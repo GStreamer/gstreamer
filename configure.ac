@@ -1283,7 +1283,7 @@ main (int   argc,
       char *argv[])
 {
   MPEG2EncOptions *options = new MPEG2EncOptions ();
-  MPEG2Encoder *encoder = new MPEG2Encoder (*options);
+  MPEG2Encoder encoder (*options);
   return 0;
 }
         ],[
