@@ -1,5 +1,12 @@
 2004-03-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),
+	(qtdemux_parse_trak):
+	  Fix crash (j might be greater than n_samples, in which case we're
+	  writing outside the allocated space for the array) and memleak.
+
+2004-03-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/oss/gstosssink.c: (gst_osssink_chain):
 	  And another caller that couldn't handle delay < 0 (unsigned
 	  integer overflow). Video now continues playing on an audio
