@@ -763,7 +763,7 @@ gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
       res = FALSE;
       break;
   }
-  gst_event_free (event);
+  gst_event_unref (event);
   return res;
 }
 
