@@ -39,20 +39,38 @@ bin_PROGRAMS = \
 	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
 bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
-# make sure each versioned tool has the right source file
+# make sure each versioned tool has the right source file and flags
 if !GST_DISABLE_REGISTRY
 gst_register_@GST_MAJORMINOR@_SOURCES = gst-register.c
+gst_register_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_register_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 endif
 if !GST_DISABLE_LOADSAVE
 gst_complete_@GST_MAJORMINOR@_SOURCES = gst-complete.c
+gst_complete_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_complete_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 gst_compprep_@GST_MAJORMINOR@_SOURCES = gst-compprep.c
+gst_compprep_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_compprep_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 gst_xmllaunch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
+gst_xmllaunch_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_xmllaunch_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 endif
 gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
+gst_inspect_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_inspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
+gst_launch_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_launch_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 gst_md5sum_@GST_MAJORMINOR@_SOURCES = gst-md5sum.c
+gst_md5sum_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_md5sum_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c
+gst_typefind_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_typefind_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c
+gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
+gst_xmlinspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 
 # make sure each unversioned tool comes from gst-run.c
 if !GST_DISABLE_REGISTRY
@@ -70,13 +88,13 @@ gst_md5sum_SOURCES = gst-run.c
 gst_typefind_SOURCES = gst-run.c
 gst_xmlinspect_SOURCES = gst-run.c
 
-# set correct compile and link flags for all, as well as for specific
-AM_CFLAGS = $(GST_CFLAGS)
-AM_LDFLAGS = $(GST_LIBS)
-
 gst_inspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
 gst_xmlinspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
+
+# CFLAGS and libs for nonversioned frontend binaries
+AM_CFLAGS = $(GLIB_ONLY_CFLAGS) $(POPT_CFLAGS)
+LDADD = $(GLIB_ONLY_LIBS) $(POPT_LIBS)
 
 ### man pages we want to install
 if GST_DISABLE_REGISTRY

@@ -23,7 +23,9 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 AS_LIBTOOL(GST, 7, 0, 1)
+echo libtool
 AM_PROG_LIBTOOL
+echo libtool done
 
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
@@ -35,6 +37,7 @@ AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
 
+echo gettext
 dnl the gettext stuff needed
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
@@ -212,7 +215,7 @@ dnl required for compilation without warnings
 GLIB2_REQ="2.2"
 AC_SUBST(GLIB2_REQ)
 
-dnl Check for glib2
+dnl Check for glib2 with sugar on top
 PKG_CHECK_MODULES(GLIB2, glib-2.0 >= $GLIB2_REQ gobject-2.0 gthread-2.0 gmodule-2.0,HAVE_GLIB2=yes,HAVE_GLIB2=no)
 GLIB_LIBS=$GLIB2_LIBS
 GLIB_CFLAGS=$GLIB2_CFLAGS
@@ -225,6 +228,9 @@ fi
 
 GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
+
+dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
+PKG_CHECK_MODULES(GLIB_ONLY, glib-2.0 >= $GLIB2_REQ)
   
 dnl === libxml 2 ===
 if test "x$GST_DISABLE_LOADSAVE" = "xyes" && test "x$GST_DISABLE_REGISTRY" = "xyes"
@@ -260,6 +266,7 @@ int main ()
                 download the latest version from 
                 ftp://ftp.rpm.org/pub/rpm/dist/])
 ])
+AC_SUBST(POPT_LIBS)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter

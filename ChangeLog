@@ -1,5 +1,12 @@
 2004-03-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+          get GLIB_ONLY and POPT flags for the nonversioned binaries
+	* tools/Makefile.am:
+          use them
+
+2004-03-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.c: (init_post):
           change so that GST_REGISTRY now is where the global registry gets
           saved, since that is where plugins now get attached to first, and
