@@ -73,6 +73,8 @@ struct _GstQueue {
   gint leaky;		/* whether the queue is leaky, and if so at which end */
   gint block_timeout;   /* microseconds until a blocked queue times out and returns GST_EVENT_FILLER. 
                          * A value of -1 will block forever. */
+  guint min_threshold_bytes; /* the minimum number of bytes required before
+                              * waking up the reader thread */ 
   gboolean may_deadlock; /* it the queue should fail on possible deadlocks */
   gboolean interrupt;
   gboolean flush;
