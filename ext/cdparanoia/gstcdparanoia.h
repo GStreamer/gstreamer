@@ -92,6 +92,12 @@ struct _CDParanoia {
 
   gulong cur_sector;			/* current offset in file */
   gulong seq;				/* buffer sequence number */
+
+	/* hacks by Gordon Irving */
+	gint no_tracks;
+	gchar *discid;
+	gchar *offsets;
+	gchar *total_seconds;
 };
 
 struct _CDParanoiaClass {

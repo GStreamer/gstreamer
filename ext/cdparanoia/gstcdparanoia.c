@@ -31,6 +31,10 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
+/* taken from linux/cdrom.h */
+#define CD_MSF_OFFSET       150 /* MSF numbering offset of first frame */
+#define CD_SECS              60 /* seconds per minute */
+#define CD_FRAMES            75 /* frames per second */
 
 #include "gstcdparanoia.h"
 
@@ -113,6 +117,10 @@ enum {
   ARG_ABORT_ON_SKIP,
   ARG_PARANOIA_MODE,
   ARG_SMILIE,
+  ARG_NO_TRACKS,
+  ARG_DISCID,
+  ARG_OFFSETS,
+  ARG_TOTAL_TIME,
 };
 
 
@@ -231,6 +239,18 @@ cdparanoia_class_init (CDParanoiaClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PARANOIA_MODE,
     g_param_spec_enum("paranoia_mode","paranoia_mode","paranoia_mode",
                       GST_TYPE_PARANOIA_MODE,0,G_PARAM_READWRITE)); /* CHECKME! */
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NO_TRACKS,
+    g_param_spec_int("no_tracks","no_tracks","no_tracks",
+		      0,G_MAXINT,0,G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DISCID,
+    g_param_spec_string("discid","discid","discid",
+	    		NULL, G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSETS,
+    g_param_spec_string("offsets","offsets","offsets",
+	    		NULL, G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TOTAL_TIME,
+    g_param_spec_string("total_time","total_time","total_time",
+		      	NULL, G_PARAM_READABLE));
 
   gobject_class->set_property = cdparanoia_set_property;
   gobject_class->get_property = cdparanoia_get_property;
@@ -267,6 +287,11 @@ cdparanoia_init (CDParanoia *cdparanoia)
 
   cdparanoia->cur_sector = 0;
   cdparanoia->seq = 0;
+
+  cdparanoia->no_tracks=0;
+  cdparanoia->discid=NULL;
+  cdparanoia->offsets=NULL;
+  cdparanoia->total_seconds=0;
 }
 
 
@@ -284,11 +309,10 @@ cdparanoia_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
 /*      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
-
       if (src->device) g_free (src->device);
       /* clear the filename if we get a NULL (is that possible?) */
-      if (g_value_get_string (value) == NULL)
-        src->device = NULL;
+      if (!g_ascii_strcasecmp( g_value_get_string (value),""))
+	 src->device = NULL;
       /* otherwise set the new filename */
       else
         src->device = g_strdup (g_value_get_string (value));
@@ -299,7 +323,7 @@ cdparanoia_set_property (GObject *object, guint prop_id, const GValue *value, GP
 
       if (src->generic_device) g_free (src->generic_device);
       /* reset the device if we get a NULL (is that possible?) */
-      if (g_value_get_string (value) == NULL)
+      if (!g_ascii_strcasecmp( g_value_get_string (value),""))
         src->generic_device = NULL;
       /* otherwise set the new filename */
       else
@@ -415,6 +439,18 @@ cdparanoia_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
     case ARG_PARANOIA_MODE:
       g_value_set_enum (value, src->paranoia_mode);
       break;
+    case ARG_NO_TRACKS:
+      g_value_set_int (value, src->no_tracks);
+      break;
+    case ARG_DISCID:
+      g_value_set_string(value, src->discid);
+      break;      
+    case ARG_OFFSETS:
+      g_value_set_string(value, src->offsets);
+      break;
+    case ARG_TOTAL_TIME:
+      g_value_set_string(value, src->total_seconds);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -468,6 +504,87 @@ cdparanoia_get (GstPad *pad)
 
   /* we're done, push the buffer off now */
   return buf;
+}
+
+/* need some stuff to get a discid (cdparanoia doesn't do cddb but lets
+ * not stop other ppl doing it ;-) */
+typedef int byte;
+
+typedef struct
+{
+	byte m;
+	byte s;
+	byte f;
+}toc_msf;
+
+/* cdparanoia provides the toc in lba format dang we need it in msf so
+ * we have to convert it */
+static inline void lba_to_msf (const gint lba, byte *m, byte *s, byte *f)
+{
+	gint lba2 = lba;
+	lba2 += CD_MSF_OFFSET;
+	lba2 &= 0xffffff;
+	*m = lba2 / (CD_SECS * CD_FRAMES);
+	lba2 %= (CD_SECS * CD_FRAMES);
+	*s = lba2 / CD_FRAMES;
+	*f = lba2 % CD_FRAMES;
+	*f += (*m)*60*75;
+	*f += (*s)*75;	
+}
+
+void lba_toc_to_msf_toc (TOC *lba_toc, toc_msf *
+		msf_toc, gint tracks)
+{
+	gint i;
+	for (i =0; i <= tracks; i++)
+		lba_to_msf(lba_toc[i].dwStartSector,&msf_toc[i].m,
+				&msf_toc[i].s, &msf_toc[i].f);
+}
+
+/* the cddb hash function */
+guint cddb_sum(gint n) 
+{
+	guint ret;
+	ret = 0;
+	while (n > 0) 
+	{
+		ret += (n % 10);
+		n /= 10;
+	}
+	return ret;
+}
+
+void cddb_discid(gchar *discid,toc_msf *toc, gint tracks)
+{
+	guint i = 0, t = 0, n = 0;
+
+	while (i < tracks)
+	{
+		n = n + cddb_sum((toc[i].m * 60) + toc[i].s);
+		i++;
+	}
+	t = ((toc[tracks].m * 60) + toc[tracks].s) - ((toc[0].m * 60)
+			+ toc[0].s);
+
+	sprintf (discid,"%08x",(( n % 0xff) << 24 | t << 8 | tracks));
+}
+
+/* get all the cddb info at once */
+void get_cddb_info(TOC *toc, gint tracks,gchar *discid, gchar *offsets,
+		gchar *total_seconds)
+{
+	toc_msf 	msf_toc[MAXTRK];
+	gint		i;
+	gchar		*p = offsets;
+
+	lba_toc_to_msf_toc(toc, &msf_toc[0],tracks);
+	cddb_discid ( discid,  &msf_toc[0], tracks);	
+
+	for (i = 0; i < tracks; i++)
+		p = (p + sprintf (p, " %d", msf_toc[i].f)) ;
+
+	sprintf (total_seconds, "%d", msf_toc[tracks].f/75);
+	
 }
 
 /* open the file, necessary to go to RUNNING state */
@@ -531,6 +648,23 @@ cdparanoia_open (CDParanoia *src)
   }
 
   /* set up some more stuff */
+  src->no_tracks = src->d->tracks;
+
+  g_assert(src->discid == NULL);
+  g_assert(src->offsets == NULL);
+  g_assert(src->total_seconds == NULL);
+
+  /* I don't like this here i would prefer it under get_cddb_info but for somereason
+   * when leaving the function it clobbers the allocated mem and all is lost bugger
+  */
+   
+  src->discid 		= g_new0(gchar,20) ;
+  src->offsets 		= g_new0(gchar,4096);
+  src->total_seconds 	= g_new0(gchar, 4);
+
+  get_cddb_info(&src->d->disc_toc[0], src->no_tracks,src->discid,
+		  src->offsets,src->total_seconds);
+	
   if (src->toc_bias) {
     src->toc_offset -= cdda_track_firstsector (src->d, 1);
   }
@@ -597,7 +731,15 @@ cdparanoia_close (CDParanoia *src)
   /* kill the paranoia state */
   paranoia_free (src->p);
   src->p = NULL;
-
+  
+  g_free(src->discid);
+  src->discid = NULL;
+  
+  g_free(src->offsets);
+  src->offsets = NULL;
+  
+  g_free(src->total_seconds);
+  src->total_seconds = NULL;
   /* close the disc */
   cdda_close (src->d);
   src->d = NULL;
