@@ -574,9 +574,12 @@ AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 dnl Check for sidplay
 AC_PATH_LIBSIDPLAY
 
+dnl Check for FLAC
+dnl thomas : checking for compile with main instead of actual function,
+dnl since that made autoconf break (for version 2.13)
 AC_MSG_CHECKING(FLAC library)
-AC_CHECK_LIB(FLAC, main, HAVE_FLAC=yes, HAVE_FLAC=no, -lm)
-AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLAC=no)
+AC_CHECK_LIB(FLAC, main, HAVE_FLACLIB=yes, HAVE_FLACLIB=no, -lm)
+AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLACLIB=no)
 
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
