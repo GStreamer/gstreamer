@@ -301,7 +301,12 @@ gst_audio_convert_getcaps (GstPad * pad)
     structure = gst_structure_copy (structure);
     if (strcmp (gst_structure_get_name (structure), "audio/x-raw-int") == 0) {
       gst_structure_set_name (structure, "audio/x-raw-float");
-      gst_structure_set (structure, "buffer-frames", G_TYPE_INT, 0, NULL);
+      if (pad == this->sink) {
+        gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 0,
+            G_MAXINT, NULL);
+      } else {
+        gst_structure_set (structure, "buffer-frames", G_TYPE_INT, 0, NULL);
+      }
     } else {
       gst_structure_set_name (structure, "audio/x-raw-int");
       gst_structure_remove_field (structure, "buffer-frames");
