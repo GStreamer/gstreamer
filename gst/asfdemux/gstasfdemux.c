@@ -78,7 +78,7 @@ static gboolean            gst_asf_demux_add_audio_stream (GstASFDemux *asf_demu
 							   guint16 id);
 static gboolean            gst_asf_demux_setup_pad        (GstASFDemux *asf_demux,
 							   GstPad *src_pad,
-							   GstCaps *caps_list,
+							   GstCaps *caps,
 							   guint16 id);
 
 static GstElementStateReturn gst_asf_demux_change_state   (GstElement *element);
@@ -1392,6 +1392,8 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
   src_pad = gst_pad_new_from_template (audiosrctempl, name);
   g_free (name);
 
+  gst_pad_use_explicit_caps (src_pad);
+
   /* Swallow up any left over data */
   if (size_left) {
     g_warning ("asfdemux: Audio header contains %d bytes of surplus data", size_left);
@@ -1575,12 +1577,12 @@ gst_asf_demux_add_video_stream (GstASFDemux *asf_demux,
 static gboolean
 gst_asf_demux_setup_pad (GstASFDemux *asf_demux,
 			 GstPad *src_pad,
-			 GstCaps *caps_list,
+			 GstCaps *caps,
 			 guint16 id)
 {
   asf_stream_context *stream;
 
-  gst_pad_try_set_caps (src_pad, caps_list);
+  gst_pad_set_explicit_caps (src_pad, caps);
   gst_pad_set_formats_function (src_pad, gst_asf_demux_get_src_formats);
   gst_pad_set_event_mask_function (src_pad, gst_asf_demux_get_src_event_mask);
   gst_pad_set_event_function (src_pad, gst_asf_demux_handle_src_event);

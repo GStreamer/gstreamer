@@ -194,6 +194,7 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   gst_pad_set_event_function (mpeg_parse->srcpad, gst_mpeg_parse_handle_src_event);
   gst_pad_set_query_type_function (mpeg_parse->srcpad, gst_mpeg_parse_get_src_query_types);
   gst_pad_set_query_function (mpeg_parse->srcpad, gst_mpeg_parse_handle_src_query);
+  gst_pad_use_explicit_caps (mpeg_parse->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (mpeg_parse), gst_mpeg_parse_loop);
 
@@ -274,15 +275,11 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
     if (!GST_PAD_CAPS (mpeg_parse->srcpad)) {
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
 
-      if (gst_pad_try_set_caps (mpeg_parse->srcpad,
-	    gst_caps_new_simple ("video/mpeg",
-	      "mpegversion",  G_TYPE_INT,  (mpeg2 ? 2 : 1),
-	      "systemstream", G_TYPE_BOOLEAN, TRUE,
-	      "parsed",       G_TYPE_BOOLEAN, TRUE, NULL)) < 0)
-      {
-	gst_element_error (GST_ELEMENT (mpeg_parse), "could no set source caps");
-	return;
-      }
+      gst_pad_set_explicit_caps (mpeg_parse->srcpad,
+	  gst_caps_new_simple ("video/mpeg",
+	    "mpegversion",  G_TYPE_INT,  (mpeg2 ? 2 : 1),
+	    "systemstream", G_TYPE_BOOLEAN, TRUE,
+	    "parsed",       G_TYPE_BOOLEAN, TRUE, NULL));
     }
 
     GST_BUFFER_TIMESTAMP (data) = time;

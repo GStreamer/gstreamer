@@ -462,47 +462,6 @@ static void gst_rmdemux_loop (GstElement *element)
 
 }
 
-static GstCaps *gst_rmdemux_src_getcaps(GstPad *pad)
-{
-  GstRMDemux *rmdemux;
-  GstRMDemuxStream *stream;
-
-  GST_DEBUG ("gst_rmdemux_src_getcaps");
-
-  rmdemux = GST_RMDEMUX(gst_pad_get_parent(pad));
-
-  g_return_val_if_fail(GST_IS_RMDEMUX(rmdemux), NULL);
-
-  stream = GST_PAD_ELEMENT_PRIVATE (pad);
-  return gst_caps_copy(stream->caps);
-}
-
-#ifdef unused
-/* This function is not useful currently */
-static GstPadLinkReturn
-gst_rmdemux_src_link(GstPad *pad, static GstCaps *caps)
-{
-  GstRMDemux *rmdemux;
-  GstRMDemuxStream *stream;
-  int i;
-
-  GST_DEBUG ("gst_rmdemux_src_link");
-
-  rmdemux = GST_RMDEMUX(gst_pad_get_parent(pad));
-
-  GST_DEBUG ("looking for pad %p in rmdemux %p", pad, rmdemux);
-  g_return_val_if_fail(GST_IS_RMDEMUX(rmdemux), GST_PAD_LINK_REFUSED);
-
-  GST_DEBUG ("n_streams is %d\n", rmdemux->n_streams);
-  stream = GST_PAD_ELEMENT_PRIVATE (pad);
-  return GST_PAD_LINK_OK;
-
-  GST_DEBUG ("Couldn't find stream cooresponding to pad\n");
-
-  return GST_PAD_LINK_REFUSED;
-}
-#endif
-
 static GstRMDemuxStream *gst_rmdemux_get_stream_by_id(GstRMDemux *rmdemux,
     int id)
 {
@@ -551,20 +510,14 @@ void gst_rmdemux_add_stream(GstRMDemux *rmdemux, GstRMDemuxStream *stream)
   g_print("n_streams is now %d\n", rmdemux->n_streams);
 
   if(stream->pad){
-    gst_pad_set_getcaps_function(stream->pad, gst_rmdemux_src_getcaps);
-#ifdef unused
-    gst_pad_set_link_function(stream->pad, gst_rmdemux_src_link);
-#endif
+    gst_pad_use_explicit_caps (stream->pad);
 
     g_print("adding pad %p to rmdemux %p\n", stream->pad, rmdemux);
     gst_element_add_pad(GST_ELEMENT (rmdemux), stream->pad);
 
-    /* Note: we need to have everything set up before calling try_set_caps */
-    if(stream->caps){
-      GST_DEBUG_CAPS("setting caps",stream->caps);
+    GST_DEBUG_CAPS("setting caps",stream->caps);
 
-      gst_pad_try_set_caps(stream->pad, stream->caps);
-    }
+    gst_pad_set_explicit_caps(stream->pad, stream->caps);
   }
 }
 

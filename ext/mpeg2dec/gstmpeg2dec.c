@@ -197,6 +197,7 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
   mpeg2dec->srcpad = gst_pad_new_from_template (
 		  gst_static_pad_template_get (&src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->srcpad);
+  gst_pad_use_explicit_caps (mpeg2dec->srcpad);
   gst_pad_set_formats_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_get_src_formats));
   gst_pad_set_event_mask_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_get_src_event_masks));
   gst_pad_set_event_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_src_event));
@@ -328,7 +329,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
       "framerate",    G_TYPE_DOUBLE, 1. * GST_SECOND / mpeg2dec->frame_period,
       NULL);
 
-  ret = gst_pad_try_set_caps (mpeg2dec->srcpad, caps);
+  ret = gst_pad_set_explicit_caps (mpeg2dec->srcpad, caps);
   if (ret != GST_PAD_LINK_OK) return FALSE;
 
   /* it worked, try to find what it was again */

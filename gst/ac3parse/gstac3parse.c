@@ -194,6 +194,7 @@ gst_ac3parse_init (GstAc3Parse *ac3parse)
 
   ac3parse->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get (&gst_ac3parse_src_template), "src");
+  gst_pad_use_explicit_caps (ac3parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (ac3parse), ac3parse->srcpad);
 
   ac3parse->partialbuf = NULL;
@@ -341,11 +342,7 @@ gst_ac3parse_chain (GstPad *pad, GstData *_data)
           newcaps = gst_caps_new_simple ("audio/x-ac3",
 	      "channels", G_TYPE_INT, channels,
 	      "rate",     G_TYPE_INT, sample_rate, NULL);
-          if (gst_pad_try_set_caps (ac3parse->srcpad, newcaps) <= 0) {
-            gst_element_error (GST_ELEMENT (ac3parse),
-			       "Ac3parse: failed to negotiate format with next element");
-            return;
-          }
+          gst_pad_set_explicit_caps (ac3parse->srcpad, newcaps);
         }
 
 	offset += bpf;

@@ -1,3 +1,55 @@
+2004-01-01  David Schleef  <ds@schleef.org>
+
+	Convert elements to use gst_pad_use_explicit_caps() where
+	appropriate:
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_init), (gst_a52dec_reneg):
+	* ext/audiofile/gstafparse.c: (gst_afparse_init),
+	(gst_afparse_open_file):
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_init),
+	(gst_afsrc_open_file):
+	* ext/esd/esdmon.c: (gst_esdmon_init), (gst_esdmon_get):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_chain):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	* ext/flac/gstflacdec.c: (gst_flacdec_init), (gst_flacdec_write):
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_init),
+	(gst_gdk_pixbuf_chain):
+	* ext/jpeg/gstjpegdec.c: (gst_jpegdec_init), (gst_jpegdec_link),
+	(gst_jpegdec_chain):
+	* ext/mad/gstmad.c: (gst_mad_init), (gst_mad_chain):
+	* ext/mikmod/gstmikmod.c: (gst_mikmod_init),
+	(gst_mikmod_negotiate):
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_init),
+	(gst_mpeg2dec_negotiate_format):
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
+	* ext/speex/gstspeexdec.c: (gst_speexdec_init),
+	(gst_speexdec_sinkconnect):
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_loop), (gst_swfdec_init):
+	* ext/vorbis/vorbisfile.c: (gst_vorbisfile_init),
+	(gst_vorbisfile_new_link):
+	* gst/ac3parse/gstac3parse.c: (gst_ac3parse_init),
+	(gst_ac3parse_chain):
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_add_audio_stream),
+	(gst_asf_demux_setup_pad):
+	* gst/auparse/gstauparse.c: (gst_auparse_init),
+	(gst_auparse_chain):
+	* gst/id3/gstid3types.c: (gst_id3types_loop):
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream):
+	* gst/mpeg1videoparse/gstmp1videoparse.c: (gst_mp1videoparse_init),
+	(mp1videoparse_parse_seq):
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_init),
+	(bpf_from_header):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead),
+	(gst_mpeg_demux_parse_pes), (gst_mpeg_demux_lpcm_set_caps):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_init),
+	(gst_mpeg_parse_send_data):
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(gst_qtdemux_add_stream):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_init),
+	(gst_wavparse_parse_fmt):
+
 2004-01-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:

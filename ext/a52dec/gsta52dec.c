@@ -178,6 +178,7 @@ gst_a52dec_init (GstA52Dec * a52dec)
 
   a52dec->srcpad = gst_pad_new_from_template (
       gst_element_get_pad_template (GST_ELEMENT (a52dec), "src"), "src");
+  gst_pad_use_explicit_caps (a52dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
   a52dec->dynamic_range_compression = FALSE;
@@ -365,17 +366,15 @@ gst_a52dec_reneg (GstPad * pad, int channels, int rate)
 {
   GST_INFO ( "a52dec: reneg channels:%d rate:%d\n", channels, rate);
 
-  if (gst_pad_try_set_caps (pad, 
-        gst_caps_new_simple ("audio/x-raw-int",
-          "endianness",	G_TYPE_INT, G_BYTE_ORDER,
-          "signed", 	G_TYPE_BOOLEAN, TRUE,
-          "width", 	G_TYPE_INT, 16,
-          "depth", 	G_TYPE_INT, 16,
-          "channels", 	G_TYPE_INT, channels,
-          "rate", 	G_TYPE_INT, rate,
-          NULL)) <= 0) {
-    gst_element_error (GST_PAD_PARENT (pad), "could not set caps on source pad, aborting...");
-  }
+  gst_pad_set_explicit_caps (pad, 
+      gst_caps_new_simple ("audio/x-raw-int",
+	"endianness",	G_TYPE_INT, G_BYTE_ORDER,
+	"signed", 	G_TYPE_BOOLEAN, TRUE,
+	"width", 	G_TYPE_INT, 16,
+	"depth", 	G_TYPE_INT, 16,
+	"channels", 	G_TYPE_INT, channels,
+	"rate", 	G_TYPE_INT, rate,
+	NULL));
 }
 
 static void

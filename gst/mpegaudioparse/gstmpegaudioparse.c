@@ -290,6 +290,7 @@ gst_mp3parse_init (GstMPEGAudioParse *mp3parse)
   mp3parse->srcpad = gst_pad_new_from_template(
       gst_static_pad_template_get (&mp3_src_template), "src");
   gst_element_add_pad(GST_ELEMENT(mp3parse),mp3parse->srcpad);
+  gst_pad_use_explicit_caps (mp3parse->srcpad);
   /*gst_pad_set_type_id(mp3parse->srcpad, mp3frametype); */
 
   mp3parse->partialbuf = NULL;
@@ -465,10 +466,7 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
       bitrate  != parse->bit_rate) {
     GstCaps *caps = mp3_caps_create (layer, channels, bitrate, rate);
 
-    if (gst_pad_try_set_caps(parse->srcpad, caps) <= 0) {
-      gst_element_error (GST_ELEMENT (parse),
-                         "mp3parse: failed to negotiate format with next element");
-    }
+    gst_pad_set_explicit_caps(parse->srcpad, caps);
 
     parse->channels = channels;
     parse->layer    = layer;

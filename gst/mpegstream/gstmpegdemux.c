@@ -458,11 +458,7 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
         outpad = &((*outstream)->pad);
 			
 	*outpad = gst_pad_new_from_template (newtemp, name);
-	if (!caps) {
-          gst_pad_try_set_caps (*outpad, gst_pad_template_get_caps (newtemp));
-        } else {
-          gst_pad_try_set_caps (*outpad, caps);
-        }
+	gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
 
 	gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
 	gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
@@ -470,8 +466,10 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
 	gst_pad_set_query_type_function (*outpad, gst_mpeg_parse_get_src_query_types);
 	gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
+	gst_pad_use_explicit_caps (*outpad);
 
-	gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
+        gst_pad_set_explicit_caps (*outpad, caps);
+
 	gst_pad_set_element_private (*outpad, *outstream);
 
 	(*outstream)->size_bound = buf_byte_size_bound;
@@ -910,18 +908,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
       /* create the pad and add it to self */
       *outpad = gst_pad_new_from_template (newtemp, name);
-      if (ps_id_code < 0xA0 || ps_id_code > 0xA7) {
-	if (!caps) {
-          gst_pad_try_set_caps (*outpad, gst_pad_template_get_caps (newtemp));
-        } else {
-          gst_pad_try_set_caps (*outpad, caps);
-        }
-      }
-      else {
-        gst_mpeg_demux_lpcm_set_caps(*outpad,
-                                     mpeg_demux->lpcm_sample_info[ps_id_code
-                                                                  - 0xA0]);
-      }
+      gst_element_add_pad(GST_ELEMENT(mpeg_demux), *outpad);
 
       gst_pad_set_formats_function (*outpad, gst_mpeg_demux_get_src_formats);
       gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
@@ -929,8 +916,17 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
       gst_pad_set_query_type_function (*outpad, gst_mpeg_parse_get_src_query_types);
       gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
+      gst_pad_use_explicit_caps (*outpad);
 
-      gst_element_add_pad(GST_ELEMENT(mpeg_demux), *outpad);
+      if (ps_id_code < 0xA0 || ps_id_code > 0xA7) {
+        gst_pad_set_explicit_caps (*outpad, caps);
+      }
+      else {
+        gst_mpeg_demux_lpcm_set_caps(*outpad,
+                                     mpeg_demux->lpcm_sample_info[ps_id_code
+                                                                  - 0xA0]);
+      }
+
       gst_pad_set_element_private (*outpad, *outstream);
 
       if (mpeg_demux->index)
@@ -1023,7 +1019,7 @@ gst_mpeg_demux_lpcm_set_caps (GstPad *pad, guint8 sample_info)
       "depth",            G_TYPE_INT, width,
       "rate",             G_TYPE_INT, rate,
       "channels",         G_TYPE_INT, channels, NULL);
-  gst_pad_try_set_caps (pad, caps);
+  gst_pad_set_explicit_caps (pad, caps);
 }
 
 /**
