@@ -1,3 +1,9 @@
+2005-01-28  Andy Wingo  <wingo@pobox.com>
+
+	* ext/dv/gstdvdec.c: Change the pixel aspect ratio of dvdec output
+	to reflect a different dubious internet source. Add a reference
+	and some commentary.
+
 2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gststreamselector.c: (gst_stream_selector_init),
