@@ -395,6 +395,12 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
     float **pcm;
     guint sample_count;
 
+    if (packet.packetno < 3) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
+          (NULL), ("no header sent yet (packet no is %d)", packet.packetno));
+      gst_data_unref (data);
+      return;
+    }
     /* normal data packet */
     if (vorbis_synthesis (&vd->vb, &packet)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
