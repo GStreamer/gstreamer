@@ -73,8 +73,8 @@ static void         gst_play_init		    (GstPlay *play);
 static void         gst_play_class_init	            (GstPlayClass *klass);
 static void         gst_play_dispose		    (GObject *object);
 
-static void         gst_play_default_timeout_add    (guint interval, GSourceFunc function, gpointer data);
-static void         gst_play_default_idle_add       (GSourceFunc function, gpointer data);
+static guint         gst_play_default_timeout_add    (guint interval, GSourceFunc function, gpointer data);
+static guint         gst_play_default_idle_add       (GSourceFunc function, gpointer data);
 
 static void         gst_play_set_property	    (GObject *object, guint prop_id, 
 						     const GValue *value, GParamSpec *pspec);
@@ -298,6 +298,9 @@ gst_play_init (GstPlay *play)
 	play->video_bin_mutex = g_mutex_new();
 	gst_play_set_idle_timeout_funcs(play, gst_play_default_timeout_add, gst_play_default_idle_add);
 
+	/*fixored by dolphy */
+	
+	play->tick_timeout_id = play->idle_timeout_id = play->idle_signal_id = 0;
 }
 
 GstPlay *
@@ -390,6 +393,18 @@ static void
 gst_play_dispose (GObject *object)
 {
 	GstPlay *play = GST_PLAY (object);
+	/* fixored by dolphy : Before disposing removing any callback that could
+	be called : time ticks, signal poller, etc...*/
+	if (play->tick_timeout_id)
+		if (!g_source_remove(play->tick_timeout_id))
+			g_warning("failed to remove timetick timer %d", play->tick_timeout_id);
+	if (play->idle_timeout_id)
+		if (!g_source_remove(play->idle_timeout_id))
+			g_warning("failed to remove idle timer %d", play->idle_timeout_id);
+	if (play->idle_signal_id)
+		if (!g_source_remove(play->idle_signal_id))
+			g_warning("failed to remove signal idle timer %d", play->idle_signal_id);
+		
 	G_OBJECT_CLASS (parent_class)->dispose (object);
 	g_mutex_free(play->audio_bin_mutex);
 	g_mutex_free(play->video_bin_mutex);
@@ -413,7 +428,10 @@ callback_pipeline_deep_notify (GstElement *element, GstElement *orig, GParamSpec
 	signal->signal_data.info.element = orig;
 	signal->signal_data.info.param = param;
 	g_async_queue_push(play->signal_queue, signal);
-	play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
+	/* fixored by dolphy : If an idle callback has been added for signal polling
+	no need to put a new one */
+	if (!play->idle_signal_id)
+		play->idle_signal_id = play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
 }
 
 static void
@@ -431,12 +449,12 @@ callback_pipeline_state_change (GstElement *element, GstElementState old, GstEle
 	if (GST_IS_PIPELINE (play->pipeline)){
 		switch (state) {
 		case GST_STATE_PLAYING:
-			play->idle_add_func ((GSourceFunc) gst_play_idle_callback, play);
-			play->timeout_add_func (200, (GSourceFunc) gst_play_tick_callback, play);
+			play->idle_timeout_id = play->idle_add_func ((GSourceFunc) gst_play_idle_callback, play);
+			play->tick_timeout_id = play->timeout_add_func (200, (GSourceFunc) gst_play_tick_callback, play);
 			if (play->length_nanos == 0LL){
 				/* try to get the length up to 16 times */
 				play->get_length_attempt = 16;
-				play->timeout_add_func (200, (GSourceFunc) gst_play_get_length_callback, play);
+				play->timeout_add_func (200, (GSourceFunc) gst_play_get_length_callback, play); 
 			}
 			break;
 		default:
@@ -448,7 +466,10 @@ callback_pipeline_state_change (GstElement *element, GstElementState old, GstEle
 	signal->signal_data.state.old_state = old;
 	signal->signal_data.state.new_state = state;
 	g_async_queue_push(play->signal_queue, signal);
-	play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
+	/* fixored by dolphy : If an idle callback has been added for signal polling
+	no need to put a new one */
+	if (!play->idle_signal_id)
+		play->idle_signal_id = play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
 }
 
 static gboolean
@@ -456,7 +477,11 @@ gst_play_idle_signal (GstPlay *play)
 {
 	GstPlaySignal *signal;
 	gint queue_length;
-
+	
+	/* fixored by dolphy : Added safety check on play before poping */
+	
+	g_return_val_if_fail(GST_IS_PLAY(play), FALSE);
+	
 	signal = g_async_queue_try_pop(play->signal_queue);
 	if (signal == NULL){
 		return FALSE;
@@ -485,6 +510,13 @@ gst_play_idle_signal (GstPlay *play)
 
 	g_free(signal);
 	queue_length = g_async_queue_length (play->signal_queue);
+	
+	/* fixored by dolphy : If queue length is zero the idle callback will be
+	destroyed */
+	
+	if (!queue_length)
+		play->idle_signal_id = 0;
+	
 	return (queue_length > 0);
 }
 
@@ -509,7 +541,10 @@ callback_video_have_xid (GstElement *element, gint xid, GstPlay *play)
 	signal->signal_id = HAVE_XID;
 	signal->signal_data.video_xid.xid = xid;
 	g_async_queue_push(play->signal_queue, signal);
-	play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
+	/* fixored by dolphy : If an idle callback has been added for signal polling
+	no need to put a new one */
+	if (!play->idle_signal_id)
+		play->idle_signal_id = play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
 	/*g_print("have xid %d\n", xid);*/
 }
 
@@ -522,7 +557,10 @@ callback_video_have_size (GstElement *element, gint width, gint height, GstPlay 
 	signal->signal_data.video_size.width = width;
 	signal->signal_data.video_size.height = height;
 	g_async_queue_push(play->signal_queue, signal);
-	play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
+	/* fixored by dolphy : If an idle callback has been added for signal polling
+	no need to put a new one */
+	if (!play->idle_signal_id)
+		play->idle_signal_id = play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
 	/*g_print("have size %d x %d\n", width, height);*/
 }
 
@@ -575,6 +613,11 @@ static gboolean
 gst_play_tick_callback (GstPlay *play)
 {
 	gint secs;
+	
+	/* fixored by dolphy : Added safety check on play before accessing */
+	
+	g_return_val_if_fail(GST_IS_PLAY(play), FALSE);
+	
 	play->clock = gst_bin_get_clock (GST_BIN (play->pipeline));
 	play->time_nanos = gst_clock_get_time(play->clock);
 	secs = (gint) (play->time_nanos / GST_SECOND);
@@ -589,6 +632,10 @@ gst_play_tick_callback (GstPlay *play)
 static gboolean
 gst_play_idle_callback (GstPlay *play)
 {
+	/* fixored by dolphy : Added safety check on play before iterating */
+	
+	g_return_val_if_fail(GST_IS_PLAY(play), FALSE);
+	
 	return gst_bin_iterate (GST_BIN (play->pipeline));
 }
 
@@ -702,22 +749,28 @@ gst_play_default_idle (GstPlayIdleData *idle_data)
 	return FALSE;
 }
 
-static void
+static guint
 gst_play_default_timeout_add (guint interval, GSourceFunc function, gpointer data)
 {
 	GstPlayIdleData *idle_data = g_new0(GstPlayIdleData, 1);
 	idle_data->func = function;
 	idle_data->data = data;
-	g_timeout_add (interval, (GSourceFunc)gst_play_default_idle, idle_data);
+	
+	/* fixored by dolphy : here we return the source tag to caller */
+	
+	return g_timeout_add (interval, (GSourceFunc)gst_play_default_idle, idle_data);
 }
 
-static void
+static guint
 gst_play_default_idle_add (GSourceFunc function, gpointer data)
 {
 	GstPlayIdleData *idle_data = g_new0(GstPlayIdleData, 1);
 	idle_data->func = function;
 	idle_data->data = data;
-	g_idle_add ((GSourceFunc)gst_play_default_idle, idle_data);
+	
+	/* fixored by dolphy : here we return the source tag to caller */
+	
+	return g_idle_add ((GSourceFunc)gst_play_default_idle, idle_data);
 }
 
 void
