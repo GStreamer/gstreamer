@@ -544,6 +544,13 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
 					 (((guint8 *)data)[1] == 0x00) &&	\
 					 (((guint8 *)data)[2] == 0x01) &&	\
 					 ((((guint8 *)data)[3] & 0x80) == 0x80))
+#define IS_MPEG_PES_HEADER(data)        ((((guint8 *)data)[0] == 0x00) &&	\
+					 (((guint8 *)data)[1] == 0x00) &&	\
+					 (((guint8 *)data)[2] == 0x01) && \
+					 ((((guint8 *)data)[3] == 0xE0) || \
+					  (((guint8 *)data)[3] == 0xC0) || \
+					  (((guint8 *)data)[3] == 0xBD)))
+
 static void
 mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
 {
@@ -565,7 +572,15 @@ mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
       gst_caps_free (caps);
     }
+  } else if (data && IS_MPEG_PES_HEADER (data)) {
+    /* PES stream */
+    GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
+
+    gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
+        G_TYPE_INT, 2, 0);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
   }
+
 };
 
 /* ATTANTION: ugly return value:
