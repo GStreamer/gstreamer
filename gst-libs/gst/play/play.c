@@ -132,14 +132,25 @@ G_STMT_START {							\
 } G_STMT_END
 
 
+/* setup parts of the pipeline
+ * only put decoding part in the thread
+ * create all others and keep them around
+ */
+
 static gboolean
 gst_play_pipeline_setup (GstPlay * play, GError ** error)
 {
   /* Threads */
   GstElement *work_thread, *audio_thread, *video_thread;
 
+  /* output bin */
+  GstElement *output_bin;
+
   /* Main Thread elements */
-  GstElement *source, *autoplugger, *audioconvert, *volume, *tee, *identity;
+  GstElement *source, *autoplugger;
+
+  /* output bin elements */
+  GstElement *audioconvert, *volume, *tee, *identity;
   GstElement *identity_cs;
 
   /* Visualization bin */
@@ -158,6 +169,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 
+  GST_DEBUG_OBJECT (play, "setting up pipeline");
   /* Creating main thread and its elements */
   {
     GST_PLAY_MAKE_OR_ERROR (work_thread, "thread", "work_thread", error);
@@ -172,6 +184,16 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     GST_PLAY_MAKE_OR_ERROR (autoplugger, "spider", "autoplugger", error);
     g_hash_table_insert (play->priv->elements, "autoplugger", autoplugger);
 
+    /* adding and linking */
+    gst_bin_add_many (GST_BIN (work_thread), source, autoplugger, NULL);
+    if (!gst_element_link (source, autoplugger))
+      GST_PLAY_ERROR_RETURN (error, "Could not link source and autoplugger");
+  }
+
+  /* output bin */
+  {
+    GST_PLAY_MAKE_OR_ERROR (output_bin, "bin", "output_bin", error);
+    g_hash_table_insert (play->priv->elements, "output_bin", output_bin);
     /* Make sure we convert audio to the needed format */
     GST_PLAY_MAKE_OR_ERROR (audioconvert, "audioconvert", "audioconvert",
         error);
@@ -185,10 +207,9 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     g_hash_table_insert (play->priv->elements, "tee_pad2", tee_pad2);
     g_hash_table_insert (play->priv->elements, "tee", tee);
 
-    gst_bin_add_many (GST_BIN (work_thread), source, autoplugger, audioconvert,
-        tee, NULL);
-    if (!gst_element_link_many (source, autoplugger, audioconvert, tee, NULL))
-      GST_PLAY_ERROR_RETURN (error, "Could not link source thread elements");
+    gst_bin_add_many (GST_BIN (output_bin), audioconvert, tee, NULL);
+    if (!gst_element_link (audioconvert, tee))
+      GST_PLAY_ERROR_RETURN (error, "Could not link audio thread elements");
 
     /* identity ! colorspace ! switch  */
     GST_PLAY_MAKE_OR_ERROR (identity, "identity", "identity", error);
@@ -207,9 +228,10 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
       }
     }
     g_hash_table_insert (play->priv->elements, "identity_cs", identity_cs);
-    gst_bin_add_many (GST_BIN (work_thread), identity, identity_cs, NULL);
+    gst_bin_add_many (GST_BIN (output_bin), identity, identity_cs, NULL);
     if (!gst_element_link_many (autoplugger, identity, identity_cs, NULL))
       GST_PLAY_ERROR_RETURN (error, "Could not link work thread elements");
+    gst_bin_add (GST_BIN (work_thread), output_bin);
   }
 
   /* Visualization bin (note: it s not added to the pipeline yet) */
@@ -256,7 +278,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
   {
     GST_PLAY_MAKE_OR_ERROR (video_thread, "thread", "video_thread", error);
     g_hash_table_insert (play->priv->elements, "video_thread", video_thread);
-    gst_bin_add (GST_BIN (work_thread), video_thread);
+    gst_bin_add (GST_BIN (output_bin), video_thread);
 
     /* Buffer queue for video data */
     GST_PLAY_MAKE_OR_ERROR (video_queue, "queue", "video_queue", error);
@@ -340,7 +362,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
   {
     GST_PLAY_MAKE_OR_ERROR (audio_thread, "thread", "audio_thread", error);
     g_hash_table_insert (play->priv->elements, "audio_thread", audio_thread);
-    gst_bin_add (GST_BIN (work_thread), audio_thread);
+    gst_bin_add (GST_BIN (output_bin), audio_thread);
 
     /* Buffer queue for our audio thread */
     GST_PLAY_MAKE_OR_ERROR (audio_queue, "queue", "audio_queue", error);
@@ -366,6 +388,7 @@ gst_play_pipeline_setup (GstPlay * play, GError ** error)
     gst_pad_link (tee_pad2, gst_element_get_pad (audio_queue, "sink"));
   }
 
+  GST_DEBUG_OBJECT (play, "setting up pipeline succeeded.");
   return TRUE;
 }
 
@@ -432,6 +455,7 @@ gst_play_get_length_callback (GstPlay * play)
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 
+  GST_DEBUG_OBJECT (play, "trying to get length");
   /* We try to get length from all real sink elements */
   audio_sink_element = g_hash_table_lookup (play->priv->elements,
       "audio_sink_element");
@@ -444,15 +468,25 @@ gst_play_get_length_callback (GstPlay * play)
   }
 
   /* Audio first and then Video */
-  if (GST_IS_ELEMENT (audio_sink_element))
+  if (GST_IS_ELEMENT (audio_sink_element)) {
+    GST_DEBUG_OBJECT (play, "querying for length on audio sink");
     q = gst_element_query (audio_sink_element, GST_QUERY_TOTAL, &format,
         &value);
-  if ((!q) && (GST_IS_ELEMENT (video_sink_element)))
-    q = gst_element_query (video_sink_element, GST_QUERY_TOTAL, &format,
-        &value);
+  } else
+    GST_DEBUG_OBJECT (play, "no audio sink element");
+  if (!q) {
+    GST_DEBUG_OBJECT (play, "no query result from audio sink");
+    if (GST_IS_ELEMENT (video_sink_element)) {
+      GST_DEBUG_OBJECT (play, "querying for length on video sink");
+      q = gst_element_query (video_sink_element, GST_QUERY_TOTAL, &format,
+          &value);
+    }
+  }
 
   if (q) {
     play->priv->length_nanos = value;
+    GST_DEBUG_OBJECT (play, "got length, %" GST_TIME_FORMAT,
+        GST_TIME_ARGS ((GstClockTime) value));
     g_signal_emit (G_OBJECT (play), gst_play_signals[STREAM_LENGTH],
         0, play->priv->length_nanos);
     play->priv->length_id = 0;
@@ -460,6 +494,8 @@ gst_play_get_length_callback (GstPlay * play)
   }
 
   play->priv->get_length_attempt++;
+  GST_DEBUG_OBJECT (play, "no length yet, was attempt %d",
+      play->priv->get_length_attempt);
 
   /* We try 16 times */
   if (play->priv->get_length_attempt > 15) {
@@ -782,16 +818,20 @@ gst_play_get_location (GstPlay * play)
  *
  * Performs a seek on @play until @time_nanos.
  */
+/* FIXME: use GstClockTime for 0.9 */
 gboolean
 gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
 {
   GstElement *audio_seek_element, *video_seek_element, *audio_sink_element;
+  GstClockTime seek_to;
 
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  g_return_val_if_fail (time_nanos >= 0L, FALSE);
 
-  if (time_nanos < 0LL)
-    time_nanos = 0LL;
+  seek_to = (GstClockTime) time_nanos;
+  GST_DEBUG_OBJECT (play, "seeking to time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (seek_to));
 
   audio_seek_element = g_hash_table_lookup (play->priv->elements,
       "audioconvert");
@@ -849,6 +889,8 @@ gst_play_set_data_src (GstPlay * play, GstElement * data_src)
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 
+  GST_DEBUG_OBJECT (play, "setting new data src element %s",
+      GST_ELEMENT_NAME (data_src));
   /* We bring back the pipeline to READY */
   if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY) {
     GstElementStateReturn ret;
@@ -1248,18 +1290,25 @@ gst_play_get_sink_element (GstPlay * play,
   g_return_val_if_fail (GST_IS_PLAY (play), NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
+  GST_DEBUG_OBJECT (play, "looking for sink element in %s",
+      GST_ELEMENT_NAME (element));
+
   if (!GST_IS_BIN (element)) {
-    /* since its not a bin, we'll presume this 
+    /* since its not a bin, we'll assume this
      * element is a sink element */
+    GST_DEBUG_OBJECT (play, "not a bin, returning %s as sink element",
+        GST_ELEMENT_NAME (element));
     return element;
   }
 
   elements = (GList *) gst_bin_get_list (GST_BIN (element));
 
-  /* traverse all elements looking for a src pad */
+  /* traverse all elements looking for one without src pad */
 
   while (elements) {
     element = GST_ELEMENT (elements->data);
+    GST_DEBUG_OBJECT (play, "looking at element %s",
+        GST_ELEMENT_NAME (element));
 
     /* Recursivity :) */
 
@@ -1274,28 +1323,41 @@ gst_play_get_sink_element (GstPlay * play,
       while (pads) {
         /* check for src pad */
         if (GST_PAD_DIRECTION (GST_PAD (pads->data)) == GST_PAD_SRC) {
+          GST_DEBUG_OBJECT (play, "element %s has a src pad",
+              GST_ELEMENT_NAME (element));
           has_src = TRUE;
           break;
         } else {
           /* If not a src pad checking caps */
+          GstPad *pad;
           GstCaps *caps;
           GstStructure *structure;
+          int i;
           gboolean has_video_cap = FALSE;
           gboolean has_audio_cap = FALSE;
 
-          caps = gst_pad_get_caps (GST_PAD (pads->data));
-          structure = gst_caps_get_structure (caps, 0);
+          pad = GST_PAD (pads->data);
+          caps = gst_pad_get_caps (pad);
+          /* loop over all caps members to find mime types */
+          for (i = 0; i < gst_caps_get_size (caps); ++i) {
+            structure = gst_caps_get_structure (caps, i);
 
-          if (strcmp (gst_structure_get_name (structure),
-                  "audio/x-raw-int") == 0) {
-            has_audio_cap = TRUE;
-          }
+            GST_DEBUG_OBJECT (play,
+                "looking at caps %d pad %s:%s on element %s with mime %s", i,
+                GST_DEBUG_PAD_NAME (pad),
+                GST_ELEMENT_NAME (element), gst_structure_get_name (structure));
 
-          if (strcmp (gst_structure_get_name (structure),
-                  "video/x-raw-yuv") == 0 ||
-              strcmp (gst_structure_get_name (structure),
-                  "video/x-raw-rgb") == 0) {
-            has_video_cap = TRUE;
+            if (strcmp (gst_structure_get_name (structure),
+                    "audio/x-raw-int") == 0) {
+              has_audio_cap = TRUE;
+            }
+
+            if (strcmp (gst_structure_get_name (structure),
+                    "video/x-raw-yuv") == 0 ||
+                strcmp (gst_structure_get_name (structure),
+                    "video/x-raw-rgb") == 0) {
+              has_video_cap = TRUE;
+            }
           }
 
           gst_caps_free (caps);
@@ -1322,8 +1384,11 @@ gst_play_get_sink_element (GstPlay * play,
 
       }
 
-      if ((!has_src) && (has_correct_type))
+      if ((!has_src) && (has_correct_type)) {
+        GST_DEBUG_OBJECT (play, "found %s with src pad and correct type",
+            GST_ELEMENT_NAME (element));
         return element;
+      }
     }
 
     elements = g_list_next (elements);
