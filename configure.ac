@@ -666,7 +666,7 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
   # prerelease and release should get it disted
   if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
     AC_MSG_NOTICE(slurping FFmpeg CVS source)
-    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2003-06-09 22:00 GMT,
+    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2003-07-05 22:00 GMT,
                     HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
   else
     AC_MSG_NOTICE(FFmpeg CVS code should be included already)
@@ -831,6 +831,15 @@ GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
   fi    
 ])
 AC_SUBST(MAD_LIBS)
+
+dnl *** matroska ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MATROSKA, true)
+GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, [
+  PATH_EBML([HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
+  if test x$HAVE_MATROSKA = xyes; then
+    PATH_MATROSKA(0.4.4, [HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
+  fi
+])
 
 dnl *** mikmod ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MIKMOD, true)
@@ -1237,6 +1246,7 @@ ext/libfame/Makefile
 ext/libpng/Makefile
 ext/mad/Makefile
 ext/mas/Makefile
+ext/matroska/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
 ext/pango/Makefile
