@@ -96,6 +96,7 @@ typedef struct {
   guint64 connect_time;
   guint64 disconnect_time;
   guint64 connect_interval;
+  guint64 last_activity_time;
   guint64 dropped_buffers;
   guint64 avg_queue_size;
   
@@ -107,7 +108,8 @@ struct _GstMultiFdSink {
   /* pad */
   GstPad *sinkpad;
 
-  size_t data_written; /* how much bytes have we written ? */
+  guint64 bytes_to_serve; /* how much bytes we must serve */
+  guint64 bytes_served; /* how much bytes have we served */
 
   GMutex *clientslock;	/* lock to protect the clients list */
   GList *clients;	/* list of clients we are serving */
@@ -127,7 +129,7 @@ struct _GstMultiFdSink {
   GThread *thread;	/* the sender thread */
 
   gint buffers_max;	/* max buffers to queue */
-  gint buffers_soft_max;	/* max buffers a client can lay before recoevery starts */
+  gint buffers_soft_max;	/* max buffers a client can lag before recovery starts */
   GstRecoverPolicy recover_policy;
   GstClockTime timeout;	/* max amount of nanoseconds to remain idle */
   /* stats */
