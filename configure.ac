@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 6, 0, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 6, 1, GST_CVS="no", GST_CVS="yes")
 
 dnl add a suffix to apps
 if test x$program_suffix = xNONE ; then
@@ -1707,7 +1707,6 @@ testsuite/spider/Makefile
 testsuite/alsa/Makefile
 testsuite/Makefile
 tools/Makefile
-tools/gst-launch-ext
 gconf/Makefile
 gconf/gstreamer.schemas
 pkgconfig/Makefile
