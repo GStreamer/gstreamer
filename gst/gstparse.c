@@ -296,7 +296,11 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
         element = gst_elementfactory_make(arg,ptr);
         g_free(ptr);
         if (!element) {
+#ifndef GST_DISABLE_REGISTRY
           fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstreamer-register?\n",arg);
+#else
+          fprintf(stderr,"Couldn't create a '%s', no such element or need to load pluginn?\n",arg);
+#endif
           exit(-1);
         }
         GST_DEBUG(0,"CREATED element %s\n",GST_ELEMENT_NAME(element));
