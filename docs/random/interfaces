@@ -47,7 +47,7 @@ Obviously, a pipeline can be a fallback for an interface. Imagine
 that we're looking for an audio sink that exposes a mixer, but our
 fakesink audio output doesn't ("I wonder why"). We could then create
 a pipeline with the volume element in it to "fake" a mixer. Ideally,
-the volume element would implement a mixer itself.
+the volume element would implement a mixer interface itself.
 
 How are we going to do that in programmatic way? We currently use
 properties. Their huge advantage is that we do not need to care
@@ -65,16 +65,12 @@ the idea of embedding interfaces (dynamically, of course) in the
 GstElement object. Think of an object being able to register an
 indefinate number of interfaces per object instance, and a client
 application could then enumerate interfaces and instantiate one.
-The API would then look like this:
-
-void gst_element_register_interface (GstElement       *element,
-				     const gchar      *name,
-				     GstInterfaceFunc  func);
-
-const GList *gst_element_list_interfaces (GstElement *element);
-
-GstInterface *gst_element_get_interface (GstElement  *element,
-					 const gchar *name);
+Glib gives us GInterface for this purpose. The disadvantage of
+this is that it's on a per-class basis, not a per-instance basis.
+This is a problem in case of elements where it depends on several
+properties whether it supports an interface or not. This can be
+solved by simply making one generic virtual function "supported ()"
+in a generic derived object of GInterface (GstInterface?).
 
 GstInterface is then a generic thing that is inherited by specific
 interfaces (see examples). Obviously, the client will need to know
@@ -89,19 +85,12 @@ useful currently, so this'd make them a lot more interesting).
 These interfaces inherit from GstInterface. The functions that
 are needed, can be provided through a class object. The element is
 then responsible for storing variables and so on. gstvideo/audio
-provides wrapper functions for the class functions.
+provides wrapper functions for the class functions. That's also how
+glib suggest us to use GInterfaces.
 
-For the plugin, it's then as simple as can be. The class_init
-function sets the virtual functions in the interface class object,
-and the instance_init function registers the object per created
-element. The get_interface() handler refs this interface and
-returns it. The application unrefs it when it's done. The
-appropriate functions will be called by the application when it
-thinks it needs to. Perfectly simple!
-
-For applictions, it's even simpler. Request an interface and use
-it as documented. When you're done, unref it. It's just like
-elements: simple!
+Plugin and application then handle and retrieve interfaces as
+documented in the glib documentation, which is available at:
+http://www.gnome.org/~mathieu/gobject/main.html
 
 So the most important part left is to document the interfaces
 and make sure all elements exporting them work equally. For this,
@@ -111,12 +100,40 @@ I'll give two examples.
 ===========
 
 typedef struct _GstInterface {
-  GObject object;
+  /* dummy */
 } GstInterface;
 
 typedef struct _GstInterfaceClass {
-  GObjectClass klass;
-} GstInterfaceClass; 
+  GTypeInterface parent;
+
+  gboolean (* supported) (GstInterface *iface);
+} GstInterfaceClass;
+
+There would probably be a convenience function that checks
+a specific interface's implementation (glib allows for this)
+and checks for ->supported () to be set and to return TRUE:
+
+gboolean
+gst_element_implements_interface (GstElement *element,
+				  GType       iface_type)
+{
+  if (G_TYPE_CHECK_INSTANCE_TYPE (G_OBJECT (element),
+				  type)) {
+    GstInterface *iface;
+    GstInterfaceClass *ifclass;
+
+    iface = G_TYPE_CHECK_INSTANCE_CAST (G_OBJECT (element),
+					type, GstInterface)
+    ifclass = GST_INTERFACE_GET_CLASS (iface);
+
+    if (ifclass->supported != NULL &&
+        ifclass->supported (iface) == TRUE) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
 
 4a) mixer
 ---------
@@ -187,49 +204,19 @@ typedef struct _GstOssMixerClass {
 [..]
 
 static void
-gst_ossmixer_class_init (GstOssMixerClass *klass)
-{
-  GstMixerClass *mix_klass = (GstMixerClass *) klass;
-
-  [.. set virtual functions to their oss/mixer counterparts here ..]
-}
-
-[..]
-
-static void
 gst_osssrc_init (GstOssSrc *osssrc)
 {
+  GstOssMixer *mixer = GST_OSS_MIXER (osssrc);
 [..]
-  gst_element_register_interface (GST_ELEMENT (osssrc),
-				  "mixer",
-				  gst_osssrc_get_interface);
+  mixer->element = GST_ELEMENT (osssrc);
 [..]
 }
 
-static GstInterface *
-gst_osssrc_get_interface (GstElement  *element,
-			  const gchar *name)
-{
-  GstOssMixer *mixer;
+The rest is done automatically, as described in the already-
+mentioned glib documentation for GInterface.
 
-  g_assert (strcmp (name, "mixer") == 0);
-
-  mixer = g_object_new (GST_TYPE_OSS_MIXER, NULL);
-  mixer->element = element;
-[..]
-
-  return (GstInterface *) mixer;
-}
-
-And yes, that's quite a piece of code, but you didn't expect
-that we could make a mixer in five lines of code, did you?
-However, applications now *can*!
-
-There might be some refcounting issues here: get_interface ()
-should ref () the element, and we should set a mixer dispose
-handler to unref () it again. Then, too, we could add a pointer
-to the file descriptor in the osssrc/osssink, too, and we'd
-have full access to the device.
+We could add a pointer to the file descriptor in the
+osssrc/osssink, too, and we'd have full access to the device.
 However, that's implementation. Let's first worry about general
 design.
 
