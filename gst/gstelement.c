@@ -849,13 +849,15 @@ gst_element_get_time (GstElement * element)
 /**
  * gst_element_wait:
  * @element: element that should wait
- * @timestamp: wait until this time has arrived
+ * @timestamp: what timestamp to wait on
  *
- * Waits until the given time has arrived. When this function returns successfully, 
- * the time specified in the timestamp has passed.
- * <note>This function can only be called on elements in #GST_STATE_PLAYING</note>
+ * Waits until the given relative time stamp for the element has arrived.
+ * When this function returns successfully, the relative time point specified
+ * in the timestamp has passed for this element.
+ * <note>This function can only be called on elements in
+ * #GST_STATE_PLAYING</note>
  *
- * Returns: TRUE on success
+ * Returns: TRUE on success.
  */
 gboolean
 gst_element_wait (GstElement * element, GstClockTime timestamp)
