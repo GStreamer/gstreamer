@@ -81,8 +81,8 @@ CVS (using autogen.sh):
 
 Required tools:
 ===============
-autoconf v2.13 or better, 2.52 prefered
-automake v1.4 or better, 1.5 prefered
+autoconf 2.52
+automake 1.5
 libtool v1.4 or better
 pkgconfig 0.8.0 (http://www.freedesktop.org/software/pkgconfig/)
 
