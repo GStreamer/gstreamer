@@ -1072,14 +1072,14 @@ dnl ##################################################
 
 infomessages=
 
-if test "x$PLUGINS_USE_SRCDIR" = xyes; then
+if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
   infomessages="$infomessages
-*** Warning: You have configured using the --enable-plugin-srcdir option.
+*** Warning: You have configured using the --enable-plugin-builddir option.
 
 This option is for development purposes only: binaries built with
 it should be used with code in the build tree only.  To build an
-installable version, use ./configure without the --enable-plugin-srcdir
-option.  Note that the autogen.sh script supplies the plugin srcdir
+installable version, use ./configure without the --enable-plugin-builddir
+option.  Note that the autogen.sh script supplies the plugin builddir
 option automatically - it cannot be used to configure installable builds.
 
 "
