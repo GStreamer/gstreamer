@@ -1,3 +1,10 @@
+2003-07-10  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* AUTHORS, NEWS, README, TODO, README-docs, Makefile.am, configure.ac,
+	docs/Makefile.am, docs/NEWS.xml, docs/README.xml, docs/RELNOTES.xml,
+	docs/gst-python.ent.in, docs/notes/release: distcheck and final
+	release prep fixes
+
 2003-07-09  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* configure.ac: check for xmlcatalog for docs build (probably not

@@ -9,9 +9,7 @@ SUBDIRS = gstreamer pkgconfig examples $(SUBDIRS_DOCS)
 DIST_SUBDIRS = gstreamer pkgconfig examples docs
 
 EXTRA_DIST = \
-  gst-python.spec.in gst-python.spec README.docs
-
-CLEANFILES = README NEWS TODO AUTHORS
+	gst-python.spec.in gst-python.spec README-docs
 
 snap:
 	$(MAKE) dist distdir=$(PACKAGE)-`date +"%Y%m%d"`

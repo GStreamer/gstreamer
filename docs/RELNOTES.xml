@@ -20,7 +20,10 @@
 
 <!--=====================================================================-->
 
-<para><ulink url="http://www.gstreamer.net/bindings/python/"/></para>
+<section id="homepage">
+  <title>Gst-Python Homepage</title>
+  <para><ulink url="http://www.gstreamer.net/bindings/python/"/></para>
+</section>
 
 <!--=====================================================================-->
 

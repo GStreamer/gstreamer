@@ -40,7 +40,7 @@ dist-docs: $(TOPDOCS)
 
 dist-hook: dist-docs
 	for d in $(TOPDOCS); do \
-		mv $$d ../`basename $$d .txt`; \
+		install -m 444 $$d $(distdir)/../`basename $$d .txt`; \
 	done
 
 # full docs
