@@ -1569,6 +1569,14 @@ gst_value_deserialize (GValue * dest, const gchar * src)
   return FALSE;
 }
 
+enum
+{
+  _GST_TYPE_FOURCC = G_TYPE_RESERVED_USER_FIRST,
+  _GST_TYPE_INT_RANGE,
+  _GST_TYPE_DOUBLE_RANGE,
+  _GST_TYPE_VALUE_LIST
+};
+
 void
 _gst_value_initialize (void)
 {
@@ -1583,6 +1591,9 @@ _gst_value_initialize (void)
     0,
     NULL,
     NULL,
+  };
+  GTypeFundamentalInfo finfo = {
+    0
   };
 
   //const GTypeFundamentalInfo finfo = { G_TYPE_FLAG_DERIVABLE, };
@@ -1612,8 +1623,8 @@ _gst_value_initialize (void)
     };
 
     info.value_table = &value_table;
-    gst_type_fourcc =
-        g_type_register_static (G_TYPE_BOXED, "GstFourcc", &info, 0);
+    gst_type_fourcc = g_type_register_fundamental (g_type_fundamental_next (),
+        "GstFourcc", &info, &finfo, 0);
     gst_value.type = gst_type_fourcc;
     gst_value_register (&gst_value);
   }
@@ -1638,7 +1649,8 @@ _gst_value_initialize (void)
 
     info.value_table = &value_table;
     gst_type_int_range =
-        g_type_register_static (G_TYPE_BOXED, "GstIntRange", &info, 0);
+        g_type_register_fundamental (g_type_fundamental_next (), "GstIntRange",
+        &info, &finfo, 0);
     gst_value.type = gst_type_int_range;
     gst_value_register (&gst_value);
   }
@@ -1663,7 +1675,8 @@ _gst_value_initialize (void)
 
     info.value_table = &value_table;
     gst_type_double_range =
-        g_type_register_static (G_TYPE_BOXED, "GstDoubleRange", &info, 0);
+        g_type_register_fundamental (g_type_fundamental_next (),
+        "GstDoubleRange", &info, &finfo, 0);
     gst_value.type = gst_type_double_range;
     gst_value_register (&gst_value);
   }
@@ -1687,8 +1700,8 @@ _gst_value_initialize (void)
     };
 
     info.value_table = &value_table;
-    gst_type_list =
-        g_type_register_static (G_TYPE_BOXED, "GstValueList", &info, 0);
+    gst_type_list = g_type_register_fundamental (g_type_fundamental_next (),
+        "GstValueList", &info, &finfo, 0);
     gst_value.type = gst_type_list;
     gst_value_register (&gst_value);
   }

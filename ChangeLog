@@ -1,3 +1,9 @@
+2004-04-15  David Schleef  <ds@schleef.org>
+
+	* gst/gstvalue.c: (gst_value_serialize_buffer),
+	(gst_value_deserialize_buffer), (_gst_value_initialize):
+	Register these types as fundamental types. (bug #140015)
+
 2004-04-16  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_new),
