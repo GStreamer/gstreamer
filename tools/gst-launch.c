@@ -94,7 +94,7 @@ main(int argc, char *argv[])
   free (malloc (8)); /* -lefence */
 
   gst_init (&argc, &argv);
-
+  
   if (argc >= 3 && !strcmp(argv[1], "-o")) {
     save_pipeline = TRUE;
     run_pipeline = FALSE;
@@ -107,43 +107,29 @@ main(int argc, char *argv[])
   launch_argc = argc;
   launch_argv = argv;
 
-  pipeline = gst_pipeline_new ("launch");
-
-  g_signal_connect (G_OBJECT (pipeline), "event", G_CALLBACK (event_func), NULL);
   /* make a null-terminated version of argv */
   argvn = g_new0 (char *,argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
 
-  /* escape spaces */
-  for (i=0; i<argc-1; i++) {
-    gchar **split;
-
-    split = g_strsplit (argvn[i], " ", 0);
-
-    argvn[i] = g_strjoinv ("\\ ", split);
-    g_strfreev (split);
+  if (strstr (argv[0], "gst-xmllaunch")) {
+//    pipeline = gst_xmllaunch_parse_cmdline (argc, argv);
+  } else {
+    pipeline = (GstElement*) gst_parse_launchv (argvn);
   }
-  /* join the argvs together */
-  cmdline = g_strjoinv (" ", argvn);
-  /* free the null-terminated argv */
-  g_free (argvn);
 
-  /* fail if there are no pipes in it (needs pipes for a pipeline */
-  if (!strchr(cmdline,'!')) {
-    fprintf(stderr,"ERROR: no pipeline description found on commandline\n");
+  if (!pipeline) {
+    fprintf(stderr, "ERROR: pipeline could not be constructed\n");
     exit(1);
   }
-
-  if (gst_parse_launch (cmdline, GST_BIN (pipeline)) < 0){
-    fprintf(stderr,"ERROR: pipeline description could not be parsed\n");
-    exit(1);
-  }
-
+  
+  g_signal_connect (G_OBJECT (pipeline), "event", G_CALLBACK (event_func), NULL);
+  
 #ifndef GST_DISABLE_LOADSAVE
   if (save_pipeline) {
     gst_xml_write_file (GST_ELEMENT (pipeline), fopen (savefile, "w"));
   }
 #endif
+  
   if (run_pipeline) {
     gst_buffer_print_stats();
     fprintf(stderr,"RUNNING pipeline\n");

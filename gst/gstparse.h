@@ -23,7 +23,7 @@
 #ifndef __GST_PARSE_H__
 #define __GST_PARSE_H__
 
-#include <gst/gstbin.h>
+#include <gst/gstpipeline.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,9 +35,11 @@ typedef enum {
   GST_PARSE_ERROR_SYNTAX = -1, 
   GST_PARSE_ERROR_CREATING_ELEMENT = -2,
   GST_PARSE_ERROR_NOSUCH_ELEMENT = -3,
+  GST_PARSE_ERROR_INTERNAL = -4
 } GstParseErrors;
   
-gint	gst_parse_launch	(const gchar *cmdline, GstBin *parent);
+GstPipeline*	gst_parse_launch	(const gchar *pipeline_description);
+GstPipeline*	gst_parse_launchv	(const gchar **argv);
 
 #else /* GST_DISABLE_PARSE */
 

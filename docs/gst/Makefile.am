@@ -48,8 +48,8 @@ extra_files =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
-GTKDOC_CFLAGS = $(GST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS)
-GTKDOC_LIBS = $(GST_LIBS) $(GLIB_LIBS) $(XML_LIBS) $(SCANOBJ_DEPS)
+GTKDOC_CFLAGS = $(GST_CFLAGS)
+GTKDOC_LIBS = $(GST_LIBS) $(SCANOBJ_DEPS)
 
 #	$(shell echo $(top_builddir)/gst/autoplug/*.la) \
 #	$(top_builddir)/gst/types/libgsttypes.la \

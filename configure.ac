@@ -271,8 +271,11 @@ else
   if $HAVE_GTK_DOC; then  
     AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scangobj, true, false)
     if $HAVE_GTK_DOC; then
-      GTK_DOC_SCANOBJ=gtkdoc-scangobj
-    fi;
+      # don't you love undocumented command line options?
+      GTK_DOC_SCANOBJ="gtkdoc-scangobj --nogtkinit"
+    else
+      GTK_DOC_SCANOBJ=false
+    fi
   fi
 
   dnl FIXME: check for  gnome2 - this conditional is currently
