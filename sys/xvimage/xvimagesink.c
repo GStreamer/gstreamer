@@ -1485,7 +1485,20 @@ gst_xvimagesink_get_desired_size (GstXOverlay *overlay,
 static void
 gst_xvimagesink_expose (GstXOverlay *overlay)
 {
+  XWindowAttributes attr;
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
+
+  if (!xvimagesink->xwindow)
+    return;
+  
+  /* Update the window geometry */
+  g_mutex_lock (xvimagesink->x_lock);
+  XGetWindowAttributes (xvimagesink->xcontext->disp,
+                        xvimagesink->xwindow->win, &attr);
+  g_mutex_unlock (xvimagesink->x_lock);
+  
+  xvimagesink->xwindow->width = attr.width;
+  xvimagesink->xwindow->height = attr.height;
   
   if (xvimagesink->cur_image) {
     gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->cur_image);
