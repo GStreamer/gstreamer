@@ -31,20 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (avidemux_debug);
 #define GST_CAT_DEFAULT avidemux_debug
 
-/* AviDemux signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-  ARG_STREAMINFO
-      /* FILL ME */
-};
-
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -73,12 +59,7 @@ static gboolean gst_avi_demux_src_convert (GstPad * pad,
 
 static GstElementStateReturn gst_avi_demux_change_state (GstElement * element);
 
-static void gst_avi_demux_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
-
 static GstRiffReadClass *parent_class = NULL;
-
-/*static guint gst_avi_demux_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_avi_demux_get_type (void)
@@ -145,16 +126,10 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
-      g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
-          GST_TYPE_CAPS, G_PARAM_READABLE));
-
   GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux",
       0, "Demuxer for AVI streams");
 
   parent_class = g_type_class_ref (GST_TYPE_RIFF_READ);
-
-  gobject_class->get_property = gst_avi_demux_get_property;
 
   gstelement_class->change_state = gst_avi_demux_change_state;
   gstelement_class->send_event = gst_avi_demux_send_event;
@@ -174,7 +149,6 @@ gst_avi_demux_init (GstAviDemux * avi)
   gst_element_set_loop_function (GST_ELEMENT (avi), gst_avi_demux_loop);
   gst_avi_demux_reset (avi);
 
-  avi->streaminfo = NULL;
   avi->index_entries = NULL;
   memset (&avi->stream, 0, sizeof (avi->stream));
 }
@@ -208,19 +182,6 @@ gst_avi_demux_reset (GstAviDemux * avi)
   avi->us_per_frame = 0;
 
   avi->seek_offset = (guint64) - 1;
-
-  gst_caps_replace (&avi->streaminfo, NULL);
-}
-
-static void
-gst_avi_demux_streaminfo (GstAviDemux * avi)
-{
-  /* compression formats are added later - a bit hacky */
-
-  gst_caps_replace (&avi->streaminfo,
-      gst_caps_new_simple ("application/x-gst-streaminfo", NULL));
-
-  /*g_object_notify(G_OBJECT(avi), "streaminfo"); */
 }
 
 static gst_avi_index_entry *
@@ -341,7 +302,7 @@ gst_avi_demux_src_convert (GstPad * pad,
   /*GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (pad)); */
   avi_stream_context *stream = gst_pad_get_element_private (pad);
 
-  if (stream->strh->type != GST_RIFF_FCC_auds &&
+  if (stream->strh->type == GST_RIFF_FCC_vids &&
       (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
     return FALSE;
 
@@ -444,12 +405,15 @@ gst_avi_demux_handle_src_query (GstPad * pad,
             if (stream->strh->samplesize == 1 && stream->blockalign != 0) {
               *value = stream->current_byte * GST_SECOND /
                   (stream->blockalign * stream->strh->rate);
-            } else if (stream->strh->rate != 0) {
-              *value = (gfloat) stream->current_frame * stream->strh->scale *
-                  GST_SECOND / stream->strh->rate;
             } else if (stream->bitrate != 0) {
               *value = ((gfloat) stream->current_byte) * GST_SECOND /
                   stream->bitrate;
+            } else if (stream->total_frames != 0) {
+              /* calculate timestamps based on video size */
+              guint64 len = demux->us_per_frame * demux->num_frames *
+                  GST_USECOND;
+
+              *value = len * stream->current_frame / stream->total_frames;
             } else {
               *value = 0;
             }
@@ -1289,9 +1253,6 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
   GST_DEBUG ("signaling no more pads");
   gst_element_no_more_pads (GST_ELEMENT (avi));
 
-  /* we've got streaminfo now */
-  g_object_notify (G_OBJECT (avi), "streaminfo");
-
   /* Now, find the data (i.e. skip all junk between header and data) */
   while (1) {
     if (!(tag = gst_riff_peek_tag (riff, NULL)))
@@ -1544,9 +1505,6 @@ gst_avi_demux_change_state (GstElement * element)
   GstAviDemux *avi = GST_AVI_DEMUX (element);
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
-      gst_avi_demux_streaminfo (avi);
-      break;
     case GST_STATE_PAUSED_TO_READY:
       gst_avi_demux_reset (avi);
       break;
@@ -1558,20 +1516,4 @@ gst_avi_demux_change_state (GstElement * element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
-}
-
-static void
-gst_avi_demux_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec)
-{
-  GstAviDemux *avi = GST_AVI_DEMUX (object);
-
-  switch (prop_id) {
-    case ARG_STREAMINFO:
-      g_value_set_boxed (value, avi->streaminfo);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }

@@ -350,7 +350,11 @@ gst_ebml_read_seek (GstEbmlRead * ebml, guint64 offset)
       GST_WARNING ("No discontinuity event after seek - seek failed");
       break;
     } else if (GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
+      GstEventType type = GST_EVENT_TYPE (event);
+
       gst_pad_event_default (ebml->sinkpad, event);
+      if (type == GST_EVENT_EOS || type == GST_EVENT_INTERRUPT)
+        return NULL;
       event = NULL;
     }
   }
@@ -389,8 +393,9 @@ gst_ebml_read_skip (GstEbmlRead * ebml)
     return gst_bytestream_flush (ebml->bs, length);
 
   if (!(event = gst_ebml_read_seek (ebml,
-              gst_bytestream_tell (ebml->bs) + length)))
+              gst_bytestream_tell (ebml->bs) + length))) {
     return FALSE;
+  }
 
   gst_event_unref (event);
 
