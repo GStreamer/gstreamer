@@ -34,7 +34,7 @@
 /* elementfactory information */
 static GstElementDetails gst_auparse_details =
 GST_ELEMENT_DETAILS (".au parser",
-    "Codec/Parser/Audio",
+    "Codec/Demuxer/Audio",
     "Parse an .au file into raw audio",
     "Erik Walthinsen <omega@cse.ogi.edu>");
 
@@ -53,8 +53,8 @@ static GstStaticPadTemplate gst_auparse_src_template =
         GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS "; "  /* 64-bit float is barely supported by gstreamer actually */
         "audio/x-alaw, " "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]; " "audio/x-mulaw, " "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]"        /*"; "
                                                                                                                                                                                    "audio/x-adpcm, "
-                                                                           "layout = (string) { g721, g722, g723_3, g723_5 }" */ )
-                                                                        /* Nothing to decode those ADPCM streams for now */
+                                                                                                                                                                                   "layout = (string) { g721, g722, g723_3, g723_5 }" */ )
+    /* Nothing to decode those ADPCM streams for now */
     );
 
 /* AuParse signals and args */
