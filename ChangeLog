@@ -1,5 +1,10 @@
 2004-03-10  David Schleef  <ds@schleef.org>
 
+	* gst-libs/ext/ffmpeg/patch/asm.diff:  Add a patch that
+	decreases register usage.  (bug #136658)
+
+2004-03-10  David Schleef  <ds@schleef.org>
+
 	* configure.ac: bump gstreamer API number to 0.8
 
 2004-03-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
