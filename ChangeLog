@@ -1,3 +1,13 @@
+2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/glib-gen.mak:
+          add hack rule to touch .Plo files
+	* gst-libs/gst/colorbalance/Makefile.am:
+	* gst-libs/gst/mixer/Makefile.am:
+	* gst-libs/gst/play/Makefile.am:
+	* gst-libs/gst/tuner/Makefile.am:
+          remove glib_root variable
+
 2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream):
