@@ -6023,6 +6023,16 @@ Query the element for the current mime type
 </para>
 
 
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
+<para>
+
+</para>
+
+@: 
+@: 
+@:
+
+
 <!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
 <para>
 
@@ -8991,13 +9001,6 @@ of an element he doesn't need anymore.
 @...: 
 @format: 
 @args...: 
-
-<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_link_get_type ##### -->
 <para>

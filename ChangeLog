@@ -1,3 +1,9 @@
+2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+        * configure.ac:
+          bump to prerelease
+          put back AM_PROG_LIBTOOL to make libtoolize stop complaining
+
 2004-02-04  David Schleef  <ds@schleef.org>
 
 	* docs/random/ds/0.9-suggested-changes: random notes

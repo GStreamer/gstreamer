@@ -105,21 +105,3 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 @Returns: 
 
 
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
-<para>
-
-</para>
-
-@gstxml: the object which received the signal.
-@arg1: 
-@arg2: 
-
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
-<para>
-
-</para>
-
-@: 
-@: 
-@: 
-
