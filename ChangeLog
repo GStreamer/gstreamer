@@ -1,3 +1,16 @@
+2004-05-06  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/Makefile.am:
+	* ext/theora/theora.c: (plugin_init):
+	* ext/theora/theoradec.c: (theora_dec_change_state):
+	* ext/theora/theoraenc.c: (gst_theora_enc_base_init),
+	(gst_theora_enc_class_init), (gst_theora_enc_init),
+	(theora_enc_sink_link), (theora_enc_event), (theora_push_packet),
+	(theora_enc_chain), (theora_enc_change_state),
+	(theora_enc_set_property), (theora_enc_get_property):
+	Added a theora encoder, grouped the encoder and decoder into the
+	same plugin.
+
 2004-05-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_get_type),
