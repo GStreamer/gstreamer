@@ -94,7 +94,7 @@ static GstPad *gst_avi_decoder_get_audio_srcpad_MPEG(GstAviDecoder *avi_decoder,
   gst_bin_add(GST_BIN(gst_object_get_parent(GST_OBJECT(avi_decoder))), decode);
 
   newpad = gst_pad_new("video", GST_PAD_SRC);
-  gst_pad_set_parent(newpad, GST_OBJECT(avi_decoder));
+  gst_pad_set_parent(newpad, GST_ELEMENT(avi_decoder));
 
   sinkpad = gst_element_get_pad(parse_audio,"sink");
   gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
@@ -164,11 +164,11 @@ static GstPad *gst_avi_decoder_get_audio_srcpad_winloader(GstAviDecoder *avi_dec
   }
 
   newpad = gst_pad_new("audio", GST_PAD_SINK);
-  gst_pad_set_parent(newpad, GST_OBJECT(avi_decoder));
+  gst_pad_set_parent(newpad, GST_ELEMENT(avi_decoder));
   gst_pad_set_chain_function(newpad, gst_avi_decoder_winloader_audio_chain);
 
   sinkpad = gst_pad_new("audio_00", GST_PAD_SRC);
-  gst_pad_set_parent(sinkpad, GST_OBJECT(avi_decoder));
+  gst_pad_set_parent(sinkpad, GST_ELEMENT(avi_decoder));
   gst_pad_connect(newpad, sinkpad);
   gst_pad_set_chain_function (newpad, GST_RPAD_CHAINFUNC (sinkpad));
 
