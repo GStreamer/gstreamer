@@ -427,6 +427,7 @@ docs/plugins/gstreamer-plugins.types
 docs/manual/Makefile
 docs/fwg/Makefile
 docs/xsl/Makefile
+docs/devhelp/Makefile
 stamp.h
 gstreamer.pc
 gstreamer-uninstalled.pc
