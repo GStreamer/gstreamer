@@ -1622,7 +1622,7 @@ gst_pad_get_caps (GstPad *pad)
             GST_DEBUG_PAD_NAME (realpad), realpad);
 
   if (GST_PAD_CAPS (realpad)) {
-    GST_DEBUG (GST_CAT_CAPS, "using pad real caps");
+    GST_DEBUG (GST_CAT_CAPS, "using pad real caps %p", GST_PAD_CAPS (realpad));
     return GST_PAD_CAPS (realpad);
   }
   else if GST_RPAD_GETCAPSFUNC (realpad) {
@@ -1630,8 +1630,9 @@ gst_pad_get_caps (GstPad *pad)
     return GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD_CAST (realpad), NULL);
   }
   else if (GST_PAD_PAD_TEMPLATE (realpad)) {
-    GST_DEBUG (GST_CAT_CAPS, "using pad template");
-    return GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (realpad));
+    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
+    GST_DEBUG (GST_CAT_CAPS, "using pad template %p with caps %p", templ, GST_PAD_TEMPLATE_CAPS (templ));
+    return GST_PAD_TEMPLATE_CAPS (templ);
   }
   GST_DEBUG (GST_CAT_CAPS, "pad has no caps");
 
@@ -2200,7 +2201,6 @@ gst_pad_template_class_init (GstPadTemplateClass *klass)
                     gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
 
-
   gstobject_class->path_string_separator = "*";
 }
 
@@ -2287,7 +2287,7 @@ gst_pad_template_new (const gchar *name_template,
 
   while (caps) {
     new->fixed &= caps->fixed;
-    thecaps = gst_caps_append (thecaps, caps);
+    thecaps = gst_caps_append (thecaps, gst_caps_ref (caps));
     caps = va_arg (var_args, GstCaps*);
   }
   va_end (var_args);

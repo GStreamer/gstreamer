@@ -65,7 +65,10 @@ extern GType _gst_event_type;
 #define GST_SEEK_FLAGS_MASK	0xfff00000
 
 typedef enum {
-  GST_EVENT_FLAG_NONE = 0
+  GST_EVENT_FLAG_NONE 		= 0,
+
+  /* indicates negative rates are supported */
+  GST_RATE_FLAG_NEGATIVE  	= (1 << 1) 
 } GstEventFlag;
 
 typedef struct
@@ -87,14 +90,19 @@ functionname (GstPad *pad)                            	\
 
 /* seek events, extends GstEventFlag */
 typedef enum {
+  /* | with some format */
+  /* | with one of these */
   GST_SEEK_METHOD_CUR		= (1 << (GST_SEEK_METHOD_SHIFT + 0)),
   GST_SEEK_METHOD_SET		= (1 << (GST_SEEK_METHOD_SHIFT + 1)),
   GST_SEEK_METHOD_END		= (1 << (GST_SEEK_METHOD_SHIFT + 2)),
 
+  /* | with optional seek flags */
+  /* seek flags */
   GST_SEEK_FLAG_FLUSH		= (1 << (GST_SEEK_FLAGS_SHIFT + 0)),
   GST_SEEK_FLAG_ACCURATE	= (1 << (GST_SEEK_FLAGS_SHIFT + 1)),
   GST_SEEK_FLAG_KEY_UNIT	= (1 << (GST_SEEK_FLAGS_SHIFT + 2)),
-  GST_SEEK_FLAG_SEGMENT_LOOP	= (1 << (GST_SEEK_FLAGS_SHIFT + 3))
+  GST_SEEK_FLAG_SEGMENT_LOOP	= (1 << (GST_SEEK_FLAGS_SHIFT + 3)),
+	
 } GstSeekType;
 
 typedef enum {
@@ -169,7 +177,9 @@ GstEvent*	gst_event_new	        	(GstEventType type);
 
 /* seek event */
 GstEvent*	gst_event_new_seek		(GstSeekType type, gint64 offset);
-GstEvent*	gst_event_new_segment_seek	(GstSeekType type, gint64 start, gint64 stop);
+
+GstEvent* 	gst_event_new_segment_seek 	(GstSeekType type, gint64 start, gint64 stop);
+
 
 /* size events */
 GstEvent*	gst_event_new_size		(GstFormat format, gint64 value);

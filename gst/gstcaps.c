@@ -132,7 +132,7 @@ gst_caps_destroy (GstCaps *caps)
 
   if (caps == NULL)
     return;
-  
+
   next = caps->next;
 
   gst_props_unref (caps->properties);
