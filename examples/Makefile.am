@@ -10,5 +10,5 @@ else
 GTK_SUBDIRS=
 endif
 
-SUBDIRS=$(GTK_SUBDIRS) gstplay
-DIST_SUBDIRS=capsfilter dynparams seeking indexing gstplay
+SUBDIRS=$(GTK_SUBDIRS) gstplay switch
+DIST_SUBDIRS=capsfilter dynparams seeking indexing gstplay switch
