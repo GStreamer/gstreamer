@@ -1,11 +1,7 @@
 from common import gst, unittest
 
-try:
-    from gst import interfaces
-except:
-    raise SystemExit
-
 import gobject
+from gst import interfaces
 
 class Availability(unittest.TestCase):
     def testXOverlay(self):
@@ -16,13 +12,12 @@ class Availability(unittest.TestCase):
         assert hasattr(interfaces, 'Mixer')
         assert issubclass(interfaces.Mixer, gobject.GInterface)
 
-if getattr(gobject, 'pygtk_version', ()) >= (2,3,92):
-    class FunctionCall(unittest.TestCase):
-        def testXOverlay(self):
-            element = gst.Element('xvimagesink')
-            assert isinstance(element, gst.Element)
-            assert isinstance(element, interfaces.XOverlay)
-            element.set_xwindow_id(0L)
+class FunctionCall(unittest.TestCase):
+    def testXOverlay(self):
+        element = gst.element_factory_make('xvimagesink')
+        assert isinstance(element, gst.Element)
+        assert isinstance(element, interfaces.XOverlay)
+        element.set_xwindow_id(0L)
         
 if __name__ == "__main__":
     unittest.main()

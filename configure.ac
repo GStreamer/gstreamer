@@ -23,7 +23,7 @@ dnl Add parameters for aclocal
 ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
 dnl required versions of other packages
-AC_SUBST(PYGTK_REQ, 2.0.0)
+AC_SUBST(PYGTK_REQ, 2.4.0)
 AC_SUBST(GLIB_REQ,  2.0.0)
 AC_SUBST(GTK_REQ,   2.0.0)
 AC_SUBST(GST_REQ,   0.8.0)
@@ -60,11 +60,6 @@ AC_SUBST(GST_LIBS)
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
 AC_SUBST(PYGTK_CFLAGS)
-
-PKG_CHECK_MODULES(_UNUSED_NEW_PYGTK, pygtk-2.0 >= 2.3.92, ,HAVE_OLD_PYGTK="yes")
-if test "x$HAVE_OLD_PYGTK" = "xyes"; then
-  AC_DEFINE_UNQUOTED(HAVE_OLD_PYGTK, 1, [Defined if we have an old version of PyGTK])
-fi
 
 AC_MSG_CHECKING(for pygtk defs)
 PYGTK_DEFSDIR=`$PKG_CONFIG --variable=defsdir pygtk-2.0`
