@@ -27,24 +27,24 @@ G_BEGIN_DECLS
 typedef struct _GstByteStream GstByteStream;
 
 struct _GstByteStream {
-  GstPad *pad;
+  GstPad 	*pad;
 
-  GstEvent *    event;
+  GstEvent 	*event;
 
   GSList 	*buflist;
-  guint32 	headbufavail;
-  guint32 	listavail;
+  guint32 	 headbufavail;
+  guint32 	 listavail;
 
   /* we keep state of assembled pieces */
   guint8	*assembled;
-  guint32	assembled_len;
+  guint32	 assembled_len;
 
   /* this is needed for gst_bytestream_tell */
-  guint64	offset;
-  guint64	last_ts;
+  guint64	 offset;
+  guint64	 last_ts;
 
   /* if we are in the seek state (waiting for DISCONT) */
-  gboolean	in_seek;
+  gboolean	 in_seek;
 };
 
 GstByteStream*		gst_bytestream_new		(GstPad *pad);
