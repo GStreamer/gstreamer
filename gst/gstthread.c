@@ -125,7 +125,7 @@ gst_thread_class_init (GstThreadClass *klass)
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR (gst_thread_save_thyself);
-  gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR gst_thread_restore_thyself);
+  gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR(gst_thread_restore_thyself);
 #endif
 
   gstelement_class->change_state =	GST_DEBUG_FUNCPTR (gst_thread_change_state);
