@@ -479,7 +479,7 @@ dvdsrc_loop (GstElement *element)
           if( len == 0 ) {
               fprintf( stderr, "Read failed for block %d\n", priv->cur_pack );
               _close(priv);
-              gst_element_signal_eos (GST_ELEMENT (dvdsrc));
+              gst_element_set_eos (GST_ELEMENT (dvdsrc));
               return;
           }
           assert( is_nav_pack( data ) );
@@ -531,7 +531,7 @@ dvdsrc_loop (GstElement *element)
               fprintf( stderr, "Read failed for %d blocks at %d\n",
                        cur_output_size, priv->cur_pack );
               _close(priv);
-              gst_element_signal_eos (GST_ELEMENT (dvdsrc));
+              gst_element_set_eos (GST_ELEMENT (dvdsrc));
               return;
           }
 

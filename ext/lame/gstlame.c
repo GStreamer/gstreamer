@@ -365,8 +365,8 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_CONNECT_REFUSED;
   }
 
-  lame->samplerate = gst_caps_get_int (caps, "rate");
-  lame->num_channels = gst_caps_get_int (caps, "channels");
+  gst_caps_get_int (caps, "rate", &lame->samplerate);
+  gst_caps_get_int (caps, "channels", &lame->num_channels);
 
   g_object_freeze_notify (G_OBJECT (lame));
   g_object_notify (G_OBJECT (lame), "frequency");

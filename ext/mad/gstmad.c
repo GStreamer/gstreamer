@@ -54,9 +54,12 @@ struct _GstMad {
   guint64 sync_point; 
   guint64 total_samples; /* the number of samples since the sync point */
 
+  gint64 seek_point;
+
   /* info */
   struct mad_header header;
   gboolean new_header;
+  gboolean can_seek;
   gint channels;
   guint framecount;
   gint vbr_average; /* average bitrate */
@@ -137,6 +140,8 @@ static void		gst_mad_set_property	(GObject *object, guint prop_id,
 						 const GValue *value, GParamSpec *pspec);
 static void		gst_mad_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
+
+static gboolean 	gst_mad_src_event 	(GstPad *pad, GstEvent *event);
 
 static void 		gst_mad_chain 		(GstPad *pad, GstBuffer *buffer);
 
@@ -228,6 +233,7 @@ gst_mad_init (GstMad *mad)
   mad->srcpad = gst_pad_new_from_template(
 		  GST_PADTEMPLATE_GET (mad_src_template_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mad),mad->srcpad);
+  gst_pad_set_event_function (mad->srcpad, GST_DEBUG_FUNCPTR(gst_mad_src_event));
 
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
   mad->tempsize = 0;
@@ -250,6 +256,30 @@ gst_mad_dispose (GObject *object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
   g_free (mad->tempbuffer);
+}
+
+static gboolean
+gst_mad_src_event (GstPad *pad, GstEvent *event)
+{
+  gboolean res = TRUE;
+  GstMad *mad;
+	    
+  mad = GST_MAD (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      if (mad->can_seek) {
+	mad->seek_point = GST_EVENT_SEEK_OFFSET (event);
+      }
+      else {
+	res = FALSE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return res;
 }
 
 static inline signed int 
@@ -385,6 +415,10 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
     gst_buffer_unref (buffer);
     return;
   }
+  if (mad->sync_point == 0 && GST_BUFFER_TIMESTAMP (buffer) != -1) {
+    mad->sync_point = GST_BUFFER_TIMESTAMP (buffer);
+    mad->total_samples = 0;
+  }
 
   while (size > 0) {
     gint tocopy;
@@ -408,6 +442,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       mad_fixed_t const *left_ch, *right_ch;
       GstBuffer *outbuffer;
       gint16 *outdata;
+      guint pad_slot, N;
 
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
 
@@ -420,10 +455,23 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
           gst_element_error (GST_ELEMENT (mad), "fatal error decoding stream");
           return;
         }
-	else {
-	  goto next;
-	}
+	/* recoverable errors pass */
       }
+
+      /* calculate beginning of next frame */
+      pad_slot = (mad->frame.header.flags & MAD_FLAG_PADDING) ? 1 : 0;
+
+      if (mad->frame.header.layer == MAD_LAYER_I)
+        N = ((12 * mad->frame.header.bitrate / mad->frame.header.samplerate) + pad_slot) * 4;
+      else {
+        unsigned int slots_per_frame;
+
+        slots_per_frame = (mad->frame.header.layer == MAD_LAYER_III &&
+                           (mad->frame.header.flags & MAD_FLAG_LSF_EXT)) ? 72 : 144;
+
+        N = (slots_per_frame * mad->frame.header.bitrate / mad->frame.header.samplerate) + pad_slot;
+      }
+
       mad_synth_frame (&mad->synth, &mad->frame);
 
       nchannels = MAD_NCHANNELS (&mad->frame.header);
@@ -431,7 +479,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       left_ch   = mad->synth.pcm.samples[0];
       right_ch  = mad->synth.pcm.samples[1];
 
-      mad->total_samples += nsamples;
+      /* at this point we can accept seek events */
+      mad->can_seek = TRUE;
 
       gst_mad_update_info (mad, &mad->frame.header);
 
@@ -439,14 +488,11 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       outdata = (gint16 *) GST_BUFFER_DATA (outbuffer) = g_malloc (nsamples * nchannels * 2);
       GST_BUFFER_SIZE (outbuffer) = nsamples * nchannels * 2;
 
-      if (GST_BUFFER_TIMESTAMP (buffer) != -1) {
-        if (GST_BUFFER_TIMESTAMP (buffer) > mad->sync_point) {
-          mad->sync_point = GST_BUFFER_TIMESTAMP (buffer);
-	  mad->total_samples = 0;
-	}
-      }
+
       GST_BUFFER_TIMESTAMP (outbuffer) = mad->sync_point + 
 	      				 mad->total_samples * 1000000LL / mad->frame.header.samplerate;
+
+      mad->total_samples += nsamples;
 
       /* end of new bit */
       while (nsamples--) {
@@ -482,13 +528,20 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       }
 
       gst_pad_push (mad->srcpad, outbuffer);
-next:
+
       /* figure out how many bytes mad consumed */
       consumed = mad->stream.next_frame - mad_input_buffer;
 
       /* move out pointer to where mad want the next data */
       mad_input_buffer += consumed;
       mad->tempsize -= consumed;
+
+      if (GST_BUFFER_TIMESTAMP (buffer) != -1) {
+        if (GST_BUFFER_TIMESTAMP (buffer) > mad->sync_point) {
+          mad->sync_point = GST_BUFFER_TIMESTAMP (buffer);
+          mad->total_samples = 0;
+        }
+      }
     }
     memmove (mad->tempbuffer, mad_input_buffer, mad->tempsize);
   }
@@ -510,7 +563,8 @@ gst_mad_change_state (GstElement *element)
       mad_stream_init (&mad->stream);
       mad_frame_init (&mad->frame);
       mad_synth_init (&mad->synth);
-      mad->tempsize=0;
+      mad->tempsize = 0;
+      mad->can_seek = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* do something to get out of the chain function faster */
@@ -521,6 +575,8 @@ gst_mad_change_state (GstElement *element)
       mad_synth_finish (&mad->synth);
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
+      mad->sync_point = 0;
+      mad->can_seek = FALSE;
       break;
     case GST_STATE_READY_TO_NULL:
       break;

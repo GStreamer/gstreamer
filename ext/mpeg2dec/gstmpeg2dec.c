@@ -219,7 +219,7 @@ gst_mpeg2dec_vo_frame_draw (vo_frame_t * frame)
     g_object_notify (G_OBJECT (mpeg2dec), "frame_rate");
   }
 
-  pts = mpeg2dec->next_time;
+  pts = mpeg2dec->next_time - 3 * (1000000LL/video_rates[mpeg2dec->decoder->frame_rate_code]);
 
   GST_BUFFER_TIMESTAMP (_frame->buffer) = pts;
 
