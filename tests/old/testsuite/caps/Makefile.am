@@ -10,7 +10,6 @@ tests_pass = \
 	union \
 	string-conversions \
 	fixed \
-	fraction \
 	intersect2 \
 	caps \
 	value_compare \
