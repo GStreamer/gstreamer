@@ -223,7 +223,7 @@ gst_avimux_class_init (GstAviMuxClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FRAMERATE,
     g_param_spec_double("framerate","Framerate","Frames/sec",
-    G_MINDOUBLE,G_MAXDOUBLE,0,G_PARAM_READWRITE));
+    G_MINDOUBLE,G_MAXDOUBLE,25.0,G_PARAM_READWRITE));
 
   gstelement_class->request_new_pad = gst_avimux_request_new_pad;
 
