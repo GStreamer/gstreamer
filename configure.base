@@ -633,9 +633,11 @@ AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLACLIB=no)
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
-AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
-AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
-AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
+
+dnl FIXME can somebody add $GLIB_CFLAGS to the CFLAGS for these next checks?
+dnl AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl Check for libraw1394
 AC_MSG_CHECKING(raw1394 library)
@@ -972,6 +974,10 @@ if test "x$HAVE_LIBGSM" = xyes; then
   AC_DEFINE(HAVE_LIBGSM)
 fi
 
+if test "x$HAVE_LIBRTP" = xyes; then
+  AC_DEFINE(HAVE_LIBRTP)
+fi
+
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -1107,7 +1113,6 @@ dnl #########################
 dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
-dnl wtay fix this: testsuite/threads/Makefile
 SUBSTFOR configure.ac:AC_OUTPUT(
 SUBSTFOR configure.ac:Makefile
 SUBSTFOR configure.in:AC_OUTPUT([Makefile
@@ -1244,6 +1249,7 @@ testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
 testsuite/refcounting/Makefile
 testsuite/plugin/Makefile
+testsuite/threads/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile
