@@ -1,3 +1,10 @@
+2004-07-27  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/silence/gstsilence.c: (gst_silence_init), (gst_silence_link),
+	(gst_silence_get):
+	* gst/silence/gstsilence.h:
+	fix silence generation for 16bit raw audio
+
 2004-07-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/matroska/matroska-demux.c:
