@@ -1,3 +1,14 @@
+2005-01-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/tmpl/gstcontrol.sgml:
+	* gst/gstbuffer.h:
+	* gst/gsttag.h:
+	* gst/gstvalue.c:
+      added docs for the TAG defines
+
 2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/schedulers/gstoptimalscheduler.c: (schedule_group):

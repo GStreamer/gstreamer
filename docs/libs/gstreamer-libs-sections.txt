@@ -127,6 +127,7 @@ gst_dp_validate_packet
 <INCLUDE>libs/control/control.h</INCLUDE>
 gst_control_init
 <SUBSECTION Dynamic Parameter Manager>
+GstDParamManager
 gst_dpman_new
 gst_dpman_add_required_dparam_callback
 gst_dpman_add_required_dparam_direct
@@ -145,6 +146,7 @@ gst_dpman_set_parent
 gst_dpman_get_manager
 gst_dpman_bypass_dparam
 <SUBSECTION Dynamic Parameters>
+GstDParam
 gst_dparam_new
 gst_dparam_attach
 gst_dparam_detach

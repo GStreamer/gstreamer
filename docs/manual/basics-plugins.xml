@@ -66,12 +66,13 @@ struct _GstPlugin {
 
   <para> 
     You can query a <classname>GList</classname> of available plugins with the
-    function <function>gst_plugin_get_list</function> as this example shows:
+    function <function>gst_registry_pool_plugin_list</function> as this example
+    shows:
   </para> 
   <programlisting>
     GList *plugins;
     
-    plugins = gst_plugin_get_list ();
+    plugins = gst_registry_pool_plugin_list ();
 
     while (plugins) {
       GstPlugin *plugin = (GstPlugin *)plugins-&gt;data;

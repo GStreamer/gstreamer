@@ -84,7 +84,8 @@ extern GType _gst_buffer_type;
  * @GST_BUFFER_KEY_UNIT: the buffer holds a key unit, a unit that can be
  * decoded independently of other buffers.
  * This flag has been deprecated, see #GST_BUFFER_DELTA_UNIT.
- * @GST_BUFFER_DONTKEEP:
+ * @GST_BUFFER_DONTKEEP: the buffer should not be ref()ed, but copied instead
+ * before doing anything with it (for specially allocated hw buffers and such)
  * @GST_BUFFER_IN_CAPS: the buffer has been added as a field in a #GstCaps.
  * @GST_BUFFER_DELTA_UNIT: this unit cannot be decoded independently.
  * Since 0.8.5
@@ -98,7 +99,7 @@ typedef enum {
   GST_BUFFER_ORIGINAL,
   GST_BUFFER_DONTFREE,
   GST_BUFFER_KEY_UNIT,		/* deprecated, use reverse DELTA_UNIT */
-  GST_BUFFER_DONTKEEP,
+  GST_BUFFER_DONTKEEP,    /* FIXME: is this deprecated ? there is no reference in gstreamer, gst-plugins */
   GST_BUFFER_IN_CAPS,
   GST_BUFFER_DELTA_UNIT,	/* this unit depends on a previous unit */
   GST_BUFFER_FLAG_LAST	= GST_DATA_FLAG_LAST + 8

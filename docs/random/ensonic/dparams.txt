@@ -18,4 +18,10 @@ $Id$
   * state of unitconvert
   * state of sychronous params
 
-* concept for global, voice params
+* dparams ng
+  * concept for global, voice params
+    one plugin instance can repeate the processing for the same input, but with
+    different parameter sets (sound synthesizers, effects)
+  * based on gobject params, so that e.g. the GUI can connect to "notify:param"
+    events and update the GUI
+

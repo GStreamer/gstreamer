@@ -42,6 +42,20 @@ The next step is to get hold of the GstDParamManager instance of a GstElement.
 @argv: 
 
 
+<!-- ##### STRUCT GstDParamManager ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GstDParamManager::new-required-dparam ##### -->
+<para>
+
+</para>
+
+@gstdparammanager: the object which received the signal.
+@arg1: 
+
 <!-- ##### FUNCTION gst_dpman_new ##### -->
 <para>
 
@@ -219,6 +233,39 @@ The next step is to get hold of the GstDParamManager instance of a GstElement.
 @dpman: 
 @dparam_name: 
 
+
+<!-- ##### STRUCT GstDParam ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GstDParam::value-changed ##### -->
+<para>
+
+</para>
+
+@gstdparam: the object which received the signal.
+
+<!-- ##### ARG GstDParam:value-double ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstDParam:value-float ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstDParam:value-int ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstDParam:value-int64 ##### -->
+<para>
+
+</para>
 
 <!-- ##### FUNCTION gst_dparam_new ##### -->
 <para>

@@ -6,18 +6,19 @@ Container for features loaded from a shared object module
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GStreamer is extensible, so <classname>GstElements</classname> can be loaded at runtime. A plugin
-system can provide one or more of the basic <application>GStreamer</application> 
+GStreamer is extensible, so <classname>GstElements</classname> can be loaded at runtime.
+A plugin system can provide one or more of the basic <application>GStreamer</application>
 #GstPluginFeature subclasses.
 </para>
 <para>
-A plugin should export a symbol <symbol>plugin_desc</symbol> that is a struct of type #GstPluginDesc. 
+A plugin should export a symbol <symbol>plugin_desc</symbol> that is a struct of type #GstPluginDesc.
 the plugin loader will check the version of the core library the plugin was linked against
 and will create a new #GstPlugin. It will then call the #GstPluginInitFunc function
 that was provided in the plugin_desc.
 </para>
 <para>
-Once you have a handle to a #GstPlugin, you can add any object that subclasses #GstPluginFeature.
+Once you have a handle to a #GstPlugin (e.g. from the #GstRegistryPool), you can
+add any object that subclasses #GstPluginFeature.
 </para>
 <para>
 Use gst_plugin_find_feature() and gst_plugin_get_feature_list() to find features in a plugin.

@@ -2037,7 +2037,7 @@ gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
  * type, or if there is a method (registered by
  * #gst_value_register_intersection_func) to calculate the intersection.
  *
- * Returns:
+ * Returns: TRUE if the values can intersect
  */
 gboolean
 gst_value_can_intersect (const GValue * value1, const GValue * value2)
