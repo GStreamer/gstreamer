@@ -167,6 +167,40 @@ gst_gconf_get_default_video_sink (void)
   return ret;
 }
 
+GstElement *
+gst_gconf_get_default_audio_src (void)
+{
+  GstElement *ret = gst_gconf_render_bin_from_key ("default/audiosrc");
+  
+  if (!ret) {
+    ret = gst_element_factory_make ("osssrc", NULL);
+  
+    if (!ret)
+      g_warning ("No GConf default audio src key and osssrc doesn't work");
+    else
+      g_warning ("GConf audio src not found, using osssrc");
+  }
+
+  return ret;
+}
+
+GstElement *
+gst_gconf_get_default_video_src (void)
+{
+  GstElement *ret = gst_gconf_render_bin_from_key ("default/videosrc");
+  
+  if (!ret) {
+    ret = gst_element_factory_make ("videotestsrc", NULL);
+  
+    if (!ret)
+      g_warning ("No GConf default video src key and videotestrc doesn't work");
+    else
+      g_warning ("GConf video src not found, using videotestrc");
+  }
+
+  return ret;
+}
+
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
