@@ -136,8 +136,8 @@ static void	dxr3audiosink_set_scr		(Dxr3AudioSink *sink,
 
 static gboolean dxr3audiosink_handle_event      (GstPad *pad,
                                                  GstEvent *event);
-static void	dxr3audiosink_chain_pcm		(GstPad *pad,GstBuffer *buf);
-static void	dxr3audiosink_chain_ac3		(GstPad *pad, GstBuffer *buf);
+static void	dxr3audiosink_chain_pcm		(GstPad *pad,GstData *buf);
+static void	dxr3audiosink_chain_ac3		(GstPad *pad, GstData *buf);
 
 /* static void	dxr3audiosink_wait		(Dxr3AudioSink *sink, */
 /*                                                  GstClockTime time); */
@@ -571,21 +571,24 @@ dxr3audiosink_handle_event (GstPad *pad, GstEvent *event)
 
 
 static void 
-dxr3audiosink_chain_pcm (GstPad *pad, GstBuffer *buf) 
+dxr3audiosink_chain_pcm (GstPad *pad, GstData *_data) 
 {
   Dxr3AudioSink *sink;
   gint bytes_written = 0;
+  GstBuffer *buf;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (_data != NULL);
 
   sink = DXR3AUDIOSINK (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (buf)) {
-    dxr3audiosink_handle_event (pad, GST_EVENT (buf));
+  if (GST_IS_EVENT (_data)) {
+    dxr3audiosink_handle_event (pad, GST_EVENT (_data));
     return;
   }
+
+  buf = GST_BUFFER (_data);
 
   if (sink->mode != DXR3AUDIOSINK_MODE_PCM) {
     /* Switch to PCM mode. */
@@ -633,21 +636,24 @@ dxr3audiosink_chain_pcm (GstPad *pad, GstBuffer *buf)
 
 
 static void 
-dxr3audiosink_chain_ac3 (GstPad *pad, GstBuffer *buf) 
+dxr3audiosink_chain_ac3 (GstPad *pad, GstData *_data) 
 {
   Dxr3AudioSink *sink;
   gint bytes_written = 0;
+  GstBuffer *buf;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (_data != NULL);
 
   sink = DXR3AUDIOSINK (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (buf)) {
-    dxr3audiosink_handle_event (pad, GST_EVENT (buf));
+  if (GST_IS_EVENT (_data)) {
+    dxr3audiosink_handle_event (pad, GST_EVENT (_data));
     return;
   }
+
+  buf = GST_BUFFER (_data);
 
   if (sink->mode != DXR3AUDIOSINK_MODE_AC3) {
     /* Switch to AC3 mode. */
