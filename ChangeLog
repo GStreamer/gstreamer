@@ -1,3 +1,8 @@
+2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/alsa/Makefile.am:
+          these are user test apps, not automatic testsuite tests
+
 2004-02-04  David Schleef  <ds@schleef.org>
 
 	Convert GST_DEBUG_CAPS() to GST_DEBUG():
