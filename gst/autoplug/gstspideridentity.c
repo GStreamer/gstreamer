@@ -490,9 +490,10 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   buf = gst_pad_pull (ident->sink);
   
   /* if it's an event... */
-  if (GST_IS_EVENT (buf)) {
+  while (GST_IS_EVENT (buf)) {
     /* handle DISCONT events, please */
     gst_pad_event_default (ident->sink, GST_EVENT (buf));
+    buf = gst_pad_pull (ident->sink);
   } 
 
   /* add it to the end of the cache */
