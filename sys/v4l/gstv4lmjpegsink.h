@@ -1,5 +1,5 @@
 /* G-Streamer hardware MJPEG video sink plugin
- * Copyright (C) 2001 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -71,6 +71,7 @@ struct _GstV4lMjpegSink {
   /* width/height/norm of the jpeg stream */
   gint width;
   gint height;
+  gint norm;
 
   /* cache values */
   gint x_offset;

@@ -1,5 +1,5 @@
 /* G-Streamer hardware MJPEG video sink plugin
- * Copyright (C) 2001 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -185,13 +185,13 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
   v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
 
   /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (vscapslist))
+  if (!GST_CAPS_IS_FIXED (vscapslist) || !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsink)))
     return GST_PAD_CONNECT_DELAYED;
 
-  for (caps = capslist; caps != NULL; caps = vscapslist = vscapslist->next)
+  for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
-    v4lmjpegsink->width =  gst_caps_get_int (caps, "width");
-    v4lmjpegsink->height =  gst_caps_get_int (caps, "height");
+    v4lmjpegsink->width = gst_caps_get_int (caps, "width");
+    v4lmjpegsink->height = gst_caps_get_int (caps, "height");
 
     if (!gst_v4lmjpegsink_set_playback(v4lmjpegsink,
          v4lmjpegsink->width, v4lmjpegsink->height,
@@ -206,8 +206,6 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
   }
 
   /* if we got here - it's not good */
-  gst_element_error(GST_ELEMENT(v4lmjpegsink),
-    "Failed to find acceptable caps");
   return GST_PAD_CONNECT_REFUSED;
 }
 

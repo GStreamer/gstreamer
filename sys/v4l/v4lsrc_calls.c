@@ -1,5 +1,5 @@
 /* G-Streamer BT8x8/V4L frame grabber plugin
- * Copyright (C) 2001 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -78,6 +78,12 @@ gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
 
   v4lsrc->mmap.frame = num;
 
+  if (v4lsrc->frame_queued[num] < 0)
+  {
+    v4lsrc->frame_queued[num] = 0;
+    return TRUE;
+  }
+
   if (ioctl(GST_V4LELEMENT(v4lsrc)->video_fd, VIDIOCMCAPTURE, &(v4lsrc->mmap)) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
@@ -86,7 +92,7 @@ gst_v4lsrc_queue_frame (GstV4lSrc *v4lsrc,
     return FALSE;
   }
 
-  v4lsrc->frame_queued[num] = TRUE;
+  v4lsrc->frame_queued[num] = 1;
 
   pthread_mutex_lock(&(v4lsrc->mutex_queued_frames));
   v4lsrc->num_queued_frames++;
@@ -123,6 +129,8 @@ gst_v4lsrc_soft_sync_thread (void *arg)
     pthread_mutex_lock(&(v4lsrc->mutex_queued_frames));
     if (v4lsrc->num_queued_frames < MIN_BUFFERS_QUEUED)
     {
+      if (v4lsrc->frame_queued[frame] < 0)
+        break;
 #ifdef DEBUG
       fprintf(stderr, "Waiting for new frames to be queued (%d < %d)\n",
         v4lsrc->num_queued_frames, MIN_BUFFERS_QUEUED);
@@ -132,11 +140,10 @@ gst_v4lsrc_soft_sync_thread (void *arg)
     }
     pthread_mutex_unlock(&(v4lsrc->mutex_queued_frames));
 
-    /* if still wrong, we got interrupted and we should exit */
-    if (v4lsrc->num_queued_frames < MIN_BUFFERS_QUEUED)
+    if (!v4lsrc->num_queued_frames)
     {
 #ifdef DEBUG
-      fprintf(stderr, "Still not enough frames, quitting...\n");
+      fprintf(stderr, "Got signal to exit...\n");
 #endif
       goto end;
     }
@@ -169,11 +176,12 @@ retry:
       pthread_mutex_unlock(&(v4lsrc->mutex_soft_sync));
     }
 
-    frame = (frame+1)%v4lsrc->mbuf.frames;
-
     pthread_mutex_lock(&(v4lsrc->mutex_queued_frames));
     v4lsrc->num_queued_frames--;
+    v4lsrc->frame_queued[frame] = 0;
     pthread_mutex_unlock(&(v4lsrc->mutex_queued_frames));
+
+    frame = (frame+1)%v4lsrc->mbuf.frames;
   }
 
 end:
@@ -216,8 +224,6 @@ gst_v4lsrc_sync_next_frame (GstV4lSrc *v4lsrc,
     return FALSE;
   v4lsrc->isready_soft_sync[*num] = 0;
   pthread_mutex_unlock(&(v4lsrc->mutex_soft_sync));
-
-  v4lsrc->frame_queued[*num] = FALSE;
 
   return TRUE;
 }
@@ -292,7 +298,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
     v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
 
   /* keep trakc of queued buffers */
-  v4lsrc->frame_queued = (gint *) malloc(sizeof(int) * v4lsrc->mbuf.frames);
+  v4lsrc->frame_queued = (gint8 *) malloc(sizeof(gint8) * v4lsrc->mbuf.frames);
   if (!v4lsrc->frame_queued)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
@@ -301,7 +307,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
     return FALSE;
   }
   for (n=0;n<v4lsrc->mbuf.frames;n++)
-    v4lsrc->frame_queued[n] = FALSE;
+    v4lsrc->frame_queued[n] = 0;
 
   /* init the pthread stuff */
   pthread_mutex_init(&(v4lsrc->mutex_soft_sync), NULL);
@@ -490,11 +496,8 @@ gst_v4lsrc_capture_stop (GstV4lSrc *v4lsrc)
 
   /* we actually need to sync on all queued buffers but not on the non-queued ones */
   for (n=0;n<v4lsrc->mbuf.frames;n++)
-    while (v4lsrc->frame_queued[n])
-      if (!gst_v4lsrc_sync_next_frame(v4lsrc, &num))
-        return FALSE;
+    v4lsrc->frame_queued[n] = -1;
 
-  pthread_cancel(v4lsrc->thread_soft_sync);
   pthread_join(v4lsrc->thread_soft_sync, NULL);
 
   return TRUE;

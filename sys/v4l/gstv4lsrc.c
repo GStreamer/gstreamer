@@ -1,5 +1,5 @@
 /* G-Streamer BT8x8/V4L frame grabber plugin
- * Copyright (C) 2001 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -329,8 +329,6 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
   }
 
   /* still nothing - no good caps */
-  gst_element_error(GST_ELEMENT(v4lsrc),
-    "Failed to find acceptable caps");
   return GST_PAD_CONNECT_REFUSED;
 }
 
@@ -445,7 +443,6 @@ gst_v4lsrc_change_state (GstElement *element)
 {
   GstV4lSrc *v4lsrc;
   GstElementStateReturn parent_value;
-  GstCaps *caps;
   gint transition = GST_STATE_TRANSITION (element);
 
   g_return_val_if_fail(GST_IS_V4LSRC(element), GST_STATE_FAILURE);

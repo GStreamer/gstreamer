@@ -5,6 +5,13 @@ TODO list (short term):
 * v4lsrc: actually try the format out on capsnego
 * all three: fix interlacing (not handled at all...)
 * libgstrec: build (a library for video recording)
+For other plugins:
+* SDL: seems okay for now
+* jpegmmxenc/dec: seems okay for now
+* avidemux: seems okay for now, though it doesn't really handle
+    events yet
+* avimux: interaction with disksink, maxfilesize support, events 
+    (GST_EVENT_RESTART!!->s/RESTART/NEW_MEDIA/), etc. - big TODO
 
 TODO list (long term):
 ======================

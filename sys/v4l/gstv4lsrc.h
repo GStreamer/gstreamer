@@ -1,5 +1,5 @@
 /* G-Streamer BT8x8/V4L frame grabber plugin
- * Copyright (C) 2001 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -53,7 +53,7 @@ struct _GstV4lSrc {
   struct video_mmap mmap;
   struct video_mbuf mbuf;
   gint sync_frame;
-  gboolean *frame_queued;
+  gint8 *frame_queued;
   guint buffer_size;
 
   /* a seperate pthread for the sync() thread (improves correctness of timestamps) */
