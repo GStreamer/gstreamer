@@ -95,7 +95,7 @@ const gchar *_gst_category_colors[] = {
   [GST_CAT_XML] = "",
   [GST_CAT_NEGOTIATION] = "",
 
-  [31] = "";
+  [31] = "",
 };
 
 
