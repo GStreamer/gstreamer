@@ -1,3 +1,10 @@
+2004-10-01  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_fmt):
+	  Throw error if we didn't recognize the stream. Fixes #152289.
+
 2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/videoscale/gstvideoscale.c: (gst_videoscale_link):
