@@ -410,8 +410,6 @@ gst_queue_link_sink (GstPad * pad, const GstCaps * caps)
 
   queue = GST_QUEUE (gst_pad_get_parent (pad));
 
-  GST_QUEUE_MUTEX_LOCK;
-
   if (queue->cur_level.bytes > 0) {
     if (gst_caps_is_equal (caps, queue->negotiated_caps)) {
       GST_QUEUE_MUTEX_UNLOCK;
@@ -420,11 +418,15 @@ gst_queue_link_sink (GstPad * pad, const GstCaps * caps)
 
     /* Wait until the queue is empty before attempting the pad
        negotiation. */
+    GST_QUEUE_MUTEX_LOCK;
+
     STATUS (queue, "waiting for queue to get empty");
     while (queue->cur_level.bytes > 0) {
       g_cond_wait (queue->item_del, queue->qlock);
     }
     STATUS (queue, "queue is now empty");
+
+    GST_QUEUE_MUTEX_UNLOCK;
   }
 
   link_ret = gst_pad_proxy_pad_link (pad, caps);
@@ -434,8 +436,6 @@ gst_queue_link_sink (GstPad * pad, const GstCaps * caps)
      * the pads become unnegotiated while we have buffers */
     gst_caps_replace (&queue->negotiated_caps, gst_caps_copy (caps));
   }
-
-  GST_QUEUE_MUTEX_UNLOCK;
 
   return link_ret;
 }

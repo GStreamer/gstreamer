@@ -1,3 +1,8 @@
+2004-11-24  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/gstqueue.c (gst_queue_link_sink): Grab the lock only when
+	it is necessary to wait.
+
 2004-11-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/building-boiler.xml:
