@@ -1,3 +1,8 @@
+2004-11-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	  Fix mpeg2enc configure check (similar to mplex check below).
+
 2004-11-14  Koop Mast  <kwm@rainbow-runner.nl>
 
 	reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
