@@ -5,6 +5,8 @@
 	(gst_value_serialize_enum), (gst_value_deserialize_enum),
 	(gst_value_can_compare), (gst_value_compare):
 	* testsuite/Makefile.am:
+	* testsuite/enumcaps/Makefile.am:
+	* testsuite/enumcaps/enumcaps.c:
 	  Fix enum serialization, deserialization, comparison in caps, add
 	  a test to ensure that this continues working in the future.
 
