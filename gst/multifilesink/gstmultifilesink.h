@@ -61,6 +61,8 @@ struct _GstMultiFileSink {
   FILE *file;
 
   guint64 data_written;
+
+  GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
 };
 
 struct _GstMultiFileSinkClass {

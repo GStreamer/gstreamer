@@ -180,6 +180,8 @@ gst_multifilesink_init (GstMultiFileSink * filesink)
   filesink->curfilename = NULL;
   filesink->curfileindex = 0;
   filesink->numfiles = 0;
+
+  filesink->streamheader = NULL;
 }
 static void
 gst_multifilesink_dispose (GObject * object)
@@ -349,8 +351,35 @@ gst_multifilesink_next_file (GstMultiFileSink * sink)
   }
 
   GST_FLAG_SET (sink, GST_MULTIFILESINK_OPEN);
-
   sink->data_written = 0;
+  if (sink->streamheader) {
+    GSList *l;
+
+    for (l = sink->streamheader; l; l = l->next) {
+      /* queue stream headers for sending */
+      guint bytes_written = 0, back_pending = 0;
+      GstBuffer *buf = GST_BUFFER (l->data);
+
+      if (ftell (sink->file) < sink->data_written)
+        back_pending = sink->data_written - ftell (sink->file);
+      while (bytes_written < GST_BUFFER_SIZE (buf)) {
+        size_t wrote = fwrite (GST_BUFFER_DATA (buf) + bytes_written, 1,
+            GST_BUFFER_SIZE (buf) - bytes_written,
+            sink->file);
+
+        if (wrote <= 0) {
+          GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
+              (_("Error while writing to file \"%s\"."), sink->filename),
+              ("Only %d of %d bytes written: %s",
+                  bytes_written, GST_BUFFER_SIZE (buf), strerror (errno)));
+          break;
+        }
+        bytes_written += wrote;
+      }
+
+      sink->data_written += bytes_written - back_pending;
+    }
+  }
   sink->curfileindex++;
 
   return TRUE;
@@ -516,7 +545,21 @@ gst_multifilesink_chain (GstPad * pad, GstData * _data)
     return;
   }
 
+  /* if the incoming buffer is marked as IN CAPS, then we assume for now
+   * it's a streamheader that needs to be sent to each new client, so we
+   * put it on our internal list of streamheader buffers.
+   * After that we return, since we only send these out when we get
+   * non IN_CAPS buffers so we properly keep track of clients that got
+   * streamheaders. */
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_IN_CAPS)) {
+    GST_DEBUG_OBJECT (filesink,
+        "appending IN_CAPS buffer with length %d to streamheader",
+        GST_BUFFER_SIZE (buf));
+    gst_buffer_ref (buf);
+    filesink->streamheader = g_slist_append (filesink->streamheader, buf);
+  }
   if (GST_FLAG_IS_SET (filesink, GST_MULTIFILESINK_OPEN)) {
+
     guint bytes_written = 0, back_pending = 0;
 
     if (ftell (filesink->file) < filesink->data_written)

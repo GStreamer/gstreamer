@@ -1,3 +1,22 @@
+2004-09-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),
+	(gst_ogg_mux_next_buffer), (gst_ogg_mux_loop):
+	* ext/vorbis/vorbis.c: (plugin_init):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_init),
+	(gst_vorbisenc_chain):
+	* ext/vorbis/vorbisenc.h:
+	remove explicit newmedia support from oggmux and vorbisenc
+	add debug category to vorbisenc
+	* gst/multifilesink/gstmultifilesink.c:
+	(gst_multifilesink_class_init), (gst_multifilesink_init),
+	(gst_multifilesink_dispose), (gst_multifilesink_set_location),
+	(gst_multifilesink_set_property), (gst_multifilesink_next_file),
+	(gst_multifilesink_handle_event), (gst_multifilesink_chain),
+	(plugin_init):
+	* gst/multifilesink/gstmultifilesink.h:
+	add support for streamheader in multifilesink
+
 2004-09-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/asfdemux/gstasfdemux.c: (_read_var_length), (_read_guid),
