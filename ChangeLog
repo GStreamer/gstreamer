@@ -1,3 +1,18 @@
+2004-07-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* configure.ac:
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_connect),
+	(gst_ffmpegdec_chain):
+
+=== gst-ffmpeg 0.8.1 ===
+
+2004-07-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: release 0.8.1, "Just Another Victim"
+
 2004-07-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init):
@@ -156,7 +171,7 @@
 2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* everything: updated upstream source to 2004-04-11 23:00 GMT
-          and fixed up patches
+	  and fixed up patches
 
 2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -213,7 +228,7 @@
 2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain):
-          don't critical, throw error (#137588)
+	  don't critical, throw error (#137588)
 
 2004-03-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 

@@ -1,6 +1,6 @@
 dnl autoconf configuration file for gst-ffmpeg 
 AC_INIT
-AC_CANONICAL_TARGET([])
+AC_CANONICAL_TARGET
 
 dnl We disable static building for development, for time savings
 dnl this goes before AS_LIBTOOL to appease autoconf
@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 8, 0, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 8, 1, 0, GST_CVS="no", GST_CVS="yes")
 dnl we cheat here so we don't have to change the actual configure code bit
 GST_PLUGINS_VERSION_NANO=$GST_FFMPEG_VERSION_NANO
 
