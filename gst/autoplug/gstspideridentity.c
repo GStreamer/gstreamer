@@ -400,13 +400,6 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
     gst_spider_identity_dumb_loop (ident);
     return;
   }
-  
-  /* in any case, we don't want to do anything:
-   * - if we're not plugged, we don't have buffers
-   * - if we're plugged, we wanna be chained please
-   */
-  gst_element_interrupt (GST_ELEMENT (ident));
-  return;  
 }
 /* This loop function is only needed when typefinding.
  */
