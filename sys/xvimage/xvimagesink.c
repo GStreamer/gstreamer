@@ -81,29 +81,25 @@ static void
 gst_xvimagesink_navigation_send_event (GstNavigation *navigation, GstStructure *structure)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (navigation);
-  XWindowAttributes attr; 
   GstEvent *event;
   double x,y;
-
-  g_mutex_lock (xvimagesink->x_lock);
-  XGetWindowAttributes (xvimagesink->xcontext->disp,
-                        xvimagesink->xwindow->win, &attr); 
-  g_mutex_unlock (xvimagesink->x_lock);
 
   event = gst_event_new (GST_EVENT_NAVIGATION);
   event->event_data.structure.structure = structure;
   
   /* Converting pointer coordinates to the non scaled geometry */
-  if (gst_structure_get_double (structure, "pointer_x", &x)) {
-    x *= xvimagesink->width;
-    x /= attr.width;
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
-  }
-  if (gst_structure_get_double (structure, "pointer_y", &y)) {
-    y *= xvimagesink->height;
-    y /= attr.height;
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
-  }
+  if (gst_structure_get_double (structure, "pointer_x", &x))
+    {
+      x *= xvimagesink->width;
+      x /= xvimagesink->xwindow->width;
+      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+    }
+  if (gst_structure_get_double (structure, "pointer_y", &y))
+    {
+      y *= xvimagesink->height;
+      y /= xvimagesink->xwindow->height;
+      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+    }
 
   gst_pad_send_event (gst_pad_get_peer (xvimagesink->sinkpad), event);
 }
@@ -239,8 +235,6 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink *xvimagesink,
 static void
 gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
 {
-  XWindowAttributes attr; 
-  
   g_return_if_fail (xvimage != NULL);
   g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
@@ -248,9 +242,6 @@ gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
   g_mutex_lock (xvimagesink->x_lock);
   
   /* We scale to the window's geometry */
-  XGetWindowAttributes (xvimagesink->xcontext->disp,
-                        xvimagesink->xwindow->win, &attr); 
-
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm)
     {  
@@ -259,7 +250,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
                      xvimagesink->xwindow->win, 
                      xvimagesink->xwindow->gc, xvimage->xvimage,
                      0, 0, xvimage->width, xvimage->height,
-                     0, 0, attr.width, attr.height, FALSE);
+                     0, 0, xvimagesink->xwindow->width,
+                     xvimagesink->xwindow->height, FALSE);
     }
   else
     {
@@ -268,7 +260,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
                   xvimagesink->xwindow->win, 
                   xvimagesink->xwindow->gc, xvimage->xvimage,
                   0, 0, xvimage->width, xvimage->height,
-                  0, 0, attr.width, attr.height);
+                  0, 0, xvimagesink->xwindow->width,
+                  xvimagesink->xwindow->height);
     }
 #else
   XvPutImage (xvimagesink->xcontext->disp,
@@ -276,7 +269,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
               xvimagesink->xwindow->win, 
               xvimagesink->xwindow->gc, xvimage->xvimage,
               0, 0, xvimage->width, xvimage->height,
-              0, 0, attr.width, attr.height);
+              0, 0, xvimagesink->xwindow->width,
+              xvimagesink->xwindow->height);
 #endif /* HAVE_XSHM */
   
   XSync(xvimagesink->xcontext->disp, FALSE);
@@ -307,9 +301,9 @@ gst_xvimagesink_xwindow_new (GstXvImageSink *xvimagesink,
                                       0, 0, xwindow->width, xwindow->height, 
                                       0, 0, xvimagesink->xcontext->black);
   
-  XSelectInput (xvimagesink->xcontext->disp, xwindow->win, PointerMotionMask |
-                KeyPressMask | KeyReleaseMask | ButtonPressMask |
-                ButtonReleaseMask);
+  XSelectInput (xvimagesink->xcontext->disp, xwindow->win,  ExposureMask |
+                StructureNotifyMask | PointerMotionMask | KeyPressMask |
+                KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
   
   xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
                            xwindow->win, 0, &values);
@@ -373,6 +367,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
   g_mutex_lock (xvimagesink->x_lock);
   while (XCheckWindowEvent (xvimagesink->xcontext->disp,
                             xvimagesink->xwindow->win,
+                            ExposureMask | StructureNotifyMask |
                             PointerMotionMask | KeyPressMask |
                             KeyReleaseMask | ButtonPressMask |
                             ButtonReleaseMask, &e))
@@ -385,6 +380,14 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
       
       switch (e.type)
         {
+          case ConfigureNotify:
+            /* Window got resized or moved. We update our data. */
+            GST_DEBUG ("ximagesink window is at %d, %d with geometry : %d,%d",
+                       e.xconfigure.x, e.xconfigure.y,
+                       e.xconfigure.width, e.xconfigure.height);
+            xvimagesink->xwindow->width = e.xconfigure.width;
+            xvimagesink->xwindow->height = e.xconfigure.height;
+            break;
           case MotionNotify:
             /* Mouse pointer moved over our window. We send upstream
                events for interactivity/navigation */
