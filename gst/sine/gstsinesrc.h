@@ -78,6 +78,7 @@ struct _GstSineSrc {
   gulong seq;
   
   gint64 timestamp;
+  GstBufferPool *bufpool;
 
   gboolean newcaps;
 

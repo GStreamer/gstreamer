@@ -68,7 +68,9 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(thread),sinesrc);
   gst_bin_add(GST_BIN(thread),osssink);
   gst_element_connect(sinesrc,osssink);
-  g_object_set(G_OBJECT(osssink),"fragment",0x00180008,NULL);
+  /* this breaks with current alsa oss compat lib
+  g_object_set(G_OBJECT(osssink),"fragment",0x00180008,NULL);*/
+
   g_object_set(G_OBJECT(sinesrc),"buffersize",64,NULL);
  
   dpman = gst_dpman_get_manager (sinesrc);
