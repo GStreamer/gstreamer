@@ -1,0 +1,472 @@
+#include <config.h>
+#include <gst/gst.h>
+#include <gst/bytestream/bytestream.h>
+#include <string.h>
+
+#define GST_TYPE_MIXMATRIX \
+  (gst_mixmatrix_get_type())
+#define GST_MIXMATRIX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MIXMATRIX,GstMixMatrix))
+#define GST_MIXMATRIX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MIXMATRIX,GstMixMatrix))
+#define GST_IS_MIXMATRIX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MIXMATRIX))
+#define GST_IS_MIXMATRIX_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MIXMATRIX))
+
+typedef struct _GstMixMatrix GstMixMatrix;
+typedef struct _GstMixMatrixClass GstMixMatrixClass;
+
+struct _GstMixMatrix {
+  GstElement element;
+
+  GstCaps *caps;
+  gint samplerate;
+
+  gint grpsize;
+  gint outsize;
+
+  GstPad **sinkpads;
+  GstByteStream **sinkbs;
+  gint sinkpadalloc;
+
+  GstPad **srcpads;
+  gint srcpadalloc;
+
+  gfloat *matrix;
+};
+
+struct _GstMixMatrixClass {
+  GstElementClass parent_class;
+
+  void (*resize) (GstMixMatrix *mix);
+};
+
+static GstElementDetails mixmatrix_details = {
+  "Mixing Matrix",
+  "Filter/Audio/Mixing",
+  "Mix N audio channels together into M channels",
+  VERSION,
+  "Erik Walthinsen <omega@temple-baptist.com>",
+  "(C) 2002",
+};
+
+enum {
+  /* FILL ME */
+  RESIZE_SIGNAL,
+  LAST_SIGNAL,
+};
+
+enum {
+  ARG_0,
+  ARG_GRPSIZE,
+  ARG_OUTSIZE,
+  ARG_SINKPADS,
+  ARG_SRCPADS,
+  ARG_MATRIXPTR,
+};
+
+GST_PAD_TEMPLATE_FACTORY (mixmatrix_sink_factory,
+  "sink%d",
+  GST_PAD_SINK,
+  GST_PAD_REQUEST,
+  GST_CAPS_NEW (
+    "float_src",
+    "audio/raw",
+    "format",	GST_PROPS_STRING ("float"),
+    "layout",   GST_PROPS_STRING ("gfloat"),
+    "intercept", GST_PROPS_FLOAT (0.0),
+    "slope",	GST_PROPS_FLOAT (1.0),
+    "channels", GST_PROPS_INT (1)
+  )
+);
+
+GST_PAD_TEMPLATE_FACTORY (mixmatrix_src_factory,
+  "src%d",
+  GST_PAD_SRC,
+  GST_PAD_REQUEST,
+  GST_CAPS_NEW (
+    "float_sink",
+    "audio/raw",
+    "format",	GST_PROPS_STRING ("float"),
+    "layout",   GST_PROPS_STRING ("gfloat"),
+    "intercept", GST_PROPS_FLOAT (0.0),
+    "slope",	GST_PROPS_FLOAT (1.0),
+    "channels", GST_PROPS_INT (1)
+  )
+);
+
+static void	gst_mixmatrix_class_init (GstMixMatrixClass *klass);
+static void	gst_mixmatrix_init (GstMixMatrix *element);
+
+static void	gst_mixmatrix_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void	gst_mixmatrix_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static GstPad *	gst_mixmatrix_request_new_pad (GstElement *element, GstPadTemplate *temp, const gchar *name);
+
+static GstPadConnectReturn gst_mixmatrix_connect (GstPad *pad, GstCaps *caps);
+
+static void	gst_mixmatrix_loop (GstElement *element);
+
+static GstPadTemplate	*srctempl, *sinktempl;
+static guint		gst_mixmatrix_signals[LAST_SIGNAL] = { 0 };
+static GstElementClass	*parent_class = NULL;
+
+GType
+gst_mixmatrix_get_type(void) {
+  static GType mixmatrix_type = 0;
+
+  if (!mixmatrix_type) {
+    static const GTypeInfo mixmatrix_info = {
+      sizeof(GstMixMatrixClass),
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_mixmatrix_class_init,
+      NULL,
+      NULL,
+      sizeof(GstMixMatrix),
+      0,
+      (GInstanceInitFunc)gst_mixmatrix_init,
+    };
+    mixmatrix_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMixMatrix", &mixmatrix_info, 0);
+  }
+  return mixmatrix_type;
+}
+
+static void
+gst_mixmatrix_class_init (GstMixMatrixClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+
+  gobject_class = (GObjectClass *)klass;
+  gstelement_class = (GstElementClass *)klass;
+
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
+  gst_mixmatrix_signals[RESIZE_SIGNAL] =
+   g_signal_new("resize",
+		G_TYPE_FROM_CLASS(klass),
+		G_SIGNAL_RUN_LAST,
+		G_STRUCT_OFFSET(GstMixMatrixClass, resize),
+		NULL, NULL,
+		g_cclosure_marshal_VOID__VOID,
+		G_TYPE_NONE, 0);
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SINKPADS,
+    g_param_spec_int("sinkpads","Sink Pads","Number of sink pads in matrix",
+		     0, G_MAXINT, 8, G_PARAM_READABLE));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SRCPADS,
+    g_param_spec_int("srcpads","Src Pads","Number of src pads in matrix",
+		     0, G_MAXINT, 8, G_PARAM_READABLE));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MATRIXPTR,
+    g_param_spec_pointer("matrixptr","Matrix Pointer","Pointer to gfloat mix matrix",
+			 G_PARAM_READABLE));
+
+  gobject_class->set_property = gst_mixmatrix_set_property;
+  gobject_class->get_property = gst_mixmatrix_get_property;
+  gstelement_class->request_new_pad = gst_mixmatrix_request_new_pad;
+}
+
+static void
+gst_mixmatrix_init (GstMixMatrix *mix)
+{
+  mix->grpsize = 8;
+  mix->outsize = 1024;
+
+  // start with zero pads
+  mix->sinkpadalloc = mix->grpsize;
+  mix->srcpadalloc = mix->grpsize;
+
+  // allocate the pads
+  mix->sinkpads = g_new(GstPad *,mix->sinkpadalloc);
+  mix->sinkbs = g_new(GstByteStream *,mix->sinkpadalloc);
+
+  mix->srcpads = g_new(GstPad *,mix->srcpadalloc);
+
+  // allocate a similarly sized matrix
+  mix->matrix = g_new(gfloat, mix->sinkpadalloc * mix->srcpadalloc);
+
+  // set the loop function that does all the work
+  gst_element_set_loop_function(GST_ELEMENT(mix), gst_mixmatrix_loop);
+}
+
+#define ROUND_UP(val,bound) ((((val)/bound)+1)*bound)
+
+static void **grow_ptrlist(void **origlist,int origsize,int newsize) {
+  void **newlist = g_new(void *,newsize);
+  memcpy(newlist,origlist,sizeof(void*)*origsize);
+  g_free(origlist);
+  return newlist;
+}
+
+void
+mixmatrix_resize(GstMixMatrix *mix, int sinkpads, int srcpads)
+{
+  int sinkresize = (sinkpads != mix->sinkpadalloc);
+  int srcresize = (srcpads != mix->srcpadalloc);
+
+  gfloat *newmatrix;
+  int i;
+
+  // check the sinkpads list
+  if (sinkresize) {
+    mix->sinkpads = (GstPad **)grow_ptrlist((void **)mix->sinkpads,mix->sinkpadalloc,sinkpads);
+    mix->sinkbs = (GstByteStream **)grow_ptrlist((void **)mix->sinkbs,mix->sinkpadalloc,sinkpads);
+  }
+
+  // check the srcpads list
+  if (srcresize) {
+    mix->srcpads = (GstPad **)grow_ptrlist((void **)mix->srcpads,mix->srcpadalloc,srcpads);
+  }
+
+  // now resize the matrix if either has changed
+  if (sinkresize || srcresize) {
+    // allocate the new matrix
+    newmatrix = g_new(gfloat, sinkpads * srcpads);
+    // if only the srcpad count changed (y axis), we can just copy
+    if (!sinkresize) {
+      memcpy(newmatrix,mix->matrix, sizeof(gfloat) * sinkpads * mix->srcpadalloc);
+    // otherwise we have to copy line by line
+    } else {
+      for (i=0;i<mix->srcpadalloc;i++)
+        memcpy(&newmatrix[i*sinkpads], &mix->matrix[i*mix->sinkpadalloc], mix->srcpadalloc);
+    }
+
+    // would signal here!
+
+    // free old matrix and replace it
+    g_free(mix->matrix);
+    mix->matrix = newmatrix;
+  }
+
+  mix->sinkpadalloc = sinkpads;
+  mix->srcpadalloc = srcpads;
+}
+
+/*
+static gboolean
+gst_mixmatrix_set_all_caps (GstMixMatrix *mix)
+{
+  int i;
+
+  // sink pads
+  for (i=0;i<mix->sinkpadalloc;i++) {
+    if (mix->sinkpads[i]) {
+      if (GST_PAD_CAPS(mix->sinkpads[i]) == NULL)
+        if (gst_pad_try_set_caps(mix->sinkpads[i],mix->caps) == FALSE) return FALSE;
+    }
+  }
+
+  // src pads
+  for (i=0;i<mix->srcpadalloc;i++) {
+    if (mix->srcpads[i]) {
+      if (GST_PAD_CAPS(mix->srcpads[i]) == NULL)
+        if (gst_pad_try_set_caps(mix->srcpads[i],mix->caps) == FALSE) return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+*/
+
+static GstPadConnectReturn
+gst_mixmatrix_connect (GstPad *pad, GstCaps *caps)
+{
+  GstMixMatrix *mix = GST_MIXMATRIX(GST_PAD_PARENT(pad));
+  gint i;
+
+  if (!GST_CAPS_IS_FIXED(caps) || GST_PAD_IS_SRC (pad)) {
+    return GST_PAD_CONNECT_DELAYED;
+  }
+
+  for (i=0;i<mix->srcpadalloc;i++) {
+    if (mix->srcpads[i]) {
+      if (GST_PAD_CAPS(mix->srcpads[i]) == NULL)
+        if (gst_pad_try_set_caps(mix->srcpads[i], caps) == FALSE) 
+	  return GST_PAD_CONNECT_REFUSED;
+    }
+  }
+
+  mix->caps = caps;
+
+  return GST_PAD_CONNECT_OK;
+}
+
+static GstPad *
+gst_mixmatrix_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *name)
+{
+  GstMixMatrix *mix;
+  gint padnum;
+  GstPad *pad = NULL;
+
+  g_return_val_if_fail(element != NULL, NULL);
+  g_return_val_if_fail(GST_IS_MIXMATRIX(element), NULL);
+
+  mix = GST_MIXMATRIX(element);
+
+  // figure out if it's a sink pad
+  if (sscanf(name,"sink%d",&padnum)) {
+    // check to see if it already exists
+    if (padnum < mix->sinkpadalloc && mix->sinkpads[padnum])
+      return mix->sinkpads[padnum];
+
+    // determine if it's bigger than the current size
+    if (padnum >= mix->sinkpadalloc)
+      mixmatrix_resize(mix, ROUND_UP(padnum,mix->grpsize), mix->sinkpadalloc);
+
+    pad = gst_pad_new_from_template(sinktempl, name);
+    GST_PAD_ELEMENT_PRIVATE(pad) = GINT_TO_POINTER(padnum);
+    gst_element_add_pad(GST_ELEMENT(mix), pad);
+//    g_signal_connect(G_OBJECT(pad), "disconnect", G_CALLBACK(sink_disconnected), mix);
+    gst_pad_set_connect_function (pad, gst_mixmatrix_connect);
+
+    // create a bytestream for it
+    mix->sinkbs[padnum] = gst_bytestream_new(pad);
+
+    // store away the pad and account for it
+    mix->sinkpads[padnum] = pad;
+  }
+
+  // or it's a src pad
+  else if (sscanf(name,"src%d",&padnum)) {
+    // check to see if it already exists
+    if (padnum < mix->srcpadalloc && mix->srcpads[padnum])
+      return mix->srcpads[padnum];
+
+    // determine if it's bigger than the current size
+    if (padnum >= mix->srcpadalloc)
+      mixmatrix_resize(mix, ROUND_UP(padnum,mix->grpsize), mix->srcpadalloc);
+
+    pad = gst_pad_new_from_template(srctempl, name);
+    GST_PAD_ELEMENT_PRIVATE(pad) = GINT_TO_POINTER(padnum);
+    gst_element_add_pad(GST_ELEMENT(mix), pad);
+//    g_signal_connect(G_OBJECT(pad), "disconnect", G_CALLBACK(sink_disconnected), mix);
+    //gst_pad_set_connect_function (pad, gst_mixmatrix_connect);
+
+    // store away the pad and account for it  
+    mix->srcpads[padnum] = pad;
+  }
+
+  return pad;
+}
+
+static void
+gst_mixmatrix_loop (GstElement *element)
+{
+  GstMixMatrix *mix = GST_MIXMATRIX(element);
+  int i,j,k;
+  GstBuffer **inbufs;
+  gfloat **infloats;
+  GstBuffer **outbufs;
+  gfloat **outfloats;
+  int bytesize = sizeof(gfloat)*mix->outsize;
+  gfloat gain;
+
+  // create the output buffers
+  outbufs = g_new(GstBuffer *,mix->srcpadalloc);
+  outfloats = g_new(gfloat *,mix->srcpadalloc);
+  for (i=0;i<mix->srcpadalloc;i++) {
+    if (mix->srcpads[i] != NULL) {
+      outbufs[i] = gst_buffer_new_and_alloc(bytesize);
+      outfloats[i] = (gfloat *)GST_BUFFER_DATA(outbufs[i]);
+      memset(outfloats[i],0,bytesize);
+    }
+  }
+
+  // go through all the input buffers and pull them
+  inbufs = g_new(GstBuffer *,mix->sinkpadalloc);
+  infloats = g_new(gfloat *,mix->sinkpadalloc);
+  for (i=0;i<mix->sinkpadalloc;i++) {
+    if (mix->sinkpads[i] != NULL) {
+      gst_bytestream_read(mix->sinkbs[i],&inbufs[i],bytesize);
+      infloats[i] = (gfloat *)GST_BUFFER_DATA(inbufs[i]);
+      // loop through each src pad
+      for (j=0;j<mix->srcpadalloc;j++) {
+        if (mix->srcpads[j] != NULL) {
+          gain = mix->matrix[j + i*mix->srcpadalloc];
+          for (k=0;k<mix->outsize;k++) {
+            outfloats[j][k] += infloats[i][k] * gain;
+          }
+        }
+      }
+    }
+  }
+
+  for (i=0;i<mix->srcpadalloc;i++) {
+    if (mix->srcpads[i] != NULL) {
+      gst_pad_push(mix->srcpads[i],outbufs[i]);
+    }
+  }
+}
+
+static void
+gst_mixmatrix_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+  GstMixMatrix *mix;
+
+  g_return_if_fail(GST_IS_MIXMATRIX(object));
+  mix = GST_MIXMATRIX(object);
+
+  switch (prop_id) {
+    default:
+      break;
+  }
+}
+
+static void
+gst_mixmatrix_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+  GstMixMatrix *mix;
+
+  g_return_if_fail(GST_IS_MIXMATRIX(object));
+  mix = GST_MIXMATRIX(object);
+
+  switch (prop_id) {
+    case ARG_SINKPADS:
+      g_value_set_int(value, mix->sinkpadalloc);
+      break;
+    case ARG_SRCPADS:
+      g_value_set_int(value, mix->srcpadalloc);
+      break;
+    case ARG_MATRIXPTR:
+      g_value_set_pointer(value, mix->matrix);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  GstElementFactory *factory;
+
+  /* this filter needs the bytestream package */
+  if (!gst_library_load("gstbytestream")) {
+    gst_info("mixmatrix:: could not load support library: 'gstbytestream'\n");
+    return FALSE;
+  }
+
+  factory = gst_element_factory_new("mixmatrix", GST_TYPE_MIXMATRIX, &mixmatrix_details);
+  g_return_val_if_fail(factory != NULL, FALSE);
+
+  sinktempl = mixmatrix_sink_factory();
+  gst_element_factory_add_pad_template (factory, sinktempl);
+
+  srctempl = mixmatrix_src_factory();
+  gst_element_factory_add_pad_template (factory, srctempl);
+
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "mixmatrix",
+  plugin_init
+};
