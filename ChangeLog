@@ -1,3 +1,10 @@
+2004-04-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_audio_caps):
+	  Really detect ac-3 audio.
+	* gst/typefind/gsttypefindfunctions.c: (matroska_type_find):
+	  really detect matroska files (off-by-1).
+
 2004-04-30  David Schleef  <ds@schleef.org>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),

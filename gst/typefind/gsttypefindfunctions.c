@@ -1047,7 +1047,7 @@ matroska_type_find (GstTypeFind * tf, gpointer ununsed)
    * we don't parse the whole header but simply check for the
    * availability of that array of characters inside the header.
    * Not fully fool-proof, but good enough. */
-  for (n = 4 + size; n < 4 + size + total - sizeof (probe_data); n++)
+  for (n = 4 + size; n <= 4 + size + total - sizeof (probe_data); n++)
     if (!memcmp (&data[n], probe_data, sizeof (probe_data))) {
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MATROSKA_CAPS);
       break;
