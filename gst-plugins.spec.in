@@ -940,27 +940,6 @@ Plug-ins for playback of AVI format media files.
 @USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 @USE_RAW1394_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
-### RTP ###
-@USE_RTP_TRUE@%package -n gstreamer-rtp
-@USE_RTP_TRUE@Summary:  GStreamer RTP plug-in.
-@USE_RTP_TRUE@Group:    Libraries/Multimedia
-@USE_RTP_TRUE@Requires: gstreamer-plugins = %{version}
-@USE_RTP_TRUE@Requires: librtp >= 0.1
-@USE_RTP_TRUE@
-@USE_RTP_TRUE@%description -n gstreamer-rtp
-@USE_RTP_TRUE@Library for transfering data with the RTP protocol.
-@USE_RTP_TRUE@
-@USE_RTP_TRUE@%files -n gstreamer-rtp
-@USE_RTP_TRUE@%defattr(-, root, root)
-@USE_RTP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
-@USE_RTP_TRUE@
-@USE_RTP_TRUE@%post -n gstreamer-rtp
-@USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_RTP_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
-@USE_RTP_TRUE@
-@USE_RTP_TRUE@%postun -n gstreamer-rtp
-@USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
-@USE_RTP_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SIDPLAY ###
 @USE_SIDPLAY_TRUE@%package -n gstreamer-sid
@@ -1480,6 +1459,27 @@ This plugin provides a videotest plugin. This plugin can be used to generate a v
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 ### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
+%package -n gstreamer-rtp
+Summary:  GStreamer RTP plug-in.
+Group:    Libraries/Multimedia
+Requires: gstreamer-plugins = %{version}
+Requires: librtp >= 0.1
+                                                                                
+%description -n gstreamer-rtp
+Library for transfering data with the RTP protocol.
+                                                                                
+%files -n gstreamer-rtp
+%defattr(-, root, root)
+%{_libdir}/gstreamer-%{majorminor}/libgstrtp.*
+                                                                                
+%post -n gstreamer-rtp
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+## %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+                                                                                
+%postun -n gstreamer-rtp
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 # Snapshot plugin
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@%package -n gstreamer-snapshot
 @USE_HERMES_TRUE@@USE_LIBPNG_TRUE@Summary:        GStreamer plug-in for grabbing images from videostreams
@@ -1566,6 +1566,10 @@ This package contains a basic audio and video playback library.
 /sbin/ldconfig
 
 %changelog
+* Sun Mar 02 2003 Christian Schaller <Uraeus@gnome.org>
+- Remove USE_RTP statement from RTP plugin
+- Move RTP plugin to no-deps section
+
 * Sat Mar 01 2003 Christian Schaller <Uraeus@gnome.org>
 - Remove videosink from SPEC
 * Thu Jan 23 2003 Thomas Vander Stichele <thomas at apestaart dot org>
