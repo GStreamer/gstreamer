@@ -57,6 +57,68 @@
 	GstObject.
       </para> 
     </sect2>
+    <sect2 id="sec-pads-synamic">
+      <title>Dynamic pads</title>
+      <para> 
+        Some elements might not have their pads when they are created. This can, for 
+	example, happen with an MPEG2 system demuxer. The demuxer will create its 
+	pads at runtime when it detects the different elementary streams in the MPEG2
+	system stream. 
+      </para> 
+      <para> 
+        Running <application>gstreamer-inspect mpeg2parse</application> will show that
+	the element has only one pad: a sink pad called 'sink'. The other pads are 
+	"dormant" as you can see in the padtemplates from the 'Exists: Sometimes'
+	property. Depending on the type of MPEG2 file you play, the pads are created. We
+	will see that this is very important when you are going to create dynamic 
+	pipelines later on in this manual.
+      </para> 
+      <para> 
+        You can attach a signal to an element to inform you when the element has created
+	a new pad from one of its padtemplates. The following piece of code is an example
+	of how to do this:
+      </para> 
+      <programlisting>
+static void
+pad_connect_func (GstElement *parser, GstPad *pad, GstElement *pipeline)
+{
+  g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
+
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  if (strncmp (gst_pad_get_name (pad), "private_stream_1.0", 18) == 0) {
+    // set up an AC3 decoder pipeline
+    ...
+    // connect pad to the AC3 decoder pipeline
+    ...
+  }
+  gst_element_set_state (GST_ELEMENT (audio_thread), GST_STATE_READY);
+}
+
+int 
+main(int argc, char *argv[]) 
+{
+  GstElement *pipeline;
+  GstElement *mpeg2parser;
+
+  // create pipeline and do something usefull
+  ...
+  
+  mpeg2parser = gst_elementfactory_make ("mpeg2parse", "mpeg2parse");
+  gtk_signal_connect (GTK_OBJECT (mpeg2parser), "new_pad", pad_connect_func, pipeline);  
+  ...
+
+  // start the pipeline
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  ...
+}
+      </programlisting>
+      <note>
+        <para> 
+          You need to set the pipeline to READY or NULL if you want to change it.
+        </para> 
+      </note>
+    </sect2>
   </sect1>
   <sect1 id="sec-pads-description">
     <title>Capabilities of a GstPad</title>

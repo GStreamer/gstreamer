@@ -13,6 +13,7 @@
   <variablelist>
     <varlistentry>
       <term>14 Jan 2001</term>
+      <listitem>
         <para>
         <emphasis>Omega:</emphasis>
           did you run ldconfig?  maybe it talks to init?

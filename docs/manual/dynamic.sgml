@@ -9,8 +9,9 @@
     GStreamer.
   </para>
   <para> 
-    We will show how to create an mpeg1 video player using the dynamic pipeline
-
+    We will show how to create an mpeg1 video player using dynamic pipelines.
+    As you have seen in the pad section, we can attach a signal to an element
+    when a pad is created. We will use this to create our MPEG1 player.
   </para>
 
 </chapter>
