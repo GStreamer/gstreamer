@@ -574,6 +574,76 @@ gst_pad_disconnect (GstPad *srcpad,
 }
 
 /**
+ * gst_pad_can_connect_filtered:
+ * @srcpad: the source pad to connect
+ * @sinkpad: the sink pad to connect
+ * @filtercaps: the filter caps.
+ *
+ * Checks if the source pad and the sink pad can be connected. 
+ * The filter indicates the media type that should flow trought this connection.
+ *
+ * Returns: TRUE if the pad can be connected, FALSE otherwise
+ */
+gboolean
+gst_pad_can_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
+{
+  gint num_decoupled = 0;
+  GstRealPad *realsrc, *realsink;
+
+  /* generic checks */
+  g_return_val_if_fail (srcpad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
+  g_return_val_if_fail (sinkpad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
+
+  /* now we need to deal with the real/ghost stuff */
+  realsrc = GST_PAD_REALIZE (srcpad);
+  realsink = GST_PAD_REALIZE (sinkpad);
+
+  g_return_val_if_fail (GST_RPAD_PEER (realsrc) == NULL, FALSE);
+  g_return_val_if_fail (GST_RPAD_PEER (realsink) == NULL, FALSE);
+  g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, FALSE);
+  g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, FALSE);
+
+  if (realsrc->sched && realsink->sched) {
+    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
+      num_decoupled++;
+    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
+      num_decoupled++;
+
+    if (realsrc->sched != realsink->sched && num_decoupled != 1) {
+      g_warning ("connecting pads with different scheds requires exactly one decoupled element (queue)\n");
+      return FALSE;
+    }
+  }
+  
+  /* check if the directions are compatible */
+  if (!(((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SINK) &&
+         (GST_RPAD_DIRECTION (realsink) == GST_PAD_SRC)) ||
+        ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
+         (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK))))
+  {
+    return FALSE;
+  }
+  
+  return TRUE;
+}
+/**
+ * gst_pad_can_connect:
+ * @srcpad: the source pad to connect
+ * @sinkpad: the sink pad to connect
+ *
+ * Checks if the source pad can be connected to the sink pad.
+ *
+ * Returns: TRUE if the pads can be connected, FALSE otherwise
+ */
+gboolean
+gst_pad_can_connect (GstPad *srcpad, GstPad *sinkpad)
+{
+  return gst_pad_can_connect_filtered (srcpad, sinkpad, NULL);
+}
+
+/**
  * gst_pad_connect_filtered:
  * @srcpad: the source pad to connect
  * @sinkpad: the sink pad to connect

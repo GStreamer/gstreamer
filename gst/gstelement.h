@@ -199,7 +199,14 @@ void			gst_element_remove_ghost_pad	(GstElement *element, GstPad *pad);
 
 GstPad*			gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ);
 GstPad*			gst_element_request_pad_by_name	(GstElement *element, const gchar *name);
+GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
+							 GstCaps *filtercaps);
+GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 
+/* these functions should probably have another name, but gst_element_connect is already used */
+gboolean		gst_element_connect_elements	(GstElement *src, GstElement *dest);
+gboolean		gst_element_connect_elements_filtered (GstElement *src, GstElement *dest,
+							 GstCaps *filtercaps);
 gboolean		gst_element_connect		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 gboolean		gst_element_connect_filtered	(GstElement *src, const gchar *srcpadname,

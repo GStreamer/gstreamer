@@ -698,6 +698,175 @@ gst_element_request_pad_by_name (GstElement *element, const gchar *name)
 }
 
 /**
+ * gst_element_get_compatible_pad_filtered:
+ * @element: the element in which the pad should be found
+ * @pad: the pad to find a compatible one for
+ * @filtercaps: the caps to use as a filter
+ *
+ * Looks for an unconnected pad to which the given pad can connect to.
+ * It is not guaranteed that connecting the pads will work, though
+ * it should work in most cases.
+ *
+ * Returns: the pad to which a connection can be made
+ */
+
+GstPad*			
+gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, GstCaps *filtercaps)
+{
+  GList *pads;
+  GstPadTemplate *templ;
+  GstCaps *intersection;
+  GstPad *foundpad = NULL;
+  
+  /* checks */
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  
+  /* let's use the real pad */
+  pad = (GstPad *) GST_PAD_REALIZE (pad);
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_RPAD_PEER (pad) == NULL, NULL);
+  
+  /* try to get an existing unconnected pad */
+  pads = gst_element_get_pad_list (element);
+  while (pads)
+  {
+    GstPad *current = GST_PAD (pads->data);
+    if ((GST_PAD_PEER (GST_PAD_REALIZE (current)) == NULL) &&
+        gst_pad_can_connect_filtered (pad, current, filtercaps))
+    {
+      return current;
+    }
+    pads = g_list_next (pads);
+  }
+  
+  /* try to create a new one */
+  /* requesting is a little crazy, we need a template. Let's create one */
+  if (filtercaps != NULL)
+  {
+    filtercaps = gst_caps_intersect (filtercaps, (GstCaps *) GST_RPAD_CAPS (pad));
+    if (filtercaps == NULL)
+      return NULL;
+  }
+  templ = gst_padtemplate_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
+                    GST_PAD_ALWAYS, filtercaps);
+  foundpad = gst_element_request_compatible_pad (element, templ);
+  gst_object_unref (GST_OBJECT (templ));
+  if (filtercaps != NULL)
+    gst_caps_unref (filtercaps);
+  
+  return foundpad;
+}
+
+/**
+ * gst_element_get_compatible_pad:
+ * @element: the element in which the pad should be found
+ * @pad: the pad to find a compatible one for
+ *
+ * Looks for an unconnected pad to which the given pad can connect to.
+ * It is not guaranteed that connecting the pads will work, though
+ * it should work in most cases.
+ *
+ * Returns: the pad to which a connection can be made
+ */
+
+GstPad*			
+gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
+{
+  return gst_element_get_compatible_pad_filtered (element, pad, NULL);
+}
+/**
+ * gst_element_connect_elements:
+ * @src: the element containing source pad
+ * @dest: the element containing destination pad
+ * @filtercaps: the caps to use as filter
+ *
+ * Connect the source to the destination element using the filtercaps.
+ * The connection must be from source to destination, the other
+ * direction will not be tried.
+ * The functions looks for existing pads that aren't connected yet. 
+ + It will use request pads if possible. But both pads will not be requested.
+ * If multiple connections are possible, only one is established.
+ *
+ * Return: TRUE if the elements could be connected.
+ */
+gboolean
+gst_element_connect_elements_filtered (GstElement *src, GstElement *dest, 
+			               GstCaps *filtercaps)
+{
+  GList *srcpads, *destpads;
+  GstPad *srcpad, *destpad;
+
+  /* checks */
+  g_return_val_if_fail (src != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT(src), FALSE);
+  g_return_val_if_fail (dest != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT(dest), FALSE);
+
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "attempting to connect element %s to element %s\n", GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
+   
+  /* loop through the existing pads in the source */
+  srcpads = gst_element_get_pad_list (src);
+  while (srcpads)
+  {
+    srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
+    if ((GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
+        (GST_PAD_PEER (srcpad) == NULL))
+    {
+      destpad = gst_element_get_compatible_pad_filtered (dest, srcpad, filtercaps);
+      if (destpad && gst_pad_connect_filtered (srcpad, destpad, filtercaps))
+      {
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s\n", GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+ 	return TRUE;
+      }
+    }
+    srcpads = g_list_next (srcpads);
+  }
+
+  /* loop through the existing pads in the destination */
+  destpads = gst_element_get_pad_list (dest);
+  while (destpads)
+  {
+    destpad = (GstPad *) GST_PAD_REALIZE (destpads->data);
+    if ((GST_RPAD_DIRECTION (destpad) == GST_PAD_SINK) &&
+        (GST_PAD_PEER (destpad) == NULL))
+    {
+      srcpad = gst_element_get_compatible_pad_filtered (src, destpad, filtercaps);
+      if (srcpad && gst_pad_connect_filtered (srcpad, destpad, filtercaps))
+      {
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s\n", GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+	return TRUE;
+      }
+    }
+    destpads = g_list_next (destpads);
+  }
+
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "no connection possible from %s to %s\n", GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
+  return FALSE;  
+}
+
+/**
+ * gst_element_connect_elements:
+ * @src: element containing source pad
+ * @dest: element containing destination pad
+ *
+ * Connect the source to the destination element.
+ * The connection must be from source to destination, the other
+ * direction will not be tried.
+ * The functions looks for existing pads and request pads that aren't
+ * connected yet. If multiple connections are possible, only one is
+ * established.
+ *
+ * Return: TRUE if the elements could be connected.
+ */
+gboolean
+gst_element_connect_elements (GstElement *src, GstElement *dest)
+{
+  return gst_element_connect_elements_filtered (src, dest, NULL);
+}
+/**
  * gst_element_connect_filtered:
  * @src: element containing source pad
  * @srcpadname: name of pad in source element

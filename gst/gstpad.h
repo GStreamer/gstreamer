@@ -385,6 +385,9 @@ GstPad*			gst_pad_get_peer			(GstPad *pad);
 
 GstBufferPool*		gst_pad_get_bufferpool			(GstPad *pad);
 
+gboolean                gst_pad_can_connect            		(GstPad *srcpad, GstPad *sinkpad);
+gboolean                gst_pad_can_connect_filtered   		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
+
 gboolean                gst_pad_connect             		(GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_connect_filtered       		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 void			gst_pad_disconnect			(GstPad *srcpad, GstPad *sinkpad);
