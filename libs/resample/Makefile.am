@@ -15,5 +15,15 @@ test_SOURCES = test.c
 test_LDADD = libresample.la
 
 
-CFLAGS += -O2 -ffast-math
+if HAVE_CPU_I386
+ARCHCFLAGS = -march=i486
+else
+if HAVE_CPU_PPC
+ARCHCFLAGS = -Wa,-m7400
+else
+ARCHCFLAGS =
+endif
+endif
+
+CFLAGS += -O2 -ffast-math $(ARCHCFLAGS)
 

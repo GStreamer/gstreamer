@@ -133,13 +133,22 @@ double functable_window_dboxcar(void *p, double x);
 void conv_double_short_table(double *dest, short *src, int n);
 void conv_double_short_unroll(double *dest, short *src, int n);
 void conv_double_short_ref(double *dest, short *src, int n);
+#ifdef HAVE_CPU_PPC
 void conv_double_short_altivec(double *dest, short *src, int n);
+#endif
 
 void conv_short_double_ref(short *dest, double *src, int n);
+#ifdef HAVE_CPU_PPC
 void conv_short_double_ppcasm(short *dest, double *src, int n);
+#endif
 
+#ifdef HAVE_CPU_PPC
 #define conv_double_short conv_double_short_table
 #define conv_short_double conv_short_double_ppcasm
+#else
+#define conv_double_short conv_double_short_ref
+#define conv_short_double conv_short_double_ref
+#endif
 
 #endif /* __RESAMPLE_H__ */
 

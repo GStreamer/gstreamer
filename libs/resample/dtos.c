@@ -29,12 +29,12 @@
 
 
 #define short_to_double_table
-#define short_to_double_altivec
+//#define short_to_double_altivec
 #define short_to_double_unroll
 
 #ifdef short_to_double_table
-float ints_high[256];
-float ints_low[256];
+static float ints_high[256];
+static float ints_low[256];
 
 void conv_double_short_table(double *dest, short *src, int n)
 {
@@ -94,7 +94,7 @@ void conv_double_short_ref(double *dest, short *src, int n)
 	}
 }
 
-#ifdef short_to_double_altivec
+#ifdef HAVE_CPU_PPC
 static union { int i[4]; float f[4]; } av_tmp __attribute__ ((__aligned__ (16)));
 
 void conv_double_short_altivec(double *dest, short *src, int n)
@@ -141,6 +141,7 @@ void conv_short_double_ref(short *dest, double *src, int n)
 	}
 }
 
+#ifdef HAVE_CPU_PPC
 void conv_short_double_ppcasm(short *dest, double *src, int n)
 {
 	int tmp[2];
@@ -168,5 +169,6 @@ void conv_short_double_ppcasm(short *dest, double *src, int n)
 	: "r9", "r5" );
 
 }
+#endif
 
 
