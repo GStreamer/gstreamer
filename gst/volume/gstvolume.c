@@ -21,6 +21,7 @@
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include <gst/control/control.h>
 #include "gstvolume.h"
 
 
@@ -44,56 +45,78 @@ enum {
 enum {
   ARG_0,
   ARG_SILENT,
-  ARG_MUTED,
+  ARG_MUTE,
   ARG_VOLUME
 };
 
-static GstPadTemplate*                    
-volume_sink_factory (void)            
-{                                         
-  static GstPadTemplate *template = NULL; 
-                                          
-  if (!template) {                        
-    template = gst_pad_template_new 
-      ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_caps_append(gst_caps_new ("sink_int",  "audio/raw",
-                                    GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
-                      gst_caps_new ("sink_float", "audio/raw",
-                                    GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS)),
-      NULL);
-  }                                       
-  return template;                        
-}
+GST_PAD_TEMPLATE_FACTORY (volume_sink_factory,
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "volume_float_sink",
+    "audio/raw",
+    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "format",     GST_PROPS_STRING ("float"),
+    "layout",     GST_PROPS_STRING ("gfloat"),
+    "intercept",  GST_PROPS_FLOAT(0.0),
+    "slope",      GST_PROPS_FLOAT(1.0),
+    "channels",   GST_PROPS_INT (1)
+  ),
+  GST_CAPS_NEW (
+    "volume_int_sink",
+    "audio/raw",
+    "format",     GST_PROPS_STRING ("int"),
+    "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "law",        GST_PROPS_INT (0),
+    "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+    "width",      GST_PROPS_INT (16),
+    "depth",      GST_PROPS_INT (16),
+    "signed",     GST_PROPS_BOOLEAN (TRUE)
+  )
+);
 
-static GstPadTemplate*
-volume_src_factory (void)
-{
-  static GstPadTemplate *template = NULL;
-  
-  if (!template)
-    template = gst_pad_template_new 
-      ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-       gst_caps_append (gst_caps_new ("src_float", "audio/raw",
-                                      GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS),
-                        gst_caps_new ("src_int", "audio/raw",
-                                      GST_AUDIO_INT_PAD_TEMPLATE_PROPS)),
-       NULL);
-  
-  return template;
-}
+GST_PAD_TEMPLATE_FACTORY (volume_src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "volume_float_src",
+    "audio/raw",
+    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "format",     GST_PROPS_STRING ("float"),
+    "layout",     GST_PROPS_STRING ("gfloat"),
+    "intercept",  GST_PROPS_FLOAT(0.0),
+    "slope",      GST_PROPS_FLOAT(1.0),
+    "channels",   GST_PROPS_INT (1)
+  ), 
+  GST_CAPS_NEW (
+    "volume_int_src",
+    "audio/raw",
+    "format",     GST_PROPS_STRING ("int"),
+    "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
+    "law",        GST_PROPS_INT (0),
+    "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+    "width",      GST_PROPS_INT (16),
+    "depth",      GST_PROPS_INT (16),
+    "signed",     GST_PROPS_BOOLEAN (TRUE)
+  )
+);
 
 static void		volume_class_init		(GstVolumeClass *klass);
 static void		volume_init		(GstVolume *filter);
 
 static void		volume_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		volume_get_property        (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		volume_get_property     (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		volume_update_volume    (const GValue *value, gpointer data);
+static void		volume_update_mute      (const GValue *value, gpointer data);
 
 static gboolean		volume_parse_caps          (GstVolume *filter, GstCaps *caps);
 
-static void		volume_chain               (GstPad *pad, GstBuffer *buf);
-static void inline 	volume_fast_float_chain    (gfloat* data, guint numsamples, GstVolume *filter);
-static void inline 	volume_fast_8bit_chain 	   (gint8* data, guint numsamples, GstVolume *filter);
-static void inline 	volume_fast_16bit_chain    (gint16* data, guint numsamples, GstVolume *filter);
+static void		volume_chain_float         (GstPad *pad, GstBuffer *buf);
+static void		volume_chain_int16         (GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
@@ -134,44 +157,22 @@ volume_parse_caps (GstVolume *filter, GstCaps *caps)
 {
   const gchar *format;
   
-  g_return_val_if_fail(filter!=NULL,-1);
-  g_return_val_if_fail(caps!=NULL,-1);
+  g_return_val_if_fail(filter!=NULL,FALSE);
+  g_return_val_if_fail(caps!=NULL,FALSE);
   
   gst_caps_get_string (caps, "format", &format);
   
-  gst_caps_get_int (caps, "rate",       &filter->rate);
-  gst_caps_get_int (caps, "channels",   &filter->channels);
-  
   if (strcmp(format, "int")==0) {
-    filter->format        = GST_VOLUME_FORMAT_INT;
-    gst_caps_get_int	 (caps, "width",      &filter->width);
-    gst_caps_get_int	 (caps, "depth",      &filter->depth);
-    gst_caps_get_int	 (caps, "law",        &filter->law);
-    gst_caps_get_int	 (caps, "endianness", &filter->endianness);
-    gst_caps_get_boolean (caps, "signed",     &filter->is_signed);
-    
-    if (!filter->silent) {
-      g_print ("Volume : channels %d, rate %d\n",  
-               filter->channels, filter->rate);
-      g_print ("Volume : format int, bit width %d, endianness %d, signed %s\n",
-               filter->width, filter->endianness, filter->is_signed ? "yes" : "no");
-    }
-  } else if (strcmp(format, "float")==0) {
-    filter->format     = GST_VOLUME_FORMAT_FLOAT;
-    gst_caps_get_string (caps, "layout",    &filter->layout); 
-    gst_caps_get_float  (caps, "intercept", &filter->intercept);
-    gst_caps_get_float  (caps, "slope",     &filter->slope);
-
-    if (!filter->silent) {
-      g_print ("Volume : channels %d, rate %d\n",  
-               filter->channels, filter->rate);
-      g_print ("Volume : format float, layout %s, intercept %f, slope %f\n",
-               filter->layout, filter->intercept, filter->slope);
-    }
-  } else  {
-    return FALSE;
+    gst_pad_set_chain_function(filter->sinkpad,volume_chain_int16);
+    return TRUE;
   }
-  return TRUE;
+  
+  if (strcmp(format, "float")==0) {
+    gst_pad_set_chain_function(filter->sinkpad,volume_chain_float);
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 
@@ -206,12 +207,8 @@ volume_class_init (GstVolumeClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
-    g_param_spec_boolean("silent","silent","silent",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
-  
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTED,
-    g_param_spec_boolean("muted","muted","muted",
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
+    g_param_spec_boolean("mute","mute","mute",
                          FALSE,G_PARAM_READWRITE));
   
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
@@ -233,67 +230,141 @@ volume_init (GstVolume *filter)
   
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
-  gst_pad_set_chain_function(filter->sinkpad,volume_chain);
-  filter->silent = FALSE;
-  filter->muted = FALSE;
+  gst_pad_set_chain_function(filter->sinkpad,volume_chain_int16);
+  filter->mute = FALSE;
   filter->volume_i = 8192;
   filter->volume_f = 1.0;
+
+  filter->dpman = gst_dpman_new ("volume_dpman", GST_ELEMENT(filter));
+  gst_dpman_add_required_dparam_callback (
+    filter->dpman, 
+    g_param_spec_int("mute","Mute","Mute the audio",
+                     0, 1, 0, G_PARAM_READWRITE),
+    "int",
+    volume_update_mute, 
+    filter
+  );
+  gst_dpman_add_required_dparam_callback (
+    filter->dpman, 
+    g_param_spec_float("volume","Volume","Volume of the audio",
+                       -4.0, 4.0, 1.0, G_PARAM_READWRITE),
+    "scalar",
+    volume_update_volume, 
+    filter
+  );
+
 }
 
 static void
-volume_chain (GstPad *pad, GstBuffer *buf)
+volume_chain_float (GstPad *pad, GstBuffer *buf)
 {
   GstVolume *filter;
-  gint16 *int_data;
-  gfloat *float_data;
-  
-  g_return_if_fail(pad != NULL);
+  GstBuffer *out_buf;
+  gfloat *data;
+  gint i, sample_countdown, num_samples;
+
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
   
   filter = GST_VOLUME(GST_OBJECT_PARENT (pad));
-  g_return_if_fail(filter != NULL);
   g_return_if_fail(GST_IS_VOLUME(filter));
-  
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_READONLY))
-    buf = gst_buffer_copy (buf);
-  
-  switch (filter->format) {
-  case GST_VOLUME_FORMAT_INT:
-    int_data = (gint16 *)GST_BUFFER_DATA(buf);
 
-    switch (filter->width) {
-    case 16:
-      volume_fast_16bit_chain(int_data,GST_BUFFER_SIZE(buf)/2, filter);
-      break;
-    case 8:
-      volume_fast_8bit_chain((gint8*)int_data,GST_BUFFER_SIZE(buf), filter);
-      break;
-    }
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_READONLY)){
+    out_buf = gst_buffer_copy (buf);
+    gst_buffer_unref(buf);
+  }
+  else {
+    out_buf = buf;
+  }
 
-    break;
-  case GST_VOLUME_FORMAT_FLOAT:
-    float_data = (gfloat *)GST_BUFFER_DATA(buf);
+  data = (gfloat *)GST_BUFFER_DATA(out_buf);
+  num_samples = GST_BUFFER_SIZE(out_buf)/sizeof(gfloat);
+  sample_countdown = GST_DPMAN_PREPROCESS(filter->dpman, num_samples, GST_BUFFER_TIMESTAMP(out_buf));
+  i = 0;
     
-    volume_fast_float_chain(float_data,GST_BUFFER_SIZE(buf)/sizeof(float), filter);
-    
-    break;
+  while(GST_DPMAN_PROCESS_COUNTDOWN(filter->dpman, sample_countdown, i)) {
+    data[i++] *= filter->real_vol_f;
   }
   
-  gst_pad_push(filter->srcpad,buf);
+  gst_pad_push(filter->srcpad,out_buf);
+  
 }
 
-static void inline
-volume_fast_float_chain(gfloat* data, guint num_samples, GstVolume *filter)
-#include "filter.func"
+static void
+volume_chain_int16 (GstPad *pad, GstBuffer *buf)
+{
+  GstVolume *filter;
+  GstBuffer *out_buf;
+  gint16 *data;
+  gint i, sample_countdown, num_samples;
 
-static void inline
-volume_fast_16bit_chain(gint16* data, guint num_samples, GstVolume *filter)
-#include "filter.func"
+  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_if_fail(buf != NULL);
+  
+  filter = GST_VOLUME(GST_OBJECT_PARENT (pad));
+  g_return_if_fail(GST_IS_VOLUME(filter));
 
-static void inline
-volume_fast_8bit_chain(gint8* data, guint num_samples, GstVolume *filter)
-#include "filter.func"
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_READONLY)){
+    out_buf = gst_buffer_copy (buf);
+    gst_buffer_unref(buf);
+  }
+  else {
+    out_buf = buf;
+  }
+
+  data = (gint16 *)GST_BUFFER_DATA(out_buf);
+  num_samples = GST_BUFFER_SIZE(out_buf)/sizeof(gint16);
+  sample_countdown = GST_DPMAN_PREPROCESS(filter->dpman, num_samples, GST_BUFFER_TIMESTAMP(out_buf));
+  i = 0;
+    
+  while(GST_DPMAN_PROCESS_COUNTDOWN(filter->dpman, sample_countdown, i)) {
+    data[i] = (gint16)(filter->real_vol_i * (gint)data[i++] / 8192);
+  }
+  
+  gst_pad_push(filter->srcpad,out_buf);   
+  
+}
+
+static void
+volume_update_mute(const GValue *value, gpointer data)
+{
+  GstVolume *filter = (GstVolume*)data;
+  g_return_if_fail(GST_IS_VOLUME(filter));
+
+  if (G_VALUE_HOLDS_BOOLEAN(value)){
+    filter->mute = g_value_get_boolean(value);
+  }
+  else if (G_VALUE_HOLDS_INT(value)){
+    filter->mute = (g_value_get_int(value) == 1);
+  }
+  
+  if (filter->mute){
+    filter->real_vol_f = 0.0;
+    filter->real_vol_i = 0;
+  }
+  else {
+    filter->real_vol_f = filter->volume_f;
+    filter->real_vol_i = filter->volume_i;
+  }
+}
+
+static void
+volume_update_volume(const GValue *value, gpointer data)
+{
+  GstVolume *filter = (GstVolume*)data;
+  g_return_if_fail(GST_IS_VOLUME(filter));
+
+  filter->volume_f       = g_value_get_float (value);
+  filter->volume_i       = filter->volume_f*8192;
+  if (filter->mute){
+    filter->real_vol_f = 0.0;
+    filter->real_vol_i = 0;
+  }
+  else {
+    filter->real_vol_f = filter->volume_f;
+    filter->real_vol_i = filter->volume_i;
+  }
+}
 
 static void
 volume_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -306,15 +377,13 @@ volume_set_property (GObject *object, guint prop_id, const GValue *value, GParam
 
   switch (prop_id) 
   {
-  case ARG_SILENT:
-    filter->silent = g_value_get_boolean (value);
-    break;
-  case ARG_MUTED:
-    filter->muted = g_value_get_boolean (value);
+  case ARG_MUTE:
+    gst_dpman_bypass_dparam(filter->dpman, "mute");
+    volume_update_mute(value, filter);
     break;
   case ARG_VOLUME:
-    filter->volume_f       = g_value_get_float (value);
-    filter->volume_i       = filter->volume_f*8192;
+    gst_dpman_bypass_dparam(filter->dpman, "volume");
+    volume_update_volume(value, filter);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -332,11 +401,8 @@ volume_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *
   filter = GST_VOLUME(object);
   
   switch (prop_id) {
-  case ARG_SILENT:
-    g_value_set_boolean (value, filter->silent);
-    break;
-  case ARG_MUTED:
-    g_value_set_boolean (value, filter->muted);
+  case ARG_MUTE:
+    g_value_set_boolean (value, filter->mute);
     break;
   case ARG_VOLUME:
     g_value_set_float (value, filter->volume_f);
@@ -361,6 +427,12 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
+  /* load dparam support library */
+  if (!gst_library_load ("gstcontrol"))
+  {
+    gst_info ("volume: could not load support library: 'gstcontrol'\n");
+    return FALSE;
+  }
   return TRUE;
 }
 

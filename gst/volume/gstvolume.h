@@ -57,31 +57,12 @@ struct _GstVolume {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
+  GstDParamManager *dpman;
 
-  gboolean silent;
-  gboolean muted;
-  gint16 volume_i;
-  gfloat volume_f;
+  gboolean mute;
+  gint   volume_i, real_vol_i;
+  gfloat volume_f, real_vol_f;
   
-  /* the next three are valid for both int and float */
-  
-  GstVolumeFormat format;
-  guint rate;
-  guint channels;
-  
-  /* the next five are valid only for format==GST_VOLUME_FORMAT_INT */
-  
-  guint width;
-  guint depth;
-  guint endianness;
-  guint law;
-  gboolean is_signed;
-  
-  /* the next three are valid only for format==GST_VOLUME_FORMAT_FLOAT */
-  
-  const gchar *layout;
-  gfloat slope;
-  gfloat intercept;
 };
 
 struct _GstVolumeClass {
