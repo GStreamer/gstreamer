@@ -1,5 +1,16 @@
 2005-03-29  Andy Wingo  <wingo@pobox.com>
 
+	* po/POTFILES: Remove gstspider.c.
+
+	* configure.ac (AC_OUTPUT): Add missing testsuite makefiles.
+
+	* docs/libs/gstreamer-libs-docs.sgml: 
+	* docs/libs/gstreamer-libs-sections.txt: Remove the section on
+	bytestream.
+
+	* tests/complexity.c (main): Set the length of the preroll queue
+	on the sinks to prevent a lockup.
+
 	* libs/gst/dataprotocol/Makefile.am: 
 	* libs/gst/dataprotocol/dataprotocol-test.c: Remove test, it's
 	the same as the one in check/gst-libs/gdp.c.

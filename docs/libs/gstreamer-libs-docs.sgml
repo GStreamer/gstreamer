@@ -36,7 +36,6 @@
     <para>
       GStreamer provides some standard libraries you can use to create plugins.
     </para>
-    &GstBytestream;
     &GstDataProtocol;
     &GstGetbits;
     <!-- has not yet been written

@@ -87,10 +87,12 @@ main (gint argc, gchar * argv[])
     src = (GstElement *) src_list->data;
     src_list = src_list->next;
 
-    if (i + max_this_level < n_elements)
+    if (i + max_this_level < n_elements) {
       e = gst_element_factory_make ("tee", NULL);
-    else
+    } else {
       e = gst_element_factory_make ("fakesink", NULL);
+      g_object_set (e, "preroll-queue-len", 1, NULL);
+    }
     g_object_set (e, "silent", TRUE, NULL);
     new_src_list = g_slist_prepend (new_src_list, e);
 

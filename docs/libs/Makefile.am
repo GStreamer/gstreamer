@@ -12,7 +12,7 @@ include $(srcdir)/../upload.mak
 
 # generated basefiles
 #basefiles = \
-##		$(DOC_MODULE).types \
+#		$(DOC_MODULE).types \
 #		$(DOC_MODULE)-sections.txt \
 #		$(DOC_MODULE)-docs.sgml
 
