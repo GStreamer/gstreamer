@@ -148,6 +148,7 @@ gst_schedule_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
     }
   }
 
+  g_assert (GST_RPAD_BUFPEN(GST_RPAD_PEER(pad)) == NULL);
   // now fill the bufferpen and switch so it can be consumed
   GST_RPAD_BUFPEN(GST_RPAD_PEER(pad)) = buf;
   GST_DEBUG (GST_CAT_DATAFLOW,"switching to %p\n",GST_ELEMENT (GST_PAD_PARENT (pad))->threadstate);
