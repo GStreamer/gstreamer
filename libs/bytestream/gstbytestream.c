@@ -57,7 +57,14 @@ gst_bytestream_new (GstPad * pad)
 void
 gst_bytestream_destroy (GstByteStream * bs)
 {
-  // FIXME lots of cleaning up to do here...
+  GSList *walk;
+
+  walk = bs->buflist;
+  while (walk) {
+    gst_buffer_unref( GST_BUFFER (walk->data) );
+    walk = g_slist_next (walk);
+  }
+
   g_free (bs);
 }
 
