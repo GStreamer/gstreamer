@@ -21,7 +21,7 @@
 #include <config.h>
 
 #include <gst/gst.h>
-#include "gstidct.h"
+#include <gst/idct/idct.h>
 #include "dct.h"
 
 static void gst_idct_int_sparse_idct(short *data);

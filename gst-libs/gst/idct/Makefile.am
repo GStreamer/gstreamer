@@ -11,7 +11,7 @@ library_LTLIBRARIES = libgstidct.la
 libgstidct_la_SOURCES = \
         fastintidct.c \
 	floatidct.c \
-	gstidct.c \
+	idct.c \
 	intidct.c \
 	$(GSTIDCTARCH_SRCS)
 
