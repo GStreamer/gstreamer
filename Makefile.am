@@ -16,10 +16,15 @@ else
 EXAMPLES_DIR=
 endif
 
-gstreamer-libs-@GST_MAJORMINOR@.pc: gstreamer-libs.pc
+all-local: gstreamer-libs-@GST_MAJORMINOR@.pc gstreamer-play-@GST_MAJORMINOR@.pc
+gstreamer-libs-@GST_MAJORMINOR@.pc: gstreamer-libs.pc gstreamer-libs.pc.in
 	cp gstreamer-libs.pc gstreamer-libs-@GST_MAJORMINOR@.pc
-gstreamer-play-@GST_MAJORMINOR@.pc: gstreamer-play.pc
+gstreamer-play-@GST_MAJORMINOR@.pc: gstreamer-play.pc gstreamer-play.pc.in
 	cp gstreamer-play.pc gstreamer-play-@GST_MAJORMINOR@.pc
+gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc: gstreamer-libs-uninstalled.pc gstreamer-libs-uninstalled.pc.in
+	cp gstreamer-libs-uninstalled.pc gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc
+gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc: gstreamer-play-uninstalled.pc gstreamer-play-uninstalled.pc.in
+	cp gstreamer-play-uninstalled.pc gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc
 gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
 	cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
 
