@@ -84,12 +84,7 @@ install-data-local:
 	fi)
 
 dist-hook:
-	mkdir $(distdir)/html
-	mkdir $(distdir)/sgml
-	mkdir $(distdir)/tmpl
-	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
+	if ! test -d $(distdir)/tmpl ; then mkdir $(distdir)/tmpl ; fi
 	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
-	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
-	-cp $(srcdir)/sgml/*.bottom $(srcdir)/sgml/*.top $(distdir)/sgml
 
 .PHONY : html sgml templates 
