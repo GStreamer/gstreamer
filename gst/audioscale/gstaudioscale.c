@@ -59,7 +59,7 @@ enum
   GST_STATIC_CAPS (\
     "audio/x-raw-int, " \
       "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, 2 ], " \
       "endianness = (int) BYTE_ORDER, " \
       "width = (int) 16, " \
       "depth = (int) 16, " \
@@ -68,7 +68,7 @@ enum
   /* disabled because it segfaults */
 "audio/x-raw-float, "
     "rate = (int) [ 1, MAX ], "
-    "channels = (int) [ 1, MAX ], "
+    "channels = (int) [ 1, 2 ], "
     "endianness = (int) BYTE_ORDER, " "width = (int) 32")
 #endif
      static GstStaticPadTemplate gst_audioscale_sink_template =

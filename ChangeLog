@@ -1,3 +1,8 @@
+2004-12-16  David Schleef  <ds@schleef.org>
+
+	* gst/audioscale/gstaudioscale.c: the resample library only
+	handles 1 or 2 channels.  Change caps to compensate.
+
 2004-12-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/matroska/matroska-demux.c: (aac_rate_idx), (aac_profile_idx),
