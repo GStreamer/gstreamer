@@ -770,9 +770,9 @@ gst_bin_create_plan_func (GstBin *bin)
 
   gst_bin_schedule(bin);
 
-  g_print ("gstbin \"%s\", eos providers:%d\n",
-		  GST_ELEMENT_NAME (bin),
-		  bin->num_eos_providers);
+//  g_print ("gstbin \"%s\", eos providers:%d\n",
+//		  GST_ELEMENT_NAME (bin),
+//		  bin->num_eos_providers);
 
   GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
 }
@@ -805,11 +805,27 @@ gst_bin_iterate_func (GstBin *bin)
     if (!chain->need_scheduling) continue;
 
     if (chain->need_cothreads) {
+      GList *entries;
+
       // all we really have to do is switch to the first child
       // FIXME this should be lots more intelligent about where to start
       GST_DEBUG (0,"starting iteration via cothreads\n");
 
-      entry = GST_ELEMENT (chain->elements->data);
+      entries = chain->elements;
+      entry = NULL;
+
+      // find an element with a threadstate to start with
+      while (entries) {
+        entry = GST_ELEMENT (entries->data);
+
+	if (entry->threadstate)
+          break;
+	entries = g_list_next (entries);
+      }
+      // if we couldn't find one, bail out
+      if (entries == NULL)
+        GST_ERROR(GST_ELEMENT(bin),"no cothreaded elements found!");
+	
       GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
       GST_DEBUG (0,"set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
             GST_ELEMENT_NAME (entry),entry);

@@ -1,4 +1,14 @@
-#include "externals.h"
+/***********************************************************
+
+	Win32 emulation code. Functions that emulate
+	responses from corresponding Win32 API calls.
+         Since we are not going to be able to load 
+       virtually any DLL, we can only implement this
+      much, adding needed functions with each new codec.
+
+************************************************************/
+
+#include "win32.h"
 #include <stdio.h>
 #include <pthread.h>
 #include <malloc.h>
@@ -120,16 +130,24 @@ int my_release(char* memory)
 #else
 void* my_mreq(int size, int to_zero)
 {
+    void* answer; 
     if(to_zero)
-	return calloc(size, 1);
-	else
-	return malloc(size);
+	answer=calloc(size+4, 1);
+    else
+	answer=malloc(size+4);
+    *(int*)answer=size;
+    return (int*)answer+1;
 }	
 int my_release(char* memory)
 {
-    free(memory);
+    if(memory==0)return 0;
+    free(memory-4);
     return 0;
 }
+int my_size(char* memory)
+{
+    return *(int*)(memory-4);
+}    
 #endif
 
 extern int unk_exp1;
@@ -526,7 +544,14 @@ long WINAPI expHeapFree(int arg1, int arg2, void* ptr)
     my_release(ptr);
     return 1;
 }    	
-
+long WINAPI expHeapSize(int heap, int flags, void* pointer)
+{
+    return my_size(pointer);
+} 
+long WINAPI expGetProcessHeap(void)
+{
+    return 1;
+}    
 void* WINAPI expVirtualAlloc(void* v1, long v2, long v3, long v4)
 {
     void* z;
@@ -972,8 +997,11 @@ LPCSTR WINAPI expGetEnvironmentStrings()
 
 int WINAPI expGetStartupInfoA(STARTUPINFOA *s)
 {
+    int i;    
     dbgprintf("GetStartupInfoA\n");
-    return  1;
+    for(i=0; i<sizeof(STARTUPINFOA)/4; i++)
+     ((int*)s)[i]=i+0x200;
+    return 1;
 }    
 
 int WINAPI expGetStdHandle(int z)
@@ -1123,6 +1151,25 @@ int WINAPI expGetPrivateProfileIntA(char* appname, char* keyname, int default_va
     free(fullname); 
     return default_value;
 }
+int WINAPI expGetPrivateProfileStringA(const char* appname, const char* keyname,
+	const char* hz1, char* hz2, int default_value, const char* filename)
+{
+    int size=4;
+    char* fullname;
+    dbgprintf("GetPrivateProfileStringA(%s, %s, %s, %X, %X, %s)\n", appname, keyname, hz1, hz2, default_value, filename );
+    if(!(appname && keyname && filename) ) return default_value;
+    fullname=(char*)malloc(50+strlen(appname)+strlen(keyname)+strlen(filename));
+    strcpy(fullname, "Software\\IniFileMapping\\");
+    strcat(fullname, appname);
+    strcat(fullname, "\\");
+    strcat(fullname, keyname);
+    strcat(fullname, "\\");
+    strcat(fullname, filename);
+//    RegQueryValueExA(HKEY_LOCAL_MACHINE, fullname, NULL, NULL, &default_value, &size);
+    printf("GetPrivateProfileStringA(%s, %s, %s, %X, %X, %s)\n", appname, keyname, hz1, hz2, default_value, filename );
+    free(fullname); 
+    return default_value;
+}
 
 int WINAPI expDefDriverProc(int _private, int id, int msg, int arg1, int arg2)
 {
@@ -1191,6 +1238,26 @@ extern void WINAPI expOutputDebugStringA( const char* string )
     fprintf(stderr, "DEBUG: %s\n", string);
 }    
 
+int WINAPI expGetDC(int hwnd)
+{
+    return 0;
+}
+
+int WINAPI expGetDesktopWindow()
+{
+    return 0;
+}
+     
+int WINAPI expReleaseDC(int hwnd, int hdc)
+{
+    return 0;
+}    
+
+int WINAPI expGetSystemPaletteEntries(int hdc, int iStartIndex, int nEntries, void* lppe)
+{
+    return 0;
+}    
+
 struct exports
 {
     char name[64];
@@ -1223,6 +1290,8 @@ FF(HeapCreate, 461)
 FF(HeapAlloc, -1)
 FF(HeapDestroy, -1)
 FF(HeapFree, -1)
+FF(HeapSize, -1)
+FF(GetProcessHeap, -1)
 FF(VirtualAlloc, -1)
 FF(VirtualFree, -1)
 FF(InitializeCriticalSection, -1) 
@@ -1278,6 +1347,7 @@ FF(UnmapViewOfFile, -1)
 FF(Sleep, -1)
 FF(GetModuleHandleA, -1)
 FF(GetPrivateProfileIntA, -1)
+FF(GetPrivateProfileStringA, -1)
 FF(GetLastError, -1)
 FF(SetLastError, -1)
 FF(InterlockedIncrement, -1)
@@ -1302,6 +1372,9 @@ FF(DefDriverProc, -1)
 struct exports exp_user32[]={
 FF(LoadStringA, -1)
 FF(wsprintfA, -1)
+FF(GetDC, -1)
+FF(GetDesktopWindow, -1)
+FF(ReleaseDC, -1)
 };
 struct exports exp_advapi32[]={
 FF(RegOpenKeyA, -1)
@@ -1315,6 +1388,7 @@ struct exports exp_gdi32[]={
 FF(CreateCompatibleDC, -1)
 FF(GetDeviceCaps, -1)
 FF(DeleteDC, -1)
+FF(GetSystemPaletteEntries, -1)
 };
 struct exports exp_version[]={
 FF(GetFileVersionInfoSizeA, -1)

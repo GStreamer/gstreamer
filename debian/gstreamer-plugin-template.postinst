@@ -1,0 +1,25 @@
+#! /bin/sh
+# template plugin postinst script
+
+set -e
+
+case "$1" in
+    configure)
+        # Update shared lib deps
+        gstreamer-register
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 0
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
+

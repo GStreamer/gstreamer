@@ -1,0 +1,38 @@
+GStreamer for Debian
+----------------------
+This package contains the GStreamer distribution.
+
+More information can be found at http://gstreamer.net/
+
+GStreamer is split into a number of base packages:
+
+   libgst0              shared core libs
+   libgst-dev           development libs and headers
+   libgst-runtime       tools required by the libs (gstreamer-register)
+   gstreamer-doc        documentation
+   gstreamer-tools      useful tools
+
+recommended plugins:
+
+   gstreamer-elements   core plugins
+   gstreamer-common     many independent plugins
+
+optional plugins:
+
+   gstreamer-cdparanoia cdparanoia plugin
+   gstreamer-esd        ESD plugin
+   gstreamer-lame       LAME plugin
+   gstreamer-mpg123     mpg123 plugin
+   gstreamer-vorbis     Vorbis plugin
+
+and applications and their supporting libs:
+
+   libgstmediaplay0     media player libs
+   libgstmediaplay-dev  media player dev support
+   gstmediaplay         media player application
+
+   libgsteditor0        stream pipeline visual editor libs
+   libgsteditor-dev     stream pipeline visual editor dev support
+   gsteditor            stream pipeline visual editor application
+
+David I. Lehn <dlehn@vt.edu>  Fri, 19 Jan 2001 19:13:06 -0500

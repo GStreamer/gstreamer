@@ -17,22 +17,7 @@
 #include <sse.h>
 #endif /* HAVE_LIBSSE */
 
-#ifdef WORDS_BIGENDIAN
-#  define swab32(x) (x)
-#else
-#  if defined (__i386__)
-#    define swab32(x) __i386_swab32(x)
-     static inline const unsigned long __i386_swab32(unsigned long x)
-      {
-         __asm__("bswap %0" : "=r" (x) : "0" (x));
-         return x;
-      }
-#  else
-#    define swab32(x)\
-     ((((guint8*)&x)[0] << 24) | (((guint8*)&x)[1] << 16) |  \
-     (((guint8*)&x)[2] << 8)  | (((guint8*)&x)[3]))
-#  endif
-#endif
+#define swab32(x) GUINT32_FROM_BE(x)
 
 typedef struct _gst_getbits_t gst_getbits_t;
 typedef void (*GstGetbitsCallback) (gst_getbits_t *gb, void *data);

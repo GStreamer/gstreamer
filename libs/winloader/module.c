@@ -14,7 +14,7 @@
 
 #include <sys/mman.h>
 #include <sys/types.h>
-
+/*
 #ifdef __linux__
 #include <asm/unistd.h>
 #include <asm/ldt.h>
@@ -40,7 +40,7 @@ struct modify_ldt_ldt_s {
 #define __NR_modify_ldt         123
 #endif
 
-
+*/
 #include <wine/windef.h>
 #include <wine/winerror.h>
 #include <wine/heap.h>
@@ -64,7 +64,7 @@ modref_list;
  *
  * Convert an ldt_entry structure to the raw bytes of the descriptor.
  */
-static void LDT_EntryToBytes( unsigned long *buffer, const struct modify_ldt_ldt_s *content )
+/*static void LDT_EntryToBytes( unsigned long *buffer, const struct modify_ldt_ldt_s *content )
 {
     *buffer++ = ((content->base_addr & 0x0000ffff) << 16) |
                  (content->limit & 0x0ffff);
@@ -77,7 +77,7 @@ static void LDT_EntryToBytes( unsigned long *buffer, const struct modify_ldt_ldt
               ((content->limit_in_pages != 0) << 23) |
               0xf000;
 }
-
+*/
 
 //
 // funcs:
@@ -86,6 +86,7 @@ static void LDT_EntryToBytes( unsigned long *buffer, const struct modify_ldt_ldt
 // 1 write old mode
 // 0x11 write
 //
+/*
 static int modify_ldt( int func, struct modify_ldt_ldt_s *ptr,
                                   unsigned long count )
 {
@@ -107,7 +108,7 @@ static int modify_ldt( int func, struct modify_ldt_ldt_s *ptr,
                            "b" (func),
                            "c" (ptr),
                            "d" (sizeof(struct modify_ldt_ldt_s)*count) );
-#endif  /* __PIC__ */
+#endif  
     if (res >= 0) return res;
     errno = -res;
     return -1;
@@ -147,7 +148,7 @@ static int install_fs()
 	perror("install_fs");
 	MESSAGE("Couldn't install fs segment, expect segfault\n");
     }	
-#endif /*linux*/
+#endif 
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
     {
@@ -161,11 +162,11 @@ static int install_fs()
             MESSAGE("Did you reconfigure the kernel with \"options USER_LDT\"?\n");
         }
     }
-#endif  /* __NetBSD__ || __FreeBSD__ || __OpenBSD__ */
+#endif 
     __asm__
     (
     "movl $0xf,%eax\n\t"
-    "pushw %ax\n\t"
+//    "pushw %ax\n\t"
     "movw %ax, %fs\n\t"
     );
     prev_struct=malloc(8);
@@ -178,13 +179,15 @@ static int install_fs()
 };    	
 static int uninstall_fs()
 {
+    printf("Uninstalling FS segment\n");
     if(fs_seg==0)
 	return -1;
     munmap(fs_seg, 0x30000);
+    fs_installed=0;
     return 0;
 }
 
-
+*/
 //WINE_MODREF *local_wm=NULL;
 modref_list* local_wm=NULL;
 
@@ -216,7 +219,7 @@ void MODULE_RemoveFromList(WINE_MODREF *mod)
     {
 	free(list);
 	local_wm=NULL;
-	uninstall_fs();
+//	uninstall_fs();
 	return;
     }
     for(;list;list=list->prev)
@@ -412,8 +415,8 @@ HMODULE WINAPI LoadLibraryExA(LPCSTR libname, HANDLE hfile, DWORD flags)
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return 0;
 	}
-	if(fs_installed==0)
-	    install_fs();
+//	if(fs_installed==0)
+//	    install_fs();
 	    
 
 	wm = MODULE_LoadLibraryExA( libname, hfile, flags );

@@ -1,0 +1,89 @@
+<chapter id="cha-debugging">
+  <title>Debugging</title>
+  <para> 
+    GStreamer has an extensive set of debugging tools for
+    plugin developers.
+  </para>
+ 
+  <sect1>
+    <title>Command line options</title>
+    <para> 
+      Applications using the GStreamer libraries accept the following set
+      of command line argruments to enable the debugging system.
+    </para>
+      
+    <para> 
+     <itemizedlist>
+       <listitem>
+         <para>
+          <option>--gst-debug-mask=<replaceable>mask</replaceable></option> 
+	  Sets the mask for the debugging output.
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+          <option>--gst-info-mask=<replaceable>mask</replaceable></option> 
+	  Sets the mask for the info output.
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+          <option>--gst-plugin-spew</option> 
+	  Enable printout of errors while loading GST plugins.
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+          <option>--gst-plugin-path=<replaceable>PATH</replaceable></option> 
+	  Add a directory to the plugin search path.
+         </para>
+       <listitem>
+         <para>
+           <option>--help</option> Print the a short desciption of the
+	   options and an overview of the current debugging/info masks
+	   set.
+         </para>
+       </listitem>
+     </itemizedlist>
+    </para>
+    <para>
+    <para>
+      The follwing table gives an overview of the mask values and 
+      their meaning. (enabled) means that the corresponding flag
+      has been set.
+    </para>
+    <programlisting>
+Mask (to be OR'ed)   info/debug         FLAGS   
+--------------------------------------------------------
+0x00000001     (enabled)/              GST_INIT
+0x00000002              /              COTHREADS
+0x00000004              /              COTHREAD_SWITCH
+0x00000008              /              AUTOPLUG
+0x00000010              /              AUTOPLUG_ATTEMPT
+0x00000020              /              PARENTAGE
+0x00000040              /              STATES
+0x00000080              /              PLANING
+0x00000100              /              SCHEDULING
+0x00000200              /              OPERATION
+0x00000400              /              BUFFER
+0x00000800              /              CAPS
+0x00001000              /              CLOCK
+0x00002000              /              ELEMENT_PADS
+0x00004000              /              ELEMENTFACTORY
+0x00008000              /              PADS
+0x00010000              /              PIPELINE
+0x00020000              /              PLUGIN_LOADING
+0x00040000              /              PLUGIN_ERRORS
+0x00080000              /              PROPERTIES
+0x00100000              /              THREAD
+0x00200000              /              TYPES
+0x00400000              /              XML
+    </programlisting>
+  </sect1>
+  <sect1>
+    <title>Adding a custom debug handler</title>
+    <para> 
+    </para> 
+  </sect1>
+
+</chapter>

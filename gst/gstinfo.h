@@ -139,7 +139,7 @@ _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 static inline gchar *
 _gst_debug_nameof_funcptr (void *ptr) 
 {
-  gchar *ptrname = __gst_function_pointers ? g_hash_table_lookup(__gst_function_pointers,ptr) : NULL;
+  gchar *ptrname = (gchar*)( __gst_function_pointers ? g_hash_table_lookup(__gst_function_pointers,ptr) : NULL );
 // FIXME this must go away, it's a major leak
   if (!ptrname) return g_strdup_printf("%p",ptr);
   else return ptrname;

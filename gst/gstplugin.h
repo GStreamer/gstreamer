@@ -64,6 +64,8 @@ void			_gst_plugin_initialize		(void);
 
 GstPlugin*		gst_plugin_new			(const gchar *name);
 
+void			gst_plugin_add_path		(const gchar *path);
+
 const gchar*		gst_plugin_get_name		(GstPlugin *plugin);
 void			gst_plugin_set_name		(GstPlugin *plugin, const gchar *name);
 const gchar*		gst_plugin_get_longname		(GstPlugin *plugin);

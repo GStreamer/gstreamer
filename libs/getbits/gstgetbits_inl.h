@@ -73,22 +73,7 @@
 #define checklength2(src, dst)
 #endif
 
-#ifdef WORDS_BIGENDIAN
-#  define swab32(x) (x)
-#else
-#  if defined (__i386__)
-#    define swab32(x) __i386_swab32(x)
-      static inline const guint32 __i386_swab32(guint32 x)
-	    {
-	      __asm__("bswap %0" : "=r" (x) : "0" (x));
-	      return x;
-	    }
-#  else
-#    define swab32(x)\
-	((((guint8*)&x)[0] << 24) | (((guint8*)&x)[1] << 16) |  \
-	 (((guint8*)&x)[2] << 8)  | (((guint8*)&x)[3]))
-#  endif
-#endif
+#define swab32(x) GUINT32_FROM_BE(x)
 
 /* External declarations for bitstream i/o operations. */
 extern unsigned long gst_getbits_nBitMask[];

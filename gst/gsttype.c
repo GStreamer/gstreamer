@@ -80,6 +80,7 @@ gst_type_register (GstTypeFactory *factory)
     _gst_types =	g_list_prepend (_gst_types, type);
 
     id = type->id;
+    GST_DEBUG (0,"gsttype: new mime type '%s', id %d\n", type->mime, type->id);
 
   } else {
     type = gst_type_find_by_id (id);

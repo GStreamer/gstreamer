@@ -27,6 +27,8 @@
 typedef enum {
   GST_CPU_FLAG_MMX      = (1<<0),
   GST_CPU_FLAG_SSE      = (1<<1),
+  GST_CPU_FLAG_MMXEXT   = (1<<2),
+  GST_CPU_FLAG_3DNOW    = (1<<3),
 } GstCPUFlags;
 
 void 		_gst_cpu_initialize	(void);

@@ -171,6 +171,33 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   return connected;
 }
 
+typedef struct {
+  GstElement *result;
+  GList *endcap;
+  gint i;
+} dynamic_pad_struct;
+
+static void
+autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
+{
+  dynamic_pad_struct *info = (dynamic_pad_struct *)data;
+  GList *pads = gst_element_get_pad_list (element);
+
+  GST_DEBUG (0,"attempting to dynamically create a ghostpad for %s=%s\n", GST_ELEMENT_NAME (element),
+		  GST_PAD_NAME (pad));
+
+  while (pads) {
+    GstPad *pad = GST_PAD (pads->data);
+    pads = g_list_next (pads);
+
+    if (gst_caps_list_check_compatibility (gst_pad_get_caps_list (pad), info->endcap)) {
+      gst_element_add_ghost_pad (info->result, pad, g_strdup_printf("src_%02d", info->i));
+      GST_DEBUG (0,"gstpipeline: new dynamic pad %s\n", GST_PAD_NAME (pad));
+      break;
+    }
+  }
+}
+
 static void
 gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 {
@@ -455,7 +482,10 @@ differ:
     {
       GList *endcap = (GList *)(endcaps->data);
       GList *pads = gst_element_get_pad_list (thesrcelement);
+      gboolean have_pad = FALSE;
       endcaps = g_list_next (endcaps);
+
+      GST_DEBUG (0,"attempting to create a ghostpad for %s\n", GST_ELEMENT_NAME (thesrcelement));
 
       while (pads) {
 	GstPad *pad = GST_PAD (pads->data);
@@ -463,8 +493,22 @@ differ:
 
 	if (gst_caps_list_check_compatibility (gst_pad_get_caps_list (pad), endcap)) {
           gst_element_add_ghost_pad (result, pad, g_strdup_printf("src_%02d", i));
+	  have_pad = TRUE;
 	  break;
 	}
+      }
+      if (!have_pad) {
+	dynamic_pad_struct *data = g_new0(dynamic_pad_struct, 1);
+
+	data->result = result;
+	data->endcap = endcap;
+	data->i = i;
+
+        GST_DEBUG (0,"delaying the creation of a ghostpad for %s\n", GST_ELEMENT_NAME (thesrcelement));
+	gtk_signal_connect (GTK_OBJECT (thesrcelement), "new_pad", 
+			autoplug_dynamic_pad, data);
+        gtk_signal_connect (GTK_OBJECT (thesrcelement), "new_ghost_pad",
+                 	autoplug_dynamic_pad, data);
       }
     }
   }

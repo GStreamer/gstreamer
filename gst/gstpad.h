@@ -26,6 +26,13 @@
 
 #include <parser.h> // NOTE: This is xml-config's fault
 
+// Include compatability defines: if libxml hasn't already defined these,
+// we have an old version 1.x
+#ifndef xmlChildrenNode
+#define xmlChildrenNode childs
+#define xmlRootNode root
+#endif
+
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/cothreads.h>
@@ -283,7 +290,7 @@ void			gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
 void			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);
 
 #if 1
-void			gst_pad_push			(GstPad *pad, GstBuffer *buffer);
+void			gst_pad_push			(GstPad *pad, GstBuffer *buf);
 #else
 #define gst_pad_push(pad,buf) G_STMT_START{ \
   if ((pad)->peer->pushfunc) ((pad)->peer->pushfunc)((pad)->peer,(buf)); \
@@ -298,8 +305,6 @@ GstBuffer*		gst_pad_pullregion		(GstPad *pad, GstRegionType type, guint64 offset
 #define gst_pad_pullregion(pad,type,offset,len) \
   (((pad)->peer->pullregionfunc) ? ((pad)->peer->pullregionfunc)((pad)->peer,(type),(offset),(len)) : NULL)
 #endif
-
-GstPad *		gst_pad_select			(GstPad *nextpad, ...);
 
 #define			gst_pad_eos(pad)		(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
 gboolean		gst_pad_set_eos			(GstPad *pad);

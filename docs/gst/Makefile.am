@@ -23,7 +23,6 @@ tmpl_sources =				\
 	tmpl/cothreads.sgml             \
 	tmpl/gst.sgml                   \
 	tmpl/gstinfo.sgml               \
-	tmpl/gstasyncdisksrc.sgml       \
 	tmpl/gstautoplug.sgml           \
 	tmpl/gstscheduler.sgml          \
 	tmpl/gstprops.sgml              \

@@ -839,7 +839,7 @@ output_widget_pads (FILE *fp, GstElement *element)
     type = gst_type_find_by_id(1);
 
     fprintf (fp, "<PAD>\n<NAME>%s::%s</NAME>\n",
-	       gtk_type_name(factory->type), pad->name);
+	       gtk_type_name(factory->type), gst_object_get_name (GST_OBJECT (pad)));
     
     if (type) {
       fprintf(fp, "<MIME>%s</MIME>\n", type->mime);

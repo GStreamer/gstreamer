@@ -252,11 +252,11 @@ gst_caps_get_type_id (GstCaps *caps)
  * Set the type id of the caps.
  */
 void
-gst_caps_set_type_id (GstCaps *caps, guint16 typeid)
+gst_caps_set_type_id (GstCaps *caps, guint16 type_id)
 {
   g_return_if_fail (caps != NULL);
 
-  caps->id = typeid;
+  caps->id = type_id;
 }
 
 /**

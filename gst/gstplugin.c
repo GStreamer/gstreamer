@@ -66,6 +66,8 @@ _gst_plugin_initialize (void)
   _gst_libraries = NULL;
   _gst_libraries_seqno = 0;
 
+  /* add the main (installed) library path */
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
 
   /* if this is set, we add build-directory paths to the list */
 #ifdef PLUGINS_USE_SRCDIR
@@ -82,9 +84,6 @@ _gst_plugin_initialize (void)
                                       PLUGINS_SRCDIR "/gst/types");
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
                                       PLUGINS_SRCDIR "/gst/autoplug");
-#else /* PLUGINS_USE_SRCDIR */
-  /* add the main (installed) library path */
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
 #endif /* PLUGINS_USE_SRCDIR */
 
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
@@ -99,6 +98,18 @@ _gst_plugin_initialize (void)
   gst_plugin_load_thyself (doc->xmlRootNode);
 
   xmlFreeDoc (doc);
+}
+
+/**
+ * gst_plugin_add_path:
+ * @path: the directory to add to the search path
+ *
+ * Add a directory to the path searched for plugins.
+ */
+void
+gst_plugin_add_path (const gchar *path)
+{
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,g_strdup(path));
 }
 
 static time_t
@@ -216,7 +227,7 @@ gst_plugin_load_all(void)
 
   path = _gst_plugin_paths;
   while (path != NULL) {
-    GST_DEBUG (GST_CAT_PLUGIN_LOADING,"loading plugins from %s\n",(gchar *)path->data);
+    GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugins from %s\n",(gchar *)path->data);
     gst_plugin_load_recurse(path->data,NULL);
     path = g_list_next(path);
   }
@@ -366,7 +377,8 @@ gst_plugin_load_absolute (const gchar *name)
     }
     return TRUE;
   } else if (_gst_plugin_spew) {
-    gst_info("error loading plugin: %s, reason: %s\n", name, g_module_error());
+    // FIXME this should be some standard gst mechanism!!!
+    g_printerr ("error loading plugin %s, reason: %s\n", name, g_module_error());
   }
 
   return FALSE;

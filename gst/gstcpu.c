@@ -63,14 +63,23 @@ _gst_cpu_initialize (void)
   }
   if (edx & (1<<25)) {
     _gst_cpu_flags |= GST_CPU_FLAG_SSE;
+    _gst_cpu_flags |= GST_CPU_FLAG_MMXEXT;
     featurelist = stringcat(featurelist,"SSE ");
+  }
+  if (edx & (1<<24)) {
+    _gst_cpu_flags |= GST_CPU_FLAG_MMXEXT;
+    featurelist = stringcat(featurelist,"MMXEXT ");
+  }
+  if (edx & (1<<31)) {
+    _gst_cpu_flags |= GST_CPU_FLAG_3DNOW;
+    featurelist = stringcat(featurelist,"3DNOW ");
   }
 
   if (!_gst_cpu_flags) {
     featurelist = stringcat(featurelist,"NONE");
   }
 
-  GST_INFO (GST_CAT_GST_INIT, "CPU features: %s",featurelist);
+  GST_INFO (GST_CAT_GST_INIT, "CPU features: (%08lx) %s",edx, featurelist);
   g_free(featurelist);
 }
 

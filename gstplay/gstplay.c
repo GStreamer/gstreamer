@@ -316,24 +316,47 @@ gst_play_typefind (GstBin *bin, GstElement *element)
 }
 
 static gboolean
-connect_pads (GstElement *new_element, GstElement *target)
+connect_pads (GstElement *new_element, GstElement *target, gboolean add)
 {
   GList *pads = gst_element_get_pad_list (new_element);
+  GstPad *targetpad = gst_element_get_pad (target, "sink");
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
-    GstPad *targetpad = gst_element_get_pad (target, "sink");
 
     if (gst_pad_check_compatibility (pad, targetpad)) {
-      gst_bin_add (GST_BIN (gst_element_get_parent (
-	           GST_ELEMENT (gst_pad_get_real_parent (pad)))),
-		   target);
+      if (add) {
+        gst_bin_add (GST_BIN (gst_element_get_parent (
+	             GST_ELEMENT (gst_pad_get_real_parent (pad)))),
+	  	     target);
+      }
       gst_pad_connect (pad, targetpad);
       return TRUE;
     }
     pads = g_list_next (pads);
   }
   return FALSE;
+}
+
+static void
+dynamic_connect_pads (GstElement *new_element, GstPad *pad, gpointer data)
+{
+  GstPlay *play = (GstPlay *)data;
+  GstPlayPrivate *priv;
+  
+  priv = (GstPlayPrivate *)play->priv;
+
+  gdk_threads_enter();
+  if (!(play->flags & GST_PLAY_TYPE_AUDIO) &&
+      (connect_pads (new_element, priv->audio_queue, FALSE))) {
+    play->flags |= GST_PLAY_TYPE_AUDIO;
+  }
+  if (!(play->flags & GST_PLAY_TYPE_VIDEO) &&
+      (connect_pads (new_element, priv->video_queue, FALSE))) {
+    play->flags |= GST_PLAY_TYPE_VIDEO;
+    gtk_widget_show (priv->video_widget);
+  }
+  gdk_threads_leave();
 }
 
 GstPlayReturn
@@ -392,14 +415,24 @@ gst_play_set_uri (GstPlay *play,
 
   gst_element_connect (priv->src, "src", new_element, "sink");
 
-  if (connect_pads (new_element, priv->video_queue)) {
+  if (connect_pads (new_element, priv->video_queue, TRUE)) {
     gst_bin_add (GST_BIN (priv->bin), priv->video_show),
     play->flags |= GST_PLAY_TYPE_VIDEO;
     gtk_widget_show (priv->video_widget);
   }
-  if (connect_pads (new_element, priv->audio_queue)) {
+  else {
+    gst_bin_add (GST_BIN (priv->bin), priv->video_show),
+    gtk_signal_connect (GTK_OBJECT (new_element), "new_pad", dynamic_connect_pads, play);
+    gtk_signal_connect (GTK_OBJECT (new_element), "new_ghost_pad", dynamic_connect_pads, play);
+  }
+  if (connect_pads (new_element, priv->audio_queue, TRUE)) {
     gst_bin_add (GST_BIN (priv->bin), priv->audio_play),
     play->flags |= GST_PLAY_TYPE_AUDIO;
+  }
+  else {
+    gst_bin_add (GST_BIN (priv->bin), priv->audio_play),
+    gtk_signal_connect (GTK_OBJECT (new_element), "new_pad", dynamic_connect_pads, play);
+    gtk_signal_connect (GTK_OBJECT (new_element), "new_ghost_pad", dynamic_connect_pads, play);
   }
 
   gst_bin_add (GST_BIN (priv->thread), priv->bin);

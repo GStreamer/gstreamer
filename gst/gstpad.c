@@ -819,7 +819,7 @@ void
 gst_pad_load_and_connect (xmlNodePtr self,
 		          GstObject *parent)
 {
-  xmlNodePtr field = self->childs;
+  xmlNodePtr field = self->xmlChildrenNode;
   GstPad *pad = NULL, *targetpad;
   guchar *peer = NULL;
   gchar **split;
@@ -927,22 +927,49 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 }
 
 #ifndef gst_pad_push
-void gst_pad_push(GstPad *pad,GstBuffer *buf) {
-  GstRealPad *peer = GST_RPAD_PEER(pad);
-  GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+/**
+ * gst_pad_push:
+ * @pad: the pad to push
+ * @buf: the buffer to push
+ *
+ * Push a buffer to the peer of the pad.
+ */
+void 
+gst_pad_push (GstPad *pad, GstBuffer *buf) 
+{
+  GstRealPad *peer = GST_RPAD_PEER (pad);
+
+  g_return_if_fail (peer != NULL);
+  
+  GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
+  
   if (peer->pushfunc) {
-    GST_DEBUG (0,"calling pushfunc &%s of peer pad %s:%s\n",
-          GST_DEBUG_FUNCPTR_NAME(peer->pushfunc),GST_DEBUG_PAD_NAME(((GstPad*)peer)));
-    (peer->pushfunc)(((GstPad*)peer),buf);
+    GST_DEBUG (0, "calling pushfunc &%s of peer pad %s:%s\n",
+          GST_DEBUG_FUNCPTR_NAME (peer->pushfunc), GST_DEBUG_PAD_NAME (((GstPad*)peer)));
+    (peer->pushfunc) (((GstPad*)peer), buf);
   } else
-    GST_DEBUG (0,"no pushfunc\n");
+    GST_DEBUG (0, "no pushfunc\n");
 }
 #endif
 
 #ifndef gst_pad_pull
-GstBuffer *gst_pad_pull(GstPad *pad) {
+/**
+ * gst_pad_pull:
+ * @pad: the pad to pull
+ *
+ * Pull a buffer from the peer pad.
+ *
+ * Returns: a new buffer from the peer pad.
+ */
+GstBuffer*
+gst_pad_pull (GstPad *pad) 
+{
   GstRealPad *peer = GST_RPAD_PEER(pad);
+  
+  g_return_val_if_fail (peer != NULL, NULL);
+
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+
   if (peer->pullfunc) {
     GST_DEBUG (0,"calling pullfunc &%s (@%p) of peer pad %s:%s\n",
       GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),&peer->pullfunc,GST_DEBUG_PAD_NAME(((GstPad*)peer)));
@@ -955,9 +982,29 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
 #endif
 
 #ifndef gst_pad_pullregion
-GstBuffer *gst_pad_pullregion(GstPad *pad,GstRegionType type,guint64 offset,guint64 len) {
+/**
+ * gst_pad_pullregion:
+ * @pad: the pad to pull the region from
+ * @type: the regiontype
+ * @offset: the offset/start of the buffer to pull
+ * @len: the length of the buffer to pull
+ *
+ * Pull a buffer region from the peer pad. The region to pull can be 
+ * specified with a offset/lenght pair or with a start/legnth time
+ * indicator as specified by the type parameter.
+ *
+ * Returns: a new buffer from the peer pad with data in the specified
+ * region.
+ */
+GstBuffer*
+gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len) 
+{
   GstRealPad *peer = GST_RPAD_PEER(pad);
+  
+  g_return_val_if_fail (peer != NULL, NULL);
+
   GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
+
   if (peer->pullregionfunc) {
     GST_DEBUG (0,"calling pullregionfunc &%s of peer pad %s:%s\n",
           GST_DEBUG_FUNCPTR_NAME(peer->pullregionfunc),GST_DEBUG_PAD_NAME(((GstPad*)peer)));
@@ -1277,23 +1324,6 @@ gst_pad_set_eos(GstPad *pad)
 
   return TRUE;
 }
-
-/*
-GstPad *
-gst_pad_select(GstPad *nextpad, ...) {
-  va_list args;
-  GstPad *pad;
-  GSList *pads = NULL;
-
-  // construct the list of pads
-  va_start (args, nextpad);
-  while ((pad = va_arg (args, GstPad*)))
-    pads = g_slist_prepend (pads, pad);
-  va_end (args);
-
-  // now switch to the nextpad
-*/
-
 
 /**
  * gst_pad_set_element_private:

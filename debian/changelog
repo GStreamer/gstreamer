@@ -1,0 +1,23 @@
+gstreamer (0.1.1-1) unstable; urgency=low
+
+  * New upstream release
+  * disable docs build, broken at the momemnt
+
+ -- David I. Lehn <dlehn@vt.edu>  Sun, 25 Feb 2001 17:58:25 -0500
+
+gstreamer (0.1.0-2) unstable; urgency=low
+
+  * debian/rules: call configure instead of autogen.sh
+
+ -- David I. Lehn <dlehn@vt.edu>  Sat, 24 Feb 2001 18:31:36 -0500
+
+gstreamer (0.1.0-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon, 15 Jan 2001 18:25:18 -0500
+
+Local variables:
+mode: debian-changelog
+add-log-mailing-address "dlehn@vt.edu"
+End:

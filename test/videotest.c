@@ -6,17 +6,21 @@ extern gboolean _gst_plugin_spew;
 gboolean idle_func(gpointer data);
 
 GstElement *videosink;
+GstElement *videosink2;
 GstElement *src;
 
 int main(int argc,char *argv[]) {
   GstElement *bin;
+  GstElement *tee;
   GstElementFactory *srcfactory;
   GstElementFactory *videosinkfactory;
 
   GtkWidget *appwindow;
+  GtkWidget *appwindow2;
   GtkWidget *vbox1;
   GtkWidget *button;
   GtkWidget *draw;
+  GtkWidget *draw2;
 
 
   //_gst_plugin_spew = TRUE;
@@ -34,17 +38,33 @@ int main(int argc,char *argv[]) {
   g_return_if_fail(videosinkfactory != NULL);
 
   src = gst_elementfactory_create(srcfactory,"src");
+  //gtk_object_set(GTK_OBJECT(src),"format",3,NULL);
+  gtk_object_set(GTK_OBJECT(src),"width",320,"height",240,NULL);
+
   videosink = gst_elementfactory_create(videosinkfactory,"videosink");
+  gtk_object_set(GTK_OBJECT(videosink),"xv_enabled",FALSE,NULL);
   gtk_object_set(GTK_OBJECT(videosink),"width",320,"height",240,NULL);
 
+  videosink2 = gst_elementfactory_create(videosinkfactory,"videosink2");
+  gtk_object_set(GTK_OBJECT(videosink2),"xv_enabled",FALSE,NULL);
+  gtk_object_set(GTK_OBJECT(videosink2),"width",320,"height",240,NULL);
+
+  tee = gst_elementfactory_make ("tee", "tee");
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
+  gst_bin_add(GST_BIN(bin),GST_ELEMENT(tee));
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(videosink));
+  gst_bin_add(GST_BIN(bin),GST_ELEMENT(videosink2));
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
+                  gst_element_get_pad(tee,"sink"));
+  gst_pad_connect(gst_element_request_pad_by_name (tee,"src%d"),
                   gst_element_get_pad(videosink,"sink"));
+  gst_pad_connect(gst_element_request_pad_by_name (tee,"src%d"),
+                  gst_element_get_pad(videosink2,"sink"));
 
   appwindow = gnome_app_new("Videotest","Videotest");
+  appwindow2 = gnome_app_new("Videotest2","Videotest2");
 
   vbox1 = gtk_vbox_new (FALSE, 0);
   gtk_widget_show (vbox1);
@@ -60,15 +80,20 @@ int main(int argc,char *argv[]) {
 				draw,
   				TRUE, TRUE, 0);
   gtk_widget_show (draw);
+
+  draw2 = gst_util_get_widget_arg(GTK_OBJECT(videosink2),"widget"),
+  gtk_widget_show (draw2);
 	
   gnome_app_set_contents(GNOME_APP(appwindow), vbox1);
 								
+  gnome_app_set_contents(GNOME_APP(appwindow2), draw2);
+
   gtk_object_set(GTK_OBJECT(appwindow),"allow_grow",TRUE,NULL);
   gtk_object_set(GTK_OBJECT(appwindow),"allow_shrink",TRUE,NULL);
 
   gtk_widget_show_all(appwindow);
+  gtk_widget_show_all(appwindow2);
 
-  gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 
   //gtk_object_set(GTK_OBJECT(src),"tune",133250,NULL);

@@ -23,12 +23,13 @@
 
 <!ENTITY XML SYSTEM "xml.sgml">
 <!ENTITY PLUGINS SYSTEM "plugins.sgml">
+<!ENTITY DEBUGGING SYSTEM "debugging.sgml">
 <!ENTITY PROGRAMS SYSTEM "programs.sgml">
 <!ENTITY COMPONENTS SYSTEM "components.sgml">
 <!ENTITY QUOTES SYSTEM "quotes.sgml">
 ]>
 
-<book id="GStreamer">
+<book id="index">
   <bookinfo>
     
     <authorgroup>
@@ -43,7 +44,7 @@
       </author>
     </authorgroup>
 
-    <legalnotice>
+    <legalnotice id="legalnotice">
       <para>
 	This material may be distributed only subject to the terms and
         conditions set forth in the Open Publication License, v1.0 or later (the
@@ -183,8 +184,11 @@
     <partintro>
       <para>
         <application>GStreamer</application> comes prepackaged with a few programs.
+	and some usefull debugging options.
       </para>
     </partintro>
+
+      &DEBUGGING;
 
       &PROGRAMS;
 

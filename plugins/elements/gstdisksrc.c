@@ -32,7 +32,7 @@
 
 
 GstElementDetails gst_disksrc_details = {
-  "asynchronous Disk Source",
+  "Disk Source",
   "Source/File",
   "Read from arbitrary point in a file",
   VERSION,

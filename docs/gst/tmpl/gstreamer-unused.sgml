@@ -154,14 +154,6 @@ This macro usets the given flags.
 </para>
 
 
-<!-- ##### FUNCTION gst_pipeline_add_src ##### -->
-<para>
-
-</para>
-
-@pipeline: 
-@src: 
-
 <!-- ##### MACRO DEBUG ##### -->
 <para>
 Use this macro to show debugging info. This is only usefull when developing new
@@ -681,14 +673,6 @@ Query whether this object has multiple input pads.
 @size: 
 @Returns: 
 
-<!-- ##### USER_FUNCTION GstAutoplugListFunction ##### -->
-<para>
-Get a list of all elements. These elements will be used in autoplugging.
-</para>
-
-@data: user data
-@Returns: a GList of elements
-
 <!-- ##### FUNCTION gst_fdsink_new_with_fd ##### -->
 <para>
 
@@ -911,6 +895,15 @@ Specify the current offset in the file.
 
 @klass: 
 
+<!-- ##### FUNCTION gst_pad_select ##### -->
+<para>
+
+</para>
+
+@nextpad: 
+@Varargs: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_identity_get_type ##### -->
 <para>
 
@@ -1018,12 +1011,6 @@ on its own.
 </para>
 
 @klass: 
-
-<!-- ##### MACRO GST_AUTOPLUG_MAX_COST ##### -->
-<para>
-The maximum cost of a certain connection.
-</para>
-
 
 <!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Short_Description ##### -->
 
@@ -1471,15 +1458,6 @@ This macro unsets the given state on the element.
 @pad: 
 @parent: 
 
-<!-- ##### FUNCTION gst_autoplug_caps ##### -->
-<para>
-
-</para>
-
-@srccaps: 
-@sinkcaps: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_tee_new ##### -->
 <para>
 
@@ -1707,15 +1685,6 @@ This macro sets the given state on the element.
 
 </para>
 
-
-<!-- ##### FUNCTION gst_autoplug_pads ##### -->
-<para>
-
-</para>
-
-@srcpad: 
-@sinkpad: 
-@Returns: 
 
 <!-- ##### FUNCTION gst_src_push_region ##### -->
 <para>
@@ -2026,14 +1995,6 @@ GstFilter
 @GST_CAPS_ALWAYS: 
 @GST_CAPS_MAYBE: 
 
-<!-- ##### FUNCTION gst_pipeline_autoplug ##### -->
-<para>
-
-</para>
-
-@pipeline: 
-@Returns: 
-
 <!-- ##### STRUCT GstPadClass ##### -->
 <para>
 
@@ -2047,6 +2008,7 @@ Flags for the GstSrc element
 
 @GST_SRC_ASYNC: Indicates that this src is asynchronous
 @GST_SRC_FLAG_LAST: subclasses can use this to number their flags
+
 
 <!-- ##### MACRO GST_HTTPSRC ##### -->
 <para>
@@ -2239,6 +2201,13 @@ The end point of a filter graph
 @format: 
 @args...: 
 
+<!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Long_Description ##### -->
+<para>
+Reads data from a file. You can seek to a specific location by setting
+the offset.
+</para>
+
+
 <!-- ##### MACRO GST_IS_ASYNCDISKSRC_CLASS ##### -->
 <para>
 
@@ -2265,14 +2234,6 @@ The end point of a filter graph
 
 </para>
 
-
-<!-- ##### FUNCTION gst_pipeline_add_sink ##### -->
-<para>
-
-</para>
-
-@pipeline: 
-@sink: 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Title ##### -->
 plugin
@@ -2336,14 +2297,6 @@ This macro checks to see if the given state is set.
 </para>
 
 
-<!-- ##### FUNCTION gst_plugin_find_elementfactory ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_type_dump ##### -->
 <para>
 
@@ -2386,16 +2339,6 @@ This macro sets the given flags.
 </para>
 
 @klass: 
-
-<!-- ##### USER_FUNCTION GstAutoplugCostFunction ##### -->
-<para>
-Calculate the cost between two elements.
-</para>
-
-@src: the source element
-@dest: the destination element
-@data: optional user data
-@Returns: the cost for a connection between the two elements
 
 <!-- ##### MACRO DEBUG_LEAVE_STRING ##### -->
 <para>

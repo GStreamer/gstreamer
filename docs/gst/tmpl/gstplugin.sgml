@@ -135,6 +135,14 @@ by the loader at statup.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_plugin_add_path ##### -->
+<para>
+
+</para>
+
+@path: 
+
+
 <!-- ##### FUNCTION gst_library_load ##### -->
 <para>
 

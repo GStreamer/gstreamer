@@ -17,9 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* First, include the header file for the plugin, to bring in the
+ * object definition and other useful things.
+ */
 #include "example.h"
 
-/* elementfactory information */
+/* The ElementDetails structure gives a human-readable description
+ * of the plugin, as well as author and version data.
+ */
 static GstElementDetails example_details = {
   "An example plugin",
   "Example",
@@ -29,30 +34,47 @@ static GstElementDetails example_details = {
   "(C) 2000",
 };
 
-/* Example signals and args */
+/* These are the signals that this element can fire.  They are zero-
+ * based because the numbers themselves are private to the object.
+ * LAST_SIGNAL is used for initialization of the signal array.
+ */
 enum {
+  ASDF,
   /* FILL ME */
   LAST_SIGNAL
 };
 
+/* Arguments are identified the same way, but cannot be zero, so you
+ * must leave the ARG_0 entry in as a placeholder.
+ */
 enum {
   ARG_0,
-  ARG_ACTIVE
+  ARG_ACTIVE,
+  /* FILL ME */
 };
 
+/* The PadFactory structures describe what pads the element has or
+ * can have.  They can be quite complex, but for this example plugin
+ * they are rather simple.
+ */
 static GstPadFactory sink_factory = {
-  "sink",					/* the name of the pads */
-  GST_PAD_FACTORY_SINK,				/* type of the pad */
-  GST_PAD_FACTORY_ALWAYS,			/* ALWAYS/SOMETIMES */
-  GST_PAD_FACTORY_CAPS(
-  "example_sink",					/* the name of the caps */
-     "unknown/unknown",					/* the mime type of the caps */
-     "something",	GST_PROPS_INT (1),		/* a property */
-     "foo",		GST_PROPS_BOOLEAN (TRUE)	/* another property */
+  "sink",			/* The name of the pad */
+  GST_PAD_FACTORY_SINK,		/* Direction of the pad */
+  GST_PAD_FACTORY_ALWAYS,	/* The pad exists for every instance */
+  GST_PAD_FACTORY_CAPS(		/* This factory has specific capabilities */
+  "example_sink",				/* The name of the caps */
+     "unknown/unknown",				/* The overall MIME/type */
+     "foo",	GST_PROPS_INT (1),		/* An integer property */
+     "bar",	GST_PROPS_BOOLEAN (TRUE),	/* A boolean */
+     "baz",	GST_PROPS_LIST (		/* A list of values for */
+			GST_PROPS_INT (1),
+			GST_PROPS_INT (3)
+		)
   ),
-  NULL
+  NULL				/* All factories must be NULL-terminated */
 };
 
+/* This factory is much simpler, and defines the source pad. */
 static GstPadFactory src_factory = {
   "src",
   GST_PAD_FACTORY_SRC,
@@ -65,19 +87,35 @@ static GstPadFactory src_factory = {
 };
 
 
-static void	gst_example_class_init		(GstExampleClass *klass);
-static void	gst_example_init		(GstExample *example);
+/* A number of functon prototypes are given so we can refer to them later. */
+static void	gst_example_class_init	(GstExampleClass *klass);
+static void	gst_example_init	(GstExample *example);
 
-static void	gst_example_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_example_chain	(GstPad *pad, GstBuffer *buf);
 
-static void	gst_example_set_arg		(GtkObject *object,GtkArg *arg,guint id);
-static void	gst_example_get_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void	gst_example_set_arg	(GtkObject *object,GtkArg *arg,guint id);
+static void	gst_example_get_arg	(GtkObject *object,GtkArg *arg,guint id);
 
-GstPadTemplate *src_template, *sink_template;
+/* These hold the constructed pad templates, which are created during
+ * plugin load, and used during element instantiation.
+ */
+static GstPadTemplate *src_template, *sink_template;
 
+/* The parent class pointer needs to be kept around for some object
+ * operations.
+ */
 static GstElementClass *parent_class = NULL;
-//static guint gst_example_signals[LAST_SIGNAL] = { 0 };
 
+/* This array holds the ids of the signals registered for this object.
+ * The array indexes are based on the enum up above.
+ */
+static guint gst_example_signals[LAST_SIGNAL] = { 0 };
+
+/* This function is used to register and subsequently return the type
+ * identifier for this object class.  On first invocation, it will
+ * register the type, providing the name of the class, struct sizes,
+ * and pointers to the various functions that define the class.
+ */
 GtkType
 gst_example_get_type(void)
 {
@@ -90,8 +128,8 @@ gst_example_get_type(void)
       sizeof(GstExampleClass),
       (GtkClassInitFunc)gst_example_class_init,
       (GtkObjectInitFunc)gst_example_init,
-      (GtkArgSetFunc)gst_example_set_arg,
-      (GtkArgGetFunc)gst_example_get_arg,
+      (GtkArgSetFunc)NULL,	/* These last three are depracated */
+      (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
     example_type = gtk_type_unique(GST_TYPE_ELEMENT,&example_info);
@@ -99,70 +137,166 @@ gst_example_get_type(void)
   return example_type;
 }
 
+/* In order to create an instance of an object, the class must be
+ * initialized by this function.  GtkObject will take care of running
+ * it, based on the pointer to the function provided above.
+ */
 static void
 gst_example_class_init (GstExampleClass *klass)
 {
+  /* Class pointers are needed to supply pointers to the private
+   * implementations of parent class methods.
+   */
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
 
+  /* Since the example class contains the parent classes, you can simply
+   * cast the pointer to get access to the parent classes.
+   */
   gtkobject_class = (GtkObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
+  /* The parent class is needed for class method overrides. */
   parent_class = gtk_type_class(GST_TYPE_ELEMENT);
 
+  /* Here we add an argument to the object.  This argument is an integer,
+   * and can be both read and written.
+   */
   gtk_object_add_arg_type("GstExample::active", GTK_TYPE_INT,
                           GTK_ARG_READWRITE, ARG_ACTIVE);
 
+  /* Here we add a signal to the object. This is avery useless signal
+   * called asdf. The signal will also pass a pointer to the listeners
+   * which happens to be the example element itself */
+  gst_example_signals[ASDF] =
+    gtk_signal_new("asdf", GTK_RUN_LAST, gtkobject_class->type,
+                   GTK_SIGNAL_OFFSET (GstExampleClass, asdf),
+                   gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                   GST_TYPE_EXAMPLE);
+
+  gtk_object_class_add_signals (gtkobject_class, gst_example_signals,
+                                LAST_SIGNAL);
+
+  /* The last thing is to provide the functions that implement get and set
+   * of arguments.
+   */
   gtkobject_class->set_arg = gst_example_set_arg;
   gtkobject_class->get_arg = gst_example_get_arg;
 }
 
+/* This function is responsible for initializing a specific instance of
+ * the plugin.
+ */
 static void
 gst_example_init(GstExample *example)
 {
+  /* First we create the sink pad, which is the input to the element.
+   * We will use the sink_template constructed in the plugin_init function
+   * (below) to quickly generate the pad we need.
+   */
   example->sinkpad = gst_pad_new_from_template (sink_template, "sink");
-  gst_element_add_pad(GST_ELEMENT(example),example->sinkpad);
+  /* Setting the chain function allows us to supply the function that will
+   * actually be performing the work.  Without this, the element would do
+   * nothing, with undefined results (assertion failures and such).
+   */
   gst_pad_set_chain_function(example->sinkpad,gst_example_chain);
+  /* We then must add this pad to the element's list of pads.  The base
+   * element class manages the list of pads, and provides accessors to it.
+   */
+  gst_element_add_pad(GST_ELEMENT(example),example->sinkpad);
 
+  /* The src pad, the output of the element, is created and registered
+   * in the same way, with the exception of the chain function.  Source
+   * pads don't have chain functions, because they can't accept buffers,
+   * they only produce them.
+   */
   example->srcpad = gst_pad_new_from_template (src_template, "src");
   gst_element_add_pad(GST_ELEMENT(example),example->srcpad);
 
+  /* Initialization of element's private variables. */
   example->active = FALSE;
 }
 
+/* The chain function is the heart of the element.  It's where all the
+ * work is done.  It is passed a pointer to the pad in question, as well
+ * as the buffer provided by the peer element.
+ */
 static void
 gst_example_chain (GstPad *pad, GstBuffer *buf)
 {
   GstExample *example;
+  GstBuffer *outbuf;
 
+  /* Some of these checks are of dubious value, since if there were not
+   * already true, the chain function would never be called.
+   */
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
-  //g_return_if_fail(GST_IS_BUFFER(buf));
 
+  /* We need to get a pointer to the element this pad belogs to. */
   example = GST_EXAMPLE(gst_pad_get_parent (pad));
 
+  /* A few more sanity checks to make sure that the element that owns
+   * this pad is the right kind of element, in case something got confused.
+   */
   g_return_if_fail(example != NULL);
   g_return_if_fail(GST_IS_EXAMPLE(example));
 
+  /* If we are supposed to be doing something, here's where it happens. */
   if (example->active) {
-    /* DO STUFF */
-  }
+    /* In this example we're going to copy the buffer to another one, 
+     * so we need to allocate a new buffer first. */
+    outbuf = gst_buffer_new();
 
-  gst_pad_push(example->srcpad,buf);
+    /* We need to copy the size and offset of the buffer at a minimum. */
+    GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE (buf);
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);
+
+    /* Then allocate the memory for the new buffer */
+    GST_BUFFER_DATA (outbuf) = (guchar *)g_malloc (GST_BUFFER_SIZE (outbuf));
+
+    /* Then copy the data in the incoming buffer into the new buffer. */
+    memcpy (GST_BUFFER_DATA (outbuf), GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (outbuf));
+
+    /* When we're done with the buffer, we push it on to the next element
+     * in the pipeline, through the element's source pad, which is stored
+     * in the element's structure.
+     */
+    gst_pad_push(example->srcpad,outbuf);
+
+    /* For fun we'll emit our useless signal here */
+    gtk_signal_emit (GTK_OBJECT (example), gst_example_signals[ASDF],
+                     example);
+
+  /* If we're not doing something, just send the original incoming buffer. */
+  } else {
+    gst_pad_push(example->srcpad,buf);
+  }
 }
 
+/* Arguments are part of the Gtk+ object system, and these functions
+ * enable the element to respond to various arguments.
+ */
 static void
 gst_example_set_arg (GtkObject *object,GtkArg *arg,guint id)
 {
   GstExample *example;
 
-  /* it's not null if we got it, but it might not be ours */
+  /* It's not null if we got it, but it might not be ours */
   g_return_if_fail(GST_IS_EXAMPLE(object));
+
+  /* Get a pointer of the right type. */
   example = GST_EXAMPLE(object);
 
-  switch(id) {
+  /* Check the argument id to see which argument we're setting. */
+  switch (id) {
     case ARG_ACTIVE:
+      /* Here we simply copy the value of the argument to our private
+       * storage.  More complex operations can be done, but beware that
+       * they may occur at any time, possibly even while your chain function
+       * is running, if you are using threads.
+       */
       example->active = GTK_VALUE_INT(*arg);
       g_print("example: set active to %d\n",example->active);
       break;
@@ -171,12 +305,13 @@ gst_example_set_arg (GtkObject *object,GtkArg *arg,guint id)
   }
 }
 
+/* The set function is simply the inverse of the get fuction. */
 static void
 gst_example_get_arg (GtkObject *object,GtkArg *arg,guint id)
 {
   GstExample *example;
 
-  /* it's not null if we got it, but it might not be ours */
+  /* It's not null if we got it, but it might not be ours */
   g_return_if_fail(GST_IS_EXAMPLE(object));
   example = GST_EXAMPLE(object);
 
@@ -190,25 +325,45 @@ gst_example_get_arg (GtkObject *object,GtkArg *arg,guint id)
   }
 }
 
+/* This is the entry into the plugin itself.  When the plugin loads,
+ * this function is called to register everything that the plugin provides.
+ */
 GstPlugin*
 plugin_init (GModule *module)
 {
   GstPlugin *plugin;
   GstElementFactory *factory;
 
+  /* First we try to create a new Plugin structure. */
   plugin = gst_plugin_new("example");
+  /* If we get a NULL back, chances are we're already loaded. */
   g_return_val_if_fail(plugin != NULL, NULL);
 
+  /* We need to create an ElementFactory for each element we provide.
+   * This consists of the name of the element, the GtkType identifier,
+   * and a pointer to the details structure at the top of the file.
+   */
   factory = gst_elementfactory_new("example", GST_TYPE_EXAMPLE, &example_details);
   g_return_val_if_fail(factory != NULL, NULL);
 
+  /* The pad templates can be easily generated from the factories above,
+   * and then added to the list of padtemplates for the elementfactory.
+   * Note that the generated padtemplates are stored in static global
+   * variables, for the gst_example_init function to use later on.
+   */
   sink_template = gst_padtemplate_new (&sink_factory);
   gst_elementfactory_add_padtemplate (factory, sink_template);
 
   src_template = gst_padtemplate_new (&src_factory);
   gst_elementfactory_add_padtemplate (factory, src_template);
 
+  /* The very last thing is to register the elementfactory with the plugin. */
   gst_plugin_add_factory (plugin, factory);
 
+  /* Now we can return the pointer to the newly created Plugin object. */
   return plugin;
+
+  /* At this point, the GStreamer core registers the plugin, its
+   * elementfactories, padtemplates, etc., for use in you application.
+   */
 }

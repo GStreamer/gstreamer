@@ -1,0 +1,1132 @@
+<?xml version="1.0"?>
+<diagram xmlns:dia="http://www.lysator.liu.se/~alla/dia/">
+  <diagramdata>
+    <attribute name="background">
+      <color val="#ffffff"/>
+    </attribute>
+    <attribute name="paper">
+      <composite type="paper">
+        <attribute name="name">
+          <string>#A4#</string>
+        </attribute>
+        <attribute name="tmargin">
+          <real val="2.82"/>
+        </attribute>
+        <attribute name="bmargin">
+          <real val="2.82"/>
+        </attribute>
+        <attribute name="lmargin">
+          <real val="2.82"/>
+        </attribute>
+        <attribute name="rmargin">
+          <real val="2.82"/>
+        </attribute>
+        <attribute name="is_portrait">
+          <boolean val="true"/>
+        </attribute>
+        <attribute name="scaling">
+          <real val="1"/>
+        </attribute>
+        <attribute name="fitto">
+          <boolean val="false"/>
+        </attribute>
+      </composite>
+    </attribute>
+    <attribute name="grid">
+      <composite type="grid">
+        <attribute name="width_x">
+          <real val="1"/>
+        </attribute>
+        <attribute name="width_y">
+          <real val="1"/>
+        </attribute>
+        <attribute name="visible_x">
+          <int val="1"/>
+        </attribute>
+        <attribute name="visible_y">
+          <int val="1"/>
+        </attribute>
+      </composite>
+    </attribute>
+    <attribute name="guides">
+      <composite type="guides">
+        <attribute name="hguides"/>
+        <attribute name="vguides"/>
+      </composite>
+    </attribute>
+  </diagramdata>
+  <layer name="Background" visible="true">
+    <object type="UML - Class" version="0" id="O0">
+      <attribute name="obj_pos">
+        <point val="0.75,5.55"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="0.7,5.5;12.7504,9.6"/>
+      </attribute>
+      <attribute name="elem_corner">
+        <point val="0.75,5.55"/>
+      </attribute>
+      <attribute name="elem_width">
+        <real val="11.9504"/>
+      </attribute>
+      <attribute name="elem_height">
+        <real val="4"/>
+      </attribute>
+      <attribute name="name">
+        <string>#GstCaps#</string>
+      </attribute>
+      <attribute name="stereotype">
+        <string/>
+      </attribute>
+      <attribute name="abstract">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_attributes">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="visible_attributes">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="visible_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="attributes">
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#name#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#gchar *#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#id#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#guint16#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#properties#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#GstProps *#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <attribute name="operations"/>
+      <attribute name="template">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="templates"/>
+    </object>
+    <object type="UML - Class" version="0" id="O1">
+      <attribute name="obj_pos">
+        <point val="16.35,9.65"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="16.3,9.6;26.896,12.1"/>
+      </attribute>
+      <attribute name="elem_corner">
+        <point val="16.35,9.65"/>
+      </attribute>
+      <attribute name="elem_width">
+        <real val="10.496"/>
+      </attribute>
+      <attribute name="elem_height">
+        <real val="2.4"/>
+      </attribute>
+      <attribute name="name">
+        <string>#GstProps#</string>
+      </attribute>
+      <attribute name="stereotype">
+        <string/>
+      </attribute>
+      <attribute name="abstract">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_attributes">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="visible_attributes">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="visible_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="attributes">
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#properties#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#GList *#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <attribute name="operations"/>
+      <attribute name="template">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="templates"/>
+    </object>
+    <object type="UML - Association" version="0" id="O2">
+      <attribute name="obj_pos">
+        <point val="12.7004,9.05"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="11.2504,7.6;18.4892,11.8"/>
+      </attribute>
+      <attribute name="orth_points">
+        <point val="12.7004,9.05"/>
+        <point val="14.15,9.05"/>
+        <point val="14.15,10.35"/>
+        <point val="16.35,10.35"/>
+      </attribute>
+      <attribute name="orth_orient">
+        <enum val="0"/>
+        <enum val="1"/>
+        <enum val="0"/>
+      </attribute>
+      <attribute name="name">
+        <string/>
+      </attribute>
+      <attribute name="direction">
+        <enum val="0"/>
+      </attribute>
+      <attribute name="ends">
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string>#1#</string>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="2"/>
+          </attribute>
+        </composite>
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string>#0..1#</string>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="0"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <connections>
+        <connection handle="0" to="O0" connection="13"/>
+        <connection handle="1" to="O1" connection="3"/>
+      </connections>
+    </object>
+    <object type="UML - Class" version="0" id="O3">
+      <attribute name="obj_pos">
+        <point val="14.75,13.45"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="14.7,13.4;26.2656,16.7"/>
+      </attribute>
+      <attribute name="elem_corner">
+        <point val="14.75,13.45"/>
+      </attribute>
+      <attribute name="elem_width">
+        <real val="11.4656"/>
+      </attribute>
+      <attribute name="elem_height">
+        <real val="3.2"/>
+      </attribute>
+      <attribute name="name">
+        <string>#GstPropsEntry#</string>
+      </attribute>
+      <attribute name="stereotype">
+        <string/>
+      </attribute>
+      <attribute name="abstract">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="suppress_attributes">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="visible_attributes">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="visible_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="attributes">
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#propid#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#GQuark#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#propstype#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#GstPropsId#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <attribute name="operations"/>
+      <attribute name="template">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="templates"/>
+    </object>
+    <object type="UML - Association" version="0" id="O4">
+      <attribute name="obj_pos">
+        <point val="16.35,11.55"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="11.25,10.1;17.8,15.6"/>
+      </attribute>
+      <attribute name="orth_points">
+        <point val="16.35,11.55"/>
+        <point val="12.7,11.55"/>
+        <point val="12.7,14.15"/>
+        <point val="14.75,14.15"/>
+      </attribute>
+      <attribute name="orth_orient">
+        <enum val="0"/>
+        <enum val="1"/>
+        <enum val="0"/>
+      </attribute>
+      <attribute name="name">
+        <string/>
+      </attribute>
+      <attribute name="direction">
+        <enum val="0"/>
+      </attribute>
+      <attribute name="ends">
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string>#1#</string>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="2"/>
+          </attribute>
+        </composite>
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string>#*#</string>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="0"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <connections>
+        <connection handle="0" to="O1" connection="8"/>
+        <connection handle="1" to="O3" connection="3"/>
+      </connections>
+    </object>
+    <object type="UML - Class" version="0" id="O5">
+      <attribute name="obj_pos">
+        <point val="4.45,19.05"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="4.4,19;14.996,21.5"/>
+      </attribute>
+      <attribute name="elem_corner">
+        <point val="4.45,19.05"/>
+      </attribute>
+      <attribute name="elem_width">
+        <real val="10.496"/>
+      </attribute>
+      <attribute name="elem_height">
+        <real val="2.4"/>
+      </attribute>
+      <attribute name="name">
+        <string>#boolean#</string>
+      </attribute>
+      <attribute name="stereotype">
+        <string/>
+      </attribute>
+      <attribute name="abstract">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_attributes">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="visible_attributes">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="visible_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="attributes">
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#bool_data#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#gboolean#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <attribute name="operations"/>
+      <attribute name="template">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="templates"/>
+    </object>
+    <object type="UML - Class" version="0" id="O6">
+      <attribute name="obj_pos">
+        <point val="10.55,22.4"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="10.5,22.35;21.5808,24.85"/>
+      </attribute>
+      <attribute name="elem_corner">
+        <point val="10.55,22.4"/>
+      </attribute>
+      <attribute name="elem_width">
+        <real val="10.9808"/>
+      </attribute>
+      <attribute name="elem_height">
+        <real val="2.4"/>
+      </attribute>
+      <attribute name="name">
+        <string>#fourcc#</string>
+      </attribute>
+      <attribute name="stereotype">
+        <string/>
+      </attribute>
+      <attribute name="abstract">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_attributes">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="visible_attributes">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="visible_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="attributes">
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#fourcc_data#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#guint32#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <attribute name="operations"/>
+      <attribute name="template">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="templates"/>
+    </object>
+    <object type="UML - Class" version="0" id="O7">
+      <attribute name="obj_pos">
+        <point val="16.8,19.2"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="16.75,19.15;24.922,21.65"/>
+      </attribute>
+      <attribute name="elem_corner">
+        <point val="16.8,19.2"/>
+      </attribute>
+      <attribute name="elem_width">
+        <real val="8.072"/>
+      </attribute>
+      <attribute name="elem_height">
+        <real val="2.4"/>
+      </attribute>
+      <attribute name="name">
+        <string>#int#</string>
+      </attribute>
+      <attribute name="stereotype">
+        <string/>
+      </attribute>
+      <attribute name="abstract">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_attributes">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="visible_attributes">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="visible_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="attributes">
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#int_data#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#gint#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <attribute name="operations"/>
+      <attribute name="template">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="templates"/>
+    </object>
+    <object type="UML - Class" version="0" id="O8">
+      <attribute name="obj_pos">
+        <point val="22.5,22.55"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="22.45,22.5;31.5916,25"/>
+      </attribute>
+      <attribute name="elem_corner">
+        <point val="22.5,22.55"/>
+      </attribute>
+      <attribute name="elem_width">
+        <real val="9.0416"/>
+      </attribute>
+      <attribute name="elem_height">
+        <real val="2.4"/>
+      </attribute>
+      <attribute name="name">
+        <string>#list#</string>
+      </attribute>
+      <attribute name="stereotype">
+        <string/>
+      </attribute>
+      <attribute name="abstract">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_attributes">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="visible_attributes">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="visible_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="attributes">
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#entries#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#GList *#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <attribute name="operations"/>
+      <attribute name="template">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="templates"/>
+    </object>
+    <object type="UML - Class" version="0" id="O9">
+      <attribute name="obj_pos">
+        <point val="27.9,18.85"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="27.85,18.8;33.598,22.1"/>
+      </attribute>
+      <attribute name="elem_corner">
+        <point val="27.9,18.85"/>
+      </attribute>
+      <attribute name="elem_width">
+        <real val="5.648"/>
+      </attribute>
+      <attribute name="elem_height">
+        <real val="3.2"/>
+      </attribute>
+      <attribute name="name">
+        <string>#int_range#</string>
+      </attribute>
+      <attribute name="stereotype">
+        <string/>
+      </attribute>
+      <attribute name="abstract">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_attributes">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="suppress_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="visible_attributes">
+        <boolean val="true"/>
+      </attribute>
+      <attribute name="visible_operations">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="attributes">
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#min#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#gint#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+        <composite type="umlattribute">
+          <attribute name="name">
+            <string>#max#</string>
+          </attribute>
+          <attribute name="type">
+            <string>#gint#</string>
+          </attribute>
+          <attribute name="value">
+            <string/>
+          </attribute>
+          <attribute name="visibility">
+            <enum val="0"/>
+          </attribute>
+          <attribute name="abstract">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="class_scope">
+            <boolean val="false"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <attribute name="operations"/>
+      <attribute name="template">
+        <boolean val="false"/>
+      </attribute>
+      <attribute name="templates"/>
+    </object>
+    <object type="UML - Association" version="0" id="O10">
+      <attribute name="obj_pos">
+        <point val="30.724,18.85"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="19.0328,15.2;32.174,20.45"/>
+      </attribute>
+      <attribute name="orth_points">
+        <point val="30.724,18.85"/>
+        <point val="30.724,18.25"/>
+        <point val="20.4828,18.25"/>
+        <point val="20.4828,16.65"/>
+      </attribute>
+      <attribute name="orth_orient">
+        <enum val="1"/>
+        <enum val="0"/>
+        <enum val="1"/>
+      </attribute>
+      <attribute name="name">
+        <string/>
+      </attribute>
+      <attribute name="direction">
+        <enum val="0"/>
+      </attribute>
+      <attribute name="ends">
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="0"/>
+          </attribute>
+        </composite>
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="1"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <connections>
+        <connection handle="0" to="O9" connection="1"/>
+        <connection handle="1" to="O3" connection="6"/>
+      </connections>
+    </object>
+    <object type="UML - Association" version="0" id="O11">
+      <attribute name="obj_pos">
+        <point val="20.836,19.2"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="19.0328,15.2;22.286,20.8"/>
+      </attribute>
+      <attribute name="orth_points">
+        <point val="20.836,19.2"/>
+        <point val="20.836,18.25"/>
+        <point val="20.4828,18.25"/>
+        <point val="20.4828,16.65"/>
+      </attribute>
+      <attribute name="orth_orient">
+        <enum val="1"/>
+        <enum val="0"/>
+        <enum val="1"/>
+      </attribute>
+      <attribute name="name">
+        <string/>
+      </attribute>
+      <attribute name="direction">
+        <enum val="0"/>
+      </attribute>
+      <attribute name="ends">
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="0"/>
+          </attribute>
+        </composite>
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="1"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <connections>
+        <connection handle="0" to="O7" connection="1"/>
+        <connection handle="1" to="O3" connection="6"/>
+      </connections>
+    </object>
+    <object type="UML - Association" version="0" id="O12">
+      <attribute name="obj_pos">
+        <point val="9.698,19.05"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="8.248,15.2;21.9328,20.65"/>
+      </attribute>
+      <attribute name="orth_points">
+        <point val="9.698,19.05"/>
+        <point val="9.698,18.25"/>
+        <point val="20.4828,18.25"/>
+        <point val="20.4828,16.65"/>
+      </attribute>
+      <attribute name="orth_orient">
+        <enum val="1"/>
+        <enum val="0"/>
+        <enum val="1"/>
+      </attribute>
+      <attribute name="name">
+        <string/>
+      </attribute>
+      <attribute name="direction">
+        <enum val="0"/>
+      </attribute>
+      <attribute name="ends">
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="0"/>
+          </attribute>
+        </composite>
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="1"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <connections>
+        <connection handle="0" to="O5" connection="1"/>
+        <connection handle="1" to="O3" connection="6"/>
+      </connections>
+    </object>
+    <object type="UML - Association" version="0" id="O13">
+      <attribute name="obj_pos">
+        <point val="16.0404,22.4"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="14.5904,15.2;21.9328,24"/>
+      </attribute>
+      <attribute name="orth_points">
+        <point val="16.0404,22.4"/>
+        <point val="16.0404,18.25"/>
+        <point val="20.4828,18.25"/>
+        <point val="20.4828,16.65"/>
+      </attribute>
+      <attribute name="orth_orient">
+        <enum val="1"/>
+        <enum val="0"/>
+        <enum val="1"/>
+      </attribute>
+      <attribute name="name">
+        <string/>
+      </attribute>
+      <attribute name="direction">
+        <enum val="0"/>
+      </attribute>
+      <attribute name="ends">
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="0"/>
+          </attribute>
+        </composite>
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="1"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <connections>
+        <connection handle="0" to="O6" connection="1"/>
+        <connection handle="1" to="O3" connection="6"/>
+      </connections>
+    </object>
+    <object type="UML - Association" version="0" id="O14">
+      <attribute name="obj_pos">
+        <point val="27.0208,22.55"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="19.0328,15.2;28.4708,24.15"/>
+      </attribute>
+      <attribute name="orth_points">
+        <point val="27.0208,22.55"/>
+        <point val="27.0208,18.25"/>
+        <point val="20.4828,18.25"/>
+        <point val="20.4828,16.65"/>
+      </attribute>
+      <attribute name="orth_orient">
+        <enum val="1"/>
+        <enum val="0"/>
+        <enum val="1"/>
+      </attribute>
+      <attribute name="name">
+        <string>#union#</string>
+      </attribute>
+      <attribute name="direction">
+        <enum val="0"/>
+      </attribute>
+      <attribute name="ends">
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="0"/>
+          </attribute>
+        </composite>
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string/>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="1"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <connections>
+        <connection handle="0" to="O8" connection="1"/>
+        <connection handle="1" to="O3" connection="6"/>
+      </connections>
+    </object>
+    <object type="UML - Association" version="0" id="O15">
+      <attribute name="obj_pos">
+        <point val="31.5416,24.45"/>
+      </attribute>
+      <attribute name="obj_bb">
+        <rectangle val="24.7656,12.7;36.3,25.9"/>
+      </attribute>
+      <attribute name="orth_points">
+        <point val="31.5416,24.45"/>
+        <point val="34.85,24.45"/>
+        <point val="34.85,14.15"/>
+        <point val="26.2156,14.15"/>
+      </attribute>
+      <attribute name="orth_orient">
+        <enum val="0"/>
+        <enum val="1"/>
+        <enum val="0"/>
+      </attribute>
+      <attribute name="name">
+        <string/>
+      </attribute>
+      <attribute name="direction">
+        <enum val="0"/>
+      </attribute>
+      <attribute name="ends">
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string>#1#</string>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="2"/>
+          </attribute>
+        </composite>
+        <composite>
+          <attribute name="role">
+            <string/>
+          </attribute>
+          <attribute name="multiplicity">
+            <string>#*#</string>
+          </attribute>
+          <attribute name="arrow">
+            <boolean val="false"/>
+          </attribute>
+          <attribute name="aggregate">
+            <enum val="0"/>
+          </attribute>
+        </composite>
+      </attribute>
+      <connections>
+        <connection handle="0" to="O8" connection="9"/>
+        <connection handle="1" to="O3" connection="4"/>
+      </connections>
+    </object>
+  </layer>
+</diagram>
