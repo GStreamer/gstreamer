@@ -220,12 +220,6 @@ else
 POLYP_DIR=
 endif
 
-if USE_LIBRFB
-LIBRFB_DIR=librfb
-else
-LIBRFB_DIR=
-endif
-
 if USE_LIBVISUAL
 LIBVISUAL_DIR=libvisual
 else
@@ -439,7 +433,6 @@ SUBDIRS=\
 	$(LIBFAME_DIR) \
 	$(LIBMNG_DIR) \
 	$(LIBPNG_DIR) \
-	$(LIBRFB_DIR) \
 	$(LIBVISUAL_DIR) \
 	$(MAD_DIR) \
 	$(MIKMOD_DIR) \
@@ -505,7 +498,6 @@ DIST_SUBDIRS=\
 	libmng \
 	libmms \
 	libpng \
-	librfb \
 	libvisual \
 	mad \
 	mikmod \

@@ -1,3 +1,24 @@
+2005-02-11  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Pull in librfb from my CVS tree, because it is
+	  too small and annoying to be separate.  Move rfbsrc plugin
+	  to gst/.
+	* ext/Makefile.am:
+	* ext/librfb/Makefile.am:
+	* ext/librfb/gstrfbsrc.c:
+	* gst/librfb/Makefile.am:
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfb.c:
+	* gst/librfb/rfb.h:
+	* gst/librfb/rfbbuffer.c:
+	* gst/librfb/rfbbuffer.h:
+	* gst/librfb/rfbbytestream.c:
+	* gst/librfb/rfbbytestream.h:
+	* gst/librfb/rfbcontext.h:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	* gst/librfb/rfbutil.h:
+
 2005-02-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/speed/Makefile.am:
