@@ -423,15 +423,21 @@ spider_find_peek (gpointer data, gint64 offset, guint size)
 			 GST_BUFFER_OFFSET (find->buffer) : 0;
   
   if (offset >= buffer_offset && offset + size <= buffer_offset + GST_BUFFER_SIZE (find->buffer)) {
+    GST_LOG ("peek %"G_GINT64_FORMAT", %u successful", offset, size);
     return GST_BUFFER_DATA (find->buffer) + offset - buffer_offset;
   } else {
+    GST_LOG ("peek %"G_GINT64_FORMAT", %u failed", offset, size);
     return NULL;
   }
 }
 void spider_find_suggest (gpointer data, guint probability, GstCaps *caps)
 {
   SpiderTypeFind *find = (SpiderTypeFind *) data;
+  G_GNUC_UNUSED gchar *caps_str;
 
+  caps_str = gst_caps_to_string (caps);
+  GST_INFO ("suggest %u, %s", probability, caps_str);
+  g_free (caps_str);
   if (probability > find->best_probability) {
     gst_caps_replace (&find->caps, caps);
     find->best_probability = probability;
