@@ -114,7 +114,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 ### AALIB ###
 @USE_AALIB_TRUE@%package -n gstreamer-aalib
-@USE_AALIB_TRUE@Summary: Gstreamer plugin for Ascii-art output
+@USE_AALIB_TRUE@Summary: GStreamer plugin for Ascii-art output
 @USE_AALIB_TRUE@Group: Libraries/Multimedia
 @USE_AALIB_TRUE@Requires: aalib >= 1.3
 @USE_AALIB_TRUE@BuildRequires: aalib-devel >= 1.3
@@ -198,7 +198,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 ### AVIFILE ###
 @USE_AVIFILE_TRUE@%package -n gstreamer-avi
-@USE_AVIFILE_TRUE@Summary: Gstreamer plugin for AVI format movie playback
+@USE_AVIFILE_TRUE@Summary: GStreamer plugin for AVI format movie playback
 @USE_AVIFILE_TRUE@Group: Libraries/Multimedia
 @USE_AVIFILE_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_AVIFILE_TRUE@Requires: avifile = 0.6.20011111DD
@@ -218,7 +218,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 ### CDPARANOIA ###
 @USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@Summary: Gstreamer plugin for CD audio input using CDParanoia IV
+@USE_CDPARANOIA_TRUE@Summary: GStreamer plugin for CD audio input using CDParanoia IV
 @USE_CDPARANOIA_TRUE@Group: Libraries/Multimedia
 @USE_CDPARANOIA_TRUE@Requires: cdparanoia >= alpha9.7
 @USE_CDPARANOIA_TRUE@Requires: gstreamer-plugins >= %{version}
@@ -254,7 +254,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 ### ESD ###
 @USE_ESD_TRUE@%package -n gstreamer-esd
-@USE_ESD_TRUE@Summary: Gstreamer plugin for ESD sound output
+@USE_ESD_TRUE@Summary: GStreamer plugin for ESD sound output
 @USE_ESD_TRUE@Group: Libraries/Multimedia
 @USE_ESD_TRUE@Requires: esound >= 0.2.8
 @USE_ESD_TRUE@Requires: gstreamer-plugins >= %{version}
@@ -292,7 +292,7 @@ Element for text-to-speech using the festival server.
 
 ### FLAC ###
 @USE_FLAC_TRUE@%package -n gstreamer-flac
-@USE_FLAC_TRUE@Summary: Gstreamer plugin for FLAC lossless audio format
+@USE_FLAC_TRUE@Summary: GStreamer plugin for FLAC lossless audio format
 @USE_FLAC_TRUE@Group: Libraries/Multimedia
 @USE_FLAC_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_FLAC_TRUE@Requires: flac >= 1.0.0
@@ -345,7 +345,7 @@ Element for text-to-speech using the festival server.
 
 ### HERMES ###
 @USE_HERMES_TRUE@%package -n gstreamer-colorspace
-@USE_HERMES_TRUE@Summary: Gstreamer colorspace conversion plugin
+@USE_HERMES_TRUE@Summary: GStreamer colorspace conversion plugin
 @USE_HERMES_TRUE@Group: Libraries/Multimedia
 @USE_HERMES_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_HERMES_TRUE@Requires: Hermes => 1.3.0
@@ -362,7 +362,7 @@ Element for text-to-speech using the festival server.
 
 ### JPEG ###
 @USE_JPEG_TRUE@%package -n gstreamer-jpeg
-@USE_JPEG_TRUE@Summary: Gstreamer plugin for jpeg images
+@USE_JPEG_TRUE@Summary: GStreamer plugin for jpeg images
 @USE_JPEG_TRUE@Group: Libraries/Multimedia
 @USE_JPEG_TRUE@Requires: libjpeg
 @USE_JPEG_TRUE@Requires: gstreamer-plugins >= %{version}
@@ -435,7 +435,7 @@ Element for text-to-speech using the festival server.
 
 ### MJPEGTOOLS ###
 @USE_MJPEGTOOLS_TRUE@%package -n gstreamer-jpegmmx
-@USE_MJPEGTOOLS_TRUE@Summary: Gstreamer mjpegtools
+@USE_MJPEGTOOLS_TRUE@Summary: GStreamer mjpegtools
 @USE_MJPEGTOOLS_TRUE@Group: Libraries/Multimedia
 @USE_MJPEGTOOLS_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_MJPEGTOOLS_TRUE@Requires: mjpegtools >= %{version}
@@ -503,7 +503,7 @@ Element for text-to-speech using the festival server.
 
 ### OSS ###
 @USE_OSS_TRUE@%package -n gstreamer-oss
-@USE_OSS_TRUE@Summary: Gstreamer plugins for input and output using OSS
+@USE_OSS_TRUE@Summary: GStreamer plugins for input and output using OSS
 @USE_OSS_TRUE@Group: Libraries/Multimedia
 @USE_OSS_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_OSS_TRUE@
@@ -576,7 +576,7 @@ Element for text-to-speech using the festival server.
 
 ### SDL ###
 @USE_SDL_TRUE@%package -n gstreamer-sdl
-@USE_SDL_TRUE@Summary: Gstreamer plugin for outputing to SDL
+@USE_SDL_TRUE@Summary: GStreamer plugin for outputing to SDL
 @USE_SDL_TRUE@Group: Libraries/Multimedia
 @USE_SDL_TRUE@Requires: SDL >= 1.2.0
 @USE_SDL_TRUE@Requires: gstreamer-plugins >= %{version}
@@ -612,7 +612,7 @@ Element for text-to-speech using the festival server.
 
 ### VORBIS ###
 @USE_VORBIS_TRUE@%package -n gstreamer-vorbis
-@USE_VORBIS_TRUE@Summary: Gstreamer plugin for encoding and decoding Ogg Vorbis audio files
+@USE_VORBIS_TRUE@Summary: GStreamer plugin for encoding and decoding Ogg Vorbis audio files
 @USE_VORBIS_TRUE@Group: Libraries/Multimedia
 @USE_VORBIS_TRUE@Requires: libogg >= 1.0beta4
 @USE_VORBIS_TRUE@Requires: libvorbis >= 1.0beta4
@@ -652,7 +652,7 @@ Element for text-to-speech using the festival server.
 
 ### XVIDEO ###
 # @USE_XVIDEO_TRUE@%package -n gstreamer-xvideosink
-# @USE_XVIDEO_TRUE@Summary: Gstreamer XFree output plugin
+# @USE_XVIDEO_TRUE@Summary: GStreamer XFree output plugin
 # @USE_XVIDEO_TRUE@Group: Libraries/Multimedia
 # @USE_XVIDEO_TRUE@Requires: gstreamer-plugins >= %{version}
 # @USE_XVIDEO_TRUE@Requires: Hermes => 1.3.0
@@ -805,7 +805,7 @@ Video CD parsing and playback
 %{_libdir}/gst/libgstcdxa*
 
 %package -n gstreamer-ladspa
-Summary: Gstreamer wrapper for LADSPA plugins
+Summary: GStreamer wrapper for LADSPA plugins
 Group: Libraries/Multimedia
 Requires: gstreamer-plugins >= %{version}
 
