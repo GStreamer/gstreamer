@@ -1,3 +1,8 @@
+2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+          Fix up TITLE of the sections
+
 2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced_interfaces.xml:

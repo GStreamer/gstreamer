@@ -2,6 +2,7 @@
 
 <SECTION>
 <FILE>cothreads</FILE>
+<TITLE>Cothreads</TITLE>
 cothread_state
 cothread_func
 cothread_context
@@ -30,6 +31,7 @@ cothread_current
 
 <SECTION>
 <FILE>gstatomic</FILE>
+<TITLE>GstAtomic</TITLE>
 GstAtomicInt
 gst_atomic_int_init
 gst_atomic_int_destroy
@@ -43,6 +45,7 @@ gst_atomic_int_dec_and_test
 
 <SECTION>
 <FILE>gstmemchunk</FILE>
+<TITLE>GstMemChunk</TITLE>
 GstMemChunk
 gst_mem_chunk_new
 gst_mem_chunk_destroy
@@ -83,6 +86,7 @@ gst_marshal_VOID__VOID
 
 <SECTION>
 <FILE>gstinfo</FILE>
+<TITLE>GstInfo</TITLE>
 GST_STR_NULL
 GST_DEBUG_PAD_NAME
 GST_FUNCTION
@@ -199,6 +203,7 @@ GST_SCHEDULER_GET_CLASS
 
 <SECTION>
 <FILE>gstconfig</FILE>
+<TITLE>GstConfig</TITLE>
 GST_DISABLE_ALLOC_TRACE
 GST_DISABLE_ENUMTYPES
 GST_DISABLE_GST_DEBUG
@@ -300,6 +305,7 @@ gst_parse_error_get_type
 
 <SECTION>
 <FILE>gstarch</FILE>
+<TITLE>GstArch</TITLE>
 GST_ARCH_CALL
 GST_ARCH_SET_SP
 GST_ARCH_SETUP_STACK
@@ -595,6 +601,7 @@ GST_IS_ELEMENT_FACTORY_CLASS
 
 <SECTION>
 <FILE>gstclock</FILE>
+<TITLE>GstClock</TITLE>
 GstClockTime
 GstClockTimeDiff
 GstClockID
@@ -665,7 +672,6 @@ gst_clock_return_get_type
 <TITLE>GstRegistry</TITLE>
 GstRegistryReturn
 GstRegistryFlags
-<TITLE>GstRegistry</TITLE>
 GstRegistry
 gst_registry_load
 gst_registry_is_loaded
@@ -740,6 +746,7 @@ GstSystemClockClass
 
 <SECTION>
 <FILE>gstlog</FILE>
+<TITLE>GstLog</TITLE>
 <SUBSECTION Standard>
 gst_info
 GST_SHOW_INFO
@@ -793,6 +800,7 @@ gst_object_flags_get_type
 
 <SECTION>
 <FILE>gstquery</FILE>
+<TITLE>GstQuery</TITLE>
 GstQueryType
 GST_QUERY_TYPE_RATE_DEN
 GstQueryTypeDefinition
@@ -1145,6 +1153,7 @@ gst_alloc_trace_flags_get_type
 
 <SECTION>
 <FILE>gsttypefind</FILE>
+<TITLE>GstTypeFind</TITLE>
 <TITLE>Writing typefind functions</TITLE>
 GstTypeFind
 GstTypeFindFunction
@@ -1244,6 +1253,7 @@ gst_uri_get_uri_type
 
 <SECTION>
 <FILE>gstcompat</FILE>
+<TITLE>GstCompat</TITLE>
 <SUBSECTION Standard>
 gst_element_connect
 gst_element_connect_pads
