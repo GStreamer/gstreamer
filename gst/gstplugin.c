@@ -111,7 +111,7 @@ gst_plugin_register_func (GstPluginDesc *desc, GstPlugin *plugin, GModule *modul
        plugin->filename);
     return NULL;
   }
-  GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" initialised", plugin->filename);
+  GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
 
   return plugin;
 }
@@ -529,4 +529,3 @@ gst_library_load (const gchar *name)
 
   return res;
 }
-

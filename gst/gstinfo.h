@@ -32,6 +32,9 @@
 #include <config.h>
 #endif
 
+/* This is needed in printf's if a char* might be NULL. Solaris crashes then */
+#define GST_STR_NULL(str) ((str) ? (str) : "(NULL)")
+
 /* FIXME: convert to using G_STRLOC all the way if we can ! */
 
 #ifndef FUNCTION
