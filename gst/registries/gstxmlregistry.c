@@ -291,27 +291,47 @@ get_time(const char * path)
 #define dirmode \
   (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
 
-static void gst_xml_registry_get_perms_func (GstXMLRegistry *registry)
+static gboolean
+make_dir (gchar *filename) 
 {
   struct stat dirstat;
-  time_t mod_time = 0;
   gchar *dirname;
+
+  if (strrchr (filename, '/') == NULL)
+    return FALSE;
+  
+  dirname = g_strndup(filename, strrchr(filename, '/') - filename);
+
+  if (stat (dirname, &dirstat) == -1 && errno == ENOENT) {
+    if (mkdir (dirname, dirmode) != 0) {
+      if (make_dir (dirname) != TRUE) {
+        g_free(dirname);
+        return FALSE;
+      } else {
+        if (mkdir (dirname, dirmode) != 0)
+          return FALSE;
+      }
+    }
+  }
+
+  g_free(dirname);
+  return TRUE;
+}
+
+static void
+gst_xml_registry_get_perms_func (GstXMLRegistry *registry)
+{
+  time_t mod_time = 0;
   FILE *temp;
 
   /* if the dir does not exist, make it. if that can't be done, flags = 0x0.
      if the file can be appended to, it's writable. if it can then be read,
      it's readable. */
   
-  dirname = g_strndup(registry->location,
-                      strrchr(registry->location, '/') - registry->location);
-  if (stat(dirname, &dirstat) == -1 && errno == ENOENT) {
-    if (mkdir(dirname, dirmode) != 0) {
-      /* we can't do anything with it, leave flags as 0x0 */
-      g_free(dirname);
-      return;
-    }
+  if (make_dir (registry->location) != TRUE) {
+    /* we can't do anything with it, leave flags as 0x0 */
+    return;
   }
-  g_free(dirname);
   
   mod_time = get_time (registry->location);
   
@@ -564,7 +584,8 @@ gst_xml_registry_load (GstRegistry *registry)
 static GstRegistryReturn 
 gst_xml_registry_load_plugin (GstRegistry *registry, GstPlugin *plugin)
 {
-  if (!gst_plugin_load_plugin (plugin)) {
+  /* FIXME: add gerror support */
+  if (!gst_plugin_load_plugin (plugin, NULL)) {
     return GST_REGISTRY_PLUGIN_LOAD_ERROR;
   }
 
@@ -1376,11 +1397,11 @@ gst_xml_registry_save (GstRegistry *registry)
   return TRUE;
 }
 
-static void
+static GList*
 gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry, const gchar *directory)
 {
   GDir *dir;
-  gboolean loaded = FALSE;
+  GList *ret = NULL;
 
   dir = g_dir_open (directory, 0, NULL);
 
@@ -1396,7 +1417,7 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry, const gchar *directo
       }
       
       dirname = g_strjoin ("/", directory, dirent, NULL);
-      gst_xml_registry_rebuild_recurse (registry, dirname);
+      ret = g_list_concat (ret, gst_xml_registry_rebuild_recurse (registry, dirname));
       g_free(dirname);
     }
     g_dir_close (dir);
@@ -1406,25 +1427,20 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry, const gchar *directo
 
       if ((temp = strstr (directory, ".so")) &&
           (!strcmp (temp, ".so"))) {
-	GstPlugin *plugin = gst_plugin_new (directory);
-
-        loaded = gst_plugin_load_plugin (plugin);
-	if (!loaded) {
-          g_free (plugin->filename);
-	  g_free (plugin);
-	}
-	else {
-	  gst_registry_add_plugin (GST_REGISTRY (registry), plugin);
-	}
+        ret = g_list_prepend (ret, gst_plugin_new (directory));
       }
     }
   }
+
+  return ret;
 }
 
 static gboolean
 gst_xml_registry_rebuild (GstRegistry *registry)
 {
-  GList *walk = NULL;
+  GList *walk = NULL, *plugins = NULL, *prune = NULL;
+  GError *error = NULL;
+  gint length;
   GstXMLRegistry *xmlregistry = GST_XML_REGISTRY (registry);
  
   walk = registry->paths;
@@ -1434,10 +1450,49 @@ gst_xml_registry_rebuild (GstRegistry *registry)
     
     GST_INFO (GST_CAT_PLUGIN_LOADING, "Rebuilding registry %p in directory %s...", registry, path);
 
-    gst_xml_registry_rebuild_recurse (xmlregistry, path);
+    plugins = g_list_concat (plugins, gst_xml_registry_rebuild_recurse (xmlregistry, path));
 
     walk = g_list_next (walk);
   }
   
+  plugins = g_list_reverse (plugins);
+
+  do {
+    length = g_list_length (plugins);
+
+    walk = plugins;
+    while (walk) {
+      g_assert (walk->data);
+      if (gst_plugin_load_plugin (GST_PLUGIN (walk->data), NULL)) {
+        prune = g_list_prepend (prune, walk->data);
+        gst_registry_add_plugin (registry, GST_PLUGIN (walk->data));
+      }
+
+      walk = g_list_next (walk);
+    }
+
+    walk = prune;
+    while (walk) {
+      plugins = g_list_remove (plugins, walk->data);
+      walk = g_list_next (walk);
+    }
+    g_list_free (prune);
+    prune = NULL;
+  } while (g_list_length (plugins) != length);
+  
+  walk = plugins;
+  while (walk) {
+    /* should return FALSE */
+    gst_plugin_load_plugin (GST_PLUGIN (walk->data), &error);
+    GST_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s\n", 
+              ((GstPlugin*)walk->data)->filename, error->message);
+
+    g_free (((GstPlugin*)walk->data)->filename);
+    g_free (walk->data);
+    g_error_free (error);
+    error = NULL;
+        
+    walk = g_list_next (walk);
+  }
   return TRUE;
 }

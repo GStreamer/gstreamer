@@ -30,6 +30,15 @@
 
 #include <gst/gstpluginfeature.h>
 
+GQuark gst_plugin_error_quark (void);
+#define GST_PLUGIN_ERROR gst_plugin_error_quark ()
+
+typedef enum
+{
+  GST_PLUGIN_ERROR_MODULE,
+  GST_PLUGIN_ERROR_DEPENDENCIES
+} GstPluginError;
+
 #define GST_PLUGIN(plugin)		((GstPlugin *) (plugin))
 
 typedef struct _GstPlugin		GstPlugin;
@@ -101,7 +110,7 @@ gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 GList*			gst_plugin_get_feature_list	(GstPlugin *plugin);
 GstPluginFeature*	gst_plugin_find_feature		(GstPlugin *plugin, const gchar *name, GType type);
 
-gboolean 		gst_plugin_load_plugin		(GstPlugin *plugin);
+gboolean 		gst_plugin_load_plugin		(GstPlugin *plugin, GError** error);
 gboolean 		gst_plugin_unload_plugin	(GstPlugin *plugin);
 
 void			gst_plugin_add_feature		(GstPlugin *plugin, GstPluginFeature *feature);

@@ -38,6 +38,15 @@ GList *_gst_plugin_static = NULL;
 static void 		gst_plugin_register_statics 	(GModule *module);
 static GstPlugin* 	gst_plugin_register_func 	(GstPluginDesc *desc, GstPlugin *plugin, 
 							 GModule *module);
+GQuark 
+gst_plugin_error_quark (void)
+{
+  static GQuark quark = 0;
+  if (!quark)
+    quark = g_quark_from_static_string ("gst_plugin_error");
+  return quark;
+}
+
 void
 _gst_plugin_initialize (void)
 {
@@ -119,13 +128,14 @@ gst_plugin_new (const gchar *filename)
 /**
  * gst_plugin_load_plugin:
  * @plugin: The plugin to load
+ * @error: Pointer to a NULL-valued GError.
  *
  * Load the given plugin.
  *
- * Returns: whether or not the plugin loaded
+ * Returns: whether or not the plugin loaded. Sets @error as appropriate.
  */
 gboolean
-gst_plugin_load_plugin (GstPlugin *plugin)
+gst_plugin_load_plugin (GstPlugin *plugin, GError **error)
 {
   GModule *module;
   GstPluginDesc *desc;
@@ -142,12 +152,19 @@ gst_plugin_load_plugin (GstPlugin *plugin)
   GST_DEBUG (GST_CAT_PLUGIN_LOADING, "attempt to load plugin \"%s\"", filename);
 
   if (g_module_supported () == FALSE) {
-    g_warning ("gstplugin: wow, you built this on a platform without dynamic loading???\n");
+    g_set_error (error,
+                 GST_PLUGIN_ERROR,
+                 GST_PLUGIN_ERROR_MODULE,
+                 "Dynamic loading not supported");
     return FALSE;
   }
 
   if (stat (filename, &file_status)) {
-    g_warning ("problem opening file %s (plugin %s)\n", filename, plugin->name); 
+    g_set_error (error,
+                 GST_PLUGIN_ERROR,
+                 GST_PLUGIN_ERROR_MODULE,
+                 "Problem opening file %s (plugin %s)\n",
+                 filename, plugin->name); 
     return FALSE;
   }
 
@@ -167,12 +184,20 @@ gst_plugin_load_plugin (GstPlugin *plugin)
       }
     }
     else {
-      GST_DEBUG (GST_CAT_PLUGIN_LOADING, "could not find plugin_desc in \"%s\"", filename);
+      g_set_error (error,
+                   GST_PLUGIN_ERROR,
+                   GST_PLUGIN_ERROR_MODULE,
+                   "Could not find plugin_desc in \"%s\"",
+                   filename);
     }
     return FALSE;
   } 
   else {
-    GST_INFO (GST_CAT_PLUGIN_LOADING, "error loading plugin %s, reason: %s\n", filename, g_module_error());
+    g_set_error (error,
+                 GST_PLUGIN_ERROR,
+                 GST_PLUGIN_ERROR_MODULE,
+                 "Error loading plugin %s, reason: %s\n",
+                 filename, g_module_error());
   }
 
   return FALSE;
@@ -384,7 +409,7 @@ gst_plugin_load (const gchar *name)
 
   plugin = gst_registry_pool_find_plugin (name);
   if (plugin)
-    return gst_plugin_load_plugin (plugin);
+    return gst_plugin_load_plugin (plugin, NULL);
 
   return FALSE;
 }

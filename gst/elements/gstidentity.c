@@ -97,10 +97,10 @@ gst_identity_class_init (GstIdentityClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
-    g_param_spec_boolean ("loop_based", "loop_based", "loop_based",
+    g_param_spec_boolean ("loop-based", "Loop-based", "Set to TRUE to use loop-based rather than chain-based scheduling",
                           TRUE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SLEEP_TIME,
-    g_param_spec_uint ("sleep_time", "sleep_time", "sleep_time",
+    g_param_spec_uint ("sleep-time", "Sleep time", "Microseconds to sleep between processing",
                        0, G_MAXUINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUPLICATE,
     g_param_spec_uint ("duplicate", "Duplicate Buffers", "Push the buffers N times",
