@@ -54,11 +54,8 @@ gst_asfmux_details =
 {
   "Asf multiplexer",
   "Codec/Muxer",
-  "LGPL",
   "Muxes audio and video streams into an asf stream",
-  VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2002",
 };
 
 /* AsfMux signals and args */
@@ -208,6 +205,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
 #define GST_ASF_PACKET_HEADER_SIZE 12
 #define GST_ASF_FRAME_HEADER_SIZE 17
 
+static void     gst_asfmux_base_init                 (gpointer g_class);
 static void 	gst_asfmux_class_init		     (GstAsfMuxClass *klass);
 static void 	gst_asfmux_init			     (GstAsfMux      *asfmux);
 
@@ -230,7 +228,7 @@ gst_asfmux_get_type (void)
   if (!asfmux_type) {
     static const GTypeInfo asfmux_info = {
       sizeof (GstAsfMuxClass),      
-      NULL,
+      gst_asfmux_base_init,
       NULL,
       (GClassInitFunc) gst_asfmux_class_init,
       NULL,
@@ -244,6 +242,20 @@ gst_asfmux_get_type (void)
 					  &asfmux_info, 0);
   }
   return asfmux_type;
+}
+
+static void
+gst_asfmux_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+				      GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class,
+				      GST_PAD_TEMPLATE_GET (audio_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+				      GST_PAD_TEMPLATE_GET (video_sink_factory));
+  gst_element_class_set_details (element_class, &gst_asfmux_details);
 }
 
 static void
@@ -1365,31 +1377,22 @@ gst_asfmux_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the asfmux element */
-  factory = gst_element_factory_new ("asfmux", GST_TYPE_ASFMUX,
-                                     &gst_asfmux_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (audio_sink_factory));
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (video_sink_factory));
+  if (!gst_element_register (plugin, "asfmux", GST_RANK_NONE, GST_TYPE_ASFMUX))
+    return FALSE;
   
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "asfmux",
-  plugin_init
-};
+  "Muxes audio and video into an ASF stream",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
