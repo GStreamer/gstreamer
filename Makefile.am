@@ -14,7 +14,19 @@ else
 SUBDIRS_DOCS =
 endif
 
-SUBDIRS = include gst libs plugins tools test tests testsuite examples \
+if BUILD_TESTS
+SUBDIRS_TESTS = test tests testsuite
+else
+SUBDIRS_TESTS =
+endif
+
+if BUILD_EXAMPLES
+SUBDIRS_EXAMPLES = examples
+else
+SUBDIRS_EXAMPLES =
+endif
+
+SUBDIRS = include gst libs plugins tools $(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) components\
 $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
