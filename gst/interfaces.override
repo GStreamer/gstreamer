@@ -65,7 +65,9 @@ _wrap_gst_tuner_list_channels(PyGObject *self)
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
 	GstTunerChannel *channel = (GstTunerChannel*)l->data;
-	PyList_Append(py_list, pygobject_new(G_OBJECT(channel)));
+	PyObject *py_channel = pygobject_new(G_OBJECT(channel));
+	PyList_Append(py_list, py_channel);
+	Py_DECREF(py_channel);
     }
 		
     return py_list;
@@ -83,7 +85,29 @@ _wrap_gst_tuner_list_norms(PyGObject *self)
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
 	GstTunerNorm *norm = (GstTunerNorm*)l->data;
-	PyList_Append(py_list, pygobject_new(G_OBJECT(norm)));
+	PyObject *py_norm = pygobject_new(G_OBJECT(norm));
+	PyList_Append(py_list, py_norm);
+	Py_DECREF(py_norm);
+    }
+		
+    return py_list;
+}
+%%
+override gst_mixer_list_tracks noargs
+static PyObject *
+_wrap_gst_mixer_list_tracks(PyGObject *self)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+	
+    list = gst_mixer_list_tracks(GST_MIXER(self->obj));
+    
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+	GstMixerTrack *track = (GstMixerTrack*)l->data;
+	PyObject *py_track = pygobject_new(G_OBJECT(track));
+	PyList_Append(py_list, py_track);
+	Py_DECREF(py_track);
     }
 		
     return py_list;
