@@ -189,7 +189,7 @@ struct _GstRealPad {
 
   /* the pad capabilities */
   GstCaps2 			*caps;
-  GstCaps2 			*filter;
+  GstPadFixateFunction		 appfixatefunc;
   GstCaps2 			*appfilter;
   GstPadGetCapsFunction 	 getcapsfunc;
   GstPadFixateFunction		 fixatefunc;
@@ -264,7 +264,6 @@ struct _GstGhostPadClass {
 /* GstRealPad */
 #define GST_RPAD_DIRECTION(pad)		(((GstRealPad *)(pad))->direction)
 #define GST_RPAD_CAPS(pad)		(((GstRealPad *)(pad))->caps)
-#define GST_RPAD_FILTER(pad)		(((GstRealPad *)(pad))->filter)
 #define GST_RPAD_APPFILTER(pad)		(((GstRealPad *)(pad))->appfilter)
 #define GST_RPAD_PEER(pad)		(((GstRealPad *)(pad))->peer)
 #define GST_RPAD_CHAINFUNC(pad)		(((GstRealPad *)(pad))->chainfunc)
@@ -283,6 +282,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_LINKFUNC(pad)		(((GstRealPad *)(pad))->linkfunc)
 #define GST_RPAD_UNLINKFUNC(pad)	(((GstRealPad *)(pad))->unlinkfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
+#define GST_RPAD_FIXATEFUNC(pad)	(((GstRealPad *)(pad))->fixatefunc)
 #define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
 
 /* GstGhostPad */
@@ -436,7 +436,7 @@ gboolean		gst_pad_relink_filtered			(GstPad *srcpad, GstPad *sinkpad, const GstC
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, const GstCaps2 *filtercaps);
 GstCaps2*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
-gboolean	     	gst_pad_recalc_allowed_caps    		(GstPad *pad);
+void                    gst_pad_caps_change_notify              (GstPad *pad);
 
 gboolean	     	gst_pad_recover_caps_error    		(GstPad *pad, const GstCaps2 *allowed);
 
