@@ -191,19 +191,24 @@ gst_system_clock_wait (GstClock * clock, GstClockEntry * entry)
   current = gst_clock_get_time (clock);
   diff = GST_CLOCK_ENTRY_TIME (entry) - current;
 
-  target = gst_system_clock_get_internal_time (clock) + diff;
+  target = GST_CLOCK_ENTRY_TIME (entry);
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
-      " target %" G_GUINT64_FORMAT
-      " now %" G_GUINT64_FORMAT, target, GST_CLOCK_ENTRY_TIME (entry), current);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "real_target %" GST_TIME_FORMAT
+      " target %" GST_TIME_FORMAT
+      " now %" GST_TIME_FORMAT
+      " diff %" G_GINT64_FORMAT,
+      GST_TIME_ARGS (target),
+      GST_TIME_ARGS (GST_CLOCK_ENTRY_TIME (entry)),
+      GST_TIME_ARGS (current), diff);
 
-  if (((gint64) target) > 0) {
+  if (diff > 0) {
     GTimeVal tv;
 
     GST_TIME_TO_TIMEVAL (target, tv);
     g_mutex_lock (sysclock->mutex);
     g_cond_timed_wait (sysclock->cond, sysclock->mutex, &tv);
     g_mutex_unlock (sysclock->mutex);
+
     res = entry->status;
   } else {
     res = GST_CLOCK_ENTRY_EARLY;

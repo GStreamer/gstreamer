@@ -97,7 +97,7 @@ typedef enum {
   GST_BUFFER_SUBBUFFER  = GST_DATA_FLAG_LAST,
   GST_BUFFER_ORIGINAL,		/* original data, not copied, not currently used  */
   GST_BUFFER_DONTFREE,		/* buffer data is managed by somebody else and cannot be freeed */
-  GST_BUFFER_KEY_UNIT,		/* sync point in the stream, DEPRECATED, use DELTA_UNIT for non-KEY_UNIT buffers */
+  GST_BUFFER_PREROLL,		/* sample should not be displayed */
   GST_BUFFER_DISCONT,		/* buffer is first after discontinuity in the stream */
   GST_BUFFER_IN_CAPS,		/* buffer is also part of caps */
   GST_BUFFER_GAP,		/* buffer has been created to fill a gap in the stream */

@@ -269,8 +269,9 @@ gst_pipeline_change_state (GstElement * element)
 {
   GstElementStateReturn result = GST_STATE_SUCCESS;
   GstPipeline *pipeline = GST_PIPELINE (element);
+  gint transition = GST_STATE_TRANSITION (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       gst_scheduler_setup (GST_ELEMENT_SCHEDULER (pipeline));
       break;
@@ -280,8 +281,13 @@ gst_pipeline_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       if (element->clock) {
-        element->base_time = gst_clock_get_time (element->clock);
+        /* we set time slightly ahead because of context switches */
+        pipeline->start_time =
+            gst_clock_get_time (element->clock) + 10 * GST_MSECOND;
+        element->base_time = pipeline->start_time - pipeline->stream_time;
       }
+      GST_DEBUG ("stream_time=%" G_GUINT64_FORMAT ", start_time=%"
+          G_GUINT64_FORMAT, pipeline->stream_time, pipeline->start_time);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
     case GST_STATE_PAUSED_TO_READY:
@@ -290,6 +296,26 @@ gst_pipeline_change_state (GstElement * element)
   }
 
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
+    case GST_STATE_READY_TO_PAUSED:
+      pipeline->stream_time = 0;
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      if (element->clock) {
+        pipeline->stream_time = gst_clock_get_time (element->clock) -
+            element->base_time;
+      }
+      GST_DEBUG ("stream_time=%" G_GUINT64_FORMAT ", start_time=%"
+          G_GUINT64_FORMAT, pipeline->stream_time, pipeline->start_time);
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
+  }
 
   /* we wait for async state changes ourselves */
   if (result == GST_STATE_ASYNC) {

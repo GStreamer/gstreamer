@@ -745,8 +745,8 @@ gst_bin_change_state (GstElement * element)
     if (GST_FLAG_IS_SET (qelement, GST_ELEMENT_LOCKED_STATE))
       goto next_element;
 
-    /* FIXME handle delayed elements like src and loop based
-     * elements */
+
+    qelement->base_time = element->base_time;
     ret = gst_element_set_state (qelement, pending);
     switch (ret) {
       case GST_STATE_SUCCESS:

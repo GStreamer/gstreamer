@@ -434,5 +434,10 @@ GstElement *gst_element_factory_create (GstElementFactory * factory,
 GstElement *gst_element_factory_make (const gchar * factoryname,
     const gchar * name);
 
+void                    __gst_element_factory_add_pad_template  (GstElementFactory *elementfactory,
+                                                                 GstPadTemplate *templ);
+void                    __gst_element_factory_add_interface     (GstElementFactory *elementfactory,
+                                                                 const gchar *interfacename);
+
 G_END_DECLS
 #endif /* __GST_ELEMENT_H__ */

@@ -63,6 +63,14 @@ G_STMT_START { 						\
   (ts).tv_usec = ((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND;	\
 } G_STMT_END
 
+/* timestamp debugging macros */
+#define GST_TIME_FORMAT "u:%02u:%02u.%09u"
+#define GST_TIME_ARGS(t) \
+        (guint) ((t) / (GST_SECOND * 60 * 60)), \
+        (guint) (((t) / (GST_SECOND * 60)) % 60), \
+        (guint) (((t) / GST_SECOND) % 60), \
+        (guint) ((t) % GST_SECOND)
+
 #define GST_CLOCK_ENTRY_TRACE_NAME "GstClockEntry"
 
 typedef struct _GstClockEntry 	GstClockEntry;
@@ -132,15 +140,15 @@ struct _GstClock {
   /*< public >*/
   GstClockFlags	 flags;
 
-  /*< protected >*/
-  GstClockTime	 start_time;
+  /*< protected >*/ /* with LOCK */
+  GstClockTime	 adjust;
   GstClockTime	 last_time;
-
-  /*< private >*/
-  guint64	 resolution;
   GList		*entries;
   GMutex	*active_mutex;
   GCond		*active_cond;
+
+  /*< private >*/
+  guint64	 resolution;
   gboolean	 stats;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -151,9 +159,6 @@ struct _GstClockClass {
 
   /*< protected >*/
   /* vtable */
-  gdouble               (*change_speed)         (GstClock *clock,
-		                                 gdouble oldspeed, gdouble newspeed);
-  gdouble               (*get_speed)            (GstClock *clock);
   guint64               (*change_resolution)    (GstClock *clock, guint64 old_resolution,
   						 guint64 new_resolution);
   guint64               (*get_resolution)       (GstClock *clock);
@@ -172,20 +177,12 @@ struct _GstClockClass {
 
 GType           	gst_clock_get_type 		(void);
 
-gdouble			gst_clock_set_speed		(GstClock *clock, gdouble speed);
-gdouble 		gst_clock_get_speed		(GstClock *clock);
-
 guint64			gst_clock_set_resolution	(GstClock *clock, guint64 resolution);
 guint64			gst_clock_get_resolution	(GstClock *clock);
 
-void 			gst_clock_set_active		(GstClock *clock, gboolean active);
-gboolean 		gst_clock_is_active		(GstClock *clock);
-void 			gst_clock_reset			(GstClock *clock);
-gboolean		gst_clock_handle_discont	(GstClock *clock, guint64 time);
-
 GstClockTime		gst_clock_get_time		(GstClock *clock);
+void			gst_clock_set_time_adjust	(GstClock *clock, GstClockTime adjust);
 
-GstClockID		gst_clock_get_next_id		(GstClock *clock);
 
 /* creating IDs that can be used to get notifications */
 GstClockID		gst_clock_new_single_shot_id	(GstClock *clock, 
@@ -193,6 +190,7 @@ GstClockID		gst_clock_new_single_shot_id	(GstClock *clock,
 GstClockID		gst_clock_new_periodic_id	(GstClock *clock, 
 							 GstClockTime start_time,
 		 					 GstClockTime interval); 
+GstClockID		gst_clock_get_next_id		(GstClock *clock);
 
 /* operations on IDs */
 GstClockTime		gst_clock_id_get_time		(GstClockID id);

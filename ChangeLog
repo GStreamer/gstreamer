@@ -1,3 +1,33 @@
+2004-12-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
+	(gst_bin_set_bus), (gst_bin_set_scheduler), (gst_bin_add_func),
+	(gst_bin_iterate_elements), (gst_bin_change_state),
+	(gst_bin_get_by_name_recurse_up):
+	* gst/gstbuffer.c: (gst_buffer_default_copy):
+	* gst/gstbuffer.h:
+	* gst/gstclock.c: (gst_clock_init), (gst_clock_get_time),
+	(gst_clock_set_time_adjust):
+	* gst/gstclock.h:
+	* gst/gstelement.h:
+	* gst/gstevent.h:
+	* gst/gstinfo.h:
+	* gst/gstpipeline.c: (is_eos), (pipeline_bus_handler),
+	(gst_pipeline_change_state):
+	* gst/gstpipeline.h:
+	* gst/gstsystemclock.c: (gst_system_clock_wait):
+	* gst/gstutils.c: (gst_element_finish_preroll),
+	(gst_element_get_compatible_pad_filtered),
+	(gst_element_link_pads_filtered), (gst_element_unlink):
+	* gst/registries/gstxmlregistry.c:
+	(gst_xml_registry_parse_element_factory),
+	(gst_xml_registry_end_element):
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer):
+	Clock updates, remove deprecated methods, simplify operations.
+	Fix clocking and time management in GstPipeline.
+	Preroll also occurs when going from playing to paused.
+
 2004-12-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfakesrc.c: (gst_fakesrc_loop),

@@ -395,7 +395,7 @@ gst_element_finish_preroll (GstElement * element, GMutex * streamlock)
   /* grab state change lock */
   GST_STATE_LOCK (element);
   /* if we are going to PAUSED, we can commit the state change */
-  if (GST_STATE_TRANSITION (element) == GST_STATE_READY_TO_PAUSED) {
+  if (GST_STATE_PENDING (element) == GST_STATE_PAUSED) {
     gst_element_commit_state (GST_ELEMENT (element));
   }
   /* if we are paused we need to wait for playing to continue */

@@ -251,6 +251,7 @@ gst_clock_id_wait_async (GstClockID id,
   return res;
 }
 
+#if 0
 static void
 gst_clock_reschedule_func (GstClockEntry * entry)
 {
@@ -258,6 +259,7 @@ gst_clock_reschedule_func (GstClockEntry * entry)
 
   gst_clock_id_unlock ((GstClockID) entry);
 }
+#endif
 
 /**
  * gst_clock_id_unschedule:
@@ -396,7 +398,7 @@ gst_clock_class_init (GstClockClass * klass)
 static void
 gst_clock_init (GstClock * clock)
 {
-  clock->start_time = 0;
+  clock->adjust = 0;
   clock->last_time = 0;
   clock->entries = NULL;
   clock->flags = 0;
@@ -415,42 +417,6 @@ gst_clock_dispose (GObject * object)
   g_cond_free (clock->active_cond);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-/**
- * gst_clock_set_speed
- * @clock: a #GstClock to modify
- * @speed: the speed to set on the clock
- *
- * Sets the speed on the given clock. 1.0 is the default 
- * speed.
- *
- * Returns: the new speed of the clock.
- */
-gdouble
-gst_clock_set_speed (GstClock * clock, gdouble speed)
-{
-  g_return_val_if_fail (GST_IS_CLOCK (clock), 0.0);
-
-  GST_WARNING_OBJECT (clock, "called deprecated function");
-  return 1.0;
-}
-
-/**
- * gst_clock_get_speed
- * @clock: a #GstClock to query
- *
- * Gets the speed of the given clock.
- *
- * Returns: the speed of the clock.
- */
-gdouble
-gst_clock_get_speed (GstClock * clock)
-{
-  g_return_val_if_fail (GST_IS_CLOCK (clock), 0.0);
-
-  GST_WARNING_OBJECT (clock, "called deprecated function");
-  return 1.0;
 }
 
 /**
@@ -503,72 +469,6 @@ gst_clock_get_resolution (GstClock * clock)
 }
 
 /**
- * gst_clock_set_active
- * @clock: a #GstClock to set state of
- * @active: flag indicating if the clock should be activated (TRUE) or deactivated
- *
- * Activates or deactivates the clock based on the active parameter.
- * As soon as the clock is activated, the time will start ticking.
- */
-void
-gst_clock_set_active (GstClock * clock, gboolean active)
-{
-  g_return_if_fail (GST_IS_CLOCK (clock));
-
-  GST_ERROR_OBJECT (clock, "called deprecated function that does nothing now.");
-
-  return;
-}
-
-/**
- * gst_clock_is_active
- * @clock: a #GstClock to query
- *
- * Checks if the given clock is active.
- * 
- * Returns: TRUE if the clock is active.
- */
-gboolean
-gst_clock_is_active (GstClock * clock)
-{
-  g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
-
-  GST_WARNING_OBJECT (clock, "called deprecated function.");
-
-  return TRUE;
-}
-
-/**
- * gst_clock_reset
- * @clock: a #GstClock to reset
- *
- * Reset the clock to time 0.
- */
-void
-gst_clock_reset (GstClock * clock)
-{
-  GstClockTime time = G_GINT64_CONSTANT (0);
-  GstClockClass *cclass;
-
-  g_return_if_fail (GST_IS_CLOCK (clock));
-
-  GST_ERROR_OBJECT (clock, "called deprecated function.");
-
-  cclass = GST_CLOCK_GET_CLASS (clock);
-
-  if (cclass->get_internal_time) {
-    time = cclass->get_internal_time (clock);
-  }
-
-  GST_LOCK (clock);
-  //clock->active = FALSE;
-  clock->start_time = time;
-  clock->last_time = G_GINT64_CONSTANT (0);
-  g_list_foreach (clock->entries, (GFunc) gst_clock_reschedule_func, NULL);
-  GST_UNLOCK (clock);
-}
-
-/**
  * gst_clock_get_time
  * @clock: a #GstClock to query
  *
@@ -588,7 +488,7 @@ gst_clock_get_time (GstClock * clock)
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   if (cclass->get_internal_time) {
-    ret = cclass->get_internal_time (clock) - clock->start_time;
+    ret = cclass->get_internal_time (clock) + clock->adjust;
   }
   /* make sure the time is increasing, else return last_time */
   if ((gint64) ret < (gint64) clock->last_time) {
@@ -598,6 +498,25 @@ gst_clock_get_time (GstClock * clock)
   }
 
   return ret;
+}
+
+/**
+ * gst_clock_set_time_adjust
+ * @clock: a #GstClock to adjust
+ * @adjust: the adjust value
+ *
+ * Adjusts the current time of the clock with the adjust value.
+ * A positive value moves the clock forwards and a backwards value
+ * moves it backwards. Note that _get_time() always returns 
+ * increasing values so when you move the clock backwards, _get_time()
+ * will report the previous value until the clock catches up.
+ */
+void
+gst_clock_set_time_adjust (GstClock * clock, GstClockTime adjust)
+{
+  g_return_if_fail (GST_IS_CLOCK (clock));
+
+  clock->adjust = adjust;
 }
 
 /**

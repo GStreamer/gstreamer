@@ -136,7 +136,7 @@ gst_buffer_default_copy (GstBuffer * buffer)
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", buffer, copy);
 
   /* copy relevant flags */
-  flags = GST_DATA_FLAG_SHIFT (GST_BUFFER_KEY_UNIT) |
+  flags = GST_DATA_FLAG_SHIFT (GST_BUFFER_PREROLL) |
       GST_DATA_FLAG_SHIFT (GST_BUFFER_IN_CAPS) |
       GST_DATA_FLAG_SHIFT (GST_BUFFER_DELTA_UNIT);
   flags = GST_BUFFER_FLAGS (buffer) & flags;
