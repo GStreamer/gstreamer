@@ -2,7 +2,7 @@ librarydir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 library_LTLIBRARIES = libgstbytestream.la
 
-libgstbytestreamincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst
+libgstbytestreamincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/bytestream
 libgstbytestreaminclude_HEADERS = bytestream.h
 
 libgstbytestream_la_SOURCES = bytestream.c 
