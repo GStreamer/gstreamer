@@ -47,15 +47,16 @@ typedef struct _GstMpeg2decClass GstMpeg2decClass;
 typedef enum
 {
   MPEG2DEC_FORMAT_NONE,
+  MPEG2DEC_FORMAT_I422,
   MPEG2DEC_FORMAT_I420,
-  MPEG2DEC_FORMAT_YV12,
+  MPEG2DEC_FORMAT_YV12
 } Mpeg2decFormat;
 
 typedef enum 
 {
   MPEG2DEC_DISC_NONE 		= 0,
   MPEG2DEC_DISC_NEW_PICTURE,
-  MPEG2DEC_DISC_NEW_KEYFRAME,
+  MPEG2DEC_DISC_NEW_KEYFRAME
 } DiscontState;
 
 struct _GstMpeg2dec {

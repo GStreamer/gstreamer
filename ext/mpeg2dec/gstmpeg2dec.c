@@ -67,7 +67,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { YV12, I420 }, "
+        "format = (fourcc) { YV12, I420, Y42B }, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
         "pixel_width = (int) [ 1, 255 ], "
@@ -291,17 +291,30 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
   guint8 *buf[3], *out;
   const mpeg2_picture_t *picture;
 
-  outbuf = gst_buffer_new_and_alloc ((size * 3) / 2);
+  if (mpeg2dec->format == MPEG2DEC_FORMAT_I422) {
+    outbuf = gst_buffer_new_and_alloc (size * 2);
 
-  out = GST_BUFFER_DATA (outbuf);
+    out = GST_BUFFER_DATA (outbuf);
 
-  buf[0] = out;
-  if (mpeg2dec->format == MPEG2DEC_FORMAT_I420) {
+    buf[0] = out;
     buf[1] = buf[0] + size;
-    buf[2] = buf[1] + size / 4;
+    buf[2] = buf[1] + size / 2;
+
   } else {
-    buf[2] = buf[0] + size;
-    buf[1] = buf[2] + size / 4;
+    outbuf = gst_buffer_new_and_alloc ((size * 3) / 2);
+
+    out = GST_BUFFER_DATA (outbuf);
+
+    buf[0] = out;
+    if (mpeg2dec->format == MPEG2DEC_FORMAT_I420) {
+      buf[0] = out;
+      buf[1] = buf[0] + size;
+      buf[2] = buf[1] + size / 4;
+    } else {
+      buf[0] = out;
+      buf[2] = buf[0] + size;
+      buf[1] = buf[2] + size / 4;
+    }
   }
 
   gst_buffer_ref (outbuf);
@@ -326,16 +339,32 @@ static gboolean
 gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
 {
   GstCaps *caps;
-  guint32 fourcc;
+  guint32 fourcc, myFourcc;
   gboolean ret;
+  const mpeg2_info_t *info;
+  const mpeg2_sequence_t *sequence;
 
   if (!GST_PAD_IS_LINKED (mpeg2dec->srcpad)) {
     mpeg2dec->format = MPEG2DEC_FORMAT_I420;
     return TRUE;
   }
 
+  info = mpeg2_info (mpeg2dec->decoder);
+  sequence = info->sequence;
+
+  if (sequence->width != sequence->chroma_width &&
+      sequence->height != sequence->chroma_height)
+    myFourcc = GST_STR_FOURCC ("I420");
+  else if (sequence->width == sequence->chroma_width ||
+      sequence->height == sequence->chroma_height)
+    myFourcc = GST_STR_FOURCC ("Y42B");
+  else {
+    g_warning ("mpeg2dec: 4:4:4 format not yet supported");
+    return (FALSE);
+  }
+
   caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("I420"),
+      "format", GST_TYPE_FOURCC, myFourcc,
       "width", G_TYPE_INT, mpeg2dec->width,
       "height", G_TYPE_INT, mpeg2dec->height,
       "pixel_width", G_TYPE_INT, mpeg2dec->pixel_width,
@@ -351,7 +380,9 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
   gst_structure_get_fourcc (gst_caps_get_structure (caps, 0),
       "format", &fourcc);
 
-  if (fourcc == GST_STR_FOURCC ("I420")) {
+  if (fourcc == GST_STR_FOURCC ("Y42B")) {
+    mpeg2dec->format = MPEG2DEC_FORMAT_I422;
+  } else if (fourcc == GST_STR_FOURCC ("I420")) {
     mpeg2dec->format = MPEG2DEC_FORMAT_I420;
   } else {
     mpeg2dec->format = MPEG2DEC_FORMAT_YV12;
