@@ -286,11 +286,15 @@ static gchar*
 format_value (GtkScale *scale,
 	      gdouble   value)
 {
-  gint real = value * duration / 100;
-  gint seconds = (gint) real/1000000;
-  gint subseconds = (gint) real/10000;
+  gint64 real;
+  gint64 seconds;
+  gint64 subseconds;
 
-  return g_strdup_printf ("%02d:%02d:%02d",
+  real = value * duration / 100;
+  seconds = (gint64) real / GST_SECOND;
+  subseconds = (gint64) real / (GST_SECOND / 10);
+
+  return g_strdup_printf ("%02lld:%02lld:%02lld",
                           seconds/60, 
 			  seconds%60, 
 			  subseconds%100);
@@ -331,10 +335,10 @@ query_rates (void)
       if (gst_pad_convert (pad, GST_FORMAT_TIME, GST_SECOND, 
 		           &format, &value)) 
       {
-        g_print ("%s %10lld | ", seek_formats[i].name, value);
+        g_print ("%s %13lld | ", seek_formats[i].name, value);
       }
       else {
-        g_print ("%s %10.10s | ", seek_formats[i].name, "*NA*");
+        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
 
       i++;
@@ -359,12 +363,12 @@ query_durations (GstPad *pad)
     format = seek_formats[i].format;
     res = gst_pad_query (pad, GST_PAD_QUERY_TOTAL, &format, &value);
     if (res) {
-      g_print ("%s %10lld | ", seek_formats[i].name, value);
+      g_print ("%s %13lld | ", seek_formats[i].name, value);
       if (seek_formats[i].format == GST_FORMAT_TIME)
 	duration = value;
     }
     else {
-      g_print ("%s %10.10s | ", seek_formats[i].name, "*NA*");
+      g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
     }
     i++;
   }
@@ -385,12 +389,12 @@ query_positions (GstPad *pad)
     format = seek_formats[i].format;
     res = gst_pad_query (pad, GST_PAD_QUERY_POSITION, &format, &value);
     if (res) {
-      g_print ("%s %10lld | ", seek_formats[i].name, value);
+      g_print ("%s %13lld | ", seek_formats[i].name, value);
       if (seek_formats[i].format == GST_FORMAT_TIME)
 	position = value;
     }
     else {
-      g_print ("%s %10.10s | ", seek_formats[i].name, "*NA*");
+      g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
     }
     i++;
   }
@@ -405,7 +409,7 @@ update_scale (gpointer data)
 
   clock = gst_bin_get_clock (GST_BIN (pipeline));
 
-  g_print ("clock:                  %10llu  (%s)\n", gst_clock_get_time (clock), gst_object_get_name (GST_OBJECT (clock)));
+  g_print ("clock:                  %13llu  (%s)\n", gst_clock_get_time (clock), gst_object_get_name (GST_OBJECT (clock)));
 
   while (walk) {
     GstPad *pad = GST_PAD (walk->data);
