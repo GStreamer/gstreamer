@@ -1,6 +1,13 @@
 2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
+	* docs/manuals.mak:
+          add .po file download snippet
+          fix a bug in the doc makefile
+
+2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
 	* po/LINGUAS:
 	* po/en_GB.po:
           Added en_GB translation (Gareth Owen)
@@ -519,6 +526,7 @@
 2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstinfo.h: adding Ronald's timestamp debugging defines
+          (GST_TIME_FORMAT, GST_TIME_ARGS)
 
 2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
