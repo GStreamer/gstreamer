@@ -58,6 +58,10 @@ typedef struct
   guint state;                  /* state of the pad */
 
   GList *headers;
+
+  gboolean new_page;            /* starting a new page */
+  gboolean first_delta;         /* was the first packet in the page a delta */
+  gboolean prev_delta;          /* was the previous buffer a delta frame */
 }
 GstOggPad;
 
@@ -93,7 +97,7 @@ struct _GstOggMux
   guint64 max_delay;
   guint64 max_page_delay;
 
-  gboolean keyframe_mode;       /* when a delta frame is detected on a stream, we mark
+  GstOggPad *delta_pad;         /* when a delta frame is detected on a stream, we mark
                                    pages as delta frames up to the page that has the
                                    keyframe */
 };
@@ -263,6 +267,8 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   ogg_mux->max_delay = DEFAULT_MAX_DELAY;
   ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
 
+  ogg_mux->delta_pad = NULL;
+
   gst_element_set_loop_function (GST_ELEMENT (ogg_mux), gst_ogg_mux_loop);
 }
 
@@ -348,6 +354,9 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->eos = FALSE;
       /* we assume there will be some control data first for this pad */
       oggpad->state = GST_OGG_PAD_STATE_CONTROL;
+      oggpad->new_page = TRUE;
+      oggpad->first_delta = FALSE;
+      oggpad->prev_delta = FALSE;
 
       /* save a pointer to our data in the pad */
       gst_pad_set_element_private (newpad, oggpad);
@@ -446,6 +455,7 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
           GST_DEBUG ("muxer: got incaps buffer in control state, ignoring");
           /* just ignore */
           gst_buffer_unref (buf);
+          /* pull next one in next iteration */
           data = NULL;
         } else {
           GST_DEBUG
@@ -460,7 +470,7 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
 }
 
 static GstBuffer *
-gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page)
+gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
 {
   GstBuffer *buffer;
 
@@ -476,15 +486,17 @@ gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page)
   GST_BUFFER_OFFSET (buffer) = mux->offset;
   mux->offset += GST_BUFFER_SIZE (buffer);
   GST_BUFFER_OFFSET_END (buffer) = mux->offset;
+  if (delta)
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_DELTA_UNIT);
 
   return buffer;
 }
 
 static void
-gst_ogg_mux_push_page (GstOggMux * mux, ogg_page * page)
+gst_ogg_mux_push_page (GstOggMux * mux, ogg_page * page, gboolean delta)
 {
   if (GST_PAD_IS_USABLE (mux->srcpad)) {
-    GstBuffer *buffer = gst_ogg_mux_buffer_from_page (mux, page);
+    GstBuffer *buffer = gst_ogg_mux_buffer_from_page (mux, page, delta);
 
     gst_pad_push (mux->srcpad, GST_DATA (buffer));
   }
@@ -714,7 +726,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     GST_LOG ("flushing page with first packet");
     while (ogg_stream_flush (&pad->stream, &page)) {
-      GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page);
+      GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
       GST_LOG ("swapped out page");
       hbufs = g_list_append (hbufs, hbuf);
@@ -758,7 +770,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
         GST_LOG ("flushing page as packet %d is first or last packet",
             pad->packetno);
         while (ogg_stream_flush (&pad->stream, &page)) {
-          GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page);
+          GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
           GST_LOG ("swapped out page");
           hbufs = g_list_append (hbufs, hbuf);
@@ -767,7 +779,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
         GST_LOG ("try to swap out page");
         /* just try to swap out a page then */
         while (ogg_stream_pageout (&pad->stream, &page) > 0) {
-          GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page);
+          GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
           GST_LOG ("swapped out page");
           hbufs = g_list_append (hbufs, hbuf);
@@ -820,6 +832,7 @@ gst_ogg_mux_loop (GstElement * element)
 {
   GstOggMux *ogg_mux;
   GstOggPad *best;
+  gboolean delta_unit;
 
   ogg_mux = GST_OGG_MUX (element);
 
@@ -838,11 +851,13 @@ gst_ogg_mux_loop (GstElement * element)
       ogg_page page;
 
       while (ogg_stream_flush (&ogg_mux->pulling->stream, &page)) {
-        gst_ogg_mux_push_page (ogg_mux, &page);
+        gst_ogg_mux_push_page (ogg_mux, &page, ogg_mux->pulling->first_delta);
         /* increment the page number counter */
         ogg_mux->pulling->pageno++;
+        ogg_mux->pulling->first_delta = TRUE;
       }
       ogg_mux->pulling = NULL;
+      ogg_mux->pulling->new_page = TRUE;
     }
   }
 
@@ -874,6 +889,7 @@ gst_ogg_mux_loop (GstElement * element)
     GstBuffer *buf, *tmpbuf;
     GstOggPad *pad = ogg_mux->pulling;
     gint64 duration;
+    gboolean force_flush;
 
     /* now see if we have a buffer */
     buf = pad->buffer;
@@ -888,6 +904,7 @@ gst_ogg_mux_loop (GstElement * element)
       }
     }
 
+    delta_unit = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_DELTA_UNIT);
     duration = GST_BUFFER_DURATION (buf);
 
     /* create a packet from the buffer */
@@ -908,6 +925,52 @@ gst_ogg_mux_loop (GstElement * element)
     /* mark EOS */
     packet.e_o_s = (tmpbuf == NULL ? 1 : 0);
 
+    /* we flush when we see a new keyframe */
+    force_flush = (pad->prev_delta && !delta_unit);
+    if (duration != -1) {
+      pad->duration += duration;
+      /* if page duration exceeds max, flush page */
+      if (pad->duration > ogg_mux->max_page_delay) {
+        force_flush = TRUE;
+        pad->duration = 0;
+      }
+    }
+
+    /* force flush */
+    if (force_flush) {
+      while (ogg_stream_flush (&pad->stream, &page)) {
+        gst_ogg_mux_push_page (ogg_mux, &page, pad->first_delta);
+        /* increment the page number counter */
+        pad->pageno++;
+        pad->first_delta = TRUE;
+      }
+      pad->new_page = TRUE;
+    }
+
+    /* if this is the first packet of a new page figure out the delta flag */
+    if (pad->new_page) {
+      if (delta_unit) {
+        /* This page is a delta frame */
+        if (ogg_mux->delta_pad == NULL) {
+          /* we got a delta unit on this pad */
+          ogg_mux->delta_pad = pad;
+        }
+        /* mark the page as delta */
+        pad->first_delta = TRUE;
+      } else {
+        /* got a keyframe */
+        if (ogg_mux->delta_pad == pad) {
+          /* if we get it on the pad with deltaunits,
+           * we mark the page as non delta */
+          pad->first_delta = FALSE;
+        }
+      }
+      pad->new_page = FALSE;
+    }
+
+    /* save key unit to track delta->key unit transitions */
+    pad->prev_delta = delta_unit;
+
     /* swap the packet in */
     ogg_stream_packetin (&pad->stream, &packet);
 
@@ -916,32 +979,20 @@ gst_ogg_mux_loop (GstElement * element)
     /* store new readahead buffer */
     pad->buffer = tmpbuf;
 
-    if (duration != -1) {
-      pad->duration += duration;
-      /* if page duration exceeds max, flush page */
-      if (pad->duration > ogg_mux->max_page_delay) {
-        while (ogg_stream_flush (&pad->stream, &page)) {
-          gst_ogg_mux_push_page (ogg_mux, &page);
-          /* increment the page number counter */
-          pad->pageno++;
-        }
-        pad->duration = 0;
-        return;
-      }
-    }
-
-    /* flush out the pages now. The packet we got could end up in
-     * more than one page so we need to flush them all */
+    /* let ogg write out the pages now. The packet we got could end 
+     * up in more than one page so we need to write them all */
     while (ogg_stream_pageout (&pad->stream, &page) > 0) {
       /* we have a complete page now, we can push the page 
        * and make sure to pull on a new pad the next time around */
-      gst_ogg_mux_push_page (ogg_mux, &page);
+      gst_ogg_mux_push_page (ogg_mux, &page, pad->first_delta);
       /* increment the page number counter */
       pad->pageno++;
       /* we're done pulling on this pad, make sure to choose a new 
        * pad for pulling in the next iteration */
       ogg_mux->pulling = NULL;
+      pad->first_delta = TRUE;
       pad->duration = 0;
+      pad->new_page = TRUE;
     }
   }
 }

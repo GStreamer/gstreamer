@@ -1,5 +1,17 @@
 2004-08-17  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_iterate),
+	(gst_ogg_pad_push):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),
+	(gst_ogg_mux_request_new_pad), (gst_ogg_mux_next_buffer),
+	(gst_ogg_mux_buffer_from_page), (gst_ogg_mux_push_page),
+	(gst_ogg_mux_send_headers), (gst_ogg_mux_loop):
+	Mark delta units in the muxer.
+	Try to decode the packet after an out-of-sync error from
+	libogg.
+
+2004-08-17  Wim Taymans  <wim@fluendo.com>
+
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
 	(gst_multifdsink_init), (gst_multifdsink_add),
 	(gst_multifdsink_client_queue_buffer),
