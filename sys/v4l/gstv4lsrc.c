@@ -640,7 +640,7 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
     vwin->flags |= fps_index << 16;
     if (!gst_v4l_set_window_properties (GST_V4LELEMENT (v4lsrc))) {
       GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SETTINGS, (NULL),
-          ("Could not set framerate of %d fps", fps));
+          ("Could not set framerate of %f fps", fps));
     }
   }
   switch (fourcc) {
@@ -823,9 +823,18 @@ gst_v4lsrc_getcaps (GstPad * pad)
         vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight, fps,
         GPOINTER_TO_INT (item->data));
 
-    gst_caps_set_simple (one, "width", GST_TYPE_INT_RANGE, vcap->minwidth,
-        vcap->maxwidth, "height", GST_TYPE_INT_RANGE, vcap->minheight,
-        vcap->maxheight, NULL);
+    if (vcap->minwidth < vcap->maxwidth) {
+      gst_caps_set_simple (one, "width", GST_TYPE_INT_RANGE, vcap->minwidth,
+          NULL);
+    } else {
+      gst_caps_set_simple (one, "width", G_TYPE_INT, vcap->minwidth, NULL);
+    }
+    if (vcap->minheight < vcap->maxheight) {
+      gst_caps_set_simple (one, "height", GST_TYPE_INT_RANGE, vcap->minheight,
+          vcap->maxheight, NULL);
+    } else {
+      gst_caps_set_simple (one, "height", G_TYPE_INT, vcap->minheight, NULL);
+    }
 
     if (fps_list) {
       GstStructure *structure = gst_caps_get_structure (one, 0);
