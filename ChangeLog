@@ -1,6 +1,14 @@
 2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Ronald Bultje <rbultje@ronald.bitfreak.net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  Fix broken mp3 typefinding.  Fixes #158375
+
+2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Ronald Bultje <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c:
 	  Fix sync on broken files.  Fixes #158976
 
