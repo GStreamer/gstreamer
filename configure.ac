@@ -251,6 +251,9 @@ dnl ===========================================================================
 dnl ============================= gst plug-ins ================================
 dnl ===========================================================================
 
+plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"
+AC_SUBST(plugindir)
+
 GST_PLUGIN_LDFLAGS='-module -avoid-version'
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
