@@ -1,3 +1,12 @@
+2005-03-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstqueue.c: (gst_queue_locked_flush), (gst_queue_chain),
+	(gst_queue_get), (gst_queue_handle_src_event):
+	  Don't drop buffers on interrupt. Rather, ignore fulness status
+	  and preserve stream (#159676).
+	(gst_queue_handle_src_query):
+	  Don't go below zero.
+
 2005-02-27  Phil Blundell  <pb@nexus.co.uk>
 
 	Reviewed by:  Maciej Katafiasz  <mathrick@freedesktop.org>
