@@ -1042,6 +1042,8 @@ gst_avimux_fill_queue (GstAviMux *avimux)
   GstBuffer *buffer;
 
   if (!avimux->audio_buffer_queue &&
+       avimux->audiosinkpad &&
+       avimux->audio_pad_connected &&
        GST_PAD_IS_USABLE(avimux->audiosinkpad) &&
       !avimux->audio_pad_eos)
   {
@@ -1061,6 +1063,8 @@ gst_avimux_fill_queue (GstAviMux *avimux)
   }
 
   if (!avimux->video_buffer_queue &&
+       avimux->videosinkpad &&
+       avimux->video_pad_connected &&
        GST_PAD_IS_USABLE(avimux->videosinkpad) &&
       !avimux->video_pad_eos)
   {
