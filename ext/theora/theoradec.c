@@ -557,8 +557,8 @@ theora_dec_chain (GstPad * pad, GstData * data)
   packet.b_o_s = (packet.packetno == 0) ? 1 : 0;
   packet.e_o_s = 0;
 
-  GST_DEBUG_OBJECT (dec, "header=%d packetno=%d", packet.packet[0],
-      packet.packetno);
+  GST_DEBUG_OBJECT (dec, "header=%d packetno=%d, outtime=%" GST_TIME_FORMAT,
+      packet.packet[0], packet.packetno, GST_TIME_ARGS (outtime));
 
   /* switch depending on packet type */
   if (packet.packet[0] & 0x80) {
