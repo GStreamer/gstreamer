@@ -59,7 +59,7 @@ GtkType gst_autoplug_get_type(void)
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    autoplug_type = gtk_type_unique (GTK_TYPE_OBJECT, &autoplug_info);
+    autoplug_type = gtk_type_unique (GST_TYPE_OBJECT, &autoplug_info);
   }
   return autoplug_type;
 }
@@ -68,10 +68,12 @@ static void
 gst_autoplug_class_init(GstAutoplugClass *klass)
 {
   GtkObjectClass *gtkobject_class;
+  GstObjectClass *gstobject_class;
 
   gtkobject_class = (GtkObjectClass*) klass;
+  gstobject_class = (GstObjectClass*) klass;
 
-  parent_class = gtk_type_class(GTK_TYPE_OBJECT);
+  parent_class = gtk_type_class(GST_TYPE_OBJECT);
 
   gst_autoplug_signals[NEW_OBJECT] =
     gtk_signal_new ("new_object", GTK_RUN_LAST, gtkobject_class->type,
@@ -100,17 +102,35 @@ gst_autoplug_signal_new_object (GstAutoplug *autoplug, GstObject *object)
 
 
 GstElement*
-gst_autoplug_caps_list (GstAutoplug *autoplug, GList *srcpad, GList *sinkpad, ...)
+gst_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, ...)
 {
   GstAutoplugClass *oclass;
   GstElement *element = NULL;
   va_list args;
 
-  va_start (args, sinkpad);
+  va_start (args, sinkcaps);
 
   oclass = GST_AUTOPLUG_CLASS (GTK_OBJECT (autoplug)->klass);
-  if (oclass->autoplug_caps_list)
-    element = (oclass->autoplug_caps_list) (autoplug, srcpad, sinkpad, args);
+  if (oclass->autoplug_to_caps)
+    element = (oclass->autoplug_to_caps) (autoplug, srccaps, sinkcaps, args);
+
+  va_end (args);
+
+  return element;
+}
+
+GstElement*
+gst_autoplug_to_renderers (GstAutoplug *autoplug, GList *srccaps, GstElement *target, ...)
+{
+  GstAutoplugClass *oclass;
+  GstElement *element = NULL;
+  va_list args;
+
+  va_start (args, target);
+
+  oclass = GST_AUTOPLUG_CLASS (GTK_OBJECT (autoplug)->klass);
+  if (oclass->autoplug_to_renderers)
+    element = (oclass->autoplug_to_renderers) (autoplug, srccaps, target, args);
 
   va_end (args);
 

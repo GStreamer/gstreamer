@@ -33,7 +33,7 @@ main (int argc, char *argv[])
 
   gtk_signal_connect (GTK_OBJECT (autoplugger), "new_object", new_object_added, NULL);
 
-  element = gst_autoplug_caps_list (autoplugger, testcaps,
+  element = gst_autoplug_to_caps (autoplugger, testcaps,
 		  gst_pad_get_caps_list (gst_element_get_pad (audiosink, "sink")),
 		  gst_pad_get_caps_list (gst_element_get_pad (videosink, "sink")),
 		  NULL);

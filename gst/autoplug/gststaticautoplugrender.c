@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gststaticautoplug.h"
+#include "gststaticautoplugrender.h"
 
 #include <gst/gst.h>
 
@@ -30,8 +30,8 @@ typedef guint   (*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointe
 typedef GList*  (*GstAutoplugListFunction) (gpointer data);
 
 
-static void     	gst_static_autoplug_class_init	(GstStaticAutoplugClass *klass);
-static void     	gst_static_autoplug_init	(GstStaticAutoplug *autoplug);
+static void     	gst_static_autoplug_render_class_init	(GstStaticAutoplugRenderClass *klass);
+static void     	gst_static_autoplug_render_init	(GstStaticAutoplugRender *autoplug);
 
 static GList*		gst_autoplug_func		(gpointer src, gpointer sink,
 						 	 GstAutoplugListFunction list_function,
@@ -40,22 +40,22 @@ static GList*		gst_autoplug_func		(gpointer src, gpointer sink,
 
 
 
-static GstElement*	gst_static_autoplug_to_caps	(GstAutoplug *autoplug, 
-						  	 GList *srccaps, GList *sinkcaps, va_list args);
+static GstElement*	gst_static_autoplug_to_render	(GstAutoplug *autoplug, 
+						  	 GList *srccaps, GstElement *target, va_list args);
 
 static GstAutoplugClass *parent_class = NULL;
 
-GtkType gst_static_autoplug_get_type(void)
+GtkType gst_static_autoplug_render_get_type(void)
 {
   static GtkType static_autoplug_type = 0;
 
   if (!static_autoplug_type) {
     static const GtkTypeInfo static_autoplug_info = {
-      "GstStaticAutoplug",
+      "GstStaticAutoplugRender",
       sizeof(GstElement),
       sizeof(GstElementClass),
-      (GtkClassInitFunc)gst_static_autoplug_class_init,
-      (GtkObjectInitFunc)gst_static_autoplug_init,
+      (GtkClassInitFunc)gst_static_autoplug_render_class_init,
+      (GtkObjectInitFunc)gst_static_autoplug_render_init,
       (GtkArgSetFunc)NULL,
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
@@ -66,7 +66,7 @@ GtkType gst_static_autoplug_get_type(void)
 }
 
 static void
-gst_static_autoplug_class_init(GstStaticAutoplugClass *klass)
+gst_static_autoplug_render_class_init(GstStaticAutoplugRenderClass *klass)
 {
   GstAutoplugClass *gstautoplug_class;
 
@@ -74,10 +74,10 @@ gst_static_autoplug_class_init(GstStaticAutoplugClass *klass)
 
   parent_class = gtk_type_class(GST_TYPE_AUTOPLUG);
 
-  gstautoplug_class->autoplug_to_caps = gst_static_autoplug_to_caps;
+  gstautoplug_class->autoplug_to_renderers = gst_static_autoplug_to_render;
 }
 
-static void gst_static_autoplug_init(GstStaticAutoplug *autoplug) {
+static void gst_static_autoplug_render_init(GstStaticAutoplugRender *autoplug) {
 }
 
 GstPlugin*
@@ -86,14 +86,14 @@ plugin_init (GModule *module)
   GstPlugin *plugin;
   GstAutoplugFactory *factory;
 
-  plugin = gst_plugin_new("gststaticautoplug");
+  plugin = gst_plugin_new("gststaticautoplugrender");
   g_return_val_if_fail(plugin != NULL,NULL);
 
   gst_plugin_set_longname (plugin, "A static autoplugger");
 
-  factory = gst_autoplugfactory_new ("static",
+  factory = gst_autoplugfactory_new ("staticrender",
 		  "A static autoplugger, it constructs the complete element before running it",
-		  gst_static_autoplug_get_type ());
+		  gst_static_autoplug_render_get_type ());
 
   if (factory != NULL) {
      gst_plugin_add_autoplugger (plugin, factory);
@@ -222,6 +222,8 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     gtk_signal_connect(GTK_OBJECT(src),"new_pad",
                  GTK_SIGNAL_FUNC(gst_autoplug_pads_autoplug_func), sink);
+    gtk_signal_connect(GTK_OBJECT(src),"new_ghost_pad",
+                 GTK_SIGNAL_FUNC(gst_autoplug_pads_autoplug_func), sink);
   }
 }
 
@@ -267,18 +269,18 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
 }
 
 static GstElement*
-gst_static_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, va_list args)
+gst_static_autoplug_to_render (GstAutoplug *autoplug, GList *srccaps, GstElement *target, va_list args)
 {
   caps_struct caps;
-  GList *capslist;
+  GstElement *targetelement;
   GstElement *result = NULL, *srcelement = NULL;
   GList **factories;
   GList *chains = NULL;
-  GList *endcaps = NULL;
+  GList *endelements = NULL;
   guint numsinks = 0, i;
   gboolean have_common = FALSE;
 
-  capslist = sinkcaps;
+  targetelement = target;
 
   /*
    * We first create a list of elements that are needed
@@ -287,10 +289,13 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkc
    */
   caps.src  = srccaps;
 
-  while (capslist) {
+  while (targetelement) {
     GList *elements;
+    GstPad *pad;
 
-    caps.sink = capslist;
+    pad = GST_PAD (gst_element_get_pad_list (targetelement)->data);
+
+    caps.sink = gst_pad_get_caps_list (pad);
 
     GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
 
@@ -301,13 +306,13 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GList *srccaps, GList *sinkc
 
     if (elements) {
       chains = g_list_append (chains, elements);
-      endcaps = g_list_append (endcaps, capslist);
+      endelements = g_list_append (endelements, targetelement);
       numsinks++;
     }
     else {
     }
 
-    capslist = va_arg (args, GList *);
+    targetelement = va_arg (args, GstElement *);
   }
 
   /*
@@ -403,63 +408,89 @@ differ:
   for (i = 0; i < numsinks; i++) {
     GstElement *thesrcelement = srcelement;
     GstElement *thebin = GST_ELEMENT(result);
+    GstElement *sinkelement;
+    gboolean use_thread;
 
-    while (factories[i]) {
+    sinkelement = GST_ELEMENT (endelements->data);
+    endelements = g_list_next (endelements);
+
+    use_thread = have_common;
+
+    while (factories[i] || sinkelement) {
       // fase 4: add other elements...
       GstElementFactory *factory;
       GstElement *element;
 
-      factory = (GstElementFactory *)(factories[i]->data);
+      if (factories[i]) {
+        factory = (GstElementFactory *)(factories[i]->data);
 
-      GST_DEBUG (0,"factory \"%s\"\n", factory->name);
-      element = gst_elementfactory_create(factory, factory->name);
+        GST_DEBUG (0,"factory \"%s\"\n", factory->name);
+        element = gst_elementfactory_create(factory, factory->name);
+      }
+      else {
+	element = sinkelement;
+	sinkelement = NULL;
+      }
 
-      GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
-      gst_bin_add(GST_BIN(thebin), element);
-      gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
-      
+      // this element suggests the use of a thread, so we set one up...
+      if (GST_ELEMENT_IS_THREAD_SUGGESTED(element) || use_thread) {
+        GstElement *queue;
+        GList *sinkpads;
+        GstPad *srcpad, *sinkpad;
+
+	use_thread = FALSE;
+
+        GST_DEBUG (0,"sugest new thread for \"%s\" %08x\n", GST_ELEMENT_NAME (element), GST_FLAGS(element));
+
+	// create a new queue and add to the previous bin
+        queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
+        GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
+        gst_bin_add(GST_BIN(thebin), queue);
+        gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (queue));
+
+	// this will be the new bin for all following elements
+        thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
+
+        srcpad = gst_element_get_pad(queue, "src");
+
+        sinkpads = gst_element_get_pad_list(element);
+        while (sinkpads) {
+          sinkpad = (GstPad *)sinkpads->data;
+
+	  // FIXME connect matching pads, not just the first one...
+          if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
+	      !GST_PAD_CONNECTED(sinkpad)) {
+            GList *caps = gst_pad_get_caps_list (sinkpad);
+
+	    // the queue has the type of the elements it connects
+	    gst_pad_set_caps_list (srcpad, caps);
+            gst_pad_set_caps_list (gst_element_get_pad(queue, "sink"), caps);
+	    break;
+	  }
+          sinkpads = g_list_next(sinkpads);
+        }
+        gst_autoplug_pads_autoplug(thesrcelement, queue);
+
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
+        gst_bin_add(GST_BIN(thebin), element);
+        gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (thebin));
+        gst_bin_add(GST_BIN(result), thebin);
+        gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (thebin));
+        thesrcelement = queue;
+      }
+      // no thread needed, easy case
+      else {
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
+        gst_bin_add(GST_BIN(thebin), element);
+        gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (element));
+      }
       gst_autoplug_pads_autoplug(thesrcelement, element);
 
       // this element is now the new source element
       thesrcelement = element;
 
       factories[i] = g_list_next(factories[i]);
-    }
-    /*
-     * we're at the last element in the chain,
-     * find a suitable pad to turn into a ghostpad
-     */
-    {
-      GList *endcap = (GList *)(endcaps->data);
-      GList *pads = gst_element_get_pad_list (thesrcelement);
-      gboolean have_pad = FALSE;
-      endcaps = g_list_next (endcaps);
-
-      GST_DEBUG (0,"attempting to create a ghostpad for %s\n", GST_ELEMENT_NAME (thesrcelement));
-
-      while (pads) {
-	GstPad *pad = GST_PAD (pads->data);
-	pads = g_list_next (pads);
-
-	if (gst_caps_list_check_compatibility (gst_pad_get_caps_list (pad), endcap)) {
-          gst_element_add_ghost_pad (result, pad, g_strdup_printf("src_%02d", i));
-	  have_pad = TRUE;
-	  break;
-	}
-      }
-      if (!have_pad) {
-	dynamic_pad_struct *data = g_new0(dynamic_pad_struct, 1);
-
-	data->result = result;
-	data->endcap = endcap;
-	data->i = i;
-
-        GST_DEBUG (0,"delaying the creation of a ghostpad for %s\n", GST_ELEMENT_NAME (thesrcelement));
-	gtk_signal_connect (GTK_OBJECT (thesrcelement), "new_pad", 
-			autoplug_dynamic_pad, data);
-        gtk_signal_connect (GTK_OBJECT (thesrcelement), "new_ghost_pad",
-                 	autoplug_dynamic_pad, data);
-      }
     }
   }
 

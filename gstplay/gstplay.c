@@ -125,43 +125,16 @@ gst_play_init (GstPlay *play)
   priv->bin = gst_bin_new ("main_bin");
   g_assert (priv->bin != NULL);
 
-  /* and an audio sink */
-  priv->audio_play = gst_thread_new ("audio_render_thread");
-  g_return_if_fail (priv->audio_play != NULL);
-
   priv->audio_element = gst_elementfactory_make ("audiosink", "play_audio");
   g_return_if_fail (priv->audio_element != NULL);
   gtk_signal_connect (GTK_OBJECT (priv->audio_element), "handoff",
 		  GTK_SIGNAL_FUNC (gst_play_audio_handoff), play);
-
-  priv->audio_queue = gst_elementfactory_make ("queue", "audio_queue");
-
-  gst_bin_add (GST_BIN (priv->audio_play), priv->audio_element),
-
-  gst_element_connect (priv->audio_queue, "src", priv->audio_element, "sink");
-  // FIXME, we need caps negiciation
-  gst_pad_set_caps_list (gst_element_get_pad (priv->audio_queue, "sink"),
-			 gst_pad_get_caps_list (
-		           gst_element_get_pad (priv->audio_element, "sink")));
-
-  /* and a video sink */
-  priv->video_show = gst_thread_new ("video_render_thread");
-  g_return_if_fail (priv->video_show != NULL);
 
   priv->video_element = gst_elementfactory_make ("videosink", "show");
   g_return_if_fail (priv->video_element != NULL);
   gtk_object_set (GTK_OBJECT (priv->video_element), "xv_enabled", FALSE, NULL);
   gtk_signal_connect (GTK_OBJECT (priv->video_element), "frame_displayed",
 		  GTK_SIGNAL_FUNC (gst_play_frame_displayed), play);
-
-  priv->video_queue = gst_elementfactory_make ("queue", "video_queue");
-
-  gst_bin_add (GST_BIN (priv->video_show), priv->video_element),
-
-  gst_element_connect (priv->video_queue, "src", priv->video_element, "sink");
-  gst_pad_set_caps_list (gst_element_get_pad (priv->video_queue, "sink"),
-			 gst_pad_get_caps_list (
-		           gst_element_get_pad (priv->video_element, "sink")));
 
   play->state = GST_PLAY_STOPPED;
   play->flags = 0;
@@ -193,6 +166,14 @@ static void
 gst_play_frame_displayed (GstElement *element,
 		          GstPlay *play)
 {
+  GstPlayPrivate *priv;
+
+  priv = (GstPlayPrivate *)play->priv;
+
+  gdk_threads_enter ();
+  gtk_widget_show (GTK_WIDGET (priv->video_widget));
+  gdk_threads_leave ();
+
   gtk_signal_emit (GTK_OBJECT (play), gst_play_signals[SIGNAL_FRAME_DISPLAYED],
 		  NULL);
 }
@@ -338,27 +319,6 @@ connect_pads (GstElement *new_element, GstElement *target, gboolean add)
   return FALSE;
 }
 
-static void
-dynamic_connect_pads (GstElement *new_element, GstPad *pad, gpointer data)
-{
-  GstPlay *play = (GstPlay *)data;
-  GstPlayPrivate *priv;
-  
-  priv = (GstPlayPrivate *)play->priv;
-
-  gdk_threads_enter();
-  if (!(play->flags & GST_PLAY_TYPE_AUDIO) &&
-      (connect_pads (new_element, priv->audio_queue, FALSE))) {
-    play->flags |= GST_PLAY_TYPE_AUDIO;
-  }
-  if (!(play->flags & GST_PLAY_TYPE_VIDEO) &&
-      (connect_pads (new_element, priv->video_queue, FALSE))) {
-    play->flags |= GST_PLAY_TYPE_VIDEO;
-    gtk_widget_show (priv->video_widget);
-  }
-  gdk_threads_leave();
-}
-
 GstPlayReturn
 gst_play_set_uri (GstPlay *play,
 		  const guchar *uri)
@@ -394,14 +354,15 @@ gst_play_set_uri (GstPlay *play,
     return GST_PLAY_UNKNOWN_MEDIA;
   }
 
-  autoplug = gst_autoplugfactory_make ("static");
+  autoplug = gst_autoplugfactory_make ("staticrender");
+  g_assert (autoplug != NULL);
 
   gtk_signal_connect (GTK_OBJECT (autoplug), "new_object", gst_play_object_added, play);
 
-  new_element = gst_autoplug_caps_list (autoplug,
+  new_element = gst_autoplug_to_renderers (autoplug,
 	   gst_pad_get_caps_list (gst_element_get_pad (priv->src, "src")),
-	   gst_pad_get_caps_list (gst_element_get_pad (priv->video_queue, "sink")),
-	   gst_pad_get_caps_list (gst_element_get_pad (priv->audio_queue, "sink")),
+	   priv->video_element,
+	   priv->audio_element,
 	   NULL);
 
   if (!new_element) {
@@ -414,26 +375,6 @@ gst_play_set_uri (GstPlay *play,
   gst_bin_add (GST_BIN (priv->bin), new_element);
 
   gst_element_connect (priv->src, "src", new_element, "sink");
-
-  if (connect_pads (new_element, priv->video_queue, TRUE)) {
-    gst_bin_add (GST_BIN (priv->bin), priv->video_show),
-    play->flags |= GST_PLAY_TYPE_VIDEO;
-    gtk_widget_show (priv->video_widget);
-  }
-  else {
-    gst_bin_add (GST_BIN (priv->bin), priv->video_show),
-    gtk_signal_connect (GTK_OBJECT (new_element), "new_pad", dynamic_connect_pads, play);
-    gtk_signal_connect (GTK_OBJECT (new_element), "new_ghost_pad", dynamic_connect_pads, play);
-  }
-  if (connect_pads (new_element, priv->audio_queue, TRUE)) {
-    gst_bin_add (GST_BIN (priv->bin), priv->audio_play),
-    play->flags |= GST_PLAY_TYPE_AUDIO;
-  }
-  else {
-    gst_bin_add (GST_BIN (priv->bin), priv->audio_play),
-    gtk_signal_connect (GTK_OBJECT (new_element), "new_pad", dynamic_connect_pads, play);
-    gtk_signal_connect (GTK_OBJECT (new_element), "new_ghost_pad", dynamic_connect_pads, play);
-  }
 
   gst_bin_add (GST_BIN (priv->thread), priv->bin);
   gtk_signal_connect (GTK_OBJECT (priv->thread), "eos", GTK_SIGNAL_FUNC (gst_play_eos), play);

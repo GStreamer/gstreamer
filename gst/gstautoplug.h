@@ -44,18 +44,27 @@ extern "C" {
 typedef struct _GstAutoplug GstAutoplug;
 typedef struct _GstAutoplugClass GstAutoplugClass;
 
+typedef enum {
+  GST_AUTOPLUG_TO_CAPS 		= GST_OBJECT_FLAG_LAST,
+  GST_AUTOPLUG_TO_RENDERER,
+
+  GST_AUTOPLUG_FLAG_LAST	= GST_OBJECT_FLAG_LAST + 8,
+} GstAutoplugFlags;
+	
+
 struct _GstAutoplug {
-  GtkObject object;
+  GstObject object;
 };
 
 struct _GstAutoplugClass {
-  GtkObjectClass parent_class;
+  GstObjectClass parent_class;
 
   /* signal callbacks */
   void (*new_object)  (GstAutoplug *autoplug, GstObject *object);
 
   /* perform the autoplugging */
-  GstElement* (*autoplug_caps_list) (GstAutoplug *autoplug, GList *srcpad, GList *sinkpad, va_list args);
+  GstElement* (*autoplug_to_caps) (GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, va_list args);
+  GstElement* (*autoplug_to_renderers) (GstAutoplug *autoplug, GList *srccaps, GstElement *target, va_list args);
 };
 
 typedef struct _GstAutoplugFactory GstAutoplugFactory;
@@ -70,7 +79,9 @@ GtkType			gst_autoplug_get_type			(void);
 
 void			gst_autoplug_signal_new_object		(GstAutoplug *autoplug, GstObject *object);
 
-GstElement*		gst_autoplug_caps_list			(GstAutoplug *autoplug, GList *srcpad, GList *sinkpad, ...);
+GstElement*		gst_autoplug_to_caps			(GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, ...);
+GstElement*		gst_autoplug_to_renderers		(GstAutoplug *autoplug, GList *srccaps, 
+								 GstElement *target, ...);
 
 
 /*
