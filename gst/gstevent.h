@@ -58,7 +58,7 @@ struct _GstEvent {
 
 void 		_gst_event_initialize 	(void);
 	
-GstEvent*	gst_event_empty_new	(GstEventType type);
+GstEvent*	gst_event_new	        (GstEventType type);
 void		gst_event_free 		(GstEvent* event);
 
 #ifdef __cplusplus

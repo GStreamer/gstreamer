@@ -58,7 +58,7 @@ _gst_event_initialize (void)
 }
 
 GstEvent*
-gst_event_empty_new (GstEventType type)
+gst_event_new (GstEventType type)
 {
   GstEvent *event;
 
