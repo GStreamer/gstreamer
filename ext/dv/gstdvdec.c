@@ -157,43 +157,6 @@ GST_PAD_TEMPLATE_FACTORY ( audio_src_temp,
   )
 )
 
-/* typefind stuff */
-static GstCaps*
-dv_type_find (GstByteStream *bs, gpointer private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-
-  if (gst_bytestream_peek (bs, &buf, 5) == 5) {
-    guint32 head = GUINT32_FROM_BE (*((guint32 *) GST_BUFFER_DATA (buf)));
-
-    /* check for DIF  and DV flag */
-    if ((head & 0xffffff00) == 0x1f070000 &&
-        !(GST_BUFFER_DATA (buf)[4] & 0x01)) {
-      gchar *format;
-
-      if ((head & 0x000000ff) & 0x80)
-        format = "PAL";
-      else
-        format = "NTSC";
-    
-      new = GST_CAPS_NEW ("dv_type_find",
-                          "video/x-dv",
-                          "systemstream", GST_PROPS_BOOLEAN (TRUE));
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
-}
-
-static GstTypeDefinition dv_definition = {
-  "dv_video/dv", "video/x-dv", ".dv", dv_type_find 
-};
-
 #define GST_TYPE_DVDEC_QUALITY (gst_dvdec_quality_get_type())
 GType
 gst_dvdec_quality_get_type (void)
@@ -1004,7 +967,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
 
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
@@ -1028,9 +990,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   /* The very last thing is to register the elementfactory with the plugin. */
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  type = gst_type_factory_new (&dv_definition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }
