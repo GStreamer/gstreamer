@@ -251,11 +251,15 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 static GstBuffer *
 gst_queue_get (GstPad *pad)
 {
-  GstQueue *queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
+  GstQueue *queue;
   GstBuffer *buf = NULL;
   GSList *front;
   const guchar *name;
 
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
   name = GST_ELEMENT_NAME (queue);
 
   /* have to lock for thread-safety */
