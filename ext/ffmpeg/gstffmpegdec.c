@@ -36,7 +36,8 @@
 
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
-struct _GstFFMpegDec {
+struct _GstFFMpegDec
+{
   GstElement element;
 
   /* We need to keep track of our pads, so we do so here. */
@@ -50,7 +51,8 @@ struct _GstFFMpegDec {
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
 
-struct _GstFFMpegDecClass {
+struct _GstFFMpegDecClass
+{
   GstElementClass parent_class;
 
   AVCodec *in_plugin;
@@ -59,7 +61,8 @@ struct _GstFFMpegDecClass {
 
 typedef struct _GstFFMpegDecClassParams GstFFMpegDecClassParams;
 
-struct _GstFFMpegDecClassParams {
+struct _GstFFMpegDecClassParams
+{
   AVCodec *in_plugin;
   GstCaps *srccaps, *sinkcaps;
 };
@@ -75,12 +78,14 @@ struct _GstFFMpegDecClassParams {
 #define GST_IS_FFMPEGDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGDEC))
 
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
@@ -88,25 +93,23 @@ enum {
 static GHashTable *global_plugins;
 
 /* A number of functon prototypes are given so we can refer to them later. */
-static void	gst_ffmpegdec_base_init		(GstFFMpegDecClass *klass);
-static void	gst_ffmpegdec_class_init	(GstFFMpegDecClass *klass);
-static void	gst_ffmpegdec_init		(GstFFMpegDec *ffmpegdec);
-static void	gst_ffmpegdec_dispose		(GObject      *object);
+static void gst_ffmpegdec_base_init (GstFFMpegDecClass * klass);
+static void gst_ffmpegdec_class_init (GstFFMpegDecClass * klass);
+static void gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec);
+static void gst_ffmpegdec_dispose (GObject * object);
 
-static GstPadLinkReturn	gst_ffmpegdec_connect	(GstPad    *pad,
-						 const GstCaps  *caps);
-static void	gst_ffmpegdec_chain		(GstPad    *pad,
-						 GstData   *data);
+static GstPadLinkReturn gst_ffmpegdec_connect (GstPad * pad,
+    const GstCaps * caps);
+static void gst_ffmpegdec_chain (GstPad * pad, GstData * data);
 
-static GstElementStateReturn
-		gst_ffmpegdec_change_state	(GstElement *element);
+static GstElementStateReturn gst_ffmpegdec_change_state (GstElement * element);
 
 #if 0
 /* some sort of bufferpool handling, but different */
-static int	gst_ffmpegdec_get_buffer	(AVCodecContext *context,
-						 AVFrame        *picture);
-static void	gst_ffmpegdec_release_buffer	(AVCodecContext *context,
-						 AVFrame        *picture);
+static int gst_ffmpegdec_get_buffer (AVCodecContext * context,
+    AVFrame * picture);
+static void gst_ffmpegdec_release_buffer (AVCodecContext * context,
+    AVFrame * picture);
 #endif
 
 static GstElementClass *parent_class = NULL;
@@ -114,7 +117,7 @@ static GstElementClass *parent_class = NULL;
 /*static guint gst_ffmpegdec_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
-gst_ffmpegdec_base_init (GstFFMpegDecClass *klass)
+gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -123,22 +126,20 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass *klass)
   GstPadTemplate *sinktempl, *srctempl;
 
   params = g_hash_table_lookup (global_plugins,
-		GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
+      GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
   if (!params)
-    params = g_hash_table_lookup (global_plugins,
-		GINT_TO_POINTER (0));
+    params = g_hash_table_lookup (global_plugins, GINT_TO_POINTER (0));
   g_assert (params);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf("FFMPEG %s decoder",
-				      params->in_plugin->name);
-  details.klass = g_strdup_printf("Codec/%s/Decoder",
-				   (params->in_plugin->type == CODEC_TYPE_VIDEO) ?
-				   "Video" : "Audio");
-  details.description = g_strdup_printf("FFMPEG %s decoder",
-					 params->in_plugin->name);
+  details.longname = g_strdup_printf ("FFMPEG %s decoder",
+      params->in_plugin->name);
+  details.klass = g_strdup_printf ("Codec/%s/Decoder",
+      (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
+  details.description = g_strdup_printf ("FFMPEG %s decoder",
+      params->in_plugin->name);
   details.author = "Wim Taymans <wim.taymans@chello.be>, "
-		  "Ronald Bultje <rbultje@ronald.bitfreak.net>";
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>";
   gst_element_class_set_details (element_class, &details);
   g_free (details.longname);
   g_free (details.klass);
@@ -146,9 +147,9 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass *klass)
 
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
-				    GST_PAD_ALWAYS, params->sinkcaps);
+      GST_PAD_ALWAYS, params->sinkcaps);
   srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
-				   GST_PAD_ALWAYS, params->srccaps);
+      GST_PAD_ALWAYS, params->srccaps);
 
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
@@ -159,13 +160,13 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass *klass)
 }
 
 static void
-gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
+gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -174,9 +175,10 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
 }
 
 static void
-gst_ffmpegdec_init (GstFFMpegDec *ffmpegdec)
+gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
 {
-  GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDecClass *oclass =
+      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   /* setup pads */
   ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
@@ -189,14 +191,14 @@ gst_ffmpegdec_init (GstFFMpegDec *ffmpegdec)
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->srcpad);
 
   /* some ffmpeg data */
-  ffmpegdec->context = avcodec_alloc_context();
-  ffmpegdec->picture = avcodec_alloc_frame();
+  ffmpegdec->context = avcodec_alloc_context ();
+  ffmpegdec->picture = avcodec_alloc_frame ();
 
   ffmpegdec->opened = FALSE;
 }
 
 static void
-gst_ffmpegdec_dispose (GObject *object)
+gst_ffmpegdec_dispose (GObject * object)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
 
@@ -210,11 +212,11 @@ gst_ffmpegdec_dispose (GObject *object)
 }
 
 static GstPadLinkReturn
-gst_ffmpegdec_connect (GstPad  *pad,
-		       const GstCaps *caps)
+gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
 {
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
-  GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
+  GstFFMpegDecClass *oclass =
+      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   /* close old session */
   if (ffmpegdec->opened) {
@@ -233,13 +235,13 @@ gst_ffmpegdec_connect (GstPad  *pad,
 
   /* get size and so */
   gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
-				caps, ffmpegdec->context);
+      caps, ffmpegdec->context);
 
   /* we dont send complete frames - FIXME: we need a 'framed' property
    * in caps */
   if (oclass->in_plugin->capabilities & CODEC_CAP_TRUNCATED &&
       (ffmpegdec->context->codec_id == CODEC_ID_MPEG1VIDEO ||
-       ffmpegdec->context->codec_id == CODEC_ID_MPEG2VIDEO))
+          ffmpegdec->context->codec_id == CODEC_ID_MPEG2VIDEO))
     ffmpegdec->context->flags |= CODEC_FLAG_TRUNCATED;
 
   /* do *not* draw edges */
@@ -251,7 +253,7 @@ gst_ffmpegdec_connect (GstPad  *pad,
   if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
     avcodec_close (ffmpegdec->context);
     GST_DEBUG ("ffdec_%s: Failed to open FFMPEG codec",
-		oclass->in_plugin->name);
+        oclass->in_plugin->name);
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -263,8 +265,7 @@ gst_ffmpegdec_connect (GstPad  *pad,
 
 #if 0
 static int
-gst_ffmpegdec_get_buffer (AVCodecContext *context,
-			  AVFrame        *picture)
+gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstBuffer *buf = NULL;
   gulong bufsize = 0;
@@ -272,12 +273,10 @@ gst_ffmpegdec_get_buffer (AVCodecContext *context,
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
       bufsize = avpicture_get_size (context->pix_fmt,
-				    context->width,
-				    context->height);
+          context->width, context->height);
       buf = gst_buffer_new_and_alloc (bufsize);
       avpicture_fill ((AVPicture *) picture, GST_BUFFER_DATA (buf),
-		      context->pix_fmt,
-		      context->width, context->height);
+          context->pix_fmt, context->width, context->height);
       break;
 
     case CODEC_TYPE_AUDIO:
@@ -301,15 +300,15 @@ gst_ffmpegdec_get_buffer (AVCodecContext *context,
 }
 
 static void
-gst_ffmpegdec_release_buffer (AVCodecContext *context,
-			      AVFrame        *picture)
+gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 {
   gint i;
   GstBuffer *buf = GST_BUFFER (picture->base[0]);
+
   gst_buffer_unref (buf);
 
   /* zero out the reference in ffmpeg */
-  for (i=0;i<4;i++) {
+  for (i = 0; i < 4; i++) {
     picture->data[i] = NULL;
     picture->linesize[i] = 0;
   }
@@ -317,21 +316,21 @@ gst_ffmpegdec_release_buffer (AVCodecContext *context,
 #endif
 
 static void
-gst_ffmpegdec_chain (GstPad    *pad,
-		     GstData *_data)
+gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *inbuf = GST_BUFFER (_data);
   GstBuffer *outbuf = NULL;
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
-  GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
+  GstFFMpegDecClass *oclass =
+      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   guchar *data;
   gint size, len = 0;
   gint have_data;
 
   if (!ffmpegdec->opened) {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-		       ("ffdec_%s: input format was not set before data start",
-		       oclass->in_plugin->name));
+        ("ffdec_%s: input format was not set before data start",
+            oclass->in_plugin->name));
     return;
   }
 
@@ -348,38 +347,35 @@ gst_ffmpegdec_chain (GstPad    *pad,
 
     switch (oclass->in_plugin->type) {
       case CODEC_TYPE_VIDEO:
-	/* workarounds, functions write to buffers:
-	 *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
+        /* workarounds, functions write to buffers:
+         *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
          *  libavcodec/svq3.c:svq3_decode_slice_header too.
          * ffmpeg devs know about it and will fix it (they said). */
-	if (oclass->in_plugin->id == CODEC_ID_SVQ1 ||
+        if (oclass->in_plugin->id == CODEC_ID_SVQ1 ||
             oclass->in_plugin->id == CODEC_ID_SVQ3) {
-	  inbuf = gst_buffer_copy_on_write(inbuf);
-	  data = GST_BUFFER_DATA (inbuf);
-	  size = GST_BUFFER_SIZE (inbuf);
-	}
+          inbuf = gst_buffer_copy_on_write (inbuf);
+          data = GST_BUFFER_DATA (inbuf);
+          size = GST_BUFFER_SIZE (inbuf);
+        }
         len = avcodec_decode_video (ffmpegdec->context,
-				    ffmpegdec->picture,
-				    &have_data,
-				    data, size);
+            ffmpegdec->picture, &have_data, data, size);
         if (have_data) {
           /* libavcodec constantly crashes on stupid buffer allocation
            * errors inside. This drives me crazy, so we let it allocate
            * it's own buffers and copy to our own buffer afterwards... */
           AVPicture pic;
           gint size = avpicture_get_size (ffmpegdec->context->pix_fmt,
-					  ffmpegdec->context->width,
-					  ffmpegdec->context->height);
+              ffmpegdec->context->width,
+              ffmpegdec->context->height);
+
           outbuf = gst_buffer_new_and_alloc (size);
           avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
-			  ffmpegdec->context->pix_fmt,
-			  ffmpegdec->context->width,
-			  ffmpegdec->context->height);
+              ffmpegdec->context->pix_fmt,
+              ffmpegdec->context->width, ffmpegdec->context->height);
           img_convert (&pic, ffmpegdec->context->pix_fmt,
-		       (AVPicture *) ffmpegdec->picture,
-		       ffmpegdec->context->pix_fmt,
-		       ffmpegdec->context->width,
-		       ffmpegdec->context->height);
+              (AVPicture *) ffmpegdec->picture,
+              ffmpegdec->context->pix_fmt,
+              ffmpegdec->context->width, ffmpegdec->context->height);
 
           /* this isn't necessarily true, but it's better than nothing */
           GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
@@ -389,40 +385,38 @@ gst_ffmpegdec_chain (GstPad    *pad,
       case CODEC_TYPE_AUDIO:
         outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
         len = avcodec_decode_audio (ffmpegdec->context,
-				    (int16_t *) GST_BUFFER_DATA (outbuf),
-				    &have_data,
-				    data, size);
+            (int16_t *) GST_BUFFER_DATA (outbuf), &have_data, data, size);
 
         if (have_data) {
           GST_BUFFER_SIZE (outbuf) = have_data;
           GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
-					   (ffmpegdec->context->channels *
-					    ffmpegdec->context->sample_rate);
+              (ffmpegdec->context->channels * ffmpegdec->context->sample_rate);
         } else {
           gst_buffer_unref (outbuf);
-        } 
+        }
         break;
       default:
-	g_assert(0);
+        g_assert (0);
         break;
     }
 
     if (len < 0) {
       GST_ERROR_OBJECT (ffmpegdec, "ffdec_%s: decoding error",
-		 oclass->in_plugin->name);
+          oclass->in_plugin->name);
       break;
     }
 
     if (have_data) {
       if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
         GstCaps *caps;
+
         caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
-					     ffmpegdec->context);
+            ffmpegdec->context);
         if (caps == NULL ||
             !gst_pad_set_explicit_caps (ffmpegdec->srcpad, caps)) {
           GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-			     ("Failed to link ffmpeg decoder (%s) to next element",
-			     oclass->in_plugin->name));
+              ("Failed to link ffmpeg decoder (%s) to next element",
+                  oclass->in_plugin->name));
           return;
         }
       }
@@ -430,7 +424,7 @@ gst_ffmpegdec_chain (GstPad    *pad,
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
 
       gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
-    } 
+    }
 
     size -= len;
     data += len;
@@ -440,7 +434,7 @@ gst_ffmpegdec_chain (GstPad    *pad,
 }
 
 static GstElementStateReturn
-gst_ffmpegdec_change_state (GstElement *element)
+gst_ffmpegdec_change_state (GstElement * element)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) element;
   gint transition = GST_STATE_TRANSITION (element);
@@ -461,22 +455,22 @@ gst_ffmpegdec_change_state (GstElement *element)
 }
 
 gboolean
-gst_ffmpegdec_register (GstPlugin *plugin)
+gst_ffmpegdec_register (GstPlugin * plugin)
 {
   GTypeInfo typeinfo = {
-    sizeof(GstFFMpegDecClass),      
-    (GBaseInitFunc)gst_ffmpegdec_base_init,
+    sizeof (GstFFMpegDecClass),
+    (GBaseInitFunc) gst_ffmpegdec_base_init,
     NULL,
-    (GClassInitFunc)gst_ffmpegdec_class_init,
+    (GClassInitFunc) gst_ffmpegdec_class_init,
     NULL,
     NULL,
-    sizeof(GstFFMpegDec),
+    sizeof (GstFFMpegDec),
     0,
-    (GInstanceInitFunc)gst_ffmpegdec_init,
+    (GInstanceInitFunc) gst_ffmpegdec_init,
   };
   GType type;
   AVCodec *in_plugin;
-  
+
   in_plugin = first_avcodec;
 
   global_plugins = g_hash_table_new (NULL, NULL);
@@ -488,8 +482,8 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 
     /* no quasi-codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
-	(in_plugin->id >= CODEC_ID_PCM_S16LE &&
-	 in_plugin->id <= CODEC_ID_PCM_ALAW)) {
+        (in_plugin->id >= CODEC_ID_PCM_S16LE &&
+            in_plugin->id <= CODEC_ID_PCM_ALAW)) {
       goto next;
     }
 
@@ -500,16 +494,16 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 
     /* first make sure we've got a supported type */
     sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
-    srccaps  = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
+    srccaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
     if (!sinkcaps || !srccaps)
       goto next;
 
     /* construct the type */
-    type_name = g_strdup_printf("ffdec_%s", in_plugin->name);
+    type_name = g_strdup_printf ("ffdec_%s", in_plugin->name);
 
     /* if it's already registered, drop it */
-    if (g_type_from_name(type_name)) {
-      g_free(type_name);
+    if (g_type_from_name (type_name)) {
+      g_free (type_name);
       goto next;
     }
 
@@ -517,28 +511,26 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     params->in_plugin = in_plugin;
     params->srccaps = srccaps;
     params->sinkcaps = sinkcaps;
-    g_hash_table_insert (global_plugins, 
-		         GINT_TO_POINTER (0), 
-			 (gpointer) params);
-    
+    g_hash_table_insert (global_plugins,
+        GINT_TO_POINTER (0), (gpointer) params);
+
     /* create the gtype now
      * (Ronald) MPEG-4 gets a higher priority because it has been well-
      * tested and by far outperforms divxdec/xviddec - so we prefer it. */
-    type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
+    type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
     if (!gst_element_register (plugin, type_name,
-			       (in_plugin->id == CODEC_ID_MPEG4) ?
-			       GST_RANK_PRIMARY : GST_RANK_MARGINAL, type)) {
+            (in_plugin->id == CODEC_ID_MPEG4) ?
+            GST_RANK_PRIMARY : GST_RANK_MARGINAL, type)) {
       g_free (type_name);
       return FALSE;
     }
 
     g_free (type_name);
 
-    g_hash_table_insert (global_plugins, 
-		         GINT_TO_POINTER (type), 
-			 (gpointer) params);
+    g_hash_table_insert (global_plugins,
+        GINT_TO_POINTER (type), (gpointer) params);
 
-next:
+  next:
     in_plugin = in_plugin->next;
   }
   g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));

@@ -86,9 +86,8 @@
  */
 
 GstCaps *
-gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
-                            AVCodecContext *context,
-			    gboolean        encode)
+gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
+    AVCodecContext * context, gboolean encode)
 {
   GstCaps *caps = NULL;
   gboolean buildcaps = FALSE;
@@ -99,9 +98,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       if (encode) {
         /* FIXME: bitrate */
         caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
-	  "mpegversion",  G_TYPE_INT,     1,
-	  "systemstream", G_TYPE_BOOLEAN, FALSE,
-	  NULL);
+            "mpegversion", G_TYPE_INT, 1,
+            "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       }
       break;
 
@@ -109,16 +107,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       if (encode) {
         /* FIXME: bitrate */
         caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
-	  "mpegversion",  G_TYPE_INT,     2,
-	  "systemstream", G_TYPE_BOOLEAN, FALSE,
-	  NULL);
+            "mpegversion", G_TYPE_INT, 2,
+            "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       } else {
         /* decode both MPEG-1 and MPEG-2; width/height/fps are all in
          * the MPEG video stream headers, so may be omitted from caps. */
         caps = gst_caps_new_simple ("video/mpeg",
-	  "mpegversion",  GST_TYPE_INT_RANGE, 1, 2,
-	  "systemstream", G_TYPE_BOOLEAN,     FALSE,
-	  NULL);
+            "mpegversion", GST_TYPE_INT_RANGE, 1, 2,
+            "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       }
       break;
 
@@ -126,7 +122,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       /* this is a special ID - don't need it in GStreamer, I think */
       break;
 
-    /* I don't know the exact differences between those... Anyone? */
+      /* I don't know the exact differences between those... Anyone? */
     case CODEC_ID_H263:
     case CODEC_ID_H263P:
     case CODEC_ID_H263I:
@@ -140,9 +136,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
         /* FIXME: context->sub_id must be filled in during decoding */
         caps = GST_FF_VID_CAPS_NEW ("video/x-pn-realvideo",
-	  "systemstream", G_TYPE_BOOLEAN, FALSE,
-	  "rmversion",    G_TYPE_INT,     version,
-	  NULL);
+            "systemstream", G_TYPE_BOOLEAN, FALSE,
+            "rmversion", G_TYPE_INT, version, NULL);
       } while (0);
       break;
 
@@ -151,9 +146,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       if (encode) {
         /* FIXME: bitrate */
         caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
-	  "mpegversion", G_TYPE_INT, 1,
-	  "layer",       G_TYPE_INT, 2,
-	  NULL);
+            "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 2, NULL);
       }
       break;
 
@@ -161,16 +154,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       if (encode) {
         /* FIXME: bitrate */
         caps = GST_FF_AUD_CAPS_NEW ("audio/mpeg",
-	  "mpegversion", G_TYPE_INT, 1,
-	  "layer",       G_TYPE_INT, 3,
-	  NULL);
+            "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
       } else {
         /* Decodes MPEG-1 layer 1/2/3. Samplerate, channels et al are
          * in the MPEG audio header, so may be omitted from caps. */
         caps = gst_caps_new_simple ("audio/mpeg",
-	  "mpegversion", G_TYPE_INT,         1,
-	  "layer",       GST_TYPE_INT_RANGE, 1, 3,
-	  NULL);
+            "mpegversion", G_TYPE_INT, 1,
+            "layer", GST_TYPE_INT_RANGE, 1, 3, NULL);
       }
       break;
 
@@ -195,11 +185,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       }
       break;
 
-    /* MJPEG is normal JPEG, Motion-JPEG and Quicktime MJPEG-A. MJPEGB
-     * is Quicktime's MJPEG-B. LJPEG is lossless JPEG. I don't know what
-     * sp5x is, but it's apparently something JPEG... We don't separate
-     * between those in GStreamer. Should we (at least between MJPEG,
-     * MJPEG-B and sp5x decoding...)? */
+      /* MJPEG is normal JPEG, Motion-JPEG and Quicktime MJPEG-A. MJPEGB
+       * is Quicktime's MJPEG-B. LJPEG is lossless JPEG. I don't know what
+       * sp5x is, but it's apparently something JPEG... We don't separate
+       * between those in GStreamer. Should we (at least between MJPEG,
+       * MJPEG-B and sp5x decoding...)? */
     case CODEC_ID_MJPEG:
     case CODEC_ID_MJPEGB:
     case CODEC_ID_LJPEG:
@@ -213,18 +203,15 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
          * the AVI fourcc 'DIVX', but 'mp4v' for Quicktime... */
         /* FIXME: bitrate */
         caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
-	  "systemstream", G_TYPE_BOOLEAN, FALSE,
-	  "mpegversion",  G_TYPE_INT,     4,
-	  NULL);
+            "systemstream", G_TYPE_BOOLEAN, FALSE,
+            "mpegversion", G_TYPE_INT, 4, NULL);
       } else {
         /* The trick here is to separate xvid, divx, mpeg4, 3ivx et al */
         caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
-	  "mpegversion",  G_TYPE_INT,     4,
-	  "systemstream", G_TYPE_BOOLEAN, FALSE,
-	  NULL);
+            "mpegversion", G_TYPE_INT, 4,
+            "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
         gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
-				 "divxversion", GST_TYPE_INT_RANGE, 4, 5,
-				 NULL));
+                "divxversion", GST_TYPE_INT_RANGE, 4, 5, NULL));
         gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-xvid"));
         gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-3ivx"));
       }
@@ -242,12 +229,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
         /* encode-FIXME: bitrate */
         caps = GST_FF_VID_CAPS_NEW ("video/x-msmpeg",
-	  "msmpegversion", G_TYPE_INT, version,
-	  NULL);
+            "msmpegversion", G_TYPE_INT, version, NULL);
         if (!encode && codec_id == CODEC_ID_MSMPEG4V3) {
           gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
-				   "divxversion", G_TYPE_INT, 3,
-				   NULL));
+                  "divxversion", G_TYPE_INT, 3, NULL));
         }
       } while (0);
       break;
@@ -259,8 +244,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
         /* encode-FIXME: bitrate */
         caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",
-	  "wmvversion", G_TYPE_INT, version,
-	  NULL);
+            "wmvversion", G_TYPE_INT, version, NULL);
       } while (0);
       break;
 
@@ -270,18 +254,16 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_SVQ1:
       caps = GST_FF_VID_CAPS_NEW ("video/x-svq",
-	"svqversion", G_TYPE_INT, 1,
-	NULL);
+          "svqversion", G_TYPE_INT, 1, NULL);
       break;
 
     case CODEC_ID_SVQ3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-svq",
-	"svqversion",        G_TYPE_INT,          3,
-	"halfpel_flag",      GST_TYPE_INT_RANGE,  0, 1,
-	"thirdpel_flag",     GST_TYPE_INT_RANGE,  0, 1,
-	"low_delay",         GST_TYPE_INT_RANGE,  0, 1,
-	"unknown_svq3_flag", GST_TYPE_INT_RANGE,  0, 1,
-	NULL);
+          "svqversion", G_TYPE_INT, 3,
+          "halfpel_flag", GST_TYPE_INT_RANGE, 0, 1,
+          "thirdpel_flag", GST_TYPE_INT_RANGE, 0, 1,
+          "low_delay", GST_TYPE_INT_RANGE, 0, 1,
+          "unknown_svq3_flag", GST_TYPE_INT_RANGE, 0, 1, NULL);
       break;
 
     case CODEC_ID_DVAUDIO:
@@ -298,12 +280,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
         gint version = (codec_id == CODEC_ID_WMAV1) ? 1 : 2;
 
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
-	  "wmaversion",  G_TYPE_INT,          version,
-	  "flags1",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-	  "flags2",      GST_TYPE_INT_RANGE,  G_MININT, G_MAXINT,
-	  "block_align", GST_TYPE_INT_RANGE,  0, G_MAXINT,
-	  "bitrate",     GST_TYPE_INT_RANGE,  0, G_MAXINT,
-	  NULL);
+            "wmaversion", G_TYPE_INT, version,
+            "flags1", GST_TYPE_INT_RANGE, G_MININT, G_MAXINT,
+            "flags2", GST_TYPE_INT_RANGE, G_MININT, G_MAXINT,
+            "block_align", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+            "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
       } while (0);
       break;
 
@@ -313,8 +294,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
         gint version = (codec_id == CODEC_ID_MACE3) ? 3 : 6;
 
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-mace",
-	  "maceversion", G_TYPE_INT, version,
-	  NULL);
+            "maceversion", G_TYPE_INT, version, NULL);
       } while (0);
       break;
 
@@ -332,8 +312,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_INDEO3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-indeo",
-	"indeoversion", G_TYPE_INT, 3,
-	NULL);
+          "indeoversion", G_TYPE_INT, 3, NULL);
       break;
 
     case CODEC_ID_VP3:
@@ -358,8 +337,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_FFV1:
       caps = GST_FF_VID_CAPS_NEW ("video/x-ffv",
-	"ffvversion", G_TYPE_INT, 1,
-	NULL);
+          "ffvversion", G_TYPE_INT, 1, NULL);
       break;
 
     case CODEC_ID_4XM:
@@ -397,7 +375,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       buildcaps = TRUE;
       break;
 
-    /* weird quasi-codecs for the demuxers only */
+      /* weird quasi-codecs for the demuxers only */
     case CODEC_ID_PCM_S16LE:
     case CODEC_ID_PCM_S16BE:
     case CODEC_ID_PCM_U16LE:
@@ -406,50 +384,55 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
     case CODEC_ID_PCM_U8:
       do {
         gint width = 0, depth = 0, endianness = 0;
-	gboolean signedness = FALSE; /* blabla */
+        gboolean signedness = FALSE;    /* blabla */
 
         switch (codec_id) {
           case CODEC_ID_PCM_S16LE:
-            width = 16; depth = 16;
+            width = 16;
+            depth = 16;
             endianness = G_LITTLE_ENDIAN;
             signedness = TRUE;
             break;
           case CODEC_ID_PCM_S16BE:
-            width = 16; depth = 16;
+            width = 16;
+            depth = 16;
             endianness = G_BIG_ENDIAN;
             signedness = TRUE;
             break;
           case CODEC_ID_PCM_U16LE:
-            width = 16; depth = 16;
+            width = 16;
+            depth = 16;
             endianness = G_LITTLE_ENDIAN;
             signedness = FALSE;
             break;
           case CODEC_ID_PCM_U16BE:
-            width = 16; depth = 16;
+            width = 16;
+            depth = 16;
             endianness = G_BIG_ENDIAN;
             signedness = FALSE;
             break;
           case CODEC_ID_PCM_S8:
-            width = 8;  depth = 8;
+            width = 8;
+            depth = 8;
             endianness = G_BYTE_ORDER;
             signedness = TRUE;
             break;
           case CODEC_ID_PCM_U8:
-            width = 8;  depth = 8;
+            width = 8;
+            depth = 8;
             endianness = G_BYTE_ORDER;
             signedness = FALSE;
             break;
           default:
-            g_assert(0); /* don't worry, we never get here */
+            g_assert (0);       /* don't worry, we never get here */
             break;
         }
 
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-raw-int",
-	    "width",      G_TYPE_INT,	  width,
-	    "depth",      G_TYPE_INT,	  depth,
-	    "endianness", G_TYPE_INT,	  endianness,
-	    "signed",     G_TYPE_BOOLEAN, signedness,
-	    NULL);
+            "width", G_TYPE_INT, width,
+            "depth", G_TYPE_INT, depth,
+            "endianness", G_TYPE_INT, endianness,
+            "signed", G_TYPE_BOOLEAN, signedness, NULL);
       } while (0);
       break;
 
@@ -514,15 +497,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
             layout = "g726";
             break;
           default:
-            g_assert (0); /* don't worry, we never get here */
+            g_assert (0);       /* don't worry, we never get here */
             break;
         }
 
         /* FIXME: someone please check whether we need additional properties
          * in this caps definition. */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-adpcm",
-	  "layout", G_TYPE_STRING, layout,
-          NULL);
+            "layout", G_TYPE_STRING, layout, NULL);
       } while (0);
       break;
 
@@ -540,8 +522,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
         /* FIXME: properties? */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-pn-realaudio",
-	  "raversion", G_TYPE_INT, version,
-	  NULL);
+            "raversion", G_TYPE_INT, version, NULL);
       } while (0);
       break;
 
@@ -562,18 +543,17 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
             layout = "xan";
             break;
           default:
-            g_assert (0); /* don't worry, we never get here */
+            g_assert (0);       /* don't worry, we never get here */
             break;
         }
 
         /* FIXME: someone please check whether we need additional properties
          * in this caps definition. */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-dpcm",
-	  "layout", G_TYPE_STRING, layout,
-	  NULL);
+            "layout", G_TYPE_STRING, layout, NULL);
       } while (0);
       break;
-    
+
     case CODEC_ID_FLAC:
       /* Note that ffmpeg has no encoder yet, but just for safety. In the
        * encoder case, we want to add things like samplerate, channels... */
@@ -613,6 +593,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
   if (caps != NULL) {
     char *str = gst_caps_to_string (caps);
+
     GST_DEBUG ("caps for codec_id=%d: %s", codec_id, str);
     g_free (str);
   } else {
@@ -630,8 +611,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
  */
 
 static GstCaps *
-gst_ffmpeg_pixfmt_to_caps (enum PixelFormat  pix_fmt,
-                           AVCodecContext   *context)
+gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
 {
   GstCaps *caps = NULL;
 
@@ -641,51 +621,65 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat  pix_fmt,
 
   switch (pix_fmt) {
     case PIX_FMT_YUV420P:
-      fmt = GST_MAKE_FOURCC ('I','4','2','0');
+      fmt = GST_MAKE_FOURCC ('I', '4', '2', '0');
       break;
     case PIX_FMT_YUV422:
-      fmt = GST_MAKE_FOURCC ('Y','U','Y','2');
+      fmt = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
       break;
     case PIX_FMT_RGB24:
       bpp = depth = 24;
       endianness = G_BIG_ENDIAN;
-      r_mask = 0xff0000; g_mask = 0x00ff00; b_mask = 0x0000ff;
+      r_mask = 0xff0000;
+      g_mask = 0x00ff00;
+      b_mask = 0x0000ff;
       break;
     case PIX_FMT_BGR24:
       bpp = depth = 24;
       endianness = G_BIG_ENDIAN;
-      r_mask = 0x0000ff; g_mask = 0x00ff00; b_mask = 0xff0000;
+      r_mask = 0x0000ff;
+      g_mask = 0x00ff00;
+      b_mask = 0xff0000;
       break;
     case PIX_FMT_YUV422P:
-      fmt = GST_MAKE_FOURCC ('Y','4','2','B');
+      fmt = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
       break;
     case PIX_FMT_YUV444P:
       /* .. */
       break;
     case PIX_FMT_RGBA32:
-      bpp = 32; depth = 24;
+      bpp = 32;
+      depth = 24;
       endianness = G_BIG_ENDIAN;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-      r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
-#else 
-      r_mask = 0x0000ff00; g_mask = 0x00ff0000; b_mask = 0xff000000;
+      r_mask = 0x00ff0000;
+      g_mask = 0x0000ff00;
+      b_mask = 0x000000ff;
+#else
+      r_mask = 0x0000ff00;
+      g_mask = 0x00ff0000;
+      b_mask = 0xff000000;
 #endif
       break;
     case PIX_FMT_YUV410P:
-      fmt = GST_MAKE_FOURCC ('Y','U','V','9');
+      fmt = GST_MAKE_FOURCC ('Y', 'U', 'V', '9');
       break;
     case PIX_FMT_YUV411P:
-      fmt = GST_MAKE_FOURCC ('Y','4','1','B');
+      fmt = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
       break;
     case PIX_FMT_RGB565:
       bpp = depth = 16;
       endianness = G_BYTE_ORDER;
-      r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
+      r_mask = 0xf800;
+      g_mask = 0x07e0;
+      b_mask = 0x001f;
       break;
     case PIX_FMT_RGB555:
-      bpp = 16; depth = 15;
+      bpp = 16;
+      depth = 15;
       endianness = G_BYTE_ORDER;
-      r_mask = 0x7c00; g_mask = 0x03e0; b_mask = 0x001f;
+      r_mask = 0x7c00;
+      g_mask = 0x03e0;
+      b_mask = 0x001f;
       break;
     default:
       /* give up ... */
@@ -694,23 +688,22 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat  pix_fmt,
 
   if (bpp != 0) {
     caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
-	"bpp",	      G_TYPE_INT, bpp,
-        "depth",      G_TYPE_INT, depth,
-        "red_mask",   G_TYPE_INT, r_mask,
+        "bpp", G_TYPE_INT, bpp,
+        "depth", G_TYPE_INT, depth,
+        "red_mask", G_TYPE_INT, r_mask,
         "green_mask", G_TYPE_INT, g_mask,
-        "blue_mask",  G_TYPE_INT, b_mask,
-	"endianness", G_TYPE_INT, endianness,
-        NULL);
+        "blue_mask", G_TYPE_INT, b_mask,
+        "endianness", G_TYPE_INT, endianness, NULL);
   } else if (fmt) {
     caps = GST_FF_VID_CAPS_NEW ("video/x-raw-yuv",
-	"format",     GST_TYPE_FOURCC, fmt,
-        NULL);
+        "format", GST_TYPE_FOURCC, fmt, NULL);
   }
 
   if (caps != NULL) {
     char *str = gst_caps_to_string (caps);
+
     GST_DEBUG ("caps for pix_fmt=%d: %s", pix_fmt, str);
-    g_free(str);
+    g_free (str);
   } else {
     GST_WARNING ("No caps found for pix_fmt=%d", pix_fmt);
   }
@@ -726,8 +719,8 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat  pix_fmt,
  */
 
 static GstCaps *
-gst_ffmpeg_smpfmt_to_caps (enum SampleFormat  sample_fmt,
-                           AVCodecContext    *context)
+gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
+    AVCodecContext * context)
 {
   GstCaps *caps = NULL;
 
@@ -747,17 +740,16 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat  sample_fmt,
 
   if (bpp) {
     caps = GST_FF_AUD_CAPS_NEW ("audio/x-raw-int",
-	"signed",     G_TYPE_BOOLEAN, signedness,
-        "endianness", G_TYPE_INT,     G_BYTE_ORDER,
-        "width",      G_TYPE_INT,     bpp,
-        "depth",      G_TYPE_INT,     bpp,
-        NULL);
+        "signed", G_TYPE_BOOLEAN, signedness,
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "width", G_TYPE_INT, bpp, "depth", G_TYPE_INT, bpp, NULL);
   }
 
   if (caps != NULL) {
     char *str = gst_caps_to_string (caps);
+
     GST_DEBUG ("caps for sample_fmt=%d: %s", sample_fmt, str);
-    g_free(str);
+    g_free (str);
   } else {
     GST_WARNING ("No caps found for sample_fmt=%d", sample_fmt);
   }
@@ -773,8 +765,8 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat  sample_fmt,
  */
 
 GstCaps *
-gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
-                              AVCodecContext *context)
+gst_ffmpeg_codectype_to_caps (enum CodecType codec_type,
+    AVCodecContext * context)
 {
   GstCaps *caps;
 
@@ -827,23 +819,22 @@ gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
  * when needed.
  */
 static void
-gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
-                              AVCodecContext *context)
+gst_ffmpeg_caps_to_extradata (const GstCaps * caps, AVCodecContext * context)
 {
   GstStructure *structure;
   const gchar *mimetype;
 
   g_return_if_fail (gst_caps_get_size (caps) == 1);
   structure = gst_caps_get_structure (caps, 0);
-  
+
   mimetype = gst_structure_get_name (structure);
 
-  if (!strcmp(mimetype, "audio/x-wma")) {
+  if (!strcmp (mimetype, "audio/x-wma")) {
     gint flags1, flags2, wmaversion = 0;
 
     if (!gst_structure_get_int (structure, "flags1", &flags1) ||
-	!gst_structure_get_int (structure, "flags2", &flags2) ||
-	!gst_structure_get_int (structure, "wmaversion", &wmaversion)) {
+        !gst_structure_get_int (structure, "flags2", &flags2) ||
+        !gst_structure_get_int (structure, "wmaversion", &wmaversion)) {
       g_warning ("invalid caps for audio/x-wma");
       return;
     }
@@ -855,32 +846,32 @@ gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
     gst_structure_get_int (structure, "wmaversion", &wmaversion);
     switch (wmaversion) {
       case 1:
-	/* FIXME: is this freed with g_free? If not, don't use g_malloc */
-	context->extradata = (guint8 *) g_malloc0 (4); 
-	((guint8 *)context->extradata)[0] = flags1;
-	((guint8 *)context->extradata)[2] = flags2;
-	context->extradata_size = 4;
-	break;
+        /* FIXME: is this freed with g_free? If not, don't use g_malloc */
+        context->extradata = (guint8 *) g_malloc0 (4);
+        ((guint8 *) context->extradata)[0] = flags1;
+        ((guint8 *) context->extradata)[2] = flags2;
+        context->extradata_size = 4;
+        break;
       case 2:
-	/* FIXME: is this freed with g_free? If not, don't use g_malloc */
-	context->extradata = (guint8 *) g_malloc0 (6);        
-	((guint8 *) context->extradata)[0] = flags1;
-	((guint8 *) context->extradata)[1] = flags1 >> 8;
-	((guint8 *) context->extradata)[2] = flags1 >> 16;
-	((guint8 *) context->extradata)[3] = flags1 >> 24;
-	((guint8 *) context->extradata)[4] = flags2; 
-	((guint8 *) context->extradata)[5] = flags2 >> 8;
-	context->extradata_size = 6;
-	break;
+        /* FIXME: is this freed with g_free? If not, don't use g_malloc */
+        context->extradata = (guint8 *) g_malloc0 (6);
+        ((guint8 *) context->extradata)[0] = flags1;
+        ((guint8 *) context->extradata)[1] = flags1 >> 8;
+        ((guint8 *) context->extradata)[2] = flags1 >> 16;
+        ((guint8 *) context->extradata)[3] = flags1 >> 24;
+        ((guint8 *) context->extradata)[4] = flags2;
+        ((guint8 *) context->extradata)[5] = flags2 >> 8;
+        context->extradata_size = 6;
+        break;
       default:
-	g_warning ("Unknown wma version %d\n", wmaversion);
-	break;
+        g_warning ("Unknown wma version %d\n", wmaversion);
+        break;
     }
 
     return;
   }
 
-  if (!strcmp(mimetype, "video/x-svq")) {
+  if (!strcmp (mimetype, "video/x-svq")) {
     gint version = 0;
 
     if (!gst_structure_get_int (structure, "svqversion", &version)) {
@@ -894,11 +885,12 @@ gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
 
       if (!gst_structure_get_int (structure, "halfpel_flag", &halfpel_flag) ||
           !gst_structure_get_int (structure, "thirdpel_flag", &thirdpel_flag) ||
-	  !gst_structure_get_int (structure, "low_delay", &low_delay) ||
-	  !gst_structure_get_int (structure, "unknown_svq3_flag", &unknown_svq3_flag)) {
-	g_warning ("invalid caps for video/x-svq");
-	return;
-      }	  
+          !gst_structure_get_int (structure, "low_delay", &low_delay) ||
+          !gst_structure_get_int (structure, "unknown_svq3_flag",
+              &unknown_svq3_flag)) {
+        g_warning ("invalid caps for video/x-svq");
+        return;
+      }
 
       context->extradata = (guint8 *) g_malloc0 (0x64);
       g_stpcpy (context->extradata, "SVQ3");
@@ -913,7 +905,7 @@ gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
       flags = flags << 3;
 
       flags = GUINT16_FROM_LE (flags);
-	
+
       memcpy (context->extradata + 0x62, &flags, 2);
       context->extradata_size = 0x64;
     }
@@ -928,8 +920,7 @@ gst_ffmpeg_caps_to_extradata (const GstCaps *caps,
  */
 
 static void
-gst_ffmpeg_caps_to_smpfmt (const GstCaps *caps,
-                           AVCodecContext *context)
+gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps, AVCodecContext * context)
 {
   GstStructure *structure;
   gint depth = 0, width = 0, endianness = 0;
@@ -937,7 +928,7 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps *caps,
 
   g_return_if_fail (gst_caps_get_size (caps) == 1);
   structure = gst_caps_get_structure (caps, 0);
-  
+
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "depth", &depth) &&
       gst_structure_get_int (structure, "signed", &signedness) &&
@@ -964,15 +955,14 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps *caps,
  */
 
 static void
-gst_ffmpeg_caps_to_pixfmt (const GstCaps *caps,
-                           AVCodecContext *context)
+gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps, AVCodecContext * context)
 {
   GstStructure *structure;
   gdouble fps;
-  
+
   g_return_if_fail (gst_caps_get_size (caps) == 1);
   structure = gst_caps_get_structure (caps, 0);
-  
+
   gst_structure_get_int (structure, "width", &context->width);
   gst_structure_get_int (structure, "height", &context->height);
 
@@ -983,37 +973,38 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps *caps,
 
   if (strcmp (gst_structure_get_name (structure), "video/x-raw-yuv") == 0) {
     guint32 fourcc;
-    
+
     if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
       switch (fourcc) {
-	case GST_MAKE_FOURCC ('Y','U','Y','2'):
-	  context->pix_fmt = PIX_FMT_YUV422;
-	  break;
-	case GST_MAKE_FOURCC ('I','4','2','0'):
-	  context->pix_fmt = PIX_FMT_YUV420P;
-	  break;
-	case GST_MAKE_FOURCC ('Y','4','1','B'):
-	  context->pix_fmt = PIX_FMT_YUV411P;
-	  break;
-	case GST_MAKE_FOURCC ('Y','4','2','B'):
-	  context->pix_fmt = PIX_FMT_YUV422P;
-	  break;
-	case GST_MAKE_FOURCC ('Y','U','V','9'):
-	  context->pix_fmt = PIX_FMT_YUV410P;
-	  break;
+        case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+          context->pix_fmt = PIX_FMT_YUV422;
+          break;
+        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+          context->pix_fmt = PIX_FMT_YUV420P;
+          break;
+        case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
+          context->pix_fmt = PIX_FMT_YUV411P;
+          break;
+        case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
+          context->pix_fmt = PIX_FMT_YUV422P;
+          break;
+        case GST_MAKE_FOURCC ('Y', 'U', 'V', '9'):
+          context->pix_fmt = PIX_FMT_YUV410P;
+          break;
 #if 0
-	case FIXME:
-	  context->pix_fmt = PIX_FMT_YUV444P;
-	  break;
+        case FIXME:
+          context->pix_fmt = PIX_FMT_YUV444P;
+          break;
 #endif
       }
     }
-  } else if (strcmp (gst_structure_get_name (structure), "video/x-raw-rgb") == 0) {
+  } else if (strcmp (gst_structure_get_name (structure),
+          "video/x-raw-rgb") == 0) {
     gint bpp = 0, rmask = 0, endianness = 0;
-    
+
     if (gst_structure_get_int (structure, "bpp", &bpp) &&
-	gst_structure_get_int (structure, "endianness", &endianness) &&
-	gst_structure_get_int (structure, "red_mask", &rmask)) {
+        gst_structure_get_int (structure, "endianness", &endianness) &&
+        gst_structure_get_int (structure, "red_mask", &rmask)) {
       switch (bpp) {
         case 32:
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
@@ -1028,18 +1019,18 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps *caps,
             context->pix_fmt = PIX_FMT_BGR24;
           else
             context->pix_fmt = PIX_FMT_RGB24;
-	  break;
+          break;
         case 16:
           if (endianness == G_BYTE_ORDER)
             context->pix_fmt = PIX_FMT_RGB565;
-	  break;
+          break;
         case 15:
           if (endianness == G_BYTE_ORDER)
             context->pix_fmt = PIX_FMT_RGB555;
-	  break;
+          break;
         default:
           /* nothing */
-	  break;
+          break;
       }
     }
   }
@@ -1055,9 +1046,8 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps *caps,
  */
 
 void
-gst_ffmpeg_caps_to_codectype (enum CodecType  type,
-                              const GstCaps *caps,
-                              AVCodecContext *context)
+gst_ffmpeg_caps_to_codectype (enum CodecType type,
+    const GstCaps * caps, AVCodecContext * context)
 {
   if (context == NULL)
     return;
@@ -1088,50 +1078,38 @@ gst_ffmpeg_caps_to_codectype (enum CodecType  type,
  */
 
 GstCaps *
-gst_ffmpeg_formatid_to_caps (const gchar *format_name)
+gst_ffmpeg_formatid_to_caps (const gchar * format_name)
 {
   GstCaps *caps = NULL;
 
   if (!strcmp (format_name, "mpeg")) {
     caps = gst_caps_new_simple ("video/mpeg",
-	"systemstream", G_TYPE_BOOLEAN, TRUE,
-        NULL);
+        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (!strcmp (format_name, "mpegts")) {
     caps = gst_caps_new_simple ("video/mpegts",
-	"systemstream", G_TYPE_BOOLEAN, TRUE,
-        NULL);
+        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (!strcmp (format_name, "rm")) {
     caps = gst_caps_new_simple ("application/x-pn-realmedia",
-	"systemstream", G_TYPE_BOOLEAN, TRUE,
-        NULL);
+        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (!strcmp (format_name, "asf")) {
-    caps = gst_caps_new_simple ("video/x-ms-asf",
-	NULL);
+    caps = gst_caps_new_simple ("video/x-ms-asf", NULL);
   } else if (!strcmp (format_name, "avi")) {
-    caps = gst_caps_new_simple ("video/x-msvideo",
-	NULL);
+    caps = gst_caps_new_simple ("video/x-msvideo", NULL);
   } else if (!strcmp (format_name, "wav")) {
-    caps = gst_caps_new_simple ("video/x-wav",
-	NULL);
+    caps = gst_caps_new_simple ("video/x-wav", NULL);
   } else if (!strcmp (format_name, "swf")) {
-    caps = gst_caps_new_simple ("application/x-shockwave-flash",
-	NULL);
+    caps = gst_caps_new_simple ("application/x-shockwave-flash", NULL);
   } else if (!strcmp (format_name, "au")) {
-    caps = gst_caps_new_simple ("audio/x-au",
-	NULL);
+    caps = gst_caps_new_simple ("audio/x-au", NULL);
   } else if (!strcmp (format_name, "mov_mp4_m4a_3gp")) {
-    caps = gst_caps_new_simple ("video/quicktime",
-	NULL);
+    caps = gst_caps_new_simple ("video/quicktime", NULL);
   } else if (!strcmp (format_name, "dv")) {
     caps = gst_caps_new_simple ("video/x-dv",
-	"systemstream", G_TYPE_BOOLEAN, TRUE,
-	NULL);
+        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (!strcmp (format_name, "4xm")) {
-    caps = gst_caps_new_simple ("video/x-4xm",
-	NULL);
+    caps = gst_caps_new_simple ("video/x-4xm", NULL);
   } else if (!strcmp (format_name, "matroska")) {
-    caps = gst_caps_new_simple ("video/x-matroska",
-	NULL);
+    caps = gst_caps_new_simple ("video/x-matroska", NULL);
   } else {
     gchar *name;
 
@@ -1154,18 +1132,17 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
  */
 
 enum CodecID
-gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
-                            AVCodecContext *context)
+gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
 {
   enum CodecID id = CODEC_ID_NONE;
   const gchar *mimetype;
   const GstStructure *structure;
-  gboolean video = FALSE, audio = FALSE; /* we want to be sure! */
+  gboolean video = FALSE, audio = FALSE;        /* we want to be sure! */
 
   g_return_val_if_fail (caps != NULL, CODEC_ID_NONE);
   g_return_val_if_fail (gst_caps_get_size (caps) == 1, CODEC_ID_NONE);
   structure = gst_caps_get_structure (caps, 0);
-  
+
   mimetype = gst_structure_get_name (structure);
 
   if (!strcmp (mimetype, "video/x-raw-rgb")) {
@@ -1176,10 +1153,10 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
       gint bpp = 0, endianness = 0, rmask = 0;
       enum PixelFormat pix_fmt = -1;
 
-      gst_structure_get_int (structure, "bpp",        &bpp);
+      gst_structure_get_int (structure, "bpp", &bpp);
       gst_structure_get_int (structure, "endianness", &endianness);
-      gst_structure_get_int (structure, "rmask",      &rmask);
-  
+      gst_structure_get_int (structure, "rmask", &rmask);
+
       switch (bpp) {
         case 15:
           if (endianness == G_BYTE_ORDER) {
@@ -1232,19 +1209,19 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
       gst_structure_get_fourcc (structure, "format", &fmt_fcc);
 
       switch (fmt_fcc) {
-        case GST_MAKE_FOURCC ('Y','U','Y','2'):
+        case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
           pix_fmt = PIX_FMT_YUV422;
           break;
-        case GST_MAKE_FOURCC ('I','4','2','0'):
+        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           pix_fmt = PIX_FMT_YUV420P;
           break;
-        case GST_MAKE_FOURCC ('Y','4','1','B'):
+        case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
           pix_fmt = PIX_FMT_YUV411P;
           break;
-        case GST_MAKE_FOURCC ('Y','4','2','B'):
+        case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
           pix_fmt = PIX_FMT_YUV422P;
           break;
-        case GST_MAKE_FOURCC ('Y','U','V','9'):
+        case GST_MAKE_FOURCC ('Y', 'U', 'V', '9'):
           pix_fmt = PIX_FMT_YUV410P;
           break;
         default:
@@ -1264,7 +1241,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
   } else if (!strcmp (mimetype, "audio/x-raw-int")) {
 
     gint depth = 0, width = 0, endianness = 0;
-    gboolean signedness = FALSE; /* bla default value */
+    gboolean signedness = FALSE;        /* bla default value */
 
     gst_structure_get_int (structure, "endianness", &endianness);
     gst_structure_get_boolean (structure, "signed", &signedness);
@@ -1280,67 +1257,68 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
 
     if (depth == width) {
       switch (depth) {
-	case 8:
-	  if (signedness) {
-	    id = CODEC_ID_PCM_S8;
-	  } else {
-	    id = CODEC_ID_PCM_U8;
-	  }
-	  break;
-	case 16:
-	  switch (endianness) {
-	    case G_BIG_ENDIAN:
-	      if (signedness) {
-		id = CODEC_ID_PCM_S16BE;
-	      } else {
-		id = CODEC_ID_PCM_U16BE;
-	      }
-	      break;
-	    case G_LITTLE_ENDIAN:
-	      if (signedness) {
-		id = CODEC_ID_PCM_S16LE;
-	      } else {
-		id = CODEC_ID_PCM_U16LE;
-	      }
-	      break;
-	  }
-	  break;
+        case 8:
+          if (signedness) {
+            id = CODEC_ID_PCM_S8;
+          } else {
+            id = CODEC_ID_PCM_U8;
+          }
+          break;
+        case 16:
+          switch (endianness) {
+            case G_BIG_ENDIAN:
+              if (signedness) {
+                id = CODEC_ID_PCM_S16BE;
+              } else {
+                id = CODEC_ID_PCM_U16BE;
+              }
+              break;
+            case G_LITTLE_ENDIAN:
+              if (signedness) {
+                id = CODEC_ID_PCM_S16LE;
+              } else {
+                id = CODEC_ID_PCM_U16LE;
+              }
+              break;
+          }
+          break;
       }
 
       if (id != CODEC_ID_NONE) {
-	audio = TRUE;
+        audio = TRUE;
       }
     }
 
-  } else if (!strcmp(mimetype, "audio/x-mulaw")) {
+  } else if (!strcmp (mimetype, "audio/x-mulaw")) {
 
     id = CODEC_ID_PCM_MULAW;
     audio = TRUE;
 
-  } else if (!strcmp(mimetype, "audio/x-alaw")) {
+  } else if (!strcmp (mimetype, "audio/x-alaw")) {
 
     id = CODEC_ID_PCM_ALAW;
     audio = TRUE;
 
-  } else if (!strcmp(mimetype, "video/x-dv")) {
+  } else if (!strcmp (mimetype, "video/x-dv")) {
 
     id = CODEC_ID_DVVIDEO;
     video = TRUE;
 
-  } else if (!strcmp(mimetype, "audio/x-dv")) { /* ??? */
+  } else if (!strcmp (mimetype, "audio/x-dv")) {        /* ??? */
 
     id = CODEC_ID_DVAUDIO;
     audio = TRUE;
 
-  } else if (!strcmp(mimetype, "video/x-h263")) {
+  } else if (!strcmp (mimetype, "video/x-h263")) {
 
-    id = CODEC_ID_H263; /* or H263[IP] */
+    id = CODEC_ID_H263;         /* or H263[IP] */
     video = TRUE;
 
-  } else if (!strcmp(mimetype, "video/mpeg")) {
+  } else if (!strcmp (mimetype, "video/mpeg")) {
 
     gboolean sys_strm = TRUE;
     gint mpegversion = 0;
+
     gst_structure_get_boolean (structure, "systemstream", &sys_strm);
     gst_structure_get_int (structure, "mpegversion", &mpegversion);
     if (!sys_strm) {
@@ -1354,7 +1332,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
         case 4:
           id = CODEC_ID_MPEG4;
           if (context) {
-            context->codec_tag = GST_MAKE_FOURCC ('m','p','4','v');
+            context->codec_tag = GST_MAKE_FOURCC ('m', 'p', '4', 'v');
           }
           break;
         default:
@@ -1367,43 +1345,43 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
       video = TRUE;
     }
 
-  } else if (!strcmp(mimetype, "video/x-jpeg")) {
+  } else if (!strcmp (mimetype, "video/x-jpeg")) {
 
-    id = CODEC_ID_MJPEG; /* A... B... */
+    id = CODEC_ID_MJPEG;        /* A... B... */
     video = TRUE;
 
-  } else if (!strcmp(mimetype, "video/x-wmv")) {
+  } else if (!strcmp (mimetype, "video/x-wmv")) {
     gint wmvversion = 0;
 
     gst_structure_get_int (structure, "wmvversion", &wmvversion);
 
     switch (wmvversion) {
       case 1:
-	id = CODEC_ID_WMV1;
-	break;
+        id = CODEC_ID_WMV1;
+        break;
       case 2:
-	id = CODEC_ID_WMV2;
-	break;
+        id = CODEC_ID_WMV2;
+        break;
       default:
-	/* ... */
-	break;
+        /* ... */
+        break;
     }
 
     if (id != CODEC_ID_NONE) {
       video = TRUE;
     }
 
-  } else if (!strcmp(mimetype, "application/ogg")) {
+  } else if (!strcmp (mimetype, "application/ogg")) {
 
     id = CODEC_ID_VORBIS;
 
-  } else if (!strcmp(mimetype, "audio/mpeg")) {
+  } else if (!strcmp (mimetype, "audio/mpeg")) {
     gint layer = 0;
     gint mpegversion = 0;
 
     if (gst_structure_get_int (structure, "mpegversion", &mpegversion)) {
       switch (mpegversion) {
-        case 2: /* ffmpeg uses faad for both... */
+        case 2:                /* ffmpeg uses faad for both... */
         case 4:
           id = CODEC_ID_MPEG4AAC;
           break;
@@ -1432,70 +1410,70 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
       audio = TRUE;
     }
 
-  } else if (!strcmp(mimetype, "audio/x-wma")) {
+  } else if (!strcmp (mimetype, "audio/x-wma")) {
     gint wmaversion = 0;
 
     gst_structure_get_int (structure, "wmaversion", &wmaversion);
 
     switch (wmaversion) {
       case 1:
-	id = CODEC_ID_WMAV1;
-	break;
+        id = CODEC_ID_WMAV1;
+        break;
       case 2:
-	id = CODEC_ID_WMAV2;
-	break;
+        id = CODEC_ID_WMAV2;
+        break;
       default:
-	/* ... */
-	break;
+        /* ... */
+        break;
     }
 
     if (id != CODEC_ID_NONE) {
       audio = TRUE;
     }
 
-  } else if (!strcmp(mimetype, "audio/x-ac3")) {
+  } else if (!strcmp (mimetype, "audio/x-ac3")) {
 
     id = CODEC_ID_AC3;
 
-  } else if (!strcmp(mimetype, "video/x-msmpeg")) {
+  } else if (!strcmp (mimetype, "video/x-msmpeg")) {
     gint msmpegversion = 0;
 
     gst_structure_get_int (structure, "msmpegversion", &msmpegversion);
 
     switch (msmpegversion) {
       case 41:
-	id = CODEC_ID_MSMPEG4V1;
-	break;
+        id = CODEC_ID_MSMPEG4V1;
+        break;
       case 42:
-	id = CODEC_ID_MSMPEG4V2;
-	break;
+        id = CODEC_ID_MSMPEG4V2;
+        break;
       case 43:
-	id = CODEC_ID_MSMPEG4V3;
-	break;
+        id = CODEC_ID_MSMPEG4V3;
+        break;
       default:
-	/* ... */
-	break;
+        /* ... */
+        break;
     }
 
     if (id != CODEC_ID_NONE) {
       video = TRUE;
     }
 
-  } else if (!strcmp(mimetype, "video/x-svq")) {
+  } else if (!strcmp (mimetype, "video/x-svq")) {
     gint svqversion = 0;
 
     gst_structure_get_int (structure, "svqversion", &svqversion);
 
     switch (svqversion) {
       case 1:
-	id = CODEC_ID_SVQ1;
-	break;
+        id = CODEC_ID_SVQ1;
+        break;
       case 3:
-	id = CODEC_ID_SVQ3;
-	break;
+        id = CODEC_ID_SVQ3;
+        break;
       default:
-	/* ... */
-	break;
+        /* ... */
+        break;
     }
 
     if (id != CODEC_ID_NONE) {
@@ -1513,14 +1491,14 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
     gst_structure_get_int (structure, "maceversion", &maceversion);
     switch (maceversion) {
       case 3:
-	id = CODEC_ID_MACE3;
-	break;
+        id = CODEC_ID_MACE3;
+        break;
       case 6:
-	id = CODEC_ID_MACE6;
-	break;
+        id = CODEC_ID_MACE6;
+        break;
       default:
-	/* ... */
-	break;
+        /* ... */
+        break;
     }
 
     if (id != CODEC_ID_NONE) {
@@ -1543,11 +1521,11 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
     gst_structure_get_int (structure, "indeoversion", &indeoversion);
     switch (indeoversion) {
       case 3:
-	id = CODEC_ID_INDEO3;
-	break;
+        id = CODEC_ID_INDEO3;
+        break;
       default:
-	/* ... */
-	break;
+        /* ... */
+        break;
     }
 
     if (id != CODEC_ID_NONE) {
@@ -1560,19 +1538,19 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
     gst_structure_get_int (structure, "divxversion", &divxversion);
     switch (divxversion) {
       case 3:
-	id = CODEC_ID_MSMPEG4V3;
-	break;
+        id = CODEC_ID_MSMPEG4V3;
+        break;
       case 4:
       case 5:
-	id = CODEC_ID_MPEG4;
-	break;
+        id = CODEC_ID_MPEG4;
+        break;
       default:
-	/* ... */
-	break;
+        /* ... */
+        break;
     }
 
     if (context) {
-      context->codec_tag = GST_MAKE_FOURCC ('D','I','V','X');
+      context->codec_tag = GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
     }
 
     if (id != CODEC_ID_NONE) {
@@ -1585,7 +1563,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
     video = TRUE;
 
     if (context) {
-      context->codec_tag = GST_MAKE_FOURCC ('3','I','V','X');
+      context->codec_tag = GST_MAKE_FOURCC ('3', 'I', 'V', 'X');
     }
 
   } else if (!strcmp (mimetype, "video/x-xvid")) {
@@ -1594,7 +1572,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
     video = TRUE;
 
     if (context) {
-      context->codec_tag = GST_MAKE_FOURCC ('X','V','I','D');
+      context->codec_tag = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
     }
 
   } else if (!strcmp (mimetype, "video/x-ffv")) {
@@ -1603,11 +1581,11 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
     gst_structure_get_int (structure, "ffvversion", &ffvversion);
     switch (ffvversion) {
       case 1:
-	id = CODEC_ID_FFV1;
-	break;
+        id = CODEC_ID_FFV1;
+        break;
       default:
-	/* ... */
-	break;
+        /* ... */
+        break;
     }
 
     if (id != CODEC_ID_NONE) {
@@ -1649,7 +1627,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
     if (id != CODEC_ID_NONE) {
       audio = TRUE;
     }
-    
+
   } else if (!strcmp (mimetype, "video/x-4xm")) {
 
     id = CODEC_ID_4XM;
@@ -1707,9 +1685,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
   } else if (!strcmp (mimetype, "audio/x-pn-realaudio")) {
 
     gint raversion;
-                                                                                
+
     gst_structure_get_int (structure, "raversion", &raversion);
-                                                                                
+
     switch (raversion) {
       case 1:
         id = CODEC_ID_RA_144;
@@ -1721,13 +1699,13 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
         /* .. */
         break;
     }
-                                                                                
+
     if (id != CODEC_ID_NONE) {
       audio = TRUE;
     }
 
   } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15) ||
-             !strncmp (mimetype, "video/x-gst_ff-", 15)) {
+      !strncmp (mimetype, "video/x-gst_ff-", 15)) {
 
     gchar ext[16];
     AVCodec *codec;
@@ -1760,8 +1738,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
 
   if (id != CODEC_ID_NONE) {
     char *str = gst_caps_to_string (caps);
+
     GST_DEBUG ("The id=%d belongs to the caps %s", id, str);
-    g_free(str);
+    g_free (str);
   }
 
   return id;

@@ -33,16 +33,16 @@
 #include <ffmpeg/avformat.h>
 #endif
 
-extern gboolean gst_ffmpegdemux_register (GstPlugin *plugin);
-extern gboolean gst_ffmpegdec_register (GstPlugin *plugin);
-extern gboolean gst_ffmpegenc_register (GstPlugin *plugin);
-extern gboolean gst_ffmpegmux_register (GstPlugin *plugin);
-extern gboolean gst_ffmpegcsp_register (GstPlugin *plugin);
-	
+extern gboolean gst_ffmpegdemux_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegdec_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegenc_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegmux_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegcsp_register (GstPlugin * plugin);
+
 extern URLProtocol gstreamer_protocol;
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
@@ -54,7 +54,7 @@ plugin_init (GstPlugin *plugin)
   gst_ffmpegenc_register (plugin);
   gst_ffmpegdec_register (plugin);
   gst_ffmpegdemux_register (plugin);
-  /*gst_ffmpegmux_register (plugin);*/
+  /*gst_ffmpegmux_register (plugin); */
   gst_ffmpegcsp_register (plugin);
 
   register_protocol (&gstreamer_protocol);
@@ -63,14 +63,9 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "ffmpeg",
-  "All FFMPEG codecs",
-  plugin_init,
-  FFMPEG_VERSION,
-  "LGPL",
-  "FFMpeg",
-  "http://ffmpeg.sourceforge.net/"
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "ffmpeg",
+    "All FFMPEG codecs",
+    plugin_init,
+    FFMPEG_VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")

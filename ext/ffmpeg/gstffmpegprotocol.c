@@ -34,18 +34,17 @@
 
 typedef struct _GstProtocolInfo GstProtocolInfo;
 
-struct _GstProtocolInfo {
-  GstPad 	*pad;
+struct _GstProtocolInfo
+{
+  GstPad *pad;
 
-  int 		 flags;
+  int flags;
   GstByteStream *bs;
-  gboolean 	 eos;
+  gboolean eos;
 };
 
-static int 
-gst_ffmpegdata_open (URLContext *h,
-		     const char *filename,
-		     int         flags)
+static int
+gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
 {
   GstProtocolInfo *info;
   GstPad *pad;
@@ -54,8 +53,7 @@ gst_ffmpegdata_open (URLContext *h,
   info->flags = flags;
 
   /* we don't support R/W together */
-  if (flags != URL_RDONLY &&
-      flags != URL_WRONLY) {
+  if (flags != URL_RDONLY && flags != URL_WRONLY) {
     g_warning ("Only read-only or write-only are supported");
     return -EINVAL;
   }
@@ -87,10 +85,8 @@ gst_ffmpegdata_open (URLContext *h,
   return 0;
 }
 
-static int 
-gst_ffmpegdata_read (URLContext    *h,
-		     unsigned char *buf,
-		     int            size)
+static int
+gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
 {
   GstByteStream *bs;
   guint32 total, request;
@@ -144,7 +140,7 @@ gst_ffmpegdata_read (URLContext    *h,
       }
     }
   } while (!info->eos && total != request);
-  
+
   memcpy (buf, data, total);
   gst_bytestream_flush (bs, total);
 
@@ -152,9 +148,7 @@ gst_ffmpegdata_read (URLContext    *h,
 }
 
 static int
-gst_ffmpegdata_write (URLContext    *h,
-		      unsigned char *buf,
-		      int            size)
+gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
 {
   GstProtocolInfo *info;
   GstBuffer *outbuf;
@@ -174,9 +168,7 @@ gst_ffmpegdata_write (URLContext    *h,
 }
 
 static offset_t
-gst_ffmpegdata_seek (URLContext *h,
-		     offset_t    pos,
-		     int         whence)
+gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 {
   GstSeekType seek_type = 0;
   GstProtocolInfo *info;
@@ -216,16 +208,17 @@ gst_ffmpegdata_seek (URLContext *h,
 }
 
 static int
-gst_ffmpegdata_close (URLContext *h)
+gst_ffmpegdata_close (URLContext * h)
 {
   GstProtocolInfo *info;
 
   info = (GstProtocolInfo *) h->priv_data;
 
   switch (info->flags) {
-    case URL_WRONLY: {
+    case URL_WRONLY:{
       /* send EOS - that closes down the stream */
       GstEvent *event = gst_event_new (GST_EVENT_EOS);
+
       gst_pad_push (info->pad, GST_DATA (event));
     }
       break;
@@ -243,11 +236,10 @@ gst_ffmpegdata_close (URLContext *h)
 }
 
 URLProtocol gstreamer_protocol = {
-  .name      = "gstreamer",
-  .url_open  = gst_ffmpegdata_open,
-  .url_read  = gst_ffmpegdata_read,
+  .name = "gstreamer",
+  .url_open = gst_ffmpegdata_open,
+  .url_read = gst_ffmpegdata_read,
   .url_write = gst_ffmpegdata_write,
-  .url_seek  = gst_ffmpegdata_seek,
+  .url_seek = gst_ffmpegdata_seek,
   .url_close = gst_ffmpegdata_close,
 };
-
