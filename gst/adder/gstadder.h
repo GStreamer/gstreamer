@@ -64,27 +64,21 @@ struct _GstAdder {
 
   GstPad         *srcpad;
   GstBufferPool  *bufpool;
-  
+
   /* keep track of the sinkpads */
   guint           numsinkpads;
   GSList         *input_channels;
 
-  /* the next three are valid for both int and float */
+  /* the next are valid for both int and float */
   GstAdderFormat  format;
   guint           rate;
   guint           channels;
-  
-  /* the next five are valid only for format == GST_ADDER_FORMAT_INT */
   guint           width;
-  guint           depth;
   guint           endianness;
-  guint           law;
+
+  /* the next are valid only for format == GST_ADDER_FORMAT_INT */
+  guint           depth;
   gboolean        is_signed;
-  
-  /* the next three are valid only for format == GST_ADDER_FORMAT_FLOAT */
-  const gchar    *layout;
-  gfloat          slope;
-  gfloat          intercept;
 
   /* counters to keep track of timestamps */
   gint64     	  timestamp;
