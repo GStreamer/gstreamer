@@ -1,20 +1,16 @@
 The never-ending story of new features:
 * add more codecs into our codec map
-* encoding/decoding support lacks:
+* encoding support lacks:
    - event handling (particularly discont/flush and EOS)
+* both encoding and decoding lacks:
    - prevent data copying
 * demux/mux support lacks:
    - good testing of exotic formats
    - correct caps sets on the pad templates
    - event handling in the loop function (mux)
    - prevent data copying
-* some sort of codectype-fallback, so that we still register a codec plus its
-    mimetype even if we don't have a defined gst-type for it
-* ffvideoscale && other filter elements
+* ffvideoscale, ffdeinterlace and other filter elements
 * can we wrap URLProtocol as a source/sink?
-* propagate options like --disable-ffplay (and server and ffmpeg) to ffmpeg
-    source tree build directly in AC_CONFIG_SUBDIRS instead of the
-    'disabletools.diff' patch
 
 If you have cool ideas, add them here or contact the mailinglist:
 <gstreamer-devel@lists.sf.net>

@@ -1,5 +1,14 @@
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* TODO:
+	  Update since some tasks are done.
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find):
+	  Add correct mimetype for FLI video, restore correct typefind
+	  priority.
+
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_connect),
 	(gst_ffmpegdec_frame), (gst_ffmpegdec_handle_event),
 	(gst_ffmpegdec_chain):
