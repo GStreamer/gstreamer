@@ -74,6 +74,7 @@ typedef struct
   guint64 	delay;
   gboolean 	need_flush;
   guint32	av_bps;
+  guint64	end_pos;
 
   guint64	total_bytes;
   guint32	total_frames;

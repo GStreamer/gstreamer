@@ -369,6 +369,7 @@ gst_avi_demux_strh (GstAviDemux *avi_demux)
     target->delay = 0LL;
     target->total_bytes = 0LL;
     target->total_frames = 0;
+    target->end_pos = -1;
 
     target->skip = 0;
 
@@ -1032,6 +1033,7 @@ gst_avi_demux_get_event_mask (GstPad *pad)
 {
   static const GstEventMask masks[] = {
     { GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_KEY_UNIT },
+    { GST_EVENT_SEEK_SEGMENT, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_KEY_UNIT },
     { 0, }
   };
 
@@ -1048,6 +1050,8 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
   stream = gst_pad_get_element_private (pad);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK_SEGMENT:
+      stream->end_pos = GST_EVENT_SEEK_ENDOFFSET (event);
     case GST_EVENT_SEEK:
       GST_DEBUG (0, "seek format %d, %08x", GST_EVENT_SEEK_FORMAT (event), stream->strh.type);
       switch (GST_EVENT_SEEK_FORMAT (event)) {
@@ -1060,12 +1064,14 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
 	  gint64 desired_offset = GST_EVENT_SEEK_OFFSET (event);
 	  guint32 flags;
           guint64 min_index;
+	  
 
 	  /* no seek on audio yet */
 	  if (stream->strh.type == GST_RIFF_FCC_auds) {
 	    res = FALSE;
 	    goto done;
 	  }
+          GST_DEBUG (0, "seeking to %lld", desired_offset);
 
           flags = GST_RIFF_IF_KEYFRAME;
 
@@ -1344,27 +1350,34 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
       stream->current_byte += *chunksize;
 
       if (stream->skip) {
-	stream->skip--;
+        stream->skip--;
       }
       else {
-        if (stream->pad && GST_PAD_IS_CONNECTED (stream->pad)) {
-	  GstBuffer *buf;
-          guint32   got_bytes;
-
-	  if (*chunksize) {
-            got_bytes = gst_bytestream_peek (bs, &buf, *chunksize);
-
-            GST_BUFFER_TIMESTAMP (buf) = next_ts;
-
-            if (stream->need_flush) {
-               /* FIXME, do some flush event here */
-              stream->need_flush = FALSE;
-            }
-	    GST_DEBUG (0, "send stream %d: %lld %d %lld %08x", stream_id, next_ts, stream->current_frame - 1,
-			  stream->delay, *chunksize);
-
-            gst_pad_push(stream->pad, buf);
+        if (GST_PAD_IS_USABLE (stream->pad)) {
+          if (next_ts >= stream->end_pos) {
+	    gst_pad_push (stream->pad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+	    GST_DEBUG (0, "end stream %d: %lld %d %lld", stream_id, next_ts, stream->current_frame - 1,
+			    stream->end_pos);
 	  }
+	  else {
+	    GstBuffer *buf;
+            guint32   got_bytes;
+
+	    if (*chunksize) {
+              got_bytes = gst_bytestream_peek (bs, &buf, *chunksize);
+
+              GST_BUFFER_TIMESTAMP (buf) = next_ts;
+
+              if (stream->need_flush) {
+                 /* FIXME, do some flush event here */
+                stream->need_flush = FALSE;
+              }
+	      GST_DEBUG (0, "send stream %d: %lld %d %lld %08x", stream_id, next_ts, stream->current_frame - 1,
+			    stream->delay, *chunksize);
+
+              gst_pad_push(stream->pad, buf);
+	    }
+          }
         }
       }
 
