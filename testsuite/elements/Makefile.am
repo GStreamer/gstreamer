@@ -1,9 +1,9 @@
 if BUILD_FAILING_TESTS
-tests_failing = 
+tests_failing = fake 
 else
 tests_failing =
 endif
-tests_working = fake name tee
+tests_working = name tee
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 
