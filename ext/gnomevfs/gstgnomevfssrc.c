@@ -200,6 +200,8 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
 	GstGnomeVFSSrc *src;
+        const gchar *location;
+        gchar cwd[PATH_MAX];
 
 	/* it's not null if we got it, but it might not be ours */
 	g_return_if_fail(GST_IS_GNOMEVFSSRC(object));
@@ -221,7 +223,16 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 			src->filename = NULL;
 		} else {
 			/* otherwise set the new filename */
-			src->filename = g_strdup(g_value_get_string (value));
+                        location = g_value_get_string (value);
+                        /* if it's not a proper uri, default to file:// -- this
+                         * is a crude test */
+                        if (!strchr (location, ':'))
+                                if (*location == '/')
+                                        src->filename = g_strdup_printf ("file://%s", location);
+                                else
+                                        src->filename = g_strdup_printf ("file://%s/%s", getcwd(cwd, PATH_MAX), location);
+                        else
+                                src->filename = g_strdup (g_value_get_string (value));
 		}
 
 		if ((GST_STATE(src) == GST_STATE_PAUSED)
@@ -234,7 +245,7 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 		src->bytes_per_read = g_value_get_int (value);
 		break;
 	case ARG_OFFSET:
-		src->curoffset = g_value_get_long (value);
+		src->curoffset = g_value_get_int64 (value);
 		src->new_seek = TRUE;
 		break;
 	default:
@@ -259,10 +270,10 @@ static void gst_gnomevfssrc_get_property(GObject *object, guint prop_id, GValue 
 		g_value_set_int (value, src->bytes_per_read);
 		break;
 	case ARG_OFFSET:
-		g_value_set_long (value, src->curoffset);
+		g_value_set_int64 (value, src->curoffset);
 		break;
 	case ARG_FILESIZE:
-		g_value_set_long (value, src->size);
+		g_value_set_int64 (value, src->size);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -318,6 +329,8 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 
 		src->curoffset += GST_BUFFER_SIZE (buf);
 
+                g_object_notify ((GObject*) src, "offset");
+
 		if (src->new_seek)
 		{
 			/* FIXME do a discont, flush event */
@@ -357,6 +370,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		GST_BUFFER_OFFSET(buf) = src->curoffset;
 		GST_BUFFER_SIZE(buf) = readbytes;
 		src->curoffset += readbytes;
+                g_object_notify ((GObject*) src, "offset");
 	}
 
 	/* we're done, return the buffer */
@@ -409,6 +423,8 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			return FALSE;
 		}
 
+                g_object_notify (G_OBJECT (src), "filesize");
+
 		src->new_seek = TRUE;
 	} else {
 		result =
@@ -436,6 +452,8 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 				src->size = 0;
 			else
 				src->size = info->size;
+
+                        g_object_notify (G_OBJECT (src), "filesize");
 
 			gnome_vfs_file_info_unref(info);
 		}
