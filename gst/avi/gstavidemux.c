@@ -1670,9 +1670,13 @@ gst_avi_demux_loop (GstElement *element)
                 guint32   got_bytes;
 
 	        if (chunk.size) {
+	          GstClockTime dur_ts;
                   got_bytes = gst_bytestream_peek (avi_demux->bs, &buf, chunk.size);
-
+		  
                   GST_BUFFER_TIMESTAMP (buf) = next_ts;
+
+                  gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &dur_ts);
+                  GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
 
                   if (stream->need_flush) {
                     /* FIXME, do some flush event here */
