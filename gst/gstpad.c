@@ -2695,9 +2695,6 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
     case GST_EVENT_EOS:
       gst_pad_event_default_dispatch (pad, element, event);
       gst_element_set_eos (element);
-      /* we have to try to schedule another element 
-       * because this one is disabled */
-      gst_element_yield (element);
       break;
     case GST_EVENT_DISCONTINUOUS:
     {
