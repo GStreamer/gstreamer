@@ -76,8 +76,6 @@ static GstElementDetails gst_wavenc_details = GST_ELEMENT_DETAILS (
   "Iain Holmes <iain@prettypeople.org>"
 );
 
-static GstPadTemplate *srctemplate, *sinktemplate;
-
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE (
   "sink",
@@ -154,9 +152,9 @@ gst_wavenc_change_state (GstElement *element)
 
 static void
 set_property (GObject *object,
-							guint prop_id,
-							const GValue *value,
-							GParamSpec *pspec)
+	      guint prop_id,
+	      const GValue *value,
+	      GParamSpec *pspec)
 {
 	GstWavEnc *enc;
 
@@ -283,12 +281,16 @@ gst_wavenc_stop_file (GstWavEnc *wavenc)
 static void
 gst_wavenc_init (GstWavEnc *wavenc)
 {
-  wavenc->sinkpad = gst_pad_new_from_template (sinktemplate, "sink");
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (wavenc);
+
+  wavenc->sinkpad = gst_pad_new_from_template (
+	gst_element_class_get_pad_template (klass, "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
   gst_pad_set_chain_function (wavenc->sinkpad, gst_wavenc_chain);
   gst_pad_set_link_function (wavenc->sinkpad, gst_wavenc_sinkconnect);
   
-  wavenc->srcpad = gst_pad_new_from_template (srctemplate, "src");
+  wavenc->srcpad = gst_pad_new_from_template (
+	gst_element_class_get_pad_template (klass, "src"), "src");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->srcpad);
 
   wavenc->setup = FALSE;
