@@ -955,8 +955,7 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
       continue;
     }
 
-    /* if (chain->num_cothreaded > 1) { */
-    if (FALSE) {
+    if (chain->num_cothreaded > 1) { 
       g_warning ("this scheduler can only deal with 1 cothreaded element in a chain");
 
       state = GST_SCHEDULER_STATE_ERROR;
