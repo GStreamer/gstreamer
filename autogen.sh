@@ -32,6 +32,7 @@ version_check "libtool" "" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
 version_check "pkg-config" "" "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
 
 autoconf_2.52d_check || DIE=1
+aclocal_check || DIE=1
 
 CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
 # if no arguments specified then this will be printed
@@ -45,7 +46,7 @@ fi
 
 toplevel_check $srcfile
 
-tool_run "aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
+tool_run "$aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
 
 # FIXME : why does libtoolize keep complaining about aclocal ?
 
