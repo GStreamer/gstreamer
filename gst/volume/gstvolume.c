@@ -234,6 +234,8 @@ volume_init (GstVolume *filter)
   filter->mute = FALSE;
   filter->volume_i = 8192;
   filter->volume_f = 1.0;
+  filter->real_vol_i = 8192;
+  filter->real_vol_f = 1.0;
 
   filter->dpman = gst_dpman_new ("volume_dpman", GST_ELEMENT(filter));
   gst_dpman_add_required_dparam_callback (
