@@ -241,7 +241,9 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink)
   if ( sdlvideosink->yuv_overlay == NULL )
   {
     gst_element_error(GST_ELEMENT(sdlvideosink),
-      "SDL: Couldn't create SDL_yuv_overlay: %s", SDL_GetError());
+      "SDL: Couldn't create SDL_yuv_overlay (%dx%d \'%4.4s\'): %s",
+      sdlvideosink->image_width, sdlvideosink->image_height,
+      (char*)&print_format, SDL_GetError());
     return FALSE;
   }
   else
@@ -281,6 +283,10 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
 
   sdlvideosink = GST_SDLVIDEOSINK (gst_pad_get_parent (pad));
 
+  /* we are not going to act on variable caps */
+  if (!GST_CAPS_IS_FIXED (vscapslist))
+    return GST_PAD_CONNECT_DELAYED;
+
   for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
   {
     /* check whether it's in any way compatible */
@@ -296,6 +302,11 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
                                      gst_caps_get_fourcc_int(caps, "format"));
         sdlvideosink->image_width = gst_caps_get_int(caps, "width");
         sdlvideosink->image_height = gst_caps_get_int(caps, "height");
+
+        /* try it out */
+        if (!gst_sdlvideosink_create(sdlvideosink))
+          return GST_PAD_CONNECT_REFUSED;
+
         return GST_PAD_CONNECT_OK;
     }
   }
@@ -464,17 +475,10 @@ gst_sdlvideosink_change_state (GstElement *element)
       }
       GST_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
-    case GST_STATE_READY_TO_PAUSED:
-      /* create a YUV overlay */
-      if (!gst_sdlvideosink_create(sdlvideosink))
-        return GST_STATE_FAILURE;
-      break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_READY_TO_NULL:
       if (sdlvideosink->yuv_overlay)
         SDL_FreeYUVOverlay(sdlvideosink->yuv_overlay);
       sdlvideosink->yuv_overlay = NULL;
-      break;
-    case GST_STATE_READY_TO_NULL:
       SDL_Quit();
       GST_FLAG_UNSET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
