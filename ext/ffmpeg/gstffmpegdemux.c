@@ -208,7 +208,7 @@ gst_ffmpegdemux_loop (GstElement *element)
   /* open file if we didn't so already */
   if (!ffmpegdemux->opened) {
     res = av_open_input_file (&ffmpegdemux->context, 
-			      g_strdup_printf ("gstreamer://i/%p",
+			      g_strdup_printf ("gstreamer://%p",
 					       ffmpegdemux->sinkpad),
 			      oclass->in_plugin, 0, NULL);
     if (res < 0) {

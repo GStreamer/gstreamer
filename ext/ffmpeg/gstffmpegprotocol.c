@@ -32,8 +32,7 @@
 
 typedef struct _GstProtocolInfo GstProtocolInfo;
 
-struct _GstProtocolInfo
-{
+struct _GstProtocolInfo {
   GstPad 	*pad;
 
   int 		 flags;
@@ -42,7 +41,9 @@ struct _GstProtocolInfo
 };
 
 static int 
-gst_open (URLContext *h, const char *filename, int flags)
+gst_open (URLContext *h,
+	  const char *filename,
+	  int         flags)
 {
   GstProtocolInfo *info;
   GstPad *pad;
@@ -50,31 +51,43 @@ gst_open (URLContext *h, const char *filename, int flags)
   info = g_new0 (GstProtocolInfo, 1);
   info->flags = flags;
 
-  if (filename[12] != 'i') {
-    g_warning("%s is no input: %c", filename, filename[12]);
+  /* we don't support R/W together */
+  if (flags != URL_RDONLY &&
+      flags != URL_WRONLY) {
+    g_warning ("Only read-only or write-only are supported");
+    return -EINVAL;
+  }
+
+  if (sscanf (&filename[12], "%p", &pad) != 1) {
+    g_warning ("could not decode pad from %s", filename);
     return -EIO;
   }
 
-  if (sscanf (&filename[14], "%p", &pad) != 1) {
-    g_warning ("could not decode pad from %s", &filename[12]);
-    return -EIO;
+  /* make sure we're a pad and that we're of the right type */
+  g_return_val_if_fail (GST_IS_PAD (pad), -EINVAL);
+
+  switch (flags) {
+    case URL_RDONLY:
+      g_return_val_if_fail (GST_PAD_IS_SINK (pad), -EINVAL);
+      info->bs = gst_bytestream_new (pad);
+      break;
+    case URL_WRONLY:
+      g_return_val_if_fail (GST_PAD_IS_SRC (pad), -EINVAL);
+      info->bs = NULL;
+      break;
   }
 
-  if (!GST_IS_PAD (pad)) {
-    g_warning ("decoded string is not a pad, %s", &filename[12]);
-    return -EIO;
-  }
-
-  info->bs = gst_bytestream_new (pad);
   info->eos = FALSE;
-  
+
   h->priv_data = (void *) info;
 
   return 0;
 }
 
 static int 
-gst_read (URLContext *h, unsigned char *buf, int size)
+gst_read (URLContext    *h,
+	  unsigned char *buf,
+	  int            size)
 {
   GstByteStream *bs;
   guint32 total;
@@ -82,6 +95,9 @@ gst_read (URLContext *h, unsigned char *buf, int size)
   GstProtocolInfo *info;
 
   info = (GstProtocolInfo *) h->priv_data;
+
+  g_return_val_if_fail (info->flags == URL_RDONLY, -EIO);
+
   bs = info->bs;
 
   if (info->eos) 
@@ -118,24 +134,101 @@ gst_read (URLContext *h, unsigned char *buf, int size)
   return total;
 }
 
-static int gst_write(URLContext *h, unsigned char *buf, int size)
+static int
+gst_write (URLContext    *h,
+	   unsigned char *buf,
+	   int            size)
 {
-  g_print ("write %p, %d\n", buf, size);
+  GstProtocolInfo *info;
+  GstBuffer *outbuf;
+
+  info = (GstProtocolInfo *) h->priv_data;
+
+  g_return_val_if_fail (info->flags == URL_WRONLY, -EIO);
+
+  /* create buffer and push data further */
+  outbuf = gst_buffer_new_and_alloc (size);
+  GST_BUFFER_SIZE (outbuf) = size;
+  memcpy (GST_BUFFER_DATA (outbuf), buf, size);
+
+  gst_pad_push (info->pad, outbuf);
 
   return 0;
 }
 
-static int gst_close(URLContext *h)
+static offset_t
+gst_seek (URLContext *h,
+	  offset_t    pos,
+	  int         whence)
 {
+  GstSeekType seek_type = 0;
+  GstProtocolInfo *info;
+
+  info = (GstProtocolInfo *) h->priv_data;
+
+  switch (whence) {
+    case SEEK_SET:
+      seek_type = GST_SEEK_METHOD_SET;
+      break;
+    case SEEK_CUR:
+      seek_type = GST_SEEK_METHOD_CUR;
+      break;
+    case SEEK_END:
+      seek_type = GST_SEEK_METHOD_END;
+      break;
+    default:
+      g_assert (0);
+      break;
+  }
+
+  switch (info->flags) {
+    case URL_RDONLY:
+      gst_bytestream_seek (info->bs, pos, seek_type);
+      break;
+
+    case URL_WRONLY: {
+      GstEvent *event = gst_event_new_seek (seek_type, pos);
+      gst_pad_push (info->pad, GST_BUFFER (event));
+    }
+      break;
+  }
+
+  return 0;
+}
+
+static int
+gst_close (URLContext *h)
+{
+  GstProtocolInfo *info;
+
+  info = (GstProtocolInfo *) h->priv_data;
+
+  switch (info->flags) {
+    case URL_WRONLY: {
+      /* send EOS - that closes down the stream */
+      GstEvent *event = gst_event_new (GST_EVENT_EOS);
+      gst_pad_push (info->pad, GST_BUFFER (event));
+    }
+      break;
+
+    case URL_RDONLY:
+      /* unref bytestream */
+      gst_bytestream_destroy (info->bs);
+      break;
+  }
+
+  /* clean up data */
+  g_free (info);
+
   return 0;
 }
 
 URLProtocol gstreamer_protocol = {
-  "gstreamer",
-  gst_open,
-  gst_read,
-  gst_write,
-  NULL,
-  gst_close,
+  .name      = "gstreamer",
+  .url_open  = gst_open,
+  .url_read  = gst_read,
+  .url_write = gst_write,
+  .url_seek  = gst_seek,
+  .url_close = gst_close,
 };
 
