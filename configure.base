@@ -763,7 +763,7 @@ esac],
 [USE_PROFILING=no]) dnl Default value
 
 dnl Default value
-GST_CONFIG_DIR=${sysconfdir}/gstreamer
+GST_CONFIG_DIR=/etc/gstreamer
 AC_ARG_WITH(configdir,
 [  --with-configdir             specify path to use for configdir],
 [case "${withval}" in
