@@ -28,6 +28,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
+  /* Protocol type enum */
+typedef enum {
+  SHOUT2SEND_PROTOCOL_ICE = 1,
+  SHOUT2SEND_PROTOCOL_XAUDIOCAST,
+  SHOUT2SEND_PROTOCOL_ICY,
+  SHOUT2SEND_PROTOCOL_HTTP
+} GstShout2SendProtocol;
+
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstShout2send GstShout2send;
@@ -35,6 +43,8 @@ struct _GstShout2send {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
+
+  GstShout2SendProtocol protocol;
 
   shout_t *conn;
 
@@ -48,6 +58,8 @@ struct _GstShout2send {
   gchar *url;
 
 };
+
+
 
 /* Standard definition defining a class for this element. */
 typedef struct _GstShout2sendClass GstShout2sendClass;

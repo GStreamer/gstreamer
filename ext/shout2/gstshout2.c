@@ -49,6 +49,8 @@ enum {
   ARG_DESCRIPTION, /* Description of the stream */
   ARG_GENRE,       /* Genre of the stream */
 
+  ARG_PROTOCOL,    /* Protocol to connect with */
+
   ARG_MOUNT,       /* mountpoint of stream (icecast only) */
   ARG_URL,         /* Url of stream (I'm guessing) */
 };
@@ -90,6 +92,24 @@ static GstElementStateReturn	gst_shout2send_change_state	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_shout2send_signals[LAST_SIGNAL] = { 0 }; */
+
+#define GST_TYPE_SHOUT_PROTOCOL (gst_shout2send_protocol_get_type())
+static GType
+gst_shout2send_protocol_get_type (void) 
+{
+  static GType shout2send_protocol_type = 0;
+  static GEnumValue shout2send_protocol[] = {
+    { SHOUT2SEND_PROTOCOL_ICE, 	      "1", "Ice Protocol"},
+    { SHOUT2SEND_PROTOCOL_XAUDIOCAST, "2", "Xaudiocast Protocol (icecast 1.3.x)"},
+    { SHOUT2SEND_PROTOCOL_ICY, 	      "3", "Icy Protocol (ShoutCast)"},
+    { SHOUT2SEND_PROTOCOL_HTTP,       "4", "Http Protocol (icecast 2.x)"},
+    {0, NULL, NULL},
+  };
+  if (!shout2send_protocol_type) {
+    shout2send_protocol_type = g_enum_register_static ("GstShout2SendProtocol", shout2send_protocol);
+  }
+  return shout2send_protocol_type;
+}
 
 GType
 gst_shout2send_get_type(void)
@@ -147,6 +167,11 @@ gst_shout2send_class_init (GstShout2sendClass *klass)
     g_param_spec_string("genre","genre","genre",
                         NULL, G_PARAM_READWRITE)); /* CHECKME */
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROTOCOL,
+    g_param_spec_enum ("protocol", "protocol", "Connection Protocol to use",
+                       GST_TYPE_SHOUT_PROTOCOL, SHOUT2SEND_PROTOCOL_HTTP, G_PARAM_READWRITE)); 
+
+
   /* icecast only */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MOUNT,
     g_param_spec_string("mount","mount","mount",
@@ -181,6 +206,7 @@ gst_shout2send_init (GstShout2send *shout2send)
   shout2send->genre = g_strdup ("");
   shout2send->mount = g_strdup ("");
   shout2send->url = g_strdup ("");
+  shout2send->protocol = SHOUT2SEND_PROTOCOL_HTTP;
 }
 
 static void
@@ -254,6 +280,10 @@ gst_shout2send_set_property (GObject *object, guint prop_id, const GValue *value
     shout2send->genre = g_strdup (g_value_get_string (value));
     break;
     
+  case ARG_PROTOCOL:       /* protocol to connect with */
+    shout2send->protocol = g_value_get_enum (value);
+    break;  
+
   case ARG_MOUNT:       /* mountpoint of stream (icecast only) */
     if (shout2send->mount)
       g_free (shout2send->mount);
@@ -304,6 +334,10 @@ gst_shout2send_get_property (GObject *object, guint prop_id, GValue *value, GPar
     g_value_set_string (value, shout2send->genre);
     break;
 
+  case ARG_PROTOCOL:       /* protocol to connect with */
+    g_value_set_enum (value, shout2send->protocol);
+    break; 
+
   case ARG_MOUNT:       /* mountpoint of stream (icecast only) */
     g_value_set_string (value, shout2send->mount);
     break;
@@ -347,6 +381,7 @@ gst_shout2send_change_state (GstElement *element)
   GstShout2send *shout2send;
 
   guint major, minor, micro;
+  gshort proto = 3;
 
   gchar *version_string;
 
@@ -361,10 +396,22 @@ gst_shout2send_change_state (GstElement *element)
    case GST_STATE_NULL_TO_READY:
      shout2send->conn = shout_new();
 
-     /* There are other choices for protocols (_ICE, _XAUDIOCAST and _ICY)
-	adding a property to set this might be in order */
-     
-     if (shout_set_protocol(shout2send->conn, SHOUT_PROTOCOL_HTTP) != SHOUTERR_SUCCESS)
+     switch (shout2send->protocol) {
+     case SHOUT2SEND_PROTOCOL_ICE:
+       proto = SHOUT_PROTOCOL_ICE;
+       break;
+     case SHOUT2SEND_PROTOCOL_XAUDIOCAST:
+       proto = SHOUT_PROTOCOL_XAUDIOCAST;
+       break;
+     case SHOUT2SEND_PROTOCOL_ICY:
+       proto = SHOUT_PROTOCOL_ICY;
+       break;
+     case SHOUT2SEND_PROTOCOL_HTTP:
+       proto = SHOUT_PROTOCOL_HTTP;
+       break;
+     }
+
+     if (shout_set_protocol(shout2send->conn, proto) != SHOUTERR_SUCCESS)
        {
 	 g_error ("Error setting protocol: %s\n", shout_get_error(shout2send->conn));
        }
@@ -383,11 +430,11 @@ gst_shout2send_change_state (GstElement *element)
        {
 	 g_error ("Error setting port: %s\n", shout_get_error(shout2send->conn)); 
        } 
-     
+
      if(shout_set_password(shout2send->conn, shout2send->password) != SHOUTERR_SUCCESS)
        {
 	 g_error ("Error setting password: %s\n", shout_get_error(shout2send->conn)); 
-       }  
+       }
      
      if (shout_set_name(shout2send->conn, shout2send->name) != SHOUTERR_SUCCESS)
        {
