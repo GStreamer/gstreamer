@@ -595,6 +595,14 @@ gst_pad_connect (GstPad *srcpad,
   }
   g_return_if_fail((srcpad->direction == GST_PAD_SRC) &&
                    (sinkpad->direction == GST_PAD_SINK));
+ 
+  /* chack pad compatibility */
+  if (srcpad->caps && sinkpad->caps) {
+    if (!gst_caps_check_compatibility (srcpad->caps, sinkpad->caps))
+      g_warning ("gstpad: connecting incompatible pads");
+    else
+      g_print ("gstpad: connecting compatible pads\n");
+  }
 
   /* first set peers */
   srcpad->peer = sinkpad;
@@ -904,7 +912,16 @@ gst_padtemplate_create (gchar *name_template,
 		        GstPadDirection direction, GstPadPresence presence,
 		        GstCaps *caps, ...)
 {
-  return NULL;
+  GstPadTemplate *new;
+  
+  new = g_new0 (GstPadTemplate, 1);
+
+  new->name_template = name_template;
+  new->direction = direction;
+  new->presence = presence;
+  new->caps = caps;
+
+  return new;
 }
 
 

@@ -43,7 +43,7 @@ GList *_gst_libraries;
 gint _gst_libraries_seqno;
 
 /* whether or not to spew library load issues */
-gboolean _gst_plugin_spew = FALSE;
+gboolean _gst_plugin_spew = TRUE;
 
 
 void _gst_plugin_initialize() {
