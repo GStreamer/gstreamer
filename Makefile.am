@@ -1,3 +1,3 @@
-SUBDIRS=sys
+SUBDIRS=sys ext
 
-DIST_SUBDIRS=sys
+DIST_SUBDIRS=sys ext

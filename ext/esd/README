@@ -1,0 +1,12 @@
+The esdsink plugin
+==================
+
+The esdsink plugin is for outputting an audio atream to an esd soundserver, whether local or on a remote machine 
+
+esdsink has 2 arguments that it accepts:
+ - 'mute'      (boolean value)
+ - 'depth'     (sample depth in bits- defaults to 16)
+ - 'host'      (used only if you want to connect to a remote esd soundserver)
+ - 'frequency' (integer value in Hz)
+ - 'channels'  (number of channels - 2 for stereo)
+

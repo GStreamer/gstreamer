@@ -152,6 +152,21 @@ automake -a -c || {
 
 CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
 
+# if enable exists, add an -enable option for each of the lines in that file
+if test -f enable; then
+  for a in `cat enable`; do
+    CONFIGURE_OPT="$CONFIGURE_OPT --enable-$a"
+  done
+fi
+
+# if disable exists, add an -disable option for each of the lines in that file
+if test -f disable; then
+  for a in `cat disable`; do
+    CONFIGURE_OPT="$CONFIGURE_OPT --disable-$a"
+  done
+fi
+
+
 echo "+ running configure ... "
 echo "./configure default flags: $CONFIGURE_OPT"
 echo "using: $CONFIGURE_OPT $@"
