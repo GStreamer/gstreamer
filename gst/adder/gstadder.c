@@ -685,10 +685,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
                                    &adder_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
-  if (! gst_library_load ("gstbytestream")) {
-    gst_info ("gstadder: could not load support library: 'gstbytestream'\n");
+  if (! gst_library_load ("gstbytestream"))
     return FALSE;
-  }
     
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_adder_src_template_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_adder_sink_template_factory));

@@ -334,10 +334,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   /* load support library */
   if (!gst_library_load ("gstresample"))
-  {
-    gst_info ("audioscale: could not load support library: 'gstresample'\n");
     return FALSE;
-  }
 
   return TRUE;
 }
