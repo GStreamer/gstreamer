@@ -764,7 +764,7 @@ gst_fakesrc_change_state (GstElement *element)
     case GST_STATE_READY_TO_NULL:
       break;
     default:
-      g_asset_not_reached ();
+      g_assert_not_reached ();
       break;
   }
 
