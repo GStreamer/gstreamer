@@ -20,7 +20,7 @@
 
 /*
  * This file was (probably) generated from gstvideobalance.c,
- * $Id$
+ * gstvideobalance.c,v 1.7 2003/11/08 02:48:59 dschleef Exp 
  */
 
 #ifdef HAVE_CONFIG_H
