@@ -48,7 +48,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   VERSION,
   "GPL",
-  "(c) 2003 Martin Soto <martinsoto@users.sourceforge.net>",
   GST_PACKAGE,
   GST_ORIGIN
 )

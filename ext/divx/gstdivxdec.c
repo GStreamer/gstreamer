@@ -479,7 +479,6 @@ GST_PLUGIN_DEFINE (
   plugin_init,
   "5.03",
   GST_LICENSE_UNKNOWN,
-  "(c) 2002 DivX Networks",
   "divx4linux",
   "http://www.divx.com/"
 )
