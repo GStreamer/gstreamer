@@ -1,3 +1,16 @@
+2004-07-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (create_group),
+	(add_to_group), (merge_groups), (schedule_group),
+	(gst_opt_scheduler_get_wrapper), (group_elements),
+	(group_dec_link), (gst_opt_scheduler_pad_link),
+	(group_migrate_connected), (gst_opt_scheduler_pad_unlink),
+	(gst_opt_scheduler_iterate):
+	move isolated groups to a new chain.
+	Emit a warning instead of segfaulting in some error cases.
+	Fix a bug where the link count between groups was not calculated 
+	correctly. Fixes #144510.
+
 2004-07-13  Steve Lhomme  <steve.lhomme@free.fr>
 	* gst/elements/gstfilesrc.c:
 	  Binary files support under Windows now OK
