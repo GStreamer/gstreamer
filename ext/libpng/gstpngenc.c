@@ -158,7 +158,7 @@ gst_pngenc_class_init (GstPngEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_NEWMEDIA,
       g_param_spec_boolean ("newmedia", "newmedia",
           "Send new media discontinuity after encoding each frame",
-          DEFAULT_SNAPSHOT, (GParamFlags) G_PARAM_READWRITE));
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->get_property = gst_pngenc_get_property;
   gstelement_class->set_property = gst_pngenc_set_property;
