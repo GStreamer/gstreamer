@@ -1,3 +1,17 @@
+2004-03-24  David Schleef  <ds@schleef.org>
+
+	* sys/oss/gstosselement.c: (gst_osselement_sync_parms),
+	(gst_osselement_close_audio), (gst_osselement_probe_caps),
+	(gst_osselement_get_format_structure),
+	(gst_osselement_rate_probe_check), (gst_osselement_rate_add_range),
+	(gst_osselement_rate_check_rate), (gst_osselement_rate_add_rate),
+	(gst_osselement_rate_int_compare): Add code to handle rate probing
+	(bug #120883)
+	* sys/oss/gstosselement.h: same
+	* sys/oss/gstosssink.c: (gst_osssink_init), (gst_osssink_getcaps):
+	Use rate probing provided by osselement.
+	* sys/oss/gstosssrc.c: (gst_osssrc_init), (gst_osssrc_getcaps): same
+
 2004-03-24  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/xvid/gstxvidenc.c: (gst_xvidenc_set_property),
