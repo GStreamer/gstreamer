@@ -1162,9 +1162,12 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gsttags"))
     return FALSE;
 
+  /* We register id3tag with a rank one less than mad so that mad always
+     gets picked before id3tag if possible.  This avoids multiple plugging
+     of id3tag in the autoplugger for now. */
   if (!gst_element_register (plugin, "mad", GST_RANK_PRIMARY,
           gst_mad_get_type ())
-      || !gst_element_register (plugin, "id3tag", GST_RANK_PRIMARY,
+      || !gst_element_register (plugin, "id3tag", GST_RANK_PRIMARY - 1,
           gst_id3_tag_get_type ()))
     return FALSE;
 
