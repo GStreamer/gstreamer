@@ -285,6 +285,7 @@ gst_wavenc_chain (GstPad *pad,
 
         outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
         memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
+        GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
 	gst_pad_push (wavenc->srcpad, outbuf);
         wavenc->flush_header = FALSE;

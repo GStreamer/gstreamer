@@ -21,6 +21,10 @@
 
 #include <string.h>
 
+#ifdef __MMX__
+#include <mmx.h>
+#endif
+
 #define GST_TYPE_VIDEO_CROP \
   (gst_video_crop_get_type())
 #define GST_VIDEO_CROP(obj) \
@@ -281,17 +285,22 @@ gst_video_crop_i420 (GstVideoCrop *video_crop, GstBuffer *src_buffer, GstBuffer 
   guint8 *srcY, *srcU, *srcV;
   guint8 *destY, *destU, *destV;
   gint width = video_crop->crop_width;
+  gint crop_height = video_crop->crop_height;
   gint src_stride = video_crop->width;
   gint frame_size = video_crop->width * video_crop->height;
-  gint crop_height;
   gint j;
 
   srcY = GST_BUFFER_DATA (src_buffer) + (src_stride * video_crop->crop_y + video_crop->crop_x);
   destY = GST_BUFFER_DATA (dest_buffer);
 
-  crop_height = video_crop->crop_height;
-
   /* copy Y plane first */
+
+  for (j = crop_height; j; j--) {
+    memcpy (destY, srcY, width);
+    srcY += src_stride;
+    destY += width;
+  }
+
   for (j = crop_height; j; j--) {
     memcpy (destY, srcY, width);
     srcY += src_stride;
