@@ -5,14 +5,14 @@ INCLUDES = -I$(top_srcdir)/gst				\
 	-DGNOMELOCALEDIR=\""$(datadir)/locale"\" 	\
 	-DDATADIR=\""$(datadir)"\"			\
 	-I$(includedir)				 	\
-	$(BONOBOX_TEST_CFLAGS)
+	$(BONOBOX_TEST_CFLAGS) -Wall -O2
 
 bin_PROGRAMS = bonobo-gstmediaplay
 
 bonobo_gstmediaplay_SOURCES = 	\
 	bonobo-gstmediaplay.c
 
-bonobo_gstmediaplay_CFLAGS =		\
+bonobo_gstmediaplay_CFLAGS = -Wall -O2		\
 	$(shell gnome-config --cflags gnomeui bonobo bonobox)  $(shell libglade-config --cflags gnome) \
 	$(shell gstreamer-config --clfags )
 
