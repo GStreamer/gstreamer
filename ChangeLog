@@ -1,3 +1,12 @@
+2005-01-14  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* ext/dv/gstdvdec.c:
+	* gst/subparse/gstsubparse.c: (parse_mdvdsub):
+	* gst/y4m/gsty4mencode.c: (gst_y4mencode_sinkconnect):
+	  I'm a bad boy. using /1001. to force C to do float division
+	  and not integer division (as it did in my last commit)
+	  Thanks to David I. Lehn for pointing this mistake.
+
 2005-01-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l/gstv4lelement.c: (gst_v4l_iface_supported):
