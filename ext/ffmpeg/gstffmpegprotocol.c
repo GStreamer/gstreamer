@@ -27,7 +27,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/bytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 
 typedef struct _GstProtocolInfo GstProtocolInfo;
