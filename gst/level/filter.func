@@ -29,6 +29,7 @@ gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
 
   for (j = 0; j < num; j += channels)
   {
+    //g_print ("ch %d -> smp %d\n", j, in[j]);
     square = (double) (in[j] * in[j]);
     if (square > PSS) PSS = square;
     squaresum += square;
