@@ -470,8 +470,6 @@ merge_chains (GstOptSchedulerChain *chain1, GstOptSchedulerChain *chain2)
   }
   chain2 = unref_chain (chain2);
 
-  g_assert (chain2 == NULL);
-
   return chain1;
 }
 
