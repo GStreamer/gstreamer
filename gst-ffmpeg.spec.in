@@ -13,9 +13,9 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %define 	majorminor	@GST_MAJORMINOR@
 
 Prereq:		%{_bindir}/gst-register-%{majorminor}
-Requires: 	gstreamer >= 0.7.4
-Requires:	gstreamer-tools >= 0.7.4
-BuildRequires: 	gstreamer-devel >= 0.7.4
+Requires: 	gstreamer >= 0.7.5
+Requires:	gstreamer-tools >= 0.7.5
+BuildRequires: 	gstreamer-devel >= 0.7.5
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which

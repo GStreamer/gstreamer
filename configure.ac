@@ -12,9 +12,12 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 7, 0, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 7, 1, 0, GST_CVS="no", GST_CVS="yes")
 dnl we cheat here so we don't have to change the actual configure code bit
 GST_PLUGINS_VERSION_NANO=$GST_FFMPEG_VERSION_NANO
+
+dnl required GStreamer version
+GST_REQ=0.7.5
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
@@ -58,7 +61,7 @@ AC_HEADER_STDC([])
 
 
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
-PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_FFMPEG_VERSION_MAJOR.$GST_FFMPEG_VERSION_MINOR.$GST_FFMPEG_VERSION_MICRO,
+PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST="yes", HAVE_GST="no")
                                                                                 
 if test "x$HAVE_GST" = "xno"; then
