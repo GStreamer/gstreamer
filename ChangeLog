@@ -1,3 +1,8 @@
+2004-04-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_getcaps):
+          revert previous patch
+
 2004-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_getcaps):
