@@ -232,6 +232,7 @@ endif
 
 clean-local:
 	rm -f *~ *.bak
+	rm -rf xml html
 	rm -rf .libs
 
 maintainer-clean-local: clean
