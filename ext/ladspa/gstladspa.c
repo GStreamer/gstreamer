@@ -429,10 +429,11 @@ gst_ladspa_init (GstLADSPA *ladspa)
     }
   }
 
-  ladspa->samplerate = 0;
+  /* nonzero default needed to instantiate() some plugins */
+  ladspa->samplerate = 44100;
+
   ladspa->buffersize = 64;
   ladspa->numbuffers = 16;
-  ladspa->newcaps = FALSE;
   ladspa->activated = FALSE;
   ladspa->bufpool = NULL;
   ladspa->inplace_broken = LADSPA_IS_INPLACE_BROKEN(ladspa->descriptor->Properties);
@@ -441,13 +442,8 @@ gst_ladspa_init (GstLADSPA *ladspa)
     /* get mode (no sink pads) */
     GST_DEBUG (0, "mono get mode with 1 src pad");
 
-    ladspa->newcaps = TRUE;
-    ladspa->samplerate = 44100;
-    ladspa->buffersize = 64;
-
     gst_pad_set_connect_function (ladspa->srcpads[0], gst_ladspa_connect_get);
     gst_pad_set_get_function (ladspa->srcpads[0], gst_ladspa_get);
-
   } else if (sinkcount==1){
     /* with one sink we can use the chain function */
     GST_DEBUG (0, "chain mode");
@@ -471,7 +467,7 @@ gst_ladspa_init (GstLADSPA *ladspa)
     g_warning("%d sink pads, %d src pads not yet supported", sinkcount, srccount);
   }
 
-  gst_ladspa_instantiate(ladspa);
+  gst_ladspa_instantiate (ladspa);
 }
 
 static void
@@ -569,6 +565,7 @@ gst_ladspa_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_SAMPLERATE:
       ladspa->samplerate = g_value_get_int (value);
       ladspa->newcaps=TRUE;
+      gst_ladspa_instantiate (ladspa);
       break;
     case ARG_BUFFERSIZE:
       ladspa->buffersize = g_value_get_int (value);
