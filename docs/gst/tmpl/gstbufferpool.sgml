@@ -69,10 +69,11 @@ is typically used when a plugin wants to write into a memory area provided by an
 
 </para>
 
-@lock: 
-@buffer_free: 
+@data: 
+@active: 
+@buffer_new: 
 @buffer_copy: 
-@destroy_hook: 
+@buffer_free: 
 @user_data: 
 
 <!-- ##### USER_FUNCTION GstBufferPoolBufferNewFunction ##### -->
@@ -81,36 +82,12 @@ The function will be called when a buffer must be allocated from the pool.
 </para>
 
 @pool: The pool allocating the buffer
-@location: the location (offset) of the buffer to allocate
+@offset: 
 @size: The size of the allocated buffer
 @user_data: user data as set on the bufferpool
 @Returns: A new buffer with the given parameters.
-
-
-<!-- ##### USER_FUNCTION GstBufferPoolDestroyHook ##### -->
-<para>
-Will be called when the bufferpool is destroyed so that the owner of the pool
-can perform necessary cleanup.
-</para>
-
-@pool: The pool that is being destroyed
-@user_data: user data as set on th bufferpool
-
-
-<!-- ##### MACRO GST_BUFFER_POOL_UNLOCK ##### -->
-<para>
-Lock the given bufferpool.
-</para>
-
-@pool: The pool to lock.
-
-
-<!-- ##### MACRO GST_BUFFER_POOL_LOCK ##### -->
-<para>
-Unlock the given bufferpool.
-</para>
-
-@pool: the bufferpool to unlock.
+<!-- # Unused Parameters # -->
+@location: the location (offset) of the buffer to allocate
 
 
 <!-- ##### FUNCTION gst_buffer_pool_new ##### -->
@@ -118,42 +95,46 @@ Unlock the given bufferpool.
 
 </para>
 
+@free: 
+@copy: 
+@buffer_create: 
+@buffer_copy: 
+@buffer_free: 
+@user_data: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_buffer_pool_ref ##### -->
+<!-- ##### MACRO gst_buffer_pool_ref ##### -->
 <para>
 
 </para>
 
+@buf: 
+<!-- # Unused Parameters # -->
 @pool: 
 
 
-<!-- ##### FUNCTION gst_buffer_pool_ref_by_count ##### -->
+<!-- ##### MACRO gst_buffer_pool_ref_by_count ##### -->
 <para>
 
 </para>
 
+@buf: 
+@c: 
+<!-- # Unused Parameters # -->
 @pool: 
 @count: 
 
 
-<!-- ##### FUNCTION gst_buffer_pool_unref ##### -->
+<!-- ##### MACRO gst_buffer_pool_unref ##### -->
 <para>
 
 </para>
 
-@pool: 
+@buf: 
 <!-- # Unused Parameters # -->
-@buffer: 
-
-
-<!-- ##### FUNCTION gst_buffer_pool_destroy ##### -->
-<para>
-
-</para>
-
 @pool: 
+@buffer: 
 
 
 <!-- ##### FUNCTION gst_buffer_pool_get_default ##### -->
@@ -161,10 +142,12 @@ Unlock the given bufferpool.
 
 </para>
 
-@buffer_size: 
-@pool_size: 
+@size: 
+@numbuffers: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@buffer_size: 
+@pool_size: 
 @oldpool: 
 
 
@@ -186,41 +169,5 @@ Unlock the given bufferpool.
 @Returns: 
 <!-- # Unused Parameters # -->
 @user_data: 
-
-
-<!-- ##### FUNCTION gst_buffer_pool_set_buffer_copy_function ##### -->
-<para>
-
-</para>
-
-@pool: 
-@copy: 
-
-
-<!-- ##### FUNCTION gst_buffer_pool_set_buffer_free_function ##### -->
-<para>
-
-</para>
-
-@pool: 
-@destroy: 
-
-
-<!-- ##### FUNCTION gst_buffer_pool_set_buffer_new_function ##### -->
-<para>
-
-</para>
-
-@pool: 
-@create: 
-
-
-<!-- ##### FUNCTION gst_buffer_pool_set_destroy_hook ##### -->
-<para>
-
-</para>
-
-@pool: 
-@destroy: 
 
 

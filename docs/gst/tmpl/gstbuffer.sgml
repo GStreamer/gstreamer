@@ -166,48 +166,6 @@ Gets the bufferpool private data.
 @buf: a #GstBuffer to get bufferpool's private data of
 
 
-<!-- ##### MACRO GST_BUFFER_LOCK ##### -->
-<para>
-Obtains a lock on the object, making serialization possible.
-</para>
-
-@buf: a #GstBuffer to lock
-
-
-<!-- ##### MACRO GST_BUFFER_TRYLOCK ##### -->
-<para>
-Tries to obtain a lock on the buffer.
-If it can't get immediately, will return FALSE.
-</para>
-
-@buf: a #GstBuffer to try to lock
-
-
-<!-- ##### MACRO GST_BUFFER_UNLOCK ##### -->
-<para>
-Releases a lock on the buffer.
-
-</para>
-
-@buf: a #GstBuffer to unlock
-
-
-<!-- ##### MACRO GST_BUFFER_PARENT ##### -->
-<para>
-Gets the parent of this buffer. The parent is set on sub-buffers.
-</para>
-
-@buf: a #GstBuffer to get parent of
-
-
-<!-- ##### MACRO GST_BUFFER_MAXAGE ##### -->
-<para>
-Gets the maximum age of a buffer.
-</para>
-
-@buf: a #GstBuffer to get maximum age of
-
-
 <!-- ##### MACRO GST_BUFFER_COPY_FUNC ##### -->
 <para>
 Calls the buffer-specific copy function on the given buffer.
@@ -224,55 +182,19 @@ Calls the buffer-specific free function on the given buffer.
 @buf: a #GstBuffer to free
 
 
-<!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
-<para>
-This supplied function is used to copy the buffer contents.
-</para>
-
-@srcbuf: a #GstBuffer to copy from
-@Returns: a newly allocated #GstBuffer copy of srcbuf
-
-
-<!-- ##### USER_FUNCTION GstBufferFreeFunc ##### -->
-<para>
-This supplied function is called when the buffer data has to be freed.
-</para>
-
-@buf: a #GstBuffer to clear the buffer data of
-
-
-<!-- ##### ENUM GstBufferFlag ##### -->
-<para>
-This enumeration type describes the flags that can be used for a buffer.
-</para>
-
-@GST_BUFFER_READONLY: buffer is read-only
-@GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer
-@GST_BUFFER_DONTFREE: do not try to free the data when this buffer is unreferenced
-@GST_BUFFER_DISCONTINOUS: This buffer is the first one after a discontinuity in the stream
-@GST_BUFFER_KEY_UNIT: This buffer holds a key unit, a unit that can be decoded independently
-                      of other buffers
-@GST_BUFFER_PREROLL: This buffer should be decoded but not rendered, it is mainly used
-                     to resynchronise the stream
-
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>
 
 </para>
 
 @data_type: 
-@lock: 
 @data: 
 @size: 
 @maxsize: 
-@offset: 
 @timestamp: 
-@maxage: 
-@parent: 
+@offset: 
 @pool: 
 @pool_private: 
-@free: 
-@copy: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>
@@ -295,7 +217,7 @@ This enumeration type describes the flags that can be used for a buffer.
 @location: 
 
 
-<!-- ##### FUNCTION gst_buffer_copy ##### -->
+<!-- ##### MACRO gst_buffer_copy ##### -->
 <para>
 
 </para>
@@ -315,49 +237,35 @@ This enumeration type describes the flags that can be used for a buffer.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_buffer_append ##### -->
+<!-- ##### MACRO gst_buffer_ref ##### -->
 <para>
 
 </para>
 
-@buffer: 
-@append: 
-@Returns: 
-<!-- # Unused Parameters # -->
 @buf: 
-@buf2: 
-
-
-<!-- ##### FUNCTION gst_buffer_ref ##### -->
-<para>
-
-</para>
-
+<!-- # Unused Parameters # -->
 @buffer: 
 
 
-<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
+<!-- ##### MACRO gst_buffer_ref_by_count ##### -->
 <para>
 
 </para>
 
+@buf: 
+@c: 
+<!-- # Unused Parameters # -->
 @buffer: 
 @count: 
 
 
-<!-- ##### FUNCTION gst_buffer_unref ##### -->
+<!-- ##### MACRO gst_buffer_unref ##### -->
 <para>
 
 </para>
 
-@buffer: 
-
-
-<!-- ##### FUNCTION gst_buffer_destroy ##### -->
-<para>
-
-</para>
-
+@buf: 
+<!-- # Unused Parameters # -->
 @buffer: 
 
 

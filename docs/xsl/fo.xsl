@@ -7,7 +7,7 @@
 <!-- This file is for customizing the default XSL stylesheets. -->
 <!-- We include them here (this one is for print output):      -->
 <xsl:import
- href="http://docbook.sourceforge.net/release/xsl/current/fo/docbook.xsl"/>
+ href="http://docbook.sourceforge.net/release/xsl/1.49/fo/docbook.xsl"/>
 
 <!-- .. and customize them here:                               -->
 <xsl:include href="ulink.xsl"/>

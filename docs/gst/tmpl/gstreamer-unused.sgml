@@ -467,8 +467,7 @@ GstIdentity
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Long_Description ##### -->
 <para>
-MD5 Sink can be used to automate regression tests on media pipelines by
-computing a hash on the resulting buffers.
+
 </para>
 
 
@@ -479,7 +478,7 @@ computing a hash on the resulting buffers.
 
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Short_Description ##### -->
-Compute a hash on buffer data.
+
 
 
 <!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Title ##### -->
@@ -1031,6 +1030,27 @@ g_print messages.
 
 @klass: 
 
+<!-- ##### MACRO GST_BUFFER_LOCK ##### -->
+<para>
+Obtains a lock on the object, making serialization possible.
+</para>
+
+@buf: a #GstBuffer to lock
+
+<!-- ##### MACRO GST_BUFFER_MAXAGE ##### -->
+<para>
+Gets the maximum age of a buffer.
+</para>
+
+@buf: a #GstBuffer to get maximum age of
+
+<!-- ##### MACRO GST_BUFFER_PARENT ##### -->
+<para>
+Gets the parent of this buffer. The parent is set on sub-buffers.
+</para>
+
+@buf: a #GstBuffer to get parent of
+
 <!-- ##### MACRO GST_BUFFER_POOL ##### -->
 <para>
 
@@ -1038,12 +1058,42 @@ g_print messages.
 
 @buf: 
 
+<!-- ##### MACRO GST_BUFFER_POOL_LOCK ##### -->
+<para>
+Unlock the given bufferpool.
+</para>
+
+@pool: the bufferpool to unlock.
+
+<!-- ##### MACRO GST_BUFFER_POOL_UNLOCK ##### -->
+<para>
+Lock the given bufferpool.
+</para>
+
+@pool: The pool to lock.
+
+<!-- ##### MACRO GST_BUFFER_TRYLOCK ##### -->
+<para>
+Tries to obtain a lock on the buffer.
+If it can't get immediately, will return FALSE.
+</para>
+
+@buf: a #GstBuffer to try to lock
+
 <!-- ##### MACRO GST_BUFFER_TYPE ##### -->
 <para>
 Retrieves the type id of the data in the buffer.
 </para>
 
 @buf: GstBuffer
+
+<!-- ##### MACRO GST_BUFFER_UNLOCK ##### -->
+<para>
+Releases a lock on the buffer.
+
+</para>
+
+@buf: a #GstBuffer to unlock
 
 <!-- ##### MACRO GST_CAPS_LOCK ##### -->
 <para>
@@ -2964,6 +3014,35 @@ The frequency.
 </para>
 
 
+<!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
+<para>
+This supplied function is used to copy the buffer contents.
+</para>
+
+@srcbuf: a #GstBuffer to copy from
+@Returns: a newly allocated #GstBuffer copy of srcbuf
+
+<!-- ##### ENUM GstBufferFlag ##### -->
+<para>
+This enumeration type describes the flags that can be used for a buffer.
+</para>
+
+@GST_BUFFER_READONLY: buffer is read-only
+@GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer
+@GST_BUFFER_DONTFREE: do not try to free the data when this buffer is unreferenced
+@GST_BUFFER_DISCONTINOUS: This buffer is the first one after a discontinuity in the stream
+@GST_BUFFER_KEY_UNIT: This buffer holds a key unit, a unit that can be decoded independently
+                      of other buffers
+@GST_BUFFER_PREROLL: This buffer should be decoded but not rendered, it is mainly used
+                     to resynchronise the stream
+
+<!-- ##### USER_FUNCTION GstBufferFreeFunc ##### -->
+<para>
+This supplied function is called when the buffer data has to be freed.
+</para>
+
+@buf: a #GstBuffer to clear the buffer data of
+
 <!-- ##### USER_FUNCTION GstBufferPoolCreateFunction ##### -->
 <para>
 The function called when a buffer has to be created for this pool.
@@ -2982,6 +3061,15 @@ the pool.
 @pool: the pool to return the buffer to
 @buffer: the buffer to return
 @user_data: any user data
+
+<!-- ##### USER_FUNCTION GstBufferPoolDestroyHook ##### -->
+<para>
+Will be called when the bufferpool is destroyed so that the owner of the pool
+can perform necessary cleanup.
+</para>
+
+@pool: The pool that is being destroyed
+@user_data: user data as set on th bufferpool
 
 <!-- ##### ENUM GstCapsDefinition ##### -->
 <para>
@@ -3597,6 +3685,15 @@ Indicates this pad is active
 
 <<<<<<< gstreamer-unused.sgml
 
+
+<!-- ##### USER_FUNCTION GstPadDispatcherFunc ##### -->
+<para>
+The signature of the dispatcher callback.
+</para>
+
+@pad: The pad that is being dispatched
+@data: user data
+@Returns: TRUE if no further pads need to be processed
 
 <!-- ##### USER_FUNCTION GstPadEOSFunction ##### -->
 <para>
@@ -5234,6 +5331,24 @@ must be defined to activate the tracing functionality.
 @buffer: 
 @meta: 
 
+<!-- ##### FUNCTION gst_buffer_append ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@append: 
+@Returns: 
+@buf: 
+@buf2: 
+
+<!-- ##### FUNCTION gst_buffer_destroy ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
 <!-- ##### FUNCTION gst_buffer_get_first_meta ##### -->
 <para>
 
@@ -5250,6 +5365,13 @@ must be defined to activate the tracing functionality.
 @buffer: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_buffer_pool_destroy ##### -->
+<para>
+
+</para>
+
+@pool: 
+
 <!-- ##### FUNCTION gst_buffer_pool_destroy_buffer ##### -->
 <para>
 
@@ -5265,6 +5387,30 @@ must be defined to activate the tracing functionality.
 
 @pool: 
 @Returns: 
+
+<!-- ##### FUNCTION gst_buffer_pool_set_buffer_copy_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@copy: 
+
+<!-- ##### FUNCTION gst_buffer_pool_set_buffer_free_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@destroy: 
+
+<!-- ##### FUNCTION gst_buffer_pool_set_buffer_new_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@create: 
 
 <!-- ##### FUNCTION gst_buffer_pool_set_create_function ##### -->
 <para>
@@ -5283,6 +5429,14 @@ must be defined to activate the tracing functionality.
 @pool: 
 @destroy: 
 @user_data: 
+
+<!-- ##### FUNCTION gst_buffer_pool_set_destroy_hook ##### -->
+<para>
+
+</para>
+
+@pool: 
+@destroy: 
 
 <!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
 <para>
@@ -5706,6 +5860,13 @@ must be defined to activate the tracing functionality.
 </para>
 
 @esdsink: 
+
+<!-- ##### FUNCTION gst_event_free ##### -->
+<para>
+
+</para>
+
+@event: 
 
 <!-- ##### FUNCTION gst_event_new_info ##### -->
 <para>

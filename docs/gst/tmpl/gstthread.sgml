@@ -43,3 +43,20 @@ Thread flags:
 @Returns: 
 
 
+<!-- ##### SIGNAL GstThread::shutdown ##### -->
+<para>
+
+</para>
+
+@gstthread: the object which received the signal.
+
+<!-- ##### ARG GstThread:schedpolicy ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstThread:priority ##### -->
+<para>
+
+</para>
+

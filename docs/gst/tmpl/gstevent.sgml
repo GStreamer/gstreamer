@@ -41,6 +41,7 @@ The different major types of events.
 @GST_EVENT_QOS: a quality of service event
 @GST_EVENT_SEEK: a seek event.
 @GST_EVENT_FILLER: a dummy element that should be ignored by plugins
+@GST_EVENT_SIZE: 
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>
@@ -223,20 +224,14 @@ The event data structure.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_event_copy ##### -->
+<!-- ##### MACRO gst_event_copy ##### -->
 <para>
 
 </para>
 
-@event: 
+@ev: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_event_free ##### -->
-<para>
-
-</para>
-
+<!-- # Unused Parameters # -->
 @event: 
 
 

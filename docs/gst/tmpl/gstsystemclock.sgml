@@ -4,7 +4,6 @@ GstSystemClock
 <!-- ##### SECTION Short_Description ##### -->
 A default clock that uses the current system time
 
-
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 The System clock is an implementation of GstClock using the

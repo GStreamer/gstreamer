@@ -45,8 +45,8 @@ $(DOC).fo: $(XML) $(PDFS) $(XSLFO) $(XSLFOMODS)
 	mv -f $@-t $@
 
 $(DOC).pdf: $(DOC).fo
-	pdfxmltex $<
-	pdfxmltex $<
+	pdfxmltex $< || true
+	pdfxmltex $< || true
 
 $(DOC).ps: $(DOC).pdf
 	pdftops $< $@
@@ -93,6 +93,6 @@ $(DOC).tar.gz: distclean
 
 # Make pdf from xfig
 %.pdf: %.fig
-	fig2dev -Lpdf $< $@
+	fig2dev -Lpdf $< images/$@
 
 .PHONY: distclean clean all builddate

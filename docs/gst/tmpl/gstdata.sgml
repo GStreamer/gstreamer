@@ -21,4 +21,8 @@ The base structure
 </para>
 
 @type: The type of this data.
+@refcount: 
+@flags: 
+@free: 
+@copy: 
 
