@@ -22,8 +22,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <string.h>
 #include <gstwavenc.h>
+#include <riff.h>
 
 static void 	gst_wavenc_class_init 	(GstWavEncClass *klass);
 static void 	gst_wavenc_init 	(GstWavEnc *wavenc);
@@ -111,6 +113,11 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
   )
 )
 
+enum {
+	PROP_0,
+	PROP_METADATA
+};
+
 static GstElementClass *parent_class = NULL;
 
 static GType
@@ -159,14 +166,45 @@ gst_wavenc_change_state (GstElement *element)
 }
 
 static void
+set_property (GObject *object,
+							guint prop_id,
+							const GValue *value,
+							GParamSpec *pspec)
+{
+	GstWavEnc *enc;
+
+	enc = GST_WAVENC (object);
+	
+	switch (prop_id) {
+	case PROP_METADATA:
+		enc->metadata = g_value_get_boxed (value);
+		break;
+
+	default:
+		break;
+	}
+}
+
+static void
 gst_wavenc_class_init (GstWavEncClass *klass)
 {
   GstElementClass *element_class;
-
+	GObjectClass *object_class;
+	
   element_class = (GstElementClass *) klass;
+	object_class = (GObjectClass *) klass;
+
+	object_class->set_property = set_property;
+	
   element_class->change_state = gst_wavenc_change_state;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+	g_object_class_install_property (object_class,
+																	 PROP_METADATA,
+																	 g_param_spec_boxed ("metadata", "", "",
+																											 GST_TYPE_CAPS,
+																											 G_PARAM_WRITABLE));
 }
 
 static gboolean
@@ -216,7 +254,7 @@ gst_wavenc_setup (GstWavEnc *wavenc)
 
 static GstPadLinkReturn
 gst_wavenc_sinkconnect (GstPad *pad,
-			GstCaps *caps)
+												GstCaps *caps)
 {
   GstWavEnc *wavenc;
 
@@ -244,9 +282,9 @@ gst_wavenc_stop_file (GstWavEnc *wavenc)
 {
   GstEvent *event;
   GstBuffer *outbuf;
-
+	
   event = gst_event_new_seek (GST_FORMAT_BYTES |
-			      GST_SEEK_METHOD_SET, 0);
+															GST_SEEK_METHOD_SET, 0);
   gst_pad_send_event (GST_PAD_PEER (wavenc->srcpad), event);
   
   outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
@@ -269,13 +307,290 @@ gst_wavenc_init (GstWavEnc *wavenc)
 
   wavenc->setup = FALSE;
   wavenc->flush_header = TRUE;
-
+	wavenc->metadata = NULL;
+	
 	GST_FLAG_SET (wavenc, GST_ELEMENT_EVENT_AWARE);
+}
+
+struct _maps {
+	guint32 id;
+	char *name;
+} maps[] = {
+	{ GST_RIFF_INFO_IARL, "Location" },
+	{ GST_RIFF_INFO_IART, "Artist" },
+	{ GST_RIFF_INFO_ICMS, "Commissioner" },
+	{ GST_RIFF_INFO_ICMT, "Comment" },
+	{ GST_RIFF_INFO_ICOP, "Copyright" },
+	{ GST_RIFF_INFO_ICRD, "Creation Date" },
+	{ GST_RIFF_INFO_IENG, "Engineer" },
+	{ GST_RIFF_INFO_IGNR, "Genre" },
+	{ GST_RIFF_INFO_IKEY, "Keywords" },
+	{ GST_RIFF_INFO_INAM, "Title" }, /* Name */
+	{ GST_RIFF_INFO_IPRD, "Product" },
+	{ GST_RIFF_INFO_ISBJ, "Subject" },
+	{ GST_RIFF_INFO_ISFT, "Software" },
+	{ GST_RIFF_INFO_ITCH, "Technician" },
+	{ 0, NULL }
+};
+
+static guint32
+get_id_from_name (const char *name)
+{
+	int i;
+
+	for (i = 0; maps[i].name; i++) {
+		if (strcasecmp (maps[i].name, name) == 0) {
+			return maps[i].id;
+		}
+	}
+
+	return 0;
+}
+
+static void
+write_metadata (GstWavEnc *wavenc)
+{
+	GString *info_str;
+	GList *props;
+	int total = 4;
+	gboolean need_to_write = FALSE;
+	
+	info_str = g_string_new ("LIST    INFO");
+
+	for (props = wavenc->metadata->properties->properties; props; props = props->next) {
+		GstPropsEntry *entry = props->data;
+		const char *name;
+		guint32 id;
+
+		name = gst_props_entry_get_name (entry);
+		id = get_id_from_name (name);
+		if (id != 0) {
+			const char *text;
+			char *tmp;
+			int len, req, i;
+
+			need_to_write = TRUE; /* We've got at least one entry */
+			
+			gst_props_entry_get_string (entry, &text);
+			len = strlen (text) + 1; /* The length in the file includes the \0 */
+
+			tmp = g_strdup_printf (GST_FOURCC_FORMAT "%d%s", GST_FOURCC_ARGS (id),
+														 GUINT32_TO_LE (len), text); 
+			g_string_append (info_str, tmp);
+			g_free (tmp);
+
+			/* Check that we end on an even boundary */
+			req = ((len + 8) + 1) & ~1;
+			for (i = 0; i < req - len; i++) {
+				g_string_append_printf (info_str, "%c", 0);
+			}
+
+			total += req;
+		}
+	}
+
+	if (need_to_write) {
+		GstBuffer *buf;
+		/* Now we've got all the strings together, we can write our length in */
+		info_str->str[4] = GUINT32_TO_LE (total);
+
+		buf = gst_buffer_new ();
+		gst_buffer_set_data (buf, info_str->str, info_str->len);
+
+		gst_pad_push (wavenc->srcpad, GST_DATA (buf));
+		g_string_free (info_str, FALSE);
+	}
+}
+
+static void
+write_cues (GstWavEnc *wavenc)
+{
+	GString *cue_string, *point_string;
+	GstBuffer *buf;
+	GList *cue_list, *c;
+	int num_cues, total = 4;
+
+	if (gst_props_get (wavenc->metadata->properties,
+										 "cues", &cue_list,
+										 NULL) == FALSE) {
+		/* No cues, move along please, nothing to see here */
+		return;
+	}
+
+	/* Space for 'cue ', chunk size and number of cuepoints */
+	cue_string = g_string_new ("cue         ");
+#define CUEPOINT_SIZE 24
+	point_string = g_string_sized_new (CUEPOINT_SIZE);
+	
+	for (c = cue_list, num_cues = 0; c; c = c->next, num_cues++) {
+		GstCaps *cue_caps = c->data;
+		guint32 pos;
+		
+		gst_props_get (cue_caps->properties, "position", &pos, NULL);
+		
+		point_string->str[0] = GUINT32_TO_LE (num_cues + 1);
+		point_string->str[4] = GUINT32_TO_LE (0);
+		/* Fixme: There is probably a macro for this */
+		point_string->str[8] = 'd';
+		point_string->str[9] = 'a';
+		point_string->str[10] = 't';
+		point_string->str[11] = 'a';
+		point_string->str[12] = GUINT32_TO_LE (0);
+		point_string->str[16] = GUINT32_TO_LE (0);
+		point_string->str[20] = GUINT32_TO_LE (pos);
+		
+		total += CUEPOINT_SIZE;
+	}
+
+	/* Set the length and chunk size */
+	cue_string->str[4] = GUINT32_TO_LE (total);
+	cue_string->str[8] = GUINT32_TO_LE (num_cues);
+	/* Stick the cue points on the end */
+	g_string_append (cue_string, point_string->str);
+	g_string_free (point_string, TRUE);
+
+	buf = gst_buffer_new ();
+	gst_buffer_set_data (buf, cue_string->str, cue_string->len);
+
+	gst_pad_push (wavenc->srcpad, GST_DATA (buf));
+	g_string_free (cue_string, FALSE);
+}
+
+static void
+write_labels (GstWavEnc *wavenc)
+{
+	GstBuffer *buf;
+	GString *info_str;
+	int total = 4;
+	GList *caps;
+	
+	info_str = g_string_new ("LIST    adtl");
+	if (gst_props_get (wavenc->metadata->properties, "ltxts", &caps, NULL)) {
+		GList *p;
+		int i;
+
+		for (p = caps, i = 1; p; p = p->next, i++) {
+			GstCaps *ltxt_caps = p->data;
+			GString *ltxt;
+			char *label = NULL;
+			int len, req, j;
+			
+			gst_props_get (ltxt_caps->properties, "name", &label, NULL);
+			len = strlen (label);
+
+#define LTXT_SIZE 28
+			ltxt = g_string_new ("ltxt                        ");
+			ltxt->str[8] = GUINT32_TO_LE (i); /* Identifier */
+			ltxt->str[12] = GUINT32_TO_LE (0); /* Sample Length */
+			ltxt->str[16] = GUINT32_TO_LE (0); /* FIXME: Don't save the purpose yet */
+			ltxt->str[20] = GUINT16_TO_LE (0); /* Country */
+			ltxt->str[22] = GUINT16_TO_LE (0); /* Language */
+			ltxt->str[24] = GUINT16_TO_LE (0); /* Dialect */
+			ltxt->str[26] = GUINT16_TO_LE (0); /* Code Page */
+			g_string_append (ltxt, label);
+			g_free (label);
+
+			len += LTXT_SIZE;
+
+			ltxt->str[4] = GUINT32_TO_LE (len);
+			
+			/* Check that we end on an even boundary */
+			req = ((len + 8) + 1) & ~1;
+			for (j = 0; j < req - len; j++) {
+				g_string_append_printf (ltxt, "%c", 0);
+			}
+
+			total += req;
+
+			g_string_append (info_str, ltxt->str);
+			g_string_free (ltxt, TRUE);
+		}
+	}
+
+	if (gst_props_get (wavenc->metadata->properties, "labels", &caps, NULL)) {
+		GList *p;
+		int i;
+
+		for (p = caps, i = 1; p; p = p->next, i++) {
+			GstCaps *labl_caps = p->data;
+			GString *labl;
+			char *label = NULL;
+			int len, req, j;
+
+			gst_props_get (labl_caps->properties, "name", &label, NULL);
+			len = strlen (label);
+
+#define LABL_SIZE 4
+			labl = g_string_new ("labl        ");
+			labl->str[8] = GUINT32_TO_LE (i);
+			g_string_append (labl, label);
+			g_free (label);
+			
+			len += LABL_SIZE;
+
+			labl->str[4] = GUINT32_TO_LE (len);
+
+			/* Check our size */
+			req = ((len + 8) + 1) & ~1;
+			for (j = 0; j < req - len; j++) {
+				g_string_append_printf (labl, "%c", 0);
+			}
+
+			total += req;
+
+			g_string_append (info_str, labl->str);
+			g_string_free (labl, TRUE);
+		}
+	}
+
+	if (gst_props_get (wavenc->metadata->properties, "notes", &caps, NULL)) {
+		GList *p;
+		int i;
+
+		for (p = caps, i = 1; p; p = p->next, i++) {
+			GstCaps *note_caps = p->data;
+			GString *note;
+			char *label = NULL;
+			int len, req, j;
+
+			gst_props_get (note_caps->properties, "name", &label, NULL);
+			len = strlen (label);
+
+#define NOTE_SIZE 4
+			note = g_string_new ("note        ");
+			note->str[8] = GUINT32_TO_LE (i);
+			g_string_append (note, label);
+			g_free (label);
+
+			len += NOTE_SIZE;
+
+			note->str[4] = GUINT32_TO_LE (len);
+
+			/* Size check */
+			req = ((len + 8) + 1) & ~1;
+			for (j = 0; j < req - len; j++) {
+				g_string_append_printf (note, "%c", 0);
+			}
+
+			total += req;
+
+			g_string_append (info_str, note->str);
+			g_string_free (note, TRUE);
+		}
+	}
+
+	info_str->str[4] = GUINT32_TO_LE (total);
+
+	buf = gst_buffer_new ();
+	gst_buffer_set_data (buf, info_str->str, info_str->len);
+
+	gst_pad_push (wavenc->srcpad, GST_DATA (buf));
+	g_string_free (info_str, FALSE);
 }
 
 static void
 gst_wavenc_chain (GstPad *pad,
-		  GstData *_data)
+									GstData *_data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstWavEnc *wavenc;
@@ -291,6 +606,14 @@ gst_wavenc_chain (GstPad *pad,
 	if (GST_IS_EVENT (buf)) {
 		if (GST_EVENT_TYPE (buf) == GST_EVENT_EOS) {
 			wavenc->pad_eos = TRUE;
+
+			/* Write our metadata if we have any */
+			if (wavenc->metadata) {
+				write_metadata (wavenc);
+				write_cues (wavenc);
+				write_labels (wavenc);
+			}
+			
 			gst_wavenc_stop_file (wavenc);
 			gst_pad_push (wavenc->srcpad,
 										GST_DATA (gst_event_new (GST_EVENT_EOS)));
