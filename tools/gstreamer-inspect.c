@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+#include <string.h>
 
 // this must be built within the gstreamer dir, else this will fail
 #include <gst/gstpropsprivate.h>
@@ -81,8 +82,7 @@ struct _GstPropsEntry {
 };
 */
 
-int main(int argc,char *argv[]) {
-  GstElementFactory *factory;
+gint print_element_info(GstElementFactory *factory) {
   GstElement *element;
   GstElementClass *gstelement_class;
   GList *pads, *caps;
@@ -93,15 +93,11 @@ int main(int argc,char *argv[]) {
   guint32 *flags;
   gint num_args,i;
 
-  gst_init(&argc,&argv);
-
-  factory = gst_elementfactory_find(argv[1]);
-  if (!factory) {
-    g_print ("no elementfactory for element '%s' exists\n", argv[1]);
+  element = gst_elementfactory_create(factory,"element");
+  if (!element) {
+    g_print ("couldn't construct element for some reason\n");
     return -1;
   }
-	  
-  element = gst_elementfactory_create(factory,argv[1]);
   gstelement_class = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
 
   printf("Factory Details:\n");
@@ -268,6 +264,106 @@ int main(int argc,char *argv[]) {
   }
   if (num_args == 0) g_print ("  none");
   printf("\n");
+
+  return 0;
+}
+
+void print_element_list() {
+  GList *plugins, *factories;
+  GstPlugin *plugin;
+  GstElementFactory *factory;
+
+  plugins = gst_plugin_get_list();
+  while (plugins) {
+    plugin = (GstPlugin*)(plugins->data);
+    plugins = g_list_next (plugins);
+
+//    printf("%s:\n",plugin->name);
+
+    factories = gst_plugin_get_factory_list(plugin);
+    while (factories) {
+      factory = (GstElementFactory*)(factories->data);
+      factories = g_list_next (factories);
+
+      printf("%s: %s: %s\n",plugin->name,factory->name,factory->details->longname);
+    }
+
+//    printf("\n");
+  }
+}
+
+
+void print_plugin_info(GstPlugin *plugin) {
+  GList *factories;
+  GstElementFactory *factory;
+
+  printf("Plugin Details:\n");
+  printf("  Name:\t\t%s\n",plugin->name);
+  printf("  Long Name:\t%s\n",plugin->longname);
+  printf("  Filename:\t%s\n",plugin->filename);
+  printf("\n");
+
+  if (plugin->numelements) {
+    printf("Element Factories:\n");
+
+    factories = gst_plugin_get_factory_list(plugin);
+    while (factories) {
+      factory = (GstElementFactory*)(factories->data);
+      factories = g_list_next(factories);
+
+      printf("  %s: %s\n",factory->name,factory->details->longname);
+    }
+  }
+  printf("\n");
+}
+
+
+int main(int argc,char *argv[]) {
+  GstElementFactory *factory;
+  GstPlugin *plugin;
+  gchar *so;
+
+  gst_init(&argc,&argv);
+
+  // if no arguments, print out list of elements
+  if (argc == 1) {
+    print_element_list(); 
+
+  // else we try to get a factory
+  } else {
+    // first check for help
+    if (strstr(argv[1],"-help")) {
+      printf("Usage: %s\t\t\tList all registered elements\n",argv[0]);
+      printf("       %s element-name\tShow element details\n",argv[0]);
+      printf("       %s plugin-name[.so]\tShow information about plugin\n",argv[0]);
+      return 0;
+    }
+
+    // only search for a factory if there's not a '.so'
+    if (! strstr(argv[1],".so")) {
+      factory = gst_elementfactory_find (argv[1]);
+
+      // if there's a factory, print out the info
+      if (factory)
+        return print_element_info(factory);
+    } else {
+      // strip the .so
+      so = strstr(argv[1],".so");
+      so[0] = '\0';
+    }
+
+    // otherwise assume it's a plugin
+    plugin = gst_plugin_find (argv[1]);
+
+    // if there is such a plugin, print out info
+    if (plugin) {
+      print_plugin_info(plugin);
+
+    } else {
+      printf("no such element or plugin '%s'\n",argv[1]);
+      return -1;
+    }
+  }
 
   return 0;
 }

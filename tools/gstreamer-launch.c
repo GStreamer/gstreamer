@@ -144,6 +144,18 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
         else DEBUG("have src pad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
       }
 
+    // argument with = in it
+    } else if (strstr(arg, "=")) {
+      gchar * argname;
+      gchar * argval;
+      gchar * pos = strstr(arg, "=");
+      // we have an argument
+      argname = g_strndup(arg, pos - arg);
+      argval = pos+1;
+      DEBUG("attempting to set argument '%s'\n", arg);
+      gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
+      g_free(argname);
+
     // element or argument, or beginning of bin or thread
     } else {
       DEBUG("have element or bin/thread\n");
@@ -161,18 +173,6 @@ gint parse_cmdline(int argc,char *argv[],GstBin *parent) {
 
         i += parse_cmdline(argc - i, argv + i + 1, GST_BIN (element));
 
-      } else if (strstr(arg, "=")) {
-	gchar * argname;
-	gchar * argval;
-	gchar * pos = strstr(arg, "=");
-        // we have an argument
-	argname = g_strndup(arg, pos - arg);
-	argval = pos+1;
-	DEBUG("attempting to set argument '%s'\n", arg);
-	gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
-	g_free(argname);
-	i++;
-	continue;
       } else {
 	// we have an element
         DEBUG("attempting to create element '%s'\n",arg);
@@ -351,7 +351,8 @@ int main(int argc,char *argv[]) {
 
   VERBOSE("RUNNING pipeline\n");
   gst_element_set_state(pipeline,GST_STATE_PLAYING);
-  for (i=0; i < 1000; i++)
+
+  while(1)
     gst_bin_iterate (GST_BIN (pipeline));
 
   fprintf(stderr,"\n");
