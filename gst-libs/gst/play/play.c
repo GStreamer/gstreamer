@@ -457,6 +457,16 @@ gst_play_state_change (GstElement *element, GstElementState old,
                                    (GSourceFunc) gst_play_get_length_callback,
                                    play);
   }
+  else {
+    if (play->priv->tick_id) {
+      g_source_remove (play->priv->tick_id);
+      play->priv->tick_id = 0;
+    }
+    if (play->priv->length_id) {
+      g_source_remove (play->priv->length_id);
+      play->priv->length_id = 0;
+    }
+  }
     
   if (GST_ELEMENT_CLASS (parent_class)->state_change)
     GST_ELEMENT_CLASS (parent_class)->state_change (element, old, state);

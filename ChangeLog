@@ -1,3 +1,12 @@
+2004-02-15  Julien MOUTTE  <julien@moutte.net>
+
+	* examples/gstplay/player.c: (got_eos), (main): Adding some 
+	output for debugging.
+	* gst-libs/gst/play/play.c: (gst_play_state_change): Stop our
+	timeouts if we go to any state different from PLAYING.
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_seek): Fix some
+	more EOS bugs in riff lib.
+
 2004-02-14  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/play/play.c: (gst_play_connect_visualization): Disable
