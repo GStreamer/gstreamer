@@ -56,13 +56,13 @@ GST_PAD_TEMPLATE_FACTORY (gst_glsink_sink_template_factory,
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_CAPS_NEW ("glsink_rgbsink", "video/x-raw-rgb",
-	"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-	"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-	"height", GST_PROPS_INT_RANGE (0, G_MAXINT)),
+        "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+        "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+        "height", GST_PROPS_INT_RANGE (0, G_MAXINT)),
     GST_CAPS_NEW ("glsink_yuvsink", "video/x-raw-yuv",
-	"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-	"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-	"height", GST_PROPS_INT_RANGE (0, G_MAXINT))
+        "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+        "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+        "height", GST_PROPS_INT_RANGE (0, G_MAXINT))
     )
 
 /* glsink signals and args */
@@ -106,9 +106,9 @@ GST_PAD_TEMPLATE_FACTORY (gst_glsink_sink_template_factory,
        guint64 frame_time;
        gint width, height;
        gboolean muted;
-       gint demo;		// some kind of fun demo mode to let GL show its 3D capabilities
-       gboolean dumpvideo;	// dump the video down to .ppm:s 
-       GstBuffer *last_image;	/* not thread safe ? */
+       gint demo;               // some kind of fun demo mode to let GL show its 3D capabilities
+       gboolean dumpvideo;      // dump the video down to .ppm:s 
+       GstBuffer *last_image;   /* not thread safe ? */
 
        GstClock *clock;
 
@@ -189,9 +189,10 @@ GST_PAD_TEMPLATE_FACTORY (gst_glsink_sink_template_factory,
       0,
       (GInstanceInitFunc) gst_glsink_init,
     };
+
     videosink_type =
-	g_type_register_static (GST_TYPE_ELEMENT, "GstGLSink", &videosink_info,
-	0);
+        g_type_register_static (GST_TYPE_ELEMENT, "GstGLSink", &videosink_info,
+        0);
   }
   return videosink_type;
 }
@@ -218,25 +219,25 @@ gst_glsink_class_init (GstGLSinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property (gobject_class, ARG_WIDTH, g_param_spec_int ("width", "Width", "The video width", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));	/* CHECKME */
-  g_object_class_install_property (gobject_class, ARG_HEIGHT, g_param_spec_int ("height", "Height", "The video height", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));	/* CHECKME */
-  g_object_class_install_property (gobject_class, ARG_FRAMES_DISPLAYED, g_param_spec_int ("frames_displayed", "Frames Displayed", "The number of frames displayed so far", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
-  g_object_class_install_property (gobject_class, ARG_FRAME_TIME, g_param_spec_int ("frame_time", "Frame time", "The interval between frames", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_WIDTH, g_param_spec_int ("width", "Width", "The video width", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));  /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_HEIGHT, g_param_spec_int ("height", "Height", "The video height", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));      /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_FRAMES_DISPLAYED, g_param_spec_int ("frames_displayed", "Frames Displayed", "The number of frames displayed so far", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_FRAME_TIME, g_param_spec_int ("frame_time", "Frame time", "The interval between frames", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
   g_object_class_install_property (gobject_class, ARG_HOOK,
       g_param_spec_pointer ("hook", "Hook", "The object receiving the output",
-	  G_PARAM_WRITABLE));
+          G_PARAM_WRITABLE));
   g_object_class_install_property (gobject_class, ARG_MUTE,
       g_param_spec_boolean ("mute", "Mute", "mute the output ?", FALSE,
-	  G_PARAM_READWRITE));
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_REPAINT,
       g_param_spec_boolean ("repaint", "Repaint", "repaint the current frame",
-	  FALSE, G_PARAM_WRITABLE));
+          FALSE, G_PARAM_WRITABLE));
   g_object_class_install_property (gobject_class, ARG_DEMO,
       g_param_spec_int ("demo", "Demo", "demo mode (shows 3D capabilities)", 0,
-	  1, 0, G_PARAM_READWRITE));
+          1, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_DUMP,
       g_param_spec_boolean ("dump", "Dump",
-	  "stores sequence of frames in .ppm files", FALSE, G_PARAM_READWRITE));
+          "stores sequence of frames in .ppm files", FALSE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_glsink_set_property;
   gobject_class->get_property = gst_glsink_get_property;
@@ -366,7 +367,7 @@ gst_glsink_buffer_free (GstBufferPool * pool, GstBuffer * buffer,
 {
   GstGLSink *sink =
       GST_GLSINK (gst_buffer_pool_get_user_data (GST_BUFFER_BUFFERPOOL
-	  (buffer)));
+          (buffer)));
 
   gst_glsink_append_cache (sink,
       (GstImageData *) GST_BUFFER_POOL_PRIVATE (buffer));
@@ -463,8 +464,8 @@ gst_glsink_getcaps (GstPad * pad, GstCaps * caps)
   gst_glxwindow_hook_context (sink->hook);
   while (list) {
     ret =
-	gst_caps_append (ret,
-	((GstImagePlugin *) list->data)->get_caps (sink->hook));
+        gst_caps_append (ret,
+        ((GstImagePlugin *) list->data)->get_caps (sink->hook));
     list = g_list_next (list);
   }
 
@@ -499,7 +500,7 @@ gst_glsink_chain (GstPad * pad, GstData * _data)
 
     switch (GST_EVENT_TYPE (event)) {
       default:
-	gst_pad_event_default (pad, event);
+        gst_pad_event_default (pad, event);
     }
     return;
   }
@@ -518,11 +519,11 @@ gst_glsink_chain (GstPad * pad, GstData * _data)
       frame_drops++;
       return;
     }
-    frame_drops = 0;		// we made it - reset time
+    frame_drops = 0;            // we made it - reset time
 
     GstClockReturn ret;
     GstClockID id =
-	gst_clock_new_single_shot_id (sink->clock, GST_BUFFER_TIMESTAMP (buf));
+        gst_clock_new_single_shot_id (sink->clock, GST_BUFFER_TIMESTAMP (buf));
 
     ret = gst_element_clock_wait (GST_ELEMENT (sink), id, NULL);
     gst_clock_id_free (id);
@@ -552,7 +553,7 @@ gst_glsink_chain (GstPad * pad, GstData * _data)
       glClearDepth (1.0f);
       glClearColor (0, 0, 0, 0);
 
-      glEnable (GL_AUTO_NORMAL);	// let OpenGL generate the Normals
+      glEnable (GL_AUTO_NORMAL);        // let OpenGL generate the Normals
 
       glDisable (GL_BLEND);
       glDisable (GL_CULL_FACE);
@@ -594,19 +595,19 @@ gst_glsink_chain (GstPad * pad, GstData * _data)
       sink->hook->dumpvideo = sink->dumpvideo;
 
       sink->plugin->put_image (sink->hook,
-	  (GstImageData *) GST_BUFFER_POOL_PRIVATE (buf));
+          (GstImageData *) GST_BUFFER_POOL_PRIVATE (buf));
       sink->last_image = buf;
     } else {
       buffer =
-	  gst_buffer_new_from_pool (gst_glsink_get_bufferpool (sink->sinkpad),
-	  0, GST_BUFFER_SIZE (buf));
+          gst_buffer_new_from_pool (gst_glsink_get_bufferpool (sink->sinkpad),
+          0, GST_BUFFER_SIZE (buf));
       memcpy (GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (buf),
-	  GST_BUFFER_SIZE (buf) >
-	  GST_BUFFER_SIZE (buffer) ? GST_BUFFER_SIZE (buffer) :
-	  GST_BUFFER_SIZE (buf));
+          GST_BUFFER_SIZE (buf) >
+          GST_BUFFER_SIZE (buffer) ? GST_BUFFER_SIZE (buffer) :
+          GST_BUFFER_SIZE (buf));
 
       sink->plugin->put_image (sink->hook,
-	  (GstImageData *) GST_BUFFER_POOL_PRIVATE (buffer));
+          (GstImageData *) GST_BUFFER_POOL_PRIVATE (buffer));
 
       sink->last_image = buffer;
       gst_buffer_unref (buf);
@@ -640,7 +641,7 @@ gst_glsink_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_HOOK:
       if (sink->hook) {
-	sink->hook->free_info (sink->hook);
+        sink->hook->free_info (sink->hook);
       }
       sink->hook = g_value_get_pointer (value);
       break;
@@ -658,8 +659,8 @@ gst_glsink_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_REPAINT:
       if (sink->last_image != NULL) {
-	sink->plugin->put_image (sink->hook,
-	    (GstImageData *) GST_BUFFER_POOL_PRIVATE (sink->last_image));
+        sink->plugin->put_image (sink->hook,
+            (GstImageData *) GST_BUFFER_POOL_PRIVATE (sink->last_image));
       }
       break;
     default:
@@ -732,10 +733,10 @@ gst_glsink_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (sink->conn)
-	sink->conn->close_conn (sink->conn, sink->hook);
+        sink->conn->close_conn (sink->conn, sink->hook);
       if (sink->last_image) {
-	gst_buffer_unref (sink->last_image);
-	sink->last_image = NULL;
+        gst_buffer_unref (sink->last_image);
+        sink->last_image = NULL;
       }
       break;
     case GST_STATE_READY_TO_NULL:

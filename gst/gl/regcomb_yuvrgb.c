@@ -29,22 +29,23 @@ unsigned int UVwidth = 256, UVheight = 512;
 int tex_xsize, tex_ysize;
 
 void
-GenerateRGBTables (unsigned char *Ytable,	// Y-palette
-    unsigned char *Utable,	// U-palette
-    unsigned char *Vtable,	// V-palette
-    float *bias,		// bias (fourth vector to be added)
-    float *Uscale,		// scaling color for U
-    float *Vscale)		// scaling color for V
+GenerateRGBTables (unsigned char *Ytable,       // Y-palette
+    unsigned char *Utable,      // U-palette
+    unsigned char *Vtable,      // V-palette
+    float *bias,                // bias (fourth vector to be added)
+    float *Uscale,              // scaling color for U
+    float *Vscale)              // scaling color for V
 {
   int i;
-  const float mat[9] = {	// the modified YUV->RGB matrix
+  const float mat[9] = {        // the modified YUV->RGB matrix
     +1.130469478f, -0.058755723f, +1.596026304f,
     +1.130469478f, -0.450515935f, -0.812967512f,
     +1.130469478f, +1.958477882f, 0.0f
   };
-#define COMPRESS(a)(0.5f*(a)+128.0f)	// counter-piece to EXPAND_NORMAL
+
+#define COMPRESS(a)(0.5f*(a)+128.0f)    // counter-piece to EXPAND_NORMAL
 #define fCOMPRESS(a) (0.5f*(a)+0.5f);
-#define XCLAMP(a) ((a)<0.0f ? 0.0f : ((a)>255.0f ? 255.0f : (a)))	// should not be necessary, but what do you know.
+#define XCLAMP(a) ((a)<0.0f ? 0.0f : ((a)>255.0f ? 255.0f : (a)))       // should not be necessary, but what do you know.
   bias[0] = fCOMPRESS (-0.842580964f);
   bias[1] = fCOMPRESS (+0.563287723f);
   bias[2] = fCOMPRESS (-1.0f);
@@ -59,17 +60,17 @@ GenerateRGBTables (unsigned char *Ytable,	// Y-palette
   Vscale[3] = 0.0f;
   for (i = 0; i < 256; i++) {
     // Y-table holds unsigned values
-    Ytable[3 * i] = (unsigned char) XCLAMP (mat[0] * (float) i);	// R
-    Ytable[3 * i + 1] = (unsigned char) XCLAMP (mat[3] * (float) i);	// G
-    Ytable[3 * i + 2] = (unsigned char) XCLAMP (mat[6] * (float) i);	// B
+    Ytable[3 * i] = (unsigned char) XCLAMP (mat[0] * (float) i);        // R
+    Ytable[3 * i + 1] = (unsigned char) XCLAMP (mat[3] * (float) i);    // G
+    Ytable[3 * i + 2] = (unsigned char) XCLAMP (mat[6] * (float) i);    // B
     // U-table holds signed values
-    Utable[3 * i] = (unsigned char) XCLAMP (COMPRESS (255.0f / 16.0f * mat[1] * (float) i));	// R
-    Utable[3 * i + 1] = (unsigned char) XCLAMP (COMPRESS (255.0f / 120.0f * mat[4] * (float) i));	// G
-    Utable[3 * i + 2] = (unsigned char) XCLAMP (COMPRESS (255.0f / 500.0f * mat[7] * (float) i));	// B
+    Utable[3 * i] = (unsigned char) XCLAMP (COMPRESS (255.0f / 16.0f * mat[1] * (float) i));    // R
+    Utable[3 * i + 1] = (unsigned char) XCLAMP (COMPRESS (255.0f / 120.0f * mat[4] * (float) i));       // G
+    Utable[3 * i + 2] = (unsigned char) XCLAMP (COMPRESS (255.0f / 500.0f * mat[7] * (float) i));       // B
     // V-table holds signed values
-    Vtable[3 * i] = (unsigned char) XCLAMP (COMPRESS (255.0f / 408.0f * mat[2] * (float) i));	// R
-    Vtable[3 * i + 1] = (unsigned char) XCLAMP (COMPRESS (255.0f / 210.0f * mat[5] * (float) i));	// G
-    Vtable[3 * i + 2] = (unsigned char) (128.0f - 14.0f);	// G constant
+    Vtable[3 * i] = (unsigned char) XCLAMP (COMPRESS (255.0f / 408.0f * mat[2] * (float) i));   // R
+    Vtable[3 * i + 1] = (unsigned char) XCLAMP (COMPRESS (255.0f / 210.0f * mat[5] * (float) i));       // G
+    Vtable[3 * i + 2] = (unsigned char) (128.0f - 14.0f);       // G constant
   }
 #undef fCOMPRESS
 #undef COMPRESS
@@ -315,7 +316,7 @@ PowerOfTwo (unsigned int i)
 
 // Initializes textures. Call once prior to rendering
 void
-InitYUVPlanes (GLuint * Yhandle, GLuint * Uhandle, GLuint * Vhandle, unsigned int Ywidth, unsigned int Yheight, unsigned int UVwidth, unsigned int UVheight, GLenum filter,	// filter should be either GL_NEAREST or GL_LINEAR. Test this! 
+InitYUVPlanes (GLuint * Yhandle, GLuint * Uhandle, GLuint * Vhandle, unsigned int Ywidth, unsigned int Yheight, unsigned int UVwidth, unsigned int UVheight, GLenum filter,     // filter should be either GL_NEAREST or GL_LINEAR. Test this! 
     unsigned char *Ypal, unsigned char *Upal, unsigned char *Vpal)
 {
   glGenTextures (1, Yhandle);

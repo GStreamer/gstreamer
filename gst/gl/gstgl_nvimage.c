@@ -55,7 +55,7 @@ typedef struct _GstNvImage GstNvImage;
 struct _GstNvImage
 {
   GstImageData data;
-  int slot;			// < AGP_BUFSLOTS: allocated from AGP mem, otherwise from CPU mem
+  int slot;                     // < AGP_BUFSLOTS: allocated from AGP mem, otherwise from CPU mem
   GstGLImageConnection *conn;
 };
 
@@ -154,10 +154,10 @@ gst_gl_nvimage_get_caps (GstImageInfo * info)
   }
 
   caps = gst_caps_append (caps, GST_CAPS_NEW ("nvimage_caps",
-	  "video/x-raw-yuv",
-	  "format", GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y', 'V', '1', '2')),
-	  "width", GST_PROPS_INT_RANGE (0, 1024),
-	  "height", GST_PROPS_INT_RANGE (0, 1024))
+          "video/x-raw-yuv",
+          "format", GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y', 'V', '1', '2')),
+          "width", GST_PROPS_INT_RANGE (0, 1024),
+          "height", GST_PROPS_INT_RANGE (0, 1024))
       );
   g_warning ("nvimage returns caps !\n");
   return caps;
@@ -190,7 +190,7 @@ gst_gl_nvimage_set_caps (GstImageInfo * info, GstCaps * caps)
     GST_DEBUG ("GL_NVImage: Format is invalid !\n");
     return NULL;
   }
-  if (0)			//conn->port == (XvPortID) -1)
+  if (0)                        //conn->port == (XvPortID) -1)
   {
     /* this happens if the plugin can't handle the caps, so no warning */
     g_free (conn);
@@ -266,7 +266,7 @@ gst_gl_nvimage_put_image (GstImageInfo * info, GstImageData * image)
   if (xinfo->info.demo) {
     //g_print("Putting image, context is %p\n", glXGetCurrentContext());
 
-    glTranslatef (0.0, 0.0, -5.0);	// make it avoid the clipping plane, zoom 2.0 instead
+    glTranslatef (0.0, 0.0, -5.0);      // make it avoid the clipping plane, zoom 2.0 instead
     glRotatef (180.0 * sin (xinfo->rotX), 1, 0, 0);
     glRotatef (180.0 * cos (xinfo->rotY), 0, 1, 0);
 
@@ -348,11 +348,11 @@ gst_gl_nvimage_put_image (GstImageInfo * info, GstImageData * image)
 
     printf ("Recording frame #%d\n", framenr);
     glReadPixels (0, 0, img_width, img_height, GL_RGB, GL_UNSIGNED_BYTE,
-	cap_image_data);
+        cap_image_data);
     // invert the pixels
     for (i = 0; i < img_height; i++)
       memcpy (cap_image_data2 + i * img_width * 3,
-	  cap_image_data + (img_height - 1 - i) * img_width * 3, img_width * 3);
+          cap_image_data + (img_height - 1 - i) * img_width * 3, img_width * 3);
 
     sprintf (capfilename, "cap%04d.ppm", framenr);
     FILE *outfile = fopen (capfilename, "wb");
@@ -363,7 +363,7 @@ gst_gl_nvimage_put_image (GstImageInfo * info, GstImageData * image)
       fprintf (outfile, "%d %d\n", img_width, img_height);
       fprintf (outfile, "255\n");
       fwrite (cap_image_data2, sizeof (char), img_width * img_height * 3,
-	  outfile);
+          outfile);
       fclose (outfile);
     }
     framenr++;
