@@ -492,6 +492,8 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	
         ioctl (osssink->fd, SNDCTL_DSP_RESET);
 	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
+          if (!gst_clock_handle_discont (osssink->clock, value))
+	    gst_oss_clock_set_active (osssink->provided_clock, FALSE);
 	  osssink->handled = 0;
 	}
 	osssink->resync = TRUE;
