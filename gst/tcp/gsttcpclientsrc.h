@@ -62,7 +62,6 @@ struct _GstTCPClientSrc {
   /* server information */
   int port;
   gchar *host;
-  struct sockaddr_in server_sin;
 
   /* socket */
   int sock_fd;

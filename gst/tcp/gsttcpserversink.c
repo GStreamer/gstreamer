@@ -29,6 +29,8 @@
 #include <sys/filio.h>
 #endif
 
+#include <glib.h>
+
 #include "gsttcpserversink.h"
 #include "gsttcp-marshal.h"
 
@@ -187,6 +189,7 @@ gst_tcpserversink_init (GstTCPServerSink * this)
 
   this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
   this->clock = NULL;
+  this->host = NULL;
 }
 
 static void
@@ -208,8 +211,11 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
 {
   /* new client */
   int client_sock_fd;
-  struct sockaddr_in client_address;
+  struct sockaddr_storage client_address;
   int client_address_len;
+  char clienthost[NI_MAXHOST];
+  char clientservice[NI_MAXSERV];
+  int error;
 
   client_sock_fd =
       accept (sink->server_sock_fd, (struct sockaddr *) &client_address,
@@ -220,11 +226,19 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
     return FALSE;
   }
   FD_SET (client_sock_fd, &(sink->clientfds));
-  GST_DEBUG_OBJECT (sink, "added new client ip %s with fd %d",
-      inet_ntoa (client_address.sin_addr), client_sock_fd);
+  error = getnameinfo ((struct sockaddr *) &client_address, client_address_len,
+      clienthost, sizeof (clienthost), clientservice,
+      sizeof (clientservice), NI_NUMERICHOST);
+  if (error != 0) {
+    GST_DEBUG_OBJECT (sink, "added new client address %s with fd %d",
+        clienthost, client_sock_fd);
+  } else {
+    GST_DEBUG_OBJECT (sink, "problem error received from getnameinfo: %d",
+        error);
+  }
   g_signal_emit (G_OBJECT (sink),
       gst_tcpserversink_signals[SIGNAL_CLIENT_ADDED], 0,
-      inet_ntoa (client_address.sin_addr), client_sock_fd);
+      g_strdup (clienthost), client_sock_fd);
 
   return TRUE;
 }
@@ -546,15 +560,49 @@ gst_tcpserversink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_tcpserversink_init_send (GstTCPServerSink * this)
 {
-  int ret;
+  int ret, error;
+  struct addrinfo hints, *res, *ressave;
+  char *tempport;
 
-  /* create sending server socket */
-  if ((this->server_sock_fd = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
-    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_WRITE, (NULL), GST_ERROR_SYSTEM);
+
+  /* name the socket */
+  memset (&hints, 0, sizeof (struct addrinfo));
+  hints.ai_flags = AI_PASSIVE;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  tempport = g_strdup_printf ("%d", this->server_port);
+
+  error = getaddrinfo (this->host, tempport, &hints, &res);
+  g_free (tempport);
+  if (error != 0) {
+    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
+        ("getaddrinfo failed: %s", gai_strerror (error)));
     return FALSE;
   }
-  GST_DEBUG_OBJECT (this, "opened sending server socket with fd %d",
-      this->server_sock_fd);
+  ressave = res;
+
+  /* Try open socket with each address getaddrinfo returned, until getting 
+     a valid listening socket */
+  this->server_sock_fd = -1;
+  while (res) {
+    this->server_sock_fd =
+        socket (res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (this->server_sock_fd >= 0) {
+      ret = bind (this->server_sock_fd, res->ai_addr, res->ai_addrlen);
+      if (ret == 0)
+        break;
+      close (this->server_sock_fd);
+      this->server_sock_fd = -1;
+    }
+    res = res->ai_next;
+  }
+  freeaddrinfo (ressave);
+
+  if (this->server_sock_fd < 0) {
+    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
+        ("bind failed: %s", g_strerror (errno)));
+    return FALSE;
+  }
 
   /* make address reusable */
   if (setsockopt (this->server_sock_fd, SOL_SOCKET, SO_REUSEADDR, &ret,
@@ -570,28 +618,6 @@ gst_tcpserversink_init_send (GstTCPServerSink * this)
         ("Could not setsockopt: %s", g_strerror (errno)));
     return FALSE;
   }
-
-  /* name the socket */
-  memset (&this->server_sin, 0, sizeof (this->server_sin));
-  this->server_sin.sin_family = AF_INET;        /* network socket */
-  this->server_sin.sin_port = htons (this->server_port);        /* on port */
-  this->server_sin.sin_addr.s_addr = htonl (INADDR_ANY);        /* for hosts */
-
-  /* bind it */
-  GST_DEBUG_OBJECT (this, "binding server socket to address");
-  ret = bind (this->server_sock_fd, (struct sockaddr *) &this->server_sin,
-      sizeof (this->server_sin));
-
-  if (ret) {
-    switch (errno) {
-      default:
-        GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
-            ("bind failed: %s", g_strerror (errno)));
-        return FALSE;
-        break;
-    }
-  }
-
   /* set the server socket to nonblocking */
   fcntl (this->server_sock_fd, F_SETFL, O_NONBLOCK);
 

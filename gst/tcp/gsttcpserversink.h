@@ -73,7 +73,6 @@ struct _GstTCPServerSink {
   /* server information */
   int server_port;
   gchar *host;
-  struct sockaddr_in server_sin;
 
   /* socket */
   int server_sock_fd;
