@@ -318,7 +318,7 @@ cb_parse_clicked (GtkButton *button, gpointer *user_data)
     ui_feedback_add (fd->ui, "Error : try setting an input pipe.\n");
     return;
   }
-  if (fd->input) gst_bin_destroy (GST_BIN (fd->input));
+  if (fd->input) gst_object_unref (GST_OBJECT (fd->input));
   fd->input = GST_ELEMENT (gst_parse_launch (fd->input_pipe, &error));
   if (error)
   {
@@ -333,7 +333,7 @@ cb_parse_clicked (GtkButton *button, gpointer *user_data)
     ui_feedback_add (fd->ui, "Error : try setting an output pipe.\n");
     return;
   }
-  if (fd->output) gst_bin_destroy (GST_BIN (fd->output));
+  if (fd->output) gst_object_unref (GST_OBJECT (fd->output));
   fd->output = GST_ELEMENT (gst_parse_launch (fd->output_pipe, &error));
   if (error)
   {
@@ -344,7 +344,7 @@ cb_parse_clicked (GtkButton *button, gpointer *user_data)
   }
 
   /* try to create filter */
-  if (fd->filter) gst_element_destroy (GST_BIN (fd->filter));
+  if (fd->filter) gst_object_unref (GST_OBJECT (fd->filter));
   fd->filter = gst_element_factory_make (fd->filter_element, "filter");
   if (fd->filter == NULL)
   {
