@@ -197,7 +197,7 @@ sources_powerpc = \
 #	ffmpeg/libavcodec/ppc/fft_altivec.c \
 #	ffmpeg/libavcodec/ppc/gmc_altivec.c \
 #	ffmpeg/libavcodec/ppc/idct_altivec.c \
-#	ffmpeg/libavcodec/ppc/mpegvideo_altivec.c \
+#	ffmpeg/libavcodec/ppc/mpegvideo_altivec.c
 else
 sources_powerpc =
 endif
