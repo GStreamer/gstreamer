@@ -1,0 +1,240 @@
+<chapter id="cha-programs">
+  <title>Programs</title>
+  <para> 
+  </para>
+
+  <sect1>
+    <title><command>gstreamer-config</command></title>
+    <para> 
+      <command>gstreamer-config</command> is a script to get information about the installed 
+      version of <application>GStreamer</application>.
+      This program "knows" what compiler switches are needed to compile programs that use 
+      <application>GStreamer</application>. 
+    </para>
+      
+    <para> 
+      <command>gstreamer-config</command> accepts the following options:
+ 
+     <itemizedlist>
+       <listitem>
+         <para>
+          <option>--version</option> Print the currently installed version of 
+	     <application>GStreamer</application> on the standard output. 
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+          <option>--libs</option> Print the linker flags that are necessary to link a 
+	    <application>GStreamer</application> program. 
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+           <option>--cflags</option> Print the compiler flags that are necessary to compile a 
+	     <application>GStreamer</application> program. 
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+           <option>--prefix=<replaceable>PREFIX</replaceable></option>
+             If specified, use <replaceable>PREFIX</replaceable> instead of the installation 
+	     prefix that <application>GStreamer</application> was built with when computing the
+             output for the <option>--cflags</option> and <option>--libs</option> options. 
+	     This option is also used for the exec prefix if 
+	     <option>--exec-prefix</option> was not specified. This option must be specified before any 
+	     <option>--libs</option> or <option>--cflags</option> options. 
+         </para>
+       </listitem>
+       <listitem>
+         <para>
+           <option>--exec-prefix=<replaceable>PREFIX</replaceable></option> 
+             If specified, use <replaceable>PREFIX</replaceable> instead of the installation exec 
+	     prefix that <application>GStreamer</application> was built with when computing the
+             output for the <option>--cflags</option> and <option>--libs</option> options. This option must be 
+	     specified before any <option>--libs</option> or <option>--cflags</option>
+             options. 
+         </para>
+       </listitem>
+     </itemizedlist>
+    </para>
+    <para>
+      A simple <filename>Makefile</filename> will contain something like:
+      <programlisting>
+CC = gcc
+
+helloworld2: helloworld2.c
+   $(CC) -Wall `gstreamer-config --cflags --libs` helloworld2.c -o helloworld2
+
+clean:
+   rm -f *.o helloworld2
+      </programlisting>
+    </para>
+  </sect1>
+
+  <sect1>
+    <title><command>gstreamer-register</command></title>
+    <para> 
+      <command>gstreamer-register</command> is used to rebuild the database of plugins.
+      It is used after a new plugin has been added to the system. The plugin database
+      can be found in <filename>/etc/gstreamer/reg.xml</filename>.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title><command>gstreamer-launch</command></title>
+    <para> 
+      This is a tool that will construct pipelines based on a command-line
+      syntax.  
+    </para> 
+    <para> 
+      A simple commandline looks like:
+
+    <screen>
+gstreamer-launch disksrc location=hello.mp3 ! mp3parse ! mpg123 ! audiosink
+    </screen>
+
+      A more complex pipeline looks like:
+
+    <screen>
+gstreamer-launch disksrc redpill.vob audio_00! (ac3parse ! ac3dec ! audiosink) \
+video_00! (mpeg2dec ! videosink)
+    </screen>
+
+    </para>
+    <para>
+      Note that the parser isn't capable of more complex pipelines yet, including
+      the VOB player above.  The minor tweaks will be made post 0.2.1.
+    </para>
+    <para>
+      You can also use the the parser in you own code. <application>GStreamer</application>
+      provides a function gst_parse_launch () that you can use to construt a pipeline. 
+      The following programs lets you create an mp3 pipeline using the gst_parse_launch () 
+      function:
+    </para>
+    <programlisting>
+#include &lt;gst/gst.h&gt;
+
+int
+main (int argc, char *argv[])
+{
+  GstElement *pipeline;
+  GstElement *disksrc;
+
+  gst_init (&amp;argc, &amp;argv);
+
+  if (argc != 2) {
+    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    return -1;
+  }
+  pipeline = gst_pipeline_new ("my_pipeline");
+
+  gst_parse_launch ("disksrc[my_disksrc] ! mp3parse ! mpg123 ! osssink", GST_BIN (pipeline));
+
+  disksrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_disksrc");
+  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  while (gst_bin_iterate (GST_BIN (pipeline)));
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  return 0;
+}
+    </programlisting>
+    <para>
+      Note how we can retrieve the disksrc element from the constructed bin using the
+      element name.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title><command>gstreamer-inspect</command></title>
+    <para> 
+      This is a tool to query a plugin or an element about its properties.
+    </para> 
+    <para> 
+      To query the information about the element mpg123, you would specify:
+    </para> 
+
+    <screen>
+gstreamer-inspect mpg123
+    </screen>
+
+    <para> 
+      Below is the output of a query for the audiosink element:
+    </para> 
+
+    <screen>
+Factory Details:
+  Long name:	Audio Sink (OSS)
+  Class:	Sink/Audio
+  Description:	Output to a sound card via OSS
+  Version:	0.1.0
+  Author(s):	Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
+  Copyright:	(C) 1999
+
+Pad Templates:
+  SINK template: 'sink'
+    Exists: Always
+    Capabilities:
+      'audiosink_sink':
+        MIME type: 'audio/raw':
+        format: Integer: 16
+        depth: List:
+          Integer: 8
+          Integer: 16
+        rate: Integer range: 8000 - 48000
+        channels: Integer range: 1 - 2
+
+Element Flags:
+  GST_ELEMENT_THREADSUGGESTED
+  no flags set
+
+Element Implementation:
+  No loopfunc(), must be chain-based or not configured yet
+  Has change_state() function
+
+Pads:
+  SINK: 'sink'
+    Implementation:
+      Has chainfunc(): 0x4001cde8
+      Has default eosfunc() gst_pad_eos_func()
+    Pad Template: 'sink'
+    Capabilities:
+      'audiosink_sink':
+        MIME type: 'audio/raw':
+        format: Integer: 16
+        depth: List:
+          Integer: 8
+          Integer: 16
+        rate: Integer range: 8000 - 48000
+        channels: Integer range: 1 - 2
+
+Element Arguments:
+  GstAudioSink::mute: Boolean
+  GstAudioSink::format: Enum (default 16)
+    (8): 	8 Bits
+    (16): 	16 Bits
+  GstAudioSink::channels: Enum (default 2)
+    (1): 	Mono
+    (2): 	Stereo
+  GstAudioSink::frequency: Integer
+    </screen>
+
+    <para> 
+      To query the information about a plugin, you would do:
+    </para> 
+
+    <screen>
+gstreamer-inspect gstelements
+    </screen>
+  </sect1>
+  <sect1>
+    <title><command>gstmediaplay</command></title>
+    <para> 
+      A sample media player.
+    </para>
+  </sect1>
+
+</chapter>

@@ -54,10 +54,10 @@
     <para> 
       You can set the following states to an element:
     </para>
-    <informaltable pgwide=1 frame="none" role="enum">
+    <informaltable pgwide="1" frame="none" role="enum">
     <tgroup cols="2">
-      <colspec colwidth="2*">
-      <colspec colwidth="8*">
+      <colspec colwidth="2*" />
+      <colspec colwidth="8*" />
     <tbody>
       <row>
         <entry><literal>GST_STATE_NULL</literal></entry>

@@ -26,7 +26,7 @@
     <title>a two-threaded decoder with a queue</title>
     <mediaobject>
       <imageobject>
-        <imagedata fileref="images/queue" format="PNG">
+        <imagedata fileref="images/queue.&magic;" format="&magic;" />
       </imageobject>
     </mediaobject>  
   </figure>

@@ -203,7 +203,7 @@ main (int argc, char *argv[])
       <title>The Hello world pipeline</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/hello-world" format="PNG">
+          <imagedata fileref="images/hello-world.&magic;" format="&magic;" />
         </imageobject>
       </mediaobject>  
 

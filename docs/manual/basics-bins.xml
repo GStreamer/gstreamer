@@ -20,7 +20,7 @@
     <title>Visualisation of a <classname>GstBin</classname> element with some elements in it</title>
       <mediaobject>  
         <imageobject>
-          <imagedata fileref="images/bin-element" format="PNG">
+          <imagedata fileref="images/bin-element.&magic;" format="&magic;" />
         </imageobject>
       </mediaobject>
   </figure>
@@ -176,7 +176,7 @@
       <title>Visualisation of a <classname>GstBin</classname> element with a ghostpad</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/bin-element-ghost" format="PNG">
+          <imagedata fileref="images/bin-element-ghost.&magic;" format="&magic;" />
         </imageobject>
       </mediaobject>  
     </figure>

@@ -36,7 +36,7 @@
         <title>Visualisation of a source element</title>
           <mediaobject>  
             <imageobject>
-              <imagedata fileref="images/src-element" format="PNG">
+              <imagedata fileref="images/src-element.&magic;" format="&magic;" />
             </imageobject>
           </mediaobject>
       </figure>
@@ -65,7 +65,7 @@
         <title>Visualisation of a filter element</title>
           <mediaobject>  
             <imageobject>
-              <imagedata fileref="images/filter-element" format="PNG">
+              <imagedata fileref="images/filter-element.&magic;" format="&magic;" />
             </imageobject>
           </mediaobject>
       </figure>
@@ -79,7 +79,7 @@
 	  more than one output pad</title>
         <mediaobject>  
           <imageobject>
-            <imagedata fileref="images/filter-element-multi" format="PNG">
+            <imagedata fileref="images/filter-element-multi.&magic;" format="&magic;" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -103,7 +103,7 @@
         <title>Visualisation of a sink element</title>
         <mediaobject>  
           <imageobject>
-            <imagedata fileref="images/sink-element" format="PNG">
+            <imagedata fileref="images/sink-element.&magic;" format="&magic;" />
           </imageobject>
         </mediaobject>
       </figure>

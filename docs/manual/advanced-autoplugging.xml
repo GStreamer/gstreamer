@@ -90,7 +90,7 @@
       <title>The Hello world pipeline with MIME types</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/mime-world" format="PNG">
+          <imagedata fileref="images/mime-world.&magic;" format="&magic;" />
         </imageobject>
       </mediaobject>  
 

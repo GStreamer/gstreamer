@@ -1,0 +1,218 @@
+<chapter id="cha-bins">
+  <title>Bins</title>
+  <para> 
+    A Bin is a container element. You can add elements to a bin. Since a bin is 
+    an <classname>GstElement</classname> itself, it can also be added to another bin.
+  </para>
+  <para> 
+    Bins allow you to combine connected elements into one logical element. You do
+    not deal with the individual elements anymore but with just one element, the bin.
+    We will see that this is extremely powerfull when you are going to construct
+    complex pipelines since it allows you to break up the pipeline in smaller chunks.
+  </para>
+  <para> 
+    The bin will also manage the elements contained in it. It will figure out how
+    the data will flow in the bin and generate an optimal plan for that data flow. Plan
+    generation is one of the most complicated procedures in GStreamer.
+  </para>
+
+  <figure float="1" id="sec-bin-img">
+    <title>Visualisation of a <classname>GstBin</classname> element with some elements in it</title>
+      <mediaobject>  
+        <imageobject>
+          <imagedata fileref="images/bin-element.&magic;" format="&magic;" />
+        </imageobject>
+      </mediaobject>
+  </figure>
+
+  <para> 
+    There are two standard bins available to the GStreamer programmer:
+
+    <itemizedlist>
+      <listitem>
+        <para>
+          A pipeline (<classname>GstPipeline</classname>). Which is a generic container you will
+	  use most of the time. The toplevel bin has to be a pipeline.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A thread (<classname>GstThread</classname>). All the elements in the thread bin will 
+	  run in a separate thread. You will have to use this bin if you carfully have to 
+	  synchronize audio and video for example. You will learn more about threads in.. <!-- FIXME -->
+        </para>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  <sect1 id="sec-bin-create">
+    <title>Creating a bin</title>
+    <para>
+      You create a bin with  a specified name 'mybin' with:
+    </para>
+    <programlisting>
+  GstElement *bin;
+  
+  gst_bin_new ("mybin");
+   ...
+    </programlisting>
+    <para>
+      A thread can be created with:
+    </para>
+    <programlisting>
+  GstElement *thread;
+  
+  gst_thread_new ("mythread");
+   ...
+    </programlisting>
+    <para>
+      Pipelines are created with gst_pipeline_new ("name");
+    </para>
+  </sect1>
+
+  <sect1 id="sec-bin-adding">
+    <title>Adding elements to a bin</title>
+    <para>
+      Elements are added to a bin with the following code sample: 
+    </para>
+    <programlisting>
+  GstElement *element;
+  GstElement *bin;
+  
+  bin = gst_bin_new ("mybin");
+  
+  element = gst_elementfactory_make ("mpg123", "decoder");
+  gst_bin_add (GST_BIN (bin), element);
+   ...
+    </programlisting>
+    <para>
+      Bins and threads can be added to other bins too. This allows you to create nested 
+      bins.
+    </para>
+    <para>
+      To get an element from the bin you can use: 
+    </para>
+    <programlisting>
+  GstElement *element;
+  
+  element = gst_bin_get_by_name (GST_BIN (bin), "decoder");
+   ...
+    </programlisting>
+    <para>
+      You can see that the name of the element becomes very handy for retrieving the
+      element from an bin by using the elements name. gst_bin_get_by_name () will 
+      recursively search nested bins.
+    </para>
+    <para>
+      To get a list of elements in a bin, use:
+    </para>
+    <programlisting>
+  GList *elements;
+  
+  elements = gst_bin_get_list (GST_BIN (bin));
+
+  while (elements) {
+    GstElement *element = GST_ELEMENT (elements-&gt;data);
+
+    g_print ("element in bin: &percnt;s\n", gst_element_get_name (element));
+
+    elements = g_list_next (elements);
+  }
+   ...
+    </programlisting>
+    <para>
+      To remove an element from a bin use:
+    </para>
+    <programlisting>
+  GstElement *element;
+  
+  gst_bin_remove (GST_BIN (bin), element);
+   ...
+    </programlisting>
+  </sect1>
+
+  <sect1 id="sec-bin-custom">
+    <title>Custom bins</title>
+    <para> 
+      The application programmer can create custom bins packed with elements to perform a 
+      specific task. This allow you to write an MPEG audio decoder with just the follwing lines
+      of code:
+
+      <programlisting>
+
+  // create the mp3player element
+  GstElement *mp3player = gst_elementfactory_make ("mp3player", "mp3player");
+  // set the source mp3 audio file
+  g_object_set (G_OBJECT (mp3player), "location", "helloworld.mp3", NULL);
+  // start playback
+  gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_PLAYING);
+   ...
+  // pause playback
+  gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_PAUSED);
+   ...
+  // stop
+  gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_NULL);
+      </programlisting>
+
+      Custom bins can be created with a plugin or an XML description. You will find more 
+      information about creating custom bin in the Filter-Writers-Guide.
+    </para>
+  </sect1>
+
+  <sect1 id="sec-bin-ghostpads">
+    <title>Ghostpads</title>
+    <para>
+      You can see from figure ... how a bin has no pads of its own. This is where Ghostpads
+      come into play. 
+    </para>
+    <para>
+      A ghostpad is a pad from some element in the bin that has been promoted to the bin.
+      This way, the bin also has a pad. The bin becomes just another element with a pad and
+      you can then use the bin just like any other element. This is a very important feature
+      for creating custom bins.
+    </para>
+    
+    <figure float="1" id="sec-bin-ghost-img">
+      <title>Visualisation of a <classname>GstBin</classname> element with a ghostpad</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/bin-element-ghost.&magic;" format="&magic;" />
+        </imageobject>
+      </mediaobject>  
+    </figure>
+    <para>
+      Above is a representation of a ghostpad. the sinkpad of element one is now also a pad
+      of the bin.
+    </para>
+    <para>
+      Ghostpads can actually be added to all <classname>GstElement</classname>s and not just
+      <classname>GstBin</classname>s. Use the following code example to add a ghostpad to a bin:
+    </para>
+    <programlisting>
+  GstElement *bin;
+  GstElement *element;
+
+  element = gst_elementfactory_create ("mpg123", "decoder");
+  bin = gst_bin_new ("mybin");
+
+  gst_bin_add (GST_BIN (bin), element);
+
+  gst_element_add_ghost_pad (bin, gst_element_get_pad (element, "sink"), "sink");
+  
+    </programlisting>
+    <para>
+      In the above example, the bin now also has a pad: the pad called 'sink' of the
+      given element. We can now, for example, connect the srcpad of a disksrc to the 
+      bin with:
+    </para>
+    <programlisting>
+  GstElement *disksrc;
+
+  disksrc = gst_elementfactory_create ("disksrc", "disk_reader");
+  
+  gst_element_connect (disksrc, "src", bin, "sink");
+    ...
+    </programlisting>
+  </sect1>
+
+</chapter>

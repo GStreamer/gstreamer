@@ -1,34 +1,39 @@
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
-<!ENTITY INTRO SYSTEM "intro.sgml">
-<!ENTITY MOTIVATION SYSTEM "motivation.sgml">
-<!ENTITY GOALS SYSTEM "goals.sgml">
+<?xml version='1.0'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                  "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % magic-entities SYSTEM "magic">
+%magic-entities;
 
-<!ENTITY INIT SYSTEM "init.sgml">
-<!ENTITY ELEMENTS SYSTEM "elements.sgml">
-<!ENTITY PADS SYSTEM "pads.sgml">
-<!ENTITY CONNECTIONS SYSTEM "connections.sgml">
-<!ENTITY BINS SYSTEM "bins.sgml">
-<!ENTITY BUFFERS SYSTEM "buffers.sgml">
-<!ENTITY STATES SYSTEM "states.sgml">
+<!ENTITY INTRO SYSTEM "intro.xml">
+<!ENTITY MOTIVATION SYSTEM "motivation.xml">
+<!ENTITY GOALS SYSTEM "goals.xml">
 
-<!ENTITY HELLOWORLD SYSTEM "helloworld.sgml">
-<!ENTITY FACTORIES SYSTEM "factories.sgml">
-<!ENTITY AUTOPLUGGING SYSTEM "autoplugging.sgml">
-<!ENTITY HELLOWORLD2 SYSTEM "helloworld2.sgml">
+<!ENTITY INIT SYSTEM "init.xml">
+<!ENTITY ELEMENTS SYSTEM "elements.xml">
+<!ENTITY PADS SYSTEM "pads.xml">
+<!ENTITY CONNECTIONS SYSTEM "connections.xml">
+<!ENTITY BINS SYSTEM "bins.xml">
+<!ENTITY BUFFERS SYSTEM "buffers.xml">
+<!ENTITY STATES SYSTEM "states.xml">
 
-<!ENTITY THREADS SYSTEM "threads.sgml">
-<!ENTITY QUEUES SYSTEM "queues.sgml">
-<!ENTITY COTHREADS SYSTEM "cothreads.sgml">
-<!ENTITY DYNAMIC SYSTEM "dynamic.sgml">
-<!ENTITY TYPEDETECTION SYSTEM "typedetection.sgml">
-<!ENTITY UTILITY SYSTEM "utility.sgml">
+<!ENTITY HELLOWORLD SYSTEM "helloworld.xml">
+<!ENTITY FACTORIES SYSTEM "factories.xml">
+<!ENTITY AUTOPLUGGING SYSTEM "autoplugging.xml">
+<!ENTITY HELLOWORLD2 SYSTEM "helloworld2.xml">
 
-<!ENTITY XML SYSTEM "xml.sgml">
-<!ENTITY PLUGINS SYSTEM "plugins.sgml">
-<!ENTITY DEBUGGING SYSTEM "debugging.sgml">
-<!ENTITY PROGRAMS SYSTEM "programs.sgml">
-<!ENTITY COMPONENTS SYSTEM "components.sgml">
-<!ENTITY QUOTES SYSTEM "quotes.sgml">
+<!ENTITY THREADS SYSTEM "threads.xml">
+<!ENTITY QUEUES SYSTEM "queues.xml">
+<!ENTITY COTHREADS SYSTEM "cothreads.xml">
+<!ENTITY DYNAMIC SYSTEM "dynamic.xml">
+<!ENTITY TYPEDETECTION SYSTEM "typedetection.xml">
+<!ENTITY UTILITY SYSTEM "utility.xml">
+
+<!ENTITY XML SYSTEM "xml.xml">
+<!ENTITY PLUGINS SYSTEM "plugins.xml">
+<!ENTITY DEBUGGING SYSTEM "debugging.xml">
+<!ENTITY PROGRAMS SYSTEM "programs.xml">
+<!ENTITY COMPONENTS SYSTEM "components.xml">
+<!ENTITY QUOTES SYSTEM "quotes.xml">
 ]>
 
 <book id="index">

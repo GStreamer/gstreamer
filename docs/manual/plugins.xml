@@ -1,0 +1,70 @@
+<chapter id="cha-plugins">
+  <title>What are Plugins</title>
+  <para> 
+    A plugin is a shared library that contains at least one of the following items:
+  </para>
+
+  <itemizedlist>
+    <listitem>
+      <para>
+        one or more elementfactories
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        one or more typedefinitions
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        one or more autopluggers
+      </para>
+    </listitem>
+  </itemizedlist>
+  <para> 
+    The plugins have one simple method: plugin_init () where all the elementfactories are
+    created and the typedefinitions are registered.
+  </para> 
+  <para> 
+    the plugins are maintained in the plugin system. Optionally, the typedefinitions and 
+    the elementfactories can be saved into an XML representation so that the plugin system
+    does not have to load all available plugins in order to know their definition.
+  </para> 
+														  
+  <para> 
+    The basic plugin structure has the following fields:
+  </para> 
+  <programlisting>
+struct _GstPlugin {
+  gchar *name;                  /* name of the plugin */
+  gchar *longname;              /* long name of plugin */
+  gchar *filename;              /* filename it came from */
+
+  GList *types;                 /* list of types provided */
+  gint numtypes;
+  GList *elements;              /* list of elements provided */
+  gint numelements;
+  GList *autopluggers;          /* list of autopluggers provided */
+  gint numautopluggers;
+
+  gboolean loaded;              /* if the plugin is in memory */
+};
+  </programlisting>
+
+  <para> 
+    You can query a GList of available plugins with:
+  </para> 
+  <programlisting>
+    GList *plugins;
+    
+    plugins = gst_plugin_get_list ();
+
+    while (plugins) {
+      GstPlugin *plugin = (GstPlugin *)plugins-&gt;data;
+
+      g_print ("plugin: &percnt;s\n", gst_plugin_get_name (plugin));
+
+      plugins = g_list_next (plugins);
+    }
+  </programlisting>
+</chapter>

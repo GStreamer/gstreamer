@@ -48,7 +48,7 @@
     <title>a thread</title>
     <mediaobject>
       <imageobject>
-        <imagedata fileref="images/thread" format="PNG">
+        <imagedata fileref="images/thread.&magic;" format="&magic;" />
       </imageobject>
     </mediaobject>  
   </figure>
