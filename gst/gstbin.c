@@ -334,6 +334,36 @@ gst_bin_unset_element_sched (GstElement * element)
 
 
 /**
+ * gst_element_connect_elements_many:
+ * @element_1: the first element to add to the bin
+ * @...: NULL-terminated list of elements to add to the bin
+ * 
+ * Add a list of elements to a bin. Uses #gst_bin_add.
+ **/
+/* API FIXME: this should be called gst_element_connect_many, and connect_elements
+ * should just be connect */
+void
+gst_bin_add_many (GstBin *bin, GstElement *element_1, ...)
+{
+  va_list args;
+
+  g_return_if_fail (bin != NULL);
+  g_return_if_fail (element_1 != NULL);
+  g_return_if_fail (GST_IS_BIN (bin));
+  g_return_if_fail (GST_IS_ELEMENT (element_1));
+
+  va_start (args, element_1);
+
+  while (element_1) {
+    gst_bin_add (bin, element_1);
+    
+    element_1 = va_arg (args, GstElement*);
+  }
+
+  va_end (args);
+}
+
+/**
  * gst_bin_add:
  * @bin: #GstBin to add element to
  * @element: #GstElement to add to bin

@@ -224,6 +224,7 @@ gboolean		gst_element_connect_filtered	(GstElement *src, const gchar *srcpadname
 void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
 void			gst_element_disconnect_elements (GstElement *src, GstElement *dest);
+gboolean		gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2, ...);
 
 void			gst_element_set_eos		(GstElement *element);
 

@@ -824,12 +824,12 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, GstCa
  *
  * Returns: the pad to which a connection can be made
  */
-
 GstPad*			
 gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 {
   return gst_element_get_compatible_pad_filtered (element, pad, NULL);
 }
+
 /**
  * gst_element_connect_elements:
  * @src: the element containing source pad
@@ -928,6 +928,41 @@ gst_element_connect_elements_filtered (GstElement *src, GstElement *dest,
 }
 
 /**
+ * gst_element_connect_elements_many:
+ * @element_1: the first element in the connection chain
+ * @element_2: the second element in the connection chain
+ * @...: NULL-terminated list of elements to connect in order
+ * 
+ * Chain together a series of elements. Uses #gst_element_connect_elements.
+ *
+ * Returns: TRUE on success, FALSE otherwise.
+ **/
+/* API FIXME: this should be called gst_element_connect_many, and connect_elements
+ * should just be connect */
+gboolean
+gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2, ...)
+{
+  va_list args;
+
+  g_return_val_if_fail (element_1 != NULL && element_2 != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element_1) && GST_IS_ELEMENT (element_2), FALSE);
+
+  va_start (args, element_2);
+
+  while (element_2) {
+    if (!gst_element_connect_elements (element_1, element_2))
+      return FALSE;
+    
+    element_1 = element_2;
+    element_2 = va_arg (args, GstElement*);
+  }
+
+  va_end (args);
+  
+  return TRUE;
+}
+
+/**
  * gst_element_connect_elements:
  * @src: element containing source pad
  * @dest: element containing destination pad
@@ -946,6 +981,7 @@ gst_element_connect_elements (GstElement *src, GstElement *dest)
 {
   return gst_element_connect_elements_filtered (src, dest, NULL);
 }
+
 /**
  * gst_element_connect_filtered:
  * @src: element containing source pad
