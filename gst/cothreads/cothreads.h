@@ -32,27 +32,47 @@
 
 
 typedef pth_mctx_t cothread;
-typedef enum _cothread_attr_method cothread_attr_method;
-typedef struct _cothread_attr cothread_attr;
+typedef enum _cothreads_alloc_method cothreads_alloc_method;
+typedef struct _cothreads_config cothreads_config;
 
 
-enum _cothread_attr_method 
+enum _cothreads_alloc_method 
 {
-  COTHREAD_ATTR_METHOD_MALLOC,        /* cothread stacks on the heap, one block per chunk */
-  COTHREAD_ATTR_METHOD_GTHREAD_STACK, /* cothread stacks within the current gthread's stack */
-  COTHREAD_ATTR_METHOD_LINUXTHREADS,  /* a hack that allows for linuxthreads compatibility */
+  COTHREADS_ALLOC_METHOD_MALLOC,        /* cothread stacks on the heap, one block per chunk */
+  COTHREADS_ALLOC_METHOD_GTHREAD_STACK, /* cothread stacks within the current gthread's stack */
+  COTHREADS_ALLOC_METHOD_LINUXTHREADS,  /* a hack that allows for linuxthreads compatibility */
 };
 
-struct _cothread_attr {
-  cothread_attr_method method;        /* the method of allocating new cothread stacks */
-  int chunk_size;                     /* size of contiguous chunk of memory for cothread stacks */
-  int blocks_per_chunk;               /* cothreads per chunk */
-  gboolean alloc_cothread_0;          /* if the first cothread needs to be allocated */
+struct _cothreads_config {
+  cothreads_alloc_method method;        /* the method of allocating new cothread stacks */
+  int chunk_size;                       /* size of contiguous chunk of memory for cothread stacks */
+  int blocks_per_chunk;                 /* cothreads per chunk */
+  gboolean alloc_cothread_0;            /* if the first cothread needs to be allocated */
 };
 
+#define COTHREADS_CONFIG_HEAP_INITIALIZER { \
+  COTHREADS_ALLOC_METHOD_MALLOC,        /* each cothread on the heap */ \
+  0x20000,                              /* stack size of 128 kB */ \
+  1,                                    /* we aren't chunked */ \
+  FALSE                                 /* nothing special for cothread 0 */ \
+}
+
+#define COTHREADS_CONFIG_GTHREAD_INITIALIZER { \
+  COTHREADS_ALLOC_METHOD_GTHREAD_STACK, /* this is what the old cothreads code does */ \
+  0x100000,                             /* only 1 MB due the the FreeBSD defaults */ \
+  8,                                    /* for a stack size of 128 KB */ \
+  TRUE                                  /* set up the first chunk */ \
+}
+
+#define COTHREADS_CONFIG_LINUXTHREADS_INITIALIZER { \
+  COTHREADS_ALLOC_METHOD_LINUXTHREADS,  /* use the linuxthreads hack */ \
+  0x200000,                             /* 2 MB */ \
+  8,                                    /* for a stack size of 256 KB */ \
+  TRUE                                  /* set up the first chunk */ \
+}
 
 gboolean	cothreads_initialized	(void);
-void		cothreads_init		(cothread_attr *attr);
+void		cothreads_init		(cothreads_config *config);
 
 cothread*	cothread_create		(void (*func)(int, void**), int argc, void **argv);
 void		cothread_destroy	(cothread *thread);

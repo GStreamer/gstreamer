@@ -28,11 +28,11 @@ typedef struct _cothread_private cothread_private;
 
 struct _cothread_private {
   int argc;
-  char **argv;
-  void (*func) (int argc, char **argv);
+  void **argv;
+  void (*func) (int argc, void **argv);
 };
 
-extern cothread_attr *_cothread_attr_global;
+extern cothreads_config *_cothreads_config_global;
 
 
 gboolean	cothread_stack_alloc_on_gthread_stack	(char **low, char **high);

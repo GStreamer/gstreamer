@@ -6,7 +6,7 @@
 
 pth_mctx_t main_context;
 
-void thread_1 (char *str)
+void thread_1 (void)
 {
   printf ("sleeping 5s in thread 1...\n");
   sleep (5);

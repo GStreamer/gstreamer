@@ -21,6 +21,8 @@
 
 #include "cothreads-private.h"
 #include "linuxthreads.h"
+#include <unistd.h>
+#include <sys/resource.h>
 
 typedef enum _cothread_block_state cothread_block_state;
 typedef struct _cothread_chunk cothread_chunk;
@@ -47,13 +49,14 @@ static void		cothread_chunk_free		(cothread_chunk *chunk);
 static gboolean		cothread_stack_alloc_chunked 	(cothread_chunk *chunk, char **low, char **high, 
                                                          cothread_chunk *(*chunk_new)(cothread_chunk*));
 static cothread_chunk*	cothread_chunk_new_linuxthreads	(cothread_chunk* old);
+static cothread_chunk*	cothread_chunk_new_on_stack	(cothread_chunk* old);
 
 
 gboolean
 cothread_stack_alloc_on_heap (char **low, char **high)
 {
-  if (posix_memalign (low, _cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk,
-                      _cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk) != NULL) {
+  if (posix_memalign (low, _cothreads_config_global->chunk_size / _cothreads_config_global->blocks_per_chunk,
+                      _cothreads_config_global->chunk_size / _cothreads_config_global->blocks_per_chunk)) {
     g_error ("could not memalign stack");
     return FALSE;
   }
@@ -69,11 +72,11 @@ cothread_stack_alloc_on_gthread_stack (char **low, char **high)
   static GStaticPrivate chunk_key = G_STATIC_PRIVATE_INIT;
   
   if (!(chunk = g_static_private_get(&chunk_key))) {
-    chunk = cothread_chunk_new (_cothread_attr_global->chunk_size, FALSE);
-    g_static_private_set (&chunk_key, chunk, cothread_chunk_free);
+    chunk = cothread_chunk_new (_cothreads_config_global->chunk_size, FALSE);
+    g_static_private_set (&chunk_key, chunk, (GDestroyNotify) cothread_chunk_free);
   }
   
-  return cothread_stack_alloc_chunked (chunk, low, high, NULL);
+  return cothread_stack_alloc_chunked (chunk, low, high, cothread_chunk_new_on_stack);
 }
 
 gboolean
@@ -83,9 +86,9 @@ cothread_stack_alloc_linuxthreads (char **low, char **high)
   static GStaticPrivate chunk_key = G_STATIC_PRIVATE_INIT;
   
   if (!(chunk = g_static_private_get(&chunk_key))) {
-    chunk = cothread_chunk_new (_cothread_attr_global->chunk_size, FALSE);
+    chunk = cothread_chunk_new (_cothreads_config_global->chunk_size, FALSE);
     g_message ("created new chunk, %p, size=0x%x", chunk->chunk, chunk->size);
-    g_static_private_set (&chunk_key, chunk, cothread_chunk_free);
+    g_static_private_set (&chunk_key, chunk, (GDestroyNotify) cothread_chunk_free);
   }
   
   return cothread_stack_alloc_chunked (chunk, low, high, cothread_chunk_new_linuxthreads);
@@ -100,7 +103,7 @@ cothread_chunk_new (unsigned long size, gboolean allocate)
   char *sp = CURRENT_STACK_FRAME;
   
   ret = g_new0 (cothread_chunk, 1);
-  ret->nblocks = _cothread_attr_global->blocks_per_chunk;
+  ret->nblocks = _cothreads_config_global->blocks_per_chunk;
   ret->block_states = g_new0 (cothread_block_state, ret->nblocks);
   
   if (allocate) {
@@ -127,11 +130,11 @@ cothread_chunk_new (unsigned long size, gboolean allocate)
  * cothread_stack_alloc_chunked:
  * @chunk: the chunk for the 
  * Make a new cothread stack out of a chunk. Chunks are assumed to be aligned on
- * boundaries of _cothread_attr_global->chunk_size.
+ * boundaries of _cothreads_config_global->chunk_size.
  *
  * Returns: the new cothread context
  */
-  /* we assume that the stack is aligned on _cothread_attr_global->chunk_size boundaries */
+  /* we assume that the stack is aligned on _cothreads_config_global->chunk_size boundaries */
 static gboolean
 cothread_stack_alloc_chunked (cothread_chunk *chunk, char **low, char **high, 
                               cothread_chunk *(*chunk_new)(cothread_chunk*))
@@ -184,7 +187,7 @@ cothread_chunk_new_linuxthreads (cothread_chunk* old)
   cothread_chunk *new;
   void *pthread_descr;
   
-  new = cothread_chunk_new (_cothread_attr_global->chunk_size, TRUE);
+  new = cothread_chunk_new (_cothreads_config_global->chunk_size, TRUE);
   pthread_descr = __linuxthreads_self();
 #if PTH_STACK_GROWTH > 0
   /* we don't really know pthread_descr's size in this case, but we can be
@@ -195,6 +198,37 @@ cothread_chunk_new_linuxthreads (cothread_chunk* old)
 #else
   new->reserved_bottom = ((unsigned long) pthread_descr | (new->size - 1)) - (unsigned long) pthread_descr;
   memcpy(new->chunk + new->size - new->reserved_bottom - 1, pthread_descr, new->reserved_bottom);
+#endif
+  
+  old->next = new;
+  return new;
+}
+
+static cothread_chunk*
+cothread_chunk_new_on_stack (cothread_chunk* old)
+{
+  cothread_chunk *new;
+  void *pthread_descr;
+  struct rlimit limit;
+  
+  getrlimit (RLIMIT_STACK, &limit);
+  g_print ("stack limit: %d\nstack max: %d\n", limit.rlim_cur, limit.rlim_max);
+  limit.rlim_cur += old->size;
+  if (setrlimit (RLIMIT_STACK, &limit)) {
+    perror ("Could not increase the stack size, aborting...");
+    return NULL;
+  }
+  
+  new = cothread_chunk_new (old->size, FALSE);
+  new->reserved_bottom = 0;
+  
+#if PTH_STACK_GROWTH > 0
+  /* we don't really know pthread_descr's size in this case, but we can be
+   * conservative. it's normally 1K in the down-growing case, so we allocate 2K.
+   */
+  new->chunk += new->size;
+#else
+  new->chunk -= new->size;
 #endif
   
   old->next = new;

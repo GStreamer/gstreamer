@@ -7,7 +7,7 @@
 pth_mctx_t main_context;
 int threadnum = 0;
 
-void cothread (void *unused)
+void cothread (void)
 {
   printf ("1.1: current stack frame: %p\n", CURRENT_STACK_FRAME);
   printf ("1.1: sleeping 2s in thread %d...\n", threadnum);
@@ -17,7 +17,7 @@ void cothread (void *unused)
   pth_mctx_restore (&main_context);
 }
 
-void pthread (void* unused) 
+void *pthread (void* unused) 
 {
   pth_mctx_t ctx;
   char *skaddr;
@@ -52,11 +52,11 @@ int main (int argc, char *argv[])
 
   printf ("0: current stack frame: %p\n", CURRENT_STACK_FRAME);
   printf ("0: creating the pthread\n");
-  pthread_create (&tid, NULL, pthread, NULL);
-  printf ("0: %d\n", pthread_self());
-//  pthread(NULL);
+//  pthread_create (&tid, NULL, pthread, NULL);
+//  printf ("0: %d\n", pthread_self());
+  pthread(NULL);
 //  printf ("joining the pthread\n");
-  pthread_join (tid, NULL);
+//  pthread_join (tid, NULL);
 
   printf ("0: current stack frame: %p\n", CURRENT_STACK_FRAME);
   printf ("0: take five...\n");

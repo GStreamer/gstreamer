@@ -24,24 +24,12 @@
 #define HAVE_LINUXTHREADS
 
 #ifdef HAVE_LINUXTHREADS
-static cothread_attr cothread_attr_default = 
-{
-  COTHREAD_ATTR_METHOD_LINUXTHREADS,  /* use the linuxthreads hack */
-  0x200000,                           /* 2 MB */
-  8,                                  /* for a stack size of 256 KB */
-  TRUE                                /* set up the first chunk */
-};
+static cothreads_config cothreads_config_default = COTHREADS_CONFIG_LINUXTHREADS_INITIALIZER;
 #else
-static cothread_attr cothread_attr_default = 
-{
-  COTHREAD_ATTR_METHOD_GTHREAD_STACK, /* this is what the old cothreads code does */
-  0x100000,                           /* only 1 MB due the the FreeBSD defaults */
-  8,                                  /* for a stack size of 128 KB */
-  TRUE                                /* set up the first chunk */
-};
+static cothreads_config cothreads_config_default = COTHREADS_CONFIG_GTHREAD_INITIALIZER;
 #endif
 
-cothread_attr *_cothread_attr_global = NULL;
+cothreads_config *_cothreads_config_global = NULL;
 
 static gboolean (*stack_alloc_func) (char**, char**);
 
@@ -60,45 +48,46 @@ static void	cothread_stub		(void);
 gboolean
 cothreads_initialized (void) 
 {
-  return (_cothread_attr_global != NULL);
+  return (_cothreads_config_global != NULL);
 }
 
 /**
  * cothreads_init:
- * @attr: attributes for creation of cothread stacks
+ * @config: attributes for creation of cothread stacks
  *
- * Initialize the cothreads system. If @attr is NULL, use the default parameters
+ * Initialize the cothreads system. If @config is NULL, use the default parameters
  * detected at compile-time.
  */
 void
-cothreads_init (cothread_attr *attr)
+cothreads_init (cothreads_config *config)
 {
-  static cothread_attr _attr;
+  static cothreads_config _config;
   
   if (cothreads_initialized()) {
     g_warning ("cothread system has already been initialized");
     return;
   }
-  
-  if (!attr)
-    _attr = cothread_attr_default;
+
+  /* we don't hold on to *config, we copy it (if it's supplied) */
+  if (!config)
+    _config = cothreads_config_default;
   else 
-    _attr = *attr;
+    _config = *config;
   
-  _cothread_attr_global = &_attr;
+  _cothreads_config_global = &_config;
   
-  switch (_cothread_attr_global->method) {
-  case COTHREAD_ATTR_METHOD_MALLOC:
+  switch (_cothreads_config_global->method) {
+  case COTHREADS_ALLOC_METHOD_MALLOC:
     stack_alloc_func = cothread_stack_alloc_on_heap;
     break;
-  case COTHREAD_ATTR_METHOD_GTHREAD_STACK:
+  case COTHREADS_ALLOC_METHOD_GTHREAD_STACK:
     stack_alloc_func = cothread_stack_alloc_on_gthread_stack;
     break;
-  case COTHREAD_ATTR_METHOD_LINUXTHREADS:
+  case COTHREADS_ALLOC_METHOD_LINUXTHREADS:
     stack_alloc_func = cothread_stack_alloc_linuxthreads;
     break;
   default:
-    g_error ("unexpected value for attr method %d", _cothread_attr_global->method);
+    g_error ("unexpected value for config method %d", _cothreads_config_global->method);
   }
 }
 
@@ -124,7 +113,7 @@ cothread_create (void (*func)(int, void **), int argc, void **argv)
   if (!func) {
     /* we are being asked to save the current thread into a new cothread. this
      * only happens for the first cothread. */
-    if (_cothread_attr_global->alloc_cothread_0)
+    if (_cothreads_config_global->alloc_cothread_0)
       if (!stack_alloc_func (&low, &high))
         g_error ("couldn't create cothread 0");
       else
@@ -174,10 +163,10 @@ cothread_private_set (char *sp, void *priv, size_t size)
   char *dest;
   
 #if PTH_STACK_GROWTH > 0
-  dest = ((gulong)sp | (_cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk - 1))
+  dest = (char*) ((gulong)sp | (_cothreads_config_global->chunk_size / _cothreads_config_global->blocks_per_chunk - 1))
     - size + 1 - getpagesize();
 #else
-  dest = ((gulong)sp &~ (_cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk - 1))
+  dest = (char*) ((gulong)sp &~ (_cothreads_config_global->chunk_size / _cothreads_config_global->blocks_per_chunk - 1))
     + getpagesize();
 #endif
   
@@ -190,10 +179,10 @@ cothread_private_get (char *sp, void *priv, size_t size)
   char *src;
   
 #if PTH_STACK_GROWTH > 0
-  src = ((gulong)sp | (_cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk - 1))
+  src = (char*) ((gulong)sp | (_cothreads_config_global->chunk_size / _cothreads_config_global->blocks_per_chunk - 1))
     - size + 1 - getpagesize();
 #else
-  src = ((gulong)sp &~ (_cothread_attr_global->chunk_size / _cothread_attr_global->blocks_per_chunk - 1))
+  src = (char*) ((gulong)sp &~ (_cothreads_config_global->chunk_size / _cothreads_config_global->blocks_per_chunk - 1))
     + getpagesize();
 #endif
   

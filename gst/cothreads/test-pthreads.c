@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "linuxthreads.h"
+#include <sys/resource.h>
+#include <unistd.h>
 
 /* this function is only really necessary to get the main thread's
  * pthread_descr, as the other threads store the pthread_descr (actually the
@@ -43,12 +45,17 @@ int main (int argc, char *argv[])
 {
   pthread_t tid;
   int i;
+  struct rlimit limit;  
   
-  for (i=0; i<10; i++) {
+  for (i=0; i<5; i++) {
     pthread_create (&tid, NULL, pthread, NULL);
-    sleep(2);
+    sleep(1);
   }
   
   linuxthreads_self();
+  
+  getrlimit (RLIMIT_STACK, &limit);
+  printf ("\nstack size: %d\nmax stack sizeL %d\n", limit.rlim_cur, limit.rlim_max);
+  
   exit (0);
 }
