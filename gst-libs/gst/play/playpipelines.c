@@ -1176,6 +1176,7 @@ gst_play_connect_visualisation (	GstPlay *play,
 									gboolean connect)
 {
 	GstPad *tee_vis_pad, *vis_video_thread_pad;
+	GstElement *vis_video_thread;
 	gboolean connected = FALSE;
 	
 	g_return_val_if_fail (play != NULL, FALSE);
@@ -1185,6 +1186,8 @@ gst_play_connect_visualisation (	GstPlay *play,
 											"tee_vis_pad");
 	vis_video_thread_pad = g_hash_table_lookup(	play->other_elements,
 												"vis_video_thread_pad");
+	vis_video_thread = g_hash_table_lookup(	play->other_elements,
+												"vis_video_thread");
 	
 	if (gst_pad_get_peer (vis_video_thread_pad) != NULL)
 		connected = TRUE;
@@ -1196,6 +1199,11 @@ gst_play_connect_visualisation (	GstPlay *play,
 	}
 	else if ( (!connect) && (connected) ){
 		gst_pad_unlink (tee_vis_pad, vis_video_thread_pad);
+	}
+	
+	if ( GST_IS_ELEMENT(vis_video_thread) && GST_IS_ELEMENT(play->pipeline) ) {
+		gst_element_set_state (	vis_video_thread,
+								gst_element_get_state (play->pipeline));
 	}
 	
 	return TRUE;
