@@ -806,6 +806,22 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
     AC_CHECK_LIB(audiofile, af_virtual_file_new, , HAVE_AUDIOFILE="no")
   fi])
 
+dnl *** audioresample ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AUDIORESAMPLE, true)
+GST_CHECK_FEATURE(AUDIORESAMPLE, [audioresample plug-in], audioresample, [
+  PKG_CHECK_MODULES(AUDIORESAMPLE, audioresample-0.1, HAVE_AUDIORESAMPLE=yes, HAVE_AUDIORESAMPLE=no)
+  AC_SUBST(AUDIORESAMPLE_CFLAGS)
+  AC_SUBST(AUDIORESAMPLE_LIBS)
+])
+
+dnl *** cairo ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
+GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
+  PKG_CHECK_MODULES(CAIRO, cairo, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+  AC_SUBST(CAIRO_CFLAGS)
+  AC_SUBST(CAIRO_LIBS)
+])
+
 dnl *** cdaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDAUDIO, true)
 GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
@@ -1722,15 +1738,6 @@ dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
 
-AC_ARG_ENABLE(libmmx,
-  AC_HELP_STRING([--enable-libmmx],[use libmmx, if available]),
-[case "${enableval}" in
-  yes) USE_LIBMMX=$HAVE_LIBMMX ;;
-  no)  USE_LIBMMX=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-libmmx) ;;
-esac], 
-[USE_LIBMMX=$HAVE_LIBMMX]) dnl Default value
-
 AC_ARG_ENABLE(atomic,
   AC_HELP_STRING([--enable-atomic],[use atomic reference counting header]),
 [case "${enableval}" in
@@ -1783,10 +1790,6 @@ dnl # Set defines according to variables set above #
 dnl ################################################
 
 
-if test "x$USE_LIBMMX" = xyes; then
-  AC_DEFINE(HAVE_LIBMMX, 1, [Define if libmmx is available])
-fi
-
 if test "x$USE_ATOMIC_H" = xyes; then
   AC_DEFINE(HAVE_ATOMIC_H, 1, [Define if atomic.h header file is available])
 fi
@@ -1804,8 +1807,6 @@ dnl #############################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
-AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
-
 AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 
 AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
@@ -1980,6 +1981,8 @@ ext/alsa/Makefile
 ext/arts/Makefile
 ext/artsd/Makefile
 ext/audiofile/Makefile
+ext/audioresample/Makefile
+ext/cairo/Makefile
 ext/cdaudio/Makefile
 ext/cdparanoia/Makefile
 ext/dirac/Makefile

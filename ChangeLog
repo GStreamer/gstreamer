@@ -1,3 +1,23 @@
+2004-12-15  David Schleef  <ds@schleef.org>
+
+	* configure.ac: add audioresample and cairo plugins.  Remove
+	HAVE_MMX stuff, because it's not used.
+	* ext/Makefile.am: same
+	* ext/audioresample/Makefile.am: You are not ready for an
+	audio resampling element based on audioresample.
+	* ext/audioresample/gstaudioresample.c:
+	* ext/audioresample/gstaudioresample.h:
+	* ext/cairo/Makefile.am: You are not ready for overlay elements
+	based on cairo.  Don't look too closely, these elements kinda
+	suck right now.
+	* ext/cairo/gstcairo.c: new
+	* ext/cairo/gsttextoverlay.c: new
+	* ext/cairo/gsttextoverlay.h: new
+	* ext/cairo/gsttimeoverlay.c: new
+	* ext/cairo/gsttimeoverlay.h: new
+	* gst-libs/gst/media-info/media-info-priv.h: fix compile
+	problem with compilers that don't support variadic macros.
+
 2004-12-15  Balamurali Viswanathan  <balamurali.viswanathan@wipro.com>
 
 	Reviewed by:  David Schleef  <ds@schleef.org>

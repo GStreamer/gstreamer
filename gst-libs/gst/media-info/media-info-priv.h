@@ -23,6 +23,7 @@
 #define __GST_MEDIA_INFO_PRIV_H__
 
 #include <gst/gst.h>
+#include <glib/gprintf.h>
 
 /* debug */
 GST_DEBUG_CATEGORY_EXTERN (gst_media_info_debug);
