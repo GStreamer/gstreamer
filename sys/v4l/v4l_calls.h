@@ -130,8 +130,9 @@ gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement, GstV4lAudioType type
 
 /* overlay */
 gboolean gst_v4l_set_overlay    (GstV4lElement *v4lelement, gchar *display);
-gboolean gst_v4l_set_window     (GstV4lElement *v4lelement, gint x, gint y,           gint w, gint h);
-gboolean gst_v4l_set_clips      (GstV4lElement *v4lelement, struct video_clip *clips, gint num_clips);
+gboolean gst_v4l_set_window     (GstV4lElement *v4lelement, gint x,                   gint y,
+                                                            gint w,                   gint h,
+                                                            struct video_clip *clips, gint num_clips);
 gboolean gst_v4l_enable_overlay (GstV4lElement *v4lelement, gboolean enable);
 
 

@@ -74,78 +74,54 @@ gst_v4l_set_overlay (GstV4lElement *v4lelement,
 
 
 /******************************************************
- * gst_v4l_set_vwin():
- *   does the VIDIOCSVWIN ioctl()
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-
-static gboolean
-gst_v4l_set_vwin (GstV4lElement *v4lelement)
-{
-  if (ioctl(v4lelement->video_fd, VIDIOCSWIN, &(v4lelement->vwin)) < 0)
-  {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Failed to set the video window: %s",
-      sys_errlist[errno]);
-    return FALSE;
-  }
-  return TRUE;
-}
-
-
-/******************************************************
  * gst_v4l_set_window():
  *   sets the window where to display the video overlay
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 
 gboolean
-gst_v4l_set_window (GstV4lElement *v4lelement,
-                    gint x,        gint y,
-                    gint w,        gint h)
+gst_v4l_set_window (GstV4lElement     *v4lelement,
+                    gint               x,
+                    gint               y,
+                    gint               w,
+                    gint               h,
+                    struct video_clip *clips,
+                    gint               num_clips)
 {
+  struct video_window vwin;
+
   DEBUG("setting video window to position (x,y/wxh) = %d,%d/%dx%d",
     x, y, w, h);
-  GST_V4L_CHECK_OVERLAY(v4lelement);
-
-  v4lelement->vwin.clipcount = 0;
-  v4lelement->vwin.x = x;
-  v4lelement->vwin.y = y;
-  v4lelement->vwin.width = w;
-  v4lelement->vwin.height = h;
-  v4lelement->vwin.flags = 0;
-
-  return gst_v4l_set_vwin(v4lelement);
-}
-
-
-/******************************************************
- * gst_v4l_set_clips():
- *   sets video overlay clips
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-
-gboolean
-gst_v4l_set_clips (GstV4lElement     *v4lelement,
-                   struct video_clip *clips,
-                   gint               num_clips)
-{
-  DEBUG("setting video window clips");
   GST_V4L_CHECK_OPEN(v4lelement);
   GST_V4L_CHECK_OVERLAY(v4lelement);
 
-  if (!(v4lelement->vcap.type & VID_TYPE_CLIPPING))
+  vwin.x = x;
+  vwin.y = y;
+  vwin.width = w;
+  vwin.height = h;
+  vwin.flags = 0;
+
+  if (clips && !(v4lelement->vcap.type & VID_TYPE_CLIPPING))
+  {
+    DEBUG("Device \'%s\' doesn't do clipping",
+      v4lelement->videodev?v4lelement->videodev:"/dev/video");
+    vwin.clips = 0;
+  }
+  else
+  {
+    vwin.clips = clips;
+    vwin.clipcount = num_clips;
+  }
+
+  if (ioctl(v4lelement->video_fd, VIDIOCSWIN, &vwin) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lelement),
-      "Device \'%s\' doesn't do clipping",
-      v4lelement->videodev?v4lelement->videodev:"/dev/video");
+      "Failed to set the video window: %s",
+      sys_errlist[errno]);
     return FALSE;
   }
 
-  v4lelement->vwin.clips = clips;
-  v4lelement->vwin.clipcount = num_clips;
-
-  return gst_v4l_set_vwin(v4lelement);
+  return TRUE;
 }
 
 

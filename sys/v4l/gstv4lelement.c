@@ -62,7 +62,6 @@ enum {
   ARG_DEVICE_IS_MPEG_PLAYBACK,
   ARG_DISPLAY,
   ARG_VIDEOWINDOW,
-  ARG_CLIPPING,
   ARG_DO_OVERLAY,
 };
 
@@ -204,9 +203,6 @@ gst_v4lelement_class_init (GstV4lElementClass *klass)
     0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VIDEOWINDOW,
     g_param_spec_pointer("videowindow","videowindow","videowindow",
-    G_PARAM_WRITABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CLIPPING,
-    g_param_spec_pointer("videowindowclip","videowindowclip","videowindowclip",
     G_PARAM_WRITABLE));
 
   gobject_class->set_property = gst_v4lelement_set_property;
@@ -358,28 +354,12 @@ gst_v4lelement_set_property (GObject      *object,
       break;
     case ARG_VIDEOWINDOW:
       if (GST_V4L_IS_OPEN(v4lelement))
-        gst_v4l_set_window(v4lelement,
-          ((GstV4lRect*)g_value_get_pointer(value))->x,
-          ((GstV4lRect*)g_value_get_pointer(value))->y,
-          ((GstV4lRect*)g_value_get_pointer(value))->w,
-          ((GstV4lRect*)g_value_get_pointer(value))->h);
-      break;
-    case ARG_CLIPPING:
-      if (GST_V4L_IS_OPEN(v4lelement))
       {
-        gint i;
-        struct video_clip *clips;
-        GList *list = (GList*)g_value_get_pointer(value);
-        clips = g_malloc(sizeof(struct video_clip) * g_list_length(list));
-        for (i=0;i<g_list_length(list);i++)
-        {
-          clips[i].x = ((GstV4lRect*)g_list_nth_data(list, i))->x;
-          clips[i].y = ((GstV4lRect*)g_list_nth_data(list, i))->y;
-          clips[i].width = ((GstV4lRect*)g_list_nth_data(list, i))->w;
-          clips[i].height = ((GstV4lRect*)g_list_nth_data(list, i))->h;
-        }
-        gst_v4l_set_clips(v4lelement, clips, g_list_length(list));
-        g_free(clips);
+        GByteArray *array = (GByteArray *) g_value_get_pointer(value);
+        struct video_clip *clips = (struct video_clip *) array->data;
+        gst_v4l_set_window(v4lelement,
+          clips->x, clips->y, clips->width, clips->height,
+          &clips[1], array->len/sizeof(struct video_clip)-1);
       }
       break;
     default:
