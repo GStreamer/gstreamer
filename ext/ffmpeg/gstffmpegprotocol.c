@@ -145,6 +145,13 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
           have_event = FALSE;
           gst_event_unref (event);
           break;
+        case GST_EVENT_FLUSH:
+          gst_event_unref (event);
+          break;
+        case GST_EVENT_INTERRUPT:
+          have_event = FALSE;
+          gst_event_unref (event);
+          break;
         default:
           gst_pad_event_default (info->pad, event);
           break;
@@ -219,6 +226,7 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 
       /* handle discont */
       gst_bytestream_seek (info->bs, pos, seek_type);
+
       /* prevent eos */
       if (gst_bytestream_tell (info->bs) ==
               gst_bytestream_length (info->bs)) {
@@ -239,11 +247,15 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
             g_warning ("unexpected/unwanted EOS event after seek");
             info->eos = TRUE;
             gst_event_unref (event);
-            break;
+            return -1;
           case GST_EVENT_DISCONTINUOUS:
-            gst_bytestream_flush_fast (info->bs, remaining);
             gst_event_unref (event); /* we expect this */
             break;
+          case GST_EVENT_FLUSH:
+            break;
+          case GST_EVENT_INTERRUPT:
+            gst_event_unref (event);
+            return -1;
           default:
             gst_pad_event_default (info->pad, event);
             break;

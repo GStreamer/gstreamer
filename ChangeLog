@@ -1,5 +1,13 @@
 2004-10-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	  Signal no_more_pads.
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_read),
+	(gst_ffmpegdata_seek):
+	  Handle events.
+
+2004-10-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_pixfmt_to_caps),
 	(gst_ffmpeg_caps_to_pixfmt):
 	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_pad_link),

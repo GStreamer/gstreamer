@@ -570,6 +570,7 @@ gst_ffmpegdemux_loop (GstElement * element)
   if (!demux->opened) {
     if (!gst_ffmpegdemux_open (demux))
       return;
+    gst_element_no_more_pads (element);
   }
 
   /* read a package */
@@ -622,9 +623,10 @@ gst_ffmpegdemux_loop (GstElement * element)
     memcpy (GST_BUFFER_DATA (outbuf), pkt.data, pkt.size);
     GST_BUFFER_SIZE (outbuf) = pkt.size;
 
-    if (pkt.pts != AV_NOPTS_VALUE && demux->context->pts_den)
+    if (pkt.pts != AV_NOPTS_VALUE && demux->context->pts_den) {
       GST_BUFFER_TIMESTAMP (outbuf) = (double) pkt.pts * GST_SECOND *
           demux->context->pts_num / demux->context->pts_den;
+    }
 
     if (pkt.flags & PKT_FLAG_KEY) {
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
