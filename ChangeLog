@@ -1,5 +1,14 @@
 2004-07-16  Wim Taymans  <wim@fluendo.com>
 
+	* testsuite/schedulers/142183-2.c: (handoff_identity), (main):
+	* testsuite/schedulers/142183.c: (handoff_identity), (main):
+	* testsuite/schedulers/Makefile.am:
+	Added testsuite for bug 142183 in its two incarnations. Refcount
+	is not increased for scheduled elements and threadsafe properties
+	mutexes are not properly unlocked.
+
+2004-07-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/schedulers/gstoptimalscheduler.c: (gst_opt_scheduler_init),
 	(create_chain), (destroy_chain), (create_group), (destroy_group),
 	(add_to_group), (merge_groups), (group_elements), (group_inc_link),
