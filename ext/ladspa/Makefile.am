@@ -7,4 +7,4 @@ libgstladspa_la_CFLAGS = $(GST_CFLAGS)
 libgstladspa_la_LIBADD =
 libgstladspa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstladspa.h ladspa.h utils.h
+noinst_HEADERS = gstladspa.h utils.h
