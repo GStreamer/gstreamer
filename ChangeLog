@@ -1,3 +1,9 @@
+2004-04-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/en_GB.po:
+        * po/LINGUAS:
+          Adding en_GB translation (Gareth Owen)
+
 2004-04-20  David Schleef  <ds@schleef.org>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event),
