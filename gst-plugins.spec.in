@@ -765,24 +765,25 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 %{prefix}/lib/gst/libgstsmooth*
 %{prefix}/lib/gst/libgstspectrum*
 %{prefix}/lib/gst/libgstvu*
+%{prefix}/lib/gst/libgstgoom*
 
 %post -n gstreamer-visualisation
 %{prefix}/bin/gst-register --gst-mask=0
 
-@USE_LIBMMX_TRUE@%package -n gstreamer-jpegmmx
-@USE_LIBMMX_TRUE@Summary: Gstreamer mjpegtools
-@USE_LIBMMX_TRUE@Group: Libraries/Multimedia
-@USE_LIBMMX_TRUE@Requires: gstreamer >= %{ver}
+@USE_JPEG_MMX_TRUE@%package -n gstreamer-jpegmmx
+@USE_JPEG_MMX_TRUE@Summary: Gstreamer mjpegtools
+@USE_JPEG_MMX_TRUE@Group: Libraries/Multimedia
+@USE_JPEG_MMX_TRUE@Requires: gstreamer >= %{ver}
 
-@USE_LIBMMX_TRUE@%description -n gstreamer-jpegmmx
-@USE_LIBMMX_TRUE@Mgpegtools based encoding and decoding plugin
+@USE_JPEG_MMX_TRUE@%description -n gstreamer-jpegmmx
+@USE_JPEG_MMX_TRUE@Mgpegtools based encoding and decoding plugin
 
-@USE_LIBMMX_TRUE@%files -n gstreamer-jpegmmx
-@USE_LIBMMX_TRUE@%defattr(-, root, root)
-@USE_LIBMMX_TRUE@%{prefix}/lib/gst/libgstjpegmmx*
+@USE_JPEG_MMX_TRUE@%files -n gstreamer-jpegmmx
+@USE_JPEG_MMX_TRUE@%defattr(-, root, root)
+@USE_JPEG_MMX_TRUE@%{prefix}/lib/gst/libgstjpegmmx*
 
-@USE_LIBMMX_TRUE@%post -n gstreamer-jpegmmx
-@USE_LIBMMX_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+@USE_JPEG_MMX_TRUE@%post -n gstreamer-jpegmmx
+@USE_JPEG_MMX_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 
 %package -n gstreamer-plugin-libs
 Summary: GStreamer support libraries
@@ -840,3 +841,17 @@ Plugin for playback of wav audio files
 
 %post -n gstreamer-wav
 %{prefix}/bin/gst-register --gst-mask=0
+
+@USE_SHOUT_TRUE@%package -n gstreamer-icecast
+@USE_SHOUT_TRUE@Summary: Gstreamer Icecast broadcasting plugin
+@USE_SHOUT_TRUE@Group: Libraries/Multimedia
+@USE_SHOUT_TRUE@Requires: gstreamer >= %{ver}
+@USE_SHOUT_TRUE@%description -n gstreamer-icecast
+@USE_SHOUT_TRUE@Plugin for broadcasting audio with the Icecast server
+
+@USE_SHOUT_TRUE@%files -n gstreamer-icecast
+@USE_SHOUT_TRUE@%defattr(-, root, root)
+@USE_SHOUT_TRUE@%{prefix}/lib/gst/libgstshout*
+
+@USE_SHOUT_TRUE@%post -n gstreamer-icecast
+@USE_SHOUT_TRUE@%{prefix}/bin/gst-register --gst-mask=0
