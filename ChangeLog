@@ -1,3 +1,8 @@
+2004-07-22  David Schleef  <ds@schleef.org>
+
+	* docs/random/ds/0.9-suggested-changes: more comments
+	* tools/gst-launch.c: (idle_func): Fix hard-to-translate string.
+
 2004-07-22  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelementfactory.c: (gst_element_register):

@@ -87,11 +87,30 @@ idle_func (gpointer data)
 
   if (!busy || caught_intr || (max_iterations > 0
           && iterations >= max_iterations)) {
+    char *s_iterations;
+    char *s_sum;
+    char *s_ave;
+    char *s_min;
+    char *s_max;
+
     gst_main_quit ();
-    g_print (_("Execution ended after %" G_GUINT64_FORMAT " iterations (sum %"
-            G_GUINT64_FORMAT " ns, average %" G_GUINT64_FORMAT " ns, min %"
-            G_GUINT64_FORMAT " ns, max %" G_GUINT64_FORMAT " ns).\n"),
-        iterations, sum, sum / iterations, min, max);
+
+    /* We write these all to strings first because 
+     * G_GUINT64_FORMAT and gettext mix very poorly */
+    s_iterations = g_strdup_printf ("%" G_GUINT64_FORMAT, iterations);
+    s_sum = g_strdup_printf ("%" G_GUINT64_FORMAT, sum);
+    s_ave = g_strdup_printf ("%" G_GUINT64_FORMAT, sum / iterations);
+    s_min = g_strdup_printf ("%" G_GUINT64_FORMAT, min);
+    s_max = g_strdup_printf ("%" G_GUINT64_FORMAT, max);
+
+    g_print (_("Execution ended after %s iterations (sum %s ns, "
+            "average %s ns, min %s ns, max %s ns).\n"),
+        s_iterations, s_sum, s_ave, s_min, s_max);
+    g_free (s_iterations);
+    g_free (s_sum);
+    g_free (s_ave);
+    g_free (s_min);
+    g_free (s_max);
   }
 
   return busy;

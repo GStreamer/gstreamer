@@ -69,6 +69,12 @@ API:
    so that you can search a GstPlay for an element implementing the interface
    (right now gstplay has added a gst_play_get_by_interface)
 
+ - make multichannel properties on audio caps manditory
+
+ - talk to vektor about various wierdness with NTSC video (combinations of
+   24 fps pulled down to 60 and straight video, etc) and make sure our
+   video stream descriptions make sense.
+
  - rename GST_TYPE_FIXED_LIST to GST_TYPE_ARRAY
 
 caps:
