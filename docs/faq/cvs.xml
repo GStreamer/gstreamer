@@ -3,7 +3,56 @@
   <qandaset>
 
     <qandaentry>
-      <question id="cvs">
+      <question id="cvs-anon">
+        <para>
+How do I check out GStreamer from CVS ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+GStreamer is hosted on Freedesktop.org.  GStreamer consists of various parts.
+In the beginning, you will be interested in the "gstreamer" module, containing
+the core, and "gst-plugins", containing the basic set of plugins.
+        </para>
+        <para>
+To check out the HEAD version of the core, use
+<programlisting>
+ cvs -d:pserver:anoncvs@cvs.freedesktop.org:/cvs/gstreamer co gstreamer
+</programlisting>
+This will create a directory "gstreamer" in your current directory.
+If you want to get another module, replace the last "gstreamer" with the
+name of the module.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <question id="cvs-developer">
+        <para>
+How do I get developer access to GStreamer CVS ?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+If you want to gain developer access to GStreamer CVS, you should ask for
+it on the development lists, or ask one of the maintainers directly.
+If you are not already a registered developer with a user account on
+Freedesktop.org, You will then have to provide them with:
+<orderedlist>
+<listitem><para>your desired unix username</para></listitem>
+<listitem><para>your full name</para></listitem>
+<listitem><para>your e-mail address</para></listitem>
+<listitem><para>a copy of your public sshv2 identity.  If you do not have this yet, you can generate it by running "ssh-keygen -t dsa".  The resulting public key will be in .ssh/id_dsa.pub</para></listitem>
+</orderedlist>
+        </para>
+      </answer>
+    </qandaentry>
+
+
+    <qandaentry>
+      <question id="autogen-libtool">
         <para>
 I ran autogen.sh, but it fails with something like this:
 <programlisting>
