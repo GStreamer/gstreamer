@@ -55,80 +55,45 @@ enum _GstPlayOnDemandFormat {
 struct _GstPlayOnDemand {
   GstElement element;
 
-  GstPad *sinkpad, *srcpad;
   GstBufferPool *bufpool;
+  GstPad   *sinkpad, *srcpad;
+  GstClock *clock;
 
-  /* these next data elements are for the filter's internal buffers and list of
-     play pointers (offsets in the internal buffers). there are also flags for
-     repeating from the beginning or end of the input stream, and a max buffer
-     size. */
+  /* filter properties */
+  gboolean  mute;
+  gfloat    buffer_time;
+  guint     max_plays;
+  gfloat    clock_speed;
+  guint     total_ticks;
+  GSList   *tick_list;
+
+  /* internal buffer info */
   gchar    *buffer;
-  guint     buffer_size;
-  guint     buffer_samples;
+  guint     buffer_bytes;
+  gboolean  eos;
 
+  /* play pointers == internal buffer offsets for producing output sound */
   guint    *plays;
   guint     write;
-  guint     start;
 
-  gboolean  play_from_beginning;
-  gboolean  buffer_filled_once;
-
-  gboolean  eos;
-  gboolean  silent;
-
-  /* the playondemand filter needs to keep track of a number of 'measures'
-     consisting of 'beats'. these are represented as an array of guint64s, with
-     each guint64 being one measure, and the bits in each measure being beats
-     (lower order bits come first). each measure can therefore have a maximum of
-     64 beats, though there are a potentially unlimited number of measures.
-
-     this is basically a way to figure out when incoming clock signals should
-     add a play pointer. */
-  GstClock *clock;
-  guint     last_time;
-
-  guint64  *times;
-  guint     num_measures;
-  guint     num_beats;
-  guint     total_beats;
-
-  /* the next three are valid for both int and float */
+  /* audio format info (used to calculate buffer_samples) */
   GstPlayOnDemandFormat format;
-  guint                 rate;
-  guint                 channels;
-
-  /* the next five are valid only for format == GST_PLAYONDEMAND_FORMAT_INT */
+  guint    rate;
+  guint    channels;
   guint    width;
-  guint    depth;
-  guint    endianness;
-  guint    law;
-  gboolean is_signed;
-
-  /* the next three are valid only for format == GST_PLAYONDEMAND_FORMAT_FLOAT */
-  const gchar *layout;
-  gfloat       slope;
-  gfloat       intercept;
 };
 
 struct _GstPlayOnDemandClass {
   GstElementClass parent_class;
 
-  void (*play)  (GstElement *elem);
-  void (*reset) (GstElement *elem);
+  void (*play)   (GstElement *elem);
+  void (*clear)  (GstElement *elem);
+  void (*reset)  (GstElement *elem);
+  void (*played) (GstElement *elem);
 };
 
 GType gst_play_on_demand_get_type(void);
 
-void gst_play_on_demand_set_beat     (GstPlayOnDemand *filter,
-                                      const guint measure,
-                                      const guint beat,
-                                      const gboolean value);
-gboolean gst_play_on_demand_get_beat (GstPlayOnDemand *filter,
-                                      const guint measure,
-                                      const guint beat);
-void gst_play_on_demand_toggle_beat  (GstPlayOnDemand *filter,
-                                      const guint measure,
-                                      const guint beat);
 
 #ifdef __cplusplus
 }
