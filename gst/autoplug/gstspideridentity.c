@@ -417,7 +417,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   GstCaps *caps;
 
   /* this should possibly be a property */
-  guint bufsizelimit = 4096;
+  guint bufsizelimit = 8192;
   
   /* checks - disable for speed */
   g_return_if_fail (ident != NULL);
@@ -448,21 +448,15 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
       /* handle DISCONT events, please */
     }
 
-    typefindbuf = buf;
-    getmorebuf = FALSE;
-    /* FIXME merging doesn't work for some reason so 
-     * we'll just typefind with the first element
     if (!typefindbuf){
       typefindbuf = buf;
-      gst_buffer_ref(buf);
     }
     else {
       GstBuffer *oldbuf = typefindbuf;
       typefindbuf = gst_buffer_merge(typefindbuf, buf);
-      gst_buffer_unref(oldbuf);
-      gst_buffer_unref(buf);
+      gst_buffer_unref (oldbuf);
+      gst_buffer_unref (buf);
     }
-    */
   }
   
   if (!typefindbuf){
@@ -485,7 +479,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
       GstTypeFactory *factory = GST_TYPE_FACTORY (factories->data);
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
 
-      if (typefindfunc && (caps = typefindfunc (buf, factory))) {
+      if (typefindfunc && (caps = typefindfunc (typefindbuf, factory))) {
 
 	if (gst_pad_try_set_caps (ident->sink, caps) <= 0) {
           g_warning ("typefind: found type but peer didn't accept it");
@@ -499,8 +493,8 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
     type_list = g_list_next (type_list);
   }
   gst_element_error(GST_ELEMENT(ident), "Could not find media type", NULL);
-  gst_buffer_unref(buf);
-  buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+  gst_buffer_unref(typefindbuf);
+  typefindbuf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 
 end:
 
@@ -509,7 +503,7 @@ end:
                                 (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_dumb_loop));
   
   /* push the buffer */
-  gst_spider_identity_chain (ident->sink, buf);
+  gst_spider_identity_chain (ident->sink, typefindbuf);
 
   return;
 
