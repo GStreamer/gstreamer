@@ -362,13 +362,14 @@ GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
 ])
 
 dnl *** XVideo ***
+dnl look for the PIC library first, debian likes it
+dnl yeah but redhat doesn't even *have* it and it works fine without
+dnl GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
-  dnl look for the PIC library first, debian likes it
-  GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
-  if test "x$HAVE_XVIDEO" = "no"; then
-    GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
-  fi    
+  GST_CHECK_LIBHEADER(XVIDEO, Xv, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h)
+  XVIDEO_LIBS="-lXv -lXext"
+  AC_SUBST(XVIDEO_LIBS)
 ])
 
 dnl Next, check for the optional libraries:
