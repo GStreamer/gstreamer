@@ -1,3 +1,11 @@
+2005-01-10  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_class_init), (gst_alsa_get_caps):
+	* ext/alsa/gstalsa.h:
+	  Add HW probing for period_count/size and buffer_size MIX/MAX
+	  Adjust default/user defined value if out of bounds
+	  Should fix bug #162024
+
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event):
