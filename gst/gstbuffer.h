@@ -123,6 +123,12 @@ GstBuffer*	gst_buffer_new_and_alloc	(guint size);
 /* creating a new buffer from a pool */
 GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint64 offset, guint size);
 
+#define		gst_buffer_set_data(buf, data, size) 	\
+G_STMT_START { 					     	\
+  GST_BUFFER_DATA (buf) = data;				\
+  GST_BUFFER_SIZE (buf) = size;				\
+} G_STMT_END
+
 /* refcounting */
 #define		gst_buffer_ref(buf)		GST_BUFFER (gst_data_ref (GST_DATA (buf)))
 #define		gst_buffer_ref_by_count(buf,c)	GST_BUFFER (gst_data_ref_by_count (GST_DATA (buf), c))
