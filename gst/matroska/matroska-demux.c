@@ -79,10 +79,6 @@ gst_matroska_demux_change_state (GstElement * element);
 static void gst_matroska_demux_set_clock (GstElement * element,
     GstClock * clock);
 
-/* gobject bla bla */
-static void gst_matroska_demux_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
-
 /* caps functions */
 static GstCaps *gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext
     * videocontext,
@@ -154,22 +150,11 @@ gst_matroska_demux_base_init (GstMatroskaDemuxClass * klass)
 static void
 gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (gobject_class, ARG_METADATA,
-      g_param_spec_boxed ("metadata", "Metadata", "Metadata",
-          GST_TYPE_STRUCTURE, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
-      g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
-          GST_TYPE_STRUCTURE, G_PARAM_READABLE));
-
   parent_class = g_type_class_ref (GST_TYPE_EBML_READ);
-
-  gobject_class->get_property = gst_matroska_demux_get_property;
 
   gstelement_class->change_state = gst_matroska_demux_change_state;
   gstelement_class->send_event = gst_matroska_demux_send_event;
@@ -196,7 +181,6 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
   for (i = 0; i < GST_MATROSKA_DEMUX_MAX_STREAMS; i++) {
     demux->src[i] = NULL;
   }
-  demux->streaminfo = demux->metadata = NULL;
   demux->writing_app = demux->muxing_app = NULL;
   demux->index = NULL;
 
@@ -234,10 +218,6 @@ gst_matroska_demux_reset (GstElement * element)
   demux->num_v_streams = 0;
 
   /* reset media info */
-
-  gst_caps_replace (&demux->metadata, NULL);
-  gst_caps_replace (&demux->streaminfo, NULL);
-
   g_free (demux->writing_app);
   demux->writing_app = NULL;
   g_free (demux->muxing_app);
@@ -2512,28 +2492,6 @@ gst_matroska_demux_change_state (GstElement * element)
     return ((GstElementClass *) parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
-}
-
-static void
-gst_matroska_demux_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec)
-{
-  GstMatroskaDemux *demux;
-
-  g_return_if_fail (GST_IS_MATROSKA_DEMUX (object));
-  demux = GST_MATROSKA_DEMUX (object);
-
-  switch (prop_id) {
-    case ARG_STREAMINFO:
-      g_value_set_boxed (value, demux->streaminfo);
-      break;
-    case ARG_METADATA:
-      g_value_set_boxed (value, demux->metadata);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 gboolean

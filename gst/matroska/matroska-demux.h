@@ -66,8 +66,6 @@ typedef struct _GstMatroskaDemux {
   GstClock	*clock;
 
   /* metadata */
-  GstCaps      *metadata;
-  GstCaps	*streaminfo;
   gchar         *muxing_app, *writing_app;
   gint64         created;
 

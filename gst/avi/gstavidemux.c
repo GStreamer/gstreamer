@@ -742,6 +742,7 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
   GstRiffRead *riff = GST_RIFF_READ (avi);
   guint32 tag;
   gst_riff_strh *strh;
+  GstBuffer *extradata = NULL, *initdata = NULL;
   gchar *name = NULL, *padname = NULL;
   GstCaps *caps = NULL;
   GstPadTemplate *templ = NULL;
@@ -775,7 +776,7 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
   }
   switch (strh->type) {
     case GST_RIFF_FCC_vids:
-      if (!gst_riff_read_strf_vids (riff, &strf.vids))
+      if (!gst_riff_read_strf_vids_with_data (riff, &strf.vids, &extradata))
         return FALSE;
       break;
     case GST_RIFF_FCC_auds:
@@ -802,6 +803,13 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
     }
 
     switch (tag) {
+      case GST_RIFF_TAG_strd:
+        if (initdata)
+          gst_buffer_unref (initdata);
+        if (!gst_riff_read_data (riff, &tag, &initdata))
+          return FALSE;
+        break;
+
       case GST_RIFF_TAG_strn:
         if (name)
           g_free (name);
@@ -814,7 +822,6 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
             GST_FOURCC_ARGS (tag));
         /* fall-through */
 
-      case GST_RIFF_TAG_strd:  /* what is this? */
       case GST_RIFF_TAG_JUNK:
         if (!gst_riff_read_skip (riff))
           return FALSE;
@@ -836,8 +843,8 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
 
       padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
-      caps = gst_riff_create_video_caps (strf.vids->compression, strh,
-          strf.vids, &codec_name);
+      caps = gst_riff_create_video_caps_with_data (strf.vids->compression,
+          strh, strf.vids, extradata, initdata, &codec_name);
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
           codec_name, NULL);
       gst_element_found_tags (GST_ELEMENT (avi), list);
@@ -919,6 +926,12 @@ gst_avi_demux_add_stream (GstAviDemux * avi)
 
   /* auto-negotiates */
   gst_element_add_pad (GST_ELEMENT (avi), pad);
+
+  /* clean something up */
+  if (initdata)
+    gst_buffer_unref (initdata);
+  if (extradata)
+    gst_buffer_unref (extradata);
 
   return TRUE;
 

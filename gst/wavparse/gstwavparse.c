@@ -80,6 +80,10 @@ static GstStaticPadTemplate src_template_factory =
         "rate = (int) [ 8000, 48000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/x-mulaw, "
+        "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ];"
+        "audio/x-adpcm, "
+        "layout = (string) microsoft, "
+        "block_align = (int) [ 1, 8192 ], "
         "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -621,6 +625,14 @@ gst_wavparse_parse_fmt (GstWavParse * wavparse, guint size)
             "channels", G_TYPE_INT, wavparse->channels, NULL);
         break;
 
+      case GST_RIFF_WAVE_FORMAT_ADPCM:
+        caps = gst_caps_new_simple ("audio/x-adpcm",
+            "layout", G_TYPE_STRING, "microsoft",
+            "block_align", G_TYPE_INT, wavparse->bps,
+            "rate", G_TYPE_INT, wavparse->rate,
+            "channels", G_TYPE_INT, wavparse->channels, NULL);
+        break;
+
       case GST_RIFF_WAVE_FORMAT_MPEGL12:
       case GST_RIFF_WAVE_FORMAT_MPEGL3:{
         int layer = (wavparse->format == GST_RIFF_WAVE_FORMAT_MPEGL12) ? 2 : 3;
@@ -716,7 +728,7 @@ gst_wavparse_loop (GstElement * element)
        Does anyone care about streaming wavs?
        FIXME: Should we have a decent buffer size? */
 
-#define MAX_BUFFER_SIZE 1024
+#define MAX_BUFFER_SIZE 4096
 
     if (wavparse->dataleft > 0) {
       desired = MIN (wavparse->dataleft, MAX_BUFFER_SIZE);
