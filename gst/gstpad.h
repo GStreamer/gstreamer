@@ -189,7 +189,7 @@ struct _GstPadClass {
 struct _GstRealPad {
   GstPad 			 pad;
 
-  /* the pad cpabilities */
+  /* the pad capabilities */
   GstCaps 			*caps;
   GstCaps 			*filter;
   GstCaps 			*appfilter;
@@ -390,7 +390,7 @@ gboolean		gst_pad_is_active			(GstPad *pad);
 void			gst_pad_set_element_private		(GstPad *pad, gpointer priv);
 gpointer		gst_pad_get_element_private		(GstPad *pad);
 
-void			gst_pad_set_parent			(GstPad *pad, GstObject *parent);
+void			gst_pad_set_parent			(GstPad *pad, GstElement *parent);
 GstElement*		gst_pad_get_parent			(GstPad *pad);
 GstElement*		gst_pad_get_real_parent			(GstPad *pad);
 
@@ -502,7 +502,7 @@ GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 GstCaps*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
-xmlNodePtr              gst_pad_ghost_save_thyself   		(GstPad *pad,
+xmlNodePtr              gst_ghost_pad_save_thyself   		(GstPad *pad,
 						     		 GstElement *bin,
 						     		 xmlNodePtr parent);
 
