@@ -698,7 +698,7 @@ gst_bin_create_plan_outside (GstBin *bin, GstElement *element)
   GstPad *pad;
   gboolean dedicated = TRUE;
   cothread_state *threadstate;
-  _GstBinOutsideSchedule *sched;
+  _GstBinOutsideSchedule *sched = NULL;
 
   // walk through all the pads, find out of this is hard or not
   pads = gst_element_get_pad_list (element);
@@ -755,6 +755,7 @@ gst_bin_create_plan_outside (GstBin *bin, GstElement *element)
     cothread_setfunc (sched->threadstate, gst_bin_sched_wrapper,
                       0, (char **)sched);
   }
+  return sched;
 }
 
 static void

@@ -38,7 +38,7 @@ struct _GstType {
   gchar *mime;			/* MIME type */
   gchar *exts;			/* space-delimited list of extensions */
 
-  GstTypeFindFunc typefindfunc;	/* typefind function */
+  GSList *typefindfuncs;	/* typefind functions */
 
   GList *srcs;			/* list of src objects for this type */
   GList *sinks;			/* list of sink objects for type */
@@ -66,8 +66,10 @@ guint16 	gst_type_find_by_mime		(gchar *mime);
 guint16 	gst_type_find_by_ext		(gchar *ext);
 
 /* add src or sink object */
-void	 	gst_type_add_src		(guint16 id, GstElementFactory *src);
-void 		gst_type_add_sink		(guint16 id, GstElementFactory *sink);
+void	 	_gst_type_add_src		(guint16 id, GstElementFactory *src);
+void 		_gst_type_add_sink		(guint16 id, GstElementFactory *sink);
+void	 	_gst_type_remove_src		(guint16 id, GstElementFactory *src);
+void 		_gst_type_remove_sink		(guint16 id, GstElementFactory *sink);
 /* get list of src or sink objects */
 GList*		gst_type_get_srcs		(guint16 id);
 GList*		gst_type_get_sinks		(guint16 id);

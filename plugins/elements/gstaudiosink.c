@@ -67,6 +67,18 @@ enum {
   /* FILL ME */
 };
 
+static GstCapsFactory audiosink_sink_caps = {
+  "audio/raw",
+  "format",   GST_PROPS_INT (AFMT_S16_LE),
+  "depth",    GST_PROPS_LIST (
+		  GST_PROPS_INT (8),
+		  GST_PROPS_INT (16)
+		  ),
+  "rate",     GST_PROPS_INT_RANGE (8000, 48000),
+  "channels", GST_PROPS_INT_RANGE (1, 2),
+  NULL
+};
+
 #define GST_TYPE_AUDIOSINK_FORMATS (gst_audiosink_formats_get_type())
 
 static GtkType 
@@ -103,7 +115,7 @@ gst_audiosink_channels_get_type(void) {
 static GstSinkClass *parent_class = NULL;
 static guint gst_audiosink_signals[LAST_SIGNAL] = { 0 };
 
-static guint16 gst_audiosink_type_audio = 0;
+static GstCaps *gst_audiosink_sink_caps = NULL;
 
 GtkType
 gst_audiosink_get_type (void) 
@@ -123,9 +135,6 @@ gst_audiosink_get_type (void)
     };
     audiosink_type = gtk_type_unique (GST_TYPE_SINK, &audiosink_info);
   }
-
-  if (!gst_audiosink_type_audio)
-    gst_audiosink_type_audio = gst_type_find_by_mime ("audio/raw");
 
   return audiosink_type;
 }
@@ -169,7 +178,7 @@ gst_audiosink_init (GstAudioSink *audiosink)
 {
   audiosink->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (audiosink), audiosink->sinkpad);
-  gst_pad_set_type_id (audiosink->sinkpad, gst_audiosink_type_audio);
+  gst_pad_set_caps (audiosink->sinkpad, gst_audiosink_sink_caps);
 
   gst_pad_set_chain_function (audiosink->sinkpad, gst_audiosink_chain);
 
@@ -401,10 +410,7 @@ gst_audiosink_change_state (GstElement *element)
 gboolean 
 gst_audiosink_factory_init (GstElementFactory *factory) 
 { 
-  if (!gst_audiosink_type_audio)
-    gst_audiosink_type_audio = gst_type_find_by_mime ("audio/raw");
-
-  gst_type_add_sink (gst_audiosink_type_audio, factory);
+  gst_audiosink_sink_caps = gst_caps_register (audiosink_sink_caps);
 
   return TRUE;
 }

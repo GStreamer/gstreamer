@@ -9,10 +9,10 @@ int main(int argc,char *argv[]) {
 
   pipeline = GST_BIN(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(1,pipeline != NULL);
-//  thr1 = GST_BIN(gst_thread_new("thr1"));
+  //thr1 = GST_BIN(gst_thread_new("thr1"));
   thr1 = gst_bin_new("thr1");
   g_return_val_if_fail(2,thr1 != NULL);
-//  thr2 = GST_BIN(gst_thread_new("thr2"));
+  //thr2 = GST_BIN(gst_thread_new("thr2"));
   thr2 = gst_bin_new("thr2");
   g_return_val_if_fail(3,thr2 != NULL);
 fprintf(stderr,"QUEUE: fakesrc\n");
@@ -43,6 +43,7 @@ fprintf(stderr,"QUEUE: fakesink\n");
   gst_element_connect(queue,"src",thr2,"sink");
   printf("QUEUE: constructed outer pipeline\n");
 
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
   if (GST_STATE(src) != GST_STATE_PLAYING) fprintf(stderr,"error: state not set\n");
 

@@ -60,8 +60,9 @@ void 		_gst_props_initialize		(void);
 
 GstProps*	gst_props_register		(GstPropsFactory factory);
 
-void		gst_props_dump			(GstProps *props);
-
 gboolean 	gst_props_check_compatibility 	(GstProps *props1, GstProps *props2);
+
+xmlNodePtr 	gst_props_save_thyself 		(GstProps *props, xmlNodePtr parent);
+GstProps* 	gst_props_load_thyself 		(xmlNodePtr parent);
 
 #endif /* __GST_PROPS_H__ */

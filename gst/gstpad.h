@@ -70,7 +70,6 @@ struct _GstPad {
   GstObject object;
 
   gchar *name;
-  GList *types;
   GstCaps *caps;
 
   cothread_state *threadstate;
@@ -95,7 +94,8 @@ struct _GstPadClass {
   GstObjectClass parent_class;
 
   /* signal callbacks */
-  void (*set_active)	(GstPad *pad,gboolean active);
+  void (*set_active)	(GstPad *pad, gboolean active);
+  void (*caps_changed)	(GstPad *pad, GstCaps *newcaps);
 };
 
 
@@ -109,12 +109,6 @@ void 			gst_pad_set_chain_function	(GstPad *pad, GstPadChainFunction chain);
 void 			gst_pad_set_pull_function	(GstPad *pad, GstPadPullFunction pull);
 void			gst_pad_set_pullregion_function	(GstPad *pad, GstPadPullRegionFunction pullregion);
 void 			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
-
-// FIXME is here for backward compatibility until we have GstCaps working...
-void	 		gst_pad_set_type_id		(GstPad *pad, guint16 id);
-
-GList*	 		gst_pad_get_type_ids		(GstPad *pad);
-void 			gst_pad_add_type_id		(GstPad *pad, guint16 id);
 
 void	 		gst_pad_set_caps		(GstPad *pad, GstCaps *caps);
 GstCaps* 		gst_pad_get_caps		(GstPad *pad);

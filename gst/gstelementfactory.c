@@ -46,6 +46,35 @@ void gst_elementfactory_register(GstElementFactory *elementfactory) {
 }
 
 /**
+ * gst_elementfactory_unregister:
+ * @elementfactory: factory to register
+ *
+ * Removes the elementfactory from the global list.
+ */
+void 
+gst_elementfactory_unregister(GstElementFactory *factory) 
+{
+  GList *caps;
+  g_return_if_fail (factory != NULL);
+
+  caps = factory->sink_caps;
+  while (caps) {
+    _gst_type_remove_sink (((GstCaps *)caps->data)->id, factory);
+    caps = g_list_next (caps);
+  }
+
+  caps = factory->src_caps;
+  while (caps) {
+    _gst_type_remove_src (((GstCaps *)caps->data)->id, factory);
+    caps = g_list_next (caps);
+  }
+
+  _gst_elementfactories = g_list_remove(_gst_elementfactories, factory);
+
+  g_free (factory);
+}
+
+/**
  * gst_elementfactory_find:
  * @name: name of factory to find
  *
@@ -58,8 +87,6 @@ GstElementFactory *gst_elementfactory_find(gchar *name) {
   GstElementFactory *factory;
 
   DEBUG("gstelementfactory: find \"%s\"\n", name);
-
-  gst_plugin_load_elementfactory(name);
 
   walk = _gst_elementfactories;
   while (walk) {
@@ -101,8 +128,8 @@ GstElementFactory *gst_elementfactory_new(gchar *name,GtkType type,
   factory->name = g_strdup(name);
   factory->type = type;
   factory->details = details;
-  factory->src_types = NULL;
-  factory->sink_types = NULL;
+  factory->src_caps = NULL;
+  factory->sink_caps = NULL;
   return factory;
 }
 
@@ -126,9 +153,9 @@ GstElement *gst_elementfactory_create(GstElementFactory *factory,
 
   DEBUG("gstelementfactory: create \"%s\" \"%s\"\n", factory->name, name);
 
+  // it's not loaded, try to load the plugin
   if (factory->type == 0) {
     factory = gst_plugin_load_elementfactory(factory->name);
-    //factory = gst_elementfactory_find(factory->name);
   }
   g_return_val_if_fail(factory != NULL, NULL);
   g_return_val_if_fail(factory->type != 0, NULL);
@@ -173,31 +200,45 @@ GstElement *gst_elementfactory_make(gchar *factoryname,gchar *name) {
 }
 
 /**
- * gst_elementfactory_add_src:
+ * gst_elementfactory_add_src_caps :
  * @elementfactory: factory to add the src id to
  * @id: the mime id of the src 
  *
  * Use this function to indicate that this factory can src
  * the given type id.
  */
-void gst_elementfactory_add_src(GstElementFactory *elementfactory, guint16 id) {
-  guint type = id;
+void 
+gst_elementfactory_add_src_caps (GstElementFactory *factory, 
+				 GstCapsDefinition def,
+				 GstCaps *caps) 
+{
+  g_return_if_fail(factory != NULL);
 
-  elementfactory->src_types = g_list_prepend(elementfactory->src_types, GUINT_TO_POINTER(type));
+  if (caps) {
+    factory->src_caps = g_list_append (factory->src_caps, caps); 
+    _gst_type_add_src (caps->id, factory);
+  }
 }
 
 /**
- * gst_elementfactory_add_sink:
+ * gst_elementfactory_add_sink_caps :
  * @elementfactory: factory to add the sink id to
  * @id: the type id of the sink 
  *
  * Use this function to indicate that this factory can sink
  * the given type id.
  */
-void gst_elementfactory_add_sink(GstElementFactory *elementfactory, guint16 id) {
-  guint type = id;
+void 
+gst_elementfactory_add_sink_caps (GstElementFactory *factory, 
+				 GstCapsDefinition def,
+				 GstCaps *caps) 
+{
+  g_return_if_fail(factory != NULL);
 
-  elementfactory->sink_types = g_list_prepend(elementfactory->sink_types, GUINT_TO_POINTER(type));
+  if (caps) {
+    factory->sink_caps = g_list_append (factory->sink_caps, caps); 
+    _gst_type_add_sink (caps->id, factory);
+  }
 }
 
 /**
@@ -210,41 +251,39 @@ void gst_elementfactory_add_sink(GstElementFactory *elementfactory, guint16 id) 
  * Returns: the new xmlNodePtr
  */
 xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePtr parent) {
-  GList *types;
+  GList *caps;
   xmlNodePtr subtree, subsubtree;
 
   xmlNewChild(parent,NULL,"name",factory->name);
   xmlNewChild(parent,NULL,"longname", factory->details->longname);
-  xmlNewChild(parent,NULL,"class", factory->details->class);
+  xmlNewChild(parent,NULL,"class", factory->details->klass);
   xmlNewChild(parent,NULL,"description", factory->details->description);
   xmlNewChild(parent,NULL,"version", factory->details->version);
   xmlNewChild(parent,NULL,"author", factory->details->author);
   xmlNewChild(parent,NULL,"copyright", factory->details->copyright);
 
-  types = factory->src_types;
-  if (types) {
+  caps = factory->src_caps;
+  if (caps) {
     subtree = xmlNewChild(parent,NULL,"sources",NULL);
-    while (types) {
-      guint16 typeid = GPOINTER_TO_UINT(types->data);
-      GstType *type = gst_type_find_by_id(typeid);
+    while (caps) {
+      GstCaps *cap = (GstCaps *)caps->data;
 
-      subsubtree = xmlNewChild(subtree,NULL,"type",NULL);
-      gst_type_save_thyself(type, subsubtree);
+      subsubtree = xmlNewChild(subtree,NULL,"capabilities",NULL);
+      gst_caps_save_thyself(cap, subsubtree);
 
-      types = g_list_next(types);
+      caps = g_list_next(caps);
     }
   }
-  types = factory->sink_types;
-  if (types) {
+  caps = factory->sink_caps;
+  if (caps) {
     subtree = xmlNewChild(parent,NULL,"sinks",NULL);
-    while (types) {
-      guint16 typeid = GPOINTER_TO_UINT(types->data);
-      GstType *type = gst_type_find_by_id(typeid);
+    while (caps) {
+      GstCaps *cap = (GstCaps *)caps->data;
 
-      subsubtree = xmlNewChild(subtree,NULL,"type",NULL);
-      gst_type_save_thyself(type, subsubtree);
+      subsubtree = xmlNewChild(subtree,NULL,"capabilities",NULL);
+      gst_caps_save_thyself(cap, subsubtree);
 
-      types = g_list_next(types);
+      caps = g_list_next(caps);
     }
   }
 
@@ -259,12 +298,14 @@ xmlNodePtr gst_elementfactory_save_thyself(GstElementFactory *factory, xmlNodePt
  * 
  * Returns: the new factory
  */
-GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent) {
+GstElementFactory *
+gst_elementfactory_load_thyself (xmlNodePtr parent) 
+{
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
   xmlNodePtr children = parent->childs;
   factory->details = g_new0(GstElementDetails, 1);
-  factory->sink_types = NULL;
-  factory->src_types = NULL;
+  factory->sink_caps = NULL;
+  factory->src_caps = NULL;
 
   while (children) {
     if (!strcmp(children->name, "name")) {
@@ -274,7 +315,7 @@ GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent) {
       factory->details->longname = g_strdup(xmlNodeGetContent(children));
     }
     if (!strcmp(children->name, "class")) {
-      factory->details->class = g_strdup(xmlNodeGetContent(children));
+      factory->details->klass = g_strdup(xmlNodeGetContent(children));
     }
     if (!strcmp(children->name, "description")) {
       factory->details->description = g_strdup(xmlNodeGetContent(children));
@@ -291,10 +332,9 @@ GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent) {
     if (!strcmp(children->name, "sources")) {
       xmlNodePtr field = children->childs;
       while (field) {
-        if (!strcmp(field->name, "type")) {
-          guint16 typeid = gst_type_load_thyself(field);
-
-          gst_type_add_src(typeid, factory);
+        if (!strcmp(field->name, "capabilities")) {
+	  GstCaps *caps = gst_caps_load_thyself (field);
+          gst_elementfactory_add_src_caps (factory, 0, caps);
 	}
 	field = field->next;
       }
@@ -302,10 +342,9 @@ GstElementFactory *gst_elementfactory_load_thyself(xmlNodePtr parent) {
     if (!strcmp(children->name, "sinks")) {
       xmlNodePtr field = children->childs;
       while (field) {
-        if (!strcmp(field->name, "type")) {
-          guint16 typeid = gst_type_load_thyself(field);
-
-          gst_type_add_sink(typeid, factory);
+        if (!strcmp(field->name, "capabilities")) {
+	  GstCaps *caps = gst_caps_load_thyself (field);
+          gst_elementfactory_add_sink_caps (factory, 0, caps);
 	}
 	field = field->next;
       }

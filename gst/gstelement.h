@@ -27,6 +27,7 @@
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
 #include <gst/gstbuffer.h>
+#include <gst/gstcaps.h>
 #include <gst/cothreads.h>
 
 
@@ -139,7 +140,7 @@ struct _GstElementClass {
 
 struct _GstElementDetails {
   gchar *longname;              /* long, english name */
-  gchar *class;                 /* type of element, kinda */
+  gchar *klass;                 /* type of element, kinda */
   gchar *description;           /* insights of one form or another */
   gchar *version;               /* version of the element */
   gchar *author;                /* who wrote this thing? */
@@ -152,8 +153,8 @@ struct _GstElementFactory {
 
   GstElementDetails *details;	/* pointer to details struct */
 
-  GList *src_types;
-  GList *sink_types;
+  GList *src_caps;
+  GList *sink_caps;
 };
 
 GtkType 		gst_element_get_type		(void);
@@ -192,10 +193,16 @@ GstElement*		gst_element_load_thyself	(xmlNodePtr parent, GHashTable *elements);
 
 GstElementFactory*	gst_elementfactory_new		(gchar *name,GtkType type,
                                           		 GstElementDetails *details);
-void 			gst_elementfactory_register	(GstElementFactory *elementfactory);
 
-void 			gst_elementfactory_add_src	(GstElementFactory *elementfactory, guint16 id);
-void 			gst_elementfactory_add_sink	(GstElementFactory *elementfactory, guint16 id);
+void 			gst_elementfactory_register	(GstElementFactory *elementfactory);
+void 			gst_elementfactory_unregister	(GstElementFactory *elementfactory);
+
+void 			gst_elementfactory_add_src_caps	(GstElementFactory *elementfactory, 
+							 GstCapsDefinition def,
+							 GstCaps *caps);
+void 			gst_elementfactory_add_sink_caps(GstElementFactory *elementfactory, 
+							 GstCapsDefinition def,
+							 GstCaps *caps);
 
 GstElementFactory*	gst_elementfactory_find		(gchar *name);
 GList*			gst_elementfactory_get_list	(void);

@@ -32,6 +32,12 @@
 GList *_gst_types;
 guint16 _gst_maxtype;
 
+struct _GstTypeFindInfo {
+  GstTypeFindFunc typefindfunc; /* typefind function */
+
+  GstPlugin *plugin;            /* the plugin with this typefind function */
+};
+
 #define MAX_COST 999999
 
 struct _gst_type_node
@@ -91,7 +97,7 @@ gst_type_register (GstTypeFactory *factory)
     type->id = 		_gst_maxtype++;
     type->mime = 	factory->mime;
     type->exts = 	factory->exts;
-    type->typefindfunc = factory->typefindfunc;
+    //type->typefindfunc = factory->typefindfunc;
     type->srcs =	NULL;
     type->sinks = 	NULL;
     type->converters = 	g_hash_table_new (NULL, NULL);
@@ -106,9 +112,11 @@ gst_type_register (GstTypeFactory *factory)
     /* FIXME: do extension merging here, not that easy */
 
     /* if there is no existing typefind function, try to use new one  */
+    /*
     if ((type->typefindfunc == gst_type_typefind_dummy || 
          type->typefindfunc == NULL) && factory->typefindfunc)
       type->typefindfunc = factory->typefindfunc;
+      */
   }
 
   return id;
@@ -161,14 +169,6 @@ guint16 gst_type_find_by_mime_func (gchar *mime)
 guint16 
 gst_type_find_by_mime (gchar *mime) 
 {
-  guint16 typeid;
-
-  typeid = gst_type_find_by_mime_func (mime);
-
-  if (!typeid) {
-    gst_plugin_load_typefactory (mime);
-  }
-
   return gst_type_find_by_mime_func (mime);
 }
 
@@ -254,16 +254,8 @@ gst_type_dump(void)
   }
 }
 
-/**
- * gst_type_add_src:
- * @id: the type id to add the source factory to
- * @src: the source factory for the type
- *
- * register the src factory as being a source for the
- * given type id
- */
-void 
-gst_type_add_src (guint16 id, GstElementFactory *src) 
+static void 
+gst_type_handle_src (guint16 id, GstElementFactory *src, gboolean remove) 
 {
   GList *walk;
   GstType *type = gst_type_find_by_id (id);
@@ -271,16 +263,23 @@ gst_type_add_src (guint16 id, GstElementFactory *src)
   g_return_if_fail (type != NULL);
   g_return_if_fail (src != NULL);
 
-  type->srcs = g_list_prepend (type->srcs, src);
-  gst_elementfactory_add_src (src, id);
+  g_print ("gsttype: add src %d, \"%s\"\n", id, src->name);
+  if (remove) 
+    type->srcs = g_list_remove (type->srcs, src);
+  else 
+    type->srcs = g_list_prepend (type->srcs, src);
 
   // find out if the element has to be indexed in the matrix
-  walk = src->sink_types;
+  walk = src->sink_caps;
 
   while (walk) {
-    GstType *type2 = gst_type_find_by_id (GPOINTER_TO_UINT (walk->data));
-    GList *converters = (GList *)g_hash_table_lookup (type2->converters, GUINT_TO_POINTER ((guint)id));
-    GList *orig = converters;
+    GstType *type2;
+    GList *converters;
+    GList *orig;
+
+    type2 = gst_type_find_by_id (((GstCaps *)walk->data)->id);
+    converters = (GList *)g_hash_table_lookup (type2->converters, GUINT_TO_POINTER ((guint)id));
+    orig = converters;
 
     while (converters) {
       if (converters->data == src) {
@@ -290,8 +289,79 @@ gst_type_add_src (guint16 id, GstElementFactory *src)
     }
 
     if (!converters) {
-      orig = g_list_prepend (orig, src);
+      if (remove) 
+        orig = g_list_remove (orig, src);
+      else
+        orig = g_list_prepend (orig, src);
       g_hash_table_insert (type2->converters, GUINT_TO_POINTER ((guint)id), orig);
+    }
+    
+    walk = g_list_next (walk);
+  }
+}
+
+/**
+ * gst_type_add_src:
+ * @id: the type id to add the source factory to
+ * @src: the source factory for the type
+ *
+ * register the src factory as being a source for the
+ * given type id
+ */
+void 
+_gst_type_add_src (guint16 id, GstElementFactory *src) 
+{
+  gst_type_handle_src (id, src, FALSE);
+}
+
+/**
+ * gst_type_remove_src:
+ * @id: the type id to add the source factory to
+ * @src: the source factory for the type
+ *
+ * register the src factory as being a source for the
+ * given type id
+ */
+void 
+_gst_type_remove_src (guint16 id, GstElementFactory *src) 
+{
+  gst_type_handle_src (id, src, TRUE);
+}
+
+static void 
+gst_type_handle_sink (guint16 id, GstElementFactory *sink, gboolean remove) 
+{
+  GList *walk;
+  GstType *type = gst_type_find_by_id (id);
+
+  g_return_if_fail (type != NULL);
+  g_return_if_fail (sink != NULL);
+
+  if (remove) 
+    type->sinks = g_list_remove (type->sinks, sink);
+  else 
+    type->sinks = g_list_prepend (type->sinks, sink);
+
+  // find out if the element has to be indexed in the matrix
+  walk = sink->src_caps;
+
+  while (walk) {
+    GList *converters = (GList *)g_hash_table_lookup (type->converters, walk->data);
+    GList *orig = converters;
+
+    while (converters) {
+      if (converters->data == sink) {
+	break;
+      }
+      converters = g_list_next (converters);
+    }
+
+    if (!converters) {
+      if (remove) 
+        orig = g_list_remove (orig, sink);
+      else
+        orig = g_list_prepend (orig, sink);
+      g_hash_table_insert (type->converters, walk->data, orig);
     }
     
     walk = g_list_next (walk);
@@ -307,38 +377,23 @@ gst_type_add_src (guint16 id, GstElementFactory *src)
  * given type id
  */
 void 
-gst_type_add_sink (guint16 id, GstElementFactory *sink) 
+_gst_type_add_sink (guint16 id, GstElementFactory *sink) 
 {
-  GList *walk;
-  GstType *type = gst_type_find_by_id (id);
+  gst_type_handle_sink (id, sink, FALSE);
+}
 
-  g_return_if_fail (type != NULL);
-  g_return_if_fail (sink != NULL);
-
-  type->sinks = g_list_prepend (type->sinks, sink);
-  gst_elementfactory_add_sink (sink, id);
-
-  // find out if the element has to be indexed in the matrix
-  walk = sink->src_types;
-
-  while (walk) {
-    GList *converters = (GList *)g_hash_table_lookup (type->converters, walk->data);
-    GList *orig = converters;
-
-    while (converters) {
-      if (converters->data == sink) {
-	break;
-      }
-      converters = g_list_next (converters);
-    }
-
-    if (!converters) {
-      orig = g_list_prepend (orig, sink);
-      g_hash_table_insert (type->converters, walk->data, orig);
-    }
-    
-    walk = g_list_next (walk);
-  }
+/**
+ * gst_type_remove_sink:
+ * @id: the type id to remove the sink factory from
+ * @sink: the sink factory for the type
+ *
+ * remove the sink factory as being a sink for the
+ * given type id
+ */
+void 
+_gst_type_remove_sink (guint16 id, GstElementFactory *sink) 
+{
+  gst_type_handle_sink (id, sink, TRUE);
 }
 
 /**
@@ -601,14 +656,16 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
   guint16 typeid;
   g_print ("gsttype: need to load typefind function\n");
 
-  type->typefindfunc = NULL;
+  type->typefindfuncs = NULL;
   gst_plugin_load_typefactory (type->mime);
   typeid = gst_type_find_by_mime (type->mime);
   type = gst_type_find_by_id (typeid);
 
+  /*
   if (type->typefindfunc) {
     return type->typefindfunc (buffer, type);
   }
+  */
 
   return FALSE;
 }
@@ -637,7 +694,7 @@ gst_typefactory_load_thyself (xmlNodePtr parent)
       factory->exts = g_strdup (xmlNodeGetContent (field));
     }
     else if (!strcmp (field->name, "typefind")) {
-      factory->typefindfunc = gst_type_typefind_dummy;
+      //factory->typefindfunc = gst_type_typefind_dummy;
     }
     field = field->next;
   }

@@ -56,8 +56,6 @@ void _gst_plugin_initialize() {
   _gst_libraries = NULL;
   _gst_libraries_seqno = 0;
 
-  /* add the main (installed) library path */
-  _gst_plugin_paths = g_list_append(_gst_plugin_paths,PLUGINS_DIR);
 
   /* if this is set, we add build-directory paths to the list */
 #ifdef PLUGINS_USE_SRCDIR
@@ -72,6 +70,9 @@ void _gst_plugin_initialize() {
                                      PLUGINS_SRCDIR "/gst/elements");
   _gst_plugin_paths = g_list_append(_gst_plugin_paths,
                                      PLUGINS_SRCDIR "/gst/types");
+#else
+  /* add the main (installed) library path */
+  _gst_plugin_paths = g_list_append(_gst_plugin_paths,PLUGINS_DIR);
 #endif /* PLUGINS_USE_SRCDIR */
 
   doc = xmlParseFile("/etc/gstreamer/reg.xml");
@@ -164,6 +165,20 @@ gboolean gst_library_load(gchar *name) {
   return res;
 }
 
+static void 
+gst_plugin_remove(GstPlugin *plugin) 
+{
+  GList *factories;
+
+  factories = plugin->elements;
+  while (factories) {
+    gst_elementfactory_unregister((GstElementFactory*)(factories->data));
+    factories = g_list_next(factories);
+  }
+  _gst_plugins = g_list_remove(_gst_plugins, plugin);
+  g_free (plugin);
+}
+
 /**
  * gst_plugin_load:
  * @name: name of plugin to load
@@ -209,26 +224,12 @@ gboolean gst_plugin_load_absolute(gchar *name) {
   GModule *module;
   GstPluginInitFunc initfunc;
   GstPlugin *plugin;
-  GList *plugins;
   struct stat file_status;
 
   if (g_module_supported() == FALSE) {
     g_print("gstplugin: wow, you built this on a platform without dynamic loading???\n");
     return FALSE;
   }
-
-  plugins = _gst_plugins;
-
-  while (plugins) {
-    plugin = (GstPlugin *)plugins->data;
-
-    if (!strcmp(plugin->filename, name) && plugin->loaded) {
-      _gst_plugins = g_list_append(_gst_plugins,plugin);
-      return TRUE;
-    }
-    plugins = g_list_next(plugins);
-  }
-  //g_print("trying to absolute load '%s\n",name);
 
   if (stat(name,&file_status)) {
 //    g_print("problem opening file %s\n",name);
@@ -239,19 +240,13 @@ gboolean gst_plugin_load_absolute(gchar *name) {
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
       if ((plugin = (initfunc)(module))) {
-        GList *factories;
         g_print("gstplugin: plugin %s loaded\n", plugin->name);
         plugin->filename = g_strdup(name);
         plugin->loaded = TRUE;
         _gst_modules = g_list_append(_gst_modules,module);
         _gst_modules_seqno++;
-        _gst_plugins = g_list_append(_gst_plugins,plugin);
+        _gst_plugins = g_list_prepend(_gst_plugins,plugin);
         _gst_plugins_seqno++;
-        factories = plugin->elements;
-        while (factories) {
-          gst_elementfactory_register((GstElementFactory*)(factories->data));
-          factories = g_list_next(factories);
-        }
         return TRUE;
       }
     }
@@ -279,7 +274,7 @@ GstPlugin *gst_plugin_new(gchar *name) {
   plugin->longname = NULL;
   plugin->types = NULL;
   plugin->elements = NULL;
-  plugin->loaded = FALSE;
+  plugin->loaded = TRUE;
 
   return plugin;
 }
@@ -343,7 +338,7 @@ GstElementFactory *gst_plugin_find_elementfactory(gchar *name) {
     factories = ((GstPlugin *)(plugins->data))->elements;
     while (factories) {
       factory = (GstElementFactory*)(factories->data);
-      if (!strcmp(factory->name,name))
+      if (!strcmp(factory->name, name))
         return (GstElementFactory*)(factory);
       factories = g_list_next(factories);
     }
@@ -376,12 +371,14 @@ GstElementFactory *gst_plugin_load_elementfactory(gchar *name) {
       factory = (GstElementFactory*)(factories->data);
       if (!strcmp(factory->name,name)) {
 	if (!plugin->loaded) {
+          gchar *filename = g_strdup (plugin->filename);
 	  g_print("gstplugin: loading element factory %s from plugin %s\n", name, plugin->name);
-	  _gst_plugins = g_list_remove(_gst_plugins, plugin);
-	  if (!gst_plugin_load_absolute(plugin->filename)) {
+	  gst_plugin_remove(plugin);
+	  if (!gst_plugin_load_absolute(filename)) {
 	    g_print("gstplugin: error loading element factory %s from plugin %s\n", name, plugin->name);
 	  }
-	  factory = gst_plugin_find_elementfactory(factory->name);
+	  g_free (filename);
+	  factory = gst_plugin_find_elementfactory(name);
 	}
         return factory;
       }
@@ -414,11 +411,13 @@ void gst_plugin_load_typefactory(gchar *mime) {
       factory = (GstTypeFactory*)(factories->data);
       if (!strcmp(factory->mime,mime)) {
 	if (!plugin->loaded) {
+          gchar *filename = g_strdup (plugin->filename);
 	  g_print("gstplugin: loading type factory for \"%s\" from plugin %s\n", mime, plugin->name);
-	  _gst_plugins = g_list_remove(_gst_plugins, plugin);
-	  if (!gst_plugin_load_absolute(plugin->filename)) {
+	  gst_plugin_remove(plugin);
+	  if (!gst_plugin_load_absolute(filename)) {
 	    g_print("gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, plugin->name);
 	  }
+	  g_free (filename);
 	}
 	return;
       }
@@ -443,6 +442,7 @@ void gst_plugin_add_factory(GstPlugin *plugin,GstElementFactory *factory) {
 
 //  g_print("adding factory to plugin\n");
   plugin->elements = g_list_append(plugin->elements,factory);
+  gst_elementfactory_register (factory);
 }
 
 /**
@@ -528,7 +528,7 @@ void gst_plugin_load_thyself(xmlNodePtr parent) {
   while (kinderen) {
     if (!strcmp(kinderen->name, "plugin")) {
       xmlNodePtr field = kinderen->childs;
-      GstPlugin *plugin = (GstPlugin *)g_malloc(sizeof(GstPlugin));
+      GstPlugin *plugin = g_new0 (GstPlugin, 1);
       plugin->elements = NULL;
       plugin->types = NULL;
       plugin->loaded = FALSE;
@@ -552,13 +552,13 @@ void gst_plugin_load_thyself(xmlNodePtr parent) {
 	}
 	else if (!strcmp(field->name, "element")) {
 	  GstElementFactory *factory = gst_elementfactory_load_thyself(field);
-	  plugin->elements = g_list_prepend(plugin->elements, factory);
+	  gst_plugin_add_factory (plugin, factory);
 	  elementcount++;
 	}
 	else if (!strcmp(field->name, "type")) {
 	  GstTypeFactory *factory = gst_typefactory_load_thyself(field);
-	  gst_type_register(factory);
-	  plugin->types = g_list_prepend(plugin->types, factory);
+	  gst_plugin_add_type (plugin, factory);
+	  elementcount++;
 	  typecount++;
 	}
 

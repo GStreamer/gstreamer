@@ -26,6 +26,25 @@ void
 _gst_caps_initialize (void) 
 {
 }
+
+static guint16
+get_type_for_mime (gchar *mime)
+{
+  guint16 typeid;
+
+  typeid = gst_type_find_by_mime (mime);
+  if (typeid == 0) {
+     GstTypeFactory *factory = g_new0 (GstTypeFactory, 1);
+
+     factory->mime = g_strdup (mime);
+     factory->exts = NULL;
+     factory->typefindfunc = NULL;
+
+     typeid = gst_type_register (factory);
+  }
+  return typeid;
+}
+
 /**
  * gst_caps_register:
  * @factory: the factory to register
@@ -48,16 +67,7 @@ gst_caps_register (GstCapsFactory factory)
 
   g_return_val_if_fail (tag != NULL, NULL);
   
-  typeid = gst_type_find_by_mime ((gchar *)tag);
-  if (typeid == 0) {
-     GstTypeFactory *factory = g_new0 (GstTypeFactory, 1);
-
-     factory->mime = g_strdup ((gchar *)tag);
-     factory->exts = NULL;
-     factory->typefindfunc = NULL;
-
-     typeid = gst_type_register (factory);
-  }
+  typeid = get_type_for_mime ((gchar *)tag);
 
   caps = g_new0 (GstCaps, 1);
   g_return_val_if_fail (caps != NULL, NULL);
@@ -68,25 +78,6 @@ gst_caps_register (GstCapsFactory factory)
   return caps;
 }
 
-
-/**
- * gst_caps_dump:
- * @caps: the capability to dump
- *
- * Dumps the contents of the capabilty one the console
- */
-void
-gst_caps_dump (GstCaps *caps)
-{
-  g_return_if_fail (caps != NULL);
-
-  g_print("gstcaps: {\ngstcaps:  mime type \"%d\"\n", caps->id);
-
-  gst_props_dump (caps->properties);
-
-  g_print("gstcaps: }\n");
-}
-	
 
 /**
  * gst_caps_check_compatibility:
@@ -108,4 +99,43 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 
   return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
 }
+
+
+xmlNodePtr      
+gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
+{
+  xmlNodePtr subtree;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  xmlNewChild (parent, NULL, "type", gst_type_find_by_id (caps->id)->mime);
+  if (caps->properties) {
+    subtree = xmlNewChild (parent, NULL, "properties", NULL);
+
+    gst_props_save_thyself (caps->properties, subtree);
+  }
+
+  return parent;
+}
+
+GstCaps*        
+gst_caps_load_thyself (xmlNodePtr parent)
+{
+  GstCaps *caps = g_new0 (GstCaps, 1);
+  xmlNodePtr field = parent->childs;
+
+  while (field) {
+    if (!strcmp (field->name, "type")) {
+      caps->id = get_type_for_mime (xmlNodeGetContent (field));
+    }
+    else if (!strcmp (field->name, "properties")) {
+      caps->properties = gst_props_load_thyself (field);
+    }
+    field = field->next;
+  }
+
+  return caps;
+}
+
+
 

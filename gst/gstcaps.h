@@ -29,6 +29,11 @@ typedef gpointer GstCapsFactoryEntry;
 typedef GstCapsFactoryEntry GstCapsFactory[];
 typedef GstCapsFactory *GstCapsListFactory[];
 
+typedef enum {
+  GST_CAPS_ALWAYS	= 1,
+  GST_CAPS_MAYBE	= 2,
+} GstCapsDefinition;
+
 struct _GstCaps {
   guint16 id;			/* type id (major type) */
 
@@ -40,8 +45,9 @@ void 		_gst_caps_initialize		(void);
 
 GstCaps*	gst_caps_register		(GstCapsFactory factory);
 
-void		gst_caps_dump			(GstCaps *caps);
-
 gboolean 	gst_caps_check_compatibility 	(GstCaps *caps1, GstCaps *caps2);
+
+xmlNodePtr      gst_caps_save_thyself    	(GstCaps *caps, xmlNodePtr parent);
+GstCaps* 	gst_caps_load_thyself    	(xmlNodePtr parent);
 
 #endif /* __GST_CAPS_H__ */

@@ -169,7 +169,7 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
 
   if (found) {
     type_id = gst_util_get_int_arg (GTK_OBJECT (typefind), "type");
-    gst_pad_add_type_id (gst_element_get_pad (element, "src"), type_id);
+    //gst_pad_add_type_id (gst_element_get_pad (element, "src"), type_id);
   }
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
@@ -180,32 +180,28 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   return type_id;
 }
 
-static void 
+static gboolean 
 gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink) 
 {
   GList *sinkpads;
   gboolean connected = FALSE;
-  guint16 type;
 
-  type = GPOINTER_TO_INT (pad->types->data);
-
-  g_print("gstpipeline: autoplug pad connect function type %d for \"%s\" to \"%s\"\n", type, 
+  g_print("gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"\n", 
 		  gst_element_get_name(src), gst_element_get_name(sink));
 
   sinkpads = gst_element_get_pad_list(sink);
   while (sinkpads) {
     GstPad *sinkpad = (GstPad *)sinkpads->data;
-    guint16 sinktype = GPOINTER_TO_INT (sinkpad->types->data);
 
     // if we have a match, connect the pads
-    if (sinktype == type && 
-        sinkpad->direction == GST_PAD_SINK && 
-        !GST_PAD_CONNECTED(sinkpad)) 
+    if (sinkpad->direction == GST_PAD_SINK && 
+        !GST_PAD_CONNECTED(sinkpad) &&
+	gst_caps_check_compatibility (pad->caps, sinkpad->caps)) 
     {
       gst_pad_connect(pad, sinkpad);
-      g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", pad->name, 
-		      type, gst_element_get_name(src));
-      g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, sinktype, 
+      g_print("gstpipeline: autoconnect pad \"%s\" in element %s <-> ", pad->name, 
+		       gst_element_get_name(src));
+      g_print("pad \"%s\" in element %s\n", sinkpad->name,  
 		      gst_element_get_name(sink));
       connected = TRUE;
       break;
@@ -214,55 +210,27 @@ gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   }
 
   if (!connected) {
-    g_print("gstpipeline: no path to sinks for type %d\n", type);
+    g_print("gstpipeline: no path to sinks for type\n");
   }
+  return connected;
 }
 
 static void 
 gst_pipeline_pads_autoplug (GstElement *src, GstElement *sink) 
 {
-  GList *srcpads, *sinkpads;
+  GList *srcpads;
   gboolean connected = FALSE;
 
   srcpads = gst_element_get_pad_list(src);
 
-  while (srcpads) {
+  while (srcpads && !connected) {
     GstPad *srcpad = (GstPad *)srcpads->data;
-    GList *srctypes = gst_pad_get_type_ids(srcpad);
-    guint16 srctype = 0;
-    if (srctypes)
-      srctype = GPOINTER_TO_INT (srctypes->data);
 
-    if (srcpad->direction == GST_PAD_SRC && !GST_PAD_CONNECTED(srcpad)) {
+    connected = gst_pipeline_pads_autoplug_func (src, srcpad, sink);
 
-      sinkpads = gst_element_get_pad_list(sink);
-      // FIXME could O(n) if the types were sorted...
-      while (sinkpads) {
-        GstPad *sinkpad = (GstPad *)sinkpads->data;
-        GList *sinktypes = gst_pad_get_type_ids(sinkpad);
-        guint16 sinktype = 0;
-        if (sinktypes)
-          sinktype = GPOINTER_TO_INT (sinktypes->data);
-
-	// if we have a match, connect the pads
-	if (sinktype == srctype && 
-	    sinkpad->direction == GST_PAD_SINK && 
-	    !GST_PAD_CONNECTED(sinkpad)) {
-          gst_pad_connect(srcpad, sinkpad);
-          g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", 
-			  srcpad->name, srctype, gst_element_get_name(src));
-          g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, 
-			  sinktype, gst_element_get_name(sink));
-	  connected = TRUE;
-	  goto end;
-	}
-        sinkpads = g_list_next(sinkpads);
-      }
-    }
     srcpads = g_list_next(srcpads);
   }
   
-end:
   if (!connected) {
     g_print("gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
 		    gst_element_get_name(src), gst_element_get_name(sink));
@@ -356,7 +324,7 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
 
   factory = gst_element_get_factory(pipeline->src);
 
-  src_types = factory->src_types;
+  src_types = factory->src_caps;
   if (src_types == NULL) {
     g_print("GstPipeline: source \"%s\" has no MIME type, running typefind...\n", 
 		gst_element_get_name(pipeline->src));
@@ -401,12 +369,14 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
       pad = (GstPad *)pads->data;
 
       if (pad->direction == GST_PAD_SINK) {
+	      /*
         GList *types = gst_pad_get_type_ids(pad);
         if (types) {
           sink_type = GPOINTER_TO_INT (types->data);
 	  break;
         }
 	else
+	*/
 	  sink_type = 0;
 
       }
@@ -501,6 +471,7 @@ differ:
         while (sinkpads) {
           sinkpad = (GstPad *)sinkpads->data;
 
+	  /*
 	  // FIXME connect matching pads, not just the first one...
           if (sinkpad->direction == GST_PAD_SINK && 
 	      !GST_PAD_CONNECTED(sinkpad)) {
@@ -513,6 +484,7 @@ differ:
             gst_pad_set_type_id (gst_element_get_pad(queue, "sink"), sinktype);
 	    break;
 	  }
+	  */
           sinkpads = g_list_next(sinkpads);
         }
         gst_pipeline_pads_autoplug(thesrcelement, queue);

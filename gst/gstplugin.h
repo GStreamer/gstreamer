@@ -47,18 +47,19 @@ typedef GstPlugin* (*GstPluginInitFunc) (GModule *module);
 void 			_gst_plugin_initialize		(void);
 
 GstPlugin*		gst_plugin_new			(gchar *name);
+void 			gst_plugin_set_longname		(GstPlugin *plugin, gchar *longname);
 
 void 			gst_plugin_load_all		(void);
 gboolean 		gst_plugin_load			(gchar *name);
-gboolean 		gst_library_load		(gchar *name);
 gboolean 		gst_plugin_load_absolute	(gchar *name);
+gboolean 		gst_library_load		(gchar *name);
 
-void 			gst_plugin_set_longname		(GstPlugin *plugin, gchar *longname);
 void 			gst_plugin_add_factory		(GstPlugin *plugin, GstElementFactory *factory);
 void 			gst_plugin_add_type		(GstPlugin *plugin, GstTypeFactory *factory);
 
 GstPlugin*		gst_plugin_find			(const gchar *name);
 GList*			gst_plugin_get_list		(void);
+
 GstElementFactory*	gst_plugin_find_elementfactory	(gchar *name);
 
 GstElementFactory*	gst_plugin_load_elementfactory	(gchar *name);

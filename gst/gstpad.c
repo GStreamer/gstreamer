@@ -28,6 +28,7 @@
 /* Pad signals and args */
 enum {
   SET_ACTIVE,
+  CAPS_CHANGED,
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -85,6 +86,11 @@ gst_pad_class_init (GstPadClass *klass)
                     GTK_SIGNAL_OFFSET (GstPadClass, set_active),
                     gtk_marshal_NONE__BOOL, GTK_TYPE_NONE, 1,
                     GTK_TYPE_BOOL);
+  gst_pad_signals[CAPS_CHANGED] =
+    gtk_signal_new ("caps_changed", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstPadClass, caps_changed),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
 
   gtk_object_add_arg_type ("GstPad::active", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_ACTIVE);
@@ -106,7 +112,7 @@ gst_pad_init (GstPad *pad)
   pad->qosfunc = NULL;
   pad->parent = NULL;
   pad->ghostparents = NULL;
-  pad->types = NULL;
+  pad->caps = NULL;
 }
 
 static void
@@ -670,30 +676,6 @@ gst_pad_get_ghost_parents (GstPad *pad)
 }
 
 /**
- * gst_pad_get_type_ids:
- * @pad: the pad to get the type ids from
- *
- * get the list of types for this pad
- *
- * Returns: a GList of types of this pad
- */
-GList*
-gst_pad_get_type_ids (GstPad *pad) 
-{
-  g_return_val_if_fail (pad != NULL, 0);
-  g_return_val_if_fail (GST_IS_PAD (pad), 0);
-
-  return pad->types;
-}
-// FIXME remove...
-void 
-gst_pad_set_type_id (GstPad *pad, 
-		     guint16 id) 
-{
-  gst_pad_add_type_id (pad, id);
-}
-
-/**
  * gst_pad_set_caps:
  * @pad: the pad to set the caps to
  * @caps: the caps to attach to this pad 
@@ -725,24 +707,6 @@ gst_pad_get_caps (GstPad *pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   return pad->caps;
-}
-
-/**
- * gst_pad_set_type_id:
- * @pad: the pad to set the type id to
- * @id: the type id to set this pad to
- *
- * set the type of this pad
- */
-void 
-gst_pad_add_type_id (GstPad *pad, 
-		     guint16 id) 
-{
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (gst_type_find_by_id (id) != NULL);
-
-  pad->types = g_list_append(pad->types, GINT_TO_POINTER((gint)id));
 }
 
 /**

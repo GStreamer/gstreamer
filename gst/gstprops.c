@@ -156,78 +156,6 @@ gst_props_register (GstPropsFactory factory)
   return props;
 }
 
-static void
-gst_props_dump_entry_func (GstPropsEntry *entry)
-{
-  switch (entry->propstype) {
-    case GST_PROPS_INT_ID_NUM: 
-      g_print("gstprops:    int %d\n", entry->data.int_data);
-      break;
-    case GST_PROPS_INT_RANGE_ID_NUM: 
-      g_print("gstprops:    int range %d %d\n", 
-		      entry->data.int_range_data.min,
-		      entry->data.int_range_data.max);
-      break;
-    case GST_PROPS_FOURCC_ID_NUM: 
-      g_print("gstprops:    fourcc 0x%08x (%4.4s)\n", entry->data.fourcc_data, (gchar *)&entry->data.fourcc_data);
-      break;
-    case GST_PROPS_BOOL_ID_NUM: 
-      g_print("gstprops:    boolean %d\n", entry->data.bool_data);
-      break;
-    default:
-      g_print("gstprops:    **illegal entry**\n");
-      break;
-  }
-}
-
-static void
-gst_props_dump_list_func (gpointer entry,
-		         gpointer list_entry)
-{
-  gst_props_dump_entry_func ((GstPropsEntry *)entry);
-}
-
-static void
-gst_props_dump_func (gpointer data,
-		    gpointer user_data)
-{
-  GstPropsEntry *entry;
-
-  entry = (GstPropsEntry *)data;
-
-  g_print("gstprops:  property type \"%s\"\n", g_quark_to_string (entry->propid));
-
-  switch (entry->propstype) {
-    case GST_PROPS_LIST_ID_NUM: 
-    {
-      g_print("gstprops:   list type (\n");
-      g_list_foreach (entry->data.list_data.entries, gst_props_dump_list_func, entry);
-      g_print("gstprops:   )\n");
-      break;
-    }
-    default:
-      gst_props_dump_entry_func (entry);
-      break;
-  }
-}
-
-/**
- * gst_props_dump:
- * @props: the capability to dump
- *
- * Dumps the contents of the capabilty one the console
- */
-void
-gst_props_dump (GstProps *props)
-{
-  g_return_if_fail (props != NULL);
-
-  g_print("gstprops: {\n");
-
-  g_slist_foreach (props->properties, gst_props_dump_func, props);
-  g_print("gstprops: }\n");
-}
-	
 /* entry2 is always a list, entry1 never is */
 static gboolean
 gst_props_entry_check_list_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry2)
@@ -381,5 +309,73 @@ end:
     return FALSE;
 
   return compatible;
+}
+
+static xmlNodePtr
+gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
+{
+  xmlNodePtr subtree;
+
+  switch (entry->propstype) {
+    case GST_PROPS_INT_ID_NUM: 
+      subtree = xmlNewChild (parent, NULL, "int", NULL);
+      xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
+      xmlNewProp (subtree, "value", g_strdup_printf ("%d", entry->data.int_data));
+      break;
+    case GST_PROPS_INT_RANGE_ID_NUM: 
+      subtree = xmlNewChild (parent, NULL, "range", NULL);
+      xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
+      xmlNewProp (subtree, "min", g_strdup_printf ("%d", entry->data.int_range_data.min));
+      xmlNewProp (subtree, "max", g_strdup_printf ("%d", entry->data.int_range_data.max));
+      break;
+    case GST_PROPS_FOURCC_ID_NUM: 
+      xmlAddChild (parent, xmlNewComment (g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data)));
+      subtree = xmlNewChild (parent, NULL, "fourcc", NULL);
+      xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
+      xmlNewProp (subtree, "hexvalue", g_strdup_printf ("%08x", entry->data.fourcc_data));
+      break;
+    case GST_PROPS_BOOL_ID_NUM: 
+      subtree = xmlNewChild (parent, NULL, "boolean", NULL);
+      xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
+      xmlNewProp (subtree, "value", (entry->data.bool_data ?  "true" : "false"));
+      break;
+    default:
+      break;
+  }
+
+  return parent;
+}
+
+xmlNodePtr
+gst_props_save_thyself (GstProps *props, xmlNodePtr parent)
+{
+  GSList *proplist;
+  xmlNodePtr subtree;
+
+  g_return_val_if_fail (props != NULL, NULL);
+
+  proplist = props->properties;
+
+  while (proplist) {
+    GstPropsEntry *entry = (GstPropsEntry *) proplist->data;
+
+    switch (entry->propstype) {
+      case GST_PROPS_LIST_ID_NUM: 
+        subtree = xmlNewChild (parent, NULL, "list", NULL);
+        g_list_foreach (entry->data.list_data.entries, (GFunc) gst_props_save_thyself_func, subtree);
+      default:
+    	gst_props_save_thyself_func (entry, parent);
+    }
+
+    proplist = g_slist_next (proplist);
+  }
+  
+  return parent;
+}
+
+GstProps*
+gst_props_load_thyself (xmlNodePtr parent)
+{
+  return NULL;
 }
 

@@ -70,24 +70,35 @@ static GstCaps *sinkcaps = NULL,
 int main(int argc,char *argv[]) 
 {
   gboolean testret;
+  xmlDocPtr doc;
+  xmlNodePtr parent;
+
+  doc = xmlNewDoc ("1.0");
+  doc->root = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
 
   _gst_type_initialize ();
 
   sinkcaps = gst_caps_register (mpeg2dec_sink_caps);
-  g_print ("caps 1:\n");
-  gst_caps_dump (sinkcaps);
+  parent = xmlNewChild (doc->root, NULL, "Capabilities1", NULL);
+  gst_caps_save_thyself (sinkcaps, parent);
+
   rawcaps  = gst_caps_register (mpeg2dec_src_caps);
-  g_print ("caps 2:\n");
-  gst_caps_dump (rawcaps);
+  parent = xmlNewChild (doc->root, NULL, "Capabilities2", NULL);
+  gst_caps_save_thyself (rawcaps, parent);
+
   rawcaps2  = gst_caps_register (raw_sink_caps);
-  g_print ("caps 3:\n");
-  gst_caps_dump (rawcaps2);
+  parent = xmlNewChild (doc->root, NULL, "Capabilities3", NULL);
+  gst_caps_save_thyself (rawcaps2, parent);
+
   mp1parsecaps  = gst_caps_register (mp1parse_src_caps);
-  g_print ("caps 4:\n");
-  gst_caps_dump (mp1parsecaps);
+  parent = xmlNewChild (doc->root, NULL, "Capabilities4", NULL);
+  gst_caps_save_thyself (mp1parsecaps, parent);
+
   rawcaps3  = gst_caps_register (raw2_sink_caps);
-  g_print ("caps 5:\n");
-  gst_caps_dump (rawcaps3);
+  parent = xmlNewChild (doc->root, NULL, "Capabilities5", NULL);
+  gst_caps_save_thyself (rawcaps3, parent);
+
+  xmlDocDump(stdout, doc);
 
   testret = gst_caps_check_compatibility (mp1parsecaps, rawcaps);
   g_print ("4 <-> 2 == %d (invalid, wrong major type)\n", testret);
