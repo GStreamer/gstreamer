@@ -1,76 +1,26 @@
 ## Process this file with automake to produce Makefile.in
 
 # The name of the module.
-DOC_MODULE=gstreamer
+DOC_MODULE=gstreamer-libs
 
 # The top-level SGML file.
-DOC_MAIN_SGML_FILE=gstreamer-docs.sgml
+DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
 # The directory containing the source code (if it contains documentation).
-DOC_SOURCE_DIR=$(top_srcdir)/gst
-
-CFLAGS = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir)
-LDFLAGS = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la $(top_srcdir)/gst/elements/libgstelements.la
-
-EXTRA_DIST=gstreamer.types.in
+DOC_SOURCE_DIR=$(top_srcdir)/libs
 
 HTML_DIR=$(datadir)/gstreamer/html
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
 tmpl_sources =				\
-	tmpl/audioraw.sgml              \
-	tmpl/cothreads.sgml             \
-	tmpl/gst.sgml                   \
-	tmpl/gstasyncdisksrc.sgml       \
-	tmpl/gstaudiosink.sgml          \
-	tmpl/gstaudiosrc.sgml           \
-	tmpl/gstbin.sgml                \
-	tmpl/gstbuffer.sgml             \
-	tmpl/gstbufferpool.sgml         \
-	tmpl/gstconnection.sgml         \
-	tmpl/gstdisksrc.sgml            \
-	tmpl/gstelement.sgml            \
-	tmpl/gstesdsink.sgml            \
-	tmpl/gstfakesink.sgml           \
-	tmpl/gstfakesrc.sgml            \
-	tmpl/gstfdsink.sgml             \
-	tmpl/gstfdsrc.sgml              \
-	tmpl/gstfilter.sgml             \
-	tmpl/gsthttpsrc.sgml            \
-	tmpl/gstidentity.sgml           \
-	tmpl/gstlog.sgml                \
-	tmpl/gstmeta.sgml               \
-	tmpl/gstobject.sgml             \
-	tmpl/gstpad.sgml                \
-	tmpl/gstpipeline.sgml           \
-	tmpl/gstplugin.sgml             \
-	tmpl/gstqueue.sgml              \
-	tmpl/gstreamer-unused.sgml      \
-	tmpl/gstsinesrc.sgml            \
-	tmpl/gstsink.sgml               \
-	tmpl/gstsrc.sgml                \
-	tmpl/gsttee.sgml                \
-	tmpl/gstthread.sgml             \
-	tmpl/gsttrace.sgml              \
-	tmpl/gsttype.sgml               \
-	tmpl/gstutils.sgml              \
-	tmpl/gstxml.sgml                \
-	tmpl/spectrum.sgml              \
 	tmpl/videoraw.sgml
 
 gstreamer_docdir = $(HTML_DIR)
 gstreamer_doc_DATA =		\
-	gstreamer.html		\
-	gstreamer.hierarchy	\
-	gstreamer.types		\
-	gstreamer-decl.txt	\
-	gstreamer-sections.txt
-
-SCANOBJS_FILES =		\
-	$(DOC_MODULE).signals	\
-	$(DOC_MODULE).hierarchy	\
-	$(DOC_MODULE).args
+	$(DOC_MODULE).html		\
+	$(DOC_MODULE)-decl.txt	\
+	$(DOC_MODULE)-sections.txt
 
 if HAVE_GTK_DOC
 gstreamer.html: html/book1.html
@@ -88,15 +38,10 @@ sgml/gstreamer-doc.bottom: $(tmpl_sources)
 gstreamer-decl.txt:
 	$(MAKE) scan
 
-scanobj: $(srcdir)/$(DOC_MODULE).types
-        -CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) gtkdoc-scanobj --module=$(DOC_MODULE)
-        gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
-
-
 scan:
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
 
-tmpl: scanobj scan
+tmpl: scan
 	gtkdoc-mktmpl --module=$(DOC_MODULE)
 
 sgml: tmpl

@@ -1,5 +1,8 @@
 #include <gtk/gtk.h>
 #include <gst/gst.h>
+
+#include <libs/colorspace/gstcolorspace.h>
+
 gst_object_get_type
 gst_element_get_type
 gst_bin_get_type
@@ -29,4 +32,5 @@ gst_pipefilter_get_type
 gst_identity_get_type
 gst_queue_get_type
 
+gst_typefind_get_type
 

@@ -1,7 +1,4 @@
 GtkObject
-  GtkWidget
-    GtkRange
-    GtkContainer
   GstObject
     GstElement
       GstBin
@@ -15,6 +12,7 @@ GtkObject
         GstFakeSink
         GstAudioSink
         GstFdSink
+        GstTypeFind
       GstSrc
         GstFakeSrc
         GstDiskSrc

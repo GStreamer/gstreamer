@@ -1,0 +1,85 @@
+<!-- ##### SECTION Title ##### -->
+GstVideoScale
+
+<!-- ##### SECTION Short_Description ##### -->
+Scale a video buffer
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+This library implements a scaling algorithm for video buffers.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstVideoScaleMethod ##### -->
+<para>
+the different scaling methods available.
+</para>
+
+@GST_VIDEOSCALE_POINT_SAMPLE: perform a point sample filter
+@GST_VIDEOSCALE_NEAREST: use a nearest neighbor algorithm
+@GST_VIDEOSCALE_BILINEAR: use a bilinear filter
+@GST_VIDEOSCALE_BICUBIC: use a bicubic filter
+
+<!-- ##### STRUCT GstVideoScale ##### -->
+<para>
+
+</para>
+
+@source_width: 
+@source_height: 
+@dest_width: 
+@dest_height: 
+@format: 
+@method: 
+@copy_row: 
+@temp: 
+@scale: 
+@scaler: 
+@filter: 
+
+<!-- ##### USER_FUNCTION GstVideoScaleScaler ##### -->
+<para>
+the actual scaler implementation
+</para>
+
+@scale: 
+@src: 
+@dest: 
+
+
+<!-- ##### FUNCTION gst_videoscale_new ##### -->
+<para>
+Create a new video scaler
+</para>
+
+@sw: the width of the source bitmap
+@sh: the height of the source bitmap
+@dw: the width of the destination bitmap
+@dh: the height of the destination bitmap
+@format: the format of the source and destination bitmaps
+@method: the filter method
+@Returns: a new scaler
+
+
+<!-- ##### MACRO gst_videoscale_scale ##### -->
+<para>
+Perform the scale
+</para>
+
+@scaler: the scaler
+@src: the source buffer
+@dest: the destination buffer
+
+
+<!-- ##### FUNCTION gst_videoscale_destroy ##### -->
+<para>
+Destroy the scaler
+</para>
+
+@scale: the scaler to destroy
+
+

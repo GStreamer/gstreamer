@@ -1,0 +1,7 @@
+Makefile
+Makefile.in
+html
+sgml
+gstreamer-libs-unused.txt
+gstreamer-libs-decl.txt
+gstreamer-libs-decl-list.txt

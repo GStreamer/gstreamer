@@ -4,6 +4,7 @@
 <!entity Gst SYSTEM "sgml/gst.sgml">
 <!entity GstBin SYSTEM "sgml/gstbin.sgml">
 <!entity GstBuffer SYSTEM "sgml/gstbuffer.sgml">
+<!entity GstBufferPool SYSTEM "sgml/gstbufferpool.sgml">
 <!entity GstConnection SYSTEM "sgml/gstconnection.sgml">
 <!entity GstCpu SYSTEM "sgml/gstcpu.sgml">
 <!entity GstElement SYSTEM "sgml/gstelement.sgml">
@@ -25,21 +26,19 @@
 
 <!entity GstFakeSrc SYSTEM "sgml/gstfakesrc.sgml">
 <!entity GstFakeSink SYSTEM "sgml/gstfakesink.sgml">
-
 <!entity GstDiskSrc SYSTEM "sgml/gstdisksrc.sgml">
 <!entity GstAsyncDiskSrc SYSTEM "sgml/gstasyncdisksrc.sgml">
 <!entity GstHttpSrc SYSTEM "sgml/gsthttpsrc.sgml">
 <!entity GstFdSrc SYSTEM "sgml/gstfdsrc.sgml">
 <!entity GstAudioSrc SYSTEM "sgml/gstaudiosrc.sgml">
 <!entity GstSineSrc SYSTEM "sgml/gstsinesrc.sgml">
-
 <!entity GstAudioSink SYSTEM "sgml/gstaudiosink.sgml">
 <!entity GstEsdSink SYSTEM "sgml/gstesdsink.sgml">
 <!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
-
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
 <!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
 <!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
+<!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
 
 <!entity audioraw SYSTEM "sgml/audioraw.sgml">
 <!entity spectrum SYSTEM "sgml/spectrum.sgml">
@@ -51,7 +50,7 @@
 
 <book>
   <bookinfo>
-    <title>GStreamer Library Reference Manual</title>
+    <title>GStreamer Library Reference Manual (Core)</title>
   </bookinfo>
   <chapter id="gstreamer">
     <title>GStreamer Core Library</title>
@@ -70,6 +69,7 @@ with some more specialized elements.</para>
     &GstSink;
     &GstSrc;
     &GstBuffer;
+    &GstBufferPool;
     &GstPad;
     &GstConnection;
     &GstPlugin;
@@ -123,16 +123,20 @@ with some more specialized elements.</para>
     &GstDiskSrc;
     &GstAsyncDiskSrc;
     &GstHttpSrc;
-    &GstFdSrc;
+    
     &GstAudioSrc;
+    &GstAudioSink;
+
     &GstSineSrc;
 
-    &GstAudioSink;
+    &GstFdSrc;
     &GstFdSink;
 
     &GstPipefilter;
     &GstIdentity;
     &GstQueue;
+
+    &GstTypeFind;
   </chapter>
 
   <chapter id="metatdata-types">
@@ -143,14 +147,6 @@ with some more specialized elements.</para>
     &spectrum;
     &audioraw;
     &videoraw;
-  </chapter>
-
-  <chapter id="plugins">
-    <title>GStreamer Multimedia Plugins</title>
-
-    <para>GStreamer has some advanced multimedia plugins. </para>
-
-
   </chapter>
 
   <chapter id="gst-index">

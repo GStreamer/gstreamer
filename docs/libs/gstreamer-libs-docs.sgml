@@ -1,0 +1,36 @@
+<!doctype book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+
+<!entity GstColorSpace SYSTEM "sgml/gstcolorspace.sgml">
+<!entity GstGetbits SYSTEM "sgml/gstgetbits.sgml">
+<!entity GstIDCT SYSTEM "sgml/gstidct.sgml">
+<!entity GstPutbits SYSTEM "sgml/gstputbits.sgml">
+<!entity GstVideoScale SYSTEM "sgml/gstvideoscale.sgml">
+<!entity GstRiff SYSTEM "sgml/gstriff.sgml">
+
+]>
+
+
+<book>
+  <bookinfo>
+    <title>GStreamer Library Reference Manual (Libraries)</title>
+  </bookinfo>
+  <chapter id="gstreamer-libs">
+    <title>GStreamer Libraries</title>
+
+    <para>
+      To ease the creation of plugins, a library system was created. The most common
+      functions for a plugin can be found in a library.
+    </para>
+    <para>
+      GStreamer provides some standard libraries you can use to create plugins.
+    </para>
+      &GstColorSpace;
+      &GstGetbits;
+      &GstIDCT;
+      &GstPutbits;
+      &GstVideoScale;
+      &GstRiff;
+
+  </chapter>
+
+</book>
