@@ -64,7 +64,7 @@ gst_autoplag_caps_intersect (GstCaps *src, GstCaps *sink)
     return FALSE;
   
   /* hurrah, we can connect, now remove the intersection */
-  gst_caps_unref (GST_OBJECT (caps));
+  gst_caps_unref (caps);
   return TRUE;
 }
 
