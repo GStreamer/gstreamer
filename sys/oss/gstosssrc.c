@@ -66,7 +66,7 @@ static GstStaticPadTemplate osssrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) { 8, 16 }, "
         "depth = (int) { 8, 16 }, "
-        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
 static void gst_osssrc_base_init (gpointer g_class);
@@ -76,6 +76,7 @@ static void gst_osssrc_dispose (GObject * object);
 
 static GstPadLinkReturn gst_osssrc_srcconnect (GstPad * pad,
     const GstCaps * caps);
+static GstCaps *gst_osssrc_getcaps (GstPad * pad);
 static const GstFormat *gst_osssrc_get_formats (GstPad * pad);
 static gboolean gst_osssrc_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
@@ -176,6 +177,7 @@ gst_osssrc_init (GstOssSrc * osssrc)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&osssrc_src_factory), "src");
   gst_pad_set_get_function (osssrc->srcpad, gst_osssrc_get);
+  gst_pad_set_getcaps_function (osssrc->srcpad, gst_osssrc_getcaps);
   gst_pad_set_link_function (osssrc->srcpad, gst_osssrc_srcconnect);
   gst_pad_set_convert_function (osssrc->srcpad, gst_osssrc_convert);
   gst_pad_set_formats_function (osssrc->srcpad, gst_osssrc_get_formats);
@@ -183,7 +185,6 @@ gst_osssrc_init (GstOssSrc * osssrc)
   gst_pad_set_event_mask_function (osssrc->srcpad, gst_osssrc_get_event_masks);
   gst_pad_set_query_function (osssrc->srcpad, gst_osssrc_src_query);
   gst_pad_set_query_type_function (osssrc->srcpad, gst_osssrc_get_query_types);
-
 
   gst_element_add_pad (GST_ELEMENT (osssrc), osssrc->srcpad);
 
@@ -206,6 +207,25 @@ gst_osssrc_dispose (GObject * object)
   gst_object_unparent (GST_OBJECT (osssrc->provided_clock));
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static GstCaps *
+gst_osssrc_getcaps (GstPad * pad)
+{
+  GstOssSrc *src;
+  GstCaps *caps;
+
+  src = GST_OSSSRC (gst_pad_get_parent (pad));
+
+  gst_osselement_probe_caps (GST_OSSELEMENT (src));
+
+  if (GST_OSSELEMENT (src)->probed_caps == NULL) {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  } else {
+    caps = gst_caps_copy (GST_OSSELEMENT (src)->probed_caps);
+  }
+
+  return caps;
 }
 
 static GstPadLinkReturn

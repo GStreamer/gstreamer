@@ -59,6 +59,7 @@ static gboolean gst_osssink_sink_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
 
 static GstCaps *gst_osssink_sink_fixate (GstPad * pad, const GstCaps * caps);
+static GstCaps *gst_osssink_getcaps (GstPad * pad);
 static GstPadLinkReturn gst_osssink_sinkconnect (GstPad * pad,
     const GstCaps * caps);
 
@@ -96,7 +97,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) { 8, 16 }, "
         "depth = (int) { 8, 16 }, "
-        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstElementClass *parent_class = NULL;
@@ -202,6 +203,7 @@ gst_osssink_init (GstOssSink * osssink)
       (&osssink_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (osssink), osssink->sinkpad);
   gst_pad_set_link_function (osssink->sinkpad, gst_osssink_sinkconnect);
+  gst_pad_set_getcaps_function (osssink->sinkpad, gst_osssink_getcaps);
   gst_pad_set_fixate_function (osssink->sinkpad, gst_osssink_sink_fixate);
   gst_pad_set_convert_function (osssink->sinkpad, gst_osssink_convert);
   gst_pad_set_query_function (osssink->sinkpad, gst_osssink_sink_query);
@@ -254,6 +256,23 @@ gst_osssink_sink_fixate (GstPad * pad, const GstCaps * caps)
   gst_caps_free (newcaps);
 
   return NULL;
+}
+
+static GstCaps *
+gst_osssink_getcaps (GstPad * pad)
+{
+  GstOssSink *osssink = GST_OSSSINK (gst_pad_get_parent (pad));
+  GstCaps *caps;
+
+  gst_osselement_probe_caps (GST_OSSELEMENT (osssink));
+
+  if (GST_OSSELEMENT (osssink)->probed_caps == NULL) {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  } else {
+    caps = gst_caps_copy (GST_OSSELEMENT (osssink)->probed_caps);
+  }
+
+  return caps;
 }
 
 static GstPadLinkReturn

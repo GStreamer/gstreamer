@@ -73,6 +73,7 @@ struct _GstOssElement
   guint64	 fragment_time;
   gint		 fragment_size;
   GstOssOpenMode mode;
+  GstCaps       *probed_caps;
 
   /* stats bytes per *second* */
   guint		 bps;
@@ -118,6 +119,7 @@ gboolean 	gst_osselement_convert 	 	(GstOssElement *oss,
 						 gint64         src_value,
 		                       		 GstFormat     *dest_format,
 						 gint64        *dest_value);
+void            gst_osselement_probe_caps       (GstOssElement *oss);
 
 G_END_DECLS
 
