@@ -63,7 +63,11 @@ U gst-template/gst-app/src/Makefile.am
   <!-- ############ sect1 ############# -->
 
   <sect1 id="section-boiler-project-stamp" xreflabel="Using the Project Stamp">
-    <title>Using the Project Stamp</title>
+    <title>!!! FIXME !!! Using the Project Stamp</title>
+    <para>
+      This section needs some fixing from someone that is aware of how this works.
+      The only tool that looks like the ones cited there is <filename>gst-plugins/tools/filterstamp.sh</filename>
+    </para>
     <para>
       The first thing to do when making a new element is to specify some basic
       details about it: what its name is, who wrote it, what version number it
@@ -76,7 +80,7 @@ U gst-template/gst-app/src/Makefile.am
       and fill in some structures. As mentioned in the previous section, the
       easiest way to do this is to copy a template and add functionality
       according to your needs. To help you do so, there are some tools in the
-      <filename class="directory">./gst-template/tools/</filename> directory.
+      <filename class="directory">./gst-plugins/tools/</filename> directory.
       One tool, <filename>gst-quick-stamp</filename>, is a quick command line
       tool. The other, <filename>gst-project-stamp</filename>, is a full GNOME
       druid application that takes you through the steps of creating a new
