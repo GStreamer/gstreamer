@@ -174,7 +174,7 @@ GST_PLUGINS_ALL="\
         cutter deinterlace flx goom intfloat law level\
         median mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes modplug\
-        monoscope passthrough playondemand rtjpeg silence sine\
+        monoscope passthrough playondemand qtdemux rtjpeg silence sine\
         smooth spectrum speed stereo stereomono\
         synaesthesia udp videoscale volenv volume vumeter wavparse y4m"
 
@@ -773,6 +773,7 @@ gst/modplug/libmodplug/Makefile
 gst/monoscope/Makefile
 gst/passthrough/Makefile
 gst/playondemand/Makefile
+gst/qtdemux/Makefile
 gst/rtjpeg/Makefile
 gst/silence/Makefile
 gst/sine/Makefile
