@@ -49,6 +49,10 @@ struct _GstDVDec {
 		*audiosrcpad;
 
   dv_decoder_t 	*decoder;
+  gboolean	 clamp_luma;
+  gboolean	 clamp_chroma;
+  gint		 quality;
+
   GstByteStream *bs;
   GstBufferPool *pool;
   dv_color_space_t space;
