@@ -169,6 +169,13 @@ gst_scheduler_remove_element (GstScheduler *sched, GstElement *element)
     CLASS (sched)->remove_element (sched, element);
 }
 
+/**
+ * gst_scheduler_lock_element:
+ * @sched: the schedulerr
+ * @element: the element to lock
+ *
+ * Acquire a lock on the given element in the given scheduler.
+ */
 void
 gst_scheduler_lock_element (GstScheduler *sched, GstElement *element)
 {
@@ -176,6 +183,13 @@ gst_scheduler_lock_element (GstScheduler *sched, GstElement *element)
     CLASS (sched)->lock_element (sched, element);
 }
 
+/**
+ * gst_scheduler_unlock_element:
+ * @sched: the schedulerr
+ * @element: the element to unlock
+ *
+ * Release the lock on the given element in the given scheduler.
+ */
 void
 gst_scheduler_unlock_element (GstScheduler *sched, GstElement *element)
 {
@@ -373,9 +387,10 @@ gst_schedulerfactory_get_list (void)
 /**
  * gst_schedulerfactory_create:
  * @factory: the factory used to create the instance
+ * @parent: the parent element of this scheduler
  *
  * Create a new #GstScheduler instance from the 
- * given schedulerfactory.
+ * given schedulerfactory with the given parent.
  *
  * Returns: A new #GstScheduler instance.
  */
@@ -399,9 +414,10 @@ gst_schedulerfactory_create (GstSchedulerFactory *factory, GstElement *parent)
 /**
  * gst_schedulerfactory_make:
  * @name: the name of the factory used to create the instance
+ * @parent: the parent element of this scheduler
  *
  * Create a new #GstScheduler instance from the 
- * schedulerfactory with the given name.
+ * schedulerfactory with the given name and parent.
  *
  * Returns: A new #GstScheduler instance.
  */

@@ -1956,6 +1956,13 @@ gst_ghost_pad_new (gchar *name,
 }
 
 
+/**
+ * gst_pad_event_default:
+ * @pad: the pad to operate on
+ * @event: the event to handle
+ *
+ * Invoke the default event handler for the given pad.
+ */
 void 
 gst_pad_event_default (GstPad *pad, GstEvent *event)
 {

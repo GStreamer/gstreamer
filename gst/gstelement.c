@@ -798,6 +798,12 @@ gst_element_wait_done (GstElement *element, GstElementState old, GstElementState
   g_cond_signal (cond);
 }
 
+/**
+ * gst_element_wait_state_change:
+ * @element: element wait for
+ *
+ * Wait and block until the element changed its state.
+ */
 void
 gst_element_wait_state_change (GstElement *element)
 {
