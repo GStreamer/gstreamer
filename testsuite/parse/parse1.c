@@ -100,6 +100,7 @@ static gchar *s;
 #define PIPELINE9  "fakesrc num-buffers=4 ! test. fakesink name=test"
 #define PIPELINE10 "( fakesrc num-buffers=\"4\" ! ) identity ! fakesink"
 #define PIPELINE11 "fakesink name = sink identity name=id ( fakesrc num-buffers=\"4\" ! id. ) id. ! sink."
+#define PIPELINE12 "fakesrc num-buffers=4 name=a:b  a:b. ! fakesink"
 
 gint
 main (gint argc, gchar * argv[])
@@ -213,6 +214,14 @@ main (gint argc, gchar * argv[])
    * - failed in grammar.y cvs version 1.18
    */
   TEST_START (PIPELINE11);
+  TEST_RUN;
+  TEST_OK;
+
+  /**
+   * checks:
+   * - fails because a:b. is not a valid element reference in parse.l cvs rev 1.29
+   */
+  TEST_START (PIPELINE12);
   TEST_RUN;
   TEST_OK;
 

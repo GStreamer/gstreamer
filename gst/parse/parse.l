@@ -29,8 +29,8 @@ PRINT (const char *format, ...)
 #define YY_DECL int _gst_parse_yylex (YYSTYPE *lvalp)
 %}
 
-_operator [(){}.:!,;=]
-_identifier [[:alpha:]][[:alnum:]\-_%]*
+_operator [(){}.!,;=]
+_identifier [[:alpha:]][[:alnum:]\-_%:]*
 
 _char ("\\".)|([^[:space:]])
 _string {_char}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")

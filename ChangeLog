@@ -1,5 +1,13 @@
 2004-10-19  Wim Taymans  <wim at fluendo dot com>
 
+	* gst/parse/parse.l:
+	* testsuite/parse/parse1.c: (main):
+	Since parse can do 'element name=a:b' make 'a:b.' work as
+	well. 
+	Added testcase to verify fix.
+
+2004-10-19  Wim Taymans  <wim at fluendo dot com>
+
 	* tools/gst-inspect.c: (print_pad_info), (print_plugin_features):
 	Use the realpad when printing the direction.
 	Add extra \n when printing extensions of typefind factories.
