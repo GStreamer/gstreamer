@@ -77,6 +77,8 @@ struct GstMediaInfoPriv
   GstCaps *streaminfo;
 
   GstElement *decoder;                  /* will be != NULL during collection */
+  GstElement *fakesink;			/* so we can get caps from the
+                                           decoder sink pad */
   gchar *source_element;                /* type of element used as source */
   GstElement *source;
 
