@@ -237,7 +237,7 @@ play_on_demand_class_init (GstPlayOnDemandClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_TICK_LIST,
     g_param_spec_pointer("tick-list", "List of ticks to play",
                          "A list of ticks (musical times) at which to play the sample",
-			 G_PARAM_READWRITE));
+			 G_PARAM_WRITABLE));
 }
 
 static void
