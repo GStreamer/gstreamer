@@ -17,6 +17,8 @@ GstElement *	gst_gconf_render_bin_from_description	(const gchar *description);
 
 GstElement *	gst_gconf_get_default_video_sink (void);
 GstElement *	gst_gconf_get_default_audio_sink (void);
+GstElement *	gst_gconf_get_default_video_src (void);
+GstElement *	gst_gconf_get_default_audio_src (void);
 
 /*
 guint		gst_gconf_notify_add		(const gchar *key,
