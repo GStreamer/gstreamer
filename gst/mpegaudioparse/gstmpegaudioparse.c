@@ -127,61 +127,43 @@ mp3_type_frame_length_from_header (guint32 header, guint *put_layer,
 				   guint *put_samplerate)
 {
   guint length;
-  gulong mode, samplerate, bitrate, layer, version, channels;
+  gulong mode, samplerate, bitrate, layer, channels, padding;
+  gint lsf, mpg25;
 
-  /* we don't need extension, copyright, original or
-   * emphasis for the frame length */
-  header >>= 6;
-
-  /* mode */
-  mode = header & 0x3;
-  header >>= 3;
-
-  /* padding */
-  length = header & 0x1;
-  header >>= 1;
-
-  /* sampling frequency */
-  samplerate = header & 0x3;
-  if (samplerate == 3)
-    return 0;
-  header >>= 2;
-
-  /* bitrate index */
-  bitrate = header & 0xF;
-  if (bitrate == 15 || bitrate == 0)
-    return 0;
-
-  /* ignore error correction, too */
-  header >>= 5;
-
-  /* layer */
-  layer = 4 - (header & 0x3);
-  if (layer == 4)
-    return 0;
-  header >>= 2;
-
-  /* version */
-  version = header & 0x3;
-  if (version == 1)
-    return 0;
-
-  /* lookup */
-  channels = (mode == 3) ? 1 : 2;
-  bitrate = mp3types_bitrates[version == 3 ? 0 : 1][layer - 1][bitrate];
-  samplerate = mp3types_freqs[version > 0 ? version - 1 : 0][samplerate];
-
-  /* calculating */
-  if (layer == 1) {
-    length = ((12000 * bitrate / samplerate) + length) * 4;
+  if (header & (1 << 20)) {
+    lsf = (header & (1 << 19)) ? 0 : 1;
+    mpg25 = 0;
   } else {
-    length += ((layer == 3 && version == 0) ? 144000 : 72000) * bitrate / samplerate;
+    lsf = 1;
+    mpg25 = 1;
+  }
+
+  mode = (header >> 6) & 0x3;
+  channels = (mode == 3) ? 1 : 2;
+  samplerate = (header >> 10) & 0x3;
+  samplerate = mp3types_freqs[lsf + mpg25][samplerate];
+  layer = 4 - ((header >> 17) & 0x3);
+  bitrate = (header >> 12) & 0xF;
+  bitrate = mp3types_bitrates[lsf][layer - 1][bitrate] * 1000;
+  if (bitrate == 0)
+    return 0;
+  padding = (header >> 9) & 0x1;
+  switch (layer) {
+    case 1:
+      length = (bitrate * 12) / samplerate + 4 * padding;
+      break;
+    case 2:
+      length = (bitrate * 144) / samplerate + padding;
+      break;
+    default:
+    case 3:
+      length = (bitrate * 144) / (samplerate << lsf) + padding;
+      break;
   }
 
   GST_DEBUG ("Calculated mp3 frame length of %u bytes", length);
-  GST_DEBUG ("samplerate = %lu - bitrate = %lu - layer = %lu - version = %lu"
-	     " - channels = %lu",
-	     samplerate, bitrate, layer, version, channels);
+  GST_DEBUG ("samplerate = %lu, bitrate = %lu, layer = %lu, channels = %lu",
+	     samplerate, bitrate, layer, channels);
 
   if (put_layer)
     *put_layer = layer;
