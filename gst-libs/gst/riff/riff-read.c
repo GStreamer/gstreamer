@@ -845,7 +845,8 @@ gst_riff_read_header (GstRiffRead *riff,
   if (!gst_riff_peek_head (riff, &tag, &length, NULL))
     return FALSE;
   if (tag != GST_RIFF_TAG_RIFF) {
-    GST_WARNING ("Not a RIFF file");
+    gst_element_error (GST_ELEMENT (riff),
+		       "Not a RIFF file");
     return FALSE;
   }
   gst_bytestream_flush_fast (riff->bs, 8);

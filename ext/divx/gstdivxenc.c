@@ -232,6 +232,7 @@ gst_divxenc_init (GstDivxEnc *divxenc)
   divxenc->srcpad = gst_pad_new_from_template(
                       gst_static_pad_template_get (&src_template),
                       "src");
+  gst_pad_use_explicit_caps (divxenc->srcpad);
   gst_element_add_pad(GST_ELEMENT(divxenc), divxenc->srcpad);
 
   /* bitrate, etc. */
@@ -456,7 +457,7 @@ gst_divxenc_connect (GstPad        *pad,
 				    "framerate",   G_TYPE_DOUBLE, fps,
 				    NULL);
 
-    ret = gst_pad_try_set_caps(divxenc->srcpad, new_caps);
+    ret = gst_pad_set_explicit_caps (divxenc->srcpad, new_caps);
     if (ret <= 0) {
       gst_divxenc_unset(divxenc);
     }
