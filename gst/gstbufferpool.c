@@ -194,7 +194,7 @@ gst_buffer_pool_set_buffer_free_function (GstBufferPool *pool,
  * @destroy: the copy function
  *
  * Sets the function that will be called when a buffer is copied.
- * If this is not set, the default GstBuffer implementation will be used.
+ * You can use the default GstBuffer implementation (gst_buffer_copy) if you like.
  */
 void 
 gst_buffer_pool_set_buffer_copy_function (GstBufferPool *pool, 
@@ -313,6 +313,7 @@ gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
   pool = gst_buffer_pool_new();
   gst_buffer_pool_set_buffer_new_function (pool, gst_buffer_pool_default_buffer_new);
   gst_buffer_pool_set_buffer_free_function (pool, gst_buffer_pool_default_buffer_free);
+  gst_buffer_pool_set_buffer_copy_function (pool, gst_buffer_copy);
   gst_buffer_pool_set_destroy_hook (pool, gst_buffer_pool_default_destroy_hook);
   
   def = g_new0 (GstBufferPoolDefault, 1);
