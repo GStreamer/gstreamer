@@ -3,8 +3,9 @@
 #include <gst/gst.h>
 #include <string.h>
 
-static GList *seekables = NULL;
+static GList *seekable_pads = NULL;
 static GList *rate_pads = NULL;
+static GList *seekable_elements = NULL;
 
 static GstElement *pipeline;
 static guint64 duration, position;
@@ -15,6 +16,7 @@ static guint update_id;
 #define UPDATE_INTERVAL 500
 
 #define THREAD
+#define PAD_SEEK
 
 typedef struct
 {
@@ -34,7 +36,7 @@ dynamic_connect (GstPadTemplate *templ, GstPad *newpad, gpointer data)
     gst_pad_connect (newpad, connect->target);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-    seekables = g_list_prepend (seekables, newpad);
+    seekable_pads = g_list_prepend (seekable_pads, newpad);
     rate_pads = g_list_prepend (rate_pads, newpad);
   }
 }
@@ -76,7 +78,7 @@ make_parse_pipeline (const gchar *location)
   gst_element_connect (parser, fakesink);
 
   seekable = gst_element_get_pad (parser, "src");
-  seekables = g_list_prepend (seekables, seekable);
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (parser, "sink"));
 
@@ -96,6 +98,8 @@ make_mp3_pipeline (const gchar *location)
   decoder = gst_element_factory_make ("mad", "dec");
   osssink = gst_element_factory_make ("osssink", "sink");
 
+  seekable_elements = g_list_prepend (seekable_elements, osssink);
+
   g_object_set (G_OBJECT (src), "location", location, NULL);
   g_object_set (G_OBJECT (osssink), "fragment", 0x00180008, NULL);
 
@@ -107,7 +111,7 @@ make_mp3_pipeline (const gchar *location)
   gst_element_connect (decoder, osssink);
 
   seekable = gst_element_get_pad (decoder, "src");
-  seekables = g_list_prepend (seekables, seekable);
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (decoder, "sink"));
 
@@ -128,6 +132,7 @@ make_avi_pipeline (const gchar *location)
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   demux = gst_element_factory_make ("avidemux", "demux");
+  seekable_elements = g_list_prepend (seekable_elements, demux);
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
@@ -137,7 +142,7 @@ make_avi_pipeline (const gchar *location)
   a_decoder = gst_element_factory_make ("mad", "a_dec");
   audio_thread = gst_thread_new ("a_decoder_thread");
   audiosink = gst_element_factory_make ("osssink", "a_sink");
-  g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
+  //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   a_queue = gst_element_factory_make ("queue", "a_queue");
   gst_element_connect (a_decoder, a_queue);
   gst_element_connect (a_queue, audiosink);
@@ -150,7 +155,7 @@ make_avi_pipeline (const gchar *location)
   setup_dynamic_connection (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
-  seekables = g_list_prepend (seekables, seekable);
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
 
@@ -175,7 +180,7 @@ make_avi_pipeline (const gchar *location)
   setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
-  seekables = g_list_prepend (seekables, seekable);
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (v_decoder, "sink"));
 
@@ -198,6 +203,8 @@ make_mpeg_pipeline (const gchar *location)
   demux = gst_element_factory_make ("mpegdemux", "demux");
   g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
 
+  seekable_elements = g_list_prepend (seekable_elements, demux);
+
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
   gst_element_connect (src, demux);
@@ -218,7 +225,7 @@ make_mpeg_pipeline (const gchar *location)
   setup_dynamic_connection (demux, "audio_00", gst_element_get_pad (a_decoder, "sink"), audio_bin);
 
   seekable = gst_element_get_pad (a_queue, "src");
-  seekables = g_list_prepend (seekables, seekable);
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
 
@@ -237,7 +244,7 @@ make_mpeg_pipeline (const gchar *location)
   setup_dynamic_connection (demux, "video_00", gst_element_get_pad (v_decoder, "sink"), video_bin);
 
   seekable = gst_element_get_pad (v_queue, "src");
-  seekables = g_list_prepend (seekables, seekable);
+  seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (v_decoder, "sink"));
 
@@ -364,12 +371,12 @@ query_positions (GstPad *pad)
 static gboolean
 update_scale (gpointer data) 
 {
-  GList *walk = seekables;
+  GList *walk = seekable_pads;
   GstClock *clock;
 
   clock = gst_bin_get_clock (GST_BIN (pipeline));
 
-  g_print ("clock:                  %10llu\n", gst_clock_get_time (clock));
+  g_print ("clock:                  %10llu  (%s)\n", gst_clock_get_time (clock), gst_object_get_name (GST_OBJECT (clock)));
 
   while (walk) {
     GstPad *pad = GST_PAD (walk->data);
@@ -416,7 +423,8 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
   gint64 real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
   gboolean res;
   GstEvent *s_event;
-  GList *walk = seekables;
+#ifdef PAD_SEEK
+  GList *walk = seekable_pads;
 
   while (walk) {
     GstPad *seekable = GST_PAD (walk->data);
@@ -431,6 +439,23 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 
     walk = g_list_next (walk);
   }
+#else
+  GList *walk = seekable_elements;
+
+  while (walk) {
+    GstElement *seekable = GST_ELEMENT (walk->data);
+
+    g_print ("seek to %lld on element %s\n", real, gst_element_get_name (seekable));
+    s_event = gst_event_new_seek (GST_FORMAT_TIME |
+			   	  GST_SEEK_METHOD_SET |
+				  GST_SEEK_FLAG_FLUSH, real);
+
+    res = gst_element_send_event (seekable, s_event);
+    gst_event_free (s_event);
+
+    walk = g_list_next (walk);
+  }
+#endif
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   gtk_idle_add ((GtkFunction) iterate, pipeline);

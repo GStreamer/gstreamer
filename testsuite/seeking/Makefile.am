@@ -1,4 +1,4 @@
-testprogs = seek1 seek2
+testprogs = seek1 
 
 TESTS = $(testprogs)
 
