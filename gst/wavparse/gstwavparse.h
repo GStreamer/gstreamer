@@ -81,6 +81,8 @@ struct _GstWavParse {
   gint64 offset;
   gint64 datastart;
   gboolean need_discont;
+
+  GstBuffer *buf;
 };
 
 struct _GstWavParseClass {
