@@ -1,3 +1,16 @@
+2004-05-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_src_convert)
+	Report which format was used for GST_FORMAT_DEFAULT
+	* gst/debug/Makefile.am:
+	* gst/debug/gstdebug.c: (plugin_init):
+	* gst/debug/progressreport.c: (gst_progressreport_base_init),
+	(gst_progressreport_class_init), (gst_progressreport_init),
+	(gst_progressreport_report), (gst_progressreport_set_property),
+	(gst_progressreport_get_property), (gst_progressreport_chain),
+	(gst_progressreport_plugin_init):
+	Add progressreport element for testing.
+
 2004-05-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_get), (gst_v4lsrc_change_state):
