@@ -436,12 +436,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   
-  /* load dparam support library */
-  if (!gst_library_load ("gstcontrol"))
-  {
-    gst_info ("sinesrc: could not load support library: 'gstcontrol'\n");
-    return FALSE;
-  }
+  /* initialize dparam support library */
+  gst_control_init(NULL,NULL);
   
   return TRUE;
 }
