@@ -336,6 +336,15 @@ gst_object_sink (GstObject *object)
 }
 #endif /* gst_object_sink */
 
+/**
+ * gst_object_save_thyself:
+ * @object: GstObject to save
+ * @parent: The parent XML node to save the object into
+ *
+ * Saves the given object into the parent XML node.
+ *
+ * Returns: the new xmlNodePtr with the saved object
+ */
 xmlNodePtr
 gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
 {

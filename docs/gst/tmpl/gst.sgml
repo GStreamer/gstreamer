@@ -53,3 +53,24 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 
 
 
+<!-- ##### MACRO GST_VERSION_MICRO ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_VERSION_MAJOR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_VERSION_MINOR ##### -->
+<para>
+
+</para>
+
+
+

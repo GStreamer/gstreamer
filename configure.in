@@ -837,6 +837,7 @@ plugins/filters/passthrough/Makefile
 plugins/filters/adder/Makefile
 plugins/filters/colorspace/Makefile
 plugins/filters/volenv/Makefile
+plugins/filters/adder/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
 plugins/effects/Makefile
@@ -884,6 +885,7 @@ examples/queue2/Makefile
 examples/queue3/Makefile
 examples/queue4/Makefile
 examples/thread/Makefile
+examples/mixer/Makefile
 examples/launch/Makefile
 examples/xml/Makefile
 examples/plugins/Makefile

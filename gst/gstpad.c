@@ -452,7 +452,7 @@ gst_pad_set_newcaps_function (GstPad *pad,
 /**
  * gst_pad_set_bufferpool_function:
  * @pad: the pad to set the bufferpool function for
- * @newcaps: the bufferpool function
+ * @bufpool: the bufferpool function
  *
  * Set the given bufferpool function for the pad.
  */
@@ -916,6 +916,15 @@ gst_pad_get_peer (GstPad *pad)
   return GST_PAD(GST_PAD_PEER(pad));
 }
 
+/**
+ * gst_pad_get_buffer_pool:
+ * @pad: the pad to get the bufferpool from
+ *
+ * Gst the bufferpool of the peer pad of the given
+ * pad
+ *
+ * Returns: The GstBufferPool or NULL.
+ */
 GstBufferPool*          
 gst_pad_get_bufferpool (GstPad *pad)
 {

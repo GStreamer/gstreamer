@@ -26,13 +26,14 @@ GstCaps
 
 <!-- ##### MACRO GST_MAKE_FOURCC ##### -->
 <para>
-
+Create a FOURCC value that can easily be used to construct
+a fourcc property.
 </para>
 
-@a: 
-@b: 
-@c: 
-@d: 
+@a: first fourcc byte
+@b: second fourcc byte
+@c: third fourcc byte
+@d: fourth fourcc byte
 
 
 <!-- ##### MACRO GST_PROPS_LIST ##### -->
@@ -65,11 +66,7 @@ Create an integer range property.
 Construct a fourcc property out of four bytes.
 </para>
 
-@a: first byte
-<!-- # Unused Parameters # -->
-@b: second byte
-@c: third byte
-@d: fourth byte
+@a: a fourcc value usualy created with GST_FOURCC_MAKE ()
 
 
 <!-- ##### MACRO GST_PROPS_BOOLEAN ##### -->
@@ -82,27 +79,27 @@ Create a boolean property.
 
 <!-- ##### MACRO GST_PROPS_STRING ##### -->
 <para>
-
+Create a string value.
 </para>
 
-@a: 
+@a: the string value.
 
 
 <!-- ##### MACRO GST_PROPS_FLOAT ##### -->
 <para>
-
+Create a floating point value.
 </para>
 
-@a: 
+@a: the float value
 
 
 <!-- ##### MACRO GST_PROPS_FLOAT_RANGE ##### -->
 <para>
-
+Create a float range value.
 </para>
 
-@a: 
-@b: 
+@a: lower float bounds
+@b: upper float bounds
 
 
 <!-- ##### FUNCTION gst_props_new ##### -->
@@ -113,8 +110,6 @@ Create a boolean property.
 @firstname: 
 @Varargs: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@entry: 
 
 
 <!-- ##### FUNCTION gst_props_newv ##### -->

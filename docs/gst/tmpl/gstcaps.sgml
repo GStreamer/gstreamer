@@ -39,6 +39,34 @@ Unlock the caps structure
 @caps: The caps structure to unlock
 
 
+<!-- ##### MACRO GST_CAPS_NEW ##### -->
+<para>
+A convenience macro to create a new GstCaps structure.
+</para>
+
+@name: the name of the caps structure
+@type: the mime type of the caps structure
+@a...: the properties of this caps stucture.
+
+
+<!-- ##### MACRO GST_CAPS_FACTORY ##### -->
+<para>
+A convenience macro to create a GstCaps factory.
+</para>
+
+@factoryname: the name of the factory
+@a...: the caps to create with this factory, usualy specified
+with GST_CAPS_NEW()
+
+
+<!-- ##### MACRO GST_CAPS_GET ##### -->
+<para>
+A convenience macro to get a GstCaps from the given capsfactory.
+</para>
+
+@fact: the factory to use.
+
+
 <!-- ##### STRUCT GstCaps ##### -->
 <para>
 
@@ -76,6 +104,7 @@ Unlock the caps structure
 </para>
 
 @caps: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_unref ##### -->
@@ -84,6 +113,7 @@ Unlock the caps structure
 </para>
 
 @caps: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_copy ##### -->
@@ -101,6 +131,16 @@ Unlock the caps structure
 </para>
 
 @caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_chain ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Varargs: 
 @Returns: 
 
 
@@ -212,21 +252,21 @@ Unlock the caps structure
 
 <!-- ##### MACRO gst_caps_set ##### -->
 <para>
-
+Set a property of a caps structure.
 </para>
 
-@caps: 
-@name: 
-@args...: 
+@caps: the caps structure to modify
+@name: the name of the property to change
+@args...: the new value of the property
 
 
 <!-- ##### MACRO gst_caps_get_boolean ##### -->
 <para>
-
+Get the value of the named property as a boolean.
 </para>
 
-@caps: 
-@name: 
+@caps: the caps to query
+@name: the name of the property to get
 
 
 <!-- ##### FUNCTION gst_caps_get_by_name ##### -->
@@ -241,29 +281,29 @@ Unlock the caps structure
 
 <!-- ##### MACRO gst_caps_get_fourcc_int ##### -->
 <para>
-
+Get the value of the named property as a fourcc.
 </para>
 
-@caps: 
-@name: 
+@caps: the caps to query
+@name: the name of the property to get
 
 
 <!-- ##### MACRO gst_caps_get_int ##### -->
 <para>
-
+Get the value of the named property as an int.
 </para>
 
-@caps: 
-@name: 
+@caps: the caps to query
+@name: the name of the property to get
 
 
 <!-- ##### MACRO gst_caps_get_string ##### -->
 <para>
-
+Get the value of the named property as a string.
 </para>
 
-@caps: 
-@name: 
+@caps: the caps to query
+@name: the name of the property to get
 
 
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->

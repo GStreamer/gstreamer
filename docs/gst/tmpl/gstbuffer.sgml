@@ -102,6 +102,22 @@ Get the timestamp for this buffer.
 @buf: GstBuffer
 
 
+<!-- ##### MACRO GST_BUFFER_BUFFERPOOL ##### -->
+<para>
+Get the bufferpool for this buffer.
+</para>
+
+@buf: GstBuffer
+
+
+<!-- ##### MACRO GST_BUFFER_POOL_PRIVATE ##### -->
+<para>
+Get the bufferpool private data.
+</para>
+
+@buf: GstBuffer
+
+
 <!-- ##### MACRO GST_BUFFER_LOCK ##### -->
 <para>
 This macro will obtain a lock on the object, making serialization
@@ -160,6 +176,7 @@ used when data in a stream has been skipped
 @metas: 
 @parent: 
 @pool: 
+@pool_private: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>

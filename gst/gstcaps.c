@@ -120,7 +120,7 @@ gst_caps_destroy (GstCaps *caps)
  * Decrease the refcount of this caps structure, 
  * destroying it when the refcount is 0
  *
- * Retruns: caps or NULL if the refcount reached 0
+ * Returns: caps or NULL if the refcount reached 0
  */
 GstCaps*
 gst_caps_unref (GstCaps *caps)
@@ -153,7 +153,7 @@ gst_caps_unref (GstCaps *caps)
  *
  * Increase the refcount of this caps structure
  *
- * Returnns: the caps with the refcount incremented
+ * Returns: the caps with the refcount incremented
  */
 GstCaps*
 gst_caps_ref (GstCaps *caps)

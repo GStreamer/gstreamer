@@ -157,11 +157,22 @@ The function that will be called in an EOS case.
 
 <!-- ##### USER_FUNCTION GstPadNewCapsFunction ##### -->
 <para>
-
+The function that will be called when the caps of the pad has
+changed.
 </para>
 
-@pad: 
-@caps: 
+@pad: The pad that has its caps changed
+@caps: the new caps of the pad
+
+
+<!-- ##### USER_FUNCTION GstPadBufferPoolFunction ##### -->
+<para>
+The function that will be called when a bufferpool is requested
+from this pad.
+</para>
+
+@pad: the pad with the bufferpool
+@Returns: the GstBufferPool associated with this pad.
 
 
 <!-- ##### ENUM GstPadNegotiateReturn ##### -->
@@ -180,10 +191,8 @@ The function that will be called when negotiating.
 
 @pad: The pad that is being negotiated
 @caps: The current caps that are being negotiated
-@data: 
+@data: A generic gpointer that can be used to store user_data
 @Returns: The result of the negotiation process
-<!-- # Unused Parameters # -->
-@count: A counter to keep track of the negotiation process
 
 
 <!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
@@ -347,6 +356,15 @@ Destroy the pad.
 
 @pad: 
 @newcaps: 
+
+
+<!-- ##### FUNCTION gst_pad_set_bufferpool_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@bufpool: 
 
 
 <!-- ##### FUNCTION gst_pad_set_caps ##### -->
@@ -530,6 +548,15 @@ Destroy the pad.
 @size: 
 
 
+<!-- ##### FUNCTION gst_pad_get_bufferpool ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_pad_set_eos ##### -->
 <para>
 
@@ -657,6 +684,7 @@ Call the EOS function of the pad
 @pullregionfunc: 
 @negotiatefunc: 
 @newcapsfunc: 
+@bufferpoolfunc: 
 @ghostpads: 
 
 <!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
@@ -771,6 +799,14 @@ Get the EOS function of the real pad.
 @pad: 
 
 
+<!-- ##### MACRO GST_RPAD_BUFFERPOOLFUNC ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
 <!-- ##### MACRO GST_GPAD_REALPAD ##### -->
 <para>
 Get the real pad of this ghost pad.
@@ -847,6 +883,37 @@ Indicates when this pad will become available.
 </para>
 
 @templ: 
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_NEW ##### -->
+<para>
+
+</para>
+
+@padname: 
+@dir: 
+@pres: 
+@a...: 
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_FACTORY ##### -->
+<para>
+
+</para>
+
+@name: 
+@padname: 
+@dir: 
+@pres: 
+@a...: 
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_GET ##### -->
+<para>
+
+</para>
+
+@fact: 
 
 
 <!-- ##### FUNCTION gst_padtemplate_new ##### -->

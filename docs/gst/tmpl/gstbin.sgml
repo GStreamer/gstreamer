@@ -43,10 +43,10 @@ Flags for a bin.
 
 <!-- ##### MACRO gst_bin_destroy ##### -->
 <para>
-
+Free the memory allocated by this bin
 </para>
 
-@bin: 
+@bin: the bin to free
 
 
 <!-- ##### FUNCTION gst_bin_add ##### -->
