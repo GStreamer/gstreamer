@@ -975,7 +975,7 @@ gst_element_change_state (GstElement *element)
   old_state = GST_STATE (element);
 
   if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING || old_state == GST_STATE_PENDING (element)) {
-    g_warning ("no state change needed for element %s (VOID_PENDING)\n", GST_ELEMENT_NAME (element));
+    GST_INFO (GST_CAT_STATES, "no state change needed for element %s (VOID_PENDING)\n", GST_ELEMENT_NAME (element));
     return GST_STATE_SUCCESS;
   }
   

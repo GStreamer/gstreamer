@@ -42,6 +42,7 @@ typedef struct _cothread_context	cothread_context;
 typedef int (*cothread_func) (int argc,char **argv);
 
 #define COTHREAD_STARTED	0x01
+#define COTHREAD_DESTROYED	0x02
 
 struct _cothread_state {
   cothread_context *ctx;
@@ -66,9 +67,11 @@ struct _cothread_state {
 };
 
 
-cothread_context*		cothread_init           (void);
+cothread_context*		cothread_context_init   (void);
+void				cothread_context_free	(cothread_context *ctx);
+
 cothread_state*			cothread_create		(cothread_context *ctx);
-void				cothread_free		(cothread_context *ctx);
+void				cothread_free		(cothread_state *thread);
 void				cothread_setfunc	(cothread_state *thread, cothread_func func,
 						         int argc, char **argv);
 int				cothread_getcurrent	(void);

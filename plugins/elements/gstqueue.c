@@ -332,6 +332,7 @@ restart:
       /* if there's a pending state change for this queue or its manager, switch */
       /* back to iterator so bottom half of state change executes */
       while (GST_STATE (queue) != GST_STATE_PLAYING) {
+      //while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
         g_mutex_unlock (queue->qlock);
         cothread_switch(cothread_current_main());
@@ -400,6 +401,7 @@ restart:
      * back to iterator so bottom half of state change executes
      */ 
     while (GST_STATE (queue) != GST_STATE_PLAYING) {
+    //while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
       g_mutex_unlock (queue->qlock);
       cothread_switch(cothread_current_main());

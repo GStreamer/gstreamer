@@ -318,31 +318,29 @@ gst_thread_change_state (GstElement * element)
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
       while (elements) {
-	GstElement *e = GST_ELEMENT (elements->data);
+	GstElement *element = GST_ELEMENT (elements->data);
 
-	g_assert (e);
-	THR_DEBUG ("  element \"%s\"\n", GST_ELEMENT_NAME (e));
+	g_assert (element);
+	THR_DEBUG ("  element \"%s\"\n", GST_ELEMENT_NAME (element));
 	elements = g_list_next (elements);
-	if (GST_IS_QUEUE (e)) {
+	if (GST_IS_QUEUE (element)) {
   /* FIXME make this more efficient by only waking queues that are asleep
    *  FIXME and only waking the appropriate condition (depending on if it's
    *  FIXME on up- or down-stream side)
    * FIXME also make this more efficient by keeping list of managed queues
    */
-	  THR_DEBUG ("waking queue \"%s\"\n", GST_ELEMENT_NAME (e));
-	  gst_element_set_state (e, GST_STATE_PAUSED);
+	  THR_DEBUG ("waking queue \"%s\"\n", GST_ELEMENT_NAME (element));
+	  gst_element_set_state (element, GST_STATE_PAUSED);
 	}
 	else {
-	  GList *pads = GST_ELEMENT_PADS (e);
+	  GList *pads = GST_ELEMENT_PADS (element);
 
 	  while (pads) {
-	    GstRealPad *peer;
+	    GstRealPad *peer = GST_PAD_PEER (pads->data);
 	    GstElement *peerelement;
-	    GstPad *p = GST_PAD (pads->data);
 
 	    pads = g_list_next (pads);
 
-	    peer = GST_PAD_PEER (p);
 	    if (!peer)
 	      continue;
 
@@ -364,7 +362,7 @@ gst_thread_change_state (GstElement * element)
 	    if (GST_ELEMENT_SCHED (peerelement) != GST_ELEMENT_SCHED (thread)) {
 	      GstQueue *queue = GST_QUEUE (peerelement);
 
-	      THR_DEBUG ("  element \"%s\" has pad cross sched boundary\n", GST_ELEMENT_NAME (e));
+	      THR_DEBUG ("  element \"%s\" has pad cross sched boundary\n", GST_ELEMENT_NAME (element));
 	      /* FIXME!! */
 	      g_mutex_lock (queue->qlock);
 	      g_cond_signal (queue->not_full);
@@ -470,8 +468,12 @@ gst_thread_main_loop (void *arg)
                         gst_element_statename (GST_STATE_PAUSED));
         g_cond_wait (thread->cond,thread->lock);
 	
-	g_assert (GST_STATE_PENDING (thread) == GST_STATE_NULL ||
-	          GST_STATE_PENDING (thread) == GST_STATE_PAUSED);
+	/* this must have happened by a state change in the thread context */
+	if (GST_STATE_PENDING (thread) != GST_STATE_NULL &&
+	    GST_STATE_PENDING (thread) != GST_STATE_PAUSED) {
+          g_cond_signal (thread->cond);
+	  continue;
+	}
 
         /* been signaled, we need to state transition now and signal back */
         gst_thread_update_state (thread);
@@ -491,8 +493,12 @@ gst_thread_main_loop (void *arg)
                        gst_element_statename (GST_STATE_PLAYING));
         g_cond_wait (thread->cond,thread->lock);
 
-	g_assert (GST_STATE_PENDING (thread) == GST_STATE_READY ||
-	          GST_STATE_PENDING (thread) == GST_STATE_PLAYING);
+	/* this must have happened by a state change in the thread context */
+	if (GST_STATE_PENDING (thread) != GST_STATE_READY &&
+	    GST_STATE_PENDING (thread) != GST_STATE_PLAYING) {
+          g_cond_signal (thread->cond);
+	  continue;
+	}
 
         /* been signaled, we need to state transition now and signal back */
         gst_thread_update_state (thread);

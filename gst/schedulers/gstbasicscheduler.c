@@ -622,6 +622,12 @@ gst_basic_scheduler_chain_disable_element (GstSchedulerChain * chain, GstElement
   /* reschedule the chain */
 /* FIXME this should be done only if manager state != NULL */
 /*  gst_basic_scheduler_cothreaded_chain(GST_BIN(chain->sched->parent),chain); */
+  /* FIXME is this right? */
+  /* we have to check for a threadstate here because a queue doesn't have one */
+  if (element->threadstate) {
+    cothread_free (element->threadstate);
+    element->threadstate = NULL;
+  }
 }
 
 static void
@@ -787,7 +793,7 @@ gst_basic_scheduler_setup (GstScheduler *sched)
   /* first create thread context */
   if (bin->threadcontext == NULL) {
     GST_DEBUG (GST_CAT_SCHEDULING, "initializing cothread context\n");
-    bin->threadcontext = cothread_init ();
+    bin->threadcontext = cothread_context_init ();
   }
 }
 
@@ -805,7 +811,7 @@ gst_basic_scheduler_reset (GstScheduler *sched)
   
   ctx = GST_BIN (GST_SCHED_PARENT (sched))->threadcontext;
 
-  cothread_free (ctx);
+  cothread_context_free (ctx);
   
   GST_BIN (GST_SCHED_PARENT (sched))->threadcontext = NULL;
 }
@@ -992,6 +998,7 @@ gst_basic_scheduler_pad_disconnect (GstScheduler * sched, GstPad * srcpad, GstPa
   chain2 = gst_basic_scheduler_find_chain (sched, element2);
 
   if (chain1 != chain2) {
+    /* elements not in the same chain don't need to be separated */
     GST_INFO (GST_CAT_SCHEDULING, "elements not in the same chain");
     return;
   }
@@ -1006,10 +1013,7 @@ gst_basic_scheduler_pad_disconnect (GstScheduler * sched, GstPad * srcpad, GstPa
   }
 
   /* check the other element to see if it landed in the newly created chain */
-  if (chain2) {
-    GST_INFO (GST_CAT_SCHEDULING, "destroying chain");
-    gst_basic_scheduler_chain_destroy (chain2);
-
+  if (gst_basic_scheduler_find_chain (sched, element2) == NULL) {
     /* if not in chain, create chain and build from scratch */
     chain2 = gst_basic_scheduler_chain_new (sched);
     gst_basic_scheduler_chain_recursive_add (chain2, element2);
@@ -1076,7 +1080,8 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
   /* step through all the chains */
   chains = sched->chains;
 
-  g_return_val_if_fail (chains != NULL, FALSE);
+  if (chains == NULL)
+    return FALSE;
 
   while (chains) {
     chain = (GstSchedulerChain *) (chains->data);
