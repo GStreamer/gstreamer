@@ -474,16 +474,49 @@ static void
 gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
 {
   XEvent e;
+  guint pointer_x = 0, pointer_y = 0;
+  gboolean pointer_moved = FALSE;
   
   g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
+  
+  /* We get all pointer motion events, only the last position is
+     interesting. */
+  g_mutex_lock (xvimagesink->x_lock);
+  while (XCheckWindowEvent (xvimagesink->xcontext->disp,
+                            xvimagesink->xwindow->win,
+                            PointerMotionMask, &e))
+    {
+      g_mutex_unlock (xvimagesink->x_lock);
+      
+      switch (e.type)
+        {
+          case MotionNotify:
+            pointer_x = e.xmotion.x;
+            pointer_y = e.xmotion.y;
+            pointer_moved = TRUE;
+            break;
+          default:
+            break;
+        }
+        
+      g_mutex_lock (xvimagesink->x_lock);
+    }
+  g_mutex_unlock (xvimagesink->x_lock);
+
+  if (pointer_moved)
+    {
+      GST_DEBUG ("xvimagesink pointer moved over window at %d,%d",
+                 pointer_x, pointer_y);
+      gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
+                                       "mouse-move", 0, pointer_x, pointer_y);
+    }
   
   /* We get all events on our window to throw them upstream */
   g_mutex_lock (xvimagesink->x_lock);
   while (XCheckWindowEvent (xvimagesink->xcontext->disp,
                             xvimagesink->xwindow->win,
-                            ExposureMask | StructureNotifyMask |
-                            PointerMotionMask | KeyPressMask |
+                            StructureNotifyMask | KeyPressMask |
                             KeyReleaseMask | ButtonPressMask |
                             ButtonReleaseMask, &e))
     {
@@ -501,15 +534,6 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
                        e.xconfigure.width, e.xconfigure.height);
             xvimagesink->xwindow->width = e.xconfigure.width;
             xvimagesink->xwindow->height = e.xconfigure.height;
-            break;
-          case MotionNotify:
-            /* Mouse pointer moved over our window. We send upstream
-               events for interactivity/navigation */
-            GST_DEBUG ("xvimagesink pointer moved over window at %d,%d",
-                       e.xmotion.x, e.xmotion.y);
-            gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
-                                             "mouse-move", 0, 
-                                             e.xmotion.x, e.xmotion.y);
             break;
           case ButtonPress:
             /* Mouse button pressed over our window. We send upstream
