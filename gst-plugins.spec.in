@@ -959,6 +959,7 @@ integer to float conversion, LAW conversion and level detection plug-ins.
 %{_libdir}/gst/libgstpassthrough.so
 # %{_libdir}/gst/libgstfloatcast.so
 %{_libdir}/gst/libgstcutter.so
+%{_libdir}/gst/libgstfilter.so
 
 %post -n gstreamer-audio-effects
 %{_bindir}/gst-register --gst-mask=0 2> /dev/null
