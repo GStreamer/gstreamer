@@ -199,8 +199,8 @@
           that arise when working on these more specialized plugin types. The
           part includes chapters on <xref linkend="chapter-other-source"/>,
           <xref linkend="chapter-other-sink"/>, <xref
-          linkend="chapter-other-oneton"/> (including demuxers), <xref
-          linkend="chapter-other-ntoone"/> (including muxers) and <xref
+          linkend="chapter-other-oneton"/>, <xref
+          linkend="chapter-other-ntoone"/> and <xref
           linkend="chapter-other-manager"/>.
         </para>
       </listitem>

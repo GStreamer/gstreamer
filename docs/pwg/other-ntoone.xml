@@ -1,8 +1,8 @@
 
 <!-- ############ chapter ############# -->
 
-<chapter id="chapter-other-ntoone" xreflabel="Writing a N-to-1 Element or Demuxer">
-  <title>Writing a N-to-1 Element or Demuxer</title>
+<chapter id="chapter-other-ntoone" xreflabel="Writing a N-to-1 Element or Muxer">
+  <title>Writing a N-to-1 Element or Muxer</title>
   <para>
     N-to-1 elements have been previously mentioned and discussed in both
     <xref linkend="chapter-advanced-request"/> and in
