@@ -960,7 +960,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   g_return_val_if_fail (sinkpad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
 
-  GST_INFO (GST_CAT_PADS, "connecting %s:%s and %s:%s",
+  GST_INFO (GST_CAT_PADS, "trying to connect %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   /* now we need to deal with the real/ghost stuff */
@@ -971,11 +971,30 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     GST_INFO (GST_CAT_PADS, "*actually* connecting %s:%s and %s:%s",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
-
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) == NULL, FALSE);
-  g_return_val_if_fail (GST_RPAD_PEER (realsink) == NULL, FALSE);
-  g_return_val_if_fail (GST_PAD_PARENT (realsrc) != NULL, FALSE);
-  g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, FALSE);
+  if (GST_RPAD_PEER (realsrc) != NULL)
+  {
+    GST_INFO (GST_CAT_PADS, "Real source pad %s:%s has a peer, failed",
+	      GST_DEBUG_PAD_NAME (realsrc));
+    return FALSE;
+  }
+  if (GST_RPAD_PEER (realsink) != NULL)
+  {
+    GST_INFO (GST_CAT_PADS, "Real sink pad %s:%s has a peer, failed",
+	      GST_DEBUG_PAD_NAME (realsink));
+    return FALSE;
+  }
+  if (GST_PAD_PARENT (realsrc) == NULL)
+  {
+    GST_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
+	      GST_DEBUG_PAD_NAME (realsrc));
+    return FALSE;
+  }
+  if (GST_PAD_PARENT (realsink) == NULL)
+  {
+    GST_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
+	      GST_DEBUG_PAD_NAME (realsrc));
+    return FALSE;
+  }
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
     g_warning ("connecting pads with different scheds requires "
@@ -992,9 +1011,19 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     realsrc = realsink;
     realsink = temppad;
   }
-  g_return_val_if_fail ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
-                        (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK), FALSE);
-
+  if (GST_PAD_PARENT (realsink) == NULL)
+  if (GST_RPAD_DIRECTION (realsrc) != GST_PAD_SRC)
+  {
+    GST_INFO (GST_CAT_PADS, "Real src pad %s:%s is not a source pad, failed",
+	      GST_DEBUG_PAD_NAME (realsrc));
+    return FALSE;
+  }    
+  if (GST_RPAD_DIRECTION (realsink) != GST_PAD_SINK)
+  {
+    GST_INFO (GST_CAT_PADS, "Real sink pad %s:%s is not a sink pad, failed",
+	      GST_DEBUG_PAD_NAME (realsink));
+    return FALSE;
+  }    
   /* first set peers */
   GST_RPAD_PEER (realsrc) = realsink;
   GST_RPAD_PEER (realsink) = realsrc;
@@ -1002,7 +1031,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   /* try to negotiate the pads, we don't need to clear the caps here */
   if (!gst_pad_try_reconnect_filtered_func (realsrc, realsink, 
 	                                    filtercaps, FALSE)) {
-    GST_DEBUG (GST_CAT_CAPS, "pads cannot connect");
+    GST_DEBUG (GST_CAT_CAPS, "reconnect_filtered_func failed, can't connect");
 
     GST_RPAD_PEER (realsrc) = NULL;
     GST_RPAD_PEER (realsink) = NULL;
@@ -1028,7 +1057,7 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     gst_scheduler_pad_connect (sink_sched, 
 	                       GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
 
-  GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s",
+  GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s, successful",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   gst_caps_debug (gst_pad_get_caps (GST_PAD_CAST (realsrc)), 
                   "caps of newly connected src pad");
