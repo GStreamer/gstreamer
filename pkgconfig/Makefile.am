@@ -12,13 +12,15 @@ pcverfiles =  \
 	gstreamer-interfaces-@GST_MAJORMINOR@.pc \
 	gstreamer-libs-@GST_MAJORMINOR@.pc \
 	gstreamer-media-info-@GST_MAJORMINOR@.pc \
-	gstreamer-play-@GST_MAJORMINOR@.pc
+	gstreamer-play-@GST_MAJORMINOR@.pc \
+	gstreamer-plugins-@GST_MAJORMINOR@.pc
 pcverfiles_uninstalled = \
 	$(GCONF_PC_UNINSTALLED) \
 	gstreamer-interfaces-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc \
 	gstreamer-media-info-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc \
+	gstreamer-plugins-@GST_MAJORMINOR@-uninstalled.pc
 
 pcverfiles_gconf = $(GCONF_PC) $(GCONF_PC_UNINSTALLED)
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
@@ -38,7 +40,8 @@ pcinfiles = \
            gstreamer-interfaces.pc.in gstreamer-interfaces-uninstalled.pc.in \
            gstreamer-libs.pc.in gstreamer-libs-uninstalled.pc.in \
            gstreamer-media-info.pc.in gstreamer-media-info-uninstalled.pc.in \
-           gstreamer-play.pc.in gstreamer-play-uninstalled.pc.in
+           gstreamer-play.pc.in gstreamer-play-uninstalled.pc.in \
+           gstreamer-plugins.pc.in gstreamer-plugins-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)
