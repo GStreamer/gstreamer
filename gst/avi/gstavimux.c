@@ -789,16 +789,24 @@ gst_avimux_bigfile(GstAviMux *avimux, gboolean last)
   if (avimux->is_bigfile)
   {
     /* sarch back */
-    event = gst_event_new_seek(GST_SEEK_BYTEOFFSET_SET, avimux->avix_start, TRUE);
-    gst_pad_send_event(avimux->srcpad, event);
+    event = gst_event_new_seek (GST_FORMAT_BYTES | 
+		    	        GST_SEEK_METHOD_SET | 
+				GST_SEEK_FLAG_FLUSH, 
+				avimux->avix_start);
+    /* if the event succeeds */
+    if (gst_pad_send_event(avimux->srcpad, event)) {
 
-    /* rewrite AVIX header */
-    header = gst_avimux_riff_get_avix_header(avimux->datax_size);
-    gst_pad_push(avimux->srcpad, header);
+      /* rewrite AVIX header */
+      header = gst_avimux_riff_get_avix_header(avimux->datax_size);
+      gst_pad_push(avimux->srcpad, header);
 
-    /* go back to current location */
-    event = gst_event_new_seek(GST_SEEK_BYTEOFFSET_SET, avimux->total_data, TRUE);
-    gst_pad_send_event(avimux->srcpad, event);
+      /* go back to current location */
+      event = gst_event_new_seek (GST_FORMAT_BYTES | 
+		    	          GST_SEEK_METHOD_SET | 
+				  GST_SEEK_FLAG_FLUSH, 
+				  avimux->total_data);
+      gst_pad_send_event(avimux->srcpad, event);
+    }
   }
   avimux->avix_start = avimux->total_data;
 
@@ -884,7 +892,9 @@ gst_avimux_stop_file (GstAviMux *avimux)
 
   /* seek and rewrite the header */
   header = gst_avimux_riff_get_avi_header(avimux);
-  event = gst_event_new_seek(GST_SEEK_BYTEOFFSET_SET, 0, TRUE);
+  event = gst_event_new_seek (GST_FORMAT_BYTES | 
+		  	      GST_SEEK_METHOD_SET |
+			      GST_SEEK_FLAG_FLUSH, 0);
   gst_pad_send_event(avimux->srcpad, event);
   gst_pad_push(avimux->srcpad, header);
 

@@ -350,7 +350,7 @@ gst_aasink_chain (GstPad *pad, GstBuffer *buf)
   GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
 
   if (aasink->clock) {
-    gst_element_clock_wait (GST_ELEMENT (aasink), aasink->clock, GST_BUFFER_TIMESTAMP(buf));
+    gst_element_clock_wait (GST_ELEMENT (aasink), aasink->clock, GST_BUFFER_TIMESTAMP(buf), NULL);
   }
 
   aa_render (aasink->context, &aasink->ascii_parms, 

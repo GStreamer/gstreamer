@@ -43,60 +43,71 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVI_DEMUX))
 
 
-#define GST_AVI_DEMUX_UNKNOWN	  	0	/* initialized state */
-#define GST_AVI_DEMUX_REGULAR	  	1	/* regular parsing */
-#define GST_AVI_DEMUX_HDRL    		2
-#define GST_AVI_DEMUX_STRL    		3
-#define GST_AVI_DEMUX_MOVI    		4
-#define GST_AVI_DEMUX_AVIH    		5
-#define GST_AVI_DEMUX_STRH_VIDS		6
-#define GST_AVI_DEMUX_STRH_AUDS		7
-#define GST_AVI_DEMUX_STRH_IAVS		8
+#define GST_AVI_DEMUX_MAX_STREAMS	16	
 
-#define GST_AVI_DEMUX_MAX_AUDIO_PADS	8	
-#define GST_AVI_DEMUX_MAX_VIDEO_PADS	8	
+#define CHUNKID_TO_STREAMNR(chunkid) \
+  (((GUINT32_FROM_BE (chunkid) >> 24) - '0') * 10 + \
+   ((GUINT32_FROM_BE (chunkid) >> 16) & 0xff) - '0')
 
 typedef struct _GstAviDemux GstAviDemux;
 typedef struct _GstAviDemuxClass GstAviDemuxClass;
 
+typedef struct
+{
+  gint 		index_nr;
+  gint 		stream_nr;
+  guint64 	ts;
+  guint32	flags;
+  guint32	offset;
+  gint 		size;
+  guint64	bytes_before;
+  guint32	frames_before;
+} gst_avi_index_entry;
+
+typedef struct
+{
+  GstPad       *pad;
+  gint 		num;
+  gst_riff_strh strh;
+  guint64 	next_ts;
+  guint32 	current_frame;
+  guint32 	current_byte;
+  guint64 	delay;
+  gboolean 	need_flush;
+
+  guint64	total_bytes;
+  gint32	total_frames;
+
+  guint32	skip;
+
+} avi_stream_context;
+
 struct _GstAviDemux {
-  GstElement element;
+  GstElement 	 element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad 	*sinkpad, *srcpad;
 
   /* AVI decoding state */
-  gint state;
-  guint32 fcc_type;
+  guint32 	 fcc_type;
 
   GstByteStream *bs;
 
-  gint frame_rate;
+  gst_avi_index_entry *index_entries;
+  gulong 	 index_size;
+  gulong 	 index_offset;
 
-  gst_riff_index_entry *index_entries;
-  gulong index_size;
-  gulong index_offset;
-  gulong resync_offset;
+  gst_riff_avih  avih;
 
-  guint64 next_time;
-  guint64 time_interval;
-  gulong tot_frames;
-  gulong current_frame;
+  guint 	 num_streams;
+  guint 	 num_v_streams;
+  guint 	 num_a_streams;
 
-  guint32 flags;
-  guint32 init_audio;
-  guint32 audio_rate;
+  avi_stream_context stream[GST_AVI_DEMUX_MAX_STREAMS];
 
-  guint num_audio_pads;
-  guint num_video_pads;
-  guint num_iavs_pads;
-  GstPad       *audio_pad[GST_AVI_DEMUX_MAX_AUDIO_PADS];
-  gboolean 	audio_need_flush[GST_AVI_DEMUX_MAX_AUDIO_PADS];
-
-  GstPad       *video_pad[GST_AVI_DEMUX_MAX_VIDEO_PADS];
-  gboolean 	video_need_flush[GST_AVI_DEMUX_MAX_VIDEO_PADS];
-
-  gpointer extra_data;
+  gboolean 	 seek_pending;
+  gint64 	 seek_offset;
+  guint64 	 last_seek;
 };
 
 struct _GstAviDemuxClass {

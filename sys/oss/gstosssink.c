@@ -50,7 +50,7 @@ static void 			gst_osssink_close_audio		(GstOssSink *sink);
 static gboolean 		gst_osssink_sync_parms 		(GstOssSink *osssink);
 static GstElementStateReturn 	gst_osssink_change_state	(GstElement *element);
 static void		 	gst_osssink_set_clock		(GstElement *element, GstClock *clock);
-static GstClock* 		gst_osssink_get_clock 		(GstElement *element);
+//static GstClock* 		gst_osssink_get_clock 		(GstElement *element);
 
 static GstPadConnectReturn	gst_osssink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
@@ -217,35 +217,6 @@ gst_osssink_class_init (GstOssSinkClass *klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_osssink_change_state);
 }
 
-static GstClockTime 
-gst_osssink_get_time (GstClock *clock, gpointer data) 
-{
-  GstOssSink *osssink = GST_OSSSINK (data);
-  gint delay;
-  GstClockTime res;
-
-  if (!osssink->bps)
-    return 0;
-
-  ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay);
-
-  /* sometimes delay is bigger than the number of bytes sent to the device, which screws
-   * up this calculation, we assume that everything is still in the device then */
-  if (delay > osssink->handled) {
-    res = osssink->offset;
-  }
-  else {
-    res = osssink->offset + (osssink->handled - delay) * 1000000LL / osssink->bps;
-  }
-
-  /*
-  g_print ("from osssink: %lld %lld %d %lld %d\n", res, osssink->offset, delay, osssink->handled,
-		  osssink->bps);
-		  */
-
-  return res;
-}
-
 static void 
 gst_osssink_init (GstOssSink *osssink) 
 {
@@ -268,19 +239,13 @@ gst_osssink_init (GstOssSink *osssink)
 #else
   osssink->format = AFMT_S16_LE;
 #endif /* WORDS_BIGENDIAN */  
-  /* gst_clock_register (osssink->clock, GST_OBJECT (osssink)); */
   osssink->bufsize = 4096;
   osssink->bps = 0;
-  osssink->offset = 0LL;
-  osssink->handled = 0LL;
+  osssink->resync = FALSE;
   /* 6 buffers per chunk by default */
   osssink->sinkpool = gst_buffer_pool_get_default (osssink->bufsize, 6);
 
-  osssink->provided_clock = NULL;
-  osssink->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock", gst_osssink_get_time, osssink));
-
   GST_ELEMENT (osssink)->setclockfunc 	 = gst_osssink_set_clock;
-  GST_ELEMENT (osssink)->getclockfunc 	 = gst_osssink_get_clock;
   
   GST_FLAG_SET (osssink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET (osssink, GST_ELEMENT_EVENT_AWARE);
@@ -427,16 +392,6 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   return TRUE;
 }
 
-static GstClock*
-gst_osssink_get_clock (GstElement *element)
-{
-  GstOssSink *osssink;
-  
-  osssink = GST_OSSSINK (element);
-
-  return GST_CLOCK (osssink->provided_clock);
-}
-
 static void
 gst_osssink_set_clock (GstElement *element, GstClock *clock)
 {
@@ -457,53 +412,68 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
   osssink = GST_OSSSINK (gst_pad_get_parent (pad));
 
   if (GST_IS_EVENT (buf)) {
-    switch (GST_EVENT_TYPE (buf)) {
+    GstEvent *event = GST_EVENT (buf);
+    //gint64 offset;
+
+    switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
         ioctl (osssink->fd, SNDCTL_DSP_SYNC);
-	gst_pad_event_default (pad, GST_EVENT (buf));
+	gst_pad_event_default (pad, event);
         return;
+      case GST_EVENT_NEW_MEDIA:
+	g_print ("new media\n");
+        return;
+      case GST_EVENT_DISCONTINUOUS:
+      {
+	gint64 value;
+	
+        ioctl (osssink->fd, SNDCTL_DSP_RESET);
+	if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
+          gst_clock_handle_discont (osssink->clock, value);
+	}
+	osssink->resync = TRUE;
+        return;
+      }
       default:
+	gst_pad_event_default (pad, event);
         return;
     }
+    gst_event_free (event);
   }
-  
-  buftime = GST_BUFFER_TIMESTAMP (buf);
 
   if (!osssink->bps) {
     gst_buffer_unref (buf);
     gst_element_error (GST_ELEMENT (osssink), "capsnego was never performed, unknown data type");
+    return;
   }
+
+  buftime = GST_BUFFER_TIMESTAMP (buf);
 
   if (osssink->fd >= 0) {
     if (!osssink->mute) {
       guchar *data = GST_BUFFER_DATA (buf);
       gint size = GST_BUFFER_SIZE (buf);
-      /* gint frag = osssink->fragment;   <-- unused, for reason see above */
 
       if (osssink->clock) {
-        /* FIXME, NEW_MEDIA/DISCONT?. Try to get our start point */
-        if (!osssink->have_offset && buftime != -1LL) {
-           GST_INFO (GST_CAT_PLUGIN_INFO, 
-			   "osssink: clock at offset: %lld, new offset %lld at time %lld\n", 
-			   osssink->offset, buftime, gst_clock_get_time (osssink->clock));
+        gint delay;
+	gint64 queued;
+	GstClockTimeDiff jitter;
+    
+        ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay);
+	queued = delay * GST_SECOND / osssink->bps;
 
-	  osssink->offset = buftime;
-	  osssink->have_offset = TRUE;
-	  osssink->handled = 0;
-          gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, buftime);
+	if  (osssink->resync) {
+	  gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, 
+				buftime - queued, &jitter);
+
+	  if (jitter > 0) {
+	    write (osssink->fd, data, size);
+	    osssink->resync = FALSE;
+	  }
+	}
+	else {
+	  write (osssink->fd, data, size);
         }
-	
-	
-	/* this doesn't work on BE machines, apparently
-	while (size) {
-          gint tosend = MIN (size, frag);
-          write (osssink->fd, data, tosend);
-	  data += tosend;
-	  size -= tosend;
-          osssink->handled += tosend;
-	} */
-	write (osssink->fd, data, size);
-        osssink->handled += size;
       }
       /* no clock, try to be as fast as possible */
       else {
@@ -514,7 +484,6 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
         if (ospace.bytes >= size) {
           write (osssink->fd, data, size);
 	}
-        osssink->handled += size;
       }
     }
   }
@@ -708,11 +677,8 @@ gst_osssink_change_state (GstElement *element)
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
-      osssink->offset = 0LL;
-      osssink->have_offset = FALSE;
-      osssink->handled = 0LL;
-      break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      osssink->resync = TRUE;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
     {
