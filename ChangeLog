@@ -1,5 +1,10 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/gst-i18n-plugin.h:
+          remove config.h inclusion
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* autogen.sh:
           adding autopoint invocation
 	* Makefile.am:
