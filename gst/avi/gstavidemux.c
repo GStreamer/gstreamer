@@ -1215,12 +1215,6 @@ gst_avi_demux_stream_header (GstAviDemux *avi)
               return FALSE;
             break;
 
-          case GST_RIFF_LIST_INFO:
-            if (!gst_riff_read_list (riff, &tag) ||
-                !gst_riff_read_info (riff))
-              return FALSE;
-            break;
-
           default:
             GST_WARNING ("Unknown list " GST_FOURCC_FORMAT " in AVI header",
 			 GST_FOURCC_ARGS (tag));
@@ -1271,8 +1265,13 @@ gst_avi_demux_stream_header (GstAviDemux *avi)
     if (!(tag = gst_riff_peek_list (riff)))
       return FALSE;
     if (tag != GST_RIFF_LIST_movi) {
-      if (!gst_riff_read_skip (riff))
+      if (tag == GST_RIFF_LIST_INFO) {
+        if (!gst_riff_read_list (riff, &tag) ||
+            !gst_riff_read_info (riff))
+         return FALSE;
+      } else  if (!gst_riff_read_skip (riff)) {
         return FALSE;
+      }
       continue;
     }
     break;
