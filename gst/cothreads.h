@@ -26,6 +26,7 @@
 #include <glib.h>
 #include <setjmp.h>
 
+/* this bit is lifted out of glibc */
 #ifndef CURRENT_STACK_FRAME
 #define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
 #endif /* CURRENT_STACK_FRAME */
@@ -40,7 +41,7 @@ typedef int (*cothread_func) (int argc,char **argv);
 
 struct _cothread_state {
   cothread_context 	*ctx;
-  int			 threadnum;
+  int			 cothreadnum;
   gpointer		 priv;
 
   cothread_func		 func;

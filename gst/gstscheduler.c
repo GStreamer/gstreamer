@@ -96,11 +96,11 @@ gst_scheduler_setup (GstScheduler *sched)
 
 /**
  * gst_scheduler_get_preferred_stack:
- * @sched: the scheduler
- * @stack: a pointer to the location of the preferred stack
- * @size: a pointer to the size of the preferred stack
+ * @sched: a #GstScheduler to query.
+ * @stack: the pointer to store the location of the preferred stack in.
+ * @size: the pointer to store the size of the preferred stack in.
  *
- * Get the preferred stack location and size of this scheduler.
+ * Gets the preferred stack location and size of this scheduler.
  *
  * Returns: TRUE if the scheduler suggested a preferred stacksize and location.
  */
@@ -117,9 +117,9 @@ gst_scheduler_get_preferred_stack (GstScheduler *sched, gpointer *stack, gulong 
 
 /**
  * gst_scheduler_reset:
- * @sched: the scheduler
+ * @sched: a #GstScheduler to reset.
  *
- * Reset the scheduler
+ * Reset the schedulers.
  */
 void
 gst_scheduler_reset (GstScheduler *sched)

@@ -181,6 +181,7 @@ gst_thread_init (GstThread *thread)
   thread->thread_id = (pthread_t) -1;
   thread->sched_policy = SCHED_OTHER;
   thread->priority = 0;
+  thread->stack = NULL;
 }
 
 static void
@@ -261,17 +262,24 @@ gst_thread_new (const gchar *name)
   return gst_element_factory_make ("thread", name);
 }
 
+/* these two macros are used for debug/info from the state_change function */
 
 #define THR_INFO(format,args...) \
   GST_INFO_ELEMENT(GST_CAT_THREAD, thread, "sync(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->pid) , ## args )
+  
 #define THR_DEBUG(format,args...) \
   GST_DEBUG_ELEMENT(GST_CAT_THREAD, thread, "sync(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->pid) , ## args )
 
+/* these two macros are used for debug/info from the gst_thread_main_loop
+ * function
+ */
+
 #define THR_INFO_MAIN(format,args...) \
   GST_INFO_ELEMENT(GST_CAT_THREAD, thread, "sync-main(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->ppid) , ## args )
+
 #define THR_DEBUG_MAIN(format,args...) \
   GST_DEBUG_ELEMENT(GST_CAT_THREAD, thread, "sync-main(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->ppid) , ## args )
@@ -279,13 +287,17 @@ gst_thread_new (const gchar *name)
 static GstElementStateReturn 
 gst_thread_update_state (GstThread *thread)
 {
+  GST_DEBUG_ELEMENT (GST_CAT_THREAD, thread, "updating state of thread");
   /* check for state change */
-  if (GST_STATE_PENDING(thread) != GST_STATE_VOID_PENDING) {
+  if (GST_STATE_PENDING (thread) != GST_STATE_VOID_PENDING) {
     /* punt and change state on all the children */
     if (GST_ELEMENT_CLASS (parent_class)->change_state)
-      return GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT(thread));
+      return GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (thread));
   }
 
+  /* FIXME: in the case of no change_state function in the parent's class,
+   * shouldn't we actually change the thread's state ? */
+  g_warning ("thread's parent doesn't have change_state, returning success");
   return GST_STATE_SUCCESS;
 }
 
@@ -324,15 +336,36 @@ gst_thread_change_state (GstElement * element)
 
       THR_DEBUG ("creating thread \"%s\"", GST_ELEMENT_NAME (element));
 
+      /* this bit of code handles creation of pthreads
+       * this is therefor tricky code
+       * compare it with the block of code that handles the destruction
+       * in GST_STATE_READY_TO_NULL below
+       */
       g_mutex_lock (thread->lock);
+
+      /* create attribute struct for pthread
+       * and assign stack pointer and size to it
+       *
+       * the default state of a pthread is PTHREAD_CREATE_JOINABLE
+       * (see man pthread_attr_init)
+       * - other thread can sync on termination
+       * - thread resources are kept allocated until other thread performs
+       *   pthread_join
+       */
 
       if (pthread_attr_init (&thread->attr) != 0)
 	g_warning ("pthread_attr_init returned an error !");
 
+      /* this function should return a newly allocated stack
+       * (using whatever method)
+       * which we can initiate the pthreads with
+       * the stack should be freed in 
+       */
       if (gst_scheduler_get_preferred_stack (GST_ELEMENT_SCHED (element), 
 	                                     &thread->stack, &stacksize)) {
 #ifdef HAVE_PTHREAD_ATTR_SETSTACK
-        if (pthread_attr_setstack (&thread->attr, thread->stack, stacksize) != 0) {
+        if (pthread_attr_setstack (&thread->attr, 
+	                           thread->stack, stacksize) != 0) {
           g_warning ("pthread_attr_setstack failed\n");
           return GST_STATE_FAILURE;
         }
@@ -349,16 +382,24 @@ gst_thread_change_state (GstElement * element)
 	GST_DEBUG (GST_CAT_THREAD, "pthread attr set stack at %p of size %ld", 
 		   thread->stack, stacksize);
       }
+      else {
+	g_warning ("scheduler did not return a preferred stack");
+      }
 
-      /* create the thread */
-      THR_DEBUG ("going to pthread_create...");
-      if (pthread_create (&thread->thread_id, &thread->attr, gst_thread_main_loop, thread) != 0) {
-        THR_DEBUG ("pthread create failed");
+      /* create a new pthread
+       * use the specified attributes
+       * make it execute gst_thread_main_loop (thread)
+       */
+      GST_DEBUG (GST_CAT_THREAD, "going to pthread_create...");
+      if (pthread_create (&thread->thread_id, &thread->attr, 
+	  gst_thread_main_loop, thread) != 0) {
+        GST_DEBUG (GST_CAT_THREAD, "pthread_create failed");
 	g_mutex_unlock (thread->lock);
-        THR_DEBUG ("could not create thread \"%s\"", GST_ELEMENT_NAME (element));
+        GST_DEBUG (GST_CAT_THREAD, "could not create thread \"%s\"", 
+	           GST_ELEMENT_NAME (element));
 	return GST_STATE_FAILURE;
       }
-      THR_DEBUG ("pthread created");
+      GST_DEBUG (GST_CAT_THREAD, "pthread created");
 
       /* wait for it to 'spin up' */
       THR_DEBUG ("waiting for child thread spinup");
@@ -477,19 +518,38 @@ gst_thread_change_state (GstElement * element)
       THR_DEBUG ("waiting for ack");
       g_cond_wait (thread->cond, thread->lock);
       THR_DEBUG ("got ack");
+
+      /* this block of code is very tricky
+       * basically, we try to clean up the whole thread and
+       * everything related to it in the right order without
+       * triggering segfaults
+       * compare this block to the block
+       */
+
+      
+      /* in glibc 2.2.5, pthread_attr_destroy does nothing more
+       * than return 0 */
+      if (pthread_attr_destroy (&thread->attr) != 0)
+	g_warning ("pthread_attr_destroy has failed !");
+
+      GST_DEBUG (GST_CAT_THREAD, "joining pthread %ld", thread->thread_id);
       if (pthread_join (thread->thread_id, NULL) != 0)
         g_warning ("pthread_join has failed !\n");
-      if (pthread_attr_destroy (&thread->attr) != 0)
-	g_warning ("pthread_attr_destroy has failed !\n");
-      thread->thread_id = -1;
-      g_mutex_unlock (thread->lock);
 
+      thread->thread_id = -1;
+      
+      /* the stack was allocated when we created the thread
+       * using scheduler->get_preferred_stack */
       if (thread->stack) {
-        GST_DEBUG (GST_CAT_THREAD, "freeing allocated stack (%p)", thread->stack);
+        GST_DEBUG (GST_CAT_THREAD, "freeing allocated stack (%p)", 
+	           thread->stack);
         free (thread->stack);
         thread->stack = NULL;
       }
- 
+     
+      THR_DEBUG ("unlocking mutex");
+      g_mutex_unlock (thread->lock);
+
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_STARTED);
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
@@ -531,6 +591,7 @@ gst_thread_main_loop (void *arg)
   thread = GST_THREAD (arg);
   g_mutex_lock (thread->lock);
 
+  /* handle scheduler policy */
   if (thread->sched_policy != SCHED_OTHER) {
     struct sched_param sched_param;
 
@@ -544,12 +605,15 @@ gst_thread_main_loop (void *arg)
       GST_DEBUG (GST_CAT_THREAD, "not running with real-time priority");
     }
   }
+  else
+    g_warning ("thread has SCHED_OTHER policy, unhandled !");
 
+  /* set up the element's scheduler */
   gst_scheduler_setup (GST_ELEMENT_SCHED (thread));
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
 
   thread->pid = getpid();
-  THR_INFO_MAIN("thread is running");
+  THR_INFO_MAIN ("thread is running");
 
   /* first we need to change the state of all the children */
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
@@ -559,7 +623,6 @@ gst_thread_main_loop (void *arg)
       THR_DEBUG_MAIN ("state change of children failed");
     }
   }
-
 
   THR_DEBUG_MAIN ("indicating spinup");
   g_cond_signal (thread->cond);
@@ -581,7 +644,7 @@ gst_thread_main_loop (void *arg)
                         gst_element_state_get_name (GST_STATE_READY),
                         gst_element_state_get_name (GST_STATE_NULL),
                         gst_element_state_get_name (GST_STATE_PAUSED));
-        g_cond_wait (thread->cond,thread->lock);
+        g_cond_wait (thread->cond, thread->lock);
 	
 	/* this must have happened by a state change in the thread context */
 	if (GST_STATE_PENDING (thread) != GST_STATE_NULL &&
@@ -592,20 +655,23 @@ gst_thread_main_loop (void *arg)
 
         /* been signaled, we need to state transition now and signal back */
         gst_thread_update_state (thread);
-        THR_DEBUG_MAIN ("done with state transition, signaling back to parent process");
+        THR_DEBUG_MAIN ("done with state transition, "
+	                "signaling back to parent process");
         g_cond_signal (thread->cond);
         /* now we decide what to do next */
         if (GST_STATE (thread) == GST_STATE_NULL) {
           /* REAPING must be set, we can simply break this iteration */
+          THR_DEBUG_MAIN ("set GST_THREAD_STATE_REAPING");
           GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
 	}
         continue;
+
       case GST_STATE_PAUSED:
         /* wait to be set to either the READY or PLAYING states */
-        THR_DEBUG_MAIN("thread in %s state, waiting for either %s or %s",
-                       gst_element_state_get_name (GST_STATE_PAUSED),
-                       gst_element_state_get_name (GST_STATE_READY),
-                       gst_element_state_get_name (GST_STATE_PLAYING));
+        THR_DEBUG_MAIN ("thread in %s state, waiting for either %s or %s",
+                        gst_element_state_get_name (GST_STATE_PAUSED),
+                        gst_element_state_get_name (GST_STATE_READY),
+                        gst_element_state_get_name (GST_STATE_PLAYING));
         g_cond_wait (thread->cond, thread->lock);
 
 	/* this must have happened by a state change in the thread context */
@@ -651,8 +717,8 @@ gst_thread_main_loop (void *arg)
       case GST_STATE_PLAYING:
         /* wait to be set to PAUSED */
         THR_DEBUG_MAIN ("thread in %s state, waiting for %s",
-                        gst_element_state_get_name(GST_STATE_PLAYING),
-                        gst_element_state_get_name(GST_STATE_PAUSED));
+                        gst_element_state_get_name (GST_STATE_PLAYING),
+                        gst_element_state_get_name (GST_STATE_PAUSED));
         g_cond_wait (thread->cond,thread->lock);
 
         /* been signaled, we need to state transition now and signal back */
@@ -663,7 +729,7 @@ gst_thread_main_loop (void *arg)
         continue;
       case GST_STATE_NULL:
         THR_DEBUG_MAIN ("thread in %s state, preparing to die",
-                        gst_element_state_get_name(GST_STATE_NULL));
+                        gst_element_state_get_name (GST_STATE_NULL));
         GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
         break;
       default:
@@ -671,6 +737,9 @@ gst_thread_main_loop (void *arg)
         break;
     }
   }
+
+  /* THREAD HAS STOPPED RUNNING */
+  
   /* we need to destroy the scheduler here because it has mapped it's
    * stack into the threads stack space */
   gst_scheduler_reset (GST_ELEMENT_SCHED (thread));
