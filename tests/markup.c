@@ -55,7 +55,7 @@ int main(int argc,char *argv[]) {
   GstElement *pipeline;
   GstElement *src;
 
-  DEBUG_ENTER("(%d)",argc);
+  GST_DEBUG_ENTER("(%d)",argc);
 
   gst_init(&argc,&argv);
 

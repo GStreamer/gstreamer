@@ -5,7 +5,7 @@ int main(int argc,char *argv[]) {
   GstBin *thread;
   GstElement *src,*identity,*sink;
 
-  DEBUG_ENTER("(%d)",argc);
+  GST_DEBUG_ENTER("(%d)",argc);
 
   gst_init(&argc,&argv);
 

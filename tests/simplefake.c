@@ -6,7 +6,7 @@ int main(int argc,char *argv[]) {
   GstElement *src,*identity,*sink;
   int i;
 
-  DEBUG_ENTER("(%d)",argc);
+  GST_DEBUG_ENTER("(%d)",argc);
 
   gst_init(&argc,&argv);
 

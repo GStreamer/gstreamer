@@ -11,7 +11,7 @@ int main(int argc,char *argv[]) {
   int i;
   int outfile;
 
-  DEBUG_ENTER("(%d)",argc);
+  GST_DEBUG_ENTER("(%d)",argc);
 
   gst_init(&argc,&argv);
 

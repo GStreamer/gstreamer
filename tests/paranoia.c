@@ -11,7 +11,7 @@ int main(int argc,char *argv[]) {
   int i;
   int track = (argc == 2) ? atoi(argv[1]) : 1;
 
-  DEBUG_ENTER("(%d)",argc);
+  GST_DEBUG_ENTER("(%d)",argc);
 
   gst_init(&argc,&argv);
 
