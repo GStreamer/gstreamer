@@ -27,8 +27,8 @@
 gulong gst_riff_fourcc_to_id(gchar *fourcc) {
   g_return_val_if_fail(fourcc != NULL, 0);
 
-  return (fourcc[0] << 0) | (fourcc[1] << 8) |
-         (fourcc[2] << 16) | (fourcc[3] << 24);
+  return GUINT32_FROM_LE((gulong)(fourcc[0] << 0) | (fourcc[1] << 8) |
+         (fourcc[2] << 16) | (fourcc[3] << 24));
 }
 
 gchar *gst_riff_id_to_fourcc(gulong id) {
@@ -36,6 +36,7 @@ gchar *gst_riff_id_to_fourcc(gulong id) {
 
   g_return_val_if_fail(fourcc != NULL, NULL);
 
+  id = GUINT32_FROM_LE(id);
   fourcc[0] = (id >> 0) & 0xff;
   fourcc[1] = (id >> 8) & 0xff;
   fourcc[2] = (id >> 16) & 0xff;
