@@ -168,7 +168,7 @@ gst_rfc2250_enc_add_slice (GstRFC2250Enc *enc, GstBuffer *buffer)
 
   /* see if the slice fits in the current buffer */
   if (slice_length <= enc->remaining) {
-    gst_buffer_append (enc->packet, buffer);
+    gst_buffer_merge (enc->packet, buffer);
     gst_buffer_unref (buffer);
     enc->remaining -= slice_length;
   }
@@ -177,7 +177,7 @@ gst_rfc2250_enc_add_slice (GstRFC2250Enc *enc, GstBuffer *buffer)
     /* do we need to start a new packet? */
     if (slice_length <= enc->MTU) {
       gst_rfc2250_enc_new_buffer (enc);
-      gst_buffer_append (enc->packet, buffer);
+      gst_buffer_merge (enc->packet, buffer);
       gst_buffer_unref (buffer);
       enc->remaining -= slice_length;
     }
@@ -189,7 +189,7 @@ gst_rfc2250_enc_add_slice (GstRFC2250Enc *enc, GstBuffer *buffer)
 	GstBuffer *outbuf;
 
 	outbuf = gst_buffer_create_sub (buffer, offset, MIN (enc->remaining, slice_length));
-        gst_buffer_append (enc->packet, outbuf);
+        gst_buffer_merge (enc->packet, outbuf);
 	slice_length -= GST_BUFFER_SIZE (outbuf);
 	offset += GST_BUFFER_SIZE (outbuf);
 	gst_buffer_unref (outbuf);
@@ -251,7 +251,7 @@ gst_rfc2250_enc_loop (GstElement *element)
 
     }
     if (buffer) {
-      gst_buffer_append (enc->packet, buffer);
+      gst_buffer_merge (enc->packet, buffer);
       enc->remaining -= GST_BUFFER_SIZE (buffer);
       gst_buffer_unref (buffer);
     }

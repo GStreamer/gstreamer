@@ -258,7 +258,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
   /* if we have something left from the previous frame */
   if (mp3parse->partialbuf) {
 
-    mp3parse->partialbuf = gst_buffer_append(mp3parse->partialbuf, buf);
+    mp3parse->partialbuf = gst_buffer_merge(mp3parse->partialbuf, buf);
     /* and the one we received.. */
     gst_buffer_unref(buf);
   }

@@ -380,13 +380,15 @@ gst_mpeg_parse_loop (GstElement *element)
         mpeg_parse->discont_pending = TRUE;
         mpeg_parse->scr_pending = TRUE;
         mpeg_parse->packetize->resync = TRUE;
-	gst_event_free (event);
+	gst_event_unref (event);
 	return;
       default:
 	break;
     }
     if (CLASS (mpeg_parse)->send_data)
       CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
+    else
+      gst_event_unref (event);
   }
   else {
     guint64 size;
@@ -498,6 +500,7 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
       guint64 desired_offset;
 
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_TIME) {
+        gst_event_unref (event);
         return FALSE;
       }
 
@@ -506,6 +509,7 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
       desired_offset = mpeg_parse->bit_rate * GST_EVENT_SEEK_OFFSET (event) / (8 * GST_SECOND);
 
       if (!gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
+        gst_event_unref (event);
 	return FALSE;
       }
       mpeg_parse->discont_pending = TRUE;
@@ -517,6 +521,7 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
       break;
   }
 
+  gst_event_unref (event);
   return res;
 }
 
