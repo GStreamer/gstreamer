@@ -934,13 +934,27 @@ gst_avimux_write_index (GstAviMux *avimux)
   avimux->avi_hdr.flags |= GST_RIFF_AVIH_HASINDEX;
 }
 
+static gboolean
+gst_avimux_can_seek(GstAviMux *avimux)
+{
+  const GstEventMask *masks = gst_pad_get_event_masks(GST_PAD_PEER(avimux->srcpad));
+
+  while (masks->type != 0) {
+    if (masks->type == GST_EVENT_SEEK) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 static void
 gst_avimux_bigfile(GstAviMux *avimux, gboolean last)
 {
   GstBuffer *header;
   GstEvent *event;
     
-  if (avimux->is_bigfile)
+  if (avimux->is_bigfile && gst_avimux_can_seek(avimux))
   {
     /* sarch back */
     event = gst_event_new_seek (GST_FORMAT_BYTES | 
@@ -948,19 +962,18 @@ gst_avimux_bigfile(GstAviMux *avimux, gboolean last)
 				GST_SEEK_FLAG_FLUSH, 
 				avimux->avix_start);
     /* if the event succeeds */
-    if (gst_pad_send_event(GST_PAD_PEER(avimux->srcpad), event)) {
+    gst_pad_push(avimux->srcpad, GST_BUFFER(event));
 
-      /* rewrite AVIX header */
-      header = gst_avimux_riff_get_avix_header(avimux->datax_size);
-      gst_pad_push(avimux->srcpad, header);
+    /* rewrite AVIX header */
+    header = gst_avimux_riff_get_avix_header(avimux->datax_size);
+    gst_pad_push(avimux->srcpad, header);
 
-      /* go back to current location */
-      event = gst_event_new_seek (GST_FORMAT_BYTES | 
-		    	          GST_SEEK_METHOD_SET | 
-				  GST_SEEK_FLAG_FLUSH, 
-				  avimux->total_data);
-      gst_pad_send_event(GST_PAD_PEER(avimux->srcpad), event);
-    }
+    /* go back to current location */
+    event = gst_event_new_seek (GST_FORMAT_BYTES | 
+				GST_SEEK_METHOD_SET |
+				GST_SEEK_FLAG_FLUSH, 
+				avimux->total_data);
+    gst_pad_push(avimux->srcpad, GST_BUFFER(event));
   }
   avimux->avix_start = avimux->total_data;
 
@@ -1046,7 +1059,12 @@ gst_avimux_stop_file (GstAviMux *avimux)
   if (avimux->audio_pad_connected) {
     /* calculate bps if needed */
     if (!avimux->auds.av_bps) {
-      avimux->auds_hdr.rate = (GST_SECOND * avimux->audio_size) / avimux->audio_time;
+      if (avimux->audio_time) {
+        avimux->auds_hdr.rate = (GST_SECOND * avimux->audio_size) / avimux->audio_time;
+      } else {
+        gst_element_error (GST_ELEMENT (avimux), "Audio stream available, but no audio data transferred (or data with invalid timestamps). Resulting AVI will be corrupt");
+        avimux->auds_hdr.rate = 0;
+      }
       avimux->auds.av_bps = avimux->auds_hdr.rate * avimux->auds_hdr.scale;
     }
     avimux->avi_hdr.max_bps += avimux->auds.av_bps;
@@ -1058,14 +1076,16 @@ gst_avimux_stop_file (GstAviMux *avimux)
   }
 
   /* seek and rewrite the header */
-  header = gst_avimux_riff_get_avi_header(avimux);
-  event = gst_event_new_seek (GST_FORMAT_BYTES | 
-		  	      GST_SEEK_METHOD_SET, 0);
-  gst_pad_push(avimux->srcpad, GST_BUFFER(event));
-  gst_pad_push(avimux->srcpad, header);
-  event = gst_event_new_seek (GST_FORMAT_BYTES |
-		  	      GST_SEEK_METHOD_SET, avimux->total_data);
-  gst_pad_push(avimux->srcpad, GST_BUFFER(event));
+  if (gst_avimux_can_seek(avimux)) {
+    header = gst_avimux_riff_get_avi_header(avimux);
+    event = gst_event_new_seek (GST_FORMAT_BYTES | 
+				GST_SEEK_METHOD_SET, 0);
+    gst_pad_push(avimux->srcpad, GST_BUFFER(event));
+    gst_pad_push(avimux->srcpad, header);
+    event = gst_event_new_seek (GST_FORMAT_BYTES |
+				GST_SEEK_METHOD_SET, avimux->total_data);
+    gst_pad_push(avimux->srcpad, GST_BUFFER(event));
+  }
 
   avimux->write_header = TRUE;
 }
@@ -1078,7 +1098,7 @@ gst_avimux_restart_file (GstAviMux *avimux)
   gst_avimux_stop_file(avimux);
 
   event = gst_event_new(GST_EVENT_EOS);
-  gst_pad_send_event(avimux->srcpad, event);
+  gst_pad_push(avimux->srcpad, GST_BUFFER(event));
 
   gst_avimux_start_file(avimux);
 }
