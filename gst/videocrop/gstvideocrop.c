@@ -57,15 +57,12 @@ struct _GstVideoCropClass {
 };
 
 /* elementfactory information */
-static GstElementDetails gst_video_crop_details = {
+static GstElementDetails gst_video_crop_details = GST_ELEMENT_DETAILS (
   "video crop filter",
   "Filter/Video",
-  "LGPL",
   "Crops video into a user defined region",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2002",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* VideoCrop signals and args */
@@ -108,6 +105,7 @@ GST_PAD_TEMPLATE_FACTORY (video_crop_sink_template_factory,
 )
 
 
+static void		gst_video_crop_base_init	(gpointer g_class);
 static void 		gst_video_crop_class_init	(GstVideoCropClass *klass);
 static void 		gst_video_crop_init		(GstVideoCrop *video_crop);
 
@@ -135,7 +133,7 @@ gst_video_crop_get_type (void)
   if (!video_crop_type) {
     static const GTypeInfo video_crop_info = {
       sizeof(GstVideoCropClass),      
-      NULL,
+      gst_video_crop_base_init,
       NULL,
       (GClassInitFunc)gst_video_crop_class_init,
       NULL,
@@ -149,6 +147,18 @@ gst_video_crop_get_type (void)
   return video_crop_type;
 }
 
+static void
+gst_video_crop_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_video_crop_details);
+
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (video_crop_sink_template_factory));
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (video_crop_src_template_factory));
+}
 static void
 gst_video_crop_class_init (GstVideoCropClass *klass)
 {
@@ -423,28 +433,20 @@ gst_video_crop_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the videocrop element */
-  factory = gst_element_factory_new ("videocrop", GST_TYPE_VIDEO_CROP, &gst_video_crop_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (video_crop_sink_template_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (video_crop_src_template_factory));
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "videocrop", GST_RANK_PRIMARY, GST_TYPE_VIDEO_CROP);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "videocrop",
-  plugin_init
-};
+  "Crops video into a user defined region",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

@@ -28,15 +28,12 @@
 
 
 /* elementfactory information */
-static GstElementDetails videoflip_details = {
+static GstElementDetails videoflip_details = GST_ELEMENT_DETAILS (
   "Video scaler",
   "Filter/Video",
-  "LGPL",
   "Resizes video",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 /* GstVideoflip signals and args */
 enum {
@@ -50,6 +47,7 @@ enum {
   /* FILL ME */
 };
 
+static void	gst_videoflip_base_init		(gpointer g_class);
 static void	gst_videoflip_class_init	(GstVideoflipClass *klass);
 static void	gst_videoflip_init		(GstVideoflip *videoflip);
 
@@ -83,48 +81,6 @@ gst_videoflip_method_get_type(void)
 	videoflip_methods);
   }
   return videoflip_method_type;
-}
-
-GType
-gst_videoflip_get_type (void)
-{
-  static GType videoflip_type = 0;
-
-  if (!videoflip_type) {
-    static const GTypeInfo videoflip_info = {
-      sizeof(GstVideoflipClass),      NULL,
-      NULL,
-      (GClassInitFunc)gst_videoflip_class_init,
-      NULL,
-      NULL,
-      sizeof(GstVideoflip),
-      0,
-      (GInstanceInitFunc)gst_videoflip_init,
-    };
-    videoflip_type = g_type_register_static(GST_TYPE_ELEMENT, "GstVideoflip", &videoflip_info, 0);
-  }
-  return videoflip_type;
-}
-
-static void
-gst_videoflip_class_init (GstVideoflipClass *klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
-      g_param_spec_enum("method","method","method",
-      GST_TYPE_VIDEOFLIP_METHOD, GST_VIDEOFLIP_METHOD_90R,
-      G_PARAM_READWRITE));
-
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
-
-  gobject_class->set_property = gst_videoflip_set_property;
-  gobject_class->get_property = gst_videoflip_get_property;
-
 }
 
 static GstPadTemplate *
@@ -162,6 +118,59 @@ gst_videoflip_sink_template_factory(void)
     templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
   }
   return templ;
+}
+
+GType
+gst_videoflip_get_type (void)
+{
+  static GType videoflip_type = 0;
+
+  if (!videoflip_type) {
+    static const GTypeInfo videoflip_info = {
+      sizeof(GstVideoflipClass),
+      gst_videoflip_base_init,
+      NULL,
+      (GClassInitFunc)gst_videoflip_class_init,
+      NULL,
+      NULL,
+      sizeof(GstVideoflip),
+      0,
+      (GInstanceInitFunc)gst_videoflip_init,
+    };
+    videoflip_type = g_type_register_static(GST_TYPE_ELEMENT, "GstVideoflip", &videoflip_info, 0);
+  }
+  return videoflip_type;
+}
+
+static void
+gst_videoflip_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &videoflip_details);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_videoflip_sink_template_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_videoflip_src_template_factory));
+}
+static void
+gst_videoflip_class_init (GstVideoflipClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+
+  gobject_class = (GObjectClass*)klass;
+  gstelement_class = (GstElementClass*)klass;
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
+      g_param_spec_enum("method","method","method",
+      GST_TYPE_VIDEOFLIP_METHOD, GST_VIDEOFLIP_METHOD_90R,
+      G_PARAM_READWRITE));
+
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+
+  gobject_class->set_property = gst_videoflip_set_property;
+  gobject_class->get_property = gst_videoflip_get_property;
+
 }
 
 static GstCaps *
@@ -438,26 +447,20 @@ gst_videoflip_get_property (GObject *object, guint prop_id, GValue *value, GPara
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the videoflip element */
-  factory = gst_element_factory_new("videoflip",GST_TYPE_VIDEOFLIP,
-                                   &videoflip_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_videoflip_sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (gst_videoflip_src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "videoflip", GST_RANK_NONE, GST_TYPE_VIDEOFLIP);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "videoflip",
-  plugin_init
-};
+  "Resizes video",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
