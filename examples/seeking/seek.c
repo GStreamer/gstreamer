@@ -755,6 +755,7 @@ update_scale (gpointer data)
   GstClock *clock;
   guint64 position;
   GstFormat format = GST_FORMAT_TIME;
+  gboolean res;
 
   duration = 0;
   clock = gst_bin_get_clock (GST_BIN (pipeline));
@@ -763,15 +764,23 @@ update_scale (gpointer data)
     if (seekable_elements) {
       GstElement *element = GST_ELEMENT (seekable_elements->data);
 
-      gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
-      gst_element_query (element, GST_QUERY_POSITION, &format, &position);
+      res = gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
+      if (!res)
+        duration = 0;
+      res = gst_element_query (element, GST_QUERY_POSITION, &format, &position);
+      if (!res)
+        position = 0;
     }
   } else {
     if (seekable_pads) {
       GstPad *pad = GST_PAD (seekable_pads->data);
 
-      gst_pad_query (pad, GST_QUERY_TOTAL, &format, &duration);
-      gst_pad_query (pad, GST_QUERY_POSITION, &format, &position);
+      res = gst_pad_query (pad, GST_QUERY_TOTAL, &format, &duration);
+      if (!res)
+        duration = 0;
+      res = gst_pad_query (pad, GST_QUERY_POSITION, &format, &position);
+      if (!res)
+        position = 0;
     }
   }
 
