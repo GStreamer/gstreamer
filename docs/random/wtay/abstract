@@ -1,0 +1,12 @@
+This talk will present the GStreamer Media framework. We will
+explain briefly what a media framework is and what its advantages
+are. This introduction will present the basic design of GStreamer
+and how the modularity can provide many benefits.
+
+We will then go into more detail about the different components of
+the framework and how specific problems were solved, such as 
+pipelines, scheduling, state changes, buffers, type negotiation and
+events.
+
+We will conclude the presentation with a little demonstration of 
+the provided tools and applications.
