@@ -1,0 +1,8 @@
+if USE_SINE
+SINE_DIR=sine
+else
+SINE_DIR=
+endif
+
+SUBDIRS=$(SINE_DIR)
+DIST_SUBDIRS=sine
