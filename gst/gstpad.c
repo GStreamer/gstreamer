@@ -1446,7 +1446,12 @@ gst_pad_pull (GstPad *pad)
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
-  g_return_val_if_fail (peer != NULL, NULL);
+
+  if (!peer)
+    {
+      g_critical ("gst_pad_pull but %s:%s is unconnected", GST_DEBUG_PAD_NAME(pad));
+      return NULL;
+    }
 
   if (peer->gethandler) {
     GST_DEBUG (GST_CAT_DATAFLOW,"calling gethandler %s of peer pad %s:%s\n",
