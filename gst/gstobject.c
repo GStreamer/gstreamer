@@ -99,6 +99,9 @@ gst_object_class_init (GstObjectClass *klass)
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_object_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
+
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NAME,
     g_param_spec_string ("name", "Name", "The name of the object",
                          NULL, G_PARAM_READWRITE));
@@ -119,9 +122,6 @@ gst_object_class_init (GstObjectClass *klass)
   klass->path_string_separator = "/";
 // FIXME!!!
 //  klass->signal_object = g_object_new(gst_signal_object_get_type (,NULL));
-
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_object_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
 
   gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
