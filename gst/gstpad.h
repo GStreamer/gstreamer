@@ -203,7 +203,7 @@ struct _GstRealPad {
   GstPadLink                    *link;
   GstCaps			*explicit_caps;
 
-  gpointer _gst_reserved[GST_PADDING - 2];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRealPadClass {
@@ -216,7 +216,7 @@ struct _GstRealPadClass {
   void 		(*unlinked)		(GstPad *pad, GstPad *peer);
   GstPadFixateFunction		 appfixatefunc;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstGhostPad {

@@ -244,7 +244,7 @@ struct _GstElementClass {
   void			(*set_index)		(GstElement *element, GstIndex *index);
 
   GstElementStateReturn	(*set_state)		(GstElement *element, GstElementState state);
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);

@@ -1,5 +1,13 @@
 2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* gst/gstelement.h:
+	* gst/gstpad.h:
+	* gst/gstqueue.h:
+          upgrade libtool CURRENT, reset padding
+
+2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
         * configure.ac:
           bump to prerelease
           put back AM_PROG_LIBTOOL to make libtoolize stop complaining

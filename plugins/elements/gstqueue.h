@@ -90,7 +90,7 @@ struct _GstQueue {
 
   GstCaps *negotiated_caps;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstQueueClass {
