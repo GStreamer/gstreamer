@@ -1,3 +1,12 @@
+2005-01-06  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_process_ext_content_desc):
+	 Extract TrackNumber metadata + clean up code
+
+	* gst/games/gstvideoimage.c: (gst_video_image_draw_rectangle):
+	 Hope this is the good fix (var used unitialised)
+
 2005-01-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/faad/gstfaad.c: (gst_faad_chain):
