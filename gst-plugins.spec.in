@@ -245,7 +245,8 @@ GStreamer support libraries header files.
 @USE_AVIFILE_TRUE@Group:         Libraries/Multimedia
 @USE_AVIFILE_TRUE@Requires:      gstreamer-plugins >= %{version}
 @USE_AVIFILE_TRUE@Requires:      gstreamer-colorspace >= %{version}
-@USE_AVIFILE_TRUE@Requires:      libavifile0.7 = 0.7.7
+@USE_AVIFILE_TRUE@Requires:      avifile
+@USE_AVIFILE_TRUE@BuildRequires: avifile-devel
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%description -n gstreamer-avi
 @USE_AVIFILE_TRUE@Plug-ins for playback of AVI format media files.
