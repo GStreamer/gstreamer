@@ -500,12 +500,18 @@ gst_ebml_read_buffer (GstEbmlRead * ebml, guint32 * id, GstBuffer ** buf)
 
   if ((bytes = gst_ebml_read_element_id (ebml, id, NULL)) < 0)
     return FALSE;
+
   gst_bytestream_flush_fast (ebml->bs, bytes);
 
   if ((bytes = gst_ebml_read_element_length (ebml, &length)) < 0)
     return FALSE;
+
   gst_bytestream_flush_fast (ebml->bs, bytes);
   ebml->id_cache = 0;
+  if (length == 0) {
+    *buf = gst_buffer_new ();
+    return TRUE;
+  }
 
   return ((*buf = gst_ebml_read_element_data (ebml, length)) != NULL);
 }
