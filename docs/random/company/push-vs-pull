@@ -1,0 +1,40 @@
+PUSH vs PULL
+
+(This is a writedown of ideas I plan to update whenever I find issues. This 
+should be fleshed out when doing the threadsafety / buffer passing changes.)
+
+GStreamer allows 3 different forms of elements:
+- loopbased:
+Loopbased elements may push and pull from every pad however they want. They're
+therefore heaviest on the scheduler and for latency or similar considerations.
+- chainbased:
+Chainbased elements have one sinkpad. Data gets pushed into a function attached 
+to the pad. => PUSH based
+- getbased:
+Getbased elements have no sinkpads. Every sourcepad has a getfunction that 
+produces data on request. => PULL based
+
+The current problem is that PUSH and PULL based elements are quite limited in 
+what they may or may not do (especially PULL based elements). Some libraries 
+elements link to might also expect the architecture around them to work in a
+specific way (libogg requires the ogg input to be pull-based, JACK is PULL-based
+on sinks and PUSH-based on sinks). This often requires costly wrapping.
+
+Inside a scheduler cothread switches can be avoided (which makes the pipeline 
+faster and scheduling less error-prone) if a PUSH-based element is connected on 
+the push-side of the pipeline. (Same goes with PULL-based on the pull-side). So 
+a pipeline with elements like "pull-pull-loop-push" works without cothread 
+switches while a pipeline like "push-loop-pull" needs 2. Even "push-pull" needs 
+one.
+
+I'm under the impression that push-vs-pull is often best decided by the 
+application in use. (Video players probably prefer PULL because they display on
+demand, live recorders prefer PUSH.) Since many elements probably don't care if 
+they're PUSH or PULL based it would be nice if an element could implement both
+and use whatever suits better. (The code to achieve this should obviously be 
+abstracted into superclasses like videofilter.)
+
+
+references:
+MPlayer (http://www.mplayerhq.hu) - push-based architecture on version 1,
+    switching to PULL-based on version 2.
