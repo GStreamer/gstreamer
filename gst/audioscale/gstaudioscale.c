@@ -23,8 +23,8 @@
 
 //#define DEBUG_ENABLED
 #include <gstaudioscale.h>
-#include <libs/audio/gstaudio.h>
-#include <libs/resample/resample.h>
+#include <gst/audio/audio.h>
+#include <gst/resample/resample.h>
 
 /* elementfactory information */
 static GstElementDetails audioscale_details = {

@@ -20,7 +20,7 @@
 
 #include <string.h>
 #include <gst/gst.h>
-#include <libs/audio/gstaudio.h>
+#include <gst/audio/audio.h>
 #include "gstvolume.h"
 
 

@@ -25,7 +25,7 @@
 #include <config.h>
 #include <gst/gst.h>
 
-#include <libs/resample/resample.h>
+#include <gst/resample/resample.h>
 
 
 #ifdef __cplusplus

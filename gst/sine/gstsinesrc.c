@@ -24,7 +24,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libs/control/gstcontrol.h>
+#include <gst/control/control.h>
 
 #include <gstsinesrc.h>
 

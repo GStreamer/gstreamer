@@ -1,7 +1,6 @@
+##libdir = $(libdir)/gst
 
-filterdir = $(libdir)/gst
-
-filter_LTLIBRARIES = libgstaudioscale.la
+lib_LTLIBRARIES = libgstaudioscale.la
 
 libgstaudioscale_la_SOURCES = gstaudioscale.c
 libgstaudioscale_la_LIBADD = $(top_builddir)/gst-libs/gst/resample/libgstresample.la
