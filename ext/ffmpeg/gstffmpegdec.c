@@ -271,8 +271,9 @@ gst_ffmpegdec_release_buffer (AVCodecContext *context,
 
 static void
 gst_ffmpegdec_chain (GstPad    *pad,
-		     GstBuffer *inbuf)
+		     GstData *_data)
 {
+  GstBuffer *inbuf = GST_BUFFER (_data);
   GstBuffer *outbuf = NULL;
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
   GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
@@ -354,7 +355,7 @@ gst_ffmpegdec_chain (GstPad    *pad,
 
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
 
-      gst_pad_push (ffmpegdec->srcpad, outbuf);
+      gst_pad_push (ffmpegdec->srcpad, GST_DATA (outbuf));
     } 
 
     size -= len;

@@ -151,7 +151,7 @@ gst_write (URLContext    *h,
   GST_BUFFER_SIZE (outbuf) = size;
   memcpy (GST_BUFFER_DATA (outbuf), buf, size);
 
-  gst_pad_push (info->pad, outbuf);
+  gst_pad_push (info->pad, GST_DATA (outbuf));
 
   return 0;
 }
@@ -188,7 +188,7 @@ gst_seek (URLContext *h,
 
     case URL_WRONLY: {
       GstEvent *event = gst_event_new_seek (seek_type, pos);
-      gst_pad_push (info->pad, GST_BUFFER (event));
+      gst_pad_push (info->pad, GST_DATA (event));
     }
       break;
   }
@@ -207,7 +207,7 @@ gst_close (URLContext *h)
     case URL_WRONLY: {
       /* send EOS - that closes down the stream */
       GstEvent *event = gst_event_new (GST_EVENT_EOS);
-      gst_pad_push (info->pad, GST_BUFFER (event));
+      gst_pad_push (info->pad, GST_DATA (event));
     }
       break;
 

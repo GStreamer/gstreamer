@@ -246,7 +246,7 @@ gst_ffmpegdemux_loop (GstElement *element)
         pad = ffmpegdemux->srcpads[i];
         if (GST_PAD_IS_USABLE (pad)) {
           gst_data_ref (GST_DATA (event));
-          gst_pad_push (pad, GST_BUFFER (event));
+          gst_pad_push (pad, GST_DATA (event));
         }
         gst_data_unref (GST_DATA (event));
       }
@@ -332,7 +332,7 @@ gst_ffmpegdemux_loop (GstElement *element)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
     }
 
-    gst_pad_push (pad, outbuf);
+    gst_pad_push (pad, GST_DATA (outbuf));
     pkt.destruct (&pkt);
   }
 }

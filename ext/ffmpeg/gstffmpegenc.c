@@ -124,7 +124,7 @@ static void	gst_ffmpegenc_dispose		(GObject *object);
 
 static GstPadLinkReturn
 		gst_ffmpegenc_connect		(GstPad *pad, GstCaps *caps);
-static void	gst_ffmpegenc_chain		(GstPad *pad, GstBuffer *buffer);
+static void	gst_ffmpegenc_chain		(GstPad *pad, GstData *_data);
 
 static void	gst_ffmpegenc_set_property	(GObject *object,
 						 guint prop_id,
@@ -339,8 +339,9 @@ gst_ffmpegenc_connect (GstPad  *pad,
 
 static void
 gst_ffmpegenc_chain (GstPad    *pad,
-		     GstBuffer *inbuf)
+		     GstData *_data)
 {
+  GstBuffer *inbuf = GST_BUFFER (_data);
   GstBuffer *outbuf = NULL;
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *)(gst_pad_get_parent (pad));
   GstFFMpegEncClass *oclass = (GstFFMpegEncClass*)(G_OBJECT_GET_CLASS(ffmpegenc));
@@ -393,7 +394,7 @@ gst_ffmpegenc_chain (GstPad    *pad,
   GST_BUFFER_SIZE (outbuf) = ret_size;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-  gst_pad_push (ffmpegenc->srcpad, outbuf);
+  gst_pad_push (ffmpegenc->srcpad, GST_DATA (outbuf));
 
   gst_buffer_unref (inbuf);
 }

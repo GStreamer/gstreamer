@@ -321,7 +321,7 @@ gst_ffmpegmux_loop (GstElement *element)
            ffmpegmux->eos[i] == FALSE &&
            ffmpegmux->bufferqueue[i] == NULL) {
       /* we can pull a buffer! */
-      buf = gst_pad_pull (pad);
+      buf = GST_BUFFER (gst_pad_pull (pad));
       if (GST_IS_EVENT (buf)) {
         if (GST_EVENT_TYPE (GST_EVENT (buf)) == GST_EVENT_EOS) {
           /* flag EOS on this stream */
