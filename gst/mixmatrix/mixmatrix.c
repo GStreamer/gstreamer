@@ -22,7 +22,7 @@
 #endif
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 #include <gst/audio/audio.h>
 #include <string.h>
 
@@ -499,6 +499,9 @@ gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
+
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   factory = gst_element_factory_new ("mixmatrix", GST_TYPE_MIXMATRIX, 
                                      &mixmatrix_details);

@@ -25,6 +25,9 @@
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   gst_afsink_plugin_init (module, plugin);
   gst_afsrc_plugin_init (module, plugin);
   gst_afparse_plugin_init (module, plugin);

@@ -28,10 +28,8 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <gst/gst.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 	
-#include "modplug_types.h"	
-
 #define GST_TYPE_MODPLUG \
   (gst_modplug_get_type())
   

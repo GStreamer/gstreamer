@@ -50,16 +50,6 @@ static GstElementDetails gst_cdxa_parse_details = {
   "(C) 2002",
 };
 
-static GstCaps* cdxa_type_find (GstByteStream *bs, gpointer private);
-
-/* typefactory for 'cdxa' */
-static GstTypeDefinition cdxadefinition = {
-  "cdxaparse_video",
-  "video/x-cdxa",
-  ".dat",
-  cdxa_type_find,
-};
-
 /* CDXAParse signals and args */
 enum {
   /* FILL ME */
@@ -156,33 +146,6 @@ gst_cdxa_parse_init (GstCDXAParse *cdxa_parse)
 
   gst_element_set_loop_function (GST_ELEMENT (cdxa_parse), gst_cdxa_parse_loop);
 
-}
-
-static GstCaps*
-cdxa_type_find (GstByteStream *bs,
-		gpointer       private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-
-  GST_DEBUG ("cdxa_parse: typefind");
-
-  if (gst_bytestream_peek (bs, &buf, 12) == 12) {
-    guint32 head1 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[0]),
-	    head2 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[2]);
-
-    if (head1 == GST_RIFF_TAG_RIFF && head2 == GST_RIFF_RIFF_CDXA) {
-      new = GST_CAPS_NEW ("cdxa_type_find",
-			  "video/x-cdxa", 
-			    NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
 }
 
 static gboolean
@@ -343,7 +306,9 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
+
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   /* create an elementfactory for the cdxa_parse element */
   factory = gst_element_factory_new ("cdxaparse", GST_TYPE_CDXA_PARSE,
@@ -352,9 +317,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_templ));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
-
-  type = gst_type_factory_new (&cdxadefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

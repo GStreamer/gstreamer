@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 
 #define GST_TYPE_IVORBISFILE \
   (ivorbisfile_get_type())

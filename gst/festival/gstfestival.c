@@ -80,8 +80,6 @@
 static void		gst_festival_class_init		(GstFestivalClass *klass);
 static void		gst_festival_init		(GstFestival *festival);
 
-static GstCaps*		text_type_find			(GstByteStream *bs, gpointer private);
-
 static void		gst_festival_chain		(GstPad *pad, GstData *_data);
 static GstElementStateReturn 
 			gst_festival_change_state 	(GstElement *element);
@@ -122,17 +120,6 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
     GST_AUDIO_INT_PAD_TEMPLATE_PROPS
   )
 )
-
-/* typefactory for 'wav' */
-static GstTypeDefinition 
-textdefinition = 
-{
-  "festival_text/plain",
-  "text/plain",
-  ".txt",
-  text_type_find,
-};
-
 
 /* Festival signals and args */
 enum {
@@ -196,40 +183,6 @@ gst_festival_init (GstFestival *festival)
 
   festival->info = festival_default_info();
 }
-
-static GstCaps*
-text_type_find (GstByteStream *bs, gpointer private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-
-#define TEXT_SIZE 32
-
-  /* read arbitrary number and see if it's textual */
-  if (gst_bytestream_peek (bs, &buf, TEXT_SIZE) == TEXT_SIZE) {
-    gchar *data = GST_BUFFER_DATA (buf);
-    gint i;
-
-    for (i = 0; i < TEXT_SIZE; i++) {
-      if (!isprint (data[i]) && data[i] != '\n') {
-	goto out;
-      }
-    }
-
-    /* well, we found something that looks like text... */
-    new = gst_caps_new ("text_type_find",
-			"text/plain",
-			  NULL);
-  }
-out:
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
-}
-
 
 static void
 gst_festival_chain (GstPad *pad, GstData *_data)
@@ -484,7 +437,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
 
   /* create an elementfactory for the festival element */
   factory = gst_element_factory_new ("festival", GST_TYPE_FESTIVAL,
@@ -495,9 +447,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
 
-  type = gst_type_factory_new (&textdefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }

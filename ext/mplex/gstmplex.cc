@@ -578,8 +578,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* this filter needs the bytestream package */
-/*  if (!gst_library_load ("gstbytestream"))
-    return FALSE;*/
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   /* create an elementfactory for the avi_demux element */
   factory = gst_element_factory_new ("mplex",GST_TYPE_MPLEX,

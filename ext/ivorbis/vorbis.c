@@ -21,7 +21,7 @@
 #include <gst/gst.h>
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
-#include <gst/gstbytestream.h>
+#include <gst/bytestream.h>
 
 extern GType ivorbisfile_get_type(void);
 
@@ -103,6 +103,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *file;
   GstTypeFactory *type;
   GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
+
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   gst_plugin_set_longname (plugin, "The OGG Vorbis Codec");
 

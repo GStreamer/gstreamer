@@ -129,50 +129,6 @@ static GstElementStateReturn
 
 static GstElementClass *parent_class = NULL;
 
-static GstCaps* 
-modplug_type_find (GstByteStream *bs, gpointer priv) 
-{
-  GstBuffer *buf = NULL;
-  GstCaps *newc = NULL;
-
-  if (gst_bytestream_peek (bs, &buf, 75) == 75) {
-    if (MOD_CheckType (buf)     ||
-        Mod_669_CheckType (buf) ||
-        Amf_CheckType (buf)     ||
-        Dsm_CheckType (buf)     ||
-        Fam_CheckType (buf)     ||
-        Gdm_CheckType (buf)     ||
-        Imf_CheckType (buf)     ||
-        It_CheckType (buf)      ||
-        M15_CheckType (buf)     ||
-#if 0
-        Med_CheckType (buf)     || /* FIXME */
-#endif
-        Mtm_CheckType (buf)     ||
-        Okt_CheckType (buf)     ||
-        S3m_CheckType (buf)     ||
-        Xm_CheckType (buf)) {
-      newc = GST_CAPS_NEW ("modplug_type_find",
-			   "audio/x-mod",
-			     NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return newc;
-}
-
-static GstTypeDefinition modplug_definitions[] = {
-  { "modplug_audio/mod", "audio/x-mod",
-    ".mod .sam .med .stm .mtm .669 .ult .far .amf "
-    ".dsm .imf .gdm .stx .okt .xm .it .s3m",
-    modplug_type_find },
-  { NULL, NULL, NULL, NULL }
-};
-
 GType
 gst_modplug_get_type(void) {
   static GType modplug_type = 0;
@@ -858,12 +814,12 @@ gst_modplug_get_property (GObject *object, guint id, GValue *value, GParamSpec *
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
-  GstElementFactory *factory;  
-	guint i;
+  GstElementFactory *factory;
+  guint i;
   
   /* this filter needs the bytestream package */
-/*  if (!gst_library_load ("gstbytestream"))
-    return FALSE;*/
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
   
   factory = gst_element_factory_new ("modplug", GST_TYPE_MODPLUG, &modplug_details);
   g_return_val_if_fail (factory != NULL, FALSE);
@@ -874,13 +830,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (modplug_src_template_factory));
 
   i = 0;
-  while (modplug_definitions[i].name) {
-    GstTypeFactory *type;
-
-    type = gst_type_factory_new (&modplug_definitions[i]);
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
-    i++;
-  }
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));	
 

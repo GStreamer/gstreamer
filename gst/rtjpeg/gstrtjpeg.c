@@ -25,13 +25,6 @@
 extern GstElementDetails gst_rtjpegenc_details;
 extern GstElementDetails gst_rtjpegdec_details;
 
-GstTypeDefinition rtjpegdefinition = {
-  "rtjpeg_video/rtjpeg",
-  "video/x-rtjpeg",
-  ".rtj",
-  NULL,
-};
-
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {

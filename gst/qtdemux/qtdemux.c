@@ -104,15 +104,6 @@ gst_qtdemux_details =
   "(C) 2003",
 };
 
-static GstCaps* quicktime_type_find (GstByteStream *bs, gpointer private);
-
-static GstTypeDefinition quicktimedefinition = {
-  "qtdemux_video/quicktime",
-  "video/quicktime",
-  ".mov",
-  quicktime_type_find,
-};
-
 enum {
   LAST_SIGNAL
 };
@@ -186,37 +177,10 @@ gst_qtdemux_init (GstQTDemux *qtdemux)
   gst_element_add_pad (GST_ELEMENT (qtdemux), qtdemux->sinkpad);
 }
 
-static GstCaps*
-quicktime_type_find (GstByteStream *bs, gpointer private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-
-  if (gst_bytestream_peek (bs, &buf, 8) == 8) {
-    gchar *data = GST_BUFFER_DATA (buf);
-
-    if (!strncmp (&data[4], "wide", 4) ||
-        !strncmp (&data[4], "moov", 4) ||
-        !strncmp (&data[4], "mdat", 4) ||
-        !strncmp (&data[4], "free", 4)) {
-      new = GST_CAPS_NEW ("quicktime_type_find",
-			  "video/quicktime",
-			    NULL);
-    }
-  }
-
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
-
-  return new;
-}
-
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
   GstCaps *audiocaps = NULL, *videocaps = NULL, *temp;
   const guint32 audio_fcc[] = {
     /* FILLME */
@@ -226,6 +190,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
     0,
   };
   gint i;
+
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
 
   factory = gst_element_factory_new ("qtdemux", GST_TYPE_QTDEMUX,
                                      &gst_qtdemux_details);
@@ -253,9 +220,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
   gst_element_factory_add_pad_template (factory, videosrctempl);
   gst_element_factory_add_pad_template (factory, audiosrctempl);
-
-  type = gst_type_factory_new (&quicktimedefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

@@ -626,34 +626,10 @@ gst_swfdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
   }
 }
 
-static GstCaps *
-swf_type_find(GstByteStream *bs, gpointer private)
-{
-        GstBuffer *buf;
-	gchar *data;
-        
-        gst_bytestream_peek (bs, &buf, 4);
-        data = GST_BUFFER_DATA(buf);
-
-	if (GST_BUFFER_SIZE (buf) < 4)
-	  return NULL;
-
-	if((data[0] != 'F' && data[0] != 'C') ||
-	    data[1] != 'W' || data[2] != 'S')return NULL;
-
-	return gst_caps_new("swf_type_find","application/x-shockwave-flash",
-		NULL);
-}
-
-static GstTypeDefinition swftype_definition = 
-	{ "swfdecode/x-shockwave-flash", "application/x-shockwave-flash",
-		".swf .swfl", swf_type_find };
-
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
 
   /* create an elementfactory for the swfdec element */
   factory = gst_element_factory_new("swfdec",GST_TYPE_SWFDEC,
@@ -669,9 +645,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 		  GST_PAD_TEMPLATE_GET (sink_template_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  type = gst_type_factory_new(&swftype_definition);
-  gst_plugin_add_feature(plugin, GST_PLUGIN_FEATURE(type));
 
   return TRUE;
 }

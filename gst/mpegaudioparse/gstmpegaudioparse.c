@@ -35,15 +35,6 @@ static GstElementDetails mp3parse_details = {
   "(C) 1999",
 };
 
-static GstCaps * mp3_type_find (GstByteStream *bs, gpointer data);
-
-static GstTypeDefinition mp3type_definition = {
-  "mp3_audio/mpeg",
-  "audio/mpeg",
-  ".mp3 .mp2 .mp1 .mpga",
-  mp3_type_find,
-};
-
 static GstPadTemplate*
 mp3_src_factory (void)
 {
@@ -263,78 +254,6 @@ mp3_caps_create (guint layer, guint channels,
 			/*"bitrate",     GST_PROPS_INT (bitrate),*/
 			"rate",        GST_PROPS_INT (samplerate),
 			"channels",    GST_PROPS_INT (channels));
-
-  return new;
-}
-
-static GstCaps *
-mp3_type_find (GstByteStream *bs, gpointer private)
-{
-  GstBuffer *buf = NULL;
-  GstCaps *new = NULL;
-  guint8 *data;
-  guint size;
-  guint32 head;
-  guint layer = 0, bitrate = 0, samplerate = 0, channels = 0;
-
-  /* note that even if we don't get the requested size,
-   * it might still be a (very small) mp3 */
-  gst_bytestream_peek (bs, &buf, GST_MP3_TYPEFIND_MIN_DATA);
-  if (!buf) {
-    goto done;
-  }
-  
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
-  
-  while (size >= 4) {
-    head = GUINT32_FROM_BE(*((guint32 *)data));
-    if ((head & 0xffe00000) == 0xffe00000) {
-      guint length;
-      guint prev_layer = 0, prev_bitrate = 0,
-	    prev_channels = 0, prev_samplerate = 0;
-      guint found = 0; /* number of valid headers found */
-      guint pos = 0;
-
-      do {
-        if (!(length = mp3_type_frame_length_from_header (head, &layer,
-							  &channels, &bitrate,
-							  &samplerate))) {
-          break;
-	}
-	if ((prev_layer && prev_layer != layer) || !layer ||
-	    (prev_bitrate && prev_bitrate != bitrate) || !bitrate ||
-	    (prev_samplerate && prev_samplerate != samplerate) || !samplerate ||
-	    (prev_channels && prev_channels != channels) || !channels) {
-          /* this means an invalid property, or a change, which likely
-	   * indicates that this is not a mp3 but just a random bytestream */
-	  break;
-	}
-	prev_layer = layer;
-	prev_bitrate = bitrate;
-	prev_channels = channels;
-	prev_samplerate = samplerate;
-	pos += length;
-	if (++found >= GST_MP3_TYPEFIND_MIN_HEADERS) {
-          /* we're pretty sure that this is mp3 now */
-          new = mp3_caps_create (layer, channels, bitrate, samplerate);
-	  goto done;
-        }
-
-        /* and now, find a new head */
-        head = GUINT32_FROM_BE(*((guint32 *) &(data[pos])));  
-        if ((head & 0xffe00000) != 0xffe00000)
-	  break;
-      } while (TRUE);
-    }
-    data++;
-    size--;
-  }
-
-done:
-  if (buf != NULL) {
-    gst_buffer_unref (buf);
-  }
 
   return new;
 }
@@ -658,7 +577,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
 
   /* create an elementfactory for the mp3parse element */
   factory = gst_element_factory_new ("mp3parse",
@@ -673,10 +591,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, src_temp);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  /* type finding */
-  type = gst_type_factory_new (&mp3type_definition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }
