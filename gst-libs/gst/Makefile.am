@@ -4,6 +4,6 @@ else
 GCONF_DIR=
 endif
 
-SUBDIRS = audio idct resample riff floatcast $(GCONF_DIR) video
+SUBDIRS = audio idct resample riff floatcast $(GCONF_DIR) video play
 
-DIST_SUBDIRS = audio idct resample riff floatcast gconf video
+DIST_SUBDIRS = audio idct resample riff floatcast gconf video play
