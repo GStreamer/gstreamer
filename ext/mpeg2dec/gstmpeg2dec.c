@@ -464,13 +464,16 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
     GST_DEBUG (GST_CAT_CLOCK, "no pts");
   }
 
+  GST_DEBUG (0, "calling _buffer");
   mpeg2_buffer (mpeg2dec->decoder, data, end);
+  GST_DEBUG (0, "calling _buffer done");
 
   while (!done) {
     gboolean slice = FALSE;
 
+    GST_DEBUG (0, "calling parse");
     state = mpeg2_parse (mpeg2dec->decoder);
-    GST_DEBUG (0, "state %d", state);
+    GST_DEBUG (0, "parse state %d", state);
     switch (state) {
       case STATE_SEQUENCE:
       {
@@ -623,8 +626,10 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	break;
       /* error */
       case STATE_INVALID:
-	gst_element_error (GST_ELEMENT (mpeg2dec), "decoding error");
-	done = TRUE;
+	g_warning ("mpeg2dec: decoding error");
+	/* it looks like setting a new frame in libmpeg2 avoids a crash */
+	/* FIXME figure out how this screws up sync and buffer leakage */
+	gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
         break;
       default:
 	g_warning ("%s: unhandled state %d, FIXME", 
