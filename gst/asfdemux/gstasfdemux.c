@@ -1138,7 +1138,7 @@ static gboolean gst_asf_demux_process_chunk (GstASFDemux *asf_demux,
   format = GST_FORMAT_TIME;
   gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &next_ts);
 
-  if (GST_PAD_IS_CONNECTED (stream->pad)) {
+  if (GST_PAD_IS_LINKED (stream->pad)) {
     GstBuffer *buf;
     
     got_bytes = gst_bytestream_peek (bs, &buf, segment_info->chunk_size);

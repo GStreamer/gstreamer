@@ -649,7 +649,7 @@ done:
   }
 
   /* create the buffer and send it off to the Other Side */
-  if (GST_PAD_IS_CONNECTED (outpad) && datalen > 0) {
+  if (GST_PAD_IS_LINKED (outpad) && datalen > 0) {
     GST_DEBUG (0, "creating subbuffer len %d", datalen);
 
     /* if this is part of the buffer, create a subbuffer */

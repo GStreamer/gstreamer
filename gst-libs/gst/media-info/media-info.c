@@ -454,8 +454,8 @@ gst_media_info_find_type (GstMediaInfo *info, const char *location)
 
   gst_bin_add (GST_BIN (priv->pipeline), priv->typefind);
   g_object_set (G_OBJECT (priv->source), "location", location, NULL);
-  if (!gst_element_connect (priv->source, priv->typefind))
-    g_warning ("Couldn't connect source and typefind\n");
+  if (!gst_element_link (priv->source, priv->typefind))
+    g_warning ("Couldn't link source and typefind\n");
   g_signal_connect (G_OBJECT (priv->typefind), "have-type",
 		    G_CALLBACK (have_type_callback), info);
   if (gst_element_set_state (priv->pipeline, GST_STATE_PLAYING) 
@@ -469,7 +469,7 @@ gst_media_info_find_type (GstMediaInfo *info, const char *location)
 
   /*clear up typefind */
   gst_element_set_state (priv->pipeline, GST_STATE_READY);
-  gst_element_disconnect (priv->source, priv->typefind);
+  gst_element_unlink (priv->source, priv->typefind);
   gst_bin_remove (GST_BIN (priv->pipeline), priv->typefind);
 }
 /* get properties of complete physical stream 
@@ -683,7 +683,7 @@ gst_media_info_clear_decoder (GstMediaInfo *info)
     /* clear up decoder */
 	  /* FIXME: shouldn't need to set state here */
     gst_element_set_state (info->priv->pipeline, GST_STATE_READY);
-    gst_element_disconnect (info->priv->source, info->priv->decoder);
+    gst_element_unlink (info->priv->source, info->priv->decoder);
     gst_bin_remove (GST_BIN (info->priv->pipeline), info->priv->decoder);
     info->priv->decoder = NULL;
   }
@@ -701,9 +701,9 @@ gst_media_info_set_decoder (GstMediaInfo *info, GstElement *decoder)
   /* set up pipeline and connect signal handlers */
   priv->decoder = decoder;
   gst_bin_add (GST_BIN (priv->pipeline), decoder);
-  if (!gst_element_connect (priv->source, decoder))
-    g_warning ("Couldn't connect source and decoder\n");
-  /* FIXME: we should be connecting to ALL possible src pads */
+  if (!gst_element_link (priv->source, decoder))
+    g_warning ("Couldn't link source and decoder\n");
+  /* FIXME: we should be link to ALL possible src pads */
   if (!(priv->decoder_pad = gst_element_get_pad (decoder, "src")))
     g_warning ("Couldn't get decoder pad\n");
   if (!(priv->source_pad = gst_element_get_pad (priv->source, "src")))

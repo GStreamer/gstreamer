@@ -194,7 +194,7 @@ gst_synaesthesia_init (GstSynaesthesia *synaesthesia)
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
 
   gst_pad_set_chain_function (synaesthesia->sinkpad, gst_synaesthesia_chain);
-  gst_pad_set_connect_function (synaesthesia->sinkpad, gst_synaesthesia_sinkconnect);
+  gst_pad_set_link_function (synaesthesia->sinkpad, gst_synaesthesia_sinkconnect);
 
   synaesthesia->next_time = 0;
   synaesthesia->peerpool = NULL;
@@ -214,10 +214,10 @@ gst_synaesthesia_sinkconnect (GstPad *pad, GstCaps *caps)
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void

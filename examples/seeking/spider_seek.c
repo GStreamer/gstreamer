@@ -56,11 +56,11 @@ make_spider_pipeline (const gchar *location, gboolean thread)
   gst_bin_add (GST_BIN (pipeline), a_thread);
   gst_bin_add (GST_BIN (pipeline), v_thread);
 
-  gst_element_connect (src, decoder);
-  gst_element_connect (v_queue, videosink);
-  gst_element_connect (decoder, v_queue);
-  gst_element_connect (a_queue, audiosink);
-  gst_element_connect (decoder, a_queue);
+  gst_element_link (src, decoder);
+  gst_element_link (v_queue, videosink);
+  gst_element_link (decoder, v_queue);
+  gst_element_link (a_queue, audiosink);
+  gst_element_link (decoder, a_queue);
 
   seekable_elements = g_list_prepend (seekable_elements, videosink);
   seekable_elements = g_list_prepend (seekable_elements, audiosink);

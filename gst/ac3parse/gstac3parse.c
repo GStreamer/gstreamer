@@ -257,7 +257,7 @@ gst_ac3parse_chain (GstPad *pad, GstBuffer *buf)
 	outbuf = gst_buffer_create_sub(ac3parse->partialbuf,offset,bpf);
 
 	offset += bpf;
-	if (ac3parse->skip == 0 && GST_PAD_IS_CONNECTED(ac3parse->srcpad)) {
+	if (ac3parse->skip == 0 && GST_PAD_IS_LINKED(ac3parse->srcpad)) {
 	  GST_DEBUG (0,"ac3parse: pushing buffer of %d bytes",GST_BUFFER_SIZE(outbuf));
           gst_pad_push(ac3parse->srcpad,outbuf);
 	}
