@@ -299,8 +299,7 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
   }
   else
   {
-    gst_element_info(GST_ELEMENT(sdlvideosink),
-      "Using a %dx%d %dbpp SDL screen with a %dx%d \'%4.4s\' YUV overlay",
+    g_message("Using a %dx%d %dbpp SDL screen with a %dx%d \'%4.4s\' YUV overlay\n",
       sdlvideosink->window_width, sdlvideosink->window_height,
       sdlvideosink->screen->format->BitsPerPixel,
       sdlvideosink->image_width, sdlvideosink->image_height,
