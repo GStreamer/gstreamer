@@ -107,23 +107,37 @@ gst_xml_new (void)
  * Returns: a pointer to an XML document
  */
 xmlDocPtr
-gst_xml_write (GstElement *element)
+gst_xml_write_ns (GstElement *element, gint num_ns, GstXMLNs ns[])
 {
   xmlDocPtr doc;
   xmlNodePtr elementnode;
-  xmlNsPtr ns;
+  xmlNsPtr gst_ns;
 
   doc = xmlNewDoc ("1.0");
 
   doc->xmlRootNode = xmlNewDocNode (doc, NULL, "gstreamer", NULL);
   
-  ns = xmlNewNs (doc->xmlRootNode, "http://gstreamer.net/gst-core/1.0/", "gst");
+  gst_ns = xmlNewNs (doc->xmlRootNode, "http://gstreamer.net/gst-core/1.0/", "gst");
   
-  elementnode = xmlNewChild (doc->xmlRootNode, ns, "element", NULL);
+  elementnode = xmlNewChild (doc->xmlRootNode, gst_ns, "element", NULL);
 
   gst_object_save_thyself (GST_OBJECT (element), elementnode);
 
   return doc;
+}
+
+/**
+ * gst_xml_write:
+ * @element: The element to write out
+ *
+ * Converts the given element into an XML presentation.
+ *
+ * Returns: a pointer to an XML document
+ */
+xmlDocPtr
+gst_xml_write (GstElement *element)
+{
+  return gst_xml_write_ns (element, 0, NULL);
 }
 
 /**
@@ -137,7 +151,7 @@ gst_xml_write (GstElement *element)
  * Returns: number of bytes written on success, -1 otherwise.
  */
 gint
-gst_xml_write_file (GstElement *element, FILE *out)
+gst_xml_write_file_ns (GstElement *element, FILE *out, gint num_ns, GstXMLNs ns[])
 {
   xmlDocPtr cur;
 #ifdef HAVE_LIBXML2
@@ -186,6 +200,22 @@ gst_xml_write_file (GstElement *element, FILE *out)
 #endif
   
   return ret;
+}
+
+/**
+ * gst_xml_write_file:
+ * @element: The element to write out
+ * @out: an open file, like stdout
+ *
+ * Converts the given element into XML and writes the formatted XML to an open
+ * file.
+ *
+ * Returns: number of bytes written on success, -1 otherwise.
+ */
+gint
+gst_xml_write_file (GstElement *element, FILE *out)
+{
+  return gst_xml_write_file_ns (element, out, 0, NULL);
 }
 
 /**

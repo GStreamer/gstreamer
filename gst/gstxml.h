@@ -50,6 +50,13 @@ struct _GstXML {
   xmlNsPtr ns;
 };
 
+typedef struct _GstXMLNs GstXMLNs;
+
+struct _GstXMLNs {
+  gchar  *href;
+  gchar  *prefix;
+};
+
 struct _GstXMLClass {
   GstObjectClass parent_class;
 
@@ -63,9 +70,11 @@ GType		gst_xml_get_type	(void);
 
 /* create an XML document out of a pipeline */
 xmlDocPtr	gst_xml_write		(GstElement *element);
+xmlDocPtr	gst_xml_write_ns	(GstElement *element, gint num_ns, GstXMLNs ns[]);
 
 /* write a formatted representation of a pipeline to an open file */
 gint		gst_xml_write_file	(GstElement *element, FILE *out);
+gint		gst_xml_write_file_ns	(GstElement *element, FILE *out, gint num_ns, GstXMLNs ns[]);
 
 GstXML*		gst_xml_new		(void);
 
