@@ -190,13 +190,16 @@ dvdsrc_init (DVDSrc *dvdsrc)
   dvdsrc->priv->angle = 1;
 }
 
+/* FIXME: this code is not being used */
+#ifdef PLEASEFIXTHISCODE
 static void
-dvdsrc_destory (DVDSrc *dvdsrc)
+dvdsrc_destroy (DVDSrc *dvdsrc)
 {
   /* FIXME */
   g_print("FIXME\n");
   g_free(dvdsrc->priv);
 }
+#endif
 
 static void 
 dvdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
