@@ -9,7 +9,7 @@ install-data-local: html
 
 uninstall-local:
 	for part in $(HTML_DAT); do rm -rf $(DESTDIR)$(docdir)/$$part; done
-	rmdir $(DESTDIR)$(docdir)
+	if test -d $(DESTDIR)$(docdir); then rmdir $(DESTDIR)$(docdir); fi
 else
 install-data-local:
 uninstall-local:
