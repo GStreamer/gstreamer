@@ -64,11 +64,11 @@ else
 ESD_DIR=
 endif
 
-if USE_FESTIVAL
-FESTIVAL_DIR=festival
-else
-FESTIVAL_DIR=
-endif
+## if USE_FESTIVAL
+## FESTIVAL_DIR=festival
+## else
+## FESTIVAL_DIR=
+## endif
 
 if USE_GSM
 GSM_DIR=gsm
@@ -213,7 +213,7 @@ endif
 SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
         $(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) \
-	$(DVDREAD_DIR) $(ESD_DIR) $(FESTIVAL_DIR) \
+	$(DVDREAD_DIR) $(ESD_DIR) \
 	$(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
 	$(HERMES_DIR) $(HTTP_DIR) $(JACK_DIR) $(JPEG_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
@@ -226,7 +226,7 @@ DIST_SUBDIRS=\
 	a52dec aalib alsa \
 	arts artsd avifile \
 	audiofile cdparanoia dv \
-	dvdread esd festival \
+	dvdread esd ffmpeg \
 	flac gnomevfs gsm \
 	hermes http jack jpeg \
 	ladspa lame lcs \
