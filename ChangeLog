@@ -3,6 +3,9 @@
 	* gst/law/alaw.c : alawdec should be registered with type ALAWDEC, not ALAWENC
 	* gst/law/alaw-decode.c : put audio/x-alaw on pads, instead of audio/x-mulaw
 	* gst/law/alaw-encode.c : (idem)
+	* ext/a52dec/gsta52dec.c : mark audio/a52, audio/ac3 as deprecated in a comment
+	* gst/ac3parse/gstac3parse.c : audio/ac3 => audio/x-ac3
+	* gst/realmedia/rmdemux.c : audio/a52 => audio/x-ac3
 
 2004-05-09  Benjamin Otte  <otte@gnome.org>
 
