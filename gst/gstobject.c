@@ -141,8 +141,6 @@ gst_object_ref (GstObject *object)
              G_OBJECT(object)->ref_count,G_OBJECT(object)->ref_count+1);
 
   g_object_ref (G_OBJECT (object));
-  GST_DEBUG (GST_CAT_REFCOUNTING, "count now %d\n", G_OBJECT(object)->ref_count);
-
   return object;
 }
 #define gst_object_ref gst_object_ref
@@ -163,7 +161,6 @@ gst_object_unref (GstObject *object)
              G_OBJECT(object)->ref_count,G_OBJECT(object)->ref_count-1);
 
   g_object_unref (G_OBJECT (object));
-  GST_DEBUG (GST_CAT_REFCOUNTING, "count now %d\n", G_OBJECT(object)->ref_count);
 }
 #define gst_object_unref gst_object_unref
 
