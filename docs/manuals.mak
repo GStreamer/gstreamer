@@ -11,11 +11,12 @@ PDFFILES=$(manualname).pdf
 PSFILES=$(manualname).ps
 
 if HAVE_FIG2DEV_PNG
-$(manualname)/$(htmlname): $(sgml_files) $(png_files)
+PNGS_TO_MAKE=$(png_files)
 else
-$(manualname)/$(htmlname): $(sgml_files)
+PNGS_TO_MAKE=
 endif
 
+$(manualname)/$(htmlname): $(sgml_files) $(PNGS_TO_MAKE)
 if HAVE_DB2HTML
 	db2html $(manualname).sgml
 else
@@ -54,7 +55,11 @@ images/%.eps : %.fig images
 endif
 
 $(manualname)/images:
-	@ln -sf ../images $(manualname)/images
+	@if [ -d $(manualname) ] ; then \
+	   if [ -d images ] ; then \
+	      ln -sf ../images $(manualname)/images ;\
+	   fi \
+	fi
 
 htmldocs: $(manualname)/$(htmlname) $(manualname)/images
 htmldist: htmldocs
