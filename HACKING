@@ -185,6 +185,7 @@ them correctly !
       cvs diff
     - tag merge point
       cvs tag BRANCH-UPDATE-CVS-2004-04-11-23-00-MERGE
+    - add upstream date to "THE RECORDS" below
 
   - get a drink
 
@@ -252,13 +253,15 @@ Some notes on how ffmpeg wrapping inside GStreamer currently works:
 * there's lots of things that still need doing. See the TODO file for more
     information.
 
+THE RECORDS
+-----------
+- list of snapshots used:
+
+  CVS-2004-04-11-23-00
+
+
 THE REMINDERS
 -------------
 * the initial ffmpeg checkout was imported using:
   - get CVS ffmpeg
     cvs -z3 -d:pserver:anonymous@mplayerhq.hu:/cvsroot/ffmpeg co -D '2004-03-09 06:00 GMT' ffmpeg
-
-  - delete all CVS directories
-    find . -name CVS -type d -exec rm -rf {} \;
-  - import it in our CVS
-    cvs -d:ext:thomasvs@cvs.freedesktop.org:/cvs/gstreamer import -m "Import of FFmpeg cvs from 2004-03-09 06:00 GMT" mirror/ffmpeg FFMPEG CVS-2004-03-09
