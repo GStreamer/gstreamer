@@ -76,12 +76,6 @@ endif
 ## FESTIVAL_DIR=
 ## endif
 
-if USE_GSM
-GSM_DIR=gsm
-else
-GSM_DIR=
-endif
-
 if USE_FFMPEG
 FFMPEG_DIR=ffmpeg
 else
@@ -94,10 +88,22 @@ else
 FLAC_DIR=
 endif
 
+if USE_GDK_PIXBUF
+GDK_PIXBUF_DIR=gdk_pixbuf
+else
+GDK_PIXBUF_DIR=
+endif
+
 if USE_GNOME_VFS
 GNOMEVFS_DIR=gnomevfs
 else
 GNOMEVFS_DIR=
+endif
+
+if USE_GSM
+GSM_DIR=gsm
+else
+GSM_DIR=
 endif
 
 if USE_HERMES
@@ -266,7 +272,7 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
 	$(CDPARANOIA_DIR) $(DIVX_DIR) \
 	$(DVDREAD_DIR) $(DVDNAV_DIR) $(ESD_DIR) $(MAS_DIR) \
-	$(FFMPEG_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
+	$(FFMPEG_DIR) $(FLAC_DIR) $(GDK_PIXBUF_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
 	$(HERMES_DIR) $(JACK_DIR) $(JPEG_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
 	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
@@ -281,7 +287,7 @@ DIST_SUBDIRS=\
 	arts artsd \
 	audiofile cdparanoia divx dv \
 	dvdread dvdnav esd mas ffmpeg \
-	flac gnomevfs gsm \
+	flac gdk_pixbuf gnomevfs gsm \
 	hermes ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
 	mad mikmod mjpegtools mpeg2dec \
