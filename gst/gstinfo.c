@@ -735,9 +735,9 @@ _gst_debug_category_new	(gchar *name, guint color, gchar *description)
 }
 /**
  * gst_debug_category_free:
- * @category: category to remove
- * 
- * Removes and frees the category and all associated ressources.
+ * @category: #GstDebugCategory to free.
+ *
+ * Removes and frees the category and all associated resources.
  */
 void
 gst_debug_category_free (GstDebugCategory *category)
@@ -749,23 +749,24 @@ gst_debug_category_free (GstDebugCategory *category)
   __categories = g_slist_remove (__categories, category);
   g_static_mutex_unlock (&__cat_mutex);
 
-  g_free ((gpointer) category->name); 
-  g_free ((gpointer) category->description); 
+  g_free ((gpointer) category->name);
+  g_free ((gpointer) category->description);
   gst_atomic_int_destroy (category->threshold);
   g_free (category->threshold);
   g_free (category);
 }
+
 /**
  * gst_debug_category_set_threshold:
- * @category: category to set threshold for
- * @level: the threshold to set
- * 
+ * @category: a #GstDebugCategory to set threshold of.
+ * @level: the #GstDebugLevel threshold to set.
+ *
  * Sets the threshold of the category to the given level. Debug information will
- * only be output if the threshold is lower or equal to the level of the 
+ * only be output if the threshold is lower or equal to the level of the
  * debugging message.
  * <note><para>
- * Do not use this function in production code, because other functions may 
- * change the threshold of categories as side effect. It is however a nice 
+ * Do not use this function in production code, because other functions may
+ * change the threshold of categories as side effect. It is however a nice
  * function to use when debugging (even from gdb).
  * </para></note>
  */
@@ -776,14 +777,15 @@ gst_debug_category_set_threshold (GstDebugCategory *category, GstDebugLevel leve
 
   gst_atomic_int_set (category->threshold, level);
 }
+
 /**
  * gst_debug_category_reset_threshold:
- * @category: category to set threshold for
- * 
- * Resets the threshold of the category to the default level. Debug information 
- * will only be output if the threshold is lower or equal to the level of the 
+ * @category: a #GstDebugCategory to reset threshold of.
+ *
+ * Resets the threshold of the category to the default level. Debug information
+ * will only be output if the threshold is lower or equal to the level of the
  * debugging message.
- * Use this function to set the threshold back to where it was after using 
+ * Use this function to set the threshold back to where it was after using
  * gst_debug_category_set_threshold().
  */
 void
@@ -791,52 +793,57 @@ gst_debug_category_reset_threshold (GstDebugCategory *category)
 {
   gst_debug_reset_threshold (category, NULL);
 }
+
 /**
  * gst_debug_category_get_threshold:
- * @category: category to get threshold for
- * 
+ * @category: a #GstDebugCategory to get threshold of.
+ *
  * Returns the threshold of a #GstCategory.
- * 
- * Returns: the level that is used as threshold
+ *
+ * Returns: the #GstDebugLevel that is used as threshold.
  */
 GstDebugLevel
 gst_debug_category_get_threshold (GstDebugCategory *category)
 {
   return gst_atomic_int_read (category->threshold);
 }
+
 /**
  * gst_debug_category_get_name:
- * @category: category to get name for
- * 
- * Returns the name of a #GstCategory.
- * 
- * Returns: the name of the category
+ * @category: a #GstDebugCategory to get name of.
+ *
+ * Returns the name of a debug category.
+ *
+ * Returns: the name of the category.
  */
 const gchar *
 gst_debug_category_get_name (GstDebugCategory *category)
 {
   return category->name;
 }
+
 /**
  * gst_debug_category_get_color:
- * @category: category to get color for
- * 
- * Returns the color of a #GstCategory to use when outputting this.
- * 
- * Returns: the color of the category
+ * @category: a #GstDebugCategory to get the color of.
+ *
+ * Returns the color of a debug category used when printing output in this
+ * category.
+ *
+ * Returns: the color of the category.
  */
 guint
 gst_debug_category_get_color (GstDebugCategory *category)
 {
   return category->color;
 }
+
 /**
  * gst_debug_category_get_description:
- * @category: category to get description for
- * 
- * Returns the description of a #GstCategory
- * 
- * Returns: the description of the category
+ * @category: a #GstDebugCategory to get the description of.
+ *
+ * Returns the description of a debug category.
+ *
+ * Returns: the description of the category.
  */
 const gchar *
 gst_debug_category_get_description (GstDebugCategory *category)
@@ -849,9 +856,9 @@ gst_debug_category_get_description (GstDebugCategory *category)
  * Returns a snapshot of a all categories that are currently in use . This list
  * may change anytime.
  * The caller has to free the list after use.
- * <emphasis>This function is not threadsafe, so only use it while only the 
+ * <emphasis>This function is not threadsafe, so only use it while only the
  * main thread is running.</emphasis>
- * 
+ *
  * Returns: the list of categories
  */
 GSList *
