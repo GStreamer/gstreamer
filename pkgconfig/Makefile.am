@@ -18,5 +18,7 @@ $(pcfiles_uninstalled): %-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcfiles)
 
-EXTRA_DIST = $(pcfiles:.pc=.pc.in) \
-	     $(pcfiles_uninstalled:.pc=.pc.in)
+#EXTRA_DIST = $(pcfiles:.pc=.pc.in) \
+#	     $(pcfiles_uninstalled:.pc=.pc.in)
+EXTRA_DIST = gstreamer.pc.in gstreamer-uninstalled.pc.in \
+	     gstreamer-control.pc.in gstreamer-control-uninstalled.pc.in
