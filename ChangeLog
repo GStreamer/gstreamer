@@ -1,3 +1,11 @@
+2005-01-27  Stephane Wirtel  <stephane.wirtel@belgacom.net>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/schedulers/faircothreads.c:
+	(gst_fair_scheduler_cothread_queue_show):
+	  Fix build without debug enabled.
+
 2005-01-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:

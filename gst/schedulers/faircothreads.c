@@ -355,8 +355,9 @@ gst_fair_scheduler_cothread_queue_show (GstFairSchedulerCothreadQueue * queue)
 
   for (iter = queue->ct_queue->tail; iter != NULL; iter = iter->prev) {
     ct = (GstFairSchedulerCothread *) iter->data;
-
+#ifndef GST_DISABLE_GST_DEBUG
     g_print ("    %p: %s (%d)\n", ct, ct->readable_name->str, ct->pid);
+#endif
   }
 }
 
