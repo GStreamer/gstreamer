@@ -192,6 +192,7 @@ gst_faad_chanpos_from_gst (GstAudioChannelPosition * pos, guint num)
         fpos[n] = FRONT_CHANNEL_RIGHT;
         break;
       case GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER:
+      case GST_AUDIO_CHANNEL_POSITION_FRONT_MONO:
         fpos[n] = FRONT_CHANNEL_CENTER;
         break;
       case GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT:
@@ -238,7 +239,11 @@ gst_faad_chanpos_to_gst (guchar * fpos, guint num)
         pos[n] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
         break;
       case FRONT_CHANNEL_CENTER:
-        pos[n] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+        /* argh, mono = center */
+        if (num == 1)
+          pos[n] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+        else
+          pos[n] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
         break;
       case SIDE_CHANNEL_LEFT:
         pos[n] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
@@ -539,6 +544,7 @@ gst_faad_chain (GstPad * pad, GstData * data)
   GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
   GstBuffer *buf, *outbuf;
   faacDecFrameInfo *info;
+  guint64 next_ts;
   void *out;
 
   if (GST_IS_EVENT (data)) {
@@ -563,6 +569,7 @@ gst_faad_chain (GstPad * pad, GstData * data)
 
   /* buffer + remaining data */
   buf = GST_BUFFER (data);
+  next_ts = GST_BUFFER_TIMESTAMP (buf);
   if (faad->tempbuf) {
     buf = gst_buffer_join (faad->tempbuf, buf);
     faad->tempbuf = NULL;
@@ -644,9 +651,10 @@ gst_faad_chain (GstPad * pad, GstData * data)
         outbuf = gst_buffer_new_and_alloc (info->samples * faad->bps);
         /* ugh */
         memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
-        GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-        GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
-
+        GST_BUFFER_TIMESTAMP (outbuf) = next_ts;
+        GST_BUFFER_DURATION (outbuf) =
+            (guint64) GST_SECOND *info->samples / faad->samplerate;
+        next_ts += GST_BUFFER_DURATION (outbuf);
         gst_pad_push (faad->srcpad, GST_DATA (outbuf));
       }
     }
