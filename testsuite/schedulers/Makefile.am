@@ -8,11 +8,11 @@ tests_pass = \
 	143777 143777-2 \
         147713 \
         147819 \
-        147894
+        147894 147894-2
 
 # don't enable this one unless it actually works.
 #	useless_iteration
-tests_fail = 147894-2
+tests_fail = group_link
 tests_ignore =
 
 unlink_src_SOURCES = unlink.c

@@ -1,3 +1,14 @@
+2004-07-22  Wim Taymans  <wim@fluendo.com>
+
+	* testsuite/schedulers/147894-2.c: (queue_empty), (queue_filled),
+	(handoff_identity), (main):
+	* testsuite/schedulers/147894.c: (queue_empty), (queue_filled),
+	(handoff_identity), (main):
+	* testsuite/schedulers/Makefile.am:
+	* testsuite/schedulers/group_link.c: (main):
+	Show bug in scheduler when linking chain and loop based element 
+	where the chain based element was not yet in a group.
+
 2004-07-21  Benjamin Otte  <otte@gnome.org>
 
 	* gst/.cvsignore:
