@@ -27,12 +27,12 @@
 #include "gstdeinterlace.h"
 
 /* elementfactory information */
-static GstElementDetails deinterlace_details = {
+static GstElementDetails deinterlace_details = GST_ELEMENT_DETAILS (
   "Deinterlace",
   "Filter/Video",
   "Deinterlace video",
   "Wim Taymans <wim.taymans@chello.be>"
-};
+);
 
 
 /* Filter signals and args */
