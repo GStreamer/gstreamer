@@ -25,7 +25,7 @@ DIST_SUBDIRS = \
 	bins bytestream caps cleanup clock \
 	debug \
 	dlopen dynparams \
-	elements enumcaps ghostpads indexers negotiation \
+	elements ghostpads indexers negotiation \
 	parse \
 	plugin refcounting schedulers states tags threads
 
