@@ -1,3 +1,31 @@
+2004-01-23  Julien MOUTTE  <julien@moutte.net>
+
+	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup),
+	(gst_play_set_location), (gst_play_seek_to_time),
+	(gst_play_set_audio_sink), (gst_play_set_visualization),
+	(gst_play_connect_visualization), (gst_play_get_sink_element): Reworked
+	the pipeline from scratch. Visualization is back and switch went out as
+	i realized it was not possible to use the way i wanted.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_imagepool_clear),
+	(gst_ximagesink_change_state), (gst_ximagesink_dispose): Move xcontext
+	clearing in state change from READY to NULL. So that one can clean the
+	X ressources keeping the element.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_imagepool_clear), (gst_xvimagesink_change_state),
+	(gst_xvimagesink_colorbalance_set_value),
+	(gst_xvimagesink_colorbalance_get_value),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_dispose),
+	(gst_xvimagesink_init): Same xcontext cleaning than ximagesink in state
+	change from READY to NULL and fixed some stupid bugs in colorbalance
+	get/set values. Also added the following feature : when nobody tries to
+	set some values to the colorbalance levels before the xcontext is 
+	grabbed, then when creating channels list from Xv attributes we set the
+	internal values to the Xv defaults. This way we handle buggy Xv drivers
+	that set default hue values far from the middle of the range (Thanks
+	to Jon Trowbridge for pointing that issue).
+	* sys/xvimage/xvimagesink.h: Adding a cb_changed boolean to know if 
+	colorbalance levels have been set before xcontext is grabbed.
+
 2004-01-22  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/oss/gstosselement.c: (gst_osselement_class_probe_devices):
