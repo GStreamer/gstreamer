@@ -67,7 +67,7 @@ _gst_buffer_initialize (void)
  * Returns: new buffer
  */
 GstBuffer*
-gst_buffer_new(void) 
+gst_buffer_new (void) 
 {
   GstBuffer *buffer;
 
@@ -243,7 +243,8 @@ gst_buffer_append (GstBuffer *buffer,
  *
  * destroy the buffer
  */
-void gst_buffer_destroy (GstBuffer *buffer) 
+void 
+gst_buffer_destroy (GstBuffer *buffer) 
 {
 
   g_return_if_fail (buffer != NULL);

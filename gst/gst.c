@@ -99,6 +99,7 @@ gst_init (int *argc, char **argv[])
   _gst_props_initialize ();
   _gst_caps_initialize ();
   _gst_plugin_initialize ();
+  _gst_event_initialize ();
   _gst_buffer_initialize ();
   _gst_buffer_pool_initialize ();
 
