@@ -78,9 +78,11 @@ gmi_track_new (void)
 
 /* callbacks */
 static void
-have_type_callback (GstElement *typefind, GstCaps *type, GstMediaInfoPriv *priv)
+have_type_callback (GstElement *typefind, guint probability, GstCaps *type, GstMediaInfoPriv *priv)
 {
-  priv->type = type;
+  g_print ("DEBUG: have_type: caps %p\n", type);
+  priv->type = gst_caps_copy (type);
+  /* FIXME: make sure we _free these somewhere */
 }
 
 void
@@ -88,6 +90,13 @@ deep_notify_callback (GObject *object, GstObject *origin,
 		      GParamSpec *pspec, GstMediaInfoPriv *priv)
 {
   GValue value = { 0, };
+
+  /* we only care about pad notifies */
+  if (!GST_IS_PAD (origin)) return;
+
+  GST_DEBUG ("DEBUG: deep_notify: have notify of %s from object %s:%s !",
+             pspec->name, gst_element_get_name (gst_pad_get_parent (GST_PAD (origin))),
+             gst_object_get_name (origin));
 
   if (strcmp (pspec->name, "metadata") == 0)
   {
@@ -265,8 +274,11 @@ gmi_set_decoder (GstMediaInfo *info, GstElement *decoder)
   /* set up pipeline and connect signal handlers */
   priv->decoder = decoder;
   gst_bin_add (GST_BIN (priv->pipeline), decoder);
+  gst_bin_add (GST_BIN (priv->pipeline), priv->fakesink);
   if (!gst_element_link (priv->source, decoder))
     g_warning ("Couldn't connect source and decoder\n");
+  if (!gst_element_link (priv->decoder, priv->fakesink))
+    g_warning ("Couldn't connect decoder and fakesink\n");
   /* FIXME: we should be connecting to ALL possible src pads */
   if (!(priv->decoder_pad = gst_element_get_pad (decoder, "src")))
     g_warning ("Couldn't get decoder pad\n");
@@ -285,7 +297,9 @@ gmi_clear_decoder (GstMediaInfo *info)
 	  /* FIXME: shouldn't need to set state here */
     gst_element_set_state (info->priv->pipeline, GST_STATE_READY);
     gst_element_unlink (info->priv->source, info->priv->decoder);
+    gst_element_unlink (info->priv->decoder, info->priv->fakesink);
     gst_bin_remove (GST_BIN (info->priv->pipeline), info->priv->decoder);
+    gst_bin_remove (GST_BIN (info->priv->pipeline), info->priv->fakesink);
     info->priv->decoder = NULL;
   }
 }
@@ -303,9 +317,7 @@ gmip_find_type_pre (GstMediaInfoPriv *priv)
   /* clear vars that need clearing */
   if (priv->type)
   {
-    /* we don't need to unref, this is done inside gsttypefind.c
-       gst_caps_free (priv->type);
-     */
+    gst_caps_free (priv->type);
     priv->type = NULL;
   }
 

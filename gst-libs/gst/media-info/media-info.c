@@ -151,13 +151,18 @@ gst_media_info_instance_init (GstMediaInfo *info)
 
   info->priv->pipeline = gst_pipeline_new ("media-info");
 
+  /* create the typefind element and make sure it stays around by reffing */
   info->priv->typefind = gst_element_factory_make ("typefind", "typefind");
   if (!GST_IS_ELEMENT (info->priv->typefind))
-	  /* FIXME */
     g_error ("Cannot create typefind element !");
-
-  /* ref it so it never goes away on removal out of bins */
   gst_object_ref (GST_OBJECT (info->priv->typefind));
+
+  /* create the fakesink element and make sure it stays around by reffing */
+  info->priv->fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  if (!GST_IS_ELEMENT (info->priv->fakesink))
+    g_error ("Cannot create fakesink element !");
+  gst_object_ref (GST_OBJECT (info->priv->fakesink));
+
 
   /* use gnomevfssrc by default */
   source = gst_element_factory_make ("gnomevfssrc", "source");
@@ -292,6 +297,7 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       GST_DEBUG ("STATE_TYPEFIND");
       if ((priv->type == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline)))
       {
+	GST_DEBUG ("iterating while in STATE_TYPEFIND");
 	GMI_DEBUG("?");
         return TRUE;
       }
