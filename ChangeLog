@@ -1,5 +1,11 @@
 2005-01-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/avi/gstavimux.c: (gst_avimux_class_init),
+	(gst_avimux_pad_unlink), (gst_avimux_release_pad):
+	  Reusability fixes.
+
+2005-01-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_update),
 	(gst_alsa_mixer_get_volume), (gst_alsa_mixer_set_volume),
 	(gst_alsa_mixer_set_mute), (gst_alsa_mixer_set_record),
