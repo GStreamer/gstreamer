@@ -1,3 +1,10 @@
+2004-06-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audiorate_class_init),
+	(gst_audiorate_init), (gst_audiorate_chain),
+	(gst_audiorate_set_property), (gst_audiorate_get_property):
+	Implement sample dropping and notify
+
 2004-06-22  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
