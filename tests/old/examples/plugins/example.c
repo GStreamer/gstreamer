@@ -20,6 +20,7 @@
 /* First, include the header file for the plugin, to bring in the
  * object definition and other useful things.
  */
+#include <string.h>
 #include "example.h"
 
 /* The ElementDetails structure gives a human-readable description

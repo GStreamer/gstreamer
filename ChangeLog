@@ -1,3 +1,30 @@
+2001-12-13  Michael Meeks  <michael@ximian.com>
+
+	* plugins/xvideosink/Makefile.am: add $(X_LIBS)
+
+	* examples/typefind/typefind.c (type_found): upd.
+	xml code.
+
+	* plugins/mikmod/gstmikmod.c
+	(gst_mikmod_set_property): same memory bug here -
+	unfixed.
+
+	* plugins/oss/gstosssrc.c
+	(gst_osssrc_set_property): fix memory issue.
+	(gst_osssrc_init): dup the string - argh; quit here -
+	such code should be stuck in a common base class not
+	cut and pasted.
+
+	* plugins/oss/gstosssink.c
+	(gst_osssink_init): manage the device allocation.
+	(gst_osssink_finalize): impl.
+	(gst_osssink_class_init): upd.
+	(gst_osssink_set_property): upd.
+
+	* acconfig.h: cover HAVE_LIBXML2
+
+	* configure.ac: update libxml checks.
+
 2001-12-11 22:10  thomasvs
 
 	* lots of build fixes for 0.3.0 release

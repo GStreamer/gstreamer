@@ -142,8 +142,8 @@ automake -a -c || {
 }
 
 # now remove the cache, because it can be considered dangerous in this case
-echo "+ removing config.cache ... "
-rm -f config.cache
+#echo "+ removing config.cache ... "
+#rm -f config.cache
 
 CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
 

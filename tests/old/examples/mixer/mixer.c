@@ -83,7 +83,6 @@ int main(int argc,char *argv[])
 {
   int i, j;
   int num_channels;
-  gboolean done;
   
   char buffer[20];
   

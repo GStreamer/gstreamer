@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdlib.h>
 #include <gst/gst.h>
 
@@ -35,7 +36,8 @@ int main(int argc,char *argv[])
 
   xml = gst_xml_new ();
 
-  g_signal_connect (G_OBJECT (xml), "object_loaded", xml_loaded, xml);
+  g_signal_connect (G_OBJECT (xml), "object_loaded",
+		    G_CALLBACK (xml_loaded), xml);
 
   ret = gst_xml_parse_file(xml, "xmlTest.gst", NULL);
   g_assert (ret == TRUE);

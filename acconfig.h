@@ -9,6 +9,7 @@
 #undef HAVE_STPCPY
 
 #undef USE_GLIB2
+#undef HAVE_LIBXML2
 
 #undef PLUGINS_DIR
 #undef PLUGINS_BUILDDIR

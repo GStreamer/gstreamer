@@ -248,7 +248,8 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
 
 
-  g_signal_connect(G_OBJECT(parse),"new_pad",mp2tomp1, pipeline);
+  g_signal_connect(G_OBJECT(parse),"new_pad",
+		   G_CALLBACK (mp2tomp1), pipeline);
 
   g_signal_connect(G_OBJECT(src),"eos",G_CALLBACK(eof),NULL);
 

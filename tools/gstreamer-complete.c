@@ -1,17 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include <parser.h> // NOTE: this is xml-config's fault
 
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
+#include <gst/gstconfig.h>
 
 #include <glib.h>
 
-#include "config.h"
 
 typedef struct {
   gchar *name;
