@@ -29,6 +29,7 @@
 #include <asm/atomic.h>
 #endif
 
+#include <gst/gstobject.h>
 #include <gst/gstmeta.h>
 
 #ifdef __cplusplus

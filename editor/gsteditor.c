@@ -99,7 +99,9 @@ static void on_name_changed(GstEditorElement *element, gpointer data) {
  *
  * Returns: Freshly created GstEditor widget.
  */
-GstEditor *gst_editor_new(GstElement *element) {
+GstEditor*
+gst_editor_new (GstElement *element) 
+{
   GstEditor *editor;
 
   g_return_val_if_fail(element != NULL, NULL);
@@ -117,10 +119,6 @@ GstEditor *gst_editor_new(GstElement *element) {
   /* get the canvas widget */
   editor->canvaswidget = gst_editor_canvas_get_canvas(editor->canvas);
 
-  /* add the canvas to the scrolled window */
-  /*gtk_container_add(GTK_CONTAINER(editor->scrollwindow),
-                    editor->canvaswidget);
-		    */
   gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(editor->scrollwindow),
                     editor->canvaswidget);
 
@@ -128,6 +126,28 @@ GstEditor *gst_editor_new(GstElement *element) {
   gtk_container_add(GTK_CONTAINER(editor),editor->scrollwindow);
 
   gtk_widget_set_usize(GTK_WIDGET(editor),400,400);
+
+  if (GST_IS_BIN (element)) {
+    GList *elements;
+
+    elements = gst_bin_get_list (GST_BIN(element));
+
+    while (elements) {
+      GstElement *child = (GstElement *)elements->data;
+      
+      if (GST_IS_BIN (child)) {
+	g_print ("new bin \n");
+        gst_editor_bin_new (GST_EDITOR_BIN(editor->canvas),GST_BIN(child),
+                "x",10.0,"y",10.0,"width",50.0,"height",20.0,NULL);
+      }
+      else {
+	g_print ("new element \n");
+        gst_editor_element_new (GST_EDITOR_BIN(editor->canvas),child,
+                "x",10.0,"y",10.0,"width",50.0,"height",20.0,NULL);
+      }
+      elements = g_list_next (elements);
+    }
+  }
 
   gtk_widget_show_all(GTK_WIDGET(editor));
 

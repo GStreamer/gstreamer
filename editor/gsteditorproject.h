@@ -56,11 +56,16 @@ struct _GstEditorProjectClass {
 		           GstEditorElement *element);
 };
 
-GtkType gst_editor_project_get_type();
-GstEditorProject *gst_editor_project_new();
-GstEditorProject *gst_editor_project_new_from_file(const guchar *fname);
-void gst_editor_project_add_toplevel_element(GstEditorProject *project, GstElement *element);
+GtkType 		gst_editor_project_get_type		(void);
 
+GstEditorProject*	gst_editor_project_new			(void);
+GstEditorProject*	gst_editor_project_new_from_file	(const guchar *fname);
+void			gst_editor_project_save			(GstEditorProject *project);
+void			gst_editor_project_save_as		(GstEditorProject *project,
+		   						 const guchar *fname);
+
+void 			gst_editor_project_add_toplevel_element	(GstEditorProject *project, 
+								 GstElement *element);
 
 #define GST_TYPE_EDITOR_PROJECT_VIEW \
   (gst_editor_project_view_get_type())
@@ -88,7 +93,8 @@ struct _GstEditorProjectViewClass {
   GtkObjectClass parent_class;
 };
 
-GtkType gst_editor_project_view_get_type();
-GstEditorProjectView *gst_editor_project_view_new(GstEditorProject *project);
+GtkType 		gst_editor_project_view_get_type	(void);
+
+GstEditorProjectView*	gst_editor_project_view_new		(GstEditorProject *project);
 
 #endif /* __GST_EDITOR_PROJECT_H__ */

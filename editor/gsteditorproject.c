@@ -28,10 +28,11 @@
 #include "gsteditorimage.h"
 
 /* class functions */
-static void gst_editor_project_class_init(GstEditorProjectClass *klass);
-static void gst_editor_project_init(GstEditorProject *project);
-static void gst_editor_project_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_project_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void gst_editor_project_class_init	(GstEditorProjectClass *klass);
+static void gst_editor_project_init		(GstEditorProject *project);
+
+static void gst_editor_project_set_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void gst_editor_project_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 
 enum {
   ARG_0,
@@ -47,7 +48,8 @@ enum {
 static GtkObjectClass *parent_class;
 static guint gst_editor_project_signals[LAST_SIGNAL] = { 0 };
 
-GtkType gst_editor_project_get_type() {
+GtkType gst_editor_project_get_type (void) 
+{
   static GtkType project_type = 0;
 
   if (!project_type) {
@@ -66,7 +68,9 @@ GtkType gst_editor_project_get_type() {
   return project_type;
 }
 
-static void gst_editor_project_class_init(GstEditorProjectClass *klass) {
+static void 
+gst_editor_project_class_init (GstEditorProjectClass *klass) 
+{
   GtkObjectClass *object_class;
 
   object_class = (GtkObjectClass*)klass;
@@ -97,11 +101,15 @@ static void gst_editor_project_class_init(GstEditorProjectClass *klass) {
   object_class->get_arg = gst_editor_project_get_arg;
 }
 
-static void gst_editor_project_init(GstEditorProject *project) {
+static void 
+gst_editor_project_init (GstEditorProject *project) 
+{
   project->toplevelelements = NULL;
 }
 
-GstEditorProject *gst_editor_project_new() {
+GstEditorProject*
+gst_editor_project_new (void) 
+{
   GstEditorProject *editorproject;
 
   editorproject = GST_EDITOR_PROJECT(gtk_type_new(GST_TYPE_EDITOR_PROJECT));
@@ -109,16 +117,54 @@ GstEditorProject *gst_editor_project_new() {
   return editorproject;
 }
 
-GstEditorProject *gst_editor_project_new_from_file(const guchar *fname) {
+GstEditorProject *
+gst_editor_project_new_from_file (const guchar *fname) 
+{
   GstEditorProject *editorproject;
+  GstXML *xml;
+  GList *elements;
+
+  g_return_if_fail (fname != NULL);
 
   editorproject = gst_editor_project_new();
 
+  xml = gst_xml_new (fname, NULL);
+
+  elements = gst_xml_get_topelements(xml);
+  
+  while (elements) {
+    GstElement *element = (GstElement *) elements->data;
+
+    gst_editor_project_add_toplevel_element (editorproject, element);
+    
+    elements = g_list_next (elements);
+  }
+  
   return editorproject;
 }
 
-void gst_editor_project_add_toplevel_element(GstEditorProject *project, GstElement *element) {
+void 
+gst_editor_project_save_as (GstEditorProject *project, const guchar *fname) 
+{
+  GList *elements;
 
+  g_return_if_fail (fname != NULL);
+  g_return_if_fail (project != NULL);
+
+  elements = project->toplevelelements;
+
+  while (elements) {
+    GstElement *element = (GstElement *) elements->data;
+
+    xmlSaveFile (fname, gst_xml_write (element));
+
+    elements = g_list_next (elements);
+  }
+}
+
+void 
+gst_editor_project_add_toplevel_element (GstEditorProject *project, GstElement *element) 
+{
   g_return_if_fail(project != NULL);
   g_return_if_fail(GST_IS_EDITOR_PROJECT(project));
   g_return_if_fail(element != NULL);
@@ -131,7 +177,9 @@ void gst_editor_project_add_toplevel_element(GstEditorProject *project, GstEleme
   gtk_signal_emit(GTK_OBJECT(project),gst_editor_project_signals[ELEMENT_ADDED], element);
 }
 
-static void gst_editor_project_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_project_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstEditorProject *project;
 
   /* get the major types of this object */
@@ -144,7 +192,9 @@ static void gst_editor_project_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static void gst_editor_project_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_project_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstEditorProject *project;
 
   /* get the major types of this object */

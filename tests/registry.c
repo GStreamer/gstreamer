@@ -31,6 +31,35 @@ dump_factories (void)
 }
 
 static void 
+dump_factory (gchar *name)
+{
+  GstElementFactory *factory;
+
+  factory = gst_elementfactory_find (name);
+
+  if (factory) {
+    GList *padtemplates = factory->padtemplates;
+    xmlDocPtr doc;
+
+    doc = xmlNewDoc ("1.0");
+    doc->root = xmlNewDocNode (doc, NULL, "templates", NULL);
+
+    while (padtemplates) {
+      xmlNodePtr parent;
+      GstPadTemplate *template = (GstPadTemplate *) padtemplates->data;
+
+      parent = xmlNewChild (doc->root, NULL, "template", NULL);
+
+      gst_padtemplate_save_thyself (template, parent);
+
+      padtemplates = g_list_next (padtemplates);
+    }
+
+    xmlDocDump(stdout, doc);
+  }
+}
+
+static void 
 dump_types (void)
 {
   GList *types;
@@ -117,4 +146,7 @@ int main(int argc,char *argv[])
   dump_types ();
 
   gst_type_dump ();
+
+  dump_factory ("lame");
+  dump_factory ("mpeg_play");
 }

@@ -829,7 +829,8 @@ gst_pad_load_and_connect (xmlNodePtr parent,
     field = field->next;
   }
   g_return_if_fail(pad != NULL);
-  g_return_if_fail(peer != NULL);
+
+  if (peer == NULL) return;
 
   split = g_strsplit(peer, ".", 2);
 

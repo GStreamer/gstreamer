@@ -104,6 +104,8 @@ GstEditorBin *gst_editor_bin_new(GstEditorBin *parent,GstBin *bin,
                                first_arg_name,args);
   va_end(args);
 
+  
+
   return editorbin;
 }
 
@@ -267,5 +269,7 @@ void gst_editor_bin_add(GstEditorBin *bin,GstEditorElement *element) {
   bin->elements = g_list_prepend(bin->elements,element);
 
   /* add the real element to the real bin */
-  gst_bin_add(GST_BIN(GST_EDITOR_ELEMENT(bin)->element),element->element);
+  if (!gst_object_get_parent (GST_OBJECT (element->element))) {
+    gst_bin_add(GST_BIN(GST_EDITOR_ELEMENT(bin)->element),element->element);
+  }
 }

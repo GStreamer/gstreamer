@@ -167,7 +167,6 @@ gst_thread_get_arg (GtkObject *object,
 
   switch (id) {
     case ARG_CREATE_THREAD:
-      g_print("gstthread: query thread %d\n", GST_FLAG_IS_SET (object, GST_THREAD_CREATE));
       GTK_VALUE_BOOL (*arg) = GST_FLAG_IS_SET (object, GST_THREAD_CREATE);
       break;
     default:

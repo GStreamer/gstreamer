@@ -19,8 +19,8 @@
 
 #include "gstxml.h"
 
-static void gst_xml_class_init(GstXMLClass *klass);
-static void gst_xml_init(GstXML *xml);
+static void 	gst_xml_class_init		(GstXMLClass *klass);
+static void	gst_xml_init			(GstXML *xml);
 
 static GstObjectClass *parent_class = NULL;
 
@@ -85,7 +85,9 @@ xmlDocPtr gst_xml_write(GstElement *element) {
  *
  * Returns: a pointer to a new GstElement
  */
-GstXML *gst_xml_new(const guchar *fname, const guchar *root) {
+GstXML*
+gst_xml_new (const guchar *fname, const guchar *root) 
+{
   xmlDocPtr doc;
   xmlNodePtr field;
   GstXML *xml;
@@ -106,17 +108,40 @@ GstXML *gst_xml_new(const guchar *fname, const guchar *root) {
   xml = GST_XML(gtk_type_new(GST_TYPE_XML));
 
   xml->elements = g_hash_table_new(g_str_hash, g_str_equal);
+  xml->topelements = NULL;
 
   field = doc->root->childs;
   
   while (field) {
     if (!strcmp(field->name, "element")) {
-      gst_element_load_thyself(field, xml->elements);
+      GstElement *element;
+      
+      element = gst_element_load_thyself(field, xml->elements);
+
+      xml->topelements = g_list_prepend (xml->topelements, element);
     }
     field = field->next;
   }
 
+  xml->topelements = g_list_reverse (xml->topelements);
+
   return xml;
+}
+
+/**
+ * gst_xml_get_topelements:
+ * @xml: The GstXML to get the elements from
+ *
+ * retrive a list of toplevel elements
+ *
+ * Returns: a GList of elements
+ */
+GList*
+gst_xml_get_topelements (GstXML *xml) 
+{
+  g_return_val_if_fail (xml != NULL, NULL);
+
+  return xml->topelements;
 }
 
 /**
@@ -130,7 +155,9 @@ GstXML *gst_xml_new(const guchar *fname, const guchar *root) {
  *
  * Returns: a pointer to a new GstElement
  */
-GstElement *gst_xml_get_element(GstXML *xml, const guchar *name) {
+GstElement*
+gst_xml_get_element (GstXML *xml, const guchar *name) 
+{
   GstElement *element;
 
   g_return_val_if_fail(xml != NULL, NULL);

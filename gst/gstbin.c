@@ -592,6 +592,7 @@ gst_bin_src_wrapper (int argc,char *argv[])
   return 0;
 }
 
+/*
 static void 
 gst_bin_pullfunc_proxy (GstPad *pad) 
 {

@@ -26,6 +26,8 @@
 #endif
 
 #include <gmodule.h>
+#include <unistd.h>
+
 #include <gst/gsttrace.h>
 
 /* for include files that make too much noise normally */

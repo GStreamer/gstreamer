@@ -362,6 +362,7 @@ gst_props_save_thyself (GstProps *props, xmlNodePtr parent)
     switch (entry->propstype) {
       case GST_PROPS_LIST_ID_NUM: 
         subtree = xmlNewChild (parent, NULL, "list", NULL);
+        xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
         g_list_foreach (entry->data.list_data.entries, (GFunc) gst_props_save_thyself_func, subtree);
       default:
     	gst_props_save_thyself_func (entry, parent);
@@ -373,9 +374,74 @@ gst_props_save_thyself (GstProps *props, xmlNodePtr parent)
   return parent;
 }
 
+static GstPropsEntry*
+gst_props_load_thyself_func (xmlNodePtr field)
+{
+  GstPropsEntry *entry;
+
+  entry = g_new0 (GstPropsEntry, 1);
+
+  if (!strcmp(field->name, "int")) {
+    entry->propstype = GST_PROPS_INT_ID_NUM;
+    entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
+    sscanf (xmlGetProp(field, "value"), "%d", &entry->data.int_data);
+  }
+  else if (!strcmp(field->name, "range")) {
+    entry->propstype = GST_PROPS_INT_RANGE_ID_NUM;
+    entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
+    sscanf (xmlGetProp(field, "min"), "%d", &entry->data.int_range_data.min);
+    sscanf (xmlGetProp(field, "max"), "%d", &entry->data.int_range_data.max);
+  }
+  else if (!strcmp(field->name, "boolean")) {
+    entry->propstype = GST_PROPS_BOOL_ID_NUM;
+    entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
+    if (!strcmp (xmlGetProp(field, "value"), "false")) entry->data.bool_data = 0;
+    else entry->data.bool_data = 1;
+  }
+  else if (!strcmp(field->name, "fourcc")) {
+    entry->propstype = GST_PROPS_FOURCC_ID_NUM;
+    entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
+    sscanf (xmlGetProp(field, "hexvalue"), "%08x", &entry->data.fourcc_data);
+  }
+
+  return entry;
+}
+
 GstProps*
 gst_props_load_thyself (xmlNodePtr parent)
 {
-  return NULL;
+  GstProps *props = g_new0 (GstProps, 1);
+  xmlNodePtr field = parent->childs;
+
+  while (field) {
+    if (!strcmp (field->name, "list")) {
+      GstPropsEntry *entry;
+      xmlNodePtr subfield = field->childs;
+
+      entry = g_new0 (GstPropsEntry, 1);
+      entry->propstype = GST_PROPS_LIST_ID_NUM;
+      entry->propid = g_quark_from_string (xmlGetProp(field, "name"));
+
+      while (subfield) {
+        GstPropsEntry *subentry = gst_props_load_thyself_func (subfield);
+
+	entry->data.list_data.entries = g_list_prepend (entry->data.list_data.entries, subentry);
+
+        subfield = subfield->next;
+      }
+      entry->data.list_data.entries = g_list_reverse (entry->data.list_data.entries);
+      props->properties = g_slist_insert_sorted (props->properties, entry, props_compare_func);
+    }
+    else {
+      GstPropsEntry *entry;
+
+      entry = gst_props_load_thyself_func (field);
+
+      props->properties = g_slist_insert_sorted (props->properties, entry, props_compare_func);
+    }
+    field = field->next;
+  }
+
+  return props;
 }
 

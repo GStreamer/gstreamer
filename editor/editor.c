@@ -27,7 +27,9 @@
 
 extern gboolean _gst_plugin_spew;
 
-int main(int argc,char *argv[]) {
+int 
+main (int argc, char *argv[]) 
+{
   GstEditorProject *project;
 
   bindtextdomain (PACKAGE, PACKAGE_LOCALE_DIR);
@@ -35,14 +37,19 @@ int main(int argc,char *argv[]) {
 
   _gst_plugin_spew = TRUE;
   gst_init(&argc,&argv);
-  gst_plugin_load_all();
-  gst_plugin_load("gstelements");
   gnome_init("GST Graph Editor",VERSION,argc,argv);
   glade_init();
   glade_gnome_init();
 
 
-  project = gst_editor_project_new();
+  if (argc > 1) {
+    project = gst_editor_project_new_from_file(argv[1]);
+  }
+  else
+    project = gst_editor_project_new();
+
+  g_assert (project != NULL);
+
   gst_editor_project_view_new(project);
 
   gtk_main();

@@ -196,10 +196,12 @@ const gchar *gst_editor_element_get_name(GstEditorElement *element) {
   return gst_element_get_name(element->element);
 }
 
-void gst_editor_element_construct(GstEditorElement *element,
-                                  GstEditorBin *parent,
-                                  const gchar *first_arg_name,
-                                  va_list args) {
+void 
+gst_editor_element_construct(GstEditorElement *element,
+                             GstEditorBin *parent,
+                             const gchar *first_arg_name,
+                             va_list args) 
+{
   GtkObject *obj = GTK_OBJECT(element);
   GSList *arg_list = NULL, *info_list = NULL;
   gchar *error;
