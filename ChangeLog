@@ -1,3 +1,8 @@
+2005-03-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstpipeline.c: (gst_pipeline_use_clock):
+	  Lock/unlock mismatch.
+
 2005-03-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/faq/gst-uninstalled:

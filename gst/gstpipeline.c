@@ -443,7 +443,7 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
 
   gst_object_replace ((GstObject **) & pipeline->fixed_clock,
       (GstObject *) clock);
-  GST_LOCK (pipeline);
+  GST_UNLOCK (pipeline);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using fixed clock %p (%s)", clock,
       (clock ? GST_OBJECT_NAME (clock) : "nil"));
