@@ -43,6 +43,7 @@ struct _GstByteStream {
 
   /* this is needed for gst_bytestream_tell */
   guint64	offset;
+  guint64	last_ts;
 
   /* if we are in the seek state (waiting for DISCONT) */
   gboolean	in_seek;

@@ -130,14 +130,15 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
   bs_print ("get_next_buf: pulling buffer");
   nextbuf = gst_pad_pull (bs->pad);
 
-  if (GST_IS_EVENT (nextbuf))
-    {
-      bs->event = GST_EVENT (nextbuf);
-      return FALSE;
-    }
+  if (GST_IS_EVENT (nextbuf)) {
+    bs->event = GST_EVENT (nextbuf);
+    return FALSE;
+  }
 
   if (!nextbuf)
     return FALSE;
+
+  bs->last_ts = GST_BUFFER_TIMESTAMP (nextbuf);
 
   bs_print ("get_next_buf: got buffer of %d bytes", GST_BUFFER_SIZE (nextbuf));
 
@@ -256,7 +257,7 @@ gst_bytestream_peek (GstByteStream * bs, GstBuffer **buf, guint32 len)
     retbuf = gst_buffer_new ();
     GST_BUFFER_SIZE (retbuf) = len;
     GST_BUFFER_DATA (retbuf) = gst_bytestream_assemble (bs, len);
-    GST_BUFFER_TIMESTAMP (retbuf) = gst_bytestream_get_timestamp (bs);
+    GST_BUFFER_TIMESTAMP (retbuf) = bs->last_ts;
     if (GST_BUFFER_OFFSET (headbuf) != -1)
       GST_BUFFER_OFFSET (retbuf) = GST_BUFFER_OFFSET (headbuf) + (GST_BUFFER_SIZE (headbuf) - bs->headbufavail);
   }
@@ -462,8 +463,17 @@ gst_bytestream_seek (GstByteStream *bs, gint64 offset, GstSeekType method)
 guint64
 gst_bytestream_tell (GstByteStream *bs)
 {
+  GstFormat format;
+  gint64 value;
+  
   g_return_val_if_fail (bs != NULL, 0);
-  return bs->offset;
+
+  format = GST_FORMAT_BYTES;
+
+  if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_PAD_QUERY_POSITION, &format, &value)) 
+    return value;
+  
+  return -1;
 }
 
 guint32
