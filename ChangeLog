@@ -1,3 +1,9 @@
+2004-11-01  Johan Dahlin  <johan@gnome.org>
+
+	* ext/ogg/gstoggdemux.c:
+	* gst/tags/gstvorbistag.c:
+	Plug leaks.
+
 2004-10-31  Benjamin Otte  <otte@gnome.org>
 
 	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_chain):
