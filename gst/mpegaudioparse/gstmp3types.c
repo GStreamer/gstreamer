@@ -25,8 +25,8 @@ static GstCaps* mp3_type_find(GstBuffer *buf, gpointer private);
 static GstCaps* mp3_type_find_stream(GstBuffer *buf, gpointer private);
 
 static GstTypeDefinition mp3type_definitions[] = {
-  { "mp3types_audio/x-mp3", "audio/x-mp3", ".mp3 .mp2 .mp1 .mpga", mp3_type_find },
-  { "mp3types_stream_audio/x-mp3", "audio/x-mp3", ".mp3 .mp2 .mp1 .mpga", mp3_type_find_stream },
+  { "mp3types_audio/mpeg", "audio/mpeg", ".mp3 .mp2 .mp1 .mpga", mp3_type_find },
+  { "mp3types_stream_audio/mpeg", "audio/mpeg", ".mp3 .mp2 .mp1 .mpga", mp3_type_find_stream },
   { NULL, NULL, NULL, NULL },
 };
 
@@ -34,7 +34,7 @@ static GstCaps*
 mp3_type_find(GstBuffer *buf, gpointer private) 
 {
   guint8 *data;
-  gint size;
+  gint size, layer;
   guint32 head;
   GstCaps *caps;
 
@@ -81,8 +81,9 @@ mp3_type_find(GstBuffer *buf, gpointer private)
   head = GUINT32_FROM_BE(*((guint32 *)data));
   if ((head & 0xffe00000) != 0xffe00000)
     return NULL;
-  if (!((head >> 17) & 3))
+  if (!(layer = ((head >> 17) & 3)))
     return NULL;
+  layer = 4 - layer;
   if (((head >> 12) & 0xf) == 0xf)
     return NULL;
   if (!((head >> 12) & 0xf))
@@ -90,7 +91,7 @@ mp3_type_find(GstBuffer *buf, gpointer private)
   if (((head >> 10) & 0x3) == 0x3)
     return NULL;
 
-  caps = gst_caps_new ("mp3_type_find", "audio/x-mp3", NULL);
+  caps = GST_CAPS_NEW ("mp3_type_find", "audio/mpeg", "layer", GST_PROPS_INT (layer));
 
   return caps;
 }
@@ -107,7 +108,7 @@ static guint mp3types_freqs[3][3] =
   {22050, 24000, 16000}, 
   {11025, 12000,  8000}};
 static inline guint
-mp3_type_frame_length_from_header (guint32 header)
+mp3_type_frame_length_from_header (guint32 header, guint *put_layer)
 {
   guint length;
   gulong samplerate, bitrate, layer, version;
@@ -149,8 +150,9 @@ mp3_type_frame_length_from_header (guint32 header)
 
   GST_DEBUG ("Calculated mad frame length of %u bytes", length);
   GST_DEBUG ("samplerate = %lu - bitrate = %lu - layer = %lu - version = %lu", samplerate, bitrate, layer, version);
+  if (put_layer)
+    *put_layer = layer;
   return length;
-
 }
 /* increase this value when this function finds too many false positives */
 /**
@@ -181,6 +183,7 @@ mp3_type_find_stream (GstBuffer *buf, gpointer private)
   guint8 *data;
   guint size;
   guint32 head;
+  gint layer = 0;
   
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
@@ -188,11 +191,15 @@ mp3_type_find_stream (GstBuffer *buf, gpointer private)
   while (size >= 4) {
     head = GUINT32_FROM_BE(*((guint32 *)data));
     if ((head & 0xffe00000) == 0xffe00000) {
-      guint pos = 0;
       guint length;
+      guint prev_layer = 0;
       guint found = 0; /* number of valid headers found */
+      guint pos = 0;
       do {
-        if ((length = mp3_type_frame_length_from_header (head))) {
+        if ((length = mp3_type_frame_length_from_header (head, &layer))) {
+	  if (prev_layer && prev_layer != layer)
+	    break;
+	  prev_layer = layer;
 	  pos += length;
           found++;
 	  if (pos + 4 >= size) {
@@ -214,7 +221,8 @@ mp3_type_find_stream (GstBuffer *buf, gpointer private)
   return NULL;
 
 success:
-  return gst_caps_new ("mp3_type_find", "audio/x-mp3", NULL);
+  g_assert (layer);
+  return GST_CAPS_NEW ("mp3_type_find", "audio/mpeg", "layer", GST_PROPS_INT (layer));
 }
 
 static gboolean
