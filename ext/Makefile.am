@@ -178,6 +178,12 @@ else
 MPEG2DEC_DIR=
 endif
 
+if USE_PANGO
+PANGO_DIR=pango
+else
+PANGO_DIR=
+endif
+
 if USE_RAW1394
 RAW1394_DIR=raw1394
 else
@@ -258,7 +264,7 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(HERMES_DIR) $(JACK_DIR) $(JPEG_DIR) \
 	$(LADSPA_DIR) $(LAME_DIR) $(LCS_DIR) \
 	$(LIBDV_DIR) $(LIBFAME_DIR) $(LIBPNG_DIR) \
-	$(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
+	$(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) $(PANGO_DIR) \
 	$(RAW1394_DIR) $(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) $(SWFDEC_DIR) $(TARKIN_DIR) \
 	$(VORBIS_DIR) $(XVID_DIR) $(SNAPSHOT_DIR)
@@ -270,7 +276,7 @@ DIST_SUBDIRS=\
 	flac gdk_pixbuf gnomevfs gsm \
 	hermes ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
-	mad mikmod mpeg2dec raw1394 \
+	mad mikmod mpeg2dec pango raw1394 \
 	sdl snapshot shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis \
 	xvid 
