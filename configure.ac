@@ -46,6 +46,7 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 dnl you need automake 1.5 for AM_PROG_AS to work !
 AM_PROG_AS
+AS="${CC}"
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_ISC_POSIX
