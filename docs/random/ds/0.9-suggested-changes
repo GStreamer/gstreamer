@@ -98,4 +98,7 @@ bugs with interesting info:
   the data stream.  This would allow automatic shutoff of pipelines
   whose processing is being dumped.
 
+- object properties:
+  - all bitrates should be bits per second, since they're specified
+    as integers
 
