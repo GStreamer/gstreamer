@@ -56,7 +56,7 @@ struct _GstVideoSink {
   
   gint width, height;
   gint frames_displayed;
-  guint64 frame_time;
+  gint64 frame_time;
   
   GstClock *clock;
   

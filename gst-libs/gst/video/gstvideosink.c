@@ -155,8 +155,8 @@ gst_videosink_class_init (GstVideoSinkClass *klass)
                       G_MININT,G_MAXINT, 0, G_PARAM_READABLE));
   
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME,
-    g_param_spec_int ("frame_time", "Frame time", "The interval between frames",
-                      G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+    g_param_spec_int64 ("frame_time", "Frame time", "The interval between frames",
+                      G_MININT64, G_MAXINT64, 0, G_PARAM_READABLE));
 
   gobject_class->set_property = gst_videosink_set_property;
   gobject_class->get_property = gst_videosink_get_property;
