@@ -306,9 +306,7 @@ static seek_format seek_formats[] =
 {
   { "tim",  GST_FORMAT_TIME    },
   { "byt",  GST_FORMAT_BYTES   },
-  { "smp",  GST_FORMAT_SAMPLES },
-  { "frm",  GST_FORMAT_FRAMES  },
-  { "fld",  GST_FORMAT_FIELDS  },
+  { "unt",  GST_FORMAT_UNIT    },
   { "buf",  GST_FORMAT_BUFFERS },
   { "def",  GST_FORMAT_DEFAULT },
   { NULL, 0 }, 
