@@ -5,6 +5,24 @@
 #include "gobject2gtk.h"
 
 
+// list functions not in glib 1.2
+GList *
+g_list_delete_link (GList *list, GList *llink)
+{
+  GList *temp = g_list_remove_link(list, llink);
+  g_list_free(llink);
+  return temp;
+}
+
+GSList *
+g_slist_delete_link (GSList *list, GSList *llink)
+{
+  GSList *temp = g_slist_remove_link(list, llink);
+  g_slist_free(llink);
+  return temp;
+}
+
+
 
 // GObject dummy implementation
 static void

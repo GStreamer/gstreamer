@@ -14,6 +14,12 @@
 #define G_PI_4  0.78539816339744830962E0
 #define G_SQRT2 1.4142135623730950488E0
 
+// lists functions not in glib 1.2
+GList *g_list_delete_link (GList *list, GList *llink);
+GSList *g_slist_delete_link (GSList *list, GSList *llink);
+  
+
+// GObject
 typedef struct _GObject GObject;
 typedef struct _GObjectClass GObjectClass;
 
