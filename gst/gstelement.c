@@ -1987,8 +1987,8 @@ restart:
 
       /* see if the pad has a loop function and grab
        * the peer */
+      pad_get = gst_pad_check_pull_range (pad);
       GST_LOCK (pad);
-      pad_get = GST_RPAD_GETRANGEFUNC (pad) != NULL;
       pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
       peer = GST_RPAD_PEER (pad);
       if (peer)
@@ -1999,7 +1999,7 @@ restart:
         gboolean peer_loop, peer_get;
 
         /* see if the peer has a getrange function */
-        peer_get = GST_RPAD_GETRANGEFUNC (peer) != NULL;
+        peer_get = gst_pad_check_pull_range (pad);
         /* see if the peer has a loop function */
         peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
 

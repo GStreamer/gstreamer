@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstfilesrc.h: 
  *
@@ -20,16 +21,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_FILESRC_H__
 #define __GST_FILESRC_H__
 
-
-#include <gst/gst.h>
 #include <sys/types.h>
 
-G_BEGIN_DECLS
+#include <gst/gst.h>
+#include <gst/base/gstbasesrc.h>
 
+G_BEGIN_DECLS
 
 #define GST_TYPE_FILESRC \
   (gst_filesrc_get_type())
@@ -42,42 +42,29 @@ G_BEGIN_DECLS
 #define GST_IS_FILESRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILESRC))
 
-typedef enum {
-  GST_FILESRC_OPEN              = GST_ELEMENT_FLAG_LAST,
-
-  GST_FILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-} GstFileSrcFlags;
-
 typedef struct _GstFileSrc GstFileSrc;
 typedef struct _GstFileSrcClass GstFileSrcClass;
 
 struct _GstFileSrc {
-  GstElement element;
-  GstPad *srcpad;
+  GstBaseSrc element;
 
   guint pagesize;			/* system page size*/
  
   gchar *filename;			/* filename */
   gchar *uri;				/* caching the URI */
   gint fd;				/* open file descriptor*/
-  off_t filelen;			/* what's the file length?*/
+  guint64 read_position;		/* position of fd */
 
-  off_t curoffset;			/* current offset in file*/
-  off_t block_size;			/* bytes per read */
   gboolean touch;			/* whether to touch every page */
   gboolean using_mmap;                  /* whether we opened it with mmap */
   gboolean is_regular;                  /* whether it's (symlink to)
                                            a regular file */
-
   GstBuffer *mapbuf;
   size_t mapsize;
-
-  gint need_discont;
-  gboolean need_flush;
 };
 
 struct _GstFileSrcClass {
-  GstElementClass parent_class;
+  GstBaseSrcClass parent_class;
 };
 
 GType gst_filesrc_get_type(void);

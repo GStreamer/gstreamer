@@ -838,6 +838,27 @@ gst_pad_set_getrange_function (GstPad * pad, GstPadGetRangeFunction get)
 }
 
 /**
+ * gst_pad_set_checkgetrange_function:
+ * @pad: a real source #GstPad.
+ * @check: the #GstPadCheckGetRangeFunction to set.
+ *
+ * Sets the given checkgetrange function for the pad. Implement this function on
+ * a pad if you dynamically support getrange based scheduling on the pad.
+ */
+void
+gst_pad_set_checkgetrange_function (GstPad * pad,
+    GstPadCheckGetRangeFunction check)
+{
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SRC);
+
+  GST_RPAD_CHECKGETRANGEFUNC (pad) = check;
+
+  GST_CAT_DEBUG (GST_CAT_PADS, "checkgetrangefunc for %s:%s  set to %s",
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (check));
+}
+
+/**
  * gst_pad_set_event_function:
  * @pad: a real source #GstPad.
  * @event: the #GstPadEventFunction to set.
@@ -2980,11 +3001,11 @@ gst_pad_check_pull_range (GstPad * pad)
   gboolean ret;
   GstPadCheckGetRangeFunction checkgetrangefunc;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK,
-      GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);
 
   GST_LOCK (pad);
+  if (GST_RPAD_DIRECTION (pad) != GST_PAD_SINK)
+    goto wrong_direction;
 
   if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto not_connected;
@@ -2993,33 +3014,31 @@ gst_pad_check_pull_range (GstPad * pad)
   GST_UNLOCK (pad);
 
   /* see note in above function */
-  if (G_UNLIKELY ((checkgetrangefunc = peer->checkgetrangefunc) == NULL))
-    goto no_function;
+  if (G_LIKELY ((checkgetrangefunc = peer->checkgetrangefunc) == NULL)) {
+    ret = GST_RPAD_GETRANGEFUNC (peer) != NULL;
+  } else {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "calling checkgetrangefunc %s of peer pad %s:%s",
+        GST_DEBUG_FUNCPTR_NAME (checkgetrangefunc), GST_DEBUG_PAD_NAME (peer));
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "calling checkgetrangefunc %s of peer pad %s:%s",
-      GST_DEBUG_FUNCPTR_NAME (checkgetrangefunc), GST_DEBUG_PAD_NAME (peer));
-
-  ret = checkgetrangefunc (GST_PAD_CAST (peer));
+    ret = checkgetrangefunc (GST_PAD_CAST (peer));
+  }
 
   gst_object_unref (GST_OBJECT_CAST (peer));
 
   return ret;
 
   /* ERROR recovery here */
-not_connected:
+wrong_direction:
   {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "checkinh pull range, but it was not linked");
     GST_UNLOCK (pad);
     return FALSE;
   }
-no_function:
+not_connected:
   {
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-        ("pad %s:%s checked pull_range but the peer pad %s:%s has no checkgetrangefunction",
-            GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
-    gst_object_unref (GST_OBJECT (peer));
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "checking pull range, but it was not linked");
+    GST_UNLOCK (pad);
     return FALSE;
   }
 }

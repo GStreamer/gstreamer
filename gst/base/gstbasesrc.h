@@ -35,11 +35,20 @@ G_BEGIN_DECLS
 #define GST_IS_BASESRC(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASESRC))
 #define GST_IS_BASESRC_CLASS(obj)  	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASESRC))
 
+typedef enum {
+  GST_BASESRC_STARTED           = GST_ELEMENT_FLAG_LAST,
+
+  GST_BASESRC_FLAG_LAST         = GST_ELEMENT_FLAG_LAST + 2
+} GstFileSrcFlags;
+
+
 typedef struct _GstBaseSrc GstBaseSrc;
 typedef struct _GstBaseSrcClass GstBaseSrcClass;
 
 struct _GstBaseSrc {
   GstElement     element;
+
+  GstPad 	*srcpad;
 
   gint 		 blocksize;
 
@@ -47,7 +56,9 @@ struct _GstBaseSrc {
   gint64	 segment_end;
   gboolean	 segment_loop;
 
+  gboolean       seekable;
   guint64 	 offset;
+  guint64        size;
 };
 
 struct _GstBaseSrcClass {
@@ -61,6 +72,11 @@ struct _GstBaseSrcClass {
 
   void          (*get_times)    (GstBaseSrc *src, GstBuffer *buffer,
                                  GstClockTime *start, GstClockTime *end);
+
+  gboolean      (*get_size)     (GstBaseSrc *src, guint64 *size);
+
+  gboolean      (*is_seekable)  (GstBaseSrc *src);
+  gboolean      (*unlock)       (GstBaseSrc *src);
 
   gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size, 

@@ -484,6 +484,7 @@ void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activ
 void			gst_pad_set_loop_function		(GstPad *pad, GstPadLoopFunction loop);
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_getrange_function		(GstPad *pad, GstPadGetRangeFunction get);
+void			gst_pad_set_checkgetrange_function	(GstPad *pad, GstPadCheckGetRangeFunction check);
 void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
 void			gst_pad_set_event_mask_function		(GstPad *pad, GstPadEventMaskFunction mask_func);
 G_CONST_RETURN GstEventMask*

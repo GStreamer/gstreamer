@@ -33,3 +33,4 @@ GstBaseSrc
   - one sinkpad
   - handles state changes
   - pull/push mode
+  - handles seeking/query
