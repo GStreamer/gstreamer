@@ -214,6 +214,8 @@ gst_real_pad_init (GstRealPad *pad)
   pad->formatsfunc 	= gst_pad_get_formats_default;
   pad->querytypefunc 	= gst_pad_get_query_types_default;
 
+  GST_FLAG_SET (pad, GST_PAD_DISABLED);
+  
   gst_probe_dispatcher_init (&pad->probedisp);
 }
 
@@ -2154,7 +2156,7 @@ gst_ghost_pad_save_thyself (GstPad *pad, xmlNodePtr parent)
 void 
 gst_pad_push (GstPad *pad, GstBuffer *buf) 
 {
-  GstRealPad *peer = GST_RPAD_PEER (pad);
+  GstRealPad *peer;
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
@@ -2163,11 +2165,19 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
   if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), GST_DATA (buf)))
     return;
 
+  peer = GST_RPAD_PEER (pad);
+
   if (!peer) {
     g_warning ("push on pad %s:%s but it is unconnected", 
 	       GST_DEBUG_PAD_NAME (pad));
   }
   else {
+    if (!GST_IS_EVENT (buf) && !GST_PAD_IS_ACTIVE (pad)) {
+      g_warning ("push on pad %s:%s but it is unusable", 
+	         GST_DEBUG_PAD_NAME (pad));
+      return;
+    }
+
     if (peer->chainhandler) {
       if (buf) {
         GST_DEBUG (GST_CAT_DATAFLOW, 
@@ -2207,12 +2217,12 @@ GstBuffer*
 gst_pad_pull (GstPad *pad) 
 {
   GstRealPad *peer;
-
-  peer = GST_RPAD_PEER (pad);
   
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
+
+  peer = GST_RPAD_PEER (pad);
 
   if (!peer) {
     gst_element_error (GST_PAD_PARENT (pad), 
@@ -2976,17 +2986,8 @@ gst_pad_handles_format (GstPad *pad, GstFormat format)
   const GstFormat *formats;
 
   formats = gst_pad_get_formats (pad);
-  if (!formats)
-    return FALSE;
 
-  while (*formats) {
-    if (*formats == format)
-      return TRUE;
-
-    formats++;
-  }
-
-  return FALSE;
+  return gst_formats_contains (formats, format);
 }
 
 static gboolean

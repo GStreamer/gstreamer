@@ -123,6 +123,31 @@ gst_format_get_by_nick (const gchar *nick)
 }
 
 /**
+ * gst_formats_contains:
+ * @formats: The format array to search
+ * @format: the format to find
+ *
+ * See if the given format is inside the format array.
+ *
+ * Returns: TRUE if the format is found inside the array
+ */
+gboolean
+gst_formats_contains (const GstFormat *formats, GstFormat format)
+{
+  if (!formats)
+    return FALSE;
+
+  while (*formats) {
+    if (*formats == format)
+      return TRUE;
+
+    formats++;
+  }
+  return FALSE;
+}
+
+
+/**
  * gst_format_get_details:
  * @format: The format to get details of
  *
