@@ -42,7 +42,7 @@ main (int argc,char *argv[])
 //  cspace = gst_elementfactory_make ("colorspace", "cspace");
   videosink = gst_elementfactory_make ("xvideosink", "videosink");
   if (!videosink) fprintf(stderr,"no dvdec\n"),exit(1);
-  gtk_object_set(GTK_OBJECT(videosink),"width",720,"height",480,NULL);
+  gtk_object_set(GTK_OBJECT(videosink),"width",720,"height",576,NULL);
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(dvdec));
@@ -66,7 +66,7 @@ main (int argc,char *argv[])
   draw = gst_util_get_int_arg (GTK_OBJECT (videosink), "xid"),
 
   gtk_socket = gtk_socket_new ();
-  gtk_widget_set_usize(gtk_socket,720,480);
+  gtk_widget_set_usize(gtk_socket,720,576);
   gtk_widget_show (gtk_socket);
 
   gnome_app_set_contents(GNOME_APP(appwindow), vbox1);

@@ -32,11 +32,28 @@ libtool_version=`libtool --version | sed 's/^.* \([0-9\.]*\) .*$/\1/'`
 libtool_major=`echo $libtool_version | cut -d. -f1`
 libtool_minor=`echo $libtool_version | cut -d. -f2`
 libtool_micro=`echo $libtool_version | cut -d. -f3`
-if [ $libtool_major -lt 1 -o $libtool_minor -lt 3 -o $libtool_micro -lt 5 ];then
-	echo
-	echo "You must have libtool 1.3.5 or greater to compile $package."
-	echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
-	DIE=1
+if [ x$libtool_micro = x ]; then
+	libtool_micro=0
+fi
+if [ $libtool_major -le 1 ]; then
+	if [ $libtool_major -lt 1 ]; then
+		echo
+		echo "You must have libtool 1.3.5 or greater to compile $package."
+		echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
+		DIE=1
+	elif [ $libtool_minor -le 3 ]; then
+		if [ $libtool_minor -lt 3 ]; then
+			echo
+			echo "You must have libtool 1.3.5 or greater to compile $package."
+			echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
+			DIE=1
+		elif [ $libtool_micro -lt 5 ]; then
+			echo
+			echo "You must have libtool 1.3.5 or greater to compile $package."
+			echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
+			DIE=1
+		fi
+	fi
 fi
 
 if test "$DIE" -eq 1; then
