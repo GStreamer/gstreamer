@@ -53,8 +53,8 @@ void cut_start (GstElement *element)
 	ct->tm_hour, ct->tm_min, ct->tm_sec);
   }
   g_print ("DEBUG: cut_start: setting new location to %s\n", buffer);
-  gtk_object_set (G_OBJECT (disksink), "location", buffer, NULL);
-  gtk_object_set (G_OBJECT (disksink), "type", 4, NULL);
+  g_object_set (G_OBJECT (disksink), "location", buffer, NULL);
+  g_object_set (G_OBJECT (disksink), "type", 4, NULL);
 
   gst_element_set_state (main_bin, GST_STATE_PLAYING);
   ++id;
@@ -78,7 +78,7 @@ void cut_stop (GstElement *element)
   gst_element_set_state (main_bin, GST_STATE_PAUSED);
 
   g_print ("DEBUG: cut_stop: setting new location\n");
-  gtk_object_set (G_OBJECT (disksink), "location", "/dev/null", NULL);
+  g_object_set (G_OBJECT (disksink), "location", "/dev/null", NULL);
 
   gst_element_set_state (main_bin, GST_STATE_PLAYING);
   g_print ("stop_cut_signal done\n");
@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
   /* create cutter */
   cutter = gst_elementfactory_make ("cutter", "cutter");
 
-  gtk_object_set (G_OBJECT (cutter), 
+  g_object_set (G_OBJECT (cutter), 
 	"threshold_dB", -40.0, 
 	"runlength", 0.5,
 	NULL);
@@ -126,14 +126,14 @@ int main (int argc, char *argv[])
 
   /* set params */
 
-  gtk_object_set (G_OBJECT (audiosrc), "frequency", 44100, 
+  g_object_set (G_OBJECT (audiosrc), "frequency", 44100, 
                                          "channels", 1,
   					 "format", 16, NULL);
 
   encoder = gst_elementfactory_make ("passthrough", "encoder");
   disksink = gst_elementfactory_make ("afsink", "disk_sink");
 
-  gtk_object_set (G_OBJECT (disksink), "location", "/dev/null", NULL);
+  g_object_set (G_OBJECT (disksink), "location", "/dev/null", NULL);
 
   thread = gst_thread_new ("thread");
   g_assert (thread != NULL);
@@ -168,10 +168,10 @@ int main (int argc, char *argv[])
 
   /* set signal handlers */
   g_print ("setting signal handlers\n");
-  gtk_signal_connect (G_OBJECT(cutter), "cut_start",
-                      GTK_SIGNAL_FUNC(cut_start_signal), NULL);
-  gtk_signal_connect (G_OBJECT(cutter), "cut_stop",
-                      GTK_SIGNAL_FUNC(cut_stop_signal), NULL);
+  g_signal_connectc (G_OBJECT(cutter), "cut_start",
+                     (GCallback)cut_start_signal, NULL, FALSE);
+  g_signal_connectc (G_OBJECT(cutter), "cut_stop",
+                     (GCallback)cut_stop_signal, NULL, FALSE);
 
   /* start playing */
   g_print ("setting to play\n");
