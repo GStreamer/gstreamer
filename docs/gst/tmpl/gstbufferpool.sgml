@@ -35,22 +35,23 @@ the number of memcpy operations.
 
 <!-- ##### USER_FUNCTION GstBufferPoolCreateFunction ##### -->
 <para>
-
+The function called when a buffer has to be created for this pool.
 </para>
 
-@pool: 
-@user_data: 
-@Returns: 
+@pool: the pool from which to create the buffer
+@user_data: any user data
+@Returns: a new buffer from the pool
 
 
 <!-- ##### USER_FUNCTION GstBufferPoolDestroyFunction ##### -->
 <para>
-
+This function will be called when the given buffer has to be returned to
+the pool.
 </para>
 
-@pool: 
-@buffer: 
-@user_data: 
+@pool: the pool to return the buffer to
+@buffer: the buffer to return
+@user_data: any user data
 
 
 <!-- ##### FUNCTION gst_buffer_pool_new ##### -->

@@ -2,11 +2,18 @@
 cothreads
 
 <!-- ##### SECTION Short_Description ##### -->
-
+userspace threads
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+Cothreads are a simple user-space method for switching between
+subtasks.  They're based on setjmp()/longjmp() in their current form.
+</para>
 
+<para>
+Cothreads are used for loop-based elements that pull data instead
+of being fed with data. They can also be used to pull a specific region
+of data out of their src element.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -16,14 +23,14 @@ cothreads
 
 <!-- ##### MACRO COTHREAD_STACKSIZE ##### -->
 <para>
-
+The default stack size of a cothread
 </para>
 
 
 
 <!-- ##### MACRO COTHREAD_MAXTHREADS ##### -->
 <para>
-
+The maximum number of cothreads we are going to support.
 </para>
 
 
@@ -66,10 +73,11 @@ cothreads
 @threads: 
 @nthreads: 
 @current: 
+@data: 
 
 <!-- ##### USER_FUNCTION cothread_func ##### -->
 <para>
-
+the function that will be called when the cothread starts.
 </para>
 
 @argc: 
@@ -79,14 +87,13 @@ cothreads
 
 <!-- ##### MACRO COTHREAD_STARTED ##### -->
 <para>
-
+Indicates the cothread is started
 </para>
 
 
 
 <!-- ##### FUNCTION cothread_init ##### -->
 <para>
-
 </para>
 
 @Returns: 
@@ -126,6 +133,26 @@ cothreads
 </para>
 
 @ctx: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cothread_set_data ##### -->
+<para>
+
+</para>
+
+@thread: 
+@key: 
+@data: 
+
+
+<!-- ##### FUNCTION cothread_get_data ##### -->
+<para>
+
+</para>
+
+@thread: 
+@key: 
 @Returns: 
 
 

@@ -55,6 +55,16 @@ The function that will be called when pulling buffers.
 @pad: the pad to pull
 
 
+<!-- ##### USER_FUNCTION GstPadPullRegionFunction ##### -->
+<para>
+The function that will be called when pulling a region buffer.
+</para>
+
+@pad: the pad to pull
+@offset: the offset of the region to pull
+@size: the size of the region to pull
+
+
 <!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
 <para>
 
@@ -92,7 +102,7 @@ the function that will be called when a QoS message is sent.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_destroy ##### -->
+<!-- ##### MACRO gst_pad_destroy ##### -->
 <para>
 
 </para>
@@ -250,6 +260,17 @@ the function that will be called when a QoS message is sent.
 </para>
 
 @pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_pull_region ##### -->
+<para>
+
+</para>
+
+@pad: 
+@offset: 
+@size: 
 @Returns: 
 
 
