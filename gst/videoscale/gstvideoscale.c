@@ -241,11 +241,13 @@ gst_videoscale_src_link (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
   }
 
+  gst_caps_debug(caps,"ack");
+
   videoscale->format = videoscale_find_by_caps (caps);
+  g_return_val_if_fail(videoscale->format, GST_PAD_LINK_REFUSED);
+
   gst_caps_get_int (caps, "width", &videoscale->to_width);
   gst_caps_get_int (caps, "height", &videoscale->to_height);
-
-  gst_videoscale_setup(videoscale);
 
   GST_DEBUG ("width %d height %d",videoscale->to_width,videoscale->to_height);
 
@@ -283,11 +285,13 @@ gst_videoscale_sink_link (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
   }
 
+
   videoscale->format = videoscale_find_by_caps (caps);
+  gst_caps_debug(caps,"ack");
+  g_return_val_if_fail(videoscale->format, GST_PAD_LINK_REFUSED);
+
   gst_caps_get_int (caps, "width", &videoscale->from_width);
   gst_caps_get_int (caps, "height", &videoscale->from_height);
-
-  gst_videoscale_setup(videoscale);
 
   peercaps = gst_caps_copy(caps);
 
