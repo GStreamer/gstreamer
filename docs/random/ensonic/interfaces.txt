@@ -18,7 +18,7 @@ $Id$
   * GST_TYPE_UI_HINT
     - add hints to generate 'good' looking interfaces to elements
     - API:
-      GList *get_group_list()
+      GList *get_group_list();
     - features
       - grouping of parameters
         - each group has a label and references a list of dparams or properties
@@ -30,8 +30,13 @@ $Id$
   * GST_TYPE_MUSIC_GENERATOR
     - add hints so that application can use a element as an instrument
     - API:
+      // param types
       DParam *get_note_dparam();
       GList *get_trigger_dparams();
+      // -- or
+      DParamType get_dparam_type(DParam *);
+      dparamtype = { NOTE, TRIGGER, OTHER }
+      // voices
       char *get_number_of_voices_property();
       GList *get_global_param_names();
       GList *get_voice_param_names();
