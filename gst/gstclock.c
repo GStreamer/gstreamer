@@ -22,11 +22,12 @@
 
 #include <sys/time.h>
 
-/* #define GST_DEBUG_ENABLED */
 #include "gst_private.h"
-
 #include "gstclock.h"
 #include "gstlog.h"
+#include "gstmemchunk.h"
+
+/* #define GST_WITH_ALLOC_TRACE */
 #include "gstmemchunk.h"
 
 #define DEFAULT_MAX_DIFF	(2 * GST_SECOND)
@@ -37,10 +38,13 @@ enum {
   ARG_MAX_DIFF,
 };
 
-static GstMemChunk *_gst_clock_entries_chunk;
+static GstMemChunk   *_gst_clock_entries_chunk;
+static GstAllocTrace *_gst_clock_entry_trace;
 
 static void		gst_clock_class_init		(GstClockClass *klass);
 static void		gst_clock_init			(GstClock *clock);
+static void 		gst_clock_dispose 		(GObject *object);
+
 static void             gst_clock_set_property		(GObject *object, guint prop_id, 
 							 const GValue *value, GParamSpec *pspec);
 static void             gst_clock_get_property		(GObject *object, guint prop_id, 
@@ -51,9 +55,6 @@ static void		gst_clock_update_stats		(GstClock *clock);
 static GstObjectClass *parent_class = NULL;
 /* static guint gst_clock_signals[LAST_SIGNAL] = { 0 }; */
 
-static GMutex *_gst_clock_mutex;
-static GCond  *_gst_clock_cond;
-
 static GstClockID
 gst_clock_entry_new (GstClock *clock, GstClockTime time, 
 		     GstClockTime interval, GstClockEntryType type)
@@ -61,6 +62,7 @@ gst_clock_entry_new (GstClock *clock, GstClockTime time,
   GstClockEntry *entry;
 
   entry = gst_mem_chunk_alloc (_gst_clock_entries_chunk);
+  gst_alloc_trace_new (_gst_clock_entry_trace, entry);
 
   entry->clock = clock;
   entry->time = time;
@@ -281,6 +283,7 @@ gst_clock_id_free (GstClockID id)
 {
   g_return_if_fail (id != NULL);
 
+  gst_alloc_trace_free (_gst_clock_entry_trace, id);
   gst_mem_chunk_free (_gst_clock_entries_chunk, id);
 }
 
@@ -354,9 +357,9 @@ gst_clock_class_init (GstClockClass *klass)
                      sizeof (GstClockEntry), sizeof (GstClockEntry) * 32,
                      G_ALLOC_AND_FREE);
 
-  _gst_clock_mutex = g_mutex_new ();
-  _gst_clock_cond  = g_cond_new ();
+  _gst_clock_entry_trace = gst_alloc_trace_register (GST_CLOCK_ENTRY_TRACE_NAME);
 
+  gobject_class->dispose      = GST_DEBUG_FUNCPTR (gst_clock_dispose);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_clock_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_clock_get_property);
 
@@ -383,6 +386,17 @@ gst_clock_init (GstClock *clock)
 
   clock->active_mutex = g_mutex_new ();
   clock->active_cond = g_cond_new ();
+}
+
+static void
+gst_clock_dispose (GObject *object)
+{
+  GstClock *clock = GST_CLOCK (object);
+
+  g_mutex_free (clock->active_mutex);
+  g_cond_free (clock->active_cond);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /**
@@ -633,7 +647,7 @@ gst_clock_get_time (GstClock *clock)
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
 
   if (!clock->active) {
-    /* clock is not activen return previous time */
+    /* clock is not active return previous time */
     ret = clock->last_time;
   }
   else {
