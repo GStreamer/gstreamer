@@ -39,6 +39,23 @@ GST_DEBUG_CATEGORY (jpegenc_debug);
 
 #define JPEG_DEFAULT_QUALITY 85
 
+/* These macros are adapted from videotestsrc.c 
+ *  and/or gst-plugins/gst/games/gstvideoimage.c */
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
+
+/* I420 */
+#define I420_Y_ROWSTRIDE(width) (ROUND_UP_4(width))
+#define I420_U_ROWSTRIDE(width) (ROUND_UP_8(width)/2)
+#define I420_V_ROWSTRIDE(width) ((ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
+
+#define I420_Y_OFFSET(w,h) (0)
+#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*ROUND_UP_2(h)))
+#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
+#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
 /* JpegEnc signals and args */
 enum
 {
@@ -291,7 +308,6 @@ gst_jpegenc_link (GstPad * pad, const GstCaps * caps)
 static void
 gst_jpegenc_resync (GstJpegEnc * jpegenc)
 {
-  guint size = 0;
   gint width, height;
 
   GST_DEBUG ("gst_jpegenc_resync: resync");
@@ -311,14 +327,14 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
 #if 0
   switch (jpegenc->format) {
     case GST_COLORSPACE_RGB24:
-      size = 3;
+      jpegenc->bufsize = jpegenc->width * jpegenc->height * 3;
       GST_DEBUG ("gst_jpegenc_resync: setting format to RGB24");
       jpegenc->cinfo.in_color_space = JCS_RGB;
       jpegenc->cinfo.raw_data_in = FALSE;
       break;
     case GST_COLORSPACE_YUV420P:
 #endif
-      size = 2;
+      jpegenc->bufsize = I420_SIZE (jpegenc->width, jpegenc->height);
       jpegenc->cinfo.raw_data_in = TRUE;
       jpegenc->cinfo.in_color_space = JCS_YCbCr;
       GST_DEBUG ("gst_jpegenc_resync: setting format to YUV420P");
@@ -343,12 +359,11 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
       break;
     default:
       printf ("gst_jpegenc_resync: unsupported colorspace, using RGB\n");
-      size = 3;
+      jpegenc->bufsize = jpegenc->width * jpegenc->height * 3;
       jpegenc->cinfo.in_color_space = JCS_RGB;
       break;
   }
 #endif
-  jpegenc->bufsize = jpegenc->width * jpegenc->height * size;
 
   jpeg_suppress_tables (&jpegenc->cinfo, TRUE);
   //jpeg_suppress_tables(&jpegenc->cinfo, FALSE);
@@ -367,7 +382,7 @@ gst_jpegenc_chain (GstPad * pad, GstData * _data)
   GstBuffer *outbuf;
 
 /*  GstMeta *meta; */
-  guint height, width, width2;
+  guint height, width;
   guchar *base[3];
   gint i, j, k;
 
@@ -394,9 +409,9 @@ gst_jpegenc_chain (GstPad * pad, GstData * _data)
   width = jpegenc->width;
   height = jpegenc->height;
 
-  base[0] = data;
-  base[1] = base[0] + width * height;
-  base[2] = base[1] + width * height / 4;
+  base[0] = data + I420_Y_OFFSET (width, height);
+  base[1] = data + I420_U_OFFSET (width, height);
+  base[2] = data + I420_V_OFFSET (width, height);
 
   jpegenc->jdest.next_output_byte = outdata;
   jpegenc->jdest.free_in_buffer = outsize;
@@ -405,22 +420,23 @@ gst_jpegenc_chain (GstPad * pad, GstData * _data)
   jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
   jpeg_start_compress (&jpegenc->cinfo, TRUE);
 
-  width2 = width >> 1;
   GST_DEBUG ("gst_jpegdec_chain: compressing");
 
   for (i = 0; i < height; i += 2 * DCTSIZE) {
-    for (j = 0, k = 0; j < 2 * DCTSIZE; j += 2, k++) {
+    /*g_print ("next scanline: %d\n", jpegenc->cinfo.next_scanline); */
+    for (j = 0, k = 0; j < (2 * DCTSIZE); j += 2, k++) {
       jpegenc->line[0][j] = base[0];
-      base[0] += width;
+      base[0] += I420_Y_ROWSTRIDE (width);
       jpegenc->line[0][j + 1] = base[0];
-      base[0] += width;
+      base[0] += I420_Y_ROWSTRIDE (width);
       jpegenc->line[1][k] = base[1];
-      base[1] += width2;
+      base[1] += I420_U_ROWSTRIDE (width);
       jpegenc->line[2][k] = base[2];
-      base[2] += width2;
+      base[2] += I420_V_ROWSTRIDE (width);
     }
     jpeg_write_raw_data (&jpegenc->cinfo, jpegenc->line, 2 * DCTSIZE);
   }
+
   jpeg_finish_compress (&jpegenc->cinfo);
   GST_DEBUG ("gst_jpegdec_chain: compressing done");
 

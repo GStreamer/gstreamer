@@ -37,18 +37,24 @@ GstElementDetails gst_jpegdec_details = {
 GST_DEBUG_CATEGORY (jpegdec_debug);
 #define GST_CAT_DEFAULT jpegdec_debug
 
-/* JpegDec signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
-enum
-{
-  ARG_0
-      /* FILL ME */
-};
+/* These macros are adapted from videotestsrc.c 
+ *  and/or gst-plugins/gst/games/gstvideoimage.c */
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
+
+/* I420 */
+#define I420_Y_ROWSTRIDE(width) (ROUND_UP_4(width))
+#define I420_U_ROWSTRIDE(width) (ROUND_UP_8(width)/2)
+#define I420_V_ROWSTRIDE(width) ((ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
+
+#define I420_Y_OFFSET(w,h) (0)
+#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*ROUND_UP_2(h)))
+#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
+#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+
 
 static void gst_jpegdec_base_init (gpointer g_class);
 static void gst_jpegdec_class_init (GstJpegDec * klass);
@@ -375,7 +381,7 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
   GstBuffer *outbuf;
 
   /*GstMeta *meta; */
-  gint width, height, width2;
+  gint width, height;
   guchar *base[3];
   gint i, j, k;
   gint r_h, r_v;
@@ -443,7 +449,7 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
   /* FIXME: someone needs to do the work to figure out how to correctly
    * calculate an output size that takes into account everything libjpeg
    * needs, like padding for DCT size and so on.  */
-  outsize = width * height + width * height / 2;
+  outsize = I420_SIZE (width, height);
   outbuf = gst_pad_alloc_buffer (jpegdec->srcpad, GST_BUFFER_OFFSET_NONE,
       outsize);
   outdata = GST_BUFFER_DATA (outbuf);
@@ -453,28 +459,25 @@ gst_jpegdec_chain (GstPad * pad, GstData * _data)
       height, outsize);
 
   /* mind the swap, jpeglib outputs blue chroma first */
-  /* FIXME: this needs stride love */
-  base[0] = outdata;
-  base[1] = base[0] + width * height;
-  base[2] = base[1] + width * height / 4;
-
-  width2 = width >> 1;
+  base[0] = outdata + I420_Y_OFFSET (width, height);
+  base[1] = outdata + I420_U_OFFSET (width, height);
+  base[2] = outdata + I420_V_OFFSET (width, height);
 
   GST_LOG_OBJECT (jpegdec, "decompressing %u",
       jpegdec->cinfo.rec_outbuf_height);
   for (i = 0; i < height; i += r_v * DCTSIZE) {
     for (j = 0, k = 0; j < (r_v * DCTSIZE); j += r_v, k++) {
       jpegdec->line[0][j] = base[0];
-      base[0] += width;
+      base[0] += I420_Y_ROWSTRIDE (width);
       if (r_v == 2) {
         jpegdec->line[0][j + 1] = base[0];
-        base[0] += width;
+        base[0] += I420_Y_ROWSTRIDE (width);
       }
       jpegdec->line[1][k] = base[1];
       jpegdec->line[2][k] = base[2];
       if (r_v == 2 || k & 1) {
-        base[1] += width2;
-        base[2] += width2;
+        base[1] += I420_U_ROWSTRIDE (width);
+        base[2] += I420_V_ROWSTRIDE (width);
       }
     }
     /*g_print ("%d\n", jpegdec->cinfo.output_scanline); */
