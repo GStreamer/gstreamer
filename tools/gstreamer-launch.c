@@ -113,6 +113,8 @@ main(int argc, char *argv[])
   gboolean run_pipeline = TRUE;
   gchar *savefile = "";
 
+  free (malloc (8)); /* -lefence */
+
   gst_init (&argc, &argv);
 
   if (argc >= 3 && !strcmp(argv[1], "-o")) {

@@ -1,5 +1,21 @@
 2001-12-14  Michael Meeks  <michael@ximian.com>
 
+        * plugins/audiofile/gstafsrc.c (gst_afsrc_class_init): upd.
+
+        * plugins/gnomevfs/gnomevfssrc.c (gst_gnomevfssrc_class_init):
+        kill broken mess for install_std_props.
+
+        * plugins/gnomevfs/gnomevfssink.c
+        (gst_gnomevfssink_class_init): upd.
+
+        * tools/gstreamer-launch.c (main): add efence hook.
+
+        * gst/elements/gstfilesrc.c (gst_filesrc_get): use
+        a volatile pointer, don't write to the buffer.
+
+        * gst/gstelement.c (gst_element_populate_std_props):
+        add debug & robustness.
+
         * gst/gstelement.c (gst_element_populate_std_props):
         add debug & robustness.
 
