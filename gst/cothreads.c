@@ -181,7 +181,12 @@ cothread_main(cothread_context *ctx)
   return ctx->threads[0];
 }
 
-void
+/**
+ * cothread_current)main:
+ *
+ * Returns: the #cothread_state of the main (0th) thread in the current pthread
+ */
+cothread_state*
 cothread_current_main(void)
 {
   cothread_context *ctx = pthread_getspecific(_cothread_key);
