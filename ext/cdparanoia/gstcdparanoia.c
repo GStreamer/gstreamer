@@ -318,7 +318,7 @@ cdparanoia_init (CDParanoia * cdparanoia)
   cdparanoia->abort_on_skip = FALSE;
 
   cdparanoia->total_seconds = 0;
-  cdparanoia->discont_pending = FALSE;
+  cdparanoia->discont_sent = FALSE;
 }
 
 
@@ -476,13 +476,27 @@ cdparanoia_get (GstPad * pad)
     gint64 timestamp;
     GstFormat format;
 
-    /* read a sector */
-    cdda_buf = paranoia_read (src->p, cdparanoia_callback);
-
     /* convert the sequence sector number to a timestamp */
     format = GST_FORMAT_TIME;
     timestamp = 0LL;
-    gst_pad_convert (src->srcpad, sector_format, src->seq, &format, &timestamp);
+    gst_pad_convert (src->srcpad, sector_format, src->cur_sector, &format,
+        &timestamp);
+
+    if (!src->discont_sent && src->prev_sec != src->cur_sector) {
+      GstEvent *discont_ev;
+
+      discont_ev =
+          gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, timestamp,
+          GST_FORMAT_UNDEFINED);
+
+      src->discont_sent = TRUE;
+      return GST_DATA (discont_ev);
+    }
+
+    src->discont_sent = FALSE;
+
+    /* read a sector */
+    cdda_buf = paranoia_read (src->p, cdparanoia_callback);
 
     /* have to copy the buffer for now since we don't own it... */
     /* FIXME must ask monty about allowing ownership transfer */
@@ -492,7 +506,7 @@ cdparanoia_get (GstPad * pad)
 
     /* update current sector */
     src->cur_sector++;
-    src->seq++;
+    src->prev_sec = src->cur_sector;
   }
 
   /* we're done, push the buffer off now */
@@ -710,6 +724,7 @@ cdparanoia_open (CDParanoia * src)
   }
 
   src->cur_sector = src->first_sector;
+  src->prev_sec = src->cur_sector;
   paranoia_seek (src->p, src->cur_sector, SEEK_SET);
   GST_DEBUG ("successfully seek'd to beginning of disk");
 
@@ -757,7 +772,6 @@ cdparanoia_change_state (GstElement * element)
         g_warning ("cdparanoia: failed opening cd");
         return GST_STATE_FAILURE;
       }
-      cdparanoia->seq = 0;
       break;
     case GST_STATE_READY_TO_PAUSED:
       break;

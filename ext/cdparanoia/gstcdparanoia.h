@@ -102,8 +102,8 @@ struct _CDParanoia {
   gint64 offsets[MAXTRK];
   gint64 total_seconds;
 
-  gint seq;
-  gboolean discont_pending;
+  gint prev_sec;
+  gboolean discont_sent;
 };
 
 struct _CDParanoiaClass {
