@@ -84,6 +84,7 @@ IGNORE_HFILES= \
 	gstidentity.h \
 	gstmd5sink.h \
 	gstmultifilesrc.h \
+	gstmultifdsink.h \
 	gstpipefilter.h \
 	gstshaper.h \
 	gststatistics.h \

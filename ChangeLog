@@ -1,5 +1,10 @@
 2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/Makefile.am:
+	  fix docs build
+
+2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/POTFILES.in:
 	* po/af.po:
 	* po/az.po:
