@@ -49,8 +49,8 @@ enum
   ARG_0,
   ARG_SILENT,
   ARG_NUM_PADS,
-  ARG_LAST_MESSAGE,
-  /* FILL ME */
+  ARG_LAST_MESSAGE
+      /* FILL ME */
 };
 
 GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",

@@ -50,8 +50,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_MD5,
-  /* FILL ME */
+  ARG_MD5
+      /* FILL ME */
 };
 
 GstStaticPadTemplate md5_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

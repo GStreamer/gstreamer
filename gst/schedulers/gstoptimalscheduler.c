@@ -102,7 +102,7 @@ typedef enum
 {
   GST_OPT_SCHEDULER_CHAIN_DIRTY = (1 << 1),
   GST_OPT_SCHEDULER_CHAIN_DISABLED = (1 << 2),
-  GST_OPT_SCHEDULER_CHAIN_RUNNING = (1 << 3),
+  GST_OPT_SCHEDULER_CHAIN_RUNNING = (1 << 3)
 }
 GstOptSchedulerChainFlags;
 
@@ -139,7 +139,7 @@ typedef enum
   GST_OPT_SCHEDULER_GROUP_DISABLED = (1 << 3),  /* this group is disabled */
   GST_OPT_SCHEDULER_GROUP_RUNNING = (1 << 4),   /* this group is running */
   GST_OPT_SCHEDULER_GROUP_SCHEDULABLE = (1 << 5),       /* this group is schedulable */
-  GST_OPT_SCHEDULER_GROUP_VISITED = (1 << 6),   /* this group is visited when finding links */
+  GST_OPT_SCHEDULER_GROUP_VISITED = (1 << 6)    /* this group is visited when finding links */
 }
 GstOptSchedulerGroupFlags;
 
@@ -147,7 +147,7 @@ typedef enum
 {
   GST_OPT_SCHEDULER_GROUP_UNKNOWN = 3,
   GST_OPT_SCHEDULER_GROUP_GET = 1,
-  GST_OPT_SCHEDULER_GROUP_LOOP = 2,
+  GST_OPT_SCHEDULER_GROUP_LOOP = 2
 }
 GstOptSchedulerGroupType;
 
@@ -285,7 +285,7 @@ typedef struct _GstOptSchedulerCtx GstOptSchedulerCtx;
 
 typedef enum
 {
-  GST_OPT_SCHEDULER_CTX_DISABLED = (1 << 1),    /* the element is disabled */
+  GST_OPT_SCHEDULER_CTX_DISABLED = (1 << 1)     /* the element is disabled */
 }
 GstOptSchedulerCtxFlags;
 
@@ -304,7 +304,7 @@ enum
 {
   ARG_0,
   ARG_ITERATIONS,
-  ARG_MAX_RECURSION,
+  ARG_MAX_RECURSION
 };
 
 static void gst_opt_scheduler_class_init (GstOptSchedulerClass * klass);
@@ -1701,7 +1701,7 @@ typedef enum
   GST_OPT_GET_TO_LOOP,
   GST_OPT_CHAIN_TO_CHAIN,
   GST_OPT_CHAIN_TO_LOOP,
-  GST_OPT_LOOP_TO_LOOP,
+  GST_OPT_LOOP_TO_LOOP
 }
 LinkType;
 

@@ -71,7 +71,7 @@ enum
   ARG_SILENT,
   ARG_DUMP,
   ARG_PARENTSIZE,
-  ARG_LAST_MESSAGE,
+  ARG_LAST_MESSAGE
 };
 
 GstStaticPadTemplate fakesrc_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",

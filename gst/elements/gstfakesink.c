@@ -54,7 +54,7 @@ enum
   ARG_DUMP,
   ARG_SYNC,
   ARG_SIGNAL_HANDOFFS,
-  ARG_LAST_MESSAGE,
+  ARG_LAST_MESSAGE
 };
 
 GstStaticPadTemplate fakesink_sink_template = GST_STATIC_PAD_TEMPLATE ("sink%d",

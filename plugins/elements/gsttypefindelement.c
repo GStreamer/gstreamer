@@ -84,7 +84,7 @@ enum
 enum
 {
   MODE_NORMAL,                  /* act as identity */
-  MODE_TYPEFIND,                /* do typefinding */
+  MODE_TYPEFIND                 /* do typefinding */
 };
 
 

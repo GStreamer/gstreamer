@@ -48,8 +48,8 @@ enum
   ARG_NUM_PADS,
   ARG_SILENT,
   ARG_SCHED,
-  ARG_LAST_MESSAGE,
-  /* FILL ME */
+  ARG_LAST_MESSAGE
+      /* FILL ME */
 };
 
 GstStaticPadTemplate aggregator_src_template =

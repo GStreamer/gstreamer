@@ -50,7 +50,7 @@ enum
   ARG_0,
   ARG_POLICY,
   ARG_SILENT,
-  ARG_LAST_MESSAGE,
+  ARG_LAST_MESSAGE
 };
 
 typedef struct
