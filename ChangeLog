@@ -1,3 +1,7 @@
+2002-01-03 Rodney Dawes  <dobey@free.fr>
+
+	* gstreamer.spec.in: Fixed the missing plug-ins problem
+
 2001-12-29 Rodney Dawes  <dobey@free.fr>
 
 	* gstreamer.spec.in: Fixed up for the splitification

@@ -29,6 +29,7 @@ plugins.
 %{_bindir}/gstreamer-register
 %{_libdir}/libgst.so.*
 %{_libdir}/gst/*.so.*
+%{_libdir}/gst/*.so
 %{_mandir}/man1/gstreamer-complete.*
 %{_mandir}/man1/gstreamer-compprep.*
 %{_mandir}/man1/gstreamer-inspect.*
