@@ -230,6 +230,28 @@ void gst_pad_chain(GstPad *pad) {
     (pad->chain)(pad,pad->bufpen);
 }
 
+void gst_pad_disconnect(GstPad *srcpad,GstPad *sinkpad) {
+
+  /* generic checks */
+  g_return_if_fail(srcpad != NULL);
+  g_return_if_fail(GST_IS_PAD(srcpad));
+  g_return_if_fail(srcpad->peer != NULL);
+  g_return_if_fail(sinkpad != NULL);
+  g_return_if_fail(GST_IS_PAD(sinkpad));
+  g_return_if_fail(sinkpad->peer != NULL);
+
+  g_return_if_fail((srcpad->direction == GST_PAD_SRC) &&
+                   (sinkpad->direction == GST_PAD_SINK));
+
+  /* first clear peers */
+  srcpad->peer = NULL;
+  sinkpad->peer = NULL;
+
+  srcpad->chain = NULL;
+  srcpad->pull = NULL;
+
+}
+
 void gst_pad_connect(GstPad *srcpad,GstPad *sinkpad) {
   GstPad *temppad;
 
@@ -273,7 +295,7 @@ void gst_pad_set_parent(GstPad *pad,GstObject *parent) {
   g_return_if_fail(GTK_IS_OBJECT(parent));
   g_return_if_fail((gpointer)pad != (gpointer)parent);
 
-	//g_print("set parent %s\n", gst_element_get_name(parent));
+  //g_print("set parent %s\n", gst_element_get_name(parent));
 
   pad->parent = parent;
 }

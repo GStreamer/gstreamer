@@ -150,6 +150,10 @@ static void gst_disksrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
     case ARG_BYTESPERREAD:
       src->bytes_per_read = GTK_VALUE_INT(*arg);
       break;
+    case ARG_OFFSET:
+      src->curoffset = GTK_VALUE_INT(*arg);
+      lseek(src->fd,src->curoffset, SEEK_SET);
+      break;
     default:
       break;
   }

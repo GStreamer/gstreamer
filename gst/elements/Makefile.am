@@ -23,6 +23,7 @@ libgstelements_la_SOURCES =	\
 	gstfdsink.c		\
 	gstpipefilter.c		\
 	gstqueue.c		\
+	gsttypefind.c		\
 	gstsinesrc.c
 
 noinst_HEADERS =		\
@@ -38,6 +39,7 @@ noinst_HEADERS =		\
 	gstfdsink.h		\
 	gstpipefilter.h		\
 	gstqueue.h		\
+	gsttypefind.h		\
 	gstsinesrc.h
 
 CFLAGS += -O2 -Wall

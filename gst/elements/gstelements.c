@@ -35,6 +35,7 @@
 #include <gstpipefilter.h>
 #include <gstqueue.h>
 #include <gstsinesrc.h>
+#include <gsttypefind.h>
 
 
 struct _elements_entry {
@@ -59,6 +60,7 @@ struct _elements_entry _elements[] = {
   { "pipefilter", gst_pipefilter_get_type, &gst_pipefilter_details },
   { "queue", gst_queue_get_type, &gst_queue_details },
   { "sinesrc", gst_sinesrc_get_type, &gst_sinesrc_details },
+  { "typefind", gst_typefind_get_type, &gst_typefind_details },
   { NULL, 0 },
 };
 

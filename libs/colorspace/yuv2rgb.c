@@ -26,6 +26,8 @@
 #include <gst/gst.h>
 #include <gstcolorspace.h>
 
+//#undef HAVE_LIBMMX
+
 #ifdef HAVE_LIBMMX
 #include "mmx.h"
 #endif
@@ -85,8 +87,11 @@ GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace *space
         case GST_COLORSPACE_BGR32:
           space->color_tables = gst_colorspace_init_yuv(32, 0xFF0000, 0x00FF00, 0x0000FF);
           space->outsize = space->width*space->height*4;
-          //return gst_colorspace_yuv420P_to_bgr32;
+#ifdef HAVE_LIBMMX
           return gst_colorspace_yuv420P_to_bgr32_mmx;
+#else
+          return gst_colorspace_yuv420P_to_bgr32;
+#endif
         case GST_COLORSPACE_RGB32:
           space->color_tables = gst_colorspace_init_yuv(32, 0x0000FF, 0x00FF00, 0xFF0000);
           space->outsize = space->width*space->height*4;
@@ -107,8 +112,14 @@ GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace *space
           space->outsize = space->width*space->height*2;
           return gst_colorspace_yuv420P_to_rgb16;
         case GST_COLORSPACE_BGR565:
+          g_return_val_if_fail(space->visual != NULL, NULL);
+          space->color_tables = gst_colorspace_init_yuv(16, space->visual->red_mask, space->visual->green_mask, space->visual->blue_mask);
           space->outsize = space->width*space->height*2;
+#ifdef HAVE_LIBMMX
           return gst_colorspace_yuv420P_to_bgr16_mmx;
+#else
+          return gst_colorspace_yuv420P_to_rgb16;
+#endif
 	default:
 	  break;
       }
@@ -447,7 +458,7 @@ gst_colorspace_init_yuv(long depth, long red_mask, long green_mask, long blue_ma
  */
 
 static void
-gst_colorspace_yuv_to_rgb16(tables, lum, cr, cb, out, rows, cols)
+gst_colorspace_yuv_to_rgb16(tables, lum, cb, cr, out, rows, cols)
   GstColorSpaceYUVTables *tables;
   unsigned char *lum;
   unsigned char *cr;
@@ -510,7 +521,7 @@ gst_colorspace_yuv_to_rgb16(tables, lum, cr, cb, out, rows, cols)
 }
 
 static void
-gst_colorspace_yuv_to_rgb24(tables, lum, cr, cb, out, rows, cols)
+gst_colorspace_yuv_to_rgb24(tables, lum, cb, cr, out, rows, cols)
   GstColorSpaceYUVTables *tables;
   unsigned char *lum;
   unsigned char *cr;
@@ -595,7 +606,7 @@ gst_colorspace_yuv_to_rgb24(tables, lum, cr, cb, out, rows, cols)
  */
 
 static void
-gst_colorspace_yuv_to_rgb32(tables, lum, cr, cb, out, rows, cols)
+gst_colorspace_yuv_to_rgb32(tables, lum, cb, cr, out, rows, cols)
   GstColorSpaceYUVTables *tables;
   unsigned char *lum;
   unsigned char *cr;
@@ -692,9 +703,9 @@ gst_colorspace_yuv_to_bgr16_mmx(tables, lum, cr, cb, out, rows, cols)
     for (y=rows>>1; y; y--) {
       for (x=cols8; x; x--) {
 	
-        movd_m2r(*(mmx_t *)cb, mm0);		// 4 Cb     0  0  0  0 u3 u2 u1 u0
+        movd_m2r(*(mmx_t *)cr, mm0);		// 4 Cr     0  0  0  0 u3 u2 u1 u0
         pxor_r2r(mm7, mm7);
-        movd_m2r(*(mmx_t *)cr, mm1);		// 4 Cr     0  0  0  0 v3 v2 v1 v0
+        movd_m2r(*(mmx_t *)cb, mm1);		// 4 Cb     0  0  0  0 v3 v2 v1 v0
         punpcklbw_r2r(mm7, mm0);		// 4 W cb   0 u3  0 u2  0 u1  0 u0
         punpcklbw_r2r(mm7, mm1);		// 4 W cr   0 v3  0 v2  0 v1  0 v0
         psubw_m2r(MMX_80w, mm0);

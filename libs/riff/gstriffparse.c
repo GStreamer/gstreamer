@@ -67,7 +67,7 @@ gint gst_riff_parser_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
 
     buf = gst_buffer_new();
     GST_BUFFER_DATA(buf) = riff->dataleft;
-    GST_BUFFER_SIZE(buf) = newsize;
+    size = GST_BUFFER_SIZE(buf) = newsize;
     off -= riff->dataleft_size;
     //last -= riff->dataleft_size;
     riff->dataleft = NULL;

@@ -44,7 +44,7 @@ GstElementDetails gst_audiosink_details;
 #define GST_IS_AUDIOSINK(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_AUDIOSINK))
 #define GST_IS_AUDIOSINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSINK))
 
 typedef struct _GstAudioSink GstAudioSink;
 typedef struct _GstAudioSinkClass GstAudioSinkClass;

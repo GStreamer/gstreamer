@@ -29,7 +29,7 @@ int main(int argc,char *argv[]) {
   compress = gst_elementfactory_create(compressfactory,"jpegenc");
   encoderfactory = gst_elementfactory_find("aviencoder");
   encoder = gst_elementfactory_create(encoderfactory,"aviencoder");
-  gtk_object_set(GTK_OBJECT(videosrc),"width",384,"height",288,NULL);
+  gtk_object_set(GTK_OBJECT(videosrc),"width",320,"height",240,NULL);
   gtk_object_set(GTK_OBJECT(videosrc),"format",9,NULL);
 
   gtk_object_set(GTK_OBJECT(encoder),"video","00:I420",NULL);

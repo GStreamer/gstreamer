@@ -110,6 +110,7 @@ GList *gst_pad_get_ghost_parents(GstPad *pad);
 GstPad *gst_pad_get_peer(GstPad *pad);
 
 void gst_pad_connect(GstPad *srcpad,GstPad *sinkpad);
+void gst_pad_disconnect(GstPad *srcpad,GstPad *sinkpad);
 
 void gst_pad_push(GstPad *pad,GstBuffer *buffer);
 GstBuffer *gst_pad_pull(GstPad *pad);

@@ -1,5 +1,5 @@
 
-#define BUFFER 1
+#define BUFFER 20
 #define VIDEO_DECODER "mpeg_play"
 
 #include <gnome.h>

@@ -147,20 +147,22 @@ static GstBuffer *gst_queue_pull(GstPad *pad) {
 void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   GstQueue *queue;
   gboolean tosignal = FALSE;
+  guchar *name;
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
 
   queue = GST_QUEUE(pad->parent);
+  name = gst_element_get_name(GST_ELEMENT(queue));
 
   /* we have to lock the queue since we span threads */
   
   GST_LOCK(queue);
-  DEBUG("queue: chain %d %p\n", queue->level_buffers, buf);
+  DEBUG("queue: %s: chain %d %p\n", name, queue->level_buffers, buf);
 
   if (queue->level_buffers >= queue->max_buffers) {
-    DEBUG("queue: waiting %d\n", queue->level_buffers);
+    DEBUG("queue: %s waiting %d\n", name, queue->level_buffers);
     GST_UNLOCK(queue);
     while (queue->level_buffers >= queue->max_buffers) {
       g_mutex_lock(queue->fulllock);
@@ -169,7 +171,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
       g_mutex_unlock(queue->fulllock);
     }
     GST_LOCK(queue);
-    DEBUG("queue: waiting done %d\n", queue->level_buffers);
+    DEBUG("queue: %s waiting done %d\n", name, queue->level_buffers);
   }
   
 
@@ -191,7 +193,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   queue->level_buffers++;
 
   /* we can unlock now */
-  DEBUG("queue: chain %d end\n", queue->level_buffers);
+  DEBUG("queue: %s chain %d end\n", name, queue->level_buffers);
   GST_UNLOCK(queue);
 
   if (tosignal) {
@@ -207,10 +209,13 @@ void gst_queue_push(GstConnection *connection) {
   GstBuffer *buf = NULL;
   GList *front;
   gboolean tosignal = FALSE;
+  guchar *name;
+  
+  name = gst_element_get_name(GST_ELEMENT(queue));
 
   /* have to lock for thread-safety */
   GST_LOCK(queue);
-  DEBUG("queue: push %d\n", queue->level_buffers);
+  DEBUG("queue: %s push %d\n", name, queue->level_buffers);
 
   if (!queue->level_buffers) {
     GST_UNLOCK(queue);
@@ -238,9 +243,9 @@ void gst_queue_push(GstConnection *connection) {
     g_mutex_unlock(queue->fulllock);
   }
 
-  DEBUG("queue: pushing %d %p\n", queue->level_buffers, buf);
+  DEBUG("queue: %s pushing %d %p\n", name, queue->level_buffers, buf);
   gst_pad_push(queue->srcpad,buf);
-  DEBUG("queue: pushing %d done\n", queue->level_buffers);
+  DEBUG("queue: %s pushing %d done\n", name, queue->level_buffers);
 
   /* unlock now */
 }

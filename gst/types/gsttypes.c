@@ -22,50 +22,12 @@
 #include <gst/gst.h>
 #include <string.h>
 
-gint mp3_typefind(GstBuffer *buf,gpointer *private);
-gint wav_typefind(GstBuffer *buf,gpointer *private);
-
 GstTypeFactory _factories[] = {
   { "audio/raw", ".raw", NULL },
-  { "audio/mpeg audio/mp3", ".mp2 .mp3 .mpa .mpega", mp3_typefind },
-  { "audio/wav", ".wav", wav_typefind },
   { "audio/ac3", ".ac3", NULL },
-  { "image/jpeg", ".jpg .jpeg", NULL },
   { "video/raw image/raw", ".raw", NULL },
-  { "video/mpeg video/mpeg1 video/mpeg-system", ".mpg", NULL },
-  { "video/x-msvideo video/msvideo video/avi", ".avi", NULL },
   { NULL, NULL, NULL },
 };
-
-
-/* check to see if a buffer indicates the presence of an mp3 frame
- * NOTE that this only checks for a potentially valid mp3 frame header
- * and doesn't guarantee that it's a fully valid mp3 audio stream */
-gboolean mp3_typefind(GstBuffer *buf,gpointer *private) {
-  gulong head = GULONG_FROM_BE(*((gulong *)GST_BUFFER_DATA(buf)));
-
-  if ((head & 0xffe00000) != 0xffe00000)
-    return FALSE;
-  if (!((head >> 17) & 3))
-    return FALSE;
-  if (((head >> 12) & 0xf) == 0xf)
-    return FALSE;
-  if (!((head >> 12) & 0xf))
-    return FALSE;
-  if (((head >> 10) & 0x3) == 0x3)
-    return FALSE;
-
-  return TRUE;
-}
-
-gboolean wav_typefind(GstBuffer *buf,gpointer *private) {
-  gulong *data = (gulong *)GST_BUFFER_DATA(buf);
-
-  if (strncmp((char *)data[0], "RIFF", 4)) return FALSE;
-  if (strncmp((char *)data[2], "WAVE", 4)) return FALSE;
-
-  return TRUE;
-}
 
 
 GstPlugin *plugin_init(GModule *module) {
