@@ -236,7 +236,7 @@ gst_spider_request_new_pad (GstElement * element, GstPadTemplate * templ,
   returnpad = gst_element_add_ghost_pad (element, returnpad, padname);
   g_free (padname);
   gst_spider_link_new (identity);
-  GST_DEBUG ("successuflly created requested pad %s:%s",
+  GST_DEBUG ("successfully created requested pad %s:%s",
       GST_DEBUG_PAD_NAME (returnpad));
 
   return returnpad;
@@ -257,10 +257,9 @@ gst_spider_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_FACTORIES:
       list = (GList *) g_value_get_pointer (value);
-      while (list) {
+      for (; list; list = list->next) {
         g_return_if_fail (list->data != NULL);
         g_return_if_fail (GST_IS_ELEMENT_FACTORY (list->data));
-        list = g_list_next (list);
       }
       g_list_free (spider->factories);
       spider->factories = (GList *) g_value_get_pointer (value);
@@ -373,15 +372,14 @@ static GstSpiderConnection *
 gst_spider_link_find (GstSpiderIdentity * src)
 {
   GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (src);
-  GList *list = spider->links;
+  GList *list;
 
-  while (list) {
+  for (list = spider->links; list; list = list->next) {
     GstSpiderConnection *conn = (GstSpiderConnection *) list->data;
 
     if (conn->src == src) {
       return conn;
     }
-    list = g_list_next (list);
   }
   return NULL;
 }
@@ -452,8 +450,6 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
     gst_caps_free (src_caps);
   }
 
-
-
   /* get the direction of our ident */
   if (GST_PAD_PEER (ident->sink)) {
     if (GST_PAD_PEER (ident->src)) {
@@ -475,7 +471,7 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
 
   /* now iterate all possible pads and link when needed */
   padlist = gst_element_get_pad_list (GST_ELEMENT (spider));
-  while (padlist) {
+  for (; padlist; padlist = padlist->next) {
     GstPad *otherpad;
     GstSpiderIdentity *peer;
 
@@ -497,7 +493,6 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
         }
       }
     }
-    padlist = g_list_next (padlist);
   }
 
   ident->plugged = TRUE;
@@ -507,15 +502,13 @@ void
 gst_spider_identity_unplug (GstSpiderIdentity * ident)
 {
   GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (ident);
-  GList *list = spider->links;
+  GList *list;
 
-  while (list) {
+  for (list = spider->links; list; list = list->next) {
     GstSpiderConnection *conn = list->data;
-    GList *cur = list;
 
-    list = g_list_next (list);
     if (conn->src == ident) {
-      g_list_delete_link (spider->links, cur);
+      g_list_delete_link (spider->links, list);
       gst_spider_link_destroy (conn);
     }
   }
@@ -578,7 +571,7 @@ gst_spider_create_and_plug (GstSpiderConnection * conn, GList * plugpath)
       if (element != (GstElement *) conn->src)
         gst_bin_remove (GST_BIN (spider), element);
 
-      while (templs) {
+      for (; templs; templs = templs->next) {
         GstPadTemplate *templ = (GstPadTemplate *) templs->data;
 
         if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC)
@@ -591,14 +584,13 @@ gst_spider_create_and_plug (GstSpiderConnection * conn, GList * plugpath)
           g_list_free (plugpath);
           return GST_PAD_LINK_DELAYED;
         }
-        templs = g_list_next (templs);
       }
       GST_DEBUG ("no chance to link element %s to %s",
           GST_ELEMENT_NAME (conn->current), GST_ELEMENT_NAME (conn->src));
       g_list_free (plugpath);
       return GST_PAD_LINK_REFUSED;
     }
-    GST_DEBUG ("added element %s and attached it to element %s",
+    GST_DEBUG ("coupling %s and %s",
         GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (conn->current));
     gst_spider_link_add (conn, element);
     if (plugpath != NULL)
@@ -621,7 +613,7 @@ gst_spider_find_element_to_plug (GstElement * src, GstElementFactory * fac,
 {
   GList *padlist = GST_ELEMENT_PADS (src);
 
-  while (padlist) {
+  for (; padlist; padlist = padlist->next) {
     GstPad *pad = (GstPad *) GST_PAD_REALIZE (padlist->data);
 
     /* is the pad on the right side and is it linked? */
@@ -635,7 +627,6 @@ gst_spider_find_element_to_plug (GstElement * src, GstElementFactory * fac,
         return element;
       }
     }
-    padlist = g_list_next (padlist);
   }
 
   return NULL;
