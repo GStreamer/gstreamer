@@ -1,3 +1,16 @@
+2004-03-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_get_property),
+	(gst_alsa_open_audio), (gst_alsa_close_audio):
+	* ext/alsa/gstalsa.c:
+	  Don't open the device if we're a mixer (= padless).
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_class_init),
+	(gst_alsa_mixer_init), (gst_alsa_mixer_open),
+	(gst_alsa_mixer_close), (gst_alsa_mixer_change_state):
+	  Open mixer during state change rather than during object
+	  initialization. Also, get a device name. Currently in a somewhat
+	  hackish fashion, but I didn't really find something better.
+
 2004-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* *.c, *.h: run gst-indent
