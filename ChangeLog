@@ -1,3 +1,16 @@
+2004-09-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_getcaps):
+	   Correct caps negotiation
+	* gst/volume/gstvolume.c: (volume_chain_float),
+	(volume_chain_int16):
+	   Modify debug output to be little more informative
+	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),
+	(gst_xvimagesink_xvimage_destroy):
+	  Add XSync calls after detaching from the shared memory segment to
+	  avoid a crash.
+
 2004-09-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),
