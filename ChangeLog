@@ -1,5 +1,17 @@
 2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup),
+	(gst_play_get_length_callback), (gst_play_set_location),
+	(gst_play_seek_to_time), (gst_play_set_data_src),
+	(gst_play_set_video_sink), (gst_play_set_audio_sink),
+	(gst_play_set_visualization), (gst_play_connect_visualization),
+	(gst_play_get_sink_element):
+	- add debugging info
+	- fix looking up sink elements by iterating over complete caps
+	- put everything except for source and autoplugger in a complete bin
+
+2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_drain_audio):
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_flush_one_pad),
 	(gst_alsa_sink_check_event), (gst_alsa_sink_mmap),
