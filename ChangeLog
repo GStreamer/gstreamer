@@ -1,5 +1,11 @@
 2005-02-11  David Schleef  <ds@schleef.org>
 
+	* gst/librfb/Makefile.am: Testing stuff before committing is
+	  for wimps... and people with fast machines.  Fix stupid
+	  mistake.
+
+2005-02-11  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Pull in librfb from my CVS tree, because it is
 	  too small and annoying to be separate.  Move rfbsrc plugin
 	  to gst/.
