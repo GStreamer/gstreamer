@@ -194,7 +194,7 @@ gst_xvidenc_class_init (GstXvidEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_MAXKEYINTERVAL,
       g_param_spec_int ("max_key_interval", "Max. Key Interval",
           "Maximum number of frames between two keyframes",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_BUFSIZE,
       g_param_spec_ulong ("buffer_size", "Buffer Size",
