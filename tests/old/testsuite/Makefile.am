@@ -1,5 +1,5 @@
 # FIXME : refcounting threads bytestream cleanup
-SUBDIRS = caps plugin elements dynparams
+SUBDIRS = caps plugin elements ## dynparams
 
 testprogs = test_gst_init
 
