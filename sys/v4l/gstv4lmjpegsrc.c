@@ -395,6 +395,7 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
       v4lmjpegsrc->init = TRUE;
       if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
         return GST_STATE_FAILURE;
+      break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
       if (!gst_v4lmjpegsrc_capture_start(v4lmjpegsrc))
