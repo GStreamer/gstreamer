@@ -212,7 +212,7 @@ text_type_find (GstBuffer *buf, gpointer private)
   gint i;
 
   for (i=0; i<GST_BUFFER_SIZE (buf); i++) {
-    if (!isascii(*(data+i)))
+    if (!isprint(*(data+i)))
       return NULL;
   }
 
