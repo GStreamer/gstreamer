@@ -1,7 +1,8 @@
 # This directory depends on an x86 computer, so if nasm is present, we're good
 # complain to hadess@hadess.net
+# bufspeed gives warnings, can someone please fix that ?
 if HAVE_NASM
-NASMDEP_DIR=memchunk
+NASMDEP_DIR=memchunk #bufspeed
 else
 NASMDEP_DIR=
 endif
