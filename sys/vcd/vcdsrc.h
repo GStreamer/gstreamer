@@ -21,25 +21,19 @@
 #ifndef __VCDSRC_H__
 #define __VCDSRC_H__
 
-
 #include <gst/gst.h>
-
 #include <linux/cdrom.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define VCD_BYTES_PER_SECTOR 2352
 
 #define GST_TYPE_VCDSRC \
-  (vcdsrc_get_type())
-#define VCDSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VCDSRC,VCDSrc))
-#define VCDSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VCDSRC,VCDSrcClass))
+  (gst_vcdsrc_get_type())
+#define GST_VCDSRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VCDSRC,GstVCDSrc))
+#define GST_VCDSRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VCDSRC,GstVCDSrcClass))
 #define GST_IS_VCDSRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VCDSRC))
 #define GST_IS_VCDSRC_CLASS(obj) \
@@ -50,12 +44,12 @@ typedef enum {
   VCDSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
   VCDSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
-} VCDSrcFlags;
+} GstVCDSrcFlags;
 
-typedef struct _VCDSrc VCDSrc;
-typedef struct _VCDSrcClass VCDSrcClass;
+typedef struct _GstVCDSrc GstVCDSrc;
+typedef struct _GstVCDSrcClass GstVCDSrcClass;
 
-struct _VCDSrc {
+struct _GstVCDSrc {
   GstElement element;
   /* pads */
   GstPad *srcpad;
@@ -75,6 +69,10 @@ struct _VCDSrc {
   gulong trackoffset;
   gulong frameoffset;
 
+  /* bytes offset in next buf */
+  gulong tempoffset;
+  gboolean discont, flush;
+
   gulong curoffset;			/* current offset in file */
   gulong bytes_per_read;		/* bytes per read */
 
@@ -82,15 +80,12 @@ struct _VCDSrc {
   int max_errors;
 };
 
-struct _VCDSrcClass {
+struct _GstVCDSrcClass {
   GstElementClass parent_class;
 };
 
-GType vcdsrc_get_type(void);
+GType gst_vcdsrc_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __VCDSRC_H__ */

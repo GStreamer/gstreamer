@@ -36,13 +36,6 @@
 
 #include <vcdsrc.h>
 
-
-static GstElementDetails vcdsrc_details = GST_ELEMENT_DETAILS ("VCD Source",
-    "Source/File",
-    "Asynchronous read from VCD disk",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
-
 /* VCDSrc signals and args */
 enum
 {
@@ -60,95 +53,147 @@ enum
   ARG_MAX_ERRORS
 };
 
-static void vcdsrc_base_init (gpointer g_class);
-static void vcdsrc_class_init (VCDSrcClass * klass);
-static void vcdsrc_init (VCDSrc * vcdsrc);
-static void vcdsrc_set_property (GObject * object, guint prop_id,
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+GST_DEBUG_CATEGORY_STATIC (gst_vcdsrc_debug);
+#define GST_CAT_DEFAULT gst_vcdsrc_debug
+
+static void gst_vcdsrc_base_init (gpointer g_class);
+static void gst_vcdsrc_class_init (GstVCDSrcClass * klass);
+static void gst_vcdsrc_init (GstVCDSrc * vcdsrc);
+static void gst_vcdsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void vcdsrc_get_property (GObject * object, guint prop_id,
+static void gst_vcdsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstData *vcdsrc_get (GstPad * pad);
+static const GstEventMask *gst_vcdsrc_get_event_mask (GstPad * pad);
+static const GstQueryType *gst_vcdsrc_get_query_types (GstPad * pad);
+static const GstFormat *gst_vcdsrc_get_formats (GstPad * pad);
+static gboolean gst_vcdsrc_srcpad_event (GstPad * pad, GstEvent * event);
+static gboolean gst_vcdsrc_srcpad_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value);
 
-/*static GstBuffer *		vcdsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
-static GstElementStateReturn vcdsrc_change_state (GstElement * element);
+static GstData *gst_vcdsrc_get (GstPad * pad);
+static GstElementStateReturn gst_vcdsrc_change_state (GstElement * element);
+static inline guint64 gst_vcdsrc_msf (GstVCDSrc * vcdsrc, gint track);
+static void gst_vcdsrc_recalculate (GstVCDSrc * vcdsrc);
 
-static void vcdsrc_recalculate (VCDSrc * vcdsrc);
-
+static void gst_vcdsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
 static GstElementClass *parent_class = NULL;
 
 /*static guint vcdsrc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-vcdsrc_get_type (void)
+gst_vcdsrc_get_type (void)
 {
-  static GType vcdsrc_type = 0;
+  static GType gst_vcdsrc_type = 0;
 
-  if (!vcdsrc_type) {
-    static const GTypeInfo vcdsrc_info = {
-      sizeof (VCDSrcClass),
-      vcdsrc_base_init,
+  if (!gst_vcdsrc_type) {
+    static const GTypeInfo gst_vcdsrc_info = {
+      sizeof (GstVCDSrcClass),
+      gst_vcdsrc_base_init,
       NULL,
-      (GClassInitFunc) vcdsrc_class_init,
+      (GClassInitFunc) gst_vcdsrc_class_init,
       NULL,
       NULL,
-      sizeof (VCDSrc),
+      sizeof (GstVCDSrc),
       0,
-      (GInstanceInitFunc) vcdsrc_init,
+      (GInstanceInitFunc) gst_vcdsrc_init,
+    };
+    static const GInterfaceInfo urihandler_info = {
+      gst_vcdsrc_uri_handler_init,
+      NULL,
+      NULL
     };
 
-    vcdsrc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "VCDSrc", &vcdsrc_info, 0);
+    gst_vcdsrc_type =
+        g_type_register_static (GST_TYPE_ELEMENT,
+        "GstVCDSrc", &gst_vcdsrc_info, 0);
+    g_type_add_interface_static (gst_vcdsrc_type,
+        GST_TYPE_URI_HANDLER, &urihandler_info);
   }
-  return vcdsrc_type;
+
+  return gst_vcdsrc_type;
 }
 
 static void
-vcdsrc_base_init (gpointer g_class)
+gst_vcdsrc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  static GstElementDetails gst_vcdsrc_details =
+      GST_ELEMENT_DETAILS ("VCD Source",
+      "Source/File",
+      "Asynchronous read from VCD disk",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
 
-  gst_element_class_set_details (element_class, &vcdsrc_details);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_set_details (element_class, &gst_vcdsrc_details);
 }
-static void
-vcdsrc_class_init (VCDSrcClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+static void
+gst_vcdsrc_class_init (GstVCDSrcClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION, g_param_spec_string ("location", "location", "location", NULL, G_PARAM_READWRITE));    /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TRACK, g_param_spec_int ("track", "track", "track", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BYTESPERREAD, g_param_spec_int ("bytesperread", "bytesperread", "bytesperread", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OFFSET, g_param_spec_int ("offset", "offset", "offset", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_ERRORS,
-      g_param_spec_int ("max-errors", "", "", 0, G_MAXINT, 16,
-          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_LOCATION,
+      g_param_spec_string ("location", "Location",
+          "CD device location", NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_TRACK,
+      g_param_spec_int ("track", "Track",
+          "Track number to play", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_BYTESPERREAD,
+      g_param_spec_int ("bytesperread", "Bytes per read",
+          "Bytes to read per iteration (VCD sector size)",
+          G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_OFFSET,
+      g_param_spec_int ("offset", "Offset", "Offset",
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MAX_ERRORS,
+      g_param_spec_int ("max-errors", "Max. errors",
+          "Maximum number of errors before bailing out",
+          0, G_MAXINT, 16, G_PARAM_READWRITE));
 
-  gobject_class->set_property = vcdsrc_set_property;
-  gobject_class->get_property = vcdsrc_get_property;
+  gobject_class->set_property = gst_vcdsrc_set_property;
+  gobject_class->get_property = gst_vcdsrc_get_property;
 
-  gstelement_class->change_state = vcdsrc_change_state;
+  gstelement_class->change_state = gst_vcdsrc_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (gst_vcdsrc_debug, "vcdsrc", 0,
+      "VideoCD Source element");
 }
 
 static void
-vcdsrc_init (VCDSrc * vcdsrc)
+gst_vcdsrc_init (GstVCDSrc * vcdsrc)
 {
-  vcdsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_pad_set_get_function (vcdsrc->srcpad, vcdsrc_get);
-/*  gst_pad_set_get_region_function (vcdsrc->srcpad, vcdsrc_getregion); */
+  vcdsrc->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
+  gst_pad_set_get_function (vcdsrc->srcpad, gst_vcdsrc_get);
+#if 0
+  gst_pad_set_get_region_function (vcdsrc->srcpad, vcdsrc_getregion);
+#endif
+  gst_pad_set_event_function (vcdsrc->srcpad, gst_vcdsrc_srcpad_event);
+  gst_pad_set_event_mask_function (vcdsrc->srcpad, gst_vcdsrc_get_event_mask);
+  gst_pad_set_query_function (vcdsrc->srcpad, gst_vcdsrc_srcpad_query);
+  gst_pad_set_query_type_function (vcdsrc->srcpad, gst_vcdsrc_get_query_types);
+  gst_pad_set_formats_function (vcdsrc->srcpad, gst_vcdsrc_get_formats);
   gst_element_add_pad (GST_ELEMENT (vcdsrc), vcdsrc->srcpad);
 
   vcdsrc->device = g_strdup ("/dev/cdrom");
-  vcdsrc->track = 2;
+  vcdsrc->track = 1;
   vcdsrc->fd = 0;
   vcdsrc->trackoffset = 0;
   vcdsrc->curoffset = 0;
+  vcdsrc->tempoffset = 0;
+  vcdsrc->discont = vcdsrc->flush = FALSE;
   vcdsrc->bytes_per_read = VCD_BYTES_PER_SECTOR;
   vcdsrc->seq = 0;
   vcdsrc->max_errors = 16;
@@ -156,14 +201,14 @@ vcdsrc_init (VCDSrc * vcdsrc)
 
 
 static void
-vcdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
+gst_vcdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  VCDSrc *src;
+  GstVCDSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VCDSRC (object));
-  src = VCDSRC (object);
+  src = GST_VCDSRC (object);
 
   switch (prop_id) {
     case ARG_LOCATION:
@@ -180,14 +225,11 @@ vcdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
         src->device = g_strdup (g_value_get_string (value));
       break;
     case ARG_TRACK:
-      src->track = g_value_get_int (value);
-      vcdsrc_recalculate (src);
-      break;
-/*    case ARG_BYTESPERREAD:
-      src->bytes_per_read = g_value_get_int (value);
-      break;*/
-    case ARG_OFFSET:
-      src->curoffset = g_value_get_int (value) / VCD_BYTES_PER_SECTOR;
+      if (g_value_get_int (value) >= 1 &&
+          g_value_get_int (value) < src->numtracks) {
+        src->track = g_value_get_int (value);
+        gst_vcdsrc_recalculate (src);
+      }
       break;
     case ARG_MAX_ERRORS:
       src->max_errors = g_value_get_int (value);
@@ -199,14 +241,14 @@ vcdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-vcdsrc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_vcdsrc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  VCDSrc *src;
+  GstVCDSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VCDSRC (object));
-  src = VCDSRC (object);
+  src = GST_VCDSRC (object);
 
   switch (prop_id) {
     case ARG_LOCATION:
@@ -230,71 +272,210 @@ vcdsrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstData *
-vcdsrc_get (GstPad * pad)
+/*
+ * Querying and seeking.
+ */
+
+static const GstEventMask *
+gst_vcdsrc_get_event_mask (GstPad * pad)
 {
-  VCDSrc *vcdsrc;
+  static const GstEventMask masks[] = {
+    {GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
+          GST_SEEK_METHOD_SET | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
+    {0, 0}
+  };
+
+  return masks;
+}
+
+static const GstQueryType *
+gst_vcdsrc_get_query_types (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return types;
+}
+
+static const GstFormat *
+gst_vcdsrc_get_formats (GstPad * pad)
+{
+  static const GstFormat formats[] = {
+    GST_FORMAT_BYTES,
+    0,
+  };
+
+  return formats;
+}
+
+static gboolean
+gst_vcdsrc_srcpad_event (GstPad * pad, GstEvent * event)
+{
+  GstVCDSrc *vcdsrc = GST_VCDSRC (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:{
+      gint64 new_off;
+
+      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES)
+        return FALSE;
+
+      new_off = GST_EVENT_SEEK_OFFSET (event);
+      switch (GST_EVENT_SEEK_METHOD (event)) {
+        case GST_SEEK_METHOD_SET:
+          /* no-op */
+          break;
+        case GST_SEEK_METHOD_CUR:
+          new_off += vcdsrc->curoffset * vcdsrc->bytes_per_read;
+          break;
+        case GST_SEEK_METHOD_END:
+          new_off = (gst_vcdsrc_msf (vcdsrc, vcdsrc->track + 1) -
+              vcdsrc->trackoffset) * vcdsrc->bytes_per_read - new_off;
+          break;
+        default:
+          return FALSE;
+      }
+
+      if (new_off < 0 ||
+          new_off > (gst_vcdsrc_msf (vcdsrc, vcdsrc->track + 1) -
+              vcdsrc->trackoffset) * vcdsrc->bytes_per_read)
+        return FALSE;
+
+      vcdsrc->curoffset = new_off / vcdsrc->bytes_per_read;
+      vcdsrc->tempoffset = new_off % vcdsrc->bytes_per_read;
+      vcdsrc->discont = TRUE;
+      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
+        vcdsrc->flush = TRUE;
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+
+  gst_event_unref (event);
+
+  return res;
+}
+
+static gboolean
+gst_vcdsrc_srcpad_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value)
+{
+  GstVCDSrc *vcdsrc = GST_VCDSRC (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+
+  if (*format != GST_FORMAT_BYTES)
+    return FALSE;
+
+  switch (type) {
+    case GST_QUERY_TOTAL:
+      *value = (gst_vcdsrc_msf (vcdsrc, vcdsrc->track + 1) -
+          vcdsrc->trackoffset) * vcdsrc->bytes_per_read;
+      break;
+    case GST_QUERY_POSITION:
+      *value = vcdsrc->curoffset * vcdsrc->bytes_per_read;
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
+}
+
+/*
+ * Data.
+ */
+
+static GstData *
+gst_vcdsrc_get (GstPad * pad)
+{
+  GstVCDSrc *vcdsrc;
+  GstFormat fmt = GST_FORMAT_BYTES;
   GstBuffer *buf;
   gulong offset;
   struct cdrom_msf *msf;
   gint error_count = 0;
 
-  /* fprintf(stderr,"in vcdsrc_push\n"); */
-
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  vcdsrc = VCDSRC (GST_OBJECT_PARENT (pad));
+  vcdsrc = GST_VCDSRC (GST_OBJECT_PARENT (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (vcdsrc, VCDSRC_OPEN), NULL);
+
+  offset = vcdsrc->trackoffset + vcdsrc->curoffset;
+  if (offset >= gst_vcdsrc_msf (vcdsrc, vcdsrc->track + 1)) {
+    gst_element_set_eos (GST_ELEMENT (vcdsrc));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+  }
+
+  if (vcdsrc->discont) {
+    if (vcdsrc->flush) {
+      vcdsrc->flush = FALSE;
+      return GST_DATA (gst_event_new (GST_EVENT_FLUSH));
+    }
+    vcdsrc->discont = FALSE;
+    return GST_DATA (gst_event_new_discontinuous (FALSE,
+            GST_FORMAT_BYTES, vcdsrc->curoffset * vcdsrc->bytes_per_read,
+            GST_FORMAT_UNDEFINED));
+  }
 
   /* create the buffer */
   /* FIXME: should eventually use a bufferpool for this */
-  buf = gst_buffer_new ();
-  g_return_val_if_fail (buf != NULL, NULL);
-
-  /* allocate the space for the buffer data */
-  GST_BUFFER_DATA (buf) = g_malloc (vcdsrc->bytes_per_read);
-  memset (GST_BUFFER_DATA (buf), 0, vcdsrc->bytes_per_read);
-  g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
-
+  buf = gst_buffer_new_and_alloc (vcdsrc->bytes_per_read);
   msf = (struct cdrom_msf *) GST_BUFFER_DATA (buf);
 
-read_sector:
-
+read:
   /* read it in from the device */
-  offset = vcdsrc->trackoffset + vcdsrc->curoffset;
   msf->cdmsf_frame0 = offset % 75;
   msf->cdmsf_sec0 = (offset / 75) % 60;
   msf->cdmsf_min0 = (offset / (75 * 60));
 
-  /*GST_INFO("msf is %d:%d:%d\n",msf->cdmsf_min0,msf->cdmsf_sec0, */
-  /* msf->cdmsf_frame0); */
+  GST_LOG ("msf is %d:%d:%d", msf->cdmsf_min0, msf->cdmsf_sec0,
+      msf->cdmsf_frame0);
 
-  if (ioctl (vcdsrc->fd, CDROMREADRAW, msf)) {
-    if (++error_count > vcdsrc->max_errors) {
-      gst_element_set_eos (GST_ELEMENT (vcdsrc));
-      return GST_DATA (gst_event_new (GST_EVENT_EOS));
+  if (ioctl (vcdsrc->fd, CDROMREADRAW, msf) < 0) {
+    if (++error_count <= vcdsrc->max_errors) {
+      vcdsrc->curoffset++;
+      offset++;
+      goto read;
     }
 
-    fprintf (stderr, "%s while reading raw data from cdrom at %d:%d:%d\n",
-        strerror (errno), msf->cdmsf_min0, msf->cdmsf_sec0, msf->cdmsf_frame0);
-    vcdsrc->curoffset += 1;
+    GST_ELEMENT_ERROR (vcdsrc, RESOURCE, READ, (NULL),
+        ("Read from cdrom at %d:%d:%d failed: %s",
+            msf->cdmsf_min0, msf->cdmsf_sec0, msf->cdmsf_frame0,
+            strerror (errno)));
 
-    /* Or we can return a zero-filled buffer.  Which is better? */
-    goto read_sector;
+    return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
 
-  GST_BUFFER_OFFSET (buf) = vcdsrc->curoffset;
+  gst_pad_query (pad, GST_QUERY_POSITION, &fmt,
+      (gint64 *) & GST_BUFFER_OFFSET (buf));
   GST_BUFFER_SIZE (buf) = vcdsrc->bytes_per_read;
   vcdsrc->curoffset += 1;
+
+  if (vcdsrc->tempoffset != 0) {
+    GstBuffer *sub;
+
+    sub = gst_buffer_create_sub (buf, vcdsrc->tempoffset,
+        vcdsrc->bytes_per_read - vcdsrc->tempoffset);
+    vcdsrc->tempoffset = 0;
+    gst_buffer_unref (buf);
+    buf = sub;
+  }
 
   return GST_DATA (buf);
 }
 
 /* open the file, necessary to go to RUNNING state */
 static gboolean
-vcdsrc_open_file (VCDSrc * src)
+gst_vcdsrc_open_file (GstVCDSrc * src)
 {
   int i;
 
@@ -309,43 +490,40 @@ vcdsrc_open_file (VCDSrc * src)
 
   /* read the table of contents */
   if (ioctl (src->fd, CDROMREADTOCHDR, &src->tochdr)) {
-    perror ("reading toc of VCD\n");
-/* FIXME 	*/
-/*    exit(1);	*/
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), GST_ERROR_SYSTEM);
+    close (src->fd);
+    return FALSE;
   }
 
   /* allocate enough track structs for disk */
   src->numtracks = (src->tochdr.cdth_trk1 - src->tochdr.cdth_trk0) + 1;
-  src->tracks = g_new (struct cdrom_tocentry, src->numtracks);
+  src->tracks = g_new (struct cdrom_tocentry, src->numtracks + 1);
 
   /* read each track entry */
-  for (i = 0; i < src->numtracks; i++) {
-    src->tracks[i].cdte_track = i + 1;
+  for (i = 0; i <= src->numtracks; i++) {
+    src->tracks[i].cdte_track = i == src->numtracks ? CDROM_LEADOUT : i + 1;
     src->tracks[i].cdte_format = CDROM_MSF;
     if (ioctl (src->fd, CDROMREADTOCENTRY, &src->tracks[i])) {
-      perror ("reading tocentry");
-/* FIXME 	*/
-/*      exit(1);*/
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), GST_ERROR_SYSTEM);
+      g_free (src->tracks);
+      close (src->fd);
+      return FALSE;
     }
-    fprintf (stderr, "VCDSrc: track begins at %d:%d:%d\n",
+    GST_DEBUG ("track %d begins at %d:%02d.%02d", i,
         src->tracks[i].cdte_addr.msf.minute,
         src->tracks[i].cdte_addr.msf.second,
         src->tracks[i].cdte_addr.msf.frame);
   }
 
-  src->trackoffset =
-      (((src->tracks[src->track - 1].cdte_addr.msf.minute * 60) +
-          src->tracks[src->track - 1].cdte_addr.msf.second) * 75) +
-      src->tracks[src->track - 1].cdte_addr.msf.frame;
-  fprintf (stderr, "VCDSrc: track offset is %ld\n", src->trackoffset);
-
   GST_FLAG_SET (src, VCDSRC_OPEN);
+  gst_vcdsrc_recalculate (src);
+
   return TRUE;
 }
 
 /* close the file */
 static void
-vcdsrc_close_file (VCDSrc * src)
+gst_vcdsrc_close_file (GstVCDSrc * src)
 {
   g_return_if_fail (GST_FLAG_IS_SET (src, VCDSRC_OPEN));
 
@@ -357,42 +535,103 @@ vcdsrc_close_file (VCDSrc * src)
   src->curoffset = 0;
   src->seq = 0;
 
+  g_free (src->tracks);
+
   GST_FLAG_UNSET (src, VCDSRC_OPEN);
 }
 
 static GstElementStateReturn
-vcdsrc_change_state (GstElement * element)
+gst_vcdsrc_change_state (GstElement * element)
 {
-  g_return_val_if_fail (GST_IS_VCDSRC (element), GST_STATE_FAILURE);
+  GstVCDSrc *vcdsrc = GST_VCDSRC (element);
 
-  /* if going down into NULL state, close the file if it's open */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, VCDSRC_OPEN))
-      vcdsrc_close_file (VCDSRC (element));
-    /* otherwise (READY or higher) we need to open the sound card */
-  } else {
-    if (!GST_FLAG_IS_SET (element, VCDSRC_OPEN)) {
-      if (!vcdsrc_open_file (VCDSRC (element)))
-        return GST_STATE_FAILURE;
-    }
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_READY_TO_NULL:
+      if (GST_FLAG_IS_SET (element, VCDSRC_OPEN))
+        gst_vcdsrc_close_file (vcdsrc);
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      vcdsrc->curoffset = 0;
+      vcdsrc->discont = vcdsrc->flush = FALSE;
+      break;
+    case GST_STATE_NULL_TO_READY:
+      if (!GST_FLAG_IS_SET (element, VCDSRC_OPEN))
+        if (!gst_vcdsrc_open_file (vcdsrc))
+          return GST_STATE_FAILURE;
+      break;
+    default:
+      break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
   return GST_STATE_SUCCESS;
 }
 
+static inline guint64
+gst_vcdsrc_msf (GstVCDSrc * vcdsrc, gint track)
+{
+  return (vcdsrc->tracks[track].cdte_addr.msf.minute * 60 +
+      vcdsrc->tracks[track].cdte_addr.msf.second) * 75 +
+      vcdsrc->tracks[track].cdte_addr.msf.frame;
+}
+
 static void
-vcdsrc_recalculate (VCDSrc * vcdsrc)
+gst_vcdsrc_recalculate (GstVCDSrc * vcdsrc)
 {
   if (GST_FLAG_IS_SET (vcdsrc, VCDSRC_OPEN)) {
     /* calculate track offset (beginning of track) */
-    vcdsrc->trackoffset =
-        (((vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.minute * 60) +
-            vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.second) * 75) +
-        vcdsrc->tracks[vcdsrc->track - 1].cdte_addr.msf.frame;
-    fprintf (stderr, "VCDSrc: track offset is %ld\n", vcdsrc->trackoffset);
+    vcdsrc->trackoffset = gst_vcdsrc_msf (vcdsrc, vcdsrc->track);
+    GST_DEBUG ("track offset is %ld", vcdsrc->trackoffset);
   }
+}
+
+/*
+ * URI interface.
+ */
+
+static guint
+gst_vcdsrc_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+
+static gchar **
+gst_vcdsrc_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "vcd", NULL };
+
+  return protocols;
+}
+
+static const gchar *
+gst_vcdsrc_uri_get_uri (GstURIHandler * handler)
+{
+  return "vcd://";
+}
+
+static gboolean
+gst_vcdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gboolean ret;
+  gchar *protocol = gst_uri_get_protocol (uri);
+
+  ret = (protocol && !strcmp (protocol, "vcd")) ? TRUE : FALSE;
+  g_free (protocol);
+
+  return ret;
+}
+
+static void
+gst_vcdsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_vcdsrc_uri_get_type;
+  iface->get_protocols = gst_vcdsrc_uri_get_protocols;
+  iface->get_uri = gst_vcdsrc_uri_get_uri;
+  iface->set_uri = gst_vcdsrc_uri_set_uri;
 }
 
 static gboolean

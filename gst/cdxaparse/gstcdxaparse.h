@@ -18,7 +18,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_CDXAPARSE_H__
 #define __GST_CDXAPARSE_H__
 
@@ -26,9 +25,7 @@
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-read.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_CDXAPARSE \
   (gst_cdxaparse_get_type())
@@ -40,10 +37,6 @@ extern "C" {
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDXAPARSE))
 #define GST_IS_CDXAPARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDXAPARSE))
-
-#define GST_CDXA_SECTOR_SIZE  	2352
-#define GST_CDXA_DATA_SIZE  	2324
-#define GST_CDXA_HEADER_SIZE	24
 
 typedef enum {
   GST_CDXAPARSE_START,
@@ -65,7 +58,6 @@ struct _GstCDXAParse {
   GstCDXAParseState state;
 
   guint64 dataleft, datasize, datastart;
-  int byteoffset;
   
   gboolean seek_pending;
   guint64 seek_offset;
@@ -77,10 +69,6 @@ struct _GstCDXAParseClass {
 
 GType 		gst_cdxaparse_get_type		(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_CDXAPARSE_H__ */
-

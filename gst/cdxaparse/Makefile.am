@@ -1,11 +1,12 @@
+plugin_LTLIBRARIES = libgstcdxaparse.la
 
-plugin_LTLIBRARIES = \
-		libgstcdxaparse.la
-
-libgstcdxaparse_la_SOURCES = gstcdxaparse.c 
+libgstcdxaparse_la_SOURCES = \
+	gstcdxaparse.c \
+	gstcdxastrip.c
 
 noinst_HEADERS = \
-		gstcdxaparse.h
+	gstcdxaparse.h \
+	gstcdxastrip.h
 
 libgstcdxaparse_la_CFLAGS = $(GST_CFLAGS)
 libgstcdxaparse_la_LIBADD =
