@@ -225,6 +225,10 @@ void			gst_element_error		(GstElement *element, const gchar *error);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
+void                    gst_element_install_std_props   (GstElementClass *klass,
+							 const char      *first_name, ...);
+
+
 #ifndef GST_DISABLE_LOADSAVE
 /* XML write and read */
 GstElement*		gst_element_restore_thyself	(xmlNodePtr self, GstObject *parent);
@@ -292,7 +296,6 @@ GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
 								 const gchar *name);
 /* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_elementfactory_make			(const gchar *factoryname, const gchar *name);
-
 
 #ifdef __cplusplus
 }

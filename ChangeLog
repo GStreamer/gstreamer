@@ -1,5 +1,15 @@
 2001-12-13  Michael Meeks  <michael@ximian.com>
 
+	* gst/elements/*.c: (..._class_init): clean to use
+	gst_populate_std_props.
+
+	* gst/gstelement.c
+	(gst_element_populate_std_props): impl, simply for now,
+	with a few standard properties.
+	(gst_element_install_std_props): impl nice helper.
+
+2001-12-13  Michael Meeks  <michael@ximian.com>
+
 	* gst/gstplugin.c (_gst_plugin_initialize): g_error
 	instead of warning.
 
@@ -27,33 +37,6 @@
 
 	* configure.ac: Add checks for libglade-2.0 and
 	gnome-vfs-2.0
-
-2001-12-13  Michael Meeks  <michael@ximian.com>
-
-	* plugins/xvideosink/Makefile.am: add $(X_LIBS)
-
-	* examples/typefind/typefind.c (type_found): upd.
-	xml code.
-
-	* plugins/mikmod/gstmikmod.c
-	(gst_mikmod_set_property): same memory bug here -
-	unfixed.
-
-	* plugins/oss/gstosssrc.c
-	(gst_osssrc_set_property): fix memory issue.
-	(gst_osssrc_init): dup the string - argh; quit here -
-	such code should be stuck in a common base class not
-	cut and pasted.
-
-	* plugins/oss/gstosssink.c
-	(gst_osssink_init): manage the device allocation.
-	(gst_osssink_finalize): impl.
-	(gst_osssink_class_init): upd.
-	(gst_osssink_set_property): upd.
-
-	* acconfig.h: cover HAVE_LIBXML2
-
-	* configure.ac: update libxml checks.
 
 2001-12-13  Michael Meeks  <michael@ximian.com>
 

@@ -146,27 +146,16 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
-    g_param_spec_string("location","File Location","Location of the file to read",
-                        NULL,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FILESIZE,
-    g_param_spec_int64("filesize","File Size","Size of the file being read",
-                       0,G_MAXINT64,0,G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FD,
-    g_param_spec_int("fd","File-descriptor","File-descriptor for the file being read",
-                     0,G_MAXINT,0,G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BLOCKSIZE,
-    g_param_spec_ulong("blocksize","Block Size","Block size to read per buffer",
-                       0,G_MAXULONG,4096,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
-    g_param_spec_int64("offset","File Offset","Byte offset of current read pointer",
-                       0,G_MAXINT64,0,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAPSIZE,
-    g_param_spec_ulong("mmapsize","mmap() Block Size","Size in bytes of mmap()d regions",
-                       0,G_MAXULONG,4*1048576,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TOUCH,
-    g_param_spec_boolean("touch","Touch read data","Touch data to force disk read before push()",
-                         TRUE,G_PARAM_READWRITE));
+  gst_element_install_std_props (
+	  GST_ELEMENT_CLASS (klass),
+	  "fd",           ARG_FD,           G_PARAM_READABLE,
+	  "offset",       ARG_OFFSET,       G_PARAM_READWRITE,
+	  "filesize",     ARG_FILESIZE,     G_PARAM_READABLE,
+	  "location",     ARG_LOCATION,     G_PARAM_READWRITE,
+	  "blocksize",    ARG_BLOCKSIZE,    G_PARAM_READWRITE,
+	  "mmapsize",     ARG_MAPSIZE,      G_PARAM_READWRITE,
+	  "touch",        ARG_TOUCH,        G_PARAM_READWRITE,
+	  NULL);
 
   gobject_class->set_property = gst_filesrc_set_property;
   gobject_class->get_property = gst_filesrc_get_property;

@@ -107,12 +107,12 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SINKS,
     g_param_spec_int ("num_sinks", "num_sinks", "num_sinks",
                       1, G_MAXINT, 1, G_PARAM_READABLE)); 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
-    g_param_spec_boolean ("silent", "silent", "silent",
-                          FALSE, G_PARAM_READWRITE)); 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
-    g_param_spec_boolean ("dump", "dump", "dump",
-                          FALSE, G_PARAM_READWRITE)); 
+
+  gst_element_install_std_props (
+	  GST_ELEMENT_CLASS (klass),
+	  "silent", ARG_SILENT, G_PARAM_READWRITE,
+	  "dump",   ARG_DUMP,   G_PARAM_READWRITE,
+	  NULL);
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,

@@ -231,12 +231,12 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EOS,
     g_param_spec_boolean("eos","eos","eos",
                          TRUE,G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
-    g_param_spec_boolean("silent","silent","silent",
-                         FALSE, G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
-    g_param_spec_boolean ("dump","dump","dump",
-                          FALSE, G_PARAM_READWRITE)); 
+
+  gst_element_install_std_props (
+	  GST_ELEMENT_CLASS (klass),
+	  "silent", ARG_SILENT, G_PARAM_READWRITE,
+	  "dump",   ARG_DUMP,   G_PARAM_READWRITE,
+	  NULL);
 
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,

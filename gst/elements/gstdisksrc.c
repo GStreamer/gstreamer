@@ -108,18 +108,13 @@ gst_disksrc_class_init (GstDiskSrcClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
-    g_param_spec_string("location","location","location",
-                        NULL,G_PARAM_READWRITE)); // CHECKME!
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
-    g_param_spec_int("bytesperread","bytesperread","bytesperread",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
-    g_param_spec_long("offset","offset","offset",
-                     G_MINLONG,G_MAXLONG,0,G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FILESIZE,
-    g_param_spec_long("filesize","filesize","filesize",
-                     G_MINLONG,G_MAXLONG,0,G_PARAM_READABLE)); // CHECKME
+  gst_element_install_std_props (
+	  GST_ELEMENT_CLASS (klass),
+	  "location",     ARG_LOCATION,     G_PARAM_READWRITE,
+	  "bytesperread", ARG_BYTESPERREAD, G_PARAM_READWRITE,
+	  "offset",       ARG_OFFSET,       G_PARAM_READWRITE,
+	  "filesize",     ARG_FILESIZE,     G_PARAM_READABLE,
+	  NULL);
 
   gobject_class->set_property = gst_disksrc_set_property;
   gobject_class->get_property = gst_disksrc_get_property;
