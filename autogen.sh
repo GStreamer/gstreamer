@@ -69,7 +69,7 @@ if test -f po/Makefile.in.in;
 then
   patch -p0 -R < common/gettext.patch
 fi
-tool_run "$autopoint"
+tool_run "$autopoint --force"
 patch -p0 < common/gettext.patch
 
 tool_run "$aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
