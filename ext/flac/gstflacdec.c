@@ -579,11 +579,18 @@ gst_flacdec_loop (GstElement *element)
   GST_DEBUG ("flacdec: _loop end");
 }
 
-GST_PAD_FORMATS_FUNCTION (gst_flacdec_get_src_formats,
-  GST_FORMAT_DEFAULT,
-  GST_FORMAT_BYTES,
-  GST_FORMAT_TIME
-)
+
+static const GstFormat *
+gst_flacdec_get_src_formats (GstPad *pad)
+{ 
+  static const GstFormat formats[] = {
+    GST_FORMAT_DEFAULT,
+    GST_FORMAT_BYTES,
+    GST_FORMAT_TIME,
+    0,
+  };
+  return formats;
+} 
 
 static gboolean
 gst_flacdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
@@ -648,10 +655,16 @@ gst_flacdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
-GST_PAD_QUERY_TYPE_FUNCTION (gst_flacdec_get_src_query_types,
-  GST_QUERY_TOTAL,
-  GST_QUERY_POSITION
-)
+static const GstQueryType *
+gst_flacdec_get_src_query_types (GstPad *pad)
+{ 
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0,
+  };
+  return types;
+} 
 
 static gboolean
 gst_flacdec_src_query (GstPad *pad, GstQueryType type,
@@ -690,9 +703,15 @@ gst_flacdec_src_query (GstPad *pad, GstQueryType type,
   return res;
 }
 	  
-GST_PAD_EVENT_MASK_FUNCTION (gst_flacdec_get_src_event_masks,
-    { GST_EVENT_SEEK, GST_SEEK_FLAG_ACCURATE }
-);
+static const GstEventMask *
+gst_flacdec_get_src_event_masks (GstPad *pad)
+{
+  static const GstEventMask masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_FLAG_ACCURATE },
+    { 0, 0 },
+  };
+  return masks;
+}
 
 static gboolean
 gst_flacdec_src_event (GstPad *pad, GstEvent *event)
