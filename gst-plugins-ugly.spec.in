@@ -740,7 +740,7 @@ Plug-ins for playback of AVI format media files.
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%files -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%defattr(-, root, root)
-@USE_MPEG2DEC_TRUE@/usr/lib/gstreamer-0.7/libgstmpeg2dec.so
+@USE_MPEG2DEC_TRUE@/usr/lib/gstreamer-%{majorminor}/libgstmpeg2dec.so
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_MPEG2DEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
@@ -748,6 +748,28 @@ Plug-ins for playback of AVI format media files.
 @USE_MPEG2DEC_TRUE@%postun -n  gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_MPEG2DEC_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+### FAAD ###
+@USE_FAAD_TRUE@%package -n gstreamer-faad
+@USE_FAAD_TRUE@Summary:GStreamer plug-ins for AAC audio playback.
+@USE_FAAD_TRUE@Group:         Libraries/Multimedia
+@USE_FAAD_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_FAAD_TRUE@Requires:      faad2 => 2.0
+@USE_FAAD_TRUE@BuildRequires: faad2-devel => 2.0
+@USE_FAAD_TRUE@
+@USE_FAAD_TRUE@%description -n gstreamer-faad
+@USE_FAAD_TRUE@Plug-ins for playing AAC audio
+@USE_FAAD_TRUE@
+@USE_FAAD_TRUE@%files -n gstreamer-faad
+@USE_FAAD_TRUE@%defattr(-, root, root)
+@USE_FAAD_TRUE@/usr/lib/gstreamer-%{majorminor}/libgstfaad.so
+@USE_FAAD_TRUE@%post -n  gstreamer-faad
+@USE_FAAD_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_FAAD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_FAAD_TRUE@
+@USE_FAAD_TRUE@%postun -n  gstreamer-faad
+@USE_FAAD_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_FAAD_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 ### SIDPLAY ###
 @USE_SIDPLAY_TRUE@%package -n gstreamer-sid
@@ -839,6 +861,7 @@ Plug-in for playing ASF movies under GStreamer.
 %changelog
 * Sun Nov 23 2003 Christian Schaller <Uraeus@gnome.org>
 - Update spec file for latest changes
+- add faad plugin
 * Thu Oct 16 2003 Christian Schaller <Uraeus@gnome.org>
 - Add new colorbalance and tuner and xoverlay stuff
 - Change name of kde-audio-devel to arts-devel
