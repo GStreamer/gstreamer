@@ -10,6 +10,6 @@ gst/elements/gstfilesrc.c
 gst/elements/gstidentity.c
 gst/elements/gstmultidisksrc.c
 gst/elements/gstpipefilter.c
-gst/elements/gsttypefindelement.c
+gst/elements/gsttypefind.c
 gst/parse/grammar.y
 tools/gst-launch.c

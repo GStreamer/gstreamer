@@ -531,19 +531,19 @@ msgstr "Bestand \"%s\" is geen gewoon bestand"
 msgid "Failed after iterations as requested"
 msgstr "Fout na iteraties zoals gevraagd"
 
-#: gst/elements/gsttypefindelement.c:153
+#: gst/elements/gsttypefind.c:153
 msgid "caps"
 msgstr "mogelijkheden"
 
-#: gst/elements/gsttypefindelement.c:153
+#: gst/elements/gsttypefind.c:153
 msgid "detected capabilities in stream"
 msgstr "gedetecteerde mogelijkheden in stroom"
 
-#: gst/elements/gsttypefindelement.c:156
+#: gst/elements/gsttypefind.c:156
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:159
+#: gst/elements/gsttypefind.c:159
 msgid "maximum"
 msgstr "maximum"
 

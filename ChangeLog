@@ -14,6 +14,9 @@
 	* gst/elements/gstelements.c:
 	* gst/elements/gsttypefindelement.c:
 	* gst/elements/gsttypefindelement.h:
+	* po/POTFILES.in:
+	* po/fr.po:
+	* po/nl.po:
           renamed gsttypefindelement to gsttypefind, conserving CVS history
 
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
