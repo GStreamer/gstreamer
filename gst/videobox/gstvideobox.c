@@ -219,20 +219,24 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
           GST_TYPE_VIDEO_BOX_FILL, DEFAULT_FILL_TYPE,
           (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LEFT,
-      g_param_spec_int ("left", "Left", "Pixels to box at left",
-          G_MININT, G_MAXINT, DEFAULT_LEFT, G_PARAM_READWRITE));
+      g_param_spec_int ("left", "Left",
+          "Pixels to box at left (<0  = add a border)", G_MININT, G_MAXINT,
+          DEFAULT_LEFT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RIGHT,
-      g_param_spec_int ("right", "Right", "Pixels to box at right",
-          G_MININT, G_MAXINT, DEFAULT_RIGHT, G_PARAM_READWRITE));
+      g_param_spec_int ("right", "Right",
+          "Pixels to box at right (<0 = add a border)", G_MININT, G_MAXINT,
+          DEFAULT_RIGHT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOP,
-      g_param_spec_int ("top", "Top", "Pixels to box at top",
-          G_MININT, G_MAXINT, DEFAULT_TOP, G_PARAM_READWRITE));
+      g_param_spec_int ("top", "Top",
+          "Pixels to box at top (<0 = add a border)", G_MININT, G_MAXINT,
+          DEFAULT_TOP, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BOTTOM,
-      g_param_spec_int ("bottom", "Bottom", "Pixels to box at bottom",
-          G_MININT, G_MAXINT, DEFAULT_BOTTOM, G_PARAM_READWRITE));
+      g_param_spec_int ("bottom", "Bottom",
+          "Pixels to box at bottom (<0 = add a border)", G_MININT, G_MAXINT,
+          DEFAULT_BOTTOM, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALPHA,
-      g_param_spec_double ("alpha", "Alpha", "Alpha value picture",
-          0.0, 1.0, DEFAULT_ALPHA, G_PARAM_READWRITE));
+      g_param_spec_double ("alpha", "Alpha", "Alpha value picture", 0.0, 1.0,
+          DEFAULT_ALPHA, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BORDER_ALPHA,
       g_param_spec_double ("border_alpha", "Border Alpha",
           "Alpha value of the border", 0.0, 1.0, DEFAULT_BORDER_ALPHA,
@@ -674,12 +678,14 @@ gst_video_box_chain (GstPad * pad, GstData * _data)
   }
 
   if (video_box->use_alpha) {
-    outbuf = gst_buffer_new_and_alloc (new_width * new_height * 4);
+    outbuf = gst_pad_alloc_buffer (video_box->srcpad,
+        GST_BUFFER_OFFSET_NONE, new_width * new_height * 4);
 
     gst_video_box_ayuv (video_box,
         GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (outbuf));
   } else {
-    outbuf = gst_buffer_new_and_alloc ((new_width * new_height * 3) / 2);
+    outbuf = gst_pad_alloc_buffer (video_box->srcpad,
+        GST_BUFFER_OFFSET_NONE, (new_width * new_height * 3) / 2);
 
     gst_video_box_i420 (video_box,
         GST_BUFFER_DATA (buffer), GST_BUFFER_DATA (outbuf));

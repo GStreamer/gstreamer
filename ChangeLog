@@ -1,5 +1,12 @@
 2004-07-07  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videobox/gstvideobox.c: (gst_video_box_fill_get_type),
+	(gst_video_box_class_init), (gst_video_box_set_property),
+	(gst_video_box_i420), (gst_video_box_ayuv), (gst_video_box_chain):
+	Use pad_alloc where possible.
+
+2004-07-07  Wim Taymans  <wim@fluendo.com>
+
 	* sys/oss/gstosselement.c: (gst_osselement_reset),
 	(gst_osselement_parse_caps):
 	* sys/oss/gstosselement.h:
