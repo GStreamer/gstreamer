@@ -609,14 +609,6 @@ GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
   AS_SCRUB_INCLUDE(IVORBIS_CFLAGS)
 ])
 
-dnl *** ivorbis ***
-dnl AM_PATH_IVORBIS only takes two options
-translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
-GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
-  XIPH_PATH_IVORBIS(HAVE_IVORBIS=yes, HAVE_IVORBIS=no)
-  AS_SCRUB_INCLUDE(IVORBIS_CFLAGS)
-])
-
 dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
 GST_CHECK_FEATURE(JACK, Jack, jack, [
@@ -1114,11 +1106,11 @@ ext/gnomevfs/Makefile
 ext/gsm/Makefile
 ext/hermes/Makefile
 ext/http/Makefile
-ext/ivorbis/Makefile
 ext/jack/Makefile
 ext/jpeg/Makefile
 ext/ladspa/Makefile
 ext/lame/Makefile
+ext/ivorbis/Makefile
 ext/lcs/Makefile
 ext/libfame/Makefile
 ext/libpng/Makefile
