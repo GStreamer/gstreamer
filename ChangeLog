@@ -1,3 +1,14 @@
+2004-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(find_compatibles), (close_pad_link), (try_to_link_1), (new_pad),
+	(no_more_pads), (close_link), (type_found):
+	* gst/playback/gstplaybasebin.c: (new_decoded_pad):
+	* gst/playback/gstplaybin.c: (gen_video_element):
+	Do not signal the no_more_pads after the first pad when
+	we are plugging a non dynamic element with multiple
+	output pads (like swfdec, dvdec, ...).
+
 2004-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
