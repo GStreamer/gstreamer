@@ -22,7 +22,7 @@
 #ifndef __GST_ALSA_SINK_H__
 #define __GST_ALSA_SINK_H__
 
-#include "gstalsa.h"
+#include "gstalsamixer.h"
 
 G_BEGIN_DECLS
 
@@ -36,7 +36,7 @@ typedef struct _GstAlsaSink GstAlsaSink;
 typedef struct _GstAlsaSinkClass GstAlsaSinkClass;
 
 struct _GstAlsaSink {
-  GstAlsa    parent;
+  GstAlsaMixer parent;
 
   /* array of the data on the channels */
   guint8    *data[GST_ALSA_MAX_TRACKS];      /* pointer into buffer */
@@ -47,7 +47,7 @@ struct _GstAlsaSink {
 };
 
 struct _GstAlsaSinkClass {
-  GstAlsaClass parent_class;
+  GstAlsaMixerClass parent_class;
 };
 
 GType gst_alsa_sink_get_type (void);

@@ -225,8 +225,16 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
   gint i, count;
   snd_mixer_elem_t *element;
   GstMixerTrack *track;
+  const GList *templates;
+  GstPadDirection dir = GST_PAD_UNKNOWN;
 
   g_return_if_fail (((gint) mixer->mixer_handle) != -1);
+
+  /* find direction */
+  templates =
+      gst_element_class_get_pad_template_list (GST_ELEMENT_GET_CLASS (mixer));
+  if (templates)
+    dir = GST_PAD_TEMPLATE (templates->data)->direction;
 
   count = snd_mixer_get_count (mixer->mixer_handle);
   element = snd_mixer_first_elem (mixer->mixer_handle);
@@ -240,10 +248,10 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
       continue;
 
     /* find out if this element can be an input */
-
-    if (snd_mixer_selem_has_capture_channel (element, 0) ||
-        snd_mixer_selem_has_capture_switch (element) ||
-        snd_mixer_selem_is_capture_mono (element)) {
+    if ((dir == GST_PAD_SRC || dir == GST_PAD_UNKNOWN) &&
+        (snd_mixer_selem_has_capture_channel (element, 0) ||
+            snd_mixer_selem_has_capture_switch (element) ||
+            snd_mixer_selem_is_capture_mono (element))) {
       while (snd_mixer_selem_has_capture_channel (element, channels))
         channels++;
 
@@ -256,9 +264,10 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
 
     channels = 0;
 
-    if (snd_mixer_selem_has_playback_channel (element, 0) ||
-        snd_mixer_selem_has_playback_switch (element) ||
-        snd_mixer_selem_is_playback_mono (element)) {
+    if ((dir == GST_PAD_SINK || dir == GST_PAD_UNKNOWN) &&
+        (snd_mixer_selem_has_playback_channel (element, 0) ||
+            snd_mixer_selem_has_playback_switch (element) ||
+            snd_mixer_selem_is_playback_mono (element))) {
       while (snd_mixer_selem_has_playback_channel (element, channels))
         channels++;
 

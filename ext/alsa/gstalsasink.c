@@ -95,8 +95,8 @@ gst_alsa_sink_get_type (void)
     };
 
     alsa_sink_type =
-        g_type_register_static (GST_TYPE_ALSA, "GstAlsaSink", &alsa_sink_info,
-        0);
+        g_type_register_static (GST_TYPE_ALSA_MIXER, "GstAlsaSink",
+        &alsa_sink_info, 0);
   }
   return alsa_sink_type;
 }
@@ -128,7 +128,7 @@ gst_alsa_sink_class_init (gpointer g_class, gpointer class_data)
   alsa_class = (GstAlsaClass *) klass;
 
   if (sink_parent_class == NULL)
-    sink_parent_class = g_type_class_ref (GST_TYPE_ALSA);
+    sink_parent_class = g_type_class_ref (GST_TYPE_ALSA_MIXER);
 
   alsa_class->stream = SND_PCM_STREAM_PLAYBACK;
   alsa_class->transmit_mmap = gst_alsa_sink_mmap;
@@ -294,7 +294,7 @@ gst_alsa_sink_mmap (GstAlsa * this, snd_pcm_sframes_t * avail)
     goto out;
   }
 
- out:
+out:
   g_free (src);
   return err;
 }

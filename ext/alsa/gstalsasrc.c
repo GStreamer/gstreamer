@@ -79,7 +79,8 @@ gst_alsa_src_get_type (void)
     };
 
     alsa_src_type =
-        g_type_register_static (GST_TYPE_ALSA, "GstAlsaSrc", &alsa_src_info, 0);
+        g_type_register_static (GST_TYPE_ALSA_MIXER, "GstAlsaSrc",
+        &alsa_src_info, 0);
   }
   return alsa_src_type;
 }
@@ -109,7 +110,7 @@ gst_alsa_src_class_init (gpointer g_class, gpointer class_data)
   alsa_class = (GstAlsaClass *) klass;
 
   if (src_parent_class == NULL)
-    src_parent_class = g_type_class_ref (GST_TYPE_ALSA);
+    src_parent_class = g_type_class_ref (GST_TYPE_ALSA_MIXER);
 
   alsa_class->stream = SND_PCM_STREAM_CAPTURE;
   alsa_class->transmit_mmap = gst_alsa_src_mmap;

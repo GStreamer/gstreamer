@@ -22,7 +22,7 @@
 #ifndef __GST_ALSA_SRC_H__
 #define __GST_ALSA_SRC_H__
 
-#include "gstalsa.h"
+#include "gstalsamixer.h"
 
 G_BEGIN_DECLS
 
@@ -36,12 +36,12 @@ typedef struct _GstAlsaSrc GstAlsaSrc;
 typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 
 struct _GstAlsaSrc {
-  GstAlsa        parent;
+  GstAlsaMixer   parent;
   GstBuffer     *buf[GST_ALSA_MAX_TRACKS];
 };
 
 struct _GstAlsaSrcClass {
-  GstAlsaClass parent_class;
+  GstAlsaMixerClass parent_class;
 };
 
 GType gst_alsa_src_get_type (void);
