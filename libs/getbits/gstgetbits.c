@@ -2,6 +2,7 @@
 
 #include "gstgetbits.h"
 
+/* Defined in gstgetbits_i386.s */
 extern unsigned long _gst_get1bit_i386(gst_getbits_t *gb, unsigned long bits);
 extern unsigned long _gst_getbits_i386(gst_getbits_t *gb, unsigned long bits);
 extern unsigned long _gst_getbits_fast_i386(gst_getbits_t *gb, unsigned long bits);
@@ -9,29 +10,15 @@ extern unsigned long _gst_showbits_i386(gst_getbits_t *gb, unsigned long bits);
 extern void _gst_flushbits_i386(gst_getbits_t *gb, unsigned long bits);
 extern void _gst_getbits_back_i386(gst_getbits_t *gb, unsigned long bits);
 
-//#define DEBUG_ENABLED
-#ifdef DEBUG_ENABLED
-#define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
-#else
-#define DEBUG(format, args...)
-#endif
+/* Defined in gstgetbits_generic.c */
+extern unsigned long _gst_getbits_int_cb(gst_getbits_t *gb, unsigned long bits);
+extern unsigned long _gst_get1bit_int(gst_getbits_t *gb, unsigned long bits);
+extern unsigned long _gst_getbits_int(gst_getbits_t *gb, unsigned long bits);
+extern unsigned long _gst_getbits_fast_int(gst_getbits_t *gb, unsigned long bits);
+extern unsigned long _gst_showbits_int(gst_getbits_t *gb, unsigned long bits);
+extern void _gst_flushbits_int(gst_getbits_t *gb, unsigned long bits);
+extern void _gst_getbits_back_int(gst_getbits_t *gb, unsigned long bits);
 
-#ifdef WORDS_BIGENDIAN
-#  define swab32(x) (x)
-#else
-#  if defined (__i386__)
-#    define swab32(x) __i386_swab32(x)
-     static inline const guint32 __i386_swab32(guint32 x)
-      {
-         __asm__("bswap %0" : "=r" (x) : "0" (x));
-         return x;
-      }
-#  else
-#    define swab32(x)\
-     ((((guint8*)&x)[0] << 24) | (((guint8*)&x)[1] << 16) |  \
-     (((guint8*)&x)[2] << 8)  | (((guint8*)&x)[3]))
-#  endif
-#endif
 
 unsigned long gst_getbits_nBitMask[] = { 
   0x00000000, 0x80000000, 0xc0000000, 0xe0000000,
@@ -162,113 +149,8 @@ unsigned long _gst_getbits_mmx(gst_getbits_t *gb,unsigned long bits) {
 }
 #endif /* HAVE_LIBMMX */
 
-unsigned long _gst_getbits_int_cb(gst_getbits_t *gb, unsigned long bits) {
-  int result;
-  int bitsleft;
-
-  //printf("gst_getbits%lu %ld %p %08x\n", bits, gb->bits, gb->ptr, gb->dword);
-
-  if (!bits) return 0;
-
-  gb->bits -= bits;
-  result = gb->dword >> (32-bits);
-
-  if (gb->bits < 0) {
-    
-    gb->ptr += 4;
-
-    bitsleft = (gb->endptr - gb->ptr)*8;
-    bits = -gb->bits;
-    gb->bits += (bitsleft>32? 32 : bitsleft); 
-    
-    if (gb->endptr <= gb->ptr) {
-      (gb->callback)(gb, gb->data);
-      gb->bits -= bits;
-    }
-    gb->dword = swab32(*((unsigned long *)(gb->ptr)));
-
-    result |= (gb->dword >> (32-bits));
-  }
-  gb->dword <<= bits;
-
-  return result;
-}
-
-void _gst_getbits_back_int(gst_getbits_t *gb, unsigned long bits) {
-  gb->bits -= bits;
-  gb->ptr += (gb->bits>>3);
-  gb->bits &= 0x7;
-}
-
-unsigned long _gst_showbits_int(gst_getbits_t *gb, unsigned long bits) {
-  unsigned long rval;
-
-  if (bits == 0) return 0;
-
-  rval = swab32(*((unsigned long *)(gb->ptr)));
-  rval <<= gb->bits;
-  rval >>= (32-bits);
-
-  DEBUG("showbits%d, %08x\n", bits, rval);
-  return rval;
-}
-
 unsigned long _gst_getbyte(gst_getbits_t *gb, unsigned long bits) {
   return *gb->ptr++;
-}
-
-unsigned long _gst_get1bit_int(gst_getbits_t *gb, unsigned long bits) {
-  unsigned char rval;
-
-  rval = *gb->ptr << gb->bits;
-
-  gb->bits++;
-  gb->ptr += (gb->bits>>3);
-  gb->bits &= 0x7;
-
-  DEBUG("getbits%d, %08x\n", bits, rval);
-  return rval>>7;
-}
-
-unsigned long _gst_getbits_fast_int(gst_getbits_t *gb, unsigned long bits) {
-  unsigned long rval;
-
-  rval = (unsigned char) (gb->ptr[0] << gb->bits);
-  rval |= ((unsigned int) gb->ptr[1] << gb->bits)>>8;
-  rval <<= bits;
-  rval >>= 8;
-
-  gb->bits += bits;
-  gb->ptr += (gb->bits>>3);
-  gb->bits &= 0x7;
-
-  DEBUG("getbits%d, %08x\n", bits, rval);
-  return rval;
-}
-
-unsigned long _gst_getbits_int(gst_getbits_t *gb, unsigned long bits) {
-  unsigned long rval;
-
-  if (bits == 0) return 0;
-
-  rval = swab32(*((unsigned long *)(gb->ptr)));
-  rval <<= gb->bits;
-
-  gb->bits += bits;
-
-  rval >>= (32-bits);
-  gb->ptr += (gb->bits>>3);
-  gb->bits &= 0x7;
-
-  DEBUG("getbits%d, %08x\n", bits, rval);
-  return rval;
-}
-
-void _gst_flushbits_int(gst_getbits_t *gb, unsigned long bits) {
-  gb->bits += bits;
-  gb->ptr += (gb->bits>>3);
-  gb->bits &= 0x7;
-  DEBUG("flushbits%d\n", bits);
 }
 
 /* initialize the getbits structure with the proper getbits func */

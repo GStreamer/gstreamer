@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <config.h>
+// FIXME - remove this HAVE_LIBMMX - let configure set it.
 #undef HAVE_LIBMMX
 
 #include <byteswap.h>
@@ -14,6 +15,32 @@
 #ifdef HAVE_LIBSSE
 #include <sse.h>
 #endif /* HAVE_LIBSSE */
+
+// FIXME - let configure set DEBUG_ENABLED.
+//#define DEBUG_ENABLED
+#ifdef DEBUG_ENABLED
+#define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
+#else
+#define DEBUG(format, args...)
+#endif
+
+
+#ifdef WORDS_BIGENDIAN
+#  define swab32(x) (x)
+#else
+#  if defined (__i386__)
+#    define swab32(x) __i386_swab32(x)
+     static inline const guint32 __i386_swab32(guint32 x)
+      {
+         __asm__("bswap %0" : "=r" (x) : "0" (x));
+         return x;
+      }
+#  else
+#    define swab32(x)\
+     ((((guint8*)&x)[0] << 24) | (((guint8*)&x)[1] << 16) |  \
+     (((guint8*)&x)[2] << 8)  | (((guint8*)&x)[3]))
+#  endif
+#endif
 
 typedef struct _gst_getbits_t gst_getbits_t;
 typedef void (*GstGetbitsCallback) (gst_getbits_t *gb, void *data);
