@@ -108,8 +108,8 @@ ignore
   gst_tag_list_add_valist_values
   gst_tag_list_copy_value
   gst_trace_read_tsc
-%%
 
+%%
 define GstTagList.keys noargs
 void
 tag_foreach_func_dict (const GstTagList *list,
