@@ -29,8 +29,6 @@ plot_CFLAGS = $(GTK_CFLAGS) $(GST_CFLAGS)
 plot_LDFLAGS = $(GTK_LIBS) $(GST_LIBS)
 endif
 
-EXTRA_libgstlevel_la_SOURCES = gstlevel-marshal.list
-
 CLEANFILES = $(BUILT_SOURCES)
                                                                         
-EXTRA_DIST = README
+EXTRA_DIST = README gst-level-marshal.list
