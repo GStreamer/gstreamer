@@ -127,17 +127,26 @@ gst_bin_src_wrapper (int argc,char *argv[])
 static void
 gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
 {
-  cothread_state *threadstate = GST_ELEMENT (GST_PAD_PARENT (pad))->threadstate;
+  GstPad *peer = GST_RPAD_PEER(pad);
+  cothread_state *threadstate;
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
   GST_DEBUG (GST_CAT_DATAFLOW,"putting buffer %p in peer's pen\n",buf);
 
   // FIXME this should be bounded
   // loop until the bufferpen is empty so we can fill it up again
   while (GST_RPAD_BUFPEN(pad) != NULL) {
+    threadstate = GST_ELEMENT (GST_PAD_PARENT (pad))->threadstate;
     GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to empty bufpen\n",threadstate);
     cothread_switch (threadstate);
+
+    // we may no longer be the same pad, check.
+    if (GST_RPAD_PEER(peer) != pad) {
+      GST_DEBUG (GST_CAT_DATAFLOW, "new pad in mid-switch!\n");
+      pad = GST_RPAD_PEER(peer);
+    }
   }
 
+  threadstate = GST_ELEMENT (GST_PAD_PARENT (pad))->threadstate;
   // now fill the bufferpen and switch so it can be consumed
   GST_RPAD_BUFPEN(GST_RPAD_PEER(pad)) = buf;
   GST_DEBUG (GST_CAT_DATAFLOW,"switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate));
@@ -149,16 +158,27 @@ gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
 static GstBuffer*
 gst_bin_pullfunc_proxy (GstPad *pad)
 {
+  GstPad *peer = GST_RPAD_PEER(pad);
   GstBuffer *buf;
 
-  cothread_state *threadstate = GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate;
+  cothread_state *threadstate;
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
   // FIXME this should be bounded
   // we will loop switching to the peer until it's filled up the bufferpen
   while (GST_RPAD_BUFPEN(pad) == NULL) {
-    GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to fill bufpen\n",threadstate);
+    // get the new threadstate, if it changed (FIXME?)
+    threadstate = GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate;
+
+    GST_DEBUG (GST_CAT_DATAFLOW, "switching to \"%s\": %p to fill bufpen\n",
+GST_ELEMENT_NAME(GST_ELEMENT(GST_PAD_PARENT(pad))),threadstate);
     cothread_switch (threadstate);
+
+    // we may no longer be the same pad, check.
+    if (GST_RPAD_PEER(peer) != pad) {
+      GST_DEBUG (GST_CAT_DATAFLOW, "new pad in mid-switch!\n");
+      pad = GST_RPAD_PEER(peer);
+    }
   }
   GST_DEBUG (GST_CAT_DATAFLOW,"done switching\n");
 
@@ -172,6 +192,7 @@ static GstBuffer*
 gst_bin_pullregionfunc_proxy (GstPad *pad,GstRegionType type,guint64 offset,guint64 len)
 {
   GstBuffer *buf;
+  GstPad *peer = GST_RPAD_PEER(pad);
 
   cothread_state *threadstate = GST_ELEMENT(GST_PAD_PARENT(pad))->threadstate;
   GST_DEBUG_ENTER("%s:%s,%d,%lld,%lld",GST_DEBUG_PAD_NAME(pad),type,offset,len);
@@ -184,8 +205,15 @@ gst_bin_pullregionfunc_proxy (GstPad *pad,GstRegionType type,guint64 offset,guin
   // FIXME this should be bounded
   // we will loop switching to the peer until it's filled up the bufferpen
   while (GST_RPAD_BUFPEN(pad) == NULL) {
+    threadstate = GST_ELEMENT (GST_PAD_PARENT (pad))->threadstate;
     GST_DEBUG (GST_CAT_DATAFLOW, "switching to %p to fill bufpen\n",threadstate);
     cothread_switch (threadstate);
+
+    // we may no longer be the same pad, check.
+    if (GST_RPAD_PEER(peer) != pad) {
+      GST_DEBUG (GST_CAT_DATAFLOW, "new pad in mid-switch!\n");
+      pad = GST_RPAD_PEER(peer);
+    }
   }
   GST_DEBUG (GST_CAT_DATAFLOW,"done switching\n");
 
