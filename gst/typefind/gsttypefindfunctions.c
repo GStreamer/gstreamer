@@ -917,6 +917,21 @@ mng_type_find (GstTypeFind *tf, gpointer unused)
   }
 }
 
+/*** image/x-jng *********************/
+#define JNG_CAPS gst_caps_new ("jng_type_find", "image/x-jng", NULL)
+static void
+jng_type_find (GstTypeFind *tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 8);
+  guint8 header[4] = {0x0D, 0x0A, 0x1A, 0x0A};
+
+  if (data && (data[0] == 0x8B) && memcmp (data + 1, "JNG", 3) == 0) {
+    if (memcmp (data + 4, header, 4) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, JNG_CAPS);
+    }
+  }
+}
+
 /*** image/bmp *********************/
 #define BMP_CAPS gst_caps_new ("bmp_type_find", "image/bmp", NULL)
 static void
@@ -1064,6 +1079,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   static gchar * sid_exts[] = {"sid", NULL};
   static gchar * xcf_exts[] = {"xcf", NULL};
   static gchar * mng_exts[] = {"mng", NULL};
+  static gchar * jng_exts[] = {"jng", NULL};
   
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions", GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
 
@@ -1127,6 +1143,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 				  xcf_type_find, xcf_exts, XCF_CAPS, NULL);
   gst_type_find_factory_register (plugin, "video/x-mng", GST_ELEMENT_RANK_SECONDARY,
 				  mng_type_find, mng_exts, MNG_CAPS, NULL);
+  gst_type_find_factory_register (plugin, "image/x-jng", GST_ELEMENT_RANK_SECONDARY,
+				  jng_type_find, jng_exts, JNG_CAPS, NULL);
   
   return TRUE;
 }
