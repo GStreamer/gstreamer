@@ -426,6 +426,7 @@ gst_scheduler_get_clock (GstScheduler *sched)
 {
   GstClock *clock = NULL;
   
+  /* if we have a fixed clock, use that one */
   if (GST_FLAG_IS_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK)) {
     clock = sched->clock;  
 
@@ -434,7 +435,9 @@ gst_scheduler_get_clock (GstScheduler *sched)
   }
   else {
     GList *schedulers = sched->schedulers;
+    GList *providers = sched->clock_providers;
 
+    /* try to get a clock from one of the schedulers we manage first */
     while (schedulers) {
       GstScheduler *scheduler = GST_SCHEDULER (schedulers->data);
       
@@ -444,9 +447,13 @@ gst_scheduler_get_clock (GstScheduler *sched)
 
       schedulers = g_list_next (schedulers);
     }
-    if (!clock && sched->clock_providers) {
-      clock = gst_element_get_clock (GST_ELEMENT (sched->clock_providers->data));
+    /* still no clock, try to find one in the providers */
+    while (!clock && providers) {
+      clock = gst_element_get_clock (GST_ELEMENT (providers->data));
+
+      providers = g_list_next (providers);
     }
+    /* still no clock, use a system clock */
     if (!clock && sched->parent_sched == NULL) {
       clock = gst_system_clock_obtain ();
     }
