@@ -1,3 +1,10 @@
+2004-11-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/libcaca/gstcacasink.c: (gst_cacasink_class_init),
+	(gst_cacasink_init), (gst_cacasink_chain):
+	* ext/libcaca/gstcacasink.h:
+        Cacasink inherits from VideoSink, so let that store the clock. 
+
 2004-11-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/README:
