@@ -157,7 +157,7 @@ dist-hook:
 	rm -f $(distdir)/gstmarshal.c $(distdir)/gstmarshal.h
 # Clean generated files
 distclean-local:
-	rm -f $(builddir)/gstmarshal.c $(builddir)/gstmarshal.h
+	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
 
 libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
