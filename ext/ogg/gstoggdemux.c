@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <ogg/ogg.h>
 /* memcpy - if someone knows a way to get rid of it, please speak up 
- * note: the ogg docs even say you ned this... */
+ * note: the ogg docs even say you need this... */
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_ogg_demux_debug);
@@ -376,7 +376,8 @@ gst_ogg_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_OGG_SET_STATE (ogg, GST_OGG_STATE_SEEK);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+          );
       GST_DEBUG_OBJECT (ogg, "initiating seeking to offset %" G_GUINT64_FORMAT,
           offset);
       ogg->seek_pad = cur;
@@ -423,7 +424,8 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       GST_FLAG_UNSET (ogg, GST_OGG_FLAG_WAIT_FOR_DISCONT);
       FOR_PAD_IN_CURRENT_CHAIN (ogg, pad,
-          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;);
+          pad->flags |= GST_OGG_PAD_NEEDS_DISCONT;
+          );
       break;
     case GST_EVENT_EOS:
       if (ogg->state == GST_OGG_STATE_SETUP) {
@@ -959,8 +961,8 @@ gst_ogg_type_find (ogg_packet * packet)
   return NULL;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_ogg_demux_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_ogg_demux_debug, "oggdemux", 0, "ogg demuxer");
 
@@ -968,14 +970,9 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_OGG_DEMUX);
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "ogg",
-    "ogg stream manipulation (info about ogg: http://xiph.org)",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
-
 /* prints all info about the element */
-     static void gst_ogg_print (GstOggDemux * ogg)
+static void
+gst_ogg_print (GstOggDemux * ogg)
 {
   guint i;
   GSList *walk;
