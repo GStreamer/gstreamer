@@ -446,6 +446,10 @@ gst_colorspace_base_init (gpointer g_class)
   caps = gst_caps_append (caps,
 			  gst_caps_new ("csp_templ_rgb24_32",
 					"video/x-raw-rgb",
+					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32_REVERSE));
+  caps = gst_caps_append (caps,
+			  gst_caps_new ("csp_templ_rgb24_32",
+					"video/x-raw-rgb",
 					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32));
   caps = gst_caps_append (caps,
 			  gst_caps_new ("csp_templ_rgb15",
