@@ -577,7 +577,7 @@ gst_id3_tag_get_tag_to_render (GstID3Tag *tag)
   } else if (tag->parsed_tags) {
     ret = gst_tag_list_copy (tag->parsed_tags);
   }
-  if (ret) {
+  if (ret && gst_tag_setter_get_list (GST_TAG_SETTER (tag))) {
     gst_tag_list_insert (ret, gst_tag_setter_get_list (GST_TAG_SETTER (tag)),
 	    gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
   } else if (gst_tag_setter_get_list (GST_TAG_SETTER (tag))) {
@@ -830,16 +830,11 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
       tag->v1tag_size = id3_tag_query (GST_BUFFER_DATA (tag->buffer),
 				       GST_BUFFER_SIZE (tag->buffer));
       if (tag->v1tag_size == 128) {
-	struct id3_tag *v1tag;
+	GstTagList *newtag;
 
-	v1tag = id3_tag_parse (GST_BUFFER_DATA (tag->buffer), 
-			       GST_BUFFER_SIZE (tag->buffer));
+	newtag = gst_tag_list_new_from_id3v1 (GST_BUFFER_DATA (tag->buffer));
 	GST_LOG_OBJECT (tag, "have read ID3v1 tag");
-	if (v1tag) {
-	  GstTagList *newtag;
-	  
-	  newtag = gst_mad_id3_to_tag_list (v1tag);
-	  id3_tag_delete (v1tag);
+	if (newtag) {
 	  if (tag->parsed_tags) {
 	    /* FIXME: use append/prepend here ? */
 	    gst_tag_list_insert (tag->parsed_tags, newtag,
