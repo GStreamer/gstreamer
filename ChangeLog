@@ -1,3 +1,8 @@
+2003-12-23  Colin Walters  <walters@verbum.org>
+
+	* ext/gnomevfs/gnomevfssink.c: Add ARG_HANDLE property that takes
+	a GnomeVFSHandle directly.
+
 2003-12-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/volume/Makefile.am:
