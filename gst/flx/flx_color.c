@@ -27,40 +27,41 @@
 #include "flx_color.h"
 
 FlxColorSpaceConverter *
-flx_colorspace_converter_new(gint width, gint height)
+flx_colorspace_converter_new (gint width, gint height)
 {
-  FlxColorSpaceConverter *new = g_malloc(sizeof(FlxColorSpaceConverter));
+  FlxColorSpaceConverter *new = g_malloc (sizeof (FlxColorSpaceConverter));
 
   new->width = width;
   new->height = height;
 
-  memset(new->palvec, 0, sizeof(new->palvec));  
+  memset (new->palvec, 0, sizeof (new->palvec));
   return new;
 }
 
 void
-flx_colorspace_converter_destroy(FlxColorSpaceConverter *flxpal)
+flx_colorspace_converter_destroy (FlxColorSpaceConverter * flxpal)
 {
-  g_return_if_fail(flxpal != NULL);
+  g_return_if_fail (flxpal != NULL);
 
-  g_free(flxpal);
+  g_free (flxpal);
 }
 
 void
-flx_colorspace_convert(FlxColorSpaceConverter *flxpal, guchar *src, guchar *dest)
+flx_colorspace_convert (FlxColorSpaceConverter * flxpal, guchar * src,
+    guchar * dest)
 {
   guint size, col;
 
-  g_return_if_fail(flxpal != NULL);
-  g_return_if_fail(src != dest);
+  g_return_if_fail (flxpal != NULL);
+  g_return_if_fail (src != dest);
 
 
   size = flxpal->width * flxpal->height;
 
-  while(size--) {
-    col     = (*src++ * 3);
-    *dest++ = flxpal->palvec[col+2];
-    *dest++ = flxpal->palvec[col+1];
+  while (size--) {
+    col = (*src++ * 3);
+    *dest++ = flxpal->palvec[col + 2];
+    *dest++ = flxpal->palvec[col + 1];
     *dest++ = flxpal->palvec[col];
     *dest++ = 0;
   }
@@ -68,13 +69,14 @@ flx_colorspace_convert(FlxColorSpaceConverter *flxpal, guchar *src, guchar *dest
 }
 
 
-void 
-flx_set_palette_vector(FlxColorSpaceConverter *flxpal, guint start, guint num, guchar *newpal, gint scale)
+void
+flx_set_palette_vector (FlxColorSpaceConverter * flxpal, guint start, guint num,
+    guchar * newpal, gint scale)
 {
-  guint  grab;
-  
-  g_return_if_fail(flxpal != NULL);
-  g_return_if_fail(start < 0x100);
+  guint grab;
+
+  g_return_if_fail (flxpal != NULL);
+  g_return_if_fail (start < 0x100);
 
   grab = ((start + num) > 0x100 ? 0x100 - start : num);
 
@@ -88,23 +90,21 @@ flx_set_palette_vector(FlxColorSpaceConverter *flxpal, guint start, guint num, g
       flxpal->palvec[start++] = newpal[i++] << scale;
       grab--;
     }
-  }
-  else {
-    memcpy(&flxpal->palvec[start * 3], newpal, grab * 3);
+  } else {
+    memcpy (&flxpal->palvec[start * 3], newpal, grab * 3);
   }
 
 }
 
 void
-flx_set_color(FlxColorSpaceConverter *flxpal, guint colr, guint red, guint green, guint blue, gint scale)
+flx_set_color (FlxColorSpaceConverter * flxpal, guint colr, guint red,
+    guint green, guint blue, gint scale)
 {
-  
-  g_return_if_fail(flxpal != NULL);
-  g_return_if_fail(colr < 0x100);
 
-  flxpal->palvec[(colr * 3)]     = red << scale;
+  g_return_if_fail (flxpal != NULL);
+  g_return_if_fail (colr < 0x100);
+
+  flxpal->palvec[(colr * 3)] = red << scale;
   flxpal->palvec[(colr * 3) + 1] = green << scale;
   flxpal->palvec[(colr * 3) + 2] = blue << scale;
 }
-
-

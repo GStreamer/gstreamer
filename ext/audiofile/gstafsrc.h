@@ -26,12 +26,13 @@
 
 
 #include <gst/gst.h>
-#include <audiofile.h>			/* what else are we to do */
+#include <audiofile.h>		/* what else are we to do */
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 /*GstElementDetails gst_afsrc_details;*/
@@ -48,60 +49,63 @@ extern "C" {
 #define GST_IS_AFSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AFSRC))
 
-typedef struct _GstAFSrc GstAFSrc;
-typedef struct _GstAFSrcClass GstAFSrcClass;
+  typedef struct _GstAFSrc GstAFSrc;
+  typedef struct _GstAFSrcClass GstAFSrcClass;
 
-typedef enum {
-  GST_AFSRC_OPEN             = GST_ELEMENT_FLAG_LAST,
+  typedef enum
+  {
+    GST_AFSRC_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_AFSRC_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
-} GstAFSrcFlags;
+    GST_AFSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  } GstAFSrcFlags;
 
-struct _GstAFSrc {
-  GstElement element;
-  GstPad *srcpad;
+  struct _GstAFSrc
+  {
+    GstElement element;
+    GstPad *srcpad;
 
-  gchar *filename;
+    gchar *filename;
 /*  FILE *file; */
 
 /*  AFfilesetup outfilesetup; */
-  AFfilehandle file;
-  int format;
-  int channels;
-  int width;
-  unsigned int rate;
-  gboolean is_signed;
-  int type;				/* type of output, compare to audiofile.h 
-  						 * RAW, AIFF, AIFFC, NEXTSND, WAVE
-  						 */ 
-  /* blocking */
-  gulong curoffset;
-  gulong bytes_per_read;
+    AFfilehandle file;
+    int format;
+    int channels;
+    int width;
+    unsigned int rate;
+    gboolean is_signed;
+    int type;			/* type of output, compare to audiofile.h 
+				 * RAW, AIFF, AIFFC, NEXTSND, WAVE
+				 */
+    /* blocking */
+    gulong curoffset;
+    gulong bytes_per_read;
 
-  gulong seq;
-  guint64 framestamp;
-  /* FIXME : endianness is a little cryptic at this point */
-  int endianness_data;		/* 4321 or 1234 */
-  int endianness_wanted; /* same thing, but what the output format wants */
-  int endianness_output; /* what the output endianness will be */
-};
+    gulong seq;
+    guint64 framestamp;
+    /* FIXME : endianness is a little cryptic at this point */
+    int endianness_data;	/* 4321 or 1234 */
+    int endianness_wanted;	/* same thing, but what the output format wants */
+    int endianness_output;	/* what the output endianness will be */
+  };
 
-struct _GstAFSrcClass {
-  GstElementClass parent_class;
+  struct _GstAFSrcClass
+  {
+    GstElementClass parent_class;
 
-  /* signals */
-  void (*handoff) (GstElement *element,GstPad *pad);
-};
+    /* signals */
+    void (*handoff) (GstElement * element, GstPad * pad);
+  };
 
-GType 		gst_afsrc_get_type	(void);
-gboolean        gst_afsrc_plugin_init  (GstPlugin *plugin);
+  GType gst_afsrc_get_type (void);
+  gboolean gst_afsrc_plugin_init (GstPlugin * plugin);
 
 
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_AFSRC_H__ */
+#endif				/* __GST_AFSRC_H__ */

@@ -54,7 +54,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define MAX_HEIGHT 243
 #define MAX_WIDTH 336
 
-struct qcam {
+struct qcam
+{
   int width, height;
   int bpp;
   int mode;
@@ -63,72 +64,72 @@ struct qcam {
   int port_mode;
   int transfer_scale;
   int top, left;
-  int fd; /* lock file descriptor
-           * It was, unfortunately, necessary to add this member to the
-           * struct qcam to conveniently implement POSIX fcntl-style locking.
-           * We need a seperate lock file for each struct qcam, for instance,
-           * if the same process (using qcam-lib) is accessing multiple
-           * QuickCams on (of course) multiple ports.
-           * - Dave Plonka (plonka@carroll1.cc.edu)
-           */
+  int fd;			/* lock file descriptor
+				 * It was, unfortunately, necessary to add this member to the
+				 * struct qcam to conveniently implement POSIX fcntl-style locking.
+				 * We need a seperate lock file for each struct qcam, for instance,
+				 * if the same process (using qcam-lib) is accessing multiple
+				 * QuickCams on (of course) multiple ports.
+				 * - Dave Plonka (plonka@carroll1.cc.edu)
+				 */
 };
 
 typedef unsigned char scanbuf;
 
 /* General QuickCam handling routines */
 
-int qc_getbrightness(const struct qcam *q);
-int qc_setbrightness(struct qcam *q, int val);
-int qc_getcontrast(const struct qcam *q);
-int qc_setcontrast(struct qcam *q, int val);
-int qc_getwhitebal(const struct qcam *q);
-int qc_setwhitebal(struct qcam *q, int val);
-void qc_getresolution(const struct qcam *q, int *x, int *y);
-int qc_setresolution(struct qcam *q, int x, int y);
-int qc_getbitdepth(const struct qcam *q);
-int qc_setbitdepth(struct qcam *q, int val);
-int qc_getheight(const struct qcam *q);
-int qc_setheight(struct qcam *q, int y);
-int qc_getwidth(const struct qcam *q);
-int qc_setwidth(struct qcam *q, int x);
-int qc_gettop(const struct qcam *q);
-int qc_settop(struct qcam *q, int val);
-int qc_getleft(const struct qcam *q);
-int qc_setleft(struct qcam *q, int val);
-int qc_gettransfer_scale(const struct qcam *q);
-int qc_settransfer_scale(struct qcam *q, int val);
-int qc_calibrate(struct qcam *q);
-int qc_forceunidir(struct qcam *q);
-void qc_dump(const struct qcam *q, char *file);
+int qc_getbrightness (const struct qcam *q);
+int qc_setbrightness (struct qcam *q, int val);
+int qc_getcontrast (const struct qcam *q);
+int qc_setcontrast (struct qcam *q, int val);
+int qc_getwhitebal (const struct qcam *q);
+int qc_setwhitebal (struct qcam *q, int val);
+void qc_getresolution (const struct qcam *q, int *x, int *y);
+int qc_setresolution (struct qcam *q, int x, int y);
+int qc_getbitdepth (const struct qcam *q);
+int qc_setbitdepth (struct qcam *q, int val);
+int qc_getheight (const struct qcam *q);
+int qc_setheight (struct qcam *q, int y);
+int qc_getwidth (const struct qcam *q);
+int qc_setwidth (struct qcam *q, int x);
+int qc_gettop (const struct qcam *q);
+int qc_settop (struct qcam *q, int val);
+int qc_getleft (const struct qcam *q);
+int qc_setleft (struct qcam *q, int val);
+int qc_gettransfer_scale (const struct qcam *q);
+int qc_settransfer_scale (struct qcam *q, int val);
+int qc_calibrate (struct qcam *q);
+int qc_forceunidir (struct qcam *q);
+void qc_dump (const struct qcam *q, char *file);
 
-struct qcam *qc_init(void);
-int qc_initfile(struct qcam *q, char *fname);
-int qc_open(struct qcam *q);
-int qc_close(struct qcam *q);
-int qc_detect(const struct qcam *q);
-void qc_reset(struct qcam *q);
-void qc_set(struct qcam *q);
-scanbuf *qc_scan(const struct qcam *q);
-scanbuf *qc_convertscan(struct qcam *q, scanbuf *scan);
-void qc_writepgm(const struct qcam *q, FILE *f, scanbuf *scan);
-void qc_wait(int val);
+struct qcam *qc_init (void);
+int qc_initfile (struct qcam *q, char *fname);
+int qc_open (struct qcam *q);
+int qc_close (struct qcam *q);
+int qc_detect (const struct qcam *q);
+void qc_reset (struct qcam *q);
+void qc_set (struct qcam *q);
+scanbuf *qc_scan (const struct qcam *q);
+scanbuf *qc_convertscan (struct qcam *q, scanbuf * scan);
+void qc_writepgm (const struct qcam *q, FILE * f, scanbuf * scan);
+void qc_wait (int val);
 
 /* OS/hardware specific routines */
 
-int read_lpstatus(const struct qcam *q);
-int read_lpcontrol(const struct qcam *q);
-int read_lpdata(const struct qcam *q);
-void write_lpdata(const struct qcam *q, int d);
-void write_lpcontrol(const struct qcam *q, int d);
-int enable_ports(const struct qcam *q);
-int disable_ports(const struct qcam *q);
-int qc_unlock(struct qcam *q);
-int qc_lock(struct qcam *q);
-void qc_wait(int val);
-int qc_probe(struct qcam *q);
+int read_lpstatus (const struct qcam *q);
+int read_lpcontrol (const struct qcam *q);
+int read_lpdata (const struct qcam *q);
+void write_lpdata (const struct qcam *q, int d);
+void write_lpcontrol (const struct qcam *q, int d);
+int enable_ports (const struct qcam *q);
+int disable_ports (const struct qcam *q);
+int qc_unlock (struct qcam *q);
+int qc_lock (struct qcam *q);
+void qc_wait (int val);
+int qc_probe (struct qcam *q);
 
 /* Image processing routines */
-int fixdark(const struct qcam *q, scanbuf *scan);
-int qc_edge_detect(const struct qcam *q, scanbuf *scan, int tolerance);
+int fixdark (const struct qcam *q, scanbuf * scan);
+int qc_edge_detect (const struct qcam *q, scanbuf * scan, int tolerance);
 
-#endif /*! _QCAM_H*/
+#endif /*! _QCAM_H */

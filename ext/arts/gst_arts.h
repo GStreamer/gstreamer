@@ -28,8 +28,9 @@
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 #define GST_TYPE_ARTS \
   (gst_arts_get_type())
@@ -42,24 +43,26 @@ extern "C" {
 #define GST_IS_ARTS_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ARTS))
 
-typedef struct _GstARTS GstARTS;
-typedef struct _GstARTSClass GstARTSClass;
+  typedef struct _GstARTS GstARTS;
+  typedef struct _GstARTSClass GstARTSClass;
 
-struct _GstARTS {
-  GstElement element;
+  struct _GstARTS
+  {
+    GstElement element;
 
-  GstPad *sinkpad, *srcpad;
-  void *wrapper;
-};
+    GstPad *sinkpad, *srcpad;
+    void *wrapper;
+  };
 
-struct _GstARTSClass {
-  GstElementClass parent_class;
-};
+  struct _GstARTSClass
+  {
+    GstElementClass parent_class;
+  };
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_ARTS_H__ */
+#endif				/* __GST_ARTS_H__ */

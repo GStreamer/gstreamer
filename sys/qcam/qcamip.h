@@ -55,13 +55,13 @@ SOFTWARE.
 
 /* Prototypes for image processing routines  */
 
-int qcip_autoexposure(struct qcam *q, scanbuf *scan);
-int qcip_set_luminance_target(struct qcam *q, int val);
-int qcip_set_luminance_tolerance(struct qcam *q, int val);
-int qcip_set_luminance_std_target(struct qcam *q, int val);
-int qcip_set_luminance_std_tolerance(struct qcam *q, int val);
-int qcip_set_autoexposure_mode(int val);
-void qcip_histogram(struct qcam *q, scanbuf *scan, int *histogram);
-void qcip_display_histogram(struct qcam *q, scanbuf *scan);
+int qcip_autoexposure (struct qcam *q, scanbuf * scan);
+int qcip_set_luminance_target (struct qcam *q, int val);
+int qcip_set_luminance_tolerance (struct qcam *q, int val);
+int qcip_set_luminance_std_target (struct qcam *q, int val);
+int qcip_set_luminance_std_tolerance (struct qcam *q, int val);
+int qcip_set_autoexposure_mode (int val);
+void qcip_histogram (struct qcam *q, scanbuf * scan, int *histogram);
+void qcip_display_histogram (struct qcam *q, scanbuf * scan);
 
-#endif /*! _QCAMIP_H*/
+#endif /*! _QCAMIP_H */

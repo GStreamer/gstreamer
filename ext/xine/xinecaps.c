@@ -20,13 +20,14 @@
 #include "gstxine.h"
 #include <xine/buffer.h>
 
-typedef struct {
-  guint32	xine;
-  gchar *	caps;
+typedef struct
+{
+  guint32 xine;
+  gchar *caps;
 } GstXineCapsMap;
 
 static GstXineCapsMap _gst_xine_caps_map[] = {
-  { BUF_AUDIO_QDESIGN2,		"audio/x-qdm2" },
+  {BUF_AUDIO_QDESIGN2, "audio/x-qdm2"},
 /* FIXME:
 #define BUF_AUDIO_A52		0x03000000
 #define BUF_AUDIO_MPEG		0x03010000
@@ -79,29 +80,29 @@ static GstXineCapsMap _gst_xine_caps_map[] = {
 #define BUF_AUDIO_RAWPCM	0x03300000
 #define BUF_AUDIO_4X_ADPCM	0x03310000
 */
-  { 0,				NULL }
+  {0, NULL}
 };
 
 const gchar *
 gst_xine_get_caps_for_format (guint32 format)
 {
   guint i = 0;
-  
+
   while (_gst_xine_caps_map[i].xine != 0) {
     if (_gst_xine_caps_map[i].xine == format)
       return _gst_xine_caps_map[i].caps;
     i++;
   }
-  
+
   return NULL;
 }
 
 guint32
-gst_xine_get_format_for_caps (const GstCaps *caps)
+gst_xine_get_format_for_caps (const GstCaps * caps)
 {
   guint i = 0;
   GstCaps *compare, *intersect;
-  
+
   while (_gst_xine_caps_map[i].xine != 0) {
     compare = gst_caps_from_string (_gst_xine_caps_map[i].caps);
     intersect = gst_caps_intersect (caps, compare);
@@ -113,7 +114,6 @@ gst_xine_get_format_for_caps (const GstCaps *caps)
     gst_caps_free (intersect);
     i++;
   }
-  
-  return 0;     
-}
 
+  return 0;
+}

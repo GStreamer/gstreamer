@@ -64,23 +64,24 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define FESTIVAL_DEFAULT_SERVER_HOST "localhost"
 #define FESTIVAL_DEFAULT_SERVER_PORT 1314
 #define FESTIVAL_DEFAULT_TEXT_MODE "fundamental"
 
-typedef struct FT_Info
-{
+  typedef struct FT_Info
+  {
     int encoding;
     char *server_host;
     int server_port;
     char *text_mode;
-    
+
     int server_fd;
-} FT_Info;
+  } FT_Info;
 
 #define GST_TYPE_FESTIVAL \
   (gst_festival_get_type())
@@ -93,32 +94,35 @@ typedef struct FT_Info
 #define GST_IS_FESTIVAL_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FESTIVAL))
 
-typedef enum {
-  GST_FESTIVAL_OPEN		= GST_ELEMENT_FLAG_LAST,
+  typedef enum
+  {
+    GST_FESTIVAL_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_FESTIVAL_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
-} GstFestivalFlags;
+    GST_FESTIVAL_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  } GstFestivalFlags;
 
-typedef struct _GstFestival GstFestival;
-typedef struct _GstFestivalClass GstFestivalClass;
+  typedef struct _GstFestival GstFestival;
+  typedef struct _GstFestivalClass GstFestivalClass;
 
-struct _GstFestival {
-  GstElement element;
+  struct _GstFestival
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad,*srcpad;
+    /* pads */
+    GstPad *sinkpad, *srcpad;
 
-  FT_Info *info;
-};
+    FT_Info *info;
+  };
 
-struct _GstFestivalClass {
-  GstElementClass parent_class;
-};
+  struct _GstFestivalClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_festival_get_type(void);
+  GType gst_festival_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_FESTIVAL_H__ */
+#endif				/* __GST_FESTIVAL_H__ */

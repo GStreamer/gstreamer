@@ -35,25 +35,25 @@ _gst_mask_init (void)
 }
 
 static gint
-gst_mask_compare (GstMaskDefinition *def1,
-		  GstMaskDefinition *def2)
+gst_mask_compare (GstMaskDefinition * def1, GstMaskDefinition * def2)
 {
   return (def1->type - def2->type);
 }
 
 void
-_gst_mask_register (GstMaskDefinition *definition)
+_gst_mask_register (GstMaskDefinition * definition)
 {
-  masks = g_list_insert_sorted (masks, definition, (GCompareFunc) gst_mask_compare);
+  masks =
+      g_list_insert_sorted (masks, definition, (GCompareFunc) gst_mask_compare);
 }
 
-const GList*
+const GList *
 gst_mask_get_definitions (void)
 {
   return masks;
 }
 
-static GstMaskDefinition*
+static GstMaskDefinition *
 gst_mask_find_definition (gint type)
 {
   GList *walk = masks;
@@ -63,13 +63,13 @@ gst_mask_find_definition (gint type)
 
     if (def->type == type)
       return def;
-    
+
     walk = g_list_next (walk);
   }
   return NULL;
 }
 
-GstMask*
+GstMask *
 gst_mask_factory_new (gint type, gint bpp, gint width, gint height)
 {
   GstMaskDefinition *definition;
@@ -95,14 +95,14 @@ gst_mask_factory_new (gint type, gint bpp, gint width, gint height)
 }
 
 void
-_gst_mask_default_destroy (GstMask *mask)
+_gst_mask_default_destroy (GstMask * mask)
 {
   g_free (mask->data);
   g_free (mask);
 }
 
 void
-gst_mask_destroy (GstMask *mask)
+gst_mask_destroy (GstMask * mask)
 {
   if (mask->destroy_func)
     mask->destroy_func (mask);

@@ -27,19 +27,20 @@
 
 /* Search just the one directory. */
 static void
-LADSPADirectoryPluginSearch
-(const char * pcDirectory, 
- LADSPAPluginSearchCallbackFunction fCallbackFunction) {
+    LADSPADirectoryPluginSearch
+    (const char *pcDirectory,
+    LADSPAPluginSearchCallbackFunction fCallbackFunction)
+{
 
-  char * pcFilename;
-  DIR * psDirectory;
+  char *pcFilename;
+  DIR *psDirectory;
   LADSPA_Descriptor_Function fDescriptorFunction;
   long lDirLength;
   long iNeedSlash;
-  struct dirent * psDirectoryEntry;
-  void * pvPluginHandle;
+  struct dirent *psDirectoryEntry;
+  void *pvPluginHandle;
 
-  lDirLength = strlen(pcDirectory);
+  lDirLength = strlen (pcDirectory);
   if (!lDirLength)
     return;
   if (pcDirectory[lDirLength - 1] == '/')
@@ -47,66 +48,63 @@ LADSPADirectoryPluginSearch
   else
     iNeedSlash = 1;
 
-  psDirectory = opendir(pcDirectory);
+  psDirectory = opendir (pcDirectory);
   if (!psDirectory)
     return;
 
   while (1) {
 
-    psDirectoryEntry = readdir(psDirectory);
+    psDirectoryEntry = readdir (psDirectory);
     if (!psDirectoryEntry) {
-      closedir(psDirectory);
+      closedir (psDirectory);
       return;
     }
 
-    pcFilename = malloc(lDirLength
-			+ strlen(psDirectoryEntry->d_name)
-			+ 1 + iNeedSlash);
-    strcpy(pcFilename, pcDirectory);
+    pcFilename = malloc (lDirLength + strlen (psDirectoryEntry->d_name)
+	+ 1 + iNeedSlash);
+    strcpy (pcFilename, pcDirectory);
     if (iNeedSlash)
-      strcat(pcFilename, "/");
-    strcat(pcFilename, psDirectoryEntry->d_name);
-    
-    pvPluginHandle = dlopen(pcFilename, RTLD_LAZY);
+      strcat (pcFilename, "/");
+    strcat (pcFilename, psDirectoryEntry->d_name);
+
+    pvPluginHandle = dlopen (pcFilename, RTLD_LAZY);
     if (pvPluginHandle) {
       /* This is a file and the file is a shared library! */
 
-      dlerror();
+      dlerror ();
       fDescriptorFunction
-	= (LADSPA_Descriptor_Function)dlsym(pvPluginHandle,
-					    "ladspa_descriptor");
-      if (dlerror() == NULL && fDescriptorFunction) {
+	  = (LADSPA_Descriptor_Function) dlsym (pvPluginHandle,
+	  "ladspa_descriptor");
+      if (dlerror () == NULL && fDescriptorFunction) {
 	/* We've successfully found a ladspa_descriptor function. Pass
-           it to the callback function. */
-	fCallbackFunction(pcFilename,
-			  pvPluginHandle,
-			  fDescriptorFunction);
-      }
-      else {
+	   it to the callback function. */
+	fCallbackFunction (pcFilename, pvPluginHandle, fDescriptorFunction);
+      } else {
 	/* It was a library, but not a LADSPA one. Unload it. */
-	dlclose(pcFilename);
+	dlclose (pcFilename);
       }
     }
-    free(pcFilename);
+    free (pcFilename);
   }
 }
 
 /*****************************************************************************/
 
-void 
-LADSPAPluginSearch(LADSPAPluginSearchCallbackFunction fCallbackFunction) {
+void
+LADSPAPluginSearch (LADSPAPluginSearchCallbackFunction fCallbackFunction)
+{
 
-  char * pcBuffer;
-  const char * pcEnd;
-  const char * pcLADSPAPath;
-  const char * pcStart;
+  char *pcBuffer;
+  const char *pcEnd;
+  const char *pcLADSPAPath;
+  const char *pcStart;
 
   /* thomasvs: I'm sorry, but I'm going to add glib stuff here.
-  * I'm appending logical values for LADSPA_PATH here
-  */
+   * I'm appending logical values for LADSPA_PATH here
+   */
 
   pcLADSPAPath = g_strdup_printf ("%s:/usr/lib/ladspa:/usr/local/lib/ladspa",
-	          getenv("LADSPA_PATH"));
+      getenv ("LADSPA_PATH"));
 
   if (!pcLADSPAPath) {
 /*    fprintf(stderr, */
@@ -114,20 +112,20 @@ LADSPAPluginSearch(LADSPAPluginSearchCallbackFunction fCallbackFunction) {
 /*	    "environment variable set.\n"); */
     return;
   }
-  
+
   pcStart = pcLADSPAPath;
   while (*pcStart != '\0') {
     pcEnd = pcStart;
     while (*pcEnd != ':' && *pcEnd != '\0')
       pcEnd++;
-    
-    pcBuffer = malloc(1 + pcEnd - pcStart);
+
+    pcBuffer = malloc (1 + pcEnd - pcStart);
     if (pcEnd > pcStart)
-      strncpy(pcBuffer, pcStart, pcEnd - pcStart);
+      strncpy (pcBuffer, pcStart, pcEnd - pcStart);
     pcBuffer[pcEnd - pcStart] = '\0';
-    
-    LADSPADirectoryPluginSearch(pcBuffer, fCallbackFunction);
-    free(pcBuffer);
+
+    LADSPADirectoryPluginSearch (pcBuffer, fCallbackFunction);
+    free (pcBuffer);
 
     pcStart = pcEnd;
     if (*pcStart == ':')

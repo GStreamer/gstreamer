@@ -49,8 +49,8 @@ SOFTWARE.
  * prototyped in qcamip.h
  */
 
-static int qcip_pixel_average(struct qcam *q, scanbuf *scan);
-static int qcip_luminance_std(struct qcam *q, scanbuf *scan, int avg);
+static int qcip_pixel_average (struct qcam *q, scanbuf * scan);
+static int qcip_luminance_std (struct qcam *q, scanbuf * scan, int avg);
 
 /* Private data used by the auto exposure routine */
 
@@ -63,7 +63,7 @@ static int ae_mode = AE_ALL_AVG;
 /* Calculate average pixel value for entire image */
 
 static int
-qcip_pixel_average(struct qcam *q, scanbuf *scan)
+qcip_pixel_average (struct qcam *q, scanbuf * scan)
 {
   int count = 0;
   int sum = 0;
@@ -83,7 +83,7 @@ qcip_pixel_average(struct qcam *q, scanbuf *scan)
 /* Calculate average pixel value for center of image */
 
 static int
-qcip_pixel_average_center(struct qcam *q, scanbuf *scan)
+qcip_pixel_average_center (struct qcam *q, scanbuf * scan)
 {
   int count = 0;
   int sum = 0;
@@ -95,12 +95,12 @@ qcip_pixel_average_center(struct qcam *q, scanbuf *scan)
   width = q->width / q->transfer_scale;
   height = q->height / q->transfer_scale;
 
-  maxcol = width  * 2 / 3;
+  maxcol = width * 2 / 3;
   maxrow = height * 2 / 3;
 
-  for (i = width/3; i < maxcol; i++) {
-    for (j = height/3; j < maxrow; j++) {
-      sum += scan[j*width+i];
+  for (i = width / 3; i < maxcol; i++) {
+    for (j = height / 3; j < maxrow; j++) {
+      sum += scan[j * width + i];
       count++;
     }
   }
@@ -108,7 +108,7 @@ qcip_pixel_average_center(struct qcam *q, scanbuf *scan)
 }
 
 int
-qcip_set_luminance_target(struct qcam *q, int val)
+qcip_set_luminance_target (struct qcam *q, int val)
 {
   const int max_pixel_val = q->bpp == 6 ? 63 : 15;
 
@@ -121,7 +121,7 @@ qcip_set_luminance_target(struct qcam *q, int val)
 }
 
 int
-qcip_set_luminance_tolerance(struct qcam *q, int val)
+qcip_set_luminance_tolerance (struct qcam *q, int val)
 {
   const int max_pixel_val = q->bpp == 6 ? 63 : 15;
 
@@ -139,21 +139,21 @@ qcip_set_luminance_tolerance(struct qcam *q, int val)
 }
 
 int
-qcip_set_luminance_std_target(struct qcam *q, int val)
+qcip_set_luminance_std_target (struct qcam *q, int val)
 {
   luminance_std_target = val;
   return QCIP_XPSR_OK;
 }
 
 int
-qcip_set_luminance_std_tolerance(struct qcam *q, int val)
+qcip_set_luminance_std_tolerance (struct qcam *q, int val)
 {
   luminance_std_tolerance = val;
   return QCIP_XPSR_OK;
 }
 
 int
-qcip_set_autoexposure_mode(int val)
+qcip_set_autoexposure_mode (int val)
 {
   ae_mode = val;
   return 0;
@@ -162,7 +162,7 @@ qcip_set_autoexposure_mode(int val)
 /* Calculate standard deviation of pixel value for entire image */
 
 static int
-qcip_luminance_std(struct qcam *q, scanbuf *scan, int avg)
+qcip_luminance_std (struct qcam *q, scanbuf * scan, int avg)
 {
   int count = 0;
   int sum = 0;
@@ -197,7 +197,7 @@ qcip_luminance_std(struct qcam *q, scanbuf *scan, int avg)
  */
 
 int
-qcip_autoexposure(struct qcam *q, scanbuf *scan)
+qcip_autoexposure (struct qcam *q, scanbuf * scan)
 {
   int luminance_dif;
   int luminance_avg;
@@ -207,45 +207,46 @@ qcip_autoexposure(struct qcam *q, scanbuf *scan)
   int ret = QCIP_XPSR_OK;
 
 #ifdef DEBUG
-  fprintf(stderr, "Brightness: %d  Contrast: %d\n",
-	  qc_getbrightness(q), qc_getcontrast(q));
+  fprintf (stderr, "Brightness: %d  Contrast: %d\n",
+      qc_getbrightness (q), qc_getcontrast (q));
 #endif
 
   switch (ae_mode) {
-  case AE_CTR_AVG:
-    luminance_avg = qcip_pixel_average_center(q, scan);
-    break;
-  case AE_STD_AVG:
-    luminance_avg = qcip_pixel_average(q, scan);
-    lum_std = qcip_luminance_std(q, scan, luminance_avg);
+    case AE_CTR_AVG:
+      luminance_avg = qcip_pixel_average_center (q, scan);
+      break;
+    case AE_STD_AVG:
+      luminance_avg = qcip_pixel_average (q, scan);
+      lum_std = qcip_luminance_std (q, scan, luminance_avg);
 
-    /* ==>> Contrast adjustment <<== */
+      /* ==>> Contrast adjustment <<== */
 
-    /* set target if it has not been explicitly set */
-    if (luminance_std_target == -1) {
-      luminance_std_target = q->bpp == 6 ? 10 : 2;
-    }
-
-    /* Adjust contrast to reach target luminance standard deviation */
-    lum_std_min = luminance_std_target - luminance_std_tolerance;
-    lum_std_max = luminance_std_target + luminance_std_tolerance;
-
-    if (lum_std < lum_std_min || lum_std > lum_std_max) {
-      ret = QCIP_XPSR_RSCN;
-      if (qc_setcontrast(q, luminance_std_target - lum_std + qc_getcontrast(q))) {
-	return QCIP_XPSR_ERR;
+      /* set target if it has not been explicitly set */
+      if (luminance_std_target == -1) {
+	luminance_std_target = q->bpp == 6 ? 10 : 2;
       }
-    }
+
+      /* Adjust contrast to reach target luminance standard deviation */
+      lum_std_min = luminance_std_target - luminance_std_tolerance;
+      lum_std_max = luminance_std_target + luminance_std_tolerance;
+
+      if (lum_std < lum_std_min || lum_std > lum_std_max) {
+	ret = QCIP_XPSR_RSCN;
+	if (qc_setcontrast (q,
+		luminance_std_target - lum_std + qc_getcontrast (q))) {
+	  return QCIP_XPSR_ERR;
+	}
+      }
 #ifdef DEBUG
-    fprintf(stderr, "Luminance std/target/tolerance: %d/%d/%d\n",
-	    lum_std, luminance_std_target, luminance_std_tolerance );
+      fprintf (stderr, "Luminance std/target/tolerance: %d/%d/%d\n",
+	  lum_std, luminance_std_target, luminance_std_tolerance);
 #endif
-    
-    break;
-  case AE_ALL_AVG:
-  default:
-    luminance_avg = qcip_pixel_average(q, scan);
-    break;
+
+      break;
+    case AE_ALL_AVG:
+    default:
+      luminance_avg = qcip_pixel_average (q, scan);
+      break;
   }
 
   /* ==>> Brightness adjustment <<== */
@@ -259,8 +260,8 @@ qcip_autoexposure(struct qcam *q, scanbuf *scan)
   lum_max = luminance_target + luminance_tolerance;
 
 #ifdef DEBUG
-  fprintf(stderr, "Luminance avg/target/tolerance: %d/%d/%d\n",
-	  luminance_avg, luminance_target, luminance_tolerance );
+  fprintf (stderr, "Luminance avg/target/tolerance: %d/%d/%d\n",
+      luminance_avg, luminance_target, luminance_tolerance);
 #endif
 
   /* check for luminance within target range */
@@ -277,7 +278,7 @@ qcip_autoexposure(struct qcam *q, scanbuf *scan)
     /* Adjusted brightness is out of range ..
      * throw in the towel ... auto-exposure has failed!
      */
-    if (qc_setbrightness(q, brightness_adj + qc_getbrightness(q))) {
+    if (qc_setbrightness (q, brightness_adj + qc_getbrightness (q))) {
       return QCIP_XPSR_ERR;
     }
   }

@@ -25,40 +25,43 @@
 #include <shout/shout.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 /* Definition of structure storing data for this element. */
-typedef struct _GstIcecastSend GstIcecastSend;
-struct _GstIcecastSend {
-  GstElement element;
+  typedef struct _GstIcecastSend GstIcecastSend;
+  struct _GstIcecastSend
+  {
+    GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  shout_conn_t conn;
+    shout_conn_t conn;
 
-  gchar *ip;
-  guint port;
-  gchar *password;
-  gboolean public;
-  gchar *name;
-  gchar *description;
-  gchar *genre;
-  gchar *mount;
-  gchar *dumpfile;
-  gboolean icy;
-  gchar *aim;
-  gchar *icq;
-  gchar *irc;
+    gchar *ip;
+    guint port;
+    gchar *password;
+    gboolean public;
+    gchar *name;
+    gchar *description;
+    gchar *genre;
+    gchar *mount;
+    gchar *dumpfile;
+    gboolean icy;
+    gchar *aim;
+    gchar *icq;
+    gchar *irc;
 
-};
+  };
 
 /* Standard definition defining a class for this element. */
-typedef struct _GstIcecastSendClass GstIcecastSendClass;
-struct _GstIcecastSendClass {
-  GstElementClass parent_class;
-};
+  typedef struct _GstIcecastSendClass GstIcecastSendClass;
+  struct _GstIcecastSendClass
+  {
+    GstElementClass parent_class;
+  };
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_ICECASTSEND \
@@ -73,12 +76,12 @@ struct _GstIcecastSendClass {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ICECASTSEND))
 
 /* Standard function returning type information. */
-GType gst_icecastsend_get_type(void);
+  GType gst_icecastsend_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_ICECASTSEND_H__ */
+#endif				/* __GST_ICECASTSEND_H__ */

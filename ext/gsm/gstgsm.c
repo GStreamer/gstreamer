@@ -25,23 +25,19 @@
 #include "gstgsmenc.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "gsmenc", GST_RANK_NONE, GST_TYPE_GSMENC))
     return FALSE;
-  if (!gst_element_register (plugin, "gsmdec", GST_RANK_PRIMARY, GST_TYPE_GSMDEC))
+  if (!gst_element_register (plugin, "gsmdec", GST_RANK_PRIMARY,
+	  GST_TYPE_GSMDEC))
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gsm",
-  "GSM Elements Plugin",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gsm",
+    "GSM Elements Plugin",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

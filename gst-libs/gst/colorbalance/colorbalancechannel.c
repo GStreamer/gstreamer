@@ -25,15 +25,17 @@
 
 #include "colorbalancechannel.h"
 
-enum {
+enum
+{
   /* FILL ME */
   SIGNAL_VALUE_CHANGED,
   LAST_SIGNAL
 };
 
-static void gst_color_balance_channel_class_init (GstColorBalanceChannelClass *klass);
-static void gst_color_balance_channel_init (GstColorBalanceChannel *balance);
-static void gst_color_balance_channel_dispose (GObject *object);
+static void gst_color_balance_channel_class_init (GstColorBalanceChannelClass *
+    klass);
+static void gst_color_balance_channel_init (GstColorBalanceChannel * balance);
+static void gst_color_balance_channel_dispose (GObject * object);
 
 static GObjectClass *parent_class = NULL;
 static guint signals[LAST_SIGNAL] = { 0 };
@@ -59,46 +61,44 @@ gst_color_balance_channel_get_type (void)
 
     gst_color_balance_channel_type =
 	g_type_register_static (G_TYPE_OBJECT,
-				"GstColorBalanceChannel",
-				&color_balance_channel_info, 0);
+	"GstColorBalanceChannel", &color_balance_channel_info, 0);
   }
 
   return gst_color_balance_channel_type;
 }
 
 static void
-gst_color_balance_channel_class_init (GstColorBalanceChannelClass *klass)
+gst_color_balance_channel_class_init (GstColorBalanceChannelClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   signals[SIGNAL_VALUE_CHANGED] =
-    g_signal_new ("value-changed", G_TYPE_FROM_CLASS (klass),
-		  G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstColorBalanceChannelClass,
-				   value_changed),
-                  NULL, NULL, g_cclosure_marshal_VOID__INT,
-                  G_TYPE_NONE, 1, G_TYPE_INT);
+      g_signal_new ("value-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstColorBalanceChannelClass,
+	  value_changed),
+      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   object_klass->dispose = gst_color_balance_channel_dispose;
 }
 
 static void
-gst_color_balance_channel_init (GstColorBalanceChannel *channel)
+gst_color_balance_channel_init (GstColorBalanceChannel * channel)
 {
   channel->label = NULL;
   channel->min_value = channel->max_value = 0;
 }
 
 static void
-gst_color_balance_channel_dispose (GObject *object)
+gst_color_balance_channel_dispose (GObject * object)
 {
   GstColorBalanceChannel *channel = GST_COLOR_BALANCE_CHANNEL (object);
 
   if (channel->label)
     g_free (channel->label);
-  
+
   channel->label = NULL;
 
   if (parent_class->dispose)

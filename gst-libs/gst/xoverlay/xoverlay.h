@@ -26,7 +26,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_X_OVERLAY \
   (gst_x_overlay_get_type ())
 #define GST_X_OVERLAY(obj) \
@@ -40,42 +39,38 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_X_OVERLAY))
 #define GST_X_OVERLAY_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_X_OVERLAY, GstXOverlayClass))
-
 typedef struct _GstXOverlay GstXOverlay;
 
-typedef struct _GstXOverlayClass {
+typedef struct _GstXOverlayClass
+{
   GTypeInterface klass;
 
   /* virtual functions */
-  void (* set_xwindow_id) (GstXOverlay *overlay,
-			   gulong	xwindow_id);
+  void (*set_xwindow_id) (GstXOverlay * overlay, gulong xwindow_id);
   /* optional virtual functions */
-  void (* get_desired_size) (GstXOverlay *overlay,
-			     guint *width,
-			     guint *height);
-  void (* expose) (GstXOverlay *overlay);
-  
+  void (*get_desired_size) (GstXOverlay * overlay,
+      guint * width, guint * height);
+  void (*expose) (GstXOverlay * overlay);
+
   /* signals */
-  void (*have_xwindow_id) (GstXOverlay *overlay,
-                           gulong	xwindow_id);
-  void (* desired_size)	  (GstXOverlay *overlay,
-			   guint width,
-			   guint height);
+  void (*have_xwindow_id) (GstXOverlay * overlay, gulong xwindow_id);
+  void (*desired_size) (GstXOverlay * overlay, guint width, guint height);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstXOverlayClass;
 
-GType	gst_x_overlay_get_type		(void);
+GType gst_x_overlay_get_type (void);
 
 /* virtual class function wrappers */
-void gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, gulong xwindow_id);
-void gst_x_overlay_get_desired_size (GstXOverlay *overlay, guint *width, guint *height);
-void gst_x_overlay_expose (GstXOverlay *overlay);
+void gst_x_overlay_set_xwindow_id (GstXOverlay * overlay, gulong xwindow_id);
+void gst_x_overlay_get_desired_size (GstXOverlay * overlay, guint * width,
+    guint * height);
+void gst_x_overlay_expose (GstXOverlay * overlay);
 
 /* public methods to fire signals */
-void gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, gulong xwindow_id);
-void gst_x_overlay_got_desired_size (GstXOverlay *overlay, guint width, guint height);
+void gst_x_overlay_got_xwindow_id (GstXOverlay * overlay, gulong xwindow_id);
+void gst_x_overlay_got_desired_size (GstXOverlay * overlay, guint width,
+    guint height);
 
 G_END_DECLS
-
 #endif /* __GST_X_OVERLAY_H__ */

@@ -33,8 +33,7 @@ GstElementDetails tarkindec_details = {
   "Ogg Tarkin decoder",
   "Filter/Video/Decoder",
   "Decodes video in OGG Tarkin format",
-  "Monty <monty@xiph.org>, " 
-  "Wim Taymans <wim.taymans@chello.be>",
+  "Monty <monty@xiph.org>, " "Wim Taymans <wim.taymans@chello.be>",
 };
 
 /* TarkinDec signals and args */
@@ -50,21 +49,21 @@ enum
   ARG_BITRATE,
 };
 
-static void     gst_tarkindec_base_init         (gpointer g_class);
-static void 	gst_tarkindec_class_init 	(TarkinDecClass *klass);
-static void 	gst_tarkindec_init 		(TarkinDec *arkindec);
+static void gst_tarkindec_base_init (gpointer g_class);
+static void gst_tarkindec_class_init (TarkinDecClass * klass);
+static void gst_tarkindec_init (TarkinDec * arkindec);
 
-static void 	gst_tarkindec_chain 		(GstPad *pad, GstData *_data);
-static void 	gst_tarkindec_setup 		(TarkinDec *tarkindec);
-static GstElementStateReturn
-		gst_tarkindec_change_state 	(GstElement *element);
+static void gst_tarkindec_chain (GstPad * pad, GstData * _data);
+static void gst_tarkindec_setup (TarkinDec * tarkindec);
+static GstElementStateReturn gst_tarkindec_change_state (GstElement * element);
 
-static void 	gst_tarkindec_get_property 	(GObject *object, guint prop_id, GValue *value,
-						 GParamSpec *pspec);
-static void 	gst_tarkindec_set_property 	(GObject *object, guint prop_id, const GValue *value,
-						 GParamSpec *pspec);
+static void gst_tarkindec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_tarkindec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_tarkindec_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -74,7 +73,7 @@ tarkindec_get_type (void)
 
   if (!tarkindec_type) {
     static const GTypeInfo tarkindec_info = {
-      sizeof (TarkinDecClass), 
+      sizeof (TarkinDecClass),
       gst_tarkindec_base_init,
       NULL,
       (GClassInitFunc) gst_tarkindec_class_init,
@@ -85,38 +84,35 @@ tarkindec_get_type (void)
       (GInstanceInitFunc) gst_tarkindec_init,
     };
 
-    tarkindec_type = g_type_register_static (GST_TYPE_ELEMENT, "TarkinDec", &tarkindec_info, 0);
+    tarkindec_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "TarkinDec", &tarkindec_info,
+	0);
   }
   return tarkindec_type;
 }
 
-static GstCaps*
+static GstCaps *
 tarkin_caps_factory (void)
 {
-  return
-   gst_caps_new (
-  	"tarkin_tarkin",
-  	"application/ogg",
-	  NULL);
+  return gst_caps_new ("tarkin_tarkin", "application/ogg", NULL);
 }
 
-static GstCaps*
+static GstCaps *
 raw_caps_factory (void)
 {
   return
-   GST_CAPS_NEW (
-    "tarkin_raw",
-    "video/x-raw-rgb",
-      "bpp",        GST_PROPS_INT (24),
-      "depth",      GST_PROPS_INT (24),
+      GST_CAPS_NEW ("tarkin_raw",
+      "video/x-raw-rgb",
+      "bpp", GST_PROPS_INT (24),
+      "depth", GST_PROPS_INT (24),
       "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "red_mask",   GST_PROPS_INT (0xff0000),
+      "red_mask", GST_PROPS_INT (0xff0000),
       "green_mask", GST_PROPS_INT (0xff00),
-      "blue_mask",  GST_PROPS_INT (0xff),
-      "width",      GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "height",     GST_PROPS_INT_RANGE (0, G_MAXINT),
-      "framerate",  GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
-   );
+      "blue_mask", GST_PROPS_INT (0xff),
+      "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+      "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+      "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT)
+      );
 }
 
 static void
@@ -128,16 +124,10 @@ gst_tarkindec_base_init (gpointer g_class)
   raw_caps = raw_caps_factory ();
   tarkin_caps = tarkin_caps_factory ();
 
-  dec_sink_template = gst_pad_template_new ("sink", 
-					    GST_PAD_SINK, 
-					    GST_PAD_ALWAYS, 
-					    tarkin_caps, 
-					    NULL);
-  dec_src_template = gst_pad_template_new ("src", 
-					   GST_PAD_SRC, 
-					   GST_PAD_ALWAYS, 
-					   raw_caps, 
-					   NULL);
+  dec_sink_template = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, tarkin_caps, NULL);
+  dec_src_template = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, raw_caps, NULL);
   gst_element_class_add_pad_template (element_class, dec_sink_template);
   gst_element_class_add_pad_template (element_class, dec_src_template);
 
@@ -145,7 +135,7 @@ gst_tarkindec_base_init (gpointer g_class)
 }
 
 static void
-gst_tarkindec_class_init (TarkinDecClass *klass)
+gst_tarkindec_class_init (TarkinDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -153,9 +143,9 @@ gst_tarkindec_class_init (TarkinDecClass *klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE, 
-    g_param_spec_int ("bitrate", "bitrate", "bitrate", 
-	    G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
+      g_param_spec_int ("bitrate", "bitrate", "bitrate",
+	  G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -184,10 +174,10 @@ gst_tarkindec_init (TarkinDec * tarkindec)
 }
 
 static void
-gst_tarkindec_setup (TarkinDec *tarkindec)
+gst_tarkindec_setup (TarkinDec * tarkindec)
 {
   tarkindec->tarkin_stream = tarkin_stream_new ();
-  
+
   ogg_sync_init (&tarkindec->oy);
   ogg_stream_init (&tarkindec->os, 1);
   tarkin_info_init (&tarkindec->ti);
@@ -197,7 +187,7 @@ gst_tarkindec_setup (TarkinDec *tarkindec)
 }
 
 static void
-gst_tarkindec_chain (GstPad *pad, GstData *_data)
+gst_tarkindec_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   TarkinDec *tarkindec;
@@ -209,7 +199,8 @@ gst_tarkindec_chain (GstPad *pad, GstData *_data)
   tarkindec = GST_TARKINDEC (gst_pad_get_parent (pad));
 
   if (!tarkindec->setup) {
-    GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL), ("decoder not initialized (input is not tarkin?)"));
+    GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL),
+	("decoder not initialized (input is not tarkin?)"));
     if (GST_IS_BUFFER (buf))
       gst_buffer_unref (buf);
     else
@@ -224,61 +215,50 @@ gst_tarkindec_chain (GstPad *pad, GstData *_data)
 	gst_pad_event_default (pad, GST_EVENT (buf));
 	break;
     }
-  }
-  else {
+  } else {
     gchar *data;
     gulong size;
     gchar *buffer;
     guchar *rgb;
     TarkinTime date;
     TarkinVideoLayerDesc *layer;
-  
+
     /* data to decode */
     data = GST_BUFFER_DATA (buf);
     size = GST_BUFFER_SIZE (buf);
 
-    buffer = ogg_sync_buffer(&tarkindec->oy, size);
+    buffer = ogg_sync_buffer (&tarkindec->oy, size);
     memcpy (buffer, data, size);
-    ogg_sync_wrote(&tarkindec->oy, size);
+    ogg_sync_wrote (&tarkindec->oy, size);
 
     if (ogg_sync_pageout (&tarkindec->oy, &tarkindec->og)) {
       ogg_stream_pagein (&tarkindec->os, &tarkindec->og);
 
       while (ogg_stream_packetout (&tarkindec->os, &tarkindec->op)) {
-        if (tarkindec->op.e_o_s)
-          break;
-	if (tarkindec->nheader < 3) { /* 3 first packets to headerin */
-          tarkin_synthesis_headerin (&tarkindec->ti, &tarkindec->tc, &tarkindec->op);
+	if (tarkindec->op.e_o_s)
+	  break;
+	if (tarkindec->nheader < 3) {	/* 3 first packets to headerin */
+	  tarkin_synthesis_headerin (&tarkindec->ti, &tarkindec->tc,
+	      &tarkindec->op);
 
 	  if (tarkindec->nheader == 2) {
 	    tarkin_synthesis_init (tarkindec->tarkin_stream, &tarkindec->ti);
-          }
-          tarkindec->nheader++;
-        } else {
+	  }
+	  tarkindec->nheader++;
+	} else {
 	  tarkin_synthesis_packetin (tarkindec->tarkin_stream, &tarkindec->op);
-	  
-	  while (tarkin_synthesis_frameout (tarkindec->tarkin_stream, &rgb, 0, &date) == 0) {
-            GstBuffer *outbuf;
+
+	  while (tarkin_synthesis_frameout (tarkindec->tarkin_stream, &rgb, 0,
+		  &date) == 0) {
+	    GstBuffer *outbuf;
 
 	    layer = &tarkindec->tarkin_stream->layer->desc;
 
 	    if (!GST_PAD_CAPS (tarkindec->srcpad)) {
-	      if (gst_pad_try_set_caps (tarkindec->srcpad,
-				      GST_CAPS_NEW (
-				        "tarkin_raw",
-				        "video/x-raw-rgb",
-				        "bpp",        GST_PROPS_INT (24),
-				        "depth",      GST_PROPS_INT (24),
-				        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-				        "red_mask",   GST_PROPS_INT (0xff0000),
-				        "green_mask", GST_PROPS_INT (0xff00),
-				        "blue_mask",  GST_PROPS_INT (0xff),
-				        "width",      GST_PROPS_INT (layer->width),
-				        "height",     GST_PROPS_INT (layer->height),
-					"framerate",  GST_PROPS_FLOAT (0.) /* FIXME!!! */
-				       )) <= 0)
-	      {
-		GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL),  ("could not output format"));
+	      if (gst_pad_try_set_caps (tarkindec->srcpad, GST_CAPS_NEW ("tarkin_raw", "video/x-raw-rgb", "bpp", GST_PROPS_INT (24), "depth", GST_PROPS_INT (24), "endianness", GST_PROPS_INT (G_BYTE_ORDER), "red_mask", GST_PROPS_INT (0xff0000), "green_mask", GST_PROPS_INT (0xff00), "blue_mask", GST_PROPS_INT (0xff), "width", GST_PROPS_INT (layer->width), "height", GST_PROPS_INT (layer->height), "framerate", GST_PROPS_FLOAT (0.)	/* FIXME!!! */
+		      )) <= 0) {
+		GST_ELEMENT_ERROR (tarkindec, CORE, NEGOTATION, (NULL),
+		    ("could not output format"));
 		gst_buffer_unref (buf);
 		return;
 	      }
@@ -288,10 +268,10 @@ gst_tarkindec_chain (GstPad *pad, GstData *_data)
 	    GST_BUFFER_SIZE (outbuf) = layer->width * layer->height * 3;
 	    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DONTFREE);
 	    gst_pad_push (tarkindec->srcpad, GST_DATA (outbuf));
-	    
+
 	    tarkin_synthesis_freeframe (tarkindec->tarkin_stream, rgb);
-          }
-        }
+	  }
+	}
       }
     }
     gst_buffer_unref (buf);
@@ -299,7 +279,7 @@ gst_tarkindec_chain (GstPad *pad, GstData *_data)
 }
 
 static GstElementStateReturn
-gst_tarkindec_change_state (GstElement *element)
+gst_tarkindec_change_state (GstElement * element)
 {
   TarkinDec *tarkindec;
 
@@ -314,12 +294,13 @@ gst_tarkindec_change_state (GstElement *element)
     default:
       break;
   }
-  
+
   return parent_class->change_state (element);
 }
 
 static void
-gst_tarkindec_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_tarkindec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   TarkinDec *tarkindec;
 
@@ -338,8 +319,8 @@ gst_tarkindec_get_property (GObject *object, guint prop_id, GValue *value, GPara
 }
 
 static void
-gst_tarkindec_set_property (GObject *object, guint prop_id, const GValue *value,
-			    GParamSpec *pspec)
+gst_tarkindec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   TarkinDec *tarkindec;
 

@@ -35,42 +35,43 @@ static GstElementDetails artsdsink_details = {
 };
 
 /* Signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_MUTE,
   ARG_NAME,
 };
 
-static GstStaticPadTemplate sink_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
-);
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    );
 
-static void                     gst_artsdsink_base_init                 (gpointer g_class);
-static void			gst_artsdsink_class_init		(GstArtsdsinkClass *klass);
-static void			gst_artsdsink_init			(GstArtsdsink *artsdsink);
+static void gst_artsdsink_base_init (gpointer g_class);
+static void gst_artsdsink_class_init (GstArtsdsinkClass * klass);
+static void gst_artsdsink_init (GstArtsdsink * artsdsink);
 
-static gboolean			gst_artsdsink_open_audio		(GstArtsdsink *sink);
-static void			gst_artsdsink_close_audio		(GstArtsdsink *sink);
-static GstElementStateReturn	gst_artsdsink_change_state		(GstElement *element);
-static gboolean			gst_artsdsink_sync_parms		(GstArtsdsink *artsdsink);
-static GstPadLinkReturn		gst_artsdsink_link			(GstPad *pad, const GstCaps *caps);
-static void			gst_artsdsink_chain			(GstPad *pad, GstData *_data);
+static gboolean gst_artsdsink_open_audio (GstArtsdsink * sink);
+static void gst_artsdsink_close_audio (GstArtsdsink * sink);
+static GstElementStateReturn gst_artsdsink_change_state (GstElement * element);
+static gboolean gst_artsdsink_sync_parms (GstArtsdsink * artsdsink);
+static GstPadLinkReturn gst_artsdsink_link (GstPad * pad, const GstCaps * caps);
+static void gst_artsdsink_chain (GstPad * pad, GstData * _data);
 
-static void			gst_artsdsink_set_property		(GObject *object, guint prop_id, 
-									 const GValue *value, GParamSpec *pspec);
-static void			gst_artsdsink_get_property		(GObject *object, guint prop_id, 
-									 GValue *value, GParamSpec *pspec);
+static void gst_artsdsink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_artsdsink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_artsdsink_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -80,17 +81,19 @@ gst_artsdsink_get_type (void)
 
   if (!artsdsink_type) {
     static const GTypeInfo artsdsink_info = {
-      sizeof(GstArtsdsinkClass),
+      sizeof (GstArtsdsinkClass),
       gst_artsdsink_base_init,
       NULL,
-      (GClassInitFunc)gst_artsdsink_class_init,
+      (GClassInitFunc) gst_artsdsink_class_init,
       NULL,
       NULL,
-      sizeof(GstArtsdsink),
+      sizeof (GstArtsdsink),
       0,
-      (GInstanceInitFunc)gst_artsdsink_init,
+      (GInstanceInitFunc) gst_artsdsink_init,
     };
-    artsdsink_type = g_type_register_static(GST_TYPE_ELEMENT, "GstArtsdsink", &artsdsink_info, 0);
+    artsdsink_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstArtsdsink",
+	&artsdsink_info, 0);
   }
   return artsdsink_type;
 }
@@ -106,23 +109,19 @@ gst_artsdsink_base_init (gpointer g_class)
 }
 
 static void
-gst_artsdsink_class_init (GstArtsdsinkClass *klass)
+gst_artsdsink_class_init (GstArtsdsinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
-    g_param_spec_boolean("mute","mute","mute",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));	/* CHECKME */
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NAME,
-    g_param_spec_string("name","name","name",
-                        NULL, G_PARAM_READWRITE)); /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_READWRITE));	/* CHECKME */
 
   gobject_class->set_property = gst_artsdsink_set_property;
   gobject_class->get_property = gst_artsdsink_get_property;
@@ -131,13 +130,14 @@ gst_artsdsink_class_init (GstArtsdsinkClass *klass)
 }
 
 static void
-gst_artsdsink_init(GstArtsdsink *artsdsink)
+gst_artsdsink_init (GstArtsdsink * artsdsink)
 {
-  artsdsink->sinkpad = gst_pad_new_from_template (
-      gst_element_get_pad_template (GST_ELEMENT (artsdsink), "sink"), "sink");
-  gst_element_add_pad(GST_ELEMENT(artsdsink), artsdsink->sinkpad);
-  gst_pad_set_chain_function(artsdsink->sinkpad, gst_artsdsink_chain);
-  gst_pad_set_link_function(artsdsink->sinkpad, gst_artsdsink_link);
+  artsdsink->sinkpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+	  (artsdsink), "sink"), "sink");
+  gst_element_add_pad (GST_ELEMENT (artsdsink), artsdsink->sinkpad);
+  gst_pad_set_chain_function (artsdsink->sinkpad, gst_artsdsink_chain);
+  gst_pad_set_link_function (artsdsink->sinkpad, gst_artsdsink_link);
 
   artsdsink->connected = FALSE;
   artsdsink->mute = FALSE;
@@ -145,12 +145,13 @@ gst_artsdsink_init(GstArtsdsink *artsdsink)
 }
 
 static gboolean
-gst_artsdsink_sync_parms (GstArtsdsink *artsdsink)
+gst_artsdsink_sync_parms (GstArtsdsink * artsdsink)
 {
   g_return_val_if_fail (artsdsink != NULL, FALSE);
   g_return_val_if_fail (GST_IS_ARTSDSINK (artsdsink), FALSE);
 
-  if (!artsdsink->connected) return TRUE;
+  if (!artsdsink->connected)
+    return TRUE;
 
   /* Need to set stream to use new parameters: only way to do this is to reopen. */
   gst_artsdsink_close_audio (artsdsink);
@@ -158,7 +159,7 @@ gst_artsdsink_sync_parms (GstArtsdsink *artsdsink)
 }
 
 static GstPadLinkReturn
-gst_artsdsink_link (GstPad *pad, const GstCaps *caps)
+gst_artsdsink_link (GstPad * pad, const GstCaps * caps)
 {
   GstArtsdsink *artsdsink = GST_ARTSDSINK (gst_pad_get_parent (pad));
   GstStructure *structure;
@@ -176,30 +177,32 @@ gst_artsdsink_link (GstPad *pad, const GstCaps *caps)
 }
 
 static void
-gst_artsdsink_chain (GstPad *pad, GstData *_data)
+gst_artsdsink_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstArtsdsink *artsdsink;
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (buf != NULL);
 
   artsdsink = GST_ARTSDSINK (gst_pad_get_parent (pad));
 
   if (GST_BUFFER_DATA (buf) != NULL) {
-    gst_trace_add_entry(NULL, 0, GPOINTER_TO_INT(buf), "artsdsink: writing to server");
+    gst_trace_add_entry (NULL, 0, GPOINTER_TO_INT (buf),
+	"artsdsink: writing to server");
     if (!artsdsink->mute && artsdsink->connected) {
       int bytes;
-      void * bufptr = GST_BUFFER_DATA (buf);
+      void *bufptr = GST_BUFFER_DATA (buf);
       int bufsize = GST_BUFFER_SIZE (buf);
+
       GST_DEBUG ("artsdsink: stream=%p data=%p size=%d",
-		 artsdsink->stream, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+	  artsdsink->stream, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
       do {
 	bytes = arts_write (artsdsink->stream, bufptr, bufsize);
-	if(bytes < 0) {
-	  fprintf(stderr,"arts_write error: %s\n", arts_error_text(bytes));
+	if (bytes < 0) {
+	  fprintf (stderr, "arts_write error: %s\n", arts_error_text (bytes));
 	  gst_buffer_unref (buf);
 	  return;
 	}
@@ -212,24 +215,26 @@ gst_artsdsink_chain (GstPad *pad, GstData *_data)
 }
 
 static void
-gst_artsdsink_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_artsdsink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstArtsdsink *artsdsink;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_ARTSDSINK(object));
-  artsdsink = GST_ARTSDSINK(object);
+  g_return_if_fail (GST_IS_ARTSDSINK (object));
+  artsdsink = GST_ARTSDSINK (object);
 
   switch (prop_id) {
     case ARG_MUTE:
       artsdsink->mute = g_value_get_boolean (value);
       break;
     case ARG_NAME:
-      if (artsdsink->connect_name != NULL) g_free(artsdsink->connect_name);
+      if (artsdsink->connect_name != NULL)
+	g_free (artsdsink->connect_name);
       if (g_value_get_string (value) == NULL)
-	  artsdsink->connect_name = NULL;
+	artsdsink->connect_name = NULL;
       else
-	  artsdsink->connect_name = g_strdup (g_value_get_string (value));
+	artsdsink->connect_name = g_strdup (g_value_get_string (value));
       break;
     default:
       break;
@@ -237,13 +242,14 @@ gst_artsdsink_set_property (GObject *object, guint prop_id, const GValue *value,
 }
 
 static void
-gst_artsdsink_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_artsdsink_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstArtsdsink *artsdsink;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_ARTSDSINK(object));
-  artsdsink = GST_ARTSDSINK(object);
+  g_return_if_fail (GST_IS_ARTSDSINK (object));
+  artsdsink = GST_ARTSDSINK (object);
 
   switch (prop_id) {
     case ARG_MUTE:
@@ -259,46 +265,42 @@ gst_artsdsink_get_property (GObject *object, guint prop_id, GValue *value, GPara
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "artsdsink", GST_RANK_NONE, GST_TYPE_ARTSDSINK))
+  if (!gst_element_register (plugin, "artsdsink", GST_RANK_NONE,
+	  GST_TYPE_ARTSDSINK))
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "artsdsink",
-  "Plays audio to an aRts server",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "artsdsink",
+    "Plays audio to an aRts server",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
 
-static gboolean
-gst_artsdsink_open_audio (GstArtsdsink *sink)
+     static gboolean gst_artsdsink_open_audio (GstArtsdsink * sink)
 {
-  const char * connname = "gstreamer";
+  const char *connname = "gstreamer";
   int errcode;
 
   /* Name used by aRtsd for this connection. */
-  if (sink->connect_name != NULL) connname = sink->connect_name;
+  if (sink->connect_name != NULL)
+    connname = sink->connect_name;
 
   /* FIXME: this should only ever happen once per process. */
   /* Really, artsc needs to be made thread safe to fix this (and other related */
   /* problems). */
-  errcode = arts_init();
-  if(errcode < 0) {
-      fprintf(stderr,"arts_init error: %s\n", arts_error_text(errcode));
-      return FALSE;
+  errcode = arts_init ();
+  if (errcode < 0) {
+    fprintf (stderr, "arts_init error: %s\n", arts_error_text (errcode));
+    return FALSE;
   }
 
   GST_DEBUG ("artsdsink: attempting to open connection to aRtsd server");
-  sink->stream = arts_play_stream(sink->frequency, sink->depth,
-				  sink->channels, connname);
+  sink->stream = arts_play_stream (sink->frequency, sink->depth,
+      sink->channels, connname);
   /* FIXME: check connection */
   /*   GST_DEBUG ("artsdsink: can't open connection to aRtsd server"); */
 
@@ -309,20 +311,21 @@ gst_artsdsink_open_audio (GstArtsdsink *sink)
 }
 
 static void
-gst_artsdsink_close_audio (GstArtsdsink *sink)
+gst_artsdsink_close_audio (GstArtsdsink * sink)
 {
-  if (!sink->connected) return;
+  if (!sink->connected)
+    return;
 
-  arts_close_stream(sink->stream);
-  arts_free();
+  arts_close_stream (sink->stream);
+  arts_free ();
   GST_FLAG_UNSET (sink, GST_ARTSDSINK_OPEN);
   sink->connected = FALSE;
 
-  g_print("artsdsink: closed connection\n");
+  g_print ("artsdsink: closed connection\n");
 }
 
 static GstElementStateReturn
-gst_artsdsink_change_state (GstElement *element)
+gst_artsdsink_change_state (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_ARTSDSINK (element), FALSE);
 
@@ -342,4 +345,3 @@ gst_artsdsink_change_state (GstElement *element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
   return GST_STATE_SUCCESS;
 }
-

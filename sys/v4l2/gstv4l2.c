@@ -29,7 +29,7 @@
 #include "gstv4l2src.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   /* actually, we can survive without it, but I'll create
    * that handling later on. */
@@ -37,9 +37,9 @@ plugin_init (GstPlugin *plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "v4l2element",
-			     GST_RANK_NONE, GST_TYPE_V4L2ELEMENT) ||
+	  GST_RANK_NONE, GST_TYPE_V4L2ELEMENT) ||
       !gst_element_register (plugin, "v4l2src",
-			     GST_RANK_NONE, GST_TYPE_V4L2SRC))
+	  GST_RANK_NONE, GST_TYPE_V4L2SRC))
     return FALSE;
 
 #ifdef ENABLE_NLS
@@ -50,14 +50,8 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "video4linux2",
-  "elements for Video 4 Linux 2",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "video4linux2",
+    "elements for Video 4 Linux 2",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

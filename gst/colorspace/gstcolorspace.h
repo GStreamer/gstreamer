@@ -23,7 +23,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_COLORSPACE \
   (gst_colorspace_get_type())
 #define GST_COLORSPACE(obj) \
@@ -34,11 +33,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLORSPACE))
 #define GST_IS_COLORSPACE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLORSPACE))
-
 typedef struct _GstColorspace GstColorspace;
 typedef struct _GstColorspaceClass GstColorspaceClass;
 
-typedef enum {
+typedef enum
+{
   GST_COLORSPACE_NONE,
   GST_COLORSPACE_HERMES,
   GST_COLORSPACE_YUV_RGB,
@@ -48,10 +47,11 @@ typedef enum {
   GST_COLORSPACE_420_SWAP,
 } GstColorSpaceConverterType;
 
-struct _GstColorspace {
+struct _GstColorspace
+{
   GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   int converter_index;
 
@@ -60,7 +60,7 @@ struct _GstColorspace {
 
   int src_size;
   int sink_size;
-  
+
   int src_stride;
   int sink_stride;
 
@@ -68,18 +68,21 @@ struct _GstColorspace {
   gdouble fps;
 };
 
-struct _GstColorspaceClass {
+struct _GstColorspaceClass
+{
   GstElementClass parent_class;
 };
 
-GType gst_colorspace_get_type(void);
+GType gst_colorspace_get_type (void);
 
-typedef struct _GstColorspaceFormat {
+typedef struct _GstColorspaceFormat
+{
   GstStaticCaps caps;
 
 } GstColorspaceFormat;
 
-typedef enum {
+typedef enum
+{
   GST_COLORSPACE_I420,
   GST_COLORSPACE_YV12,
   GST_COLORSPACE_RGB32,
@@ -87,13 +90,13 @@ typedef enum {
   GST_COLORSPACE_RGB16,
 } GstColorSpaceFormatType;
 
-typedef struct _GstColorspaceConverter {
+typedef struct _GstColorspaceConverter
+{
   GstColorSpaceFormatType from;
   GstColorSpaceFormatType to;
-  void (*convert) (GstColorspace *colorspace, unsigned char *dest, unsigned char *src);
+  void (*convert) (GstColorspace * colorspace, unsigned char *dest,
+      unsigned char *src);
 } GstColorspaceConverter;
 
 G_END_DECLS
-
 #endif
-

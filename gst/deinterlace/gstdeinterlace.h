@@ -26,7 +26,6 @@
 /* #include <gst/meta/audioraw.h> */
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_DEINTERLACE \
   (gst_deinterlace_get_type())
 #define GST_DEINTERLACE(obj) \
@@ -37,11 +36,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DEINTERLACE))
 #define GST_IS_DEINTERLACE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DEINTERLACE))
-
 typedef struct _GstDeInterlace GstDeInterlace;
 typedef struct _GstDeInterlaceClass GstDeInterlaceClass;
 
-struct _GstDeInterlace {
+struct _GstDeInterlace
+{
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
@@ -50,8 +49,8 @@ struct _GstDeInterlace {
 
   gboolean show_deinterlaced_area_only;
   gboolean blend;
-  gint threshold_blend; /* here we start blending */
-  gint threshold;         /* here we start interpolating TODO FIXME */
+  gint threshold_blend;		/* here we start blending */
+  gint threshold;		/* here we start interpolating TODO FIXME */
   gint edge_detect;
 
   gint picsize;
@@ -59,10 +58,10 @@ struct _GstDeInterlace {
 
 };
 
-struct _GstDeInterlaceClass {
+struct _GstDeInterlaceClass
+{
   GstElementClass parent_class;
 };
 
 G_END_DECLS
-
 #endif /* __GST_DEINTERLACE_H__ */

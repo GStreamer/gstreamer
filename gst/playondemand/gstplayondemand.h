@@ -29,7 +29,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_PLAYONDEMAND \
   (gst_play_on_demand_get_type())
 #define GST_PLAYONDEMAND(obj) \
@@ -40,58 +39,59 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAYONDEMAND))
 #define GST_IS_PLAYONDEMAND_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAYONDEMAND))
+typedef struct _GstPlayOnDemand GstPlayOnDemand;
+typedef struct _GstPlayOnDemandClass GstPlayOnDemandClass;
+typedef enum _GstPlayOnDemandFormat GstPlayOnDemandFormat;
 
-typedef struct _GstPlayOnDemand       GstPlayOnDemand;
-typedef struct _GstPlayOnDemandClass  GstPlayOnDemandClass;
-typedef enum   _GstPlayOnDemandFormat GstPlayOnDemandFormat;
-
-enum _GstPlayOnDemandFormat {
+enum _GstPlayOnDemandFormat
+{
   GST_PLAYONDEMAND_FORMAT_INT,
   GST_PLAYONDEMAND_FORMAT_FLOAT
 };
 
-struct _GstPlayOnDemand {
+struct _GstPlayOnDemand
+{
   GstElement element;
 
-  GstPad   *sinkpad, *srcpad;
+  GstPad *sinkpad, *srcpad;
   GstClock *clock;
 
   /* filter properties */
-  gboolean  mute;
-  gfloat    buffer_time;
-  guint     max_plays;
-  gfloat    tick_rate;
-  guint     total_ticks;
-  guint32  *ticks;
+  gboolean mute;
+  gfloat buffer_time;
+  guint max_plays;
+  gfloat tick_rate;
+  guint total_ticks;
+  guint32 *ticks;
 
   /* internal buffer info */
-  gchar    *buffer;
-  guint     buffer_bytes;
-  gboolean  eos;
+  gchar *buffer;
+  guint buffer_bytes;
+  gboolean eos;
 
   /* play pointers == internal buffer offsets for producing output sound */
-  guint    *plays;
-  guint     write;
+  guint *plays;
+  guint write;
 
   /* audio format info (used to calculate buffer_samples) */
   GstPlayOnDemandFormat format;
-  guint    rate;
-  guint    channels;
-  guint    width;
+  guint rate;
+  guint channels;
+  guint width;
 };
 
-struct _GstPlayOnDemandClass {
+struct _GstPlayOnDemandClass
+{
   GstElementClass parent_class;
 
-  void (*play)    (GstElement *elem);
-  void (*clear)   (GstElement *elem);
-  void (*reset)   (GstElement *elem);
-  void (*played)  (GstElement *elem);
-  void (*stopped) (GstElement *elem);
+  void (*play) (GstElement * elem);
+  void (*clear) (GstElement * elem);
+  void (*reset) (GstElement * elem);
+  void (*played) (GstElement * elem);
+  void (*stopped) (GstElement * elem);
 };
 
-GType gst_play_on_demand_get_type(void);
+GType gst_play_on_demand_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_PLAYONDEMAND_H__ */

@@ -9,7 +9,7 @@
 #define __SNDFILE_H
 
 #ifndef LPCBYTE
-typedef const BYTE * LPCBYTE;
+typedef const BYTE *LPCBYTE;
 #endif
 
 #define MOD_AMIGAC2			0x1AB
@@ -60,7 +60,7 @@ typedef const BYTE * LPCBYTE;
 #define MOD_TYPE_AMF0		0x200000
 #define MOD_TYPE_PSM		0x400000
 #define MOD_TYPE_J2B		0x800000
-#define MOD_TYPE_UMX		0x80000000 /* Fake type */
+#define MOD_TYPE_UMX		0x80000000	/* Fake type */
 #define MAX_MODTYPE			23
 
 
@@ -202,9 +202,9 @@ typedef const BYTE * LPCBYTE;
 #define RS_STIPCM16U	(RS_PCM16U|0x40|RSF_STEREO)	/* stereo 16-bit unsigned */
 #define RS_STIPCM16M	(RS_PCM16M|0x40|RSF_STEREO)	/* stereo 16-bit signed big endian */
 /* 24-bit signed */
-#define RS_PCM24S		(RS_PCM16S|0x80)			/* mono 24-bit signed */
+#define RS_PCM24S		(RS_PCM16S|0x80)	/* mono 24-bit signed */
 #define RS_STIPCM24S	(RS_PCM16S|0x80|RSF_STEREO)	/* stereo 24-bit signed */
-#define RS_PCM32S		(RS_PCM16S|0xC0)			/* mono 24-bit signed */
+#define RS_PCM32S		(RS_PCM16S|0xC0)	/* mono 24-bit signed */
 #define RS_STIPCM32S	(RS_PCM16S|0xC0|RSF_STEREO)	/* stereo 24-bit signed */
 
 /* NNA types */
@@ -269,176 +269,178 @@ typedef const BYTE * LPCBYTE;
 
 
 /* Reverb Types (GM2 Presets) */
-enum {
-	REVERBTYPE_SMALLROOM,
-	REVERBTYPE_MEDIUMROOM,
-	REVERBTYPE_LARGEROOM,
-	REVERBTYPE_SMALLHALL,
-	REVERBTYPE_MEDIUMHALL,
-	REVERBTYPE_LARGEHALL,
-	NUM_REVERBTYPES
+enum
+{
+  REVERBTYPE_SMALLROOM,
+  REVERBTYPE_MEDIUMROOM,
+  REVERBTYPE_LARGEROOM,
+  REVERBTYPE_SMALLHALL,
+  REVERBTYPE_MEDIUMHALL,
+  REVERBTYPE_LARGEHALL,
+  NUM_REVERBTYPES
 };
 
 
-enum {
-	SRCMODE_NEAREST,
-	SRCMODE_LINEAR,
-	SRCMODE_SPLINE,
-	SRCMODE_POLYPHASE,
-	NUM_SRC_MODES
+enum
+{
+  SRCMODE_NEAREST,
+  SRCMODE_LINEAR,
+  SRCMODE_SPLINE,
+  SRCMODE_POLYPHASE,
+  NUM_SRC_MODES
 };
 
 
 /* Sample Struct */
 typedef struct _MODINSTRUMENT
 {
-	UINT nLength,nLoopStart,nLoopEnd;
-	UINT nSustainStart, nSustainEnd;
-	signed char *pSample;
-	UINT nC4Speed;
-	WORD nPan;
-	WORD nVolume;
-	WORD nGlobalVol;
-	WORD uFlags;
-	signed char RelativeTone;
-	signed char nFineTune;
-	BYTE nVibType;
-	BYTE nVibSweep;
-	BYTE nVibDepth;
-	BYTE nVibRate;
-	CHAR name[22];
+  UINT nLength, nLoopStart, nLoopEnd;
+  UINT nSustainStart, nSustainEnd;
+  signed char *pSample;
+  UINT nC4Speed;
+  WORD nPan;
+  WORD nVolume;
+  WORD nGlobalVol;
+  WORD uFlags;
+  signed char RelativeTone;
+  signed char nFineTune;
+  BYTE nVibType;
+  BYTE nVibSweep;
+  BYTE nVibDepth;
+  BYTE nVibRate;
+  CHAR name[22];
 } MODINSTRUMENT;
 
 
 /* Instrument Struct */
 typedef struct _INSTRUMENTHEADER
 {
-	UINT nFadeOut;
-	DWORD dwFlags;
-	WORD nGlobalVol;
-	WORD nPan;
-	WORD VolPoints[MAX_ENVPOINTS];
-	WORD PanPoints[MAX_ENVPOINTS];
-	WORD PitchPoints[MAX_ENVPOINTS];
-	BYTE VolEnv[MAX_ENVPOINTS];
-	BYTE PanEnv[MAX_ENVPOINTS];
-	BYTE PitchEnv[MAX_ENVPOINTS];
-	BYTE Keyboard[128];
-	BYTE NoteMap[128];
+  UINT nFadeOut;
+  DWORD dwFlags;
+  WORD nGlobalVol;
+  WORD nPan;
+  WORD VolPoints[MAX_ENVPOINTS];
+  WORD PanPoints[MAX_ENVPOINTS];
+  WORD PitchPoints[MAX_ENVPOINTS];
+  BYTE VolEnv[MAX_ENVPOINTS];
+  BYTE PanEnv[MAX_ENVPOINTS];
+  BYTE PitchEnv[MAX_ENVPOINTS];
+  BYTE Keyboard[128];
+  BYTE NoteMap[128];
 
-	BYTE nVolEnv;
-	BYTE nPanEnv;
-	BYTE nPitchEnv;
-	BYTE nVolLoopStart;
-	BYTE nVolLoopEnd;
-	BYTE nVolSustainBegin;
-	BYTE nVolSustainEnd;
-	BYTE nPanLoopStart;
-	BYTE nPanLoopEnd;
-	BYTE nPanSustainBegin;
-	BYTE nPanSustainEnd;
-	BYTE nPitchLoopStart;
-	BYTE nPitchLoopEnd;
-	BYTE nPitchSustainBegin;
-	BYTE nPitchSustainEnd;
-	BYTE nNNA;
-	BYTE nDCT;
-	BYTE nDNA;
-	BYTE nPanSwing;
-	BYTE nVolSwing;
-	BYTE nIFC;
-	BYTE nIFR;
-	WORD wMidiBank;
-	BYTE nMidiProgram;
-	BYTE nMidiChannel;
-	BYTE nMidiDrumKey;
-	signed char nPPS;
-	unsigned char nPPC;
-	CHAR name[32];
-	CHAR filename[12];
+  BYTE nVolEnv;
+  BYTE nPanEnv;
+  BYTE nPitchEnv;
+  BYTE nVolLoopStart;
+  BYTE nVolLoopEnd;
+  BYTE nVolSustainBegin;
+  BYTE nVolSustainEnd;
+  BYTE nPanLoopStart;
+  BYTE nPanLoopEnd;
+  BYTE nPanSustainBegin;
+  BYTE nPanSustainEnd;
+  BYTE nPitchLoopStart;
+  BYTE nPitchLoopEnd;
+  BYTE nPitchSustainBegin;
+  BYTE nPitchSustainEnd;
+  BYTE nNNA;
+  BYTE nDCT;
+  BYTE nDNA;
+  BYTE nPanSwing;
+  BYTE nVolSwing;
+  BYTE nIFC;
+  BYTE nIFR;
+  WORD wMidiBank;
+  BYTE nMidiProgram;
+  BYTE nMidiChannel;
+  BYTE nMidiDrumKey;
+  signed char nPPS;
+  unsigned char nPPC;
+  CHAR name[32];
+  CHAR filename[12];
 } INSTRUMENTHEADER;
 
 
 /* Channel Struct */
 typedef struct _MODCHANNEL
 {
-	/* First 32-bytes: Most used mixing information: don't change it */
-	signed char * pCurrentSample;
-	DWORD nPos;
-	DWORD nPosLo;	/* actually 16-bit */
-	LONG nInc;		/* 16.16 */
-	LONG nRightVol;
-	LONG nLeftVol;
-	LONG nRightRamp;
-	LONG nLeftRamp;
-	/* 2nd cache line */
-	DWORD nLength;
-	DWORD dwFlags;
-	DWORD nLoopStart;
-	DWORD nLoopEnd;
-	LONG nRampRightVol;
-	LONG nRampLeftVol;
-	LONG nFilter_Y1, nFilter_Y2, nFilter_Y3, nFilter_Y4;
-	LONG nFilter_A0, nFilter_B0, nFilter_B1;
-	LONG nROfs, nLOfs;
-	LONG nRampLength;
-	/* Information not used in the mixer */
-	signed char * pSample;
-	LONG nNewRightVol, nNewLeftVol;
-	LONG nRealVolume, nRealPan;
-	LONG nVolume, nPan, nFadeOutVol;
-	LONG nPeriod, nC4Speed, nPortamentoDest;
-	INSTRUMENTHEADER *pHeader;
-	MODINSTRUMENT *pInstrument;
-	DWORD nVolEnvPosition, nPanEnvPosition, nPitchEnvPosition;
-	DWORD nMasterChn, nVUMeter;
-	LONG nGlobalVol, nInsVol;
-	LONG nFineTune, nTranspose;
-	LONG nPortamentoSlide, nAutoVibDepth;
-	UINT nAutoVibPos, nVibratoPos, nTremoloPos, nPanbrelloPos;
-	/* 16-bit members */
-	signed short nVolSwing, nPanSwing;
-	/* 8-bit members */
-	BYTE nNote, nNNA;
-	BYTE nNewNote, nNewIns, nCommand, nArpeggio;
-	BYTE nOldVolumeSlide, nOldFineVolUpDown;
-	BYTE nOldPortaUpDown, nOldFinePortaUpDown;
-	BYTE nOldPanSlide, nOldChnVolSlide;
-	BYTE nVibratoType, nVibratoSpeed, nVibratoDepth;
-	BYTE nTremoloType, nTremoloSpeed, nTremoloDepth;
-	BYTE nPanbrelloType, nPanbrelloSpeed, nPanbrelloDepth;
-	BYTE nOldCmdEx, nOldVolParam, nOldTempo;
-	BYTE nOldOffset, nOldHiOffset;
-	BYTE nCutOff, nResonance;
-	BYTE nRetrigCount, nRetrigParam;
-	BYTE nTremorCount, nTremorParam;
-	BYTE nPatternLoop, nPatternLoopCount;
-	BYTE nRowNote, nRowInstr;
-	BYTE nRowVolCmd, nRowVolume;
-	BYTE nRowCommand, nRowParam;
-	BYTE nLeftVU, nRightVU;
-	BYTE nActiveMacro, nPadding;
+  /* First 32-bytes: Most used mixing information: don't change it */
+  signed char *pCurrentSample;
+  DWORD nPos;
+  DWORD nPosLo;			/* actually 16-bit */
+  LONG nInc;			/* 16.16 */
+  LONG nRightVol;
+  LONG nLeftVol;
+  LONG nRightRamp;
+  LONG nLeftRamp;
+  /* 2nd cache line */
+  DWORD nLength;
+  DWORD dwFlags;
+  DWORD nLoopStart;
+  DWORD nLoopEnd;
+  LONG nRampRightVol;
+  LONG nRampLeftVol;
+  LONG nFilter_Y1, nFilter_Y2, nFilter_Y3, nFilter_Y4;
+  LONG nFilter_A0, nFilter_B0, nFilter_B1;
+  LONG nROfs, nLOfs;
+  LONG nRampLength;
+  /* Information not used in the mixer */
+  signed char *pSample;
+  LONG nNewRightVol, nNewLeftVol;
+  LONG nRealVolume, nRealPan;
+  LONG nVolume, nPan, nFadeOutVol;
+  LONG nPeriod, nC4Speed, nPortamentoDest;
+  INSTRUMENTHEADER *pHeader;
+  MODINSTRUMENT *pInstrument;
+  DWORD nVolEnvPosition, nPanEnvPosition, nPitchEnvPosition;
+  DWORD nMasterChn, nVUMeter;
+  LONG nGlobalVol, nInsVol;
+  LONG nFineTune, nTranspose;
+  LONG nPortamentoSlide, nAutoVibDepth;
+  UINT nAutoVibPos, nVibratoPos, nTremoloPos, nPanbrelloPos;
+  /* 16-bit members */
+  signed short nVolSwing, nPanSwing;
+  /* 8-bit members */
+  BYTE nNote, nNNA;
+  BYTE nNewNote, nNewIns, nCommand, nArpeggio;
+  BYTE nOldVolumeSlide, nOldFineVolUpDown;
+  BYTE nOldPortaUpDown, nOldFinePortaUpDown;
+  BYTE nOldPanSlide, nOldChnVolSlide;
+  BYTE nVibratoType, nVibratoSpeed, nVibratoDepth;
+  BYTE nTremoloType, nTremoloSpeed, nTremoloDepth;
+  BYTE nPanbrelloType, nPanbrelloSpeed, nPanbrelloDepth;
+  BYTE nOldCmdEx, nOldVolParam, nOldTempo;
+  BYTE nOldOffset, nOldHiOffset;
+  BYTE nCutOff, nResonance;
+  BYTE nRetrigCount, nRetrigParam;
+  BYTE nTremorCount, nTremorParam;
+  BYTE nPatternLoop, nPatternLoopCount;
+  BYTE nRowNote, nRowInstr;
+  BYTE nRowVolCmd, nRowVolume;
+  BYTE nRowCommand, nRowParam;
+  BYTE nLeftVU, nRightVU;
+  BYTE nActiveMacro, nPadding;
 } MODCHANNEL;
 
 
 typedef struct _MODCHANNELSETTINGS
 {
-	UINT nPan;
-	UINT nVolume;
-	DWORD dwFlags;
-	UINT nMixPlugin;
-        char szName[MAX_CHANNELNAME];        /* changed from CHAR */
+  UINT nPan;
+  UINT nVolume;
+  DWORD dwFlags;
+  UINT nMixPlugin;
+  char szName[MAX_CHANNELNAME];	/* changed from CHAR */
 } MODCHANNELSETTINGS;
 
 
 typedef struct _MODCOMMAND
 {
-	BYTE note;
-	BYTE instr;
-	BYTE volcmd;
-	BYTE command;
-	BYTE vol;
-	BYTE param;
+  BYTE note;
+  BYTE instr;
+  BYTE volcmd;
+  BYTE command;
+  BYTE vol;
+  BYTE param;
 } MODCOMMAND, *LPMODCOMMAND;
 
 /*////////////////////////////////////////////////////////////////// */
@@ -448,14 +450,15 @@ typedef struct _MODCOMMAND
 class IMixPlugin
 {
 public:
-	virtual int AddRef() = 0;
-	virtual int Release() = 0;
-	virtual void SaveAllParameters() = 0;
-	virtual void RestoreAllParameters() = 0;
-	virtual void Process(float *pOutL, float *pOutR, unsigned long nSamples) = 0;
-	virtual void Init(unsigned long nFreq, int bReset) = 0;
-	virtual void MidiSend(DWORD dwMidiCode) = 0;
-	virtual void MidiCommand(UINT nMidiCh, UINT nMidiProg, UINT note, UINT vol) = 0;
+  virtual int AddRef () = 0;
+  virtual int Release () = 0;
+  virtual void SaveAllParameters () = 0;
+  virtual void RestoreAllParameters () = 0;
+  virtual void Process (float *pOutL, float *pOutR, unsigned long nSamples) = 0;
+  virtual void Init (unsigned long nFreq, int bReset) = 0;
+  virtual void MidiSend (DWORD dwMidiCode) = 0;
+  virtual void MidiCommand (UINT nMidiCh, UINT nMidiProg, UINT note, UINT vol) =
+      0;
 };
 
 
@@ -465,59 +468,60 @@ public:
 
 typedef struct _SNDMIXPLUGINSTATE
 {
-	DWORD dwFlags;					/* MIXPLUG_XXXX */
-	LONG nVolDecayL, nVolDecayR;	/* Buffer click removal */
-	int *pMixBuffer;				/* Stereo effect send buffer */
-	float *pOutBufferL;				/* Temp storage for int -> float conversion */
-	float *pOutBufferR;
+  DWORD dwFlags;		/* MIXPLUG_XXXX */
+  LONG nVolDecayL, nVolDecayR;	/* Buffer click removal */
+  int *pMixBuffer;		/* Stereo effect send buffer */
+  float *pOutBufferL;		/* Temp storage for int -> float conversion */
+  float *pOutBufferR;
 } SNDMIXPLUGINSTATE, *PSNDMIXPLUGINSTATE;
 
 typedef struct _SNDMIXPLUGININFO
 {
-	DWORD dwPluginId1;
-	DWORD dwPluginId2;
-	DWORD dwInputRouting;	/* MIXPLUG_INPUTF_XXXX */
-	DWORD dwOutputRouting;	/* 0=mix 0x80+=fx */
-	DWORD dwReserved[4];	/* Reserved for routing info */
-	CHAR szName[32];
-	CHAR szLibraryName[64];	/* original DLL name */
-} SNDMIXPLUGININFO, *PSNDMIXPLUGININFO; /* Size should be 128 */
+  DWORD dwPluginId1;
+  DWORD dwPluginId2;
+  DWORD dwInputRouting;		/* MIXPLUG_INPUTF_XXXX */
+  DWORD dwOutputRouting;	/* 0=mix 0x80+=fx */
+  DWORD dwReserved[4];		/* Reserved for routing info */
+  CHAR szName[32];
+  CHAR szLibraryName[64];	/* original DLL name */
+} SNDMIXPLUGININFO, *PSNDMIXPLUGININFO;	/* Size should be 128 */
 
 typedef struct _SNDMIXPLUGIN
 {
-	IMixPlugin *pMixPlugin;
-	PSNDMIXPLUGINSTATE pMixState;
-	ULONG nPluginDataSize;
-	PVOID pPluginData;
-	SNDMIXPLUGININFO Info;
+  IMixPlugin *pMixPlugin;
+  PSNDMIXPLUGINSTATE pMixState;
+  ULONG nPluginDataSize;
+  PVOID pPluginData;
+  SNDMIXPLUGININFO Info;
 } SNDMIXPLUGIN, *PSNDMIXPLUGIN;
 
-typedef	BOOL (*PMIXPLUGINCREATEPROC)(PSNDMIXPLUGIN);
+typedef BOOL (*PMIXPLUGINCREATEPROC) (PSNDMIXPLUGIN);
 
 /*////////////////////////////////////////////////////////////////// */
 
-enum {
-	MIDIOUT_START=0,
-	MIDIOUT_STOP,
-	MIDIOUT_TICK,
-	MIDIOUT_NOTEON,
-	MIDIOUT_NOTEOFF,
-	MIDIOUT_VOLUME,
-	MIDIOUT_PAN,
-	MIDIOUT_BANKSEL,
-	MIDIOUT_PROGRAM
+enum
+{
+  MIDIOUT_START = 0,
+  MIDIOUT_STOP,
+  MIDIOUT_TICK,
+  MIDIOUT_NOTEON,
+  MIDIOUT_NOTEOFF,
+  MIDIOUT_VOLUME,
+  MIDIOUT_PAN,
+  MIDIOUT_BANKSEL,
+  MIDIOUT_PROGRAM
 };
 
 
 typedef struct MODMIDICFG
 {
-        char szMidiGlb[9*32];      /* changed from CHAR */
-        char szMidiSFXExt[16*32];  /* changed from CHAR */
-        char szMidiZXXExt[128*32]; /* changed from CHAR */
+  char szMidiGlb[9 * 32];	/* changed from CHAR */
+  char szMidiSFXExt[16 * 32];	/* changed from CHAR */
+  char szMidiZXXExt[128 * 32];	/* changed from CHAR */
 } MODMIDICFG, *LPMODMIDICFG;
 
 
-typedef VOID (* LPSNDMIXHOOKPROC)(int *, unsigned long, unsigned long); /* buffer, samples, channels */
+typedef VOID (*LPSNDMIXHOOKPROC) (int *, unsigned long, unsigned long);	/* buffer, samples, channels */
 
 
 
@@ -525,251 +529,343 @@ typedef VOID (* LPSNDMIXHOOKPROC)(int *, unsigned long, unsigned long); /* buffe
 class CSoundFile
 /*============== */
 {
-public:	/* Static Members */
-	static UINT m_nXBassDepth, m_nXBassRange;
-	static UINT m_nReverbDepth, m_nReverbDelay, gnReverbType;
-	static UINT m_nProLogicDepth, m_nProLogicDelay;
-	static UINT m_nStereoSeparation;
-	static UINT m_nMaxMixChannels;
-	static LONG m_nStreamVolume;
-	static DWORD gdwSysInfo, gdwSoundSetup, gdwMixingFreq, gnBitsPerSample, gnChannels;
-	static UINT gnAGC, gnVolumeRampSamples, gnVUMeter, gnCPUUsage;
-	static LPSNDMIXHOOKPROC gpSndMixHook;
-	static PMIXPLUGINCREATEPROC gpMixPluginCreateProc;
+public:			/* Static Members */
+  static UINT m_nXBassDepth, m_nXBassRange;
+  static UINT m_nReverbDepth, m_nReverbDelay, gnReverbType;
+  static UINT m_nProLogicDepth, m_nProLogicDelay;
+  static UINT m_nStereoSeparation;
+  static UINT m_nMaxMixChannels;
+  static LONG m_nStreamVolume;
+  static DWORD gdwSysInfo, gdwSoundSetup, gdwMixingFreq, gnBitsPerSample,
+      gnChannels;
+  static UINT gnAGC, gnVolumeRampSamples, gnVUMeter, gnCPUUsage;
+  static LPSNDMIXHOOKPROC gpSndMixHook;
+  static PMIXPLUGINCREATEPROC gpMixPluginCreateProc;
 
-public:	/* for Editing */
-	MODCHANNEL Chn[MAX_CHANNELS];					/* Channels */
-	UINT ChnMix[MAX_CHANNELS];						/* Channels to be mixed */
-	MODINSTRUMENT Ins[MAX_SAMPLES];					/* Instruments */
-	INSTRUMENTHEADER *Headers[MAX_INSTRUMENTS];		/* Instrument Headers */
-	MODCHANNELSETTINGS ChnSettings[MAX_BASECHANNELS]; /* Channels settings */
-	MODCOMMAND *Patterns[MAX_PATTERNS];				/* Patterns */
-	WORD PatternSize[MAX_PATTERNS];					/* Patterns Lengths */
-	BYTE Order[MAX_ORDERS];							/* Pattern Orders */
-	MODMIDICFG m_MidiCfg;							/* Midi macro config table */
-	SNDMIXPLUGIN m_MixPlugins[MAX_MIXPLUGINS];		/* Mix plugins */
-	UINT m_nDefaultSpeed, m_nDefaultTempo, m_nDefaultGlobalVolume;
-	DWORD m_dwSongFlags;							/* Song flags SONG_XXXX */
-	UINT m_nChannels, m_nMixChannels, m_nMixStat, m_nBufferCount;
-	UINT m_nType, m_nSamples, m_nInstruments;
-	UINT m_nTickCount, m_nTotalCount, m_nPatternDelay, m_nFrameDelay;
-	UINT m_nMusicSpeed, m_nMusicTempo;
-	UINT m_nNextRow, m_nRow;
-	UINT m_nPattern,m_nCurrentPattern,m_nNextPattern,m_nRestartPos;
-	UINT m_nMasterVolume, m_nGlobalVolume, m_nSongPreAmp;
-	UINT m_nFreqFactor, m_nTempoFactor, m_nOldGlbVolSlide;
-	LONG m_nMinPeriod, m_nMaxPeriod, m_nRepeatCount, m_nInitialRepeatCount;
-	DWORD m_nGlobalFadeSamples, m_nGlobalFadeMaxSamples;
-	UINT m_nMaxOrderPosition;
-	UINT m_nPatternNames;
-	LPSTR m_lpszSongComments, m_lpszPatternNames;
-	char m_szNames[MAX_INSTRUMENTS][32];    /* changed from CHAR */
-	CHAR CompressionTable[16];
-
-public:
-	CSoundFile();
-	~CSoundFile();
+public:			/* for Editing */
+    MODCHANNEL Chn[MAX_CHANNELS];	/* Channels */
+  UINT ChnMix[MAX_CHANNELS];	/* Channels to be mixed */
+  MODINSTRUMENT Ins[MAX_SAMPLES];	/* Instruments */
+  INSTRUMENTHEADER *Headers[MAX_INSTRUMENTS];	/* Instrument Headers */
+  MODCHANNELSETTINGS ChnSettings[MAX_BASECHANNELS];	/* Channels settings */
+  MODCOMMAND *Patterns[MAX_PATTERNS];	/* Patterns */
+  WORD PatternSize[MAX_PATTERNS];	/* Patterns Lengths */
+  BYTE Order[MAX_ORDERS];	/* Pattern Orders */
+  MODMIDICFG m_MidiCfg;		/* Midi macro config table */
+  SNDMIXPLUGIN m_MixPlugins[MAX_MIXPLUGINS];	/* Mix plugins */
+  UINT m_nDefaultSpeed, m_nDefaultTempo, m_nDefaultGlobalVolume;
+  DWORD m_dwSongFlags;		/* Song flags SONG_XXXX */
+  UINT m_nChannels, m_nMixChannels, m_nMixStat, m_nBufferCount;
+  UINT m_nType, m_nSamples, m_nInstruments;
+  UINT m_nTickCount, m_nTotalCount, m_nPatternDelay, m_nFrameDelay;
+  UINT m_nMusicSpeed, m_nMusicTempo;
+  UINT m_nNextRow, m_nRow;
+  UINT m_nPattern, m_nCurrentPattern, m_nNextPattern, m_nRestartPos;
+  UINT m_nMasterVolume, m_nGlobalVolume, m_nSongPreAmp;
+  UINT m_nFreqFactor, m_nTempoFactor, m_nOldGlbVolSlide;
+  LONG m_nMinPeriod, m_nMaxPeriod, m_nRepeatCount, m_nInitialRepeatCount;
+  DWORD m_nGlobalFadeSamples, m_nGlobalFadeMaxSamples;
+  UINT m_nMaxOrderPosition;
+  UINT m_nPatternNames;
+  LPSTR m_lpszSongComments, m_lpszPatternNames;
+  char m_szNames[MAX_INSTRUMENTS][32];	/* changed from CHAR */
+  CHAR CompressionTable[16];
 
 public:
-	BOOL Create(LPCBYTE lpStream, DWORD dwMemLength=0);
-	BOOL Destroy();
-	UINT GetType() const { return m_nType; }
-	UINT GetNumChannels() const;
-	UINT GetLogicalChannels() const { return m_nChannels; }
-	BOOL SetMasterVolume(UINT vol, BOOL bAdjustAGC=FALSE);
-	UINT GetMasterVolume() const { return m_nMasterVolume; }
-	UINT GetNumPatterns() const;
-	UINT GetNumInstruments() const;
-	UINT GetNumSamples() const { return m_nSamples; }
-	UINT GetCurrentPos() const;
-	UINT GetCurrentPattern() const { return m_nPattern; }
-	UINT GetCurrentOrder() const { return m_nCurrentPattern; }
-	UINT GetSongComments(LPSTR s, UINT cbsize, UINT linesize=32);
-	UINT GetRawSongComments(LPSTR s, UINT cbsize, UINT linesize=32);
-	UINT GetMaxPosition() const;
-	void SetCurrentPos(UINT nPos);
-	void SetCurrentOrder(UINT nOrder);
-	void GetTitle(LPSTR s) const { lstrcpyn(s,m_szNames[0],32); }
-	LPCSTR GetTitle() const { return m_szNames[0]; }
-	UINT GetSampleName(UINT nSample,LPSTR s=NULL) const;
-	UINT GetInstrumentName(UINT nInstr,LPSTR s=NULL) const;
-	UINT GetMusicSpeed() const { return m_nMusicSpeed; }
-	UINT GetMusicTempo() const { return m_nMusicTempo; }
-	DWORD GetLength(BOOL bAdjust, BOOL bTotal=FALSE);
-	DWORD GetSongTime() { return GetLength(FALSE, TRUE); }
-	void SetRepeatCount(int n) { m_nRepeatCount = n; m_nInitialRepeatCount = n; }
-	int GetRepeatCount() const { return m_nRepeatCount; }
-	BOOL IsPaused() const {	return (m_dwSongFlags & SONG_PAUSED) ? TRUE : FALSE; }
-	void LoopPattern(int nPat, int nRow=0);
-	void CheckCPUUsage(UINT nCPU);
-	BOOL SetPatternName(UINT nPat, LPCSTR lpszName);
-	BOOL GetPatternName(UINT nPat, LPSTR lpszName, UINT cbSize=MAX_PATTERNNAME) const;
-	/* Module Loaders */
-	BOOL ReadXM(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadS3M(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadMod(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadMed(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadMTM(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadSTM(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadIT(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL Read669(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadUlt(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadWav(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadDSM(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadFAR(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadAMS(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadMDL(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadOKT(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadDMF(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadPTM(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadDBM(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadAMF(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadMT2(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadPSM(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadJ2B(LPCBYTE lpStream, DWORD dwMemLength);
-	BOOL ReadUMX(LPCBYTE lpStream, DWORD dwMemLength);
-	/* Save Functions */
+    CSoundFile ();
+   ~CSoundFile ();
+
+public:
+    BOOL Create (LPCBYTE lpStream, DWORD dwMemLength = 0);
+  BOOL Destroy ();
+  UINT GetType () const
+  {
+    return m_nType;
+  }
+  UINT GetNumChannels () const;
+  UINT GetLogicalChannels () const
+  {
+    return m_nChannels;
+  }
+  BOOL SetMasterVolume (UINT vol, BOOL bAdjustAGC = FALSE);
+  UINT GetMasterVolume () const
+  {
+    return m_nMasterVolume;
+  }
+  UINT GetNumPatterns () const;
+  UINT GetNumInstruments () const;
+  UINT GetNumSamples () const
+  {
+    return m_nSamples;
+  }
+  UINT GetCurrentPos () const;
+  UINT GetCurrentPattern () const
+  {
+    return m_nPattern;
+  }
+  UINT GetCurrentOrder () const
+  {
+    return m_nCurrentPattern;
+  }
+  UINT GetSongComments (LPSTR s, UINT cbsize, UINT linesize = 32);
+  UINT GetRawSongComments (LPSTR s, UINT cbsize, UINT linesize = 32);
+  UINT GetMaxPosition () const;
+  void SetCurrentPos (UINT nPos);
+  void SetCurrentOrder (UINT nOrder);
+  void GetTitle (LPSTR s) const
+  {
+    lstrcpyn (s, m_szNames[0], 32);
+  }
+  LPCSTR GetTitle () const
+  {
+    return m_szNames[0];
+  }
+  UINT GetSampleName (UINT nSample, LPSTR s = NULL) const;
+  UINT GetInstrumentName (UINT nInstr, LPSTR s = NULL) const;
+  UINT GetMusicSpeed () const
+  {
+    return m_nMusicSpeed;
+  }
+  UINT GetMusicTempo () const
+  {
+    return m_nMusicTempo;
+  }
+  DWORD GetLength (BOOL bAdjust, BOOL bTotal = FALSE);
+  DWORD GetSongTime ()
+  {
+    return GetLength (FALSE, TRUE);
+  }
+  void SetRepeatCount (int n)
+  {
+    m_nRepeatCount = n;
+    m_nInitialRepeatCount = n;
+  }
+  int GetRepeatCount () const
+  {
+    return m_nRepeatCount;
+  }
+  BOOL IsPaused () const
+  {
+    return (m_dwSongFlags & SONG_PAUSED) ? TRUE : FALSE;
+  }
+  void LoopPattern (int nPat, int nRow = 0);
+  void CheckCPUUsage (UINT nCPU);
+  BOOL SetPatternName (UINT nPat, LPCSTR lpszName);
+  BOOL GetPatternName (UINT nPat, LPSTR lpszName, UINT cbSize =
+      MAX_PATTERNNAME) const;
+  /* Module Loaders */
+  BOOL ReadXM (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadS3M (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadMod (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadMed (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadMTM (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadSTM (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadIT (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL Read669 (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadUlt (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadWav (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadDSM (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadFAR (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadAMS (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadAMS2 (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadMDL (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadOKT (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadDMF (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadPTM (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadDBM (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadAMF (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadMT2 (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadPSM (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadJ2B (LPCBYTE lpStream, DWORD dwMemLength);
+  BOOL ReadUMX (LPCBYTE lpStream, DWORD dwMemLength);
+
+  /* Save Functions */
 #ifndef MODPLUG_NO_FILESAVE
-	UINT WriteSample(FILE *f, MODINSTRUMENT *pins, UINT nFlags, UINT nMaxLen=0);
-	BOOL SaveXM(LPCSTR lpszFileName, UINT nPacking=0);
-	BOOL SaveS3M(LPCSTR lpszFileName, UINT nPacking=0);
-	BOOL SaveMod(LPCSTR lpszFileName, UINT nPacking=0);
-	BOOL SaveIT(LPCSTR lpszFileName, UINT nPacking=0);
+  UINT WriteSample (FILE * f, MODINSTRUMENT * pins, UINT nFlags, UINT nMaxLen =
+      0);
+  BOOL SaveXM (LPCSTR lpszFileName, UINT nPacking = 0);
+  BOOL SaveS3M (LPCSTR lpszFileName, UINT nPacking = 0);
+  BOOL SaveMod (LPCSTR lpszFileName, UINT nPacking = 0);
+  BOOL SaveIT (LPCSTR lpszFileName, UINT nPacking = 0);
 #endif /* MODPLUG_NO_FILESAVE */
-	/* MOD Convert function */
-	UINT GetBestSaveFormat() const;
-	UINT GetSaveFormats() const;
-	void ConvertModCommand(MODCOMMAND *) const;
-	void S3MConvert(MODCOMMAND *m, BOOL bIT) const;
-	void S3MSaveConvert(UINT *pcmd, UINT *pprm, BOOL bIT) const;
-	WORD ModSaveCommand(const MODCOMMAND *m, BOOL bXM) const;
+  /* MOD Convert function */
+  UINT GetBestSaveFormat () const;
+  UINT GetSaveFormats () const;
+  void ConvertModCommand (MODCOMMAND *) const;
+  void S3MConvert (MODCOMMAND * m, BOOL bIT) const;
+  void S3MSaveConvert (UINT * pcmd, UINT * pprm, BOOL bIT) const;
+  WORD ModSaveCommand (const MODCOMMAND * m, BOOL bXM) const;
 
 public:
-	/* Real-time sound functions */
-	VOID ResetChannels();
+  /* Real-time sound functions */
+  VOID ResetChannels ();
 
-	UINT Read(LPVOID lpBuffer, UINT cbBuffer);
-	UINT CreateStereoMix(int count);
-	BOOL FadeSong(UINT msec);
-	BOOL GlobalFadeSong(UINT msec);
-	UINT GetTotalTickCount() const { return m_nTotalCount; }
-	VOID ResetTotalTickCount() { m_nTotalCount = 0; }
+  UINT Read (LPVOID lpBuffer, UINT cbBuffer);
+  UINT CreateStereoMix (int count);
+  BOOL FadeSong (UINT msec);
+  BOOL GlobalFadeSong (UINT msec);
+  UINT GetTotalTickCount () const
+  {
+    return m_nTotalCount;
+  }
+  VOID ResetTotalTickCount ()
+  {
+    m_nTotalCount = 0;
+  }
 
 public:
-	/* Mixer Config */
-	static BOOL InitPlayer(BOOL bReset=FALSE);
-	static BOOL SetWaveConfig(UINT nRate,UINT nBits,UINT nChannels,BOOL bMMX=FALSE);
-	static BOOL SetResamplingMode(UINT nMode); /* SRCMODE_XXXX */
-	static BOOL IsStereo() { return (gnChannels > 1) ? TRUE : FALSE; }
-	static DWORD GetSampleRate() { return gdwMixingFreq; }
-	static DWORD GetBitsPerSample() { return gnBitsPerSample; }
-	static DWORD InitSysInfo();
-	static DWORD GetSysInfo() { return gdwSysInfo; }
-	/* AGC */
-	static BOOL GetAGC() { return (gdwSoundSetup & SNDMIX_AGC) ? TRUE : FALSE; }
-	static void SetAGC(BOOL b);
-	static void ResetAGC();
-	static void ProcessAGC(int count);
+  /* Mixer Config */
+  static BOOL InitPlayer (BOOL bReset = FALSE);
+  static BOOL SetWaveConfig (UINT nRate, UINT nBits, UINT nChannels, BOOL bMMX =
+      FALSE);
+  static BOOL SetResamplingMode (UINT nMode);	/* SRCMODE_XXXX */
+  static BOOL IsStereo ()
+  {
+    return (gnChannels > 1) ? TRUE : FALSE;
+  }
+  static DWORD GetSampleRate ()
+  {
+    return gdwMixingFreq;
+  }
+  static DWORD GetBitsPerSample ()
+  {
+    return gnBitsPerSample;
+  }
+  static DWORD InitSysInfo ();
+  static DWORD GetSysInfo ()
+  {
+    return gdwSysInfo;
+  }
+  /* AGC */
+  static BOOL GetAGC ()
+  {
+    return (gdwSoundSetup & SNDMIX_AGC) ? TRUE : FALSE;
+  }
+  static void SetAGC (BOOL b);
+  static void ResetAGC ();
+  static void ProcessAGC (int count);
 
-	/*GCCFIX -- added these functions back in! */
-	static BOOL SetWaveConfigEx(BOOL bSurround,BOOL bNoOverSampling,BOOL bReverb,BOOL hqido,BOOL bMegaBass,BOOL bNR,BOOL bEQ);
-	/* DSP Effects */
-	static void InitializeDSP(BOOL bReset);
-	static void ProcessStereoDSP(int count);
-	static void ProcessMonoDSP(int count);
-	/* [Reverb level 0(quiet)-100(loud)], [delay in ms, usually 40-200ms] */
-	static BOOL SetReverbParameters(UINT nDepth, UINT nDelay);
-	/* [XBass level 0(quiet)-100(loud)], [cutoff in Hz 10-100] */
-	static BOOL SetXBassParameters(UINT nDepth, UINT nRange);
-	/* [Surround level 0(quiet)-100(heavy)] [delay in ms, usually 5-40ms] */
-	static BOOL SetSurroundParameters(UINT nDepth, UINT nDelay);
+  /*GCCFIX -- added these functions back in! */
+  static BOOL SetWaveConfigEx (BOOL bSurround, BOOL bNoOverSampling,
+      BOOL bReverb, BOOL hqido, BOOL bMegaBass, BOOL bNR, BOOL bEQ);
+  /* DSP Effects */
+  static void InitializeDSP (BOOL bReset);
+  static void ProcessStereoDSP (int count);
+  static void ProcessMonoDSP (int count);
+
+  /* [Reverb level 0(quiet)-100(loud)], [delay in ms, usually 40-200ms] */
+  static BOOL SetReverbParameters (UINT nDepth, UINT nDelay);
+
+  /* [XBass level 0(quiet)-100(loud)], [cutoff in Hz 10-100] */
+  static BOOL SetXBassParameters (UINT nDepth, UINT nRange);
+
+  /* [Surround level 0(quiet)-100(heavy)] [delay in ms, usually 5-40ms] */
+  static BOOL SetSurroundParameters (UINT nDepth, UINT nDelay);
+
 public:
-	BOOL ReadNote();
-	BOOL ProcessRow();
-	BOOL ProcessEffects();
-	UINT GetNNAChannel(UINT nChn) const;
-	void CheckNNA(UINT nChn, UINT instr, int note, BOOL bForceCut);
-	void NoteChange(UINT nChn, int note, BOOL bPorta=FALSE, BOOL bResetEnv=TRUE);
-	void InstrumentChange(MODCHANNEL *pChn, UINT instr, BOOL bPorta=FALSE,BOOL bUpdVol=TRUE,BOOL bResetEnv=TRUE);
-	/* Channel Effects */
-	void PortamentoUp(MODCHANNEL *pChn, UINT param);
-	void PortamentoDown(MODCHANNEL *pChn, UINT param);
-	void FinePortamentoUp(MODCHANNEL *pChn, UINT param);
-	void FinePortamentoDown(MODCHANNEL *pChn, UINT param);
-	void ExtraFinePortamentoUp(MODCHANNEL *pChn, UINT param);
-	void ExtraFinePortamentoDown(MODCHANNEL *pChn, UINT param);
-	void TonePortamento(MODCHANNEL *pChn, UINT param);
-	void Vibrato(MODCHANNEL *pChn, UINT param);
-	void FineVibrato(MODCHANNEL *pChn, UINT param);
-	void VolumeSlide(MODCHANNEL *pChn, UINT param);
-	void PanningSlide(MODCHANNEL *pChn, UINT param);
-	void ChannelVolSlide(MODCHANNEL *pChn, UINT param);
-	void FineVolumeUp(MODCHANNEL *pChn, UINT param);
-	void FineVolumeDown(MODCHANNEL *pChn, UINT param);
-	void Tremolo(MODCHANNEL *pChn, UINT param);
-	void Panbrello(MODCHANNEL *pChn, UINT param);
-	void RetrigNote(UINT nChn, UINT param);
-	void NoteCut(UINT nChn, UINT nTick);
-	void KeyOff(UINT nChn);
-	int PatternLoop(MODCHANNEL *, UINT param);
-	void ExtendedMODCommands(UINT nChn, UINT param);
-	void ExtendedS3MCommands(UINT nChn, UINT param);
-	void ExtendedChannelEffect(MODCHANNEL *, UINT param);
-	void ProcessMidiMacro(UINT nChn, LPCSTR pszMidiMacro, UINT param=0);
-	void SetupChannelFilter(MODCHANNEL *pChn, BOOL bReset, int flt_modifier=256) const;
-	/* Low-Level effect processing */
-	void DoFreqSlide(MODCHANNEL *pChn, LONG nFreqSlide);
-	/* Global Effects */
-	void SetTempo(UINT param);
-	void SetSpeed(UINT param);
-	void GlobalVolSlide(UINT param);
-	DWORD IsSongFinished(UINT nOrder, UINT nRow) const;
-	BOOL IsValidBackwardJump(UINT nStartOrder, UINT nStartRow, UINT nJumpOrder, UINT nJumpRow) const;
-	/* Read/Write sample functions */
-	signed char GetDeltaValue(signed char prev, UINT n) const { return (signed char)(prev + CompressionTable[n & 0x0F]); }
-	UINT PackSample(int &sample, int next);
-	BOOL CanPackSample(LPSTR pSample, UINT nLen, UINT nPacking, BYTE *result=NULL);
-	UINT ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR pMemFile, DWORD dwMemLength);
-	BOOL DestroySample(UINT nSample);
-	BOOL DestroyInstrument(UINT nInstr);
-	BOOL IsSampleUsed(UINT nSample);
-	BOOL IsInstrumentUsed(UINT nInstr);
-	BOOL RemoveInstrumentSamples(UINT nInstr);
-	UINT DetectUnusedSamples(BOOL *);
-	BOOL RemoveSelectedSamples(BOOL *);
-	void AdjustSampleLoop(MODINSTRUMENT *pIns);
-	/* I/O from another sound file */
-	BOOL ReadInstrumentFromSong(UINT nInstr, CSoundFile *, UINT nSrcInstrument);
-	BOOL ReadSampleFromSong(UINT nSample, CSoundFile *, UINT nSrcSample);
-	/* Period/Note functions */
-	UINT GetNoteFromPeriod(UINT period) const;
-	UINT GetPeriodFromNote(UINT note, int nFineTune, UINT nC4Speed) const;
-	UINT GetFreqFromPeriod(UINT period, UINT nC4Speed, int nPeriodFrac=0) const;
-	/* Misc functions */
-	MODINSTRUMENT *GetSample(UINT n) { return Ins+n; }
-	void ResetMidiCfg();
-	UINT MapMidiInstrument(DWORD dwProgram, UINT nChannel, UINT nNote);
-	BOOL ITInstrToMPT(const void *p, INSTRUMENTHEADER *penv, UINT trkvers);
-	UINT SaveMixPlugins(FILE *f=NULL, BOOL bUpdate=TRUE);
-	UINT LoadMixPlugins(const void *pData, UINT nLen);
+  BOOL ReadNote ();
+  BOOL ProcessRow ();
+  BOOL ProcessEffects ();
+  UINT GetNNAChannel (UINT nChn) const;
+  void CheckNNA (UINT nChn, UINT instr, int note, BOOL bForceCut);
+  void NoteChange (UINT nChn, int note, BOOL bPorta = FALSE, BOOL bResetEnv =
+      TRUE);
+  void InstrumentChange (MODCHANNEL * pChn, UINT instr, BOOL bPorta =
+      FALSE, BOOL bUpdVol = TRUE, BOOL bResetEnv = TRUE);
+  /* Channel Effects */
+  void PortamentoUp (MODCHANNEL * pChn, UINT param);
+  void PortamentoDown (MODCHANNEL * pChn, UINT param);
+  void FinePortamentoUp (MODCHANNEL * pChn, UINT param);
+  void FinePortamentoDown (MODCHANNEL * pChn, UINT param);
+  void ExtraFinePortamentoUp (MODCHANNEL * pChn, UINT param);
+  void ExtraFinePortamentoDown (MODCHANNEL * pChn, UINT param);
+  void TonePortamento (MODCHANNEL * pChn, UINT param);
+  void Vibrato (MODCHANNEL * pChn, UINT param);
+  void FineVibrato (MODCHANNEL * pChn, UINT param);
+  void VolumeSlide (MODCHANNEL * pChn, UINT param);
+  void PanningSlide (MODCHANNEL * pChn, UINT param);
+  void ChannelVolSlide (MODCHANNEL * pChn, UINT param);
+  void FineVolumeUp (MODCHANNEL * pChn, UINT param);
+  void FineVolumeDown (MODCHANNEL * pChn, UINT param);
+  void Tremolo (MODCHANNEL * pChn, UINT param);
+  void Panbrello (MODCHANNEL * pChn, UINT param);
+  void RetrigNote (UINT nChn, UINT param);
+  void NoteCut (UINT nChn, UINT nTick);
+  void KeyOff (UINT nChn);
+  int PatternLoop (MODCHANNEL *, UINT param);
+  void ExtendedMODCommands (UINT nChn, UINT param);
+  void ExtendedS3MCommands (UINT nChn, UINT param);
+  void ExtendedChannelEffect (MODCHANNEL *, UINT param);
+  void ProcessMidiMacro (UINT nChn, LPCSTR pszMidiMacro, UINT param = 0);
+  void SetupChannelFilter (MODCHANNEL * pChn, BOOL bReset, int flt_modifier =
+      256) const;
+  /* Low-Level effect processing */
+  void DoFreqSlide (MODCHANNEL * pChn, LONG nFreqSlide);
+
+  /* Global Effects */
+  void SetTempo (UINT param);
+  void SetSpeed (UINT param);
+  void GlobalVolSlide (UINT param);
+  DWORD IsSongFinished (UINT nOrder, UINT nRow) const;
+  BOOL IsValidBackwardJump (UINT nStartOrder, UINT nStartRow, UINT nJumpOrder,
+      UINT nJumpRow) const;
+  /* Read/Write sample functions */
+  signed char GetDeltaValue (signed char prev, UINT n) const
+  {
+    return (signed char) (prev + CompressionTable[n & 0x0F]);
+  }
+  UINT PackSample (int &sample, int next);
+  BOOL CanPackSample (LPSTR pSample, UINT nLen, UINT nPacking, BYTE * result =
+      NULL);
+  UINT ReadSample (MODINSTRUMENT * pIns, UINT nFlags, LPCSTR pMemFile,
+      DWORD dwMemLength);
+  BOOL DestroySample (UINT nSample);
+  BOOL DestroyInstrument (UINT nInstr);
+  BOOL IsSampleUsed (UINT nSample);
+  BOOL IsInstrumentUsed (UINT nInstr);
+  BOOL RemoveInstrumentSamples (UINT nInstr);
+  UINT DetectUnusedSamples (BOOL *);
+  BOOL RemoveSelectedSamples (BOOL *);
+  void AdjustSampleLoop (MODINSTRUMENT * pIns);
+
+  /* I/O from another sound file */
+  BOOL ReadInstrumentFromSong (UINT nInstr, CSoundFile *, UINT nSrcInstrument);
+  BOOL ReadSampleFromSong (UINT nSample, CSoundFile *, UINT nSrcSample);
+
+  /* Period/Note functions */
+  UINT GetNoteFromPeriod (UINT period) const;
+  UINT GetPeriodFromNote (UINT note, int nFineTune, UINT nC4Speed) const;
+  UINT GetFreqFromPeriod (UINT period, UINT nC4Speed, int nPeriodFrac =
+      0) const;
+  /* Misc functions */
+  MODINSTRUMENT *GetSample (UINT n)
+  {
+    return Ins + n;
+  }
+  void ResetMidiCfg ();
+  UINT MapMidiInstrument (DWORD dwProgram, UINT nChannel, UINT nNote);
+  BOOL ITInstrToMPT (const void *p, INSTRUMENTHEADER * penv, UINT trkvers);
+  UINT SaveMixPlugins (FILE * f = NULL, BOOL bUpdate = TRUE);
+  UINT LoadMixPlugins (const void *pData, UINT nLen);
+
 #ifndef NO_FILTER
-	DWORD CutOffToFrequency(UINT nCutOff, int flt_modifier=256) const; /* [0-255] => [1-10KHz] */
+  DWORD CutOffToFrequency (UINT nCutOff, int flt_modifier = 256) const;	/* [0-255] => [1-10KHz] */
 #endif
 
-	/* Static helper functions */
+  /* Static helper functions */
 public:
-	static DWORD TransposeToFrequency(int transp, int ftune=0);
-	static int FrequencyToTranspose(DWORD freq);
-	static void FrequencyToTranspose(MODINSTRUMENT *psmp);
+  static DWORD TransposeToFrequency (int transp, int ftune = 0);
+  static int FrequencyToTranspose (DWORD freq);
+  static void FrequencyToTranspose (MODINSTRUMENT * psmp);
 
-	/* System-Dependant functions */
+  /* System-Dependant functions */
 public:
-	static MODCOMMAND *AllocatePattern(UINT rows, UINT nchns);
-	static signed char* AllocateSample(UINT nbytes);
-	static void FreePattern(LPVOID pat);
-	static void FreeSample(LPVOID p);
-	static UINT Normalize24BitBuffer(LPBYTE pbuffer, UINT cbsizebytes, DWORD lmax24, DWORD dwByteInc);
+  static MODCOMMAND *AllocatePattern (UINT rows, UINT nchns);
+  static signed char *AllocateSample (UINT nbytes);
+  static void FreePattern (LPVOID pat);
+  static void FreeSample (LPVOID p);
+  static UINT Normalize24BitBuffer (LPBYTE pbuffer, UINT cbsizebytes,
+      DWORD lmax24, DWORD dwByteInc);
 };
 
 
@@ -812,88 +908,88 @@ public:
 
 typedef struct WAVEFILEHEADER
 {
-	DWORD id_RIFF;		/* "RIFF" */
-	DWORD filesize;		/* file length-8 */
-	DWORD id_WAVE;
+  DWORD id_RIFF;		/* "RIFF" */
+  DWORD filesize;		/* file length-8 */
+  DWORD id_WAVE;
 } WAVEFILEHEADER;
 
 
 typedef struct WAVEFORMATHEADER
 {
-	DWORD id_fmt;		/* "fmt " */
-	DWORD hdrlen;		/* 16 */
-	WORD format;		/* 1 */
-	WORD channels;		/* 1:mono, 2:stereo */
-	DWORD freqHz;		/* sampling freq */
-	DWORD bytessec;		/* bytes/sec=freqHz*samplesize */
-	WORD samplesize;	/* sizeof(sample) */
-	WORD bitspersample;	/* bits per sample (8/16) */
+  DWORD id_fmt;			/* "fmt " */
+  DWORD hdrlen;			/* 16 */
+  WORD format;			/* 1 */
+  WORD channels;		/* 1:mono, 2:stereo */
+  DWORD freqHz;			/* sampling freq */
+  DWORD bytessec;		/* bytes/sec=freqHz*samplesize */
+  WORD samplesize;		/* sizeof(sample) */
+  WORD bitspersample;		/* bits per sample (8/16) */
 } WAVEFORMATHEADER;
 
 
 typedef struct WAVEDATAHEADER
 {
-	DWORD id_data;		/* "data" */
-	DWORD length;		/* length of data */
+  DWORD id_data;		/* "data" */
+  DWORD length;			/* length of data */
 } WAVEDATAHEADER;
 
 
 typedef struct WAVESMPLHEADER
 {
-	/* SMPL */
-	DWORD smpl_id;		/* "smpl"	-> 0x6C706D73 */
-	DWORD smpl_len;		/* length of smpl: 3Ch	(54h with sustain loop) */
-	DWORD dwManufacturer;
-	DWORD dwProduct;
-	DWORD dwSamplePeriod;	/* 1000000000/freqHz */
-	DWORD dwBaseNote;	/* 3Ch = C-4 -> 60 + RelativeTone */
-	DWORD dwPitchFraction;
-	DWORD dwSMPTEFormat;
-	DWORD dwSMPTEOffset;
-	DWORD dwSampleLoops;	/* number of loops */
-	DWORD cbSamplerData;
+  /* SMPL */
+  DWORD smpl_id;		/* "smpl"       -> 0x6C706D73 */
+  DWORD smpl_len;		/* length of smpl: 3Ch  (54h with sustain loop) */
+  DWORD dwManufacturer;
+  DWORD dwProduct;
+  DWORD dwSamplePeriod;		/* 1000000000/freqHz */
+  DWORD dwBaseNote;		/* 3Ch = C-4 -> 60 + RelativeTone */
+  DWORD dwPitchFraction;
+  DWORD dwSMPTEFormat;
+  DWORD dwSMPTEOffset;
+  DWORD dwSampleLoops;		/* number of loops */
+  DWORD cbSamplerData;
 } WAVESMPLHEADER;
 
 
 typedef struct SAMPLELOOPSTRUCT
 {
-	DWORD dwIdentifier;
-	DWORD dwLoopType;		/* 0=normal, 1=bidi */
-	DWORD dwLoopStart;
-	DWORD dwLoopEnd;		/* Byte offset ? */
-	DWORD dwFraction;
-	DWORD dwPlayCount;		/* Loop Count, 0=infinite */
+  DWORD dwIdentifier;
+  DWORD dwLoopType;		/* 0=normal, 1=bidi */
+  DWORD dwLoopStart;
+  DWORD dwLoopEnd;		/* Byte offset ? */
+  DWORD dwFraction;
+  DWORD dwPlayCount;		/* Loop Count, 0=infinite */
 } SAMPLELOOPSTRUCT;
 
 
 typedef struct WAVESAMPLERINFO
 {
-	WAVESMPLHEADER wsiHdr;
-	SAMPLELOOPSTRUCT wsiLoops[2];
+  WAVESMPLHEADER wsiHdr;
+  SAMPLELOOPSTRUCT wsiLoops[2];
 } WAVESAMPLERINFO;
 
 
 typedef struct WAVELISTHEADER
 {
-	DWORD list_id;	/* "LIST" -> 0x5453494C */
-	DWORD list_len;
-	DWORD info;		/* "INFO" */
+  DWORD list_id;		/* "LIST" -> 0x5453494C */
+  DWORD list_len;
+  DWORD info;			/* "INFO" */
 } WAVELISTHEADER;
 
 
 typedef struct WAVEEXTRAHEADER
 {
-	DWORD xtra_id;	/* "xtra"	-> 0x61727478 */
-	DWORD xtra_len;
-	DWORD dwFlags;
-	WORD  wPan;
-	WORD  wVolume;
-	WORD  wGlobalVol;
-	WORD  wReserved;
-	BYTE nVibType;
-	BYTE nVibSweep;
-	BYTE nVibDepth;
-	BYTE nVibRate;
+  DWORD xtra_id;		/* "xtra"       -> 0x61727478 */
+  DWORD xtra_len;
+  DWORD dwFlags;
+  WORD wPan;
+  WORD wVolume;
+  WORD wGlobalVol;
+  WORD wReserved;
+  BYTE nVibType;
+  BYTE nVibSweep;
+  BYTE nVibDepth;
+  BYTE nVibRate;
 } WAVEEXTRAHEADER;
 
 #pragma pack()
@@ -923,8 +1019,8 @@ typedef struct WAVEEXTRAHEADER
 #define MOD2XMFineTune(k)	((int)( (signed char)((k)<<4) ))
 #define XM2MODFineTune(k)	((int)( (k>>4)&0x0f ))
 
-int _muldiv(long a, long b, long c);
-int _muldivr(long a, long b, long c);
+int _muldiv (long a, long b, long c);
+int _muldivr (long a, long b, long c);
 
 
 /* Byte swapping functions from the GNU C Library and libsdl */
@@ -954,8 +1050,8 @@ bswap_16 (unsigned short int __bsx)
 static inline unsigned int
 bswap_32 (unsigned int __bsx)
 {
-  return ((((__bsx) & 0xff000000) >> 24) | (((__bsx) & 0x00ff0000) >>  8) |
-	  (((__bsx) & 0x0000ff00) <<  8) | (((__bsx) & 0x000000ff) << 24));
+  return ((((__bsx) & 0xff000000) >> 24) | (((__bsx) & 0x00ff0000) >> 8) |
+      (((__bsx) & 0x0000ff00) << 8) | (((__bsx) & 0x000000ff) << 24));
 }
 #endif
 

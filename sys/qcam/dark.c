@@ -50,8 +50,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define FNAME "qcam.darkfile"
 
 static unsigned char master_darkmask1[MAX_HEIGHT][MAX_WIDTH];
-static unsigned char master_darkmask2[MAX_HEIGHT/2+1][MAX_WIDTH/2+1];
-static unsigned char master_darkmask4[MAX_HEIGHT/4+1][MAX_WIDTH/4+1];
+static unsigned char master_darkmask2[MAX_HEIGHT / 2 + 1][MAX_WIDTH / 2 + 1];
+static unsigned char master_darkmask4[MAX_HEIGHT / 4 + 1][MAX_WIDTH / 4 + 1];
 
 /*
 int
@@ -133,7 +133,7 @@ read_darkmask()
 */
 
 int
-fixdark(const struct qcam *q, scanbuf *scan)
+fixdark (const struct qcam *q, scanbuf * scan)
 {
   static int init = 0;
   static int smallest_dm = 255;
@@ -150,14 +150,15 @@ fixdark(const struct qcam *q, scanbuf *scan)
   int scale = q->transfer_scale;
 
   if (!init) {
-    if (!read_darkmask()) return 0;
+    if (!read_darkmask ())
+      return 0;
     for (y = 0; y < MAX_HEIGHT; y++)
       for (x = 0; x < MAX_HEIGHT; x++)
-        if (master_darkmask1[y][x] < smallest_dm) {
+	if (master_darkmask1[y][x] < smallest_dm) {
 	  smallest_dm = master_darkmask1[y][x];
 #ifdef DEBUG
-	  fprintf(stderr, "Smallest mask is %d at (%d, %d)\n",
-		smallest_dm, x, y);
+	  fprintf (stderr, "Smallest mask is %d at (%d, %d)\n",
+	      smallest_dm, x, y);
 #endif
 	}
     init = 1;
@@ -165,7 +166,8 @@ fixdark(const struct qcam *q, scanbuf *scan)
 
   if (brightness < smallest_dm) {
 #ifdef DEBUG
-    fprintf(stderr, "Brightness %d (dark current starts at %d), no fixup needed\n",
+    fprintf (stderr,
+	"Brightness %d (dark current starts at %d), no fixup needed\n",
 	brightness, smallest_dm);
 #endif
     return 1;
@@ -186,53 +188,53 @@ fixdark(const struct qcam *q, scanbuf *scan)
 	darkmask[y][x] = master_darkmask4[y][x];
       } else {
 #ifdef DEBUG
-	fprintf(stderr, "Bad transfer_scale in darkmask assignment!\n");
+	fprintf (stderr, "Bad transfer_scale in darkmask assignment!\n");
 #endif
 	return 0;
       }
 
   do {
     again = 0;
-    ccd_y = (q->top-1)/scale;
+    ccd_y = (q->top - 1) / scale;
     for (y = 0; y < height; y++, ccd_y++) {
-      ccd_x = q->left-1;
+      ccd_x = q->left - 1;
       ccd_x /= 2;
       ccd_x *= 2;
       ccd_x /= scale;
       for (x = 0; x < width; x++, ccd_x++) {
-        val = scan[y*width + x];
-        if (brightness < darkmask[ccd_y][ccd_x]) { /* good pixel */
+	val = scan[y * width + x];
+	if (brightness < darkmask[ccd_y][ccd_x]) {	/* good pixel */
 	  new_image[y][x] = val;
-	} else { /* bad pixel */
+	} else {		/* bad pixel */
 	  /* look at nearby pixels, average the good values */
 	  pixelcount = 0;
 	  pixeltotal = 0;
-	  if (x > 0) { /* left */
-	    if (brightness < darkmask[ccd_y][ccd_x-1]) {
+	  if (x > 0) {		/* left */
+	    if (brightness < darkmask[ccd_y][ccd_x - 1]) {
 	      pixelcount++;
-	      pixeltotal += scan[y*width + x - 1];
+	      pixeltotal += scan[y * width + x - 1];
 	    }
 	  }
-	  if (x < width-1) { /* right */
-	    if (brightness < darkmask[ccd_y][ccd_x+1]) {
+	  if (x < width - 1) {	/* right */
+	    if (brightness < darkmask[ccd_y][ccd_x + 1]) {
 	      pixelcount++;
-	      pixeltotal += scan[y*width + x + 1];
+	      pixeltotal += scan[y * width + x + 1];
 	    }
 	  }
-	  if (y > 0) { /* above */
-	    if (brightness < darkmask[ccd_y-1][ccd_x]) {
+	  if (y > 0) {		/* above */
+	    if (brightness < darkmask[ccd_y - 1][ccd_x]) {
 	      pixelcount++;
-	      pixeltotal += scan[(y-1)*width + x];
+	      pixeltotal += scan[(y - 1) * width + x];
 	    }
 	  }
-	  if (y < height-1) { /* below */
-	    if (brightness < darkmask[ccd_y+1][ccd_x]) {
+	  if (y < height - 1) {	/* below */
+	    if (brightness < darkmask[ccd_y + 1][ccd_x]) {
 	      pixelcount++;
-	      pixeltotal += scan[(y+1)*width + x];
+	      pixeltotal += scan[(y + 1) * width + x];
 	    }
 	  }
- 
-	  if (pixelcount == 0) { /* no valid neighbors! */
+
+	  if (pixelcount == 0) {	/* no valid neighbors! */
 	    again = 1;
 	  } else {
 	    new_image[y][x] = pixeltotal / pixelcount;
@@ -245,13 +247,12 @@ fixdark(const struct qcam *q, scanbuf *scan)
 
     for (y = 0; y < height; y++)
       for (x = 0; x < width; x++)
-	scan[y*width + x] = new_image[y][x];
+	scan[y * width + x] = new_image[y][x];
 
   } while (loopcount++ < MAX_LOOPS && again);
 #ifdef DEBUG
-  fprintf(stderr, "Darkmask fix took %d loop%s\n",
-    loopcount, (loopcount == 1)?"":"s");
+  fprintf (stderr, "Darkmask fix took %d loop%s\n",
+      loopcount, (loopcount == 1) ? "" : "s");
 #endif
   return 1;
 }
-

@@ -30,33 +30,28 @@
 #include "gstv4l2element.h"
 #include "v4l2_calls.h"
 
-static void	gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass *klass);
-static void	gst_v4l2_tuner_channel_init	(GstV4l2TunerChannel *channel);
+static void gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass *
+    klass);
+static void gst_v4l2_tuner_channel_init (GstV4l2TunerChannel * channel);
 
-static void	gst_v4l2_tuner_norm_class_init	(GstV4l2TunerNormClass *klass);
-static void	gst_v4l2_tuner_norm_init	(GstV4l2TunerNorm *norm);
+static void gst_v4l2_tuner_norm_class_init (GstV4l2TunerNormClass * klass);
+static void gst_v4l2_tuner_norm_init (GstV4l2TunerNorm * norm);
 
-static const GList *
-		gst_v4l2_tuner_list_channels	(GstTuner        *mixer);
-static void	gst_v4l2_tuner_set_channel	(GstTuner        *mixer,
-						 GstTunerChannel *channel);
-static GstTunerChannel *
-		gst_v4l2_tuner_get_channel	(GstTuner        *mixer);
+static const GList *gst_v4l2_tuner_list_channels (GstTuner * mixer);
+static void gst_v4l2_tuner_set_channel (GstTuner * mixer,
+    GstTunerChannel * channel);
+static GstTunerChannel *gst_v4l2_tuner_get_channel (GstTuner * mixer);
 
-static const GList *
-		gst_v4l2_tuner_list_norms	(GstTuner        *mixer);
-static void	gst_v4l2_tuner_set_norm		(GstTuner        *mixer,
-						 GstTunerNorm    *norm);
-static GstTunerNorm *
-		gst_v4l2_tuner_get_norm		(GstTuner        *mixer);
+static const GList *gst_v4l2_tuner_list_norms (GstTuner * mixer);
+static void gst_v4l2_tuner_set_norm (GstTuner * mixer, GstTunerNorm * norm);
+static GstTunerNorm *gst_v4l2_tuner_get_norm (GstTuner * mixer);
 
-static void	gst_v4l2_tuner_set_frequency	(GstTuner        *mixer,
-						 GstTunerChannel *channel,
-						 gulong           frequency);
-static gulong	gst_v4l2_tuner_get_frequency	(GstTuner        *mixer,
-						 GstTunerChannel *channel);
-static gint	gst_v4l2_tuner_signal_strength	(GstTuner        *mixer,
-						 GstTunerChannel *channel);
+static void gst_v4l2_tuner_set_frequency (GstTuner * mixer,
+    GstTunerChannel * channel, gulong frequency);
+static gulong gst_v4l2_tuner_get_frequency (GstTuner * mixer,
+    GstTunerChannel * channel);
+static gint gst_v4l2_tuner_signal_strength (GstTuner * mixer,
+    GstTunerChannel * channel);
 
 static GstTunerNormClass *norm_parent_class = NULL;
 static GstTunerChannelClass *channel_parent_class = NULL;
@@ -82,21 +77,20 @@ gst_v4l2_tuner_channel_get_type (void)
 
     gst_v4l2_tuner_channel_type =
 	g_type_register_static (GST_TYPE_TUNER_CHANNEL,
-				"GstV4l2TunerChannel",
-				&v4l2_tuner_channel_info, 0);
+	"GstV4l2TunerChannel", &v4l2_tuner_channel_info, 0);
   }
 
   return gst_v4l2_tuner_channel_type;
 }
 
 static void
-gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass *klass)
+gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass * klass)
 {
   channel_parent_class = g_type_class_ref (GST_TYPE_TUNER_CHANNEL);
 }
 
 static void
-gst_v4l2_tuner_channel_init (GstV4l2TunerChannel *channel)
+gst_v4l2_tuner_channel_init (GstV4l2TunerChannel * channel)
 {
   channel->index = 0;
   channel->tuner = 0;
@@ -124,27 +118,26 @@ gst_v4l2_tuner_norm_get_type (void)
 
     gst_v4l2_tuner_norm_type =
 	g_type_register_static (GST_TYPE_TUNER_NORM,
-				"GstV4l2TunerNorm",
-				&v4l2_tuner_norm_info, 0);
+	"GstV4l2TunerNorm", &v4l2_tuner_norm_info, 0);
   }
 
   return gst_v4l2_tuner_norm_type;
 }
 
 static void
-gst_v4l2_tuner_norm_class_init (GstV4l2TunerNormClass *klass)
+gst_v4l2_tuner_norm_class_init (GstV4l2TunerNormClass * klass)
 {
   norm_parent_class = g_type_class_ref (GST_TYPE_TUNER_NORM);
 }
 
 static void
-gst_v4l2_tuner_norm_init (GstV4l2TunerNorm *norm)
+gst_v4l2_tuner_norm_init (GstV4l2TunerNorm * norm)
 {
   norm->index = 0;
 }
 
 void
-gst_v4l2_tuner_interface_init (GstTunerClass *klass)
+gst_v4l2_tuner_interface_init (GstTunerClass * klass)
 {
   /* default virtual functions */
   klass->list_channels = gst_v4l2_tuner_list_channels;
@@ -161,7 +154,7 @@ gst_v4l2_tuner_interface_init (GstTunerClass *klass)
 }
 
 static gboolean
-gst_v4l2_tuner_is_sink (GstV4l2Element *v4l2element)
+gst_v4l2_tuner_is_sink (GstV4l2Element * v4l2element)
 {
   const GList *pads = gst_element_get_pad_list (GST_ELEMENT (v4l2element));
   GstPadDirection dir = GST_PAD_UNKNOWN;
@@ -174,8 +167,8 @@ gst_v4l2_tuner_is_sink (GstV4l2Element *v4l2element)
 }
 
 static gboolean
-gst_v4l2_tuner_contains_channel (GstV4l2Element      *v4l2element,
-			         GstV4l2TunerChannel *v4l2channel)
+gst_v4l2_tuner_contains_channel (GstV4l2Element * v4l2element,
+    GstV4l2TunerChannel * v4l2channel)
 {
   const GList *item;
 
@@ -187,15 +180,14 @@ gst_v4l2_tuner_contains_channel (GstV4l2Element      *v4l2element,
 }
 
 static const GList *
-gst_v4l2_tuner_list_channels (GstTuner *mixer)
+gst_v4l2_tuner_list_channels (GstTuner * mixer)
 {
   /* ... or output, if we're a sink... */
   return GST_V4L2ELEMENT (mixer)->channels;
 }
 
 static void
-gst_v4l2_tuner_set_channel (GstTuner        *mixer,
-			    GstTunerChannel *channel)
+gst_v4l2_tuner_set_channel (GstTuner * mixer, GstTunerChannel * channel)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
   GstV4l2TunerChannel *v4l2channel = GST_V4L2_TUNER_CHANNEL (channel);
@@ -205,7 +197,7 @@ gst_v4l2_tuner_set_channel (GstTuner        *mixer,
   g_return_if_fail (gst_v4l2_tuner_contains_channel (v4l2element, v4l2channel));
 
   /* ... or output, if we're a sink... */
-  if (gst_v4l2_tuner_is_sink (v4l2element) ? 
+  if (gst_v4l2_tuner_is_sink (v4l2element) ?
       gst_v4l2_set_output (v4l2element, v4l2channel->index) :
       gst_v4l2_set_input (v4l2element, v4l2channel->index)) {
     gst_tuner_channel_changed (mixer, channel);
@@ -214,7 +206,7 @@ gst_v4l2_tuner_set_channel (GstTuner        *mixer,
 }
 
 static GstTunerChannel *
-gst_v4l2_tuner_get_channel (GstTuner *mixer)
+gst_v4l2_tuner_get_channel (GstTuner * mixer)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
   GList *item;
@@ -238,8 +230,8 @@ gst_v4l2_tuner_get_channel (GstTuner *mixer)
 }
 
 static gboolean
-gst_v4l2_tuner_contains_norm (GstV4l2Element   *v4l2element,
-			      GstV4l2TunerNorm *v4l2norm)
+gst_v4l2_tuner_contains_norm (GstV4l2Element * v4l2element,
+    GstV4l2TunerNorm * v4l2norm)
 {
   const GList *item;
 
@@ -251,14 +243,13 @@ gst_v4l2_tuner_contains_norm (GstV4l2Element   *v4l2element,
 }
 
 static const GList *
-gst_v4l2_tuner_list_norms (GstTuner *mixer)
+gst_v4l2_tuner_list_norms (GstTuner * mixer)
 {
   return GST_V4L2ELEMENT (mixer)->norms;
 }
 
 static void
-gst_v4l2_tuner_set_norm (GstTuner     *mixer,
-			 GstTunerNorm *norm)
+gst_v4l2_tuner_set_norm (GstTuner * mixer, GstTunerNorm * norm)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
   GstV4l2TunerNorm *v4l2norm = GST_V4L2_TUNER_NORM (norm);
@@ -269,12 +260,12 @@ gst_v4l2_tuner_set_norm (GstTuner     *mixer,
 
   if (gst_v4l2_set_norm (v4l2element, v4l2norm->index)) {
     gst_tuner_norm_changed (mixer, norm);
-    g_object_notify (G_OBJECT (v4l2element), "norm"); 
+    g_object_notify (G_OBJECT (v4l2element), "norm");
   }
 }
 
 static GstTunerNorm *
-gst_v4l2_tuner_get_norm (GstTuner *mixer)
+gst_v4l2_tuner_get_norm (GstTuner * mixer)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
   GList *item;
@@ -294,9 +285,8 @@ gst_v4l2_tuner_get_norm (GstTuner *mixer)
 }
 
 static void
-gst_v4l2_tuner_set_frequency (GstTuner        *mixer,
-			      GstTunerChannel *channel,
-			      gulong           frequency)
+gst_v4l2_tuner_set_frequency (GstTuner * mixer,
+    GstTunerChannel * channel, gulong frequency)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
   GstV4l2TunerChannel *v4l2channel = GST_V4L2_TUNER_CHANNEL (channel);
@@ -305,7 +295,7 @@ gst_v4l2_tuner_set_frequency (GstTuner        *mixer,
   /* assert that we're opened and that we're using a known item */
   g_return_if_fail (GST_V4L2_IS_OPEN (v4l2element));
   g_return_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
-			GST_TUNER_CHANNEL_FREQUENCY));
+	  GST_TUNER_CHANNEL_FREQUENCY));
   g_return_if_fail (gst_v4l2_tuner_contains_channel (v4l2element, v4l2channel));
 
   gst_v4l2_get_input (v4l2element, &chan);
@@ -313,14 +303,13 @@ gst_v4l2_tuner_set_frequency (GstTuner        *mixer,
       GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
     if (gst_v4l2_set_frequency (v4l2element, v4l2channel->tuner, frequency)) {
       gst_tuner_frequency_changed (mixer, channel, frequency);
-      g_object_notify (G_OBJECT (v4l2element), "frequency"); 
+      g_object_notify (G_OBJECT (v4l2element), "frequency");
     }
   }
 }
 
 static gulong
-gst_v4l2_tuner_get_frequency (GstTuner        *mixer,
-			      GstTunerChannel *channel)
+gst_v4l2_tuner_get_frequency (GstTuner * mixer, GstTunerChannel * channel)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
   GstV4l2TunerChannel *v4l2channel = GST_V4L2_TUNER_CHANNEL (channel);
@@ -330,9 +319,9 @@ gst_v4l2_tuner_get_frequency (GstTuner        *mixer,
   /* assert that we're opened and that we're using a known item */
   g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), 0);
   g_return_val_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
-				GST_TUNER_CHANNEL_FREQUENCY), 0);
+	  GST_TUNER_CHANNEL_FREQUENCY), 0);
   g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2element,
-							 v4l2channel), 0);
+	  v4l2channel), 0);
 
   gst_v4l2_get_input (v4l2element, &chan);
   if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
@@ -344,8 +333,7 @@ gst_v4l2_tuner_get_frequency (GstTuner        *mixer,
 }
 
 static gint
-gst_v4l2_tuner_signal_strength (GstTuner        *mixer,
-			        GstTunerChannel *channel)
+gst_v4l2_tuner_signal_strength (GstTuner * mixer, GstTunerChannel * channel)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
   GstV4l2TunerChannel *v4l2channel = GST_V4L2_TUNER_CHANNEL (channel);
@@ -355,9 +343,9 @@ gst_v4l2_tuner_signal_strength (GstTuner        *mixer,
   /* assert that we're opened and that we're using a known item */
   g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), 0);
   g_return_val_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
-				GST_TUNER_CHANNEL_FREQUENCY), 0);
+	  GST_TUNER_CHANNEL_FREQUENCY), 0);
   g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2element,
-							 v4l2channel), 0);
+	  v4l2channel), 0);
 
   gst_v4l2_get_input (v4l2element, &chan);
   if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&

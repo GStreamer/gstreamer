@@ -25,24 +25,21 @@
 #include "gsttarkindec.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "tarkinenc", GST_RANK_NONE, GST_TYPE_TARKINENC))
+  if (!gst_element_register (plugin, "tarkinenc", GST_RANK_NONE,
+	  GST_TYPE_TARKINENC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "tarkindec", GST_RANK_NONE, GST_TYPE_TARKINDEC))
+  if (!gst_element_register (plugin, "tarkindec", GST_RANK_NONE,
+	  GST_TYPE_TARKINDEC))
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "tarkin",
-  "Tarkin plugin library",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "tarkin",
+    "Tarkin plugin library",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

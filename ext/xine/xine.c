@@ -25,22 +25,21 @@
 
 GST_BOILERPLATE (GstXine, gst_xine, GstElement, GST_TYPE_ELEMENT)
 
-static GstElementStateReturn	gst_xine_change_state		(GstElement *	element);
-  
-static xine_ao_driver_t *  	_xine_create_audio_driver     	(GstXine *	xine);
-static xine_vo_driver_t *  	_xine_create_video_driver     	(GstXine *	xine);
+     static GstElementStateReturn gst_xine_change_state (GstElement * element);
+
+     static xine_ao_driver_t *_xine_create_audio_driver (GstXine * xine);
+     static xine_vo_driver_t *_xine_create_video_driver (GstXine * xine);
 
 
-static void
-gst_xine_base_init (gpointer klass)
+     static void gst_xine_base_init (gpointer klass)
 {
 }
 
 static void
-gst_xine_class_init (GstXineClass *klass)
+gst_xine_class_init (GstXineClass * klass)
 {
   GstElementClass *element = GST_ELEMENT_CLASS (klass);
-  
+
   klass->xine = xine_new ();
   xine_init (klass->xine);
 
@@ -51,15 +50,15 @@ gst_xine_class_init (GstXineClass *klass)
 }
 
 static void
-gst_xine_init (GstXine *filter)
+gst_xine_init (GstXine * filter)
 {
 }
 
 static GstElementStateReturn
-gst_xine_change_state (GstElement *element)
+gst_xine_change_state (GstElement * element)
 {
   GstXine *xine = GST_XINE (element);
-  
+
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       break;
@@ -79,32 +78,36 @@ gst_xine_change_state (GstElement *element)
       GST_ERROR_OBJECT (element, "invalid state change");
       break;
   }
-  
-  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state, (element), GST_STATE_SUCCESS);
+
+  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
+      (element), GST_STATE_SUCCESS);
 }
 
 static xine_ao_driver_t *
-_xine_create_audio_driver (GstXine *xine)
+_xine_create_audio_driver (GstXine * xine)
 {
   return xine_open_audio_driver (GST_XINE_GET_CLASS (xine)->xine, "none", NULL);
 }
 
 static xine_vo_driver_t *
-_xine_create_video_driver (GstXine *xine)
+_xine_create_video_driver (GstXine * xine)
 {
-  return xine_open_video_driver (GST_XINE_GET_CLASS (xine)->xine, "none", XINE_VISUAL_TYPE_NONE, NULL);
+  return xine_open_video_driver (GST_XINE_GET_CLASS (xine)->xine, "none",
+      XINE_VISUAL_TYPE_NONE, NULL);
 }
 
 xine_stream_t *
-gst_xine_get_stream (GstXine *xine)
+gst_xine_get_stream (GstXine * xine)
 {
   if (!xine->stream) {
     GstXineClass *klass = GST_XINE_GET_CLASS (xine);
+
     g_assert (xine->video_driver == NULL);
     g_assert (xine->audio_driver == NULL);
     xine->audio_driver = klass->create_audio_driver (xine);
     xine->video_driver = klass->create_video_driver (xine);
-    xine->stream = xine_stream_new (klass->xine, xine->audio_driver, xine->video_driver);
+    xine->stream =
+	xine_stream_new (klass->xine, xine->audio_driver, xine->video_driver);
 
     /* FIXME: fail gracefully */
     g_assert (xine->stream);
@@ -114,7 +117,7 @@ gst_xine_get_stream (GstXine *xine)
 }
 
 void
-gst_xine_free_stream (GstXine *xine)
+gst_xine_free_stream (GstXine * xine)
 {
   g_return_if_fail (xine->stream != NULL);
   g_assert (xine->video_driver != NULL);
@@ -129,17 +132,17 @@ gst_xine_free_stream (GstXine *xine)
 }
 
 static void
-_free_xine_buf_element (buf_element_t *buffer)
+_free_xine_buf_element (buf_element_t * buffer)
 {
   gst_buffer_unref (GST_BUFFER (buffer->source));
 }
 
 void
-gst_buffer_to_xine_buffer (buf_element_t *ret, GstBuffer *buffer)
+gst_buffer_to_xine_buffer (buf_element_t * ret, GstBuffer * buffer)
 {
   g_return_if_fail (ret != NULL);
   g_return_if_fail (buffer != NULL);
-  
+
   /* FIXME: what's the difference? */
   ret->mem = GST_BUFFER_DATA (buffer);
   ret->content = GST_BUFFER_DATA (buffer);
@@ -151,7 +154,7 @@ gst_buffer_to_xine_buffer (buf_element_t *ret, GstBuffer *buffer)
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_xine_input_init_plugin (plugin) ||
       !gst_xine_audio_dec_init_plugin (plugin) ||
@@ -161,14 +164,8 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "xine",
-  "wrapper for libxine (version "XINE_VERSION") plugins",
-  plugin_init,
-  VERSION,
-  "GPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "xine",
+    "wrapper for libxine (version " XINE_VERSION ") plugins",
+    plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN)

@@ -26,8 +26,9 @@
 #include <gst/bytestream/bytestream.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 #define GST_TYPE_CDXA_PARSE \
   (gst_cdxa_parse_get_type())
@@ -43,38 +44,40 @@ extern "C" {
 #define CDXA_SECTOR_SIZE  	2352
 #define CDXA_DATA_SIZE  	2324
 
-typedef enum
-{
-  CDXA_PARSE_HEADER,
-  CDXA_PARSE_DATA,
-} GstCDXAParseState;
+  typedef enum
+  {
+    CDXA_PARSE_HEADER,
+    CDXA_PARSE_DATA,
+  } GstCDXAParseState;
 
-typedef struct _GstCDXAParse GstCDXAParse;
-typedef struct _GstCDXAParseClass GstCDXAParseClass;
+  typedef struct _GstCDXAParse GstCDXAParse;
+  typedef struct _GstCDXAParseClass GstCDXAParseClass;
 
-struct _GstCDXAParse {
-  GstElement element;
+  struct _GstCDXAParse
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad, *srcpad;
+    /* pads */
+    GstPad *sinkpad, *srcpad;
 
-  GstByteStream *bs;
+    GstByteStream *bs;
 
-  GstCDXAParseState state;
+    GstCDXAParseState state;
 
-  guint32 riff_size;
-  guint32 data_size;
-  guint32 sectors;
-};
+    guint32 riff_size;
+    guint32 data_size;
+    guint32 sectors;
+  };
 
-struct _GstCDXAParseClass {
-  GstElementClass parent_class;
-};
+  struct _GstCDXAParseClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType 		gst_cdxa_parse_get_type		(void);
+  GType gst_cdxa_parse_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_CDXA_PARSE_H__ */
+#endif				/* __GST_CDXA_PARSE_H__ */

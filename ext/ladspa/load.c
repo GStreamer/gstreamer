@@ -26,18 +26,19 @@
    not an absolute path (i.e. does not begin with / character), this
    routine will search the LADSPA_PATH for the file. */
 static void *
-dlopenLADSPA(const char * pcFilename, int iFlag) {
+dlopenLADSPA (const char *pcFilename, int iFlag)
+{
 
-  char * pcBuffer;
-  const char * pcEnd;
-  const char * pcLADSPAPath;
-  const char * pcStart;
+  char *pcBuffer;
+  const char *pcEnd;
+  const char *pcLADSPAPath;
+  const char *pcStart;
   int iEndsInSO;
   int iNeedSlash;
   size_t iFilenameLength;
-  void * pvResult;
+  void *pvResult;
 
-  iFilenameLength = strlen(pcFilename);
+  iFilenameLength = strlen (pcFilename);
   pvResult = NULL;
 
   if (pcFilename[0] == '/') {
@@ -45,12 +46,11 @@ dlopenLADSPA(const char * pcFilename, int iFlag) {
     /* The filename is absolute. Assume the user knows what he/she is
        doing and simply dlopen() it. */
 
-    pvResult = dlopen(pcFilename, iFlag);
+    pvResult = dlopen (pcFilename, iFlag);
     if (pvResult != NULL)
       return pvResult;
 
-  }
-  else {
+  } else {
 
     /* If the filename is not absolute then we wish to check along the
        LADSPA_PATH path to see if we can find the file there. We do
@@ -63,8 +63,8 @@ dlopenLADSPA(const char * pcFilename, int iFlag) {
      */
 
     pcLADSPAPath = g_strdup_printf ("%s:/usr/lib/ladspa:/usr/local/lib/ladspa",
-	getenv("LADSPA_PATH"));
-    
+	getenv ("LADSPA_PATH"));
+
     if (pcLADSPAPath) {
 
       pcStart = pcLADSPAPath;
@@ -72,24 +72,24 @@ dlopenLADSPA(const char * pcFilename, int iFlag) {
 	pcEnd = pcStart;
 	while (*pcEnd != ':' && *pcEnd != '\0')
 	  pcEnd++;
-	
-	pcBuffer = malloc(iFilenameLength + 2 + (pcEnd - pcStart));
+
+	pcBuffer = malloc (iFilenameLength + 2 + (pcEnd - pcStart));
 	if (pcEnd > pcStart)
-	  strncpy(pcBuffer, pcStart, pcEnd - pcStart);
+	  strncpy (pcBuffer, pcStart, pcEnd - pcStart);
 	iNeedSlash = 0;
 	if (pcEnd > pcStart)
 	  if (*(pcEnd - 1) != '/') {
 	    iNeedSlash = 1;
 	    pcBuffer[pcEnd - pcStart] = '/';
 	  }
-	strcpy(pcBuffer + iNeedSlash + (pcEnd - pcStart), pcFilename);
-	
-	pvResult = dlopen(pcBuffer, iFlag);
-	
+	strcpy (pcBuffer + iNeedSlash + (pcEnd - pcStart), pcFilename);
+
+	pvResult = dlopen (pcBuffer, iFlag);
+
 	free (pcBuffer);
 	if (pvResult != NULL)
 	  return pvResult;
-	
+
 	pcStart = pcEnd;
 	if (*pcStart == ':')
 	  pcStart++;
@@ -101,13 +101,13 @@ dlopenLADSPA(const char * pcFilename, int iFlag) {
      ".so". In this case, add this suffix and recurse. */
   iEndsInSO = 0;
   if (iFilenameLength > 3)
-    iEndsInSO = (strcmp(pcFilename + iFilenameLength - 3, ".so") == 0);
+    iEndsInSO = (strcmp (pcFilename + iFilenameLength - 3, ".so") == 0);
   if (!iEndsInSO) {
-    pcBuffer = malloc(iFilenameLength + 4);
-    strcpy(pcBuffer, pcFilename);
-    strcat(pcBuffer, ".so");
-    pvResult = dlopenLADSPA(pcBuffer, iFlag);
-    free(pcBuffer);
+    pcBuffer = malloc (iFilenameLength + 4);
+    strcpy (pcBuffer, pcFilename);
+    strcat (pcBuffer, ".so");
+    pvResult = dlopenLADSPA (pcBuffer, iFlag);
+    free (pcBuffer);
   }
 
   if (pvResult != NULL)
@@ -120,23 +120,22 @@ dlopenLADSPA(const char * pcFilename, int iFlag) {
      will be kept when multiple calls are made to dlopen(). We've
      covered the former case - now we can handle the latter by calling
      dlopen() again here. */
-  return dlopen(pcFilename, iFlag);
+  return dlopen (pcFilename, iFlag);
 }
 
 /*****************************************************************************/
 
 void *
-loadLADSPAPluginLibrary(const char * pcPluginFilename) {
+loadLADSPAPluginLibrary (const char *pcPluginFilename)
+{
 
-  void * pvPluginHandle;
+  void *pvPluginHandle;
 
-  pvPluginHandle = dlopenLADSPA(pcPluginFilename, RTLD_NOW);
+  pvPluginHandle = dlopenLADSPA (pcPluginFilename, RTLD_NOW);
   if (!pvPluginHandle) {
-    fprintf(stderr, 
-	    "Failed to load plugin \"%s\": %s\n", 
-	    pcPluginFilename,
-	    dlerror());
-    exit(1);
+    fprintf (stderr,
+	"Failed to load plugin \"%s\": %s\n", pcPluginFilename, dlerror ());
+    exit (1);
   }
 
   return pvPluginHandle;
@@ -144,49 +143,49 @@ loadLADSPAPluginLibrary(const char * pcPluginFilename) {
 
 /*****************************************************************************/
 
-void 
-unloadLADSPAPluginLibrary(void * pvLADSPAPluginLibrary) {
-  dlclose(pvLADSPAPluginLibrary);
+void
+unloadLADSPAPluginLibrary (void *pvLADSPAPluginLibrary)
+{
+  dlclose (pvLADSPAPluginLibrary);
 }
 
 /*****************************************************************************/
 
 const LADSPA_Descriptor *
-findLADSPAPluginDescriptor(void * pvLADSPAPluginLibrary,
-			   const char * pcPluginLibraryFilename,
-			   const char * pcPluginLabel) {
+findLADSPAPluginDescriptor (void *pvLADSPAPluginLibrary,
+    const char *pcPluginLibraryFilename, const char *pcPluginLabel)
+{
 
-  const LADSPA_Descriptor * psDescriptor;
+  const LADSPA_Descriptor *psDescriptor;
   LADSPA_Descriptor_Function pfDescriptorFunction;
   unsigned long lPluginIndex;
 
-  dlerror();
-  pfDescriptorFunction 
-    = (LADSPA_Descriptor_Function)dlsym(pvLADSPAPluginLibrary,
-					"ladspa_descriptor");
+  dlerror ();
+  pfDescriptorFunction
+      = (LADSPA_Descriptor_Function) dlsym (pvLADSPAPluginLibrary,
+      "ladspa_descriptor");
   if (!pfDescriptorFunction) {
-    const char * pcError = dlerror();
+    const char *pcError = dlerror ();
+
     if (pcError) {
-      fprintf(stderr,
-	      "Unable to find ladspa_descriptor() function in plugin "
-	      "library file \"%s\": %s.\n"
-	      "Are you sure this is a LADSPA plugin file?\n", 
-	      pcPluginLibraryFilename,
-	      pcError);
-      exit(1);
+      fprintf (stderr,
+	  "Unable to find ladspa_descriptor() function in plugin "
+	  "library file \"%s\": %s.\n"
+	  "Are you sure this is a LADSPA plugin file?\n",
+	  pcPluginLibraryFilename, pcError);
+      exit (1);
     }
   }
 
   for (lPluginIndex = 0;; lPluginIndex++) {
-    psDescriptor = pfDescriptorFunction(lPluginIndex);
+    psDescriptor = pfDescriptorFunction (lPluginIndex);
     if (psDescriptor == NULL) {
-      fprintf(stderr,
-	      "Unable to find label \"%s\" in plugin library file \"%s\".\n",
-	      pcPluginLabel,
-	      pcPluginLibraryFilename);
-      exit(1);      
+      fprintf (stderr,
+	  "Unable to find label \"%s\" in plugin library file \"%s\".\n",
+	  pcPluginLabel, pcPluginLibraryFilename);
+      exit (1);
     }
-    if (strcmp(psDescriptor->Label, pcPluginLabel) == 0)
+    if (strcmp (psDescriptor->Label, pcPluginLabel) == 0)
       return psDescriptor;
   }
 }

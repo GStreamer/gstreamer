@@ -28,37 +28,40 @@
 
 #define CDPLAYER_MAX_TRACKS 128
 
-typedef enum {
-	CD_PLAYING,
-	CD_COMPLETED,
-	CD_ERROR
+typedef enum
+{
+  CD_PLAYING,
+  CD_COMPLETED,
+  CD_ERROR
 } CDStatus;
 
-struct cd_msf {
-	guint8 minute;
-	guint8 second;
-	guint8 frame;
+struct cd_msf
+{
+  guint8 minute;
+  guint8 second;
+  guint8 frame;
 
-	gboolean data_track;
+  gboolean data_track;
 };
 
-struct cd {
-	gint fd;
-	gint num_tracks;
-	struct cd_msf tracks[CDPLAYER_MAX_TRACKS];
+struct cd
+{
+  gint fd;
+  gint num_tracks;
+  struct cd_msf tracks[CDPLAYER_MAX_TRACKS];
 };
 
 
 /* these are defined by the different cdrom type header files */
-gboolean cd_init(struct cd *cd,const gchar *device);
-gboolean cd_start(struct cd *cd,gint start_track,gint end_track);
-gboolean cd_pause(struct cd *cd);
-gboolean cd_resume(struct cd *cd);
-gboolean cd_stop(struct cd *cd);
-CDStatus cd_status(struct cd *cd);
-gint cd_current_track(struct cd *cd);
-gboolean cd_close(struct cd *cd);
+gboolean cd_init (struct cd *cd, const gchar * device);
+gboolean cd_start (struct cd *cd, gint start_track, gint end_track);
+gboolean cd_pause (struct cd *cd);
+gboolean cd_resume (struct cd *cd);
+gboolean cd_stop (struct cd *cd);
+CDStatus cd_status (struct cd *cd);
+gint cd_current_track (struct cd *cd);
+gboolean cd_close (struct cd *cd);
 
-guint32 cd_cddb_discid(struct cd *cd);
+guint32 cd_cddb_discid (struct cd *cd);
 
 #endif

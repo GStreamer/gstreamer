@@ -27,33 +27,30 @@
 #include <gst/audio/audio.h>
 
 
-struct _elements_entry {
+struct _elements_entry
+{
   gchar *name;
-  GType (*type) (void);
+    GType (*type) (void);
 };
 
 static struct _elements_entry _elements[] = {
-  { "iir",  	gst_iir_get_type	},
-  { "lpwsinc",  gst_lpwsinc_get_type	},
-  { "bpwsinc",  gst_bpwsinc_get_type	},
-  { NULL, 0 },
+  {"iir", gst_iir_get_type},
+  {"lpwsinc", gst_lpwsinc_get_type},
+  {"bpwsinc", gst_bpwsinc_get_type},
+  {NULL, 0},
 };
 
-GstStaticPadTemplate gst_filter_src_template =
-GST_STATIC_PAD_TEMPLATE (
-    "src",
+GstStaticPadTemplate gst_filter_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS )
-);
+    GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+    );
 
-GstStaticPadTemplate gst_filter_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-    "sink",
+GstStaticPadTemplate gst_filter_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ( GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS )
-);
+    GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+    );
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -61,7 +58,8 @@ plugin_init (GstPlugin * plugin)
   gint i = 0;
 
   while (_elements[i].name) {
-    if (!gst_element_register (plugin, _elements[i].name, GST_RANK_NONE, _elements[i].type()))
+    if (!gst_element_register (plugin, _elements[i].name, GST_RANK_NONE,
+	    _elements[i].type ()))
       return FALSE;
 
     i++;
@@ -70,14 +68,8 @@ plugin_init (GstPlugin * plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "filter",
-  "IIR, lpwsinc and bpwsinc audio filter elements",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-);
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "filter",
+    "IIR, lpwsinc and bpwsinc audio filter elements",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);

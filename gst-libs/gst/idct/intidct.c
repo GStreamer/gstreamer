@@ -51,10 +51,8 @@
  */
 
 #if DCTSIZE != 8
-  Sorry, this code only copes with 8x8 DCTs. /* deliberate syntax err */
+Sorry, this code only copes with 8 x8 DCTs.	/* deliberate syntax err */
 #endif
-
-
 /*
  * A 2-D IDCT can be done by 1-D IDCT on each row followed by 1-D IDCT
  * on each column.  Direct algorithms are also available, but they are
@@ -90,7 +88,6 @@
  * have BITS_IN_JSAMPLE + CONST_BITS + PASS1_BITS <= 26.  Error analysis
  * shows that the values given below are the most effective.
  */
-
 #ifdef EIGHT_BIT_SAMPLES
 #define CONST_BITS  13
 #define PASS1_BITS  2
@@ -98,22 +95,16 @@
 #define CONST_BITS  13
 #define PASS1_BITS  1		/* lose a little precision to avoid overflow */
 #endif
-
 #define ONE	((INT32) 1)
-
 #define CONST_SCALE (ONE << CONST_BITS)
-
 /* Convert a positive real constant to an integer scaled by CONST_SCALE. */
-
 #define FIX(x)	((INT32) ((x) * CONST_SCALE + 0.5))
-
 /* Some C compilers fail to reduce "FIX(constant)" at compile time, thus
  * causing a lot of useless floating-point operations at run time.
  * To get around this we use the following pre-calculated constants.
  * If you change CONST_BITS you may want to add appropriate values.
  * (With a reasonable C compiler, you can just rely on the FIX() macro...)
  */
-
 #if CONST_BITS == 13
 #define FIX_0_298631336  ((INT32)  2446)	/* FIX(0.298631336) */
 #define FIX_0_390180644  ((INT32)  3196)	/* FIX(0.390180644) */
@@ -141,15 +132,11 @@
 #define FIX_2_562915447  FIX(2.562915447)
 #define FIX_3_072711026  FIX(3.072711026)
 #endif
-
-
 /* Descale and correctly round an INT32 value that's scaled by N bits.
  * We assume RIGHT_SHIFT rounds towards minus infinity, so adding
  * the fudge factor is correct for either sign of X.
  */
-
 #define DESCALE(x,n)  RIGHT_SHIFT((x) + (ONE << ((n)-1)), n)
-
 /* Multiply an INT32 variable by an INT32 constant to yield an INT32 result.
  * For 8-bit samples with the recommended scaling, all the variable
  * and constant values involved are no more than 16 bits wide, so a
@@ -160,7 +147,6 @@
  * combination of casts.
  * NB: for 12-bit samples, a full 32-bit multiplication will be needed.
  */
-
 #ifdef EIGHT_BIT_SAMPLES
 #ifdef SHORTxSHORT_32		/* may work if 'int' is 32 bits */
 #define MULTIPLY(var,const)  (((INT16) (var)) * ((INT16) (const)))
@@ -169,17 +155,13 @@
 #define MULTIPLY(var,const)  (((INT16) (var)) * ((INT32) (const)))
 #endif
 #endif
-
 #ifndef MULTIPLY		/* default definition */
 #define MULTIPLY(var,const)  ((var) * (const))
 #endif
-
-
 /*
  * Perform the inverse DCT on one block of coefficients.
  */
-
-void
+    void
 gst_idct_int_idct (DCTBLOCK data)
 {
   INT32 tmp0, tmp1, tmp2, tmp3;
@@ -187,14 +169,13 @@ gst_idct_int_idct (DCTBLOCK data)
   INT32 z1, z2, z3, z4, z5;
   register DCTELEM *dataptr;
   int rowctr;
+
   SHIFT_TEMPS
-
-  /* Pass 1: process rows. */
-  /* Note results are scaled up by sqrt(8) compared to a true IDCT; */
-  /* furthermore, we scale the results by 2**PASS1_BITS. */
-
-  dataptr = data;
-  for (rowctr = DCTSIZE-1; rowctr >= 0; rowctr--) {
+      /* Pass 1: process rows. */
+      /* Note results are scaled up by sqrt(8) compared to a true IDCT; */
+      /* furthermore, we scale the results by 2**PASS1_BITS. */
+      dataptr = data;
+  for (rowctr = DCTSIZE - 1; rowctr >= 0; rowctr--) {
     /* Due to quantization, we will usually find that many of the input
      * coefficients are zero, especially the AC terms.  We can exploit this
      * by short-circuiting the IDCT calculation for any row in which all
@@ -205,10 +186,10 @@ gst_idct_int_idct (DCTBLOCK data)
      */
 
     if ((dataptr[1] | dataptr[2] | dataptr[3] | dataptr[4] |
-	 dataptr[5] | dataptr[6] | dataptr[7]) == 0) {
+	    dataptr[5] | dataptr[6] | dataptr[7]) == 0) {
       /* AC terms all zero */
       DCTELEM dcval = (DCTELEM) (dataptr[0] << PASS1_BITS);
-      
+
       dataptr[0] = dcval;
       dataptr[1] = dcval;
       dataptr[2] = dcval;
@@ -217,7 +198,7 @@ gst_idct_int_idct (DCTBLOCK data)
       dataptr[5] = dcval;
       dataptr[6] = dcval;
       dataptr[7] = dcval;
-      
+
       dataptr += DCTSIZE;	/* advance pointer to next row */
       continue;
     }
@@ -228,9 +209,9 @@ gst_idct_int_idct (DCTBLOCK data)
     z2 = (INT32) dataptr[2];
     z3 = (INT32) dataptr[6];
 
-    z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
-    tmp2 = z1 + MULTIPLY(z3, - FIX_1_847759065);
-    tmp3 = z1 + MULTIPLY(z2, FIX_0_765366865);
+    z1 = MULTIPLY (z2 + z3, FIX_0_541196100);
+    tmp2 = z1 + MULTIPLY (z3, -FIX_1_847759065);
+    tmp3 = z1 + MULTIPLY (z2, FIX_0_765366865);
 
     tmp0 = ((INT32) dataptr[0] + (INT32) dataptr[4]) << CONST_BITS;
     tmp1 = ((INT32) dataptr[0] - (INT32) dataptr[4]) << CONST_BITS;
@@ -239,7 +220,7 @@ gst_idct_int_idct (DCTBLOCK data)
     tmp13 = tmp0 - tmp3;
     tmp11 = tmp1 + tmp2;
     tmp12 = tmp1 - tmp2;
-    
+
     /* Odd part per figure 8; the matrix is unitary and hence its
      * transpose is its inverse.  i0..i3 are y7,y5,y3,y1 respectively.
      */
@@ -253,20 +234,20 @@ gst_idct_int_idct (DCTBLOCK data)
     z2 = tmp1 + tmp2;
     z3 = tmp0 + tmp2;
     z4 = tmp1 + tmp3;
-    z5 = MULTIPLY(z3 + z4, FIX_1_175875602); /* sqrt(2) * c3 */
-    
-    tmp0 = MULTIPLY(tmp0, FIX_0_298631336); /* sqrt(2) * (-c1+c3+c5-c7) */
-    tmp1 = MULTIPLY(tmp1, FIX_2_053119869); /* sqrt(2) * ( c1+c3-c5+c7) */
-    tmp2 = MULTIPLY(tmp2, FIX_3_072711026); /* sqrt(2) * ( c1+c3+c5-c7) */
-    tmp3 = MULTIPLY(tmp3, FIX_1_501321110); /* sqrt(2) * ( c1+c3-c5-c7) */
-    z1 = MULTIPLY(z1, - FIX_0_899976223); /* sqrt(2) * (c7-c3) */
-    z2 = MULTIPLY(z2, - FIX_2_562915447); /* sqrt(2) * (-c1-c3) */
-    z3 = MULTIPLY(z3, - FIX_1_961570560); /* sqrt(2) * (-c3-c5) */
-    z4 = MULTIPLY(z4, - FIX_0_390180644); /* sqrt(2) * (c5-c3) */
-    
+    z5 = MULTIPLY (z3 + z4, FIX_1_175875602);	/* sqrt(2) * c3 */
+
+    tmp0 = MULTIPLY (tmp0, FIX_0_298631336);	/* sqrt(2) * (-c1+c3+c5-c7) */
+    tmp1 = MULTIPLY (tmp1, FIX_2_053119869);	/* sqrt(2) * ( c1+c3-c5+c7) */
+    tmp2 = MULTIPLY (tmp2, FIX_3_072711026);	/* sqrt(2) * ( c1+c3+c5-c7) */
+    tmp3 = MULTIPLY (tmp3, FIX_1_501321110);	/* sqrt(2) * ( c1+c3-c5-c7) */
+    z1 = MULTIPLY (z1, -FIX_0_899976223);	/* sqrt(2) * (c7-c3) */
+    z2 = MULTIPLY (z2, -FIX_2_562915447);	/* sqrt(2) * (-c1-c3) */
+    z3 = MULTIPLY (z3, -FIX_1_961570560);	/* sqrt(2) * (-c3-c5) */
+    z4 = MULTIPLY (z4, -FIX_0_390180644);	/* sqrt(2) * (c5-c3) */
+
     z3 += z5;
     z4 += z5;
-    
+
     tmp0 += z1 + z3;
     tmp1 += z2 + z4;
     tmp2 += z2 + z3;
@@ -274,14 +255,14 @@ gst_idct_int_idct (DCTBLOCK data)
 
     /* Final output stage: inputs are tmp10..tmp13, tmp0..tmp3 */
 
-    dataptr[0] = (DCTELEM) DESCALE(tmp10 + tmp3, CONST_BITS-PASS1_BITS);
-    dataptr[7] = (DCTELEM) DESCALE(tmp10 - tmp3, CONST_BITS-PASS1_BITS);
-    dataptr[1] = (DCTELEM) DESCALE(tmp11 + tmp2, CONST_BITS-PASS1_BITS);
-    dataptr[6] = (DCTELEM) DESCALE(tmp11 - tmp2, CONST_BITS-PASS1_BITS);
-    dataptr[2] = (DCTELEM) DESCALE(tmp12 + tmp1, CONST_BITS-PASS1_BITS);
-    dataptr[5] = (DCTELEM) DESCALE(tmp12 - tmp1, CONST_BITS-PASS1_BITS);
-    dataptr[3] = (DCTELEM) DESCALE(tmp13 + tmp0, CONST_BITS-PASS1_BITS);
-    dataptr[4] = (DCTELEM) DESCALE(tmp13 - tmp0, CONST_BITS-PASS1_BITS);
+    dataptr[0] = (DCTELEM) DESCALE (tmp10 + tmp3, CONST_BITS - PASS1_BITS);
+    dataptr[7] = (DCTELEM) DESCALE (tmp10 - tmp3, CONST_BITS - PASS1_BITS);
+    dataptr[1] = (DCTELEM) DESCALE (tmp11 + tmp2, CONST_BITS - PASS1_BITS);
+    dataptr[6] = (DCTELEM) DESCALE (tmp11 - tmp2, CONST_BITS - PASS1_BITS);
+    dataptr[2] = (DCTELEM) DESCALE (tmp12 + tmp1, CONST_BITS - PASS1_BITS);
+    dataptr[5] = (DCTELEM) DESCALE (tmp12 - tmp1, CONST_BITS - PASS1_BITS);
+    dataptr[3] = (DCTELEM) DESCALE (tmp13 + tmp0, CONST_BITS - PASS1_BITS);
+    dataptr[4] = (DCTELEM) DESCALE (tmp13 - tmp0, CONST_BITS - PASS1_BITS);
 
     dataptr += DCTSIZE;		/* advance pointer to next row */
   }
@@ -291,7 +272,7 @@ gst_idct_int_idct (DCTBLOCK data)
   /* and also undo the PASS1_BITS scaling. */
 
   dataptr = data;
-  for (rowctr = DCTSIZE-1; rowctr >= 0; rowctr--) {
+  for (rowctr = DCTSIZE - 1; rowctr >= 0; rowctr--) {
     /* Columns of zeroes can be exploited in the same way as we did with rows.
      * However, the row calculation has created many nonzero AC terms, so the
      * simplification applies less often (typically 5% to 10% of the time).
@@ -301,21 +282,21 @@ gst_idct_int_idct (DCTBLOCK data)
      */
 
 #ifndef NO_ZERO_COLUMN_TEST
-    if ((dataptr[DCTSIZE*1] | dataptr[DCTSIZE*2] | dataptr[DCTSIZE*3] |
-	 dataptr[DCTSIZE*4] | dataptr[DCTSIZE*5] | dataptr[DCTSIZE*6] |
-	 dataptr[DCTSIZE*7]) == 0) {
+    if ((dataptr[DCTSIZE * 1] | dataptr[DCTSIZE * 2] | dataptr[DCTSIZE * 3] |
+	    dataptr[DCTSIZE * 4] | dataptr[DCTSIZE * 5] | dataptr[DCTSIZE * 6] |
+	    dataptr[DCTSIZE * 7]) == 0) {
       /* AC terms all zero */
-      DCTELEM dcval = (DCTELEM) DESCALE((INT32) dataptr[0], PASS1_BITS+3);
-      
-      dataptr[DCTSIZE*0] = dcval;
-      dataptr[DCTSIZE*1] = dcval;
-      dataptr[DCTSIZE*2] = dcval;
-      dataptr[DCTSIZE*3] = dcval;
-      dataptr[DCTSIZE*4] = dcval;
-      dataptr[DCTSIZE*5] = dcval;
-      dataptr[DCTSIZE*6] = dcval;
-      dataptr[DCTSIZE*7] = dcval;
-      
+      DCTELEM dcval = (DCTELEM) DESCALE ((INT32) dataptr[0], PASS1_BITS + 3);
+
+      dataptr[DCTSIZE * 0] = dcval;
+      dataptr[DCTSIZE * 1] = dcval;
+      dataptr[DCTSIZE * 2] = dcval;
+      dataptr[DCTSIZE * 3] = dcval;
+      dataptr[DCTSIZE * 4] = dcval;
+      dataptr[DCTSIZE * 5] = dcval;
+      dataptr[DCTSIZE * 6] = dcval;
+      dataptr[DCTSIZE * 7] = dcval;
+
       dataptr++;		/* advance pointer to next column */
       continue;
     }
@@ -324,48 +305,52 @@ gst_idct_int_idct (DCTBLOCK data)
     /* Even part: reverse the even part of the forward DCT. */
     /* The rotator is sqrt(2)*c(-6). */
 
-    z2 = (INT32) dataptr[DCTSIZE*2];
-    z3 = (INT32) dataptr[DCTSIZE*6];
+    z2 = (INT32) dataptr[DCTSIZE * 2];
+    z3 = (INT32) dataptr[DCTSIZE * 6];
 
-    z1 = MULTIPLY(z2 + z3, FIX_0_541196100);
-    tmp2 = z1 + MULTIPLY(z3, - FIX_1_847759065);
-    tmp3 = z1 + MULTIPLY(z2, FIX_0_765366865);
+    z1 = MULTIPLY (z2 + z3, FIX_0_541196100);
+    tmp2 = z1 + MULTIPLY (z3, -FIX_1_847759065);
+    tmp3 = z1 + MULTIPLY (z2, FIX_0_765366865);
 
-    tmp0 = ((INT32) dataptr[DCTSIZE*0] + (INT32) dataptr[DCTSIZE*4]) << CONST_BITS;
-    tmp1 = ((INT32) dataptr[DCTSIZE*0] - (INT32) dataptr[DCTSIZE*4]) << CONST_BITS;
+    tmp0 =
+	((INT32) dataptr[DCTSIZE * 0] +
+	(INT32) dataptr[DCTSIZE * 4]) << CONST_BITS;
+    tmp1 =
+	((INT32) dataptr[DCTSIZE * 0] -
+	(INT32) dataptr[DCTSIZE * 4]) << CONST_BITS;
 
     tmp10 = tmp0 + tmp3;
     tmp13 = tmp0 - tmp3;
     tmp11 = tmp1 + tmp2;
     tmp12 = tmp1 - tmp2;
-    
+
     /* Odd part per figure 8; the matrix is unitary and hence its
      * transpose is its inverse.  i0..i3 are y7,y5,y3,y1 respectively.
      */
 
-    tmp0 = (INT32) dataptr[DCTSIZE*7];
-    tmp1 = (INT32) dataptr[DCTSIZE*5];
-    tmp2 = (INT32) dataptr[DCTSIZE*3];
-    tmp3 = (INT32) dataptr[DCTSIZE*1];
+    tmp0 = (INT32) dataptr[DCTSIZE * 7];
+    tmp1 = (INT32) dataptr[DCTSIZE * 5];
+    tmp2 = (INT32) dataptr[DCTSIZE * 3];
+    tmp3 = (INT32) dataptr[DCTSIZE * 1];
 
     z1 = tmp0 + tmp3;
     z2 = tmp1 + tmp2;
     z3 = tmp0 + tmp2;
     z4 = tmp1 + tmp3;
-    z5 = MULTIPLY(z3 + z4, FIX_1_175875602); /* sqrt(2) * c3 */
-    
-    tmp0 = MULTIPLY(tmp0, FIX_0_298631336); /* sqrt(2) * (-c1+c3+c5-c7) */
-    tmp1 = MULTIPLY(tmp1, FIX_2_053119869); /* sqrt(2) * ( c1+c3-c5+c7) */
-    tmp2 = MULTIPLY(tmp2, FIX_3_072711026); /* sqrt(2) * ( c1+c3+c5-c7) */
-    tmp3 = MULTIPLY(tmp3, FIX_1_501321110); /* sqrt(2) * ( c1+c3-c5-c7) */
-    z1 = MULTIPLY(z1, - FIX_0_899976223); /* sqrt(2) * (c7-c3) */
-    z2 = MULTIPLY(z2, - FIX_2_562915447); /* sqrt(2) * (-c1-c3) */
-    z3 = MULTIPLY(z3, - FIX_1_961570560); /* sqrt(2) * (-c3-c5) */
-    z4 = MULTIPLY(z4, - FIX_0_390180644); /* sqrt(2) * (c5-c3) */
-    
+    z5 = MULTIPLY (z3 + z4, FIX_1_175875602);	/* sqrt(2) * c3 */
+
+    tmp0 = MULTIPLY (tmp0, FIX_0_298631336);	/* sqrt(2) * (-c1+c3+c5-c7) */
+    tmp1 = MULTIPLY (tmp1, FIX_2_053119869);	/* sqrt(2) * ( c1+c3-c5+c7) */
+    tmp2 = MULTIPLY (tmp2, FIX_3_072711026);	/* sqrt(2) * ( c1+c3+c5-c7) */
+    tmp3 = MULTIPLY (tmp3, FIX_1_501321110);	/* sqrt(2) * ( c1+c3-c5-c7) */
+    z1 = MULTIPLY (z1, -FIX_0_899976223);	/* sqrt(2) * (c7-c3) */
+    z2 = MULTIPLY (z2, -FIX_2_562915447);	/* sqrt(2) * (-c1-c3) */
+    z3 = MULTIPLY (z3, -FIX_1_961570560);	/* sqrt(2) * (-c3-c5) */
+    z4 = MULTIPLY (z4, -FIX_0_390180644);	/* sqrt(2) * (c5-c3) */
+
     z3 += z5;
     z4 += z5;
-    
+
     tmp0 += z1 + z3;
     tmp1 += z2 + z4;
     tmp2 += z2 + z3;
@@ -373,23 +358,23 @@ gst_idct_int_idct (DCTBLOCK data)
 
     /* Final output stage: inputs are tmp10..tmp13, tmp0..tmp3 */
 
-    dataptr[DCTSIZE*0] = (DCTELEM) DESCALE(tmp10 + tmp3,
-					   CONST_BITS+PASS1_BITS+3);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp10 - tmp3,
-					   CONST_BITS+PASS1_BITS+3);
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp11 + tmp2,
-					   CONST_BITS+PASS1_BITS+3);
-    dataptr[DCTSIZE*6] = (DCTELEM) DESCALE(tmp11 - tmp2,
-					   CONST_BITS+PASS1_BITS+3);
-    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(tmp12 + tmp1,
-					   CONST_BITS+PASS1_BITS+3);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp12 - tmp1,
-					   CONST_BITS+PASS1_BITS+3);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp13 + tmp0,
-					   CONST_BITS+PASS1_BITS+3);
-    dataptr[DCTSIZE*4] = (DCTELEM) DESCALE(tmp13 - tmp0,
-					   CONST_BITS+PASS1_BITS+3);
-    
+    dataptr[DCTSIZE * 0] = (DCTELEM) DESCALE (tmp10 + tmp3,
+	CONST_BITS + PASS1_BITS + 3);
+    dataptr[DCTSIZE * 7] = (DCTELEM) DESCALE (tmp10 - tmp3,
+	CONST_BITS + PASS1_BITS + 3);
+    dataptr[DCTSIZE * 1] = (DCTELEM) DESCALE (tmp11 + tmp2,
+	CONST_BITS + PASS1_BITS + 3);
+    dataptr[DCTSIZE * 6] = (DCTELEM) DESCALE (tmp11 - tmp2,
+	CONST_BITS + PASS1_BITS + 3);
+    dataptr[DCTSIZE * 2] = (DCTELEM) DESCALE (tmp12 + tmp1,
+	CONST_BITS + PASS1_BITS + 3);
+    dataptr[DCTSIZE * 5] = (DCTELEM) DESCALE (tmp12 - tmp1,
+	CONST_BITS + PASS1_BITS + 3);
+    dataptr[DCTSIZE * 3] = (DCTELEM) DESCALE (tmp13 + tmp0,
+	CONST_BITS + PASS1_BITS + 3);
+    dataptr[DCTSIZE * 4] = (DCTELEM) DESCALE (tmp13 - tmp0,
+	CONST_BITS + PASS1_BITS + 3);
+
     dataptr++;			/* advance pointer to next column */
   }
 }

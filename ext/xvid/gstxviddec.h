@@ -24,8 +24,9 @@
 #include "gstxvid.h"
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_XVIDDEC \
@@ -39,32 +40,34 @@ extern "C" {
 #define GST_IS_XVIDDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XVIDDEC))
 
-typedef struct _GstXvidDec GstXvidDec;
-typedef struct _GstXvidDecClass GstXvidDecClass;
+  typedef struct _GstXvidDec GstXvidDec;
+  typedef struct _GstXvidDecClass GstXvidDecClass;
 
-struct _GstXvidDec {
-  GstElement element;
+  struct _GstXvidDec
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad, *srcpad;
+    /* pads */
+    GstPad *sinkpad, *srcpad;
 
-  /* xvid handle */
-  void *handle;
+    /* xvid handle */
+    void *handle;
 
-  /* video (output) settings */
-  gint csp, bpp, stride;
-  gint width, height;
-  double fps;
-};
+    /* video (output) settings */
+    gint csp, bpp, stride;
+    gint width, height;
+    double fps;
+  };
 
-struct _GstXvidDecClass {
-  GstElementClass parent_class;
-};
+  struct _GstXvidDecClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_xviddec_get_type(void);
+  GType gst_xviddec_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_XVIDDEC_H__ */
+#endif				/* __GST_XVIDDEC_H__ */

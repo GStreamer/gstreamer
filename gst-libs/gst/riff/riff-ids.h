@@ -66,29 +66,29 @@
 #define GST_RIFF_FCCH_MSVC GST_MAKE_FOURCC ('M','S','V','C')
 
 /* INFO types - see http://www.saettler.com/RIFFMCI/riffmci.html */
-#define GST_RIFF_INFO_IARL GST_MAKE_FOURCC ('I','A','R','L') /* location */
-#define GST_RIFF_INFO_IART GST_MAKE_FOURCC ('I','A','R','T') /* artist */
-#define GST_RIFF_INFO_ICMS GST_MAKE_FOURCC ('I','C','M','S') /* commissioned */
-#define GST_RIFF_INFO_ICMT GST_MAKE_FOURCC ('I','C','M','T') /* comment */
-#define GST_RIFF_INFO_ICOP GST_MAKE_FOURCC ('I','C','O','P') /* copyright */
-#define GST_RIFF_INFO_ICRD GST_MAKE_FOURCC ('I','C','R','D') /* creation date */
-#define GST_RIFF_INFO_ICRP GST_MAKE_FOURCC ('I','C','R','P') /* cropped */
-#define GST_RIFF_INFO_IDIM GST_MAKE_FOURCC ('I','D','I','M') /* dimensions */
-#define GST_RIFF_INFO_IDPI GST_MAKE_FOURCC ('I','D','P','I') /* dots-per-inch */
-#define GST_RIFF_INFO_IENG GST_MAKE_FOURCC ('I','E','N','G') /* engineer(s) */
-#define GST_RIFF_INFO_IGNR GST_MAKE_FOURCC ('I','G','N','R') /* genre */
-#define GST_RIFF_INFO_IKEY GST_MAKE_FOURCC ('I','K','E','Y') /* keywords */
-#define GST_RIFF_INFO_ILGT GST_MAKE_FOURCC ('I','L','G','T') /* lightness */
-#define GST_RIFF_INFO_IMED GST_MAKE_FOURCC ('I','M','E','D') /* medium */
-#define GST_RIFF_INFO_INAM GST_MAKE_FOURCC ('I','N','A','M') /* name */
-#define GST_RIFF_INFO_IPLT GST_MAKE_FOURCC ('I','P','L','T') /* palette setting */
-#define GST_RIFF_INFO_IPRD GST_MAKE_FOURCC ('I','P','R','D') /* product */
-#define GST_RIFF_INFO_ISBJ GST_MAKE_FOURCC ('I','S','B','J') /* subject */
-#define GST_RIFF_INFO_ISFT GST_MAKE_FOURCC ('I','S','F','T') /* software */
-#define GST_RIFF_INFO_ISHP GST_MAKE_FOURCC ('I','S','H','P') /* sharpness */
-#define GST_RIFF_INFO_ISRC GST_MAKE_FOURCC ('I','S','R','C') /* source */
-#define GST_RIFF_INFO_ISRF GST_MAKE_FOURCC ('I','S','R','F') /* source form */
-#define GST_RIFF_INFO_ITCH GST_MAKE_FOURCC ('I','T','C','H') /* technician(s) */
+#define GST_RIFF_INFO_IARL GST_MAKE_FOURCC ('I','A','R','L')	/* location */
+#define GST_RIFF_INFO_IART GST_MAKE_FOURCC ('I','A','R','T')	/* artist */
+#define GST_RIFF_INFO_ICMS GST_MAKE_FOURCC ('I','C','M','S')	/* commissioned */
+#define GST_RIFF_INFO_ICMT GST_MAKE_FOURCC ('I','C','M','T')	/* comment */
+#define GST_RIFF_INFO_ICOP GST_MAKE_FOURCC ('I','C','O','P')	/* copyright */
+#define GST_RIFF_INFO_ICRD GST_MAKE_FOURCC ('I','C','R','D')	/* creation date */
+#define GST_RIFF_INFO_ICRP GST_MAKE_FOURCC ('I','C','R','P')	/* cropped */
+#define GST_RIFF_INFO_IDIM GST_MAKE_FOURCC ('I','D','I','M')	/* dimensions */
+#define GST_RIFF_INFO_IDPI GST_MAKE_FOURCC ('I','D','P','I')	/* dots-per-inch */
+#define GST_RIFF_INFO_IENG GST_MAKE_FOURCC ('I','E','N','G')	/* engineer(s) */
+#define GST_RIFF_INFO_IGNR GST_MAKE_FOURCC ('I','G','N','R')	/* genre */
+#define GST_RIFF_INFO_IKEY GST_MAKE_FOURCC ('I','K','E','Y')	/* keywords */
+#define GST_RIFF_INFO_ILGT GST_MAKE_FOURCC ('I','L','G','T')	/* lightness */
+#define GST_RIFF_INFO_IMED GST_MAKE_FOURCC ('I','M','E','D')	/* medium */
+#define GST_RIFF_INFO_INAM GST_MAKE_FOURCC ('I','N','A','M')	/* name */
+#define GST_RIFF_INFO_IPLT GST_MAKE_FOURCC ('I','P','L','T')	/* palette setting */
+#define GST_RIFF_INFO_IPRD GST_MAKE_FOURCC ('I','P','R','D')	/* product */
+#define GST_RIFF_INFO_ISBJ GST_MAKE_FOURCC ('I','S','B','J')	/* subject */
+#define GST_RIFF_INFO_ISFT GST_MAKE_FOURCC ('I','S','F','T')	/* software */
+#define GST_RIFF_INFO_ISHP GST_MAKE_FOURCC ('I','S','H','P')	/* sharpness */
+#define GST_RIFF_INFO_ISRC GST_MAKE_FOURCC ('I','S','R','C')	/* source */
+#define GST_RIFF_INFO_ISRF GST_MAKE_FOURCC ('I','S','R','F')	/* source form */
+#define GST_RIFF_INFO_ITCH GST_MAKE_FOURCC ('I','T','C','H')	/* technician(s) */
 
 /*********Chunk Names***************/
 #define GST_RIFF_FF00 GST_MAKE_FOURCC (0xFF,0xFF,0x00,0x00)
@@ -167,7 +167,7 @@
 #define GST_RIFF_v422 GST_MAKE_FOURCC ('v', '4', '2', '2')
 #define GST_RIFF_V422 GST_MAKE_FOURCC ('V', '4', '2', '2')
 #define GST_RIFF_mvi1 GST_MAKE_FOURCC ('m', 'v', 'i', '1')
-#define GST_RIFF_MPIX GST_MAKE_FOURCC (0x04,0x00, 'i', '1')     /* MotionPixels munged their id */
+#define GST_RIFF_MPIX GST_MAKE_FOURCC (0x04,0x00, 'i', '1')	/* MotionPixels munged their id */
 #define GST_RIFF_AURA GST_MAKE_FOURCC ('A', 'U', 'R', 'A')
 #define GST_RIFF_DMB1 GST_MAKE_FOURCC ('D', 'M', 'B', '1')
 #define GST_RIFF_dmb1 GST_MAKE_FOURCC ('d', 'm', 'b', '1')
@@ -203,7 +203,7 @@
 
 #define GST_RIFF_rpza GST_MAKE_FOURCC ('r', 'p', 'z', 'a')
 /* And this here's the mistakes that need to be supported */
-#define GST_RIFF_azpr GST_MAKE_FOURCC ('a', 'z', 'p', 'r')  /* recognize Apple's rpza mangled? */
+#define GST_RIFF_azpr GST_MAKE_FOURCC ('a', 'z', 'p', 'r')	/* recognize Apple's rpza mangled? */
 
 /*********** FND in MJPG **********/
 #define GST_RIFF_ISFT GST_MAKE_FOURCC ('I', 'S', 'F', 'T')
@@ -216,26 +216,28 @@
 #define GST_RIFF_rec  GST_MAKE_FOURCC ('r', 'e', 'c', ' ')
 
 /* common data structures */
-typedef struct _gst_riff_strh {
-  guint32 type;             /* stream type */
-  guint32 fcc_handler;       /* fcc_handler */
+typedef struct _gst_riff_strh
+{
+  guint32 type;			/* stream type */
+  guint32 fcc_handler;		/* fcc_handler */
   guint32 flags;
 /* flags values */
 #define GST_RIFF_STRH_DISABLED        0x000000001
 #define GST_RIFF_STRH_VIDEOPALCHANGES 0x000010000
   guint32 priority;
-  guint32 init_frames;       /* initial frames (???) */
+  guint32 init_frames;		/* initial frames (???) */
   guint32 scale;
   guint32 rate;
   guint32 start;
   guint32 length;
-  guint32 bufsize;           /* suggested buffer size */
+  guint32 bufsize;		/* suggested buffer size */
   guint32 quality;
   guint32 samplesize;
   /* XXX 16 bytes ? */
 } gst_riff_strh;
 
-typedef struct _gst_riff_strf_vids {       /* == BitMapInfoHeader */
+typedef struct _gst_riff_strf_vids
+{				/* == BitMapInfoHeader */
   guint32 size;
   guint32 width;
   guint32 height;
@@ -245,13 +247,14 @@ typedef struct _gst_riff_strf_vids {       /* == BitMapInfoHeader */
   guint32 image_size;
   guint32 xpels_meter;
   guint32 ypels_meter;
-  guint32 num_colors;        /* used colors */
-  guint32 imp_colors;        /* important colors */
+  guint32 num_colors;		/* used colors */
+  guint32 imp_colors;		/* important colors */
   /* may be more for some codecs */
 } gst_riff_strf_vids;
 
 
-typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
+typedef struct _gst_riff_strf_auds
+{				/* == WaveHeader (?) */
   guint16 format;
 /**** from public Microsoft RIFF docs ******/
 #define GST_RIFF_WAVE_FORMAT_UNKNOWN        (0x0000)
@@ -290,7 +293,8 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
   guint16 size;
 } gst_riff_strf_auds;
 
-typedef struct _gst_riff_strf_iavs {    
+typedef struct _gst_riff_strf_iavs
+{
   guint32 DVAAuxSrc;
   guint32 DVAAuxCtl;
   guint32 DVAAuxSrc1;
@@ -301,7 +305,8 @@ typedef struct _gst_riff_strf_iavs {
   guint32 DVReserved2;
 } gst_riff_strf_iavs;
 
-typedef struct _gst_riff_index_entry {  
+typedef struct _gst_riff_index_entry
+{
   guint32 id;
   guint32 flags;
 #define GST_RIFF_IF_LIST		(0x00000001L)
@@ -312,7 +317,8 @@ typedef struct _gst_riff_index_entry {
   guint32 size;
 } gst_riff_index_entry;
 
-typedef struct _gst_riff_dmlh {
+typedef struct _gst_riff_dmlh
+{
   guint32 totalframes;
 } gst_riff_dmlh;
 

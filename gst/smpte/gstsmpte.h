@@ -38,28 +38,28 @@
 typedef struct _GstSMPTE GstSMPTE;
 typedef struct _GstSMPTEClass GstSMPTEClass;
 
-struct _GstSMPTE {
-  GstElement 	 element;
+struct _GstSMPTE
+{
+  GstElement element;
 
-  gint 		 format;
-  gint 		 width;
-  gint 		 height;
-  gdouble	 fps;
+  gint format;
+  gint width;
+  gint height;
+  gdouble fps;
 
-  gint 		 duration;
-  gint 		 position;
+  gint duration;
+  gint position;
 
-  GstPad 	*srcpad,
-  		*sinkpad1,
-  		*sinkpad2;
+  GstPad *srcpad, *sinkpad1, *sinkpad2;
 
-  gint 		 type;
-  gint 		 border;
-  gint 		 depth;
-  GstMask	*mask;
+  gint type;
+  gint border;
+  gint depth;
+  GstMask *mask;
 };
 
-struct _GstSMPTEClass {
+struct _GstSMPTEClass
+{
   GstElementClass parent_class;
 };
 

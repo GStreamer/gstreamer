@@ -9,9 +9,11 @@
 
 #if defined(DBG_MEMLEAKS)
 
-extern void* dbg_malloc (char *file, int line, char *func, size_t bytes);
-extern void* dbg_calloc (char *file, int line, char *func, size_t count, size_t bytes);
-extern void* dbg_realloc (char *file, int line, char *func, char *what, void *mem, size_t bytes);
+extern void *dbg_malloc (char *file, int line, char *func, size_t bytes);
+extern void *dbg_calloc (char *file, int line, char *func, size_t count,
+    size_t bytes);
+extern void *dbg_realloc (char *file, int line, char *func, char *what,
+    void *mem, size_t bytes);
 extern void dbg_free (char *file, int line, char *func, char *what, void *mem);
 
 #define MALLOC(bytes)        dbg_malloc(__FILE__,__LINE__,__FUNCTION__,bytes)
@@ -29,4 +31,3 @@ extern void dbg_free (char *file, int line, char *func, char *what, void *mem);
 #endif
 
 #endif
-

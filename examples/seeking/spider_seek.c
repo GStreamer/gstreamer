@@ -19,19 +19,19 @@ static guint update_id;
 
 #define UPDATE_INTERVAL 500
 
-static GstElement*
-make_spider_pipeline (const gchar *location, gboolean thread) 
+static GstElement *
+make_spider_pipeline (const gchar * location, gboolean thread)
 {
   GstElement *pipeline;
-  GstElement *src, *decoder, *audiosink, *videosink, *a_thread, *v_thread, *a_queue, *v_queue;
-  
+  GstElement *src, *decoder, *audiosink, *videosink, *a_thread, *v_thread,
+      *a_queue, *v_queue;
+
   if (thread) {
     pipeline = gst_thread_new ("app");
-  }
-  else {
+  } else {
     pipeline = gst_pipeline_new ("app");
   }
-  
+
 
   src = gst_element_factory_make (SOURCE, "src");
   decoder = gst_element_factory_make ("spider", "decoder");
@@ -64,15 +64,16 @@ make_spider_pipeline (const gchar *location, gboolean thread)
 
   seekable_elements = g_list_prepend (seekable_elements, videosink);
   seekable_elements = g_list_prepend (seekable_elements, audiosink);
-  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (audiosink, "sink"));
-  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (videosink, "sink"));
+  rate_pads =
+      g_list_prepend (rate_pads, gst_element_get_pad (audiosink, "sink"));
+  rate_pads =
+      g_list_prepend (rate_pads, gst_element_get_pad (videosink, "sink"));
 
   return pipeline;
 }
 
-static gchar*
-format_value (GtkScale *scale,
-	      gdouble   value)
+static gchar *
+format_value (GtkScale * scale, gdouble value)
 {
   gint64 real;
   gint64 seconds;
@@ -83,9 +84,7 @@ format_value (GtkScale *scale,
   subseconds = (gint64) real / (GST_SECOND / 100);
 
   return g_strdup_printf ("%02lld:%02lld:%02lld",
-                          seconds/60, 
-			  seconds%60, 
-			  subseconds%100);
+      seconds / 60, seconds % 60, subseconds % 100);
 }
 
 typedef struct
@@ -94,13 +93,12 @@ typedef struct
   const GstFormat format;
 } seek_format;
 
-static seek_format seek_formats[] = 
-{
-  { "tim",  GST_FORMAT_TIME    },
-  { "byt",  GST_FORMAT_BYTES   },
-  { "buf",  GST_FORMAT_BUFFERS },
-  { "def",  GST_FORMAT_DEFAULT },
-  { NULL, 0 }, 
+static seek_format seek_formats[] = {
+  {"tim", GST_FORMAT_TIME},
+  {"byt", GST_FORMAT_BYTES},
+  {"buf", GST_FORMAT_BUFFERS},
+  {"def", GST_FORMAT_DEFAULT},
+  {NULL, 0},
 };
 
 G_GNUC_UNUSED static void
@@ -119,13 +117,10 @@ query_rates (void)
 
       format = seek_formats[i].format;
 
-      if (gst_pad_convert (pad, GST_FORMAT_TIME, GST_SECOND, 
-		           &format, &value)) 
-      {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
-      }
-      else {
-        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+      if (gst_pad_convert (pad, GST_FORMAT_TIME, GST_SECOND, &format, &value)) {
+	g_print ("%s %13lld | ", seek_formats[i].name, value);
+      } else {
+	g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
 
       i++;
@@ -154,10 +149,9 @@ query_durations ()
       format = seek_formats[i].format;
       res = gst_element_query (element, GST_QUERY_TOTAL, &format, &value);
       if (res) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
-      }
-      else {
-        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+	g_print ("%s %13lld | ", seek_formats[i].name, value);
+      } else {
+	g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
       i++;
     }
@@ -184,10 +178,9 @@ query_positions ()
       format = seek_formats[i].format;
       res = gst_element_query (element, GST_QUERY_POSITION, &format, &value);
       if (res) {
-        g_print ("%s %13lld | ", seek_formats[i].name, value);
-      }
-      else {
-        g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
+	g_print ("%s %13lld | ", seek_formats[i].name, value);
+      } else {
+	g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
       }
       i++;
     }
@@ -197,7 +190,7 @@ query_positions ()
 }
 
 static gboolean
-update_scale (gpointer data) 
+update_scale (gpointer data)
 {
   GstClock *clock;
   guint64 position;
@@ -208,12 +201,14 @@ update_scale (gpointer data)
 
   if (seekable_elements) {
     GstElement *element = GST_ELEMENT (seekable_elements->data);
+
     gst_element_query (element, GST_QUERY_TOTAL, &format, &duration);
   }
   position = gst_clock_get_time (clock);
 
   if (stats) {
-    g_print ("clock:                  %13llu  (%s)\n", position, gst_object_get_name (GST_OBJECT (clock)));
+    g_print ("clock:                  %13llu  (%s)\n", position,
+	gst_object_get_name (GST_OBJECT (clock)));
     query_durations ();
     query_positions ();
     query_rates ();
@@ -239,7 +234,7 @@ iterate (gpointer data)
 }
 
 static gboolean
-start_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
   gtk_timeout_remove (update_id);
@@ -248,7 +243,7 @@ start_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 }
 
 static gboolean
-stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
+stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
   gint64 real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
   gboolean res;
@@ -260,8 +255,7 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 
     g_print ("seek to %lld on element %s\n", real, GST_ELEMENT_NAME (seekable));
     s_event = gst_event_new_seek (GST_FORMAT_TIME |
-			   	  GST_SEEK_METHOD_SET |
-				  GST_SEEK_FLAG_FLUSH, real);
+	GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, real);
 
     res = gst_element_send_event (seekable, s_event);
 
@@ -271,7 +265,8 @@ stop_seek (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (!GST_FLAG_IS_SET (pipeline, GST_BIN_SELF_SCHEDULABLE))
     gtk_idle_add ((GtkFunction) iterate, pipeline);
-  update_id = gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+  update_id =
+      gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
 
   return FALSE;
 }
@@ -283,7 +278,8 @@ play_cb (GtkButton * button, gpointer data)
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     if (!GST_FLAG_IS_SET (pipeline, GST_BIN_SELF_SCHEDULABLE))
       gtk_idle_add ((GtkFunction) iterate, pipeline);
-    update_id = gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+    update_id =
+	gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
   }
 }
 
@@ -308,17 +304,16 @@ stop_cb (GtkButton * button, gpointer data)
 int
 main (int argc, char **argv)
 {
-  GtkWidget *window, *hbox, *vbox, 
-            *play_button, *pause_button, *stop_button, 
-	    *hscale;
+  GtkWidget *window, *hbox, *vbox,
+      *play_button, *pause_button, *stop_button, *hscale;
   gboolean threaded = FALSE;
   struct poptOption options[] = {
-    {"threaded",  't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &threaded,   0,
-         "Run the pipeline in a toplevel thread", NULL},
-    {"stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &stats,   0,
-         "Show element stats", NULL},
-     POPT_TABLEEND
-    };
+    {"threaded", 't', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &threaded, 0,
+	"Run the pipeline in a toplevel thread", NULL},
+    {"stats", 's', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &stats, 0,
+	"Show element stats", NULL},
+    POPT_TABLEEND
+  };
 
   gst_init_with_popt_table (&argc, &argv, options);
   gtk_init (&argc, &argv);
@@ -338,17 +333,18 @@ main (int argc, char **argv)
   pause_button = gtk_button_new_with_label ("pause");
   stop_button = gtk_button_new_with_label ("stop");
 
-  adjustment = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
+  adjustment =
+      GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
   hscale = gtk_hscale_new (adjustment);
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
-  gtk_signal_connect(GTK_OBJECT(hscale),
-                             "button_press_event", G_CALLBACK (start_seek), pipeline);
-  gtk_signal_connect(GTK_OBJECT(hscale),
-                             "button_release_event", G_CALLBACK (stop_seek), pipeline);
-  gtk_signal_connect(GTK_OBJECT(hscale),
-                             "format_value", G_CALLBACK (format_value), pipeline);
+  gtk_signal_connect (GTK_OBJECT (hscale),
+      "button_press_event", G_CALLBACK (start_seek), pipeline);
+  gtk_signal_connect (GTK_OBJECT (hscale),
+      "button_release_event", G_CALLBACK (stop_seek), pipeline);
+  gtk_signal_connect (GTK_OBJECT (hscale),
+      "format_value", G_CALLBACK (format_value), pipeline);
 
   /* do the packing stuff ... */
   gtk_window_set_default_size (GTK_WINDOW (window), 96, 96);
@@ -360,9 +356,12 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 
   /* connect things ... */
-  g_signal_connect (G_OBJECT (play_button), "clicked", G_CALLBACK (play_cb), pipeline);
-  g_signal_connect (G_OBJECT (pause_button), "clicked", G_CALLBACK (pause_cb), pipeline);
-  g_signal_connect (G_OBJECT (stop_button), "clicked", G_CALLBACK (stop_cb), pipeline);
+  g_signal_connect (G_OBJECT (play_button), "clicked", G_CALLBACK (play_cb),
+      pipeline);
+  g_signal_connect (G_OBJECT (pause_button), "clicked", G_CALLBACK (pause_cb),
+      pipeline);
+  g_signal_connect (G_OBJECT (stop_button), "clicked", G_CALLBACK (stop_cb),
+      pipeline);
   g_signal_connect (G_OBJECT (window), "delete_event", gtk_main_quit, NULL);
 
   /* show the gui. */

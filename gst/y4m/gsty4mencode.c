@@ -26,83 +26,74 @@
 #include <gst/video/video.h>
 #include "gsty4mencode.h"
 
-static GstElementDetails y4mencode_details = GST_ELEMENT_DETAILS (
-  "Y4mEncode",
-  "Codec/Encoder/Video",
-  "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
-  "Wim Taymans <wim.taymans@chello.be>"
-);
+static GstElementDetails y4mencode_details = GST_ELEMENT_DETAILS ("Y4mEncode",
+    "Codec/Encoder/Video",
+    "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 
 /* Filter signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0
 };
 
 static GstStaticPadTemplate y4mencode_src_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("application/x-yuv4mpeg, "
-      "y4mversion = (int) 1"
-  )
-);
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-yuv4mpeg, " "y4mversion = (int) 1")
+    );
 
 static GstStaticPadTemplate y4mencode_sink_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
-);
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    );
 
-static void	gst_y4mencode_base_init		(gpointer g_class);
-static void	gst_y4mencode_class_init	(GstY4mEncodeClass *klass);
-static void	gst_y4mencode_init		(GstY4mEncode *filter);
+static void gst_y4mencode_base_init (gpointer g_class);
+static void gst_y4mencode_class_init (GstY4mEncodeClass * klass);
+static void gst_y4mencode_init (GstY4mEncode * filter);
 
-static void	gst_y4mencode_set_property	(GObject       *object,
-						 guint          prop_id,
-						 const GValue  *value,
-						 GParamSpec    *pspec);
-static void	gst_y4mencode_get_property	(GObject       *object,
-						 guint          prop_id,
-						 GValue        *value,
-						 GParamSpec    *pspec);
+static void gst_y4mencode_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_y4mencode_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
-static void	gst_y4mencode_chain		(GstPad        *pad,
-						 GstData       *_data);
-static GstElementStateReturn
-		gst_y4mencode_change_state 	(GstElement    *element);
+static void gst_y4mencode_chain (GstPad * pad, GstData * _data);
+static GstElementStateReturn gst_y4mencode_change_state (GstElement * element);
 
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
-gst_y4mencode_get_type(void) {
+gst_y4mencode_get_type (void)
+{
   static GType y4mencode_type = 0;
 
   if (!y4mencode_type) {
     static const GTypeInfo y4mencode_info = {
-      sizeof(GstY4mEncodeClass),
+      sizeof (GstY4mEncodeClass),
       gst_y4mencode_base_init,
       NULL,
-      (GClassInitFunc)gst_y4mencode_class_init,
+      (GClassInitFunc) gst_y4mencode_class_init,
       NULL,
       NULL,
-      sizeof(GstY4mEncode),
+      sizeof (GstY4mEncode),
       0,
-      (GInstanceInitFunc)gst_y4mencode_init,
+      (GInstanceInitFunc) gst_y4mencode_init,
     };
-    y4mencode_type = g_type_register_static(GST_TYPE_ELEMENT,
-					     "GstY4mEncode",
-					     &y4mencode_info, 0);
+    y4mencode_type = g_type_register_static (GST_TYPE_ELEMENT,
+	"GstY4mEncode", &y4mencode_info, 0);
   }
   return y4mencode_type;
 }
@@ -112,23 +103,23 @@ static void
 gst_y4mencode_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  
-  gst_element_class_add_pad_template (element_class, 
-		  gst_static_pad_template_get (&y4mencode_src_factory));
-  gst_element_class_add_pad_template (element_class, 
-		  gst_static_pad_template_get (&y4mencode_sink_factory));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&y4mencode_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&y4mencode_sink_factory));
   gst_element_class_set_details (element_class, &y4mencode_details);
 }
 static void
-gst_y4mencode_class_init (GstY4mEncodeClass *klass)
+gst_y4mencode_class_init (GstY4mEncodeClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gstelement_class->change_state = gst_y4mencode_change_state;
 
@@ -137,16 +128,16 @@ gst_y4mencode_class_init (GstY4mEncodeClass *klass)
 }
 
 static GstPadLinkReturn
-gst_y4mencode_sinkconnect (GstPad *pad, const GstCaps *caps)
+gst_y4mencode_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
   GstY4mEncode *filter;
   gint idx = -1, i;
   gdouble fps;
   gdouble framerates[] = {
     00.000,
-    23.976, 24.000,              /* 24fps movie */
-    25.000,                      /* PAL */
-    29.970, 30.000,              /* NTSC */
+    23.976, 24.000,		/* 24fps movie */
+    25.000,			/* PAL */
+    29.970, 30.000,		/* NTSC */
     50.000,
     59.940, 60.000
   };
@@ -156,20 +147,20 @@ gst_y4mencode_sinkconnect (GstPad *pad, const GstCaps *caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int  (structure, "width", &filter->width);
-  gst_structure_get_int  (structure, "height", &filter->height);
-  gst_structure_get_double  (structure, "framerate", &fps);
+  gst_structure_get_int (structure, "width", &filter->width);
+  gst_structure_get_int (structure, "height", &filter->height);
+  gst_structure_get_double (structure, "framerate", &fps);
 
   /* find fps idx */
   for (i = 1; i < 9; i++) {
     if (idx == -1) {
-       idx = i;
+      idx = i;
     } else {
-      gdouble old_diff = fabs(framerates[idx] - fps),
-             new_diff = fabs(framerates[i]   - fps);
+      gdouble old_diff = fabs (framerates[idx] - fps),
+	  new_diff = fabs (framerates[i] - fps);
 
       if (new_diff < old_diff) {
-        idx = i;
+	idx = i;
       }
     }
   }
@@ -179,37 +170,39 @@ gst_y4mencode_sinkconnect (GstPad *pad, const GstCaps *caps)
 }
 
 static void
-gst_y4mencode_init (GstY4mEncode *filter)
+gst_y4mencode_init (GstY4mEncode * filter)
 {
-  filter->sinkpad = gst_pad_new_from_template(
-		  gst_static_pad_template_get (&y4mencode_sink_factory), "sink");
+  filter->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&y4mencode_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_y4mencode_chain);
   gst_pad_set_link_function (filter->sinkpad, gst_y4mencode_sinkconnect);
 
-  filter->srcpad = gst_pad_new_from_template(
-		  gst_static_pad_template_get (&y4mencode_src_factory), "src");
+  filter->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&y4mencode_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->init = TRUE;
 }
 
 static void
-gst_y4mencode_chain (GstPad *pad,GstData *_data)
+gst_y4mencode_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstY4mEncode *filter;
-  GstBuffer* outbuf;
+  GstBuffer *outbuf;
   gchar *header;
   gint len;
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (buf != NULL);
 
   filter = GST_Y4MENCODE (gst_pad_get_parent (pad));
-  g_return_if_fail(filter != NULL);
-  g_return_if_fail(GST_IS_Y4MENCODE(filter));
+  g_return_if_fail (filter != NULL);
+  g_return_if_fail (GST_IS_Y4MENCODE (filter));
 
   outbuf = gst_buffer_new ();
   GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (buf) + 256);
@@ -217,31 +210,32 @@ gst_y4mencode_chain (GstPad *pad,GstData *_data)
   if (filter->init) {
     header = "YUV4MPEG %d %d %d\nFRAME\n";
     filter->init = FALSE;
-  }
-  else {
+  } else {
     header = "FRAME\n";
   }
 
   snprintf (GST_BUFFER_DATA (outbuf), 255, header,
-	    filter->width, filter->height, filter->fps_idx);
+      filter->width, filter->height, filter->fps_idx);
   len = strlen (GST_BUFFER_DATA (outbuf));
 
-  memcpy (GST_BUFFER_DATA (outbuf) + len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  memcpy (GST_BUFFER_DATA (outbuf) + len, GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf));
   GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE (buf) + len;
 
-  gst_buffer_unref(buf);
+  gst_buffer_unref (buf);
 
-  gst_pad_push(filter->srcpad,GST_DATA (outbuf));
+  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
 }
 
 static void
-gst_y4mencode_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_y4mencode_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstY4mEncode *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_Y4MENCODE(object));
-  filter = GST_Y4MENCODE(object);
+  g_return_if_fail (GST_IS_Y4MENCODE (object));
+  filter = GST_Y4MENCODE (object);
 
   switch (prop_id) {
     default:
@@ -250,13 +244,14 @@ gst_y4mencode_set_property (GObject *object, guint prop_id, const GValue *value,
 }
 
 static void
-gst_y4mencode_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_y4mencode_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstY4mEncode *filter;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_Y4MENCODE(object));
-  filter = GST_Y4MENCODE(object);
+  g_return_if_fail (GST_IS_Y4MENCODE (object));
+  filter = GST_Y4MENCODE (object);
 
   switch (prop_id) {
     default:
@@ -266,13 +261,13 @@ gst_y4mencode_get_property (GObject *object, guint prop_id, GValue *value, GPara
 }
 
 static GstElementStateReturn
-gst_y4mencode_change_state (GstElement *element)
+gst_y4mencode_change_state (GstElement * element)
 {
   GstY4mEncode *filter;
 
   g_return_val_if_fail (GST_IS_Y4MENCODE (element), GST_STATE_FAILURE);
 
-  filter = GST_Y4MENCODE(element);
+  filter = GST_Y4MENCODE (element);
 
   if (GST_STATE_TRANSITION (element) == GST_STATE_NULL_TO_READY) {
     filter->init = TRUE;
@@ -285,19 +280,14 @@ gst_y4mencode_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "y4menc", GST_RANK_NONE, GST_TYPE_Y4MENCODE);
+  return gst_element_register (plugin, "y4menc", GST_RANK_NONE,
+      GST_TYPE_Y4MENCODE);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "y4menc",
-  "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "y4menc",
+    "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

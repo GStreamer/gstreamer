@@ -25,8 +25,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
-
 #define GST_TYPE_DXR3VIDEOSINK \
   (dxr3videosink_get_type())
 #define DXR3VIDEOSINK(obj) \
@@ -37,19 +35,19 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DXR3VIDEOSINK))
 #define GST_IS_DXR3VIDEOSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DXR3VIDEOSINK))
-
-
 typedef struct _Dxr3VideoSink Dxr3VideoSink;
 typedef struct _Dxr3VideoSinkClass Dxr3VideoSinkClass;
 
 
-typedef enum {
+typedef enum
+{
   DXR3VIDEOSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-  DXR3VIDEOSINK_FLAG_LAST  = GST_ELEMENT_FLAG_LAST + 2,
+  DXR3VIDEOSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
 } Dxr3VideoSinkFlags;
 
 
-struct _Dxr3VideoSink {
+struct _Dxr3VideoSink
+{
   GstElement element;
 
   int card_number;		/* The number of the card to open. */
@@ -58,40 +56,40 @@ struct _Dxr3VideoSink {
   int video_fd;			/* File descriptor for the video device. */
 
   gchar *control_filename;	/* File name for the control device. */
-  int control_fd;          	/* File descriptor for the control
-                                   device. */
+  int control_fd;		/* File descriptor for the control
+				   device. */
 
   GstClock *clock;		/* The clock for this element. */
 
   GstClockTime last_ts;		/* Last timestamp received. */
 
   GstBuffer *cur_buf;		/* The buffer we are currently
-                                   building. */
+				   building. */
   GstClockTime cur_ts;		/* Timestamp associated to the
-                                   current buffer. */
+				   current buffer. */
 
   guchar scan_state;		/* The current state of the MPEG start
-                                   code scanner. */
+				   code scanner. */
   guint scan_pos;		/* The current position of the MPEG
-                                   start code scanner (with respect to
-                                   the start of the current buffer. */
+				   start code scanner (with respect to
+				   the start of the current buffer. */
 
   guchar parse_state;		/* The current state of the MPEG
-                                   sequence parser. */
+				   sequence parser. */
 };
 
 
-struct _Dxr3VideoSinkClass {
+struct _Dxr3VideoSinkClass
+{
   GstElementClass parent_class;
 
   /* signals */
-  void (*flushed) (Dxr3VideoSink *sink);
+  void (*flushed) (Dxr3VideoSink * sink);
 };
 
 
-extern GType	dxr3videosink_get_type		(void);
-extern gboolean	dxr3videosink_factory_init	(GstPlugin *plugin);
+extern GType dxr3videosink_get_type (void);
+extern gboolean dxr3videosink_factory_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __DXR3VIDEOSINK_H__ */

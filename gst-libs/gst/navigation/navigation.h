@@ -26,7 +26,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_NAVIGATION \
   (gst_navigation_get_type ())
 #define GST_NAVIGATION(obj) \
@@ -35,28 +34,28 @@ G_BEGIN_DECLS
       (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_NAVIGATION))
 #define GST_NAVIGATION_GET_IFACE(obj) \
     (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_NAVIGATION, GstNavigationInterface))
-
 typedef struct _GstNavigation GstNavigation;
 
-typedef struct _GstNavigationInterface {
+typedef struct _GstNavigationInterface
+{
   GTypeInterface g_iface;
 
   /* virtual functions */
-  void (*send_event) (GstNavigation *navigation, GstStructure *structure);
-  
+  void (*send_event) (GstNavigation * navigation, GstStructure * structure);
+
   gpointer _gst_reserved[GST_PADDING];
 } GstNavigationInterface;
 
-GType		gst_navigation_get_type	(void);
+GType gst_navigation_get_type (void);
 
 /* virtual class function wrappers */
-void gst_navigation_send_event (GstNavigation *navigation, GstStructure *structure);
+void gst_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure);
 
-void gst_navigation_send_key_event (GstNavigation *navigation, 
-	const char *event, const char *key);
-void gst_navigation_send_mouse_event (GstNavigation *navigation, 
-	const char *event, int button, double x, double y);
+void gst_navigation_send_key_event (GstNavigation * navigation,
+    const char *event, const char *key);
+void gst_navigation_send_mouse_event (GstNavigation * navigation,
+    const char *event, int button, double x, double y);
 
 G_END_DECLS
-
 #endif /* __GST_NAVIGATION_H__ */

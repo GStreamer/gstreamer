@@ -7,42 +7,42 @@
  *                                                           *
  * version 2.0ß                                              *
  *                                                           *
- *************************************************************/
-
+ *************************************************************/  
+    
 #ifndef __NV_register_combiners_H_
 #define __NV_register_combiners_H_
-
+    
 /*
  *  GLOBAL SWITCHES - enable/disable advanced features of this header
  *
- */
-#define NV_REGISTER_COMBINERS_INITIALIZE 1 // enable generic init-routines
+ */ 
+#define NV_REGISTER_COMBINERS_INITIALIZE 1	// enable generic init-routines
 #ifndef _WIN32
 #define GL_GLEXT_PROTOTYPES 1
-#endif
-
+#endif /*  */
+    
 #ifdef __cplusplus
-extern "C" {
-#endif
-
+extern "C"
+{
+  
+#endif				/*  */
+  
 #if defined(_WIN32) && !defined(APIENTRY) && !defined(__CYGWIN__)
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
-#endif
-
+#endif				/*  */
+  
 #ifndef APIENTRY
 #define APIENTRY
-#endif
-
-
+#endif				/*  */
+  
 // Header file version number, required by OpenGL ABI for Linux
 //#define GL_GLEXT_VERSION 7
-
-
+  
 /* 
  * NEW TOKENS TO OPENGL 1.2.1 
  *
- */
+ */ 
 #ifndef GL_NV_register_combiners
 #define GL_REGISTER_COMBINERS_NV          0x8522
 #define GL_COMBINER0_NV                   0x8550
@@ -96,123 +96,228 @@ extern "C" {
 #define GL_COLOR_SUM_CLAMP_NV             0x854F
 #define GL_MAX_GENERAL_COMBINERS_NV       0x854D
 #define GL_NV_register_combiners 1
-#endif
-
+#endif				/*  */
+  
 #ifndef _WIN32
 #ifdef GL_GLEXT_PROTOTYPES
-extern void APIENTRY glCombinerParameterfvNV(GLenum, const GLfloat *);
-extern void APIENTRY glCombinerParameterivNV(GLenum, const GLint *); 
-extern void APIENTRY glCombinerParameterfNV (GLenum, GLfloat); 
-extern void APIENTRY glCombinerParameteriNV (GLenum, GLint); 
-extern void APIENTRY glCombinerInputNV      (GLenum, GLenum, GLenum, GLenum, GLenum, GLenum); 
-extern void APIENTRY glCombinerOutputNV     (GLenum, GLenum, GLenum, GLenum, GLenum, GLenum, GLenum, GLboolean, GLboolean, GLboolean); 
-extern void APIENTRY glFinalCombinerInputNV (GLenum, GLenum, GLenum, GLenum); 
-extern void APIENTRY glGetCombinerInputParameterfvNV (GLenum, GLenum, GLenum, GLenum, GLfloat *); 
-extern void APIENTRY glGetCombinerInputParameterivNV (GLenum, GLenum, GLenum, GLenum, GLint *); 
-extern void APIENTRY glGetCombinerOutputParameterfvNV(GLenum, GLenum, GLenum, GLfloat *); 
-extern void APIENTRY glGetCombinerOutputParameterivNV(GLenum, GLenum, GLenum, GLint *);
-extern void APIENTRY glGetFinalCombinerInputParameterfvNV(GLenum, GLenum, GLfloat *); 
-extern void APIENTRY glGetFinalCombinerInputParameterivNV(GLenum, GLenum, GLint *);
-#endif // GL_GLEXT_PROTOTYPES 
-#else // _WIN32
-typedef void (APIENTRY * PFNGLCOMBINERPARAMETERFVNVPROC) (GLenum pname, const GLfloat *params);
-typedef void (APIENTRY * PFNGLCOMBINERPARAMETERIVNVPROC) (GLenum pname, const GLint *params); 
-typedef void (APIENTRY * PFNGLCOMBINERPARAMETERFNVPROC)  (GLenum pname, GLfloat param); 
-typedef void (APIENTRY * PFNGLCOMBINERPARAMETERINVPROC)  (GLenum pname, GLint param); 
-typedef void (APIENTRY * PFNGLCOMBINERINPUTNVPROC)       (GLenum stage, GLenum portion, GLenum variable, GLenum input, GLenum mapping, GLenum componentUsage); 
-typedef void (APIENTRY * PFNGLCOMBINEROUTPUTNVPROC)      (GLenum stage, GLenum portion, GLenum abOutput, GLenum cdOutput, GLenum sumOutput, GLenum scale, GLenum bias, GLboolean abDotProduct, GLboolean cdDotProduct, GLboolean muxSum); 
-typedef void (APIENTRY * PFNGLFINALCOMBINERINPUTNVPROC)  (GLenum variable, GLenum input, GLenum mapping, GLenum componentUsage); 
-typedef void (APIENTRY * PFNGLGETCOMBINERINPUTPARAMETERFVNVPROC) (GLenum stage, GLenum portion, GLenum variable, GLenum pname, GLfloat *params); 
-typedef void (APIENTRY * PFNGLGETCOMBINERINPUTPARAMETERIVNVPROC) (GLenum stage, GLenum portion, GLenum variable, GLenum pname, GLint *params); 
-typedef void (APIENTRY * PFNGLGETCOMBINEROUTPUTPARAMETERFVNVPROC)(GLenum stage, GLenum portion, GLenum pname, GLfloat *params); 
-typedef void (APIENTRY * PFNGLGETCOMBINEROUTPUTPARAMETERIVNVPROC)(GLenum stage, GLenum portion, GLenum pname, GLint *params);
-typedef void (APIENTRY * PFNGLGETFINALCOMBINERINPUTPARAMETERFVNVPROC)(GLenum variable, GLenum pname, GLfloat *params); 
-typedef void (APIENTRY * PFNGLGETFINALCOMBINERINPUTPARAMETERIVNVPROC)(GLenum variable, GLenum pname, GLint *params);
-#endif // not _WIN32
-
+  extern void APIENTRY glCombinerParameterfvNV (GLenum, const GLfloat *);
+   extern void APIENTRY glCombinerParameterivNV (GLenum, const GLint *);
+   extern void APIENTRY glCombinerParameterfNV (GLenum, GLfloat);
+   extern void APIENTRY glCombinerParameteriNV (GLenum, GLint);
+   extern void APIENTRY glCombinerInputNV (GLenum, GLenum, GLenum, GLenum,
+      GLenum, GLenum);
+   extern void APIENTRY glCombinerOutputNV (GLenum, GLenum, GLenum, GLenum,
+      GLenum, GLenum, GLenum, GLboolean, GLboolean, GLboolean);
+   extern void APIENTRY glFinalCombinerInputNV (GLenum, GLenum, GLenum,
+      GLenum);
+   extern void APIENTRY glGetCombinerInputParameterfvNV (GLenum, GLenum,
+      GLenum, GLenum, GLfloat *);
+   extern void APIENTRY glGetCombinerInputParameterivNV (GLenum, GLenum,
+      GLenum, GLenum, GLint *);
+   extern void APIENTRY glGetCombinerOutputParameterfvNV (GLenum, GLenum,
+      GLenum, GLfloat *);
+   extern void APIENTRY glGetCombinerOutputParameterivNV (GLenum, GLenum,
+      GLenum, GLint *);
+   extern void APIENTRY glGetFinalCombinerInputParameterfvNV (GLenum, GLenum,
+      GLfloat *);
+   extern void APIENTRY glGetFinalCombinerInputParameterivNV (GLenum, GLenum,
+      GLint *);
+   
+#endif				// GL_GLEXT_PROTOTYPES 
+#else				// _WIN32
+  typedef void (APIENTRY * PFNGLCOMBINERPARAMETERFVNVPROC) (GLenum pname,
+      const GLfloat * params);
+   typedef void (APIENTRY * PFNGLCOMBINERPARAMETERIVNVPROC) (GLenum pname,
+      const GLint * params);
+   typedef void (APIENTRY * PFNGLCOMBINERPARAMETERFNVPROC) (GLenum pname,
+      GLfloat param);
+   typedef void (APIENTRY * PFNGLCOMBINERPARAMETERINVPROC) (GLenum pname,
+      GLint param);
+   typedef void (APIENTRY * PFNGLCOMBINERINPUTNVPROC) (GLenum stage,
+      GLenum portion, GLenum variable, GLenum input, GLenum mapping,
+      GLenum componentUsage);
+   typedef void (APIENTRY * PFNGLCOMBINEROUTPUTNVPROC) (GLenum stage,
+      GLenum portion, GLenum abOutput, GLenum cdOutput, GLenum sumOutput,
+      GLenum scale, GLenum bias, GLboolean abDotProduct, GLboolean cdDotProduct,
+      GLboolean muxSum);
+   typedef void (APIENTRY * PFNGLFINALCOMBINERINPUTNVPROC) (GLenum variable,
+      GLenum input, GLenum mapping, GLenum componentUsage);
+   typedef void (APIENTRY *
+      PFNGLGETCOMBINERINPUTPARAMETERFVNVPROC) (GLenum stage, GLenum portion,
+      GLenum variable, GLenum pname, GLfloat * params);
+   typedef void (APIENTRY *
+      PFNGLGETCOMBINERINPUTPARAMETERIVNVPROC) (GLenum stage, GLenum portion,
+      GLenum variable, GLenum pname, GLint * params);
+   typedef void (APIENTRY *
+      PFNGLGETCOMBINEROUTPUTPARAMETERFVNVPROC) (GLenum stage, GLenum portion,
+      GLenum pname, GLfloat * params);
+   typedef void (APIENTRY *
+      PFNGLGETCOMBINEROUTPUTPARAMETERIVNVPROC) (GLenum stage, GLenum portion,
+      GLenum pname, GLint * params);
+   typedef void (APIENTRY *
+      PFNGLGETFINALCOMBINERINPUTPARAMETERFVNVPROC) (GLenum variable,
+      GLenum pname, GLfloat * params);
+   typedef void (APIENTRY *
+      PFNGLGETFINALCOMBINERINPUTPARAMETERIVNVPROC) (GLenum variable,
+      GLenum pname, GLint * params);
+   
+#endif				// not _WIN32
+   
 #ifdef NV_REGISTER_COMBINERS_INITIALIZE
-#include<string.h> // string manipulation for runtime-check
-
+#include<string.h>		// string manipulation for runtime-check
+   
 #ifdef _WIN32
-PFNGLCOMBINERPARAMETERFVNVPROC              glCombinerParameterfvNV              = NULL;
-PFNGLCOMBINERPARAMETERIVNVPROC              glCombinerParameterivNV              = NULL;
-PFNGLCOMBINERPARAMETERFNVPROC               glCombinerParameterfNV               = NULL;
-PFNGLCOMBINERPARAMETERINVPROC               glCombinerParameteriNV               = NULL;
-PFNGLCOMBINERINPUTNVPROC                    glCombinerInputNV                    = NULL;
-PFNGLCOMBINEROUTPUTNVPROC                   glCombinerOutputNV                   = NULL;
-PFNGLFINALCOMBINERINPUTNVPROC               glFinalCombinerInputNV               = NULL;
-PFNGLGETCOMBINERINPUTPARAMETERFVNVPROC      glGetCombinerInputParameterfvNV      = NULL;
-PFNGLGETCOMBINERINPUTPARAMETERIVNVPROC      glGetCombinerInputParameterivNV      = NULL;
-PFNGLGETCOMBINEROUTPUTPARAMETERFVNVPROC     glGetCombinerOutputParameterfvNV     = NULL;
-PFNGLGETCOMBINEROUTPUTPARAMETERIVNVPROC     glGetCombinerOutputParameterivNV     = NULL;
-PFNGLGETFINALCOMBINERINPUTPARAMETERFVNVPROC glGetFinalCombinerInputParameterfvNV = NULL;
-PFNGLGETFINALCOMBINERINPUTPARAMETERIVNVPROC glGetFinalCombinerInputParameterivNV = NULL;
-#endif // _WIN32
-
-int CheckForNVRegisterCombinersSupport(void) {
-    const char search[]="GL_NV_register_combiners";
-    int i, pos=0;
-    int maxpos=strlen(search)-1;
-    char extensions[10000];
-    strcpy(extensions,(const char *)glGetString(GL_EXTENSIONS));
-    int len=strlen(extensions);
-    for (i=0; i<len; i++) {
-        if ((i==0) || ((i>1) && extensions[i-1]==' ')) {
-             pos=0;
-             while(extensions[i]!=' ') {
-                if (extensions[i]==search[pos]) pos++;
-                if ((pos>maxpos) && extensions[i+1]==' ') {
-		  //printf(search);
-		  //  printf(" supported.\n");
-                     return 1;
-                }
-                i++;
-            }
-        }
+    PFNGLCOMBINERPARAMETERFVNVPROC glCombinerParameterfvNV = NULL;
+   PFNGLCOMBINERPARAMETERIVNVPROC glCombinerParameterivNV = NULL;
+   PFNGLCOMBINERPARAMETERFNVPROC glCombinerParameterfNV = NULL;
+   PFNGLCOMBINERPARAMETERINVPROC glCombinerParameteriNV = NULL;
+   PFNGLCOMBINERINPUTNVPROC glCombinerInputNV = NULL;
+   PFNGLCOMBINEROUTPUTNVPROC glCombinerOutputNV = NULL;
+   PFNGLFINALCOMBINERINPUTNVPROC glFinalCombinerInputNV = NULL;
+   PFNGLGETCOMBINERINPUTPARAMETERFVNVPROC glGetCombinerInputParameterfvNV =
+      NULL;
+   PFNGLGETCOMBINERINPUTPARAMETERIVNVPROC glGetCombinerInputParameterivNV =
+      NULL;
+   PFNGLGETCOMBINEROUTPUTPARAMETERFVNVPROC glGetCombinerOutputParameterfvNV =
+      NULL;
+   PFNGLGETCOMBINEROUTPUTPARAMETERIVNVPROC glGetCombinerOutputParameterivNV =
+      NULL;
+   PFNGLGETFINALCOMBINERINPUTPARAMETERFVNVPROC
+      glGetFinalCombinerInputParameterfvNV = NULL;
+   PFNGLGETFINALCOMBINERINPUTPARAMETERIVNVPROC
+      glGetFinalCombinerInputParameterivNV = NULL;
+   
+#endif				// _WIN32
+   int CheckForNVRegisterCombinersSupport (void)
+  {
+    const char search[] = "GL_NV_register_combiners";
+     int i, pos = 0;
+     int maxpos = strlen (search) - 1;
+     char extensions[10000];
+     strcpy (extensions, (const char *) glGetString (GL_EXTENSIONS));
+     int len = strlen (extensions);
+     for (i = 0; i < len; i++)
+    {
+      if ((i == 0) || ((i > 1) && extensions[i - 1] == ' ')) {
+	pos = 0;
+	while (extensions[i] != ' ')
+	{
+	  if (extensions[i] == search[pos])
+	    pos++;
+	  if ((pos > maxpos) && extensions[i + 1] == ' ') {
+	    
+		//printf(search);
+		//  printf(" supported.\n");
+		return 1;
+	  }
+	   i++;
+	}
+      }
+    }
+    
+	//printf(search);
+	//printf(" not supported.\n");
+	return 0;
+  }
+  int GL_NV_register_combiners_Init (void)
+  {
+    if (!CheckForNVRegisterCombinersSupport ())
+      return 0;
+    
+#ifdef _WIN32
+	glCombinerParameterfvNV = (PFNGLCOMBINERPARAMETERFVNVPROC)
+	wglGetProcAddress ("glCombinerParameterfvNV");
+    if (glCombinerParameterfvNV == NULL) {
+      fprintf (stderr, "glCombinerParameterfvNV not found.\n");
+      return 0;
     }
-    //printf(search);
-    //printf(" not supported.\n");
-    return 0;
-}
-
-int GL_NV_register_combiners_Init(void) {
-    if (!CheckForNVRegisterCombinersSupport()) return 0;
-
-#ifdef _WIN32
-    glCombinerParameterfvNV=(PFNGLCOMBINERPARAMETERFVNVPROC) wglGetProcAddress("glCombinerParameterfvNV");
-        if (glCombinerParameterfvNV==NULL) {fprintf(stderr,"glCombinerParameterfvNV not found.\n"); return 0;}
-    glCombinerParameterivNV=(PFNGLCOMBINERPARAMETERIVNVPROC) wglGetProcAddress("glCombinerParameterivNV");
-        if (glCombinerParameterivNV==NULL) {fprintf(stderr,"glCombinerParameterivNV not found.\n"); return 0;}
-    glCombinerParameterfNV=(PFNGLCOMBINERPARAMETERFNVPROC) wglGetProcAddress("glCombinerParameterfNV");
-        if (glCombinerParameterfvNV==NULL) {fprintf(stderr,"glCombinerParameterfNV not found.\n"); return 0;}
-    glCombinerParameteriNV=(PFNGLCOMBINERPARAMETERINVPROC) wglGetProcAddress("glCombinerParameteriNV");
-        if (glCombinerParameterivNV==NULL) {fprintf(stderr,"glCombinerParameteriNV not found.\n"); return 0;}
-    glCombinerInputNV=(PFNGLCOMBINERINPUTNVPROC) wglGetProcAddress("glCombinerInputNV");
-        if (glCombinerInputNV==NULL) {fprintf(stderr,"glCombinerInputNV not found.\n"); return 0;}
-    glCombinerOutputNV=(PFNGLCOMBINEROUTPUTNVPROC) wglGetProcAddress("glCombinerOutputNV");
-        if (glCombinerOutputNV==NULL) {fprintf(stderr,"glCombinerOutputNV not found.\n"); return 0;}
-    glFinalCombinerInputNV=(PFNGLFINALCOMBINERINPUTNVPROC) wglGetProcAddress("glFinalCombinerInputNV");
-        if (glFinalCombinerInputNV==NULL) {fprintf(stderr,"glFinalCombinerInputNV not found.\n"); return 0;}
-    glGetCombinerInputParameterfvNV=(PFNGLGETCOMBINERINPUTPARAMETERFVNVPROC) wglGetProcAddress("glGetCombinerInputParameterfvNV");
-        if (glGetCombinerInputParameterfvNV==NULL) {fprintf(stderr,"glGetCombinerInputParameterfvNV not found.\n"); return 0;}
-    glGetCombinerInputParameterivNV=(PFNGLGETCOMBINERINPUTPARAMETERIVNVPROC) wglGetProcAddress("glGetCombinerInputParameterivNV");
-        if (glGetCombinerInputParameterivNV==NULL) {fprintf(stderr,"glGetCombinerInputParameterivNV not found.\n"); return 0;}
-    glGetCombinerOutputParameterfvNV=(PFNGLGETCOMBINEROUTPUTPARAMETERFVNVPROC) wglGetProcAddress("glGetCombinerOutputParameterfvNV");
-        if (glGetCombinerOutputParameterfvNV==NULL) {fprintf(stderr,"glGetCombinerOutputParameterfvNV not found.\n"); return 0;}
-    glGetCombinerOutputParameterivNV=(PFNGLGETCOMBINEROUTPUTPARAMETERIVNVPROC) wglGetProcAddress("glGetCombinerOutputParameterivNV");
-        if (glGetCombinerOutputParameterivNV==NULL) {fprintf(stderr,"glGetCombinerOutputParameterivNV not found.\n"); return 0;}
-    glGetFinalCombinerInputParameterfvNV=(PFNGLGETFINALCOMBINERINPUTPARAMETERFVNVPROC) wglGetProcAddress("glGetFinalCombinerInputParameterfvNV");
-        if (glGetFinalCombinerInputParameterfvNV==NULL) {fprintf(stderr,"glGetFinalCombinerInputParameterfvNV not found.\n"); return 0;}
-    glGetFinalCombinerInputParameterivNV=(PFNGLGETFINALCOMBINERINPUTPARAMETERIVNVPROC) wglGetProcAddress("glGetFinalCombinerInputParameterivNV");
-        if (glGetFinalCombinerInputParameterivNV==NULL) {fprintf(stderr,"glGetFinalCombinerInputParameterivNV not found.\n"); return 0;}
+    glCombinerParameterivNV = (PFNGLCOMBINERPARAMETERIVNVPROC)
+	wglGetProcAddress ("glCombinerParameterivNV");
+    if (glCombinerParameterivNV == NULL) {
+      fprintf (stderr, "glCombinerParameterivNV not found.\n");
+      return 0;
+    }
+    glCombinerParameterfNV = (PFNGLCOMBINERPARAMETERFNVPROC)
+	wglGetProcAddress ("glCombinerParameterfNV");
+    if (glCombinerParameterfvNV == NULL) {
+      fprintf (stderr, "glCombinerParameterfNV not found.\n");
+      return 0;
+    }
+    glCombinerParameteriNV = (PFNGLCOMBINERPARAMETERINVPROC)
+	wglGetProcAddress ("glCombinerParameteriNV");
+    if (glCombinerParameterivNV == NULL) {
+      fprintf (stderr, "glCombinerParameteriNV not found.\n");
+      return 0;
+    }
+    glCombinerInputNV =
+	(PFNGLCOMBINERINPUTNVPROC) wglGetProcAddress ("glCombinerInputNV");
+    if (glCombinerInputNV == NULL) {
+      fprintf (stderr, "glCombinerInputNV not found.\n");
+      return 0;
+    }
+    glCombinerOutputNV =
+	(PFNGLCOMBINEROUTPUTNVPROC) wglGetProcAddress ("glCombinerOutputNV");
+    if (glCombinerOutputNV == NULL) {
+      fprintf (stderr, "glCombinerOutputNV not found.\n");
+      return 0;
+    }
+    glFinalCombinerInputNV = (PFNGLFINALCOMBINERINPUTNVPROC)
+	wglGetProcAddress ("glFinalCombinerInputNV");
+    if (glFinalCombinerInputNV == NULL) {
+      fprintf (stderr, "glFinalCombinerInputNV not found.\n");
+      return 0;
+    }
+    glGetCombinerInputParameterfvNV = (PFNGLGETCOMBINERINPUTPARAMETERFVNVPROC)
+	wglGetProcAddress ("glGetCombinerInputParameterfvNV");
+    if (glGetCombinerInputParameterfvNV == NULL) {
+      fprintf (stderr, "glGetCombinerInputParameterfvNV not found.\n");
+      return 0;
+    }
+    glGetCombinerInputParameterivNV = (PFNGLGETCOMBINERINPUTPARAMETERIVNVPROC)
+	wglGetProcAddress ("glGetCombinerInputParameterivNV");
+    if (glGetCombinerInputParameterivNV == NULL) {
+      fprintf (stderr, "glGetCombinerInputParameterivNV not found.\n");
+      return 0;
+    }
+    glGetCombinerOutputParameterfvNV =
+	(PFNGLGETCOMBINEROUTPUTPARAMETERFVNVPROC)
+	wglGetProcAddress ("glGetCombinerOutputParameterfvNV");
+    if (glGetCombinerOutputParameterfvNV == NULL) {
+      fprintf (stderr, "glGetCombinerOutputParameterfvNV not found.\n");
+      return 0;
+    }
+    glGetCombinerOutputParameterivNV =
+	(PFNGLGETCOMBINEROUTPUTPARAMETERIVNVPROC)
+	wglGetProcAddress ("glGetCombinerOutputParameterivNV");
+    if (glGetCombinerOutputParameterivNV == NULL) {
+      fprintf (stderr, "glGetCombinerOutputParameterivNV not found.\n");
+      return 0;
+    }
+    glGetFinalCombinerInputParameterfvNV =
+	(PFNGLGETFINALCOMBINERINPUTPARAMETERFVNVPROC)
+	wglGetProcAddress ("glGetFinalCombinerInputParameterfvNV");
+    if (glGetFinalCombinerInputParameterfvNV == NULL) {
+      fprintf (stderr, "glGetFinalCombinerInputParameterfvNV not found.\n");
+      return 0;
+    }
+    glGetFinalCombinerInputParameterivNV =
+	(PFNGLGETFINALCOMBINERINPUTPARAMETERIVNVPROC)
+	wglGetProcAddress ("glGetFinalCombinerInputParameterivNV");
+    if (glGetFinalCombinerInputParameterivNV == NULL) {
+      fprintf (stderr, "glGetFinalCombinerInputParameterivNV not found.\n");
+      return 0;
+    }
+    
 #endif // _WIN32
-    return 1;
-}
-
+	return 1;
+  }
+  
 #endif // NV_REGISTER_COMBINERS_INITIALIZE
-
+      
 #ifdef __cplusplus
 }
-#endif
 
+
+#endif /*  */
+    
 #endif // not __NV_REGISTER_COMBINERS_H_

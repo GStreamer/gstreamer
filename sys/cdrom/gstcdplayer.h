@@ -35,30 +35,31 @@
 typedef struct _CDPlayer CDPlayer;
 typedef struct _CDPlayerClass CDPlayerClass;
 
-struct _CDPlayer {
-	GstBin element;
-	
-	/* properties */
-	gchar *device;
-	gint num_tracks;
-	gint start_track;
-	gint end_track;
-	gint current_track;
-	guint32 cddb_discid;
+struct _CDPlayer
+{
+  GstBin element;
 
-	/* private */
-	struct cd cd;
-	gboolean paused;
+  /* properties */
+  gchar *device;
+  gint num_tracks;
+  gint start_track;
+  gint end_track;
+  gint current_track;
+  guint32 cddb_discid;
+
+  /* private */
+  struct cd cd;
+  gboolean paused;
 };
 
-struct _CDPlayerClass {
-	GstBinClass parent_class;
+struct _CDPlayerClass
+{
+  GstBinClass parent_class;
 
-	/* signal callbacks */
-	void (*track_change) (GstElement *element,guint track);
+  /* signal callbacks */
+  void (*track_change) (GstElement * element, guint track);
 };
 
-GType cdplayer_get_type(void);
+GType cdplayer_get_type (void);
 
-#endif	
-
+#endif

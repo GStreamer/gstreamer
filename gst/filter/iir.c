@@ -28,91 +28,103 @@
 #include <math.h>
 #include "iir.h"
 
-void IIR_init(IIR_state *s,int stages,double gain, double *A, double *B){
-  memset(s,0,sizeof(IIR_state));
-  s->stages=stages;
-  s->gain=gain;
-  s->coeff_A=malloc(stages*sizeof(double));
-  s->coeff_B=malloc((stages+1)*sizeof(double));
-  s->z_A=calloc(stages*2,sizeof(double));
-  s->z_B=calloc(stages*2,sizeof(double));
+void
+IIR_init (IIR_state * s, int stages, double gain, double *A, double *B)
+{
+  memset (s, 0, sizeof (IIR_state));
+  s->stages = stages;
+  s->gain = gain;
+  s->coeff_A = malloc (stages * sizeof (double));
+  s->coeff_B = malloc ((stages + 1) * sizeof (double));
+  s->z_A = calloc (stages * 2, sizeof (double));
+  s->z_B = calloc (stages * 2, sizeof (double));
 
-  memcpy(s->coeff_A,A,stages*sizeof(double));
-  memcpy(s->coeff_B,B,(stages+1)*sizeof(double));
+  memcpy (s->coeff_A, A, stages * sizeof (double));
+  memcpy (s->coeff_B, B, (stages + 1) * sizeof (double));
 }
 
-void IIR_clear(IIR_state *s){
-  if(s){
-    free(s->coeff_A);
-    free(s->coeff_B);
-    free(s->z_A);
-    free(s->z_B);
-    memset(s,0,sizeof(IIR_state));
+void
+IIR_clear (IIR_state * s)
+{
+  if (s) {
+    free (s->coeff_A);
+    free (s->coeff_B);
+    free (s->z_A);
+    free (s->z_B);
+    memset (s, 0, sizeof (IIR_state));
   }
 }
 
-double IIR_filter(IIR_state *s,double in){
-  int stages=s->stages,i;
+double
+IIR_filter (IIR_state * s, double in)
+{
+  int stages = s->stages, i;
   double newA;
-  double newB=0;
-  double *zA=s->z_A+s->ring;
+  double newB = 0;
+  double *zA = s->z_A + s->ring;
 
-  newA=in/=s->gain;
-  for(i=0;i<stages;i++){
-    newA+= s->coeff_A[i] * zA[i];
-    newB+= s->coeff_B[i] * zA[i];
+  newA = in /= s->gain;
+  for (i = 0; i < stages; i++) {
+    newA += s->coeff_A[i] * zA[i];
+    newB += s->coeff_B[i] * zA[i];
   }
-  newB+=newA*s->coeff_B[stages];
+  newB += newA * s->coeff_B[stages];
 
-  zA[0]=zA[stages]=newA;
-  if(++s->ring>=stages)s->ring=0;
+  zA[0] = zA[stages] = newA;
+  if (++s->ring >= stages)
+    s->ring = 0;
 
-  return(newB);
+  return (newB);
 }
 
 /* this assumes the symmetrical structure of the feed-forward stage of
    a Chebyshev bandpass to save multiplies */
-double IIR_filter_ChebBand(IIR_state *s,double in){
-  int stages=s->stages,i;
+double
+IIR_filter_ChebBand (IIR_state * s, double in)
+{
+  int stages = s->stages, i;
   double newA;
-  double newB=0;
-  double *zA=s->z_A+s->ring;
+  double newB = 0;
+  double *zA = s->z_A + s->ring;
 
-  newA=in/=s->gain;
+  newA = in /= s->gain;
 
-  newA+= s->coeff_A[0] * zA[0];
-  for(i=1;i<(stages>>1);i++){
-    newA+= s->coeff_A[i] * zA[i];
-    newB+= s->coeff_B[i] * (zA[i]-zA[stages-i]);
+  newA += s->coeff_A[0] * zA[0];
+  for (i = 1; i < (stages >> 1); i++) {
+    newA += s->coeff_A[i] * zA[i];
+    newB += s->coeff_B[i] * (zA[i] - zA[stages - i]);
   }
-  newB+= s->coeff_B[i] * zA[i];
-  for(;i<stages;i++)
-    newA+= s->coeff_A[i] * zA[i];
+  newB += s->coeff_B[i] * zA[i];
+  for (; i < stages; i++)
+    newA += s->coeff_A[i] * zA[i];
 
-  newB+= newA-zA[0];
+  newB += newA - zA[0];
 
-  zA[0]=zA[stages]=newA;
-  if(++s->ring>=stages)s->ring=0;
+  zA[0] = zA[stages] = newA;
+  if (++s->ring >= stages)
+    s->ring = 0;
 
-  return(newB);
+  return (newB);
 }
 
 #ifdef _V_SELFTEST
 
 /* z^-stage, z^-stage+1... */
-static double cheb_bandpass_B[]={-1.,0.,5.,0.,-10.,0.,10.,0.,-5.,0.,1};
-static double cheb_bandpass_A[]={-0.6665900311,
-				  1.0070146601,
-				 -3.1262875409,
-			 	  3.5017171569,
-				 -6.2779211945,
-				  5.2966481740,
-				 -6.7570216587,
-				  4.0760335768,
-				 -3.9134284363,
-				  1.3997338886};
+static double cheb_bandpass_B[] =
+    { -1., 0., 5., 0., -10., 0., 10., 0., -5., 0., 1 };
+static double cheb_bandpass_A[] = { -0.6665900311,
+  1.0070146601,
+  -3.1262875409,
+  3.5017171569,
+  -6.2779211945,
+  5.2966481740,
+  -6.7570216587,
+  4.0760335768,
+  -3.9134284363,
+  1.3997338886
+};
 
-static double data[128]={  
+static double data[128] = {
   0.0426331,
   0.0384521,
   0.0345764,
@@ -240,7 +252,8 @@ static double data[128]={
   -0.0537415,
   -0.0610046,
   -0.0609741,
-  -0.0547791};
+  -0.0547791
+};
 
 /* comparison test code from http://www-users.cs.york.ac.uk/~fisher/mkfilter/
    (the above page kicks ass, BTW)*/
@@ -249,58 +262,87 @@ static double data[128]={
 #define NPOLES 10
 #define GAIN   4.599477515e+02
 
-static float xv[NZEROS+1], yv[NPOLES+1];
+static float xv[NZEROS + 1], yv[NPOLES + 1];
 
-static double filterloop(double next){ 
-  xv[0] = xv[1]; xv[1] = xv[2]; xv[2] = xv[3]; xv[3] = xv[4]; xv[4] = xv[5]; 
-  xv[5] = xv[6]; xv[6] = xv[7]; xv[7] = xv[8]; xv[8] = xv[9]; xv[9] = xv[10]; 
+static double
+filterloop (double next)
+{
+  xv[0] = xv[1];
+  xv[1] = xv[2];
+  xv[2] = xv[3];
+  xv[3] = xv[4];
+  xv[4] = xv[5];
+  xv[5] = xv[6];
+  xv[6] = xv[7];
+  xv[7] = xv[8];
+  xv[8] = xv[9];
+  xv[9] = xv[10];
   xv[10] = next / GAIN;
-  yv[0] = yv[1]; yv[1] = yv[2]; yv[2] = yv[3]; yv[3] = yv[4]; yv[4] = yv[5]; 
-  yv[5] = yv[6]; yv[6] = yv[7]; yv[7] = yv[8]; yv[8] = yv[9]; yv[9] = yv[10]; 
-  yv[10] =   (xv[10] - xv[0]) + 5 * (xv[2] - xv[8]) + 10 * (xv[6] - xv[4])
-    + ( -0.6665900311 * yv[0]) + (  1.0070146601 * yv[1])
-    + ( -3.1262875409 * yv[2]) + (  3.5017171569 * yv[3])
-    + ( -6.2779211945 * yv[4]) + (  5.2966481740 * yv[5])
-    + ( -6.7570216587 * yv[6]) + (  4.0760335768 * yv[7])
-    + ( -3.9134284363 * yv[8]) + (  1.3997338886 * yv[9]);
-  return(yv[10]);
+  yv[0] = yv[1];
+  yv[1] = yv[2];
+  yv[2] = yv[3];
+  yv[3] = yv[4];
+  yv[4] = yv[5];
+  yv[5] = yv[6];
+  yv[6] = yv[7];
+  yv[7] = yv[8];
+  yv[8] = yv[9];
+  yv[9] = yv[10];
+  yv[10] = (xv[10] - xv[0]) + 5 * (xv[2] - xv[8]) + 10 * (xv[6] - xv[4])
+      + (-0.6665900311 * yv[0]) + (1.0070146601 * yv[1])
+      + (-3.1262875409 * yv[2]) + (3.5017171569 * yv[3])
+      + (-6.2779211945 * yv[4]) + (5.2966481740 * yv[5])
+      + (-6.7570216587 * yv[6]) + (4.0760335768 * yv[7])
+      + (-3.9134284363 * yv[8]) + (1.3997338886 * yv[9]);
+  return (yv[10]);
 }
 
 #include <stdio.h>
-int main(){
+int
+main ()
+{
 
   /* run the pregenerated Chebyshev filter, then our own distillation
      through the generic and specialized code */
-  double *work=malloc(128*sizeof(double));
+  double *work = malloc (128 * sizeof (double));
   IIR_state iir;
   int i;
 
-  for(i=0;i<128;i++)work[i]=filterloop(data[i]);
+  for (i = 0; i < 128; i++)
+    work[i] = filterloop (data[i]);
   {
-    FILE *out=fopen("IIR_ref.m","w");
-    for(i=0;i<128;i++)fprintf(out,"%g\n",work[i]);
-    fclose(out);
+    FILE *out = fopen ("IIR_ref.m", "w");
+
+    for (i = 0; i < 128; i++)
+      fprintf (out, "%g\n", work[i]);
+    fclose (out);
   }
 
-  IIR_init(&iir,NPOLES,GAIN,cheb_bandpass_A,cheb_bandpass_B);
-  for(i=0;i<128;i++)work[i]=IIR_filter(&iir,data[i]);
+  IIR_init (&iir, NPOLES, GAIN, cheb_bandpass_A, cheb_bandpass_B);
+  for (i = 0; i < 128; i++)
+    work[i] = IIR_filter (&iir, data[i]);
   {
-    FILE *out=fopen("IIR_gen.m","w");
-    for(i=0;i<128;i++)fprintf(out,"%g\n",work[i]);
-    fclose(out);
-  }
-  IIR_clear(&iir);  
+    FILE *out = fopen ("IIR_gen.m", "w");
 
-  IIR_init(&iir,NPOLES,GAIN,cheb_bandpass_A,cheb_bandpass_B);
-  for(i=0;i<128;i++)work[i]=IIR_filter_ChebBand(&iir,data[i]);
+    for (i = 0; i < 128; i++)
+      fprintf (out, "%g\n", work[i]);
+    fclose (out);
+  }
+  IIR_clear (&iir);
+
+  IIR_init (&iir, NPOLES, GAIN, cheb_bandpass_A, cheb_bandpass_B);
+  for (i = 0; i < 128; i++)
+    work[i] = IIR_filter_ChebBand (&iir, data[i]);
   {
-    FILE *out=fopen("IIR_cheb.m","w");
-    for(i=0;i<128;i++)fprintf(out,"%g\n",work[i]);
-    fclose(out);
-  }
-  IIR_clear(&iir);  
+    FILE *out = fopen ("IIR_cheb.m", "w");
 
-  return(0);
+    for (i = 0; i < 128; i++)
+      fprintf (out, "%g\n", work[i]);
+    fclose (out);
+  }
+  IIR_clear (&iir);
+
+  return (0);
 }
 
 #endif

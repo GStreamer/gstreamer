@@ -43,13 +43,15 @@ static GstElementDetails afsink_details = {
 
 
 /* AFSink signals and args */
-enum {
+enum
+{
   /* FILL ME */
   SIGNAL_HANDOFF,
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_TYPE,
   ARG_OUTPUT_ENDIANNESS,
@@ -59,68 +61,66 @@ enum {
 /* added a sink factory function to force audio/raw MIME type */
 /* I think the caps can be broader, we need to change that somehow */
 static GstStaticPadTemplate afsink_sink_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-raw-int, "
-     "rate = (int) [ 1, MAX ], "
-     "channels = (int) [ 1, 2 ], "
-     "endianness = (int) BYTE_ORDER, "
-     "width = (int) { 8, 16 }, "
-     "depth = (int) { 8, 16 }, "
-     "signed = (boolean) { true, false }, "
-     "buffer-frames = (int) [ 1, MAX ]"
-  )
-);
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"rate = (int) [ 1, MAX ], "
+	"channels = (int) [ 1, 2 ], "
+	"endianness = (int) BYTE_ORDER, "
+	"width = (int) { 8, 16 }, "
+	"depth = (int) { 8, 16 }, "
+	"signed = (boolean) { true, false }, "
+	"buffer-frames = (int) [ 1, MAX ]")
+    );
 
 /* we use an enum for the output type arg */
 
 #define GST_TYPE_AFSINK_TYPES (gst_afsink_types_get_type())
 /* FIXME: fix the string ints to be string-converted from the audiofile.h types */
 static GType
-gst_afsink_types_get_type (void) 
+gst_afsink_types_get_type (void)
 {
   static GType afsink_types_type = 0;
   static GEnumValue afsink_types[] = {
     {AF_FILE_RAWDATA, "0", "raw PCM"},
-    {AF_FILE_AIFFC,   "1", "AIFFC"},
-    {AF_FILE_AIFF,    "2", "AIFF"},
+    {AF_FILE_AIFFC, "1", "AIFFC"},
+    {AF_FILE_AIFF, "2", "AIFF"},
     {AF_FILE_NEXTSND, "3", "Next/SND"},
-    {AF_FILE_WAVE,    "4", "Wave"},
+    {AF_FILE_WAVE, "4", "Wave"},
     {0, NULL, NULL},
   };
-  
-  if (!afsink_types_type) 
-  {
-    afsink_types_type = g_enum_register_static ("GstAudiosinkTypes", afsink_types);
+
+  if (!afsink_types_type) {
+    afsink_types_type =
+	g_enum_register_static ("GstAudiosinkTypes", afsink_types);
   }
   return afsink_types_type;
 }
 
-static void             gst_afsink_base_init    (gpointer g_class);
-static void		gst_afsink_class_init	(GstAFSinkClass *klass);
-static void		gst_afsink_init		(GstAFSink *afsink);
+static void gst_afsink_base_init (gpointer g_class);
+static void gst_afsink_class_init (GstAFSinkClass * klass);
+static void gst_afsink_init (GstAFSink * afsink);
 
-static gboolean 	gst_afsink_open_file 	(GstAFSink *sink);
-static void 		gst_afsink_close_file 	(GstAFSink *sink);
+static gboolean gst_afsink_open_file (GstAFSink * sink);
+static void gst_afsink_close_file (GstAFSink * sink);
 
-static void		gst_afsink_chain	(GstPad *pad,GstData *_data);
+static void gst_afsink_chain (GstPad * pad, GstData * _data);
 
-static void		gst_afsink_set_property	(GObject *object, guint prop_id, const GValue *value, 
-						 GParamSpec *pspec);
-static void		gst_afsink_get_property	(GObject *object, guint prop_id, GValue *value, 
-						 GParamSpec *pspec);
+static void gst_afsink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_afsink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static gboolean		gst_afsink_handle_event (GstPad *pad, GstEvent *event);
+static gboolean gst_afsink_handle_event (GstPad * pad, GstEvent * event);
 
-static GstElementStateReturn gst_afsink_change_state (GstElement *element);
+static GstElementStateReturn gst_afsink_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_afsink_signals[LAST_SIGNAL] = { 0 };
 
 GType
-gst_afsink_get_type (void) 
+gst_afsink_get_type (void)
 {
   static GType afsink_type = 0;
 
@@ -136,7 +136,8 @@ gst_afsink_get_type (void)
       0,
       (GInstanceInitFunc) gst_afsink_init,
     };
-    afsink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAFSink", &afsink_info, 0);
+    afsink_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstAFSink", &afsink_info, 0);
   }
   return afsink_type;
 }
@@ -152,32 +153,26 @@ gst_afsink_base_init (gpointer g_class)
 }
 
 static void
-gst_afsink_class_init (GstAFSinkClass *klass) 
+gst_afsink_class_init (GstAFSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gst_element_class_install_std_props (
-         GST_ELEMENT_CLASS (klass),
-         "location",     ARG_LOCATION,     G_PARAM_READWRITE,
-         NULL);
+  gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
+      "location", ARG_LOCATION, G_PARAM_READWRITE, NULL);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TYPE,
-    g_param_spec_enum("type","type","type",
-                      GST_TYPE_AFSINK_TYPES,0,G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT_ENDIANNESS,
-    g_param_spec_int("endianness","endianness","endianness",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
- 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE, g_param_spec_enum ("type", "type", "type", GST_TYPE_AFSINK_TYPES, 0, G_PARAM_READWRITE));	/* CHECKME! */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OUTPUT_ENDIANNESS, g_param_spec_int ("endianness", "endianness", "endianness", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+
   gst_afsink_signals[SIGNAL_HANDOFF] =
-    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET (GstAFSinkClass, handoff), NULL, NULL,
-                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstAFSinkClass, handoff), NULL, NULL,
+      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 
   gobject_class->set_property = gst_afsink_set_property;
@@ -186,13 +181,14 @@ gst_afsink_class_init (GstAFSinkClass *klass)
   gstelement_class->change_state = gst_afsink_change_state;
 }
 
-static void 
-gst_afsink_init (GstAFSink *afsink) 
+static void
+gst_afsink_init (GstAFSink * afsink)
 {
   /* GstPad *pad;   this is now done in the struct */
 
-  afsink->sinkpad = gst_pad_new_from_template (
-      gst_element_get_pad_template (GST_ELEMENT (afsink), "sink"), "sink");
+  afsink->sinkpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+	  (afsink), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (afsink), afsink->sinkpad);
 
   gst_pad_set_chain_function (afsink->sinkpad, gst_afsink_chain);
@@ -209,7 +205,8 @@ gst_afsink_init (GstAFSink *afsink)
 }
 
 static void
-gst_afsink_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_afsink_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstAFSink *sink;
 
@@ -220,15 +217,14 @@ gst_afsink_set_property (GObject *object, guint prop_id, const GValue *value, GP
     case ARG_LOCATION:
       /* the element must be stopped or paused in order to do this */
       g_return_if_fail ((GST_STATE (sink) < GST_STATE_PLAYING)
-                      || (GST_STATE (sink) == GST_STATE_PAUSED));
+	  || (GST_STATE (sink) == GST_STATE_PAUSED));
       if (sink->filename)
 	g_free (sink->filename);
       sink->filename = g_strdup (g_value_get_string (value));
-      if ( (GST_STATE (sink) == GST_STATE_PAUSED)
-        && (sink->filename != NULL))
-      {
-              gst_afsink_close_file (sink);
-              gst_afsink_open_file (sink);
+      if ((GST_STATE (sink) == GST_STATE_PAUSED)
+	  && (sink->filename != NULL)) {
+	gst_afsink_close_file (sink);
+	gst_afsink_open_file (sink);
       }
 
       break;
@@ -236,27 +232,29 @@ gst_afsink_set_property (GObject *object, guint prop_id, const GValue *value, GP
       sink->type = g_value_get_enum (value);
       break;
     case ARG_OUTPUT_ENDIANNESS:
-      {
-        int end = g_value_get_int (value);
-        if (end == 1234 || end == 4321)
-          sink->endianness_output = end;
-      }
+    {
+      int end = g_value_get_int (value);
+
+      if (end == 1234 || end == 4321)
+	sink->endianness_output = end;
+    }
       break;
     default:
       break;
   }
 }
 
-static void   
-gst_afsink_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+static void
+gst_afsink_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstAFSink *sink;
- 
+
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AFSINK (object));
- 
+
   sink = GST_AFSINK (object);
-  
+
   switch (prop_id) {
     case ARG_LOCATION:
       g_value_set_string (value, sink->filename);
@@ -274,7 +272,7 @@ gst_afsink_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 }
 
 gboolean
-gst_afsink_plugin_init (GstPlugin *plugin)
+gst_afsink_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "afsink", GST_RANK_NONE, GST_TYPE_AFSINK))
     return FALSE;
@@ -288,35 +286,34 @@ gst_afsink_plugin_init (GstPlugin *plugin)
 
 /* this is where we open the audiofile */
 static gboolean
-gst_afsink_open_file (GstAFSink *sink)
+gst_afsink_open_file (GstAFSink * sink)
 {
   AFfilesetup outfilesetup;
   const GstCaps *caps;
   GstStructure *structure;
-  int sample_format;			/* audiofile's sample format, look in audiofile.h */
-  int byte_order = 0;			/* audiofile's byte order defines */
-  
+  int sample_format;		/* audiofile's sample format, look in audiofile.h */
+  int byte_order = 0;		/* audiofile's byte order defines */
+
   g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_AFSINK_OPEN), FALSE);
 
   /* get the audio parameters */
   g_return_val_if_fail (GST_IS_PAD (sink->sinkpad), FALSE);
   caps = GST_PAD_CAPS (sink->sinkpad);
-  
+
   if (caps == NULL) {
     g_critical ("gstafsink chain : Could not get caps of pad !\n");
   } else {
     structure = gst_caps_get_structure (caps, 0);
-    gst_structure_get_int (structure, "channels",   &sink->channels);
-    gst_structure_get_int (structure, "width",      &sink->width);
-    gst_structure_get_int (structure, "rate",       &sink->rate);
+    gst_structure_get_int (structure, "channels", &sink->channels);
+    gst_structure_get_int (structure, "width", &sink->width);
+    gst_structure_get_int (structure, "rate", &sink->rate);
     gst_structure_get_boolean (structure, "signed", &sink->is_signed);
     gst_structure_get_int (structure, "endianness", &sink->endianness_data);
   }
   GST_DEBUG ("channels %d, width %d, rate %d, signed %s",
-  	   		sink->channels, sink->width, sink->rate,
-  	   		sink->is_signed ? "yes" : "no");
-  GST_DEBUG ("endianness: data %d, output %d", 
-	   sink->endianness_data, sink->endianness_output);
+      sink->channels, sink->width, sink->rate, sink->is_signed ? "yes" : "no");
+  GST_DEBUG ("endianness: data %d, output %d",
+      sink->endianness_data, sink->endianness_output);
   /* setup the output file */
   if (sink->is_signed)
     sample_format = AF_SAMPFMT_TWOSCOMP;
@@ -324,11 +321,11 @@ gst_afsink_open_file (GstAFSink *sink)
     sample_format = AF_SAMPFMT_UNSIGNED;
   /* FIXME : this check didn't seem to work, so let the output endianness be set */
   /*
-  if (sink->endianness_data == sink->endianness_wanted)
-    byte_order = AF_BYTEORDER_LITTLEENDIAN;
-  else
-    byte_order = AF_BYTEORDER_BIGENDIAN;
-  */
+     if (sink->endianness_data == sink->endianness_wanted)
+     byte_order = AF_BYTEORDER_LITTLEENDIAN;
+     else
+     byte_order = AF_BYTEORDER_BIGENDIAN;
+   */
   if (sink->endianness_output == 1234)
     byte_order = AF_BYTEORDER_LITTLEENDIAN;
   else
@@ -338,41 +335,37 @@ gst_afsink_open_file (GstAFSink *sink)
   afInitFileFormat (outfilesetup, sink->type);
   afInitChannels (outfilesetup, AF_DEFAULT_TRACK, sink->channels);
   afInitRate (outfilesetup, AF_DEFAULT_TRACK, sink->rate);
-  afInitSampleFormat (outfilesetup, AF_DEFAULT_TRACK, 
-  					  sample_format, sink->width);
+  afInitSampleFormat (outfilesetup, AF_DEFAULT_TRACK,
+      sample_format, sink->width);
 
   /* open it */
   sink->file = afOpenFile (sink->filename, "w", outfilesetup);
-  if (sink->file == AF_NULL_FILEHANDLE)
-  {
-   GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-                         (_("Could not open file \"%s\" for writing."), sink->filename),
-                         ("system error: %s", strerror (errno)));
+  if (sink->file == AF_NULL_FILEHANDLE) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+	(_("Could not open file \"%s\" for writing."), sink->filename),
+	("system error: %s", strerror (errno)));
     return FALSE;
-  } 
+  }
 
   afFreeFileSetup (outfilesetup);
 /*  afSetVirtualByteOrder (sink->file, AF_DEFAULT_TRACK, byte_order); */
-  
+
   GST_FLAG_SET (sink, GST_AFSINK_OPEN);
 
   return TRUE;
 }
 
 static void
-gst_afsink_close_file (GstAFSink *sink)
+gst_afsink_close_file (GstAFSink * sink)
 {
 /*  g_print ("DEBUG: closing sinkfile...\n"); */
   g_return_if_fail (GST_FLAG_IS_SET (sink, GST_AFSINK_OPEN));
 /*  g_print ("DEBUG: past flag test\n"); */
 /*  if (fclose (sink->file) != 0) */
-  if (afCloseFile (sink->file) != 0)
-  {
+  if (afCloseFile (sink->file) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-                       (_("Error closing file \"%s\"."), sink->filename),
-                       GST_ERROR_SYSTEM);
-  }
-  else {
+	(_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
+  } else {
     GST_FLAG_UNSET (sink, GST_AFSINK_OPEN);
   }
 }
@@ -384,8 +377,8 @@ gst_afsink_close_file (GstAFSink *sink)
  *
  * take the buffer from the pad and write to file if it's open
  */
-static void 
-gst_afsink_chain (GstPad *pad, GstData *_data) 
+static void
+gst_afsink_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf;
   GstAFSink *afsink;
@@ -413,24 +406,22 @@ gst_afsink_chain (GstPad *pad, GstData *_data)
   }
 */
 
-  if (!GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN))
-  {
+  if (!GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN)) {
     /* it's not open yet, open it */
     if (!gst_afsink_open_file (afsink))
-          g_print ("WARNING: gstafsink: can't open file !\n");
+      g_print ("WARNING: gstafsink: can't open file !\n");
 /*        return FALSE;    Can't return value */
   }
 
-  if (GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN))
-  {
+  if (GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN)) {
     int frameCount = 0;
 
-    frameCount = GST_BUFFER_SIZE (buf) / ((afsink->width / 8) * afsink->channels);
- /*   g_print ("DEBUG: writing %d frames ", frameCount); */
-    ret = afWriteFrames (afsink->file, AF_DEFAULT_TRACK, 
-	                 GST_BUFFER_DATA (buf), frameCount);
-    if (ret == AF_BAD_WRITE || ret == AF_BAD_LSEEK)
-    {
+    frameCount =
+	GST_BUFFER_SIZE (buf) / ((afsink->width / 8) * afsink->channels);
+    /*   g_print ("DEBUG: writing %d frames ", frameCount); */
+    ret = afWriteFrames (afsink->file, AF_DEFAULT_TRACK,
+	GST_BUFFER_DATA (buf), frameCount);
+    if (ret == AF_BAD_WRITE || ret == AF_BAD_LSEEK) {
       printf ("afsink : Warning : afWriteFrames returned an error (%d)\n", ret);
     }
   }
@@ -441,20 +432,18 @@ gst_afsink_chain (GstPad *pad, GstData *_data)
 }
 
 static GstElementStateReturn
-gst_afsink_change_state (GstElement *element)
+gst_afsink_change_state (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_AFSINK (element), GST_STATE_FAILURE);
 
   /* if going to NULL? then close the file */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) 
-  {
+  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
 /*    printf ("DEBUG: afsink state change: null pending\n"); */
-    if (GST_FLAG_IS_SET (element, GST_AFSINK_OPEN))
-    {
+    if (GST_FLAG_IS_SET (element, GST_AFSINK_OPEN)) {
 /*      g_print ("DEBUG: trying to close the sink file\n"); */
       gst_afsink_close_file (GST_AFSINK (element));
     }
-  } 
+  }
 /*
 
   else
@@ -483,7 +472,7 @@ gst_afsink_change_state (GstElement *element)
 /* this function was copied from sinesrc */
 
 static gboolean
-gst_afsink_handle_event (GstPad *pad, GstEvent *event)
+gst_afsink_handle_event (GstPad * pad, GstEvent * event)
 {
   GstAFSink *afsink;
 
@@ -515,4 +504,3 @@ gst_afsink_factory_init (GstElementFactory *factory)
 
 }
 */
-

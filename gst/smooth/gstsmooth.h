@@ -25,8 +25,9 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_SMOOTH \
@@ -40,34 +41,36 @@ extern "C" {
 #define GST_IS_SMOOTH_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SMOOTH))
 
-typedef struct _GstSmooth GstSmooth;
-typedef struct _GstSmoothClass GstSmoothClass;
+  typedef struct _GstSmooth GstSmooth;
+  typedef struct _GstSmoothClass GstSmoothClass;
 
-struct _GstSmooth {
-  GstElement element;
+  struct _GstSmooth
+  {
+    GstElement element;
 
-  int format;
-  int width;
-  int height;
+    int format;
+    int width;
+    int height;
 
-  gboolean active;
-  int tolerance;
-  int filtersize;
-  gboolean lum_only;
+    gboolean active;
+    int tolerance;
+    int filtersize;
+    gboolean lum_only;
 
-  GstPad *sinkpad,*srcpad;
-};
+    GstPad *sinkpad, *srcpad;
+  };
 
-struct _GstSmoothClass {
-  GstElementClass parent_class;
-};
+  struct _GstSmoothClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_smooth_get_type(void);
+  GType gst_smooth_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_SMOOTH_H__ */
+#endif				/* __GST_SMOOTH_H__ */

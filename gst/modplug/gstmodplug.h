@@ -22,15 +22,16 @@
 #define __GST_MODPLUG_H__
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
-	
+
 #define GST_TYPE_MODPLUG \
   (gst_modplug_get_type())
-  
+
 #define GST_MODPLUG(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MODPLUG,GstModPlug))
 #define GST_MODPLUG_CLASS(klass) \
@@ -39,57 +40,59 @@ extern "C" {
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MODPLUG))
 #define GST_IS_MODPLUG_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MODPLUG))
-  
-struct _GstModPlug {
-  GstElement element;
-  GstPad *sinkpad, *srcpad;
-  guint8 *buffer_in;
-  GstByteStream *bs;
 
-  const gchar *songname;
-  gboolean reverb;
-  gint reverb_depth;
-  gint reverb_delay;
-  gboolean megabass;
-  gint megabass_amount;
-  gint megabass_range;
-  gboolean surround;
-  gint surround_depth;
-  gint surround_delay;
-  gboolean noise_reduction;
-  gboolean _16bit;
-  gboolean oversamp;
-  gint channel;
-  gint frequency;
+  struct _GstModPlug
+  {
+    GstElement element;
+    GstPad *sinkpad, *srcpad;
+    guint8 *buffer_in;
+    GstByteStream *bs;
 
-  guchar *audiobuffer;
-  gint32 length;
-  guint state;
-  guint bitsPerSample;
-  gboolean need_discont;
-  gboolean eos;
-  gint64 seek_at;
-  guint64 song_size;
-  guint64 timestamp;
+    const gchar *songname;
+    gboolean reverb;
+    gint reverb_depth;
+    gint reverb_delay;
+    gboolean megabass;
+    gint megabass_amount;
+    gint megabass_range;
+    gboolean surround;
+    gint surround_depth;
+    gint surround_delay;
+    gboolean noise_reduction;
+    gboolean _16bit;
+    gboolean oversamp;
+    gint channel;
+    gint frequency;
 
-  CSoundFile *mSoundFile;
-  gboolean opened; /* set to TRUE when mSoundFile is created */
-};
+    guchar *audiobuffer;
+    gint32 length;
+    guint state;
+    guint bitsPerSample;
+    gboolean need_discont;
+    gboolean eos;
+    gint64 seek_at;
+    guint64 song_size;
+    guint64 timestamp;
 
-struct _GstModPlugClass {
-  GstElementClass parent_class;
-};
+    CSoundFile *mSoundFile;
+    gboolean opened;		/* set to TRUE when mSoundFile is created */
+  };
 
-typedef struct _GstModPlug GstModPlug;
-typedef struct _GstModPlugClass GstModPlugClass;
+  struct _GstModPlugClass
+  {
+    GstElementClass parent_class;
+  };
 
-GstPad *srcpad;
-int need_sync;
+  typedef struct _GstModPlug GstModPlug;
+  typedef struct _GstModPlugClass GstModPlugClass;
 
-GType gst_modplug_get_type(void);
+  GstPad *srcpad;
+  int need_sync;
+
+  GType gst_modplug_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_MODPLUG_H__ */
+#endif				/* __GST_MODPLUG_H__ */

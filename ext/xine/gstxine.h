@@ -25,7 +25,6 @@
 #include <xine/buffer.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_XINE \
   (gst_xine_get_type())
 #define GST_XINE(obj) \
@@ -38,47 +37,45 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XINE))
 #define GST_IS_XINE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XINE))
-
-typedef struct _GstXine      GstXine;
+typedef struct _GstXine GstXine;
 typedef struct _GstXineClass GstXineClass;
 
 struct _GstXine
 {
-  GstElement		element;
+  GstElement element;
 
-  xine_stream_t *	stream;
-  xine_ao_driver_t *	audio_driver;
-  xine_vo_driver_t *	video_driver;
+  xine_stream_t *stream;
+  xine_ao_driver_t *audio_driver;
+  xine_vo_driver_t *video_driver;
 };
 
-struct _GstXineClass 
+struct _GstXineClass
 {
-  GstElementClass	parent_class;
+  GstElementClass parent_class;
 
-  xine_t *		xine;
+  xine_t *xine;
 
-  xine_ao_driver_t *	(* create_audio_driver)		(GstXine *	xine);
-  xine_vo_driver_t *	(* create_video_driver)		(GstXine *	xine);
+  xine_ao_driver_t *(*create_audio_driver) (GstXine * xine);
+  xine_vo_driver_t *(*create_video_driver) (GstXine * xine);
 };
 
-GType		gst_xine_get_type		(void);
+GType gst_xine_get_type (void);
 
-xine_stream_t *	gst_xine_get_stream		(GstXine *xine);
-void		gst_xine_free_stream		(GstXine *xine);
+xine_stream_t *gst_xine_get_stream (GstXine * xine);
+void gst_xine_free_stream (GstXine * xine);
 
-void		gst_buffer_to_xine_buffer	(buf_element_t *element, GstBuffer *buffer);
+void gst_buffer_to_xine_buffer (buf_element_t * element, GstBuffer * buffer);
 
 /* conversion functions from xinecaps.c */
 
-const gchar *	gst_xine_get_caps_for_format	(guint32 format);
-guint32		gst_xine_get_format_for_caps	(const GstCaps *caps);
+const gchar *gst_xine_get_caps_for_format (guint32 format);
+guint32 gst_xine_get_format_for_caps (const GstCaps * caps);
 
 /* init functions for the plugins */
 
-gboolean	gst_xine_audio_sink_init_plugin	(GstPlugin *plugin);
-gboolean	gst_xine_audio_dec_init_plugin	(GstPlugin *plugin);
-gboolean	gst_xine_input_init_plugin	(GstPlugin *plugin);
-  
-G_END_DECLS
+gboolean gst_xine_audio_sink_init_plugin (GstPlugin * plugin);
+gboolean gst_xine_audio_dec_init_plugin (GstPlugin * plugin);
+gboolean gst_xine_input_init_plugin (GstPlugin * plugin);
 
+G_END_DECLS
 #endif /* __GST_XINE_H__ */

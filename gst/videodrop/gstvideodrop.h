@@ -23,7 +23,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_VIDEODROP \
   (gst_videodrop_get_type())
 #define GST_VIDEODROP(obj) \
@@ -34,29 +33,28 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEODROP))
 #define GST_IS_VIDEODROP_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEODROP))
-
 typedef struct _GstVideodrop GstVideodrop;
 typedef struct _GstVideodropClass GstVideodropClass;
 
-struct _GstVideodrop {
+struct _GstVideodrop
+{
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
 
   /* video state */
   gboolean inited;
-  gfloat from_fps,
-	 to_fps;
+  gfloat from_fps, to_fps;
   gfloat speed;
   guint64 pass, total, time_adjust;
 };
 
-struct _GstVideodropClass {
+struct _GstVideodropClass
+{
   GstElementClass parent_class;
 };
 
-GType gst_videodrop_get_type(void);
+GType gst_videodrop_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_VIDEODROP_H__ */

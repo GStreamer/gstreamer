@@ -25,8 +25,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
-
 #define GST_TYPE_DXR3SPUSINK \
   (dxr3spusink_get_type())
 #define DXR3SPUSINK(obj) \
@@ -37,51 +35,49 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DXR3SPUSINK))
 #define GST_IS_DXR3SPUSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DXR3SPUSINK))
-
-
 typedef struct _Dxr3SpuSink Dxr3SpuSink;
 typedef struct _Dxr3SpuSinkClass Dxr3SpuSinkClass;
 
 
-typedef enum {
+typedef enum
+{
   DXR3SPUSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-  DXR3SPUSINK_FLAG_LAST  = GST_ELEMENT_FLAG_LAST + 2,
+  DXR3SPUSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
 } Dxr3SpuSinkFlags;
 
 
-struct _Dxr3SpuSink {
+struct _Dxr3SpuSink
+{
   GstElement element;
 
-  int card_number;     		/* The number of the card to open. */
+  int card_number;		/* The number of the card to open. */
 
-  gchar *spu_filename; 		/* File name for the spu device. */
-  int spu_fd;          		/* File descriptor for the spu device. */
+  gchar *spu_filename;		/* File name for the spu device. */
+  int spu_fd;			/* File descriptor for the spu device. */
 
   gchar *control_filename;	/* File name for the control device. */
   int control_fd;		/* File descriptor for the control
-                                   device. */
+				   device. */
 
   GstClock *clock;		/* The clock for this element. */
 };
 
 
-struct _Dxr3SpuSinkClass {
+struct _Dxr3SpuSinkClass
+{
   GstElementClass parent_class;
 
   /* Signals */
-  void (*set_clut) (Dxr3SpuSink *sink, const guint32 *clut);
-  void (*highlight_on) (Dxr3SpuSink *sink, unsigned palette,
-                        unsigned sx, unsigned sy,
-                        unsigned ex, unsigned ey,
-                        unsigned pts);
-  void (*highlight_off) (Dxr3SpuSink *sink);
-  void (*flushed) (Dxr3SpuSink *sink);
+  void (*set_clut) (Dxr3SpuSink * sink, const guint32 * clut);
+  void (*highlight_on) (Dxr3SpuSink * sink, unsigned palette,
+      unsigned sx, unsigned sy, unsigned ex, unsigned ey, unsigned pts);
+  void (*highlight_off) (Dxr3SpuSink * sink);
+  void (*flushed) (Dxr3SpuSink * sink);
 };
 
 
-extern GType	dxr3spusink_get_type		(void);
-extern gboolean	dxr3spusink_factory_init	(GstPlugin *plugin);
+extern GType dxr3spusink_get_type (void);
+extern gboolean dxr3spusink_factory_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __DXR3SPUSINK_H__ */

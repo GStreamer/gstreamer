@@ -23,28 +23,24 @@
 
 #include <vorbisenc.h>
 
-extern GType ivorbisfile_get_type(void);
+extern GType ivorbisfile_get_type (void);
 
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  if (!gst_element_register (plugin, "tremor", GST_RANK_PRIMARY, ivorbisfile_get_type ()))
+  if (!gst_element_register (plugin, "tremor", GST_RANK_PRIMARY,
+	  ivorbisfile_get_type ()))
     return FALSE;
-  
+
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "tremor",
-  "OGG Vorbis Tremor plugins element",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "tremor",
+    "OGG Vorbis Tremor plugins element",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

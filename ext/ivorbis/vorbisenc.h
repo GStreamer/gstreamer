@@ -27,8 +27,9 @@
 #include <tremor/ivorbiscodec.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 #define GST_TYPE_VORBISENC \
   (vorbisenc_get_type())
@@ -41,60 +42,61 @@ extern "C" {
 #define GST_IS_VORBISENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VORBISENC))
 
-typedef struct _VorbisEnc VorbisEnc;
-typedef struct _VorbisEncClass VorbisEncClass;
+  typedef struct _VorbisEnc VorbisEnc;
+  typedef struct _VorbisEncClass VorbisEncClass;
 
-struct _VorbisEnc {
-  GstElement 	   element;
+  struct _VorbisEnc
+  {
+    GstElement element;
 
-  GstPad          *sinkpad,
-                  *srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  ogg_stream_state os; /* take physical pages, weld into a logical
-			                              stream of packets */
-  ogg_page         og; /* one Ogg bitstream page.  Vorbis packets are inside */
-  ogg_packet       op; /* one raw packet of data for decode */
+    ogg_stream_state os;	/* take physical pages, weld into a logical
+				   stream of packets */
+    ogg_page og;		/* one Ogg bitstream page.  Vorbis packets are inside */
+    ogg_packet op;		/* one raw packet of data for decode */
 
-  vorbis_info      vi; /* struct that stores all the static vorbis bitstream
-				                            settings */
-  vorbis_comment   vc; /* struct that stores all the user comments */
+    vorbis_info vi;		/* struct that stores all the static vorbis bitstream
+				   settings */
+    vorbis_comment vc;		/* struct that stores all the user comments */
 
-  vorbis_dsp_state vd; /* central working state for the packet->PCM decoder */
-  vorbis_block     vb; /* local working space for packet->PCM decode */
+    vorbis_dsp_state vd;	/* central working state for the packet->PCM decoder */
+    vorbis_block vb;		/* local working space for packet->PCM decode */
 
-  gboolean         eos;
+    gboolean eos;
 
-  gboolean         managed;
-  gint             bitrate;
-  gint             min_bitrate;
-  gint             max_bitrate;
-  gfloat           quality;
-  gboolean	   quality_set;
-  gint             serial;
+    gboolean managed;
+    gint bitrate;
+    gint min_bitrate;
+    gint max_bitrate;
+    gfloat quality;
+    gboolean quality_set;
+    gint serial;
 
-  gint             channels;
-  gint             frequency;
+    gint channels;
+    gint frequency;
 
-  guint64	   samples_in;
-  guint64	   bytes_out;
+    guint64 samples_in;
+    guint64 bytes_out;
 
-  GstCaps         *metadata;
+    GstCaps *metadata;
 
-  gboolean         setup;
-  gboolean         flush_header;
-  gchar		  *last_message;
-};
+    gboolean setup;
+    gboolean flush_header;
+    gchar *last_message;
+  };
 
-struct _VorbisEncClass {
-  GstElementClass parent_class;
-};
+  struct _VorbisEncClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType vorbisenc_get_type(void);
+  GType vorbisenc_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __VORBISENC_H__ */
+#endif				/* __VORBISENC_H__ */

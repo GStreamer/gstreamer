@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_SPEED \
   (gst_speed_get_type())
 #define GST_SPEED(obj) \
@@ -36,17 +35,18 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPEED))
 #define GST_IS_SPEED_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPEED))
-
 typedef struct _GstSpeed GstSpeed;
 typedef struct _GstSpeedClass GstSpeedClass;
 typedef enum _GstSpeedFormat GstSpeedFormat;
 
-enum _GstSpeedFormat {
+enum _GstSpeedFormat
+{
   GST_SPEED_FORMAT_INT,
   GST_SPEED_FORMAT_FLOAT
 };
 
-struct _GstSpeed {
+struct _GstSpeed
+{
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
@@ -66,12 +66,12 @@ struct _GstSpeed {
   gboolean is_signed;
 };
 
-struct _GstSpeedClass {
+struct _GstSpeedClass
+{
   GstElementClass parent_class;
 };
 
-GType gst_speed_get_type(void);
+GType gst_speed_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_SPEED_H__ */

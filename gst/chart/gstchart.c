@@ -33,11 +33,12 @@
 typedef struct _GstChart GstChart;
 typedef struct _GstChartClass GstChartClass;
 
-struct _GstChart {
+struct _GstChart
+{
   GstElement element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   /* the timestamp of the next frame */
   guint64 next_time;
@@ -49,16 +50,17 @@ struct _GstChart {
   gint height;
 
   gint samplerate;
-  gdouble framerate; /* desired frame rate */
-  gint samples_between_frames; /* number of samples between start of successive frames */
-  gint samples_since_last_frame; /* number of samples between start of successive frames */
+  gdouble framerate;		/* desired frame rate */
+  gint samples_between_frames;	/* number of samples between start of successive frames */
+  gint samples_since_last_frame;	/* number of samples between start of successive frames */
 };
 
-struct _GstChartClass {
+struct _GstChartClass
+{
   GstElementClass parent_class;
 };
 
-GType gst_chart_get_type(void);
+GType gst_chart_get_type (void);
 
 
 /* elementfactory information */
@@ -70,51 +72,50 @@ static GstElementDetails gst_chart_details = {
 };
 
 /* signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static GstStaticPadTemplate src_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ( GST_VIDEO_CAPS_RGB_16)
-);
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16)
+    );
 
-static GstStaticPadTemplate sink_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-raw-int, "
-    "endianness = (int) BYTE_ORDER, "
-    "signed = (boolean) TRUE, "
-    "width = (int) 16, "
-    "depth = (int) 16, "
-    "rate = (int) [ 8000, 96000 ], "
-    "channels = (int) 1")
-);
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) BYTE_ORDER, "
+	"signed = (boolean) TRUE, "
+	"width = (int) 16, "
+	"depth = (int) 16, "
+	"rate = (int) [ 8000, 96000 ], " "channels = (int) 1")
+    );
 
-static void     gst_chart_base_init     (gpointer g_class);
-static void	gst_chart_class_init	(GstChartClass *klass);
-static void	gst_chart_init		(GstChart *chart);
+static void gst_chart_base_init (gpointer g_class);
+static void gst_chart_class_init (GstChartClass * klass);
+static void gst_chart_init (GstChart * chart);
 
-static void	gst_chart_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_chart_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_chart_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_chart_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void	gst_chart_chain		(GstPad *pad, GstData *_data);
+static void gst_chart_chain (GstPad * pad, GstData * _data);
 
-static GstPadLinkReturn 
-		gst_chart_sinkconnect 	(GstPad *pad, const GstCaps *caps);
-static GstPadLinkReturn 
-		gst_chart_srcconnect 	(GstPad *pad, const GstCaps *caps);
+static GstPadLinkReturn
+gst_chart_sinkconnect (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn
+gst_chart_srcconnect (GstPad * pad, const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -125,17 +126,17 @@ gst_chart_get_type (void)
 
   if (!type) {
     static const GTypeInfo info = {
-      sizeof(GstChartClass),
+      sizeof (GstChartClass),
       gst_chart_base_init,
       NULL,
-      (GClassInitFunc)gst_chart_class_init,
+      (GClassInitFunc) gst_chart_class_init,
       NULL,
       NULL,
-      sizeof(GstChart),
+      sizeof (GstChart),
       0,
-      (GInstanceInitFunc)gst_chart_init,
+      (GInstanceInitFunc) gst_chart_init,
     };
-    type = g_type_register_static(GST_TYPE_ELEMENT, "GstChart", &info, 0);
+    type = g_type_register_static (GST_TYPE_ELEMENT, "GstChart", &info, 0);
   }
   return type;
 }
@@ -145,36 +146,38 @@ gst_chart_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class, gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &gst_chart_details);
 }
 
 static void
-gst_chart_class_init(GstChartClass *klass)
+gst_chart_class_init (GstChartClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_chart_set_property;
   gobject_class->get_property = gst_chart_get_property;
 }
 
 static void
-gst_chart_init (GstChart *chart)
+gst_chart_init (GstChart * chart)
 {
   /* create the sink and src pads */
-  chart->sinkpad = gst_pad_new_from_template (
-			gst_static_pad_template_get (&sink_factory),
-			"sink");
-  chart->srcpad = gst_pad_new_from_template (
-			gst_static_pad_template_get (&src_factory),
-			"src");
+  chart->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
+      "sink");
+  chart->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
+      "src");
   gst_element_add_pad (GST_ELEMENT (chart), chart->sinkpad);
   gst_element_add_pad (GST_ELEMENT (chart), chart->srcpad);
 
@@ -191,13 +194,13 @@ gst_chart_init (GstChart *chart)
   chart->height = 128;
 
   chart->samplerate = -1;
-  chart->framerate = 25; /* desired frame rate */
-  chart->samples_between_frames = 0; /* number of samples between start of successive frames */
+  chart->framerate = 25;	/* desired frame rate */
+  chart->samples_between_frames = 0;	/* number of samples between start of successive frames */
   chart->samples_since_last_frame = 0;
 }
 
 static GstPadLinkReturn
-gst_chart_sinkconnect (GstPad *pad, const GstCaps *caps)
+gst_chart_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
   GstChart *chart;
   GstStructure *structure;
@@ -209,15 +212,14 @@ gst_chart_sinkconnect (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "rate", &chart->samplerate);
   chart->samples_between_frames = chart->samplerate / chart->framerate;
 
-  GST_DEBUG ("CHART: new sink caps: rate %d",
-	     chart->samplerate);
+  GST_DEBUG ("CHART: new sink caps: rate %d", chart->samplerate);
   /*gst_chart_sync_parms (chart); */
   /* */
   return GST_PAD_LINK_OK;
 }
 
 static GstPadLinkReturn
-gst_chart_srcconnect (GstPad *pad, const GstCaps*caps)
+gst_chart_srcconnect (GstPad * pad, const GstCaps * caps)
 {
   GstChart *chart;
   GstStructure *structure;
@@ -234,63 +236,64 @@ gst_chart_srcconnect (GstPad *pad, const GstCaps*caps)
   gst_structure_get_int (structure, "height", &chart->height);
 
   GST_DEBUG ("CHART: new src caps: framerate %f, %dx%d",
-	     chart->framerate, chart->width, chart->height);
+      chart->framerate, chart->width, chart->height);
 
   return GST_PAD_LINK_OK;
 }
 
 static void
-draw_chart_16bpp(guchar * output, gint width, gint height,
-		 gint16 * src_data, gint src_size)
+draw_chart_16bpp (guchar * output, gint width, gint height,
+    gint16 * src_data, gint src_size)
 {
-    gint i;
-    guint16 *colstart;
-    gint16 * in;
+  gint i;
+  guint16 *colstart;
+  gint16 *in;
 
-    GST_DEBUG ("CHART: drawing frame to %p, width = %d, height = %d, src_data = %p, src_size = %d",
-	       output, width, height, src_data, src_size);
-    
-    for (colstart = (guint16 *)output, in = (gint16 *)src_data, i = 0;
-	 i < width;
-	 colstart++, in++, i++) {
-	guint16 * pos = colstart;
-	gint h1;
+  GST_DEBUG
+      ("CHART: drawing frame to %p, width = %d, height = %d, src_data = %p, src_size = %d",
+      output, width, height, src_data, src_size);
 
-	h1 = (((gint)(*in)) * height / (1 << 16)) + height / 2;
-	if (h1 >= height) h1 = height;
+  for (colstart = (guint16 *) output, in = (gint16 *) src_data, i = 0;
+      i < width; colstart++, in++, i++) {
+    guint16 *pos = colstart;
+    gint h1;
 
-	if (h1 < height / 2) {
-	    while (pos < colstart + h1 * width) {
-		*pos = 0x0000;
-		pos += width;
-	    }
-	    while (pos < colstart + height / 2 * width) {
-		*pos = 0x07e0;
-		pos += width;
-	    }
-	    while (pos < colstart + height * width) {
-		*pos = 0x0000;
-		pos += width;
-	    }
-	} else {
-	    while (pos < colstart + height / 2 * width) {
-		*pos = 0x0000;
-		pos += width;
-	    }
-	    while (pos < colstart + h1 * width) {
-		*pos = 0x07e0;
-		pos += width;
-	    }
-	    while (pos < colstart + height * width) {
-		*pos = 0x0000;
-		pos += width;
-	    }
-	}
+    h1 = (((gint) (*in)) * height / (1 << 16)) + height / 2;
+    if (h1 >= height)
+      h1 = height;
+
+    if (h1 < height / 2) {
+      while (pos < colstart + h1 * width) {
+	*pos = 0x0000;
+	pos += width;
+      }
+      while (pos < colstart + height / 2 * width) {
+	*pos = 0x07e0;
+	pos += width;
+      }
+      while (pos < colstart + height * width) {
+	*pos = 0x0000;
+	pos += width;
+      }
+    } else {
+      while (pos < colstart + height / 2 * width) {
+	*pos = 0x0000;
+	pos += width;
+      }
+      while (pos < colstart + h1 * width) {
+	*pos = 0x07e0;
+	pos += width;
+      }
+      while (pos < colstart + height * width) {
+	*pos = 0x0000;
+	pos += width;
+      }
     }
+  }
 }
 
 static void
-gst_chart_chain (GstPad *pad, GstData *_data)
+gst_chart_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *bufin = GST_BUFFER (_data);
   GstChart *chart;
@@ -302,14 +305,14 @@ gst_chart_chain (GstPad *pad, GstData *_data)
 
   g_return_if_fail (bufin != NULL);
   g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD(pad));
-  g_return_if_fail (GST_IS_CHART(GST_OBJECT_PARENT(pad)));
-  chart = GST_CHART(GST_OBJECT_PARENT (pad));
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (GST_IS_CHART (GST_OBJECT_PARENT (pad)));
+  chart = GST_CHART (GST_OBJECT_PARENT (pad));
   g_return_if_fail (chart != NULL);
 
   GST_DEBUG ("CHART: chainfunc called");
 
-  samples_in = GST_BUFFER_SIZE (bufin) / sizeof(gint16);
+  samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
   datain = (gint16 *) (GST_BUFFER_DATA (bufin));
   GST_DEBUG ("input buffer has %d samples", samples_in);
   if (chart->next_time <= GST_BUFFER_TIMESTAMP (bufin)) {
@@ -319,43 +322,45 @@ gst_chart_chain (GstPad *pad, GstData *_data)
 
   chart->samples_since_last_frame += samples_in;
   if (chart->samples_between_frames <= chart->samples_since_last_frame) {
-      chart->samples_since_last_frame = 0;
+    chart->samples_since_last_frame = 0;
 
-      /* get data to draw into buffer */
-      if (samples_in >= chart->width) {
-	  /* make a new buffer for the output */
-	  bufout = gst_buffer_new ();
-	  sizeout = chart->bpp / 8 * chart->width * chart->height;
-	  dataout = g_malloc (sizeout);
-	  GST_BUFFER_SIZE(bufout) = sizeout;
-	  GST_BUFFER_DATA(bufout) = dataout;
-	  GST_DEBUG ("CHART: made new buffer: size %d, width %d, height %d",
-		     sizeout, chart->width, chart->height);
+    /* get data to draw into buffer */
+    if (samples_in >= chart->width) {
+      /* make a new buffer for the output */
+      bufout = gst_buffer_new ();
+      sizeout = chart->bpp / 8 * chart->width * chart->height;
+      dataout = g_malloc (sizeout);
+      GST_BUFFER_SIZE (bufout) = sizeout;
+      GST_BUFFER_DATA (bufout) = dataout;
+      GST_DEBUG ("CHART: made new buffer: size %d, width %d, height %d",
+	  sizeout, chart->width, chart->height);
 
-	  /* take data and draw to new buffer */
-	  /* FIXME: call different routines for different properties */
-	  draw_chart_16bpp(dataout, chart->width, chart->height, (gint16 *)datain, samples_in);
+      /* take data and draw to new buffer */
+      /* FIXME: call different routines for different properties */
+      draw_chart_16bpp (dataout, chart->width, chart->height, (gint16 *) datain,
+	  samples_in);
 
-          gst_buffer_unref(bufin);
+      gst_buffer_unref (bufin);
 
-	  /* set timestamp */
-	  GST_BUFFER_TIMESTAMP (bufout) = chart->next_time;
+      /* set timestamp */
+      GST_BUFFER_TIMESTAMP (bufout) = chart->next_time;
 
-	  GST_DEBUG ("CHART: outputting buffer");
-	  /* output buffer */
-	  GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_READONLY);
-	  gst_pad_push (chart->srcpad, GST_DATA (bufout));
-      }
+      GST_DEBUG ("CHART: outputting buffer");
+      /* output buffer */
+      GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_READONLY);
+      gst_pad_push (chart->srcpad, GST_DATA (bufout));
+    }
   } else {
-      GST_DEBUG ("CHART: skipping buffer");
-      gst_buffer_unref(bufin);
+    GST_DEBUG ("CHART: skipping buffer");
+    gst_buffer_unref (bufin);
   }
 
   GST_DEBUG ("CHART: exiting chainfunc");
 }
 
 static void
-gst_chart_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_chart_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstChart *chart;
 
@@ -370,7 +375,8 @@ gst_chart_set_property (GObject *object, guint prop_id, const GValue *value, GPa
 }
 
 static void
-gst_chart_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_chart_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstChart *chart;
 
@@ -385,21 +391,16 @@ gst_chart_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "chart", GST_RANK_NONE, GST_TYPE_CHART))
     return FALSE;
-  
+
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "chart",
-  "Takes frames of data and outputs video frames of a chart of data",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "chart",
+    "Takes frames of data and outputs video frames of a chart of data",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

@@ -27,8 +27,6 @@
 #include "ac3_padder.h"
 
 G_BEGIN_DECLS
-
-
 #define GST_TYPE_DXR3AUDIOSINK \
   (dxr3audiosink_get_type())
 #define DXR3AUDIOSINK(obj) \
@@ -39,75 +37,77 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DXR3AUDIOSINK))
 #define GST_IS_DXR3AUDIOSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DXR3AUDIOSINK))
-
-
 typedef struct _Dxr3AudioSink Dxr3AudioSink;
 typedef struct _Dxr3AudioSinkClass Dxr3AudioSinkClass;
 
 
-typedef enum {
+typedef enum
+{
   DXR3AUDIOSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-  DXR3AUDIOSINK_FLAG_LAST  = GST_ELEMENT_FLAG_LAST + 2,
+  DXR3AUDIOSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
 } Dxr3AudioSinkFlags;
 
 
 /* PCM or AC3? */
-typedef enum {
-  DXR3AUDIOSINK_MODE_NONE, /* No mode set. */ 
-  DXR3AUDIOSINK_MODE_AC3,  /* AC3 out. */ 
-  DXR3AUDIOSINK_MODE_PCM,  /* PCM out. */
+typedef enum
+{
+  DXR3AUDIOSINK_MODE_NONE,	/* No mode set. */
+  DXR3AUDIOSINK_MODE_AC3,	/* AC3 out. */
+  DXR3AUDIOSINK_MODE_PCM,	/* PCM out. */
 } Dxr3AudioSinkMode;
 
 
 /* Information for a delayed SCR set operation. */
-typedef struct {
+typedef struct
+{
   struct _Dxr3AudioSink *sink;
   guint32 scr;
 } Dxr3AudioSinkDelayedSCR;
 
 
-struct _Dxr3AudioSink {
+struct _Dxr3AudioSink
+{
   GstElement element;
 
-  GstPad *pcm_sinkpad;     /* The AC3 audio sink pad. */
-  GstPad *ac3_sinkpad;     /* The PCM audio sink pad. */
+  GstPad *pcm_sinkpad;		/* The AC3 audio sink pad. */
+  GstPad *ac3_sinkpad;		/* The PCM audio sink pad. */
 
-  int card_number;         /* The number of the card to open. */
+  int card_number;		/* The number of the card to open. */
 
-  gchar *audio_filename;   /* File name for the audio device. */
-  int audio_fd;            /* File descriptor for the audio device. */
+  gchar *audio_filename;	/* File name for the audio device. */
+  int audio_fd;			/* File descriptor for the audio device. */
 
-  gchar *control_filename; /* File name for the control device. */
-  int control_fd;          /* File descriptor for the control
-                              device. */
+  gchar *control_filename;	/* File name for the control device. */
+  int control_fd;		/* File descriptor for the control
+				   device. */
 
-  guint64 scr;             /* The current System Reference Clock value
-                              for the audio stream. */
+  guint64 scr;			/* The current System Reference Clock value
+				   for the audio stream. */
 
-  gboolean digital_pcm;    /* Should PCM use the digital or the 
-                              analog output? */
+  gboolean digital_pcm;		/* Should PCM use the digital or the 
+				   analog output? */
 
-  Dxr3AudioSinkMode mode;  /* The current sound output mode. */
+  Dxr3AudioSinkMode mode;	/* The current sound output mode. */
 
-  gint rate;               /* The sampling rate for PCM sound. */
+  gint rate;			/* The sampling rate for PCM sound. */
 
-  ac3_padder *padder;      /* AC3 to SPDIF padder object. */
+  ac3_padder *padder;		/* AC3 to SPDIF padder object. */
 
-  GstClock *clock;	   /* The clock for this element. */
+  GstClock *clock;		/* The clock for this element. */
 };
 
 
-struct _Dxr3AudioSinkClass {
+struct _Dxr3AudioSinkClass
+{
   GstElementClass parent_class;
 
   /* signals */
-  void (*flushed) (Dxr3AudioSink *sink);
+  void (*flushed) (Dxr3AudioSink * sink);
 };
 
 
-extern GType	dxr3audiosink_get_type		(void);
-extern gboolean	dxr3audiosink_factory_init	(GstPlugin *plugin);
+extern GType dxr3audiosink_get_type (void);
+extern gboolean dxr3audiosink_factory_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __DXR3AUDIOINK_H__ */

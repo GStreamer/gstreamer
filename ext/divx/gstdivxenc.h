@@ -23,8 +23,9 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_DIVXENC \
@@ -38,46 +39,48 @@ extern "C" {
 #define GST_IS_DIVXENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DIVXENC))
 
-typedef struct _GstDivxEnc GstDivxEnc;
-typedef struct _GstDivxEncClass GstDivxEncClass;
+  typedef struct _GstDivxEnc GstDivxEnc;
+  typedef struct _GstDivxEncClass GstDivxEncClass;
 
-struct _GstDivxEnc {
-  GstElement element;
+  struct _GstDivxEnc
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad, *srcpad;
+    /* pads */
+    GstPad *sinkpad, *srcpad;
 
-  /* quality of encoded image */
-  gulong bitrate;
+    /* quality of encoded image */
+    gulong bitrate;
 
-  /* size of the buffers */
-  gulong buffer_size;
+    /* size of the buffers */
+    gulong buffer_size;
 
-  /* max key interval */
-  gint max_key_interval;
+    /* max key interval */
+    gint max_key_interval;
 
-  /* amount of motion estimation to do */
-  gint quality;
+    /* amount of motion estimation to do */
+    gint quality;
 
-  /* divx handle */
-  void *handle;
-  guint32 csp;
-  gint bitcnt; 
-  gint width, height;
-  gfloat fps;
-};
+    /* divx handle */
+    void *handle;
+    guint32 csp;
+    gint bitcnt;
+    gint width, height;
+    gfloat fps;
+  };
 
-struct _GstDivxEncClass {
-  GstElementClass parent_class;
+  struct _GstDivxEncClass
+  {
+    GstElementClass parent_class;
 
-  /* signals */
-  void (*frame_encoded) (GstElement *element);
-};
+    /* signals */
+    void (*frame_encoded) (GstElement * element);
+  };
 
-GType gst_divxenc_get_type(void);
+  GType gst_divxenc_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_DIVXENC_H__ */
+#endif				/* __GST_DIVXENC_H__ */

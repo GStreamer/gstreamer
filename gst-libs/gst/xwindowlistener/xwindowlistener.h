@@ -26,7 +26,6 @@
 #include <X11/Xlib.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_X_WINDOW_LISTENER \
   (gst_x_window_listener_get_type())
 #define GST_X_WINDOW_LISTENER(obj) \
@@ -39,28 +38,22 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_X_WINDOW_LISTENER))
 #define GST_IS_X_WINDOW_LISTENER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_X_WINDOW_LISTENER))
+typedef struct _GstXWindowListener GstXWindowListener;
+typedef struct _GstXWindowListenerClass GstXWindowListenerClass;
+typedef struct _GstXWindowClip GstXWindowClip;
+typedef void (*MapWindowFunc) (gpointer your_data, gboolean visible);
+typedef void (*SetWindowFunc) (gpointer your_data,
+    gint x, gint y, gint w, gint h, GstXWindowClip * clips, gint num_clips);
 
-typedef struct _GstXWindowListener	GstXWindowListener;
-typedef struct _GstXWindowListenerClass	GstXWindowListenerClass;
-typedef struct _GstXWindowClip		GstXWindowClip;
-typedef void (* MapWindowFunc)		(gpointer your_data,
-					 gboolean visible);
-typedef void (* SetWindowFunc)		(gpointer your_data,
-					 gint x,  gint y,
-					 gint w,  gint h,
-					 GstXWindowClip *clips,
-					 gint     num_clips);
-
-struct _GstXWindowClip {
-  gint32   x_offset,
-	   y_offset,
-	   width,
-	   height;
+struct _GstXWindowClip
+{
+  gint32 x_offset, y_offset, width, height;
   gpointer data;
 };
 
-struct _GstXWindowListener {
-  GObject  parent;
+struct _GstXWindowListener
+{
+  GObject parent;
 
   /* "per-instance virtual functions" */
   MapWindowFunc map_window_func;
@@ -70,12 +63,12 @@ struct _GstXWindowListener {
   gpointer private_data;
 
   /* general information of what we're doing */
-  gchar   *display_name;
-  XID      xwindow_id;
+  gchar *display_name;
+  XID xwindow_id;
 
   /* one extra... */
   Display *main_display;
-  GMutex  *main_lock;
+  GMutex *main_lock;
 
   /* oh my g*d, this is going to be so horribly ugly */
   GThread *thread;
@@ -84,33 +77,24 @@ struct _GstXWindowListener {
   /* the overlay window + own thread */
   Display *display;
   Drawable child;
-  gboolean ov_conf,
-	   ov_map,
-	   ov_visible,
-	   ov_refresh,
-	   ov_move,
-	   ov_wmmap;
-  gint     ov_visibility;
-  guint    ov_conf_id,
-	   ov_refresh_id;
-  gint     x, y, w, h;
+  gboolean ov_conf, ov_map, ov_visible, ov_refresh, ov_move, ov_wmmap;
+  gint ov_visibility;
+  guint ov_conf_id, ov_refresh_id;
+  gint x, y, w, h;
   GstXWindowClip *clips;
-  gint     num_clips;
+  gint num_clips;
 };
 
-struct _GstXWindowListenerClass {
+struct _GstXWindowListenerClass
+{
   GObjectClass parent;
 };
 
-GType 	gst_x_window_listener_get_type	(void);
-GstXWindowListener *
-	gst_x_window_listener_new	(gchar              *display,
-					 MapWindowFunc       map_window_func,
-					 SetWindowFunc       set_window_func,
-					 gpointer            private_data);
-void	gst_x_window_listener_set_xid	(GstXWindowListener *xwin,
-					 XID                 id);
+GType gst_x_window_listener_get_type (void);
+GstXWindowListener *gst_x_window_listener_new (gchar * display,
+    MapWindowFunc map_window_func,
+    SetWindowFunc set_window_func, gpointer private_data);
+void gst_x_window_listener_set_xid (GstXWindowListener * xwin, XID id);
 
 G_END_DECLS
-
 #endif /* __X_WINDOW_LISTENER_H__ */

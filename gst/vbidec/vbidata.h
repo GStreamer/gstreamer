@@ -44,16 +44,16 @@ typedef struct vbidata_s vbidata_t;
 #define CAPTURE_T3  8
 #define CAPTURE_T4  9
 
-vbidata_t *vbidata_new_file( const char *filename, vbiscreen_t *vs, 
-                        /*tvtime_osd_t* osd,*/ int verbose  );
-vbidata_t *vbidata_new_line( vbiscreen_t *vs, int verbose  );
+vbidata_t *vbidata_new_file (const char *filename, vbiscreen_t * vs,
+    /*tvtime_osd_t* osd, */ int verbose);
+vbidata_t *vbidata_new_line (vbiscreen_t * vs, int verbose);
 
-void vbidata_delete( vbidata_t *vbi );
-void vbidata_reset( vbidata_t *vbi );
-void vbidata_set_verbose( vbidata_t *vbi, int verbose );
-void vbidata_capture_mode( vbidata_t *vbi, int mode );
-void vbidata_process_frame( vbidata_t *vbi, int printdebug );
-void vbidata_process_line( vbidata_t *vbi, unsigned char *s, int bottom );
-void vbidata_process_16b( vbidata_t *vbi, int bottom, int w );
+void vbidata_delete (vbidata_t * vbi);
+void vbidata_reset (vbidata_t * vbi);
+void vbidata_set_verbose (vbidata_t * vbi, int verbose);
+void vbidata_capture_mode (vbidata_t * vbi, int mode);
+void vbidata_process_frame (vbidata_t * vbi, int printdebug);
+void vbidata_process_line (vbidata_t * vbi, unsigned char *s, int bottom);
+void vbidata_process_16b (vbidata_t * vbi, int bottom, int w);
 
 #endif /* VBIDATA_H_INCLUDED */

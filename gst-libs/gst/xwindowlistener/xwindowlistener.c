@@ -28,12 +28,12 @@
 
 #define NUM_CLIPS 1024
 
-static void gst_x_window_listener_class_init (GstXWindowListenerClass *klass);
-static void gst_x_window_listener_init       (GstXWindowListener *xwin);
-static void gst_x_window_listener_dispose    (GObject            *object);
+static void gst_x_window_listener_class_init (GstXWindowListenerClass * klass);
+static void gst_x_window_listener_init (GstXWindowListener * xwin);
+static void gst_x_window_listener_dispose (GObject * object);
 
-static void gst_xwin_start		     (GstXWindowListener *xwin);
-static void gst_xwin_stop		     (GstXWindowListener *xwin);
+static void gst_xwin_start (GstXWindowListener * xwin);
+static void gst_xwin_stop (GstXWindowListener * xwin);
 
 static GObjectClass *parent_class = NULL;
 
@@ -58,15 +58,14 @@ gst_x_window_listener_get_type (void)
 
     x_window_listener_type =
 	g_type_register_static (G_TYPE_OBJECT,
-				"GstXWindowListener",
-				&x_window_listener_info, 0);
+	"GstXWindowListener", &x_window_listener_info, 0);
   }
 
   return x_window_listener_type;
 }
 
 static void
-gst_x_window_listener_class_init (GstXWindowListenerClass *klass)
+gst_x_window_listener_class_init (GstXWindowListenerClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
@@ -76,7 +75,7 @@ gst_x_window_listener_class_init (GstXWindowListenerClass *klass)
 }
 
 static void
-gst_x_window_listener_init (GstXWindowListener *xwin)
+gst_x_window_listener_init (GstXWindowListener * xwin)
 {
   xwin->xwindow_id = 0;
   xwin->display_name = NULL;
@@ -88,7 +87,7 @@ gst_x_window_listener_init (GstXWindowListener *xwin)
 }
 
 static void
-gst_x_window_listener_dispose (GObject *object)
+gst_x_window_listener_dispose (GObject * object)
 {
   GstXWindowListener *xwin = GST_X_WINDOW_LISTENER (object);
 
@@ -105,13 +104,11 @@ gst_x_window_listener_dispose (GObject *object)
 }
 
 GstXWindowListener *
-gst_x_window_listener_new (gchar           *display,
-			   MapWindowFunc    map_window_func,
-			   SetWindowFunc    set_window_func,
-			   gpointer         private_data)
+gst_x_window_listener_new (gchar * display,
+    MapWindowFunc map_window_func,
+    SetWindowFunc set_window_func, gpointer private_data)
 {
-  GstXWindowListener *xwin =
-	g_object_new (GST_TYPE_X_WINDOW_LISTENER, NULL);
+  GstXWindowListener *xwin = g_object_new (GST_TYPE_X_WINDOW_LISTENER, NULL);
 
   xwin->display_name = g_strdup (display);
   xwin->map_window_func = map_window_func;
@@ -122,8 +119,7 @@ gst_x_window_listener_new (gchar           *display,
 }
 
 void
-gst_x_window_listener_set_xid (GstXWindowListener *xwin,
-			       XID                 id)
+gst_x_window_listener_set_xid (GstXWindowListener * xwin, XID id)
 {
   g_return_if_fail (xwin != NULL);
 
@@ -137,9 +133,7 @@ gst_x_window_listener_set_xid (GstXWindowListener *xwin,
 
   xwin->xwindow_id = id;
 
-  if (xwin->xwindow_id &&
-      xwin->display_name &&
-      xwin->display_name[0] == ':') {
+  if (xwin->xwindow_id && xwin->display_name && xwin->display_name[0] == ':') {
     g_return_if_fail (xwin->map_window_func != NULL);
     g_return_if_fail (xwin->set_window_func != NULL);
 
@@ -163,8 +157,7 @@ gst_x_window_listener_set_xid (GstXWindowListener *xwin,
   GST_DEBUG ("XWL: " format, ##args)
 
 static void
-gst_xwin_set_overlay (GstXWindowListener *xwin,
-		      gboolean       on)
+gst_xwin_set_overlay (GstXWindowListener * xwin, gboolean on)
 {
   xwin->map_window_func (xwin->private_data, on);
 
@@ -190,22 +183,20 @@ gst_xwin_refresh (gpointer data)
   if (!xwin->ov_move && xwin->ov_map &&
       xwin->ov_visibility == VisibilityUnobscured) {
     g_mutex_unlock (xwin->main_lock);
-    return FALSE; /* skip */
+    return FALSE;		/* skip */
   }
 
-  if (xwin->ov_map &&
-      xwin->ov_visibility != VisibilityFullyObscured) {
+  if (xwin->ov_map && xwin->ov_visibility != VisibilityFullyObscured) {
     xwin->ov_refresh = TRUE;
   }
 
   xswa.override_redirect = True;
   xswa.backing_store = NotUseful;
   xswa.save_under = False;
-  tmp = XCreateWindow (xwin->main_display,win, 0, 0,
-		       attr.width, attr.height, 0,
-		       CopyFromParent, InputOutput, CopyFromParent,
-		       (CWSaveUnder | CWBackingStore| CWOverrideRedirect ),
-		       &xswa);
+  tmp = XCreateWindow (xwin->main_display, win, 0, 0,
+      attr.width, attr.height, 0,
+      CopyFromParent, InputOutput, CopyFromParent,
+      (CWSaveUnder | CWBackingStore | CWOverrideRedirect), &xswa);
   XMapWindow (xwin->main_display, tmp);
   XUnmapWindow (xwin->main_display, tmp);
   XDestroyWindow (xwin->main_display, tmp);
@@ -218,10 +209,9 @@ gst_xwin_refresh (gpointer data)
 }
 
 static int
-x11_error_dev_null (Display     *display,
-		    XErrorEvent *event)
+x11_error_dev_null (Display * display, XErrorEvent * event)
 {
-    return 0;
+  return 0;
 }
 
 #define ADD_CLIP(_x, _y, _w, _h) \
@@ -235,7 +225,7 @@ x11_error_dev_null (Display     *display,
   } while (0);
 
 static void
-gst_xwin_set_clips (GstXWindowListener *xwin)
+gst_xwin_set_clips (GstXWindowListener * xwin)
 {
   Window root, rroot, parent, *kids, me;
   XWindowAttributes attr;
@@ -286,10 +276,9 @@ gst_xwin_set_clips (GstXWindowListener *xwin)
     y1 = attr.y - xwin->y;
     w1 = attr.width + 2 * attr.border_width;
     h1 = attr.height + 2 * attr.border_width;
-    if (((x1 + w1) < 0) || (x1 > xwin->w) ||
-        ((y1 + h1) < 0) || (y1 > xwin->h))
+    if (((x1 + w1) < 0) || (x1 > xwin->w) || ((y1 + h1) < 0) || (y1 > xwin->h))
       continue;
-	
+
     if (x1 < 0)
       x1 = 0;
     if (y1 < 0)
@@ -306,7 +295,7 @@ gst_xwin_set_clips (GstXWindowListener *xwin)
 
 
 static gboolean
-gst_xwin_window (GstXWindowListener *xwin)
+gst_xwin_window (GstXWindowListener * xwin)
 {
   if (xwin->ov_map && xwin->ov_wmmap &&
       xwin->ov_visibility != VisibilityFullyObscured) {
@@ -318,20 +307,17 @@ gst_xwin_window (GstXWindowListener *xwin)
 
     if (xwin->ov_conf) {
       xwin->set_window_func (xwin->private_data,
-			     xwin->x, xwin->y,
-			     xwin->w, xwin->h,
-			     xwin->clips, xwin->num_clips);
+	  xwin->x, xwin->y, xwin->w, xwin->h, xwin->clips, xwin->num_clips);
 
       if (!xwin->ov_visible)
-        gst_xwin_set_overlay (xwin, TRUE);
+	gst_xwin_set_overlay (xwin, TRUE);
 
       g_mutex_lock (xwin->main_lock);
 
       if (xwin->ov_refresh_id)
-        g_source_remove (xwin->ov_refresh_id);
+	g_source_remove (xwin->ov_refresh_id);
       xwin->ov_refresh_id =
-	  g_timeout_add (200, (GSourceFunc) gst_xwin_refresh,
-			 (gpointer) xwin);
+	  g_timeout_add (200, (GSourceFunc) gst_xwin_refresh, (gpointer) xwin);
 
       xwin->ov_conf = FALSE;
 
@@ -345,10 +331,9 @@ gst_xwin_window (GstXWindowListener *xwin)
       g_mutex_lock (xwin->main_lock);
 
       if (xwin->ov_refresh_id)
-        g_source_remove (xwin->ov_refresh_id);
+	g_source_remove (xwin->ov_refresh_id);
       xwin->ov_refresh_id =
-	  g_timeout_add (200, (GSourceFunc) gst_xwin_refresh,
-			 (gpointer) xwin);
+	  g_timeout_add (200, (GSourceFunc) gst_xwin_refresh, (gpointer) xwin);
 
       xwin->ov_conf = FALSE;
 
@@ -363,31 +348,28 @@ gst_xwin_window (GstXWindowListener *xwin)
 }
 
 static void
-gst_xwin_configure (GstXWindowListener *xwin)
+gst_xwin_configure (GstXWindowListener * xwin)
 {
 #if 0
   /* This part is disabled, because the idle task will be done
    * in the main thread instead of here. */
   if (!xwin->ov_conf_id)
     xwin->ov_conf_id =
-	g_idle_add ((GSourceFunc) gst_rec_xoverlay_window,
-		    (gpointer) xwin);
+	g_idle_add ((GSourceFunc) gst_rec_xoverlay_window, (gpointer) xwin);
 #endif
 
   gst_xwin_window ((gpointer) xwin);
 }
 
 static void
-gst_xwin_resize (GstXWindowListener *xwin)
+gst_xwin_resize (GstXWindowListener * xwin)
 {
   Drawable drawable, parent, *kids, root;
   guint numkids;
   XWindowAttributes attr;
 
-  XGetWindowAttributes (xwin->display,
-			xwin->xwindow_id, &attr);
-  XMoveResizeWindow (xwin->display, xwin->child,
-		     0, 0, attr.width, attr.height);
+  XGetWindowAttributes (xwin->display, xwin->xwindow_id, &attr);
+  XMoveResizeWindow (xwin->display, xwin->child, 0, 0, attr.width, attr.height);
 
   /* set the video window - the first clip is our own window */
   xwin->x = 0;
@@ -397,10 +379,9 @@ gst_xwin_resize (GstXWindowListener *xwin)
 
   drawable = xwin->child;
   while (1) {
-    XQueryTree (xwin->display, drawable,
-		&root, &parent, &kids, &numkids);
+    XQueryTree (xwin->display, drawable, &root, &parent, &kids, &numkids);
     if (numkids)
-      XFree(kids);
+      XFree (kids);
     drawable = parent;
     XGetWindowAttributes (xwin->display, drawable, &attr);
     xwin->x += attr.x;
@@ -416,7 +397,7 @@ gst_xwin_resize (GstXWindowListener *xwin)
 }
 
 static void
-gst_xwin_init_window (GstXWindowListener *xwin)
+gst_xwin_init_window (GstXWindowListener * xwin)
 {
   XWindowAttributes attr;
 
@@ -438,20 +419,16 @@ gst_xwin_init_window (GstXWindowListener *xwin)
   xwin->display = XOpenDisplay (xwin->display_name);
 
   /* window */
-  XGetWindowAttributes (xwin->display,
-			xwin->xwindow_id, &attr);
+  XGetWindowAttributes (xwin->display, xwin->xwindow_id, &attr);
   xwin->child = XCreateSimpleWindow (xwin->display,
-				     xwin->xwindow_id, 0, 0,
-				     attr.width, attr.height, 0, 0, 0);
+      xwin->xwindow_id, 0, 0, attr.width, attr.height, 0, 0, 0);
 
   /* listen to certain X events */
-  XSelectInput (xwin->display, xwin->xwindow_id,
-		StructureNotifyMask);
+  XSelectInput (xwin->display, xwin->xwindow_id, StructureNotifyMask);
   XSelectInput (xwin->display, xwin->child,
-		VisibilityChangeMask | StructureNotifyMask);
+      VisibilityChangeMask | StructureNotifyMask);
   XSelectInput (xwin->display, DefaultRootWindow (xwin->display),
-		VisibilityChangeMask | StructureNotifyMask |
-		SubstructureNotifyMask);
+      VisibilityChangeMask | StructureNotifyMask | SubstructureNotifyMask);
 
   /* show */
   XMapWindow (xwin->display, xwin->child);
@@ -460,7 +437,7 @@ gst_xwin_init_window (GstXWindowListener *xwin)
 }
 
 static void
-gst_xwin_exit_window (GstXWindowListener *xwin)
+gst_xwin_exit_window (GstXWindowListener * xwin)
 {
   /* disable overlay */
   gst_xwin_set_overlay (xwin, FALSE);
@@ -496,89 +473,89 @@ gst_xwin_thread (gpointer data)
       break;
 
     if ((event.type == ConfigureNotify &&
-         event.xconfigure.window == xwin->xwindow_id) ||
-        (event.type == MapNotify &&
-         event.xmap.window == xwin->xwindow_id) ||
-        (event.type == UnmapNotify &&
-         event.xunmap.window == xwin->xwindow_id)) {
+	    event.xconfigure.window == xwin->xwindow_id) ||
+	(event.type == MapNotify &&
+	    event.xmap.window == xwin->xwindow_id) ||
+	(event.type == UnmapNotify &&
+	    event.xunmap.window == xwin->xwindow_id)) {
       /* the 'parent' window, i.e. the widget provided by client */
       switch (event.type) {
-        case MapNotify:
-          xwin->ov_map = TRUE;
-          xwin->ov_conf = TRUE;
-          gst_xwin_configure (xwin);
-          break;
+	case MapNotify:
+	  xwin->ov_map = TRUE;
+	  xwin->ov_conf = TRUE;
+	  gst_xwin_configure (xwin);
+	  break;
 
-        case UnmapNotify:
-          xwin->ov_map = FALSE;
-          xwin->ov_conf = TRUE;
-          gst_xwin_configure (xwin);
-          break;
+	case UnmapNotify:
+	  xwin->ov_map = FALSE;
+	  xwin->ov_conf = TRUE;
+	  gst_xwin_configure (xwin);
+	  break;
 
-        case ConfigureNotify:
-          gst_xwin_resize (xwin);
-          break;
+	case ConfigureNotify:
+	  gst_xwin_resize (xwin);
+	  break;
 
-        default:
-          /* nothing */
-          break;
+	default:
+	  /* nothing */
+	  break;
       }
     } else if (event.xany.window == xwin->child) {
       /* our own private window */
       switch (event.type) {
-        case Expose:
-          if (!event.xexpose.count) {
-            if (xwin->ov_refresh) {
-              xwin->ov_refresh = FALSE;
-            } else {
-              xwin->ov_conf = TRUE;
-              gst_xwin_configure (xwin);
-            }
-          }
-          break;
+	case Expose:
+	  if (!event.xexpose.count) {
+	    if (xwin->ov_refresh) {
+	      xwin->ov_refresh = FALSE;
+	    } else {
+	      xwin->ov_conf = TRUE;
+	      gst_xwin_configure (xwin);
+	    }
+	  }
+	  break;
 
-        case VisibilityNotify:
-          xwin->ov_visibility = event.xvisibility.state;
-          if (xwin->ov_refresh) {
-            if (event.xvisibility.state != VisibilityFullyObscured)
-              xwin->ov_refresh = FALSE;
-          } else {
-            xwin->ov_conf = TRUE;
-            gst_xwin_configure (xwin);
-          }
-          break;
+	case VisibilityNotify:
+	  xwin->ov_visibility = event.xvisibility.state;
+	  if (xwin->ov_refresh) {
+	    if (event.xvisibility.state != VisibilityFullyObscured)
+	      xwin->ov_refresh = FALSE;
+	  } else {
+	    xwin->ov_conf = TRUE;
+	    gst_xwin_configure (xwin);
+	  }
+	  break;
 
-        default:
-          /* nothing */
-          break;
+	default:
+	  /* nothing */
+	  break;
       }
     } else {
       /* root window */
       switch (event.type) {
-        case MapNotify:
-        case UnmapNotify:
-          /* are we still visible? */
-          if (!xwin->ov_refresh) {
-            XWindowAttributes attr;
-            gboolean on;
-            XGetWindowAttributes (xwin->display,
-				  xwin->xwindow_id, &attr);
-            on = (attr.map_state == IsViewable);
-            xwin->ov_wmmap = on;
-            xwin->ov_conf = TRUE;
-            gst_xwin_configure (xwin);
-          }
-          break;
+	case MapNotify:
+	case UnmapNotify:
+	  /* are we still visible? */
+	  if (!xwin->ov_refresh) {
+	    XWindowAttributes attr;
+	    gboolean on;
 
-        case ConfigureNotify:
-          if (!xwin->ov_refresh) {
-            gst_xwin_resize (xwin);
-          }
-          break;
+	    XGetWindowAttributes (xwin->display, xwin->xwindow_id, &attr);
+	    on = (attr.map_state == IsViewable);
+	    xwin->ov_wmmap = on;
+	    xwin->ov_conf = TRUE;
+	    gst_xwin_configure (xwin);
+	  }
+	  break;
 
-        default:
-          /* nothing */
-          break;
+	case ConfigureNotify:
+	  if (!xwin->ov_refresh) {
+	    gst_xwin_resize (xwin);
+	  }
+	  break;
+
+	default:
+	  /* nothing */
+	  break;
       }
     }
   }
@@ -592,7 +569,7 @@ gst_xwin_thread (gpointer data)
 }
 
 static void
-gst_xwin_start (GstXWindowListener *xwin)
+gst_xwin_start (GstXWindowListener * xwin)
 {
   DEBUG ("Starting XWindow listener");
 
@@ -603,15 +580,13 @@ gst_xwin_start (GstXWindowListener *xwin)
    * event handler after we've stopped it */
   xwin->main_lock = g_mutex_new ();
   xwin->main_display = XOpenDisplay (xwin->display_name);
-  xwin->thread = g_thread_create (gst_xwin_thread,
-					(gpointer) xwin,
-					TRUE, NULL);
+  xwin->thread = g_thread_create (gst_xwin_thread, (gpointer) xwin, TRUE, NULL);
 
   DEBUG ("Started X-overlay");
 }
 
 static void
-gst_xwin_stop (GstXWindowListener *xwin)
+gst_xwin_stop (GstXWindowListener * xwin)
 {
   DEBUG ("Stopping XWindow listener");
 
@@ -637,19 +612,13 @@ gst_xwin_stop (GstXWindowListener *xwin)
  */
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "xwindowlistener",
-  "X11-based XWindow event/motion listener",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "xwindowlistener",
+    "X11-based XWindow event/motion listener",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

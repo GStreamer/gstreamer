@@ -26,21 +26,20 @@
 #include "paint.h"
 
 void
-gst_smpte_paint_vbox (guint32 *dest, gint stride, 
-		      gint x0, gint y0, gint c0, 
-		      gint x1, gint y1, gint c1)
+gst_smpte_paint_vbox (guint32 * dest, gint stride,
+    gint x0, gint y0, gint c0, gint x1, gint y1, gint c1)
 {
   gint i, j;
   gint width, height;
 
   width = x1 - x0;
   height = y1 - y0;
-  
+
   g_assert (width > 0);
   g_assert (height > 0);
 
   dest = dest + y0 * stride + x0;
-        
+
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
       dest[j] = (c1 * j + c0 * (width - j)) / width;
@@ -50,16 +49,15 @@ gst_smpte_paint_vbox (guint32 *dest, gint stride,
 }
 
 void
-gst_smpte_paint_hbox (guint32 *dest, gint stride, 
-		      gint x0, gint y0, gint c0, 
-		      gint x1, gint y1, gint c1)
+gst_smpte_paint_hbox (guint32 * dest, gint stride,
+    gint x0, gint y0, gint c0, gint x1, gint y1, gint c1)
 {
   gint i, j;
   gint width, height;
 
   width = x1 - x0;
   height = y1 - y0;
-  
+
   g_assert (width > 0);
   g_assert (height > 0);
 
@@ -68,7 +66,8 @@ gst_smpte_paint_hbox (guint32 *dest, gint stride,
   dest = dest + y0 * stride + x0;
 
   for (i = 0; i < height; i++) {
-    guint32 value  = (c1 * i + c0 * (height - i)) / height;
+    guint32 value = (c1 * i + c0 * (height - i)) / height;
+
     for (j = 0; j < width; j++) {
       dest[j] = value;
     }
@@ -148,29 +147,35 @@ G_STMT_START { 			\
 } G_STMT_END
 
 void
-gst_smpte_paint_triangle_linear (guint32 *dest, gint stride,
-				 gint x0, gint y0, gint c0,
-				 gint x1, gint y1, gint c1, gint x2, gint y2, gint c2)
+gst_smpte_paint_triangle_linear (guint32 * dest, gint stride,
+    gint x0, gint y0, gint c0,
+    gint x1, gint y1, gint c1, gint x2, gint y2, gint c2)
 {
   gint sdxl, sdyl, sdcl, dxlabs, dylabs, dclabs, xrl, yrl, crl, pxl, pyl, pcl;
   gint sdxr, sdyr, sdcr, dxrabs, dyrabs, dcrabs, xrr, yrr, crr, pxr, pyr, pcr;
   gint i, j, k, seg_start, seg_end;
 
-  if (y0 > y1) { SWAP_INT (x0, x1); SWAP_INT (y0, y1); SWAP_INT (c0, c1); }
-  if (y0 > y2) { SWAP_INT (x0, x2); SWAP_INT (y0, y2); SWAP_INT (c0, c2); }
-  if (y1 > y2) { SWAP_INT (x1, x2); SWAP_INT (y1, y2); SWAP_INT (c1, c2); }
-  
-  PREPARE_3D_LINE (x0,y0,c0,x2,y2,c2,
-		   dxlabs,dylabs,dclabs,
-		   sdxl, sdyl,sdcl,
-		   xrl,yrl,crl,
-		   pxl,pyl,pcl);
+  if (y0 > y1) {
+    SWAP_INT (x0, x1);
+    SWAP_INT (y0, y1);
+    SWAP_INT (c0, c1);
+  }
+  if (y0 > y2) {
+    SWAP_INT (x0, x2);
+    SWAP_INT (y0, y2);
+    SWAP_INT (c0, c2);
+  }
+  if (y1 > y2) {
+    SWAP_INT (x1, x2);
+    SWAP_INT (y1, y2);
+    SWAP_INT (c1, c2);
+  }
 
-  PREPARE_3D_LINE (x0,y0,c0,x1,y1,c1,
-		   dxrabs,dyrabs,dcrabs,
-		   sdxr, sdyr,sdcr,
-		   xrr,yrr,crr,
-		   pxr,pyr,pcr);
+  PREPARE_3D_LINE (x0, y0, c0, x2, y2, c2,
+      dxlabs, dylabs, dclabs, sdxl, sdyl, sdcl, xrl, yrl, crl, pxl, pyl, pcl);
+
+  PREPARE_3D_LINE (x0, y0, c0, x1, y1, c1,
+      dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr, xrr, yrr, crr, pxr, pyr, pcr);
 
   dest = dest + stride * y0;
   seg_start = y0;
@@ -183,37 +188,32 @@ gst_smpte_paint_triangle_linear (guint32 *dest, gint stride,
       gint sign = SIGN (e - s);
 
       e += sign;
-      for (j = s; j != e; j+=sign) {
-       dest[j] = (ec * (j - s) + sc * (e - j)) / (e - s);
+      for (j = s; j != e; j += sign) {
+	dest[j] = (ec * (j - s) + sc * (e - j)) / (e - s);
       }
 
       while (pyr == i) {
-        STEP_3D_LINE (dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr, 
-	              xrr, yrr, crr, pxr, pyr, pcr);
+	STEP_3D_LINE (dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr,
+	    xrr, yrr, crr, pxr, pyr, pcr);
       }
       while (pyl == i) {
-        STEP_3D_LINE (dxlabs, dylabs, dclabs, sdxl, sdyl, sdcl, 
-	              xrl, yrl, crl, pxl, pyl, pcl);
+	STEP_3D_LINE (dxlabs, dylabs, dclabs, sdxl, sdyl, sdcl,
+	    xrl, yrl, crl, pxl, pyl, pcl);
       }
       dest += stride;
     }
 
-    PREPARE_3D_LINE (x1,y1,c1,x2,y2,c2,
-		     dxrabs,dyrabs,dcrabs,
-		     sdxr, sdyr,sdcr,
-		     xrr,yrr,crr,
-		     pxr,pyr,pcr);
+    PREPARE_3D_LINE (x1, y1, c1, x2, y2, c2,
+	dxrabs, dyrabs, dcrabs, sdxr, sdyr, sdcr, xrr, yrr, crr, pxr, pyr, pcr);
 
     seg_start = y1;
     seg_end = y2;
   }
 }
 
-static void 
-draw_bresenham_line (guint32 *dest, gint stride, 
-		     gint x0, gint y0, 
-		     gint x1, gint y1, 
-		     guint32 col)
+static void
+draw_bresenham_line (guint32 * dest, gint stride,
+    gint x0, gint y0, gint x1, gint y1, guint32 col)
 {
   gint dx = abs (x1 - x0);
   gint dy = abs (y1 - y0);
@@ -224,13 +224,12 @@ draw_bresenham_line (guint32 *dest, gint stride,
 
   x_incr = SIGN (x1 - x0);
   y_incr = SIGN (y1 - y0) * stride;
-	
-  if (dx >= dy)	{           
+
+  if (dx >= dy) {
     dpr = dy << 1;
     i = dx;
     indep = x_incr;
-  }
-  else {
+  } else {
     dpr = dx << 1;
     i = dy;
     indep = y_incr;
@@ -242,7 +241,7 @@ draw_bresenham_line (guint32 *dest, gint stride,
   for (; i >= 0; i--) {
     *dest = col;
 
-    if (P > 0) { 
+    if (P > 0) {
       dest += x_incr;
       dest += y_incr;
       P += dpru;
@@ -254,10 +253,9 @@ draw_bresenham_line (guint32 *dest, gint stride,
 }
 
 void
-gst_smpte_paint_triangle_clock (guint32 *dest, gint stride,
-				gint x0, gint y0, gint c0,
-				gint x1, gint y1, gint c1, 
-				gint x2, gint y2, gint c2)
+gst_smpte_paint_triangle_clock (guint32 * dest, gint stride,
+    gint x0, gint y0, gint c0,
+    gint x1, gint y1, gint c1, gint x2, gint y2, gint c2)
 {
   gint i;
   gint sign;
@@ -265,11 +263,11 @@ gst_smpte_paint_triangle_clock (guint32 *dest, gint stride,
   gfloat len1;
 
   angle_s = 0.0;
-  angle_e = acos (((x1-x0) * (x2-x0) + (y1-y0) * (y2-y0))/
-		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
-		     sqrt ((x2-x0) * (x2-x0) + (y2-y0) * (y2-y0))));
+  angle_e = acos (((x1 - x0) * (x2 - x0) + (y1 - y0) * (y2 - y0)) /
+      (sqrt ((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) *
+	  sqrt ((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0))));
 
-  len1 = sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0));
+  len1 = sqrt ((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
 
   if (x1 == x2) {
     sign = SIGN (y2 - y1);
@@ -278,65 +276,57 @@ gst_smpte_paint_triangle_clock (guint32 *dest, gint stride,
       if (y1 == i)
 	angle = 0;
       else
-        angle = acos (((x1-x0) * (x2-x0) + (y1-y0) * (i-y0)) / 
-			(len1 * sqrt ((x1-x0) * (x1-x0) + (i-y0) * (i-y0)))) / angle_e;
+	angle = acos (((x1 - x0) * (x2 - x0) + (y1 - y0) * (i - y0)) /
+	    (len1 * sqrt ((x1 - x0) * (x1 - x0) + (i - y0) * (i -
+			y0)))) / angle_e;
 
       draw_bresenham_line (dest, stride,
-		    x0, y0, x1, i, 
-		    (c2 * angle + c1 * (1.0-angle)));
+	  x0, y0, x1, i, (c2 * angle + c1 * (1.0 - angle)));
     }
-  }
-  else if (y1 == y2) {
+  } else if (y1 == y2) {
     sign = SIGN (x2 - x1);
 
     for (i = x1; i != (x2 + sign); i += sign) {
       if (x1 == i)
 	angle = 0;
       else
-        angle = acos (((x1-x0) * (i-x0) + (y1-y0) * (y2-y0)) / 
-			(len1 * sqrt ((i-x0) * (i-x0) + (y2-y0) * (y2-y0)))) / angle_e;
+	angle = acos (((x1 - x0) * (i - x0) + (y1 - y0) * (y2 - y0)) /
+	    (len1 * sqrt ((i - x0) * (i - x0) + (y2 - y0) * (y2 -
+			y0)))) / angle_e;
 
       draw_bresenham_line (dest, stride,
-		    x0, y0, i, y1, 
-		    (c2 * angle + c1 * (1.0-angle)));
+	  x0, y0, i, y1, (c2 * angle + c1 * (1.0 - angle)));
     }
   }
 }
 
 void
-gst_smpte_paint_box_clock (guint32 *dest, gint stride,
-			   gint x0, gint y0, gint c0,
-			   gint x1, gint y1, gint c1, 
-			   gint x2, gint y2, gint c2)
+gst_smpte_paint_box_clock (guint32 * dest, gint stride,
+    gint x0, gint y0, gint c0,
+    gint x1, gint y1, gint c1, gint x2, gint y2, gint c2)
 {
   gfloat angle_m, col_m;
   gint xv, yv;
 
-  if (x1 == x0) { 
+  if (x1 == x0) {
     xv = x2;
     yv = y1;
   } else if (y1 == y0) {
     xv = x1;
     yv = y2;
-  }
-  else {
+  } else {
     g_warning ("paint box clock: not supported");
     return;
   }
 
-  angle_m = 2 * acos (((x1-x0) * (xv-x0) + (y1-y0) * (yv-y0))/
-		    (sqrt ((x1-x0) * (x1-x0) + (y1-y0) * (y1-y0)) * 
-		     sqrt ((xv-x0) * (xv-x0) + (yv-y0) * (yv-y0)))) / M_PI;
-    
-  col_m = c2 * angle_m + c1 * (1.0-angle_m);
+  angle_m = 2 * acos (((x1 - x0) * (xv - x0) + (y1 - y0) * (yv - y0)) /
+      (sqrt ((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) *
+	  sqrt ((xv - x0) * (xv - x0) + (yv - y0) * (yv - y0)))) / M_PI;
+
+  col_m = c2 * angle_m + c1 * (1.0 - angle_m);
 
   gst_smpte_paint_triangle_clock (dest, stride,
-		                  x0, y0, c0,
-		                  x1, y1, c1,
-		                  xv, yv, col_m);
+      x0, y0, c0, x1, y1, c1, xv, yv, col_m);
   gst_smpte_paint_triangle_clock (dest, stride,
-		                  x0, y0, c0,
-		                  xv, yv, col_m,
-		                  x2, y2, c2);
+      x0, y0, c0, xv, yv, col_m, x2, y2, c2);
 }
-

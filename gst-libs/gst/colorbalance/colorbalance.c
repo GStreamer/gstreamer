@@ -27,12 +27,13 @@
 #include "colorbalance.h"
 #include "colorbalance-marshal.h"
 
-enum {
+enum
+{
   VALUE_CHANGED,
   LAST_SIGNAL
 };
 
-static void 	gst_color_balance_class_init	(GstColorBalanceClass *klass);
+static void gst_color_balance_class_init (GstColorBalanceClass * klass);
 
 static guint gst_color_balance_signals[LAST_SIGNAL] = { 0 };
 
@@ -55,35 +56,33 @@ gst_color_balance_get_type (void)
     };
 
     gst_color_balance_type = g_type_register_static (G_TYPE_INTERFACE,
-						     "GstColorBalance",
-						     &gst_color_balance_info, 0);
+	"GstColorBalance", &gst_color_balance_info, 0);
     g_type_interface_add_prerequisite (gst_color_balance_type,
-				       GST_TYPE_IMPLEMENTS_INTERFACE);
+	GST_TYPE_IMPLEMENTS_INTERFACE);
   }
 
   return gst_color_balance_type;
 }
 
 static void
-gst_color_balance_class_init (GstColorBalanceClass *klass)
+gst_color_balance_class_init (GstColorBalanceClass * klass)
 {
   static gboolean initialized = FALSE;
-  
+
   if (!initialized) {
     gst_color_balance_signals[VALUE_CHANGED] =
-      g_signal_new ("value-changed",
-		    GST_TYPE_COLOR_BALANCE, G_SIGNAL_RUN_LAST,
-		    G_STRUCT_OFFSET (GstColorBalanceClass, value_changed),
-		    NULL, NULL,
-		    gst_color_balance_marshal_VOID__OBJECT_INT,
-		    G_TYPE_NONE, 2,
-		    GST_TYPE_COLOR_BALANCE_CHANNEL, G_TYPE_INT);
-      
+	g_signal_new ("value-changed",
+	GST_TYPE_COLOR_BALANCE, G_SIGNAL_RUN_LAST,
+	G_STRUCT_OFFSET (GstColorBalanceClass, value_changed),
+	NULL, NULL,
+	gst_color_balance_marshal_VOID__OBJECT_INT,
+	G_TYPE_NONE, 2, GST_TYPE_COLOR_BALANCE_CHANNEL, G_TYPE_INT);
+
     initialized = TRUE;
   }
 
   klass->balance_type = GST_COLOR_BALANCE_SOFTWARE;
-  
+
   /* default virtual functions */
   klass->list_channels = NULL;
   klass->set_value = NULL;
@@ -91,7 +90,7 @@ gst_color_balance_class_init (GstColorBalanceClass *klass)
 }
 
 const GList *
-gst_color_balance_list_channels	(GstColorBalance *balance)
+gst_color_balance_list_channels (GstColorBalance * balance)
 {
   GstColorBalanceClass *klass = GST_COLOR_BALANCE_GET_CLASS (balance);
 
@@ -103,9 +102,8 @@ gst_color_balance_list_channels	(GstColorBalance *balance)
 }
 
 void
-gst_color_balance_set_value (GstColorBalance        *balance,
-			     GstColorBalanceChannel *channel,
-			     gint                    value)
+gst_color_balance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
 {
   GstColorBalanceClass *klass = GST_COLOR_BALANCE_GET_CLASS (balance);
 
@@ -115,8 +113,8 @@ gst_color_balance_set_value (GstColorBalance        *balance,
 }
 
 gint
-gst_color_balance_get_value (GstColorBalance        *balance,
-			     GstColorBalanceChannel *channel)
+gst_color_balance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel)
 {
   GstColorBalanceClass *klass = GST_COLOR_BALANCE_GET_CLASS (balance);
 
@@ -128,13 +126,11 @@ gst_color_balance_get_value (GstColorBalance        *balance,
 }
 
 void
-gst_color_balance_value_changed (GstColorBalance        *balance,
-				 GstColorBalanceChannel *channel,
-				 gint                    value)
+gst_color_balance_value_changed (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
 {
   g_signal_emit (G_OBJECT (balance),
-                 gst_color_balance_signals[VALUE_CHANGED],
-		 0, channel, value);
+      gst_color_balance_signals[VALUE_CHANGED], 0, channel, value);
 
   g_signal_emit_by_name (G_OBJECT (channel), "value_changed", value);
 }

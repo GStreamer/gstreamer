@@ -34,23 +34,26 @@ GstElementDetails gst_gsmenc_details = {
 };
 
 /* GSMEnc signals and args */
-enum {
+enum
+{
   FRAME_ENCODED,
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static void                     gst_gsmenc_base_init (gpointer g_class);
-static void			gst_gsmenc_class_init	(GstGSMEnc *klass);
-static void			gst_gsmenc_init		(GstGSMEnc *gsmenc);
+static void gst_gsmenc_base_init (gpointer g_class);
+static void gst_gsmenc_class_init (GstGSMEnc * klass);
+static void gst_gsmenc_init (GstGSMEnc * gsmenc);
 
-static void			gst_gsmenc_chain	(GstPad *pad,GstData *_data);
-static GstPadLinkReturn	gst_gsmenc_sinkconnect 	(GstPad *pad, const GstCaps *caps);
+static void gst_gsmenc_chain (GstPad * pad, GstData * _data);
+static GstPadLinkReturn gst_gsmenc_sinkconnect (GstPad * pad,
+    const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_gsmenc_signals[LAST_SIGNAL] = { 0 };
@@ -63,7 +66,7 @@ gst_gsmenc_get_type (void)
   if (!gsmenc_type) {
     static const GTypeInfo gsmenc_info = {
       sizeof (GstGSMEncClass),
-      gst_gsmenc_base_init, 
+      gst_gsmenc_base_init,
       NULL,
       (GClassInitFunc) gst_gsmenc_class_init,
       NULL,
@@ -72,38 +75,31 @@ gst_gsmenc_get_type (void)
       0,
       (GInstanceInitFunc) gst_gsmenc_init,
     };
-    gsmenc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstGSMEnc", &gsmenc_info, 0);
+    gsmenc_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstGSMEnc", &gsmenc_info, 0);
   }
   return gsmenc_type;
 }
 
 static GstStaticPadTemplate gsmenc_src_template =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (
-    "audio/x-gsm, "
-      "rate = (int) [ 1000, 48000 ], "
-      "channels = (int) 1"
-  )
-);
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-gsm, "
+	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+    );
 
 static GstStaticPadTemplate gsmenc_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (
-    "audio/x-raw-int, "
-      "endianness = (int) BYTE_ORDER, "
-      "signed = (boolean) true, "
-      "width = (int) 16, "
-      "depth = (int) 16, "
-      "rate = (int) [ 1000, 48000 ], "
-      "channels = (int) 1"
-  )
-);
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"endianness = (int) BYTE_ORDER, "
+	"signed = (boolean) true, "
+	"width = (int) 16, "
+	"depth = (int) 16, "
+	"rate = (int) [ 1000, 48000 ], " "channels = (int) 1")
+    );
 
 static void
 gst_gsmenc_base_init (gpointer g_class)
@@ -116,37 +112,39 @@ gst_gsmenc_base_init (gpointer g_class)
       gst_static_pad_template_get (&gsmenc_src_template));
   gst_element_class_set_details (element_class, &gst_gsmenc_details);
 }
-  
+
 static void
-gst_gsmenc_class_init (GstGSMEnc *klass)
+gst_gsmenc_class_init (GstGSMEnc * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstelement_class = (GstElementClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gst_gsmenc_signals[FRAME_ENCODED] =
-    g_signal_new ("frame-encoded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET (GstGSMEncClass, frame_encoded), NULL, NULL,
-                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      g_signal_new ("frame-encoded", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstGSMEncClass, frame_encoded), NULL,
+      NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 
 static void
-gst_gsmenc_init (GstGSMEnc *gsmenc)
+gst_gsmenc_init (GstGSMEnc * gsmenc)
 {
   /* create the sink and src pads */
-  gsmenc->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gsmenc_sink_template), "sink");
+  gsmenc->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gsmenc_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->sinkpad);
   gst_pad_set_chain_function (gsmenc->sinkpad, gst_gsmenc_chain);
   gst_pad_set_link_function (gsmenc->sinkpad, gst_gsmenc_sinkconnect);
 
-  gsmenc->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&gsmenc_src_template), "src");
+  gsmenc->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&gsmenc_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->srcpad);
 
   gsmenc->state = gsm_create ();
@@ -156,7 +154,7 @@ gst_gsmenc_init (GstGSMEnc *gsmenc)
 }
 
 static GstPadLinkReturn
-gst_gsmenc_sinkconnect (GstPad *pad, const GstCaps *caps)
+gst_gsmenc_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
   GstGSMEnc *gsmenc;
   GstStructure *structure;
@@ -164,13 +162,11 @@ gst_gsmenc_sinkconnect (GstPad *pad, const GstCaps *caps)
   gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int  (structure, "rate", &gsmenc->rate);
+  gst_structure_get_int (structure, "rate", &gsmenc->rate);
   if (gst_pad_try_set_caps (gsmenc->srcpad,
-        gst_caps_new_simple("audio/x-gsm",
-          "rate",     G_TYPE_INT, gsmenc->rate,
-          "channels", G_TYPE_INT, 1,
-          NULL)) > 0)
-  {
+	  gst_caps_new_simple ("audio/x-gsm",
+	      "rate", G_TYPE_INT, gsmenc->rate,
+	      "channels", G_TYPE_INT, 1, NULL)) > 0) {
     return GST_PAD_LINK_OK;
   }
   return GST_PAD_LINK_REFUSED;
@@ -178,7 +174,7 @@ gst_gsmenc_sinkconnect (GstPad *pad, const GstCaps *caps)
 }
 
 static void
-gst_gsmenc_chain (GstPad *pad, GstData *_data)
+gst_gsmenc_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstGSMEnc *gsmenc;
@@ -190,26 +186,28 @@ gst_gsmenc_chain (GstPad *pad, GstData *_data)
   g_return_if_fail (buf != NULL);
 
   gsmenc = GST_GSMENC (GST_OBJECT_PARENT (pad));
-	      
-  data = (gsm_signal*) GST_BUFFER_DATA (buf);
+
+  data = (gsm_signal *) GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf) / sizeof (gsm_signal);
 
   if (gsmenc->bufsize && (gsmenc->bufsize + size >= 160)) {
     GstBuffer *outbuf;
 
-    memcpy (gsmenc->buffer + gsmenc->bufsize, data, (160 - gsmenc->bufsize) * sizeof (gsm_signal));
+    memcpy (gsmenc->buffer + gsmenc->bufsize, data,
+	(160 - gsmenc->bufsize) * sizeof (gsm_signal));
 
     outbuf = gst_buffer_new ();
     GST_BUFFER_DATA (outbuf) = g_malloc (33 * sizeof (gsm_byte));
     GST_BUFFER_SIZE (outbuf) = 33 * sizeof (gsm_byte);
 
-    gsm_encode (gsmenc->state, gsmenc->buffer, (gsm_byte *) GST_BUFFER_DATA (outbuf));
+    gsm_encode (gsmenc->state, gsmenc->buffer,
+	(gsm_byte *) GST_BUFFER_DATA (outbuf));
 
     GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
     gst_pad_push (gsmenc->srcpad, GST_DATA (outbuf));
     gsmenc->next_ts += (160.0 / gsmenc->rate) * 1000000;
 
-    size -= (160 - gsmenc->bufsize); 
+    size -= (160 - gsmenc->bufsize);
     data += (160 - gsmenc->bufsize);
     gsmenc->bufsize = 0;
   }
@@ -236,5 +234,5 @@ gst_gsmenc_chain (GstPad *pad, GstData *_data)
     gsmenc->bufsize += size;
   }
 
-  gst_buffer_unref(buf);
+  gst_buffer_unref (buf);
 }

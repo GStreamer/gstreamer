@@ -25,25 +25,19 @@
 #include <gstrtjpegdec.h>
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "rtjpegenc",
-			     GST_RANK_NONE, GST_TYPE_RTJPEGENC) ||
+	  GST_RANK_NONE, GST_TYPE_RTJPEGENC) ||
       !gst_element_register (plugin, "rtjpegdec",
-			     GST_RANK_NONE, GST_TYPE_RTJPEGDEC))
+	  GST_RANK_NONE, GST_TYPE_RTJPEGDEC))
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "rtjpeg",
-  "Justin Schoeman's RTjpeg codec",
-  plugin_init,
-  VERSION,
-  "GPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "rtjpeg",
+    "Justin Schoeman's RTjpeg codec",
+    plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN)

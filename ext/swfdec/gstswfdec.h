@@ -26,8 +26,9 @@
 #include <swfdec.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_SWFDEC \
@@ -41,47 +42,49 @@ extern "C" {
 #define GST_IS_SWFDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SWFDEC))
 
-typedef struct _GstSwfdec GstSwfdec;
-typedef struct _GstSwfdecClass GstSwfdecClass;
+  typedef struct _GstSwfdec GstSwfdec;
+  typedef struct _GstSwfdecClass GstSwfdecClass;
 
-struct _GstSwfdec {
-  GstElement element;
+  struct _GstSwfdec
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad;
-  GstPad *videopad;
-  GstPad *audiopad;
+    /* pads */
+    GstPad *sinkpad;
+    GstPad *videopad;
+    GstPad *audiopad;
 
-  SwfdecDecoder *state;
-  gboolean closed;
+    SwfdecDecoder *state;
+    gboolean closed;
 
-  /* the timestamp of the next frame */
-  gboolean first;
-  gboolean have_format;
+    /* the timestamp of the next frame */
+    gboolean first;
+    gboolean have_format;
 
-  double rate;
-  gint64 timestamp;
-  gint64 interval;
-  double frame_rate;
+    double rate;
+    gint64 timestamp;
+    gint64 interval;
+    double frame_rate;
 
-  /* video state */
-  gint format;
-  gint width;
-  gint height;
-  gint64 total_frames;
+    /* video state */
+    gint format;
+    gint width;
+    gint height;
+    gint64 total_frames;
 
-};
+  };
 
-struct _GstSwfdecClass {
-  GstElementClass parent_class;
-};
+  struct _GstSwfdecClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_swfdec_get_type(void);
+  GType gst_swfdec_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_SWFDEC_H__ */
+#endif				/* __GST_SWFDEC_H__ */

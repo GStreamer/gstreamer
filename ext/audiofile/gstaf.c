@@ -25,10 +25,10 @@
 #include "gstafsink.h"
 #include "gstafparse.h"
 
-gboolean gst_aftypes_plugin_init (GstPlugin *plugin);
+gboolean gst_aftypes_plugin_init (GstPlugin * plugin);
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
@@ -40,13 +40,7 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gstaf",
-  "Audiofile plugin",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gstaf",
+    "Audiofile plugin", plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

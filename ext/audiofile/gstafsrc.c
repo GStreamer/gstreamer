@@ -43,34 +43,33 @@ static GstElementDetails afsrc_details = {
 
 
 /* AFSrc signals and args */
-enum {
+enum
+{
   /* FILL ME */
   SIGNAL_HANDOFF,
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_LOCATION
 };
 
 /* added a src factory function to force audio/raw MIME type */
 /* I think the caps can be broader, we need to change that somehow */
-static GstStaticPadTemplate afsrc_src_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-raw-int, "
-    "rate = (int) [ 1, MAX ], "
-    "channels = (int) [ 1, MAX ], "
-    "endianness = (int) BYTE_ORDER, "
-    "width = (int) { 8, 16 }, "
-    "depth = (int) { 8, 16 }, "
-    "signed = (boolean) { true, false }, "
-    "buffer-frames = (int) [ 1, MAX ]"
-  )
-);
+static GstStaticPadTemplate afsrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"rate = (int) [ 1, MAX ], "
+	"channels = (int) [ 1, MAX ], "
+	"endianness = (int) BYTE_ORDER, "
+	"width = (int) { 8, 16 }, "
+	"depth = (int) { 8, 16 }, "
+	"signed = (boolean) { true, false }, "
+	"buffer-frames = (int) [ 1, MAX ]")
+    );
 
 /* we use an enum for the output type arg */
 
@@ -98,27 +97,27 @@ gst_afsrc_types_get_type (void)
   return afsrc_types_type;
 }
 */
-static void             gst_afsrc_base_init             (gpointer g_class);
-static void		gst_afsrc_class_init		(GstAFSrcClass *klass);
-static void		gst_afsrc_init			(GstAFSrc *afsrc);
+static void gst_afsrc_base_init (gpointer g_class);
+static void gst_afsrc_class_init (GstAFSrcClass * klass);
+static void gst_afsrc_init (GstAFSrc * afsrc);
 
-static gboolean 	gst_afsrc_open_file 		(GstAFSrc *src);
-static void 		gst_afsrc_close_file 		(GstAFSrc *src);
+static gboolean gst_afsrc_open_file (GstAFSrc * src);
+static void gst_afsrc_close_file (GstAFSrc * src);
 
-static GstData*	gst_afsrc_get			(GstPad *pad);
+static GstData *gst_afsrc_get (GstPad * pad);
 
-static void		gst_afsrc_set_property		(GObject *object, guint prop_id, 
-							 const GValue *value, GParamSpec *pspec);
-static void		gst_afsrc_get_property		(GObject *object, guint prop_id, 
-							 GValue *value, GParamSpec *pspec);
+static void gst_afsrc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_afsrc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static GstElementStateReturn gst_afsrc_change_state 	(GstElement *element);
+static GstElementStateReturn gst_afsrc_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_afsrc_signals[LAST_SIGNAL] = { 0 };
 
 GType
-gst_afsrc_get_type (void) 
+gst_afsrc_get_type (void)
 {
   static GType afsrc_type = 0;
 
@@ -134,7 +133,8 @@ gst_afsrc_get_type (void)
       0,
       (GInstanceInitFunc) gst_afsrc_init,
     };
-    afsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAFSrc", &afsrc_info, 0);
+    afsrc_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstAFSrc", &afsrc_info, 0);
   }
   return afsrc_type;
 }
@@ -150,25 +150,23 @@ gst_afsrc_base_init (gpointer g_class)
 }
 
 static void
-gst_afsrc_class_init (GstAFSrcClass *klass) 
+gst_afsrc_class_init (GstAFSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gst_element_class_install_std_props (
-         GST_ELEMENT_CLASS (klass),
-         "location",     ARG_LOCATION,     G_PARAM_READWRITE,
-         NULL);
- 
+  gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
+      "location", ARG_LOCATION, G_PARAM_READWRITE, NULL);
+
   gst_afsrc_signals[SIGNAL_HANDOFF] =
-    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET (GstAFSrcClass, handoff), NULL, NULL,
-                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstAFSrcClass, handoff), NULL, NULL,
+      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 
   gobject_class->set_property = gst_afsrc_set_property;
@@ -177,12 +175,13 @@ gst_afsrc_class_init (GstAFSrcClass *klass)
   gstelement_class->change_state = gst_afsrc_change_state;
 }
 
-static void 
-gst_afsrc_init (GstAFSrc *afsrc) 
+static void
+gst_afsrc_init (GstAFSrc * afsrc)
 {
   /* no need for a template, caps are set based on file, right ? */
-  afsrc->srcpad = gst_pad_new_from_template (
-      gst_element_get_pad_template (GST_ELEMENT (afsrc), "src"), "src");
+  afsrc->srcpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+	  (afsrc), "src"), "src");
   gst_element_add_pad (GST_ELEMENT (afsrc), afsrc->srcpad);
   gst_pad_use_explicit_caps (afsrc->srcpad);
   gst_pad_set_get_function (afsrc->srcpad, gst_afsrc_get);
@@ -204,7 +203,7 @@ gst_afsrc_init (GstAFSrc *afsrc)
 }
 
 static GstData *
-gst_afsrc_get (GstPad *pad)
+gst_afsrc_get (GstPad * pad)
 {
   GstAFSrc *src;
   GstBuffer *buf;
@@ -217,21 +216,21 @@ gst_afsrc_get (GstPad *pad)
 
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
-  
+
   GST_BUFFER_DATA (buf) = (gpointer) g_malloc (src->bytes_per_read);
- 
+
   /* calculate frameCount to read based on file info */
 
   frameCount = src->bytes_per_read / (src->channels * src->width / 8);
 /*  g_print ("DEBUG: gstafsrc: going to read %ld frames\n", frameCount); */
   readframes = afReadFrames (src->file, AF_DEFAULT_TRACK, GST_BUFFER_DATA (buf),
- 	                    frameCount);
+      frameCount);
   readbytes = readframes * (src->channels * src->width / 8);
   if (readbytes == 0) {
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));  
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
-  
+
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
 
@@ -239,16 +238,17 @@ gst_afsrc_get (GstPad *pad)
 
   src->framestamp += gst_audio_frame_length (src->srcpad, buf);
   GST_BUFFER_TIMESTAMP (buf) = src->framestamp * 1E9
-                             / gst_audio_frame_rate (src->srcpad);
+      / gst_audio_frame_rate (src->srcpad);
   printf ("DEBUG: afsrc: timestamp set on output buffer: %f sec\n",
-        GST_BUFFER_TIMESTAMP (buf) / 1E9);
+      GST_BUFFER_TIMESTAMP (buf) / 1E9);
 
 /*  g_print("DEBUG: gstafsrc: pushed buffer of %ld bytes\n", readbytes); */
   return GST_DATA (buf);
 }
 
 static void
-gst_afsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_afsrc_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
 {
   GstAFSrc *src;
 
@@ -266,16 +266,17 @@ gst_afsrc_set_property (GObject *object, guint prop_id, const GValue *value, GPa
   }
 }
 
-static void   
-gst_afsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+static void
+gst_afsrc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstAFSrc *src;
- 
+
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_AFSRC (object));
- 
+
   src = GST_AFSRC (object);
-  
+
   switch (prop_id) {
     case ARG_LOCATION:
       g_value_set_string (value, src->filename);
@@ -287,7 +288,7 @@ gst_afsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 }
 
 gboolean
-gst_afsrc_plugin_init (GstPlugin *plugin)
+gst_afsrc_plugin_init (GstPlugin * plugin)
 {
   /* load audio support library */
   if (!gst_library_load ("gstaudio"))
@@ -307,57 +308,52 @@ gst_afsrc_plugin_init (GstPlugin *plugin)
 
 /* this is where we open the audiofile */
 static gboolean
-gst_afsrc_open_file (GstAFSrc *src)
+gst_afsrc_open_file (GstAFSrc * src)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_AFSRC_OPEN), FALSE);
 
   /* open the file */
   src->file = afOpenFile (src->filename, "r", AF_NULL_FILESETUP);
-  if (src->file == AF_NULL_FILEHANDLE)
-  {
-     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-                        (_("Could not open file \"%s\" for reading."), src->filename),
-                        ("system error: %s", strerror (errno)));
+  if (src->file == AF_NULL_FILEHANDLE) {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+	(_("Could not open file \"%s\" for reading."), src->filename),
+	("system error: %s", strerror (errno)));
     return FALSE;
   }
 
   /* get the audiofile audio parameters */
   {
     int sampleFormat, sampleWidth;
+
     src->channels = afGetChannels (src->file, AF_DEFAULT_TRACK);
-    afGetSampleFormat (src->file, AF_DEFAULT_TRACK, 
-			&sampleFormat, &sampleWidth);
-	switch (sampleFormat)
-	{
-	  case AF_SAMPFMT_TWOSCOMP:
-	    src->is_signed = TRUE;
-	    break;
-	  case AF_SAMPFMT_UNSIGNED:
-	    src->is_signed = FALSE;
-	    break;
-	  case AF_SAMPFMT_FLOAT:
-	  case AF_SAMPFMT_DOUBLE:
-	    GST_DEBUG (
-	    		   "ERROR: float data not supported yet !\n");
-	}
-	src->rate = (guint) afGetRate (src->file, AF_DEFAULT_TRACK);		
+    afGetSampleFormat (src->file, AF_DEFAULT_TRACK,
+	&sampleFormat, &sampleWidth);
+    switch (sampleFormat) {
+      case AF_SAMPFMT_TWOSCOMP:
+	src->is_signed = TRUE;
+	break;
+      case AF_SAMPFMT_UNSIGNED:
+	src->is_signed = FALSE;
+	break;
+      case AF_SAMPFMT_FLOAT:
+      case AF_SAMPFMT_DOUBLE:
+	GST_DEBUG ("ERROR: float data not supported yet !\n");
+    }
+    src->rate = (guint) afGetRate (src->file, AF_DEFAULT_TRACK);
     src->width = sampleWidth;
-    GST_DEBUG (
-    		   "input file: %d channels, %d width, %d rate, signed %s\n",
-	  			src->channels, src->width, src->rate,
-	  			src->is_signed ? "yes" : "no");
+    GST_DEBUG ("input file: %d channels, %d width, %d rate, signed %s\n",
+	src->channels, src->width, src->rate, src->is_signed ? "yes" : "no");
   }
-  
+
   /* set caps on src */
-  gst_pad_set_explicit_caps (src->srcpad, 
+  gst_pad_set_explicit_caps (src->srcpad,
       gst_caps_new_simple ("audio/x-raw-int",
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "signed",     G_TYPE_BOOLEAN, src->is_signed,
-        "width",      G_TYPE_INT, src->width,
-        "depth",      G_TYPE_INT, src->width,
-        "rate",       G_TYPE_INT, src->rate,
-        "channels",   G_TYPE_INT, src->channels,
-        NULL));
+	  "endianness", G_TYPE_INT, G_BYTE_ORDER,
+	  "signed", G_TYPE_BOOLEAN, src->is_signed,
+	  "width", G_TYPE_INT, src->width,
+	  "depth", G_TYPE_INT, src->width,
+	  "rate", G_TYPE_INT, src->rate,
+	  "channels", G_TYPE_INT, src->channels, NULL));
 
   GST_FLAG_SET (src, GST_AFSRC_OPEN);
 
@@ -365,47 +361,39 @@ gst_afsrc_open_file (GstAFSrc *src)
 }
 
 static void
-gst_afsrc_close_file (GstAFSrc *src)
+gst_afsrc_close_file (GstAFSrc * src)
 {
 /*  g_print ("DEBUG: closing srcfile...\n"); */
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_AFSRC_OPEN));
 /*  g_print ("DEBUG: past flag test\n"); */
 /*  if (fclose (src->file) != 0) 	*/
-  if (afCloseFile (src->file) != 0)
-  {
+  if (afCloseFile (src->file) != 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, CLOSE,
-                       (_("Error closing file \"%s\"."), src->filename),
-                       GST_ERROR_SYSTEM);
+	(_("Error closing file \"%s\"."), src->filename), GST_ERROR_SYSTEM);
   } else {
     GST_FLAG_UNSET (src, GST_AFSRC_OPEN);
   }
 }
 
 static GstElementStateReturn
-gst_afsrc_change_state (GstElement *element)
+gst_afsrc_change_state (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_AFSRC (element), GST_STATE_FAILURE);
 
   /* if going to NULL then close the file */
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) 
-  {
+  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
 /*    printf ("DEBUG: afsrc state change: null pending\n"); */
-    if (GST_FLAG_IS_SET (element, GST_AFSRC_OPEN))
-    {
+    if (GST_FLAG_IS_SET (element, GST_AFSRC_OPEN)) {
 /*      g_print ("DEBUG: trying to close the src file\n"); */
       gst_afsrc_close_file (GST_AFSRC (element));
     }
-  } 
-  else if (GST_STATE_PENDING (element) == GST_STATE_READY) 
-  {
+  } else if (GST_STATE_PENDING (element) == GST_STATE_READY) {
 /*    g_print ("DEBUG: afsrc: ready state pending.  This shouldn't happen at the *end* of a stream\n"); */
-    if (!GST_FLAG_IS_SET (element, GST_AFSRC_OPEN)) 
-    {
+    if (!GST_FLAG_IS_SET (element, GST_AFSRC_OPEN)) {
 /*      g_print ("DEBUG: GST_AFSRC_OPEN not set\n"); */
-      if (!gst_afsrc_open_file (GST_AFSRC (element)))
-      {
+      if (!gst_afsrc_open_file (GST_AFSRC (element))) {
 /*        g_print ("DEBUG: element tries to open file\n"); */
-        return GST_STATE_FAILURE;
+	return GST_STATE_FAILURE;
       }
     }
   }

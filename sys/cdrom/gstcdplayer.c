@@ -41,30 +41,27 @@ enum
   LAST_SIGNAL,
 };
 
-static void 		cdplayer_base_init 		(gpointer g_class);
-static void 		cdplayer_class_init 		(CDPlayerClass *klass);
-static void 		cdplayer_init 			(CDPlayer *cdp);
-static void 		cdplayer_dispose 		(GObject *object);
+static void cdplayer_base_init (gpointer g_class);
+static void cdplayer_class_init (CDPlayerClass * klass);
+static void cdplayer_init (CDPlayer * cdp);
+static void cdplayer_dispose (GObject * object);
 
-static void 		cdplayer_set_property 		(GObject *object, guint prop_id, 
-							 const GValue *value, GParamSpec *spec);
-static void 		cdplayer_get_property 		(GObject *object, guint prop_id,
-							 GValue *value, GParamSpec *spec);
-static gboolean 	cdplayer_iterate 		(GstBin *bin);
+static void cdplayer_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * spec);
+static void cdplayer_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * spec);
+static gboolean cdplayer_iterate (GstBin * bin);
 
-static GstElementStateReturn 
-			cdplayer_change_state 		(GstElement * element);
+static GstElementStateReturn cdplayer_change_state (GstElement * element);
 
 static GstElementClass *parent_class;
 static guint cdplayer_signals[LAST_SIGNAL] = { 0 };
 
-static GstElementDetails cdplayer_details = GST_ELEMENT_DETAILS (
-  "CD Player",
-  "Generic/Bin",
-  "Play CD audio through the CD Drive",
-  "Charles Schmidt <cbschmid@uiuc.edu>, "
-  "Wim Taymans <wim.taymans@chello.be>"
-);
+static GstElementDetails cdplayer_details = GST_ELEMENT_DETAILS ("CD Player",
+    "Generic/Bin",
+    "Play CD audio through the CD Drive",
+    "Charles Schmidt <cbschmid@uiuc.edu>, "
+    "Wim Taymans <wim.taymans@chello.be>");
 
 
 GType
@@ -86,7 +83,8 @@ cdplayer_get_type (void)
       NULL
     };
 
-    cdplayer_type = g_type_register_static (GST_TYPE_BIN, "CDPlayer", &cdplayer_info, 0);
+    cdplayer_type =
+	g_type_register_static (GST_TYPE_BIN, "CDPlayer", &cdplayer_info, 0);
   }
 
   return cdplayer_type;
@@ -121,33 +119,31 @@ cdplayer_class_init (CDPlayerClass * klass)
   gobject_klass->get_property = cdplayer_get_property;
 
   g_object_class_install_property (gobject_klass, ARG_DEVICE,
-     g_param_spec_string ("device", "device", "CDROM device", NULL,
-			  G_PARAM_READWRITE));
+      g_param_spec_string ("device", "device", "CDROM device", NULL,
+	  G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_NUM_TRACKS,
-    g_param_spec_int ("num_tracks", "num_tracks", "Number of Tracks",
-		      G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+      g_param_spec_int ("num_tracks", "num_tracks", "Number of Tracks",
+	  G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, ARG_START_TRACK,
-    g_param_spec_int ("start_track", "start_track",
-		      "Track to start playback on", 1,
-		      CDPLAYER_MAX_TRACKS - 1, 1,
-		      G_PARAM_READWRITE));
+      g_param_spec_int ("start_track", "start_track",
+	  "Track to start playback on", 1,
+	  CDPLAYER_MAX_TRACKS - 1, 1, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_END_TRACK,
-    g_param_spec_int ("end_track", "end_track",
-		      "Track to end playback on", 0,
-		      CDPLAYER_MAX_TRACKS - 1, 0,
-		      G_PARAM_READWRITE));
+      g_param_spec_int ("end_track", "end_track",
+	  "Track to end playback on", 0,
+	  CDPLAYER_MAX_TRACKS - 1, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_klass, ARG_CURRENT_TRACK,
-    g_param_spec_int ("current_track", "current_track",
-		      "Current track playing", 1,
-		      CDPLAYER_MAX_TRACKS - 1, 1, G_PARAM_READABLE));
+      g_param_spec_int ("current_track", "current_track",
+	  "Current track playing", 1,
+	  CDPLAYER_MAX_TRACKS - 1, 1, G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, ARG_CDDB_DISCID,
-    g_param_spec_uint ("cddb_discid", "cddb_discid", "CDDB Disc ID",
-		       0, G_MAXUINT, 1, G_PARAM_READABLE));
+      g_param_spec_uint ("cddb_discid", "cddb_discid", "CDDB Disc ID",
+	  0, G_MAXUINT, 1, G_PARAM_READABLE));
 
   cdplayer_signals[TRACK_CHANGE] =
-    g_signal_new ("track-change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-		  G_STRUCT_OFFSET (CDPlayerClass, track_change), NULL, NULL, 
-		  gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      g_signal_new ("track-change", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (CDPlayerClass, track_change), NULL,
+      NULL, gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   return;
 }
@@ -169,7 +165,8 @@ cdplayer_init (CDPlayer * cdp)
 }
 
 static void
-cdplayer_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * spec)
+cdplayer_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * spec)
 {
   CDPlayer *cdp;
 
@@ -204,7 +201,8 @@ cdplayer_set_property (GObject * object, guint prop_id, const GValue * value, GP
 
 
 static void
-cdplayer_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * spec)
+cdplayer_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * spec)
 {
   CDPlayer *cdp;
 
@@ -268,7 +266,8 @@ cdplayer_iterate (GstBin * bin)
 
       if (current_track != -1 && current_track != cdp->current_track) {
 	cdp->current_track = current_track;
-	g_signal_emit (G_OBJECT (cdp), cdplayer_signals[TRACK_CHANGE], 0, cdp->current_track);
+	g_signal_emit (G_OBJECT (cdp), cdplayer_signals[TRACK_CHANGE], 0,
+	    cdp->current_track);
       }
 
       return TRUE;
@@ -328,7 +327,8 @@ cdplayer_change_state (GstElement * element)
 
 	cdp->paused = FALSE;
       } else {
-	if (cd_start (CDPLAYER_CD (cdp), cdp->start_track, cdp->end_track) == FALSE) {
+	if (cd_start (CDPLAYER_CD (cdp), cdp->start_track,
+		cdp->end_track) == FALSE) {
 	  return GST_STATE_FAILURE;
 	}
       }
@@ -336,7 +336,8 @@ cdplayer_change_state (GstElement * element)
       break;
     case GST_STATE_NULL:
       /* stop & close fd */
-      if (cd_stop (CDPLAYER_CD (cdp)) == FALSE || cd_close (CDPLAYER_CD (cdp)) == FALSE) {
+      if (cd_stop (CDPLAYER_CD (cdp)) == FALSE
+	  || cd_close (CDPLAYER_CD (cdp)) == FALSE) {
 	return GST_STATE_FAILURE;
       }
 
@@ -356,17 +357,9 @@ cdplayer_change_state (GstElement * element)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "cdplayer", GST_RANK_NONE, GST_TYPE_CDPLAYER);
+  return gst_element_register (plugin, "cdplayer", GST_RANK_NONE,
+      GST_TYPE_CDPLAYER);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "cdplayer",
-  "CD Player",
-  plugin_init,
-  VERSION,
-  GST_LICENSE, /* ? */
-  GST_PACKAGE,
-  GST_ORIGIN
-);
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "cdplayer", "CD Player", plugin_init, VERSION, GST_LICENSE,	/* ? */
+    GST_PACKAGE, GST_ORIGIN);

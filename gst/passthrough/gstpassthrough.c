@@ -34,68 +34,68 @@ static GstElementDetails passthrough_details = {
   "Passthrough",
   "Filter/Effect/Audio",
   "Transparent filter for audio/raw (boilerplate for effects)",
-  "Thomas <thomas@apestaart.org>, "\
-  "Andy Wingo <apwingo@eos.ncsu.edu>"
+  "Thomas <thomas@apestaart.org>, " "Andy Wingo <apwingo@eos.ncsu.edu>"
 };
 
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
 /* static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
-enum {
+enum
+{
   ARG_0,
   ARG_SILENT
 };
 
 static GstStaticPadTemplate passthrough_sink_template =
-GST_STATIC_PAD_TEMPLATE (
-    "sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-      GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-      GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS
-    )
-);
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+	GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+    );
 
 static GstStaticPadTemplate passthrough_src_template =
-GST_STATIC_PAD_TEMPLATE (
-    "src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-      GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-      GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS
-    )
-);
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+	GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
+    );
 
-static void		passthrough_class_init		(GstPassthroughClass *klass);
-static void		passthrough_base_init		(GstPassthroughClass *klass);
-static void		passthrough_init		(GstPassthrough *filter);
+static void passthrough_class_init (GstPassthroughClass * klass);
+static void passthrough_base_init (GstPassthroughClass * klass);
+static void passthrough_init (GstPassthrough * filter);
 
-static void		passthrough_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		passthrough_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void passthrough_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void passthrough_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static GstPadLinkReturn passthrough_connect_sink	(GstPad *pad, const GstCaps *caps);
+static GstPadLinkReturn passthrough_connect_sink (GstPad * pad,
+    const GstCaps * caps);
 
-static void		passthrough_chain		(GstPad *pad, GstData *_data);
-static void inline 	passthrough_fast_float_chain 	(gfloat* data, guint numsamples);
-static void inline 	passthrough_fast_16bit_chain 	(gint16* data, guint numsamples);
-static void inline 	passthrough_fast_8bit_chain	(gint8* data, guint numsamples);
+static void passthrough_chain (GstPad * pad, GstData * _data);
+static void inline passthrough_fast_float_chain (gfloat * data,
+    guint numsamples);
+static void inline passthrough_fast_16bit_chain (gint16 * data,
+    guint numsamples);
+static void inline passthrough_fast_8bit_chain (gint8 * data, guint numsamples);
 
 static GstElementClass *parent_class = NULL;
 
 static GstPadLinkReturn
-passthrough_connect_sink (GstPad *pad, const GstCaps *caps)
+passthrough_connect_sink (GstPad * pad, const GstCaps * caps)
 {
   const gchar *mimetype;
   GstPassthrough *filter;
   GstStructure *structure;
-  
-  g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_DELAYED);
+
+  g_return_val_if_fail (pad != NULL, GST_PAD_LINK_DELAYED);
   g_return_val_if_fail (caps != NULL, GST_PAD_LINK_DELAYED);
 
   filter = GST_PASSTHROUGH (gst_pad_get_parent (pad));
@@ -105,27 +105,30 @@ passthrough_connect_sink (GstPad *pad, const GstCaps *caps)
   structure = gst_caps_get_structure (caps, 0);
 
   mimetype = gst_structure_get_name (structure);
-  gst_structure_get_int  (structure, "rate", &filter->rate);
-  gst_structure_get_int  (structure, "channels", &filter->channels);
-  gst_structure_get_int  (structure, "width", &filter->width);
-  gst_structure_get_int  (structure, "endianness", &filter->endianness);
+  gst_structure_get_int (structure, "rate", &filter->rate);
+  gst_structure_get_int (structure, "channels", &filter->channels);
+  gst_structure_get_int (structure, "width", &filter->width);
+  gst_structure_get_int (structure, "endianness", &filter->endianness);
 
   if (strcmp (mimetype, "audio/x-raw-int") == 0) {
     filter->format = GST_PASSTHROUGH_FORMAT_INT;
 
-    gst_structure_get_int	  (structure, "depth",      &filter->depth);
-    gst_structure_get_boolean  (structure, "signed",     &filter->is_signed);
+    gst_structure_get_int (structure, "depth", &filter->depth);
+    gst_structure_get_boolean (structure, "signed", &filter->is_signed);
 
-    if (! filter->silent) {
-      g_print ("Passthrough : channels %d, rate %d\n", filter->channels, filter->rate);
-      g_print ("Passthrough : format int, bit width %d, endianness %d, signed %s\n",
-               filter->width, filter->endianness, filter->is_signed ? "yes" : "no");
+    if (!filter->silent) {
+      g_print ("Passthrough : channels %d, rate %d\n", filter->channels,
+	  filter->rate);
+      g_print
+	  ("Passthrough : format int, bit width %d, endianness %d, signed %s\n",
+	  filter->width, filter->endianness, filter->is_signed ? "yes" : "no");
     }
   } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
     filter->format = GST_PASSTHROUGH_FORMAT_FLOAT;
 
-    if (! filter->silent) {
-      g_print ("Passthrough : channels %d, rate %d\n", filter->channels, filter->rate);
+    if (!filter->silent) {
+      g_print ("Passthrough : channels %d, rate %d\n", filter->channels,
+	  filter->rate);
       g_print ("Passthrough : format float, width %d\n", filter->width);
     }
   }
@@ -150,13 +153,15 @@ gst_passthrough_get_type (void)
       0,
       (GInstanceInitFunc) passthrough_init,
     };
-    passthrough_type = g_type_register_static (GST_TYPE_ELEMENT, "GstPassthrough", &passthrough_info, 0);
+    passthrough_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstPassthrough",
+	&passthrough_info, 0);
   }
   return passthrough_type;
 }
 
 static void
-passthrough_base_init (GstPassthroughClass *klass)
+passthrough_base_init (GstPassthroughClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -168,103 +173,102 @@ passthrough_base_init (GstPassthroughClass *klass)
 }
 
 static void
-passthrough_class_init (GstPassthroughClass *klass)
+passthrough_class_init (GstPassthroughClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstelement_class = (GstElementClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
-    g_param_spec_boolean("silent","silent","silent",
-                         TRUE, G_PARAM_READWRITE)); /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT, g_param_spec_boolean ("silent", "silent", "silent", TRUE, G_PARAM_READWRITE));	/* CHECKME */
 
   gobject_class->set_property = passthrough_set_property;
   gobject_class->get_property = passthrough_get_property;
 }
 
 static void
-passthrough_init (GstPassthrough *filter)
+passthrough_init (GstPassthrough * filter)
 {
-  filter->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&passthrough_src_template), "src");
+  filter->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&passthrough_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  filter->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&passthrough_sink_template), "sink");
+  filter->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
+      (&passthrough_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
-  gst_pad_set_link_function    (filter->sinkpad, passthrough_connect_sink);
-  gst_pad_set_chain_function      (filter->sinkpad, passthrough_chain);
+  gst_pad_set_link_function (filter->sinkpad, passthrough_connect_sink);
+  gst_pad_set_chain_function (filter->sinkpad, passthrough_chain);
 
   filter->silent = FALSE;
 }
 
 static void
-passthrough_chain (GstPad *pad, GstData *_data)
+passthrough_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstPassthrough *filter;
   gint16 *int_data;
   gfloat *float_data;
-  
+
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
-  
+
   filter = GST_PASSTHROUGH (gst_pad_get_parent (pad));
   g_return_if_fail (filter != NULL);
   g_return_if_fail (GST_IS_PASSTHROUGH (filter));
 
   switch (filter->format) {
-  case GST_PASSTHROUGH_FORMAT_INT:
-    int_data = (gint16 *) GST_BUFFER_DATA (buf);
+    case GST_PASSTHROUGH_FORMAT_INT:
+      int_data = (gint16 *) GST_BUFFER_DATA (buf);
 
-    switch (filter->width) {
-    case 16:
-      passthrough_fast_16bit_chain (int_data, GST_BUFFER_SIZE (buf) / 2);
-      break;
-    case 8:
-      passthrough_fast_8bit_chain ((gint8*) int_data, GST_BUFFER_SIZE (buf));
-      break;
-    }
+      switch (filter->width) {
+	case 16:
+	  passthrough_fast_16bit_chain (int_data, GST_BUFFER_SIZE (buf) / 2);
+	  break;
+	case 8:
+	  passthrough_fast_8bit_chain ((gint8 *) int_data,
+	      GST_BUFFER_SIZE (buf));
+	  break;
+      }
 
-    break;
-  case GST_PASSTHROUGH_FORMAT_FLOAT:
-    float_data = (gfloat *) GST_BUFFER_DATA (buf);
-    
-    passthrough_fast_float_chain (float_data, GST_BUFFER_SIZE (buf) / sizeof (gfloat));
-    
-    break;
+      break;
+    case GST_PASSTHROUGH_FORMAT_FLOAT:
+      float_data = (gfloat *) GST_BUFFER_DATA (buf);
+
+      passthrough_fast_float_chain (float_data,
+	  GST_BUFFER_SIZE (buf) / sizeof (gfloat));
+
+      break;
   }
-  
+
   gst_pad_push (filter->srcpad, GST_DATA (buf));
 }
 
 static void inline
-passthrough_fast_float_chain(gfloat* data, guint num_samples)
+passthrough_fast_float_chain (gfloat * data, guint num_samples)
 #include "filter.func"
-
-static void inline
-passthrough_fast_16bit_chain(gint16* data, guint num_samples)
+     static void inline
+	 passthrough_fast_16bit_chain (gint16 * data, guint num_samples)
 #include "filter.func"
-
-static void inline
-passthrough_fast_8bit_chain(gint8* data, guint num_samples)
+     static void inline
+	 passthrough_fast_8bit_chain (gint8 * data, guint num_samples)
 #include "filter.func"
-
-static void
-passthrough_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+     static void
+	 passthrough_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstPassthrough *filter;
 
   g_return_if_fail (GST_IS_PASSTHROUGH (object));
   filter = GST_PASSTHROUGH (object);
 
-  switch (prop_id) 
-  {
+  switch (prop_id) {
     case ARG_SILENT:
       filter->silent = g_value_get_boolean (value);
       break;
@@ -274,7 +278,8 @@ passthrough_set_property (GObject *object, guint prop_id, const GValue *value, G
 }
 
 static void
-passthrough_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+passthrough_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstPassthrough *filter;
 
@@ -292,20 +297,14 @@ passthrough_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "passthrough",
-			       GST_RANK_NONE, GST_TYPE_PASSTHROUGH);
+      GST_RANK_NONE, GST_TYPE_PASSTHROUGH);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "passthrough",
-  "Transparent filter for audio/raw (boilerplate for effects)",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "passthrough",
+    "Transparent filter for audio/raw (boilerplate for effects)",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

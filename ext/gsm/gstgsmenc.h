@@ -31,8 +31,9 @@
 #endif
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_GSMENC \
@@ -46,36 +47,38 @@ extern "C" {
 #define GST_IS_GSMENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GSMENC))
 
-typedef struct _GstGSMEnc GstGSMEnc;
-typedef struct _GstGSMEncClass GstGSMEncClass;
+  typedef struct _GstGSMEnc GstGSMEnc;
+  typedef struct _GstGSMEncClass GstGSMEncClass;
 
-struct _GstGSMEnc {
-  GstElement element;
+  struct _GstGSMEnc
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *sinkpad,*srcpad;
+    /* pads */
+    GstPad *sinkpad, *srcpad;
 
-  gsm state;
-  gsm_signal buffer[160];
-  gint bufsize;
+    gsm state;
+    gsm_signal buffer[160];
+    gint bufsize;
 
-  guint64 next_ts;
-  gint rate;
-};
+    guint64 next_ts;
+    gint rate;
+  };
 
-struct _GstGSMEncClass {
-  GstElementClass parent_class;
+  struct _GstGSMEncClass
+  {
+    GstElementClass parent_class;
 
-  /* signals */
-  void (*frame_encoded) (GstElement *element);
-};
+    /* signals */
+    void (*frame_encoded) (GstElement * element);
+  };
 
-GType gst_gsmenc_get_type(void);
+  GType gst_gsmenc_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_GSMENC_H__ */
+#endif				/* __GST_GSMENC_H__ */

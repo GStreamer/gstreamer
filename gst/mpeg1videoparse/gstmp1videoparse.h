@@ -26,8 +26,9 @@
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_MP1VIDEOPARSE \
@@ -41,35 +42,37 @@ extern "C" {
 #define GST_IS_MP1VIDEOPARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MP1VIDEOPARSE))
 
-typedef struct _Mp1VideoParse Mp1VideoParse;
-typedef struct _Mp1VideoParseClass Mp1VideoParseClass;
+  typedef struct _Mp1VideoParse Mp1VideoParse;
+  typedef struct _Mp1VideoParseClass Mp1VideoParseClass;
 
-struct _Mp1VideoParse {
-  GstElement element;
+  struct _Mp1VideoParse
+  {
+    GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  GstBuffer *partialbuf;	/* previous buffer (if carryover) */
-  gulong next_buffer_offset;
-  gboolean need_resync;
-  gboolean in_flush;
-  guint64 last_pts;
-  gint picture_in_buffer;
+    GstBuffer *partialbuf;	/* previous buffer (if carryover) */
+    gulong next_buffer_offset;
+    gboolean need_resync;
+    gboolean in_flush;
+    guint64 last_pts;
+    gint picture_in_buffer;
 
-  gint width, height;
-  gfloat fps, asr;
-};
+    gint width, height;
+    gfloat fps, asr;
+  };
 
-struct _Mp1VideoParseClass {
-  GstElementClass parent_class;
-};
+  struct _Mp1VideoParseClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_mp1videoparse_get_type(void);
+  GType gst_mp1videoparse_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __MP1VIDEOPARSE_H__ */
+#endif				/* __MP1VIDEOPARSE_H__ */

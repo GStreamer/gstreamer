@@ -27,13 +27,14 @@
 
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
-#include <audiofile.h>			/* what else are we to do */
+#include <audiofile.h>		/* what else are we to do */
 #include <af_vfs.h>
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 /*GstElementDetails gst_afparse_details;*/
@@ -50,55 +51,58 @@ extern "C" {
 #define GST_IS_AFPARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AFPARSE))
 
-typedef struct _GstAFParse GstAFParse;
-typedef struct _GstAFParseClass GstAFParseClass;
+  typedef struct _GstAFParse GstAFParse;
+  typedef struct _GstAFParseClass GstAFParseClass;
 
-typedef enum {
-  GST_AFPARSE_OPEN             = GST_ELEMENT_FLAG_LAST,
+  typedef enum
+  {
+    GST_AFPARSE_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  GST_AFPARSE_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
-} GstAFParseFlags;
+    GST_AFPARSE_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  } GstAFParseFlags;
 
-struct _GstAFParse {
-  GstElement element;
-  GstPad *srcpad;
-  GstPad *sinkpad;
+  struct _GstAFParse
+  {
+    GstElement element;
+    GstPad *srcpad;
+    GstPad *sinkpad;
 
-  AFvirtualfile *vfile;
-  AFfilehandle file;
-  int format;
-  int channels;
-  int width;
-  unsigned int rate;
-  gboolean is_signed;
-  int type;				/* type of output, compare to audiofile.h 
-  						 * RAW, AIFF, AIFFC, NEXTSND, WAVE
-  						 */ 
-  /* blocking */
-  gulong curoffset;
-  gulong bytes_per_read;
-  gint frames_per_read;
+    AFvirtualfile *vfile;
+    AFfilehandle file;
+    int format;
+    int channels;
+    int width;
+    unsigned int rate;
+    gboolean is_signed;
+    int type;			/* type of output, compare to audiofile.h 
+				 * RAW, AIFF, AIFFC, NEXTSND, WAVE
+				 */
+    /* blocking */
+    gulong curoffset;
+    gulong bytes_per_read;
+    gint frames_per_read;
 
-  gulong seq;
-  gint64 timestamp;
-  /* FIXME : endianness is a little cryptic at this point */
-  int endianness_data;		/* 4321 or 1234 */
-  int endianness_wanted; /* same thing, but what the output format wants */
-  int endianness_output; /* what the output endianness will be */
-};
+    gulong seq;
+    gint64 timestamp;
+    /* FIXME : endianness is a little cryptic at this point */
+    int endianness_data;	/* 4321 or 1234 */
+    int endianness_wanted;	/* same thing, but what the output format wants */
+    int endianness_output;	/* what the output endianness will be */
+  };
 
-struct _GstAFParseClass {
-  GstElementClass parent_class;
+  struct _GstAFParseClass
+  {
+    GstElementClass parent_class;
 
-  /* signals */
-  void (*handoff) (GstElement *element,GstPad *pad);
-};
+    /* signals */
+    void (*handoff) (GstElement * element, GstPad * pad);
+  };
 
-gboolean 	gst_afparse_plugin_init 	(GstPlugin *plugin);
+  gboolean gst_afparse_plugin_init (GstPlugin * plugin);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_AFPARSE_H__ */
+#endif				/* __GST_AFPARSE_H__ */

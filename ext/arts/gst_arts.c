@@ -34,52 +34,46 @@ static GstElementDetails gst_arts_details = {
   "Filter/Audio",
   "aRts wrapper filter",
   "Erik Walthinsen <omega@temple-baptist.com,\n"
-  "Stefan Westerfeld <stefan@space.twc.de>",
+      "Stefan Westerfeld <stefan@space.twc.de>",
 };
 
 
-static GstStaticPadTemplate sink_temp =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ( "audio/x-raw-int, "
-    "depth = (int) 16, "
-    "width = (int) 16, "
-    "signed = (boolean) true, "
-    "channels = (int) 2, "
-    "endianness = (int) byte_order"
-  )
-);
+static GstStaticPadTemplate sink_temp = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"depth = (int) 16, "
+	"width = (int) 16, "
+	"signed = (boolean) true, "
+	"channels = (int) 2, " "endianness = (int) byte_order")
+    );
 
-static GstStaticPadTemplate src_temp =
-GST_STATIC_PAD_TEMPLATE (
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("audio/x-raw-int, "
-    "depth = (int) 16, "
-    "width = (int) 16, "
-    "signed = (boolean) true, "
-    "channels = (int) 2, "
-    "rate = (int) 44100, "
-    "endianness = (int) byte_order"
-  )
-);
+static GstStaticPadTemplate src_temp = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+	"depth = (int) 16, "
+	"width = (int) 16, "
+	"signed = (boolean) true, "
+	"channels = (int) 2, "
+	"rate = (int) 44100, " "endianness = (int) byte_order")
+    );
 
-enum {
+enum
+{
   ARG_0,
   ARG_LAST,
 };
 
-static void			gst_arts_base_init		(gpointer g_class);
-static void			gst_arts_class_init		(GstARTSClass *klass);
-static void			gst_arts_init			(GstARTS *arts);
+static void gst_arts_base_init (gpointer g_class);
+static void gst_arts_class_init (GstARTSClass * klass);
+static void gst_arts_init (GstARTS * arts);
 
-static void			gst_arts_loop			(GstElement *element);
+static void gst_arts_loop (GstElement * element);
 
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_arts_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -89,26 +83,27 @@ gst_arts_get_type (void)
 
   if (!gst_arts_type) {
     static const GTypeInfo gst_arts_info = {
-      sizeof(GstARTSClass),      
+      sizeof (GstARTSClass),
       gst_arts_base_init,
       NULL,
-      (GClassInitFunc)gst_arts_class_init,
+      (GClassInitFunc) gst_arts_class_init,
       NULL,
       NULL,
-      sizeof(GstARTS),
+      sizeof (GstARTS),
       0,
-      (GInstanceInitFunc)gst_arts_init,
+      (GInstanceInitFunc) gst_arts_init,
     };
-    gst_arts_type = g_type_register_static(GST_TYPE_ELEMENT, "GstArts", &gst_arts_info, 0);
+    gst_arts_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstArts", &gst_arts_info, 0);
   }
   return gst_arts_type;
-} 
+}
 
 static void
 gst_arts_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_temp));
   gst_element_class_add_pad_template (element_class,
@@ -117,45 +112,47 @@ gst_arts_base_init (gpointer g_class)
 }
 
 static void
-gst_arts_class_init (GstARTSClass *klass)
+gst_arts_class_init (GstARTSClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 }
 
 static void
-gst_arts_init (GstARTS *arts)
+gst_arts_init (GstARTS * arts)
 {
-  arts->sinkpad = gst_pad_new_from_template(
-      gst_element_get_pad_template (GST_ELEMENT (arts), "sink"), "sink");
-  gst_element_add_pad(GST_ELEMENT(arts),arts->sinkpad);
+  arts->sinkpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+	  (arts), "sink"), "sink");
+  gst_element_add_pad (GST_ELEMENT (arts), arts->sinkpad);
 
-  arts->srcpad = gst_pad_new_from_template(
-      gst_element_get_pad_template (GST_ELEMENT (arts), "src"), "src");
-  gst_element_add_pad(GST_ELEMENT(arts),arts->srcpad);
+  arts->srcpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+	  (arts), "src"), "src");
+  gst_element_add_pad (GST_ELEMENT (arts), arts->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (arts), gst_arts_loop);
 
-  arts->wrapper = gst_arts_wrapper_new(arts->sinkpad,arts->srcpad);
+  arts->wrapper = gst_arts_wrapper_new (arts->sinkpad, arts->srcpad);
 }
 
 static void
-gst_arts_loop	(GstElement *element)
+gst_arts_loop (GstElement * element)
 {
-  GstARTS *arts = (GstARTS*)element;
+  GstARTS *arts = (GstARTS *) element;
 
   g_return_if_fail (arts != NULL);
 
-  gst_arts_wrapper_do(arts->wrapper);
+  gst_arts_wrapper_do (arts->wrapper);
 }
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "gstarts", GST_RANK_NONE, GST_TYPE_ARTS))
     return FALSE;
@@ -163,14 +160,8 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gst_arts",
-  "arTs filter wrapper",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gst_arts",
+    "arTs filter wrapper",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

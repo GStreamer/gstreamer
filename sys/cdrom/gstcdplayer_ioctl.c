@@ -35,8 +35,9 @@
 
 
 /* private functions */
-static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track);
-static gint cddb_sum(gint n);
+static void cd_fix_track_range (struct cd *cd, gint * start_track,
+    gint * end_track);
+static gint cddb_sum (gint n);
 
 #if defined(HAVE_LINUX_CDROM_H)
 #include <linux/cdrom.h>
@@ -58,7 +59,7 @@ irix cdaudio works quite a bit differently than ioctl(), so its not ready
 	CDStatus cd_status(struct cd *cd);
 	gint cd_current_track(struct cd *cd);
 	gboolean cd_close(struct cd *cd);
-*/	
+*/
 #if defined(HAVE_CDROM_SOLARIS)
 #include "gstcdplayer_ioctl_solaris.h"
 #elif defined(HAVE_CDROM_BSD)
@@ -69,25 +70,26 @@ irix cdaudio works quite a bit differently than ioctl(), so its not ready
 */
 #endif
 
-static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track)
+static void
+cd_fix_track_range (struct cd *cd, gint * start_track, gint * end_track)
 {
-	if (*start_track <= 0) {
-		*start_track = 1;
-	}
+  if (*start_track <= 0) {
+    *start_track = 1;
+  }
 
-	if (*start_track > cd->num_tracks) {
-		*start_track = cd->num_tracks;
-	}
+  if (*start_track > cd->num_tracks) {
+    *start_track = cd->num_tracks;
+  }
 
-	if (*end_track < *start_track && *end_track != LEADOUT) {
-		*end_track = *start_track;
-	}
+  if (*end_track < *start_track && *end_track != LEADOUT) {
+    *end_track = *start_track;
+  }
 
-	if (*end_track > cd->num_tracks || *end_track + 1 > cd->num_tracks) {
-		*end_track = LEADOUT;
-	}
+  if (*end_track > cd->num_tracks || *end_track + 1 > cd->num_tracks) {
+    *end_track = LEADOUT;
+  }
 
-	return;
+  return;
 }
 
 /* this cddb info is from 
@@ -96,29 +98,32 @@ static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track)
    this will probably be of interest to anyone wishing to actually use the discid
    http://www.freedb.org/modules.php?name=Sections&sop=viewarticle&artid=28
 */
-static gint cddb_sum(gint n)
+static gint
+cddb_sum (gint n)
 {
-	gint ret = 0;
+  gint ret = 0;
 
-	while (n > 0) {
-		ret += n % 10;
-		n /= 10;
-	}
+  while (n > 0) {
+    ret += n % 10;
+    n /= 10;
+  }
 
-	return ret;
+  return ret;
 }
 
-guint32 cd_cddb_discid(struct cd *cd)
+guint32
+cd_cddb_discid (struct cd * cd)
 {
-	guint i;
-	guint n = 0;
-	guint t;
+  guint i;
+  guint n = 0;
+  guint t;
 
-	for (i = 1; i <= cd->num_tracks; i++) {
-		n += cddb_sum(cd->tracks[i].minute * 60 + cd->tracks[i].second);
-	}
+  for (i = 1; i <= cd->num_tracks; i++) {
+    n += cddb_sum (cd->tracks[i].minute * 60 + cd->tracks[i].second);
+  }
 
-	t = (cd->tracks[LEADOUT].minute * 60 + cd->tracks[LEADOUT].second) - (cd->tracks[1].minute * 60 + cd->tracks[1].second);
+  t = (cd->tracks[LEADOUT].minute * 60 + cd->tracks[LEADOUT].second) -
+      (cd->tracks[1].minute * 60 + cd->tracks[1].second);
 
-	return ((n % 0xff) << 24 | t << 8 | (cd->num_tracks));
+  return ((n % 0xff) << 24 | t << 8 | (cd->num_tracks));
 }

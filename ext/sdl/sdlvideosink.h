@@ -25,7 +25,6 @@
 #include <SDL.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_SDLVIDEOSINK \
   (gst_sdlvideosink_get_type())
 #define GST_SDLVIDEOSINK(obj) \
@@ -36,9 +35,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SDLVIDEOSINK))
 #define GST_IS_SDLVIDEOSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SDLVIDEOSINK))
-
-typedef enum {
-  GST_SDLVIDEOSINK_OPEN              = GST_ELEMENT_FLAG_LAST,
+    typedef enum
+{
+  GST_SDLVIDEOSINK_OPEN = GST_ELEMENT_FLAG_LAST,
 
   GST_SDLVIDEOSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
 } GstSDLVideoSinkFlags;
@@ -46,11 +45,12 @@ typedef enum {
 typedef struct _GstSDLVideoSink GstSDLVideoSink;
 typedef struct _GstSDLVideoSinkClass GstSDLVideoSinkClass;
 
-struct _GstSDLVideoSink {
+struct _GstSDLVideoSink
+{
   GstVideoSink videosink;
 
   guint32 format;
-  gint width, height;   /* the size of the incoming YUV stream */
+  gint width, height;		/* the size of the incoming YUV stream */
   unsigned long xwindow_id;
 
   gboolean init;
@@ -62,13 +62,13 @@ struct _GstSDLVideoSink {
   GMutex *lock;
 };
 
-struct _GstSDLVideoSinkClass {
+struct _GstSDLVideoSinkClass
+{
   GstVideoSinkClass parent_class;
 
 };
 
-GType gst_sdlsink_get_type(void);
+GType gst_sdlsink_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_SDLVIDEOSINK_H__ */
