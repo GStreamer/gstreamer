@@ -23,8 +23,6 @@
 
 #include <gst/gst.h>
 
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-
 #define R_MASK_32 0xff000000
 #define G_MASK_32 0x00ff0000
 #define B_MASK_32 0x0000ff00
@@ -32,18 +30,6 @@
 #define R_MASK_24 0xff0000
 #define G_MASK_24 0x00ff00
 #define B_MASK_24 0x0000ff
-
-#else
-
-#define R_MASK_32 0x000000ff
-#define G_MASK_32 0x0000ff00
-#define B_MASK_32 0x00ff0000
-
-#define R_MASK_24 0x0000ff
-#define G_MASK_24 0x00ff00
-#define B_MASK_24 0xff0000
-
-#endif
 
 #define R_MASK_16 0xf800
 #define G_MASK_16 0x07e0
