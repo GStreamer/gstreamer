@@ -53,6 +53,7 @@ enum {
   ARG_SILENT,
   ARG_LAST_MESSAGE,
   ARG_DUMP,
+  ARG_DELAY_CAPSNEGO,
 };
 
 
@@ -98,7 +99,8 @@ gst_identity_class_init (GstIdentityClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
-    g_param_spec_boolean ("loop-based", "Loop-based", "Set to TRUE to use loop-based rather than chain-based scheduling",
+    g_param_spec_boolean ("loop-based", "Loop-based", 
+	    		  "Set to TRUE to use loop-based rather than chain-based scheduling",
                           TRUE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SLEEP_TIME,
     g_param_spec_uint ("sleep-time", "Sleep time", "Microseconds to sleep between processing",
@@ -119,7 +121,10 @@ gst_identity_class_init (GstIdentityClass *klass)
     g_param_spec_string ("last-message", "last-message", "last-message",
                          NULL, G_PARAM_READABLE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
-    g_param_spec_boolean("dump","Dump","Dump buffer contents",
+    g_param_spec_boolean("dump", "Dump", "Dump buffer contents",
+                         FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELAY_CAPSNEGO,
+    g_param_spec_boolean("delay_capsnego", "Delay Caps Nego", "Delay capsnegotiation to loop/chain function",
                          FALSE, G_PARAM_READWRITE));
 
   gst_identity_signals[SIGNAL_HANDOFF] =
@@ -149,6 +154,11 @@ gst_identity_getcaps (GstPad *pad, GstCaps *caps)
   GstPad *otherpad;
   
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
+
+  if (identity->delay_capsnego) {
+    return NULL;
+  }
+
   otherpad = (pad == identity->srcpad ? identity->sinkpad : identity->srcpad);
 
   return gst_pad_get_allowed_caps (otherpad);
@@ -158,13 +168,23 @@ static GstPadLinkReturn
 gst_identity_link (GstPad *pad, GstCaps *caps)
 {
   GstIdentity *identity;
-  GstPad *otherpad;
   
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
-  otherpad = (pad == identity->srcpad ? identity->sinkpad : identity->srcpad);
 
-  if (GST_CAPS_IS_FIXED (caps))
-    return gst_pad_try_set_caps (otherpad, caps);
+  if (GST_CAPS_IS_FIXED (caps)) {
+    if (identity->delay_capsnego && GST_PAD_IS_SINK (pad)) {
+      identity->srccaps = gst_caps_ref (caps);
+
+      return GST_PAD_LINK_OK;
+    }
+    else {
+      GstPad *otherpad;
+      
+      otherpad = (pad == identity->srcpad ? identity->sinkpad : identity->srcpad);
+
+      return gst_pad_try_set_caps (otherpad, caps);
+    }
+  }
   else
     return GST_PAD_LINK_DELAYED;
 }
@@ -192,6 +212,8 @@ gst_identity_init (GstIdentity *identity)
   identity->silent = FALSE;
   identity->dump = FALSE;
   identity->last_message = NULL;
+  identity->delay_capsnego = FALSE;
+  identity->srccaps = NULL;
 }
 
 static void 
@@ -205,6 +227,16 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
+
+  if (identity->delay_capsnego && identity->srccaps) {
+    if (gst_pad_try_set_caps (identity->srcpad, identity->srccaps) <= 0) {
+      if (!gst_pad_recover_caps_error (identity->srcpad, identity->srccaps)) {
+        gst_buffer_unref (buf);
+        return;
+      }
+    }
+    identity->srccaps = NULL;
+  }
 
   if (identity->error_after >= 0) {
     identity->error_after--;
@@ -315,6 +347,9 @@ gst_identity_set_property (GObject *object, guint prop_id, const GValue *value, 
     case ARG_DUMP:
       identity->dump = g_value_get_boolean (value);
       break;
+    case ARG_DELAY_CAPSNEGO:
+      identity->delay_capsnego = g_value_get_boolean (value);
+      break;
     case ARG_ERROR_AFTER:
       identity->error_after = g_value_get_int (value);
       break;
@@ -355,6 +390,9 @@ static void gst_identity_get_property(GObject *object, guint prop_id, GValue *va
       break;
     case ARG_DUMP:
       g_value_set_boolean (value, identity->dump);
+      break;
+    case ARG_DELAY_CAPSNEGO:
+      g_value_set_boolean (value, identity->delay_capsnego);
       break;
     case ARG_LAST_MESSAGE:
       g_value_set_string (value, identity->last_message);

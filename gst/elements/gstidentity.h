@@ -48,19 +48,21 @@ typedef struct _GstIdentity GstIdentity;
 typedef struct _GstIdentityClass GstIdentityClass;
 
 struct _GstIdentity {
-  GstElement element;
+  GstElement 	 element;
 
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstPad 	*sinkpad;
+  GstPad 	*srcpad;
 
-  gboolean loop_based;
-  guint duplicate;
-  gint error_after;
-  gfloat drop_probability;
-  guint sleep_time;
-  gboolean silent;
-  gboolean dump;
-  gchar *last_message;
+  gboolean 	 loop_based;
+  guint 	 duplicate;
+  gint 	 	 error_after;
+  gfloat 	 drop_probability;
+  guint 	 sleep_time;
+  gboolean 	 silent;
+  gboolean 	 dump;
+  gchar 	*last_message;
+  gboolean 	 delay_capsnego;
+  GstCaps	*srccaps;
 };
 
 struct _GstIdentityClass {
