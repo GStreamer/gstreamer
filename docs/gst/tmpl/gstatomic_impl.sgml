@@ -1,0 +1,46 @@
+<!-- ##### SECTION Title ##### -->
+gstatomic_impl
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO SMP_LOCK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO SMP_SYNC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO SMP_ISYNC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO PPC405_ERR77 ##### -->
+<para>
+
+</para>
+
+@ra: 
+@rb: 
+
+

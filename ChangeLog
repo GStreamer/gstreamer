@@ -1,3 +1,96 @@
+2004-03-24  David Schleef  <ds@schleef.org>
+
+	* docs/gst/gstreamer-docs.sgml:  I got tired of the reference
+	manual being such complete crap, that I decided to do major
+	hacking of it.  This checkin replaces any fine tuning that
+	may have been done previously, with the benefit of actually
+	being complete for much of the API that was changed since
+	0.6.  Further fine tuning will occur shortly.  (bug #134721)
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/GstBin.sgml:
+	* docs/gst/tmpl/GstBuffer.sgml:
+	* docs/gst/tmpl/GstCaps.sgml:
+	* docs/gst/tmpl/GstClock.sgml:
+	* docs/gst/tmpl/GstCompat.sgml:
+	* docs/gst/tmpl/GstData.sgml:
+	* docs/gst/tmpl/GstElement.sgml:
+	* docs/gst/tmpl/GstEvent.sgml:
+	* docs/gst/tmpl/GstIndex.sgml:
+	* docs/gst/tmpl/GstStructure.sgml:
+	* docs/gst/tmpl/GstTag.sgml:
+	* docs/gst/tmpl/cothreads.sgml:
+	* docs/gst/tmpl/cothreads_compat.sgml:
+	* docs/gst/tmpl/gettext.sgml:
+	* docs/gst/tmpl/grammar.tab.sgml:
+	* docs/gst/tmpl/gst-i18n-app.sgml:
+	* docs/gst/tmpl/gst-i18n-lib.sgml:
+	* docs/gst/tmpl/gst.sgml:
+	* docs/gst/tmpl/gst_private.sgml:
+	* docs/gst/tmpl/gstaggregator.sgml:
+	* docs/gst/tmpl/gstarch.sgml:
+	* docs/gst/tmpl/gstatomic.sgml:
+	* docs/gst/tmpl/gstatomic_impl.sgml:
+	* docs/gst/tmpl/gstbin.sgml:
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/gst/tmpl/gstbufferstore.sgml:
+	* docs/gst/tmpl/gstcaps.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+	* docs/gst/tmpl/gstcompat.sgml:
+	* docs/gst/tmpl/gstconfig.sgml:
+	* docs/gst/tmpl/gstcpu.sgml:
+	* docs/gst/tmpl/gstdata.sgml:
+	* docs/gst/tmpl/gstdata_private.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstenumtypes.sgml:
+	* docs/gst/tmpl/gsterror.sgml:
+	* docs/gst/tmpl/gstevent.sgml:
+	* docs/gst/tmpl/gstfakesink.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* docs/gst/tmpl/gstfilesink.sgml:
+	* docs/gst/tmpl/gstfilter.sgml:
+	* docs/gst/tmpl/gstindex.sgml:
+	* docs/gst/tmpl/gstinfo.sgml:
+	* docs/gst/tmpl/gstinterface.sgml:
+	* docs/gst/tmpl/gstlog.sgml:
+	* docs/gst/tmpl/gstmacros.sgml:
+	* docs/gst/tmpl/gstmarshal.sgml:
+	* docs/gst/tmpl/gstmd5sink.sgml:
+	* docs/gst/tmpl/gstmultifilesrc.sgml:
+	* docs/gst/tmpl/gstobject.sgml:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gstparse.sgml:
+	* docs/gst/tmpl/gstpipeline.sgml:
+	* docs/gst/tmpl/gstplugin.sgml:
+	* docs/gst/tmpl/gstpluginfeature.sgml:
+	* docs/gst/tmpl/gstqueue.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gstregistry.sgml:
+	* docs/gst/tmpl/gstregistrypool.sgml:
+	* docs/gst/tmpl/gstscheduler.sgml:
+	* docs/gst/tmpl/gstsearchfuncs.sgml:
+	* docs/gst/tmpl/gstshaper.sgml:
+	* docs/gst/tmpl/gstspider.sgml:
+	* docs/gst/tmpl/gstspideridentity.sgml:
+	* docs/gst/tmpl/gststructure.sgml:
+	* docs/gst/tmpl/gstsystemclock.sgml:
+	* docs/gst/tmpl/gsttag.sgml:
+	* docs/gst/tmpl/gsttaginterface.sgml:
+	* docs/gst/tmpl/gsttee.sgml:
+	* docs/gst/tmpl/gstthread.sgml:
+	* docs/gst/tmpl/gsttrace.sgml:
+	* docs/gst/tmpl/gsttrashstack.sgml:
+	* docs/gst/tmpl/gsttypefind.sgml:
+	* docs/gst/tmpl/gsttypes.sgml:
+	* docs/gst/tmpl/gsturi.sgml:
+	* docs/gst/tmpl/gsturitype.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* docs/gst/tmpl/gstvalue.sgml:
+	* docs/gst/tmpl/gstversion.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* docs/gst/tmpl/gstxmlregistry.sgml:
+	* docs/gst/tmpl/gthread-cothreads.sgml:
+	* docs/gst/tmpl/types.sgml:
+
 2004-03-24  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/other-sink.xml:

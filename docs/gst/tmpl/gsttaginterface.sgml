@@ -2,7 +2,7 @@
 GstTagInterface
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Element interface that allows setting and retrieval of media metadata
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -14,13 +14,18 @@ GstTagInterface
 
 </para>
 
-<!-- ##### FUNCTION gst_tag_setter_get_type ##### -->
+<!-- ##### STRUCT GstTagSetter ##### -->
 <para>
 
 </para>
 
-@Returns: 
 
+<!-- ##### STRUCT GstTagSetterIFace ##### -->
+<para>
+
+</para>
+
+@g_iface: 
 
 <!-- ##### FUNCTION gst_tag_setter_merge ##### -->
 <para>

@@ -1,0 +1,366 @@
+<!-- ##### SECTION Title ##### -->
+GstStructure
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstStructure ##### -->
+<para>
+
+</para>
+
+@type: 
+@name: 
+@fields: 
+@_gst_reserved: 
+
+<!-- ##### USER_FUNCTION GstStructureForeachFunc ##### -->
+<para>
+
+</para>
+
+@field_id: 
+@value: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_empty_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_id_empty_new ##### -->
+<para>
+
+</para>
+
+@quark: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@firstfield: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_new_valist ##### -->
+<para>
+
+</para>
+
+@name: 
+@firstfield: 
+@varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_copy ##### -->
+<para>
+
+</para>
+
+@structure: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_free ##### -->
+<para>
+
+</para>
+
+@structure: 
+
+
+<!-- ##### FUNCTION gst_structure_get_name ##### -->
+<para>
+
+</para>
+
+@structure: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_set_name ##### -->
+<para>
+
+</para>
+
+@structure: 
+@name: 
+
+
+<!-- ##### FUNCTION gst_structure_id_set_value ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field: 
+@value: 
+
+
+<!-- ##### FUNCTION gst_structure_set_value ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@value: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_set ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@Varargs: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_set_valist ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@varargs: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_id_get_value ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_get_value ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_remove_field ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_remove_fields ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@Varargs: 
+<!-- # Unused Parameters # -->
+@fieldnamename: 
+
+
+<!-- ##### FUNCTION gst_structure_remove_fields_valist ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@varargs: 
+<!-- # Unused Parameters # -->
+@fieldnamename: 
+
+
+<!-- ##### FUNCTION gst_structure_remove_all_fields ##### -->
+<para>
+
+</para>
+
+@structure: 
+
+
+<!-- ##### FUNCTION gst_structure_get_field_type ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_foreach ##### -->
+<para>
+
+</para>
+
+@structure: 
+@func: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_n_fields ##### -->
+<para>
+
+</para>
+
+@structure: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_has_field ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_has_field_typed ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@type: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_get_boolean ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@value: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_get_int ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@value: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_get_fourcc ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@value: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_get_double ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@value: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@fieldnamename: 
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_get_string ##### -->
+<para>
+
+</para>
+
+@structure: 
+@fieldname: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@field: 
+
+
+<!-- ##### FUNCTION gst_structure_to_string ##### -->
+<para>
+
+</para>
+
+@structure: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_structure_from_string ##### -->
+<para>
+
+</para>
+
+@string: 
+@end: 
+@Returns: 
+
+

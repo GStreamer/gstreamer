@@ -14,6 +14,101 @@ Tracing functionality
 
 </para>
 
+<!-- ##### STRUCT GstTrace ##### -->
+<para>
+
+</para>
+
+@filename: 
+@fd: 
+@buf: 
+@bufsize: 
+@bufoffset: 
+
+<!-- ##### STRUCT GstTraceEntry ##### -->
+<para>
+
+</para>
+
+@timestamp: 
+@sequence: 
+@data: 
+@message: 
+
+<!-- ##### FUNCTION gst_trace_new ##### -->
+<para>
+
+</para>
+
+@filename: 
+@size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_trace_destroy ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
+<!-- ##### FUNCTION gst_trace_flush ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
+<!-- ##### FUNCTION gst_trace_text_flush ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
+<!-- ##### MACRO gst_trace_get_size ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
+<!-- ##### MACRO gst_trace_get_offset ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
+<!-- ##### MACRO gst_trace_get_remaining ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
+<!-- ##### FUNCTION gst_trace_set_default ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+
+<!-- ##### FUNCTION gst_trace_read_tsc ##### -->
+<para>
+
+</para>
+
+@dst: 
+
+
 <!-- ##### ENUM GstAllocTraceFlags ##### -->
 <para>
 Flags indicating which tracing feature to enable.
@@ -41,6 +136,14 @@ The main tracing object
 
 
 <!-- ##### FUNCTION gst_alloc_trace_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_alloc_trace_live_all ##### -->
 <para>
 
 </para>
@@ -113,5 +216,16 @@ Trace a memory free operation
 
 @trace: The traver to use
 @mem: The memory that is freed
+
+
+<!-- ##### MACRO gst_trace_add_entry ##### -->
+<para>
+
+</para>
+
+@trace: 
+@seq: 
+@data: 
+@msg: 
 
 

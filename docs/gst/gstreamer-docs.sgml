@@ -78,7 +78,7 @@
   <chapter id="gstreamer">
     <title>GStreamer Core Library</title>
 
-    <para>libgst.la provides all the core GStreamer services,
+    <para>libgstreamer-0.8.so provides all the core GStreamer services,
 including initialization, plugin management and types, as 
 well as the object hierarchy that defines elements and bins, along
 with some more specialized elements.</para>
@@ -92,7 +92,7 @@ with some more specialized elements.</para>
     &GstCpu;
     &GstData;
     &GstElement;
-    &GstElementFactory;
+<!--    &GstElementFactory; -->
     &GstError;
     &GstEvent;
     &GstFormat;
@@ -118,7 +118,7 @@ with some more specialized elements.</para>
     &GstTagInterface;
     &GstThread;
     &GstTypeFind;
-    &GstTypeFindFactory;
+<!--    &GstTypeFindFactory; -->
     &GstUri;
     &GstUtils;
 <!-- not commented properly yet

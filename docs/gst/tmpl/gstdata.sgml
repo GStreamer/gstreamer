@@ -2,7 +2,7 @@
 GstData
 
 <!-- ##### SECTION Short_Description ##### -->
-Common structure for GstBuffer, GstBufferPool, and GstEvent
+Abstract structure for information that is passed among elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -48,24 +48,6 @@ Shift a given flag so that it can be used in an or operation
 @flag: The flag to shift
 
 
-<!-- ##### MACRO GST_DATA_FLAG_IS_SET ##### -->
-<para>
-Check if a given flag is set on the data
-</para>
-
-@data: The data to check
-@flag: The flag to check for
-
-
-<!-- ##### MACRO GST_DATA_FLAG_SET ##### -->
-<para>
-Set the flag on the data
-</para>
-
-@data: The data to set the flag on
-@flag: The flag to set
-
-
 <!-- ##### MACRO GST_DATA_FLAG_UNSET ##### -->
 <para>
 Unset the given flag
@@ -73,6 +55,13 @@ Unset the given flag
 
 @data: The data to unset the flag of
 @flag: The flag to unset
+
+
+<!-- ##### MACRO GST_TYPE_DATA ##### -->
+<para>
+
+</para>
+
 
 
 <!-- ##### STRUCT GstData ##### -->
@@ -176,6 +165,15 @@ Get access to the free function of the data
 
 
 <!-- ##### FUNCTION gst_data_copy ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_data_is_writable ##### -->
 <para>
 
 </para>

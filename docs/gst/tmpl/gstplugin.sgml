@@ -2,7 +2,7 @@
 GstPlugin
 
 <!-- ##### SECTION Short_Description ##### -->
-Dynamically loadable Elements
+Container for features loaded from a shared object module
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -34,19 +34,19 @@ to bring the plugin into memory.
 #GstPluginFeature, #GstType, #GstAutoplug, #GstElementFactory
 </para>
 
-<!-- ##### MACRO GST_PLUGIN_ERROR ##### -->
-<para>
-The error quark
-</para>
-
-
-
 <!-- ##### FUNCTION gst_plugin_error_quark ##### -->
 <para>
 Get the error quark
 </para>
 
 @Returns: The error quark used in GError messages
+
+
+<!-- ##### MACRO GST_PLUGIN_ERROR ##### -->
+<para>
+The error quark
+</para>
+
 
 
 <!-- ##### ENUM GstPluginError ##### -->
@@ -57,6 +57,14 @@ The plugin loading errors
 @GST_PLUGIN_ERROR_MODULE: The plugin could not be loaded
 @GST_PLUGIN_ERROR_DEPENDENCIES: The plugin has unresolved dependencies
 @GST_PLUGIN_ERROR_NAME_MISMATCH: 
+
+<!-- ##### MACRO GST_PLUGIN ##### -->
+<para>
+
+</para>
+
+@plugin: 
+
 
 <!-- ##### STRUCT GstPlugin ##### -->
 <para>
@@ -70,18 +78,6 @@ The plugin object
 @manager: 
 @module: 
 @_gst_reserved: 
-
-<!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
-<para>
-A plugin should provide a pointer to a function of this type in the plugin_desc struct.
-It will be called by the loader at statup.
-</para>
-
-@plugin: The plugin object that can be used to register stuff for this plugin.
-@Returns: A boolean indicating success or failure.
-<!-- # Unused Parameters # -->
-@module: The <classname>GModule</classname> it was loaded from
-
 
 <!-- ##### STRUCT GstPluginDesc ##### -->
 <para>
@@ -101,7 +97,100 @@ loaded will use this variable to initialize the plugin.
 @origin: 
 @_gst_reserved: 
 
+<!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
+<para>
+A plugin should provide a pointer to a function of this type in the plugin_desc struct.
+It will be called by the loader at statup.
+</para>
+
+@plugin: The plugin object that can be used to register stuff for this plugin.
+@Returns: A boolean indicating success or failure.
+<!-- # Unused Parameters # -->
+@module: The <classname>GModule</classname> it was loaded from
+
+
+<!-- ##### USER_FUNCTION GstPluginExitFunc ##### -->
+<para>
+
+</para>
+
+@plugin: 
+
+
+<!-- ##### MACRO GST_PLUGIN_DEFINE ##### -->
+<para>
+
+</para>
+
+@major: 
+@minor: 
+@name: 
+@description: 
+@init: 
+@version: 
+@license: 
+@package: 
+@origin: 
+
+
+<!-- ##### MACRO GST_PLUGIN_DEFINE_STATIC ##### -->
+<para>
+
+</para>
+
+@major: 
+@minor: 
+@name: 
+@description: 
+@init: 
+@version: 
+@license: 
+@package: 
+@origin: 
+
+
+<!-- ##### MACRO GST_LICENSE_UNKNOWN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### USER_FUNCTION GstPluginFilter ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_PLUGIN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_plugin_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_plugin_get_name ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_description ##### -->
 <para>
 
 </para>
@@ -119,12 +208,82 @@ loaded will use this variable to initialize the plugin.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_plugin_get_license ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_package ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_origin ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_get_module ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_plugin_is_loaded ##### -->
 <para>
 
 </para>
 
 @plugin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_feature_filter ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@filter: 
+@first: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_list_feature_filter ##### -->
+<para>
+
+</para>
+
+@list: 
+@filter: 
+@first: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_name_filter ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@name: 
 @Returns: 
 
 
@@ -145,6 +304,16 @@ loaded will use this variable to initialize the plugin.
 @plugin: 
 @name: 
 @type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_load_file ##### -->
+<para>
+
+</para>
+
+@filename: 
+@error: 
 @Returns: 
 
 

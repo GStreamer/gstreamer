@@ -1,0 +1,425 @@
+<!-- ##### SECTION Title ##### -->
+GstClock
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstClockTime ##### -->
+<para>
+A datatype to hold a time, measured in nanoseconds.
+</para>
+
+
+<!-- ##### TYPEDEF GstClockTimeDiff ##### -->
+<para>
+A datatype to hold a timedifference, measured in nanoseconds.
+</para>
+
+
+<!-- ##### TYPEDEF GstClockID ##### -->
+<para>
+A detatype to hold the handle to an outstanding async clock callback
+</para>
+
+
+<!-- ##### MACRO GST_CLOCK_TIME_NONE ##### -->
+<para>
+Constant to define an undefined clock time
+</para>
+
+
+
+<!-- ##### MACRO GST_CLOCK_TIME_IS_VALID ##### -->
+<para>
+
+</para>
+
+@time: 
+
+
+<!-- ##### MACRO GST_SECOND ##### -->
+<para>
+Constant that defines one GStreamer second
+</para>
+
+
+
+<!-- ##### MACRO GST_MSECOND ##### -->
+<para>
+Constant that defines one GStreamer millisecond
+</para>
+
+
+
+<!-- ##### MACRO GST_USECOND ##### -->
+<para>
+Constant that defines one GStreamer microsecond
+</para>
+
+
+
+<!-- ##### MACRO GST_NSECOND ##### -->
+<para>
+Constant that defines one GStreamer nanosecond
+</para>
+
+
+
+<!-- ##### MACRO GST_CLOCK_DIFF ##### -->
+<para>
+Calculate a difference between to clock times.
+</para>
+
+@s: the first time
+@e: the second time
+
+
+<!-- ##### MACRO GST_TIMEVAL_TO_TIME ##### -->
+<para>
+Convert a GTimeVal to a GstClockTime
+</para>
+
+@tv: the timeval to convert
+
+
+<!-- ##### MACRO GST_TIME_TO_TIMEVAL ##### -->
+<para>
+Convert a GstClockTime to a GTimeVal
+</para>
+
+@t: The GstClockTime to convert
+@tv: The target timeval
+
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_TRACE_NAME ##### -->
+<para>
+The name used for tracing clock entry allocations.
+</para>
+
+
+
+<!-- ##### STRUCT GstClockEntry ##### -->
+<para>
+All pending timeouts or periodic notifies are converted into
+an entry.
+</para>
+
+@clock: 
+@type: 
+@time: 
+@interval: 
+@status: 
+@func: 
+@user_data: 
+
+<!-- ##### USER_FUNCTION GstClockCallback ##### -->
+<para>
+The function prototype of the callback.
+</para>
+
+@clock: The clock that triggered the callback
+@time: The time it was triggered
+@id: The id that expired
+@user_data: user data passed in the async_wait call
+@Returns: 
+
+
+<!-- ##### ENUM GstClockEntryStatus ##### -->
+<para>
+The status of a clock timeout.
+</para>
+
+@GST_CLOCK_ENTRY_OK: timeout happened
+@GST_CLOCK_ENTRY_EARLY: request for timout that has been passed
+@GST_CLOCK_ENTRY_RESTART: need to restart the timeout request
+
+<!-- ##### ENUM GstClockEntryType ##### -->
+<para>
+The type of the clock entry
+</para>
+
+@GST_CLOCK_ENTRY_SINGLE: a single shot timeout
+@GST_CLOCK_ENTRY_PERIODIC: a periodic timeout request
+
+<!-- ##### MACRO GST_CLOCK_ENTRY ##### -->
+<para>
+Cast to a clock entry
+</para>
+
+@entry: the entry to cast
+
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_CLOCK ##### -->
+<para>
+Get the owner clock of the entry
+</para>
+
+@entry: the entry to query
+
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_TYPE ##### -->
+<para>
+Get the type of the clock entry
+</para>
+
+@entry: the entry to query
+
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_TIME ##### -->
+<para>
+Get the requested time of this entry
+</para>
+
+@entry: the entry to query
+
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_INTERVAL ##### -->
+<para>
+Get the interval of this periodic entry
+</para>
+
+@entry: the entry to query
+
+
+<!-- ##### MACRO GST_CLOCK_ENTRY_STATUS ##### -->
+<para>
+The status of the entry
+</para>
+
+@entry: the entry to query
+
+
+<!-- ##### ENUM GstClockReturn ##### -->
+<para>
+The return value of a clock operation.
+</para>
+
+@GST_CLOCK_STOPPED: The clock is stopped.
+@GST_CLOCK_TIMEOUT: The operation timed out.
+@GST_CLOCK_EARLY: The operation was scheduled too late.
+@GST_CLOCK_ERROR: An error occured
+@GST_CLOCK_UNSUPPORTED: Operation is not supported
+
+<!-- ##### ENUM GstClockFlags ##### -->
+<para>
+The capabilities of this clock
+</para>
+
+@GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC: This clock can do a single sync timeut request
+@GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC: This clock can do a single async timeout request
+@GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC: This clock can do sync periodic timeout requests
+@GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC: This clock can do async periodic timeout callbacks
+@GST_CLOCK_FLAG_CAN_SET_RESOLUTION: The resolution of this clock can be changed
+@GST_CLOCK_FLAG_CAN_SET_SPEED: The speed of this clock can be changed
+
+<!-- ##### MACRO GST_CLOCK_FLAGS ##### -->
+<para>
+Get the clock flags
+</para>
+
+@clock: the clock to query
+
+
+<!-- ##### FUNCTION gst_clock_set_speed ##### -->
+<para>
+
+</para>
+
+@clock: 
+@speed: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_speed ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_set_resolution ##### -->
+<para>
+
+</para>
+
+@clock: 
+@resolution: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_resolution ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_set_active ##### -->
+<para>
+
+</para>
+
+@clock: 
+@active: 
+
+
+<!-- ##### FUNCTION gst_clock_is_active ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_reset ##### -->
+<para>
+
+</para>
+
+@clock: 
+
+
+<!-- ##### FUNCTION gst_clock_handle_discont ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_time ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_event_time ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_next_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_new_single_shot_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_new_periodic_id ##### -->
+<para>
+
+</para>
+
+@clock: 
+@start_time: 
+@interval: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_id_get_time ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_id_wait ##### -->
+<para>
+
+</para>
+
+@id: 
+@jitter: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_id_wait_async ##### -->
+<para>
+
+</para>
+
+@id: 
+@func: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_id_unschedule ##### -->
+<para>
+
+</para>
+
+@id: 
+
+
+<!-- ##### FUNCTION gst_clock_id_unlock ##### -->
+<para>
+
+</para>
+
+@id: 
+
+
+<!-- ##### FUNCTION gst_clock_id_free ##### -->
+<para>
+
+</para>
+
+@id: 
+
+
+<!-- ##### ARG GstClock:event-diff ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstClock:max-diff ##### -->
+<para>
+Maximum allowed diff for clock sync requests against the real time.
+</para>
+
+<!-- ##### ARG GstClock:stats ##### -->
+<para>
+Boolean property to activate stat generation on the clock.
+</para>
+

@@ -2,8 +2,7 @@
 GstCpu
 
 <!-- ##### SECTION Short_Description ##### -->
-
-Request the features of the CPU.
+Descripe CPU features
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

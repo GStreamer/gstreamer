@@ -1,3 +1,123 @@
+<!-- ##### SECTION ./tmpl/GstBin.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstBin.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstBin.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstBin.sgml:Title ##### -->
+GstBin
+
+
+<!-- ##### SECTION ./tmpl/GstBuffer.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstBuffer.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstBuffer.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstBuffer.sgml:Title ##### -->
+GstBuffer
+
+
+<!-- ##### SECTION ./tmpl/GstCaps.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstCaps.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstCaps.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstCaps.sgml:Title ##### -->
+GstCaps
+
+
+<!-- ##### SECTION ./tmpl/GstClock.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstClock.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstClock.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstClock.sgml:Title ##### -->
+GstClock
+
+
+<!-- ##### SECTION ./tmpl/GstCompat.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstCompat.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstCompat.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstCompat.sgml:Title ##### -->
+GstCompat
+
+
+<!-- ##### SECTION ./tmpl/GstData.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstData.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstData.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstData.sgml:Title ##### -->
+GstData
+
+
 <!-- ##### SECTION ./tmpl/GstElement.sgml:Long_Description ##### -->
 <para>
 
@@ -16,6 +136,86 @@
 
 <!-- ##### SECTION ./tmpl/GstElement.sgml:Title ##### -->
 GstElement
+
+
+<!-- ##### SECTION ./tmpl/GstEvent.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstEvent.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstEvent.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstEvent.sgml:Title ##### -->
+GstEvent
+
+
+<!-- ##### SECTION ./tmpl/GstIndex.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstIndex.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstIndex.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstIndex.sgml:Title ##### -->
+GstIndexFactory
+
+
+<!-- ##### SECTION ./tmpl/GstStructure.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstStructure.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstStructure.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstStructure.sgml:Title ##### -->
+GstStructure
+
+
+<!-- ##### SECTION ./tmpl/GstTag.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstTag.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstTag.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstTag.sgml:Title ##### -->
+GstTag
 
 
 <!-- ##### SECTION ./tmpl/audioraw.sgml:Long_Description ##### -->
@@ -38,26 +238,6 @@ Information about audio buffers.
 audioraw
 
 
-<!-- ##### SECTION ./tmpl/cothreads_compat.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/cothreads_compat.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/cothreads_compat.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/cothreads_compat.sgml:Title ##### -->
-cothreads_compat
-
-
 <!-- ##### SECTION ./tmpl/gobject2gtk.sgml:Long_Description ##### -->
 <para>
 
@@ -76,67 +256,6 @@ cothreads_compat
 
 <!-- ##### SECTION ./tmpl/gobject2gtk.sgml:Title ##### -->
 GObject
-
-
-<!-- ##### SECTION ./tmpl/grammar.tab.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/grammar.tab.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/grammar.tab.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/grammar.tab.sgml:Title ##### -->
-grammar.tab
-
-
-<!-- ##### SECTION ./tmpl/gst_private.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gst_private.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gst_private.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gst_private.sgml:Title ##### -->
-gst_private
-
-
-<!-- ##### SECTION ./tmpl/gstaggregator.sgml:Long_Description ##### -->
-<para>
-The aggregator is mainly used for testing purposes. It has several
-methods to request buffers from its pads.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstaggregator.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstaggregator.sgml:Short_Description ##### -->
-Combine buffers.
-
-
-<!-- ##### SECTION ./tmpl/gstaggregator.sgml:Title ##### -->
-GstAggregator
 
 
 <!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Long_Description ##### -->
@@ -392,26 +511,6 @@ GstCacheFactory
 GstColorSpace
 
 
-<!-- ##### SECTION ./tmpl/gstdata_private.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstdata_private.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstdata_private.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstdata_private.sgml:Title ##### -->
-gstdata_private
-
-
 <!-- ##### SECTION ./tmpl/gstdisksink.sgml:Long_Description ##### -->
 <para>
 The disksink write to a file. The filename can be given as an argument.
@@ -473,24 +572,64 @@ GstDiskSrc
 GstElementFactory
 
 
-<!-- ##### SECTION ./tmpl/gstenumtypes.sgml:Long_Description ##### -->
+<!-- ##### SECTION ./tmpl/gstelementfactory.sgml:Long_Description ##### -->
 <para>
+GstElementFactory is used to create instances of elements. A GstElementfactory
+can be added to a #GstPlugin as it is also a #GstPluginFeature.
+</para>
+<para>
+Use gst_element_factory_new() to create a new factory which can be added to a plugin 
+with gst_plugin_add_feature().
+</para>
+<para>
+gst_element_factory_add_pad_template() is used to add a padtemplate to the factory.
+This function will enable the application to query for elementfactories that handle
+a specific media type.
+</para>
+<para>
+Use the gst_element_factory_find() and gst_element_factory_create() functions
+to create element instances or use gst_element_factory_make() as a convenient 
+shortcut.
+</para>
+<para>
+The following code example shows you how to create a GstFileSrc element.
+</para>
 
+<para>
+  <programlisting role="C">
+  #include &lt;gst/gst.h&gt;
+
+  GstElement *src;
+  GstElementFactory *srcfactory;
+
+  gst_init(&amp;argc,&amp;argv);
+
+  srcfactory = gst_element_factory_find("filesrc");
+  g_return_if_fail(srcfactory != NULL);
+
+  src = gst_element_factory_create(srcfactory,"src");
+  g_return_if_fail(src != NULL);
+  ...
+  </programlisting>
+</para>
+<para>
+An elementfactory can be assigned a rank with gst_element_factory_set_rank() 
+so that the autopluggers can select a plugin more appropriatly
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstenumtypes.sgml:See_Also ##### -->
+<!-- ##### SECTION ./tmpl/gstelementfactory.sgml:See_Also ##### -->
 <para>
-
+#GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstenumtypes.sgml:Short_Description ##### -->
+<!-- ##### SECTION ./tmpl/gstelementfactory.sgml:Short_Description ##### -->
+Create GstElements from a factory
 
 
-
-<!-- ##### SECTION ./tmpl/gstenumtypes.sgml:Title ##### -->
-gstenumtypes
+<!-- ##### SECTION ./tmpl/gstelementfactory.sgml:Title ##### -->
+GstElementFactory
 
 
 <!-- ##### SECTION ./tmpl/gstesdsink.sgml:Long_Description ##### -->
@@ -533,152 +672,6 @@ GstEsdSink
 GstExtraTypes
 
 
-<!-- ##### SECTION ./tmpl/gstfakesink.sgml:Long_Description ##### -->
-<para>
-Take a buffer and gst_buffer_unref() it. This element does nothing
-with the buffer. (fakesink)
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfakesink.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfakesink.sgml:Short_Description ##### -->
-Sources a buffer without doing anything with it. (fakesink)
-
-
-<!-- ##### SECTION ./tmpl/gstfakesink.sgml:Title ##### -->
-GstFakeSink
-
-
-<!-- ##### SECTION ./tmpl/gstfakesrc.sgml:Long_Description ##### -->
-<para>
-The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfakesrc.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfakesrc.sgml:Short_Description ##### -->
-Generate empty buffers. (fakesrc)
-
-
-<!-- ##### SECTION ./tmpl/gstfakesrc.sgml:Title ##### -->
-GstFakeSrc
-
-
-<!-- ##### SECTION ./tmpl/gstfdsink.sgml:Long_Description ##### -->
-<para>
-Write data to a file descriptor.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfdsink.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfdsink.sgml:Short_Description ##### -->
-Write data to a file descriptor. (fdsink)
-
-
-<!-- ##### SECTION ./tmpl/gstfdsink.sgml:Title ##### -->
-GstFdSink
-
-
-<!-- ##### SECTION ./tmpl/gstfdsrc.sgml:Long_Description ##### -->
-<para>
-Read buffers from a file descriptor.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfdsrc.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfdsrc.sgml:Short_Description ##### -->
-Read buffers from a file descriptor. (fdsrc)
-
-
-<!-- ##### SECTION ./tmpl/gstfdsrc.sgml:Title ##### -->
-GstFdSrc
-
-
-<!-- ##### SECTION ./tmpl/gstfilesink.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfilesink.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfilesink.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstfilesink.sgml:Title ##### -->
-GstFileSink
-
-
-<!-- ##### SECTION ./tmpl/gstfilesrc.sgml:Long_Description ##### -->
-<para>
-FileSrc is used to read buffers from a file. It efficiently uses mmap
-and subbuffers.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfilesrc.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfilesrc.sgml:Short_Description ##### -->
-Read data from a file
-
-
-<!-- ##### SECTION ./tmpl/gstfilesrc.sgml:Title ##### -->
-GstFileSrc
-
-
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:Long_Description ##### -->
-<para>
-Filters take data in and spit data out. They are the main Element in a filter graph.
-Filters have zero or more inputs and zero or more outputs. Filters are linked
-together to form filter graphs. A GstFilter is the base class and is not very usefull
-on its own.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:Short_Description ##### -->
-Take data in and spit data out
-
-
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:Title ##### -->
-GstFilter
-
-
 <!-- ##### SECTION ./tmpl/gstgetbits.sgml:Long_Description ##### -->
 <para>
 
@@ -719,24 +712,24 @@ Reads data from a URL. (httpsrc)
 GstHttpSrc
 
 
-<!-- ##### SECTION ./tmpl/gstidentity.sgml:Long_Description ##### -->
+<!-- ##### SECTION ./tmpl/gstindexfactory.sgml:Long_Description ##### -->
 <para>
-Pass data without modification.
+GstIndexFactory is used to dynamically create GstIndex implementations.
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstidentity.sgml:See_Also ##### -->
+<!-- ##### SECTION ./tmpl/gstindexfactory.sgml:See_Also ##### -->
 <para>
-
+#GstIndex
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstidentity.sgml:Short_Description ##### -->
-Pass data without modification. (identity)
+<!-- ##### SECTION ./tmpl/gstindexfactory.sgml:Short_Description ##### -->
+Create GstIndexes from a factory
 
 
-<!-- ##### SECTION ./tmpl/gstidentity.sgml:Title ##### -->
-GstIdentity
+<!-- ##### SECTION ./tmpl/gstindexfactory.sgml:Title ##### -->
+GstIndexFactory
 
 
 <!-- ##### SECTION ./tmpl/gstlink.sgml:Long_Description ##### -->
@@ -759,66 +752,6 @@ Generic link between elements.
 
 <!-- ##### SECTION ./tmpl/gstlink.sgml:Title ##### -->
 GstLink
-
-
-<!-- ##### SECTION ./tmpl/gstmacros.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstmacros.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstmacros.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstmacros.sgml:Title ##### -->
-gstmacros
-
-
-<!-- ##### SECTION ./tmpl/gstmarshal.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstmarshal.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstmarshal.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstmarshal.sgml:Title ##### -->
-gstmarshal
-
-
-<!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstmd5sink.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstmd5sink.sgml:Title ##### -->
-GstMD5Sink
 
 
 <!-- ##### SECTION ./tmpl/gstmeta.sgml:Long_Description ##### -->
@@ -954,76 +887,117 @@ GstMeta
 GstMultiDiskSrc
 
 
-<!-- ##### SECTION ./tmpl/gstpipefilter.sgml:Long_Description ##### -->
+<!-- ##### SECTION ./tmpl/gstpadtemplate.sgml:Long_Description ##### -->
 <para>
-A GstPipefilter pipes data to an external program and creates
-buffers from its output.
+Padtemplates describe the possible media types a pad or an elementfactory can
+handle. 
+</para>
+<para>
+Pad and PadTemplates have #GstCaps attached to it to describe the media type they
+are capable of dealing with.  gst_pad_template_get_caps() is used to get the
+caps of a padtemplate. It's not possible to modify the caps of a padtemplate after
+creation. 
+</para>
+<para>
+Padtemplates can be created with gst_pad_template_new() or with the convenient
+GST_PAD_TEMPLATE_FACTORY() macro. A padtemplate can be used to create a pad or 
+to add to an elementfactory.
+</para>
+<para>
+The following code example shows the code to create a pad from a padtemplate.
+<programlisting>
+  GstStaticPadTemplate my_template =
+  GST_STATIC_PAD_TEMPLATE (
+    "sink",		/* the name of the pad */
+    GST_PAD_SINK,	/* the direction of the pad */
+    GST_PAD_ALWAYS, 	/* when this pad will be present */
+    GST_STATIC_CAPS (	/* the capabilities of the padtemplate */
+      "audio/x-raw-int, "
+        "channels = (int) [ 1, 6 ]"
+    )
+  )
+
+  void
+  my_method (void) 
+  {
+    GstPad *pad;
+  
+    pad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (my_template_factory), "sink");
+    ...
+  }
+</programlisting>
+</para>
+<para>
+The following example shows you how to add the padtemplate to an elementfactory:
+<programlisting>
+  gboolean
+  my_factory_init (GstPlugin *plugin)
+  {
+    GstElementFactory *factory;
+
+    factory = gst_element_factory_new ("my_factory", GST_TYPE_MYFACTORY, &amp;gst_myfactory_details);
+    g_return_val_if_fail (factory != NULL, FALSE);
+
+    gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (my_template_factory));
+
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+    return TRUE;
+  }
+
+</programlisting>
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstpipefilter.sgml:See_Also ##### -->
+<!-- ##### SECTION ./tmpl/gstpadtemplate.sgml:See_Also ##### -->
+<para>
+#GstPad, #GstElementFactory
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstpadtemplate.sgml:Short_Description ##### -->
+Describe the media type of a pad.
+
+
+<!-- ##### SECTION ./tmpl/gstpadtemplate.sgml:Title ##### -->
+GstPadTemplate
+
+
+<!-- ##### SECTION ./tmpl/gstschedulerfactory.sgml:Long_Description ##### -->
+<para>
+A schedulerfactory is used to create instances of a scheduler. It
+can be added to a #GstPlugin as it extends #GstPluginFeature.
+</para>
+<para>
+Use gst_scheduler_factory_new() to create a new scheduler which can be registered
+to a plugin with gst_plugin_add_feature().
+</para>
+<para>
+Use gst_scheduler_factory_find() to find the named schedulerfactory.
+or use gst_scheduler_factory_get_list() to get a  list of all available schedulers.
+</para>
+<para>
+Once an schedulerfactory has been obtained use gst_scheduler_factory_create() to
+instantiate a real scheduler. Optionally gst_scheduler_factory_make() to create
+a scheduler from the named factory.
+</para>
+<para>
+Use gst_scheduler_factory_destroy() to remove the factory from the global list.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstschedulerfactory.sgml:See_Also ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstpipefilter.sgml:Short_Description ##### -->
-A wrapper around every stdin/stdout capable program
+<!-- ##### SECTION ./tmpl/gstschedulerfactory.sgml:Short_Description ##### -->
+Create schedulers from a factory
 
 
-<!-- ##### SECTION ./tmpl/gstpipefilter.sgml:Title ##### -->
-GstPipefilter
-
-
-<!-- ##### SECTION ./tmpl/gstqueue.sgml:Long_Description ##### -->
-<para>
-Simple data queue. Data is queued till max_level buffers any subsequent buffers
-sent to this filter will block until free space becomes available in the buffer.
-The queue is typically used in conjunction with a thread.
-</para>
-<para>
-You can query how many buffers are queued with the level argument.
-</para>
-<para>
-The default queue length is set to 100.
-</para>
-<para>
-The queue blocks by default.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstqueue.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstqueue.sgml:Short_Description ##### -->
-Simple asynchronous data queue.
-
-
-<!-- ##### SECTION ./tmpl/gstqueue.sgml:Title ##### -->
-GstQueue
-
-
-<!-- ##### SECTION ./tmpl/gstsearchfuncs.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstsearchfuncs.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstsearchfuncs.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstsearchfuncs.sgml:Title ##### -->
-gstsearchfuncs
+<!-- ##### SECTION ./tmpl/gstschedulerfactory.sgml:Title ##### -->
+GstSchedulerFactory
 
 
 <!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Long_Description ##### -->
@@ -1066,46 +1040,6 @@ The end point of a filter graph
 
 <!-- ##### SECTION ./tmpl/gstsink.sgml:Title ##### -->
 GstSink
-
-
-<!-- ##### SECTION ./tmpl/gstspider.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstspider.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstspider.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstspider.sgml:Title ##### -->
-GstSpider
-
-
-<!-- ##### SECTION ./tmpl/gstspideridentity.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstspideridentity.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstspideridentity.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstspideridentity.sgml:Title ##### -->
-GstSpiderIdentity
 
 
 <!-- ##### SECTION ./tmpl/gstsrc.sgml:Long_Description ##### -->
@@ -1172,47 +1106,6 @@ An autoplugger made for media playback
 GstStaticAutoplugRender
 
 
-<!-- ##### SECTION ./tmpl/gststatistics.sgml:Long_Description ##### -->
-<para>
-The plugin doesn't alter the data but provides statistics about
-the data stream, such as buffers/bytes/events etc.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gststatistics.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gststatistics.sgml:Short_Description ##### -->
-Provide statistics about data that passes this plugin
-
-
-<!-- ##### SECTION ./tmpl/gststatistics.sgml:Title ##### -->
-GstStatistics
-
-
-<!-- ##### SECTION ./tmpl/gsttee.sgml:Long_Description ##### -->
-<para>
-A tee can be used to split out the filter graph.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gsttee.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gsttee.sgml:Short_Description ##### -->
-1-to-N pipe fitting
-
-
-<!-- ##### SECTION ./tmpl/gsttee.sgml:Title ##### -->
-GstTee
-
-
 <!-- ##### SECTION ./tmpl/gsttimecache.sgml:Long_Description ##### -->
 <para>
 This class is used by plugins to manage time vs byte offsets. It is mainly
@@ -1234,84 +1127,77 @@ Cache time and byteoffsets.
 GstTimeCache
 
 
-<!-- ##### SECTION ./tmpl/gsttypes.sgml:Long_Description ##### -->
+<!-- ##### SECTION ./tmpl/gsttypefindfactory.sgml:Long_Description ##### -->
 <para>
-
+These functions allow querying informations about registered typefind 
+functions. How to create and register these functions is described in
+the section <link linkend="gstreamer-Writing-typefind-functions">
+"Writing typefind functions"</link>.
+</para>
+<example>
+<title>how to write a simple typefinder</title>
+<programlisting>
+/* FIXME: compile this? ;) */
+typedef struct {
+  guint8 *data;
+  guint size;
+  guint probability;
+  GstCaps *data;
+} MyTypeFind;
+static void
+my_peek (gpointer data, gint64 offset, guint size)
+{
+  MyTypeFind *find = (MyTypeFind *) data;
+  if (offset &gt;= 0 &amp;&amp; offset + size &lt;= find->size) {
+    return find->data + offset;
+  }
+  return NULL;
+}
+static void
+my_suggest (gpointer data, guint probability, GstCaps *caps)
+{
+  MyTypeFind *find = (MyTypeFind *) data;
+  if (probability &gt; find->probability) {
+    find->probability = probability;
+    gst_caps_replace (&amp;find->caps, caps);
+  }
+}
+static GstCaps *
+find_type (guint8 *data, guint size)
+{
+  GList *walk, *type_list;
+  MyTypeFind find = {data, size, 0, NULL};
+  GstTypeFind gst_find = {my_peek, my_suggest, &amp;find, };
+  
+  walk = type_list = gst_type_find_factory_get_list ();
+  while (walk) {
+    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
+    walk = g_list_next (walk)
+    gst_type_find_factory_call_function (factory, &amp;gst_find);
+  }
+  g_list_free (type_list);
+  return find.caps;
+};
+</programlisting>
+</example>
+<para>
+The above example shows how to write a very simple typefinder that identifies
+the given data. You can get quite a bit more complicated than that though.
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gsttypes.sgml:See_Also ##### -->
+<!-- ##### SECTION ./tmpl/gsttypefindfactory.sgml:See_Also ##### -->
 <para>
-
+<link linkend="gstreamer-Writing-typefind-functions">Writing typefind functions</link>
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gsttypes.sgml:Short_Description ##### -->
+<!-- ##### SECTION ./tmpl/gsttypefindfactory.sgml:Short_Description ##### -->
+information about registered typefind functions
 
 
-
-<!-- ##### SECTION ./tmpl/gsttypes.sgml:Title ##### -->
-gsttypes
-
-
-<!-- ##### SECTION ./tmpl/gstvalue.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstvalue.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstvalue.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstvalue.sgml:Title ##### -->
-GstValue
-
-
-<!-- ##### SECTION ./tmpl/gstversion.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstversion.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstversion.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstversion.sgml:Title ##### -->
-gstversion
-
-
-<!-- ##### SECTION ./tmpl/gstxmlregistry.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstxmlregistry.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstxmlregistry.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstxmlregistry.sgml:Title ##### -->
-GstXMLRegistry
+<!-- ##### SECTION ./tmpl/gsttypefindfactory.sgml:Title ##### -->
+GstTypeFindFactory
 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
@@ -1355,26 +1241,6 @@ Frequencies of a spectrum analysis.
 spectrum
 
 
-<!-- ##### SECTION ./tmpl/types.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/types.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/types.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/types.sgml:Title ##### -->
-types
-
-
 <!-- ##### SECTION ./tmpl/videoraw.sgml:Long_Description ##### -->
 <para>
 Information about video buffers.
@@ -1396,18 +1262,6 @@ videoraw
 
 
 <!-- ##### MACRO BLINK ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO COTHREADS_NAME ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO COTHREADS_NAME_CAPITAL ##### -->
 <para>
 
 </para>
@@ -1542,24 +1396,6 @@ g_print messages.
 
 
 <!-- ##### MACRO GInstanceInitFunc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GLOBAL_REGISTRY_DIR ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GLOBAL_REGISTRY_FILE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GLOBAL_REGISTRY_FILE_TMP ##### -->
 <para>
 
 </para>
@@ -1743,12 +1579,6 @@ Get the value of a #GstAtomicSwap
 
 @klass: 
 
-<!-- ##### MACRO GST_AUTOPLUG_MAX_COST ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_BIN ##### -->
 <para>
 
@@ -1763,19 +1593,20 @@ Get the value of a #GstAtomicSwap
 
 @obj: 
 
-<!-- ##### MACRO GST_BIN_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
 <!-- ##### MACRO GST_BIN_CLASS_CAST ##### -->
 <para>
 
 </para>
 
 @klass: 
+
+<!-- ##### MACRO GST_BUFFER ##### -->
+<para>
+Casts an object to a GstBuffer.
+</para>
+
+@buf: an object to cast.
+@Returns: the #GstBuffer to which the given object points.
 
 <!-- ##### MACRO GST_BUFFER_BUFFERPOOL ##### -->
 <para>
@@ -1955,6 +1786,22 @@ A flag indicating that SSE instructions are supported.
 </para>
 
 
+<!-- ##### MACRO GST_DATA_FLAG_IS_SET ##### -->
+<para>
+Check if a given flag is set on the data
+</para>
+
+@data: The data to check
+@flag: The flag to check for
+
+<!-- ##### MACRO GST_DATA_FLAG_SET ##### -->
+<para>
+Set the flag on the data
+</para>
+
+@data: The data to set the flag on
+@flag: The flag to set
+
 <!-- ##### MACRO GST_DATA_IS_READONLY ##### -->
 <para>
 Query if the GstData is READONLY
@@ -2067,28 +1914,7 @@ to the current function, i.e. "('element')"
 
 @obj: 
 
-<!-- ##### MACRO GST_ELEMENT_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
 <!-- ##### MACRO GST_ELEMENT_CLASS_CAST ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_ELEMENT_FACTORY_CLASS ##### -->
 <para>
 
 </para>
@@ -2246,13 +2072,6 @@ subclass use this to start their flag enumeration
 </para>
 
 
-<!-- ##### MACRO GST_GHOST_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### MACRO GST_GHOST_PAD_CAST ##### -->
 <para>
 
@@ -2260,25 +2079,12 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
-<!-- ##### MACRO GST_GHOST_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
 <!-- ##### MACRO GST_GHOST_PAD_CLASS_CAST ##### -->
 <para>
 
 </para>
 
 @klass: 
-
-<!-- ##### MACRO GST_GNUC_CONSTRUCTOR ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO GST_HTTPSRC ##### -->
 <para>
@@ -2378,6 +2184,13 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
+<!-- ##### MACRO GST_IS_BUFFER ##### -->
+<para>
+Checks if the pointer is a GstBuffer.
+</para>
+
+@buf: a pointer to query.
+
 <!-- ##### MACRO GST_IS_CACHE_FACTORY ##### -->
 <para>
 
@@ -2419,20 +2232,6 @@ subclass use this to start their flag enumeration
 </para>
 
 @obj: 
-
-<!-- ##### MACRO GST_IS_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_ELEMENT_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
 
 <!-- ##### MACRO GST_IS_ESDSINK ##### -->
 <para>
@@ -2518,27 +2317,6 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
-<!-- ##### MACRO GST_IS_GHOST_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_GHOST_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_GHOST_PAD_FAST ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### MACRO GST_IS_HTTPSRC ##### -->
 <para>
 
@@ -2609,27 +2387,6 @@ subclass use this to start their flag enumeration
 
 @obj: 
 
-<!-- ##### MACRO GST_IS_PAD_FAST ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_PAD_TEMPLATE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_PAD_TEMPLATE_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### MACRO GST_IS_PIPELINE ##### -->
 <para>
 
@@ -2652,41 +2409,6 @@ subclass use this to start their flag enumeration
 @obj: 
 
 <!-- ##### MACRO GST_IS_QUEUE_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_REAL_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_REAL_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_REAL_PAD_FAST ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_SCHEDULER_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_SCHEDULER_FACTORY_CLASS ##### -->
 <para>
 
 </para>
@@ -2829,13 +2551,6 @@ Clear a flag in the meta data.
 
 @obj: 
 
-<!-- ##### MACRO GST_OBJECT_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
 <!-- ##### MACRO GST_OBJECT_CLASS_CAST ##### -->
 <para>
 
@@ -2863,43 +2578,12 @@ subclasses can use this value to start the enumeration of their flags
 
 @obj: 
 
-<!-- ##### MACRO GST_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
 <!-- ##### MACRO GST_PAD_CLASS_CAST ##### -->
 <para>
 
 </para>
 
 @klass: 
-
-<!-- ##### MACRO GST_PAD_CONNECT_DELAYED ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PAD_CONNECT_DONE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PAD_CONNECT_OK ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PAD_CONNECT_REFUSED ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO GST_PAD_FACTORY_ALWAYS ##### -->
 <para>
@@ -2955,20 +2639,6 @@ Is this pad linked.
 
 @pad: the pad to check
 
-<!-- ##### MACRO GST_PAD_TEMPLATE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_PAD_TEMPLATE_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
 <!-- ##### MACRO GST_PAD_TEMPLATE_FIXED ##### -->
 <para>
 Get the flag indicating the properties are fixed from the template.
@@ -2989,13 +2659,6 @@ Get the flag indicating the properties are fixed from the template.
 </para>
 
 @klass: 
-
-<!-- ##### MACRO GST_PLUGIN ##### -->
-<para>
-
-</para>
-
-@plugin: 
 
 <!-- ##### MACRO GST_PLUGIN_DESC ##### -->
 <para>
@@ -3042,26 +2705,12 @@ A macro used to define a statically linked plugin.
 
 @klass: 
 
-<!-- ##### MACRO GST_REAL_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### MACRO GST_REAL_PAD_CAST ##### -->
 <para>
 
 </para>
 
 @obj: 
-
-<!-- ##### MACRO GST_REAL_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
 
 <!-- ##### MACRO GST_REAL_PAD_CLASS_CAST ##### -->
 <para>
@@ -3146,20 +2795,6 @@ Get the type of the region that is being pulled.
 </para>
 
 @pad: the real pad to query.
-
-<!-- ##### MACRO GST_SCHEDULER_FACTORY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_SCHEDULER_FACTORY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
 
 <!-- ##### MACRO GST_SCHEDULE_ADD_ELEMENT ##### -->
 <para>
@@ -3249,12 +2884,6 @@ Get the parent #GstElement of this scheduler.
 </para>
 
 @sched: the scheduler to query.
-
-<!-- ##### MACRO GST_SHOW_INFO ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO GST_SINESRC ##### -->
 <para>
@@ -3407,12 +3036,6 @@ This macro unsets the given state on the element.
 
 @klass: 
 
-<!-- ##### MACRO GST_TYPE_ASSOC_FLAGS ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
 <para>
 
@@ -3449,18 +3072,6 @@ This macro unsets the given state on the element.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_BIN_FLAGS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_BUFFER_FLAG ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_BUFFER_POOL ##### -->
 <para>
 
@@ -3491,42 +3102,6 @@ This macro unsets the given state on the element.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_CLOCK_ENTRY_STATUS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_CLOCK_ENTRY_TYPE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_CLOCK_FLAGS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_CLOCK_RETURN ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_CPU_FLAGS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_DATA_FLAGS ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_DISKSRC ##### -->
 <para>
 
@@ -3539,43 +3114,7 @@ This macro unsets the given state on the element.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_ELEMENT_FACTORY ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_ELEMENT_FLAGS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_ELEMENT_STATE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_ELEMENT_STATE_RETURN ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_ESDSINK ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_EVENT_FLAG ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_EVENT_TYPE ##### -->
 <para>
 
 </para>
@@ -3617,18 +3156,6 @@ A type that can be used to indicate a filename.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_FORMAT ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_GHOST_PAD ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_HTTPSRC ##### -->
 <para>
 
@@ -3653,37 +3180,7 @@ A type that can be used to indicate a filename.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_OBJECT_FLAGS ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_PAD ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_PAD_DIRECTION ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_PAD_FLAGS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_PAD_LINK_RETURN ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_PAD_PRESENCE ##### -->
 <para>
 
 </para>
@@ -3695,19 +3192,7 @@ A type that can be used to indicate a filename.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_PAD_TEMPLATE ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_PARANOID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_PARSE_ERROR ##### -->
 <para>
 
 </para>
@@ -3719,67 +3204,7 @@ A type that can be used to indicate a filename.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_PLUGIN_ERROR ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_TYPE_QUEUE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_REAL_PAD ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_REGISTRY_FLAGS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_REGISTRY_RETURN ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_RESULT ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_SCHEDULER_FACTORY ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_SCHEDULER_FLAGS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_SCHEDULER_STATE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_SEEK_ACCURACY ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_SEEK_TYPE ##### -->
 <para>
 
 </para>
@@ -3814,47 +3239,6 @@ A type that can be used to indicate a filename.
 
 </para>
 
-
-<!-- ##### MACRO GST_TYPE_THREAD_STATE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
-<para>
-
-</para>
-
-@x: 
-
-<!-- ##### MACRO GST_VALUE_HOLDS_DOUBLE_RANGE ##### -->
-<para>
-
-</para>
-
-@x: 
-
-<!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
-<para>
-
-</para>
-
-@x: 
-
-<!-- ##### MACRO GST_VALUE_HOLDS_INT_RANGE ##### -->
-<para>
-
-</para>
-
-@x: 
-
-<!-- ##### MACRO GST_VALUE_HOLDS_LIST ##### -->
-<para>
-
-</para>
-
-@x: 
 
 <!-- ##### MACRO GType ##### -->
 <para>
@@ -4297,15 +3681,6 @@ A type that can be used to indicate a filename.
 </para>
 
 
-<!-- ##### ENUM GstAggregatorSchedType ##### -->
-<para>
-
-</para>
-
-@AGGREGATOR_LOOP: 
-@AGGREGATOR_LOOP_SELECT: 
-@AGGREGATOR_CHAIN: 
-
 <!-- ##### STRUCT GstAsyncDiskSrc ##### -->
 <para>
 
@@ -4487,17 +3862,6 @@ The type of the autoplugger.
 @GST_AUTOPLUG_TO_RENDERER: 
 @GST_AUTOPLUG_FLAG_LAST: 
 
-<!-- ##### STRUCT GstAutoplugNode ##### -->
-<para>
-
-</para>
-
-@prev: 
-@fac: 
-@templ: 
-@cost: 
-@endpoint: 
-
 <!-- ##### SIGNAL GstBin::object-added ##### -->
 <para>
 is signaled whenever a new <classname>GstElement</classname> is added to the <classname>GstBin</classname>
@@ -4506,12 +3870,6 @@ is signaled whenever a new <classname>GstElement</classname> is added to the <cl
 
 @gstbin: the object which received the signal.
 @arg1: the element that was added
-
-<!-- ##### STRUCT GstBinClass ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
 <para>
@@ -4657,6 +4015,12 @@ can perform necessary cleanup.
 </para>
 
 
+<!-- ##### STRUCT GstClock ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### SIGNAL GstDiskSink::handoff ##### -->
 <para>
 Is emited after the buffer has been written to the disk.
@@ -4782,12 +4146,6 @@ Is trigered whenever a new ghost pad is added to an element
 
 @gstelement: the object which received the signal.
 @arg1: the new ghost pad that was added
-
-<!-- ##### STRUCT GstElementClass ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### STRUCT GstElementFactory ##### -->
 <para>
@@ -4997,49 +4355,6 @@ Sync on the clock
 </para>
 
 
-<!-- ##### ENUM GstFakeSrcDataType ##### -->
-<para>
-
-</para>
-
-@FAKESRC_DATA_ALLOCATE: 
-@FAKESRC_DATA_SUBBUFFER: 
-@FAKESRC_DATA_BUFFERPOOL: 
-
-<!-- ##### ENUM GstFakeSrcFillType ##### -->
-<para>
-
-</para>
-
-@FAKESRC_FILLTYPE_NOTHING: 
-@FAKESRC_FILLTYPE_NULL: 
-@FAKESRC_FILLTYPE_RANDOM: 
-@FAKESRC_FILLTYPE_PATTERN: 
-@FAKESRC_FILLTYPE_PATTERN_CONT: 
-
-<!-- ##### ENUM GstFakeSrcOutputType ##### -->
-<para>
-
-</para>
-
-@FAKESRC_FIRST_LAST_LOOP: 
-@FAKESRC_LAST_FIRST_LOOP: 
-@FAKESRC_PING_PONG: 
-@FAKESRC_ORDERED_RANDOM: 
-@FAKESRC_RANDOM: 
-@FAKESRC_PATTERN_LOOP: 
-@FAKESRC_PING_PONG_PATTERN: 
-@FAKESRC_GET_ALWAYS_SUCEEDS: 
-
-<!-- ##### ENUM GstFakeSrcSizeType ##### -->
-<para>
-
-</para>
-
-@FAKESRC_SIZETYPE_NULL: 
-@FAKESRC_SIZETYPE_FIXED: 
-@FAKESRC_SIZETYPE_RANDOM: 
-
 <!-- ##### STRUCT GstFdSink ##### -->
 <para>
 
@@ -5088,14 +4403,6 @@ Get the current offset in the file.
 </para>
 
 
-<!-- ##### ENUM GstFileSinkFlags ##### -->
-<para>
-
-</para>
-
-@GST_FILESINK_OPEN: 
-@GST_FILESINK_FLAG_LAST: 
-
 <!-- ##### ARG GstFileSrc:blocksize ##### -->
 <para>
 The size of the buffers to pass to the peer element.
@@ -5138,14 +4445,6 @@ Indicates the mmapped area should be touched to bring it into memory.
 </para>
 
 
-<!-- ##### ENUM GstFileSrcFlags ##### -->
-<para>
-
-</para>
-
-@GST_FILESRC_OPEN: 
-@GST_FILESRC_FLAG_LAST: 
-
 <!-- ##### STRUCT GstFilter ##### -->
 <para>
 
@@ -5155,6 +4454,12 @@ Indicates the mmapped area should be touched to bring it into memory.
 <!-- ##### STRUCT GstFilterClass ##### -->
 <para>
 
+</para>
+
+
+<!-- ##### STRUCT GstGhostPad ##### -->
+<para>
+The Ghostpad object
 </para>
 
 
@@ -5263,6 +4568,18 @@ Specify the location of the file. The location must be a fully qualified URL.
 </para>
 
 
+<!-- ##### STRUCT GstIndex ##### -->
+<para>
+The GstIndex object
+</para>
+
+
+<!-- ##### STRUCT GstIndexFactory ##### -->
+<para>
+The GstIndexFactory object
+</para>
+
+
 <!-- ##### STRUCT GstLink ##### -->
 <para>
 
@@ -5314,33 +4631,9 @@ Flags indicating properties about the meta data.
 @GST_MULTIDISKSRC_OPEN: 
 @GST_MULTIDISKSRC_FLAG_LAST: 
 
-<!-- ##### STRUCT GstObjectClass ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### ARG GstPad:active ##### -->
 <para>
 Indicates this pad is active
-</para>
-
-
-<!-- ##### STRUCT GstPadClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF GstPadConnectFunction ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF GstPadConnectReturn ##### -->
-<para>
-
 </para>
 
 
@@ -5468,11 +4761,14 @@ The different supported query types.
                             executing segment.
 @GST_PAD_QUERY_RATE: Query at which rate this pad will process data.
 
-<!-- ##### STRUCT GstPadTemplateClass ##### -->
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
 <para>
-
+This signal is fired when an element creates a pad from this 
+template.
 </para>
 
+@gstpadtemplate: the object which received the signal.
+@arg1: The pad that was created.
 
 <!-- ##### ENUM GstParseErrors ##### -->
 <para>
@@ -5485,17 +4781,15 @@ The different supported query types.
 @GST_PARSE_ERROR_INTERNAL: 
 @GST_PARSE_ERROR_LINK: 
 
-<!-- ##### ENUM GstPipeFilterFlags ##### -->
-<para>
-
-</para>
-
-@GST_PIPEFILTER_OPEN: 
-@GST_PIPEFILTER_FLAG_LAST: 
-
 <!-- ##### ARG GstPipefilter:command ##### -->
 <para>
 Sets the command to be executed.
+</para>
+
+
+<!-- ##### STRUCT GstPipeline ##### -->
+<para>
+The pipeline object
 </para>
 
 
@@ -5560,6 +4854,12 @@ blocks.
 </para>
 
 
+<!-- ##### STRUCT GstRealPad ##### -->
+<para>
+The realpad object
+</para>
+
+
 <!-- ##### ENUM GstRegionType ##### -->
 <para>
 the region types for #gst_pad_pullregion.
@@ -5568,6 +4868,12 @@ the region types for #gst_pad_pullregion.
 @GST_REGION_VOID: 
 @GST_REGION_OFFSET_LEN: an offet/length pair
 @GST_REGION_TIME_LEN: a time start/length pair
+
+<!-- ##### STRUCT GstRegistry ##### -->
+<para>
+The registry object
+</para>
+
 
 <!-- ##### STRUCT GstRegistryRead ##### -->
 <para>
@@ -5586,15 +4892,6 @@ the region types for #gst_pad_pullregion.
 @file: 
 @tmp_file: 
 
-<!-- ##### ENUM GstResult ##### -->
-<para>
-
-</para>
-
-@GST_RESULT_OK: 
-@GST_RESULT_NOK: 
-@GST_RESULT_NOT_IMPL: 
-
 <!-- ##### STRUCT GstScheduleChain ##### -->
 <para>
 
@@ -5607,27 +4904,6 @@ the region types for #gst_pad_pullregion.
 @entry: 
 @cothreaded_elements: 
 @schedule: 
-
-<!-- ##### STRUCT GstScheduler ##### -->
-<para>
-
-</para>
-
-@object: 
-@parent: 
-@parent_sched: 
-@state: 
-@clock: 
-@current_clock: 
-@clock_providers: 
-@clock_receivers: 
-@schedulers: 
-
-<!-- ##### STRUCT GstSchedulerClass ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### STRUCT GstSineSrc ##### -->
 <para>
@@ -5834,6 +5110,12 @@ Flags for the GstSrc element
 </para>
 
 
+<!-- ##### STRUCT GstThread ##### -->
+<para>
+The GstThread object
+</para>
+
+
 <!-- ##### ARG GstThread:create-thread ##### -->
 <para>
 TRUE if the thread should be created.
@@ -5880,27 +5162,6 @@ TRUE if the thread should be created.
 @minlocation: 
 @maxlocation: 
 
-<!-- ##### STRUCT GstTrace ##### -->
-<para>
-
-</para>
-
-@filename: 
-@fd: 
-@buf: 
-@bufsize: 
-@bufoffset: 
-
-<!-- ##### STRUCT GstTraceEntry ##### -->
-<para>
-
-</para>
-
-@timestamp: 
-@sequence: 
-@data: 
-@message: 
-
 <!-- ##### SIGNAL GstTypeFind::have-type ##### -->
 <para>
 The signal to indicate the mime type was detected.
@@ -5921,100 +5182,24 @@ Query the element for the current mime type
 </para>
 
 
+<!-- ##### STRUCT GstTypeFindFactory ##### -->
+<para>
+Object that stores information about a typefind function
+</para>
+
+
+<!-- ##### STRUCT GstTypeFindFactoryClass ##### -->
+<para>
+Class belonging to #GstTypeFindFactory.
+</para>
+
+@parent: 
+
 <!-- ##### STRUCT GstXML ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
-<para>
-
-</para>
-
-@registry: 
-
-<!-- ##### USER_FUNCTION GstXMLRegistryClose ##### -->
-<para>
-
-</para>
-
-@registry: 
-@Returns: 
-
-<!-- ##### USER_FUNCTION GstXMLRegistryGetPerms ##### -->
-<para>
-
-</para>
-
-@registry: 
-
-<!-- ##### USER_FUNCTION GstXMLRegistryLoad ##### -->
-<para>
-
-</para>
-
-@registry: 
-@dest: 
-@size: 
-@Returns: 
-
-<!-- ##### ENUM GstXMLRegistryMode ##### -->
-<para>
-
-</para>
-
-@GST_XML_REGISTRY_READ: 
-@GST_XML_REGISTRY_WRITE: 
-
-<!-- ##### USER_FUNCTION GstXMLRegistryOpen ##### -->
-<para>
-
-</para>
-
-@registry: 
-@mode: 
-@Returns: 
-
-<!-- ##### USER_FUNCTION GstXMLRegistryParser ##### -->
-<para>
-
-</para>
-
-@context: 
-@tag: 
-@text: 
-@text_len: 
-@registry: 
-@error: 
-@Returns: 
-
-<!-- ##### USER_FUNCTION GstXMLRegistrySave ##### -->
-<para>
-
-</para>
-
-@registry: 
-@format: 
-@Varargs: 
-@Returns: 
-
-<!-- ##### ENUM GstXMLRegistryState ##### -->
-<para>
-
-</para>
-
-@GST_XML_REGISTRY_NONE: 
-@GST_XML_REGISTRY_TOP: 
-@GST_XML_REGISTRY_PATHS: 
-@GST_XML_REGISTRY_PATH: 
-@GST_XML_REGISTRY_PATHS_DONE: 
-@GST_XML_REGISTRY_PLUGIN: 
-@GST_XML_REGISTRY_FEATURE: 
-@GST_XML_REGISTRY_PADTEMPLATE: 
-@GST_XML_REGISTRY_CAPS: 
-@GST_XML_REGISTRY_CAPSCOMP: 
-@GST_XML_REGISTRY_PROPERTIES: 
 
 <!-- ##### SIGNAL GstXml::object-loaded ##### -->
 <para>
@@ -6024,12 +5209,6 @@ Query the element for the current mime type
 @gstxml: the object which received the signal.
 @arg1: 
 @arg2: 
-
-<!-- ##### MACRO IDENTIFIER ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO INFO ##### -->
 <para>
@@ -6049,30 +5228,6 @@ Query the element for the current mime type
 @element: 
 @format: 
 @args...: 
-
-<!-- ##### MACRO LINK ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO LOCAL_REGISTRY_DIR ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO LOCAL_REGISTRY_FILE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO LOCAL_REGISTRY_FILE_TMP ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### STRUCT MetaAudioRaw ##### -->
 <para>
@@ -6136,13 +5291,6 @@ Query the element for the current mime type
 @overlay_info: 
 @dga_info: 
 
-<!-- ##### MACRO N_ ##### -->
-<para>
-
-</para>
-
-@String: 
-
 <!-- ##### STRUCT OverlayClip ##### -->
 <para>
 
@@ -6152,24 +5300,6 @@ Query the element for the current mime type
 @x2: 
 @y1: 
 @y2: 
-
-<!-- ##### MACRO REGISTRY_DIR_PERMS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO REGISTRY_FILE_PERMS ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO REGISTRY_TMPFILE_PERMS ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### MACRO STACK_SIZE ##### -->
 <para>
@@ -6190,27 +5320,6 @@ must be defined to activate the tracing functionality.
 
 
 <!-- ##### MACRO YYSTYPE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO _ ##### -->
-<para>
-
-</para>
-
-@String: 
-
-<!-- ##### MACRO bindtextdomain ##### -->
-<para>
-
-</para>
-
-@Domain: 
-@Directory: 
-
-<!-- ##### TYPEDEF cothread ##### -->
 <para>
 
 </para>
@@ -6246,114 +5355,6 @@ must be defined to activate the tracing functionality.
 @thread: 
 @key: 
 @data: 
-
-<!-- ##### MACRO dcgettext ##### -->
-<para>
-
-</para>
-
-@Domain: 
-@String: 
-@Type: 
-
-<!-- ##### MACRO dgettext ##### -->
-<para>
-
-</para>
-
-@Domain: 
-@String: 
-
-<!-- ##### MACRO do_cothread_context_destroy ##### -->
-<para>
-
-</para>
-
-@context: 
-
-<!-- ##### MACRO do_cothread_context_init ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO do_cothread_create ##### -->
-<para>
-
-</para>
-
-@new_cothread: 
-@context: 
-@func: 
-@argc: 
-@argv: 
-
-<!-- ##### MACRO do_cothread_destroy ##### -->
-<para>
-
-</para>
-
-@cothread: 
-
-<!-- ##### MACRO do_cothread_get_current ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO do_cothread_get_main ##### -->
-<para>
-
-</para>
-
-@context: 
-
-<!-- ##### MACRO do_cothread_lock ##### -->
-<para>
-
-</para>
-
-@cothread: 
-
-<!-- ##### MACRO do_cothread_setfunc ##### -->
-<para>
-
-</para>
-
-@cothread: 
-@context: 
-@func: 
-@argc: 
-@argv: 
-
-<!-- ##### MACRO do_cothread_switch ##### -->
-<para>
-
-</para>
-
-@to: 
-
-<!-- ##### MACRO do_cothread_unlock ##### -->
-<para>
-
-</para>
-
-@cothread: 
-
-<!-- ##### MACRO do_cothreads_init ##### -->
-<para>
-
-</para>
-
-@x: 
-
-<!-- ##### MACRO do_cothreads_stackquery ##### -->
-<para>
-
-</para>
-
-@stack: 
-@size: 
 
 <!-- ##### TYPEDEF element_t ##### -->
 <para>
@@ -7137,48 +6138,11 @@ must be defined to activate the tracing functionality.
 
 @val: 
 
-<!-- ##### MACRO gettext ##### -->
-<para>
-
-</para>
-
-@String: 
-
-<!-- ##### STRUCT graph_t ##### -->
-<para>
-
-</para>
-
-@first: 
-@current: 
-@parent: 
-@current_bin_type: 
-@elements: 
-@links: 
-@links_pending: 
-@bins: 
-@bin: 
-
 <!-- ##### VARIABLE gst_aggregator_details ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### FUNCTION gst_aggregator_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_assoc_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_asyncdisksrc_get_type ##### -->
 <para>
@@ -7281,24 +6245,6 @@ must be defined to activate the tracing functionality.
 @src: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_autoplug_can_match ##### -->
-<para>
-
-</para>
-
-@src: 
-@dest: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_autoplug_caps_intersect ##### -->
-<para>
-
-</para>
-
-@src: 
-@sink: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_autoplug_caps_list ##### -->
 <para>
 
@@ -7311,48 +6257,6 @@ must be defined to activate the tracing functionality.
 @Returns: 
 @srccaps: 
 @sinkcaps: 
-
-<!-- ##### FUNCTION gst_autoplug_factories_at_most_templates ##### -->
-<para>
-
-</para>
-
-@factories: 
-@dir: 
-@maxtemplates: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_autoplug_factories_filters ##### -->
-<para>
-
-</para>
-
-@factories: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_autoplug_factories_filters_with_sink_caps ##### -->
-<para>
-
-</para>
-
-@factories: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_autoplug_factories_sinks ##### -->
-<para>
-
-</para>
-
-@factories: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_autoplug_factories_srcs ##### -->
-<para>
-
-</para>
-
-@factories: 
-@Returns: 
 
 <!-- ##### FUNCTION gst_autoplug_factory_create ##### -->
 <para>
@@ -7390,29 +6294,6 @@ must be defined to activate the tracing functionality.
 </para>
 
 @Returns: 
-
-<!-- ##### FUNCTION gst_autoplug_factory_has_direction ##### -->
-<para>
-
-</para>
-
-@fac: 
-@dir: 
-@Returns: 
-
-<!-- ##### MACRO gst_autoplug_factory_has_sink ##### -->
-<para>
-
-</para>
-
-@fac: 
-
-<!-- ##### MACRO gst_autoplug_factory_has_src ##### -->
-<para>
-
-</para>
-
-@fac: 
 
 <!-- ##### FUNCTION gst_autoplug_factory_load_thyself ##### -->
 <para>
@@ -7456,13 +6337,6 @@ must be defined to activate the tracing functionality.
 
 @Returns: 
 
-<!-- ##### MACRO gst_autoplug_get_cost ##### -->
-<para>
-
-</para>
-
-@fac: 
-
 <!-- ##### FUNCTION gst_autoplug_signal_new_object ##### -->
 <para>
 
@@ -7470,16 +6344,6 @@ must be defined to activate the tracing functionality.
 
 @autoplug: 
 @object: 
-
-<!-- ##### FUNCTION gst_autoplug_sp ##### -->
-<para>
-
-</para>
-
-@src_caps: 
-@sink_caps: 
-@factories: 
-@Returns: 
 
 <!-- ##### FUNCTION gst_autoplug_to_caps ##### -->
 <para>
@@ -7538,13 +6402,6 @@ Free the memory allocated by this bin
 
 </para>
 
-
-<!-- ##### FUNCTION gst_bin_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_bin_get_type ##### -->
 <para>
@@ -7618,13 +6475,6 @@ Free the memory allocated by this bin
 </para>
 
 @buffer: 
-
-<!-- ##### FUNCTION gst_buffer_flag_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### MACRO gst_buffer_free ##### -->
 <para>
@@ -8079,27 +6929,6 @@ safely be modified.
 @clock: 
 @id: 
 
-<!-- ##### FUNCTION gst_clock_entry_status_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_clock_entry_type_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_clock_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_clock_get_system ##### -->
 <para>
 
@@ -8133,13 +6962,6 @@ safely be modified.
 
 @clock: 
 @id: 
-
-<!-- ##### FUNCTION gst_clock_return_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_clock_unlock_id ##### -->
 <para>
@@ -8180,13 +7002,6 @@ safely be modified.
 @jitter: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_cpu_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_data_default_copy ##### -->
 <para>
 
@@ -8201,13 +7016,6 @@ safely be modified.
 </para>
 
 @data: 
-
-<!-- ##### FUNCTION gst_data_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_data_free ##### -->
 <para>
@@ -8238,12 +7046,6 @@ safely be modified.
 @format: 
 @args: 
 
-<!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gst_disksrc_get_type ##### -->
 <para>
 
@@ -8260,50 +7062,6 @@ safely be modified.
 @state: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_element_class_install_std_props ##### -->
-<para>
-
-</para>
-
-@klass: 
-@first_name: 
-@Varargs: 
-
-<!-- ##### MACRO gst_element_connect ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
-
-<!-- ##### MACRO gst_element_connect_filtered ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
-@c: 
-
-<!-- ##### MACRO gst_element_connect_many ##### -->
-<para>
-
-</para>
-
-@a: 
-@...: 
-
-<!-- ##### MACRO gst_element_connect_pads ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
-@c: 
-@d: 
-
 <!-- ##### MACRO gst_element_destroy ##### -->
 <para>
 Destroys the element (without taking the refcount into account).
@@ -8312,14 +7070,6 @@ of an element he doesn't need anymore.
 </para>
 
 @element: a #GstElement to destroy
-
-<!-- ##### MACRO gst_element_disconnect ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
 
 <!-- ##### MACRO gst_element_error ##### -->
 <para>
@@ -8384,13 +7134,6 @@ of an element he doesn't need anymore.
 
 @elementfactory: 
 
-<!-- ##### FUNCTION gst_element_factory_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_element_factory_load_thyself ##### -->
 <para>
 
@@ -8441,13 +7184,6 @@ of an element he doesn't need anymore.
 
 @factory: 
 @rank: 
-
-<!-- ##### FUNCTION gst_element_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_element_get_cache ##### -->
 <para>
@@ -8632,20 +7368,6 @@ of an element he doesn't need anymore.
 
 @element: 
 
-<!-- ##### FUNCTION gst_element_state_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_element_state_return_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_element_unlink_elements ##### -->
 <para>
 
@@ -8700,13 +7422,6 @@ of an element he doesn't need anymore.
 
 @esdsink: 
 
-<!-- ##### FUNCTION gst_event_flag_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_event_free ##### -->
 <para>
 
@@ -8729,13 +7444,6 @@ of an element he doesn't need anymore.
 </para>
 
 
-<!-- ##### FUNCTION gst_event_type_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_extra_get_filename_type ##### -->
 <para>
 
@@ -8751,14 +7459,6 @@ of an element he doesn't need anymore.
 @pad: 
 @buf: 
 
-<!-- ##### FUNCTION gst_fakesink_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_fakesink_get_type ##### -->
 <para>
 
@@ -8772,14 +7472,6 @@ of an element he doesn't need anymore.
 </para>
 
 @name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_fakesrc_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
 @Returns: 
 
 <!-- ##### FUNCTION gst_fakesrc_get_type ##### -->
@@ -8858,20 +7550,6 @@ of an element he doesn't need anymore.
 @name: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_format_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_ghost_pad_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
 <para>
 
@@ -8902,15 +7580,6 @@ of an element he doesn't need anymore.
 @name: 
 @Returns: 
 
-<!-- ##### MACRO gst_info ##### -->
-<para>
-
-</para>
-
-@...: 
-@format: 
-@args...: 
-
 <!-- ##### FUNCTION gst_link_get_type ##### -->
 <para>
 
@@ -8932,110 +7601,6 @@ of an element he doesn't need anymore.
 </para>
 
 @link: 
-
-<!-- ##### MACRO gst_marshal_VOID__BOOLEAN ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO gst_marshal_VOID__INT ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_marshal_VOID__INT64 ##### -->
-<para>
-
-</para>
-
-@closure: 
-@return_value: 
-@n_param_values: 
-@param_values: 
-@invocation_hint: 
-@marshal_data: 
-
-<!-- ##### FUNCTION gst_marshal_VOID__INT_INT ##### -->
-<para>
-
-</para>
-
-@closure: 
-@return_value: 
-@n_param_values: 
-@param_values: 
-@invocation_hint: 
-@marshal_data: 
-
-<!-- ##### MACRO gst_marshal_VOID__OBJECT ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_marshal_VOID__OBJECT_PARAM ##### -->
-<para>
-
-</para>
-
-@closure: 
-@return_value: 
-@n_param_values: 
-@param_values: 
-@invocation_hint: 
-@marshal_data: 
-
-<!-- ##### FUNCTION gst_marshal_VOID__OBJECT_POINTER ##### -->
-<para>
-
-</para>
-
-@closure: 
-@return_value: 
-@n_param_values: 
-@param_values: 
-@invocation_hint: 
-@marshal_data: 
-
-<!-- ##### FUNCTION gst_marshal_VOID__OBJECT_STRING ##### -->
-<para>
-
-</para>
-
-@closure: 
-@return_value: 
-@n_param_values: 
-@param_values: 
-@invocation_hint: 
-@marshal_data: 
-
-<!-- ##### MACRO gst_marshal_VOID__POINTER ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO gst_marshal_VOID__STRING ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO gst_marshal_VOID__VOID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_md5sink_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
 
 <!-- ##### MACRO gst_meta_new ##### -->
 <para>
@@ -9073,13 +7638,6 @@ Create new meta data.
 
 @object: the object
 
-<!-- ##### FUNCTION gst_object_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_object_get_type ##### -->
 <para>
 
@@ -9102,44 +7660,12 @@ Create new meta data.
 @pad: 
 @parent: 
 
-<!-- ##### MACRO gst_pad_connect ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
-
-<!-- ##### MACRO gst_pad_connect_filtered ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
-@c: 
-
 <!-- ##### MACRO gst_pad_destroy ##### -->
 <para>
 Destroy the pad.
 </para>
 
 @pad: the pad to destroy
-
-<!-- ##### FUNCTION gst_pad_direction_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO gst_pad_disconnect ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
 
 <!-- ##### MACRO gst_pad_eos ##### -->
 <para>
@@ -9165,13 +7691,6 @@ Call the EOS function of the pad
 @event: 
 @timestamp: 
 @data: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_pad_flags_get_type ##### -->
-<para>
-
-</para>
-
 @Returns: 
 
 <!-- ##### FUNCTION gst_pad_get_caps_by_name ##### -->
@@ -9248,13 +7767,6 @@ Call the EOS function of the pad
 @format: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_pad_link_return_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_pad_negotiate_proxy ##### -->
 <para>
 
@@ -9266,13 +7778,6 @@ Call the EOS function of the pad
 @Returns: 
 @counter: 
 @count: 
-
-<!-- ##### FUNCTION gst_pad_presence_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_pad_probe_destroy ##### -->
 <para>
@@ -9299,14 +7804,6 @@ Call the EOS function of the pad
 @probe: 
 @data: 
 @Returns: 
-
-<!-- ##### MACRO gst_pad_proxy_connect ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
 
 <!-- ##### FUNCTION gst_pad_pull_region ##### -->
 <para>
@@ -9345,14 +7842,6 @@ Call the EOS function of the pad
 @pad: 
 @parent: 
 
-<!-- ##### FUNCTION gst_pad_renegotiate ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_pad_save_thyself ##### -->
 <para>
 
@@ -9378,14 +7867,6 @@ Call the EOS function of the pad
 
 @pad: 
 @caps: 
-
-<!-- ##### MACRO gst_pad_set_connect_function ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
 
 <!-- ##### FUNCTION gst_pad_set_eos ##### -->
 <para>
@@ -9462,13 +7943,6 @@ Call the EOS function of the pad
 @caps: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_pad_template_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_pad_template_load_thyself ##### -->
 <para>
 
@@ -9493,13 +7967,6 @@ Call the EOS function of the pad
 
 @srcpad: 
 @sinkpad: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_parse_error_get_type ##### -->
-<para>
-
-</para>
-
 @Returns: 
 
 <!-- ##### MACRO gst_pipeline_destroy ##### -->
@@ -9559,13 +8026,6 @@ Destroys the pipeline.
 
 @plugin: 
 @factory: 
-
-<!-- ##### FUNCTION gst_plugin_error_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_plugin_feature_get_type ##### -->
 <para>
@@ -9830,20 +8290,6 @@ Destroys the pipeline.
 
 @link: 
 
-<!-- ##### FUNCTION gst_real_pad_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_registry_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_registry_option_set ##### -->
 <para>
 
@@ -9858,21 +8304,7 @@ Destroys the pipeline.
 
 @Returns: 
 
-<!-- ##### FUNCTION gst_registry_return_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_registry_write_get ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_result_get_type ##### -->
 <para>
 
 </para>
@@ -9991,20 +8423,6 @@ Destroy the scheduler
 
 @Returns: 
 
-<!-- ##### FUNCTION gst_scheduler_factory_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_scheduler_flags_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### FUNCTION gst_scheduler_get_preferred_stack ##### -->
 <para>
 
@@ -10013,27 +8431,6 @@ Destroy the scheduler
 @sched: 
 @stack: 
 @size: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_scheduler_state_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_seek_accuracy_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_seek_type_get_type ##### -->
-<para>
-
-</para>
-
 @Returns: 
 
 <!-- ##### FUNCTION gst_sinesrc_get_type ##### -->
@@ -10073,52 +8470,6 @@ Destroy the scheduler
 @name: 
 @Returns: 
 
-<!-- ##### VARIABLE gst_spider_details ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_spider_identity_new_sink ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_spider_identity_new_src ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_spider_identity_plug ##### -->
-<para>
-
-</para>
-
-@ident: 
-
-<!-- ##### FUNCTION gst_spider_identity_request_new_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@templ: 
-@name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_spider_identity_unplug ##### -->
-<para>
-
-</para>
-
-@ident: 
-
 <!-- ##### FUNCTION gst_src_get_type ##### -->
 <para>
 
@@ -10149,6 +8500,13 @@ Destroy the scheduler
 
 @src: 
 
+<!-- ##### FUNCTION gst_tag_setter_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 <!-- ##### FUNCTION gst_tee_chain ##### -->
 <para>
 
@@ -10162,14 +8520,6 @@ Destroy the scheduler
 
 </para>
 
-
-<!-- ##### FUNCTION gst_tee_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
 
 <!-- ##### FUNCTION gst_tee_get_type ##### -->
 <para>
@@ -10220,13 +8570,6 @@ Destroy the scheduler
 </para>
 
 @arg: 
-
-<!-- ##### FUNCTION gst_thread_state_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 <!-- ##### FUNCTION gst_time_cache_add_entry ##### -->
 <para>
@@ -10304,81 +8647,6 @@ Destroy the scheduler
 @tc: 
 @groupnum: 
 @Returns: 
-
-<!-- ##### MACRO gst_trace_add_entry ##### -->
-<para>
-
-</para>
-
-@trace: 
-@seq: 
-@data: 
-@msg: 
-
-<!-- ##### FUNCTION gst_trace_destroy ##### -->
-<para>
-
-</para>
-
-@trace: 
-
-<!-- ##### FUNCTION gst_trace_flush ##### -->
-<para>
-
-</para>
-
-@trace: 
-
-<!-- ##### MACRO gst_trace_get_offset ##### -->
-<para>
-
-</para>
-
-@trace: 
-
-<!-- ##### MACRO gst_trace_get_remaining ##### -->
-<para>
-
-</para>
-
-@trace: 
-
-<!-- ##### MACRO gst_trace_get_size ##### -->
-<para>
-
-</para>
-
-@trace: 
-
-<!-- ##### FUNCTION gst_trace_new ##### -->
-<para>
-
-</para>
-
-@filename: 
-@size: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_trace_read_tsc ##### -->
-<para>
-
-</para>
-
-@dst: 
-
-<!-- ##### FUNCTION gst_trace_set_default ##### -->
-<para>
-
-</para>
-
-@trace: 
-
-<!-- ##### FUNCTION gst_trace_text_flush ##### -->
-<para>
-
-</para>
-
-@trace: 
 
 <!-- ##### FUNCTION gst_type_add_sink ##### -->
 <para>
@@ -10637,237 +8905,6 @@ Destroy the scheduler
 @arg_type: 
 @Returns: 
 
-<!-- ##### FUNCTION gst_value_can_compare ##### -->
-<para>
-
-</para>
-
-@value1: 
-@value2: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_can_intersect ##### -->
-<para>
-
-</para>
-
-@value1: 
-@value2: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_can_union ##### -->
-<para>
-
-</para>
-
-@value1: 
-@value2: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_compare ##### -->
-<para>
-
-</para>
-
-@value1: 
-@value2: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_deserialize ##### -->
-<para>
-
-</para>
-
-@dest: 
-@src: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_get_caps ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_get_double_range_max ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_get_double_range_min ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_get_fourcc ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_get_int_range_max ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_get_int_range_min ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_init_and_copy ##### -->
-<para>
-
-</para>
-
-@dest: 
-@src: 
-
-<!-- ##### FUNCTION gst_value_intersect ##### -->
-<para>
-
-</para>
-
-@dest: 
-@value1: 
-@value2: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_list_append_value ##### -->
-<para>
-
-</para>
-
-@value: 
-@append_value: 
-
-<!-- ##### FUNCTION gst_value_list_concat ##### -->
-<para>
-
-</para>
-
-@dest: 
-@value1: 
-@value2: 
-
-<!-- ##### FUNCTION gst_value_list_get_size ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_list_get_value ##### -->
-<para>
-
-</para>
-
-@value: 
-@index: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_list_prepend_value ##### -->
-<para>
-
-</para>
-
-@value: 
-@prepend_value: 
-
-<!-- ##### FUNCTION gst_value_register ##### -->
-<para>
-
-</para>
-
-@table: 
-
-<!-- ##### FUNCTION gst_value_register_intersect_func ##### -->
-<para>
-
-</para>
-
-@type1: 
-@type2: 
-@func: 
-
-<!-- ##### FUNCTION gst_value_register_union_func ##### -->
-<para>
-
-</para>
-
-@type1: 
-@type2: 
-@func: 
-
-<!-- ##### FUNCTION gst_value_serialize ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_value_set_caps ##### -->
-<para>
-
-</para>
-
-@value: 
-@caps: 
-@calue: 
-
-<!-- ##### FUNCTION gst_value_set_double_range ##### -->
-<para>
-
-</para>
-
-@value: 
-@start: 
-@end: 
-
-<!-- ##### FUNCTION gst_value_set_fourcc ##### -->
-<para>
-
-</para>
-
-@value: 
-@fourcc: 
-
-<!-- ##### FUNCTION gst_value_set_int_range ##### -->
-<para>
-
-</para>
-
-@value: 
-@start: 
-@end: 
-
-<!-- ##### FUNCTION gst_value_union ##### -->
-<para>
-
-</para>
-
-@dest: 
-@value1: 
-@value2: 
-@Returns: 
-
 <!-- ##### FUNCTION gst_xml_new_from_memory ##### -->
 <para>
 
@@ -10877,21 +8914,6 @@ Destroy the scheduler
 @size: 
 @root: 
 @Returns: 
-
-<!-- ##### FUNCTION gst_xml_registry_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@location: 
-@Returns: 
-
-<!-- ##### TYPEDEF link_t ##### -->
-<para>
-
-</para>
-
 
 <!-- ##### FUNCTION plugin_initialize ##### -->
 <para>
@@ -10926,20 +8948,4 @@ Destroy the scheduler
 
 </para>
 
-
-<!-- ##### STRUCT stats ##### -->
-<para>
-
-</para>
-
-@buffers: 
-@bytes: 
-@events: 
-
-<!-- ##### MACRO textdomain ##### -->
-<para>
-
-</para>
-
-@String: 
 

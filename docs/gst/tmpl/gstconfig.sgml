@@ -2,7 +2,7 @@
 GstConfig
 
 <!-- ##### SECTION Short_Description ##### -->
-configuration options
+Configuration options
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -37,14 +37,7 @@ If a subsystem is disabled in GStreamer, a value is defined in
 
 </para>
 
-<!-- ##### MACRO GST_DISABLE_ALLOC_TRACE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_DISABLE_ENUMTYPES ##### -->
+<!-- ##### MACRO GST_DISABLE_LOADSAVE_REGISTRY ##### -->
 <para>
 
 </para>
@@ -59,21 +52,7 @@ If this is defined, the <link linkend="gstreamer-gstinfo">debugging subsystem
 
 
 
-<!-- ##### MACRO GST_DISABLE_INDEX ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_DISABLE_LOADSAVE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GST_DISABLE_LOADSAVE_REGISTRY ##### -->
 <para>
 
 </para>
@@ -87,14 +66,42 @@ If this is defined, the <link linkend="gstreamer-gstinfo">debugging subsystem
 
 
 
-<!-- ##### MACRO GST_DISABLE_PLUGIN ##### -->
+<!-- ##### MACRO GST_DISABLE_TRACE ##### -->
 <para>
 
 </para>
 
 
 
-<!-- ##### MACRO GST_DISABLE_TRACE ##### -->
+<!-- ##### MACRO GST_DISABLE_ALLOC_TRACE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_REGISTRY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_ENUMTYPES ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_INDEX ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DISABLE_PLUGIN ##### -->
 <para>
 
 </para>
@@ -108,7 +115,7 @@ If this is defined, the <link linkend="gstreamer-gstinfo">debugging subsystem
 
 
 
-<!-- ##### MACRO GST_DISABLE_REGISTRY ##### -->
+<!-- ##### MACRO GST_PTR_FORMAT ##### -->
 <para>
 
 </para>

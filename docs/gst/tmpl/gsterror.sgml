@@ -2,7 +2,7 @@
 GstError
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Categorized error messages
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -32,4 +32,147 @@ GstError
 @GST_CORE_ERROR_CAPS: 
 @GST_CORE_ERROR_TAG: 
 @GST_CORE_ERROR_NUM_ERRORS: 
+
+<!-- ##### ENUM GstLibraryError ##### -->
+<para>
+
+</para>
+
+@GST_LIBRARY_ERROR_FAILED: 
+@GST_LIBRARY_ERROR_TOO_LAZY: 
+@GST_LIBRARY_ERROR_INIT: 
+@GST_LIBRARY_ERROR_SHUTDOWN: 
+@GST_LIBRARY_ERROR_SETTINGS: 
+@GST_LIBRARY_ERROR_ENCODE: 
+@GST_LIBRARY_ERROR_NUM_ERRORS: 
+
+<!-- ##### ENUM GstResourceError ##### -->
+<para>
+
+</para>
+
+@GST_RESOURCE_ERROR_FAILED: 
+@GST_RESOURCE_ERROR_TOO_LAZY: 
+@GST_RESOURCE_ERROR_NOT_FOUND: 
+@GST_RESOURCE_ERROR_BUSY: 
+@GST_RESOURCE_ERROR_OPEN_READ: 
+@GST_RESOURCE_ERROR_OPEN_WRITE: 
+@GST_RESOURCE_ERROR_OPEN_READ_WRITE: 
+@GST_RESOURCE_ERROR_CLOSE: 
+@GST_RESOURCE_ERROR_READ: 
+@GST_RESOURCE_ERROR_WRITE: 
+@GST_RESOURCE_ERROR_SEEK: 
+@GST_RESOURCE_ERROR_SYNC: 
+@GST_RESOURCE_ERROR_SETTINGS: 
+@GST_RESOURCE_ERROR_NUM_ERRORS: 
+
+<!-- ##### ENUM GstStreamError ##### -->
+<para>
+
+</para>
+
+@GST_STREAM_ERROR_FAILED: 
+@GST_STREAM_ERROR_TOO_LAZY: 
+@GST_STREAM_ERROR_NOT_IMPLEMENTED: 
+@GST_STREAM_ERROR_TYPE_NOT_FOUND: 
+@GST_STREAM_ERROR_WRONG_TYPE: 
+@GST_STREAM_ERROR_CODEC_NOT_FOUND: 
+@GST_STREAM_ERROR_DECODE: 
+@GST_STREAM_ERROR_ENCODE: 
+@GST_STREAM_ERROR_DEMUX: 
+@GST_STREAM_ERROR_MUX: 
+@GST_STREAM_ERROR_FORMAT: 
+@GST_STREAM_ERROR_NUM_ERRORS: 
+
+<!-- ##### MACRO GST_TYPE_G_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_LIBRARY_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_RESOURCE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_CORE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_STREAM_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_ERROR_SYSTEM ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_g_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_error_get_message ##### -->
+<para>
+
+</para>
+
+@domain: 
+@code: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_stream_error_quark ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_core_error_quark ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_resource_error_quark ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_library_error_quark ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 

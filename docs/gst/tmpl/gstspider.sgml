@@ -1,0 +1,44 @@
+<!-- ##### SECTION Title ##### -->
+GstSpider
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### VARIABLE gst_spider_details ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstSpiderConnection ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_spider_identity_plug ##### -->
+<para>
+
+</para>
+
+@ident: 
+
+
+<!-- ##### FUNCTION gst_spider_identity_unplug ##### -->
+<para>
+
+</para>
+
+@ident: 
+
+

@@ -15,12 +15,6 @@ methods to request buffers from its pads.
 
 </para>
 
-<!-- ##### VARIABLE gst_aggregator_details ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### ENUM GstAggregatorSchedType ##### -->
 <para>
 

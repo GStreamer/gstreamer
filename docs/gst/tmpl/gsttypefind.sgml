@@ -1,100 +1,18 @@
 <!-- ##### SECTION Title ##### -->
-Writing typefind functions
+GstTypeFindElement
 
 <!-- ##### SECTION Short_Description ##### -->
-Using the type finding subsystem from plugins
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-The typefinding subsystem in GStreamer is used to find the matching #GstCaps
-for an unidentified stream. This works similar to the unix <emphasis>file
-</emphasis> command.
+
 </para>
-<para>
-There are a number of elements which output unidentified data streams, such as
-a file source. Some other elements such as an autoplugger require a proper 
-identification of the data, so they can create the right pipeline. To find the
-right type, they use typefinding elements, the most notable being the typefind
-element. These elements take a list of all registered typefind functions and
-try them on the data to see if any of these functions can identify the data.
-</para>
-<para>
-The functions in this section provide the simple framework for writing these
-typefind functions. The job of a typefind function is to identify the type of
-the data good enough so that plugins using this type can understand them while
-make sure no other type is misidentified.
-<example>
-<title>a typefind function for Ogg data</title>
-<programlisting>
-static void
-ogg_type_find (GstTypeFind *tf, gpointer unused)
-{
-  guint8 *data = gst_type_find_peek (tf, 0, 4);
-  
-  if (data &amp;&amp; memcmp (data, "OggS", 4) == 0) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, 
-	    gst_caps_new ("ogg_type_find", "application/ogg", NULL));
-  }
-};
-</programlisting>
-</example>
-</para>
+
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-<link linkend="GstTypeFindFactory">GstTypeFactory - querying registered typefind 
-functions</link>
-</para>
-
-<!-- ##### STRUCT GstTypeFind ##### -->
-<para>
-This structure is filled by the caller of the typefind function. Typefind 
-functions must treat this as an opaque structure.
-</para>
-
-@peek: function called to get data. See gst_type_find_peek()
-@suggest: function called to suggest a caps. See gst_type_find_suggest()
-@data: caller defined data, that is passed when calling the functions
-@get_length: function called to query the length of the stream. See 
-gst_type_find_get_length(). Providing this function is optional.
-
-<!-- ##### USER_FUNCTION GstTypeFindFunction ##### -->
-<para>
-This is the prototype for a typefind function.
-</para>
-
-@find: The #GstTypeFind data
-@data: the user defined data that was provided on 
-gst_type_find_factory_register()
-
-
-<!-- ##### FUNCTION gst_type_find_peek ##### -->
-<para>
 
 </para>
-
-@find: 
-@offset: 
-@size: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_type_find_suggest ##### -->
-<para>
-
-</para>
-
-@find: 
-@probability: 
-@caps: 
-
-
-<!-- ##### FUNCTION gst_type_find_get_length ##### -->
-<para>
-
-</para>
-
-@find: 
-@Returns: 
 
 

@@ -2,7 +2,7 @@
 GstBin
 
 <!-- ##### SECTION Short_Description ##### -->
-Base container element
+Base class for elements that contain other elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -55,21 +55,12 @@ clock providers in the bin.
 
 </para>
 
-<!-- ##### ENUM GstBinFlags ##### -->
+<!-- ##### MACRO GST_BIN_CLASS ##### -->
 <para>
-Flags for a bin.
+
 </para>
 
-@GST_BIN_FLAG_MANAGER: This bin has a scheduler and can be used as a toplevel bin.
-@GST_BIN_SELF_SCHEDULABLE: This bin iterates itself, so no calls to gst_bin_iterate() should be made.
-@GST_BIN_FLAG_PREFER_COTHREADS: This bin preferes to have its elements scheduled with cothreads
-@GST_BIN_FLAG_FIXED_CLOCK: This bin uses a fixed clock, possibly the one set with gst_bin_use_clock().
-@GST_BIN_FLAG_LAST: 
-
-<!-- ##### STRUCT GstBin ##### -->
-<para>
-The GstBin object
-</para>
+@klass: 
 
 
 <!-- ##### USER_FUNCTION GstBinPrePostIterateFunction ##### -->
@@ -81,6 +72,17 @@ gst_bin_set_pre_iterate_function() and gst_bin_set_post_iterate_function().
 @bin: The bin that performed the callback
 @user_data: user data
 
+
+<!-- ##### ENUM GstBinFlags ##### -->
+<para>
+Flags for a bin.
+</para>
+
+@GST_BIN_FLAG_MANAGER: This bin has a scheduler and can be used as a toplevel bin.
+@GST_BIN_SELF_SCHEDULABLE: This bin iterates itself, so no calls to gst_bin_iterate() should be made.
+@GST_BIN_FLAG_PREFER_COTHREADS: This bin preferes to have its elements scheduled with cothreads
+@GST_BIN_FLAG_FIXED_CLOCK: This bin uses a fixed clock, possibly the one set with gst_bin_use_clock().
+@GST_BIN_FLAG_LAST: 
 
 <!-- ##### FUNCTION gst_bin_new ##### -->
 <para>
@@ -158,55 +160,27 @@ gst_bin_set_pre_iterate_function() and gst_bin_set_post_iterate_function().
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_bin_iterate ##### -->
+<!-- ##### FUNCTION gst_bin_get_by_interface ##### -->
 <para>
 
 </para>
 
 @bin: 
+@interface: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_bin_set_post_iterate_function ##### -->
+<!-- ##### FUNCTION gst_bin_get_all_by_interface ##### -->
 <para>
 
 </para>
 
 @bin: 
-@func: 
-@user_data: 
+@interface: 
+@Returns: 
 
 
-<!-- ##### FUNCTION gst_bin_set_pre_iterate_function ##### -->
-<para>
-
-</para>
-
-@bin: 
-@func: 
-@user_data: 
-
-
-<!-- ##### FUNCTION gst_bin_child_state_change ##### -->
-<para>
-
-</para>
-
-@bin: 
-@oldstate: 
-@newstate: 
-@child: 
-
-
-<!-- ##### FUNCTION gst_bin_auto_clock ##### -->
-<para>
-
-</para>
-
-@bin: 
-
-
-<!-- ##### FUNCTION gst_bin_get_clock ##### -->
+<!-- ##### FUNCTION gst_bin_iterate ##### -->
 <para>
 
 </para>
@@ -222,6 +196,63 @@ gst_bin_set_pre_iterate_function() and gst_bin_set_post_iterate_function().
 
 @bin: 
 @clock: 
+
+
+<!-- ##### FUNCTION gst_bin_get_clock ##### -->
+<para>
+
+</para>
+
+@bin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_auto_clock ##### -->
+<para>
+
+</para>
+
+@bin: 
+
+
+<!-- ##### FUNCTION gst_bin_sync_children_state ##### -->
+<para>
+
+</para>
+
+@bin: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_bin_child_state_change ##### -->
+<para>
+
+</para>
+
+@bin: 
+@oldstate: 
+@newstate: 
+@child: 
+
+
+<!-- ##### FUNCTION gst_bin_set_pre_iterate_function ##### -->
+<para>
+
+</para>
+
+@bin: 
+@func: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_bin_set_post_iterate_function ##### -->
+<para>
+
+</para>
+
+@bin: 
+@func: 
+@user_data: 
 
 
 <!-- ##### SIGNAL GstBin::element-added ##### -->

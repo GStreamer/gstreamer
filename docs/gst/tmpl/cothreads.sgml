@@ -38,21 +38,9 @@ The cothread state structure
 @stack_size: 
 @magic_number: 
 
-<!-- ##### USER_FUNCTION cothread_func ##### -->
-<para>
-the function that will be called when the cothread starts. The function
-prototype is like a main() function, so you can do whatever you want with
-it.
-</para>
-
-@argc: a main-like argument count
-@argv: a main-like array of arguments
-@Returns: a return code
-
-
 <!-- ##### STRUCT cothread_context ##### -->
 <para>
-The cothread context structure
+
 </para>
 
 @cothreads: 
@@ -60,6 +48,16 @@ The cothread context structure
 @current: 
 @mutex: 
 @gst_thread: 
+
+<!-- ##### USER_FUNCTION cothread_func ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
 
 <!-- ##### MACRO COTHREAD_STARTED ##### -->
 <para>
@@ -91,22 +89,24 @@ Indicates the cothread is destroyed.
 @ctx: 
 
 
-<!-- ##### FUNCTION cothread_get_private ##### -->
+<!-- ##### FUNCTION cothread_context_set_data ##### -->
 <para>
 
 </para>
 
 @cothread: 
-@Returns: 
-
-
-<!-- ##### FUNCTION cothread_set_private ##### -->
-<para>
-
-</para>
-
-@cothread: 
+@key: 
 @data: 
+
+
+<!-- ##### FUNCTION cothread_context_get_data ##### -->
+<para>
+
+</para>
+
+@cothread: 
+@key: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cothread_create ##### -->
@@ -153,24 +153,22 @@ Indicates the cothread is destroyed.
 @cothread: 
 
 
-<!-- ##### FUNCTION cothread_context_get_data ##### -->
+<!-- ##### FUNCTION cothread_set_private ##### -->
 <para>
 
 </para>
 
 @cothread: 
-@key: 
-@Returns: 
-
-
-<!-- ##### FUNCTION cothread_context_set_data ##### -->
-<para>
-
-</para>
-
-@cothread: 
-@key: 
 @data: 
+
+
+<!-- ##### FUNCTION cothread_get_private ##### -->
+<para>
+
+</para>
+
+@cothread: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cothread_lock ##### -->

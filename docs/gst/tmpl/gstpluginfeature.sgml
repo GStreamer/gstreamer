@@ -2,7 +2,7 @@
 GstPluginFeature
 
 <!-- ##### SECTION Short_Description ##### -->
-The base class for plugable objects.
+Base class for contents of a GstPlugin
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -22,6 +22,22 @@ Get the name of the feature
 @feature: The feature to query
 
 
+<!-- ##### TYPEDEF GstTypeNameData ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### USER_FUNCTION GstPluginFeatureFilter ##### -->
+<para>
+
+</para>
+
+@feature: 
+@user_data: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_plugin_feature_ensure_loaded ##### -->
 <para>
 
@@ -37,5 +53,51 @@ Get the name of the feature
 </para>
 
 @feature: 
+
+
+<!-- ##### FUNCTION gst_plugin_feature_type_name_filter ##### -->
+<para>
+
+</para>
+
+@feature: 
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_feature_set_rank ##### -->
+<para>
+
+</para>
+
+@feature: 
+@rank: 
+
+
+<!-- ##### FUNCTION gst_plugin_feature_set_name ##### -->
+<para>
+
+</para>
+
+@feature: 
+@name: 
+
+
+<!-- ##### FUNCTION gst_plugin_feature_get_rank ##### -->
+<para>
+
+</para>
+
+@feature: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_plugin_feature_get_name ##### -->
+<para>
+
+</para>
+
+@feature: 
+@Returns: 
 
 

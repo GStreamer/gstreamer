@@ -1,0 +1,122 @@
+<!-- ##### SECTION Title ##### -->
+GstXMLRegistry
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstXMLRegistryState ##### -->
+<para>
+
+</para>
+
+@GST_XML_REGISTRY_NONE: 
+@GST_XML_REGISTRY_TOP: 
+@GST_XML_REGISTRY_PATHS: 
+@GST_XML_REGISTRY_PATH: 
+@GST_XML_REGISTRY_PATHS_DONE: 
+@GST_XML_REGISTRY_PLUGIN: 
+@GST_XML_REGISTRY_FEATURE: 
+@GST_XML_REGISTRY_PADTEMPLATE: 
+@GST_XML_REGISTRY_CAPS: 
+@GST_XML_REGISTRY_STRUCTURE: 
+@GST_XML_REGISTRY_PROPERTIES: 
+
+<!-- ##### ENUM GstXMLRegistryMode ##### -->
+<para>
+
+</para>
+
+@GST_XML_REGISTRY_READ: 
+@GST_XML_REGISTRY_WRITE: 
+
+<!-- ##### USER_FUNCTION GstXMLRegistryGetPerms ##### -->
+<para>
+
+</para>
+
+@registry: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
+<para>
+
+</para>
+
+@registry: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistryParser ##### -->
+<para>
+
+</para>
+
+@context: 
+@tag: 
+@text: 
+@text_len: 
+@registry: 
+@error: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistryOpen ##### -->
+<para>
+
+</para>
+
+@registry: 
+@mode: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistryLoad ##### -->
+<para>
+
+</para>
+
+@registry: 
+@dest: 
+@size: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistrySave ##### -->
+<para>
+
+</para>
+
+@registry: 
+@format: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstXMLRegistryClose ##### -->
+<para>
+
+</para>
+
+@registry: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_xml_registry_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@location: 
+@Returns: 
+
+

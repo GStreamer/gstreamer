@@ -16,6 +16,19 @@ with the buffer. (fakesink)
 
 </para>
 
+<!-- ##### ENUM GstFakeSinkStateError ##### -->
+<para>
+
+</para>
+
+@FAKESINK_STATE_ERROR_NONE: 
+@FAKESINK_STATE_ERROR_NULL_READY: 
+@FAKESINK_STATE_ERROR_READY_PAUSED: 
+@FAKESINK_STATE_ERROR_PAUSED_PLAYING: 
+@FAKESINK_STATE_ERROR_PLAYING_PAUSED: 
+@FAKESINK_STATE_ERROR_PAUSED_READY: 
+@FAKESINK_STATE_ERROR_READY_NULL: 
+
 <!-- ##### FUNCTION gst_fakesink_factory_init ##### -->
 <para>
 

@@ -14,6 +14,15 @@ Some convenience functions
 
 </para>
 
+<!-- ##### FUNCTION gst_util_set_value_from_string ##### -->
+<para>
+
+</para>
+
+@value: 
+@value_str: 
+
+
 <!-- ##### FUNCTION gst_util_set_object_arg ##### -->
 <para>
 
@@ -24,15 +33,6 @@ Some convenience functions
 @value: 
 
 
-<!-- ##### FUNCTION gst_util_set_value_from_string ##### -->
-<para>
-
-</para>
-
-@value: 
-@value_str: 
-
-
 <!-- ##### FUNCTION gst_util_dump_mem ##### -->
 <para>
 
@@ -40,6 +40,16 @@ Some convenience functions
 
 @mem: 
 @size: 
+
+
+<!-- ##### FUNCTION gst_print_pad_caps ##### -->
+<para>
+
+</para>
+
+@buf: 
+@indent: 
+@pad: 
 
 
 <!-- ##### FUNCTION gst_print_element_args ##### -->
@@ -52,13 +62,58 @@ Some convenience functions
 @element: 
 
 
-<!-- ##### FUNCTION gst_print_pad_caps ##### -->
+<!-- ##### MACRO GST_BOILERPLATE_FULL ##### -->
 <para>
 
 </para>
 
-@buf: 
-@indent: 
-@pad: 
+@type: 
+@type_as_function: 
+@parent_type: 
+@\
+    parent_type_macro:
+@\
+    parent_type_macro:
+@\
+    parent_type_macro:
+@\
+    parent_type_macro:
+@\
+    parent_type_macro:
+@\
+    parent_type_macro: 
+@additional_initializations: 
+
+
+<!-- ##### MACRO GST_BOILERPLATE ##### -->
+<para>
+
+</para>
+
+@type: 
+@type_as_function: 
+@parent_type: 
+@parent_type_macro: 
+
+
+<!-- ##### MACRO GST_CALL_PARENT ##### -->
+<para>
+
+</para>
+
+@parent_class_cast: 
+@name: 
+@args: 
+
+
+<!-- ##### MACRO GST_CALL_PARENT_WITH_DEFAULT ##### -->
+<para>
+
+</para>
+
+@parent_class_cast: 
+@name: 
+@args: 
+@def_return: 
 
 

@@ -90,11 +90,13 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @argv: 
 
 
-<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
+<!-- ##### FUNCTION gst_init_check ##### -->
 <para>
 
 </para>
 
+@argc: 
+@argv: 
 @Returns: 
 
 
@@ -111,16 +113,6 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_init_check ##### -->
-<para>
-
-</para>
-
-@argc: 
-@argv: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_init_check_with_popt_table ##### -->
 <para>
 
@@ -134,31 +126,7 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @Param3: 
 
 
-<!-- ##### FUNCTION gst_version ##### -->
-<para>
-
-</para>
-
-@major: 
-@minor: 
-@micro: 
-
-
-<!-- ##### FUNCTION gst_main ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### FUNCTION gst_main_quit ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### FUNCTION gst_has_threads ##### -->
+<!-- ##### FUNCTION gst_init_get_popt_table ##### -->
 <para>
 
 </para>
@@ -174,29 +142,24 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @use_threads: 
 
 
-<!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
+<!-- ##### FUNCTION gst_has_threads ##### -->
 <para>
-The variable that holds the GStreamer log domain
+
 </para>
 
+@Returns: 
 
-<!-- ##### MACRO GST_VERSION_MAJOR ##### -->
+
+<!-- ##### FUNCTION gst_main ##### -->
 <para>
-The major version of GStreamer at compile time
-</para>
 
-
-
-<!-- ##### MACRO GST_VERSION_MINOR ##### -->
-<para>
-The minor version of GStreamer at compile time
 </para>
 
 
 
-<!-- ##### MACRO GST_VERSION_MICRO ##### -->
+<!-- ##### FUNCTION gst_main_quit ##### -->
 <para>
-The micro version of GStreamer at compile time
+
 </para>
 
 

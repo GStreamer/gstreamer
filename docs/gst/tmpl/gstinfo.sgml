@@ -2,7 +2,7 @@
 GstInfo
 
 <!-- ##### SECTION Short_Description ##### -->
-debugging subsystem
+Debugging and logging
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -68,37 +68,6 @@ categories. These are explained at GST_DEBUG_CATEGORY_INIT().
 and environment variables that affect the debugging output.
 </para>
 
-<!-- ##### MACRO GST_STR_NULL ##### -->
-<para>
-Macro to use when a string must not be NULL, but may be NULL. If the string is
-NULL, "(NULL)" is printed instead.
-In GStreamer printf string arguments may not be NULL, because on some platforms
-(ie Solaris) the libc crashes in that case. This includes debugging strings.
-</para>
-
-@str: The string to check.
-@Returns: A string that is guaranteed to be not NULL.
-
-
-<!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
-<para>
-Evaluates to 2 strings, that describe the pad. Often used in debugging
-statements.
-</para>
-
-@pad: The pad to debug.
-
-
-<!-- ##### MACRO GST_FUNCTION ##### -->
-<para>
-This macro should evaluate to the name of the current function and be should
-be defined when configuring your project, as it is compiler dependant. If it
-is not defined, some default value is used. It is used to provide debugging
-output with the function name of the message.
-</para>
-
-
-
 <!-- ##### ENUM GstDebugLevel ##### -->
 <para>
 The level defines the importance of a debugging message. The more important a 
@@ -141,15 +110,6 @@ reset the debugging output to default behaviour.
 
 
 
-<!-- ##### FUNCTION gst_debug_level_get_name ##### -->
-<para>
-
-</para>
-
-@level: 
-@Returns: 
-
-
 <!-- ##### ENUM GstDebugColorFlags ##### -->
 <para>
 These are some terminal-oriented flags you can use when creating your debugging
@@ -175,13 +135,25 @@ categories to make them stand out in debugging output.
 @GST_DEBUG_BOLD: Make the output bold.
 @GST_DEBUG_UNDERLINE: Underline the output.
 
-<!-- ##### FUNCTION gst_debug_construct_term_color ##### -->
+<!-- ##### MACRO GST_DEBUG_FG_MASK ##### -->
 <para>
 
 </para>
 
-@colorinfo: 
-@Returns: 
+
+
+<!-- ##### MACRO GST_DEBUG_BG_MASK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_FORMAT_MASK ##### -->
+<para>
+
+</para>
+
 
 
 <!-- ##### STRUCT GstDebugCategory ##### -->
@@ -191,15 +163,40 @@ This is the struct that describes the categories. Once initialized with
 </para>
 
 
-<!-- ##### VARIABLE GST_CAT_DEFAULT ##### -->
+<!-- ##### MACRO GST_STR_NULL ##### -->
 <para>
-The default category that is used when no other category is defined as the
-default. If you want to define a default category, do it like this:
-<informalexample>
-<programlisting>
-&hash;define GST_CAT_DEFAULT category_to_be_default
-</programlisting>
-</informalexample>
+Macro to use when a string must not be NULL, but may be NULL. If the string is
+NULL, "(NULL)" is printed instead.
+In GStreamer printf string arguments may not be NULL, because on some platforms
+(ie Solaris) the libc crashes in that case. This includes debugging strings.
+</para>
+
+@str: The string to check.
+@Returns: A string that is guaranteed to be not NULL.
+
+
+<!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
+<para>
+Evaluates to 2 strings, that describe the pad. Often used in debugging
+statements.
+</para>
+
+@pad: The pad to debug.
+
+
+<!-- ##### MACRO GST_FUNCTION ##### -->
+<para>
+This macro should evaluate to the name of the current function and be should
+be defined when configuring your project, as it is compiler dependant. If it
+is not defined, some default value is used. It is used to provide debugging
+output with the function name of the message.
+</para>
+
+
+
+<!-- ##### STRUCT GstDebugMessage ##### -->
+<para>
+
 </para>
 
 
@@ -233,6 +230,30 @@ default. If you want to define a default category, do it like this:
 @Varargs: 
 
 
+<!-- ##### FUNCTION gst_debug_log_valist ##### -->
+<para>
+
+</para>
+
+@category: 
+@level: 
+@file: 
+@function: 
+@line: 
+@object: 
+@format: 
+@args: 
+
+
+<!-- ##### FUNCTION gst_debug_message_get ##### -->
+<para>
+
+</para>
+
+@message: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_debug_log_default ##### -->
 <para>
 
@@ -246,6 +267,15 @@ default. If you want to define a default category, do it like this:
 @object: 
 @message: 
 @unused: 
+
+
+<!-- ##### FUNCTION gst_debug_level_get_name ##### -->
+<para>
+
+</para>
+
+@level: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_debug_add_log_function ##### -->
@@ -444,6 +474,27 @@ default. If you want to define a default category, do it like this:
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_debug_construct_term_color ##### -->
+<para>
+
+</para>
+
+@colorinfo: 
+@Returns: 
+
+
+<!-- ##### VARIABLE GST_CAT_DEFAULT ##### -->
+<para>
+The default category that is used when no other category is defined as the
+default. If you want to define a default category, do it like this:
+<informalexample>
+<programlisting>
+&hash;define GST_CAT_DEFAULT category_to_be_default
+</programlisting>
+</informalexample>
+</para>
+
+
 <!-- ##### MACRO GST_CAT_LEVEL_LOG ##### -->
 <para>
 GST_CAT_LEVEL_LOG:
@@ -456,22 +507,6 @@ below.
 @level: the severity of the message
 @object: the #GObject the message belongs to or NULL if none
 @...: A printf-style message to output
-
-
-<!-- ##### MACRO GST_INFO ##### -->
-<para>
-Output an informational message in the default category.
-</para>
-
-@...: printf-style message to output
-
-
-<!-- ##### MACRO GST_DEBUG ##### -->
-<para>
-Output a debugging message in the default category.
-</para>
-
-@...: printf-style message to output
 
 
 <!-- ##### MACRO GST_CAT_ERROR_OBJECT ##### -->
@@ -537,6 +572,24 @@ Output an error message in the given category.
 <!-- ##### MACRO GST_CAT_WARNING ##### -->
 <para>
 Output a warning message in the given category.
+</para>
+
+@cat: category to use
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_INFO ##### -->
+<para>
+Output an informational message in the given category.
+</para>
+
+@cat: category to use
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_CAT_DEBUG ##### -->
+<para>
+Output a debuggign message in the given category.
 </para>
 
 @cat: category to use
@@ -615,21 +668,19 @@ Output a warning message in the default category.
 @...: printf-style message to output
 
 
-<!-- ##### MACRO GST_CAT_INFO ##### -->
+<!-- ##### MACRO GST_INFO ##### -->
 <para>
-Output an informational message in the given category.
+Output an informational message in the default category.
 </para>
 
-@cat: category to use
 @...: printf-style message to output
 
 
-<!-- ##### MACRO GST_CAT_DEBUG ##### -->
+<!-- ##### MACRO GST_DEBUG ##### -->
 <para>
-Output a debuggign message in the given category.
+Output a debugging message in the default category.
 </para>
 
-@cat: category to use
 @...: printf-style message to output
 
 
@@ -639,6 +690,58 @@ Output a logging message in the default category.
 </para>
 
 @...: printf-style message to output
+
+
+<!-- ##### MACRO GST_INFO_ELEMENT ##### -->
+<para>
+
+</para>
+
+@cat: 
+@obj: 
+@...: 
+
+
+<!-- ##### MACRO GST_DEBUG_ELEMENT ##### -->
+<para>
+
+</para>
+
+@cat: 
+@obj: 
+@...: 
+
+
+<!-- ##### MACRO GST_DEBUG_ENTER ##### -->
+<para>
+
+</para>
+
+@...: 
+
+
+<!-- ##### MACRO GST_DEBUG_LEAVE ##### -->
+<para>
+
+</para>
+
+@...: 
+
+
+<!-- ##### MACRO GST_INFO_ENTER ##### -->
+<para>
+
+</para>
+
+@...: 
+
+
+<!-- ##### MACRO GST_INFO_LEAVE ##### -->
+<para>
+
+</para>
+
+@...: 
 
 
 <!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
@@ -664,5 +767,46 @@ Make sure you free the string after use.
 
 @ptr: pointer to the function
 Returns: The name of the function
+
+
+<!-- ##### MACRO gst_debug_set_log_function ##### -->
+<para>
+
+</para>
+
+@func: 
+@data: 
+
+
+<!-- ##### MACRO gst_debug_reset_log_function ##### -->
+<para>
+
+</para>
+
+@void: 
+
+
+<!-- ##### MACRO gst_debug_category_set_threshold_for_name ##### -->
+<para>
+
+</para>
+
+@name: 
+@level: 
+
+
+<!-- ##### MACRO gst_debug_category_unset_threshold_for_name ##### -->
+<para>
+
+</para>
+
+@name: 
+
+
+<!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
+<para>
+
+</para>
+
 
 

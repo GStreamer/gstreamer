@@ -46,6 +46,14 @@ Constant to define an undefined clock time
 
 
 
+<!-- ##### MACRO GST_CLOCK_TIME_IS_VALID ##### -->
+<para>
+
+</para>
+
+@time: 
+
+
 <!-- ##### MACRO GST_SECOND ##### -->
 <para>
 Constant that defines one GStreamer second
@@ -100,6 +108,13 @@ Convert a GstClockTime to a GTimeVal
 @tv: The target timeval
 
 
+<!-- ##### MACRO GST_CLOCK_ENTRY_TRACE_NAME ##### -->
+<para>
+The name used for tracing clock entry allocations.
+</para>
+
+
+
 <!-- ##### STRUCT GstClockEntry ##### -->
 <para>
 All pending timeouts or periodic notifies are converted into
@@ -142,13 +157,6 @@ The type of the clock entry
 
 @GST_CLOCK_ENTRY_SINGLE: a single shot timeout
 @GST_CLOCK_ENTRY_PERIODIC: a periodic timeout request
-
-<!-- ##### MACRO GST_CLOCK_ENTRY_TRACE_NAME ##### -->
-<para>
-The name used for tracing clock entry allocations.
-</para>
-
-
 
 <!-- ##### MACRO GST_CLOCK_ENTRY ##### -->
 <para>
@@ -229,12 +237,6 @@ Get the clock flags
 @clock: the clock to query
 
 
-<!-- ##### STRUCT GstClock ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gst_clock_set_speed ##### -->
 <para>
 
@@ -310,6 +312,15 @@ Get the clock flags
 
 
 <!-- ##### FUNCTION gst_clock_get_time ##### -->
+<para>
+
+</para>
+
+@clock: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_event_time ##### -->
 <para>
 
 </para>

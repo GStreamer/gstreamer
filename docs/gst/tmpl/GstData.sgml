@@ -1,0 +1,220 @@
+<!-- ##### SECTION Title ##### -->
+GstData
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_DATA ##### -->
+<para>
+Cast a pointer to a GstData
+</para>
+
+@data: The pointer to cast
+
+
+<!-- ##### MACRO GST_DATA_TYPE ##### -->
+<para>
+Get the type of the GstData
+</para>
+
+@data: The data to get the type of
+
+
+<!-- ##### MACRO GST_DATA_FLAGS ##### -->
+<para>
+Get the flags of this GstData
+</para>
+
+@data: The data to get the flags of
+
+
+<!-- ##### MACRO GST_DATA_FLAG_SHIFT ##### -->
+<para>
+Shift a given flag so that it can be used in an or operation
+</para>
+
+@flag: The flag to shift
+
+
+<!-- ##### MACRO GST_DATA_FLAG_UNSET ##### -->
+<para>
+Unset the given flag
+</para>
+
+@data: The data to unset the flag of
+@flag: The flag to unset
+
+
+<!-- ##### MACRO GST_TYPE_DATA ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT GstData ##### -->
+<para>
+The base structure
+</para>
+
+@type: The type of this data.
+@refcount: A refcount
+@flags: The flags of this GstData
+@free: A pointer to a custom free function
+@copy: A pointer to a custom copy function
+@_gst_reserved: 
+
+<!-- ##### USER_FUNCTION GstDataFreeFunction ##### -->
+<para>
+The signature of the free function. Subclasses should provide a free function
+with this signature and pass it in the gst_data_init() function.
+</para>
+
+@data: The GstData to free
+
+
+<!-- ##### USER_FUNCTION GstDataCopyFunction ##### -->
+<para>
+The signature of the copy function. Subclasses should provide a copy function
+with this signature and pass it in the gst_data_init() function.
+</para>
+
+@data: The GstData to copy
+@Returns: A new GstData that is a copy of data
+
+
+<!-- ##### ENUM GstDataFlags ##### -->
+<para>
+Various flags that can be set on a GstData
+</para>
+
+@GST_DATA_READONLY: The data is readonly
+@GST_DATA_FLAG_LAST: Subclasses can add additional flags starting from this offset
+
+<!-- ##### MACRO GST_DATA_REFCOUNT ##### -->
+<para>
+Get access to the refcount field of the GstData
+</para>
+
+@data: The GstData to get the refcount field of
+
+
+<!-- ##### MACRO GST_DATA_REFCOUNT_VALUE ##### -->
+<para>
+Get the current refcount value
+</para>
+
+@data: The GstData to query
+
+
+<!-- ##### MACRO GST_DATA_COPY_FUNC ##### -->
+<para>
+Get access to the copy function of the data
+</para>
+
+@data: The data to query
+
+
+<!-- ##### MACRO GST_DATA_FREE_FUNC ##### -->
+<para>
+Get access to the free function of the data
+</para>
+
+@data: The data to query
+
+
+<!-- ##### FUNCTION gst_data_init ##### -->
+<para>
+
+</para>
+
+@data: 
+@type: 
+@flags: 
+@free: 
+@copy: 
+
+
+<!-- ##### FUNCTION gst_data_dispose ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### FUNCTION gst_data_copy_into ##### -->
+<para>
+
+</para>
+
+@data: 
+@target: 
+
+
+<!-- ##### FUNCTION gst_data_copy ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_data_is_writable ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_data_copy_on_write ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_data_ref ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_data_ref_by_count ##### -->
+<para>
+
+</para>
+
+@data: 
+@count: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_data_unref ##### -->
+<para>
+
+</para>
+
+@data: 
+
+

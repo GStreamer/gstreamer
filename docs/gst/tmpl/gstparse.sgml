@@ -2,7 +2,7 @@
 GstParse
 
 <!-- ##### SECTION Short_Description ##### -->
-Parses commandline syntax into a pipeline.
+Parses pipeline syntax into elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -44,6 +44,21 @@ can be made with <option>{}</option>.
 
 </para>
 
+<!-- ##### FUNCTION gst_parse_error_quark ##### -->
+<para>
+Get the error quark passed in the GError messages.
+</para>
+
+@Returns: The parse error quark
+
+
+<!-- ##### MACRO GST_PARSE_ERROR ##### -->
+<para>
+The error quark
+</para>
+
+
+
 <!-- ##### ENUM GstParseError ##### -->
 <para>
 The parsing errors.
@@ -56,21 +71,6 @@ The parsing errors.
 @GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY: 
 @GST_PARSE_ERROR_EMPTY_BIN: 
 @GST_PARSE_ERROR_EMPTY: 
-
-<!-- ##### MACRO GST_PARSE_ERROR ##### -->
-<para>
-The error quark
-</para>
-
-
-
-<!-- ##### FUNCTION gst_parse_error_quark ##### -->
-<para>
-Get the error quark passed in the GError messages.
-</para>
-
-@Returns: The parse error quark
-
 
 <!-- ##### FUNCTION gst_parse_launch ##### -->
 <para>

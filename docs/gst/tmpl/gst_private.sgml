@@ -1,0 +1,178 @@
+<!-- ##### SECTION Title ##### -->
+gst_private
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### VARIABLE GST_CAT_GST_INIT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_COTHREADS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_COTHREAD_SWITCH ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_AUTOPLUG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_AUTOPLUG_ATTEMPT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_PARENTAGE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_STATES ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_PLANNING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_SCHEDULING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_DATAFLOW ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_BUFFER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_CAPS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_CLOCK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_ELEMENT_PADS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_PADS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_PIPELINE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_PLUGIN_LOADING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_PLUGIN_INFO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_PROPERTIES ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_THREAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_XML ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_NEGOTIATION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_REFCOUNTING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_ERROR_SYSTEM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_EVENT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_PARAMS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE GST_CAT_CALL_TRACE ##### -->
+<para>
+
+</para>
+
+

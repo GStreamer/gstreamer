@@ -35,7 +35,6 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 
 @FAKESRC_DATA_ALLOCATE: 
 @FAKESRC_DATA_SUBBUFFER: 
-@FAKESRC_DATA_BUFFERPOOL: 
 
 <!-- ##### ENUM GstFakeSrcSizeType ##### -->
 <para>

@@ -2,7 +2,7 @@
 GstInterface
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Core interfaces implemented by #GstElements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,6 +13,31 @@ GstInterface
 <para>
 
 </para>
+
+<!-- ##### STRUCT GstImplementsInterface ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ##### -->
+<para>
+
+</para>
+
+@obj: 
+@type: 
+@cast_t: 
+
+
+<!-- ##### MACRO GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ##### -->
+<para>
+
+</para>
+
+@obj: 
+@type: 
+
 
 <!-- ##### FUNCTION gst_element_implements_interface ##### -->
 <para>

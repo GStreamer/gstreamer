@@ -2,7 +2,7 @@
 GstScheduler
 
 <!-- ##### SECTION Short_Description ##### -->
-An abstract class for plugable schedulers.
+Abstract class for objects that manage the scheduling of groups of elements
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,6 +13,15 @@ This is a base class for custom schedulers.
 <para>
 
 </para>
+
+<!-- ##### ENUM GstSchedulerFlags ##### -->
+<para>
+Flags for the scheduler
+</para>
+
+@GST_SCHEDULER_FLAG_FIXED_CLOCK: The scheduler has a fixed clock
+@GST_SCHEDULER_FLAG_LAST: subclasses can start numbering their flags starting
+                          from here.
 
 <!-- ##### MACRO GST_SCHEDULER_PARENT ##### -->
 <para>
@@ -39,15 +48,6 @@ The state of the scheduler
 @GST_SCHEDULER_STATE_RUNNING: the scheduler is running
 @GST_SCHEDULER_STATE_STOPPED: the scheduler is stopped
 @GST_SCHEDULER_STATE_ERROR: the scheduler is in error
-
-<!-- ##### ENUM GstSchedulerFlags ##### -->
-<para>
-Flags for the scheduler
-</para>
-
-@GST_SCHEDULER_FLAG_FIXED_CLOCK: The scheduler has a fixed clock
-@GST_SCHEDULER_FLAG_LAST: subclasses can start numbering their flags starting
-                          from here.
 
 <!-- ##### FUNCTION gst_scheduler_setup ##### -->
 <para>
@@ -81,6 +81,24 @@ Flags for the scheduler
 
 @sched: 
 @element: 
+
+
+<!-- ##### FUNCTION gst_scheduler_add_scheduler ##### -->
+<para>
+
+</para>
+
+@sched: 
+@sched2: 
+
+
+<!-- ##### FUNCTION gst_scheduler_remove_scheduler ##### -->
+<para>
+
+</para>
+
+@sched: 
+@sched2: 
 
 
 <!-- ##### FUNCTION gst_scheduler_state_transition ##### -->
@@ -180,59 +198,6 @@ Flags for the scheduler
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_scheduler_add_scheduler ##### -->
-<para>
-
-</para>
-
-@sched: 
-@sched2: 
-
-
-<!-- ##### FUNCTION gst_scheduler_remove_scheduler ##### -->
-<para>
-
-</para>
-
-@sched: 
-@sched2: 
-
-
-<!-- ##### FUNCTION gst_scheduler_auto_clock ##### -->
-<para>
-
-</para>
-
-@sched: 
-
-
-<!-- ##### FUNCTION gst_scheduler_get_clock ##### -->
-<para>
-
-</para>
-
-@sched: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_scheduler_set_clock ##### -->
-<para>
-
-</para>
-
-@sched: 
-@clock: 
-
-
-<!-- ##### FUNCTION gst_scheduler_use_clock ##### -->
-<para>
-
-</para>
-
-@sched: 
-@clock: 
-
-
 <!-- ##### FUNCTION gst_scheduler_clock_wait ##### -->
 <para>
 
@@ -257,11 +222,174 @@ Flags for the scheduler
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_scheduler_use_clock ##### -->
+<para>
+
+</para>
+
+@sched: 
+@clock: 
+
+
+<!-- ##### FUNCTION gst_scheduler_set_clock ##### -->
+<para>
+
+</para>
+
+@sched: 
+@clock: 
+
+
+<!-- ##### FUNCTION gst_scheduler_get_clock ##### -->
+<para>
+
+</para>
+
+@sched: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_auto_clock ##### -->
+<para>
+
+</para>
+
+@sched: 
+
+
 <!-- ##### FUNCTION gst_scheduler_show ##### -->
 <para>
 
 </para>
 
 @sched: 
+
+
+<!-- ##### MACRO GST_TYPE_SCHEDULER_FACTORY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_SCHEDULER_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_IS_SCHEDULER_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_SCHEDULER_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### MACRO GST_IS_SCHEDULER_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+<!-- # Unused Parameters # -->
+@obj: 
+
+
+<!-- ##### MACRO GST_SCHEDULER_FACTORY_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_SCHEDULER_DEFAULT_NAME ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_scheduler_factory_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_factory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@longdesc: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_factory_destroy ##### -->
+<para>
+
+</para>
+
+@factory: 
+
+
+<!-- ##### FUNCTION gst_scheduler_factory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_factory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_factory_make ##### -->
+<para>
+
+</para>
+
+@name: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_factory_set_default_name ##### -->
+<para>
+
+</para>
+
+@name: 
+
+
+<!-- ##### FUNCTION gst_scheduler_factory_get_default_name ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 

@@ -14,6 +14,31 @@ GstXML
 
 </para>
 
+<!-- ##### STRUCT GstXMLNs ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_xml_write ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_xml_write_file ##### -->
+<para>
+
+</para>
+
+@element: 
+@out: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_xml_new ##### -->
 <para>
 
@@ -33,18 +58,6 @@ GstXML
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_xml_parse_memory ##### -->
-<para>
-
-</para>
-
-@xml: 
-@buffer: 
-@size: 
-@root: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_xml_parse_file ##### -->
 <para>
 
@@ -56,22 +69,15 @@ GstXML
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_xml_write ##### -->
+<!-- ##### FUNCTION gst_xml_parse_memory ##### -->
 <para>
 
 </para>
 
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_xml_write_file ##### -->
-<para>
-
-</para>
-
-@element: 
-@out: 
+@xml: 
+@buffer: 
+@size: 
+@root: 
 @Returns: 
 
 

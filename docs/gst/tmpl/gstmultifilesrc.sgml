@@ -1,0 +1,24 @@
+<!-- ##### SECTION Title ##### -->
+GstMultiFileSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstMultiFileSrcFlags ##### -->
+<para>
+
+</para>
+
+@GST_MULTIFILESRC_OPEN: 
+@GST_MULTIFILESRC_FLAG_LAST: 
+

@@ -2,7 +2,7 @@
 GstURIHandler
 
 <!-- ##### SECTION Short_Description ##### -->
-Register URIs and the elements that can handle them.
+Plugin feature that describes URI types and the element that handles it
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -14,4 +14,174 @@ and the element property that can handle a given URI.
 <para>
 
 </para>
+
+<!-- ##### ENUM GstURIType ##### -->
+<para>
+
+</para>
+
+@GST_URI_UNKNOWN: 
+@GST_URI_SINK: 
+@GST_URI_SRC: 
+
+<!-- ##### MACRO GST_TYPE_URI_HANDLER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_URI_HANDLER ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_IS_URI_HANDLER ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_URI_HANDLER_GET_INTERFACE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_URI_HANDLER_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### STRUCT GstURIHandler ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstURIHandlerInterface ##### -->
+<para>
+
+</para>
+
+@parent: 
+@new_uri: 
+@get_type: 
+@get_protocols: 
+@get_uri: 
+@set_uri: 
+@_gst_reserved: 
+
+<!-- ##### FUNCTION gst_uri_protocol_is_valid ##### -->
+<para>
+
+</para>
+
+@protocol: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_is_valid ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_get_protocol ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_get_location ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_construct ##### -->
+<para>
+
+</para>
+
+@protocol: 
+@location: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_make_from_uri ##### -->
+<para>
+
+</para>
+
+@type: 
+@uri: 
+@elementname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_get_uri_type ##### -->
+<para>
+
+</para>
+
+@handler: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_get_protocols ##### -->
+<para>
+
+</para>
+
+@handler: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_get_uri ##### -->
+<para>
+
+</para>
+
+@handler: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_set_uri ##### -->
+<para>
+
+</para>
+
+@handler: 
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_new_uri ##### -->
+<para>
+
+</para>
+
+@handler: 
+@uri: 
+
 

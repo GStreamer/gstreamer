@@ -2,7 +2,7 @@
 GstRegistryPool
 
 <!-- ##### SECTION Short_Description ##### -->
-Manage a list of plugins and registries
+Management of a group of #GstRegistry objects
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -53,6 +53,28 @@ GstRegistry
 
 </para>
 
+
+
+<!-- ##### FUNCTION gst_registry_pool_plugin_filter ##### -->
+<para>
+
+</para>
+
+@filter: 
+@first: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_registry_pool_feature_filter ##### -->
+<para>
+
+</para>
+
+@filter: 
+@first: 
+@user_data: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_registry_pool_plugin_list ##### -->

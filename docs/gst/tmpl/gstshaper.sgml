@@ -1,0 +1,33 @@
+<!-- ##### SECTION Title ##### -->
+GstShaper
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstShaperPolicyType ##### -->
+<para>
+
+</para>
+
+@SHAPER_POLICY_TIMESTAMPS: 
+@SHAPER_POLICY_BUFFERSIZE: 
+
+<!-- ##### FUNCTION gst_shaper_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+

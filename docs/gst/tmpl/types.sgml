@@ -1,0 +1,79 @@
+<!-- ##### SECTION Title ##### -->
+types
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### TYPEDEF link_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF chain_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT graph_t ##### -->
+<para>
+
+</para>
+
+@chain: 
+@links: 
+@error: 
+
+<!-- ##### MACRO gst_parse_strdup ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO gst_parse_strfree ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO gst_parse_link_new ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO gst_parse_link_free ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO gst_parse_chain_new ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO gst_parse_chain_free ##### -->
+<para>
+
+</para>
+
+
+

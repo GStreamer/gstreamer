@@ -14,13 +14,256 @@ GstValue
 
 </para>
 
-<!-- ##### FUNCTION gst_value_list_prepend_value ##### -->
+<!-- ##### MACRO GST_MAKE_FOURCC ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+@d: 
+
+
+<!-- ##### MACRO GST_STR_FOURCC ##### -->
+<para>
+
+</para>
+
+@f: 
+
+
+<!-- ##### MACRO GST_FOURCC_FORMAT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_FOURCC_ARGS ##### -->
+<para>
+
+</para>
+
+@fourcc: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_INT_RANGE ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_DOUBLE_RANGE ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_LIST ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO GST_TYPE_FOURCC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TYPE_INT_RANGE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TYPE_DOUBLE_RANGE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TYPE_LIST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_VALUE_LESS_THAN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_VALUE_EQUAL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_VALUE_GREATER_THAN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_VALUE_UNORDERED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### USER_FUNCTION GstValueCompareFunc ##### -->
+<para>
+
+</para>
+
+@value1: 
+@value2: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstValueSerializeFunc ##### -->
+<para>
+
+</para>
+
+@value1: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstValueDeserializeFunc ##### -->
+<para>
+
+</para>
+
+@dest: 
+@s: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstValueUnionFunc ##### -->
+<para>
+
+</para>
+
+@dest: 
+@value1: 
+@value2: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstValueIntersectFunc ##### -->
+<para>
+
+</para>
+
+@dest: 
+@value1: 
+@value2: 
+@Returns: 
+
+
+<!-- ##### STRUCT GstValueTable ##### -->
+<para>
+
+</para>
+
+@type: 
+@compare: 
+@serialize: 
+@deserialize: 
+@_gst_reserved: 
+
+<!-- ##### VARIABLE gst_type_fourcc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE gst_type_int_range ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE gst_type_double_range ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### VARIABLE gst_type_list ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_value_register ##### -->
+<para>
+
+</para>
+
+@table: 
+
+
+<!-- ##### FUNCTION gst_value_init_and_copy ##### -->
+<para>
+
+</para>
+
+@dest: 
+@src: 
+
+
+<!-- ##### FUNCTION gst_value_serialize ##### -->
 <para>
 
 </para>
 
 @value: 
-@prepend_value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_value_deserialize ##### -->
+<para>
+
+</para>
+
+@dest: 
+@src: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_value_list_append_value ##### -->
@@ -30,6 +273,25 @@ GstValue
 
 @value: 
 @append_value: 
+
+
+<!-- ##### FUNCTION gst_value_list_prepend_value ##### -->
+<para>
+
+</para>
+
+@value: 
+@prepend_value: 
+
+
+<!-- ##### FUNCTION gst_value_list_concat ##### -->
+<para>
+
+</para>
+
+@dest: 
+@value1: 
+@value2: 
 
 
 <!-- ##### FUNCTION gst_value_list_get_size ##### -->
@@ -49,16 +311,6 @@ GstValue
 @value: 
 @index: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_value_list_concat ##### -->
-<para>
-
-</para>
-
-@dest: 
-@value1: 
-@value2: 
 
 
 <!-- ##### FUNCTION gst_value_set_fourcc ##### -->
@@ -155,16 +407,6 @@ GstValue
 @calue: 
 
 
-<!-- ##### FUNCTION gst_value_can_compare ##### -->
-<para>
-
-</para>
-
-@value1: 
-@value2: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_value_compare ##### -->
 <para>
 
@@ -175,7 +417,7 @@ GstValue
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_value_can_union ##### -->
+<!-- ##### FUNCTION gst_value_can_compare ##### -->
 <para>
 
 </para>
@@ -196,6 +438,16 @@ GstValue
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_value_can_union ##### -->
+<para>
+
+</para>
+
+@value1: 
+@value2: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_value_register_union_func ##### -->
 <para>
 
@@ -204,16 +456,6 @@ GstValue
 @type1: 
 @type2: 
 @func: 
-
-
-<!-- ##### FUNCTION gst_value_can_intersect ##### -->
-<para>
-
-</para>
-
-@value1: 
-@value2: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_value_intersect ##### -->
@@ -227,6 +469,16 @@ GstValue
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_value_can_intersect ##### -->
+<para>
+
+</para>
+
+@value1: 
+@value2: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_value_register_intersect_func ##### -->
 <para>
 
@@ -235,81 +487,5 @@ GstValue
 @type1: 
 @type2: 
 @func: 
-
-
-<!-- ##### FUNCTION gst_value_register ##### -->
-<para>
-
-</para>
-
-@table: 
-
-
-<!-- ##### FUNCTION gst_value_init_and_copy ##### -->
-<para>
-
-</para>
-
-@dest: 
-@src: 
-
-
-<!-- ##### FUNCTION gst_value_serialize ##### -->
-<para>
-
-</para>
-
-@value: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_value_deserialize ##### -->
-<para>
-
-</para>
-
-@dest: 
-@src: 
-@Returns: 
-
-
-<!-- ##### MACRO GST_VALUE_HOLDS_FOURCC ##### -->
-<para>
-
-</para>
-
-@x: 
-
-
-<!-- ##### MACRO GST_VALUE_HOLDS_INT_RANGE ##### -->
-<para>
-
-</para>
-
-@x: 
-
-
-<!-- ##### MACRO GST_VALUE_HOLDS_DOUBLE_RANGE ##### -->
-<para>
-
-</para>
-
-@x: 
-
-
-<!-- ##### MACRO GST_VALUE_HOLDS_LIST ##### -->
-<para>
-
-</para>
-
-@x: 
-
-
-<!-- ##### MACRO GST_VALUE_HOLDS_CAPS ##### -->
-<para>
-
-</para>
-
-@x: 
 
 

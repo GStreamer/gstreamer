@@ -14,3 +14,27 @@ gstlog
 
 </para>
 
+<!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
+<para>
+The variable that holds the GStreamer log domain
+</para>
+
+
+<!-- ##### MACRO GST_SHOW_INFO ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO gst_info ##### -->
+<para>
+
+</para>
+
+@...: 
+<!-- # Unused Parameters # -->
+@format: 
+@args...: 
+
+

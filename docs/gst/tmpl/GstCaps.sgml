@@ -1,0 +1,413 @@
+<!-- ##### SECTION Title ##### -->
+GstCaps
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_CAPS_FLAGS_ANY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_CAPS_ANY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_CAPS_NONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_STATIC_CAPS_ANY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_STATIC_CAPS_NONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_CAPS_IS_SIMPLE ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### MACRO gst_caps_is_simple ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### MACRO GST_DEBUG_CAPS ##### -->
+<para>
+
+</para>
+
+@string: 
+@caps: 
+
+
+<!-- ##### MACRO GST_STATIC_CAPS ##### -->
+<para>
+
+</para>
+
+@string: 
+
+
+<!-- ##### STRUCT GstCaps ##### -->
+<para>
+
+</para>
+
+@type: 
+@flags: 
+@structs: 
+@_gst_reserved: 
+
+<!-- ##### STRUCT GstStaticCaps ##### -->
+<para>
+
+</para>
+
+@caps: 
+@string: 
+@_gst_reserved: 
+
+<!-- ##### FUNCTION gst_caps_new_empty ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_any ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_simple ##### -->
+<para>
+
+</para>
+
+@media_type: 
+@fieldname: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_full ##### -->
+<para>
+
+</para>
+
+@struct1: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_full_valist ##### -->
+<para>
+
+</para>
+
+@structure: 
+@var_args: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_copy ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_free ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### FUNCTION gst_static_caps_get ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_append ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+
+
+<!-- ##### FUNCTION gst_caps_append_structure ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@structure: 
+
+
+<!-- ##### FUNCTION gst_caps_split_one ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_get_size ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_get_structure ##### -->
+<para>
+
+</para>
+
+@caps: 
+@index: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_copy_1 ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_set_simple ##### -->
+<para>
+
+</para>
+
+@caps: 
+@field: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_caps_set_simple_valist ##### -->
+<para>
+
+</para>
+
+@caps: 
+@field: 
+@varargs: 
+
+
+<!-- ##### FUNCTION gst_caps_is_any ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_empty ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_chained ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_fixed ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_equal_fixed ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_always_compatible ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_intersect ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_union ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_normalize ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_simplify ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_save_thyself ##### -->
+<para>
+
+</para>
+
+@caps: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_replace ##### -->
+<para>
+
+</para>
+
+@caps: 
+@newcaps: 
+
+
+<!-- ##### FUNCTION gst_caps_to_string ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_from_string ##### -->
+<para>
+
+</para>
+
+@string: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_structure_fixate_field_nearest_int ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field_name: 
+@target: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_structure_fixate_field_nearest_double ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field_name: 
+@target: 
+@Returns: 
+
+

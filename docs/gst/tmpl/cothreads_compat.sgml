@@ -1,0 +1,140 @@
+<!-- ##### SECTION Title ##### -->
+cothreads_compat
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO COTHREADS_NAME ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO COTHREADS_NAME_CAPITAL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### TYPEDEF cothread ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO do_cothreads_init ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO do_cothreads_stackquery ##### -->
+<para>
+
+</para>
+
+@stack: 
+@size: 
+
+
+<!-- ##### MACRO do_cothread_switch ##### -->
+<para>
+
+</para>
+
+@to: 
+
+
+<!-- ##### MACRO do_cothread_create ##### -->
+<para>
+
+</para>
+
+@new_cothread: 
+@context: 
+@func: 
+@argc: 
+@argv: 
+
+
+<!-- ##### MACRO do_cothread_setfunc ##### -->
+<para>
+
+</para>
+
+@cothread: 
+@context: 
+@func: 
+@argc: 
+@argv: 
+
+
+<!-- ##### MACRO do_cothread_destroy ##### -->
+<para>
+
+</para>
+
+@cothread: 
+
+
+<!-- ##### MACRO do_cothread_context_init ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO do_cothread_context_destroy ##### -->
+<para>
+
+</para>
+
+@context: 
+
+
+<!-- ##### MACRO do_cothread_lock ##### -->
+<para>
+
+</para>
+
+@cothread: 
+
+
+<!-- ##### MACRO do_cothread_unlock ##### -->
+<para>
+
+</para>
+
+@cothread: 
+
+
+<!-- ##### MACRO do_cothread_get_current ##### -->
+<para>
+
+</para>
+
+@context: 
+
+
+<!-- ##### MACRO do_cothread_get_main ##### -->
+<para>
+
+</para>
+
+@context: 
+
+

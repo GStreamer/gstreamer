@@ -1,0 +1,51 @@
+<!-- ##### SECTION Title ##### -->
+gsttrashstack
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstTrashStack ##### -->
+<para>
+
+</para>
+
+@head: 
+@count: 
+@lock: 
+
+<!-- ##### STRUCT GstTrashStackElement ##### -->
+<para>
+
+</para>
+
+@next: 
+
+<!-- ##### TYPEDEF gst_vgpointer ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF gst_vgulong ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SMP_LOCK ##### -->
+<para>
+
+</para>
+
+
+

@@ -2,7 +2,7 @@
 GstObject
 
 <!-- ##### SECTION Short_Description ##### -->
-Basis for the GST object hierarchy.
+Base class for the GStreamer object hierarchy
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -25,6 +25,21 @@ object.
 
 </para>
 
+<!-- ##### MACRO GST_OBJECT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### MACRO xmlNodePtr ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### ENUM GstObjectFlags ##### -->
 <para>
 Flags for an object
@@ -33,12 +48,6 @@ Flags for an object
 @GST_DESTROYED: The object is flagged for destruction
 @GST_FLOATING: The object is created but has no parent yet to manage it
 @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
-
-<!-- ##### STRUCT GstObject ##### -->
-<para>
-The GstObject
-</para>
-
 
 <!-- ##### MACRO GST_FLAGS ##### -->
 <para>
@@ -75,6 +84,38 @@ This macro usets the given bits.
 @flag: Flag to set, must be a single bit in guint32.
 
 
+<!-- ##### MACRO GST_OBJECT_NAME ##### -->
+<para>
+Get the name of this object
+</para>
+
+@obj: Object to get the name of.
+
+
+<!-- ##### MACRO GST_OBJECT_PARENT ##### -->
+<para>
+Get the parent of this object
+</para>
+
+@obj: Object to get the parent of.
+
+
+<!-- ##### MACRO GST_OBJECT_DESTROYED ##### -->
+<para>
+Check if the object has been destroyed.
+</para>
+
+@obj: The Object to check
+
+
+<!-- ##### MACRO GST_OBJECT_FLOATING ##### -->
+<para>
+Check if the object is floating.
+</para>
+
+@obj: The Object to check
+
+
 <!-- ##### MACRO GST_LOCK ##### -->
 <para>
 This macro will obtain a lock on the object, making serialization
@@ -109,45 +150,21 @@ Acquire a reference to the mutex of this object.
 @obj: Object to get the mutex of.
 
 
-<!-- ##### MACRO GST_OBJECT_PARENT ##### -->
-<para>
-Get the parent of this object
-</para>
-
-@obj: Object to get the parent of.
-
-
-<!-- ##### MACRO GST_OBJECT_NAME ##### -->
-<para>
-Get the name of this object
-</para>
-
-@obj: Object to get the name of.
-
-
-<!-- ##### MACRO GST_OBJECT_FLOATING ##### -->
-<para>
-Check if the object is floating.
-</para>
-
-@obj: The Object to check
-
-
-<!-- ##### MACRO GST_OBJECT_DESTROYED ##### -->
-<para>
-Check if the object has been destroyed.
-</para>
-
-@obj: The Object to check
-
-
-<!-- ##### FUNCTION gst_object_check_uniqueness ##### -->
+<!-- ##### FUNCTION gst_object_set_name ##### -->
 <para>
 
 </para>
 
-@list: 
+@object: 
 @name: 
+
+
+<!-- ##### FUNCTION gst_object_get_name ##### -->
+<para>
+
+</para>
+
+@object: 
 @Returns: 
 
 
@@ -169,24 +186,6 @@ Check if the object has been destroyed.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_object_set_name ##### -->
-<para>
-
-</para>
-
-@object: 
-@name: 
-
-
-<!-- ##### FUNCTION gst_object_get_name ##### -->
-<para>
-
-</para>
-
-@object: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_object_unparent ##### -->
 <para>
 
@@ -195,38 +194,25 @@ Check if the object has been destroyed.
 @object: 
 
 
-<!-- ##### FUNCTION gst_object_ref ##### -->
+<!-- ##### FUNCTION gst_object_default_deep_notify ##### -->
 <para>
 
 </para>
 
-@object: the object
+@object: 
+@orig: 
+@pspec: 
+@excluded_props: 
+
+
+<!-- ##### FUNCTION gst_object_check_uniqueness ##### -->
+<para>
+
+</para>
+
+@list: 
+@name: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_object_unref ##### -->
-<para>
-
-</para>
-
-@object: the object
-
-
-<!-- ##### FUNCTION gst_object_replace ##### -->
-<para>
-
-</para>
-
-@oldobj: 
-@newobj: 
-
-
-<!-- ##### FUNCTION gst_object_sink ##### -->
-<para>
-
-</para>
-
-@object: the object
 
 
 <!-- ##### FUNCTION gst_object_save_thyself ##### -->
@@ -248,6 +234,40 @@ Check if the object has been destroyed.
 @self: 
 
 
+<!-- ##### FUNCTION gst_object_ref ##### -->
+<para>
+
+</para>
+
+@object: the object
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_object_unref ##### -->
+<para>
+
+</para>
+
+@object: the object
+
+
+<!-- ##### FUNCTION gst_object_sink ##### -->
+<para>
+
+</para>
+
+@object: the object
+
+
+<!-- ##### FUNCTION gst_object_replace ##### -->
+<para>
+
+</para>
+
+@oldobj: 
+@newobj: 
+
+
 <!-- ##### FUNCTION gst_object_get_path_string ##### -->
 <para>
 
@@ -255,27 +275,6 @@ Check if the object has been destroyed.
 
 @object: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_object_default_deep_notify ##### -->
-<para>
-
-</para>
-
-@object: 
-@orig: 
-@pspec: 
-@excluded_props: 
-
-
-<!-- ##### FUNCTION gst_class_signal_emit_by_name ##### -->
-<para>
-
-</para>
-
-@object: 
-@name: 
-@self: 
 
 
 <!-- ##### FUNCTION gst_class_signal_connect ##### -->
@@ -288,6 +287,16 @@ Check if the object has been destroyed.
 @func: 
 @func_data: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_class_signal_emit_by_name ##### -->
+<para>
+
+</para>
+
+@object: 
+@name: 
+@self: 
 
 
 <!-- ##### SIGNAL GstObject::deep-notify ##### -->

@@ -1,0 +1,47 @@
+<!-- ##### SECTION Title ##### -->
+gstversion
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_VERSION_MAJOR ##### -->
+<para>
+The major version of GStreamer at compile time
+</para>
+
+
+
+<!-- ##### MACRO GST_VERSION_MINOR ##### -->
+<para>
+The minor version of GStreamer at compile time
+</para>
+
+
+
+<!-- ##### MACRO GST_VERSION_MICRO ##### -->
+<para>
+The micro version of GStreamer at compile time
+</para>
+
+
+
+<!-- ##### FUNCTION gst_version ##### -->
+<para>
+
+</para>
+
+@major: 
+@minor: 
+@micro: 
+
+

@@ -1,0 +1,523 @@
+<!-- ##### SECTION Title ##### -->
+GstIndexFactory
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_INDEX_ENTRY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT GstIndexEntry ##### -->
+<para>
+The basic element of an index.
+</para>
+
+@type: 
+@id: 
+
+<!-- ##### STRUCT GstIndexGroup ##### -->
+<para>
+A group of related entries in an index.
+</para>
+
+@groupnum: 
+@entries: 
+@certainty: 
+@peergroup: 
+
+<!-- ##### ENUM GstIndexCertainty ##### -->
+<para>
+The certainty of a group in the index.
+</para>
+
+@GST_INDEX_UNKNOWN: accuracy is not known
+@GST_INDEX_CERTAIN: accuracy is perfect
+@GST_INDEX_FUZZY: accuracy is fuzzy
+
+<!-- ##### ENUM GstIndexEntryType ##### -->
+<para>
+The different types of entries in the index.
+</para>
+
+@GST_INDEX_ENTRY_ID: This entry is an id that maps an index id to its owner object
+@GST_INDEX_ENTRY_ASSOCIATION: This entry is an association between formats
+@GST_INDEX_ENTRY_OBJECT: An object
+@GST_INDEX_ENTRY_FORMAT: A format definition
+
+<!-- ##### ENUM GstIndexLookupMethod ##### -->
+<para>
+Specify the method to find an index entry in the index.
+</para>
+
+@GST_INDEX_LOOKUP_EXACT: There has to be an exact indexentry with the given format/value
+@GST_INDEX_LOOKUP_BEFORE: The exact entry or the one before it
+@GST_INDEX_LOOKUP_AFTER: The exact entry or the one after it
+
+<!-- ##### MACRO GST_INDEX_NASSOCS ##### -->
+<para>
+Get the number of associations in the entry.
+</para>
+
+@entry: The entry to query
+
+
+<!-- ##### MACRO GST_INDEX_ASSOC_FLAGS ##### -->
+<para>
+Get the flags for this entry
+</para>
+
+@entry: The entry to query
+
+
+<!-- ##### MACRO GST_INDEX_ASSOC_FORMAT ##### -->
+<para>
+Get the i-th format of the entry.
+</para>
+
+@entry: The entry to query
+@i: The format index
+
+
+<!-- ##### MACRO GST_INDEX_ASSOC_VALUE ##### -->
+<para>
+Get the i-th value of the entry.
+</para>
+
+@entry: The entry to query
+@i: The value index
+
+
+<!-- ##### STRUCT GstIndexAssociation ##### -->
+<para>
+An association in an entry.
+</para>
+
+@format: the format of the association
+@value: the value of the association
+
+<!-- ##### ENUM GstAssocFlags ##### -->
+<para>
+flags for an association entry
+</para>
+
+@GST_ASSOCIATION_FLAG_NONE: no extra flags
+@GST_ASSOCIATION_FLAG_KEY_UNIT: the entry marks a key unit, a key unit is one
+                                that marks a place where one can randomly seek to.
+@GST_ASSOCIATION_FLAG_LAST: extra user defined flags should start here.
+
+<!-- ##### MACRO GST_INDEX_FORMAT_FORMAT ##### -->
+<para>
+Get the format of the format entry
+</para>
+
+@entry: The entry to query
+
+
+<!-- ##### MACRO GST_INDEX_FORMAT_KEY ##### -->
+<para>
+Get the key of the format entry
+</para>
+
+@entry: The entry to query
+
+
+<!-- ##### MACRO GST_INDEX_ID_INVALID ##### -->
+<para>
+An invalid index id
+</para>
+
+
+
+<!-- ##### MACRO GST_INDEX_ID_DESCRIPTION ##### -->
+<para>
+Get the description of the id entry
+</para>
+
+@entry: The entry to query
+
+
+<!-- ##### USER_FUNCTION GstIndexFilter ##### -->
+<para>
+Function to filter out entries in the index.
+</para>
+
+@index: The index being queried
+@entry: The entry to be added.
+@Returns: This function should return TRUE if the entry is to be added
+          to the index, FALSE otherwise.
+
+
+<!-- ##### ENUM GstIndexResolverMethod ##### -->
+<para>
+The method used to resolve index writers
+</para>
+
+@GST_INDEX_RESOLVER_CUSTOM: Use a custom resolver
+@GST_INDEX_RESOLVER_GTYPE: Resolve based on the GType of the object
+@GST_INDEX_RESOLVER_PATH: Resolve on the path in graph
+
+<!-- ##### USER_FUNCTION GstIndexResolver ##### -->
+<para>
+Function to resolve ids to writer descriptions.
+</para>
+
+@index: the index being queried.
+@writer: The object that wants to write
+@writer_string: A description of the writer.
+@user_data: user_data as registered
+@Returns: TRUE if an id could be assigned to the writer.
+<!-- # Unused Parameters # -->
+@writer_id: A pointer to the id that has to be assigned to this writer
+
+
+<!-- ##### ENUM GstIndexFlags ##### -->
+<para>
+Flags for this index
+</para>
+
+@GST_INDEX_WRITABLE: The index is writable
+@GST_INDEX_READABLE: The index is readable
+@GST_INDEX_FLAG_LAST: First flag that can be used by subclasses
+
+<!-- ##### MACRO GST_INDEX_IS_READABLE ##### -->
+<para>
+Check if the index can be read from
+</para>
+
+@obj: The index to check
+
+
+<!-- ##### MACRO GST_INDEX_IS_WRITABLE ##### -->
+<para>
+Check if the index can be written to
+</para>
+
+@obj: The index to check
+
+
+<!-- ##### FUNCTION gst_index_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_commit ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
+
+
+<!-- ##### FUNCTION gst_index_get_group ##### -->
+<para>
+
+</para>
+
+@index: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_new_group ##### -->
+<para>
+
+</para>
+
+@index: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_set_group ##### -->
+<para>
+
+</para>
+
+@index: 
+@groupnum: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_set_certainty ##### -->
+<para>
+
+</para>
+
+@index: 
+@certainty: 
+
+
+<!-- ##### FUNCTION gst_index_get_certainty ##### -->
+<para>
+
+</para>
+
+@index: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_set_filter ##### -->
+<para>
+
+</para>
+
+@index: 
+@filter: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_index_set_resolver ##### -->
+<para>
+
+</para>
+
+@index: 
+@resolver: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_index_get_writer_id ##### -->
+<para>
+
+</para>
+
+@index: 
+@writer: 
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_add_format ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
+@format: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_add_association ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
+@flags: 
+@format: 
+@value: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_add_object ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
+@key: 
+@type: 
+@object: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_add_id ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
+@description: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_get_assoc_entry ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
+@method: 
+@flags: 
+@format: 
+@value: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_get_assoc_entry_full ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
+@method: 
+@flags: 
+@format: 
+@value: 
+@func: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_entry_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_entry_copy ##### -->
+<para>
+
+</para>
+
+@entry: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_entry_free ##### -->
+<para>
+
+</para>
+
+@entry: 
+
+
+<!-- ##### FUNCTION gst_index_entry_assoc_map ##### -->
+<para>
+
+</para>
+
+@entry: 
+@format: 
+@value: 
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_INDEX_FACTORY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_INDEX_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_IS_INDEX_FACTORY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GST_INDEX_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### MACRO GST_IS_INDEX_FACTORY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### MACRO GST_INDEX_FACTORY_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### FUNCTION gst_index_factory_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_factory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@longdesc: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_factory_destroy ##### -->
+<para>
+
+</para>
+
+@factory: 
+
+
+<!-- ##### FUNCTION gst_index_factory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_factory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_index_factory_make ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+

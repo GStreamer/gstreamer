@@ -1,0 +1,124 @@
+<!-- ##### SECTION Title ##### -->
+gettext
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO gettext ##### -->
+<para>
+
+</para>
+
+@Msgid: 
+<!-- # Unused Parameters # -->
+@String: 
+
+
+<!-- ##### MACRO dgettext ##### -->
+<para>
+
+</para>
+
+@Domainname: 
+@Msgid: 
+<!-- # Unused Parameters # -->
+@Domain: 
+@String: 
+
+
+<!-- ##### MACRO dcgettext ##### -->
+<para>
+
+</para>
+
+@Domainname: 
+@Msgid: 
+@Category: 
+<!-- # Unused Parameters # -->
+@Domain: 
+@String: 
+@Type: 
+
+
+<!-- ##### MACRO ngettext ##### -->
+<para>
+
+</para>
+
+@Msgid1: 
+@Msgid2: 
+@N: 
+
+
+<!-- ##### MACRO dngettext ##### -->
+<para>
+
+</para>
+
+@Domainname: 
+@Msgid1: 
+@Msgid2: 
+@N: 
+
+
+<!-- ##### MACRO dcngettext ##### -->
+<para>
+
+</para>
+
+@Domainname: 
+@Msgid1: 
+@Msgid2: 
+@N: 
+@Category: 
+
+
+<!-- ##### MACRO textdomain ##### -->
+<para>
+
+</para>
+
+@Domainname: 
+<!-- # Unused Parameters # -->
+@String: 
+
+
+<!-- ##### MACRO bindtextdomain ##### -->
+<para>
+
+</para>
+
+@Domainname: 
+@Dirname: 
+<!-- # Unused Parameters # -->
+@Domain: 
+@Directory: 
+
+
+<!-- ##### MACRO bind_textdomain_codeset ##### -->
+<para>
+
+</para>
+
+@Domainname: 
+@Codeset: 
+
+
+<!-- ##### MACRO gettext_noop ##### -->
+<para>
+
+</para>
+
+@String: 
+
+

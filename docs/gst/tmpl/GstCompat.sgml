@@ -1,0 +1,152 @@
+<!-- ##### SECTION Title ##### -->
+GstCompat
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_element_connect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+
+<!-- ##### MACRO gst_element_connect_pads ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+@d: 
+
+
+<!-- ##### MACRO gst_element_connect_many ##### -->
+<para>
+
+</para>
+
+@a: 
+@...: 
+
+
+<!-- ##### MACRO gst_element_connect_filtered ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+
+
+<!-- ##### MACRO gst_element_disconnect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+
+<!-- ##### MACRO gst_pad_connect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+
+<!-- ##### MACRO gst_pad_connect_filtered ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+
+
+<!-- ##### MACRO gst_pad_disconnect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+
+<!-- ##### MACRO gst_pad_proxy_connect ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+
+<!-- ##### MACRO gst_pad_set_connect_function ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+
+<!-- ##### MACRO GST_PAD_CONNECT_REFUSED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_PAD_CONNECT_DELAYED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_PAD_CONNECT_OK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_PAD_CONNECT_DONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### TYPEDEF GstPadConnectReturn ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstPadConnectFunction ##### -->
+<para>
+
+</para>
+
+

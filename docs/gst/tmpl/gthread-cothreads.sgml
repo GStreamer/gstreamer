@@ -1,0 +1,101 @@
+<!-- ##### SECTION Title ##### -->
+gthread-cothreads
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO COTHREADS_NAME ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO COTHREADS_NAME_CAPITAL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### USER_FUNCTION cothread_func ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
+
+<!-- ##### TYPEDEF cothread ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT cothread_context ##### -->
+<para>
+
+</para>
+
+@cothreads: 
+@main: 
+@current: 
+@mutex: 
+@gst_thread: 
+
+<!-- ##### MACRO do_cothread_create ##### -->
+<para>
+
+</para>
+
+@new_cothread: 
+@context: 
+@func: 
+@argc: 
+@argv: 
+
+
+<!-- ##### MACRO do_cothread_lock ##### -->
+<para>
+
+</para>
+
+@cothread: 
+
+
+<!-- ##### MACRO do_cothread_unlock ##### -->
+<para>
+
+</para>
+
+@cothread: 
+
+
+<!-- ##### MACRO do_cothread_get_current ##### -->
+<para>
+
+</para>
+
+@context: 
+
+
+<!-- ##### MACRO do_cothread_get_main ##### -->
+<para>
+
+</para>
+
+@context: 
+
+

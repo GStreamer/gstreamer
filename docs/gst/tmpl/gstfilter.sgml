@@ -1,0 +1,41 @@
+<!-- ##### SECTION Title ##### -->
+GstFilter
+
+<!-- ##### SECTION Short_Description ##### -->
+Take data in and spit data out
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Filters take data in and spit data out. They are the main Element in a filter graph.
+Filters have zero or more inputs and zero or more outputs. Filters are linked
+together to form filter graphs. A GstFilter is the base class and is not very usefull
+on its own.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### USER_FUNCTION GstFilterFunc ##### -->
+<para>
+
+</para>
+
+@obj: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_filter_run ##### -->
+<para>
+
+</para>
+
+@list: 
+@func: 
+@first: 
+@user_data: 
+@Returns: 
+
+

@@ -2,117 +2,151 @@
 GstCaps
 
 <!-- ##### SECTION Short_Description ##### -->
-Capabilities of pads
+Structure describing sets of media formats
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GstCaps is used to attach capabilities to a pad. Capabilities are made of
-a mime-type and a set of properties. GstCaps can be named and chained into
-a list, which is then a GstCaps on its own.
-</para>
-<para>
-GstCaps are created with gst_caps_new_simpl(), which takes a mime type and
-a list of arguments in sets of 3, terminated with NULL.  Each set of 3
-arguments is the name of a field, the GType of the field, and the value
-of the field.  The following example shows how to create a GstCaps.
-<programlisting>
-  GstCaps *caps;
 
-  caps = gst_caps_new (
-      "audio/x-raw-int",		/* mime type */
-      "channels", G_TYPE_INT, 5,
-      NULL);
-</programlisting>
-
-The following code example is equivalent to the above example:
-<programlisting>
-  GstCaps *caps;
-
-  caps = gst_caps_from_string ("audio/x-raw-int, channels = (int) 5");
-</programlisting>
-</para>
-<para>
-GstCaps are refcounted with gst_caps_ref() and gst_caps_unref().
-</para>
-<para>
-GstCaps can be chained with the gst_caps_append(), gst_caps_prepend() and
-gst_caps_chain() functions. Use gst_caps_get_by_name() to get a named caps
-structure from a chained list.
-</para>
-<para>
-To get the properties of a caps structure the functions 
-gst_caps_get_boolean(), gst_caps_get_fourcc_int(), gst_caps_get_int(),
-gst_caps_get_string(), gst_caps_get_float(), which all take a property name as an argument.
-</para>
-<para>
-The fields of the caps structure can be modified with gst_caps_set_simple,
-which takes the caps structure to be modified, a list of arguments in
-sets of 3, terminated by NULL.  The format of these arguments is the
-same as above.
-
-<programlisting>
-  GstCaps *caps;
-   ....
-
-  gst_caps_set_simple (caps, "channels", G_TYPE_INT, 20, NULL);
- 
-</programlisting>
-</para>
-<para>
-before modifying a GstCaps, it is a good idea to make a copy if it first with
-gst_caps_copy_on_write(). This will copy the GstCaps if the refcount is &gt;1.
-</para>
-<para>
-If you need a unique instance of a GstCaps you can use the convenient 
-GST_CAPS_FACTORY() macro as shown below. 
-<programlisting>
-  GstStaticCaps my_caps = GST_STATIC_CAPS (
-      "audio/x-raw-float, "
-        "channels = (int) 5; "
-      "audio/x-raw-int, "
-        "channels = (int) 5"
-    )
-  )
-
-  void
-  some_function (void)
-  {
-    GstCaps *caps = gst_caps_copy (gst_static_caps_get (&amp;my_caps));
-
-    ...
-  }
-</programlisting>
-</para>
-<para>
-If you want to check if a link between source and destination caps
-is always possible, use gst_caps_is_always_compatible(), which returns
-a boolean.
-If you want to check if a link between source and destination caps
-might be possible, use gst_caps_intersect(), which returns an intersection
-of the capabilities.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GstStructure, #GstPad
+
 </para>
 
-<!-- ##### MACRO GST_TYPE_CAPS ##### -->
+<!-- ##### MACRO GST_CAPS_FLAGS_ANY ##### -->
 <para>
-The GType of the caps boxed type, for use in GValues.
+
 </para>
 
+
+
+<!-- ##### MACRO GST_CAPS_ANY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_CAPS_NONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_STATIC_CAPS_ANY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_STATIC_CAPS_NONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_CAPS_IS_SIMPLE ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### MACRO gst_caps_is_simple ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### MACRO GST_DEBUG_CAPS ##### -->
+<para>
+
+</para>
+
+@string: 
+@caps: 
+
+
+<!-- ##### MACRO GST_STATIC_CAPS ##### -->
+<para>
+
+</para>
+
+@string: 
 
 
 <!-- ##### STRUCT GstCaps ##### -->
 <para>
-The gstcaps structure
+
 </para>
 
 @type: 
 @flags: 
 @structs: 
 @_gst_reserved: 
+
+<!-- ##### STRUCT GstStaticCaps ##### -->
+<para>
+
+</para>
+
+@caps: 
+@string: 
+@_gst_reserved: 
+
+<!-- ##### FUNCTION gst_caps_new_empty ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_any ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_simple ##### -->
+<para>
+
+</para>
+
+@media_type: 
+@fieldname: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_full ##### -->
+<para>
+
+</para>
+
+@struct1: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_new_full_valist ##### -->
+<para>
+
+</para>
+
+@structure: 
+@var_args: 
+@Returns: 
+
 
 <!-- ##### FUNCTION gst_caps_copy ##### -->
 <para>
@@ -123,7 +157,15 @@ The gstcaps structure
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_copy_1 ##### -->
+<!-- ##### FUNCTION gst_caps_free ##### -->
+<para>
+
+</para>
+
+@caps: 
+
+
+<!-- ##### FUNCTION gst_static_caps_get ##### -->
 <para>
 
 </para>
@@ -139,21 +181,118 @@ The gstcaps structure
 
 @caps1: 
 @caps2: 
-<!-- # Unused Parameters # -->
-@caps: 
-@capstoadd: 
-@Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_replace ##### -->
+<!-- ##### FUNCTION gst_caps_append_structure ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@structure: 
+
+
+<!-- ##### FUNCTION gst_caps_split_one ##### -->
 <para>
 
 </para>
 
 @caps: 
-@newcaps: 
-<!-- # Unused Parameters # -->
-@oldcaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_get_size ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_get_structure ##### -->
+<para>
+
+</para>
+
+@caps: 
+@index: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_copy_1 ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_set_simple ##### -->
+<para>
+
+</para>
+
+@caps: 
+@field: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_caps_set_simple_valist ##### -->
+<para>
+
+</para>
+
+@caps: 
+@field: 
+@varargs: 
+
+
+<!-- ##### FUNCTION gst_caps_is_any ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_empty ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_chained ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_fixed ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_is_equal_fixed ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_is_always_compatible ##### -->
@@ -164,9 +303,26 @@ The gstcaps structure
 @caps1: 
 @caps2: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@fromcaps: 
-@tocaps: 
+
+
+<!-- ##### FUNCTION gst_caps_intersect ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_union ##### -->
+<para>
+
+</para>
+
+@caps1: 
+@caps2: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_caps_normalize ##### -->
@@ -178,13 +334,12 @@ The gstcaps structure
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_intersect ##### -->
+<!-- ##### FUNCTION gst_caps_simplify ##### -->
 <para>
 
 </para>
 
-@caps1: 
-@caps2: 
+@caps: 
 @Returns: 
 
 
@@ -207,13 +362,52 @@ The gstcaps structure
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_union ##### -->
+<!-- ##### FUNCTION gst_caps_replace ##### -->
 <para>
 
 </para>
 
-@caps1: 
-@caps2: 
+@caps: 
+@newcaps: 
+
+
+<!-- ##### FUNCTION gst_caps_to_string ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_from_string ##### -->
+<para>
+
+</para>
+
+@string: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_structure_fixate_field_nearest_int ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field_name: 
+@target: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_caps_structure_fixate_field_nearest_double ##### -->
+<para>
+
+</para>
+
+@structure: 
+@field_name: 
+@target: 
 @Returns: 
 
 

@@ -1,0 +1,45 @@
+<!-- ##### SECTION Title ##### -->
+GstSpiderIdentity
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gst_spider_identity_new_sink ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_spider_identity_new_src ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_spider_identity_request_new_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@name: 
+@Returns: 
+
+

@@ -1,0 +1,79 @@
+<!-- ##### SECTION Title ##### -->
+grammar.tab
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO PARSE_URL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO IDENTIFIER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO BINREF ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO PADREF ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO REF ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO ASSIGNMENT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO LINK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO yystype ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO YYSTYPE_IS_TRIVIAL ##### -->
+<para>
+
+</para>
+
+
+

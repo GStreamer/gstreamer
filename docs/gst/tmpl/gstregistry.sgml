@@ -2,7 +2,7 @@
 GstRegistry
 
 <!-- ##### SECTION Short_Description ##### -->
-Abstract class for managing plugins.
+Abstract base class for management of #GstPlugin objects
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,6 +13,69 @@ The registry holds the available plugins in the system.
 <para>
 #GstPlugin, #GstPluginFeature
 </para>
+
+<!-- ##### MACRO GLOBAL_REGISTRY_DIR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GLOBAL_REGISTRY_FILE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GLOBAL_REGISTRY_FILE_TMP ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO LOCAL_REGISTRY_DIR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO LOCAL_REGISTRY_FILE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO LOCAL_REGISTRY_FILE_TMP ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO REGISTRY_DIR_PERMS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO REGISTRY_TMPFILE_PERMS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO REGISTRY_FILE_PERMS ##### -->
+<para>
+
+</para>
+
+
 
 <!-- ##### ENUM GstRegistryReturn ##### -->
 <para>
@@ -35,12 +98,6 @@ Flags for the registry
 @GST_REGISTRY_EXISTS: The registry exists
 @GST_REGISTRY_REMOTE: The registry is remote and might be slower
 @GST_REGISTRY_DELAYED_LOADING: The registry will be loaded on demand.
-
-<!-- ##### STRUCT GstRegistry ##### -->
-<para>
-The registry object
-</para>
-
 
 <!-- ##### FUNCTION gst_registry_load ##### -->
 <para>
@@ -130,6 +187,30 @@ The registry object
 
 @registry: 
 @plugin: 
+
+
+<!-- ##### FUNCTION gst_registry_plugin_filter ##### -->
+<para>
+
+</para>
+
+@registry: 
+@filter: 
+@first: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_registry_feature_filter ##### -->
+<para>
+
+</para>
+
+@registry: 
+@filter: 
+@first: 
+@user_data: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_registry_find_plugin ##### -->

@@ -1,0 +1,736 @@
+<!-- ##### SECTION Title ##### -->
+gstenumtypes
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gst_object_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_OBJECT_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_bin_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_BIN_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_buffer_flag_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_BUFFER_FLAG ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_clock_entry_status_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_CLOCK_ENTRY_STATUS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_clock_entry_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_CLOCK_ENTRY_TYPE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_clock_return_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_CLOCK_RETURN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_clock_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_CLOCK_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_cpu_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_CPU_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_data_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_DATA_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_element_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_ELEMENT_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_core_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_CORE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_library_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_LIBRARY_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_resource_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_RESOURCE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_stream_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_STREAM_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_event_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_EVENT_TYPE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_event_flag_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_EVENT_FLAG ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_seek_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_SEEK_TYPE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_seek_accuracy_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_SEEK_ACCURACY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_format_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_FORMAT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_index_certainty_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_INDEX_CERTAINTY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_index_entry_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_INDEX_ENTRY_TYPE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_index_lookup_method_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_INDEX_LOOKUP_METHOD ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_assoc_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_ASSOC_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_index_resolver_method_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_INDEX_RESOLVER_METHOD ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_index_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_INDEX_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_debug_level_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_DEBUG_LEVEL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_debug_color_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_DEBUG_COLOR_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_pad_link_return_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_PAD_LINK_RETURN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_pad_direction_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_PAD_DIRECTION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_pad_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_PAD_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_pad_presence_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_PAD_PRESENCE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_pad_template_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_PAD_TEMPLATE_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_plugin_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_PLUGIN_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_query_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_QUERY_TYPE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_scheduler_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_SCHEDULER_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_scheduler_state_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_SCHEDULER_STATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_tag_merge_mode_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_TAG_MERGE_MODE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_tag_flag_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_TAG_FLAG ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_thread_state_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_THREAD_STATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_alloc_trace_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_ALLOC_TRACE_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_type_find_probability_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_TYPE_FIND_PROBABILITY ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_element_state_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_ELEMENT_STATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_element_state_return_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_ELEMENT_STATE_RETURN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_result_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_RESULT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_uri_type_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_URI_TYPE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_registry_return_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_REGISTRY_RETURN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_registry_flags_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_REGISTRY_FLAGS ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gst_parse_error_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### MACRO GST_TYPE_PARSE_ERROR ##### -->
+<para>
+
+</para>
+
+
+

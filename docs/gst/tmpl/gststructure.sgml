@@ -2,7 +2,7 @@
 GstStructure
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Generic structure containing fields of names and values
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -13,6 +13,27 @@ GstStructure
 <para>
 
 </para>
+
+<!-- ##### STRUCT GstStructure ##### -->
+<para>
+
+</para>
+
+@type: 
+@name: 
+@fields: 
+@_gst_reserved: 
+
+<!-- ##### USER_FUNCTION GstStructureForeachFunc ##### -->
+<para>
+
+</para>
+
+@field_id: 
+@value: 
+@user_data: 
+@Returns: 
+
 
 <!-- ##### FUNCTION gst_structure_empty_new ##### -->
 <para>

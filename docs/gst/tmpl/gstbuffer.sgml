@@ -82,28 +82,36 @@ Last reviewed on August 30th, 2002 (0.4.0.1)
 #GstBufferPool, #GstPad, #GstData
 </para>
 
+<!-- ##### STRUCT GstBuffer ##### -->
+<para>
+The basic structure of a buffer.
+</para>
+
+@data_type: 
+@data: 
+@size: 
+@maxsize: 
+@timestamp: 
+@duration: 
+@offset: 
+@offset_end: 
+@free_data: 
+@buffer_private: 
+@_gst_reserved: 
+
+<!-- ##### USER_FUNCTION GstBufferFreeDataFunc ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
 <!-- ##### MACRO GST_BUFFER_TRACE_NAME ##### -->
 <para>
 The name used for tracing memory allocations
 </para>
 
-
-
-<!-- ##### MACRO GST_BUFFER ##### -->
-<para>
-Casts an object to a GstBuffer.
-</para>
-
-@buf: an object to cast.
-@Returns: the #GstBuffer to which the given object points.
-
-
-<!-- ##### MACRO GST_IS_BUFFER ##### -->
-<para>
-Checks if the pointer is a GstBuffer.
-</para>
-
-@buf: a pointer to query.
 
 
 <!-- ##### MACRO GST_BUFFER_REFCOUNT ##### -->
@@ -206,12 +214,106 @@ Gets the timestamp for this buffer.
 @buf: a #GstBuffer to get timestamp of.
 
 
+<!-- ##### MACRO GST_BUFFER_DURATION ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_FORMAT ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
 <!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
 <para>
 Gets the offset in the source file of this buffer.
 </para>
 
 @buf: a #GstBuffer to get offset of.
+
+
+<!-- ##### MACRO GST_BUFFER_OFFSET_END ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_FREE_DATA_FUNC ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_PRIVATE ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+
+<!-- ##### MACRO GST_BUFFER_OFFSET_NONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_BUFFER_MAXSIZE_NONE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_BUFFER_DURATION_IS_VALID ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### MACRO GST_BUFFER_TIMESTAMP_IS_VALID ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### MACRO GST_BUFFER_OFFSET_IS_VALID ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### MACRO GST_BUFFER_OFFSET_END_IS_VALID ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### MACRO GST_BUFFER_MAXSIZE_IS_VALID ##### -->
+<para>
+
+</para>
+
+@buffer: 
 
 
 <!-- ##### ENUM GstBufferFlag ##### -->
@@ -229,23 +331,6 @@ A set of buffer flags used to describe properties of a #GstBuffer.
                       decoded independently of other buffers.
 @GST_BUFFER_DONTKEEP: 
 @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
-
-<!-- ##### STRUCT GstBuffer ##### -->
-<para>
-The basic structure of a buffer.
-</para>
-
-@data_type: 
-@data: 
-@size: 
-@maxsize: 
-@timestamp: 
-@duration: 
-@offset: 
-@offset_end: 
-@free_data: 
-@buffer_private: 
-@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>
@@ -274,23 +359,6 @@ A convenience function to set the data and size on a buffer
 @size: The size to set on the buffer
 
 
-<!-- ##### FUNCTION gst_buffer_default_free ##### -->
-<para>
-
-</para>
-
-@buffer: 
-
-
-<!-- ##### FUNCTION gst_buffer_default_copy ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@Returns: 
-
-
 <!-- ##### MACRO gst_buffer_ref ##### -->
 <para>
 Increases the refcount of the given buffer by one.
@@ -317,6 +385,15 @@ will be freed.
 @buf: a #GstBuffer to unref.
 
 
+<!-- ##### FUNCTION gst_buffer_stamp ##### -->
+<para>
+
+</para>
+
+@dest: 
+@src: 
+
+
 <!-- ##### MACRO gst_buffer_copy ##### -->
 <para>
 Copies the given buffer using the copy function of the parent GstData structure.
@@ -324,6 +401,14 @@ Copies the given buffer using the copy function of the parent GstData structure.
 
 @buf: a #GstBuffer to copy.
 @Returns: a new #GstBuffer copy of the buffer.
+
+
+<!-- ##### MACRO gst_buffer_is_writable ##### -->
+<para>
+
+</para>
+
+@buf: 
 
 
 <!-- ##### MACRO gst_buffer_copy_on_write ##### -->
@@ -378,6 +463,23 @@ If the refcount is 1, this function just returns the original buffer.
 @offset: 
 @buf2: 
 @len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_buffer_default_free ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_default_copy ##### -->
+<para>
+
+</para>
+
+@buffer: 
 @Returns: 
 
 

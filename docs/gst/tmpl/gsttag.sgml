@@ -2,7 +2,7 @@
 GstTag
 
 <!-- ##### SECTION Short_Description ##### -->
-
+List of tags and values used to describe media metadata
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -38,6 +38,35 @@ GstTag
 @GST_TAG_FLAG_ENCODED: 
 @GST_TAG_FLAG_DECODED: 
 @GST_TAG_FLAG_COUNT: 
+
+<!-- ##### TYPEDEF GstTagList ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TAG_LIST ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO GST_IS_TAG_LIST ##### -->
+<para>
+
+</para>
+
+@x: 
+
+
+<!-- ##### MACRO GST_TYPE_TAG_LIST ##### -->
+<para>
+
+</para>
+
+
 
 <!-- ##### USER_FUNCTION GstTagForeachFunc ##### -->
 <para>
@@ -148,6 +177,15 @@ GstTag
 
 </para>
 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_is_tag_list ##### -->
+<para>
+
+</para>
+
+@p: 
 @Returns: 
 
 
@@ -581,5 +619,261 @@ GstTag
 @index: 
 @value: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_event_new_tag ##### -->
+<para>
+
+</para>
+
+@list: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_event_tag_get_list ##### -->
+<para>
+
+</para>
+
+@tag_event: 
+@Returns: 
+
+
+<!-- ##### MACRO GST_TAG_TITLE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ARTIST ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ALBUM ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_DATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_GENRE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_COMMENT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_TRACK_NUMBER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_TRACK_COUNT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ALBUM_VOLUME_NUMBER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ALBUM_VOLUME_COUNT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_LOCATION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_DESCRIPTION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_VERSION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ISRC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ORGANIZATION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_COPYRIGHT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_CONTACT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_LICENSE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_PERFORMER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_DURATION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_CODEC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_VIDEO_CODEC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_AUDIO_CODEC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_BITRATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_NOMINAL_BITRATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_MINIMUM_BITRATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_MAXIMUM_BITRATE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_SERIAL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ENCODER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ENCODER_VERSION ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_TRACK_GAIN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_TRACK_PEAK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ALBUM_GAIN ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_TAG_ALBUM_PEAK ##### -->
+<para>
+
+</para>
+
 
 

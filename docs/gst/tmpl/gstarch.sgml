@@ -18,20 +18,20 @@ implementations in this file.
 
 </para>
 
-<!-- ##### MACRO GST_ARCH_CALL ##### -->
-<para>
-Jumps to a specific location in memory.
-</para>
-
-@target: the memory to jump to.
-
-
 <!-- ##### MACRO GST_ARCH_SET_SP ##### -->
 <para>
 Sets the stackpointer.
 </para>
 
 @stackpointer: the stackpointer to set.
+
+
+<!-- ##### MACRO GST_ARCH_CALL ##### -->
+<para>
+Jumps to a specific location in memory.
+</para>
+
+@target: the memory to jump to.
 
 
 <!-- ##### MACRO GST_ARCH_SETUP_STACK ##### -->
@@ -45,6 +45,13 @@ Make toom on the stack?
 <!-- ##### MACRO GST_ARCH_PRESETJMP ##### -->
 <para>
 Do something funny, which is required on some archs..
+</para>
+
+
+
+<!-- ##### MACRO USE_MAKECONTEXT ##### -->
+<para>
+
 </para>
 
 

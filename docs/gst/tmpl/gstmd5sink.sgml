@@ -1,0 +1,25 @@
+<!-- ##### SECTION Title ##### -->
+GstMD5Sink
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gst_md5sink_factory_init ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
