@@ -1,5 +1,28 @@
 2004-02-02  David Schleef  <ds@schleef.org>
 
+	code cleanup.  Change bzero() to memset().  Remove duplicate ; at ends
+	of lines.
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_event):
+	* ext/flac/gstflactag.c: (gst_flac_tag_chain):
+	* ext/xvid/gstxviddec.c: (gst_xviddec_src_link):
+	* gst-libs/gst/play/play.c: (gst_play_get_sink_element):
+	* gst/ac3parse/gstac3parse.c: (gst_ac3parse_chain):
+	* gst/effectv/gstedge.c: (gst_edgetv_sinkconnect):
+	* gst/effectv/gstvertigo.c: (gst_vertigotv_sinkconnect):
+	* gst/intfloat/float22int.c: (gst_float2_2_int_getcaps),
+	(gst_float2_2_int_link):
+	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_chain_subtitle):
+	* gst/rtjpeg/RTjpeg.c: (RTjpeg_init_mcompress):
+	* gst/tcp/gsttcpsink.c: (gst_tcpsink_init_send):
+	* gst/tcp/gsttcpsrc.c: (gst_tcpsrc_init_receive):
+	* gst/udp/gstudpsink.c: (gst_udpsink_init_send):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_init_receive):
+	* sys/v4l/gstv4lelement.c: (gst_v4lelement_init):
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_set_capture):
+	* testsuite/gst-lint: Add tests for bzero and ;;
+
+2004-02-02  David Schleef  <ds@schleef.org>
+
 	* gst/debug/efence.c: Add fallback if MAP_ANONYMOUS isn't defined.
 
 2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
