@@ -106,6 +106,26 @@ cothread_init (void)
   return ctx;
 }
 
+void
+cothread_free (cothread_context *ctx)
+{
+  gint i;
+
+  for (i=0; i<ctx->nthreads; i++) {
+#ifndef COTHREAD_ATOMIC
+    if (ctx->threads[i]->lock) {
+      g_mutex_unlock(ctx->threads[i]->lock);
+      g_mutex_free (ctx->threads[i]->lock);
+    }
+#endif
+    if (i == 0)
+      g_free (ctx->threads[i]);
+  }
+
+  g_hash_table_destroy (ctx->data);
+  g_free (ctx);
+}
+
 /**
  * cothread_create:
  * @ctx: the cothread context

@@ -68,6 +68,7 @@ struct _cothread_state {
 
 cothread_context*		cothread_init           (void);
 cothread_state*			cothread_create		(cothread_context *ctx);
+void				cothread_free		(cothread_context *ctx);
 void				cothread_setfunc	(cothread_state *thread, cothread_func func,
 						         int argc, char **argv);
 int				cothread_getcurrent	(void);
