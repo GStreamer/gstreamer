@@ -40,7 +40,7 @@ typedef guint8 uint8_t;
 typedef guint32 uint32_t;
 #endif
 /* grosj... but it works (tm) */
-#end /* HAVE_STDINT_H */
+#endif /* HAVE_STDINT_H */
 
 #include <gst/gst.h>
 #include <a52dec/a52.h>
