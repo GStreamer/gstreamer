@@ -527,7 +527,7 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
   # prerelease and release should get it disted
   if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
     AC_MSG_NOTICE(slurping FFmpeg CVS source)
-    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, "2002-12-14 12:00 GMT",
+    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2002-12-14 12:00 GMT,
                     HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
     AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1, 
                        [defined if we use uninstalled ffmpeg])
