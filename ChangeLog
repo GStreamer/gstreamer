@@ -1,5 +1,12 @@
 2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Wim Taymans
+
+	* gst/gstbin.c:
+	  Fix for #159852 - make iterate emission threadsafe
+
+2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/faq/cvs.xml:
 	  notes about new fdo account request
 

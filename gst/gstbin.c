@@ -1204,10 +1204,14 @@ gst_bin_restore_thyself (GstObject * object, xmlNodePtr self)
 }
 #endif /* GST_DISABLE_LOADSAVE */
 
+static GStaticRecMutex iterate_lock = G_STATIC_REC_MUTEX_INIT;
+
 static gboolean
 gst_bin_iterate_func (GstBin * bin)
 {
   GstScheduler *sched = GST_ELEMENT_SCHED (bin);
+
+  g_static_rec_mutex_unlock (&iterate_lock);
 
   /* only iterate if this is the manager bin */
   if (sched && sched->parent == GST_ELEMENT (bin)) {
@@ -1216,7 +1220,7 @@ gst_bin_iterate_func (GstBin * bin)
     state = gst_scheduler_iterate (sched);
 
     if (state == GST_SCHEDULER_STATE_RUNNING) {
-      return TRUE;
+      goto done;
     } else if (state == GST_SCHEDULER_STATE_ERROR) {
       gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
     } else if (state == GST_SCHEDULER_STATE_STOPPED) {
@@ -1233,7 +1237,7 @@ gst_bin_iterate_func (GstBin * bin)
               "current bin is not iterating, but children are, "
               "so returning TRUE anyway...");
           g_usleep (1);
-          return TRUE;
+          goto done;
         }
       }
     }
@@ -1242,7 +1246,13 @@ gst_bin_iterate_func (GstBin * bin)
         GST_ELEMENT_NAME (bin));
   }
 
+  g_static_rec_mutex_lock (&iterate_lock);
+
   return FALSE;
+
+done:
+  g_static_rec_mutex_lock (&iterate_lock);
+  return TRUE;
 }
 
 /**
@@ -1265,8 +1275,10 @@ gst_bin_iterate (GstBin * bin)
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, bin, "starting iteration");
   gst_object_ref (GST_OBJECT (bin));
 
+  g_static_rec_mutex_lock (&iterate_lock);
   running = FALSE;
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ITERATE], 0, &running);
+  g_static_rec_mutex_unlock (&iterate_lock);
 
   gst_object_unref (GST_OBJECT (bin));
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, bin, "finished iteration");
