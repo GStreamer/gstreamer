@@ -8,12 +8,15 @@
 #ifndef _FLAC_COMPAT_H_
 #define _FLAC_COMPAT_H_
 
+#ifndef VERSION
+#define VERSION bogus
+#endif
 #include <FLAC/all.h>
 
 /* FIXME when there's a autoconf symbol */
 #ifndef FLAC_VERSION
 
-#ifdef FLAC__STREAM_ENCODER_WRITE_ERROR /* added in 1.0.4 */
+#ifndef FLAC__VERSION_STRING /* removed in 1.0.4 */
 #define FLAC_VERSION 0x010004
 #else
 #ifdef FLAC__REFERENCE_CODEC_MAX_BITS_PER_SAMPLE
@@ -24,6 +27,7 @@
 #endif
 
 #endif /* !defined(FLAC_VERSION) */
+
 
 #if FLAC_VERSION < 0x010004
 #define FLAC__STREAM_ENCODER_OK FLAC__STREAM_ENCODER_WRITE_OK
