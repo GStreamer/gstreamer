@@ -263,7 +263,7 @@ gst_tcpserversrc_gdp_read_header (GstTCPServerSrc * this)
     return NULL;
   }
   if (ret != readsize) {
-    g_warning ("Wanted %d bytes, got %d bytes", readsize, ret);
+    g_warning ("Wanted %d bytes, got %d bytes", (int) readsize, (int) ret);
   }
   g_assert (ret == readsize);
 

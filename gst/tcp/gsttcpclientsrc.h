@@ -29,6 +29,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <netdb.h>                        /* sockaddr_in */
+#include <netinet/in.h>			  /* sockaddr_in */
 #include "gsttcp.h"
 
 #define GST_TYPE_TCPCLIENTSRC \

@@ -228,7 +228,7 @@ vorbis_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
           &granulepos))
     return FALSE;
 
-  if (!vorbis_dec_from_granulepos (dec, *format, granulepos, value))
+  if (!vorbis_dec_from_granulepos (dec, *format, granulepos, (guint64 *) value))
     return FALSE;
 
   GST_LOG_OBJECT (dec,
@@ -275,7 +275,8 @@ vorbis_dec_event (GstVorbisDec * dec, GstEvent * event)
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
-      if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
+      if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT,
+              (gint64 *) & value)) {
         dec->granulepos = value;
         GST_DEBUG_OBJECT (dec,
             "setting granuleposition to %" G_GUINT64_FORMAT " after discont",

@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -154,7 +156,7 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
     return NULL;
   }
   if (ret != readsize) {
-    g_warning ("Wanted %d bytes, got %d bytes", readsize, ret);
+    g_warning ("Wanted %d bytes, got %d bytes", (int) readsize, (int) ret);
   }
   g_assert (ret == readsize);
 
