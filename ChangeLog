@@ -1,3 +1,22 @@
+2004-04-03  Andy Wingo  <wingo@pobox.com>
+
+	* gst/schedulers/gstoptimalscheduler.c (GstOptSchedulerGroupLink):
+	Rename ->group1 and ->group2 to ->src and ->sink, respectively.
+	This allows better introspection of pipeline topology.
+	(add_to_chain): Don't do trickery to put loop elements first;
+	rather, queue a chain sort by marking the chain as dirty.
+	(remove_from_chain): Mark the chain dirty.
+	(sort_chain): New function. Sorts the group list so that terminal
+	sinks are first. This means elements on the sink side will be
+	preferentially sscheduled before elements on the src side of the
+	pipeline.
+	(chain_recursively_migrate_group): Use OTHER_GROUP_LINK.
+	(schedule_chain): If the chain is marked DIRTY, call sort_chain.
+	(gst_opt_scheduler_pad_link, gst_opt_scheduler_pad_unlink)
+	(group_inc_link): Change argument and variable names to match the
+	new link structure member names (src and sink).
+	(group_dec_link): Add some description
+
 2004-04-03  Benjamin Otte  <otte@gnome.org>
 
 	* gst/autoplug/gstspider.c: (gst_spider_identity_plug):

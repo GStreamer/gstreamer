@@ -106,6 +106,10 @@ typedef enum
 }
 GstOptSchedulerChainFlags;
 
+#define GST_OPT_SCHEDULER_CHAIN_SET_DIRTY(chain)	((chain)->flags |= GST_OPT_SCHEDULER_CHAIN_DIRTY)
+#define GST_OPT_SCHEDULER_CHAIN_SET_CLEAN(chain)	((chain)->flags &= ~GST_OPT_SCHEDULER_CHAIN_DIRTY)
+#define GST_OPT_SCHEDULER_CHAIN_IS_DIRTY(chain) 	((chain)->flags & GST_OPT_SCHEDULER_CHAIN_DIRTY)
+
 #define GST_OPT_SCHEDULER_CHAIN_DISABLE(chain) 		((chain)->flags |= GST_OPT_SCHEDULER_CHAIN_DISABLED)
 #define GST_OPT_SCHEDULER_CHAIN_ENABLE(chain) 		((chain)->flags &= ~GST_OPT_SCHEDULER_CHAIN_DISABLED)
 #define GST_OPT_SCHEDULER_CHAIN_IS_DISABLED(chain) 	((chain)->flags & GST_OPT_SCHEDULER_CHAIN_DISABLED)
@@ -162,14 +166,14 @@ typedef struct _GstOptSchedulerGroupLink GstOptSchedulerGroupLink;
 /* used to keep track of links with other groups */
 struct _GstOptSchedulerGroupLink
 {
-  GstOptSchedulerGroup *group1; /* the group we are linked with */
-  GstOptSchedulerGroup *group2; /* the group we are linked with */
+  GstOptSchedulerGroup *src;    /* the group we are linked with */
+  GstOptSchedulerGroup *sink;   /* the group we are linked with */
   gint count;                   /* the number of links with the group */
 };
 
-#define IS_GROUP_LINK(link, group1, group2)	((link->group1 == group1 && link->group2 == group2) || \
-		                                 (link->group2 == group1 && link->group1 == group2))
-#define OTHER_GROUP_LINK(link, group)		(link->group1 == group ? link->group2 : link->group1)
+#define IS_GROUP_LINK(link, srcg, sinkg)	((link->src == srcg && link->sink == sinkg) || \
+		                                 (link->sink == srcg && link->src == sinkg))
+#define OTHER_GROUP_LINK(link, group)		(link->src == group ? link->sink : link->src)
 
 typedef int (*GroupScheduleFunction) (int argc, char *argv[]);
 
@@ -541,21 +545,17 @@ add_to_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
 
   group->chain = ref_chain (chain);
 
-  /* The first non-disabled group in the chain's group list will be the entry
-     point for the chain. Because buffers can accumulate in loop elements' peer
-     bufpens, we preferentially schedule loop groups before get groups to avoid
-     unnecessary execution of get-based groups when the bufpens are already
-     full. */
-  if (group->type == GST_OPT_SCHEDULER_GROUP_LOOP)
-    chain->groups = g_slist_prepend (chain->groups, group);
-  else
-    chain->groups = g_slist_append (chain->groups, group);
+  chain->groups = g_slist_prepend (chain->groups, group);
 
   chain->num_groups++;
 
   if (GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group)) {
     chain_group_set_enabled (chain, group, TRUE);
   }
+
+  /* queue a resort of the group list, which determines which group will be run
+   * first. */
+  GST_OPT_SCHEDULER_CHAIN_SET_DIRTY (chain);
 
   return chain;
 }
@@ -578,6 +578,8 @@ remove_from_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
 
   if (chain->num_groups == 0)
     chain = unref_chain (chain);
+
+  GST_OPT_SCHEDULER_CHAIN_SET_DIRTY (chain);
 
   chain = unref_chain (chain);
   return chain;
@@ -623,6 +625,62 @@ merge_chains (GstOptSchedulerChain * chain1, GstOptSchedulerChain * chain2)
   /* chain2 is now freed, if nothing else was referencing it before */
 
   return chain1;
+}
+
+/* sorts the group list so that terminal sinks come first -- prevents pileup of
+ * buffers in bufpens */
+static void
+sort_chain (GstOptSchedulerChain * chain)
+{
+  GSList *original = chain->groups;
+  GSList *new = NULL;
+  GSList *walk, *links, *this;
+
+  /* if there's only one group, just return */
+  if (!original->next)
+    return;
+  /* otherwise, we know that all groups are somehow linked together */
+
+  GST_LOG ("sorting chain %p (%d groups)", chain, g_slist_length (original));
+
+  /* first find the terminal sinks */
+  for (walk = original; walk;) {
+    GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) walk->data;
+
+    this = walk;
+    walk = walk->next;
+    if (group->group_links) {
+      gboolean is_sink = TRUE;
+
+      for (links = group->group_links; links; links = links->next)
+        if (((GstOptSchedulerGroupLink *) links->data)->src == group)
+          is_sink = FALSE;
+      if (is_sink) {
+        /* found one */
+        original = g_slist_remove_link (original, this);
+        new = g_slist_concat (new, this);
+      }
+    }
+  }
+  g_assert (new != NULL);
+
+  /* now look for the elements that are linked to the terminal sinks */
+  for (walk = new; walk; walk = walk->next) {
+    GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) walk->data;
+
+    for (links = group->group_links; links; links = links->next) {
+      this =
+          g_slist_find (original,
+          ((GstOptSchedulerGroupLink *) links->data)->src);
+      if (this) {
+        original = g_slist_remove_link (original, this);
+        new = g_slist_concat (new, this);
+      }
+    }
+  }
+  g_assert (original == NULL);
+
+  chain->groups = new;
 }
 
 static void
@@ -693,8 +751,7 @@ chain_recursively_migrate_group (GstOptSchedulerChain * chain,
 
     links = g_slist_next (links);
 
-    chain_recursively_migrate_group (chain,
-        (link->group1 == group ? link->group2 : link->group1));
+    chain_recursively_migrate_group (chain, OTHER_GROUP_LINK (link, group));
   }
 }
 
@@ -1074,8 +1131,14 @@ schedule_chain (GstOptSchedulerChain * chain)
   GstOptScheduler *osched;
 
   osched = chain->sched;
-  groups = chain->groups;
 
+  /* if the chain has changed, we need to resort the groups so we enter in the
+     proper place */
+  if (GST_OPT_SCHEDULER_CHAIN_IS_DIRTY (chain))
+    sort_chain (chain);
+  GST_OPT_SCHEDULER_CHAIN_SET_CLEAN (chain);
+
+  groups = chain->groups;
   while (groups) {
     GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
 
@@ -1475,6 +1538,7 @@ get_group (GstElement * element, GstOptSchedulerGroup ** group)
  *   that group
  * - if both of the elements have a group, we merge the groups, which
  *   will also merge the chains.
+ * Group links must be managed by the caller.
  */
 static GstOptSchedulerGroup *
 group_elements (GstOptScheduler * osched, GstElement * element1,
@@ -1524,12 +1588,13 @@ group_elements (GstOptScheduler * osched, GstElement * element1,
 }
 
 /*
- * increment link counts between groups
+ * increment link counts between groups -- it's important that src is actually
+ * the src group, so we can introspect the topology later
  */
 static void
-group_inc_link (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
+group_inc_link (GstOptSchedulerGroup * src, GstOptSchedulerGroup * sink)
 {
-  GSList *links = group1->group_links;
+  GSList *links = src->group_links;
   gboolean done = FALSE;
   GstOptSchedulerGroupLink *link;
 
@@ -1538,11 +1603,11 @@ group_inc_link (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
     link = (GstOptSchedulerGroupLink *) links->data;
     links = g_slist_next (links);
 
-    if (IS_GROUP_LINK (link, group1, group2)) {
+    if (IS_GROUP_LINK (link, src, sink)) {
       /* we found a link to this group, increment the link count */
       link->count++;
       GST_LOG ("incremented group link count between %p and %p to %d",
-          group1, group2, link->count);
+          src, sink, link->count);
       done = TRUE;
     }
   }
@@ -1550,19 +1615,21 @@ group_inc_link (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
     /* no link was found, create a new one */
     link = g_new0 (GstOptSchedulerGroupLink, 1);
 
-    link->group1 = group1;
-    link->group2 = group2;
+    link->src = src;
+    link->sink = sink;
     link->count = 1;
 
-    group1->group_links = g_slist_prepend (group1->group_links, link);
-    group2->group_links = g_slist_prepend (group2->group_links, link);
+    src->group_links = g_slist_prepend (src->group_links, link);
+    sink->group_links = g_slist_prepend (sink->group_links, link);
 
-    GST_DEBUG ("added group link between %p and %p", group1, group2);
+    GST_DEBUG ("added group link between %p and %p", src, sink);
   }
 }
 
 /*
- * decrement link counts between groups, returns TRUE if the link count reaches 0
+ * decrement link counts between groups, returns TRUE if the link count reaches
+ * 0 -- note that the groups are not necessarily ordered as (src, sink) like
+ * inc_link requires
  */
 static gboolean
 group_dec_link (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
@@ -1648,6 +1715,7 @@ gst_opt_scheduler_reset (GstScheduler * sched)
   }
 #endif
 }
+
 static void
 gst_opt_scheduler_add_element (GstScheduler * sched, GstElement * element)
 {
@@ -1705,7 +1773,7 @@ gst_opt_scheduler_remove_element (GstScheduler * sched, GstElement * element)
       GST_OBJECT_NAME (element));
 
   /* decoupled elements are not added to the scheduler lists and should therefore
-   * no be removed */
+   * not be removed */
   if (GST_ELEMENT_IS_DECOUPLED (element))
     return;
 
@@ -1794,35 +1862,35 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   LinkType type = GST_OPT_INVALID;
-  GstElement *element1, *element2;
+  GstElement *src_element, *sink_element;
 
   GST_INFO ("scheduling link between %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-  element1 = GST_PAD_PARENT (srcpad);
-  element2 = GST_PAD_PARENT (sinkpad);
+  src_element = GST_PAD_PARENT (srcpad);
+  sink_element = GST_PAD_PARENT (sinkpad);
 
   /* first we need to figure out what type of link we're dealing
    * with */
-  if (element1->loopfunc && element2->loopfunc)
+  if (src_element->loopfunc && sink_element->loopfunc)
     type = GST_OPT_LOOP_TO_LOOP;
   else {
-    if (element1->loopfunc) {
+    if (src_element->loopfunc) {
       if (GST_RPAD_CHAINFUNC (sinkpad))
         type = GST_OPT_LOOP_TO_CHAIN;
-    } else if (element2->loopfunc) {
+    } else if (sink_element->loopfunc) {
       if (GST_RPAD_GETFUNC (srcpad)) {
         type = GST_OPT_GET_TO_LOOP;
         /* this could be tricky, the get based source could 
          * already be part of a loop based group in another pad,
          * we assert on that for now */
-        if (GST_ELEMENT_SCHED_CONTEXT (element1) != NULL &&
-            GST_ELEMENT_SCHED_GROUP (element1) != NULL) {
-          GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (element1);
+        if (GST_ELEMENT_SCHED_CONTEXT (src_element) != NULL &&
+            GST_ELEMENT_SCHED_GROUP (src_element) != NULL) {
+          GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (src_element);
 
           /* if the loop based element is the entry point we're ok, if it
            * isn't then we have multiple loop based elements in this group */
-          if (group->entry != element2) {
+          if (group->entry != sink_element) {
             g_error
                 ("internal error: cannot schedule get to loop in multi-loop based group");
             return;
@@ -1835,15 +1903,15 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
         type = GST_OPT_GET_TO_CHAIN;
         /* the get based source could already be part of a loop 
          * based group in another pad, we assert on that for now */
-        if (GST_ELEMENT_SCHED_CONTEXT (element1) != NULL &&
-            GST_ELEMENT_SCHED_GROUP (element1) != NULL) {
-          GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (element1);
+        if (GST_ELEMENT_SCHED_CONTEXT (src_element) != NULL &&
+            GST_ELEMENT_SCHED_GROUP (src_element) != NULL) {
+          GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (src_element);
 
           /* if the get based element is the entry point we're ok, if it
            * isn't then we have a mixed loop/chain based group */
-          if (group->entry != element1) {
-            g_error
-                ("internal error: cannot schedule get to chain with mixed loop/chain based group");
+          if (group->entry != src_element) {
+            g_error ("internal error: cannot schedule get to chain "
+                "with mixed loop/chain based group");
             return;
           }
         }
@@ -1867,23 +1935,23 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
 
       /* setup get/chain handlers */
       GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
-      if (GST_ELEMENT_IS_EVENT_AWARE (element2))
+      if (GST_ELEMENT_IS_EVENT_AWARE (sink_element))
         GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
       else
         GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
 
       /* the two elements should be put into the same group, 
        * this also means that they are in the same chain automatically */
-      group = group_elements (osched, element1, element2,
+      group = group_elements (osched, src_element, sink_element,
           GST_OPT_SCHEDULER_GROUP_GET);
 
       /* if there is not yet an entry in the group, select the source
        * element as the entry point */
       if (!group->entry) {
-        group->entry = element1;
+        group->entry = src_element;
 
         GST_DEBUG ("setting \"%s\" as entry point of _get-based group %p",
-            GST_ELEMENT_NAME (element1), group);
+            GST_ELEMENT_NAME (src_element), group);
       }
       break;
     }
@@ -1891,27 +1959,29 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
     case GST_OPT_CHAIN_TO_CHAIN:
       GST_LOG ("loop/chain to chain based link");
 
-      if (GST_ELEMENT_IS_EVENT_AWARE (element2))
+      if (GST_ELEMENT_IS_EVENT_AWARE (sink_element))
         GST_RPAD_CHAINHANDLER (sinkpad) = GST_RPAD_CHAINFUNC (sinkpad);
       else
         GST_RPAD_CHAINHANDLER (sinkpad) = gst_opt_scheduler_chain_wrapper;
 
-      /* the two elements should be put into the same group, 
-       * this also means that they are in the same chain automatically, 
-       * in case of a loop-based element1, there will be a group for element1 and
-       * element2 will be added to it. */
-      group_elements (osched, element1, element2, GST_OPT_SCHEDULER_GROUP_LOOP);
+      /* the two elements should be put into the same group, this also means
+       * that they are in the same chain automatically, in case of a loop-based
+       * src_element, there will be a group for src_element and sink_element
+       * will be added to it. */
+      group_elements (osched, src_element, sink_element,
+          GST_OPT_SCHEDULER_GROUP_LOOP);
       break;
     case GST_OPT_GET_TO_LOOP:
       GST_LOG ("get to loop based link");
 
       GST_RPAD_GETHANDLER (srcpad) = GST_RPAD_GETFUNC (srcpad);
 
-      /* the two elements should be put into the same group, 
-       * this also means that they are in the same chain automatically, 
-       * element2 is loop-based so it already has a group where element1
-       * will be added to */
-      group_elements (osched, element1, element2, GST_OPT_SCHEDULER_GROUP_LOOP);
+      /* the two elements should be put into the same group, this also means
+       * that they are in the same chain automatically, sink_element is
+       * loop-based so it already has a group where src_element will be added
+       * to */
+      group_elements (osched, src_element, sink_element,
+          GST_OPT_SCHEDULER_GROUP_LOOP);
       break;
     case GST_OPT_CHAIN_TO_LOOP:
     case GST_OPT_LOOP_TO_LOOP:
@@ -1926,20 +1996,20 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
        * flush the buffer lists, so override the given eventfunc */
       GST_RPAD_EVENTHANDLER (srcpad) = gst_opt_scheduler_event_wrapper;
 
-      group1 = GST_ELEMENT_SCHED_GROUP (element1);
-      group2 = GST_ELEMENT_SCHED_GROUP (element2);
+      group1 = GST_ELEMENT_SCHED_GROUP (src_element);
+      group2 = GST_ELEMENT_SCHED_GROUP (sink_element);
 
       g_assert (group2 != NULL);
 
       /* group2 is guaranteed to exist as it contains a loop-based element.
-       * group1 only exists if element1 is linked to some other element */
+       * group1 only exists if src_element is linked to some other element */
       if (!group1) {
-        /* create a new group for element1 as it cannot be merged into another group
+        /* create a new group for src_element as it cannot be merged into another group
          * here. we create the group in the same chain as the loop-based element. */
         GST_DEBUG ("creating new group for element %s",
-            GST_ELEMENT_NAME (element1));
+            GST_ELEMENT_NAME (src_element));
         group1 =
-            create_group (group2->chain, element1,
+            create_group (group2->chain, src_element,
             GST_OPT_SCHEDULER_GROUP_LOOP);
       } else {
         /* both elements are already in a group, make sure they are added to
@@ -2076,24 +2146,24 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
     GstPad * srcpad, GstPad * sinkpad)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
-  GstElement *element1, *element2;
+  GstElement *src_element, *sink_element;
   GstOptSchedulerGroup *group1, *group2;
 
   GST_INFO ("unscheduling link between %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-  element1 = GST_PAD_PARENT (srcpad);
-  element2 = GST_PAD_PARENT (sinkpad);
+  src_element = GST_PAD_PARENT (srcpad);
+  sink_element = GST_PAD_PARENT (sinkpad);
 
-  get_group (element1, &group1);
-  get_group (element2, &group2);
+  get_group (src_element, &group1);
+  get_group (sink_element, &group2);
 
   /* for decoupled elements (that are never put into a group) we use the
    * group of the peer element for the remainder of the algorithm */
-  if (GST_ELEMENT_IS_DECOUPLED (element1)) {
+  if (GST_ELEMENT_IS_DECOUPLED (src_element)) {
     group1 = group2;
   }
-  if (GST_ELEMENT_IS_DECOUPLED (element2)) {
+  if (GST_ELEMENT_IS_DECOUPLED (sink_element)) {
     group2 = group1;
   }
 
@@ -2114,8 +2184,8 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
     /* we can remove the links between the groups now */
     zero = group_dec_link (group1, group2);
 
-    /* if the groups are not directly connected anymore, we have to perform a recursive check
-     * to see if they are really unlinked */
+    /* if the groups are not directly connected anymore, we have to perform a
+     * recursive check to see if they are really unlinked */
     if (zero) {
       gboolean still_link;
       GstOptSchedulerChain *chain;
@@ -2153,8 +2223,8 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
      * Note that this check is only to make sure that a single element can be removed 
      * completely from the group, we also have to check for migrating several 
      * elements to a new group. */
-    still_link1 = element_has_link_with_group (element1, group, srcpad);
-    still_link2 = element_has_link_with_group (element2, group, sinkpad);
+    still_link1 = element_has_link_with_group (src_element, group, srcpad);
+    still_link2 = element_has_link_with_group (sink_element, group, sinkpad);
     /* if there is still a link, we don't need to break this group */
     if (still_link1 && still_link2) {
       GSList *l;
@@ -2206,7 +2276,7 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
             return;
           }
         }
-      /* Peer element will be catched during next iteration */
+      /* Peer element will be caught during next iteration */
       return;
     }
 
@@ -2214,32 +2284,32 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
     if (!still_link1) {
       /* we only remove elements that are not the entry point of a loop based
        * group and are not decoupled */
-      if (!(group->entry == element1 &&
+      if (!(group->entry == src_element &&
               group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
-          !GST_ELEMENT_IS_DECOUPLED (element1)) {
+          !GST_ELEMENT_IS_DECOUPLED (src_element)) {
         GST_LOG ("el ement1 is separated from the group");
 
         /* have to decrement links to other groups from other pads */
-        group_dec_links_for_element (group, element1);
-        remove_from_group (group, element1);
+        group_dec_links_for_element (group, src_element);
+        remove_from_group (group, src_element);
       } else {
-        GST_LOG ("element1 is decoupled or entry in loop based group");
+        GST_LOG ("src_element is decoupled or entry in loop based group");
       }
     }
 
     if (!still_link2) {
       /* we only remove elements that are not the entry point of a loop based
        * group and are not decoupled */
-      if (!(group->entry == element2 &&
+      if (!(group->entry == sink_element &&
               group->type == GST_OPT_SCHEDULER_GROUP_LOOP) &&
-          !GST_ELEMENT_IS_DECOUPLED (element2)) {
-        GST_LOG ("element2 is separated from the group");
+          !GST_ELEMENT_IS_DECOUPLED (sink_element)) {
+        GST_LOG ("sink_element is separated from the group");
 
         /* have to decrement links to other groups from other pads */
-        group_dec_links_for_element (group, element2);
-        remove_from_group (group, element2);
+        group_dec_links_for_element (group, sink_element);
+        remove_from_group (group, sink_element);
       } else {
-        GST_LOG ("element2 is decoupled or entry in loop based group");
+        GST_LOG ("sink_element is decoupled or entry in loop based group");
       }
     }
   }
