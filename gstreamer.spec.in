@@ -147,11 +147,11 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoptgthreadscheduler*.so
 %{_libdir}/gstreamer-%{majorminor}/libgstelements*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgsttypes*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgststaticautoplug*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstgetbits*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
-%{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
+%{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
+%{_libdir}/gstreamer-%{majorminor}/libgstbytestream.so
 %{_datadir}/locale/*
 
 %files tools
@@ -184,6 +184,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_includedir}/%{name}-%{majorminor}/gst/control/*.h
 %dir %{_includedir}/%{name}-%{majorminor}/gst/getbits
 %{_includedir}/%{name}-%{majorminor}/gst/getbits/getbits.h
+%{_includedir}/%{name}-%{majorminor}/gst/bytestream/bytestream.h
 # %{_libdir}/libgstreamer.a
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstcontrol-%{majorminor}.so
@@ -208,6 +209,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %changelog
+* Sun Nov 09 2003 Christian Schaller <Uraeus@gnome.org>
+- Fix spec to handle new bytestream library 
+
 * Sun Aug 17 2003 Christian Schaller <uraeus@gnome.org>
 - Remove docs build from RPM as the build is broken
 - Fix stuff since more files are versioned now
