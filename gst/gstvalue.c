@@ -1332,11 +1332,7 @@ static gboolean
 gst_value_deserialize_string (GValue * dest, const char *s)
 {
   if (*s != '"') {
-    const gchar *t = s;
-
-    while (GST_ASCII_IS_STRING (*t))
-      t++;
-    if (!*t == '\0')
+    if (!g_utf8_validate (s, -1, NULL))
       return FALSE;
     g_value_set_string (dest, s);
     return TRUE;
