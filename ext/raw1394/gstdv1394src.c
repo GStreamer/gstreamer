@@ -620,6 +620,9 @@ gst_dv1394src_change_state (GstElement * element)
         }
       }
       break;
+    case GST_STATE_PAUSED_TO_READY:
+      dv1394src->negotiated = FALSE;
+      break;
     case GST_STATE_READY_TO_NULL:
       if (dv1394src->use_avc) {
         /* stop the VCR */
