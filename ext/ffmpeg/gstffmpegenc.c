@@ -165,7 +165,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass *klass)
   details = g_new0 (GstElementDetails, 1);
   details->longname = g_strdup_printf("FFMPEG %s encoder",
 				      params->in_plugin->name);
-  details->klass = g_strdup_printf("Codec/%s/Encoder",
+  details->klass = g_strdup_printf("Codec/Encoder/%s",
 				   (params->in_plugin->type == CODEC_TYPE_VIDEO) ?
 				   "Video" : "Audio");
   details->description = g_strdup_printf("FFMPEG %s encoder",

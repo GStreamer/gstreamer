@@ -70,7 +70,7 @@ struct _GstFFMpegCspClass {
 /* elementfactory information */
 static GstElementDetails ffmpegcsp_details = {
   "FFMPEG Colorspace converter",
-  "Filter/Effect",
+  "Filter/Converter/Video",
   "Converts video from one colorspace to another",
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
 };
