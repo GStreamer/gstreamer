@@ -70,6 +70,12 @@ else
 MAS_DIR=
 endif
 
+if USE_FAAC
+FAAC_DIR=faac
+else
+FAAC_DIR=
+endif
+
 if USE_FAAD
 FAAD_DIR=faad
 else
@@ -286,6 +292,7 @@ SUBDIRS=\
 	$(DVDREAD_DIR) \
 	$(DVDNAV_DIR) \
 	$(ESD_DIR) \
+	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FFMPEG_DIR) \
 	$(FLAC_DIR) \
@@ -334,6 +341,7 @@ DIST_SUBDIRS=\
 	dvdnav \
 	esd \
 	mas \
+	faac \
 	faad \
 	ffmpeg \
 	flac \

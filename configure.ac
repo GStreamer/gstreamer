@@ -768,6 +768,14 @@ GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink esdmon, [
   AS_SCRUB_INCLUDE(ESD_CFLAGS)
 ])
 
+dnl **** Free AAC Encoder (FAAC) ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
+GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
+  GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h, FAAC_LIBS="-lfaac -lm")
+  AS_SCRUB_INCLUDE(FAAC_CFLAGS)
+  AC_SUBST(FAAC_LIBS)
+])
+
 dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
@@ -1398,6 +1406,7 @@ ext/dv/Makefile
 ext/dvdread/Makefile
 ext/dvdnav/Makefile
 ext/esd/Makefile
+ext/faac/Makefile
 ext/faad/Makefile
 ext/ffmpeg/Makefile
 ext/flac/Makefile
