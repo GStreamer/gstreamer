@@ -62,6 +62,7 @@ gboolean 		gst_library_load		(gchar *name);
 
 void 			gst_plugin_add_factory		(GstPlugin *plugin, GstElementFactory *factory);
 void 			gst_plugin_add_type		(GstPlugin *plugin, GstTypeFactory *factory);
+GList*			gst_plugin_get_factory_list	(GstPlugin *plugin);
 
 GstPlugin*		gst_plugin_find			(const gchar *name);
 GList*			gst_plugin_get_list		(void);

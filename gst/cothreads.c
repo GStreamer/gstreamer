@@ -43,6 +43,50 @@ pthread_key_t _cothread_key = -1;
 #define COTHREAD_PARANOID
 
 /**
+ * cothread_init:
+ *
+ * create and initialize a new cotread context 
+ *
+ * Returns: the new cothread context
+ */
+cothread_context*
+cothread_init (void) 
+{
+  cothread_context *ctx = (cothread_context *)malloc(sizeof(cothread_context));
+
+  GST_INFO (GST_CAT_COTHREADS,"initializing cothreads");
+
+  if (_cothread_key == -1) {
+    if (pthread_key_create (&_cothread_key,NULL) != 0) {
+      perror ("pthread_key_create");
+      return NULL;
+    }
+  }
+  pthread_setspecific (_cothread_key,ctx);
+
+  memset (ctx->threads,0,sizeof(ctx->threads));
+
+  ctx->threads[0] = (cothread_state *)malloc(sizeof(cothread_state));
+  ctx->threads[0]->ctx = ctx;
+  ctx->threads[0]->threadnum = 0;
+  ctx->threads[0]->func = NULL;
+  ctx->threads[0]->argc = 0;
+  ctx->threads[0]->argv = NULL;
+  ctx->threads[0]->flags = COTHREAD_STARTED;
+  ctx->threads[0]->sp = (int *)CURRENT_STACK_FRAME;
+  ctx->threads[0]->pc = 0;
+
+  GST_INFO (GST_CAT_COTHREADS,"0th thread is %p at sp:%p",ctx->threads[0], ctx->threads[0]->sp);
+
+  // we consider the initiating process to be cothread 0
+  ctx->nthreads = 1;
+  ctx->current = 0;
+  ctx->data = g_hash_table_new(g_str_hash, g_str_equal);
+
+  return ctx;
+}
+
+/**
  * cothread_create:
  * @ctx: the cothread context
  *
@@ -109,64 +153,14 @@ cothread_setfunc (cothread_state *thread,
   thread->pc = (int *)func;
 }
 
-/**
- * cothread_init:
- *
- * create and initialize a new cotread context 
- *
- * Returns: the new cothread context
- */
-cothread_context*
-cothread_init (void) 
-{
-  cothread_context *ctx = (cothread_context *)malloc(sizeof(cothread_context));
-
-  GST_INFO (GST_CAT_COTHREADS,"initializing cothreads");
-
-  if (_cothread_key == -1) {
-    if (pthread_key_create (&_cothread_key,NULL) != 0) {
-      perror ("pthread_key_create");
-      return NULL;
-    }
-  }
-  pthread_setspecific (_cothread_key,ctx);
-
-  memset (ctx->threads,0,sizeof(ctx->threads));
-
-  ctx->threads[0] = (cothread_state *)malloc(sizeof(cothread_state));
-  ctx->threads[0]->ctx = ctx;
-  ctx->threads[0]->threadnum = 0;
-  ctx->threads[0]->func = NULL;
-  ctx->threads[0]->argc = 0;
-  ctx->threads[0]->argv = NULL;
-  ctx->threads[0]->flags = COTHREAD_STARTED;
-  ctx->threads[0]->sp = (int *)CURRENT_STACK_FRAME;
-  ctx->threads[0]->pc = 0;
-
-  GST_INFO (GST_CAT_COTHREADS,"0th thread is %p at sp:%p",ctx->threads[0], ctx->threads[0]->sp);
-
-  // we consider the initiating process to be cothread 0
-  ctx->nthreads = 1;
-  ctx->current = 0;
-  ctx->data = g_hash_table_new(g_str_hash, g_str_equal);
-
-  return ctx;
-}
-
-/**
- * cothread_main:
- * @ctx: the cothread context
- *
- * Returns: the new cothread state
- */
-cothread_state*
+static cothread_state*
 cothread_main(cothread_context *ctx) 
 {
   GST_DEBUG (0,"returning %p, the 0th cothread\n",ctx->threads[0]);
   return ctx->threads[0];
 }
 
-void 
+static void 
 cothread_stub (void) 
 {
   cothread_context *ctx = pthread_getspecific(_cothread_key);

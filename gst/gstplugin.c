@@ -648,3 +648,10 @@ gst_plugin_load_thyself (xmlNodePtr parent)
   GST_INFO (GST_CAT_PLUGIN_LOADING,"added %d registered factories and %d types",elementcount,typecount);
 }
 
+
+GList*
+gst_plugin_get_factory_list (GstPlugin *plugin)
+{
+  return plugin->elements;
+}
+

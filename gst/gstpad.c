@@ -1105,3 +1105,19 @@ gst_pad_set_eos(GstPad *pad)
 
   return TRUE;
 }
+
+/*
+GstPad *
+gst_pad_select(GstPad *nextpad, ...) {
+  va_list args;
+  GstPad *pad;
+  GSList *pads = NULL;
+
+  // construct the list of pads
+  va_start (args, nextpad);
+  while ((pad = va_arg (args, GstPad*)))
+    pads = g_slist_prepend (pads, pad);
+  va_end (args);
+
+  // now switch to the nextpad
+*/

@@ -210,6 +210,8 @@ GstBuffer*		gst_pad_pull_region		(GstPad *pad, gulong offset, gulong size);
   (((pad)->peer->pullregionfunc) ? ((pad)->peer->pullregionfunc)((pad)->peer,(offset),(size)) : NULL)
 #endif
 
+GstPad *		gst_pad_select			(GstPad *nextpad, ...);
+
 #define			gst_pad_eos(pad)		((pad)->peer->eosfunc((pad)->peer))
 gboolean		gst_pad_set_eos			(GstPad *pad);
 

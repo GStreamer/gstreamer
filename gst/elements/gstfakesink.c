@@ -43,14 +43,17 @@ enum {
 
 enum {
   ARG_0,
-  /* FILL ME */
+  ARG_NUM_SOURCES,
 };
 
 
-static void gst_fakesink_class_init(GstFakeSinkClass *klass);
-static void gst_fakesink_init(GstFakeSink *fakesink);
+static void	gst_fakesink_class_init	(GstFakeSinkClass *klass);
+static void	gst_fakesink_init	(GstFakeSink *fakesink);
 
-static void gst_fakesink_chain(GstPad *pad,GstBuffer *buf);
+static void	gst_fakesink_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void	gst_fakesink_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+
+static void	gst_fakesink_chain	(GstPad *pad,GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
@@ -83,6 +86,11 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
 
   gtkobject_class = (GtkObjectClass*)klass;
 
+  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+
+  gtk_object_add_arg_type ("GstFakeSink::num_sources", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_NUM_SOURCES);
+
   gst_fakesink_signals[SIGNAL_HANDOFF] =
     gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstFakeSinkClass, handoff),
@@ -91,18 +99,68 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   gtk_object_class_add_signals (gtkobject_class, gst_fakesink_signals,
                                     LAST_SIGNAL);
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  gtkobject_class->set_arg = gst_fakesink_set_arg;
+  gtkobject_class->get_arg = gst_fakesink_get_arg;
 }
 
 static void 
 gst_fakesink_init (GstFakeSink *fakesink) 
 {
-  fakesink->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (fakesink), fakesink->sinkpad);
-  gst_pad_set_chain_function (fakesink->sinkpad, gst_fakesink_chain);
+  GstPad *pad;
+  pad = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_element_add_pad (GST_ELEMENT (fakesink), pad);
+  gst_pad_set_chain_function (pad, gst_fakesink_chain);
+  fakesink->sinkpads = g_slist_prepend (NULL, pad);
+  fakesink->numsinkpads = 1;
 
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesink),GST_STATE_READY);
+}
+
+static void
+gst_fakesink_set_arg (GtkObject *object, GtkArg *arg, guint id)
+{
+  GstFakeSink *sink;
+  gint new_numsinks;
+  GstPad *pad;
+
+  /* it's not null if we got it, but it might not be ours */
+  sink = GST_FAKESINK (object);
+
+  switch(id) {
+    case ARG_NUM_SOURCES:
+      new_numsinks = GTK_VALUE_INT (*arg);
+      while (sink->numsinkpads < new_numsinks) {
+        pad = gst_pad_new (g_strdup_printf ("sink%d", sink->numsinkpads), GST_PAD_SINK);
+        gst_pad_set_chain_function (pad, gst_fakesink_chain);
+        gst_element_add_pad (GST_ELEMENT (sink), pad);
+        sink->sinkpads = g_slist_append (sink->sinkpads, pad);
+        sink->numsinkpads++;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+static void   
+gst_fakesink_get_arg (GtkObject *object, GtkArg *arg, guint id)
+{
+  GstFakeSink *sink;
+ 
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_FAKESINK (object));
+ 
+  sink = GST_FAKESINK (object);
+  
+  switch (id) {
+    case ARG_NUM_SOURCES:
+      GTK_VALUE_INT (*arg) = sink->numsinkpads;
+      break;
+    default:
+      arg->type = GTK_TYPE_INVALID;
+      break;
+  }
 }
 
 /**
