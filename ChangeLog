@@ -1,5 +1,10 @@
 2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/mad/gstid3demuxbin.c: (gst_id3demux_bin_base_init):
+	  Fix category so decodebin picks it up.
+
+2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/mad/Makefile.am:
 	* ext/mad/gstid3demuxbin.c: (gst_id3demux_bin_get_type),
 	(gst_id3demux_bin_base_init), (gst_id3demux_bin_class_init),
