@@ -21,7 +21,7 @@
 #define __GST_VALUE_H__
 
 #include <gst/gstconfig.h>
-#include <gst/gstcaps2.h>
+#include <gst/gstcaps.h>
 
 G_BEGIN_DECLS
 

@@ -24,7 +24,7 @@
 #define __GST_TYPE_FIND_H__
 
 #include <gst/gstbuffer.h>
-#include <gst/gstcaps2.h>
+#include <gst/gstcaps.h>
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
 #include <gst/gsttypes.h>

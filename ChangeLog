@@ -1,3 +1,16 @@
+2003-12-21  David Schleef  <ds@schleef.org>
+
+	* many, many files: Merge CAPS branch.  This includes:
+	  - implemention of GstValue and several GstValue types
+	  - implemention of GstStructure
+	  - entire rewrite of GstCaps
+	  - removal of GstProps
+	  - many changes to GstPad to compensate for new caps paradigm
+	  - removal of GstBufferpool
+	* gst/Makefile.am, gst/gst.h, gst/gstpad.h, gst/gsttypefind.h,
+	gstvalue.h, gst/gstcaps[2]*.[ch]:
+	  - rename gstcaps2.[ch] to gstcaps.[ch]
+
 2003-12-21  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstqueue.c: (gst_queue_handle_pending_events),

@@ -80,7 +80,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstatomic.c		\
 	gstbin.c		\
 	gstbuffer.c		\
-	gstcaps2.c		\
+	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
 	gstdata.c		\
@@ -141,7 +141,7 @@ gst_headers =			\
 	gstobject.h		\
 	gstbin.h		\
 	gstbuffer.h		\
-	gstcaps2.h		\
+	gstcaps.h		\
 	gstclock.h		\
 	gstcompat.h		\
 	gstcpu.h		\

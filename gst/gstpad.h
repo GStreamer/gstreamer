@@ -28,7 +28,7 @@
 
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
-#include <gst/gstcaps2.h>
+#include <gst/gstcaps.h>
 #include <gst/gstevent.h>
 #include <gst/gstprobe.h>
 #include <gst/gstquery.h>
