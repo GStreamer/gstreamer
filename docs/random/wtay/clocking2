@@ -1,0 +1,88 @@
+The clock
+---------
+
+The clock always returns reference time
+
+Element State change
+--------------------
+
+Each element receives the current clock reference time
+in the state change function.
+
+On PAUSED to PLAYING 
+
+An element starts sending buffers with timestamp 
+reftime + internal counter
+
+After a seek, the element sets internal counters to 0
+
+
+Bin state change
+----------------
+
+PAUSED to PLAYING
+
+bin propagates clock time to children
+
+
+Toplevel bin state change
+-------------------------
+
+PAUSED to PLAYING
+
+start time is set to ref time
+stream time is thus 0
+
+start time is sent to state change of children
+
+
+use case 1
+----------
+
+filesrc ! mad ! osssink
+
+pipeline PAUSED to PLAYING:
+
+start time = ref time
+
+filesrc state change gets starttime
+mad state change gets starttime
+osssink state change gets starttime
+
+mad sends buffers with timestamp starttime + internal counter
+osssink syncs these samples against the clock with starttime + timestamp
+
+PLAYING to PAUSED
+
+nothing happens
+
+use case 2
+----------
+
+ { filesrc ! mad ! queue } ! osssink
+
+let it play for a while
+PAUSE the thread
+PLAY the thread
+thread is not the toplevel bin, use same starttime as when 
+it first started.
+do state change on elements with same starttime
+
+use case 3
+----------
+
+  filesrc ! mad ! mixer ! osssink
+
+                  !
+  filesrc ! mad !-^ 
+
+
+
+
+
+
+
+
+
+
+

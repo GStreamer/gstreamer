@@ -1,0 +1,41 @@
+
+blocking wait
+-------------
+
+- allocate a new clock entry
+- add to list of pending sync waits
+- do {
+    wait on entry
+  } while (entry != restart)
+- free entry/remove from list
+
+async wait
+----------
+
+- if no thread, start thread
+- alloc a new clock entry
+- add to list of pending async waits
+- signal thread to restart timeouts
+
+async thread
+------------
+
+  while (true) {
+    if (no entry) wait for restart
+    do {
+      take first entry
+      wait on it
+     } while (entry != restart)
+     call entry signal function
+     free entry/remove from list
+   }
+  
+clock adjust
+------------
+
+- loop over sync/async entries
+- restart all entries
+
+ 
+
+
