@@ -207,8 +207,11 @@ void user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 
   if (pngenc->buffer_out)
   {
-    pngenc->buffer_out = gst_buffer_merge (pngenc->buffer_out, buffer);
+    GstBuffer *merge;
+    merge = gst_buffer_merge (pngenc->buffer_out, buffer);
     gst_buffer_unref (buffer);
+    gst_buffer_unref (pngenc->buffer_out);
+    pngenc->buffer_out = merge;
   }
   else
     pngenc->buffer_out = buffer;

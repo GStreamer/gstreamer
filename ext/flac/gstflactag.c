@@ -264,7 +264,11 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
   tag = GST_FLAC_TAG (gst_pad_get_parent (pad));
 
   if (tag->buffer) {
-    tag->buffer = gst_buffer_merge (tag->buffer, buffer);
+    GstBuffer *merge;
+    merge = gst_buffer_merge (tag->buffer, buffer);
+    gst_buffer_unref (buffer);
+    gst_buffer_unref (tag->buffer);
+    tag->buffer = merge;
   } else {
     tag->buffer = buffer;
   }
@@ -365,7 +369,11 @@ gst_flac_tag_chain (GstPad *pad, GstData *data)
       if (tag->vorbiscomment == NULL) {
 	tag->vorbiscomment = sub;
       } else {
-	tag->vorbiscomment = gst_buffer_merge (tag->vorbiscomment, sub);
+	GstBuffer *merge;
+	merge = gst_buffer_merge (tag->vorbiscomment, sub);
+	gst_buffer_unref (tag->vorbiscomment);
+	gst_buffer_unref (sub);
+	tag->vorbiscomment = merge;
       }
     }
 
