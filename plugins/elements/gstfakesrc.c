@@ -749,17 +749,14 @@ gst_fakesrc_change_state (GstElement *element)
 
   fakesrc = GST_FAKESRC (element);
 
-  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
+  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
+    fakesrc->buffer_count = 0;
+    fakesrc->pattern_byte = 0x00;
+    fakesrc->need_flush = FALSE;
     if (fakesrc->parent) {
       gst_buffer_unref (fakesrc->parent);
       fakesrc->parent = NULL;
     }
-  }
-  else if (GST_STATE_PENDING (element) == GST_STATE_READY) {
-    fakesrc->buffer_count = 0;
-    fakesrc->pattern_byte = 0x00;
-    fakesrc->need_flush = FALSE;
-    fakesrc->parent = NULL;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
