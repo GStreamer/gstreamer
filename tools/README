@@ -35,7 +35,7 @@ Here we convert a Mp3 file into an Ogg Vorbis file:
 
 And then we can play that file with:
 
- gst-launch filesrc location=music.ogg ! oggdemux ! vorbisdec ! osssink
+ gst-launch filesrc location=music.ogg ! oggdemux ! vorbisdec ! audioconvert ! osssink
 
 Some other useful pipelines are..
 Plays wav files (currently there are no wav encoders):

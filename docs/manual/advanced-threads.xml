@@ -104,7 +104,7 @@ eos (GstElement *src, gpointer data)
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *filesrc, *demuxer, *decoder, *audiosink;
+  GstElement *filesrc, *demuxer, *decoder, *audioconvert, *audiosink;
   GstElement *thread;
 
   if (argc &lt; 2) {
@@ -133,14 +133,18 @@ main (int argc, char *argv[])
   decoder = gst_element_factory_make ("vorbisdec", "decoder");
   g_assert (decoder != NULL);
 
+  /* create an audio converter */
+  converter = gst_element_factory_make ("audioconvert", "converter");
+  g_assert (decoder != NULL);
+
   /* and an audio sink */
   audiosink = gst_element_factory_make ("osssink", "play_audio");
   g_assert (audiosink != NULL);
 
   /* add objects to the thread */
-  gst_bin_add_many (GST_BIN (thread), filesrc, demuxer, decoder, audiosink, NULL);
+  gst_bin_add_many (GST_BIN (thread), filesrc, demuxer, decoder, converter, audiosink, NULL);
   /* link them in the logical order */
-  gst_element_link_many (filesrc, demuxer, decoder, audiosink, NULL);
+  gst_element_link_many (filesrc, demuxer, decoder, converter, audiosink, NULL);
 
   /* start playing */
   gst_element_set_state (thread, GST_STATE_PLAYING);
