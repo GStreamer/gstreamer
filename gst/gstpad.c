@@ -3020,8 +3020,7 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
   if (GST_RPAD_EVENTHANDLER (rpad))
     success = GST_RPAD_EVENTHANDLER (rpad) (GST_PAD_CAST (rpad), event);
   else {
-    GST_CAT_DEBUG (GST_CAT_EVENT, "there's no event function for pad %s:%s", 
-	       GST_DEBUG_PAD_NAME (rpad));
+    g_warning ("pad %s:%s has no event handler", GST_DEBUG_PAD_NAME (rpad));
     gst_event_unref (event);
   }
 
