@@ -69,7 +69,7 @@
       <title>A thread</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/thread.&magic;" format="&magic;" />
+          <imagedata fileref="images/thread.&magic;" format="&MAGIC;" />
         </imageobject>
       </mediaobject>  
     </figure>

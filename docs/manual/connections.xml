@@ -9,7 +9,7 @@
     <title>Visualisation of three connected elements</title>
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/connected-elements.&magic;" format="&magic;" />
+          <imagedata fileref="images/connected-elements.&magic;" format="&MAGIC;" />
         </imageobject>
       </mediaobject>
   </figure>

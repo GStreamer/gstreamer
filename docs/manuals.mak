@@ -2,8 +2,12 @@
 # taken from selfdocbookx, http://cyberelk.net/tim/docbook/selfdocbookx/index.html
 
 # modified by andy wingo <apwingo@eos.ncsu.edu> 14 dec 2001 for use by gstreamer
+# and a little bit by thomas as well
 
 all: html ps pdf
+
+check:
+	xmllint -noout -valid $(MAIN)
 
 if     HAVE_XSLTPROC
 
@@ -39,17 +43,25 @@ ps:
 pdf:
 endif #!HAVE_XSLTPROC
 
-$(DOC).fo: $(XML) $(PDFS) $(XSLFO) $(XSLFOMODS)
-	cp magic-pdf magic
-	xsltproc $(XSLFO) $(MAIN) > $@-t
-	mv -f $@-t $@
+#$(DOC).fo: $(XML) $(PDFS) $(XSLFO) $(XSLFOMODS)
+#	cp magic-pdf magic
+#	xsltproc $(XSLFO) $(MAIN) > $@-t
+#	mv -f $@-t $@
+#
+#$(DOC).pdf: $(DOC).fo
+#	pdfxmltex $< || true
+#	pdfxmltex $< || true
+#
+#$(DOC).ps: $(DOC).pdf
+#	pdftops $< $@
 
-$(DOC).pdf: $(DOC).fo
-	pdfxmltex $< || true
-	pdfxmltex $< || true
+# thomasvs: use db2 because it seems a lot better
+# this ought to be checked for in configure, and the old stuff removed
+$(DOC).pdf: $(DOC).xml
+	db2pdf $(DOC).xml
 
-$(DOC).ps: $(DOC).pdf
-	pdftops $< $@
+$(DOC).ps: $(DOC).xml
+	db2ps $(DOC).xml
 
 $(DOC): $(XML) $(PNGS) $(XSLHTML) $(XSLHTMLMODS)
 	-$(RM) *.html

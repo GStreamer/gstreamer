@@ -34,7 +34,7 @@
         <title>Visualisation of a source element</title>
           <mediaobject>  
             <imageobject>
-              <imagedata fileref="images/src-element.&magic;" format="&magic;" />
+              <imagedata fileref="images/src-element.&magic;" format="&MAGIC;" />
             </imageobject>
           </mediaobject>
       </figure>
@@ -62,7 +62,7 @@
         <title>Visualisation of a filter element</title>
           <mediaobject>  
             <imageobject>
-              <imagedata fileref="images/filter-element.&magic;" format="&magic;" />
+              <imagedata fileref="images/filter-element.&magic;" format="&MAGIC;" />
             </imageobject>
           </mediaobject>
       </figure>
@@ -77,7 +77,7 @@
         <mediaobject>  
           <imageobject>
             <imagedata fileref="images/filter-element-multi.&magic;" 
-                       format="&magic;" />
+                       format="&MAGIC;" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -102,7 +102,7 @@
         <title>Visualisation of a sink element</title>
         <mediaobject>  
           <imageobject>
-            <imagedata fileref="images/sink-element.&magic;" format="&magic;" />
+            <imagedata fileref="images/sink-element.&magic;" format="&MAGIC;" />
           </imageobject>
         </mediaobject>
       </figure>
