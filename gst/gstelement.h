@@ -138,6 +138,7 @@ struct _GstElement {
 
   GstElementLoopFunction loopfunc;
   cothread_state *threadstate;
+  GstPad *select_pad;
 
   guint16 numpads;
   guint16 numsrcpads;
