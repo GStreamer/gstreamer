@@ -173,6 +173,7 @@ gst_real_pad_init (GstRealPad *pad)
   pad->pullfunc = NULL;
   pad->pullregionfunc = NULL;
 
+  pad->bufferpoolfunc = NULL;
   pad->ghostpads = NULL;
   pad->caps = NULL;
 }
@@ -448,7 +449,24 @@ gst_pad_set_newcaps_function (GstPad *pad,
              GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_NEWCAPSFUNC(pad),newcaps);
 }
 
+/**
+ * gst_pad_set_bufferpool_function:
+ * @pad: the pad to set the bufferpool function for
+ * @newcaps: the bufferpool function
+ *
+ * Set the given bufferpool function for the pad.
+ */
+void
+gst_pad_set_bufferpool_function (GstPad *pad,
+		                 GstPadBufferPoolFunction bufpool)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
 
+  GST_RPAD_BUFFERPOOLFUNC (pad) = bufpool;
+  GST_DEBUG (0,"bufferpoolfunc for %s:%s(@%p) at %p is set to %p\n",
+             GST_DEBUG_PAD_NAME (pad), pad, &GST_RPAD_BUFFERPOOLFUNC (pad), bufpool);
+}
 
 static void
 gst_pad_push_func(GstPad *pad, GstBuffer *buf)
@@ -755,8 +773,13 @@ gboolean
 gst_pad_set_caps (GstPad *pad,
                   GstCaps *caps)
 {
+  GstCaps *oldcaps;
+
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_REAL_PAD (pad), FALSE);		// NOTE this restriction
+
+  GST_INFO (GST_CAT_CAPS, "setting caps %p on pad %s:%s",
+            caps, GST_DEBUG_PAD_NAME(pad));
 
   if (!gst_caps_check_compatibility (caps, gst_pad_get_padtemplate_caps (pad))) {
     g_warning ("pad %s:%s tried to set caps incompatible with its padtemplate\n",
@@ -764,12 +787,14 @@ gst_pad_set_caps (GstPad *pad,
     //return FALSE;
   }
   
-  if (GST_PAD_CAPS (pad))
-    gst_caps_unref (GST_PAD_CAPS (pad));
+  oldcaps = GST_PAD_CAPS (pad);
 
   if (caps)
     gst_caps_ref (caps);
   GST_PAD_CAPS(pad) = caps;
+
+  if (oldcaps)
+    gst_caps_unref (oldcaps);
 
   return gst_pad_renegotiate (pad);
 }
@@ -890,6 +915,31 @@ gst_pad_get_peer (GstPad *pad)
 
   return GST_PAD(GST_PAD_PEER(pad));
 }
+
+GstBufferPool*          
+gst_pad_get_bufferpool (GstPad *pad)
+{
+  GstRealPad *peer;
+
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+   
+  peer = GST_RPAD_PEER(pad);
+
+  g_return_val_if_fail (peer != NULL, NULL);
+
+  GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+
+  if (peer->bufferpoolfunc) {
+    GST_DEBUG (0,"calling bufferpoolfunc &%s (@%p) of peer pad %s:%s\n",
+      GST_DEBUG_FUNCPTR_NAME(peer->bufferpoolfunc),&peer->bufferpoolfunc,GST_DEBUG_PAD_NAME(((GstPad*)peer)));
+    return (peer->bufferpoolfunc)(((GstPad*)peer));
+  } else {
+    GST_DEBUG (0,"no bufferpoolfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(((GstPad*)peer)),&peer->bufferpoolfunc);
+    return NULL;
+  }
+}
+
 
 // FIXME this needs to be rethought soon
 static void
@@ -1115,11 +1165,11 @@ gst_pad_renegotiate (GstPad *pad)
     GST_DEBUG (GST_CAT_NEGOTIATION, "pads aggreed on caps :)\n");
 
     /* here we have some sort of aggreement of the caps */
-    GST_PAD_CAPS (currentpad) = newcaps;
+    GST_PAD_CAPS (currentpad) = gst_caps_ref (newcaps);
     if (GST_RPAD_NEWCAPSFUNC (currentpad))
       GST_RPAD_NEWCAPSFUNC (currentpad) (GST_PAD (currentpad), newcaps);
 
-    GST_PAD_CAPS (otherpad) = newcaps;
+    GST_PAD_CAPS (otherpad) = gst_caps_ref (newcaps);
     if (GST_RPAD_NEWCAPSFUNC (otherpad))
       GST_RPAD_NEWCAPSFUNC (otherpad) (GST_PAD (otherpad), newcaps);
   }

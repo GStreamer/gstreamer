@@ -119,26 +119,32 @@ gst_caps_destroy (GstCaps *caps)
  *
  * Decrease the refcount of this caps structure, 
  * destroying it when the refcount is 0
+ *
+ * Retruns: caps or NULL if the refcount reached 0
  */
-void
+GstCaps*
 gst_caps_unref (GstCaps *caps)
 {
   gboolean zero;
-  GstCaps *next;
+  GstCaps **next;
 
-  g_return_if_fail (caps != NULL);
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (caps->refcount > 0, NULL);
 
   GST_CAPS_LOCK (caps);
   caps->refcount--;
   zero = (caps->refcount == 0);
-  next = caps->next;
+  next = &caps->next;
   GST_CAPS_UNLOCK (caps);
 
-  if (next)
-    gst_caps_unref (next);
+  if (*next)
+    *next = gst_caps_unref (*next);
 
-  if (zero)
+  if (zero) {
     gst_caps_destroy (caps);
+    caps = NULL;
+  }
+  return caps;
 }
 
 /**
@@ -146,15 +152,19 @@ gst_caps_unref (GstCaps *caps)
  * @caps: the caps to ref
  *
  * Increase the refcount of this caps structure
+ *
+ * Returnns: the caps with the refcount incremented
  */
-void
+GstCaps*
 gst_caps_ref (GstCaps *caps)
 {
-  g_return_if_fail (caps != NULL);
+  g_return_val_if_fail (caps != NULL, NULL);
 
   GST_CAPS_LOCK (caps);
   caps->refcount++;
   GST_CAPS_UNLOCK (caps);
+
+  return caps;
 }
 
 /**
@@ -350,6 +360,36 @@ gst_caps_get_props (GstCaps *caps)
   g_return_val_if_fail (caps != NULL, NULL);
 
   return caps->properties;
+}
+
+/**
+ * gst_caps_chain:
+ * @caps: a capabilty
+ * @...: more capabilities
+ *
+ * chains the given capabilities
+ *
+ * Returns: the new capability
+ */
+GstCaps*
+gst_caps_chain (GstCaps *caps, ...)
+{
+  GstCaps *orig = caps;
+  va_list var_args;
+
+  va_start (var_args, caps);
+
+  while (caps) {
+    GstCaps *toadd;
+    
+    toadd = va_arg (var_args, GstCaps*);
+    gst_caps_append (caps, toadd);
+    
+    caps = toadd;
+  }
+  va_end (var_args);
+  
+  return orig;
 }
 
 /**

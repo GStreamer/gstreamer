@@ -60,6 +60,8 @@ extern "C" {
 #define GST_BUFFER_OFFSET(buf)		(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_MAXSIZE(buf)		(GST_BUFFER(buf)->maxsize)
 #define GST_BUFFER_TIMESTAMP(buf)	(GST_BUFFER(buf)->timestamp)
+#define GST_BUFFER_BUFFERPOOL(buf)	(GST_BUFFER(buf)->pool)
+#define GST_BUFFER_POOL_PRIVATE(buf)	(GST_BUFFER(buf)->pool_private)
 
 
 #define GST_BUFFER_LOCK(buf)	(g_mutex_lock(GST_BUFFER(buf)->lock))
@@ -118,6 +120,7 @@ struct _GstBuffer {
 
   /* this is a pointer to the buffer pool (if any) */
   GstBufferPool *pool;
+  gpointer pool_private;
 };
 
 /* initialisation */
