@@ -21,10 +21,11 @@
 #include <sys/time.h>
 #include "v4l2src_calls.h"
 
-
+/* elementfactory details */
 static GstElementDetails gst_v4l2src_details = {
 	"Video (video4linux2) Source",
 	"Source/Video",
+	"LGPL",
 	"Reads frames (compressed or uncompressed) from a video4linux2 device",
 	VERSION,
 	"Ronald Bultje <rbultje@ronald.bitfreak.net>",
@@ -63,6 +64,8 @@ static gboolean			gst_v4l2src_srcconvert		(GstPad          *pad,
 								 gint64          *dest_value);
 static GstPadConnectReturn	gst_v4l2src_srcconnect		(GstPad          *pad,
 								 GstCaps         *caps);
+static GstCaps *		gst_v4l2src_getcaps		(GstPad          *pad,
+								 GstCaps         *caps);
 static GstBuffer *		gst_v4l2src_get			(GstPad          *pad);
 
 /* get/set params */
@@ -82,9 +85,6 @@ static GstElementStateReturn	gst_v4l2src_change_state	(GstElement      *element)
 static GstBuffer *		gst_v4l2src_buffer_new		(GstBufferPool   *pool,
 								 guint64         offset,
 								 guint           size,
-								 gpointer        user_data);
-static GstBuffer *		gst_v4l2src_buffer_copy		(GstBufferPool   *pool,
-								 const GstBuffer *srcbuf,
 								 gpointer        user_data);
 static void			gst_v4l2src_buffer_free		(GstBufferPool   *pool,
 								 GstBuffer       *buf,
@@ -176,10 +176,11 @@ gst_v4l2src_init (GstV4l2Src *v4l2src)
 	gst_pad_set_get_function(v4l2src->srcpad, gst_v4l2src_get);
 	gst_pad_set_connect_function(v4l2src->srcpad, gst_v4l2src_srcconnect);
 	gst_pad_set_convert_function (v4l2src->srcpad, gst_v4l2src_srcconvert);
+	gst_pad_set_getcaps_function (v4l2src->srcpad, gst_v4l2src_getcaps);
 
 	v4l2src->bufferpool = gst_buffer_pool_new(NULL, NULL,
 					gst_v4l2src_buffer_new,
-					gst_v4l2src_buffer_copy,
+					NULL,
 					gst_v4l2src_buffer_free,
 					v4l2src);
 
@@ -562,33 +563,15 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 
 	/* clean up if we still haven't cleaned up our previous
 	 * capture session */
-	if (GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src)))
-	{
+	if (GST_V4L2_IS_ACTIVE(v4l2element)) {
 		if (!gst_v4l2src_capture_deinit(v4l2src))
 			return GST_PAD_CONNECT_REFUSED;
-	}
-	else if (!GST_V4L2_IS_OPEN(GST_V4L2ELEMENT(v4l2src)))
-	{
+	} else if (!GST_V4L2_IS_OPEN(v4l2element)) {
 		return GST_PAD_CONNECT_DELAYED;
 	}
 
 	/* build our own capslist */
-	if (v4l2src->palette) {
-		struct v4l2_fmtdesc *format = g_list_nth_data(v4l2element->formats, v4l2src->palette);
-		owncapslist = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
-						v4l2src->width, v4l2src->height,
-						format->flags & V4L2_FMT_FLAG_COMPRESSED);
-	} else {
-		gint i;
-		owncapslist = NULL;
-		for (i=0;i<g_list_length(v4l2element->formats);i++) {
-			struct v4l2_fmtdesc *format = g_list_nth_data(v4l2element->formats, i);
-			caps = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
-							v4l2src->width, v4l2src->height,
-							format->flags & V4L2_FMT_FLAG_COMPRESSED);
-			owncapslist = gst_caps_append(owncapslist, caps);
-		}
-	}
+	owncapslist = gst_v4l2src_getcaps(pad, NULL);
 
 	/* and now, get the caps that we have in common */
 	if (!(caps = gst_v4l2src_caps_intersect(owncapslist, vscapslist)))
@@ -618,13 +601,10 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 					for (;lastcaps != NULL; lastcaps = lastcaps->next) {
 						GstPadConnectReturn ret_val;
 						onecaps = gst_caps_copy_1(lastcaps);
-						if ((ret_val = gst_pad_try_set_caps(v4l2src->srcpad, onecaps)) > 0)
-						{
+						if ((ret_val = gst_pad_try_set_caps(v4l2src->srcpad, onecaps)) > 0) {
 							if (gst_v4l2src_capture_init(v4l2src))
 								return GST_PAD_CONNECT_DONE;
-						}
-						else if (ret_val == GST_PAD_CONNECT_DELAYED)
-						{
+						} else if (ret_val == GST_PAD_CONNECT_DELAYED) {
 							return GST_PAD_CONNECT_DELAYED;
 						}
 					}
@@ -634,6 +614,40 @@ gst_v4l2src_srcconnect (GstPad  *pad,
 	}
 
 	return GST_PAD_CONNECT_REFUSED;
+}
+
+
+static GstCaps *
+gst_v4l2src_getcaps (GstPad  *pad,
+                     GstCaps *caps)
+{
+	GstV4l2Src *v4l2src = GST_V4L2SRC(gst_pad_get_parent (pad));
+	GstV4l2Element *v4l2element = GST_V4L2ELEMENT(v4l2src);
+	GstCaps *owncapslist;
+
+	if (!GST_V4L2_IS_OPEN(v4l2element)) {
+		return NULL;
+	}
+
+	/* build our own capslist */
+	if (v4l2src->palette) {
+		struct v4l2_fmtdesc *format = g_list_nth_data(v4l2element->formats, v4l2src->palette);
+		owncapslist = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
+						v4l2src->width, v4l2src->height,
+						format->flags & V4L2_FMT_FLAG_COMPRESSED);
+	} else {
+		gint i;
+		owncapslist = NULL;
+		for (i=0;i<g_list_length(v4l2element->formats);i++) {
+			struct v4l2_fmtdesc *format = g_list_nth_data(v4l2element->formats, i);
+			caps = gst_v4l2src_v4l2fourcc_to_caps(format->pixelformat,
+							v4l2src->width, v4l2src->height,
+							format->flags & V4L2_FMT_FLAG_COMPRESSED);
+			owncapslist = gst_caps_append(owncapslist, caps);
+		}
+	}
+
+	return owncapslist;
 }
 
 
@@ -660,7 +674,6 @@ gst_v4l2src_get (GstPad *pad)
 		return NULL;
 	GST_BUFFER_DATA(buf) = GST_V4L2ELEMENT(v4l2src)->buffer[num];
 	GST_BUFFER_SIZE(buf) = v4l2src->bufsettings.bytesused;
-	GST_BUFFER_MAXSIZE(buf) = v4l2src->bufsettings.length;
 	if (!v4l2src->first_timestamp)
 		v4l2src->first_timestamp = v4l2src->bufsettings.timestamp;
 	GST_BUFFER_TIMESTAMP(buf) = v4l2src->bufsettings.length - v4l2src->first_timestamp;
@@ -834,30 +847,19 @@ gst_v4l2src_buffer_new (GstBufferPool *pool,
                         gpointer       user_data)
 {
 	GstBuffer *buffer;
+	GstV4l2Src *v4l2src = GST_V4L2SRC(user_data);
+
+	if (!GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src)))
+		return NULL;
 
 	buffer = gst_buffer_new();
-	if (!buffer) return NULL;
-	/* TODO: add interlacing info to buffer as metadata (height>288 or 240 = topfieldfirst, else noninterlaced) */
+	if (!buffer)
+		return NULL;
 
-	return buffer;
-}
-
-
-static GstBuffer*
-gst_v4l2src_buffer_copy (GstBufferPool   *pool,
-                         const GstBuffer *srcbuf,
-                         gpointer         user_data)
-{
-	GstBuffer *buffer;
-
-	buffer = gst_buffer_new();
-	if (!buffer) return NULL;
-	GST_BUFFER_DATA(buffer) = g_malloc(GST_BUFFER_SIZE(srcbuf));
-	if (!GST_BUFFER_DATA(buffer)) return NULL;
-	GST_BUFFER_MAXSIZE(buffer) = GST_BUFFER_SIZE(srcbuf);
-	GST_BUFFER_SIZE(buffer) = GST_BUFFER_SIZE(srcbuf);
-	memcpy(GST_BUFFER_DATA(buffer), GST_BUFFER_DATA(srcbuf), GST_BUFFER_SIZE(srcbuf));
-	GST_BUFFER_TIMESTAMP(buffer) = GST_BUFFER_TIMESTAMP(srcbuf);
+	/* TODO: add interlacing info to buffer as metadata
+	 * (height>288 or 240 = topfieldfirst, else noninterlaced) */
+	GST_BUFFER_MAXSIZE(buffer) = v4l2src->bufsettings.length;
+	GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_DONTFREE);
 
 	return buffer;
 }
@@ -871,14 +873,21 @@ gst_v4l2src_buffer_free (GstBufferPool *pool,
 	GstV4l2Src *v4l2src = GST_V4L2SRC(user_data);
 	int n;
 
+	if (gst_element_get_state(GST_ELEMENT(v4l2src)) != GST_STATE_PLAYING)
+		return; /* we've already cleaned up ourselves */
+
 	for (n=0;n<v4l2src->breq.count;n++)
 		if (GST_BUFFER_DATA(buf) == GST_V4L2ELEMENT(v4l2src)->buffer[n]) {
 			gst_v4l2src_requeue_frame(v4l2src, n);
-			return;
+			break;
 		}
 
-	gst_element_error(GST_ELEMENT(v4l2src),
-		"Couldn\'t find the buffer");
+	if (n == v4l2src->breq.count)
+		gst_element_error(GST_ELEMENT(v4l2src),
+			"Couldn\'t find the buffer");
+
+	/* free the buffer itself */
+	gst_buffer_default_free(buf);
 }
 
 
