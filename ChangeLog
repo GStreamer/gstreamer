@@ -1,3 +1,7 @@
+2004-01-17  Christian Schaller <Uraeus@gnome.org>
+
+	* tools/gst-launch-ext.in - update for new plugins
+
 2004-01-16  David Schleef  <ds@schleef.org>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_connect): Fix use of
