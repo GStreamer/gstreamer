@@ -64,10 +64,12 @@ HAVE_BROKEN=yes,disabled,
   USE_SMOOTHWAVE="yes"
   USE_VGA="yes"
   USE_XMMS="yes"
+  USE_ARTS="yes"
 ],[
   USE_SMOOTHWAVE="no"
   USE_VGA="no"
   USE_XMMS="no"
+  USE_ARTS="no"
   AC_MSG_NOTICE(not building broken plugins)
 ])
 
