@@ -1236,6 +1236,7 @@ sys/v4l/Makefile
 sys/v4l2/Makefile
 sys/vcd/Makefile
 sys/xvideo/Makefile
+sys/glsink/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
