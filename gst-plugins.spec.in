@@ -308,7 +308,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_GNOME_VFS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
 @USE_GSM_TRUE@%package -n gstreamer-gsm
-@USE_GSM_TRUE@Summary: Gstreamer plugin for GSM lossy audio format
+@USE_GSM_TRUE@Summary: GStreamer plugin for GSM lossy audio format
 @USE_GSM_TRUE@Group: Libraries/Multimedia
 @USE_GSM_TRUE@Requires: gsm >= 1.0.10
 @USE_GSM_TRUE@Requires: gstreamer-plugins >= %{ver}
@@ -322,6 +322,22 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%post -n gstreamer-gsm
 @USE_GSM_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+
+@USE_JPEG_TRUE@%package -n gstreamer-jpeg
+@USE_JPEG_TRUE@Summary: Gstreamer plugin for jpeg images
+@USE_JPEG_TRUE@Group: Libraries/Multimedia
+@USE_JPEG_TRUE@Requires: libjpeg
+@USE_JPEG_TRUE@Requires: gstreamer-plugins >= %{ver}
+@USE_JPEG_TRUE@
+@USE_JPEG_TRUE@%description -n gstreamer-jpeg
+@USE_JPEG_TRUE@Output plugin for GStreamer using libjpeg
+@USE_JPEG_TRUE@
+@USE_JPEG_TRUE@%files -n gstreamer-jpeg
+@USE_JPEG_TRUE@%defattr(-, root, root)
+@USE_JPEG_TRUE@%{prefix}/lib/gst/libgstjpeg*
+@USE_JPEG_TRUE@
+@USE_JPEG_TRUE@%post -n gstreamer-jpeg
+@USE_JPEG_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
 @USE_MJPEGTOOLS_TRUE@%package -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@Summary: Gstreamer mjpegtools
@@ -749,7 +765,6 @@ and so on.
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstadder*
 %{prefix}/lib/gst/libgstalaw*
-%{prefix}/lib/gst/libgstjpeg*
 %{prefix}/lib/gst/libgstintfloat*
 %{prefix}/lib/gst/libgstlevel*
 %{prefix}/lib/gst/libgstmedian*
