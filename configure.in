@@ -503,7 +503,7 @@ docs/libs/Makefile
 docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
 docs/manual/Makefile
-docs/manual/images/Makefile
+docs/fwg/Makefile
 stamp.h
 gstreamer-config
 gstreamer.spec])
