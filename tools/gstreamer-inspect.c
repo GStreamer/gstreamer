@@ -252,7 +252,6 @@ print_element_info (GstElementFactory *factory)
   printf("Element Arguments:\n");
   args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
   for (i=0;i<num_args;i++) {
-    gtk_object_getv(GTK_OBJECT(element), 1, &args[i]);
 
 // FIXME should say whether it's read-only or not
 
@@ -283,7 +282,7 @@ print_element_info (GstElementFactory *factory)
         else if (args[i].type == GTK_TYPE_WIDGET)
           printf("GtkWidget");
         else
-          printf("unknown");
+          printf("unknown %d", args[i].type);
         break;
     }
     printf("\n");
