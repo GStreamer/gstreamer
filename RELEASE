@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.8.1 "Snow Brigade"
+GStreamer: Release notes for GStreamer 0.8.2 "Gigantic"
         
 
 The GStreamer team is happy to announce a new release
@@ -22,33 +22,43 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * New translations in this release: Swedish, Afrikaans, Azerbeaijani
-      * Translations: af, az, fr, nl, sr, sv
-      * New scheduler: entry
-      * Reworked capabilities and negotiation subsystem
-      * Reworked tagging subsystem
-      * Reworked interactivity subsystem (for DVD playback)
-      * Consistent error and debug signaling
-      * Dynamic debug logging
-      * Portability fixes
-      * Binding support fixes
-      * ChangeLog use
-      * Coding style consistency
+      * New translations in this release: Turkish, Ukrainian, GB English
+      * Translations: af, az, en_GB, fr, nl, sr, sv, tr, uk
+      * Fixes for setting elements to NULL to release devices
+      * Windows port
+      * New GStreamer Data Protocol helper library
+      * New GstAdapter, similar to bytestream
+      * Fixes for registry loading plugins with same name
+      * Added no-more-pads signal
+      * Added Fixed List GValue type
+      * Fixes to schedulers
 
 Bugs fixed in this release
     
-      * 136841 : Some code will need to be rewritten to compile against gc...
-      * 136904 : [opt] support loop in multi-loop based group
-      * 137279 : [patch] dispose/finalize functions for gst core elements
-      * 137625 : HAVE_ATOMIC_H is not used
-      * 138705 : Problem testing gstreamer 0.8.0
-      * 139002 : Compilation error
-      * 139109 : Compilation of gst-plugins fails because of errors in header
-      * 139617 : v4l2src ! spider ! ximagesink : crashes
+      * 133897 : Internal GStreamer error: seek problem
+      * 134839 : buffers leaked by filesrc, typefind, spider or fakesink
+      * 137710 : When seeking, the sink's time is reset
+      * 138012 : [opt] simple pipeline crashe
+      * 138836 : docs build but won't install
+      * 140015 : GstValue GTypes should not derive from G_TYPE_BOXED
+      * 140156 : ARM port / type reading patches
+      * 140477 : [debug] crash with *:2 while playing alien.mpg
+      * 140594 : Small memory leak int gst_parse_launch()
+      * 140734 : filesrc should handle named pipes/devices
+      * 140743 : Leak in _gst_parse_escape()
+      * 141083 : gstreamer-0.8.1 compile failure with gcc-3.4: error: PIC ...
+      * 141304 : GST_CAPS and GST_IS_CAPS broken
+      * 141317 : Win32 build with newest Microsoft compilers
+      * 141414 : filesink leaks events
+      * 141416 : leak in entrygthread scheduler
+      * 141417 : Memory leak in gthread-cothreads.h
+      * 142304 : The Win32 makefiles clean too much
+      * 142804 : needed change to allow x86 Solaris compile with Forte
+      * 142957 : xmlregistry failes to compile on osx
 
 Download
 
-You find source releases of gstreamer in the download directory:
+You can find source releases of gstreamer in the download directory:
 http://gstreamer.freedesktop.org/src/gstreamer/
 
 GStreamer Homepage
@@ -79,17 +89,18 @@ GNOME applications including sound-juicer, totem and RhythmBox.
   
 Contributors to this release
     
-      * Andy Wingo
+      * Baris Cicek
       * Benjamin Otte
       * Christian Rose
-      * Colin Walters
+      * Daniel Gazard
       * David Schleef
+      * Gareth Owen
       * Jan Schmidt
       * Johan Dahlin
-      * Martin Soto
-      * Mətin Əmirov
-      * Petri Jooste
+      * Maxim V. Dziumanenko
       * Ronald Bultje
-      * Tim-Philipp Müller
+      * Sebastien Cote
+      * Stephane Loeuillet
       * Thomas Vander Stichele
+      * Wim Taymans
  
