@@ -17,24 +17,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_FFMPEGALL_CODECMAP_H__
-#define __GST_FFMPEGALL_CODECMAP_H__
+#ifndef __GST_FFMPEG_CODECMAP_H__
+#define __GST_FFMPEG_CODECMAP_H__
 
-#include "config.h"
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <ffmpeg/avcodec.h>
 #endif
-#include <string.h>
 #include <gst/gst.h>
 
+/* _codecid_to_caps () gets the GstCaps that belongs to
+ * a certain CodecID for a pad with compressed data.
+ */
+
 GstCaps *
-gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
-                            AVCodecContext *context);
+gst_ffmpeg_codecid_to_caps   (enum CodecID    codec_id,
+                              AVCodecContext *context);
 
-enum CodecID
-gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
-                            AVCodecContext *context);
+/* _codectype_to_caps () gets the GstCaps that belongs to
+ * a certain CodecType for a pad with uncompressed data.
+ */
 
-#endif /* __GST_FFMPEGALL_CODECMAP_H__ */
+GstCaps *
+gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
+                              AVCodecContext *context);
+
+#endif /* __GST_FFMPEG_CODECMAP_H__ */

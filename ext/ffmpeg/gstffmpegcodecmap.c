@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * This file:
+ * Copyright (c) 2002-2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,283 +25,513 @@
 #else
 #include <ffmpeg/avcodec.h>
 #endif
-
+#include <string.h>
 #include <gst/gst.h>
 
+#include "gstffmpegcodecmap.h"
+
+/* this macro makes a caps width fixed or unfixed width/height
+ * properties depending on whether we've got a context.
+ *
+ * See below for why we use this.
+ */
+
+#define GST_FF_VID_CAPS_NEW(name, mimetype, props...)		\
+	(context != NULL) ?					\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT (context->width),	\
+		      "height", GST_PROPS_INT (context->height),\
+		      ##props)					\
+	:							\
+	GST_CAPS_NEW (name,					\
+		      mimetype,					\
+		      "width",  GST_PROPS_INT_RANGE (16, 4096),	\
+		      "height", GST_PROPS_INT_RANGE (16, 4096),	\
+		      ##props)
+
+/* same for audio - now with channels/sample rate
+ */
+
+#define GST_FF_AUD_CAPS_NEW(name, mimetype, props...)			\
+	(context != NULL) ?						\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT (context->sample_rate),	\
+		      "channels", GST_PROPS_INT (context->channels),	\
+		      ##props)						\
+	:								\
+	GST_CAPS_NEW (name,						\
+		      mimetype,						\
+		      "rate",     GST_PROPS_INT_RANGE (8000, 96000),	\
+		      "channels", GST_PROPS_INT_RANGE (1, 2),		\
+		      ##props)
+
+/* Convert a FFMPEG codec ID and optional AVCodecContext
+ * to a GstCaps. If the context is ommitted, no fixed values
+ * for video/audio size will be included in the GstCaps
+ *
+ * CodecID is primarily meant for compressed data GstCaps!
+ */
+
 GstCaps *
-gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
+gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
+                            AVCodecContext *context)
 {
+  GstCaps *caps = NULL;
+
   switch (codec_id) {
-    case CODEC_ID_NONE:
-      return GST_CAPS_NEW ("ffmpeg_none",
-		           "unknown/unknown",
-			   NULL);
-      break;
     case CODEC_ID_MPEG1VIDEO:
-      return GST_CAPS_NEW ("ffmpeg_mpeg1video",
-		           "video/mpeg",
-			     "mpegversion",  GST_PROPS_INT (1),
-			     "systemstream", GST_PROPS_BOOLEAN (FALSE)
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_mpeg1video",
+                                  "video/mpeg",
+                                    "mpegversion",  GST_PROPS_INT (1),
+                                    "systemstream", GST_PROPS_BOOLEAN (FALSE)
+                                 );
+      break;
+
+    case CODEC_ID_H263P:
+    case CODEC_ID_H263I:
+    case CODEC_ID_H263:
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_h263",
+                                  "video/h263"
+                                 );
+      break;
+
+    case CODEC_ID_RV10:
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_rv10",
+                                  "video/realvideo"
+                                 );
+      break;
+
+    case CODEC_ID_MP2:
+      caps = GST_CAPS_NEW ("ffmpeg_mp2",
+                           "audio/x-mp3",
+                             "layer", GST_PROPS_INT (2)
+                          );
+      break;
+
+    case CODEC_ID_MP3LAME:
+      caps = GST_CAPS_NEW ("ffmpeg_mp3",
+                           "audio/x-mp3",
+                             "layer", GST_PROPS_INT (3)
+                          );
+      break;
+
+    case CODEC_ID_VORBIS:
+      caps = GST_CAPS_NEW ("ffmpeg_vorbis",
+		           "application/x-ogg",
+			   NULL
 			  );
       break;
-    case CODEC_ID_H263:
-      return GST_CAPS_NEW ("ffmpeg_h263",
-		           "video/H263",
-			   NULL);
-      break;
-    case CODEC_ID_RV10:
-      return GST_CAPS_NEW ("ffmpeg_rv10",
-		           "video/x-rv10",
-			   NULL);
-      break;
-    case CODEC_ID_MP2:
-      return GST_CAPS_NEW ("ffmpeg_mp2",
-		           "audio/x-mp3",
-			   NULL);
-      break;
-    case CODEC_ID_MP3LAME:
-      return GST_CAPS_NEW ("ffmpeg_mp3",
-		           "audio/x-mp3",
-			   NULL);
-      break;
-    case CODEC_ID_VORBIS:
-      return GST_CAPS_NEW ("ffmpeg_vorbis",
-		           "application/x-ogg",
-			   NULL);
-      break;
+      
     case CODEC_ID_AC3:
-      return GST_CAPS_NEW ("ffmpeg_ac3",
+      caps = GST_CAPS_NEW ("ffmpeg_ac3",
 		           "audio/ac3",
-			   NULL);
+			   NULL
+			  );
       break;
+
     case CODEC_ID_MJPEG:
-      return GST_CAPS_NEW ("ffmpeg_mjpeg",
-		           "video/x-mjpeg",
-			   NULL);
-      break;
     case CODEC_ID_MJPEGB:
-      return GST_CAPS_NEW ("ffmpeg_mjpeg",
-		           "video/x-mjpegb",
-			   NULL);
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_mjpeg",
+                                  "video/jpeg"
+                                 );
       break;
+
     case CODEC_ID_MPEG4:
-      if (context) {
-        return GST_CAPS_NEW ("ffmpeg_mpeg4",
-		             "video/avi",
-			       "format",  GST_PROPS_STRING ("strf_vids"),
-			        "compression",  GST_PROPS_FOURCC (context->codec_tag),
-			        "width",   GST_PROPS_INT (context->width),
-			        "height",  GST_PROPS_INT (context->height)
-			    );
-      }
-      else {
-        return GST_CAPS_NEW ("ffmpeg_mpeg4",
-		             "video/avi",
-			       "format",  GST_PROPS_STRING ("strf_vids"),
-			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("DIV3")),
-			        "width",   GST_PROPS_INT_RANGE (0, 4096),
-			        "height",  GST_PROPS_INT_RANGE (0, 4096)
-			    );
-      }
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_mpeg4",
+                                  "video/mpeg",
+                                    "mpegversion",  GST_PROPS_INT (4),
+                                    "systemstream", GST_PROPS_BOOLEAN (FALSE)
+                                 );
+      caps = gst_caps_append(caps,
+             GST_FF_VID_CAPS_NEW ("ffmpeg_divx",
+                                  "video/divx",
+                                    "divxversion",  GST_PROPS_INT (5)
+                                 ));
+      caps = gst_caps_append(caps,
+             GST_FF_VID_CAPS_NEW ("ffmpeg_xvid",
+                                  "video/xvid"
+                                 ));
       break;
-    case CODEC_ID_RAWVIDEO:
-      return GST_CAPS_NEW ("ffmpeg_rawvideo",
-		           "video/raw",
-			   NULL);
-      break;
+
     case CODEC_ID_MSMPEG4V1:
-      if (context) {
-        return GST_CAPS_NEW ("ffmpeg_msmpeg4v1",
-		             "video/avi",
-			       "format",  	GST_PROPS_STRING ("strf_vids"),
-			        "compression", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("MPG4")),
-			        "width",   	GST_PROPS_INT (context->width),
-			        "height",  	GST_PROPS_INT (context->height)
-			    );
-      }
-      else {
-        return GST_CAPS_NEW ("ffmpeg_msmpeg4v1",
-		             "video/avi",
-			       "format",  	GST_PROPS_STRING ("strf_vids"),
-			        "compression", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("MPG4")),
-			        "width",   	GST_PROPS_INT_RANGE (0, 4096),
-			        "height",  	GST_PROPS_INT_RANGE (0, 4096)
-			    );
-      }
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_msmpeg4v1",
+                                  "video/x-msmpeg",
+                                    "mpegversion", GST_PROPS_INT (41)
+                                 );
       break;
+
     case CODEC_ID_MSMPEG4V2:
-      if (context) {
-        return GST_CAPS_NEW ("ffmpeg_msmpeg4v2",
-		             "video/avi",
-			       "format",  GST_PROPS_STRING ("strf_vids"),
-			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("MP42")),
-			        "width",   GST_PROPS_INT (context->width),
-			        "height",  GST_PROPS_INT (context->height)
-			    );
-      }
-      else {
-        return GST_CAPS_NEW ("ffmpeg_msmpeg4v2",
-		             "video/avi",
-			       "format",  GST_PROPS_STRING ("strf_vids"),
-			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("MP42")),
-			        "width",   GST_PROPS_INT_RANGE (0, 4096),
-			        "height",  GST_PROPS_INT_RANGE (0, 4096)
-			    );
-      }
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_msmpeg4v2",
+                                  "video/x-msmpeg",
+                                    "mpegversion", GST_PROPS_INT (42)
+                                 );
       break;
+
     case CODEC_ID_MSMPEG4V3:
-      if (context) {
-        return GST_CAPS_NEW ("ffmpeg_msmpeg4v3",
-		             "video/avi",
-			       "format",  GST_PROPS_STRING ("strf_vids"),
-			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("DIV3")),
-			        "width",   GST_PROPS_INT (context->width),
-			        "height",  GST_PROPS_INT (context->height)
-			    );
-      }
-      else {
-        return GST_CAPS_NEW ("ffmpeg_msmpeg4v3",
-		             "video/avi",
-			       "format",  GST_PROPS_STRING ("strf_vids"),
-			        "compression",  GST_PROPS_FOURCC (GST_STR_FOURCC ("DIV3")),
-			        "width",   GST_PROPS_INT_RANGE (0, 4096),
-			        "height",  GST_PROPS_INT_RANGE (0, 4096)
-			    );
-      }
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_msmpeg4v3",
+                                  "video/x-msmpeg",
+                                    "mpegversion", GST_PROPS_INT (43)
+                                 );
       break;
+
     case CODEC_ID_WMV1:
-      if (context) {
-        return GST_CAPS_NEW ("ffmpeg_wmv1",
-		             "video/avi",
-			       "format",  	GST_PROPS_STRING ("strf_vids"),
-			        "compression", 	GST_PROPS_FOURCC (GST_STR_FOURCC ("WMV1")),
-			        "width",   	GST_PROPS_INT (context->width),
-			        "height",  	GST_PROPS_INT (context->height)
-			    );
-      }
-      else {
-        return GST_CAPS_NEW ("ffmpeg_wmv1",
-		             "video/x-wmv1",
-			     NULL
-			    );
-      }
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_wmv1",
+                                  "video/wmv",
+                                    "wmvversion", GST_PROPS_INT (1)
+                                 );
       break;
+
     case CODEC_ID_WMV2:
-      return GST_CAPS_NEW ("ffmpeg_wmv2",
-		           "unknown/unknown",
-			   NULL);
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_wmv2",
+                                  "video/wmv",
+                                    "wmvversion", GST_PROPS_INT (2)
+                                 );
       break;
-    case CODEC_ID_H263P:
-      return GST_CAPS_NEW ("ffmpeg_h263p",
-		           "unknown/unknown",
-			   NULL);
-      break;
-    case CODEC_ID_H263I:
-      return GST_CAPS_NEW ("ffmpeg_h263i",
-		           "unknown/unknown",
-			   NULL);
-      break;
+
     case CODEC_ID_SVQ1:
-      return GST_CAPS_NEW ("ffmpeg_svq1",
-		           "unknown/unknown",
-			   NULL);
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_svq1",
+                                  "video/x-svq",
+                                    "svqversion", GST_PROPS_INT (1)
+                                 );
       break;
+
+    case CODEC_ID_SVQ3:
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_svq3",
+                                  "video/x-svq",
+                                    "svqversion", GST_PROPS_INT (3)
+                                 );
+      break;
+
+    case CODEC_ID_DVAUDIO: /* ??? */
     case CODEC_ID_DVVIDEO:
-      return GST_CAPS_NEW ("ffmpeg_dvvideo",
-		           "unknown/unknown",
-			   NULL);
+      if (!context) {
+        caps = GST_FF_VID_CAPS_NEW ("ffmpeg_dvvideo",
+                                    "video/dv",
+                                      "format",  GST_PROPS_LIST (
+                                                   GST_PROPS_STRING ("NTSC"),
+                                                   GST_PROPS_STRING ("PAL")
+                                                 )
+                                   );
+      } else {
+        GstPropsEntry *normentry;
+
+	if (context->height == 576) {
+	  normentry = gst_props_entry_new("format", GST_PROPS_STRING ("PAL"));
+	} else {
+	  normentry = gst_props_entry_new("format", GST_PROPS_STRING ("NTSC"));
+	}
+
+        caps = GST_FF_VID_CAPS_NEW ("ffmpeg_dvvideo",
+                                    "video/dv",
+                                   );
+	gst_props_add_entry(caps->properties, normentry);
+      }
       break;
-    case CODEC_ID_DVAUDIO: 
-      return GST_CAPS_NEW ("ffmpeg_dvaudio",
-		           "unknown/unknown",
-			   NULL);
-      break;
+
     case CODEC_ID_WMAV1:
-      return GST_CAPS_NEW ("ffmpeg_wmav1",
-		           "unknown/unknown",
-			   NULL);
+      caps = GST_CAPS_NEW ("ffmpeg_wma1",
+                           "audio/wma",
+                             "wmaversion", GST_PROPS_INT (1)
+                          );
       break;
+
     case CODEC_ID_WMAV2:
-      return GST_CAPS_NEW ("ffmpeg_wmav2",
-		           "unknown/unknown",
-			   NULL);
+      caps = GST_CAPS_NEW ("ffmpeg_wma2",
+                           "audio/wma",
+                             "wmaversion", GST_PROPS_INT (2)
+                          );
       break;
+
     case CODEC_ID_MACE3:
-      return GST_CAPS_NEW ("ffmpeg_mace3",
-		           "unknown/unknown",
-			   NULL);
+      /* .. */
       break;
+
     case CODEC_ID_MACE6:
-      return GST_CAPS_NEW ("ffmpeg_mace6",
-		           "unknown/unknown",
-			   NULL);
+      /* .. */
       break;
+
     case CODEC_ID_HUFFYUV:
-      return GST_CAPS_NEW ("ffmpeg_huffyuv",
-		           "video/x-huffyuv",
-			   NULL);
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_huffyuv",
+                                  "video/huffyuv"
+                                 );
       break;
-    /* various pcm "codecs" */
-    case CODEC_ID_PCM_S16LE:
-      return GST_CAPS_NEW ("ffmpeg_s16le",
-		           "unknown/unknown",
-			   NULL);
+
+    case CODEC_ID_CYUV:
+      /* .. */
       break;
-    case CODEC_ID_PCM_S16BE:
-      return GST_CAPS_NEW ("ffmpeg_s16be",
-		           "unknown/unknown",
-			   NULL);
+
+    case CODEC_ID_H264:
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_h264",
+                                  "video/h264"
+                                 );
       break;
-    case CODEC_ID_PCM_U16LE:
-      return GST_CAPS_NEW ("ffmpeg_u16le",
-		           "unknown/unknown",
-			   NULL);
+
+    case CODEC_ID_INDEO3:
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_indeo3",
+                                  "video/indeo3"
+                                 );
       break;
-    case CODEC_ID_PCM_U16BE:
-      return GST_CAPS_NEW ("ffmpeg_u16be",
-		           "unknown/unknown",
-			   NULL);
+
+    case CODEC_ID_VP3:
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_vp3",
+                                  "video/vp3"
+                                 );
+      caps = gst_caps_append(caps,
+             GST_FF_VID_CAPS_NEW ("ffmpeg_theora",
+                                  "video/x-theora"
+                                 ));
       break;
-    case CODEC_ID_PCM_S8:
-      return GST_CAPS_NEW ("ffmpeg_s8",
-		           "unknown/unknown",
-			   NULL);
+
+    case CODEC_ID_AAC:
+      /* .. */
       break;
-    case CODEC_ID_PCM_U8:
-      return GST_CAPS_NEW ("ffmpeg_u8",
-		           "unknown/unknown",
-			   NULL);
+
+    case CODEC_ID_MPEG4AAC:
+      caps = GST_FF_VID_CAPS_NEW ("ffmpeg_mpeg4aac",
+                                  "video/mpeg",
+                                    "systemstream", GST_PROPS_BOOLEAN (FALSE),
+                                    "mpegversion",  GST_PROPS_INT (4)
+                                 );
       break;
-    case CODEC_ID_PCM_MULAW:
-      return GST_CAPS_NEW ("ffmpeg_mulaw",
-		           "unknown/unknown",
-			   NULL);
+
+    case CODEC_ID_ASV1:
+      /* .. */
       break;
-    case CODEC_ID_PCM_ALAW:
-      return GST_CAPS_NEW ("ffmpeg_alaw",
-		           "unknown/unknown",
-			   NULL);
-      break;
-    /* various adpcm codecs */
+
     case CODEC_ID_ADPCM_IMA_QT:
-      return GST_CAPS_NEW ("ffmpeg_adpcm_ima_qt",
-		           "unknown/unknown",
-			   NULL);
+      /* .. */
       break;
+
     case CODEC_ID_ADPCM_IMA_WAV:
-      return GST_CAPS_NEW ("ffmpeg_adpcm_ima_wav",
-		           "unknown/unknown",
-			   NULL);
+      /* .. */
       break;
+
     case CODEC_ID_ADPCM_MS:
-      return GST_CAPS_NEW ("ffmpeg_adpcm_ms",
-		           "unknown/unknown",
-			   NULL);
+      /* .. */
       break;
+
+    case CODEC_ID_AMR_NB:
+      /* .. */
+      break;
+
     default:
-      g_warning ("no caps found for codec id %d\n", codec_id);
+      /* .. */
       break;
   }
 
-  return NULL;
+  if (caps != NULL) {
+    char *str = g_strdup_printf("The caps that belongs to codec_id=%d",
+				codec_id);
+    gst_caps_debug(caps, str);
+    g_free(str);
+  }
+
+  return caps;
+}
+
+/* Convert a FFMPEG Pixel Format and optional AVCodecContext
+ * to a GstCaps. If the context is ommitted, no fixed values
+ * for video/audio size will be included in the GstCaps
+ *
+ * See below for usefullness
+ */
+
+static GstCaps *
+gst_ffmpeg_pixfmt_to_caps (enum PixelFormat  pix_fmt,
+                           AVCodecContext   *context)
+{
+  GstCaps *caps = NULL;
+
+  int bpp = 0, depth = 0, endianness = 0;
+  gulong g_mask = 0, r_mask = 0, b_mask = 0;
+  guint32 fmt = 0;
+
+  switch (pix_fmt) {
+    case PIX_FMT_YUV420P:
+      fmt = GST_MAKE_FOURCC ('I','4','2','0');
+      break;
+    case PIX_FMT_YUV422:
+      fmt = GST_MAKE_FOURCC ('Y','U','Y','2');
+      break;
+    case PIX_FMT_RGB24:
+      bpp = depth = 24;
+      endianness = G_BIG_ENDIAN;
+      r_mask = 0xff0000; g_mask = 0x00ff00; b_mask = 0x0000ff;
+      break;
+    case PIX_FMT_BGR24:
+      bpp = depth = 24;
+      endianness = G_LITTLE_ENDIAN;
+      r_mask = 0xff0000; g_mask = 0x00ff00; b_mask = 0x0000ff;
+      break;
+    case PIX_FMT_YUV422P:
+      /* .. */
+      break;
+    case PIX_FMT_YUV444P:
+      /* .. */
+      break;
+    case PIX_FMT_RGBA32:
+      bpp = depth = 32;
+      endianness = G_BYTE_ORDER;
+      r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
+      break;
+    case PIX_FMT_YUV410P:
+      /* .. */
+      break;
+    case PIX_FMT_YUV411P:
+      fmt = GST_MAKE_FOURCC ('Y','4','1','P');
+      break;
+    case PIX_FMT_RGB565:
+      bpp = depth = 16;
+      endianness = G_BYTE_ORDER;
+      r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
+      break;
+    case PIX_FMT_RGB555:
+      bpp = 16; depth = 15;
+      endianness = G_BYTE_ORDER;
+      r_mask = 0x7c00; g_mask = 0x03e0; b_mask = 0x001f;
+      break;
+    default:
+      /* give up ... */
+      break;
+  }
+
+  if (bpp != 0) {
+    fmt = GST_MAKE_FOURCC ('R','G','B',' ');
+    caps = GST_FF_VID_CAPS_NEW ("ffmpeg_rawvideo",
+                                "video/raw",
+                                  "format",     GST_PROPS_FOURCC (fmt),
+                                  "bpp",        GST_PROPS_INT (bpp),
+                                  "depth",      GST_PROPS_INT (depth),
+                                  "red_mask",   GST_PROPS_INT (r_mask),
+                                  "green_mask", GST_PROPS_INT (g_mask),
+                                  "blue_mask",  GST_PROPS_INT (b_mask),
+                                  "endianness", GST_PROPS_INT (endianness)
+                                );
+  } else if (fmt) {
+    caps = GST_FF_VID_CAPS_NEW ("ffmpeg_rawvideo",
+                                "video/raw",
+                                  "format",     GST_PROPS_FOURCC (fmt)
+                               );
+  }
+
+  if (caps != NULL) {
+    char *str = g_strdup_printf("The caps that belongs to pix_fmt=%d",
+				pix_fmt);
+    gst_caps_debug(caps, str);
+    g_free(str);
+  }
+
+  return caps;
+}
+
+/* Convert a FFMPEG Sample Format and optional AVCodecContext
+ * to a GstCaps. If the context is ommitted, no fixed values
+ * for video/audio size will be included in the GstCaps
+ *
+ * See below for usefullness
+ */
+
+static GstCaps *
+gst_ffmpeg_smpfmt_to_caps (enum SampleFormat  sample_fmt,
+                           AVCodecContext    *context)
+{
+  GstCaps *caps = NULL;
+
+  int bpp = 0;
+  gboolean signedness = FALSE;
+
+  switch (sample_fmt) {
+    case SAMPLE_FMT_S16:
+      signedness = TRUE;
+      bpp = 16;
+      break;
+
+    default:
+      /* .. */
+      break;
+  }
+
+  if (bpp) {
+    caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_rawaudio",
+                                "audio/raw",
+                                  "signed",     GST_PROPS_BOOLEAN (signedness),
+                                  "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+                                  "width",      GST_PROPS_INT (bpp),
+                                  "depth",      GST_PROPS_INT (bpp),
+                                  "law",        GST_PROPS_INT (0),
+                                  "format",     GST_PROPS_STRING ("int")
+                                );
+  }
+
+  if (caps != NULL) {
+    char *str = g_strdup_printf("The caps that belongs to sample_fmt=%d",
+				sample_fmt);
+    gst_caps_debug(caps, str);
+    g_free(str);
+  }
+
+  return caps;
+}
+
+/* Convert a FFMPEG codec Type and optional AVCodecContext
+ * to a GstCaps. If the context is ommitted, no fixed values
+ * for video/audio size will be included in the GstCaps
+ *
+ * CodecType is primarily meant for uncompressed data GstCaps!
+ */
+
+GstCaps *
+gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
+                              AVCodecContext *context)
+{
+  GstCaps *caps = NULL;
+
+  switch (codec_type) {
+    case CODEC_TYPE_VIDEO:
+      if (context) {
+        caps = gst_ffmpeg_pixfmt_to_caps (context->pix_fmt, context);
+      } else {
+        GstCaps *temp;
+        enum PixelFormat i;
+
+        for (i = 0; i < PIX_FMT_NB; i++) {
+          temp = gst_ffmpeg_pixfmt_to_caps (i, NULL);
+          if (temp != NULL) {
+            caps = gst_caps_append (caps, temp);
+          }
+        }
+      }
+      break;
+
+    case CODEC_TYPE_AUDIO:
+      if (context) {
+        caps = gst_ffmpeg_smpfmt_to_caps (context->sample_fmt, context);
+      } else {
+        GstCaps *temp;
+        enum SampleFormat i;
+
+        for (i = 0; i <= SAMPLE_FMT_S16; i++) {
+          temp = gst_ffmpeg_smpfmt_to_caps (i, NULL);
+          if (temp != NULL) {
+            caps = gst_caps_append (caps, temp);
+          }
+        }
+      }
+      break;
+
+    default:
+      /* .. */
+      break;
+  }
+
+  if (caps != NULL) {
+    char *str = g_strdup_printf("The caps that belongs to codec_type=%d",
+				codec_type);
+    gst_caps_debug(caps, str);
+    g_free(str);
+  }
+
+  return caps;
 }

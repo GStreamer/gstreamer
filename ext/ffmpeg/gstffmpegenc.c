@@ -17,9 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>
-#include <assert.h>
 #include "config.h"
+
+#include <assert.h>
+#include <string.h>
+
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
@@ -27,6 +29,8 @@
 #endif
 
 #include <gst/gst.h>
+
+#include "gstffmpegcodecmap.h"
 
 typedef struct _GstFFMpegEnc GstFFMpegEnc;
 
@@ -86,6 +90,8 @@ enum {
   ARG_ME_METHOD,
   /* FILL ME */
 };
+
+int motion_estimation_method;
 
 /* This factory is much simpler, and defines the source pad. */
 GST_PAD_TEMPLATE_FACTORY (gst_ffmpegenc_src_factory,

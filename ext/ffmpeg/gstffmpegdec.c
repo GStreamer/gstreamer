@@ -17,9 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+
 #include <assert.h>
 #include <string.h>
-#include "config.h"
+
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
@@ -28,9 +30,8 @@
 
 #include <gst/gst.h>
 
-extern GstCaps*	gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *ctx, int id);
+#include "gstffmpegcodecmap.h"
 
-	
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
 struct _GstFFMpegDec {
@@ -42,6 +43,7 @@ struct _GstFFMpegDec {
 
   AVCodecContext *context;
   AVFrame *picture;
+  gboolean opened;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -50,12 +52,12 @@ struct _GstFFMpegDecClass {
   GstElementClass parent_class;
 
   AVCodec *in_plugin;
-  GstPadTemplate *templ;
+  GstPadTemplate *srctempl, *sinktempl;
 };
 
 typedef struct {
   AVCodec *in_plugin;
-  GstPadTemplate *templ;
+  GstPadTemplate *srctempl, *sinktempl;
 } GstFFMpegClassParams;
 
 #define GST_TYPE_FFMPEGDEC \
@@ -79,54 +81,26 @@ enum {
   /* FILL ME */
 };
 
-/* This factory is much simpler, and defines the source pad. */
-GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_audio_src_factory,
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "ffmpegdec_src",
-    "audio/raw",
-      "format",       GST_PROPS_STRING ("int"),
-        "law",        GST_PROPS_INT (0),
-        "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",     GST_PROPS_BOOLEAN (TRUE),
-        "width",      GST_PROPS_INT (16),
-	"depth",      GST_PROPS_INT (16),
-        "rate",       GST_PROPS_INT_RANGE (8000, 96000),
-        "channels",   GST_PROPS_INT_RANGE (1, 2)
-  )
-)
-
-/* This factory is much simpler, and defines the source pad. */
-GST_PAD_TEMPLATE_FACTORY (gst_ffmpegdec_video_src_factory,
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "ffmpegdec_src",
-    "video/raw",
-      "format",       GST_PROPS_LIST (
-	                GST_PROPS_FOURCC (GST_STR_FOURCC ("I420"))
-		      ),
-        "width",      GST_PROPS_INT_RANGE (16, 4096),
-        "height",     GST_PROPS_INT_RANGE (16, 4096)
-  )
-)
-
 static GHashTable *global_plugins;
 
 /* A number of functon prototypes are given so we can refer to them later. */
 static void	gst_ffmpegdec_class_init	(GstFFMpegDecClass *klass);
 static void	gst_ffmpegdec_init		(GstFFMpegDec *ffmpegdec);
+static void	gst_ffmpegdec_dispose		(GObject      *object);
 
-static void	gst_ffmpegdec_chain_audio	(GstPad *pad, GstBuffer *buffer);
-static void	gst_ffmpegdec_chain_video	(GstPad *pad, GstBuffer *buffer);
+static GstPadLinkReturn	gst_ffmpegdec_connect	(GstPad    *pad,
+						 GstCaps   *caps);
+static void	gst_ffmpegdec_chain		(GstPad    *pad,
+						 GstBuffer *buffer);
 
-static void	gst_ffmpegdec_set_property	(GObject *object, guint prop_id, const GValue *value, 
-						 GParamSpec *pspec);
-static void	gst_ffmpegdec_get_property	(GObject *object, guint prop_id, GValue *value, 
-						 GParamSpec *pspec);
+static GstElementStateReturn
+		gst_ffmpegdec_change_state	(GstElement *element);
+
+/* some sort of bufferpool handling, but different */
+static int	gst_ffmpegdec_get_buffer	(AVCodecContext *context,
+						 AVFrame        *picture);
+static void	gst_ffmpegdec_release_buffer	(AVCodecContext *context,
+						 AVFrame        *picture);
 
 static GstElementClass *parent_class = NULL;
 
@@ -148,94 +122,283 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
 		  GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
 
   klass->in_plugin = params->in_plugin;
-  klass->templ = params->templ;
+  klass->srctempl = params->srctempl;
+  klass->sinktempl = params->sinktempl;
 
-  gobject_class->set_property = gst_ffmpegdec_set_property;
-  gobject_class->get_property = gst_ffmpegdec_get_property;
-}
-
-static GstPadLinkReturn
-gst_ffmpegdec_sinkconnect (GstPad *pad, GstCaps *caps)
-{
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
-  GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
-
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-
-  if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE))
-    gst_caps_get_int (caps, "width", &ffmpegdec->context->width);
-  if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE))
-    gst_caps_get_int (caps, "height", &ffmpegdec->context->height);
-
-  ffmpegdec->context->pix_fmt = PIX_FMT_YUV420P;
-  ffmpegdec->context->bit_rate = 0;
-
-  /* FIXME bug in ffmpeg */
-  /*
-  if (avcodec_open (ffmpegdec->context, avcodec_find_encoder(CODEC_ID_MPEG1VIDEO)) <0 ) {
-    g_warning ("ffmpegdec: could not open codec");
-    return GST_PAD_LINK_REFUSED;
-  }
-  */
-
-  if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
-    g_warning ("ffmpegdec: could not open codec");
-    return GST_PAD_LINK_REFUSED;
-  }
-  return GST_PAD_LINK_OK;
+  gobject_class->dispose = gst_ffmpegdec_dispose;
+  gstelement_class->change_state = gst_ffmpegdec_change_state;
 }
 
 static void
-gst_ffmpegdec_init(GstFFMpegDec *ffmpegdec)
+gst_ffmpegdec_init (GstFFMpegDec *ffmpegdec)
 {
   GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
 
-  ffmpegdec->context = avcodec_alloc_context();
-
-  ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->templ, "sink");
-  gst_pad_set_link_function (ffmpegdec->sinkpad, gst_ffmpegdec_sinkconnect);
-
-  if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
-    ffmpegdec->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_video_src_factory), "src");
-    gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain_video);
-  }
-  else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
-    ffmpegdec->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_ffmpegdec_audio_src_factory), "src");
-    gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain_audio);
-  }
+  /* setup pads */
+  ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
+  gst_pad_set_link_function (ffmpegdec->sinkpad, gst_ffmpegdec_connect);
+  gst_pad_set_chain_function (ffmpegdec->sinkpad, gst_ffmpegdec_chain);
+  ffmpegdec->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
 
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->srcpad);
 
-  ffmpegdec->picture = g_malloc0 (sizeof (AVFrame));
+  /* some ffmpeg data */
+  ffmpegdec->context = avcodec_alloc_context();
+  ffmpegdec->picture = avcodec_alloc_frame();
+
+  ffmpegdec->opened = FALSE;
 }
 
 static void
-gst_ffmpegdec_chain_audio (GstPad *pad, GstBuffer *inbuf)
+gst_ffmpegdec_dispose (GObject *object)
 {
-  /*GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad)); */
-  gpointer data;
-  gint size;
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
+  /* close old session */
+  if (ffmpegdec->opened) {
+    avcodec_close (ffmpegdec->context);
+    ffmpegdec->opened = FALSE;
+  }
 
-  data = GST_BUFFER_DATA (inbuf);
-  size = GST_BUFFER_SIZE (inbuf);
+  /* clean up remaining allocated data */
+  av_free (ffmpegdec->context);
+  av_free (ffmpegdec->picture);
+}
 
-  GST_DEBUG (0, "got buffer %p %d", data, size);
+static GstPadLinkReturn
+gst_ffmpegdec_connect (GstPad  *pad,
+		       GstCaps *caps)
+{
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
+  GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
 
-  gst_buffer_unref (inbuf);
+  /* we want fixed caps */
+  if (!GST_CAPS_IS_FIXED (caps))
+    return GST_PAD_LINK_DELAYED;
+
+  /* close old session */
+  if (ffmpegdec->opened) {
+    avcodec_close (ffmpegdec->context);
+    ffmpegdec->opened = FALSE;
+  }
+
+  /* set defaults */
+  avcodec_get_context_defaults (ffmpegdec->context);
+
+  /* set buffer functions */
+  ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
+  ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
+
+  switch (oclass->in_plugin->type) {
+    case CODEC_TYPE_VIDEO:
+      /* get size */
+      if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE))
+        gst_caps_get_int (caps, "width", &ffmpegdec->context->width);
+      if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE))
+        gst_caps_get_int (caps, "height", &ffmpegdec->context->height);
+      break;
+
+    case CODEC_TYPE_AUDIO:
+      /* FIXME: does ffmpeg want us to set the sample format
+       * and the rate+channels here?  Or does it provide them
+       * itself? */
+      break;
+
+    default:
+      /* Unsupported */
+      return GST_PAD_LINK_REFUSED;
+  }
+
+  /* we dont send complete frames */
+  if (oclass->in_plugin->capabilities & CODEC_CAP_TRUNCATED)
+    ffmpegdec->context->flags |= CODEC_FLAG_TRUNCATED;
+
+  /* open codec - we don't select an output pix_fmt yet,
+   * simply because we don't know! We only get it
+   * during playback... */
+  if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
+    GST_DEBUG (GST_CAT_PLUGIN_INFO,
+		"ffdec_%s: Failed to open FFMPEG codec",
+		oclass->in_plugin->name);
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  /* done! */
+  ffmpegdec->opened = TRUE;
+
+  return GST_PAD_LINK_OK;
+}
+
+/* innocent hacks */
+#define EDGE_WIDTH 16
+#define ALIGN(x) (((x)+alignment)&~alignment)
+
+static int
+gst_ffmpegdec_get_buffer (AVCodecContext *context,
+			  AVFrame        *picture)
+{
+  GstBuffer *buf = NULL;
+  gint hor_chr_dec = 0, ver_chr_dec = 0, bpp = 0;
+  gint width, height;
+  gint alignment;
+  gulong bufsize = 0;
+  void *base;
+
+  /* set alignment */
+  if (context->codec_id == CODEC_ID_SVQ1) {
+    alignment = 63;
+  } else {
+    alignment = 15;
+  }
+
+  /* set start size */
+  width = ALIGN (context->width);
+  height = ALIGN (context->height);
+
+  /* edge */
+  if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
+    width  += EDGE_WIDTH * 2;
+    height += EDGE_WIDTH * 2;
+  }
+
+  switch (context->codec_type) {
+    case CODEC_TYPE_VIDEO:
+      switch (context->pix_fmt) {
+        case PIX_FMT_YUV420P:
+          bpp = 12;
+	  hor_chr_dec = ver_chr_dec = 2;
+          break;
+        case PIX_FMT_YUV422:
+          bpp = 16;
+          break;
+        case PIX_FMT_YUV422P:
+          bpp = 16;
+          hor_chr_dec = 2; ver_chr_dec = 1;
+          break;
+        case PIX_FMT_RGB24:
+        case PIX_FMT_BGR24:
+          bpp = 24;
+          break;
+        case PIX_FMT_YUV444P:
+          bpp = 24;
+          hor_chr_dec = ver_chr_dec = 1;
+          break;
+        case PIX_FMT_RGBA32:
+          bpp = 32;
+          break;
+        case PIX_FMT_YUV410P:
+          bpp = 9;
+          hor_chr_dec = ver_chr_dec = 4;
+          break;
+        case PIX_FMT_YUV411P:
+          bpp = 12;
+          hor_chr_dec = 4; ver_chr_dec = 1;
+          break;
+        case PIX_FMT_RGB565:
+        case PIX_FMT_RGB555:
+          bpp = 16;
+          break;
+        default:
+          g_assert (0);
+          break;
+      }
+      bufsize = width * height * bpp / 8;
+      break;
+
+    case CODEC_TYPE_AUDIO:
+      bufsize = AVCODEC_MAX_AUDIO_FRAME_SIZE;
+      break;
+
+    default:
+      g_assert (0);
+      break;
+  }
+
+  /* create buffer */
+  buf = gst_buffer_new_and_alloc (bufsize);
+
+  /* set up planes */
+  base = GST_BUFFER_DATA (buf);
+  if (hor_chr_dec > 0 && ver_chr_dec > 0) {
+    picture->linesize[0] = width;
+    picture->data[0] = base;
+    if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
+      picture->data[0] += (picture->linesize[0] * EDGE_WIDTH) + EDGE_WIDTH;
+    }
+
+    base += width * height;
+    picture->linesize[1] = picture->linesize[0] / hor_chr_dec;
+    picture->data[1] = base;
+    if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
+      picture->data[1] += (picture->linesize[1] * EDGE_WIDTH / ver_chr_dec) +
+			    (EDGE_WIDTH / hor_chr_dec);
+    }
+
+    base += (width * height) / (ver_chr_dec * hor_chr_dec);
+    picture->linesize[2] = picture->linesize[1];
+    picture->data[2] = base;
+    if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
+      picture->data[2] += (picture->linesize[2] * EDGE_WIDTH / ver_chr_dec) +
+                            (EDGE_WIDTH / hor_chr_dec);
+    }
+  } else {
+    picture->linesize[0] = GST_BUFFER_MAXSIZE (buf) / height;
+    picture->data[0] = base;
+    if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
+      picture->data[0] += (picture->linesize[0] * EDGE_WIDTH) + EDGE_WIDTH;
+    }
+
+    picture->linesize[1] = picture->linesize[2] = 0;
+    picture->data[1] = picture->data[2] = NULL;
+  }
+  picture->linesize[3] = 0;
+  picture->data[3] = NULL;
+
+  /* tell ffmpeg we own this buffer
+   *
+   * we also use an evil hack (keep buffer in base[0])
+   * to keep a reference to the buffer in release_buffer(),
+   * so that we can ref() it here and unref() it there
+   * so that we don't need to copy data */
+  picture->type = FF_BUFFER_TYPE_USER;
+  picture->age = G_MAXINT;
+  picture->base[0] = (int8_t *) buf;
+  gst_buffer_ref (buf);
+
+  return 0;
 }
 
 static void
-gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
+gst_ffmpegdec_release_buffer (AVCodecContext *context,
+			      AVFrame        *picture)
+{
+  gint i;
+  GstBuffer *buf = GST_BUFFER (picture->base[0]);
+  gst_buffer_unref (buf);
+
+  /* zero out the reference in ffmpeg */
+  for (i=0;i<4;i++) {
+    picture->data[i] = NULL;
+    picture->linesize[i] = 0;
+  }
+  picture->base[0] = NULL;
+}
+
+static void
+gst_ffmpegdec_chain (GstPad    *pad,
+		     GstBuffer *inbuf)
 {
   GstBuffer *outbuf;
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
+  GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
   guchar *data;
-  gint size, frame_size, len;
-  gint have_picture;
+  gint size, len = 0;
+  gint have_data;
+
+  /* FIXME: implement event awareness (especially EOS
+   * (av_close_codec ()) and FLUSH/DISCONT
+   * (avcodec_flush_buffers ()))
+   */
 
   data = GST_BUFFER_DATA (inbuf);
   size = GST_BUFFER_SIZE (inbuf);
@@ -243,103 +406,87 @@ gst_ffmpegdec_chain_video (GstPad *pad, GstBuffer *inbuf)
   do {
     ffmpegdec->context->frame_number++;
 
-    len = avcodec_decode_video (ffmpegdec->context, ffmpegdec->picture,
-		  &have_picture, data, size);
+    switch (oclass->in_plugin->type) {
+      case CODEC_TYPE_VIDEO:
+        len = avcodec_decode_video (ffmpegdec->context,
+				    ffmpegdec->picture,
+				    &have_data,
+				    data, size);
+        break;
+      case CODEC_TYPE_AUDIO:
+        len = avcodec_decode_audio (ffmpegdec->context,
+				    (int16_t *) ffmpegdec->picture->data[0],
+				    &have_data,
+				    data, size);
+        break;
+      default:
+	g_assert(0);
+        break;
+    }
 
     if (len < 0) {
-      g_warning ("ffmpegdec: decoding error");
+      g_warning ("ffdec_%s: decoding error",
+		 oclass->in_plugin->name);
       break;
     }
 
-    if (have_picture) {
-      guchar *picdata, *picdata2, *outdata, *outdata2;
-      gint xsize, i, width, height;
-
-      width = ffmpegdec->context->width;
-      height = ffmpegdec->context->height;
-
+    if (have_data) {
       if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
-        gst_pad_try_set_caps (ffmpegdec->srcpad, 
-		      GST_CAPS_NEW (
-			"ffmpegdec_src",
-			"video/raw",
-			  "format",	GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-			    "width",	GST_PROPS_INT (width),
-			    "height",	GST_PROPS_INT (height)
-		      ));
+        GstCaps *caps;
+	if (!(ffmpegdec->context->flags & CODEC_FLAG_EMU_EDGE)) {
+	  ffmpegdec->context->width  += EDGE_WIDTH * 2;
+	  ffmpegdec->context->height += EDGE_WIDTH * 2;
+	}
+        caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
+					     ffmpegdec->context);
+	if (!(ffmpegdec->context->flags & CODEC_FLAG_EMU_EDGE)) {
+	  ffmpegdec->context->width  -= EDGE_WIDTH * 2;
+	  ffmpegdec->context->height -= EDGE_WIDTH * 2;
+	}
+        if (caps == NULL ||
+            gst_pad_try_set_caps (ffmpegdec->srcpad, caps) <= 0) {
+          gst_element_error (GST_ELEMENT (ffmpegdec),
+			     "Failed to link ffmpeg decoder (%s) to next element",
+			     oclass->in_plugin->name);
+          return;
+        }
       }
 
-      frame_size = width * height;
-
-      outbuf = gst_buffer_new ();
-      GST_BUFFER_SIZE (outbuf) = (frame_size*3)>>1;
-      outdata = GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
+      outbuf = GST_BUFFER (ffmpegdec->picture->base[0]);
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
- 
-      picdata = ffmpegdec->picture->data[0];
-      xsize = ffmpegdec->picture->linesize[0];
-      for (i=height; i; i--) {
-        memcpy (outdata, picdata, width);
-        outdata += width;
-        picdata += xsize;
-      }
-
-      frame_size >>= 2;
-      width >>= 1;
-      height >>= 1;
-      outdata2 = outdata + frame_size;
-
-      picdata = ffmpegdec->picture->data[1];
-      picdata2 = ffmpegdec->picture->data[2];
-      xsize = ffmpegdec->picture->linesize[1];
-      for (i=height; i; i--) {
-        memcpy (outdata, picdata, width);
-        memcpy (outdata2, picdata2, width);
-        outdata += width; outdata2 += width;
-        picdata += xsize; picdata2 += xsize;
-      }
-
+      if (oclass->in_plugin->type == CODEC_TYPE_AUDIO)
+        GST_BUFFER_SIZE (outbuf) = have_data;
+      else
+        GST_BUFFER_SIZE (outbuf) = GST_BUFFER_MAXSIZE (outbuf);
       gst_pad_push (ffmpegdec->srcpad, outbuf);
     } 
 
     size -= len;
     data += len;
-  }
-  while (size > 0);
+  } while (size > 0);
 
   gst_buffer_unref (inbuf);
 }
 
-static void
-gst_ffmpegdec_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+static GstElementStateReturn
+gst_ffmpegdec_change_state (GstElement *element)
 {
-  GstFFMpegDec *ffmpegdec;
+  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) element;
+  gint transition = GST_STATE_TRANSITION (element);
 
-  /* Get a pointer of the right type. */
-  ffmpegdec = (GstFFMpegDec *)(object);
-
-  /* Check the argument id to see which argument we're setting. */
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  switch (transition) {
+    case GST_STATE_PAUSED_TO_READY:
+      if (ffmpegdec->opened) {
+        avcodec_close (ffmpegdec->context);
+        ffmpegdec->opened = FALSE;
+      }
       break;
   }
-}
 
-/* The set function is simply the inverse of the get fuction. */
-static void
-gst_ffmpegdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-  GstFFMpegDec *ffmpegdec;
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
-  /* It's not null if we got it, but it might not be ours */
-  ffmpegdec = (GstFFMpegDec *)(object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  return GST_STATE_SUCCESS;
 }
 
 gboolean
@@ -368,8 +515,8 @@ gst_ffmpegdec_register (GstPlugin *plugin)
   while (in_plugin) {
     gchar *type_name;
     gchar *codec_type;
-    GstPadTemplate *sinktempl;
-    GstCaps *sinkcaps;
+    GstPadTemplate *sinktempl, *srctempl;
+    GstCaps *sinkcaps, *srccaps;
     GstFFMpegClassParams *params;
 
     if (in_plugin->decode) {
@@ -378,6 +525,13 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     else {
       goto next;
     }
+
+    /* first make sure we've got a supported type */
+    sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL);
+    srccaps  = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
+    if (!sinkcaps || !srccaps)
+      goto next;
+
     /* construct the type */
     type_name = g_strdup_printf("ff%s_%s", codec_type, in_plugin->name);
 
@@ -391,41 +545,42 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
 
     /* construct the element details struct */
-    details = g_new0 (GstElementDetails,1);
-    details->longname = g_strdup (in_plugin->name);
-    details->klass = "Codec/FFMpeg";
-    details->license = "LGPL";
-    details->description = g_strdup (in_plugin->name);
-    details->version = g_strdup("1.0.0");
-    details->author = g_strdup("The FFMPEG crew, GStreamer plugin by Wim Taymans <wim.taymans@chello.be>");
-    details->copyright = g_strdup("(c) 2001");
+    details = g_new0 (GstElementDetails, 1);
+    details->longname = g_strdup(in_plugin->name);
+    details->klass = g_strdup_printf("Codec/%s/%s",
+				     (in_plugin->type == CODEC_TYPE_VIDEO) ?
+				     "Video" : "Audio",
+				     type_name);
+    details->license = g_strdup("LGPL");
+    details->description = g_strdup(in_plugin->name);
+    details->version = g_strdup(VERSION);
+    details->author = g_strdup("The FFMPEG crew\n"
+				"Wim Taymans <wim.taymans@chello.be>\n"
+				"Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    details->copyright = g_strdup("(c) 2001-2003");
 
     /* register the plugin with gstreamer */
     factory = gst_element_factory_new(type_name,type,details);
     g_return_val_if_fail(factory != NULL, FALSE);
 
-    gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_NONE);
+    gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_MARGINAL);
 
-    sinkcaps = gst_ffmpegcodec_codec_context_to_caps (NULL, in_plugin->id);
-    sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sinkcaps, NULL);
+    sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
+				      GST_PAD_ALWAYS, sinkcaps, NULL);
     gst_element_factory_add_pad_template (factory, sinktempl);
+
+    srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
+				     GST_PAD_ALWAYS, srccaps, NULL);
+    gst_element_factory_add_pad_template (factory, srctempl);
 
     params = g_new0 (GstFFMpegClassParams, 1);
     params->in_plugin = in_plugin;
-    params->templ = sinktempl;
+    params->sinktempl = sinktempl;
+    params->srctempl = srctempl;
 
     g_hash_table_insert (global_plugins, 
 		         GINT_TO_POINTER (type), 
 			 (gpointer) params);
-
-    if (in_plugin->type == CODEC_TYPE_VIDEO) {
-      gst_element_factory_add_pad_template (factory, 
-		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_video_src_factory));
-    }
-    else if (in_plugin->type == CODEC_TYPE_AUDIO) {
-      gst_element_factory_add_pad_template (factory, 
-		    GST_PAD_TEMPLATE_GET (gst_ffmpegdec_audio_src_factory));
-    }
 
     /* The very last thing is to register the elementfactory with the plugin. */
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
