@@ -56,24 +56,6 @@ static gboolean
 plugin_init (GModule   *module,
              GstPlugin *plugin)
 {
-  XVID_INIT_PARAM xinit;
-  gint ret;
-
-  /* set up xvid initially (function pointers, CPU flags) */
-  memset(&xinit, 0, sizeof(XVID_INIT_PARAM));
-  xinit.cpu_flags = 0;
-  if ((ret = xvid_init(NULL, 0, &xinit, NULL)) != XVID_ERR_OK) {
-    g_warning("Faied to initialize XviD: %s (%d)",
-	      gst_xvid_error(ret), ret);
-    return FALSE;
-  }
-  
-  if (xinit.api_version != API_VERSION) {
-    g_warning("Xvid API version mismatch! %d.%d (that's us) != %d.%d (lib)",
-              (API_VERSION >> 8) & 0xff, API_VERSION & 0xff,
-              (xinit.api_version >> 8) & 0xff, xinit.api_version & 0xff);
-  }
-
   return (gst_xviddec_plugin_init(module, plugin) &&
           gst_xvidenc_plugin_init(module, plugin));
 }

@@ -135,6 +135,23 @@ static void
 gst_xviddec_class_init (GstXvidDecClass *klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  XVID_INIT_PARAM xinit;
+  gint ret;
+
+  /* set up xvid initially (function pointers, CPU flags) */
+  memset(&xinit, 0, sizeof(XVID_INIT_PARAM));
+  xinit.cpu_flags = 0;
+  if ((ret = xvid_init(NULL, 0, &xinit, NULL)) != XVID_ERR_OK) {
+    g_warning("Failed to initialize XviD: %s (%d)",
+	      gst_xvid_error(ret), ret);
+    return;
+  }
+  
+  if (xinit.api_version != API_VERSION) {
+    g_warning("Xvid API version mismatch! %d.%d (that's us) != %d.%d (lib)",
+              (API_VERSION >> 8) & 0xff, API_VERSION & 0xff,
+              (xinit.api_version >> 8) & 0xff, xinit.api_version & 0xff);
+  }
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
@@ -248,7 +265,7 @@ gst_xviddec_chain (GstPad    *pad,
   xframe.bitstream = (void *) GST_BUFFER_DATA(buf);
   xframe.image = (void *) GST_BUFFER_DATA(outbuf);
   xframe.length = GST_BUFFER_SIZE(buf);
-  xframe.stride = xviddec->width * xviddec->bpp / 8;
+  xframe.stride = 0; /*xviddec->width * xviddec->bpp / 8;*/
   xframe.colorspace = xviddec->csp;
 
   if ((ret = xvid_decore(xviddec->handle, XVID_DEC_DECODE,
@@ -278,8 +295,8 @@ gst_xviddec_negotiate (GstXvidDec *xviddec)
     { GST_MAKE_FOURCC('Y','U','Y','V'), 16, 16, XVID_CSP_YUY2   },
     { GST_MAKE_FOURCC('U','Y','V','Y'), 16, 16, XVID_CSP_UYVY   },
     { GST_MAKE_FOURCC('Y','V','Y','U'), 16, 16, XVID_CSP_YVYU   },
-    { GST_MAKE_FOURCC('I','4','2','0'), 12, 12, XVID_CSP_I420   },
     { GST_MAKE_FOURCC('Y','V','1','2'), 12, 12, XVID_CSP_YV12   },
+    { GST_MAKE_FOURCC('I','4','2','0'), 12, 12, XVID_CSP_I420   },
     { GST_MAKE_FOURCC('R','G','B',' '), 32, 32, XVID_CSP_RGB32  },
     { GST_MAKE_FOURCC('R','G','B',' '), 24, 24, XVID_CSP_RGB24  },
     { GST_MAKE_FOURCC('R','G','B',' '), 16, 16, XVID_CSP_RGB555 },
