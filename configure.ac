@@ -416,6 +416,7 @@ translit(dnm, m, l) AC_SUBST(GNOME_LIBS)
 translit(dnm, m, l) AC_SUBST(GNOME_CFLAGS)
 GST_CHECK_CONFIGPROG(GNOME, gnome-config, gnome gnomeui)
 fi
+AC_SUBST(HAVE_GNOME)
 
 dnl Check for libghttp
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGHTTP, true)
