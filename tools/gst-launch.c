@@ -17,9 +17,11 @@ idle_func (gpointer data)
   GTimeVal tfthen, tfnow;
   GstClockTimeDiff diff;
 
+  /*
   if (s_clock) {
-    //g_print ("%lld\n", gst_clock_get_time (s_clock));
+    g_print ("%lld\n", gst_clock_get_time (s_clock));
   }
+  */
 
   g_get_current_time (&tfthen);
   busy = gst_bin_iterate (GST_BIN (data));
@@ -113,6 +115,10 @@ static void
 fault_handler (int signum, siginfo_t *si, void *misc)
 {
   int spinning = TRUE;
+
+  /* dolphy has seen si == NULL;
+   * that doesn't seem like a good idea, does it ? */
+  g_assert (si);
 
   fault_restore ();
 
