@@ -84,6 +84,7 @@ enum {
 enum {
   ARG_0,
   ARG_LOCATION,
+  ARG_TITLE_STRING,
   ARG_TITLE,
   ARG_CHAPTER,
   ARG_ANGLE
@@ -106,7 +107,21 @@ static void 		dvdnavsrc_get_property		(GObject *object, guint prop_id, GValue *v
 /*static GstBuffer *	dvdnavsrc_get		(GstPad *pad); */
 static void     	dvdnavsrc_loop		(GstElement *element);
 /*static GstBuffer *	dvdnavsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
-//static void		dvdnavsrc_event (GstPad *pad, GstEvent *event);
+static gboolean 	dvdnavsrc_event 		(GstPad *pad, GstEvent *event);
+static const GstEventMask*
+			dvdnavsrc_get_event_mask 	(GstPad *pad);
+static const GstFormat*
+			dvdnavsrc_get_formats 		(GstPad *pad);
+/*static gboolean 	dvdnavsrc_convert 		(GstPad *pad,
+				    			 GstFormat src_format,
+				    			 gint64 src_value, 
+							 GstFormat *dest_format, 
+							 gint64 *dest_value);*/
+static gboolean 	dvdnavsrc_query 		(GstPad *pad, GstQueryType type,
+		     					 GstFormat *format, gint64 *value);
+static const GstQueryType*
+			dvdnavsrc_get_query_types 	(GstPad *pad);
+
 static gboolean     	dvdnavsrc_close		(DVDNavSrc *src);
 static gboolean     	dvdnavsrc_open		(DVDNavSrc *src);
 static void             dvdnavsrc_print_event   (DVDNavSrc *src, guint8 *data, int event, int len);
@@ -116,6 +131,11 @@ static GstElementStateReturn 	dvdnavsrc_change_state 	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint dvdnavsrc_signals[LAST_SIGNAL] = { 0 }; */
+
+static GstFormat sector_format;
+static GstFormat title_format;
+static GstFormat chapter_format;
+static GstFormat angle_format;
 
 GType
 dvdnavsrc_get_type (void) 
@@ -134,6 +154,11 @@ dvdnavsrc_get_type (void)
       (GInstanceInitFunc)dvdnavsrc_init,
     };
     dvdnavsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "DVDNavSrc", &dvdnavsrc_info, 0);
+
+    sector_format = gst_format_register ("sector", "DVD sector");
+    title_format = gst_format_register ("title", "DVD title");
+    chapter_format = gst_format_register ("chapter", "DVD chapter");
+    angle_format = gst_format_register ("angle", "DVD angle");
   }
   return dvdnavsrc_type;
 }
@@ -152,6 +177,9 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
     g_param_spec_string("location","location","location",
                         NULL, G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TITLE_STRING,
+    g_param_spec_string("title_string","title string","DVD title string",
+                        NULL, G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TITLE,
     g_param_spec_int("title","title","title",
                      0,99,1,G_PARAM_READWRITE));
@@ -172,9 +200,18 @@ static void
 dvdnavsrc_init (DVDNavSrc *dvdnavsrc) 
 {
   gst_element_set_loop_function (GST_ELEMENT(dvdnavsrc), GST_DEBUG_FUNCPTR(dvdnavsrc_loop));
+
   dvdnavsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+
+  //gst_pad_set_get_function (dvdnavsrc->srcpad, dvdnavsrc_get);
+  gst_pad_set_event_function (dvdnavsrc->srcpad, dvdnavsrc_event);
+  gst_pad_set_event_mask_function (dvdnavsrc->srcpad, dvdnavsrc_get_event_mask);
+  /*gst_pad_set_convert_function (dvdnavsrc->srcpad, dvdnavsrc_convert);*/
+  gst_pad_set_query_function (dvdnavsrc->srcpad, dvdnavsrc_query);
+  gst_pad_set_query_type_function (dvdnavsrc->srcpad, dvdnavsrc_get_query_types);
+  gst_pad_set_formats_function (dvdnavsrc->srcpad, dvdnavsrc_get_formats);
+
   gst_element_add_pad (GST_ELEMENT (dvdnavsrc), dvdnavsrc->srcpad);
-  //gst_pad_set_event_function (dvdnavsrc->srcpad, dvdnavsrc_event);
 
   dvdnavsrc->bufferpool = gst_buffer_pool_get_default (DVD_VIDEO_LB_LEN, 2);
 
@@ -251,6 +288,7 @@ static void
 dvdnavsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) 
 {
   DVDNavSrc *src;
+  char *title_string;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DVDNAVSRC (object));
@@ -260,6 +298,13 @@ dvdnavsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
   switch (prop_id) {
     case ARG_LOCATION:
       g_value_set_string (value, src->location);
+      break;
+    case ARG_TITLE_STRING:
+      if (dvdnav_get_title_string(src->dvdnav, &title_string) != DVDNAV_STATUS_OK) {
+        g_value_set_string (value, "[error getting DVD title]");
+      } else {
+        g_value_set_string (value, title_string);
+      }
       break;
     case ARG_TITLE:
       g_value_set_int (value, src->title);
@@ -751,6 +796,366 @@ dvdnavsrc_change_state (GstElement *element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
+}
+
+static const GstEventMask *
+dvdnavsrc_get_event_mask (GstPad *pad)
+{
+  static const GstEventMask masks[] = {
+    {GST_EVENT_SEEK,         GST_SEEK_METHOD_SET | 
+	                     GST_SEEK_METHOD_CUR | 
+	                     GST_SEEK_METHOD_END | 
+		             GST_SEEK_FLAG_FLUSH },
+                             /*
+    {GST_EVENT_SEEK_SEGMENT, GST_SEEK_METHOD_SET | 
+	                     GST_SEEK_METHOD_CUR | 
+	                     GST_SEEK_METHOD_END | 
+		             GST_SEEK_FLAG_FLUSH },
+                             */
+    {0,}
+  };
+
+  return masks;
+}
+
+static gboolean
+dvdnavsrc_event (GstPad *pad, GstEvent *event)
+{
+  DVDNavSrc *src;
+  gboolean res = TRUE;
+
+  src = DVDNAVSRC (gst_pad_get_parent (pad));
+
+  if (!GST_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
+    goto error;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      gint64 offset;
+      gint format;
+      int titles, title, new_title;
+      int parts, part, new_part;
+      int angles, angle, new_angle;
+	    
+      format    = GST_EVENT_SEEK_FORMAT (event);
+      offset    = GST_EVENT_SEEK_OFFSET (event);
+
+      switch (format) {
+        default:
+          if (dvdnav_current_title_info(src->dvdnav, &title, &part) !=
+              DVDNAV_STATUS_OK) {
+            goto error;
+          }
+          /*if (format == sector_format) {
+          } else */if (format == title_format) {
+            switch (GST_EVENT_SEEK_METHOD (event)) {
+              case GST_SEEK_METHOD_SET:
+                new_title = offset;
+                break;
+              case GST_SEEK_METHOD_CUR:
+                new_title = title + offset;
+                break;
+              case GST_SEEK_METHOD_END:
+                if (dvdnav_get_number_of_titles(src->dvdnav, &titles) !=
+                    DVDNAV_STATUS_OK) {
+                  goto error;
+                }
+                new_title = titles + offset;
+                break;
+              default:
+                goto error;
+            }
+            if (dvdnav_title_play(src->dvdnav, new_title) !=
+                DVDNAV_STATUS_OK) {
+              goto error;
+            }
+          } else if (format == chapter_format) {
+            switch (GST_EVENT_SEEK_METHOD (event)) {
+              case GST_SEEK_METHOD_SET:
+                new_part = offset;
+                break;
+              case GST_SEEK_METHOD_CUR:
+                new_part = part + offset;
+                break;
+              case GST_SEEK_METHOD_END:
+                if (dvdnav_get_number_of_programs(src->dvdnav, &parts) !=
+                    DVDNAV_STATUS_OK) {
+                  goto error;
+                }
+                new_part = parts + offset;
+                break;
+              default:
+                goto error;
+            }
+            g_message("seek->chap %d->%d", part, new_part);
+            /*if (dvdnav_part_search(src->dvdnav, new_part) !=*/
+            if (dvdnav_part_play(src->dvdnav, title, new_part) !=
+                DVDNAV_STATUS_OK) {
+              goto error;
+            }
+            if (dvdnav_current_title_info(src->dvdnav, &title, &part) !=
+                DVDNAV_STATUS_OK) {
+              goto error;
+            }
+            g_message("seek->chap after:%d", part);
+            g_message("seek->chap->cur done");
+          } else if (format == angle_format) {
+            switch (GST_EVENT_SEEK_METHOD (event)) {
+              case GST_SEEK_METHOD_SET:
+                new_angle = offset;
+                break;
+              case GST_SEEK_METHOD_CUR:
+                new_angle = angle + offset;
+                break;
+              case GST_SEEK_METHOD_END:
+                if (dvdnav_get_angle_info(src->dvdnav, &angle, &angles) !=
+                    DVDNAV_STATUS_OK) {
+                  goto error;
+                }
+                new_angle = angles + offset;
+                break;
+              default:
+                goto error;
+            }
+            if (dvdnav_angle_change(src->dvdnav, new_angle) !=
+                DVDNAV_STATUS_OK) {
+              goto error;
+            }
+          } else {
+            goto error;
+          }
+      }
+      break;
+    }
+    default:
+      goto error;
+  }
+
+  if (FALSE) {
+error:
+    res = FALSE;
+  }
+  gst_event_unref (event);
+
+  return res;
+}
+
+static const GstFormat *
+dvdnavsrc_get_formats (GstPad *pad)
+{
+  int i;
+  static GstFormat formats[] = {
+    /*
+    GST_FORMAT_TIME,
+    GST_FORMAT_BYTES,
+    GST_FORMAT_UNITS,
+    */
+    0,	/* filled later */
+    0,	/* filled later */
+    0,	/* filled later */
+    0,	/* filled later */
+    0
+  };
+  static gboolean format_initialized = FALSE;
+
+  if (!format_initialized) {
+    for (i=0; formats[i] != 0; i++) {
+    }
+    formats[i++] = sector_format;
+    formats[i++] = title_format;
+    formats[i++] = chapter_format;
+    formats[i++] = angle_format;
+    format_initialized = TRUE;
+  }
+
+  return formats;
+}
+
+#if 0
+static gboolean
+dvdnavsrc_convert (GstPad *pad,
+		    GstFormat src_format, gint64 src_value, 
+		    GstFormat *dest_format, gint64 *dest_value)
+{
+  DVDNavSrc *src;
+
+  src = DVDNAVSRC (gst_pad_get_parent (pad));
+
+  if (!GST_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
+    return FALSE;
+
+  switch (src_format) {
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          src_value <<= 2;	/* 4 bytes per sample */
+        case GST_FORMAT_UNITS:
+	  *dest_value = src_value * 44100 / GST_SECOND;
+	  break;
+	default:
+          if (*dest_format == track_format || *dest_format == sector_format) {
+	    gint sector = (src_value * 44100) / ((CD_FRAMESIZE_RAW >> 2) * GST_SECOND);
+
+	    if (*dest_format == sector_format) {
+	      *dest_value = sector;
+	    }
+	    else {
+	      *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
+	    }
+	  }
+          else 
+	    return FALSE;
+	  break;
+      }
+      break;
+    case GST_FORMAT_BYTES:
+      src_value >>= 2;
+    case GST_FORMAT_UNITS:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * 4;
+	  break;
+        case GST_FORMAT_TIME:
+          *dest_value = src_value * GST_SECOND / 44100;
+	  break;
+	default:
+          if (*dest_format == track_format || *dest_format == sector_format) {
+            gint sector = src_value / (CD_FRAMESIZE_RAW >> 2);
+
+            if (*dest_format == track_format) {
+	      *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
+	    }
+	    else {
+	      *dest_value = sector;
+	    }
+	  }
+          else 
+	    return FALSE;
+	  break;
+      }
+      break;
+    default:
+    {
+      gint sector;
+
+      if (src_format == track_format) {
+	/* some sanity checks */
+	if (src_value < 0 || src_value > src->d->tracks)
+          return FALSE;
+
+	sector = cdda_track_firstsector (src->d, src_value + 1);
+      }
+      else if (src_format == sector_format) {
+	sector = src_value;
+      }
+      else
+        return FALSE;
+
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = ((CD_FRAMESIZE_RAW >> 2) * sector * GST_SECOND) / 44100;
+	  break;
+        case GST_FORMAT_BYTES:
+          sector <<= 2;
+        case GST_FORMAT_UNITS:
+          *dest_value = (CD_FRAMESIZE_RAW >> 2) * sector;
+	  break;
+	default:
+          if (*dest_format == sector_format) {
+	    *dest_value = sector;
+	  }
+	  else if (*dest_format == track_format) {
+	    /* if we go past the last sector, make sure to report the last track */
+	    if (sector > src->last_sector)
+	      *dest_value = cdda_sector_gettrack (src->d, src->last_sector);
+	    else 
+	      *dest_value = cdda_sector_gettrack (src->d, sector) - 1;
+	  }
+          else 
+            return FALSE;
+	  break;
+      }
+      break;
+    }
+  }
+
+  return TRUE;
+}
+#endif
+
+static const GstQueryType*
+dvdnavsrc_get_query_types (GstPad *pad)
+{
+  static const GstQueryType src_query_types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
+  return src_query_types;
+}
+
+static gboolean
+dvdnavsrc_query (GstPad *pad, GstQueryType type,
+		  GstFormat *format, gint64 *value)
+{
+  gboolean res = TRUE;
+  DVDNavSrc *src;
+  int titles, title;
+  int parts, part;
+  int angles, angle;
+
+  src = DVDNAVSRC (gst_pad_get_parent (pad));
+
+  if (!GST_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
+    return FALSE;
+
+  switch (type) {
+    case GST_QUERY_TOTAL:
+      if (*format == title_format) {
+        if (dvdnav_get_number_of_titles(src->dvdnav, &titles) != DVDNAV_STATUS_OK) {
+          res = FALSE;
+        }
+        *value = titles;
+      } else if (*format == chapter_format) {
+        if (dvdnav_get_number_of_programs(src->dvdnav, &parts) != DVDNAV_STATUS_OK) {
+          res = FALSE;
+        }
+        *value = parts;
+      } else if (*format == angle_format) {
+        if (dvdnav_get_angle_info(src->dvdnav, &angle, &angles) != DVDNAV_STATUS_OK) {
+          res = FALSE;
+        }
+        *value = angles;
+      } else {
+        res = FALSE;
+      }
+      break;
+    case GST_QUERY_POSITION:
+      if (*format == title_format) {
+        if (dvdnav_current_title_info(src->dvdnav, &title, &part) != DVDNAV_STATUS_OK) {
+          res = FALSE;
+        }
+        *value = title;
+      } else if (*format == chapter_format) {
+        if (dvdnav_current_title_info(src->dvdnav, &title, &part) != DVDNAV_STATUS_OK) {
+          res = FALSE;
+        }
+        *value = part;
+      } else if (*format == angle_format) {
+        if (dvdnav_get_angle_info(src->dvdnav, &angle, &angles) != DVDNAV_STATUS_OK) {
+          res = FALSE;
+        }
+        *value = angle;
+      } else {
+        res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
 }
 
 static gboolean
