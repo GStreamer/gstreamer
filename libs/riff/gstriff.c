@@ -34,26 +34,28 @@ GstRiff *gst_riff_new(GstRiffCallback function, gpointer data) {
   riff->nextlikely = 0;
 	riff->new_tag_found = function;
 	riff->callback_data = data;
+	riff->incomplete_chunk = NULL;
 
   return riff;
 }
 
 gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
-  gulong last;
+  gulong last, size;
   GstRiffChunk *chunk;
 
   g_return_val_if_fail(riff != NULL, GST_RIFF_EINVAL);
   g_return_val_if_fail(buf != NULL, GST_RIFF_EINVAL);
   g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, GST_RIFF_EINVAL);
 
-  last = off + GST_BUFFER_SIZE(buf);
+	size = GST_BUFFER_SIZE(buf);
+  last = off + size;
 
-	//g_print("offset new buffer 0x%08lx\n", off);
+	//g_print("offset new buffer 0x%08lx size 0x%08x\n", off, GST_BUFFER_SIZE(buf));
 
   if (off == 0) {
     gulong *words = (gulong *)GST_BUFFER_DATA(buf);
 
-		// don't even try to parse the head if it's not there
+		// don't even try to parse the head if it's not there FIXME
 		if (last < 12) {
       riff->state = GST_RIFF_ENOTRIFF;
       return riff->state;
@@ -68,7 +70,33 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
     riff->form = words[2];
     //g_print("form is 0x%08lx '%s'\n",words[2],gst_riff_id_to_fourcc(words[2]));
     riff->nextlikely = 12;	/* skip 'RIFF', length, and form */
+		// all OK here
+	  riff->incomplete_chunk = NULL;
   }
+
+	// if we have an incomplete chunk from the previous buffer
+	if (riff->incomplete_chunk) {
+		guint leftover;
+		//g_print("have incomplete chunk %08x filled\n", riff->incomplete_chunk_size);
+		leftover = riff->incomplete_chunk->size - riff->incomplete_chunk_size;
+		if (leftover <= size) {
+		  //g_print("we can fill it from %08x with %08x bytes = %08x\n", riff->incomplete_chunk_size, leftover, riff->incomplete_chunk_size+leftover);
+			memcpy(riff->incomplete_chunk->data+riff->incomplete_chunk_size, GST_BUFFER_DATA(buf), leftover);
+
+		  if (riff->new_tag_found) {
+		    riff->new_tag_found(riff->incomplete_chunk, riff->callback_data);
+		  }
+	    g_free(riff->incomplete_chunk->data);
+	    g_free(riff->incomplete_chunk);
+	    riff->incomplete_chunk = NULL;
+		}
+		else {
+		  //g_print("we cannot fill it %08x >= %08lx\n", leftover, size);
+			memcpy(riff->incomplete_chunk->data+riff->incomplete_chunk_size, GST_BUFFER_DATA(buf), size);
+		  riff->incomplete_chunk_size += size;
+			return 0;
+		}
+	}
 
   /* loop while the next likely chunk header is in this buffer */
   while ((riff->nextlikely+12) < last) {
@@ -97,27 +125,44 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
     chunk->size = words[1];
 		chunk->data = (gchar *)(words+2);
 		// we need word alignment
-		if (chunk->size & 0x01) chunk->size++;
+		//if (chunk->size & 0x01) chunk->size++;
 		chunk->form = words[2]; /* fill in the form,  might not be valid */
 
-		// send the buffer to the listener if we have received a function
-		if (riff->new_tag_found) {
-		  riff->new_tag_found(chunk, riff->callback_data);
-		}
 
 		if (chunk->id == GST_RIFF_TAG_LIST) {
       //g_print("found LIST %s\n", gst_riff_id_to_fourcc(chunk->form));
       riff->nextlikely += 12;	
 			// we push the list chunk on our 'stack'
       riff->chunks = g_list_prepend(riff->chunks,chunk);
+		  // send the buffer to the listener if we have received a function
+		  if (riff->new_tag_found) {
+		    riff->new_tag_found(chunk, riff->callback_data);
+		  }
 		}
 		else {
 
-      //g_print("chunk id is 0x%08lx '%s' and is 0x%08lx long\n",words[0],
-       //     gst_riff_id_to_fourcc(words[0]),words[1]);
+      //g_print("chunk id offset %08x is 0x%08lx '%s' and is 0x%08lx long\n",riff->nextlikely, words[0],
+      //      gst_riff_id_to_fourcc(words[0]),words[1]);
 
       riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
-			g_free(chunk);
+			// if this buffer is incomplete
+			if (riff->nextlikely > last) {
+				guint left = size - (riff->nextlikely - 0 - chunk->size - off);
+
+		    //g_print("make incomplete buffer %08x\n", left);
+				chunk->data = g_malloc(chunk->size);
+		    memcpy(chunk->data, (gchar *)(words+2), left);
+				riff->incomplete_chunk = chunk;
+				riff->incomplete_chunk_size = left;
+		  }
+			else {
+		    // send the buffer to the listener if we have received a function
+		    if (riff->new_tag_found) {
+		      riff->new_tag_found(chunk, riff->callback_data);
+		    }
+			  g_free(chunk);
+			}
+
       //riff->chunks = g_list_prepend(riff->chunks,chunk);
 		}
   }

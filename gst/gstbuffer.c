@@ -151,7 +151,7 @@ void gst_buffer_destroy(GstBuffer *buffer) {
     gst_buffer_unref(buffer->parent);
 
   g_mutex_free(buffer->lock);
-//  g_print("freed mutex\n");
+  //g_print("freed mutex\n");
 
   // remove it entirely from memory
   g_mem_chunk_free(_gst_buffer_chunk,buffer);

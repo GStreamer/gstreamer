@@ -286,6 +286,9 @@ struct _GstRiff {
   /* list of chunks, most recent at the head */
   GList *chunks;
 
+	/* incomplete chunks are assembled here */
+	GstRiffChunk *incomplete_chunk;
+	guint32 incomplete_chunk_size;
   /* parse state */
   gint state;
   guint32 curoffset;

@@ -140,7 +140,11 @@ AC_CHECK_HEADER(xaudio/decoder.h,[
 ])
 
 dnl Set location of plugin directory
-PLUGINS_DIR=${prefix}/lib/gst
+if test "x${prefix}" = "xNONE"; then
+  PLUGINS_DIR=${ac_default_prefix}/lib/gst
+else
+  PLUGINS_DIR=${prefix}/lib/gst
+fi
 AC_DEFINE_UNQUOTED(PLUGINS_DIR,"$PLUGINS_DIR")
 AC_SUBST(PLUGINS_DIR)
 

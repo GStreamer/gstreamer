@@ -134,8 +134,10 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   /* we have to lock the queue since we span threads */
   
   GST_LOCK(queue);
+	//g_print("queue: chain %d\n", queue->level_buffers);
 
   if (queue->level_buffers >= queue->max_buffers) {
+	  //g_print("queue: waiting %d\n", queue->level_buffers);
     GST_UNLOCK(queue);
     while (queue->level_buffers >= queue->max_buffers) {
       g_mutex_lock(queue->fulllock);
@@ -144,6 +146,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
       g_mutex_unlock(queue->fulllock);
     }
     GST_LOCK(queue);
+	  //g_print("queue: waiting done %d\n", queue->level_buffers);
   }
   
 
@@ -164,6 +167,7 @@ void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   tosignal = (queue->level_buffers++ == 0);
 
   /* we can unlock now */
+	//g_print("queue: chain %d end\n", queue->level_buffers);
   GST_UNLOCK(queue);
 
   if (tosignal) {
@@ -182,6 +186,7 @@ void gst_queue_push(GstConnection *connection) {
 
   /* have to lock for thread-safety */
   GST_LOCK(queue);
+	//g_print("queue: push %d\n", queue->level_buffers);
 
   if (!queue->level_buffers) {
     GST_UNLOCK(queue);
@@ -197,12 +202,14 @@ void gst_queue_push(GstConnection *connection) {
   front = queue->queue;
   buf = (GstBuffer *)(front->data);
   queue->queue = g_list_remove_link(queue->queue,front);
+	//g_print("queue: pushing %d\n", queue->level_buffers);
   gst_pad_push(queue->srcpad,buf);
+	//g_print("queue: pushing %d done\n", queue->level_buffers);
   g_list_free(front);
   queue->level_buffers--;
-  //g_print("-");
 
   tosignal = queue->level_buffers < queue->max_buffers;
+	//g_print("queue: push end %d\n", queue->level_buffers);
   GST_UNLOCK(queue);
 
   if (tosignal) {

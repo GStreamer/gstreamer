@@ -187,12 +187,15 @@ void gst_audiosink_chain(GstPad *pad,GstBuffer *buf) {
                   audiosink);
   if (GST_BUFFER_DATA(buf) != NULL) {
     gst_trace_add_entry(NULL,0,buf,"audiosink: writing to soundcard");
+    //g_print("audiosink: writing to soundcard\n");
     if (audiosink->fd > 2)
       write(audiosink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
+    //g_print("audiosink: writing to soundcard ok\n");
   }
 
+  //g_print("a unref\n");
   gst_buffer_unref(buf);
-//  g_print("a");
+  //g_print("a done\n");
 }
 
 void gst_audiosink_set_format(GstAudioSink *audiosink,gint format) {

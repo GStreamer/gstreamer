@@ -71,13 +71,15 @@ static gboolean gst_plugin_load_recurse(gchar *directory,gchar *name) {
   struct dirent *dirent;
   gboolean loaded = FALSE;
 
+	//g_print("recursive load of '%s' in '%s'\n", name, directory);
   dir = opendir(directory);
   if (dir) {
     while ((dirent = readdir(dir))) {
       /* don't want to recurse in place or backwards */
       if (strcmp(dirent->d_name,".") && strcmp(dirent->d_name,"..")) {
-        gst_plugin_load_recurse(g_strjoin("/",directory,dirent->d_name,
+        loaded = gst_plugin_load_recurse(g_strjoin("/",directory,dirent->d_name,
                                               NULL),name);
+				if (loaded && name) return TRUE;
       }
     }
     closedir(dir);
@@ -87,13 +89,13 @@ static gboolean gst_plugin_load_recurse(gchar *directory,gchar *name) {
       if (name) {
         if ((temp = strstr(directory,name)) && 
             (!strcmp(temp,name))) {
-          gst_plugin_load_absolute(directory);
-          return TRUE;
+          loaded = gst_plugin_load_absolute(directory);
+          return loaded;
         }
       } else if ((temp = strstr(directory,".so")) &&
                  (!strcmp(temp,".so"))) {
-        gst_plugin_load_absolute(directory);
-        loaded = TRUE;
+        loaded = gst_plugin_load_absolute(directory);
+        //return loaded;
       }
     }
   }
@@ -116,6 +118,19 @@ void gst_plugin_load_all() {
 }
 
 /**
+ * gst_library_load:
+ * @name: name of liabrary to load
+ *
+ * Load the named liabrary.  Name should be given as
+ * &quot;libliabrary.so&quot;.
+ *
+ * Returns: whether the liabrary was loaded or not
+ */
+gboolean gst_library_load(gchar *name) {
+	// for now this is the same
+  return gst_plugin_load(name);
+}
+/**
  * gst_plugin_load:
  * @name: name of plugin to load
  *
@@ -135,14 +150,14 @@ gboolean gst_plugin_load(gchar *name) {
     if (gst_plugin_load_absolute(g_module_build_path(path->data,name)))
       return TRUE;
     libspath = g_strconcat(path->data,"/.libs",NULL);
-//    g_print("trying to load '%s'\n",g_module_build_path(libspath,name));
+    //g_print("trying to load '%s'\n",g_module_build_path(libspath,name));
     if (gst_plugin_load_absolute(g_module_build_path(libspath,name))) {
       g_free(libspath);
       return TRUE;
     }
     g_free(libspath);
-//    g_print("trying to load '%s' from '%s'\n",name,path->data);
-    if (gst_plugin_load_recurse(path->data,name)) {
+    //g_print("trying to load '%s' from '%s'\n",name,path->data);
+    if (gst_plugin_load_recurse(path->data,g_module_build_path("",name))) {
       return TRUE;
     }
     path = g_list_next(path);
@@ -161,14 +176,14 @@ gboolean gst_plugin_load_absolute(gchar *name) {
   GstPluginInitFunc initfunc;
   GstPlugin *plugin;
 
-//  g_print("trying to load '%s\n",name);
+  //g_print("trying to absolute load '%s\n",name);
 
   if (g_module_supported() == FALSE) {
     g_print("wow, you built this on a platform without dynamic loading???\n");
     return FALSE;
   }
 
-  module = g_module_open(name,0);
+  module = g_module_open(name,G_MODULE_BIND_LAZY);
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
       if ((plugin = (initfunc)(module))) {
@@ -186,6 +201,7 @@ gboolean gst_plugin_load_absolute(gchar *name) {
         return TRUE;
       }
     }
+		return TRUE;
   } else if (_gst_plugin_spew) {
 //    if (strstr(g_module_error(),"No such") == NULL)
       gst_info("error loading plugin: %s\n",g_module_error());

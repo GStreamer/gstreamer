@@ -314,7 +314,7 @@ void gst_thread_iterate(GstThread *thread) {
       g_assert_not_reached();
     entries = g_list_next(entries);
   }
-//  g_print(",");
+  //g_print(",");
 }
 
 static void gst_thread_signal_thread(GstThread *thread) {

@@ -52,6 +52,7 @@ void gst_plugin_set_longname(GstPlugin *plugin,gchar *longname);
 void _gst_plugin_initialize();
 void gst_plugin_load_all();
 gboolean gst_plugin_load(gchar *name);
+gboolean gst_library_load(gchar *name);
 gboolean gst_plugin_load_absolute(gchar *name);
 
 void gst_plugin_add_factory(GstPlugin *plugin,GstElementFactory *factory);

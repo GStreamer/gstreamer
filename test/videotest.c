@@ -19,9 +19,10 @@ int main(int argc,char *argv[]) {
   GtkWidget *draw;
 
 
-	_gst_plugin_spew = TRUE;
+	//_gst_plugin_spew = TRUE;
 	gst_init(&argc,&argv);
-	gst_plugin_load_all();
+	gst_plugin_load("v4lsrc");
+	gst_plugin_load("videosink");
 
   gnome_init("Videotest","0.0.1",argc,argv);
 
