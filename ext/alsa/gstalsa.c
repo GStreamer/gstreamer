@@ -1213,7 +1213,9 @@ gst_alsa_get_clock (GstElement * element)
 
 static void
 gst_alsa_set_clock (GstElement * element, GstClock * clock)
-{                               /* we need this function just so everybody knows we use a clock */
+{
+  /* we need this function just so everybody knows we use a clock */
+  GST_ALSA (element)->ext_clock = clock;
 }
 
 /*** AUDIO PROCESSING *********************************************************/

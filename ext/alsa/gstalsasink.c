@@ -405,7 +405,7 @@ sink_restart:
          * assumes that both calls return the same value. However they can be
          * wildly different, since snd_pcm_delay goes deep into the kernel.
          */
-        if (gst_element_get_clock (element) == GST_CLOCK (this->clock)) {
+        if (this->ext_clock == GST_CLOCK (this->clock)) {
           /* FIXME: this is ugly because of the variables it uses but I
            * don't know a better way to get this info */
           if (element->base_time > this->clock->start_time) {
