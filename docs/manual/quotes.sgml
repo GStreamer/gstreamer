@@ -12,6 +12,31 @@
 
   <variablelist>
     <varlistentry>
+      <term>14 Jan 2001</term>
+        <para>
+        <emphasis>Omega:</emphasis>
+          did you run ldconfig?  maybe it talks to init?
+        </para>
+        <para>
+        <emphasis>wtay:</emphasis>
+          not sure, don't think so...
+          I did run gstreamer-register though :-)
+        </para>
+        <para>
+        <emphasis>Omega:</emphasis>
+          ah, that did it then ;-)
+        </para>
+        <para>
+        <emphasis>wtay:</emphasis>
+          right
+        </para>
+        <para>
+        <emphasis>Omega:</emphasis>
+          probably not, but in case GStreamer starts turning into an OS, someone please let me know?
+        </para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
       <term>9 Jan 2001</term>
       <listitem>
         <para>
