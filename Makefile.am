@@ -16,7 +16,7 @@ else
 EXAMPLES_DIR=
 endif
 
-all-local: gstreamer-libs-@GST_MAJORMINOR@.pc gstreamer-play-@GST_MAJORMINOR@.pc
+all-local: gstreamer-libs-@GST_MAJORMINOR@.pc gstreamer-play-@GST_MAJORMINOR@.pc gstreamer-libs-@GST_MAJORMINOR@-uninstalled.pc gstreamer-play-@GST_MAJORMINOR@-uninstalled.pc
 gstreamer-libs-@GST_MAJORMINOR@.pc: gstreamer-libs.pc gstreamer-libs.pc.in
 	cp gstreamer-libs.pc gstreamer-libs-@GST_MAJORMINOR@.pc
 gstreamer-play-@GST_MAJORMINOR@.pc: gstreamer-play.pc gstreamer-play.pc.in
