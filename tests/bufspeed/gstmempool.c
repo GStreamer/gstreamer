@@ -145,7 +145,7 @@ again:
 #endif
 
   if (!pool) {
-    //g_print ("extending\n");
+    /*g_print ("extending\n"); */
     if (populate (mem_pool))
       goto again;
     else 

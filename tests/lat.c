@@ -203,7 +203,7 @@ int main(int argc,char *argv[]) {
   }
   g_return_val_if_fail(pipeline != NULL, -1);
 
-  //xmlSaveFile("lat.gst", gst_xml_write(GST_ELEMENT(pipeline)));
+  /*xmlSaveFile("lat.gst", gst_xml_write(GST_ELEMENT(pipeline))); */
 
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 

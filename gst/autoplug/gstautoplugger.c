@@ -146,10 +146,10 @@ gst_autoplugger_class_init (GstAutopluggerClass *klass)
 /*
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_COUNT,
     g_param_spec_int("buffer_count","buffer_count","buffer_count",
-                      0,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME!
+                      0,G_MAXINT,0,G_PARAM_READABLE)); * CHECKME! *
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RESET,
     g_param_spec_boolean("reset","reset","reset",
-                         FALSE,G_PARAM_WRITABLE)); // CHECKME!
+                         FALSE,G_PARAM_WRITABLE)); * CHECKME! *
 */
 
   gobject_class->set_property = gst_autoplugger_set_property;
@@ -461,11 +461,11 @@ gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
   g_return_if_fail(autoplugger->autobin != NULL);
   gst_bin_add(GST_BIN(autoplugger),autoplugger->autobin);
 
-//  // re-attach the srcpad's original peer to the cache
-//  GST_DEBUG(GST_CAT_AUTOPLUG, "reconnecting the cache to the downstream peer\n");
-//  gst_pad_connect(autoplugger->cache_srcpad,autoplugger->srcpadpeer);
+*  // re-attach the srcpad's original peer to the cache *
+*  GST_DEBUG(GST_CAT_AUTOPLUG, "reconnecting the cache to the downstream peer\n"); *
+*  gst_pad_connect(autoplugger->cache_srcpad,autoplugger->srcpadpeer); *
 
-  // attach the autoplugged bin
+  * attach the autoplugged bin *
   GST_DEBUG(GST_CAT_AUTOPLUG, "attaching the autoplugged bin between cache and downstream peer\n");
   gst_pad_connect(autoplugger->cache_srcpad,gst_element_get_pad(autoplugger->autobin,"sink"));
   gst_pad_connect(gst_element_get_pad(autoplugger->autobin,"src_00"),autoplugger->srcpadpeer);
@@ -549,7 +549,7 @@ gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
     GST_INFO(GST_CAT_AUTOPLUG,"here we go into nothingness, hoping the typefind will return us to safety");
 gst_scheduler_show(GST_ELEMENT_SCHED(autoplugger));
   } else {
-/*    // attach the cache_empty handler, since the cache simply isn't needed
+/*    * attach the cache_empty handler, since the cache simply isn't needed *
  *    g_signal_connect (G_OBJECT(autoplugger->cache),"cache_empty",
  *                       gst_autoplugger_cache_empty,autoplugger);
  */ 

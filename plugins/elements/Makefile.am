@@ -19,7 +19,7 @@ libgstelements_la_SOURCES =	\
 	gststatistics.c		\
 	gstmd5sink.c
 libgstelements_la_CFLAGS = $(GST_CFLAGS)
-libgstelements_la_LIBADD = $(GST_LIBS)
+libgstelements_la_LIBADD =
 libgstelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) @GST_LT_LDFLAGS@
 
 noinst_HEADERS =		\

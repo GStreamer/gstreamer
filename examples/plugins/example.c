@@ -161,7 +161,7 @@ gst_example_class_init (GstExampleClass *klass)
    */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ACTIVE,
     g_param_spec_int("active","active","active",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
 
   /* Here we add a signal to the object. This is avery useless signal
    * called asdf. The signal will also pass a pointer to the listeners

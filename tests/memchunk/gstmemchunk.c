@@ -123,7 +123,7 @@ again:
 			:"ecx", "ebx");
 
   if (!chunk) {
-    //g_print ("extending\n");
+    /*g_print ("extending\n"); */
     if (populate (mem_chunk))
       goto again;
     else 

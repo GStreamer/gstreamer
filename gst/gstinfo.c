@@ -324,7 +324,7 @@ gst_default_info_handler (gint category, gboolean incore,
   #else
     fprintf(stderr,"INFO (%5d:%2d)%s%s %s\n",
             pthread_id,cothread_id,location,elementname,string);
-  #endif /* GST_DEBUG_COLOR */
+#endif /* GST_DEBUG_COLOR */
 /*
 #else
   #ifdef GST_DEBUG_COLOR
@@ -333,7 +333,7 @@ gst_default_info_handler (gint category, gboolean incore,
   #else
     fprintf(stderr,"INFO:%s%s %s\n",
             location,elementname,string);
-  #endif // GST_DEBUG_COLOR
+  #endif * GST_DEBUG_COLOR *
 
 #endif
 */

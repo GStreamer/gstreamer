@@ -53,18 +53,18 @@ _gst_buffer_initialize (void)
 {
   int buffersize = sizeof(GstBuffer);
   static const GTypeInfo buffer_info = {
-    0, // sizeof(class),
+    0, /* sizeof(class), */
     NULL,
     NULL,
     NULL,
     NULL,
     NULL,
-    0, // sizeof(object),
+    0, /* sizeof(object), */
     0,
     NULL,
   };
 
-  // round up to the nearest 32 bytes for cache-line and other efficiencies
+  /* round up to the nearest 32 bytes for cache-line and other efficiencies */
   buffersize = (((buffersize-1) / 32) + 1) * 32;
 
   _gst_buffer_pool = gst_mem_pool_new ("GstBuffer", buffersize,
@@ -170,29 +170,29 @@ gst_buffer_create_sub (GstBuffer *parent,
   buffer->refcount = 1;
 #endif
 
-  // copy flags and type from parent, for lack of better
+  /* copy flags and type from parent, for lack of better */
   buffer->flags = parent->flags;
 
-  // set the data pointer, size, offset, and maxsize
+  /* set the data pointer, size, offset, and maxsize */
   buffer->data = parent->data + offset;
   buffer->size = size;
   buffer->maxsize = parent->size - offset;
 
-  // deal with bogus/unknown offsets
+  /* deal with bogus/unknown offsets */
   if (parent->offset != -1)
     buffer->offset = parent->offset + offset;
   else
     buffer->offset = -1;
 
-  // again, for lack of better, copy parent's timestamp
+  /* again, for lack of better, copy parent's timestamp */
   buffer->timestamp = parent->timestamp;
   buffer->maxage = parent->maxage;
 
-  // if the parent buffer is a subbuffer itself, use its parent, a real buffer
+  /* if the parent buffer is a subbuffer itself, use its parent, a real buffer */
   if (parent->parent != NULL)
     parent = parent->parent;
 
-  // set parentage and reference the parent
+  /* set parentage and reference the parent */
   buffer->parent = parent;
   gst_buffer_ref (parent);
 
@@ -202,7 +202,7 @@ gst_buffer_create_sub (GstBuffer *parent,
 }
 
 
-// FIXME FIXME: how does this overlap with the newly-added gst_buffer_span() ???
+/* FIXME FIXME: how does this overlap with the newly-added gst_buffer_span() ??? */
 /**
  * gst_buffer_append:
  * @buffer: a buffer
@@ -229,17 +229,17 @@ gst_buffer_append (GstBuffer *buffer,
   GST_INFO (GST_CAT_BUFFER,"appending buffers %p and %p",buffer,append);
 
   GST_BUFFER_LOCK (buffer);
-  // the buffer is not used by anyone else
+  /* the buffer is not used by anyone else */
   if (GST_BUFFER_REFCOUNT (buffer) == 1 && buffer->parent == NULL 
 	  && !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE)) {
-    // save the old size
+    /* save the old size */
     size = buffer->size;
     buffer->size += append->size;
     buffer->data = g_realloc (buffer->data, buffer->size);
     memcpy(buffer->data + size, append->data, append->size);
     GST_BUFFER_UNLOCK (buffer);
   }
-  // the buffer is used, create a new one 
+  /* the buffer is used, create a new one  */
   else {
     newbuf = gst_buffer_new ();
     newbuf->size = buffer->size+append->size;
@@ -269,11 +269,11 @@ gst_buffer_destroy (GstBuffer *buffer)
 	    (buffer->parent?"sub":""),
 	    buffer);
   
-  // free the data only if there is some, DONTFREE isn't set, and not sub
+  /* free the data only if there is some, DONTFREE isn't set, and not sub */
   if (GST_BUFFER_DATA (buffer) &&
       !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) &&
       (buffer->parent == NULL)) {
-    // if there's a free function, use it
+    /* if there's a free function, use it */
     if (buffer->free != NULL) {
       (buffer->free)(buffer);
     } else {
@@ -281,11 +281,11 @@ gst_buffer_destroy (GstBuffer *buffer)
     }
   }
 
-  // unreference the parent if there is one
+  /* unreference the parent if there is one */
   if (buffer->parent != NULL)
     gst_buffer_unref (buffer->parent);
 
-  // remove it entirely from memory
+  /* remove it entirely from memory */
   gst_mem_pool_free (_gst_buffer_pool,buffer);
 }
 
@@ -359,27 +359,27 @@ gst_buffer_copy (GstBuffer *buffer)
 
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0, NULL);
 
-  // if a copy function exists, use it, else copy the bytes
+  /* if a copy function exists, use it, else copy the bytes */
   if (buffer->copy != NULL) {
     newbuf = (buffer->copy)(buffer);
   } else {
-    // allocate a new buffer
+    /* allocate a new buffer */
     newbuf = gst_buffer_new();
 
-    // copy the absolute size
+    /* copy the absolute size */
     newbuf->size = buffer->size;
-    // allocate space for the copy
+    /* allocate space for the copy */
     newbuf->data = (guchar *)g_malloc (buffer->size);
-    // copy the data straight across
+    /* copy the data straight across */
     memcpy(newbuf->data,buffer->data,buffer->size);
-    // the new maxsize is the same as the size, since we just malloc'd it
+    /* the new maxsize is the same as the size, since we just malloc'd it */
     newbuf->maxsize = newbuf->size;
   }
   newbuf->offset = buffer->offset;
   newbuf->timestamp = buffer->timestamp;
   newbuf->maxage = buffer->maxage;
 
-  // since we just created a new buffer, so we have no ties to old stuff
+  /* since we just created a new buffer, so we have no ties to old stuff */
   newbuf->parent = NULL;
   newbuf->pool = NULL;
 
@@ -425,7 +425,7 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
  *
  * Returns: new buffer that spans the two source buffers
  */
-// FIXME need to think about CoW and such...
+/* FIXME need to think about CoW and such... */
 GstBuffer *
 gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 {
@@ -434,7 +434,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf1) > 0, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf2) > 0, NULL);
 
-  // make sure buf1 has a lower address than buf2
+  /* make sure buf1 has a lower address than buf2 */
   if (buf1->data > buf2->data) {
     GstBuffer *tmp = buf1;
     g_print ("swapping buffers\n");
@@ -442,23 +442,23 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     buf2 = tmp;
   }
 
-  // if the two buffers have the same parent and are adjacent
+  /* if the two buffers have the same parent and are adjacent */
   if (gst_buffer_is_span_fast(buf1,buf2)) {
-    // we simply create a subbuffer of the common parent
+    /* we simply create a subbuffer of the common parent */
     newbuf = gst_buffer_create_sub (buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
   }
   else {
     g_print ("slow path taken in buffer_span\n");
-    // otherwise we simply have to brute-force copy the buffers
+    /* otherwise we simply have to brute-force copy the buffers */
     newbuf = gst_buffer_new ();
 
-    // put in new size
+    /* put in new size */
     newbuf->size = len;
-    // allocate space for the copy
+    /* allocate space for the copy */
     newbuf->data = (guchar *)g_malloc(len);
-    // copy the first buffer's data across
+    /* copy the first buffer's data across */
     memcpy(newbuf->data, buf1->data + offset, buf1->size - offset);
-    // copy the second buffer's data across
+    /* copy the second buffer's data across */
     memcpy(newbuf->data + (buf1->size - offset), buf2->data, len - (buf1->size - offset));
 
     if (newbuf->offset != -1)
@@ -490,6 +490,6 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 GstBuffer *
 gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
 {
-  // we're just a specific case of the more general gst_buffer_span()
+  /* we're just a specific case of the more general gst_buffer_span() */
   return gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
 }

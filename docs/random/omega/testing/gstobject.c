@@ -73,84 +73,84 @@ int main(int argc,char *argv[]) {
   TEST_CATEGORY("Creation");
 
   TEST("create object");
-  // setup
-  // action
+  /* setup */
+  /* action */
   object = gst_object_new();
-  // assertions
+  /* assertions */
   ASSERT(object != NULL);
   ASSERT(GST_IS_OBJECT(object));
-  // cleanup
+  /* cleanup */
   g_free(object);
   ENDTEST();
 
 
-  // new category
+  /* new category */
   TEST_CATEGORY("Refcounting");
-  // category setup
+  /* category setup */
   object = gst_object_new();
 
   TEST("new object");
-  // setup
-  // action
-  // assertions
+  /* setup */
+  /* action */
+  /* assertions */
   ASSERT(object->refcount == 1);
   ASSERT(GTK_OBJECT_FLOATING(object) == TRUE);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("increment refcount");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_ref(object);
-  // assertions
+  /* assertions */
   ASSERT(object->refcount == 2);
   ASSERT(GTK_OBJECT_FLOATING(object) == TRUE);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("sink object");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_sink(object);
-  // assertions
+  /* assertions */
   ASSERT(object->refcount == 1);
   ASSERT(GTK_OBJECT_FLOATING(object) == FALSE);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("increment refcount after sink");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_ref(object);
-  // assertions
+  /* assertions */
   ASSERT(object->refcount == 2);
   ASSERT(GTK_OBJECT_FLOATING(object) == FALSE);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("decrement refcount after sink");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_unref(object);
-  // assertions
+  /* assertions */
   ASSERT(object->refcount == 1);
   ASSERT(GTK_OBJECT_FLOATING(object) == FALSE);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
-  // category cleanup
+  /* category cleanup */
   g_free(object);
 
 
 
-  // new category
+  /* new category */
   TEST_CATEGORY("Parentage");
-  // category setup
+  /* category setup */
   object = gst_object_new();
   parent = gst_object_new();
   newparent = gst_object_new();
   gtkobject = gtk_type_new(gtk_object_get_type());
-  // category assertions
+  /* category assertions */
   ASSERT(object != NULL);
   ASSERT(object->refcount == 1);
   ASSERT(object->parent == NULL);
@@ -160,135 +160,135 @@ int main(int argc,char *argv[]) {
   ASSERT(!GST_IS_OBJECT(gtkobject));
 
   TEST("gst_object_set_parent: null object");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_set_parent(NULL,NULL);
-  // assertions
+  /* assertions */
   ASSERT(object->parent == NULL);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_set_parent: invalid object");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_set_parent((GstObject*)gtkobject,NULL);
-  // assertions
+  /* assertions */
   ASSERT(object->parent == NULL);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_set_parent: null parent");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_set_parent(object,NULL);
-  // assertions
+  /* assertions */
   ASSERT(object->parent == NULL);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_set_parent: invalid parent");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_set_parent(object,(GstObject*)gtkobject);
-  // assertions
+  /* assertions */
   ASSERT(object->parent == NULL);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_set_parent: valid object, parent is object");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_set_parent(object,object);
-  // assertions
+  /* assertions */
   ASSERT(object->parent == NULL);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_set_parent: valid object and parent");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_set_parent(object,parent);
-  // assertions
+  /* assertions */
   ASSERT(object->parent == parent);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_set_parent: parent already set");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_set_parent(object,newparent);
-  // assertions
+  /* assertions */
   ASSERT(object->parent != newparent);
   ASSERT(object->parent == parent);
-  // cleanup
+  /* cleanup */
   g_free(object);
   ENDTEST();
 
 
   TEST("gst_object_get_parent: null object");
-  // setup
-  // action
+  /* setup */
+  /* action */
   curparent = gst_object_get_parent(NULL);
-  // assertions
+  /* assertions */
   ASSERT(curparent == NULL);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_get_parent: invalid object");
-  // setup
-  // action
+  /* setup */
+  /* action */
   curparent = gst_object_get_parent((GstObject*)gtkobject);
-  // assertions
+  /* assertions */
   ASSERT(curparent == NULL);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_get_parent: no parent");
-  // setup
+  /* setup */
   object = gst_object_new();
-  // action
+  /* action */
   curparent = gst_object_get_parent(object);
-  // assertions
+  /* assertions */
   ASSERT(curparent == NULL);
-  // cleanup
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_get_parent: valid parent");
-  // setup
+  /* setup */
   gst_object_set_parent(object,parent);
-  // action
+  /* action */
   curparent = gst_object_get_parent(object);
-  // assertions
+  /* assertions */
   ASSERT(curparent == parent);
-  // cleanup
+  /* cleanup */
   g_free(object);
   ENDTEST();
 
 
   TEST("gst_object_unparent: null object");
-  // setup
-  // action
+  /* setup */
+  /* action */
   gst_object_unparent(NULL);
-  // assertions
-  // NONE - FIXME!
-  // cleanup
+  /* assertions */
+  /* NONE - FIXME! */
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_unparent: invalid object");
-  // setup 
-  // action
+  /* setup  */
+  /* action */
   gst_object_unparent((GstObject*)gtkobject);
-  // assertions
-  // NONE - FIXME!
-  // cleanup
+  /* assertions */
+  /* NONE - FIXME! */
+  /* cleanup */
   ENDTEST();
 
   TEST("gst_object_unparent: no parent");
-  // setup
+  /* setup */
   object = gst_object_new();
   
 
-  // category cleanup
+  /* category cleanup */
   g_free(object);
   g_free(parent);
   g_free(newparent);

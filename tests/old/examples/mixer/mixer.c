@@ -18,10 +18,10 @@
 #include "mixer.h"
 #include <unistd.h>
 
-//#define WITH_BUG
-//#define WITH_BUG2
-//#define DEBUG
-//#define AUTOPLUG	/* define if you want autoplugging of input channels */
+/*#define WITH_BUG */
+/*#define WITH_BUG2 */
+/*#define DEBUG */
+/*#define AUTOPLUG	* define if you want autoplugging of input channels * */
 /* function prototypes */
 
 input_channel_t*	create_input_channel (int id, char* location);
@@ -37,7 +37,7 @@ void eos(GstElement *element)
 {
   g_print("have eos, quitting ?\n");
 
-//  playing = FALSE;
+/*  playing = FALSE; */
 }
 
 static GstCaps*
@@ -62,7 +62,7 @@ gst_play_typefind (GstBin *bin, GstElement *element)
   
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   
-  // push a buffer... the have_type signal handler will set the found flag
+  /* push a buffer... the have_type signal handler will set the found flag */
   gst_bin_iterate (GST_BIN (pipeline));
   
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -188,17 +188,17 @@ int main(int argc,char *argv[])
     /* start playing */
     gst_element_set_state(main_bin, GST_STATE_PLAYING);
 
-    // write out the schedule
+    /* write out the schedule */
     gst_scheduler_show(GST_ELEMENT_SCHED(main_bin));
     playing = TRUE;
 
     j = 0;
-    //printf ("main: start iterating from 0");
+    /*printf ("main: start iterating from 0"); */
     while (playing && j < 100) 
     {
-//      printf ("main: iterating %d\n", j);
+/*      printf ("main: iterating %d\n", j); */
       gst_bin_iterate(GST_BIN(main_bin));
-     //fprintf(stderr,"after iterate()\n");
+     /*fprintf(stderr,"after iterate()\n"); */
       ++j;
     }
   }
@@ -206,7 +206,7 @@ int main(int argc,char *argv[])
   while (playing) 
   {
     gst_bin_iterate(GST_BIN(main_bin));
-    //fprintf(stderr,"after iterate()\n");
+    /*fprintf(stderr,"after iterate()\n"); */
   }
   /* stop the bin */
   gst_element_set_state(main_bin, GST_STATE_NULL);

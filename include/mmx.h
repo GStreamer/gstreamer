@@ -66,7 +66,7 @@
 #ifndef _MMX_H
 #define _MMX_H
 
-//#define MMX_TRACE
+/*#define MMX_TRACE */
 
 /*	Warning:  at this writing, the version of GAS packaged
 	with most Linux distributions does not handle the

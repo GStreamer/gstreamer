@@ -9,27 +9,27 @@ plugin_LTLIBRARIES = \
 
 libgststaticautoplug_la_SOURCES = gststaticautoplug.c 
 libgststaticautoplug_la_CFLAGS = $(GST_CFLAGS)
-libgststaticautoplug_la_LIBADD = $(GST_LIBS)
+libgststaticautoplug_la_LIBADD =
 libgststaticautoplug_la_LDFLAGS = @GST_LT_LDFLAGS@
 
 libgststaticautoplugrender_la_SOURCES = gststaticautoplugrender.c
 libgststaticautoplugrender_la_CFLAGS = $(GST_CFLAGS)
-libgststaticautoplugrender_la_LIBADD = $(GST_LIBS)
+libgststaticautoplugrender_la_LIBADD =
 libgststaticautoplugrender_la_LDFLAGS = @GST_LT_LDFLAGS@
 
 libgstautoplugcache_la_SOURCES = gstautoplugcache.c
 libgstautoplugcache_la_CFLAGS = $(GST_CFLAGS)
-libgstautoplugcache_la_LIBADD = $(GST_LIBS)
+libgstautoplugcache_la_LIBADD =
 libgstautoplugcache_la_LDFLAGS = @GST_LT_LDFLAGS@
 
 libgstautoplugger_la_SOURCES = gstautoplugger.c
 libgstautoplugger_la_CFLAGS = $(GST_CFLAGS)
-libgstautoplugger_la_LIBADD = $(GST_LIBS)
+libgstautoplugger_la_LIBADD =
 libgstautoplugger_la_LDFLAGS = @GST_LT_LDFLAGS@
 
 libgstspider_la_SOURCES = gstspider.c gstspideridentity.c gstsearchfuncs.c
 libgstspider_la_CFLAGS = $(GST_CFLAGS)
-libgstspider_la_LIBADD = $(GST_LIBS)
+libgstspider_la_LIBADD =
 libgstspider_la_LDFLAGS = @GST_LT_LDFLAGS@
 
 noinst_HEADERS = gststaticautoplug.h gststaticautoplugrender.h \

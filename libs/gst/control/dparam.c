@@ -100,7 +100,7 @@ gst_dparam_class_init (GstDParamClass *klass)
                      
 	gobject_class->dispose = gst_dparam_dispose;
 	
-	//gstobject_class->save_thyself = gst_dparam_save_thyself;
+	/*gstobject_class->save_thyself = gst_dparam_save_thyself; */
 
 }
 

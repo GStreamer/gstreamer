@@ -7,7 +7,7 @@ main (int argc, char *argv[])
   GstElement *src, *sink;
   GstPad *srcpad, *sinkpad;
 
-//  _gst_plugin_spew = TRUE;
+/*  _gst_plugin_spew = TRUE; */
   gst_init (&argc, &argv);
 
   bin = GST_BIN (gst_pipeline_new ("pipeline"));

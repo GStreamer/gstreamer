@@ -102,7 +102,7 @@ static void 			gst_bstest_loop 		(GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
-// static guint gst_bstest_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_bstest_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_bstest_get_type (void)
@@ -387,7 +387,7 @@ plugin_init (GModule * module, GstPlugin * plugin)
 {
   GstElementFactory *factory;
 
-  // we need gstbytestream
+  /* we need gstbytestream */
   if (!gst_library_load ("gstbytestream")) {
     g_print ("can't load bytestream\n");
     return FALSE;

@@ -95,7 +95,7 @@ gst_dpsmooth_class_init (GstDParamSmoothClass *klass)
 		                   "The amount a float value can change for a given slope_time",
 		                   0.0F, G_MAXFLOAT, 0.2F, G_PARAM_READWRITE));
 	
-	//gstobject_class->save_thyself = gst_dparam_save_thyself;
+	/*gstobject_class->save_thyself = gst_dparam_save_thyself; */
 
 }
 

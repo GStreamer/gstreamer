@@ -312,7 +312,7 @@ restart:
 			   GST_ELEMENT_NAME (queue), queue->level_buffers);
 	break;
       default:
-	//gst_pad_event_default (pad, GST_EVENT (buf));
+	/*gst_pad_event_default (pad, GST_EVENT (buf)); */
 	break;
     }
   }
@@ -536,8 +536,8 @@ gst_queue_change_state (GstElement *element)
   new_state = GST_STATE_PENDING (element);
 
   if (new_state == GST_STATE_PAUSED) {
-    //g_cond_signal (queue->not_full);
-    //g_cond_signal (queue->not_empty);
+    /*g_cond_signal (queue->not_full); */
+    /*g_cond_signal (queue->not_empty); */
   }
   else if (new_state == GST_STATE_READY) {
     gst_queue_locked_flush (queue);

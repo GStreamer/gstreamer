@@ -597,42 +597,6 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
   return TRUE;
 }
 
-/*
-G_GNUC_UNUSED static void
-gst_basic_scheduler_chained_chain (GstBin *bin, _GstBinChain *chain) {
-  GList *elements;
-  GstElement *element;
-  GList *pads;
-  GstPad *pad;
-
-  GST_DEBUG (GST_CAT_SCHEDULING,"chain entered\n");
-  // walk through all the elements
-  elements = chain->elements;
-  while (elements) {
-    element = GST_ELEMENT (elements->data);
-    elements = g_list_next (elements);
-
-    // walk through all the pads
-    pads = gst_element_get_pad_list (element);
-    while (pads) {
-      pad = GST_PAD (pads->data);
-      pads = g_list_next (pads);
-      if (!GST_IS_REAL_PAD(pad)) continue;
-
-      if (GST_RPAD_DIRECTION(pad) == GST_PAD_SINK) {
-        GST_DEBUG (GST_CAT_SCHEDULING,"copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-        GST_RPAD_CHAINHANDLER(pad) = GST_RPAD_CHAINFUNC(pad);
-      } else {
-        GST_DEBUG (GST_CAT_SCHEDULING,"copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-        GST_RPAD_GETHANDLER(pad) = GST_RPAD_GETFUNC(pad);
-        GST_RPAD_PULLREGIONFUNC(pad) = GST_RPAD_GETREGIONFUNC(pad);
-      }
-    }
-  }
-}
-*/
-
-
 static GstSchedulerChain *
 gst_basic_scheduler_chain_new (GstBasicScheduler * sched)
 {

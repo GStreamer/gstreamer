@@ -18,7 +18,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   autobin = gst_bin_get_by_name (GST_BIN (pipeline), "autobin");
   cache = gst_bin_get_by_name (GST_BIN (autobin), "cache");
 
-  // disconnect the typefind from the pipeline and remove it
+  /* disconnect the typefind from the pipeline and remove it */
   gst_element_disconnect (cache, "src", typefind, "sink");
   gst_bin_remove (GST_BIN (autobin), typefind);
       

@@ -75,7 +75,7 @@ int main(int argc,char *argv[])
     incount = 0;
     outcount = 0;
 
-//    gst_element_set_state(bin, GST_STATE_READY);
+/*    gst_element_set_state(bin, GST_STATE_READY); */
     gst_element_set_state(bin, GST_STATE_PLAYING);
 
     if (GST_IS_THREAD (bin)) {

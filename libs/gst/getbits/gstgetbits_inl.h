@@ -54,8 +54,8 @@
 
 #include <glib.h>
 
-//#define GETBITS_DEBUG_ENABLED
-//#define GETBITS_OVERRUN_ENABLED
+/*#define GETBITS_DEBUG_ENABLED */
+/*#define GETBITS_OVERRUN_ENABLED */
 
 #ifdef GETBITS_DEBUG_ENABLED
 #define debug2(format,args...) g_print(format,##args)

@@ -501,7 +501,7 @@ gst_parse_launchv (const gchar **argv)
   ret = gst_parse_launchv_recurse (argv, GST_BIN (pipeline), NULL);
 
   if (ret <= 0) {
-    // print an error
+    /* print an error */
     gst_object_unref (GST_OBJECT (pipeline));
     return NULL;
   } else {

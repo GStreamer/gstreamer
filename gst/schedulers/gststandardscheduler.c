@@ -242,8 +242,6 @@ static inline void sched_switch (cothread *to)
   if (from == to) {
     GST_DEBUG (GST_CAT_COTHREAD_SWITCH, "trying to switch to the same cothread (%p), not allowed\n",
               to);
-    /* wingo says G_BREAKPOINT only works for x86, so change it */
-    /* G_BREAKPOINT(); */
     g_assert_not_reached ();
   }
   GST_INFO (GST_CAT_COTHREAD_SWITCH, "switching from cothread %p to cothread %p",
@@ -610,42 +608,6 @@ gst_standard_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain
   
   return TRUE;
 }
-
-/*
-G_GNUC_UNUSED static void
-gst_standard_scheduler_chained_chain (GstBin *bin, _GstBinChain *chain) {
-  GList *elements;
-  GstElement *element;
-  GList *pads;
-  GstPad *pad;
-
-  GST_DEBUG (GST_CAT_SCHEDULING,"chain entered\n");
-  // walk through all the elements
-  elements = chain->elements;
-  while (elements) {
-    element = GST_ELEMENT (elements->data);
-    elements = g_list_next (elements);
-
-    // walk through all the pads
-    pads = gst_element_get_pad_list (element);
-    while (pads) {
-      pad = GST_PAD (pads->data);
-      pads = g_list_next (pads);
-      if (!GST_IS_REAL_PAD(pad)) continue;
-
-      if (GST_RPAD_DIRECTION(pad) == GST_PAD_SINK) {
-        GST_DEBUG (GST_CAT_SCHEDULING,"copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-        GST_RPAD_CHAINHANDLER(pad) = GST_RPAD_CHAINFUNC(pad);
-      } else {
-        GST_DEBUG (GST_CAT_SCHEDULING,"copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-        GST_RPAD_GETHANDLER(pad) = GST_RPAD_GETFUNC(pad);
-        GST_RPAD_PULLREGIONFUNC(pad) = GST_RPAD_GETREGIONFUNC(pad);
-      }
-    }
-  }
-}
-*/
-
 
 static GstSchedulerChain *
 gst_standard_scheduler_chain_new (GstStandardScheduler * sched)
@@ -1073,15 +1035,15 @@ gst_standard_scheduler_state_transition (GstScheduler *sched, GstElement *elemen
 static void
 gst_standard_scheduler_lock_element (GstScheduler * sched, GstElement * element)
 {
-//  if (GST_ELEMENT_THREADSTATE (element))
-//    cothread_lock (GST_ELEMENT_THREADSTATE (element));
+/*  if (GST_ELEMENT_THREADSTATE (element)) */
+/*    cothread_lock (GST_ELEMENT_THREADSTATE (element)); */
 }
 
 static void
 gst_standard_scheduler_unlock_element (GstScheduler * sched, GstElement * element)
 {
-//  if (GST_ELEMENT_THREADSTATE (element))
-//    cothread_unlock (GST_ELEMENT_THREADSTATE (element));
+/*  if (GST_ELEMENT_THREADSTATE (element)) */
+/*    cothread_unlock (GST_ELEMENT_THREADSTATE (element)); */
 }
 
 static void

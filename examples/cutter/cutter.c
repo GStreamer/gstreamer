@@ -47,7 +47,7 @@ void cut_start (GstElement *element)
     struct tm *ct;
     time (&seconds);
     ct = localtime (&seconds);
-//    sprintf (buffer, "/news/incoming/audio/cutter.%06d.wav", id);
+/*    sprintf (buffer, "/news/incoming/audio/cutter.%06d.wav", id); */
     sprintf (buffer, "/news/incoming/audio/cutter.%04d%02d%02d.%02d%02d%02d.wav", 
 	ct->tm_year + 1900, ct->tm_mon, ct->tm_mday,
 	ct->tm_hour, ct->tm_min, ct->tm_sec);
@@ -93,12 +93,12 @@ void cut_stop_signal (GstElement *element)
 
 int main (int argc, char *argv[]) 
 {
-  //int i, j;
-  //gboolean done;
+  /*int i, j; */
+  /*gboolean done; */
   
-  //char buffer[20];
+  /*char buffer[20]; */
   
-  //output_channel_t *channel_out;
+  /*output_channel_t *channel_out; */
   
   GstElement *audiosrc;
 
@@ -183,9 +183,9 @@ int main (int argc, char *argv[])
 */
   while (playing) 
   {
-//      g_print ("> ");
+/*      g_print ("> "); */
       gst_bin_iterate (GST_BIN (main_bin));
-//      g_print (" <");
+/*      g_print (" <"); */
       if (cut_start_signalled)
       {
         g_print ("\nDEBUG: main: cut_start_signalled true !\n");

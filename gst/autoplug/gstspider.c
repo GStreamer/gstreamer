@@ -96,7 +96,7 @@ static GstSpiderConnection *	gst_spider_connection_get		(GstSpiderIdentity *sink
 static GstElement *             gst_spider_find_element_to_plug      	(GstElement *src, GstElementFactory *fac, GstPadDirection dir);
 static GstPadConnectReturn	gst_spider_plug				(GstSpiderConnection *conn);
 static GstPadConnectReturn	gst_spider_plug_from_srcpad		(GstSpiderConnection *conn, GstPad *srcpad);
-//static GstPadConnectReturn      gst_spider_plug_peers			(GstSpider *spider, GstPad *srcpad, GstPad *sinkpad);
+/*static GstPadConnectReturn      gst_spider_plug_peers			(GstSpider *spider, GstPad *srcpad, GstPad *sinkpad); */
 static GstPadConnectReturn	gst_spider_create_and_plug		(GstSpiderConnection *conn, GList *plugpath);
 
 /* random functions */

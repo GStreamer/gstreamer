@@ -163,9 +163,9 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
 #ifdef HAVE_LIBMMX
   if (1) {
     gb->getbits = _gst_getbits_mmx;
-//    gb->backbits = _gst_getbits_back_mmx;
-//    gb->backbytes = _gst_getbits_byteback_mmx;
-//    printf("gstgetbits: using MMX optimized versions\n");
+/*    gb->backbits = _gst_getbits_back_mmx; */
+/*    gb->backbytes = _gst_getbits_byteback_mmx; */
+/*    printf("gstgetbits: using MMX optimized versions\n"); */
   } else
 #endif /* HAVE_LIBMMX */
   {
@@ -174,7 +174,7 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
       gb->showbits = _gst_showbits_int;
       gb->flushbits = _gst_flushbits_int;
       gb->backbits = _gst_getbits_back_int;
-//      printf("gstgetbits: using callback versions\n");
+/*      printf("gstgetbits: using callback versions\n"); */
     }
     else {
 #ifdef HAVE_CPU_I386
@@ -186,7 +186,7 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
       gb->showbits = _gst_showbits_i386;
       gb->flushbits = _gst_flushbits_i386;
       gb->backbits = _gst_getbits_back_i386;
-//      printf("gstgetbits: using i386 optimized versions\n");
+/*      printf("gstgetbits: using i386 optimized versions\n"); */
 #else
       gb->get1bit = _gst_get1bit_int;
       gb->getbits = _gst_getbits_int;
@@ -196,7 +196,7 @@ void gst_getbits_init(gst_getbits_t *gb, GstGetbitsCallback callback, void *data
       gb->showbits = _gst_showbits_int;
       gb->flushbits = _gst_flushbits_int;
       gb->backbits = _gst_getbits_back_int;
-//      printf("gstgetbits: using normal versions\n");
+/*      printf("gstgetbits: using normal versions\n"); */
 #endif
     }
   }
@@ -208,6 +208,6 @@ void gst_getbits_newbuf(gst_getbits_t *gb,unsigned char *buffer, unsigned long l
   gb->endptr = buffer+len;
   gb->bits = 0;
 #ifdef HAVE_LIBMMX
-//  gb->qword = 0;
+/*  gb->qword = 0; */
 #endif /* HAVE_LIBMMX */
 }

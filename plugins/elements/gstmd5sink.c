@@ -141,7 +141,7 @@ md5_read_ctx (GstMD5Sink *ctx, gpointer resbuf)
 void
 md5_process_bytes (const void *buffer, size_t len, GstMD5Sink *ctx)
 {
-  //const void aligned_buffer = buffer;
+  /*const void aligned_buffer = buffer; */
 
   /* When we already have some bits in our internal buffer concatenate
      both inputs first.  */

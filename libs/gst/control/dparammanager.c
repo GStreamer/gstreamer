@@ -583,7 +583,7 @@ gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, Gst
 	if (new_state == GST_STATE_PLAYING){
 		GST_DEBUG(GST_CAT_PARAMS, "initialising params\n");
 			
-		// force all params to be updated
+		/* force all params to be updated */
 		dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
 		while (dwraps){
 			dpwrap = (GstDParamWrapper*)dwraps->data;
@@ -622,7 +622,7 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 	g_return_val_if_fail (dpman != NULL, frames);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), frames);
 
-	// now check whether any passive dparams are ready for an update
+	/* now check whether any passive dparams are ready for an update */
 	dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
 	while (dwraps){
 		dpwrap = (GstDParamWrapper*)dwraps->data;
@@ -633,7 +633,7 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 		              	
 			switch (dpwrap->update_method) {
 				
-				// direct method - set the value directly in the struct of the element
+				/* direct method - set the value directly in the struct of the element */
 				case GST_DPMAN_DIRECT:
 					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value);
 					GST_DEBUG(GST_CAT_PARAMS, "doing direct update\n");
@@ -652,15 +652,15 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 					}
 					break;
 
-				// callback method - call the element's callback so it can do what it likes
+				/* callback method - call the element's callback so it can do what it likes */
 				case GST_DPMAN_CALLBACK:
 					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value);
 					GST_DEBUG(GST_CAT_PARAMS, "doing callback update\n");
 					GST_DPMAN_DO_UPDATE(dpwrap);
 					break;
 					
-				// array method - generate an array of the right size 
-				// with each value being the same (in synchronous update mode)
+				/* array method - generate an array of the right size  */
+				/* with each value being the same (in synchronous update mode) */
 				case GST_DPMAN_ARRAY:
 					GST_DEBUG(GST_CAT_PARAMS, "doing array update\n");
 					switch (G_VALUE_TYPE(dpwrap->value)){

@@ -87,7 +87,7 @@ static void gst_identity_get_property	(GObject *object, guint prop_id, GValue *v
 static void gst_identity_loop		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
-// static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_identity_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_identity_get_type (void) 
@@ -157,11 +157,11 @@ gst_identity_init (GstIdentity *identity)
 {
   identity->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
-  //gst_pad_set_negotiate_function (identity->sinkpad, gst_identity_negotiate_sink);
+  /*gst_pad_set_negotiate_function (identity->sinkpad, gst_identity_negotiate_sink); */
   
   identity->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
-  //gst_pad_set_negotiate_function (identity->srcpad, gst_identity_negotiate_src);
+  /*gst_pad_set_negotiate_function (identity->srcpad, gst_identity_negotiate_src); */
 
   gst_element_set_loop_function (GST_ELEMENT (identity), gst_identity_loop);
 
@@ -185,17 +185,17 @@ gst_identity_loop (GstElement *element)
 
 /* THIS IS THE BUFFER BASED ONE
   do {
-//    g_print("\n");
+*    g_print("\n"); *
 
     for (i=0;i<identity->count;i++) {
-//      g_print("bstest: getting a buffer of %d bytes\n",identity->byte_size);
+*      g_print("bstest: getting a buffer of %d bytes\n",identity->byte_size); *
       buf = gst_bytestream_read(identity->bs,identity->byte_size);
       if (!buf) g_print("BUFFER IS BOGUS\n");
-//      g_print("pushing the buffer, %d bytes at %d\n",GST_BUFFER_SIZE(buf),GST_BUFFER_OFFSET(buf));
+*      g_print("pushing the buffer, %d bytes at %d\n",GST_BUFFER_SIZE(buf),GST_BUFFER_OFFSET(buf)); *
       gst_pad_push(identity->srcpad,buf);
-//      g_print("\n");
+*      g_print("\n"); *
       gst_bytestream_print_status(identity->bs);
-//      g_print("\n\n");
+*      g_print("\n\n"); *
     }
 
     exit(1);
@@ -206,7 +206,7 @@ gst_identity_loop (GstElement *element)
   do {
     for (i=0;i<identity->count;i++) {
       buf = gst_buffer_new();
-      // note that this is dangerous, as it does *NOT* refcount the data, it can go away!!!
+      /* note that this is dangerous, as it does *NOT* refcount the data, it can go away!!! */
       GST_BUFFER_DATA(buf) = gst_bytestream_peek_bytes(identity->bs,identity->byte_size);
       GST_BUFFER_SIZE(buf) = identity->byte_size;
       GST_BUFFER_FLAG_SET(buf,GST_BUFFER_DONTFREE);
@@ -268,7 +268,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  // we need gstbytestream
+  /* we need gstbytestream */
   if (!gst_library_load ("gstbytestream")) {
     g_print("can't load bytestream\n");
     return FALSE;
