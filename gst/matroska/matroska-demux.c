@@ -1730,7 +1730,7 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux *demux,
                     break;
                   }
                   data += r; size -= r;
-                  lace_size[n] = lace_size[0] + snum;
+                  lace_size[n] = lace_size[n - 1] + snum;
                   total += lace_size[n];
                 }
                 lace_size[n] = size - total;

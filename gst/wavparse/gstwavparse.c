@@ -47,6 +47,7 @@ static gboolean		gst_wavparse_pad_convert 	(GstPad *pad,
 							 gint64 *dest_value);
 
 static void             gst_wavparse_loop               (GstElement *element);
+static GstCaps *        gst_wavparse_getcaps            (GstPad *pad);
 static const GstEventMask*
 			gst_wavparse_get_event_masks 	(GstPad *pad);
 static gboolean 	gst_wavparse_srcpad_event 	(GstPad *pad, GstEvent *event);
@@ -202,7 +203,8 @@ gst_wavparse_init (GstWavParse *wavparse)
   gst_pad_set_query_function (wavparse->srcpad, gst_wavparse_pad_query);
   gst_pad_set_event_function (wavparse->srcpad, gst_wavparse_srcpad_event);
   gst_pad_set_event_mask_function (wavparse->srcpad, gst_wavparse_get_event_masks);
-  gst_pad_use_explicit_caps (wavparse->srcpad);
+  gst_pad_set_getcaps_function (wavparse->srcpad, gst_wavparse_getcaps);
+  wavparse->caps = NULL;
 
   gst_element_set_loop_function (GST_ELEMENT (wavparse), gst_wavparse_loop);
 
@@ -661,12 +663,29 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse)
       gst_element_error (GST_ELEMENT (wavparse), "wavparse: format %d not handled", wavparse->format);
       return;
     }
-		
-    gst_pad_set_explicit_caps (wavparse->srcpad, caps);
+
+    if (wavparse->caps)
+        gst_caps_free (wavparse->caps);
+    wavparse->caps = caps ? gst_caps_copy (caps) : gst_caps_new_empty ();
+    if (caps)
+        gst_pad_try_set_caps (wavparse->srcpad, caps);
 
     GST_DEBUG ("frequency %d, channels %d",
 							 wavparse->rate, wavparse->channels);
   }
+}
+
+static GstCaps *
+gst_wavparse_getcaps (GstPad *pad)
+{
+  GstWavParse *wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
+  GstPadTemplate *templ;
+
+  if (wavparse->caps)
+    return gst_caps_copy (wavparse->caps);
+
+  templ = gst_static_pad_template_get (&src_template_factory);
+  return gst_caps_copy (gst_pad_template_get_caps (templ));
 }
 
 static gboolean
@@ -678,12 +697,14 @@ gst_wavparse_handle_sink_event (GstWavParse *wavparse)
   gboolean res = TRUE;
 	
   gst_bytestream_get_status (wavparse->bs, &remaining, &event);
+g_print ("Handle sink event\n");
 	
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
   GST_DEBUG ("wavparse: event %p %d", event, type);
 	
   switch (type) {
   case GST_EVENT_EOS:
+g_print ("EOS\n");
     gst_bytestream_flush (wavparse->bs, remaining);
     gst_pad_event_default (wavparse->sinkpad, event);
     res = FALSE;
@@ -744,7 +765,16 @@ gst_wavparse_loop (GstElement *element)
       desired = MIN (wavparse->dataleft, MAX_BUFFER_SIZE);
       got_bytes = gst_bytestream_peek (bs, &buf, desired);
 
-      if (got_bytes == 0) {
+      if (got_bytes != desired) {
+        /* EOS? */
+        GstEvent *event;
+        guint32 remaining;
+        gst_bytestream_get_status (bs, &remaining, &event);
+        if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+          gst_pad_event_default (wavparse->sinkpad, event);
+        } else {
+          gst_element_error (element, "Read failure");
+        }
 	return;
       }
 
@@ -1088,7 +1118,10 @@ gst_wavparse_change_state (GstElement *element)
       wavparse->bps = 0;
       wavparse->seek_pending = FALSE;
       wavparse->seek_offset = 0;
-      
+      if (wavparse->caps) {
+        gst_caps_free (wavparse->caps);
+        wavparse->caps = NULL;
+      }
       break;
     case GST_STATE_READY_TO_NULL:
       break;

@@ -57,6 +57,7 @@ struct _GstWavParse {
   GstByteStream *bs;
   /* pads */
   GstPad *sinkpad,*srcpad;
+  GstCaps *caps;
 
   /* WAVE decoding state */
   gint state;
