@@ -46,7 +46,121 @@
     <application>GStreamer</application>.  For a gentle introduction to
     GStreamer, you may wish to read the <emphasis>GStreamer Application
     Development Manual</emphasis>.  Since <application>GStreamer</application>
-    adheres to the GTK+ programming model, the reader is also assumed to
-    understand the basics of GTK+.
+    adheres to the GObject programming model, the reader is also assumed to
+    understand the basics of GObject.
   </para>
+</chapter>
+
+<chapter id="cha-structure">
+  <title>Structure of this guide</title>
+  <para>
+    The <application>GStreamer</application> API for developing plugins is 
+    rather extensive and powerful. We will first try to get you up and running
+    with a simple plugin as fast as possible. We will then gradually add more 
+    feature to our plugin. The basic topics will be:
+  </para>
+  <itemizedlist>
+    <listitem>
+      <para>
+        Introduction to the basic structure of the plugin. We will cover all the
+	different steps you have to perform in order to build a plugin. This will
+	include a general overview of the structure of your source files.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Creating the plugin boilerplate. We will show you how to define and set up
+	the different aspects for creating a plugin. This will cover extending the 
+	GstElement class and creating the elementfactory structures. This will include
+	setting up the .h and .c files of your plugin.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Defining the entry point of the plugin and registering the elementfactory.
+	After this step your plugin will become available for application programmers.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Setting up the basic components of the element like adding pads and setting
+	up the scheduling entry points of your plugin.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Adding arguments and signals to the plugin. Users of your plugin will be
+	able to listen for specific events your plugin generates as well as change and
+	adjust the different properties of your plugin.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Compiling and testing the basic plugin.
+      </para>
+    </listitem>
+  </itemizedlist>
+  <para>
+    After this first section, you should be able to create a simple plugin. We will then
+    introduce the more advanced concepts of plugins, including:
+  </para>
+  <itemizedlist>
+    <listitem>
+      <para>
+        Adding padtemplates to the plugin. This will allow your plugin to become fully
+	integrated in the GStreamer plugin registry and will allow users of your plugin 
+	to know what media types your plugin operates on.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Adding new mime-types to the registry along with typedetect functions. This will allow
+	your plugin to operate on a completely new media type.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Adding caps to the plugins input pads. This will allow other plugins to know what
+	media type your plugin is handling at runtime.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Choosing between a loop-based or a chain-based plugin. We will teach you how to 
+	create plugins with a more complicated input/output behaviour.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Adding request pads to the plugin. Request pads allow the application programmer
+	to let your plugin dynamically create a pad based on a template.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Caps negotiation will show you how your plugin can addapt to the plugins it 
+	is connected to.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Creating compound and complex elements by extending from a GstBin. This will
+	allow you to create plugins that have other plugins embedded in them.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Creating custom schedulers when the default schedulers are insufficient.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Creating custom autopluggers when the default ones are insufficient for your needs.
+      </para>
+    </listitem>
+  </itemizedlist>
+  <para>
+    As you can see, there a lot to learn, so let's get started...
+  </para>
+
 </chapter>
