@@ -47,7 +47,7 @@ EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \
 	     configure.base autogen.sh \
 	     LICENSE REQUIREMENTS ABOUT-NLS $(man_MANS) \
-	     idiottest.mak
+	     idiottest.mak ltconfig.sh
 
 dist-hook:
 	cp gstreamer.spec $(distdir)
