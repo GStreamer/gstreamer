@@ -541,7 +541,7 @@ init_post (void)
   _gst_cpu_initialize (_gst_enable_cpu_opt);
   _gst_structure_initialize ();
   _gst_value_initialize ();
-  _gst_caps_initialize ();
+  gst_caps_get_type ();
   _gst_plugin_initialize ();
   _gst_event_initialize ();
   _gst_buffer_initialize ();

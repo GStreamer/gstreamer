@@ -25,9 +25,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CAPS             gst_caps_get_type()
+#define GST_TYPE_CAPS              gst_caps_get_type()
+#define GST_CAPS(object)          (G_TYPE_CHECK_INSTANCE_CAST ((object), GST_TYPE_CAPS, GstCaps))
+#define GST_IS_CAPS(object)       (G_TYPE_CHECK_INSTANCE_TYPE ((object), GST_TYPE_CAPS))
 
-#define GST_CAPS_FLAGS_ANY	  (1<<0)
+#define GST_CAPS_FLAGS_ANY	  (1 << 0)
 
 #define GST_CAPS_ANY              gst_caps_new_any()
 #define GST_CAPS_NONE             gst_caps_new_empty()
@@ -63,7 +65,7 @@ struct _GstStaticCaps {
   const char *string;
 };
 
-GType                    gst_caps_get_type                              (void);
+GType                    gst_caps_get_type                              (void) G_GNUC_CONST;
 GstCaps *                gst_caps_new_empty                             (void);
 GstCaps *                gst_caps_new_any                               (void);
 GstCaps *                gst_caps_new_simple                            (const char    *media_type,
@@ -133,9 +135,6 @@ gboolean                 gst_caps_structure_fixate_field_nearest_int    (GstStru
 gboolean                 gst_caps_structure_fixate_field_nearest_double (GstStructure *structure,
 									 const char   *field_name,
 									 double        target);
-/* private */
-void                     _gst_caps_initialize                           (void);
-extern GType _gst_caps_type;
 
 G_END_DECLS
 
