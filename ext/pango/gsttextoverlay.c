@@ -371,13 +371,17 @@ gst_textoverlay_video_chain(GstPad *pad, GstBuffer *buf)
     gst_pad_push(overlay->srcpad, buf);
 }
 
+#define PAST_END(buffer, time) \
+  (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE && \
+   GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE && \
+   GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer) \
+     < (time))
 
 static void
 gst_textoverlay_loop(GstElement *element)
 {
     GstTextOverlay *overlay;
     GstBuffer      *video_frame;
-    GstBuffer      *new_text;
     guint64         now;
 
     g_return_if_fail(element != NULL);
@@ -386,32 +390,74 @@ gst_textoverlay_loop(GstElement *element)
 
     video_frame = gst_pad_pull(overlay->video_sinkpad);
     now = GST_BUFFER_TIMESTAMP(video_frame);
-    if (now >= overlay->next_known_text_change) {
-      GST_DEBUG ( "rendering '%s'", overlay->next_known_text->str);
+
+    /*
+     * This state machine has a bug that can't be resolved easily.
+     * (Needs a more complicated state machine.)  Basically, if the
+     * text that came from a buffer from the sink pad is being
+     * displayed, and the default text is changed by set_parameter,
+     * we'll incorrectly display the default text.
+     *
+     * Otherwise, this is a pretty decent state machine that handles
+     * buffer timestamps and durations correctly.  (I think)
+     */
+
+    while (overlay->next_buffer == NULL){
+      GST_DEBUG("attempting to pull a buffer");
+
+      /* read all text buffers until we get one "in the future" */
+      if(!GST_PAD_IS_USABLE(overlay->text_sinkpad)){
+        break;
+      }
+      overlay->next_buffer = gst_pad_pull(overlay->text_sinkpad);
+      if (!overlay->next_buffer)
+	break;
+
+      if (PAST_END(overlay->next_buffer, now)){
+	gst_buffer_unref(overlay->next_buffer);
+	overlay->next_buffer = NULL;
+      }
+    }
+
+    if (overlay->next_buffer && 
+	(GST_BUFFER_TIMESTAMP(overlay->next_buffer) <= now ||
+        GST_BUFFER_TIMESTAMP(overlay->next_buffer) == GST_CLOCK_TIME_NONE)){
+      GST_DEBUG("using new buffer");
+
+      if (overlay->current_buffer){
+	gst_buffer_unref (overlay->current_buffer);
+      }
+      overlay->current_buffer = overlay->next_buffer;
+      overlay->next_buffer = NULL;
+
+      GST_DEBUG ( "rendering '%*s'", 
+	  GST_BUFFER_SIZE(overlay->current_buffer),
+	  GST_BUFFER_DATA(overlay->current_buffer));
       pango_layout_set_markup(overlay->layout,
-			      overlay->next_known_text->str,
-			      overlay->next_known_text->len);
+	  GST_BUFFER_DATA(overlay->current_buffer),
+	  GST_BUFFER_SIZE(overlay->current_buffer));
       render_text(overlay);
-      overlay->next_known_text_change = 0;
+      overlay->need_render = FALSE;
     }
-    if (overlay->next_known_text_change == 0) {
-	/* read all text buffers until we get one "in the future" */
-	while (1) {
-	    new_text = gst_pad_pull(overlay->text_sinkpad);
-	    if (!new_text)
-		break;
-	    overlay->next_known_text_change =
-		GST_BUFFER_TIMESTAMP(new_text);
-	    overlay->next_known_text = g_string_truncate
-		(overlay->next_known_text, 0);
-	    overlay->next_known_text = g_string_append_len
-		(overlay->next_known_text,
-		 (gchar *) GST_BUFFER_DATA(new_text),
-		 GST_BUFFER_SIZE(new_text));
-	    gst_buffer_unref(new_text);
-            break;
-	}
+
+    if (overlay->current_buffer && PAST_END(overlay->current_buffer, now)){
+      GST_DEBUG("dropping old buffer");
+
+      gst_buffer_unref(overlay->current_buffer);
+      overlay->current_buffer = NULL;
+
+      overlay->need_render = TRUE;
     }
+
+    if(overlay->need_render){
+      GST_DEBUG ( "rendering '%s'", overlay->default_text);
+      pango_layout_set_markup(overlay->layout,
+	  overlay->default_text, strlen(overlay->default_text));
+      render_text(overlay);
+
+      overlay->need_render = FALSE;
+    }
+
     gst_textoverlay_video_chain(overlay->srcpad, video_frame);
 }
 
@@ -483,8 +529,8 @@ gst_textoverlay_init(GstTextOverlay *overlay)
     overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
     overlay->x0 = overlay->y0 = 0;
 
-    overlay->next_known_text = g_string_new(NULL);
-    overlay->next_known_text_change = 0;
+    overlay->default_text = g_strdup("");
+    overlay->need_render = TRUE;
 
     gst_element_set_loop_function(GST_ELEMENT(overlay), gst_textoverlay_loop);
 }
@@ -503,8 +549,11 @@ gst_textoverlay_set_property(GObject *object, guint prop_id, const GValue *value
     {
 
     case ARG_TEXT:
-	pango_layout_set_markup(overlay->layout, g_value_get_string(value), -1);
-	render_text(overlay);
+        if(overlay->default_text){
+	  g_free(overlay->default_text);
+	}
+        overlay->default_text = g_strdup(g_value_get_string(value));
+	overlay->need_render = TRUE;
 	break;
 
     case ARG_VALIGN:
