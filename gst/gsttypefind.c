@@ -192,7 +192,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 	}
 
 	{
-          int oldstate = GST_STATE(typefind);
+          /* int oldstate = GST_STATE(typefind);*/
 	  gst_object_ref (GST_OBJECT (typefind));
           g_signal_emit (G_OBJECT (typefind), gst_typefind_signals[HAVE_TYPE], 0,
 	                      typefind->caps);
