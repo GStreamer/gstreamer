@@ -317,7 +317,6 @@ Plug-ins for playback of AVI format media files.
 %defattr(-, root, root)
 %{_libdir}/gstreamer-%{majorminor}/libgstavidemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstavimux.so
-%{_libdir}/gstreamer-%{majorminor}/libgstaviparse.so
 
 %post -n gstreamer-avi
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1546,9 +1545,6 @@ This package contains a basic audio and video playback library.
 /sbin/ldconfig
 
 %changelog
-* Sun Jan 19 2003 Christian Schaller <Uraeus@gnome.org>
-- Add aviparse plugin
-
 * Fri Dec 27 2002 Thomas Vander Stichele <thomas at apestaart dot org>
 - add virtual provides for audio sources and sinks
 
