@@ -147,7 +147,6 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
 {
   GstXImage *ximage = NULL;
   
-  g_return_val_if_fail (ximagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
   
   ximage = g_new0 (GstXImage, 1);
@@ -218,7 +217,6 @@ static void
 gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
 {
   g_return_if_fail (ximage != NULL);
-  g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   /* If the destroyed image is the current one we destroy our reference too */
@@ -263,7 +261,6 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
   gint x, y;
  
   g_return_if_fail (ximage != NULL);
-  g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   /* Store a reference to the last image we put */
@@ -302,7 +299,6 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
 {
   GstXWindow *xwindow = NULL;
   
-  g_return_val_if_fail (ximagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
   
   xwindow = g_new0 (GstXWindow, 1);
@@ -341,7 +337,6 @@ static void
 gst_ximagesink_xwindow_destroy (GstXImageSink *ximagesink, GstXWindow *xwindow)
 {
   g_return_if_fail (xwindow != NULL);
-  g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   g_mutex_lock (ximagesink->x_lock);
@@ -367,7 +362,6 @@ gst_ximagesink_xwindow_resize (GstXImageSink *ximagesink, GstXWindow *xwindow,
                                guint width, guint height)
 {
   g_return_if_fail (xwindow != NULL);
-  g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   g_mutex_lock (ximagesink->x_lock);
@@ -377,7 +371,28 @@ gst_ximagesink_xwindow_resize (GstXImageSink *ximagesink, GstXWindow *xwindow,
   
   XResizeWindow (ximagesink->xcontext->disp, xwindow->win,
                  xwindow->width, xwindow->height);
+  
+  XSync (ximagesink->xcontext->disp, FALSE);
+  
+  g_mutex_unlock (ximagesink->x_lock);
+}
 
+static void
+gst_ximagesink_xwindow_clear (GstXImageSink *ximagesink, GstXWindow *xwindow)
+{
+  g_return_if_fail (xwindow != NULL);
+  g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  
+  g_mutex_lock (ximagesink->x_lock);
+  
+  XSetForeground (ximagesink->xcontext->disp, xwindow->gc,
+                  ximagesink->xcontext->black);
+  
+  XFillRectangle (ximagesink->xcontext->disp, xwindow->win, xwindow->gc,
+                  0, 0, xwindow->width, xwindow->height);
+  
+  XSync (ximagesink->xcontext->disp, FALSE);
+  
   g_mutex_unlock (ximagesink->x_lock);
 }
 
@@ -385,7 +400,6 @@ static void
 gst_ximagesink_renegotiate_size (GstXImageSink *ximagesink,
                                  guint width, guint height)
 {
-  g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   /* Window got resized or moved. We do caps negotiation again to get video
@@ -442,7 +456,6 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
   guint new_width = 0, new_height = 0, pointer_x = 0, pointer_y = 0;
   gboolean pointer_moved = FALSE;
   
-  g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   /* First we get all structure modification events. Only the last one is 
@@ -580,7 +593,6 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
   XPixmapFormatValues *px_formats = NULL;
   gint nb_formats = 0, i;
   
-  g_return_val_if_fail (ximagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
   
   xcontext = g_new0 (GstXContext, 1);
@@ -679,7 +691,6 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
 static void
 gst_ximagesink_xcontext_clear (GstXImageSink *ximagesink)
 {
-  g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   gst_caps_free (ximagesink->xcontext->caps);
@@ -842,6 +853,7 @@ gst_ximagesink_change_state (GstElement *element)
         return GST_STATE_FAILURE;
       break;
     case GST_STATE_READY_TO_PAUSED:
+      gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
       ximagesink->time = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -889,7 +901,6 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
   GstBuffer *buf = GST_BUFFER (data);
   GstXImageSink *ximagesink;
   
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
@@ -1095,7 +1106,6 @@ gst_ximagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
   GstXWindow *xwindow = NULL;
   XWindowAttributes attr;
   
-  g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
   /* If we already use that window return */

@@ -160,7 +160,6 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
 {
   GstXvImage *xvimage = NULL;
   
-  g_return_val_if_fail (xvimagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
   
   xvimage = g_new0 (GstXvImage, 1);
@@ -230,7 +229,6 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink *xvimagesink,
                                  GstXvImage *xvimage)
 {
   g_return_if_fail (xvimage != NULL);
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
   /* If the destroyed image is the current one we destroy our reference too */
@@ -273,7 +271,6 @@ static void
 gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
 {
   g_return_if_fail (xvimage != NULL);
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
   /* Store a reference to the last image we put */
@@ -319,7 +316,6 @@ gst_xvimagesink_xwindow_new (GstXvImageSink *xvimagesink,
   GstXWindow *xwindow = NULL;
   XGCValues values;
   
-  g_return_val_if_fail (xvimagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
   
   xwindow = g_new0 (GstXWindow, 1);
@@ -358,7 +354,6 @@ static void
 gst_xvimagesink_xwindow_destroy (GstXvImageSink *xvimagesink, GstXWindow *xwindow)
 {
   g_return_if_fail (xwindow != NULL);
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
   g_mutex_lock (xvimagesink->x_lock);
@@ -384,7 +379,6 @@ gst_xvimagesink_xwindow_resize (GstXvImageSink *xvimagesink,
                                 GstXWindow *xwindow, guint width, guint height)
 {
   g_return_if_fail (xwindow != NULL);
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
   g_mutex_lock (xvimagesink->x_lock);
@@ -400,6 +394,25 @@ gst_xvimagesink_xwindow_resize (GstXvImageSink *xvimagesink,
   g_mutex_unlock (xvimagesink->x_lock);
 }
 
+static void
+gst_xvimagesink_xwindow_clear (GstXvImageSink *xvimagesink, GstXWindow *xwindow)
+{
+  g_return_if_fail (xwindow != NULL);
+  g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
+  
+  g_mutex_lock (xvimagesink->x_lock);
+  
+  XSetForeground (xvimagesink->xcontext->disp, xwindow->gc,
+                  xvimagesink->xcontext->black);
+  
+  XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
+                  0, 0, xwindow->width, xwindow->height);
+  
+  XSync (xvimagesink->xcontext->disp, FALSE);
+  
+  g_mutex_unlock (xvimagesink->x_lock);
+}
+
 /* This function commits our internal colorbalance settings to our grabbed Xv
    port. If the xcontext is not initialized yet it simply returns */
 static void
@@ -407,7 +420,6 @@ gst_xvimagesink_update_colorbalance (GstXvImageSink *xvimagesink)
 {
   GList *channels = NULL;
   
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
   /* If we haven't initialized the X context we can't update anything */
@@ -485,7 +497,6 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
   guint pointer_x = 0, pointer_y = 0;
   gboolean pointer_moved = FALSE;
   
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
   /* We get all pointer motion events, only the last position is
@@ -743,7 +754,6 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
   char *channels[4] = { "XV_HUE", "XV_SATURATION",
                         "XV_BRIGHTNESS", "XV_CONTRAST" };
   
-  g_return_val_if_fail (xvimagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
   
   xcontext = g_new0 (GstXContext, 1);
@@ -895,7 +905,6 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
 {
   GList *formats_list, *channels_list;
   
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
   formats_list = xvimagesink->xcontext->formats_list;
@@ -989,7 +998,6 @@ gst_xvimagesink_get_fourcc_from_caps (GstXvImageSink *xvimagesink,
 {
   GList *list = NULL;
   
-  g_return_val_if_fail (xvimagesink != NULL, 0);
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), 0);
   
   list = xvimagesink->xcontext->formats_list;
@@ -1129,6 +1137,7 @@ gst_xvimagesink_change_state (GstElement *element)
         gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_READY_TO_PAUSED:
+      gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
       xvimagesink->time = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
@@ -1176,7 +1185,6 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
   GstBuffer *buf = NULL;
   GstXvImageSink *xvimagesink;
 
-  g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (data != NULL);
 
@@ -1379,7 +1387,6 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
   GstXWindow *xwindow = NULL;
   XWindowAttributes attr;
   
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
   /* If we already use that window return */
@@ -1498,7 +1505,6 @@ gst_xvimagesink_colorbalance_list_channels (GstColorBalance *balance)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (balance);
   
-  g_return_val_if_fail (xvimagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
   
   if (xvimagesink->xcontext)
@@ -1514,7 +1520,6 @@ gst_xvimagesink_colorbalance_set_value (GstColorBalance        *balance,
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (balance);
   
-  g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   g_return_if_fail (channel->label != NULL);
   
@@ -1556,7 +1561,6 @@ gst_xvimagesink_colorbalance_get_value (GstColorBalance        *balance,
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (balance);
   gint value = 0;
   
-  g_return_val_if_fail (xvimagesink != NULL, 0);
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), 0);
   g_return_val_if_fail (channel->label != NULL, 0);
   

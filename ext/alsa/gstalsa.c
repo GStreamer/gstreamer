@@ -25,6 +25,7 @@
 
 #include <sys/time.h>
 
+#include "gst/gst-i18n-plugin.h"
 #include "gstalsa.h"
 #include "gstalsaclock.h"
 #include "gstalsamixer.h"
@@ -909,10 +910,14 @@ gst_alsa_open_audio (GstAlsa *this)
   ERROR_CHECK (snd_output_stdio_attach (&this->out, stderr, 0),
                "error opening log output: %s");
 #endif
-  /* we use non-blocking i/o */
-  ERROR_CHECK (snd_pcm_open (&this->handle, this->device, 
-                             GST_ALSA_GET_CLASS (this)->stream, SND_PCM_NONBLOCK),
-               "error opening pcm device %s: %s\n", this->device);
+  
+  if (snd_pcm_open (&this->handle, this->device, 
+                    GST_ALSA_GET_CLASS (this)->stream, SND_PCM_NONBLOCK) < 0) {
+    GST_ELEMENT_ERROR (GST_ELEMENT (this), RESOURCE, BUSY,
+                       (_("Alsa device \"%s\" is already in use by another program."), this->device),
+                       (NULL));
+    return FALSE;
+  }
 
   GST_FLAG_SET (this, GST_ALSA_OPEN);
   return TRUE;
@@ -1305,4 +1310,3 @@ gst_alsa_timestamp_to_bytes (GstAlsa *this, GstClockTime time)
 {
   return gst_alsa_samples_to_bytes (this, gst_alsa_timestamp_to_samples (this, time));
 }
-

@@ -1,3 +1,32 @@
+2004-02-16  Julien MOUTTE <julien@moutte.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_open_audio),
+	(gst_alsa_timestamp_to_bytes): Alsa should trigger an error if it
+	failed opening the audio device.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),
+	(gst_ximagesink_ximage_destroy), (gst_ximagesink_ximage_put),
+	(gst_ximagesink_xwindow_new), (gst_ximagesink_xwindow_destroy),
+	(gst_ximagesink_xwindow_resize), (gst_ximagesink_xwindow_clear),
+	(gst_ximagesink_renegotiate_size), (gst_ximagesink_handle_xevents),
+	(gst_ximagesink_xcontext_get), (gst_ximagesink_xcontext_clear),
+	(gst_ximagesink_change_state), (gst_ximagesink_chain),
+	(gst_ximagesink_set_xwindow_id): Clearing window in READY TO PAUSED.
+	Removing some useless g_return_if_fail like wingo suggested.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_xvimage_destroy), (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_xwindow_new), (gst_xvimagesink_xwindow_destroy),
+	(gst_xvimagesink_xwindow_resize), (gst_xvimagesink_xwindow_clear),
+	(gst_xvimagesink_update_colorbalance),
+	(gst_xvimagesink_handle_xevents), (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_xcontext_clear),
+	(gst_xvimagesink_get_fourcc_from_caps),
+	(gst_xvimagesink_change_state), (gst_xvimagesink_chain),
+	(gst_xvimagesink_set_xwindow_id),
+	(gst_xvimagesink_colorbalance_list_channels),
+	(gst_xvimagesink_colorbalance_set_value),
+	(gst_xvimagesink_colorbalance_get_value): Clearing window in READY TO
+	PAUSED. Removing some useless g_return_if_fail like wingo suggested.
+
 2004-02-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_chain):
