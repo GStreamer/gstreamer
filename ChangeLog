@@ -1,5 +1,10 @@
 2004-05-07  David Schleef  <ds@schleef.org>
 
+	* configure.ac: Make sure GST_INT_CFLAGS is not clobbered,
+	since it contains important stuff.
+
+2004-05-07  David Schleef  <ds@schleef.org>
+
 	* testsuite/caps/caps.c: (test3), (main): A check for appending
 	ANY caps.
 

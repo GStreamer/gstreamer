@@ -567,7 +567,7 @@ dnl we disable deprecated internally
 dnl XML, GLib, popt, GST_INT, VALGRIND, and the right include for CFLAGS
 dnl no need to add XML, GLib, popt explicitly since libgstreamer pulls them in
 GST_INT_CFLAGS="$GLIB_CFLAGS $XML_CFLAGS \
- $GST_ERROR_CFLAGS -DGST_DISABLE_DEPRECATED"
+ $GST_INT_CFLAGS $GST_ERROR_CFLAGS -DGST_DISABLE_DEPRECATED"
 
 dnl Private vars for libgst only
 GST_LIB_CFLAGS="$GST_PKG_CFLAGS $GST_INT_CFLAGS \
