@@ -69,11 +69,8 @@ struct _GstMixMatrixClass {
 static GstElementDetails mixmatrix_details = {
   "Mixing Matrix",
   "Filter/Audio",
-  "LGPL",
   "Mix N audio channels together into M channels",
-  VERSION,
-  "Erik Walthinsen <omega@temple-baptist.com>",
-  "(C) 2002",
+  "Erik Walthinsen <omega@temple-baptist.com>"
 };
 
 enum {
@@ -114,6 +111,7 @@ GST_PAD_TEMPLATE_FACTORY (mixmatrix_src_factory,
 );
 
 static void	gst_mixmatrix_class_init (GstMixMatrixClass *klass);
+static void	gst_mixmatrix_base_init (GstMixMatrixClass *klass);
 static void	gst_mixmatrix_init (GstMixMatrix *element);
 
 static void	gst_mixmatrix_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -135,7 +133,7 @@ gst_mixmatrix_get_type(void) {
   if (!mixmatrix_type) {
     static const GTypeInfo mixmatrix_info = {
       sizeof(GstMixMatrixClass),
-      NULL,
+      (GBaseInitFunc)gst_mixmatrix_base_init,
       NULL,
       (GClassInitFunc)gst_mixmatrix_class_init,
       NULL,
@@ -147,6 +145,16 @@ gst_mixmatrix_get_type(void) {
     mixmatrix_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMixMatrix", &mixmatrix_info, 0);
   }
   return mixmatrix_type;
+}
+
+static void
+gst_mixmatrix_base_init (GstMixMatrixClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class, sinktempl);
+  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_set_details (element_class, &mixmatrix_details);
 }
 
 static void
@@ -496,31 +504,27 @@ gst_mixmatrix_get_property (GObject *object, guint prop_id, GValue *value, GPara
 }
 
 gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  factory = gst_element_factory_new ("mixmatrix", GST_TYPE_MIXMATRIX, 
-                                     &mixmatrix_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
   sinktempl = mixmatrix_sink_factory ();
-  gst_element_factory_add_pad_template (factory, sinktempl);
-
   srctempl = mixmatrix_src_factory ();
-  gst_element_factory_add_pad_template (factory, srctempl);
 
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "mixmatrix",
+			       GST_RANK_NONE, GST_TYPE_MIXMATRIX);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "mixmatrix",
-  plugin_init
-};
+  "An audio mixer matrix",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
