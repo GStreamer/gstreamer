@@ -179,7 +179,7 @@ gst_default_debug_handler (gint category, gboolean incore,
 			   const gchar *file, const gchar *function,
 			   gint line, const gchar *debug_string,
 			   void *element, gchar *string)
-  __attribute__ ((no_instrument_function));
+  G_GNUC_NO_INSTRUMENT;
 
 void
 gst_default_debug_handler (gint category, gboolean incore,
@@ -483,7 +483,7 @@ GHashTable *__gst_function_pointers = NULL;
 /* FIXME make this thread specific */
 /* static GSList *stack_trace = NULL; */
 
-gchar *_gst_debug_nameof_funcptr (void *ptr) __attribute__ ((no_instrument_function));
+gchar *_gst_debug_nameof_funcptr (void *ptr) G_GNUC_NO_INSTRUMENT;
 
 gchar *
 _gst_debug_nameof_funcptr (void *ptr)
@@ -502,7 +502,7 @@ _gst_debug_nameof_funcptr (void *ptr)
 
 
 #ifdef GST_ENABLE_FUNC_INSTRUMENTATION
-void __cyg_profile_func_enter(void *this_fn,void *call_site) __attribute__ ((no_instrument_function));
+void __cyg_profile_func_enter(void *this_fn,void *call_site) G_GNUC_NO_INSTRUMENT;
 void __cyg_profile_func_enter(void *this_fn,void *call_site) 
 {
   gchar *name = _gst_debug_nameof_funcptr (this_fn);
@@ -515,7 +515,7 @@ void __cyg_profile_func_enter(void *this_fn,void *call_site)
   g_free (site);
 }
 
-void __cyg_profile_func_exit(void *this_fn,void *call_site) __attribute__ ((no_instrument_function));
+void __cyg_profile_func_exit(void *this_fn,void *call_site) G_GNUC_NO_INSTRUMENT;
 void __cyg_profile_func_exit(void *this_fn,void *call_site) 
 {
   gchar *name = _gst_debug_nameof_funcptr (this_fn);

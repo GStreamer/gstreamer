@@ -488,7 +488,8 @@ cothread_stub (void)
  *
  * Returns: the current cothread id
  */
-int cothread_getcurrent (void) __attribute__ ((no_instrument_function));
+int cothread_getcurrent (void) G_GNUC_NO_INSTRUMENT;
+
 int
 cothread_getcurrent (void)
 {
