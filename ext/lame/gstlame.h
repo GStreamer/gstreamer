@@ -72,7 +72,8 @@ struct _GstLame {
   gboolean extension;
   gboolean strict_iso;
   gboolean disable_reservoir;
-  gboolean vbr;
+  gint vbr;
+  gint vbr_quality;
   gint vbr_mean_bitrate;
   gint vbr_min_bitrate;
   gint vbr_max_bitrate;
@@ -90,6 +91,7 @@ struct _GstLame {
   gboolean allow_diff_short;
   gboolean no_short_blocks;
   gboolean emphasis;
+  gboolean xingheader;
 
   lame_global_flags *lgf;
 
