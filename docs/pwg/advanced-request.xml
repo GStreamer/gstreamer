@@ -1,6 +1,267 @@
 <chapter id="cha-advanced-request">
-  <title>Request pads</title>
+  <title>Request and Sometimes pads</title>
   <para>
-    aka pushing and pulling
+    Until now, we've only dealt with pads that are always available. However,
+    there's also pads that are only being created in some cases, or only if
+    the application requests the pad. The first is called a
+    <emphasis>sometimes</emphasis>; the second is called a
+    <emphasis>request</emphasis> pad. The availability of a pad (always,
+    sometimes or request) can be seen in a pad's template. This chapted will
+    discuss when each of the two is useful, how they are created and when
+    they should be disposed.
   </para>
+
+  <sect1 id="sect1-reqpad-sometimes" xreflabel="Sometimes pads">
+    <title>Sometimes pads</title>
+    <para>
+      A <quote>sometimes</quote> pad is a pad that is created under certain
+      conditions, but not in all cases. This mostly depends on stream content:
+      demuxers will generally parse the stream header, decide what elementary
+      (video, audio, subtitle, etc.) streams are embedded inside the system
+      stream, and will then create a sometimes pad for each of those elementary
+      streams. At its own choice, it can also create more than one instance of
+      each of those per element instance. The only limitation is that each
+      newly created pad should have a unique name. Sometimes pads are disposed
+      when the stream data is disposed, too (i.e. when going from PAUSED to the
+      READY state). You should <emphasis>not</emphasis> dispose the pad on EOS,
+      because someone might re-activate the pipeline and seek back to before
+      the end-of-stream point. The stream should still stay valid after EOS, at
+      least until the stream data is disposed. In any case, the element is
+      always the owner of such a pad.
+    </para>
+    <para>
+      The example code below will parse a text file, where the first line is
+      a number (n). The next lines all start with a number (0 to n-1), which
+      is the number of the source pad over which the data should be sent.
+    </para>
+    <programlisting>
+3
+0: foo
+1: bar
+0: boo
+2: bye
+    </programlisting>
+    <para>
+      The code to parse this file and create the dynamic <quote>sometimes</quote>
+      pads, looks like this:
+    </para>
+    <programlisting>
+typedef struct _GstMyFilter {
+[..]
+  gboolean firstrun;
+  GList *srcpadlist;
+} GstMyFilter;
+
+static void
+gst_my_filter_base_init (GstMyFilterClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  static GstStaticPadTemplate src_factory =
+  GST_STATIC_PAD_TEMPLATE (
+    "src_%02d",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS ("ANY")
+  );
+[..]
+  gst_element_class_add_pad_template (element_class,
+	gst_static_pad_template_get (&amp;src_factory));
+[..]
+}
+
+static void
+gst_my_filter_init (GstMyFilter *filter)
+{
+[..]
+  filter->firstrun = TRUE;
+  filter->srcpadlist = NULL;
+}
+
+/*
+ * Get one line of data - without newline.
+ */
+
+static GstBuffer *
+gst_my_filter_getline (GstMyFilter *filter)
+{
+  guint8 *data;
+  gint n, num;
+
+  /* max. line length is 512 characters - for safety */
+  for (n = 0; n < 512; n++) {
+    num = gst_bytestream_peek_bytes (filter->bs, &amp;data, n + 1);
+    if (num != n + 1)
+      return NULL;
+
+    /* newline? */
+    if (data[n] == '\n') {
+      GstBuffer *buf = gst_buffer_new_and_alloc (n + 1);
+
+      gst_bytestream_peek_bytes (filter->bs, &amp;data, n);
+      memcpy (GST_BUFFER_DATA (buf), data, n);
+      GST_BUFFER_DATA (buf)[n] = '\0';
+      gst_bytestream_flush_fast (filter->bs, n + 1);
+
+      return buf;
+    }
+  }
+}
+
+static void
+gst_my_filter_loopfunc (GstElement *element)
+{
+  GstMyFilter *filter = GST_MY_FILTER (element);
+  GstBuffer *buf;
+  GstPad *pad;
+  gint num, n;
+
+  /* parse header */
+  if (filter->firstrun) {
+    GstElementClass *klass;
+    GstPadTemplate *templ;
+    gchar *padname;
+
+    if (!(buf = gst_my_filter_getline (filter))) {
+      gst_element_error (element, STREAM, READ, (NULL),
+			 ("Stream contains no header"));
+      return;
+    }
+    num = atoi (GST_BUFFER_DATA (buf));
+    gst_buffer_unref (buf);
+
+    /* for each of the streams, create a pad */
+    klass = GST_ELEMENT_GET_CLASS (filter);
+    templ = gst_element_class_get_pad_template (klass, "src_%02d");
+    for (n = 0; n < num; n++) {
+      padname = g_strdup_printf ("src_%02d", n);
+      pad = gst_pad_new_from_template (templ, padname);
+      g_free (padname);
+
+      /* here, you would set _getcaps () and _link () functions */
+
+      gst_element_add_pad (element, pad);
+      filter->srcpadlist = g_list_append (filter->srcpadlist, pad);
+    }
+  }
+
+  /* and now, simply parse each line and push over */
+  if (!(buf = gst_my_filter_getline (filter))) {
+    GstEvent *event = gst_event_new (GST_EVENT_EOS);
+    GList *padlist;
+
+    for (padlist = srcpadlist;
+         padlist != NULL; padlist = g_list_next (padlist)) {
+      pad = GST_PAD (padlist->data);
+      gst_event_ref (event);
+      gst_pad_push (pad, GST_DATA (event));
+    }
+    gst_event_unref (event);
+    gst_element_set_eos (element);
+
+    return;
+  }
+
+  /* parse stream number and go beyond the ':' in the data */
+  num = atoi (GST_BUFFER_DATA (buf));
+  if (num >= 0 &amp;&amp; num < g_list_length (filter->srcpadlist)) {
+    pad = GST_PAD (g_list_nth_data (filter->srcpadlist, num);
+
+    /* magic buffer parsing foo */
+    for (n = 0; GST_BUFFER_DATA (buf)[n] != ':' &amp;&amp;
+                GST_BUFFER_DATA (buf)[n] != '\0'; n++) ;
+    if (GST_BUFFER_DATA (buf)[n] != '\0') {
+      GstBuffer *sub;
+
+      /* create subbuffer that starts right past the space. The reason
+       * that we don't just forward the data pointer is because the
+       * pointer is no longer the start of an allocated block of memory,
+       * but just a pointer to a position somewhere in the middle of it.
+       * That cannot be freed upon disposal, so we'd either crash or have
+       * a memleak. Creating a subbuffer is a simple way to solve that. */
+      sub = gst_buffer_create_sub (buf, n + 1, GST_BUFFER_SIZE (buf) - n - 1);
+      gst_pad_push (pad, GST_DATA (sub));
+    }
+  }
+  gst_buffer_unref (buf);
+}
+    </programlisting>
+    <para>
+      Note that we use a lot of checks everywhere to make sure that the content
+      in the file is valid. This has two purposes: first, the file could be
+      erronous, in which case we prevent a crash. The second and most important
+      reason is that - in extreme cases - the file could be used maliciously to
+      cause undefined behaviour in the plugin, which might lead to security
+      issues. <emphasis>Always</emphasis> assume that the file could be used to
+      do bad things.
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-reqpad-request" xreflabel="Request pads">
+    <title>Request pads</title>
+    <para>
+      <quote>Request</quote> pads are similar to sometimes pads, except that
+      request are created on demand of something outside of the element rather
+      than something inside the element. This concept is often used in muxers,
+      where - for each elementary stream that is to be placed in the output
+      system stream - one sink pad will be requested. It can also be used in
+      elements with a variable number of input or outputs pads, such as the
+      <classname>tee</classname> (multi-output), <classname>switch</classname>
+      or <classname>aggregator</classname> (both multi-input) elements. At the
+      time of writing this, it is unclear to me who is responsible for cleaning
+      up the created pad and how or when that should be done. Below is a simple
+      example of an aggregator based on request pads.
+    </para>
+    <programlisting>
+static GstPad *	gst_my_filter_request_new_pad	(GstElement     *element,
+						 GstPadTemplate *templ,
+						 const gchar    *name);
+
+static void
+gst_my_filter_base_init (GstMyFilterClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  static GstStaticPadTemplate sink_factory =
+  GST_STATIC_PAD_TEMPLATE (
+    "sink_%d",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("ANY")
+  );
+[..]
+  gst_element_class_add_pad_template (klass,
+	gst_static_pad_template_get (&amp;sink_factory));
+}
+
+static void
+gst_my_filter_class_init (GstMyFilterClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+[..]
+  element_class->request_new_pad = gst_my_filter_request_new_pad;
+}
+
+static GstPad *
+gst_my_filter_request_new_pad (GstElement     *element,
+			       GstPadTemplate *templ,
+			       const gchar    *name)
+{
+  GstPad *pad;
+  GstMyFilterInputContext *context;
+
+  context = g_new0 (GstMyFilterInputContext, 1);
+  pad = gst_pad_new_from_template (templ, name);
+  gst_element_set_private_data (pad, context);
+
+  /* normally, you would set _link () and _getcaps () functions here */
+
+  gst_element_add_pad (element, pad);
+
+  return pad;
+}
+    </programlisting>
+    <para>
+      The <function>_loop ()</function> function is the same as the one given
+      previously in <xref linkend="sect1-loopfn-multiinput"/>.
+    </para>
+  </sect1>
 </chapter>

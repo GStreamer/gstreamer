@@ -1,6 +1,105 @@
 <chapter id="cha-advanced-interfaces">
   <title>Interfaces</title>
   <para>
-    WRITEME
+    Previously, in the chapter <xref linkend="cha-building-args"/>, we have
+    introduced the concept of GObject properties of controlling an element's
+    behaviour. This is a very powerful, but has two big disadvantage: firstly,
+    it is too generic, and secondly, it isn't dynamic.
   </para>
+  <para>
+    The first disadvantage has to do with customizability of the end-user
+    interface that will be built to control the element. Some properties are
+    more important than others. Some integer properties are better shown in a
+    spin-button widget, whereas others would be better represented by a slider
+    widget. Such things are not possible because the UI has no actual meaning
+    in the application. A UI widget that stands for a bitrate property is the
+    same as an UI widget that stands for the size of a video, as long as both
+    are of the same <classname>GParamSpec</classname> type. Another problem,
+    related to the one about parameter important, is that things like parameter
+    grouping, function grouping or anything to make parameters coherent, is not
+    really possible.
+  </para>
+  <para>
+    The second argument against parameters are that they are not dynamic. In
+    many cases, the allowed values for a property are not fixed, but depend
+    on things that can only be detected at run-time. The names of inputs for
+    a TV card in a video4linux source element, for example, can only be
+    retrieved from the kernel driver when we've opened the device; this only
+    happens when the element goes into the READY state. This means that we
+    cannot create an enum property type to show this to the user.
+  </para>
+  <para>
+    The solution to those problems is to create very specialized types of
+    controls for certain often-used controls. We use the concept of interfaces
+    to achieve this. The basis of this all is the glib
+    <classname>GTypeInterface</classname> type. For each case where we think
+    it's useful, we've created interfaces which can be implemented by elements
+    at their own will. We've also created a small extension to
+    <classname>GTypeInterface</classname> (which is static itself, too) which
+    allows us to query for interface availability based on runtime properties.
+    This extension is called <classname>GstImplementsInterface</classname>.
+  </para>
+
+  <sect1 id="sect1-iface-general" xreflabel="How to Implement Interfaces">
+    <title>How to Implement Interfaces</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-iface-mixer" xreflabel="Mixer Interface">
+    <title>Mixer Interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-iface-tuner" xreflabel="Tuner Interface">
+    <title>Tuner Interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-iface-colorbalance" xreflabel="Color Balance Interface">
+    <title>Color Balance Interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-iface-propprobe" xreflabel="Property Probe Interface">
+    <title>Property Probe Interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-iface-profile" xreflabel="Profile Interface">
+    <title>Profile Interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+                                                                                
+  <sect1 id="sect1-iface-xoverlay" xreflabel="X Overlay Interface">
+    <title>X Overlay Interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-iface-navigation" xreflabel="Navigation Interface">
+    <title>Navigation Interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-iface-tagging" xreflabel="Tagging Interface">
+    <title>Tagging Interface</title>
+    <para>
+      WRITEME
+    </para>
+  </sect1>
 </chapter>

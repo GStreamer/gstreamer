@@ -1,3 +1,16 @@
+2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced_clock.xml:
+	* docs/pwg/advanced_interfaces.xml:
+	* docs/pwg/advanced_midi.xml:
+	  General placeholders for now.
+	* docs/pwg/advanced_request.xml:
+	  Explanation about sometimes and request pads.
+	* docs/pwg/advanced_scheduling.xml:
+	  Concept of bytestream, loopfunctions and schedulers.
+	* docs/pwg/building_boiler.xml:
+	  Add something about plugin-init.
+
 2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/pwg/building_pads.xml:

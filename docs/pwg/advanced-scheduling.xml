@@ -1,15 +1,361 @@
 <chapter id="cha-loopbased-sched">
   <title>How scheduling works</title>
   <para>
-    aka pushing and pulling
+    Scheduling is, in short, a method for making sure that every element gets
+    called once in a while to process data and prepare data for the next
+    element. Likewise, a kernel has a scheduler to for processes, and your
+    brain is a very complex scheduler too in a way.
+    Randomly calling elements' chain functions won't bring us far, however, so
+    you'll understand that the schedulers in &GStreamer; are a bit more complex
+    than this. However, as a start, it's a nice picture.
+    &GStreamer; currently provides two schedulers: a <emphasis>basic</emphasis>
+    scheduler and an <emphasis>optimal</emphasis> scheduler. As the name says,
+    the basic scheduler (<quote>basic</quote>) is an unoptimized, but very
+    complete and simple scheduler. The optimal scheduler (<quote>opt</quote>),
+    on the other hand, is optimized for media processing, but therefore also
+    more complex.
   </para>
+  <para>
+    Note that schedulers only operate on one thread. If your pipeline contains
+    multiple threads, each thread will run with a separate scheduler. That is
+    the reason why two elements running in different threads need a queue-like
+    element (a <classname>DECOUPLED</classname> element) in between them.
+  </para>
+
+  <sect1 id="sect1-sched-basic" xreflabel="The Basic Scheduler">
+  <title>The Basic Scheduler</title>
+  <para>
+    The <emphasis>basic</emphasis> scheduler assumes that each element is its
+    own process. We don't use UNIX processes or POSIX threads for this,
+    however; instead, we use so-called <emphasis>co-threads</emphasis>.
+    Co-threads are threads that run besides each other, but only one is active
+    at a time. The advantage of co-threads over normal threads is that they're
+    lightweight. The disadvantage is that UNIX or POSIX do not provide such a
+    thing, so we need to include our own co-threads stack for this to run.
+  </para>
+  <para>
+    The task of the scheduler here is to control which co-thread runs at what
+    time. A well-written scheduler based on co-threads will let an element run
+    until it outputs one piece of data. Upon pushing one piece of data to the
+    next element, it will let the next element run, and so on. Whenever a
+    running element requires data from the previous element, the scheduler will
+    switch to that previous element and run that element until it has provided
+    data for use in the next element.
+  </para>
+  <para>
+    This method of running elements as needed has the disadvantage that a lot
+    of data will often be queued in between two elements, as the one element
+    has provided data but the other element hasn't actually used it yet. These
+    storages of in-between-data are called <emphasis>bufpens</emphasis>, and
+    they can be visualized as a light <quote>queue</quote>.
+  </para>
+  <para>
+    Note that since every element runs in its own (co-)thread, this scheduler
+    is rather heavy on your system for larger pipelines.
+  </para>
+  </sect1>
+
+  <sect1 id="sect1-sched-opt" xreflabel="The Optimal Scheduler">
+  <title>The Optimal Scheduler</title>
+  <para>
+    The <emphasis>optimal</emphasis> scheduler takes advantage of the fact that
+    several elements can be linked together in one thread, with one element
+    controlling the other. This works as follows: in a series of chain-based
+    elements, each element has a function that accepts one piece of data, and
+    it calls a function that provides one piece of data to the next element.
+    The optimal scheduler will make sure that the <function>gst_pad_push ()</function>
+    function of the first element <emphasis>directly</emphasis> calls the
+    chain-function of the second element. This significantly decreases the
+    latency in a pipeline. It takes similar advantage of other possibilities
+    of short-cutting the data path from one element to the next.
+  </para>
+  <para>
+    The disadvantage of the optimal scheduler is that it is not fully
+    implemented. Also it is badly documented; for most developers, the opt
+    scheduler is one big black box. Features that are not implemented
+    include pad-unlinking within a group while running, pad-selecting
+    (i.e. waiting for data to arrive on a list of pads), and it can't really
+    cope with multi-input/-output elements (with the elements linked to each
+    of these in-/outputs running in the same thread) right now.
+  </para>
+  <para>
+    Some of our developers are intending to write a new scheduler, similar to
+    the optimal scheduler (but better documented and more completely
+    implemented).
+  </para>
+  </sect1>
 </chapter>
 
 <chapter id="cha-loopbased-loopfn">
   <title>How a loopfunc works</title>
   <para>
-    aka pulling and pushing
+    A <function>_loop ()</function> function is a function that is called by
+    the scheduler, but without providing data to the element. Instead, the
+    element will become responsible for acquiring its own data, and it will
+    still be responsible of sending data over to its source pads. This method
+    noticeably complicates scheduling; you should only write loop-based
+    elements when you need to. Normally, chain-based elements are preferred.
+    Examples of elements that <emphasis>have</emphasis> to be loop-based are
+    elements with multiple sink pads. Since the scheduler will push data into
+    the pads as it comes (and this might not be synchronous), you will easily
+    get ascynronous data on both pads, which means that the data that arrives
+    on the first pad has a different display timestamp then the data arriving
+    on the second pad at the same time. To get over these issues, you should
+    write such elements in a loop-based form. Other elements that are
+    <emphasis>easier</emphasis> to write in a loop-based form than in a
+    chain-based form are demuxers and parsers. It is not required to write such
+    elements in a loop-based form, though.
   </para>
+  <para>
+    Below is an example of the easiest loop-function that one can write:
+  </para>
+  <programlisting>
+static void	gst_my_filter_loopfunc	(GstElement *element);
+
+static void
+gst_my_filter_init (GstMyFilter *filter)
+{
+[..]
+  gst_element_set_loopfunc (GST_ELEMENT (filter), gst_my_filter_loopfunc);
+[..]
+}
+
+static void
+gst_my_filter_loopfunc (GstElement *element)
+{
+  GstMyFilter *filter = GST_MY_FILTER (element);
+  GstData *data;
+
+  /* acquire data */
+  data = gst_pad_pull (filter->sinkpad);
+
+  /* send data */
+  gst_pad_push (filter->srcpad, data);
+}
+  </programlisting>
+  <para>
+    Obviously, this specific example has no single advantage over a chain-based
+    element, so you should never write such elements. However, it's a good
+    introduction to the concept.
+  </para>
+
+  <sect1 id="sect1-loopfn-multiinput" xreflabel="Multi-Input Elements">
+    <title>Multi-Input Elements</title>
+    <para>
+      Elements with multiple sink pads need to take manual control over their
+      input to assure that the input is synchronized. The following example
+      code could (should) be used in an aggregator, i.e. an element that takes
+      input from multiple streams and sends it out intermangled. Not really
+      useful in practice, but a good example, again.
+    </para>
+    <programlisting>
+typedef struct _GstMyFilterInputContext {
+  gboolean   eos;
+  GstBuffer *lastbuf;
+} GstMyFilterInputContext;
+
+[..]
+
+static void
+gst_my_filter_init (GstMyFilter *filter)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
+  GstMyFilterInputContext *context;
+
+  filter->sinkpad1 = gst_pad_new_from_template (
+	gst_element_class_get_pad_template (klass, "sink"), "sink_1");
+  context = g_new0 (GstMyFilterInputContext, 1);
+  gst_pad_set_private_data (filter->sinkpad1, context);
+[..]
+  filter->sinkpad2 = gst_pad_new_from_template (
+	gst_element_class_get_pad_template (klass, "sink"), "sink_2");
+  context = g_new0 (GstMyFilterInputContext, 1);
+  gst_pad_set_private_data (filter->sinkpad2, context);
+[..]
+  gst_element_set_loopfunc (GST_ELEMENT (filter),
+			    gst_my_filter_loopfunc);
+}
+
+[..]
+
+static void
+gst_my_filter_loopfunc (GstElement *element)
+{
+  GstMyFilter *filter = GST_MY_FILTER (element);
+  GList *padlist;
+  GstMyFilterInputContext *first_context = NULL;
+
+  /* Go over each sink pad, update the cache if needed, handle EOS
+   * or non-responding streams and see which data we should handle
+   * next. */
+  for (padlist = gst_element_get_padlist (element);
+       padlist != NULL; padlist = g_list_next (padlist)) {
+    GstPad *pad = GST_PAD (padlist->data);
+    GstMyFilterInputContext *context = gst_pad_get_private_data (pad);
+
+    if (GST_PAD_IS_SRC (pad))
+      continue;
+
+    while (GST_PAD_IS_USABLE (pad) &amp;&amp;
+           !context->eos &amp;&amp; !context->lastbuf) {
+      GstData *data = gst_pad_pull (pad);
+
+      if (GST_IS_EVENT (data)) {
+        /* We handle events immediately */
+        GstEvent *event = GST_EVENT (data);
+
+        switch (GST_EVENT_TYPE (event)) {
+          case GST_EVENT_EOS:
+            context->eos = TRUE;
+            gst_event_unref (event);
+            break;
+          case GST_EVENT_DISCONTINUOUS:
+            g_warning ("HELP! How do I handle this?");
+            /* fall-through */
+          default:
+            gst_pad_event_default (pad, event);
+            break;
+        }
+      } else {
+        /* We store the buffer to handle synchronization below */
+        context->lastbuf = GST_BUFFER (data);
+      }
+    }
+
+    /* synchronize streams by always using the earliest buffer */
+    if (context->lastbuf) {
+      if (!first_context) {
+        first_context = context;
+      } else {
+        if (GST_BUFFER_TIMESTAMP (context->lastbuf) <
+		GST_BUFFER_TIMESTAMP (first_context->lastbuf))
+          first_context = context;
+      }
+    }
+  }
+
+  /* If we handle no data at all, we're at the end-of-stream, so
+   * we should signal EOS. */
+  if (!first_context) {
+    gst_pad_push (filter->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
+    gst_element_set_eos (element);
+    return;
+  }
+
+  /* So we do have data! Let's forward that to our source pad. */
+  gst_pad_push (filter->srcpad, GST_DATA (first_context->lastbuf));
+  first_context->lastbuf = NULL;
+}
+    </programlisting>
+    <para>
+      Note that a loop-function is allowed to return. Better yet, a loop
+      function <emphasis>has to</emphasis> return so the scheduler can
+      let other elements run (this is particularly true for the optimal
+      scheduler). Whenever the scheduler feels right, it will call the
+      loop-function of the element again.
+    </para>
+  </sect1>
+
+  <sect1 id="sect1-loopfn-bytestream" xreflabel="The Bytestream Object">
+    <title>The Bytestream Object</title>
+    <para>
+      A second type of elements that wants to be loop-based, are the so-called
+      bytestream-elements. Until now, we've only dealt with elements that
+      receive of pull full buffers of a random size from other elements. Often,
+      however, it is wanted to have control over the stream at a byte-level,
+      such as in stream parsers or demuxers. It is possible to manually pull
+      buffers and merge them until a certain size; it is easier, however, to
+      use bytestream, which wraps this behaviour.
+    </para>
+    <para>
+      Bytestream-using elements are ususally stream parsers or demuxers. For
+      now, we will take a parser as an example. Demuxers require some more
+      magic that will be dealt with later in this guide:
+      <xref linkend="cha-advanced-request"/>. The goal of this parser will be
+      to parse a text-file and to push each line of text as a separate buffer
+      over its source pad.
+    </para>
+    <programlisting>
+static void
+gst_my_filter_loopfunc (GstElement *element)
+{
+  GstMyFilter *filter = GST_MY_FILTER (element);
+  gint n, num;
+  guint8 *data;
+
+  for (n = 0; ; n++) {
+    num = gst_bytestream_peek_bytes (filter->bs, &amp;data, n + 1);
+    if (num != n + 1) {
+      GstEvent *event = NULL;
+      guint remaining;
+
+      gst_bytestream_get_status (filter->bs, &amp;remaining, &amp;event);
+      if (event) {
+        if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)) {
+          /* end-of-file */
+          gst_pad_push (filter->srcpad, GST_DATA (event));
+          gst_element_set_eos (element);
+
+          return;
+        }
+        gst_event_unref (event);
+      }
+
+      /* failed to read - throw error and bail out */
+      gst_element_error (element, STREAM, READ, (NULL), (NULL));
+
+      return;
+    }
+
+    /* check if the last character is a newline */
+    if (data[n] == '\n') {
+      GstBuffer *buf = gst_buffer_new_and_alloc (n + 1);
+
+      /* read the line of text without newline - then flush the newline */
+      gst_bytestream_peek_data (filter->bs, &amp;data, n);
+      memcpy (GST_BUFFER_DATA (buf), data, n);
+      GST_BUFFER_DATA (buf)[n] = '\0';
+      gst_bytestream_flush_fast (filter->bs, n + 1);
+      g_print ("Pushing '%s'\n", GST_BUFFER_DATA (buf));
+      gst_pad_push (filter->srcpad, GST_DATA (buf));
+
+      return;
+    }
+  }
+}
+
+static void
+gst_my_filter_change_state (GstElement *element)
+{
+  GstMyFilter *filter = GST_MY_FILTER (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_READY_TO_PAUSED:
+      filter->bs = gst_bytestream_new (filter->sinkpad);
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      gst_bytestream_destroy (filter->bs);
+      break;
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
+    </programlisting>
+    <para>
+      In the above example, you'll notice how bytestream handles buffering of
+      data for you. The result is that you can handle the same data multiple
+      times. Event handling in bytestream is currently sort of
+      <emphasis>wacky</emphasis>, but it works quite well. The one big
+      disadvantage of bytestream is that it <emphasis>requires</emphasis>
+      the element to be loop-based. Long-term, we hope to have a chain-based
+      usable version of bytestream, too.
+    </para>
+  </sect1>
 </chapter>
 
 <chapter id="cha-loopbased-secnd">

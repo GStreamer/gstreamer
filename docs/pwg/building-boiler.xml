@@ -343,6 +343,27 @@ gst_my_filter_base_init (GstMyFilterClass *klass)
       Also, in this function, any supported element type in the plugin should
       be registered.
     </para>
+    <programlisting>
+static gboolean
+plugin_init (GstPlugin *plugin)
+{
+  return gst_element_register (plugin, "my_filter",
+			       GST_RANK_NONE,
+			       GST_TYPE_MY_FILTER);
+}
+
+GST_PLUGIN_DEFINE (
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "my_filter",
+  "My filter plugin",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  "GStreamer",
+  "http://gstreamer.net/"
+)
+    </programlisting>
     <para>
       Note that the information returned by the plugin_init() function will be
       cached in a central registry. For this reason, it is important that the
