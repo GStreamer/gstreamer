@@ -214,6 +214,12 @@ else
 MPLEX_DIR=
 endif
 
+if USE_MUSICBRAINZ
+MUSICBRAINZ_DIR=musicbrainz
+else
+MUSICBRAINZ_DIR=
+endif
+
 if USE_OGG
 OGG_DIR=ogg
 else
@@ -340,6 +346,7 @@ SUBDIRS=\
 	$(MPEG2DEC_DIR) \
 	$(MPEG2ENC_DIR) \
 	$(MPLEX_DIR) \
+	$(MUSICBRAINZ_DIR) \
 	$(OGG_DIR) \
 	$(PANGO_DIR) \
 	$(RAW1394_DIR) \
@@ -393,6 +400,7 @@ DIST_SUBDIRS=\
 	mpeg2dec \
 	mpeg2enc \
 	mplex \
+	muscibrainz \
 	ogg \
 	pango \
 	raw1394 \
