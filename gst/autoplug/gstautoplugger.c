@@ -46,6 +46,7 @@ typedef struct _GstAutopluggerClass GstAutopluggerClass;
 
 struct _GstAutoplugger {
   GstBin bin;
+  gint paused;
 
   GstElement *cache;
   gboolean cache_first_buffer;
@@ -185,10 +186,10 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
                       GTK_SIGNAL_FUNC (gst_autoplugger_external_sink_caps_nego_failed), autoplugger);
   gtk_signal_connect (GTK_OBJECT (autoplugger->cache_srcpad), "caps_nego_failed",
                       GTK_SIGNAL_FUNC (gst_autoplugger_external_src_caps_nego_failed), autoplugger);
-  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_sinkpad), "connected",
-                      GTK_SIGNAL_FUNC (gst_autoplugger_external_sink_connected), autoplugger);
-  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_srcpad), "connected",
-                      GTK_SIGNAL_FUNC (gst_autoplugger_external_src_connected), autoplugger);
+//  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_sinkpad), "connected",
+//                      GTK_SIGNAL_FUNC (gst_autoplugger_external_sink_connected), autoplugger);
+//  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_srcpad), "connected",
+//                      GTK_SIGNAL_FUNC (gst_autoplugger_external_src_connected), autoplugger);
 
   // ghost both of these pads to the outside world
   gst_element_add_ghost_pad (GST_ELEMENT(autoplugger), autoplugger->cache_sinkpad, "sink");
@@ -276,9 +277,6 @@ gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps *src
   GST_DEBUG(GST_CAT_AUTOPLUG,"srcpadcaps are of type %s\n",gst_caps_get_mime(srccaps));
   GST_DEBUG(GST_CAT_AUTOPLUG,"sinkpadcaps are of type %s\n",gst_caps_get_mime(sinkcaps));
 
-// try to PAUSE the whole thing
-//gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
-
   // disconnect the pads
   GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting the pads that will be joined by an autobin\n");
   gst_pad_disconnect(srcpad,sinkpad);
@@ -305,10 +303,6 @@ gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps *src
   GST_DEBUG(GST_CAT_AUTOPLUG, "trying to force everyone to nego\n");
   gst_pad_renegotiate(gst_element_get_pad(autoplugger->autobin,"sink"));
   gst_pad_renegotiate(sinkpad);
-
-// try to PLAY the whole thing
-//gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
-
 }
 
 static void
@@ -322,8 +316,10 @@ gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, GstAutoplugger *auto
 
   GST_INFO(GST_CAT_AUTOPLUG, "have caps nego failure on sinkpad %s:%s!!!",GST_DEBUG_PAD_NAME(pad));
 
-// try to PAUSE the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+  autoplugger->paused++;
+  if (autoplugger->paused == 1)
+    // try to PAUSE the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
   srcpad_peer = GST_PAD(GST_PAD_PEER(autoplugger->cache_srcpad));
   g_return_if_fail(srcpad_peer != NULL);
@@ -339,14 +335,42 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
   gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,sinkpad_peer_caps,srcpad_peer_caps);
 
-// try to PLAY the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+  autoplugger->paused--;
+  if (autoplugger->paused == 0)
+    // try to PLAY the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 }
 
 static void
 gst_autoplugger_external_src_caps_nego_failed(GstPad *pad, GstAutoplugger *autoplugger)
 {
-  GST_INFO(GST_CAT_AUTOPLUG, "have caps nego failure on src!!!");
+  GstCaps *srcpad_caps;
+  GstPad *srcpad_peer;
+  GstPadTemplate *srcpad_peer_template;
+  GstCaps *srcpad_peer_caps;
+
+  GST_INFO(GST_CAT_AUTOPLUG, "have caps nego failure on srcpad %s:%s!!!",GST_DEBUG_PAD_NAME(pad));
+
+  autoplugger->paused++;
+  if (autoplugger->paused == 1)
+    // try to PAUSE the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+
+  srcpad_caps = GST_PAD_CAPS(autoplugger->cache_srcpad);
+
+  srcpad_peer = GST_PAD(GST_PAD_PEER(autoplugger->cache_srcpad));
+  g_return_if_fail(srcpad_peer != NULL);
+  srcpad_peer_template = GST_PAD_PADTEMPLATE(srcpad_peer);
+  g_return_if_fail(srcpad_peer_template != NULL);
+  srcpad_peer_caps = GST_PADTEMPLATE_CAPS(srcpad_peer_template);
+  g_return_if_fail(srcpad_peer_caps != NULL);
+
+  gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,srcpad_caps,srcpad_peer_caps);
+
+  autoplugger->paused--;
+  if (autoplugger->paused == 0)
+    // try to PLAY the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 }
 
 
@@ -357,8 +381,10 @@ gst_autoplugger_cache_empty(GstElement *element, GstAutoplugger *autoplugger)
 
   GST_INFO(GST_CAT_AUTOPLUG, "autoplugger cache has hit empty, we can now remove it");
 
-// try to PAUSE the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+  autoplugger->paused++;
+  if (autoplugger->paused == 1)
+    // try to PAUSE the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
   // disconnect the cache from its peers
   GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting autoplugcache from its peers\n");
@@ -375,8 +401,10 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
   GST_DEBUG(GST_CAT_AUTOPLUG, "reconnecting the autoplugcache's former peers\n");
   gst_pad_connect(cache_sinkpad_peer,cache_srcpad_peer);
 
-// try to PLAY the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+  autoplugger->paused--;
+  if (autoplugger->paused == 0)
+    // try to PLAY the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 
   xmlSaveFile("autoplugger.gst", gst_xml_write(GST_ELEMENT_SCHED(autoplugger)->parent));
 
@@ -390,8 +418,10 @@ gst_autoplugger_typefind_have_type(GstElement *element, GstCaps *caps, GstAutopl
 
 gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 
-// try to PAUSE the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+  autoplugger->paused++;
+  if (autoplugger->paused == 1)
+    // try to PAUSE the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
   // first disconnect the typefind and shut it down
   GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting typefind from the cache\n");
@@ -437,8 +467,10 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
   gtk_signal_connect(GTK_OBJECT(autoplugger->cache),"cache_empty",
                      GTK_SIGNAL_FUNC(gst_autoplugger_cache_empty),autoplugger);
 
-// try to PLAY the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+  autoplugger->paused--;
+  if (autoplugger->paused == 0)
+    // try to PLAY the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 
   GST_INFO(GST_CAT_AUTOPLUG, "typefind_have_type finished");
 gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
@@ -456,8 +488,10 @@ gst_autoplugger_cache_first_buffer(GstElement *element,GstBuffer *buf,GstAutoplu
 
 gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 
-// try to PAUSE the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
+  autoplugger->paused++;
+  if (autoplugger->paused == 1)
+    // try to PAUSE the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
 
     // detach the srcpad
     GST_DEBUG(GST_CAT_AUTOPLUG, "disconnecting cache from its downstream peer\n");
@@ -481,8 +515,10 @@ gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PAUSED);
     GST_DEBUG(GST_CAT_AUTOPLUG, "setting typefind state to PLAYING\n");
     gst_element_set_state(autoplugger->cache,GST_STATE_PLAYING);
 
-// try to PLAY the whole thing
-gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+  autoplugger->paused--;
+  if (autoplugger->paused == 0)
+    // try to PLAY the whole thing
+    gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 
     GST_INFO(GST_CAT_AUTOPLUG,"here we go into nothingness, hoping the typefind will return us to safety");
 gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
