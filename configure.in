@@ -505,7 +505,6 @@ dnl # Set up some more defines #
 dnl ############################
 
 dnl Set location of configuration dir.
-GST_CONFIG_DIR="/etc/gstreamer"
 AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
 AC_SUBST(GST_CONFIG_DIR)
 
