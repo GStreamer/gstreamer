@@ -97,6 +97,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 %{_libdir}/gst/libgstidct.so
 %{_libdir}/gst/libgstresample.so
 %{_libdir}/gst/libgstriff.so
+%{_libdir}/gst/libgstvideo.so
 
 %package -n gstreamer-plugins-devel
 Summary: 	GStreamer Plugin Library Headers.
@@ -114,6 +115,7 @@ GStreamer support libraries header files.
 %{_includedir}/gst-plugins-%{version}/gst/idct/idct.h
 %{_includedir}/gst-plugins-%{version}/gst/resample/resample.h
 %{_includedir}/gst-plugins-%{version}/gst/riff/riff.h
+%{_includedir}/gst-plugins-%{version}/gst/video/video.h
 %{_libdir}/pkgconfig/gstreamer-libs.pc
 
 # Here are all the packages depending on external libs #
