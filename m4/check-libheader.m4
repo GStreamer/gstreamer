@@ -21,20 +21,17 @@ AC_DEFUN(CHECK_LIBHEADER,
   check_libheader_feature_name=translit([$1], A-Z, a-z)
 
   if test "x$HAVE_[$1]" = "xyes"; then
-
     check_libheader_save_CPPFLAGS=$CPPFLAGS
     CPPFLAGS="[$8] $CPPFLAGS"
     AC_CHECK_HEADER([$4], :, HAVE_[$1]=no)
     CPPFLAGS=$check_libheader_save_CPPFLAGS
+  fi
 
-    if test "x$HAVE_[$1]" = "xyes"; then
-      dnl execute what needs to be
-      ifelse([$5], , :, [$5])
-      AC_MSG_NOTICE(feature $check_libheader_feature_name is found)
-    else
-      ifelse([$6], , :, [$6])
-    fi
+  if test "x$HAVE_[$1]" = "xyes"; then
+    ifelse([$5], , :, [$5])
+    AC_MSG_NOTICE($check_libheader_feature_name was found)
   else
+    ifelse([$6], , :, [$6])
     AC_MSG_WARN($check_libheader_feature_name not found)
   fi
   AC_SUBST(HAVE_[$1])
