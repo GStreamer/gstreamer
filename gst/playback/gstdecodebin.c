@@ -259,7 +259,13 @@ gst_decode_bin_factory_filter (GstPluginFeature * feature,
 static gint
 compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 {
-  return gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
+  gint diff;
+
+  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
+  if (diff != 0)
+    return diff;
+  return strcmp (gst_plugin_feature_get_name (f2),
+      gst_plugin_feature_get_name (f1));
 }
 
 static void
@@ -364,6 +370,8 @@ find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
         if (!gst_caps_is_empty (intersect)) {
           /* non empty intersection, we can use this element */
           to_try = g_list_append (to_try, factory);
+          gst_caps_free (intersect);
+          break;
         }
         gst_caps_free (intersect);
       }
