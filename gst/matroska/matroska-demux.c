@@ -2142,6 +2142,7 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux)
           case GST_MATROSKA_ID_TAGS:{
             guint level_up = demux->level_up;
             guint64 before_pos, length;
+            guint32 id_cache = ebml->id_cache;
             GstEbmlLevel *level;
             GstEvent *event;
 
@@ -2224,6 +2225,7 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux)
               return FALSE;
             gst_event_unref (event);
             demux->level_up = level_up;
+            ebml->id_cache = id_cache;
             break;
           }
 
@@ -2333,6 +2335,10 @@ gst_matroska_demux_loop_stream (GstMatroskaDemux * demux)
           demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
           gst_element_no_more_pads (GST_ELEMENT (demux));
         } else {
+          if (!gst_ebml_read_reserve (ebml)) {
+            res = FALSE;
+            break;
+          }
           if (!gst_ebml_read_master (ebml, &id)) {
             res = FALSE;
             break;
@@ -2670,7 +2676,6 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext * audiocontext,
     }
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
-    g_print ("Codec=%s\n", codec_id);
     return NULL;
   }
 

@@ -53,6 +53,9 @@ typedef struct _GstEbmlRead {
   GstByteStream *bs;
 
   GList *level;
+
+  /* cache of ID (peeking) */
+  guint32 id_cache;
 } GstEbmlRead;
 
 typedef struct _GstEbmlReadClass {
@@ -66,6 +69,7 @@ guint32  gst_ebml_peek_id       (GstEbmlRead *ebml,
 GstEvent *gst_ebml_read_seek    (GstEbmlRead *ebml,
 				 guint64      offset);
 gboolean gst_ebml_read_skip     (GstEbmlRead *ebml);
+gboolean gst_ebml_read_reserve	(GstEbmlRead *ebml);
 gboolean gst_ebml_read_buffer   (GstEbmlRead *ebml,
 				 guint32     *id,
 				 GstBuffer  **buf);
