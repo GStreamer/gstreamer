@@ -21,6 +21,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
 
   // connect to audio pad
+  //if (0) {
   if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
     // construct internal pipeline elements
     parse_audio = gst_elementfactory_make("mp3parse","parse_audio");
@@ -61,6 +62,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_print("setting to PLAYING state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
+	//} else if (0) {
     infopad = gst_pad_new("sink",GST_PAD_SINK);
     gst_pad_set_chain_function(infopad,mp1parse_info_chain);
 
