@@ -77,16 +77,16 @@ A plugins should export a variable of this type called plugin_desc. This plugin
 loaded will use this variable to initialize the plugin.
 </para>
 
-@major_version: The minor version of the gstreamer library this plugin was created with
-@minor_version: The minor version of the gstreamer library this plugin was created with
-@name: The name of the plugin
+@major_version: the major version number of core that plugin was compiled for
+@minor_version: the minor version number of core that plugin was compiled for
+@name: a unique name of the plugin
 @description: 
 @plugin_init: The init function of this plugin.
 @plugin_exit: 
-@version: 
-@license: 
-@package: 
-@origin: 
+@version: version of the plugin
+@license: effective license of plugin
+@package: package plugin belongs to
+@origin: URL to provider of plugin
 @_gst_reserved: 
 
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
@@ -103,42 +103,44 @@ It will be called by the loader at statup.
 
 <!-- ##### USER_FUNCTION GstPluginExitFunc ##### -->
 <para>
-
+Exiting function when plugin is unloaded.
 </para>
 
-@plugin: 
+@plugin: The plugin object that can be used to unregister stuff for this plugin.
 
 
 <!-- ##### MACRO GST_PLUGIN_DEFINE ##### -->
 <para>
-
+This macro needs to be used to define the entry point and meta data of a plugin.
+One would use this macro to export a plugin, so that it can be used by other applications
 </para>
 
-@major: 
-@minor: 
-@name: 
-@description: 
-@init: 
-@version: 
-@license: 
-@package: 
-@origin: 
+@major: major version number of the gstreamer-core that plugin was compiled for
+@minor: minor version number of the gstreamer-core that plugin was compiled for
+@name: short, but unique name of the plugin
+@description: information about the purpose of the plugin
+@init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
+@version: full version string (e.g. VERSION from config.h)
+@license: under which licence the package has been released, e.g. GPL, LGPL.
+@package: the package-name (e.g. PACKAGE_NAME from config.h)
+@origin: a description from where the package comes from (e.g. the homepage URL)
 
 
 <!-- ##### MACRO GST_PLUGIN_DEFINE_STATIC ##### -->
 <para>
-
+This macro needs to be used to define the entry point and meta data of a local plugin.
+One would use this macro to define a local plugin that can only be used by the own application.
 </para>
 
-@major: 
-@minor: 
-@name: 
-@description: 
-@init: 
-@version: 
-@license: 
-@package: 
-@origin: 
+@major: major version number of the gstreamer-core that plugin was compiled for
+@minor: minor version number of the gstreamer-core that plugin was compiled for
+@name: short, but unique name of the plugin
+@description: information about the purpose of the plugin
+@init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
+@version: full version string (e.g. VERSION from config.h)
+@license: under which licence the package has been released, e.g. GPL, LGPL.
+@package: the package-name (e.g. PACKAGE_NAME from config.h)
+@origin: a description from where the package comes from (e.g. the homepage URL)
 
 
 <!-- ##### MACRO GST_LICENSE_UNKNOWN ##### -->

@@ -1,5 +1,15 @@
 $Id$
 
+* existing gstreamer interfaces
+  ./gstreamer/gst/gsttaginterface.c
+  ./gstreamer/gst/gstinterface.c
+  ./gstreamer/gst/gsturi.c
+  ./gst-plugins/gst-libs/gst/propertyprobe/propertyprobe.c
+  ./gst-plugins/gst-libs/gst/mixer/mixer.c
+  ./gst-plugins/gst-libs/gst/tuner/tuner.c
+  ./gst-plugins/gst-libs/gst/xoverlay/xoverlay.c
+  ./gst-plugins/gst-libs/gst/colorbalance/colorbalance.c
+  ./gst-plugins/gst-libs/gst/navigation/navigation.c
 * new general interfaces
   * GST_TYPE_PRESET_MANAGER
     - add preset managment

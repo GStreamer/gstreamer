@@ -213,15 +213,16 @@ Gets the timestamp for this buffer.
 
 <!-- ##### MACRO GST_BUFFER_DURATION ##### -->
 <para>
-
+Gets the duration in nanoseconds of the data in the buffer.
+Value will be GST_CLOCK_TIME_NONE if the duration is unknown.
 </para>
 
-@buf: 
+@buf: a #GstBuffer to get the duration from.
 
 
 <!-- ##### MACRO GST_BUFFER_OFFSET ##### -->
 <para>
-Gets the offset in the source file of this buffer.
+Gets the offset in the source file of the beinning of this buffer.
 </para>
 
 @buf: a #GstBuffer to get offset of.
@@ -229,10 +230,10 @@ Gets the offset in the source file of this buffer.
 
 <!-- ##### MACRO GST_BUFFER_OFFSET_END ##### -->
 <para>
-
+Gets the offset in the source file of the end of this buffer.
 </para>
 
-@buf: 
+@buf: a #GstBuffer to get offset of.
 
 
 <!-- ##### MACRO gst_buffer_ref ##### -->
@@ -410,26 +411,35 @@ Calls the buffer-specific free function on the given buffer.
 
 <!-- ##### MACRO GST_BUFFER_FREE_DATA_FUNC ##### -->
 <para>
-
+A function that should be called if the buffer has no more references left.
+Elements that utilize hardware memory could use this to re-queue
+the buffer after it's been unreferenced. If no free_data_func has been
+provided, the default will be used which simply deallocates the memory
+region and the GstBuffer object. Manual implementations that want to
+free their own memory but don't do anything special otherwise are
+suggested to set the GST_BUFFER_DONTFREE flag on the buffer and call the
+default data free function (gst_buffer_default_free()) from their manual
+implementation.
 </para>
 
-@buf: 
+@buf: the #GstBuffer this function belongs to
 
 
 <!-- ##### USER_FUNCTION GstBufferFreeDataFunc ##### -->
 <para>
-
+the type for the GST_BUFFER_FREE_DATA_FUNC
 </para>
 
-@buffer: 
+@buffer: the #GstBuffer on which it will operate, when called
 
 
 <!-- ##### MACRO GST_BUFFER_PRIVATE ##### -->
 <para>
-
+Private data for the buffer. This can be used to store a pointer to the
+object that can then be retrieved in something like the BUFFER_FREE_DATA_FUNC.
 </para>
 
-@buf: 
+@buf: the #GstBuffer this data belongs to
 
 
 <!-- ##### MACRO GST_BUFFER_OFFSET_NONE ##### -->
@@ -448,18 +458,18 @@ Calls the buffer-specific free function on the given buffer.
 
 <!-- ##### MACRO GST_BUFFER_DURATION_IS_VALID ##### -->
 <para>
-
+Tests if the duration is known.
 </para>
 
-@buffer: 
+@buffer: the #GstBuffer to check for the duration
 
 
 <!-- ##### MACRO GST_BUFFER_TIMESTAMP_IS_VALID ##### -->
 <para>
-
+Tests if the timestamp is known.
 </para>
 
-@buffer: 
+@buffer: the #GstBuffer to check for the timestamp
 
 
 <!-- ##### MACRO GST_BUFFER_OFFSET_IS_VALID ##### -->

@@ -343,13 +343,15 @@ Get the pads of this elements.
 
 <!-- ##### MACRO GST_ELEMENT_ERROR ##### -->
 <para>
-
+Utility function that elements can use in case they encountered a fatal
+data processing error. The pipeline will throw an error signal and the
+application will be requested to stop further media processing.
 </para>
 
-@el: 
+@el: the element that throws the error
 @domain: 
 @code: 
-@message: 
+@message: the message to display
 @debug: 
 
 

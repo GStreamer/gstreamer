@@ -80,21 +80,6 @@ struct _GstPlugin {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-/**
- * GST_PLUGIN_DEFINE:
- * @major: major version number
- * @minor: minor version number
- * @name: short name of the plugin
- * @description: information about the purpose of the plugin
- * @init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
- * @version: full version string (e.g. VERSION from config.h)
- * @license: under which licence the package has been released, e.g. GPL, LGPL.
- * @package: the package-name (e.g. PACKAGE_NAME from config.h)
- * @origin: a description from where the package comes from (e.g. the homepage URL)
- *
- * This macro needs to be used to define the entry point and meta data of a plugin.
- * One would use this macro to export a plugin, so that it can be used by other applications.
- */
 #define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
 GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {		      	\
   major,						\
@@ -110,21 +95,6 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {		      	\
   GST_PADDING_INIT				        \
 };
 
-/**
- * GST_PLUGIN_DEFINE_STATIC:
- * @major: major version number
- * @minor: minor version number
- * @name: short name of the plugin
- * @description: information about the purpose of the plugin
- * @init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
- * @version: full version string (e.g. VERSION from config.h)
- * @license: under which licence the package has been released, e.g. GPL, LGPL.
- * @package: the package-name (e.g. PACKAGE_NAME from config.h)
- * @origin: a description from where the package comes from (e.g. the homepage URL)
- *
- * This macro needs to be used to define the entry point and meta data of a local plugin.
- * One would use this macro to define a local plugin that can only be used by the own application.
- */
 #define GST_PLUGIN_DEFINE_STATIC(major,minor,name,description,init,version,license,package,origin)  \
 static void GST_GNUC_CONSTRUCTOR			\
 _gst_plugin_static_init__ ##init (void)			\
