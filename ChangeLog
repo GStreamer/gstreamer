@@ -1,3 +1,12 @@
+2004-09-24  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_change_state):
+	  Throw error if we failed to find a suitable output. This should
+	  throw an error if we successfully set up a pipeline (e.g. because
+	  we recognized a media file) but found no decodable streams in it
+	  (e.g. because it contains only media stream types for which we
+	  have no decoders, or because it's not a media type).
+
 2004-09-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/dirac/Makefile.am:
