@@ -163,9 +163,9 @@ raw_caps_factory (void)
   return
       gst_caps_new_simple ("audio/x-raw-float",
       "rate", GST_TYPE_INT_RANGE, 8000, 50000,
-      "channels", GST_TYPE_INT_RANGE, 1, 2, NULL,
+      "channels", GST_TYPE_INT_RANGE, 1, 2,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, 32, "buffer-frames", G_TYPE_INT, 0);
+      "width", G_TYPE_INT, 32, "buffer-frames", G_TYPE_INT, 0, NULL);
 }
 
 static void
