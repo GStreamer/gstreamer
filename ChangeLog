@@ -1,5 +1,21 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gsterror.c: (_gst_core_errors_init),
+	(_gst_library_errors_init), (_gst_resource_errors_init),
+	(_gst_stream_errors_init):
+        remove ending punctuation dots
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/elements/gstfilesink.c: (gst_filesink_open_file):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get_read):
+	* gst/elements/gstmultidisksrc.c: (gst_multidisksrc_open_file):
+	* gst/elements/gstpipefilter.c: (gst_pipefilter_get),
+	(gst_pipefilter_chain), (gst_pipefilter_open_file):
+        use GST_ERROR_SYSTEM
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstelement.c: (gst_element_error_printf),
 	(gst_element_error_extended):
 	* gst/gstelement.h:

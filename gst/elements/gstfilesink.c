@@ -242,7 +242,7 @@ gst_filesink_open_file (GstFileSink *sink)
   if (sink->file == NULL) {
     gst_element_error (sink, RESOURCE, OPEN_WRITE,
                          (_("Could not open file \"%s\" for writing"), sink->filename),
-                         ("system error: %s", strerror (errno)));
+                         GST_ERROR_SYSTEM);
     return FALSE;
   }
 

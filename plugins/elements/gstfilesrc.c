@@ -642,7 +642,7 @@ gst_filesrc_get_read (GstFileSrc *src)
   if (ret < 0){
     gst_element_error (src, RESOURCE, READ,
 	               NULL,
-                       ("system error: %s", strerror (errno)));
+                       GST_ERROR_SYSTEM);
     return NULL;
   }
   if (ret < readsize) {

@@ -242,7 +242,7 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
   if (src->fd < 0) {
       gst_element_error (src, RESOURCE, OPEN_READ,
                          (_("Could not open file \"%s\" for reading"), src->currentfilename),
-                         ("system error: %s", strerror (errno)));
+                         GST_ERROR_SYSTEM);
     return FALSE;
 
   } else {
