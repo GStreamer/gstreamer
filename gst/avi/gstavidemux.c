@@ -380,6 +380,17 @@ gst_avi_demux_strh (GstAviDemux *avi_demux)
   return FALSE;
 }
 
+static void
+gst_avi_demux_dmlh (GstAviDemux *avi_demux)
+{
+  gst_riff_dmlh *dmlh;
+  guint32 got_bytes;
+
+  got_bytes = gst_bytestream_peek_bytes (avi_demux->bs, (guint8**) &dmlh, sizeof (gst_riff_dmlh));
+
+/*   g_print ("Found total frame: %u\n", dmlh->totalframes); */
+}
+
 static void 
 gst_avi_demux_strf_vids (GstAviDemux *avi_demux)
 {
@@ -1173,6 +1184,7 @@ gst_avi_demux_read_chunk (GstAviDemux *avi_demux, guint32 *id, guint32 *size)
 
       return TRUE;
     }
+
   } while (gst_avi_demux_handle_sink_event (avi_demux));
 
   return TRUE;
@@ -1257,8 +1269,9 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
             gst_bytestream_get_status (avi_demux->bs, &remaining, &event);
 	    gst_event_unref (event);
 	  }
-	  if  (avi_demux->avih.bufsize)
+	  if  (avi_demux->avih.bufsize) {
 	    gst_bytestream_size_hint (avi_demux->bs, avi_demux->avih.bufsize);
+	  }
 
 	  gst_avi_demux_process_movi (avi_demux, rec_depth, filepos);
 	  goto done;
@@ -1332,7 +1345,7 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
       avi_stream_context *stream;
       gint64 next_ts;
       GstFormat format;
-      
+
       stream_id = CHUNKID_TO_STREAMNR (chunkid);
 		   
       stream = &avi_demux->stream[stream_id];
@@ -1384,17 +1397,30 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
       *chunksize = (*chunksize + 1) & ~1;
       break;
     }
-    default:
-      GST_DEBUG (0, "  *****  unknown chunkid %08x (%s)", chunkid, gst_riff_id_to_fourcc (chunkid));
-      *chunksize = (*chunksize + 1) & ~1;
-      break;
+  case GST_RIFF_TAG_dmlh:
+    gst_avi_demux_dmlh (avi_demux);
+    break;
+    
+  case GST_RIFF_TAG_JUNK:
+    *chunksize = (*chunksize + 1) & ~1;
+    break;
+    
+  default:
+    GST_DEBUG (0, "  *****  unknown chunkid %08x", chunkid);
+    *chunksize = 1;
+/*       *chunksize = (*chunksize + 1) & ~1; */
   }
   GST_INFO (GST_CAT_PLUGIN_INFO, "chunkid %s, flush %08x, filepos %08llx", 
-		  gst_riff_id_to_fourcc (chunkid), *chunksize, *filepos);
-
+	    gst_riff_id_to_fourcc (chunkid), *chunksize, *filepos);
+  
   *filepos += *chunksize;
-  if (!gst_bytestream_flush (bs, *chunksize)) {
-    return gst_avi_demux_handle_sink_event (avi_demux);
+  {
+    gboolean ret;
+    
+    ret = gst_bytestream_flush (bs, *chunksize);
+    if (!ret) {
+      return gst_avi_demux_handle_sink_event (avi_demux);
+    }
   }
 
 done:
