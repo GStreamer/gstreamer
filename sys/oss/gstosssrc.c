@@ -29,8 +29,6 @@
 
 #include <gstosssrc.h>
 
-//#define WEIRD_THING	/* show the weird thing with 44100 KHz rec */
-
 static GstElementDetails gst_osssrc_details = {
   "Audio Source (OSS)",
   "Source/Audio",
@@ -306,6 +304,9 @@ gst_osssrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 static GstElementStateReturn 
 gst_osssrc_change_state (GstElement *element) 
 {
+  GstPad *pad = NULL;
+  GstOssSrc *src = GST_OSSSRC (element);
+  
   g_return_val_if_fail (GST_IS_OSSSRC (element), FALSE);
   GST_DEBUG (0, "osssrc: state change\n");
   /* if going down into NULL state, close the file if it's open */
@@ -319,6 +320,31 @@ gst_osssrc_change_state (GstElement *element)
     if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) { 
       if (!gst_osssrc_open_audio (GST_OSSSRC (element)))
         return GST_STATE_FAILURE;
+      else
+      {
+        /* set the caps here instead of after first iteration */
+	pad = gst_element_get_pad (element, "src");
+        if (! (GST_PAD_CAPS (pad))) 
+	{
+          /* set caps on src pad */
+          if (!gst_pad_try_set_caps (pad, 
+		    GST_CAPS_NEW (
+    		      "oss_src",
+		      "audio/raw",
+        		"format",       GST_PROPS_STRING ("int"),
+		          "law",        GST_PROPS_INT (0),              //FIXME
+		          "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
+		          "signed",     GST_PROPS_BOOLEAN (TRUE),	//FIXME
+		          "width",      GST_PROPS_INT (src->format),
+		          "depth",      GST_PROPS_INT (src->format),
+		          "rate",       GST_PROPS_INT (src->frequency),
+		          "channels",   GST_PROPS_INT (src->channels)
+        	   ))) 
+           {
+             gst_element_error (GST_ELEMENT (element), "could not set caps");
+           }      
+	}
+      }
     }
   }
 
@@ -366,9 +392,10 @@ gst_osssrc_sync_parms (GstOssSrc *osssrc)
 {
   audio_buf_info ispace;
   gint frag;
-  /* hack : ioctl on frequency seems to *change* the frequency
-	maybe this is right, but at least for 44100 Khz, it
-	gives unexpected results ! */
+  /* remember : ioctl on samplerate returns the sample rate the card
+   * is actually set to ! Setting it to 44101 KHz could cause it to
+   * be set to 44101, for example
+   */
 
   guint frequency;
 
@@ -385,18 +412,9 @@ gst_osssrc_sync_parms (GstOssSrc *osssrc)
  
   ioctl(osssrc->fd, SNDCTL_DSP_SETFMT, &osssrc->format);
   ioctl(osssrc->fd, SNDCTL_DSP_CHANNELS, &osssrc->channels);
-#ifdef WEIRD_THING
-  g_print ("DEBUG: do you want to see A Weird Thing (TM) ?\n");
-  g_print ("DEBUG: then set osssrc to a 44100 frequency and check these numbers.\n");
-  g_print ("DEBUG: osssrc frequency before ioctl: %d\n", osssrc->frequency);
-#endif
   ioctl(osssrc->fd, SNDCTL_DSP_SPEED, &osssrc->frequency);
-#ifdef WEIRD_THING
-  g_print ("DEBUG: osssrc frequency after ioctl : %d\n", osssrc->frequency);
-  g_print ("DEBUG: redoing ioctl using a temp variable, and resetting osssrc->frequency\n");
   osssrc->frequency = frequency;
   ioctl(osssrc->fd, SNDCTL_DSP_SPEED, &frequency);
-#endif  
   ioctl(osssrc->fd, SNDCTL_DSP_GETISPACE, &ispace);
   ioctl(osssrc->fd, SNDCTL_DSP_GETBLKSIZE, &frag);
  
