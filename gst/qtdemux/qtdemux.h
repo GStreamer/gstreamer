@@ -70,6 +70,8 @@ struct _GstQTDemux {
 
   int offset;
 
+  GstTagList *tag_list;
+
   /* track stuff */
 
 };

@@ -30,6 +30,10 @@
 GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
 #define GST_CAT_DEFAULT qtdemux_debug
 
+/* temporary hack */
+#define g_print(...)            /* */
+#define gst_util_dump_mem(a,b)  /* */
+
 #define QTDEMUX_GUINT32_GET(a)	(GST_READ_UINT32_BE(a))
 #define QTDEMUX_GUINT24_GET(a)	(GST_READ_UINT32_BE(a) >> 8)
 #define QTDEMUX_GUINT16_GET(a)	(GST_READ_UINT16_BE(a))
@@ -158,6 +162,9 @@ static void qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer,
 static QtNodeType *qtdemux_type_get (guint32 fourcc);
 static void qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
 static void qtdemux_parse_tree (GstQTDemux * qtdemux);
+static void qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta);
+static void qtdemux_tag_add (GstQTDemux * qtdemux, const char *tag,
+    GNode * node);
 static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GNode * esds);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
@@ -574,8 +581,9 @@ gst_qtdemux_loop_header (GstElement * element)
           } while (1);
 
           qtdemux_parse_moov (qtdemux, GST_BUFFER_DATA (moov), length);
-          if (1)
+          if (1) {
             qtdemux_node_dump (qtdemux, qtdemux->moov_node);
+          }
           qtdemux_parse_tree (qtdemux);
           qtdemux->state = QTDEMUX_STATE_MOVIE;
           break;
@@ -813,6 +821,22 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 #define FOURCC_wave	GST_MAKE_FOURCC('w','a','v','e')
 #define FOURCC_appl	GST_MAKE_FOURCC('a','p','p','l')
 #define FOURCC_esds	GST_MAKE_FOURCC('e','s','d','s')
+#define FOURCC_hnti	GST_MAKE_FOURCC('h','n','t','i')
+#define FOURCC_rtp_	GST_MAKE_FOURCC('r','t','p',' ')
+#define FOURCC_sdp_	GST_MAKE_FOURCC('s','d','p',' ')
+#define FOURCC_meta	GST_MAKE_FOURCC('m','e','t','a')
+#define FOURCC_ilst	GST_MAKE_FOURCC('i','l','s','t')
+#define FOURCC__nam	GST_MAKE_FOURCC(0xa9,'n','a','m')
+#define FOURCC__ART	GST_MAKE_FOURCC(0xa9,'A','R','T')
+#define FOURCC__alb	GST_MAKE_FOURCC(0xa9,'a','l','b')
+#define FOURCC_gnre	GST_MAKE_FOURCC('g','n','r','e')
+#define FOURCC_trkn	GST_MAKE_FOURCC('t','r','k','n')
+#define FOURCC_cpil	GST_MAKE_FOURCC('c','p','i','l')
+#define FOURCC_tmpo	GST_MAKE_FOURCC('t','m','p','o')
+#define FOURCC__too	GST_MAKE_FOURCC(0xa9,'t','o','o')
+#define FOURCC_____	GST_MAKE_FOURCC('-','-','-','-')
+#define FOURCC_free	GST_MAKE_FOURCC('f','r','e','e')
+#define FOURCC_data	GST_MAKE_FOURCC('d','a','t','a')
 
 
 static void qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth);
@@ -840,7 +864,7 @@ QtNodeType qt_node_types[] = {
       qtdemux_dump_mvhd},
   {FOURCC_clip, "clipping", QT_CONTAINER,},
   {FOURCC_trak, "track", QT_CONTAINER,},
-  {FOURCC_udta, "user data", 0,},       /* special container */
+  {FOURCC_udta, "user data", QT_CONTAINER,},    /* special container */
   {FOURCC_ctab, "color table", 0,},
   {FOURCC_tkhd, "track header", 0,
       qtdemux_dump_tkhd},
@@ -886,15 +910,29 @@ QtNodeType qt_node_types[] = {
       qtdemux_dump_co64},
   {FOURCC_vide, "video media", 0},
   {FOURCC_cmov, "compressed movie", QT_CONTAINER},
-  {FOURCC_dcom, "compressed data", 0,
-      qtdemux_dump_dcom},
-  {FOURCC_cmvd, "compressed movie data", 0,
-      qtdemux_dump_cmvd},
-  {FOURCC_hint, "hint", 0, qtdemux_dump_unknown},
-  {FOURCC_mp4a, "mp4a", 0, qtdemux_dump_unknown},
-  {FOURCC_mp4v, "mp4v", 0, qtdemux_dump_unknown},
+  {FOURCC_dcom, "compressed data", 0, qtdemux_dump_dcom},
+  {FOURCC_cmvd, "compressed movie data", 0, qtdemux_dump_cmvd},
+  {FOURCC_hint, "hint", 0,},
+  {FOURCC_mp4a, "mp4a", 0,},
+  {FOURCC_mp4v, "mp4v", 0,},
   {FOURCC_wave, "wave", QT_CONTAINER},
   {FOURCC_appl, "appl", QT_CONTAINER},
+  {FOURCC_hnti, "hnti", QT_CONTAINER},
+  {FOURCC_rtp_, "rtp ", 0, qtdemux_dump_unknown},
+  {FOURCC_sdp_, "sdp ", 0, qtdemux_dump_unknown},
+  {FOURCC_meta, "meta", 0, qtdemux_dump_unknown},
+  {FOURCC_ilst, "ilst", QT_CONTAINER,},
+  {FOURCC__nam, "Name", QT_CONTAINER,},
+  {FOURCC__ART, "Artist", QT_CONTAINER,},
+  {FOURCC__alb, "Album", QT_CONTAINER,},
+  {FOURCC_gnre, "Genre", QT_CONTAINER,},
+  {FOURCC_trkn, "Track Number", QT_CONTAINER,},
+  {FOURCC_cpil, "cpil", QT_CONTAINER,},
+  {FOURCC_tmpo, "Tempo", QT_CONTAINER,},
+  {FOURCC__too, "too", QT_CONTAINER,},
+  {FOURCC_____, "----", QT_CONTAINER,},
+  {FOURCC_data, "data", 0, qtdemux_dump_unknown},
+  {FOURCC_free, "free", 0,},
   {0, "unknown", 0},
 };
 static int n_qt_node_types = sizeof (qt_node_types) / sizeof (qt_node_types[0]);
@@ -1125,6 +1163,31 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           buf += len;
         }
       }
+    } else if (fourcc == FOURCC_meta) {
+      void *buf;
+      guint32 len;
+
+      buf = buffer + 12;
+      end = buffer + length;
+      while (buf < end) {
+        GNode *child;
+
+        if (buf + 8 >= end) {
+          /* FIXME: get annoyed */
+          GST_LOG ("buffer overrun");
+        }
+        len = QTDEMUX_GUINT32_GET (buf);
+        if (len < 8) {
+          GST_LOG ("bad length");
+          break;
+        }
+
+        child = g_node_new (buf);
+        g_node_append (node, child);
+        qtdemux_parse (qtdemux, child, buf, len);
+
+        buf += len;
+      }
     }
 #if 0
     if (fourcc == FOURCC_cmvd) {
@@ -1169,7 +1232,7 @@ qtdemux_type_get (guint32 fourcc)
       return qt_node_types + i;
   }
 
-  GST_LOG ("unknown QuickTime node type " GST_FOURCC_FORMAT,
+  GST_ERROR ("unknown QuickTime node type " GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (fourcc));
   return qt_node_types + n_qt_node_types - 1;
 }
@@ -1478,7 +1541,7 @@ qtdemux_dump_stsc (GstQTDemux * qtdemux, void *buffer, int depth)
 static void
 qtdemux_dump_stsz (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  int i;
+  //int i;
   int n;
   int offset;
   int sample_size;
@@ -1493,19 +1556,21 @@ qtdemux_dump_stsz (GstQTDemux * qtdemux, void *buffer, int depth)
         QTDEMUX_GUINT32_GET (buffer + 16));
     n = QTDEMUX_GUINT32_GET (buffer + 16);
     offset = 20;
+#if 0
     for (i = 0; i < n; i++) {
       GST_LOG ("%*s    sample size:   %u", depth, "",
           QTDEMUX_GUINT32_GET (buffer + offset));
 
       offset += 4;
     }
+#endif
   }
 }
 
 static void
 qtdemux_dump_stco (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  int i;
+  //int i;
   int n;
   int offset;
 
@@ -1515,18 +1580,20 @@ qtdemux_dump_stco (GstQTDemux * qtdemux, void *buffer, int depth)
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
+#if 0
   for (i = 0; i < n; i++) {
     GST_LOG ("%*s    chunk offset:  %08x", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
 
     offset += 4;
   }
+#endif
 }
 
 static void
 qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  int i;
+  //int i;
   int n;
   int offset;
 
@@ -1536,12 +1603,14 @@ qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth)
       QTDEMUX_GUINT32_GET (buffer + 12));
   n = QTDEMUX_GUINT32_GET (buffer + 12);
   offset = 16;
+#if 0
   for (i = 0; i < n; i++) {
     GST_LOG ("%*s    chunk offset:  %" G_GUINT64_FORMAT, depth, "",
         QTDEMUX_GUINT64_GET (buffer + offset));
 
     offset += 8;
   }
+#endif
 }
 
 static void
@@ -1560,7 +1629,12 @@ qtdemux_dump_cmvd (GstQTDemux * qtdemux, void *buffer, int depth)
 static void
 qtdemux_dump_unknown (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  length: %d", depth, "", QTDEMUX_GUINT32_GET (buffer + 8));
+  int len;
+
+  GST_LOG ("%*s  length: %d", depth, "", QTDEMUX_GUINT32_GET (buffer + 0));
+
+  len = QTDEMUX_GUINT32_GET (buffer + 0);
+  gst_util_dump_mem (buffer, len);
 
 }
 
@@ -1612,6 +1686,20 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 {
   GNode *mvhd;
   GNode *trak;
+  GNode *udta;
+
+  udta = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_udta);
+  if (udta) {
+    qtdemux_parse_udta (qtdemux, udta);
+
+    if (qtdemux->tag_list) {
+      g_print ("calling gst_element_found_tags with %s\n",
+          gst_structure_to_string (qtdemux->tag_list));
+      gst_element_found_tags (GST_ELEMENT (qtdemux), qtdemux->tag_list);
+    }
+  } else {
+    GST_LOG ("No udta node found.");
+  }
 
   mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
   if (mvhd == NULL) {
@@ -1633,6 +1721,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 
   while ((trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak)) != NULL)
     qtdemux_parse_trak (qtdemux, trak);
+
 }
 
 static void
@@ -1998,6 +2087,67 @@ done2:
 #endif
 
   gst_qtdemux_add_stream (qtdemux, stream);
+}
+
+static void
+qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
+{
+  GNode *meta;
+  GNode *ilst;
+  GNode *node;
+
+  meta = qtdemux_tree_get_child_by_type (udta, FOURCC_meta);
+  if (meta == NULL) {
+    GST_LOG ("no meta");
+    return;
+  }
+
+  ilst = qtdemux_tree_get_child_by_type (meta, FOURCC_ilst);
+  if (ilst == NULL) {
+    GST_LOG ("no ilst");
+    return;
+  }
+
+  g_print ("new tag list\n");
+  qtdemux->tag_list = gst_tag_list_new ();
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__nam);
+  if (node) {
+    qtdemux_tag_add (qtdemux, GST_TAG_TITLE, node);
+  }
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__ART);
+  if (node) {
+    qtdemux_tag_add (qtdemux, GST_TAG_ARTIST, node);
+  }
+
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__alb);
+  if (node) {
+    qtdemux_tag_add (qtdemux, GST_TAG_ALBUM, node);
+  }
+
+
+}
+
+static void
+qtdemux_tag_add (GstQTDemux * qtdemux, const char *tag, GNode * node)
+{
+  GNode *data;
+  char *s;
+  int len;
+  int type;
+
+  data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
+  if (data) {
+    len = QTDEMUX_GUINT32_GET (data->data);
+    type = QTDEMUX_GUINT32_GET (data->data + 8);
+    if (type == 0x00000001) {
+      s = g_strndup ((char *) data->data + 16, len - 16);
+      g_print ("adding tag %s\n", s);
+      gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, s, NULL);
+      g_free (s);
+    }
+  }
 }
 
 /* taken from ffmpeg */
