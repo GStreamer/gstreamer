@@ -50,11 +50,14 @@ struct _GstMad {
   guchar	*tempbuffer;
   glong		tempsize;	/* used to keep track of partial buffers */
   gboolean	need_sync;
+  guint64       base_byte_offset;
+  guint64       bytes_consumed;   /* since the base_byte_offset */
   guint64	base_time;
   guint64	framestamp;	/* timestamp-like, but counted in frames */
   guint64	total_samples;  /* the number of samples since the sync point */
 
   gboolean	restart;
+  guint64       segment_start;
 
   /* info */
   struct mad_header header;
@@ -73,6 +76,9 @@ struct _GstMad {
   /* negotiated format */
   gint		rate;
   gint		channels;
+
+  GstIndex	*index;
+  gint		 index_id;
 };
 
 struct _GstMadClass {
@@ -166,6 +172,9 @@ static void	gst_mad_chain		(GstPad *pad, GstBuffer *buffer);
 
 static GstElementStateReturn
 		gst_mad_change_state (GstElement *element);
+
+static void      gst_mad_set_index (GstElement *element, GstIndex *index);
+static GstIndex* gst_mad_get_index (GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
@@ -261,6 +270,8 @@ gst_mad_class_init (GstMadClass *klass)
   gobject_class->dispose = gst_mad_dispose;
 
   gstelement_class->change_state = gst_mad_change_state;
+  gstelement_class->set_index    = gst_mad_set_index;
+  gstelement_class->get_index    = gst_mad_get_index;
 
   /* init properties */
   /* currently, string representations are used, we might want to change that */
@@ -305,6 +316,8 @@ gst_mad_init (GstMad *mad)
   mad->tempsize = 0;
   mad->need_sync = TRUE;
   mad->base_time = 0;
+  mad->base_byte_offset = 0;
+  mad->bytes_consumed = 0;
   mad->framestamp = 0;
   mad->total_samples = 0;
   mad->new_header = TRUE;
@@ -312,6 +325,7 @@ gst_mad_init (GstMad *mad)
   mad->vbr_average = 0;
   mad->vbr_rate = 0;
   mad->restart = FALSE;
+  mad->segment_start = 0;
   mad->header.mode = -1;
   mad->header.emphasis = -1;
   mad->metadata = NULL;
@@ -328,9 +342,30 @@ gst_mad_dispose (GObject *object)
 {
   GstMad *mad = GST_MAD (object);
 
+  gst_mad_set_index (GST_ELEMENT (object), NULL);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
   g_free (mad->tempbuffer);
+}
+
+static void
+gst_mad_set_index (GstElement *element, GstIndex *index)
+{
+  GstMad *mad = GST_MAD (element);
+  
+  mad->index = index;
+
+  if (index)
+    gst_index_get_writer_id (index, GST_OBJECT (element), &mad->index_id);
+}
+
+static GstIndex*
+gst_mad_get_index (GstElement *element)
+{
+  GstMad *mad = GST_MAD (element);
+
+  return mad->index;
 }
 
 static const GstFormat*
@@ -574,6 +609,115 @@ gst_mad_src_query (GstPad *pad, GstQueryType type,
 }
 
 static gboolean
+index_seek (GstMad *mad, GstPad *pad, GstEvent *event)
+{
+  /* since we know the exact byteoffset of the frame,
+     make sure to try bytes first */
+
+  const GstFormat try_all_formats[] = { 
+    GST_FORMAT_BYTES,
+    GST_FORMAT_TIME,
+    0
+  };
+  const GstFormat *try_formats = try_all_formats;
+  const GstFormat *peer_formats;
+
+  GstIndexEntry *entry =
+    gst_index_get_assoc_entry (mad->index, mad->index_id,
+			       GST_INDEX_LOOKUP_BEFORE, 0,
+			       GST_EVENT_SEEK_FORMAT (event),
+			       GST_EVENT_SEEK_OFFSET (event));
+  if (!entry)
+    return FALSE;
+  
+  peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
+
+  while (gst_formats_contains (peer_formats, *try_formats)) {
+    gint64 value;
+    
+    if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
+      /* lookup succeeded, create the seek */
+
+      GstEvent *seek_event =
+	gst_event_new_seek (*try_formats |
+			    GST_SEEK_METHOD_SET |
+			    GST_SEEK_FLAG_FLUSH, value);
+
+      if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
+	/* seek worked, we're done, loop will exit */
+	mad->restart = TRUE;
+	g_assert (GST_EVENT_SEEK_FORMAT (event) == GST_FORMAT_TIME);
+	mad->segment_start = GST_EVENT_SEEK_OFFSET (event);
+	return TRUE;
+      }
+    }
+    try_formats++;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+normal_seek (GstMad *mad, GstPad *pad, GstEvent *event)
+{
+  gint64 src_offset;
+  gboolean flush;
+  GstFormat format;
+  const GstFormat *peer_formats;
+  gboolean res;
+  
+  format = GST_FORMAT_TIME;
+  
+  /* first bring the src_format to TIME */
+  if (!gst_pad_convert (pad,
+			GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
+			&format, &src_offset))
+    {
+      /* didn't work, probably unsupported seek format then */
+      return FALSE;
+    }
+  
+  /* shave off the flush flag, we'll need it later */
+  flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+  
+  /* assume the worst */
+  res = FALSE;
+  
+  peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
+  
+  /* while we did not exhaust our seek formats without result */
+  while (peer_formats && *peer_formats && !res) {
+    gint64 desired_offset;
+    
+    format = *peer_formats;
+    
+    /* try to convert requested format to one we can seek with on the sinkpad */
+    if (gst_pad_convert (mad->sinkpad, GST_FORMAT_TIME, src_offset,
+			 &format, &desired_offset))
+      {
+	GstEvent *seek_event;
+	
+	/* conversion succeeded, create the seek */
+	seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush,
+					 desired_offset);
+	/* do the seek */
+	if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
+	  /* seek worked, we're done, loop will exit */
+	  res = TRUE;
+	}
+      }
+    /* at this point, either the seek worked or res == FALSE */
+    if (res)
+      /* we need to break out of the processing loop on flush */
+      mad->restart = flush;
+    
+    peer_formats++;
+  }
+
+  return res;
+}
+
+static gboolean
 gst_mad_src_event (GstPad *pad, GstEvent *event)
 {
   gboolean res = TRUE;
@@ -591,62 +735,16 @@ gst_mad_src_event (GstPad *pad, GstEvent *event)
       break;
     /* the all-formats seek logic */
     case GST_EVENT_SEEK:
-    {
-      gint64 src_offset;
-      gboolean flush;
-      GstFormat format;
-      const GstFormat *peer_formats;
-
-      format = GST_FORMAT_TIME;
-
-      /* first bring the src_format to TIME */
-      if (!gst_pad_convert (pad,
-		GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
-		&format, &src_offset))
-      {
-	/* didn't work, probably unsupported seek format then */
-        res = FALSE;
-        break;
+      if (!mad->can_seek) {
+	g_warning ("MAD: can't seek now, seek ignored");
+	break;
       }
-
-      /* shave off the flush flag, we'll need it later */
-      flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-
-      /* assume the worst */
-      res = FALSE;
-
-      peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
-
-      /* while we did not exhaust our seek formats without result */
-      while (peer_formats && *peer_formats && !res) {
-        gint64 desired_offset;
-
-	format = *peer_formats;
-
-        /* try to convert requested format to one we can seek with on the sinkpad */
-        if (gst_pad_convert (mad->sinkpad, GST_FORMAT_TIME, src_offset,
-			     &format, &desired_offset))
-        {
-          GstEvent *seek_event;
-
-	  /* conversion succeeded, create the seek */
-          seek_event = gst_event_new_seek (format | GST_SEEK_METHOD_SET | flush,
-			                   desired_offset);
-	  /* do the seek */
-          if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), seek_event)) {
-	    /* seek worked, we're done, loop will exit */
-	    res = TRUE;
-	  }
-        }
-	/* at this point, either the seek worked or res == FALSE */
-	if (res)
-          /* we need to break out of the processing loop on flush */
-          mad->restart = flush;
-
-	peer_formats++;
-      }
+      if (mad->index)
+	res = index_seek (mad, pad, event);
+      else
+	res = normal_seek (mad, pad, event);
       break;
-    }
+
     default:
       res = FALSE;
       break;
@@ -999,6 +1097,17 @@ gst_mad_handle_event (GstPad *pad, GstBuffer *buffer)
   return;
 }
 
+static gboolean
+gst_mad_check_restart (GstMad *mad)
+{
+  gboolean yes = mad->restart;
+  if (mad->restart) {
+    mad->restart = FALSE;
+    mad->tempsize = 0;
+  }
+  return yes;
+}
+
 static void
 gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 {
@@ -1006,6 +1115,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
   gchar *data;
   glong size;
   gboolean new_pts = FALSE;
+  GstClockTime timestamp;
 
   mad = GST_MAD (gst_pad_get_parent (pad));
   g_return_if_fail (GST_IS_MAD (mad));
@@ -1017,13 +1127,19 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
     return;
   }
 
+  gst_mad_check_restart (mad);
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
   /* handle timestamps */
-  if (GST_BUFFER_TIMESTAMP (buffer) != -1) {
+  if (timestamp != -1) {
     /* if there is nothing queued (partial buffer), we prepare to set the
      * timestamp on the next buffer */
     if (mad->tempsize == 0) {
-      mad->base_time = GST_BUFFER_TIMESTAMP (buffer);
+      mad->base_time = timestamp;
       mad->total_samples = 0;
+      mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
+      mad->bytes_consumed = 0;
     }
     /* else we need to finish the current partial frame with the old timestamp
      * and queue this timestamp for the next frame */
@@ -1061,6 +1177,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       guint nchannels;
       guint nsamples;
       gint rate;
+      guint64 time_offset;
 
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
 
@@ -1157,7 +1274,30 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	mad->rate = rate;
       }
 
-      if (GST_PAD_IS_USABLE (mad->srcpad)) {
+      if (mad->frame.header.samplerate == 0) {
+	g_warning ("mad->frame.header.samplerate is 0; timestamps cannot be calculated");
+	time_offset = mad->base_time + 0;
+      }
+      else {
+	time_offset = mad->base_time + (mad->total_samples * GST_SECOND
+					/ mad->frame.header.samplerate);
+      }
+
+      if (mad->index) {
+	guint64 x_bytes = mad->base_byte_offset + mad->bytes_consumed;
+
+	gst_index_add_association (mad->index, mad->index_id, 0,
+				   GST_FORMAT_BYTES, x_bytes,
+				   GST_FORMAT_TIME, time_offset,
+				   NULL);
+      }
+
+      if (GST_PAD_IS_USABLE (mad->srcpad) &&
+	  mad->segment_start < time_offset) {
+
+	/* for sample accurate seeking, calculate how many samples
+	   to skip and send the remaining pcm samples */
+
         GstBuffer *outbuffer;
         gint16 *outdata;
         mad_fixed_t const *left_ch, *right_ch;
@@ -1169,15 +1309,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
         outbuffer = gst_buffer_new_and_alloc (nsamples * nchannels * 2);
         outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
 
-        if (mad->frame.header.samplerate == 0) {
-	  g_warning ("mad->frame.header.samplerate is 0 !");
-        }
-        else {
-	  guint64 increase;
-	  increase = mad->total_samples * GST_SECOND
-			                / mad->frame.header.samplerate;
-	  GST_BUFFER_TIMESTAMP (outbuffer) = mad->base_time + increase;
-        }
+	GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
 
         /* output sample(s) in 16-bit signed native-endian PCM */
         if (nchannels == 1) {
@@ -1203,13 +1335,13 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
        * use for the next frame */
       if (new_pts) {
 	new_pts = FALSE;
-        mad->base_time = GST_BUFFER_TIMESTAMP (buffer);
+        mad->base_time = timestamp;
         mad->total_samples = 0;
+	mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
+	mad->bytes_consumed = 0;
       }
 
-      if (mad->restart) {
-	mad->restart = FALSE;
-	mad->tempsize = 0;
+      if (gst_mad_check_restart (mad)) {
 	goto end;
       }
 
@@ -1220,6 +1352,7 @@ next:
       /* move out pointer to where mad want the next data */
       mad_input_buffer += consumed;
       mad->tempsize -= consumed;
+      mad->bytes_consumed += consumed;
     }
     memmove (mad->tempbuffer, mad_input_buffer, mad->tempsize);
   }
@@ -1252,6 +1385,7 @@ gst_mad_change_state (GstElement *element)
       mad->channels = 0;
       mad->vbr_average = 0;
       mad->base_time = 0;
+      mad->segment_start = 0;
       mad->framestamp = 0;
       mad->new_header = TRUE;
       mad->framecount = 0;
