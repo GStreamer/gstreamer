@@ -20,14 +20,14 @@ main (int argc, char **argv)
 
   gst_init (&argc, &argv);
 
-  for (i = 0; i < 100; i++) {
+  for (i = 0; i < 20; i++) {
     bin = gst_element_factory_make ("bin", "bin");
     gst_scheduler_factory_make (NULL, GST_ELEMENT (bin));
 
     g_thread_create ((GThreadFunc) iterate_bin, bin, TRUE, NULL);
   }
 
-  sleep (20000);
+  sleep (5);
 
   return 0;
 }
