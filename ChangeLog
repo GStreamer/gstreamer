@@ -1,3 +1,10 @@
+2004-03-06  Benjamin Otte  <otte@gnome.org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_get_pad_by_pad),
+	(gst_ogg_demux_src_query):
+	  make sure to handle the case where there's no current chain
+	  gracefully.
+
 2004-03-05  David Schleef  <ds@schleef.org>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_fixate), (gst_aasink_init):
