@@ -1042,6 +1042,7 @@ gst-libs/gst/audio/Makefile
 gst-libs/gst/floatcast/Makefile
 gst-libs/gst/gconf/Makefile
 gst-libs/gst/idct/Makefile
+gst-libs/gst/play/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/video/Makefile
