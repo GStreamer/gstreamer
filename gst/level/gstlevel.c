@@ -214,7 +214,7 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
   for (i = 0; i < filter->channels; ++i)
     filter->CS[i] = filter->peak[i] = filter->MS[i] = filter->RMS_dB[i] = 0.0;
   
-  in_data = (gint16 *) GST_BUFFER_DATA(buf);
+  in_data = (gint16 *) GST_BUFFER_DATA (buf);
   
   num_samples = GST_BUFFER_SIZE (buf) / (filter->width / 8);
   if (num_samples % filter->channels != 0)
@@ -288,14 +288,18 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
   {
     if (filter->signal)
     {
-      gdouble RMS, peak;
+      gdouble RMS, peak, endtime;
       for (i = 0; i < filter->channels; ++i)
       {
         RMS = sqrt (filter->CS[i] / (filter->num_samples / filter->channels));
         peak = filter->last_peak[i];
+        num_samples = GST_BUFFER_SIZE (buf) / (filter->width / 8);
+        endtime = (double) GST_BUFFER_TIMESTAMP (buf) / GST_SECOND
+                + (double) num_samples / (double) filter->rate;
 
         g_signal_emit (G_OBJECT (filter), gst_filter_signals[SIGNAL_LEVEL], 0,
-                       i, 20 * log10 (RMS), 20 * log10 (filter->last_peak[i]),
+                       endtime, i,
+                       20 * log10 (RMS), 20 * log10 (filter->last_peak[i]),
                        20 * log10 (filter->decay_peak[i]));
         /* we emitted, so reset cumulative and normal peak */
         filter->CS[i] = 0.0;
@@ -397,9 +401,10 @@ gst_level_class_init (GstLevelClass *klass)
   gst_filter_signals[SIGNAL_LEVEL] = 
     g_signal_new ("level", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstLevelClass, level), NULL, NULL,
-                  gstlevel_cclosure_marshal_VOID__INT_DOUBLE_DOUBLE_DOUBLE,
-                  G_TYPE_NONE, 4,
-                  G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+                  gstlevel_cclosure_marshal_VOID__DOUBLE_INT_DOUBLE_DOUBLE_DOUBLE,
+                  G_TYPE_NONE, 5,
+                  G_TYPE_DOUBLE, G_TYPE_INT,
+                  G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
 }
 
 static void

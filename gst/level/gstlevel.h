@@ -77,7 +77,7 @@ struct _GstLevel {
 
 struct _GstLevelClass {
   GstElementClass parent_class;
-  void (*level) (GstElement *element, gint channel,
+  void (*level) (GstElement *element, gdouble time, gint channel,
                  gdouble RMS_dB, gdouble peak_dB, gdouble decay_peak_dB);
 };
 

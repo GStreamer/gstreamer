@@ -9,10 +9,13 @@ libgstlevel_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS = gstlevel.h filter.func
 
 if HAVE_GTK
-noinst_PROGRAMS = demo
+noinst_PROGRAMS = demo plot
 demo_SOURCES = demo.c
 demo_CFLAGS = $(GTK_CFLAGS) $(GST_CFLAGS)
 demo_LDFLAGS = $(GTK_LIBS) $(GST_LIBS)
+plot_SOURCES = plot.c
+plot_CFLAGS = $(GTK_CFLAGS) $(GST_CFLAGS)
+plot_LDFLAGS = $(GTK_LIBS) $(GST_LIBS)
 endif
 
 EXTRA_libgstlevel_la_SOURCES = gstlevel-marshal.list

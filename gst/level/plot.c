@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
- * demo.c: sample application to display VU meter-like output of level
+ * plot.c: output data points to be graphed with gnuplot
  * Copyright (C) 2003
  *           Thomas Vander Stichele <thomas at apestaart dot org>
  *
@@ -24,72 +24,57 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
-/* global array for the scale widgets, we'll assume stereo */
-GtkWidget *scale[2][3];
+gboolean got_channel[2] = { FALSE, FALSE}; /* to see if we got the signal for this one yet */
+gint channels = 0 ;      /* guess at how many channels there are */
+gdouble last_time = 0.0; /* time of last signal */
+gdouble values[2][3];    /* array of levels from which to print */
 
 static void
 level_callback (GstElement *element, gdouble time, gint channel,
                 gdouble rms, gdouble peak, gdouble decay)
 {
-  gtk_range_set_value (GTK_RANGE (scale[channel][0]), rms);
-  gtk_range_set_value (GTK_RANGE (scale[channel][1]), peak);
-  gtk_range_set_value (GTK_RANGE (scale[channel][2]), decay);
+  int i = 0, j = 0;
+  gboolean got_all = FALSE;
+
+  if (channel  + 1> channels) channels = channel + 1;
+
+  /* reset got_channel if this is a new time point */
+  if (time > last_time)
+  {
+    for (i = 0; i < channels; ++i)  got_channel[i] = FALSE;
+    last_time = time;
+  }
+
+  /* store values */
+  got_channel[channel] = TRUE;
+  values[channel][0] = rms;
+  values[channel][1] = peak;
+  values[channel][2] = decay;
+
+  /* check if we have all channels, and output if we do */
+  /* FIXME: this fails on the first, no ? */
+  got_all = TRUE;
+  for (i = 0; i < channels; ++i)
+    if (!got_channel[i]) got_all = FALSE;
+  if (got_all)
+  {
+    g_print ("%f ", time);
+    for (i = 0; i < channels; ++i)
+      for (j = 0; j < 3; ++j)
+        g_print ("%f ", values[i][j]);
+    g_print ("\n");
+  }
 }
 
 static gboolean
 idler (gpointer data)
 {
   GstElement *pipeline = GST_ELEMENT (data);
-  g_print ("+");
   if (gst_bin_iterate (GST_BIN (pipeline)))
     return TRUE;
+
   gtk_main_quit ();
   return FALSE;
-}
-
-static void
-setup_gui ()
-{
-  GtkWidget *window;
-  GtkWidget *vbox;
-  int c;
-
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  g_signal_connect (window, "destroy", gtk_main_quit, NULL);
-
-  vbox = gtk_vbox_new (TRUE, 0);
-  gtk_container_add (GTK_CONTAINER (window), vbox);
-  for (c = 0; c < 2; ++c)
-  {
-    GtkWidget *label, *hbox;
-
-    /* RMS */
-    hbox = gtk_hbox_new (TRUE, 0);
-    label = gtk_label_new ("RMS");
-    gtk_container_add (GTK_CONTAINER (hbox), label);
-    scale[c][0] = gtk_hscale_new_with_range (-90.0, 0.0, 0.2);
-    gtk_widget_set_size_request (scale[c][0], 100, -1);
-    gtk_container_add (GTK_CONTAINER (hbox), scale[c][0]);
-    gtk_container_add (GTK_CONTAINER (vbox), hbox);
-    /* peak */
-    hbox = gtk_hbox_new (TRUE, 0);
-    label = gtk_label_new ("peak");
-    gtk_container_add (GTK_CONTAINER (hbox), label);
-    scale[c][1] = gtk_hscale_new_with_range (-90.0, 0.0, 0.2);
-    gtk_widget_set_size_request (scale[c][1], 100, -1);
-    gtk_container_add (GTK_CONTAINER (hbox), scale[c][1]);
-    gtk_container_add (GTK_CONTAINER (vbox), hbox);
-    /* decay */
-    hbox = gtk_hbox_new (TRUE, 0);
-    label = gtk_label_new ("decaying peek");
-    gtk_container_add (GTK_CONTAINER (hbox), label);
-    scale[c][2] = gtk_hscale_new_with_range (-90.0, 0.0, 0.2);
-    gtk_widget_set_size_request (scale[c][2], 100, -1);
-    gtk_container_add (GTK_CONTAINER (hbox), scale[c][2]);
-    gtk_container_add (GTK_CONTAINER (vbox), hbox);
-  }
-
-  gtk_widget_show_all (GTK_WIDGET (window));
 }
 
 int main
@@ -124,11 +109,6 @@ int main
   g_signal_connect (level, "level", G_CALLBACK (level_callback), NULL);
 
   
-  /* setup GUI */
-  setup_gui ();
-
-  /* connect level signal */
-
   /* go to main loop */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_idle_add (idler, pipeline);
