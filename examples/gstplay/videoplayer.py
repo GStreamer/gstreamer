@@ -93,11 +93,11 @@ class PlayerWidget(gtk.DrawingArea):
         self.player = gst.play.Play()
         self.player.connect('eos', lambda p: gst.main_quit())
 
-        self.imagesink = gst.Element('xvimagesink')
+        self.imagesink = gst.element_factory_make('xvimagesink')
         
         # Setup source and sinks
-        self.player.set_data_src(gst.Element('filesrc'))
-        self.player.set_audio_sink(gst.Element('osssink'))
+        self.player.set_data_src(gst.element_factory_make('filesrc'))
+        self.player.set_audio_sink(gst.element_factory_make('osssink'))
         self.player.set_video_sink(self.imagesink)
 
     def destroy_cb(self, da):

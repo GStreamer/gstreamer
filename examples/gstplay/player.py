@@ -53,9 +53,9 @@ def main(args):
     play.connect('eos', lambda p: gst.main_quit())
 
     # Setup source and sinks
-    play.set_data_src(gst.Element('filesrc'))
-    play.set_audio_sink(gst.Element('osssink'))
-    play.set_video_sink(gst.Element('fakesink'))
+    play.set_data_src(gst.element_factory_make('filesrc'))
+    play.set_audio_sink(gst.element_factory_make('osssink'))
+    play.set_video_sink(gst.element_factory_make('fakesink'))
 
     # Point location to our filename
     play.set_location(filename)
