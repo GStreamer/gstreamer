@@ -1,3 +1,8 @@
+2004-08-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  bump nano for prerelease
+
 2004-08-27  David Schleef  <ds@schleef.org>
 
 	* sys/sunaudio/Makefile.am: Add sunaudiosrc patch from Bala
