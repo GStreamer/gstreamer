@@ -1,5 +1,10 @@
 2004-03-05  Julien MOUTTE <julien@moutte.net>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_change_state): Check if
+	we have a window before clearing it.
+
+2004-03-05  Julien MOUTTE <julien@moutte.net>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_change_state): Check if we
 	have a window before clearing it.
 
