@@ -74,12 +74,14 @@ main (gint argc, gchar *argv[])
     construct_pipeline (thread, i / 10 + 1);
 
     g_print ("Setting thread to play with %d identities\n", i / 10 + 1);
-    if (gst_element_set_state (thread, GST_STATE_PLAYING) == GST_STATE_FAILURE)
+    if (gst_element_set_state (thread, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
       g_error ("Failed setting thread to play\n");
-
-    g_print ("Going into the main GStreamer loop\n");
-    can_quit = TRUE; /* we don't want gst_main_quit called before gst_main */
-    gst_main (); 
+    }
+    else {
+      g_print ("Going into the main GStreamer loop\n");
+      can_quit = TRUE; /* we don't want gst_main_quit called before gst_main */
+      gst_main (); 
+    }
     running = FALSE;
     g_print ("Coming out of the main GStreamer loop\n");
     g_signal_handler_disconnect (G_OBJECT (thread), id);
