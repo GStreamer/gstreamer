@@ -1,3 +1,10 @@
+2005-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstpad.h:
+	* gst/gstprobe.c:
+	  allow probes to work on ghost pads by realizing the pad
+	  probe debugging
+
 2005-01-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/gst/gstreamer-sections.txt:
