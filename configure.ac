@@ -762,7 +762,7 @@ dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
 GST_CHECK_FEATURE(VORBIS, [vorbis plug-in], vorbisenc vorbisdec, [
-  AM_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
+  XIPH_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
 ])
 
 dnl *** XMMS ***
