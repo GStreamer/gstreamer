@@ -1087,6 +1087,11 @@ gst_osselement_probe_caps (GstOssElement * oss)
     }
   }
 
+  if (gst_caps_is_empty (caps)) {
+    GST_ELEMENT_ERROR (oss, RESOURCE, SETTINGS,
+        (_("Your oss device could not be probed correctly")), (NULL));
+    return;
+  }
   GST_DEBUG ("probed caps: %" GST_PTR_FORMAT, caps);
   oss->probed_caps = caps;
 }
