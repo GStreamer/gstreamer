@@ -46,6 +46,7 @@ sub check_lib_deprecated();
 sub check_typo();
 sub check_explicit_caps();
 sub check_signals();
+sub check_gettext();
 
 sub m_check_plugindir();
 sub m_check_interfaces();
@@ -74,6 +75,7 @@ foreach $filename (<FIND>) {
 	check_glibisms();
 	check_explicit_caps();
 	check_signals();
+	check_gettext();
 
 	# less important stuff
 	check_license();
@@ -522,6 +524,18 @@ sub check_signals()
 {
 	if (grep { /g_signal_new.*\".*-.*\"/; } @lines) {
 		print "E: g_signal_new() with a signal name with a - in it (we prefer _)\n"
+	}
+}
+
+#
+# Check for things that gettext gets wrong
+#
+sub check_gettext()
+{
+	if (grep { /\b_\(.*G_GU?INT64_FORMAT/ ||
+	           /\b_\(.*GST_TIME_FORMAT/ ||
+	           /\b_\(.*GST_FOURCC_FORMAT/ } @lines) {
+		print "E: gettext doesn't handle format strings that are defines\n"
 	}
 }
 
