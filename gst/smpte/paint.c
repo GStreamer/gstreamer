@@ -64,20 +64,9 @@ gst_smpte_paint_hbox (guint32 *dest, gint stride,
   for (i = 0; i < height; i++) {
     guint32 value  = (c1 * i + c0 * (height - i)) / height;
     for (j = 0; j < width; j++) {
-      *dest++ = value;
+      dest[j] = value;
     }
-  }
-}
-
-void
-gst_smpte_paint_rect16 (guint16 * dest, gint depth, gint w, gint h)
-{
-  gint i, j;
-
-  for (i = 0; i < h; i++) {
-    for (j = 0; j < w; j++) {
-      *dest++ = (guint16) ((double) (1 << depth) * j / w);
-    }
+    dest += stride;
   }
 }
 

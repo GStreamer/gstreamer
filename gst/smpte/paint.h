@@ -29,9 +29,6 @@ void 	gst_smpte_paint_hbox 		(guint32 *dest, gint stride,
 					 gint x0, gint y0, gint c0, 
 					 gint x1, gint y1, gint c1);
 
-void	gst_smpte_paint_rect16	(guint16 *dest, gint depth, gint width, gint height);
-
-
 void 	gst_smpte_paint_triangle_linear (guint32 *dest, gint stride,
 		                         gint x0, gint y0, gint c0,
 					 gint x1, gint y1, gint c1, 
