@@ -25,11 +25,11 @@ fi
 autogen_options $@
 
 echo -n "+ check for build tools"
-if test ! -z $NOCHECK; then echo " skipped"; else  echo; fi
-version_check "autoconf" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
-version_check "automake" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
-version_check "libtool" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
-version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
+if test ! -z $NOCHECK; then echo ": skipped version checks"; else  echo; fi
+version_check "autoconf" "$AUTOCONF" "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
+version_check "automake" "$AUTOMAKE" "ftp://ftp.gnu.org/pub/gnu/automake/" 1 5 || DIE=1
+version_check "libtool" "" "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
+version_check "pkg-config" "" "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
 
 die_check $DIE
 
@@ -61,14 +61,15 @@ tool_run "autoheader"
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
 echo timestamp > stamp-h.in 2> /dev/null
 
-tool_run "autoconf"
-tool_run "automake" "-a -c"
+tool_run "$autoconf"
+debug "automake: $automake"
+tool_run "$automake" "-a -c"
 
 echo
 echo "+ running autogen.sh in libs/ext/cothreads..."
 pushd libs/ext/cothreads > /dev/null
 echo
-./autogen.sh --autogen-noconfigure --autogen-nocheck || {
+./autogen.sh --noconfigure --nocheck || {
         echo "autogen in cothreads failed."
         exit 1
 }
