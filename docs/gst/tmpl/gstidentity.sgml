@@ -42,6 +42,11 @@ Pass data without modification.
 
 </para>
 
+<!-- ##### ARG GstIdentity:drop-probability ##### -->
+<para>
+
+</para>
+
 <!-- ##### ARG GstIdentity:silent ##### -->
 <para>
 

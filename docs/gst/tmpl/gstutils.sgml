@@ -94,6 +94,16 @@ Some convenience functions
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_util_get_int64_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_util_dump_mem ##### -->
 <para>
 
@@ -101,6 +111,17 @@ Some convenience functions
 
 @mem: 
 @size: 
+
+
+<!-- ##### FUNCTION gst_util_has_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@arg_type: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_print_element_args ##### -->

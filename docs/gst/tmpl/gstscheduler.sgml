@@ -30,6 +30,24 @@ Get the state of the scheduler.
 @sched: the scheduler to get the state of.
 
 
+<!-- ##### ENUM GstSchedulerState ##### -->
+<para>
+
+</para>
+
+@GST_SCHEDULER_STATE_NONE: 
+@GST_SCHEDULER_STATE_RUNNING: 
+@GST_SCHEDULER_STATE_STOPPED: 
+@GST_SCHEDULER_STATE_ERROR: 
+
+<!-- ##### MACRO gst_scheduler_destroy ##### -->
+<para>
+Destroy the scheduler
+</para>
+
+@sched: The scheduler to destroy.
+
+
 <!-- ##### FUNCTION gst_scheduler_setup ##### -->
 <para>
 

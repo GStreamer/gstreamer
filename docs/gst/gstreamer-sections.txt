@@ -24,6 +24,7 @@ G_TYPE_UCHAR
 G_TYPE_BOOLEAN
 G_TYPE_INT
 G_TYPE_UINT
+G_TYPE_INT64
 G_TYPE_LONG
 G_TYPE_ULONG
 G_TYPE_ENUM
@@ -297,6 +298,8 @@ GST_DISABLE_LOADSAVE_REGISTRY
 <TITLE>GstScheduler</TITLE>
 GST_SCHEDULER_PARENT
 GST_SCHEDULER_STATE
+GstSchedulerState
+gst_scheduler_destroy
 gst_scheduler_setup
 gst_scheduler_reset
 gst_scheduler_add_element
@@ -332,6 +335,8 @@ gst_schedulerfactory_find
 gst_schedulerfactory_get_list
 gst_schedulerfactory_make
 gst_schedulerfactory_new
+gst_schedulerfactory_get_default_name
+gst_schedulerfactory_set_default_name
 <SUBSECTION Standard>
 gst_schedulerfactory_get_type
 GST_IS_SCHEDULERFACTORY
@@ -358,6 +363,8 @@ gst_bin_get_by_name_recurse_up
 gst_bin_get_list
 gst_bin_set_state_type
 gst_bin_iterate
+gst_bin_child_state_change
+gst_bin_child_error
 <SUBSECTION Standard>
 GstBinClass
 gst_bin_get_type
@@ -434,7 +441,7 @@ gst_buffer_destroy
 gst_buffer_is_span_fast
 gst_buffer_merge
 gst_buffer_span
-
+gst_buffer_print_stats
 <SUBSECTION Standard>
 GST_TYPE_BUFFER
 </SECTION>
@@ -468,16 +475,19 @@ GST_BUFFER_POOL
 <TITLE>GstEvent</TITLE>
 GstEventType
 GST_EVENT_TYPE
+GST_EVENT_SRC
 GST_EVENT_TIMESTAMP
 GstSeekType
 GST_EVENT_SEEK_TYPE
 GST_EVENT_SEEK_OFFSET
 GST_EVENT_SEEK_FLUSH
+GST_EVENT_INFO_PROPS
 GstEvent
 gst_event_new
 gst_event_free
 gst_event_new_seek
 gst_event_new_flush
+gst_event_new_info
 <SUBSECTION Standard>
 GST_EVENT
 GST_IS_EVENT
@@ -536,10 +546,15 @@ gst_element_set_state
 gst_element_get_state
 gst_element_wait_state_change
 gst_element_statename
+gst_element_info
 gst_element_error
 gst_element_get_factory
 gst_element_set_eos
 gst_element_restore_thyself
+gst_element_install_std_props
+gst_element_send_event
+gst_element_interrupt
+gst_element_yield
 <SUBSECTION Standard>
 GstElementClass
 GST_TYPE_ELEMENT
@@ -1082,7 +1097,9 @@ gst_util_get_float_arg
 gst_util_get_double_arg
 gst_util_get_string_arg
 gst_util_get_pointer_arg
+gst_util_get_int64_arg
 gst_util_dump_mem
+gst_util_has_arg
 gst_print_element_args
 gst_print_pad_caps
 <SUBSECTION Standard>
@@ -1189,6 +1206,7 @@ GST_IS_AGGREGATOR_CLASS
 <FILE>gstfilesrc</FILE>
 <TITLE>GstFileSrc</TITLE>
 <SUBSECTION Standard>
+GstFileSrcFlags
 GstFileSrc
 GstFileSrcClass
 gst_filesrc_get_type

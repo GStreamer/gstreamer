@@ -145,6 +145,26 @@ Free the memory allocated by this bin
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_bin_child_state_change ##### -->
+<para>
+
+</para>
+
+@bin: 
+@oldstate: 
+@newstate: 
+@child: 
+
+
+<!-- ##### FUNCTION gst_bin_child_error ##### -->
+<para>
+
+</para>
+
+@bin: 
+@child: 
+
+
 <!-- ##### SIGNAL GstBin::object-added ##### -->
 <para>
 is signaled whenever a new <classname>GstElement</classname> is added to the <classname>GstBin</classname>

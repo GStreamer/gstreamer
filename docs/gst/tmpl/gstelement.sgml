@@ -468,6 +468,16 @@ instead.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_info ##### -->
+<para>
+
+</para>
+
+@element: 
+@info: 
+@Varargs: 
+
+
 <!-- ##### FUNCTION gst_element_error ##### -->
 <para>
 
@@ -503,6 +513,42 @@ instead.
 @self: 
 @parent: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_element_install_std_props ##### -->
+<para>
+
+</para>
+
+@klass: 
+@first_name: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION gst_element_send_event ##### -->
+<para>
+
+</para>
+
+@element: 
+@event: 
+
+
+<!-- ##### FUNCTION gst_element_interrupt ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_yield ##### -->
+<para>
+
+</para>
+
+@element: 
 
 
 <!-- ##### SIGNAL GstElement::state-change ##### -->

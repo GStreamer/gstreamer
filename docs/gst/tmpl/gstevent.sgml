@@ -38,8 +38,8 @@ The different major types of events.
 @GST_EVENT_EMPTY: an empty event.
 @GST_EVENT_SEEK: a seek event.
 @GST_EVENT_DISCONTINUOUS: a discontinuous event to indicate the stream has a discontinuity.
-@GST_EVENT_INFO: 
-@GST_EVENT_ERROR: 
+@GST_EVENT_INFO: an informational event
+@GST_EVENT_ERROR: an error event
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>
@@ -47,6 +47,14 @@ Get the event type.
 </para>
 
 @event: The event to query.
+
+
+<!-- ##### MACRO GST_EVENT_SRC ##### -->
+<para>
+The source object that generated this event
+</para>
+
+@event: The event to query
 
 
 <!-- ##### MACRO GST_EVENT_TIMESTAMP ##### -->
@@ -88,6 +96,14 @@ Qeury wether the seek event also needs a flush.
 </para>
 
 @event: The event to query.
+
+
+<!-- ##### MACRO GST_EVENT_INFO_PROPS ##### -->
+<para>
+The properties of the info event
+</para>
+
+@event: The event to query
 
 
 <!-- ##### STRUCT GstEvent ##### -->
@@ -133,5 +149,15 @@ The event data structure.
 Create a new flush event.
 </para>
 
+
+
+<!-- ##### FUNCTION gst_event_new_info ##### -->
+<para>
+
+</para>
+
+@firstname: 
+@Varargs: 
+@Returns: 
 
 

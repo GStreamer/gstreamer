@@ -392,3 +392,10 @@ The function called when the buffer data has to be freed
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_buffer_print_stats ##### -->
+<para>
+
+</para>
+
+
+
