@@ -1,3 +1,8 @@
+2004-03-19  Iain <iain@prettypeople.org>
+
+	* gst/interleave/deinterleave.c (deinterleave_sink_link): Use the 
+	is_int in the structure, not the local variable.
+
 2004-03-19  David Schleef  <ds@schleef.org>
 
 	* ext/librfb/gstrfbsrc.c: (gst_rfbsrc_change_state),
