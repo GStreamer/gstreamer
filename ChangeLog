@@ -1,3 +1,16 @@
+2004-02-24  David Schleef  <ds@schleef.org>
+
+	* gst/qtdemux/qtdemux.c: (plugin_init), (gst_qtdemux_loop_header),
+	(qtdemux_parse_moov), (qtdemux_parse), (qtdemux_node_dump_foreach),
+	(qtdemux_dump_mvhd), (qtdemux_dump_tkhd), (qtdemux_dump_elst),
+	(qtdemux_dump_mdhd), (qtdemux_dump_hdlr), (qtdemux_dump_vmhd),
+	(qtdemux_dump_dref), (qtdemux_dump_stsd), (qtdemux_dump_stts),
+	(qtdemux_dump_stss), (qtdemux_dump_stsc), (qtdemux_dump_stsz),
+	(qtdemux_dump_stco), (qtdemux_dump_co64), (qtdemux_dump_dcom),
+	(qtdemux_dump_cmvd), (qtdemux_parse_tree), (qtdemux_parse_trak):
+	Cleanups.  Convert g_prints to GST_LOGs.  Add qtdemux debug
+	category.  Attempt to fix timestamp calculation.
+
 2004-02-24  Johan Dahlin  <johan@gnome.org>
 
 	* gst-libs/gst/gconf/gconf.c: Add \n to g_print error messages
