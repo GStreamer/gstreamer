@@ -109,6 +109,14 @@ gst_typefactory_init (GstTypeFactory *factory)
   _gst_typefactories = g_list_prepend (_gst_typefactories, factory);
 }
 
+/**
+ * gst_typefactory_new:
+ * @definition: the definition to use
+ *
+ * Creata a new typefactory from the given definition.
+ *
+ * Returns: the new typefactory
+ */
 GstTypeFactory* 
 gst_typefactory_new (GstTypeDefinition *definition)
 {
@@ -326,12 +334,12 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
 
   GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s\n", factory->mime);
 
-  gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory));
-
-  if (factory->typefindfunc) {
-     GstCaps *res = factory->typefindfunc (buffer, factory);
-     if (res) 
-       return res;
+  if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
+    if (factory->typefindfunc) {
+       GstCaps *res = factory->typefindfunc (buffer, factory);
+       if (res) 
+         return res;
+    }
   }
 
   return NULL;

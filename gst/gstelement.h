@@ -177,7 +177,7 @@ struct _GstElementClass {
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
 };
 
-void			gst_element_class_add_padtemplate	(GstElementClass *element, GstPadTemplate *templ);
+void			gst_element_class_add_padtemplate	(GstElementClass *klass, GstPadTemplate *templ);
 
 GType			gst_element_get_type		(void);
 #define			gst_element_destroy(element)	gst_object_destroy (GST_OBJECT (element))
@@ -214,7 +214,7 @@ void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
 void			gst_element_signal_eos		(GstElement *element);
 
 
-GstElementState         gst_element_get_state           (GstElement *elem);
+GstElementState         gst_element_get_state           (GstElement *element);
 /* called by the app to set the state of the element */
 gint			gst_element_set_state		(GstElement *element, GstElementState state);
 const gchar *		gst_element_statename		(GstElementState state);

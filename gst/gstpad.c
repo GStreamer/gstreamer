@@ -1970,32 +1970,20 @@ gst_pad_event_default(GstPad *pad, GstEventType event, guint64 timestamp, guint3
         gst_element_signal_eos(GST_PAD_PARENT(pad));
       else
         GST_DEBUG(GST_CAT_EVENT, "WARNING: no default behavior for EOS with multiple sinkpads\n");
+    default:
       break;
   }
 }
 
-gboolean
-gst_pad_event (GstPad *pad, GstEventType event, gint64 timestamp, guint32 data)
-{
-  GstRealPad *peer;
-  gboolean handled = FALSE;
-
-  GST_DEBUG(GST_CAT_EVENT, "have event %d on pad %s:%s\n",(gint)event,GST_DEBUG_PAD_NAME(pad));
-
-  peer = GST_RPAD_PEER(pad);
-  if (GST_RPAD_EVENTFUNC(peer)) {
-    //handled = GST_RPAD_EVENTFUNC(peer) (peer, event, timestamp, data);
-  }
-  else {
-    GST_DEBUG(GST_CAT_EVENT, "there's no event function for peer %s:%s\n",GST_DEBUG_PAD_NAME(peer));
-  }
-
-  if (!handled) {
-    GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
-    //gst_pad_event_default(peer,event, timestamp, data);
-  }
-}
-
+/**
+ * gst_pad_send_event:
+ * @pad: the pad to send the event to
+ * @event: the event to send to the pad.
+ *
+ * Send the event to the pad.
+ *
+ * Returns: TRUe if the event was handled.
+ */
 gboolean
 gst_pad_send_event (GstPad *pad, GstEvent *event)
 {

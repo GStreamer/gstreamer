@@ -274,6 +274,11 @@ gst_plugin_load_all (void)
   GST_INFO (GST_CAT_PLUGIN_LOADING,"loaded %d plugins", _gst_plugins_seqno);
 }
 
+/**
+ * gst_plugin_unload_all:
+ *
+ * Unload all plugins in memory.
+ */
 void
 gst_plugin_unload_all (void)
 {
@@ -391,11 +396,11 @@ gst_plugin_load (const gchar *name)
 }
 
 /**
- * gst_plugin_load:
+ * gst_plugin_load_absolute:
  * @name: name of plugin to load
  *
  * Load the named plugin.  Name should be given as
- * &quot;libplugin.so&quot;.
+ * &quot;/path/to/plugin/libplugin.so&quot;.
  *
  * Returns: whether the plugin was loaded or not
  */
@@ -464,8 +469,10 @@ gst_plugin_register_func (GstPluginDesc *desc, GstPlugin *plugin, GModule *modul
 }
 
 /**
- * gst_plugin_load_absolute:
- * @name: name of plugin to load
+ * gst_plugin_load_plugin:
+ * @plugin: The plugin to load
+ *
+ * Load the given plugin.
  *
  * Returns: whether or not the plugin loaded
  */

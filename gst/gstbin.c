@@ -36,6 +36,7 @@ GstElementDetails gst_bin_details = {
   "(C) 1999",
 };
 
+GType _gst_bin_type = 0;
 
 static void			gst_bin_dispose		(GObject *object);
 
@@ -74,9 +75,7 @@ static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 GType
 gst_bin_get_type (void)
 {
-  static GType bin_type = 0;
-
-  if (!bin_type) {
+  if (!_gst_bin_type) {
     static const GTypeInfo bin_info = {
       sizeof(GstBinClass),
       NULL,
@@ -89,9 +88,9 @@ gst_bin_get_type (void)
       (GInstanceInitFunc)gst_bin_init,
       NULL
     };
-    bin_type = g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
+    _gst_bin_type = g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
   }
-  return bin_type;
+  return _gst_bin_type;
 }
 
 static void

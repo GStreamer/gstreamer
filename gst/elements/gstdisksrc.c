@@ -290,10 +290,7 @@ gst_disksrc_get (GstPad *pad)
   /* deal with EOF state */
   if (src->curoffset >= src->size) {
     GST_DEBUG (0,"map offset %ld >= size %ld --> eos\n", src->curoffset, src->size);
-    gst_pad_event(pad, GST_EVENT_EOS, 0LL, 0);
-    buf =  gst_buffer_new();
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
-    return buf;
+    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
 
   // FIXME use a bufferpool

@@ -110,7 +110,16 @@ gst_plugin_feature_restore_thyself (GstObject *object, xmlNodePtr parent)
 }
 #endif /* GST_DISABLE_REGISTRY */
 
-void
+/**
+ * gst_plugin_feature_ensure_loaded:
+ * @feature: the plugin feature to check
+ *
+ * Check if the plugin containing the feature is loaded,
+ * if not, the plugin will be loaded.
+ *
+ * Returns: a boolean indicating the feature is loaded.
+ */
+gboolean
 gst_plugin_feature_ensure_loaded (GstPluginFeature *feature)
 {
   GstPlugin *plugin = (GstPlugin *) (feature->manager);
@@ -118,10 +127,18 @@ gst_plugin_feature_ensure_loaded (GstPluginFeature *feature)
   if (plugin && !gst_plugin_is_loaded (plugin)) {
     GST_DEBUG (GST_CAT_PLUGIN_LOADING, "loading plugin %s for feature\n", plugin->name);
     
-    gst_plugin_load_plugin (plugin);
+    return gst_plugin_load_plugin (plugin);
   }
+  return TRUE;
 }
 
+/**
+ * gst_plugin_feature_unload_thyself:
+ * @feature: the plugin feature to check
+ *
+ * Unload the given feature. This will decrease the refcount
+ * in the plugin and will eventually unload the plugin
+ */
 void
 gst_plugin_feature_unload_thyself (GstPluginFeature *feature)
 {

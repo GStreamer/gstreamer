@@ -56,19 +56,19 @@ struct _GstTimeCacheEntry {
 };
 
 struct _GstTimeCacheGroup {
-  // unique ID of group in cache
+  /* unique ID of group in cache */
   gint groupnum;
 
-  // list of entries
+  /* list of entries */
   GList *entries;
 
-  // the certainty level of the group
+  /* the certainty level of the group */
   GstTimeCacheCertainty certainty;
 
-  // peer group that contains more certain entries
+  /* peer group that contains more certain entries */
   gint peergroup;
 
-  // range variables
+  /* range variables */
   gint64 mintimestamp,maxtimestamp;
   guint64 minlocation,maxlocation;
 };

@@ -25,6 +25,7 @@
 
 #include "gstscheduler.h"
 
+GType _gst_schedule_type = 0;
 
 static int
 gst_schedule_loopfunc_wrapper (int argc,char *argv[])
@@ -828,10 +829,10 @@ static void	gst_schedule_init	(GstSchedule *schedule);
 
 static GstObjectClass *parent_class = NULL;
 
-GType gst_schedule_get_type(void) {
-  static GType schedule_type = 0;
-
-  if (!schedule_type) {
+GType 
+gst_schedule_get_type (void) 
+{
+  if (!_gst_schedule_type) {
     static const GTypeInfo schedule_info = {
       sizeof(GstScheduleClass),
       NULL,
@@ -844,9 +845,9 @@ GType gst_schedule_get_type(void) {
       (GInstanceInitFunc)gst_schedule_init,
       NULL
     };
-    schedule_type = g_type_register_static(GST_TYPE_OBJECT, "GstSchedule", &schedule_info, 0);
+    _gst_schedule_type = g_type_register_static(GST_TYPE_OBJECT, "GstSchedule", &schedule_info, 0);
   }
-  return schedule_type;
+  return _gst_schedule_type;
 }
 
 static void
@@ -870,6 +871,14 @@ gst_schedule_init (GstSchedule *schedule)
   schedule->iterate = GST_DEBUG_FUNCPTR(gst_schedule_iterate);
 }
 
+/**
+ * gst_schedule_new:
+ * @parent: the parent of the new scheduler
+ *
+ * Create a new scheduler for the given parent.
+ *
+ * Returns: the new scheduler.
+ */
 GstSchedule*
 gst_schedule_new(GstElement *parent)
 {
@@ -1083,6 +1092,14 @@ gst_schedule_chain_elements (GstSchedule *sched, GstElement *element1, GstElemen
   }
 }
 
+/**
+ * gst_schedule_pad_connect:
+ * @sched: the scheduler
+ * @srcpad: the srcpad to connect
+ * @sinkpad: the sinkpad to connect to
+ *
+ * Connect the srcpad to the given sinkpad.
+ */
 void
 gst_schedule_pad_connect (GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad)
 {
@@ -1159,6 +1176,14 @@ gst_schedule_chain_recursive_add (GstScheduleChain *chain, GstElement *element)
   }
 }
 
+/**
+ * gst_schedule_pad_disconnect:
+ * @sched: the scheduler
+ * @srcpad: the srcpad to disconnect
+ * @sinkpad: the sinkpad to disconnect from
+ *
+ * Disconnect the srcpad to the given sinkpad.
+ */
 void
 gst_schedule_pad_disconnect (GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad)
 {
@@ -1195,6 +1220,15 @@ gst_schedule_pad_disconnect (GstSchedule *sched, GstPad *srcpad, GstPad *sinkpad
   }
 }
 
+/**
+ * gst_schedule_pad_select:
+ * @sched: the scheduler
+ * @padlist: the padlist to select on
+ *
+ * register the given padlist for a select operation. 
+ *
+ * Returns: the pad which received a buffer.
+ */
 GstPad*
 gst_schedule_pad_select (GstSchedule *sched, GList *padlist)
 {
@@ -1235,6 +1269,13 @@ gst_schedule_pad_select (GstSchedule *sched, GList *padlist)
   return pad;
 }
 
+/**
+ * gst_schedule_add_element:
+ * @sched: the scheduler
+ * @element: the element to add to the scheduler
+ *
+ * Add an element to the scheduler.
+ */
 void
 gst_schedule_add_element (GstSchedule *sched, GstElement *element)
 {
@@ -1296,6 +1337,13 @@ gst_schedule_add_element (GstSchedule *sched, GstElement *element)
   }
 }
 
+/**
+ * gst_schedule_enable_element:
+ * @sched: the scheduler
+ * @element: the element to enable
+ *
+ * Enable an element for scheduling.
+ */
 void
 gst_schedule_enable_element (GstSchedule *sched, GstElement *element)
 {
@@ -1310,6 +1358,13 @@ gst_schedule_enable_element (GstSchedule *sched, GstElement *element)
     GST_INFO (GST_CAT_SCHEDULING, "element not found in any chain, not enabling");
 }
 
+/**
+ * gst_schedule_disable_element:
+ * @sched: the scheduler
+ * @element: the element to disable
+ *
+ * Disable an element for scheduling.
+ */
 void
 gst_schedule_disable_element (GstSchedule *sched, GstElement *element)
 {
@@ -1324,6 +1379,13 @@ gst_schedule_disable_element (GstSchedule *sched, GstElement *element)
   }
 }
 
+/**
+ * gst_schedule_remove_element:
+ * @sched: the scheduler
+ * @element: the element to remove
+ *
+ * Remove an element from the scheduler.
+ */
 void
 gst_schedule_remove_element (GstSchedule *sched, GstElement *element)
 {
@@ -1351,6 +1413,14 @@ gst_schedule_remove_element (GstSchedule *sched, GstElement *element)
   }
 }
 
+/**
+ * gst_schedule_iterate:
+ * @sched: the scheduler
+ *
+ * Perform one iteration on the scheduler.
+ *
+ * Returns: a boolean indicating something usefull has happened.
+ */
 gboolean
 gst_schedule_iterate (GstSchedule *sched)
 {
@@ -1486,7 +1556,12 @@ GST_DEBUG(GST_CAT_SCHEDULING,"there are %d elements in this chain\n",chain->num_
 }
 
 
-
+/**
+ * gst_schedule_show:
+ * @sched: the scheduler
+ *
+ * Dump the state of the scheduler
+ */
 void
 gst_schedule_show (GstSchedule *sched)
 {

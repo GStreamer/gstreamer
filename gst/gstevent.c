@@ -50,13 +50,20 @@ _gst_event_initialize (void)
 
   _gst_event_chunk = g_mem_chunk_new ("GstEvent", eventsize,
   				      eventsize * 32, G_ALLOC_AND_FREE);
-
   _gst_event_chunk_lock = g_mutex_new ();
 
   // register the type
   _gst_event_type = g_type_register_static (G_TYPE_INT, "GstEvent", &event_info, 0);
 }
 
+/**
+ * gst_event_new:
+ * @type: The type of the new event
+ *
+ * Allocate a new event of the given type.
+ *
+ * Returns: A new event.
+ */
 GstEvent*
 gst_event_new (GstEventType type)
 {
@@ -73,6 +80,12 @@ gst_event_new (GstEventType type)
   return event;
 }
 
+/**
+ * gst_event_free:
+ * @event: The event to free
+ *
+ * Free the given element.
+ */
 void
 gst_event_free (GstEvent* event)
 {
@@ -81,7 +94,16 @@ gst_event_free (GstEvent* event)
   g_mutex_unlock (_gst_event_chunk_lock);
 }
 
-/* seek stuff */
+/**
+ * gst_event_new_seek:
+ * @type: The type of the seek event
+ * @offset: The offset of the seek
+ * @flush: A boolean indicating a flush has to be performed as well
+ *
+ * Allocate a new seek event with the given parameters.
+ *
+ * Returns: A new seek event.
+ */
 GstEvent*       
 gst_event_new_seek (GstSeekType type, guint64 offset, gboolean flush)
 {

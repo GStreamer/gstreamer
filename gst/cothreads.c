@@ -192,10 +192,12 @@ cothread_setfunc (cothread_state *thread,
  * cothread_main:
  * @ctx: cothread context to find main thread of
  *
+ * Get the main thread.
+ *
  * Returns: the #cothread_state of the main (0th) thread
  */
 cothread_state*
-cothread_main(cothread_context *ctx) 
+cothread_main (cothread_context *ctx) 
 {
   GST_DEBUG (0,"returning %p, the 0th cothread\n",ctx->threads[0]);
   return ctx->threads[0];
@@ -204,10 +206,12 @@ cothread_main(cothread_context *ctx)
 /**
  * cothread_current_main:
  *
+ * Get the main thread in the current pthread.
+ *
  * Returns: the #cothread_state of the main (0th) thread in the current pthread
  */
 cothread_state*
-cothread_current_main(void)
+cothread_current_main (void)
 {
   cothread_context *ctx = pthread_getspecific(_cothread_key);
   return ctx->threads[0];
@@ -242,10 +246,14 @@ cothread_stub (void)
 /**
  * cothread_getcurrent:
  *
+ * Get the current cothread id
+ *
  * Returns: the current cothread id
  */
-int cothread_getcurrent(void) __attribute__ ((no_instrument_function));
-int cothread_getcurrent(void) {
+int cothread_getcurrent (void) __attribute__ ((no_instrument_function));
+int 
+cothread_getcurrent (void) 
+{
   cothread_context *ctx = pthread_getspecific(_cothread_key);
   if (!ctx) return -1;
   return ctx->current;

@@ -39,8 +39,7 @@ noinst_HEADERS =		\
 	gstfdsink.h		\
 	gstpipefilter.h		\
 	gsttee.h		\
-	gstaggregator.h		\
-	gstsinesrc.h
+	gstaggregator.h		
 
 CFLAGS += -O2 -Wall 
 LDFLAGS += -lm

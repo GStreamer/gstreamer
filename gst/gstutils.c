@@ -40,15 +40,15 @@
  * Returns: the property of the object
  */
 gint
-gst_util_get_int_arg (GObject *object, const gchar *argname) 
+gst_util_get_int_arg (GObject * object, const gchar * argname)
 {
   GValue value;
 
   ZERO (value);
   g_value_init (&value, G_TYPE_INT);
-  g_object_get_property(G_OBJECT(object),argname,&value);
+  g_object_get_property (G_OBJECT (object), argname, &value);
 
-  return g_value_get_int(&value);
+  return g_value_get_int (&value);
 }
 
 /**
@@ -61,15 +61,15 @@ gst_util_get_int_arg (GObject *object, const gchar *argname)
  * Returns: the property of the object
  */
 gint
-gst_util_get_bool_arg (GObject *object, const gchar *argname) 
+gst_util_get_bool_arg (GObject * object, const gchar * argname)
 {
   GValue value;
 
   ZERO (value);
   g_value_init (&value, G_TYPE_BOOLEAN);
-  g_object_get_property(G_OBJECT(object),argname,&value);
+  g_object_get_property (G_OBJECT (object), argname, &value);
 
-  return g_value_get_boolean(&value);
+  return g_value_get_boolean (&value);
 }
 
 /**
@@ -82,15 +82,15 @@ gst_util_get_bool_arg (GObject *object, const gchar *argname)
  * Returns: the property of the object
  */
 glong
-gst_util_get_long_arg (GObject *object, const gchar *argname) 
+gst_util_get_long_arg (GObject * object, const gchar * argname)
 {
   GValue value;
 
   ZERO (value);
   g_value_init (&value, G_TYPE_LONG);
-  g_object_get_property(G_OBJECT(object),argname,&value);
+  g_object_get_property (G_OBJECT (object), argname, &value);
 
-  return g_value_get_long(&value);
+  return g_value_get_long (&value);
 }
 
 /**
@@ -103,15 +103,15 @@ gst_util_get_long_arg (GObject *object, const gchar *argname)
  * Returns: the property of the object
  */
 gfloat
-gst_util_get_float_arg (GObject *object, const gchar *argname) 
+gst_util_get_float_arg (GObject * object, const gchar * argname)
 {
   GValue value;
 
   ZERO (value);
   g_value_init (&value, G_TYPE_FLOAT);
-  g_object_get_property(G_OBJECT(object),argname,&value);
+  g_object_get_property (G_OBJECT (object), argname, &value);
 
-  return g_value_get_float(&value);
+  return g_value_get_float (&value);
 }
 
 /**
@@ -123,16 +123,16 @@ gst_util_get_float_arg (GObject *object, const gchar *argname)
  *
  * Returns: the property of the object
  */
-gdouble 
-gst_util_get_double_arg (GObject *object, const gchar *argname) 
+gdouble
+gst_util_get_double_arg (GObject * object, const gchar * argname)
 {
   GValue value;
 
   ZERO (value);
   g_value_init (&value, G_TYPE_DOUBLE);
-  g_object_get_property(G_OBJECT(object),argname,&value);
+  g_object_get_property (G_OBJECT (object), argname, &value);
 
-  return g_value_get_double(&value);
+  return g_value_get_double (&value);
 }
 
 /**
@@ -144,16 +144,16 @@ gst_util_get_double_arg (GObject *object, const gchar *argname)
  *
  * Returns: the property of the object
  */
- const gchar*
-gst_util_get_string_arg (GObject *object, const gchar *argname) 
+const gchar *
+gst_util_get_string_arg (GObject * object, const gchar * argname)
 {
   GValue value;
 
   ZERO (value);
   g_value_init (&value, G_TYPE_STRING);
-  g_object_get_property(G_OBJECT(object),argname,&value);
+  g_object_get_property (G_OBJECT (object), argname, &value);
 
-  return g_value_get_string(&value);  // memleak?
+  return g_value_get_string (&value);	// memleak?
 }
 
 /**
@@ -166,15 +166,15 @@ gst_util_get_string_arg (GObject *object, const gchar *argname)
  * Returns: the property of the object
  */
 gpointer
-gst_util_get_pointer_arg (GObject *object, const gchar *argname) 
+gst_util_get_pointer_arg (GObject * object, const gchar * argname)
 {
   GValue value;
 
   ZERO (value);
   g_value_init (&value, G_TYPE_POINTER);
-  g_object_get_property(G_OBJECT(object),argname,&value);
+  g_object_get_property (G_OBJECT (object), argname, &value);
 
-  return g_value_get_pointer(&value);
+  return g_value_get_pointer (&value);
 }
 
 /**
@@ -206,24 +206,24 @@ gst_util_get_widget_property (GObject *object, const gchar *argname)
  *
  * Dumps the memory block into a hex representation. Useful for debugging.
  */
-void 
-gst_util_dump_mem (guchar *mem, guint size) 
+void
+gst_util_dump_mem (guchar * mem, guint size)
 {
   guint i, j;
 
-  i = j =0;
-  while (i<size) {
+  i = j = 0;
+  while (i < size) {
     if (j == 0) {
-      g_print("\n%08x : ", i);
+      g_print ("\n%08x : ", i);
       j = 15;
     }
     else {
       j--;
     }
-    g_print("%02x ", mem[i]);
+    g_print ("%02x ", mem[i]);
     i++;
   }
-  g_print("\n");
+  g_print ("\n");
 }
 
 /**
@@ -236,88 +236,99 @@ gst_util_dump_mem (guchar *mem, guint size)
  * sets the argument with it.
  */
 void
-gst_util_set_object_arg (GObject *object,  const gchar *name,  const gchar *value) 
+gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * value)
 {
   if (name && value) {
     GParamSpec *paramspec;
 
-    paramspec = g_object_class_find_property(G_OBJECT_GET_CLASS(object),name);
+    paramspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
 
     if (!paramspec) {
       return;
     }
 
-    GST_DEBUG(0,"paramspec->flags is %d, paramspec->value_type is %d\n",
-              paramspec->flags,paramspec->value_type);
+    GST_DEBUG (0, "paramspec->flags is %d, paramspec->value_type is %d\n",
+	       paramspec->flags, paramspec->value_type);
 
     if (paramspec->flags & G_PARAM_WRITABLE) {
       switch (paramspec->value_type) {
-        case G_TYPE_STRING:
-          g_object_set (G_OBJECT (object), name, value, NULL);
-          break;
-        case G_TYPE_ENUM: 
-        case G_TYPE_INT: {
-          gint i;
-          sscanf (value, "%d", &i);
-          g_object_set (G_OBJECT (object), name, i, NULL);
+	case G_TYPE_STRING:
+	  g_object_set (G_OBJECT (object), name, value, NULL);
+	  break;
+	case G_TYPE_ENUM:
+	case G_TYPE_INT:{
+	  gint i;
+
+	  sscanf (value, "%d", &i);
+	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case G_TYPE_UINT: {
-          guint i;
-          sscanf (value, "%u", &i);
-          g_object_set (G_OBJECT (object), name, i, NULL);
+	case G_TYPE_UINT:{
+	  guint i;
+
+	  sscanf (value, "%u", &i);
+	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case G_TYPE_LONG: {
+	case G_TYPE_LONG:{
 	  glong i;
+
 	  sscanf (value, "%ld", &i);
-          g_object_set (G_OBJECT (object), name, i, NULL);
+	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case G_TYPE_ULONG: {
+	case G_TYPE_ULONG:{
 	  gulong i;
+
 	  sscanf (value, "%lu", &i);
-          g_object_set (G_OBJECT (object), name, i, NULL);
+	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case G_TYPE_BOOLEAN: {
+	case G_TYPE_BOOLEAN:{
 	  gboolean i = FALSE;
-	  if (!strncmp ("true", value, 4)) i = TRUE;
-          g_object_set (G_OBJECT (object), name, i, NULL);
+
+	  if (!strncmp ("true", value, 4))
+	    i = TRUE;
+	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case G_TYPE_CHAR: {
+	case G_TYPE_CHAR:{
 	  gchar i;
+
 	  sscanf (value, "%c", &i);
-          g_object_set (G_OBJECT (object), name, i, NULL);
+	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case G_TYPE_UCHAR: {
+	case G_TYPE_UCHAR:{
 	  guchar i;
+
 	  sscanf (value, "%c", &i);
-          g_object_set (G_OBJECT (object), name, i, NULL);
+	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case G_TYPE_FLOAT: {
+	case G_TYPE_FLOAT:{
 	  gfloat i;
+
 	  sscanf (value, "%f", &i);
-          g_object_set (G_OBJECT (object), name, i, NULL);
+	  g_object_set (G_OBJECT (object), name, i, NULL);
 	  break;
 	}
-        case G_TYPE_DOUBLE: {
+	case G_TYPE_DOUBLE:{
 	  gfloat i;
+
 	  sscanf (value, "%g", &i);
-          g_object_set (G_OBJECT (object), name, (gdouble)i, NULL);
+	  g_object_set (G_OBJECT (object), name, (gdouble) i, NULL);
 	  break;
 	}
-        default:
-	  if (G_IS_PARAM_SPEC_ENUM(paramspec)) {
-            gint i;
-            sscanf (value, "%d", &i);
-            g_object_set (G_OBJECT (object), name, i, NULL);
+	default:
+	  if (G_IS_PARAM_SPEC_ENUM (paramspec)) {
+	    gint i;
+
+	    sscanf (value, "%d", &i);
+	    g_object_set (G_OBJECT (object), name, i, NULL);
 	  }
 	  else if (paramspec->value_type == GST_TYPE_FILENAME) {
-            g_object_set (G_OBJECT (object), name, value, NULL);
+	    g_object_set (G_OBJECT (object), name, value, NULL);
 	  }
 	  break;
       }
@@ -336,140 +347,150 @@ gst_util_set_object_arg (GObject *object,  const gchar *name,  const gchar *valu
 #include "gstprops.h"
 #include "gstpropsprivate.h"
 
-static void string_append_indent (GString *str, gint count)
+static void
+string_append_indent (GString * str, gint count)
 {
   gint xx;
-  for (xx=0; xx < count; xx++)
+
+  for (xx = 0; xx < count; xx++)
     g_string_append_c (str, ' ');
 }
 
-static void 
-gst_print_props (GString *buf, gint indent,
-		 GList *props, gboolean showname)
+static void
+gst_print_props (GString * buf, gint indent, GList * props, gboolean showname)
 {
   GList *elem;
   guint width = 0;
-	    
+
   if (showname)
-    for (elem = props; elem; elem = g_list_next (elem))
-      {
-	GstPropsEntry *prop = elem->data;
-	const gchar *name = g_quark_to_string (prop->propid);
-
-	if (width < strlen (name))
-	  width = strlen (name);
-      }
-
-  for (elem = props; elem; elem = g_list_next (elem))
-    {
+    for (elem = props; elem; elem = g_list_next (elem)) {
       GstPropsEntry *prop = elem->data;
+      const gchar *name = g_quark_to_string (prop->propid);
 
-      string_append_indent (buf, indent);
-      if (showname)
-	{
-	  const gchar *name = g_quark_to_string (prop->propid);
-	  
-	  g_string_append (buf, name);
-	  string_append_indent (buf, 2 + width - strlen (name));
-	}
+      if (width < strlen (name))
+	width = strlen (name);
+    }
 
-      switch (prop->propstype) {
+  for (elem = props; elem; elem = g_list_next (elem)) {
+    GstPropsEntry *prop = elem->data;
+
+    string_append_indent (buf, indent);
+    if (showname) {
+      const gchar *name = g_quark_to_string (prop->propid);
+
+      g_string_append (buf, name);
+      string_append_indent (buf, 2 + width - strlen (name));
+    }
+
+    switch (prop->propstype) {
       case GST_PROPS_INT_ID:
 	g_string_append_printf (buf, "%d (int)\n", prop->data.int_data);
 	break;
       case GST_PROPS_INT_RANGE_ID:
 	g_string_append_printf (buf, "%d - %d (int)\n",
-			  prop->data.int_range_data.min,
-			  prop->data.int_range_data.max);
+				prop->data.int_range_data.min, prop->data.int_range_data.max);
 	break;
       case GST_PROPS_FLOAT_ID:
 	g_string_append_printf (buf, "%f (float)\n", prop->data.float_data);
-      break;
+	break;
       case GST_PROPS_FLOAT_RANGE_ID:
 	g_string_append_printf (buf, "%f - %f (float)\n",
-			  prop->data.float_range_data.min,
-			  prop->data.float_range_data.max);
+				prop->data.float_range_data.min, prop->data.float_range_data.max);
 	break;
       case GST_PROPS_BOOL_ID:
-	g_string_append_printf (buf, "%s\n",
-			  prop->data.bool_data ? "TRUE" : "FALSE");
+	g_string_append_printf (buf, "%s\n", prop->data.bool_data ? "TRUE" : "FALSE");
 	break;
       case GST_PROPS_STRING_ID:
 	g_string_append_printf (buf, "\"%s\"\n", prop->data.string_data.string);
 	break;
       case GST_PROPS_FOURCC_ID:
 	g_string_append_printf (buf, "'%c%c%c%c' (fourcc)\n",
-			  prop->data.fourcc_data & 0xff,
-			  prop->data.fourcc_data>>8 & 0xff,
-			  prop->data.fourcc_data>>16 & 0xff,
-			  prop->data.fourcc_data>>24 & 0xff);
+				prop->data.fourcc_data & 0xff,
+				prop->data.fourcc_data >> 8 & 0xff,
+				prop->data.fourcc_data >> 16 & 0xff,
+				prop->data.fourcc_data >> 24 & 0xff);
 	break;
       case GST_PROPS_LIST_ID:
-	gst_print_props (buf, indent+2, prop->data.list_data.entries, FALSE);
+	gst_print_props (buf, indent + 2, prop->data.list_data.entries, FALSE);
 	break;
       default:
 	g_string_append_printf (buf, "unknown proptype %d\n", prop->propstype);
 	break;
-      }
+    }
   }
 }
 
-void gst_print_pad_caps (GString *buf, gint indent, GstPad *pad)
+/**
+ * gst_print_pad_caps:
+ * @buf: the buffer to print the caps in
+ * @indent: initial indentation
+ * @pad: the pad to print the caps from
+ *
+ * Write the pad capabilities in a human readable format into
+ * the given GString.
+ */
+void
+gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
 {
   GstRealPad *realpad;
   GstCaps *caps;
 
-  realpad = GST_PAD_REALIZE(pad);
+  realpad = GST_PAD_REALIZE (pad);
   caps = realpad->caps;
 
-  if (!caps)
-    {
+  if (!caps) {
+    string_append_indent (buf, indent);
+    g_string_printf (buf, "%s:%s has no capabilities", GST_DEBUG_PAD_NAME (pad));
+  }
+  else {
+    gint capx = 0;
+
+    while (caps) {
+      GstType *type;
+
       string_append_indent (buf, indent);
-      g_string_printf (buf, "%s:%s has no capabilities",
-		       GST_DEBUG_PAD_NAME (pad));
+      g_string_append_printf (buf, "Cap[%d]: %s\n", capx++, caps->name);
+
+      type = gst_type_find_by_id (caps->id);
+      string_append_indent (buf, indent + 2);
+      g_string_append_printf (buf, "MIME type: %s\n", type->mime ? type->mime : "unknown/unknown");
+
+      if (caps->properties)
+	gst_print_props (buf, indent + 4, caps->properties->properties, TRUE);
+
+      caps = caps->next;
     }
-  else
-    {
-      gint capx = 0;
-
-      while (caps) {
-	GstType *type;
-
-	string_append_indent (buf, indent);
-	g_string_append_printf (buf, "Cap[%d]: %s\n", capx++, caps->name);
-
-	type = gst_type_find_by_id (caps->id);
-	string_append_indent (buf, indent+2);
-	g_string_append_printf (buf, "MIME type: %s\n",
-			  type->mime? type->mime : "unknown/unknown");
-
-	if (caps->properties)
-	  gst_print_props (buf, indent + 4,
-			   caps->properties->properties, TRUE);
-
-	caps = caps->next;
-      }
-    }
+  }
 }
 
-void gst_print_element_args (GString *buf, gint indent, GstElement *element)
+/**
+ * gst_print_element_args:
+ * @buf: the buffer to print the args in
+ * @indent: initial indentation
+ * @element: the element to print the args of
+ *
+ * Print the element argument in a human readable format in the given
+ * GString.
+ */
+void
+gst_print_element_args (GString * buf, gint indent, GstElement * element)
 {
   gint num_properties;
   gint px;
   guint width;
 
-  GParamSpec **property_specs =
-    g_object_class_list_properties (G_OBJECT_GET_CLASS (element),
-				    &num_properties);
-  
-  width=0;
-  for (px=0; px < num_properties; px++) {
+  GParamSpec **property_specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (element),
+								&num_properties);
+
+  width = 0;
+  for (px = 0; px < num_properties; px++) {
     GParamSpec *param = property_specs[px];
+
     if (width < strlen (param->name))
       width = strlen (param->name);
   }
 
-  for (px=0; px < num_properties; px++) {
+  for (px = 0; px < num_properties; px++) {
     GParamSpec *param = property_specs[px];
     GValue value;
 
@@ -492,49 +513,57 @@ void gst_print_element_args (GString *buf, gint indent, GstElement *element)
 #endif
 
       g_string_append_printf (buf, "%s (%s)",
-			values [g_value_get_enum (&value)].value_nick,
-			g_type_name (G_VALUE_TYPE (&value)));
+			      values[g_value_get_enum (&value)].value_nick,
+			      g_type_name (G_VALUE_TYPE (&value)));
     }
-    else
+    else {
       switch (G_VALUE_TYPE (&value)) {
-      case G_TYPE_STRING:
-	g_string_append_printf (buf, "\"%s\"", g_value_get_string (&value));
-	break;
-      case G_TYPE_BOOLEAN:
-	g_string_append (buf, g_value_get_boolean (&value)? "TRUE":"FALSE");
-	break;
-      case G_TYPE_ULONG:{
-	gulong val = g_value_get_ulong (&value);
-	g_string_append_printf (buf, "%lu (0x%lx)", val, val);
-	break;}
-      case G_TYPE_LONG:{
-	glong val = g_value_get_long (&value);
-	g_string_append_printf (buf, "%ld (0x%lx)", val, val);
-	break;}
-      case G_TYPE_UINT:{
-	guint val = g_value_get_uint (&value);
-	g_string_append_printf (buf, "%u (0x%x)", val, val);
-	break;}
-      case G_TYPE_INT:{
-	gint val = g_value_get_int (&value);
-	g_string_append_printf (buf, "%d (0x%x)", val, val);
-	break;}
-      case G_TYPE_FLOAT:
-	g_string_append_printf (buf, "%f", g_value_get_float (&value));
-	break;
-      case G_TYPE_DOUBLE:
-	g_string_append_printf (buf, "%f", g_value_get_double (&value));
-	break;
-      default:
-	g_string_append_printf (buf, "unknown value_type %d", G_VALUE_TYPE (&value));
-	break;
+	case G_TYPE_STRING:
+	  g_string_append_printf (buf, "\"%s\"", g_value_get_string (&value));
+	  break;
+	case G_TYPE_BOOLEAN:
+	  g_string_append (buf, g_value_get_boolean (&value) ? "TRUE" : "FALSE");
+	  break;
+	case G_TYPE_ULONG:{
+	  gulong val = g_value_get_ulong (&value);
+
+	  g_string_append_printf (buf, "%lu (0x%lx)", val, val);
+	  break;
+	}
+	case G_TYPE_LONG:{
+	  glong val = g_value_get_long (&value);
+
+	  g_string_append_printf (buf, "%ld (0x%lx)", val, val);
+	  break;
+	}
+	case G_TYPE_UINT:{
+	  guint val = g_value_get_uint (&value);
+
+	  g_string_append_printf (buf, "%u (0x%x)", val, val);
+	  break;
+	}
+	case G_TYPE_INT:{
+	  gint val = g_value_get_int (&value);
+
+	  g_string_append_printf (buf, "%d (0x%x)", val, val);
+	  break;
+	}
+	case G_TYPE_FLOAT:
+	  g_string_append_printf (buf, "%f", g_value_get_float (&value));
+	  break;
+	case G_TYPE_DOUBLE:
+	  g_string_append_printf (buf, "%f", g_value_get_double (&value));
+	  break;
+	default:
+	  g_string_append_printf (buf, "unknown value_type %d", G_VALUE_TYPE (&value));
+	  break;
       }
+    }
 
     g_string_append_c (buf, '\n');
 
     if (G_VALUE_TYPE (&value))
       g_value_unset (&value);
   }
-
   g_free (property_specs);
 }

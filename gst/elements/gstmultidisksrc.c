@@ -203,8 +203,7 @@ gst_multidisksrc_get (GstPad *pad)
     gst_multidisksrc_close_file(src);
 
   if (!src->listptr) {
-    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-    return FALSE;
+    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
 
   list = src->listptr;

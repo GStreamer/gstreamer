@@ -191,7 +191,7 @@ gst_buffer_pool_set_buffer_free_function (GstBufferPool *pool,
 /**
  * gst_buffer_pool_set_buffer_copy_function:
  * @pool: the pool to set the buffer copy function for
- * @destroy: the copy function
+ * @copy: the copy function
  *
  * Sets the function that will be called when a buffer is copied.
  *
@@ -207,7 +207,7 @@ gst_buffer_pool_set_buffer_copy_function (GstBufferPool *pool,
 }
 
 /**
- * gst_buffer_pool_set_pool_destroy_hook:
+ * gst_buffer_pool_set_destroy_hook:
  * @pool: the pool to set the destroy hook for
  * @destroy: the destroy function
  *
@@ -243,14 +243,13 @@ gst_buffer_pool_set_user_data (GstBufferPool *pool,
 /**
  * gst_buffer_pool_get_user_data:
  * @pool: the pool to get the user data from
- * @user_data: any user data to be passed to the create/destroy buffer functions
- * and the destroy hook
  *
  * gets user data
+ *
+ * Returns: The user data of this bufferpool
  */
 gpointer
-gst_buffer_pool_get_user_data (GstBufferPool *pool, 
-                               gpointer user_data)
+gst_buffer_pool_get_user_data (GstBufferPool *pool)
 {
   g_return_val_if_fail (pool != NULL, NULL);
 

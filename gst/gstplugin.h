@@ -85,8 +85,6 @@ _gst_plugin_static_init__ ##init (void)				\
 void			_gst_plugin_initialize		(void);
 void 			_gst_plugin_register_static 	(GstPluginDesc *desc);
 
-GstPlugin*		gst_plugin_new			(const gchar *name, gint major, gint minor);
-
 void			gst_plugin_add_path		(const gchar *path);
 
 const gchar*		gst_plugin_get_name		(GstPlugin *plugin);

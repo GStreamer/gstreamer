@@ -60,7 +60,7 @@ struct _GstPluginFeatureClass {
 /* normal GObject stuff */
 GType		gst_plugin_feature_get_type		(void);
 
-void		gst_plugin_feature_ensure_loaded 	(GstPluginFeature *feature);
+gboolean	gst_plugin_feature_ensure_loaded 	(GstPluginFeature *feature);
 void		gst_plugin_feature_unload_thyself 	(GstPluginFeature *feature);
 
 #ifdef __cplusplus

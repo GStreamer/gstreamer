@@ -66,6 +66,8 @@ static gchar *_gst_info_category_strings[] = {
  * gst_get_category_name:
  * @category: the category to return the name of
  *
+ * Return a string containing the name of the category
+ *
  * Returns: string containing the name of the category
  */
 const gchar *
@@ -214,6 +216,8 @@ gst_debug_set_categories (guint32 categories) {
 /**
  * gst_debug_get_categories:
  *
+ * Return the current bitmask of enabled DEBUG categories
+ *
  * Returns: the current bitmask of enabled DEBUG categories
  * The bit for any given category is (1 << GST_CAT_...).
  */
@@ -338,6 +342,9 @@ gst_info_set_categories (guint32 categories) {
 
 /**
  * gst_info_get_categories:
+ *
+ * Return the current bitmask of enabled INFO categories
+ * The bit for any given category is (1 << GST_CAT_...).
  *
  * Returns: the current bitmask of enabled INFO categories
  * The bit for any given category is (1 << GST_CAT_...).
@@ -528,6 +535,7 @@ gst_debug_print_stack_trace (void)
 void 
 gst_debug_print_stack_trace (void)
 {
+  //nothing because it's compiled out
 }
 
 #endif /* GST_ENABLE_FUNC_INTSTRUMENTATION */

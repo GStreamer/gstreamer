@@ -57,6 +57,13 @@ gst_clock_new (gchar *name)
   return clock;
 }
 
+/**
+ * gst_clock_get_system:
+ *
+ * Get the global system clock
+ *
+ * Returns: the global clock
+ */
 GstClock*
 gst_clock_get_system(void)
 {
@@ -67,6 +74,14 @@ gst_clock_get_system(void)
   return the_system_clock;
 }
 
+/**
+ * gst_clock_register:
+ * @clock: the name of the clock to register to
+ * @obj: the object registering to the clock
+ *
+ * State that an object is interested in listening to the
+ * given clock
+ */
 void
 gst_clock_register (GstClock *clock, GstObject *obj)
 {
@@ -77,6 +92,13 @@ gst_clock_register (GstClock *clock, GstObject *obj)
   }
 }
 
+/**
+ * gst_clock_set:
+ * @clock: The clock to set
+ * @time: the time to set
+ *
+ * Set the time of the given clock to time.
+ */
 void
 gst_clock_set (GstClock *clock, GstClockTime time)
 {
@@ -92,6 +114,16 @@ gst_clock_set (GstClock *clock, GstClockTime time)
              time, now, clock->start_time);
 }
 
+/**
+ * gst_clock_current_diff:
+ * @clock: the clock to calculate the diff against
+ * @time: the time
+ *
+ * Calculate the difference between the given clock and the
+ * given time
+ *
+ * Returns: the clock difference
+ */
 GstClockTimeDiff
 gst_clock_current_diff (GstClock *clock, GstClockTime time)
 {
@@ -106,6 +138,13 @@ gst_clock_current_diff (GstClock *clock, GstClockTime time)
   return GST_CLOCK_DIFF (time, now);
 }
 
+/**
+ * gst_clock_reset:
+ * @clock: the clock to reset
+ *
+ * Reset the given clock. The of the clock will be adjusted back
+ * to 0.
+ */
 void
 gst_clock_reset (GstClock *clock)
 {
@@ -120,6 +159,14 @@ gst_clock_reset (GstClock *clock)
   g_mutex_unlock (clock->lock);
 }
 
+/**
+ * gst_clock_wait:
+ * @clock: the clock to wait on
+ * @time: the time to wait for
+ * @obj: the object performing the wait
+ *
+ * Wait for a specific clock tick on the given clock.
+ */
 void
 gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
 {

@@ -186,6 +186,12 @@ gst_object_sink (GstObject *object)
   }
 }
 
+/**
+ * gst_object_destroy:
+ * @object: GstObject to destroy
+ *
+ * Destroy the object.
+ */
 void
 gst_object_destroy (GstObject *object)
 {
@@ -475,13 +481,11 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
 }
 
 /**
- * gst_object_load_thyself:
+ * gst_object_restore_thyself:
  * @object: GstObject to load into
- * @parent: The parent XML node to save the object into
+ * @parent: The parent XML node to load the object from
  *
- * Saves the given object into the parent XML node.
- *
- * Returns: the new xmlNodePtr with the saved object
+ * Restores the given object with the data from the parent XML node.
  */
 void
 gst_object_restore_thyself (GstObject *object, xmlNodePtr parent)

@@ -335,11 +335,11 @@ gst_autoplugfactory_create (GstAutoplugFactory *factory)
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory));
+  if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
+    g_return_val_if_fail (factory->type != 0, NULL);
 
-  g_return_val_if_fail (factory->type != 0, NULL);
-
-  new = GST_AUTOPLUG (g_object_new(factory->type,NULL));
+    new = GST_AUTOPLUG (g_object_new(factory->type,NULL));
+  }
 
   return new;
 }

@@ -102,8 +102,10 @@ gst_buffer_new (void)
 /**
  * gst_buffer_new_from_pool:
  * @pool: the buffer pool to use
+ * @offset: the offset of the new buffer
+ * @size: the size of the new buffer
  *
- * Create a new buffer using the specified bufferpool.
+ * Create a new buffer using the specified bufferpool, offset and size.
  *
  * Returns: new buffer
  */
@@ -315,6 +317,30 @@ gst_buffer_ref (GstBuffer *buffer)
 }
 
 /**
+ * gst_buffer_ref_by_count:
+ * @buffer: the GstBuffer to reference
+ * @count: a number
+ *
+ * Increment the refcount of this buffer by the given number.
+ */
+void
+gst_buffer_ref_by_count (GstBuffer *buffer, gint count)
+{
+  g_return_if_fail (buffer != NULL);
+  g_return_if_fail (count > 0);
+
+#ifdef HAVE_ATOMIC_H
+  g_return_if_fail (atomic_read (&(buffer->refcount)) > 0);
+  atomic_add (count, &(buffer->refcount));
+#else
+  g_return_if_fail (buffer->refcount > 0);
+  GST_BUFFER_LOCK (buffer);
+  buffer->refcount += count;
+  GST_BUFFER_UNLOCK (buffer);
+#endif
+}
+
+/**
  * gst_buffer_unref:
  * @buffer: the GstBuffer to unref
  *
@@ -388,8 +414,8 @@ gst_buffer_copy (GstBuffer *buffer)
   return newbuf;
 }
 
-/*
- * gst_buffer_is_span_fast
+/**
+ * gst_buffer_is_span_fast:
  * @buf1: first source buffer
  * @buf2: second source buffer
  *
@@ -439,7 +465,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   // make sure buf1 has a lower address than buf2
   if (buf1->data > buf2->data) {
     GstBuffer *tmp = buf1;
-    g_print ("swapping buffers\n");
+    //g_print ("swapping buffers\n");
     buf1 = buf2;
     buf2 = tmp;
   }
@@ -450,7 +476,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     newbuf = gst_buffer_create_sub (buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
   }
   else {
-    g_print ("slow path taken in buffer_span\n");
+    //g_print ("slow path taken in buffer_span\n");
     // otherwise we simply have to brute-force copy the buffers
     newbuf = gst_buffer_new ();
 

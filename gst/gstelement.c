@@ -794,12 +794,20 @@ gst_element_error (GstElement *element, const gchar *error)
 }
 
 
+/**
+ * gst_element_get_state:
+ * @element: element to get state of
+ *
+ * Gets the state of the element. 
+ *
+ * Returns: The element state
+ */
 GstElementState
-gst_element_get_state (GstElement *elem)
+gst_element_get_state (GstElement *element)
 {
-  g_return_val_if_fail (GST_IS_ELEMENT (elem), GST_STATE_VOID_PENDING);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_VOID_PENDING);
 
-  return GST_STATE (elem);
+  return GST_STATE (element);
 }
 
 /**
@@ -968,23 +976,6 @@ gst_element_dispose (GObject *object)
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
-
-/*
-static gchar *_gst_element_type_names[] = {
-  "invalid",
-  "none",
-  "char",
-  "uchar",
-  "bool",
-  "int",
-  "uint",
-  "long",
-  "ulong",
-  "float",
-  "double",
-  "string",
-};
-*/
 
 #ifndef GST_DISABLE_LOADSAVE
 /**
@@ -1260,7 +1251,17 @@ gst_element_signal_eos (GstElement *element)
 }
 
 
-const gchar *gst_element_statename(GstElementState state) {
+/**
+ * gst_element_statename:
+ * @state: The state to get the name of
+ *
+ * Gets a string representing the given state.
+ *
+ * Returns: a string with the statename.
+ */
+const gchar*
+gst_element_statename (GstElementState state) 
+{
   switch (state) {
 #ifdef GST_DEBUG_COLOR
     case GST_STATE_VOID_PENDING: return "NONE_PENDING";break;

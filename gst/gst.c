@@ -34,6 +34,7 @@
 #include "gstthread.h"
 #include "gstqueue.h"
 #include "gstautoplug.h"
+#include "gstscheduler.h"
 #ifndef GST_DISABLE_TYPEFIND
 #include "gsttypefind.h"
 #endif
@@ -117,6 +118,8 @@ gst_init (int *argc, char **argv[])
   gst_elementfactory_get_type ();
   gst_element_get_type ();
   gst_typefactory_get_type ();
+  gst_schedule_get_type ();
+  gst_bin_get_type ();
 #ifndef GST_DISABLE_AUTOPLUG
   gst_autoplugfactory_get_type ();
 #endif

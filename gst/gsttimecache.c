@@ -85,6 +85,13 @@ gst_timecache_init (GstTimeCache *tc)
   GST_DEBUG(0, "created new timecache\n");
 }
 
+/**
+ * gst_timecache_new:
+ *
+ * Create a new tilecache object
+ *
+ * Returns: a new timecache object
+ */
 GstTimeCache *
 gst_timecache_new()
 {
@@ -95,12 +102,29 @@ gst_timecache_new()
   return tc;
 }
 
+/**
+ * gst_timecache_get_group:
+ * @tc: the timecache to get the current group from
+ *
+ * Get the id of the current group.
+ *
+ * Returns: the id of the current group.
+ */
 gint
 gst_timecache_get_group(GstTimeCache *tc)
 {
   return tc->curgroup->groupnum;
 }
 
+/**
+ * gst_timecache_new_group:
+ * @tc: the timecache to create the new group in
+ *
+ * Create a new group for the given timecache. It will be
+ * set as the current group.
+ *
+ * Returns: the id of the newly created group.
+ */
 gint
 gst_timecache_new_group(GstTimeCache *tc)
 {
@@ -110,6 +134,16 @@ gst_timecache_new_group(GstTimeCache *tc)
   return tc->maxgroup;
 }
 
+/**
+ * gst_timecache_set_group:
+ * @tc: the timecache to set the new group in
+ * @groupnum: the groupnumber to set
+ *
+ * Set the current groupnumber to the given argument.
+ *
+ * Returns: TRUE if the operation succeeded, FALSE if the group
+ * did not exist.
+ */
 gboolean
 gst_timecache_set_group(GstTimeCache *tc, gint groupnum)
 {
@@ -137,18 +171,42 @@ gst_timecache_set_group(GstTimeCache *tc, gint groupnum)
   return FALSE;
 }
 
+/**
+ * gst_timecache_set_certainty:
+ * @tc: the timecache to set the certainty on
+ * @certainty: the certainty to set
+ *
+ * Set the certainty of the given timecache.
+ */
 void
 gst_timecache_set_certainty(GstTimeCache *tc, GstTimeCacheCertainty certainty)
 {
   tc->curgroup->certainty = certainty;
 }
 
+/**
+ * gst_timecache_get_certainty:
+ * @tc: the timecache to get the certainty of
+ *
+ * Get the certainty of the given timecache.
+ *
+ * Returns: the certainty of the timecache.
+ */
 GstTimeCacheCertainty
 gst_timecache_get_certainty(GstTimeCache *tc)
 {
   return tc->curgroup->certainty;
 }
 
+/**
+ * gst_timecache_add_entry:
+ * @tc: the timecache to add the entry to
+ * @location: the location
+ * @timestamp: the timestamp
+ *
+ * Associate the given timestamp with the given location in the 
+ * timecache.
+ */
 void
 gst_timecache_add_entry (GstTimeCache *tc, guint64 location, gint64 timestamp)
 {
@@ -169,12 +227,25 @@ gst_timecache_add_entry (GstTimeCache *tc, guint64 location, gint64 timestamp)
   GST_DEBUG(0, "added entry to timecache group %d\n",tc->curgroup->groupnum);
 }
 
-gint _gst_timecache_find_location (const GstTimeCacheEntry *entry, const guint64 *location) {
+static gint 
+_gst_timecache_find_location (const GstTimeCacheEntry *entry, const guint64 *location) 
+{
   if (*location < entry->location) return -1;
   else if (*location > entry->location) return 1;
   else return 0;
 }
 
+/**
+ * gst_timecache_find_location:
+ * @tc: the timecache to find the timestamp in
+ * @location: the location
+ * @timestamp: the timestamp 
+ *
+ * Look up the associated timestamp for the given location in the 
+ * timecache.
+ *
+ * Returns: TRUE if the location was found in the timecache.
+ */
 gboolean
 gst_timecache_find_location (GstTimeCache *tc, guint64 location, gint64 *timestamp)
 {
@@ -196,12 +267,25 @@ gst_timecache_find_location (GstTimeCache *tc, guint64 location, gint64 *timesta
   return FALSE;
 }
 
-gint _gst_timecache_find_timestamp (const GstTimeCacheEntry *entry, const gint64 *timestamp) {
+static gint 
+_gst_timecache_find_timestamp (const GstTimeCacheEntry *entry, const gint64 *timestamp) 
+{
   if (*timestamp < entry->timestamp) return -1;
   else if (*timestamp > entry->timestamp) return 1;
   else return 0;
 }
 
+/**
+ * gst_timecache_find_timestamp:
+ * @tc: the timecache to find the location in
+ * @location: the location
+ * @timestamp: the timestamp 
+ *
+ * Look up the associated location for the given timestamp in the 
+ * timecache.
+ *
+ * Returns: TRUE if the timestamp was found in the timecache.
+ */
 gboolean
 gst_timecache_find_timestamp (GstTimeCache *tc, gint64 timestamp, guint64 *location)
 {

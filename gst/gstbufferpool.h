@@ -70,7 +70,7 @@ GstBufferPool*		gst_buffer_pool_new			(void);
 /* refcounting */
 void 		gst_buffer_pool_ref			(GstBufferPool *pool);
 void 		gst_buffer_pool_ref_by_count		(GstBufferPool *pool, int count);
-void 		gst_buffer_pool_unref			(GstBufferPool *buffer);
+void 		gst_buffer_pool_unref			(GstBufferPool *pool);
 
 /* setting create and destroy functions */
 void 		gst_buffer_pool_set_buffer_new_function	        (GstBufferPool *pool, 
@@ -83,8 +83,7 @@ void 		gst_buffer_pool_set_destroy_hook		(GstBufferPool *pool,
                                                                  GstBufferPoolDestroyHook destroy);
 void 		gst_buffer_pool_set_user_data			(GstBufferPool *pool, 
                                                                  gpointer user_data);
-gpointer	gst_buffer_pool_get_user_data			(GstBufferPool *pool, 
-                                                                 gpointer user_data);
+gpointer	gst_buffer_pool_get_user_data			(GstBufferPool *pool);
 
 /* destroying the buffer pool */
 void 		gst_buffer_pool_destroy			(GstBufferPool *pool);

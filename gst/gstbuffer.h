@@ -36,7 +36,6 @@
 //
 
 #include <gst/gstdata.h>
-#include <gst/gstobject.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -137,8 +136,8 @@ struct _GstBuffer {
   gpointer 		pool_private;
 
   /* utility function pointers */
-  GstBufferFreeFunc 	free;		// free the data associated with the buffer
-  GstBufferCopyFunc 	copy;		// copy the data from one buffer to another
+  GstBufferFreeFunc 	free;		/* free the data associated with the buffer */
+  GstBufferCopyFunc 	copy;		/* copy the data from one buffer to another */
 };
 
 /* initialisation */
@@ -152,6 +151,7 @@ GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint32 offset, guint32 si
 
 /* refcounting */
 void 		gst_buffer_ref			(GstBuffer *buffer);
+void 		gst_buffer_ref_by_count		(GstBuffer *buffer, gint count);
 void 		gst_buffer_unref		(GstBuffer *buffer);
 
 /* destroying the buffer */
@@ -163,7 +163,7 @@ GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
 /* merge, span, or append two buffers, intelligently */
 GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1,guint32 offset,GstBuffer *buf2,guint32 len);
-GstBuffer*	gst_buffer_append		(GstBuffer *buf, GstBuffer *buf2);
+GstBuffer*	gst_buffer_append		(GstBuffer *buffer, GstBuffer *append);
 
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 

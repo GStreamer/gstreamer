@@ -33,16 +33,22 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_SCHEDULE \
-  (gst_schedule_get_type())
-#define GST_SCHEDULE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SCHEDULE,GstSchedule))
-#define GST_SCHEDULE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SCHEDULE,GstScheduleClass))
-#define GST_IS_SCHEDULE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SCHEDULE))
-#define GST_IS_SCHEDULE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHEDULE))
+extern GType _gst_schedule_type;
+
+#define GST_TYPE_SCHEDULE                 (_gst_schedule_type)
+# define GST_IS_SCHEDULE(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SCHEDULE))
+# define GST_IS_SCHEDULE_CLASS(obj)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SCHEDULE))
+
+#define GST_SCHEDULE_FAST(obj)            ((GstSchedule*)(obj))
+#define GST_SCHEDULE_CLASS_FAST(klass)    ((GstScheduleClass*)(klass))
+
+#ifdef GST_TYPE_PARANOID
+# define GST_SCHEDULE(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SCHEDULE, GstSchedule))
+# define GST_SCHEDULE_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SCHEDULE, GstScheduleClass))
+#else
+# define GST_SCHEDULE                     GST_SCHEDULE_FAST
+# define GST_SCHEDULE_CLASS               GST_SCHEDULE_CLASS_FAST
+#endif
 
 
 #define GST_SCHED_PARENT(sched)		((sched)->parent)

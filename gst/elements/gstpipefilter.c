@@ -64,7 +64,7 @@ static void 			gst_pipefilter_get_property	(GObject *object, guint prop_id, GVal
 
 static GstBuffer*		gst_pipefilter_get		(GstPad *pad);
 static void 			gst_pipefilter_chain		(GstPad *pad, GstBuffer *buf);
-static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, void *event);
+static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, GstEvent *event);
 
 static GstElementStateReturn 	gst_pipefilter_change_state	(GstElement *element);
 
@@ -134,7 +134,7 @@ gst_pipefilter_init (GstPipefilter *pipefilter)
 }
 
 static gboolean
-gst_pipefilter_handle_event (GstPad *pad, void *event)
+gst_pipefilter_handle_event (GstPad *pad, GstEvent *event)
 {
   GstPipefilter *pipefilter;
 
@@ -180,8 +180,8 @@ gst_pipefilter_get (GstPad *pad)
   }
   /* if we didn't get as many bytes as we asked for, we're at EOF */
   if (readbytes == 0) {
-    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-    return NULL;
+    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
+
   }
 
   GST_BUFFER_OFFSET(newbuf) = pipefilter->curoffset;

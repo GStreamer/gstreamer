@@ -403,16 +403,6 @@ NULL )
 NULL )
 #endif
 
-#if 1
-gboolean		gst_pad_event			(GstPad *pad, GstEventType event, gint64 timestamp, guint32 data);
-#else
-#define gst_pad_event(pad,event,timestamp,data) G_STMT_START{ \
-  ( (((GstRealPad *)(pad))->peer->eventhandler) ? \
-    (((GstRealPad *)(pad))->peer->eventhandler)((GstPad *)(((GstRealPad *)(pad))->peer),(event),(timestamp),(data)) : \
-FALSE )
-}G_STMT_END
-#endif
-
 gboolean		gst_pad_send_event		(GstPad *pad, GstEvent *event);
 
 GstBuffer*		gst_pad_peek			(GstPad *pad);
