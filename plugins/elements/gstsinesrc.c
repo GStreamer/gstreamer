@@ -152,6 +152,7 @@ gst_sinesrc_init (GstSineSrc *src)
 {
   GstElement *element = GST_ELEMENT(src);
   GstDParamManager *dpman;
+  GstDParamSpec *spec;
   
   src->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sinesrc_src_factory), "src");
@@ -173,10 +174,22 @@ gst_sinesrc_init (GstSineSrc *src)
   src->seq = 0;
 
   dpman = gst_dpman_new ("sinesrc_dpman", GST_ELEMENT(src));
-  gst_dpman_add_required_dparam_callback (dpman, "volume", G_TYPE_FLOAT, gst_sinesrc_update_volume, src);
   gst_dpman_add_required_dparam_callback (dpman, "freq", G_TYPE_FLOAT, gst_sinesrc_update_freq, src);
-  
-  src->volume = 1.0;
+  spec = gst_dpman_get_dparam_spec (dpman, "freq");
+  g_value_set_float(spec->min_val, 10.0);
+  g_value_set_float(spec->max_val, 10000.0);
+  g_value_set_float(spec->default_val, 350.0);
+  spec->unit_name = "frequency";
+  spec->is_log = TRUE;
+ 
+  gst_dpman_add_required_dparam_callback (dpman, "volume", G_TYPE_FLOAT, gst_sinesrc_update_volume, src);
+  spec = gst_dpman_get_dparam_spec (dpman, "volume");
+  g_value_set_float(spec->min_val, 0.0);
+  g_value_set_float(spec->max_val, 2.0);
+  g_value_set_float(spec->default_val, 0.8);
+  spec->unit_name = "scalar";
+
+  src->volume = 0.0;
   
   gst_dpman_set_rate_change_pad(dpman, src->srcpad);
   

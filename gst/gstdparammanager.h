@@ -92,7 +92,7 @@ struct _GstDPMMode {
 };
 
 struct _GstDParamWrapper {
-	gchar *dparam_name;
+	GstDParamSpec* spec;
 	GValue *value;
 	GstDParam *dparam;
 	GstDPMUpdateMethod update_method;
@@ -139,6 +139,10 @@ gboolean gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, G
 void gst_dpman_dettach_dparam (GstDParamManager *dpman, gchar *dparam_name);                         
 GstDParam* gst_dpman_get_dparam(GstDParamManager *dpman, gchar *name);
 GType gst_dpman_get_dparam_type (GstDParamManager *dpman, gchar *name);
+
+GstDParamSpec** gst_dpman_list_dparam_specs(GstDParamManager *dpman);
+GstDParamSpec* gst_dpman_get_dparam_spec (GstDParamManager *dpman, gchar *dparam_name);
+void gst_dpman_dparam_spec_has_changed (GstDParamManager *dpman, gchar *dparam_name);
 
 void gst_dpman_set_rate_change_pad(GstDParamManager *dpman, GstPad *pad);
 

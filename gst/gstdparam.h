@@ -38,6 +38,7 @@ extern "C" {
 #define GST_DPARAM_NAME(dparam)				 (GST_OBJECT_NAME(dparam))
 #define GST_DPARAM_PARENT(dparam)			 (GST_OBJECT_PARENT(dparam))
 #define GST_DPARAM_VALUE(dparam)				 ((dparam)->value)
+#define GST_DPARAM_SPEC(dparam)				 ((dparam)->spec)
 #define GST_DPARAM_TYPE(dparam)				 ((dparam)->type)
 
 #define GST_DPARAM_LOCK(dparam)		(g_mutex_lock((dparam)->lock))
@@ -78,7 +79,7 @@ typedef enum {
 
 typedef struct _GstDParam GstDParam;
 typedef struct _GstDParamClass GstDParamClass;
-typedef struct _GstDParamModel GstDParamModel;
+typedef struct _GstDParamSpec GstDParamSpec;
 
 typedef GValue** (*GstDParamInsertPointFunction) (GstDParam *dparam, guint64 timestamp);
 typedef void (*GstDParamRemovePointFunction) (GstDParam *dparam, GValue** point);
@@ -100,6 +101,7 @@ struct _GstDParam {
 	
 	GMutex *lock;
 	GValue *value;
+	GstDParamSpec *spec;
 	GValue **point;
 	GType type;
 	gint64 last_update_timestamp;
@@ -114,9 +116,19 @@ struct _GstDParamClass {
 	/* signal callbacks */
 };
 
+struct _GstDParamSpec {
+	gchar *dparam_name;
+	gchar *unit_name;
+	GValue *min_val;
+	GValue *max_val;
+	GValue *default_val;
+	gboolean is_log;
+	gboolean is_rate;
+};
+
 GType gst_dparam_get_type (void);
 GstDParam* gst_dparam_new (GType type);
-void gst_dparam_attach (GstDParam *dparam, GstObject *parent, gchar *dparam_name, GValue *value);
+void gst_dparam_attach (GstDParam *dparam, GstObject *parent, GValue *value, GstDParamSpec *spec);
 GValue** gst_dparam_new_value_array(GType type, ...);
 void gst_dparam_set_value_from_string(GValue *value, const gchar *value_str);
 

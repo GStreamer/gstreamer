@@ -25,7 +25,6 @@
 #include <gst/gstelement.h>
 
 
-static void gst_dpman_base_class_init (GstDParamManagerClass *klass);
 static void gst_dpman_class_init (GstDParamManagerClass *klass);
 static void gst_dpman_init (GstDParamManager *dpman);
 static GstDParamWrapper* gst_dpman_new_wrapper(GstDParamManager *dpman, gchar *dparam_name, GType type, GstDPMUpdateMethod update_method);
@@ -44,7 +43,7 @@ gst_dpman_get_type (void)
 	if (!dpman_type) {
 		static const GTypeInfo dpman_info = {
 			sizeof(GstDParamManagerClass),
-			(GBaseInitFunc)gst_dpman_base_class_init,
+			NULL,
 			NULL,
 			(GClassInitFunc)gst_dpman_class_init,
 			NULL,
@@ -56,15 +55,6 @@ gst_dpman_get_type (void)
 		dpman_type = g_type_register_static(GST_TYPE_OBJECT, "GstDParamManager", &dpman_info, 0);
 	}
 	return dpman_type;
-}
-
-static void
-gst_dpman_base_class_init (GstDParamManagerClass *klass)
-{
-	GObjectClass *gobject_class;
-
-	gobject_class = (GObjectClass*) klass;
-
 }
 
 static void
@@ -277,7 +267,7 @@ gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam 
 	g_return_val_if_fail(dpwrap->value != NULL, FALSE);
 
 	dpwrap->dparam = dparam;
-	gst_dparam_attach(dparam, GST_OBJECT(dpman), dparam_name, dpwrap->value);
+	gst_dparam_attach(dparam, GST_OBJECT(dpman), dpwrap->value, dpwrap->spec);
 
 	return TRUE;
 }
@@ -351,6 +341,48 @@ gst_dpman_get_dparam_type (GstDParamManager *dpman, gchar *name)
 	g_return_val_if_fail (dpwrap != NULL, 0);
 	
 	return G_VALUE_TYPE(dpwrap->value);
+}
+
+GstDParamSpec**
+gst_dpman_list_dparam_specs(GstDParamManager *dpman)
+{
+	GstDParamWrapper* dpwrap;
+	GSList *dpwraps;
+	GstDParamSpec** dparam_specs;
+	guint x = 0;
+
+	g_return_val_if_fail (dpman != NULL, NULL);
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);
+	
+	dpwraps = GST_DPMAN_DPARAMS_LIST(dpman);
+
+	dparam_specs = g_new0(GstDParamSpec*, g_slist_length(dpwraps) + 1);
+	
+	while (dpwraps){
+		dpwrap = (GstDParamWrapper*)dpwraps->data;
+		dparam_specs[x++] = dpwrap->spec;
+		dpwraps = g_slist_next(dpwraps);
+	}
+	return dparam_specs;
+}
+
+GstDParamSpec*
+gst_dpman_get_dparam_spec (GstDParamManager *dpman, gchar *dparam_name)
+{
+	GstDParamWrapper* dpwrap;
+
+	g_return_val_if_fail (dpman != NULL, NULL);
+	g_return_val_if_fail (GST_IS_DPMAN (dpman), NULL);
+	g_return_val_if_fail (dparam_name != NULL, NULL);
+
+	dpwrap = gst_dpman_get_wrapper(dpman, dparam_name);
+	return dpwrap->spec;
+}
+
+void
+gst_dpman_dparam_spec_has_changed (GstDParamManager *dpman, gchar *dparam_name)
+{
+	
 }
 
 /**
@@ -482,10 +514,18 @@ gst_dpman_new_wrapper(GstDParamManager *dpman, gchar *dparam_name, GType type, G
 	g_return_val_if_fail(gst_dpman_get_wrapper(dpman, dparam_name) == NULL, NULL);
 
 	dpwrap = g_new0(GstDParamWrapper,1);
-	dpwrap->dparam_name = dparam_name;
 	dpwrap->update_method = update_method;
 	dpwrap->value = g_new0(GValue,1);
 	g_value_init(dpwrap->value, type);
+	
+	dpwrap->spec = g_new0(GstDParamSpec,1);
+	dpwrap->spec->dparam_name = dparam_name;
+	dpwrap->spec->min_val = g_new0(GValue,1);
+	dpwrap->spec->max_val = g_new0(GValue,1);
+	dpwrap->spec->default_val = g_new0(GValue,1);
+	g_value_init(dpwrap->spec->min_val, type);
+	g_value_init(dpwrap->spec->max_val, type);
+	g_value_init(dpwrap->spec->default_val, type);
 
 	g_hash_table_insert(GST_DPMAN_DPARAMS(dpman), dparam_name, dpwrap);
 	GST_DPMAN_DPARAMS_LIST(dpman) = g_slist_append(GST_DPMAN_DPARAMS_LIST(dpman), dpwrap);
@@ -538,7 +578,7 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 	GSList *dwraps;
    	GstDParam *dparam;
 	GstDParamWrapper *dpwrap;
-	int x;
+	guint x;
 
 	g_return_val_if_fail (dpman != NULL, frames);
 	g_return_val_if_fail (GST_IS_DPMAN (dpman), frames);

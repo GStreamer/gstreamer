@@ -25,7 +25,6 @@
 #include "gstdparammanager.h"
 
 static void gst_dparam_class_init (GstDParamClass *klass);
-static void gst_dparam_base_class_init (GstDParamClass *klass);
 static void gst_dparam_init (GstDParam *dparam);
 
 static void gst_dparam_do_update_realtime (GstDParam *dparam, gint64 timestamp);
@@ -38,7 +37,7 @@ gst_dparam_get_type(void) {
 	if (!dparam_type) {
 		static const GTypeInfo dparam_info = {
 			sizeof(GstDParamClass),
-			(GBaseInitFunc)gst_dparam_base_class_init,
+			NULL,
 			NULL,
 			(GClassInitFunc)gst_dparam_class_init,
 			NULL,
@@ -50,15 +49,6 @@ gst_dparam_get_type(void) {
 		dparam_type = g_type_register_static(GST_TYPE_OBJECT, "GstDParam", &dparam_info, 0);
 	}
 	return dparam_type;
-}
-
-static void
-gst_dparam_base_class_init (GstDParamClass *klass)
-{
-	GObjectClass *gobject_class;
-
-	gobject_class = (GObjectClass*) klass;
-
 }
 
 static void
@@ -116,7 +106,7 @@ gst_dparam_new (GType type)
  *
  */
 void
-gst_dparam_attach (GstDParam *dparam, GstObject *parent, gchar *dparam_name, GValue *value)
+gst_dparam_attach (GstDParam *dparam, GstObject *parent, GValue *value, GstDParamSpec *spec)
 {
 	
 	g_return_if_fail (dparam != NULL);
@@ -126,12 +116,13 @@ gst_dparam_attach (GstDParam *dparam, GstObject *parent, gchar *dparam_name, GVa
 	g_return_if_fail (G_IS_OBJECT (parent));
 	g_return_if_fail (GST_IS_DPMAN (parent));
 	g_return_if_fail ((gpointer)dparam != (gpointer)parent);
-	g_return_if_fail (dparam_name != NULL);
 	g_return_if_fail (value != NULL);
+	g_return_if_fail (spec != NULL);
 	g_return_if_fail (GST_DPARAM_TYPE(dparam) == G_VALUE_TYPE(value));
 	
-	GST_DPARAM_NAME(dparam) = dparam_name;
+	GST_DPARAM_NAME(dparam) = spec->dparam_name;
 	GST_DPARAM_VALUE(dparam) = value;
+	GST_DPARAM_SPEC(dparam) = spec;
 	gst_object_set_parent (GST_OBJECT (dparam), parent);
 }
 
@@ -151,7 +142,7 @@ gst_dparam_new_value_array(GType type, ...)
 	GValue **point;
 	GValue *value;
 	guint x;
-	gint values_length = 0;
+	guint values_length = 0;
 	va_list var_args;
 	GType each_type;
 
