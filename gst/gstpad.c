@@ -980,6 +980,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
     if (!gst_caps_intersect (caps, gst_padtemplate_get_caps (template))) {
       GST_INFO (GST_CAT_CAPS, "caps did not intersect with %s:%s's padtemplate",
                 GST_DEBUG_PAD_NAME (pad));
+      gst_caps_debug (caps, "caps themselves (attemped to set)");
       gst_caps_debug (gst_padtemplate_get_caps (template),
                       "pad template caps that did not agree with caps");
       return GST_PAD_CONNECT_REFUSED;
