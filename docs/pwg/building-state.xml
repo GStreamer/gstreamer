@@ -53,8 +53,8 @@
     as possible and would ideally cause no delay at all. The same goes for the
     reverse transition (<classname>GST_STATE_PLAYING_TO_PAUSED</classname>).
   </para>
-</chapter>
-<chapter id="cha-statemanage-filters">
+
+  <sect1 id="sect1-statemanage-filters">
   <title>
     Mangaging filter state
   </title>
@@ -99,4 +99,5 @@ gst_my_filter_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
   </programlisting>
+  </sect1>
 </chapter>

@@ -313,6 +313,40 @@ gst_my_filter_base_init (GstMyFilterClass *klass)
 [..]
 }
     </programlisting>
+    <para>
+      The last argument in a template is its type
+      or list of supported types. In this example, we use 'ANY', which means
+      that this element will accept all input. In real-life situations, you
+      would set a mimetype and optionally a set of properties to make sure
+      that only supported input will come in. This representation should be
+      a string that starts with a mimetype, then a set of comma-separates
+      properties with their supported values. In case of an audio filter that
+      supports raw integer 16-bit audio, mono or stereo at any samplerate, the
+      correct template would look like this:
+    </para>
+    <programlisting>
+static GstStaticPadTemplate sink_factory =
+GST_STATIC_PAD_TEMPLATE (
+  "sink",
+  GST_PAD_SINK,
+  GST_PAD_ALWAYS,
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "endianness = (int) BYTE_ORDER, "
+      "channels = (int) { 1, 2 }, "
+      "rate = (int) [ 8000, 96000 ]"
+  )
+);
+    </programlisting>
+    <para>
+      Values surrounded by {} are lists, values surrounded by [] are ranges.
+      Multiple sets of types are supported too, and should be separated by
+      a semicolon (<quote>;</quote>). Later, in the chapter on pads, we will
+      see how to use types to know the exact format of a stream:
+      <xref linkend="cha-building-pads"/>.
+    </para>
   </sect1>
 
   <!-- ############ sect1 ############# -->

@@ -1,5 +1,16 @@
 2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/pwg/advanced_types.xml:
+	  Add notes on creating your own types.
+	* docs/pwg/building_boiler.xml:
+	* docs/pwg/building_pads.xml:
+	* docs/pwg/building_state.xml:
+	  Add some stuff about how to retrieve values from structures, how
+	  that relates to types and change layout slightly again to be almost
+	  perfect.
+
+2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/advanced_dparams.xml:
 	* docs/pwg/advanced_scheduling.xml:
 	  Change index layout slightly.

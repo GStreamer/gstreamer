@@ -55,6 +55,9 @@ gst_my_filter_init (GstMyFilter *filter)
 [..]
 }
   </programlisting>
+
+  <sect1 id="sect-pads-linkfn" xreflabel="The link function">
+  <title>The link function</title>
   <para>
     The <function>_link ()</function> is called during caps negotiation. This
     is the process where the linked pads decide on the streamtype that will
@@ -109,12 +112,26 @@ gst_my_filter_link (GstPad        *pad,
 }
   </programlisting>
   <para>
+    In here, we check the mimetype of the provided caps. Normally, you don't
+    need to do that in your own plugin/element, because the core does that
+    for you. We simply use it to show how to retrieve the mimetype from a
+    provided set of caps. Types are stored in <classname>GstStructure</classname>
+    internally. A <classname>GstCaps</classname> is nothing more than a small
+    wrapper for 0 or more structures/types. From the structure, you can also
+    retrieve properties, as is shown above with the function
+    <function>gst_structure_get_int ()</function>.
+  </para>
+  <para>
     If your <function>_link ()</function> function does not need to perform
     any specific operation (i.e. it will only forward caps), you can set it
     to <function>gst_pad_proxy_link</function>. This is a link forwarding
     function implementation provided by the core. It is useful for elements
     such as <classname>identity</classname>.
   </para>
+  </sect1>
+
+  <sect1 id="sect-pads-getcapsfn" xreflabel="The getcaps function">
+  <title>The getcaps function</title>
   <para>
     The <function>_getcaps ()</function> funtion is used to request the list
     of supported formats and properties from the element. In some cases, this
@@ -158,6 +175,10 @@ gst_my_filter_getcaps (GstPad *pad)
   return caps;
 }
   </programlisting>
+  </sect1>
+
+  <sect1 id="sect-pads-explicitcaps" xreflabel="Explicit caps">
+  <title>Explicit caps</title>
   <para>
     Obviously, many elements will not need this complex mechanism, because they
     are much simpler than that. They only support one format, or their format
@@ -191,5 +212,6 @@ gst_my_filter_somefunction (GstMyFilter *filter)
 [..]
 }
   </programlisting>
+  </sect1>
 </chapter>
 

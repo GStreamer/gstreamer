@@ -59,22 +59,25 @@
   <sect1 id="sect1-types-test" xreflabel="Building a Simple Format for Testing">
     <title>Building a Simple Format for Testing</title>
     <para>
+      If you need a new format that has not yet been defined in our <xref
+      linkend="sect1-types-definitions"/>, you will want to have some general
+      guidelines on mimetype naming, properties and such. A mimetype would
+      ideally be one defined by IANA; else, it should be in the form
+      type/x-name, where type is the sort of data this mimetype handles (audio,
+      video, ...) and name should be something specific for this specific type.
+      Audio and video mimetypes should try to support the general audio/video
+      properties (see the list), and can use their own properties, too. To get
+      an idea of what properties we think are useful, see (again) the list.
     </para>
-  </sect1>
-
-  <!-- ############ sect1 ############# -->
-
-  <sect1 id="sect1-types-mime" xreflabel="A Simple Mime Type">
-    <title>A Simple Mime Type</title>
     <para>
-    </para>
-  </sect1>
-
-  <!-- ############ sect1 ############# -->
-
-  <sect1 id="sect1-types-properties" xreflabel="Type Properties">
-    <title>Type Properties</title>
-    <para>
+      Take your time to find the right set of properties for your type. There
+      is no reason to hurry. Also, experimenting with this is generally a good
+      idea. Experience learns that theoretically thought-out types are good,
+      but they still need practical use to assure that they serve their needs.
+      Make sure that your property names do not clash with similar properties
+      used in other types. If they match, make sure they mean the same thing;
+      properties with different types but the same names are
+      <emphasis>not</emphasis> allowed.
     </para>
   </sect1>
 
@@ -83,6 +86,7 @@
   <sect1 id="sect1-types-typefind" xreflabel="Typefind Functions and Autoplugging">
     <title>Typefind Functions and Autoplugging</title>
     <para>
+      WRITEME
     </para>
   </sect1>
 
