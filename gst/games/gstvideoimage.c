@@ -265,7 +265,7 @@ gst_video_image_draw_rectangle (GstVideoImage * image, gint x, gint y,
     }
   } else {
     h--;
-    image->format->paint_hline (image, x, i, w, c);
+    image->format->paint_hline (image, x, y, w, c);
     for (i = 1; i < h; i++) {
       image->format->paint_hline (image, x, y + i, 1, c);
       image->format->paint_hline (image, x + w - 1, y + i, 1, c);
