@@ -83,6 +83,8 @@ GType			gst_typefactory_get_type	(void);
 GstTypeFactory*		gst_typefactory_new		(GstTypeDefinition *definition);
 
 GstTypeFactory*		gst_typefactory_find		(const gchar *name);
+GList* 			gst_typefactory_get_list 	(void);
+
 
 /* create a new type, or find/merge an existing one */
 guint16			gst_type_register		(GstTypeFactory *factory);

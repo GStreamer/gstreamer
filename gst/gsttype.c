@@ -290,6 +290,18 @@ gst_type_get_list (void)
   return _gst_types;
 }
 
+/**
+ * gst_typefactory_get_list:
+ *
+ * Return a list of all typefactories
+ *
+ * Returns: a list of GstTypeFactories
+ */
+GList*
+gst_typefactory_get_list (void)
+{
+  return _gst_typefactories;
+}
 
 /**
  * gst_typefactory_find:
