@@ -189,25 +189,9 @@ gst_ffmpegdec_connect (GstPad  *pad,
   ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
   ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
 
-  switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
-      /* get size */
-      if (gst_caps_has_property_typed (caps, "width", GST_PROPS_INT_TYPE))
-        gst_caps_get_int (caps, "width", &ffmpegdec->context->width);
-      if (gst_caps_has_property_typed (caps, "height", GST_PROPS_INT_TYPE))
-        gst_caps_get_int (caps, "height", &ffmpegdec->context->height);
-      break;
-
-    case CODEC_TYPE_AUDIO:
-      /* FIXME: does ffmpeg want us to set the sample format
-       * and the rate+channels here?  Or does it provide them
-       * itself? */
-      break;
-
-    default:
-      /* Unsupported */
-      return GST_PAD_LINK_REFUSED;
-  }
+  /* get size and so */
+  gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
+				caps, ffmpegdec->context);
 
   /* we dont send complete frames */
   if (oclass->in_plugin->capabilities & CODEC_CAP_TRUNCATED)
@@ -232,89 +216,29 @@ gst_ffmpegdec_connect (GstPad  *pad,
   return GST_PAD_LINK_OK;
 }
 
-/* innocent hacks */
-#define ALIGN(x) (((x)+alignment)&~alignment)
-
 static int
 gst_ffmpegdec_get_buffer (AVCodecContext *context,
 			  AVFrame        *picture)
 {
   GstBuffer *buf = NULL;
-  gint hor_chr_dec = -1, ver_chr_dec = -1;
-  gint width, height;
-  gint alignment;
   gulong bufsize = 0;
-
-  /* set alignment */
-  if (context->codec_id == CODEC_ID_SVQ1) {
-    alignment = 63;
-  } else {
-    alignment = 15;
-  }
-
-  /* set start size */
-  width = ALIGN (context->width);
-  height = ALIGN (context->height);
 
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
       bufsize = avpicture_get_size (context->pix_fmt,
-				    width, height);
-
-      /* find out whether we are planar or packed */
-      switch (context->pix_fmt) {
-        case PIX_FMT_YUV420P:
-        case PIX_FMT_YUV422P:
-        case PIX_FMT_YUV444P:
-        case PIX_FMT_YUV410P:
-        case PIX_FMT_YUV411P:
-          avcodec_get_chroma_sub_sample (context->pix_fmt,
-					 &hor_chr_dec, &ver_chr_dec);
-          break;
-        case PIX_FMT_YUV422:
-        case PIX_FMT_RGB24:
-        case PIX_FMT_BGR24:
-        case PIX_FMT_RGBA32:
-        case PIX_FMT_RGB565:
-        case PIX_FMT_RGB555:
-          /* not planar */
-          break;
-        default:
-          g_assert (0);
-          break;
-      }
+				    context->width,
+				    context->height);
+      buf = gst_buffer_new_and_alloc (bufsize);
+      avpicture_fill ((AVPicture *) picture, GST_BUFFER_DATA (buf),
+		      context->pix_fmt,
+		      context->width, context->height);
       break;
 
     case CODEC_TYPE_AUDIO:
-      bufsize = AVCODEC_MAX_AUDIO_FRAME_SIZE;
-      break;
-
     default:
       g_assert (0);
       break;
   }
-
-  /* create buffer */
-  buf = gst_buffer_new_and_alloc (bufsize);
-
-  /* set up planes */
-  picture->data[0] = GST_BUFFER_DATA (buf);
-  if (hor_chr_dec >= 0 && ver_chr_dec >= 0) {
-    picture->linesize[0] = width;
-    picture->linesize[1] = width >> hor_chr_dec;
-    picture->linesize[2] = width >> hor_chr_dec;
-
-    picture->data[1] = picture->data[0] + (width * height);
-    picture->data[2] = picture->data[1] +
-			 ((width * height) >> (ver_chr_dec + hor_chr_dec));
-  } else {
-    picture->linesize[0] = GST_BUFFER_MAXSIZE (buf) / height;
-    picture->linesize[1] = picture->linesize[2] = 0;
-
-    picture->data[1] = picture->data[2] = NULL;
-  }
-  picture->linesize[3] = 0;
-  picture->data[3] = NULL;
 
   /* tell ffmpeg we own this buffer
    *
@@ -343,14 +267,13 @@ gst_ffmpegdec_release_buffer (AVCodecContext *context,
     picture->data[i] = NULL;
     picture->linesize[i] = 0;
   }
-  picture->base[0] = NULL;
 }
 
 static void
 gst_ffmpegdec_chain (GstPad    *pad,
 		     GstBuffer *inbuf)
 {
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *)(gst_pad_get_parent (pad));
   GstFFMpegDecClass *oclass = (GstFFMpegDecClass*)(G_OBJECT_GET_CLASS (ffmpegdec));
   guchar *data;
@@ -374,12 +297,28 @@ gst_ffmpegdec_chain (GstPad    *pad,
 				    ffmpegdec->picture,
 				    &have_data,
 				    data, size);
+        if (have_data) {
+          outbuf = GST_BUFFER (ffmpegdec->picture->base[0]);
+          GST_BUFFER_SIZE (outbuf) = GST_BUFFER_MAXSIZE (outbuf);
+          /* this isn't necessarily true, but it's better than nothing */
+          GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
+        }
         break;
+
       case CODEC_TYPE_AUDIO:
+        outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
         len = avcodec_decode_audio (ffmpegdec->context,
-				    (int16_t *) ffmpegdec->picture->data[0],
+				    (int16_t *) GST_BUFFER_DATA (outbuf),
 				    &have_data,
 				    data, size);
+        if (have_data) {
+          GST_BUFFER_SIZE (outbuf) = have_data;
+          GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
+					   (ffmpegdec->context->channels *
+					    ffmpegdec->context->sample_rate);
+        } else {
+          gst_buffer_unref (outbuf);
+        } 
         break;
       default:
 	g_assert(0);
@@ -406,12 +345,8 @@ gst_ffmpegdec_chain (GstPad    *pad,
         }
       }
 
-      outbuf = GST_BUFFER (ffmpegdec->picture->base[0]);
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
-      if (oclass->in_plugin->type == CODEC_TYPE_AUDIO)
-        GST_BUFFER_SIZE (outbuf) = have_data;
-      else
-        GST_BUFFER_SIZE (outbuf) = GST_BUFFER_MAXSIZE (outbuf);
+
       gst_pad_push (ffmpegdec->srcpad, outbuf);
     } 
 
