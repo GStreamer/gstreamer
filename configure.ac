@@ -323,12 +323,27 @@ dnl These are all libraries used in building plugins
 dnl ================================================
 dnl let's try and sort them alphabetically, shall we ?
 
+echo
+echo
+AC_MSG_NOTICE(Checking for plugin libraries)
+
+dnl *** a52dec ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
+GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
+GST_CHECK_LIBHEADER(A52DEC, a52, a52_init, :, a52dec/a52.h, A52DEC_LIBS="-la52")
+])
+
+dnl *** aalib ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
+GST_CHECK_FEATURE(AALIB, [aasink plugin], aasink, [
+  AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
+], enabled, :, :)
 
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
 GST_CHECK_FEATURE(ALSA, [alsa plugins], gstalsa, [
-  AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
-])
+AM_PATH_ALSA(0.9.0, HAVE_ALSA=yes, HAVE_ALSA=no)
+], enabled, :, :)
 
 dnl *** arts ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTS, true)
@@ -336,7 +351,8 @@ GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
 
 dnl *** artsc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ARTSC, true)
-GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
+GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()],
+)
 
 dnl *** audiofile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
@@ -350,12 +366,17 @@ GST_CHECK_CONFIGPROG(LIBAUDIOFILE, audiofile-config)
 dnl *** avifile ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
-GST_CHECK_FEATURE(AVIFILE, [avifile], FIXME windec winenc wincodec, [
+GST_CHECK_FEATURE(AVIFILE, [avifile], windec winenc, [
 translit(dnm, m, l) AC_SUBST(AVIFILE_LIBS)
 translit(dnm, m, l) AC_SUBST(AVIFILE_CFLAGS)
 GST_CHECK_CONFIGPROG(AVIFILE, avifile-config)
 ])
 
+dnl *** dvdread ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDVDREAD, true)
+GST_CHECK_FEATURE(LIBDVDREAD, [dvdread library], libdvdread, [
+GST_CHECK_LIBHEADER(LIBDVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, LIBDVDREAD_LIBS="-ldvdread")
+])
 
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBESD, true)
@@ -363,6 +384,14 @@ GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
   AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
 ])
 
+dnl *** FLAC ***
+dnl dnl thomas : checking for compile with main instead of actual function,
+dnl dnl since that made autoconf break (for version 2.13)
+dnl translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFLAC, true)
+dnl GST_CHECK_FEATURE(FLACLIB, [FLAC lossless audio], flacenc flacdec, [
+dnl GST_CHECK_LIBHEADER(FLACLIB, FLAC, main, -lm, FLAC/all.h, LIBFLAC_LIBS="-lFLAC")
+dnl ])
+dnl 
 dnl *** Gnome VFS ***
 dnl this check uses the GST_CHECK_CONFIGPROG macro with gnome-config vfs
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
@@ -372,11 +401,101 @@ translit(dnm, m, l) AC_SUBST(GNOME_VFS_CFLAGS)
 GST_CHECK_CONFIGPROG(GNOME_VFS, gnome-config vfs)
 ])
 
+dnl *** gsm ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGSM, true)
+GST_CHECK_FEATURE(LIBGSM, [GSM library], gsmenc gsmdec, [
+GST_CHECK_LIBHEADER(LIBGSM, gsm, gsm_create, , gsm/gsm.h, LIBGSM_LIBS="-lgsm"; LIBGSM_CFLAGS="-DGSM_HEADER_IN_SUBDIR")
+])
+
+dnl *** Hermes ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBHERMES, true)
+GST_CHECK_FEATURE(LIBHERMES, [Hermes library], colorspace, [
+GST_CHECK_LIBHEADER(LIBHERMES, Hermes, Hermes_ConverterInstance, , Hermes/Hermes.h, LIBHERMES_LIBS="-lHermes")
+])
+
+dnl *** lame ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBLAME, true)
+GST_CHECK_FEATURE(LIBLAME, [lame mp3 encoder library], lame, [
+GST_CHECK_LIBHEADER(LIBLAME, mp3lame, lame_init, -lm, lame/lame.h, LIBLAME_LIBS="-lmp3lame")
+])
+
+dnl AC_SUBST(HAVE_LIBLAME)
+
+dnl *** libdv ***
+dnl FIXME : check if those GLIB thingies are ok
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
+GST_CHECK_FEATURE(LIBDV, [dv library], dv, [
+GST_CHECK_LIBHEADER(LIBDV, dv, dv_init, -lm $GLIB_LIBS $GLIB_CFLAGS, libdv/dv.h, LIBDV_LIBS="-ldv")
+])
+dnl FIXME : check if these CPP flags can be dealt with otherwise
+dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
+dnl CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
+dnl AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
+dnl CPPFLAGS="$libdvcheck_save_CPPFLAGS"
+
+dnl *** libjpeg ***
+dnl FIXME: we could use header checks here as well IMO
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBJPEG, true)
+GST_CHECK_FEATURE(LIBJPEG, [libjpeg], jpegenc jpegdec, [
+  AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_LIBJPEG="yes", HAVE_LIBJPEG="no")
+])
+
+dnl *** mad ***
+dnl FIXME: we could use header checks here as well IMO
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMAD, true)
+GST_CHECK_FEATURE(LIBMAD, [mad], mad, [
+AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_LIBMAD="yes")
+])
+
+dnl *** mikmod ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMIKMOD, true)
+GST_CHECK_FEATURE(LIBMIKMOD, [mikmod plugin], mikmod, [
+  AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes, HAVE_LIBMIKMOD=no)
+])
+
+dnl *** mpeg2dec ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
+GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
+  GST_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init,, mpeg2dec/mpeg2.h, MPEG2DEC_LIBS="-lmpeg2")
+])
+
+dnl *** quicktime ***
+dnl FIXME: make this be called openquicktime
+translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
+GST_CHECK_FEATURE(QUICKTIME, [Open Quicktime], quicktime_parser quicktime_decoder quicktime_demux,[
+  GST_CHECK_LIBHEADER(QUICKTIME, openquicktime, quicktime_init,, openquicktime/openquicktime.h, QUICKTIME_LIBS="-lopenquicktime")
+])
+
+dnl *** raw1394 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_RAW1394, true)
+GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
+  GST_CHECK_LIBHEADER(RAW1394, raw1934, raw1934_get_handle,, libraw1394/raw1394.h, RAW1394_LIBS="-raw1394")
+])
+
+dnl *** SDL ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBSDL, true)
+GST_CHECK_FEATURE(LIBSDL, [SDL plugin], sdlvideosink, [
+ AM_PATH_SDL(, HAVE_LIBSDL=yes, HAVE_LIBSDL=no)
+])
+
+dnl *** shout ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBSHOUT, true)
+GST_CHECK_FEATURE(LIBSHOUT, [shout plugin], icecastsend, [
+  GST_CHECK_LIBHEADER(LIBSHOUT, shout, shout_init_connection,, shout/shout.h, LIBSHOUT_LIBS="-lshout")
+])
+
+dnl *** vorbis ***
+dnl AM_PATH_VORBIS only takes two options
+translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
+GST_CHECK_FEATURE(VORBIS, [vorbis plugin], vorbisenc vorbisdec, [
+  AM_PATH_VORBIS(HAVE_VORBIS=yes, HAVE_VORBIS=no)
+])
+
 dnl *** xmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBXMMS, true)
 GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
   AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
-], disabled)
+])
 
 dnl Check for libgdk-pixbuf
 dnl FIXME: not sure that this is still used anywhere.
@@ -500,77 +619,6 @@ AC_CHECK_HEADER(xaudio/decoder.h,
   HAVE_XAUDIO="no",
 )
 
-dnl Check for libmad
-AC_MSG_CHECKING(MAD library)
-AC_CHECK_LIB(mad, mad_decoder_finish,
-  HAVE_LIBMAD=yes
-  AC_DEFINE(HAVE_LIBMAD, 1, [Define if libmad is available]),
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: mad
-)
-  HAVE_LIBMAD=no,
-)
-
-dnl Check for libmikmod
-AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes,
-  AC_MSG_WARN(***** NOTE: These plugins won't be built: mikmod)
-  HAVE_LIBMIKMOD=no
-)
-
-dnl Check for libvorbis
-AM_PATH_VORBIS(HAVE_VORBIS=yes,
-  AC_MSG_WARN(***** NOTE: These plugins won't be built: vorbisdec vorbisenc)
-  HAVE_VORBIS=no
-)
-
-dnl Check for libjpeg
-AC_MSG_CHECKING(libjpeg library)
-AC_CHECK_LIB(jpeg, jpeg_set_defaults,
-  HAVE_LIBJPEG=yes
-  AC_DEFINE(HAVE_LIBJPEG, 1, [Define if libjpeg is available]),
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: jpegdec jpegenc
-)
-  HAVE_LIBJPEG=no,
-)
-
-dnl Check for libHermes
-AC_MSG_CHECKING(Hermes library)
-AC_CHECK_LIB(Hermes, Hermes_ConverterInstance,
-  HAVE_LIBHERMES=yes
-  AC_DEFINE(HAVE_LIBHERMES, 1, [Define if Hermes library is available]),
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: colorspace
-)
-  HAVE_LIBHERMES=no,
-)
-AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
-if test "x$HAVE_LIBHERMES" = "xyes"; then
-  LIBHERMES_LIBADD="-lHermes"
-  AC_SUBST(LIBHERMES_LIBADD)
-fi
-
-dnl Check for libgsm
-AC_MSG_CHECKING(GSM library)
-AC_CHECK_LIB(gsm, gsm_create, HAVE_LIBGSM=yes, HAVE_LIBGSM=no,)
-GSM_CFLAGS=
-GSM_LIBS=-lgsm
-AC_CHECK_HEADER(gsm.h, :, 
-  GSM_CFLAGS="$GSM_CFLAGS -DGSM_HEADER_IN_SUBDIR"
-  AC_CHECK_HEADER(gsm/gsm.h, :, HAVE_LIBGSM=no)
-)
-AC_SUBST(GSM_CFLAGS)
-AC_SUBST(GSM_LIBS)
-
-if test "x$HAVE_LIBGSM" = "xyes"; then
-  AC_DEFINE(HAVE_LIBGSM, 1, [Define if GSM library is available])
-else
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: gsmdec, gsmenc
-)
-fi
-
-dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
 HAVE_CDPARANOIA=yes
 AC_CHECK_LIB(cdda_interface, cdda_open, : , HAVE_CDPARANOIA=no, )
@@ -578,35 +626,8 @@ AC_CHECK_HEADER(cdda_interface.h, :, HAVE_CDPARANOIA=no)
 AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
-dnl Check for liblame
-AC_MSG_CHECKING(LAME library)
-AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, -lm)
-AC_CHECK_HEADER(lame/lame.h, :, HAVE_LIBLAME=no)
-
-dnl Check for libshout
-AC_MSG_CHECKING(Shout library)
-AC_CHECK_LIB(shout, shout_init_connection, HAVE_LIBSHOUT=yes, HAVE_LIBSHOUT=no, )
-AC_CHECK_HEADER(shout/shout.h, :, HAVE_LIBSHOUT=no)
-
-dnl Check for mpeg2dec
-AC_MSG_CHECKING(mpeg2dec library)
-AC_CHECK_LIB(mpeg2, mpeg2_init, HAVE_MPEG2DEC=yes, HAVE_MPEG2DEC=no, )
-AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
-
-dnl Check for a52dec
-AC_MSG_CHECKING(a52dec library)
-AC_CHECK_LIB(a52, a52_init, HAVE_A52DEC=yes, HAVE_A52DEC=no, -lm)
-AC_CHECK_HEADER(a52dec/a52.h, :, HAVE_A52DEC=no)
-
 dnl Check for sidplay
 AC_PATH_LIBSIDPLAY
-
-dnl Check for FLAC
-dnl thomas : checking for compile with main instead of actual function,
-dnl since that made autoconf break (for version 2.13)
-AC_MSG_CHECKING(FLAC library)
-AC_CHECK_LIB(FLAC, main, HAVE_FLACLIB=yes, HAVE_FLACLIB=no, -lm)
-AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLACLIB=no)
 
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
@@ -614,48 +635,6 @@ AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GL
 AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
 AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
 AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
-
-dnl Check for libraw1394
-AC_MSG_CHECKING(raw1394 library)
-AC_CHECK_LIB(raw1394, raw1394_get_handle, HAVE_RAW1394=yes, HAVE_RAW1394=no, )
-AC_CHECK_HEADER(libraw1394/raw1394.h, :, HAVE_RAW1394=no)
-
-dnl Check for libdv
-AC_MSG_CHECKING(libdv)
-AC_CHECK_LIB(dv, dv_init, HAVE_LIBDV=yes, HAVE_LIBDV=no, -lm $GLIB_LIBS $GLIB_CFLAGS)
-libdvcheck_save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
-AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
-CPPFLAGS="$libdvcheck_save_CPPFLAGS"
-
-dnl Check for aalib
-AM_PATH_AALIB( , HAVE_AALIB=yes,
-  AC_MSG_WARN(***** NOTE: These plugins won't be built: aasink)
-  HAVE_AALIB=no
-)
-
-dnl AC_MSG_CHECKING(aalib)
-dnl AC_CHECK_LIB(aa, aa_init, HAVE_AALIB=yes, HAVE_AALIB=no, )
-dnl AC_CHECK_HEADER(aalib.h, :, HAVE_AALIB=no)
-
-dnl Check for quicktime
-AC_MSG_CHECKING(openquicktime)
-AC_CHECK_LIB(openquicktime, quicktime_init, HAVE_LIBOPENQUICKTIME=yes, HAVE_LIBOPENQUICKTIME=no, )
-AC_CHECK_HEADER(openquicktime/openquicktime.h, :, HAVE_LIBOPENQUICKTIME=no)
-
-dnl Check for libdvdread
-AC_MSG_CHECKING(libdvdread)
-AC_CHECK_LIB(dvdread, DVDOpen, HAVE_LIBDVDREAD=yes, HAVE_LIBDVDREAD=no, )
-AC_CHECK_HEADER(dvdread/dvd_reader.h, :, HAVE_LIBDVDREAD=no)
-
-dnl Check for SDL library
-AM_PATH_SDL( , , HAVE_LIBSDL=no)
-
-if test "x$HAVE_LIBSDL" = "xno"; then
-  AC_MSG_WARN(
-***** NOTE: These plugins won't be built: sdlvideosink
-)
-fi
 
 
 dnl Check for linux/cdrom.h
@@ -1274,5 +1253,7 @@ chmod +x gstreamer-config
 echo "$infomessages", infomessages="$infomessages"
 )
 
-echo -e "configure: *** Plugins that will be built : \n$GST_PLUGINS_YES"
-echo -e "configure: *** Plugins that will not be built : \n$GST_PLUGINS_NO"
+echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
+echo
+echo -e "configure: *** Plugins that will not be built : $GST_PLUGINS_NO"
+echo
