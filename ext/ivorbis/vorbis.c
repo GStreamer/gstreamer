@@ -23,97 +23,31 @@
 #include <tremor/ivorbisfile.h>
 #include <gst/bytestream/bytestream.h>
 
+#include <config.h>
+
 extern GType ivorbisfile_get_type(void);
 
-extern GstElementDetails ivorbisfile_details;
-
-GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template; 
-
-static GstCaps*
-vorbis_caps_factory (void)
-{
-  return
-   gst_caps_new (
-  	"tremor_tremor",
-  	"application/ogg",
-  	NULL);
-}
-
-static GstCaps*
-raw_caps_factory (void)
-{
-  return
-   gst_caps_new (
-  	"tremor_raw",
-  	"audio/x-raw-int",
-	gst_props_new (
-    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
-    	    "width", 		GST_PROPS_INT (16),
-    	    "depth",    	GST_PROPS_INT (16),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL));
-}
-
-static GstCaps*
-raw_caps2_factory (void)
-{
-  return
-   gst_caps_new (
-  	"tremor_raw_float",
-  	"audio/x-raw-float",
-	gst_props_new (
-    	    "depth",		GST_PROPS_INT (32),
-	    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT (2), /* ?? */
-	    NULL));
-}
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *file;
-  GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
-
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  gst_plugin_set_longname (plugin, "The OGG Vorbis Codec");
-
-  raw_caps = raw_caps_factory ();
-  raw_caps2 = raw_caps2_factory ();
-  vorbis_caps = vorbis_caps_factory ();
-
-  /* register sink pads */
-  gst_vorbisdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-		                                      GST_PAD_ALWAYS, 
-					              vorbis_caps, NULL);
-  raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
-  /* register src pads */
-  gst_vorbisdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-		                                     GST_PAD_ALWAYS, 
-					             raw_caps, NULL);
-  /* create an elementfactory for the vorbisfile element */
-  file = gst_element_factory_new ("tremor", ivorbisfile_get_type(),
-                                  &ivorbisfile_details);
-  g_return_val_if_fail(file != NULL, FALSE);
-  gst_element_factory_set_rank (file, GST_ELEMENT_RANK_PRIMARY);
- 
-  /* register sink pads */
-  gst_element_factory_add_pad_template (file, gst_vorbisdec_sink_template);
-  /* register src pads */
-  gst_element_factory_add_pad_template (file, gst_vorbisdec_src_template);
+  if (!gst_element_register (plugin, "tremor", GST_RANK_PRIMARY, ivorbisfile_get_type ()))
+    return FALSE;
   
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (file));
-
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "tremor",
-  plugin_init
-};
+  "OGG Vorbis Tremor plugins element",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)

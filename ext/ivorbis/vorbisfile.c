@@ -72,19 +72,16 @@ struct _IvorbisfileClass {
 
 GType ivorbisfile_get_type (void);
 
-extern GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
+static GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails ivorbisfile_details = 
 {
   "Ogg Vorbis decoder",
   "Codec/Audio/Decoder",
-  "LGPL",
   "Decodes OGG Vorbis audio using the Tremor vorbisfile API",
-  VERSION,
   "Monty <monty@xiph.org>\n" 
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
 };
 
 /* Ivorbisfile signals and args */
@@ -100,6 +97,7 @@ enum
   ARG_STREAMINFO
 };
 
+static void     gst_ivorbisfile_base_init       (gpointer g_class);
 static void
 		gst_ivorbisfile_class_init 	(IvorbisfileClass *klass);
 static void 	gst_ivorbisfile_init 		(Ivorbisfile *ivorbisfile);
@@ -146,6 +144,48 @@ static GstElementClass *parent_class = NULL;
 
 static GstFormat logical_stream_format;
 
+static GstCaps*
+vorbis_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"tremor_tremor",
+  	"application/ogg",
+  	NULL);
+}
+
+static GstCaps*
+raw_caps_factory (void)
+{
+  return
+   gst_caps_new (
+  	"tremor_raw",
+  	"audio/x-raw-int",
+	gst_props_new (
+    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
+    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
+    	    "width", 		GST_PROPS_INT (16),
+    	    "depth",    	GST_PROPS_INT (16),
+    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
+	    NULL));
+}
+
+static GstCaps*
+raw_caps2_factory (void)
+{
+  return
+   gst_caps_new (
+  	"tremor_raw_float",
+  	"audio/x-raw-float",
+	gst_props_new (
+    	    "depth",		GST_PROPS_INT (32),
+	    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
+    	    "channels", 	GST_PROPS_INT (2), /* ?? */
+	    NULL));
+}
+
 GType
 ivorbisfile_get_type (void)
 {
@@ -153,7 +193,9 @@ ivorbisfile_get_type (void)
 
   if (!ivorbisfile_type) {
     static const GTypeInfo ivorbisfile_info = {
-      sizeof (IvorbisfileClass), NULL, NULL,
+      sizeof (IvorbisfileClass),
+      gst_ivorbisfile_base_init,
+      NULL,
       (GClassInitFunc) gst_ivorbisfile_class_init, NULL, NULL,
       sizeof (Ivorbisfile), 0,
       (GInstanceInitFunc) gst_ivorbisfile_init,
@@ -165,6 +207,30 @@ ivorbisfile_get_type (void)
     logical_stream_format = gst_format_register ("logical_stream", "The logical stream");
   }
   return ivorbisfile_type;
+}
+
+static void
+gst_ivorbisfile_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *raw_caps, *vorbis_caps, *raw_caps2;
+
+  raw_caps = raw_caps_factory ();
+  raw_caps2 = raw_caps2_factory ();
+  vorbis_caps = vorbis_caps_factory ();
+
+  /* register sink pads */
+  gst_vorbisdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+		                                      GST_PAD_ALWAYS, 
+					              vorbis_caps, NULL);
+  raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
+  /* register src pads */
+  gst_vorbisdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+		                                     GST_PAD_ALWAYS, 
+					             raw_caps, NULL);
+  gst_element_class_add_pad_template (element_class, gst_vorbisdec_sink_template);
+  gst_element_class_add_pad_template (element_class, gst_vorbisdec_src_template);
+  gst_element_class_set_details (element_class, &ivorbisfile_details);
 }
 
 static void
@@ -585,7 +651,7 @@ gst_ivorbisfile_loop (GstElement *element)
     /* if the pad is not usable, don't push it out */
     if (GST_PAD_IS_USABLE (ivorbisfile->srcpad)) {
       gst_pad_push (ivorbisfile->srcpad, 
-		    GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+		    GST_DATA (gst_event_new (GST_EVENT_EOS)));
     }
     gst_element_set_eos (element);
     return;
