@@ -39,7 +39,6 @@ GstElementDetails gst_pipeline_details = {
   "(C) 1999",
 };
 
-
 /* Pipeline signals and args */
 enum {
   /* FILL ME */
@@ -209,6 +208,9 @@ gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
         connected = TRUE;
         break;
       }
+      else {
+	GST_DEBUG (0,"pads incompatible %s, %s\n", gst_pad_get_name (pad), gst_pad_get_name (sinkpad));
+      }
     }
     sinkpads = g_list_next(sinkpads);
   }
@@ -311,6 +313,7 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
   GstCaps *src_caps = 0;
   guint i, numsinks;
   gboolean use_thread = FALSE, have_common = FALSE;
+  GList *sinkstart;
 
   g_return_val_if_fail(pipeline != NULL, FALSE);
   g_return_val_if_fail(GST_IS_PIPELINE(pipeline), FALSE);
@@ -344,6 +347,8 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
 
   elements = pipeline->sinks;
 
+  sinkstart = g_list_copy (elements);
+
   numsinks = g_list_length(elements);
   factories = g_new0(GList *, numsinks);
   base_factories = g_new0(GList *, numsinks);
@@ -359,8 +364,12 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
 
     base_factories[i] = factories[i] = gst_autoplug_caps_list (g_list_append(NULL,src_caps), pad->caps);
     // if we have a succesfull connection, proceed
-    if (factories[i] != NULL)
+    if (factories[i] != NULL) {
       i++;
+    }
+    else {
+      sinkstart = g_list_remove (sinkstart, element);
+    }
 
     elements = g_list_next(elements);
   }
@@ -394,7 +403,7 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
 
 differ:
   // loop over all the sink elements
-  elements = pipeline->sinks;
+  elements = sinkstart;
 
   i = 0;
   while (elements) {
