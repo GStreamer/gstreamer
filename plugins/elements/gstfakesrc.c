@@ -112,7 +112,6 @@ gst_fakesrc_data_get_type (void)
   static GEnumValue fakesrc_data[] = {
     { FAKESRC_DATA_ALLOCATE, 		"1", "Allocate data"},
     { FAKESRC_DATA_SUBBUFFER, 		"2", "Subbuffer data"},
-    { FAKESRC_DATA_BUFFERPOOL, 		"3", "Use the default buffer pool (forces sizetype=2)"},
     {0, NULL, NULL},
   };
   if (!fakesrc_data_type) {
@@ -488,19 +487,6 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
           src->parent = NULL;
         }
       }
-      
-      if (src->data == FAKESRC_DATA_BUFFERPOOL) {
-        if (src->sizetype != FAKESRC_SIZETYPE_FIXED)
-          g_object_set (src, "sizetype", FAKESRC_SIZETYPE_FIXED, NULL);
-        
-        if (!src->pool) 
-          src->pool = gst_buffer_pool_get_default (src->sizemax, 10);
-      } else {
-        if (src->pool) {
-          gst_buffer_pool_unref (src->pool);
-          src->pool = NULL;
-        }
-      }
       break;
     case ARG_SIZETYPE:
       src->sizetype = g_value_get_enum (value);
@@ -728,10 +714,6 @@ gst_fakesrc_create_buffer (GstFakeSrc *src)
       }
       gst_fakesrc_prepare_buffer (src, buf);
       break;
-    case FAKESRC_DATA_BUFFERPOOL:
-      buf = gst_buffer_new_from_pool (src->pool, 0, 0);
-      gst_fakesrc_prepare_buffer (src, buf);
-      break;
     default:
       g_warning ("fakesrc: dunno how to allocate buffers !");
       buf = gst_buffer_new();
@@ -868,10 +850,6 @@ gst_fakesrc_change_state (GstElement *element)
       if (fakesrc->parent) {
         gst_buffer_unref (fakesrc->parent);
         fakesrc->parent = NULL;
-      }
-      if (fakesrc->pool) {
-        gst_buffer_pool_unref (fakesrc->pool);
-        fakesrc->pool = NULL;
       }
       g_free (fakesrc->last_message);
       fakesrc->last_message = NULL;

@@ -216,7 +216,6 @@ gst_real_pad_init (GstRealPad *pad)
   pad->chainhandler = NULL;
   pad->gethandler = NULL;
 
-  pad->bufferpoolfunc = NULL;
   pad->ghostpads = NULL;
   pad->caps = NULL;
 
@@ -824,25 +823,26 @@ gst_pad_set_getcaps_function (GstPad *pad,
   GST_CAT_DEBUG (GST_CAT_PADS, "getcapsfunc for %s:%s set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (getcaps));
 }
+
 /**
- * gst_pad_set_bufferpool_function:
- * @pad: a #GstPad to set the bufferpool function for.
- * @bufpool: the #GstPadBufferPoolFunction to set.
+ * gst_pad_set_bufferalloc_function:
+ * @pad: a #GstPad to set the bufferalloc function for.
+ * @bufalloc: the #GstPadBufferPoolFunction to set.
  *
- * Sets the given bufferpool function for the pad. Note that the
- * bufferpool function can only be set on sinkpads.
+ * Sets the given bufferalloc function for the pad. Note that the
+ * bufferalloc function can only be set on sinkpads.
  */
 void
-gst_pad_set_bufferpool_function (GstPad *pad,
-		                 GstPadBufferPoolFunction bufpool)
+gst_pad_set_bufferalloc_function (GstPad *pad,
+		                 GstPadBufferAllocFunction bufalloc)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
   g_return_if_fail (GST_PAD_IS_SINK (pad));
 
-  GST_RPAD_BUFFERPOOLFUNC (pad) = bufpool;
-  GST_CAT_DEBUG (GST_CAT_PADS, "bufferpoolfunc for %s:%s set to %s",
-             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (bufpool));
+  GST_RPAD_BUFFERALLOCFUNC (pad) = bufalloc;
+  GST_CAT_DEBUG (GST_CAT_PADS, "bufferallocfunc for %s:%s set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (bufalloc));
 }
 
 /**
@@ -2214,16 +2214,16 @@ gst_pad_recover_caps_error (GstPad *pad, const GstCaps2 *allowed)
 }
 
 /**
- * gst_pad_get_bufferpool:
- * @pad: a #GstPad to get the bufferpool from.
+ * gst_pad_alloc_buffer:
+ * @pad: a #GstPad to get the buffer from.
  *
- * Gets the bufferpool of the peer pad of the given pad.Note that
- * a bufferpool can only be obtained from a srcpad.
+ * Allocates a new, empty buffer optimized to push to pad #pad.  This
+ * function only works if #pad is a src pad.
  *
- * Returns: the #GstBufferPool, or NULL in case of an error.
+ * Returns: a new, empty #GstBuffer, or NULL if there is an error
  */
-GstBufferPool*          
-gst_pad_get_bufferpool (GstPad *pad)
+GstBuffer*          
+gst_pad_alloc_buffer (GstPad *pad, guint64 offset, gint size)
 {
   GstRealPad *peer;
 
@@ -2236,18 +2236,17 @@ gst_pad_get_bufferpool (GstPad *pad)
   if (!peer)
     return NULL;
 
-  GST_CAT_DEBUG (GST_CAT_BUFFER, "(%s:%s): getting bufferpool", GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG (GST_CAT_BUFFER, "(%s:%s): getting buffer",
+      GST_DEBUG_PAD_NAME (pad));
 
-  if (peer->bufferpoolfunc) {
+  if (peer->bufferallocfunc) {
     GST_CAT_DEBUG (GST_CAT_PADS, 
-	       "calling bufferpoolfunc &%s (@%p) of peer pad %s:%s",
-               GST_DEBUG_FUNCPTR_NAME (peer->bufferpoolfunc), 
-	       &peer->bufferpoolfunc, GST_DEBUG_PAD_NAME (((GstPad*) peer)));
-    return (peer->bufferpoolfunc) (((GstPad*) peer));
+	       "calling bufferallocfunc &%s (@%p) of peer pad %s:%s",
+               GST_DEBUG_FUNCPTR_NAME (peer->bufferallocfunc), 
+	       &peer->bufferallocfunc, GST_DEBUG_PAD_NAME (((GstPad*) peer)));
+    return (peer->bufferallocfunc) (GST_PAD (peer), offset, size);
   } else {
-    GST_CAT_DEBUG (GST_CAT_PADS, "no bufferpoolfunc for peer pad %s:%s at %p",
-	       GST_DEBUG_PAD_NAME (((GstPad*) peer)), &peer->bufferpoolfunc);
-    return NULL;
+    return gst_buffer_new_and_alloc(size);
   }
 }
 

@@ -170,16 +170,6 @@ gst_shaper_class_init (GstShaperClass *klass)
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (gst_shaper_request_new_pad);
 }
 
-static GstBufferPool*
-gst_shaper_get_bufferpool (GstPad *pad)
-{
-  GstShaperConnection *connection;
-
-  connection = gst_pad_get_element_private (pad);
-
-  return gst_pad_get_bufferpool (connection->srcpad);
-}
-
 static GstCaps2*
 gst_shaper_getcaps (GstPad *pad)
 {
@@ -236,7 +226,6 @@ gst_shaper_create_connection (GstShaper *shaper)
   connection->sinkpad = gst_pad_new_from_template (
       gst_static_pad_template_get (&shaper_sink_template), padname);
   g_free (padname);
-  gst_pad_set_bufferpool_function (connection->sinkpad, gst_shaper_get_bufferpool);
   gst_pad_set_getcaps_function (connection->sinkpad, gst_shaper_getcaps);
   gst_pad_set_internal_link_function (connection->sinkpad, gst_shaper_get_internal_link);
   gst_pad_set_link_function (connection->sinkpad, gst_shaper_link);

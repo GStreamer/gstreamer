@@ -663,9 +663,9 @@ print_element_info (GstElementFactory *factory)
         PUT_STRING (4, "<intlink-function function=\"%s\"/>",
                 GST_DEBUG_FUNCPTR_NAME(realpad->intlinkfunc));
 
-      if (realpad->bufferpoolfunc)
-        PUT_STRING (4, "<bufferpool-function function=\"%s\"/>",
-                GST_DEBUG_FUNCPTR_NAME(realpad->bufferpoolfunc));
+      if (realpad->bufferallocfunc)
+        PUT_STRING (4, "<bufferalloc-function function=\"%s\"/>",
+                GST_DEBUG_FUNCPTR_NAME(realpad->bufferallocfunc));
       PUT_END_TAG (3, "implementation");
 
       if (realpad->caps) {

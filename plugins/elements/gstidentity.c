@@ -152,16 +152,6 @@ gst_identity_class_init (GstIdentityClass *klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 }
 
-static GstBufferPool*
-gst_identity_get_bufferpool (GstPad *pad)
-{
-  GstIdentity *identity;
-
-  identity = GST_IDENTITY (gst_pad_get_parent (pad));
-
-  return gst_pad_get_bufferpool (identity->srcpad);
-}
-
 static GstCaps2*
 gst_identity_getcaps (GstPad *pad)
 {
@@ -216,7 +206,6 @@ gst_identity_init (GstIdentity *identity)
   identity->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
   gst_pad_set_chain_function (identity->sinkpad, GST_DEBUG_FUNCPTR (gst_identity_chain));
-  gst_pad_set_bufferpool_function (identity->sinkpad, gst_identity_get_bufferpool);
   gst_pad_set_link_function (identity->sinkpad, gst_identity_link);
   gst_pad_set_getcaps_function (identity->sinkpad, gst_identity_getcaps);
   

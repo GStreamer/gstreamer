@@ -1211,7 +1211,7 @@ gst_element_class_add_pad_template (GstElementClass *klass,
  * <note>This function is for use in _base_init functions only.</note>
  */
 void                    
-gst_element_class_set_details (GstElementClass *klass, GstElementDetails *details)
+gst_element_class_set_details (GstElementClass *klass, const GstElementDetails *details)
 {
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (GST_IS_ELEMENT_DETAILS (details));

@@ -133,16 +133,6 @@ gst_spider_identity_class_init (GstSpiderIdentityClass *klass)
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_identity_request_new_pad);
 }
 
-static GstBufferPool*
-gst_spider_identity_get_bufferpool (GstPad *pad)
-{
-  GstSpiderIdentity *ident;
-
-  ident = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
-
-  return gst_pad_get_bufferpool (ident->src);
-}
-
 static void 
 gst_spider_identity_init (GstSpiderIdentity *ident) 
 {
@@ -152,7 +142,6 @@ gst_spider_identity_init (GstSpiderIdentity *ident)
   gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
   gst_pad_set_link_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
   gst_pad_set_getcaps_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
-  gst_pad_set_bufferpool_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_get_bufferpool));
   /* src */
   ident->src = gst_pad_new_from_template (
       gst_static_pad_template_get (&spider_src_factory), "src");
@@ -292,7 +281,6 @@ gst_spider_identity_request_new_pad  (GstElement *element, GstPadTemplate *templ
       gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
       gst_pad_set_link_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_link));
       gst_pad_set_getcaps_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
-      gst_pad_set_bufferpool_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_get_bufferpool));
       return ident->sink;
     case GST_PAD_SRC:
       /* src */

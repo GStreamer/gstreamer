@@ -122,7 +122,7 @@ typedef GstPadLinkReturn	(*GstPadLinkFunction) 		(GstPad *pad, const GstCaps2 *c
 typedef void			(*GstPadUnlinkFunction) 	(GstPad *pad);
 typedef GstCaps2*		(*GstPadGetCapsFunction) 	(GstPad *pad);
 typedef GstCaps2*		(*GstPadFixateFunction) 	(GstPad *pad, const GstCaps2 *caps, gpointer user_data);
-typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
+typedef GstBuffer*		(*GstPadBufferAllocFunction) 	(GstPad *pad, guint64 offset, guint size);
 
 typedef gboolean 		(*GstPadDispatcherFunction) 	(GstPad *pad, gpointer data);
 
@@ -191,7 +191,7 @@ struct _GstRealPad {
   GstPadQueryTypeFunction	 querytypefunc;
   GstPadIntLinkFunction		 intlinkfunc;
 
-  GstPadBufferPoolFunction 	 bufferpoolfunc;
+  GstPadBufferAllocFunction        bufferallocfunc;
 
   GstProbeDispatcher 		 probedisp;
 
@@ -254,7 +254,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_UNLINKFUNC(pad)	(((GstRealPad *)(pad))->unlinkfunc)
 #define GST_RPAD_GETCAPSFUNC(pad)	(((GstRealPad *)(pad))->getcapsfunc)
 #define GST_RPAD_FIXATEFUNC(pad)	(((GstRealPad *)(pad))->fixatefunc)
-#define GST_RPAD_BUFFERPOOLFUNC(pad)	(((GstRealPad *)(pad))->bufferpoolfunc)
+#define GST_RPAD_BUFFERALLOCFUNC(pad)	(((GstRealPad *)(pad))->bufferallocfunc)
 
 /* GstGhostPad */
 #define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
@@ -369,8 +369,8 @@ GList*			gst_pad_get_ghost_pad_list		(GstPad *pad);
 
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
-void			gst_pad_set_bufferpool_function		(GstPad *pad, GstPadBufferPoolFunction bufpool);
-GstBufferPool*		gst_pad_get_bufferpool			(GstPad *pad);
+void			gst_pad_set_bufferalloc_function		(GstPad *pad, GstPadBufferAllocFunction bufferalloc);
+GstBuffer*		gst_pad_alloc_buffer			(GstPad *pad, guint64 offset, gint size);
 
 /* data passing setup functions */
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);

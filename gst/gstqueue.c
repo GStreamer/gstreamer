@@ -90,8 +90,6 @@ static GstPadLinkReturn
 static void	gst_queue_chain			(GstPad        *pad,
 						 GstData       *data);
 static GstData *gst_queue_get			(GstPad        *pad);
-static GstBufferPool *
-		gst_queue_get_bufferpool 	(GstPad        *pad);
 	
 static gboolean gst_queue_handle_src_event 	(GstPad        *pad,
 						 GstEvent      *event);
@@ -253,7 +251,6 @@ gst_queue_init (GstQueue *queue)
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_chain));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
-  gst_pad_set_bufferpool_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_get_bufferpool));
   gst_pad_set_link_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_link));
   gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_active (queue->sinkpad, TRUE);
@@ -347,12 +344,6 @@ gst_queue_getcaps (GstPad  *pad)
     return gst_pad_get_caps (otherpad);
 
   return gst_caps2_new_any ();
-}
-
-static GstBufferPool *
-gst_queue_get_bufferpool (GstPad *pad)
-{
-  return gst_pad_get_bufferpool (gst_queue_otherpad (pad));
 }
 
 static void

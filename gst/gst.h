@@ -33,7 +33,6 @@
 
 #include <gst/gstbin.h>
 #include <gst/gstbuffer.h>
-#include <gst/gstbufferpool-default.h>
 #include <gst/gstcaps2.h>
 #include <gst/gstclock.h>
 #include <gst/gstcpu.h>

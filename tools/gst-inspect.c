@@ -558,9 +558,9 @@ print_element_info (GstElementFactory *factory)
         g_print ("      Has custom intconnfunc(): %s\n",
                 GST_DEBUG_FUNCPTR_NAME(realpad->intlinkfunc));
 
-      if (realpad->bufferpoolfunc)
-        g_print ("      Has bufferpoolfunc(): %s\n",
-                GST_DEBUG_FUNCPTR_NAME(realpad->bufferpoolfunc));
+      if (realpad->bufferallocfunc)
+        g_print ("      Has bufferallocfunc(): %s\n",
+                GST_DEBUG_FUNCPTR_NAME(realpad->bufferallocfunc));
 
       if (pad->padtemplate)
         g_print ("    Pad Template: '%s'\n",

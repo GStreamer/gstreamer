@@ -239,7 +239,7 @@ void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplat
 void                    gst_element_class_install_std_props	(GstElementClass *klass,
 								 const gchar      *first_name, ...);
 void			gst_element_class_set_details		(GstElementClass *klass,
-								 GstElementDetails *details);
+								 const GstElementDetails *details);
 
 #define 		gst_element_default_deep_notify 	gst_object_default_deep_notify
 
