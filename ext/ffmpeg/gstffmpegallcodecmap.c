@@ -514,15 +514,15 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
         case GST_MAKE_FOURCC('x','2','6','3'):
           id = CODEC_ID_H263; /* or H263[IP] */
           break;
-        case GST_MAKE_FOURCC('D','I','V','X'):
         case GST_MAKE_FOURCC('d','i','v','x'):
         case GST_MAKE_FOURCC('D','I','V','3'):
         case GST_MAKE_FOURCC('D','I','V','4'):
         case GST_MAKE_FOURCC('D','I','V','5'):
-        case GST_MAKE_FOURCC('D','X','5','0'):
         case GST_MAKE_FOURCC('M','P','4','3'):
           id = CODEC_ID_MSMPEG4V3;
           break;
+        case GST_MAKE_FOURCC('D','I','V','X'):
+        case GST_MAKE_FOURCC('D','X','5','0'):
         case GST_MAKE_FOURCC('X','V','I','D'):
           id = CODEC_ID_MPEG4;
           break;
