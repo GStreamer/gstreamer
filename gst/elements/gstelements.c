@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 
 #include "gstdisksrc.h"
+#include "gstdisksink.h"
 #include "gstidentity.h"
 #include "gstfakesink.h"
 #include "gstfakesrc.h"
@@ -50,6 +51,7 @@ static struct _elements_entry _elements[] = {
   { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		NULL },
   { "fakesink",     gst_fakesink_get_type, 	&gst_fakesink_details,		NULL },
   { "disksrc", 	    gst_disksrc_get_type, 	&gst_disksrc_details,		NULL },
+  { "disksink",	    gst_disksink_get_type,      &gst_disksink_details, 		NULL },
   { "identity",     gst_identity_get_type,  	&gst_identity_details,		NULL },
   { "fdsink",       gst_fdsink_get_type, 	&gst_fdsink_details,		NULL },
   { "fdsrc", 	    gst_fdsrc_get_type, 	&gst_fdsrc_details,		NULL },
