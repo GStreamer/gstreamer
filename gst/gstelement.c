@@ -2350,7 +2350,7 @@ gst_element_convert (GstElement *element,
 }
 
 /**
- * gst_element_error_printf:
+ * _gst_element_error_printf:
  * @format: the printf-like format to use, or NULL
  *
  * This function is only used internally by the #gst_element_error macro.
@@ -2358,7 +2358,7 @@ gst_element_convert (GstElement *element,
  * Returns: a newly allocated string, or NULL if the format was NULL or ""
  */
 gchar *
-gst_element_error_printf (const gchar *format, ...)
+_gst_element_error_printf (const gchar *format, ...)
 {
   va_list args;
   gchar *buffer;

@@ -1,5 +1,11 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstelement.c: (_gst_element_error_printf):
+	* gst/gstelement.h:
+          privatise function
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/random/error:
           doc explaining error system
 	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
