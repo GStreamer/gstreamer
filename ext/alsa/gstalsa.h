@@ -23,7 +23,7 @@
 
 #include <alsa/asoundlib.h>
 #include <gst/gst.h>
-#include <libs/bytestream/gstbytestream.h>
+#include <gst/bytestream/bytestream.h>
 #include <glib.h>
 
 #define GST_ALSA(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA, GstAlsa)
