@@ -21,6 +21,7 @@ tcS: id1, element, signalname (attach to signal in an element)
 tcS: id2, element, signalname
 ...
 tcI: the number of iterations on the top bin 
+tcT: a timeout value in mSecs
 tcR: id1,1,id2,1,.. (the pattern of signals trigered)
 or 
 tcR: id1==id2,... (denote an equal number of signals)

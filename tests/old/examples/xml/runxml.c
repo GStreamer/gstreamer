@@ -23,7 +23,6 @@ int main(int argc,char *argv[])
 
   bin = gst_xml_get_element(xml, "bin");
   
-  gst_element_set_state(bin, GST_STATE_READY);
   gst_element_set_state(bin, GST_STATE_PLAYING);
 
   playing = TRUE;

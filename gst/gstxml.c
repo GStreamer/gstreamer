@@ -23,6 +23,7 @@
 #include "gst_private.h"
 
 #include "gstxml.h"
+#include "gstbin.h"
 
 
 static void 	gst_xml_class_init		(GstXMLClass *klass);
@@ -175,13 +176,30 @@ GstElement*
 gst_xml_get_element (GstXML *xml, const guchar *name) 
 {
   GstElement *element;
+  GList *topelements;
 
   g_return_val_if_fail(xml != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
   GST_DEBUG (0,"gstxml: getting element \"%s\"\n", name);
 
-  element = g_hash_table_lookup(xml->elements, name);
+  topelements = gst_xml_get_topelements (xml);
 
-  return element;
+  while (topelements) {
+    GstElement *top = GST_ELEMENT (topelements->data);
+
+    if (!strcmp (gst_element_get_name (top), name)) {
+      return top;
+    }
+    else {
+      if (GST_IS_BIN (top)) {
+        element = gst_bin_get_by_name (GST_BIN (top), name);
+
+	if (element) 
+          return element;
+      }
+    }
+    topelements = g_list_next (topelements);
+  }
+  return NULL;
 }

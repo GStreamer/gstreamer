@@ -8,13 +8,13 @@
   <para> 
     A buffer that is sinked to a Queue will not automatically be pushed to the
     next connected element but will be buffered. It will be pushed to the next
-    element as soon as gst_connection_push () is called.
+    element as soon as a gst_pad_pull () is called on the queues srcpad.
   </para>
   <para> 
     Queues are mostly used in conjunction with a <classname>GstThread</classname> to
     provide an external connection for the thread elements. You could have one
     thread feeding buffers into a <classname>GstQueue</classname> and another
-    thread repeadedly calling gst_connection_push () on the queue to feed its 
+    thread repeadedly calling gst_pad_pull () on the queue to feed its 
     internal elements.
   </para>
 
@@ -26,6 +26,110 @@
     <title>a two-threaded decoder with a queue</title>
     <graphic fileref="images/queue" format="png"></graphic>
   </figure>
+
+  <para> 
+    The standard <application>GStreamer</application> queue implementation has some
+    properties that can be changed using the gtk_objet_set () method. To set the 
+    maximum number of buffers that can be queued to 30, do:
+  </para>
+  <programlisting>
+  gtk_object_set (GTK_OBJECT (queue), "max_level", 30, NULL);
+  </programlisting>
+
+  <para> 
+    The following mp3 player shows you how to create the above pipeline using a
+    thread and a queue.
+  </para>
+
+  <programlisting>
+#include &lt;stdlib.h&gt;
+#include &lt;gst/gst.h&gt;
+
+gboolean playing;
+
+/* eos will be called when the src element has an end of stream */
+void 
+eos (GstElement *element, gpointer data) 
+{
+  g_print ("have eos, quitting\n");
+
+  playing = FALSE;
+}
+
+int 
+main (int argc, char *argv[]) 
+{
+  GstElement *disksrc, *audiosink, *queue, *parse, *decode;
+  GstElement *bin;
+  GstElement *thread;
+
+  gst_init (&amp;argc,&amp;argv);
+
+  if (argc != 2) {
+    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    exit (-1);
+  }
+
+  /* create a new thread to hold the elements */
+  thread = gst_thread_new ("thread");
+  g_assert (thread != NULL);
+
+  /* create a new bin to hold the elements */
+  bin = gst_bin_new ("bin");
+  g_assert (bin != NULL);
+
+  /* create a disk reader */
+  disksrc = gst_elementfactory_make ("disksrc", "disk_source");
+  g_assert (disksrc != NULL);
+  gtk_object_set (GTK_OBJECT (disksrc), "location", argv[1], NULL);
+  gtk_signal_connect (GTK_OBJECT (disksrc), "eos",
+                      GTK_SIGNAL_FUNC (eos), thread);
+
+  queue = gst_elementfactory_make ("queue", "queue");
+
+  /* and an audio sink */
+  audiosink = gst_elementfactory_make ("audiosink", "play_audio");
+  g_assert (audiosink != NULL);
+
+  parse = gst_elementfactory_make ("mp3parse", "parse");
+  decode = gst_elementfactory_make ("mpg123", "decode");
+
+  /* add objects to the main bin */
+  gst_bin_add (GST_BIN (bin), disksrc);
+  gst_bin_add (GST_BIN (bin), queue);
+
+  gst_bin_add (GST_BIN (thread), parse);
+  gst_bin_add (GST_BIN (thread), decode);
+  gst_bin_add (GST_BIN (thread), audiosink);
+  
+  gst_pad_connect (gst_element_get_pad (disksrc,"src"),
+                   gst_element_get_pad (queue,"sink"));
+
+  gst_pad_connect (gst_element_get_pad (queue, "src"),
+                   gst_element_get_pad (parse, "sink"));
+  gst_pad_connect (gst_element_get_pad (parse, "src"),
+                   gst_element_get_pad (decode, "sink"));
+  gst_pad_connect (gst_element_get_pad (decode, "src"),
+                   gst_element_get_pad (audiosink, "sink"));
+
+  gst_bin_add (GST_BIN (bin), thread);
+
+  /* make it ready */
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
+  /* start playing */
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+
+  playing = TRUE;
+
+  while (playing) {
+    gst_bin_iterate (GST_BIN (bin));
+  }
+
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+
+  exit (0);
+}
+  </programlisting>
 
 
 

@@ -1,6 +1,178 @@
 <chapter id="cha-xml">
-  <title>XML in GStreamer</title>
+  <title>XML in <application>GStreamer</application></title>
   <para> 
+    <application>GStreamer</application> uses XML to store and load
+    its pipeline definitions. XML is also used internally to manage the
+    plugin registry. The plugin registry is a file that contains the definition
+    of all the plugins <application>GStreamer</application> knows about to have 
+    quick access to the specifics of the plugins.
   </para>
+
+  <para>
+    We will show you how you can save a pipeline to XML and how you can reload that
+    XML file again for later use. 
+  </para>
+  
+  <sect1 id="sec-xml-write">
+    <title>Turning GstElements into XML</title>
+
+    <para>
+      We create a simple pipeline and save it to disk with gst_xml_write (). The following
+      code constructs an mp3 player pipeline with two threads and finaly writes it to disk.
+      use this program with one argument: the mp3 file on disk.
+    </para>
+
+    <programlisting>
+#include &lt;stdlib.h&gt;
+#include &lt;gst/gst.h&gt;
+
+gboolean playing;
+
+int 
+main (int argc, char *argv[]) 
+{
+  GstElement *disksrc, *audiosink, *queue, *queue2, *parse, *decode;
+  GstElement *bin;
+  GstElement *thread, *thread2;
+
+  gst_init (&amp;argc,&amp;argv);
+
+  if (argc != 2) {
+    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    exit (-1);
+  }
+
+  /* create a new thread to hold the elements */
+  thread = gst_elementfactory_make ("thread", "thread");
+  g_assert (thread != NULL);
+  thread2 = gst_elementfactory_make ("thread", "thread2");
+  g_assert (thread2 != NULL);
+
+  /* create a new bin to hold the elements */
+  bin = gst_bin_new ("bin");
+  g_assert (bin != NULL);
+
+  /* create a disk reader */
+  disksrc = gst_elementfactory_make ("disksrc", "disk_source");
+  g_assert (disksrc != NULL);
+  gtk_object_set (GTK_OBJECT (disksrc), "location", argv[1], NULL);
+
+  queue = gst_elementfactory_make ("queue", "queue");
+  queue2 = gst_elementfactory_make ("queue", "queue2");
+
+  /* and an audio sink */
+  audiosink = gst_elementfactory_make ("audiosink", "play_audio");
+  g_assert (audiosink != NULL);
+
+  parse = gst_elementfactory_make ("mp3parse", "parse");
+  decode = gst_elementfactory_make ("mpg123", "decode");
+
+  /* add objects to the main bin */
+  gst_bin_add (GST_BIN (bin), disksrc);
+  gst_bin_add (GST_BIN (bin), queue);
+
+  gst_bin_add (GST_BIN (thread), parse);
+  gst_bin_add (GST_BIN (thread), decode);
+  gst_bin_add (GST_BIN (thread), queue2);
+
+  gst_bin_add (GST_BIN (thread2), audiosink);
+  
+  gst_pad_connect (gst_element_get_pad (disksrc,"src"),
+                   gst_element_get_pad (queue,"sink"));
+
+  gst_pad_connect (gst_element_get_pad (queue,"src"),
+                   gst_element_get_pad (parse,"sink"));
+  gst_pad_connect (gst_element_get_pad (parse,"src"),
+                   gst_element_get_pad (decode,"sink"));
+  gst_pad_connect (gst_element_get_pad (decode,"src"),
+                   gst_element_get_pad (queue2,"sink"));
+
+  gst_pad_connect (gst_element_get_pad (queue2,"src"),
+                   gst_element_get_pad (audiosink,"sink"));
+
+  gst_bin_add (GST_BIN (bin), thread);
+  gst_bin_add (GST_BIN (bin), thread2);
+
+  // write the bin to disk
+  xmlSaveFile ("xmlTest.gst", gst_xml_write (GST_ELEMENT (bin)));
+
+  exit (0);
+}
+    </programlisting>
+    <para>
+      The most important line is:
+    </para>
+    <programlisting>
+  xmlSaveFile ("xmlTest.gst", gst_xml_write (GST_ELEMENT (bin)));
+    </programlisting>
+    <para>
+      gst_xml_write () will turn the given element into and xmlDocPtr that 
+      can be saved with the xmlSaveFile () function found in the gnome-xml 
+      package. The result is an XML file named xmlTest.gst.
+    </para>
+    <para>
+      The complete element hierarchy will be saved along with the inter element
+      pad connections and the element parameters. Future <application>GStreamer</application>
+      versions will also allow you to store the signals in the XML file.
+    </para>
+  </sect1>
+
+  <sect1 id="sec-xml-load">
+    <title>Loading a GstElement from an XML file</title>
+    <para>
+      A saved XML file can be loade with the gst_xml_new (filename, rootelement).
+      The root element can optionally left NULL. The following code example loads
+      the previously created XML file and runs it.
+    </para>
+    <programlisting>
+#include &lt;stdlib.h&gt;
+#include &lt;gst/gst.h&gt;
+
+gboolean playing;
+
+/* eos will be called when the src element has an end of stream */
+void 
+eos (GstElement *element, gpointer data)
+{
+  g_print ("have eos, quitting\n");
+
+  playing = FALSE;
+}
+
+int 
+main(int argc, char *argv[]) 
+{
+  GstXML *xml;
+  GstElement *bin;
+  GstElement *disk;
+
+  gst_init (&amp;argc, &amp;argv);
+
+  xml = gst_xml_new ("xmlTest.gst", NULL);
+
+  bin = gst_xml_get_element (xml, "bin");
+  
+  gst_element_set_state (bin, GST_STATE_PLAYING);
+
+  playing = TRUE;
+
+  while (playing) {
+    gst_bin_iterate (GST_BIN (bin));
+  }
+
+  gst_element_set_state (bin, GST_STATE_NULL);
+
+  exit (0);
+}
+    </programlisting>
+    <para>
+      gst_xml_get_element (xml, "name") can be used to get a specific element 
+      from the XML file. 
+    </para>
+    <para>
+      gst_xml_get_topelements (xml) can be used to get a list of all toplevel elements
+      in the XML file.
+    </para>
+  </sect1>
 
 </chapter>

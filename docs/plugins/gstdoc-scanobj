@@ -835,7 +835,8 @@ output_widget_pads (FILE *fp, GstElement *element)
     GstPad *pad = (GstPad *)pads->data;
     GstType *type;
 
-    type = gst_type_find_by_id(pad->type);
+    //type = gst_type_find_by_id(pad->type);
+    type = gst_type_find_by_id(1);
 
     fprintf (fp, "<PAD>\n<NAME>%s::%s</NAME>\n",
 	       gtk_type_name(factory->type), pad->name);

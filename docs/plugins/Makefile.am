@@ -15,7 +15,7 @@ LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_srcdir)/gst/libgst.la
 CFLAGS = `gstreamer-config --cflags` -Wall -g
 LDFLAGS = `gstreamer-config --libs` 
 
-EXTRA_DIST=$(DOC_MODULE).types.in
+EXTRA_DIST=$(DOC_MODULE).types.in $(DOC_MODULE)-sections.txt $(DOC_MAIN_SGML_FILE) gstdoc-mkdb gstdoc-mktmpl gstdoc-scanobj
 
 HTML_DIR=$(datadir)/$(DOC_MODULE)/html
 

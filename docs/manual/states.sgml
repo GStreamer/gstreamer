@@ -41,6 +41,55 @@
         <graphic fileref="images/state-diagram" format="png"></graphic>
       </figure>
     </para>
+    <para> 
+      The state of an element can be changed with the following code:
+    </para>
+    <programlisting>
+  GstElement *bin;
+
+  // create a bin, put elements in it and connect them
+  ...
+  gst_element_set_state (bin, GST_STATE_PLAYING);
+  ...
+    </programlisting>
+
+    <para> 
+      You can set the following states to an element:
+    </para>
+    <informaltable pgwide=1 frame="none" role="enum">
+    <tgroup cols="2">
+      <colspec colwidth="2*">
+      <colspec colwidth="8*">
+    <tbody>
+      <row>
+        <entry><literal>GST_STATE_NONE_PENDING</literal></entry>
+        <entry>The element is in the desired state.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_NULL</literal></entry>
+        <entry>Reset the state of an element.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_READY</literal></entry>
+        <entry>will make the element ready to start processing data.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_PLAYING</literal></entry>
+        <entry>means there really is data flowing through the graph.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_PAUSED</literal></entry>
+        <entry>temporary stops the data flow.
+        </entry>
+      </row>
+    </tbody>
+    </tgroup>
+    </informaltable>
+
   </sect1>
 
   <sect1 id="sec-states-null">
