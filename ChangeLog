@@ -1,5 +1,12 @@
 2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_chain):
+	  D'oh, reference the palette data, not the palette structure.
+	  Fixes color distortion in #132341.
+
+2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/videoscale/gstvideoscale.c: (gst_videoscale_link):
 	  PAR can be non-fixed when not provided as argument (#162626).
 
