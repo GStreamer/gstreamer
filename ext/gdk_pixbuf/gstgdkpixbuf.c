@@ -403,7 +403,7 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
   data = gst_type_find_peek (tf, 0, GST_GDK_PIXBUF_TYPE_FIND_SIZE);
   if (data == NULL) return;
 
-  GST_DEBUG ("gst_gdk_pixbuf_type_find");
+  GST_DEBUG ("creating new loader");
 
   pixbuf_loader = gdk_pixbuf_loader_new();
   
@@ -414,15 +414,25 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
 
   if (format != NULL) {
     GstCaps *caps;
-    gchar **mlist = gdk_pixbuf_format_get_mime_types(format);
+    gchar **p;
+    gchar **mlist = gdk_pixbuf_format_get_mime_types (format);
 
-    caps = gst_caps_new_simple (mlist[0], NULL);
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM, caps);
-    gst_caps_free (caps);
+    for (p = mlist; *p; ++p)
+    {
+      GST_DEBUG ("suggesting mime type %s", *p);
+      caps = gst_caps_new_simple (*p, NULL);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM, caps);
+      gst_caps_free (caps);
+    }
     g_strfreev (mlist);
   }
 
+  GST_DEBUG ("closing pixbuf loader, hope it doesn't hang ...");
+  /* librsvg 2.4.x has a bug where it triggers an endless loop in trying
+     to close a gzip that's not an svg; fixed upstream but no good way
+     to work around it */
   gdk_pixbuf_loader_close (pixbuf_loader, NULL);
+  GST_DEBUG ("closed pixbuf loader");
   g_object_unref (G_OBJECT (pixbuf_loader));
 }
 
