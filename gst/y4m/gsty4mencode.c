@@ -26,15 +26,12 @@
 #include <gst/video/video.h>
 #include "gsty4mencode.h"
 
-static GstElementDetails y4mencode_details = {
+static GstElementDetails y4mencode_details = GST_ELEMENT_DETAILS (
   "Y4mEncode",
   "Codec/Video/Encoder",
-  "LGPL",
   "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 
 /* Filter signals and args */
@@ -70,6 +67,7 @@ GST_PAD_TEMPLATE_FACTORY (y4mencode_sink_factory,
   )
 )
 
+static void	gst_y4mencode_base_init		(gpointer g_class);
 static void	gst_y4mencode_class_init	(GstY4mEncodeClass *klass);
 static void	gst_y4mencode_init		(GstY4mEncode *filter);
 
@@ -98,7 +96,7 @@ gst_y4mencode_get_type(void) {
   if (!y4mencode_type) {
     static const GTypeInfo y4mencode_info = {
       sizeof(GstY4mEncodeClass),
-      NULL,
+      gst_y4mencode_base_init,
       NULL,
       (GClassInitFunc)gst_y4mencode_class_init,
       NULL,
@@ -114,6 +112,18 @@ gst_y4mencode_get_type(void) {
   return y4mencode_type;
 }
 
+
+static void
+gst_y4mencode_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (y4mencode_src_factory));
+  gst_element_class_add_pad_template (element_class, 
+		  GST_PAD_TEMPLATE_GET (y4mencode_sink_factory));
+  gst_element_class_set_details (element_class, &y4mencode_details);
+}
 static void
 gst_y4mencode_class_init (GstY4mEncodeClass *klass)
 {
@@ -280,27 +290,20 @@ gst_y4mencode_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  factory = gst_element_factory_new("y4menc",GST_TYPE_Y4MENCODE,
-                                   &y4mencode_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (y4mencode_src_factory));
-  gst_element_factory_add_pad_template (factory, 
-		  GST_PAD_TEMPLATE_GET (y4mencode_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "y4menc", GST_RANK_NONE, GST_TYPE_Y4MENCODE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "y4menc",
-  plugin_init
-};
+  "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
