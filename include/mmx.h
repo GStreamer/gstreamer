@@ -529,7 +529,7 @@ mmx_ok(void)
 #define	pand_r2r(regs, regd) \
 	{ \
 		mmx_m2r(pandn, (mmx_t) -1LL, regd); \
-		mmx_r2r(pandn, regs, regd) \
+		mmx_r2r(pandn, regs, regd); \
 	}
 #define	pand(vars, vard) \
 	{ \
