@@ -51,8 +51,8 @@ enum
 {
   ARG_0,
   ARG_QUALITY,
-  ARG_SMOOTHING,
-  /* FILL ME */
+  ARG_SMOOTHING
+      /* FILL ME */
 };
 
 static void gst_jpegenc_base_init (gpointer g_class);

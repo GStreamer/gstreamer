@@ -47,8 +47,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_METHOD,
-  /* FILL ME */
+  ARG_METHOD
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate gst_pixbufscale_src_template =

@@ -55,7 +55,7 @@ enum
   ARG_PROTOCOL,                 /* Protocol to connect with */
 
   ARG_MOUNT,                    /* mountpoint of stream (icecast only) */
-  ARG_URL,                      /* Url of stream (I'm guessing) */
+  ARG_URL                       /* Url of stream (I'm guessing) */
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

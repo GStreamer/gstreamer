@@ -57,7 +57,7 @@ enum
   ARG_INVERSION,
   ARG_RANDOMVAL,
   ARG_FRAMES_DISPLAYED,
-  ARG_FRAME_TIME,
+  ARG_FRAME_TIME
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

@@ -43,8 +43,8 @@ enum
 
 enum
 {
-  ARG_0,
-  /* FILL ME */
+  ARG_0
+      /* FILL ME */
 };
 
 static void gst_speexenc_base_init (gpointer g_class);

@@ -42,7 +42,7 @@ enum
   ARG_0,
   ARG_CONSECUTIVE,
   ARG_SKIP,
-  ARG_DROP_INCOMPLETE,
+  ARG_DROP_INCOMPLETE
 };
 
 static GstElementDetails gst_dv1394src_details =

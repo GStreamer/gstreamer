@@ -63,8 +63,8 @@ enum
   ARG_0,
   ARG_CLAMP_LUMA,
   ARG_CLAMP_CHROMA,
-  ARG_QUALITY,
-  /* FILL ME */
+  ARG_QUALITY
+      /* FILL ME */
 };
 
 const gint qualities[] = {
@@ -73,7 +73,7 @@ const gint qualities[] = {
   DV_QUALITY_AC_2,
   DV_QUALITY_DC | DV_QUALITY_COLOR,
   DV_QUALITY_AC_1 | DV_QUALITY_COLOR,
-  DV_QUALITY_AC_2 | DV_QUALITY_COLOR,
+  DV_QUALITY_AC_2 | DV_QUALITY_COLOR
 };
 
 #define DV_QUALITY_DEFAULT 5

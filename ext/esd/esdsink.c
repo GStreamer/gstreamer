@@ -52,7 +52,7 @@ enum
   ARG_MUTE,
   ARG_HOST,
   ARG_SYNC,
-  ARG_FALLBACK,
+  ARG_FALLBACK
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",

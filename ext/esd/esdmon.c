@@ -51,7 +51,7 @@ enum
   ARG_CUROFFSET,
   ARG_CHANNELS,
   ARG_RATE,
-  ARG_HOST,
+  ARG_HOST
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",

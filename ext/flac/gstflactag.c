@@ -102,8 +102,8 @@ enum
 
 enum
 {
-  ARG_0,
-  /* FILL ME */
+  ARG_0
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate flac_tag_src_template =
