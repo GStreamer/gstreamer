@@ -369,12 +369,9 @@ gst_videoscale_chain (GstPad *pad, GstData *_data)
 
   g_return_if_fail (size == videoscale->from_buf_size);
 
-  outbuf = gst_buffer_new();
   outbuf = gst_pad_alloc_buffer (videoscale->srcpad,
                                  GST_BUFFER_OFFSET_NONE, videoscale->to_buf_size);
   
-  /*GST_BUFFER_SIZE(outbuf) = videoscale->to_buf_size;*/
-  /*GST_BUFFER_DATA(outbuf) = g_malloc (videoscale->to_buf_size);*/
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
   g_return_if_fail(videoscale->format);
