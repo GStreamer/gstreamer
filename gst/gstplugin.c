@@ -119,17 +119,18 @@ void gst_plugin_load_all() {
 
 /**
  * gst_library_load:
- * @name: name of liabrary to load
+ * @name: name of library to load
  *
- * Load the named liabrary.  Name should be given as
- * &quot;libliabrary.so&quot;.
+ * Load the named library.  Name should be given as
+ * &quot;liblibrary.so&quot;.
  *
- * Returns: whether the liabrary was loaded or not
+ * Returns: whether the library was loaded or not
  */
 gboolean gst_library_load(gchar *name) {
-	// for now this is the same
+  // for now this is the same
   return gst_plugin_load(name);
 }
+
 /**
  * gst_plugin_load:
  * @name: name of plugin to load
