@@ -25,7 +25,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/floatcast/floatcast.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (audio_convert_debug);
@@ -136,20 +135,19 @@ GST_STATIC_PAD_TEMPLATE (
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
   GST_STATIC_CAPS (
-    "audio/x-raw-int, " \
-    "rate = (int) [ 1, MAX ], " \
-    "channels = (int) [ 1, MAX ], " \
-    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-    "width = (int) { 8, 16, 32 }, " \
-    "depth = (int) [ 1, 32 ], " \
-    "signed = (boolean) { true, false }; " 
-
-    "audio/x-raw-float, " \
-    "rate = (int) [ 1, MAX ], "
-    "channels = (int) [ 1, MAX ], "
-    "endianness = (int) BYTE_ORDER, "
-    "width = (int) 32, "
-    "buffer-frames = (int) [ 0, MAX ]"
+    "audio/x-raw-int, "
+      "rate = (int) [ 1, MAX ], "
+      "channels = (int) [ 1, MAX ], "
+      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+      "width = (int) { 8, 16, 32 }, "
+      "depth = (int) [ 1, 32 ], "
+      "signed = (boolean) { true, false }; "
+    "audio/x-raw-float, "
+      "rate = (int) [ 1, MAX ], "
+      "channels = (int) [ 1, MAX ], "
+      "endianness = (int) BYTE_ORDER, "
+      "width = (int) 32, "
+      "buffer-frames = (int) [ 0, MAX ]"
   )
 );
 
@@ -666,8 +664,12 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
     in = (gfloat*)GST_BUFFER_DATA (buf);
     out = (gint32*)GST_BUFFER_DATA (ret);
     /* increment `in' via the for, cause CLAMP duplicates the first arg */
-    for (i = buf->size / sizeof(float); i; i--, in++)
-      *(out++) = (gint32) gst_cast_float(CLAMP (*in, -1.f, 1.f) * 2147483647.0F);
+    for (i = buf->size / sizeof(float); i > 0; i--) {
+      *in *= 2147483647.0f + .5;
+      *out = (gint32) CLAMP ((gint64) *in, -2147483648ll, 2147483647ll);
+      out++;
+      in++;
+    }
   }
 
   gst_buffer_unref (buf);
