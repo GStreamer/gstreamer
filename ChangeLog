@@ -1,3 +1,17 @@
+2004-07-02  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstpad.c: (gst_pad_check_schedulers),
+	(gst_pad_can_link_filtered), (gst_pad_link_filtered),
+	(gst_pad_link_prepare):
+	  check that pads that get linked belong to the same manager. The old
+	  code allowed linking elements before putting them into bins, so it
+	  worked to link them and then put them in different threads, which
+	  lead to weird behaviour.
+	  Since this effectively disallows linking elements before putting
+	  them in a bin, some applications might not work after this and error
+	  out. If these applications are too critical, we might need to revert
+	  that patch. Please test this before the next release...
+
 2004-06-28  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstpad.c: (gst_pad_get_caps):
