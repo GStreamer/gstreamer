@@ -50,6 +50,8 @@ TODO :
            This is needed in order to support newer platforms.
            On Debian install the autotools-dev package to get these.
            Someone please add some more useful info here on how to do this
+  - copy new supporting RPMS to the htdocs/redhat dir in various places,
+    update README, and update symlinks to these packages in the release dir
   - while (IS_PRERELEASE)
     {
       - increase the nano number (starting with 2)
