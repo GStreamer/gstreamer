@@ -58,13 +58,8 @@ struct _GstA52Dec {
   sample_t 	*samples;
   a52_state_t 	*state;
 
-  GstByteStream *bs;
-
-  GstClockTime	last_ts;
-  GstClockTime	current_ts;
-
-  GstClockTime last_timestamp;
-  GstClockTimeDiff last_diff;
+  GstBuffer	*cache;
+  GstClockTime	 time;
 };
 
 struct _GstA52DecClass {

@@ -1,3 +1,15 @@
+2004-12-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_init),
+	(gst_a52dec_handle_event), (gst_a52dec_update_streaminfo),
+	(gst_a52dec_handle_frame), (gst_a52dec_chain),
+	(gst_a52dec_change_state), (plugin_init):
+	* ext/a52dec/gsta52dec.h:
+	  Do something useful with timestamps. Make chain-based (since
+	  there's really no reason to be loopbased).
+	* gst/avi/gstavidemux.c: (gst_avi_demux_process_next_entry):
+	  Update current_byte/frame correctly.
+
 2004-12-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/apetag/apedemux.c: (gst_ape_demux_parse_tags),
