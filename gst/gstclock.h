@@ -128,10 +128,7 @@ struct _GstClock {
   gint64	 max_diff;
 
   /* --- private --- */
-  gboolean 	 accept_discont;	  /* FIXME: REMOVE! */
-  gdouble 	 speed;			  /* FIXME: REMOVE! */
   guint64	 resolution;
-  gboolean 	 active;		  /* FIXME: REMOVE! */
   GList		*entries;
   GMutex	*active_mutex;
   GCond		*active_cond;
@@ -140,9 +137,7 @@ struct _GstClock {
   GstClockTime	 last_event;
   GstClockTime	 max_event_diff;
   
-  /* weird padding here */  
-  guint8	 padding[sizeof(gpointer) * GST_PADDING];
-  /*gpointer _gst_reserved[GST_PADDING];*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstClockClass {

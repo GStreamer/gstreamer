@@ -397,8 +397,6 @@ gst_clock_init (GstClock *clock)
 {
   clock->max_diff = DEFAULT_MAX_DIFF;
 
-  clock->speed = 1.0;
-  clock->active = TRUE;
   clock->start_time = 0;
   clock->last_time = 0;
   clock->entries = NULL;
@@ -436,7 +434,7 @@ gst_clock_set_speed (GstClock *clock, gdouble speed)
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0.0);
 
   GST_WARNING_OBJECT (clock, "called deprecated function");
-  return clock->speed;
+  return 1.0;
 }
 
 /**
@@ -453,7 +451,7 @@ gst_clock_get_speed (GstClock *clock)
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0.0);
 
   GST_WARNING_OBJECT (clock, "called deprecated function");
-  return clock->speed;
+  return 1.0;
 }
 
 /**
