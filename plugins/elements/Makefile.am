@@ -21,9 +21,7 @@ libgstelements_la_SOURCES =	\
 	gstaudiosrc.c		\
 	gstfdsink.c		\
 	gstpipefilter.c		\
-	gstqueue.c		\
 	gsttee.c		\
-	gsttypefind.c		\
 	gstsinesrc.c		\
 	$(GSTHTTPSRC)
 
@@ -39,9 +37,7 @@ noinst_HEADERS =		\
 	gstaudiosrc.h		\
 	gstfdsink.h		\
 	gstpipefilter.h		\
-	gstqueue.h		\
 	gsttee.h		\
-	gsttypefind.h		\
 	gstsinesrc.h
 
 CFLAGS += -O2 -Wall

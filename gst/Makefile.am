@@ -32,10 +32,12 @@ libgst_la_SOURCES =		\
 	gstpipeline.c		\
 	gstplugin.c		\
 	gstprops.c		\
+	gstqueue.c		\
 	gstscheduler.c		\
 	gstthread.c		\
 	gsttrace.c		\
 	gsttype.c		\
+	gsttypefind.c		\
 	gstutils.c		\
 	gstxml.c		\
 	gstparse.c		\
@@ -86,10 +88,12 @@ libgstinclude_HEADERS =		\
 	gstpipeline.h		\
 	gstplugin.h		\
 	gstprops.h		\
+	gstqueue.h		\
 	gstscheduler.h		\
 	gstthread.h		\
 	gsttrace.h		\
 	gsttype.h		\
+	gsttypefind.h		\
 	gstutils.h		\
 	gstparse.h		\
 	gstxml.h

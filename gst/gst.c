@@ -31,6 +31,8 @@
 #include "gstbin.h"
 #include "gstpipeline.h"
 #include "gstthread.h"
+#include "gstqueue.h"
+#include "gsttypefind.h"
 
 
 
@@ -76,6 +78,8 @@ gst_init (int *argc, char **argv[])
   gst_elementfactory_new ("bin", gst_bin_get_type (), &gst_bin_details);
   gst_elementfactory_new ("pipeline", gst_pipeline_get_type (), &gst_pipeline_details);
   gst_elementfactory_new ("thread", gst_thread_get_type (), &gst_thread_details);
+  gst_elementfactory_new ("queue", gst_queue_get_type (), &gst_queue_details);
+  gst_elementfactory_new ("typefind", gst_typefind_get_type (), &gst_typefind_details);
 
   _gst_trace_on = 0;
   if (_gst_trace_on) {

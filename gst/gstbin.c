@@ -29,6 +29,7 @@
 #include "gstscheduler.h"
 
 
+
 GstElementDetails gst_bin_details = { 
   "Generic bin",
   "Bin",
