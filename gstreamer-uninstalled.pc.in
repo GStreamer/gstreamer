@@ -1,14 +1,13 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=
-includedir=
+libdir=${pcfiledir}
+includedir=${pcfiledir}
 toolsdir=${pcfiledir}/tools
 
 Name: GStreamer Uninstalled
 Description: Streaming-media framework, Not Installed
 Version: @VERSION@
 Requires: @GST_PKG_DEPS@@LIBXML_PKG@
-Libs: ${pcfiledir}/gst/libgstreamer.la -L${pcfiledir}/libs/gst/control/
-Cflags: -I${pcfiledir} -I${pcfiledir}/libs -I${pc_top_builddir}/${pcfiledir}/@srcdir@ -I${pc_top_builddir}/${pcfiledir}/@srcdir@/libs @GST_PKG_CFLAGS@
-
+Libs: ${libdir}/gst/libgstreamer.la -L${libdir}/libs/gst/control/
+Cflags: -I${includedir} -I${includedir}/libs -I${pc_top_builddir}/${pcfiledir}/@srcdir@ -I${pc_top_builddir}/${pcfiledir}/@srcdir@/libs @GST_PKG_CFLAGS@
