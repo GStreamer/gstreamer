@@ -157,9 +157,16 @@ if test -z $GST_TOOLS_DIR; then
 fi
 AC_SUBST(GST_TOOLS_DIR)
 
-dnl additional gstcontrol libs
-GST_CONTROL_LIBS=`pkg-config --variable=gstcontrol_libs gstreamer-$GST_MAJORMINOR`
+dnl check for gstreamer-control; uninstalled is selected preferentially
+PKG_CHECK_MODULES(GST_CONTROL, gstreamer-control-$GST_MAJORMINOR >= $GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR.$GST_PLUGINS_VERSION_MICRO,
+  HAVE_GST_CONTROL="yes", HAVE_GST_CONTROL="no")
+
+if test "x$HAVE_GST_CONTROL" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Control Libs found)
+fi
+
 AC_SUBST(GST_CONTROL_LIBS)
+
 
 dnl Set up conditionals for (target) architecture:
 dnl ==============================================
@@ -1015,10 +1022,12 @@ dnl #########################
 
 AC_CONFIG_FILES(
 Makefile
-gstreamer-libs.pc
-gstreamer-libs-uninstalled.pc
-gstreamer-play.pc
-gstreamer-play-uninstalled.pc
+pkgconfig/gstreamer-libs.pc
+pkgconfig/gstreamer-libs-uninstalled.pc
+pkgconfig/gstreamer-play.pc
+pkgconfig/gstreamer-play-uninstalled.pc
+gst-libs/gst/gconf/gstreamer-gconf.pc
+gst-libs/gst/gconf/gstreamer-gconf-uninstalled.pc
 gst-plugins.spec
 gst/Makefile
 gst/ac3parse/Makefile
@@ -1159,6 +1168,7 @@ testsuite/alsa/Makefile
 testsuite/Makefile
 tools/Makefile
 gconf/Makefile
+pkgconfig/Makefile
 )
 AC_OUTPUT
 
