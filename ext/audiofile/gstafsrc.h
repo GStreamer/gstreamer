@@ -35,7 +35,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-//GstElementDetails gst_afsrc_details;
+/*GstElementDetails gst_afsrc_details;*/
 
 
 #define GST_TYPE_AFSRC \
@@ -63,9 +63,9 @@ struct _GstAFSrc {
   GstPad *srcpad;
 
   gchar *filename;
-//  FILE *file;
+/*  FILE *file; */
 
-//  AFfilesetup outfilesetup;
+/*  AFfilesetup outfilesetup; */
   AFfilehandle file;
   int format;
   int channels;
@@ -81,7 +81,7 @@ struct _GstAFSrc {
 
   gulong seq;
   guint64 framestamp;
-  // FIXME : endianness is a little cryptic at this point
+  /* FIXME : endianness is a little cryptic at this point */
   int endianness_data;		/* 4321 or 1234 */
   int endianness_wanted; /* same thing, but what the output format wants */
   int endianness_output; /* what the output endianness will be */
@@ -95,7 +95,7 @@ struct _GstAFSrcClass {
 };
 
 GType gst_afsrc_get_type(void);
-//gboolean gst_afsrc_factory_init (GstElementFactory *factory);
+/*gboolean gst_afsrc_factory_init (GstElementFactory *factory);*/
 
 
 #ifdef __cplusplus

@@ -66,7 +66,7 @@ GST_PADTEMPLATE_FACTORY (afsrc_src_factory,
        			    ),
         "width",            GST_PROPS_INT_RANGE (8, 16),
         "depth",            GST_PROPS_INT_RANGE (8, 16),
-        "rate",             GST_PROPS_INT_RANGE (4000, 48000), //FIXME
+        "rate",             GST_PROPS_INT_RANGE (4000, 48000), /*FIXME*/
         "channels",         GST_PROPS_INT_RANGE (1, 2)
   )
 );
@@ -208,7 +208,7 @@ gst_afsrc_get (GstPad *pad)
   /* calculate frameCount to read based on file info */
 
   frameCount = src->bytes_per_read / (src->channels * src->width / 8);
-//  g_print ("DEBUG: gstafsrc: going to read %ld frames\n", frameCount);
+/*  g_print ("DEBUG: gstafsrc: going to read %ld frames\n", frameCount); */
   readframes = afReadFrames (src->file, AF_DEFAULT_TRACK, GST_BUFFER_DATA (buf),
  	                    frameCount);
   readbytes = readframes * (src->channels * src->width / 8);
@@ -228,7 +228,7 @@ gst_afsrc_get (GstPad *pad)
   printf ("DEBUG: afsrc: timestamp set on output buffer: %f sec\n",
         GST_BUFFER_TIMESTAMP (buf) / 1E9);
 
-//  g_print("DEBUG: gstafsrc: pushed buffer of %ld bytes\n", readbytes);
+/*  g_print("DEBUG: gstafsrc: pushed buffer of %ld bytes\n", readbytes); */
   return buf;
 }
 
@@ -347,14 +347,14 @@ gst_afsrc_open_file (GstAFSrc *src)
   }
   
   /* set caps on src */
-  //FIXME: add all the possible formats, especially float ! */
+  /*FIXME: add all the possible formats, especially float ! */ 
   gst_pad_try_set_caps (src->srcpad, 
 		  GST_CAPS_NEW (
     		    "af_src",
                     "audio/raw",
                       "format",     GST_PROPS_STRING ("int"),
-                      "law",        GST_PROPS_INT (0),              //FIXME
-                      "endianness", GST_PROPS_INT (G_BYTE_ORDER),   //FIXME
+                      "law",        GST_PROPS_INT (0),              /*FIXME */
+                      "endianness", GST_PROPS_INT (G_BYTE_ORDER),   /*FIXME */
                       "signed",     GST_PROPS_BOOLEAN (src->is_signed),
                       "width",      GST_PROPS_INT (src->width),
                       "depth",      GST_PROPS_INT (src->width),
@@ -371,10 +371,10 @@ gst_afsrc_open_file (GstAFSrc *src)
 static void
 gst_afsrc_close_file (GstAFSrc *src)
 {
-//  g_print ("DEBUG: closing srcfile...\n");
+/*  g_print ("DEBUG: closing srcfile...\n"); */
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_AFSRC_OPEN));
-//  g_print ("DEBUG: past flag test\n");
-//  if (fclose (src->file) != 0)
+/*  g_print ("DEBUG: past flag test\n"); */
+/*  if (fclose (src->file) != 0) 	*/
   if (afCloseFile (src->file) != 0)
   {
     g_print ("WARNING: afsrc: oops, error closing !\n");
@@ -394,22 +394,22 @@ gst_afsrc_change_state (GstElement *element)
   /* if going to NULL then close the file */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) 
   {
-//    printf ("DEBUG: afsrc state change: null pending\n");
+/*    printf ("DEBUG: afsrc state change: null pending\n"); */
     if (GST_FLAG_IS_SET (element, GST_AFSRC_OPEN))
     {
-//      g_print ("DEBUG: trying to close the src file\n");
+/*      g_print ("DEBUG: trying to close the src file\n"); */
       gst_afsrc_close_file (GST_AFSRC (element));
     }
   } 
   else if (GST_STATE_PENDING (element) == GST_STATE_READY) 
   {
-//    g_print ("DEBUG: afsrc: ready state pending.  This shouldn't happen at the *end* of a stream\n");
+/*    g_print ("DEBUG: afsrc: ready state pending.  This shouldn't happen at the *end* of a stream\n"); */
     if (!GST_FLAG_IS_SET (element, GST_AFSRC_OPEN)) 
     {
-//      g_print ("DEBUG: GST_AFSRC_OPEN not set\n");
+/*      g_print ("DEBUG: GST_AFSRC_OPEN not set\n"); */
       if (!gst_afsrc_open_file (GST_AFSRC (element)))
       {
-//        g_print ("DEBUG: element tries to open file\n");
+/*        g_print ("DEBUG: element tries to open file\n"); */
         return GST_STATE_FAILURE;
       }
     }

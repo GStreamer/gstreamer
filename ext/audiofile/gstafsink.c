@@ -67,7 +67,7 @@ GST_PADTEMPLATE_FACTORY (afsink_sink_factory,
        			    ),
         "width",            GST_PROPS_INT_RANGE (8, 16),
         "depth",            GST_PROPS_INT_RANGE (8, 16),
-        "rate",             GST_PROPS_INT_RANGE (4000, 48000), //FIXME
+        "rate",             GST_PROPS_INT_RANGE (4000, 48000), /*FIXME*/
         "channels",         GST_PROPS_INT_RANGE (1, 2)
   )
 );
@@ -155,10 +155,10 @@ gst_afsink_class_init (GstAFSinkClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TYPE,
     g_param_spec_enum("type","type","type",
-                      GST_TYPE_AFSINK_TYPES,0,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_AFSINK_TYPES,0,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT_ENDIANNESS,
     g_param_spec_int("endianness","endianness","endianness",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
  
   gst_afsink_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -175,7 +175,7 @@ gst_afsink_class_init (GstAFSinkClass *klass)
 static void 
 gst_afsink_init (GstAFSink *afsink) 
 {
-  // GstPad *pad;   this is now done in the struct
+  /* GstPad *pad;   this is now done in the struct */
 
   afsink->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (afsink_sink_factory), "sink");
@@ -306,7 +306,7 @@ gst_afsink_open_file (GstAFSink *sink)
   
   if (caps == NULL)
   {
-    // FIXME : Please change this to a better warning method !
+    /* FIXME : Please change this to a better warning method ! */
     printf ("WARNING: gstafsink chain : Could not get caps of pad !\n");
   }
   else
@@ -327,7 +327,7 @@ gst_afsink_open_file (GstAFSink *sink)
     sample_format = AF_SAMPFMT_TWOSCOMP;
   else
     sample_format = AF_SAMPFMT_UNSIGNED;
-  // FIXME : this check didn't seem to work, so let the output endianness be set */
+  /* FIXME : this check didn't seem to work, so let the output endianness be set */
   /*
   if (sink->endianness_data == sink->endianness_wanted)
     byte_order = AF_BYTEORDER_LITTLEENDIAN;
@@ -356,7 +356,7 @@ gst_afsink_open_file (GstAFSink *sink)
   } 
 
   afFreeFileSetup (outfilesetup);
-//  afSetVirtualByteOrder (sink->file, AF_DEFAULT_TRACK, byte_order);
+/*  afSetVirtualByteOrder (sink->file, AF_DEFAULT_TRACK, byte_order); */
   
   GST_FLAG_SET (sink, GST_AFSINK_OPEN);
 
@@ -366,10 +366,10 @@ gst_afsink_open_file (GstAFSink *sink)
 static void
 gst_afsink_close_file (GstAFSink *sink)
 {
-//  g_print ("DEBUG: closing sinkfile...\n");
+/*  g_print ("DEBUG: closing sinkfile...\n"); */
   g_return_if_fail (GST_FLAG_IS_SET (sink, GST_AFSINK_OPEN));
-//  g_print ("DEBUG: past flag test\n");
-//  if (fclose (sink->file) != 0)
+/*  g_print ("DEBUG: past flag test\n"); */
+/*  if (fclose (sink->file) != 0) */
   if (afCloseFile (sink->file) != 0)
   {
     g_print ("WARNING: afsink: oops, error closing !\n");
@@ -416,7 +416,7 @@ gst_afsink_chain (GstPad *pad, GstBuffer *buf)
     /* it's not open yet, open it */
     if (!gst_afsink_open_file (afsink))
           g_print ("WARNING: gstafsink: can't open file !\n");
-//        return FALSE;    Can't return value
+/*        return FALSE;    Can't return value */
   }
 
   if (GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN))
@@ -424,7 +424,7 @@ gst_afsink_chain (GstPad *pad, GstBuffer *buf)
     int frameCount = 0;
 
     frameCount = GST_BUFFER_SIZE (buf) / ((afsink->width / 8) * afsink->channels);
- //   g_print ("DEBUG: writing %d frames ", frameCount);
+ /*   g_print ("DEBUG: writing %d frames ", frameCount); */
     ret = afWriteFrames (afsink->file, AF_DEFAULT_TRACK, 
 	                 GST_BUFFER_DATA (buf), frameCount);
     if (ret == AF_BAD_WRITE || ret == AF_BAD_LSEEK)
@@ -446,26 +446,26 @@ gst_afsink_change_state (GstElement *element)
   /* if going to NULL? then close the file */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) 
   {
-//    printf ("DEBUG: afsink state change: null pending\n");
+/*    printf ("DEBUG: afsink state change: null pending\n"); */
     if (GST_FLAG_IS_SET (element, GST_AFSINK_OPEN))
     {
-//      g_print ("DEBUG: trying to close the sink file\n");
+/*      g_print ("DEBUG: trying to close the sink file\n"); */
       gst_afsink_close_file (GST_AFSINK (element));
     }
   } 
 /*
 
   else
-// this has been moved to the chain function, since it's only then that
-// the caps are set and can be known
+/* this has been moved to the chain function, since it's only then that */
+/* the caps are set and can be known */
  {
-//    g_print ("DEBUG: it's not going to null\n");
+/*    g_print ("DEBUG: it's not going to null\n"); */
     if (!GST_FLAG_IS_SET (element, GST_AFSINK_OPEN)) 
     {
-//      g_print ("DEBUG: GST_AFSINK_OPEN not set\n");
+/*      g_print ("DEBUG: GST_AFSINK_OPEN not set\n"); */
       if (!gst_afsink_open_file (GST_AFSINK (element)))
       {
-//        g_print ("DEBUG: element tries to open file\n");
+/*        g_print ("DEBUG: element tries to open file\n"); */
         return GST_STATE_FAILURE;
       }
     }

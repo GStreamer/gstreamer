@@ -35,7 +35,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-//GstElementDetails gst_afsink_details;
+/*GstElementDetails gst_afsink_details;*/
 
 
 #define GST_TYPE_AFSINK \
@@ -63,9 +63,9 @@ struct _GstAFSink {
   GstPad *sinkpad;
 
   gchar *filename;
-//  FILE *file;
+/*  FILE *file; */
 
-//  AFfilesetup outfilesetup;
+/*  AFfilesetup outfilesetup; */
   AFfilehandle file;
   int format;
   int channels;
@@ -75,7 +75,7 @@ struct _GstAFSink {
   int type;				/* type of output, compare to audiofile.h 
   						 * RAW, AIFF, AIFFC, NEXTSND, WAVE
   						 */ 
-  // FIXME : endianness is a little cryptic at this point
+  /* FIXME : endianness is a little cryptic at this point */
   int endianness_data;		/* 4321 or 1234 */
   int endianness_wanted; /* same thing, but what the output format wants */
   int endianness_output; /* what the output endianness will be */
@@ -89,7 +89,7 @@ struct _GstAFSinkClass {
 };
 
 GType gst_afsink_get_type(void);
-//gboolean gst_afsink_factory_init (GstElementFactory *factory);
+/*gboolean gst_afsink_factory_init (GstElementFactory *factory); */
 
 
 #ifdef __cplusplus
