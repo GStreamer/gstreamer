@@ -35,8 +35,10 @@ VCD_DIR=
 endif
 
 if USE_X
-X_DIR=ximage xvideo
+X_DIR=xvideo
+XI_DIR=ximage
 else
+X_DIR=
 X_DIR=
 endif
 
@@ -53,6 +55,6 @@ CDROM_DIR=
 endif
 
 SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(V4L2_DIR) \
-	$(VCD_DIR) $(CDROM_DIR) $(X_DIR) $(XV_DIR)
+	$(VCD_DIR) $(CDROM_DIR) $(X_DIR) $(XI_DIR) $(XV_DIR)
 
-DIST_SUBDIRS=dxr3 oss qcam v4l v4l2 vcd xvideo ximage glsink cdrom
+DIST_SUBDIRS=dxr3 oss qcam v4l v4l2 vcd xvideo ximage xvimage glsink cdrom
