@@ -11,3 +11,4 @@ threadstest-registry.xml
 *.bb
 *.bbg
 *.da
+test_gst_init

@@ -33,3 +33,4 @@ depcomp
 install-sh
 mkinstalldirs
 py-compile
+registry.xml
