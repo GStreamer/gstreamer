@@ -1,3 +1,10 @@
+2005-01-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_class_init)
+	  Use 1/2 a second for default max_discont, as PES streams from DVB
+	  seem to have larger spacings in the SCR. 
+	  Fix a typo.
+
 2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (group_commit):
