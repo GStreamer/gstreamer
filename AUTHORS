@@ -1,4 +1,4 @@
-Erik Walthinsen <omega@cse.ogi.edu>
+Erik Walthinsen <omega@temple-baptist.com>
 Matt Howell <mhowell@users.sourceforge.net>
 Brent Bradburn <bbradburn@users.sourceforge.net>
 Wim Taymans <wim.taymans@chello.be>
@@ -18,3 +18,5 @@ Thomas Nyberg <thomas@codefactory.se>
   - ALSA plugins
 Bastien Nocera <hadess@hadess.net>
   - gnomevfs sink and source
+Christian Fredrik Kalager Schaller <Uraeus@linuxrising.org>
+  - Red Hat packaging and website work
