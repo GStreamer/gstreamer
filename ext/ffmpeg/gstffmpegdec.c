@@ -163,7 +163,7 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_ffmpegdec_dispose;
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -194,11 +194,10 @@ static void
 gst_ffmpegdec_dispose (GObject *object)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
-  /* close old session */
-  if (ffmpegdec->opened) {
-    avcodec_close (ffmpegdec->context);
-    ffmpegdec->opened = FALSE;
-  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+  /* old session should have been closed in element_class->dispose */
+  g_assert (!ffmpegdec->opened);
 
   /* clean up remaining allocated data */
   av_free (ffmpegdec->context);

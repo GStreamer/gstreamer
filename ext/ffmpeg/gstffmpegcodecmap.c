@@ -111,31 +111,31 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
       break;
 
     case CODEC_ID_MP2:
-      caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mp2",
-                                  "audio/mpeg",
-                                    "layer", GST_PROPS_INT (2)
-                                 );
+      caps = GST_CAPS_NEW ("ffmpeg_mp2",
+                           "audio/mpeg",
+			     "layer", GST_PROPS_INT (2)
+                          );
       break;
 
     case CODEC_ID_MP3LAME:
-      caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_mp3",
-                                  "audio/mpeg",
-                                    "layer", GST_PROPS_INT (3)
-                                 );
+      caps = GST_CAPS_NEW ("ffmpeg_mp3",
+                           "audio/mpeg",
+			     "layer", GST_PROPS_INT (3)
+                          );
       break;
 
     case CODEC_ID_VORBIS: /* FIXME? vorbis or ogg? */
-      caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_vorbis",
-		                  "application/ogg",
-			            NULL
-			         );
+      caps = GST_CAPS_NEW ("ffmpeg_vorbis",
+			   "application/ogg",
+			     NULL
+			  );
       break;
       
     case CODEC_ID_AC3:
-      caps = GST_FF_AUD_CAPS_NEW ("ffmpeg_ac3",
-		                  "audio/x-ac3",
-			            NULL
-			         );
+      caps = GST_CAPS_NEW ("ffmpeg_ac3",
+		           "audio/x-ac3",
+			     NULL
+			  );
       break;
 
     case CODEC_ID_MJPEG:
