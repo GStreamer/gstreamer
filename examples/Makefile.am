@@ -1,5 +1,3 @@
-# um, we're lacking an api? gst_element_connect_filtered()
+SUBDIRS=dynparams seeking
 
-SUBDIRS=seeking
-
-DIST_SUBDIRS=capsfilter seeking
+DIST_SUBDIRS=capsfilter dynparams seeking
