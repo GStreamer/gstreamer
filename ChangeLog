@@ -1,3 +1,12 @@
+2005-03-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/gst-uninstalled:
+	  add gst-plugins-base
+	* docs/gst/Makefile.am:
+	  don't error out until docs are fixed
+	* docs/gst/gstreamer.types:
+	  remove thread
+
 2005-03-22  Wim Taymans  <wim@fluendo.com>
 
 	* check/Makefile.am:
