@@ -6,6 +6,10 @@ AS_VERSION(gstreamer, GST_VERSION, 0, 3, 3, 2)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(GST, 0, 0, 0, yes)
 
+dnl we'll move this to a configure option later on which will be turned on
+dnl by autogen
+dnl GST_ERROR="-Wall -Werror"
+
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
 
@@ -342,7 +346,7 @@ GST_LIBS="$GST_EXT_LIBS $XML_LIBS $GLIB_LIBS -lpopt"
 
 dnl Private vars for libgst only
 LIBGST_LIBS="$GST_LIBS"
-LIBGST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir) -Wall -Werror"
+LIBGST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir) $GST_ERROR"
 AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
