@@ -34,6 +34,8 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 
 
 /* error checking for standard alsa functions */
+/* NOTE: these functions require a GObject *this and can only be used in 
+   functions that return TRUE on success and FALSE on error */
 #define SIMPLE_ERROR_CHECK(value) G_STMT_START{ \
   int err = (value); if (err < 0) { return FALSE; } \
 }G_STMT_END
@@ -43,7 +45,7 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 #define ERROR_CHECK(value, ...) G_STMT_START{ \
   int err = (value); \
   if (err < 0) { \
-    g_warning ( __VA_ARGS__, snd_strerror (err)); \
+    GST_WARNING_OBJECT (this, __VA_ARGS__, snd_strerror (err)); \
     return FALSE; \
   } \
 }G_STMT_END
@@ -52,7 +54,7 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 #define ERROR_CHECK(value, args...) G_STMT_START{ \
   int err = (value); \
   if (err < 0) { \
-    g_warning ( ## args, snd_strerror (err)); \
+    GST_WARNING_OBJECT (this, ## args, snd_strerror (err)); \
     return FALSE; \
   } \
 }G_STMT_END
@@ -61,7 +63,7 @@ GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
 #define ERROR_CHECK(value, args...) G_STMT_START{ \
   int err = (value); \
   if (err < 0) { \
-    g_warning (snd_strerror (err)); \
+    GST_WARNING_OBJECT (this, snd_strerror (err)); \
     return FALSE; \
   } \
 }G_STMT_END

@@ -892,8 +892,11 @@ gst_alsa_open_audio (GstAlsa *this)
 
   GST_INFO ( "Opening alsa device \"%s\"...\n", this->device);
 
+#if 0
+  /* enable this to get better debugging */
   ERROR_CHECK (snd_output_stdio_attach (&this->out, stderr, 0),
                "error opening log output: %s");
+#endif
   /* we use non-blocking i/o */
   ERROR_CHECK (snd_pcm_open (&this->handle, this->device, 
                              GST_ALSA_GET_CLASS (this)->stream, SND_PCM_NONBLOCK),
