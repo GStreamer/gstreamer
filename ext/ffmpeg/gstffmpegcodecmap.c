@@ -324,7 +324,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_DVVIDEO:
-      caps = GST_FF_VID_CAPS_NEW ("video/dv", NULL);
+      caps = GST_FF_VID_CAPS_NEW ("video/x-dv", NULL);
       break;
 
     case CODEC_ID_WMAV1:
