@@ -34,7 +34,7 @@
       <listitem>
         <para>
           A thread (<classname>GstThread</classname>). All the elements in the thread bin will 
-	  run in a separate thread. You will haver to use this bin if you carfully have to 
+	  run in a separate thread. You will have to use this bin if you carfully have to 
 	  synchronize audio and video for example. You will learn more about threads in.. <!-- FIXME -->
         </para>
       </listitem>

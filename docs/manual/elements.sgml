@@ -1,8 +1,8 @@
 <chapter id="cha-elements">
   <title>GstElement</title>
   <para> 
-    The most important object in GStreamer for the application programmer is
-    the GstElement object. 
+    The most important object in <application>GStreamer</application> for the 
+    application programmer is the <classname>GstElement</classname> object. 
   </para>
 
   <sect1 id="sec-elements-design">

@@ -1,0 +1,99 @@
+<chapter id="cha-autoplug">
+  <title>Autoplugging</title>
+  <para> 
+    <application>GStreamer</application> provides an API to automatically
+    construct complex pipelinebased on source and destination capabilities.
+    This feature is very usefull if you want to convert type X to type Y but
+    don't care about the plugins needed to accomplish this task. The 
+    autoplugger will consult the plugin repository, select and connect the
+    elements needed for the conversion.
+  </para>
+  <para> 
+    The autoplugger API is implemented in an abstract class. Autoplugger implementations
+    reside in plugins and are therefore optional and can be optimized for a specific
+    task.  Two types of autopluggers exist: renderer ones and non
+    renderer ones. the renderer autopluggers will not have any src pads while the
+    non renderer ones do. The renderer autopluggers are mainly used for media
+    playback while the non renderer ones are used for arbitrary format conversion.
+  </para>
+
+  <sect1>
+    <title>Using autoplugging</title>
+    <para> 
+      You first need to create a suitable autoplugger with gst_autoplugfactory_make().
+      The name of the autoplugger must be one of the registered autopluggers..
+    </para>
+    <para>
+      A list of all available autopluggers can be obtained with gst_autoplugfactory_get_list().
+    </para>
+    <para>
+      If the autoplugger supports the RENDERER API, use gst_autoplug_to_renderers() call to
+      create a bin that connectes the src caps to the specified render elements. You can
+      then add the bin to a pipeline and run it.
+
+      <programlisting>
+
+        GstAutoplug *autoplug;
+	GstElement  *element;
+	GstElement  *sink;
+
+	/* create a static autoplugger */
+	autoplug = gst_autoplugfactory_make ("staticrender");
+
+	/* create an osssink */
+	sink = gst_elementfactory_make ("osssink", "our_sink");
+
+	/* create an element that can play audio/mp3 through osssink */
+	element = gst_autoplug_to_renderers (autoplug,
+	                                     gst_caps_new (
+	                                       "sink_audio_caps",
+	                                       "audio/mp3",
+	                                       NULL
+	                                     ),
+	                                     sink,
+	                                     NULL);
+
+	/* add the element to a bin and connect the sink pad */
+	...
+      </programlisting>
+    </para>
+    <para>
+      If the autoplugger supports the CAPS API, use the gst_autoplug_to_caps() function to
+      connect the src caps to the destination caps. The created bin will have src and sink
+      pads compatible with the provided caps.
+
+      <programlisting>
+
+        GstAutoplug *autoplug;
+	GstElement  *element;
+
+	/* create a static autoplugger */
+	autoplug = gst_autoplugfactory_make ("static");
+
+	/* create an element that converts audio/mp3 to audio/raw */
+	element = gst_autoplug_to_caps (autoplug,
+	                                gst_caps_new (
+	                                  "sink_audio_caps",
+	                                  "audio/mp3",
+	                                  NULL
+	                                ),
+	                                gst_caps_new (
+	                                  "src_audio_caps",
+	                                  "audio/raw",
+	                                  NULL
+	                                ),
+	                                NULL);
+
+	/* add the element to a bin and connect the src/sink pads */
+	...
+      </programlisting>
+    </para>
+  </sect1>
+  <sect1>
+    <title>A complete autoplugging example</title>
+    <para>
+      We will create and explain how a complete media player can be built with the
+      autoplugger.
+    </para>
+  </sect1>
+</chapter>

@@ -27,17 +27,6 @@
 	  will be used to destroy the buffer when no element is having a reference to it.
         </para>
       </listitem>
-      <listitem>
-        <para>
-          A list of metadata that describes the context of the buffers memory. In the case
-	  of audio data, for example, it would provide the samplerate, depth and channel
-	  count.
-        </para>
-        <para>
-	  GStreamer provides a registry where different metadata types can be registered
-	  so that everybody is talking about the same data.
-        </para>
-      </listitem>
     </itemizedlist>
   </para>
 
@@ -65,13 +54,6 @@
     as easy to deal with. An element that works in place has to be carefull when
     the buffer is used in more than one element; a copy on write has to made in this
     situation.
-  </para>
-
-  <para> 
-    Before an element can operate on the buffers memory, is has to check the metadata 
-    attached to it (if any).  An MPEG audio decoder has to ignore a buffer with video
-    metadata (in which case the pipeline is probably constructed by connecting the
-    wrong elements, anyway).
   </para>
 
 </chapter>

@@ -12,6 +12,7 @@
 
 <!ENTITY HELLOWORLD SYSTEM "helloworld.sgml">
 <!ENTITY FACTORIES SYSTEM "factories.sgml">
+<!ENTITY AUTOPLUGGING SYSTEM "autoplugging.sgml">
 <!ENTITY HELLOWORLD2 SYSTEM "helloworld2.sgml">
 
 <!ENTITY THREADS SYSTEM "threads.sgml">
@@ -129,6 +130,8 @@
       &HELLOWORLD;
 
       &FACTORIES;
+
+      &AUTOPLUGGING;
 
       &HELLOWORLD2;
   </part>
