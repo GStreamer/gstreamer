@@ -1,6 +1,6 @@
 2002-03-24  David I. Lehn  <dlehn@vt.edu>
 
-	* examples/gstreamer/: add cp.py oggplay.py f2f.py
+	* examples/gstreamer/: add cp.py oggplay.py f2f.py dvdplay.py
 
 	* gstreamer/gstreamermodule.c: strip GST_ prefix
 
