@@ -1,3 +1,9 @@
+2004-10-13  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mad/gstmad.c: (gst_mad_check_caps_reset), (gst_mad_chain):
+	Decoding the header first fixes some problems in resyncing
+	in more mp3s.
+
 2004-10-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybin.c: (gen_video_element),

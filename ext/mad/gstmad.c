@@ -1183,11 +1183,12 @@ gst_mad_check_caps_reset (GstMad * mad)
         "depth", G_TYPE_INT, 16,
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
 
-    gst_pad_set_explicit_caps (mad->srcpad, caps);
+    if (gst_pad_set_explicit_caps (mad->srcpad, caps)) {
+      mad->caps_set = TRUE;     /* set back to FALSE on discont */
+      mad->channels = nchannels;
+      mad->rate = rate;
+    }
     gst_caps_free (caps);
-    mad->caps_set = TRUE;       /* set back to FALSE on discont */
-    mad->channels = nchannels;
-    mad->rate = rate;
   }
 }
 
@@ -1268,9 +1269,22 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       unsigned char const *before_sync, *after_sync;
 
       mad->in_error = FALSE;
+
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
 
+      /* added separate header decoding to catch errors earlier, also fixes
+       * some weird decoding errors... */
+      GST_LOG ("decoding the header now");
+      if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
+        GST_DEBUG ("mad_frame_decode had an error: %s",
+            mad_stream_errorstr (&mad->stream));
+      }
+
+      GST_LOG ("decoding one frame now");
+
       if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
+        GST_LOG ("got error %d", mad->stream.error);
+
         /* not enough data, need to wait for next buffer? */
         if (mad->stream.error == MAD_ERROR_BUFLEN) {
           GST_LOG ("not enough data in tempbuffer (%d), breaking to get more",
