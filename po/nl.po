@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-03-16 00:32+0100\n"
+"POT-Creation-Date: 2004-03-21 04:09+0100\n"
 "PO-Revision-Date: 2004-02-02 23:08+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -15,17 +15,17 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
+#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kon bestand \"%s\" niet openen voor schrijven."
 
-#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:372
+#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Kon bestand \"%s\" niet sluiten."
 
-#: ext/audiofile/gstafsrc.c:319
+#: ext/audiofile/gstafsrc.c:320
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon bestand \"%s\" niet openen voor lezen."
@@ -34,75 +34,75 @@ msgstr "Kon bestand \"%s\" niet openen voor lezen."
 msgid "Could not open CD device for reading."
 msgstr "Kon CD-apparaat niet openen voor lezen."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1054 ext/gnomevfs/gstgnomevfssrc.c:1077
+#: ext/gnomevfs/gstgnomevfssrc.c:1059 ext/gnomevfs/gstgnomevfssrc.c:1082
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Kon vfs-bestand \"%s\" niet openen voor lezen."
 
-#: ext/gnomevfs/gstgnomevfssink.c:293
+#: ext/gnomevfs/gstgnomevfssink.c:295
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing."
 msgstr "Kon vfs-bestand \"%s\" niet openen voor schrijven."
 
-#: ext/gnomevfs/gstgnomevfssink.c:318
+#: ext/gnomevfs/gstgnomevfssink.c:320
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon vfs-bestand \"%s\" niet sluiten."
 
-#: ext/sndfile/gstsf.c:579
+#: ext/sndfile/gstsf.c:582
 msgid "No filename specified."
 msgstr "Geen bestandsnaam gegeven."
 
-#: ext/sndfile/gstsf.c:832
+#: ext/sndfile/gstsf.c:835
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kon niet schrijven naar bestand \"%s\"."
 
-#: gst/avi/gstavimux.c:1051
+#: gst/avi/gstavimux.c:1052
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geen of foutief invoergeluid, AVI zal corrupt zijn."
 
-#: sys/dxr3/dxr3audiosink.c:297
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Kon audio-apparaat \"%s\" niet openen voor schrijven."
 
-#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Kon controle-apparaat \"%s\" niet openen voor schrijven."
 
-#: sys/dxr3/dxr3audiosink.c:342
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Kon audio-apparaat \"%s\" niet configureren."
 
-#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Kon audio-apparaat \"%s\" niet instellen op %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:421
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Kon audio-apparaat \"%s\" niet sluiten."
 
-#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Kon controle-apparaat \"%s\" niet sluiten."
 
-#: sys/dxr3/dxr3videosink.c:270
+#: sys/dxr3/dxr3videosink.c:271
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr "Kon video-apparaat \"%s\" niet openen voor schrijven."
 
-#: sys/dxr3/dxr3videosink.c:300
+#: sys/dxr3/dxr3videosink.c:301
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr "Kon video-apparaat \"%s\" niet sluiten."
 
-#: sys/dxr3/dxr3videosink.c:452 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kon niet schrijven naar apparaat \"%s\"."
@@ -133,103 +133,103 @@ msgstr "Kon apparaat \"%s\" niet openen voor schrijven."
 msgid "Could not open device \"%s\" for reading."
 msgstr "Kon apparaat \"%s\" niet openen voor lezen."
 
-#: sys/oss/gstossmixer.c:83
+#: sys/oss/gstossmixer.c:85
 msgid "Volume"
 msgstr "Volume"
 
-#: sys/oss/gstossmixer.c:84
+#: sys/oss/gstossmixer.c:87
 msgid "Bass"
 msgstr "Lage Tonen"
 
-#: sys/oss/gstossmixer.c:85
+#: sys/oss/gstossmixer.c:89
 msgid "Treble"
 msgstr "Hoge Tonen"
 
-#: sys/oss/gstossmixer.c:86
+#: sys/oss/gstossmixer.c:91
 msgid "Synth"
 msgstr "Synthesizer"
 
-#: sys/oss/gstossmixer.c:87
+#: sys/oss/gstossmixer.c:93
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss/gstossmixer.c:88
+#: sys/oss/gstossmixer.c:95
 msgid "Speaker"
 msgstr "Luidspreker"
 
-#: sys/oss/gstossmixer.c:89
+#: sys/oss/gstossmixer.c:97
 msgid "Line-in"
 msgstr "Lijningang"
 
-#: sys/oss/gstossmixer.c:90
+#: sys/oss/gstossmixer.c:99
 msgid "Microphone"
 msgstr "Microfoon"
 
-#: sys/oss/gstossmixer.c:91
+#: sys/oss/gstossmixer.c:101
 msgid "CD"
 msgstr "CD"
 
-#: sys/oss/gstossmixer.c:92
+#: sys/oss/gstossmixer.c:103
 msgid "Mixer"
 msgstr "Mixer"
 
-#: sys/oss/gstossmixer.c:93
+#: sys/oss/gstossmixer.c:105
 msgid "PCM-2"
 msgstr "PCM-2"
 
-#: sys/oss/gstossmixer.c:94
+#: sys/oss/gstossmixer.c:107
 msgid "Record"
 msgstr "Opname"
 
-#: sys/oss/gstossmixer.c:95
+#: sys/oss/gstossmixer.c:109
 msgid "In-gain"
 msgstr "Invoer-volume"
 
-#: sys/oss/gstossmixer.c:96
+#: sys/oss/gstossmixer.c:111
 msgid "Out-gain"
 msgstr "Uitvoer-volume"
 
-#: sys/oss/gstossmixer.c:97
+#: sys/oss/gstossmixer.c:113
 msgid "Line-1"
 msgstr "Lijningang 1"
 
-#: sys/oss/gstossmixer.c:98
+#: sys/oss/gstossmixer.c:115
 msgid "Line-2"
 msgstr "Lijningang 2"
 
-#: sys/oss/gstossmixer.c:99
+#: sys/oss/gstossmixer.c:117
 msgid "Line-3"
 msgstr "Lijningang 3"
 
-#: sys/oss/gstossmixer.c:100
+#: sys/oss/gstossmixer.c:119
 msgid "Digital-1"
 msgstr "Digitaal 1"
 
-#: sys/oss/gstossmixer.c:101
+#: sys/oss/gstossmixer.c:121
 msgid "Digital-2"
 msgstr "Digitaal 2"
 
-#: sys/oss/gstossmixer.c:102
+#: sys/oss/gstossmixer.c:123
 msgid "Digital-3"
 msgstr "Digitaal 3"
 
-#: sys/oss/gstossmixer.c:103
+#: sys/oss/gstossmixer.c:125
 msgid "Phone-in"
 msgstr "Telefoon-ingang"
 
-#: sys/oss/gstossmixer.c:104
+#: sys/oss/gstossmixer.c:127
 msgid "Phone-out"
 msgstr "Koptelefoon-uitgang"
 
-#: sys/oss/gstossmixer.c:105
+#: sys/oss/gstossmixer.c:129
 msgid "Video"
 msgstr "Video"
 
-#: sys/oss/gstossmixer.c:106
+#: sys/oss/gstossmixer.c:131
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixer.c:107
+#: sys/oss/gstossmixer.c:133
 msgid "Monitor"
 msgstr "Monitor"
 

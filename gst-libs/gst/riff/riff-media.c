@@ -315,7 +315,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
     default:
       GST_WARNING ("Unkown audio tag 0x%04x", codec_id);
-      break;
+      return NULL;
   }
 
   if (strf != NULL) {
