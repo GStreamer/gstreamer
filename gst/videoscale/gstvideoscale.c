@@ -266,22 +266,27 @@ GST_DEBUG(0,"size=%ld from=%dx%d to=%dx%d newsize=%d",
 	videoscale->targetwidth, videoscale->targetheight,
   	videoscale->targetwidth*videoscale->targetheight + videoscale->targetwidth*videoscale->targetheight/2);
 
-  outbuf = gst_buffer_new();
-  /* XXX this is wrong for anything but I420 */
-  GST_BUFFER_SIZE(outbuf) = videoscale->targetwidth*videoscale->targetheight +
+  if(videoscale->targetwidth==videoscale->width &&
+     videoscale->targetheight==videoscale->height){
+	gst_pad_push(videoscale->srcpad, buf);
+  }else{
+    outbuf = gst_buffer_new();
+    /* XXX this is wrong for anything but I420 */
+    GST_BUFFER_SIZE(outbuf) = videoscale->targetwidth*videoscale->targetheight +
   			    videoscale->targetwidth*videoscale->targetheight/2;
-  GST_BUFFER_DATA(outbuf) = g_malloc (videoscale->targetwidth*videoscale->targetheight*2);
-  GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
+    GST_BUFFER_DATA(outbuf) = g_malloc (videoscale->targetwidth*videoscale->targetheight*2);
+    GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
-  /*g_return_if_fail(videoscale->scale_cc != NULL); */
-  videoscale->scale_cc(videoscale, data, GST_BUFFER_DATA(outbuf));
+    /*g_return_if_fail(videoscale->scale_cc != NULL); */
+    videoscale->scale_cc(videoscale, data, GST_BUFFER_DATA(outbuf));
 
-  GST_DEBUG (0,"gst_videoscale_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
+    GST_DEBUG (0,"gst_videoscale_chain: pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
 		              GST_OBJECT_NAME (videoscale));
 
-  gst_pad_push(videoscale->srcpad, outbuf);
+    gst_pad_push(videoscale->srcpad, outbuf);
 
-  gst_buffer_unref(buf);
+    gst_buffer_unref(buf);
+  }
 }
 
 static void
