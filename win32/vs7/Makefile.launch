@@ -1,0 +1,77 @@
+# Project: libgstreamer
+# Makefile to use with GNU Make
+#
+# Uses the Free Visual C++ 2003 compiler from Microsoft
+# http://msdn.microsoft.com/visualc/vctoolkit2003/
+
+# Compile with debug information ? IMPOSSIBLE with the free version of the compiler
+#DEBUG = yes
+
+# Link with MSVCRT as a DLL ? IMPOSSIBLE with the free version of the compiler
+MSVCRT = yes
+
+SRC_DIR=..\tools
+GLIB_DIR=..\..\glib
+
+#
+# Don't change anything below this line.
+#
+CXX  = cl /Tp
+CC   = cl /Tc
+SRC  = $(SRC_DIR)\gst-launch.obj
+OBJ  = $(patsubst %.c,%.obj,$(SRC))
+INCS = /I. /I.. /I../libs /I../../popt/include /I../../libiconv/include /I../../libxml2/include/libxml2 /I$(GLIB_DIR) /I$(GLIB_DIR)\glib /I$(GLIB_DIR)\gmodule /I$(GLIB_DIR)\build\win32
+LDFLAGS = /NOLOGO /DLL /IMPLIB:gstreamer-0.8.lib /MAP:gst-launch.map /LIBPATH:$(GLIB_DIR)/glib /LIBPATH:$(GLIB_DIR)/gobject /LIBPATH:$(GLIB_DIR)/gmodule /LIBPATH:$(GLIB_DIR)/gthread /LIBPATH:../../popt/lib /LIBPATH:../../libxml2/lib
+OPTMIZ = /G6 /O2 /Oi /Wp64 /GL
+CXXFLAGS = $(INCS) /DWIN32 /D_WINDOWS /DHAVE_CONFIG_H /D_USRDLL /DHAVE_WIN32 /nologo
+
+
+HEADERS = $(SRC_DIR)\gstconfig.h $(SRC_DIR)\gstenumtypes.h $(SRC_DIR)\gstversion.h $(SRC_DIR)\gstenumtypes.c $(SRC_DIR)\gstmarshal.h
+
+ifeq (yes,$(DEBUG))
+
+ifeq (yes,$(MSVCRT))
+ CXXFLAGS += /MDd
+else
+ CXXFLAGS += /MTd
+endif
+CXXFLAGS += /Zi /DDEBUG /D_DEBUG /RTC1
+LDFLAGS += /DEBUG
+
+else
+
+ifeq (yes,$(MSVCRT))
+ CXXFLAGS += /MD
+else
+ CXXFLAGS += /MT
+endif
+CXXFLAGS += /DGST_DISABLE_GST_DEBUG
+LDFLAGS += /OPT:REF
+endif
+
+.PHONY: all all-before all-after clean clean-custom
+
+%.obj : %.cpp
+	$(CXX) $< /c $(CXXFLAGS) /Fo$@
+
+%.obj : %.c
+	$(CC) $< /c $(CXXFLAGS) /Fo$@
+
+all: gst-launch.exe
+
+clean:
+	$(RM) gst-launch.*
+
+gst-launch.exe:
+	$(CC) $(SRC_DIR)\gst-launch.c $(CXXFLAGS) gstreamer-0.8.lib $(GLIB_DIR)/glib/glib-2.0.lib $(GLIB_DIR)/gobject/gobject-2.0.lib
+	
+
+depend:
+	$(CXX) $(CXXFLAGS) -MM $(SRC) > .depend
+
+#
+# include dependency files if they exist
+#
+ifneq ($(wildcard .depend),)
+include .depend
+endif

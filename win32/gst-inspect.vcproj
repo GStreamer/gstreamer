@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="gst-inspect"
-	ProjectGUID="{0CCB8AFC-97D8-4251-9B9D-08E7DC41BB7E}"
+	ProjectGUID="{0CCB8AFC-97D8-4251-9B9D-08E7DC41BB7F}"
 	RootNamespace="gst-inspect"
 	Keyword="Win32Proj">
 	<Platforms>
@@ -20,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;..\;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32"
+				AdditionalIncludeDirectories=".\;..\;..\libs;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GST_DISABLE_GST_DEBUG"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -34,11 +34,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GLib.lib GObject.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib"
 				OutputFile="$(OutDir)/gst-inspect.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\win32\Debug"
+				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject"
 				IgnoreAllDefaultLibraries="FALSE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/gst-inspect.pdb"
@@ -73,7 +73,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=".\;..\;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32"
+				AdditionalIncludeDirectories=".\;..\;..\libs;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GST_DISABLE_GST_DEBUG"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -85,11 +85,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GLib.lib GObject.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib"
 				OutputFile="$(OutDir)/gst-inspect.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\win32\Release"
+				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"

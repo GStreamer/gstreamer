@@ -29,11 +29,27 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <fcntl.h>
+#ifdef _MSC_VER
+#include <sys/utime.h>
+#include <io.h>
+#ifndef F_OK
+#define F_OK 0
+#define W_OK 2
+#define R_OK 4
+#endif
+#ifndef S_ISREG
+#define S_ISREG(mode) ((mode)&_S_IFREG)
+#endif
+#ifndef S_ISDIR
+#define S_ISDIR(mode) ((mode)&_S_IFDIR)
+#endif
+#else /* _MSC_VER */
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <fcntl.h>
 #include <utime.h>
+#endif
 
 #include <gst/gst_private.h>
 #include <gst/gstelement.h>
@@ -302,15 +318,18 @@ get_time (const char *path, gboolean * is_dir)
   return statbuf.st_ctime;
 }
 
-/* same as 0755 */
-#define DIRMODE \
-  (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
+#ifdef _MSC_VER
+#define xmkdir(dirname) _mkdir (dirname)
+#else
+#define xmkdir(dirname) mkdir (dirname, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+#endif
 
 static gboolean
 make_dir (gchar * filename)
 {
   struct stat dirstat;
   gchar *dirname;
+  int ret;
 
   if (strrchr (filename, '/') == NULL)
     return FALSE;
@@ -318,19 +337,16 @@ make_dir (gchar * filename)
   dirname = g_strndup (filename, strrchr (filename, '/') - filename);
 
   if (stat (dirname, &dirstat) == -1 && errno == ENOENT) {
-#ifndef HAVE_WIN32
-    if (mkdir (dirname, DIRMODE) != 0) {
+    if (xmkdir (dirname) != 0) {
       if (make_dir (dirname) != TRUE) {
         g_free (dirname);
         return FALSE;
       } else {
-        if (mkdir (dirname, DIRMODE) != 0)
+        if (xmkdir (dirname) != 0) {
           return FALSE;
+        }
       }
     }
-#else
-    return FALSE;
-#endif
   }
 
   g_free (dirname);

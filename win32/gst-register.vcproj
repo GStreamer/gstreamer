@@ -34,11 +34,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GLib.lib GObject.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib"
 				OutputFile="$(OutDir)/gst-register.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\win32\Debug"
+				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject"
 				IgnoreAllDefaultLibraries="FALSE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/gst-register.pdb"
@@ -85,11 +85,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GLib.lib GObject.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib"
 				OutputFile="$(OutDir)/gst-register.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\win32\Release"
+				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"

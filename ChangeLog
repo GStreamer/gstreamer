@@ -1,3 +1,37 @@
+2004-05-10  David Schleef  <ds@schleef.org>
+
+	* gst/gstinfo.h: Add missing inline function.
+	* gst/gsttrace.c: add include
+	* gst/parse/grammar.y: remove unused code
+	* gst/registries/gstxmlregistry.c: (make_dir): make mkdir call
+	more portable.
+	* tools/gst-register.c: wrap unistd.h
+	
+	More additions/fixes from Steve for the MSVC build.
+	* win32/GStreamer.vcproj:
+	* win32/Makefile:
+	* win32/Makefile.inspect:
+	* win32/Makefile.launch:
+	* win32/Makefile.register:
+	* win32/README.txt:
+	* win32/gst-inspect.vcproj:
+	* win32/gst-launch.vcproj:
+	* win32/gst-register.vcproj:
+	* win32/gstbytestream.def:
+	* win32/gstbytestream.vcproj:
+	* win32/gstconfig.h:
+	* win32/gstelements.def:
+	* win32/gstelements.vcproj:
+	* win32/gstenumtypes.c:
+	* win32/gstenumtypes.h:
+	* win32/gstoptimalscheduler.def:
+	* win32/gstoptimalscheduler.vcproj:
+	* win32/gstreamer.def:
+	* win32/gstspider.def:
+	* win32/gstspider.vcproj:
+	* win32/gstversion.h:
+	* win32/msvc71.sln:
+
 2004-05-10  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstelement.c: (gst_element_class_init),

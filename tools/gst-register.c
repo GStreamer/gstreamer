@@ -30,7 +30,9 @@
 #include <stdio.h>
 
 #include <fcntl.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <errno.h>
 #include <locale.h>

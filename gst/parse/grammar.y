@@ -136,19 +136,6 @@ typedef struct {
    }G_STMT_END
 #endif
 
-#elif defined(G_HAVE_ISO_VARARGS)
-
-#define SET_ERROR(error, type, ...) G_STMT_START{ \
-  GST_CAT_ERROR (GST_CAT_PIPELINE, "error while parsing" ); \
-  if ((error) && !*(error)) { \
-    g_set_error ((error), GST_PARSE_ERROR, (type), "error while parsing"); \
-  } \
-}G_STMT_END
-#define ERROR(type, ...) SET_ERROR (((graph_t *) graph)->error, (type), "error while parsing")
-#ifndef GST_DISABLE_GST_DEBUG
-#  define YYDEBUG 1
-#endif
-
 #else
 
 static inline void

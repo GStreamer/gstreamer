@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include "gst_private.h"
+#include "gstinfo.h"
 
 #include "gsttrace.h"
 

@@ -698,6 +698,12 @@ G_CONST_RETURN gchar*
 
 #else
 static inline void
+GST_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
+    GstDebugLevel level, gpointer object, const char *format, va_list varargs)
+{
+}
+
+static inline void
 GST_CAT_ERROR_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
     ...)
 {

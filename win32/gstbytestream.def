@@ -1,0 +1,17 @@
+EXPORTS
+	gst_plugin_desc
+	gst_bytestream_new
+	gst_bytestream_destroy
+	gst_bytestream_reset
+	gst_bytestream_read
+	gst_bytestream_tell
+	gst_bytestream_length
+	gst_bytestream_size_hint
+	gst_bytestream_seek
+	gst_bytestream_peek
+	gst_bytestream_peek_bytes
+	gst_bytestream_flush
+	gst_bytestream_flush_fast
+	gst_bytestream_get_status
+	gst_bytestream_get_timestamp
+	gst_bytestream_print_status

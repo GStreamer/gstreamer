@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="gstbytestream"
-	ProjectGUID="{0CCB8AFC-97D8-4251-9B9D-08E7DC41BB7E}"
+	ProjectGUID="{0CCB8AFC-97D8-4251-9B9D-08E7DC41BB7D}"
 	RootNamespace="gstbytestream"
 	Keyword="Win32Proj">
 	<Platforms>
@@ -21,7 +21,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=".\;..\;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32;..\..\libintl\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;HAVE_CONFIG_H;GST_DISABLE_GST_DEBUG"
+				PreprocessorDefinitions="WIN32;_DEBUG;HAVE_CONFIG_H;GST_DISABLE_GST_DEBUG;HAVE_WIN32"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -34,11 +34,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GLib.lib GObject.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib"
 				OutputFile="$(OutDir)/gstbytestream.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\win32\Debug"
+				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject"
 				IgnoreAllDefaultLibraries="FALSE"
 				ModuleDefinitionFile="gstbytestream.def"
 				GenerateDebugInformation="TRUE"
@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories=".\;..\;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32;..\..\libintl\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;HAVE_CONFIG_H;GST_DISABLE_GST_DEBUG"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;HAVE_CONFIG_H;GST_DISABLE_GST_DEBUG;HAVE_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -85,11 +85,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GLib.lib GObject.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib"
 				OutputFile="$(OutDir)/gstbytestream.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\win32\Release"
+				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject"
 				ModuleDefinitionFile="gstbytestream.def"
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
