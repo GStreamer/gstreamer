@@ -32,7 +32,7 @@ gulong gst_riff_fourcc_to_id(gchar *fourcc) {
 }
 
 gchar *gst_riff_id_to_fourcc(gulong id) {
-  gchar *fourcc = (gchar *)g_malloc(5);
+  static gchar fourcc[5];
 
   g_return_val_if_fail(fourcc != NULL, NULL);
 
