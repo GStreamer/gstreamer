@@ -245,6 +245,17 @@ gst_dparam_set_property (GObject * object, guint prop_id, const GValue * value,
   GST_DPARAM_UNLOCK (dparam);
 }
 
+/**
+ * gst_dparam_do_update_default:
+ * @dparam: 
+ * @timestamp:
+ * @value:
+ * @update_info:
+ *
+ * Default implementation for changing a dynamic parameter.
+ * Subclasses might overwrite the behaviour of this.
+ *
+ */
 void
 gst_dparam_do_update_default (GstDParam * dparam, gint64 timestamp,
     GValue * value, GstDParamUpdateInfo update_info)

@@ -134,6 +134,8 @@ gst_dpsmooth_init (GstDParamSmooth * dpsmooth)
  * gst_dpsmooth_new:
  * @type: the type that this dparam will store
  *
+ * Create a new dynamic parameter controller which smoothes control changes.
+ *
  * Returns: a new instance of GstDParam
  */
 GstDParam *

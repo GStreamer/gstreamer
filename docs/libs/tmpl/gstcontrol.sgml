@@ -259,3 +259,12 @@ The next step is to get hold of the GstDParamManager instance of a GstElement.
 @update_info: 
 
 
+<!-- ##### FUNCTION gst_dpsmooth_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@Returns: 
+
+

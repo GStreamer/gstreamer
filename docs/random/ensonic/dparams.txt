@@ -1,0 +1,11 @@
+$Id$
+
+* cleanup of dparams
+  * resolve g_return_if_fail() into GST_WARNING and return()
+    in cases where the caller has to handle the problem
+  * rename
+    GST_TYPE_DPSMOOTH to GST_TYPE_DPARAM_SMOOTH
+    GST_TYPE_DP_LININT to GST_TYPE_DPARAM_LININT
+    there seems to be nobody using them, as they still look unfinished
+
+* concept for global, voice params

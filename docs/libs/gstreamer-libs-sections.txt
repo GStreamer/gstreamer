@@ -128,4 +128,5 @@ gst_dparam_new
 gst_dparam_attach
 gst_dparam_detach
 gst_dparam_do_update_default
+gst_dpsmooth_new
 </SECTION>

@@ -162,6 +162,8 @@ with some more specialized elements.</para>
     &gstreamer-tree-index;
   </chapter>
 
-  <index id="symbol-index"/>
+  <index id="api-index">
+    <title>API Index</title>
+  </index>
 
 </book>

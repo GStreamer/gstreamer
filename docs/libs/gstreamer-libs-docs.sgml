@@ -10,6 +10,8 @@
 <!ENTITY GstControl SYSTEM "xml/gstcontrol.xml">
 <!ENTITY GstDataProtocol SYSTEM "xml/gstdataprotocol.xml">
 
+<!ENTITY gstlibs-tree-index SYSTEM "xml/tree_index.sgml">
+
 <!ENTITY hash "#">
 ]>
 <book>
@@ -35,6 +37,13 @@
 
   </chapter>
 
-  <index id="symbol-index"/>
+  <chapter id="gstreamer-libs-hierarchy">
+    <title>Object Hierarchy</title>
+    &gstlibs-tree-index;
+  </chapter>
+
+  <index id="api-index">
+    <title>API Index</title>
+  </index>
 
 </book>
