@@ -48,7 +48,6 @@ static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 static gboolean			gst_bin_change_state_type	(GstBin *bin,
 								 GstElementState state,
 								 GType type);
-static void 			gst_bin_send_event 		(GstElement *element, GstEvent *event);
 
 static gboolean 		gst_bin_iterate_func 		(GstBin * bin);
 
@@ -124,7 +123,6 @@ gst_bin_class_init (GstBinClass * klass)
 #endif
 
   gstelement_class->change_state 	= GST_DEBUG_FUNCPTR (gst_bin_change_state);
-  gstelement_class->send_event 		= GST_DEBUG_FUNCPTR (gst_bin_send_event);
 
   klass->change_state_type 		= GST_DEBUG_FUNCPTR (gst_bin_change_state_type);
   klass->iterate 			= GST_DEBUG_FUNCPTR (gst_bin_iterate_func);
@@ -489,34 +487,6 @@ gst_bin_child_state_change (GstBin *bin, GstElementState oldstate, GstElementSta
     }
   }
   GST_UNLOCK (bin);
-}
-
-/**
- * gst_bin_child_error:
- * @bin: #GstBin with the child
- * @child: #GstElement that signaled an error
- *
- * An internal function to inform the parent bin about a failed child.
- */
-void
-gst_bin_child_error (GstBin *bin, GstElement *child)
-{
-  g_return_if_fail (GST_IS_BIN (bin));
-
-  if (GST_STATE (bin) != GST_STATE_NULL) {
-    gst_element_info (GST_ELEMENT (bin), "bin \"%s\" stopped because child \"%s\" signalled an error",
-		    GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (child));
-  }
-}
-
-static void
-gst_bin_send_event (GstElement *element, GstEvent *event)
-{
-  GST_DEBUG (GST_CAT_EVENT, "event from %s in %s\n", 
-	   gst_element_get_name (GST_ELEMENT (GST_EVENT_SRC (event))),
-  	   gst_element_get_name (element));
-
-  GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 }
 
 static GstElementStateReturn

@@ -159,8 +159,7 @@ struct _GstElementClass {
   void (*state_change)		(GstElement *element, GstElementState old, GstElementState state);
   void (*new_pad)		(GstElement *element, GstPad *pad);
   void (*pad_removed)		(GstElement *element, GstPad *pad);
-  void (*error)			(GstElement *element, gchar *error);
-  void (*event)			(GstElement *element, GstEvent *event);
+  void (*error)			(GstElement *element, GstElement *source, gchar *error);
   void (*eos)			(GstElement *element);
 
   /* local pointers for get/set */

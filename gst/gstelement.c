@@ -38,7 +38,6 @@ enum {
   NEW_PAD,
   PAD_REMOVED,
   ERROR,
-  EVENT,
   EOS,
   LAST_SIGNAL
 };
@@ -62,7 +61,7 @@ static void			gst_element_get_property	(GObject *object, guint prop_id, GValue *
 static void 			gst_element_dispose 		(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
-static void 			gst_element_send_event_func 	(GstElement *element, GstEvent *event);
+static void			gst_element_error_func		(GstElement* element, GstElement *source, gchar *errormsg);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
@@ -123,13 +122,8 @@ gst_element_class_init (GstElementClass *klass)
   gst_element_signals[ERROR] =
     g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
-                  gst_marshal_VOID__STRING, G_TYPE_NONE,1,
-                  G_TYPE_STRING);
-  gst_element_signals[EVENT] =
-    g_signal_new ("event", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstElementClass, event), NULL, NULL,
-                  gst_marshal_VOID__POINTER, G_TYPE_NONE,1,
-                  G_TYPE_POINTER);
+                  gst_marshal_VOID__OBJECT_STRING, G_TYPE_NONE, 2,
+                  G_TYPE_OBJECT, G_TYPE_STRING);
   gst_element_signals[EOS] =
     g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
@@ -147,7 +141,7 @@ gst_element_class_init (GstElementClass *klass)
 #endif
 
   klass->change_state 			= GST_DEBUG_FUNCPTR (gst_element_change_state);
-  klass->send_event 			= GST_DEBUG_FUNCPTR (gst_element_send_event_func);
+  klass->error	 			= GST_DEBUG_FUNCPTR (gst_element_error_func);
   klass->elementfactory 		= NULL;
   klass->padtemplates 			= NULL;
   klass->numpadtemplates 		= 0;
@@ -1024,25 +1018,18 @@ gst_element_disconnect (GstElement *src, const gchar *srcpadname,
   /* we're satisified they can be disconnected, let's do it */
   gst_pad_disconnect(srcpad,destpad);
 }
-
 static void
-gst_element_message (GstElement *element, const gchar *type, const gchar *info, va_list var_args)
+gst_element_error_func (GstElement* element, GstElement *source, gchar *errormsg)
 {
-  GstEvent *event;
-  GstProps *props;
-  gchar *string;
-  
-  string = g_strdup_vprintf (info, var_args);
-
-  GST_INFO (GST_CAT_EVENT, "%s sends message %s", GST_ELEMENT_NAME (element),
-		  string);
-
-  event = gst_event_new_info (type, GST_PROPS_STRING (string), NULL);
-  gst_element_send_event (element, event);
-
-  g_free (string);
+  /* tell the parent */
+  if (GST_OBJECT_PARENT (element))
+  {
+    GST_DEBUG (GST_CAT_EVENT, "forwarding error \"%s\" from %s to %s\n", errormsg, GST_ELEMENT_NAME (element), GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
+    gst_object_ref (element);
+    g_signal_emit (G_OBJECT (GST_OBJECT_PARENT (element)), gst_element_signals[ERROR], 0, source, errormsg);
+    gst_object_unref (element);
+  }
 }
-
 /**
  * gst_element_error:
  * @element: Element with the error
@@ -1056,25 +1043,31 @@ void
 gst_element_error (GstElement *element, const gchar *error, ...)
 {
   va_list var_args;
-  GstObject *parent;
+  gchar *string;
   
+  /* checks */
   g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (element != NULL);
   g_return_if_fail (error != NULL);
 
+  /* create error message */
   va_start (var_args, error);
-  gst_element_message (element, "error", error, var_args);
+  string = g_strdup_vprintf (error, var_args);
   va_end (var_args);
+  GST_INFO (GST_CAT_EVENT, "ERROR in %s: %s", GST_ELEMENT_NAME (element), string);
 
-  parent = GST_ELEMENT_PARENT (element);
-
-  if (parent && GST_IS_BIN (parent)) {
-    gst_bin_child_error (GST_BIN (parent), element);
-  }
-
+  /* emit the signal, make sure the element stays available */
+  gst_object_ref (element);
+  g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element, string);
+  
+ /* tell the scheduler */
   if (element->sched) {
     gst_scheduler_error (element->sched, element); 
-  }
+  } 
 
+  /* cleanup */
+  gst_object_unref (element);
+  g_free (string);
 }
 
 /**
@@ -1089,54 +1082,21 @@ gst_element_error (GstElement *element, const gchar *error, ...)
 void
 gst_element_info (GstElement *element, const gchar *info, ...)
 {
-  va_list var_args;
-  
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (info != NULL);
-
-  va_start (var_args, info);
-  gst_element_message (element, "info", info, var_args);
-  va_end (var_args);
+  g_warning ("The function gst_element_info is gone. Use g_object_notify instead.");
 }
 
-
-static void
-gst_element_send_event_func (GstElement *element, GstEvent *event)
-{
-  if (GST_OBJECT_PARENT (element)) {
-    gst_element_send_event (GST_ELEMENT (GST_OBJECT_PARENT (element)), event);
-  }
-  else {
-    switch (GST_EVENT_TYPE (event)) {
-      default:
-        g_signal_emit (G_OBJECT (element), gst_element_signals[EVENT], 0, event);
-    }
-    gst_event_free (event);
-  }
-}
 
 /**
  * gst_element_send_event:
  * @element: Element generating the event
  * @event: the event to send
  *
- * This function is used intenally by elements to send an event to 
- * the app. It will result in an "event" signal.
+ * This function is deprecated and doesn't work anymore.
  */
 void
 gst_element_send_event (GstElement *element, GstEvent *event)
 {
-  GstElementClass *oclass = CLASS (element);
-
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (event);
-
-  if (GST_EVENT_SRC (event) == NULL)
-    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (element));
-
-  if (oclass->send_event)
-    (oclass->send_event) (element, event);
-
+  g_warning ("The function gst_element_send_event is gone. Use g_object_notify instead.");
 }
 
 /**
@@ -1461,7 +1421,7 @@ gst_element_save_thyself (GstObject *object,
   GstElementClass *oclass;
   GParamSpec **specs, *spec;
   gint nspecs, i;
-  GValue value;
+  GValue value = { 0, };
   GstElement *element;
   gchar *str;
 
@@ -1502,6 +1462,8 @@ gst_element_save_thyself (GstObject *object,
         xmlNewChild (param, NULL, "value", g_value_dup_string (&value));
       else if (G_IS_PARAM_SPEC_ENUM (spec))
         xmlNewChild (param, NULL, "value", g_strdup_printf ("%d", g_value_get_enum (&value)));
+      else if (G_IS_PARAM_SPEC_INT64 (spec))
+        xmlNewChild (param, NULL, "value", g_strdup_printf ("%lld", g_value_get_int64 (&value)));
       else
         xmlNewChild (param, NULL, "value", g_strdup_value_contents (&value));
       
