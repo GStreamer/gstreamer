@@ -46,8 +46,19 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
     GstBuffer * strf_data, GstBuffer * strd_data, char **codec_name)
 {
   GstCaps *caps = NULL;
+  GstBuffer *palette = NULL;
 
   switch (codec_fcc) {
+    case GST_MAKE_FOURCC ('D', 'I', 'B', ' '):
+      caps = gst_caps_new_simple ("video/x-raw-rgb",
+          "bpp", G_TYPE_INT, 8,
+          "depth", G_TYPE_INT, 8, "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
+      palette = strf_data;
+      strf_data = NULL;
+      if (codec_name)
+        *codec_name = g_strdup ("Palettized 8-bit RGB");
+      break;
+
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, codec_fcc, NULL);
@@ -267,26 +278,8 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
     case GST_MAKE_FOURCC (0x1, 0x0, 0x0, 0x0): /* why, why, why? */
       caps = gst_caps_new_simple ("video/x-rle",
           "layout", G_TYPE_STRING, "microsoft", NULL);
-      if (strf_data && GST_BUFFER_SIZE (strf_data) >= 256 * 4) {
-        GstBuffer *copy = gst_buffer_copy (strf_data);
-        GValue value = { 0 };
-
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-        gint n;
-        guint32 *data = (guint32 *) GST_BUFFER_DATA (copy);
-
-        /* own endianness */
-        for (n = 0; n < 256; n++)
-          data[n] = GUINT32_FROM_LE (data[n]);
-#endif
-        g_value_init (&value, GST_TYPE_BUFFER);
-        g_value_set_boxed (&value, copy);
-        gst_structure_set_value (gst_caps_get_structure (caps, 0),
-            "palette_data", &value);
-        g_value_unset (&value);
-        gst_buffer_unref (copy);
-        strf_data = NULL;       /* used */
-      }
+      palette = strf_data;
+      strf_data = NULL;
       if (strf) {
         gst_caps_set_simple (caps,
             "depth", G_TYPE_INT, (gint) strf->bit_cnt, NULL);
@@ -326,6 +319,22 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
   if (strf_data || strd_data) {
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
         strf_data ? strf_data : strd_data, NULL);
+  }
+
+  /* palette */
+  if (palette && GST_BUFFER_SIZE (palette) >= 256 * 4) {
+    GstBuffer *copy = gst_buffer_copy (palette);
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    gint n;
+    guint32 *data = (guint32 *) GST_BUFFER_DATA (copy);
+
+    /* own endianness */
+    for (n = 0; n < 256; n++)
+      data[n] = GUINT32_FROM_LE (data[n]);
+#endif
+    gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, copy, NULL);
+    gst_buffer_unref (copy);
   }
 
   return caps;
@@ -557,6 +566,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('c', 'v', 'i', 'd'),
     GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
     GST_MAKE_FOURCC ('R', 'L', 'E', ' '),
+    GST_MAKE_FOURCC ('D', 'I', 'B', ' '),
     /* FILL ME */
     0
   };

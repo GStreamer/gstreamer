@@ -582,9 +582,9 @@ gst_riff_read_strf_vids_with_data (GstRiffRead * riff,
   } else if (strf->size < GST_BUFFER_SIZE (buf)) {
     gint len;
 
-    len = GST_BUFFER_SIZE (buf) - strf->size - 2;
+    len = GST_BUFFER_SIZE (buf) - strf->size;
     if (len > 0) {
-      *extradata = gst_buffer_create_sub (buf, strf->size + 2, len);
+      *extradata = gst_buffer_create_sub (buf, strf->size, len);
     }
   }
 
