@@ -1,3 +1,35 @@
+2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* gstinterfaces/.cvsignore:
+	* gstinterfaces/0.7.defs:
+	* gstinterfaces/Makefile.am:
+	* gstinterfaces/common.defs:
+	* gstinterfaces/common.override:
+	* gstinterfaces/gstinterfacesmodule.c: (init_gstinterfaces):
+	* gstplay/.cvsignore:
+	* gstplay/0.7.c:
+	* gstplay/0.7.defs:
+	* gstplay/0.7.h:
+	* gstplay/0.7.override:
+	* gstplay/Makefile.am:
+	* gstplay/__init__.py:
+	* gstplay/arg-types.py:
+	* gstplay/common.c:
+	* gstplay/common.h:
+	* gstplay/common.override:
+	* gstplay/gstplaymodule.c: (init_gstplay):
+	* gstreamer/Makefile.am:
+	* gstreamer/__init__.py:
+	* gstreamer/common.override:
+	Support GstPlay, bug fixes, updates.
+	* examples/gstplay/player.py:
+	GstPlay example.
+	* Makefile.am:
+	Support GstPlay build.
+	* configure.ac:
+	Support GstPlay build, remove AC_SUBST() calls that
+	PKG_CHECK_MODULES does automagically.
+
 2004-01-27  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* Makefile.am: add gstinterfaces dir

@@ -358,10 +358,10 @@ _wrap_gst_element_factory_make_element(PyGObject *self, PyObject *args, PyObject
     return 0;
 }
 %%
-override gst_version
+override gst_version noargs
 
 static PyObject *
-_wrap_gst_version(PyGObject *self)
+_wrap_gst_version(void)
 {
 	guint major, minor, micro;
 

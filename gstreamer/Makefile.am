@@ -1,10 +1,12 @@
+MODULE = gstreamer
+
 INCLUDES = $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
 PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
 
-pygstreamerdir = $(pythondir)/gstreamer
+pygstreamerdir = $(pythondir)/$(MODULE)
 pygstreamer_PYTHON = __init__.py
 
-pygstreamerexecdir = $(pyexecdir)/gstreamer
+pygstreamerexecdir = $(pyexecdir)/$(MODULE)
 
 GST_OVERRIDES = common.override \
 	0.6.override \
@@ -35,10 +37,8 @@ _gstreamermodule_la_LIBADD = $(GST_LIBS)
 _gstreamermodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_gstreamer
 nodist__gstreamermodule_la_SOURCES = gstreamer.c
 
-CLEANFILES = gstreamer.c core.defs gstreamer.defs gstreamer.override
+CLEANFILES = $(MODULE).c h2def.defs $(MODULE).defs $(MODULE).override
 EXTRA_DIST = $(GST_OVERRIDES) $(GST_DEFS) $(GST_CODE) arg-types.py
-
-gstreamer.c: gstreamer.defs gstreamer.override
 
 GST_EXCLUDE_INCLUDES=\
 	$(GST_INCLUDEDIR)/gst/gstatomic_impl.h \
@@ -48,19 +48,19 @@ GST_INCLUDES=$(filter-out $(GST_EXCLUDE_INCLUDES),$(wildcard $(GST_INCLUDEDIR)/g
 gstreamer.override: common.override $(GST_MAJORMINOR).override
 	cat $+ > $@
 
-core.defs: $(GST_INCLUDES)
+h2def.defs: $(GST_INCLUDES)
 	$(PYTHON) $(PYGTK_H2DEF) $(GST_INCLUDES) > $@
 
-gstreamer.defs: core.defs common.defs $(GST_MAJORMINOR).defs
+gstreamer.defs: h2def.defs common.defs $(GST_MAJORMINOR).defs
 	cat $+ > $@
 
-gstreamer.c: gstreamer.defs arg-types.py gstreamer.override
+gstreamer.c: $(MODULE).defs arg-types.py $(MODULE).override
 	$(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \
-		--override $(srcdir)/gstreamer.override \
-		--prefix pygstreamer gstreamer.defs > gen-gstreamer.c \
-	&& cp gen-gstreamer.c gstreamer.c \
-	&& rm -f gen-gstreamer.c
+		--override $(srcdir)/$(MODULE).override \
+		--prefix py$(MODULE) $(MODULE).defs > gen-$(MODULE).c \
+	&& cp gen-$(MODULE).c $(MODULE).c \
+	&& rm -f gen-$(MODULE).c
 
 #		--register $(PYGTK_DEFSDIR)/gtk-types.defs
 #		--register $(top_srcdir)/blah/blah-types.defs

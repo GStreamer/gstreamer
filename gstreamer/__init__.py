@@ -37,6 +37,8 @@ del devloc, sys, os
 
 from _gstreamer import *
 
+#from gtk import threads_init, threads_enter, threads_leave
+
 def threads_init():
     import gtk
     gtk.threads_init()

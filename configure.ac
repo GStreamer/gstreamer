@@ -58,15 +58,12 @@ if test "x$HAVE_GSTREAMER" = "xno"; then
   AC_MSG_ERROR(you need gstreamer development packages installed !)
 fi
 
-AC_SUBST(GST_LIBS)
-AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_MAJORMINOR)
 AM_CONDITIONAL(GST_0_6, test $GST_MAJORMINOR = 0.6)
 AM_CONDITIONAL(GST_0_7, test $GST_MAJORMINOR = 0.7)
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
-AC_SUBST(PYGTK_CFLAGS)
 AC_PATH_PROG(PYGTK_CODEGEN, pygtk-codegen-2.0, no)
 if test "x$PYGTK_CODEGEN" = xno; then
   AC_MSG_ERROR(could not find pygtk-codegen-2.0 script)
@@ -98,12 +95,24 @@ AC_SUBST(GST_INCLUDEDIR)
 
 if test "x$GST_MAJORMINOR" != "x0.6"; then
   AC_MSG_CHECKING(for GStreamer interfaces include dir)
+  PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR)
   GST_INTERFACES_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-interfaces-$GST_MAJORMINOR`
   AC_MSG_RESULT($GST_INTERFACES_INCLUDEDIR)
   if test "x$GST_INTERFACES_INCLUDEDIR" = "x"; then
     AC_MSG_ERROR(no GStreamer interfaces include dir found)
   fi
   AC_SUBST(GST_INTERFACES_INCLUDEDIR)
+fi
+
+if test "x$GST_MAJORMINOR" != "x0.6"; then
+  AC_MSG_CHECKING(for GStreamer play include dir)
+  PKG_CHECK_MODULES(GST_PLAY, gstreamer-play-$GST_MAJORMINOR)
+  GST_PLAY_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-play-$GST_MAJORMINOR`
+  AC_MSG_RESULT($GST_PLAY_INCLUDEDIR)
+  if test "x$GST_PLAY_INCLUDEDIR" = "x"; then
+    AC_MSG_ERROR(no GStreamer play include dir found)
+  fi
+  AC_SUBST(GST_PLAY_INCLUDEDIR)
 fi
 
 
@@ -153,6 +162,7 @@ AC_OUTPUT([
   Makefile
   gstreamer/Makefile
   gstinterfaces/Makefile
+  gstplay/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc
