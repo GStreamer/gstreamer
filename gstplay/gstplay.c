@@ -619,6 +619,18 @@ gst_play_media_seek (GstPlay *play,
   gtk_object_set (GTK_OBJECT (priv->src), "offset", offset, NULL);
 }
 
+GstElement*
+gst_play_get_pipeline(GstPlay *play)
+{
+  GstPlayPrivate *priv;
+
+  g_return_val_if_fail (play != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PLAY (play), NULL);
+
+  priv = (GstPlayPrivate *)play->priv;
+
+  return GST_ELEMENT (priv->bin);
+}
 
 static void
 gst_play_set_arg (GtkObject *object,
