@@ -16,10 +16,10 @@
         <applyto>/system/gstreamer/default/videosink</applyto>
         <owner>gstreamer</owner>
         <type>string</type>
-        <default>videosink</default>
+        <default>xvideosink</default>
         <locale name="C">
         <short>default GStreamer videosink</short>
-        <long>GStreamer can play video using any number of output plugins.  Some possible choices are videosink, sdlvideosink and aasink.</long>
+        <long>GStreamer can play video using any number of output plugins.  Some possible choices are xvideosink, sdlvideosink and aasink.</long>
         </locale>
       </schema>
     </schemalist>
