@@ -125,7 +125,7 @@ gst_tarkinenc_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
 
-  gst_caps_debug (caps);
+  gst_caps_debug (caps, "caps to be set on tarkin sink pad");
 
   tarkinenc->layer[0].bitstream_len = tarkinenc->bitrate;
   tarkinenc->layer[0].a_moments = tarkinenc->a_moments;
