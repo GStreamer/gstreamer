@@ -22,7 +22,6 @@
 #define __GST_LAME_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #ifdef __cplusplus
