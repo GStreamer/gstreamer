@@ -1,3 +1,10 @@
+2004-03-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/ext/ffmpeg/.pc/no-imlib/configure.ac:
+	* gst-libs/ext/ffmpeg/configure.ac:
+	* gst-libs/ext/ffmpeg/patches/series:
+          add patch to remove imlib completely
+
 2004-03-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: use new setup with mirrored cvs tree
