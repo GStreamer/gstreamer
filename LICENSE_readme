@@ -3,8 +3,6 @@ When using GPL linked plugins GStreamer is for all practical reasons under the G
 
 The plugins which use a GPL library are as follows:
 cdparanoia      libcdparanoia   (http://www.xiph.org/paranoia/)
-lame            libmp3lame      (http://www.mp3dev.org/mp3/)
-icastsend       libshout        (http://www.icecast.org)
 aasink		aalib		(http://aa-project.sourceforge.net/aalib/)
 gst1394 	libraw1394	(http://linux1394.sourceforge.net)
 xmms		libxmms		(http://www.xmms.org)
@@ -19,6 +17,8 @@ sdlsink		libsdl		(http://www.libsdl.org)
 gnomevfssource  gnome-vfs       (ftp.gnome.org//pub/GNOME/stable/sources/gnome-vfs)
 gnomevfssink    gnome-vfs
 esdsink         libesd          (ftp.gnome.org/pub/GNOME/stable/sources/esound)
+icastsend       libshout        (http://www.icecast.org)
+lame            libmp3lame      (http://www.mp3dev.org/mp3/)
 
 Plugins which use a BSD covered library are as follows:
 vorbisenc	libogg/libvorbis	(http://www.xiph.org/ogg/vorbis)
