@@ -710,31 +710,14 @@ gst_osssink_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
       osssink->offset = 0LL;
       osssink->have_offset = FALSE;
+      osssink->handled = 0LL;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      /* gst_clock_adjust (osssink->clock, osssink->offset - gst_clock_get_time (osssink->clock)); */
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
     {
-      if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) {
-	if (osssink->bps) {
-          GstClockTime time;
-          audio_buf_info ospace;
-          gint queued;
-
-          ioctl (osssink->fd, SNDCTL_DSP_GETOSPACE, &ospace);
-          ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
-
-          queued = (ospace.fragstotal * ospace.fragsize) - ospace.bytes;
-          time = osssink->offset + (osssink->handled - queued) * 1000000LL / osssink->bps;
-
-          //gst_clock_adjust (osssink->clock, time - gst_clock_get_time (osssink->clock));
-	}
-	else {
-          ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
-	}
-      }
-
+      if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) 
+        ioctl (osssink->fd, SNDCTL_DSP_RESET, 0);
       break;
     }
     case GST_STATE_PAUSED_TO_READY:

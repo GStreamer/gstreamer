@@ -56,32 +56,32 @@ typedef struct _GstOssSink GstOssSink;
 typedef struct _GstOssSinkClass GstOssSinkClass;
 
 struct _GstOssSink {
-  GstElement element;
+  GstElement 	 element;
 
-  GstPad *sinkpad;
+  GstPad 	*sinkpad;
   GstBufferPool *sinkpool;
 
-  GstClock *provided_clock;
-  GstClock *clock;
+  GstClock 	*provided_clock;
+  GstClock 	*clock;
 
   /* device */
-  gchar *device;
+  gchar 	*device;
 
   /* soundcard state */
-  int fd;
-  int caps; /* the capabilities */
-  gint format;
-  gint channels;
-  gint frequency;
-  gint fragment;
-  gboolean mute;
-  guint bufsize;
-  guint bps;
-  gboolean have_offset;
-  guint64 offset;
-  guint64 handled;
+  int 		 fd;
+  int 		 caps; /* the capabilities */
+  gint 		 format;
+  gint 		 channels;
+  gint 		 frequency;
+  gint 		 fragment;
+  gboolean 	 mute;
+  guint 	 bufsize;
+  guint 	 bps;
+  gboolean 	 have_offset;
+  guint64 	 offset;
+  guint64	 handled;
 
-  guint64 fragment_time;
+  guint64 	 fragment_time;
 };
 
 struct _GstOssSinkClass {
