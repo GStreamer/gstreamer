@@ -5,6 +5,7 @@
  */
 
 #include <gst/gst.h>
+#include "property.h"
 
 GstElement *
 element_create (char *name, char *element)
@@ -40,7 +41,9 @@ main (int argc, char *argv[])
   g_print ("Creating pipeline\n");
   pipeline = gst_pipeline_new ("pipeline");
 
- g_print ("Creating elements\n");
+  g_print ("Connecting signals to pipeline\n");
+  g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
+  g_print ("Creating elements\n");
   if (!(src = element_create ("src", "fakesrc"))) return 1;
   g_object_set (G_OBJECT (src), "sizetype", 2, NULL);
   if (!(sink = element_create ("sink", "fakesink"))) return 1;
