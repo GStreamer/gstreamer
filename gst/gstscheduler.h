@@ -89,7 +89,7 @@ struct _GstScheduleChain {
 
   GstElement *entry;
 
-  gboolean need_cothreads;
+  gint cothreaded_elements;
   gboolean schedule;
 };
 

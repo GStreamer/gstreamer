@@ -37,6 +37,7 @@ int main(int argc,char *argv[]) {
   gst_element_connect(src,"src",identity,"sink");
   gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
+//return;
   g_print("\nDisconnecting src from identity:\n");
   gst_element_disconnect(src,"src",identity,"sink");
   gst_schedule_show(GST_ELEMENT_SCHED(thread));
@@ -73,7 +74,10 @@ int main(int argc,char *argv[]) {
   gst_element_connect(identity,"src",identity2,"sink");
   gst_schedule_show(GST_ELEMENT_SCHED(thread));
 
-  g_print("\nDisconnecting identity to identity2\n");
+  g_print("\nDisconnecting identity from identity2\n");
   gst_element_disconnect(identity,"src",identity2,"sink");
   gst_schedule_show(GST_ELEMENT_SCHED(thread));
+
+  g_print("\n\nNow setting state from NULL to READY:\n");
+  gst_element_set_state(GST_ELEMENT(thread),GST_STATE_READY);
 }

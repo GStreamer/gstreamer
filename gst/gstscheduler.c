@@ -197,13 +197,14 @@ gst_bin_pullregionfunc_proxy (GstPad *pad,GstRegionType type,guint64 offset,guin
 
 
 static void
-gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
+gst_schedule_cothreaded_chain (GstBin *bin, GstScheduleChain *chain) {
   GList *elements;
   GstElement *element;
   cothread_func wrapper_function;
   GList *pads;
   GstPad *pad;
 
+printf("\n");
   GST_DEBUG (0,"chain is using cothreads\n");
 
   // first create thread context
@@ -224,7 +225,7 @@ gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
     // if the element has a loopfunc...
     if (element->loopfunc != NULL) {
       wrapper_function = GST_DEBUG_FUNCPTR(gst_bin_loopfunc_wrapper);
-      GST_DEBUG (0,"\nelement '%s' is a loop-based\n",GST_ELEMENT_NAME(element));
+      GST_DEBUG (0,"element '%s' is a loop-based\n",GST_ELEMENT_NAME(element));
     } else {
       // otherwise we need to decide what kind of cothread
       // if it's not DECOUPLED, we decide based on whether it's a source or not
@@ -232,10 +233,10 @@ gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
         // if it doesn't have any sinks, it must be a source (duh)
         if (element->numsinkpads == 0) {
           wrapper_function = GST_DEBUG_FUNCPTR(gst_bin_src_wrapper);
-          GST_DEBUG (0,"\nelement '%s' is a source, using _src_wrapper\n",GST_ELEMENT_NAME(element));
+          GST_DEBUG (0,"element '%s' is a source, using _src_wrapper\n",GST_ELEMENT_NAME(element));
         } else {
           wrapper_function = GST_DEBUG_FUNCPTR(gst_bin_chain_wrapper);
-          GST_DEBUG (0,"\nelement '%s' is a filter, using _chain_wrapper\n",GST_ELEMENT_NAME(element));
+          GST_DEBUG (0,"element '%s' is a filter, using _chain_wrapper\n",GST_ELEMENT_NAME(element));
         }
       }
     }
@@ -249,7 +250,9 @@ gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
 
       // if the element is DECOUPLED or outside the manager, we have to chain
       if ((wrapper_function == NULL) ||
-          (GST_ELEMENT (GST_PAD_PARENT (GST_PAD (GST_RPAD_PEER (pad))))->manager != GST_ELEMENT(bin))) {
+          (GST_RPAD_PEER(pad) &&
+           (GST_ELEMENT (GST_PAD_PARENT (GST_PAD (GST_RPAD_PEER (pad))))->manager != GST_ELEMENT(bin)))
+         ) {
         // set the chain proxies
         if (GST_RPAD_DIRECTION(pad) == GST_PAD_SINK) {
           GST_DEBUG (0,"copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
@@ -835,7 +838,7 @@ gst_schedule_chain_new (GstSchedule *sched)
   chain->elements = NULL;
   chain->num_elements = 0;
   chain->entry = NULL;
-  chain->need_cothreads = TRUE;
+  chain->cothreaded_elements = 0;
   chain->schedule = FALSE;
 
   sched->chains = g_list_prepend (sched->chains, chain);
@@ -862,7 +865,9 @@ gst_schedule_chain_add_element (GstScheduleChain *chain, GstElement *element)
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to chain", GST_ELEMENT_NAME (element));
   chain->elements = g_list_prepend (chain->elements, element);
   chain->num_elements++;
+
   // FIXME need to update chain schedule here, or not
+//  gst_schedule_cothreaded_chain(chain->sched->parent,chain);
 }
 
 void
@@ -898,6 +903,7 @@ gst_schedule_chain_elements (GstSchedule *sched, GstElement *element1, GstElemen
     gst_schedule_chain_add_element (chain, element1);
     gst_schedule_chain_add_element (chain, element2);
     // FIXME chain changed here
+    gst_schedule_cothreaded_chain(chain->sched->parent,chain);
 
   // otherwise if both have chains already, join them
   } else if ((chain1 != NULL) && (chain2 != NULL)) {
@@ -906,6 +912,7 @@ gst_schedule_chain_elements (GstSchedule *sched, GstElement *element1, GstElemen
     chain1->elements = g_list_concat (chain1->elements, g_list_copy(chain2->elements));
     chain1->num_elements += chain2->num_elements;
     // FIXME chain changed here
+    gst_schedule_cothreaded_chain(chain->sched->parent,chain);
 
     gst_schedule_chain_destroy(chain2);
 
@@ -918,6 +925,7 @@ gst_schedule_chain_elements (GstSchedule *sched, GstElement *element1, GstElemen
     GST_INFO (GST_CAT_SCHEDULING, "adding element to existing chain");
     gst_schedule_chain_add_element (chain, element);
     // FIXME chain changed here
+    gst_schedule_cothreaded_chain(chain->sched->parent,chain);
   }
 }
 

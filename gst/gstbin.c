@@ -364,6 +364,7 @@ gst_bin_change_state (GstElement *element)
 
 //  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
 
+/*
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
     {
@@ -379,6 +380,7 @@ gst_bin_change_state (GstElement *element)
     default:
       break;
   }
+*/
 
 //  g_print("-->\n");
   children = bin->children;
@@ -771,6 +773,7 @@ gst_bin_create_plan_func (GstBin *bin)
   gst_element_set_manager (GST_ELEMENT (bin), manager);
 */
 
+/*
   // perform the first recursive pass of plan generation
   // we set the manager of every element but those who manage themselves
   // the need for cothreads is also determined recursively
@@ -831,6 +834,7 @@ gst_bin_create_plan_func (GstBin *bin)
     GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
     return;
   }
+*/
 
 /*
   // clear previous plan state
@@ -882,6 +886,7 @@ gst_bin_create_plan_func (GstBin *bin)
   } while (pending);
 */
 
+/*
   GST_DEBUG (0,"have %d elements to manage, implementing plan\n",bin->num_managed_elements);
 
   gst_bin_schedule(bin);
@@ -889,6 +894,7 @@ gst_bin_create_plan_func (GstBin *bin)
   GST_DEBUG (0, "gstbin \"%s\", eos providers:%d\n",
 		  GST_ELEMENT_NAME (bin),
 		  bin->num_eos_providers);
+*/
 
   GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
 }
