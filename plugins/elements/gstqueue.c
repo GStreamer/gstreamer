@@ -391,7 +391,7 @@ gst_queue_change_state (GstElement *element)
   // can't call this queue's _get (or whatever)
   GST_LOCK (queue);
 
-  GST_DEBUG (0,"gstqueue: state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG (GST_CAT_STATES,"gstqueue: state pending %d\n", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, clear out buffers*/
   if (GST_STATE_PENDING (element) == GST_STATE_READY) {

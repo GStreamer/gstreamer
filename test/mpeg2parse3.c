@@ -19,7 +19,6 @@ gboolean idle_func(gpointer data) {
 void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
-//  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
     gst_pad_connect(pad, gst_element_get_pad(v_queue,"sink"));
@@ -30,7 +29,6 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     gst_bin_add(GST_BIN(pipeline),a_thread);
     gst_element_set_state(a_thread,GST_STATE_PLAYING);
   }
-//  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 }
 
 void mpeg2parse_have_size(GstElement *videosink,gint width,gint height) {

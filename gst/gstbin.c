@@ -174,7 +174,6 @@ gst_bin_reset_element_sched (GstElement *element, GstSchedule *sched)
 void
 gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
 {
-  GstSchedule *realsched = NULL;
   GList *children;
   GstElement *child;
 
@@ -189,15 +188,13 @@ gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
   // if it's actually a Bin
   if (GST_IS_BIN(element)) {
 
-    // figure out which element is the manager
     if (GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
-      realsched = GST_ELEMENT_SCHED(element);
-      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's schedule to own sched");
-    } else {
-      realsched = sched;
-      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's schedule to parent's");
-      GST_SCHEDULE_ADD_ELEMENT (sched, element);
+      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is already a manager, not resetting");
+      return;
     }
+
+    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's schedule to parent's");
+    GST_SCHEDULE_ADD_ELEMENT (sched, element);
 
     // set the children's schedule
     children = GST_BIN(element)->children;
@@ -205,12 +202,11 @@ gst_bin_set_element_sched (GstElement *element,GstSchedule *sched)
       child = GST_ELEMENT (children->data);
       children = g_list_next(children);
 
-      gst_bin_set_element_sched (child, realsched);
+      gst_bin_set_element_sched (child, sched);
     }
 
   // otherwise, if it's just a regular old element
   } else {
-//g_print("calling schedule_add_element (%p, \"%s\")\n",sched, GST_ELEMENT_NAME(element));
     GST_SCHEDULE_ADD_ELEMENT (sched, element);
   }
 }
@@ -228,6 +224,15 @@ gst_bin_unset_element_sched (GstElement *element)
   // if it's actually a Bin
   if (GST_IS_BIN(element)) {
 
+    if (GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
+      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "child is already a manager, not unsetting sched");
+      return;
+    }
+
+    // FIXME this check should be irrelevant
+    if (GST_ELEMENT_SCHED (element))
+      GST_SCHEDULE_REMOVE_ELEMENT (GST_ELEMENT_SCHED(element), element);
+
     // for each child, remove them from their schedule
     children = GST_BIN(element)->children;
     while (children) {
@@ -239,6 +244,7 @@ gst_bin_unset_element_sched (GstElement *element)
 
   // otherwise, if it's just a regular old element
   } else {
+    // FIXME this check should be irrelevant
     if (GST_ELEMENT_SCHED (element))
       GST_SCHEDULE_REMOVE_ELEMENT (GST_ELEMENT_SCHED(element), element);
   }
@@ -262,7 +268,8 @@ gst_bin_add (GstBin *bin,
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  GST_DEBUG_ENTER ("");
+  GST_DEBUG (GST_CAT_PARENTAGE, "adding element \"%s\" to bin \"%s\"\n",
+             GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(bin));
 
   // must be not be in PLAYING state in order to modify bin
 //  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);

@@ -76,16 +76,16 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
   #ifdef _GST_COLOR_CODE
 #warning have a coded debug
     #define GST_DEBUG_PREFIX(cat,format,args...) \
-"DEBUG(%d:%d)\033[" _GST_COLOR_CODE "m" __PRETTY_FUNCTION__ ":%d\033[00m" format , \
+"DEBUG(%5d:%2d)\033[" _GST_COLOR_CODE "m" __PRETTY_FUNCTION__ ":%d\033[00m" format , \
 getpid() , cothread_getcurrent() , __LINE__ , ## args
   #else
     #define GST_DEBUG_PREFIX(cat,format,args...) \
-"DEBUG(%d:%d)\033[" GST_DEBUG_CHAR_MODE ";%sm" __PRETTY_FUNCTION__ ":%d\033[00m" format , \
+"DEBUG(%5d:%2d)\033[" GST_DEBUG_CHAR_MODE ";%sm" __PRETTY_FUNCTION__ ":%d\033[00m" format , \
 getpid() , cothread_getcurrent() , _gst_category_colors[cat] , __LINE__ , ## args
   #endif /* _GST_COLOR_CODE */
 #else
   #define GST_DEBUG_PREFIX(cat,format,args...) \
-"DEBUG(%d:%d)" __PRETTY_FUNCTION__ ":%d" format , getpid() ,cothread_getcurrent() , __LINE__ , ## args
+"DEBUG(%5d:%2d)" __PRETTY_FUNCTION__ ":%d" format , getpid() ,cothread_getcurrent() , __LINE__ , ## args
 #endif
 
 
@@ -164,7 +164,7 @@ getpid() , cothread_getcurrent() , _gst_category_colors[cat] , __LINE__ , ## arg
 /********** function pointer stuff **********/
 extern GHashTable *__gst_function_pointers;
 
-#ifdef GST_DEBUG_ENABLED
+#ifdef GST_DEBUG_ENABLED_dontuse
 #define GST_DEBUG_FUNCPTR(ptr) _gst_debug_register_funcptr((void *)(ptr), #ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
 #else
@@ -181,14 +181,7 @@ _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
   return ptr;
 }
 
-static inline gchar *
-_gst_debug_nameof_funcptr (void *ptr) 
-{
-  gchar *ptrname = (gchar*)( __gst_function_pointers ? g_hash_table_lookup(__gst_function_pointers,ptr) : NULL );
-// FIXME this must go away, it's a major leak
-  if (!ptrname) return g_strdup_printf("%p",ptr);
-  else return ptrname;
-}
+gchar *_gst_debug_nameof_funcptr (void *ptr);
 
 
 /**********************************************************************

@@ -2,7 +2,7 @@
 
 if HAVE_GNOME
 GNOME_PROGS = spectrum wave mpeg2parse mp1parse videotest aviparse \
-                  mpeg2parse2 videotest2 video2mp1 dvshow dv2mp1 mpeg2parse3
+                  mpeg2parse2 videotest2 video2mp1 dvshow dv2mp1 mpeg2parse3 mpeg2parse4
 else
 GNOME_PROGS =
 endif

@@ -45,7 +45,7 @@ int main(int argc,char *argv[]) {
   pipeline = gst_pipeline_new("pipeline");
   sourcethread = gst_elementfactory_make("thread","sourcethread");
   src = gst_elementfactory_make("disksrc","src");
-  gtk_object_set(GTK_OBJECT(src),"location","/opt/data/AlienSong.mpg",NULL);
+  gtk_object_set(GTK_OBJECT(src),"location","/home/omega/media/AlienSong.mpg",NULL);
   parse = gst_elementfactory_make("mpeg1parse","parse");
 
   gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
@@ -65,8 +65,10 @@ int main(int argc,char *argv[]) {
 
   while (1) {
 //    sleep(1);
+fprintf(stderr,"setting to PAUSED\n");
     gst_element_set_state(pipeline,GST_STATE_PAUSED);fprintf(stderr,"paused... ");
 //    sleep(1);
+fprintf(stderr,"setting to PLAYING\n");
     gst_element_set_state(pipeline,GST_STATE_PLAYING);fprintf(stderr,"playing.\n");
   }
 

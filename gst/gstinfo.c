@@ -20,6 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <dlfcn.h>
 #include "gst_private.h"
 #include "gstelement.h"
 #include "gstpad.h"
@@ -50,7 +51,7 @@ static gchar *_gst_info_category_strings[] = {
   "STATES",
   "PLANNING",
   "SCHEDULING",
-  "OPERATION",
+  "DATAFLOW",
   "BUFFER",
   "CAPS",
   "CLOCK",
@@ -85,7 +86,7 @@ const gchar *_gst_category_colors[32] = {
   [GST_CAT_AUTOPLUG_ATTEMPT]	= "00;36;44",
   [GST_CAT_PARENTAGE]		= "01;37;41",		// !!
   [GST_CAT_STATES]		= "00;31",
-  [GST_CAT_PLANNING]		= "00;35",
+  [GST_CAT_PLANNING]		= "07;35",
   [GST_CAT_SCHEDULING]		= "00;35",
   [GST_CAT_DATAFLOW]		= "00;32",
   [GST_CAT_BUFFER]		= "00;32",
@@ -153,12 +154,12 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
 
 #ifdef GST_DEBUG_ENABLED
   #ifdef GST_DEBUG_COLOR
-    fprintf(stderr,"INFO (\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m):\033["
+    fprintf(stderr,"INFO (\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
             GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
             pthread_color,pthread_id,cothread_color,cothread_id,
             _gst_category_colors[category],location,elementname,string);
   #else
-    fprintf(stderr,"INFO (%5d:%2d):%s%s %s\n",
+    fprintf(stderr,"INFO (%5d:%2d)%s%s %s\n",
             getpid(),cothread_id,location,elementname,string);
   #endif /* GST_DEBUG_COLOR */
 #else
@@ -380,4 +381,25 @@ gst_default_error_handler (gchar *file, gchar *function,
   g_on_error_stack_trace (_gst_progname);
 
   exit(1);
+}
+
+
+
+#ifdef __USE_GNU
+#warning __USE_GNU is defined
+#endif
+
+gchar *
+_gst_debug_nameof_funcptr (void *ptr)
+{
+  gchar *ptrname;
+  Dl_info dlinfo;
+  if (__gst_function_pointers) {
+    if (ptrname = g_hash_table_lookup(__gst_function_pointers,ptr))
+      return g_strdup(ptrname);
+  } else if (dladdr(ptr,&dlinfo)) {
+    return g_strdup(dlinfo.dli_sname);
+  } else {
+    return g_strdup_printf("%p",ptr);
+  }
 }

@@ -77,6 +77,7 @@ struct _GstScheduleClass {
 
 //#define GST_SCHEDULE_SAFETY if (sched)
 #define GST_SCHEDULE_SAFETY
+
 #define GST_SCHEDULE_ADD_ELEMENT(sched,element) \
   GST_SCHEDULE_SAFETY ((sched)->add_element((sched),(element)))
 #define GST_SCHEDULE_REMOVE_ELEMENT(sched,element) \
@@ -85,14 +86,12 @@ struct _GstScheduleClass {
   GST_SCHEDULE_SAFETY ((sched)->enable_element((sched),(element)))
 #define GST_SCHEDULE_DISABLE_ELEMENT(sched,element) \
   GST_SCHEDULE_SAFETY ((sched)->disable_element((sched),(element)))
-
 #define GST_SCHEDULE_LOCK_ELEMENT(sched,element) \
-if ((sched)->lock_element != NULL) \
-((sched)->lock_element((sched),(element)))
+  GST_SCHEDULE_SAFETY if ((sched)->lock_element != NULL) \
+    ((sched)->lock_element((sched),(element)))
 #define GST_SCHEDULE_UNLOCK_ELEMENT(sched,element) \
-if ((sched)->unlock_element != NULL) \
-((sched)->unlock_element((sched),(element)))
-
+  GST_SCHEDULE_SAFETY if ((sched)->unlock_element != NULL) \
+    ((sched)->unlock_element((sched),(element)))
 #define GST_SCHEDULE_PAD_CONNECT(sched,srcpad,sinkpad) \
   GST_SCHEDULE_SAFETY ((sched)->pad_connect((sched),(srcpad),(sinkpad)))
 #define GST_SCHEDULE_PAD_DISCONNECT(sched,srcpad,sinkpad) \
