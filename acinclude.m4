@@ -799,6 +799,9 @@ dnl checks the results of artsc-config to some extent)
 dnl
 dnl thomas: ask nicely for C++ compilation
 AC_LANG_PUSH(C++)
+
+ac_save_CPPFLAGS="$CPPFLAGS"
+ac_save_LDFLAGS="$LDFLAGS"
 AC_SUBST(CPPFLAGS,"$CPPFLAGS $ARTS_CFLAGS")
 AC_SUBST(LDFLAGS,"$LDFLAGS $ARTS_CLIBS") 
      rm -f conf.artstest
@@ -860,8 +863,12 @@ int main ()
 ],, no_arts=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
 	dnl release C++ question
 	AC_LANG_POP(C++)
-       CFLAGS="$ac_save_CFLAGS"
-       LIBS="$ac_save_LIBS"
+        CFLAGS="$ac_save_CFLAGS"
+        LIBS="$ac_save_LIBS"
+        CPPFLAGS="$ac_save_CPPFLAGS"
+        LDFLAGS="$ac_save_LDFLAGS"
+	AC_SUBST(CPPFLAGS,"$CPPFLAGS")
+	AC_SUBST(LDFLAGS,"$LDFLAGS")
      fi
   fi
   if test "x$no_arts" = x ; then
