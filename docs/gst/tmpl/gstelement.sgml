@@ -81,22 +81,21 @@ of an element he doesn't need anymore.
 @element: a #GstElement to destroy
 
 
-<!-- ##### FUNCTION gst_element_get_name ##### -->
+<!-- ##### MACRO gst_element_set_name ##### -->
 <para>
-
+Sets the name of the element, getting rid of the old name if there was one.
 </para>
 
-@element: 
-@Returns: 
+@element: a #GstElement to set the name of.
+@name: the new name of the element.
 
-
-<!-- ##### FUNCTION gst_element_set_name ##### -->
+<!-- ##### MACRO gst_element_get_name ##### -->
 <para>
-
+Gets the name of the element.
 </para>
 
-@element: 
-@name: 
+@element: a #GstElement to get the name of.
+@Returns: the name of the element.
 
 
 <!-- connection -->
@@ -470,24 +469,6 @@ of an element he doesn't need anymore.
 @Returns: 
 
 
-<!-- ##### USER_FUNCTION GstElementGetClockFunction ##### -->
-<para>
-The function to get the clock from a clock providing element
-</para>
-
-@element: The element to get the clock of
-@Returns: The clock provided by the element
-
-
-<!-- ##### USER_FUNCTION GstElementSetClockFunction ##### -->
-<para>
-The function to set the clock on a clock receiving element.
-</para>
-
-@element: The element to set the clock on
-@clock: The clock to set on the element
-
-
 <!-- ##### FUNCTION gst_element_set_loop_function ##### -->
 <para>
 
@@ -525,22 +506,22 @@ circumstances.
 @sched: 
 
 
-<!-- ##### FUNCTION gst_element_get_parent ##### -->
+<!-- ##### MACRO gst_element_get_parent ##### -->
 <para>
-
+Gets the parent of an element.
 </para>
 
-@element: 
-@Returns: 
+@element: a #GstElement to get the parent of.
+@Returns: the #GstObject parent of the element.
 
 
-<!-- ##### FUNCTION gst_element_set_parent ##### -->
+<!-- ##### MACRO gst_element_set_parent ##### -->
 <para>
-
+Sets the parent of an element.
 </para>
 
-@element: 
-@parent: 
+@element: a #GstElement to set the parent of.
+@parent:  the new #GstObject parent of the object.
 
 
 <!-- ##### FUNCTION gst_element_get_managing_bin ##### -->
@@ -871,15 +852,6 @@ Get the clock of this element
 
 @obj: a #GstElement to query
 
-
-<!-- ##### SIGNAL GstElement::deep-notify ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: 
-@arg2: 
 
 <!-- ##### SIGNAL GstElement::eos ##### -->
 <para>
