@@ -1,3 +1,9 @@
+2004-04-03  Benjamin Otte  <otte@gnome.org>
+
+	* gst/schedulers/entryscheduler.c:
+	  completely revamp the inner workings, so it's a lot easier to
+	  understand and extend
+
 2004-04-03  Andy Wingo  <wingo@pobox.com>
 
 	* gst/schedulers/gstoptimalscheduler.c (GstOptSchedulerGroupLink):
