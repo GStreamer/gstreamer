@@ -408,7 +408,7 @@ gst_ffmpegdec_chain (GstPad    *pad,
     }
 
     if (len < 0) {
-      g_warning ("ffdec_%s: decoding error",
+      GST_ERROR_OBJECT (ffmpegdec, "ffdec_%s: decoding error",
 		 oclass->in_plugin->name);
       break;
     }
