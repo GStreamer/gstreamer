@@ -336,7 +336,7 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps)) {
     GST_DEBUG (GST_CAT_CAPS, "caps on lame pad %s:%s not fixed, delayed",
 	       GST_DEBUG_PAD_NAME (pad));
-    return GST_PAD_CONNECT_DELAYED;
+    return GST_PAD_LINK_DELAYED;
   }
 
   gst_caps_get_int (caps, "rate", &lame->samplerate);
@@ -345,10 +345,10 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!gst_lame_setup (lame)) {
     gst_element_error (GST_ELEMENT (lame), 
 	               "could not initialize encoder (wrong parameters?)");
-    return GST_PAD_CONNECT_REFUSED;
+    return GST_PAD_LINK_REFUSED;
   }
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -359,7 +359,7 @@ gst_lame_init (GstLame *lame)
   lame->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (gst_lame_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
   gst_pad_set_chain_function (lame->sinkpad, gst_lame_chain);
-  gst_pad_set_connect_function (lame->sinkpad, gst_lame_sinkconnect);
+  gst_pad_set_link_function (lame->sinkpad, gst_lame_sinkconnect);
 
   lame->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (gst_lame_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
