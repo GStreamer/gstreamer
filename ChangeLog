@@ -1,5 +1,9 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac: fix speex detection to work with 1.0 but not 1.1
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* gst-plugins.spec.in:
 	* pkgconfig/Makefile.am:

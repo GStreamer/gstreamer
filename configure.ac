@@ -1277,17 +1277,17 @@ GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
   AC_SUBST(LIBPNG_LIBS)
 ])
 
-dnl *** speex ***
+dnl *** speex 1.0 only, not 1.1 ***
+dnl speex_jitter.h is 1.1 only
 translit(dnm, m, l) AM_CONDITIONAL(USE_SPEEX, true)
 GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
-  PKG_CHECK_MODULES(SPEEX, speex >= 1.0 speex < 1.1, [
-    HAVE_SPEEX="yes"
-    AC_SUBST(SPEEX_CFLAGS)
-    AC_SUBST(SPEEX_LIBS)
-  ], [
-    GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex.h, HAVE_SPEEX="yes" SPEEX_LIBS="-lspeex")
-    AC_SUBST(SPEEX_CFLAGS)
-    AC_SUBST(SPEEX_LIBS)
+  GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex.h, [
+    AC_CHECK_HEADER(speex_jitter.h, HAVE_SPEEX="no", [
+      HAVE_SPEEX="yes"
+      SPEEX_LIBS="-lspeex"
+      AC_SUBST(SPEEX_CFLAGS)
+      AC_SUBST(SPEEX_LIBS)
+    ])
   ])
 ])
 
