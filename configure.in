@@ -150,6 +150,9 @@ dnl Next, check for the optional libraries:
 dnl =======================================
 
 
+dnl Check for libesd
+AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
+
 dnl Check for libgdk-pixbuf
 AC_PATH_PROG(GDK_PIXBUF_CONFIG, gdk-pixbuf-config, no)
 if test x$GDK_PIXBUF_CONFIG = xno; then
@@ -481,6 +484,7 @@ AM_CONDITIONAL(HAVE_PS2PDF,         $HAVE_PS2PDF)
 AM_CONDITIONAL(HAVE_FIG2DEV,        $HAVE_FIG2DEV)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
+AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
 
 
 
@@ -600,6 +604,8 @@ plugins/vorbis/Makefile
 plugins/capture/Makefile
 plugins/capture/v4l/Makefile
 plugins/cdparanoia/Makefile
+plugins/esd/Makefile
+plugins/esd/esdsink/Makefile
 gstplay/Makefile
 components/bonobo-gstmediaplay/Makefile
 test/Makefile
