@@ -285,7 +285,7 @@ dnl ==========================================================================
 GST_PLUGINS_ALL="\
         ac3parse adder audioscale auparse avi chart\
         cutter deinterlace flx intfloat law level\
-        median mpeg1enc mpeg1sys mpeg2enc mpeg2sub\
+        median mpeg1enc mpeg1sys mpeg1videoparse mpeg2enc mpeg2sub\
         mpegaudio mpegaudioparse mpegstream mpegtypes\
         passthrough playondemand rtjpeg silence sine\
         smooth spectrum speed stereo stereomono\
@@ -1015,6 +1015,7 @@ gst/level/Makefile
 gst/median/Makefile
 gst/mpeg1enc/Makefile
 gst/mpeg1sys/Makefile
+gst/mpeg1videoparse/Makefile
 gst/mpeg2enc/Makefile
 gst/mpeg2sub/Makefile
 gst/mpegaudio/Makefile
