@@ -235,17 +235,22 @@ static gboolean
 gst_gdk_animation_iter_create_pipeline (GstGdkAnimationIter *iter)
 {
   GstElement *src, *typefind, *autoplugger, *sink, *colorspace;
-  GstCaps *caps = GST_CAPS_NEW ("pixbuf_filter",
+  GstCaps *caps = GST_CAPS_NEW ("pixbuf_filter32",
 				"video/x-raw-rgb", 
 				  "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
-				  "bpp",	GST_PROPS_LIST (
-							GST_PROPS_INT (32),
-							GST_PROPS_INT (24)
-						),
-				  "red_mask",	GST_PROPS_INT (0x00FF0000),
-				  "green_mask",	GST_PROPS_INT (0x0000FF00),
-				  "blue_mask",	GST_PROPS_INT (0x000000FF)
+				  "bpp",	GST_PROPS_INT (32),
+				  "red_mask",	GST_PROPS_INT (0xFF000000),
+				  "green_mask",	GST_PROPS_INT (0x00FF0000),
+				  "blue_mask",	GST_PROPS_INT (0x0000FF00)
 				);
+  gst_caps_append (caps, GST_CAPS_NEW ("pixbuf_filter24",
+				"video/x-raw-rgb", 
+				  "endianness", GST_PROPS_INT (G_BIG_ENDIAN),
+				  "bpp",	GST_PROPS_INT (24),
+				  "red_mask",	GST_PROPS_INT (0xFF0000),
+				  "green_mask",	GST_PROPS_INT (0x00FF00),
+				  "blue_mask",	GST_PROPS_INT (0x0000FF)
+				));
 
   iter->pipeline = gst_element_factory_make ("pipeline", "main_pipeline");
   if (iter->pipeline == NULL) return FALSE;
@@ -276,15 +281,11 @@ gst_gdk_animation_iter_create_pipeline (GstGdkAnimationIter *iter)
   if (!gst_element_link (typefind, autoplugger))
     goto error;
 
-  /* add ffcolorspace if available so we get svq1, too */
-  if ((colorspace = gst_element_factory_make ("ffcolorspace", "ffcolorspace"))) {
-    gst_bin_add (GST_BIN (iter->pipeline), colorspace);
-    if (!gst_element_link (autoplugger, colorspace))
-      goto error;
-    autoplugger = colorspace;
-  }
-  
-  if (!(colorspace = gst_element_factory_make ("colorspace", "colorspace")))
+  /* try ffcolorspace if available so we get svq1, too */
+  colorspace = gst_element_factory_make ("ffcolorspace", "ffcolorspace");
+  if (!colorspace)
+    colorspace = gst_element_factory_make ("colorspace", "colorspace");
+  if (!colorspace)
     goto error;
   gst_bin_add (GST_BIN (iter->pipeline), colorspace);
   if (!gst_element_link (autoplugger, colorspace))

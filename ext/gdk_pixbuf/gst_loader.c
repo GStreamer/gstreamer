@@ -220,6 +220,8 @@ fill_info (GdkPixbufFormat *info)
     { "RIFF    AVI ", "    xxxx    ", 100 },
     /* MPEG 1 */
     { "xx\001\272", "zz  ", 100 },
+    /* MPEG 2 */
+    { "xx\001\263", "zz  ", 100 },
     /* Quicktime */
     { "    wide", "xxxx    ", 80 },
     { "    moov", "xxxx    ", 80 },
@@ -227,6 +229,8 @@ fill_info (GdkPixbufFormat *info)
     { "    pnot", "xxxx    ", 80 },
     { "    PICT", "xxxx    ", 80 },
     { "    free", "xxxx    ", 80 },
+    /* ASF */
+    { "\060\046\262\165\216\146\317\021\246\331 \252 \142\316\154", "          z z   ", 100 },
     { NULL, NULL, 0 }
   };
   
@@ -234,6 +238,7 @@ fill_info (GdkPixbufFormat *info)
     "video/avi", "video/x-avi", "video/x-msvideo",
     "video/mpeg",
     "video/quicktime", 
+    "video/x-ms-asf", 
     NULL
   };
 
@@ -241,6 +246,7 @@ fill_info (GdkPixbufFormat *info)
     "avi",
     "mpeg", "mpe", "mpg",
     "mov",
+    "asf", "wmv", 
     NULL
   };
   
