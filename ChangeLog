@@ -1,3 +1,9 @@
+2004-09-19  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_init), (gst_wavenc_chain):
+	* gst/wavenc/gstwavenc.h:
+	Added newmedia support to wavenc
+
 2004-09-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstfdset.c: (gst_fdset_fd_has_closed),
