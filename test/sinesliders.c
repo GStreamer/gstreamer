@@ -2,7 +2,7 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
-#include <sys/soundcard.h>
+#include <libs/control/gstcontrol.h>
 
 static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
   gtk_main_quit();
@@ -74,7 +74,7 @@ int main(int argc,char *argv[]) {
   g_object_set(G_OBJECT(osssink),"fragment",0x00180008,NULL);
   g_object_set(G_OBJECT(sinesrc),"buffersize",64,NULL);
  
-  dpman = GST_ELEMENT_DPARAM_MANAGER(sinesrc);
+  dpman = gst_dpman_get_manager (sinesrc);
 
   freq = gst_dparam_smooth_new(G_TYPE_FLOAT);
   vals = GST_DPARAM_GET_POINT(freq, 0LL);

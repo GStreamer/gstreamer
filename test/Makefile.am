@@ -5,6 +5,7 @@ GNOME_PROGS = spectrum wave mp1parse videotest aviparse \
 		videotest2 video2mp1 dvshow dv2mp1 \
 		mpeg2parse2 mpeg2parse3 \
 		mp2tomp1v2 main sinesliders testspeed
+sinesliders_LDADD = ../libs/control/libgstcontrol.la
 else
 GNOME_PROGS =
 endif
@@ -13,7 +14,7 @@ noinst_PROGRAMS = qtest $(GNOME_PROGS) record mp3 teardown buffer mp3parse \
 		  mp3play ac3parse ac3play dvdcat fake cobin \
 		  vidcapture avi2mpg mp2tomp1 mp1tomp1 pipetest \
 		  vidcapture2 mp2toavi mp3tovorbis xmmstest \
-		  mp3mad lat
+		  mp3mad lat pluginload
 
 SUBDIRS = xml bindings
 
