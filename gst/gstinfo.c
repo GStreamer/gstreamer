@@ -25,6 +25,28 @@
 #include "gstelement.h"
 #include "gstpad.h"
 
+#if defined __sgi__
+#include <rld_interface.h>
+typedef struct DL_INFO {
+  const char * dli_fname;
+  void       * dli_fbase;
+  const char * dli_sname;
+  void       * dli_saddr;
+  int          dli_version;
+  int          dli_reserved1;
+  long         dli_reserved[4];
+} Dl_info;
+#define _RLD_DLADDR             14
+int dladdr(void *address, Dl_info *dl);
+
+int dladdr(void *address, Dl_info *dl)
+{
+  void *v;
+  v = _rld_new_interface(_RLD_DLADDR,address,dl);
+  return (int)v;
+}
+#endif
+
 extern gchar *_gst_progname;
 
 
