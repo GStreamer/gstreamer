@@ -180,7 +180,7 @@ cothread_stub (void)
   thread->pc = 0;
   thread->sp = thread->top_sp;
   GST_DEBUG_LEAVE("");
-  fprintf(stderr,"uh, yeah, we shouldn't be here, but we should deal anyway\n");
+//  fprintf(stderr,"uh, yeah, we shouldn't be here, but we should deal anyway\n");
 }
 
 /**

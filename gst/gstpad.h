@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2000 Wim Taymans <wim.taymans@chello.be>
  *
  * gstpad.h: Header for GstPad object
  *
@@ -26,13 +26,6 @@
 
 #include <parser.h> // NOTE: This is xml-config's fault
 
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
-
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/cothreads.h>
@@ -44,21 +37,34 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_PAD                 	(gst_pad_get_type ())
-#define GST_PAD(obj)                 	(GTK_CHECK_CAST ((obj), GST_TYPE_PAD,GstPad))
-#define GST_PAD_CLASS(klass)         	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD,GstPadClass))
-#define GST_IS_PAD(obj)              	(GTK_CHECK_TYPE ((obj), GST_TYPE_PAD))
-#define GST_IS_PAD_CLASS(obj)        	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
+#define GST_TYPE_PAD			(gst_pad_get_type ())
+#define GST_PAD(obj)			(GTK_CHECK_CAST ((obj), GST_TYPE_PAD,GstPad))
+#define GST_PAD_CLASS(klass)		(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD,GstPadClass))
+#define GST_IS_PAD(obj)			(GTK_CHECK_TYPE ((obj), GST_TYPE_PAD))
+#define GST_IS_PAD_CLASS(obj)		(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 
-/* quick test to see if the pad is connected */
-#define GST_PAD_CONNECTED(pad) 		((pad) && (pad)->peer != NULL)
-#define GST_PAD_CAN_PULL(pad) 		((pad) && (pad)->pullfunc != NULL)
+#define GST_TYPE_REAL_PAD		(gst_real_pad_get_type ())
+#define GST_REAL_PAD(obj)		(GTK_CHECK_CAST ((obj), GST_TYPE_REAL_PAD,GstRealPad))
+#define GST_REAL_PAD_CLASS(klass)	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD,GstRealPadClass))
+#define GST_IS_REAL_PAD(obj)		(GTK_CHECK_TYPE ((obj), GST_TYPE_REAL_PAD))
+#define GST_IS_REAL_PAD_CLASS(obj)	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_REAL_PAD))
+
+#define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
+#define GST_GHOST_PAD(obj)		(GTK_CHECK_CAST ((obj), GST_TYPE_GHOST_PAD,GstGhostPad))
+#define GST_GHOST_PAD_CLASS(klass)	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD,GstGhostPadClass))
+#define GST_IS_GHOST_PAD(obj)		(GTK_CHECK_TYPE ((obj), GST_TYPE_GHOST_PAD))
+#define GST_IS_GHOST_PAD_CLASS(obj)	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
 
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
+typedef struct _GstRealPad GstRealPad;
+typedef struct _GstRealPadClass GstRealPadClass;
+typedef struct _GstGhostPad GstGhostPad;
+typedef struct _GstGhostPadClass GstGhostPadClass;
 typedef struct _GstPadTemplate GstPadTemplate;
 typedef struct _GstPadTemplateClass GstPadTemplateClass;
+
 
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)
@@ -91,14 +97,30 @@ struct _GstPad {
   GstObject object;
 
   gchar *name;
-  GList *caps;
   gpointer element_private;
+  GstObject *parent;
+
+  GstPadTemplate *padtemplate;	/* the template for this pad */
+};
+
+struct _GstPadClass {
+  GstObjectClass parent_class;
+};
+
+/* quick access macros */
+#define GST_PAD_NAME(pad)		(GST_PAD(pad)->name)
+#define GST_PAD_DIRECTION(pad)		(GST_PAD(pad)->direction)
+#define GST_PAD_PARENT(pad)		(GST_PAD(pad)->parent)
+
+struct _GstRealPad {
+  GstPad pad;
+
+  GList *caps;
+  GstPadDirection direction;
 
   cothread_state *threadstate;
 
-  GstPadDirection direction;
-
-  GstPad *peer;
+  GstRealPad *peer;
 
   GstBuffer *bufpen;
 
@@ -112,19 +134,30 @@ struct _GstPad {
   GstPadPullFunction pullfunc;
   GstPadPullRegionFunction pullregionfunc;
 
-  GstObject *parent;
   GList *ghostparents;
-
-  GstPadTemplate *padtemplate;	/* the template for this pad */
 };
 
-struct _GstPadClass {
-  GstObjectClass parent_class;
+/* quick test to see if the pad is connected */
+#define GST_PAD_CONNECTED(pad) 		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->peer != NULL)
+#define GST_PAD_CAN_PULL(pad) 		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->pullfunc != NULL)
+
+struct _GstRealPadClass {
+  GstPadClass parent_class;
 
   /* signal callbacks */
   void (*set_active)	(GstPad *pad, gboolean active);
   void (*caps_changed)	(GstPad *pad, GstCaps *newcaps);
   void (*eos)		(GstPad *pad);
+};
+
+struct _GstGhostPad {
+  GstPad pad;
+
+  GstRealPad *realpad;
+};
+
+struct _GstGhostPadClass {
+  GstPadClass parent_class;
 };
 
 /* template */
@@ -170,7 +203,10 @@ typedef GstPadFactoryEntry GstPadFactory[];
 
 #define GST_PAD_FACTORY_CAPS(a...) 	GINT_TO_POINTER(1),##a,NULL
 
+
 GtkType 		gst_pad_get_type		(void);
+GtkType 		gst_real_pad_get_type		(void);
+GtkType 		gst_ghost_pad_get_type		(void);
 
 GstPad*			gst_pad_new			(gchar *name, GstPadDirection direction);
 #define 		gst_pad_destroy(pad) 		gst_object_destroy (GST_OBJECT (pad))
@@ -233,6 +269,9 @@ void 			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 
 xmlNodePtr 		gst_pad_save_thyself		(GstPad *pad, xmlNodePtr parent);
 void 			gst_pad_load_and_connect	(xmlNodePtr parent, GstObject *element, GHashTable *elements);
+
+
+
 
 
 /* templates and factories */

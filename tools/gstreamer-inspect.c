@@ -87,6 +87,7 @@ gint print_element_info(GstElementFactory *factory) {
   GstElementClass *gstelement_class;
   GList *pads, *caps;
   GstPad *pad;
+  GstRealPad *realpad;
   GstPadTemplate *padtemplate;
   GstCaps *cap;
   GtkArg *args;
@@ -196,6 +197,7 @@ gint print_element_info(GstElementFactory *factory) {
     while (pads) {
       pad = GST_PAD(pads->data);
       pads = g_list_next(pads);
+      realpad = GST_REAL_PAD(pad);
 
       if (gst_pad_get_direction(pad) == GST_PAD_SRC)
         printf("  SRC: '%s'\n",gst_pad_get_name(pad));
@@ -205,27 +207,27 @@ gint print_element_info(GstElementFactory *factory) {
         printf("  UNKNOWN!!!: '%s'\n",gst_pad_get_name(pad));
 
       printf("    Implementation:\n");
-      if (pad->chainfunc)
-        printf("      Has chainfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->chainfunc));
-      if (pad->getfunc)
-        printf("      Has getfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->getfunc));
-      if (pad->getregionfunc)
-        printf("      Has getregionfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->getregionfunc));
-      if (pad->qosfunc)
-        printf("      Has qosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->qosfunc));
-      if (pad->eosfunc) {
-        if (pad->eosfunc == gst_pad_eos_func)
+      if (realpad->chainfunc)
+        printf("      Has chainfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->chainfunc));
+      if (realpad->getfunc)
+        printf("      Has getfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->getfunc));
+      if (realpad->getregionfunc)
+        printf("      Has getregionfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->getregionfunc));
+      if (realpad->qosfunc)
+        printf("      Has qosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->qosfunc));
+      if (realpad->eosfunc) {
+        if (realpad->eosfunc == gst_pad_eos_func)
           printf("      Has default eosfunc() gst_pad_eos_func()\n");
         else
-          printf("      Has eosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->eosfunc));
+          printf("      Has eosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->eosfunc));
       }
 
       if (pad->padtemplate)
         printf("    Pad Template: '%s'\n",pad->padtemplate->name_template);
 
-      if (pad->caps) {
+      if (realpad->caps) {
         printf("    Capabilities:\n");
-        caps = pad->caps;
+        caps = realpad->caps;
         while (caps) {
 	  GstType *type;
 
@@ -254,6 +256,8 @@ gint print_element_info(GstElementFactory *factory) {
   args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
   for (i=0;i<num_args;i++) {
     gtk_object_getv(GTK_OBJECT(element), 1, &args[i]);
+
+// FIXME should say whether it's read-only or not
 
     printf("  %s: ",args[i].name);
     switch (args[i].type) {

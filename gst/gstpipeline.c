@@ -196,10 +196,10 @@ gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     GstPad *sinkpad = (GstPad *)sinkpads->data;
 
     // if we have a match, connect the pads
-    if (sinkpad->direction == GST_PAD_SINK && 
+    if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK && 
         !GST_PAD_CONNECTED(sinkpad)) 
     {
-      if (gst_caps_list_check_compatibility (pad->caps, sinkpad->caps)) {
+      if (gst_caps_list_check_compatibility (gst_pad_get_caps_list(pad), gst_pad_get_caps_list(sinkpad))) {
         gst_pad_connect(pad, sinkpad);
         GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", pad->name, 
 		       gst_element_get_name(src));
@@ -232,7 +232,7 @@ gst_pipeline_pads_autoplug (GstElement *src, GstElement *sink)
   while (srcpads && !connected) {
     GstPad *srcpad = (GstPad *)srcpads->data;
 
-    if (srcpad->direction == GST_PAD_SRC) 
+    if (gst_pad_get_direction(srcpad) == GST_PAD_SRC) 
       connected = gst_pipeline_pads_autoplug_func (src, srcpad, sink);
 
     srcpads = g_list_next(srcpads);
@@ -362,7 +362,8 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
 
     pad = (GstPad *)gst_element_get_pad_list (element)->data;
 
-    base_factories[i] = factories[i] = gst_autoplug_caps_list (g_list_append(NULL,src_caps), pad->caps);
+    base_factories[i] = factories[i] = gst_autoplug_caps_list (g_list_append(NULL,src_caps), 
+gst_pad_get_caps_list(pad));
     // if we have a succesfull connection, proceed
     if (factories[i] != NULL) {
       i++;
@@ -456,7 +457,7 @@ differ:
           sinkpad = (GstPad *)sinkpads->data;
 
 	  // FIXME connect matching pads, not just the first one...
-          if (sinkpad->direction == GST_PAD_SINK && 
+          if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK && 
 	      !GST_PAD_CONNECTED(sinkpad)) {
             GList *caps = gst_pad_get_caps_list (sinkpad);
 

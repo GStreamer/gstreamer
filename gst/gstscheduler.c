@@ -53,6 +53,7 @@ gst_bin_chain_wrapper (int argc,char *argv[])
   G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
   GList *pads;
   GstPad *pad;
+  GstRealPad *realpad;
   GstBuffer *buf;
         
   GST_DEBUG_ENTER("(\"%s\")",name);
@@ -62,11 +63,13 @@ gst_bin_chain_wrapper (int argc,char *argv[])
     while (pads) {
       pad = GST_PAD (pads->data);
       pads = g_list_next (pads);   
-      if (pad->direction == GST_PAD_SINK) {
+      if (!GST_IS_REAL_PAD(pad)) continue;
+      realpad = GST_REAL_PAD(pad);
+      if (realpad->direction == GST_PAD_SINK) {
         GST_DEBUG (0,"pulling a buffer from %s:%s\n", name, gst_pad_get_name (pad));
         buf = gst_pad_pull (pad);
         GST_DEBUG (0,"calling chain function of %s:%s\n", name, gst_pad_get_name (pad));
-        (pad->chainfunc) (pad,buf);
+        (realpad->chainfunc) (pad,buf);
         GST_DEBUG (0,"calling chain function of %s:%s done\n", name, gst_pad_get_name (pad));
       }
     }
@@ -83,6 +86,7 @@ gst_bin_src_wrapper (int argc,char *argv[])
   GstElement *element = GST_ELEMENT (argv);
   GList *pads;
   GstPad *pad;
+  GstRealPad *realpad;
   GstBuffer *buf;
   G_GNUC_UNUSED const gchar *name = gst_element_get_name (element);
   
@@ -92,24 +96,26 @@ gst_bin_src_wrapper (int argc,char *argv[])
     pads = element->pads;
     while (pads) {
       pad = GST_PAD (pads->data);   
-      if (pad->direction == GST_PAD_SRC) {
+      pads = g_list_next(pads);
+      if (!GST_IS_REAL_PAD(pad)) continue;
+      realpad = GST_REAL_PAD(pad);
+      if (realpad->direction == GST_PAD_SRC) {
 //        region_struct *region = cothread_get_data (element->threadstate, "region");
         GST_DEBUG (0,"calling _getfunc for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
 //        if (region) {
           //gst_src_push_region (GST_SRC (element), region->offset, region->size);
-//          if (pad->getregionfunc == NULL)
+//          if (eralpad->getregionfunc == NULL)
 //            fprintf(stderr,"error, no getregionfunc in \"%s\"\n", name);
-//          buf = (pad->getregionfunc)(pad, region->offset, region->size);
+//          buf = (realpad->getregionfunc)(pad, region->offset, region->size);
 //        } else {
-          if (pad->getfunc == NULL)
+          if (realpad->getfunc == NULL)
             fprintf(stderr,"error, no getfunc in \"%s\"\n", name);
-          buf = (pad->getfunc)(pad);
+          buf = (realpad->getfunc)(pad);
 //        }
  
         GST_DEBUG (0,"calling gst_pad_push on pad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
         gst_pad_push (pad, buf);
       }
-      pads = g_list_next(pads);
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
   GST_FLAG_UNSET(element,GST_ELEMENT_COTHREAD_STOPPING);
@@ -124,7 +130,7 @@ gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
   cothread_state *threadstate = GST_ELEMENT(pad->parent)->threadstate;
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
   GST_DEBUG (0,"putting buffer %p in peer's pen\n",buf);
-  pad->peer->bufpen = buf;
+  GST_REAL_PAD(pad)->peer->bufpen = buf;
   GST_DEBUG (0,"switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(pad->parent)->threadstate));
   cothread_switch (threadstate);
   GST_DEBUG (0,"done switching\n");
@@ -132,18 +138,19 @@ gst_bin_pushfunc_proxy (GstPad *pad, GstBuffer *buf)
 
 static GstBuffer*
 gst_bin_pullfunc_proxy (GstPad *pad)
-{       
+{
+  GstRealPad *realpad = GST_REAL_PAD(pad);
   GstBuffer *buf;
 
   cothread_state *threadstate = GST_ELEMENT(pad->parent)->threadstate;
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
-  if (pad->bufpen == NULL) {
+  if (realpad->bufpen == NULL) {
     GST_DEBUG (0,"switching to %p (@%p)\n",threadstate,&(GST_ELEMENT(pad->parent)->threadstate));
     cothread_switch (threadstate);
   }
   GST_DEBUG (0,"done switching\n");
-  buf = pad->bufpen;  
-  pad->bufpen = NULL;
+  buf = realpad->bufpen;  
+  realpad->bufpen = NULL;
   return buf; 
 }
   
@@ -183,6 +190,7 @@ gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
   cothread_func wrapper_function;
   GList *pads;
   GstPad *pad;
+  GstRealPad *realpad;
 
   GST_DEBUG (0,"chain is using cothreads\n");
 
@@ -225,28 +233,30 @@ gst_schedule_cothreaded_chain (GstBin *bin, _GstBinChain *chain) {
     while (pads) {
       pad = GST_PAD (pads->data);
       pads = g_list_next (pads);
+      if (!GST_IS_REAL_PAD(pad)) continue;
+      realpad = GST_REAL_PAD(pad);
 
       // if the element is DECOUPLED or outside the manager, we have to chain
       if ((wrapper_function == NULL) ||
-          (GST_ELEMENT(pad->peer->parent)->manager != GST_ELEMENT(bin))) {
+          (GST_ELEMENT(GST_PAD(realpad->peer)->parent)->manager != GST_ELEMENT(bin))) {
         // set the chain proxies
         if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
           GST_DEBUG (0,"copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          pad->pushfunc = pad->chainfunc;
+          realpad->pushfunc = realpad->chainfunc;
         } else {
           GST_DEBUG (0,"copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          pad->pullfunc = pad->getfunc;
-          pad->pullregionfunc = pad->getregionfunc;
+          realpad->pullfunc = realpad->getfunc;
+          realpad->pullregionfunc = realpad->getregionfunc;
         }
 
       // otherwise we really are a cothread
       } else {
         if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
           GST_DEBUG (0,"setting cothreaded push proxy for sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          pad->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_proxy);
+          realpad->pushfunc = GST_DEBUG_FUNCPTR(gst_bin_pushfunc_proxy);
         } else {
           GST_DEBUG (0,"setting cothreaded pull proxy for srcpad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-          pad->pullfunc = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
+          realpad->pullfunc = GST_DEBUG_FUNCPTR(gst_bin_pullfunc_proxy);
         }
       }
     }
@@ -270,6 +280,7 @@ gst_schedule_chained_chain (GstBin *bin, _GstBinChain *chain) {
   GstElement *element;
   GList *pads;
   GstPad *pad;
+  GstRealPad *realpad;
 
   GST_DEBUG (0,"chain entered\n");
   // walk through all the elements
@@ -283,14 +294,16 @@ gst_schedule_chained_chain (GstBin *bin, _GstBinChain *chain) {
     while (pads) {
       pad = GST_PAD (pads->data);
       pads = g_list_next (pads);
+      if (!GST_IS_REAL_PAD(pad)) continue;
+      realpad = GST_REAL_PAD(pad);
 
       if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
         GST_DEBUG (0,"copying chain function into push proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-        pad->pushfunc = pad->chainfunc; 
+        realpad->pushfunc = realpad->chainfunc; 
       } else {
         GST_DEBUG (0,"copying get function into pull proxy for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
-        pad->pullfunc = pad->getfunc;
-        pad->pullregionfunc = pad->getregionfunc;
+        realpad->pullfunc = realpad->getfunc;
+        realpad->pullregionfunc = realpad->getregionfunc;
       }
     }
   }
@@ -316,15 +329,13 @@ static void gst_bin_schedule_cleanup(GstBin *bin) {
 }
 
 void gst_bin_schedule_func(GstBin *bin) {
-//  GstElement *manager;
   GList *elements;
   GstElement *element;
-//  const gchar *elementname;
   GSList *pending = NULL;
-//  GstBin *pending_bin;
   GList *pads;
   GstPad *pad;
-//  GstElement *peer_manager;
+  GstRealPad *realpad;
+  GstElement *peerparent;
   GList *chains;
   _GstBinChain *chain;
 
@@ -393,30 +404,34 @@ void gst_bin_schedule_func(GstBin *bin) {
         while (pads) {
           pad = GST_PAD (pads->data);
           pads = g_list_next (pads);
+          if (!GST_IS_REAL_PAD(pad)) continue;
+          realpad = GST_REAL_PAD(pad);
           GST_DEBUG (0,"have pad %s:%s\n",GST_DEBUG_PAD_NAME(pad));
 
-if (pad->peer == NULL) GST_ERROR(pad,"peer is null!");
-          g_assert(pad->peer != NULL);
-          g_assert(pad->peer->parent != NULL);
-          //g_assert(GST_ELEMENT(pad->peer->parent)->manager != NULL);
+if (realpad->peer == NULL) GST_ERROR(pad,"peer is null!");
+          g_assert(realpad->peer != NULL);
+          g_assert(GST_PAD(realpad->peer)->parent != NULL);
 
-	  GST_DEBUG (0,"peer pad %p\n", pad->peer);
+          peerparent = GST_ELEMENT(GST_PAD(realpad->peer)->parent);
+
+	  GST_DEBUG (0,"peer pad %p\n", realpad->peer);
           // only bother with if the pad's peer's parent is this bin or it's DECOUPLED
           // only add it if it's in the list of un-visited elements still
-          if ((g_list_find (elements, pad->peer->parent) != NULL) ||
-              GST_FLAG_IS_SET (pad->peer->parent, GST_ELEMENT_DECOUPLED)) {
+          if ((g_list_find (elements, peerparent) != NULL) ||
+              GST_FLAG_IS_SET (peerparent, GST_ELEMENT_DECOUPLED)) {
             // add the peer element to the pending list
-            GST_DEBUG (0,"adding '%s' to list of pending elements\n",gst_element_get_name(GST_ELEMENT(pad->peer->parent)));
-            pending = g_slist_prepend (pending, GST_ELEMENT(pad->peer->parent));
+            GST_DEBUG (0,"adding '%s' to list of pending elements\n",
+                       gst_element_get_name(peerparent));
+            pending = g_slist_prepend (pending, peerparent);
 
             // if this is a sink pad, then the element on the other side is an entry
             if ((gst_pad_get_direction (pad) == GST_PAD_SINK) &&
-                (GST_FLAG_IS_SET (pad->peer->parent, GST_ELEMENT_DECOUPLED))) {
-              chain->entries = g_list_prepend (chain->entries, pad->peer->parent);
-              GST_DEBUG (0,"added '%s' as DECOUPLED entry into the chain\n",gst_element_get_name(GST_ELEMENT(pad->peer->parent))); 
+                (GST_FLAG_IS_SET (peerparent, GST_ELEMENT_DECOUPLED))) {
+              chain->entries = g_list_prepend (chain->entries, peerparent);
+              GST_DEBUG (0,"added '%s' as DECOUPLED entry into the chain\n",gst_element_get_name(peerparent));
             }
           } else
-            GST_DEBUG (0,"element '%s' has already been dealt with\n",gst_element_get_name(GST_ELEMENT(pad->peer->parent)));
+            GST_DEBUG (0,"element '%s' has already been dealt with\n",gst_element_get_name(peerparent));
         }
       }
     } while (pending);
