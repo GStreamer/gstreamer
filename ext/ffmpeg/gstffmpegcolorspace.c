@@ -353,7 +353,8 @@ gst_ffmpegcsp_chain (GstPad  *pad,
     guint size = avpicture_get_size (space->to_pixfmt,
 				     space->width,
 				     space->height);
-    outbuf = gst_buffer_new_and_alloc (size);
+    outbuf = gst_pad_alloc_buffer (gst_pad_get_peer (pad),
+                                   GST_BUFFER_OFFSET_NONE, size);
 
     /* convert */
     avpicture_fill ((AVPicture *) space->from_frame, GST_BUFFER_DATA (inbuf),
