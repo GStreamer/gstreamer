@@ -1,5 +1,24 @@
 2004-01-14  Julien MOUTTE  <julien@moutte.net>
 
+	* gst/videofilter/gstvideobalance.c: (gst_videobalance_init),
+	(gst_videobalance_colorbalance_set_value),
+	(gst_videobalance_colorbalance_get_value): Fixing videobalance ranges
+	for colorbalance interface implementation.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get),
+	(gst_ximagesink_set_property), (gst_ximagesink_get_property),
+	(gst_ximagesink_dispose), (gst_ximagesink_init),
+	(gst_ximagesink_class_init): Adding DISPLAY property.
+	* sys/ximage/ximagesink.h: Adding display_name to store display.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_get_property),
+	(gst_xvimagesink_dispose), (gst_xvimagesink_init),
+	(gst_xvimagesink_class_init): Adding DISPLAY property and colorbalance
+	properties (they still need polishing though for gst-launch use : no
+	xcontext yet, i ll do that tomorrow).
+	* sys/xvimage/xvimagesink.h: Adding display_name to store display.
+
+2004-01-14  Julien MOUTTE  <julien@moutte.net>
+
 	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup),
 	(gst_play_set_location), (gst_play_set_visualization): Preparing 
 	switch integration, adding videobalance in the pipeline.

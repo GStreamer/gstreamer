@@ -215,8 +215,8 @@ gst_videobalance_init (GTypeInstance *instance, gpointer g_class)
       
       channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
       channel->label = g_strdup (channels[i]);
-      channel->min_value = G_MININT;
-      channel->max_value = G_MAXINT;
+      channel->min_value = -1000;
+      channel->max_value = 1000;
       
       videobalance->channels = g_list_append (videobalance->channels,
                                               channel);
@@ -263,13 +263,13 @@ gst_videobalance_colorbalance_set_value (GstColorBalance        *balance,
   g_return_if_fail (channel->label != NULL);
   
   if (!g_ascii_strcasecmp (channel->label, "HUE"))
-    vb->hue = (value - G_MININT) * 2 / ((double) G_MAXINT - G_MININT) - 1;
+    vb->hue = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
   else if (!g_ascii_strcasecmp (channel->label, "SATURATION"))
-    vb->saturation = (value - G_MININT) * 2 / ((double) G_MAXINT - G_MININT);
+    vb->saturation = (value + 1000.0) * 2.0 / 2000.0;
   else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS"))
-    vb->brightness = (value - G_MININT) * 2 / ((double) G_MAXINT - G_MININT) - 1;
+    vb->brightness = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
   else if (!g_ascii_strcasecmp (channel->label, "CONTRAST"))
-    vb->contrast = (value - G_MININT) * 2 / ((double) G_MAXINT - G_MININT);
+    vb->contrast = (value + 1000.0) * 2.0 / 2000.0;
 }
 
 static gint
@@ -284,13 +284,13 @@ gst_videobalance_colorbalance_get_value (GstColorBalance        *balance,
   g_return_val_if_fail (channel->label != NULL, 0);
   
   if (!g_ascii_strcasecmp (channel->label, "HUE"))
-    value = (vb->hue + 1) * ((double) G_MAXINT - G_MININT) / 2 + G_MININT;
+    value = (vb->hue + 1) * 2000.0 / 2.0 - 1000.0;
   else if (!g_ascii_strcasecmp (channel->label, "SATURATION"))
-    value = vb->saturation * ((double) G_MAXINT - G_MININT) / 2 + G_MININT;
+    value = vb->saturation * 2000.0 / 2.0 - 1000.0;
   else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS"))
-    value = (vb->brightness + 1) * ((double) G_MAXINT - G_MININT) / 2 + G_MININT;
+    value = (vb->brightness + 1) * 2000.0 / 2.0 - 1000.0;
   else if (!g_ascii_strcasecmp (channel->label, "CONTRAST"))
-    value = vb->contrast * ((double) G_MAXINT - G_MININT) / 2 + G_MININT;
+    value = vb->contrast * 2000.0 / 2.0 - 1000.0;
   
   return value;
 }
