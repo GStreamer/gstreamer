@@ -442,6 +442,8 @@ gst_ladspa_init (GstLADSPA *ladspa)
     /* get mode (no sink pads) */
     GST_DEBUG (0, "mono get mode with 1 src pad");
 
+    ladspa->newcaps = TRUE;
+
     gst_pad_set_connect_function (ladspa->srcpads[0], gst_ladspa_connect_get);
     gst_pad_set_get_function (ladspa->srcpads[0], gst_ladspa_get);
   } else if (sinkcount==1){
@@ -1045,7 +1047,7 @@ gst_ladspa_get(GstPad *pad)
   data = (LADSPA_Data *) GST_BUFFER_DATA(buf);  
 
   desc = ladspa->descriptor;
-  GST_DPMAN_PREPROCESS(ladspa->dpman, ladspa->buffersize, ladspa->timestamp);
+  GST_DPMAN_PREPROCESS(ladspa->dpman, GST_BUFFER_SIZE (buf) / sizeof (gfloat), ladspa->timestamp);
   num_processed = 0;
 
   /* split up processing of the buffer into chunks so that dparams can
