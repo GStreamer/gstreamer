@@ -15,7 +15,7 @@ SUBDIRS_DOCS =
 endif
 
 if BUILD_TESTS
-SUBDIRS_TESTS = test tests testsuite
+SUBDIRS_TESTS =
 else
 SUBDIRS_TESTS =
 endif
@@ -47,7 +47,7 @@ EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \
 	     configure.base autogen.sh \
 	     LICENSE REQUIREMENTS ABOUT-NLS $(man_MANS) \
-	     idiottest.mak ltconfig.sh
+	     idiottest.mak
 
 dist-hook:
 	cp gstreamer.spec $(distdir)
