@@ -139,6 +139,70 @@
 	    <name>view1_menu</name>
 
 	    <widget>
+	      <class>GtkMenuItem</class>
+	      <name>present_movie</name>
+	      <label>P_resent Movie</label>
+	      <right_justify>False</right_justify>
+
+	      <widget>
+		<class>GtkMenu</class>
+		<name>present_movie_menu</name>
+
+		<widget>
+		  <class>GtkMenuItem</class>
+		  <name>original_size</name>
+		  <accelerator>
+		    <modifiers>GDK_MOD1_MASK</modifiers>
+		    <key>GDK_1</key>
+		    <signal>activate</signal>
+		  </accelerator>
+		  <signal>
+		    <name>activate</name>
+		    <handler>on_original_size_activate</handler>
+		    <data>mplay</data>
+		    <last_modification_time>Sun, 06 May 2001 01:58:18 GMT</last_modification_time>
+		  </signal>
+		  <label>Original Size</label>
+		  <right_justify>False</right_justify>
+		</widget>
+
+		<widget>
+		  <class>GtkMenuItem</class>
+		  <name>double_size</name>
+		  <accelerator>
+		    <modifiers>GDK_MOD1_MASK</modifiers>
+		    <key>GDK_2</key>
+		    <signal>activate</signal>
+		  </accelerator>
+		  <signal>
+		    <name>activate</name>
+		    <handler>on_double_size_activate</handler>
+		    <last_modification_time>Sun, 06 May 2001 01:34:06 GMT</last_modification_time>
+		  </signal>
+		  <label>Double Size</label>
+		  <right_justify>False</right_justify>
+		</widget>
+
+		<widget>
+		  <class>GtkMenuItem</class>
+		  <name>full_screen</name>
+		  <accelerator>
+		    <modifiers>GDK_MOD1_MASK</modifiers>
+		    <key>GDK_3</key>
+		    <signal>activate</signal>
+		  </accelerator>
+		  <signal>
+		    <name>activate</name>
+		    <handler>on_full_screen_activate</handler>
+		    <last_modification_time>Sun, 06 May 2001 01:34:06 GMT</last_modification_time>
+		  </signal>
+		  <label>Full Screen</label>
+		  <right_justify>False</right_justify>
+		</widget>
+	      </widget>
+	    </widget>
+
+	    <widget>
 	      <class>GtkCheckMenuItem</class>
 	      <name>extended1</name>
 	      <signal>
@@ -443,7 +507,6 @@ Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
       <last_modification_time>Sun, 06 Aug 2000 15:55:52 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_OK</stock_button>
-    <relief>GTK_RELIEF_NORMAL</relief>
   </widget>
 
   <widget>
@@ -459,7 +522,6 @@ Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
       <last_modification_time>Sun, 06 Aug 2000 15:53:48 GMT</last_modification_time>
     </signal>
     <stock_button>GNOME_STOCK_BUTTON_CANCEL</stock_button>
-    <relief>GTK_RELIEF_NORMAL</relief>
   </widget>
 </widget>
 
