@@ -124,7 +124,7 @@ static void     	gst_basic_scheduler_pad_link		(GstScheduler *sched, GstPad *src
 								 GstPad *sinkpad);
 static void     	gst_basic_scheduler_pad_unlink 		(GstScheduler *sched, GstPad *srcpad,
 								 GstPad *sinkpad);
-static GstPad*  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
+static void	  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstClockReturn	gst_basic_scheduler_clock_wait	 	(GstScheduler *sched, GstElement *element,
 								 GstClockID id, GstClockTimeDiff *jitter);
 static GstSchedulerState
@@ -265,8 +265,8 @@ GstPluginDesc plugin_desc = {
   plugin_init
 };
 
-static void
-gst_basic_scheduler_loopfunc_wrapper (int argc, void **argv)
+static int
+gst_basic_scheduler_loopfunc_wrapper (int argc, char **argv)
 {
   GstElement *element = GST_ELEMENT_CAST (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
@@ -294,10 +294,12 @@ gst_basic_scheduler_loopfunc_wrapper (int argc, void **argv)
 
   GST_DEBUG_LEAVE ("(%d,'%s')", argc, name);
   gst_object_unref (GST_OBJECT (element));
+
+  return 0;
 }
 
-static void
-gst_basic_scheduler_chain_wrapper (int argc, void **argv)
+static int
+gst_basic_scheduler_chain_wrapper (int argc, char **argv)
 {
   GstElement *element = GST_ELEMENT_CAST (argv);
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
@@ -356,10 +358,12 @@ gst_basic_scheduler_chain_wrapper (int argc, void **argv)
 
   GST_DEBUG_LEAVE ("(%d,'%s')", argc, name);
   gst_object_unref (GST_OBJECT (element));
+
+  return 0;
 }
 
-static void
-gst_basic_scheduler_src_wrapper (int argc, void **argv)
+static int
+gst_basic_scheduler_src_wrapper (int argc, char **argv)
 {
   GstElement *element = GST_ELEMENT_CAST (argv);
   GList *pads;
@@ -381,7 +385,7 @@ gst_basic_scheduler_src_wrapper (int argc, void **argv)
       pads = g_list_next (pads);
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC && GST_PAD_IS_USABLE (realpad)) {
 	GST_DEBUG (GST_CAT_DATAFLOW, "calling _getfunc for %s:%s", GST_DEBUG_PAD_NAME (realpad));
-	g_return_if_fail (GST_RPAD_GETFUNC (realpad) != NULL);
+	g_return_val_if_fail (GST_RPAD_GETFUNC (realpad) != NULL, 0);
 	buf = GST_RPAD_GETFUNC (realpad) (GST_PAD_CAST (realpad));
 	if (buf) {
 	  GST_DEBUG (GST_CAT_DATAFLOW, "calling gst_pad_push on pad %s:%s %p",
@@ -401,6 +405,8 @@ gst_basic_scheduler_src_wrapper (int argc, void **argv)
   SCHED (element)->current = NULL;
 
   GST_DEBUG_LEAVE ("");
+
+  return 0;
 }
 
 static void
@@ -1296,7 +1302,7 @@ gst_basic_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad, GstPad * 
 #endif
 }
 
-static GstPad *
+static void
 gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
 {
   GstPad *pad = NULL;
@@ -1329,7 +1335,6 @@ gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
 
     g_assert (pad != NULL);
   }
-  return pad;
 }
 
 static GstClockReturn

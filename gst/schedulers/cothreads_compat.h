@@ -114,11 +114,11 @@ static void do_cothread_switch(cothread *to)
 
 #define do_cothread_create(new_cothread, context, func, argc, argv)         \
   G_STMT_START{                                                             \
-    new_cothread = cothread_create ((func), 0, (void**) (argv), (context)); \
+    new_cothread = cothread_create ((func), 0, (char**) (argv), (context)); \
   }G_STMT_END
   
 #define do_cothread_setfunc(cothread, context, func, argc, argv)            \
-  cothread_setfunc ((cothread), (func), (argc), (void **) (argv), (context))
+  cothread_setfunc ((cothread), (func), (argc), (char **) (argv), (context))
 
 #define do_cothread_destroy(cothread)		cothread_destroy(cothread)
   

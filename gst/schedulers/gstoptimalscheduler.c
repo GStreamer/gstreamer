@@ -224,7 +224,7 @@ static gboolean		gst_opt_scheduler_interrupt 		(GstScheduler *sched, GstElement 
 static void 		gst_opt_scheduler_error	 		(GstScheduler *sched, GstElement *element);
 static void     	gst_opt_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static void     	gst_opt_scheduler_pad_unlink 		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-static GstPad*  	gst_opt_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
+static void	  	gst_opt_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstClockReturn   gst_opt_scheduler_clock_wait        	(GstScheduler *sched, GstElement *element,
 	                                                         GstClockID id, GstClockTimeDiff *jitter);
 static GstSchedulerState
@@ -1782,14 +1782,12 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
   }
 }
 
-static GstPad*
+static void
 gst_opt_scheduler_pad_select (GstScheduler *sched, GList *padlist)
 {
   //GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
   
   g_warning ("pad select, implement me");
-
-  return NULL;
 }
 
 static GstClockReturn

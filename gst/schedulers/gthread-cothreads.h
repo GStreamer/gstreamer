@@ -35,7 +35,7 @@
  */
 
 /* define "cothread", "cothread_context" and "cothread_func" */
-typedef void (*cothread_func) (int, char **);
+typedef int (*cothread_func) (int, char **);
 
 typedef struct _cothread cothread;
 typedef struct _cothread_context cothread_context;
