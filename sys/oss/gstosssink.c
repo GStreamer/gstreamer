@@ -188,7 +188,7 @@ gst_osssink_class_init (GstOssSinkClass *klass)
     g_param_spec_boolean("mute","mute","mute",
                          TRUE,G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_SYNC,
-    g_param_spec_boolean("sync","Sync","If syncing on timestamps should be anabled",
+    g_param_spec_boolean("sync","Sync","If syncing on timestamps should be enabled",
                          TRUE, G_PARAM_READWRITE)); 
 
   /* it would be nice to show format in symbolic form, oh well */
