@@ -2,7 +2,7 @@
 
 extern gboolean _gst_plugin_spew;
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
     g_print("have eof, quitting\n");
    exit(0);
 }
@@ -25,7 +25,7 @@ int main(int argc,char *argv[]) {
 // gst_plugin_load("mp3parse");
   gst_plugin_load_all();
 
-  pipeline = gst_pipeline_new("pipeline");
+  pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(pipeline != NULL, -1);
 
   srcfactory = gst_elementfactory_find("disksrc");

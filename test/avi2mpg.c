@@ -13,7 +13,7 @@ int fd;
 char *outfile;
 GstElement *mux;
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
   g_print("have eos, quitting\n");
   exit(0);
 }
@@ -123,8 +123,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 }
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
-  GstElement *src, *parse, *fdsink;
+  GstElement *pipeline, *src, *parse, *fdsink;
   GstElementFactory *fdsinkfactory;
 
   g_print("have %d args\n",argc);

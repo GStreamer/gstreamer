@@ -5,15 +5,14 @@
 #include <gst/gst.h>
 
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
    g_print("have eof, quitting\n");
    exit(0);
 }
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
   GstElementFactory *srcfactory, *pipefactory, *sinkfactory;
-  GstElement *src, *pipe, *sink;
+  GstElement *pipeline, *src, *pipe, *sink;
   int fd;
 
   g_print("have %d args\n",argc);

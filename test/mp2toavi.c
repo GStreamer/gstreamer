@@ -9,7 +9,7 @@
 GstElement *mux;
 GstElement *merge_subtitles;
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
   g_print("have eos, quitting\n");
   exit(0);
 }
@@ -229,8 +229,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 }
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
-  GstElement *src, *parse;
+  GstElement *pipeline, *src, *parse;
   GstElement *fdsink;
   GstElementFactory *fdsinkfactory;
   int fd;

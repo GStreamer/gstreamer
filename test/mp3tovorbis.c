@@ -4,7 +4,7 @@
 #include <fcntl.h>
 
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
    g_print("have eof, quitting\n");
    exit(0);
 }

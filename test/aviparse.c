@@ -9,7 +9,7 @@ GstElement *show, *play;
 GstElement *audio_thread, *video_thread;
 GstElement *audio_queue, *video_queue;
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
   g_print("have eos, quitting\n");
   exit(0);
 }
@@ -59,8 +59,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 }
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
-  GstElement *src, *parse;
+  GstElement *pipeline, *src, *parse;
 
   g_print("have %d args\n",argc);
 

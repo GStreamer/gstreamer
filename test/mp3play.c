@@ -1,15 +1,14 @@
 #include <gst/gst.h>
 
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
    g_print("have eof, quitting\n");
    exit(0);
 }
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
   GstElementFactory *srcfactory, *parsefactory, *decodefactory, *playfactory;
-  GstElement *src, *parse, *decode, *play;
+  GstElement *pipeline, *src, *parse, *decode, *play;
   GstPad *infopad;
 
   g_print("have %d args\n",argc);

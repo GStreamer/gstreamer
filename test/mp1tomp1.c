@@ -8,7 +8,7 @@
 int fd;
 char *outfile;
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
   g_print("have eos, quitting\n");
   exit(0);
 }
@@ -170,8 +170,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 }
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
-  GstElement *src, *parse, *out;
+  GstElement *pipeline, *src, *parse, *out;
   GstPad *infopad;
   int i,c;
 

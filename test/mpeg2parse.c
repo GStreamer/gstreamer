@@ -2,7 +2,7 @@
 #include <gnome.h>
 #include <gst/gst.h>
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
   g_print("have eos, quitting\n");
   exit(0);
 }
@@ -185,7 +185,7 @@ int main(int argc,char *argv[]) {
   gst_plugin_load("mpeg2parse");
   //gst_plugin_load("mpeg1parse");
 
-  pipeline = gst_pipeline_new("pipeline");
+  pipeline = GST_PIPELINE(gst_pipeline_new("pipeline"));
   g_return_val_if_fail(pipeline != NULL, -1);
 
   if (strstr(argv[1],"video_ts")) {

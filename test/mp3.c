@@ -5,7 +5,7 @@ extern gboolean _gst_plugin_spew;
 
 static gboolean playing = TRUE;
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
   DEBUG("have EOF\n");
   playing = FALSE;
 }

@@ -9,7 +9,7 @@ extern gboolean _gst_plugin_spew;
    don't screw around with state unexpectedly */
 static gboolean playing = TRUE;
 
-void eof(GstSrc *src) {
+void eof(GstElement *src) {
   DEBUG("have EOF\n");
   playing = FALSE;
 }
