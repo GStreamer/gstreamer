@@ -1,3 +1,11 @@
+2004-09-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/debug/gstnavigationtest.c: (gst_navigationtest_class_init),
+	(gst_navigationtest_handle_src_event), (draw_box_planar411),
+	(gst_navigationtest_planar411), (gst_navigationtest_change_state):
+	* gst/debug/gstnavigationtest.h:
+	  make navigationtest display button-press and button-release events
+
 2004-09-26 Iain <iaingnome@gmail.com>
 
 	* gst/wavenc/gstwavenc.c (gst_wavenc_chain): Company says we need to
@@ -494,6 +502,7 @@
 		Create cues for audio only files.
 
 2004-08-31  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+>>>>>>> 1.1090
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_build_list):
 	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_new):
