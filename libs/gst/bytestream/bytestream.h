@@ -22,9 +22,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef struct _GstByteStream GstByteStream;
 
@@ -65,5 +63,7 @@ void                    gst_bytestream_get_status	(GstByteStream *bs, guint32 *a
 guint64			gst_bytestream_get_timestamp	(GstByteStream *bs);
 
 void 			gst_bytestream_print_status	(GstByteStream *bs);
+
+G_END_DECLS
 
 #endif /* __GST_BYTESTREAM_H__ */
