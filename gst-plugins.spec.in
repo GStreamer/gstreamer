@@ -196,14 +196,12 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
 %{_libdir}/gstreamer-%{majorminor}/libgstalaw.so
-%{_libdir}/gstreamer-%{majorminor}/libgstintfloat.so
 %{_libdir}/gstreamer-%{majorminor}/libgstlevel.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmulaw.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpassthrough.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
 %{_libdir}/gstreamer-%{majorminor}/libmixmatrix.so
-%{_libdir}/gstreamer-%{majorminor}/libgstoneton.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstauparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
@@ -264,6 +262,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgamma.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
+%{_libdir}/gstreamer-%{majorminor}/libgstinterleave.so
 # non-core plugins with external dependencies
 @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
 @USE_ARTSC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstartsdsink.so
@@ -282,11 +281,13 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 @USE_V4L_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvideosink.so
-@USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer.schemas
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so.*
+@USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas
 @USE_GCONF_TRUE@%{_libdir}/pkgconfig/gstreamer-gconf-%{majorminor}.pc
 # Snapshot plugin
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
+@USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
+@USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 %post 
 %{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 
@@ -316,13 +317,10 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalancechannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/colorbalance/colorbalance-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/play/play-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/play/play.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner-marshal.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixertrack.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tuner.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tuner/tunerchannel.h
