@@ -44,8 +44,6 @@ static void gst_alsa_src_loop (GstElement * element);
 static void gst_alsa_src_flush (GstAlsaSrc * src);
 static GstElementStateReturn gst_alsa_src_change_state (GstElement * element);
 
-static GstClockTime gst_alsa_src_get_time (GstAlsa * this);
-
 static GstAlsa *src_parent_class = NULL;
 
 static GstPadTemplate *
@@ -118,6 +116,7 @@ gst_alsa_src_class_init (gpointer g_class, gpointer class_data)
 
   element_class->change_state = gst_alsa_src_change_state;
 }
+
 static void
 gst_alsa_src_init (GstAlsaSrc * src)
 {
@@ -128,14 +127,9 @@ gst_alsa_src_init (GstAlsaSrc * src)
   gst_pad_set_getcaps_function (this->pad[0], gst_alsa_get_caps);
   gst_element_add_pad (GST_ELEMENT (this), this->pad[0]);
 
-  this->clock =
-      gst_alsa_clock_new ("alsasrcclock", gst_alsa_src_get_time, this);
-  /* we hold a ref to our clock until we're disposed */
-  gst_object_ref (GST_OBJECT (this->clock));
-  gst_object_sink (GST_OBJECT (this->clock));
-
   gst_element_set_loop_function (GST_ELEMENT (this), gst_alsa_src_loop);
 }
+
 static int
 gst_alsa_src_mmap (GstAlsa * this, snd_pcm_sframes_t * avail)
 {
@@ -359,26 +353,47 @@ gst_alsa_src_loop (GstElement * element)
     src->buf[i] =
         gst_buffer_new_and_alloc (gst_alsa_samples_to_bytes (this, avail));
   }
+
   /* fill buffer with data */
   if ((copied = this->transmit (this, &avail)) <= 0)
     return;
-  /* push the buffers out and let them have fun */
-  for (i = 0; i < element->numpads; i++) {
-    GstBuffer *buf;
 
-    if (!src->buf[i])
-      return;
-    if (copied != this->period_size)
-      GST_BUFFER_SIZE (src->buf[i]) = gst_alsa_samples_to_bytes (this, copied);
-    GST_BUFFER_TIMESTAMP (src->buf[i]) =
-        gst_alsa_samples_to_timestamp (this, this->transmitted);
-    GST_BUFFER_DURATION (src->buf[i]) =
-        gst_alsa_samples_to_timestamp (this, copied);
-    buf = src->buf[i];
-    src->buf[i] = NULL;
-    gst_pad_push (this->pad[i], GST_DATA (buf));
+  {
+    gint outsize;
+    GstClockTime outtime, outdur;
+
+    outsize = gst_alsa_samples_to_bytes (this, copied);
+    outdur = gst_alsa_samples_to_timestamp (this, copied);
+    outtime = GST_CLOCK_TIME_NONE;
+
+    if (GST_ELEMENT_CLOCK (this)) {
+      if (GST_CLOCK (GST_ALSA (this)->clock) == GST_ELEMENT_CLOCK (this)) {
+        outtime = gst_alsa_samples_to_timestamp (this, this->transmitted);
+      } else {
+        outtime = gst_element_get_time (GST_ELEMENT (this));
+      }
+    }
+
+    /* push the buffers out and let them have fun */
+    for (i = 0; i < element->numpads; i++) {
+      GstBuffer *buf;
+
+      if (!src->buf[i])
+        return;
+      if (copied != this->period_size)
+        GST_BUFFER_SIZE (src->buf[i]) = outsize;
+
+      GST_BUFFER_TIMESTAMP (src->buf[i]) = outtime;
+      GST_BUFFER_DURATION (src->buf[i]) = outdur;
+      GST_BUFFER_OFFSET (src->buf[i]) = this->transmitted;
+      GST_BUFFER_OFFSET_END (src->buf[i]) = this->transmitted + copied;
+
+      buf = src->buf[i];
+      src->buf[i] = NULL;
+      gst_pad_push (this->pad[i], GST_DATA (buf));
+    }
+    this->transmitted += copied;
   }
-  this->transmitted += copied;
 }
 
 static void
@@ -393,6 +408,7 @@ gst_alsa_src_flush (GstAlsaSrc * src)
     }
   }
 }
+
 static GstElementStateReturn
 gst_alsa_src_change_state (GstElement * element)
 {
@@ -404,7 +420,9 @@ gst_alsa_src_change_state (GstElement * element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
     case GST_STATE_READY_TO_PAUSED:
+      break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
@@ -420,16 +438,4 @@ gst_alsa_src_change_state (GstElement * element)
     return GST_ELEMENT_CLASS (src_parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
-}
-
-static GstClockTime
-gst_alsa_src_get_time (GstAlsa * this)
-{
-  snd_pcm_sframes_t delay;
-
-  if (snd_pcm_delay (this->handle, &delay) == 0 && this->format) {
-    return GST_SECOND * (this->transmitted + delay) / this->format->rate;
-  } else {
-    return 0;
-  }
 }

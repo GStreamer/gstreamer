@@ -38,6 +38,8 @@ typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 struct _GstAlsaSrc {
   GstAlsaMixer   parent;
   GstBuffer     *buf[GST_ALSA_MAX_TRACKS];
+  snd_pcm_status_t *status;
+  GstClockTime  base_time; /* FIXME: move this up ? already present in element ? */
 };
 
 struct _GstAlsaSrcClass {

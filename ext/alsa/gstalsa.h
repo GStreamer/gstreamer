@@ -164,6 +164,7 @@ struct _GstAlsa {
   GstClockTime			max_discont;	/* max difference between current
   						   playback timestamp and buffers timestamps
 						 */
+  snd_pcm_status_t *status;
 };
 
 struct _GstAlsaClass {
@@ -190,6 +191,8 @@ GstCaps *		gst_alsa_fixate 	(GstPad *		pad,
 GstCaps *		gst_alsa_caps		(snd_pcm_format_t	format,
 						 gint			rate,
 						 gint			channels);
+
+GstClockTime			gst_alsa_get_time	(GstAlsa * this);
 
 /* audio processing functions */
 inline snd_pcm_sframes_t	gst_alsa_update_avail	(GstAlsa * this);

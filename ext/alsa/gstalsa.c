@@ -203,6 +203,12 @@ static void
 gst_alsa_init (GstAlsa * this)
 {
   this->device = g_strdup ("default");
+  g_assert (snd_pcm_status_malloc (&(this->status)) == 0);
+
+  this->clock = gst_alsa_clock_new ("alsaclock", gst_alsa_get_time, this);
+  /* we hold a ref to our clock until we're disposed */
+  gst_object_ref (GST_OBJECT (this->clock));
+  gst_object_sink (GST_OBJECT (this->clock));
 
   GST_FLAG_SET (this, GST_ELEMENT_EVENT_AWARE);
   GST_FLAG_SET (this, GST_ELEMENT_THREAD_SUGGESTED);
@@ -214,6 +220,9 @@ gst_alsa_dispose (GObject * object)
   GstAlsa *this = GST_ALSA (object);
 
   g_free (this->device);
+  this->device = NULL;
+  snd_pcm_status_free (this->status);
+  this->status = NULL;
 
   if (this->clock)
     gst_object_unparent (GST_OBJECT (this->clock));
@@ -308,6 +317,33 @@ gst_alsa_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+/**
+ * ask ALSA for current time using htstamp
+ * FIXME: This is not very accurate, should use alsa timers instead.
+ * htstamp seems to use the system clock instead of the hw clock.
+ */
+GstClockTime
+gst_alsa_get_time (GstAlsa * this)
+{
+  int err;
+  snd_htimestamp_t timestamp;
+  GstClockTime time;
+
+  if ((err = snd_pcm_status (this->handle, this->status)) < 0) {
+    GST_WARNING_OBJECT (this, "could not get snd_pcm_status");
+  }
+
+  snd_pcm_status_get_htstamp (this->status, &timestamp);
+
+  /* time = GST_TIMESPEC_TO_TIME (timestamp); */
+  time = timestamp.tv_sec * GST_SECOND + timestamp.tv_nsec * GST_NSECOND;
+
+  GST_LOG_OBJECT (this, "ALSA reports time of %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time));
+
+  return time;
 }
 
 static const GList *
@@ -1251,6 +1287,10 @@ gst_alsa_xrun_recovery (GstAlsa * this)
     timersub (&now, &tstamp, &diff);
     GST_INFO_OBJECT (this, "alsa: xrun of at least %.3f msecs",
         diff.tv_sec * 1000 + diff.tv_usec / 1000.0);
+
+    /* start new timestamps from the current time */
+    this->transmitted = gst_alsa_timestamp_to_samples (this,
+        gst_element_get_time (GST_ELEMENT (this)));
 
     /* if we're allowed to recover, ... */
     if (this->autorecover) {
