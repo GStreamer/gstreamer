@@ -34,5 +34,9 @@ void 	gst_smpte_paint_triangle_linear (guint32 *dest, gint stride,
 					 gint x1, gint y1, gint c1, 
 					 gint x2, gint y2, gint c2);
 
+void 	gst_smpte_paint_triangle_clock 	(guint32 *dest, gint stride,
+		                         gint x0, gint y0, gint c0,
+				         gint x1, gint y1, gint c1, 
+					 gint x2, gint y2, gint c2);
 
 #endif /* __GST_SMPTE_PAINT_H__ */
