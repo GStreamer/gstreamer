@@ -1,5 +1,7 @@
 2004-08-12  Johan Dahlin  <johan@gnome.org>
 
+	* gst/interfaces.defs (TunerNorm, TunerChannel): Add fields.
+
 	* gst/interfaces.override (_wrap_gst_tuner_list_norms) 
 	(_wrap_gst_tuner_list_channels): Impl.
 

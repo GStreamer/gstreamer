@@ -516,6 +516,14 @@
    (parent "GstObject")
    (c-name "GstTunerChannel")
    (gtype-id "GST_TYPE_TUNER_CHANNEL")
+   (fields
+    '("gchar*" "label")
+    '("GstTunerChannelFlags" "flags")
+    '("gfloat" "freq_multiplicator")
+    '("gulong" "min_frequency")
+    '("gulong" "max_frequency")
+    '("gint" "min_signal")
+    '("gint" "max_signal"))
 )
 
 (define-object TunerNorm
@@ -523,4 +531,6 @@
    (parent "GstObject")
    (c-name "GstTunerNorm")
    (gtype-id "GST_TYPE_TUNER_NORM")
+    '("gchar*" "label")
+    '("gfloat" "fps")
 )
