@@ -1,3 +1,8 @@
+2005-01-25  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l/gstv4lelement.c (gst_v4l_iface_supported): Fix compile
+	for #ifndef HAVE_XVIDEO.
+
 2005-01-24  Jeffrey C. Ollie
 
 	reviewed by: Maciej Katafiasz  <mathrick@freedesktop.org>
