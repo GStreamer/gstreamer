@@ -416,6 +416,12 @@ GST_CHECK_FEATURE(OSS, [OSS audio], osssrc osssink, [
   AC_CHECK_HEADER(sys/soundcard.h, HAVE_OSS="yes", HAVE_OSS="no")
 ])
 
+dnl *** Video 4 Linux ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_V4L, true)
+GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc, [
+  AC_CHECK_HEADER(linux/videodev.h, HAVE_V4L="yes", HAVE_V4L="no")
+])
+
 dnl *** VGA ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VGA, true)
 GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
@@ -760,11 +766,6 @@ AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
   HAVE_LINUX_CDROM=yes, HAVE_LINUX_CDROM=no
-)
-
-dnl Check for linux/videodev.h
-AC_CHECK_HEADER(linux/videodev.h,
-  HAVE_LINUX_VIDEODEV=yes, HAVE_LINUX_VIDEODEV=no
 )
 
 
