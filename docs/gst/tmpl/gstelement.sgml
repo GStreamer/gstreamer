@@ -71,16 +71,6 @@ The element object
 </para>
 
 
-<!-- ##### MACRO gst_element_destroy ##### -->
-<para>
-Destroys the element (without taking the refcount into account).
-An application programmer should use #gst_object_unref instead to dispose
-of an element he doesn't need anymore.
-</para>
-
-@element: a #GstElement to destroy
-
-
 <!-- ##### MACRO gst_element_get_name ##### -->
 <para>
 Gets the name of the element.
@@ -870,6 +860,8 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_USE_THREADSAFE_PROPERTIES: 
 @GST_ELEMENT_SCHEDULER_PRIVATE1: 
 @GST_ELEMENT_SCHEDULER_PRIVATE2: 
+@GST_ELEMENT_LOCKED_STATE: 
+@GST_ELEMENT_ERROR: 
 @GST_ELEMENT_FLAG_LAST: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->

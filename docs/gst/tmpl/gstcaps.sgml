@@ -163,7 +163,7 @@ The gstcaps structure
 Flags for this caps.
 </para>
 
-@GST_CAPS_FIXED: flag indicating the caps has no variable properties
+@GST_CAPS_UNUSED: 
 @GST_CAPS_FLOATING: the caps is not owned by anyone
 
 <!-- ##### MACRO GST_CAPS_FLAGS ##### -->
@@ -276,14 +276,6 @@ The name used for tracing
 @id: 
 @props: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_destroy ##### -->
-<para>
-
-</para>
-
-@caps: 
 
 
 <!-- ##### FUNCTION gst_caps_ref ##### -->

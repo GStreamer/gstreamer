@@ -409,14 +409,6 @@ Flags for the pad.
 @Returns: 
 
 
-<!-- ##### MACRO gst_pad_destroy ##### -->
-<para>
-Destroy the pad.
-</para>
-
-@pad: the pad to destroy
-
-
 <!-- ##### FUNCTION gst_pad_new_from_template ##### -->
 <para>
 

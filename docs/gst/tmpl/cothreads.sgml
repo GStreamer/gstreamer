@@ -38,12 +38,6 @@ The cothread state structure
 @stack_size: 
 @magic_number: 
 
-<!-- ##### STRUCT cothread_context ##### -->
-<para>
-The cothread context structure
-</para>
-
-
 <!-- ##### USER_FUNCTION cothread_func ##### -->
 <para>
 the function that will be called when the cothread starts. The function
@@ -55,6 +49,17 @@ it.
 @argv: a main-like array of arguments
 @Returns: a return code
 
+
+<!-- ##### STRUCT cothread_context ##### -->
+<para>
+The cothread context structure
+</para>
+
+@cothreads: 
+@main: 
+@current: 
+@mutex: 
+@gst_thread: 
 
 <!-- ##### MACRO COTHREAD_STARTED ##### -->
 <para>

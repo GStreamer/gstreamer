@@ -49,14 +49,6 @@ Flags for the scheduler
 @GST_SCHEDULER_FLAG_LAST: subclasses can start numbering their flags starting
                           from here.
 
-<!-- ##### MACRO gst_scheduler_destroy ##### -->
-<para>
-Destroy the scheduler
-</para>
-
-@sched: The scheduler to destroy.
-
-
 <!-- ##### FUNCTION gst_scheduler_setup ##### -->
 <para>
 

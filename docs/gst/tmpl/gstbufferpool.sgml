@@ -245,12 +245,3 @@ Free the given pool. This is dangerous, use gst_buffer_pool_unref() instead.
 @pool: 
 
 
-<!-- ##### MACRO gst_buffer_pool_needs_copy_on_write ##### -->
-<para>
-Checks if a copy needs to be made of the bufferpool before it can
-safely be modified.
-</para>
-
-@pool: The pool to query
-
-

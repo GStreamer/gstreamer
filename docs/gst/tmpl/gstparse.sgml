@@ -53,6 +53,9 @@ The parsing errors.
 @GST_PARSE_ERROR_NO_SUCH_ELEMENT: The pipeline description contains a non existing element
 @GST_PARSE_ERROR_NO_SUCH_PROPERTY: The pipeline description contains a non existing element property
 @GST_PARSE_ERROR_LINK: A pad link could not be made
+@GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY: 
+@GST_PARSE_ERROR_EMPTY_BIN: 
+@GST_PARSE_ERROR_EMPTY: 
 
 <!-- ##### MACRO GST_PARSE_ERROR ##### -->
 <para>

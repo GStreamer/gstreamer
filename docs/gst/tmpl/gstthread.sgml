@@ -23,9 +23,9 @@ A Thread can act as a toplevel bin as it has its own scheduler.
 Thread flags:
 </para>
 
-@GST_THREAD_STATE_STARTED: The thread is started
 @GST_THREAD_STATE_SPINNING: The thread is runnning
 @GST_THREAD_STATE_REAPING: The thread is ending.
+@GST_THREAD_MUTEX_LOCKED: 
 @GST_THREAD_FLAG_LAST: subclass use this to start their enumeration
 
 <!-- ##### STRUCT GstThread ##### -->

@@ -326,14 +326,6 @@ The name used for tracing memory allocations.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_props_destroy ##### -->
-<para>
-
-</para>
-
-@props: 
-
-
 <!-- ##### FUNCTION gst_props_ref ##### -->
 <para>
 
@@ -437,16 +429,6 @@ The name used for tracing memory allocations.
 @props: 
 @first_name: 
 @Varargs: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_props_has_property ##### -->
-<para>
-
-</para>
-
-@props: 
-@name: 
 @Returns: 
 
 
@@ -582,6 +564,14 @@ The name used for tracing memory allocations.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_props_entry_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_props_entry_get_boolean ##### -->
 <para>
 
@@ -678,7 +668,6 @@ The name used for tracing memory allocations.
 
 </para>
 
-@entry: 
 @Returns: 
 
 

@@ -37,7 +37,6 @@ The different major types of events.
 @GST_EVENT_FLUSH: a flush event.
 @GST_EVENT_EMPTY: an empty event.
 @GST_EVENT_DISCONTINUOUS: a discontinuous event to indicate the stream has a discontinuity.
-@GST_EVENT_NEW_MEDIA: a new media stream is started
 @GST_EVENT_QOS: a quality of service event
 @GST_EVENT_SEEK: a seek event.
 @GST_EVENT_SEEK_SEGMENT: a segment seek with start and stop position

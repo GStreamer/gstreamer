@@ -229,14 +229,6 @@ Check if the object has been destroyed.
 @object: the object
 
 
-<!-- ##### FUNCTION gst_object_destroy ##### -->
-<para>
-
-</para>
-
-@object: the object
-
-
 <!-- ##### FUNCTION gst_object_save_thyself ##### -->
 <para>
 

@@ -461,13 +461,32 @@ default. If you want to define a default category, do it like this:
 
 <!-- ##### MACRO GST_CAT_LEVEL_LOG ##### -->
 <para>
-
+GST_CAT_LEVEL_LOG:
+Outputs a debugging message. This is the most general macro for outputting
+debugging messages. You will probably want to use one of the ones described
+below.
 </para>
 
-@cat: 
-@level: 
-@object: 
-@...: 
+@cat: category to use
+@level: the severity of the message
+@object: the #GObject the message belongs to or NULL if none
+@...: A printf-style message to output
+
+
+<!-- ##### MACRO GST_INFO ##### -->
+<para>
+Output an informational message in the default category.
+</para>
+
+@...: printf-style message to output
+
+
+<!-- ##### MACRO GST_DEBUG ##### -->
+<para>
+Output a debugging message in the default category.
+</para>
+
+@...: printf-style message to output
 
 
 <!-- ##### MACRO GST_CAT_ERROR_OBJECT ##### -->
@@ -533,24 +552,6 @@ Output an error message in the given category.
 <!-- ##### MACRO GST_CAT_WARNING ##### -->
 <para>
 Output a warning message in the given category.
-</para>
-
-@cat: category to use
-@...: printf-style message to output
-
-
-<!-- ##### MACRO GST_CAT_INFO ##### -->
-<para>
-Output an informational message in the given category.
-</para>
-
-@cat: category to use
-@...: printf-style message to output
-
-
-<!-- ##### MACRO GST_CAT_DEBUG ##### -->
-<para>
-Output a debuggign message in the given category.
 </para>
 
 @cat: category to use
@@ -629,19 +630,21 @@ Output a warning message in the default category.
 @...: printf-style message to output
 
 
-<!-- ##### MACRO GST_INFO ##### -->
+<!-- ##### MACRO GST_CAT_INFO ##### -->
 <para>
-Output an informational message in the default category.
+Output an informational message in the given category.
 </para>
 
+@cat: category to use
 @...: printf-style message to output
 
 
-<!-- ##### MACRO GST_DEBUG ##### -->
+<!-- ##### MACRO GST_CAT_DEBUG ##### -->
 <para>
-Output a debugging message in the default category.
+Output a debuggign message in the given category.
 </para>
 
+@cat: category to use
 @...: printf-style message to output
 
 
@@ -655,15 +658,26 @@ Output a logging message in the default category.
 
 <!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
 <para>
-
+Register a pointer to a function with its name, so it can later be used by
+GST_DEBUG_FUNCPTR_NAME().
 </para>
 
-@ptr: 
+@ptr: The function to register
+Returns: The ptr to the function.
 
 
 <!-- ##### MACRO GST_DEBUG_FUNCPTR_NAME ##### -->
 <para>
-
+Retrieves the name of the function, if it was previously registered with
+GST_DEBUG_FUNCPTR(). If not, it returns a description of the pointer.
+<note>
+<para>
+Make sure you free the string after use.
+</para>
+</note>
 </para>
 
-@ptr:
+@ptr: pointer to the function
+Returns: The name of the function
+
+

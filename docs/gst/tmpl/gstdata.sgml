@@ -113,14 +113,6 @@ Various flags that can be set on a GstData
 @GST_DATA_READONLY: The data is readonly
 @GST_DATA_FLAG_LAST: Subclasses can add additional flags starting from this offset
 
-<!-- ##### MACRO GST_DATA_IS_READONLY ##### -->
-<para>
-Query if the GstData is READONLY
-</para>
-
-@data: The data to query
-
-
 <!-- ##### MACRO GST_DATA_REFCOUNT ##### -->
 <para>
 Get access to the refcount field of the GstData
@@ -183,15 +175,6 @@ Get access to the free function of the data
 
 
 <!-- ##### FUNCTION gst_data_copy ##### -->
-<para>
-
-</para>
-
-@data: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_data_needs_copy_on_write ##### -->
 <para>
 
 </para>

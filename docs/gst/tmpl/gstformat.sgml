@@ -26,8 +26,6 @@ Standard predefined formats
 @GST_FORMAT_TIME: time in nanoseconds
 @GST_FORMAT_BUFFERS: buffers
 @GST_FORMAT_PERCENT: percentage of stream
-@GST_FORMAT_UNITS: frames for video, samples for audio, other definitions as 
-                   defined by the media type.
 
 <!-- ##### MACRO GST_FORMAT_PERCENT_MAX ##### -->
 <para>

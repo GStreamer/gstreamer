@@ -276,17 +276,6 @@ gchar *		gst_debug_construct_term_color	(guint colorinfo);
 
 extern GstDebugCategory *	GST_CAT_DEFAULT;
 
-/**
- * GST_CAT_LEVEL_LOG:
- * @cat: category to use
- * @level: the severity of the message
- * @object: the #GObject the message belongs to or NULL if none
- * @...: A printf-style message to output
- *
- * Outputs a debugging message. This is the most general macro for outputting
- * debugging messages. You will probably want to use one of the ones described 
- * below.
- */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{			\
   if (gst_debug_is_active ()) {				\
@@ -389,30 +378,7 @@ void* 		_gst_debug_register_funcptr	(void *			ptr,
 						 gchar *		ptrname);
 gchar*		_gst_debug_nameof_funcptr 	(void *			ptr);
 
-/**
- * GST_DEBUG_FUNCPTR:
- * @ptr: The function to register
- *
- * Register a pointer to a function with its name, so it can later be used by
- * GST_DEBUG_FUNCPTR_NAME().
- *
- * Returns: The ptr to the function.
- */
 #define GST_DEBUG_FUNCPTR(ptr) (_gst_debug_register_funcptr((void *)(ptr), #ptr) , ptr)
-/**
- * GST_DEBUG_FUNCPTR_NAME:
- * @ptr: pointer to the function
- *
- * Retrieves the name of the function, if it was previously registered with 
- * GST_DEBUG_FUNCPTR(). If not, it returns a description of the pointer.
- * <note>
- * <para>
- * Make sure you free the string after use.
- * </para>
- * </note>
- *
- * Returns: The name of the function
- */
 #define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
 
 #else /* GST_DISABLE_GST_DEBUG */
