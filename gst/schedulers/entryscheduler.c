@@ -130,6 +130,8 @@ struct _GstEntryScheduler
   GList *schedule_possible;     /* possible entry points */
   GList *waiting;               /* elements waiting for the clock */
   gboolean error;               /* if an element threw an error */
+
+  GSList *reaping;              /* cothreads we need to destroy but can't */
 };
 
 struct _GstEntrySchedulerClass
@@ -526,10 +528,37 @@ can_schedule (Entry * entry)
   }
 }
 
-#define safe_cothread_switch(sched,cothread) G_STMT_START{ \
-  if (do_cothread_get_current (sched->context) != cothread) \
-    do_cothread_switch (cothread); \
-}G_STMT_END
+static void
+safe_cothread_switch (GstEntryScheduler * scheduler, cothread * thread)
+{
+  GList *list;
+  cothread *cur = do_cothread_get_current (scheduler->context);
+
+  if (cur == thread) {
+    GST_LOG_OBJECT (scheduler, "switch to same cothread, ignoring");
+  }
+
+  for (list = scheduler->schedule_possible; list; list = g_list_next (list)) {
+    if (ENTRY_IS_COTHREAD (list->data)) {
+      CothreadPrivate *priv = (CothreadPrivate *) list->data;
+
+      if (priv->thread == thread)
+        gst_object_ref (GST_OBJECT (priv->element));
+      if (priv->thread == cur)
+        gst_object_unref (GST_OBJECT (priv->element));
+    }
+  }
+  do_cothread_switch (thread);
+  if (cur == do_cothread_get_main (scheduler->context)) {
+    GSList *walk;
+
+    for (walk = scheduler->reaping; walk; walk = g_slist_next (walk)) {
+      do_cothread_destroy (walk->data);
+    }
+    g_slist_free (scheduler->reaping);
+    scheduler->reaping = NULL;
+  }
+}
 
 /* the meat - no guarantee as to which cothread this function is called */
 static void
@@ -739,26 +768,46 @@ gst_entry_scheduler_setup (GstScheduler * sched)
 }
 
 static void
+safe_cothread_destroy (CothreadPrivate * thread)
+{
+  GstEntryScheduler *scheduler = thread->sched;
+
+  if (do_cothread_get_current (scheduler->context) ==
+      do_cothread_get_main (scheduler->context)) {
+    do_cothread_destroy (thread->thread);
+  } else {
+    GST_WARNING_OBJECT (scheduler, "delaying destruction of cothread %p",
+        thread->thread);
+    scheduler->reaping = g_slist_prepend (scheduler->reaping, thread->thread);
+  }
+  thread->thread = NULL;
+}
+
+static void
+gst_entry_scheduler_remove_all_cothreads (GstEntryScheduler * scheduler)
+{
+  GList *list;
+
+  for (list = scheduler->schedule_possible; list; list = g_list_next (list)) {
+    if (ENTRY_IS_COTHREAD (list->data)) {
+      CothreadPrivate *priv = (CothreadPrivate *) list->data;
+
+      if (priv->thread)
+        safe_cothread_destroy (priv);
+    }
+  }
+}
+
+static void
 gst_entry_scheduler_reset (GstScheduler * sched)
 {
-#if 0
-  /* FIXME: do we need to destroy cothreads ourselves? */
-  GList *elements = GST_ENTRY_SCHEDULER (sched)->elements;
+  GstEntryScheduler *scheduler = GST_ENTRY_SCHEDULER (sched);
 
-  while (elements) {
-    GstElement *element = GST_ELEMENT (elements->data);
-
-    if (GST_ELEMENT_THREADSTATE (element)) {
-      do_cothread_destroy (GST_ELEMENT_THREADSTATE (element));
-      GST_ELEMENT_THREADSTATE (element) = NULL;
-    }
-    elements = g_list_next (elements);
-  }
-#endif
-
-  if (GST_ENTRY_SCHEDULER (sched)->context) {
-    do_cothread_context_destroy (GST_ENTRY_SCHEDULER (sched)->context);
-    GST_ENTRY_SCHEDULER (sched)->context = NULL;
+  if (scheduler->context) {
+    g_return_if_fail (scheduler->reaping == NULL);
+    gst_entry_scheduler_remove_all_cothreads (scheduler);
+    do_cothread_context_destroy (scheduler->context);
+    scheduler->context = NULL;
   }
 }
 
@@ -813,7 +862,7 @@ _remove_cothread (CothreadPrivate * priv)
   sched->schedule_possible = g_list_remove (sched->schedule_possible, priv);
 
   if (priv->thread)
-    do_cothread_destroy (priv->thread);
+    safe_cothread_destroy (priv);
   g_free (priv);
 }
 
@@ -856,23 +905,11 @@ gst_entry_scheduler_state_transition (GstScheduler * scheduler,
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (element == scheduler->parent) {
-        GList *list;
-
-        for (list = sched->schedule_possible; list; list = g_list_next (list)) {
-          if (ENTRY_IS_COTHREAD (list->data)) {
-            CothreadPrivate *priv = (CothreadPrivate *) list->data;
-
-            if (priv->thread) {
-              do_cothread_destroy (priv->thread);
-              priv->thread = NULL;
-            }
-          }
-        }
+        gst_entry_scheduler_remove_all_cothreads (sched);
       }
       if (element->sched_private != NULL
           && ELEMENT_PRIVATE (element)->thread != NULL) {
-        do_cothread_destroy (ELEMENT_PRIVATE (element)->thread);
-        ELEMENT_PRIVATE (element)->thread = NULL;
+        safe_cothread_destroy (ELEMENT_PRIVATE (element));
       }
       break;
     case GST_STATE_READY_TO_NULL:

@@ -670,6 +670,7 @@ testsuite/negotiation/Makefile
 testsuite/parse/Makefile
 testsuite/plugin/Makefile
 testsuite/refcounting/Makefile
+testsuite/schedulers/Makefile
 testsuite/tags/Makefile
 testsuite/threads/Makefile
 examples/Makefile

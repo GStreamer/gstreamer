@@ -1,3 +1,28 @@
+2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstbin.c: (gst_bin_iterate_func), (gst_bin_iterate):
+	  don't
+	* gst/schedulers/entryscheduler.c: (safe_cothread_switch),
+	(safe_cothread_destroy),
+	(gst_entry_scheduler_remove_all_cothreads),
+	(gst_entry_scheduler_reset), (_remove_cothread),
+	(gst_entry_scheduler_state_transition):
+	  hold off cothread destruction if we're not in main cothread
+	* configure.ac:
+	* testsuite/Makefile.am:
+	  add new test dir
+	* testsuite/schedulers/.cvsignore:
+	* testsuite/schedulers/Makefile.am:
+	  add tests
+	* testsuite/schedulers/relink.c: (cb_handoff), (main):
+	  check relinking and adding/removing elements from a running pipeline
+	* testsuite/schedulers/unlink.c: (cb_handoff), (main):
+	  check unlinking in a running pipeline
+	* testsuite/schedulers/unref.c: (cb_handoff), (main):
+	  check unreffing a running pipeline
+	* testsuite/schedulers/useless_iteration.c: (main):
+	  check iterating a pipeline that contains running threads works
+
 2004-05-18  David Schleef  <ds@schleef.org>
 
 	* docs/gst/Makefile.am: Add all-local target for when HAVE_GTK_DOC

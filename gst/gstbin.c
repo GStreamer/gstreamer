@@ -1112,17 +1112,35 @@ gst_bin_restore_thyself (GstObject * object, xmlNodePtr self)
 static gboolean
 gst_bin_iterate_func (GstBin * bin)
 {
+  GstScheduler *sched = GST_ELEMENT_SCHED (bin);
+
   /* only iterate if this is the manager bin */
-  if (GST_ELEMENT_SCHED (bin) &&
-      GST_ELEMENT_SCHED (bin)->parent == GST_ELEMENT (bin)) {
+  if (sched && sched->parent == GST_ELEMENT (bin)) {
     GstSchedulerState state;
 
-    state = gst_scheduler_iterate (GST_ELEMENT_SCHED (bin));
+    state = gst_scheduler_iterate (sched);
 
     if (state == GST_SCHEDULER_STATE_RUNNING) {
       return TRUE;
     } else if (state == GST_SCHEDULER_STATE_ERROR) {
       gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+    } else if (state == GST_SCHEDULER_STATE_STOPPED) {
+      /* check if we have children scheds that are still running */
+      /* FIXME: remove in 0.9? autouseless because iterations gone? */
+      GList *walk;
+
+      for (walk = sched->schedulers; walk; walk = g_list_next (walk)) {
+        GstScheduler *test = walk->data;
+
+        g_return_val_if_fail (test->parent, FALSE);
+        if (GST_STATE (test->parent) == GST_STATE_PLAYING) {
+          GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, bin,
+              "current bin is not iterating, but children are, "
+              "so returning TRUE anyway...");
+          g_usleep (1);
+          return TRUE;
+        }
+      }
     }
   } else {
     g_warning ("bin \"%s\" is not the managing bin, can't be iterated on!\n",
@@ -1150,25 +1168,13 @@ gst_bin_iterate (GstBin * bin)
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, bin, "starting iteration");
-
   gst_object_ref (GST_OBJECT (bin));
 
   running = FALSE;
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ITERATE], 0, &running);
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, bin, "finished iteration");
-
-  if (!running) {
-    if (GST_STATE (bin) == GST_STATE_PLAYING &&
-        GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {
-      GST_CAT_DEBUG (GST_CAT_SCHEDULING,
-          "[%s]: polling for child shutdown after useless iteration",
-          GST_ELEMENT_NAME (bin));
-      g_usleep (1);
-      running = TRUE;
-    }
-  }
   gst_object_unref (GST_OBJECT (bin));
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, bin, "finished iteration");
 
   return running;
 }
