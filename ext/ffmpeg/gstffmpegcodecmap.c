@@ -87,7 +87,7 @@ gst_ffmpegcodec_codec_context_to_caps (AVCodecContext *context, int codec_id)
         return GST_CAPS_NEW ("ffmpeg_mpeg4",
 		             "video/avi",
 			       "format",  GST_PROPS_STRING ("strf_vids"),
-			        "compression",  GST_PROPS_FOURCC (context->fourcc),
+			        "compression",  GST_PROPS_FOURCC (context->codec_tag),
 			        "width",   GST_PROPS_INT (context->width),
 			        "height",  GST_PROPS_INT (context->height)
 			    );

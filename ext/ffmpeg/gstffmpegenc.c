@@ -297,7 +297,8 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
     ffmpegenc->context->qmax = 15;
     ffmpegenc->context->max_qdiff = 3;
     ffmpegenc->context->gop_size = 15;
-    ffmpegenc->context->frame_rate = 25 * FRAME_RATE_BASE;
+    ffmpegenc->context->frame_rate = 25 * DEFAULT_FRAME_RATE_BASE;
+    ffmpegenc->context->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
     ffmpegenc->out_width = -1;
     ffmpegenc->out_height = -1;
   }

@@ -172,7 +172,8 @@ gst_ffmpegmux_sinkconnect (GstPad *pad, GstCaps *caps)
     gst_caps_get_int (caps, "height", &ffmpegmux->context->height);
 
   ffmpegmux->context->pix_fmt = PIX_FMT_YUV420P;
-  ffmpegmux->context->frame_rate = 23 * FRAME_RATE_BASE;
+  ffmpegmux->context->frame_rate = 23 * DEFAULT_FRAME_RATE_BASE;
+  ffmpegmux->context->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
   ffmpegmux->context->bit_rate = 0;
 
   /* FIXME bug in ffmpeg */

@@ -159,12 +159,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
             break;
           case PIX_FMT_RGBA32:
             bpp = depth = 32;
-            endianness = G_BIG_ENDIAN;
-            r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
-            break;
-          case PIX_FMT_BGRA32:
-            bpp = depth = 32;
-            endianness = G_BIG_ENDIAN;
+            endianness = G_BYTE_ORDER;
             r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
             break;
           case PIX_FMT_YUV410P:
@@ -175,22 +170,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
             break;
           case PIX_FMT_RGB565:
             bpp = depth = 16;
-            endianness = G_BIG_ENDIAN;
+            endianness = G_BYTE_ORDER;
             r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
             break;
           case PIX_FMT_RGB555:
             bpp = 16; depth = 15;
-            endianness = G_BIG_ENDIAN;
-            r_mask = 0x7c00; g_mask = 0x03e0; b_mask = 0x001f;
-            break;
-          case PIX_FMT_BGR565:
-            bpp = depth = 16;
-            endianness = G_LITTLE_ENDIAN;
-            r_mask = 0xf800; g_mask = 0x07e0; b_mask = 0x001f;
-            break;
-          case PIX_FMT_BGR555:
-            bpp = 16; depth = 16;
-            endianness = G_LITTLE_ENDIAN;
+            endianness = G_BYTE_ORDER;
             r_mask = 0x7c00; g_mask = 0x03e0; b_mask = 0x001f;
             break;
           default:
@@ -562,18 +547,10 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
           gst_caps_get_int(caps, "depth", &depth);
           switch (depth) {
             case 15:
-              if (endianness == G_BIG_ENDIAN) {
-                context->pix_fmt = PIX_FMT_RGB555;
-              } else {
-                context->pix_fmt = PIX_FMT_BGR555;
-              }
+              context->pix_fmt = PIX_FMT_RGB555;
               break;
             case 16:
-              if (endianness == G_BIG_ENDIAN) {
-                context->pix_fmt = PIX_FMT_RGB565;
-              } else {
-                context->pix_fmt = PIX_FMT_BGR565;
-              }
+              context->pix_fmt = PIX_FMT_RGB565;
               break;
             case 24:
               if (endianness == G_BIG_ENDIAN) {
@@ -583,11 +560,7 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
               }
               break;
             case 32:
-              if (endianness == G_BIG_ENDIAN) {
-                context->pix_fmt = PIX_FMT_RGBA32;
-              } else {
-                context->pix_fmt = PIX_FMT_BGRA32;
-              }
+              context->pix_fmt = PIX_FMT_RGBA32;
               break;
           }
           break;
