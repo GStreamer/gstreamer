@@ -149,6 +149,7 @@
 #define GST_MATROSKA_CODEC_ID_AUDIO_ACM          "A_MS/ACM"
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG2        "A_AAC/MPEG2/"
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG4        "A_AAC/MPEG4/"
+#define GST_MATROSKA_CODEC_ID_AUDIO_TTA          "A_TTA1"
 /* TODO: AC3-9/10 (?), Real, Musepack, Quicktime */
 
 /*

@@ -312,6 +312,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   demux->src[demux->num_streams] = context;
   context->index = demux->num_streams;
   context->type = 0;            /* no type yet */
+  context->default_duration = 0;
   demux->num_streams++;
 
   /* start with the master */
@@ -1756,7 +1757,13 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
 {
   GstEbmlRead *ebml = GST_EBML_READ (demux);
   gboolean res = TRUE;
+  gboolean readblock = FALSE;
   guint32 id;
+  guint64 block_duration = 0;
+  GstBuffer *buf = NULL;
+  gint stream = 0, n, laces = 0;
+  guint size = 0, *lace_size = NULL;
+  gint64 time = 0;
 
   while (res) {
     if (!(id = gst_ebml_peek_id (ebml, &demux->level_up))) {
@@ -1772,11 +1779,8 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
          * of the harder things, so this code is a bit complicated.
          * See http://www.matroska.org/ for documentation. */
       case GST_MATROSKA_ID_BLOCK:{
-        GstBuffer *buf;
         guint8 *data;
-        gint64 time;
-        guint size, *lace_size = NULL;
-        gint n, stream, flags, laces = 0;
+        gint flags = 0;
         guint64 num;
 
         if (!gst_ebml_read_buffer (ebml, &id, &buf)) {
@@ -1921,39 +1925,15 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
           gst_pad_push (demux->src[stream]->pad, GST_DATA (priv));
         }
 
-        if (res) {
-          for (n = 0; n < laces; n++) {
-            GstBuffer *sub = gst_buffer_create_sub (buf,
-                GST_BUFFER_SIZE (buf) - size,
-                lace_size[n]);
-
-            if (cluster_time != GST_CLOCK_TIME_NONE) {
-              if (time < 0 && (-time) > cluster_time)
-                GST_BUFFER_TIMESTAMP (sub) = cluster_time;
-              else
-                GST_BUFFER_TIMESTAMP (sub) = cluster_time + time;
-            }
-            /* FIXME: duration */
-
-            gst_pad_push (demux->src[stream]->pad, GST_DATA (sub));
-
-            size -= lace_size[n];
-          }
-        }
-
-        g_free (lace_size);
-        gst_buffer_unref (buf);
+        readblock = TRUE;
         break;
       }
 
       case GST_MATROSKA_ID_BLOCKDURATION:{
-        guint64 num;
-
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
+        if (!gst_ebml_read_uint (ebml, &id, &block_duration)) {
           res = FALSE;
           break;
         }
-        GST_WARNING ("FIXME: implement support for BlockDuration");
         break;
       }
       case GST_MATROSKA_ID_REFERENCEBLOCK:{
@@ -1986,6 +1966,40 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
       break;
     }
   }
+
+  if (res && readblock) {
+    guint64 duration = 0;
+
+    if (block_duration) {
+      duration = block_duration * demux->time_scale;
+    } else if (demux->src[stream]->default_duration) {
+      duration = demux->src[stream]->default_duration;
+    }
+    for (n = 0; n < laces; n++) {
+      GstBuffer *sub = gst_buffer_create_sub (buf,
+          GST_BUFFER_SIZE (buf) - size,
+          lace_size[n]);
+
+      if (cluster_time != GST_CLOCK_TIME_NONE) {
+        if (time < 0 && (-time) > cluster_time)
+          GST_BUFFER_TIMESTAMP (sub) = cluster_time;
+        else
+          GST_BUFFER_TIMESTAMP (sub) = cluster_time + time;
+      }
+
+      /* do all laces have the same lenght? */
+      if (duration) {
+        GST_BUFFER_DURATION (sub) = duration / laces;
+      }
+      gst_pad_push (demux->src[stream]->pad, GST_DATA (sub));
+
+      size -= lace_size[n];
+    }
+  }
+
+  if (readblock)
+    gst_buffer_unref (buf);
+  g_free (lace_size);
 
   return res;
 }
@@ -2644,6 +2658,14 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext * audiocontext,
 
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, mpegversion, NULL);
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_TTA)) {
+    if (audiocontext != NULL) {
+      caps = gst_caps_new_simple ("audio/x-raw-tta",
+          "width", G_TYPE_INT, audiocontext->bitdepth, NULL);
+    } else {
+      caps = gst_caps_from_string ("audio/x-raw-tta, "
+          "width = (int) { 8, 16, 24 }");
+    }
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
     g_print ("Codec=%s\n", codec_id);
@@ -2742,6 +2764,7 @@ gst_matroska_demux_plugin_init (GstPlugin * plugin)
         GST_MATROSKA_CODEC_ID_AUDIO_AC3,
         GST_MATROSKA_CODEC_ID_AUDIO_ACM,
         GST_MATROSKA_CODEC_ID_AUDIO_VORBIS,
+        GST_MATROSKA_CODEC_ID_AUDIO_TTA,
         GST_MATROSKA_CODEC_ID_AUDIO_MPEG2, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
         /* TODO: AC3-9/10, Real, Musepack, Quicktime */
         /* FILLME */
