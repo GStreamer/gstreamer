@@ -9,7 +9,7 @@ tests_pass = \
 # don't enable this one unless it actually works.
 #	useless_iteration
 
-tests_fail = 142183 142183-2 147894
+tests_fail = 142183 142183-2 147894 147819
 tests_ignore =
 
 unlink_src_SOURCES = unlink.c

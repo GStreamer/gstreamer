@@ -1,5 +1,12 @@
 2004-07-19  Wim Taymans  <wim@fluendo.com>
 
+	* testsuite/schedulers/147819.c: (handoff_identity1),
+	(handoff_identity2), (main):
+	* testsuite/schedulers/Makefile.am:
+	Added testcase for bug 147819
+
+2004-07-19  Wim Taymans  <wim@fluendo.com>
+
 	* testsuite/schedulers/147894.c: (queue_empty), (queue_filled),
 	(handoff_identity), (main):
 	* testsuite/schedulers/Makefile.am:
