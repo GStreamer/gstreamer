@@ -247,12 +247,6 @@ gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
 }
 
 static void
-gst_chart_free (GstChart *chart)
-{
-  g_free (chart);
-}
-
-static void
 draw_chart_16bpp(guchar * output, gint width, gint height,
 		 gint16 * src_data, gint src_size)
 {

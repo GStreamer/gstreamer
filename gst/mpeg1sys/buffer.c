@@ -58,11 +58,11 @@ static double picture_rates [16] =
 	0,
 	0
 };
-
+/* deined but not used
 static double ratio [16] = { 0., 1., 0.6735, 0.7031, 0.7615, 0.8055,
 	0.8437, 0.8935, 0.9157, 0.9815, 1.0255, 1.0695, 1.0950, 1.1575,
 	1.2015, 0.};
-
+*/
 static char picture_types [4][3] = 
     { "I", "P", "B", "D" };
 
@@ -82,7 +82,7 @@ static double dfrequency[9] =
 {44.1, 48, 32, 22.05, 24, 16, 11.025, 12, 8};
 
 static unsigned int samples [4] = {192, 384, 1152, 1152};
-
+/* deined but not used
 static char mode [4][15] =
     { "stereo", "joint stereo", "dual channel", "single channel" };
 static char copyright [2][20] =
@@ -91,7 +91,7 @@ static char original [2][10] =
     { "copy","original" };
 static char emphasis [4][20] =
     { "none", "50/15 microseconds", "reserved", "CCITT J.17" };
-
+*/
 static void mpeg1mux_buffer_update_video_info(Mpeg1MuxBuffer *mb);
 static void mpeg1mux_buffer_update_audio_info(Mpeg1MuxBuffer *mb);
 

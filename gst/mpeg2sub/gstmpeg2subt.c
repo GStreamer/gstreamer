@@ -43,14 +43,14 @@ static GstElementDetails mpeg2subt_details = {
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2000",
 };
-
+/* defined but not used
 static GstTypeDefinition mpeg2subtitledefinition = {
   "mpeg2subt_video/mpeg2ubtitle",
   "video/mpeg2subtitle",
   NULL,
   NULL,
 };
-
+*/
 /* GstMpeg2Subt signals and args */
 enum {
   /* FILL ME */

@@ -63,7 +63,8 @@ do {
     out = in;
   } else {
     j = 0;
-
+    w = 0;
+    
     out = gst_buffer_new_from_pool(filter->bufpool, 0, 0);
   }
 

@@ -5,7 +5,7 @@ plugin_LTLIBRARIES = libgstmpeg2subt.la
 libgstmpeg2subt_la_SOURCES = gstmpeg2subt.c  
 
 if HAVE_CPU_I386
-ARCHCFLAGS = -m486
+ARCHCFLAGS = -mcpu=486
 else
 ARCHCFLAGS = 
 endif

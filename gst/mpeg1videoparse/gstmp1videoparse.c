@@ -94,9 +94,9 @@ static void	gst_mp1videoparse_init		(Mp1VideoParse *mp1videoparse);
 
 static void	gst_mp1videoparse_chain		(GstPad *pad, GstBuffer *buf);
 static void	gst_mp1videoparse_real_chain	(Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstPad *outpad);
-
+/* defined but not used
 static void	gst_mp1videoparse_flush		(Mp1VideoParse *mp1videoparse);
-
+*/
 static GstPadTemplate *src_template, *sink_template;
 
 static GstElementClass *parent_class = NULL;
@@ -203,7 +203,7 @@ mp1videoparse_find_next_gop (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
 
   return -1;
 }
-
+/* defined but not used
 static void
 gst_mp1videoparse_flush (Mp1VideoParse *mp1videoparse)
 {
@@ -216,7 +216,7 @@ gst_mp1videoparse_flush (Mp1VideoParse *mp1videoparse)
   mp1videoparse->in_flush = TRUE;
   mp1videoparse->picture_in_buffer = 0;
 }
-
+*/
 static void
 gst_mp1videoparse_chain (GstPad *pad,GstBuffer *buf)
 {
