@@ -109,6 +109,10 @@ gst_gdk_pixbuf_sink_link (GstPad *pad, const GstCaps *caps)
   g_return_val_if_fail (GST_IS_GDK_PIXBUF (filter),
                         GST_PAD_LINK_REFUSED);
 
+  filter->framerate = 0.0;
+  gst_structure_get_double (gst_caps_get_structure (caps, 0), "framerate",
+      &filter->framerate);
+
   return GST_PAD_LINK_OK;
 }
 
@@ -300,11 +304,11 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstData *_data)
         filter->rowstride = gdk_pixbuf_get_rowstride(pixbuf);
         filter->image_size = filter->rowstride * filter->height;
 
-        caps = gst_pad_get_caps(filter->srcpad);
+        caps = gst_caps_copy (gst_pad_get_pad_template_caps (filter->srcpad));
         gst_caps_set_simple (caps,
             "width", G_TYPE_INT, filter->width,
             "height", G_TYPE_INT, filter->height,
-            "framerate", G_TYPE_DOUBLE, 0., NULL);
+            "framerate", G_TYPE_DOUBLE, filter->framerate, NULL);
 
         gst_pad_set_explicit_caps (filter->srcpad, caps);
       }

@@ -55,6 +55,8 @@ struct _GstGdkPixbuf
   int height;
   int rowstride;
   unsigned int image_size;
+
+  double framerate;
 };
 
 struct _GstGdkPixbufClass 

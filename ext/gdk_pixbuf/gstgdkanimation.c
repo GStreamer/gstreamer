@@ -370,7 +370,7 @@ gst_gdk_animation_iter_create_pixbuf (GstGdkAnimationIter *iter)
     g_assert (fakesink);
     pad = gst_element_get_pad (fakesink, "sink");
     g_assert (pad);
-    caps = gst_pad_get_caps (pad);
+    caps = gst_pad_get_negotiated_caps (pad);
     g_assert (caps);
     g_assert (GST_CAPS_IS_FIXED (caps));
     g_assert (gst_caps_has_fixed_property (caps, "bpp") &&
