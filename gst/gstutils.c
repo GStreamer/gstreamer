@@ -37,37 +37,33 @@
  * Dumps the memory block into a hex representation. Useful for debugging.
  */
 void
-gst_util_dump_mem (guchar * mem, guint size)
+gst_util_dump_mem (guchar *mem, guint size)
 {
   guint i, j;
-  GString *string = g_string_sized_new (80);
+  GString *string = g_string_sized_new (50);
+  GString *chars = g_string_sized_new (18);
 
   i = j = 0;
   while (i < size) {
-    if (j == 0) {
-      if (i != 0) {
-	guint k;
+    if (g_ascii_isprint (mem[i]))
+      g_string_append_printf (chars, "%c", mem[i]);
+    else 
+      g_string_append_printf (chars, ".");
 
-	for (k = i - 16; k < i; k++) {
-          if (g_ascii_isprint (mem[k]))
-            g_string_append_printf (string, "%c", mem[k]);
-	  else 
-            g_string_append_printf (string, ".");
-	}
-        g_print ("%s\n", string->str);
-	g_string_set_size (string, 0);
-      }
-      g_string_append_printf (string, "%08x (%p): ", i, mem+i);
-      j = 15;
-    }
-    else {
-      j--;
-    }
     g_string_append_printf (string, "%02x ", mem[i]);
+
+    j++;
     i++;
+
+    if (j == 16 || i == size) {
+      g_print ("%08x (%p): %-48.48s %-16.16s\n", i-j, mem+i-j, string->str, chars->str);
+      g_string_set_size (string, 0);
+      g_string_set_size (chars, 0);
+      j = 0;
+    }
   }
   g_string_free (string, TRUE);
-  g_print ("\n");
+  g_string_free (chars, TRUE);
 }
 
 
