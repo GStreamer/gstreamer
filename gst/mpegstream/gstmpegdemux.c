@@ -24,6 +24,8 @@
 #endif
 #include <gstmpegdemux.h>
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
+
 /* elementfactory information */
 static GstElementDetails mpeg_demux_details = {
   "MPEG Demuxer",
@@ -330,6 +332,23 @@ gst_mpeg_demux_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   return TRUE;
 }
 
+static gint
+_demux_get_writer_id (GstIndex *index, GstPad *pad)
+{
+  gint id;
+  if (!gst_index_get_writer_id (index, GST_OBJECT (pad), &id)) {
+    GST_CAT_WARNING_OBJECT (GST_CAT_SEEK, index,
+			    "can't get index id for %s:%s",
+			    GST_DEBUG_PAD_NAME (pad));
+    return -1;
+  } else {
+    GST_CAT_LOG_OBJECT (GST_CAT_SEEK, index,
+			 "got index id %d for %s:%s",
+			id, GST_DEBUG_PAD_NAME (pad));
+    return id;
+  }
+}
+
 static gboolean
 gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 {
@@ -458,10 +477,9 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	(*outstream)->size_bound = buf_byte_size_bound;
 	mpeg_demux->total_size_bound += buf_byte_size_bound;
 
-	if (mpeg_demux->index) {
-          gst_index_get_writer_id (mpeg_demux->index, GST_OBJECT (*outpad),
-                           &(*outstream)->index_id);
-	}
+	if (mpeg_demux->index)
+	  (*outstream)->index_id =
+	    _demux_get_writer_id (mpeg_demux->index, *outpad);
 
 	if (GST_PAD_IS_USABLE (*outpad)) {
           GstEvent *event;
@@ -903,10 +921,9 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       gst_element_add_pad(GST_ELEMENT(mpeg_demux), *outpad);
       gst_pad_set_element_private (*outpad, *outstream);
 
-      if (mpeg_demux->index) {
-        gst_index_get_writer_id (mpeg_demux->index, GST_OBJECT (*outpad),
-                                 &(*outstream)->index_id);
-      }
+      if (mpeg_demux->index)
+	(*outstream)->index_id =
+	  _demux_get_writer_id (mpeg_demux->index, *outpad);
     }
     else {
       g_warning ("cannot create pad %s, no template for %02x", name, id);
@@ -1050,10 +1067,22 @@ index_seek (GstPad *pad, GstEvent *event, gint64 *offset)
                                      GST_INDEX_LOOKUP_BEFORE, 0,
                                      GST_EVENT_SEEK_FORMAT (event),
                                      GST_EVENT_SEEK_OFFSET (event));
-  if (!entry)
+  if (!entry) {
+    GST_CAT_WARNING (GST_CAT_SEEK, "%s:%s index %s %" G_GINT64_FORMAT
+		     " -> failed",
+		     GST_DEBUG_PAD_NAME (pad),
+		     gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+		     GST_EVENT_SEEK_OFFSET (event));
     return FALSE;
+  }
 
   if (gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, offset)) {
+    GST_CAT_DEBUG (GST_CAT_SEEK, "%s:%s index %s %" G_GINT64_FORMAT
+		   " -> %" G_GINT64_FORMAT " bytes",
+		   GST_DEBUG_PAD_NAME (pad),
+		   gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+		   GST_EVENT_SEEK_OFFSET (event),
+		   *offset);
     return TRUE;
   }
   return FALSE;
@@ -1072,10 +1101,18 @@ normal_seek (GstPad *pad, GstEvent *event, gint64 *offset)
   res = gst_pad_convert (pad, GST_FORMAT_BYTES, mpeg_demux->total_size_bound,
 		         &format, &adjust);
 
-  GST_DEBUG ("seek adjusted from %" G_GINT64_FORMAT " bytes to %" G_GINT64_FORMAT "\n", mpeg_demux->total_size_bound, adjust);
-
-  if (res) 
+  if (res) {
     *offset = MAX (GST_EVENT_SEEK_OFFSET (event) - adjust, 0);
+
+    GST_CAT_DEBUG (GST_CAT_SEEK, "%s:%s guestimate %" G_GINT64_FORMAT
+		   " %s -> %" G_GINT64_FORMAT
+		   " (total_size_bound = %" G_GINT64_FORMAT ")",
+		   GST_DEBUG_PAD_NAME (pad),
+		   GST_EVENT_SEEK_OFFSET (event),
+		   gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+		   *offset,
+		   mpeg_demux->total_size_bound);
+  }
 
    return res;
 }

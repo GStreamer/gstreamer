@@ -26,6 +26,8 @@
 
 #include "gstmpeg2dec.h"
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
+
 /* elementfactory information */
 static GstElementDetails gst_mpeg2dec_details = {
   "mpeg1 and mpeg2 video decoder",
@@ -930,6 +932,13 @@ index_seek (GstPad *pad, GstEvent *event)
     
       if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
         GstEvent *seek_event;
+
+	GST_CAT_DEBUG (GST_CAT_SEEK, "index %s %" G_GINT64_FORMAT
+		       " -> %s %" G_GINT64_FORMAT,
+		       gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+		       GST_EVENT_SEEK_OFFSET (event),
+		       gst_format_get_details (*try_formats)->nick,
+		       value);
 
         /* lookup succeeded, create the seek */
         seek_event = gst_event_new_seek (*try_formats | GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, value);

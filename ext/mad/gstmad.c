@@ -22,6 +22,8 @@
 #endif
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
+
 #include <string.h>
 #include <mad.h>
 #include "id3tag.h"
@@ -612,6 +614,13 @@ index_seek (GstMad *mad, GstPad *pad, GstEvent *event)
     
     if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
       /* lookup succeeded, create the seek */
+
+      GST_CAT_DEBUG (GST_CAT_SEEK, "index %s %" G_GINT64_FORMAT
+		     " -> %s %" G_GINT64_FORMAT,
+		     gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+		     GST_EVENT_SEEK_OFFSET (event),
+		     gst_format_get_details (*try_formats)->nick,
+		     value);
 
       GstEvent *seek_event =
 	gst_event_new_seek (*try_formats |

@@ -27,6 +27,8 @@
 
 static GstFormat scr_format;
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
+
 /* elementfactory information */
 static GstElementDetails mpeg_parse_details = {
   "MPEG System Parser",
@@ -712,6 +714,12 @@ index_seek (GstPad *pad, GstEvent *event, guint64 *offset, gint64 *scr)
     if (gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time)) {
       *scr = GSTTIME_TO_MPEGTIME (time);
     }
+    GST_CAT_DEBUG (GST_CAT_SEEK, "%s:%s index %s %" G_GINT64_FORMAT
+		   " -> %" G_GINT64_FORMAT " bytes, scr=%" G_GINT64_FORMAT,
+		   GST_DEBUG_PAD_NAME (pad),
+		   gst_format_get_details (GST_EVENT_SEEK_FORMAT (event))->nick,
+		   GST_EVENT_SEEK_OFFSET (event),
+		   *offset, *scr);
     return TRUE;
   }
   return FALSE;
