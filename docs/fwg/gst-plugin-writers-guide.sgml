@@ -4,12 +4,28 @@
 <!ENTITY INTRO SYSTEM "intro.sgml">
 
 <!ENTITY CONCEPTS SYSTEM "concepts.sgml">
+
+<!ENTITY FIRSTPLUGIN SYSTEM ".sgml">
+
+<!ENTITY TESTAPP SYSTEM ".sgml">
+
+<!ENTITY LOOPBASED SYSTEM ".sgml">
+
+<!ENTITY TYPESNPROPS SYSTEM ".sgml">
+
+<!ENTITY BUFFERS SYSTEM ".sgml">
+
+<!ENTITY SRCNSINK SYSTEM ".sgml">
+
+<!ENTITY STATEMANAGE SYSTEM ".sgml">
+
+<!ENTITY CHECKLIST SYSTEM ".sgml">
 ]>
 
 <book id="index">
   &TITLEPAGE;
       
-<!-- ############# Overview - part ############### -->
+<!-- ############# part ############### -->
 
   <part id="introduction"><title>Introduction</title>
     <partintro>
@@ -36,7 +52,7 @@
       &INTRO;
   </part>
 
-<!-- ############ Basic concepts - part ############# -->
+<!-- ############ part ############# -->
 
   <part id="basic-concepts"><title>Basic concepts</title>
     <partintro>
@@ -52,23 +68,21 @@
 
   </part>
 
-<!-- ############ Building A Filter - part ############# -->
-</book>
+<!-- ############ part ############# -->
 
+  <part id="first-plugin"><title>Building our first plugin</title>
+    <partintro>
+      <para>
+	We are now have the neccessary concepts to build our first plugin.
+	We are going to build an element which has a single input pad and
+	a single output pad, and simply passes anything it reads on
+	the input pad through and out on the output pad.  In a later
+	section we will convert this plugin into something less useless.
+      </para>
+    </partintro>
 
+      &FIRSTPLUGIN;
 
-GStreamer Filter Writer's Guide
-===============================
-
-Outline:
-
-Basic concepts
-	Chain vs loop elements
-	Scheduling
-	Buffers
-	Typing and Properties
-	Metadata
-Building our first filter
 	Constructing the boilerplate
 		Doing it the easy way with FilterFactory
 		  (NOTE: FilterFactory doesn't exist yet)
@@ -80,43 +94,118 @@ Building our first filter
 	The plugin_init function
 		Registering the types
 		Registering the filter
-Building a simple test application
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="test-app"><title>Building a simple test application</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &TESTAPP;
 	Initialization
 	Instantiating the plugins
 	  (NOTE: we really should have a debugging Sink)
 	Connecting them
 	Running the pipeline
-Loop-based Elements
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="loopbased"><title>Loop-based Elements</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &LOOPBASED;
 	How scheduling works, aka pushing and pulling
 	How a loopfunc works, aka pulling and pushing
 	Adding a second output
 		Identity is now a tee
 		Modifying the test application
-Types and Properties
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="typesnprops"><title>Types and Properties</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &TYPESNPROPS;
 	Building a simple format for testing
 	A simple MIME type
 	Type properties
-	Typefind functions and autopluggin
-Buffers and Metadata
+	Typefind functions and autoplugging
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="buffersnmeta"><title>Buffers and Metadata</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &BUFFERS;
 	Anatomy of a Buffer
 	Refcounts and mutability
 	Metadata
 		How Properties work efficiently
 		Metadata mutability
 		  (FIXME: this is an unsolved problem)
-Sources and Sinks
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="srcnsink"><title>Sources and Sinks</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &SRCNSINK;
 	Writing a source
 		Pull vs loop based
 		Region pulling
 		  (NOTE: somewhere explain how filters use this)
 	Writing a sink
 		Gee, that was easy
-State management
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="statemanage"><title>State management</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &STATEMANAGE;
 	What are states?
 	Mangaging filter state
-Checklist
+  </part>
+
+<!-- ############ part ############# -->
+
+  <part id="checklist"><title>Checklist</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &CHECKLIST;
 	Things to check when writing a filter
 	Things to check when writing a source or sink
+  </part>
+
+</book>
+
+
 
 
 

@@ -1,7 +1,7 @@
-manualname = gst-filter-writers-guide
+manualname = gst-plugin-writers-guide
 htmlname = index.html
 
-sgml_files = gst-filter-writers-guide.sgml \
+sgml_files = gst-plugin-writers-guide.sgml \
 	     titlepage.sgml \
 	     intro.sgml \
 	     concepts.sgml
