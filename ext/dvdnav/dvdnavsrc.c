@@ -911,13 +911,17 @@ dvdnavsrc_get (GstPad *pad)
       case DVDNAV_NAV_PACKET:
         if (0) dvdnavsrc_update_buttoninfo (src);
         break;
+      case DVDNAV_WAIT:
+	/* FIXME: supposed to make sure all the data has made 
+	 * it to the sinks before skipping the wait
+	 */
+        dvdnav_wait_skip(src->dvdnav);
       case DVDNAV_VTS_CHANGE:
       case DVDNAV_SPU_STREAM_CHANGE:
       case DVDNAV_AUDIO_STREAM_CHANGE:
       case DVDNAV_HIGHLIGHT:
       case DVDNAV_SPU_CLUT_CHANGE:
       case DVDNAV_HOP_CHANNEL:
-      case DVDNAV_WAIT:
       default:
         dvdnavsrc_print_event (src, data, event, len);
         break;
