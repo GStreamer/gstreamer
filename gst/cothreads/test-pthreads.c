@@ -1,17 +1,15 @@
+#define __USE_GNU /* non-posix functions */
 #include <pthread.h>
+#undef __USE_GNU
 #include <stdio.h>
-#include "linuxthreads-internals.h"
 
-#pragma weak __pthread_initial_thread
-extern pthread_descr __pthread_initial_thread;
-
-static inline thread_self_descr() 
-{
+// the thread_self algorithm:
+/*
   char * sp = CURRENT_STACK_FRAME;
   int self = (int) pthread_self();
   
   if (self % PTHREAD_THREADS_MAX < 2)
-    /* we only support the main thread, not the manager. */
+  * we only support the main thread, not the manager. *
     return &__pthread_initial_thread;
   
 #ifdef _STACK_GROWS_DOWN
@@ -19,11 +17,41 @@ static inline thread_self_descr()
 #else
   return (pthread_descr)((unsigned long)sp &~ (STACK_SIZE-1));
 #endif
+*/
+
+static _pthread_descr linuxthreads_self() 
+{
+  pthread_mutexattr_t mutexattr;
+  pthread_mutex_t mutex;
+  _pthread_descr self;
+  
+  pthread_mutexattr_init (&mutexattr);
+  pthread_mutexattr_setkind_np (&mutexattr, PTHREAD_MUTEX_ERRORCHECK_NP);
+  pthread_mutex_init (&mutex, &mutexattr);
+
+  pthread_mutex_lock (&mutex);
+  self = mutex.__m_owner;
+  pthread_mutex_unlock (&mutex);
+  
+  printf ("pthread_self: %d\n", pthread_self());
+  printf ("descr: %p\n", self);
+  
+  return self;
+}
+
+void *pthread (void *unused) 
+{
+  linuxthreads_self();
+  return NULL;
 }
 
 int main (int argc, char *argv[]) 
 {
-    printf ("pthread_self: %d\n", pthread_self());
-    printf ("descr: %p\n", thread_self_descr());
-    exit (0);
+  pthread_t tid;
+  
+  pthread_create (&tid, NULL, pthread, NULL);
+  pthread_join (tid, NULL);
+  
+  linuxthreads_self();
+  exit (0);
 }
