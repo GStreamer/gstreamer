@@ -9,9 +9,6 @@ srcfile=gst/gst.c
 if test ! -d common; then
   echo "+ getting common from cvs"; cvs co common
 fi
-if test ! -d libs/ext/cothreads; then
-  echo "+ getting cothreads from cvs"; cvs co gst-cothreads
-fi
 
 # source helper functions
 if test ! -f common/gst-autogen.sh;
