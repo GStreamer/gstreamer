@@ -138,8 +138,7 @@ gst_dptest_init (GstDpTest * dptest)
     dptest->dpman, 
     g_param_spec_float("float1","float1","float1",
                        0.0, 1.0, 0.5, G_PARAM_READWRITE),
-    FALSE,
-    FALSE,
+    "float",
     &(dptest->float1)
   );
   
@@ -224,8 +223,8 @@ int main(int argc,char *argv[]) {
   testelement = gst_element_factory_make ("dptest", "testelement");
   g_assert (testelement);
 
-  gst_element_connect (src, "src", testelement, "sink");
-  gst_element_connect (testelement, "src", sink, "sink");
+  gst_element_connect (src, testelement);
+  gst_element_connect (testelement, sink);
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), testelement);
