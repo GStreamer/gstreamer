@@ -198,7 +198,6 @@ static void
 gst_bin_distribute_clocks (GstBin *bin)
 {
   GList *needing = NULL, *providing = NULL;
-  GstElement *provider;
   GstClock *clock;
       
   gst_bin_get_clock_elements (bin, &needing, &providing);
@@ -632,8 +631,8 @@ gst_bin_set_state_type (GstBin * bin, GstElementState state, GType type)
 {
   GstBinClass *oclass;
 
-  GST_DEBUG (GST_CAT_STATES, "gst_bin_set_state_type(\"%s\",%d,%d)\n",
-	     GST_ELEMENT_NAME (bin), state, type);
+  GST_DEBUG (GST_CAT_STATES, "gst_bin_set_state_type(\"%s\",%d,%s)\n",
+	     GST_ELEMENT_NAME (bin), state, G_OBJECT_TYPE_NAME (type));
 
   g_return_val_if_fail (bin != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);

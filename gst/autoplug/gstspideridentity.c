@@ -165,7 +165,6 @@ static void
 gst_spider_identity_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstSpiderIdentity *ident;
-  GstPad *peerpad;
   
   /* g_print ("chaining on pad %s:%s with buffer %p\n", GST_DEBUG_PAD_NAME (pad), buf); */
 
@@ -188,7 +187,7 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 	list = g_list_next (list);
 	if (conn->sink == ident && (GstElement *) conn->src != conn->current)
 	{
-	  gst_element_set_eos (conn->src);
+	  gst_element_set_eos (GST_ELEMENT (conn->src));
           gst_pad_push (conn->src->src, gst_event_new (GST_EVENT_EOS));  
 	}
       }

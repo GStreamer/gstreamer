@@ -41,7 +41,6 @@ struct _gst_parse_priv
   guint bincount;
   guint threadcount;
   gint binlevel;
-  GHashTable *elementcounts;
   gboolean verbose;
   gboolean debug;
 };
@@ -75,20 +74,6 @@ dynamic_connect (GstElement * element, GstPad * newpad, gpointer data)
   }
 }
 
-static gchar *
-gst_parse_unique_name (const gchar * type, gst_parse_priv * priv)
-{
-  gpointer tmp;
-  gint count;
-
-  tmp = g_hash_table_lookup (priv->elementcounts, type);
-  count = GPOINTER_TO_INT (tmp);
-  count++;
-  g_hash_table_insert (priv->elementcounts, g_strdup (type), GINT_TO_POINTER (count));
-
-  return g_strdup_printf ("%s%d", type, count - 1);
-}
-
 static gint
 gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv * priv)
 {
@@ -110,7 +95,6 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
 
   if (!priv) {
     priv = g_new0 (gst_parse_priv, 1);
-    priv->elementcounts = g_hash_table_new (g_str_hash, g_str_equal);
   }
 
   priv->binlevel++;
@@ -297,7 +281,8 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
         
         if (arg[0] == '(') {
           /* create a bin and add it to the current parent */
-          element = gst_bin_new (g_strdup_printf ("bin%d", priv->bincount++));
+          priv->bincount++;
+          element = gst_elementfactory_make ("bin", NULL);
           if (!element) {
             fprintf (stderr, "Couldn't create a bin!\n");
             return GST_PARSE_ERROR_CREATING_ELEMENT;
@@ -305,7 +290,8 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
           GST_DEBUG (0, "CREATED bin %s\n", GST_ELEMENT_NAME (element));
         } else if (arg[0] == '{') {
           /* create a thread and add it to the current parent */
-          element = gst_thread_new (g_strdup_printf ("thread%d", priv->threadcount++));
+          priv->threadcount++;
+          element = gst_elementfactory_make ("thread", NULL);
           if (!element) {
             fprintf (stderr, "Couldn't create a thread!\n");
             return GST_PARSE_ERROR_CREATING_ELEMENT;
@@ -330,9 +316,7 @@ gst_parse_launchv_recurse (const gchar **argv, GstBin * parent, gst_parse_priv *
         /* we have an element */
         DEBUG ("attempting to create element '%s'\n", arg);
         
-        ptr = gst_parse_unique_name (arg, priv);
-        element = gst_elementfactory_make (arg, ptr);
-        g_free (ptr);
+        element = gst_elementfactory_make (arg, NULL);
         if (!element) {
 #ifndef GST_DISABLE_REGISTRY
           fprintf (stderr,

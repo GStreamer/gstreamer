@@ -208,7 +208,6 @@ gst_element_set_name (GstElement *element, const gchar *name)
 {
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (name != NULL);
 
   gst_object_set_name (GST_OBJECT (element), name);
 }
@@ -277,8 +276,6 @@ gst_element_get_parent (GstElement *element)
 void
 gst_element_set_clock (GstElement *element, GstClock *clock)
 {
-  GstElementClass *oclass;
-  
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
@@ -764,7 +761,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, GstCa
 {
   GList *pads;
   GstPadTemplate *templ;
-  GstCaps *intersection, *templcaps;
+  GstCaps *templcaps;
   GstPad *foundpad = NULL;
   
   /* checks */
@@ -1055,28 +1052,31 @@ gst_element_disconnect (GstElement *src, const gchar *srcpadname,
 
 /**
  * gst_element_disconnect_elements:
- * @src: element 1
- * @dest: element 2
+ * @src: source element
+ * @dest: sink element
  *
- * Disconnect all pads connecting the two elements.
+ * Disconnect all pads connecting the two elements in the direction src -> dest.
  */
 void
 gst_element_disconnect_elements (GstElement *src, GstElement *dest)
 {
-  GstPad *src, *dst;
-  GList *srcpads, *destpads, *l;
+  GList *srcpads;
+  GstPad *pad;
 
   g_return_if_fail (GST_IS_ELEMENT(src));
   g_return_if_fail (GST_IS_ELEMENT(dest));
 
-  /* loop through the existing pads in the source */
   srcpads = gst_element_get_pad_list (src);
-  destpads = gst_element_get_pad_list (dest);
 
-  for (; srcpads; srcpads=srcpads->next)
-    for (l=destpads; l; l=l->next)
-      if (GST_PAD_PEER ((GstPad*) srcpads->data) == (GstPad*) l->data)
-        gst_pad_disconnect ((GstPad*) srcpads->data, (GstPad*) l->data);
+  while (srcpads) {
+    pad = GST_PAD (srcpads->data);
+    
+    if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
+      if (GST_OBJECT_PARENT (GST_PAD_PEER (pad)) == (GstObject*) dest)
+        gst_pad_disconnect (pad, GST_PAD_PEER (pad));
+
+    srcpads = g_list_next (srcpads);
+  }
 }
 
 static void
@@ -1429,9 +1429,8 @@ static void
 gst_element_dispose (GObject *object)
 {
   GstElement *element = GST_ELEMENT (object);
-  GList *pads, *test;
+  GList *pads;
   GstPad *pad;
-  gint i;
   
   GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "dispose\n");
 
@@ -1487,7 +1486,6 @@ gst_element_save_thyself (GstObject *object,
   gint nspecs, i;
   GValue value = { 0, };
   GstElement *element;
-  gchar *str;
 
   g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
 

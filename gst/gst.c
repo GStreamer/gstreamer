@@ -237,6 +237,7 @@ init_post (void)
 {
   GLogLevelFlags llf;
   gboolean showhelp = FALSE;
+  const gchar *plugin_path;
 #ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
 #endif
@@ -258,13 +259,10 @@ init_post (void)
 #ifndef GST_DISABLE_AUTOPLUG
   gst_autoplugfactory_get_type ();
 #endif
-  
-  /* check for ENV variables */
-  {
-    const gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
-    split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func);
-  }
-   
+
+  plugin_path = g_getenv("GST_PLUGIN_PATH");
+  split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func);
+ 
   _gst_cpu_initialize ();
   _gst_props_initialize ();
   _gst_caps_initialize ();

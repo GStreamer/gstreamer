@@ -65,7 +65,6 @@ _gst_plugin_initialize (void)
   struct stat stat_buf;
 #ifndef GST_DISABLE_REGISTRY
   xmlDocPtr doc = NULL;
-  xmlNodePtr root;
 #endif
 
   main_module =  g_module_open (NULL, G_MODULE_BIND_LAZY);
@@ -692,7 +691,7 @@ gst_plugin_find_feature_func (GstPlugin *plugin, const gchar *name, GType type)
   return NULL;
 }
 
-static GstPluginFeature*
+G_GNUC_UNUSED static GstPluginFeature*
 gst_plugin_find_feature (const gchar *name, GType type)
 {
   GList *plugins;

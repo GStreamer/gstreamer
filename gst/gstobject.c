@@ -46,6 +46,8 @@ enum {
 };
 
 GType _gst_object_type = 0;
+static GHashTable *object_name_counts = NULL;
+G_LOCK_DEFINE_STATIC (object_name_mutex);
 
 typedef struct _GstSignalObject GstSignalObject;
 typedef struct _GstSignalObjectClass GstSignalObjectClass;
@@ -265,6 +267,36 @@ gst_object_finalize (GObject *object)
   parent_class->finalize (object);
 }
 
+static void
+gst_object_set_name_default (GstObject *object)
+{
+  gint count;
+  gchar *name;
+  const gchar *type_name, *subname;
+  
+  type_name = G_OBJECT_TYPE_NAME (object);
+
+  G_LOCK (object_name_mutex);
+
+  if (!object_name_counts)
+    object_name_counts = g_hash_table_new (g_str_hash, g_str_equal);
+
+  count = GPOINTER_TO_INT (g_hash_table_lookup (object_name_counts, type_name));
+  g_hash_table_insert (object_name_counts, g_strdup (type_name), GINT_TO_POINTER (++count));
+  
+  G_UNLOCK (object_name_mutex);
+
+  /* GstFooSink -> sinkN */
+  subname = type_name + strlen (type_name) - 1;
+  while (g_ascii_islower (*subname) && subname > type_name)
+    subname--;
+  name = g_strdup_printf ("%s%d", subname, count);
+  *name = g_ascii_tolower (*name);
+  
+  gst_object_set_name (object, name);
+  g_free (name);
+}
+
 /**
  * gst_object_set_name:
  * @object: GstObject to set the name of
@@ -277,12 +309,14 @@ gst_object_set_name (GstObject *object, const gchar *name)
 {
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
-  g_return_if_fail (name != NULL);
 
   if (object->name != NULL)
     g_free (object->name);
 
-  object->name = g_strdup (name);
+  if (name != NULL)
+    object->name = g_strdup (name);
+  else
+    gst_object_set_name_default (object);
 }
 
 /**
@@ -531,8 +565,6 @@ gst_object_restore_thyself (GstObject *object, xmlNodePtr self)
 static void
 gst_object_real_restore_thyself (GstObject *object, xmlNodePtr self)
 {
-  GstObjectClass *oclass;
-
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (self != NULL);

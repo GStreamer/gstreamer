@@ -54,7 +54,7 @@ _gst_props_initialize (void)
 static void
 gst_props_debug_entry (GstPropsEntry *entry)
 {
-  gchar *name = g_quark_to_string (entry->propid);
+  const gchar *name = g_quark_to_string (entry->propid);
 
   switch (entry->propstype) {
     case GST_PROPS_INT_ID:
@@ -641,7 +641,6 @@ GstProps*
 gst_props_copy (GstProps *props)
 {
   GstProps *new;
-  GList *properties;
 
   if (props == NULL)
     return NULL;
@@ -910,6 +909,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
         case GST_PROPS_INT_RANGE_ID:
 	  return (entry2->data.int_range_data.min <= entry1->data.int_range_data.min &&
 	          entry2->data.int_range_data.max >= entry1->data.int_range_data.max);
+        default:
       }
       break;
     case GST_PROPS_FLOAT_RANGE_ID:
@@ -918,6 +918,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
         case GST_PROPS_FLOAT_RANGE_ID:
 	  return (entry2->data.float_range_data.min <= entry1->data.float_range_data.min &&
 	          entry2->data.float_range_data.max >= entry1->data.float_range_data.max);
+        default:
       }
       break;
     case GST_PROPS_FOURCC_ID:
@@ -925,8 +926,9 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 	/* b   <--->   a */
         case GST_PROPS_FOURCC_ID:
           GST_DEBUG(GST_CAT_PROPERTIES,"\"%4.4s\" <--> \"%4.4s\" ?\n",
-			  &entry2->data.fourcc_data, &entry1->data.fourcc_data);
+			  (char*) &entry2->data.fourcc_data, (char*) &entry1->data.fourcc_data);
 	  return (entry2->data.fourcc_data == entry1->data.fourcc_data);
+        default:
       }
       break;
     case GST_PROPS_INT_ID:
@@ -941,6 +943,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
         case GST_PROPS_INT_ID:
           GST_DEBUG(GST_CAT_PROPERTIES,"%d == %d ?\n",entry1->data.int_data,entry2->data.int_data);
 	  return (entry2->data.int_data == entry1->data.int_data);
+        default:
       }
       break;
     case GST_PROPS_FLOAT_ID:
@@ -952,6 +955,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 	/* b   <--->   a */
         case GST_PROPS_FLOAT_ID:
 	  return (entry2->data.float_data == entry1->data.float_data);
+        default:
       }
       break;
     case GST_PROPS_BOOL_ID:
@@ -959,6 +963,7 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 	/* t   <--->   t */
         case GST_PROPS_BOOL_ID:
           return (entry2->data.bool_data == entry1->data.bool_data);
+        default:
       }
     case GST_PROPS_STRING_ID:
       switch (entry2->propstype) {
@@ -967,7 +972,9 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
           GST_DEBUG(GST_CAT_PROPERTIES,"\"%s\" <--> \"%s\" ?\n",
 			  entry2->data.string_data.string, entry1->data.string_data.string);
           return (!strcmp (entry2->data.string_data.string, entry1->data.string_data.string));
+        default:
       }
+    default:
   }
 
   return FALSE;
@@ -1056,6 +1063,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
       entry1 = entry2;
       entry2 = temp;
     }
+    default:
   }
 
   switch (entry1->propstype) {
@@ -1129,6 +1137,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	      entry1->data.int_range_data.max >= entry2->data.int_data) {
             result = gst_props_entry_copy (entry2);
 	  }
+        default:
       }
       break;
     case GST_PROPS_FLOAT_RANGE_ID:
@@ -1160,6 +1169,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 	      entry1->data.float_range_data.max >= entry2->data.float_data) {
             result = gst_props_entry_copy (entry2);
 	  }
+        default:
       }
       break;
     case GST_PROPS_FOURCC_ID:
@@ -1168,6 +1178,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
         case GST_PROPS_FOURCC_ID:
           if (entry1->data.fourcc_data == entry2->data.fourcc_data)
 	    result = gst_props_entry_copy (entry1);
+        default:
       }
       break;
     case GST_PROPS_INT_ID:
@@ -1176,6 +1187,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
         case GST_PROPS_INT_ID:
           if (entry1->data.int_data == entry2->data.int_data)
 	    result = gst_props_entry_copy (entry1);
+        default:
       }
       break;
     case GST_PROPS_FLOAT_ID:
@@ -1184,6 +1196,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
         case GST_PROPS_FLOAT_ID:
           if (entry1->data.float_data == entry2->data.float_data)
 	    result = gst_props_entry_copy (entry1);
+        default:
       }
       break;
     case GST_PROPS_BOOL_ID:
@@ -1192,6 +1205,7 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
         case GST_PROPS_BOOL_ID:
           if (entry1->data.bool_data == entry2->data.bool_data)
 	    result = gst_props_entry_copy (entry1);
+        default:
       }
     case GST_PROPS_STRING_ID:
       switch (entry2->propstype) {
@@ -1199,7 +1213,9 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
         case GST_PROPS_STRING_ID:
           if (!strcmp (entry1->data.string_data.string, entry2->data.string_data.string))
 	    result = gst_props_entry_copy (entry1);
+        default:
       }
+    default:
   }
 
   return result;
