@@ -58,6 +58,7 @@ extern "C" {
 #define GST_BUFFER_OFFSET(buf)		(GST_BUFFER(buf)->offset)
 #define GST_BUFFER_MAXSIZE(buf)		(GST_BUFFER(buf)->maxsize)
 #define GST_BUFFER_TIMESTAMP(buf)	(GST_BUFFER(buf)->timestamp)
+#define GST_BUFFER_FREE_FUNC(buf)	(GST_BUFFER(buf)->free)
 #define GST_BUFFER_MAXAGE(buf)		(GST_BUFFER(buf)->maxage)
 #define GST_BUFFER_BUFFERPOOL(buf)	(GST_BUFFER(buf)->pool)
 #define GST_BUFFER_PARENT(buf)		(GST_BUFFER(buf)->parent)
