@@ -547,6 +547,27 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
       continue;
     }
 
+    if (strcmp (id, "COMM") == 0) {
+      ucs4 = id3_field_getfullstring (&frame->fields[3]);
+      g_assert (ucs4);
+
+      utf8 = id3_ucs4_utf8duplicate (ucs4);
+      if (utf8 == 0)
+        continue;
+
+      if (!g_utf8_validate (utf8, -1, NULL)) {
+        g_warning ("converted string is not valid utf-8");
+        g_free (utf8);
+        continue;
+      }
+
+      gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+          GST_TAG_COMMENT, utf8, NULL);
+
+      g_free (utf8);
+      continue;
+    }
+
     field = &frame->fields[1];
     nstrings = id3_field_getnstrings (field);
 
@@ -694,6 +715,22 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
       str = g_strdup_printf ("%u", u);
       put = g_utf8_to_ucs4_fast (str, -1, NULL);
       g_free (str);
+    } else if (strcmp (tag_name, GST_TAG_COMMENT) == 0) {
+      gchar *str;
+      id3_ucs4_t ucs4_empty[] = { 0 };
+
+      if (!gst_tag_list_get_string_index (list, tag_name, values, &str))
+        g_assert_not_reached ();
+      put = g_utf8_to_ucs4_fast (str, -1, NULL);
+      g_free (str);
+
+      if (id3_field_setlanguage (&frame->fields[1], "XXX") == -1 ||
+          id3_field_setstring (&frame->fields[2], ucs4_empty) == -1 ||
+          id3_field_setfullstring (&frame->fields[3], (id3_ucs4_t *) put) == -1)
+        GST_WARNING ("could not add a string to the id3 COMM field");
+
+      g_free (put);
+      return;
     } else {
       gchar *str;
 
