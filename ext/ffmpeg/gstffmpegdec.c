@@ -409,40 +409,18 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
            * errors inside. This drives me crazy, so we let it allocate
            * it's own buffers and copy to our own buffer afterwards... */
           AVPicture pic;
-          enum PixelFormat to_fmt =
-	      (ffmpegdec->context->pix_fmt == PIX_FMT_PAL8) ?
-	      PIX_FMT_RGBA32 : ffmpegdec->context->pix_fmt;
-          gint size = avpicture_get_size (to_fmt,
+          gint size = avpicture_get_size (ffmpegdec->context->pix_fmt,
               ffmpegdec->context->width,
               ffmpegdec->context->height);
 
           outbuf = gst_buffer_new_and_alloc (size);
-          avpicture_fill (&pic, GST_BUFFER_DATA (outbuf), to_fmt,
+          avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
+              ffmpegdec->context->pix_fmt,
               ffmpegdec->context->width, ffmpegdec->context->height);
-          if (to_fmt == ffmpegdec->context->pix_fmt) {
-            img_convert (&pic, ffmpegdec->context->pix_fmt,
-                (AVPicture *) ffmpegdec->picture,
-                ffmpegdec->context->pix_fmt,
-                ffmpegdec->context->width, ffmpegdec->context->height);
-          } else {
-            /* manual conversion from palette to RGBA32 */
-            gint x, y, pix, ws = ffmpegdec->picture->linesize[0],
-		wd = ffmpegdec->context->width;
-            guint8 *dest = GST_BUFFER_DATA (outbuf);
-            guint32 conv;
-            AVPaletteControl *pal = ffmpegdec->context->palctrl;
-
-            for (y = 0; y < ffmpegdec->context->height; y++) {
-              for (x = 0; x < ffmpegdec->context->width; x++) {
-                pix = ffmpegdec->picture->data[0][y * ws + x];
-                conv = pal->palette[pix];
-                dest[(y * wd + x) * 4]     = ((guint8 *) &conv)[0];
-                dest[(y * wd + x) * 4 + 1] = ((guint8 *) &conv)[1];
-                dest[(y * wd + x) * 4 + 2] = ((guint8 *) &conv)[2];
-                dest[(y * wd + x) * 4 + 3] = ((guint8 *) &conv)[3];
-              }
-            }
-          }
+          img_convert (&pic, ffmpegdec->context->pix_fmt,
+              (AVPicture *) ffmpegdec->picture,
+              ffmpegdec->context->pix_fmt,
+              ffmpegdec->context->width, ffmpegdec->context->height);
 
           /* note that ffmpeg sometimes gets the FPS wrong */
           if (GST_CLOCK_TIME_IS_VALID (expected_ts)) {

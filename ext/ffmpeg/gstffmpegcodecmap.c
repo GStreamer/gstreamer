@@ -783,19 +783,33 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       g_mask = 0x03e0;
       b_mask = 0x001f;
       break;
+    case PIX_FMT_PAL8:
+      bpp = depth = 8;
+      endianness = G_BYTE_ORDER;
+      break;
     default:
       /* give up ... */
       break;
   }
 
   if (bpp != 0) {
-    caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
-        "bpp", G_TYPE_INT, bpp,
-        "depth", G_TYPE_INT, depth,
-        "red_mask", G_TYPE_INT, r_mask,
-        "green_mask", G_TYPE_INT, g_mask,
-        "blue_mask", G_TYPE_INT, b_mask,
-	"endianness", G_TYPE_INT, endianness, NULL);
+    if (r_mask != 0) {
+      caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
+          "bpp", G_TYPE_INT, bpp,
+          "depth", G_TYPE_INT, depth,
+          "red_mask", G_TYPE_INT, r_mask,
+          "green_mask", G_TYPE_INT, g_mask,
+          "blue_mask", G_TYPE_INT, b_mask,
+          "endianness", G_TYPE_INT, endianness, NULL);
+    } else {
+      caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
+          "bpp", G_TYPE_INT, bpp,
+          "depth", G_TYPE_INT, depth,
+          "endianness", G_TYPE_INT, endianness, NULL);
+      if (context) {
+        gst_ffmpeg_set_palette (caps, context);
+      }
+    }
   } else if (fmt) {
     caps = GST_FF_VID_CAPS_NEW ("video/x-raw-yuv",
         "format", GST_TYPE_FOURCC, fmt, NULL);
@@ -1012,34 +1026,40 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     gint bpp = 0, rmask = 0, endianness = 0;
 
     if (gst_structure_get_int (structure, "bpp", &bpp) &&
-        gst_structure_get_int (structure, "endianness", &endianness) &&
-        gst_structure_get_int (structure, "red_mask", &rmask)) {
-      switch (bpp) {
-        case 32:
+        gst_structure_get_int (structure, "endianness", &endianness)) {
+      if (gst_structure_get_int (structure, "red_mask", &rmask)) {
+        switch (bpp) {
+          case 32:
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-          if (rmask == 0x00ff0000)
+            if (rmask == 0x00ff0000)
 #else
-          if (rmask == 0x0000ff00)
+            if (rmask == 0x0000ff00)
 #endif
-            context->pix_fmt = PIX_FMT_RGBA32;
-          break;
-        case 24:
-          if (rmask == 0x0000FF)
-            context->pix_fmt = PIX_FMT_BGR24;
-          else
-            context->pix_fmt = PIX_FMT_RGB24;
-          break;
-        case 16:
-          if (endianness == G_BYTE_ORDER)
-            context->pix_fmt = PIX_FMT_RGB565;
-          break;
-        case 15:
-          if (endianness == G_BYTE_ORDER)
-            context->pix_fmt = PIX_FMT_RGB555;
-          break;
-        default:
-          /* nothing */
-          break;
+              context->pix_fmt = PIX_FMT_RGBA32;
+            break;
+          case 24:
+            if (rmask == 0x0000FF)
+              context->pix_fmt = PIX_FMT_BGR24;
+            else
+              context->pix_fmt = PIX_FMT_RGB24;
+            break;
+          case 16:
+            if (endianness == G_BYTE_ORDER)
+              context->pix_fmt = PIX_FMT_RGB565;
+            break;
+          case 15:
+            if (endianness == G_BYTE_ORDER)
+              context->pix_fmt = PIX_FMT_RGB555;
+            break;
+          default:
+            /* nothing */
+            break;
+        }
+      } else {
+        if (bpp == 8) {
+          context->pix_fmt = PIX_FMT_PAL8;
+          gst_ffmpeg_get_palette (caps, context);
+        }
       }
     }
   }
