@@ -1291,13 +1291,14 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
      * - server socket input (ie, new client connections)
      * - client socket input (ie, clients saying goodbye)
      * - client socket output (ie, client reads)          */
+    GST_LOG_OBJECT (sink, "waiting on action on fdset");
     result = gst_fdset_wait (sink->fdset, -1);
 
     /* < 0 is an error, 0 just means a timeout happened, which is impossible */
     if (result < 0) {
       GST_WARNING_OBJECT (sink, "wait failed: %s", g_strerror (errno));
       if (errno == EBADF) {
-        /* ok, so one or more of the fds is invalid. We loop over them to find 
+        /* ok, so one or more of the fds is invalid. We loop over them to find
          * the ones that give an error to the F_GETFL fcntl. */
         g_mutex_lock (sink->clientslock);
         for (clients = sink->clients; clients; clients = next) {
@@ -1401,6 +1402,7 @@ gst_multifdsink_handle_clients (GstMultiFdSink * sink)
       continue;
     }
     if (gst_fdset_fd_has_error (sink->fdset, &client->fd)) {
+      GST_WARNING_OBJECT (sink, "gst_fdset_fd_has_error for %d", client->fd);
       client->status = GST_CLIENT_STATUS_ERROR;
       gst_multifdsink_remove_client_link (sink, clients);
       continue;
