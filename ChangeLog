@@ -1,3 +1,11 @@
+2005-02-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_open):
+	  Don't send "Hey! You gave me a NULL pointer you naughty person" as
+	  error message when we can't open the DVD device (when dvdnav_open()
+	  fails, src->dvdnav is NULL, so dvdnav_err_to_string() will return
+	  the above). Send something more useful instead (fixes #167117).
+
 2005-02-11  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put),
