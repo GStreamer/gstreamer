@@ -1,1 +1,2 @@
-gstreamer-0.7.schemas
+gstreamer-*.schemas
+gstreamer.schemas
