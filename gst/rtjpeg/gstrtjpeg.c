@@ -21,37 +21,27 @@
 #include <gstrtjpegenc.h>
 #include <gstrtjpegdec.h>
 
-/* elementfactory information */
-extern GstElementDetails gst_rtjpegenc_details;
-extern GstElementDetails gst_rtjpegdec_details;
-
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *enc, *dec;
-
-  gst_plugin_set_longname(plugin,"Justin Schoeman's RTjpeg codec and \
-conversion utilities");
-
-  /* create an elementfactory for the rtjpegenc element */
-  enc = gst_element_factory_new("rtjpegenc",GST_TYPE_RTJPEGENC,
-                               &gst_rtjpegenc_details);
-  g_return_val_if_fail(enc != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
-
-  /* create an elementfactory for the rtjpegdec element */
-  dec = gst_element_factory_new("rtjpegdec",GST_TYPE_RTJPEGDEC,
-                               &gst_rtjpegdec_details);
-  g_return_val_if_fail(dec != NULL, FALSE);
-  gst_element_factory_set_rank (dec, GST_ELEMENT_RANK_PRIMARY);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
+  if (!gst_element_register (plugin, "rtjpegenc",
+			     GST_RANK_NONE, GST_TYPE_RTJPEGENC) ||
+      !gst_element_register (plugin, "rtjpegdec",
+			     GST_RANK_NONE, GST_TYPE_RTJPEGDEC))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "rtjpeg",
-  plugin_init
-};
+  "Justin Schoeman's RTjpeg codec",
+  plugin_init,
+  VERSION,
+  "GPL",
+  "(c) 2000 Justin Schoeman <justin@suntiger.ee.up.ac.za>",
+  GST_PACKAGE,
+  GST_ORIGIN
+)

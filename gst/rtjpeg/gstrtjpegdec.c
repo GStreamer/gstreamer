@@ -29,11 +29,8 @@
 GstElementDetails gst_rtjpegdec_details = {
   "RTjpeg decoder",
   "Codec/Video/Decoder",
-  "GPL",
   "Decodes video in RTjpeg format",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
+  "Erik Walthinsen <omega@cse.ogi.edu>"
 };
 
 /* GstRTJpegDec signals and args */
@@ -49,6 +46,7 @@ enum {
 
 
 static void	gst_rtjpegdec_class_init	(GstRTJpegDecClass *klass);
+static void	gst_rtjpegdec_base_init		(GstRTJpegDecClass *klass);
 static void	gst_rtjpegdec_init		(GstRTJpegDec *rtjpegdec);
 
 static void	gst_rtjpegdec_chain		(GstPad *pad, GstData *_data);
@@ -63,7 +61,8 @@ gst_rtjpegdec_get_type (void)
 
   if (!rtjpegdec_type) {
     static const GTypeInfo rtjpegdec_info = {
-      sizeof(GstRTJpegDecClass),      NULL,
+      sizeof(GstRTJpegDecClass),
+      (GBaseInitFunc)gst_rtjpegdec_base_init,
       NULL,
       (GClassInitFunc)gst_rtjpegdec_class_init,
       NULL,
@@ -75,6 +74,14 @@ gst_rtjpegdec_get_type (void)
     rtjpegdec_type = g_type_register_static(GST_TYPE_ELEMENT, "GstRTJpegDec", &rtjpegdec_info, 0);
   }
   return rtjpegdec_type;
+}
+
+static void
+gst_rtjpegdec_base_init (GstRTJpegDecClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_details (element_class, &gst_rtjpegdec_details);
 }
 
 static void

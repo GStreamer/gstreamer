@@ -27,11 +27,8 @@
 GstElementDetails gst_rtjpegenc_details = {
   "RTjpeg encoder",
   "Codec/Video/Encoder",
-  "GPL",
   "Encodes video in RTjpeg format",
-  VERSION,
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-  "(C) 1999",
+  "Erik Walthinsen <omega@cse.ogi.edu>"
 };
 
 /* GstRTJpegEnc signals and args */
@@ -47,6 +44,7 @@ enum {
 
 
 static void	gst_rtjpegenc_class_init	(GstRTJpegEncClass *klass);
+static void	gst_rtjpegenc_base_init		(GstRTJpegEncClass *klass);
 static void	gst_rtjpegenc_init		(GstRTJpegEnc *rtjpegenc);
 
 static void	gst_rtjpegenc_chain		(GstPad *pad, GstData *_data);
@@ -61,7 +59,8 @@ gst_rtjpegenc_get_type (void)
 
   if (!rtjpegenc_type) {
     static const GTypeInfo rtjpegenc_info = {
-      sizeof(GstRTJpegEncClass),      NULL,
+      sizeof(GstRTJpegEncClass),
+      (GBaseInitFunc)gst_rtjpegenc_base_init,
       NULL,
       (GClassInitFunc)gst_rtjpegenc_class_init,
       NULL,
@@ -73,6 +72,14 @@ gst_rtjpegenc_get_type (void)
     rtjpegenc_type = g_type_register_static(GST_TYPE_ELEMENT, "GstRTJpegEnc", &rtjpegenc_info, 0);
   }
   return rtjpegenc_type;
+}
+
+static void
+gst_rtjpegenc_base_init (GstRTJpegEncClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_set_details (element_class, &gst_rtjpegenc_details);
 }
 
 static void
