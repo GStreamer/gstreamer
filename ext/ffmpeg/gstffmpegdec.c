@@ -356,6 +356,7 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     details = g_new0 (GstElementDetails,1);
     details->longname = g_strdup (in_plugin->name);
     details->klass = "Codec/FFMpeg";
+    details->license = "LGPL";
     details->description = g_strdup (in_plugin->name);
     details->version = g_strdup("1.0.0");
     details->author = g_strdup("The FFMPEG crew, GStreamer plugin by Wim Taymans <wim.taymans@chello.be>");
