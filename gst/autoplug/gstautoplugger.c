@@ -184,10 +184,12 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
   autoplugger->cache_srcpad = gst_element_get_pad (autoplugger->cache, "src");
 
   /* attach handlers to the typefind pads */
+  /* FIXME "caps_changed" no longer exists
   g_signal_connect (G_OBJECT (autoplugger->cache_sinkpad), "caps_changed",
                      G_CALLBACK (gst_autoplugger_external_sink_caps_changed), autoplugger);
   g_signal_connect (G_OBJECT (autoplugger->cache_srcpad), "caps_changed",
                      G_CALLBACK (gst_autoplugger_external_src_caps_changed), autoplugger);
+  */
   g_signal_connect (G_OBJECT (autoplugger->cache_sinkpad), "caps_nego_failed",
                      G_CALLBACK (gst_autoplugger_external_sink_caps_nego_failed), autoplugger);
   g_signal_connect (G_OBJECT (autoplugger->cache_srcpad), "caps_nego_failed",
