@@ -293,13 +293,13 @@ gst_tag_list_new_from_id3v1 (const guint8 *data)
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, year, NULL);
   }
   if (data[125] == 0) {
-    gst_tag_extract (list, GST_TAG_ALBUM, &data[97], 28);
+    gst_tag_extract (list, GST_TAG_COMMENT, &data[97], 28);
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER, (guint) data[126], NULL);
   } else {
-    gst_tag_extract (list, GST_TAG_ALBUM, &data[97], 30);
+    gst_tag_extract (list, GST_TAG_COMMENT, &data[97], 30);
   }
   if (data[127] < gst_tag_id3_genre_count ()) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER, gst_tag_id3_genre_get (data[126]), NULL);
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE, gst_tag_id3_genre_get (data[127]), NULL);
   }
 
   return list;

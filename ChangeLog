@@ -1,3 +1,11 @@
+2004-01-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/flac/gstflacenc.c: (gst_flacenc_set_metadata),
+	(gst_flacenc_chain):
+	  handle tags correctly
+	* gst/tags/gstid3tag.c: (gst_tag_list_new_from_id3v1):
+	  extract ID3v1 tags correctly
+
 2004-01-14  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/typefind/gsttypefindfunctions.c: (matroska_type_find),
