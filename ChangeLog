@@ -1,3 +1,14 @@
+2004-09-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/__init__.py:
+	* gst/gstreamer.py:
+	* gst/arg-types.py:
+	  fix headers
+	* gst/gst.override:
+	  change GstPad repr
+	* gst/ltihooks.py:
+	  fix distcheck for uninstalled by only adding .libs when needed
+
 2004-08-30  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst.override (_wrap_gst_structure_ass_subscript): Some more

@@ -1,3 +1,5 @@
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
@@ -19,7 +21,6 @@
 # Boston, MA 02111-1307, USA.
 # 
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
-#
 
 from argtypes import UInt64Arg, Int64Arg, PointerArg, ArgMatcher, ArgType, matcher
 

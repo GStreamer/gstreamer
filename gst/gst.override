@@ -186,15 +186,18 @@ _wrap_gst_pad_tp_repr (PyGObject *self)
 {
 	char *buf;
 	PyObject *retval;
+  	GstPad *pad;
+  	GstElement *parent;
 	
-	buf = g_strdup_printf("<GstPad (%s) at %lx>",
-			      gst_pad_get_name(GST_PAD(self->obj)),
-			      (long)self->obj);
+	buf = g_strdup_printf ("<GstPad (%s:%s) at %lx>",
+		gst_element_get_name (parent),
+		gst_pad_get_name (pad), (long) self->obj);
 
 	retval = PyString_FromString(buf);
 	g_free(buf);
 	return retval;
 }
+
 %%
 override gst_pad_query kwargs
 static PyObject *
