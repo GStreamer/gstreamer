@@ -27,7 +27,7 @@ plugins.
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
 %{_bindir}/gst-register
-%{_libdir}/libgst.so.*
+%{_libdir}/libgst-%{version}.so.*
 %{_libdir}/gst/libgstautoplugcache.so*
 %{_libdir}/gst/libgstautoplugger.so*
 %{_libdir}/gst/libgstbasicscheduler.so*

@@ -1,6 +1,16 @@
 Release TODO
 ------------
 
+* after a release, we move in cvs mode and use a .1 nano version number
+
+* close to the next release, we make prereleases by upping the nano version
+
+* update release notes
+
+* add release notes to cvs
+
+* update web site release notes
+
 * make distcheck should pass
 
 * test suite should pass
@@ -19,7 +29,6 @@ Release TODO
   http://gstreamer.net/dev/cvs.php
   add tag to above page
 
-* update web site release notes
 
 * update web site news items for release
 
