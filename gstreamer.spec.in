@@ -254,9 +254,10 @@ of GStreamer. geditor is development tool for graphically creating applications 
 %package -n gstreamer-gnomevfs
 Summary: GStreamer plugins for GNOME VFS input and output
 Group: Libraries/Multimedia
-Requires: gnome-vfs > 1.0
+# Requires: gnome-vfs > 1.0
 Requires: %{name} = %{ver}
-BuildRequires: gnome-vfs-devel > 1.0
+# Commented out since it breaks gnome2 build
+# BuildRequires: gnome-vfs-devel > 1.0
 
 %description -n gstreamer-gnomevfs
 Plugins for reading and writing through GNOME VFS.
@@ -801,8 +802,8 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %post -n gstreamer-oss
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
-%post -n  gstreamer-ac3dec
-%{prefix}/bin/gstreamer-register --gst-mask=0
+# %post -n  gstreamer-ac3dec
+# %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n  gstreamer-afs
 %{prefix}/bin/gstreamer-register --gst-mask=0
