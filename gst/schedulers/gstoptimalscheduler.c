@@ -857,9 +857,10 @@ remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
   group->num_elements--;
 
   /* if the element was an entry point in the group, clear the group's
-   * entry point */
+   * entry point, and mark it as unknown */
   if (group->entry == element) {
     group->entry = NULL;
+    group->type = GST_OPT_SCHEDULER_GROUP_UNKNOWN;
   }
 
   GST_ELEMENT_SCHED_GROUP (element) = NULL;
@@ -1911,9 +1912,11 @@ gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
           GST_OPT_SCHEDULER_GROUP_GET);
 
       /* if there is not yet an entry in the group, select the source
-       * element as the entry point */
+       * element as the entry point and mark the group as a get based
+       * group */
       if (!group->entry) {
         group->entry = src_element;
+        group->type = GST_OPT_SCHEDULER_GROUP_GET;
 
         GST_DEBUG ("setting \"%s\" as entry point of _get-based group %p",
             GST_ELEMENT_NAME (src_element), group);
