@@ -839,6 +839,7 @@ plugins/capture/v4l/Makefile
 plugins/cdparanoia/Makefile
 plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
+plugins/artsd/Makefile
 plugins/xmms/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
