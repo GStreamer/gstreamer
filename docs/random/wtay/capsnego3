@@ -1,0 +1,48 @@
+Capsnego patterns
+-----------------
+
+
+
+
+src negotiation recovery
+------------------------
+
+common pipelines like 
+
+ filesrc -> mad -> osssink
+
+perform negotiation strictly left to right. At some point during
+iterate, mad will know the caps of the media stream and will need
+to inform osssink of this before pushing out a buffer.
+mad only has one set of fixed caps.
+
+1) try_set_caps
+
+ mad does a try_set_caps with the caps if all goes well, osssink
+ accepts and negotiation succeeds.
+
+ if the try_set_caps function fails, the application should have 
+ a change to recover.
+ 
+ - mad therefore calls gst_pad_caps_error_try_recover, this will
+   emit a signal on the pad that the app can catch. One of the
+   signal arguments will contain a list of possible caps.
+
+ - the app can use the allowed caps to find another element that
+   is compatible with the caps and the peer element caps.
+
+ - the app will connect the new element with mad, negotiation
+   will happen again, the link will fail or succeed, if it fails,
+   thr app knows because the link function returns FALSE.
+
+ - if the link succeeds, pad caps are set and the try_recover 
+   function returns TRUE, mad then knows the issue was resolved
+   and can continue. It will have received the final caps in its
+   srclink function.
+
+ - if no signal handler is connected to the caps_nego_failure signal
+   the issue will remain unresolved and a big debug warning is
+   printed on the console to debug the issue. mad will get a
+   return value of FALSE and may stop. 
+ 
+
