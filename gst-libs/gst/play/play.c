@@ -923,14 +923,14 @@ gst_play_get_sink_element (GstPlay *play,
         }
         else {
           /* If not a src pad checking caps */
-          const GstCaps *caps;
+          GstCaps *caps;
           GstStructure *structure;
           gboolean has_video_cap = FALSE;
           gboolean has_audio_cap = FALSE;
 
-          caps = gst_pad_get_negotiated_caps (GST_PAD (pads->data));
+          caps = gst_pad_get_caps (GST_PAD (pads->data));
           structure = gst_caps_get_structure (caps, 0);
-
+          
           if (strcmp (gst_structure_get_name (structure),
                                   "audio/x-raw-int") == 0) {
             has_audio_cap = TRUE;
@@ -943,6 +943,8 @@ gst_play_get_sink_element (GstPlay *play,
             has_video_cap = TRUE;
           }
 
+          gst_caps_free (caps);
+          
           switch (sink_type) {
             case GST_PLAY_SINK_TYPE_AUDIO:
               if (has_audio_cap)
