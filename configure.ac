@@ -320,34 +320,6 @@ AC_SUBST(GNOME_LIBS)
 AC_SUBST(GNOME_CFLAGS)
 AC_SUBST(HAVE_GNOME)
 
-dnl Check for libglade with gnome support; no libglade for glib2.0
-HAVE_LIBGLADE_GNOME="no"
-if test x$USE_GLIB2 = xyes; then
-  AC_MSG_WARN(libglade disabled for glib2.0)
-dnl  PKG_CHECK_MODULES(LIBGLADE_GNOME, libglade-2.0 libgnomeui-2.0, HAVE_LIBGLADE_GNOME=yes, HAVE_LIBGLADE_GNOME=no)
-dnl  if test x$HAVE_LIBGLADE_GNOME = xno; then
-dnl    AC_MSG_WARN(Couldn't find libglade-2.0 - Can't build gstplay)
-    LIBGLADE_GNOME_LIBS=
-    LIBGLADE_GNOME_CFLAGS=
-dnl  fi;
-else
-  AM_PATH_LIBGLADE(HAVE_LIBGLADE_GNOME="yes", HAVE_LIBGLADE_GNOME="no", gnome)
-  if test x$HAVE_LIBGLADE_GNOME = xno; then
-    AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
-  else
-    LIBGLADE_GNOME_LIBS=$LIBGLADE_LIBS
-    LIBGLADE_GNOME_CFLAGS=$LIBGLADE_CFLAGS
-        AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
-                HAVE_LIBGLADE_GNOME="yes"
-                AC_MSG_WARN(
-        [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
-               )
-  fi
-fi
-AC_SUBST(HAVE_LIBGLADE_GNOME)
-AC_SUBST(LIBGLADE_GNOME_LIBS)
-AC_SUBST(LIBGLADE_GNOME_CFLAGS)
-
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
 dnl defines the wrong default symbol as well (HAVE_ASM_ATOMIC_H)
@@ -621,7 +593,6 @@ AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
 AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
 
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
-AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
