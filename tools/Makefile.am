@@ -38,18 +38,6 @@ bin_PROGRAMS = \
 	$(GST_LOADSAVE_SRC) $(GST_LOADSAVE_SRC_V) \
 	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
 
-manpages = gst-launch.1 gst-md5sum.1 gst-register.1 gst-inspect.1 \
-	gst-complete.1 gst-compprep.1 gst-xmllaunch.1 \
-	gst-feedback.1
-
-CLEANFILES = $(manpages)
-man_MANS = $(manpages)
-
-EXTRA_DIST = gst-launch.1.in gst-md5sum.1.in gst-register.1.in gst-inspect.1.in \
-	gst-complete.1.in gst-compprep.1.in gst-xmllaunch.1.in \
-	gst-feedback.1.in
-EXTRA_DIST += gst-feedback
-
 # make sure each versioned tool has the right source file
 if !GST_DISABLE_REGISTRY
 gst_register_@GST_MAJORMINOR@_SOURCES = gst-register.c
@@ -88,19 +76,55 @@ gst_inspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJO
 
 gst_xmlinspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
+### man pages we want to install
+if GST_DISABLE_REGISTRY
+GST_REGISTRY_MAN = gst-register-@GST_MAJORMINOR@.1
+else
+GST_REGISTRY_MAN=
+endif
+
+if GST_DISABLE_LOADSAVE
+GST_LOADSAVE_MAN = \
+	gst-complete-@GST_MAJORMINOR@.1 \
+	gst-compprep-@GST_MAJORMINOR@.1 \
+	gst-xmllaunch-@GST_MAJORMINOR@.1
+else
+GST_LOADSAVE_MAN=
+endif
+
+GST_OTHER_MAN = \
+	gst-inspect-@GST_MAJORMINOR@.1 \
+	gst-launch-@GST_MAJORMINOR@.1 \
+	gst-md5sum-@GST_MAJORMINOR@.1 \
+	gst-typefind-@GST_MAJORMINOR@.1
+#	gst-xmlinspect-@GST_MAJORMINOR@.1
+
+manpages = $(GST_REGISTRY_MAN) $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
+
+CLEANFILES = $(manpages)
+man_MANS = $(manpages)
+
+EXTRA_DIST = \
+	gst-complete.1.in \
+	gst-compprep.1.in \
+	gst-feedback.1.in \
+	gst-inspect.1.in \
+	gst-launch.1.in \
+	gst-md5sum.1.in \
+	gst-register.1.in \
+	gst-xmllaunch.1.in \
+	gst-feedback
 
 bin_SCRIPTS = gst-feedback
 
-SUFFIXES = .1 .1.in
-.1.in.1:
+%-@GST_MAJORMINOR@.1: %.1.in
 	sed \
-		-e s,gst.-complete,`echo gst-complete | sed $(program_transform_name) | sed s/-/\\-/`,g \
-		-e s,gst.-compprep,`echo gst-compprep | sed $(program_transform_name) | sed s/-/\\-/`,g \
-		-e s,gst.-feedback,`echo gst-feedback | sed $(program_transform_name) | sed s/-/\\-/`,g \
-		-e s,gst.-inspect,`echo gst-inspect | sed $(program_transform_name) | sed s/-/\\-/`,g \
-		-e s,gst.-launch,`echo gst-launch | sed $(program_transform_name) | sed s/-/\\-/`,g \
-		-e s,gst.-md5sum,`echo gst-md5sum | sed $(program_transform_name) | sed s/-/\\-/`,g \
-		-e s,gst.-register,`echo gst-register | sed $(program_transform_name) | sed s/-/\\-/`,g \
-		-e s,gst.-xmllaunch,`echo gst-xmllaunch | sed $(program_transform_name) | sed s/-/\\-/`,g \
+		-e s,gst-complete,gst-complete-@GST_MAJORMINOR@,g \
+		-e s,gst-compprep,gst-compprep-@GST_MAJORMINOR@,g \
+		-e s,gst-feedback,gst-feedback-@GST_MAJORMINOR@,g \
+		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
+		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
+		-e s,gst-md5sum,gst-md5sum-@GST_MAJORMINOR@,g \
+		-e s,gst-register,gst-register-@GST_MAJORMINOR@,g \
+		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
 		$< >$@
-
