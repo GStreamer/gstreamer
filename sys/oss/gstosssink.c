@@ -337,6 +337,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
   GstClockTime buftime, elementtime, soundtime;
   guchar *data;
   guint to_write;
+  gint delay;
 
   /* this has to be an audio buffer */
   osssink = GST_OSSSINK (gst_pad_get_parent (pad));
@@ -367,7 +368,10 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
   to_write = GST_BUFFER_SIZE (buf);
   /* sync audio with buffers timestamp */
   elementtime = gst_element_get_time (GST_ELEMENT (osssink));
-  soundtime = elementtime + gst_osssink_get_delay (osssink) * GST_SECOND / GST_OSSELEMENT (osssink)->bps;
+  delay = gst_osssink_get_delay (osssink);
+  if (delay < 0)
+    delay = 0;
+  soundtime = elementtime + delay * GST_SECOND / GST_OSSELEMENT (osssink)->bps;
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     buftime = GST_BUFFER_TIMESTAMP (buf);
   } else {
@@ -381,9 +385,9 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 	elementtime, soundtime, buftime);
     if (soundtime > buftime) {
       /* full frames */
-      guint throw_away = (soundtime - buftime) * GST_OSSELEMENT (osssink)->bps / GST_SECOND
-	  / GST_OSSELEMENT (osssink)->width / GST_OSSELEMENT (osssink)->channels
-	  * GST_OSSELEMENT (osssink)->width * GST_OSSELEMENT (osssink)->channels;
+      guint throw_away = (soundtime - buftime) * GST_OSSELEMENT (osssink)->bps / GST_SECOND;
+      throw_away &= ~(GST_OSSELEMENT (osssink)->width * GST_OSSELEMENT (osssink)->channels);
+      osssink->handled += throw_away;
       if (throw_away >= GST_BUFFER_SIZE (buf)) {
 	gst_data_unref (_data);
 	return;
