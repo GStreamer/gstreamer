@@ -261,11 +261,17 @@ static inline gint64
 gst_osssink_get_delay (GstOssSink *osssink) 
 {
   gint delay = 0;
+  gint ret;
 
   if (GST_OSSELEMENT (osssink)->fd == -1)
     return 0;
 
-  if (ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_GETODELAY, &delay) < 0) {
+#ifdef SNDCTL_DSP_GETODELAY
+  ret = ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_GETODELAY, &delay);
+#else
+  ret = -1;
+#endif
+  if (ret < 0) {
     audio_buf_info info;
     if (ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_GETOSPACE, &info) < 0) {
       delay = 0;
@@ -337,7 +343,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
-        ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_SYNC);
+        ioctl (GST_OSSELEMENT (osssink)->fd, SNDCTL_DSP_SYNC, 0);
 	gst_audio_clock_set_active (GST_AUDIO_CLOCK (osssink->provided_clock), FALSE);
 	gst_pad_event_default (pad, event);
         return;
