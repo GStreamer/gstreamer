@@ -1,3 +1,9 @@
+2004-02-19  Benjamin Otte  <otte@gnome.org>
+
+	* ext/lame/gstlame.c: (gst_lame_chain):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_chain):
+	  use gst_tag_list_insert when you want to insert tags
+
 2004-02-18  David Schleef  <ds@schleef.org>
 
 	* configure.ac:  Move massink to gst-rotten
