@@ -104,6 +104,8 @@ gst_pipeline_init (GstPipeline *pipeline)
 
   pipeline->src = NULL;
   pipeline->sinks = NULL;
+
+  gst_element_set_manager(GST_ELEMENT(pipeline),GST_ELEMENT(pipeline));
 }
 
 

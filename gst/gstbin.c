@@ -155,6 +155,85 @@ gst_bin_new (const gchar *name)
   return gst_elementfactory_make ("bin", name);
 }
 
+static inline void
+gst_bin_reset_element_manager (GstElement *element, GstElement *manager)
+{
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "resetting element's manager");
+
+  // first remove the element from its current manager, if any
+  if (element->manager)
+    gst_bin_remove_managed_element (GST_BIN(element->manager), element);
+  // then set the new manager
+  gst_element_set_manager (element,manager);
+  // and add it to the new manager's list
+  if (manager)
+    gst_bin_add_managed_element (GST_BIN(manager), element);
+}
+
+void
+gst_bin_set_element_manager (GstElement *element,GstElement *manager)
+{
+  GstElement *realmanager = NULL;
+  GList *children;
+  GstElement *child;
+
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT(element));
+
+  // figure out which element is the manager
+  if (manager) {
+    if (GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
+      realmanager = element;
+      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's manager to self");
+    } else {
+      realmanager = manager;
+      GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting children's manager to parent");
+    }
+  } else {
+    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "unsetting children's manager");
+  }
+
+  // if it's actually a Bin
+  if (GST_IS_BIN(element)) {
+    // set the children's manager
+    children = GST_BIN(element)->children;
+    while (children) {
+      child = GST_ELEMENT (children->data);
+      children = g_list_next(children);
+
+      gst_bin_set_element_manager (child, realmanager);
+    }
+
+  // otherwise, if it's just a regular old element
+  } else {
+    // simply reset the element's manager
+    gst_bin_reset_element_manager (element, realmanager);
+  }
+}
+
+void
+gst_bin_add_managed_element (GstBin *bin, GstElement *element)
+{
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "adding managed element \"%s\"", GST_ELEMENT_NAME(element));
+  bin->managed_elements = g_list_prepend (bin->managed_elements, element);
+  bin->num_managed_elements++;
+
+  gst_schedule_add_element (NULL, element);
+}
+
+void
+gst_bin_remove_managed_element (GstBin *bin, GstElement *element)
+{
+  if (g_list_find (bin->managed_elements, element)) {
+    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "removing managed element %s", GST_ELEMENT_NAME(element));
+    bin->managed_elements = g_list_remove (bin->managed_elements, element);
+    bin->num_managed_elements--;
+  }
+
+  gst_schedule_remove_element (NULL, element);
+}
+
+
 /**
  * gst_bin_add:
  * @bin: #GstBin to add element to
@@ -172,15 +251,27 @@ gst_bin_add (GstBin *bin,
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  GST_DEBUG_ENTER ("");
+
   // must be NULL or PAUSED state in order to modify bin
+  // FIXME this isn't right any more
   g_return_if_fail ((GST_STATE (bin) == GST_STATE_NULL) ||
 		    (GST_STATE (bin) == GST_STATE_PAUSED));
 
+  // the element must not already have a parent
+  g_return_if_fail (GST_ELEMENT_PARENT(element) == NULL);
+
+  // then check to see if the element's name is already taken in the bin
+  g_return_if_fail (gst_object_check_uniqueness (bin->children, GST_ELEMENT_NAME(element)) == TRUE);
+
+  gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
   bin->children = g_list_append (bin->children, element);
   bin->numchildren++;
-  gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
 
-  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child %s", GST_ELEMENT_NAME (element));
+  ///// now we have to deal with manager stuff
+  gst_bin_set_element_manager (element, GST_ELEMENT(bin));
+
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child \"%s\"", GST_ELEMENT_NAME (element));
 
   /* we know we have at least one child, we just added one... */
 //  if (GST_STATE(element) < GST_STATE_READY)
@@ -210,12 +301,20 @@ gst_bin_remove (GstBin *bin,
   g_return_if_fail ((GST_STATE (bin) == GST_STATE_NULL) ||
 		    (GST_STATE (bin) == GST_STATE_PAUSED));
 
+  // the element must have its parent set to the current bin
+  g_return_if_fail (GST_ELEMENT_PARENT(element) == bin);
+
+  // the element must be in the bin's list of children
   if (g_list_find(bin->children, element) == NULL) {
     // FIXME this should be a warning!!!
     GST_ERROR_OBJECT(bin,element,"no such element in bin");
     return;
   }
 
+  // remove this element from the list of managed elements
+  gst_bin_set_element_manager (element, NULL);
+
+  // now remove the element from the list of elements
   gst_object_unparent (GST_OBJECT (element));
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
@@ -286,8 +385,12 @@ gst_bin_change_state (GstElement *element)
 //    g_print("\n");
     children = g_list_next (children);
   }
-//  g_print("<-- \"%s\"\n",gst_object_get_name(GST_OBJECT(bin)));
+//  g_print("<-- \"%s\"\n",GST_OBJECT_NAME(bin));
 
+
+  GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s",
+                _gst_print_statename (GST_STATE (element)),
+                _gst_print_statename (GST_STATE_PENDING (element)));
 
   return gst_bin_change_state_norecurse (bin);
 }
@@ -312,7 +415,7 @@ gst_bin_change_state_type(GstBin *bin,
   GstElement *child;
 
 //  g_print("gst_bin_change_state_type(\"%s\",%d,%d);\n",
-//          gst_object_get_name(GST_OBJECT(bin)),state,type);
+//          GST_OBJECT_NAME(bin))),state,type);
 
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
   g_return_val_if_fail (bin->numchildren != 0, FALSE);
@@ -411,7 +514,7 @@ gst_bin_get_by_name (GstBin *bin,
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    if (!strcmp (gst_object_get_name (GST_OBJECT (child)),name))
+    if (!strcmp (GST_OBJECT_NAME(child),name))
       return child;
     if (GST_IS_BIN (child)) {
       GstElement *res = gst_bin_get_by_name (GST_BIN (child), name);
@@ -635,6 +738,7 @@ gst_bin_create_plan_func (GstBin *bin)
 
   GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "creating plan");
 
+/*
   // first figure out which element is the manager of this and all child elements
   // if we're a managing bin ourselves, that'd be us
   if (GST_FLAG_IS_SET (bin, GST_BIN_FLAG_MANAGER)) {
@@ -651,6 +755,7 @@ gst_bin_create_plan_func (GstBin *bin)
     GST_DEBUG (0,"setting manager to \"%s\"\n", GST_ELEMENT_NAME (manager));
   }
   gst_element_set_manager (GST_ELEMENT (bin), manager);
+*/
 
   // perform the first recursive pass of plan generation
   // we set the manager of every element but those who manage themselves
@@ -669,9 +774,9 @@ gst_bin_create_plan_func (GstBin *bin)
 #endif
     GST_DEBUG (0,"have element \"%s\"\n",elementname);
 
-    // first set their manager
-    GST_DEBUG (0,"setting manager of \"%s\" to \"%s\"\n",elementname,GST_ELEMENT_NAME (manager));
-    gst_element_set_manager (element, manager);
+//    // first set their manager
+//    GST_DEBUG (0,"setting manager of \"%s\" to \"%s\"\n",elementname,GST_ELEMENT_NAME (manager));
+//    gst_element_set_manager (element, manager);
 
     // we do recursion and such for Bins
     if (GST_IS_BIN (element)) {
@@ -713,6 +818,7 @@ gst_bin_create_plan_func (GstBin *bin)
     return;
   }
 
+/*
   // clear previous plan state
   g_list_free (bin->managed_elements);
   bin->managed_elements = NULL;
@@ -760,12 +866,13 @@ gst_bin_create_plan_func (GstBin *bin)
       }
     }
   } while (pending);
+*/
 
   GST_DEBUG (0,"have %d elements to manage, implementing plan\n",bin->num_managed_elements);
 
   gst_bin_schedule(bin);
 
-  g_print ("gstbin \"%s\", eos providers:%d\n",
+  GST_DEBUG (0, "gstbin \"%s\", eos providers:%d\n",
 		  GST_ELEMENT_NAME (bin),
 		  bin->num_eos_providers);
 

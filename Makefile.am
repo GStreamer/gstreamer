@@ -8,17 +8,10 @@ else
 SUBDIRS_LGG =
 endif
 
-if BUILD_DOCS
-SUBDIRS_DOCS = docs
-else
-SUBDIRS_DOCS =
-endif
-
-SUBDIRS = include gst libs plugins tools test tests examples \
-$(SUBDIRS_LGG) $(SUBDIRS_DOCS)
+SUBDIRS = include gst libs plugins tools test tests examples $(SUBDIRS_LGG) docs
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include gst libs plugins tools test tests examples gstplay editor docs
+DIST_SUBDIRS = intl po include gst libs plugins tools test tests examples gstplay editor docs
 
 
 bin_SCRIPTS = gstreamer-config

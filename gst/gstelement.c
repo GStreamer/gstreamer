@@ -236,9 +236,15 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
+  // first check to make sure the pad's parent is already set
+  g_return_if_fail (GST_PAD_PARENT (pad) == NULL);
+
+  // then check to see if there's already a pad by that name here
+  g_return_if_fail (gst_object_check_uniqueness (element->pads, GST_PAD_NAME(pad)) == TRUE);
+
   /* set the pad's parent */
-  GST_DEBUG (0,"setting parent of pad '%s'(%p) to '%s'(%p)\n",
-        GST_PAD_NAME (pad), pad, GST_ELEMENT_NAME (element), element);
+  GST_DEBUG (0,"setting parent of pad '%s' to '%s'\n",
+        GST_PAD_NAME (pad), GST_ELEMENT_NAME (element));
   gst_object_set_parent (GST_OBJECT (pad), GST_OBJECT (element));
 
   /* add it to the list */
@@ -271,6 +277,9 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
+
+  // then check to see if there's already a pad by that name here
+  g_return_if_fail (gst_object_check_uniqueness (element->pads, name) == TRUE);
 
   GST_DEBUG(0,"creating new ghost pad called %s, from pad %s:%s\n",name,GST_DEBUG_PAD_NAME(pad));
   ghostpad = gst_ghost_pad_new (name, pad);
@@ -337,7 +346,7 @@ gst_element_get_pad (GstElement *element, const gchar *name)
   walk = element->pads;
   while (walk) {
     GstPad *pad = GST_PAD(walk->data);
-    if (!strcmp (gst_object_get_name (GST_OBJECT(pad)), name)) {
+    if (!strcmp (GST_PAD_NAME(pad), name)) {
       GST_DEBUG(GST_CAT_ELEMENT_PADS,"found pad '%s'\n",name);
       return pad;
     }
@@ -658,7 +667,7 @@ gst_element_disconnect (GstElement *src, const gchar *srcpadname,
 void
 gst_element_error (GstElement *element, const gchar *error)
 {
-  g_error("GstElement: error in element '%s': %s\n", gst_object_get_name (GST_OBJECT (element)), error);
+  g_error("GstElement: error in element '%s': %s\n", GST_ELEMENT_NAME(element), error);
 
   /* FIXME: this is not finished!!! */
 
@@ -829,7 +838,7 @@ gst_element_save_thyself (GstObject *object,
 
   oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
 
-  xmlNewChild(parent, NULL, "name", gst_object_get_name (GST_OBJECT (element)));
+  xmlNewChild(parent, NULL, "name", GST_ELEMENT_NAME(element));
 
   if (oclass->elementfactory != NULL) {
     GstElementFactory *factory = (GstElementFactory *)oclass->elementfactory;
@@ -837,6 +846,9 @@ gst_element_save_thyself (GstObject *object,
     xmlNewChild (parent, NULL, "type", factory->name);
     xmlNewChild (parent, NULL, "version", factory->details->version);
   }
+
+  if (element->manager)
+    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager));
 
   // output all args to the element
   type = GTK_OBJECT_TYPE (element);
@@ -1081,6 +1093,8 @@ void
 gst_element_set_manager (GstElement *element,
 		         GstElement *manager)
 {
+  if (manager)
+    GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting manager to \"%s\"",GST_ELEMENT_NAME(manager));
   element->manager = manager;
 }
 

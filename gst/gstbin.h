@@ -116,6 +116,10 @@ GtkType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
 #define		gst_bin_destroy(bin)		gst_object_destroy(GST_OBJECT(bin))
 
+void		gst_bin_set_element_manager	(GstElement *element, GstElement *manager);
+void		gst_bin_add_managed_element	(GstBin *bin, GstElement *element);
+void		gst_bin_remove_managed_element	(GstBin *bin, GstElement *element);
+
 /* add and remove elements from the bin */
 void		gst_bin_add			(GstBin *bin,
 						 GstElement *element);

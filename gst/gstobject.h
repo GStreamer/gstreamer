@@ -122,6 +122,8 @@ void		gst_object_set_parent		(GstObject *object,GstObject *parent);
 GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
 
+gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
+
 xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 
 /* refcounting */

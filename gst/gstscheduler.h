@@ -24,6 +24,8 @@
 #ifndef __GST_SCHEDULER_H__
 #define __GST_SCHEDULER_H__
 
+#include <gst/gstelement.h>
+/// ACK!
 #include <gst/gstbin.h>
 
 
@@ -32,7 +34,36 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+typedef struct _GstScheduleChain GstScheduleChain;
+typedef struct _GstSchedule GstSchedule;
+
+struct _GstSchedule {
+  GstElement *parent;
+
+  GList *elements;
+  gint num_elements;
+
+  GList *chains;
+  gint num_chains;
+};
+
+struct _GstScheduleChain {
+  GstSchedule *parent;
+
+  GList *elements;
+  gint num_elements;
+
+  GstElement *entry;
+
+  gboolean need_cothreads;
+  gboolean schedule;
+};
+
+
 void gst_bin_schedule_func(GstBin *bin);
+
+void gst_schedule_add_element(GstSchedule *schedule,GstElement *element);
+void gst_schedule_remove_element(GstSchedule *schedule,GstElement *element);
 
 
 #ifdef __cplusplus   

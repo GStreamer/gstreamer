@@ -23,7 +23,7 @@
 //#define DEBUG_ENABLED
 //#define STATUS_ENABLED
 #ifdef STATUS_ENABLED
-#define STATUS(A) GST_DEBUG(0,A, gst_element_get_name(GST_ELEMENT(queue)))
+#define STATUS(A) GST_DEBUG(0,A, GST_ELEMENT_NAME(queue))
 #else
 #define STATUS(A)
 #endif

@@ -50,6 +50,9 @@ AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
+dnl ALL_LINGUAS=""
+dnl AM_GNU_GETTEXT
+
 CFLAGS=""
 
 dnl ##############################
@@ -484,16 +487,6 @@ AC_ARG_WITH(win32_libdir,
 esac],
 [:]) dnl Default value
 
-AC_ARG_ENABLE(docs-build,
-[  --enable-docs-build          enable the building of the documentation],
-[case "${enableval}" in
-  yes) BUILD_DOCS=yes ;;
-  no)  BUILD_DOCS=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs-build) ;;
-esac], 
-[BUILD_DOCS=no]) dnl Default value
-
-
 
 dnl ################################################
 dnl # Set defines according to variables set above #
@@ -571,7 +564,6 @@ AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
-AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 AM_CONDITIONAL(HAVE_DB2HTML,        $HAVE_DB2HTML)
 AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
 AM_CONDITIONAL(HAVE_PS2PDF,         $HAVE_PS2PDF)
@@ -656,6 +648,8 @@ dnl # Make the output files #
 dnl #########################
 
 AC_OUTPUT([Makefile
+intl/Makefile
+po/Makefile.in
 include/Makefile
 include/wine/Makefile
 gst/Makefile

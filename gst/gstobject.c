@@ -336,6 +336,33 @@ gst_object_sink (GstObject *object)
 }
 #endif /* gst_object_sink */
 
+/**
+ * gst_object_check_uniqueness:
+ * @list: a list of #GstObject to check through
+ * @name: the name to search for
+ *
+ * This function checks through the list of objects to see if the name
+ * given appears in the list as the name of an object.  It returns TRUE if
+ * the name does not exist in the list.
+ *
+ * Returns: TRUE if the name doesn't appear in the list, FALSE if it does.
+ */
+gboolean
+gst_object_check_uniqueness (GList *list, const gchar *name)
+{
+  GstObject *child;
+
+  while (list) {
+    child = GST_OBJECT (list->data);
+    list = g_list_next(list);
+      
+    if (strcmp(GST_OBJECT_NAME(child), name) == 0) return FALSE;
+  }
+
+  return TRUE;
+}
+
+
 xmlNodePtr
 gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
 {

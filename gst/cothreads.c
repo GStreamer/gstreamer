@@ -263,7 +263,7 @@ cothread_switch (cothread_state *thread)
   if (current == thread) goto selfswitch;
 
   // find the number of the thread to switch to
-  GST_INFO (GST_CAT_COTHREAD_SWITCH,"switching from cothread %d to to cothread #%d",
+  GST_INFO (GST_CAT_COTHREAD_SWITCH,"switching from cothread #%d to cothread #%d",
             ctx->current,thread->threadnum);
   ctx->current = thread->threadnum;
 

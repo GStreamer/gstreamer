@@ -331,8 +331,7 @@ void gst_pad_set_chain_function (GstPad *pad,
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_CHAINFUNC(pad) = chain;
-  GST_DEBUG (0,"chainfunc for %s:%s(@%p) at %p is set to %p\n",
-             GST_DEBUG_PAD_NAME(pad),pad,&GST_RPAD_CHAINFUNC(pad),chain);
+  GST_DEBUG (0,"chainfunc for %s:%s is set to %p\n",GST_DEBUG_PAD_NAME(pad),chain);
 }
 
 /**

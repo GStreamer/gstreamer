@@ -412,8 +412,6 @@ gst_media_play_frame_displayed (GstPlay *play,
   size           = gst_play_get_media_size (play);
   current_offset = gst_play_get_media_offset (play);
 
-  //g_print ("%lu %lu %lu %lu\n", current_time, total_time, size, current_offset);
-
   if (current_time != mplay->last_time) {
     gdk_threads_enter ();
     gst_media_play_update_status_area (mplay, current_time, total_time);
