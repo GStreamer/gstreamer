@@ -340,8 +340,6 @@ flx_decode_delta_fli(GstFlxDec *flxdec, guchar *data, guchar *dest)
     /* packet count */
     packets = *data++;
 
-    dest = start_p + (flxdec->hdr.width * (start_l - lines));
-
     while(packets--) {
       /* skip count */
       dest += *data++;
@@ -363,6 +361,8 @@ flx_decode_delta_fli(GstFlxDec *flxdec, guchar *data, guchar *dest)
           *dest++ = *data++;
       }
     }
+    start_p += flxdec->hdr.width;
+    dest = start_p;
   }                  
 }
 
@@ -386,7 +386,7 @@ flx_decode_delta_flc(GstFlxDec *flxdec, guchar *data, guchar *dest)
   start_p    = dest;
   start_l    = lines;
 
-  while(lines--) {
+  while (lines) {
     dest = start_p + (flxdec->hdr.width * (start_l - lines));
 
     /* process opcode(s) */
@@ -428,6 +428,7 @@ flx_decode_delta_flc(GstFlxDec *flxdec, guchar *data, guchar *dest)
         }
       }
     }
+    lines--;
   }
 }
           
