@@ -27,7 +27,8 @@
 #include "gstbuffer.h"
 #include "gstobject.h"
 
-static GMemChunk *_buffer_chunk = NULL;
+/* memchunks are slower if you have to lock them */
+/* static GMemChunk *_buffer_chunk = NULL;*/
 static GstBufferPool *_default_pool = NULL;
 static GstBufferPool *_sub_buffer_pool = NULL;
 
@@ -50,11 +51,12 @@ static void 		gst_buffer_pool_sub_buffer_dispose	(GstData *buffer);
 void
 _gst_buffer_initialize (void)
 {
-  gint buffersize = sizeof (GstBuffer);
-  if (_buffer_chunk == NULL)
+  /*gint buffersize = sizeof (GstBuffer);
+  if (_buffer_chunk == NULL)*/
+  if (_default_pool == NULL)
   {
     /* create the default buffer chunk */
-    _buffer_chunk = g_mem_chunk_new ("GstBufferChunk", buffersize, buffersize * 128, G_ALLOC_AND_FREE);
+    /*_buffer_chunk = g_mem_chunk_new ("GstBufferChunk", buffersize, buffersize * 128, G_ALLOC_AND_FREE);*/
     /* create the default pool that uses g_malloc/free */
     _default_pool = gst_buffer_pool_new ();
     /* create the pool for subbuffers */
@@ -78,7 +80,8 @@ _gst_buffer_initialize (void)
 GstBuffer *
 gst_buffer_alloc (void)
 {
-  return g_mem_chunk_alloc (_buffer_chunk);
+  /* return g_mem_chunk_alloc (_buffer_chunk);*/
+  return g_new (GstBuffer, 1);
 }
 /**
  * gst_buffer_free:
@@ -89,7 +92,8 @@ gst_buffer_alloc (void)
 void
 gst_buffer_free (GstBuffer *buffer)
 {
-  g_mem_chunk_free (_buffer_chunk, buffer);
+  /* g_mem_chunk_free (_buffer_chunk, buffer);*/
+  g_free (buffer);
 }
 /**
  * gst_buffer_init:

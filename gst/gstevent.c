@@ -29,12 +29,12 @@
 static void		gst_event_free 		(GstData *data);
 static void		gst_event_lock_free	(GstData *data);
 
-static GMemChunk *_gst_event_chunk = NULL;
+/* static GMemChunk *_gst_event_chunk = NULL;*/
 
 void
 _gst_event_initialize (void)
 {
-  gint eventsize = sizeof(GstData);
+/*  gint eventsize = sizeof(GstData);
   eventsize = eventsize > sizeof(GstEventEOS) ? eventsize : sizeof(GstEventEOS);
   eventsize = eventsize > sizeof(GstEventDiscontinuous) ? eventsize : sizeof(GstEventDiscontinuous);
   eventsize = eventsize > sizeof(GstEventNewMedia) ? eventsize : sizeof(GstEventNewMedia);
@@ -50,7 +50,7 @@ _gst_event_initialize (void)
     _gst_event_chunk = g_mem_chunk_new ("GstEvent", eventsize,
 					eventsize * 32, G_ALLOC_AND_FREE);
     GST_INFO (GST_CAT_EVENT, "event system initialized.");
-  }
+  }*/
 }
 /**
  * gst_event_new:
@@ -73,7 +73,8 @@ gst_event_new (GstDataType type)
     case GST_EVENT_FLUSH:
     case GST_EVENT_EMPTY:
     case GST_EVENT_UNLOCK:
-      event = g_mem_chunk_alloc (_gst_event_chunk);
+      /* event = g_mem_chunk_alloc (_gst_event_chunk);*/
+      event = g_new (GstData, 1);
       g_return_val_if_fail (event != NULL, NULL);
       gst_event_init (event);
       event->type = type;
@@ -104,7 +105,8 @@ static void
 gst_event_free (GstData *data)
 {
   GST_DEBUG (GST_CAT_EVENT, "freeing event %p", data);
-  g_mem_chunk_free (_gst_event_chunk, data);
+  /* g_mem_chunk_free (_gst_event_chunk, data); */
+  g_free (data);
 }
 /**
  * gst_event_seek_init:
@@ -151,8 +153,8 @@ gst_event_new_seek (GstSeekType type, GstOffsetType offset_type, gint64 offset, 
   GstEventSeek *event;
 
   g_return_val_if_fail (offset_type < GST_OFFSET_TYPES, NULL);
-  /* using malloc for now */
-  event = g_mem_chunk_alloc (_gst_event_chunk);
+  /* event = g_mem_chunk_alloc (_gst_event_chunk); */
+  event = g_new (GstEventSeek, 1);
   g_return_val_if_fail (event != NULL, NULL);
   gst_event_seek_init (event, type, offset_type);
 
@@ -213,7 +215,8 @@ gst_event_lock_free (GstData *data)
     event->on_delete (event->func_data);
   }
   GST_DEBUG (GST_CAT_EVENT, "freeing lock event %p", data);
-  g_mem_chunk_free (_gst_event_chunk, data);
+  /* g_mem_chunk_free (_gst_event_chunk, data); */
+  g_free (data);
 }
 /**
  * gst_event_new_lock:
@@ -229,8 +232,8 @@ gst_event_new_lock (GstLockFunction func, gpointer data)
 {
   GstEventLock *event;
 
-  /* using malloc for now */
-  event = g_mem_chunk_alloc (_gst_event_chunk);
+  /* event = g_mem_chunk_alloc (_gst_event_chunk);*/
+  event = g_new (GstEventLock, 1);
   g_return_val_if_fail (event != NULL, NULL);
   gst_event_lock_init (event);
 
@@ -295,8 +298,8 @@ gst_event_new_length (GstOffsetType original, GstEventAccuracy accuracy, guint64
 {
   GstEventLength *event;
 
-  /* using malloc for now */
-  event = g_mem_chunk_alloc (_gst_event_chunk);
+  /* event = g_mem_chunk_alloc (_gst_event_chunk);*/
+  event = g_new (GstEventLength, 1);
   g_return_val_if_fail (event != NULL, NULL);
   gst_event_length_init (event);
 
