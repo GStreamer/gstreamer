@@ -5,8 +5,8 @@ else
 SUBDIRS_PLUGINS =
 endif
 
-SUBDIRS = manual pwg gst libs $(SUBDIRS_PLUGINS) devhelp
-DIST_SUBDIRS = manual pwg gst libs plugins xsl devhelp
+SUBDIRS = faq manual pwg gst libs $(SUBDIRS_PLUGINS) devhelp
+DIST_SUBDIRS = faq manual pwg gst libs plugins xsl devhelp
 
 EXTRA_DIST = slides manuals.mak
 
