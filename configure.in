@@ -809,6 +809,7 @@ plugins/mpeg1video/parse/Makefile
 plugins/oss/Makefile
 plugins/rtp/Makefile
 plugins/rtp/rtpsend/Makefile
+plugins/mulaw/Makefile
 plugins/filters/Makefile
 plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
