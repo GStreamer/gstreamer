@@ -1,0 +1,306 @@
+Element types
+-------------
+
+SOURCES
+-------
+
+* never chain-based
+* have no sinkpads
+
+1) get based src
+
+   (----------)
+   ! fakesrc  !
+   !         src-   (get based)
+   (----------)
+
+  * no sinkpads
+  * srcpad(s) that are get-based
+
+2) loop based src
+
+   (----------)
+   ! fakesrc  !
+   !         src-   (loop based)
+   (----------)
+
+  * no sinkpads
+  * element is loop-based
+  * data is pushed on the srcpad(s)
+
+FILTERS
+-------
+
+3) chain based filter
+
+   (----------)
+   ! identity !
+ -sink       src- 
+   (----------)
+
+  * sinkpad(s) have a chain function
+  * srcpad(s) push data
+
+4) loop-based filter
+
+   (----------)
+   ! identity !
+ -sink       src- 
+   (----------)
+
+  * element is loop-based
+  * data is pushed on the srcpads
+  * data is pulled from sinkpad(s)
+
+
+SINKS
+-----
+
+5) chain based sink
+
+   (----------)
+   ! fakesink !
+ -sink        !
+   (----------)
+
+  * sinkpad(s) have a chain function
+  * no srcpads
+
+6) loop-based sink
+
+   (----------)
+   ! fakesink !
+ -sink        !
+   (----------)
+
+  * element is loop-based
+  * data is pulled from sinkpad(s)
+
+
+DECOUPLED
+---------
+
+7) decoupled element
+
+
+   (----------)
+   ! queue    !
+ -sink       src- 
+   (----------)
+
+  * sinkpad(s) have chain function
+  * srcpad(s) have get function
+  * never loop-based
+  * always acts like a chain-based sink for upstream elements
+  * always acts like a get-based src for downstream elements
+
+
+Connection types
+----------------
+
+1) get based src
+2) loop based src
+3) chain based filter
+4) loop-based filter
+5) chain based sink
+6) loop-based sink
+7) decoupled element
+
+
+   !  1  !  2  !  3  !  4  !  5  !  6  !  7  !
+---+-----+-----+-----+-----+-----+-----+-----+
+ 1 !  X  !  X  !  A  !  C  !  A  !  C  !  A  !
+   !     !     !     !     !     !     !     !
+ 2 !  X  !  X  !  B  !  F  !  B  !  F  !  B  !
+   !     !     !     !     !     !     !     !
+ 3 !  X  !  X  !  D  !  E  !  D  !  E  !  D  !
+   !     !     !     !     !     !     !     !
+ 4 !  X  !  X  !  B  !  F  !  B  !  F  !  B  !
+   !     !     !     !     !     !     !     !
+ 5 !  X  !  X  !  X  !  X  !  X  !  X  !  X  !
+   !     !     !     !     !     !     !     !
+ 6 !  X  !  X  !  X  !  X  !  X  !  X  !  X  !
+   !     !     !     !     !     !     !     !
+ 7 !  X  !  X  !  A  !  C  !  A  !  C  !  X  !
+   !     !     !     !     !     !     !     !
+
+
+A)
+
+  src       -> sink
+  src       -> filter
+  src       -> decoupled
+  decoupled -> sink
+  decoupled -> filter
+
+ - get based source
+ - chain based sink
+
+  * src at start of chain and entry point
+  * _get from src, push to sink
+
+B)
+
+  src    -> sink
+  src    -> filter
+  src    -> decoupled
+  filter -> sink
+  filter -> filter
+  filter -> decoupled
+
+ - loop based source/filter
+ - chain based sink/filter/decoupled
+
+ * src/filter at start of chain and entry point
+ * loop on src, pushhandler set to chain function
+
+
+C) 
+
+  src       -> sink
+  src       -> filter
+  decoupled -> sink
+  decoupled -> filter
+
+ - get based source/decoupled
+ - loop based sink/filter
+
+ * loop based element is entry point
+ * loop on sink/filter, pullhandler set to _getfunction
+ 
+
+D)
+
+  filter -> filter
+  filter -> sink
+  filter -> decoupled
+
+  - chain based filter
+  - chain based filter/sink/decoupled
+
+  * no entry point
+  * pushhandler set to peer chainfunction
+  
+E)
+
+  filter  -> filter
+  filter  -> sink
+
+  - chain based filter
+  - loop based filter/sink
+
+  * entry point in chain of filter
+  * pushhandler set to loop wrapper
+
+F)
+
+  src     -> filter
+  src     -> sink
+  filter  -> filter
+  filter  -> sink
+
+  - loop based filter/src
+  - loop based filter/sink
+
+  * entry point in chain of filter/src
+  * pushhandler set to loop wrapper
+  
+
+Grouping
+--------
+
+ * a group has at most one loop based element
+ * elements in a group are sorted, src elements first
+ * a group has one cothread
+ * get-based plugins are put in the same group as a peer loop based element
+ * chain based elements are put in the same group
+ * entry point in the group is:
+   - leftmost loopbased element 
+   - first src element if no loopbased elements exist in the group
+
+
+examples:
+---------
+
+ % = loop based
+ * = entry point of group
+   
+.
+  (-group1---------------)
+  !                      !
+  ! *fakesrc -> fakesink !
+  (----------------------)
+
+.
+  (-group1---------------------------------------)
+  !                                              !
+  ! *fakesrc -> identity -> identity -> fakesink !
+  (----------------------------------------------)
+
+.
+  (-group1-----------------------------------------)
+  !                                                !
+  ! fakesrc -> %*identity -> identity -> fakesink  !
+  (------------------------------------------------)
+
+.
+  (-group1---------------) (-group2-----------------)
+  !                      ! !                        !
+  ! *fakesrc -> identity --> *%identity -> fakesink !
+  (----------------------) (------------------------)
+
+.
+  (-group1------------------------------------)
+  !                                           ! 
+  ! *fakesrc -> tee  --> identity -> fakesink !
+  !                  --> identity -> fakesink !  
+  (-------------------------------------------)
+
+.
+  (-group1------------------------------------)
+  !                                           ! 
+  ! *fakesrc -> tee  --> identity -> fakesink !
+  (--------------!----------------------------)
+                 v
+              (-group2-----------------)
+              !                        !
+              ! *%identity -> fakesink !
+              (------------------------)
+
+.
+  (-group1----------) (-group2-----------------)
+  !                 ! !                        !
+  ! *fakesrc -> tee --> *%identity -> fakesink !
+  (--------------!--) (------------------------)
+                 v
+              (-group3-----------------)
+              !                        !
+              ! *%identity -> fakesink !
+              (------------------------)
+
+.
+  (-group1-----------------------) (-group2----------------------)
+  !                              ! !                             !
+  ! filesrc -> *%mpegdemux  --> queue* -> mpeg2dec -> xvideosink !
+  !                              ! (-----------------------------)
+  !                              ! (-group3----------------------)
+  !                              ! !                             !
+  !                         --> queue* -> mad -> osssink         !  
+  (------------------------------) (-----------------------------)
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
