@@ -172,7 +172,11 @@ static GstOptSchedulerGroup* 	ref_group_by_count 	(GstOptSchedulerGroup *group, 
 #endif
 static GstOptSchedulerGroup* 	unref_group 		(GstOptSchedulerGroup *group);
 static void 			destroy_group 		(GstOptSchedulerGroup *group);
+static void 			group_element_set_enabled (GstOptSchedulerGroup *group, 
+							   GstElement *element, gboolean enabled);
 
+static void 		chain_group_set_enabled 	(GstOptSchedulerChain *chain, 
+							 GstOptSchedulerGroup *group, gboolean enabled);
 /* 
  * Scheduler private data for an element 
  */
@@ -425,6 +429,10 @@ add_to_chain (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
   chain->groups = g_slist_prepend (chain->groups, group);
   chain->num_groups++;
 
+  if (GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group)) {
+    chain_group_set_enabled (chain, group, TRUE);
+  }
+
   return chain;
 }
 
@@ -586,6 +594,10 @@ add_to_group (GstOptSchedulerGroup *group, GstElement *element)
   gst_object_ref (GST_OBJECT (element));
   group->elements = g_slist_prepend (group->elements, element);
   group->num_elements++;
+
+  if (gst_element_get_state (element) == GST_STATE_PLAYING) {
+    group_element_set_enabled (group, element, TRUE);
+  }
 
   return group;
 }
