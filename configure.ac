@@ -14,8 +14,7 @@ AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL_FLAGS="-I common/m4 $ACLOCAL_FLAGS"
-AC_SUBST(ACLOCAL_AMFLAGS, $ACLOCAL_FLAGS)
+ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
 AC_PROG_CC
 AM_PROG_CC_STDC
@@ -505,16 +504,17 @@ examples/typefind/Makefile
 examples/xml/Makefile
 tools/Makefile
 docs/Makefile
+docs/devhelp/Makefile
+docs/devhelp/html2xml.py
+docs/faq/Makefile
 docs/gst/Makefile
 docs/gst/gstreamer.types
 docs/libs/Makefile
-docs/plugins/Makefile
-docs/plugins/gstreamer-plugins.types
 docs/manual/Makefile
 docs/pwg/Makefile
+docs/plugins/Makefile
+docs/plugins/gstreamer-plugins.types
 docs/xsl/Makefile
-docs/devhelp/Makefile
-docs/devhelp/html2xml.py
 stamp.h
 gstreamer.pc
 gstreamer-uninstalled.pc
