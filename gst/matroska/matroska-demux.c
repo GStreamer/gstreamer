@@ -1979,6 +1979,7 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
           GST_BUFFER_TIMESTAMP (sub) = cluster_time;
         else
           GST_BUFFER_TIMESTAMP (sub) = cluster_time + time;
+        demux->pos = GST_BUFFER_TIMESTAMP (sub);
       }
 
       /* do all laces have the same lenght? */
