@@ -48,6 +48,7 @@ THE WAY
     - cvs add .pc/(patchsetname)/(file)
     - cvs commit .pc/(patchsetname) (to update the state of quilt in cvs)
     - edit the file
+    - cvs add the file if it doesn't exist yet
     - quilt refresh
     - quilt push -a (This one is IMPORTANT, otherwise you'll have a huge diff)
     - cvs commit
