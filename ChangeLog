@@ -1,3 +1,21 @@
+2004-07-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/lame/gstlame.c: (gst_lame_chain): send tag events downstream
+	* ext/shout2/gstshout2.c: (gst_shout2send_protocol_get_type),
+	(gst_shout2send_get_type), (gst_shout2send_set_clock),
+	(gst_shout2send_class_init), (gst_shout2send_init),
+	(set_shout_metadata), (gst_shout2send_set_metadata),
+	(gst_shout2send_chain), (gst_shout2send_set_property),
+	(gst_shout2send_get_property), (gst_shout2send_connect),
+	(gst_shout2send_change_state):
+	* ext/shout2/gstshout2.h:
+	- fix for sending mp3 audio to icecast2 server, if pad link function not
+	called before PAUSED state
+	- added option to use GStreamer clock sync (as opposed to libshout's own sync)
+	- added tagging support for mp3 audio broadcasted
+	* gst/monoscope/gstmonoscope.c: (gst_monoscope_class_init):
+	debug info
+
 2004-07-28  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query),

@@ -26,6 +26,10 @@
 #include <gst/audio/audio.h>
 #include "monoscope.h"
 
+GST_DEBUG_CATEGORY (monoscope_debug);
+#define GST_CAT_DEFAULT monoscope_debug
+
+
 #define GST_TYPE_MONOSCOPE (gst_monoscope_get_type())
 #define GST_MONOSCOPE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MONOSCOPE,GstMonoscope))
 #define GST_MONOSCOPE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MONOSCOPE,GstMonoscope))
@@ -178,6 +182,9 @@ gst_monoscope_class_init (GstMonoscopeClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  GST_DEBUG_CATEGORY_INIT (monoscope_debug, "monoscope", 0,
+      "monoscope element");
 }
 
 static void

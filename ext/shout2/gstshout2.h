@@ -55,6 +55,14 @@ struct _GstShout2send {
   gchar *genre;
   gchar *mount;
   gchar *url;
+  gboolean sync;
+  gboolean started;
+
+  guint16 audio_format;
+
+  GstTagList* tags;
+
+  GstClock 	*clock;
 
 };
 
