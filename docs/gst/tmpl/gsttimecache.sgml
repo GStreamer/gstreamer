@@ -28,6 +28,12 @@ used for efficient seeking.
 
 </para>
 
+@groupnum: 
+@entries: 
+@certainty: 
+@peergroup: 
+@mintimestamp: 
+@maxtimestamp: 
 @minlocation: 
 @maxlocation: 
 

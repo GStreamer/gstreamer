@@ -3955,14 +3955,6 @@ must be defined to activate the tracing functionality.
 @destroy: 
 @user_data: 
 
-<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@count: 
-
 <!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
 <para>
 

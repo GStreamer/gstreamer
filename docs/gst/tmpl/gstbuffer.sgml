@@ -275,6 +275,7 @@ used when data in a stream has been skipped
 @pool: 
 @pool_private: 
 @free: 
+@copy: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>
@@ -336,6 +337,15 @@ used when data in a stream has been skipped
 </para>
 
 @buffer: 
+
+
+<!-- ##### FUNCTION gst_buffer_ref_by_count ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@count: 
 
 
 <!-- ##### FUNCTION gst_buffer_unref ##### -->
