@@ -146,7 +146,7 @@ sinesrc_force_caps (SineSrc *src) {
  */
 static guint8 UIDENTITY(guint8 x) { return x; };
 static gint8 IDENTITY(gint8 x) { return x; };
-#define POPULATE(format, be_func, le_func) {\
+#define POPULATE(format, be_func, le_func) G_STMT_START {\
   format val = (format) int_value;\
   format *p = data;\
   switch (src->endianness) {\
@@ -164,7 +164,8 @@ static gint8 IDENTITY(gint8 x) { return x; };
     p ++;\
   }\
   data = p;\
-}
+} G_STMT_END
+
 static GstData *
 sinesrc_get (GstPad *pad)
 {
@@ -193,15 +194,15 @@ sinesrc_get (GstPad *pad)
         switch (src->width) {
           case 8:
             if (src->sign)
-              POPULATE (gint8, IDENTITY, IDENTITY)
+              POPULATE (gint8, IDENTITY, IDENTITY);
             else
-              POPULATE (guint8, UIDENTITY, UIDENTITY)
+              POPULATE (guint8, UIDENTITY, UIDENTITY);
             break;
           case 16:
             if (src->sign)
-              POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE)
+              POPULATE (gint16, GINT16_TO_BE, GINT16_TO_LE);
             else
-              POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE)
+              POPULATE (guint16, GUINT16_TO_BE, GUINT16_TO_LE);
             break;
           case 24:
             if (src->sign) {
@@ -248,9 +249,9 @@ sinesrc_get (GstPad *pad)
             break;
           case 32:
             if (src->sign)
-              POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE)
+              POPULATE (gint32, GINT32_TO_BE, GINT32_TO_LE);
             else
-              POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE)
+              POPULATE (guint32, GUINT32_TO_BE, GUINT32_TO_LE);
             break;
           default:
             g_assert_not_reached ();
