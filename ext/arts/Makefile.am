@@ -2,8 +2,11 @@
 plugin_LTLIBRARIES = libgstarts.la
 
 SUFFIXES = .idl
+# on FC2, artsc-config --cflags has -pthread, which mcopidl doesn't like
+# If someone has time and energy, please check if -pthread should be allowed
+# in compile flags at all.
 .idl.cc:
-	mcopidl -t $(ARTS_CXXFLAGS) $<
+	mcopidl -t `echo $(ARTS_CXXFLAGS) | sed 's/-pthread//g'` $<
 
 # mcopidl Extension Expansion Technology clean up
 CLEANFILES = gst_artsio.h gst_artsio.cc gst_artsio.mcopclass gst_artsio.mcoptype
