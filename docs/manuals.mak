@@ -170,14 +170,18 @@ check-local: $(BUILDDIR)/$(MAIN)
 	cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)
 
 ### this is a website upload target
+### if you want to use it, make sure your ..sh/config file contains the
+### correct User entry for the Host entry for the DOC_SERVER
+DOC_SERVER=freedesktop.org
+DOC_BASE=/home/projects/gstreamer/www/data/doc
+DOC_URL=$(DOC_SERVER):$(DOC_BASE)
 
 upload: html ps pdf
-	@export RSYNC_RSH=ssh; \
-	if test "x$$GST_PLUGINS_VERSION_NANO" = x0; then \
+	@if test "x$$GST_PLUGINS_VERSION_NANO" = x0; then \
             export DOCVERSION=$(VERSION); \
-        else export DOCVERSION=cvs; \
+        else export DOCVERSION=head; \
         fi; \
-	echo Uploading docs to shell.sf.net/home/groups/g/gs/gstreamer/htdocs/docs/$$DOCVERSION; \
-	ssh $(USERNAME)@shell.sf.net mkdir -p /home/groups/g/gs/gstreamer/htdocs/docs/$$DOCVERSION/$(DOC); \
-	rsync -arv $(DOC).ps $(DOC).pdf html $(USERNAME)@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/$$DOCVERSION/$(DOC)
-
+        export DIR=$(DOC_BASE)/gstreamer/$$DOCVERSION/$(DOC); \
+	echo Uploading docs to $(DOC_SERVER):$$DIR; \
+	ssh $(DOC_SERVER) mkdir -p $$DIR; \
+	rsync -arv -e ssh $(DOC).ps $(DOC).pdf html $(DOC_SERVER):$$DIR
