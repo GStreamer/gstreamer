@@ -532,10 +532,6 @@ gst_mpeg2dec_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   gboolean res = TRUE;
   GstMpeg2dec *mpeg2dec;
 	      
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  } 
   mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
 
   switch (src_format) {
@@ -570,10 +566,6 @@ gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   gboolean res = TRUE;
   GstMpeg2dec *mpeg2dec;
 	      
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  } 
   mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
 
   switch (src_format) {
@@ -668,11 +660,11 @@ gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
 
               /* convert to TIME */
               conv_format = GST_FORMAT_TIME;
-              res = gst_mpeg2dec_convert_sink (pad,
+              res = gst_pad_convert (mpeg2dec->sinkpad,
                               peer_format, peer_value,
                               &conv_format, value);
               /* and to final format */
-              res &= gst_mpeg2dec_convert_src (pad,
+              res &= gst_pad_convert (pad,
                          GST_FORMAT_TIME, *value,
                          format, value);
             }
@@ -692,7 +684,7 @@ gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
           *format = GST_FORMAT_TIME;
           /* fallthrough */
         default:
-          res = gst_mpeg2dec_convert_src (pad,
+          res = gst_pad_convert (pad,
                           GST_FORMAT_TIME, mpeg2dec->next_time,
                           format, value);
           break;
@@ -729,7 +721,7 @@ gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
       format = GST_FORMAT_TIME;
 
       /* first bring the src_format to TIME */
-      if (!gst_mpeg2dec_convert_src (pad,
+      if (!gst_pad_convert (pad,
                 GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
                 &format, &src_offset))
       {
@@ -751,7 +743,7 @@ gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
         format = formats[i];
 
         /* try to convert requested format to one we can seek with on the sinkpad */
-        if (gst_mpeg2dec_convert_sink (pad, GST_FORMAT_TIME, src_offset, &format, &desired_offset))
+        if (gst_pad_convert (mpeg2dec->sinkpad, GST_FORMAT_TIME, src_offset, &format, &desired_offset))
         {
           GstEvent *seek_event;
 
