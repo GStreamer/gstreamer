@@ -36,6 +36,8 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(decode != NULL);
     audio_encode = gst_elementfactory_make("pipefilter","audio_encode");
     g_return_if_fail(audio_encode != NULL);
+    gtk_object_set(GTK_OBJECT(audio_encode),"command",
+         "lame -x -s 48 --resample 44.1 - -", NULL);
 
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");

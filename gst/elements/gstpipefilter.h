@@ -58,8 +58,9 @@ struct _GstPipefilter {
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  /* filename */
-  gchar *filename;
+  /* command */
+  gchar **command;
+  gchar *orig_command;
   /* fd */
   gint fdout[2];
   gint fdin[2];
@@ -69,8 +70,6 @@ struct _GstPipefilter {
   gulong bytes_per_read;                /* bytes per read */
 
   gulong seq;                           /* buffer sequence number */
-
-  gint control;
 };
 
 struct _GstPipefilterClass {

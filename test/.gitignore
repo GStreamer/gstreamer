@@ -39,3 +39,5 @@ aviparse
 avi2mpg
 vidcapture
 mp2tomp1
+mp1tomp1
+pipetest

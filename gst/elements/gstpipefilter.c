@@ -48,7 +48,7 @@ enum {
 
 enum {
   ARG_0,
-  ARG_CONTROL
+  ARG_COMMAND
 };
 
 
@@ -98,11 +98,11 @@ static void gst_pipefilter_class_init(GstPipefilterClass *klass) {
 
   gstelement_class->change_state = gst_pipefilter_change_state;
 
-  //gtk_object_add_arg_type("GstPipefilter::control", GTK_TYPE_INT,
-   //                       GTK_ARG_READWRITE, ARG_CONTROL);
+  gtk_object_add_arg_type("GstPipefilter::command", GTK_TYPE_STRING,
+                          GTK_ARG_READWRITE, ARG_COMMAND);
 
-  //gtkobject_class->set_arg = gst_pipefilter_set_arg;  
-  //gtkobject_class->get_arg = gst_pipefilter_get_arg;
+  gtkobject_class->set_arg = gst_pipefilter_set_arg;  
+  gtkobject_class->get_arg = gst_pipefilter_get_arg;
 }
 
 static void gst_pipefilter_init(GstPipefilter *pipefilter) {
@@ -112,7 +112,7 @@ static void gst_pipefilter_init(GstPipefilter *pipefilter) {
   pipefilter->srcpad = gst_pad_new("src",GST_PAD_SRC);
   gst_element_add_pad(GST_ELEMENT(pipefilter),pipefilter->srcpad);
 
-  pipefilter->control = 0;
+  pipefilter->command = NULL;
   pipefilter->curoffset = 0;
   pipefilter->bytes_per_read = 4096;
   pipefilter->seq = 0;
@@ -199,8 +199,9 @@ static void gst_pipefilter_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   pipefilter = GST_PIPEFILTER(object);
 
   switch(id) {
-    case ARG_CONTROL:
-      pipefilter->control = GTK_VALUE_INT(*arg);
+    case ARG_COMMAND:
+      pipefilter->orig_command = g_strdup(GTK_VALUE_STRING(*arg));
+      pipefilter->command = g_strsplit(GTK_VALUE_STRING(*arg), " ", 0);
       break;
     default:
       break;
@@ -215,8 +216,8 @@ static void gst_pipefilter_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   pipefilter = GST_PIPEFILTER(object);
 
   switch (id) {
-    case ARG_CONTROL:
-      GTK_VALUE_INT(*arg) = pipefilter->control;
+    case ARG_COMMAND:
+      GTK_VALUE_STRING(*arg) = pipefilter->orig_command;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -246,11 +247,16 @@ static gboolean gst_pipefilter_open_file(GstPipefilter *src) {
 
   if(src->childpid == 0)
   {
-    close(1);
-    dup(src->fdout[1]);  /* set the childs output stream */
-    close(0);
-    dup(src->fdin[0]);  /* set the childs output stream */
-    execlp("lame", "lame", "-x", "-", "-", NULL);
+    // child
+    dup2(src->fdin[0], STDIN_FILENO);  /* set the childs input stream */
+    dup2(src->fdout[1], STDOUT_FILENO);  /* set the childs output stream */
+    //execlp("lame", "lame", "-x", "-s", "48", "--resample", "44.1", "-", "-", NULL);
+    execvp(src->command[0], &src->command[0]);
+    // will only reach if error
+    perror("exec");
+    gst_element_error(GST_ELEMENT(src),"starting child process");
+    return FALSE;
+    
   }
   
   GST_FLAG_SET(src,GST_PIPEFILTER_OPEN);
