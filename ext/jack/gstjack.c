@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset: 4 -*- */
 /*
-    Copyright (C) 2002 Andy Wingo <wingo@pobox.com>
+    Copyright (C) 2002, 2003 Andy Wingo <wingo@pobox.com>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public
@@ -27,8 +27,6 @@
 
 /* TODO:
 
-   this element is still nonfunctional
-
    - work out the src side (caps setting, etc)
 
    future core TODO:
@@ -43,51 +41,51 @@ static GstElementDetails gst_jack_bin_details = {
     "Jack Bin",
     "Generic/Bin",
     "GPL",
-    "Jack processing bin: see README for more info",
+    "Jack processing bin",
     VERSION,
     "Andy Wingo <wingo@pobox.com>",
-    "(C) 2002 "
+    "(C) 2002, 2003"
 };
 
 static GstElementDetails gst_jack_sink_details = {  
     "Jack Sink",
     "Sink/Audio",
     "GPL",
-    "Output to a Jack processing network: see README for more info",
+    "Output to a Jack processing network",
     VERSION,
     "Andy Wingo <wingo@pobox.com>",
-    "(C) 2002 "
+    "(C) 2002, 2003"
 };
 
 static GstElementDetails gst_jack_src_details = {  
     "Jack Src",
     "Source/Audio",
     "GPL",
-    "Input from a Jack processing network: see README for more info",
+    "Input from a Jack processing network",
     VERSION,
     "Andy Wingo <wingo@pobox.com>",
-    "(C) 2002",
+    "(C) 2002, 2003",
 };
 
 
 static GHashTable *port_name_counts = NULL;
 static GstElementClass *parent_class = NULL;
 
-static void gst_jack_init(GstJack *this);
-static void gst_jack_class_init(GstJackClass *klass);
+static void		gst_jack_init(GstJack *this);
+static void		gst_jack_class_init(GstJackClass *klass);
+static void		gst_jack_set_property (GObject *object, guint prop_id,
+                                               const GValue *value, GParamSpec *pspec);
+static void		gst_jack_get_property (GObject *object, guint prop_id,
+                                               GValue *value, GParamSpec *pspec);
 
-static GstPadTemplate *gst_jack_src_request_pad_factory();
-static GstPadTemplate *gst_jack_sink_request_pad_factory();
+static GstPadTemplate*	gst_jack_src_request_pad_factory();
+static GstPadTemplate*	gst_jack_sink_request_pad_factory();
+static GstPad*		gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ,
+                                                  const gchar *name);
+static GstElementStateReturn	gst_jack_change_state (GstElement *element);
+static GstPadLinkReturn	gst_jack_link (GstPad *pad, GstCaps *caps);
 
-static GstPad* gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const
-                                         gchar *name);
-
-static void gst_jack_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_jack_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-static GstElementStateReturn gst_jack_change_state(GstElement *element);
-static GstPadLinkReturn gst_jack_connect (GstPad *pad, GstCaps *caps);
-
-static void gst_jack_loop (GstElement *element);
+static void		gst_jack_loop (GstElement *element);
 
 
 enum {
@@ -162,45 +160,12 @@ gst_jack_src_get_type (void)
     return jack_type;
 }
 
-static GstPadTemplate*
-gst_jack_src_request_pad_factory(void)
-{
-    static GstPadTemplate *template = NULL;
-    
-    if (!template) {
-	GstCaps *caps;
-	caps = gst_caps_new("src",
-			    "audio/x-raw-float",
-                            GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS);
-        template = gst_pad_template_new("%s", GST_PAD_SRC,
-					GST_PAD_REQUEST, caps, NULL);
-    }
-    
-    return template;
-}
-
-static GstPadTemplate*
-gst_jack_sink_request_pad_factory(void)
-{
-    static GstPadTemplate *template = NULL;
-    
-    if (!template) {
-	GstCaps *caps;
-	caps = gst_caps_new ("sink",
-			     "audio/x-raw-float",
-                             GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS);
-        template = gst_pad_template_new("%s", GST_PAD_SINK,
-					GST_PAD_REQUEST, caps, NULL);
-    }
-    
-    return template;
-}
-
 static void
 gst_jack_class_init(GstJackClass *klass)
 {
     GObjectClass *object_class;
     GstElementClass *element_class;
+    GParamSpec *pspec;
     gchar *prefix;
     
     object_class = (GObjectClass *)klass;
@@ -217,11 +182,10 @@ gst_jack_class_init(GstJackClass *klass)
     else
         prefix = "gst-in-";
     
-    g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PORT_NAME_PREFIX,
-                                    g_param_spec_string("port-name-prefix","Port name prefix",
-                                                        "String to prepend to jack port names",
-                                                        prefix,
-                                                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    pspec = g_param_spec_string ("port-name-prefix", "Port name prefix",
+                                 "String to prepend to jack port names",
+                                 prefix, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+    g_object_class_install_property (object_class, ARG_PORT_NAME_PREFIX, pspec);
 
     element_class->change_state = gst_jack_change_state;
     
@@ -231,15 +195,80 @@ gst_jack_class_init(GstJackClass *klass)
 static void
 gst_jack_init(GstJack *this)
 {
-    if (G_OBJECT_TYPE (this) == GST_TYPE_JACK_SRC) {
+    if (G_OBJECT_TYPE (this) == GST_TYPE_JACK_SRC)
         this->direction = GST_PAD_SRC;
-    } else if (G_OBJECT_TYPE (this) == GST_TYPE_JACK_SINK) {
+    else if (G_OBJECT_TYPE (this) == GST_TYPE_JACK_SINK)
         this->direction = GST_PAD_SINK;
-    } else {
+    else
         g_assert_not_reached ();
+    
+    gst_element_set_loop_function (GST_ELEMENT (this), gst_jack_loop);
+}
+
+static void
+gst_jack_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+    GstJack *this = (GstJack*)object;
+
+    switch (prop_id) {
+    case ARG_PORT_NAME_PREFIX:
+        if (this->port_name_prefix)
+            g_free (this->port_name_prefix);
+        this->port_name_prefix = g_strdup (g_value_get_string (value));
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        return;
+    }
+}
+
+static void
+gst_jack_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+    GstJack *this = (GstJack*)object;
+
+    switch (prop_id) {
+    case ARG_PORT_NAME_PREFIX:
+        g_value_set_string (value, this->port_name_prefix);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static GstPadTemplate*
+gst_jack_src_request_pad_factory (void)
+{
+    static GstPadTemplate *template = NULL;
+    
+    if (!template) {
+	GstCaps *caps;
+	caps = gst_caps_new ("src",
+                             "audio/x-raw-float",
+                             GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS);
+        template = gst_pad_template_new ("%s", GST_PAD_SRC,
+					 GST_PAD_REQUEST, caps, NULL);
     }
     
-    gst_element_set_loop_function(GST_ELEMENT(this), gst_jack_loop);
+    return template;
+}
+
+static GstPadTemplate*
+gst_jack_sink_request_pad_factory (void)
+{
+    static GstPadTemplate *template = NULL;
+    
+    if (!template) {
+	GstCaps *caps;
+	caps = gst_caps_new ("sink",
+			     "audio/x-raw-float",
+                             GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS);
+        template = gst_pad_template_new ("%s", GST_PAD_SINK,
+                                         GST_PAD_REQUEST, caps, NULL);
+    }
+    
+    return template;
 }
 
 static GstPad*
@@ -277,7 +306,7 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
             newname = g_strdup ("alsa_pcm:capture_1");
     }
     
-    pad = g_new0(GstJackPad, 1);
+    pad = g_new0 (GstJackPad, 1);
     
     if (!port_name_counts)
         port_name_counts = g_hash_table_new (g_str_hash, g_str_equal);
@@ -290,47 +319,12 @@ gst_jack_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     pad->peer_name = newname;
     pad->pad = gst_pad_new_from_template (templ, newname);
     gst_element_add_pad (GST_ELEMENT (this), pad->pad);
-    gst_pad_set_link_function (pad->pad, gst_jack_connect);
+    gst_pad_set_link_function (pad->pad, gst_jack_link);
     
     this->pads = g_list_append (this->pads, pad);
     
     g_print ("returning from request_new_pad, pad %s created, to connect to %s\n", pad->name, pad->peer_name);
     return pad->pad;
-}
-
-static void
-gst_jack_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
-{
-    GstJack *this;
-    
-    this = (GstJack *)object;
-    switch (prop_id) {
-    case ARG_PORT_NAME_PREFIX:
-        if (this->port_name_prefix)
-            g_free (this->port_name_prefix);
-        this->port_name_prefix = g_strdup (g_value_get_string (value));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-        return;
-    }
-}
-
-static void
-gst_jack_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-    GstJack *this;
-
-    this = (GstJack *)object;
-
-    switch (prop_id) {
-    case ARG_PORT_NAME_PREFIX:
-        g_value_set_string (value, this->port_name_prefix);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-        break;
-    }
 }
 
 static GstElementStateReturn
@@ -358,7 +352,7 @@ gst_jack_change_state (GstElement *element)
                 || !GST_IS_JACK_BIN (this->bin)) {
                 this->bin = NULL;
                 g_warning ("jack element %s needs to be contained in a jack bin.",
-                           GST_OBJECT_NAME (GST_OBJECT (element)));
+                           GST_OBJECT_NAME (element));
                 return GST_STATE_FAILURE;
             }
 
@@ -383,7 +377,10 @@ gst_jack_change_state (GstElement *element)
             while (l) {
                 pad = GST_JACK_PAD (l);
                 caps = gst_pad_get_caps (pad->pad);
-                gst_caps_set (caps, "rate", GST_PROPS_INT_TYPE, (gint) this->bin->rate, NULL);
+                gst_caps_set (caps, "rate", GST_PROPS_INT_TYPE,
+                              (gint)this->bin->rate, NULL);
+                gst_caps_set (caps, "buffer-frames", GST_PROPS_INT_TYPE,
+                              (gint)this->bin->nframes, NULL);
                 if (gst_pad_try_set_caps (pad->pad, caps) <= 0)
                     return GST_STATE_FAILURE;
                 l = g_list_next (l);
@@ -404,18 +401,18 @@ gst_jack_change_state (GstElement *element)
 }
 
 static GstPadLinkReturn
-gst_jack_connect (GstPad *pad, GstCaps *caps)
+gst_jack_link (GstPad *pad, GstCaps *caps)
 {
   GstJack *this;
-  gint rate;
+  gint rate, buffer_frames;
   
-  this = GST_JACK (gst_pad_get_parent (pad));
-  g_return_val_if_fail (this != NULL, GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_IS_JACK (this), GST_PAD_LINK_REFUSED);
+  this = GST_JACK (GST_OBJECT_PARENT (pad));
   
   if (GST_CAPS_IS_FIXED (caps)) {
       gst_caps_get_int (caps, "rate", &rate);
-      if (this->bin && rate != this->bin->rate)
+      gst_caps_get_int (caps, "buffer-frames", &buffer_frames);
+      if (this->bin && (rate != this->bin->rate ||
+                        buffer_frames != this->bin->nframes))
           return GST_PAD_LINK_REFUSED;
       
       return GST_PAD_LINK_OK;
@@ -429,78 +426,60 @@ gst_jack_loop (GstElement *element)
 {
     GstJack *this;
     GList *pads;
-    gint len, peeked_len;
-    guint8 *peeked;
-    gint avail;
-    GstEvent *event;
+    gint len;
     GstJackPad *pad;
     GstBuffer *buffer;
     
     this = GST_JACK (element);
     
-    g_return_if_fail(this != NULL);
-    len = this->bin->nframes * sizeof (jack_default_audio_sample_t);
+    len = this->bin->nframes * sizeof (sample_t);
     
-    do {
-        pads = this->pads;
-        while (pads) {
-            pad = GST_JACK_PAD (pads);
+    pads = this->pads;
+    while (pads) {
+        pad = GST_JACK_PAD (pads);
             
-            if (this->direction == GST_PAD_SINK) {
-                if (!pad->bs)
-                    pad->bs = gst_bytestream_new (pad->pad);
+        if (this->direction == GST_PAD_SINK) {
+            buffer = gst_pad_pull (pad->pad);
                 
-            read:
-                peeked_len = gst_bytestream_peek_bytes (pad->bs, &peeked, len);
-                if (peeked_len < len) {
-                    gst_bytestream_get_status(pad->bs, &avail, &event);
-                    if (event) {
-                        g_warning("got an event on jacksink");
-                        if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-                            /* really, we should just cut this pad out of the graph. let
-                             * me know when this is needed ;)
-                             * also, for sample accuracy etc, we should play avail
-                             * bytes, but hey. */
-                            gst_element_set_eos (element);
-                            gst_event_unref (event);
-//                            gst_element_yield (element); /* shouldn't return */
-                            return;
-                        }
-                        goto read;
-                    } else {
-                        /* the element at the top of the chain did not emit an eos
-                         * event. this is a Bug(tm) */
-                        g_assert_not_reached();
-                    }
+            if (GST_IS_EVENT (buffer)) {
+                GstEvent *event = GST_EVENT (buffer);
+                switch (GST_EVENT_TYPE (buffer)) {
+                case GST_EVENT_EOS:
+                    gst_element_set_eos (element);
+                    gst_event_unref (event);
+                    return;
+                default:
+                    gst_pad_event_default (pad->pad, event);
+                    return;
                 }
-                
-                
-                memcpy (pad->data, peeked, peeked_len);
-                gst_bytestream_flush (pad->bs, peeked_len);
-            } else {
-                buffer = gst_buffer_new ();
-                GST_BUFFER_DATA (buffer)    = pad->data;
-                GST_BUFFER_SIZE (buffer)    = len;
-                GST_BUFFER_MAXSIZE (buffer) = len;
-		GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_DONTFREE);
-                
-                gst_pad_push (pad->pad, buffer);
             }
-            pads = g_list_next (pads);
+                
+            /* if the other plugins only give out buffer-frames or less (as
+               they should), if the length of the GstBuffer is different
+               from nframes then the buffer is short and we will get EOS
+               next */
+            memcpy (pad->data, GST_BUFFER_DATA (buffer),
+                    GST_BUFFER_SIZE (buffer));
+            if (len != GST_BUFFER_SIZE (buffer))
+                memset (pad->data + GST_BUFFER_SIZE (buffer), 0,
+                        len - GST_BUFFER_SIZE (buffer));
+
+            gst_buffer_unref (buffer);
+        } else {
+            buffer = gst_buffer_new ();
+            gst_buffer_set_data (buffer, pad->data, len);
+            GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_DONTFREE);
+                
+            gst_pad_push (pad->pad, buffer);
         }
-        
-        return;
-//	gst_element_yield (element);
-    } while (TRUE);
+        pads = g_list_next (pads);
+    }
 }
 
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
     GstElementFactory *factory;
-    
-    if (!gst_library_load ("gstbytestream"))
-        return FALSE;
     
     factory = gst_element_factory_new ("jackbin", GST_TYPE_JACK_BIN, &gst_jack_bin_details);
     g_return_val_if_fail (factory != NULL, FALSE);
@@ -516,7 +495,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
     gst_element_factory_add_pad_template (factory, gst_jack_sink_request_pad_factory());
     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
     
-    gst_plugin_set_longname(plugin, "JACK plugin library");
+    gst_plugin_set_longname (plugin, "JACK plugin library");
     
     return TRUE;
 }
@@ -527,5 +506,3 @@ GstPluginDesc plugin_desc = {
     "jack",
     plugin_init
 };
-
-
