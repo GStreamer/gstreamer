@@ -77,27 +77,35 @@ struct _GstScheduleClass {
   GstObjectClass parent_class;
 };
 
-//#define GST_SCHEDULE_SAFETY if (sched)
-#define GST_SCHEDULE_SAFETY
+#define GST_SCHEDULE_SAFETY(sched) if (sched)
+//#define GST_SCHEDULE_SAFETY(sched)
 
-#define GST_SCHEDULE_ADD_ELEMENT(sched,element) \
-  GST_SCHEDULE_SAFETY ((sched)->add_element((sched),(element)))
-#define GST_SCHEDULE_REMOVE_ELEMENT(sched,element) \
-  GST_SCHEDULE_SAFETY ((sched)->remove_element((sched),(element)))
-#define GST_SCHEDULE_ENABLE_ELEMENT(sched,element) \
-  GST_SCHEDULE_SAFETY ((sched)->enable_element((sched),(element)))
-#define GST_SCHEDULE_DISABLE_ELEMENT(sched,element) \
-  GST_SCHEDULE_SAFETY ((sched)->disable_element((sched),(element)))
-#define GST_SCHEDULE_LOCK_ELEMENT(sched,element) \
-  GST_SCHEDULE_SAFETY if ((sched)->lock_element != NULL) \
-    ((sched)->lock_element((sched),(element)))
-#define GST_SCHEDULE_UNLOCK_ELEMENT(sched,element) \
-  GST_SCHEDULE_SAFETY if ((sched)->unlock_element != NULL) \
-    ((sched)->unlock_element((sched),(element)))
-#define GST_SCHEDULE_PAD_CONNECT(sched,srcpad,sinkpad) \
-  GST_SCHEDULE_SAFETY ((sched)->pad_connect((sched),(srcpad),(sinkpad)))
-#define GST_SCHEDULE_PAD_DISCONNECT(sched,srcpad,sinkpad) \
-  GST_SCHEDULE_SAFETY ((sched)->pad_disconnect((sched),(srcpad),(sinkpad)))
+#define GST_SCHEDULE_ADD_ELEMENT(sched,element) G_STMT_START{ \
+  GST_SCHEDULE_SAFETY(sched) { ((sched)->add_element((sched),(element))); } \
+}G_STMT_END
+#define GST_SCHEDULE_REMOVE_ELEMENT(sched,element) G_STMT_START{ \
+  GST_SCHEDULE_SAFETY(sched) { ((sched)->remove_element((sched),(element))); } \
+}G_STMT_END
+#define GST_SCHEDULE_ENABLE_ELEMENT(sched,element) G_STMT_START{ \
+  GST_SCHEDULE_SAFETY(sched) { ((sched)->enable_element((sched),(element))); } \
+}G_STMT_END
+#define GST_SCHEDULE_DISABLE_ELEMENT(sched,element) G_STMT_START{ \
+  GST_SCHEDULE_SAFETY(sched) { ((sched)->disable_element((sched),(element))); } \
+}G_STMT_END
+#define GST_SCHEDULE_LOCK_ELEMENT(sched,element) G_STMT_START{ \
+  GST_SCHEDULE_SAFETY(sched) { if ((sched)->lock_element != NULL) \
+    ((sched)->lock_element((sched),(element))); } \
+}G_STMT_END
+#define GST_SCHEDULE_UNLOCK_ELEMENT(sched,element) G_STMT_START{ \
+  GST_SCHEDULE_SAFETY(sched) { if ((sched)->unlock_element != NULL) \
+    ((sched)->unlock_element((sched),(element))); } \
+}G_STMT_END
+#define GST_SCHEDULE_PAD_CONNECT(sched,srcpad,sinkpad) G_STMT_START{ \
+  GST_SCHEDULE_SAFETY(sched) { ((sched)->pad_connect((sched),(srcpad),(sinkpad))); } \
+}G_STMT_END
+#define GST_SCHEDULE_PAD_DISCONNECT(sched,srcpad,sinkpad) G_STMT_START{ \
+  GST_SCHEDULE_SAFETY(sched) { ((sched)->pad_disconnect((sched),(srcpad),(sinkpad))); } \
+}G_STMT_END
 #define GST_SCHEDULE_ITERATE(sched) \
   ((sched)->iterate((sched)))
 
