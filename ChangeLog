@@ -1,3 +1,8 @@
+2004-06-14  David Schleef  <ds@schleef.org>
+
+	* gst/volume/demo.c: (value_changed_callback): exp10() is not
+	standard.  Thank you for playing.
+
 2004-06-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/ffmpegcolorspace/imgconvert.c: (img_convert):
