@@ -1,3 +1,10 @@
+2004-11-08  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_clear),
+	(gst_ximagesink_finalize):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_clear),
+	(gst_xvimagesink_finalize): Some more cleanups, leaks fixed and checks.
+
 2004-11-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (aac_type_find):
