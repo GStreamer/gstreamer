@@ -294,33 +294,29 @@ group_destroy (GstPlayBaseGroup * group)
   /* remove the preroll queues */
   for (n = 0; n < NUM_TYPES; n++) {
     GstElement *element = group->type[n].preroll;
-    GstPad *pad;
-    guint sig_id;
     GstElement *fakesrc;
     const GList *item;
 
     if (!element)
       continue;
 
-    /* have to unlink the unlink handler first because else we
-     * are going to link an element in the finalize handler */
-    pad = gst_element_get_pad (element, "sink");
-    sig_id =
-        GPOINTER_TO_INT (g_object_get_data (G_OBJECT (pad), "unlinked_id"));
-
-    if (sig_id != 0) {
-      GST_LOG ("removing unlink signal %s:%s", GST_DEBUG_PAD_NAME (pad));
-      g_signal_handler_disconnect (G_OBJECT (pad), sig_id);
-      g_object_set_data (G_OBJECT (pad), "unlinked_id", GINT_TO_POINTER (0));
-    }
-
     /* remove any fakesrc elements for this preroll element */
     for (item = gst_element_get_pad_list (group->type[n].selector);
         item != NULL; item = item->next) {
-      GstPad *pad = item->data;
+      GstPad *pad = GST_PAD (item->data);
+      guint sig_id;
 
       if (GST_PAD_DIRECTION (pad) != GST_PAD_SINK)
         continue;
+
+      sig_id =
+          GPOINTER_TO_INT (g_object_get_data (G_OBJECT (pad), "unlinked_id"));
+
+      if (sig_id != 0) {
+        GST_LOG ("removing unlink signal %s:%s", GST_DEBUG_PAD_NAME (pad));
+        g_signal_handler_disconnect (G_OBJECT (pad), sig_id);
+        g_object_set_data (G_OBJECT (pad), "unlinked_id", GINT_TO_POINTER (0));
+      }
 
       fakesrc = (GstElement *) g_object_get_data (G_OBJECT (pad), "fakesrc");
       if (fakesrc != NULL) {
@@ -328,8 +324,6 @@ group_destroy (GstPlayBaseGroup * group)
             gst_pad_get_name (pad),
             GST_ELEMENT_NAME (gst_pad_get_parent (pad)));
         gst_bin_remove (GST_BIN (play_base_bin->thread), fakesrc);
-      } else if (GST_PAD_PEER (pad)) {
-        gst_pad_unlink (GST_PAD_PEER (pad), pad);
       }
     }
 
