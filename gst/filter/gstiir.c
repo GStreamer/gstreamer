@@ -193,6 +193,9 @@ gst_iir_chain (GstPad * pad, GstBuffer * buf)
 
   src = (gfloat *) GST_BUFFER_DATA (buf);
 
+  /* get a writable buffer */
+  buf = gst_buffer_copy_on_write (buf);
+
   /* do an in-place edit */
   for (i = 0; i < GST_BUFFER_SIZE (buf) / sizeof (gfloat); ++i)
     *(src + i) = (gfloat) IIR_filter (filter->state, (double) *(src + i));
