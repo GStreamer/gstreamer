@@ -105,15 +105,13 @@ gst_pipeline_init (GstPipeline *pipeline)
 
   /* get an instance of the default scheduler */
   scheduler = gst_scheduler_factory_make (NULL, GST_ELEMENT (pipeline));
+
   /* FIXME need better error handling */
-  if (scheduler == NULL)
-  {
+  if (scheduler == NULL) {
     g_error ("Critical error: could not get a scheduler - \
 	      are you sure you have a registry ? Run gst-register as root \
 	      if you haven't done so yet.");
   }
-	  
-  gst_scheduler_setup (scheduler);
 }
 
 static void
@@ -147,6 +145,18 @@ gst_pipeline_new (const gchar *name)
 static GstElementStateReturn
 gst_pipeline_change_state (GstElement *element)
 {
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      gst_scheduler_setup (GST_ELEMENT_SCHED (element));
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_PLAYING_TO_PAUSED:
+    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_READY_TO_NULL:
+      break;
+  }
+
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
