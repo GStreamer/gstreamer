@@ -413,7 +413,7 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
 static void
 gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
 {
-  GstBuffer *buf;
+  GstBuffer *buf=NULL;
   GstBuffer *typefindbuf = NULL;
   gboolean getmorebuf = TRUE;
   GList *type_list;
