@@ -253,8 +253,11 @@ gst_tag_extract (GstTagList *list, const gchar *tag, const gchar *start, const g
 	return;
       }
     }
+    conv = g_strchomp (conv);
   }
-  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, tag, conv, NULL);
+  if (conv[0] != '\0') {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, tag, conv, NULL);
+  }
   g_free (conv);
 }
 /**
@@ -275,7 +278,7 @@ gst_tag_list_new_from_id3v1 (const guint8 *data)
 
   g_return_val_if_fail (data != NULL, NULL);
   
-  if (data[0] == 'T' && data[1] == 'A' && data[2] == 'G') return NULL;
+  if (data[0] != 'T' || data[1] != 'A' || data[2] != 'G') return NULL;
   list = gst_tag_list_new ();
   gst_tag_extract (list, GST_TAG_TITLE, &data[3], 30);
   gst_tag_extract (list, GST_TAG_ARTIST, &data[33], 30);
