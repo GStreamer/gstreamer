@@ -15,6 +15,8 @@ aviparse_CFLAGS = $(shell gnome-config --cflags gnomeui)
 aviparse_LDFLAGS = $(shell gnome-config --libs gnomeui)
 mp1parse_CFLAGS = $(shell gnome-config --cflags gnomeui)
 mp1parse_LDFLAGS = $(shell gnome-config --libs gnomeui)
+mpeg2parse_CFLAGS = $(shell gnome-config --cflags gnomeui)
+mpeg2parse_LDFLAGS = $(shell gnome-config --libs gnomeui)
 
 buffer_SOURCES = buffer.c mem.c
 teardown_SOURCES = teardown.c mem.c

@@ -318,6 +318,7 @@ plugins/mpeg2/ac3dec/Makefile
 plugins/mpeg1/Makefile
 plugins/mpeg1/mpeg_play/Makefile
 plugins/mpeg1/parse/Makefile
+plugins/mpeg1video/Makefile
 plugins/mpeg1video/parse/Makefile
 plugins/effects/Makefile
 plugins/effects/stereo/Makefile

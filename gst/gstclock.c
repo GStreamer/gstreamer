@@ -103,8 +103,8 @@ void gst_clock_wait(GstClock *clock, GstClockTime time, GstObject *obj) {
 	clock->locking = FALSE;
       }
       else {
-        DEBUG("gst_clock: unlock all %p\n", obj);
 	gst_clock_reset(clock);
+        DEBUG("gst_clock: unlock all %p\n", obj);
         g_mutex_unlock(clock->sinkmutex);
 	clock->locking = FALSE;
       }
