@@ -140,7 +140,7 @@ struct _GstPlayClass
 	
 	/* signals */
 	void (*information)		(	GstPlay* play,
-								GstElement* element,
+								GstObject* element,
 								GParamSpec *param);
 	void (*pipeline_error)	(	GstPlay* play,
 								GstElement* element,
