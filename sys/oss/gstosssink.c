@@ -22,6 +22,7 @@
 
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
+#include <errno.h>
 
 #include <gstosssink.h>
 
@@ -383,6 +384,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
     if (!osssink->mute) {
       guchar *data = GST_BUFFER_DATA (buf);
       gint size = GST_BUFFER_SIZE (buf);
+      gint to_write = 0;
 
       if (osssink->clock) {
         gint delay = 0;
@@ -400,22 +402,13 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 
 	  if (jitter >= 0) {
             gst_clock_handle_discont (osssink->clock, buftime - queued + jitter);
-	    write (osssink->common.fd, data, size);
+	    to_write = size;
 	    gst_oss_clock_set_active (osssink->provided_clock, TRUE);
 	    osssink->resync = FALSE;
-	    osssink->handled += size;
 	  }
 	}
 	else {
-	  gint to_write;
-          while (size > 0) {
-	    to_write = MIN (size, osssink->chunk_size);
-
-	    write (osssink->common.fd, data, to_write);
-	    size -= to_write;
-	    data += to_write;
-	    osssink->handled += to_write;
-	  }
+	  to_write = size;
         }
       }
       /* no clock, try to be as fast as possible */
@@ -425,7 +418,22 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
         ioctl (osssink->common.fd, SNDCTL_DSP_GETOSPACE, &ospace);
 
         if (ospace.bytes >= size) {
-          write (osssink->common.fd, data, size);
+	  to_write = size;
+	}
+      }
+
+      while (to_write > 0) {
+        gint done = write (osssink->common.fd, data, 
+                           MIN (to_write, osssink->chunk_size));
+
+        if (done == -1) {
+          if (errno != EINTR)
+	    break;
+	}
+	else {
+	  to_write -= done;
+	  data += done;
+	  osssink->handled += done;
 	}
       }
     }
