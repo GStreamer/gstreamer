@@ -36,7 +36,8 @@ GST_ELEMENT_DETAILS ("Threaded container",
     "Generic/Bin",
     "Container that creates/manages a thread",
     "Erik Walthinsen <omega@cse.ogi.edu>, "
-    "Benjamin Otte <in7y118@informatik.uni-hamburg.de");
+    "Benjamin Otte <in7y118@informatik.uni-hamburg.de"
+    "Wim Taymans <wim@fluendo.com");
 
 /* Thread signals and args */
 enum
@@ -74,7 +75,7 @@ static GstElementStateReturn gst_thread_change_state (GstElement * element);
 static void gst_thread_child_state_change (GstBin * bin,
     GstElementState oldstate, GstElementState newstate, GstElement * element);
 
-static void gst_thread_sync (GstThread * thread);
+static void gst_thread_sync (GstThread * thread, gboolean is_self);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_thread_save_thyself (GstObject * object,
@@ -248,6 +249,7 @@ gst_thread_dispose (GObject * object)
 
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
+  g_mutex_free (thread->iterate_lock);
 
   gst_object_replace ((GstObject **) & GST_ELEMENT_SCHED (thread), NULL);
 }
@@ -390,7 +392,7 @@ gst_thread_release_children_locks (GstThread * thread)
  * This function should be called with the thread lock held.
  */
 static void
-gst_thread_sync (GstThread * thread)
+gst_thread_sync (GstThread * thread, gboolean is_self)
 {
   if (thread->thread_id == NULL)
     return;
@@ -398,7 +400,7 @@ gst_thread_sync (GstThread * thread)
   /* need to stop spinning in any case */
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
 
-  if (thread == gst_thread_get_current ()) {
+  if (is_self) {
     /* we're trying to sync ourself. Not much we can do here but hope
      * that the thread will stop spinning and  end up in the waiting
      * state */
@@ -435,6 +437,7 @@ gst_thread_change_state (GstElement * element)
   GstThread *thread;
   GstElementStateReturn ret;
   gint transition;
+  gboolean is_self;
 
   g_return_val_if_fail (GST_IS_THREAD (element), GST_STATE_FAILURE);
 
@@ -446,10 +449,14 @@ gst_thread_change_state (GstElement * element)
 
   thread = GST_THREAD (element);
 
+  /* boolean to check if we called the state change in the same thread as
+   * the iterate thread */
+  is_self = (thread == gst_thread_get_current ());
+
   GST_LOG_OBJECT (thread, "grabbing lock");
   g_mutex_lock (thread->lock);
 
-  gst_thread_sync (thread);
+  gst_thread_sync (thread, is_self);
 
   /* FIXME: (or GStreamers ideas about "threading"): the element variables are
      commonly accessed by multiple threads at the same time (see bug #111146
@@ -517,7 +524,7 @@ gst_thread_change_state (GstElement * element)
       /* thread was already gone */
       if (thread->thread_id != NULL) {
         thread->thread_id = NULL;
-        if (thread == gst_thread_get_current ()) {
+        if (is_self) {
           /* or should we continue? */
           GST_LOG_OBJECT (thread,
               "Thread %s is destroying itself. Function call will not return!",
@@ -553,13 +560,18 @@ gst_thread_change_state (GstElement * element)
   GST_LOG_OBJECT (thread, "unlocking lock");
   g_mutex_unlock (thread->lock);
 
-  g_mutex_lock (thread->iterate_lock);
+  /* do not try to grab the lock if this method is called from the
+   * same thread as the iterate thread, the lock might be held and we 
+   * might deadlock */
+  if (!is_self)
+    g_mutex_lock (thread->iterate_lock);
   if (GST_ELEMENT_CLASS (parent_class)->change_state) {
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (thread));
   } else {
     ret = GST_STATE_SUCCESS;
   }
-  g_mutex_unlock (thread->iterate_lock);
+  if (!is_self)
+    g_mutex_unlock (thread->iterate_lock);
 
   return ret;
 
@@ -586,9 +598,15 @@ gst_thread_child_state_change (GstBin * bin, GstElementState oldstate,
     GstElementState newstate, GstElement * element)
 {
   GstThread *thread = GST_THREAD (bin);
+  gboolean is_self;
+  GstThread *current;
+
+  current = gst_thread_get_current ();
+
+  is_self = (current == thread);
 
   GST_LOG_OBJECT (bin, "(from thread %s) child %s changed state from %s to %s",
-      gst_thread_get_current ()? GST_ELEMENT_NAME (gst_thread_get_current ()) :
+      current ? GST_ELEMENT_NAME (current) :
       "(none)", GST_ELEMENT_NAME (element),
       gst_element_state_get_name (oldstate),
       gst_element_state_get_name (newstate));
@@ -597,7 +615,7 @@ gst_thread_child_state_change (GstBin * bin, GstElementState oldstate,
     parent_class->child_state_change (bin, oldstate, newstate, element);
 
   /* see if we have to wake up the thread now. */
-  if (thread == gst_thread_get_current ()) {
+  if (is_self) {
     GST_LOG_OBJECT (element, "we are in the thread context");
     /* we are the thread, set the spinning flag so that we start spinning
      * next time */

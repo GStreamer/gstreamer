@@ -1,3 +1,11 @@
+2004-10-07  Wim Taymans  <wim at fluendo dot com>
+
+	* gst/gstthread.c: (gst_thread_dispose), (gst_thread_sync),
+	(gst_thread_change_state), (gst_thread_child_state_change):
+	Do not try to grab the iterate lock in the state change method
+	when we are in the same thread as the iterate or else we
+	could deadlock. Some other cleanups.
+
 2004-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
