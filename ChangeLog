@@ -1,3 +1,18 @@
+2004-01-31  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_change_state), (gst_alsa_start):
+	  start clock on PAUSED=>PLAYING, not later
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
+	  extract correct time for different discont formats
+	(gst_alsa_sink_get_time):
+	  don't segfault when no format is negotiated yet, just return 0
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_event),
+	(gst_ogg_demux_handle_event), (gst_ogg_demux_push),
+	(gst_ogg_pad_push):
+	  handle flush and discont events correctly
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_event), (vorbis_dec_chain):
+	  handle discont events correctly
+
 2004-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/play/play.c: (gst_play_error_quark),
