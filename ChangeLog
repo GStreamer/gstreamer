@@ -1,3 +1,19 @@
+2004-12-11  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+	* AUTHORS ChangeLog
+	* gst/auparse/gstauparse.c
+	* gst/interleave/deinterleave.c
+	* gst/law/ :
+		alaw-decode.c alaw-encode.c
+		mulaw-decode.c mulaw-encode.c
+	* gst/oneton/gstoneton.c
+	* sys/osxaudio/ :
+		gstosxaudioelement.c gstosxaudiosink.c gstosxaudiosrc.c
+	* sys/osxvideo/ :
+		cocoawindow.h cocoawindow.m
+		osxvideosink.h osxvideosink.m
+
+	put the same mail address for Zaheer Abbas Merali everywhere
+
 2004-12-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_loop):
