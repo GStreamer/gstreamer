@@ -554,6 +554,9 @@ gst_pad_disconnect (GstPad *srcpad,
   g_return_if_fail (sinkpad != NULL);
   g_return_if_fail (GST_IS_PAD (sinkpad));
 
+  GST_INFO (GST_CAT_ELEMENT_PADS, "disconnecting %s:%s(%p) and %s:%s",
+            GST_DEBUG_PAD_NAME(srcpad), srcpad, GST_DEBUG_PAD_NAME(sinkpad));
+
   // now we need to deal with the real/ghost stuff
   realsrc = GST_PAD_REALIZE(srcpad);
   realsink = GST_PAD_REALIZE(sinkpad);
@@ -583,8 +586,8 @@ gst_pad_disconnect (GstPad *srcpad,
   // now tell the scheduler
   if (realsrc->sched)
     GST_SCHEDULE_PAD_DISCONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
-  if (realsink->sched)
-    GST_SCHEDULE_PAD_DISCONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
+//  if (realsink->sched)
+//    GST_SCHEDULE_PAD_DISCONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
@@ -1017,18 +1020,18 @@ gst_real_pad_destroy (GtkObject *object)
 {
   GstPad *pad = GST_PAD (object);
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy %s:%s\n", GST_DEBUG_PAD_NAME(pad));
 
   if (GST_PAD (pad)->padtemplate)
     gst_object_unref (GST_OBJECT (GST_PAD (pad)->padtemplate));
 
-  if (GST_PAD_PEER (object)) {
-    gst_pad_disconnect (GST_PAD (object), GST_PAD (GST_PAD_PEER (object)));
-  }
+  if (GST_PAD_PEER (pad))
+    gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
 
   if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad)))
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
 
+  // FIXME we should destroy the ghostpads, because they are nothing without the real pad
   g_list_free (GST_REAL_PAD(pad)->ghostpads);
 
   if (GTK_OBJECT_CLASS (real_pad_parent_class)->destroy)
