@@ -72,8 +72,12 @@ caps:
 
 negotiation:
 
-  autopluggers would be easier to write if there was a core method
+- autopluggers would be easier to write if there was a core method
   to do what plugidentities do.
+
+- there should be a way to hook into negotiation and be able to do something if 
+  negotiation fails. Autopluggers would need that for exchanging elements when
+  they can't link.
 
 bugs with interesting info:
  
