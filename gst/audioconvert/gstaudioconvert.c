@@ -293,12 +293,6 @@ gst_audio_convert_chain_int2float (GstPad *pad, GstData *data)
   /* we know we're negotiated, because it's the link function that set the
      custom chain handler */
   
-  /* FIXME: this runs into scheduling problems if the next element is loop-based
-   * (the bufpen fills up until infinity because we push multiple buffers per
-   * chain, in the normal situation). The fix is either to make the opt
-   * scheduler choose the loop group as its entry, or to make this a loop
-   * plugin. But I want to commit, will fix this later. */
-
   /**
    * Theory of operation:
    * - convert the format (endianness, signedness, width, depth) to
@@ -397,7 +391,7 @@ gst_audio_convert_getcaps (GstPad *pad)
   GstCaps *othercaps, *caps;
   const GstCaps *templcaps;
   gboolean has_float = FALSE, has_int = FALSE;
-  int i;
+  int i, size;
 
   g_return_val_if_fail(GST_IS_PAD(pad), NULL);
   g_return_val_if_fail(GST_IS_AUDIO_CONVERT(GST_OBJECT_PARENT (pad)), NULL);
@@ -409,7 +403,9 @@ gst_audio_convert_getcaps (GstPad *pad)
   templcaps = gst_pad_get_pad_template_caps (pad);
   othercaps = gst_pad_get_allowed_caps (otherpad);
 
-  for (i=0;i<gst_caps_get_size (othercaps); i++) {
+  size = gst_caps_get_size (othercaps);
+
+  for (i=0; i<size; i++) {
     structure = gst_caps_get_structure (othercaps, i);
     gst_structure_remove_field (structure, "channels");
     gst_structure_remove_field (structure, "endianness");
@@ -425,17 +421,18 @@ gst_audio_convert_getcaps (GstPad *pad)
   }
   caps = gst_caps_intersect (othercaps, templcaps);
   gst_caps_free (othercaps);
+  size = gst_caps_get_size (caps);
 
   /* the intersection probably lost either float or int. so we take the rate
    * property and set it on a copy of the templcaps struct. */
-  if (!has_int) {
+  if (!has_int && size) {
     structure = gst_structure_copy (gst_caps_get_structure (templcaps, 0));
     gst_structure_set_value (structure, "rate",
                              gst_structure_get_value (gst_caps_get_structure (caps, 0),
                                                       "rate"));
     gst_caps_append_structure (caps, structure);
   }
-  if (!has_float) {
+  if (!has_float && size) {
     structure = gst_structure_copy (gst_caps_get_structure (templcaps, 1));
     gst_structure_set_value (structure, "rate",
                              gst_structure_get_value (gst_caps_get_structure (caps, 0),
