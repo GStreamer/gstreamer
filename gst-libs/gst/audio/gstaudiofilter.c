@@ -23,7 +23,7 @@
 #endif
 
 /*#define DEBUG_ENABLED */
-#include <gstaudiofilter.h>
+#include "gstaudiofilter.h"
 
 #include <string.h>
 
