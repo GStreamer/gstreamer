@@ -84,7 +84,7 @@ static GstElementStateReturn gst_asf_demux_change_state   (GstElement *element);
 static GstCaps * gst_asf_demux_video_caps (guint32 codec_fcc,
 					   asf_stream_video_format *video);
 static GstCaps * gst_asf_demux_audio_caps (guint16 codec_id,
-					   asf_stream_audio *audio);
+					   asf_stream_audio *audio, guint8 *extradata);
 
 static GstPadTemplate *videosrctempl, *audiosrctempl;
 static GstElementClass *parent_class = NULL;
@@ -144,7 +144,7 @@ gst_asf_demux_base_init (gpointer g_class)
   };
 
   for (i = 0; aud_list[i] != -1; i++) {
-    temp = gst_asf_demux_audio_caps (aud_list[i], NULL);
+    temp = gst_asf_demux_audio_caps (aud_list[i], NULL, NULL);
     audcaps = gst_caps_append (audcaps, temp);
   }
 
@@ -661,7 +661,7 @@ gst_asf_demux_process_stream (GstASFDemux *asf_demux, guint64 *obj_size)
     audio_object = (asf_stream_audio *)ptr;
     size = GUINT16_FROM_LE (audio_object->size);
 
-    GST_INFO ( "Object is an audio stream with %u bytes of additional data.", size);
+    GST_INFO ("Object is an audio stream with %u bytes of additional data.", size);
 
     if (!gst_asf_demux_add_audio_stream (asf_demux, audio_object, id))
       return FALSE;
@@ -993,7 +993,7 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux,
 				 guint32      remaining)
 {
   GstEventType type;
-  
+
   type = event? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
   switch (type) {
@@ -1242,9 +1242,13 @@ gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
 
 static GstCaps *
 gst_asf_demux_audio_caps (guint16 codec_id,
-			  asf_stream_audio *audio)
+			  asf_stream_audio *audio, guint8 *extradata)
 {
   GstCaps *caps = NULL;
+  gint flags1, flags2;
+
+  flags1 = 0;
+  flags2 = 0;
 
   switch (codec_id) {
     case GST_RIFF_WAVE_FORMAT_MPEGL3: /* mp3 */
@@ -1315,15 +1319,54 @@ gst_asf_demux_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_DIVX_WMAV1:
-      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav1",
-				   "audio/x-wma",
-				     "wmaversion", GST_PROPS_INT (1));
+      /* get flags1 and flags2 ripped from ffmpeg (wmadec.c) */
+      if (audio && audio->size >= 4) {
+        flags1 = extradata[0] | (extradata[1] << 8);
+        flags2 = extradata[2] | (extradata[3] << 8);
+      }
+      if (audio != NULL)
+        caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav1",
+                                     "audio/x-wma",
+                                       "wmaversion",  GST_PROPS_INT (1),                        
+                                       "flags1",      GST_PROPS_INT (flags1),
+                                       "flags2",      GST_PROPS_INT (flags2),
+                                       "block_align", GST_PROPS_INT (audio->block_align),
+                                       "bitrate",     GST_PROPS_INT (audio->byte_rate * 8));
+      else
+        caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav1",
+                                     "audio/x-wma",
+	 			       "wmaversion",  GST_PROPS_INT (1),
+                                       "flags1",      GST_PROPS_INT_RANGE (G_MININT, G_MAXINT),
+                                       "flags2",      GST_PROPS_INT_RANGE (G_MININT, G_MAXINT),
+                                       "block_align", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                                       "bitrate",     GST_PROPS_INT_RANGE (0, G_MAXINT)
+                                    );
       break;
 
     case GST_RIFF_WAVE_FORMAT_DIVX_WMAV2:
-      caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav2",
-				   "audio/x-wma",
-				     "wmaversion", GST_PROPS_INT (2));
+      /* get flags1 and flags2 ripped from ffmpeg (wmadec.c) */
+      if (audio && audio->size >= 6) {
+        flags1 = extradata[0] | (extradata[1] << 8) | 
+                (extradata[2] << 16) | (extradata[3] << 24);
+        flags2 = extradata[4] | (extradata[5] << 8);
+      }
+      if (audio != NULL)
+        caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav2",
+				     "audio/x-wma",
+				       "wmaversion",  GST_PROPS_INT (2),
+                                       "flags1",      GST_PROPS_INT (flags1),
+                                       "flags2",      GST_PROPS_INT (flags2),
+                                       "block_align", GST_PROPS_INT (audio->block_align),
+                                       "bitrate",     GST_PROPS_INT (audio->byte_rate * 8));
+     else
+       caps = GST_ASF_AUD_CAPS_NEW ("asf_demux_audio_src_wmav2",
+	 			    "audio/x-wma",
+				      "wmaversion",  GST_PROPS_INT (2),
+                                      "flags1",      GST_PROPS_INT_RANGE (G_MININT, G_MAXINT),
+                                      "flags2",      GST_PROPS_INT_RANGE (G_MININT, G_MAXINT),
+                                      "block_align", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                                      "bitrate",     GST_PROPS_INT_RANGE (0, G_MAXINT)
+                                   );
       break;
 
     case GST_RIFF_WAVE_FORMAT_WMAV9:
@@ -1350,31 +1393,34 @@ gst_asf_demux_add_audio_stream (GstASFDemux *asf_demux,
   GstCaps        *caps;
   gchar          *name = NULL;
   guint16         size_left = 0;
+  guint8         *extradata=NULL;
 
   size_left = GUINT16_FROM_LE(audio->size);
 
   /* Create the audio pad */
   name = g_strdup_printf ("audio_%02d", asf_demux->num_audio_streams);
+
   src_pad = gst_pad_new_from_template (audiosrctempl, name);
   g_free (name);
 
+  /* Swallow up any left over data */
+  if (size_left) {
+    g_warning ("asfdemux: Audio header contains %d bytes of surplus data", size_left);
+    gst_asf_demux_read_object_header_rest (asf_demux, &extradata, size_left);
+/*     gst_bytestream_flush (asf_demux->bs, size_left);*/
+  }
+
   /* Now set up the standard propertis from the header info */
   caps = gst_asf_demux_audio_caps (GUINT16_FROM_LE(audio->codec_tag),
-				   audio);
+				   audio, extradata);
 
   GST_INFO ("Adding audio stream %u codec %u (0x%x)",
 	    asf_demux->num_video_streams,
 	    GUINT16_FROM_LE(audio->codec_tag),
 	    GUINT16_FROM_LE(audio->codec_tag));
 
-   asf_demux->num_audio_streams++;
+  asf_demux->num_audio_streams++;
 
-   /* Swallow up any left over data */
-   if (size_left) {
-     g_warning ("asfdemux: Audio header contains %d bytes of surplus data", size_left);
-     gst_bytestream_flush (asf_demux->bs, size_left);
-   }
-  
   return gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id);
 }
 
@@ -1529,7 +1575,7 @@ gst_asf_demux_add_video_stream (GstASFDemux *asf_demux,
 	    GUINT32_FROM_LE(video->tag));
   
   asf_demux->num_video_streams++;
-  
+
   return gst_asf_demux_setup_pad (asf_demux, src_pad, caps, id);
 }
 
@@ -1541,7 +1587,7 @@ gst_asf_demux_setup_pad (GstASFDemux *asf_demux,
 			 guint16 id)
 {
   asf_stream_context *stream;
-  
+
   gst_pad_try_set_caps (src_pad, caps_list);
   gst_pad_set_formats_function (src_pad, gst_asf_demux_get_src_formats);
   gst_pad_set_event_mask_function (src_pad, gst_asf_demux_get_src_event_mask);
@@ -1560,6 +1606,7 @@ gst_asf_demux_setup_pad (GstASFDemux *asf_demux,
 
   GST_INFO ("Adding pad for stream %u",
 	    asf_demux->num_streams);
+
 
   asf_demux->num_streams++;
   
