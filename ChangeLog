@@ -1,3 +1,16 @@
+2004-01-31  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/theora/theoradec.c: (theora_dec_chain):
+	  make comments work
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
+	(vorbis_dec_src_event), (vorbis_dec_chain):
+	  add encoder tag, fix tag reading to be more error tolerant, change
+	  BITRATE to NOMINAL_BITRATE, add debugging, don't unref events after
+	  gst_pad_event_default.
+	* gst/tags/gstvorbistag.c:
+	(gst_tag_list_from_vorbiscomment_buffer):
+	  undefine function specific define at end of function
+
 2004-01-31  Jeremy Simon  <jesimon@libertysurf.fr>
 
 	* ext/flac/gstflac.c: (plugin_init):

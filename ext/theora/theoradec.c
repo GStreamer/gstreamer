@@ -248,7 +248,17 @@ theora_dec_chain (GstPad *pad, GstData *data)
       return;
     }
     if (packet.packetno == 1) {
-      GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, "\101theora", 7, NULL);
+      gchar *encoder = NULL;
+      GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, "\201theora", 7, &encoder);
+      if (!list) {
+	GST_ERROR_OBJECT (dec, "failed to parse tags");
+	list = gst_tag_list_new ();
+      }
+      if (encoder) {
+	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+	    GST_TAG_ENCODER, encoder, NULL);
+	g_free (encoder);
+      }
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
 	  GST_TAG_ENCODER_VERSION, dec->info.version_major, NULL);
       gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);

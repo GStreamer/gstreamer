@@ -211,7 +211,8 @@ vorbis_dec_src_query (GstPad *pad, GstQueryType query, GstFormat *format, gint64
   if (!vorbis_dec_from_granulepos (dec, *format, granulepos, value))
     return FALSE;
 
-  g_print ("peer returned granulepos: %llu - we return %llu\n", granulepos, *value);
+  GST_LOG_OBJECT (dec, "query %u: peer returned granulepos: %llu - we return %llu (format %u)\n", 
+      query, granulepos, *value, *format);
   return TRUE;
 }
 
@@ -233,6 +234,7 @@ vorbis_dec_src_event (GstPad *pad, GstEvent *event)
 	    value);
 	res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
       }
+      gst_event_unref (event);
       break;
     }
     default:
@@ -240,7 +242,6 @@ vorbis_dec_src_event (GstPad *pad, GstEvent *event)
       break;
   }
 
-  gst_event_unref (event);
   return res;
 }
 static void
@@ -302,7 +303,17 @@ vorbis_dec_chain (GstPad *pad, GstData *data)
       return;
     }
     if (packet.packetno == 1) {
-      GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7, NULL);
+      gchar *encoder = NULL;
+      GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7, &encoder);
+      if (!list) {
+	GST_ERROR_OBJECT (vd, "couldn't decode comments");
+	list = gst_tag_list_new ();
+      }
+      if (encoder) {
+	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+	    GST_TAG_ENCODER, encoder, NULL);
+	g_free (encoder);
+      }
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
 	  GST_TAG_ENCODER_VERSION, vd->vi.version, NULL);
       if (vd->vi.bitrate_upper)
@@ -310,7 +321,7 @@ vorbis_dec_chain (GstPad *pad, GstData *data)
 	    GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
       if (vd->vi.bitrate_nominal)
 	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, 
-	    GST_TAG_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
+	    GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
       if (vd->vi.bitrate_lower)
 	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, 
 	    GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);

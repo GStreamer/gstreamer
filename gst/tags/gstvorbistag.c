@@ -366,6 +366,7 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer *buffer, const guint8 *i
 error:
   gst_tag_list_free (list);
   return NULL;
+#undef ADVANCE
 }
 typedef struct {
   guint count;
