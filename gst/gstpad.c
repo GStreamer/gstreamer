@@ -1909,7 +1909,8 @@ gst_pad_try_relink_filtered (GstPad *srcpad, GstPad *sinkpad,
 
   g_return_val_if_fail (realsrc != NULL, FALSE);
   g_return_val_if_fail (realsink != NULL, FALSE);
-  g_return_val_if_fail (GST_RPAD_PEER (realsrc) == GST_RPAD_PEER (realsink), FALSE);
+  g_return_val_if_fail (GST_RPAD_PEER (realsrc) == realsink, FALSE);
+  g_assert (realsrc == GST_RPAD_PEER (realsink));
   if ((GST_PAD (realsrc) != srcpad) || (GST_PAD (realsink) != sinkpad)) {
     GST_CAT_INFO (GST_CAT_PADS, "*actually* linking %s:%s and %s:%s",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));

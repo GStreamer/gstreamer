@@ -1,3 +1,8 @@
+2004-01-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstpad.c: (gst_pad_try_relink_filtered):
+	  Fix wrong g_return_if_fail
+
 2004-01-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbin.c: (gst_bin_class_init):
