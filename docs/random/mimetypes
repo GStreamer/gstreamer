@@ -63,7 +63,7 @@ audio), but these are usually used in conjunction with each other.
   mimetype: video/x-quicktime
 3 - MPEG (MPEG LA)
   mimetype: video/mpeg
-  properties: 'systemstream' = 1 (INT)
+  properties: 'systemstream' = TRUE (BOOLEAN)
 4 - ASF (Microsoft)
   mimetype: video/x-asf
 5 - WAV (PCM)
@@ -72,7 +72,7 @@ audio), but these are usually used in conjunction with each other.
   mimetype: video/realmedia
 7 - DV (Digital Video)
   mimetype: video/dv
-  properties: 'systemstream' = 1 (INT)
+  properties: 'systemstream' = TRUE (BOOLEAN)
 8 - Ogg
   mimetypes: media/ogg
 
@@ -89,14 +89,14 @@ of the frame (in pixels).
   mimetype: video/raw
   properties: 'format' = 'RGB ' (fourcc)
               'endianness' = 1234/4321 (INT) <- endianness
-              'r_mask' = bitmask (0x..) (INT) <- red pixel mask
-              'g_mask' = bitmask (0x..) (INT) <- green pixel mask
-              'b_mask' = bitmask (0x..) (INT) <- blue pixel mask
+              'red_mask' = bitmask (0x..) (INT) <- red pixel mask
+              'green_mask' = bitmask (0x..) (INT) <- green pixel mask
+              'blue_mask' = bitmask (0x..) (INT) <- blue pixel mask
               'depth' = 15/16/24/32 (INT) <- bits per pixel (depth)
               'bpp' = 16/24/32 (INT) <- bits per pixel (in memory)
 2 - MPEG-1, -2 and -4 video (ISO/LA MPEG)
   mimetype: video/mpeg
-  properties: 'systemstream' = 0 (INT)
+  properties: 'systemstream' = FALSE (BOOLEAN)
               'mpegversion' = 1/2/4 (INT)
   known fourccs: MPEG, MPGI
 3 - DivX ;-) 3.x, 4.x and 5.x video
@@ -120,7 +120,7 @@ of the frame (in pixels).
   mimetype: video/realvideo
 9 - Digital Video (DV)
   mimetype: video/dv
-  properties: 'systemstream' = 0 (INT)
+  properties: 'systemstream' = FALSE (BOOLEAN)
   known fourccs: DVSD, dvsd
 10 - Windows Media Video 1 and 2 (WMV)
   mimetype: video/wmv
