@@ -8,5 +8,3 @@ libgstpassthrough_la_LIBADD =
 libgstpassthrough_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstpassthrough.h filter.func
-
-EXTRA_DIST = 
