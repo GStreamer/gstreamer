@@ -1,3 +1,13 @@
+2004-02-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/videodrop/gstvideodrop.c: (gst_videodrop_init),
+	(gst_videodrop_chain), (gst_videodrop_change_state):
+	* gst/videodrop/gstvideodrop.h:
+	  Work based on timestamp of input data, not based on the expected
+	  framerate from the input. The consequence is that this element now
+	  not only scales framerates, but also functions as a framerate
+	  corrector or framerate stabilizer/constantizer.
+
 2004-02-27  David Schleef  <ds@schleef.org>
 
 	patches from jmmv@menta.net (Julio M. Merino Vidal)

@@ -48,7 +48,7 @@ struct _GstVideodrop {
   gfloat from_fps,
 	 to_fps;
   gfloat speed;
-  guint64 pass, total;
+  guint64 pass, total, time_adjust;
 };
 
 struct _GstVideodropClass {
