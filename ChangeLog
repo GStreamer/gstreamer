@@ -1,3 +1,8 @@
+2004-07-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/Makefile.am:
+	Add headers to noinst
+
 2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* tools/gst-launch-ext-m.m:
