@@ -1,4 +1,4 @@
-<!DOCTYPE book PUBLIC "-//GNOME//DTD DocBook PNG Variant V1.0//EN" "" [ 
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
 <!ENTITY INTRO SYSTEM "intro.sgml">
 <!ENTITY MOTIVATION SYSTEM "motivation.sgml">
 <!ENTITY GOALS SYSTEM "goals.sgml">
