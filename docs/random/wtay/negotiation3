@@ -1,0 +1,328 @@
+Caps Negotiation
+================
+
+
+Definitions
+-----------
+
+- GstCaps is a structure that holds a mimetype and a set of properties. The properties are
+  either fixed or non-fixed, they contain ranges or lists.
+
+- filter caps: caps set by the application to constrain a link to a specific GstCaps.
+
+- allowed caps: caps calculated when connecting elements, these are the types that are
+  possible on this connection. If no types are possible, the link is refused.
+
+- pad template caps: caps put on padtemplates to describe the possible media types of
+  the pad.
+
+- pad caps: the caps of the pad as it is currently negotiated.
+
+
+General overview
+----------------
+
+Caps negotiation is the process of two pads agreeing on a common fixed GstCaps structure
+that describes the media type that will be exchanged between those pads.
+
+We define that caps negotiation only happens in the PLAYING state, when there is actual
+dataflow and elements thus know what kind of data they are dealing with, or when 
+linking elements.
+
+Caps negotiation is first performed when linking elements. If the elements can agree
+on a media type at link time then negotiation will not have to be performed at runtime.
+Usually this is not possible, so the pads remain unnegotiated until at runtime.
+
+Caps negotiation is initiated by an element that wants to send data on a non-negotiated
+pad, thus the source pad. The core only provides a policy and convenience methods to aid 
+the element in performing the negotiation. The core does not keep track of what pads
+are negotiated or not, this is a task of the pads.
+
+Caps negotiation is normally started by the source element right before it sends out 
+data (case 1).
+Caps negotiation can also be redone by a sink element that wants to receive another 
+format from a downstream element (case 2).
+
+There are two functions handling the negotiation, the link function and the do_link
+function. The link function is always called first and must eventually call do_link on
+the peer pad.  The link function must figure out a compatible format for the connection
+and then call the do_link function on the peer pad. The do_link function can only 
+accept or refuse the provided caps.
+
+For autopluggers it is important to know when the pad is ready to start the negotiation.
+It is also inportant to know when the negotiation failed and it must be possible to 
+restart the negotiation with another element. This functionality will be provided
+with signals.
+
+Pad functions
+-------------
+
+!
+! const GstCaps* gst_pad_iterate_caps (GstPad *pad, gint position);
+!
+Returns the nth possible caps that describes the media type that can flow over
+this pad. This function should not return static caps but caps that are 
+dependent of the media type and the peer connections of the element.
+
+This function can be called at any time so that an autoplugger can know the
+exact types of the pads at any time.
+
+!
+! gboolean gst_pad_accept_caps (GstPad *pad, GstCaps *caps);
+!
+Checks that a given caps is acceptable for this pad. Returns FALSE if the
+pad cannot handle the caps.
+
+!
+! gboolean gst_pad_link (GstPad *pad, GstPad *peer, GstCaps *caps);
+!
+Tells the pad to start negotiation with the given filtercaps. The
+caps need not be fixed and serves as a filter for performing the negotiation
+with the peerpad. 
+
+!
+! gboolean gst_pad_do_link (GstPad *pad, GstPad *peer, GstCaps *caps);
+!
+Configures the pad to accept data with the given caps.  The caps must be fixed. 
+
+!
+! const GstCaps* gst_pad_get_negotiated_caps (GstPad *pad);
+!
+Get the negotiated caps of a pad or NULL if the pad is not negotiated.
+
+
+Linking Elements
+----------------
+
+When linking elements with the gst_pad_link function, the core will call
+the link function on the srcpad. If that pad returns GST_PAD_LINK_OK,
+the link is established, else the link fails.
+
+Since the link function of the pad will call the do_link function of
+the peerpad, the caps will be set on both pads.
+
+It is not required to decide on a caps at link time, a plugin can choose to
+dynamically renegotiate at runtime.
+
+When a link fails, the core emits a signal link_failed, which the application
+can catch to try to establish a new link with another element, for example.
+
+!
+! def gst_pad_link_filtered (pad1, pad2, filtercaps):
+!
+!   ... get srcpad and sinkpad ...
+!   srcpad  = (pad1 == GST_PAD_SRC ? pad1 : pad2);
+!   sinkpad = (pad1 == GST_PAD_SINK ? pad1 : pad2);
+!
+!   ... more checks to see if the pads are of different types and
+!   ... that they live in the same scheduler etc...
+!
+!   res = gst_pad_link (srcpad, sinkpad, filtercaps)
+!   if (res == GST_PAD_LINK_OK)
+!     ... perform other setup ...
+!   else
+!     res = signal_emit (srcpad, "link_failed")
+!
+!   return res
+!
+
+Pad link is just a convenience function that passes a NULL filtercaps:
+! 
+! def gst_pad_link (pad1, pad2):
+!   gst_pad_link_filtered (pad1, pad2, NULL)
+!
+
+
+Dynamic renegotiation
+---------------------
+
+Dynamic renegotiation happens at runtime when the element knows the exact media
+type it is handling.
+
+The element that wants to redecide on the data type of a connection just calls
+gst_pad_relink on one of it's pads. The core will call unlink and link on the
+pads again as if this were a new connection. Since the iterate_caps function
+returns other values while linking, the new link will renegotiate to a new
+format or the link will fail.
+
+Prototype of the relink function:
+!
+! def gst_pad_relink_filtered (pad, filtercaps):
+!   gst_pad_unlink (pad, peerpad)
+!   gst_pad_link_filtered (pad, peerpad, filtercaps)
+!
+
+Again the relink function is a convenience function for not having to pass 
+filtercaps.
+!
+! def gst_pad_relink (pad):
+!   gst_pad_relink_filtered (pad, NULL)
+!
+
+The core, however, should optimize the relink function so that it does a minimal
+amount of work, like not informing the scheduler about the unlink/link call in
+case of success.
+
+Error recovery
+--------------
+
+When a pad is ready to negotiate and it has no peer pad, it fires the "need-link"
+signal. Autopluggers can use this signal to start plugging elements to the pad.
+
+When a link fails because of a renegotiation, the "link-failed" signal is fired
+so that autopluggers can try other elements.
+
+
+Default implementations
+-----------------------
+
+!
+! gst_pad_src_link_func (pad, peerpad, filtercaps) 
+! {
+!   srcpad->negotiated_caps = NULL;
+!   gboolean possible = FALSE;
+!
+!   for (i=0; peercaps = gst_pad_iterate_caps (peerpad, i); i++) 
+!   {
+!     for (j=0; srccaps = gst_pad_iterate_caps (srcpad, j); j++) 
+!     {
+!       test = gst_caps_intersect (srccaps, peercaps, filtercaps);
+!       if (test == GST_CAPS_EMPTY)
+!         continue;
+!
+!       /* non empty caps, something is possible */
+!       possible = TRUE;
+!
+!       if (!gst_caps_is_fixed (caps))
+!         continue;
+!
+!       if (gst_pad_accepts_caps (peerpad, test))
+!       {
+!         if (gst_pad_do_link (peerpad, srcpad, test))
+!         {
+!           srcpad->negotiated_caps = test;
+!           goto done;
+!         }
+!         else
+!         {
+!           /* weird, it accepted but did not want to link */
+!         }
+!       }
+!       else
+!       {
+!         /* caps are not accepted by peer, try next */
+!       }
+!     }
+!   }
+! done:
+!   if (!possible)
+!     return GST_PAD_LINK_FAILED;
+!   else
+!     return GST_PAD_LINK_OK;
+! }
+!
+
+gst_pad_iterate_caps returns caps in the following order:
+
+ 1) prefered caps (if any)
+ 2) negotiated caps (if any)
+ 3) profile caps (if any, filtered against caps of current media type)
+ 4) padtemplate caps (filtered against caps of current media type)
+
+1 = a caps describing the media type that would result in optimal
+    processing of the current media type
+2 = a caps that it is currently handling
+3 = a caps describing the user configured default values
+4 = a caps describing all other possibilities that this pad can
+    produce or consume given the current media type if any.
+
+
+generic flow 1:
+
+ Linkage
+
+         src                         sink
+          |                           |
+          | <--- link(sink, A)        |
+check if  |                           |
+A is ok   |                           |
+or filter |                           |
+against   |                           |
+allowed   |                           |
+src caps  |                           |
+          |  iterate_caps             |
+if A not  +-------------------------> |
+fixed     |                           |
+          | <-------------------------+
+filter    |                           |
+against A |                           |
+to get A' |                           |
+          |  can_accept(A')           |
+if A' fix +-------------------------> |
+          |                           | check if A' is ok
+          |        yes                |
+          | <-------------------------+
+          |                           |
+if A' not |                           |
+fixed,    |                           |
+A'=null   |                           |
+          |  do_link(src, A')         |
+          +-------------------------> |
+          |        ok                 | store src, A'
+          | <-------------------------+
+store     |                           |
+sink, A'  |                           |
+
+
+
+Unlink
+
+         src                         sink
+          |                           |
+          | <--- unlink()             |
+          |                           |
+          |  unlink()                 |
+          +-------------------------> |
+unref     |                           | unref src, format
+sink, fmt |                           |
+
+
+  Dynamic negotiation of B
+
+         src                         sink
+          |  can_accept(B)            |
+          +-------------------------> |
+          |                           | check if B is ok
+          |        yes                |
+          | <-------------------------+
+          |                           |
+          |       do_link(B)          |
+          +-------------------------> |
+          |        ok                 | store B
+          | <-------------------------+
+store     |                           |
+B         |                           |
+
+
+
+TODO
+-----
+
+Write test objects to simulate different behaviour.
+
+
+tests (in python):
+
+   vts -> colorspace -> ximagsink
+
+  relink with different colorspaces while running
+
+  
+   vts -> videoscale -> ximagesink
+
+  relink to different sizes while running, scaling vts or ximagesink.
+
+   sinesrc -> audiorate -> audiosink
+
+  where audiosink only has one possible fixed caps.
+  

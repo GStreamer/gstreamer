@@ -1,0 +1,85 @@
+Fixing Performance
+------------------
+
+1) Observations 
+
+ The following observations are made when considering the current (17/11/2004)
+ problems in gstreamer.
+
+ - startup time.
+   Most of the time is spend in reading the xml registry. Several methods exist
+   for not using a registry (see testsuite/plugin/).
+   Since registries are pluggable, one can also write a binary registry which
+   should significantly reduce the size and the load time.
+
+ - Performance in state changes
+   State changes are pretty heavy currently because negotiation happens at
+   each state change. The PAUSED->PLAYING state change in particular is
+   too heavy and should be made more 'snappy'.
+   
+ - Performance in data passing.
+   Too much checking is done in the push/pull functions. Most of these checks
+   can be performed more efficiently in the plugins, like checking if the
+   element is sufficiently negotiated. The discont event 'invent' hack used
+   for fixing the synchronisation has to go away.
+   
+   We also propose a get_range based method for pads so that random-access 
+   in file-based sources can happen more efficiently (typical for muxers).
+
+ - Scheduling overhead.
+   The current default opt scheduler has extensive data-structures and does
+   uses fairly complicated algorithms for grouping and scheduling elements.
+   This has performance impact on pipeline constructions and pipeline 
+   execution.
+
+ - Events in dataflow.
+   Because events are put inside the dataflow, a typical chain function has
+   to check if the GstData object is an event of a buffer. 
+   
+
+2) Proposed solutions
+
+ - startup time.
+   Volunteers to implement a binary registry?
+
+ - The changes listed in the separate document 'threading' will greatly
+   reduce the number of negotiation steps during state changes. It will
+   also reduce the latency between PAUSED<->PLAYING since it basically
+   involves unlocking a mutex in the sinks.
+
+ - adding return values to push/pull will offload some checks to the plugins
+   that can more efficiently and more accuratly handle most error cases.
+   With the new sync model in 'threading' it is also not needed to have
+   the 'invented' events in the pull function.
+
+ - The following scheduling policies should be made possible for pads:
+
+    1) get_range <-> pull-range-based
+    2) get       <-> pull based
+    3) push      <-> chain-based
+    
+   The scheduling policies are listed in order of preference. A pad should
+   export what scheduling it supports and the core will select what 
+   scheduling method to use. It is possible for a pad to support more than
+   one scheduling method.
+
+   It is possible that two elements cannot connect when they do not support
+   compatible scheduling policies. We require that pull-based pads also
+   support the chain based methods, at minimal, using a helper function to 
+   queue a buffer and that get-based pads also support a push based implementation.
+
+ - With the changes listed in 'threading' the scheduler will be a lot more
+   simple since it does not have to keep track of groups and connected 
+   elements. Starting and scheduling the pipeline will be a matter of
+   starting the source/loop GstTasks and they will from there on take
+   over.
+
+ - move events out of the dataflow. Different methods will be used to
+   send/receive events. This will also remove some of the checks in
+   the push/pull functions. Note that plugins are still able to serialize
+   buffers and events because they hold the streaming lock.
+
+3) detailed explanation
+ 
+  TO BE WRITTEN
+
