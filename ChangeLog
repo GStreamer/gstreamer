@@ -1,5 +1,13 @@
 2004-04-18  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init), (gst_gsmdec_getcaps),
+	(gst_gsmdec_link), (gst_gsmdec_chain):
+	  Fix capsnego, simplify chain function slightly.
+	* gst/qtdemux/qtdemux.c: (qtdemux_audio_caps):
+	  Add GSM.
+
+2004-04-18  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_init),
 	(gst_wavparse_destroy_sourcepad), (gst_wavparse_create_sourcepad),
 	(gst_wavparse_parse_fmt), (gst_wavparse_change_state):
