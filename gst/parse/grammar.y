@@ -285,24 +285,39 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     }
     case G_TYPE_INT:
     case G_TYPE_LONG:
-    case G_TYPE_INT64:
+    case G_TYPE_INT64: {
+      gchar *endptr;
+      glong l;
       g_value_init (&v2, G_TYPE_LONG); 
-      g_value_set_long (&v2, strtol (pos, NULL, 0));
-      if (!g_value_transform (&v2, &v)) goto error;
+      l = strtol (pos, &endptr, 0);
+      if (*endptr != '\0') goto error_conversion;
+      g_value_set_long (&v2, l);
+      if (!g_value_transform (&v2, &v)) goto error_conversion;
       break;      
+    }
     case G_TYPE_UINT:
     case G_TYPE_ULONG:
-    case G_TYPE_UINT64:
+    case G_TYPE_UINT64: {
+      gchar *endptr;
+      gulong ul;
       g_value_init (&v2, G_TYPE_ULONG); 
-      g_value_set_ulong (&v2, strtoul (pos, NULL, 0));
-      if (!g_value_transform (&v2, &v)) goto error;
-      break;
+      ul = strtoul (pos, &endptr, 0);
+      if (*endptr != '\0') goto error_conversion;
+      g_value_set_ulong (&v2, ul);
+      if (!g_value_transform (&v2, &v)) goto error_conversion;
+      break;      
+    }
     case G_TYPE_FLOAT:
-    case G_TYPE_DOUBLE:
+    case G_TYPE_DOUBLE: {
+      gchar *endptr;
+      gdouble d;
       g_value_init (&v2, G_TYPE_DOUBLE); 
-      g_value_set_double (&v2, atof (pos));
-      if (!g_value_transform (&v2, &v)) goto error;
-      break;
+      d = strtod (pos, &endptr);
+      if (*endptr != '\0') goto error_conversion;
+      g_value_set_double (&v2, d);
+      if (!g_value_transform (&v2, &v)) goto error_conversion;
+      break;      
+    }
     default:
       /* add more */
       g_warning ("property \"%s\" in element %s cannot be set", value, GST_ELEMENT_NAME (element)); 
@@ -318,7 +333,14 @@ out:
   return;
   
 error:
-  ERROR (GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY, "Could not set property \"%s\" in element \"%s\" to \"%s\"", value, GST_ELEMENT_NAME (element), pos); 
+  ERROR (GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+         "Could not set property \"%s\" in element \"%s\" to \"%s\"", 
+	 value, GST_ELEMENT_NAME (element), pos); 
+  goto out;
+error_conversion:
+  ERROR (GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+         "Could not convert \"%s\" so that it fits property \"%s\" in element \"%s\"",
+         pos, value, GST_ELEMENT_NAME (element)); 
   goto out;
 }
 static inline void
