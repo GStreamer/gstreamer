@@ -220,12 +220,8 @@ if test "x$GST_DISABLE_LOADSAVE" = "xyes" && test "x$GST_DISABLE_REGISTRY" = "xy
 then
   AC_MSG_NOTICE([Registry and load/save are disabled, not checking for libxml2])
 else
-  dnl Minimum required version of libxml2
-  LIBXML2_REQ="2.4.9"
-  AC_SUBST(LIBXML2_REQ)
-
-  dnl check for libxml2
-  GST_LIBXML2_CHECK()
+  dnl check for libxml2 with minimum req version
+  GST_LIBXML2_CHECK(2.4.9)
 fi
 
 dnl popt checks
