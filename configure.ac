@@ -777,6 +777,7 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
     GST_CHECK_CONFIGPROG(AUDIOFILE, audiofile-config)
     dnl we need this function
     AC_CHECK_LIB(audiofile, afOpenVirtualFile, , HAVE_AUDIOFILE="no")
+    AC_CHECK_LIB(audiofile, af_virtual_file_new, , HAVE_AUDIOFILE="no")
   fi])
 
 dnl *** CDParanoia ***
