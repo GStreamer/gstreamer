@@ -47,6 +47,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
 
 #define GST_CAT_DEFAULT v4l_debug
 
+#ifndef GST_DISABLE_GST_DEBUG
 /* palette names */
 static const char *palette_name[] = {
   "",                           /* 0 */
@@ -67,6 +68,7 @@ static const char *palette_name[] = {
   "YUV-4:2:0 (planar)",         /* VIDEO_PALETTE_YUV420P */
   "YUV-4:1:0 (planar)"          /* VIDEO_PALETTE_YUV410P */
 };
+#endif
 
 /******************************************************
  * gst_v4lsrc_queue_frame():

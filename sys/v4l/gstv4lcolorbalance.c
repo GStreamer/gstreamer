@@ -94,7 +94,7 @@ gst_v4l_color_balance_interface_init (GstColorBalanceClass * klass)
   klass->get_value = gst_v4l_color_balance_get_value;
 }
 
-static gboolean
+static G_GNUC_UNUSED gboolean
 gst_v4l_color_balance_contains_channel (GstV4lElement * v4lelement,
     GstV4lColorBalanceChannel * v4lchannel)
 {

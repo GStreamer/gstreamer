@@ -1,5 +1,31 @@
 2004-08-03  Benjamin Otte  <otte@gnome.org>
 
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_get_volume),
+	(gst_alsa_mixer_set_volume), (gst_alsa_mixer_set_mute),
+	(gst_alsa_mixer_set_record), (gst_alsa_mixer_set_option),
+	(gst_alsa_mixer_get_option):
+	* ext/dvdnav/dvdnavsrc.c: (dvdnav_get_event_name),
+	(dvdnavsrc_print_event):
+	* ext/ogg/gstoggdemux.c: (_find_chain_process), (gst_ogg_print):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_pad_link),
+	(gst_ogg_mux_pad_unlink):
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_pad_link),
+	(gst_multipart_mux_pad_unlink):
+	* gst/videofilter/gstvideobalance.c:
+	(gst_videobalance_colorbalance_set_value):
+	* gst/videomixer/videomixer.c: (gst_videomixer_pad_link),
+	(gst_videomixer_pad_unlink):
+	* po/uk.po:
+	* sys/oss/gstossmixer.c:
+	* sys/v4l/gstv4lcolorbalance.c:
+	* sys/v4l/gstv4ltuner.c:
+	* sys/v4l/v4lsrc_calls.c:
+	* sys/v4l2/gstv4l2colorbalance.c:
+	* sys/v4l2/gstv4l2tuner.c:
+	  compile fixes for --disable-gst-debug, G_DISABLE_ASSERT and friends
+
+2004-08-03  Benjamin Otte  <otte@gnome.org>
+
 	* examples/dynparams/filter.c: (ui_control_create):
 	* examples/gstplay/player.c: (print_tag):
 	* ext/alsa/gstalsa.c: (gst_alsa_request_new_pad):

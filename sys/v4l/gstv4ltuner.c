@@ -153,7 +153,7 @@ gst_v4l_tuner_interface_init (GstTunerClass * klass)
   klass->signal_strength = gst_v4l_tuner_signal_strength;
 }
 
-static gboolean
+static G_GNUC_UNUSED gboolean
 gst_v4l_tuner_contains_channel (GstV4lElement * v4lelement,
     GstV4lTunerChannel * v4lchannel)
 {
@@ -207,7 +207,7 @@ gst_v4l_tuner_get_channel (GstTuner * tuner)
   return NULL;
 }
 
-static gboolean
+static G_GNUC_UNUSED gboolean
 gst_v4l_tuner_contains_norm (GstV4lElement * v4lelement,
     GstV4lTunerNorm * v4lnorm)
 {
