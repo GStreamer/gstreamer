@@ -41,7 +41,7 @@ extern "C" {
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-#include "gsttcp.h"
+#include "gsttcpplugin.h"
 
 #define GST_TYPE_TCPSINK \
   (gst_tcpsink_get_type())

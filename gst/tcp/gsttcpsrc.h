@@ -34,7 +34,7 @@ extern "C" {
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "gsttcp.h"
+#include "gsttcpplugin.h"
 
 #include <fcntl.h>
 
