@@ -1,3 +1,9 @@
+2004-11-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find):
+	  Disable halfway-seek for pending release (since it needs a new
+	  core release).
+
 2004-11-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/v4l/gstv4lsrc.c:
