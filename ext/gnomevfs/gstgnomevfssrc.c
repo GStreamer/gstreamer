@@ -748,7 +748,7 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
 				g_free (src->iradio_genre);
 			src->iradio_genre = g_strdup (value);
 			g_object_notify (G_OBJECT (src), "iradio-genre");
-                } else if (!strncmp (data, "url", 3)) {
+                } else if (!strncmp (key, "url", 3)) {
 			if (src->iradio_url)
 				g_free (src->iradio_url);
 			src->iradio_url = g_strdup (value);
