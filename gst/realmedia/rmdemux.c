@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David A. Schleef <ds@schleef.org>
+ * Copyright (C) <2004> Stephane Loeuillet <gstreamer@leroutier.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -509,6 +510,18 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         gst_pad_new_from_template (gst_static_pad_template_get
         (&gst_rmdemux_videosrc_template), g_strdup_printf ("video_%02d",
             rmdemux->n_video_streams));
+    switch (stream->fourcc) {
+      case GST_MAKE_FOURCC ('R', 'V', '1', '0'):
+      case GST_MAKE_FOURCC ('R', 'V', '2', '0'):
+      case GST_MAKE_FOURCC ('R', 'V', '3', '0'):
+      case GST_MAKE_FOURCC ('R', 'V', '4', '0'):
+        stream->caps = gst_caps_new_simple ("video/x-pn-realvideo", NULL);
+/*           "systemstream", G_TYPE_BOOLEAN, FALSE,
+            "rmversion", G_TYPE_INT, version, NULL); */
+        break;
+      default:
+        g_print ("Unknown video FOURCC code\n");
+    }
     if (stream->caps) {
       gst_caps_set_simple (stream->caps,
           "width", G_TYPE_INT, stream->width,
@@ -520,10 +533,20 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         gst_pad_new_from_template (gst_static_pad_template_get
         (&gst_rmdemux_audiosrc_template), g_strdup_printf ("audio_%02d",
             rmdemux->n_audio_streams));
-    stream->caps = gst_caps_new_simple ("audio/x-pn-realaudio", NULL);
-    gst_caps_set_simple (stream->caps,
-        "rate", G_TYPE_INT, (int) stream->rate,
-        "channels", G_TYPE_INT, stream->n_channels, NULL);
+    switch (stream->fourcc) {
+      case GST_MAKE_FOURCC ('.', 'r', 'a', '4'):
+      case GST_MAKE_FOURCC ('.', 'r', 'a', '5'):
+        stream->caps = gst_caps_new_simple ("audio/x-pn-realaudio", NULL);
+/*             "raversion", G_TYPE_INT, version, NULL); */
+        break;
+      default:
+        g_print ("Unknown audio FOURCC code\n");
+    }
+    if (stream->caps) {
+      gst_caps_set_simple (stream->caps,
+          "rate", G_TYPE_INT, (int) stream->rate,
+          "channels", G_TYPE_INT, stream->n_channels, NULL);
+    }
     rmdemux->n_audio_streams++;
   } else {
     g_print ("not adding stream of type %d\n", stream->subtype);
@@ -661,7 +684,7 @@ gst_rmdemux_dump_prop (GstRMDemux * rmdemux, void *data, int length)
   g_print ("duration: %d\n", RMDEMUX_GUINT32_GET (data + 22));
   g_print ("preroll: %d\n", RMDEMUX_GUINT32_GET (data + 26));
   g_print ("offset of INDX section: 0x%08x\n", RMDEMUX_GUINT32_GET (data + 30));
-  g_print ("offset of data section: 0x%08x\n", RMDEMUX_GUINT32_GET (data + 34));
+  g_print ("offset of DATA section: 0x%08x\n", RMDEMUX_GUINT32_GET (data + 34));
   g_print ("n streams: %d\n", RMDEMUX_GUINT16_GET (data + 38));
   g_print ("flags: 0x%04x\n", RMDEMUX_GUINT16_GET (data + 40));
   g_print ("\n");
@@ -708,7 +731,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
   stream->subtype = stream_type;
   switch (stream_type) {
     case GST_RMDEMUX_STREAM_VIDEO:
-      /* VIDO[RV10/RV30/RV40] */
+      /* RV10/RV20/RV30/RV40 => video/x-pn-realvideo, version=1,2,3,4 */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
 
       stream->width = RMDEMUX_GUINT16_GET (data + offset + 12);
@@ -716,7 +739,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
       stream->rate = RMDEMUX_GUINT16_GET (data + offset + 16);
       break;
     case GST_RMDEMUX_STREAM_AUDIO:
-      /* .ra4, .ra5 */
+      /* .ra4/.ra5 => audio/x-pn-realvideo, version=4,5 */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
 
       stream->rate = RMDEMUX_GUINT32_GET (data + offset + 48);
@@ -946,7 +969,9 @@ gst_rmdemux_dump_data (GstRMDemux * rmdemux, void *data, int length)
 static void
 gst_rmdemux_parse_cont (GstRMDemux * rmdemux, void *data, int length)
 {
+//  int offset = 0;
 
+//  offset += re_dump_pascal_string ( data + offset + 3 );
 }
 
 static void
