@@ -66,18 +66,6 @@ tool_run "$autoconf"
 debug "automake: $automake"
 tool_run "$automake" "-a -c"
 
-echo
-echo "+ running autogen.sh --noconfigure $@ in libs/ext/cothreads..."
-OLDDIR=`pwd` 
-cd libs/ext/cothreads
-echo
-./autogen.sh --noconfigure $@ || {
-        echo "autogen in cothreads failed."
-        exit 1
-}
-cd "$OLDDIR"
-echo
-
 test -n "$NOCONFIGURE" && {
   echo "skipping configure stage for package $package, as requested."
   echo "autogen.sh done."
