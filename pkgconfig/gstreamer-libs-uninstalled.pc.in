@@ -7,7 +7,7 @@ includedir=${pcfiledir}/../gst-libs
 Name: GStreamer Uninstalled Media-Specific Libraries
 Description: Streaming-media framework media-specific libraries, not installed
 Version: @VERSION@
-Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@ >= @VERSION@
 
 Libs: -L${libdir}/audio -L${libdir}/video
 Cflags: -I${includedir}
