@@ -189,8 +189,8 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   if (!filter->have_caps) gst_cutter_get_caps (pad, filter);
 
   in_data = (gint16 *) GST_BUFFER_DATA (buf);
-  g_print ("DEBUG: cutter: length of prerec buffer: %.3f sec\n",
-           filter->pre_run_length);
+  GST_DEBUG(GST_CAT_PLUGIN_INFO, "cutter: length of prerec buffer: %.3f sec\n",
+            filter->pre_run_length);
 
   /* calculate mean square value on buffer */
   switch (filter->width) 
