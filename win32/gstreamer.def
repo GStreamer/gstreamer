@@ -196,6 +196,7 @@ EXPORTS
         gst_marshal_VOID__UINT_BOXED
         gst_marshal_BOOLEAN__POINTER
         gst_marshal_VOID__POINTER_OBJECT
+        GST_CAT_DEFAULT
         _gst_element_error_printf
         _gst_bin_type           DATA
         _gst_element_type       DATA

@@ -1,4 +1,11 @@
 2004-07-12  Steve Lhomme  <steve.lhomme@free.fr>
+	* docs/manual/win32.xml:
+	* win32/config.h:
+	* win32/gst-register.vcproj:
+	* win32/gstreamer.def:
+	  Update to another gettext public build
+
+2004-07-12  Steve Lhomme  <steve.lhomme@free.fr>
     * gst/gstplugin.c:
       Fix an impossible C syntax
     * win32/config.h:
