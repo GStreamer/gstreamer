@@ -363,7 +363,7 @@ gst_adder_loop (GstElement *element)
             GST_DEBUG (0, "got an EOS event\n");
 
             gst_bytestream_destroy (input->bytestream);
-            gst_pad_unref (input->sinkpad);
+            /* gst_object_unref (GST_OBJECT (input->sinkpad)); this causes problems */
             g_free (input);
 
             adder->input_channels = g_slist_delete_link (inputs, inputs);
