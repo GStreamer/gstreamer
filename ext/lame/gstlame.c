@@ -177,7 +177,7 @@ enum {
   ARG_ATH_ONLY,
   ARG_ATH_SHORT,
   ARG_NO_ATH,
-  /*  ARG_ATH_TYPE,		// note: CVS has this, 3.87 doesn't */
+  /*  ARG_ATH_TYPE,		/* note: CVS has this, 3.87 doesn't */ */
   ARG_ATH_LOWER,
   ARG_CWLIMIT,
   ARG_ALLOW_DIFF_SHORT,
@@ -235,7 +235,7 @@ gst_lame_class_init (GstLameClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BITRATE,
     g_param_spec_int("bitrate","bitrate","bitrate",
-                     G_MININT,G_MAXINT,128,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,128,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
     g_param_spec_int("frequency","frequency","frequency",
                      0,G_MAXINT, 44100 ,G_PARAM_READABLE)); 
@@ -244,93 +244,93 @@ gst_lame_class_init (GstLameClass *klass)
                      0, 2, 2 ,G_PARAM_READABLE)); 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COMPRESSION_RATIO,
     g_param_spec_float("compression_ratio","compression_ratio","compression_ratio",
-                       0.0,200.0,11.0,G_PARAM_READWRITE)); // CHECKME
+                       0.0,200.0,11.0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_QUALITY,
     g_param_spec_enum("quality","quality","quality",
-                      GST_TYPE_LAME_QUALITY,5,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_LAME_QUALITY,5,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MODE,
     g_param_spec_enum("mode","mode","mode",
-                      GST_TYPE_LAME_MODE,0,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_LAME_MODE,0,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORCE_MS,
     g_param_spec_boolean("force_ms","force_ms","force_ms",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREE_FORMAT,
     g_param_spec_boolean("free_format","free_format","free_format",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_COPYRIGHT,
     g_param_spec_boolean("copyright","copyright","copyright",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ORIGINAL,
     g_param_spec_boolean("original","original","original",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ERROR_PROTECTION,
     g_param_spec_boolean("error_protection","error_protection","error_protection",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PADDING_TYPE,
     g_param_spec_enum("padding_type","padding_type","padding_type",
-                      GST_TYPE_LAME_PADDING,0,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_LAME_PADDING,0,G_PARAM_READWRITE)); /* CHECKME! */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EXTENSION,
     g_param_spec_boolean("extension","extension","extension",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_STRICT_ISO,
     g_param_spec_boolean("strict_iso","strict_iso","strict_iso",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DISABLE_RESERVOIR,
     g_param_spec_boolean("disable_reservoir","disable_reservoir","disable_reservoir",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR,
     g_param_spec_boolean("vbr","vbr","vbr",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR_MEAN_BITRATE,
     g_param_spec_int("vbr_mean_bitrate","vbr_mean_bitrate","vbr_mean_bitrate",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR_MIN_BITRATE,
     g_param_spec_int("vbr_min_bitrate","vbr_min_bitrate","vbr_min_bitrate",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR_MAX_BITRATE,
     g_param_spec_int("vbr_max_bitrate","vbr_max_bitrate","vbr_max_bitrate",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VBR_HARD_MIN,
     g_param_spec_int("vbr_hard_min","vbr_hard_min","vbr_hard_min",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOWPASS_FREQ,
     g_param_spec_int("lowpass_freq","lowpass_freq","lowpass_freq",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOWPASS_WIDTH,
     g_param_spec_int("lowpass_width","lowpass_width","lowpass_width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HIGHPASS_FREQ,
     g_param_spec_int("highpass_freq","highpass_freq","highpass_freq",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HIGHPASS_WIDTH,
     g_param_spec_int("highpass_width","highpass_width","highpass_width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ATH_ONLY,
     g_param_spec_boolean("ath_only","ath_only","ath_only",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ATH_SHORT,
     g_param_spec_boolean("ath_short","ath_short","ath_short",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NO_ATH,
     g_param_spec_boolean("no_ath","no_ath","no_ath",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
 /*  gtk_object_add_arg_type ("GstLame::ath_type", G_TYPE_INT,
                                GTK_ARG_READWRITE, ARG_ATH_TYPE); */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ATH_LOWER,
     g_param_spec_int("ath_lower","ath_lower","ath_lower",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CWLIMIT,
     g_param_spec_int("cwlimit","cwlimit","cwlimit",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ALLOW_DIFF_SHORT,
     g_param_spec_boolean("allow_diff_short","allow_diff_short","allow_diff_short",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NO_SHORT_BLOCKS,
     g_param_spec_boolean("no_short_blocks","no_short_blocks","no_short_blocks",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EMPHASIS,
     g_param_spec_boolean("emphasis","emphasis","emphasis",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
