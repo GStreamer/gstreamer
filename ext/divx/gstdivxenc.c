@@ -396,10 +396,6 @@ gst_divxenc_connect (GstPad        *pad,
   /* if there's something old around, remove it */
   gst_divxenc_unset(divxenc);
 
-  /* we are not going to act on variable caps */
-  if (!gst_caps_is_fixed(caps))
-    return GST_PAD_LINK_DELAYED;
-
   gst_structure_get_int(structure, "width", &w);
   gst_structure_get_int(structure, "height", &h);
   gst_structure_get_double(structure, "framerate", &fps);
