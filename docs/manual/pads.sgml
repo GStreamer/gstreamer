@@ -34,7 +34,7 @@
  while (pads) {
    GstPad *pad = GST_PAD (pads-&gt;data);
 
-   g_print ("pad name %s\n", gst_pad_get_name (pad));
+   g_print ("pad name &percnt;s\n", gst_pad_get_name (pad));
    
    pads = g_list_next (pads);
  }
@@ -82,7 +82,7 @@
 static void
 pad_connect_func (GstElement *parser, GstPad *pad, GstElement *pipeline)
 {
-  g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
+  g_print("***** a new pad &percnt;s was created\n", gst_pad_get_name(pad));
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
@@ -258,12 +258,12 @@ Pads:
     ...
  caps = gst_pad_get_caps_list (pad);
 
- g_print ("pad name %s\n", gst_pad_get_name (pad));
+ g_print ("pad name &percnt;s\n", gst_pad_get_name (pad));
  
  while (caps) {
    GstCaps *cap = (GstCaps *) caps-&gt;data;
 
-   g_print (" Capability name %s, MIME type\n", gst_caps_get_name (cap), 
+   g_print (" Capability name &percnt;s, MIME type\n", gst_caps_get_name (cap), 
                                                 gst_caps_get_mime (cap));
    
    caps = g_list_next (caps);

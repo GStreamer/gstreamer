@@ -102,7 +102,7 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
 
   GtkWidget *appwindow;
 
-  g_print ("***** a new pad %s was created\n", gst_pad_get_name (pad));
+  g_print ("***** a new pad &percnt;s was created\n", gst_pad_get_name (pad));
   
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
 

@@ -41,7 +41,7 @@ main (int argc, char *argv[])
   GstElement *pipeline;
 
   if (argc != 2) {
-    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    g_print ("usage: &percnt;s &lt;filename&gt;\n", argv[0]);
     exit (-1);
   }
 
