@@ -645,7 +645,7 @@ AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
 CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
 dnl Check for aalib
-AM_PATH_AALIB(HAVE_AALIB=yes,
+AM_PATH_AALIB( , HAVE_AALIB=yes,
   AC_MSG_WARN(***** NOTE: These plugins won't be built: aasink)
   HAVE_AALIB=no
 )
