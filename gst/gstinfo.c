@@ -21,7 +21,8 @@
  */
 
 #include "gst_private.h"
-#include "gst.h"
+#include "gstelement.h"
+#include "gstpad.h"
 
 extern gchar *_gst_progname;
 
@@ -91,7 +92,7 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
   if (category != GST_CAT_GST_INIT)
     location = g_strdup_printf("%s:%d%s:",function,line,debug_string);
   if (element && GST_IS_ELEMENT (element))
-    elementname = g_strdup_printf (" [%s]",gst_element_get_name (element));
+    elementname = g_strdup_printf (" [%s]", GST_OBJECT_NAME (element));
 
   fprintf(stderr,"INFO:%s%s %s\n",location,elementname,string);
 

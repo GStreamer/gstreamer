@@ -131,7 +131,7 @@ gst_httpsrc_get(GstPad *pad)
   glong readbytes;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_HTTPSRC(gst_pad_get_parent(pad));
+  src = GST_HTTPSRC(gst_pad_get_parent (pad));
 
   buf = gst_buffer_new();
   GST_BUFFER_DATA(buf) = (gpointer)malloc(src->bytes_per_read);

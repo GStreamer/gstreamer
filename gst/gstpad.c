@@ -26,11 +26,15 @@
 #include "gstpad.h"
 #include "gstelement.h"
 #include "gsttype.h"
+#include "gstbin.h"
 
 
 /***** Start with the base GstPad class *****/
-static void	gst_pad_class_init		(GstPadClass *klass);
-static void	gst_pad_init			(GstPad *pad);
+static void		gst_pad_class_init		(GstPadClass *klass);
+static void		gst_pad_init			(GstPad *pad);
+
+static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
+
 
 static GstObject *pad_parent_class = NULL;
 
@@ -63,9 +67,7 @@ gst_pad_class_init (GstPadClass *klass)
 static void
 gst_pad_init (GstPad *pad)
 {
-  pad->name = NULL;
   pad->element_private = NULL;
-  pad->parent = NULL;
 
   pad->padtemplate = NULL;
 }
@@ -87,16 +89,16 @@ enum {
   /* FILL ME */
 };
 
-static void	gst_real_pad_class_init		(GstRealPadClass *klass);
-static void	gst_real_pad_init		(GstRealPad *pad);
+static void		gst_real_pad_class_init		(GstRealPadClass *klass);
+static void		gst_real_pad_init		(GstRealPad *pad);
 
-static void	gst_real_pad_set_arg		(GtkObject *object,GtkArg *arg,guint id);
-static void	gst_real_pad_get_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void		gst_real_pad_set_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void		gst_real_pad_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 
-static void	gst_real_pad_destroy		(GtkObject *object);
+static void		gst_real_pad_destroy		(GtkObject *object);
 
-static void	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
-static gboolean gst_pad_eos_func                (GstPad *pad);
+static void		gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
+static gboolean		gst_pad_eos_func                (GstPad *pad);
 
 
 static GstPad *real_pad_parent_class = NULL;
@@ -126,8 +128,10 @@ static void
 gst_real_pad_class_init (GstRealPadClass *klass)
 {
   GtkObjectClass *gtkobject_class;
+  GstObjectClass *gstobject_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
+  gstobject_class = (GstObjectClass*)klass;
 
   real_pad_parent_class = gtk_type_class(GST_TYPE_PAD);
 
@@ -149,6 +153,9 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gtkobject_class->destroy = gst_real_pad_destroy;
   gtkobject_class->set_arg = gst_real_pad_set_arg;
   gtkobject_class->get_arg = gst_real_pad_get_arg;
+
+  gstobject_class->save_thyself = gst_pad_save_thyself;
+  gstobject_class->path_string_separator = ".";
 }
 
 static void
@@ -228,7 +235,7 @@ gst_pad_new (gchar *name,
   g_return_val_if_fail (direction != GST_PAD_UNKNOWN, NULL);
 
   pad = gtk_type_new (gst_real_pad_get_type ());
-  GST_PAD_NAME(pad) = g_strdup (name);
+  gst_object_set_name (GST_OBJECT (pad), name);
   GST_RPAD_DIRECTION(pad) = direction;
 
   return GST_PAD(pad);
@@ -290,10 +297,7 @@ gst_pad_set_name (GstPad *pad,
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  if (pad->name != NULL)
-    g_free (pad->name);
-
-  pad->name = g_strdup (name);
+  gst_object_set_name (GST_OBJECT (pad), name);
 }
 
 /**
@@ -310,7 +314,7 @@ gst_pad_get_name (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_PAD_NAME(pad);
+  return GST_OBJECT_NAME (pad);
 }
 
 /**
@@ -436,7 +440,7 @@ gst_pad_handle_qos(GstPad *pad,
   GList *pads;
   GstPad *target_pad;
 
-  GST_DEBUG (0,"gst_pad_handle_qos(\"%s\",%08ld)\n", GST_ELEMENT(pad->parent)->name,qos_message);
+  GST_DEBUG (0,"gst_pad_handle_qos(\"%s\",%08ld)\n", GST_OBJECT_NAME (GST_PAD_PARENT (pad)),qos_message);
 
   if (GST_RPAD_QOSFUNC(pad)) {
     (GST_RPAD_QOSFUNC(pad)) (pad,qos_message);
@@ -444,7 +448,7 @@ gst_pad_handle_qos(GstPad *pad,
     element = GST_ELEMENT (GST_PAD_PARENT(GST_RPAD_PEER(pad)));
 
     pads = element->pads;
-    GST_DEBUG (0,"gst_pad_handle_qos recurse(\"%s\",%08ld)\n", element->name, qos_message);
+    GST_DEBUG (0,"gst_pad_handle_qos recurse(\"%s\",%08ld)\n", GST_ELEMENT_NAME (element), qos_message);
     while (pads) {
       target_pad = GST_PAD (pads->data);
       if (GST_RPAD_DIRECTION(target_pad) == GST_PAD_SINK) {
@@ -560,18 +564,33 @@ gst_pad_connect (GstPad *srcpad,
  */
 void
 gst_pad_set_parent (GstPad *pad,
-		    GstObject *parent)
+                    GstObject *parent)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (pad->parent == NULL);
+  g_return_if_fail (GST_PAD_PARENT (pad) == NULL);
   g_return_if_fail (parent != NULL);
   g_return_if_fail (GTK_IS_OBJECT (parent));
   g_return_if_fail ((gpointer)pad != (gpointer)parent);
 
-  //g_print("set parent %s\n", gst_element_get_name(parent));
+  gst_object_set_parent (GST_OBJECT (pad), parent);
+}
 
-  GST_PAD_PARENT(pad) = parent;
+/**
+ * gst_pad_get_parent:
+ * @pad: the pad to get the parent from
+ *
+ * Get the parent object of this pad.
+ *
+ * Returns: the parent object
+ */
+GstObject*
+gst_pad_get_parent (GstPad *pad)
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  return GST_OBJECT_PARENT (pad);
 }
 
 /**
@@ -619,23 +638,6 @@ gst_pad_remove_ghost_pad (GstPad *pad,
   realpad = GST_PAD_REALIZE (pad);
 
   realpad->ghostpads = g_list_remove (realpad->ghostpads, ghostpad);
-}
-
-/**
- * gst_pad_get_parent:
- * @pad: the pad to get the parent from
- *
- * Get the parent object of this pad.
- *
- * Returns: the parent object
- */
-GstObject*
-gst_pad_get_parent (GstPad *pad)
-{
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  return GST_PAD_PARENT(pad);
 }
 
 /**
@@ -783,62 +785,65 @@ gst_real_pad_destroy (GtkObject *object)
 
 //  g_print("in gst_pad_real_destroy()\n");
 
-  if (pad->name)
-    g_free (pad->name);
   g_list_free (GST_REAL_PAD(pad)->ghostpads);
 }
 
 
 /**
  * gst_pad_load_and_connect:
- * @parent: the parent XML node to read the description from
- * @element: the element that has the source pad
- * @elements: a hashtable with elements
+ * @self: the XML node to read the description from
+ * @parent: the element that has the pad
  *
  * Read the pad definition from the XML node and connect the given pad
- * in element to a pad of an element in the hashtable.
+ * in element to a pad of an element up in the hierarchy.
  */
 void
-gst_pad_load_and_connect (xmlNodePtr parent,
-		          GstObject *element,
-			  GHashTable *elements)
+gst_pad_load_and_connect (xmlNodePtr self,
+		          GstObject *parent)
 {
-  xmlNodePtr field = parent->childs;
+  xmlNodePtr field = self->childs;
   GstPad *pad = NULL, *targetpad;
   guchar *peer = NULL;
   gchar **split;
   GstElement *target;
+  GstObject *grandparent;
 
   while (field) {
-    if (!strcmp(field->name, "name")) {
-      pad = gst_element_get_pad(GST_ELEMENT(element), xmlNodeGetContent(field));
+    if (!strcmp (field->name, "name")) {
+      pad = gst_element_get_pad (GST_ELEMENT (parent), xmlNodeGetContent (field));
     }
     else if (!strcmp(field->name, "peer")) {
-      peer = g_strdup(xmlNodeGetContent(field));
+      peer = g_strdup (xmlNodeGetContent (field));
     }
     field = field->next;
   }
-  g_return_if_fail(pad != NULL);
+  g_return_if_fail (pad != NULL);
 
   if (peer == NULL) return;
 
-  split = g_strsplit(peer, ".", 2);
+  split = g_strsplit (peer, ".", 2);
 
-  g_return_if_fail(split[0] != NULL);
-  g_return_if_fail(split[1] != NULL);
+  g_return_if_fail (split[0] != NULL);
+  g_return_if_fail (split[1] != NULL);
 
-  target = (GstElement *)g_hash_table_lookup(elements, split[0]);
+  grandparent = gst_object_get_parent (parent);
+
+  if (grandparent && GST_IS_BIN (grandparent)) {
+    target = gst_bin_get_by_name_recurse_up (GST_BIN (grandparent), split[0]);
+  }
+  else
+    goto cleanup;
 
   if (target == NULL) goto cleanup;
 
-  targetpad = gst_element_get_pad(target, split[1]);
+  targetpad = gst_element_get_pad (target, split[1]);
 
   if (targetpad == NULL) goto cleanup;
 
-  gst_pad_connect(pad, targetpad);
+  gst_pad_connect (pad, targetpad);
 
 cleanup:
-  g_strfreev(split);
+  g_strfreev (split);
 }
 
 
@@ -851,25 +856,24 @@ cleanup:
  *
  * Returns: the xml representation of the pad
  */
-xmlNodePtr
-gst_pad_save_thyself (GstPad *pad,
+static xmlNodePtr
+gst_pad_save_thyself (GstObject *object,
 		      xmlNodePtr parent)
 {
   GstRealPad *realpad;
   GstPad *peer;
 
-  g_return_val_if_fail (GST_IS_REAL_PAD (pad), NULL);
+  g_return_val_if_fail (GST_IS_REAL_PAD (object), NULL);
 
-  realpad = GST_REAL_PAD(pad);
+  realpad = GST_REAL_PAD(object);
 
-  xmlNewChild(parent,NULL,"name",pad->name);
+  xmlNewChild(parent,NULL,"name", GST_PAD_NAME (realpad));
   if (GST_RPAD_PEER(realpad) != NULL) {
     peer = GST_PAD(GST_RPAD_PEER(realpad));
     // first check to see if the peer's parent's parent is the same
-    //if (pad->parent->parent == peer->parent->parent)
-      // we just save it off
-      xmlNewChild(parent,NULL,"peer",g_strdup_printf("%s.%s",
-                    GST_ELEMENT(peer->parent)->name,peer->name));
+    // we just save it off
+    xmlNewChild(parent,NULL,"peer",g_strdup_printf("%s.%s",
+                    GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer)));
   } else
     xmlNewChild(parent,NULL,"peer","");
 
@@ -896,8 +900,8 @@ gst_pad_ghost_save_thyself (GstPad *pad,
   g_return_val_if_fail (GST_IS_GHOST_PAD (pad), NULL);
 
   self = xmlNewChild(parent,NULL,"ghostpad",NULL);
-  xmlNewChild(self,NULL,"name",pad->name);
-  xmlNewChild(self,NULL,"parent",GST_ELEMENT(pad->parent)->name);
+  xmlNewChild(self,NULL,"name", GST_PAD_NAME (pad));
+  xmlNewChild(self,NULL,"parent", GST_OBJECT_NAME (GST_PAD_PARENT (pad)));
 
   // FIXME FIXME FIXME!
 
@@ -1137,7 +1141,7 @@ gst_pad_eos_func(GstPad *pad)
 
   GST_INFO (GST_CAT_PADS,"attempting to set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
 
-  element = GST_ELEMENT(gst_pad_get_parent (pad));
+  element = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (pad)));
 //  g_return_val_if_fail (element != NULL, FALSE);
 //  g_return_val_if_fail (GST_IS_ELEMENT(element), FALSE);
 
@@ -1184,7 +1188,7 @@ gst_pad_set_eos(GstPad *pad)
   GST_INFO (GST_CAT_PADS,"set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
   GST_FLAG_SET (pad, GST_PAD_EOS);
 
-  gst_element_signal_eos (GST_ELEMENT (pad->parent));
+  gst_element_signal_eos (GST_ELEMENT (GST_PAD_PARENT (pad)));
 
   return TRUE;
 }
@@ -1307,7 +1311,7 @@ gst_ghost_pad_new (gchar *name,
   g_return_val_if_fail (GST_IS_PAD(pad), NULL);
 
   ghostpad = gtk_type_new (gst_ghost_pad_get_type ());
-  GST_PAD_NAME(ghostpad) = g_strdup (name);
+  gst_pad_set_name (GST_PAD (ghostpad), name);
   GST_GPAD_REALPAD(ghostpad) = GST_PAD_REALIZE(pad);
 
   // add ourselves to the real pad's list of ghostpads

@@ -23,8 +23,6 @@
 #include "gst_private.h"
 
 #include "gstobject.h"
-#include "gstpad.h"
-#include "gstelement.h"
 
 /* Object signals and args */
 enum {
@@ -38,14 +36,15 @@ enum {
 };
 
 
-static void gst_object_class_init(GstObjectClass *klass);
-static void gst_object_init(GstObject *object);
-
+static void		gst_object_class_init		(GstObjectClass *klass);
+static void		gst_object_init			(GstObject *object);
 
 static GtkObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 
-GtkType gst_object_get_type(void) {
+GtkType
+gst_object_get_type (void)
+{
   static GtkType object_type = 0;
 
   if (!object_type) {
@@ -64,22 +63,28 @@ GtkType gst_object_get_type(void) {
   return object_type;
 }
 
-static void gst_object_class_init(GstObjectClass *klass) {
+static void
+gst_object_class_init (GstObjectClass *klass)
+{
   GtkObjectClass *gtkobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gtkobject_class = (GtkObjectClass*) klass;
 
-  parent_class = gtk_type_class(gtk_object_get_type());
+  parent_class = gtk_type_class (gtk_object_get_type ());
 
   gst_object_signals[PARENT_SET] =
-    gtk_signal_new("parent_set",GTK_RUN_LAST,gtkobject_class->type,
-                   GTK_SIGNAL_OFFSET(GstObjectClass,parent_set),
-                   gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GST_TYPE_OBJECT);
-  gtk_object_class_add_signals(gtkobject_class,gst_object_signals,LAST_SIGNAL);
+    gtk_signal_new ("parent_set", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstObjectClass, parent_set),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_OBJECT);
+  gtk_object_class_add_signals (gtkobject_class, gst_object_signals, LAST_SIGNAL);
+
+  klass->path_string_separator = "/";
 }
 
-static void gst_object_init(GstObject *object) {
+static void
+gst_object_init (GstObject *object)
+{
   object->lock = g_mutex_new();
 #ifdef HAVE_ATOMIC_H
   atomic_set(&(object->refcount),1);
@@ -96,8 +101,47 @@ static void gst_object_init(GstObject *object) {
  *
  * Returns: new object
  */
-GstObject *gst_object_new() {
-  return GST_OBJECT(gtk_type_new(gst_object_get_type()));
+GstObject*
+gst_object_new (void)
+{
+  return GST_OBJECT (gtk_type_new (gst_object_get_type ()));
+}
+
+/**
+ * gst_object_set_name:
+ * @object: GstObject to set the name of
+ * @name: new name of object
+ *
+ * Set the name of the object.
+ */
+void
+gst_object_set_name (GstObject *object, const gchar *name)
+{
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (name != NULL);
+
+  if (object->name != NULL)
+    g_free (object->name);
+
+  object->name = g_strdup (name);
+}
+
+/**
+ * gst_object_get_name:
+ * @object: GstObject to get the name of
+ *
+ * Get the name of the object.
+ *
+ * Returns: name of the object
+ */
+const gchar*
+gst_object_get_name (GstObject *object)
+{
+  g_return_val_if_fail (object != NULL, NULL);
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+
+  return object->name;
 }
 
 /**
@@ -109,23 +153,25 @@ GstObject *gst_object_new() {
  * incremented.
  * signals the parent-set signal
  */
-void gst_object_set_parent(GstObject *object,GstObject *parent) {
-  g_return_if_fail(object != NULL);
-  g_return_if_fail(GST_IS_OBJECT(object));
-  g_return_if_fail(parent != NULL);
-  g_return_if_fail(GST_IS_OBJECT(parent));
-  g_return_if_fail(object != parent);
+void
+gst_object_set_parent (GstObject *object, GstObject *parent)
+{
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (parent != NULL);
+  g_return_if_fail (GST_IS_OBJECT (parent));
+  g_return_if_fail (object != parent);
 
   if (object->parent != NULL) {
-    GST_ERROR_OBJECT(object,object->parent,"object's parent is already set, must unparent first");
+    GST_ERROR_OBJECT (object,object->parent, "object's parent is already set, must unparent first");
     return;
   }
 
-  gst_object_ref(object);
-  gst_object_sink(object);
+  gst_object_ref (object);
+  gst_object_sink (object);
   object->parent = parent;
 
-  gtk_signal_emit(GTK_OBJECT(object),gst_object_signals[PARENT_SET],parent);
+  gtk_signal_emit (GTK_OBJECT (object), gst_object_signals[PARENT_SET], parent);
 }
 
 /**
@@ -136,9 +182,11 @@ void gst_object_set_parent(GstObject *object,GstObject *parent) {
  *
  * Returns: parent of the object
  */
-GstObject *gst_object_get_parent(GstObject *object) {
-  g_return_val_if_fail(object != NULL, NULL);
-  g_return_val_if_fail(GST_IS_OBJECT(object), NULL);
+GstObject*
+gst_object_get_parent (GstObject *object)
+{
+  g_return_val_if_fail (object != NULL, NULL);
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
   return object->parent;
 }
@@ -149,14 +197,16 @@ GstObject *gst_object_get_parent(GstObject *object) {
  *
  * Clear the parent of the object, removing the associated reference.
  */
-void gst_object_unparent(GstObject *object) {
-  g_return_if_fail(object != NULL);
-  g_return_if_fail(GST_IS_OBJECT(object));
+void
+gst_object_unparent (GstObject *object)
+{
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT(object));
   if (object->parent == NULL)
     return;
 
   object->parent = NULL;
-  gst_object_unref(object);
+  gst_object_unref (object);
 }
 
 /**
@@ -166,18 +216,20 @@ void gst_object_unparent(GstObject *object) {
  * Increments the refence count on the object.
  */
 #ifndef gst_object_ref
-void gst_object_ref (GstObject *object) {
-  g_return_if_fail(object != NULL);
-  g_return_if_fail(GST_IS_OBJECT(object));
+void
+gst_object_ref (GstObject *object)
+{
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
 
 #ifdef HAVE_ATOMIC_H
-  g_return_if_fail(atomic_read(&(object->refcount)) > 0);
-  atomic_inc(&(object->refcount))
+  g_return_if_fail (atomic_read (&(object->refcount)) > 0);
+  atomic_inc (&(object->refcount))
 #else
-  g_return_if_fail(object->refcount > 0);
-  GST_LOCK(object);
+  g_return_if_fail (object->refcount > 0);
+  GST_LOCK (object);
   object->refcount++;
-  GST_UNLOCK(object);
+  GST_UNLOCK (object);
 #endif
 }
 #endif /* gst_object_ref */
@@ -190,36 +242,38 @@ void gst_object_ref (GstObject *object) {
  * zero, destroy the object.
  */
 #ifndef gst_object_unref
-void gst_object_unref (GstObject *object) {
+void
+gst_object_unref (GstObject *object)
+{
   int reftest;
 
-  g_return_if_fail(object != NULL);
-  g_return_if_fail(GST_IS_OBJECT(object));
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
 
 #ifdef HAVE_ATOMIC_H
-  g_return_if_fail(atomic_read(&(object->refcount)) > 0);
-  reftest = atomic_dec_and_test(&(object->refcount))
+  g_return_if_fail (atomic_read (&(object->refcount)) > 0);
+  reftest = atomic_dec_and_test (&(object->refcount))
 #else
-  g_return_if_fail(object->refcount > 0);
-  GST_LOCK(object);
+  g_return_if_fail (object->refcount > 0);
+  GST_LOCK (object);
   object->refcount--;
   reftest = (object->refcount == 0);
-  GST_UNLOCK(object);
+  GST_UNLOCK (object);
 #endif
 
   /* if we ended up with the refcount at zero */
   if (reftest) {
     /* get the count to 1 for gtk_object_destroy() */
 #ifdef HAVE_ATOMIC_H
-    atomic_set(&(object->refcount),1);
+    atomic_set (&(object->refcount),1);
 #else
     object->refcount = 1;
 #endif
     /* destroy it */
-    gtk_object_destroy(GTK_OBJECT(object));
+    gtk_object_destroy (GTK_OBJECT (object));
     /* drop the refcount back to zero */
 #ifdef HAVE_ATOMIC_H
-    atomic_set(&(object->refcount),0);
+    atomic_set (&(object->refcount),0);
 #else
     object->refcount = 0;
 #endif
@@ -240,17 +294,41 @@ void gst_object_unref (GstObject *object) {
  * creating a new object to symbolically 'take ownership of' the object.
  */
 #ifndef gst_object_sink
-void gst_object_sink(GstObject *object) {
-  g_return_if_fail(object != NULL);
-  g_return_if_fail(GST_IS_OBJECT(object));
+void
+gst_object_sink (GstObject *object)
+{
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_IS_OBJECT (object));
 
-  if (GTK_OBJECT_FLOATING(object)) {
-    GTK_OBJECT_UNSET_FLAGS(object, GTK_FLOATING);
-    gst_object_unref(object);
+  if (GTK_OBJECT_FLOATING (object)) {
+    GTK_OBJECT_UNSET_FLAGS (object, GTK_FLOATING);
+    gst_object_unref (object);
   }
 }
 #endif /* gst_object_sink */
 
+xmlNodePtr
+gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
+{
+  GstObjectClass *oclass;
+
+  g_return_val_if_fail (object != NULL, parent);
+  g_return_val_if_fail (GST_IS_OBJECT (object), parent);
+  g_return_val_if_fail (parent != NULL, parent);
+
+  oclass = GST_OBJECT_CLASS (GTK_OBJECT (object)->klass);
+
+  if (oclass->save_thyself)
+    oclass->save_thyself (object, parent);
+
+  return parent;
+}
+
+void
+gst_object_load_thyself (xmlNodePtr self, GstObject *parent)
+{
+  g_print ("gstobject: load thyself\n");
+}
 
 /**
  * gst_object_get_path_string:
@@ -258,79 +336,64 @@ void gst_object_sink(GstObject *object) {
  *
  * Generates a string describing the path of the object in
  * the object hierarchy. Usefull for debugging
- * 
+ *
  * Returns: a string describing the path of the object
  */
 gchar*
-gst_object_get_path_string(GstObject *object) 
+gst_object_get_path_string (GstObject *object)
 {
   GSList *parentage = NULL;
   GSList *parents;
   void *parent;
-  gchar *prevpath, *path = ""; 
+  gchar *prevpath, *path = "";
   const char *component;
   gchar *separator = "";
   gboolean free_component;
 
   parentage = g_slist_prepend (NULL, object);
-       
+
   // first walk the object hierarchy to build a list of the parents
   do {
-    if (GST_IS_OBJECT(object)) {
-      if (GST_IS_PAD(object)) {
-        parent = GST_PAD(object)->parent;
-//      } else if (GST_IS_ELEMENT(object)) {
-//        parent = gst_element_get_parent(GST_ELEMENT(object));
-      } else {
-        parent = gst_object_get_parent (object);
-      }
+    if (GST_IS_OBJECT (object)) {
+      parent = gst_object_get_parent (object);
     } else {
       parentage = g_slist_prepend (parentage, NULL);
       parent = NULL;
     }
 
-    if (parent != NULL) { 
+    if (parent != NULL) {
       parentage = g_slist_prepend (parentage, parent);
     }
- 
+
     object = parent;
   } while (object != NULL);
 
   // then walk the parent list and print them out
   parents = parentage;
   while (parents) {
-    if (GST_IS_OBJECT(parents->data)) {
-      if (GST_IS_PAD(parents->data)) {
-        component = gst_pad_get_name(GST_PAD(parents->data));
-        separator = ".";
-        free_component = FALSE;
-      } else if (GST_IS_ELEMENT(parents->data)) {
-        component = gst_element_get_name(GST_ELEMENT(parents->data));
-        separator = "/";
-        free_component = FALSE;
-      } else {
-//        component = g_strdup_printf("a %s",gtk_type_name(gtk_identifier_get_type(parents->data)));
-        component = g_strdup_printf("unknown%p",parents->data);
-        separator = "/";
-        free_component = TRUE;
-      }
+    if (GST_IS_OBJECT (parents->data)) {
+      GstObjectClass *oclass = GST_OBJECT_CLASS (GTK_OBJECT (parents->data));
+
+      component = GST_OBJECT_NAME (parents->data);
+      separator = oclass->path_string_separator;
+      free_component = FALSE;
     } else {
-      component = g_strdup_printf("%p",parents->data);  
+      component = g_strdup_printf("%p",parents->data);
       separator = "/";
       free_component = TRUE;
     }
-      
+
     prevpath = path;
-    path = g_strjoin(separator,prevpath,component,NULL);
+    path = g_strjoin (separator, prevpath, component, NULL);
     g_free(prevpath);
     if (free_component)
       g_free((gchar *)component);
 
     parents = g_slist_next(parents);
   }
-    
-  g_slist_free(parentage);
-              
+
+  g_slist_free (parentage);
+
   return path;
 }
 

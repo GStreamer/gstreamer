@@ -25,11 +25,18 @@
 #include "gstxml.h"
 #include "gstbin.h"
 
+enum {
+  OBJECT_LOADED,
+  OBJECT_SAVED,
+  LAST_SIGNAL
+};
+
 
 static void	gst_xml_class_init		(GstXMLClass *klass);
 static void	gst_xml_init			(GstXML *xml);
 
 static GstObjectClass *parent_class = NULL;
+static guint gst_xml_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_xml_get_type(void)
@@ -39,15 +46,15 @@ gst_xml_get_type(void)
   if (!xml_type) {
     static const GtkTypeInfo xml_info = {
       "GstXML",
-      sizeof(GstElement),
-      sizeof(GstElementClass),
+      sizeof(GstXML),
+      sizeof(GstXMLClass),
       (GtkClassInitFunc)gst_xml_class_init,
       (GtkObjectInitFunc)gst_xml_init,
       (GtkArgSetFunc)NULL,
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    xml_type = gtk_type_unique (GST_TYPE_XML, &xml_info);
+    xml_type = gtk_type_unique (GST_TYPE_OBJECT, &xml_info);
   }
   return xml_type;
 }
@@ -55,12 +62,44 @@ gst_xml_get_type(void)
 static void
 gst_xml_class_init (GstXMLClass *klass)
 {
+  GtkObjectClass *gtkobject_class;
+
+  gtkobject_class = (GtkObjectClass *)klass;
+
   parent_class = gtk_type_class (GST_TYPE_OBJECT);
+
+  gst_xml_signals[OBJECT_LOADED] =
+    gtk_signal_new ("object_loaded", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstXMLClass, object_loaded),
+                    gtk_marshal_NONE__POINTER_POINTER, GTK_TYPE_NONE, 2,
+                    GST_TYPE_OBJECT, GTK_TYPE_POINTER);
+
+  gst_xml_signals[OBJECT_SAVED] =
+    gtk_signal_new ("object_saved", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstXMLClass, object_saved),
+                    gtk_marshal_NONE__POINTER_POINTER, GTK_TYPE_NONE, 2,
+                    GST_TYPE_OBJECT, GTK_TYPE_POINTER);
+
+  gtk_object_class_add_signals (gtkobject_class, gst_xml_signals, LAST_SIGNAL);
 }
 
 static void
 gst_xml_init(GstXML *xml)
 {
+  xml->topelements = NULL;
+}
+
+/**
+ * gst_xml_new:
+ *
+ * Create a new GstXML parser object.
+ *
+ * Returns: a pointer to a new GstXML object.
+ */
+GstXML*
+gst_xml_new (void)
+{
+  return GST_XML (gtk_type_new (GST_TYPE_XML));
 }
 
 /**
@@ -75,41 +114,52 @@ xmlDocPtr
 gst_xml_write (GstElement *element)
 {
   xmlDocPtr doc;
+  xmlNodePtr elementnode;
+  xmlNsPtr ns;
 
   doc = xmlNewDoc ("1.0");
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "GST-Pipeline", NULL);
+  xmlNewGlobalNs (doc, "http://gstreamer.net/gst-core/1.0/", "gst");
+  ns = xmlNewNs (doc->xmlRootNode, "http://gstreamer.net/gst-core/1.0/", "gst");
 
-  gst_element_save_thyself (element, doc->xmlRootNode);
+  doc->xmlRootNode = xmlNewDocNode (doc, ns, "GST-Pipeline", NULL);
+
+  elementnode = xmlNewChild (doc->xmlRootNode, NULL, "element", NULL);
+
+  gst_object_save_thyself (GST_OBJECT (element), elementnode);
 
   return doc;
 }
 
-static GstXML*
-gst_xml_real_parse (xmlDocPtr doc, const guchar *root)
+static gboolean
+gst_xml_real_parse (GstXML *xml, xmlDocPtr doc, const guchar *root)
 {
-  GstXML *xml;
-  xmlNodePtr field;
+  xmlNodePtr field, cur;
+  xmlNsPtr ns;
 
-  if (strcmp(doc->xmlRootNode->name, "GST-Pipeline")) {
+  cur = xmlDocGetRootElement(doc);
+  if (cur == NULL) {
+    g_warning("gstxml: empty document\n");
+    return FALSE ;
+  }
+  ns = xmlSearchNsByHref(doc, cur, "http://gstreamer.net/gst-core/1.0/");
+  if (ns == NULL) {
+    g_warning("gstxml: document of wrong type, core namespace not found\n");
+    return FALSE;
+  }
+  if (strcmp(cur->name, "GST-Pipeline")) {
     g_warning("gstxml: XML file is in wrong format\n");
-    return NULL;
+    return FALSE;
   }
 
-  xml = GST_XML(gtk_type_new(GST_TYPE_XML));
+  xml->ns = ns;
 
-  xml->topelements = NULL;
-
-  field = doc->xmlRootNode->xmlChildrenNode;
+  field = cur->xmlChildrenNode;
 
   while (field) {
-    if (!strcmp(field->name, "element")) {
+    if (!strcmp(field->name, "element") && (field->ns == xml->ns)) {
       GstElement *element;
 
-      xml->elements = g_hash_table_new(g_str_hash, g_str_equal);
-
-      element = gst_element_load_thyself(field, xml->elements);
-
-      g_hash_table_destroy (xml->elements);
+      element = gst_element_load_thyself(field, NULL);
 
       xml->topelements = g_list_prepend (xml->topelements, element);
     }
@@ -118,11 +168,11 @@ gst_xml_real_parse (xmlDocPtr doc, const guchar *root)
 
   xml->topelements = g_list_reverse (xml->topelements);
 
-  return xml;
+  return TRUE;
 }
 
 /**
- * gst_xml_new:
+ * gst_xml_parse_file:
  * @fname: The filename with the xml description
  * @root: The name of the root object to build
  *
@@ -134,27 +184,27 @@ gst_xml_real_parse (xmlDocPtr doc, const guchar *root)
  * tree is cached to speed up creating another GstXML object for
  * the same file
  *
- * Returns: a pointer to a new GstXML object
+ * Returns: TRUE on success, FALSE otherwise
  */
-GstXML*
-gst_xml_new (const guchar *fname, const guchar *root)
+gboolean
+gst_xml_parse_file (GstXML *xml, const guchar *fname, const guchar *root)
 {
   xmlDocPtr doc;
 
-  g_return_val_if_fail(fname != NULL, NULL);
+  g_return_val_if_fail(fname != NULL, FALSE);
 
   doc = xmlParseFile(fname);
 
   if (!doc) {
     g_warning("gstxml: XML file \"%s\" could not be read\n", fname);
-    return NULL;
+    return FALSE;
   }
 
-  return gst_xml_real_parse (doc, root);
+  return gst_xml_real_parse (xml, doc, root);
 }
 
 /**
- * gst_xml_new_from_memory:
+ * gst_xml_parse_memory:
  * @buffer: a pointer to the in memory XML buffer
  * @size: the size of the buffer
  * @root: the name of the root objects to build
@@ -164,18 +214,29 @@ gst_xml_new (const guchar *fname, const guchar *root)
  *
  * Returns: a pointer to a new GstXML object
  */
-GstXML*
-gst_xml_new_from_memory (guchar *buffer, guint size, const gchar *root)
+gboolean
+gst_xml_parse_memory (GstXML *xml, guchar *buffer, guint size, const gchar *root)
 {
   xmlDocPtr doc;
 
-  g_return_val_if_fail(buffer != NULL, NULL);
+  g_return_val_if_fail(buffer != NULL, FALSE);
 
   doc = xmlParseMemory (buffer, size);
 
-  return gst_xml_real_parse (doc, root);
+  return gst_xml_real_parse (xml, doc, root);
 }
 
+void
+gst_xml_object_loaded (GstXML *xml, GstObject *object, xmlNodePtr self)
+{
+  gtk_signal_emit (GTK_OBJECT (xml), gst_xml_signals[OBJECT_LOADED], object, self);
+}
+
+void
+gst_xml_object_saved (GstXML *xml, GstObject *object, xmlNodePtr self)
+{
+  gtk_signal_emit (GTK_OBJECT (xml), gst_xml_signals[OBJECT_SAVED], object, self);
+}
 /**
  * gst_xml_get_topelements:
  * @xml: The GstXML to get the elements from
@@ -219,7 +280,8 @@ gst_xml_get_element (GstXML *xml, const guchar *name)
   while (topelements) {
     GstElement *top = GST_ELEMENT (topelements->data);
 
-    if (!strcmp (gst_element_get_name (top), name)) {
+    GST_DEBUG (0,"gstxml: getting element \"%s\"\n", name);
+    if (!strcmp (GST_ELEMENT_NAME (top), name)) {
       return top;
     }
     else {

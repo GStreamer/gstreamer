@@ -244,7 +244,7 @@ gst_audiosink_chain (GstPad *pad, GstBuffer *buf)
   /* this has to be an audio buffer */
 //  g_return_if_fail(((GstMeta *)buf->meta)->type !=
 //gst_audiosink_type_audio);
-  audiosink = GST_AUDIOSINK (pad->parent);
+  audiosink = GST_AUDIOSINK (gst_pad_get_parent (pad));
 //  g_return_if_fail(GST_FLAG_IS_SET(audiosink,GST_STATE_RUNNING));
 
   if ((in_flush = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLUSH))) {

@@ -153,12 +153,12 @@ gst_queue_handle_eos (GstPad *pad)
 {
   GstQueue *queue;
 
-  queue = GST_QUEUE(pad->parent);
+  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  GST_DEBUG (0,"queue: %s received eos\n", gst_element_get_name (GST_ELEMENT (queue)));
+  GST_DEBUG (0,"queue: %s received eos\n", GST_ELEMENT_NAME (queue));
 
   GST_LOCK (queue);
-  GST_DEBUG (0,"queue: %s has %d buffers left\n", gst_element_get_name (GST_ELEMENT (queue)),
+  GST_DEBUG (0,"queue: %s has %d buffers left\n", GST_ELEMENT_NAME (queue),
 		  queue->level_buffers);
 
   GST_FLAG_SET (pad, GST_PAD_EOS);
@@ -182,7 +182,7 @@ static void
 gst_queue_flush (GstQueue *queue)
 {
   g_slist_foreach (queue->queue, gst_queue_cleanup_buffers,
-		  (char *)gst_element_get_name (GST_ELEMENT (queue)));
+		  (char *) GST_ELEMENT_NAME (queue));
   g_slist_free (queue->queue);
 
   queue->queue = NULL;
@@ -201,8 +201,8 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  queue = GST_QUEUE (pad->parent);
-  name = gst_element_get_name (GST_ELEMENT (queue));
+  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
+  name = GST_ELEMENT_NAME (queue);
 
   /* we have to lock the queue since we span threads */
 
@@ -251,12 +251,12 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 static GstBuffer *
 gst_queue_get (GstPad *pad)
 {
-  GstQueue *queue = GST_QUEUE (gst_pad_get_parent(pad));
+  GstQueue *queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
   GstBuffer *buf = NULL;
   GSList *front;
   const guchar *name;
 
-  name = gst_element_get_name (GST_ELEMENT (queue));
+  name = GST_ELEMENT_NAME (queue);
 
   /* have to lock for thread-safety */
   GST_DEBUG (0,"queue: %s try have queue lock\n", name);

@@ -21,28 +21,18 @@ All GstElements can be serialized to an XML presentation and subsequently loaded
 </para>
 
 @object: 
-@elements: 
 @topelements: 
+@ns: 
 
 <!-- ##### FUNCTION gst_xml_new ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @fname: 
 @root: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_xml_new_from_memory ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@size: 
-@root: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_xml_write ##### -->

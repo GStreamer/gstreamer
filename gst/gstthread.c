@@ -53,14 +53,13 @@ enum {
 static void			gst_thread_class_init		(GstThreadClass *klass);
 static void			gst_thread_init			(GstThread *thread);
 
-static void			gst_thread_set_arg		(GtkObject *object,GtkArg *arg,guint id);
-static void			gst_thread_get_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void			gst_thread_set_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_thread_get_arg		(GtkObject *object, GtkArg *arg, guint id);
 
 static GstElementStateReturn	gst_thread_change_state		(GstElement *element);
 
-static xmlNodePtr		gst_thread_save_thyself		(GstElement *element,xmlNodePtr parent);
-static void			gst_thread_restore_thyself	(GstElement *element,xmlNodePtr parent,
-								 GHashTable *elements);
+static xmlNodePtr		gst_thread_save_thyself		(GstObject *object, xmlNodePtr parent);
+static void			gst_thread_restore_thyself	(GstObject *object, xmlNodePtr self);
 
 static void			gst_thread_signal_thread	(GstThread *thread);
 static void			gst_thread_wait_thread		(GstThread *thread);
@@ -109,9 +108,10 @@ gst_thread_class_init (GstThreadClass *klass)
   gtk_object_add_arg_type ("GstThread::create_thread", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_CREATE_THREAD);
 
+  gstobject_class->save_thyself =	gst_thread_save_thyself;
+  gstobject_class->restore_thyself =	gst_thread_restore_thyself;
+
   gstelement_class->change_state =	gst_thread_change_state;
-  gstelement_class->save_thyself =	gst_thread_save_thyself;
-  gstelement_class->restore_thyself =	gst_thread_restore_thyself;
 
   gstbin_class->schedule = gst_thread_schedule_dummy;
 
@@ -123,7 +123,7 @@ gst_thread_class_init (GstThreadClass *klass)
 static void
 gst_thread_init (GstThread *thread)
 {
-  GST_DEBUG (0,"initializing thread '%s'\n",gst_element_get_name(GST_ELEMENT(thread)));
+  GST_DEBUG (0,"initializing thread '%s'\n",GST_ELEMENT_NAME (thread));
 
   // we're a manager by default
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
@@ -212,12 +212,12 @@ gst_thread_change_state (GstElement *element)
   gint pending, transition;
 
   g_return_val_if_fail (GST_IS_THREAD(element), FALSE);
-  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name(element));
+  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME(element));
 
   thread = GST_THREAD (element);
 
   GST_INFO (GST_CAT_THREAD,"gstthread: thread \"%s\" change state %d",
-               gst_element_get_name (GST_ELEMENT (element)),
+               GST_ELEMENT_NAME (GST_ELEMENT (element)),
 	       GST_STATE_PENDING (element));
 
   pending = GST_STATE_PENDING (element);
@@ -238,7 +238,7 @@ gst_thread_change_state (GstElement *element)
 //      if (!stateset) return FALSE;
       // we want to prepare our internal state for doing the iterations
       GST_INFO (GST_CAT_THREAD, "gstthread: preparing thread \"%s\" for iterations:",
-               gst_element_get_name (GST_ELEMENT (element)));
+               GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
       // set the state to idle
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
@@ -247,7 +247,7 @@ gst_thread_change_state (GstElement *element)
 
       if (GST_FLAG_IS_SET (thread, GST_THREAD_CREATE)) {
         GST_INFO (GST_CAT_THREAD, "gstthread: starting thread \"%s\"",
-                 gst_element_get_name (GST_ELEMENT (element)));
+                 GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
         // create the thread
         pthread_create (&thread->thread_id, NULL,
@@ -257,28 +257,28 @@ gst_thread_change_state (GstElement *element)
 //        gst_thread_wait_thread (thread);
       } else {
         GST_INFO (GST_CAT_THREAD, "gstthread: NOT starting thread \"%s\"",
-                gst_element_get_name (GST_ELEMENT (element)));
+                GST_ELEMENT_NAME (GST_ELEMENT (element)));
       }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_READY_TO_PLAYING:
       if (!stateset) return FALSE;
       GST_INFO (GST_CAT_THREAD, "gstthread: starting thread \"%s\"",
-              gst_element_get_name (GST_ELEMENT (element)));
+              GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
       GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread (thread);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       GST_INFO (GST_CAT_THREAD,"gstthread: pausing thread \"%s\"",
-              gst_element_get_name (GST_ELEMENT (element)));
+              GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
       //GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread (thread);
       break;
     case GST_STATE_READY_TO_NULL:
       GST_INFO (GST_CAT_THREAD,"gstthread: stopping thread \"%s\"",
-              gst_element_get_name (GST_ELEMENT (element)));
+              GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
       GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
       gst_thread_signal_thread (thread);
@@ -303,7 +303,7 @@ gst_thread_main_loop (void *arg)
   GstThread *thread = GST_THREAD (arg);
 
   GST_INFO (GST_CAT_THREAD,"gstthread: thread \"%s\" is running with PID %d",
-		  gst_element_get_name (GST_ELEMENT (thread)), getpid ());
+		  GST_ELEMENT_NAME (GST_ELEMENT (thread)), getpid ());
 
   // construct the plan and signal back
   if (GST_BIN_CLASS (parent_class)->schedule)
@@ -318,7 +318,7 @@ gst_thread_main_loop (void *arg)
       }
     }
     else {
-      GST_DEBUG (0, "thread \"%s\" waiting\n", gst_element_get_name (GST_ELEMENT (thread)));
+      GST_DEBUG (0, "thread \"%s\" waiting\n", GST_ELEMENT_NAME (GST_ELEMENT (thread)));
       gst_thread_wait_thread (thread);
     }
   }
@@ -327,7 +327,7 @@ gst_thread_main_loop (void *arg)
   //pthread_join (thread->thread_id, 0);
 
   GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
-		  gst_element_get_name (GST_ELEMENT (thread)));
+		  GST_ELEMENT_NAME (thread));
   return NULL;
 }
 
@@ -351,21 +351,20 @@ gst_thread_wait_thread (GstThread *thread)
 
 
 static void
-gst_thread_restore_thyself (GstElement *element,
-		            xmlNodePtr parent,
-			    GHashTable *elements)
+gst_thread_restore_thyself (GstObject *object,
+		            xmlNodePtr self)
 {
   GST_DEBUG (0,"gstthread: restore\n");
 
-  if (GST_ELEMENT_CLASS (parent_class)->restore_thyself)
-    GST_ELEMENT_CLASS (parent_class)->restore_thyself (element,parent, elements);
+  if (GST_OBJECT_CLASS (parent_class)->restore_thyself)
+    GST_OBJECT_CLASS (parent_class)->restore_thyself (object, self);
 }
 
 static xmlNodePtr
-gst_thread_save_thyself (GstElement *element,
-		         xmlNodePtr parent)
+gst_thread_save_thyself (GstObject *object,
+		         xmlNodePtr self)
 {
-  if (GST_ELEMENT_CLASS (parent_class)->save_thyself)
-    GST_ELEMENT_CLASS (parent_class)->save_thyself (element,parent);
+  if (GST_OBJECT_CLASS (parent_class)->save_thyself)
+    GST_OBJECT_CLASS (parent_class)->save_thyself (object, self);
   return NULL;
 }

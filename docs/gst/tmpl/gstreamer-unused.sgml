@@ -217,19 +217,19 @@ the stream.
 </para>
 
 
-<!-- ##### FUNCTION gst_object_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
 <!-- ##### MACRO GST_SINESRC ##### -->
 <para>
 
 </para>
 
 @obj: 
+
+<!-- ##### FUNCTION gst_object_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
 <para>
@@ -1613,6 +1613,16 @@ Query the element for the current mime type
 </para>
 
 
+<!-- ##### FUNCTION gst_xml_new_from_memory ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@root: 
+@Returns: 
+
 <!-- ##### SECTION ./tmpl/gstgetbits.sgml:Long_Description ##### -->
 <para>
 
@@ -1916,6 +1926,15 @@ Indicates this pad is active
 </para>
 
 
+<!-- ##### FUNCTION gst_element_save_thyself ##### -->
+<para>
+
+</para>
+
+@element: 
+@parent: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_sinesrc_push ##### -->
 <para>
 
@@ -1992,6 +2011,15 @@ Indicates this pad is active
 </para>
 
 @obj: 
+
+<!-- ##### FUNCTION gst_pad_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+@Returns: 
 
 <!-- ##### STRUCT GstElementClass ##### -->
 <para>

@@ -28,6 +28,8 @@
 
 #include "gst_private.h"
 #include "gstparse.h"
+#include "gstpipeline.h"
+#include "gstthread.h"
 
 typedef struct _gst_parse_priv gst_parse_priv;
 struct _gst_parse_priv {
@@ -51,10 +53,10 @@ gst_parse_newpad(GstElement *element,GstPad *pad,launch_delayed_pad *peer)
 {
   gst_info("have NEW_PAD signal\n");
   // if it matches, connect it
-  if (!strcmp(gst_pad_get_name(pad),peer->name)) {
+  if (!strcmp(GST_PAD_NAME(pad),peer->name)) {
     gst_pad_connect(pad,peer->peer);
     gst_info("delayed connect of '%s' to '%s'\n",
-             gst_pad_get_name(pad),gst_pad_get_name(peer->peer));
+             GST_PAD_NAME(pad),GST_PAD_NAME(peer->peer));
   }
 }
 */
@@ -93,7 +95,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
   if (GST_IS_PIPELINE(parent)) { closingchar = '\0';DEBUG("in pipeline "); }
   else if (GST_IS_THREAD(parent)) { closingchar = '}';DEBUG("in thread "); }
   else { closingchar = ')';DEBUG("in bin "); }
-  DEBUG_NOPREFIX("%s\n",gst_element_get_name (GST_ELEMENT (parent)));
+  DEBUG_NOPREFIX("%s\n",GST_ELEMENT_NAME (GST_ELEMENT (parent)));
 
   while (i < argc) {
     arg = argv[i];
@@ -112,7 +114,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
     // end of the container
     } else if (arg[0] == closingchar) {
       // time to finish off this bin
-      DEBUG("exiting container %s\n",gst_element_get_name (GST_ELEMENT (parent)));
+      DEBUG("exiting container %s\n",GST_ELEMENT_NAME (GST_ELEMENT (parent)));
       retval = i+1;
       break;
 
@@ -146,12 +148,12 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
         if (srcpadname != NULL) {
           srcpad = gst_element_get_pad(previous,srcpadname);
           if (!srcpad)
-            GST_DEBUG(0,"NO SUCH pad %s in element %s\n",srcpadname,gst_element_get_name(previous));
+            GST_DEBUG(0,"NO SUCH pad %s in element %s\n",srcpadname,GST_ELEMENT_NAME(previous));
         }
 
         if (srcpad == NULL) {
           // check through the list to find the first sink pad
-          GST_DEBUG(0,"CHECKING through element %s for pad named %s\n",gst_element_get_name(previous),srcpadname);
+          GST_DEBUG(0,"CHECKING through element %s for pad named %s\n",GST_ELEMENT_NAME(previous),srcpadname);
           pads = gst_element_get_pad_list(previous);
           while (pads) {
             srcpad = GST_PAD(pads->data);
@@ -177,7 +179,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       pos[0] = '\0';
       argval = pos+1;
       DEBUG("attempting to set argument '%s' to '%s' on element '%s'\n",
-            argname,argval,gst_element_get_name(previous));
+            argname,argval,GST_ELEMENT_NAME(previous));
       gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
       g_free(argname);
 
@@ -193,7 +195,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
             fprintf(stderr,"Couldn't create a bin!\n");
 //            exit(-1);
           }
-          GST_DEBUG(0,"CREATED bin %s\n",gst_element_get_name(element));
+          GST_DEBUG(0,"CREATED bin %s\n",GST_ELEMENT_NAME(element));
         } else if (arg[0] == '{') {
           // create a thread and add it to the current parent
           element = gst_thread_new(g_strdup_printf("thread%d",priv->threadcount++));
@@ -201,7 +203,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
             fprintf(stderr,"Couldn't create a thread!\n");
 //            exit(-1);
           }
-          GST_DEBUG(0,"CREATED thread %s\n",gst_element_get_name(element));
+          GST_DEBUG(0,"CREATED thread %s\n",GST_ELEMENT_NAME(element));
         }
 
         i += gst_parse_launch_cmdline(argc - i, argv + i + 1, GST_BIN (element), priv);
@@ -216,7 +218,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
           fprintf(stderr,"Couldn't create a '%s', no such element or need to run gstraemer-register?\n",arg);
 //          exit(-1);
         }
-        GST_DEBUG(0,"CREATED element %s\n",gst_element_get_name(element));
+        GST_DEBUG(0,"CREATED element %s\n",GST_ELEMENT_NAME(element));
       }
 
       gst_bin_add (GST_BIN (parent), element);
@@ -254,7 +256,7 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       // if we're the first element, ghost all the sinkpads
       if (elementcount == 1) {
         DEBUG("first element, ghosting all of %s's sink pads to parent %s\n",
-              gst_element_get_name(element),gst_element_get_name(GST_ELEMENT(parent)));
+              GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT(parent)));
         pads = gst_element_get_pad_list (element);
         while (pads) {
           sinkpad = GST_PAD (pads->data);
@@ -262,9 +264,9 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
           if (!sinkpad) DEBUG("much oddness, pad doesn't seem to exist\n");
           else if (gst_pad_get_direction (sinkpad) == GST_PAD_SINK) {
             gst_element_add_ghost_pad (GST_ELEMENT (parent), sinkpad,
-g_strdup_printf("%s-ghost",gst_pad_get_name(sinkpad)));
+g_strdup_printf("%s-ghost",GST_PAD_NAME(sinkpad)));
             GST_DEBUG(0,"GHOSTED %s:%s to %s as %s-ghost\n",
-                      GST_DEBUG_PAD_NAME(sinkpad),gst_element_get_name(GST_ELEMENT(parent)),gst_pad_get_name(sinkpad));
+                      GST_DEBUG_PAD_NAME(sinkpad),GST_ELEMENT_NAME(GST_ELEMENT(parent)),GST_PAD_NAME(sinkpad));
           }
         }
       }
@@ -279,7 +281,7 @@ g_strdup_printf("%s-ghost",gst_pad_get_name(sinkpad)));
   // ghost all the src pads of the bin
   if (prevelement != NULL) {
     DEBUG("last element, ghosting all of %s's src pads to parent %s\n",
-          gst_element_get_name(prevelement),gst_element_get_name(GST_ELEMENT(parent)));
+          GST_ELEMENT_NAME(prevelement),GST_ELEMENT_NAME(GST_ELEMENT(parent)));
     pads = gst_element_get_pad_list (prevelement);
     while (pads) {
       srcpad = GST_PAD (pads->data);
@@ -287,9 +289,9 @@ g_strdup_printf("%s-ghost",gst_pad_get_name(sinkpad)));
       if (!srcpad) DEBUG("much oddness, pad doesn't seem to exist\n");
       else if (gst_pad_get_direction (srcpad) == GST_PAD_SRC) {
         gst_element_add_ghost_pad (GST_ELEMENT (parent), srcpad,
-g_strdup_printf("%s-ghost",gst_pad_get_name(srcpad)));
+g_strdup_printf("%s-ghost",GST_PAD_NAME(srcpad)));
         GST_DEBUG(0,"GHOSTED %s:%s to %s as %s-ghost\n",
-GST_DEBUG_PAD_NAME(srcpad),gst_element_get_name(GST_ELEMENT(parent)),gst_pad_get_name(srcpad));
+GST_DEBUG_PAD_NAME(srcpad),GST_ELEMENT_NAME (parent),GST_PAD_NAME(srcpad));
       }
     }
   }

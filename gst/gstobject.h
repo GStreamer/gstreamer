@@ -26,6 +26,7 @@
 
 #include <gtk/gtk.h>
 #include <gst/gsttrace.h>
+#include <parser.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -62,6 +63,7 @@ typedef struct _GstObjectClass GstObjectClass;
 struct _GstObject {
   GtkObject object;
 
+  gchar *name;
   /* have to have a refcount for the object */
 #ifdef HAVE_ATOMIC_H
   atomic_t refcount;
@@ -79,11 +81,18 @@ struct _GstObject {
 struct _GstObjectClass {
   GtkObjectClass parent_class;
 
+  gchar *path_string_separator;
+
   /* signals */
-  void (*parent_set) (GstObject *object,GstObject *parent);
+  void		(*parent_set)		(GstObject *object, GstObject *parent);
 
   /* functions go here */
+  xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
+  void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
 };
+
+#define GST_OBJECT_NAME(obj)		(const gchar*)(((GstObject *)(obj))->name)
+#define GST_OBJECT_PARENT(obj)		(((GstObject *)(obj))->parent)
 
 
 #define GST_FLAGS(obj)			GTK_OBJECT_FLAGS(obj)
@@ -91,27 +100,35 @@ struct _GstObjectClass {
 #define GST_FLAG_SET(obj,flag)		G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
 #define GST_FLAG_UNSET(obj,flag)	G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
 
+/* object locking */
 #define GST_LOCK(obj)		(g_mutex_lock(GST_OBJECT(obj)->lock))
 #define GST_TRYLOCK(obj)	(g_mutex_trylock(GST_OBJECT(obj)->lock))
 #define GST_UNLOCK(obj)		(g_mutex_unlock(GST_OBJECT(obj)->lock))
+#define GST_GET_LOCK(obj)	(GST_OBJECT(obj)->lock)
 
 
 /* normal GtkObject stuff */
-GtkType 	gst_object_get_type		(void);
-GstObject* 	gst_object_new			(void);
+GtkType		gst_object_get_type		(void);
+GstObject*	gst_object_new			(void);
+
+/* name routines */
+void		gst_object_set_name		(GstObject *object, const gchar *name);
+const gchar*	gst_object_get_name		(GstObject *object);
 
 /* parentage routines */
-void 		gst_object_set_parent		(GstObject *object,GstObject *parent);
+void		gst_object_set_parent		(GstObject *object,GstObject *parent);
 GstObject*	gst_object_get_parent		(GstObject *object);
-void 		gst_object_unparent		(GstObject *object);
+void		gst_object_unparent		(GstObject *object);
+
+xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 
 /* refcounting */
-#define 	gst_object_ref(object) 		gtk_object_ref(GTK_OBJECT(object));
-#define 	gst_object_unref(object) 	gtk_object_unref(GTK_OBJECT(object));
-#define 	gst_object_sink(object) 	gtk_object_sink(GTK_OBJECT(object));
+#define		gst_object_ref(object)		gtk_object_ref(GTK_OBJECT(object));
+#define		gst_object_unref(object)	gtk_object_unref(GTK_OBJECT(object));
+#define		gst_object_sink(object)		gtk_object_sink(GTK_OBJECT(object));
 
 /* destroying an object */
-#define 	gst_object_destroy(object) 	gtk_object_destroy(GTK_OBJECT(object))
+#define		gst_object_destroy(object)	gtk_object_destroy(GTK_OBJECT(object))
 
 /* printing out the 'path' of the object */
 gchar *		gst_object_get_path_string	(GstObject *object);
@@ -122,5 +139,5 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 #endif /* __cplusplus */
 
 
-#endif /* __GST_OBJECT_H__ */     
+#endif /* __GST_OBJECT_H__ */
 

@@ -52,7 +52,7 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(thread), queue2);
 
   gst_bin_add(GST_BIN(thread2), audiosink);
-  
+
   gst_pad_connect(gst_element_get_pad(disksrc,"src"),
                   gst_element_get_pad(queue,"sink"));
 

@@ -84,6 +84,7 @@ struct _GstPropsEntry {
 
 gint print_element_info(GstElementFactory *factory) {
   GstElement *element;
+  GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
   GList *pads, *caps;
   GstPad *pad;
@@ -99,6 +100,8 @@ gint print_element_info(GstElementFactory *factory) {
     g_print ("couldn't construct element for some reason\n");
     return -1;
   }
+
+  gstobject_class = GST_OBJECT_CLASS (GTK_OBJECT (element)->klass);
   gstelement_class = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
 
   printf("Factory Details:\n");
@@ -184,9 +187,9 @@ gint print_element_info(GstElementFactory *factory) {
     printf("  Has change_state() function\n");
   else
     printf("  No change_state() class function\n");
-  if (gstelement_class->save_thyself)
+  if (gstobject_class->save_thyself)
     printf("  Has custom save_thyself() class function\n");
-  if (gstelement_class->restore_thyself)
+  if (gstobject_class->restore_thyself)
     printf("  Has custom restore_thyself() class function\n");
   printf("\n");
 

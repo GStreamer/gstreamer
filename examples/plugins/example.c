@@ -76,7 +76,7 @@ static void 	gst_example_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 GstPadTemplate *src_template, *sink_template;
 
 static GstElementClass *parent_class = NULL;
-static guint gst_example_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_example_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_example_get_type(void) 
@@ -134,15 +134,13 @@ static void
 gst_example_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstExample *example;
-  guchar *data;
-  gint i;
 
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
   //g_return_if_fail(GST_IS_BUFFER(buf));
 
-  example = GST_EXAMPLE(pad->parent);
+  example = GST_EXAMPLE(gst_pad_get_parent (pad));
 
   g_return_if_fail(example != NULL);
   g_return_if_fail(GST_IS_EXAMPLE(example));
@@ -199,10 +197,10 @@ plugin_init (GModule *module)
   GstElementFactory *factory;
 
   plugin = gst_plugin_new("example");
-  g_return_if_fail(plugin != NULL);
+  g_return_val_if_fail(plugin != NULL, NULL);
 
   factory = gst_elementfactory_new("example", GST_TYPE_EXAMPLE, &example_details);
-  g_return_if_fail(factory != NULL);
+  g_return_val_if_fail(factory != NULL, NULL);
 
   sink_template = gst_padtemplate_new (&sink_factory);
   gst_elementfactory_add_padtemplate (factory, sink_template);

@@ -139,7 +139,7 @@ gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
     GstEditorPad *peereditorpad;
 
     // FIXME does this need to check for ghost/real?
-    peerpad = GST_PAD_PEER(pad);
+    peerpad = gst_pad_get_peer (pad);
 
     peereditorpad = GST_EDITOR_GET_OBJECT (peerpad);
 
@@ -152,7 +152,7 @@ gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
   }
 
   gtk_signal_connect_object (GTK_OBJECT (parent), "position_changed", 
-		             gst_editor_pad_position_changed, editorpad);
+		             gst_editor_pad_position_changed, GTK_OBJECT (editorpad));
 
   return editorpad;
 }
@@ -454,10 +454,7 @@ static void
 gst_editor_pad_position_changed(GstEditorPad *pad, 
 		                GstEditorElement *element)
 {
-  GList *pads;
-
   if (pad->connection) {
-//      g_print("updating pad's connection\n");
     pad->connection->resize = TRUE;
     gst_editor_connection_resize(pad->connection);
   }

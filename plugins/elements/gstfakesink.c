@@ -180,7 +180,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  fakesink = GST_FAKESINK (pad->parent);
+  fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
   g_print("fakesink: ******* (%s:%s)< \n",GST_DEBUG_PAD_NAME(pad));
   
   gst_buffer_unref (buf);

@@ -37,7 +37,6 @@
 #include <gst/gstpad.h>
 #include <gst/cothreads.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -121,6 +120,8 @@ typedef enum {
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_COTHREAD_STOPPING))
 #define GST_ELEMENT_IS_EOS(obj)			(GST_FLAG_IS_SET(obj,GST_ELEMENT_EOS))
 
+#define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
+#define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
 
 typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
@@ -131,8 +132,6 @@ typedef void (*GstElementLoopFunction) (GstElement *element);
 
 struct _GstElement {
   GstObject object;
-
-  gchar *name;
 
   guint8 current_state;
   guint8 pending_state;
@@ -165,10 +164,6 @@ struct _GstElementClass {
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ);
-
-  /* create or read XML representation of self */
-  xmlNodePtr	(*save_thyself)		(GstElement *element, xmlNodePtr parent);
-  void		(*restore_thyself)	(GstElement *element, xmlNodePtr self, GHashTable *elements);
 };
 
 struct _GstElementDetails {
@@ -197,8 +192,11 @@ GstElement*		gst_element_new			(void);
 void			gst_element_set_loop_function	(GstElement *element,
 							 GstElementLoopFunction loop);
 
-void			gst_element_set_name		(GstElement *element, const gchar *name);
-const gchar*		gst_element_get_name		(GstElement *element);
+void                    gst_element_set_name            (GstElement *element, const gchar *name);
+const gchar*            gst_element_get_name            (GstElement *element);
+
+void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
+GstObject*              gst_element_get_parent          (GstElement *element);
 
 void			gst_element_set_manager		(GstElement *element, GstElement *manager);
 GstElement*		gst_element_get_manager		(GstElement *element);
@@ -230,8 +228,7 @@ void			gst_element_error		(GstElement *element, const gchar *error);
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
 
 /* XML write and read */
-xmlNodePtr		gst_element_save_thyself	(GstElement *element, xmlNodePtr parent);
-GstElement*		gst_element_load_thyself	(xmlNodePtr parent, GHashTable *elements);
+GstElement*		gst_element_load_thyself	(xmlNodePtr self, GstObject *parent);
 
 
 /*

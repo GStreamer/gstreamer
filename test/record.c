@@ -31,9 +31,6 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(audiosrc,"src"),
                   gst_element_get_pad(fdsink,"sink"));
 
-  g_print("\neverything's built, setting it up to be runnable\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
-
   g_print("\nok, runnable, hitting 'play'...\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 

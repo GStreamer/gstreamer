@@ -40,25 +40,25 @@ static GstClock *the_system_clock = NULL;
  * Returns: the new clock element
  */
 GstClock*
-gst_clock_new (gchar *name) 
+gst_clock_new (gchar *name)
 {
   GstClock *clock = (GstClock *) g_malloc(sizeof(GstClock));
-  
+
   clock->name = g_strdup (name);
   clock->sinkobjects = NULL;
   clock->sinkmutex = g_mutex_new ();
   clock->lock = g_mutex_new ();
   g_mutex_lock (clock->sinkmutex);
-  
+
   clock->num = 0;
   clock->num_locked = 0;
   clock->locking = FALSE;
-  
+
   return clock;
 }
 
 GstClock*
-gst_clock_get_system(void) 
+gst_clock_get_system(void)
 {
   if (the_system_clock == NULL) {
     the_system_clock = gst_clock_new ("system_clock");
@@ -67,8 +67,8 @@ gst_clock_get_system(void)
   return the_system_clock;
 }
 
-void 
-gst_clock_register (GstClock *clock, GstObject *obj) 
+void
+gst_clock_register (GstClock *clock, GstObject *obj)
 {
   if ((GST_ELEMENT(obj))->numsrcpads == 0) {
     GST_DEBUG (0,"gst_clock: setting registered sink object 0x%p\n", obj);
@@ -77,8 +77,8 @@ gst_clock_register (GstClock *clock, GstObject *obj)
   }
 }
 
-void 
-gst_clock_set (GstClock *clock, GstClockTime time) 
+void
+gst_clock_set (GstClock *clock, GstClockTime time)
 {
   struct timeval tfnow;
   GstClockTime now;
@@ -91,7 +91,7 @@ gst_clock_set (GstClock *clock, GstClockTime time)
   GST_DEBUG (0,"gst_clock: setting clock to %llu %llu %llu\n", time, now, clock->start_time);
 }
 
-GstClockTimeDiff 
+GstClockTimeDiff
 gst_clock_current_diff (GstClock *clock, GstClockTime time)
 {
   struct timeval tfnow;
@@ -99,14 +99,14 @@ gst_clock_current_diff (GstClock *clock, GstClockTime time)
 
   gettimeofday (&tfnow, (struct timezone *)NULL);
   g_mutex_lock (clock->lock);
-  now = ((guint64)tfnow.tv_sec*1000000LL+tfnow.tv_usec) - (guint64)clock->start_time; 
+  now = ((guint64)tfnow.tv_sec*1000000LL+tfnow.tv_usec) - (guint64)clock->start_time;
   g_mutex_unlock (clock->lock);
 
   return GST_CLOCK_DIFF (time, now);
 }
 
-void 
-gst_clock_reset (GstClock *clock) 
+void
+gst_clock_reset (GstClock *clock)
 {
   struct timeval tfnow;
 
@@ -119,8 +119,8 @@ gst_clock_reset (GstClock *clock)
   g_mutex_unlock (clock->lock);
 }
 
-void 
-gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj) 
+void
+gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
 {
   struct timeval tfnow;
   GstClockTime now;
@@ -133,8 +133,8 @@ gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
 
   diff = GST_CLOCK_DIFF (time, now);
   // if we are not behind wait a bit
-  GST_DEBUG (0,"gst_clock: %s waiting for time %08llu %08llu %08lld\n", gst_element_get_name(GST_ELEMENT(obj)), time, now, diff);
-   
+  GST_DEBUG (0,"gst_clock: %s waiting for time %08llu %08llu %08lld\n", GST_OBJECT_NAME (obj), time, now, diff);
+
   g_mutex_unlock (clock->lock);
   if (diff > 10000 ) {
     tfnow.tv_usec = (diff % 1000000);
@@ -143,8 +143,8 @@ gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
     if (!tfnow.tv_sec) {
       select(0, NULL, NULL, NULL, &tfnow);
     }
-    else GST_DEBUG (0,"gst_clock: %s waiting %u %llu %llu %llu seconds\n", gst_element_get_name(GST_ELEMENT(obj)), 
+    else GST_DEBUG (0,"gst_clock: %s waiting %u %llu %llu %llu seconds\n", GST_OBJECT_NAME (obj),
 		    (int)tfnow.tv_sec, now, diff, time);
   }
-  GST_DEBUG (0,"gst_clock: %s waiting for time %08llu %08llu %08lld done \n", gst_element_get_name(GST_ELEMENT(obj)), time, now, diff);
+  GST_DEBUG (0,"gst_clock: %s waiting for time %08llu %08llu %08lld done \n", GST_OBJECT_NAME (obj), time, now, diff);
 }

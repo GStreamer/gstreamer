@@ -208,7 +208,7 @@ gst_disksrc_get (GstPad *pad)
   glong readbytes;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_DISKSRC(gst_pad_get_parent(pad));
+  src = GST_DISKSRC(gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN), NULL);
   g_return_val_if_fail (GST_STATE (src) >= GST_STATE_READY, NULL);
 

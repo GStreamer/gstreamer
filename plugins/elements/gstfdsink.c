@@ -113,7 +113,7 @@ gst_fdsink_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  fdsink = GST_FDSINK (pad->parent);
+  fdsink = GST_FDSINK (gst_pad_get_parent (pad));
   
   g_return_if_fail (fdsink->fd >= 0);
   

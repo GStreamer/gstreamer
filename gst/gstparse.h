@@ -23,8 +23,8 @@
 #ifndef __GST_PARSE_H__
 #define __GST_PARSE_H__
 
-#include "gst.h"
+#include <gst/gstbin.h>
 
-gint gst_parse_launch(const gchar *cmdline,GstBin *parent);
+gint	gst_parse_launch	(const gchar *cmdline, GstBin *parent);
 
-#endif __GST_PARSE_H__
+#endif /* __GST_PARSE_H__ */

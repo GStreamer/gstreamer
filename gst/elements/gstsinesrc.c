@@ -132,18 +132,6 @@ static void gst_sinesrc_init(GstSineSrc *sinesrc) {
   sinesrc->sentmeta = FALSE;
 }
 
-GstElement *gst_sinesrc_new(gchar *name) {
-  GstElement *sinesrc = GST_ELEMENT(gtk_type_new(GST_TYPE_SINESRC));
-  gst_element_set_name(GST_ELEMENT(sinesrc),name);
-  return sinesrc;
-}
-
-GstElement *gst_sinesrc_new_with_fd(gchar *name,gchar *filename) {
-  GstElement *sinesrc = gst_sinesrc_new(name);
-  gtk_object_set(GTK_OBJECT(sinesrc),"location",filename,NULL);
-  return sinesrc;
-}
-
 static GstBuffer *
 gst_sinesrc_get(GstPad *pad)
 {
@@ -155,7 +143,7 @@ gst_sinesrc_get(GstPad *pad)
   gdouble val;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_SINESRC(gst_pad_get_parent(pad));
+  src = GST_SINESRC(gst_pad_get_parent (pad));
 
   buf = gst_buffer_new();
   g_return_val_if_fail (buf, NULL);

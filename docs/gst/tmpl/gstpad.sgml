@@ -503,22 +503,14 @@ Call the EOS function of the pad
 @pad: the pad to call the eos function of.
 
 
-<!-- ##### FUNCTION gst_pad_save_thyself ##### -->
-<para>
-
-</para>
-
-@pad: 
-@parent: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_load_and_connect ##### -->
 <para>
 
 </para>
 
+@self: 
 @parent: 
+<!-- # Unused Parameters # -->
 @element: 
 @elements: 
 

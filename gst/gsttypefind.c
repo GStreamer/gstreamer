@@ -161,9 +161,9 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  typefind = GST_TYPEFIND (pad->parent);
+  typefind = GST_TYPEFIND (GST_OBJECT_PARENT (pad));
   GST_DEBUG (0,"got buffer of %d bytes in '%s'\n",
-        GST_BUFFER_SIZE (buf), gst_element_get_name (GST_ELEMENT (typefind)));
+        GST_BUFFER_SIZE (buf), GST_OBJECT_NAME (typefind));
 
   type_list = gst_type_get_list ();
 

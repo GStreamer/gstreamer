@@ -125,6 +125,8 @@ void		gst_bin_remove			(GstBin *bin,
 /* retrieve a single element or the list of children */
 GstElement*	gst_bin_get_by_name		(GstBin *bin,
 						 const gchar *name);
+GstElement*	gst_bin_get_by_name_recurse_up	(GstBin *bin,
+						 const gchar *name);
 GList*		gst_bin_get_list		(GstBin *bin);
 
 void		gst_bin_create_plan		(GstBin *bin);

@@ -44,12 +44,14 @@ enum {
 };
 
 
-static void gst_element_class_init	(GstElementClass *klass);
-static void gst_element_init		(GstElement *element);
+static void			gst_element_class_init		(GstElementClass *klass);
+static void			gst_element_init		(GstElement *element);
 
-static void gst_element_real_destroy	(GtkObject *object);
+static void			gst_element_real_destroy	(GtkObject *object);
 
-static GstElementStateReturn gst_element_change_state(GstElement *element);
+static GstElementStateReturn	gst_element_change_state	(GstElement *element);
+
+static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
 
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
@@ -77,8 +79,10 @@ static void
 gst_element_class_init (GstElementClass *klass)
 {
   GtkObjectClass *gtkobject_class;
+  GstObjectClass *gstobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gtkobject_class = (GtkObjectClass*) klass;
+  gstobject_class = (GstObjectClass*) klass;
 
   parent_class = gtk_type_class(GST_TYPE_OBJECT);
 
@@ -110,10 +114,12 @@ gst_element_class_init (GstElementClass *klass)
 
   gtk_object_class_add_signals (gtkobject_class, gst_element_signals, LAST_SIGNAL);
 
+  gtkobject_class->destroy =		gst_element_real_destroy;
+
+  gstobject_class->save_thyself =	gst_element_save_thyself;
+
   klass->change_state = gst_element_change_state;
   klass->elementfactory = NULL;
-
-  gtkobject_class->destroy = gst_element_real_destroy;
 }
 
 static void
@@ -143,6 +149,78 @@ gst_element_new(void)
 }
 
 /**
+ * gst_element_set_name:
+ * @element: GstElement to set name of
+ * @name: new name of element
+ *
+ * Set the name of the element, getting rid of the old name if there was
+ * one.
+ */
+void
+gst_element_set_name (GstElement *element, const gchar *name)
+{
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (name != NULL);
+
+  gst_object_set_name (GST_OBJECT (element), name);
+}
+
+/**
+ * gst_element_get_name:
+ * @element: GstElement to get name of
+ *
+ * Get the name of the element.
+ *
+ * Returns: name of the element
+ */
+const gchar*
+gst_element_get_name (GstElement *element)
+{
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  return GST_OBJECT_NAME (element);
+}
+
+/**
+ * gst_element_set_parent:
+ * @element: GstElement to set parent of
+ * @name: new parent of the object
+ *
+ * Set the parent of the element.
+ */
+void
+gst_element_set_parent (GstElement *element, GstObject *parent)
+{
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_OBJECT_PARENT (element) == NULL);
+  g_return_if_fail (parent != NULL);
+  g_return_if_fail (GTK_IS_OBJECT (parent));
+  g_return_if_fail ((gpointer)element != (gpointer)parent);
+
+  gst_object_set_parent (GST_OBJECT (element), parent);
+}
+
+/**
+ * gst_element_get_parent:
+ * @element: GstElement to get the parent of
+ *
+ * Get the parent of the element.
+ *
+ * Returns: parent of the element
+ */
+GstObject*
+gst_element_get_parent (GstElement *element)
+{
+  g_return_val_if_fail (element != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  return GST_OBJECT_PARENT (element);
+}
+
+/**
  * gst_element_add_pad:
  * @element: element to add pad to
  * @pad: pad to add
@@ -160,8 +238,8 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
 
   /* set the pad's parent */
   GST_DEBUG (0,"setting parent of pad '%s'(%p) to '%s'(%p)\n",
-        gst_pad_get_name(pad),pad,gst_element_get_name(element),element);
-  gst_pad_set_parent (pad,GST_OBJECT (element));
+        GST_PAD_NAME (pad), pad, GST_ELEMENT_NAME (element), element);
+  gst_object_set_parent (GST_OBJECT (pad), GST_OBJECT (element));
 
   /* add it to the list */
   element->pads = g_list_append (element->pads, pad);
@@ -198,11 +276,11 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, gchar *name)
   ghostpad = gst_ghost_pad_new (name, pad);
 
   /* add it to the list */
-  GST_DEBUG(0,"adding ghost pad %s to element %s\n",name,gst_element_get_name(element));
+  GST_DEBUG(0,"adding ghost pad %s to element %s\n", name, GST_ELEMENT_NAME (element));
   element->pads = g_list_append (element->pads, ghostpad);
   element->numpads++;
   // set the parent of the ghostpad
-  gst_pad_set_parent(ghostpad, GST_OBJECT (element));
+  gst_object_set_parent (GST_OBJECT (ghostpad), GST_OBJECT (element));
 
   GST_DEBUG(0,"added ghostpad %s:%s\n",GST_DEBUG_PAD_NAME(ghostpad));
 
@@ -253,14 +331,15 @@ gst_element_get_pad (GstElement *element, const gchar *name)
     return NULL;
 
   GST_DEBUG(GST_CAT_ELEMENT_PADS,"searching for pad '%s' in element %s\n",
-            name,gst_element_get_name(element));
+            name, GST_ELEMENT_NAME (element));
 
   // look through the list, matching by name
   walk = element->pads;
   while (walk) {
-    if (!strcmp ((GST_PAD(walk->data))->name, name)) {
+    GstPad *pad = GST_PAD(walk->data);
+    if (!strcmp (gst_object_get_name (GST_OBJECT(pad)), name)) {
       GST_DEBUG(GST_CAT_ELEMENT_PADS,"found pad '%s'\n",name);
-      return GST_PAD(walk->data);
+      return pad;
     }
     walk = g_list_next (walk);
   }
@@ -521,7 +600,7 @@ gst_element_connect (GstElement *src, const gchar *srcpadname,
   /*
   if (srcparent != destparent) {
     GST_ERROR_OBJECT(srcparent,destparent,"%s and %s have different parents",
-                 gst_element_get_name(src),gst_element_get_name(dest));
+                 GST_ELEMENT_NAME (src),GST_ELEMENT_NAME (dest));
     return;
   }
   */
@@ -579,7 +658,7 @@ gst_element_disconnect (GstElement *src, const gchar *srcpadname,
 void
 gst_element_error (GstElement *element, const gchar *error)
 {
-  g_error("GstElement: error in element '%s': %s\n", element->name, error);
+  g_error("GstElement: error in element '%s': %s\n", gst_object_get_name (GST_OBJECT (element)), error);
 
   /* FIXME: this is not finished!!! */
 
@@ -631,7 +710,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     /* if that outright didn't work, we need to bail right away */
     /* NOTE: this will bail on ASYNC as well! */
     if (return_val == GST_STATE_FAILURE) {
-//      GST_DEBUG (0,"have async return from '%s'\n",gst_element_get_name(element));
+//      GST_DEBUG (0,"have async return from '%s'\n",GST_ELEMENT_NAME (element));
       return return_val;
     }
   }
@@ -688,44 +767,6 @@ gst_element_change_state (GstElement *element)
   return TRUE;
 }
 
-/**
- * gst_element_set_name:
- * @element: GstElement to set name of
- * @name: new name of element
- *
- * Set the name of the element, getting rid of the old name if there was
- * one.
- */
-void
-gst_element_set_name (GstElement *element, const gchar *name)
-{
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (name != NULL);
-
-  if (element->name != NULL)
-    g_free(element->name);
-
-  element->name = g_strdup (name);
-}
-
-/**
- * gst_element_get_name:
- * @element: GstElement to get name of
- *
- * Get the name of the element.
- *
- * Returns: name of the element
- */
-const gchar*
-gst_element_get_name (GstElement *element)
-{
-  g_return_val_if_fail (element != NULL, NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  return element->name;
-}
-
 static void
 gst_element_real_destroy (GtkObject *object)
 {
@@ -734,9 +775,6 @@ gst_element_real_destroy (GtkObject *object)
   GstPad *pad;
 
 //  g_print("in gst_element_real_destroy()\n");
-
-  if (element->name)
-    g_free (element->name);
 
   pads = element->pads;
   while (pads) {
@@ -774,25 +812,30 @@ static gchar *_gst_element_type_names[] = {
  *
  * Returns: the new xml node
  */
-xmlNodePtr
-gst_element_save_thyself (GstElement *element,
+static xmlNodePtr
+gst_element_save_thyself (GstObject *object,
 		          xmlNodePtr parent)
 {
-  xmlNodePtr self;
   GList *pads;
-  GstPad *pad;
   GstElementClass *oclass;
-  GstElementFactory *factory;
   GtkType type;
+  GstElement *element;
+
+  g_return_val_if_fail (object != NULL, parent);
+  g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
+  g_return_val_if_fail (parent != NULL, parent);
+
+  element = GST_ELEMENT (object);
 
   oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
 
-  self = xmlNewChild (parent, NULL, "element", NULL);
-  xmlNewChild(self, NULL, "name", element->name);
+  xmlNewChild(parent, NULL, "name", gst_object_get_name (GST_OBJECT (element)));
+
   if (oclass->elementfactory != NULL) {
-    factory = (GstElementFactory *)oclass->elementfactory;
-    xmlNewChild (self, NULL, "type", factory->name);
-    xmlNewChild (self, NULL, "version", factory->details->version);
+    GstElementFactory *factory = (GstElementFactory *)oclass->elementfactory;
+
+    xmlNewChild (parent, NULL, "type", factory->name);
+    xmlNewChild (parent, NULL, "version", factory->details->version);
   }
 
   // output all args to the element
@@ -806,11 +849,10 @@ gst_element_save_thyself (GstElement *element,
 
     for (i=0; i<num_args; i++) {
       if ((args[i].type > GTK_TYPE_NONE) &&
-          //(args[i].type <= GTK_TYPE_STRING) &&
           (flags[i] & GTK_ARG_READABLE)) {
         xmlNodePtr arg;
         gtk_object_getv (GTK_OBJECT (element), 1, &args[i]);
-        arg = xmlNewChild (self, NULL, "arg", NULL);
+        arg = xmlNewChild (parent, NULL, "arg", NULL);
         xmlNewChild (arg, NULL, "name", args[i].name);
         switch (args[i].type) {
           case GTK_TYPE_CHAR:
@@ -861,24 +903,20 @@ gst_element_save_thyself (GstElement *element,
 
   pads = element->pads;
   while (pads) {
-    xmlNodePtr padtag = xmlNewChild (self, NULL, "pad", NULL);
-    pad = GST_PAD (pads->data);
+    GstPad *pad = GST_PAD (pads->data);
+    xmlNodePtr padtag = xmlNewChild (parent, NULL, "pad", NULL);
     // figure out if it's a direct pad or a ghostpad
-    if (GST_ELEMENT (pad->parent) == element)
-      gst_pad_save_thyself (pad, padtag);
+    if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element)
+      gst_object_save_thyself (GST_OBJECT (pad), padtag);
     pads = g_list_next (pads);
   }
 
-
-  if (oclass->save_thyself)
-    (oclass->save_thyself)(element, self);
-
-  return self;
+  return parent;
 }
 
 /**
  * gst_element_load_thyself:
- * @parent: the xml parent node
+ * @self: the xml node
  * @elements: a hashtable to store the elements in. This is used
  *    to resolve inter element dependecies during the loading.
  *
@@ -887,12 +925,11 @@ gst_element_save_thyself (GstElement *element,
  * Returns: the new element
  */
 GstElement*
-gst_element_load_thyself (xmlNodePtr parent,
-		          GHashTable *elements)
+gst_element_load_thyself (xmlNodePtr self, GstObject *parent)
 {
-  xmlNodePtr children = parent->xmlChildrenNode;
+  xmlNodePtr children = self->xmlChildrenNode;
   GstElement *element;
-  GstElementClass *oclass;
+  GstObjectClass *oclass;
   guchar *name = NULL;
   guchar *value = NULL;
   guchar *type = NULL;
@@ -915,10 +952,13 @@ gst_element_load_thyself (xmlNodePtr parent,
 
   g_return_val_if_fail (element != NULL, NULL);
 
-  g_hash_table_insert (elements, g_strdup (gst_element_get_name (element)), element);
+  // ne need to set the parent on this object bacause the pads
+  // will go through the hierarchy to connect to thier peers
+  if (parent)
+    gst_object_set_parent (GST_OBJECT (element), parent);
 
   // we have the element now, set the arguments
-  children = parent->xmlChildrenNode;
+  children = self->xmlChildrenNode;
 
   while (children) {
     if (!strcmp (children->name, "arg")) {
@@ -1009,18 +1049,21 @@ gst_element_load_thyself (xmlNodePtr parent,
     children = children->next;
   }
   // we have the element now, set the pads
-  children = parent->xmlChildrenNode;
+  children = self->xmlChildrenNode;
 
   while (children) {
     if (!strcmp (children->name, "pad")) {
-      gst_pad_load_and_connect (children, GST_OBJECT(element), elements);
+      gst_pad_load_and_connect (children, GST_OBJECT (element));
     }
     children = children->next;
   }
 
-  oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
+  oclass = GST_OBJECT_CLASS (GTK_OBJECT (element)->klass);
   if (oclass->restore_thyself)
-    (oclass->restore_thyself) (element, parent, elements);
+    (oclass->restore_thyself) (GST_OBJECT (element), self);
+
+  if (parent)
+    gst_object_unparent (GST_OBJECT (element));
 
   return element;
 }

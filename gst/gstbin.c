@@ -28,8 +28,6 @@
 
 #include "gstscheduler.h"
 
-
-
 GstElementDetails gst_bin_details = {
   "Generic bin",
   "Bin",
@@ -51,9 +49,8 @@ static gboolean			gst_bin_change_state_type	(GstBin *bin,
 static void			gst_bin_create_plan_func	(GstBin *bin);
 static gboolean			gst_bin_iterate_func		(GstBin *bin);
 
-static xmlNodePtr		gst_bin_save_thyself		(GstElement *element, xmlNodePtr parent);
-static void			gst_bin_restore_thyself		(GstElement *element, xmlNodePtr parent,
-								 GHashTable *elements);
+static xmlNodePtr		gst_bin_save_thyself		(GstObject *object, xmlNodePtr parent);
+static void			gst_bin_restore_thyself		(GstObject *object, xmlNodePtr self);
 
 /* Bin signals and args */
 enum {
@@ -99,9 +96,11 @@ static void
 gst_bin_class_init (GstBinClass *klass)
 {
   GtkObjectClass *gtkobject_class;
+  GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
+  gstobject_class = (GstObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
   parent_class = gtk_type_class (GST_TYPE_ELEMENT);
@@ -118,9 +117,10 @@ gst_bin_class_init (GstBinClass *klass)
   klass->schedule =			gst_bin_schedule_func;
   klass->iterate =			gst_bin_iterate_func;
 
+  gstobject_class->save_thyself =	gst_bin_save_thyself;
+  gstobject_class->restore_thyself =	gst_bin_restore_thyself;
+
   gstelement_class->change_state =	gst_bin_change_state;
-  gstelement_class->save_thyself =	gst_bin_save_thyself;
-  gstelement_class->restore_thyself =	gst_bin_restore_thyself;
 
   gtkobject_class->destroy =		gst_bin_real_destroy;
 }
@@ -180,7 +180,7 @@ gst_bin_add (GstBin *bin,
   bin->numchildren++;
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
 
-  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child %s", gst_element_get_name(element));
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child %s", GST_ELEMENT_NAME (element));
 
   /* we know we have at least one child, we just added one... */
 //  if (GST_STATE(element) < GST_STATE_READY)
@@ -220,7 +220,7 @@ gst_bin_remove (GstBin *bin,
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
 
-  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "removed child %s", gst_element_get_name(element));
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "removed child %s", GST_ELEMENT_NAME (element));
 
   /* if we're down to zero children, force state to NULL */
   if (bin->numchildren == 0)
@@ -235,7 +235,7 @@ gst_bin_change_state (GstElement *element)
   GList *children;
   GstElement *child;
 
-  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name (element));
+  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (element));
 
   g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
 
@@ -271,16 +271,16 @@ gst_bin_change_state (GstElement *element)
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    GST_DEBUG (0,"setting state on '%s'\n",gst_element_get_name (child));
+    GST_DEBUG (0,"setting state on '%s'\n",GST_ELEMENT_NAME  (child));
     switch (gst_element_set_state (child, GST_STATE_PENDING (element))) {
       case GST_STATE_FAILURE:
         GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;
-        GST_DEBUG (0,"child '%s' failed to go to state %d(%s)\n", gst_element_get_name (child),
+        GST_DEBUG (0,"child '%s' failed to go to state %d(%s)\n", GST_ELEMENT_NAME  (child),
               GST_STATE_PENDING (element), _gst_print_statename (GST_STATE_PENDING (element)));
         return GST_STATE_FAILURE;
         break;
       case GST_STATE_ASYNC:
-        GST_DEBUG (0,"child '%s' is changing state asynchronously\n", gst_element_get_name (child));
+        GST_DEBUG (0,"child '%s' is changing state asynchronously\n", GST_ELEMENT_NAME  (child));
         break;
     }
 //    g_print("\n");
@@ -355,7 +355,7 @@ gst_bin_set_state_type (GstBin *bin,
   GstBinClass *oclass;
 
   GST_DEBUG (0,"gst_bin_set_state_type(\"%s\",%d,%d)\n",
-          gst_element_get_name (GST_ELEMENT (bin)), state,type);
+          GST_ELEMENT_NAME (bin), state,type);
 
   g_return_val_if_fail (bin != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
@@ -411,7 +411,7 @@ gst_bin_get_by_name (GstBin *bin,
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    if (!strcmp (child->name,name))
+    if (!strcmp (gst_object_get_name (GST_OBJECT (child)),name))
       return child;
     if (GST_IS_BIN (child)) {
       GstElement *res = gst_bin_get_by_name (GST_BIN (child), name);
@@ -422,6 +422,41 @@ gst_bin_get_by_name (GstBin *bin,
   }
 
   return NULL;
+}
+
+/**
+ * gst_bin_get_by_name_recurse_up:
+ * @bin: #Gstbin to search
+ * @name: the element name to search for
+ *
+ * Get the element with the given name from this bin. If the
+ * element is not found, a recursion is performed on the parent bin.
+ *
+ * Returns: the element with the given name
+ */
+GstElement*
+gst_bin_get_by_name_recurse_up (GstBin *bin,
+		                const gchar *name)
+{
+  GstElement *result = NULL;
+  GstObject *parent;
+
+  g_return_val_if_fail (bin != NULL, NULL);
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  result = gst_bin_get_by_name (bin, name);
+
+  if (result)
+    return result;
+
+  parent = gst_object_get_parent (GST_OBJECT (bin));
+
+  if (parent && GST_IS_BIN (parent)) {
+    result = gst_bin_get_by_name_recurse_up (GST_BIN (parent), name);
+  }
+
+  return result;
 }
 
 /**
@@ -442,48 +477,46 @@ gst_bin_get_list (GstBin *bin)
 }
 
 static xmlNodePtr
-gst_bin_save_thyself (GstElement *element,
+gst_bin_save_thyself (GstObject *object,
 		      xmlNodePtr parent)
 {
-  GstBin *bin = GST_BIN (element);
-  xmlNodePtr childlist;
+  GstBin *bin = GST_BIN (object);
+  xmlNodePtr childlist, elementnode;
   GList *children;
   GstElement *child;
 
-  if (GST_ELEMENT_CLASS (parent_class)->save_thyself)
-    GST_ELEMENT_CLASS (parent_class)->save_thyself (GST_ELEMENT (bin), parent);
+  if (GST_OBJECT_CLASS (parent_class)->save_thyself)
+    GST_OBJECT_CLASS (parent_class)->save_thyself (GST_OBJECT (bin), parent);
 
-  childlist = xmlNewChild (parent,NULL,"children",NULL);
+  childlist = xmlNewChild (parent, NULL, "children", NULL);
 
   GST_INFO_ELEMENT (GST_CAT_XML, bin, "saving %d children", bin->numchildren);
 
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    gst_element_save_thyself (child, childlist);
+    elementnode = xmlNewChild (childlist, NULL, "element", NULL);
+    gst_object_save_thyself (GST_OBJECT (child), elementnode);
     children = g_list_next (children);
   }
   return childlist;
 }
 
 static void
-gst_bin_restore_thyself (GstElement *element,
-		         xmlNodePtr parent,
-			 GHashTable *elements)
+gst_bin_restore_thyself (GstObject *object,
+		         xmlNodePtr self)
 {
-  GstBin *bin = GST_BIN (element);
-  xmlNodePtr field = parent->xmlChildrenNode;
+  GstBin *bin = GST_BIN (object);
+  xmlNodePtr field = self->xmlChildrenNode;
   xmlNodePtr childlist;
-
-//  g_print("gstbin: restore \"%s\"\n", gst_element_get_name (element));
 
   while (field) {
     if (!strcmp (field->name, "children")) {
-      GST_INFO_ELEMENT (GST_CAT_XML, element, "loading children");
+      GST_INFO_ELEMENT (GST_CAT_XML, GST_ELEMENT (object), "loading children");
       childlist = field->xmlChildrenNode;
       while (childlist) {
         if (!strcmp (childlist->name, "element")) {
-          GstElement *element = gst_element_load_thyself (childlist, elements);
+          GstElement *element = gst_element_load_thyself (childlist, GST_OBJECT (bin));
 
 	  gst_bin_add (bin, element);
 	}
@@ -493,7 +526,6 @@ gst_bin_restore_thyself (GstElement *element,
 
     field = field->next;
   }
-
 }
 
 void
@@ -520,14 +552,14 @@ gst_bin_iterate (GstBin *bin)
   GstBinClass *oclass;
   gboolean eos = TRUE;
 
-  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME (bin));
 
   oclass = GST_BIN_CLASS (GTK_OBJECT (bin)->klass);
 
   if (oclass->iterate)
     eos = (oclass->iterate) (bin);
 
-  GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+  GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
 
   return eos;
 }
@@ -553,7 +585,7 @@ gst_bin_create_plan (GstBin *bin)
 static void
 gst_bin_received_eos (GstElement *element, GstBin *bin)
 {
-  GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "child %s fired eos, pending %d\n", gst_element_get_name (element),
+  GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "child %s fired eos, pending %d\n", GST_ELEMENT_NAME (element),
 		  bin->num_eos_providers);
 
   GST_LOCK (bin);
@@ -599,7 +631,7 @@ gst_bin_create_plan_func (GstBin *bin)
   GSList *pending = NULL;
   GstBin *pending_bin;
 
-  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
+  GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (bin));
 
   GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "creating plan");
 
@@ -612,11 +644,11 @@ gst_bin_create_plan_func (GstBin *bin)
   } else {
     manager = gst_element_get_manager (GST_ELEMENT (bin));
     if (!manager) {
-      GST_DEBUG (0,"manager not set for element \"%s\" assuming manager is self\n", gst_element_get_name (GST_ELEMENT (bin)));
+      GST_DEBUG (0,"manager not set for element \"%s\" assuming manager is self\n", GST_ELEMENT_NAME (bin));
       manager = GST_ELEMENT (bin);
       GST_FLAG_SET (bin, GST_BIN_FLAG_MANAGER);
     }
-    GST_DEBUG (0,"setting manager to \"%s\"\n", gst_element_get_name (manager));
+    GST_DEBUG (0,"setting manager to \"%s\"\n", GST_ELEMENT_NAME (manager));
   }
   gst_element_set_manager (GST_ELEMENT (bin), manager);
 
@@ -633,22 +665,22 @@ gst_bin_create_plan_func (GstBin *bin)
     element = GST_ELEMENT (elements->data);
     elements = g_list_next (elements);
 #ifdef GST_DEBUG_ENABLED
-    elementname = gst_element_get_name (element);
+    elementname = GST_ELEMENT_NAME  (element);
 #endif
     GST_DEBUG (0,"have element \"%s\"\n",elementname);
 
     // first set their manager
-    GST_DEBUG (0,"setting manager of \"%s\" to \"%s\"\n",elementname,gst_element_get_name(manager));
+    GST_DEBUG (0,"setting manager of \"%s\" to \"%s\"\n",elementname,GST_ELEMENT_NAME (manager));
     gst_element_set_manager (element, manager);
 
     // we do recursion and such for Bins
     if (GST_IS_BIN (element)) {
       // recurse into the child Bin
       GST_DEBUG (0,"recursing into child Bin \"%s\" with manager \"%s\"\n",elementname,
-		      gst_element_get_name(element->manager));
+		      GST_ELEMENT_NAME (element->manager));
       gst_bin_create_plan (GST_BIN (element));
       GST_DEBUG (0,"after recurse got manager \"%s\"\n",
-		      gst_element_get_name(element->manager));
+		      GST_ELEMENT_NAME (element->manager));
       // check to see if it needs cothreads and isn't self-managing
       if (((GST_BIN (element))->need_cothreads) && !GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
         GST_DEBUG (0,"requiring cothreads because child bin \"%s\" does\n",elementname);
@@ -677,7 +709,7 @@ gst_bin_create_plan_func (GstBin *bin)
 
   // if we're not a manager thread, we're done.
   if (!GST_FLAG_IS_SET (bin, GST_BIN_FLAG_MANAGER)) {
-    GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+    GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
     return;
   }
 
@@ -697,13 +729,13 @@ gst_bin_create_plan_func (GstBin *bin)
 
     // walk the list of elements, find bins, and do stuff
     GST_DEBUG (0,"checking Bin \"%s\" for managed elements\n",
-          gst_element_get_name (GST_ELEMENT (pending_bin)));
+          GST_ELEMENT_NAME  (pending_bin));
     elements = pending_bin->children;
     while (elements) {
       element = GST_ELEMENT (elements->data);
       elements = g_list_next (elements);
 #ifdef GST_DEBUG_ENABLED
-      elementname = gst_element_get_name (element);
+      elementname = GST_ELEMENT_NAME  (element);
 #endif
 
       // if it's ours, add it to the list
@@ -734,10 +766,10 @@ gst_bin_create_plan_func (GstBin *bin)
   gst_bin_schedule(bin);
 
   g_print ("gstbin \"%s\", eos providers:%d\n",
-		  gst_element_get_name (GST_ELEMENT (bin)),
+		  GST_ELEMENT_NAME (bin),
 		  bin->num_eos_providers);
 
-  GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+  GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
 }
 
 static gboolean
@@ -753,7 +785,7 @@ gst_bin_iterate_func (GstBin *bin)
   gint num_scheduled = 0;
   gboolean eos = FALSE;
 
-  GST_DEBUG_ENTER("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
+  GST_DEBUG_ENTER("(\"%s\")", GST_ELEMENT_NAME (bin));
 
   g_return_val_if_fail (bin != NULL, TRUE);
   g_return_val_if_fail (GST_IS_BIN (bin), TRUE);
@@ -775,7 +807,7 @@ gst_bin_iterate_func (GstBin *bin)
       entry = GST_ELEMENT (chain->elements->data);
       GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
       GST_DEBUG (0,"set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
-            gst_element_get_name(entry),entry);
+            GST_ELEMENT_NAME (entry),entry);
       cothread_switch (entry->threadstate);
 
     } else {
@@ -789,7 +821,7 @@ gst_bin_iterate_func (GstBin *bin)
         entry = GST_ELEMENT (entries->data);
         entries = g_list_next (entries);
 
-        GST_DEBUG (0,"have entry \"%s\"\n",gst_element_get_name(entry));
+        GST_DEBUG (0,"have entry \"%s\"\n",GST_ELEMENT_NAME (entry));
 
         if (GST_IS_BIN (entry)) {
           gst_bin_iterate (GST_BIN (entry));
@@ -800,7 +832,7 @@ gst_bin_iterate_func (GstBin *bin)
             if (GST_RPAD_DIRECTION(pad) == GST_PAD_SRC) {
               GST_DEBUG (0,"calling getfunc of %s:%s\n",GST_DEBUG_PAD_NAME(pad));
               if (GST_REAL_PAD(pad)->getfunc == NULL)
-                fprintf(stderr, "error, no getfunc in \"%s\"\n", gst_element_get_name (entry));
+                fprintf(stderr, "error, no getfunc in \"%s\"\n", GST_ELEMENT_NAME  (entry));
               else
                 buf = (GST_REAL_PAD(pad)->getfunc)(pad);
               if (buf) gst_pad_push(pad,buf);
@@ -829,7 +861,7 @@ gst_bin_iterate_func (GstBin *bin)
     }
   }
 
-  GST_DEBUG_LEAVE("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
+  GST_DEBUG_LEAVE("(%s)", GST_ELEMENT_NAME (bin));
   return !eos;
 }
 

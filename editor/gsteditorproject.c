@@ -128,7 +128,8 @@ gst_editor_project_new_from_file (const guchar *fname)
 
   editorproject = gst_editor_project_new();
 
-  xml = gst_xml_new (fname, NULL);
+  xml = gst_xml_new ();
+  gst_xml_parse_file (xml, fname, NULL);
 
   elements = gst_xml_get_topelements(xml);
   

@@ -184,7 +184,7 @@ gst_fdsrc_get(GstPad *pad)
   glong readbytes;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_FDSRC(gst_pad_get_parent(pad));
+  src = GST_FDSRC(gst_pad_get_parent (pad));
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this

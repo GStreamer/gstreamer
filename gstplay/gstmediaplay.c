@@ -12,18 +12,18 @@
 #include "gstmediaplay.h"
 #include "callbacks.h"
 
-static void gst_media_play_class_init 		(GstMediaPlayClass *klass);
-static void gst_media_play_init       		(GstMediaPlay *play);
+static void gst_media_play_class_init		(GstMediaPlayClass *klass);
+static void gst_media_play_init			(GstMediaPlay *play);
 
-static void gst_media_play_set_arg    		(GtkObject *object,GtkArg *arg,guint id);
-static void gst_media_play_get_arg    		(GtkObject *object,GtkArg *arg,guint id);
+static void gst_media_play_set_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void gst_media_play_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 
-static void gst_media_play_frame_displayed 	(GstPlay *play, GstMediaPlay *mplay);
-static void gst_media_play_state_changed 	(GstPlay *play, GstPlayState state, GstMediaPlay *mplay);
-static void gst_media_play_slider_changed 	(GtkAdjustment   *adj, GstMediaPlay *mplay);
+static void gst_media_play_frame_displayed	(GstPlay *play, GstMediaPlay *mplay);
+static void gst_media_play_state_changed	(GstPlay *play, GstPlayState state, GstMediaPlay *mplay);
+static void gst_media_play_slider_changed	(GtkAdjustment   *adj, GstMediaPlay *mplay);
 
-static void update_buttons            		(GstMediaPlay *mplay, GstPlayState state);
-static void update_slider 			(GstMediaPlay *mplay, GtkAdjustment *adjustment, gfloat value);
+static void update_buttons			(GstMediaPlay *mplay, GstPlayState state);
+static void update_slider			(GstMediaPlay *mplay, GtkAdjustment *adjustment, gfloat value);
 
 /* signals and args */
 enum {
@@ -47,7 +47,7 @@ target_drag_data_received  (GtkWidget          *widget,
   if (strstr (data->data, "file:")) {
     g_print ("Got: %s\n",&data->data[5]);
     gdk_threads_leave ();
-    gst_media_play_start_uri (play, g_strchomp(&data->data[5])); 
+    gst_media_play_start_uri (play, g_strchomp(&data->data[5]));
     gdk_threads_enter ();
   }
 }
@@ -59,8 +59,8 @@ static GtkTargetEntry target_table[] = {
 static GtkObject *parent_class = NULL;
 //static guint gst_media_play_signals[LAST_SIGNAL] = { 0 };
 
-GtkType 
-gst_media_play_get_type(void) 
+GtkType
+gst_media_play_get_type(void)
 {
   static GtkType play_type = 0;
 

@@ -269,9 +269,11 @@ gst_fakesrc_get(GstPad *pad)
   GstFakeSrc *src;
   GstBuffer *buf;
 
-  g_return_val_if_fail(pad != NULL, NULL);
-  src = GST_FAKESRC(gst_pad_get_parent(pad));
-  g_return_val_if_fail(GST_IS_FAKESRC(src), NULL);
+  g_return_val_if_fail (pad != NULL, NULL);
+
+  src = GST_FAKESRC (gst_pad_get_parent (pad));
+
+  g_return_val_if_fail (GST_IS_FAKESRC (src), NULL);
 
   if (src->num_buffers == 0) {
     gst_pad_set_eos (pad);

@@ -218,7 +218,7 @@ gst_asyncdisksrc_get (GstPad *pad)
   GstBuffer *buf;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_ASYNCDISKSRC (gst_pad_get_parent(pad));
+  src = GST_ASYNCDISKSRC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_ASYNCDISKSRC_OPEN), NULL);
 
   /* deal with EOF state */
@@ -276,7 +276,7 @@ gst_asyncdisksrc_get_region (GstPad *pad, gulong offset, gulong size)
 
   g_return_val_if_fail (pad != NULL, NULL);
 
-  src = GST_ASYNCDISKSRC (gst_pad_get_parent(pad));
+  src = GST_ASYNCDISKSRC (gst_pad_get_parent (pad));
 
   g_return_val_if_fail (GST_IS_ASYNCDISKSRC (src), NULL);
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_ASYNCDISKSRC_OPEN), NULL);

@@ -181,7 +181,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  tee = GST_TEE (pad->parent);
+  tee = GST_TEE (gst_pad_get_parent (pad));
   gst_trace_add_entry (NULL, 0, buf, "tee buffer");
 
   for (i=0; i<tee->numsrcpads-1; i++)

@@ -149,7 +149,7 @@ gst_audiosrc_get (GstPad *pad)
   glong readbytes;
 
   g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_AUDIOSRC(gst_pad_get_parent(pad));
+  src = GST_AUDIOSRC(gst_pad_get_parent (pad));
 
 //  g_print("attempting to read something from soundcard\n");
 

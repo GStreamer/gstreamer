@@ -96,9 +96,7 @@ typedef enum {
 struct _GstPad {
   GstObject object;
 
-  gchar *name;
   gpointer element_private;
-  GstObject *parent;
 
   GstPadTemplate *padtemplate;	/* the template for this pad */
 };
@@ -154,9 +152,9 @@ struct _GstGhostPadClass {
 
 /***** helper macros *****/
 /* GstPad */
-#define GST_PAD_NAME(pad)		(((GstPad *)(pad))->name)
+#define GST_PAD_NAME(pad)		(GST_OBJECT_NAME(pad))
+#define GST_PAD_PARENT(pad)		(GST_OBJECT_PARENT(pad))
 #define GST_PAD_ELEMENT_PRIVATE(pad)	(((GstPad *)(pad))->element_private)
-#define GST_PAD_PARENT(pad)		(((GstPad *)(pad))->parent)
 #define GST_PAD_PADTEMPLATE(pad)	(((GstPad *)(pad))->padtemplate)
 
 /* GstRealPad */
@@ -236,41 +234,42 @@ GtkType			gst_real_pad_get_type		(void);
 GtkType			gst_ghost_pad_get_type		(void);
 
 GstPad*			gst_pad_new			(gchar *name, GstPadDirection direction);
-#define 		gst_pad_destroy(pad) 		gst_object_destroy (GST_OBJECT (pad))
+#define			gst_pad_destroy(pad)		gst_object_destroy (GST_OBJECT (pad))
 GstPad*			gst_pad_new_from_template	(GstPadTemplate *templ, gchar *name);
 
-GstPadDirection 	gst_pad_get_direction		(GstPad *pad);
+GstPadDirection		gst_pad_get_direction		(GstPad *pad);
 
-void 			gst_pad_set_chain_function	(GstPad *pad, GstPadChainFunction chain);
-void 			gst_pad_set_get_function	(GstPad *pad, GstPadGetFunction get);
+void			gst_pad_set_chain_function	(GstPad *pad, GstPadChainFunction chain);
+void			gst_pad_set_get_function	(GstPad *pad, GstPadGetFunction get);
 void			gst_pad_set_getregion_function	(GstPad *pad, GstPadGetRegionFunction getregion);
-void 			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
+void			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 void			gst_pad_set_eos_function	(GstPad *pad, GstPadEOSFunction eos);
 
-void	 		gst_pad_set_caps_list		(GstPad *pad, GList *caps);
-GList* 			gst_pad_get_caps_list		(GstPad *pad);
-GstCaps* 		gst_pad_get_caps_by_name	(GstPad *pad, gchar *name);
-gboolean 		gst_pad_check_compatibility	(GstPad *srcpad, GstPad *sinkpad);
-
-void 			gst_pad_set_name		(GstPad *pad, const gchar *name);
-const gchar*		gst_pad_get_name		(GstPad *pad);
+void			gst_pad_set_caps_list		(GstPad *pad, GList *caps);
+GList*			gst_pad_get_caps_list		(GstPad *pad);
+GstCaps*		gst_pad_get_caps_by_name	(GstPad *pad, gchar *name);
+gboolean		gst_pad_check_compatibility	(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_element_private	(GstPad *pad, gpointer priv);
 gpointer		gst_pad_get_element_private	(GstPad *pad);
 
-void 			gst_pad_set_parent		(GstPad *pad, GstObject *parent);
+void			gst_pad_set_name		(GstPad *pad, const gchar *name);
+const gchar*		gst_pad_get_name		(GstPad *pad);
+
+void			gst_pad_set_parent		(GstPad *pad, GstObject *parent);
 GstObject*		gst_pad_get_parent		(GstPad *pad);
-void 			gst_pad_add_ghost_pad		(GstPad *pad, GstPad *ghostpad);
-void 			gst_pad_remove_ghost_pad	(GstPad *pad, GstPad *ghostpad);
+
+void			gst_pad_add_ghost_pad		(GstPad *pad, GstPad *ghostpad);
+void			gst_pad_remove_ghost_pad	(GstPad *pad, GstPad *ghostpad);
 GList*			gst_pad_get_ghost_pad_list	(GstPad *pad);
 
 GstPad*			gst_pad_get_peer		(GstPad *pad);
 
-void 			gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
-void 			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);
+void			gst_pad_connect			(GstPad *srcpad, GstPad *sinkpad);
+void			gst_pad_disconnect		(GstPad *srcpad, GstPad *sinkpad);
 
 #if 1
-void 			gst_pad_push			(GstPad *pad, GstBuffer *buffer);
+void			gst_pad_push			(GstPad *pad, GstBuffer *buffer);
 #else
 #define gst_pad_push(pad,buf) G_STMT_START{ \
   if ((pad)->peer->pushfunc) ((pad)->peer->pushfunc)((pad)->peer,(buf)); \
@@ -291,10 +290,9 @@ GstPad *		gst_pad_select			(GstPad *nextpad, ...);
 #define			gst_pad_eos(pad)		(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
 gboolean		gst_pad_set_eos			(GstPad *pad);
 
-void 			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
+void			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 
-xmlNodePtr 		gst_pad_save_thyself		(GstPad *pad, xmlNodePtr parent);
-void 			gst_pad_load_and_connect	(xmlNodePtr parent, GstObject *element, GHashTable *elements);
+void			gst_pad_load_and_connect	(xmlNodePtr self, GstObject *parent);
 
 
 /* ghostpads */
@@ -303,14 +301,14 @@ GstPad *		gst_ghost_pad_new		(gchar *name,GstPad *pad);
 
 
 /* templates and factories */
-GtkType 		gst_padtemplate_get_type	(void);
+GtkType			gst_padtemplate_get_type	(void);
 
 GstPadTemplate*		gst_padtemplate_new		(GstPadFactory *factory);
-GstPadTemplate*		gst_padtemplate_create		(gchar *name_template, 
+GstPadTemplate*		gst_padtemplate_create		(gchar *name_template,
 		                                         GstPadDirection direction, GstPadPresence presence,
 							 GList *caps);
 
-xmlNodePtr 		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
+xmlNodePtr		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
 
 #ifdef __cplusplus
@@ -318,5 +316,5 @@ GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
 #endif /* __cplusplus */
 
 
-#endif /* __GST_PAD_H__ */     
+#endif /* __GST_PAD_H__ */
 

@@ -54,8 +54,8 @@ gboolean _gst_warn_old_registry = TRUE;
 static gboolean plugin_times_older_than(time_t regtime);
 static time_t get_time(const char * path);
 
-void 
-_gst_plugin_initialize (void) 
+void
+_gst_plugin_initialize (void)
 {
   xmlDocPtr doc;
   _gst_modules = NULL;
@@ -123,7 +123,7 @@ plugin_times_older_than_recurse(gchar *path, time_t regtime)
 	       path, (long)pathtime, (long)regtime);
     return FALSE;
   }
-  
+
   dir = opendir(path);
   if (dir) {
     while ((dirent = readdir(dir))) {
@@ -161,8 +161,8 @@ plugin_times_older_than(time_t regtime)
   return TRUE;
 }
 
-static gboolean 
-gst_plugin_load_recurse (gchar *directory, gchar *name) 
+static gboolean
+gst_plugin_load_recurse (gchar *directory, gchar *name)
 {
   DIR *dir;
   struct dirent *dirent;
@@ -189,7 +189,7 @@ gst_plugin_load_recurse (gchar *directory, gchar *name)
     if (strstr(directory,".so")) {
       gchar *temp;
       if (name) {
-        if ((temp = strstr(directory,name)) && 
+        if ((temp = strstr(directory,name)) &&
             (!strcmp(temp,name))) {
           loaded = gst_plugin_load_absolute(directory);
         }
@@ -207,8 +207,8 @@ gst_plugin_load_recurse (gchar *directory, gchar *name)
  *
  * Load all plugins in the path.
  */
-void 
-gst_plugin_load_all(void) 
+void
+gst_plugin_load_all(void)
 {
   GList *path;
 
@@ -231,8 +231,8 @@ gst_plugin_load_all(void)
  *
  * Returns: whether the library was loaded or not
  */
-gboolean 
-gst_library_load (const gchar *name) 
+gboolean
+gst_library_load (const gchar *name)
 {
   gboolean res;
   GList *libraries = _gst_libraries;
@@ -242,7 +242,7 @@ gst_library_load (const gchar *name)
 
     libraries = g_list_next(libraries);
   }
-  
+
   // for now this is the same
   res = gst_plugin_load(name);
 
@@ -253,8 +253,8 @@ gst_library_load (const gchar *name)
   return res;
 }
 
-static void 
-gst_plugin_remove (GstPlugin *plugin) 
+static void
+gst_plugin_remove (GstPlugin *plugin)
 {
   GList *factories;
 
@@ -263,7 +263,7 @@ gst_plugin_remove (GstPlugin *plugin)
     gst_elementfactory_destroy ((GstElementFactory*)(factories->data));
     factories = g_list_next(factories);
   }
-  
+
   _gst_plugins = g_list_remove(_gst_plugins, plugin);
 
   // don't free the stuct because someone can have a handle to it
@@ -278,8 +278,8 @@ gst_plugin_remove (GstPlugin *plugin)
  *
  * Returns: whether the plugin was loaded or not
  */
-gboolean 
-gst_plugin_load (const gchar *name) 
+gboolean
+gst_plugin_load (const gchar *name)
 {
   GList *path;
   gchar *libspath;
@@ -327,8 +327,8 @@ gst_plugin_load (const gchar *name)
  *
  * Returns: whether or not the plugin loaded
  */
-gboolean 
-gst_plugin_load_absolute (const gchar *name) 
+gboolean
+gst_plugin_load_absolute (const gchar *name)
 {
   GModule *module;
   GstPluginInitFunc initfunc;
@@ -379,7 +379,7 @@ gst_plugin_load_absolute (const gchar *name)
  * Returns: new plugin
  */
 GstPlugin*
-gst_plugin_new (const gchar *name) 
+gst_plugin_new (const gchar *name)
 {
   GstPlugin *plugin;
 
@@ -441,12 +441,12 @@ gst_plugin_set_name (GstPlugin *plugin, const gchar *name)
  *
  * Sets the long name (should be descriptive) of the plugin.
  */
-void 
-gst_plugin_set_longname (GstPlugin *plugin, const gchar *longname) 
+void
+gst_plugin_set_longname (GstPlugin *plugin, const gchar *longname)
 {
   g_return_if_fail(plugin != NULL);
 
-  if (plugin->longname) 
+  if (plugin->longname)
     g_free(plugin->longname);
 
   plugin->longname = g_strdup(longname);
@@ -510,7 +510,7 @@ gst_plugin_is_loaded (GstPlugin *plugin)
  * Returns: pointer to the #GstPlugin if found, NULL otherwise
  */
 GstPlugin*
-gst_plugin_find (const gchar *name) 
+gst_plugin_find (const gchar *name)
 {
   GList *plugins = _gst_plugins;
 
@@ -529,7 +529,7 @@ gst_plugin_find (const gchar *name)
   return NULL;
 }
 
-/** 
+/**
  * gst_plugin_find_elementfactory:
  * @name: name of elementfactory to find
  *
@@ -538,7 +538,7 @@ gst_plugin_find (const gchar *name)
  * Returns: @GstElementFactory if found, NULL if not
  */
 GstElementFactory*
-gst_plugin_find_elementfactory (const gchar *name) 
+gst_plugin_find_elementfactory (const gchar *name)
 {
   GList *plugins, *factories;
   GstElementFactory *factory;
@@ -560,7 +560,7 @@ gst_plugin_find_elementfactory (const gchar *name)
   return NULL;
 }
 
-/** 
+/**
  * gst_plugin_load_elementfactory:
  * @name: name of elementfactory to load
  *
@@ -569,7 +569,7 @@ gst_plugin_find_elementfactory (const gchar *name)
  * Returns: @GstElementFactory if loaded, NULL if not
  */
 GstElementFactory*
-gst_plugin_load_elementfactory (const gchar *name) 
+gst_plugin_load_elementfactory (const gchar *name)
 {
   GList *plugins, *factories;
   GstElementFactory *factory = NULL;
@@ -581,15 +581,15 @@ gst_plugin_load_elementfactory (const gchar *name)
   while (plugins) {
     plugin = (GstPlugin *)plugins->data;
     factories = plugin->elements;
-    
+
     while (factories) {
       factory = (GstElementFactory*)(factories->data);
-      
+
       if (!strcmp(factory->name,name)) {
 	if (!plugin->loaded) {
           gchar *filename = g_strdup (plugin->filename);
 	  gchar *pluginname = g_strdup (plugin->name);
-	  
+
           GST_INFO (GST_CAT_PLUGIN_LOADING,"loaded elementfactory %s from plugin %s",name,plugin->name);
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
@@ -609,14 +609,14 @@ gst_plugin_load_elementfactory (const gchar *name)
   return factory;
 }
 
-/** 
+/**
  * gst_plugin_load_typefactory:
  * @mime: name of typefactory to load
  *
  * Load a registered typefactory by mime type.
  */
-void 
-gst_plugin_load_typefactory (const gchar *mime) 
+void
+gst_plugin_load_typefactory (const gchar *mime)
 {
   GList *plugins, *factories;
   GstTypeFactory *factory;
@@ -628,15 +628,15 @@ gst_plugin_load_typefactory (const gchar *mime)
   while (plugins) {
     plugin = (GstPlugin *)plugins->data;
     factories = g_list_copy (plugin->types);
-    
+
     while (factories) {
       factory = (GstTypeFactory*)(factories->data);
-      
+
       if (!strcmp(factory->mime,mime)) {
 	if (!plugin->loaded) {
           gchar *filename = g_strdup (plugin->filename);
 	  gchar *pluginname = g_strdup (plugin->name);
-	  
+
           GST_INFO (GST_CAT_PLUGIN_LOADING,"loading type factory for \"%s\" from plugin %s",mime,plugin->name);
 	  plugin->loaded = TRUE;
 	  gst_plugin_remove(plugin);
@@ -666,8 +666,8 @@ gst_plugin_load_typefactory (const gchar *mime)
  *
  * Add factory to the list of those provided by the plugin.
  */
-void 
-gst_plugin_add_factory (GstPlugin *plugin, GstElementFactory *factory) 
+void
+gst_plugin_add_factory (GstPlugin *plugin, GstElementFactory *factory)
 {
   g_return_if_fail (plugin != NULL);
   g_return_if_fail (factory != NULL);
@@ -684,8 +684,8 @@ gst_plugin_add_factory (GstPlugin *plugin, GstElementFactory *factory)
  *
  * Add a typefactory to the list of those provided by the plugin.
  */
-void 
-gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory) 
+void
+gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory)
 {
   g_return_if_fail (plugin != NULL);
   g_return_if_fail (factory != NULL);
@@ -704,7 +704,7 @@ gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory)
  * Returns; a GList of GstPlugin elements
  */
 GList*
-gst_plugin_get_list(void) 
+gst_plugin_get_list(void)
 {
   return _gst_plugins;
 }
@@ -717,8 +717,8 @@ gst_plugin_get_list(void)
  *
  * Returns: the new XML node
  */
-xmlNodePtr 
-gst_plugin_save_thyself (xmlNodePtr parent) 
+xmlNodePtr
+gst_plugin_save_thyself (xmlNodePtr parent)
 {
   xmlNodePtr tree, subtree;
   GList *plugins = NULL, *elements = NULL, *types = NULL;
@@ -733,7 +733,7 @@ gst_plugin_save_thyself (xmlNodePtr parent)
     types = plugin->types;
     while (types) {
       GstTypeFactory *factory = (GstTypeFactory *)types->data;
-      subtree = xmlNewChild(tree,NULL,"type",NULL);
+      subtree = xmlNewChild(tree,NULL,"typefactory",NULL);
 
       gst_typefactory_save_thyself(factory, subtree);
 
@@ -742,7 +742,7 @@ gst_plugin_save_thyself (xmlNodePtr parent)
     elements = plugin->elements;
     while (elements) {
       GstElementFactory *factory = (GstElementFactory *)elements->data;
-      subtree = xmlNewChild(tree,NULL,"element",NULL);
+      subtree = xmlNewChild(tree,NULL,"elementfactory",NULL);
 
       gst_elementfactory_save_thyself(factory, subtree);
 
@@ -759,14 +759,14 @@ gst_plugin_save_thyself (xmlNodePtr parent)
  *
  * load the plugin from an XML representation
  */
-void 
-gst_plugin_load_thyself (xmlNodePtr parent) 
+void
+gst_plugin_load_thyself (xmlNodePtr parent)
 {
-  xmlNodePtr kinderen;   
+  xmlNodePtr kinderen;
   gint elementcount = 0;
   gint typecount = 0;
   gchar *pluginname;
-  
+
   kinderen = parent->xmlChildrenNode; // Dutch invasion :-)
   while (kinderen) {
     if (!strcmp(kinderen->name, "plugin")) {
@@ -794,12 +794,12 @@ gst_plugin_load_thyself (xmlNodePtr parent)
 	else if (!strcmp(field->name, "filename")) {
 	  plugin->filename = xmlNodeGetContent(field);
 	}
-	else if (!strcmp(field->name, "element")) {
+	else if (!strcmp(field->name, "elementfactory")) {
 	  GstElementFactory *factory = gst_elementfactory_load_thyself(field);
 	  gst_plugin_add_factory (plugin, factory);
 	  elementcount++;
 	}
-	else if (!strcmp(field->name, "type")) {
+	else if (!strcmp(field->name, "typefactory")) {
 	  GstTypeFactory *factory = gst_typefactory_load_thyself(field);
 	  gst_plugin_add_type (plugin, factory);
 	  elementcount++;

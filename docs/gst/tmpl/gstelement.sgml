@@ -405,24 +405,16 @@ circumstances.
 @element: 
 
 
-<!-- ##### FUNCTION gst_element_save_thyself ##### -->
-<para>
-
-</para>
-
-@element: 
-@parent: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_load_thyself ##### -->
 <para>
 
 </para>
 
+@self: 
 @parent: 
-@elements: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@elements: 
 
 
 <!-- ##### FUNCTION gst_elementfactory_new ##### -->

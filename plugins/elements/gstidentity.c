@@ -120,7 +120,7 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  identity = GST_IDENTITY (pad->parent);
+  identity = GST_IDENTITY (gst_pad_get_parent (pad));
   g_print("identity: ******* (%s:%s)i \n",GST_DEBUG_PAD_NAME(pad));
   
   gst_pad_push (identity->srcpad, buf);

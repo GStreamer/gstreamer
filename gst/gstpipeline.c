@@ -125,7 +125,7 @@ static void
 gst_pipeline_prepare (GstPipeline *pipeline) 
 {
   GST_DEBUG (0,"GstPipeline: preparing pipeline \"%s\" for playing\n", 
-		  gst_element_get_name(GST_ELEMENT(pipeline)));
+		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
 }
 
 static void 
@@ -144,7 +144,7 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
   GstCaps *caps = NULL;
 
   GST_DEBUG (0,"GstPipeline: typefind for element \"%s\" %p\n", 
-		  gst_element_get_name(element), &found);
+		  GST_ELEMENT_NAME(element), &found);
 
   typefind = gst_elementfactory_make ("typefind", "typefind");
   g_return_val_if_fail (typefind != NULL, FALSE);
@@ -189,27 +189,27 @@ gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   gboolean connected = FALSE;
 
   GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"\n", 
-		  gst_element_get_name(src), gst_element_get_name(sink));
+		  GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
 
   sinkpads = gst_element_get_pad_list(sink);
   while (sinkpads) {
     GstPad *sinkpad = (GstPad *)sinkpads->data;
 
     // if we have a match, connect the pads
-    if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK && 
-        !GST_PAD_CONNECTED(sinkpad)) 
+    if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
+        !GST_PAD_CONNECTED(sinkpad))
     {
       if (gst_caps_list_check_compatibility (gst_pad_get_caps_list(pad), gst_pad_get_caps_list(sinkpad))) {
         gst_pad_connect(pad, sinkpad);
-        GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", pad->name, 
-		       gst_element_get_name(src));
-        GST_DEBUG (0,"pad \"%s\" in element %s\n", sinkpad->name,  
-		      gst_element_get_name(sink));
+        GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
+		       GST_ELEMENT_NAME(src));
+        GST_DEBUG (0,"pad \"%s\" in element %s\n", GST_PAD_NAME (sinkpad),
+		      GST_ELEMENT_NAME(sink));
         connected = TRUE;
         break;
       }
       else {
-	GST_DEBUG (0,"pads incompatible %s, %s\n", gst_pad_get_name (pad), gst_pad_get_name (sinkpad));
+	GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
       }
     }
     sinkpads = g_list_next(sinkpads);
@@ -240,7 +240,7 @@ gst_pipeline_pads_autoplug (GstElement *src, GstElement *sink)
   
   if (!connected) {
     GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
-		    gst_element_get_name(src), gst_element_get_name(sink));
+		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
     gtk_signal_connect(GTK_OBJECT(src),"new_pad",
                  GTK_SIGNAL_FUNC(gst_pipeline_pads_autoplug_func), sink);
   }
@@ -266,7 +266,7 @@ gst_pipeline_add_src (GstPipeline *pipeline, GstElement *src)
 
   if (pipeline->src) {
     printf("gstpipeline: *WARNING* removing previously added element \"%s\"\n",
-			  gst_element_get_name(pipeline->src));
+			  GST_ELEMENT_NAME(pipeline->src));
     gst_bin_remove(GST_BIN(pipeline), pipeline->src);
   }
   pipeline->src = src;
@@ -319,27 +319,27 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
   g_return_val_if_fail(GST_IS_PIPELINE(pipeline), FALSE);
 
   GST_DEBUG (0,"GstPipeline: autopluging pipeline \"%s\"\n", 
-		  gst_element_get_name(GST_ELEMENT(pipeline)));
+		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
 
 
   // fase 1, run typedetect on the source if needed... 
   if (!pipeline->src) {
     GST_DEBUG (0,"GstPipeline: no source detected, can't autoplug pipeline \"%s\"\n", 
-		gst_element_get_name(GST_ELEMENT(pipeline)));
+		GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
     return FALSE;
   }
 
   GST_DEBUG (0,"GstPipeline: source \"%s\" has no MIME type, running typefind...\n", 
-	gst_element_get_name(pipeline->src));
+	GST_ELEMENT_NAME(pipeline->src));
 
   src_caps = gst_pipeline_typefind(pipeline, pipeline->src);
 
   if (src_caps) {
-    GST_DEBUG (0,"GstPipeline: source \"%s\" type found %d\n", gst_element_get_name(pipeline->src), 
+    GST_DEBUG (0,"GstPipeline: source \"%s\" type found %d\n", GST_ELEMENT_NAME(pipeline->src), 
 	  src_caps->id);
   }
   else {
-    GST_DEBUG (0,"GstPipeline: source \"%s\" has no type\n", gst_element_get_name(pipeline->src));
+    GST_DEBUG (0,"GstPipeline: source \"%s\" has no type\n", GST_ELEMENT_NAME(pipeline->src));
     return FALSE;
   }
 
@@ -440,15 +440,15 @@ differ:
 
 	use_thread = FALSE;
 
-        GST_DEBUG (0,"sugest new thread for \"%s\" %08x\n", element->name, GST_FLAGS(element));
+        GST_DEBUG (0,"sugest new thread for \"%s\" %08x\n", GST_ELEMENT_NAME (element), GST_FLAGS(element));
 
 	// create a new queue and add to the previous bin
-        queue = gst_elementfactory_make("queue", g_strconcat("queue_", gst_element_get_name(element), NULL));
-        GST_DEBUG (0,"adding element \"%s\"\n", element->name);
+        queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
+        GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
         gst_bin_add(GST_BIN(thebin), queue);
 
 	// this will be the new bin for all following elements
-        thebin = gst_elementfactory_make("thread", g_strconcat("thread_", gst_element_get_name(element), NULL));
+        thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
 
         srcpad = gst_element_get_pad(queue, "src");
 
@@ -470,15 +470,15 @@ differ:
         }
         gst_pipeline_pads_autoplug(thesrcelement, queue);
 
-	GST_DEBUG (0,"adding element %s\n", gst_element_get_name (element));
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
         gst_bin_add(GST_BIN(thebin), element);
-	GST_DEBUG (0,"adding element %s\n", gst_element_get_name (thebin));
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (thebin));
         gst_bin_add(GST_BIN(pipeline), thebin);
         thesrcelement = queue;
       }
       // no thread needed, easy case
       else {
-	GST_DEBUG (0,"adding element %s\n", gst_element_get_name (element));
+	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
         gst_bin_add(GST_BIN(thebin), element);
       }
       gst_pipeline_pads_autoplug(thesrcelement, element);
@@ -493,7 +493,7 @@ next:
   return TRUE;
   
   GST_DEBUG (0,"GstPipeline: unable to autoplug pipeline \"%s\"\n", 
-		  gst_element_get_name(GST_ELEMENT(pipeline)));
+		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
   return FALSE;
 }
 

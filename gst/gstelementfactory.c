@@ -167,7 +167,7 @@ gst_elementfactory_create (GstElementFactory *factory,
     oclass->elementfactory = factory;
   }
 
-  gst_element_set_name(GST_ELEMENT(element),name);
+  gst_object_set_name (GST_OBJECT (element),name);
 
   return element;
 }

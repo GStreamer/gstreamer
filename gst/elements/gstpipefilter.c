@@ -118,13 +118,6 @@ static void gst_pipefilter_init(GstPipefilter *pipefilter) {
   pipefilter->seq = 0;
 }
 
-GstElement *gst_pipefilter_new(gchar *name) {
-  GstElement *pipefilter = GST_ELEMENT(gtk_type_new(GST_TYPE_PIPEFILTER));
-  gst_element_set_name(GST_ELEMENT(pipefilter),name);
-  return pipefilter;
-}
-
-
 static gboolean gst_pipefilter_read_and_push(GstPipefilter *pipefilter) {
   GstBuffer *newbuf;
   glong readbytes;
@@ -179,7 +172,7 @@ void gst_pipefilter_chain(GstPad *pad,GstBuffer *buf) {
   g_return_if_fail(GST_IS_PAD(pad));
   g_return_if_fail(buf != NULL);
 
-  pipefilter = GST_PIPEFILTER(pad->parent);
+  pipefilter = GST_PIPEFILTER (gst_pad_get_parent (pad));
 
   while (gst_pipefilter_read_and_push(pipefilter));
 
