@@ -1,9 +1,6 @@
 #ifndef GST_HGUARD_GSTI386_H
 #define GST_HGUARD_GSTI386_H
 
-/* Hmm - does this work, or do the braces cause other stack manipulation?
- * XXX
- */
 #define GET_SP(target) \
   __asm__("movl %%esp, %0" : "=m"(target) : : "esp", "ebp");
 

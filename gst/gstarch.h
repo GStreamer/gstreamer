@@ -1,12 +1,16 @@
 #ifndef GST_HGUARD_GSTARCH_H
 #define GST_HGUARD_GSTARCH_H
 
-#ifdef __I386__
-#include "gsti386.h"
-#endif
+#include "config.h"
 
-#ifdef __PPC__
+#ifdef HAVE_CPU_I386
+#include "gsti386.h"
+#else
+#ifdef HAVE_CPU_PPC
 #include "gstppc.h"
+#else
+#warn Need to know about this architecture, or have a generic implementation
+#endif
 #endif
 
 #endif /* GST_HGUARD_GSTARCH_H */

@@ -48,7 +48,7 @@ dnl Set up conditionals for (target) host type:
 dnl ===========================================
 
 case "x${target_cpu}" in
-  xi386)     HAVE_CPU_I386=yes ;
+  xi?86)     HAVE_CPU_I386=yes ;
              AC_DEFINE(HAVE_CPU_I386) ;;
   xpowerpc)  HAVE_CPU_PPC=yes ;
              AC_DEFINE(HAVE_CPU_PPC) ;;

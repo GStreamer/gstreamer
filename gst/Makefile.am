@@ -26,8 +26,7 @@ libgst_la_SOURCES =	\
 	gstbufferpool.c	\
 	gstclock.c	\
 	gstcpu.c	\
-	$(GSTI386_SRCS) \
-	$(GSTPPC_SRCS)	\
+	$(GSTARCH_SRCS) \
 	gstelement.c	\
 	gstelementfactory.c	\
 	gstbin.c	\
