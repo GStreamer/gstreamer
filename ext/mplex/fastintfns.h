@@ -4,6 +4,9 @@
  *
  */
 
+#ifndef __inline__
+#define __inline__ inline
+#endif
 
 static __inline__ int intmax( register int x, register int y )
 {
