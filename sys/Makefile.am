@@ -39,7 +39,7 @@ X_DIR=xvideo
 XI_DIR=ximage
 else
 X_DIR=
-X_DIR=
+XI_DIR=
 endif
 
 if USE_XVIDEO
