@@ -412,7 +412,7 @@ channels = 1 - MAXINT (INT, number of audio channels)
      Decoder:
 
      Note: The difference between each of these four PCM formats is the number
-           of samples packaed together per channel. For WAV, for example, each
+           of samples packed together per channel. For WAV, for example, each
            sample is 4 bit, and 8 samples are packed together per channel in the
            bytestream. For the others, refer to technical documentation. We
            probably want to distinguish these differently, but I don't know how,
