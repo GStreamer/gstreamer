@@ -190,6 +190,7 @@ gst_plugin_load_file (const gchar *filename, GError **error)
   GModule *module;
   GstPluginDesc *desc;
   struct stat file_status;
+  gboolean free_plugin;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
@@ -222,10 +223,12 @@ gst_plugin_load_file (const gchar *filename, GError **error)
 
       plugin = gst_registry_pool_find_plugin (desc->name);
       if (!plugin) {
+	free_plugin = TRUE;
 	plugin = g_new0 (GstPlugin, 1);
 	plugin->filename = g_strdup (filename);
 	GST_DEBUG ("created new GstPlugin %p for file \"%s\"", plugin, filename);
       } else {
+	free_plugin = FALSE;
 	if (gst_plugin_is_loaded (plugin)) {
 	  if (strcmp (plugin->filename, filename) != 0) {
 	    GST_WARNING ("plugin %p from file \"%s\" with same name %s is already "
@@ -236,13 +239,14 @@ gst_plugin_load_file (const gchar *filename, GError **error)
 			 GST_PLUGIN_ERROR_NAME_MISMATCH,
 			 "already a plugin with name \"%s\" loaded",
 			 desc->name);
+	    if (free_plugin) g_free (plugin);
 	    return NULL;
 	  }
 	  GST_LOG ("Plugin %p for file \"%s\" already loaded, returning it now", plugin, filename);
 	  return plugin;
 	}
       }
-      GST_LOG ("Plugin %p for file \"%s\" prepared, called entry function...", plugin, filename);
+      GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...", plugin, filename);
 
       if (gst_plugin_register_func (plugin, module, desc)) {
         GST_INFO ("plugin \"%s\" loaded", plugin->filename);
@@ -255,7 +259,7 @@ gst_plugin_load_file (const gchar *filename, GError **error)
                      GST_PLUGIN_ERROR_MODULE,
                      "gst_plugin_register_func failed for plugin \"%s\"",
                      filename);
-	g_free (plugin);
+	if (free_plugin) g_free (plugin);
         return NULL;
       }
     } else {
@@ -671,8 +675,7 @@ gst_plugin_load (const gchar *name)
   if (plugin) {
     gst_plugin_load_file (plugin->filename, &error);
     if (error) {
-      GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "load_plugin error: %s\n",
-	         error->message);
+      GST_WARNING ("load_plugin error: %s\n", error->message);
       g_error_free (error);
       return FALSE;
     }
