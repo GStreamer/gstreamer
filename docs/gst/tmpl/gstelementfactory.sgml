@@ -40,7 +40,7 @@ The following code example shows you how to create a GstDiskSrc element.
 
   gst_init(&amp;argc,&amp;argv);
 
-  srcfactory = gst_elementfactory_find("disksrc");
+  srcfactory = gst_elementfactory_find("filesrc");
   g_return_if_fail(srcfactory != NULL);
 
   src = gst_elementfactory_create(srcfactory,"src");

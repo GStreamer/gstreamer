@@ -16,7 +16,7 @@ mp3 player.
   pipeline = gst_pipeline_new ("launch");
 
   /* build a pipeline in the pipeline */
-  gst_parse_launch ("disksrc location=some.mp3 ! mad ! osssink", GST_BIN (pipeline));
+  gst_parse_launch ("filesrc location=some.mp3 ! mad ! osssink", GST_BIN (pipeline));
 
   /* play the thing */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

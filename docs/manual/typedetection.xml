@@ -1,9 +1,9 @@
 <chapter id="cha-typedetection">
   <title>Typedetection</title>
   <para> 
-    Sometimes the capabilities of a pad are not specificied. The disksrc, for
+    Sometimes the capabilities of a pad are not specificied. The filesrc, for
     example, does not know what type of file it is reading. Before you can attach
-    an element to the pad of the disksrc, you need to determine the media type in
+    an element to the pad of the filesrc, you need to determine the media type in
     order to be able to choose a compatible element.
   </para>
   <para> 
@@ -59,7 +59,7 @@ void    type_found      (GstElement *typefind, GstCaps* caps);
 int 
 main(int argc, char *argv[]) 
 {
-  GstElement *bin, *disksrc, *typefind;
+  GstElement *bin, *filesrc, *typefind;
 
   gst_init (&amp;argc, &amp;argv);
 
@@ -73,22 +73,22 @@ main(int argc, char *argv[])
   g_assert (bin != NULL);
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make ("disksrc", "disk_source");
-  g_assert (disksrc != NULL);
-  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+  filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  g_assert (filesrc != NULL);
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   /* create the typefind element */
   typefind = gst_elementfactory_make ("typefind", "typefind");
   g_assert (typefind != NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (bin), disksrc);
+  gst_bin_add (GST_BIN (bin), filesrc);
   gst_bin_add (GST_BIN (bin), typefind);
 
   g_signal_connect (G_OBJECT (typefind), "have_type", 
 		     G_CALLBACK (type_found), NULL);
 
-  gst_pad_connect (gst_element_get_pad (disksrc, "src"),
+  gst_pad_connect (gst_element_get_pad (filesrc, "src"),
                    gst_element_get_pad (typefind, "sink"));
 
   /* start playing */
@@ -102,9 +102,9 @@ main(int argc, char *argv[])
 }
   </programlisting>
   <para>
-    We create a very simple pipeline with only a disksrc and the typefind element
+    We create a very simple pipeline with only a filesrc and the typefind element
     in it. The sinkpad of the typefind element has been connected to the src pad
-    of the disksrc.
+    of the filesrc.
   </para>
   <para>
     We attached a signal 'have_type' to the typefind element which will be called 

@@ -67,7 +67,7 @@ int main (int argc,char *argv[]) {
   gst_init(&argc,&argv);
 
   pipeline = gst_pipeline_new("pipeline");
-  src = gst_elementfactory_make ("disksrc","src");
+  src = gst_elementfactory_make ("filesrc","src");
   g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   gst_bin_add (GST_BIN(pipeline),src);
 

@@ -42,7 +42,6 @@
 <!entity GstFakeSrc SYSTEM "sgml/gstfakesrc.sgml">
 <!entity GstFakeSink SYSTEM "sgml/gstfakesink.sgml">
 <!entity GstFileSrc SYSTEM "sgml/gstfilesrc.sgml">
-<!entity GstDiskSrc SYSTEM "sgml/gstdisksrc.sgml">
 <!entity GstDiskSink SYSTEM "sgml/gstdisksink.sgml">
 <!entity GstHttpSrc SYSTEM "sgml/gsthttpsrc.sgml">
 <!entity GstFdSrc SYSTEM "sgml/gstfdsrc.sgml">
@@ -119,7 +118,6 @@ with some more specialized elements.</para>
     &GstFakeSink;
 
     &GstFileSrc;
-    &GstDiskSrc;
     &GstDiskSink;
 
     &GstHttpSrc;

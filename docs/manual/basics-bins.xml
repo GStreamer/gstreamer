@@ -202,15 +202,15 @@
     </programlisting>
     <para>
       In the above example, the bin now also has a pad: the pad called 'sink' of the
-      given element. We can now, for example, connect the srcpad of a disksrc to the 
+      given element. We can now, for example, connect the srcpad of a filesrc to the 
       bin with:
     </para>
     <programlisting>
-  GstElement *disksrc;
+  GstElement *filesrc;
 
-  disksrc = gst_elementfactory_create ("disksrc", "disk_reader");
+  filesrc = gst_elementfactory_create ("filesrc", "disk_reader");
   
-  gst_element_connect (disksrc, "src", bin, "sink");
+  gst_element_connect (filesrc, "src", bin, "sink");
     ...
     </programlisting>
   </sect1>

@@ -22,7 +22,7 @@
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *pipeline, *disksrc, *parse, *decoder, *audiosink;
+  GstElement *pipeline, *filesrc, *parse, *decoder, *audiosink;
 
   gst_init(&amp;argc, &amp;argv);
 
@@ -35,8 +35,8 @@ main (int argc, char *argv[])
   pipeline = gst_pipeline_new ("pipeline");
 
   /* create a disk reader */
-  disksrc = gst_elementfactory_make ("disksrc", "disk_source");
-  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+  filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   /* now it's time to get the parser */
   parse = gst_elementfactory_make ("mp3parse", "parse");
@@ -46,13 +46,13 @@ main (int argc, char *argv[])
   audiosink = gst_elementfactory_make ("osssink", "play_audio");
 
   /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (pipeline), disksrc);
+  gst_bin_add (GST_BIN (pipeline), filesrc);
   gst_bin_add (GST_BIN (pipeline), parse);
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
 
   /* connect src to sink */
-  gst_pad_connect (gst_element_get_pad (disksrc, "src"),
+  gst_pad_connect (gst_element_get_pad (filesrc, "src"),
                    gst_element_get_pad (parse, "sink"));
   gst_pad_connect (gst_element_get_pad (parse, "src"),
                    gst_element_get_pad (decoder, "sink"));
@@ -71,7 +71,7 @@ main (int argc, char *argv[])
   gst_object_unref (GST_OBJECT (audiosink));
   gst_object_unref (GST_OBJECT (parse));
   gst_object_unref (GST_OBJECT (decoder));
-  gst_object_unref (GST_OBJECT (disksrc));
+  gst_object_unref (GST_OBJECT (filesrc));
   gst_object_unref (GST_OBJECT (pipeline));
 
   exit (0);
@@ -108,7 +108,7 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   ...
-  GstElement *pipeline, *disksrc, *parse, *decoder, *audiosink;
+  GstElement *pipeline, *filesrc, *parse, *decoder, *audiosink;
   ...
     </programlisting>
 
@@ -132,12 +132,12 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* create a disk reader */
-  disksrc = gst_elementfactory_make ("disksrc", "disk_source");
-  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+  filesrc = gst_elementfactory_make ("filesrc", "disk_source");
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
     </programlisting>
     <note>
       <para>
-        You can check if the disksrc != NULL to verify the creation of the
+        You can check if the filesrc != NULL to verify the creation of the
 	disk source element.
       </para>
     </note>
@@ -176,7 +176,7 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (pipeline), disksrc);
+  gst_bin_add (GST_BIN (pipeline), filesrc);
   gst_bin_add (GST_BIN (pipeline), parse);
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), audiosink);
@@ -187,7 +187,7 @@ main (int argc, char *argv[])
     </para>
     <programlisting>
   /* connect src to sink */
-  gst_pad_connect (gst_element_get_pad (disksrc, "src"),
+  gst_pad_connect (gst_element_get_pad (filesrc, "src"),
                    gst_element_get_pad (parse, "sink"));
   gst_pad_connect (gst_element_get_pad (parse, "src"),
                    gst_element_get_pad (decoder, "sink"));
@@ -243,7 +243,7 @@ main (int argc, char *argv[])
 
   gst_object_unref (GST_OBJECT (audiosink));
   gst_object_unref (GST_OBJECT (decoder));
-  gst_object_unref (GST_OBJECT (disksrc));
+  gst_object_unref (GST_OBJECT (filesrc));
   gst_object_unref (GST_OBJECT (pipeline));
 
   exit (0);
@@ -291,7 +291,7 @@ main (int argc, char *argv[])
     </para>
     <para>
       It should be clear from the example that we can very easily replace the 
-      disksrc element with an httpsrc, giving you instant network streaming.
+      filesrc element with an httpsrc, giving you instant network streaming.
       An element could be build to handle icecast connections, for example.
     </para>
     <para>

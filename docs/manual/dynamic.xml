@@ -44,7 +44,7 @@ main(int argc, char *argv[])
   pipeline = gst_pipeline_new ("pipeline");
   g_return_val_if_fail (pipeline != NULL, -1);
 
-  src = gst_elementfactory_make ("disksrc", "src");
+  src = gst_elementfactory_make ("filesrc", "src");
   g_return_val_if_fail (src != NULL, -1);
   g_object_set (G_OBJECT (src), "location", argv[1], NULL);
 
@@ -76,9 +76,9 @@ main(int argc, char *argv[])
 
   </programlisting>
   <para> 
-    We create two elements: a disksrc (the element that will read the
+    We create two elements: a filesrc (the element that will read the
     file from disk) and an mpeg1parser. We also add an EOS (End Of Stream) 
-    signal to the disksrc so that we will be notified when the file has ended.
+    signal to the filesrc so that we will be notified when the file has ended.
     There's nothing special about this piece of code except for the signal
     'new_pad' that we connected to the mpeg1parser using:
   </para>

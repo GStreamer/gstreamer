@@ -90,13 +90,13 @@ clean:
       A simple commandline looks like:
 
     <screen>
-gstreamer-launch disksrc location=hello.mp3 ! mp3parse ! mpg123 ! audiosink
+gstreamer-launch filesrc location=hello.mp3 ! mp3parse ! mpg123 ! audiosink
     </screen>
 
       A more complex pipeline looks like:
 
     <screen>
-gstreamer-launch disksrc redpill.vob audio_00! (ac3parse ! ac3dec ! audiosink) \
+gstreamer-launch filesrc redpill.vob audio_00! (ac3parse ! ac3dec ! audiosink) \
 video_00! (mpeg2dec ! videosink)
     </screen>
 
@@ -118,7 +118,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *pipeline;
-  GstElement *disksrc;
+  GstElement *filesrc;
 
   gst_init (&amp;argc, &amp;argv);
 
@@ -128,10 +128,10 @@ main (int argc, char *argv[])
   }
   pipeline = gst_pipeline_new ("my_pipeline");
 
-  gst_parse_launch ("disksrc[my_disksrc] ! mp3parse ! mpg123 ! osssink", GST_BIN (pipeline));
+  gst_parse_launch ("filesrc[my_filesrc] ! mp3parse ! mpg123 ! osssink", GST_BIN (pipeline));
 
-  disksrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_disksrc");
-  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
+  filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_filesrc");
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
@@ -143,7 +143,7 @@ main (int argc, char *argv[])
 }
     </programlisting>
     <para>
-      Note how we can retrieve the disksrc element from the constructed bin using the
+      Note how we can retrieve the filesrc element from the constructed bin using the
       element name.
     </para>
   </sect1>
