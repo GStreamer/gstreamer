@@ -52,6 +52,7 @@ enum {
   ARG_SAMPLES_PER_BUFFER,
   ARG_FREQ,
   ARG_VOLUME,
+  ARG_SYNC
 };
 
 static GstStaticPadTemplate gst_sinesrc_src_template =
@@ -86,6 +87,7 @@ static GstPadLinkReturn
 						     const GstCaps *caps);
 static GstElementStateReturn
                     gst_sinesrc_change_state        (GstElement *element);
+static void gst_sinesrc_set_clock (GstElement *element, GstClock *clock);
 
 static void 	    gst_sinesrc_update_freq         (const GValue *value, 
 		                                     gpointer data);
@@ -159,12 +161,16 @@ gst_sinesrc_class_init (GstSineSrcClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VOLUME,
     g_param_spec_double ("volume", "Volume", "Volume",
                         0.0, 1.0, 0.8, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+      g_param_spec_boolean ("sync", "Sync", "Synchronize to clock",
+        TRUE, G_PARAM_READWRITE));
                                      
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
   gobject_class->dispose = gst_sinesrc_dispose;
 
   gstelement_class->change_state = gst_sinesrc_change_state;
+  gstelement_class->set_clock = gst_sinesrc_set_clock;
 }
 
 static void 
@@ -182,6 +188,7 @@ gst_sinesrc_init (GstSineSrc *src)
   src->samplerate = 44100;
   src->volume = 1.0;
   src->freq = 440.0;
+  src->sync = TRUE;
   
   src->table_pos = 0.0;
   src->table_size = 1024;
@@ -226,6 +233,14 @@ gst_sinesrc_dispose (GObject *object)
   sinesrc->table_data = NULL;
   
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+}
+
+static void
+gst_sinesrc_set_clock (GstElement *element, GstClock *clock)
+{
+  GstSineSrc *sinesrc = GST_SINESRC (element);
+
+  gst_object_replace ((GstObject **)&sinesrc->clock, (GstObject *)clock);
 }
 
 static GstCaps *
@@ -345,6 +360,11 @@ gst_sinesrc_get (GstPad *pad)
   buf = gst_buffer_new_and_alloc (src->samples_per_buffer * 2);
 
   GST_BUFFER_TIMESTAMP(buf) = src->timestamp;
+  if (src->sync) {
+    if (src->clock) {
+      gst_element_wait (GST_ELEMENT(src), GST_BUFFER_TIMESTAMP (buf));
+    }
+  }
   GST_BUFFER_OFFSET (buf) = src->offset;
   GST_BUFFER_DURATION (buf) = tdiff;
 
@@ -430,6 +450,9 @@ gst_sinesrc_set_property (GObject *object, guint prop_id,
       gst_dpman_bypass_dparam (src->dpman, "volume");
       src->volume = g_value_get_double (value);
       break;
+    case ARG_SYNC:
+      src->sync = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -458,6 +481,9 @@ gst_sinesrc_get_property (GObject *object, guint prop_id,
     case ARG_VOLUME:
       g_value_set_double (value, src->volume);
       break;      
+    case ARG_SYNC:
+      g_value_set_boolean (value, src->sync);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

@@ -57,6 +57,7 @@ struct _GstSineSrc {
   /* parameters */
   gdouble volume;
   gdouble freq;
+  gboolean sync;
   
   /* lookup table data */
   gdouble *table_data;
@@ -79,6 +80,8 @@ struct _GstSineSrc {
   gdouble accumulator;
 
   gboolean tags_pushed;
+
+  GstClock *clock;
 };
 
 struct _GstSineSrcClass {
