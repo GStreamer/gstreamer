@@ -1,3 +1,8 @@
+2004-01-30  Julien Moutte  <julien@moutte.net>
+
+	* libs/gst/bytestream/bytestream.c: Reverting my event handling patch.
+	Ronald will fix riffread.
+
 2004-01-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-interfaces.xml:
