@@ -832,6 +832,7 @@ gst_scheduler_factory_new (const gchar *name, const gchar *longdesc, GType type)
 
   if (!factory) {
     factory = GST_SCHEDULER_FACTORY (g_object_new (GST_TYPE_SCHEDULER_FACTORY, NULL));
+    GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
   }
   else {
     g_free (factory->longdesc);
