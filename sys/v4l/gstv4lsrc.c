@@ -701,14 +701,14 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
   }
 
   if (palette == -1) {
-    GST_WARN_OBJECT (v4lsrc, "palette is -1, refusing link");
+    GST_WARNING_OBJECT (v4lsrc, "palette is -1, refusing link");
     return GST_PAD_LINK_REFUSED;
   }
 
   GST_DEBUG_OBJECT (v4lsrc, "trying to set_capture %dx%d, palette %d",
       w, h, palette);
   if (!gst_v4lsrc_set_capture (v4lsrc, w, h, palette)) {
-    GST_WARN_OBJECT (v4lsrc, "could not set_capture %dx%d, palette %d",
+    GST_WARNING_OBJECT (v4lsrc, "could not set_capture %dx%d, palette %d",
         w, h, palette);
     return GST_PAD_LINK_REFUSED;
   }
