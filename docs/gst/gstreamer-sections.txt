@@ -434,7 +434,6 @@ gst_element_get_state
 gst_element_state_get_name
 gst_element_wait_state_change
 
-gst_element_error
 gst_element_set_eos
 gst_element_interrupt
 gst_element_yield
@@ -480,6 +479,8 @@ gst_element_convert
 
 gst_element_default_deep_notify
 gst_element_default_error
+
+GST_ELEMENT_ERROR
 
 GstElementState
 GstElementStateReturn
@@ -607,12 +608,6 @@ GstTagFlag
 gst_tag_register
 gst_tag_merge_use_first
 gst_tag_merge_strings_with_comma
-
-
-gst_tag_initialize		
-gst_tag_register		
-gst_tag_merge_use_first		
-gst_tag_merge_strings_with_comma 
 gst_tag_exists			
 gst_tag_get_type		
 gst_tag_get_nick		
@@ -1270,8 +1265,8 @@ gst_caps_intersect
 
 gst_caps_save_thyself
 gst_caps_load_thyself
-gst_caps_debug
 gst_caps_union
+
 <SUBSECTION Standard>
 </SECTION>
 

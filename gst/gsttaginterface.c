@@ -228,7 +228,7 @@ gst_tag_setter_get_list (GstTagSetter *setter)
 /**
  * gst_tag_setter_set_merge_mode:
  * @setter: a #GstTagSetter
- * @overwrite: The mode with which tags are added
+ * @mode: The mode with which tags are added
  *
  * Sets the given merge mode that is used for adding tags from events to tags
  * specified by this interface. The default is #GST_TAG_MERGE_KEEP, which keeps

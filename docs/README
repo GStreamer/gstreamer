@@ -100,6 +100,8 @@ GTK-DOC NOTES
   - add both an entity and use the entity in gstreamer-docs.sgml
   - add a new section to gstreamer-sections.txt
   - add all documented symbols to gstreamer-sections.txt in the proper section
+
+  - signals: document them properly in tmpl/.sgml
 * checklist:
   - make sure -sections.txt has a <TITLE> set for each <FILE>
 
@@ -116,6 +118,9 @@ GTK-DOC NOTES
 
   (FIXME: why is there gstreamer.types.in and gst-plugins.types.in ?)
 
+* Possible errors and how to fix them
+  - Warning: multiple "IDs" for constraint linkend: gst-tag-register.
+    - check if gst_tag_register is listed more than once in -sections.txt
 
 WBSITE DOCUMENTATION
 ====================

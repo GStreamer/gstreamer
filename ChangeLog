@@ -1,3 +1,25 @@
+2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/README:
+          add some error fixing notes
+	* docs/gst/gstreamer-sections.txt:
+          remove double entries
+	* docs/gst/tmpl/gstbin.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+          remove override
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstindex.sgml:
+	* docs/gst/tmpl/gstobject.sgml:
+	* docs/gst/tmpl/gstpadtemplate.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gsttag.sgml:
+	* docs/gst/tmpl/gstthread.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* gst/gsttag.h:
+          sync header prototypes with c decls
+	* gst/gsttaginterface.c:
+          fix doc headers
+
 2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/parse/Makefile.am:

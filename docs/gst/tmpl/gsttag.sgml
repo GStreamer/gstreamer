@@ -58,7 +58,7 @@ GstTag
 </para>
 
 @dest: 
-@values: 
+@src: 
 
 
 <!-- ##### FUNCTION gst_tag_merge_strings_with_comma ##### -->
@@ -67,38 +67,7 @@ GstTag
 </para>
 
 @dest: 
-@values: 
-
-
-<!-- ##### FUNCTION gst_tag_register ##### -->
-<para>
-
-</para>
-
-@name: 
-@flag: 
-@type: 
-@nick: 
-@blurb: 
-@func: 
-
-
-<!-- ##### FUNCTION gst_tag_merge_use_first ##### -->
-<para>
-
-</para>
-
-@dest: 
-@values: 
-
-
-<!-- ##### FUNCTION gst_tag_merge_strings_with_comma ##### -->
-<para>
-
-</para>
-
-@dest: 
-@values: 
+@src: 
 
 
 <!-- ##### FUNCTION gst_tag_exists ##### -->

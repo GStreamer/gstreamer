@@ -4830,16 +4830,6 @@ Get the size of the file.
 @arg1: 
 @arg2: 
 
-<!-- ##### SIGNAL GstElement::error-2 ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: 
-@arg2: 
-@arg3: 
-
 <!-- ##### SIGNAL GstElement::event ##### -->
 <para>
 
@@ -6032,15 +6022,6 @@ Query the element for the current mime type
 
 </para>
 
-
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
-<para>
-
-</para>
-
-@gstxml: the object which received the signal.
-@arg1: 
-@arg2: 
 
 <!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
 <para>

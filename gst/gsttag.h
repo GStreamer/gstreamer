@@ -68,9 +68,9 @@ void		gst_tag_register		(gchar *		name,
 						 GstTagMergeFunc	func);
 /* some default merging functions */
 void		gst_tag_merge_use_first		(GValue *		dest,
-						 const GValue *		values);
+						 const GValue *		src);
 void		gst_tag_merge_strings_with_comma (GValue *		dest,
-						 const GValue *		values);
+						 const GValue *		src);
 
 /* basic tag support */
 gboolean	gst_tag_exists			(const gchar *		tag);
