@@ -207,6 +207,8 @@ gst_videobalance_init (GTypeInstance *instance, gpointer g_class)
   videobalance->brightness = 0;
   videobalance->saturation = 1;
   videobalance->hue = 0;
+
+  videofilter->passthru = TRUE;
                         
   /* Generate the channels list */
   for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++)
@@ -257,9 +259,11 @@ gst_videobalance_colorbalance_set_value (GstColorBalance        *balance,
                                          gint                    value)
 {
   GstVideobalance *vb = GST_VIDEOBALANCE (balance);
+  GstVideofilter *vf = GST_VIDEOFILTER (vb);
   
   g_return_if_fail (vb != NULL);
   g_return_if_fail (GST_IS_VIDEOBALANCE (vb));
+  g_return_if_fail (GST_IS_VIDEOFILTER (vf));
   g_return_if_fail (channel->label != NULL);
   
   if (!g_ascii_strcasecmp (channel->label, "HUE"))
@@ -270,6 +274,18 @@ gst_videobalance_colorbalance_set_value (GstColorBalance        *balance,
     vb->brightness = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
   else if (!g_ascii_strcasecmp (channel->label, "CONTRAST"))
     vb->contrast = (value + 1000.0) * 2.0 / 2000.0;
+  
+  /* Maybe we should narrow values which are around median to trigger passthru
+     more often */
+  if (vb->contrast == 1 && vb->brightness == 0 &&
+      vb->hue == 0 && vb->saturation == 1)
+    {
+      vf->passthru = TRUE;
+    }
+  else
+    {
+      vf->passthru = FALSE;
+    }
 }
 
 static gint
