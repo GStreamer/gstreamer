@@ -1,3 +1,18 @@
+2004-07-30  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
+	(gst_theora_dec_init), (theora_get_formats),
+	(theora_dec_src_convert), (theora_dec_sink_convert),
+	(theora_dec_src_query), (theora_dec_src_event), (theora_dec_event),
+	(theora_dec_chain), (theora_dec_set_property),
+	(theora_dec_get_property):
+	* ext/theora/theoraenc.c: (gst_border_mode_get_type),
+	(gst_theora_enc_class_init), (gst_theora_enc_init),
+	(theora_enc_sink_link), (theora_enc_chain),
+	(theora_enc_set_property), (theora_enc_get_property):
+	Added cropping option to theora decoder.
+	Added border option to theora encoder.
+
 2004-07-30  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/libpng/gstpngenc.c: (gst_pngenc_class_init),
