@@ -385,11 +385,11 @@ struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
 {
   int i;
   const char *mimetype = gst_caps_get_mime(caps);
-  guint32 format;
 
   if(strcmp(mimetype, "video/x-raw-yuv")==0){
     char *s;
     int fourcc;
+    guint32 format;
 
     gst_caps_get(caps, "format", &format);
     for (i = 0; i < n_fourccs; i++) {
@@ -401,7 +401,28 @@ struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
       }
     }
   }else if(strcmp(mimetype, "video/x-raw-rgb")==0){
-    g_warning("video/x-raw-rgb not implemented");
+    int red_mask;
+    int green_mask;
+    int blue_mask;
+    int depth;
+    int bpp;
+
+    gst_caps_get(caps, "red_mask", &red_mask,
+	"green_mask", &green_mask,
+	"blue_mask", &blue_mask,
+	"depth", &depth,
+	"bpp", &bpp);
+    for (i = 0; i < n_fourccs; i++) {
+      if (strcmp(fourcc_list[i].fourcc, "RGB ") == 0 &&
+	  fourcc_list[i].red_mask == red_mask &&
+	  fourcc_list[i].green_mask == green_mask &&
+	  fourcc_list[i].blue_mask == blue_mask &&
+	  fourcc_list[i].depth == depth &&
+	  fourcc_list[i].bitspp == bpp){
+	return fourcc_list + i;
+
+      }
+    }
     return NULL;
   }else{
     g_warning("unknown format");
@@ -458,53 +479,21 @@ GstCaps *paint_get_caps(struct fourcc_list_struct *format)
   fourcc = GST_MAKE_FOURCC (format->fourcc[0], format->fourcc[1], format->fourcc[2], format->fourcc[3]);
 
   if(format->ext_caps){
-#if GST_VERSION_MINOR > 6
-    caps = GST_CAPS_NEW ("videotestsrc_filter",
-			 "video/x-raw-rgb",
-  			 "bpp", GST_PROPS_INT(format->bitspp),
-			 "endianness", GST_PROPS_INT(G_BIG_ENDIAN),
-  			 "depth", GST_PROPS_INT(format->depth),
-  			 "red_mask", GST_PROPS_INT(format->red_mask),
-  			 "green_mask", GST_PROPS_INT(format->green_mask),
-  			 "blue_mask", GST_PROPS_INT(format->blue_mask));
-#else
-    guint32 red_mask;
-    guint32 green_mask;
-    guint32 blue_mask;
-    guint32 endianness;
+    int endianness;
 
     if(format->bitspp==16){
-	    endianness = G_BYTE_ORDER;
-	    red_mask = format->red_mask;
-	    green_mask = format->green_mask;
-	    blue_mask = format->blue_mask;
-    }else if(format->bitspp==24){
-	    endianness = G_BYTE_ORDER;
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-	    red_mask = GUINT32_SWAP_LE_BE(format->red_mask)>>8;
-	    green_mask = GUINT32_SWAP_LE_BE(format->green_mask)>>8;
-	    blue_mask = GUINT32_SWAP_LE_BE(format->blue_mask)>>8;
-#else
-	    red_mask = format->red_mask;
-	    green_mask = format->green_mask;
-	    blue_mask = format->blue_mask;
-#endif
+      endianness = G_BYTE_ORDER;
     }else{
-	    endianness = G_BYTE_ORDER;
-	    red_mask = GUINT32_FROM_BE(format->red_mask);
-	    green_mask = GUINT32_FROM_BE(format->green_mask);
-	    blue_mask = GUINT32_FROM_BE(format->blue_mask);
+      endianness = G_BIG_ENDIAN;
     }
-
     caps = GST_CAPS_NEW ("videotestsrc_filter",
 			 "video/x-raw-rgb",
   			 "bpp", GST_PROPS_INT(format->bitspp),
 			 "endianness", GST_PROPS_INT(endianness),
   			 "depth", GST_PROPS_INT(format->depth),
-  			 "red_mask", GST_PROPS_INT(red_mask),
-  			 "green_mask", GST_PROPS_INT(green_mask),
-  			 "blue_mask", GST_PROPS_INT(blue_mask));
-#endif
+  			 "red_mask", GST_PROPS_INT(format->red_mask),
+  			 "green_mask", GST_PROPS_INT(format->green_mask),
+  			 "blue_mask", GST_PROPS_INT(format->blue_mask));
   }else{
     caps = GST_CAPS_NEW ("videotestsrc_filter",
 			 "video/x-raw-yuv",

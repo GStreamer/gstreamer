@@ -268,6 +268,7 @@ gst_videotestsrc_change_state (GstElement * element)
       v->pool = gst_pad_get_bufferpool (v->srcpad);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
+      gst_buffer_pool_unref(v->pool);
       v->pool = NULL;
       break;
     case GST_STATE_READY_TO_NULL:
@@ -419,7 +420,7 @@ gst_videotestsrc_get (GstPad * pad)
   newsize = (videotestsrc->width * videotestsrc->height * videotestsrc->bpp) >> 3;
   g_return_val_if_fail (newsize > 0, NULL);
 
-  GST_DEBUG ("size=%ld %dx%d\n", newsize, videotestsrc->width, videotestsrc->height);
+  GST_DEBUG ("size=%ld %dx%d", newsize, videotestsrc->width, videotestsrc->height);
 
   buf = NULL;
   if (videotestsrc->pool) {
@@ -431,9 +432,7 @@ gst_videotestsrc_get (GstPad * pad)
     }
   }
   if (!buf) {
-    buf = gst_buffer_new ();
-    GST_BUFFER_SIZE (buf) = newsize;
-    GST_BUFFER_DATA (buf) = g_malloc (newsize);
+    buf = gst_buffer_new_and_alloc (newsize);
   }
   g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
 
