@@ -59,6 +59,7 @@ GstElementDetails gst_gnomevfssrc_details;
 
 static GStaticMutex count_lock = G_STATIC_MUTEX_INIT;
 static gint ref_count = 0;
+static gboolean vfs_owner = FALSE;
 
 typedef enum {
 	GST_GNOMEVFSSRC_OPEN = GST_ELEMENT_FLAG_LAST,
@@ -286,7 +287,6 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
 	gstelement_class->get_property = gst_gnomevfssrc_get_property;
 
 	gstelement_class->change_state = gst_gnomevfssrc_change_state;
-
 }
 
 static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
@@ -334,6 +334,7 @@ static void gst_gnomevfssrc_init(GstGnomeVFSSrc *gnomevfssrc)
 		/* gnome vfs engine init */
 		if (gnome_vfs_initialized() == FALSE) {
 			gnome_vfs_init();
+			vfs_owner = TRUE;
 		}
 	}
 	ref_count++;
@@ -345,7 +346,7 @@ gst_gnomevfssrc_dispose (GObject *object)
 {
 	g_static_mutex_lock (&count_lock);
 	ref_count--;
-	if (ref_count == 0) {
+	if (ref_count == 0 && vfs_owner) {
 		if (gnome_vfs_initialized() == TRUE) {
 			gnome_vfs_shutdown();
 		}
@@ -876,6 +877,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		GST_BUFFER_DATA (buf) = src->map + src->curoffset;
 		GST_BUFFER_OFFSET (buf) = src->curoffset;
 		GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
+		GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
 
 		if ((src->curoffset + src->bytes_per_read) > src->size)
 		{
