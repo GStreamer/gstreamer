@@ -704,7 +704,7 @@
 
 	* configure.ac: bump nano to 1
 
-=== gst-plugins 0.8.0 ===
+=== release 0.8.0 ===
 
 2004-03-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -1057,7 +1057,7 @@
 
 	* configure.ac: bump nano to 1
 
-=== gst-plugins 0.7.6 ===
+=== release 0.7.6 ===
 
 2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -2231,7 +2231,7 @@
 	  rework the caps negotiation so that dvdec works again instead
 	  of just segfaulting.
 
-=== gst-plugins 0.7.4 ===
+=== release 0.7.4 ===
 
 2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
                                                                                 
