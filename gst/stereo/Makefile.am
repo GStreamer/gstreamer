@@ -1,9 +1,10 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgststereo.la
+plugin_LTLIBRARIES = libgststereo.la
 
 libgststereo_la_SOURCES = gststereo.c
 libgststereo_la_CFLAGS = $(GST_CFLAGS)
+libgststereo_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = gststereo.h
 

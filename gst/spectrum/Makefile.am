@@ -1,9 +1,10 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstspectrum.la
+plugin_LTLIBRARIES = libgstspectrum.la
 
 libgstspectrum_la_SOURCES = gstspectrum.c fix_fft.c
 libgstspectrum_la_CFLAGS = $(GST_CFLAGS)
+libgstspectrum_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = gstspectrum.h
 

@@ -1,10 +1,10 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstsmoothwave.la
+plugin_LTLIBRARIES = libgstsmoothwave.la
 
 libgstsmoothwave_la_SOURCES = gstsmoothwave.c
 libgstsmoothwave_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS)
-libgstsmoothwave_la_LIBADD = $(GTK_LIBS)
+libgstsmoothwave_la_LIBADD = $(GST_LIBS) $(GTK_LIBS)
 
 noinst_HEADERS = gstsmoothwave.h
 

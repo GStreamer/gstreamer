@@ -1,9 +1,10 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstpassthrough.la
+plugin_LTLIBRARIES = libgstpassthrough.la
 
 libgstpassthrough_la_SOURCES = gstpassthrough.c
 libgstpassthrough_la_CFLAGS = $(GST_CFLAGS)
+libgstpassthrough_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = gstpassthrough.h filter.func
 

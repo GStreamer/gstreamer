@@ -1,9 +1,10 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstplayondemand.la
+plugin_LTLIBRARIES = libgstplayondemand.la
 
 libgstplayondemand_la_SOURCES = gstplayondemand.c
 libgstplayondemand_la_CFLAGS = $(GST_CFLAGS)
+libgstplayondemand_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = gstplayondemand.h filter.func
 
