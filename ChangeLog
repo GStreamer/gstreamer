@@ -1,3 +1,17 @@
+2004-05-01  Johan Dahlin  <johan@gnome.org>
+
+	* testsuite/runtests.py (gettestnames): Cleanup
+
+	* testsuite/element.py (FakeSinkTest): Enable again and disable
+	stderr while changing state to ready
+	(ElementName.testElementStateGetName): New function to test
+	gst.element_state_get_name.
+
+	* testsuite/common.py (path): Don't import ltihooks and proper
+	check for gst module. Add --gst-debug-no-color as a global option
+	(disable_stderr, enable_stderr): New functions to disable stdout
+	called from non python
+
 2004-04-30  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst.defs (element_state_get_name): Add.

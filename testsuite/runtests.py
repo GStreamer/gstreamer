@@ -1,12 +1,21 @@
 #!/usr/bin/env python
+import glob
 import sys
-from unittest import TestSuite, TestLoader, TextTestRunner
-from types import ClassType
+import unittest
 
-loader = TestLoader()
-testRunner = TextTestRunner()
+SKIP_FILES = ['common', 'runtests']
 
-test = TestSuite()
-for name in ('element', 'interface', 'pipeline'):
-    test.addTest(loader.loadTestsFromName(name))
-testRunner.run(tests)
+def gettestnames():
+    files = glob.glob('*.py')
+    names = map(lambda x: x[:-3], files)
+    map(names.remove, SKIP_FILES)
+    return names
+        
+suite = unittest.TestSuite()
+loader = unittest.TestLoader()
+
+for name in gettestnames():
+    suite.addTest(loader.loadTestsFromName(name))
+    
+testRunner = unittest.TextTestRunner()
+testRunner.run(suite)

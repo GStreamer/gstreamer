@@ -2,6 +2,7 @@
 #
 # testsuite for gstreamer.Element
 
+import common
 from common import gst, unittest
 
 class ElementTest(unittest.TestCase):
@@ -32,8 +33,7 @@ class FakeSinkTest(ElementTest):
     def setUp(self):
         self.element = gst.Element('fakesink', 'sink')
 
-    # Disabled - since it outputs junks
-    def _testStateError(self):
+    def testStateError(self):
         self.element.set_property('state-error',
                                   self.FAKESINK_STATE_ERROR_NULL_READY)
         def error_cb(element, source, error, debug):
@@ -44,8 +44,10 @@ class FakeSinkTest(ElementTest):
             assert isinstance(error, gst.GError)
         
         self.element.connect('error', error_cb)
+        common.disable_stderr()
         self.element.set_state(gst.STATE_READY)
-
+        common.enable_stderr()
+        
 class NonExistentTest(ElementTest):
     name = 'this-element-does-not-exist'
     alias = 'no-alias'
@@ -53,5 +55,21 @@ class NonExistentTest(ElementTest):
     def testGoodConstructor(self):
         pass
     
+class ElementName(unittest.TestCase):
+    def testElementStateGetName(self):
+        get_name = gst.element_state_get_name
+        for state in ('NULL',
+                      'READY',
+                      'PLAYING',
+                      'PAUSED'):
+            name = 'STATE_' + state
+            assert hasattr(gst, name)
+            attr = getattr(gst, name)
+            assert get_name(attr) == state
+            
+        assert get_name(gst.STATE_VOID_PENDING) == 'NONE_PENDING'
+        assert get_name(-1) == 'UNKNOWN!'
+        self.assertRaises(TypeError, get_name, '')
+        
 if __name__ == "__main__":
     unittest.main()
