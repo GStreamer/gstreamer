@@ -1053,44 +1053,16 @@ gst_pad_check_schedulers (GstRealPad * realsrc, GstRealPad * realsink)
   src_sched = gst_pad_get_scheduler (GST_PAD (realsrc));
   sink_sched = gst_pad_get_scheduler (GST_PAD (realsink));
 
-  if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
-    num_decoupled++;
-  if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
-    num_decoupled++;
+  if (src_sched && sink_sched) {
+    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
+      num_decoupled++;
+    if (GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
+      num_decoupled++;
 
-  if (!src_sched && !sink_sched) {
-    if (num_decoupled == 0) {
-      GstObject *src_manager, *sink_manager;
-
-      /* figure out if the managers are equal */
-      src_manager = GST_OBJECT (gst_pad_get_parent (GST_PAD (realsrc)));
-      while (!GST_FLAG_IS_SET (src_manager, GST_BIN_FLAG_MANAGER)) {
-        if (!gst_object_get_parent (src_manager))
-          break;
-        src_manager = gst_object_get_parent (src_manager);
-      }
-      sink_manager = GST_OBJECT (gst_pad_get_parent (GST_PAD (realsink)));
-      while (!GST_FLAG_IS_SET (sink_manager, GST_BIN_FLAG_MANAGER)) {
-        if (!gst_object_get_parent (sink_manager))
-          break;
-        sink_manager = gst_object_get_parent (sink_manager);
-      }
-      if (sink_manager != src_manager)
-        return FALSE;
+    if (src_sched != sink_sched && num_decoupled != 1) {
+      return FALSE;
     }
-  } else {
-    if (!src_sched
-        && !GST_FLAG_IS_SET (GST_PAD_PARENT (realsrc), GST_ELEMENT_DECOUPLED))
-      return FALSE;
-    if (!sink_sched
-        && !GST_FLAG_IS_SET (GST_PAD_PARENT (realsink), GST_ELEMENT_DECOUPLED))
-      return FALSE;
   }
-
-  if (src_sched != sink_sched && num_decoupled != 1) {
-    return FALSE;
-  }
-
   return TRUE;
 }
 
@@ -1702,10 +1674,8 @@ gst_pad_can_link_filtered (GstPad * srcpad, GstPad * sinkpad,
   }
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
-    GST_CAT_INFO (GST_CAT_CAPS, "schedulers for pads %s:%s and %s:%s weren't "
-        "equal (or didn't exist at all). Linking pads with different "
-        "schedulers requires exactly one decoupled element (such as queue)",
-        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+    g_warning ("linking pads with different scheds requires "
+        "exactly one decoupled element (such as queue)");
     return FALSE;
   }
 
@@ -1825,10 +1795,8 @@ gst_pad_link_filtered (GstPad * srcpad, GstPad * sinkpad,
   }
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
-    g_warning ("schedulers for pads %s:%s and %s:%s weren't "
-        "equal (or didn't exist at all). Linking pads with different "
-        "schedulers requires exactly one decoupled element (such as queue)",
-        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+    g_warning ("linking pads with different scheds requires "
+        "exactly one decoupled element (such as queue)");
     return FALSE;
   }
 
@@ -1876,11 +1844,16 @@ gst_pad_link_filtered (GstPad * srcpad, GstPad * sinkpad,
   src_sched = gst_pad_get_scheduler (GST_PAD (link->srcpad));
   sink_sched = gst_pad_get_scheduler (GST_PAD (link->sinkpad));
 
-  /* should have been checked by gst_pad_check_schedulers */
-  g_assert (src_sched == sink_sched);
-  g_assert (sink_sched != NULL);
   /* now tell the scheduler */
-  gst_scheduler_pad_link (src_sched, link->srcpad, link->sinkpad);
+  if (src_sched && src_sched == sink_sched) {
+    gst_scheduler_pad_link (src_sched,
+        GST_PAD (link->srcpad), GST_PAD (link->sinkpad));
+  } else {
+    GST_CAT_INFO (GST_CAT_PADS,
+        "not telling link to scheduler %s:%s and %s:%s, %p %p",
+        GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad),
+        src_sched, sink_sched);
+  }
 
   GST_CAT_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
       GST_DEBUG_PAD_NAME (link->srcpad), GST_DEBUG_PAD_NAME (link->sinkpad));
@@ -2234,10 +2207,8 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad,
   g_return_val_if_fail (GST_PAD_PARENT (realsink) != NULL, NULL);
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
-    g_warning ("schedulers for pads %s:%s and %s:%s weren't "
-        "equal (or didn't exist at all). Linking pads with different "
-        "schedulers requires exactly one decoupled element (such as queue)",
-        GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
+    g_warning ("linking pads with different scheds requires "
+        "exactly one decoupled element (such as queue)");
     return NULL;
   }
 

@@ -1,5 +1,12 @@
 2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstpad.c: (gst_pad_check_schedulers),
+	(gst_pad_can_link_filtered), (gst_pad_link_filtered),
+	(gst_pad_link_prepare):
+	  revert until testsuite is fixed
+
+2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/Makefile.am:
 	* testsuite/caps/filtercaps.c: (main):
 	* testsuite/clock/clock1.c: (main):
