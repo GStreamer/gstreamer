@@ -106,6 +106,7 @@ do {
         filter->plays[p] = (offset+k >= num_filter) ? G_MAXUINT : offset + k;
       }
     }
+  }
 
   /****************************************************************************/
   /* push out the buffer. */
