@@ -1213,7 +1213,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
   } else if (!strcmp (format_name, "avi")) {
     caps = gst_caps_new_simple ("video/x-msvideo", NULL);
   } else if (!strcmp (format_name, "wav")) {
-    caps = gst_caps_new_simple ("video/x-wav", NULL);
+    caps = gst_caps_new_simple ("audio/x-wav", NULL);
   } else if (!strcmp (format_name, "swf")) {
     caps = gst_caps_new_simple ("application/x-shockwave-flash", NULL);
   } else if (!strcmp (format_name, "au")) {
