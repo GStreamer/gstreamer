@@ -322,7 +322,7 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
       realpad = GST_REAL_PAD_CAST (pad);
 
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK && 
-	  GST_PAD_IS_USABLE (realpad)) {
+	  GST_PAD_IS_LINKED (realpad)) {
 	GstBuffer *buf;
 
 	GST_DEBUG (GST_CAT_DATAFLOW, "pulling data from %s:%s", name, 
