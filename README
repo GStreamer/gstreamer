@@ -104,36 +104,4 @@ with GStreamer, you have to make sure not to use GPL-linked plug-ins.
 When using GPL-linked plug-ins, GStreamer is for all practical reasons 
 under the GPL itself. 
 
-The plug-ins which use a GPL library are as follows:
-cdparanoia      libcdparanoia   (http://www.xiph.org/paranoia/)
-aasink		aalib		(http://aa-project.sourceforge.net/aalib/)
-xmms		libxmms		(http://www.xmms.org)
-decdvd		ac3dec,mpeg2dec	(http://linuxvideo.org/mpeg2dec/,http://linuxvideo.org/ac3dec/)a
-mad		mad		(http://www.mars.org/home/rob/proj/mpeg/)
-
-Plug-ins which use an LGPL library are as follows:
-colorspace 	Hermes 		(http://www.clanlib.org/hermes/)
-httpsrc		libghttp	(ftp.gnome.org/pub/GNOME/stable/sources/libghttp/)
-alsasink	alsa		(http://alsa-project.org)
-arts		aRts		(http://arts-project.org)
-sdlsink		libsdl		(http://www.libsdl.org)
-gnomevfssource  gnome-vfs       (ftp.gnome.org//pub/GNOME/stable/sources/gnome-vfs)
-gnomevfssink    gnome-vfs
-esdsink         libesd          (ftp.gnome.org/pub/GNOME/stable/sources/esound)
-icastsend       libshout        (http://www.icecast.org)
-lame            libmp3lame      (http://www.mp3dev.org/mp3/)
-gst1394         libraw1394      (http://linux1394.sourceforge.net)
-flac		libFLAC		(http://flac.sourceforge.net)
-RTP		ortp		(http://www.linphone.org/ortp/)
-
-Plug-ins which use a BSD covered library are as follows:
-vorbisenc	libogg/libvorbis	(http://www.xiph.org/ogg/vorbis)
-vorbisdec	libogg/libvorbis
-
-Plug-ins based on libraries with other free licenses:
-xvideosink	libXv		(MIT X11 / X Consortium license)
-gsm		libgsm		(MIT license http://kbs.cs.tu-berlin.de/~jutta/toast.html)
-
-Plug-ins using non-free libraries:
-wincodec	win32ddl	(http://divx.euro.ru/)
-
+There is a LICESENSE_readme file containing licensing information on the plugins
