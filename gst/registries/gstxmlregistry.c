@@ -1490,9 +1490,11 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
       gst_xml_registry_save_caps (xmlregistry, factory->caps);
       CLASS (xmlregistry)->save_func (xmlregistry, "</caps>\n");
     } */
-    while (factory->extensions[i]) {
-      PUT_ESCAPED ("extension", factory->extensions[i]);
-      i++;
+    if (factory->extensions) {
+      while (factory->extensions[i]) {
+        PUT_ESCAPED ("extension", factory->extensions[i]);
+        i++;
+      }
     }
   }
   else if (GST_IS_SCHEDULER_FACTORY (feature)) {
