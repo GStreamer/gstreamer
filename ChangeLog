@@ -1,3 +1,9 @@
+2004-06-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/Makefile.am:
+	* testsuite/common.py:
+	  passed make distcheck, ready to go
+
 2004-06-21  Johan Dahlin  <johan@gnome.org>
 
 	* gst/Makefile.am (EXTRA_DIST): Add ltihooks.py

@@ -19,7 +19,6 @@ sys.argv.append('--gst-debug-no-color')
 
 path = os.path.abspath(os.path.join('..', 'gst'))
 import gst
-assert gst._gst.__file__ == '../gst/_gst.la'
 
 try:
    import gst.interfaces
