@@ -74,10 +74,13 @@ main (gint argc, gchar *argv[])
     g_print ("Setting thread to play with %d identities\n", 
 	     i / RUNS_PER_IDENTITY + 1);
     done = FALSE;
-    gst_element_set_state (thread, GST_STATE_PLAYING);
-
-    g_print ("Waiting for thread PLAYING->PAUSED\n");
-    while (!done) /* do nothing */;
+    if (gst_element_set_state (thread, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
+      g_warning ("failed to go to PLAYING");
+    }
+    else {
+      g_print ("Waiting for thread PLAYING->PAUSED\n");
+      while (!done) /* do nothing */;
+    }
     running = FALSE;
     g_print ("Coming out of the main GStreamer loop\n");
     g_signal_handler_disconnect (G_OBJECT (thread), id);
