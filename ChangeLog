@@ -2,6 +2,12 @@
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_parse_blockgroup),
 	send vorbis headers at the beginning of a stream, fixes bug #141554.
+	Interpret BLOCKDURATION and set buffer duration accordingly, fixes
+	bug #148950.
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_audio_caps),
+	(gst_matroska_demux_plugin_init):
+	* gst/matroska/matroska-ids.h:
+	enable demuxing of TTA audio streams, fixes bug #148951.
 	* gst/typefind/gsttypefindfunctions.c: (tta_type_find), (plugin_init),
 	enable typefinding for TTA audio files, fixes bug #148711.
 
