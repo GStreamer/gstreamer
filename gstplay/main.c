@@ -1,5 +1,9 @@
 #include <config.h>
 #include <gnome.h>
+#ifdef USE_GLIB2
+#include <libgnomeui/libgnomeui.h>
+#include <libgnomeui/gnome-ui-init.h>
+#endif
 #include "gstmediaplay.h"
 
 int
@@ -8,9 +12,16 @@ main (int argc, char *argv[])
 	GstMediaPlay *play;
 
 	gst_init (&argc,&argv);
+
+#ifdef USE_GLIB2
+	gnome_program_init ("gstmediaplay", "0.3",
+			    LIBGNOMEUI_MODULE,
+			    argc, argv, NULL);
+#else
 	gnome_init ("gstreamer", VERSION, argc, argv);
 	glade_init();
 	glade_gnome_init();
+#endif
 
 	play = gst_media_play_new ();
 	

@@ -455,16 +455,16 @@ AM_PATH_XMMS(0.9.4, HAVE_XXMS=yes, HAVE_XMMS=no)
 dnl Check for libglade
 HAVE_LIBGLADE_GNOME="no"
 if test x$USE_GLIB2 = xyes; then
-  dnl no glade for glib2.0
-  LIBGLADE_GNOME_LIBS=
-  LIBGLADE_GNOME_CFLAGS=
-  AC_MSG_WARN(libglade disabled for glib2.0)
+  PKG_CHECK_MODULES(LIBGLADE_GNOME, libglade-2.0 libgnomeui-2.0, HAVE_LIBGLADE_GNOME=yes, HAVE_LIBGLADE_GNOME=no)
+  if test x$HAVE_LIBGLADE_GNOME = xno; then
+    AC_MSG_WARN(Couldn't find libglade-2.0 - Can't build gstplay)
+    LIBGLADE_GNOME_LIBS=
+    LIBGLADE_GNOME_CFLAGS=
+  fi;
 else
   AM_PATH_LIBGLADE(HAVE_LIBGLADE_GNOME="yes", HAVE_LIBGLADE_GNOME="no", gnome)
   if test x$HAVE_LIBGLADE_GNOME = xno; then
     AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
-    LIBGLADE_GNOME_LIBS=
-    LIBGLADE_GNOME_CFLAGS=
   else
     LIBGLADE_GNOME_LIBS=$LIBGLADE_LIBS
     LIBGLADE_GNOME_CFLAGS=$LIBGLADE_CFLAGS
@@ -481,9 +481,11 @@ AC_SUBST(LIBGLADE_GNOME_CFLAGS)
 dnl Check for Gnome VFS
 HAVE_GNOME_VFS="no"
 if test x$USE_GLIB2 = xyes; then
-  VFS_LIBS=
-  VFS_CFLAGS=
-  AC_MSG_WARN(Gnome-VFS disabled for glib2.0)
+  PKG_CHECK_MODULES(VFS, gnome-vfs-2.0, HAVE_GNOME_VFS=yes, HAVE_GNOME_VFS=no)
+
+  if test x$HAVE_GNOME_VFS = xno; then
+    AC_MSG_WARN(Couldn't find gnome-vfs-2.0 - Gnome-VFS support disabled)
+  fi;
 else
   AC_MSG_CHECKING(for Gnome VFS)
   if gnome-config --libs vfs > /dev/null 2>&1; then

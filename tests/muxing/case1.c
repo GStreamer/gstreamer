@@ -62,8 +62,10 @@ main(int argc,char *argv[])
   		   gst_element_request_pad_by_name (aggregator, "sink%d"));
   gst_element_connect (aggregator, "src", sink, "sink");
 
-  g_signal_connect (G_OBJECT (src), "eos", eos_signal, NULL);
-  g_signal_connect (G_OBJECT (sink), "handoff", handoff_signal, NULL);
+  g_signal_connect (G_OBJECT (src), "eos",
+		    G_CALLBACK (eos_signal), NULL);
+  g_signal_connect (G_OBJECT (sink), "handoff",
+		    G_CALLBACK (handoff_signal), NULL);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 

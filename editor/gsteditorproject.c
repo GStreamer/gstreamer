@@ -78,24 +78,26 @@ gst_editor_project_class_init (GstEditorProjectClass *klass)
   parent_class = gtk_type_class(gtk_object_get_type());
 
   gst_editor_project_signals[ELEMENT_ADDED] =
-    gtk_signal_new("element_added",GTK_RUN_FIRST,object_class->type,
+    gtk_signal_new("element_added",GTK_RUN_FIRST,G_TYPE_FROM_CLASS (object_class),
                    GTK_SIGNAL_OFFSET(GstEditorProjectClass,element_added),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
                    GST_TYPE_ELEMENT);
 
   gst_editor_project_signals[ELEMENT_REMOVED] =
-    gtk_signal_new("element_removed",GTK_RUN_FIRST,object_class->type,
+    gtk_signal_new("element_removed",GTK_RUN_FIRST,G_TYPE_FROM_CLASS (object_class),
                    GTK_SIGNAL_OFFSET(GstEditorProjectClass,element_removed),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
                    GST_TYPE_ELEMENT);
 
   gst_editor_project_signals[ELEMENT_CHANGED] =
-    gtk_signal_new("element_changed",GTK_RUN_FIRST,object_class->type,
+    gtk_signal_new("element_changed",GTK_RUN_FIRST,G_TYPE_FROM_CLASS (object_class),
                    GTK_SIGNAL_OFFSET(GstEditorProjectClass,element_changed),
                    gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
                    GST_TYPE_ELEMENT);
 
+#ifndef USE_GLIB2
   gtk_object_class_add_signals(object_class,gst_editor_project_signals,LAST_SIGNAL);
+#endif
 
   object_class->set_arg = gst_editor_project_set_arg;
   object_class->get_arg = gst_editor_project_get_arg;

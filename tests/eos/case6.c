@@ -64,10 +64,14 @@ main(int argc,char *argv[])
   gst_element_connect(queue,"src",identity,"sink");
   gst_element_connect(identity,"src",sink,"sink");
 
-  g_signal_connect (G_OBJECT (src2), "eos", eos_signal_element, NULL);
-  g_signal_connect (G_OBJECT (queue), "eos", eos_signal_element, NULL);
-  g_signal_connect (G_OBJECT (pipeline), "eos", eos_signal, NULL);
-  g_signal_connect (G_OBJECT (thread), "eos", eos_signal_element, NULL);
+  g_signal_connect (G_OBJECT (src2), "eos",
+		    G_CALLBACK (eos_signal_element), NULL);
+  g_signal_connect (G_OBJECT (queue), "eos",
+		    G_CALLBACK (eos_signal_element), NULL);
+  g_signal_connect (G_OBJECT (pipeline), "eos",
+		    G_CALLBACK (eos_signal), NULL);
+  g_signal_connect (G_OBJECT (thread), "eos",
+		    G_CALLBACK (eos_signal_element), NULL);
 
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 

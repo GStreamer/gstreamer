@@ -3,7 +3,12 @@ VERSION = @VERSION@
 
 # if libglade is present, build the player and editor
 if HAVE_LIBGLADE_GNOME
-SUBDIRS_LGG = gstplay editor
+if HAVE_GNOME
+	SUBDIRS_LGG = gstplay editor
+else
+# Gnome 2.0 ...
+	SUBDIRS_LGG = gstplay
+endif
 else
 SUBDIRS_LGG =
 endif

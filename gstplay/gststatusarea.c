@@ -122,6 +122,7 @@ gst_status_area_expose(GtkWidget *widget, GdkEventExpose *event)
 
 	status_area = GST_STATUS_AREA (widget);
 
+#ifndef USE_GLIB2
 	if (GTK_WIDGET_VISIBLE (widget) && GTK_WIDGET_MAPPED (widget)) {
 		gdk_draw_rectangle (widget->window,
 				    widget->style->black_gc,
@@ -215,6 +216,9 @@ gst_status_area_expose(GtkWidget *widget, GdkEventExpose *event)
 					 status_area->playtime);
 		}
 	}
+#else
+#warning this needs pangoizing.
+#endif
 
 	return FALSE;
 }

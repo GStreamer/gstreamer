@@ -169,7 +169,7 @@ struct _GstElementClass {
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-  void (*get_property)	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+  void (*get_property)	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);

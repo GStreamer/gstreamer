@@ -30,7 +30,8 @@ main (int argc, char *argv[])
 
   autoplugger = gst_autoplugfactory_make ("static");
 
-  g_signal_connect (G_OBJECT (autoplugger), "new_object", new_object_added, NULL);
+  g_signal_connect (G_OBJECT (autoplugger), "new_object",
+		    G_CALLBACK (new_object_added), NULL);
 
   element = gst_autoplug_to_caps (autoplugger, testcaps,
 		  gst_pad_get_caps (gst_element_get_pad (osssink, "sink")),

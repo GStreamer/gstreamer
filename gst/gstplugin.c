@@ -99,7 +99,7 @@ _gst_plugin_initialize (void)
       strcmp (doc->xmlRootNode->name, "GST-PluginRegistry") ||
       !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) {
     if (_gst_warn_old_registry)
-	g_warning ("gstplugin: registry needs rebuild: run gstreamer-register\n");
+	g_error ("gstplugin: registry needs rebuild: run gstreamer-register\n");
     gst_plugin_load_all ();
     //gst_plugin_unload_all ();
     return;

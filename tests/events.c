@@ -15,7 +15,7 @@ int main (int argc,char *argv[]) {
   fakesink = gst_elementfactory_make("fakesink","fakesink");
 
   g_object_set(G_OBJECT(disksrc),"location","events.c",NULL);
-  g_signal_connect(G_OBJECT(fakesink),"eos",eos_handler,NULL);
+  g_signal_connect(G_OBJECT(fakesink),"eos",G_CALLBACK (eos_handler),NULL);
 
   gst_bin_add(GST_BIN(pipeline),disksrc);
   gst_bin_add(GST_BIN(pipeline),fakesink);

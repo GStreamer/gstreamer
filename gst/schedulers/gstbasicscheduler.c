@@ -290,8 +290,6 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
 static void
 gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
 {
-  GstRealPad *peer = GST_RPAD_PEER (pad);
-
   g_print ("select proxy (%s:%s)\n", GST_DEBUG_PAD_NAME (pad));
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
@@ -1011,7 +1009,6 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
   GList *chains;
   GstSchedulerChain *chain;
   GstElement *entry;
-  gint num_basic_schedulerd = 0;
   gboolean eos = FALSE;
   GList *elements;
 

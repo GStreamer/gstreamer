@@ -68,10 +68,10 @@ on_preferences1_activate (GtkMenuItem *menuitem, gpointer user_data)
 	struct stat statbuf;
 
 	if (stat (DATADIR"gstmediaplay.glade", &statbuf) == 0) {
-		xml = glade_xml_new (DATADIR"gstmediaplay.glade", "preferences");
+		xml = gst_glade_xml_new (DATADIR"gstmediaplay.glade", "preferences");
 	}
 	else
-		xml = glade_xml_new ("gstmediaplay.glade", "preferences");
+		xml = gst_glade_xml_new ("gstmediaplay.glade", "preferences");
 }
 
 void on_about_activate (GtkWidget *widget, gpointer data)
@@ -80,10 +80,10 @@ void on_about_activate (GtkWidget *widget, gpointer data)
 	struct stat statbuf;
 
 	if (stat (DATADIR"gstmediaplay.glade", &statbuf) == 0) {
-		xml = glade_xml_new (DATADIR"gstmediaplay.glade", "about");
+		xml = gst_glade_xml_new (DATADIR"gstmediaplay.glade", "about");
 	}
 	else
-		xml = glade_xml_new ("gstmediaplay.glade", "about");
+		xml = gst_glade_xml_new ("gstmediaplay.glade", "about");
 
 	/* connect the signals in the interface */
 	glade_xml_signal_autoconnect (xml);

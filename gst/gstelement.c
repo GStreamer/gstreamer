@@ -811,7 +811,8 @@ gst_element_wait_state_change (GstElement *element)
   GMutex *mutex = g_mutex_new ();
 
   g_mutex_lock (mutex);
-  g_signal_connect (G_OBJECT (element), "state_change", gst_element_wait_done, cond);
+  g_signal_connect (G_OBJECT (element), "state_change",
+		    G_CALLBACK (gst_element_wait_done), cond);
   g_cond_wait (cond, mutex);
   g_mutex_unlock (mutex);
 

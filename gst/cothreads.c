@@ -133,7 +133,7 @@ cothread_create (cothread_context *ctx)
     // FIXME this may not be 64bit clean
     //       could use casts to uintptr_t from inttypes.h
     //       if only all platforms had inttypes.h
-    void *stack_end = (void *)((unsigned long)sp & ~(STACK_SIZE - 1));
+    guchar *stack_end = (guchar *)((unsigned long)sp & ~(STACK_SIZE - 1));
     s = (cothread_state *)(stack_end + ((ctx->nthreads - 1) *
                            COTHREAD_STACKSIZE));
     GST_DEBUG (0,"new stack (case 2) at %p\n",s);
@@ -148,7 +148,7 @@ cothread_create (cothread_context *ctx)
   s->ctx = ctx;
   s->threadnum = ctx->nthreads;
   s->flags = 0;
-  s->sp = ((void *)s + COTHREAD_STACKSIZE);
+  s->sp = ((guchar *)s + COTHREAD_STACKSIZE);
   // is this needed anymore?
   s->top_sp = s->sp;
 

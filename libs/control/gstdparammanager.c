@@ -36,6 +36,8 @@ static guint gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint fra
 static guint gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gint64 timestamp);
 static guint gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count);
 
+static GObjectClass *parent_class;
+
 void 
 _gst_dpman_initialize()
 {
@@ -68,6 +70,8 @@ gst_dpman_class_init (GstDParamManagerClass *klass)
 {
 	GstObjectClass *gstobject_class;
 	GObjectClass *gobject_class;
+
+	parent_class = g_type_class_peek_parent (klass);
 
 	gstobject_class = (GstObjectClass*) klass;
 	gobject_class = (GObjectClass*) klass;
@@ -125,9 +129,9 @@ gst_dpman_new (gchar *name, GstElement *parent)
 static void
 gst_dpman_dispose (GObject *object)
 {
-	GstDParamManager *dpman = GST_DPMAN(object);
-	
+/*	GstDParamManager *dpman = GST_DPMAN(object); */
 
+	G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /**

@@ -1,5 +1,62 @@
 2001-12-13  Michael Meeks  <michael@ximian.com>
 
+	* gst/gstplugin.c (_gst_plugin_initialize): g_error
+	instead of warning.
+
+	* Makefile.am: update.
+
+	* editor/gsteditorprojectview.c (view_on_element_added): 
+
+	* editor/gsteditorproject.c
+	(gst_editor_project_class_init): upd.
+
+	* plugins/avi/gstavimux.c
+	(gst_avimux_request_new_pad): don't clobber name.
+
+	* libs/control/gstdparammanager.c
+	(gst_dpman_class_init): upd.
+	(gst_dpman_dispose): chain to parent.
+
+	* gst/cothreads.c (cothread_create): use guchar *'s
+	not void *'s for bytewise pointer arithmetic.
+
+	* gst/gstelement.h: kill const on get_property value.
+
+	* plugins/avi/gstavimux.c
+	(gst_avimux_request_new_pad): add name param.
+
+	* configure.ac: Add checks for libglade-2.0 and
+	gnome-vfs-2.0
+
+2001-12-13  Michael Meeks  <michael@ximian.com>
+
+	* plugins/xvideosink/Makefile.am: add $(X_LIBS)
+
+	* examples/typefind/typefind.c (type_found): upd.
+	xml code.
+
+	* plugins/mikmod/gstmikmod.c
+	(gst_mikmod_set_property): same memory bug here -
+	unfixed.
+
+	* plugins/oss/gstosssrc.c
+	(gst_osssrc_set_property): fix memory issue.
+	(gst_osssrc_init): dup the string - argh; quit here -
+	such code should be stuck in a common base class not
+	cut and pasted.
+
+	* plugins/oss/gstosssink.c
+	(gst_osssink_init): manage the device allocation.
+	(gst_osssink_finalize): impl.
+	(gst_osssink_class_init): upd.
+	(gst_osssink_set_property): upd.
+
+	* acconfig.h: cover HAVE_LIBXML2
+
+	* configure.ac: update libxml checks.
+
+2001-12-13  Michael Meeks  <michael@ximian.com>
+
 	* plugins/xvideosink/Makefile.am: add $(X_LIBS)
 
 	* examples/typefind/typefind.c (type_found): upd.

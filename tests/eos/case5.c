@@ -68,10 +68,14 @@ main(int argc,char *argv[])
   gst_element_connect(src2,"src",identity2,"sink");
   gst_element_connect(identity2,"src",sink2,"sink");
 
-  g_signal_connect (G_OBJECT (src), "eos", eos_signal_element, NULL);
-  g_signal_connect (G_OBJECT (src2), "eos", eos_signal_element, NULL);
-  g_signal_connect (G_OBJECT (pipeline), "eos", eos_signal, NULL);
-  g_signal_connect (G_OBJECT (thread), "eos", eos_signal_element, NULL);
+  g_signal_connect (G_OBJECT (src), "eos",
+		    G_CALLBACK (eos_signal_element), NULL);
+  g_signal_connect (G_OBJECT (src2), "eos",
+		    G_CALLBACK (eos_signal_element), NULL);
+  g_signal_connect (G_OBJECT (pipeline), "eos",
+		    G_CALLBACK (eos_signal), NULL);
+  g_signal_connect (G_OBJECT (thread), "eos",
+		    G_CALLBACK (eos_signal_element), NULL);
 
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 

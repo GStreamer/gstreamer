@@ -4,6 +4,9 @@
 #include <unistd.h>
 
 #include <gnome.h>
+#ifdef USE_GLIB2
+#include <libgnomeui/libgnomeui.h>
+#endif
 #include "gstmediaplay.h"
 #include "callbacks.h"
 
@@ -130,23 +133,28 @@ gst_media_play_init (GstMediaPlay *mplay)
 
 	/* load the interface */
 	if (stat (DATADIR"gstmediaplay.glade", &statbuf) == 0) {
-		mplay->xml = glade_xml_new (DATADIR"gstmediaplay.glade", "gstplay");
+		mplay->xml = gst_glade_xml_new (DATADIR"gstmediaplay.glade", "gstplay");
 	}
 	else {
-		mplay->xml = glade_xml_new ("gstmediaplay.glade", "gstplay");
+		mplay->xml = gst_glade_xml_new ("gstmediaplay.glade", "gstplay");
 	}
 	g_assert (mplay->xml != NULL);
 
 	mplay->slider = glade_xml_get_widget (mplay->xml, "slider");
 	g_assert (mplay->slider != NULL);
 	{
-		GtkArg arg;
-		GtkRange *range;
-
-		arg.name = "adjustment";
+#ifndef USE_GLIB2
+ 		GtkArg arg;
+ 		GtkRange *range;
+ 
+ 		arg.name = "adjustment";
 		gtk_object_getv (GTK_OBJECT (mplay->slider), 1, &arg);
-		range = GTK_RANGE (GTK_VALUE_POINTER (arg));
-		mplay->adjustment = gtk_range_get_adjustment (range);
+
+ 		range = GTK_RANGE (GTK_VALUE_POINTER (arg));
+ 		mplay->adjustment = gtk_range_get_adjustment (range);
+#else 
+		mplay->adjustment = gtk_range_get_adjustment (GTK_RANGE (mplay->slider));
+#endif
 
 		gtk_signal_connect (GTK_OBJECT (mplay->adjustment), "value_changed",
 				    GTK_SIGNAL_FUNC (gst_media_play_slider_changed), mplay);
@@ -187,8 +195,13 @@ gst_media_play_init (GstMediaPlay *mplay)
 			    GTK_SIGNAL_FUNC (gst_media_play_state_changed),
 			    mplay);
 
+#ifdef USE_GLIB2
+	bonobo_dock_set_client_area (BONOBO_DOCK (glade_xml_get_widget(mplay->xml, "dock1")),
+				     GTK_WIDGET (mplay->play));
+#else
 	gnome_dock_set_client_area (GNOME_DOCK (glade_xml_get_widget(mplay->xml, "dock1")),
 				    GTK_WIDGET (mplay->play));
+#endif
 
 	gtk_widget_show (GTK_WIDGET (mplay->play));
 
@@ -273,10 +286,11 @@ gst_media_play_show_playlist (GstMediaPlay *mplay)
 
 	/* load the interface */
 	if (stat (DATADIR"gstmediaplay.glade", &statbuf) == 0) {
-		mplay->playlist_xml = glade_xml_new (DATADIR"gstmediaplay.glade", "playlist_window");
+		mplay->playlist_xml = gst_glade_xml_new (DATADIR"gstmediaplay.glade", "playlist_window");
 	}
 	else {
-		mplay->playlist_xml = glade_xml_new ("gstmediaplay.glade", "playlist_window");
+		mplay->playlist_xml = gst_glade_xml_new ("gstmediaplay.glade",
+							 "playlist_window");
 	}
 	g_assert (mplay->playlist_xml != NULL);
 
@@ -351,13 +365,14 @@ static void
 on_load_file_selected (GtkWidget *button,
 		       file_select *data)
 {
-	GtkWidget *selector = data->selection;
+	GtkWidget    *selector = data->selection;
+	const gchar  *file_name;
 	GstMediaPlay *play = data->play;
 
-	gchar *file_name = gtk_file_selection_get_filename (GTK_FILE_SELECTION (selector));
-	gdk_threads_leave();
+	file_name = gtk_file_selection_get_filename (GTK_FILE_SELECTION (selector));
+	gdk_threads_leave ();
 	gst_media_play_start_uri (play, file_name);
-	gdk_threads_enter();
+	gdk_threads_enter ();
 
 	//gst_media_play_addto_playlist (play, file_name);
 	
