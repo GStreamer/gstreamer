@@ -337,11 +337,8 @@ restart:
 	GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "eos in on %s %d\n", 
 			   GST_ELEMENT_NAME (queue), queue->level_buffers);
 	break;
-      case GST_EVENT_DISCONTINUOUS:
-        gst_queue_locked_flush (queue);
-	break;
       default:
-	/*gst_pad_event_default (pad, GST_EVENT (buf)); */
+	/* we put the event in the queue, we don't have to act ourselves */
 	break;
     }
   }
