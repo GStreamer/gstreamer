@@ -49,7 +49,7 @@ int main(int argc,char *argv[]) {
   hbox = gtk_hbox_new(TRUE,0);
   gtk_container_add(GTK_CONTAINER(window),hbox);
 
-  volume_adj = (GtkAdjustment*)gtk_adjustment_new(1.0, 0.0, 1.0, 0.01, 0.01, 0.01);
+  volume_adj = (GtkAdjustment*)gtk_adjustment_new(1.0, 0.0, 1.0, 0.1, 0.01, 0.01);
   volume_slider = gtk_vscale_new(volume_adj);
   gtk_box_pack_start(GTK_BOX(hbox),volume_slider,TRUE,TRUE,0);
 
@@ -66,11 +66,11 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(thread),sinesrc);
   gst_bin_add(GST_BIN(thread),osssink);
   gst_element_connect(sinesrc,"src",osssink,"sink");
-  gtk_object_set(GTK_OBJECT(sinesrc),"GstSineSrc::buffersize",64,NULL);
+  g_object_set(G_OBJECT(sinesrc),"buffersize",64,NULL);
  
   dpman = GST_ELEMENT_DPARAM_MANAGER(sinesrc);
-  volume = gst_dparam_new();
-  freq = gst_dparam_new();
+  volume = gst_dparam_new(G_TYPE_FLOAT);
+  freq = gst_dparam_new(G_TYPE_FLOAT);
 
   g_assert(gst_dpman_attach_dparam (dpman, "volume", volume));
   g_assert(gst_dpman_attach_dparam (dpman, "freq", freq));
