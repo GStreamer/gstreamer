@@ -18,7 +18,8 @@ CLEANFILES = gstreamer.c gstreamer-base.defs
 EXTRA_DIST = gstreamer-extra.defs gstreamer.override
 gstreamer.c: gstreamer.defs gstreamer.override
 
-GST_INCLUDES=$(wildcard $(GST_INCLUDEDIR)/gst/*.h)
+GST_EXCLUDE_INCLUDES=$(GST_INCLUDEDIR)/gst/gstatomic_impl.h
+GST_INCLUDES=$(filter-out $(GST_EXCLUDE_INCLUDES),$(wildcard $(GST_INCLUDEDIR)/gst/*.h))
 
 gstreamer-base.defs: $(GST_INCLUDES)
 	$(PYTHON) $(PYGTK_H2DEF) $(GST_INCLUDES) > gstreamer-base.defs
