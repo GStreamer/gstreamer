@@ -446,8 +446,8 @@ gst_thread_change_state (GstElement *element)
       {
         THR_DEBUG("telling thread to pause (null) - and joining\n");
         //MattH FIXME revisit
-//        g_mutex_lock(thread->lock);
-//        gst_thread_signal_thread(thread,FALSE);
+        g_mutex_lock(thread->lock);
+        gst_thread_signal_thread(thread,FALSE);
         pthread_join(thread->thread_id,NULL);
       }
 
@@ -456,9 +456,27 @@ gst_thread_change_state (GstElement *element)
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       GST_FLAG_UNSET(thread,GST_THREAD_STATE_ELEMENT_CHANGED);
 
-      if (GST_ELEMENT_CLASS (parent_class)->change_state)
-        stateset = GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT(thread));
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      THR_INFO("stopping thread");
 
+      // check to see if the thread is somehow changing its own state.
+      // FIXME this is currently illegal, but must somehow be made legal at some point.
+      if (pthread_equal(self, thread->thread_id))
+      {
+        //FIXME this should not happen
+        g_assert(!pthread_equal(self, thread->thread_id));
+        GST_FLAG_SET(thread, GST_THREAD_STATE_SPINNING);
+        GST_DEBUG(GST_CAT_THREAD,"no sync(" GST_DEBUG_THREAD_FORMAT "): setting own thread's state to spinning\n",
+                  GST_DEBUG_THREAD_ARGS(thread->pid));
+      }
+      else
+      {
+        THR_DEBUG("telling thread to stop spinning\n");
+        g_mutex_lock(thread->lock);
+        gst_thread_signal_thread(thread,FALSE);
+      }
+      
       break;
     default:
       break;
