@@ -47,7 +47,7 @@ GstElementDetails gst_pipefilter_details;
 typedef enum {
   GST_PIPEFILTER_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-  GST_PIPEFILTER_FLAG_LAST	= GST_ELEMENT_FLAG_LAST,
+  GST_PIPEFILTER_FLAG_LAST	= GST_ELEMENT_FLAG_LAST + 2
 } GstPipeFilterFlags;
 
 typedef struct _GstPipefilter GstPipefilter;

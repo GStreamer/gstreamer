@@ -2706,7 +2706,7 @@ gst_ghost_pad_dispose (GObject *object)
  *
  * Creates a new ghost pad associated with the given pad, and names it with
  * the given name.  If name is NULL, a guaranteed unique name (across all
- * ghost pads) will be assigned (most likely of the form ghostpad&perc;d).
+ * ghost pads) will be assigned (most likely of the form ghostpad%d).
  *
  * Returns: a new ghost #GstPad, or NULL in case of an error.
  */

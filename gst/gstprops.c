@@ -185,7 +185,7 @@ gst_props_transform_to_string (const GValue *src_value, GValue *dest_value)
   if (props)
     dest_value->data[0].v_pointer = gst_props_to_string (props);
 }
-/**
+/*
  * r will still point to the string. if end == next, the string will not be 
  * null-terminated. In all other cases it will be.
  * end = pointer to char behind end of string, next = pointer to start of
@@ -258,7 +258,7 @@ gst_props_entry_from_string_no_name (gchar *s, gchar **after, gboolean has_type)
   gchar *end, *next, *check = s;
   GstPropsType type = GST_PROPS_INVALID_TYPE;
   /* [TYPE=]VALUE */
-  /**
+  /*
    * valid type identifiers case insensitive:
    * INT: "i", "int"
    * FLOAT: "f", "float"
@@ -539,7 +539,7 @@ error:
 GstProps *
 gst_props_from_string (gchar *str)
 {
-  /**
+  /*
    * format to parse is ENTRY[,ENTRY ...]
    * ENTRY is NAME[:TYPE]=VALUE
    * NAME is alphanumeric

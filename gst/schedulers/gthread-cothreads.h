@@ -27,7 +27,7 @@
 #define COTHREADS_NAME		"gthread"
 #define COTHREADS_NAME_CAPITAL	"GThread"
 
-/**
+/*
  * Theory of operation:
  * Instead of using cothreads, GThreads and 1 mutex are used.
  * Every thread may only run if it holds the mutex. Otherwise it holds its own

@@ -450,7 +450,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
 }
 /**
  * performs a link and frees the struct. src and sink elements must be given
- * return values:  0 - link performed
+ * return values   0 - link performed
  *                 1 - link delayed
  *                <0 - error
  */

@@ -34,7 +34,7 @@ struct _graph_t {
 };
 
 
-/** 
+/* 
  * Memory checking. Should probably be done with gsttrace stuff, but that 
  * doesn't really work.
  * This is not safe from reentrance issues, but that doesn't matter as long as

@@ -32,10 +32,13 @@ struct _GstTrashStackElement {
   GstTrashStackElement *next;
 };
 
+typedef volatile gpointer gst_vgpointer;/* gtk-doc volatile workaround */
+typedef volatile gulong gst_vgulong;    /* gtk-doc volatile workaround */
+                                                                                
 struct _GstTrashStack {
-  volatile gpointer 	 head;  
-  volatile gulong 	 count; 		/* for the ABA problem */
-  GMutex                *lock;			/* lock for C fallback */
+  gst_vgpointer 	head;  
+  gst_vgulong		count; 		/* for the ABA problem */
+  GMutex                *lock;		/* lock for C fallback */
 };
 
 GST_INLINE_FUNC GstTrashStack* 	gst_trash_stack_new 	(void);

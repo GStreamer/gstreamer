@@ -24,10 +24,12 @@
 
 G_BEGIN_DECLS
 
+typedef volatile gint gst_vgint;	/* gtk-doc volatile workaround */
+
 typedef struct _GstAtomicInt GstAtomicInt;
 
 struct _GstAtomicInt {
-  volatile gint  counter;
+  gst_vgint     counter;
   GMutex	*lock;		/* for C fallback */
 };
 
