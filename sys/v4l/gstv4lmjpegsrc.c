@@ -278,6 +278,7 @@ static GstPadConnectReturn
 gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
                             GstCaps *caps)
 {
+  GstPadConnectReturn ret_val;
   GstV4lMjpegSrc *v4lmjpegsrc;
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
@@ -285,8 +286,14 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
   if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)))
+  {
     if (!gst_v4lmjpegsrc_capture_deinit(v4lmjpegsrc))
       return GST_PAD_CONNECT_REFUSED;
+  }
+  else if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc)))
+  {
+    return GST_PAD_CONNECT_DELAYED;
+  }
 
   /* Note: basically, we don't give a damn about the opposite caps here.
    * that might seem odd, but it isn't. we know that the opposite caps is
@@ -323,16 +330,15 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
                         "width",  GST_PROPS_INT(v4lmjpegsrc->end_width),
                         "height", GST_PROPS_INT(v4lmjpegsrc->end_height),
                         NULL       ) );
-  if (gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps) <= 0)
-  {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Failed to set new caps");
+  if ((ret_val = gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps)) == GST_PAD_CONNECT_REFUSED)
     return GST_PAD_CONNECT_REFUSED;
-  }
+  else if (ret_val == GST_PAD_CONNECT_DELAYED)
+    return GST_PAD_CONNECT_DELAYED;
+
   if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
     return GST_PAD_CONNECT_REFUSED;
 
-  return GST_PAD_CONNECT_OK;
+  return GST_PAD_CONNECT_DONE;
 }
 
 

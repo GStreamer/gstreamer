@@ -245,6 +245,7 @@ static GstPadConnectReturn
 gst_v4lsrc_srcconnect (GstPad  *pad,
                        GstCaps *vscapslist)
 {
+  GstPadConnectReturn ret_val;
   GstV4lSrc *v4lsrc;
   GstCaps *caps, *newcaps;
   gint palette;
@@ -254,8 +255,14 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
   if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc)))
+  {
     if (!gst_v4lsrc_capture_deinit(v4lsrc))
       return GST_PAD_CONNECT_REFUSED;
+  }
+  else if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc)))
+  {
+    return GST_PAD_CONNECT_DELAYED;
+  }
 
   palette = v4lsrc->palette;
 
@@ -415,13 +422,15 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
 
     gst_caps_debug (newcaps, "new caps to set on v4lsrc's src pad");
 
-    if (gst_pad_try_set_caps(v4lsrc->srcpad, newcaps) <= 0)
+    if ((ret_val = gst_pad_try_set_caps(v4lsrc->srcpad, newcaps)) == GST_PAD_CONNECT_REFUSED)
       continue;
+    else if (ret_val == GST_PAD_CONNECT_DELAYED)
+      return GST_PAD_CONNECT_DELAYED;
 
     if (!gst_v4lsrc_capture_init(v4lsrc))
       return GST_PAD_CONNECT_REFUSED;
 
-    return GST_PAD_CONNECT_OK;
+    return GST_PAD_CONNECT_DONE;
   }
 
   /* still nothing - no good caps */
