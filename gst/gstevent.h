@@ -34,6 +34,19 @@ G_BEGIN_DECLS
 
 GST_EXPORT GType _gst_event_type;
 
+/**
+ * GstBufferFlag:
+ * @GST_EVENT_UNKNOWN: 
+ * @GST_EVENT_EOS:
+ * @GST_EVENT_FLUSH:
+ * @GST_EVENT_DISCONTINUOUS:
+ * @GST_EVENT_QOS:
+ * @GST_EVENT_SEEK:
+ * @GST_EVENT_SIZE:
+ * @GST_EVENT_RATE:
+ * @GST_EVENT_NAVIGATION:
+ * @GST_EVENT_TAG:
+ */
 typedef enum {
   GST_EVENT_UNKNOWN		= 0,
   GST_EVENT_EOS			= 1,

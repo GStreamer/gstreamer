@@ -978,8 +978,10 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
   switch (dir) {
     case GST_PAD_SRC:
       pads = element->srcpads;
+      break;
     case GST_PAD_SINK:
       pads = element->sinkpads;
+      break;
     default:
       g_warning ("unknown pad direction");
       return NULL;

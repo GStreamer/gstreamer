@@ -25,6 +25,7 @@
 #define __GST_FAKESINK_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
 
@@ -54,29 +55,18 @@ typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;
 
 struct _GstFakeSink {
-  GstElement 	 element;
-
-  GstPad 	*sinkpad;
+  GstBaseSink 	 element;
 
   gboolean 	 silent;
   gboolean 	 dump;
-  gboolean 	 has_loop;
-  gboolean 	 has_chain;
   gboolean 	 sync;
   gboolean 	 signal_handoffs;
-  GstClock 	*clock;
   GstFakeSinkStateError state_error;
-  GstActivateMode	pad_mode;
-  guint64	 offset;
-  gboolean       eos;
-  gboolean       need_preroll;
-  gboolean       have_preroll;
-
   gchar 	*last_message;
 };
 
 struct _GstFakeSinkClass {
-  GstElementClass parent_class;
+  GstBaseSinkClass parent_class;
 
   /* signals */
   void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);

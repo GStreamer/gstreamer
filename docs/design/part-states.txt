@@ -15,7 +15,7 @@ State definitions
  - NULL:    This is the initial state of an element. 
  - READY:   The element should be prepared to go to PAUSED.
  - PAUSED:  The element should be ready to accept and process data. Sink
-            elements however only accept one sample and then block.
+            elements however only accept one buffer and then block.
  - PLAYING: The same as PAUSED except for sinks, who are now accepting
             and rendering data.
 
@@ -57,7 +57,7 @@ The _set_state() function can return 3 possible values:
 
   GST_STATE_ASYNC:   The state change will complete later on. This can happen 
                      When the element needs a long time to perform the state
-		     change or for sinks that need to receive the first sample
+		     change or for sinks that need to receive the first buffer
 		     before they can complete the state change (preroll).
 
 In the case of an async state change, it is not possible to proceed to the next

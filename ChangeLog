@@ -1,3 +1,43 @@
+2005-02-23  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* docs/design/part-states.txt:
+	* gst/Makefile.am:
+	* gst/base/Makefile.am:
+	* gst/base/gstbasesink.c: (gst_basesink_get_template),
+	(gst_basesink_base_init), (gst_basesink_class_init),
+	(gst_basesink_init), (gst_basesink_set_pad_functions),
+	(gst_basesink_set_all_pad_functions), (gst_basesink_set_clock),
+	(gst_basesink_set_property), (gst_basesink_get_property),
+	(gst_base_sink_get_template), (gst_base_sink_get_caps),
+	(gst_base_sink_set_caps), (gst_base_sink_alloc_buffer),
+	(gst_basesink_finish_preroll), (gst_basesink_event),
+	(gst_basesink_chain_unlocked), (gst_basesink_chain),
+	(gst_basesink_loop), (gst_basesink_activate),
+	(gst_basesink_change_state):
+	* gst/base/gstbasesink.h:
+	* gst/elements/Makefile.am:
+	* gst/elements/gstfakesink.c: (gst_fakesink_base_init),
+	(gst_fakesink_class_init), (gst_fakesink_init),
+	(gst_fakesink_set_property), (gst_fakesink_get_property),
+	(gst_fakesink_event), (gst_fakesink_preroll),
+	(gst_fakesink_render), (gst_fakesink_change_state):
+	* gst/elements/gstfakesink.h:
+	* gst/gstelement.c: (gst_element_get_random_pad):
+	* gst/gstevent.h:
+	* gst/gstiterator.c: (gst_iterator_init), (gst_iterator_new),
+	(gst_list_iterator_next), (gst_list_iterator_free),
+	(gst_iterator_new_list), (gst_iterator_pop), (gst_iterator_next),
+	(gst_iterator_push), (filter_next):
+	* gst/gstmessage.h:
+	* gst/gsttrashstack.h:
+	Add sink base class to abstract locking and preroll.
+	Make fakesink use the base class.
+	Some doc fixes.
+	Fix missing breaks.
+
+	
+
 2005-02-22  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstidentity.h

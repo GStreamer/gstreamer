@@ -45,7 +45,7 @@ libgstelements_la_SOURCES =	\
 
 libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstelements_la_LIBADD = $(GST_OBJ_LIBS)
-libgstelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
+libgstelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS) $(top_builddir)/gst/base/libgstbase.la
 
 noinst_HEADERS =		\
 	gstaggregator.h		\

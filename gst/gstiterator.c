@@ -318,7 +318,7 @@ typedef struct _GstIteratorFilter
 static GstIteratorResult
 filter_next (GstIteratorFilter * it, gpointer * elem)
 {
-  GstIteratorResult result;
+  GstIteratorResult result = GST_ITERATOR_ERROR;
   gboolean done = FALSE;
 
   *elem = NULL;

@@ -28,20 +28,42 @@
 #include <gst/gsttag.h>
 #include <gst/gststructure.h>
 
-G_BEGIN_DECLS GST_EXPORT GType _gst_message_type;
+G_BEGIN_DECLS 
 
+GST_EXPORT GType _gst_message_type;
+
+/**
+ * GstMessageType:
+ * @GST_MESSAGE_UNKNOWN: an undefined message
+ * @GST_MESSAGE_EOS: end-of-stream reached in a pipeline
+ * @GST_MESSAGE_ERROR: an error occured
+ * @GST_MESSAGE_WARNING: a warning occured.
+ * @GST_MESSAGE_INFO: an info message occured
+ * @GST_MESSAGE_TAG: a tag was found.
+ * @GST_MESSAGE_BUFFERING: the pipeline is buffering
+ * @GST_MESSAGE_STATE_CHANGED: a state change happened
+ * @GST_MESSAGE_STEP_DONE: a framestep finished.
+ * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline
+ * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed.
+ * @GST_MESSAGE_STREAM_STATUS: status about a stream, emited when it starts,
+ *                             stops, errors, etc..
+ * @GST_MESSAGE_ANY: mask for all of the above messages.
+ */
 typedef enum
 {
-  GST_MESSAGE_UNKNOWN       = 0,
-  GST_MESSAGE_EOS           = (1 << 0),
-  GST_MESSAGE_ERROR         = (1 << 1),
-  GST_MESSAGE_WARNING       = (1 << 2),
-  GST_MESSAGE_INFO          = (1 << 3),
-  GST_MESSAGE_TAG           = (1 << 4),
-  GST_MESSAGE_BUFFERING     = (1 << 5),
-  GST_MESSAGE_STATE_CHANGED = (1 << 6),
-  GST_MESSAGE_STEP_DONE     = (1 << 7),
-  GST_MESSAGE_ANY           = 0xffffffff
+  GST_MESSAGE_UNKNOWN           = 0,
+  GST_MESSAGE_EOS               = (1 << 0),
+  GST_MESSAGE_ERROR             = (1 << 1),
+  GST_MESSAGE_WARNING           = (1 << 2),
+  GST_MESSAGE_INFO              = (1 << 3),
+  GST_MESSAGE_TAG               = (1 << 4),
+  GST_MESSAGE_BUFFERING         = (1 << 5),
+  GST_MESSAGE_STATE_CHANGED     = (1 << 6),
+  GST_MESSAGE_STEP_DONE         = (1 << 7),
+  GST_MESSAGE_NEW_CLOCK         = (1 << 8),
+  GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 9),
+  GST_MESSAGE_STREAM_STATUS     = (1 << 10),
+  GST_MESSAGE_ANY               = 0xffffffff
 } GstMessageType;
 
 #define GST_MESSAGE_TRACE_NAME	"GstMessage"
@@ -50,6 +72,9 @@ typedef enum
 #define GST_MESSAGE(message)	((GstMessage*)(message))
 #define GST_IS_MESSAGE(message)	(GST_DATA_TYPE(message) == GST_TYPE_MESSAGE)
 
+/* the lock is used to handle the synchronous handling of messages,
+ * the emiting thread is block until the handling thread processed
+ * the message using this mutex/cond pair */
 #define GST_MESSAGE_GET_LOCK(message)	(GST_MESSAGE(message)->lock)
 #define GST_MESSAGE_LOCK(message)	g_mutex_lock(GST_MESSAGE_GET_LOCK(message))
 #define GST_MESSAGE_UNLOCK(message)	g_mutex_unlock(GST_MESSAGE_GET_LOCK(message))
