@@ -53,12 +53,6 @@ static GstCapsFactory raw2_sink_caps = {
   NULL
 };
 
-static GstCapsListFactory mpg123_sinklist_caps = 
-{
-  &raw2_sink_caps,
-  &raw2_sink_caps,
-  NULL
-};
 
 static GstCaps *sinkcaps = NULL, 
                *rawcaps = NULL, 

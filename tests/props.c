@@ -49,6 +49,11 @@ int main(int argc,char *argv[])
   if (i==3) {
     testprops  = gst_props_merge (testprops,
 		      gst_props_new ("framed", GST_PROPS_BOOLEAN (TRUE), 
+		                     "mpegtest", GST_PROPS_BOOLEAN (FALSE), 
+		                     "hello", GST_PROPS_LIST ( 
+					     GST_PROPS_FOURCC_INT (0X5555),
+					     GST_PROPS_FOURCC_INT (0X6666)
+					     ),
 			             NULL));
   }
 
