@@ -1,4 +1,8 @@
-This is GStreamer 0.7.6
+This is GStreamer 0.8.0
+
+Changes since 0.7.6:
+      * coding style consistency for .c files
+      * ABI padding for GstCaps and GstStructure
 
 Changes since 0.7.5:
                                                                                 

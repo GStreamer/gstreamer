@@ -1,33 +1,43 @@
 
-GStreamer: Release notes for GStreamer 0.7.6 "Almost"
+GStreamer: Release notes for GStreamer 0.8.0 "Executive Slacks"
         
 
-The GStreamer team is happy to announce a new release in the
-0.7.x development series of the GStreamer streaming-media framework.
-The goal of this release series is to stabilize towards a 0.8
-release series which will be part of the GNOME 2.6 releases
-and hopefully eventually KDE 4.x. 
+The GStreamer team is happy to announce the first release
+in the 0.8.x stable series
+of the GStreamer streaming-media framework.
 
 
-0.7.6 is a Release Candidate for GStreamer 0.8.0
-It is released to shake out the last bugs that might be still present
-due to major/minor number differences.
-
-
-The 0.7 series is a development series and is aimed at developers.
-It is NOT API or ABI compatible with the stable 0.6.x series or
-with other releases in the series.  This means you can not use this
-release to upgrade your current GStreamer installation and expect your
-GStreamer applications to keep working without a recompile.
+The 0.8.x series is a stable series aimed at end users.
+It is not API or ABI compatible with the stable 0.6.x series.
 It is, however, parallel installable with the 0.6.x series.
+
+
+This module only contains core functionality.  For actual media playback,
+you will need other modules.  GStreamer Plugins contains a huge set of
+additional plugins.  GStreamer FFmpeg contains a plugin based on the popular
+FFmpeg decoding library.  These modules need not have the same source version
+as the core, as long as they are in the 0.8.x series.
 
   
 Features of this release
     
-      * uses 0.8 as the major/minor number
-      * opt scheduler fixes
-      * don't link non-versioned tools to gstreamer
-      * bindings-related fixes and additions
+      * Parallel installability with 0.6.x series
+      * Internationalization
+      * Dutch, French and Serbian translations
+      * Reworked capabilities and negotiation subsystem
+      * Reworked tagging subsystem
+      * Reworked interactivity subsystem (for DVD playback)
+      * Consistent error and debug signaling
+      * Dynamic debug logging
+      * Portability fixes
+      * Binding support fixes
+      * ChangeLog use
+      * Coding style consistency
+
+Bugs fixed in this release
+    
+      * 133653 : need to settle on coding style using indent and use it befor
+      * 136683 : Add padding to GstCaps [ABI change]
 
 Download
 
@@ -55,19 +65,32 @@ will create more lists as necessary.
         
 Applications
 
-Applications are supposed to update their pkg-config checks for GStreamer,
-and start checking for 0.8 as the major/minor number.
+Applications already ported to use GStreamer 0.8.x include the GNOME
+desktop components like gnome-media and nautilus-media, as well as other
+GNOME applications including sound-juicer, totem and RhythmBox.
 
   
 Contributors to this release
     
-      * Christian Schaller
-      * Thomas Vander Stichele
-      * David Schleef
-      * Johan Dahlin
-      * Benjamin Otte
-      * Christophe Fergeau
       * Andy Wingo
-      * Ronald Bultje
+      * Benjamin Otte
+      * Brian Cameron
+      * Christian Schaller
+      * Christophe Fergeau
+      * Colin Walters
+      * Danilo Segan
+      * David I. Lehn
+      * David Schleef
+      * Iain Holmes
       * Jan Schmidt
+      * Jérémy Simon
+      * Johan Dahlin
+      * Jon Trowbridge
+      * Julien Moutte
+      * Laurent Vivier
+      * Leif Morgan Johnson
+      * Mattias Wadman
+      * Ronald Bultje
+      * Stefan Kost
+      * Thomas Vander Stichele
  

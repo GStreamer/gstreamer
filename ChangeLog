@@ -1,7 +1,14 @@
+=== release 0.8.0 ===
+
+2004-03-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: release 0.8.0, "Executive Slacks"
+
 2004-03-16  Johan Dahlin  <johan@gnome.org>
 
 	* gst/schedulers/gstoptimalscheduler.c
-	(gst_opt_scheduler_pad_unlink): Remove double ;, spotted by Scott Wheeler
+	(gst_opt_scheduler_pad_unlink): Remove double ;,
+        spotted by Scott Wheeler
 
 2004-03-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
