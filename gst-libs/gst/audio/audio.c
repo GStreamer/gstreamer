@@ -114,7 +114,8 @@ gst_audio_length (GstPad* pad, GstBuffer* buf)
   if (caps == NULL)
   {
     /* ERROR: could not get caps of pad */
-    g_error ("gstaudio: warning: could not get caps of pad %p\n", pad);
+    g_warning ("gstaudio: warning: could not get caps of pad %p (%s)\n", 
+	       pad, GST_PAD_NAME (pad));
     length = 0.0;
   }
   else
