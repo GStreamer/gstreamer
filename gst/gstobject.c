@@ -132,6 +132,7 @@ gst_object_init (GstObject *object)
 {
   object->lock = g_mutex_new();
   object->parent = NULL;
+  object->name = NULL;
 
   object->flags = 0;
   GST_FLAG_SET (object, GST_FLOATING);
