@@ -125,12 +125,7 @@ install-data-local: gstreamer.html
 	fi)
 
 dist-hook: gstreamer.html
-	if ! test -d $(distdir)/html ; then mkdir $(distdir)/html ; fi
-	if ! test -d $(distdir)/sgml ; then mkdir $(distdir)/sgml ; fi
 	if ! test -d $(distdir)/tmpl ; then mkdir $(distdir)/tmpl ; fi
-	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
 	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
-	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
-	-cp $(srcdir)/sgml/*.bottom $(srcdir)/sgml/*.top $(distdir)/sgml
 
 .PHONY : html sgml tmpl

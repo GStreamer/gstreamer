@@ -63,8 +63,4 @@ uninstall-local:
 	@echo '-- Uninstalling '$(DESTDIR)$(TARGET_DIR) ; \
 	$(RM) -rf $(DESTDIR)$(TARGET_DIR)
 
-dist-hook: html
-	mkdir $(distdir)/html
-	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
-
 .PHONY : html

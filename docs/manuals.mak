@@ -62,42 +62,14 @@ $(manualname)/images:
 	fi
 
 htmldocs: $(manualname)/$(htmlname) $(manualname)/images
-htmldist: htmldocs
-	@if [ -r $(manualname)/$(htmlname) ] ; then \
-	    echo "Adding $(manualname)/$(htmlname) to distribution" ; \
-	    $(mkinstalldirs) $(distdir)/$(manualname) ; \
-	    cp -a $(manualname)/*.html $(distdir)/$(manualname)/ ; \
-	else \
-	    echo "Skipping $(manualname)/$(htmlname) from distribution: can't build" ; \
-	fi
-
 pdfdocs: $(PDFFILES)
-pdfdist: pdfdocs
-	@for a in $(PDFFILES) ; do \
-	if [ -r $$a ] ; then \
-	    echo "Adding $$a to distribution" ; \
-	    cp -a $$a $(distdir)/ ; \
-	else \
-	    echo "Skipping $$a from distribution: can't build" ; \
-	fi \
-	done
-
 psdocs: $(PSFILES)
-psdist: psdocs
-	@for a in $(PSFILES) ; do \
-	if [ -r $$a ] ; then \
-	    echo "Adding $$a to distribution" ; \
-	    cp -a $$a $(distdir)/ ; \
-	else \
-	    echo "Skipping $$a from distribution: can't build" ; \
-	fi \
-	done
 
 # Data to install, in the usual automake way
 docdatadir   = $(datadir)/gstreamer
 docdata_DATA = $(PDFFILES) $(PSFILES)
 
-htmlinst:
+htmlinst: htmldocs
 	@if [ -r $(manualname)/$(htmlname) ] ; then \
 	    echo "Installing $(manualname)" ; \
 	    $(mkinstalldirs) $(DESTDIR)$(docdatadir)/$(manualname) ; \
@@ -130,7 +102,6 @@ htmluninst:
 all-local: htmldocs pdfdocs psdocs
 clean-local:
 	$(RM) -rf $(manualname)/ $(manualname).junk/ images/*.eps images/*.png *.eps *.png *.ps *.pdf *.aux *.dvi *.log *.tex DBTOHTML_OUTPUT_DIR*
-dist-hook: htmldist pdfdist psdist
 install-data-local: htmlinst
 uninstall-local: htmluninst
 
