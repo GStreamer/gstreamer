@@ -168,6 +168,8 @@ gst_identity_init (GstIdentity * identity)
   identity->dump = FALSE;
   identity->last_message = NULL;
   identity->srccaps = NULL;
+
+  GST_FLAG_SET (identity, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -183,6 +185,22 @@ gst_identity_chain (GstPad * pad, GstData * _data)
 
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
+  if (GST_IS_EVENT (buf)) {
+    GstEvent *event = GST_EVENT (buf);
+
+    if (!identity->silent) {
+      g_free (identity->last_message);
+
+      identity->last_message =
+          g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
+          GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
+
+      g_object_notify (G_OBJECT (identity), "last_message");
+    }
+    gst_pad_event_default (pad, event);
+    return;
+  }
+
   if (identity->error_after >= 0) {
     identity->error_after--;
     if (identity->error_after == 0) {
@@ -197,9 +215,13 @@ gst_identity_chain (GstPad * pad, GstData * _data)
     if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
       g_free (identity->last_message);
       identity->last_message =
-          g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %"
-          G_GINT64_FORMAT ")", GST_DEBUG_PAD_NAME (identity->sinkpad),
-          GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+          g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, timestamp: %"
+          GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
+          G_GINT64_FORMAT ", flags: %d) %p",
+          GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf),
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
+          GST_BUFFER_FLAGS (buf), buf);
       g_object_notify (G_OBJECT (identity), "last-message");
       gst_buffer_unref (buf);
       return;
@@ -213,11 +235,13 @@ gst_identity_chain (GstPad * pad, GstData * _data)
     if (!identity->silent) {
       g_free (identity->last_message);
       identity->last_message =
-          g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, ts %"
-          GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ")",
+          g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, timestamp: %"
+          GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
+          G_GINT64_FORMAT ", flags: %d) %p",
           GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf),
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
+          GST_BUFFER_FLAGS (buf), buf);
       g_object_notify (G_OBJECT (identity), "last-message");
     }
 
