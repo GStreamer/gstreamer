@@ -436,7 +436,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 	break;
       default:
 	gst_pad_event_default (pad, event);
-	break;
+	return;
     }
     gst_event_unref (event);
     return;
