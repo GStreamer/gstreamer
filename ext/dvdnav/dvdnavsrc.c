@@ -252,6 +252,7 @@ static void dvdnavsrc_update_highlight (DVDNavSrc * src);
 static void dvdnavsrc_user_op (DVDNavSrc * src, int op);
 static GstElementStateReturn dvdnavsrc_change_state (GstElement * element);
 
+static void dvdnavsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
 static GstElementClass *parent_class = NULL;
 static guint dvdnavsrc_signals[LAST_SIGNAL] = { 0 };
@@ -278,9 +279,16 @@ dvdnavsrc_get_type (void)
       0,
       (GInstanceInitFunc) dvdnavsrc_init,
     };
+    static const GInterfaceInfo urihandler_info = {
+      dvdnavsrc_uri_handler_init,
+      NULL,
+      NULL
+    };
 
     dvdnavsrc_type = g_type_register_static (GST_TYPE_ELEMENT,
         "DVDNavSrc", &dvdnavsrc_info, 0);
+    g_type_add_interface_static (dvdnavsrc_type,
+        GST_TYPE_URI_HANDLER, &urihandler_info);
 
     sector_format = gst_format_register ("sector", "DVD sector");
     title_format = gst_format_register ("title", "DVD title");
@@ -1979,6 +1987,53 @@ dvdnavsrc_query (GstPad * pad, GstQueryType type,
       break;
   }
   return res;
+}
+
+/*
+ * URI interface.
+ */
+
+static guint
+dvdnavsrc_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+
+static gchar **
+dvdnavsrc_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "dvdnav", NULL };
+
+  return protocols;
+}
+
+static const gchar *
+dvdnavsrc_uri_get_uri (GstURIHandler * handler)
+{
+  return "dvdnav://";
+}
+
+static gboolean
+dvdnavsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gboolean ret;
+  gchar *protocol = gst_uri_get_protocol (uri);
+
+  ret = (protocol && !strcmp (protocol, "dvdnav")) ? TRUE : FALSE;
+  g_free (protocol);
+
+  return ret;
+}
+
+static void
+dvdnavsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = dvdnavsrc_uri_get_type;
+  iface->get_protocols = dvdnavsrc_uri_get_protocols;
+  iface->get_uri = dvdnavsrc_uri_get_uri;
+  iface->set_uri = dvdnavsrc_uri_set_uri;
 }
 
 static gboolean
