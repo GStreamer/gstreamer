@@ -75,7 +75,8 @@ enum {
   ARG_CHANNELS,
   ARG_FREQUENCY,
   ARG_FRAGMENT,
-  ARG_BUFFER_SIZE
+  ARG_BUFFER_SIZE,
+  ARG_SYNC
   /* FILL ME */
 };
 
@@ -186,6 +187,9 @@ gst_osssink_class_init (GstOssSinkClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
     g_param_spec_boolean("mute","mute","mute",
                          TRUE,G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_SYNC,
+    g_param_spec_boolean("sync","Sync","If syncing on timestamps should be anabled",
+                         TRUE, G_PARAM_READWRITE)); 
 
   /* it would be nice to show format in symbolic form, oh well */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
@@ -242,6 +246,7 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->bufsize = 4096;
   osssink->bps = 0;
   osssink->resync = FALSE;
+  osssink->sync = TRUE;
   /* 6 buffers per chunk by default */
   osssink->sinkpool = gst_buffer_pool_get_default (osssink->bufsize, 6);
 
@@ -462,7 +467,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
         ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay);
 	queued = delay * GST_SECOND / osssink->bps;
 
-	if  (osssink->resync) {
+	if  (osssink->resync && osssink->sync) {
 	  gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, 
 				buftime - queued, &jitter);
 
@@ -537,6 +542,9 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
       osssink->sinkpool = gst_buffer_pool_get_default (osssink->bufsize, 6);
       g_object_notify (object, "buffer_size");
       break;
+    case ARG_SYNC:
+      osssink->sync = g_value_get_boolean (value);
+      g_object_notify (G_OBJECT (osssink), "sync");
     default:
       break;
   }
@@ -573,6 +581,9 @@ gst_osssink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       break;
     case ARG_BUFFER_SIZE:
       g_value_set_int (value, osssink->bufsize);
+      break;
+    case ARG_SYNC:
+      g_value_set_boolean (value, osssink->sync);
       break;
     default:
       break;
