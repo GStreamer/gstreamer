@@ -28,7 +28,7 @@ class GstDataPtrArg(ArgType):
               '        return NULL;\n')
     null =   ('    if (py_%(name)s == Py_None)\n'
               '        %(name)s = NULL;\n'
-              '    else if (pyst_data_from_pyobject(py_%(name)s, &%(name)s_rect))\n'
+              '    else if (pyst_data_from_pyobject(py_%(name)s, %(name)s_rect))\n'
               '        %(name)s = &%(name)s_rect;\n'
               '    else\n'
               '            return NULL;\n')
@@ -41,10 +41,10 @@ class GstDataPtrArg(ArgType):
             info.arglist.append(pname)
             info.codebefore.append(self.null % {'name':  pname})
         else:
-            info.varlist.add('GstData', pname)
+            info.varlist.add('GstData*', pname)
             info.varlist.add('PyObject', '*py_' + pname)
             info.add_parselist('O', ['&py_' + pname], [pname])
-            info.arglist.append('&' + pname)
+            info.arglist.append(pname)
             info.codebefore.append(self.normal % {'name':  pname})
 
 arg = GstDataPtrArg()

@@ -1,6 +1,7 @@
 ;; -*- scheme -*-
 
 (include "gst-types.defs")
+;;(include "0.7.defs")
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gstatomic.h
 
@@ -1559,7 +1560,7 @@
   (return-type "GstElement*")
   (parameters
     '("const-gchar*" "factoryname")
-    '("const-gchar*" "name")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
 )
 
@@ -5265,7 +5266,23 @@
   (return-type "GstTagList*")
 )
 
+;; Added python method
+(define-method keys
+  (of-object "GstTagList")
+  (c-name "pygst_tag_list_keys")
+)
 
+(define-method has_key
+  (of-object "GstTagList")
+  (c-name "pygst_tag_list_has_key")
+  (parameters '("gchar*" "key"))
+)
+
+(define-method get
+  (of-object "GstTagList")
+  (c-name "pygst_tag_list_get")
+  (parameters '("gchar*" "key"))
+)
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/gsttaginterface.h
 

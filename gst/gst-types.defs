@@ -156,8 +156,8 @@
   (in-module "Gst")
   (c-name "GstBuffer")
   (gtype-id "GST_TYPE_BUFFER")
-  (copy-func "gst_buffer_copy")
-  (release-func "gst_buffer_free")
+  (copy-func "gst_data_copy")
+  (release-func "gst_data_unref")
 )
 
 (define-boxed Caps
@@ -179,7 +179,7 @@
   (c-name "GstEvent")
   (gtype-id "GST_TYPE_EVENT")
   (copy-func "gst_event_copy")
-  (release-func "gst_event_free")
+  (release-func "gst_data_unref")
 )
 
 

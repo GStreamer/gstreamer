@@ -26,7 +26,7 @@ gboolean
 pygst_data_from_pyobject(PyObject *object, GstData **data)
 {
   g_return_val_if_fail(*data != NULL, FALSE);
-
+  
   if (pyg_boxed_check(object, GST_TYPE_DATA)) {
     *data = pyg_boxed_get(object, GstData);
     return TRUE;
@@ -58,14 +58,11 @@ PyGstData_to_value(GValue *value, PyObject *object)
 
   if (!pygst_data_from_pyobject(object, &data))
     return -1;
-
-  g_value_set_boxed(value, &data);
+  
+  g_value_set_boxed(value, data);
   return 0;
 }
 
-/* We have to set ob_type here because stupid win32 does not allow you
- * to use variables from another dll in a global variable initialisation.
- */
 void
 _pygst_register_boxed_types(PyObject *moddict)
 {

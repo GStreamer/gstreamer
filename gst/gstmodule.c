@@ -42,7 +42,7 @@ init_gst (void)
         char **argv;
 
 	init_pygobject ();
-
+	
         /* pull in arguments */
         av = PySys_GetObject ("argv");
         if (av != NULL) {

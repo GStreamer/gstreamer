@@ -2,6 +2,7 @@
 #
 # gst-python
 # Copyright (C) 2002 David I. Lehn
+#               2004 Johan Dahlin
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
@@ -57,8 +58,13 @@ def filter(element):
    filesrc = gst.Element('sinesrc', 'source');
    filesink = gst.Element('fakesink', 'sink')
 
-   bin.add_many(filesrc, element, filesink)
-   gst.element_link_many(filesrc, element, filesink)
+   stats = gst.Element('statistics', 'stats');
+   stats.set_property('silent', False)
+   stats.set_property('buffer_update_freq', True)
+   stats.set_property('update_on_eos', True)
+
+   bin.add_many(filesrc, element, stats, filesink)
+   gst.element_link_many(filesrc, element, stats, filesink)
 
    # start playing
    bin.set_state(gst.STATE_PLAYING);

@@ -1,3 +1,26 @@
+2004-02-27  Johan Dahlin  <johan@gnome.org>
+
+	* examples/gstreamer/filesrc.py,player.py: New examples
+	
+	* gstreamer/gstreamer.override: Add a dict like interface to GstTagList
+
+	* gstreamer/gstpad-handlers.override: New file, split out from gstreamer.override
+
+	* gstreamer/gst-types.defs: Don't use
+	gst_buffer_free/gst_data_free, use gst_data_unref instead.
+
+	* gstreamer/gst-types.c (PyGstData_to_value): Don't send address here.
+
+	* gstreamer/arg-types.py (GstDataPtrArg.write_param): Send the
+	address to stuff, since we really want to avoid segfaults :)
+
+	* gstreamer/0.6.[c,defs,h,override]: Remove, we're focusing on 0.7
+	
+	* gstreamer/0.7.[c,defs,h,override]: Remove, merge with
+	gstreamer.*
+	
+	* gstreamer/Makefile.am: Clean up, remove versioning support.
+
 2004-02-25  Johan Dahlin  <johan@gnome.org>
 
 	* gstreamer/gstreamer.override: 
