@@ -95,6 +95,7 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
   guint32 total, request;
   guint8 *data;
   GstProtocolInfo *info;
+  gboolean have_event;
 
   info = (GstProtocolInfo *) h->priv_data;
 
@@ -106,6 +107,8 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
     return 0;
 
   do {
+    have_event = FALSE;
+
     /* prevent EOS */
     if (gst_bytestream_tell (bs) + size > gst_bytestream_length (bs)) {
       request = (int) (gst_bytestream_length (bs) - gst_bytestream_tell (bs));
@@ -130,7 +133,7 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
         g_warning ("gstffmpegprotocol: no bytestream event");
         return total;
       }
-
+      have_event = TRUE;
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_DISCONTINUOUS:
           gst_bytestream_flush_fast (bs, remaining);
@@ -139,6 +142,7 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
         case GST_EVENT_EOS:
           g_warning ("Unexpected/unwanted eos in data function");
           info->eos = TRUE;
+          have_event = FALSE;
           gst_event_unref (event);
           break;
         default:
@@ -146,7 +150,7 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
           break;
       }
     }
-  } while (!info->eos && total != request);
+  } while ((!info->eos && total != request) || have_event);
 
   memcpy (buf, data, total);
   gst_bytestream_flush_fast (bs, total);

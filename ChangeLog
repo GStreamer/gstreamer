@@ -1,3 +1,12 @@
+2004-06-13  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid):
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_read):
+	  Do some more random property setting. Fix for if there's less than
+	  ffmpeg-default-buffersize (32kB) data in a file _and_ there's an
+	  event pending. Partially fixes #142320.
+
 2004-06-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpeg.c: (plugin_init):

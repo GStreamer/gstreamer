@@ -681,10 +681,23 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         case CODEC_TYPE_AUDIO:
           mime = g_strdup_printf ("audio/x-gst_ff-%s", codec->name);
           caps = GST_FF_AUD_CAPS_NEW (mime, NULL);
+          if (context)
+            gst_caps_set (caps, "block_align", context->block_align,
+                "bitrate", context->bit_rate, NULL);
           g_free (mime);
           break;
         default:
           break;
+      }
+
+      /* set private data */
+      if (context && context->extradata_size > 0) {
+        GstBuffer *data = gst_buffer_new_and_alloc (context->extradata_size);
+
+        memcpy (GST_BUFFER_DATA (data), context->extradata,
+            context->extradata_size);
+        gst_caps_set_simple (caps,
+            "gst_ff_extradata", GST_TYPE_BUFFER, data, NULL);
       }
     }
   }
@@ -1614,11 +1627,26 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
         sscanf (mimetype, "%*s/x-gst_ff-%s", ext) == 1) {
       if ((codec = avcodec_find_decoder_by_name (ext)) ||
           (codec = avcodec_find_encoder_by_name (ext))) {
+        const GValue *data_v;
+        const GstBuffer *data;
+
         id = codec->id;
         if (mimetype[0] == 'v')
           video = TRUE;
         else if (mimetype[0] == 'a')
           audio = TRUE;
+
+        /* extradata */
+        if ((data_v = gst_structure_get_value (structure,
+                 "gst_ff_extradata")) && context) {
+          data = g_value_get_boxed (data_v);
+          if (context->extradata)
+            av_free (context->extradata);
+          context->extradata = av_malloc (GST_BUFFER_SIZE (data));
+          memcpy (context->extradata, GST_BUFFER_DATA (data),
+              GST_BUFFER_SIZE (data));
+          context->extradata_size = GST_BUFFER_SIZE (data);
+        }
       }
     }
   }
