@@ -127,7 +127,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('d', 'i', 'v', 'x'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
       caps = gst_caps_new_simple ("video/x-divx",
-          "divxversion", G_TYPE_INT, 3, NULL);
+          "divxversion", G_TYPE_INT, 4, NULL);
       if (codec_name)
         *codec_name = g_strdup ("DivX MPEG-4 Version 4");
       break;
