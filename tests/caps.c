@@ -8,48 +8,55 @@ static GstTypeFactory mpegfactory = {
 
 static GstCapsFactory mpeg2dec_sink_caps = {
   "video/mpeg",
-  "mpegtype", GST_CAPS_LIST (
-                     GST_CAPS_INT(1),
-                     GST_CAPS_INT(2)
+  "mpegtype", GST_PROPS_LIST (
+                     GST_PROPS_INT(1),
+                     GST_PROPS_INT(2)
 		),
   NULL
 };
 
 static GstCapsFactory mp1parse_src_caps = {
   "video/mpeg",
-  "mpegtype", GST_CAPS_LIST (
-                     GST_CAPS_INT(1)
+  "mpegtype", GST_PROPS_LIST (
+                     GST_PROPS_INT(1)
 		),
   NULL
 };
 
 static GstCapsFactory mpeg2dec_src_caps = {
   "video/raw",
-  "fourcc", 	GST_CAPS_LIST (
-                        GST_CAPS_FOURCC ('Y','V','1','2'), 
- 			GST_CAPS_FOURCC_INT (0x56595559)
+  "fourcc", 	GST_PROPS_LIST (
+                        GST_PROPS_FOURCC ('Y','V','1','2'), 
+ 			GST_PROPS_FOURCC_INT (0x56595559)
 			),
-  "width",	GST_CAPS_INT_RANGE (16, 4096),
-  "height",	GST_CAPS_INT_RANGE (16, 4096),
+  "width",	GST_PROPS_INT_RANGE (16, 4096),
+  "height",	GST_PROPS_INT_RANGE (16, 4096),
   NULL
 };
 
 static GstCapsFactory raw_sink_caps = {
   "video/raw",
-  "fourcc", 	GST_CAPS_LIST (
-                        GST_CAPS_FOURCC_INT (0x32315659)
+  "fourcc", 	GST_PROPS_LIST (
+                        GST_PROPS_FOURCC_INT (0x32315659)
 			),
-  "height",	GST_CAPS_INT_RANGE (16, 256),
+  "height",	GST_PROPS_INT_RANGE (16, 256),
   NULL
 };
 
 static GstCapsFactory raw2_sink_caps = {
   "video/raw",
-  "fourcc", 	GST_CAPS_LIST (
-                        GST_CAPS_FOURCC_INT (0x32315659),
-                        GST_CAPS_FOURCC ('Y','U','Y','V') 
+  "fourcc", 	GST_PROPS_LIST (
+                        GST_PROPS_FOURCC_INT (0x32315659),
+                        GST_PROPS_FOURCC ('Y','U','Y','V') 
 			),
-  "height",	GST_CAPS_INT_RANGE (16, 4096),
+  "height",	GST_PROPS_INT_RANGE (16, 4096),
+  NULL
+};
+
+static GstCapsListFactory mpg123_sinklist_caps = 
+{
+  &raw2_sink_caps,
+  &raw2_sink_caps,
   NULL
 };
 
@@ -57,6 +64,7 @@ static GstCaps *sinkcaps = NULL,
                *rawcaps = NULL, 
                *rawcaps2 = NULL, 
                *rawcaps3 = NULL, 
+               *sinkcapslist = NULL, 
 	       *mp1parsecaps = NULL;
 
 int main(int argc,char *argv[]) 
@@ -107,4 +115,6 @@ int main(int argc,char *argv[])
 
   testret = gst_caps_check_compatibility (rawcaps, rawcaps);
   g_print ("2 <-> 2 == %d (valid, same caps)\n", testret);
+
+  return 0;
 }
