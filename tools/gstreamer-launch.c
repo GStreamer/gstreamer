@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <gst/gstpropsprivate.h>
+#include <sys/time.h>
 
 static int    launch_argc;
 static char **launch_argv;
