@@ -10,7 +10,7 @@ int main(int argc,char *argv[]) {
   GstPad *pad;
   GstPadTemplate *padtemplate;
   GParamSpec **property_specs;
-  gint num_properties,i;
+  guint num_properties,i;
 
   gst_debug_set_categories(0);
   gst_info_set_categories(0);
