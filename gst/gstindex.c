@@ -54,6 +54,7 @@ static gboolean 	gst_index_path_resolver 	(GstIndex *index, GstObject *writer,
 		                			 gchar **writer_string, gpointer data);
 static gboolean 	gst_index_gtype_resolver 	(GstIndex *index, GstObject *writer,
 		                			 gchar **writer_string, gpointer data);
+static void gst_index_add_entry (GstIndex *index, GstIndexEntry *entry);
 
 static GstObject *parent_class = NULL;
 static guint gst_index_signals[LAST_SIGNAL] = { 0 };
@@ -437,7 +438,6 @@ gst_index_add_format (GstIndex *index, gint id, GstFormat format)
 {
   GstIndexEntry *entry;
   const GstFormatDefinition* def;
-  GstIndexClass *iclass;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
@@ -453,12 +453,7 @@ gst_index_add_format (GstIndex *index, gint id, GstFormat format)
   def = gst_format_get_details (format);
   entry->data.format.key = def->nick;
 
-  iclass = GST_INDEX_GET_CLASS (index);
-  
-  if (iclass->add_entry)
-    iclass->add_entry (index, entry);
-
-  g_signal_emit (G_OBJECT (index), gst_index_signals[ENTRY_ADDED], 0, entry);
+  gst_index_add_entry (index, entry);
 
   return entry;
 }
@@ -477,7 +472,6 @@ GstIndexEntry*
 gst_index_add_id (GstIndex *index, gint id, gchar *description)
 {
   GstIndexEntry *entry;
-  GstIndexClass *iclass;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (description != NULL, NULL);
@@ -490,12 +484,7 @@ gst_index_add_id (GstIndex *index, gint id, gchar *description)
   entry->id = id;
   entry->data.id.description = description;
 
-  iclass = GST_INDEX_GET_CLASS (index);
-
-  if (iclass->add_entry)
-    iclass->add_entry (index, entry);
-  
-  g_signal_emit (G_OBJECT (index), gst_index_signals[ENTRY_ADDED], 0, entry);
+  gst_index_add_entry (index, entry);
 
   return entry;
 }
@@ -603,6 +592,59 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
   return TRUE;
 }
 
+static void
+gst_index_add_entry (GstIndex *index, GstIndexEntry *entry)
+{
+  GstIndexClass *iclass;
+
+  iclass = GST_INDEX_GET_CLASS (index);
+
+  if (iclass->add_entry) {
+    iclass->add_entry (index, entry);
+  }
+
+  g_signal_emit (G_OBJECT (index), gst_index_signals[ENTRY_ADDED], 0, entry);
+}
+
+/**
+ * gst_index_add_associationv:
+ * @index: the index to add the entry to
+ * @id: the id of the index writer
+ * @flags: optinal flags for this entry
+ * @n: number of associations
+ * @list: list of associations
+ * @...: other format/value pairs or 0 to end the list
+ *
+ * Associate given format/value pairs with each other.
+ *
+ * Returns: a pointer to the newly added entry in the index.
+ */
+GstIndexEntry*
+gst_index_add_associationv (GstIndex *index, gint id, GstAssocFlags flags, 
+    int n, const GstIndexAssociation *list)
+{
+  GstIndexEntry *entry;
+
+  g_return_val_if_fail (n > 0, NULL);
+  g_return_val_if_fail (list != NULL, NULL);
+  g_return_val_if_fail (GST_IS_INDEX (index), NULL);
+  
+  if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
+    return NULL;
+ 
+  entry = g_malloc (sizeof (GstIndexEntry));
+
+  entry->type = GST_INDEX_ENTRY_ASSOCIATION;
+  entry->id = id;
+  entry->data.assoc.flags = flags;
+  entry->data.assoc.assocs = g_memdup(list, sizeof (GstIndexAssociation) * n);
+  entry->data.assoc.nassocs = n;
+
+  gst_index_add_entry (index, entry);
+
+  return entry;
+}
+
 /**
  * gst_index_add_association:
  * @index: the index to add the entry to
@@ -612,7 +654,7 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
  * @value: the value 
  * @...: other format/value pairs or 0 to end the list
  *
- * Associate given format/value pairs with eachother.
+ * Associate given format/value pairs with each other.
  * Be sure to pass gint64 values to this functions varargs,
  * you might want to use a gint64 cast to be sure.
  *
@@ -623,13 +665,11 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
 		           GstFormat format, gint64 value, ...)
 {
   va_list args;
-  GstIndexAssociation *assoc;
   GstIndexEntry *entry;
-  gulong size;
-  gint nassocs = 0;
+  GstIndexAssociation *list;
+  gint n_assocs = 0;
   GstFormat cur_format;
-  volatile gint64 dummy;
-  GstIndexClass *iclass;
+  GArray *array;
 
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
   g_return_val_if_fail (format != 0, NULL);
@@ -637,49 +677,30 @@ gst_index_add_association (GstIndex *index, gint id, GstAssocFlags flags,
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
   
+  array = g_array_new(FALSE, FALSE, sizeof(GstIndexAssociation));
+
   va_start (args, value);
 
   cur_format = format;
-
+  n_assocs = 0;
   while (cur_format) {
-    nassocs++;
+    GstIndexAssociation a;
+
+    n_assocs++;
     cur_format = va_arg (args, GstFormat);
-    if (cur_format)
-      dummy = va_arg (args, gint64);
+    if (cur_format) {
+      a.format = cur_format;
+      a.value = va_arg (args, gint64);
+
+      g_array_append_val (array, a);
+    }
   }
   va_end (args);
 
-  /* make room for two assoc */
-  size = sizeof (GstIndexEntry) + (sizeof (GstIndexAssociation) * nassocs);
+  list = (GstIndexAssociation *) g_array_free (array, FALSE);
 
-  entry = g_malloc (size);
-
-  entry->type = GST_INDEX_ENTRY_ASSOCIATION;
-  entry->id = id;
-  entry->data.assoc.flags = flags;
-  assoc = (GstIndexAssociation *) (((guint8 *) entry) + sizeof (GstIndexEntry));
-  entry->data.assoc.assocs = assoc;
-  entry->data.assoc.nassocs = nassocs;
-
-  va_start (args, value);
-  while (format) {
-    assoc->format = format;
-    assoc->value = value;
-
-    assoc++;
-
-    format = va_arg (args, GstFormat);
-    if (format)
-      value = va_arg (args, gint64);
-  }
-  va_end (args);
-
-  iclass = GST_INDEX_GET_CLASS (index);
-
-  if (iclass->add_entry)
-    iclass->add_entry (index, entry);
-
-  g_signal_emit (G_OBJECT (index), gst_index_signals[ENTRY_ADDED], 0, entry);
+  entry = gst_index_add_associationv (index, id, flags, n_assocs, list);
+  g_free (list);
 
   return entry;
 }

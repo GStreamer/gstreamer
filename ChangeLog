@@ -1,3 +1,10 @@
+2004-02-06  David Schleef  <ds@schleef.org>
+
+	* gst/gstindex.c: (gst_index_add_format), (gst_index_add_id),
+	(gst_index_add_entry), (gst_index_add_associationv),
+	(gst_index_add_association): Add gst_index_add_associationv()
+	and clean up gst_index_add_association(). #127133
+
 2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* autogen.sh: check out common with right tag if CVS/Tag exists
