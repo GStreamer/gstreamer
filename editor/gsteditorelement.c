@@ -24,6 +24,8 @@
 #include <gst/gstutils.h>
 
 #include "gsteditor.h"
+#include "gsteditorproject.h"
+#include "gsteditorproperty.h"
 
 /* class functions */
 static void gst_editor_element_class_init(GstEditorElementClass *klass);
@@ -60,8 +62,14 @@ static void gst_editor_element_move(GstEditorElement *element,
                                     gdouble dx,gdouble dy);
 
 
-static gchar *_gst_editor_element_states[] = { "C","R","D","P" };
+static gchar *_gst_editor_element_states[] = { "S","R","P","F" };
 
+static GstElementState _gst_element_states[] = {
+  GST_STATE_NULL,
+  GST_STATE_READY,
+  GST_STATE_PLAYING,
+  GST_STATE_PAUSED,
+};
 
 enum {
   ARG_0,
@@ -77,6 +85,7 @@ enum {
 };
 
 enum {
+  NAME_CHANGED,
   LAST_SIGNAL
 };
 
@@ -108,6 +117,14 @@ static void gst_editor_element_class_init(GstEditorElementClass *klass) {
   object_class = (GtkObjectClass*)klass;
 
   parent_class = gtk_type_class(gtk_object_get_type());
+
+  gst_editor_element_signals[NAME_CHANGED] =
+    gtk_signal_new("name_changed",GTK_RUN_FIRST,object_class->type,
+                   GTK_SIGNAL_OFFSET(GstEditorElementClass,name_changed),
+                   gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
+                   GST_TYPE_EDITOR_ELEMENT);
+
+  gtk_object_class_add_signals(object_class,gst_editor_element_signals,LAST_SIGNAL);
 
   gtk_object_add_arg_type("GstEditorElement::x",GTK_TYPE_DOUBLE,
                           GTK_ARG_READWRITE|GTK_ARG_CONSTRUCT_ONLY,
@@ -148,10 +165,10 @@ GstEditorElement *gst_editor_element_new(GstEditorBin *parent,
   GstEditorElement *editorelement;
   va_list args;
 
-  g_return_if_fail(parent != NULL);
-  g_return_if_fail(GST_IS_EDITOR_BIN(parent));
-  g_return_if_fail(element != NULL);
-  g_return_if_fail(GST_IS_ELEMENT(element));
+  g_return_val_if_fail(parent != NULL, NULL);
+  g_return_val_if_fail(GST_IS_EDITOR_BIN(parent), NULL);
+  g_return_val_if_fail(element != NULL, NULL);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), NULL);
 
   editorelement = GST_EDITOR_ELEMENT(gtk_type_new(GST_TYPE_EDITOR_ELEMENT));
   editorelement->element = element;
@@ -161,6 +178,22 @@ GstEditorElement *gst_editor_element_new(GstEditorBin *parent,
   va_end(args);
 
   return editorelement;
+}
+
+void gst_editor_element_set_name(GstEditorElement *element,
+                                  const gchar *name) {
+  g_return_if_fail(GST_IS_EDITOR_ELEMENT(element));
+  g_return_if_fail(name != NULL);
+
+  gst_element_set_name(element->element, (gchar *)name);
+  gnome_canvas_item_set(element->title, "text", name, NULL);
+  gtk_signal_emit(GTK_OBJECT(element),gst_editor_element_signals[NAME_CHANGED], element);
+}
+
+const gchar *gst_editor_element_get_name(GstEditorElement *element) {
+  g_return_val_if_fail(GST_IS_EDITOR_ELEMENT(element), NULL);
+
+  return gst_element_get_name(element->element);
 }
 
 void gst_editor_element_construct(GstEditorElement *element,
@@ -199,7 +232,6 @@ void gst_editor_element_construct(GstEditorElement *element,
 
 static void gst_editor_element_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   GstEditorElement *element;
-  gdouble dx,dy,newwidth,newheight;
 
   /* get the major types of this object */
   element = GST_EDITOR_ELEMENT(object);
@@ -358,6 +390,7 @@ static void gst_editor_element_realize(GstEditorElement *element) {
       "x1",0.0,"y1",0.0,"x2",0.0,"y2",0.0,
       NULL);
     g_return_if_fail(element->statebox[i] != NULL);
+
     GST_EDITOR_SET_OBJECT(element->statebox[i],element);
     gtk_signal_connect(GTK_OBJECT(element->statebox[i]),"event",
                        GTK_SIGNAL_FUNC(gst_editor_element_state_event),
@@ -374,29 +407,6 @@ static void gst_editor_element_realize(GstEditorElement *element) {
                        GTK_SIGNAL_FUNC(gst_editor_element_state_event),
                        GINT_TO_POINTER(i));
   }
-  /* and the play box (FIXME: should be icons, not text */
-  element->playbox = gnome_canvas_item_new(element->group,
-    gnome_canvas_rect_get_type(),
-    "width_units",1.0,"fill_color","white","outline_color","black",
-    "x1",0.0,"y1",0.0,"x2",0.0,"y2",0.0,
-    NULL);
-  g_return_if_fail(element->playbox != NULL);
-  GST_EDITOR_SET_OBJECT(element->playbox,element);
-  gtk_signal_connect(GTK_OBJECT(element->playbox),"event",
-                     GTK_SIGNAL_FUNC(gst_editor_element_state_event),
-                     GINT_TO_POINTER(4));
-  element->playtext = gnome_canvas_item_new(element->group,
-    gnome_canvas_text_get_type(),
-    "text","P",
-    "x",0.0,"y",0.0,"anchor",GTK_ANCHOR_NORTH_WEST,
-    "font","-*-*-*-*-*-*-6-*-*-*-*-*-*-*",
-    NULL);
-  g_return_if_fail(element->playtext != NULL);
-  GST_EDITOR_SET_OBJECT(element->playtext,element);
-  gtk_signal_connect(GTK_OBJECT(element->playtext),"event",
-                     GTK_SIGNAL_FUNC(gst_editor_element_state_event),
-                     GINT_TO_POINTER(4));
-
   // get all the pads
   pads = gst_element_get_pad_list(element->element);
   while (pads) {
@@ -445,6 +455,7 @@ static void gst_editor_element_resize(GstEditorElement *element) {
                                       "text_width") + 2.0;
   itemheight = gst_util_get_double_arg(GTK_OBJECT(element->title),
                                        "text_height") + 2.0;
+
   element->titlewidth = itemwidth;
   element->titleheight = itemheight;
   element->minwidth = MAX(element->minwidth,itemwidth);
@@ -455,10 +466,10 @@ static void gst_editor_element_resize(GstEditorElement *element) {
   element->statewidth = 0.0;element->stateheight = 0.0;
   for (i=0;i<4;i++) {
     g_return_if_fail(element->statetext[i] != NULL);
-    itemwidth = gst_util_get_double_arg(GTK_OBJECT(element->statetext[i]),
-                                        "text_width") - 2.0;
-    itemwidth = gst_util_get_double_arg(GTK_OBJECT(element->statetext[i]),
-                                        "text_height");
+
+    itemwidth = 16.0;
+    itemheight = 16.0;
+
     element->statewidth = MAX(element->statewidth,itemwidth);
     element->stateheight = MAX(element->stateheight,itemheight);
   }
@@ -512,11 +523,8 @@ static void gst_editor_element_resize(GstEditorElement *element) {
 
 void gst_editor_element_repack(GstEditorElement *element) {
   GList *pads;
-  GstPad *pad;
   GstEditorPad *editorpad;
-  gdouble sinkwidth,sinkheight;
   gint sinks;
-  gdouble srcwidth,srcheight;
   gint srcs;
   gdouble x1,y1,x2,y2;
   gint i;
@@ -560,23 +568,13 @@ void gst_editor_element_repack(GstEditorElement *element) {
                    "x1",x1+(element->statewidth*i),
                    "y1",y2-element->stateheight,
                    "x2",x1+(element->statewidth*(i+1)),"y2",y2,NULL);
-  g_return_if_fail(element->statetext[i] != NULL);
+    g_return_if_fail(element->statetext[i] != NULL);
     gtk_object_set(GTK_OBJECT(element->statetext[i]),
                    "x",x1+(element->statewidth*i)+2.0,
                    "y",y2-element->stateheight+1.0,
                    "anchor",GTK_ANCHOR_NORTH_WEST,NULL);
   }
-  // and the playstate box
-  g_return_if_fail(element->playbox != NULL);
-  gtk_object_set(GTK_OBJECT(element->playbox),
-                 "x1",x1+(element->statewidth*4),
-                 "y1",y2-element->stateheight,
-                 "x2",x1+(element->statewidth*5),"y2",y2,NULL);
-  g_return_if_fail(element->playtext != NULL);
-  gtk_object_set(GTK_OBJECT(element->playtext),
-                 "x",x1+(element->statewidth*4)+2.0,
-                 "y",y2-element->stateheight+1.0,
-                 "anchor",GTK_ANCHOR_NORTH_WEST,NULL);
+  gst_editor_element_sync_state(element);
 
   // now we try to place all the pads
   sinks = element->sinks;
@@ -636,7 +634,14 @@ GstEditorPad *gst_editor_element_add_pad(GstEditorElement *element,
 static gint gst_editor_element_group_event(GnomeCanvasItem *item,
                                            GdkEvent *event,
                                            GstEditorElement *element) {
-//  g_print("in group_event, type %d\n",event->type);
+  switch(event->type) {
+    case GDK_BUTTON_PRESS:
+      gst_editor_property_show(gst_editor_property_get(), element);
+      break;
+    default:
+      break;
+  }
+
   if (GST_EDITOR_ELEMENT_CLASS(GTK_OBJECT(element)->klass)->event)
     return (GST_EDITOR_ELEMENT_CLASS(GTK_OBJECT(element)->klass)->event)(
       item,event,element);
@@ -646,7 +651,7 @@ static gint gst_editor_element_group_event(GnomeCanvasItem *item,
 
 static gint gst_editor_element_event(GnomeCanvasItem *item,GdkEvent *event,
                                      GstEditorElement *element) {
-  gdouble item_x,item_y,dx,dy;
+  gdouble dx,dy;
   GdkCursor *fleur;
 
 //  g_print("element in event, type %d\n",event->type);
@@ -792,8 +797,7 @@ static gint gst_editor_element_state_event(GnomeCanvasItem *item,
       return TRUE;
       break;
     case GDK_BUTTON_RELEASE:
-      if (id < 5) {
-        element->states[id] = !element->states[id];
+      if (id < 4) {
         gst_editor_element_set_state(element,id,TRUE);
       } else
         g_warning("Uh, shouldn't have gotten here, unknown state\n");
@@ -811,89 +815,38 @@ static gint gst_editor_element_state_event(GnomeCanvasItem *item,
 static void gst_editor_element_set_state(GstEditorElement *element,
                                          gint id,gboolean set) {
   gboolean stateset = TRUE;	/* if we have no element, set anyway */
-  if (element->states[id]) {
-    /* set the object state */
-    if (set && element->element)
-      stateset = gst_element_set_state(element->element,(1 << id));
-    /* change the display */
-    if (stateset) {
-      if (id < 4) {
-        gtk_object_set(GTK_OBJECT(element->statebox[id]),
-                       "fill_color","black",NULL);
-        gtk_object_set(GTK_OBJECT(element->statetext[id]),
-                       "fill_color","white",NULL);
-      } else if (id == 4) {
-        gtk_object_set(GTK_OBJECT(element->playbox),
-                       "fill_color","black",NULL);
-        gtk_object_set(GTK_OBJECT(element->playtext),
-                       "fill_color","white",NULL);
-      }
-    } else {
-      g_print("error setting state %d\n",id);
-      element->states[id] = !element->states[id];
-    }
-  } else {
-    if (set && element->element)
-      stateset = gst_element_set_state(element->element,~(1 << id));
-    if (stateset) {
-      if (id < 4) {
-        gtk_object_set(GTK_OBJECT(element->statebox[id]),
-                       "fill_color","white",NULL);
-        gtk_object_set(GTK_OBJECT(element->statetext[id]),
-                       "fill_color","black",NULL);
-      } else if (id == 4) {
-        gtk_object_set(GTK_OBJECT(element->playbox),
-                       "fill_color","white",NULL);
-        gtk_object_set(GTK_OBJECT(element->playtext),
-                       "fill_color","black",NULL);
-      }
-    } else {
-      g_print("error unsetting state %d\n",id);
-      element->states[id] = !element->states[id];
-    }
-  }
+  //g_print("element set state %d\n", id);
+  if (element->element)
+    stateset = gst_element_set_state(element->element,_gst_element_states[id]);
 }
 
 
 static void gst_editor_element_state_change(GstElement *element,
                                             gint state,
                                             GstEditorElement *editorelement) {
-  gint id;
-
   g_return_if_fail(editorelement != NULL);
 
-//  g_print("gst_editor_element_state_change got state 0x%08x\n",state);
-  // if it's an unset
-#ifdef OLD
-  if (state & GST_STATE_MAX) {
-    state = ~state;
-    for (id=0;id<(sizeof(state)*8)-1;id++) {
-      if (state & 1) {
-        editorelement->states[id] = FALSE;
-        break;
-      }
-      state /= 2;
-    }
-  } else {
-    for (id=0;id<(sizeof(state)*8)-1;id++) {
-      if (state & 1) {
-        editorelement->states[id] = TRUE;
-        break;
-      }
-      state /= 2;
-    }
-  }
-#endif
-  gst_editor_element_set_state(editorelement,id,FALSE);
+  //g_print("gst_editor_element_state_change got state 0x%08x\n",state);
+  gst_editor_element_sync_state(editorelement);
 }
 
 static void gst_editor_element_sync_state(GstEditorElement *element) {
   gint id;
+  GstElementState state = GST_STATE(element->element);
 
-//  g_print("syncronizing state\n");
-  for (id=0;id<5;id++) {
-    element->states[id] = GST_FLAG_IS_SET(element->element,1<<id);
-    gst_editor_element_set_state(element,id,FALSE);
+  for (id=0;id<4;id++) {
+    if (_gst_element_states[id] == state) {
+      gtk_object_set(GTK_OBJECT(element->statebox[id]),
+                     "fill_color","black",NULL);
+      gtk_object_set(GTK_OBJECT(element->statetext[id]),
+                     "fill_color","white",NULL);
+    }
+    else {
+      gtk_object_set(GTK_OBJECT(element->statebox[id]),
+                     "fill_color","white",NULL);
+      gtk_object_set(GTK_OBJECT(element->statetext[id]),
+                     "fill_color","black",NULL);
+    }
   }
 }
 

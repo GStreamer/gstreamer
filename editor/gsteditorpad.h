@@ -32,7 +32,7 @@
 #define GST_IS_EDITOR_PAD(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR_PAD))
 #define GST_IS_EDITOR_PAD_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_PAD)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_PAD))
 
 typedef struct _GstEditorPad GstEditorPad;
 typedef struct _GstEditorPadClass GstEditorPadClass;

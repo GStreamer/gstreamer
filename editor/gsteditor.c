@@ -26,6 +26,7 @@
 
 /* signals and args */
 enum {
+  NAME_CHANGED,
   LAST_SIGNAL
 };
 
@@ -41,6 +42,7 @@ static void gst_editor_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_editor_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 static GtkFrame *parent_class = NULL;
+static guint gst_editor_signals[LAST_SIGNAL] = { 0 };
 
 GtkType gst_editor_get_type(void) {
   static GtkType editor_type = 0;
@@ -56,7 +58,7 @@ GtkType gst_editor_get_type(void) {
       NULL,
       (GtkClassInitFunc)NULL,
     };
-    editor_type = gtk_type_unique(gtk_frame_get_type(),&editor_info);
+    editor_type = gtk_type_unique(gtk_window_get_type(),&editor_info);
   }
   return editor_type;
 }
@@ -66,37 +68,29 @@ static void gst_editor_class_init(GstEditorClass *klass) {
 
   object_class = (GtkObjectClass*)klass;
 
-  parent_class = gtk_type_class(gtk_frame_get_type());
+  parent_class = gtk_type_class(gtk_window_get_type());
 
   gtk_object_add_arg_type("GstEditor::name",GTK_TYPE_STRING,
                           GTK_ARG_READWRITE,ARG_NAME);
+
+  gst_editor_signals[NAME_CHANGED] =
+    gtk_signal_new("name_changed",GTK_RUN_FIRST,object_class->type,
+                   GTK_SIGNAL_OFFSET(GstEditorClass,name_changed),
+                   gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
+                   GST_TYPE_EDITOR);
+
+  gtk_object_class_add_signals(object_class,gst_editor_signals,LAST_SIGNAL);
 
   object_class->set_arg = gst_editor_set_arg;
   object_class->get_arg = gst_editor_get_arg;
 }
 
 static void gst_editor_init(GstEditor *editor) {
-  /* create the pipeline */
-  editor->pipeline = gst_pipeline_new("pipeline");
-  g_return_if_fail(editor->pipeline != NULL);
-
-  /* create the editor canvas */
-  editor->canvas = gst_editor_canvas_new(GST_BIN(editor->pipeline),NULL);
-
-  /* create the scrolled window */
-  editor->scrollwindow = gtk_scrolled_window_new(NULL,NULL);
-
-  /* get the canvas widget */
-  editor->canvaswidget = gst_editor_canvas_get_canvas(editor->canvas);
-
-  /* add the canvas to the scrolled window */
-  gtk_container_add(GTK_CONTAINER(editor->scrollwindow),
-                    editor->canvaswidget);
-
-  /* add the scrolled window to the canvas */
-  gtk_container_add(GTK_CONTAINER(editor),editor->scrollwindow);
 }
 
+static void on_name_changed(GstEditorElement *element, gpointer data) {
+  gtk_signal_emit(GTK_OBJECT(element),gst_editor_signals[NAME_CHANGED], NULL);
+}
 /**
  * gst_editor_new:
  * name: name of editor frame
@@ -105,13 +99,43 @@ static void gst_editor_init(GstEditor *editor) {
  *
  * Returns: Freshly created GstEditor widget.
  */
-GstEditor *gst_editor_new(gchar *name) {
+GstEditor *gst_editor_new(GstElement *element) {
   GstEditor *editor;
 
+  g_return_val_if_fail(element != NULL, NULL);
+
   editor = gtk_type_new(gst_editor_get_type());
-  gtk_object_set(GTK_OBJECT(editor),"name",name,NULL);
+  editor->element = element;
+
+  /* create the editor canvas */
+  editor->canvas = gst_editor_canvas_new(GST_BIN(editor->element),NULL);
+
+  gtk_signal_connect_object(GTK_OBJECT(editor->canvas), "name_changed", on_name_changed, GTK_OBJECT(editor));
+  /* create the scrolled window */
+  editor->scrollwindow = gtk_scrolled_window_new(NULL,NULL);
+
+  /* get the canvas widget */
+  editor->canvaswidget = gst_editor_canvas_get_canvas(editor->canvas);
+
+  /* add the canvas to the scrolled window */
+  /*gtk_container_add(GTK_CONTAINER(editor->scrollwindow),
+                    editor->canvaswidget);
+		    */
+  gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(editor->scrollwindow),
+                    editor->canvaswidget);
+
+  /* add the scrolled window to the canvas */
+  gtk_container_add(GTK_CONTAINER(editor),editor->scrollwindow);
+
+  gtk_widget_set_usize(GTK_WIDGET(editor),400,400);
+
+  gtk_widget_show_all(GTK_WIDGET(editor));
 
   return editor;
+}
+
+char *gst_editor_get_name(GstEditor *editor) {
+  return gst_element_get_name(GST_ELEMENT(editor->element));
 }
 
 static void gst_editor_set_arg(GtkObject *object,GtkArg *arg,guint id) {
@@ -120,7 +144,7 @@ static void gst_editor_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch (id) {
     case ARG_NAME:
       gtk_object_set(GTK_OBJECT(editor),"label",GTK_VALUE_STRING(*arg),NULL);
-      gst_element_set_name(GST_ELEMENT(editor->pipeline),
+      gst_element_set_name(GST_ELEMENT(editor->element),
                            GTK_VALUE_STRING(*arg));
       break;
     default:
@@ -135,7 +159,7 @@ static void gst_editor_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   switch (id) {
     case ARG_NAME:
       GTK_VALUE_STRING(*arg) =
-        gst_element_get_name(GST_ELEMENT(editor->pipeline));
+        gst_element_get_name(GST_ELEMENT(editor->element));
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

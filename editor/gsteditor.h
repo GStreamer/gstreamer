@@ -49,14 +49,14 @@ typedef struct _GstEditorConnectionClass GstEditorConnectionClass;
 #define GST_IS_EDITOR(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR))
 #define GST_IS_EDITOR_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR))
 
 
 struct _GstEditor {
-  GtkFrame frame;
+  GtkWindow window;
 
-  /* the actual pipeline to be associated with this thing */
-  GstElement *pipeline;
+  /* the actual element to be associated with this thing */
+  GstElement *element;
 
   /* the editor canvas */
   GstEditorCanvas *canvas;
@@ -67,13 +67,16 @@ struct _GstEditor {
 };
 
 struct _GstEditorClass {
-  GnomeCanvasClass parent_class;
+  GtkWindowClass parent_class;
+
+  void (*name_changed) (GstEditor *editor);
 };
 
 
 GtkType gst_editor_get_type();
-GstEditor *gst_editor_new(gchar *name);
+GstEditor *gst_editor_new(GstElement *element);
 
+char *gst_editor_get_name(GstEditor *editor);
 
 
 #define GST_EDITOR_SET_OBJECT(item,object) \
@@ -92,7 +95,7 @@ GstEditor *gst_editor_new(gchar *name);
 #define GST_IS_EDITOR_ELEMENT(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR_ELEMENT))
 #define GST_IS_EDITOR_ELEMENT_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_ELEMENT)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_ELEMENT))
 
 #define GST_EDITOR_ELEMENT_PARENT(obj) (GST_EDITOR_ELEMENT(obj)->parent)
 #define GST_EDITOR_ELEMENT_GROUP(obj) (GST_EDITOR_ELEMENT(obj)->group)
@@ -121,8 +124,6 @@ struct _GstEditorElement {
   gdouble width,height;				// size
   GnomeCanvasItem *border,*title,*resizebox;	// easy ones
   GnomeCanvasItem *statebox[4],*statetext[4];	// GST_STATE_*
-  GnomeCanvasItem *playbox,*playtext;		// playstate
-  gboolean states[5];				// visual states
 
   gdouble insidewidth,insideheight;		// minimum space inside
   gdouble minwidth,minheight;			// minimum size
@@ -148,6 +149,7 @@ struct _GstEditorElement {
 struct _GstEditorElementClass {
   GnomeCanvasGroupClass parent_class;
 
+  void (*name_changed) (GstEditorElement *element);
   void (*realize) (GstEditorElement *element);
   gint (*event) (GnomeCanvasItem *item,GdkEvent *event,
                 GstEditorElement *element);
@@ -167,6 +169,9 @@ void gst_editor_element_construct(GstEditorElement *element,
 void gst_editor_element_repack(GstEditorElement *element);
 GstEditorPad *gst_editor_element_add_pad(GstEditorElement *element,
                                          GstPad *pad);  
+void gst_editor_element_set_name(GstEditorElement *element,
+	                                const gchar *name);
+const gchar *gst_editor_element_get_name(GstEditorElement *element);
 
 
 #define GST_TYPE_EDITOR_BIN \
@@ -178,7 +183,7 @@ GstEditorPad *gst_editor_element_add_pad(GstEditorElement *element,
 #define GST_IS_EDITOR_BIN(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR_BIN))
 #define GST_IS_EDITOR_BIN_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_BIN)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_BIN))
   
 struct _GstEditorBin {
   GstEditorElement element;
@@ -216,7 +221,7 @@ GstEditorBin *gst_editor_bin_new(GstEditorBin *parent,GstBin *bin,
 #define GST_IS_EDITOR_CANVAS(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR_CANVAS))
 #define GST_IS_EDITOR_CANVAS_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_CANVAS)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_CANVAS))
 
 
 struct _GstEditorCanvas {
@@ -248,7 +253,7 @@ void gst_editor_bin_add(GstEditorBin *parent,GstEditorElement *element);
 #define GST_IS_EDITOR_PAD(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR_PAD))
 #define GST_IS_EDITOR_PAD_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_PAD)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_PAD))
 
 struct _GstEditorPad {
   GtkObject object; 
@@ -314,7 +319,7 @@ void gst_editor_pad_repack(GstEditorPad *pad);
 #define GST_IS_EDITOR_CONNECTION(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_EDITOR_CONNECTION))
 #define GST_IS_EDITOR_CONNECTION_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_CONNECTION)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_CONNECTION))
 
 struct _GstEditorConnection {
   GtkObject object;

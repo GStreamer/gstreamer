@@ -90,6 +90,7 @@ static void gst_editor_canvas_init(GstEditorCanvas *editorcanvas) {
 GstEditorCanvas *gst_editor_canvas_new(GstBin *bin,
                                        const gchar *first_arg_name,...) {
   GstEditorCanvas *editorcanvas;
+  GstEditorBin *bin2;
   va_list args;
 
   g_return_if_fail(bin != NULL);
@@ -97,6 +98,7 @@ GstEditorCanvas *gst_editor_canvas_new(GstBin *bin,
 
   editorcanvas = GST_EDITOR_CANVAS(gtk_type_new(GST_TYPE_EDITOR_CANVAS));
   GST_EDITOR_ELEMENT(editorcanvas)->element = GST_ELEMENT(bin);
+  GST_EDITOR_ELEMENT(editorcanvas)->parent = editorcanvas;
 
   va_start(args,first_arg_name);
   gst_editor_element_construct(GST_EDITOR_ELEMENT(editorcanvas),NULL,
@@ -123,10 +125,9 @@ static void gst_editor_canvas_realize(GstEditorElement *element) {
 
   element->group = gnome_canvas_root(canvas->canvas);
 
-  gnome_canvas_item_new(element->group,gnome_canvas_rect_get_type(),
-                        "width_units",1.0,"fill_color","white",
-                        "outline_color","black",
-                        "x1",-2.0,"y1",-2.0,"x2",2.0,"y2",2.0,NULL);
+  if (GST_EDITOR_ELEMENT_CLASS(parent_class)->realize) {
+    GST_EDITOR_ELEMENT_CLASS(parent_class)->realize(element);
+  }
 }
 
 static void gst_editor_canvas_set_arg(GtkObject *object,GtkArg *arg,guint id) {
@@ -207,8 +208,8 @@ static gint gst_editor_canvas_event(GnomeCanvasItem *item,
   GstEditorBin *bin = GST_EDITOR_BIN(element);
   GstEditorCanvas *canvas = GST_EDITOR_CANVAS(element);
 
-//  g_print("canvas got event %d at %.2fx%.2f\n",event->type,
-//          event->button.x,event->button.y);
+  //g_print("canvas got event %d at %.2fx%.2f\n",event->type,
+  //        event->button.x,event->button.y);
 
   switch (event->type) {
     case GDK_BUTTON_RELEASE:

@@ -18,34 +18,35 @@
  */
 
 
-#include <glade/glade.h>
+#ifndef __GST_EDITOR_IMAGE_H__
+#define __GST_EDITOR_IMAGE_H__
+
 #include <gst/gst.h>
 
-#include "gsteditor.h"
-#include "gsteditorproject.h"
-#include "config.h"
+typedef enum 
+{
+  GST_EDITOR_IMAGE_BIN,
+  GST_EDITOR_IMAGE_PIPELINE,
+  GST_EDITOR_IMAGE_THREAD,
 
-extern gboolean _gst_plugin_spew;
+  GST_EDITOR_IMAGE_ELEMENT,
+  GST_EDITOR_IMAGE_SINK,
+  GST_EDITOR_IMAGE_SOURCE,
+  GST_EDITOR_IMAGE_CONNECTION,
+  GST_EDITOR_IMAGE_FILTER,
+  GST_EDITOR_IMAGE_TEE,
+} GstEditorImageType;
 
-int main(int argc,char *argv[]) {
-  GstEditorProject *project;
+typedef struct _GstEditorImage GstEditorImage;
 
-  bindtextdomain (PACKAGE, PACKAGE_LOCALE_DIR);
-  textdomain (PACKAGE);
-
-  _gst_plugin_spew = TRUE;
-  gst_init(&argc,&argv);
-  gst_plugin_load_all();
-  gst_plugin_load("gstelements");
-  gnome_init("GST Graph Editor",VERSION,argc,argv);
-  glade_init();
-  glade_gnome_init();
+struct _GstEditorImage {
+  GdkPixmap *pixmap;
+  GdkBitmap *bitmap;
+};
 
 
-  project = gst_editor_project_new();
-  gst_editor_project_view_new(project);
+GstEditorImage *gst_editor_image_get(GstEditorImageType type);
+GstEditorImage *gst_editor_image_get_for_type(GtkType type);
 
-  gtk_main();
 
-  return(0);
-}
+#endif /* __GST_EDITOR_IMAGE_H__ */
