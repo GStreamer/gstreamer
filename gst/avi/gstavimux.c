@@ -77,7 +77,7 @@ GST_PADTEMPLATE_FACTORY (src_factory,
 )
     
 GST_PADTEMPLATE_FACTORY (video_sink_factory,
-  "video_%02d",
+  "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
@@ -124,7 +124,7 @@ GST_PADTEMPLATE_FACTORY (video_sink_factory,
 )
     
 GST_PADTEMPLATE_FACTORY (audio_sink_factory,
-  "audio_%02d",
+  "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
@@ -362,7 +362,6 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
     }
     else if (!strcmp (mimetype, "audio/raw"))
     {
-printf("WE HAVE AUDIO\n");
       avimux->auds.format      = GST_RIFF_WAVE_FORMAT_PCM;
       avimux->auds.channels    = gst_caps_get_int (caps, "channels");
       avimux->auds.rate        = gst_caps_get_int (caps, "rate");
@@ -394,7 +393,7 @@ gst_avimux_request_new_pad (GstElement     *element,
   GstAviMux *avimux;
   gchar *name = NULL;
   GstPad *newpad;
-  
+
   g_return_val_if_fail (templ != NULL, NULL);
 
   if (templ->direction != GST_PAD_SINK) {
@@ -407,7 +406,6 @@ gst_avimux_request_new_pad (GstElement     *element,
   avimux = GST_AVIMUX (element);
 
   if (templ == GST_PADTEMPLATE_GET (audio_sink_factory)) {
-printf("AUDIOPAD REQUESTED\n");
     g_return_val_if_fail(avimux->num_audio_pads == 0 /*< MAX_NUM_AUDIO_PADS*/, NULL);
     name = g_strdup_printf ("audio_%02d", avimux->num_audio_pads);
     newpad = gst_pad_new_from_template (templ, name);
@@ -417,7 +415,6 @@ printf("AUDIOPAD REQUESTED\n");
     avimux->num_audio_pads++;
   }
   else if (templ == GST_PADTEMPLATE_GET (video_sink_factory)) {
-printf("VIDEOPAD %d REQUESTED\n", avimux->num_video_pads);
     g_return_val_if_fail(avimux->num_video_pads == 0 /*< MAX_NUM_VIDEO_PADS*/, NULL);
     name = g_strdup_printf ("video_%02d", avimux->num_video_pads);
     newpad = gst_pad_new_from_template (templ, name);
