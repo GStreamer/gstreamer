@@ -80,11 +80,8 @@ gst_rmdemux_details =
 {
   "RealMedia Demuxer",
   "Codec/Demuxer",
-  "LGPL",
   "Demultiplex a RealMedia file into audio and video streams",
-  VERSION,
-  "David Schleef <ds@schleef.org>",
-  "(C) 2003",
+  "David Schleef <ds@schleef.org>"
 };
 
 enum {
@@ -123,6 +120,7 @@ GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
 static GstElementClass *parent_class = NULL;
 
 static void gst_rmdemux_class_init (GstRMDemuxClass *klass);
+static void gst_rmdemux_base_init (GstRMDemuxClass *klass);
 static void gst_rmdemux_init (GstRMDemux *rmdemux);
 static GstElementStateReturn gst_rmdemux_change_state(GstElement *element);
 static void gst_rmdemux_loop (GstElement *element);
@@ -154,7 +152,8 @@ static GType gst_rmdemux_get_type (void)
 
   if (!rmdemux_type) {
     static const GTypeInfo rmdemux_info = {
-      sizeof(GstRMDemuxClass), NULL, NULL,
+      sizeof(GstRMDemuxClass),
+      (GBaseInitFunc)gst_rmdemux_base_init, NULL,
       (GClassInitFunc)gst_rmdemux_class_init,
       NULL, NULL, sizeof(GstRMDemux), 0,
       (GInstanceInitFunc)gst_rmdemux_init,
@@ -162,6 +161,19 @@ static GType gst_rmdemux_get_type (void)
     rmdemux_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRMDemux", &rmdemux_info, 0);
   }
   return rmdemux_type;
+}
+
+static void gst_rmdemux_base_init (GstRMDemuxClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_templ));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_video_templ));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_audio_templ));
+  gst_element_class_set_details (element_class, &gst_rmdemux_details);
 }
 
 static void gst_rmdemux_class_init (GstRMDemuxClass *klass) 
@@ -186,33 +198,27 @@ gst_rmdemux_init (GstRMDemux *rmdemux)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  factory = gst_element_factory_new ("rmdemux", GST_TYPE_RMDEMUX,
-                                     &gst_rmdemux_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_video_templ));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_audio_templ));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "rmdemux",
+			       GST_RANK_PRIMARY, GST_TYPE_RMDEMUX);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "rmdemux",
-  plugin_init
-};
+  "Realmedia stream demuxer",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
 static gboolean gst_rmdemux_handle_sink_event (GstRMDemux *rmdemux)
 {
