@@ -54,7 +54,6 @@ gst_play_typefind (GstBin *bin, GstElement *element)
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
                       gst_element_get_pad (typefind, "sink"));
   gst_bin_remove (bin, typefind);
-  gst_object_unref (GST_OBJECT (typefind));
 
   return caps;
 }
@@ -174,6 +173,7 @@ int main(int argc,char *argv[])
     exit (-1);
   }
 
+  gst_object_ref (GST_OBJECT (disksrc));
   gst_bin_remove (GST_BIN (bin), disksrc);
   gst_object_destroy (GST_OBJECT (bin));
 
