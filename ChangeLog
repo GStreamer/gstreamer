@@ -1,3 +1,78 @@
+2004-12-15  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/advanced-clocks.xml:
+	* docs/manual/advanced-interfaces.xml:
+	* docs/manual/advanced-metadata.xml:
+	* docs/manual/advanced-position.xml:
+	* docs/manual/advanced-schedulers.xml:
+	* docs/manual/advanced-threads.xml:
+	* docs/manual/appendix-gnome.xml:
+	* docs/manual/appendix-programs.xml:
+	* docs/manual/appendix-quotes.xml:
+	* docs/manual/autoplugging.xml:
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-data.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/basics-init.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/basics-plugins.xml:
+	* docs/manual/bins-api.xml:
+	* docs/manual/bins.xml:
+	* docs/manual/buffers-api.xml:
+	* docs/manual/buffers.xml:
+	* docs/manual/clocks.xml:
+	* docs/manual/components.xml:
+	* docs/manual/cothreads.xml:
+	* docs/manual/debugging.xml:
+	* docs/manual/dparams-app.xml:
+	* docs/manual/dynamic.xml:
+	* docs/manual/elements-api.xml:
+	* docs/manual/elements.xml:
+	* docs/manual/factories.xml:
+	* docs/manual/gnome.xml:
+	* docs/manual/goals.xml:
+	* docs/manual/helloworld.xml:
+	* docs/manual/helloworld2.xml:
+	* docs/manual/highlevel-components.xml:
+	* docs/manual/highlevel-xml.xml:
+	* docs/manual/init-api.xml:
+	* docs/manual/intro-basics.xml:
+	* docs/manual/intro-motivation.xml:
+	* docs/manual/intro-preface.xml:
+	* docs/manual/intro.xml:
+	* docs/manual/links-api.xml:
+	* docs/manual/links.xml:
+	* docs/manual/manual.xml:
+	* docs/manual/motivation.xml:
+	* docs/manual/pads-api.xml:
+	* docs/manual/pads.xml:
+	* docs/manual/plugins-api.xml:
+	* docs/manual/plugins.xml:
+	* docs/manual/programs.xml:
+	* docs/manual/queues.xml:
+	* docs/manual/quotes.xml:
+	* docs/manual/schedulers.xml:
+	* docs/manual/states-api.xml:
+	* docs/manual/states.xml:
+	* docs/manual/threads.xml:
+	* docs/manual/typedetection.xml:
+	* docs/manual/win32.xml:
+	* docs/manual/xml.xml:
+	  Try 2. This time, include a short preface as a "general
+	  introduction", also add code blocks around all code samples
+	  so they get compiled. We still need a way to tell readers
+	  the filename of the code sample. In some cases, don't show
+	  all code in the documentation, but do include it in the generated
+	  code. This allows for focussing on specific bits in the docs,
+	  while still having a full test application available.
+	* examples/manual/Makefile.am:
+	  Fix up examples for new ADM. Add several of the new examples that
+	  were either added or were missing from the build system.
+	* examples/manual/extract.pl:
+	  Allow nameless blocks.
+
 2004-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/manual/elements-api.xml:

@@ -39,7 +39,7 @@ foreach $file (@ARGV)
 
   while ($line = <FILE>)
   {
-    if ($line =~ /<!-- example-begin $output (.*) -->/)
+    if ($line =~ /<!-- example-begin $output (.*?)-->/)
     {
       $found = 1;
       $block_id = $1;
@@ -49,7 +49,7 @@ foreach $file (@ARGV)
 
       while ($line = <FILE>)
       {
-        if ($line =~ /<!-- example-end $output (.*) -->/)
+        if ($line =~ /<!-- example-end $output (.*?)-->/)
         {
           last;
         }

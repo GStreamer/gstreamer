@@ -20,32 +20,69 @@ gnome_CFLAGS = $(GST_OBJ_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 EXTRA_DIST = extract.pl
 
 EXAMPLES = \
-	dynamic $(GNOME) elementmake elementget helloworld \
-	init popt queue threads $(GST_LOADSAVE_SRC)
+	dynamic \
+	$(GNOME) \
+	elementcreate \
+	elementmake \
+	elementfactory \
+	elementget \
+	elementlink \
+	bin \
+	pad \
+	ghostpad \
+	helloworld \
+	init \
+	popt \
+	query \
+	queue \
+	threads \
+	playbin \
+	decodebin \
+	$(GST_LOADSAVE_SRC)
 
-dynamic.c: $(top_srcdir)/docs/manual/dynamic.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/dynamic.xml
+dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/advanced-autoplugging.xml
 
-elementmake.c elementget.c: $(top_srcdir)/docs/manual/elements-api.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/elements-api.xml
+elementmake.c elementcreate.c elementget.c elementlink.c elementfactory.c: $(top_srcdir)/docs/manual/basics-elements.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/basics-elements.xml
 
-gnome.c: $(top_srcdir)/docs/manual/gnome.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/gnome.xml
+bin.c : $(top_srcdir)/docs/manual/basics-bins.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/basics-bins.xml
 
-helloworld.c: $(top_srcdir)/docs/manual/helloworld.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/helloworld.xml
+pad.c ghostpad.c: $(top_srcdir)/docs/manual/basics-pads.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/basics-pads.xml
 
-init.c popt.c: $(top_srcdir)/docs/manual/init-api.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/init-api.xml
+gnome.c: $(top_srcdir)/docs/manual/appendix-gnome.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/appendix-gnome.xml
 
-queue.c: $(top_srcdir)/docs/manual/queues.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/queues.xml
+helloworld.c: $(top_srcdir)/docs/manual/basics-helloworld.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/basics-helloworld.xml
 
-threads.c: $(top_srcdir)/docs/manual/threads.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/threads.xml
+init.c popt.c: $(top_srcdir)/docs/manual/basics-init.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/basics-init.xml
 
-xml-mp3.c: $(top_srcdir)/docs/manual/xml.xml
-	$(PERL_PATH) $(srcdir)/extract.pl $@ $(top_srcdir)/docs/manual/xml.xml 
+query.c: $(top_srcdir)/docs/manual/advanced-position.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/advanced-position.xml
+
+queue.c threads.c: $(top_srcdir)/docs/manual/advanced-threads.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/advanced-threads.xml
+
+playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/highlevel-components.xml
+
+xml-mp3.c: $(top_srcdir)/docs/manual/highlevel-xml.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ \
+		$(top_srcdir)/docs/manual/highlevel-xml.xml 
 
 # we use some of the examples as testsuite apps, to verify that
 # they actually run

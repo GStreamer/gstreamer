@@ -1,49 +1,152 @@
 <chapter id="chapter-bins">
   <title>Bins</title>
   <para> 
-    A bin is a container element. You can add elements to a bin. Since a bin is 
-    an element itself, it can also be added to another bin.
-  </para>
-  <para> 
-    Bins allow you to combine a group of linked elements into one logical element. You do
-    not deal with the individual elements anymore but with just one element, the bin.
-    We will see that this is extremely powerful when you are going to construct
-    complex pipelines since it allows you to break up the pipeline in smaller chunks.
-  </para>
-  <para> 
-    The bin will also manage the elements contained in it. It will figure out how
-    the data will flow in the bin and generate an optimal plan for that data flow. Plan
-    generation is one of the most complicated procedures in GStreamer.
+    A bin is a container element. You can add elements to a bin. Since a
+    bin is an element itself, a bin can be handled in the same way as any
+    other element. Therefore, the whole previous chapter (<xref
+    linkend="chapter-elements"/>) applies to bins as well.
   </para>
 
-  <figure float="1" id="section-bin-img">
-    <title>Visualisation of a bin with some elements in it</title>
-      <mediaobject>  
-        <imageobject>
-          <imagedata fileref="images/bin-element.&image;" format="&IMAGE;" />
-        </imageobject>
-      </mediaobject>
-  </figure>
+  <sect1 id="section-bins">
+    <title>What are bins</title>
+    <para>
+      Bins allow you to combine a group of linked elements into one
+      logical element. You do not deal with the individual elements
+      anymore but with just one element, the bin. We will see that
+      this is extremely powerful when you are going to construct
+      complex pipelines since it allows you to break up the pipeline
+      in smaller chunks.
+    </para>
+    <para> 
+      The bin will also manage the elements contained in it. It will
+      figure out how the data will flow in the bin and generate an
+      optimal plan for that data flow. Plan generation is one of the
+      most complicated procedures in &GStreamer;. You will learn more
+      about this process, called scheduling, in <xref
+      linkend="chapter-scheduler"/>.
+    </para>
 
-  <para> 
-    There are two specialized bins available to the GStreamer programmer:
+    <figure float="1" id="section-bin-img">
+      <title>Visualisation of a bin with some elements in it</title>
+        <mediaobject>  
+          <imageobject>
+            <imagedata fileref="images/bin-element.&image;" format="&IMAGE;"/>
+          </imageobject>
+        </mediaobject>
+    </figure>
 
+    <para> 
+      There are two specialized types of bins available to the
+      &GStreamer; programmer:
+    </para>
     <itemizedlist>
       <listitem>
         <para>
-          a pipeline: a generic container that allows scheduling of the
+          A pipeline: a generic container that allows scheduling of the
           containing elements.  The toplevel bin has to be a pipeline.
-          Every application thus needs at least one of these.
+          Every application thus needs at least one of these. Applications
+          can iterate pipelines using <function>gst_bin_iterate
+          ()</function> to make it process data while in the playing state.
         </para>
       </listitem>
       <listitem>
         <para>
-          a thread: a bin that will be run in a separate execution thread.
+          A thread: a bin that will be run in a separate execution thread.
 	  You will have to use this bin if you have to carefully
           synchronize audio and video, or for buffering. You will learn
 	  more about threads in <xref linkend="chapter-threads"/>.
         </para>
       </listitem>
     </itemizedlist>
-  </para>
+  </sect1>
+
+  <sect1 id="section-bin-create">
+    <title>Creating a bin</title>
+    <para>
+      Bins are created in the same way that other elements are created,
+      i.e. using an element factory. There are also convenience functions
+      available (<function>gst_bin_new ()</function>,
+      <function>gst_thread_new ()</function> and <function>gst_pipeline_new
+      ()</function>). To add elements to a bin or remove elements from a
+      bin, you can use <function>gst_bin_add ()</function> and
+      <function>gst_bin_remove ()</function>. Note that the bin that you
+      add an element to will take ownership of that element. If you
+      destroy the bin, the element will be dereferenced with it. If you
+      remove an element from a bin, it will be dereferenced automatically.
+    </para>
+    <programlisting><!-- example-begin bin.c a -->
+#include &lt;gst/gst.h&gt;
+
+int
+main (int   argc,
+      char *argv[])
+{
+  GstElement *bin, *pipeline, *source, *sink;
+
+  /* init */
+  gst_init (&amp;argc, &amp;argv);
+
+  /* create */
+  pipeline = gst_pipeline_new ("my_pipeline");
+  bin = gst_pipeline_new ("my_bin");
+  source = gst_element_factory_make ("fakesrc", "source");
+  sink = gst_element_factory_make ("fakesink", "sink");
+
+  /* set up pipeline */
+  gst_bin_add_many (GST_BIN (bin), source, sink, NULL);
+  gst_bin_add (GST_BIN (pipeline), bin);
+  gst_element_link (source, sink);
+<!-- example-end bin.c a -->
+[..]<!-- example-begin bin.c b --><!--
+  return 0;
+--><!-- example-end bin.c b -->
+<!-- example-begin bin.c c -->
+}
+    <!-- example-end bin.c c --></programlisting>
+    <para>
+      There are various functions to lookup elements in a bin. You can
+      also get a list of all elements that a bin contains using the function
+      <function>gst_bin_get_list ()</function>. See the API references of
+      <ulink type="http"
+      url="&URLAPI;GstBin.html"><classname>GstBin</classname></ulink>
+      for details.
+    </para>
+  </sect1>
+
+  <sect1 id="section-bin-custom">
+    <title>Custom bins</title>
+    <para> 
+      The application programmer can create custom bins packed with elements
+      to perform a specific task. This allows you, for example, to write
+      an Ogg/Vorbis decoder with just the following lines of code:
+    </para>
+    <programlisting>
+int
+main (int   argc
+      char *argv[])
+{
+  GstElement *player;
+
+  /* init */
+  gst_init (&amp;argc, &amp;argv);
+
+  /* create player */
+  player = gst_element_factory_make ("oggvorbisplayer", "player");
+
+  /* set the source audio file */
+  g_object_set (G_OBJECT (player), "location", "helloworld.ogg", NULL);
+
+  /* start playback */
+  gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_PLAYING);
+[..]
+}
+    </programlisting>
+    <para>
+      Custom bins can be created with a plugin or an XML description. You
+      will find more information about creating custom bin in the <ulink
+      type="http"
+      url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html">Plugin
+      Writers Guide</ulink>.
+    </para>
+  </sect1>
 </chapter>

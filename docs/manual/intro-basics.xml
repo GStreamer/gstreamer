@@ -1,0 +1,86 @@
+<chapter id="chapter-intro-basics">
+  <title>Foundations</title>
+  <para>
+    This chapter of the guide introduces the basic concepts of &GStreamer;.
+    Understanding these concepts will be important in reading any of the
+    rest of this guide, all of them assume understanding of these basic
+    concepts.
+  </para>
+
+  <sect1 id="section-intro-basics-elements">
+    <title>Elements</title>
+    <para>
+      An <emphasis>element</emphasis> is the most important class of objects
+      in &GStreamer;. You will usually create a chain of elements linked
+      together and let data flow through this chain of elements. An element
+      has one specific function, which can be the reading of data from a
+      file, decoding of this data or outputting this data to your sound
+      card (or anything else). By chaining together several such elements,
+      you create a <emphasis>pipeline</emphasis> that can do a specific task,
+      for example media playback or capture. &GStreamer; ships with a large
+      collection of elements by default, making the development of a large
+      variety of media applications possible. If needed, you can also write
+      new elements. That topic is explained in great deal in the Plugin
+      Writer's Guide.
+    </para>
+  </sect1>
+
+  <sect1 id="section-intro-basics-bins">
+    <title>Bins and pipelines</title>
+
+    <para>
+      A <emphasis>bin</emphasis> is a container for a collection of elements.
+      A pipeline is a special subtype of a bin that allows execution of all
+      of its contained child elements. Since bins are subclasses of elements
+      themselves, you can mostly control a bin as if it where an element,
+      thereby abstracting away a lot of complexity for your application. You
+      can, for example change state on all elements in a bin by changing the
+      state of that bin itself. Bins also forward some signals from their
+      contained childs (such as errors and tags).
+    </para>
+    <para>
+      A pipeline is a bin that allows to <emphasis>run</emphasis> (technically
+      referred to as <quote>iterating</quote>) its contained childs. By
+      iterating a pipeline, data flow will start and media processing will
+      take place. A pipeline requires iterating for anything to happen. you
+      can also use threads, which automatically iterate the contained childs
+      in a newly created threads. We will go into this in detail later on.
+    </para>
+  </sect1>
+
+  <sect1 id="section-intro-basics-pads">
+    <title>Pads</title>
+    <para>
+      <emphasis>Pads</emphasis> are used to negotiate links and data flow
+      between elements in &GStreamer;. A pad can be viewed as a
+      <quote>plug</quote> or <quote>port</quote> on an element where
+      links may be made with other elements, and through which data can
+      flow to or from those elements. Pads have specific data handling
+      capabilities: A pad can restrict the type of data that flows
+      through it. Links are only allowed between two pads when the
+      allowed data types of the two pads are compatible. Data types are
+      negotiated between pads using a process called <emphasis>caps
+      negotiation</emphasis>. Data types are described as a
+      <classname>GstCaps</classname>.
+    </para>
+    <para>
+      An analogy may be helpful here. A pad is similar to a plug or jack on a
+      physical device. Consider, for example, a home theater system consisting
+      of an amplifier, a DVD player, and a (silent) video projector. Linking
+      the DVD player to the amplifier is allowed because both devices have audio
+      jacks, and linking the projector to the DVD player is allowed because
+      both devices have compatible video jacks. Links between the
+      projector and the amplifier may not be made because the projector and
+      amplifier have different types of jacks. Pads in &GStreamer; serve the
+      same purpose as the jacks in the home theater system.
+    </para>
+    <para>
+      For the most part, all data in &GStreamer; flows one way through a link
+      between elements. Data flows out of one element through one or more
+      <emphasis>source pads</emphasis>, and elements accept incoming data
+      through one or more <emphasis>sink pads</emphasis>. Source and sink
+      elements have only source and sink pads, respectively. Data is
+      embodied in a <classname>GstData</classname> structure.
+    </para>
+  </sect1>
+</chapter>
