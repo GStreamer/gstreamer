@@ -174,7 +174,7 @@ main(int argc, char *argv[])
   
   if (!silent)
   {
-    gchar **exclude_list = g_strsplit (exclude_args, ",", 0);
+    gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
     g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), exclude_list);
   }
   g_signal_connect (pipeline, "error", G_CALLBACK (error_callback), NULL);
