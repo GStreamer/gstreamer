@@ -245,8 +245,6 @@ gst_filesrc_init (GstFileSrc * src)
 
   src->mapbuf = NULL;
   src->mapsize = DEFAULT_MMAPSIZE;      /* default is 4MB */
-
-  src->seek_happened = FALSE;
 }
 
 static void
@@ -660,10 +658,10 @@ gst_filesrc_get (GstPad * pad)
     return GST_DATA (gst_event_new_flush ());
   }
   /* check for seek */
-  if (src->seek_happened) {
+  if (src->need_discont) {
     GstEvent *event;
 
-    src->seek_happened = FALSE;
+    src->need_discont = FALSE;
     GST_DEBUG_OBJECT (src, "sending discont");
     event =
         gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset,
@@ -806,11 +804,12 @@ gst_filesrc_change_state (GstElement * element)
         if (!gst_filesrc_open_file (GST_FILESRC (element)))
           return GST_STATE_FAILURE;
       }
+      src->need_discont = TRUE;
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_FILESRC_OPEN))
         gst_filesrc_close_file (GST_FILESRC (element));
-      src->seek_happened = TRUE;
+      src->need_discont = TRUE;
       break;
     default:
       break;
@@ -910,7 +909,7 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
           goto error;
           break;
       }
-      src->seek_happened = TRUE;
+      src->need_discont = TRUE;
       src->need_flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
       break;
     }

@@ -1,3 +1,11 @@
+2004-04-16  Benjamin Otte  <otte@gnome.org>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_init), (gst_filesrc_get),
+	(gst_filesrc_change_state), (gst_filesrc_srcpad_event):
+	* gst/elements/gstfilesrc.h:
+	  s/seek_happened/need_discont/ and require discont before sending any
+	  data
+
 2004-04-15  David Schleef  <ds@schleef.org>
 
 	* gst/gstvalue.c: (gst_value_serialize_buffer),
