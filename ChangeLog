@@ -1,3 +1,22 @@
+2004-02-20  Benjamin Otte  <otte@gnome.org>
+
+	* ext/xine/Makefile.am:
+	* ext/xine/gstxine.h:
+	* ext/xine/xine.c: 
+	* ext/xine/xineaudiodec.c: 
+	* ext/xine/xinecaps.c: 
+	  add first version of xine plugin wrapper. Currently only wraps the
+	  QDM2 win32 DLL, and even that only in proof-of-concept quality.
+	* configure.ac:
+	* ext/Makefile.am:
+	  add xine plugin wrapper, disabled by default. Use --enable-xine to
+	  build. Note that it'll segfault on gst-register if you don't remove
+	  the goom and tvtime post plugins from xine.
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event),
+	(qtdemux_parse), (qtdemux_parse_trak), (qtdemux_audio_caps):
+	  add extradata parsing for QDM2.
+	  change around debugging prints.
+
 2004-02-19  Benjamin Otte  <otte@gnome.org>
 
 	* ext/lame/gstlame.c: (gst_lame_chain):
