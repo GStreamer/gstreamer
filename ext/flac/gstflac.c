@@ -85,10 +85,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstCaps *raw_caps, *flac_caps;
 
   /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream")) {
-    gst_info ("vorbis:: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
   gst_plugin_set_longname (plugin, "The FLAC Lossless compressor Codec");
 

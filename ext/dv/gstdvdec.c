@@ -942,10 +942,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
   GstTypeFactory *type;
 
-  if (!gst_library_load ("gstbytestream")) {
-    gst_info("dvdec: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
   /* We need to create an ElementFactory for each element we provide.
    * This consists of the name of the element, the GType identifier,
