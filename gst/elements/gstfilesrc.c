@@ -55,6 +55,7 @@
 #define O_BINARY (0)
 #endif
 
+
 /**********************************************************************
  * GStreamer Default File Source
  * Theory of Operation
@@ -922,7 +923,8 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
     {
       gint64 offset;
 
-      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
+      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES &&
+          GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_DEFAULT) {
         goto error;
       }
       if (!src->is_regular) {
@@ -934,32 +936,39 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
 
       switch (GST_EVENT_SEEK_METHOD (event)) {
         case GST_SEEK_METHOD_SET:
-          if (offset < 0 ||
-              (offset > src->filelen && (!gst_filesrc_check_filesize (src)
-                      || offset > src->filelen))) {
+          if (offset < 0) {
             goto error;
+          } else if (offset > src->filelen && (!gst_filesrc_check_filesize (src)
+                  || offset > src->filelen)) {
+            src->curoffset = src->filelen;
+          } else {
+            src->curoffset = offset;
           }
-          src->curoffset = offset;
           GST_DEBUG_OBJECT (src, "seek set pending to %" G_GINT64_FORMAT,
               src->curoffset);
           break;
         case GST_SEEK_METHOD_CUR:
-          if (offset + src->curoffset > src->filelen)
-            if (!gst_filesrc_check_filesize (src)
-                || offset + src->curoffset > src->filelen)
-              goto error;
-          src->curoffset += offset;
+          if (offset + src->curoffset > src->filelen &&
+              (!gst_filesrc_check_filesize (src)
+                  || offset + src->curoffset > src->filelen)) {
+            src->curoffset = src->filelen;
+          } else if (offset + src->curoffset < 0) {
+            src->curoffset = 0;
+          } else {
+            src->curoffset += offset;
+          }
           GST_DEBUG_OBJECT (src, "seek cur pending to %" G_GINT64_FORMAT,
               src->curoffset);
           break;
         case GST_SEEK_METHOD_END:
-          if (ABS (offset) > src->filelen) {
-            if (!gst_filesrc_check_filesize (src)
-                || ABS (offset) > src->filelen)
-              goto error;
+          if (offset > 0) {
             goto error;
+          } else if (offset > src->filelen && (!gst_filesrc_check_filesize (src)
+                  || offset > src->filelen)) {
+            src->curoffset = 0;
+          } else {
+            src->curoffset = src->filelen + offset;
           }
-          src->curoffset = src->filelen - ABS (offset);
           GST_DEBUG_OBJECT (src, "seek end pending to %" G_GINT64_FORMAT,
               src->curoffset);
           break;

@@ -36,8 +36,8 @@ check_from_double_convert (gdouble value, gint nom, gint denom, gdouble prec)
 
   g_value_set_double (&value1, value);
   g_value_transform (&value1, &value2);
-  g_print ("%s = %s\n",
-      gst_value_serialize (&value1), gst_value_serialize (&value2));
+  g_print ("%s = %s ? (expected: %d/%d )\n",
+      gst_value_serialize (&value1), gst_value_serialize (&value2), nom, denom);
   g_assert (gst_value_get_fraction_numerator (&value2) == nom);
   g_assert (gst_value_get_fraction_denominator (&value2) == denom);
   g_value_transform (&value2, &value1);

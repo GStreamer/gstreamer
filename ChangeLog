@@ -1,5 +1,14 @@
 2004-07-29  Benjamin Otte  <otte@gnome.org>
 
+	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file),
+	(gst_filesrc_srcpad_event):
+	  make seek events to before start/after end of file not fail, but
+	  seek to start/end instead
+	* testsuite/caps/fraction-convert.c: (check_from_double_convert):
+	  add more output
+
+2004-07-29  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstpad.c: (gst_pad_set_explicit_caps):
 	  check that caps are fixed
 	* gst/gstpad.c: (gst_pad_template_new):
