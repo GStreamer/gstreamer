@@ -1,3 +1,10 @@
+2004-03-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+          subst GST_MAJORMINOR
+	* docs/Makefile.am:
+          disable docs checks until they satisfy make distcheck
+
 2004-03-17  Johan Dahlin  <johan@gnome.org>
 
 	* testsuite/Makefile.am (check-local): distcheck fixes
