@@ -1,3 +1,10 @@
+2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstpad.c: (gst_pad_query):
+	  Do query on realized pad, similar to how convert/send_event handle
+	  this. Also makes sense, since this pad belongs to the function to
+	  which this query will be sent. Fixes #158163.
+
 2004-12-16  Christian Fredrik Kalager Schaller  <uraeus@gnome.org>
 
 	* docs/manual/appendix-programs.xml: fix pipeline to actually work

@@ -4318,7 +4318,7 @@ gst_pad_query (GstPad * pad, GstQueryType type,
   g_return_val_if_fail (rpad, FALSE);
 
   if (GST_RPAD_QUERYFUNC (rpad))
-    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD (pad), type, format, value);
+    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD (rpad), type, format, value);
 
   return FALSE;
 }
