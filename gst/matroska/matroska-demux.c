@@ -2445,7 +2445,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext * videocontext,
               "width", GST_TYPE_INT_RANGE, 16, 4096,
               "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
         }
-#if 0
+
         if (videocontext->display_width > 0 && videocontext->display_height > 0) {
           gint w =
               100 * videocontext->display_width / videocontext->pixel_width;
@@ -2455,8 +2455,12 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext * videocontext,
           gst_structure_set (structure,
               "pixel_width", G_TYPE_INT, w,
               "pixel_height", G_TYPE_INT, h, NULL);
+        } else {
+          gst_structure_set (structure,
+              "pixel_width", G_TYPE_INT, 1,
+              "pixel_height", G_TYPE_INT, 1, NULL);
         }
-#endif
+
         if (context->default_duration > 0) {
           gfloat framerate = 1. * GST_SECOND / context->default_duration;
 

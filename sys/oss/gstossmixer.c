@@ -45,6 +45,8 @@
 
 #endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "gstossmixer.h"
 
 #define MASK_BIT_IS_SET(mask, bit) \
@@ -73,11 +75,9 @@ static GstMixerTrackClass *parent_class = NULL;
 /* three functions: firstly, OSS has the nasty habit of inserting
  * spaces in the labels, we want to get rid of them. Secondly,
  * i18n is impossible with OSS' way of providing us with mixer
- * labels, so we make a 'given' list of i18n'ed labels. Since
- * i18n doesn't actually work, we fake it (FIXME). Thirdly, I
+ * labels, so we make a 'given' list of i18n'ed labels. Thirdly, I
  * personally don't like the "1337" names that OSS gives to their
  * labels ("Vol", "Mic", "Rec"), I'd rather see full names. */
-#define _(s) s
 
 static void
 fill_labels (void)

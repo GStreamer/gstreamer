@@ -966,7 +966,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 
-  return gst_element_register (plugin, "wavparse", GST_RANK_SECONDARY,
+  return gst_element_register (plugin, "wavparse", GST_RANK_PRIMARY,
       GST_TYPE_WAVPARSE);
 }
 
