@@ -49,9 +49,6 @@ struct _GstV4lSrc {
   /* bufferpool for the buffers we're gonna use */
   GstBufferPool *bufferpool;
 
-  /* whether we need to reset the GstPad */
-  gboolean init;
-
   /* capture/buffer info */
   struct video_mmap mmap;
   struct video_mbuf mbuf;
@@ -70,6 +67,9 @@ struct _GstV4lSrc {
   guint16 num_queued_frames;
   pthread_mutex_t mutex_queued_frames;
   pthread_cond_t cond_queued_frames;
+
+  /* list of available caps */
+  GstCaps *capslist;
 
   /* caching values */
   gint width;

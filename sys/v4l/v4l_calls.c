@@ -161,26 +161,16 @@ gst_v4l_get_chan_norm (GstV4lElement *v4lelement,
                        gint          *channel,
                        gint          *norm)
 {
-  struct video_channel vchan;
-
 #ifdef DEBUG
   fprintf(stderr, "V4L: gst_v4l_get_chan_norm()\n");
 #endif
 
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  if (ioctl(v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0)
-  {
-    gst_element_error(GST_ELEMENT(v4lelement),
-      "Error getting the channel/norm settings: %s",
-      sys_errlist[errno]);
-    return FALSE;
-  }
-
   if (channel)
-    *channel = vchan.channel;
+    *channel = v4lelement->vchan.channel;
   if (norm)
-    *norm = vchan.norm;
+    *norm = v4lelement->vchan.norm;
 
   return TRUE;
 }
@@ -198,8 +188,6 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
                        gint          channel,
                        gint          norm)
 {
-  struct video_channel vchan;
-
 #ifdef DEBUG
   fprintf(stderr, "V4L: gst_v4l_set_chan_norm(), channel = %d, norm = %d (%s)\n",
     channel, norm, norm_name[norm]);
@@ -208,22 +196,21 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
   GST_V4L_CHECK_OPEN(v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
 
-#if 0
-  if (ioctl(v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0)
-  {
-    gst_error("V4lElement - Error getting the channel/norm settings: %s",
-      sys_errlist[errno]);
-    return FALSE;
-  }
-#endif
+  v4lelement->vchan.channel = channel;
+  v4lelement->vchan.norm = norm;
 
-  vchan.channel = channel;
-  vchan.norm = norm;
-
-  if (ioctl(v4lelement->video_fd, VIDIOCSCHAN, &vchan) < 0)
+  if (ioctl(v4lelement->video_fd, VIDIOCSCHAN, &(v4lelement->vchan)) < 0)
   {
     gst_element_error(GST_ELEMENT(v4lelement),
       "Error setting the channel/norm settings: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
+
+  if (ioctl(v4lelement->video_fd, VIDIOCGCHAN, &(v4lelement->vchan)) < 0)
+  {
+    gst_element_error(GST_ELEMENT(v4lelement),
+      "Error getting the channel/norm settings: %s",
       sys_errlist[errno]);
     return FALSE;
   }
@@ -246,7 +233,8 @@ gst_v4l_has_tuner (GstV4lElement *v4lelement)
 
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  return (v4lelement->vcap.type & VID_TYPE_TUNER);
+  return (v4lelement->vcap.type & VID_TYPE_TUNER &&
+          v4lelement->vchan.flags & VIDEO_VC_TUNER);
 }
 
 
@@ -442,7 +430,8 @@ gst_v4l_has_audio (GstV4lElement *v4lelement)
 
   GST_V4L_CHECK_OPEN(v4lelement);
 
-  return (v4lelement->vcap.audios > 0);
+  return (v4lelement->vcap.audios > 0 &&
+          v4lelement->vchan.flags & VIDEO_VC_AUDIO);
 }
 
 

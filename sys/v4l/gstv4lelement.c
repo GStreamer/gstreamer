@@ -39,7 +39,9 @@ enum {
 enum {
   ARG_0,
   ARG_CHANNEL,
+  ARG_CHANNEL_NAME,
   ARG_NORM,
+  ARG_NORM_NAME,
   ARG_HAS_TUNER,
   ARG_FREQUENCY,
   ARG_HAS_AUDIO,
@@ -119,9 +121,15 @@ gst_v4lelement_class_init (GstV4lElementClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNEL,
     g_param_spec_int("channel","channel","channel",
     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNEL_NAME,
+    g_param_spec_string("channel_name","channel_name","channel_name",
+    NULL, G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NORM,
     g_param_spec_int("norm","norm","norm",
     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NORM_NAME,
+    g_param_spec_string("norm_name","norm_name","norm_name",
+    NULL, G_PARAM_READABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HAS_TUNER,
     g_param_spec_boolean("has_tuner","has_tuner","has_tuner",
@@ -159,10 +167,9 @@ gst_v4lelement_class_init (GstV4lElementClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
     g_param_spec_string("device","device","device",
     NULL, G_PARAM_READWRITE));
-
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_NAME,
     g_param_spec_string("device_name","device_name","device_name",
-    NULL, G_PARAM_READWRITE));
+    NULL, G_PARAM_READABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_IS_CAPTURE,
     g_param_spec_boolean("can_capture","can_capture","can_capture",
@@ -326,7 +333,7 @@ gst_v4lelement_set_property (GObject      *object,
       v4lelement->videodev = g_strdup(g_value_get_string(value));
       break;
     default:
-      //G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -353,10 +360,25 @@ gst_v4lelement_get_property (GObject    *object,
         gst_v4l_get_chan_norm(v4lelement, &temp_i, NULL);
       g_value_set_int(value, temp_i);
       break;
+    case ARG_CHANNEL_NAME:
+      if (GST_V4L_IS_OPEN(v4lelement))
+        g_value_set_string(value, g_strdup(v4lelement->vchan.name));
+      else
+        g_value_set_string(value, g_strdup("Unknown"));
+      break;
     case ARG_NORM:
       if (GST_V4L_IS_OPEN(v4lelement))
         gst_v4l_get_chan_norm(v4lelement, NULL, &temp_i);
       g_value_set_int(value, temp_i);
+      break;
+    case ARG_NORM_NAME:
+      if (GST_V4L_IS_OPEN(v4lelement))
+      {
+        gst_v4l_get_chan_norm(v4lelement, NULL, &temp_i);
+        g_value_set_string(value, g_strdup(norm_name[temp_i]));
+      }
+      else
+        g_value_set_string(value, g_strdup("Unknwon"));
       break;
     case ARG_HAS_TUNER:
       g_value_set_boolean(value, FALSE);
@@ -454,7 +476,7 @@ gst_v4lelement_get_property (GObject    *object,
         g_value_set_boolean(value, v4lelement->vcap.type & VID_TYPE_MPEG_DECODER);
       break;
     default:
-      //G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

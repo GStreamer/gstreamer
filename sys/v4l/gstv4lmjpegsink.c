@@ -46,24 +46,14 @@ enum {
   ARG_FRAME_TIME,
 };
 
-GST_PADTEMPLATE_FACTORY (sink_template,
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "v4lmjpegsink_caps",
-    "video/jpeg",
-        "width", 	GST_PROPS_INT_RANGE (0, G_MAXINT),
-        "height", 	GST_PROPS_INT_RANGE (0, G_MAXINT)
-  )
-)
-
 
 /* init functions */
 static void                  gst_v4lmjpegsink_class_init   (GstV4lMjpegSinkClass *klass);
 static void                  gst_v4lmjpegsink_init         (GstV4lMjpegSink      *v4lmjpegsink);
 
 /* the chain of buffers */
+static GstPadConnectReturn   gst_v4lmjpegsink_sinkconnect  (GstPad               *pad,
+                                                            GstCaps              *vscapslist);
 static void                  gst_v4lmjpegsink_chain        (GstPad               *pad,
                                                             GstBuffer            *buf);
 
@@ -78,6 +68,10 @@ static void                  gst_v4lmjpegsink_get_property (GObject             
                                                             GParamSpec           *pspec);
 static void                  gst_v4lmjpegsink_close        (GstV4lMjpegSink      *v4lmjpegsink);
 static GstElementStateReturn gst_v4lmjpegsink_change_state (GstElement           *element);
+
+
+static GstCaps *capslist = NULL;
+static GstPadTemplate *sink_template;
 
 static GstElementClass *parent_class = NULL;
 static guint gst_v4lmjpegsink_signals[LAST_SIGNAL] = { 0 };
@@ -155,37 +149,13 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass *klass)
   gstelement_class->change_state = gst_v4lmjpegsink_change_state;
 }
 
-static GstPadConnectReturn
-gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
-                          GstCaps *caps)
-{
-  GstV4lMjpegSink *v4lmjpegsink;
-
-  v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
-
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_CONNECT_DELAYED;
-
-  v4lmjpegsink->width =  gst_caps_get_int (caps, "width");
-  v4lmjpegsink->height =  gst_caps_get_int (caps, "height");
-
-  gst_v4lmjpegsink_set_playback(v4lmjpegsink,
-    v4lmjpegsink->width, v4lmjpegsink->height,
-    v4lmjpegsink->x_offset, v4lmjpegsink->y_offset,
-    GST_V4LELEMENT(v4lmjpegsink)->norm, 0); /* TODO: interlacing */
-
-  g_signal_emit (G_OBJECT (v4lmjpegsink), gst_v4lmjpegsink_signals[SIGNAL_HAVE_SIZE], 0,
-    v4lmjpegsink->width, v4lmjpegsink->height);
-
-  return GST_PAD_CONNECT_OK;
-}
-
 
 static void
 gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
 {
-  v4lmjpegsink->sinkpad = gst_pad_new_from_template(GST_PADTEMPLATE_GET (sink_template), "sink");
+  v4lmjpegsink->sinkpad = gst_pad_new_from_template (sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (v4lmjpegsink), v4lmjpegsink->sinkpad);
+
   gst_pad_set_chain_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_chain);
   gst_pad_set_connect_function (v4lmjpegsink->sinkpad, gst_v4lmjpegsink_sinkconnect);
 
@@ -202,6 +172,39 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   v4lmjpegsink->bufsize = 256;
 
   GST_FLAG_SET(v4lmjpegsink, GST_ELEMENT_THREAD_SUGGESTED);
+}
+
+
+static GstPadConnectReturn
+gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
+                              GstCaps *vscapslist)
+{
+  GstV4lMjpegSink *v4lmjpegsink;
+  GstCaps *caps;
+
+  v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
+
+  for (caps = capslist; caps != NULL; caps = vscapslist = vscapslist->next)
+  {
+    v4lmjpegsink->width =  gst_caps_get_int (caps, "width");
+    v4lmjpegsink->height =  gst_caps_get_int (caps, "height");
+
+    if (!gst_v4lmjpegsink_set_playback(v4lmjpegsink,
+         v4lmjpegsink->width, v4lmjpegsink->height,
+         v4lmjpegsink->x_offset, v4lmjpegsink->y_offset,
+         GST_V4LELEMENT(v4lmjpegsink)->norm, 0)) /* TODO: interlacing */
+      continue;
+
+    g_signal_emit (G_OBJECT (v4lmjpegsink), gst_v4lmjpegsink_signals[SIGNAL_HAVE_SIZE], 0,
+      v4lmjpegsink->width, v4lmjpegsink->height);
+
+    return GST_PAD_CONNECT_OK;
+  }
+
+  /* if we got here - it's not good */
+  gst_element_error(GST_ELEMENT(v4lmjpegsink),
+    "Failed to find acceptable caps");
+  return GST_PAD_CONNECT_REFUSED;
 }
 
 
@@ -281,7 +284,7 @@ gst_v4lmjpegsink_set_property (GObject      *object,
       v4lmjpegsink->y_offset = g_value_get_int(value);
       break;
     default:
-      /*parent_class->set_property(object, prop_id, value, pspec);*/
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -312,7 +315,7 @@ gst_v4lmjpegsink_get_property (GObject    *object,
       g_value_set_int (value, v4lmjpegsink->bufsize);
       break;
     default:
-      /*parent_class->get_property(object, prop_id, value, pspec);*/
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -379,14 +382,29 @@ plugin_init (GModule   *module,
              GstPlugin *plugin)
 {
   GstElementFactory *factory;
+  GstCaps *caps;
 
   /* create an elementfactory for the v4lmjpegsink element */
   factory = gst_elementfactory_new("v4lmjpegsink",GST_TYPE_V4LMJPEGSINK,
                                    &gst_v4lmjpegsink_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (sink_template));
+  caps = gst_caps_new ("v4lmjpegsink_caps",
+                       "video/jpeg",
+                       gst_props_new (
+                          "width",  GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          NULL       )
+                      );
+  capslist = gst_caps_append(capslist, caps);
+
+  sink_template = gst_padtemplate_new (
+		  "sink",
+                  GST_PAD_SINK,
+  		  GST_PAD_ALWAYS,
+		  capslist, NULL);
+
+  gst_elementfactory_add_padtemplate (factory, sink_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 

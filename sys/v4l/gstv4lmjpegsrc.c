@@ -57,12 +57,8 @@ static void                  gst_v4lmjpegsrc_class_init   (GstV4lMjpegSrcClass *
 static void                  gst_v4lmjpegsrc_init         (GstV4lMjpegSrc *v4lmjpegsrc);
 
 /* pad/buffer functions */
-/*
-static GstPadNegotiateReturn gst_v4lmjpegsrc_negotiate    (GstPad         *pad,
-                                                           GstCaps        **caps,
-                                                           gpointer       *user_data);
-							   */
-static GstCaps*              gst_v4lmjpegsrc_create_caps  (GstV4lMjpegSrc *v4lmjpegsrc);
+static GstPadConnectReturn   gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
+                                                           GstCaps        *caps);
 static GstBuffer*            gst_v4lmjpegsrc_get          (GstPad         *pad);
 
 /* get/set params */
@@ -86,6 +82,9 @@ static GstBuffer*            gst_v4lmjpegsrc_buffer_new   (GstBufferPool  *pool,
 static GstBuffer*            gst_v4lmjpegsrc_buffer_copy  (GstBuffer      *srcbuf);
 static void                  gst_v4lmjpegsrc_buffer_free  (GstBuffer      *buf);
 
+
+static GstCaps *capslist = NULL;
+static GstPadTemplate *src_template;
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_v4lmjpegsrc_signals[LAST_SIGNAL] = { 0 };
@@ -174,11 +173,11 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
 static void
 gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 {
-  v4lmjpegsrc->srcpad = gst_pad_new("src", GST_PAD_SRC);
+  v4lmjpegsrc->srcpad = gst_pad_new_from_template (src_template, "src");
   gst_element_add_pad(GST_ELEMENT(v4lmjpegsrc), v4lmjpegsrc->srcpad);
 
   gst_pad_set_get_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get);
-  //gst_pad_set_negotiate_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_negotiate);
+  gst_pad_set_connect_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_srcconnect);
 
   v4lmjpegsrc->bufferpool = gst_buffer_pool_new();
   gst_buffer_pool_set_buffer_new_function(v4lmjpegsrc->bufferpool, gst_v4lmjpegsrc_buffer_new);
@@ -202,46 +201,21 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   v4lmjpegsrc->numbufs = 64;
   v4lmjpegsrc->bufsize = 256;
 
-  v4lmjpegsrc->init = TRUE;
+  v4lmjpegsrc->capslist = capslist;
 }
 
 
-
-/*
-static GstPadNegotiateReturn
-gst_v4lmjpegsrc_negotiate (GstPad   *pad,
-                           GstCaps  **caps,
-                           gpointer *user_data) 
+static GstPadConnectReturn
+gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
+                            GstCaps *caps)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
 
-  if (!*caps) {
-    return GST_PAD_NEGOTIATE_FAIL;
-  }
-  else {
-    return GST_PAD_NEGOTIATE_AGREE;
-  }
+  /* we will try_set_caps() with the actual size (wxh) when we know it */
 
-  return GST_PAD_NEGOTIATE_FAIL;
-}
-*/
-
-
-static GstCaps*
-gst_v4lmjpegsrc_create_caps (GstV4lMjpegSrc *v4lmjpegsrc)
-{
-  GstCaps *caps;
-
-  caps = GST_CAPS_NEW (
-    "v4lmjpegsrc_caps",
-    "video/jpeg", 
-    "width",            GST_PROPS_INT(v4lmjpegsrc->end_width),
-    "height",           GST_PROPS_INT(v4lmjpegsrc->end_height)
-  );
-
-  return caps;
+  return GST_PAD_CONNECT_OK;
 }
 
 
@@ -255,17 +229,6 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
-
-  if (v4lmjpegsrc->init) {
-    gst_pad_try_set_caps (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_create_caps (v4lmjpegsrc));
-    v4lmjpegsrc->init = FALSE;
-  }
-  else {
-    if (!gst_pad_get_caps (v4lmjpegsrc->srcpad) && 
-        !gst_pad_renegotiate (v4lmjpegsrc->srcpad)) {
-      return NULL;
-    }
-  }
 
   buf = gst_buffer_new_from_pool(v4lmjpegsrc->bufferpool, 0, 0);
   if (!buf)
@@ -326,7 +289,7 @@ gst_v4lmjpegsrc_set_property (GObject      *object,
       v4lmjpegsrc->bufsize = g_value_get_int(value);
       break;
     default:
-      /*parent_class->set_property(object, prop_id, value, pspec);*/
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -357,7 +320,7 @@ gst_v4lmjpegsrc_get_property (GObject    *object,
       g_value_set_int(value, v4lmjpegsrc->breq.size);
       break;
     default:
-      /*parent_class->get_property(object, prop_id, value, pspec);*/
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -368,6 +331,7 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
   GstElementStateReturn parent_value;
+  GstCaps *caps;
 
   g_return_val_if_fail(GST_IS_V4LMJPEGSRC(element), GST_STATE_FAILURE);
   
@@ -396,7 +360,19 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
              v4lmjpegsrc->quality))
           return GST_STATE_FAILURE;
       }
-      v4lmjpegsrc->init = TRUE;
+      /* we now have an actual width/height - *set it* */
+      caps = gst_caps_new("v4lmjpegsrc_caps",
+                          "video/jpeg",
+                          gst_props_new(
+                            "width",  GST_PROPS_INT(v4lmjpegsrc->end_width),
+                            "height", GST_PROPS_INT(v4lmjpegsrc->end_height),
+                            NULL       ) );
+      if (!gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps))
+      {
+        gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+          "Failed to set new caps");
+        return GST_STATE_FAILURE;
+      }
       if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
         return GST_STATE_FAILURE;
       break;
@@ -509,11 +485,30 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
+  GstCaps *caps;
 
   /* create an elementfactory for the v4lmjpegsrcparse element */
   factory = gst_elementfactory_new("v4lmjpegsrc",GST_TYPE_V4LMJPEGSRC,
                                    &gst_v4lmjpegsrc_details);
   g_return_val_if_fail(factory != NULL, FALSE);
+
+  caps = gst_caps_new ("v4lmjpegsrc_caps",
+                       "video/jpeg",
+                       gst_props_new (
+                          "width",  GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          NULL       )
+                      );
+  capslist = gst_caps_append(capslist, caps);
+
+  src_template = gst_padtemplate_new (
+		  "src",
+                  GST_PAD_SRC,
+  		  GST_PAD_ALWAYS,
+		  capslist, NULL);
+
+  gst_elementfactory_add_padtemplate (factory, src_template);
+
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   return TRUE;

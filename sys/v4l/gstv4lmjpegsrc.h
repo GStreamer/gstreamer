@@ -55,6 +55,9 @@ struct _GstV4lMjpegSrc {
   struct mjpeg_sync bsync;
   struct mjpeg_requestbuffers breq;
 
+  /* list of available caps */
+  GstCaps *capslist;
+
   /* caching values */
   gint x_offset;
   gint y_offset;
@@ -69,8 +72,6 @@ struct _GstV4lMjpegSrc {
   gint quality;
   gint numbufs;
   gint bufsize; /* in KB */
-
-  gboolean init;
 };
 
 struct _GstV4lMjpegSrcClass {

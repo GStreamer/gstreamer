@@ -58,6 +58,9 @@ struct _GstV4lElement {
   /* the video-device's capabilities */
   struct video_capability vcap;
 
+  /* some more info about the current input's capabilities */
+  struct video_channel vchan;
+
   /* caching values */
   gint channel;
   gint norm;

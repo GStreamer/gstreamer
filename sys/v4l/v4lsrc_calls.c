@@ -240,7 +240,7 @@ gst_v4lsrc_set_capture (GstV4lSrc *v4lsrc,
     width, height, palette);
 #endif
 
-  GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));
+  /*GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lsrc));*/
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lsrc));
 
   v4lsrc->mmap.width = width;
