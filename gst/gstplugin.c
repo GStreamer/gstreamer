@@ -113,6 +113,7 @@ plugin_times_older_than_recurse(gchar *path, time_t regtime)
 {
   DIR *dir;
   struct dirent *dirent;
+  gchar *pluginname;
 
   time_t pathtime = get_time(path);
 
@@ -128,9 +129,13 @@ plugin_times_older_than_recurse(gchar *path, time_t regtime)
     while ((dirent = readdir(dir))) {
       /* don't want to recurse in place or backwards */
       if (strcmp(dirent->d_name,".") && strcmp(dirent->d_name,"..")) {
-	if (!plugin_times_older_than_recurse(
-	  g_strjoin("/",path,dirent->d_name,NULL), regtime))
-	    return FALSE;
+	pluginname = g_strjoin("/",path,dirent->d_name,NULL);
+	if (!plugin_times_older_than_recurse(pluginname , regtime)) {
+          g_free (pluginname);
+          closedir(dir);
+          return FALSE;
+        }
+        g_free (pluginname);
       }
     }
     closedir(dir);
