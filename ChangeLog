@@ -1,3 +1,12 @@
+2005-03-11  Stefan Kost  <ensonic@sonicpulse.de>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* tools/gst-compprep.1.in:
+	  Fix file location.
+	* tools/gst-register.1.in:
+	  Document two new options (#133494).
+
 2005-03-11  Torsten Schoenfeld  <kaffeetisch@gmx.de>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
