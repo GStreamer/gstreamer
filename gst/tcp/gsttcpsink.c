@@ -263,12 +263,8 @@ gst_tcpsink_chain (GstPad *pad, GstData *_data)
 
   tcpsink = GST_TCPSINK (GST_OBJECT_PARENT (pad));
  
-  if (tcpsink->clock) {
-    GstClockID id = gst_clock_new_single_shot_id (tcpsink->clock, GST_BUFFER_TIMESTAMP (buf));
-
-    GST_DEBUG ("tcpsink: clock wait: %" G_GUINT64_FORMAT "\n", GST_BUFFER_TIMESTAMP (buf));
-    gst_element_clock_wait (GST_ELEMENT (tcpsink), id, NULL);
-    gst_clock_id_free (id);
+  if (tcpsink->clock && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    gst_element_wait (GST_ELEMENT (tcpsink), GST_BUFFER_TIMESTAMP (buf));
   }
   
   if (write (tcpsink->sock, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf)) <= 0)

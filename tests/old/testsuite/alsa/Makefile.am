@@ -1,6 +1,6 @@
 testprogs = formats state
 
-TESTS = 
+TESTS = $(testprogs)
 
 check_PROGRAMS = $(testprogs)
 

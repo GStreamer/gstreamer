@@ -397,7 +397,6 @@ gst_videotestsrc_get (GstPad * pad)
   GstVideotestsrc *videotestsrc;
   gulong newsize;
   GstBuffer *buf;
-  GstClockTimeDiff jitter = 0;
 
   GST_DEBUG ("gst_videotestsrc_get");
 
@@ -425,21 +424,14 @@ gst_videotestsrc_get (GstPad * pad)
 			    videotestsrc->width, videotestsrc->height);
   
   if (videotestsrc->sync){
-    do {
-      GstClockID id;
+    GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
+      (videotestsrc->n_frames * GST_SECOND)/(double)videotestsrc->rate;
+    videotestsrc->n_frames++;
 
-      GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
-	(videotestsrc->n_frames * GST_SECOND)/(double)videotestsrc->rate;
-      videotestsrc->n_frames++;
-
-      /* FIXME this is not correct if we do QoS */
-      if (videotestsrc->clock) {
-        id = gst_clock_new_single_shot_id (videotestsrc->clock,
-	    GST_BUFFER_TIMESTAMP (buf));
-        gst_element_clock_wait (GST_ELEMENT (videotestsrc), id, &jitter);
-        gst_clock_id_free (id);
-      }
-    } while (jitter > 100 * GST_MSECOND);
+    /* FIXME this is not correct if we do QoS */
+    if (videotestsrc->clock) {
+      gst_element_wait (GST_ELEMENT (videotestsrc), GST_BUFFER_TIMESTAMP (buf));
+    }
   }else{
     GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
       (videotestsrc->n_frames * GST_SECOND)/(double)videotestsrc->rate;

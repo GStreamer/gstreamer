@@ -24,25 +24,24 @@
 
 #define SAMPLES_PER_WAVE 200
 
-GST_PAD_TEMPLATE_FACTORY (sinesrc_src_factory,
+static GstStaticPadTemplate sinesrc_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "sinesrc_int_src",
-    "audio/raw",
-      "law",            GST_PROPS_INT (0),
-      "endianness",	    GST_PROPS_LIST (GST_PROPS_INT (G_LITTLE_ENDIAN), GST_PROPS_INT (G_BIG_ENDIAN)),
-      "signed",         GST_PROPS_LIST (GST_PROPS_BOOLEAN (FALSE), GST_PROPS_BOOLEAN (TRUE)),
-      "width",          GST_PROPS_INT_RANGE (8, 32),
-      "depth",    	    GST_PROPS_INT_RANGE (8, 32),
-      "rate",     	    GST_PROPS_INT_RANGE (8000, 192000),
-      "channels", 	    GST_PROPS_INT_RANGE (1, 16)
-  ),
-  GST_CAPS_NEW (
-    "sinesrc_float_src",
-    "audio/raw",
-      "channels", 	    GST_PROPS_INT_RANGE (1, 16)
+  GST_STATIC_CAPS (
+    "audio/x-raw-int, "
+      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+      "signed = (boolean) { FALSE, TRUE }, "
+      "width = (int) [8, 32], "
+      "depth = (int) [8, 32], "
+      "rate = (int) [8000, 192000], "
+      "channels = (int) [1, 16];"
+    "audio/x-raw-float, "
+      "endianness = (int) BYTE_ORDER, "
+      "width = (int) {32, 64}, "
+      "rate = (int) [8000, 192000], "
+      "channels = (int) [1, 16]"
   )
 );
 
@@ -86,7 +85,7 @@ static void
 sinesrc_init (SineSrc *src) 
 {
   src->src = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (sinesrc_src_factory), "src");
+		  gst_static_pad_template_get (&sinesrc_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT(src), src->src);
   gst_pad_set_get_function (src->src, sinesrc_get);
 
@@ -115,36 +114,30 @@ sinesrc_force_caps (SineSrc *src) {
 
   switch (src->type) {
     case SINE_SRC_INT:
-      caps = GST_CAPS_NEW (
-	      "sinesrc_src_caps",
-	      "audio/raw",
-        "law",              GST_PROPS_INT (0),
-        "signed",           GST_PROPS_BOOLEAN (src->sign),
-    	  "depth",            GST_PROPS_INT (src->depth)
-	    );
+      caps = gst_caps_new_simple ("audio/x-raw-int",
+        "signed",   G_TYPE_BOOLEAN, src->sign,
+    	"depth",    G_TYPE_INT,	    src->depth,
+	NULL);
       if (src->width > 8)
-        gst_props_add_entry (gst_caps_get_props (caps), 
-                gst_props_entry_new ("endianness", 
-                        GST_PROPS_INT (src->endianness)));
+        gst_caps_set_simple (caps, 
+	    "endianness", G_TYPE_INT, src->endianness,
+	    NULL);
       break;
     case SINE_SRC_FLOAT:
       g_assert (src->width == 32 || src->width == 64);
-      caps = GST_CAPS_NEW (
-	      "sinesrc_src_caps",
-	      "audio/raw",
-              "endianness", GST_PROPS_INT(src->endianness)
-      );
+      caps = gst_caps_new_simple ("audio/x-raw-float",
+	  "endianness", G_TYPE_INT, src->endianness,
+	  NULL);
       break;
     default:
       caps = NULL;
       g_assert_not_reached();
   }
-  gst_props_add_entry (gst_caps_get_props (caps), 
-          gst_props_entry_new ("width", GST_PROPS_INT (src->width)));
-  gst_props_add_entry (gst_caps_get_props (caps), 
-          gst_props_entry_new ("rate", GST_PROPS_INT (src->rate)));
-  gst_props_add_entry (gst_caps_get_props (caps), 
-          gst_props_entry_new ("channels", GST_PROPS_INT (src->channels)));
+  gst_caps_set_simple (caps, 
+      "width",    G_TYPE_INT,	    src->width,
+      "rate",	    G_TYPE_INT,	    src->rate,
+      "channels", G_TYPE_INT,	    src->channels,
+      NULL);
   
   g_assert (gst_pad_try_set_caps (src->src, caps) == GST_PAD_LINK_OK);
 }

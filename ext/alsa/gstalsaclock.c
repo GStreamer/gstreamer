@@ -109,15 +109,13 @@ gst_alsa_clock_new (gchar *name, GstAlsaClockGetTimeFunc get_time, GstAlsa *owne
 void
 gst_alsa_clock_start (GstAlsaClock *clock)
 {
-  GTimeVal timeval;
-  g_get_current_time (&timeval);
-
   g_assert (!GST_CLOCK_TIME_IS_VALID (clock->start_time));
 
   if (clock->owner->format) {
-    clock->start_time = GST_TIMEVAL_TO_TIME (timeval) + clock->adjust - clock->get_time (clock->owner);
+    clock->start_time = gst_clock_get_event_time (GST_CLOCK (clock))
+      - clock->get_time (clock->owner);
   } else {
-    clock->start_time = GST_TIMEVAL_TO_TIME (timeval) + clock->adjust;
+    clock->start_time = gst_clock_get_event_time (GST_CLOCK (clock));
   }
 }
 void
@@ -128,7 +126,7 @@ gst_alsa_clock_stop (GstAlsaClock *clock)
 
   g_assert (GST_CLOCK_TIME_IS_VALID (clock->start_time));
 
-  clock->adjust += GST_TIMEVAL_TO_TIME (timeval) - clock->start_time - clock->get_time (clock->owner);
+  clock->adjust += GST_TIMEVAL_TO_TIME (timeval) - gst_clock_get_event_time (GST_CLOCK (clock));
   clock->start_time = GST_CLOCK_TIME_NONE;
 }
 static GstClockTime

@@ -214,8 +214,7 @@ gst_alsa_sink_check_event (GstAlsaSink *sink, gint pad_nr)
 	    break;	    
 	  }
 	  if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
-            if (!gst_clock_handle_discont (GST_ELEMENT (this)->clock, value))
-              GST_WARNING_OBJECT (this, "clock couldn't handle discontinuity");
+	    gst_element_set_time (GST_ELEMENT (this), value);
           }
 
 	  if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {

@@ -730,11 +730,7 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
   GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, ximagesink->time);
   
   if (GST_VIDEOSINK_CLOCK (ximagesink)) {
-    GstClockID id;
-    id = gst_clock_new_single_shot_id (GST_VIDEOSINK_CLOCK (ximagesink),
-                                       ximagesink->time);
-    gst_element_clock_wait (GST_ELEMENT (ximagesink), id, NULL);
-    gst_clock_id_free (id);
+    gst_element_wait (GST_ELEMENT (ximagesink), ximagesink->time);
   }
   
   /* If this buffer has been allocated using our buffer management we simply
