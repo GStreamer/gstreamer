@@ -352,8 +352,6 @@ void gst_default_info_handler (gint category,gboolean incore,
                                gint line,const gchar *debug_string,
                                void *element,gchar *string);
 
-void * _gst_debug_register_funcptr (void *ptr, gchar *ptrname);
-
 extern GstInfoHandler _gst_info_handler;
 extern guint32 _gst_info_categories;
 
@@ -458,21 +456,17 @@ extern GstErrorHandler _gst_error_handler;
 
 #endif
 
-
-
-
 /********** function pointer stuff **********/
-extern GHashTable *__gst_function_pointers;
-
 #if GST_DEBUG_ENABLED
+void* 		_gst_debug_register_funcptr 	(void *ptr, gchar *ptrname);
+gchar*		_gst_debug_nameof_funcptr 	(void *ptr);
+
 #define GST_DEBUG_FUNCPTR(ptr) _gst_debug_register_funcptr((void *)(ptr), #ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) _gst_debug_nameof_funcptr((void *)ptr)
 #else
 #define GST_DEBUG_FUNCPTR(ptr) (ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) ""
 #endif /* GST_DEBUG_ENABLED */
-
-gchar *_gst_debug_nameof_funcptr (void *ptr);
 
 void gst_debug_print_stack_trace (void);
 
