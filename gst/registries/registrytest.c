@@ -9,7 +9,7 @@ main (gint argc, gchar *argv[])
   
   gst_init (&argc, &argv);
 
-  registry = gst_xml_registry_new ("reg.xml");
+  registry = gst_xml_registry_new ("test", "reg.xml");
 
   gst_registry_load (registry);
 
