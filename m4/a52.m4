@@ -79,12 +79,14 @@ int
 main ()
 {
   a52_state_t *state;
+  state = a52_init (0);
+  a52_free (state);
   return 0;
 }
         ],, HAVE_A52DEC=no, [echo $ac_n "cross compiling; assumed OK... $ac_c"])
 
     if test HAVE_A52DEC = "no"; then
-        echo "*** Your a52dec is borked somehow. Please update to 0.7.3."
+        echo "*** Your a52dec is borked somehow. Please update to 0.7.4."
     else
         AC_TRY_RUN([
 #include <inttypes.h>
@@ -93,13 +95,15 @@ main ()
 int 
 main ()
 {
-  int i = sizeof (a52_state_t);
-  return 0;
+  a52_state_t *state;
+  int i = sizeof (state);
+  if ( i )
+    return 0;
 }
             ], HAVE_A52DEC=no,, [echo $ac_n "cross compiling; assumed OK... $ac_c"])
 
         if test HAVE_A52DEC = "no"; then
-            echo "*** Your a52dec is too old. Please update to 0.7.3."
+            echo "*** Your a52dec is too old. Please update to 0.7.4."
         fi
     fi
     CFLAGS="$ac_save_CFLAGS"
