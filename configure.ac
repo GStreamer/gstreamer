@@ -774,6 +774,15 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
     AC_CHECK_LIB(audiofile, af_virtual_file_new, , HAVE_AUDIOFILE="no")
   fi])
 
+dnl *** cdaudio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CDAUDIO, true)
+GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
+  GST_CHECK_CONFIGPROG(CDAUDIO, libcdaudio-config)
+  AC_SUBST(CDAUDIO_CFLAGS)
+  AC_SUBST(CDAUDIO_LIBS)
+])
+
+
 dnl *** CDParanoia ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
 GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
