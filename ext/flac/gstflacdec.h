@@ -22,7 +22,6 @@
 #define __FLACDEC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 

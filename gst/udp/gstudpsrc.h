@@ -21,7 +21,6 @@
 #ifndef __GST_UDPSRC_H__
 #define __GST_UDPSRC_H__
 
-#include <config.h>
 #include <gst/gst.h>
 
 #ifdef __cplusplus

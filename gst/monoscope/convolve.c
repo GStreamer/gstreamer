@@ -55,6 +55,10 @@
  * convolution", or "combine these three length 2^n outputs into one
  * 2^{n+1} output." */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include "convolve.h"
 

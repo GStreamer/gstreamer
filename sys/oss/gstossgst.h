@@ -25,7 +25,6 @@
 #define __GST_OSSGST_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #include <sys/types.h>

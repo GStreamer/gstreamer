@@ -22,7 +22,6 @@
 #define __GST_AVI_DEMUX_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 #include <gst/riff/riff.h>

@@ -21,13 +21,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <gst/gst.h>
 #include <stdlib.h>
 #include <math.h>
 #include <videoflip.h>
 #include <string.h>
 
-#include "config.h"
 #include "gstvideoflip.h"
 
 static void gst_videoflip_planar411 (GstVideoflip *scale, unsigned char *dest, unsigned char *src);

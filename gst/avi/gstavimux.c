@@ -28,7 +28,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <config.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -170,6 +169,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   GST_CAPS_NEW (
     "avimux_sink_audio_mpeg",
     "audio/mpeg",
+      "mpegversion",      GST_PROPS_INT (1),
       "layer",		  GST_PROPS_INT_RANGE (1, 3),
       "rate",             GST_PROPS_INT_RANGE (1000, 96000),
       "channels",         GST_PROPS_INT_RANGE (1, 2)

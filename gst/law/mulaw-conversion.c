@@ -19,6 +19,10 @@
  * Output: 8 bit ulaw sample
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <glib.h>
 
 #define ZEROTRAP    /* turn on the trap as per the MIL-STD */

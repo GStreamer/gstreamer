@@ -12,6 +12,10 @@
 
 /*#define _DEBUG_PIXEL; */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "filters.h"
 #include "graphic.h"
 #include "goom_tools.h"

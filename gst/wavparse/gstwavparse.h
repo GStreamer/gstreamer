@@ -22,7 +22,6 @@
 #define __GST_WAVPARSE_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <riff.h>
 #include <gst/bytestream/bytestream.h>

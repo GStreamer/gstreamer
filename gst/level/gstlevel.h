@@ -26,7 +26,6 @@
 #define __GST_LEVEL_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #include "gstlevel-marshal.h"

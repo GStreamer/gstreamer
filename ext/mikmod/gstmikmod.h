@@ -21,7 +21,6 @@
 #ifndef __GST_MIKMOD_H__
 #define __GST_MIKMOD_H__
 
-#include <config.h>
 #include <mikmod.h>
 #include <gst/gst.h>
 

@@ -22,7 +22,6 @@
 #define __GST_GST1394_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <libraw1394/raw1394.h>
 

@@ -24,7 +24,6 @@
 #define __GST_LADSPA_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 
