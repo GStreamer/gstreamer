@@ -1,3 +1,8 @@
+2004-12-12  Christian Fredrik Kalager Schaller  <christian at fluendo dot com>
+
+	* configure.ac: Update polyaudio requirement to 0.7
+	* ext/polyp/polypsink.c: (create_stream): add patch from iain (158258)
+
 2004-12-11  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/interleave/deinterleave.c:
