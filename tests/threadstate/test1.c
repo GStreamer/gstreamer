@@ -41,7 +41,7 @@ thread_loop (void *arg)
   g_print ("thread: wait ACK\n");
   g_cond_wait (info->cond, info->mutex);
   info->var = 1;
-  g_print ("thread: signal\n");
+  g_print ("thread: signal var change\n");
   g_cond_signal (info->cond);
   g_print ("thread: unlock\n");
   g_mutex_unlock (info->mutex);
@@ -56,6 +56,7 @@ main (gint argc, gchar *argv[])
   ThreadInfo *info;
   GThread *thread;
   GError *error = NULL;
+  gint res = 0;
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
@@ -76,8 +77,8 @@ main (gint argc, gchar *argv[])
   if (error != NULL) {
     g_print ("Unable to start thread: %s\n", error->message);
     g_error_free (error);
-    g_free (info);
-    return -1;
+    res = -1;
+    goto done;
   }
 
   g_print ("main: wait spinup\n");
@@ -85,8 +86,10 @@ main (gint argc, gchar *argv[])
 
   g_print ("main: signal ACK\n");
   g_cond_signal (info->cond);
-  g_print ("main: wait\n");
+
+  g_print ("main: waiting for thread to change var\n");
   g_cond_wait (info->cond, info->mutex);
+
   g_print ("main: var == %d\n", info->var);
   if (info->var != 1) 
     g_print ("main: !!error!! expected var == 1, got %d\n", info->var);
@@ -95,10 +98,11 @@ main (gint argc, gchar *argv[])
   g_print ("main: join\n");
   g_thread_join (thread);
 
+done:
   g_mutex_free (info->mutex);
   g_cond_free (info->cond);
   g_free (info);
 
-  return 0;
+  return res;
 }
 

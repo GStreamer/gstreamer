@@ -57,6 +57,7 @@ main (gint argc, gchar *argv[])
   ThreadInfo *info;
   GThread *thread;
   GError *error = NULL;
+  gint res = 0;
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
@@ -78,8 +79,8 @@ main (gint argc, gchar *argv[])
   if (error != NULL) {
     g_print ("Unable to start thread: %s\n", error->message);
     g_error_free (error);
-    g_free (info);
-    return -1;
+    res = -1;
+    goto done;
   }
 
   g_print ("main: wait spinup\n");
@@ -92,18 +93,20 @@ main (gint argc, gchar *argv[])
   g_cond_wait (info->cond_t, info->mutex);
 
   g_print ("main: var == %d\n", info->var);
-  if (info->var != 1) 
+  if (info->var != 1) {
     g_print ("main: !!error!! expected var == 1, got %d\n", info->var);
+  }
   g_mutex_unlock (info->mutex);
 
   g_print ("main: join\n");
   g_thread_join (thread);
 
+done:
   g_mutex_free (info->mutex);
   g_cond_free (info->cond_t);
   g_cond_free (info->cond_p);
   g_free (info);
 
-  return 0;
+  return res;
 }
 
