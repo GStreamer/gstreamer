@@ -1,5 +1,11 @@
 2004-12-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/apetag/apedemux.c: (gst_ape_demux_parse_tags),
+	(gst_ape_demux_stream_init):
+	  Forward tags, too.
+
+2004-12-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/apetag/apedemux.c: (gst_ape_demux_stream_init):
 	  Let's make sure we're done typefinding when detecting tags.
 
