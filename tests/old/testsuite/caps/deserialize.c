@@ -29,13 +29,14 @@ main (int argc, char *argv[])
     const char *srcdir = g_getenv ("srcdir");
 
     if (srcdir) {
-      filename = g_build_filename (srcdir, "caps_strings");
+      filename = g_build_filename (srcdir, "caps_strings", NULL);
     } else {
       filename = g_strdup ("caps_strings");
     }
   }
 
   if (!g_file_get_contents (filename, &data, &length, NULL)) {
+    g_print ("could not open file %s\n", filename);
     abort ();
   }
 

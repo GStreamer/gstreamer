@@ -67,6 +67,12 @@ main (int argc, char *argv[])
       "audio/x-raw-int, channels=2, rate=48000;"
       "audio/x-raw-int, channels=1, rate=44100 !" "fakesink", NULL);
 
+  if (pipeline == NULL) {
+    g_print
+        ("oops, couldn't build pipeline.  You probably don't have audioconvert or sinesrc\n");
+    exit (0);
+  }
+
   list = gst_bin_get_list (GST_BIN (pipeline));
   while (list) {
     GstElement *element = GST_ELEMENT (list->data);

@@ -1,5 +1,11 @@
 2004-05-03  David Schleef  <ds@schleef.org>
 
+	* testsuite/caps/deserialize.c: (main): Fix problems noticed
+	  by the build bots.
+	* testsuite/caps/renegotiate.c: (main): Same.
+
+2004-05-03  David Schleef  <ds@schleef.org>
+
 	* testsuite/caps/renegotiate.c: (my_fixate), (main): Another test.
 
 2004-05-03  David Schleef  <ds@schleef.org>
