@@ -7,9 +7,7 @@ decoderbin:
 
   TODO
    - reuse of decoderbin, cleanup in READY state
-   - debugging 
    - threading after demuxing?
-   - better factory selection, based on Demuxer/Decoder types and ranks.
    - error handling
 
 baseplaybin:
