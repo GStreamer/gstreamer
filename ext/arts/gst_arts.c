@@ -31,7 +31,7 @@ static GstElementDetails gst_arts_details = {
   "Filter/Audio",
   "aRts wrapper filter",
   VERSION,
-  "Erik Walthinsen <omega@temple-baptist.com,\n"
+  "Erik Walthinsen <omega@temple-baptist.com,\n",
   "Stefan Westerfeld <stefan@space.twc.de>",
   "(C) 2000",
 };
