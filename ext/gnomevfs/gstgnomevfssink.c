@@ -242,6 +242,8 @@ gst_gnomevfssink_init (GstGnomeVFSSink * gnomevfssink)
 {
   GstPad *pad;
 
+  GST_FLAG_SET (gnomevfssink, GST_ELEMENT_EVENT_AWARE);
+
   pad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (gnomevfssink), pad);
   gst_pad_set_chain_function (pad, gst_gnomevfssink_chain);
@@ -472,6 +474,107 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink * sink)
 }
 
 /**
+ * gst_gnomevfssink_handle_event:
+ * @sink: reference to GstGnomeVFSSink
+ * @event: the event to dispatch
+ *
+ * Handles the event appropriately (seek, end-of-file, ...)
+ *
+ * Return value: whether to continue processing or not.
+ */
+
+static gboolean
+gst_gnomevfssink_handle_event (GstGnomeVFSSink * sink, GstEvent * event)
+{
+  GstEventType type;
+  gboolean res = FALSE;
+
+  type = GST_EVENT_TYPE (event);
+
+  switch (type) {
+    case GST_EVENT_EOS:
+      gst_gnomevfssink_close_file (sink);
+      gst_element_set_eos (GST_ELEMENT (sink));
+      break;
+
+    case GST_EVENT_DISCONTINUOUS:{
+      GnomeVFSResult res;
+      gint64 offset;
+
+      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &offset)) {
+        if ((res = gnome_vfs_seek (sink->handle, GNOME_VFS_SEEK_START,
+                    offset)) != GNOME_VFS_OK) {
+          GST_ERROR_OBJECT (sink, "Failed to seek to offset %"
+              G_GINT64_FORMAT ": %s", offset, gnome_vfs_result_to_string (res));
+        }
+      }
+
+      res = TRUE;
+      break;
+    }
+
+    case GST_EVENT_SEEK:{
+      GnomeVFSResult res;
+      GnomeVFSSeekPosition method;
+      gint64 offset;
+
+      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
+        GST_ERROR_OBJECT (sink, "Can only seek in bytes");
+        break;
+      }
+
+      switch (GST_EVENT_SEEK_METHOD (event)) {
+        case GST_SEEK_METHOD_SET:
+          method = GNOME_VFS_SEEK_START;
+          break;
+        case GST_SEEK_METHOD_CUR:
+          method = GNOME_VFS_SEEK_CURRENT;
+          break;
+        case GST_SEEK_METHOD_END:
+          method = GNOME_VFS_SEEK_END;
+          break;
+        default:
+          GST_ERROR_OBJECT (sink, "Unknown seek method %d",
+              GST_EVENT_SEEK_METHOD (event));
+          goto end;
+          break;
+      }
+      offset = GST_EVENT_SEEK_OFFSET (event);
+
+      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
+        /* how does Gnome-VFS flush? */
+      }
+
+      if ((res = gnome_vfs_seek (sink->handle, method, offset)) != GNOME_VFS_OK) {
+        GST_ERROR_OBJECT (sink, "Failed to seek to offset %"
+            G_GINT64_FORMAT " with method %d: %s", offset, method,
+            gnome_vfs_result_to_string (res));
+      }
+
+      res = TRUE;
+      break;
+    }
+
+    case GST_EVENT_FLUSH:
+      /* how does Gnome-VFS flush? */
+      break;
+
+    default:
+      GST_WARNING ("Unhandled event type %d", type);
+      gst_pad_event_default (gst_element_get_pad (GST_ELEMENT (sink), "sink"),
+          event);
+      event = NULL;
+      break;
+  }
+
+end:
+  if (event)
+    gst_event_unref (event);
+
+  return res;
+}
+
+/**
  * gst_gnomevfssink_chain:
  * @pad: the pad this gnomevfssink is connected to
  * @buf: the buffer that has to be absorbed
@@ -481,18 +584,24 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink * sink)
 static void
 gst_gnomevfssink_chain (GstPad * pad, GstData * _data)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  GstBuffer *buf;
   GstGnomeVFSSink *sink;
   GnomeVFSResult result;
   GnomeVFSFileSize bytes_written;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
 
   sink = GST_GNOMEVFSSINK (gst_pad_get_parent (pad));
 
   if (GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN)) {
+    if (GST_IS_EVENT (_data)) {
+      gst_gnomevfssink_handle_event (sink, GST_EVENT (_data));
+      return;
+    }
+
+    buf = GST_BUFFER (_data);
+    g_return_if_fail (buf != NULL);
     result =
         gnome_vfs_write (sink->handle, GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf), &bytes_written);
@@ -504,7 +613,7 @@ gst_gnomevfssink_chain (GstPad * pad, GstData * _data)
           bytes_written);
     }
   }
-  gst_buffer_unref (buf);
+  gst_data_unref (_data);
 }
 
 static GstElementStateReturn
