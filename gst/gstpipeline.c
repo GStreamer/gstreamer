@@ -169,7 +169,7 @@ gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element)
 
   if (found) {
     type_id = gst_util_get_int_arg (GTK_OBJECT (typefind), "type");
-    gst_pad_set_type_id (gst_element_get_pad (element, "src"), type_id);
+    gst_pad_add_type_id (gst_element_get_pad (element, "src"), type_id);
   }
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
@@ -184,25 +184,28 @@ static void
 gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink) 
 {
   GList *sinkpads;
-  GstPad *sinkpad;
   gboolean connected = FALSE;
+  guint16 type;
 
-  g_print("gstpipeline: autoplug pad connect function type %d for \"%s\" to \"%s\"\n", pad->type, 
+  type = ((GstType *)pad->types->data)->id;
+
+  g_print("gstpipeline: autoplug pad connect function type %d for \"%s\" to \"%s\"\n", type, 
 		  gst_element_get_name(src), gst_element_get_name(sink));
 
   sinkpads = gst_element_get_pad_list(sink);
   while (sinkpads) {
-    sinkpad = (GstPad *)sinkpads->data;
+    GstPad *sinkpad = (GstPad *)sinkpads->data;
+    guint16 sinktype = ((GstType *)sinkpad->types->data)->id;
 
     // if we have a match, connect the pads
-    if (sinkpad->type == pad->type && 
+    if (sinktype == type && 
         sinkpad->direction == GST_PAD_SINK && 
         !GST_PAD_CONNECTED(sinkpad)) 
     {
       gst_pad_connect(pad, sinkpad);
       g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", pad->name, 
-		      pad->type, gst_element_get_name(src));
-      g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, sinkpad->type, 
+		      type, gst_element_get_name(src));
+      g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, sinktype, 
 		      gst_element_get_name(sink));
       connected = TRUE;
       break;
@@ -211,7 +214,7 @@ gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
   }
 
   if (!connected) {
-    g_print("gstpipeline: no path to sinks for type %d\n", pad->type);
+    g_print("gstpipeline: no path to sinks for type %d\n", type);
   }
 }
 
@@ -225,24 +228,29 @@ gst_pipeline_pads_autoplug (GstElement *src, GstElement *sink)
 
   while (srcpads) {
     GstPad *srcpad = (GstPad *)srcpads->data;
-    GstPad *sinkpad;
+    guint16 srctype = 0;
+    if (srcpad)
+      srctype = ((GstType *)srcpad->types->data)->id;
 
     if (srcpad->direction == GST_PAD_SRC && !GST_PAD_CONNECTED(srcpad)) {
 
       sinkpads = gst_element_get_pad_list(sink);
       // FIXME could O(n) if the types were sorted...
       while (sinkpads) {
-        sinkpad = (GstPad *)sinkpads->data;
+        GstPad *sinkpad = (GstPad *)sinkpads->data;
+        guint16 sinktype = 0;
+        if (srcpad)
+          sinktype = ((GstType *)sinkpad->types->data)->id;
 
 	// if we have a match, connect the pads
-	if (sinkpad->type == srcpad->type && 
+	if (sinktype == srctype && 
 	    sinkpad->direction == GST_PAD_SINK && 
 	    !GST_PAD_CONNECTED(sinkpad)) {
           gst_pad_connect(srcpad, sinkpad);
           g_print("gstpipeline: autoconnect pad \"%s\" (%d) in element %s <-> ", 
-			  srcpad->name, srcpad->type, gst_element_get_name(src));
+			  srcpad->name, srctype, gst_element_get_name(src));
           g_print("pad \"%s\" (%d) in element %s\n", sinkpad->name, 
-			  sinkpad->type, gst_element_get_name(sink));
+			  sinktype, gst_element_get_name(sink));
 	  connected = TRUE;
 	  goto end;
 	}
@@ -391,7 +399,11 @@ gst_pipeline_autoplug (GstPipeline *pipeline)
       pad = (GstPad *)pads->data;
 
       if (pad->direction == GST_PAD_SINK) {
-	sink_type = gst_pad_get_type_id(pad);
+        GList *types = gst_pad_get_type_ids(pad);
+        if (types)
+          sink_type = GPOINTER_TO_INT (types->data);
+	else
+	  sink_type = 0;
 	break;
       }
 
@@ -485,13 +497,15 @@ differ:
           sinkpad = (GstPad *)sinkpads->data;
 
 	  // FIXME connect matching pads, not just the first one...
+	  /*
           if (sinkpad->direction == GST_PAD_SINK && 
 	      !GST_PAD_CONNECTED(sinkpad)) {
-	    // the queue has the types of the element it connects
+	    // the queue has the type of the elements it connects
 	    srcpad->type = sinkpad->type;
             gst_element_get_pad(queue, "sink")->type = sinkpad->type;
 	    break;
 	  }
+	  */
           sinkpads = g_list_next(sinkpads);
         }
         gst_pipeline_pads_autoplug(thesrcelement, queue);

@@ -41,6 +41,7 @@
 #include <gst/gstsink.h>
 #include <gst/gstconnection.h>
 #include <gst/gsttype.h>
+#include <gst/gstcaps.h>
 #include <gst/gstplugin.h>
 #include <gst/gstutils.h>
 #include <gst/gsttrace.h>

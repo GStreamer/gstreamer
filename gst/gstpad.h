@@ -68,7 +68,7 @@ struct _GstPad {
   GstObject object;
 
   gchar *name;
-  guint16 type;
+  GList *types;
 
   GstPadDirection direction;
 
@@ -104,8 +104,11 @@ void 			gst_pad_set_chain_function	(GstPad *pad, GstPadChainFunction chain);
 void 			gst_pad_set_pull_function	(GstPad *pad, GstPadPullFunction pull);
 void 			gst_pad_set_qos_function	(GstPad *pad, GstPadQoSFunction qos);
 
-guint16 		gst_pad_get_type_id		(GstPad *pad);
-void 			gst_pad_set_type_id		(GstPad *pad, guint16 id);
+// FIXME is here for backward compatibility until we have GstCaps working...
+void	 		gst_pad_set_type_id		(GstPad *pad, guint16 id);
+
+GList*	 		gst_pad_get_type_ids		(GstPad *pad);
+void 			gst_pad_add_type_id		(GstPad *pad, guint16 id);
 
 void 			gst_pad_set_name		(GstPad *pad, const gchar *name);
 const gchar*		gst_pad_get_name		(GstPad *pad);
