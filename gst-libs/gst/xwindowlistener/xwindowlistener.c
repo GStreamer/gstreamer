@@ -637,17 +637,20 @@ gst_xwin_stop (GstXWindowListener *xwin)
  */
 
 static gboolean
-plugin_init (GModule   *module,
-	     GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  gst_plugin_set_longname (plugin,
-			   "X11-based XWindow event/motion listener");
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "xwindowlistener",
-  plugin_init
-};
+  "X11-based XWindow event/motion listener",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

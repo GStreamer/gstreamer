@@ -870,16 +870,21 @@ void resample_sinc_ft_float(resample_t * r)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  gst_plugin_set_longname (plugin, "Resampling routines for use in audio plugins");
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstresample",
-  plugin_init
-};
+  "Resampling routines for use in audio plugins",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);
 

@@ -1149,6 +1149,36 @@ if test "x$HAVE_FFMPEG" = xyes; then
   AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg/ffmpeg)
 fi 
 
+dnl ############################
+dnl # Set up some more defines #
+dnl ############################
+
+dnl set license and copyright notice
+AC_DEFINE(GST_LICENSE, "LGPL", [GStreamer license])
+AC_DEFINE(GST_COPYRIGHT, "(c) 1999-2003 The GStreamer Team", [copyright message in plugins])
+dnl package name in plugins
+AC_ARG_WITH(package-name,
+AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),
+[case "${withval}" in
+  yes) AC_MSG_ERROR(bad value ${withval} for --with-package-name) ;;
+  no) AC_MSG_ERROR(bad value ${withval} for --with-package-name) ;;
+  *) GST_PACKAGE="${withval}" ;;
+esac], 
+[GST_PACKAGE="Gstreamer"]) dnl Default value
+AC_MSG_NOTICE(Using $GST_PACKAGE as package name)
+AC_DEFINE_UNQUOTED(GST_PACKAGE, "$GST_PACKAGE", [package name in plugins])
+dnl package origin URL
+AC_ARG_WITH(package-origin,
+AC_HELP_STRING([--with-package-origin],[specify package origin URL to use in plugins]),
+[case "${withval}" in
+  yes) AC_MSG_ERROR(bad value ${withval} for --with-package-origin) ;;
+  no) AC_MSG_ERROR(bad value ${withval} for --with-package-origin) ;;
+  *) GST_ORIGIN="${withval}" ;;
+esac], 
+[GST_ORIGIN="http://gstreamer.net"]) dnl Default value
+AC_MSG_NOTICE(Using $GST_ORIGIN as package origin)
+AC_DEFINE_UNQUOTED(GST_ORIGIN, "$GST_ORIGIN", [package origin])
+
 dnl #########################
 dnl # Make the output files #
 dnl #########################

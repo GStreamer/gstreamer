@@ -17,8 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 #include <gst/gst.h>
 #include <gst/idct/idct.h>
@@ -127,15 +128,20 @@ void gst_idct_destroy(GstIDCT *idct)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  gst_plugin_set_longname (plugin, "Accelerated IDCT routines");
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gstidct",
-  plugin_init
-};
+  "Accelerated IDCT routines",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
