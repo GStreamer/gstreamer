@@ -47,7 +47,7 @@ struct _GstSchedule {
 };
 
 struct _GstScheduleChain {
-  GstSchedule *parent;
+  GstSchedule *sched;
 
   GList *elements;
   gint num_elements;

@@ -781,14 +781,38 @@ gst_schedule_chain_new (GstSchedule *sched)
 {
   GstScheduleChain *chain = g_new (GstScheduleChain, 1);
 
-  chain->parent = sched;
+  chain->sched = sched;
   chain->elements = NULL;
   chain->num_elements = 0;
   chain->entry = NULL;
   chain->need_cothreads = TRUE;
   chain->schedule = FALSE;
 
+  sched->chains = g_list_prepend (sched->chains, chain);
+  sched->num_chains++;
+
+  GST_INFO (GST_CAT_SCHEDULING, "created new chain, now are %d chains",sched->num_chains);
+
   return chain;
+}
+
+void
+gst_schedule_chain_destroy (GstScheduleChain *chain)
+{
+  chain->sched->chains = g_list_remove (chain->sched->chains, chain);
+  sched->num_chains--;
+
+  g_list_free (chain->elements);
+  g_free (chain);
+}
+
+void
+gst_schedule_chain_add_element (GstScheduleChain *chain, GstElement *element)
+{
+  GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to chain", GST_ELEMENT_NAME (element));
+  chain->elements = g_list_prepend (chain->elements, element);
+  chain->num_elements++;
+  // FIXME need to update chain schedule here, or not
 }
 
 void
@@ -811,26 +835,27 @@ gst_schedule_chain_elements (GstSchedule *schedule, GstElement *element1, GstEle
       chain2 = chain;
   }
 
+  // first check to see if they're in the same chain, we're done if that's the case
+  if ((chain1 != NULL) && (chain1 == chain2)) {
+    GST_INFO (GST_CAT_SCHEDULING, "elements are already in the same chain");
+    return;
+  }
+
   // now, if neither element has a chain, create one
   if ((chain1 == NULL) && (chain2 == NULL)) {
     GST_INFO (GST_CAT_SCHEDULING, "creating new chain to hold two new elements");
     chain = gst_schedule_chain_new (sched);
-    chain->elements = g_list_prepend (chain->elements, element1);
+    gst_schedule_chain_add_element (chain, element1);
+    gst_schedule_chain_add_element (chain, element2);
     // FIXME chain changed here
-    chain->elements = g_list_prepend (chain->elements, element2);
-    // FIXME chain changed here
-    chain->num_elements = 2;
-
-    sched->chains = g_list_prepend (sched->chains, chain);
-    sched->num_chains++;
 
   // otherwise if both have chains already, join them
   } else if ((chain1 != NULL) && (chain2 != NULL)) {
     GST_INFO (GST_CAT_SCHEDULING, "joining two existing chains together");
     // take the contents of chain2 and merge them into chain1
     chain1->elements = g_list_concat (chain1->elements, chain2->elements);
-    // FIXME chain changed here
     chain1->num_elements += chain2->num_elements;
+    // FIXME chain changed here
 
     g_free(chain2);
 
@@ -841,9 +866,107 @@ gst_schedule_chain_elements (GstSchedule *schedule, GstElement *element1, GstEle
     else chain = chain2, element = element1;
 
     GST_INFO (GST_CAT_SCHEDULING, "adding element to existing chain");
-    chain->elements = g_list_prepend (chain->elements, element);
+    gst_schedule_chain_add_element (chain, element);
     // FIXME chain changed here
-    chain->num_elements++;
+  }
+}
+
+void
+gst_schedule_pad_connect_callback (GstPad *pad, GstPad *peer, GstSchedule *sched)
+{
+  GstElement *peerelement;
+
+  GST_INFO (GST_CAT_SCHEDULING, "have pad connected callback on %s:%s",GST_DEBUG_PAD_NAME(pad));
+
+  if ((peerelement = gst_schedule_check_pad(sched,pad))) {
+    GST_INFO (GST_CAT_SCHEDULING, "peer is in same schedule, chaining together");
+    gst_schedule_chain_elements (sched, GST_ELEMENT(GST_PAD_PARENT(pad)), peerelement);
+  }
+}
+
+// find the chain within the schedule that holds the element, if any
+GstScheduleChain *
+gst_schedule_find_chain (GstSchedule *sched, GstElement *element)
+{
+  GList *chains;
+  GstScheduleChain *chain;
+
+  GST_INFO (GST_CAT_SCHEDULING, "searching for element \"%s\" in chains",GST_ELEMENT_NAME(element));
+
+  chains = sched->chains;
+  while (chains) {
+    chain = (GstScheduleChain *)(chains->data);
+    chains = g_list_next (chains);
+
+    if (g_list_find (chain->elements, element))
+      return chain;
+  }
+
+  return NULL;
+}
+
+void
+gst_schedule_chain_recursive_add (GstScheduleChain *chain, GstElement *element)
+{
+  GList *pads;
+  GstPad *pad;
+  GstElement *peerelement;
+
+  // add the element to the chain
+  gst_schedule_chain_add_element (chain, element);
+
+  // now go through all the pads and see which peers can be added
+  pads = element->pads;
+  while (pads) {
+    pad = GST_PAD(pads->data);
+    pads = g_list_next (pads);
+
+    // if it's a potential peer
+    if ((peerelement = gst_schedule_check_pad (sched, pad))) {
+      // if it's not already in a chain, add it to this one
+      if (gst_schedule_find_chain (sched, peerelement) == NULL) {
+        gst_schedule_chain_recursive_add (chain, peerelement);
+      }
+    }
+  }
+}
+
+void
+gst_schedule_pad_disconnect_callback (GstPad *pad, GstPad *peer, GstSchedule *sched)
+{
+  GstScheduleChain *chain;
+  GstElement *element1, *element2;
+  GstScheduleChain *chain1, *chain2;
+
+  GST_INFO (GST_CAT_SCHEDULING, "have pad disconnected callback on %s:%s",GST_DEBUG_PAD_NAME(pad));
+
+  // we need to have the parent elements of each pad
+  element1 = GST_PAD_PARENT(pad);
+  element2 = GST_PAD_PARENT(peer);
+  GST_INFO (GST_CAT_SCHEDULING, "disconnecting elements \"%s\" and \"%s\"",
+            GST_ELEMENT_NAME(element1), GST_ELEMENT_NAME(element2));
+
+  // first task is to remove the old chain they belonged to.
+  // this can be accomplished by taking either of the elements,
+  // since they are guaranteed to be in the same chain
+  // FIXME is it potentially better to make an attempt at splitting cleaner??
+  chain = gst_schedule_find_chain (sched, element1);
+  if (chain) {
+    GST_INFO (GST_CAT_SCHEDULING, "destroying chain");
+    gst_schedule_chain_destroy (chain);
+  }
+
+  // now create a new chain to hold element1 and build it from scratch
+  chain1 = gst_schedule_chain_new (sched);
+  gst_schedule_chain_recursive_add (chain1, element1);
+
+return;
+
+  // check the other element to see if it landed in the newly created chain
+  if (gst_schedule_find_chain (sched, element2) == NULL) {
+    // if not in chain, create chain and build from scratch
+    chain2 = gst_schedule_chain_new (sched);
+    gst_schedule_chain_recursive_add (chain2, element2);
   }
 }
 
@@ -876,6 +999,11 @@ gst_schedule_add_element (GstSchedule *schedule, GstElement *element)
       // make sure that the two elements are in the same chain
       gst_schedule_chain_elements (sched,element,peerelement);
     }
+
+    // now we have to attach a signal to each pad
+    // FIXME this is stupid
+    gtk_signal_connect(pad,"connected",GTK_SIGNAL_FUNC(gst_schedule_pad_connect_callback),sched);
+    gtk_signal_connect(pad,"disconnected",GTK_SIGNAL_FUNC(gst_schedule_pad_disconnect_callback),sched);
   }
 }
 

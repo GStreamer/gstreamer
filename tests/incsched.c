@@ -18,7 +18,6 @@ int main(int argc,char *argv[]) {
 
   g_print("\n\nConnecting:\n");
   gst_element_connect(src,"src",identity,"sink");
-  gst_element_connect(identity,"src",sink,"sink");
 
   g_print("\n\nAssembling things:\n");
   g_print("\nAdding src to bin:\n");
@@ -33,12 +32,17 @@ int main(int argc,char *argv[]) {
   gst_bin_add(bin,sink);
   g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
 
-  g_print("\n\nDisconnecting sink:\n");
+  g_print("\nConnecting identity to sink:\n");
+  gst_element_connect(identity,"src",sink,"sink");
+
+  g_print("\nDisconnecting sink:\n");
   gst_element_disconnect(identity,"src",sink,"sink");
 
-  g_print("\nRemoving sink from bin:\n");
-  gst_bin_remove(bin,sink);
-  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
+//  g_print("schedule has %d chains now\n",bin->sched->num_chains);
+
+//  g_print("\nRemoving sink from bin:\n");
+//  gst_bin_remove(bin,sink);
+//  g_print("there are %d managed elements in bin\n",bin->num_managed_elements);
 
 //  g_print("\nAdding bin to thread:\n");
 //  gst_bin_add(thread,bin);

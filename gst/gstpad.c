@@ -79,6 +79,8 @@ gst_pad_init (GstPad *pad)
 enum {
   REAL_SET_ACTIVE,
   REAL_CAPS_CHANGED,
+  REAL_CONNECTED,
+  REAL_DISCONNECTED,
   /* FILL ME */
   REAL_LAST_SIGNAL
 };
@@ -143,6 +145,16 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gst_real_pad_signals[REAL_CAPS_CHANGED] =
     gtk_signal_new ("caps_changed", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstRealPadClass, caps_changed),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
+  gst_real_pad_signals[REAL_CONNECTED] =
+    gtk_signal_new ("connected", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstRealPadClass, connected),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
+  gst_real_pad_signals[REAL_DISCONNECTED] =
+    gtk_signal_new ("disconnected", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstRealPadClass, disconnected),
                     gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
                     GTK_TYPE_POINTER);
   gtk_object_class_add_signals (gtkobject_class, gst_real_pad_signals, REAL_LAST_SIGNAL);
@@ -493,6 +505,10 @@ gst_pad_disconnect (GstPad *srcpad,
   GST_RPAD_PEER(realsrc) = NULL;
   GST_RPAD_PEER(realsink) = NULL;
 
+  /* fire off a signal to each of the pads telling them that they've been disconnected */
+  gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_DISCONNECTED], realsink);
+  gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_DISCONNECTED], realsrc);
+
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
 }
@@ -549,6 +565,10 @@ gst_pad_connect (GstPad *srcpad,
 
   /* set the connected flag */
   /* FIXME: set connected flag */
+
+  /* fire off a signal to each of the pads telling them that they've been connected */
+  gtk_signal_emit(GTK_OBJECT(realsrc), gst_real_pad_signals[REAL_CONNECTED], realsink);
+  gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_CONNECTED], realsrc);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "connected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
