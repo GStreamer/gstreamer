@@ -1,3 +1,12 @@
+2004-07-26  Benjamin Otte  <otte@gnome.org>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_link), (gst_lame_init),
+	(gst_lame_chain), (gst_lame_setup), (gst_lame_change_state),
+	(plugin_init):
+	  add debugging category, add error checks like checking return values
+	  of setup calls, make sure it still works after
+	  PLAYING=>NULL=>PLAYING, fix encoding of mono streams
+
 2004-07-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_get_video_stream),
