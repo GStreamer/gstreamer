@@ -31,7 +31,7 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_TARKINENC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "tarkindec", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "tarkindec", GST_RANK_PRIMARY,
           GST_TYPE_TARKINDEC))
     return FALSE;
 
