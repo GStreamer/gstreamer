@@ -16,3 +16,5 @@ CFLAGS = $(GST_CFLAGS)
 
 # FIXME : refcounting threadds
 DIST_SUBDIRS = caps plugin bytestream cleanup elements dynparams clock
+
+EXTRA_DIST = gst-inspect-check
