@@ -2390,8 +2390,12 @@ gst_pad_set_explicit_caps (GstPad * pad, const GstCaps * caps)
   }
   link_ret = gst_pad_try_set_caps (pad, caps);
   if (link_ret == GST_PAD_LINK_REFUSED) {
+    gchar *caps_str = gst_caps_to_string (caps);
+
     GST_ELEMENT_ERROR (gst_pad_get_parent (pad), CORE, PAD, (NULL),
-        ("failed to negotiate (try_set_caps returned REFUSED)"));
+        ("failed to negotiate (try_set_caps with \"%s\" returned REFUSED)",
+            caps_str));
+    g_free (caps_str);
     return FALSE;
   }
 

@@ -1,5 +1,21 @@
 2004-03-29  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstpad.c: (gst_pad_set_explicit_caps):
+	  print caps in debugging output when setting caps failed
+	* gst/schedulers/entryscheduler.c: (COTHREADS_TYPE),
+	(schedule_next_element), (get_buffer), (run_chainhandler),
+	(element_may_start), (gst_entry_scheduler_chain_handler),
+	(gst_entry_scheduler_get_handler),
+	(gst_entry_scheduler_state_transition),
+	(gst_entry_scheduler_pad_link):
+	  make this scheduler a testcase for mandatory
+	  discont-before-first-buffer which is needed if we want to allow apps
+	  to release the sound device.
+	  add SCHED_ASSERT macro to print scheduler state before an assertion
+	  triggers.
+
+2004-03-29  Benjamin Otte  <otte@gnome.org>
+
 	* COPYING:
 	  replace by LGPL (former COPYING.LIB). The core is completely
 	  licensed LGPL.
