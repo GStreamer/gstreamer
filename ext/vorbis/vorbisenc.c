@@ -232,6 +232,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
            Tell the library we're at end of stream so that it can handle
            the last frame and mark end of stream in the output properly */
         vorbis_analysis_wrote (&vorbisenc->vd, 0);
+	break;
       default:
 	gst_pad_event_default (pad, GST_EVENT (buf));
 	break;
@@ -312,8 +313,9 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
     vorbis_block_clear (&vorbisenc->vb);
     vorbis_dsp_clear (&vorbisenc->vd);
     vorbis_info_clear (&vorbisenc->vi);
+    gst_pad_push (vorbisenc->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+    gst_element_set_eos (GST_ELEMENT (vorbisenc));
   }
-
 }
 
 static void
