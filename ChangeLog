@@ -1,5 +1,10 @@
 2004-07-02  David Schleef  <ds@schleef.org>
 
+	* gst-libs/gst/xoverlay/Makefile.am: xoverlay no longer depends
+	on X.  (bug #144753)
+
+2004-07-02  David Schleef  <ds@schleef.org>
+
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_setup),
 	(gst_wavenc_stop_file): Switch to GST_WRITE_UINT32_LE macros
 	(bug #144624)
