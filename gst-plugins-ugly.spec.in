@@ -310,6 +310,268 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_LIBSDL_TRUE@%post -n gstreamer-sdl
 @USE_LIBSDL_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
 
+@USE_MAD_TRUE@%package -n gstreamer-mad
+@USE_MAD_TRUE@Summary: Gstreamer MAD mp3 decoder library
+@USE_MAD_TRUE@Group: Libraries/Multimedia
+@USE_MAD_TRUE@Requires: %{name} = %{ver}
+@USE_MAD_TRUE@Requires: mad >= 0.13.0
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%description -n gstreamer-mad
+@USE_MAD_TRUE@Plugin for playback of mp3 songs using the very good MAD library
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%files -n gstreamer-mad
+@USE_MAD_TRUE@%defattr(-, root, root)
+@USE_MAD_TRUE@%{prefix}/lib/gst/libgstmad*
+@USE_MAD_TRUE@
+@USE_MAD_TRUE@%post -n gstreamer-mad
+@USE_MAD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+@USE_OPENQUICKTIME_TRUE@%package -n gstreamer-quicktime
+@USE_OPENQUICKTIME_TRUE@Summary: GStreamer Quicktime video Plugin
+@USE_OPENQUICKTIME_TRUE@Group: Libraries/Multimedia
+@USE_OPENQUICKTIME_TRUE@Requires: %{name} = %{ver}
+@USE_OPENQUICKTIME_TRUE@Requires: OpenQuicktime = 20010429
+@USE_OPENQUICKTIME_TRUE@
+@USE_OPENQUICKTIME_TRUE@%description -n gstreamer-quicktime
+@USE_OPENQUICKTIME_TRUE@Plugin which uses the OpenQucktime library
+@USE_OPENQUICKTIME_TRUE@from 3ivx to play Quicktime movies.
+@USE_OPENQUICKTIME_TRUE@(http://openquicktime.sourceforge.net)
+@USE_OPENQUICKTIME_TRUE@
+@USE_OPENQUICKTIME_TRUE@%files -n gstreamer-quicktime
+@USE_OPENQUICKTIME_TRUE@%defattr(-, root, root)
+@USE_OPENQUICKTIME_TRUE@%{prefix}/lib/gst/libquicktime*
+@USE_OPENQUICKTIME_TRUE@
+@USE_OPENQUICKTIME_TRUE@%post -n gstreamer-quicktime
+@USE_OPENQUICKTIME_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+# Video 4 Linux
+@USE_V4L_TRUE@%package -n gstreamer-v4l
+@USE_V4L_TRUE@Summary: GStreamer video for linux input plugin
+@USE_V4L_TRUE@Group: Libraries/Multimedia
+@USE_V4L_TRUE@Requires: %{name} = %{ver}
+@USE_V4L_TRUE@
+@USE_V4L_TRUE@%description -n gstreamer-v4l
+@USE_V4L_TRUE@Plugin for accessing video for Linux streams.
+@USE_V4L_TRUE@
+@USE_V4L_TRUE@%files -n gstreamer-v4l
+@USE_V4L_TRUE@%defattr(-, root, root)
+@USE_V4L_TRUE@%{prefix}/lib/gst/libv4l*
+@USE_V4L_TRUE@
+@USE_V4L_TRUE@%post -n gstreamer-v4l
+@USE_V4L_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+# ALSA Audio plugin
+@USE_ALSA_TRUE@%package -n gstreamer-alsa
+@USE_ALSA_TRUE@Summary: GStreamer plugins for the ALSA sound architecture
+@USE_ALSA_TRUE@Group: Libraries/Multimedia
+@USE_ALSA_TRUE@Requires: %{name} = %{ver}
+@USE_ALSA_TRUE@
+@USE_ALSA_TRUE@%description -n gstreamer-alsa
+@USE_ALSA_TRUE@Input and output plugin for the ALSA soundcard driver architecture.
+@USE_ALSA_TRUE@
+@USE_ALSA_TRUE@%files -n gstreamer-alsa
+@USE_ALSA_TRUE@%defattr(-, root, root)
+@USE_ALSA_TRUE@%{prefix}/lib/gst/libalsa*
+@USE_ALSA_TRUE@
+@USE_ALSA_TRUE@%post -n gstreamer-alsa
+@USE_ALSA_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+@USE_LIBDVD_TRUE@%package -n gstreamer-libdvd
+@USE_LIBDVD_TRUE@Summary: GStreamer plugins for DVD playback
+@USE_LIBDVD_TRUE@Group: Libraries/Multimedia
+@USE_LIBDVD_TRUE@Requires: %{name} = %{ver}
+@USE_LIBDVD_TRUE@
+@USE_LIBDVD_TRUE@%description -n gstreamer-libdvd
+@USE_LIBDVD_TRUE@Input and output plugin for the ALSA soundcard driver architecture.
+@USE_LIBDVD_TRUE@
+@USE_LIBDVD_TRUE@%files -n gstreamer-libdvd
+@USE_LIBDVD_TRUE@%defattr(-, root, root)
+@USE_LIBDVD_TRUE@%{prefix}/lib/gst/libdvd*
+@USE_LIBDVD_TRUE@
+@USE_LIBDVD_TRUE@%post -n gstreamer-libdvd
+@USE_LIBDVD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+@USE_A52DEC_TRUE@%package -n gstreamer-a52dec
+@USE_A52DEC_TRUE@Summary: GStreamer VOB decoder plugin
+@USE_A52DEC_TRUE@Group: Libraries/Multimedia
+@USE_A52DEC_TRUE@Requires: %{name} = %{ver}
+@USE_A52DEC_TRUE@Requires: a52dec >= 0.7.0
+@USE_A52DEC_TRUE@
+@USE_A52DEC_TRUE@%description -n gstreamer-a52dec
+@USE_A52DEC_TRUE@Plugin for decoding of VOB files
+@USE_A52DEC_TRUE@
+@USE_A52DEC_TRUE@%files -n gstreamer-a52dec
+@USE_A52DEC_TRUE@%defattr(-, root, root)
+@USE_A52DEC_TRUE@%{prefix}/lib/gst/libgsta52dec*
+@USE_A52DEC_TRUE@
+@USE_A52DEC_TRUE@%post -n gstreamer-a52dec
+@USE_A52DEC_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+@USE_MIKMOD_TRUE@%package -n gstreamer-mikmod
+@USE_MIKMOD_TRUE@Summary: GStreamer Mikmod plugin
+@USE_MIKMOD_TRUE@Group: Libraries/Multimedia
+@USE_MIKMOD_TRUE@Requires: %{name} = %{ver}
+@USE_MIKMOD_TRUE@
+@USE_MIKMOD_TRUE@%description -n gstreamer-mikmod
+@USE_MIKMOD_TRUE@Plugin for playback of module files supported by mikmod under GStreamer
+@USE_MIKMOD_TRUE@
+@USE_MIKMOD_TRUE@%files -n gstreamer-mikmod
+@USE_MIKMOD_TRUE@%defattr(-, root, root)
+@USE_MIKMOD_TRUE@%{prefix}/lib/gst/libgstmikmod*
+@USE_MIKMOD_TRUE@
+@USE_MIKMOD_TRUE@%post -n gstreamer-mikmod
+@USE_MIKMOD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+@USE_LIBSIDPLAY_TRUE@%package -n gstreamer-sid
+@USE_LIBSIDPLAY_TRUE@Summary: GStreamer Sid C64 music plugin
+@USE_LIBSIDPLAY_TRUE@Group: Libraries/Multimedia
+@USE_LIBSIDPLAY_TRUE@Requires: %{name} = %{ver}
+@USE_LIBSIDPLAY_TRUE@Requires: libsidplay => 1.36.0
+@USE_LIBSIDPLAY_TRUE@%description -n gstreamer-sid
+@USE_LIBSIDPLAY_TRUE@Plugin for playback of C64 SID format music files
+@USE_LIBSIDPLAY_TRUE@
+@USE_LIBSIDPLAY_TRUE@%files -n gstreamer-sid
+@USE_LIBSIDPLAY_TRUE@%defattr(-, root, root)
+@USE_LIBSIDPLAY_TRUE@%{prefix}/lib/gst/libgstsid*
+@USE_LIBSIDPLAY_TRUE@
+@USE_LIBSIDPLAY_TRUE@%post -n gstreamer-sid
+@USE_LIBSIDPLAY_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+@USE_LIBRTP_TRUE@%package -n gstreamer-rtp
+@USE_LIBRTP_TRUE@Summary: GStreamer RTP plugin
+@USE_LIBRTP_TRUE@Group: Libraries/Multimedia
+@USE_LIBRTP_TRUE@Requires: %{name} = %{ver}
+@USE_LIBRTP_TRUE@Requires: librtp >= 0.1
+@USE_LIBRTP_TRUE@
+@USE_LIBRTP_TRUE@%description -n gstreamer-rtp
+@USE_LIBRTP_TRUE@Library for transfering data with the RTP protocol
+@USE_LIBRTP_TRUE@
+@USE_LIBRTP_TRUE@%files -n gstreamer-rtp
+@USE_LIBRTP_TRUE@%defattr(-, root, root)
+@USE_LIBRTP_TRUE@%{prefix}/lib/gst/libgstrtp*
+@USE_LIBRTP_TRUE@
+@USE_LIBRTP_TRUE@%post -n gstreamer-rtp
+@USE_LIBRTP_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%package -n gstreamer-resample
+Summary: GStreamer resample plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-resample
+Library for resampling of sound
+
+%files -n gstreamer-resample
+%defattr(-, root, root)
+%{prefix}/lib/gst/libresample*
+
+%post -n gstreamer-resample
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%package -n gstreamer-sine
+Summary: GStreamer Sine effect plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-sine
+Plugin for generating sine waves.
+
+%files -n gstreamer-sine
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstsine*
+
+%post -n gstreamer-sine
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%package -n gstreamer-lavencode
+Summary: GStreamer YUV to LAV converter
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-lavencode
+It takes YUV video frames and adds a header in front of it so it can be processed with the lavtools from mjpeg
+
+%files -n gstreamer-lavencode
+%defattr(-, root, root)
+%{prefix}/lib/gst/liblav*
+
+%post -n gstreamer-lavencode
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%package -n gstreamer-silence
+Summary: GStreamer Silence plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-silence
+Plugin for generation of silence
+
+%files -n gstreamer-silence
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstsilence*
+
+%post -n gstreamer-silence
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%package -n gstreamer-qcam
+Summary: GStreamer QuickCam plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-qcam
+Plugin for accessing a Quickcam source
+
+%files -n gstreamer-qcam
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstqcam*
+
+%post -n gstreamer-qcam
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%package -n gstreamer-bstest
+Summary: GStreamer BS test package
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-bstest
+Plugin for ByteStream testing of GStreamer
+
+%files -n gstreamer-bstest
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstbstest*
+
+%post -n gstreamer-bstest
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+%package -n gstreamer-au
+Summary: GStreamer au audiofile plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-au
+Plugin for playback of the SUN au audio format.
+
+%files -n gstreamer-au
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstparseau*
+
+%post -n gstreamer-au
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+
+
+%package -n gstreamer-vcd
+Summary: GStreamer Video CD plugin
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-vcd
+Video CD playback plugin
+
+%files -n gstreamer-vcd
+%defattr(-, root, root)
+%{prefix}/lib/gst/libvcd*
+
 %package -n gstreamer-ladspa
 Summary: Gstreamer wrapper for LADSPA plugins
 Group: Libraries/Multimedia
@@ -416,6 +678,10 @@ Plugin for converting audio into video
 %files -n gstreamer-chart
 %defattr(-, root, root)
 %{prefix}/lib/gst/libchart*
+
+%post -n gstreamer-chart
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
 %package -n gstreamer-visualisation
 Summary: Gstreamer visualisations plugins
 Group: Libraries/Multimedia
@@ -429,4 +695,52 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 %{prefix}/lib/gst/libsmooth*
 %{prefix}/lib/gst/libgstspectrum*
 %{prefix}/lib/gst/libvu*
+
+%post -n gstreamer-visualisation
+%{prefix}/bin/gstreamer-register --gst-mask=0
+
+
+%package -n gstreamer-misc
+Summary: GStreamer plugins for various effects
+Group: Libraries/Multimedia
+Requires: %{name} = %{ver}
+
+%description -n gstreamer-misc
+Plugins for various effects
+
+%files -n gstreamer-misc
+%defattr(-, root, root)
+%{prefix}/lib/gst/libadder*
+%{prefix}/lib/gst/libalaw*
+%{prefix}/lib/gst/libgstaudio*
+%{prefix}/lib/gst/libcolorspace*
+%{prefix}/lib/gst/libgstautoplug*
+%{prefix}/lib/gst/libgstelements*
+%{prefix}/lib/gst/libgstgetbits*
+%{prefix}/lib/gst/libgstidct*
+%{prefix}/lib/gst/libgstriff*
+%{prefix}/lib/gst/libgstjpeg*
+%{prefix}/lib/gst/libintfloatconvert*
+%{prefix}/lib/gst/liblevel*
+%{prefix}/lib/gst/libmedian*
+%{prefix}/lib/gst/libmono2stereo*
+%{prefix}/lib/gst/libmulaw*
+%{prefix}/lib/gst/libpassthrough*
+%{prefix}/lib/gst/librtjpe*
+%{prefix}/lib/gst/libstereo*
+%{prefix}/lib/gst/libsystem_*
+%{prefix}/lib/gst/libgstputbits*
+%{prefix}/lib/gst/libvol*
+%{prefix}/lib/gst/libxvideosink*
+%{prefix}/lib/gst/libgstparsewav*
+%{prefix}/lib/gst/libgststaticautoplug*
+%{prefix}/lib/gst/libgsttypes*
+%{prefix}/lib/gst/libgstbasicscheduler*
+%{prefix}/lib/gst/libgstbytestream*
+%{prefix}/lib/gst/libgstcontrol*
+%{prefix}/lib/gst/libplayondemand*
+%{prefix}/lib/gst/libspeed*
+
+%post -n gstreamer-misc
+%{prefix}/bin/gstreamer-register --gst-mask=0
 
