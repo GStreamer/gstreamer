@@ -770,7 +770,7 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     }
       
     /* constant rate stream */
-    if (stream->strh.samplesize) {
+    if (stream->strh.samplesize && stream->strh.type == GST_RIFF_FCC_auds) {
       gst_pad_convert (stream->pad, GST_FORMAT_BYTES, stream->total_bytes,
 		                 &format, &target->ts);
     }
@@ -870,7 +870,7 @@ gst_avi_demux_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
   avi_stream_context *stream = gst_pad_get_element_private (pad);
 
   if (stream->strh.type != GST_RIFF_FCC_auds && 
-		  (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
+      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
     return FALSE;
 
   switch (src_format) {
@@ -962,7 +962,7 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstQueryType type,
           *format = GST_FORMAT_TIME;
           /* fall through */
         case GST_FORMAT_TIME:
-          if (stream->strh.samplesize) {
+          if (stream->strh.samplesize && stream->strh.type == GST_RIFF_FCC_auds) {
             *value = (((gfloat)stream->current_byte) * stream->strh.scale / stream->strh.rate) * GST_SECOND;
 	  }
 	  else {
@@ -973,7 +973,7 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstQueryType type,
           *value = stream->current_byte;
 	  break;
         case GST_FORMAT_UNITS:
-          if (stream->strh.samplesize) 
+          if (stream->strh.samplesize && stream->strh.type == GST_RIFF_FCC_auds) 
             *value = stream->current_byte * stream->strh.samplesize;
 	  else 
             *value = stream->current_frame;
