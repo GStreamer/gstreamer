@@ -10,7 +10,7 @@ AC_CONFIG_SRCDIR([gst/law/alaw.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl libtool
-GST_CURRENT=2
+GST_CURRENT=0
 GST_REVISION=0
 GST_AGE=0
 GST_LIBVERSION=$GST_CURRENT:$GST_REVISION:$GST_AGE
@@ -138,24 +138,9 @@ AC_C_BIGENDIAN
 dnl Check for essential libraries first:
 dnl ====================================
 
-if test -n "`echo $GST_CFLAGS | grep USE_GLIB2`"; then
-  USE_GLIB2=yes
-else
-  USE_GLIB2=no
-fi
-
-dnl needed for some plugins and demos, now's a nice time to check for gtk
-if test x$USE_GLIB2 = xno; then
-  AM_PATH_GTK(1.2.0,,
-              AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
-  HAVE_GTK=yes
-  # we have to have it
-else
-  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
-
-  GTK_CFLAGS=$GTK2_CFLAGS
-  GTK_LIBS=$GTK2_LIBS
-fi
+PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
+GTK_CFLAGS=$GTK2_CFLAGS
+GTK_LIBS=$GTK2_LIBS
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
@@ -470,6 +455,11 @@ dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
 GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
   AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
+  if test "x$HAVE_MAD" = "xyes"; then
+    # installed with mad >= 0.14
+    HAVE_MAD="no"
+    AC_CHECK_LIB(id3tag, id3_tag_query, HAVE_MAD="yes" MAD_LIBS="$MAD_LIBS -lid3tag")
+  fi    
 ])
 AC_SUBST(MAD_LIBS)
 
@@ -709,7 +699,7 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
-AC_OUTPUT(
+AC_CONFIG_FILES(
 Makefile
 gstreamer-libs.pc
 gstreamer-libs-uninstalled.pc
@@ -808,6 +798,8 @@ examples/capsfilter/Makefile
 examples/Makefile
 tools/Makefile
 )
+
+AC_OUTPUT
 
 echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
 echo
