@@ -572,8 +572,7 @@ gst_bin_create_plan_func (GstBin *bin)
   GSList *pending = NULL;
   GstBin *pending_bin;
 
-  GST_DEBUG_SET_STRING("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
-  GST_DEBUG_ENTER_STRING;
+  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
 
   GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "creating plan");
 
@@ -710,8 +709,7 @@ gst_bin_iterate_func (GstBin *bin)
   GstPad *pad;
   GstBuffer *buf = NULL;
 
-  GST_DEBUG_SET_STRING("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
-  GST_DEBUG_ENTER_STRING;
+  GST_DEBUG_ENTER("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
 
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));

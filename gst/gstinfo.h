@@ -82,6 +82,7 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
     fprintf(stderr,GST_DEBUG_PREFIX(format": entering\n" , ## args )); \
 }G_STMT_END
 
+// FIXME FIXME FIXME this leaks like crazy
 #define GST_DEBUG_SET_STRING(format, args...) \
   gchar *_debug_string = g_strdup_printf(format , ## args )
 

@@ -328,8 +328,7 @@ void gst_bin_schedule_func(GstBin *bin) {
   GList *chains;
   _GstBinChain *chain;
 
-  GST_DEBUG_SET_STRING("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
-  GST_DEBUG_ENTER_STRING;
+  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
 
   gst_bin_schedule_cleanup(bin);
 
