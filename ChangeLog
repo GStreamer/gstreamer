@@ -1,3 +1,10 @@
+2004-03-03  Julien MOUTTE <julien@moutte.net>
+
+	* gst-libs/gst/gconf/gconf.c: (gst_gconf_get_default_video_sink):
+	Using ximagesink as a default if no gconf key found. We should
+	probably consider using alsasink instead of osssink for the audio
+	part.
+
 2004-03-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
