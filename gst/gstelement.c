@@ -76,7 +76,7 @@ static void gst_element_error_func (GstElement * element, GstElement * source,
     GError * error, gchar * debug);
 static void gst_element_found_tag_func (GstElement * element,
     GstElement * source, const GstTagList * tag_list);
-GstElementStateReturn gst_element_set_state_func (GstElement * element,
+static GstElementStateReturn gst_element_set_state_func (GstElement * element,
     GstElementState state);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -2735,7 +2735,7 @@ gst_element_set_state (GstElement * element, GstElementState state)
   return klass->set_state (element, state);
 }
 
-GstElementStateReturn
+static GstElementStateReturn
 gst_element_set_state_func (GstElement * element, GstElementState state)
 {
   GstElementClass *oclass;
