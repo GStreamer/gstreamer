@@ -1186,8 +1186,8 @@ gst_avi_demux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 	if (!gst_avi_demux_process_chunk (avi_demux, filepos, 0,
 			   rec_depth + 1, &subchunksize)) {
 
-          g_print ("  *****  Error processing chunk at filepos 0x%08llxi
-			  %u %u\n", *filepos, *chunksize, datashowed);
+          g_print ("  *****  Error processing chunk at filepos 0x%08llxi %u %u\n",
+                   *filepos, *chunksize, datashowed);
 	  return FALSE;
 	}
 	if (avi_demux->restart)
