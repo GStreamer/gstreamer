@@ -1737,7 +1737,7 @@ gst_avi_demux_get_property (GObject *object, guint prop_id, GValue *value,
       g_value_set_boxed(value, src->metadata);
       break;
     case ARG_STREAMINFO:
-      g_value_set_boxed(value, NULL);
+      g_value_set_boxed(value, src->streaminfo);
       break;
     default:
       break;
