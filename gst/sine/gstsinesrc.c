@@ -172,13 +172,11 @@ gst_sinesrc_init (GstSineSrc *src)
       gst_static_pad_template_get (&gst_sinesrc_src_template), "src");
   gst_pad_set_link_function (src->srcpad, gst_sinesrc_link);
   gst_pad_set_fixate_function (src->srcpad, gst_sinesrc_src_fixate);
-  gst_element_add_pad (GST_ELEMENT(src), src->srcpad);
-  
   gst_pad_set_get_function (src->srcpad, gst_sinesrc_get);
-  gst_pad_set_link_function (src->srcpad, gst_sinesrc_link);
   gst_pad_set_query_function (src->srcpad, gst_sinesrc_src_query);
   gst_pad_set_query_type_function (src->srcpad, gst_sinesrc_get_query_types);
-
+  gst_element_add_pad (GST_ELEMENT(src), src->srcpad);
+  
   src->samplerate = 44100;
   src->volume = 1.0;
   src->freq = 440.0;
@@ -317,8 +315,8 @@ gst_sinesrc_get (GstPad *pad)
 
   tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
 
-  /* FIXME the 1024 is arbitrary */
-  buf = gst_buffer_new_and_alloc (1024);
+  /* note: the 2 is because of the format we use */
+  buf = gst_buffer_new_and_alloc (src->samples_per_buffer * 2);
 
   GST_BUFFER_TIMESTAMP(buf) = src->timestamp;
   GST_BUFFER_OFFSET (buf) = src->offset;
