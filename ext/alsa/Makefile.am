@@ -8,7 +8,7 @@ libgstalsa_la_SOURCES = gstalsaplugin.c \
 libgstalsa_la_CFLAGS = $(GST_CFLAGS) $(ALSA_CFLAGS)
 libgstalsa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstalsa_la_LIBADD = $(ALSA_LIBS) \
-  -L${top_builddir}/gst-libs/gst -lgstinterfaces-@GST_MAJORMINOR@
+  ${top_builddir}/gst-libs/gst -lgstinterfaces-@GST_MAJORMINOR@
 
 noinst_HEADERS = \
   gstalsa.h gstalsaclock.h gstalsasink.h gstalsasrc.h \
