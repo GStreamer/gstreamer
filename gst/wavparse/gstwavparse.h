@@ -69,8 +69,9 @@ struct _GstWavParse {
   gint rate;
   guint16 channels;
   guint16 width;
+  guint32 bps;
 
-  guint64 dataleft;
+  guint64 dataleft, datasize, datastart;
   int byteoffset;
   
   gboolean seek_pending;
