@@ -131,13 +131,15 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 %post
 /sbin/ldconfig
-%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 
 %post devel
 # adding devhelp links to work around different base not working
 mkdir -p %{_datadir}/devhelp/books
 ln -sf %{_datadir}/gtk-doc/html/gstreamer %{_datadir}/devhelp/books
 ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
+
+%post tools
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 
 %postun
 /sbin/ldconfig
