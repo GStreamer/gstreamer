@@ -205,8 +205,6 @@ again:
       return NULL;
   }
 #ifdef HAVE_VALGRIND
-  //return g_malloc (mem_chunk->atom_size);
-  g_print ("alloc %p %lu\n", GST_MEM_CHUNK_DATA (chunk), mem_chunk->atom_size);
   VALGRIND_MALLOCLIKE_BLOCK (GST_MEM_CHUNK_DATA (chunk), mem_chunk->atom_size,
       0, 0);
 #endif
@@ -252,9 +250,7 @@ gst_mem_chunk_free (GstMemChunk * mem_chunk, gpointer mem)
   chunk = GST_MEM_CHUNK_LINK (mem);
 
 #ifdef HAVE_VALGRIND
-  //g_free (mem);
   VALGRIND_FREELIKE_BLOCK (mem, 0);
-  g_print ("free %p\n", mem);
 #endif
   gst_trash_stack_push (&mem_chunk->stack, chunk);
 }
