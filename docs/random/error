@@ -1,0 +1,59 @@
+Some notes on the error handling introduced after 0.7.3
+
+- there are four domains for errors:
+  - CORE: core GStreamer errors
+  - LIBRARY: supporting library errors
+  - RESOURCE: errors accessing resources (files, network, memory, ...)
+  - STREAM: errors in the data stream
+- Each error in GStreamer or plug-ins can be put under one of these four.
+- the enum is called Gst(Domain)Error and has GST_(DOMAIN)_ERROR_(CODE) members
+  (see GError API docs for rationale)
+- each of the enums starts with _FAILED at 1 (with FAILED being the generic
+  error if none of the others applies)
+- second in the enum is TOO_LAZY, which allows us to keep track of those errors
+  that we haven't categorized yet.  This means they really should either move
+  to another one, or a new one ought to be created.
+- each enum ends with NUM_ERRORS
+
+- elements call gst_element_error to signal an error:
+  gst_element_error (element, domain, code, message, debug);
+  With :
+  - element being the one signalling the error
+  - domain one of CORE, LIBRARY, RESOURCE, STREAM
+  - code one of the suffixes in the Gst(Domain)Error enum
+  - message is either NULL (to signal the standard error message for the
+    given domain and code), or a printf-like set with the format being
+    marked for translation.
+    The string should start with a capital and not end in a period
+    (FIXME: this is something we may want to change).
+    The string can/should be shown to the user of an application.
+  - debug is either NULL or a non-translated debug string, which can be used
+    to diagnose errors after they've happened.
+    The string can be shown to the user when he asks for additional debug info.
+    A useful macro is GST_ERROR_SYSTEM, which prints out the system error
+    that explains the failure by using g_strerror.
+
+- Some example calls:
+
+      gst_element_error (src, RESOURCE, OPEN_READ,
+        (_("Could not open file \"%s\" for reading"), src->filename),
+        GST_ERROR_SYSTEM);
+
+      The message is specified since we have more information:
+          - the resource is a file 
+          - we know the file name
+
+      gst_element_error (element, CORE, NEGOTIATION, NULL, NULL);
+ 
+      This is a simple negotiation error.  The default message will be
+      signaled, telling the user that GStreamer had an internal error.
+
+      gst_element_error (ebml, RESOURCE, READ, NULL,
+                         ("Read error at position %llu (0x%llx)",
+                         pos, pos));
+
+      The plugin asked to read on the underlying resource (using bytestream),
+      but failed.  The user will get a generic read error.  The debug info
+      will contain the exact position in the stream at which the read error
+      occured.
+

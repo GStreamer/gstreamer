@@ -747,14 +747,7 @@ gst_filesrc_open_file (GstFileSrc *src)
   if (src->fd < 0)
   {
     if (errno == ENOENT)
-    gst_element_error (src, RESOURCE, NOT_FOUND,
-	               NULL,
-                       NULL);
-/* thomas
-    gst_element_error (src, RESOURCE, NOT_FOUND,
-	               (_("File \"%s\" does not exist"), src->filename),
-                       NULL);
-*/
+      gst_element_error (src, RESOURCE, NOT_FOUND, NULL, NULL);
     else
       gst_element_error (src, RESOURCE, OPEN_READ,
 	                 (_("Could not open file \"%s\" for reading"), src->filename),

@@ -1,5 +1,12 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/random/error:
+          doc explaining error system
+	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
+          cleanup
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst-i18n-app.h:
 	* gst/gst-i18n-lib.h:
           remove inclusion of config.h
