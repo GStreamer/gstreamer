@@ -3,15 +3,11 @@
 
 <!ENTITY INTRO SYSTEM "intro.sgml">
 
-<!ENTITY CONCEPTS SYSTEM "concepts.sgml">
-
 <!ENTITY FIRSTPLUGIN SYSTEM "firstplugin.sgml">
 
 <!ENTITY TESTAPP SYSTEM "testapp.sgml">
 
 <!ENTITY LOOPBASED SYSTEM "loopbased.sgml">
-
-<!ENTITY TYPESNPROPS SYSTEM "typesnprops.sgml">
 
 <!ENTITY BUFFERS SYSTEM ".sgml">
 
@@ -62,11 +58,109 @@
 
 	This section introduces the basic concepts required to understand the
 	issues involved in extending &GStreamer;
+      </para>
+      <para>
+        Many of these concepts are explained in greater detail in the
+	GStreamer Application Development Manual, and are merely mentioned
+	here to refresh your memory.
 
       </para>
     </partintro>
 
-      &CONCEPTS;
+
+    <chapter id="cha-plugins">
+      <title>Plugins</title>
+      <para>
+        Extensions to &GStreamer; can be made using a plugin mechanism.  This is
+        used extensively in &GStreamer; even if only the standard package is
+        being used: a few very basic functions reside in the core library, and
+        all others are implemented in plugins.
+      </para>
+      <para>
+        Plugins are only loaded when needed: a plugin registry is used to
+        store the details of the plugins so that it is not neccessary to load
+        all plugins to determine which are needed.
+        This registry needs to be updated whenever a new plugin is added to the
+        system: see the <emphasis>gstreamer-register</emphasis> utility and the
+        documentation in the <emphasis>GStreamer Application Development
+        Manual</emphasis> for more details.
+      </para>
+      <para>
+        User extensions to &GStreamer; can be installed in the main plugin
+        directory, and will immediately be available for use in applications.
+        <emphasis>gstreamer-register</emphasis> should be run to update
+        the repository: but the system should work correctly even if it hasn't
+        been - it will just take longer to load the correct plugin.
+      </para>
+      <para>
+        User specific plugin directories and registries will be available
+	in future versions of &GStreamer.
+      </para>
+    </chapter>
+
+    <chapter id="cha-elements">
+      <title>Elements</title>
+      <para>
+        Elements are at the core of &GStreamer;.  Without elements, &GStreamer;
+	is just
+        a bunch of pipe fittings with nothing to connect.  A large number of
+        elements (filters, sources and sinks) ship with &GStreamer;, but extra
+        elements can also be written.
+      </para>
+      <para>
+        An element may be constructed in several different ways, but all must
+        conform to the same basic rules.  A simple filter may be built with the
+        FilterFactory, where the only code that need be written is the actual
+        filter code.  A more complex filter, or a source or sink, will need to be
+        written out fully for complete access to the features and performance
+        possible with &GStreamer;.
+      </para>
+      <para>
+        The implementation of a new element will be contained in a plugin:
+        a single plugin may contain the implementation of several elements, or
+        just a single one.
+      </para>
+    </chapter>
+
+    <chapter id="cha-buffers">
+      <title>Buffers</title>
+      <para>
+        Buffers are structures used to pass data between elements.  All streams
+        of data are chopped up into chunks which are stored in buffers.
+        Buffers can be of any size, and also contain metadata indicating the
+        type of data contained in them.
+      </para>
+    </chapter>
+
+    <chapter id="cha-typing">
+      <title>Typing and Properties</title>
+      <para>
+        A type system is used to ensure that the data passed between elements
+	is in a recognised format, and that the various parameters required
+	to fully specify that format match up correctly.  Each connection
+	that is made between elements has a specified type.  This is related,
+	but different, to the metadata in buffers which describes the type
+	of data in that particular buffer.
+      </para>
+    </chapter>
+
+    <chapter id="cha-metadata">
+      <title>Metadata</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-scheduling">
+      <title>Scheduling</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-chainloop">
+      <title>Chain vs Loop Elements</title>
+      <para>
+      </para>
+    </chapter>
 
   </part>
 
@@ -119,10 +213,149 @@
   <part id="typesnprops"><title>Types and Properties</title>
     <partintro>
       <para>
+        There is a very large set of possible types that may be used to
+	pass data between elements.  Indeed, each new element that is defined
+	may use a new data format (though unless at least one other element
+	recognises that format, it will be most likely be useless since
+	nothing will be able to link with it).
+      </para>
+      <para>
+	In order for types to be useful, and for systems like autopluggers to
+	work, it is neccessary that all elements
+	agree on the type definitions, and which properties are required
+	for each type.  The GStreamer framework itself
+	simply provides the ability to define types and parameters, but does
+	not fix the meaning of types and parameters, and does not enforce
+	standards on the creation of new types.  This is a matter for
+	a policy to decide, not technical systems to enforce.
+      </para>
+      <para>
+        For now, the policy is simple:
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      Do not create a new type if you could use one which already
+	      exists.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      If creating a new type, discuss it first with the other
+	      GStreamer developers, on at least one of: IRC, mailing lists,
+	      the GStreamer wiki.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Try to ensure that the name for a new format is as unlikely to
+	      conflict with anything else created already, and is not a more
+	      generalised name than it should be.  For example:
+	      "audio/compressed" would be too generalised a name to represent
+	      audio data compressed with an mp3 codec.  Instead "audio/mp3"
+	      might be an appropriate name, or "audio/compressed" could exist
+	      and have a property indicating the type of compression used.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Ensure that, when you do create a new type, you specify it
+	      clearly, and get it added to the list of known types so that
+	      other developers can use the type correctly when writing their
+	      elements.
+	    </para>
+	  </listitem>
+	</itemizedlist>
       </para>
     </partintro>
 
-      &TYPESNPROPS;
+    <chapter id="cha-basic-types">
+      <title>The basic types</title>
+      <para>
+        This is a list of the basic types used for buffers.  For each type, we
+	give the name ("mime type") of the type, the list of properties which
+	are associated with the type, the meaning of each property, and the
+	purpose of the type.
+      </para>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>audio/raw</emphasis>
+	    - Unstructured and uncompressed raw audio data.
+	  </para><para>
+	    <emphasis>law</emphasis>
+	    - The law used to describe the data.  This is an integer for which
+	    there are three valid values: 0 for linear, 1 for
+	    mu law, 2 for A law.
+	  </para><para>
+	    <emphasis>endianness</emphasis>
+	    - The order of bytes in a sample.  This is an integer for
+	    which there are two valid values: 0 for little-endian (ie, bytes
+	    are least significant first), 1 for big-endian (ie, most
+	    significant byte first).
+	  </para><para>
+	    <emphasis>signed</emphasis>
+	    - Whether the samples are signed or not.  This is an integer
+	    for which there are two valid values: 0 for unsigned, 1 for
+	    signed.
+	  </para><para>
+	    <emphasis>width</emphasis>
+	    - The number of bits per sample.  This is extremely likely to be
+	    a multiple of 8, but as ever this is up to each element supporting
+	    this format to specify.
+	  </para><para>
+	    <emphasis>depth</emphasis>
+	    - The number of bits used per sample.  This must be less than or
+	    equal to the width: if less than the width, the low bits are
+	    assumed to be the ones used.  For example, width=32, depth=24
+	    means that each sample is stored in a 32 bit word, but only the
+	    low 24 bits are actually used.
+	  </para><para>
+	    <emphasis>rate</emphasis>
+	    - The sample rate of the data, in samples per second.
+	  </para><para>
+	    <emphasis>channels</emphasis>
+	    - The number of channels of audio data.
+	  </para>
+	  <para>
+	    For example: 16 bit, unsigned, linear, monophonic, big-endian,
+	    44100KHz audio would be represented by
+	    "law=0,endianness=1,signed=0,width=16,depth=16,rate=44100,channels=1"
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>audio/mp3</emphasis>
+	  </para>
+        </listitem>
+      </itemizedlist>
+    </chapter>
+
+    <chapter id="cha-types-test">
+      <title>Building a simple format for testing</title>
+      <para>
+      </para>
+    </chapter>
+    
+    <chapter id="cha-types-simplemime">
+      <title>A simple MIME type</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-types-props">
+      <title>Type properties</title>
+      <para>
+      </para>
+    </chapter>
+
+    <chapter id="cha-types-typefind">
+      <title>Typefind functions and autoplugging</title>
+      <para>
+      </para>
+    </chapter>
+
   </part>
 
 <!-- ############ part ############# -->

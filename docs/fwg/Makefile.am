@@ -4,11 +4,9 @@ htmlname = index.html
 sgml_files = gst-plugin-writers-guide.sgml \
 	     titlepage.sgml \
 	     intro.sgml \
-	     concepts.sgml \
 	     firstplugin.sgml \
 	     testapp.sgml \
-	     loopbased.sgml \
-	     typesnprops.sgml
+	     loopbased.sgml
 
 fig_files = 
 eps_files = 
