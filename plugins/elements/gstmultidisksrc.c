@@ -240,7 +240,7 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
   src->fd = open ((const char *) src->currentfilename, O_RDONLY);
 
   if (src->fd < 0) {
-      gst_element_error (src, RESOURCE, OPEN_READ,
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
                          (_("Could not open file \"%s\" for reading"), src->currentfilename),
                          GST_ERROR_SYSTEM);
     return FALSE;
@@ -255,7 +255,7 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
     /* collapse state if that failed */
     if (src->map == NULL) {
       close (src->fd);
-      gst_element_error (src, RESOURCE, TOO_LAZY,
+      GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY,
                          NULL,
                          ("mmap call failed"));
       return FALSE;

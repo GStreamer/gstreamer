@@ -561,7 +561,7 @@ restart:
 	    if (!queue->may_deadlock) {
               g_mutex_unlock (queue->qlock);
               gst_data_unref (data);
-              gst_element_error (queue, CORE, THREAD, NULL,
+              GST_ELEMENT_ERROR (queue, CORE, THREAD, NULL,
 				 ("deadlock found, shutting down source pad elements"));
 	      /* we don't go to out_unref here, since we want to
                * unref the buffer *before* calling GST_ELEMENT_ERROR */
@@ -676,7 +676,7 @@ restart:
         /* this means the other end is shut down */
         if (!queue->may_deadlock) {
           g_mutex_unlock (queue->qlock);
-          gst_element_error (queue, CORE, THREAD, NULL,
+          GST_ELEMENT_ERROR (queue, CORE, THREAD, NULL,
 			    ("deadlock found, shutting down sink pad elements"));
           goto restart;
         } else {

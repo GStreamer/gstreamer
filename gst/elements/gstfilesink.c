@@ -233,14 +233,14 @@ gst_filesink_open_file (GstFileSink *sink)
   /* open the file */
   if (!sink->filename)
   {
-    gst_element_error (sink, RESOURCE, NOT_FOUND,
+    GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
 		         (_("No filename specified")), NULL);
     return FALSE;
   }
 
   sink->file = fopen (sink->filename, "w");
   if (sink->file == NULL) {
-    gst_element_error (sink, RESOURCE, OPEN_WRITE,
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
                          (_("Could not open file \"%s\" for writing"), sink->filename),
                          GST_ERROR_SYSTEM);
     return FALSE;
@@ -260,7 +260,7 @@ gst_filesink_close_file (GstFileSink *sink)
 
   if (fclose (sink->file) != 0)
   {
-    gst_element_error (sink, RESOURCE, CLOSE,
+    GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
 		       (_("Error closing file \"%s\""), sink->filename),
                        GST_ERROR_SYSTEM);
   }
@@ -327,7 +327,7 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
 
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
         if (fflush (filesink->file))
-          gst_element_error (filesink, RESOURCE, WRITE,
+          GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
 			     (_("Error while writing to file \"%s\""), filesink->filename),
 			     GST_ERROR_SYSTEM);
 
@@ -359,7 +359,7 @@ gst_filesink_handle_event (GstPad *pad, GstEvent *event)
     }
     case GST_EVENT_FLUSH:
       if (fflush (filesink->file)) {
-          gst_element_error (filesink, RESOURCE, WRITE,
+          GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
 			     (_("Error while writing to file \"%s\""), filesink->filename),
 			     GST_ERROR_SYSTEM);
       }
@@ -411,7 +411,7 @@ gst_filesink_chain (GstPad *pad, GstData *_data)
 			     GST_BUFFER_SIZE (buf) - bytes_written,
 			     filesink->file);
       if (wrote <= 0) {
-        gst_element_error (filesink, RESOURCE, WRITE,
+        GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
 			     (_("Error while writing to file \"%s\""), filesink->filename),
 			      ("Only %d of %d bytes written: %s",
 			       bytes_written, GST_BUFFER_SIZE (buf),

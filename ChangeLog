@@ -11,6 +11,34 @@
 
 2004-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* gst/autoplug/gstspideridentity.c:
+	(gst_spider_identity_sink_loop_type_finding):
+	* gst/elements/gstfakesink.c: (gst_fakesink_change_state):
+	* gst/elements/gstfilesink.c: (gst_filesink_open_file),
+	(gst_filesink_close_file), (gst_filesink_handle_event),
+	(gst_filesink_chain):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_map_region),
+	(gst_filesrc_get_read), (gst_filesrc_open_file):
+	* gst/elements/gstidentity.c: (gst_identity_chain):
+	* gst/elements/gstmultidisksrc.c: (gst_multidisksrc_open_file):
+	* gst/elements/gstpipefilter.c: (gst_pipefilter_get),
+	(gst_pipefilter_chain), (gst_pipefilter_open_file):
+	* gst/elements/gsttypefind.c: (gst_type_find_element_chain):
+	* gst/gstelement.h:
+	* gst/gstpad.c: (gst_pad_set_explicit_caps),
+	(gst_pad_recover_caps_error), (gst_pad_pull):
+	* gst/gstqueue.c: (gst_queue_chain), (gst_queue_get):
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_chainhandler_proxy),
+	(gst_basic_scheduler_gethandler_proxy),
+	(gst_basic_scheduler_cothreaded_chain):
+          gst_element_error -> GST_ELEMENT_ERROR
+
+2004-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/Makefile.am:
 	* docs/gst/tmpl/gstelement.sgml:
 	* docs/gst/tmpl/gstxml.sgml:

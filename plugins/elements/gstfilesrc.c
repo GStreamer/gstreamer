@@ -394,7 +394,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   mmapregion = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
 
   if (mmapregion == NULL) {
-    gst_element_error (src, RESOURCE, TOO_LAZY,
+    GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY,
 	               NULL,
                        ("mmap call failed"));
     return NULL;
@@ -641,13 +641,13 @@ gst_filesrc_get_read (GstFileSrc *src)
 
   ret = read (src->fd, GST_BUFFER_DATA (buf), readsize);
   if (ret < 0){
-    gst_element_error (src, RESOURCE, READ,
+    GST_ELEMENT_ERROR (src, RESOURCE, READ,
 	               NULL,
                        GST_ERROR_SYSTEM);
     return NULL;
   }
   if (ret < readsize) {
-    gst_element_error (src, RESOURCE, READ,
+    GST_ELEMENT_ERROR (src, RESOURCE, READ,
 	               NULL,
                        ("unexpected end of file"));
     return NULL;
@@ -725,7 +725,7 @@ gst_filesrc_open_file (GstFileSrc *src)
 
   if (src->filename == NULL)
   {
-    gst_element_error (src, RESOURCE, NOT_FOUND,
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
 	                 (_("No filename specified")),
                          NULL);
     return FALSE;
@@ -733,7 +733,7 @@ gst_filesrc_open_file (GstFileSrc *src)
 
   if (src->filename == NULL)
   {
-    gst_element_error (src, RESOURCE, NOT_FOUND,
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
 	                 (_("No file specified for reading")),
                          NULL);
     return FALSE;
@@ -747,9 +747,9 @@ gst_filesrc_open_file (GstFileSrc *src)
   if (src->fd < 0)
   {
     if (errno == ENOENT)
-      gst_element_error (src, RESOURCE, NOT_FOUND, NULL, NULL);
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, NULL, NULL);
     else
-      gst_element_error (src, RESOURCE, OPEN_READ,
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
 	                 (_("Could not open file \"%s\" for reading"), src->filename),
                          GST_ERROR_SYSTEM);
     return FALSE;
@@ -760,7 +760,7 @@ gst_filesrc_open_file (GstFileSrc *src)
     fstat(src->fd, &stat_results);
 
     if (!S_ISREG(stat_results.st_mode)) {
-      gst_element_error (src, RESOURCE, OPEN_READ,
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
 	                   (_("File \"%s\" isn't a regular file"), src->filename),
                            NULL);
       close(src->fd);

@@ -8357,6 +8357,20 @@ of an element he doesn't need anymore.
 @a: 
 @b: 
 
+<!-- ##### MACRO gst_element_error ##### -->
+<para>
+
+</para>
+
+@el: 
+@domain: 
+@code: 
+@message: 
+@debug: 
+@element: 
+@error: 
+@Varargs: 
+
 <!-- ##### FUNCTION gst_element_factory_add_pad_template ##### -->
 <para>
 

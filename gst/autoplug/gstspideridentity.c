@@ -498,7 +498,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   }
   if (find.best_probability > 0)
     goto plug;
-  gst_element_error (ident, STREAM, TYPE_NOT_FOUND, NULL, NULL);
+  GST_ELEMENT_ERROR (ident, STREAM, TYPE_NOT_FOUND, NULL, NULL);
   find.buffer = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 
 end:

@@ -166,7 +166,7 @@ gst_identity_chain (GstPad *pad, GstData *_data)
     identity->error_after--;
     if (identity->error_after == 0) {
       gst_buffer_unref (buf);
-      gst_element_error (identity, CORE, FAILED,
+      GST_ELEMENT_ERROR (identity, CORE, FAILED,
                            (_("Failed after iterations as requested")),
                            NULL);
       return;
