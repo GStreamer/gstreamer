@@ -256,7 +256,7 @@ GST_PLUGINS_ALL="\
         monoscope oneton passthrough playondemand qtdemux \
 	realmedia rtp rtjpeg silence sine smooth smpte \
 	spectrum speed stereo synaesthesia udp vbidec \
-	videocrop videoflip videoscale videotestsrc \
+	videocrop videofilter videoflip videoscale videotestsrc \
 	volenv volume wavenc wavparse y4m"
 
 dnl see if we can build C++ plug-ins
@@ -838,6 +838,15 @@ GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
   AC_SUBST(MPEG2DEC_LIBS)
 ])
 
+dnl *** pango ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
+GST_CHECK_FEATURE(PANGO, [pango], pango, [
+  PKG_CHECK_MODULES(PANGO, pango pangoft2,
+      HAVE_PANGO="yes", HAVE_PANGO="no")
+  AC_SUBST(PANGO_CFLAGS)
+  AC_SUBST(PANGO_LIBS)
+])
+
 dnl *** raw1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RAW1394, true)
 GST_CHECK_FEATURE(RAW1394, [raw1394 library], dv1394src, [
@@ -1170,6 +1179,7 @@ gst/synaesthesia/Makefile
 gst/udp/Makefile
 gst/vbidec/Makefile
 gst/videocrop/Makefile
+gst/videofilter/Makefile
 gst/videoflip/Makefile
 gst/videoscale/Makefile
 gst/videotestsrc/Makefile
@@ -1219,6 +1229,7 @@ ext/mad/Makefile
 ext/mas/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
+ext/pango/Makefile
 ext/raw1394/Makefile
 ext/sdl/Makefile
 ext/shout/Makefile
