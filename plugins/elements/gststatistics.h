@@ -29,7 +29,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_statistics_details;
+extern GstElementDetails gst_statistics_details;
 
 
 #define GST_TYPE_STATISTICS \

@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_shaper_details;
+extern GstElementDetails gst_shaper_details;
 
 
 #define GST_TYPE_SHAPER \

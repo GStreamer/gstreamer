@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_fakesrc_details;
+extern GstElementDetails gst_fakesrc_details;
 
 typedef enum {
   FAKESRC_FIRST_LAST_LOOP = 1,

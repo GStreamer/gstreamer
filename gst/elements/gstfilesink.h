@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_filesink_details;
+extern GstElementDetails gst_filesink_details;
 
 
 #define GST_TYPE_FILESINK \

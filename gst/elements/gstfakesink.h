@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_fakesink_details;
+extern GstElementDetails gst_fakesink_details;
 
 
 #define GST_TYPE_FAKESINK \

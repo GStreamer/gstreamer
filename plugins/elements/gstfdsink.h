@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_fdsink_details;
+extern GstElementDetails gst_fdsink_details;
 
 
 #define GST_TYPE_FDSINK \

@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_identity_details;
+extern GstElementDetails gst_identity_details;
 
 
 #define GST_TYPE_IDENTITY \

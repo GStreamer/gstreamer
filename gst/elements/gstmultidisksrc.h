@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_multidisksrc_details;
+extern GstElementDetails gst_multidisksrc_details;
 
 #define GST_TYPE_MULTIDISKSRC \
   (gst_multidisksrc_get_type())

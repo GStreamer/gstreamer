@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_fdsrc_details;
+extern GstElementDetails gst_fdsrc_details;
 
 
 #define GST_TYPE_FDSRC \

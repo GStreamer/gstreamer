@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GstElementDetails gst_spider_identity_details;
+extern GstElementDetails gst_spider_identity_details;
 
 
 #define GST_TYPE_SPIDER_IDENTITY \
