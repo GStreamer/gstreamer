@@ -124,6 +124,18 @@ typedef enum {
   GST_PAD_QUERY_JITTER,
   GST_PAD_QUERY_SEGMENT_END
 } GstPadQueryType;
+
+#define GST_PAD_QUERY_TYPE_FUNCTION(functionname, a...) \
+static const GstPadQueryType*                           \
+functionname (GstPad *pad)                              \
+{                                                       \
+  static const GstPadQueryType types[] = {              \
+    a,                                                  \
+    0                                              	\
+  };                                                    \
+  return types;                                         \
+}
+
  
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)

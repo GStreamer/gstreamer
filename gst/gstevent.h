@@ -74,6 +74,17 @@ typedef struct
   GstEventFlag 	flags;
 } GstEventMask;
 
+#define GST_EVENT_MASK_FUNCTION(functionname, a...)     \
+static const GstEventMask*                              \
+functionname (GstPad *pad)                            	\
+{                                               	\
+  static const GstEventMask masks[] = {                 \
+    a,							\
+    { 0, }						\
+  };                                             	\
+  return masks;                                  	\
+}
+
 /* seek events, extends GstEventFlag */
 typedef enum {
   GST_SEEK_METHOD_CUR		= (1 << (GST_SEEK_METHOD_SHIFT + 0)),

@@ -39,6 +39,18 @@ typedef enum {
   GST_FORMAT_UNITS 	= 6,
 } GstFormat;
 
+#define GST_FORMATS_FUNCTION(functionname, a...)     \
+static const GstFormat*                              \
+functionname (GstPad *pad)                           \
+{                                                    \
+  static const GstFormat formats[] = {               \
+    a,                                               \
+    0                                                \
+  };                                                 \
+  return formats;                                    \
+}
+
+
 G_END_DECLS
 
 #endif /* __GST_FORMAT_H__ */
