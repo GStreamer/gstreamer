@@ -1,0 +1,210 @@
+<!-- ##### SECTION Title ##### -->
+gstcontrol
+
+<!-- ##### SECTION Short_Description ##### -->
+Dynamic parameter functionality
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gst_control_init ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+
+
+<!-- ##### FUNCTION gst_dpman_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_add_required_dparam_callback ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@param_spec: 
+@unit_name: 
+@update_func: 
+@update_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_add_required_dparam_direct ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@param_spec: 
+@unit_name: 
+@update_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_add_required_dparam_array ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@param_spec: 
+@unit_name: 
+@update_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_remove_required_dparam ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@dparam_name: 
+
+
+<!-- ##### FUNCTION gst_dpman_attach_dparam ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@dparam_name: 
+@dparam: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_detach_dparam ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@dparam_name: 
+
+
+<!-- ##### FUNCTION gst_dpman_get_dparam ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_get_dparam_type ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_register_mode ##### -->
+<para>
+
+</para>
+
+@klass: 
+@modename: 
+@preprocessfunc: 
+@processfunc: 
+@setupfunc: 
+@teardownfunc: 
+
+
+<!-- ##### FUNCTION gst_dpman_set_mode ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@modename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_set_parent ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@parent: 
+
+
+<!-- ##### FUNCTION gst_dpman_get_manager ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dpman_bypass_dparam ##### -->
+<para>
+
+</para>
+
+@dpman: 
+@dparam_name: 
+
+
+<!-- ##### FUNCTION gst_dparam_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_dparam_attach ##### -->
+<para>
+
+</para>
+
+@dparam: 
+@manager: 
+@param_spec: 
+@unit_name: 
+
+
+<!-- ##### FUNCTION gst_dparam_detach ##### -->
+<para>
+
+</para>
+
+@dparam: 
+
+
+<!-- ##### FUNCTION gst_dparam_do_update_default ##### -->
+<para>
+
+</para>
+
+@dparam: 
+@timestamp: 
+@value: 
+@update_info: 
+
+

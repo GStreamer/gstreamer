@@ -1,0 +1,561 @@
+<!-- ##### SECTION Title ##### -->
+gstgetbits
+
+<!-- ##### SECTION Short_Description ##### -->
+Accelerated routines for getting bits from a data stream
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT gst_getbits_t ##### -->
+<para>
+
+</para>
+
+@ptr: 
+@longptr: 
+@endptr: 
+@length: 
+@bits: 
+@dword: 
+@temp: 
+@callback: 
+@data: 
+@get1bit: 
+@getbits: 
+@getbits_fast: 
+@getbyte: 
+@show1bit: 
+@showbits: 
+@flushbits: 
+@backbits: 
+
+<!-- ##### USER_FUNCTION GstGetbitsCallback ##### -->
+<para>
+
+</para>
+
+@gb: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_getbits_init ##### -->
+<para>
+
+</para>
+
+@gb: 
+@callback: 
+@data: 
+
+
+<!-- ##### FUNCTION gst_getbits_newbuf ##### -->
+<para>
+
+</para>
+
+@gb: 
+@buffer: 
+@Param3: 
+
+
+<!-- ##### MACRO gst_getbits_bitoffset ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits_align_byte ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits_bufferpos ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits_bytesleft ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits_bitsleft ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbyte ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits_fastn ##### -->
+<para>
+
+</para>
+
+@gb: 
+@n: 
+
+
+<!-- ##### MACRO gst_getbitsn ##### -->
+<para>
+
+</para>
+
+@gb: 
+@num: 
+
+
+<!-- ##### MACRO gst_getbits1 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits2 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits3 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits4 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits5 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits6 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits7 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits8 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits9 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits10 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits11 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits12 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits13 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits14 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits15 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits16 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits17 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits18 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits19 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits20 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits21 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits22 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_getbits23 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbitsn ##### -->
+<para>
+
+</para>
+
+@gb: 
+@num: 
+
+
+<!-- ##### MACRO gst_showbits1 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits2 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits3 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits4 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits5 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits6 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits7 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits8 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits9 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits10 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits11 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits12 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits13 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits14 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits15 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits16 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits17 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits18 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits19 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits20 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits21 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits22 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits23 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits24 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_showbits32 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_flushbitsn ##### -->
+<para>
+
+</para>
+
+@gb: 
+@num: 
+
+
+<!-- ##### MACRO gst_flushbits32 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
+<!-- ##### MACRO gst_backbitsn ##### -->
+<para>
+
+</para>
+
+@gb: 
+@num: 
+
+
+<!-- ##### MACRO gst_backbits24 ##### -->
+<para>
+
+</para>
+
+@gb: 
+
+
