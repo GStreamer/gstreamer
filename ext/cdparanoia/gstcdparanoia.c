@@ -156,6 +156,8 @@ cdparanoia_class_init (CDParanoiaClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  char *success = strerror_tr[0];
+  success = NULL;
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;

@@ -373,8 +373,10 @@ gst_adder_loop (GstElement *element)
   GSList               *inputs;
   GstAdderInputChannel *input;
 
-  gint8     *raw_in, *zero_out;
+  gint8     *zero_out;
+  guint8    *raw_in;
   guint32    waiting;
+  guint32    got_bytes;
   register guint i;
 
   g_return_if_fail (element != NULL);
@@ -410,9 +412,10 @@ gst_adder_loop (GstElement *element)
       
       /* get data from the bytestream of each input channel. we need to check for
          events before passing on the data to the output buffer. */
-      raw_in = gst_bytestream_peek_bytes (input->bytestream, GST_BUFFER_SIZE (buf_out));
+      got_bytes = gst_bytestream_peek_bytes (input->bytestream, &raw_in, GST_BUFFER_SIZE (buf_out));
 
-      if (raw_in == NULL) {
+      /* FIXME we should do something with the data if got_bytes is more than zero */
+      if (got_bytes < GST_BUFFER_SIZE(buf_out)) {
         /* we need to check for an event. */
         gst_bytestream_get_status (input->bytestream, &waiting, &event);
 
