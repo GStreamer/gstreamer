@@ -111,7 +111,7 @@ PKG_CHECK_MODULES(XML, libxml-2.0, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
 if test "x$HAVE_LIBXML2" = "xyes"; then
   AC_DEFINE(HAVE_LIBXML2)
 else
-  AC_ERROR([Need libxml2 for glib2 builds -- you should be able to do without it -- this needs fixing])
+  AC_MSG_ERROR([Need libxml2 for glib2 builds -- you should be able to do without it -- this needs fixing])
 fi
 AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
