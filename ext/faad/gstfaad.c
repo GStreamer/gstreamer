@@ -93,7 +93,7 @@ static GstElementStateReturn
                 gst_faad_change_state (GstElement   *element);
 
 static GstElementClass *parent_class = NULL;
-/* static guint gst_lame_signals[LAST_SIGNAL] = { 0 }; */
+/* static guint gst_faad_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_faad_get_type (void)
@@ -157,6 +157,8 @@ gst_faad_init (GstFaad *faad)
   faad->samplerate = -1;
   faad->channels = -1;
 
+  GST_FLAG_SET (faad, GST_ELEMENT_EVENT_AWARE);
+
   faad->sinkpad = gst_pad_new_from_template (
 	GST_PAD_TEMPLATE_GET (sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
@@ -167,7 +169,12 @@ gst_faad_init (GstFaad *faad)
 	GST_PAD_TEMPLATE_GET (src_template), "src");
   gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
   gst_pad_set_link_function (faad->srcpad, gst_faad_srcconnect);
-  gst_pad_set_getcaps_function (faad->srcpad, gst_faad_srcgetcaps);
+
+  /* This was originally intended as a getcaps() function, but
+   * in the end, we needed a srcconnect() function, so this is
+   * not really useful. However, srcconnect() uses it, so it is
+   * still there... */
+  /*gst_pad_set_getcaps_function (faad->srcpad, gst_faad_srcgetcaps);*/
 }
 
 static GstPadLinkReturn
@@ -330,16 +337,14 @@ gst_faad_srcconnect (GstPad  *pad,
 
       conf = faacDecGetCurrentConfiguration (faad->handle);
       conf->outputFormat = fmt;
-      conf->defObjectType = LC;
-      conf->defSampleRate = faad->samplerate;
       faacDecSetConfiguration (faad->handle, conf);
       /* FIXME: handle return value, how? */
 
       newcaps = gst_faad_srcgetcaps (pad, NULL);
       g_assert (GST_CAPS_IS_FIXED (newcaps));
       if (gst_pad_try_set_caps (pad, newcaps) > 0) {
-        faad->bps = depth * faad->channels / 8;
-        return GST_PAD_LINK_OK;
+        faad->bps = depth / 8;
+        return GST_PAD_LINK_DONE;
       }
     }
   }
@@ -406,7 +411,7 @@ gst_faad_chain (GstPad  *pad,
     if (gst_faad_srcconnect (faad->srcpad,
 			     gst_pad_get_allowed_caps (faad->srcpad)) <= 0) {
       gst_element_error (GST_ELEMENT (faad),
-			 "Failed to negotiate format with next element");
+			 "Failed to re-negotiate format with next element");
       gst_buffer_unref (buf);
       return;
     }
