@@ -433,9 +433,13 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
         outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
         len = avcodec_decode_audio (ffmpegdec->context,
             (int16_t *) GST_BUFFER_DATA (outbuf), &have_data, data, size);
-        if (have_data < 0)
-          GST_WARNING_OBJECT (ffmpegdec, "len %d, have_data: %d < 0 !",
+        if (have_data < 0) {
+          GST_WARNING_OBJECT (ffmpegdec,
+              "FFmpeg error: len %d, have_data: %d < 0 !",
               len, have_data);
+          gst_buffer_unref (inbuf);
+          return;
+        }
 
         if (have_data) {
           GST_BUFFER_SIZE (outbuf) = have_data;
