@@ -1,7 +1,7 @@
 include ../Rules
 
 tests_pass = thread1 thread2 thread3 thread4 thread5 threade threadf signal1
-tests_fail = 159566 signal2 signal3
+tests_fail = 159566 signal2 signal3 159852
 
 # threadh
 
