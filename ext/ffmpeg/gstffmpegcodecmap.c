@@ -709,7 +709,7 @@ gst_ffmpeg_caps_to_smpfmt (GstCaps        *caps,
 
   if (gst_caps_has_property_typed (caps, "channels",
 				   GST_PROPS_INT_TYPE)) {
-    gst_caps_get_int (caps, "rate", &context->channels);
+    gst_caps_get_int (caps, "channels", &context->channels);
   }
 
   if (gst_caps_has_property_typed (caps, "rate",
