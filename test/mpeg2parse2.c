@@ -72,13 +72,13 @@ int main(int argc,char *argv[]) {
    *  sure to remove the pad connections too and don't add the
    *  mp2videoparse element to the bin.
    **/
-  parse2 = gst_elementfactory_make("mp2videoparse","parse");
-  g_return_if_fail(parse2 != NULL);
-  decode = gst_elementfactory_make("mpeg2play","decode_video");
+  //parse2 = gst_elementfactory_make("mp2videoparse","parse");
+  //g_return_if_fail(parse2 != NULL);
+  decode = gst_elementfactory_make("mpeg2dec","decode_video");
   g_return_if_fail(decode != NULL);
 
   show = gst_elementfactory_make("videosink","show");
-  gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
+  //gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
   g_return_if_fail(show != NULL);
 
   appwindow = gnome_app_new("MPEG player","MPEG player");
@@ -90,7 +90,7 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(queue));
 
-  gst_bin_add(GST_BIN(thread),GST_ELEMENT(parse2));
+  //gst_bin_add(GST_BIN(thread),GST_ELEMENT(parse2));
   gst_bin_add(GST_BIN(thread),GST_ELEMENT(decode));
   gst_bin_add(GST_BIN(thread),GST_ELEMENT(show));
 
@@ -104,8 +104,8 @@ int main(int argc,char *argv[]) {
                   gst_element_get_pad(parse,"sink"));
 
   gst_pad_connect(gst_element_get_pad(queue,"src"),
-                  gst_element_get_pad(parse2,"sink"));
-  gst_pad_connect(gst_element_get_pad(parse2,"src"),
+  //                gst_element_get_pad(parse2,"sink"));
+  //gst_pad_connect(gst_element_get_pad(parse2,"src"),
                   gst_element_get_pad(decode,"sink"));
   gst_pad_connect(gst_element_get_pad(decode,"src"),
                   gst_element_get_pad(show,"sink"));
