@@ -5,13 +5,6 @@ Makefile.in
 *.la
 .deps
 .libs
-
-gstreamer-launch
-gstreamer-register
-gstreamer-inspect
-gstreamer-compprep
-gstreamer-complete
-gstreamer-guilaunch
 *.xml
 gst-complete
 gst-compprep
@@ -19,3 +12,4 @@ gst-inspect
 gst-launch
 gst-register
 gst-xmllaunch
+gst-md5sum
