@@ -1,3 +1,14 @@
+2004-07-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
+	(gst_multifdsink_add), (gst_multifdsink_get_stats),
+	(gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_queue_buffer):
+	* gst/tcp/gstmultifdsink.h:
+	More multifdsink stats. Avoid deadlock by releasing locks
+	before sending out a signal.
+
 2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:
