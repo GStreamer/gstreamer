@@ -1042,7 +1042,6 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 gboolean
 gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
 {
-  GstCaps *oldcaps;
   GstRealPad *peer, *realpad;
 
   realpad = GST_PAD_REALIZE (pad);
@@ -1169,6 +1168,7 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
 {
   GstCaps *intersection;
   GstRealPad *realsrc, *realsink;
+  GstCaps *srccaps, *sinkcaps;
 
   g_return_val_if_fail (srcpad != NULL, FALSE);
   g_return_val_if_fail (sinkpad != NULL, FALSE);
@@ -1179,8 +1179,14 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
   g_return_val_if_fail (GST_RPAD_PEER (realsrc) != NULL, FALSE);
   g_return_val_if_fail (GST_RPAD_PEER (realsink) == realsrc, FALSE);
 
-  /* it doesn't matter which filter we take */
-  intersection = GST_RPAD_FILTER (realsrc);
+  /* calculate the new caps here */
+  srccaps = gst_pad_get_caps (GST_PAD (realsrc));
+  GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsrc));
+  gst_caps_debug (srccaps);
+  sinkcaps = gst_pad_get_caps (GST_PAD (realsink));
+  GST_INFO (GST_CAT_PADS, "dumping caps of pad %s:%s", GST_DEBUG_PAD_NAME (realsink));
+  gst_caps_debug (sinkcaps);
+  intersection = gst_caps_intersect (srccaps, sinkcaps);
 
   /* no negotiation is performed it the pads have filtercaps */
   if (intersection) {
@@ -1454,14 +1460,16 @@ gst_pad_recalc_allowed_caps (GstPad *pad)
 {
   GstRealPad *peer;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_DEBUG (GST_CAT_PROPERTIES, "set allowed caps of %s:%s\n", GST_DEBUG_PAD_NAME (pad));
 
   peer = GST_RPAD_PEER (pad);
   if (peer)
-    gst_pad_try_reconnect_filtered (pad, GST_PAD (peer), GST_RPAD_APPFILTER (pad));
+    return gst_pad_try_reconnect_filtered (pad, GST_PAD (peer), GST_RPAD_APPFILTER (pad));
+
+  return TRUE;
 }
 
 /**
