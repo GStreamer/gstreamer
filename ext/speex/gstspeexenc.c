@@ -151,7 +151,7 @@ gst_speexenc_init (GstSpeexEnc * speexenc)
   gst_element_add_pad (GST_ELEMENT (speexenc), speexenc->srcpad);
 
   speex_bits_init (&speexenc->bits);
-  speexenc->mode = &speex_nb_mode;
+  speexenc->mode = (SpeexMode *) & speex_nb_mode;
   speexenc->bufsize = 0;
   speexenc->packet_count = 0;
   speexenc->n_packets = 20;
