@@ -292,6 +292,12 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
 
+  /* the second most significant bit of the first data byte is cleared
+   * for keyframes */
+  if ((packet->packet[0] & 40) == 0) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_KEY_UNIT);
+  }
+
   enc->packetno++;
 
   return buf;
@@ -419,6 +425,7 @@ theora_enc_chain (GstPad * pad, GstData * data)
     yuv_buffer yuv;
     gint y_size;
     guchar *pixels;
+    gboolean first_packet = TRUE;
 
     pixels = GST_BUFFER_DATA (buf);
 
@@ -438,8 +445,12 @@ theora_enc_chain (GstPad * pad, GstData * data)
 
     theora_encode_YUVin (&enc->state, &yuv);
     while (theora_encode_packetout (&enc->state, 0, &op)) {
-      GstClockTime out_time =
-          theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
+      GstClockTime out_time;
+
+      if (first_packet) {
+        first_packet = FALSE;
+      }
+      out_time = theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
       theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps);
     }
 

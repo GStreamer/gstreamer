@@ -32,7 +32,7 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gsttags"))
     return FALSE;
 
-  if (!gst_element_register (plugin, "theoradec", GST_RANK_SECONDARY,
+  if (!gst_element_register (plugin, "theoradec", GST_RANK_PRIMARY,
           gst_theora_dec_get_type ()))
     return FALSE;
 

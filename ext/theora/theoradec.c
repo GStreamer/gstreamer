@@ -154,7 +154,7 @@ theora_dec_from_granulepos (GstTheoraDec * dec, GstFormat format, guint64 from,
     guint64 * to)
 {
   guint64 framecount;
-  guint ilog = _theora_ilog (dec->info.keyframe_frequency_force);
+  guint ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
 
   if (dec->packetno < 1)
     return FALSE;
@@ -166,15 +166,14 @@ theora_dec_from_granulepos (GstTheoraDec * dec, GstFormat format, guint64 from,
 
   switch (format) {
     case GST_FORMAT_TIME:
-      *to = framecount =
-          from * GST_SECOND * dec->info.fps_denominator /
-          dec->info.fps_numerator;
+      *to = framecount * (GST_SECOND * dec->info.fps_denominator /
+          dec->info.fps_numerator);
       break;
     case GST_FORMAT_DEFAULT:
       *to = framecount;
       break;
     case GST_FORMAT_BYTES:
-      *to = framecount * dec->info.height * dec->info.width * 12 / 8;
+      *to = framecount * dec->info.height * dec->info.width * 3 / 2;
       break;
     default:
       return FALSE;
@@ -219,9 +218,13 @@ theora_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
   GstTheoraDec *dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
   GstFormat my_format = GST_FORMAT_DEFAULT;
 
-  if (!gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, &my_format,
-          &granulepos))
-    return FALSE;
+  if (query == GST_QUERY_POSITION) {
+    granulepos = dec->granulepos;
+  } else {
+    if (!gst_pad_query (GST_PAD_PEER (dec->sinkpad), query, &my_format,
+            &granulepos))
+      return FALSE;
+  }
 
   if (!theora_dec_from_granulepos (dec, *format, granulepos, value))
     return FALSE;
@@ -321,6 +324,7 @@ theora_dec_chain (GstPad * pad, GstData * data)
   GstBuffer *buf;
   GstTheoraDec *dec;
   ogg_packet packet;
+  guint64 offset_end;
 
   dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
   if (GST_IS_EVENT (data)) {
@@ -329,10 +333,16 @@ theora_dec_chain (GstPad * pad, GstData * data)
   }
 
   buf = GST_BUFFER (data);
+
+  offset_end = GST_BUFFER_OFFSET_END (buf);
+  if (offset_end != -1) {
+    dec->granulepos = offset_end;
+  }
+
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buf);
   packet.bytes = GST_BUFFER_SIZE (buf);
-  packet.granulepos = GST_BUFFER_OFFSET_END (buf);
+  packet.granulepos = dec->granulepos;
   packet.packetno = dec->packetno++;
   packet.b_o_s = (packet.packetno == 0) ? 1 : 0;
   packet.e_o_s = 0;
