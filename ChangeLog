@@ -1,3 +1,10 @@
+2004-12-03  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_getcaps),
+	(gst_queue_link), (gst_queue_handle_src_query):
+	Reverted to 1.110 until this makes the testsuite and various
+	apps work.
+
 2004-12-01  Christian Fredrik Kalager Schaller christian@fluendo.com 
 
 	* docs/upload.mak: fix included CVS conflict strings
