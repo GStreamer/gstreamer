@@ -1,3 +1,9 @@
+if USE_AUDIOFILE
+AUDIOFILE_DIR=audiofile
+else
+AUDIOFILE_DIR=
+endif
+
 if USE_ESD
 ESD_DIR=esd
 else
@@ -29,6 +35,7 @@ VORBIS_DIR=
 endif
 
 
-SUBDIRS=$(ESD_DIR) $(LAME_DIR) $(MAD_DIR) $(SDL_DIR) $(VORBIS_DIR)
+SUBDIRS=$(AUDIOFILE_DIR) $(ESD_DIR) $(LAME_DIR) $(MAD_DIR) \
+	$(SDL_DIR) $(VORBIS_DIR)
 
-DIST_SUBDIRS=esd lame mad sdl vorbis
+DIST_SUBDIRS=audiofile esd lame mad sdl vorbis

@@ -5,3 +5,5 @@
   it better ;)
 
 * check SDL optimisation flags
+
+* check GST_* in configure.ac, there is too much in it
