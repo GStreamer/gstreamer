@@ -40,7 +40,7 @@ extern "C" {
 #define GST_IS_PAD(obj)              	(GTK_CHECK_TYPE ((obj), GST_TYPE_PAD))
 #define GST_IS_PAD_CLASS(obj)        	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 
-// quick test to see if the pad is connected
+/* quick test to see if the pad is connected */
 #define GST_PAD_CONNECTED(pad) 		((pad) && (pad)->peer != NULL)
 #define GST_PAD_CAN_PULL(pad) 		((pad) && (pad)->pullfunc != NULL)
 
@@ -101,7 +101,7 @@ struct _GstPad {
   GstObject *parent;
   GList *ghostparents;
 
-  GstPadTemplate *padtemplate;	// the template for this pad
+  GstPadTemplate *padtemplate;	/* the template for this pad */
 };
 
 struct _GstPadClass {

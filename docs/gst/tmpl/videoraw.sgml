@@ -22,19 +22,31 @@ Information about video buffers.
 @meta: 
 @format: 
 @visual: 
+@width: 
 @height: 
+@overlay_info: 
+@dga_info: 
 
 <!-- ##### STRUCT MetaDGA ##### -->
 <para>
 
 </para>
 
+@base: 
+@swidth: 
+@sheight: 
+@bytes_per_line: 
 
 <!-- ##### STRUCT MetaOverlay ##### -->
 <para>
 
 </para>
 
+@wx: 
+@wy: 
+@overlay_element: 
+@clip_count: 
+@overlay_clip: 
 @width: 
 @height: 
 @did_overlay: 

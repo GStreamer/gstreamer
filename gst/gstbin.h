@@ -42,10 +42,10 @@ extern GstElementDetails gst_bin_details;
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN))
 
 typedef enum {
-  // this bin is a manager of child elements, i.e. a pipeline or thread
+  /* this bin is a manager of child elements, i.e. a pipeline or thread */
   GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
 
-  // we prefer to have cothreads when its an option, over chain-based
+  /* we prefer to have cothreads when its an option, over chain-based */
   GST_BIN_FLAG_PREFER_COTHREADS,
 
   /* padding */
@@ -59,11 +59,11 @@ typedef struct __GstBinChain _GstBinChain;
 struct _GstBin {
   GstElement element;
 
-  // our children
+  /* our children */
   gint numchildren;
   GList *children;
 
-  // iteration state
+  /* iteration state */
   gboolean need_cothreads;
   GList *managed_elements;
   gint num_managed_elements;
@@ -128,7 +128,7 @@ gboolean 	gst_bin_set_state_type		(GstBin *bin,
 
 void 		gst_bin_iterate			(GstBin *bin);
 
-// hack FIXME
+/* hack FIXME */
 void 		gst_bin_use_cothreads		(GstBin *bin,
 						 gboolean enabled);
 

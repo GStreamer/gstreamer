@@ -129,6 +129,14 @@ Indicates the cothread is started
 @thread: 
 
 
+<!-- ##### FUNCTION cothread_getcurrent ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION cothread_main ##### -->
 <para>
 

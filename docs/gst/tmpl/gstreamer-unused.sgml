@@ -179,6 +179,12 @@
 
 @Returns: 
 
+<!-- ##### MACRO GST_PROPS_INT_RANGE_ID ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_SINESRC ##### -->
 <para>
 
@@ -241,6 +247,12 @@
 </para>
 
 
+<!-- ##### MACRO GST_PROPS_LIST_ID ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION plugin_load ##### -->
 <para>
 
@@ -268,6 +280,13 @@
 </para>
 
 @connection: 
+
+<!-- ##### MACRO GST_SRC_ASYNC ##### -->
+<para>
+This macro checks to see if the GST_SRC_ASYNC flag is set.
+</para>
+
+@obj: GstSrc to check for flag in.
 
 <!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
 <para>
@@ -323,6 +342,12 @@
 
 @Returns: 
 
+<!-- ##### MACRO GST_PROPS_INT_ID ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### STRUCT GstDiskSrcClass ##### -->
 <para>
 
@@ -359,6 +384,14 @@
 
 @pad: 
 @buf: 
+
+<!-- ##### FUNCTION gst_type_get_sinks ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
 
 <!-- ##### MACRO GST_TYPE_HTTPSRC ##### -->
 <para>
@@ -442,6 +475,14 @@ GstColorSpace
 </para>
 
 @obj: 
+
+<!-- ##### FUNCTION gst_type_get_srcs ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
 
 <!-- ##### FUNCTION plugin_load_absolute ##### -->
 <para>
@@ -672,6 +713,13 @@ This macro unsets the given state on the element.
 </para>
 
 
+<!-- ##### MACRO GST_SRC_FLAGS ##### -->
+<para>
+This macro returns the entire set of flags for the object.
+</para>
+
+@obj: GstSrc to return flags for.
+
 <!-- ##### FUNCTION gst_sink_get_type ##### -->
 <para>
 
@@ -724,6 +772,14 @@ This macro unsets the given state on the element.
 
 </para>
 
+
+<!-- ##### FUNCTION gst_type_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
 
 <!-- ##### FUNCTION gst_plugin_init ##### -->
 <para>
@@ -808,6 +864,14 @@ This macro sets the given state on the element.
 </para>
 
 @klass: 
+
+<!-- ##### ENUM GstCapsDefinition ##### -->
+<para>
+
+</para>
+
+@GST_CAPS_ALWAYS: 
+@GST_CAPS_MAYBE: 
 
 <!-- ##### MACRO GST_DISKSRC ##### -->
 <para>
@@ -927,6 +991,21 @@ plugin
 
 </para>
 
+
+<!-- ##### MACRO GST_PROPS_FOURCC_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_SRC_UNSET_FLAGS ##### -->
+<para>
+This macro usets the given flags.
+</para>
+
+@src: 
+@flag: Flag to set, must be a single bit in guint32.
+@obj: GstSrc to unset flag in.
 
 <!-- ##### FUNCTION gst_audiosink_sync_parms ##### -->
 <para>
@@ -1066,6 +1145,15 @@ This macro checks to see if the given state is set.
 @obj: Element to check for state.
 @flag: State to check for, must be a single bit in guint32.
 
+<!-- ##### FUNCTION gst_type_save_thyself ##### -->
+<para>
+
+</para>
+
+@type: 
+@parent: 
+@Returns: 
+
 <!-- ##### MACRO GST_IS_SINESRC ##### -->
 <para>
 
@@ -1100,6 +1188,15 @@ This macro checks to see if the given state is set.
 
 @obj: 
 
+<!-- ##### MACRO GST_SRC_SET_FLAGS ##### -->
+<para>
+This macro sets the given flags.
+</para>
+
+@src: 
+@flag: Flag to set, can by any number of bits in guint32.
+@obj: GstSrc to set flag in.
+
 <!-- ##### FUNCTION gst_fdsink_get_type ##### -->
 <para>
 
@@ -1112,6 +1209,14 @@ This macro checks to see if the given state is set.
 
 </para>
 
+
+<!-- ##### FUNCTION gst_element_loopfunc_wrapper ##### -->
+<para>
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
 
 <!-- ##### MACRO GST_TYPE_FDSRC ##### -->
 <para>
@@ -1130,6 +1235,15 @@ This macro checks to see if the given state is set.
 
 </para>
 
+
+<!-- ##### FUNCTION gst_type_get_sink_to_src ##### -->
+<para>
+
+</para>
+
+@sinkid: 
+@srcid: 
+@Returns: 
 
 <!-- ##### MACRO GST_TYPE_FAKESRC ##### -->
 <para>
@@ -1177,6 +1291,12 @@ This macro checks to see if the given state is set.
 </para>
 
 
+<!-- ##### ARG GstTypeFind:type ##### -->
+<para>
+Query the element for the current mime type
+</para>
+
+
 <!-- ##### SECTION ./tmpl/GstElement.sgml:Short_Description ##### -->
 
 
@@ -1210,6 +1330,12 @@ This macro checks to see if the given state is set.
 
 @klass: 
 
+<!-- ##### FUNCTION gst_type_dump ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### STRUCT GstAudioSinkClass ##### -->
 <para>
 
@@ -1228,6 +1354,18 @@ This macro checks to see if the given state is set.
 
 </para>
 
+
+<!-- ##### ENUM GstPropsId ##### -->
+<para>
+
+</para>
+
+@GST_PROPS_END_ID_NUM: 
+@GST_PROPS_LIST_ID_NUM: 
+@GST_PROPS_INT_ID_NUM: 
+@GST_PROPS_INT_RANGE_ID_NUM: 
+@GST_PROPS_FOURCC_ID_NUM: 
+@GST_PROPS_BOOL_ID_NUM: 
 
 <!-- ##### STRUCT GstEsdSinkClass ##### -->
 <para>
@@ -1338,6 +1476,12 @@ Get the size of the current file.
 
 @Returns: 
 
+<!-- ##### TYPEDEF GstPropsListFactory[] ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gst_pad_get_type_id ##### -->
 <para>
 
@@ -1422,6 +1566,13 @@ Get the size of the current file.
 
 @audiosink: 
 @frequency: 
+
+<!-- ##### FUNCTION gst_elementfactory_register ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
 
 <!-- ##### MACRO GST_TYPE_QUEUE ##### -->
 <para>
@@ -1540,6 +1691,14 @@ GstElement
 </para>
 
 
+<!-- ##### FUNCTION gst_pad_set_pull_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@pull: 
+
 <!-- ##### STRUCT GstFakeSinkClass ##### -->
 <para>
 
@@ -1554,12 +1713,26 @@ GstElement
 @esdsink: 
 @format: 
 
+<!-- ##### MACRO GST_ELEMENT_IS_MULTI_IN ##### -->
+<para>
+Query whether this object has multiple input pads.
+
+</para>
+
+@obj: Element to query for multiple input pads.
+
 <!-- ##### MACRO GST_DISKSRC_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
+
+<!-- ##### MACRO GST_PROPS_BOOL_ID ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO GST_TYPE_FAKESINK ##### -->
 <para>
@@ -1574,16 +1747,16 @@ GstElement
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
-
-
-
 <!-- ##### FUNCTION gst_audiosrc_push ##### -->
 <para>
 
 </para>
 
 @src: 
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
+
+
 
 <!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
 <para>
@@ -1708,15 +1881,15 @@ GstElement
 @name: 
 @Returns: 
 
-<!-- ##### MACRO GST_TYPE_ESDSINK ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->
 <para>
 A flag indicating that MMX instructions are supported.
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_ESDSINK ##### -->
+<para>
+
 </para>
 
 

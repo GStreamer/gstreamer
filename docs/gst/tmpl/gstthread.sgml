@@ -20,32 +20,13 @@ to be dealt with in the separate thread.
 
 <!-- ##### ENUM GstThreadState ##### -->
 <para>
-
-<informaltable pgwide=1 frame="none" role="enum">
-<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
-<tbody>
-<row>
-<entry>GST_THREAD_CREATE</entry>
-<entry>The thread is being created. </entry>
-</row>
-
-<row>
-<entry>GST_THREAD_STATE_SPINNING</entry>
-<entry>The thread is runnning</entry>
-</row>
-
-<row>
-<entry>GST_THREAD_STATE_REAPING</entry>
-<entry>The thread is ending.</entry>
-</row>
-
-</tbody></tgroup></informaltable>
-
+thread flags
 </para>
 
-@GST_THREAD_CREATE: 
-@GST_THREAD_STATE_SPINNING: 
-@GST_THREAD_STATE_REAPING: 
+@GST_THREAD_CREATE: The thread is being created.
+@GST_THREAD_STATE_SPINNING: The thread is runnning
+@GST_THREAD_STATE_REAPING: The thread is ending.
+@GST_THREAD_FLAG_LAST: subclass use this to start their enumeration
 
 <!-- ##### STRUCT GstThread ##### -->
 <para>

@@ -18,56 +18,18 @@ audio source. It provides data for the next element in the graph.
 
 <!-- ##### ENUM GstSrcFlags ##### -->
 <para>
-
-<informaltable pgwide=1 frame="none" role="enum">
-<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
-<tbody>
-<row>
-<entry>GST_SRC_ASYNC</entry>
-<entry>this source is assynchronous </entry>
-</row>
-
-</tbody></tgroup></informaltable>
+Flags for the GstSrc element
 </para>
 
-@GST_SRC_ASYNC: 
+@GST_SRC_ASYNC: Indicates that this src is asynchronous
+@GST_SRC_FLAG_LAST: subclasses can use this to number their flags
 
-<!-- ##### MACRO GST_SRC_FLAGS ##### -->
+<!-- ##### MACRO GST_SRC_IS_ASYNC ##### -->
 <para>
-This macro returns the entire set of flags for the object.
+Query a GstSrc for the ASYNC flag
 </para>
 
-@obj: GstSrc to return flags for.
-
-
-<!-- ##### MACRO GST_SRC_ASYNC ##### -->
-<para>
-This macro checks to see if the GST_SRC_ASYNC flag is set.
-</para>
-
-@obj: GstSrc to check for flag in.
-
-
-<!-- ##### MACRO GST_SRC_SET_FLAGS ##### -->
-<para>
-This macro sets the given flags.
-</para>
-
-@src: 
-@flag: Flag to set, can by any number of bits in guint32.
-<!-- # Unused Parameters # -->
-@obj: GstSrc to set flag in.
-
-
-<!-- ##### MACRO GST_SRC_UNSET_FLAGS ##### -->
-<para>
-This macro usets the given flags.
-</para>
-
-@src: 
-@flag: Flag to set, must be a single bit in guint32.
-<!-- # Unused Parameters # -->
-@obj: GstSrc to unset flag in.
+@obj: The GstSrc to query
 
 
 <!-- ##### STRUCT GstSrc ##### -->

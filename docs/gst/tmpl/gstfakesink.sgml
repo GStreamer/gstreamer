@@ -16,3 +16,10 @@ with the buffer. (fakesink)
 
 </para>
 
+<!-- ##### SIGNAL GstFakeSink::handoff ##### -->
+<para>
+
+</para>
+
+@gstfakesink: the object which received the signal.
+

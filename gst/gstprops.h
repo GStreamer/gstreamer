@@ -65,7 +65,7 @@ GstProps*	gst_props_new			(GstPropsFactoryEntry entry, ...);
 
 GstProps*	gst_props_merge			(GstProps *props, GstProps *tomerge);
 
-gboolean 	gst_props_check_compatibility 	(GstProps *props1, GstProps *props2);
+gboolean 	gst_props_check_compatibility 	(GstProps *fromprops, GstProps *toprops);
 
 xmlNodePtr 	gst_props_save_thyself 		(GstProps *props, xmlNodePtr parent);
 GstProps* 	gst_props_load_thyself 		(xmlNodePtr parent);

@@ -91,7 +91,7 @@ props_compare_func (gconstpointer a,
  *
  * Register the factory. 
  *
- * Returns: The registered capability
+ * Returns: The new property created from the factory
  */
 GstProps *
 gst_props_register (GstPropsFactory factory)
@@ -158,6 +158,15 @@ gst_props_register (GstPropsFactory factory)
   return props;
 }
 
+/**
+ * gst_props_new:
+ * @entry: the property entries for the property
+ * @...: the property entries for the property
+ *
+ * Create a new property from the list of entries
+ *
+ * Returns: The new property created from the list of entries
+ */
 GstProps *
 gst_props_new (GstPropsFactoryEntry entry, ...)
 {
@@ -192,6 +201,15 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
   return gst_props_register (factory);
 }
 
+/**
+ * gst_props_merge:
+ * @props: the property to merge into
+ * @tomerge: the property to merge 
+ *
+ * Merge the properties of tomerge into props
+ *
+ * Returns: The new merged property 
+ */
 GstProps*
 gst_props_merge (GstProps *props, GstProps *tomerge)
 {
@@ -313,8 +331,8 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 
 /**
  * gst_props_check_compatibility:
- * @fromprops: a capabilty
- * @toprops: a capabilty
+ * @fromprops: a property
+ * @toprops: a property
  *
  * Checks whether two capabilities are compatible
  *
@@ -411,6 +429,15 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
   return parent;
 }
 
+/**
+ * gst_props_save_thyself:
+ * @props: a property to save
+ * @parent: the parent XML tree
+ *
+ * saves the property into an XML representation
+ *
+ * Returns: the new XML tree
+ */
 xmlNodePtr
 gst_props_save_thyself (GstProps *props, xmlNodePtr parent)
 {
@@ -472,6 +499,14 @@ gst_props_load_thyself_func (xmlNodePtr field)
   return entry;
 }
 
+/**
+ * gst_props_load_thyself:
+ * @parent: the XML tree to load from
+ *
+ * creates a new property out of an XML tree
+ *
+ * Returns: the new property
+ */
 GstProps*
 gst_props_load_thyself (xmlNodePtr parent)
 {

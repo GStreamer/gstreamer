@@ -17,6 +17,15 @@ allowing for deep nesting of predefined sub-pipelines.
 
 </para>
 
+<!-- ##### ENUM GstBinFlags ##### -->
+<para>
+Flags for a bin
+</para>
+
+@GST_BIN_FLAG_MANAGER: 
+@GST_BIN_FLAG_PREFER_COTHREADS: 
+@GST_BIN_FLAG_LAST: 
+
 <!-- ##### STRUCT GstBin ##### -->
 <para>
 
@@ -30,6 +39,14 @@ allowing for deep nesting of predefined sub-pipelines.
 
 @name: 
 @Returns: 
+
+
+<!-- ##### MACRO gst_bin_destroy ##### -->
+<para>
+
+</para>
+
+@bin: 
 
 
 <!-- ##### FUNCTION gst_bin_add ##### -->
@@ -89,6 +106,14 @@ allowing for deep nesting of predefined sub-pipelines.
 
 
 <!-- ##### FUNCTION gst_bin_create_plan ##### -->
+<para>
+
+</para>
+
+@bin: 
+
+
+<!-- ##### FUNCTION gst_bin_schedule ##### -->
 <para>
 
 </para>

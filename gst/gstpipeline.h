@@ -48,8 +48,8 @@ typedef struct _GstPipelineClass GstPipelineClass;
 struct _GstPipeline {
   GstBin bin;
 
-  GstElement *src;         // we only allow one src element
-  GList      *sinks;	   // and multiple sinks
+  GstElement *src;         /* we only allow one src element */
+  GList      *sinks;	   /* and multiple sinks */
 };
 
 struct _GstPipelineClass {

@@ -795,22 +795,6 @@ gst_element_get_manager (GstElement *element)
   return element->manager;
 }
 
-// note that this casts a char ** to a GstElement *.  Ick.
-int 
-gst_element_loopfunc_wrapper (int argc, char **argv) 
-{
-  GstElement *element = GST_ELEMENT (argv);
-  while (1) {
-    /* if NEW_LOOPFUNC is set, clear it, we're implicitly updating */
-    if (GST_FLAG_IS_SET(element,GST_ELEMENT_NEW_LOOPFUNC))
-      GST_FLAG_UNSET(element,GST_ELEMENT_NEW_LOOPFUNC);
-
-    /* start up the loop function */
-    element->loopfunc (element);
-  }
-  return 0;
-}
-
 /**
  * gst_element_set_loop_function:
  * @element: Element to set loop function of.

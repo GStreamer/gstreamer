@@ -24,6 +24,16 @@ Some convenience functions
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_util_get_bool_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_util_get_long_arg ##### -->
 <para>
 

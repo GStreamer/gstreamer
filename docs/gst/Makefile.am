@@ -102,7 +102,7 @@ tmpl: scanobj scan
 sgml: tmpl
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
 
-html:
+html: sgml
 	if ! test -d html ; then mkdir html ; fi
 	-cd html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
 

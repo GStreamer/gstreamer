@@ -31,6 +31,7 @@ with seeking capabilities use a <classname>GstAsynDiskSrc</classname> instead.
 </para>
 
 @GST_DISKSRC_OPEN: 
+@GST_DISKSRC_FLAG_LAST: 
 
 <!-- ##### ARG GstDiskSrc:location ##### -->
 <para>

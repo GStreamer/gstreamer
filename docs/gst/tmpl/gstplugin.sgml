@@ -77,13 +77,13 @@ by the loader at statup.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_add_type ##### -->
+<!-- ##### FUNCTION gst_plugin_load_absolute ##### -->
 <para>
 
 </para>
 
-@plugin: 
-@factory: 
+@name: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_library_load ##### -->
@@ -95,16 +95,16 @@ by the loader at statup.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_load_absolute ##### -->
+<!-- ##### FUNCTION gst_plugin_add_factory ##### -->
 <para>
 
 </para>
 
-@name: 
-@Returns: 
+@plugin: 
+@factory: 
 
 
-<!-- ##### FUNCTION gst_plugin_add_factory ##### -->
+<!-- ##### FUNCTION gst_plugin_add_type ##### -->
 <para>
 
 </para>

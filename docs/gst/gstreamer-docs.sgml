@@ -14,6 +14,7 @@
 <!entity GstObject SYSTEM "sgml/gstobject.sgml">
 <!entity GstPad SYSTEM "sgml/gstpad.sgml">
 <!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
+<!entity GstAutoplug SYSTEM "sgml/gstautoplug.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
 <!entity GstSink SYSTEM "sgml/gstsink.sgml">
 <!entity GstSrc SYSTEM "sgml/gstsrc.sgml">
@@ -21,6 +22,8 @@
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
 <!entity GstType SYSTEM "sgml/gsttype.sgml">
+<!entity GstCaps SYSTEM "sgml/gstcaps.sgml">
+<!entity GstProps SYSTEM "sgml/gstprops.sgml">
 <!entity GstUtils SYSTEM "sgml/gstutils.sgml">
 <!entity GstXml SYSTEM "sgml/gstxml.sgml">
 <!entity cothreads SYSTEM "sgml/cothreads.sgml">
@@ -66,6 +69,7 @@ with some more specialized elements.</para>
     &GstElement;
     &GstBin;
     &GstPipeline;
+    &GstAutoplug;
     &GstFilter;
     &GstSink;
     &GstSrc;
@@ -78,6 +82,8 @@ with some more specialized elements.</para>
     &GstTee;
 
     &GstType;
+    &GstCaps;
+    &GstProps;
     &GstMeta;
     &GstUtils;
     &GstCpu;

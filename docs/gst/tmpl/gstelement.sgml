@@ -33,79 +33,25 @@ simpler to connect pads of two elements together.
 This enum defines the standard states an element may be in.  You will normally
 use gst_element_set_state() to change the state of an element.
 
-<informaltable pgwide=1 frame="none" role="enum">
-<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
-<tbody>
-<row>
-<entry>GST_STATE_NONE_PENDING</entry>
-<entry>The element is in the desired state.</entry>
-</row>
-
-<row>
-<entry>GST_STATE_NULL</entry>
-<entry>Reset the state of an element.</entry>
-</row>
-
-<row>
-<entry>GST_STATE_READY</entry>
-<entry>will make the element ready to start processing data. some
-elements might have a non trivial way to initialize themselves.
-</entry>
-</row>
-
-<row>
-<entry>GST_STATE_PLAYING</entry>
-<entry>means there really is data flowing through the graph.
-</entry>
-</row>
-
-<row>
-<entry>GST_STATE_PAUSED</entry>
-<entry>means there really is data flowing
-temporary stops the data flow.  
-</entry>
-</row>
-
-</tbody></tgroup></informaltable>
 </para>
 
-@GST_STATE_NONE_PENDING: 
-@GST_STATE_NULL: 
-@GST_STATE_READY: 
-@GST_STATE_PLAYING: 
-@GST_STATE_PAUSED: 
+@GST_STATE_NONE_PENDING: The element is in the desired state.
+@GST_STATE_NULL: Reset the state of an element.
+@GST_STATE_READY: will make the element ready to start processing data. some
+elements might have a non trivial way to initialize themselves.
+@GST_STATE_PLAYING: means there really is data flowing through the graph.
+@GST_STATE_PAUSED: means there really is data flowing temporary stops the data flow.
 
 <!-- ##### ENUM GstElementStateReturn ##### -->
 <para>
 This enum defines the standard return values that an element
 can return after a state change.
 
-<informaltable pgwide=1 frame="none" role="enum">
-<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
-<tbody>
-<row>
-<entry>GST_STATE_FAILURE</entry>
-<entry>the element could not perform the state change</entry>
-</row>
-
-<row>
-<entry>GST_STATE_SUCCESS</entry>
-<entry>the element successfully changed its state</entry>
-</row>
-
-<row>
-<entry>GST_STATE_ASYNC</entry>
-<entry>the element will asynchronously change its state as soon as possible
-</entry>
-</row>
-
-</tbody></tgroup></informaltable>
-
 </para>
 
-@GST_STATE_FAILURE: 
-@GST_STATE_SUCCESS: 
-@GST_STATE_ASYNC: 
+@GST_STATE_FAILURE: the element could not perform the state change
+@GST_STATE_SUCCESS: the element successfully changed its state
+@GST_STATE_ASYNC: the element will asynchronously change its state as soon as possible
 
 <!-- ##### MACRO GST_STATE ##### -->
 <para>
@@ -123,44 +69,85 @@ This macro returns the currently pending state of the element.
 @obj: Element to return the pending state for.
 
 
+<!-- ##### MACRO GST_STATE_TRANSITION ##### -->
+<para>
+Returns the state transition this object is going through
+</para>
+
+@obj: the Element to return the tate transition for
+
+
+<!-- ##### MACRO GST_STATE_NULL_TO_READY ##### -->
+<para>
+The Element is going from the NULL state to the READY state
+</para>
+
+
+
+<!-- ##### MACRO GST_STATE_READY_TO_PLAYING ##### -->
+<para>
+The Element is going from the READY state to the PLAYING state
+</para>
+
+
+
+<!-- ##### MACRO GST_STATE_PLAYING_TO_PAUSED ##### -->
+<para>
+The Element is going from the PLAYING state to the PAUSED state
+</para>
+
+
+
+<!-- ##### MACRO GST_STATE_PAUSED_TO_PLAYING ##### -->
+<para>
+The Element is going from the PAUSED state to the PLAYING state
+</para>
+
+
+
+<!-- ##### MACRO GST_STATE_PLAYING_TO_READY ##### -->
+<para>
+The Element is going from the PLAYING state to the READY state
+</para>
+
+
+
+<!-- ##### MACRO GST_STATE_READY_TO_NULL ##### -->
+<para>
+The Element is going from the READY state to the NULL state
+</para>
+
+
+
 <!-- ##### ENUM GstElementFlags ##### -->
 <para>
 This enum defines the standard flags that an element
 may have.
-
-<informaltable pgwide=1 frame="none" role="enum">
-<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
-<tbody>
-<row>
-<entry>GST_ELEMENT_MULTI_IN</entry>
-<entry>the element has multiple input pads</entry>
-</row>
-
-</tbody></tgroup></informaltable>
-
 </para>
 
-@GST_ELEMENT_MULTI_IN: 
+@GST_ELEMENT_COMPLEX: 
+@GST_ELEMENT_DECOUPLED: 
 @GST_ELEMENT_THREAD_SUGGESTED: 
 @GST_ELEMENT_NO_SEEK: 
 @GST_ELEMENT_NEW_LOOPFUNC: 
 @GST_ELEMENT_COTHREAD_STOPPING: 
-
-<!-- ##### MACRO GST_ELEMENT_IS_MULTI_IN ##### -->
-<para>
-Query whether this object has multiple input pads.
-
-</para>
-
-@obj: Element to query for multiple input pads.
-
+@GST_ELEMENT_USE_COTHREAD: 
+@GST_ELEMENT_FLAG_LAST: 
 
 <!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
 <para>
-
+Queries whether the Element should be placed in a thread
 </para>
 
-@obj: 
+@obj: The element to query
+
+
+<!-- ##### MACRO GST_ELEMENT_IS_COTHREAD_STOPPING ##### -->
+<para>
+Queries whether the cothread holding this element needs to be stopped
+</para>
+
+@obj: The element to query
 
 
 <!-- ##### STRUCT GstElement ##### -->
@@ -192,7 +179,7 @@ GstElementDetails struct for the element.
 @name: 
 @type: 
 @details: 
-@padfactories: 
+@padtemplates: 
 
 <!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
 <para>
@@ -210,6 +197,14 @@ circumstances.
 </para>
 
 @Returns: 
+
+
+<!-- ##### MACRO gst_element_destroy ##### -->
+<para>
+
+</para>
+
+@element: the element to destroy
 
 
 <!-- ##### FUNCTION gst_element_set_loop_function ##### -->
@@ -266,15 +261,6 @@ circumstances.
 @pad: 
 
 
-<!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-
-
 <!-- ##### FUNCTION gst_element_get_pad ##### -->
 <para>
 
@@ -292,6 +278,24 @@ circumstances.
 
 @element: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_element_get_padtemplate_list ##### -->
+<para>
+
+</para>
+
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@pad: 
 
 
 <!-- ##### FUNCTION gst_element_connect ##### -->
@@ -333,14 +337,6 @@ circumstances.
 @Returns: 
 
 
-<!-- ##### MACRO gst_element_destroy ##### -->
-<para>
-
-</para>
-
-@element: the element to destroy
-
-
 <!-- ##### FUNCTION gst_element_save_thyself ##### -->
 <para>
 
@@ -372,12 +368,23 @@ circumstances.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_elementfactory_register ##### -->
+<!-- ##### FUNCTION gst_elementfactory_destroy ##### -->
 <para>
 
 </para>
 
 @elementfactory: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_add_padtemplate ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+@temp: 
+<!-- # Unused Parameters # -->
+@pad: 
 
 
 <!-- ##### FUNCTION gst_elementfactory_find ##### -->
@@ -394,6 +401,26 @@ circumstances.
 
 </para>
 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_can_src_caps ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_can_sink_caps ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
 @Returns: 
 
 
@@ -433,15 +460,6 @@ circumstances.
 </para>
 
 @parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_loopfunc_wrapper ##### -->
-<para>
-</para>
-
-@argc: 
-@argv: 
 @Returns: 
 
 

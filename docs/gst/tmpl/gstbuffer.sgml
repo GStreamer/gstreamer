@@ -167,11 +167,12 @@ used when data in a stream has been skipped</entry>
 
 </para>
 
-@GST_BUFFER_READONLY: 
-@GST_BUFFER_EOS: 
-@GST_BUFFER_ORIGINAL: 
-@GST_BUFFER_DONTFREE: 
-@GST_BUFFER_FLUSH: 
+@GST_BUFFER_READONLY: the buffer is read only
+@GST_BUFFER_ORIGINAL: this buffer not a copy
+@GST_BUFFER_DONTFREE: do not try to free the data when this buffer is unref-ed
+@GST_BUFFER_FLUSH: this buffer is not related to previous buffers. This flag is mainly
+used when data in a stream has been skipped
+@GST_BUFFER_EOS: this buffer is the last one in the stream
 
 <!-- ##### STRUCT GstBuffer ##### -->
 <para>

@@ -65,3 +65,51 @@ g_print messages.
 @args...: arguments
 
 
+<!-- ##### MACRO GST_DEBUG_ENABLED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO DEBUG_SET_STRING ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO DEBUG_ENTER_STRING ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO DEBUG_ENTER ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+
+<!-- ##### MACRO DEBUG_LEAVE_STRING ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO DEBUG_LEAVE ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+

@@ -23,6 +23,13 @@ on its own.
 </para>
 
 
+<!-- ##### MACRO GST_FILTER_FLAG_LAST ##### -->
+<para>
+subclass use this to start their flag enumeration
+</para>
+
+
+
 <!-- ##### FUNCTION gst_filter_new ##### -->
 <para>
 

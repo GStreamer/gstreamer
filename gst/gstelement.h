@@ -83,21 +83,21 @@ static inline char *_gst_print_statename(int state) {
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
 typedef enum {
-  // element is complex (for some def.) and generally require a cothread
+  /* element is complex (for some def.) and generally require a cothread */
   GST_ELEMENT_COMPLEX		= GST_OBJECT_FLAG_LAST,
-  // input and output pads aren't directly coupled to each other
-  // examples: queues, multi-output async readers, etc.
+  /* input and output pads aren't directly coupled to each other
+     examples: queues, multi-output async readers, etc. */
   GST_ELEMENT_DECOUPLED,
-  // this element should be placed in a thread if at all possible
+  /* this element should be placed in a thread if at all possible */
   GST_ELEMENT_THREAD_SUGGESTED,
-  // this element is incable of seeking (FIXME: does this apply to filters?)
+  /* this element is incable of seeking (FIXME: does this apply to filters?) */
   GST_ELEMENT_NO_SEEK,
 
-  // there is a new loopfunction ready for placement
+  /* there is a new loopfunction ready for placement */
   GST_ELEMENT_NEW_LOOPFUNC,
-  // the cothread holding this element needs to be stopped
+  /* the cothread holding this element needs to be stopped */
   GST_ELEMENT_COTHREAD_STOPPING,
-  // the element has to be scheduled as a cothread for any sanity
+  /* the element has to be scheduled as a cothread for any sanity */
   GST_ELEMENT_USE_COTHREAD,
 
   /* use some padding for future expansion */
@@ -145,10 +145,6 @@ struct _GstElementClass {
   void (*new_pad) 	(GstElement *element,GstPad *pad);
   void (*new_ghost_pad) (GstElement *element,GstPad *pad);
   void (*error) 	(GstElement *element,gchar *error);
-
-  /* events */
-//  gboolean (*start) (GstElement *element,GstElementState state);
-//  gboolean (*stop) (GstElement *element);
 
   /* change the element state */
   GstElementStateReturn (*change_state) (GstElement *element);
@@ -204,7 +200,6 @@ gint 			gst_element_set_state		(GstElement *element, GstElementState state);
 void 			gst_element_error		(GstElement *element, gchar *error);
 
 GstElementFactory*	gst_element_get_factory		(GstElement *element);
-int 			gst_element_loopfunc_wrapper	(int argc,char **argv);
 
 /* XML write and read */
 xmlNodePtr 		gst_element_save_thyself	(GstElement *element, xmlNodePtr parent);
@@ -221,7 +216,7 @@ GstElementFactory*	gst_elementfactory_new			(gchar *name,GtkType type,
 void 			gst_elementfactory_destroy		(GstElementFactory *elementfactory);
 
 void 			gst_elementfactory_add_padtemplate	(GstElementFactory *elementfactory, 
-							 	 GstPadTemplate *pad);
+							 	 GstPadTemplate *temp);
 
 GstElementFactory*	gst_elementfactory_find			(gchar *name);
 GList*			gst_elementfactory_get_list		(void);
@@ -233,7 +228,7 @@ gboolean		gst_elementfactory_can_sink_caps 	(GstElementFactory *factory,
 
 GstElement*		gst_elementfactory_create		(GstElementFactory *factory,
                                       				 gchar *name);
-// FIXME this name is wrong, probably so is the one above it
+/* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_elementfactory_make			(gchar *factoryname, gchar *name);
 
 xmlNodePtr 		gst_elementfactory_save_thyself		(GstElementFactory *factory, xmlNodePtr parent); 

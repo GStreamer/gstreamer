@@ -284,7 +284,7 @@ void gst_pad_set_chain_function (GstPad *pad,
 }
 
 /**
- * gst_pad_set_pull_function:
+ * gst_pad_set_get_function:
  * @pad: the pad to set the get function for
  * @get: the get function
  *
@@ -350,7 +350,6 @@ gst_pad_push_func(GstPad *pad, GstBuffer *buf)
     DEBUG("got a problem here: default pad_push handler in place, no chain function\n");
   }
 }
-
 
 /**
  * gst_pad_chain:
@@ -612,7 +611,7 @@ gst_pad_set_caps (GstPad *pad,
  *
  * get the capabilities of this pad
  *
- * Return; the capabilities of this pad
+ * Returns: the capabilities of this pad
  */
 GstCaps * 
 gst_pad_get_caps (GstPad *pad) 
@@ -806,6 +805,14 @@ GstBuffer *gst_pad_pullregion(GstPad *pad,gulong offset,gulong size) {
  *
  */
 
+/**
+ * gst_padtemplate_new:
+ * @factory: the padfactory to use
+ *
+ * creates a new padtemplate from the factory
+ *
+ * Returns: the new padtemplate
+ */
 GstPadTemplate*   
 gst_padtemplate_new (GstPadFactory *factory) 
 {
@@ -832,6 +839,17 @@ gst_padtemplate_new (GstPadFactory *factory)
   return new;
 }
 
+/**
+ * gst_padtemplate_create:
+ * @name_template: the name template 
+ * @direction: the direction for the template
+ * @presence: the presence of the pad
+ * @caps: the capabilities for the template
+ *
+ * creates a new padtemplate from the given arguments
+ *
+ * Returns: the new padtemplate
+ */
 GstPadTemplate*
 gst_padtemplate_create (gchar *name_template,
 		        GstPadDirection direction, GstPadPresence presence,
@@ -850,6 +868,15 @@ gst_padtemplate_create (gchar *name_template,
 }
 
 
+/**
+ * gst_padtemplate_save_thyself:
+ * @pad: the padtemplate to save
+ * @parent: the parent XML tree
+ *
+ * saves the padtemplate into XML
+ *
+ * Returns: the new XML tree
+ */
 xmlNodePtr
 gst_padtemplate_save_thyself (GstPadTemplate *pad, xmlNodePtr parent)
 {
@@ -865,6 +892,14 @@ gst_padtemplate_save_thyself (GstPadTemplate *pad, xmlNodePtr parent)
   return parent;
 }
 
+/**
+ * gst_padtemplate_load_thyself:
+ * @parent: the source XML tree
+ *
+ * loads a padtemplate from the XML tree
+ *
+ * Returns: the new padtemplate
+ */
 GstPadTemplate*   
 gst_padtemplate_load_thyself (xmlNodePtr parent)
 {

@@ -32,3 +32,8 @@ Specify the maximum number of buffers in the queue before the queue
 blocks.
 </para>
 
+<!-- ##### ARG GstQueue:block ##### -->
+<para>
+
+</para>
+

@@ -49,7 +49,7 @@ typedef enum {
 typedef struct _GstSrc 		GstSrc;
 typedef struct _GstSrcClass 	GstSrcClass;
 
-#define GST_SRC_ASYNC(obj) (GST_FLAG_IS_SET(obj,GST_SRC_ASYNC))
+#define GST_SRC_IS_ASYNC(obj) (GST_FLAG_IS_SET(obj,GST_SRC_ASYNC))
 
 struct _GstSrc {
   GstElement			element;

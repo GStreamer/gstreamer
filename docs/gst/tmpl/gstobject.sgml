@@ -25,6 +25,13 @@ down <classname>GtkObject</classname> to re-parent the hierarchy.
 
 </para>
 
+<!-- ##### MACRO GST_OBJECT_FLAG_LAST ##### -->
+<para>
+subclasses can use this value to start the enumeration of their flags
+</para>
+
+
+
 <!-- ##### STRUCT GstObject ##### -->
 <para>
 

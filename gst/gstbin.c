@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define GST_DEBUG_ENABLED
+//#define GST_DEBUG_ENABLED
 
 #include "gstbin.h"
 #include "gstdebug.h"
@@ -45,7 +45,6 @@ static gboolean 		gst_bin_change_state_type	(GstBin *bin,
                                           			 GtkType type);
 
 static void 			gst_bin_create_plan_func	(GstBin *bin);
-//static void 			gst_bin_schedule_func		(GstBin *bin);
 static void 			gst_bin_iterate_func		(GstBin *bin);
 
 static xmlNodePtr 		gst_bin_save_thyself		(GstElement *element, xmlNodePtr parent);
@@ -678,7 +677,7 @@ gst_bin_create_plan_func (GstBin *bin)
   DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
 }
 
-void 
+static void 
 gst_bin_iterate_func (GstBin *bin) 
 {
   GList *chains;

@@ -23,8 +23,8 @@ The signal to indicate the mime type was detected.
 @gsttypefind: the object which received the signal.
 @arg1: The mime type that was detected
 
-<!-- ##### ARG GstTypeFind:type ##### -->
+<!-- ##### ARG GstTypeFind:caps ##### -->
 <para>
-Query the element for the current mime type
+
 </para>
 

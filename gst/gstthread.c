@@ -187,7 +187,7 @@ gst_thread_get_arg (GtkObject *object,
  *
  * Create a new thrad with the given name
  *
- * Returns; The new thread
+ * Returns: The new thread
  */
 GstElement*
 gst_thread_new (guchar *name) 

@@ -69,6 +69,16 @@ gst_caps_new (gchar *mime)
   return caps;
 }
 
+/**
+ * gst_caps_new_with_props:
+ * @mime: the mime type to attach to the capability
+ * @props: the properties for this capability
+ *
+ * create a new capability with the given mime type
+ * and the given properties
+ *
+ * Returns: a new capability
+ */
 GstCaps*
 gst_caps_new_with_props (gchar *mime, GstProps *props)
 {
@@ -113,6 +123,15 @@ gst_caps_register (GstCapsFactory *factory)
   return caps;
 }
 
+/**
+ * gst_caps_set_props:
+ * @caps: the caps to attach the properties to
+ * @props: the properties to attach
+ *
+ * set the properties to the given caps
+ *
+ * Returns: The new caps structure
+ */
 GstCaps*
 gst_caps_set_props (GstCaps *caps, GstProps *props)
 {
@@ -125,6 +144,14 @@ gst_caps_set_props (GstCaps *caps, GstProps *props)
   return caps;
 }
 
+/**
+ * gst_caps_get_props:
+ * @caps: the caps to get the properties from
+ *
+ * get the properties of the given caps
+ *
+ * Returns: The properties of the caps
+ */
 GstProps*
 gst_caps_get_props (GstCaps *caps)
 {
@@ -170,6 +197,15 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 }
 
 
+/**
+ * gst_caps_save_thyself:
+ * @caps: a capabilty to save
+ * @parent: the parent XML node pointer
+ *
+ * save the capability into an XML representation
+ *
+ * Returns: a new XML node pointer
+ */
 xmlNodePtr      
 gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
 {
@@ -187,6 +223,14 @@ gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
   return parent;
 }
 
+/**
+ * gst_caps_load_thyself:
+ * @parent: the parent XML node pointer
+ *
+ * load a new caps from the XML representation
+ *
+ * Returns: a new capability
+ */
 GstCaps*        
 gst_caps_load_thyself (xmlNodePtr parent)
 {

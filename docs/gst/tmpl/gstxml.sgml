@@ -22,6 +22,7 @@ All GstElements can be serialized to an XML presentation
 
 @object: 
 @elements: 
+@topelements: 
 
 <!-- ##### FUNCTION gst_xml_new ##### -->
 <para>
@@ -49,6 +50,15 @@ All GstElements can be serialized to an XML presentation
 
 @xml: 
 @name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_xml_get_topelements ##### -->
+<para>
+
+</para>
+
+@xml: 
 @Returns: 
 
 

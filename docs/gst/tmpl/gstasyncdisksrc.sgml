@@ -30,6 +30,7 @@ the offset.
 </para>
 
 @GST_ASYNCDISKSRC_OPEN: 
+@GST_ASYNCDISKSRC_FLAG_LAST: 
 
 <!-- ##### ARG GstAsyncDiskSrc:location ##### -->
 <para>

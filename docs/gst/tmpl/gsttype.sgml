@@ -72,9 +72,6 @@ A type
 @mime: 
 @exts: 
 @typefindfuncs: 
-@srcs: 
-@sinks: 
-@converters: 
 
 <!-- ##### STRUCT GstTypeFactory ##### -->
 <para>
@@ -112,24 +109,6 @@ The struct with the typefactory information
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_type_get_srcs ##### -->
-<para>
-
-</para>
-
-@id: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_type_get_sinks ##### -->
-<para>
-
-</para>
-
-@id: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_type_find_by_id ##### -->
 <para>
 
@@ -144,42 +123,6 @@ The struct with the typefactory information
 
 </para>
 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_type_save_thyself ##### -->
-<para>
-
-</para>
-
-@type: 
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_type_get_sink_to_src ##### -->
-<para>
-
-</para>
-
-@sinkid: 
-@srcid: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_type_dump ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### FUNCTION gst_type_load_thyself ##### -->
-<para>
-
-</para>
-
-@parent: 
 @Returns: 
 
 

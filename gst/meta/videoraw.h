@@ -36,22 +36,22 @@ struct _OverlayClip {
 };
 
 struct _MetaDGA {
-  // the base address of the screen
+  /* the base address of the screen */
   void *base;
-  // the dimensions of the screen
+  /* the dimensions of the screen */
   int swidth, sheight;
-  // the number of bytes in a line
+  /* the number of bytes in a line */
   int bytes_per_line;
 };
 
 struct _MetaOverlay {
-  // the position of the window
+  /* the position of the window */
   int wx, wy;
-  // a reference to the object sending overlay change events
+  /* a reference to the object sending overlay change events */
   GtkWidget *overlay_element;
-  // the number of overlay regions
+  /* the number of overlay regions */
   int clip_count;
-  // the overlay regions of the display window
+  /* the overlay regions of the display window */
   struct _OverlayClip overlay_clip[32];
 
   gint width;
@@ -67,12 +67,12 @@ struct _MetaVideoRaw {
   /* formatting information */
   GstColorSpaceType format;
   GdkVisual *visual;
-  // dimensions of the video buffer
+  /* dimensions of the video buffer */
   gint width;
   gint height;
-  // a pointer to the overlay info if the sink supports this
+  /* a pointer to the overlay info if the sink supports this */
   MetaOverlay *overlay_info;
-  // a pointer to the DGA info if the sink supports this
+  /* a pointer to the DGA info if the sink supports this */
   MetaDGA *dga_info;
 };
 

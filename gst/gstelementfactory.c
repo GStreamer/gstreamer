@@ -34,17 +34,17 @@ _gst_elementfactory_initialize (void)
 }
 
 /**
- * gst_elementfactory_unregister:
- * @elementfactory: factory to register
+ * gst_elementfactory_destroy:
+ * @elementfactory: factory to destroy
  *
  * Removes the elementfactory from the global list.
  */
 void 
-gst_elementfactory_destroy (GstElementFactory *factory) 
+gst_elementfactory_destroy (GstElementFactory *elementfactory) 
 {
-  g_return_if_fail (factory != NULL);
+  g_return_if_fail (elementfactory != NULL);
 
-  _gst_elementfactories = g_list_remove (_gst_elementfactories, factory);
+  _gst_elementfactories = g_list_remove (_gst_elementfactories, elementfactory);
 
   // we don't free the struct bacause someone might  have a handle to it..
 }
@@ -200,20 +200,29 @@ gst_elementfactory_make (gchar *factoryname, gchar *name)
 /**
  * gst_elementfactory_add_padtemplate :
  * @elementfactory: factory to add the src id to
- * @template: the padtemplate to add
+ * @temp: the padtemplate to add
  *
  * Add the given padtemplate to this elementfactory. 
  */
 void 
 gst_elementfactory_add_padtemplate (GstElementFactory *factory, 
-			            GstPadTemplate *template) 
+			            GstPadTemplate *temp) 
 {
   g_return_if_fail(factory != NULL);
-  g_return_if_fail(template != NULL);
+  g_return_if_fail(temp != NULL);
 
-  factory->padtemplates = g_list_append (factory->padtemplates, template); 
+  factory->padtemplates = g_list_append (factory->padtemplates, temp); 
 }
 
+/**
+ * gst_elementfactory_can_src_caps :
+ * @factory: factory to query
+ * @caps: the caps to check
+ *
+ * Checks if the factory can source the given capability
+ *
+ * Returns: true if it can src the capability
+ */
 gboolean
 gst_elementfactory_can_src_caps (GstElementFactory *factory,
 		                 GstCaps *caps)
@@ -238,6 +247,15 @@ gst_elementfactory_can_src_caps (GstElementFactory *factory,
   return FALSE;
 }
 
+/**
+ * gst_elementfactory_can_sink_caps :
+ * @factory: factory to query
+ * @caps: the caps to check
+ *
+ * Checks if the factory can sink the given capability
+ *
+ * Returns: true if it can sink the capability
+ */
 gboolean
 gst_elementfactory_can_sink_caps (GstElementFactory *factory,
 		                  GstCaps *caps)
