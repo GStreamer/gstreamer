@@ -1043,11 +1043,11 @@ ext/gsm/Makefile
 ext/hermes/Makefile
 ext/http/Makefile
 ext/jpeg/Makefile
-ext/jpeg-mmx/Makefile
 ext/ladspa/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/mikmod/Makefile
+ext/mjpegtools/Makefile
 ext/mpeg2dec/Makefile
 ext/openquicktime/Makefile
 ext/raw1394/Makefile
