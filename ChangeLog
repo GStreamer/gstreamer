@@ -1,3 +1,9 @@
+2005-02-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/qcam/gstqcamsrc.c: (gst_qcamsrc_change_state),
+	(gst_qcamsrc_open):
+	  Use GST_ELEMENT_ERROR, not g_warning, if open failed.
+
 2005-02-02  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
