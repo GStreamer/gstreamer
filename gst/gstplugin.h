@@ -88,7 +88,7 @@ struct _GstPlugin {
  * @description: information about the purpose of the plugin
  * @init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
  * @version: full version string (e.g. VERSION from config.h)
- * @licence: under which licence the package has been released, e.g. GPL, LGPL.
+ * @license: under which licence the package has been released, e.g. GPL, LGPL.
  * @package: the package-name (e.g. PACKAGE_NAME from config.h)
  * @origin: a description from where the package comes from (e.g. the homepage URL)
  *
@@ -118,7 +118,7 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {		      	\
  * @description: information about the purpose of the plugin
  * @init: function pointer to the plugin_init method with the signature of <code>static gboolean plugin_init (GstPlugin * plugin)</code>.
  * @version: full version string (e.g. VERSION from config.h)
- * @licence: under which licence the package has been released, e.g. GPL, LGPL.
+ * @license: under which licence the package has been released, e.g. GPL, LGPL.
  * @package: the package-name (e.g. PACKAGE_NAME from config.h)
  * @origin: a description from where the package comes from (e.g. the homepage URL)
  *
