@@ -3,24 +3,29 @@
 #include <gtk/gtk.h>
 #include <gst/gst.h>
 
-#define NUM_BEATS 16
-#define SPEED 1e-9
+#define NUM_BEATS 12
 
 GtkWidget *window, *vbox, *beat_box, *button_box;
 GtkWidget *play_button, *clear_button, *reset_button, *quit_button;
 GtkWidget **beat_button;
 GtkWidget *speed_scale;
 GtkObject *speed_adj;
-GstElement *src, *mad, *pod, *osssink, *pipeline;
+GstElement *src, *mad, *pod, *sink, *pipeline;
 GstClock *element_clock;
-GSList *beats;
+guint32 *beats;
 
 void
 played (GstElement *pod, gpointer data)
 {
-  g_print("Played beat at %u\n",
-          ((guint) (gst_clock_get_time(element_clock) *
-                    (GTK_ADJUSTMENT(speed_adj))->value * SPEED)) % NUM_BEATS);
+  gint i;
+
+  g_print("Played beat at %02u, beats are ",
+          (guint) (gst_clock_get_time(element_clock) / GST_SECOND *
+                   (GTK_ADJUSTMENT(speed_adj))->value) % NUM_BEATS);
+
+  for (i = 0; i <= NUM_BEATS / 32; i++) g_print ("%08x ", beats[i]);
+
+  g_print("\n");
 }
 
 void
@@ -47,18 +52,19 @@ reset (GtkButton *button, gpointer data)
 void
 beat (GtkToggleButton *button, gpointer data)
 {
+  guint b = GPOINTER_TO_UINT(data);
+
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
-    beats = g_slist_append(beats, data);
+    beats[b / 32] |= 1 << (b % 32);
   else
-    beats = g_slist_remove(beats, data);
-  g_object_set(G_OBJECT(pod), "tick-list", beats, NULL);
+    beats[b / 32] &= ~ (1 << (b % 32));
 }
 
 void
 speed (GtkAdjustment *adjustment, gpointer data)
 {
-  g_object_set(G_OBJECT(pod), "clock-speed", adjustment->value * SPEED, NULL);
-  /*gst_clock_set_speed(element_clock, adjustment->value * SPEED);*/
+  g_object_set(G_OBJECT(pod), "tick-rate", adjustment->value, NULL);
+  /*gst_clock_set_speed(element_clock, adjustment->value);*/
 }
 
 void
@@ -67,17 +73,21 @@ setup_pipeline (gchar *filename)
   src = gst_element_factory_make("filesrc", "filesrc");
   mad = gst_element_factory_make("mad", "mad");
   pod = gst_element_factory_make("playondemand", "playondemand");
-  osssink = gst_element_factory_make("osssink", "osssink");
+  sink = gst_element_factory_make("alsasink", "alsasink");
 
   g_object_set(G_OBJECT(src), "location", filename, NULL);
-  g_object_set(G_OBJECT(osssink), "fragment", 0x00180008, NULL);
+  g_object_set(G_OBJECT(sink), "period-count", 32,
+                               "period-size", 512, NULL);
   g_object_set(G_OBJECT(pod), "total-ticks", NUM_BEATS,
-                              "clock-speed", SPEED, NULL);
+                              "tick-rate", 1.0,
+                              "max-plays", NUM_BEATS * 2, NULL);
+
+  g_object_get(G_OBJECT(pod), "ticks", &beats, NULL);
 
   pipeline = gst_pipeline_new("app");
 
-  gst_bin_add_many(GST_BIN(pipeline), src, mad, pod, osssink, NULL);
-  gst_element_link_many(src, mad, pod, osssink, NULL);
+  gst_bin_add_many(GST_BIN(pipeline), src, mad, pod, sink, NULL);
+  gst_element_link_many(src, mad, pod, sink, NULL);
 
   element_clock = gst_bin_get_clock(GST_BIN(pipeline));
   gst_element_set_clock(GST_ELEMENT(pod), element_clock);
@@ -106,9 +116,9 @@ setup_gui (void)
   quit_button = gtk_button_new_with_label("Quit");
 
   for (i = 0; i < NUM_BEATS; i++)
-    beat_button[i] = gtk_toggle_button_new_with_label(g_strdup_printf("%2d", i));
+    beat_button[i] = gtk_toggle_button_new_with_label(g_strdup_printf("%2d", i+1));
 
-  speed_adj = gtk_adjustment_new(1, 0.0, 2, 0.01, 0.1, 0.0);
+  speed_adj = gtk_adjustment_new(1, 0.0, 10.0, 0.1, 1.0, 0.0);
   speed_scale = gtk_hscale_new(GTK_ADJUSTMENT(speed_adj));
   gtk_scale_set_digits(GTK_SCALE(speed_scale), 4);
   gtk_range_set_update_policy(GTK_RANGE(speed_scale), GTK_UPDATE_DISCONTINUOUS);
@@ -140,19 +150,7 @@ setup_gui (void)
     g_signal_connect(G_OBJECT(beat_button[i]), "toggled", G_CALLBACK(beat), GUINT_TO_POINTER(i));
 
   /* show the gui. */
-  gtk_widget_show(play_button);
-  gtk_widget_show(clear_button);
-  gtk_widget_show(reset_button);
-  gtk_widget_show(quit_button);
-
-  for (i = 0; i < NUM_BEATS; i++)
-    gtk_widget_show(beat_button[i]);
-
-  gtk_widget_show(beat_box);
-  gtk_widget_show(button_box);
-  gtk_widget_show(speed_scale);
-  gtk_widget_show(vbox);
-  gtk_widget_show(window);
+  gtk_widget_show_all(window);
 
   gtk_idle_add((GtkFunction)gst_bin_iterate, pipeline);
 }

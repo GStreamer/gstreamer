@@ -5,18 +5,23 @@ _TYPE_ *data_in, *data_out, *filter_data;
 filter_data = (_TYPE_ *) filter->buffer;
 num_filter = filter->buffer_bytes / sizeof(_TYPE_);
 
-/******************************************************************************/
-/* see if we've got any events coming through ... */
-
 do {
-  while (GST_IS_EVENT(in)) {
+  /****************************************************************************/
+  /* see if we've got any events coming through ... */
+
+  while (! filter->eos && GST_IS_EVENT(in)) {
     if (GST_EVENT_TYPE(in) == GST_EVENT_EOS) {
+      gst_event_unref(in);
       filter->eos = TRUE;
     } else if ((GST_EVENT_TYPE(in) == GST_EVENT_SEEK) ||
                (GST_EVENT_TYPE(in) == GST_EVENT_FLUSH)) {
       filter->eos = FALSE;
       filter->write = 0;
     } else {
+      if ((GST_EVENT_TYPE(in) == GST_EVENT_SEEK) ||
+          (GST_EVENT_TYPE(in) == GST_EVENT_FLUSH))
+        filter->write = 0;
+
       gst_pad_push(filter->srcpad, in);
     }
 
@@ -24,76 +29,81 @@ do {
   }
 
   /****************************************************************************/
-  /* first handle data from the input buffer. */
+  /* handle data from the input buffer. */
 
-  /* only update the input if there hasn't been an eos yet. */
   if (! filter->eos) {
+    register guint j, w = filter->write;
+
     data_in = (_TYPE_ *) GST_BUFFER_DATA(in);
     num_in = GST_BUFFER_SIZE(in) / sizeof(_TYPE_);
 
-    w = filter->write;
+    for (j = 0; (j < num_in) && (w+j < num_filter); j++)
+      filter_data[w+j] = data_in[j];
 
-    /* copy the input data to the filter's internal buffer. */
-    for (j = 0; (j < num_in) && ((w + j) < num_filter); j++)
-      filter_data[(w + j) % num_filter] = data_in[j];
+    filter->write += j;
 
-    filter->write = (w + j) % num_filter;
-
-    if ((w + j) >= num_filter)
-      filter->eos = TRUE;
+    if (filter->write >= num_filter) filter->eos = TRUE;
 
     out = in;
   } else {
-    j = num_filter;
-    w = 0;
-
     out = gst_buffer_new_from_pool(filter->bufpool, 0, 0);
   }
 
   /****************************************************************************/
-  /* check to see if we have to add a new play pointer. */
+  /* check to see if we have to add new play pointers. */
 
   if (filter->clock) {
-    current_tick = ((guint) (gst_clock_get_time(filter->clock) *
-                             filter->clock_speed)) % filter->total_ticks;
+    register gint t, tick_offset;
 
-    if (current_tick != last_tick) {
-      /* now we go through the tick list and play samples */
-      tick_list = filter->tick_list;
-      while (tick_list) {
-        tick = GPOINTER_TO_UINT(tick_list->data);
-        if (current_tick == tick)
-          play_on_demand_add_play_pointer(filter, 0);
-        else if (GST_POD_TICK_ELAPSED(tick, current_tick, last_tick))
-          play_on_demand_add_play_pointer(filter, GST_POD_SAMPLE_OFFSET(filter, current_tick - tick));
-        tick_list = g_slist_next(tick_list);
-      }
-      last_tick = current_tick;
+    guint total_ticks = filter->total_ticks;
+    guint current_tick = \
+      ((guint) (gst_clock_get_time(filter->clock) * filter->tick_rate /
+                GST_SECOND)) % total_ticks;
+
+    /* for some reason modulo arithmetic isn't working for me here, i suspect
+       some unsigned/signed voodoo. but it's probably safe to do this with an if
+       statement since it doesn't happen all that often ... */
+
+    tick_offset = current_tick - last_tick;
+    if (tick_offset < 0) tick_offset += total_ticks;
+
+    for (tick_offset -= 1, t = current_tick - tick_offset;
+         tick_offset >= 0;
+         tick_offset--, t--) {
+
+      if (t < 0) t += total_ticks;
+
+      if (filter->ticks[t / 32] & (1 << t % 32))
+        play_on_demand_add_play_pointer(
+          filter, filter->rate * tick_offset / filter->tick_rate);
     }
+
+    last_tick = current_tick;
   }
 
   /****************************************************************************/
-  /* now handle output data. */
+  /* handle output data. */
 
-  data_out = (_TYPE_ *) GST_BUFFER_DATA(out);
-  num_out = GST_BUFFER_SIZE(out) / sizeof(_TYPE_);
+  {
+    register guint k, p;
 
-  for (k = 0; k < num_out; k++)
-    data_out[k] = zero;
+    data_out = (_TYPE_ *) GST_BUFFER_DATA(out);
+    num_out = GST_BUFFER_SIZE(out) / sizeof(_TYPE_);
 
-  /* output play pointer data. */
-  if (! filter->mute)
-    for (t = 0; t < filter->max_plays; t++) {
-      offset = filter->plays[t];
+    for (k = 0; k < num_out; k++) data_out[k] = zero;
+
+    for (p = 0; p < filter->max_plays; p++) {
+      guint offset = filter->plays[p];
 
       if (offset != G_MAXUINT) {
-        for (k = 0; (k < num_out) && (offset + k < num_filter); k++)
-          data_out[k] = CLAMP(data_out[k] + filter_data[offset + k], min, max);
 
-        if ((offset + k) == num_filter)
-          filter->plays[t] = G_MAXUINT;
-        else
-          filter->plays[t] = offset + k;
+        /* only copy audio data if the element's not muted. */
+        if (! filter->mute)
+          for (k = 0; (k < num_out) && (offset+k < num_filter); k++)
+            data_out[k] = CLAMP(data_out[k] + filter_data[offset+k], min, max);
+
+        /* update the play pointer. k > 0 even if the filter is muted. */
+        filter->plays[p] = (offset+k >= num_filter) ? G_MAXUINT : offset + k;
       }
     }
 
@@ -102,9 +112,8 @@ do {
 
   gst_pad_push(filter->srcpad, out);
 
-  if (! filter->eos)
-    in = gst_pad_pull(filter->sinkpad);
+  in = (! filter->eos) ? gst_pad_pull(filter->sinkpad) : NULL;
 
-  gst_element_interrupt (GST_ELEMENT (filter));
+  if (gst_element_interrupt (GST_ELEMENT (filter))) break;
 
 } while (TRUE);

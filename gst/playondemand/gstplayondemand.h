@@ -63,9 +63,9 @@ struct _GstPlayOnDemand {
   gboolean  mute;
   gfloat    buffer_time;
   guint     max_plays;
-  gfloat    clock_speed;
+  gfloat    tick_rate;
   guint     total_ticks;
-  GSList   *tick_list;
+  guint32  *ticks;
 
   /* internal buffer info */
   gchar    *buffer;

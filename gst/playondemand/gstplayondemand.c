@@ -24,11 +24,14 @@
 
 #include "gstplayondemand.h"
 
+/* in these files, a 'tick' is a discrete unit of time, usually around the 1ms
+ * range. a tick is not divisible into smaller units of time. 1ms is probably
+ * way beyond what a real computer can actually keep track of, but hey ... */
 
 /* some default values */
 #define GST_POD_MAX_PLAYS    100   /* maximum simultaneous plays */
 #define GST_POD_BUFFER_TIME  5.0   /* buffer length in seconds */
-#define GST_POD_CLOCK_SPEED  1e-8  /* 0.1 sec/tick default */
+#define GST_POD_TICK_RATE    1e-6  /* ticks per second */
 
 /* buffer pool fallback values ... use if no buffer pool is available */
 #define GST_POD_BUFPOOL_SIZE 4096
@@ -88,6 +91,7 @@ static void play_on_demand_class_init   (GstPlayOnDemandClass *klass);
 static void play_on_demand_init         (GstPlayOnDemand *filter);
 static void play_on_demand_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void play_on_demand_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void play_on_demand_dispose      (GObject *object);
 
 /* GStreamer functionality */
 static GstBufferPool*   play_on_demand_get_bufferpool (GstPad *pad);
@@ -144,9 +148,9 @@ enum {
   PROP_MUTE,
   PROP_BUFFER_TIME,
   PROP_MAX_PLAYS,
-  PROP_CLOCK_SPEED,
+  PROP_TICK_RATE,
   PROP_TOTAL_TICKS,
-  PROP_TICK_LIST,
+  PROP_TICKS,
 };
 
 static guint gst_pod_filter_signals[LAST_SIGNAL] = { 0 };
@@ -163,40 +167,24 @@ play_on_demand_class_init (GstPlayOnDemandClass *klass)
   gstelement_class = (GstElementClass *) klass;
 
   gst_pod_filter_signals[PLAYED_SIGNAL] =
-    g_signal_new("played",
-                 G_TYPE_FROM_CLASS(klass),
-                 G_SIGNAL_RUN_LAST,
+    g_signal_new("played", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstPlayOnDemandClass, played),
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__VOID,
-                 G_TYPE_NONE, 0);
+                 NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gst_pod_filter_signals[PLAY_SIGNAL] =
-    g_signal_new("play",
-                 G_TYPE_FROM_CLASS(klass),
-                 G_SIGNAL_RUN_LAST,
+    g_signal_new("play", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstPlayOnDemandClass, play),
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__VOID,
-                 G_TYPE_NONE, 0);
+                 NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gst_pod_filter_signals[CLEAR_SIGNAL] =
-    g_signal_new("clear",
-                 G_TYPE_FROM_CLASS(klass),
-                 G_SIGNAL_RUN_LAST,
+    g_signal_new("clear", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstPlayOnDemandClass, clear),
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__VOID,
-                 G_TYPE_NONE, 0);
+                 NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gst_pod_filter_signals[RESET_SIGNAL] =
-    g_signal_new("reset",
-                 G_TYPE_FROM_CLASS(klass),
-                 G_SIGNAL_RUN_LAST,
+    g_signal_new("reset", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                  G_STRUCT_OFFSET(GstPlayOnDemandClass, reset),
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__VOID,
-                 G_TYPE_NONE, 0);
+                 NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   klass->play  = play_on_demand_play_handler;
   klass->clear = play_on_demand_clear_handler;
@@ -206,45 +194,33 @@ play_on_demand_class_init (GstPlayOnDemandClass *klass)
 
   gobject_class->set_property = play_on_demand_set_property;
   gobject_class->get_property = play_on_demand_get_property;
+  gobject_class->dispose      = play_on_demand_dispose;
 
   gstelement_class->set_clock = play_on_demand_set_clock;
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_MUTE,
-    g_param_spec_boolean("mute", "Silence output",
-                         "Do not output any sound",
-                         FALSE, G_PARAM_READWRITE));
-
+    g_param_spec_boolean("mute", "Silence output", "Do not output any sound",
+                         FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_BUFFER_TIME,
-    g_param_spec_float("buffer-time", "Buffer length in seconds",
-                       "Number of seconds of audio the buffer holds",
-                       0.0, G_MAXUINT - 2, GST_POD_BUFFER_TIME, G_PARAM_READWRITE));
-
+    g_param_spec_float("buffer-time", "Buffer length in seconds", "Number of seconds of audio the buffer holds",
+                       0.0, G_MAXUINT / GST_AUDIO_MAX_RATE - 10, GST_POD_BUFFER_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_MAX_PLAYS,
-    g_param_spec_uint("plays", "Maximum simultaneous playback",
-                      "Maximum allowed number of simultaneous plays from the buffer",
-                      1, G_MAXUINT, GST_POD_MAX_PLAYS, G_PARAM_READWRITE));
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_CLOCK_SPEED,
-    g_param_spec_float("clock-speed", "Clock speed (ticks/second)",
-                       "The relative speed of a musical tick",
-                       0, G_MAXFLOAT, 1, G_PARAM_READWRITE));
-
+    g_param_spec_uint("max-plays", "Maximum simultaneous playbacks", "Maximum allowed number of simultaneous plays from the buffer",
+                      1, G_MAXUINT, GST_POD_MAX_PLAYS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_TICK_RATE,
+    g_param_spec_float("tick-rate", "Tick rate (ticks/second)", "The rate of musical ticks, the smallest time unit in a song",
+                       0, G_MAXFLOAT, GST_POD_TICK_RATE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_TOTAL_TICKS,
-    g_param_spec_uint("total-ticks", "Total number of ticks",
-                      "Total number of ticks (only relevant for tick lists)",
-                      1, G_MAXUINT, 1, G_PARAM_READWRITE));
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_TICK_LIST,
-    g_param_spec_pointer("tick-list", "List of ticks to play",
-                         "A list of ticks (musical times) at which to play the sample",
-			 G_PARAM_WRITABLE));
+    g_param_spec_uint("total-ticks", "Total number of ticks", "Total number of ticks in the tick array",
+                      1, G_MAXUINT, 1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), PROP_TICKS,
+    g_param_spec_pointer("ticks", "Ticks to play sample on", "An array of ticks (musical times) at which to play the sample",
+			 G_PARAM_READWRITE));
 }
 
 static void
 play_on_demand_init (GstPlayOnDemand *filter)
 {
-  guint i;
-
   filter->srcpad = gst_pad_new_from_template(play_on_demand_src_factory(), "src");
   filter->sinkpad = gst_pad_new_from_template(play_on_demand_sink_factory(), "sink");
 
@@ -258,23 +234,14 @@ play_on_demand_init (GstPlayOnDemand *filter)
 
   filter->clock = NULL;
 
-  /* filter properties */
-  filter->mute        = FALSE;
-  filter->buffer_time = GST_POD_BUFFER_TIME;
-  filter->max_plays   = GST_POD_MAX_PLAYS;
-  filter->clock_speed = GST_POD_CLOCK_SPEED;
-  filter->total_ticks = 1;
-  filter->tick_list   = NULL;
+  filter->rate = 0;
 
-  /* internal buffer stuff */
+  filter->ticks = g_new(guint32, filter->total_ticks / 32 + 1);
+  filter->plays = g_new(guint, filter->max_plays);
+
   play_on_demand_resize_buffer(filter);
-  filter->eos                 = FALSE;
-
-  /* play pointers, stored as an array of buffer offsets */
-  filter->write = 0;
-  filter->plays  = g_new(guint, filter->max_plays);
-  for (i = 0; i < filter->max_plays; i++)
-    filter->plays[i] = G_MAXUINT;
+  play_on_demand_clear_handler(GST_ELEMENT(filter));
+  play_on_demand_reset_handler(GST_ELEMENT(filter));
 }
 
 static void
@@ -284,6 +251,7 @@ play_on_demand_set_property (GObject *object, guint prop_id,
   GstPlayOnDemand *filter;
   register guint   i;
   guint            new_size, min_size, *new_plays;
+  guint           *new_ticks;
 
   g_return_if_fail(GST_IS_PLAYONDEMAND(object));
   filter = GST_PLAYONDEMAND(object);
@@ -296,10 +264,9 @@ play_on_demand_set_property (GObject *object, guint prop_id,
     filter->buffer_time = g_value_get_float(value);
     play_on_demand_resize_buffer(filter);
 
-    /* clear out now-invalid play pointers, if there are any. */
+    /* clear out now-invalid play pointers */
     for (i = 0; i < filter->max_plays; i++)
-      if (filter->plays[i] > filter->buffer_bytes)
-        filter->plays[i] = G_MAXUINT;
+      filter->plays[i] = G_MAXUINT;
 
     break;
   case PROP_MAX_PLAYS:
@@ -308,21 +275,35 @@ play_on_demand_set_property (GObject *object, guint prop_id,
 
     new_plays = g_new(guint, new_size);
     for (i = 0; i < min_size; i++) new_plays[i] = filter->plays[i];
-    for (i = min_size; i < filter->max_plays; i++) new_plays[i] = G_MAXUINT;
+    for (i = min_size; i < new_size; i++) new_plays[i] = G_MAXUINT;
 
     g_free(filter->plays);
     filter->plays = new_plays;
     filter->max_plays = new_size;
 
     break;
-  case PROP_CLOCK_SPEED:
-    filter->clock_speed = g_value_get_float(value);
+  case PROP_TICK_RATE:
+    filter->tick_rate = g_value_get_float(value);
     break;
   case PROP_TOTAL_TICKS:
-    filter->total_ticks = g_value_get_uint(value);
+    new_size = g_value_get_uint(value);
+    min_size = (new_size < filter->total_ticks) ? new_size : filter->total_ticks;
+
+    new_ticks = g_new(guint32, new_size / 32 + 1);
+    for (i = 0; i <= min_size / 32; i++) new_ticks[i] = filter->ticks[i];
+    for (i = min_size / 32 + 1; i <= new_size / 32; i++) new_ticks[i] = 0;
+
+    g_free(filter->ticks);
+    filter->ticks = new_ticks;
+    filter->total_ticks = new_size;
+
     break;
-  case PROP_TICK_LIST:
-    filter->tick_list = (GSList *) g_value_get_pointer(value);
+  case PROP_TICKS:
+    new_ticks = (guint *) g_value_get_pointer(value);
+    if (new_ticks) {
+      g_free(filter->ticks);
+      filter->ticks = new_ticks;
+    }
     break;
   default:
     break;
@@ -348,16 +329,31 @@ play_on_demand_get_property (GObject *object, guint prop_id,
   case PROP_MAX_PLAYS:
     g_value_set_uint(value, filter->max_plays);
     break;
-  case PROP_CLOCK_SPEED:
-    g_value_set_float(value, filter->clock_speed);
+  case PROP_TICK_RATE:
+    g_value_set_float(value, filter->tick_rate);
     break;
   case PROP_TOTAL_TICKS:
     g_value_set_uint(value, filter->total_ticks);
+    break;
+  case PROP_TICKS:
+    g_value_set_pointer(value, (gpointer) filter->ticks);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     break;
   }
+}
+
+static void
+play_on_demand_dispose (GObject *object)
+{
+  GstPlayOnDemand *filter = GST_PLAYONDEMAND (object);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  g_free (filter->ticks);
+  g_free (filter->plays);
+  g_free (filter->buffer);
 }
 
 static GstBufferPool*
@@ -380,7 +376,7 @@ play_on_demand_pad_link (GstPad *pad, GstCaps *caps)
   filter = GST_PLAYONDEMAND(GST_PAD_PARENT(pad));
 
   gst_caps_get_string(caps, "format", &format);
-  gst_caps_get_int(caps, "rate",     &filter->rate);
+  gst_caps_get_int(caps, "rate", &filter->rate);
   gst_caps_get_int(caps, "channels", &filter->channels);
 
   if (strcmp(format, "int") == 0) {
@@ -397,21 +393,22 @@ play_on_demand_pad_link (GstPad *pad, GstCaps *caps)
   return GST_PAD_LINK_DELAYED;
 }
 
-/* clock check macros. in these macros,
-   f  == filter
-   t  == tick in question
-   c  == current tick (from the clock)
-   l  == last tick (last tick when clock was checked)
-   dt == ticks between c and t */
-#define GST_POD_SAMPLE_OFFSET(f, dt) \
-  ((guint) (dt * (f)->rate / (f)->clock_speed))
+inline static void
+play_on_demand_add_play_pointer (GstPlayOnDemand *filter, guint pos)
+{
+  register guint i;
 
-/* play a sample if the tick in question came between the last time we checked
-   the clock and the current clock time. only looks complicated because the last
-   clock time could have been at the end of the total_ticks, so the clock might
-   have wrapped around ... */
-#define GST_POD_TICK_ELAPSED(t, c, l) \
-  (((l < c) && (l < t) && (t < c)) || ((l > c) && ((l < t) || (t < c))))
+  if (filter->rate && ((filter->buffer_time * filter->rate) > pos)) {
+    for (i = 0; i < filter->max_plays; i++) {
+      if (filter->plays[i] == G_MAXUINT) {
+        filter->plays[i] = pos;
+        /* emit a signal to indicate a sample being played */
+        g_signal_emit(filter, gst_pod_filter_signals[PLAYED_SIGNAL], 0);
+        break;
+      }
+    }
+  }
+}
 
 static void
 play_on_demand_loop (GstElement *elem)
@@ -419,37 +416,30 @@ play_on_demand_loop (GstElement *elem)
   GstPlayOnDemand *filter = GST_PLAYONDEMAND(elem);
   guint            num_in, num_out, num_filter;
   GstBuffer       *in, *out;
-  register guint   j, k, t;
-  guint            w, offset;
-
-  /* variables for clock check. */
   static guint     last_tick = 0;
-  GSList          *tick_list;
-  guint            tick, current_tick;
 
   g_return_if_fail(filter != NULL);
   g_return_if_fail(GST_IS_PLAYONDEMAND(filter));
 
   filter->bufpool = gst_pad_get_bufferpool(filter->srcpad);
 
-  if (filter->bufpool == NULL) {
+  if (filter->bufpool == NULL)
     filter->bufpool = gst_buffer_pool_get_default(GST_POD_BUFPOOL_SIZE,
                                                   GST_POD_BUFPOOL_NUM);
-  }
 
   in = gst_pad_pull(filter->sinkpad);
 
   if (filter->format == GST_PLAYONDEMAND_FORMAT_INT) {
     if (filter->width == 16) {
-      gint16 min = -32768;
-      gint16 max = 32767;
+      gint16 min = 0xffff;
+      gint16 max = 0x7fff;
       gint16 zero = 0;
 #define _TYPE_ gint16
 #include "filter.func"
 #undef _TYPE_
     } else if (filter->width == 8) {
-      gint8 min = -128;
-      gint8 max = 127;
+      gint8 min = 0xff;
+      gint8 max = 0x7f;
       gint8 zero = 0;
 #define _TYPE_ gint8
 #include "filter.func"
@@ -493,6 +483,7 @@ static void
 play_on_demand_clear_handler (GstElement *elem)
 {
   GstPlayOnDemand *filter;
+  register guint i;
 
   g_return_if_fail(elem != NULL);
   g_return_if_fail(GST_IS_PLAYONDEMAND(elem));
@@ -500,6 +491,9 @@ play_on_demand_clear_handler (GstElement *elem)
 
   filter->write = 0;
   filter->eos = FALSE;
+
+  for (i = 0; i < filter->max_plays; i++) filter->plays[i] = G_MAXUINT;
+  for (i = 0; i < filter->buffer_bytes; i++) filter->buffer[i] = 0;
 }
 
 static void
@@ -508,39 +502,21 @@ play_on_demand_reset_handler (GstElement *elem)
   GstPlayOnDemand *filter;
   register guint i;
 
+  play_on_demand_clear_handler (elem);
+
   g_return_if_fail(elem != NULL);
   g_return_if_fail(GST_IS_PLAYONDEMAND(elem));
   filter = GST_PLAYONDEMAND(elem);
 
-  for (i = 0; i < filter->max_plays; i++) {
-    filter->plays[i] = G_MAXUINT;
-  }
-
-  filter->write = 0;
-  filter->eos = FALSE;
-}
-
-static void
-play_on_demand_add_play_pointer (GstPlayOnDemand *filter, guint pos)
-{
-  register guint i;
-
-  if (filter->rate && ((filter->buffer_time * filter->rate) > pos))
-    for (i = 0; i < filter->max_plays; i++)
-      if (filter->plays[i] == G_MAXUINT) {
-        filter->plays[i] = pos;
-        /* emit a signal to indicate a sample being played */
-        g_signal_emit(filter, gst_pod_filter_signals[PLAYED_SIGNAL], 0);
-        return;
-      }
+  for (i = 0; i <= filter->total_ticks / 32; i++) filter->ticks[i] = 0;
 }
 
 static void
 play_on_demand_resize_buffer (GstPlayOnDemand *filter)
 {
-  register guint   i;
-  guint            new_size, min_size;
-  gchar           *new_buffer;
+  register guint  i;
+  guint           new_size, min_size;
+  gchar          *new_buffer;
 
   /* use a default sample rate of 44100, 1 channel, 1 byte per sample if caps
      haven't been set yet */
@@ -557,7 +533,7 @@ play_on_demand_resize_buffer (GstPlayOnDemand *filter)
 
   new_buffer = g_new(gchar, new_size);
   for (i = 0; i < min_size; i++) new_buffer[i] = filter->buffer[i];
-  for (i = min_size; i < filter->buffer_bytes; i++) new_buffer[i] = 0;
+  for (i = min_size; i < new_size; i++) new_buffer[i] = 0;
 
   g_free(filter->buffer);
   filter->buffer = new_buffer;
