@@ -30,8 +30,8 @@ This file lists supporting libraries for which gst-plugins contains plugins,
 as well as their minimum version.  You can find the corresponding plugins in
 ext/(library)
 
-libHermes	(for colorspace conversions; you need this for any video work)
-			http://www.clanlib.org/hermes/
+dirac		(Dirac video codec)
+			http://www.bbc.co.uk/rd/projects/dirac/index.shtml
 libaudiofile    (for afsrc/afsink
 			http://oss.sgi.com/projects/audiofile/
 libmad          (for the mad mp3 decoder plugin)
@@ -57,6 +57,8 @@ librtp		(for the rtp sink plugin)
 			http://www.linphone.org/ortp/
 aalib		(for the aa sink plugin)
 			http://aa-project.sourceforge.net/aalib/
+libcaca		(for the color aa sink plugin)
+			http://sam.zoy.org/projects/libcaca/
 aRts		(for the arts plugin wrapper, and the artsd sink)
 			http://www.arts-project.org
 raw1394/linux1394	(for the dv plugin)
@@ -82,8 +84,10 @@ mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
 			http://libmpeg2.sourceforge.net/
 			and http://liba52.sourceforge.net/
 		>=	v0.3.1/v0.7.2
-swfdec		(for the swfdec plugin)
-			http://swfdec.sourceforge.net
+swfdec		(for the swfdec (flash) plugin)
+			http://www.schleef.org/swfdec/
+liboil		(for the liboil optimization library)
+			http://www.schleef.org/liboil/
 		>=	0.2.0
 flac		(for the FLAC lossless audio format)
 			http://flac.sourceforge.net
@@ -95,6 +99,24 @@ pango		(for the textoverlay plugins)
 			http://www.pango.org/
 libHermes       (for colorspace conversion;most use ffcolorspace instead)
                         http://www.clanlib.org/hermes/
+librfb		(for capturing of VNC output into a videostream)
+			http://www.schleef.org/
+libHermes       (for colorspace conversions (should not be needed anymore))
+                        http://www.clanlib.org/hermes/
+dtsdec		(for DTS audio decoding)
+			http://www.videolan.org/libdca.html
+divx		(for divx decoding)
+			http://www.divx.com/divx/linux/
+libmng		(for mng animated image format encoding/decoding)
+			http://gjuyn.xs4all.nl/libmng
+libvisual	(for audio visualisations)
+			http://libvisual.sourceforge.net/v2/
+musepack	(for musepack audio codec/format)
+			(http://www.musepack.net/)
+nas		(for the NAS sound server sink)
+			(http://radscan.com/nas.html)
+libtheora	(for Ogg Theora video support)
+			(http://www.theora.org)
 
 
 Optional debian packages:
