@@ -20,8 +20,6 @@
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 #
 
-import pygtk
-pygtk.require('2.0')
 import sys
 import dl
 
@@ -29,6 +27,9 @@ try:
    import ltihooks
 except:
    pass
+
+import gobject
+del gobject
 
 sys.setdlopenflags(dl.RTLD_LAZY | dl.RTLD_GLOBAL)
 del sys, dl

@@ -1,5 +1,9 @@
 2004-05-03  Johan Dahlin  <johan@gnome.org>
 
+	* gst/__init__.py: Remove pygtk import and import gobject
+	directly. It's up the app to call pygtk.require and no the
+	library. 
+
 	* testsuite/event.py, testsuite/buffer.py: New tests.
 
 	* testsuite/common.py (run_silent): New function to enable stderr
