@@ -225,6 +225,11 @@ HAVE_GTK=NO
 PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2.0, HAVE_GTK_22=yes, HAVE_GTK_22=no)
 if test "x$HAVE_GTK_22" = "xyes"; then
   HAVE_GTK=yes
+  AC_PATH_PROG(QUERYLOADERS, gdk-pixbuf-query-loaders, no)
+  GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
+  AC_SUBST(GTK_VERSION)
+  GTK_BASE_DIR=`echo "$QUERYLOADERS" | sed "s/bin\/gdk-pixbuf-query-loaders\$//"`
+  AC_SUBST(GTK_BASE_DIR)
 else
   PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK_20=yes, HAVE_GTK_20=no)
 fi
@@ -236,6 +241,7 @@ GTK_LIBS=$GTK2_LIBS
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
+AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GTK_22" = "xyes")
 
 
 dnl Check for X11 extensions
