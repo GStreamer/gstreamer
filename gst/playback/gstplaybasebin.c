@@ -1096,6 +1096,7 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
   } else {
     if (old_src) {
       GST_LOG ("removing old src element %s", gst_element_get_name (old_src));
+      gst_element_set_state (old_src, GST_STATE_NULL);
       gst_bin_remove (GST_BIN (play_base_bin->thread), old_src);
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->source);
