@@ -206,8 +206,12 @@ gst_pixbufscale_link (GstPad * pad, const GstCaps * caps)
   GstPad *otherpad;
   GstStructure *structure;
   int height, width;
+  gchar *caps_string;
 
-  GST_DEBUG ("gst_pixbufscale_link %s\n", gst_caps_to_string (caps));
+  caps_string = gst_caps_to_string (caps);
+  GST_DEBUG ("gst_pixbufscale_link %s\n", caps_string);
+  g_free (caps_string);
+
   pixbufscale = GST_PIXBUFSCALE (gst_pad_get_parent (pad));
 
   otherpad = (pad == pixbufscale->srcpad) ? pixbufscale->sinkpad :

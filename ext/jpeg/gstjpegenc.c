@@ -75,6 +75,7 @@ enum
 static void gst_jpegenc_base_init (gpointer g_class);
 static void gst_jpegenc_class_init (GstJpegEnc * klass);
 static void gst_jpegenc_init (GstJpegEnc * jpegenc);
+static void gst_jpegenc_finalize (GObject * object);
 
 static void gst_jpegenc_chain (GstPad * pad, GstData * _data);
 static GstPadLinkReturn gst_jpegenc_link (GstPad * pad, const GstCaps * caps);
@@ -85,6 +86,8 @@ static void gst_jpegenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_jpegenc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static GstElementStateReturn gst_jpegenc_change_state (GstElement * element);
+
 
 static GstElementClass *parent_class = NULL;
 static guint gst_jpegenc_signals[LAST_SIGNAL] = { 0 };
@@ -170,6 +173,9 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
 
   gobject_class->set_property = gst_jpegenc_set_property;
   gobject_class->get_property = gst_jpegenc_get_property;
+  gstelement_class->change_state = gst_jpegenc_change_state;
+
+  gobject_class->finalize = gst_jpegenc_finalize;
 
   GST_DEBUG_CATEGORY_INIT (jpegenc_debug, "jpegenc", 0,
       "JPEG encoding element");
@@ -223,13 +229,6 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
   jpegenc->cinfo.err = jpeg_std_error (&jpegenc->jerr);
   jpeg_create_compress (&jpegenc->cinfo);
 
-  GST_DEBUG ("gst_jpegenc_init: setting line buffers");
-  jpegenc->line[0] = NULL;
-  jpegenc->line[1] = NULL;
-  jpegenc->line[2] = NULL;
-
-  gst_jpegenc_resync (jpegenc);
-
   jpegenc->jdest.init_destination = gst_jpegenc_init_destination;
   jpegenc->jdest.empty_output_buffer = gst_jpegenc_flush_destination;
   jpegenc->jdest.term_destination = gst_jpegenc_term_destination;
@@ -237,6 +236,17 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
 
   jpegenc->quality = JPEG_DEFAULT_QUALITY;
   jpegenc->smoothing = 0;
+}
+
+static void
+gst_jpegenc_finalize (GObject * object)
+{
+
+  GstJpegEnc *filter = GST_JPEGENC (object);
+
+  jpeg_destroy_compress (&filter->cinfo);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -491,4 +501,36 @@ gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstElementStateReturn
+gst_jpegenc_change_state (GstElement * element)
+{
+
+  GstJpegEnc *filter = GST_JPEGENC (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      GST_DEBUG ("gst_jpegenc_change_state: setting line buffers");
+      filter->line[0] = NULL;
+      filter->line[1] = NULL;
+      filter->line[2] = NULL;
+      gst_jpegenc_resync (filter);
+      break;
+    case GST_STATE_READY_TO_NULL:
+      g_free (filter->line[0]);
+      g_free (filter->line[1]);
+      g_free (filter->line[2]);
+      filter->line[0] = NULL;
+      filter->line[1] = NULL;
+      filter->line[2] = NULL;
+      break;
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
