@@ -1,5 +1,13 @@
 2004-01-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/dxr3/dxr3audiosink.c:
+	* sys/dxr3/dxr3init.c:
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_close):
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_close):
+	  Fix more error error error errors (missing includes here).
+
+2004-01-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
 	  fix thomas' error errors.
 
