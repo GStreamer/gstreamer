@@ -22,7 +22,7 @@
 #endif
 
 /*#define GST_DEBUG_ENABLED */
-#include <gstmpegpacketize.h>
+#include "gstmpegpacketize.h"
 
 GstMPEGPacketize *
 gst_mpeg_packetize_new (GstPad * pad, GstMPEGPacketizeType type)

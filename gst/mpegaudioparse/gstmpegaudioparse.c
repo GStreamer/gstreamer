@@ -21,7 +21,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gstmpegaudioparse.h>
+#include "gstmpegaudioparse.h"
 
 
 /* elementfactory information */

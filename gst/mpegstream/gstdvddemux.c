@@ -24,7 +24,7 @@
 
 #include <string.h>
 
-#include <gstdvddemux.h>
+#include "gstdvddemux.h"
 
 
 GST_DEBUG_CATEGORY_STATIC (gstdvddemux_debug);

@@ -21,7 +21,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gstmpegdemux.h>
+#include "gstmpegdemux.h"
 
 
 GST_DEBUG_CATEGORY_STATIC (gstmpegdemux_debug);
