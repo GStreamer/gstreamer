@@ -51,6 +51,7 @@ static void gst_videoscale_packed422 (GstVideoscale *scale, unsigned char *dest,
 static void gst_videoscale_packed422rev (GstVideoscale *scale, unsigned char *dest, unsigned char *src);
 static void gst_videoscale_32bit (GstVideoscale *scale, unsigned char *dest, unsigned char *src);
 static void gst_videoscale_24bit (GstVideoscale *scale, unsigned char *dest, unsigned char *src);
+static void gst_videoscale_16bit (GstVideoscale *scale, unsigned char *dest, unsigned char *src);
 
 static void gst_videoscale_scale_nearest_str2 (GstVideoscale *scale,
 	unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
@@ -59,6 +60,8 @@ static void gst_videoscale_scale_nearest_str4 (GstVideoscale *scale,
 static void gst_videoscale_scale_nearest_32bit (GstVideoscale *scale,
 	unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
 static void gst_videoscale_scale_nearest_24bit (GstVideoscale *scale,
+	unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
+static void gst_videoscale_scale_nearest_16bit (GstVideoscale *scale,
 	unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
 
 struct videoscale_format_struct videoscale_formats[] = {
@@ -81,6 +84,8 @@ struct videoscale_format_struct videoscale_formats[] = {
 	{ "RGB ", 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 },
 	{ "RGB ", 24, gst_videoscale_24bit, 24, G_BIG_ENDIAN, 0xff0000, 0x00ff00, 0x0000ff },
 	{ "RGB ", 24, gst_videoscale_24bit, 24, G_BIG_ENDIAN, 0x0000ff, 0x00ff00, 0xff0000 },
+	{ "RGB ", 16, gst_videoscale_16bit, 16, G_BYTE_ORDER, 0xf800, 0x07e0, 0x001f },
+	{ "RGB ", 16, gst_videoscale_16bit, 15, G_BYTE_ORDER, 0x7c00, 0x03e0, 0x001f },
 };
 
 int videoscale_n_formats = sizeof(videoscale_formats)/sizeof(videoscale_formats[0]);
@@ -295,6 +300,20 @@ gst_videoscale_24bit (GstVideoscale *scale, unsigned char *dest, unsigned char *
   GST_DEBUG (0,"videoscale: scaling 24bit %dx%d to %dx%d", sw, sh, dw, dh);
 
   gst_videoscale_scale_nearest_24bit(scale, dest, src, sw, sh, dw, dh);
+
+}
+
+static void
+gst_videoscale_16bit (GstVideoscale *scale, unsigned char *dest, unsigned char *src)
+{
+  int sw = scale->from_width;
+  int sh = scale->from_height;
+  int dw = scale->to_width;
+  int dh = scale->to_height;
+
+  GST_DEBUG (0,"videoscale: scaling 16bit %dx%d to %dx%d", sw, sh, dw, dh);
+
+  gst_videoscale_scale_nearest_16bit(scale, dest, src, sw, sh, dw, dh);
 
 }
 
@@ -666,6 +685,52 @@ gst_videoscale_scale_nearest_24bit (GstVideoscale *scale,
       xpos += xinc;
     }
     dest += dw*3;
+
+    ypos += yinc;
+  }
+}
+
+static void
+gst_videoscale_scale_nearest_16bit (GstVideoscale *scale,
+			      unsigned char *dest,
+		              unsigned char *src,
+			      int sw, int sh, int dw, int dh)
+{
+  int ypos, yinc, y;
+  int xpos, xinc, x;
+  guchar *destp = dest;
+  guchar *srcp = src;
+
+  GST_DEBUG (0, "videoscale: scaling nearest %p %p %d", src, dest, dw);
+
+
+  ypos = 0x10000;
+  yinc = (sh<<16)/dh;
+  xinc = (sw<<16)/dw;
+
+  for (y = dh; y; y--) {
+
+    while (ypos >0x10000) {
+      ypos-=0x10000;
+      src += sw*2;
+    }
+
+    xpos = 0x10000;
+
+    srcp = src;
+    destp = dest;
+
+    for ( x=dw; x; x-- ) {
+      while ( xpos >= 0x10000L ) {
+        srcp+=2;
+        xpos -= 0x10000L;
+      }
+      destp[0] = srcp[0];
+      destp[1] = srcp[1];
+      destp+=2;
+      xpos += xinc;
+    }
+    dest += dw*2;
 
     ypos += yinc;
   }
