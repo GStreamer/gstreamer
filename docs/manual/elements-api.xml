@@ -3,9 +3,12 @@
   <sect1 id="section-elements-create">
     <title>Creating a GstElement</title>
     <para> 
-      A <classname>GstElement</classname> object is created from
-      a factory.  To create an element, you have to get access to a
-      <classname>GstElementFactory</classname> object using a unique
+      A <ulink type="http"
+      url="../../gstreamer/html/GstElement.html"><classname>GstElement</classname></ulink>
+      object is created from a factory.
+      To create an element, you have to get access to a
+      <ulink type="http" url="../../gstreamer/html/GstElementFactory.html">
+      <classname>GstElementFactory</classname></ulink> object using a unique
       factory name.
     </para> 
     <para> 
@@ -58,14 +61,16 @@
   <sect1 id="section-elements-properties">
     <title>GstElement properties</title>
     <para> 
-      A <classname>GstElement</classname> can have several properties
+      A <ulink type="http" url="../../gstreamer/html/GstElement.html">
+      <classname>GstElement</classname></ulink> can have several properties
       which are implemented using standard <classname>GObject</classname>
       properties. The usual <classname>GObject</classname> methods to query,
       set and get property values and <classname>GParamSpecs</classname>
       are therefore supported.
     </para> 
     <para> 
-      Every <classname>GstElement</classname> inherits at least
+      Every <ulink type="http" url="../../gstreamer/html/GstElementFactory.html">
+      <classname>GstElement</classname></ulink> inherits at least
       one property of its parent <classname>GstObject</classname>:
       the "name" property. This is the name you provide to the
       functions <function>gst_element_factory_make</function> or
@@ -108,7 +113,8 @@
   <sect1 id="section-elements-signals">
     <title>GstElement signals</title>
     <para> 
-      A <classname>GstElement</classname> also provides various 
+      A <ulink type="http" url="../../gstreamer/html/GstElementFactory.html">
+      <classname>GstElement</classname></ulink> also provides various 
       <classname>GObject</classname> signals that can be used as a flexible
       callback mechanism.
     </para> 

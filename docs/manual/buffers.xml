@@ -36,7 +36,8 @@
     </itemizedlist>
   </para>
 
-  <para> 
+  <para>
+    <!-- FIXME: this is outdated, there is no GstBufferPool in gst-0.8.X -->
     GStreamer provides functions to create custom buffer create/destroy algorithms, called
     a <classname>GstBufferPool</classname>. This makes it possible to efficiently 
     allocate and destroy buffer memory. It also makes it possible to exchange memory between

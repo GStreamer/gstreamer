@@ -119,7 +119,8 @@
     </programlisting>
     <para>
       Note that the above code assumes that the mp3player bin derives itself
-      from a <classname>GstThread</classname>, which begins to play as soon
+      from a <ulink type="http"
+      url="../../gstreamer/html/GstThread.html"><classname>GstThread</classname></ulink>, which begins to play as soon
       as its state is set to PLAYING.  Other bin types may need explicit
       iteration. For more information, see <xref linkend="chapter-threads"/>.
     </para>
@@ -137,7 +138,8 @@
       This is where "ghost pads" come into play.
     </para>
     <figure float="1" id="section-bin-noghost-img">
-      <title>Visualisation of a <classname>GstBin</classname> element without ghost pads</title>
+      <title>Visualisation of a <ulink type="http"
+      url="../../gstreamer/html/GstBin.html"><classname>GstBin</classname></ulink> element without ghost pads</title>
       <mediaobject>
         <imageobject>
           <imagedata fileref="images/bin-element-noghost.&image;" format="&IMAGE;" />
@@ -152,7 +154,8 @@
     </para>
     
     <figure float="1" id="section-bin-ghost-img">
-      <title>Visualisation of a <classname>GstBin</classname> element with a ghost pad</title>
+      <title>Visualisation of a <ulink type="http"
+      url="../../gstreamer/html/GstBin.html"><classname>GstBin</classname></ulink> element with a ghost pad</title>
       <mediaobject>
         <imageobject>
           <imagedata fileref="images/bin-element-ghost.&image;" format="&IMAGE;" />
@@ -165,8 +168,9 @@
       of the bin.
     </para>
     <para>
-      Ghost pads can actually be added to all <classname>GstElement</classname>s and not just
-      <classname>GstBin</classname>s. Use the following code example to add a ghost pad to a bin:
+      Ghost pads can actually be added to all <ulink type="http"
+      url="../../gstreamer/html/GstElement.html"><classname>GstElement</classname></ulink>s and not just
+      <ulink type="http" url="../../gstreamer/html/GstBin.html"><classname>GstBin</classname></ulink>s. Use the following code example to add a ghost pad to a bin:
     </para>
     <programlisting>
   GstElement *bin;

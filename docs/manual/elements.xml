@@ -2,7 +2,9 @@
   <title>Elements</title>
   <para> 
     The most important object in <application>GStreamer</application> for the 
-    application programmer is the <classname>GstElement</classname> object. 
+    application programmer is the <ulink type="http"
+    url="../../gstreamer/html/GstElement.html"><classname>GstElement</classname>
+    </ulink>object. 
   </para>
 
   <sect1 id="section-elements-design">
@@ -10,14 +12,16 @@
     <para> 
       An element is the basic building block for the media pipeline.
       All the different high-level components you are going to use are
-      derived from <classname>GstElement</classname>.  This means that a
+      derived from <ulink type="http" url="../../gstreamer/html/GstElement.html">
+      <classname>GstElement</classname></ulink>. This means that a
       lot of functions you are going to use operate on objects of this class.
     </para>
     <para>
       Elements, from the perspective of GStreamer, are viewed as "black boxes" 
       with a number of different aspects. One of these aspects is the presence 
-      of "pads" (see <xref linkend="chapter-pads"/>), or link points. This terminology arises from soldering; 
-      pads are where wires can be attached.
+      of "pads" (see <xref linkend="chapter-pads"/>), or link points.
+      This terminology arises from soldering; pads are where wires can be
+      attached.
     </para>
   </sect1>
 

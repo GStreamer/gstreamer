@@ -9,21 +9,24 @@
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
 <!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
 <!ENTITY GstClock SYSTEM "xml/gstclock.xml">
+<!ENTITY GstCompat SYSTEM "xml/gstcompat.xml">
 <!ENTITY GstConfig SYSTEM "xml/gstconfig.xml">
 <!ENTITY GstCpu SYSTEM "xml/gstcpu.xml">
 <!ENTITY GstData SYSTEM "xml/gstdata.xml">
 <!ENTITY GstElement SYSTEM "xml/gstelement.xml">
 <!ENTITY GstElementDetails SYSTEM "xml/gstelementdetails.xml">
 <!ENTITY GstElementFactory SYSTEM "xml/gstelementfactory.xml">
+<!ENTITY GstEnumTypes SYSTEM "xml/gstenumtypes.xml">
 <!ENTITY GstError SYSTEM "xml/gsterror.xml">
 <!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
+<!ENTITY GstFilter SYSTEM "xml/gstfilter.xml">
 <!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
 <!ENTITY GstGhostPad SYSTEM "xml/gstghostpad.xml">
+<!ENTITY GstImplementsInterface SYSTEM "xml/gstimplementsinterface.xml">
 <!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
 <!ENTITY GstIndexFactory SYSTEM "xml/gstindexfactory.xml">
-<!ENTITY GstImplementsInterface SYSTEM "xml/gstimplementsinterface.xml">
 <!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
-<!ENTITY GstLog SYSTEM "xml/gstlog.xml">
+<!ENTITY GstMacros SYSTEM "xml/gstmacros.xml">
 <!ENTITY GstMemChunk SYSTEM "xml/gstmemchunk.xml">
 <!ENTITY GstObject SYSTEM "xml/gstobject.xml">
 <!ENTITY GstPad SYSTEM "xml/gstpad.xml">
@@ -34,6 +37,7 @@
 <!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
 <!ENTITY GstProbe SYSTEM "xml/gstprobe.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
+<!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 <!ENTITY GstRealPad SYSTEM "xml/gstrealpad.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstRegistryPool SYSTEM "xml/gstregistrypool.xml">
@@ -45,14 +49,18 @@
 <!ENTITY GstTagSetter SYSTEM "xml/gsttagsetter.xml">
 <!ENTITY GstThread SYSTEM "xml/gstthread.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
+<!ENTITY GstTrashStack SYSTEM "xml/gsttrashstack.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
 <!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
-<!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
+<!ENTITY GstTypes SYSTEM "xml/gsttypes.xml">
 <!ENTITY GstUriHandler SYSTEM "xml/gsturihandler.xml">
+<!ENTITY GstUriType SYSTEM "xml/gsturitype.xml">
+<!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
+<!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
-<!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 
+<!--
 <!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
 <!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
@@ -65,7 +73,7 @@
 <!ENTITY GstStatistics SYSTEM "xml/gststatistics.xml">
 <!ENTITY GstMD5Sink SYSTEM "xml/gstmd5sink.xml">
 <!ENTITY GstTee SYSTEM "xml/gsttee.xml">
-
+-->
 <!ENTITY gstreamer-tree-index SYSTEM "xml/tree_index.sgml">
 
 <!ENTITY hash "#">
@@ -89,22 +97,24 @@
     &Gst;
     &GstBin;
     &GstBuffer;
-    &GstConfig;
     &GstCaps;
     &GstClock;
+    &GstConfig;
     &GstCpu;
     &GstData;
     &GstElement;
     &GstElementDetails;
     &GstElementFactory;
+    &GstEnumTypes;
     &GstError;
     &GstEvent;
+    &GstFilter;
     &GstFormat;
     &GstGhostPad;
+    &GstImplementsInterface;
     &GstIndex;
     &GstIndexFactory;
     &GstInfo;
-    &GstImplementsInterface;
     &GstObject;
     &GstPad;
     &GstPadTemplate;
@@ -127,9 +137,12 @@
     &GstThread;
     &GstTypeFind;
     &GstTypeFindFactory;
+    &GstTypes;
     &GstUriHandler;
+    &GstUriType;
     &GstUtils;
     &GstValue;
+    &GstVersion;
     &GstXML;
 
   </chapter>
@@ -141,12 +154,24 @@
     </para>
 
     &GstAtomic;
+    &GstMacros;
     &GstMemChunk;
 
   </chapter>
 
-<!--
-  FIXME: why is this commented out
+  <chapter id="gstreamer-compat">
+    <title>GStreamer Core Compatibility</title>
+    <para>
+      Theses elements are defined for compatibillity with older code.
+      The must not be use in new code!
+    </para>
+
+    &GstCompat;
+
+  </chapter>
+
+  <!--
+  FIXME: why is this commented out (reason #1: no public API)
   <chapter id="element-types">
     <title>GStreamer Standard Elements</title>
 

@@ -25,6 +25,13 @@ system time.
 @cond: 
 @_gst_reserved: 
 
+<!-- ##### MACRO GST_TYPE_SYSTEM_CLOCK ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### FUNCTION gst_system_clock_obtain ##### -->
 <para>
 

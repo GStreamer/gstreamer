@@ -143,7 +143,8 @@ GTK-DOC NOTES
     $(MODULE)-sections.txt is created if it doesn't exist yet (it should),
     as well as $(MODULE)-decl.txt and $(MODULE)-decl-list.txt
     and .args, .hierarchy and .signals files are created
-    gtkdoc-scan is called 
+    gtkdoc-scan is called
+  - if it not works, try e.g. 'rm docs/gst/*.stamp'
 
 * Possible errors and how to fix them
   - Warning: multiple "IDs" for constraint linkend: gst-tag-register.

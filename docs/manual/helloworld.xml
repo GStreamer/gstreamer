@@ -93,7 +93,8 @@ main (int argc, char *argv[])
 
     <para>
       We are going to create three elements and one pipeline. Since all
-      elements share the same base type, <classname>GstElement</classname>,
+      elements share the same base type, <ulink type="http"
+      url="../../gstreamer/html/GstElement.html"><classname>GstElement</classname></ulink>,
       we can define them as:
     </para>
     <programlisting>

@@ -95,8 +95,9 @@
           <para>
             It is important to understand that the term "capabilities" refers
             to a chain of one capability or more.  This will be clearer when
-            you see the structure definition of a <classname>GstCaps</classname>
-            element.
+            you see the structure definition of a <ulink type="http"
+            url="../../gstreamer/html/gstreamer-GstCaps.html"><classname>GstCaps
+            </classname></ulink>element.
           </para>
         </footnote>
       </para>

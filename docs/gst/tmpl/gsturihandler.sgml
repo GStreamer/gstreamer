@@ -1,0 +1,141 @@
+<!-- ##### SECTION Title ##### -->
+GstUriHandler
+
+<!-- ##### SECTION Short_Description ##### -->
+Plugin feature that handles URI types
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+The URIHandler is a pluginfeature that can be used to locate element
+and the element property that can handle a given URI.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GstURIHandler ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_URI_HANDLER ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GST_URI_TYPE_IS_VALID ##### -->
+<para>
+
+</para>
+
+@type: 
+
+
+<!-- ##### FUNCTION gst_uri_protocol_is_valid ##### -->
+<para>
+
+</para>
+
+@protocol: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_is_valid ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_get_protocol ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_get_location ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_construct ##### -->
+<para>
+
+</para>
+
+@protocol: 
+@location: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_element_make_from_uri ##### -->
+<para>
+
+</para>
+
+@type: 
+@uri: 
+@elementname: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_get_uri_type ##### -->
+<para>
+
+</para>
+
+@handler: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_get_protocols ##### -->
+<para>
+
+</para>
+
+@handler: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_get_uri ##### -->
+<para>
+
+</para>
+
+@handler: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_set_uri ##### -->
+<para>
+
+</para>
+
+@handler: 
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_uri_handler_new_uri ##### -->
+<para>
+
+</para>
+
+@handler: 
+@uri: 
+
+

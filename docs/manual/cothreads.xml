@@ -6,7 +6,9 @@
     from other user-space threading libraries in that they are scheduled explictly by GStreamer.
   </para>
   <para> 
-    A cothread is created by a <classname>GstBin</classname> whenever an element is found
+    A cothread is created by a <ulink type="http"
+    url="../../gstreamer/html/GstBin.html"><classname>GstBin</classname></ulink>
+    whenever an element is found
     inside the bin that has one or more of the following properties:
     <itemizedlist>
       <listitem>
@@ -25,7 +27,8 @@
         </para>
       </listitem>
     </itemizedlist>
-    The <classname>GstBin</classname> will create a cothread context for all the elements
+    The <ulink type="http" url="../../gstreamer/html/GstBin.html"><classname>GstBin
+    </classname></ulink> will create a cothread context for all the elements
     in the bin so that the elements will interact in cooperative
     multithreading.
   </para>
@@ -117,7 +120,9 @@ chain_function (GstPad *pad, GstBuffer *buffer)
       bytestream library will need to be loop-based.
     </para>
     <para>
-      There is no problem in putting cothreaded elements into a <classname>GstThread</classname> to
+      There is no problem in putting cothreaded elements into a <ulink
+      type="http" url="../../gstreamer/html/GstThread.html"><classname>GstThread
+      </classname></ulink> to
       create even more complex pipelines with both user and kernel space threads.
     </para>
 

@@ -32,21 +32,32 @@
     once as streaminfo.
   </para>
   <para>
+    <!-- FIXME: (Company knows about this) 
+      when people are interested in tags, they should connect to the pipeline's 'found-tag' signal and use that
+      the code example on that page is bogus, too btw
+      there are no string => something else g_value_transforms
+      either use gst_value_deserialize or a custom deserialization (which is a better idea most of the time)
+    -->
     A tag reading element is called <classname>TagGetter</classname> in
-    &GStreamer;. A tag writer is called <classname>TagSetter</classname>. An
-    element supporting both can be used in a tag editor for quick tag changing.
+    &GStreamer;.
+    A tag writer is called <ulink type="http"
+    url="../../gstreamer/html/GstTagSetter.html"><classname>TagSetter</classname></ulink>.
+    An element supporting both can be used in a tag editor for quick tag
+    changing.
   </para>
 
   <sect1 id="section-tagging-read" xreflabel="Reading Tags from Streams">
     <title>Reading Tags from Streams</title>
     <para>
-      The basic object for tags is a <classname>GstTagList</classname>. An
-      element that is reading tags from a stream should create an empty taglist
-      and fill this with individual tags. Empty tag lists can be created with
-      <function>gst_tag_list_new ()</function>. Then, the element can fill the
-      list using <function>gst_tag_list_add_values ()</function>. Note that
-      an element probably reads metadata as strings, but values might not
-      necessarily be strings. Be sure to use <function>gst_value_transform ()</function>
+      The basic object for tags is a <ulink type="http"
+      url="../../gstreamer/html/gstreamer-GstTagList.html"><classname>GstTagList
+      </classname></ulink>. An element that is reading tags from a stream should
+      create an empty taglist and fill this with individual tags. Empty tag
+      lists can be created with <function>gst_tag_list_new ()</function>. Then,
+      the element can fill the list using <function>gst_tag_list_add_values ()
+      </function>. Note that an element probably reads metadata as strings, but
+      values might not necessarily be strings. Be sure to use
+      <function>gst_value_transform ()</function>
       to make sure that your data is of the right type. After data reading, the
       application can be notified of the new taglist by calling
       <function>gst_element_found_tags ()</function>. The tags should also be
@@ -160,7 +171,7 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
       reader, too. Application tags are tags provided to the element via the
       TagSetter interface (which is just a layer). Pipeline tags are tags
       provided to the element from within the pipeline. The element receives
-      such tags via the <classname>GST_EVENT_TAG</classname> event, which means
+      such tags via the <symbol>GST_EVENT_TAG</symbol> event, which means
       that tags writers should automatically be event aware. The tag writer is
       responsible for combining all these three into one list and writing them
       to the output stream.

@@ -5,53 +5,53 @@
   <para>
     A state describes whether the element instance is initialized, whether it
     is ready to transfer data and whether it is currently handling data. There
-    are four states defined in &GStreamer;: <classname>GST_STATE_NULL</classname>,
-    <classname>GST_STATE_READY</classname>, <classname>GST_STATE_PAUSED</classname>
-    and <classname>GST_STATE_PLAYING</classname>.
+    are four states defined in &GStreamer;: <symbol>GST_STATE_NULL</symbol>,
+    <symbol>GST_STATE_READY</symbol>, <symbol>GST_STATE_PAUSED</symbol>
+    and <symbol>GST_STATE_PLAYING</symbol>.
   </para>
   <para>
-    <classname>GST_STATE_NULL</classname> (from now on referred to as
+    <symbol>GST_STATE_NULL</symbol> (from now on referred to as
     <quote>NULL</quote>) is the default state of an element. In this state, it
     has not allocated any runtime resources, it has not loaded any runtime
     libraries and it can obviously not handle data.
   </para>
   <para>
-    <classname>GST_STATE_READY</classname> (from now on referred to as
+    <symbol>GST_STATE_READY</symbol> (from now on referred to as
     <quote>READY</quote>) is the next state that an element can be in. In the
     READY state, an element has all default resources (runtime-libraries,
     runtime-memory) allocated. However, it has not yet allocated or defined
     anything that is stream-specific. When going from NULL to READY state
-    (<classname>GST_STATE_NULL_TO_READY</classname>), an element should
+    (<symbol>GST_STATE_NULL_TO_READY</symbol>), an element should
     allocate any non-stream-specific resources and should load runtime-loadable
     libraries (if any). When going the other way around (from READY to NULL,
-    <classname>GST_STATE_READY_TO_NULL</classname>), an element should unload
+    <symbol>GST_STATE_READY_TO_NULL</symbol>), an element should unload
     these libraries and free all allocated resources. Examples of such
     resources are hardware devices. Note that files are generally streams,
     and these should thus be considered as stream-specific resources; therefore,
     they should <emphasis>not</emphasis> be allocated in this state.
   </para>
   <para>
-    <classname>GST_STATE_PAUSED</classname> (from now on referred to as
+    <symbol>GST_STATE_PAUSED</symbol> (from now on referred to as
     <quote>PAUSED</quote>) is a state in which an element is by all means able
     to handle data; the only 'but' here is that it doesn't actually handle
     any data. When going from the READY state into the PAUSED state
-    (<classname>GST_STATE_READY_TO_PAUSED</classname>), the element will
+    (<symbol>GST_STATE_READY_TO_PAUSED</symbol>), the element will
     usually not do anything at all: all stream-specific info is generally
     handled in the <function>_link ()</function>, which is called during caps
     negotiation. Exceptions to this rule are, for example, files: these are
     considered stream-specific data (since one file is one stream), and should
     thus be opened in this state change. When going from the PAUSED back to
-    READY (<classname>GST_STATE_PAUSED_TO_READY</classname>), all
+    READY (<symbol>GST_STATE_PAUSED_TO_READY</symbol>), all
     stream-specific data should be discarded.
   </para>
   <para>
-    <classname>GST_STATE_PLAYING</classname> (from now on referred to as
+    <symbol>GST_STATE_PLAYING</symbol> (from now on referred to as
     <quote>PLAYING</quote>) is the highest state that an element can be in. It
     is similar to PAUSED, except that now, data is actually passing over the
     pipeline. The transition from PAUSED to PLAYING
-    (<classname>GST_STATE_PAUSED_TO_PLAYING</classname>) should be as small
+    (<symbol>GST_STATE_PAUSED_TO_PLAYING</symbol>) should be as small
     as possible and would ideally cause no delay at all. The same goes for the
-    reverse transition (<classname>GST_STATE_PLAYING_TO_PAUSED</classname>).
+    reverse transition (<symbol>GST_STATE_PLAYING_TO_PAUSED</symbol>).
   </para>
 
   <sect1 id="section-statemanage-filters">

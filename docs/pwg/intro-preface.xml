@@ -67,7 +67,10 @@
       url="http://developer.gnome.org/doc/API/2.0/gobject/index.html">GObject</ulink>
       programming. There are several good introductions to the GObject library,
       including the <emphasis><ulink type="http"
-      url="http://www.gtk.org/tutorial/">GTK+ Tutorial</ulink></emphasis>.
+      url="http://www.gtk.org/tutorial/">GTK+ Tutorial</ulink></emphasis> and
+      the <emphasis><ulink type="http"
+      url="http://www.le-hacker.org/papers/gobject/index.html">Glib Object
+      system</ulink></emphasis>.
     </para>
   </sect1>
 

@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-gstmacros
+GstMacros
 
 <!-- ##### SECTION Short_Description ##### -->
-
+various portabillity helper macros
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

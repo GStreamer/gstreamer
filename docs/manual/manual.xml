@@ -123,9 +123,11 @@
 
         For a gentle introduction to this system, you may wish to read the
         <emphasis><ulink url="http://www.gtk.org/tutorial/" type="http">GTK+
-        Tutorial</ulink></emphasis> or Eric Harlow's book <emphasis>Developing
-        Linux Applications with GTK+ and GDK</emphasis>.
-
+        Tutorial</ulink></emphasis>, Eric Harlow's book <emphasis>Developing
+        Linux Applications with GTK+ and GDK</emphasis> and the  <emphasis>
+        <ulink type="http"
+        url="http://www.le-hacker.org/papers/gobject/index.html">Glib Object
+        system</ulink></emphasis>.
       </para>
     </partintro>
 

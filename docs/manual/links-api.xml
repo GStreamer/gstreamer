@@ -59,19 +59,22 @@
 
   </programlisting>
    <para> 
-     You can query if a pad is linked with GST_PAD_IS_LINKED (pad). 
+     You can query if a pad is linked with
+     <function>GST_PAD_IS_LINKED (pad)</function>. 
    </para>
    <para> 
-     To query for the <classname>GstPad</classname> a pad is linked to, use 
-     gst_pad_get_peer (pad).
+     To query for the <ulink type="http"
+     url="../../gstreamer/html/GstPad.html"><classname>GstPad</classname></ulink>
+     a pad is linked to, use <function>gst_pad_get_peer (pad)</function>.
    </para>
   </sect1>
 
   <sect1 id="section-link-filtered">
    <title>Making filtered links</title>
     <para>
-      You can also force a specific media type on the link by using gst_pad_link_filtered ()
-      and gst_element_link_filtered () with capabilities.
+      You can also force a specific media type on the link by using
+      <function>gst_pad_link_filtered ()</function>
+      and <function>gst_element_link_filtered ()</function> with capabilities.
       See <xref linkend="section-caps"/> for
       an explanation of capabilities.
     </para>

@@ -37,7 +37,9 @@
     at their own will. We've also created a small extension to
     <classname>GTypeInterface</classname> (which is static itself, too) which
     allows us to query for interface availability based on runtime properties.
-    This extension is called <classname>GstImplementsInterface</classname>.
+    This extension is called <ulink type="http"
+    url="../../gstreamer/html/GstImplementsInterface.html"><classname>
+    GstImplementsInterface</classname></ulink>.
   </para>
   <para>
     One important note: interfaces do <emphasis>not</emphasis> replace
@@ -57,13 +59,16 @@
       will be notified of doing that wrongly when using the element: it will
       quit with failed assertions, which will explain what went wrong. In the
       case of GStreamer, the only dependency that <emphasis>some</emphasis>
-      interfaces have is <classname>GstImplementsInterface</classname>. Per
+      interfaces have is <ulink type="http"
+      url="../../gstreamer/html/GstImplementsInterface.html"><classname>
+      GstImplementsInterface</classname></ulink>. Per
       interface, we will indicate clearly when it depends on this extension.
       If it does, you need to register support for <emphasis>that</emphasis>
       interface before registering support for the interface that you're
       wanting to support. The example below explains how to add support for a
       simple interface with no further dependencies. For a small explanation
-      on <classname>GstImplementsInterface</classname>, see the next section
+      on <ulink type="http" url="../../gstreamer/html/GstImplementsInterface.html">
+      <classname>GstImplementsInterface</classname></ulink>, see the next section
       about the mixer interface: <xref linkend="section-iface-mixer"/>.
     </para>
     <programlisting>
@@ -127,13 +132,16 @@ gst_my_filter_some_interface_init (GstSomeInterface *iface)
       and input/output settings.
     </para>
     <para>
-      The mixer interface requires the <classname>GstImplementsInterface</classname>
+      The mixer interface requires the <ulink type="http"
+      url="../../gstreamer/html/GstImplementsInterface.html"><classname>
+      GstImplementsInterface</classname></ulink>
       interface to be implemented by the element. The example below will
-      feature both, so it serves as an example for the
-      <classname>GstImplementsInterface</classname>, too. In the
-      <classname>GstImplementsInterface</classname>, it is required to set a
-      function pointer for the <function>supported ()</function> function. If
-      you don't, this function will always return FALSE (default
+      feature both, so it serves as an example for the <ulink type="http"
+      url="../../gstreamer/html/GstImplementsInterface.html"><classname>
+      GstImplementsInterface</classname></ulink>, too. In this
+      interface, it is required to set a function pointer for the <function>
+      supported ()</function> function.
+      If you don't, this function will always return FALSE (default
       implementation) and the mixer interface implementation will not work. For
       the mixer interface, the only required function is
       <function>list_tracks ()</function>. All other function pointers in the
@@ -307,7 +315,9 @@ gst_my_filter_mixer_interface_init (GstMixerClass *iface)
       highly analog-video-centric.
     </para>
     <para>
-      This interface requires the <classname>GstImplemensInterface</classname>
+      This interface requires the <ulink type="http"
+      url="../../gstreamer/html/GstImplementsInterface.html"><classname>
+      GstImplemensInterface</classname></ulink>
       interface to work correctly.
     </para>
     <para>
@@ -454,7 +464,7 @@ gst_my_filter_tuner_interface_init (GstTunerClass *iface)
     <para>
       Property probing stores the list of allowed (or recommended) values in a
       <classname>GValueArray</classname> and returns that to the user.
-      <classname>NULL</classname> is a valid return value, too. The process of
+      <symbol>NULL</symbol> is a valid return value, too. The process of
       property probing is separated over two virtual functions: one for probing
       the property to create a <classname>GValueArray</classname>, and one to
       retrieve the current <classname>GValueArray</classname>. Those two are
@@ -462,12 +472,13 @@ gst_my_filter_tuner_interface_init (GstTunerClass *iface)
       this simpliies interface implementation in elements. For the application,
       there are functions that wrap those two. For more information on this,
       have a look at the API reference for the
+      <!-- FIXME: add link, but this is in ./gst-plugins/gst-libs/gst/propertyprobe/propertyprobe.c-->
       <classname>GstPropertyProbe</classname> interface.
     </para>
     <para>
       Below is a example of property probing for the audio filter element; it
       will probe for allowed values for the <quote>silent</quote> property.
-      Indeed, this value is a <classname>gboolean</classname> so it doesn't
+      Indeed, this value is a <type>gboolean</type> so it doesn't
       make much sense. Then again, it's only an example.
     </para>
     <programlisting>

@@ -14,6 +14,13 @@ Generic structure containing fields of names and values
 
 </para>
 
+<!-- ##### MACRO GST_TYPE_STRUCTURE ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### STRUCT GstStructure ##### -->
 <para>
 

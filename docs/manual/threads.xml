@@ -2,8 +2,10 @@
   <title>Threads</title>
   <para> 
     GStreamer has support for multithreading through the use of
-    the <classname>GstThread</classname> object. This object is in fact
-    a special <classname>GstBin</classname> that will become a thread when started.
+    the <ulink type="http" url="../../gstreamer/html/GstThread.html"><classname>
+    GstThread</classname></ulink> object. This object is in fact
+    a special <ulink type="http" url="../../gstreamer/html/GstBin.html"><classname>
+    GstBin</classname></ulink> that will become a thread when started.
   </para>
 
   <para> 

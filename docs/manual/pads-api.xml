@@ -190,8 +190,9 @@ struct _GstCaps {
       <para> 
         As we said, a capability has a name, a mime-type and some
         properties. The signature of the function to create a new
-        <classname>GstCaps</classname> structure is:
-
+        <ulink type="http" url="../../gstreamer/html/gstreamer-GstCaps.html">
+        <classname>GstCaps</classname></ulink> structure is:
+        <!-- FIXME: GstProbs are deprecated, in gst-0.8.X -->
     <programlisting>
 GstCaps*    gst_caps_new (const gchar *name, const gchar *mime, GstProps *props);
     </programlisting>

@@ -92,6 +92,7 @@
     </para>
   </sect1>
   <sect1 id="section-autoplug-cache">
+    <!-- FIXME: this is outdated, there is no GstAutoplugCache in gst-0.8.X -->
     <title>Using the <classname>GstAutoplugCache</classname> element</title>
     <para>
       The <classname>GstAutoplugCache</classname> element is used to cache the 

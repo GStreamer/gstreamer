@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-gsttypes
+GstTypes
 
 <!-- ##### SECTION Short_Description ##### -->
-
+various global enums and constants
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

@@ -17,7 +17,8 @@
     <para>
       Elements are at the core of &GStreamer;. In the context of plugin
       development, an <emphasis>element</emphasis> is an object derived from the
-      <classname>GstElement</classname> class. Elements provide some sort of
+      <ulink type="http" url="../../gstreamer/html/GstElement.html"><classname>
+      GstElement</classname></ulink> class. Elements provide some sort of
       functionality when linked with other elements: For example, a source
       element provides data to a stream, and a filter element acts on the data
       in a stream. Without elements, &GStreamer; is just a bunch of conceptual
@@ -56,9 +57,9 @@
     <para>
       See the &GstLibRef; for the current implementation details of <ulink
       type="http"
-      url="../../gstreamer/gstelement.html"><classname>GstElement</classname></ulink>
+      url="../../gstreamer/html/GstElement.html"><classname>GstElement</classname></ulink>
       and <ulink type="http"
-      url="../../gstreamer/gstreamer-gstplugin.html"><classname>GstPlugin</classname></ulink>.
+      url="../../gstreamer/html/gstreamer-GstPlugin.html"><classname>GstPlugin</classname></ulink>.
     </para>
   </sect1>
 
@@ -97,7 +98,7 @@
     <para>
       See the &GstLibRef; for the current implementation details of a <ulink
       type="http"
-      url="../../gstreamer/gstreamer-gstpad.html"><classname>GstPad</classname></ulink>.
+      url="../../gstreamer/html/GstPad.html"><classname>GstPad</classname></ulink>.
     </para>
   </sect1>
 
@@ -192,9 +193,9 @@
     <para>
       See the &GstLibRef; for the current implementation details of a <ulink
       type="http"
-      url="../../gstreamer/gstreamer-gstdata.html"><classname>GstData</classname></ulink>, <ulink type="http"
-      url="../../gstreamer/gstreamer-gstbuffer.html"><classname>GstBuffer</classname></ulink> and <ulink type="http"
-      url="../../gstreamer/gstreamer-gstevent.html"><classname>GstEvent</classname></ulink>.
+      url="../../gstreamer/html/gstreamer-GstData.html"><classname>GstData</classname></ulink>, <ulink type="http"
+      url="../../gstreamer/html/gstreamer-GstBuffer.html"><classname>GstBuffer</classname></ulink> and <ulink type="http"
+      url="../../gstreamer/html/gstreamer-GstEvent.html"><classname>GstEvent</classname></ulink>.
     </para>
 
     <sect2 id="sect2-buffer-allocation" xreflabel="Buffer Allocation">

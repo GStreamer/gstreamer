@@ -158,9 +158,13 @@ gst_my_filter_handle_src_event (GstPad   *pad,
     <para>
       In this chapter follows a list of all defined events that are currently
       being used, plus how they should be used/interpreted. Events are stored
-      in a <classname>GstEvent</classname> structure, which is simply a big
-      C union with the types for each event in it. For the next development
-      cycle, we intend to switch events over to <classname>GstStructure</classname>,
+      in a <ulink type="http"
+      url="../../gstreamer/html/gstreamer-GstEvent.html"><classname>GstEvent
+      </classname></ulink> structure, which is simply a big C union with the
+      types for each event in it. For the next development cycle, we intend to
+      switch events over to <ulink type="http"
+      url="../../gstreamer/html/gstreamer-GstStructure.html"><classname>GstStructure
+      </classname></ulink>,
       but you don't need to worry about that too much for now.
     </para>
     <para>
@@ -194,7 +198,7 @@ gst_my_filter_handle_src_event (GstPad   *pad,
         <xref linkend="section-loopfn-multiinput"/>.
       </para>
       <para>
-        The EOS event (<classname>GST_EVENT_EOS</classname>) has no properties,
+        The EOS event (<symbol>GST_EVENT_EOS</symbol>) has no properties,
         and that makes it one of the simplest events in &GStreamer;. It is
         created using <function>gst_event_new (GST_EVENT_EOS);</function>.
       </para>
@@ -246,12 +250,12 @@ gst_my_filter_handle_src_event (GstPad   *pad,
         and a modified event should be sent on. The last is true for demuxers,
         which generally have a byte-to-time conversion concept. Their input
         is usually byte-based, so the incoming event will have an offset in
-        byte units (<classname>GST_FORMAT_BYTES</classname>), too. Elements
+        byte units (<symbol>GST_FORMAT_BYTES</symbol>), too. Elements
         downstream, however, expect discontinuity events in time units, so that
         it can be used to update the pipeline clock. Therefore, demuxers and
         similar elements should not forward the event, but parse it, free it
         and send a new discontinuity event (in time units,
-        <classname>GST_FORMAT_TIME</classname>) further downstream.
+        <symbol>GST_FORMAT_TIME</symbol>) further downstream.
       </para>
       <para>
         The discontinuity event is created using the function
