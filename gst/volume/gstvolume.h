@@ -23,7 +23,6 @@
 #define __GST_VOLUME_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 /* #include <gst/meta/audioraw.h> */
 

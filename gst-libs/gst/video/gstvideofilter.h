@@ -22,7 +22,6 @@
 #define __GST_VIDEOFILTER_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 

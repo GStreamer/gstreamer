@@ -18,6 +18,10 @@
  * scaled fixed-point arithmetic, with a minimal number of shifts.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "dct.h"
 
 /* We assume that right shift corresponds to signed division by 2 with

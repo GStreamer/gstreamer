@@ -22,7 +22,6 @@
 #define __CDPARANOIA_H__
 
 
-#include <config.h>
 #include <glib.h>
 #include <gst/gst.h>
 

@@ -36,13 +36,14 @@ plugin_init (GstPlugin *plugin)
   if (!gst_library_load ("xwindowlistener"))
     return FALSE;
 
-  if (!gst_element_register (plugin, "v4lelement", GST_RANK_NONE, GST_TYPE_V4LELEMENT))
-    return FALSE;
-  if (!gst_element_register (plugin, "v4lsrc", GST_RANK_NONE, GST_TYPE_V4LSRC))
-    return FALSE;
-  if (!gst_element_register (plugin, "v4lmjpegsrc", GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC))
-    return FALSE;
-  if (!gst_element_register (plugin, "v4lmjpegsink", GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
+  if (!gst_element_register (plugin, "v4lelement",
+			     GST_RANK_NONE, GST_TYPE_V4LELEMENT) ||
+      !gst_element_register (plugin, "v4lsrc",
+			     GST_RANK_NONE, GST_TYPE_V4LSRC) ||
+      !gst_element_register (plugin, "v4lmjpegsrc",
+			     GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC) ||
+      !gst_element_register (plugin, "v4lmjpegsink",
+			     GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
     return FALSE;
 
   return TRUE;

@@ -22,7 +22,6 @@
 #define __AUDIOSCALE_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #include <gst/resample/resample.h>

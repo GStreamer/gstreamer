@@ -21,13 +21,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <gst/gst.h>
 #include <stdlib.h>
 #include <math.h>
 #include <videoscale.h>
 #include <string.h>
 
-#include "config.h"
 #include "gstvideoscale.h"
 #undef HAVE_CPU_I386
 #ifdef HAVE_CPU_I386

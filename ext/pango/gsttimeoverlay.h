@@ -22,7 +22,6 @@
 #define __GST_TIMEOVERLAY_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 #include <pango/pango.h>
 

@@ -23,7 +23,6 @@
 #define __GST_VIDEOTESTSRC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 G_BEGIN_DECLS

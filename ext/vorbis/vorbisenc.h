@@ -22,7 +22,6 @@
 #define __VORBISENC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #include <vorbis/codec.h>

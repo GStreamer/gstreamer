@@ -22,7 +22,6 @@
 #define __SINESRC_H__
 
 
-#include <config.h>
 #include <gst/gst.h>
 
 #ifdef __cplusplus
