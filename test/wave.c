@@ -42,7 +42,6 @@ int main(int argc,char *argv[]) {
                   gst_element_get_pad(wave,"sink"));
 
   appwindow = gnome_app_new("wave","Wave");
-  drawingarea = gtk_drawing_area_new();
   gnome_app_set_contents(GNOME_APP(appwindow),gst_util_get_widget_arg(GTK_OBJECT(wave),"widget"));
   gtk_widget_show_all(appwindow);
 

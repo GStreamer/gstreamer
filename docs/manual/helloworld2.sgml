@@ -15,8 +15,8 @@
     <title>Autoplugging helloworld</title>
     <para> 
       We will create a second version of the helloworld application using
-      autoplugging. Its source code is considerably more easy to write and
-      can also handle much more data types.
+      autoplugging. Its source code is considerably easier to write and
+      it can also handle many more data types.
     </para>
 
     <programlisting>
@@ -91,7 +91,7 @@ int main(int argc,char *argv[])
     </programlisting>
 
     <para>
-      first of all, we do not use any mpg123 or mp3parse element in this example.
+      First of all, we do not use any mpg123 or mp3parse element in this example.
       In fact, we only specify a source element and a sink element and add them
       to a pipeline.
     </para>
@@ -149,7 +149,7 @@ int main(int argc,char *argv[])
     </para>
 
     <para>
-      I you really want, you can use the GSteamer components to do the 
+      If you really want, you can use the GSteamer components to do the 
       autoplugging yourself. 
     </para>
 

@@ -17,11 +17,13 @@
 #endif /* HAVE_LIBSSE */
 
 // FIXME - let configure set DEBUG_ENABLED.
-//#define DEBUG_ENABLED
+/* debugging */
+#ifndef DEBUG
 #ifdef DEBUG_ENABLED
 #define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
 #else
 #define DEBUG(format, args...)
+#endif
 #endif
 
 

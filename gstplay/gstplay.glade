@@ -396,7 +396,7 @@
 Wim Taymans, plugin hacker
 Richard Boulton, makefile hacker
 </authors>
-  <comments>A generice media player for the gstreamer streaming media framework.</comments>
+  <comments>A generic media player for the gstreamer streaming media framework.</comments>
 </widget>
 
 <widget>

@@ -9,7 +9,7 @@ GSTARCH_SRCS =
 endif
 
 libgstgetbits_la_SOURCES = gstgetbits.c gstgetbits_inl.h gstgetbits_generic.c $(GSTARCH_SRCS)
-EXTRA_libgstgetbits_la_SOURCES = gstgetbits_i386.s gstgetbits_generic.c
+EXTRA_libgstgetbits_la_SOURCES = gstgetbits_i386.s
 
 libgstgetbitsincludedir = $(includedir)/gst/libs/gstgetbits
 libgstgetbitsinclude_HEADERS = gstgetbits.h

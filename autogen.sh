@@ -45,9 +45,9 @@ fi
 
 libtoolize --copy --force
 aclocal $ACLOCAL_FLAGS
-automake --add-missing
 autoheader
 autoconf
+automake --add-missing
 
 if [ "x$1" = "x--autogen-recurse" ];then
   exit	# the rest will happen later
