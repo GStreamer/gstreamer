@@ -68,6 +68,8 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
+  xmlSaveFile("xmlTest.gst", gst_xml_write(GST_ELEMENT(pipeline)));
+
   /* start playing */
   gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
 
