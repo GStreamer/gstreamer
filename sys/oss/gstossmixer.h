@@ -55,7 +55,7 @@ typedef struct _GstOssMixerTrackClass {
 GType	gst_ossmixer_track_get_type	(void);
 
 void	gst_ossmixer_interface_init	(GstMixerClass *klass);
-void	gst_oss_interface_init		(GstInterfaceClass *klass);
+void	gst_oss_interface_init		(GstImplementsInterfaceClass *klass);
 void	gst_ossmixer_build_list		(GstOssElement *oss);
 void	gst_ossmixer_free_list		(GstOssElement *oss);
 

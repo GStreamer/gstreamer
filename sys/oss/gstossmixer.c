@@ -40,7 +40,7 @@
 static void	gst_ossmixer_track_class_init (GstOssMixerTrackClass *klass);
 static void	gst_ossmixer_track_init    (GstOssMixerTrack *track);
 
-static gboolean	gst_ossmixer_supported	   (GstInterface   *iface,
+static gboolean	gst_ossmixer_supported	   (GstImplementsInterface *iface,
 					    GType           iface_type);
 static const GList *
 		gst_ossmixer_list_tracks   (GstMixer       *ossmixer);
@@ -203,7 +203,7 @@ gst_ossmixer_track_new (GstOssElement *oss,
 }
 
 void
-gst_oss_interface_init (GstInterfaceClass *klass)
+gst_oss_interface_init (GstImplementsInterfaceClass *klass)
 {
   /* default virtual functions */
   klass->supported = gst_ossmixer_supported;
@@ -221,8 +221,8 @@ gst_ossmixer_interface_init (GstMixerClass *klass)
 }
 
 static gboolean
-gst_ossmixer_supported (GstInterface *iface,
-			GType         iface_type)
+gst_ossmixer_supported (GstImplementsInterface *iface,
+			GType                   iface_type)
 {
   g_assert (iface_type == GST_TYPE_MIXER);
 

@@ -110,7 +110,7 @@ gst_osselement_get_type (void)
 					      "GstOssElement",
 					      &osselement_info, 0);
     g_type_add_interface_static (osselement_type,
-				 GST_TYPE_INTERFACE,
+				 GST_TYPE_IMPLEMENTS_INTERFACE,
 				 &ossiface_info);
     g_type_add_interface_static (osselement_type,
 				 GST_TYPE_MIXER,

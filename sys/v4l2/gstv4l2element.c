@@ -78,8 +78,8 @@ static guint gst_v4l2element_signals[LAST_SIGNAL] = { 0 };
 
 
 static gboolean
-gst_v4l2_iface_supported (GstInterface *iface,
-			  GType         iface_type)
+gst_v4l2_iface_supported (GstImplementsInterface *iface,
+			  GType                   iface_type)
 {
 	GstV4l2Element *v4l2element = GST_V4L2ELEMENT (iface);
 
@@ -99,7 +99,7 @@ gst_v4l2_iface_supported (GstInterface *iface,
 
 
 static void
-gst_v4l2_interface_init (GstInterfaceClass *klass)
+gst_v4l2_interface_init (GstImplementsInterfaceClass *klass)
 {
 	/* default virtual functions */
 	klass->supported = gst_v4l2_iface_supported;
@@ -315,7 +315,7 @@ gst_v4l2element_get_type (void)
 				"GstV4l2Element", &v4l2element_info, 0);
 
 		g_type_add_interface_static (v4l2element_type,
-					     GST_TYPE_INTERFACE,
+					     GST_TYPE_IMPLEMENTS_INTERFACE,
 					     &v4l2iface_info);
 		g_type_add_interface_static (v4l2element_type,
 					     GST_TYPE_TUNER,
