@@ -175,8 +175,8 @@ html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	@echo '*** Building HTML ***'
 	test -d html || mkdir html
 	cd html && gtkdoc-mkhtml $(DOC_MODULE) $(srcdir)/../$(DOC_MAIN_SGML_FILE)
-	test "x$(HTML_IMAGES)" = "x" || for i in $(HTML_IMAGES) ; do \
-	    cp $(srcdir)/$$i html ; done
+	test "x$(HTML_IMAGES)" = "x" || for i in "" $(HTML_IMAGES) ; do \
+	    if test "$$i" != ""; then cp $(srcdir)/$$i html ; fi; done
 	@echo '-- Fixing Crossreferences' 
 	LANG=C && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
 	touch html-build.stamp
@@ -284,8 +284,8 @@ dist-hook: dist-check-gtkdoc dist-hook-local
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
 
 	images=$(HTML_IMAGES) ;    	      \
-	for i in $$images ; do		      \
-	  cp $(srcdir)/$$i $(distdir)/html ;  \
+	for i in "" $$images ; do		      \
+	  if test "$$i" != ""; then cp $(srcdir)/$$i $(distdir)/html ; fi; \
 	done
 
 .PHONY : dist-hook-local
