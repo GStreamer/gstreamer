@@ -1,3 +1,10 @@
+2004-03-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* examples/gstplay/player.c: (main):
+	  Initialize variables to NULL. Prevents a segfault because the
+	  (uninitialized) variable is not NULL, resulting in a crash on
+	  trying to reach error->message.
+
 2004-03-05  Benjamin Otte  <otte@gnome.org>
 
 	* gst/audioconvert/gstaudioconvert.c:
