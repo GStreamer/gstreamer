@@ -19,6 +19,7 @@
 #undef HAVE_CPU_PPC
 #undef HAVE_CPU_ALPHA
 #undef HAVE_CPU_ARM
+#undef HAVE_CPU_SPARC
 
 #undef HAVE_GDK_PIXBUF
 #undef HAVE_LIBGHTTP

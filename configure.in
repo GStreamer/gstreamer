@@ -124,6 +124,8 @@ case "x${target_cpu}" in
              AC_DEFINE(HAVE_CPU_ALPHA) ;;
   xarm*)     HAVE_CPU_ARM=yes ;
              AC_DEFINE(HAVE_CPU_ARM) ;;
+  xsparc*)   HAVE_CPU_SPARC=yes ;
+             AC_DEFINE(HAVE_CPU_SPARC) ;;
 esac
 
 dnl Determine endianness
@@ -564,6 +566,7 @@ AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_SPARC       test "x$HAVE_CPU_SPARC" = "xyes")
 AM_CONDITIONAL(HAVE_GDK_PIXBUF,     test "x$USE_GDK_PIXBUF" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGHTTP,       test "x$USE_LIBGHTTP" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
