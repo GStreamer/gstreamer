@@ -18,6 +18,16 @@ API:
 
  - gst_pad_get_pad_template_caps -> gst_pad_get_template_caps()
 
+ - add ways for autopluggers to manage negotiation of their children.
+   This would allow autopluggers to no longer need helper identities.
+
+ - remove float support from dparams
+
+ - dparams: should be converted into some kind of special pad and
+   object property combination.
+
+ - remove gst_element_yield()
+
 
 caps:
 
