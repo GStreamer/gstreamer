@@ -17,7 +17,7 @@ bug fixes:
 
 changes:
   - better CPU detection 
-  - dynamic autopluggers with a new more powerfull API.
+  - dynamic autopluggers with a new more powerful API.
   - sparc cothreads.
   - reworked arg setting (gstparse.c and gstelement.c xml handling)
   - testsuite directory added
@@ -30,8 +30,8 @@ changes:
      - get rid of the metadata.
   - man pages added for command line utils.
   - more documentation updates
-  - colourfull debug system
-  - new plugin initialisation mechanism sot that the core can refuse
+  - colourful debug system
+  - new plugin initialisation mechanism so that the core can refuse
     to load plugins build with an incompatible version number.
   - added bash comand line completion for gstreamer-launch
   - pipefilter is now decoupled as it should be
