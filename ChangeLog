@@ -1,3 +1,9 @@
+2004-05-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* configure.ac:
+	  remove -DG_DISABLE_DEPRECATED. It's not usable without workarounds
+	  if you want to work against glib 2.2 and 2.4
+
 2004-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/Makefile.am:
