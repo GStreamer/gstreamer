@@ -7,5 +7,5 @@ Name: GStreamer
 Description: Streaming-media framework
 Requires: @GST_PKG_DEPS@, libxml >= 1.8.1
 Version: @VERSION@
-Libs: -L${libdir} -lgst
+Libs: -L${libdir}/gst -lgst
 Cflags: -I${includedir} @GST_CFLAGS@
