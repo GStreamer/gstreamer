@@ -32,7 +32,7 @@ typedef struct _GstCaps GstCaps;
 
 extern GType _gst_caps_type;
 
-#define GST_TYPE_CAPS  (_get_caps_type)
+#define GST_TYPE_CAPS  (_gst_caps_type)
 
 
 #define GST_CAPS(caps) \

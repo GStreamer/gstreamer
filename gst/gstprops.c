@@ -68,6 +68,33 @@ static GMutex *_gst_props_chunk_lock;
 static gboolean 	gst_props_entry_check_compatibility 	(GstPropsEntry *entry1, GstPropsEntry *entry2);
 static GList* 		gst_props_list_copy 			(GList *propslist);
 
+static void
+transform_func (const GValue *src_value,
+		GValue *dest_value)
+{
+  GstProps *props = g_value_peek_pointer (src_value);
+  GString *result = g_string_new ("");
+  GList *propslist = props->properties;
+
+  while (propslist) { 
+    GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
+    const gchar *name = g_quark_to_string (entry->propid);
+
+    switch (entry->propstype) {
+      case GST_PROPS_STRING_TYPE:
+	g_string_append_printf (result, "%s='%s'", name, entry->data.string_data.string);
+      default:
+	break;
+    }
+    
+    propslist = g_list_next (propslist);
+    if (propslist) {
+      g_string_append (result, "; ");
+    }
+  }
+  dest_value->data[0].v_pointer = result->str;
+}
+
 	
 void 
 _gst_props_initialize (void) 
@@ -86,6 +113,9 @@ _gst_props_initialize (void)
 		                       (GBoxedCopyFunc) gst_props_ref,
 		                       (GBoxedFreeFunc) gst_props_unref);
 
+  g_value_register_transform_func (_gst_props_type,
+                                   G_TYPE_STRING,
+                                   transform_func);
 }
 
 static void
@@ -107,7 +137,7 @@ gst_props_debug_entry (GstPropsEntry *entry)
       GST_DEBUG (GST_CAT_PROPERTIES, "%s: bool %d", name, entry->data.bool_data);
       break;
     case GST_PROPS_STRING_TYPE:
-      GST_DEBUG (GST_CAT_PROPERTIES, "%s: string %s", name, entry->data.string_data.string);
+      GST_DEBUG (GST_CAT_PROPERTIES, "%s: string \"%s\"", name, entry->data.string_data.string);
       break;
     case GST_PROPS_INT_RANGE_TYPE:
       GST_DEBUG (GST_CAT_PROPERTIES, "%s: int range %d-%d", name, entry->data.int_range_data.min,
@@ -184,6 +214,9 @@ G_STMT_START { 									\
       break;									\
     case GST_PROPS_STRING_TYPE:							\
       entry->data.string_data.string = g_strdup (va_arg (var_args, gchar*));	\
+      break;									\
+    case GST_PROPS_LIST_TYPE:							\
+      entry->data.list_data.entries = g_list_copy (va_arg (var_args, GList*));	\
       break;									\
     default:									\
       break;									\

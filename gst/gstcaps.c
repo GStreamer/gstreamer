@@ -32,6 +32,35 @@ static GMutex *_gst_caps_chunk_lock;
 
 GType _gst_caps_type;
 
+static void
+transform_func (const GValue *src_value,
+		GValue *dest_value)
+{
+  GstCaps *caps = g_value_peek_pointer (src_value);
+  GString *result = g_string_new (""); 
+
+  g_string_append_printf (result, "(GstCaps *) ");
+		  
+  while (caps) {
+    gchar *props;
+    GValue value = { 0, }; /* the important thing is that value.type = 0 */
+    
+    g_string_append_printf (result,
+	          "{ %s; ", gst_caps_get_mime (caps));
+
+    g_value_init (&value, GST_TYPE_PROPS);
+    g_value_set_boxed  (&value, caps->properties);
+    props = g_strdup_value_contents (&value);
+
+    g_string_append (result, props);
+    g_free (props);
+
+    caps = caps->next;
+    g_string_append_printf (result, " }%s", caps?", ":"");
+  }
+  dest_value->data[0].v_pointer = result->str;
+}
+
 void
 _gst_caps_initialize (void)
 {
@@ -44,6 +73,9 @@ _gst_caps_initialize (void)
                                        (GBoxedCopyFunc) gst_caps_ref,
                                        (GBoxedFreeFunc) gst_caps_unref);
 
+  g_value_register_transform_func (_gst_caps_type,
+		                   G_TYPE_STRING,
+				   transform_func);
 }
 
 static guint16

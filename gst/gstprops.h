@@ -33,7 +33,7 @@ G_BEGIN_DECLS
 typedef struct _GstProps GstProps;
 extern GType _gst_props_type;
 
-#define GST_TYPE_PROPS	(_get_props_type)
+#define GST_TYPE_PROPS	(_gst_props_type)
 
 typedef enum {
    GST_PROPS_END_TYPE = 0,
