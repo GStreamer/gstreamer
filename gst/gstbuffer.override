@@ -249,3 +249,49 @@ gst_buffer_length(PyGObject *self)
 	return GST_BUFFER_SIZE(self->obj);
 }
 
+%%
+define GstBuffer.flag_is_set
+static PyObject *
+_wrap_gst_buffer_flag_is_set(PyGObject *self, PyObject *args)
+{
+	int flag;
+	PyObject *retval;
+	
+	if (!PyArg_ParseTuple(args, "i:GstBuffer.flag_is_set", &flag))
+		return NULL;
+
+	retval = GST_BUFFER_FLAG_IS_SET(self->obj, flag) ? Py_True : Py_False;
+
+	Py_INCREF(retval);
+	return retval;
+}
+%%
+define GstBuffer.flag_set
+static PyObject *
+_wrap_gst_buffer_flag_set(PyGObject *self, PyObject *args)
+{
+	int flag;
+	
+	if (!PyArg_ParseTuple(args, "i:GstBuffer.set", &flag))
+		return NULL;
+
+	GST_BUFFER_FLAG_SET(self->obj, flag);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
+define GstBuffer.flag_unset
+static PyObject *
+_wrap_gst_buffer_flag_unset(PyGObject *self, PyObject *args)
+{
+	int flag;
+	
+	if (!PyArg_ParseTuple(args, "i:GstBuffer.unset", &flag))
+		return NULL;
+
+	GST_BUFFER_FLAG_UNSET(self->obj, flag);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}

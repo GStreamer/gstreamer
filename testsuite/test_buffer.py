@@ -63,5 +63,22 @@ class BufferTest(unittest.TestCase):
         spaned_buffer = buffer1.span(0L, buffer2, 6L)
         assert str(spaned_buffer) == 'foobar'
 
+    def testBufferFlagIsSet(self):
+        buffer = gst.Buffer()
+        # Off by default
+        assert not buffer.flag_is_set(gst.BUFFER_READONLY)
+
+        # Try switching on and off
+        buffer.flag_set(gst.BUFFER_READONLY)
+        assert buffer.flag_is_set(gst.BUFFER_READONLY)
+        buffer.flag_unset(gst.BUFFER_READONLY)
+        assert not buffer.flag_is_set(gst.BUFFER_READONLY)
+
+        # Try switching on and off
+        buffer.flag_set(gst.BUFFER_IN_CAPS)
+        assert buffer.flag_is_set(gst.BUFFER_IN_CAPS)
+        buffer.flag_unset(gst.BUFFER_IN_CAPS)
+        assert not buffer.flag_is_set(gst.BUFFER_IN_CAPS)
+
 if __name__ == "__main__":
     unittest.main()
