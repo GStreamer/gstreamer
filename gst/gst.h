@@ -56,7 +56,6 @@
 #include <gst/gstparse.h>
 #include <gst/gstregistry.h>
 #include <gst/gstextratypes.h>
-#include <gst/gstenumtypes.h>
 
 #ifdef __cplusplus
 extern "C" {
