@@ -15,21 +15,18 @@ usage (void)
 static void
 construct_pipeline (GstElement *pipeline) 
 {
-  GstElement *src, *sink, *queue, *thread;
+  GstElement *src, *sink, *queue, *identity, *thread;
 
-  src    = gst_element_factory_make ("fakesrc",  "src");
-  sink   = gst_element_factory_make ("fakesink", "sink");
-  queue  = gst_element_factory_make ("queue",    "queue");
-  thread = gst_element_factory_make ("thread",   "thread");
+  src      = gst_element_factory_make ("fakesrc",  NULL);
+  sink     = gst_element_factory_make ("fakesink", NULL);
+  identity = gst_element_factory_make ("identity", NULL);
+  queue    = gst_element_factory_make ("queue",    NULL);
+  thread   = gst_element_factory_make ("thread",   NULL);
 
-  gst_element_connect (src, "src", queue, "sink");
-  gst_element_connect (queue, "src", sink, "sink");
+  gst_element_connect_many (src, queue, identity, sink, NULL);
 
-  gst_bin_add (GST_BIN (pipeline), src);
-  gst_bin_add (GST_BIN (pipeline), queue);
-  gst_bin_add (GST_BIN (pipeline), thread);
-  
-  gst_bin_add (GST_BIN (thread), sink);
+  gst_bin_add_many (GST_BIN (pipeline), src, queue, thread, NULL);
+  gst_bin_add_many (GST_BIN (thread), identity, sink, NULL);
 
   g_object_set (G_OBJECT (src), "num_buffers", 5, NULL);
 }
@@ -75,10 +72,7 @@ main (gint argc, gchar *argv[])
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     g_print ("PLAYING\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    g_print ("PAUSED\n");
-    gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    g_print ("PLAYING\n");
-    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    /* element likely hits EOS and does a state transition to PAUSED */
     g_print ("READY\n");
     gst_element_set_state (pipeline, GST_STATE_READY);
     g_print ("NULL\n");
@@ -112,7 +106,7 @@ main (gint argc, gchar *argv[])
 
     sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
 
-    g_signal_connect (G_OBJECT (sink), "handoff", change_state, pipeline);
+    g_signal_connect (G_OBJECT (sink), "handoff", G_CALLBACK (change_state), pipeline);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     g_print ("running3 ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));

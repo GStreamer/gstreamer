@@ -437,6 +437,7 @@ testsuite/dynparams/Makefile
 testsuite/elements/Makefile
 testsuite/plugin/Makefile
 testsuite/refcounting/Makefile
+testsuite/threads/Makefile
 examples/Makefile
 examples/autoplug/Makefile
 examples/helloworld/Makefile

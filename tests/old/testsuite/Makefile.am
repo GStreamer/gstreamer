@@ -1,4 +1,4 @@
-# FIXME : refcounting threads bytestream
+# FIXME : threads bytestream
 SUBDIRS = caps cleanup plugin elements clock refcounting ## dynparams
 
 GST_PLUGIN_PATH = $(shell cd $(top_builddir) && pwd)
@@ -14,8 +14,7 @@ check_PROGRAMS = $(testprogs)
 LIBS = $(GST_LIBS)
 CFLAGS = $(GST_CFLAGS)
 
-# FIXME : refcounting threadds
 DIST_SUBDIRS = bytestream caps cleanup clock dynparams elements \
-		plugin refcounting
+		plugin refcounting threads
 
 EXTRA_DIST = gst-inspect-check

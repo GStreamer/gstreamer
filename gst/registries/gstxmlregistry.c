@@ -1482,15 +1482,17 @@ gst_xml_registry_rebuild (GstRegistry *registry)
   
   walk = plugins;
   while (walk) {
-    /* should return FALSE */
-    gst_plugin_load_plugin (GST_PLUGIN (walk->data), &error);
-    GST_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s\n", 
-              ((GstPlugin*)walk->data)->filename, error->message);
+    if (gst_plugin_load_plugin (GST_PLUGIN (walk->data), &error)) {
+      g_warning ("Bizarre behavior: plugin %s actually loaded", ((GstPlugin*)walk->data)->filename);
+    } else {
+      GST_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s", 
+                ((GstPlugin*)walk->data)->filename, error->message);
 
-    g_free (((GstPlugin*)walk->data)->filename);
-    g_free (walk->data);
-    g_error_free (error);
-    error = NULL;
+      g_free (((GstPlugin*)walk->data)->filename);
+      g_free (walk->data);
+      g_error_free (error);
+      error = NULL;
+    }
         
     walk = g_list_next (walk);
   }
