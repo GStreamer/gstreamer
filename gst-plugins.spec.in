@@ -393,7 +393,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%files -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%defattr(-, root, root)
-@USE_OPENQUICKTIME_TRUE@%{prefix}/lib/gst/libopenquicktime*
+@USE_OPENQUICKTIME_TRUE@%{prefix}/lib/gst/libgstopenquicktime*
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%post -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%{prefix}/bin/gst-register --gst-mask=0
