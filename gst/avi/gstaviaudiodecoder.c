@@ -143,7 +143,7 @@ gst_avi_audio_decoder_chain (GstPad *pad,
   g_return_if_fail (GST_BUFFER_DATA(buf) != NULL);
 
   avi_audio_decoder = GST_AVI_AUDIO_DECODER (gst_pad_get_parent (pad));
-  GST_DEBUG (0,"gst_avi_audio_decoder_chain: got buffer in %u\n", GST_BUFFER_OFFSET (buf));
+  GST_DEBUG (0,"gst_avi_audio_decoder_chain: got buffer in %u", GST_BUFFER_OFFSET (buf));
   g_print ("gst_avi_audio_decoder_chain: got buffer in %u\n", GST_BUFFER_OFFSET (buf));
   data = (guchar *)GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);

@@ -175,7 +175,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
 
   wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
-  GST_DEBUG (0, "gst_wavparse_chain: got buffer in '%s'\n",
+  GST_DEBUG (0, "gst_wavparse_chain: got buffer in '%s'",
           gst_object_get_name (GST_OBJECT (wavparse)));
   data = (guchar *) GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
@@ -197,7 +197,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
   }
 
   if (wavparse->state == GST_WAVPARSE_OTHER) {
-    GST_DEBUG (0, "we're in unknown territory here, not passing on\n");
+    GST_DEBUG (0, "we're in unknown territory here, not passing on");
     return;
   }
 
@@ -210,7 +210,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
   if (wavparse->state == GST_WAVPARSE_UNKNOWN) {
     gint retval;
 
-    GST_DEBUG (0, "GstWavParse: checking for RIFF format\n");
+    GST_DEBUG (0, "GstWavParse: checking for RIFF format");
 
     /* create a new RIFF parser */
     wavparse->riff = gst_riff_new ();
@@ -219,13 +219,13 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     retval = gst_riff_next_buffer (wavparse->riff, buf, 0);
     buffer_riffed = TRUE;
     if (retval < 0) {
-      GST_DEBUG (0, "sorry, isn't RIFF\n");
+      GST_DEBUG (0, "sorry, isn't RIFF");
       return;
     }
 
     /* this has to be a file of form WAVE for us to deal with it */
     if (wavparse->riff->form != gst_riff_fourcc_to_id ("WAVE")) {
-      GST_DEBUG (0, "sorry, isn't WAVE\n");
+      GST_DEBUG (0, "sorry, isn't WAVE");
       return;
     }
 
@@ -238,7 +238,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     GstRiffChunk *fmt;
     GstWavParseFormat *format;
 
-    GST_DEBUG (0, "GstWavParse: looking for fmt chunk\n");
+    GST_DEBUG (0, "GstWavParse: looking for fmt chunk");
 
     /* there's a good possibility we may not have parsed this buffer */
     if (buffer_riffed == FALSE) {
@@ -274,7 +274,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       gst_pad_try_set_caps (wavparse->srcpad, caps);
 
       wavparse->bps = format->wBlockAlign;
-      GST_DEBUG (0, "frequency %d, channels %d\n",
+      GST_DEBUG (0, "frequency %d, channels %d",
 		 format->dwSamplesPerSec, format->wChannels); 
 
       /* we're now looking for the data chunk */
@@ -291,7 +291,7 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     GstBuffer *newbuf;
     GstRiffChunk *datachunk;
 
-    GST_DEBUG (0, "GstWavParse: looking for data chunk\n");
+    GST_DEBUG (0, "GstWavParse: looking for data chunk");
 
     /* again, we might need to parse the buffer */
     if (buffer_riffed == FALSE) {
@@ -304,14 +304,14 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
     if (datachunk != NULL) {
       gulong subsize;
 
-      GST_DEBUG (0, "data begins at %ld\n", datachunk->offset);
+      GST_DEBUG (0, "data begins at %ld", datachunk->offset);
 
       /* at this point we can ACK that we have data */
       wavparse->state = GST_WAVPARSE_DATA;
 
       /* now we construct a new buffer for the remainder */
       subsize = size - datachunk->offset;
-      GST_DEBUG (0, "sending last %ld bytes along as audio\n", subsize);
+      GST_DEBUG (0, "sending last %ld bytes along as audio", subsize);
       
       newbuf = gst_buffer_new ();
       GST_BUFFER_DATA (newbuf) = g_malloc (subsize);

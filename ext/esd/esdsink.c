@@ -250,7 +250,7 @@ gst_esdsink_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_BUFFER_DATA (buf) != NULL) {
     if (!esdsink->mute && esdsink->fd >= 0) {
-      GST_DEBUG (0, "esdsink: fd=%d data=%p size=%d\n",
+      GST_DEBUG (0, "esdsink: fd=%d data=%p size=%d",
 		 esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
       write (esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     }
@@ -363,21 +363,21 @@ gst_esdsink_open_audio (GstEsdsink *sink)
   if (sink->depth == 16) esdformat |= ESD_BITS16;
   else if (sink->depth == 8) esdformat |= ESD_BITS8;
   else {
-    GST_DEBUG (0, "esdsink: invalid bit depth (%d)\n", sink->depth);
+    GST_DEBUG (0, "esdsink: invalid bit depth (%d)", sink->depth);
     return FALSE;
   }
 
   if (sink->channels == 2) esdformat |= ESD_STEREO;
   else if (sink->channels == 1) esdformat |= ESD_MONO;
   else {
-    GST_DEBUG (0, "esdsink: invalid number of channels (%d)\n", sink->channels);
+    GST_DEBUG (0, "esdsink: invalid number of channels (%d)", sink->channels);
     return FALSE;
   }
 
-  GST_DEBUG (0, "esdsink: attempting to open connection to esound server\n");
+  GST_DEBUG (0, "esdsink: attempting to open connection to esound server");
   sink->fd = esd_play_stream_fallback(esdformat, sink->frequency, sink->host, connname);
   if ( sink->fd < 0 ) {
-    GST_DEBUG (0, "esdsink: can't open connection to esound server\n");
+    GST_DEBUG (0, "esdsink: can't open connection to esound server");
     return FALSE;
   }
 
@@ -396,7 +396,7 @@ gst_esdsink_close_audio (GstEsdsink *sink)
 
   GST_FLAG_UNSET (sink, GST_ESDSINK_OPEN);
 
-  GST_DEBUG (0, "esdsink: closed sound device\n");
+  GST_DEBUG (0, "esdsink: closed sound device");
 }
 
 static GstElementStateReturn

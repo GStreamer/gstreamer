@@ -231,7 +231,7 @@ gst_flacenc_set_property(GObject *object, guint prop_id, const GValue *value, GP
   this = (FlacEnc *)object;
   switch (prop_id) {
   default:
-    GST_DEBUG(0, "Unknown arg %d\n", prop_id);
+    GST_DEBUG(0, "Unknown arg %d", prop_id);
     return;
   }
 }
@@ -245,7 +245,7 @@ gst_flacenc_get_property(GObject *object, guint prop_id, GValue *value, GParamSp
   
   switch (prop_id) {
   default:
-    GST_DEBUG(0, "Unknown arg %d\n", prop_id);
+    GST_DEBUG(0, "Unknown arg %d", prop_id);
     break;
   }
 }

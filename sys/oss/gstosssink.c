@@ -454,7 +454,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
           queued = (ospace.fragstotal * ospace.fragsize) - ospace.bytes;
           time = osssink->offset + (optr.bytes) * 1000000LL / osssink->bps;
 
-	  GST_DEBUG (GST_CAT_PLUGIN_INFO, "sync %llu %llu %d\n", buftime, time, queued);
+	  GST_DEBUG (GST_CAT_PLUGIN_INFO, "sync %llu %llu %d", buftime, time, queued);
 
           granularity = ospace.fragsize;
           /* granularity = size; */

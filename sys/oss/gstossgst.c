@@ -172,7 +172,7 @@ gst_ossgst_format_to_caps (gint format, gint stereo, gint rate)
   gint width = 16;
   gboolean supported = TRUE;
 
-  GST_DEBUG (0, "have format 0x%08x %d %d\n", format, stereo, rate); 
+  GST_DEBUG (0, "have format 0x%08x %d %d", format, stereo, rate); 
 
   switch (format) {
     case AFMT_MU_LAW:
@@ -341,7 +341,7 @@ gst_ossgst_spawn_process (GstOssGst *ossgst)
   pipe(ossgst->fdin);
   pipe(ossgst->fdout);
 
-  GST_DEBUG (0, "about to fork\n");
+  GST_DEBUG (0, "about to fork");
 
   if((ossgst->childpid = fork()) == -1)
   {
@@ -349,13 +349,13 @@ gst_ossgst_spawn_process (GstOssGst *ossgst)
     gst_element_error(GST_ELEMENT(ossgst),"forking");
     return FALSE;
   }
-  GST_DEBUG (0,"forked %d\n", ossgst->childpid);
+  GST_DEBUG (0,"forked %d", ossgst->childpid);
 
   if(ossgst->childpid == 0)
   {
     gchar **args;
 
-    GST_DEBUG (0, "fork command %d\n", ossgst->childpid);
+    GST_DEBUG (0, "fork command %d", ossgst->childpid);
 
     ld_preload = getenv ("LD_PRELOAD");
 

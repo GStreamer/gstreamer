@@ -274,7 +274,7 @@ gst_median_chain (GstPad *pad, GstBuffer *buf)
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG (0,"median: have buffer of %d\n", GST_BUFFER_SIZE(buf));
+  GST_DEBUG (0,"median: have buffer of %d", GST_BUFFER_SIZE(buf));
 
   outbuf = gst_buffer_new();
   GST_BUFFER_DATA(outbuf) = g_malloc(GST_BUFFER_SIZE(buf));

@@ -247,7 +247,7 @@ gst_aasink_sinkconnect (GstPad *pad, GstCaps *caps)
 
   print_format = GULONG_FROM_LE (aasink->format);
 
-  GST_DEBUG (0, "aasink: setting %08lx (%4.4s)\n", aasink->format, (gchar*)&print_format);
+  GST_DEBUG (0, "aasink: setting %08lx (%4.4s)", aasink->format, (gchar*)&print_format);
   
   g_signal_emit( G_OBJECT (aasink), gst_aasink_signals[SIGNAL_HAVE_SIZE], 0,
 		 aasink->width, aasink->height);
@@ -347,7 +347,7 @@ gst_aasink_chain (GstPad *pad, GstBuffer *buf)
   		    aa_imgwidth (aasink->context),	/* dw */
   		    aa_imgheight (aasink->context));	/* dh */
 
-  GST_DEBUG (0,"videosink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
 
   if (aasink->clock) {
     gst_element_clock_wait (GST_ELEMENT (aasink), aasink->clock, GST_BUFFER_TIMESTAMP(buf));

@@ -97,19 +97,19 @@ gst_jpegenc_class_init (GstJpegEnc *klass)
 static void
 gst_jpegenc_init_destination (j_compress_ptr cinfo)
 {
-  GST_DEBUG (0,"gst_jpegenc_chain: init_destination\n");
+  GST_DEBUG (0,"gst_jpegenc_chain: init_destination");
 }
 
 static gboolean
 gst_jpegenc_flush_destination (j_compress_ptr cinfo)
 {
-  GST_DEBUG (0,"gst_jpegenc_chain: flush_destination: buffer too small !!!\n");
+  GST_DEBUG (0,"gst_jpegenc_chain: flush_destination: buffer too small !!!");
   return TRUE;
 }
 
 static void gst_jpegenc_term_destination (j_compress_ptr cinfo)
 {
-  GST_DEBUG (0,"gst_jpegenc_chain: term_source\n");
+  GST_DEBUG (0,"gst_jpegenc_chain: term_source");
 }
 
 static void
@@ -133,7 +133,7 @@ gst_jpegenc_init (GstJpegEnc *jpegenc)
   jpegenc->cinfo.err = jpeg_std_error(&jpegenc->jerr);
   jpeg_create_compress(&jpegenc->cinfo);
 
-  GST_DEBUG (0,"gst_jpegenc_init: setting line buffers\n");
+  GST_DEBUG (0,"gst_jpegenc_init: setting line buffers");
   jpegenc->line[0] = NULL;
   jpegenc->line[1] = NULL;
   jpegenc->line[2] = NULL;
@@ -153,13 +153,13 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
   guint size = 0;
   gint width, height;
 
-  GST_DEBUG (0,"gst_jpegenc_resync: resync\n");
+  GST_DEBUG (0,"gst_jpegenc_resync: resync");
 
   jpegenc->cinfo.image_width = width = jpegenc->width;
   jpegenc->cinfo.image_height = height = jpegenc->height;
   jpegenc->cinfo.input_components = 3;
 
-  GST_DEBUG (0,"gst_jpegenc_resync: wdith %d, height %d\n", width, height);
+  GST_DEBUG (0,"gst_jpegenc_resync: wdith %d, height %d", width, height);
 
   jpeg_set_defaults(&jpegenc->cinfo);
   jpegenc->cinfo.dct_method = JDCT_FASTEST;
@@ -171,7 +171,7 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
   switch (jpegenc->format) {
     case GST_COLORSPACE_RGB24:
       size = 3;
-      GST_DEBUG (0,"gst_jpegenc_resync: setting format to RGB24\n");
+      GST_DEBUG (0,"gst_jpegenc_resync: setting format to RGB24");
       jpegenc->cinfo.in_color_space = JCS_RGB;
       jpegenc->cinfo.raw_data_in = FALSE;
       break;
@@ -179,7 +179,7 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
       size = 2;
       jpegenc->cinfo.raw_data_in = TRUE;
       jpegenc->cinfo.in_color_space = JCS_YCbCr;
-      GST_DEBUG (0,"gst_jpegenc_resync: setting format to YUV420P\n");
+      GST_DEBUG (0,"gst_jpegenc_resync: setting format to YUV420P");
       jpegenc->cinfo.comp_info[0].h_samp_factor = 2;
       jpegenc->cinfo.comp_info[0].v_samp_factor = 2;
       jpegenc->cinfo.comp_info[1].h_samp_factor = 1;
@@ -193,7 +193,7 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
         jpegenc->line[2] = g_realloc(jpegenc->line[2], height*sizeof(char*)/2);
       }
 
-      GST_DEBUG (0,"gst_jpegenc_resync: setting format done\n");
+      GST_DEBUG (0,"gst_jpegenc_resync: setting format done");
       break;
     default:
       printf("gst_jpegenc_resync: unsupported colorspace, using RGB\n");
@@ -208,7 +208,7 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
   jpeg_suppress_tables(&jpegenc->cinfo, TRUE);
 
   jpegenc->buffer = NULL;
-  GST_DEBUG (0,"gst_jpegenc_resync: resync done\n");
+  GST_DEBUG (0,"gst_jpegenc_resync: resync done");
 }
 
 static GstBuffer*
@@ -217,7 +217,7 @@ gst_jpegenc_get (GstPad *pad)
   GstJpegEnc *jpegenc;
   GstBuffer *newbuf;
 
-  GST_DEBUG (0,"gst_jpegenc_chain: pull buffer\n");
+  GST_DEBUG (0,"gst_jpegenc_chain: pull buffer");
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
@@ -226,7 +226,7 @@ gst_jpegenc_get (GstPad *pad)
 
   if (jpegenc->buffer == NULL || GST_BUFFER_REFCOUNT(jpegenc->buffer) != 1) {
     if (jpegenc->buffer) gst_buffer_unref(jpegenc->buffer);
-    GST_DEBUG (0,"gst_jpegenc_chain: new buffer\n");
+    GST_DEBUG (0,"gst_jpegenc_chain: new buffer");
     newbuf = jpegenc->buffer = gst_buffer_new();
     GST_BUFFER_DATA(newbuf) = g_malloc(jpegenc->bufsize);
     GST_BUFFER_SIZE(newbuf) = jpegenc->bufsize;
@@ -259,7 +259,7 @@ gst_jpegenc_chain (GstPad *pad, GstBuffer *buf)
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG (0,"gst_jpegenc_chain: got buffer of %ld bytes in '%s'\n",size,
+  GST_DEBUG (0,"gst_jpegenc_chain: got buffer of %ld bytes in '%s'",size,
           GST_OBJECT_NAME (jpegenc));
 
   outbuf = gst_buffer_new();
@@ -280,7 +280,7 @@ gst_jpegenc_chain (GstPad *pad, GstBuffer *buf)
   jpeg_start_compress(&jpegenc->cinfo, TRUE);
 
   width2 = width>>1;
-  GST_DEBUG (0,"gst_jpegdec_chain: compressing\n");
+  GST_DEBUG (0,"gst_jpegdec_chain: compressing");
 
   for (i = 0; i < height; i += 2*DCTSIZE) {
     for (j=0, k=0; j<2*DCTSIZE;j+=2, k++) {
@@ -292,7 +292,7 @@ gst_jpegenc_chain (GstPad *pad, GstBuffer *buf)
     jpeg_write_raw_data(&jpegenc->cinfo, jpegenc->line, 2*DCTSIZE);
   }
   jpeg_finish_compress(&jpegenc->cinfo);
-  GST_DEBUG (0,"gst_jpegdec_chain: compressing done\n");
+  GST_DEBUG (0,"gst_jpegdec_chain: compressing done");
 
   GST_BUFFER_SIZE(outbuf) = (((outsize - jpegenc->jdest.free_in_buffer)+3)&~3);
 

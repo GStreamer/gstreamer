@@ -189,7 +189,7 @@ gst_osssrc_get (GstPad *pad)
   g_return_val_if_fail (pad != NULL, NULL);
   src = GST_OSSSRC(gst_pad_get_parent (pad));
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from soundcard\n");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "attempting to read something from soundcard");
 
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
@@ -234,7 +234,7 @@ gst_osssrc_get (GstPad *pad)
   if (src->format == 16) readsamples /= 2;
   src->samples_since_basetime += readsamples;
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes, timestamp %lld\n", readbytes, GST_BUFFER_TIMESTAMP (buf));
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "pushed buffer from soundcard of %ld bytes, timestamp %lld", readbytes, GST_BUFFER_TIMESTAMP (buf));
   return buf;
 }
 
@@ -318,21 +318,21 @@ gst_osssrc_change_state (GstElement *element)
   /* GstOssSrc *src = GST_OSSSRC (element); */
   
   g_return_val_if_fail (GST_IS_OSSSRC (element), FALSE);
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: state change\n");
+  GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: state change");
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
     if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
       gst_osssrc_close_audio (GST_OSSSRC (element));
   /* otherwise (READY or higher) we need to open the sound card */
   } else {
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "DEBUG: osssrc: ready or higher\n");
+    GST_DEBUG (GST_CAT_PLUGIN_INFO, "DEBUG: osssrc: ready or higher");
 
     if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) { 
       if (!gst_osssrc_open_audio (GST_OSSSRC (element)))
         return GST_STATE_FAILURE;
       else
       {
-	GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: device opened successfully\n");
+	GST_DEBUG (GST_CAT_PLUGIN_INFO, "osssrc: device opened successfully");
 	/* thomas: we can't set caps here because the element is
 	 * not actually ready yet */
       }
@@ -358,7 +358,7 @@ gst_osssrc_open_audio (GstOssSrc *src)
 
     /* set card state */
     gst_osssrc_sync_parms (src);
-    GST_DEBUG (GST_CAT_PLUGIN_INFO,"opened audio: %s\n",src->device);
+    GST_DEBUG (GST_CAT_PLUGIN_INFO,"opened audio: %s",src->device);
     
     GST_FLAG_SET (src, GST_OSSSRC_OPEN);
     return TRUE;

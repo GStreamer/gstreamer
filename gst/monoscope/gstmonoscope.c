@@ -233,15 +233,15 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
 
   monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0, "Monoscope: chainfunc called\n");
+  GST_DEBUG (0, "Monoscope: chainfunc called");
 
   samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
 
-  GST_DEBUG (0, "input buffer has %d samples\n", samples_in);
+  GST_DEBUG (0, "input buffer has %d samples", samples_in);
 
   /* FIXME: should really select the first 1024 samples after the timestamp. */
   if (GST_BUFFER_TIMESTAMP (bufin) < monoscope->next_time || samples_in < 1024) {
-    GST_DEBUG (0, "timestamp is %llu: want >= %llu\n", GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
+    GST_DEBUG (0, "timestamp is %llu: want >= %llu", GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
     gst_buffer_unref (bufin);
     return;
   }
@@ -257,7 +257,7 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
 
     monoscope->visstate = monoscope_init (monoscope->width, monoscope->height);
     g_assert(monoscope->visstate != 0);
-    GST_DEBUG (0, "making new pad\n");
+    GST_DEBUG (0, "making new pad");
 
     caps = GST_CAPS_NEW (
 		     "monoscopesrc",
@@ -292,7 +292,7 @@ gst_monoscope_chain (GstPad *pad, GstBuffer *bufin)
 
   gst_buffer_unref (bufin);
 
-  GST_DEBUG (0, "Monoscope: exiting chainfunc\n");
+  GST_DEBUG (0, "Monoscope: exiting chainfunc");
 
 }
 

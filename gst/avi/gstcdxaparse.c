@@ -164,7 +164,7 @@ cdxa_typefind (GstBuffer *buf,
   gchar *data = GST_BUFFER_DATA (buf);
   GstCaps *new;
 
-  GST_DEBUG (0,"cdxa_parse: typefind\n");
+  GST_DEBUG (0,"cdxa_parse: typefind");
 
   if (GUINT32_FROM_LE (((guint32 *)data)[0]) != GST_RIFF_TAG_RIFF)
     return NULL;

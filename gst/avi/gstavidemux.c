@@ -258,7 +258,7 @@ avi_typefind (GstBuffer *buf,
   gchar *data = GST_BUFFER_DATA (buf);
   GstCaps *new;
 
-  GST_DEBUG (0,"avi_demux: typefind\n");
+  GST_DEBUG (0,"avi_demux: typefind");
 
   if (GUINT32_FROM_LE (((guint32 *)data)[0]) != GST_RIFF_TAG_RIFF)
     return NULL;
@@ -769,7 +769,7 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
     case GST_RIFF_00db:
     case GST_RIFF_00__:
     {
-      GST_DEBUG (0,"gst_avi_demux_chain: tag found %08x size %08x\n",
+      GST_DEBUG (0,"gst_avi_demux_chain: tag found %08x size %08x",
 		    chunkid, *chunksize);
 
       if (GST_PAD_IS_CONNECTED (avi_demux->video_pad[0])) {
@@ -787,9 +787,9 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
             avi_demux->video_need_flush[0] = FALSE;
           }
 
-          GST_DEBUG (0,"gst_avi_demux_chain: send video buffer %08x\n", *chunksize);
+          GST_DEBUG (0,"gst_avi_demux_chain: send video buffer %08x", *chunksize);
           gst_pad_push(avi_demux->video_pad[0], buf);
-          GST_DEBUG (0,"gst_avi_demux_chain: sent video buffer %08x %p\n",
+          GST_DEBUG (0,"gst_avi_demux_chain: sent video buffer %08x %p",
 	    	      *chunksize, &avi_demux->video_pad[0]);
           avi_demux->current_frame++;
 	}
@@ -799,7 +799,7 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
     }
     case GST_RIFF_01wb:
     {
-      GST_DEBUG (0,"gst_avi_demux_chain: tag found %08x size %08x\n",
+      GST_DEBUG (0,"gst_avi_demux_chain: tag found %08x size %08x",
 		    chunkid, *chunksize);
 
       if (avi_demux->init_audio) {
@@ -816,21 +816,21 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
           GST_BUFFER_TIMESTAMP (buf) = -1LL;
 
           if (avi_demux->audio_need_flush[0]) {
-  	    GST_DEBUG (0,"audio flush\n");
+  	    GST_DEBUG (0,"audio flush");
             avi_demux->audio_need_flush[0] = FALSE;
             /* FIXME, do some flush event here */
           }
 
-          GST_DEBUG (0,"gst_avi_demux_chain: send audio buffer %08x\n", *chunksize);
+          GST_DEBUG (0,"gst_avi_demux_chain: send audio buffer %08x", *chunksize);
           gst_pad_push (avi_demux->audio_pad[0], buf);
-          GST_DEBUG (0,"gst_avi_demux_chain: sent audio buffer %08x\n", *chunksize);
+          GST_DEBUG (0,"gst_avi_demux_chain: sent audio buffer %08x", *chunksize);
 	}
       }
       *chunksize = (*chunksize + 1) & ~1;
       break;
     }
     default:
-      GST_DEBUG (0, "  *****  unknown chunkid %08x (%s)\n", chunkid, gst_riff_id_to_fourcc (chunkid));
+      GST_DEBUG (0, "  *****  unknown chunkid %08x (%s)", chunkid, gst_riff_id_to_fourcc (chunkid));
       *chunksize = (*chunksize + 1) & ~1;
       break;
   }

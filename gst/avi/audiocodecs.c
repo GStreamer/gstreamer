@@ -177,13 +177,13 @@ static GstPad *gst_avi_decoder_get_audio_srcpad_winloader(GstAviDecoder *avi_dec
 
   data->out = sinkpad;
 
-  GST_DEBUG (0,"gst_avi_decoder: pads created\n");
+  GST_DEBUG (0,"gst_avi_decoder: pads created");
   return sinkpad;
 }
 
 static void gst_avi_decoder_winloader_audio_chain(GstPad *pad, GstBuffer *buf) 
 {
 
-  GST_DEBUG (0,"gst_avi_decoder: got buffer %08lx %p\n", *(gulong *)GST_BUFFER_DATA(buf), GST_BUFFER_DATA(buf));
+  GST_DEBUG (0,"gst_avi_decoder: got buffer %08lx %p", *(gulong *)GST_BUFFER_DATA(buf), GST_BUFFER_DATA(buf));
   gst_buffer_unref(buf);  
 }

@@ -465,7 +465,7 @@ gst_flxdec_loop (GstElement *element)
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_FLXDEC(element));
 
-  GST_DEBUG (0, "entering loop function\n");
+  GST_DEBUG (0, "entering loop function");
   
   flxdec = GST_FLXDEC(element);
 

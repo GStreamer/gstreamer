@@ -181,7 +181,7 @@ gst_auparse_chain (GstPad *pad, GstBuffer *buf)
 
   auparse = GST_AUPARSE (gst_pad_get_parent (pad));
   
-  GST_DEBUG (0, "gst_auparse_chain: got buffer in '%s'\n",
+  GST_DEBUG (0, "gst_auparse_chain: got buffer in '%s'",
           gst_element_get_name (GST_ELEMENT (auparse)));
 
   data = GST_BUFFER_DATA (buf);
@@ -219,7 +219,7 @@ gst_auparse_chain (GstPad *pad, GstBuffer *buf)
     g_print ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
              auparse->offset,auparse->size,auparse->encoding,
              auparse->frequency,auparse->channels);
-    GST_DEBUG (0, "offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
+    GST_DEBUG (0, "offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld",
              auparse->offset,auparse->size,auparse->encoding,
              auparse->frequency,auparse->channels);
     

@@ -230,11 +230,11 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   goom = GST_GOOM (gst_pad_get_parent (pad));
 
-  GST_DEBUG (0, "GOOM: chainfunc called\n");
+  GST_DEBUG (0, "GOOM: chainfunc called");
 
   samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
 
-  GST_DEBUG (0, "input buffer has %d samples\n", samples_in);
+  GST_DEBUG (0, "input buffer has %d samples", samples_in);
 
   if (GST_BUFFER_TIMESTAMP (bufin) < goom->next_time || samples_in < 1024) {
     gst_buffer_unref (bufin);
@@ -252,7 +252,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
     goom_init (goom->width, goom->height);
 	
-    GST_DEBUG (0, "making new pad\n");
+    GST_DEBUG (0, "making new pad");
 
     caps = GST_CAPS_NEW (
 		     "goomsrc",
@@ -287,7 +287,7 @@ gst_goom_chain (GstPad *pad, GstBuffer *bufin)
 
   gst_buffer_unref (bufin);
 
-  GST_DEBUG (0, "GOOM: exiting chainfunc\n");
+  GST_DEBUG (0, "GOOM: exiting chainfunc");
 
 }
 

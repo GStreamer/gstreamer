@@ -434,7 +434,7 @@ GstMikMod *mikmod;
 
   mikmod = GST_MIKMOD (element);
 
-  GST_DEBUG (0,"state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_READY) 

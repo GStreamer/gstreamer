@@ -186,7 +186,7 @@ gst_avi_decoder_new_pad (GstElement *element, GstPad *pad, GstAviDecoder *avi_de
 #define AVI_TYPE_AUDIO  2
   gint media_type = 0;
   
-  GST_DEBUG (0, "avidecoder: new pad for element \"%s\"\n", gst_element_get_name (element));
+  GST_DEBUG (0, "avidecoder: new pad for element \"%s\"", gst_element_get_name (element));
 
   caps = gst_pad_get_caps (pad);
   format = gst_caps_get_string (caps, "format");
@@ -303,7 +303,7 @@ avi_typefind (GstBuffer *buf,
   gchar *data = GST_BUFFER_DATA (buf);
   GstCaps *new;
 
-  GST_DEBUG (0,"avi_decoder: typefind\n");
+  GST_DEBUG (0,"avi_decoder: typefind");
   if (strncmp (&data[0], "RIFF", 4)) return NULL;
   if (strncmp (&data[8], "AVI ", 4)) return NULL;
 

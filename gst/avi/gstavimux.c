@@ -284,7 +284,7 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
   if (!GST_CAPS_IS_FIXED (vscaps))
     return GST_PAD_CONNECT_DELAYED;
 
-  GST_DEBUG (0, "avimux: sinkconnect triggered on %s\n", gst_pad_get_name (pad));
+  GST_DEBUG (0, "avimux: sinkconnect triggered on %s", gst_pad_get_name (pad));
 
   for (caps = vscaps; caps != NULL; caps = vscaps = vscaps->next)
   {
