@@ -1,3 +1,13 @@
+2004-12-18  David Schleef  <ds@schleef.org>
+
+	* gst/ffmpegcolorspace/imgconvert.c: (get_pix_fmt_info),
+	(avcodec_get_chroma_sub_sample), (avcodec_get_pix_fmt_name),
+	(avcodec_get_pix_fmt), (avpicture_layout),
+	(avcodec_get_pix_fmt_loss), (avg_bits_per_pixel), (img_copy),
+	(get_convert_table_entry), (img_convert), (img_get_alpha_info):
+	Fix code to not use GCC extensions (and c99 extensions that
+	Forte does not like.)
+
 2004-12-19  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
