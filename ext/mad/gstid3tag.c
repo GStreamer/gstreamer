@@ -55,7 +55,6 @@ struct _GstID3Tag {
   GstPad *		srcpad;
 
   /* caps */
-  gint			layer;
   gboolean		parse_mode;
 
   /* tags */
@@ -108,8 +107,8 @@ GST_PAD_TEMPLATE_FACTORY (id3_tag_src_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "id3_tag_data_src",
-    "audio/mpeg",
-      "layer",		GST_PROPS_INT_RANGE (1, 3)
+    "application/x-id3",
+    NULL
   ),
   GST_CAPS_NEW (
     "id3_tag_tag_src",
@@ -124,8 +123,8 @@ GST_PAD_TEMPLATE_FACTORY (id3_tag_sink_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "id3_tag_data_sink",
-    "audio/mpeg",
-      "layer",		GST_PROPS_INT_RANGE (1, 3)
+    "application/x-id3",
+    NULL
   )
 )
 
@@ -147,8 +146,6 @@ static gboolean		gst_id3_tag_src_event		(GstPad *		pad,
 static const GstEventMask* gst_id3_tag_get_event_masks	(GstPad *		pad);
 static const GstQueryType* gst_id3_tag_get_query_types	(GstPad *		pad);
 
-static GstPadLinkReturn gst_id3_tag_link_sink		(GstPad *		pad, 
-							 GstCaps *		caps);
 static gboolean		gst_id3_tag_src_query		(GstPad *		pad,
 							 GstQueryType		type,
 							 GstFormat *		format, 
@@ -240,7 +237,6 @@ gst_id3_tag_init (GstID3Tag *tag)
 		  GST_PAD_TEMPLATE_GET (id3_tag_sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (tag), tag->sinkpad);
   gst_pad_set_chain_function (tag->sinkpad, GST_DEBUG_FUNCPTR (gst_id3_tag_chain));
-  gst_pad_set_link_function (tag->sinkpad, GST_DEBUG_FUNCPTR (gst_id3_tag_link_sink));
 
   tag->srcpad = gst_pad_new_from_template(
 		  GST_PAD_TEMPLATE_GET (id3_tag_src_template_factory), "src");
@@ -407,21 +403,6 @@ gst_id3_tag_src_event (GstPad *pad, GstEvent *event)
 
   gst_event_unref (event);
   return FALSE;
-}
-static GstPadLinkReturn
-gst_id3_tag_link_sink (GstPad *pad, GstCaps *caps)
-{
-  GstID3Tag *tag;
-
-  tag = GST_ID3_TAG (gst_pad_get_parent (pad));
-
-  if (!GST_CAPS_IS_FIXED (caps))
-      return GST_PAD_LINK_DELAYED;
-  
-  if (!gst_caps_get_int (caps, "layer", &tag->layer))
-    return GST_PAD_LINK_DELAYED;
-
-  return GST_PAD_LINK_OK;
 }
 GstTagList*
 gst_mad_id3_to_tag_list(const struct id3_tag *tag)
@@ -661,14 +642,10 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
 	GstCaps *caps;
       /* do caps nego */
 capsnego:
-	if (tag->layer > 0) {
-	  caps = GST_CAPS_NEW ("id3_tag_data_src", "audio/mpeg", "layer", GST_PROPS_INT (tag->layer));
-	} else {
-	  caps = GST_CAPS_NEW ("id3_tag_data_src", "audio/mpeg", NULL);
-	}
+	caps = GST_CAPS_NEW ("id3_tag_data_src", "application/x-id3", NULL);
 	if (gst_pad_try_set_caps (tag->srcpad, caps) != GST_PAD_LINK_REFUSED) {
 	  tag->parse_mode = FALSE;
-	  GST_LOG_OBJECT (tag, "normal operation, using audio/mpeg output");
+	  GST_LOG_OBJECT (tag, "normal operation, using application/x-id3 output");
 	} else {
 	  if (gst_pad_try_set_caps (tag->srcpad, 
 				    GST_CAPS_NEW ("id3_tag_tag_src", "application/x-gst-tags", NULL))
@@ -870,7 +847,6 @@ gst_id3_tag_change_state (GstElement *element)
       tag->v1tag_size = 0;
       tag->v1tag_offset = G_MAXUINT64;
       tag->v2tag_size = 0;
-      tag->layer = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* do something to get out of the chain function faster */
