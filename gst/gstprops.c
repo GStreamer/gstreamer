@@ -601,6 +601,10 @@ gst_props_load_thyself_func (xmlNodePtr field)
     sscanf (prop, "%08x", &entry->data.fourcc_data);
     g_free (prop);
   }
+  else {
+    g_free (entry);
+    entry = NULL;
+  }
 
   return entry;
 }
@@ -634,7 +638,8 @@ gst_props_load_thyself (xmlNodePtr parent)
       while (subfield) {
         GstPropsEntry *subentry = gst_props_load_thyself_func (subfield);
 
-	entry->data.list_data.entries = g_list_prepend (entry->data.list_data.entries, subentry);
+	if (subentry)
+	  entry->data.list_data.entries = g_list_prepend (entry->data.list_data.entries, subentry);
 
         subfield = subfield->next;
       }

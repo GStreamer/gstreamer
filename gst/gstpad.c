@@ -35,7 +35,6 @@ static void		gst_pad_init			(GstPad *pad);
 
 static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
 
-
 static GstObject *pad_parent_class = NULL;
 
 GtkType
@@ -594,6 +593,25 @@ gst_pad_get_parent (GstPad *pad)
 }
 
 /**
+ * gst_pad_get_real_parent:
+ * @pad: the pad to get the parent from
+ *
+ * Get the real parent object of this pad. If the pad
+ * is a ghostpad, the actual owner of the real pad is
+ * returned, as opposed to the gst_pad_get_parent.
+ *
+ * Returns: the parent object
+ */
+GstObject*
+gst_pad_get_real_parent (GstPad *pad)
+{
+  g_return_val_if_fail (pad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  return GST_PAD_PARENT (GST_PAD (GST_PAD_REALIZE (pad)));
+}
+
+/**
  * gst_pad_add_ghost_pad:
  * @pad: the pad to set the ghost parent
  * @ghostpad: the ghost pad to add
@@ -948,7 +966,7 @@ gst_pad_pull (GstPad *pad)
 {
   GstRealPad *peer = GST_RPAD_PEER(pad);
   
-  g_return_if_fail (peer != NULL);
+  g_return_val_if_fail (peer != NULL, NULL);
 
   GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
 
@@ -983,7 +1001,7 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
 {
   GstRealPad *peer = GST_RPAD_PEER(pad);
   
-  g_return_if_fail (peer != NULL);
+  g_return_val_if_fail (peer != NULL, NULL);
 
   GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
 
@@ -1003,6 +1021,65 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
  * templates
  *
  */
+static void		gst_padtemplate_class_init	(GstPadTemplateClass *klass);
+static void		gst_padtemplate_init		(GstPadTemplate *templ);
+
+enum {
+  TEMPL_PAD_CREATED,
+  /* FILL ME */
+  TEMPL_LAST_SIGNAL
+};
+
+static GstObject *padtemplate_parent_class = NULL;
+static guint gst_padtemplate_signals[TEMPL_LAST_SIGNAL] = { 0 };
+
+GtkType
+gst_padtemplate_get_type (void)
+{
+  static GtkType padtemplate_type = 0;
+
+  if (!padtemplate_type) {
+    static const GtkTypeInfo padtemplate_info = {
+      "GstPadTemplate",
+      sizeof(GstPadTemplate),
+      sizeof(GstPadTemplateClass),
+      (GtkClassInitFunc)gst_padtemplate_class_init,
+      (GtkObjectInitFunc)gst_padtemplate_init,
+      (GtkArgSetFunc)NULL,
+      (GtkArgGetFunc)NULL,
+      (GtkClassInitFunc)NULL,
+    };
+    padtemplate_type = gtk_type_unique(GST_TYPE_OBJECT,&padtemplate_info);
+  }
+  return padtemplate_type;
+}
+
+static void
+gst_padtemplate_class_init (GstPadTemplateClass *klass)
+{
+  GtkObjectClass *gtkobject_class;
+  GstObjectClass *gstobject_class;
+
+  gtkobject_class = (GtkObjectClass*)klass;
+  gstobject_class = (GstObjectClass*)klass;
+
+  padtemplate_parent_class = gtk_type_class(GST_TYPE_OBJECT);
+
+  gst_padtemplate_signals[TEMPL_PAD_CREATED] =
+    gtk_signal_new ("pad_created", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstPadTemplateClass, pad_created),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_PAD);
+
+  gtk_object_class_add_signals (gtkobject_class, gst_padtemplate_signals, TEMPL_LAST_SIGNAL);
+
+  gstobject_class->path_string_separator = "*";
+}
+
+static void
+gst_padtemplate_init (GstPadTemplate *templ)
+{
+}
 
 /**
  * gst_padtemplate_new:
@@ -1022,7 +1099,7 @@ gst_padtemplate_new (GstPadFactory *factory)
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  new = g_new0 (GstPadTemplate, 1);
+  new = gtk_type_new (gst_padtemplate_get_type ());
 
   tag = (*factory)[i++];
   g_return_val_if_fail (tag != NULL, new);
@@ -1063,7 +1140,9 @@ gst_padtemplate_create (gchar *name_template,
 {
   GstPadTemplate *new;
 
-  new = g_new0 (GstPadTemplate, 1);
+  g_return_val_if_fail (name_template != NULL, NULL);
+
+  new = gtk_type_new (gst_padtemplate_get_type ());
 
   new->name_template = name_template;
   new->direction = direction;
@@ -1134,21 +1213,24 @@ GstPadTemplate*
 gst_padtemplate_load_thyself (xmlNodePtr parent)
 {
   xmlNodePtr field = parent->xmlChildrenNode;
-  GstPadTemplate *factory = g_new0 (GstPadTemplate, 1);
+  GstPadTemplate *factory;
+  gchar *name_template = NULL;
+  GstPadDirection direction = GST_PAD_UNKNOWN;
+  GstPadPresence presence = GST_PAD_ALWAYS;
+  GList *caps = NULL;
 
   while (field) {
     if (!strcmp(field->name, "nametemplate")) {
-      factory->name_template = xmlNodeGetContent(field);
+      name_template = xmlNodeGetContent(field);
     }
     if (!strcmp(field->name, "direction")) {
       gchar *value = xmlNodeGetContent(field);
 
-      factory->direction = GST_PAD_UNKNOWN;
       if (!strcmp(value, "sink")) {
-        factory->direction = GST_PAD_SINK;
+        direction = GST_PAD_SINK;
       }
       else if (!strcmp(value, "src")) {
-        factory->direction = GST_PAD_SRC;
+        direction = GST_PAD_SRC;
       }
       g_free (value);
     }
@@ -1156,21 +1238,24 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
       gchar *value = xmlNodeGetContent(field);
 
       if (!strcmp(value, "always")) {
-        factory->presence = GST_PAD_ALWAYS;
+        presence = GST_PAD_ALWAYS;
       }
       else if (!strcmp(value, "sometimes")) {
-        factory->presence = GST_PAD_SOMETIMES;
+        presence = GST_PAD_SOMETIMES;
       }
       else if (!strcmp(value, "request")) {
-        factory->presence = GST_PAD_REQUEST;
+        presence = GST_PAD_REQUEST;
       }
       g_free (value);
     }
     else if (!strcmp(field->name, "caps")) {
-      factory->caps = g_list_append(factory->caps, gst_caps_load_thyself (field));
+      caps = g_list_append (caps, gst_caps_load_thyself (field));
     }
     field = field->next;
   }
+
+  factory = gst_padtemplate_create (name_template, direction, presence, caps);
+
   return factory;
 }
 
@@ -1269,13 +1354,6 @@ gst_pad_get_element_private (GstPad *pad)
 {
   return pad->element_private;
 }
-
-
-
-
-
-
-
 
 
 /***** ghost pads *****/

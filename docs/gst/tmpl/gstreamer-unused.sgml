@@ -780,10 +780,6 @@ Query whether this object has multiple input pads.
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Short_Description ##### -->
-Asynchronous disk reader. (asyncdisksrc)
-
-
 <!-- ##### FUNCTION gst_src_signal_eos ##### -->
 <para>
 
@@ -1383,11 +1379,15 @@ The start point of a filter graph
 
 @klass: 
 
+<<<<<<< gstreamer-unused.sgml
 <!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Title ##### -->
 GstAsyncDiskSrc
 
 
 <!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
+=======
+<!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
+>>>>>>> 1.23.2.3
 <para>
 
 </para>
@@ -2009,6 +2009,7 @@ GstFilter
 </para>
 
 
+<<<<<<< gstreamer-unused.sgml
 <!-- ##### ENUM GstSrcFlags ##### -->
 <para>
 Flags for the GstSrc element
@@ -2024,6 +2025,18 @@ Flags for the GstSrc element
 
 
 <!-- ##### MACRO GST_HTTPSRC ##### -->
+=======
+<!-- ##### ENUM GstSrcFlags ##### -->
+<para>
+Flags for the GstSrc element
+</para>
+
+@GST_SRC_ASYNC: Indicates that this src is asynchronous
+@GST_SRC_FLAG_LAST: subclasses can use this to number their flags
+
+
+<!-- ##### MACRO GST_HTTPSRC ##### -->
+>>>>>>> 1.23.2.3
 <para>
 
 </para>

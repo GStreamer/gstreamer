@@ -29,8 +29,8 @@
 #include "gstpropsprivate.h"
 
 
-void 
-_gst_caps_initialize (void) 
+void
+_gst_caps_initialize (void)
 {
 }
 
@@ -67,12 +67,12 @@ gst_caps_new (const gchar *name, const gchar *mime)
   GstCaps *caps;
 
   g_return_val_if_fail (mime != NULL, NULL);
-  
+
   caps = g_new0 (GstCaps, 1);
   caps->name = g_strdup (name);
   caps->id = get_type_for_mime (mime);
   caps->properties = NULL;
-  
+
   return caps;
 }
 
@@ -90,7 +90,7 @@ GstCaps*
 gst_caps_new_with_props (const gchar *name, const gchar *mime, GstProps *props)
 {
   GstCaps *caps;
-  
+
   caps = gst_caps_new (name, mime);
   caps->properties = props;
 
@@ -101,7 +101,7 @@ gst_caps_new_with_props (const gchar *name, const gchar *mime, GstProps *props)
  * gst_caps_register:
  * @factory: the factory to register
  *
- * Register the factory. 
+ * Register the factory.
  *
  * Returns: the registered capability
  */
@@ -140,7 +140,7 @@ gst_caps_register_count (GstCapsFactory *factory, guint *counter)
 
   tag = (*factory)[i++];
   g_return_val_if_fail (tag != NULL, NULL);
-  
+
   typeid = get_type_for_mime ((gchar *)tag);
 
   caps = g_new0 (GstCaps, 1);
@@ -163,7 +163,7 @@ gst_caps_register_count (GstCapsFactory *factory, guint *counter)
  *
  * Returns: the name of the caps
  */
-const gchar*    
+const gchar*
 gst_caps_get_name (GstCaps *caps)
 {
   g_return_val_if_fail (caps != NULL, NULL);
@@ -173,7 +173,7 @@ gst_caps_get_name (GstCaps *caps)
 
 /**
  * gst_caps_set_name:
- * @caps: the caps to set the name to 
+ * @caps: the caps to set the name to
  * @name: the name to set
  *
  * Set the name of a caps.
@@ -182,7 +182,7 @@ void
 gst_caps_set_name (GstCaps *caps, const gchar *name)
 {
   g_return_if_fail (caps != NULL);
- 
+
   if (caps->name)
     g_free (caps->name);
 
@@ -197,7 +197,7 @@ gst_caps_set_name (GstCaps *caps, const gchar *name)
  *
  * Returns: the mime type of the caps
  */
-const gchar*    
+const gchar*
 gst_caps_get_mime (GstCaps *caps)
 {
   GstType *type;
@@ -206,9 +206,9 @@ gst_caps_get_mime (GstCaps *caps)
 
   type = gst_type_find_by_id (caps->id);
 
-  if (type) 
+  if (type)
     return type->mime;
-  else 
+  else
     return "unknown/unknown";
 }
 
@@ -236,7 +236,7 @@ gst_caps_set_mime (GstCaps *caps, const gchar *mime)
  *
  * Returns: the type id of the caps
  */
-guint16         
+guint16
 gst_caps_get_type_id (GstCaps *caps)
 {
   g_return_val_if_fail (caps != NULL, 0);
@@ -247,16 +247,16 @@ gst_caps_get_type_id (GstCaps *caps)
 /**
  * gst_caps_set_type_id:
  * @caps: the caps to set the type id to
- * @typeid: the type id to set 
+ * @typeid: the type id to set
  *
  * Set the type id of the caps.
  */
 void
-gst_caps_set_type_id (GstCaps *caps, guint16 typeid)
+gst_caps_set_type_id (GstCaps *caps, guint16 type_id)
 {
   g_return_if_fail (caps != NULL);
 
-  caps->id = typeid;
+  caps->id = type_id;
 }
 
 /**
@@ -276,7 +276,7 @@ gst_caps_set_props (GstCaps *caps, GstProps *props)
   g_return_val_if_fail (caps->properties == NULL, caps);
 
   caps->properties = props;
-  
+
   return caps;
 }
 
@@ -310,7 +310,7 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
 {
   g_return_val_if_fail (fromcaps != NULL, FALSE);
   g_return_val_if_fail (tocaps != NULL, FALSE);
-	
+
   if (fromcaps->id != tocaps->id) {
     GST_DEBUG (0,"gstcaps: mime types differ (%d to %d)\n",
 	       fromcaps->id, tocaps->id);
@@ -371,7 +371,7 @@ gst_caps_list_check_compatibility (GList *fromcaps, GList *tocaps)
  *
  * Returns: a new XML node pointer
  */
-xmlNodePtr      
+xmlNodePtr
 gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
@@ -397,7 +397,7 @@ gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
  *
  * Returns: a new capability
  */
-GstCaps*        
+GstCaps*
 gst_caps_load_thyself (xmlNodePtr parent)
 {
   GstCaps *caps = g_new0 (GstCaps, 1);

@@ -24,10 +24,6 @@
 #include "gst_private.h"
 
 #include "gstpipeline.h"
-#include "gstthread.h"
-#include "gstutils.h"
-#include "gsttype.h"
-#include "gstautoplug.h"
 
 
 GstElementDetails gst_pipeline_details = {
@@ -51,15 +47,13 @@ enum {
 };
 
 
-static void 			gst_pipeline_class_init		(GstPipelineClass *klass);
-static void 			gst_pipeline_init		(GstPipeline *pipeline);
+static void			gst_pipeline_class_init		(GstPipelineClass *klass);
+static void			gst_pipeline_init		(GstPipeline *pipeline);
 
-static GstElementStateReturn 	gst_pipeline_change_state	(GstElement *element);
+static GstElementStateReturn	gst_pipeline_change_state	(GstElement *element);
 
-static void 			gst_pipeline_prepare		(GstPipeline *pipeline);
+static void			gst_pipeline_prepare		(GstPipeline *pipeline);
 
-static void 			gst_pipeline_have_type		(GstElement *sink, GstElement *sink2, gpointer data);
-static void 			gst_pipeline_pads_autoplug	(GstElement *src, GstElement *sink);
 
 static GstBinClass *parent_class = NULL;
 //static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 };
@@ -85,7 +79,7 @@ gst_pipeline_get_type (void) {
 }
 
 static void
-gst_pipeline_class_init (GstPipelineClass *klass) 
+gst_pipeline_class_init (GstPipelineClass *klass)
 {
   GstElementClass *gstelement_class;
 
@@ -96,14 +90,11 @@ gst_pipeline_class_init (GstPipelineClass *klass)
   gstelement_class->change_state = gst_pipeline_change_state;
 }
 
-static void 
-gst_pipeline_init (GstPipeline *pipeline) 
+static void
+gst_pipeline_init (GstPipeline *pipeline)
 {
   // we're a manager by default
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
-
-  pipeline->src = NULL;
-  pipeline->sinks = NULL;
 }
 
 
@@ -116,393 +107,25 @@ gst_pipeline_init (GstPipeline *pipeline)
  * Returns: newly created GstPipeline
  */
 GstElement*
-gst_pipeline_new (guchar *name) 
+gst_pipeline_new (guchar *name)
 {
   return gst_elementfactory_make ("pipeline", name);
 }
 
-static void 
-gst_pipeline_prepare (GstPipeline *pipeline) 
+static void
+gst_pipeline_prepare (GstPipeline *pipeline)
 {
-  GST_DEBUG (0,"GstPipeline: preparing pipeline \"%s\" for playing\n", 
+  GST_DEBUG (0,"GstPipeline: preparing pipeline \"%s\" for playing\n",
 		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
 }
 
-static void 
-gst_pipeline_have_type (GstElement *sink, GstElement *sink2, gpointer data) 
-{
-  GST_DEBUG (0,"GstPipeline: pipeline have type %p\n", (gboolean *)data);
-
-  *(gboolean *)data = TRUE;
-}
-
-static GstCaps* 
-gst_pipeline_typefind (GstPipeline *pipeline, GstElement *element) 
-{
-  gboolean found = FALSE;
-  GstElement *typefind;
-  GstCaps *caps = NULL;
-
-  GST_DEBUG (0,"GstPipeline: typefind for element \"%s\" %p\n", 
-		  GST_ELEMENT_NAME(element), &found);
-
-  typefind = gst_elementfactory_make ("typefind", "typefind");
-  g_return_val_if_fail (typefind != NULL, FALSE);
-
-  gtk_signal_connect (GTK_OBJECT (typefind), "have_type",
-                      GTK_SIGNAL_FUNC (gst_pipeline_have_type), &found);
-
-  gst_pad_connect (gst_element_get_pad (element, "src"),
-                   gst_element_get_pad (typefind, "sink"));
-
-  gst_bin_add (GST_BIN (pipeline), typefind);
-
-  //gst_bin_create_plan (GST_BIN (pipeline));
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-
-  // keep pushing buffers... the have_type signal handler will set the found flag
-  while (!found) {
-    gst_bin_iterate (GST_BIN (pipeline));
-  }
-
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-
-  if (found) {
-    caps = gst_util_get_pointer_arg (GTK_OBJECT (typefind), "caps");
-    
-    gst_pad_set_caps_list (gst_element_get_pad (element, "src"), g_list_prepend (NULL, caps));
-  }
-
-  gst_pad_disconnect (gst_element_get_pad (element, "src"),
-                      gst_element_get_pad (typefind, "sink"));
-  gst_bin_remove (GST_BIN (pipeline), typefind);
-  gst_object_unref (GST_OBJECT (typefind));
-
-  return caps;
-}
-
-static gboolean 
-gst_pipeline_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink) 
-{
-  GList *sinkpads;
-  gboolean connected = FALSE;
-
-  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"\n", 
-		  GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
-
-  sinkpads = gst_element_get_pad_list(sink);
-  while (sinkpads) {
-    GstPad *sinkpad = (GstPad *)sinkpads->data;
-
-    // if we have a match, connect the pads
-    if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
-        !GST_PAD_CONNECTED(sinkpad))
-    {
-      if (gst_caps_list_check_compatibility (gst_pad_get_caps_list(pad), gst_pad_get_caps_list(sinkpad))) {
-        gst_pad_connect(pad, sinkpad);
-        GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
-		       GST_ELEMENT_NAME(src));
-        GST_DEBUG (0,"pad \"%s\" in element %s\n", GST_PAD_NAME (sinkpad),
-		      GST_ELEMENT_NAME(sink));
-        connected = TRUE;
-        break;
-      }
-      else {
-	GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
-      }
-    }
-    sinkpads = g_list_next(sinkpads);
-  }
-
-  if (!connected) {
-    GST_DEBUG (0,"gstpipeline: no path to sinks for type\n");
-  }
-  return connected;
-}
-
-static void 
-gst_pipeline_pads_autoplug (GstElement *src, GstElement *sink) 
-{
-  GList *srcpads;
-  gboolean connected = FALSE;
-
-  srcpads = gst_element_get_pad_list(src);
-
-  while (srcpads && !connected) {
-    GstPad *srcpad = (GstPad *)srcpads->data;
-
-    if (gst_pad_get_direction(srcpad) == GST_PAD_SRC) 
-      connected = gst_pipeline_pads_autoplug_func (src, srcpad, sink);
-
-    srcpads = g_list_next(srcpads);
-  }
-  
-  if (!connected) {
-    GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
-		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
-    gtk_signal_connect(GTK_OBJECT(src),"new_pad",
-                 GTK_SIGNAL_FUNC(gst_pipeline_pads_autoplug_func), sink);
-  }
-}
-
-/**
- * gst_pipeline_add_src:
- * @pipeline: the pipeline to add the src to
- * @src: the src to add to the pipeline
- *
- * Adds a src element to the pipeline. This element
- * will be used as a src for autoplugging. If you add more
- * than one src element, the previously added element will
- * be removed.
- */
-void 
-gst_pipeline_add_src (GstPipeline *pipeline, GstElement *src) 
-{
-  g_return_if_fail (pipeline != NULL);
-  g_return_if_fail (GST_IS_PIPELINE (pipeline));
-  g_return_if_fail (src != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (src));
-
-  if (pipeline->src) {
-    printf("gstpipeline: *WARNING* removing previously added element \"%s\"\n",
-			  GST_ELEMENT_NAME(pipeline->src));
-    gst_bin_remove(GST_BIN(pipeline), pipeline->src);
-  }
-  pipeline->src = src;
-  gst_bin_add(GST_BIN(pipeline), src);
-}
-
-/**
- * gst_pipeline_add_sink:
- * @pipeline: the pipeline to add the sink to
- * @sink: the sink to add to the pipeline
- *
- * Adds a sink element to the pipeline. This element
- * will be used as a sink for autoplugging.
- */
-void 
-gst_pipeline_add_sink (GstPipeline *pipeline, GstElement *sink) 
-{
-  g_return_if_fail (pipeline != NULL);
-  g_return_if_fail (GST_IS_PIPELINE (pipeline));
-  g_return_if_fail (sink != NULL);
-  g_return_if_fail (GST_IS_ELEMENT (sink));
-
-  pipeline->sinks = g_list_prepend (pipeline->sinks, sink);
-  //gst_bin_add(GST_BIN(pipeline), sink);
-}
-
-/**
- * gst_pipeline_autoplug:
- * @pipeline: the pipeline to autoplug
- *
- * Constructs a complete pipeline by automatically
- * detecting the plugins needed.
- *
- * Returns: a gboolean indicating success or failure.
- */
-gboolean 
-gst_pipeline_autoplug (GstPipeline *pipeline) 
-{
-  GList *elements;
-  GstElement *element, *srcelement = NULL, *sinkelement= NULL;
-  GList **factories;
-  GList **base_factories;
-  GstElementFactory *factory;
-  GstCaps *src_caps = 0;
-  guint i, numsinks;
-  gboolean use_thread = FALSE, have_common = FALSE;
-  GList *sinkstart;
-
-  g_return_val_if_fail(pipeline != NULL, FALSE);
-  g_return_val_if_fail(GST_IS_PIPELINE(pipeline), FALSE);
-
-  GST_DEBUG (0,"GstPipeline: autopluging pipeline \"%s\"\n", 
-		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
-
-
-  // fase 1, run typedetect on the source if needed... 
-  if (!pipeline->src) {
-    GST_DEBUG (0,"GstPipeline: no source detected, can't autoplug pipeline \"%s\"\n", 
-		GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
-    return FALSE;
-  }
-
-  GST_DEBUG (0,"GstPipeline: source \"%s\" has no MIME type, running typefind...\n", 
-	GST_ELEMENT_NAME(pipeline->src));
-
-  src_caps = gst_pipeline_typefind(pipeline, pipeline->src);
-
-  if (src_caps) {
-    GST_DEBUG (0,"GstPipeline: source \"%s\" type found %d\n", GST_ELEMENT_NAME(pipeline->src), 
-	  src_caps->id);
-  }
-  else {
-    GST_DEBUG (0,"GstPipeline: source \"%s\" has no type\n", GST_ELEMENT_NAME(pipeline->src));
-    return FALSE;
-  }
-
-  srcelement = pipeline->src;
-
-  elements = pipeline->sinks;
-
-  sinkstart = g_list_copy (elements);
-
-  numsinks = g_list_length(elements);
-  factories = g_new0(GList *, numsinks);
-  base_factories = g_new0(GList *, numsinks);
-
-  i = 0;
-  // fase 2, loop over all the sinks..
-  while (elements) {
-    GstPad *pad;
-
-    element = GST_ELEMENT(elements->data);
-
-    pad = (GstPad *)gst_element_get_pad_list (element)->data;
-
-    base_factories[i] = factories[i] = gst_autoplug_caps_list (g_list_append(NULL,src_caps), 
-gst_pad_get_caps_list(pad));
-    // if we have a succesfull connection, proceed
-    if (factories[i] != NULL) {
-      i++;
-    }
-    else {
-      sinkstart = g_list_remove (sinkstart, element);
-    }
-
-    elements = g_list_next(elements);
-  }
-  
-  while (factories[0]) {
-    // fase 3: add common elements 
-    factory = (GstElementFactory *)(factories[0]->data);
-
-    // check to other paths for mathing elements (factories)
-    for (i=1; i<numsinks; i++) {
-      if (!factories[i] || (factory != (GstElementFactory *)(factories[i]->data))) {
-	goto differ;
-      }
-      factories[i] = g_list_next(factories[i]);
-    }
-    factory = (GstElementFactory *)(factories[0]->data);
-
-    GST_DEBUG (0,"common factory \"%s\"\n", factory->name);
-
-    element = gst_elementfactory_create(factory, factory->name);
-    gst_bin_add(GST_BIN(pipeline), element);
-
-    gst_pipeline_pads_autoplug(srcelement, element);
-
-    srcelement = element;
-
-    factories[0] = g_list_next(factories[0]);
-
-    have_common = TRUE;
-  }
-
-differ:
-  // loop over all the sink elements
-  elements = sinkstart;
-
-  i = 0;
-  while (elements) {
-    GstElement *thesrcelement = srcelement;
-    GstElement *thebin = GST_ELEMENT(pipeline);
-
-    if (g_list_length(base_factories[i]) == 0) goto next;
-
-    sinkelement = (GstElement *)elements->data;
-
-    use_thread = have_common;
-
-    while (factories[i] || sinkelement) {
-      // fase 4: add other elements...
-       
-      if (factories[i]) {
-        factory = (GstElementFactory *)(factories[i]->data);
-        GST_DEBUG (0,"factory \"%s\"\n", factory->name);
-        element = gst_elementfactory_create(factory, factory->name);
-        factories[i] = g_list_next(factories[i]);
-      }
-      // we have arived to the final sink element
-      else {
-	element = sinkelement;
-	sinkelement = NULL;
-      }
-
-      // this element suggests the use of a thread, so we set one up...
-      if (GST_ELEMENT_IS_THREAD_SUGGESTED(element) || use_thread) {
-        GstElement *queue;
-        GList *sinkpads;
-        GstPad *srcpad, *sinkpad;
-
-	use_thread = FALSE;
-
-        GST_DEBUG (0,"sugest new thread for \"%s\" %08x\n", GST_ELEMENT_NAME (element), GST_FLAGS(element));
-
-	// create a new queue and add to the previous bin
-        queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
-        GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
-        gst_bin_add(GST_BIN(thebin), queue);
-
-	// this will be the new bin for all following elements
-        thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
-
-        srcpad = gst_element_get_pad(queue, "src");
-
-        sinkpads = gst_element_get_pad_list(element);
-        while (sinkpads) {
-          sinkpad = (GstPad *)sinkpads->data;
-
-	  // FIXME connect matching pads, not just the first one...
-          if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK && 
-	      !GST_PAD_CONNECTED(sinkpad)) {
-            GList *caps = gst_pad_get_caps_list (sinkpad);
-
-	    // the queue has the type of the elements it connects
-	    gst_pad_set_caps_list (srcpad, caps);
-            gst_pad_set_caps_list (gst_element_get_pad(queue, "sink"), caps);
-	    break;
-	  }
-          sinkpads = g_list_next(sinkpads);
-        }
-        gst_pipeline_pads_autoplug(thesrcelement, queue);
-
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
-        gst_bin_add(GST_BIN(thebin), element);
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (thebin));
-        gst_bin_add(GST_BIN(pipeline), thebin);
-        thesrcelement = queue;
-      }
-      // no thread needed, easy case
-      else {
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
-        gst_bin_add(GST_BIN(thebin), element);
-      }
-      gst_pipeline_pads_autoplug(thesrcelement, element);
-
-      // this element is now the new source element
-      thesrcelement = element;
-    }
-next:
-    elements = g_list_next(elements);
-    i++;
-  }
-  return TRUE;
-  
-  GST_DEBUG (0,"GstPipeline: unable to autoplug pipeline \"%s\"\n", 
-		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
-  return FALSE;
-}
-
-static GstElementStateReturn 
-gst_pipeline_change_state (GstElement *element) 
+static GstElementStateReturn
+gst_pipeline_change_state (GstElement *element)
 {
   GstPipeline *pipeline;
 
   g_return_val_if_fail (GST_IS_PIPELINE (element), FALSE);
-  
+
   pipeline = GST_PIPELINE (element);
 
   switch (GST_STATE_TRANSITION (pipeline)) {
@@ -513,13 +136,12 @@ gst_pipeline_change_state (GstElement *element)
     default:
       break;
   }
-    
+
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  
+
   return GST_STATE_SUCCESS;
 }
-
 
 /**
  * gst_pipeline_iterate:
@@ -527,8 +149,8 @@ gst_pipeline_change_state (GstElement *element)
  *
  * Cause the pipeline's contents to be run through one full 'iteration'.
  */
-void 
-gst_pipeline_iterate (GstPipeline *pipeline) 
+void
+gst_pipeline_iterate (GstPipeline *pipeline)
 {
   g_return_if_fail (pipeline != NULL);
   g_return_if_fail (GST_IS_PIPELINE(pipeline));

@@ -133,6 +133,8 @@ a start/stop timecode pair.
 @offset: the offset of the region to get
 @len: the length of the region to get
 @Returns: a #GstBuffer
+<!-- # Unused Parameters # -->
+@size: the size of the region to get
 
 
 <!-- ##### USER_FUNCTION GstPadQoSFunction ##### -->

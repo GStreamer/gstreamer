@@ -31,7 +31,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #define GST_TYPE_AUTOPLUG \
-  (gst_object_get_type())
+  (gst_autoplug_get_type())
 #define GST_AUTOPLUG(obj) \
   (GTK_CHECK_CAST((obj),GST_TYPE_AUTOPLUG,GstAutoplug))
 #define GST_AUTOPLUG_CLASS(klass) \
@@ -44,30 +44,66 @@ extern "C" {
 typedef struct _GstAutoplug GstAutoplug;
 typedef struct _GstAutoplugClass GstAutoplugClass;
 
-#define GST_AUTOPLUG_MAX_COST 999999
+typedef enum {
+  GST_AUTOPLUG_TO_CAPS 		= GST_OBJECT_FLAG_LAST,
+  GST_AUTOPLUG_TO_RENDERER,
 
-typedef guint   (*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointer data);
-typedef GList*  (*GstAutoplugListFunction) (gpointer data);
+  GST_AUTOPLUG_FLAG_LAST	= GST_OBJECT_FLAG_LAST + 8,
+} GstAutoplugFlags;
+	
 
 struct _GstAutoplug {
-  GtkObject object;
+  GstObject object;
 };
 
 struct _GstAutoplugClass {
-  GtkObjectClass parent_class;
+  GstObjectClass parent_class;
+
+  /* signal callbacks */
+  void (*new_object)  (GstAutoplug *autoplug, GstObject *object);
+
+  /* perform the autoplugging */
+  GstElement* (*autoplug_to_caps) (GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, va_list args);
+  GstElement* (*autoplug_to_renderers) (GstAutoplug *autoplug, GList *srccaps, GstElement *target, va_list args);
 };
 
-GtkType 	gst_autoplug_get_type			(void);
+typedef struct _GstAutoplugFactory GstAutoplugFactory;
 
-GList* 		gst_autoplug_caps 			(GstCaps *srccaps, GstCaps *sinkcaps);
-GList* 		gst_autoplug_caps_list 			(GList *srccaps, GList *sinkcaps);
-GList* 		gst_autoplug_pads 			(GstPad *srcpad, GstPad *sinkpad);
+struct _GstAutoplugFactory {
+  gchar *name;                  /* name of autoplugger */
+  gchar *longdesc;              /* long description of the autoplugger (well, don't overdo it..) */
+  GtkType type;                 /* unique GtkType of the autoplugger */
+};
 
+GtkType			gst_autoplug_get_type			(void);
+
+void			gst_autoplug_signal_new_object		(GstAutoplug *autoplug, GstObject *object);
+
+GstElement*		gst_autoplug_to_caps			(GstAutoplug *autoplug, GList *srccaps, GList *sinkcaps, ...);
+GstElement*		gst_autoplug_to_renderers		(GstAutoplug *autoplug, GList *srccaps, 
+								 GstElement *target, ...);
+
+
+/*
+ * creating autopluggers
+ *
+ */
+GstAutoplugFactory*	gst_autoplugfactory_new			(const gchar *name, const gchar *longdesc, GtkType type);
+void                    gst_autoplugfactory_destroy		(GstAutoplugFactory *factory);
+
+GstAutoplugFactory*	gst_autoplugfactory_find		(const gchar *name);
+GList*			gst_autoplugfactory_get_list		(void);
+
+GstAutoplug*		gst_autoplugfactory_create		(GstAutoplugFactory *factory);
+GstAutoplug*		gst_autoplugfactory_make		(const gchar *name);
+
+xmlNodePtr		gst_autoplugfactory_save_thyself	(GstAutoplugFactory *factory, xmlNodePtr parent);
+GstAutoplugFactory*	gst_autoplugfactory_load_thyself	(xmlNodePtr parent);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 
-#endif /* __GST_AUTOPLUG_H__ */     
+#endif /* __GST_AUTOPLUG_H__ */
 

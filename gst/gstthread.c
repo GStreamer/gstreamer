@@ -254,7 +254,7 @@ gst_thread_change_state (GstElement *element)
                         gst_thread_main_loop, thread);
 
         // wait for it to 'spin up'
-//        gst_thread_wait_thread (thread);
+        //gst_thread_wait_thread (thread);
       } else {
         GST_INFO (GST_CAT_THREAD, "gstthread: NOT starting thread \"%s\"",
                 GST_ELEMENT_NAME (GST_ELEMENT (element)));

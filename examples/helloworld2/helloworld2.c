@@ -41,6 +41,7 @@ int main(int argc,char *argv[])
   g_assert(audiosink != NULL);
 
   /* add objects to the main pipeline */
+  /*
   gst_pipeline_add_src(GST_PIPELINE(pipeline), disksrc);
   gst_pipeline_add_sink(GST_PIPELINE(pipeline), audiosink);
 
@@ -48,6 +49,7 @@ int main(int argc,char *argv[])
     g_print("unable to handle stream\n");
     exit(-1);
   }
+  */
 
   // hmmmm hack? FIXME
   GST_FLAG_UNSET (pipeline, GST_BIN_FLAG_MANAGER);

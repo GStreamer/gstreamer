@@ -597,6 +597,7 @@ AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
+AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
 
 
 
@@ -680,6 +681,7 @@ gst/Makefile
 gst/types/Makefile
 gst/meta/Makefile
 gst/elements/Makefile
+gst/autoplug/Makefile
 libs/Makefile
 libs/riff/Makefile
 libs/colorspace/Makefile

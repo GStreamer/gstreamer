@@ -519,7 +519,7 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
   g_return_val_if_fail (templ != NULL, NULL);
 
   templ_new = gst_element_get_padtemplate_by_compatible (element, templ);
-  if (templ_new != NULL) 
+  if (templ_new != NULL)
       pad = gst_element_request_pad (element, templ_new);
 
   return pad;
@@ -902,13 +902,15 @@ gst_element_save_thyself (GstObject *object,
     type = gtk_type_parent (type);
   }
 
-  pads = element->pads;
+  pads = GST_ELEMENT_PADS (element);
+
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
-    xmlNodePtr padtag = xmlNewChild (parent, NULL, "pad", NULL);
     // figure out if it's a direct pad or a ghostpad
-    if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element)
+    if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element) {
+      xmlNodePtr padtag = xmlNewChild (parent, NULL, "pad", NULL);
       gst_object_save_thyself (GST_OBJECT (pad), padtag);
+    }
     pads = g_list_next (pads);
   }
 
@@ -973,7 +975,6 @@ gst_element_load_thyself (xmlNodePtr self, GstObject *parent)
 	}
         child = child->next;
       }
-
       gst_util_set_object_arg (GTK_OBJECT (element), name, value);
     }
     children = children->next;

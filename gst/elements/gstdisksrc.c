@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstdisksrc.c: 
+ * gstdisksrc.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -56,23 +56,23 @@ enum {
 };
 
 
-static void 		gst_disksrc_class_init	(GstDiskSrcClass *klass);
-static void 		gst_disksrc_init		(GstDiskSrc *disksrc);
+static void		gst_disksrc_class_init	(GstDiskSrcClass *klass);
+static void		gst_disksrc_init		(GstDiskSrc *disksrc);
 
-static void 		gst_disksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void 		gst_disksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_disksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_disksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
 static GstBuffer *	gst_disksrc_get		(GstPad *pad);
 static GstBuffer *	gst_disksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
 
-static GstElementStateReturn 	gst_disksrc_change_state	(GstElement *element);
+static GstElementStateReturn	gst_disksrc_change_state	(GstElement *element);
 
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_disksrc_get_type(void) 
+gst_disksrc_get_type(void)
 {
   static GtkType disksrc_type = 0;
 
@@ -93,7 +93,7 @@ gst_disksrc_get_type(void)
 }
 
 static void
-gst_disksrc_class_init (GstDiskSrcClass *klass) 
+gst_disksrc_class_init (GstDiskSrcClass *klass)
 {
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
@@ -118,8 +118,8 @@ gst_disksrc_class_init (GstDiskSrcClass *klass)
   gstelement_class->change_state = gst_disksrc_change_state;
 }
 
-static void 
-gst_disksrc_init (GstDiskSrc *disksrc) 
+static void
+gst_disksrc_init (GstDiskSrc *disksrc)
 {
 //  GST_FLAG_SET (disksrc, GST_SRC_);
 
@@ -139,14 +139,14 @@ gst_disksrc_init (GstDiskSrc *disksrc)
 }
 
 
-static void 
-gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+static void
+gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 {
   GstDiskSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DISKSRC (object));
-  
+
   src = GST_DISKSRC (object);
 
   switch(id) {
@@ -176,14 +176,14 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
   }
 }
 
-static void 
-gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+static void
+gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 {
   GstDiskSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_DISKSRC (object));
-  
+
   src = GST_DISKSRC (object);
 
   switch (id) {
@@ -212,7 +212,7 @@ gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
  * Push a new buffer from the disksrc at the current offset.
  */
 static GstBuffer *
-gst_disksrc_get (GstPad *pad) 
+gst_disksrc_get (GstPad *pad)
 {
   GstDiskSrc *src;
   GstBuffer *buf;
@@ -223,7 +223,7 @@ gst_disksrc_get (GstPad *pad)
 
   /* deal with EOF state */
   if (src->curoffset >= src->size) {
-    gst_element_signal_eos (GST_ELEMENT (src));
+    gst_pad_set_eos (pad);
     return NULL;
   }
 
@@ -269,7 +269,7 @@ gst_disksrc_get (GstPad *pad)
  * Push a new buffer from the disksrc of given size at given offset.
  */
 static GstBuffer *
-gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 len) 
+gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 len)
 {
   GstDiskSrc *src;
   GstBuffer *buf;
@@ -281,10 +281,10 @@ gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 l
 
   g_return_val_if_fail (GST_IS_DISKSRC (src), NULL);
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN), NULL);
-  
+
   /* deal with EOF state */
   if (offset >= src->size) {
-    gst_element_signal_eos (GST_ELEMENT (src));
+    gst_pad_set_eos (pad);
     return NULL;
   }
 
@@ -312,8 +312,8 @@ gst_disksrc_get_region (GstPad *pad, GstRegionType type,guint64 offset,guint64 l
 
 
 /* open the file and mmap it, necessary to go to READY state */
-static 
-gboolean gst_disksrc_open_file (GstDiskSrc *src) 
+static
+gboolean gst_disksrc_open_file (GstDiskSrc *src)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_DISKSRC_OPEN), FALSE);
 
@@ -343,8 +343,8 @@ gboolean gst_disksrc_open_file (GstDiskSrc *src)
 }
 
 /* unmap and close the file */
-static void 
-gst_disksrc_close_file (GstDiskSrc *src) 
+static void
+gst_disksrc_close_file (GstDiskSrc *src)
 {
   g_return_if_fail (GST_FLAG_IS_SET (src, GST_DISKSRC_OPEN));
 
@@ -365,8 +365,8 @@ gst_disksrc_close_file (GstDiskSrc *src)
 }
 
 
-static GstElementStateReturn 
-gst_disksrc_change_state (GstElement *element) 
+static GstElementStateReturn
+gst_disksrc_change_state (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_DISKSRC (element), GST_STATE_FAILURE);
 
@@ -375,7 +375,7 @@ gst_disksrc_change_state (GstElement *element)
       gst_disksrc_close_file (GST_DISKSRC (element));
   } else {
     if (!GST_FLAG_IS_SET (element, GST_DISKSRC_OPEN)) {
-      if (!gst_disksrc_open_file (GST_DISKSRC (element))) 
+      if (!gst_disksrc_open_file (GST_DISKSRC (element)))
         return GST_STATE_FAILURE;
     }
   }

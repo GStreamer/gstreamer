@@ -122,6 +122,7 @@ typedef enum {
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))
+#define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
 typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;

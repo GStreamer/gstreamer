@@ -30,8 +30,8 @@
 /* global list of registered elementfactories */
 GList* _gst_elementfactories;
 
-void 
-_gst_elementfactory_initialize (void) 
+void
+_gst_elementfactory_initialize (void)
 {
   _gst_elementfactories = NULL;
 }
@@ -42,8 +42,8 @@ _gst_elementfactory_initialize (void)
  *
  * Removes the elementfactory from the global list.
  */
-void 
-gst_elementfactory_destroy (GstElementFactory *elementfactory) 
+void
+gst_elementfactory_destroy (GstElementFactory *elementfactory)
 {
   g_return_if_fail (elementfactory != NULL);
 
@@ -61,7 +61,7 @@ gst_elementfactory_destroy (GstElementFactory *elementfactory)
  * Returns: #GstElementFactory if found, NULL otherwise
  */
 GstElementFactory*
-gst_elementfactory_find (const gchar *name) 
+gst_elementfactory_find (const gchar *name)
 {
   GList *walk;
   GstElementFactory *factory;
@@ -89,7 +89,7 @@ gst_elementfactory_find (const gchar *name)
  * Returns: GList of type #GstElementFactory
  */
 GList*
-gst_elementfactory_get_list (void) 
+gst_elementfactory_get_list (void)
 {
   return _gst_elementfactories;
 }
@@ -108,11 +108,13 @@ gst_elementfactory_get_list (void)
  */
 GstElementFactory*
 gst_elementfactory_new (const gchar *name, GtkType type,
-                        GstElementDetails *details) 
+                        GstElementDetails *details)
 {
-  GstElementFactory *factory = g_new0(GstElementFactory, 1);
+  GstElementFactory *factory;
 
   g_return_val_if_fail(name != NULL, NULL);
+
+  factory = g_new0(GstElementFactory, 1);
 
   factory->name = g_strdup(name);
   factory->type = type;
@@ -138,7 +140,7 @@ gst_elementfactory_new (const gchar *name, GtkType type,
  */
 GstElement *
 gst_elementfactory_create (GstElementFactory *factory,
-                           const gchar *name) 
+                           const gchar *name)
 {
   GstElement *element;
   GstElementClass *oclass;
@@ -184,7 +186,7 @@ gst_elementfactory_create (GstElementFactory *factory,
  * Returns: new #GstElement
  */
 GstElement*
-gst_elementfactory_make (const gchar *factoryname, const gchar *name) 
+gst_elementfactory_make (const gchar *factoryname, const gchar *name)
 {
   GstElementFactory *factory;
   GstElement *element;
@@ -338,15 +340,15 @@ gst_elementfactory_can_sink_caps (GstElementFactory *factory,
 /**
  * gst_elementfactory_save_thyself:
  * @factory: factory to save
- * @parent: the parent xmlNodePtr 
+ * @parent: the parent xmlNodePtr
  *
  * Saves the factory into an XML tree.
- * 
+ *
  * Returns: the new xmlNodePtr
  */
-xmlNodePtr 
-gst_elementfactory_save_thyself (GstElementFactory *factory, 
-		                 xmlNodePtr parent) 
+xmlNodePtr
+gst_elementfactory_save_thyself (GstElementFactory *factory,
+		                 xmlNodePtr parent)
 {
   GList *pads;
 
@@ -377,14 +379,14 @@ gst_elementfactory_save_thyself (GstElementFactory *factory,
 
 /**
  * gst_elementfactory_load_thyself:
- * @parent: the parent xmlNodePtr 
+ * @parent: the parent xmlNodePtr
  *
  * Creates a new factory from an xmlNodePtr.
- * 
+ *
  * Returns: the new factory
  */
 GstElementFactory *
-gst_elementfactory_load_thyself (xmlNodePtr parent) 
+gst_elementfactory_load_thyself (xmlNodePtr parent)
 {
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
   xmlNodePtr children = parent->xmlChildrenNode;
@@ -415,7 +417,7 @@ gst_elementfactory_load_thyself (xmlNodePtr parent)
     }
     if (!strcmp(children->name, "padtemplate")) {
        GstPadTemplate *template;
-       
+
        template = gst_padtemplate_load_thyself (children);
 
        gst_elementfactory_add_padtemplate (factory, template);
