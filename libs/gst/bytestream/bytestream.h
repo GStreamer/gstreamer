@@ -37,7 +37,7 @@ struct _GstByteStream {
   guint32 	headbufavail;
   guint32 	listavail;
 
-  // we keep state of assembled pieces
+  /* we keep state of assembled pieces */
   guint8	*assembled;
   guint32	assembled_len;
 };
@@ -46,10 +46,12 @@ GstByteStream*		gst_bytestream_new		(GstPad *pad);
 void			gst_bytestream_destroy		(GstByteStream *bs);
 
 GstBuffer*		gst_bytestream_read		(GstByteStream *bs, guint32 len);
+guint64			gst_bytestream_tell		(GstByteStream *bs);
+gboolean		gst_bytestream_seek		(GstByteStream *bs, GstSeekType type, gint64 offset);
 GstBuffer*		gst_bytestream_peek		(GstByteStream *bs, guint32 len);
 guint8*			gst_bytestream_peek_bytes	(GstByteStream *bs, guint32 len);
 gboolean		gst_bytestream_flush		(GstByteStream *bs, guint32 len);
-void                    gst_bytestream_flush_fast       (GstByteStream * bs, guint32 len);
+void                    gst_bytestream_flush_fast       (GstByteStream *bs, guint32 len);
 void                    gst_bytestream_get_status	(GstByteStream *bs, guint32 *avail_out, GstEvent **event_out);
 
 void 			gst_bytestream_print_status	(GstByteStream *bs);
