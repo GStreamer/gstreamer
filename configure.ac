@@ -606,8 +606,8 @@ dnl *** rtp ***
 dnl FIXME : adapt and make it work
 translit(dnm, m, l) AM_CONDITIONAL(USE_RTP, true)
 GST_CHECK_FEATURE(RTP, [RTP library], rtpenc rtpdec,[
-  AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_RTP=yes, HAVE_RTP=no, $GST_CFLAGS $GST_LIBS)
-  RTP_LIBS="-lrtp"
+  AC_CHECK_LIB(ortp, ortp_init, HAVE_RTP=yes, HAVE_RTP=no, $GST_CFLAGS $GST_LIBS)
+  RTP_LIBS="-lortp"
   AC_SUBST(RTP_LIBS)
 ])
 
