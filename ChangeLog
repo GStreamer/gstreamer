@@ -1,3 +1,13 @@
+2005-01-09  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
+
+	* ext/dvdread/stream_labels.c: new file
+	* ext/dvdread/stream_labels.h: new file
+	* ext/dvdread/Makefile.am:
+	* ext/dvdread/dvdreadsrc.c: (_seek_title):
+	  Extract audio stream label from DVD IFO files.
+	  It only dump them on the console for now, still have to
+	  make playbin aware of them.
+
 2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybasebin.c: (setup_source):

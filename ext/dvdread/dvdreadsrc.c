@@ -37,7 +37,8 @@
 //#include <linux/cdrom.h>
 #include <assert.h>
 
-#include <dvdreadsrc.h>
+#include "dvdreadsrc.h"
+#include "stream_labels.h"
 
 #include <dvdread/dvd_reader.h>
 #include <dvdread/ifo_types.h>
@@ -592,6 +593,8 @@ _close (DVDReadSrcPrivate * priv)
 static int
 _seek_title (DVDReadSrcPrivate * priv, int title, int angle)
 {
+  GHashTable *languagelist = NULL;
+
     /**
      * Make sure our title number is valid.
      */
@@ -652,6 +655,14 @@ _seek_title (DVDReadSrcPrivate * priv, int title, int angle)
     DVDClose (priv->dvd);
     return -1;
   }
+
+  /* Get stream labels for all audio and subtitle streams */
+  languagelist = dvdreadsrc_init_languagelist ();
+
+  dvdreadsrc_get_audio_stream_labels (priv->vts_file, languagelist);
+  dvdreadsrc_get_subtitle_stream_labels (priv->vts_file, languagelist);
+
+  g_hash_table_destroy (languagelist);
 
   GST_LOG ("Opened title %d, angle %d", title, angle);
 
