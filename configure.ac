@@ -337,6 +337,14 @@ if test "x$HAVE_GDK_LOADERS" == "xyes"; then
 fi
 AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GDK_LOADERS" = "xyes")
 
+PKG_CHECK_MODULES(LIBOIL, liboil-0.1, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+AC_SUBST(LIBOIL_CFLAGS)
+AC_SUBST(LIBOIL_LIBS)
+if test "x${HAVE_LIBOIL}" = xyes ; then
+  #AC_DEFINE_UNQUOTED(HAVE_LIBOIL, 1, [Define if liboil is being used])
+  true
+fi
+
 dnl ===========================================================================
 dnl ============================= gst plug-ins ================================
 dnl ===========================================================================
