@@ -359,15 +359,18 @@ gst_v4l2_set_defaults (GstV4l2Element * v4l2element)
     gst_tuner_channel_changed (tuner, channel);
     g_object_notify (G_OBJECT (v4l2element), "channel");
   }
-  if (v4l2element->frequency != 0) {
-    gst_tuner_set_frequency (tuner, channel, v4l2element->frequency);
-  } else {
-    v4l2element->frequency = gst_tuner_get_frequency (tuner, channel);
-    if (v4l2element->frequency == 0) {
-      /* guess */
-      gst_tuner_set_frequency (tuner, channel, 1000);
+
+  if (GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
+    if (v4l2element->frequency != 0) {
+      gst_tuner_set_frequency (tuner, channel, v4l2element->frequency);
     } else {
-      g_object_notify (G_OBJECT (v4l2element), "frequency");
+      v4l2element->frequency = gst_tuner_get_frequency (tuner, channel);
+      if (v4l2element->frequency == 0) {
+        /* guess */
+        gst_tuner_set_frequency (tuner, channel, 1000);
+      } else {
+        g_object_notify (G_OBJECT (v4l2element), "frequency");
+      }
     }
   }
 }
