@@ -43,17 +43,18 @@ conversion_test ()
 
   /* read 8 16 bits */
   for (i = 0; i < 8; ++i) {
-    read_two = GUINT16_FROM_BE (*((guint16 *) (array + i)));
+    read_two = GST_READ_UINT16_BE (array + i);
     expect_two = array[i] * (1 << 8) + array[i + 1];
     if (read_two != expect_two) {
-      g_print ("GUINT16_FROM_BE %d: read %d != %d\n", i, read_two, expect_two);
+      g_print ("GST_READ_UINT16_BE %d: read %d != %d\n", i, read_two,
+          expect_two);
       return -1;
     }
   }
 
   /* write 8 16 bit */
   for (i = 0; i < 8; ++i) {
-    *((guint16 *) & write_array[i]) = GUINT16_TO_BE (read_two);
+    GST_WRITE_UINT16_BE (&write_array[i], read_two);
     if (memcmp (array + 7, write_array + i, 2) != 0) {
       gst_dp_dump_byte_array (write_array + i, 2);
       gst_dp_dump_byte_array (array + 7, 2);
@@ -63,11 +64,11 @@ conversion_test ()
 
   /* read 5 32 bits */
   for (i = 0; i < 5; ++i) {
-    read_four = GUINT32_FROM_BE (*((guint32 *) (array + i)));
+    read_four = GST_READ_UINT32_BE (array + i);
     expect_four = array[i] * (1 << 24) + array[i + 1] * (1 << 16)
         + array[i + 2] * (1 << 8) + array[i + 3];
     if (read_four != expect_four) {
-      g_print ("GUINT32_FROM_BE %d: read %d != %d\n", i, read_four,
+      g_print ("GST_READ_UINT32_BE %d: read %d != %d\n", i, read_four,
           expect_four);
       return -1;
     }
@@ -75,21 +76,21 @@ conversion_test ()
 
   /* read 2 64 bits */
   for (i = 0; i < 2; ++i) {
-    read_eight = GUINT64_FROM_BE (*((guint64 *) (array + i)));
+    read_eight = GST_READ_UINT64_BE (array + i);
     expect_eight = array[i] * (1LL << 56) + array[i + 1] * (1LL << 48)
         + array[i + 2] * (1LL << 40) + array[i + 3] * (1LL << 32)
         + array[i + 4] * (1 << 24) + array[i + 5] * (1 << 16)
         + array[i + 6] * (1 << 8) + array[i + 7];
     ;
     if (read_eight != expect_eight) {
-      g_print ("GUINT64_FROM_BE %d: read %" G_GUINT64_FORMAT
+      g_print ("GST_READ_UINT64_BE %d: read %" G_GUINT64_FORMAT
           " != %" G_GUINT64_FORMAT "\n", i, read_eight, expect_eight);
       return -1;
     }
   }
 
   /* write 1 64 bit */
-  *((guint64 *) & write_array[0]) = GUINT64_TO_BE (read_eight);
+  GST_WRITE_UINT64_BE (&write_array[0], read_eight);
   if (memcmp (array + 1, write_array, 8) != 0) {
     gst_dp_dump_byte_array (write_array, 8);
     gst_dp_dump_byte_array (array + 1, 8);

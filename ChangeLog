@@ -1,3 +1,8 @@
+2004-07-29  David Schleef  <ds@schleef.org>
+
+	* libs/gst/dataprotocol/dataprotocol-test.c: (conversion_test):
+	Use GST_READ_GUINTxx_BE(), since it accesses unaligned memory.
+
 2004-07-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_class_init),
