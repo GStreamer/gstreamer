@@ -1,5 +1,10 @@
 2004-11-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/upload.mak:
+	  Apparently docs changed location on FDO's server.
+
+2004-11-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/appendix-checklist.xml:
 	  Add some random notes on thinks to check when writing an element.
 	  This list can be extended as people see fit.

@@ -14,7 +14,7 @@
 
 # these variables define the location of the online docs
 DOC_SERVER=freedesktop.org
-DOC_BASE=/home/projects/gstreamer/www/data/doc
+DOC_BASE=/srv/gstreamer.freedesktop.org/www/data/doc
 DOC_URL=$(DOC_SERVER):$(DOC_BASE)
 
 
