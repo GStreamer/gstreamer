@@ -1,0 +1,149 @@
+-*- outline -*-
+
+* Pro Audio with GStreamer
+
+This file attempts to document usage of GStreamer for so-called "pro
+audio"[0]. Two audiences are considered: programmers that are
+considering GStreamer for their pro-audio app, and GStreamer developers
+interested in which parts of GStreamer pro-audio uses.
+
+[0] I actually don't like this term, because it's elitist. Of course
+    other audio applications are not inferior, but they are different.
+    I'll stick with the term out of established practice.
+
+** What GStreamer Offers the Pro Audio Developer
+
+Choosing GStreamer for your application gives you lots of things for
+free.
+
+*** A high penetration into POSIX desktops
+
+GStreamer is included with Gnome, so you'll find it already installed on
+an increasing number of desktops. It makes it easier for a user to
+install your app. However, you still have to check for individual
+plugins that you depend on.
+
+*** An extremely flexible signal flow graph
+
+You have elements, connection points, different kinds of processing
+functions, schedulers, etc. You can subclass just about everything, or
+replace whole subsystems as you need to.
+
+All of this you would have to implement somehow. The downside is, of
+course, that it's extremely flexible. The graph isn't run by clock-tick
+-- the delays are carried out by the timekeeping element (if any), when
+execution reaches it. It's cooperative, rather than dictator-style like
+Jack. If all problems have been worked out, etc, it runs smoothly, but
+one poorly coded element can stall the graph.
+
+Restricting graph operation to clock-ticks and using buses instead, like
+SuperCollider 3, would introduce many simplifications to scheduling and
+such, I would think. However, you'd still have to implement your
+signal-flow infrastructure from scratch if you decided to go it alone.
+
+I might revise the above paragraph, though. I like GStreamer's level of
+flexibility a bit too much :)
+
+*** A wide variety of existing plugins
+
+This includes inputs like ALSA, OSS, sndfile, etc, as well as their
+corresponding sinks (outputs). Then there are the network transports.
+And the sound servers (including Jack). LADSPA plugins for free. Some
+DSP things, but admittedly not too much -- this is an area for future
+expansion.
+
+*** Generic plugin behavior
+
+Of course you still have to know some specifics about the plugins you
+use (which properties they have, for example), but in general elements
+of a "pipeline" (signal flow graph -- and no, it doesn't have to look
+like a pipe) are replaceable. Your user can choose between ALSA or OSS
+or even ESD (shudder), and it's simple to implement.
+
+*** Easy threads
+
+Adding threads to your signal flowgraph does takes some thought, but
+once you've decided how to set things up it's reasonably easy.
+Unfortunately realtime threads aren't implemented yet, but that should
+be an easy project, knock on wood.
+
+*** Other Stuff
+
+GStreamer is big these days. I wouldn't say bloated, but there are a lot
+of subsystems relating to "media" that just aren't applicable to
+processing float data. There's a whole system (called "caps") that deals
+with negotiating common formats between elements, when all pro audio has
+to deal with is sample-rate and the number of frames per buffer. There's
+a typefinding and pipeline autoplugging subsystem. There's "tags", like
+from ID3 tags.
+
+You might find uses for these things, and thankfully these uses blur the
+lines between "pro" and "consumer" audio. To an extent, these features
+complicate GStreamer programming. But mostly they stay out of your way
+-- besides caps, they only bother you when you ask them to :-)
+
+** Pro Audio for GStreamer Programmers
+
+Pro audio is a restricted, almost purely mathematical domain. There's
+not that much to worry about. Each channel is separate from the rest
+(never interleaved). All data is in float format, and native byte order.
+The sample rate is typically the same in the whole system. Same with the
+number of frames in a buffer.
+
+So it's simple, but it's different from "normal" audio processing (a
+whole mess of variables to synchronise and convert between, interleaved
+data, codecs, etc). But it's sufficiently different that in the past
+we've had discussions every 8 months or so about why things are
+implemented in such-and-such a way, and why don't we change them, and so
+on. So this part of the document is aimed at GStreamer developer's as a
+kind of documentation for the whole float-caps space.
+
+*** The Format
+
+Pro audio deals with floats. I'm not really worried about doubles --
+although LADSPA carefully #define's LADSPA_Sample so you can override
+it, everything's in float.
+
+There are two variables to be concerned about. One is sample rate, which
+is pretty obvious. The not-so-obvious one is buffer-frames, specifying
+the number of frames that will come in a buffer. If a buffer has fewer
+frames, that indicates EOS is coming on the next pull. This property is
+an optimization to allow easy chaining of buffers in multi-pad elements,
+as well as to prevent deadlocks in circular pipelines, and to comply
+with systems like Jack that operate on clock ticks.
+
+*** Channels
+
+One variable that is not in pro-audio is the number of channels in a
+stream. Streams are always mono. All DSP algorithms expect to receive
+mono data. Multichannel processing is done via multiple inputs. This is
+the complicated part of pro audio for GStreamer, because it means lots
+of multi-pad elements, and complicated pipelines, which is a pain to
+code for (if you're not coding it in Scheme, of course ;). So yes, it's
+kindof a pain, but it is a flexibility that's necessary.
+
+*** Stability
+
+DSP routines written years back still work, because all you need to use
+them is to -lm. GStreamer is a step towards DLL hell. And audio
+developers are a funny bunch. Look at Paul Davis's Ardour CVS, for
+instance. He has a local copy of every library ever coded, ever. No
+joke.
+
+If our platform is to remain attractive to this group, we need to start
+to stabilize the way GStreamer works. Of course API and ABI change,
+we're young. But outside of media-related work, the core is pretty
+stable. When we move to change things after 0.8, changes should be well
+documented.
+
+That's all pretty normal, but there is one special consideration. DSP
+involves lots of custom plugins, maintained outside the GStreamer tree.
+So just because you grep the tree and don't find an instance of X
+function or whatever, it doesn't necessarily mean the feature/behaviour
+is unused. This will be increasingly true for other GStreamer users in
+the future, but it's true now for DSP. I'm talking about me now ;)
+
+OK, enough rambling. Hope this clarifies things a bit.
+
+Andy Wingo, 24 Jan 2004.
+
