@@ -1,3 +1,8 @@
+2004-07-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	  remove GST_CAT_DEFAULT because the type has changed
+
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* win32/gstbytestream.vcproj:
@@ -9,8 +14,8 @@
 	* win32/gst-register.vcproj:
 	* win32/gstspider.vcproj:
 	* win32/msvc71.sln:
-	  Copy the files where needed after building, The testsuite will be built
-	  separately
+	  Copy the files where needed after building, The testsuite will be
+	  built separately
 
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 
@@ -27,7 +32,7 @@
 2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/gstinfo.h:
-	Marc was right, we need to export literraly GST_CAT_DEFAULT
+	Marc was right, we need to export literally GST_CAT_DEFAULT
 
 2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 

@@ -1484,7 +1484,6 @@ gst_debug_category_get_color
 gst_debug_category_get_description
 gst_debug_get_all_categories
 gst_debug_construct_term_color
-GST_CAT_DEFAULT
 GST_CAT_LEVEL_LOG
 GST_CAT_ERROR_OBJECT
 GST_CAT_WARNING_OBJECT
