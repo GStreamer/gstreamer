@@ -50,7 +50,7 @@ plugin_init (GstPlugin *plugin)
   if (!gst_element_register (plugin, "mulawenc",
 			     GST_RANK_NONE, GST_TYPE_MULAWENC) ||
       !gst_element_register (plugin, "mulawdec",
-			     GST_RANK_PRIMARY, GST_TYPE_MULAWENC))
+			     GST_RANK_PRIMARY, GST_TYPE_MULAWDEC))
     return FALSE;
 
   return TRUE;

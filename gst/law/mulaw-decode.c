@@ -73,7 +73,7 @@ mulawdec_link (GstPad *pad, const GstCaps *caps)
   ret = gst_structure_get_int (structure, "channels", &channels);
   if (!ret) return GST_PAD_LINK_REFUSED;
 
-  tempcaps = gst_caps_new_simple ("audio/x-mulaw",
+  tempcaps = gst_caps_new_simple ("audio/x-raw-int",
       "depth",    G_TYPE_INT, 16,
       "width",    G_TYPE_INT, 16,
       "signed",   G_TYPE_BOOLEAN, TRUE,

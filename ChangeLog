@@ -1,3 +1,9 @@
+2004-02-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/law/mulaw-decode.c: (mulawdec_link):
+	* gst/law/mulaw.c: (plugin_init):
+          fix mulawdec so it actually works again
+
 2004-02-24  Arwed v. Merkatz  <v.merkatz@gmx.net>
 
 	reviewed by: David Schleef  <ds@schleef.org>
