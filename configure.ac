@@ -499,6 +499,17 @@ AC_CHECK_LIB(Hermes, Hermes_ConverterInstance,
 )
 AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
 
+dnl Check for libgsm
+AC_MSG_CHECKING(GSM library)
+AC_CHECK_LIB(gsm, gsm_create,
+  HAVE_LIBGSM=yes
+  AC_DEFINE(HAVE_LIBGSM),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: gsmdec, gsmenc
+)
+  HAVE_LIBGSM=no,
+)
+
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
 HAVE_CDPARANOIA=yes
@@ -862,6 +873,10 @@ if test "x$HAVE_LIBAUDIOFILE" = xyes; then
   AC_DEFINE(HAVE_LIBAUDIOFILE)
 fi
 
+if test "x$HAVE_LIBGSM" = xyes; then
+  AC_DEFINE(HAVE_LIBGSM)
+fi
+
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -915,7 +930,7 @@ AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
-
+AM_CONDITIONAL(HAVE_LIBGSM, 	    test "x$HAVE_LIBGSM" = "xyes")
 
 
 dnl ############################

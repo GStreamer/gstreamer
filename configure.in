@@ -493,6 +493,17 @@ AC_CHECK_LIB(jpeg, jpeg_set_defaults,
   HAVE_LIBJPEG=no,
 )
 
+dnl Check for libgsm
+AC_MSG_CHECKING(libgsm library)
+AC_CHECK_LIB(gsm, gsm_create, 
+  HAVE_LIBGSM=yes 
+  AC_DEFINE(HAVE_LIBGSM),
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: gsmdec gsmenc
+)
+  HAVE_LIBGSM=no,
+)
+
 dnl Check for Hermes
 AC_MSG_CHECKING(Hermes library)
 AC_CHECK_LIB(Hermes, Hermes_ConverterInstance, 
@@ -863,6 +874,10 @@ if test "x$HAVE_LIBAUDIOFILE" = xyes; then
   AC_DEFINE(HAVE_LIBAUDIOFILE)
 fi
 
+if test "x$HAVE_LIBGSM" = xyes; then
+  AC_DEFINE(HAVE_LIBGSM)
+fi
+
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -917,6 +932,7 @@ AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME,      test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
+AM_CONDITIONAL(HAVE_LIBGSM,         test "x$HAVE_LIBGSM" = "xyes")
 
 
 
@@ -1096,6 +1112,7 @@ plugins/xmms/Makefile
 plugins/arts/Makefile
 plugins/1394/Makefile
 plugins/sdlsink/Makefile
+plugins/gsm/Makefile
 plugins/dv/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
