@@ -1,3 +1,11 @@
+2004-11-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (get_relative), (gst_ogg_demux_src_query),
+	(gst_ogg_demux_push), (gst_ogg_pad_push):
+	  Let's act as if we're synchronized now! :).
+	* ext/theora/theoradec.c: (theora_dec_chain):
+	  Add some debug.
+
 2004-11-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/alpha/gstalpha.c: (gst_alpha_method_get_type),
