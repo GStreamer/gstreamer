@@ -27,10 +27,11 @@ dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
 AC_PROG_CC
+dnl For interactive UNIX (a Sun thing)
+AC_ISC_POSIX
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
-AC_ISC_POSIX
 
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
@@ -412,7 +413,7 @@ AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
 
 GST_PLUGIN_LDFLAGS='-module -avoid-version'
-AC_SUBST(GST_PLUGIN_LDFLAGS)
+AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 AC_CONFIG_SUBDIRS(libs/ext/cothreads)
 
