@@ -153,7 +153,6 @@ libavformat_la_SOURCES = \
 	ffmpeg/libavformat/mpegtsenc.c \
 	ffmpeg/libavformat/mpjpeg.c \
 	ffmpeg/libavformat/nut.c \
-	ffmpeg/libavformat/ogg.c \
 	ffmpeg/libavformat/os_support.c \
 	ffmpeg/libavformat/png.c \
 	ffmpeg/libavformat/pnm.c \
@@ -257,7 +256,6 @@ libavcodec_la_SOURCES = \
 	ffmpeg/libavcodec/msmpeg4.c \
 	ffmpeg/libavcodec/msrle.c \
 	ffmpeg/libavcodec/msvideo1.c \
-	ffmpeg/libavcodec/oggvorbis.c \
 	ffmpeg/libavcodec/opts.c \
 	ffmpeg/libavcodec/pcm.c \
 	ffmpeg/libavcodec/ra144.c \
