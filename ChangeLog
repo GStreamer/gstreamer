@@ -1,3 +1,27 @@
+2004-09-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstfdset.c: (gst_fdset_fd_has_closed),
+	(gst_fdset_fd_has_error), (gst_fdset_fd_can_read),
+	(gst_fdset_fd_can_write), (gst_fdset_wait):
+	* gst/tcp/gstmultifdsink.c: (gst_client_status_get_type),
+	(gst_multifdsink_init), (gst_multifdsink_add),
+	(gst_multifdsink_remove), (gst_multifdsink_get_stats),
+	(gst_multifdsink_remove_client_link),
+	(gst_multifdsink_client_queue_buffer),
+	(gst_multifdsink_handle_client_write),
+	(gst_multifdsink_recover_client), (gst_multifdsink_handle_clients),
+	(gst_multifdsink_close), (gst_multifdsink_change_state):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_class_init),
+	(gst_tcpserversink_removed):
+	Small cleanups in fdset.c
+	Use a hastable to map fd to the client structure for faster
+	lookup in _remove and get_stats.
+	Added virtual function to close the fds.
+	Handle clients even when the select/poll call was unblocked because
+	of a command.
+	Implement syncing to keyframe in the recovery procedure.
+
 2004-09-16 Iain <iaingnome@gmail.com>
 
 	* gst/audioconvert/gstaudioconvert.c (_fixate_caps_to_int): Free the

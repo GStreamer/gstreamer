@@ -337,8 +337,9 @@ gst_fdset_fd_has_closed (GstFDSet * set, GstFD * fd)
       gint idx = fd->idx;
 
       g_mutex_lock (set->poll_lock);
-      if (idx >= 0 && idx < set->last_testpollfds)
+      if (idx >= 0 && idx < set->last_testpollfds) {
         res = (set->testpollfds[idx].revents & POLLHUP) != 0;
+      }
       g_mutex_unlock (set->poll_lock);
       break;
     }
@@ -365,8 +366,9 @@ gst_fdset_fd_has_error (GstFDSet * set, GstFD * fd)
       gint idx = fd->idx;
 
       g_mutex_lock (set->poll_lock);
-      if (idx >= 0 && idx < set->last_testpollfds)
+      if (idx >= 0 && idx < set->last_testpollfds) {
         res = (set->testpollfds[idx].revents & (POLLERR | POLLNVAL)) != 0;
+      }
       g_mutex_unlock (set->poll_lock);
       break;
     }
@@ -393,8 +395,9 @@ gst_fdset_fd_can_read (GstFDSet * set, GstFD * fd)
       gint idx = fd->idx;
 
       g_mutex_lock (set->poll_lock);
-      if (idx >= 0 && idx < set->last_testpollfds)
+      if (idx >= 0 && idx < set->last_testpollfds) {
         res = (set->testpollfds[idx].revents & (POLLIN | POLLPRI)) != 0;
+      }
       g_mutex_unlock (set->poll_lock);
       break;
     }
@@ -421,8 +424,9 @@ gst_fdset_fd_can_write (GstFDSet * set, GstFD * fd)
       gint idx = fd->idx;
 
       g_mutex_lock (set->poll_lock);
-      if (idx >= 0 && idx < set->last_testpollfds)
+      if (idx >= 0 && idx < set->last_testpollfds) {
         res = (set->testpollfds[idx].revents & POLLOUT) != 0;
+      }
       g_mutex_unlock (set->poll_lock);
       break;
     }

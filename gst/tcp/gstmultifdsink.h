@@ -77,6 +77,7 @@ typedef enum
   GST_CLIENT_STATUS_REMOVED	= 2,
   GST_CLIENT_STATUS_SLOW	= 3,
   GST_CLIENT_STATUS_ERROR	= 4,
+  GST_CLIENT_STATUS_DUPLICATE	= 5,
 } GstClientStatus;
 
 /* structure for a client
@@ -121,6 +122,7 @@ struct _GstMultiFdSink {
 
   GMutex *clientslock;	/* lock to protect the clients list */
   GList *clients;	/* list of clients we are serving */
+  GHashTable *fd_hash;  /* index on fd to client */
   
   GstFDSetMode mode;
   GstFDSet *fdset;
@@ -165,6 +167,7 @@ struct _GstMultiFdSinkClass {
   gboolean (*init)   (GstMultiFdSink *sink);
   gboolean (*wait)   (GstMultiFdSink *sink, GstFDSet *set);
   gboolean (*close)  (GstMultiFdSink *sink);
+  void (*removed) (GstMultiFdSink *sink, int fd);
 
   /* signals */
   void (*client_added) (GstElement *element, gchar *host, gint fd);

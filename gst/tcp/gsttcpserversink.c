@@ -61,6 +61,7 @@ static gboolean gst_tcpserversink_handle_wait (GstMultiFdSink * sink,
     GstFDSet * set);
 static gboolean gst_tcpserversink_init_send (GstMultiFdSink * this);
 static gboolean gst_tcpserversink_close (GstMultiFdSink * this);
+static void gst_tcpserversink_removed (GstMultiFdSink * sink, int fd);
 
 static void gst_tcpserversink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -131,6 +132,7 @@ gst_tcpserversink_class_init (GstTCPServerSink * klass)
   gstmultifdsink_class->init = gst_tcpserversink_init_send;
   gstmultifdsink_class->wait = gst_tcpserversink_handle_wait;
   gstmultifdsink_class->close = gst_tcpserversink_close;
+  gstmultifdsink_class->removed = gst_tcpserversink_removed;
 
   GST_DEBUG_CATEGORY_INIT (tcpserversink_debug, "tcpserversink", 0, "TCP sink");
 }
@@ -170,6 +172,18 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
       inet_ntoa (client_address.sin_addr), client_sock_fd);
 
   return TRUE;
+}
+
+static void
+gst_tcpserversink_removed (GstMultiFdSink * sink, int fd)
+{
+  GstTCPServerSink *this = GST_TCPSERVERSINK (sink);
+
+  GST_LOG_OBJECT (this, "closing fd %d", fd);
+  if (close (fd) < 0) {
+    GST_WARNING_OBJECT (this, "error closing fd %d: %s", fd,
+        g_strerror (errno));
+  }
 }
 
 static gboolean
