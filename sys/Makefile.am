@@ -5,7 +5,9 @@ else
 OSS_DIR=
 endif
 
-if USE_QCAM
+# FIXME it's broken
+# hadess@hadess.net
+if HAVE_NASM
 QCAM_DIR=qcam
 else
 QCAM_DIR=
