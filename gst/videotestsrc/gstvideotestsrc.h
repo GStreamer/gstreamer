@@ -18,10 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_VIDEOTESTSRC_H__
 #define __GST_VIDEOTESTSRC_H__
-
 
 #include <gst/gst.h>
 
@@ -50,7 +48,7 @@ typedef struct _GstVideotestsrcClass GstVideotestsrcClass;
 struct _GstVideotestsrc {
   GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   /* parameters */
   gboolean sync;
@@ -60,7 +58,7 @@ struct _GstVideotestsrc {
   gint width;
   gint height;
   struct fourcc_list_struct *fourcc;
-  
+
   /* private */
   gint64 timestamp_offset;
   gint64 n_frames;
@@ -74,14 +72,14 @@ struct _GstVideotestsrc {
   gint64 segment_start_frame;
   gint64 segment_end_frame;
 
-  void (*make_image)(GstVideotestsrc *v, unsigned char *dest, int w, int h);
+  void (*make_image) (GstVideotestsrc *v, unsigned char *dest, int w, int h);
 };
 
 struct _GstVideotestsrcClass {
   GstElementClass parent_class;
 };
 
-GType gst_videotestsrc_get_type(void) G_GNUC_CONST;
+GType gst_videotestsrc_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS
 

@@ -23,7 +23,6 @@
 
 /* non-GST-specific stuff */
 
-/*#define DEBUG_ENABLED */
 #include <gstvideotestsrc.h>
 #include <videotestsrc.h>
 #ifdef HAVE_LIBOIL
@@ -32,15 +31,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-
-
-#if 0
-static void
-gst_videotestsrc_setup (GstVideotestsrc * v)
-{
-
-}
-#endif
 
 static unsigned char
 random_char (void)
@@ -497,6 +487,8 @@ paint_get_structure (struct fourcc_list_struct * format)
   }
 }
 
+/* returns the size in bytes for one video frame of the given dimensions
+ * given the fourcc in GstVideotestsrc */
 int
 gst_videotestsrc_get_size (GstVideotestsrc * v, int w, int h)
 {

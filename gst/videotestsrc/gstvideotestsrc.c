@@ -17,8 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-/*#define DEBUG_ENABLED */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -31,7 +29,8 @@
 #include <liboil/liboil.h>
 #endif
 
-
+GST_DEBUG_CATEGORY (videotestsrc_debug);
+#define GST_CAT_DEFAULT videotestsrc_debug
 
 /* elementfactory information */
 static GstElementDetails videotestsrc_details =
@@ -63,7 +62,7 @@ static GstElementStateReturn gst_videotestsrc_change_state (GstElement *
     element);
 static void gst_videotestsrc_set_clock (GstElement * element, GstClock * clock);
 
-static void gst_videotestsrc_set_pattern (GstVideotestsrc * src,
+static void gst_videotestsrc_set_pattern (GstVideotestsrc * videotestsrc,
     int pattern_type);
 static void gst_videotestsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -178,6 +177,9 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
 
   gstelement_class->change_state = gst_videotestsrc_change_state;
   gstelement_class->set_clock = gst_videotestsrc_set_clock;
+
+  GST_DEBUG_CATEGORY_INIT (videotestsrc_debug, "videotestsrc", 0,
+      "Video Test Source");
 }
 
 static void
@@ -227,14 +229,14 @@ gst_videotestsrc_src_link (GstPad * pad, const GstCaps * caps)
   const GstStructure *structure;
   GstPadLinkReturn ret;
 
-  GST_DEBUG ("gst_videotestsrc_src_link");
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
+  GST_DEBUG_OBJECT (videotestsrc, "linking");
 
   structure = gst_caps_get_structure (caps, 0);
 
   videotestsrc->fourcc = paintinfo_find_by_structure (structure);
   if (!videotestsrc->fourcc) {
-    g_critical ("videotestsrc format not found\n");
+    g_critical ("videotestsrc format not found");
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -247,7 +249,8 @@ gst_videotestsrc_src_link (GstPad * pad, const GstCaps * caps)
 
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
-  GST_DEBUG ("size %d x %d", videotestsrc->width, videotestsrc->height);
+  GST_DEBUG_OBJECT (videotestsrc, "size %dx%d", videotestsrc->width,
+      videotestsrc->height);
 
   return GST_PAD_LINK_OK;
 }
@@ -342,8 +345,6 @@ gst_videotestsrc_getcaps (GstPad * pad)
 static void
 gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
 {
-  GST_DEBUG ("gst_videotestsrc_init");
-
   videotestsrc->srcpad =
       gst_pad_new_from_template (gst_videotestsrc_src_template_factory (),
       "src");
@@ -511,12 +512,11 @@ gst_videotestsrc_get (GstPad * pad)
   gulong newsize;
   GstBuffer *buf;
 
-  GST_DEBUG ("gst_videotestsrc_get");
-
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
+  GST_LOG_OBJECT (videotestsrc, "get");
 
   if (videotestsrc->fourcc == NULL) {
     GST_ELEMENT_ERROR (videotestsrc, CORE, NEGOTIATION, (NULL),
@@ -555,8 +555,8 @@ gst_videotestsrc_get (GstPad * pad)
       videotestsrc->height);
   g_return_val_if_fail (newsize > 0, NULL);
 
-  GST_DEBUG ("size=%ld %dx%d", newsize, videotestsrc->width,
-      videotestsrc->height);
+  GST_LOG_OBJECT (videotestsrc, "creating buffer of %ld bytes for %dx%d image",
+      newsize, videotestsrc->width, videotestsrc->height);
 
   buf = gst_pad_alloc_buffer (pad, GST_BUFFER_OFFSET_NONE, newsize);
   g_return_val_if_fail (GST_BUFFER_DATA (buf) != NULL, NULL);
@@ -584,20 +584,20 @@ gst_videotestsrc_get (GstPad * pad)
 }
 
 static void
-gst_videotestsrc_set_pattern (GstVideotestsrc * src, int pattern_type)
+gst_videotestsrc_set_pattern (GstVideotestsrc * videotestsrc, int pattern_type)
 {
-  src->type = pattern_type;
+  videotestsrc->type = pattern_type;
 
-  GST_DEBUG ("setting pattern to %d\n", pattern_type);
+  GST_DEBUG_OBJECT (videotestsrc, "setting pattern to %d", pattern_type);
   switch (pattern_type) {
     case GST_VIDEOTESTSRC_SMPTE:
-      src->make_image = gst_videotestsrc_smpte;
+      videotestsrc->make_image = gst_videotestsrc_smpte;
       break;
     case GST_VIDEOTESTSRC_SNOW:
-      src->make_image = gst_videotestsrc_snow;
+      videotestsrc->make_image = gst_videotestsrc_snow;
       break;
     case GST_VIDEOTESTSRC_BLACK:
-      src->make_image = gst_videotestsrc_black;
+      videotestsrc->make_image = gst_videotestsrc_black;
       break;
     default:
       g_assert_not_reached ();
@@ -608,22 +608,21 @@ static void
 gst_videotestsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideotestsrc *src;
+  GstVideotestsrc *videotestsrc;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOTESTSRC (object));
-  src = GST_VIDEOTESTSRC (object);
+  videotestsrc = GST_VIDEOTESTSRC (object);
 
-  GST_DEBUG ("gst_videotestsrc_set_property");
   switch (prop_id) {
     case ARG_TYPE:
-      gst_videotestsrc_set_pattern (src, g_value_get_enum (value));
+      gst_videotestsrc_set_pattern (videotestsrc, g_value_get_enum (value));
       break;
     case ARG_SYNC:
-      src->sync = g_value_get_boolean (value);
+      videotestsrc->sync = g_value_get_boolean (value);
       break;
     case ARG_NUM_BUFFERS:
-      src->num_buffers = g_value_get_int (value);
+      videotestsrc->num_buffers = g_value_get_int (value);
       break;
     default:
       break;
@@ -634,21 +633,21 @@ static void
 gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstVideotestsrc *src;
+  GstVideotestsrc *videotestsrc;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_VIDEOTESTSRC (object));
-  src = GST_VIDEOTESTSRC (object);
+  videotestsrc = GST_VIDEOTESTSRC (object);
 
   switch (prop_id) {
     case ARG_TYPE:
-      g_value_set_enum (value, src->type);
+      g_value_set_enum (value, videotestsrc->type);
       break;
     case ARG_SYNC:
-      g_value_set_boolean (value, src->sync);
+      g_value_set_boolean (value, videotestsrc->sync);
       break;
     case ARG_NUM_BUFFERS:
-      g_value_set_int (value, src->num_buffers);
+      g_value_set_int (value, videotestsrc->num_buffers);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

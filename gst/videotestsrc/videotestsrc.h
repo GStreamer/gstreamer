@@ -20,17 +20,18 @@
 #ifndef __VIDEOTESTSRC_H__
 #define __VIDEOTESTSRC_H__
 
-struct vts_color_struct{
-	int Y,U,V;
-	int R,G,B;
+struct vts_color_struct {
+	int Y, U, V;
+	int R, G, B;
 };
 
 typedef struct paintinfo_struct paintinfo;
 struct paintinfo_struct
 {
-  unsigned char *dest;
-  unsigned char *yp, *up, *vp;
-  unsigned char *endptr;
+  unsigned char *dest;		/* pointer to first byte of video data */
+  unsigned char *yp, *up, *vp;  /* pointers to first byte of each component
+				 * for both packed/planar YUV and RGB */
+  unsigned char *endptr;	/* pointer to byte beyond last video data */
   int ystride;
   int ustride;
   int vstride;
@@ -54,18 +55,23 @@ struct fourcc_list_struct
   unsigned int blue_mask;
 };
 
-struct fourcc_list_struct * paintrect_find_fourcc (int find_fourcc);
-struct fourcc_list_struct * paintrect_find_name (const char *name);
-struct fourcc_list_struct *paintinfo_find_by_structure(
-    const GstStructure *structure);
-GstStructure *paint_get_structure(struct fourcc_list_struct *format);
-int gst_videotestsrc_get_size (GstVideotestsrc * v, int w, int h);
-void gst_videotestsrc_smpte (GstVideotestsrc * v, unsigned char *dest, int w, int h);
-void gst_videotestsrc_snow (GstVideotestsrc * v, unsigned char *dest, int w, int h);
-void gst_videotestsrc_black (GstVideotestsrc * v, unsigned char *dest, int w, int h);
+struct fourcc_list_struct *
+	paintrect_find_fourcc		(int find_fourcc);
+struct fourcc_list_struct *
+	paintrect_find_name		(const char *name);
+struct fourcc_list_struct *
+	paintinfo_find_by_structure	(const GstStructure *structure);
+GstStructure *
+	paint_get_structure		(struct fourcc_list_struct *format);
+int	gst_videotestsrc_get_size	(GstVideotestsrc * v, int w, int h);
+void	gst_videotestsrc_smpte		(GstVideotestsrc * v,
+					 unsigned char *dest, int w, int h);
+void	gst_videotestsrc_snow		(GstVideotestsrc * v,
+					 unsigned char *dest, int w, int h);
+void	gst_videotestsrc_black		(GstVideotestsrc * v,
+					 unsigned char *dest, int w, int h);
 
 extern struct fourcc_list_struct fourcc_list[];
 extern int n_fourccs;
 
 #endif
-
