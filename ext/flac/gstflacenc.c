@@ -50,13 +50,20 @@ static void	gst_flacenc_class_init		(FlacEncClass *klass);
 
 static void	gst_flacenc_chain		(GstPad *pad, GstBuffer *buf);
 
-static void     gst_flacenc_set_property        (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void     gst_flacenc_get_property        (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void     gst_flacenc_set_property        (GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void     gst_flacenc_get_property        (GObject *object, guint prop_id,
+						 GValue *value, GParamSpec *pspec);
+static GstElementStateReturn
+		gst_flacenc_change_state 	(GstElement *element);
 
 static FLAC__StreamEncoderWriteStatus 
-		gst_flacenc_write_callback 	(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[], unsigned bytes, 
-			    			 unsigned samples, unsigned current_frame, void *client_data);
-static void 	gst_flacenc_metadata_callback 	(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata, 
+		gst_flacenc_write_callback 	(const FLAC__StreamEncoder *encoder, 
+						 const FLAC__byte buffer[], unsigned bytes, 
+			    			 unsigned samples, unsigned current_frame, 
+						 void *client_data);
+static void 	gst_flacenc_metadata_callback 	(const FLAC__StreamEncoder *encoder, 
+						 const FLAC__StreamMetadata *metadata, 
 						 void *client_data);
 
 static GstElementClass *parent_class = NULL;
@@ -98,6 +105,8 @@ gst_flacenc_class_init (FlacEncClass *klass)
   /* we have no properties atm so this is a bit silly */
   gobject_class->set_property = gst_flacenc_set_property;
   gobject_class->get_property = gst_flacenc_get_property;
+
+  gstelement_class->change_state = gst_flacenc_change_state;
 }
 
 static GstPadConnectReturn
@@ -114,9 +123,14 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "depth", &flacenc->depth);
   gst_caps_get_int (caps, "rate", &flacenc->sample_rate);
 
-  FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder, flacenc->depth);
-  FLAC__stream_encoder_set_sample_rate (flacenc->encoder, flacenc->sample_rate);
-  FLAC__stream_encoder_set_channels (flacenc->encoder, flacenc->channels);
+  FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder, 
+		  			    flacenc->depth);
+  FLAC__stream_encoder_set_sample_rate (flacenc->encoder, 
+		  			flacenc->sample_rate);
+  FLAC__stream_encoder_set_channels (flacenc->encoder, 
+		  		     flacenc->channels);
+
+  flacenc->negotiated = TRUE;
 
   return GST_PAD_CONNECT_OK;
 }
@@ -136,16 +150,23 @@ gst_flacenc_init (FlacEnc *flacenc)
   flacenc->first_buf = NULL;
   flacenc->encoder = FLAC__stream_encoder_new();
 
-  FLAC__stream_encoder_set_write_callback (flacenc->encoder, gst_flacenc_write_callback);
-  FLAC__stream_encoder_set_metadata_callback (flacenc->encoder, gst_flacenc_metadata_callback);
-  FLAC__stream_encoder_set_client_data (flacenc->encoder, flacenc);
+  FLAC__stream_encoder_set_write_callback (flacenc->encoder, 
+		                           gst_flacenc_write_callback);
+  FLAC__stream_encoder_set_metadata_callback (flacenc->encoder, 
+		                              gst_flacenc_metadata_callback);
+  FLAC__stream_encoder_set_client_data (flacenc->encoder, 
+		                        flacenc);
 
   GST_FLAG_SET (flacenc, GST_ELEMENT_EVENT_AWARE);
+
+  flacenc->negotiated = FALSE;
 }
 
 static FLAC__StreamEncoderWriteStatus 
-gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[], unsigned bytes, 
-			    unsigned samples, unsigned current_frame, void *client_data)
+gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder, 
+			    const FLAC__byte buffer[], unsigned bytes, 
+			    unsigned samples, unsigned current_frame, 
+			    void *client_data)
 {
   FlacEnc *flacenc;
   GstBuffer *outbuf;
@@ -170,7 +191,9 @@ gst_flacenc_write_callback (const FLAC__StreamEncoder *encoder, const FLAC__byte
 }
 
 static void 
-gst_flacenc_metadata_callback (const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata, void *client_data)
+gst_flacenc_metadata_callback (const FLAC__StreamEncoder *encoder, 
+		               const FLAC__StreamMetadata *metadata, 
+			       void *client_data)
 {
   GstEvent *event;
   FlacEnc *flacenc;
@@ -242,13 +265,21 @@ gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
     return;
   }
 
+  if (!flacenc->negotiated) {
+    gst_element_error (GST_ELEMENT (flacenc),
+		    "format not negotiated");
+    return;
+  }
+
   channels = flacenc->channels;
   depth = flacenc->depth;
 
   insize = GST_BUFFER_SIZE (buf);
   samples = insize / channels / ((depth+7)>>3);
 
-  if (FLAC__stream_encoder_get_state (flacenc->encoder) == FLAC__STREAM_ENCODER_UNINITIALIZED) {
+  if (FLAC__stream_encoder_get_state (flacenc->encoder) == 
+		  FLAC__STREAM_ENCODER_UNINITIALIZED) 
+  {
     FLAC__StreamEncoderState state;
 
     state = FLAC__stream_encoder_init (flacenc->encoder);
@@ -277,7 +308,8 @@ gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
     }
   }
 
-  res = FLAC__stream_encoder_process (flacenc->encoder, (const FLAC__int32 **)data, samples);
+  res = FLAC__stream_encoder_process (flacenc->encoder, 
+		                      (const FLAC__int32 **)data, samples);
 
   for (i=0; i<channels; i++) {
     g_free (data[i]);
@@ -287,7 +319,8 @@ gst_flacenc_chain (GstPad *pad, GstBuffer *buf)
 }
 
 static void
-gst_flacenc_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_flacenc_set_property (GObject *object, guint prop_id,
+		          const GValue *value, GParamSpec *pspec)
 {
   FlacEnc *this;
   
@@ -300,7 +333,8 @@ gst_flacenc_set_property(GObject *object, guint prop_id, const GValue *value, GP
 }
 
 static void
-gst_flacenc_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_flacenc_get_property (GObject *object, guint prop_id, 
+		          GValue *value, GParamSpec *pspec)
 {
   FlacEnc *this;
   
@@ -311,5 +345,31 @@ gst_flacenc_get_property(GObject *object, guint prop_id, GValue *value, GParamSp
     GST_DEBUG(0, "Unknown arg %d", prop_id);
     break;
   }
+}
+
+static GstElementStateReturn
+gst_flacenc_change_state (GstElement *element)
+{
+  FlacEnc *flacenc = GST_FLACENC (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      flacenc->negotiated = FALSE;
+      break;
+    case GST_STATE_READY_TO_NULL:
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
