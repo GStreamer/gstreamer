@@ -89,6 +89,35 @@ static GstElementClass *parent_class = NULL;
 /* static guint gst_divxdec_signals[LAST_SIGNAL] = { 0 }; */
 
 
+static gchar *
+gst_divxdec_error (int errorcode)
+{
+  gchar *error;
+
+  switch (errorcode) {
+    case DEC_OK:
+      error = "No error";
+      break;
+    case DEC_MEMORY:
+      error = "Invalid memory";
+      break;
+    case DEC_BAD_FORMAT:
+      error = "Invalid format";
+      break;
+    case DEC_INVALID_ARGUMENT:
+      error = "Invalid argument";
+      break;
+    case DEC_NOT_IMPLEMENTED:
+      error = "Not implemented";
+      break;
+    default:
+      error = "Unknown error";
+      break;
+  }
+
+  return error;
+}
+
 GType
 gst_divxdec_get_type(void)
 {
@@ -145,7 +174,7 @@ gst_divxdec_init (GstDivxDec *divxdec)
   gst_element_add_pad(GST_ELEMENT(divxdec), divxdec->srcpad);
 
   /* bitrate, etc. */
-  divxdec->width = divxdec->height = divxdec->csp = -1;
+  divxdec->width = divxdec->height = divxdec->csp = divxdec->bitcnt = -1;
 
   /* set divx handle to NULL */
   divxdec->handle = NULL;
@@ -155,20 +184,9 @@ gst_divxdec_init (GstDivxDec *divxdec)
 static void
 gst_divxdec_unset (GstDivxDec *divxdec)
 {
-  /* free allocated memory */
-  g_free(divxdec->bufinfo.mp4_edged_ref_buffers);
-  g_free(divxdec->bufinfo.mp4_edged_for_buffers);
-  g_free(divxdec->bufinfo.mp4_edged_back_buffers);
-  g_free(divxdec->bufinfo.mp4_display_buffers);
-  g_free(divxdec->bufinfo.mp4_state);
-  g_free(divxdec->bufinfo.mp4_tables);
-  g_free(divxdec->bufinfo.mp4_stream);
-  g_free(divxdec->bufinfo.mp4_reference);
-
   if (divxdec->handle) {
     /* unref this instance */
-    decore((gulong) divxdec->handle, DEC_OPT_RELEASE,
-           NULL, NULL);
+    decore(divxdec->handle, DEC_OPT_RELEASE, NULL, NULL);
     divxdec->handle = NULL;
   }
 }
@@ -177,75 +195,39 @@ gst_divxdec_unset (GstDivxDec *divxdec)
 static gboolean
 gst_divxdec_setup (GstDivxDec *divxdec)
 {
-  DEC_PARAM xdec;
-  DEC_MEM_REQS xreq;
+  void *handle;
+  DEC_INIT xinit;
+  DivXBitmapInfoHeader output;
   int ret;
 
-  /* initialise parameters, see divx documentation */
-  memset(&xdec, 0, sizeof(DEC_PARAM));
-  xdec.x_dim = divxdec->width;
-  xdec.y_dim = divxdec->height;
-  xdec.time_incr = 15; /* default - what is this? */
-  xdec.output_format = divxdec->csp;
-
-  if ((ret = decore((gulong) divxdec, DEC_OPT_MEMORY_REQS,
-                    &xdec, &xreq)) != 0) {
-    char *error;
-    switch (ret) {
-      case DEC_MEMORY:
-        error = "Memory allocation error";
-        break;
-      case DEC_BAD_FORMAT:
-        error = "Format";
-        break;
-      default:
-        error = "Internal failure";
-        break;
-    }
-    GST_DEBUG(GST_CAT_PLUGIN_INFO,
-              "Setting parameters %dx%d@%d failed: %s",
-              divxdec->width, divxdec->height, divxdec->csp, error);
+  /* initialize the handle */
+  memset(&xinit, 0, sizeof(DEC_INIT));
+  if ((ret = decore(&handle, DEC_OPT_INIT, &xinit, NULL)) != 0) {
+    gst_element_error(GST_ELEMENT(divxdec),
+                      "Error initializing divx decoding library: %s (%d)",
+                      gst_divxdec_error(ret), ret);
     return FALSE;
   }
 
-  /* allocate memory */
-  xdec.buffers.mp4_edged_ref_buffers = g_malloc(xreq.mp4_edged_ref_buffers_size);
-  memset(xdec.buffers.mp4_edged_ref_buffers, 0, xreq.mp4_edged_ref_buffers_size);
+  /* we've got a handle now */
+  divxdec->handle = handle;
 
-  xdec.buffers.mp4_edged_for_buffers = g_malloc(xreq.mp4_edged_for_buffers_size);
-  memset(xdec.buffers.mp4_edged_for_buffers, 0, xreq.mp4_edged_for_buffers_size);
+  /* initialise parameters, see divx documentation */
+  memset(&output, 0, sizeof(DivXBitmapInfoHeader));
+  output.biSize = sizeof(DivXBitmapInfoHeader);
+  output.biWidth = divxdec->width;
+  output.biHeight = divxdec->height;
+  output.biBitCount = divxdec->bitcnt;
+  output.biCompression = divxdec->csp;
 
-  xdec.buffers.mp4_edged_back_buffers = g_malloc(xreq.mp4_edged_back_buffers_size);
-  memset(xdec.buffers.mp4_edged_back_buffers, 0, xreq.mp4_edged_back_buffers_size);
-
-  xdec.buffers.mp4_display_buffers = g_malloc(xreq.mp4_display_buffers_size);
-  memset(xdec.buffers.mp4_display_buffers, 0, xreq.mp4_display_buffers_size);
-
-  xdec.buffers.mp4_state = g_malloc(xreq.mp4_state_size);
-  memset(xdec.buffers.mp4_state, 0, xreq.mp4_state_size);
-
-  xdec.buffers.mp4_tables = g_malloc(xreq.mp4_tables_size);
-  memset(xdec.buffers.mp4_tables, 0, xreq.mp4_tables_size);
-
-  xdec.buffers.mp4_stream = g_malloc(xreq.mp4_stream_size);
-  memset(xdec.buffers.mp4_stream, 0, xreq.mp4_stream_size);
-
-  xdec.buffers.mp4_reference = g_malloc(xreq.mp4_reference_size);
-  memset(xdec.buffers.mp4_reference, 0, xreq.mp4_reference_size);
-
-  divxdec->bufinfo = xdec.buffers;
-
-  if ((ret = decore((gulong) divxdec, DEC_OPT_INIT,
-                    &xdec, &xreq)) != 0) {
+  if ((ret = decore(divxdec->handle, DEC_OPT_SETOUT,
+                    &output, NULL)) != 0) {
     gst_element_error(GST_ELEMENT(divxdec),
-                      "Expected error when confirming current settings: %d",
-                      ret);
+                      "Error setting output format: %s (%d)",
+                      gst_divxdec_error(ret), ret);
     gst_divxdec_unset(divxdec);
     return FALSE;
   }
-
-  /* don't tell me this sucks - this is how divx4linux works... */
-  divxdec->handle = divxdec;
 
   return TRUE;
 }
@@ -294,13 +276,14 @@ gst_divxdec_chain (GstPad    *pad,
   xframe.bitstream = (void *) GST_BUFFER_DATA(buf);
   xframe.bmp = (void *) GST_BUFFER_DATA(outbuf);
   xframe.length = GST_BUFFER_SIZE(buf);
-  xframe.stride = divxdec->width * divxdec->bpp / 8;
+  xframe.stride = 0;
   xframe.render_flag = 1;
 
-  if ((ret = decore((gulong) divxdec->handle, DEC_OPT_FRAME,
+  if ((ret = decore(divxdec->handle, DEC_OPT_FRAME,
                     &xframe, NULL))) {
     gst_element_error(GST_ELEMENT(divxdec),
-                      "Error decoding divx frame: %d\n", ret);
+                      "Error decoding divx frame: %s (%d)",
+                      gst_divxdec_error(ret), ret);
     gst_buffer_unref(buf);
     return;
   }
@@ -319,18 +302,36 @@ gst_divxdec_connect (GstPad  *pad,
   struct {
     guint32 fourcc;
     gint    depth, bpp;
-    gint    csp;
+    guint32 csp;
+    gint    bitcnt;
   } fmt_list[] = {
-    { GST_MAKE_FOURCC('Y','U','Y','V'), 16, 16, DEC_YUY2   },
-    { GST_MAKE_FOURCC('U','Y','V','Y'), 16, 16, DEC_UYVY   },
-    { GST_MAKE_FOURCC('I','4','2','0'), 12, 12, DEC_420    },
-    { GST_MAKE_FOURCC('I','Y','U','V'), 12, 12, DEC_420    },
-    { GST_MAKE_FOURCC('Y','V','1','2'), 12, 12, DEC_YV12   },
-    { GST_MAKE_FOURCC('R','G','B',' '), 32, 32, DEC_RGB32  },
-    { GST_MAKE_FOURCC('R','G','B',' '), 24, 24, DEC_RGB24  },
-    { GST_MAKE_FOURCC('R','G','B',' '), 16, 16, DEC_RGB555 },
-    { GST_MAKE_FOURCC('R','G','B',' '), 15, 16, DEC_RGB565 },
-    { 0, 0, 0 }
+    { GST_MAKE_FOURCC('Y','U','Y','2'), 16, 16,
+      GST_MAKE_FOURCC('Y','U','Y','2'), 0       },
+    { GST_MAKE_FOURCC('U','Y','V','Y'), 16, 16,
+      GST_MAKE_FOURCC('U','Y','V','Y'), 0       },
+    { GST_MAKE_FOURCC('I','4','2','0'), 12, 12,
+      GST_MAKE_FOURCC('I','4','2','0'), 0       },
+    { GST_MAKE_FOURCC('I','Y','U','V'), 12, 12,
+      GST_MAKE_FOURCC('I','4','2','0'), 0       },
+    { GST_MAKE_FOURCC('Y','V','1','2'), 12, 12,
+      GST_MAKE_FOURCC('Y','V','1','2'), 0       },
+    { GST_MAKE_FOURCC('R','G','B',' '), 32, 32,
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+      GST_MAKE_FOURCC('A','B','G','R'), 32      },
+#else
+      0,                                32      },
+#endif
+    { GST_MAKE_FOURCC('R','G','B',' '), 24, 24,
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+      GST_MAKE_FOURCC('A','B','G','R'), 24      },
+#else
+      0,                                24      },
+#endif
+    { GST_MAKE_FOURCC('R','G','B',' '), 16, 16,
+      3,                                16 },
+    { GST_MAKE_FOURCC('R','G','B',' '), 15, 16,
+      0,                                16 },
+    { 0, 0, 0, 0, 0 }
   };
   gint i;
 
@@ -392,8 +393,9 @@ gst_divxdec_connect (GstPad  *pad,
     }
 
     if (gst_pad_try_set_caps(divxdec->srcpad, caps) > 0) {
-      divxdec->csp = fmt_list[i].csp;
-      divxdec->bpp = fmt_list[i].bpp;
+      divxdec->csp    = fmt_list[i].csp;
+      divxdec->bpp    = fmt_list[i].bpp;
+      divxdec->bitcnt = fmt_list[i].bitcnt;
       if (gst_divxdec_setup(divxdec))
         return GST_PAD_LINK_OK;
     }
@@ -409,6 +411,15 @@ plugin_init (GModule   *module,
              GstPlugin *plugin)
 {
   GstElementFactory *factory;
+  int lib_version;
+
+  lib_version = decore(NULL, DEC_OPT_VERSION, 0, 0);
+  if (lib_version != DECORE_VERSION) {
+    g_warning("Version mismatch! This plugin was compiled for "
+              "DivX version %d, while your library has version %d!",
+              DECORE_VERSION, lib_version);
+    return FALSE;
+  }
 
   /* create an elementfactory for the v4lmjpegsrcparse element */
   factory = gst_element_factory_new("divxdec", GST_TYPE_DIVXDEC,

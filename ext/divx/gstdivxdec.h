@@ -50,10 +50,10 @@ struct _GstDivxDec {
 
   /* divx handle */
   void *handle;
-  DEC_BUFFERS bufinfo;
 
   /* video (output) settings */
-  int csp, bpp;
+  guint32 csp;
+  int bitcnt, bpp;
   int width, height;
 };
 

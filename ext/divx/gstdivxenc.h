@@ -56,10 +56,14 @@ struct _GstDivxEnc {
   /* max key interval */
   gint max_key_interval;
 
+  /* amount of motion estimation to do */
+  gint quality;
+
   /* divx handle */
   void *handle;
-  int csp;
-  int width, height;
+  guint32 csp;
+  gint bitcnt; 
+  gint width, height;
 };
 
 struct _GstDivxEncClass {

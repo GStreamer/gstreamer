@@ -76,7 +76,8 @@ enum {
   ARG_0,
   ARG_BITRATE,
   ARG_MAXKEYINTERVAL,
-  ARG_BUFSIZE
+  ARG_BUFSIZE,
+  ARG_QUALITY
 };
 
 
@@ -100,6 +101,39 @@ static void             gst_divxenc_get_property (GObject         *object,
 
 static GstElementClass *parent_class = NULL;
 static guint gst_divxenc_signals[LAST_SIGNAL] = { 0 };
+
+
+static gchar *
+gst_divxenc_error (int errorcode)
+{
+  gchar *error;
+
+  switch (errorcode) {
+    case ENC_BUFFER:
+      error = "Invalid buffer";
+      break;
+    case ENC_FAIL:
+      error = "Operation failed";
+      break;
+    case ENC_OK:
+      error = "No error";
+      break;
+    case ENC_MEMORY:
+      error = "Bad memory location";
+      break;
+    case ENC_BAD_FORMAT:
+      error = "Invalid format";
+      break;
+    case ENC_INTERNAL:
+      error = "Internal error";
+      break;
+    default:
+      error = "Unknown error";
+      break;
+  }
+
+  return error;
+}
 
 
 GType
@@ -152,7 +186,12 @@ gst_divxenc_class_init (GstDivxEncClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFSIZE,
     g_param_spec_ulong("buffer_size", "Buffer Size",
                        "Size of the video buffers",
-                       0,G_MAXULONG,0,G_PARAM_READWRITE));
+                       0,G_MAXULONG,0,G_PARAM_READABLE));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_QUALITY,
+    g_param_spec_int("quality", "Quality",
+                     "Amount of Motion Estimation",
+                     1,5,3,G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_divxenc_set_property;
   gobject_class->get_property = gst_divxenc_get_property;
@@ -187,10 +226,11 @@ gst_divxenc_init (GstDivxEnc *divxenc)
   gst_element_add_pad(GST_ELEMENT(divxenc), divxenc->srcpad);
 
   /* bitrate, etc. */
-  divxenc->width = divxenc->height = divxenc->csp = -1;
+  divxenc->width = divxenc->height = divxenc->csp = divxenc->bitcnt = -1;
   divxenc->bitrate = 512 * 1024;
   divxenc->max_key_interval = -1; /* default - 2*fps */
   divxenc->buffer_size = 512 * 1024;
+  divxenc->quality = 3;
 
   /* set divx handle to NULL */
   divxenc->handle = NULL;
@@ -200,43 +240,63 @@ gst_divxenc_init (GstDivxEnc *divxenc)
 static gboolean
 gst_divxenc_setup (GstDivxEnc *divxenc)
 {
-  ENC_PARAM xenc;
+  void *handle;
+  SETTINGS output;
+  DivXBitmapInfoHeader input;
   gdouble fps;
   int ret;
 
   fps = gst_video_frame_rate(GST_PAD_PEER(divxenc->sinkpad));
 
   /* set it up */
-  memset(&xenc, 0, sizeof(ENC_PARAM));
-  xenc.x_dim = divxenc->width;
-  xenc.y_dim = divxenc->height;
-  xenc.framerate = fps;
+  memset(&input, 0, sizeof(DivXBitmapInfoHeader));
+  input.biSize = sizeof(DivXBitmapInfoHeader);
+  input.biWidth = divxenc->width;
+  input.biHeight = divxenc->height;
+  input.biBitCount = divxenc->bitcnt;
+  input.biCompression = divxenc->csp;
 
-  xenc.rc_period = 2000;
-  xenc.rc_reaction_period = 10;
-  xenc.rc_reaction_ratio = 20;
+  memset(&output, 0, sizeof(SETTINGS));
+  output.vbr_mode = 0;
+  output.bitrate = divxenc->bitrate;
+  output.quantizer = 0;
+  output.use_bidirect = 0;
+  output.input_clock = 0;
+  output.input_frame_period = 1000000;
+  output.internal_timescale = fps * 1000000;
+  output.max_key_interval = (divxenc->max_key_interval == -1) ?
+                              (2 * fps) :
+                              divxenc->max_key_interval;
+  output.key_frame_threshold = 0;
+  output.vbv_bitrate = 0;
+  output.vbv_size = 0;
+  output.vbv_occupancy = 0;
+  output.complexity_modulation = 0;
+  output.deinterlace = 0;
+  output.quality = divxenc->quality;
+  output.data_partitioning = 0;
+  output.quarter_pel = 0;
+  output.use_gmc = 0; 
+  output.psychovisual = 0;
+  output.pv_strength_frame = 0;
+  output.pv_strength_MB = 0;
+  output.interlace_mode = 0;
+  output.enable_crop = 0;
+  output.enable_resize = 0;
+  output.temporal_enable = 0;
+  output.spatial_passes = 0;
 
-  xenc.max_quantizer = 31;
-  xenc.min_quantizer = 1;
-
-  xenc.quality = 3;
-  xenc.bitrate = divxenc->bitrate;
-
-  xenc.deinterlace = 0;
-
-  xenc.max_key_interval = (divxenc->max_key_interval == -1) ?
-                            (2 * xenc.framerate) :
-                            divxenc->max_key_interval;
-  xenc.handle = NULL;
-
-  if ((ret = encore(NULL, ENC_OPT_INIT, &xenc, NULL))) {
+  if ((ret = encore(&handle, ENC_OPT_INIT, &input, &output))) {
     gst_element_error(GST_ELEMENT(divxenc),
-                      "Error setting up divx encoder: %d\n",
-                      ret);
+                      "Error setting up divx encoder: %s (%d)",
+                      gst_divxenc_error(ret), ret);
     return FALSE;
   }
 
-  divxenc->handle = xenc.handle;
+  divxenc->handle = handle;
+
+  /* set buffer size to theoretical limit (see docs on divx.com) */
+  divxenc->buffer_size = 6 * divxenc->width * divxenc->height;
 
   return TRUE;
 }
@@ -245,8 +305,10 @@ gst_divxenc_setup (GstDivxEnc *divxenc)
 static void
 gst_divxenc_unset (GstDivxEnc *divxenc)
 {
-  encore(divxenc->handle, ENC_OPT_RELEASE, NULL, NULL);
-  divxenc->handle = NULL;
+  if (divxenc->handle) {
+    encore(divxenc, ENC_OPT_RELEASE, NULL, NULL);
+    divxenc->handle = NULL;
+  }
 }
 
 
@@ -289,19 +351,19 @@ gst_divxenc_chain (GstPad    *pad,
   xframe.image = GST_BUFFER_DATA(buf);
   xframe.bitstream = (void *) GST_BUFFER_DATA(outbuf);
   xframe.length = GST_BUFFER_MAXSIZE(outbuf);
-  xframe.mvs = NULL;
-  xframe.colorspace = divxenc->csp;
+  xframe.produce_empty_frame = 0;
 
   if ((ret = encore(divxenc->handle, ENC_OPT_ENCODE,
                     &xframe, &xres))) {
     gst_element_error(GST_ELEMENT(divxenc),
-                      "Error encoding divx frame: %d\n", ret);
+                      "Error encoding divx frame: %s (%d)",
+                      gst_divxenc_error(ret), ret);
     gst_buffer_unref(buf);
     return;
   }
 
   GST_BUFFER_SIZE(outbuf) = xframe.length;
-  if (xres.is_key_frame)
+  if (xres.cType == 'I')
     GST_BUFFER_FLAG_SET(outbuf, GST_BUFFER_KEY_UNIT);
 
   /* go out, multiply! */
@@ -325,9 +387,7 @@ gst_divxenc_connect (GstPad  *pad,
   divxenc = GST_DIVXENC(gst_pad_get_parent (pad));
 
   /* if there's something old around, remove it */
-  if (divxenc->handle) {
-    gst_divxenc_unset(divxenc);
-  }
+  gst_divxenc_unset(divxenc);
 
   /* we are not going to act on variable caps */
   if (!GST_CAPS_IS_FIXED(vscaps))
@@ -336,7 +396,8 @@ gst_divxenc_connect (GstPad  *pad,
   for (caps = vscaps; caps != NULL; caps = caps->next) {
     int w,h,d;
     guint32 fourcc;
-    gint divx_cs;
+    guint32 divx_cs;
+    gint bitcnt = 0;
     gst_caps_get_int(caps, "width", &w);
     gst_caps_get_int(caps, "height", &h);
     gst_caps_get_fourcc_int(caps, "format", &fourcc);
@@ -344,25 +405,31 @@ gst_divxenc_connect (GstPad  *pad,
     switch (fourcc) {
       case GST_MAKE_FOURCC('I','4','2','0'):
       case GST_MAKE_FOURCC('I','Y','U','V'):
-        divx_cs = ENC_CSP_I420;
+        divx_cs = GST_MAKE_FOURCC('I','4','2','0');
         break;
       case GST_MAKE_FOURCC('Y','U','Y','2'):
-        divx_cs = ENC_CSP_YUY2;
+      case GST_MAKE_FOURCC('Y','U','Y','V'):
+        divx_cs = GST_MAKE_FOURCC('Y','U','Y','2');
         break;
       case GST_MAKE_FOURCC('Y','V','1','2'):
-        divx_cs = ENC_CSP_YV12;
+        divx_cs = GST_MAKE_FOURCC('Y','V','1','2');
+        break;
+      case GST_MAKE_FOURCC('Y','V','Y','U'):
+        divx_cs = GST_MAKE_FOURCC('Y','V','Y','U');
         break;
       case GST_MAKE_FOURCC('U','Y','V','Y'):
-        divx_cs = ENC_CSP_UYVY;
+        divx_cs = GST_MAKE_FOURCC('U','Y','V','Y');
         break;
       case GST_MAKE_FOURCC('R','G','B',' '):
         gst_caps_get_int(caps, "depth", &d);
         switch (d) {
           case 24:
-            divx_cs = ENC_CSP_RGB24;
+            divx_cs = 0;
+            bitcnt = 24;
             break;
           case 32:
-            divx_cs = ENC_CSP_RGB32;
+            divx_cs = 0;
+            bitcnt = 32;
             break;
           default:
             goto trynext;
@@ -376,6 +443,7 @@ gst_divxenc_connect (GstPad  *pad,
      * linking, so we accept here, get the fps on
      * the first cycle and set it all up then */
     divxenc->csp = divx_cs;
+    divxenc->bitcnt = bitcnt;
     divxenc->width = w;
     divxenc->height = h;
     return gst_pad_try_set_caps(divxenc->srcpad,
@@ -409,11 +477,11 @@ gst_divxenc_set_property (GObject      *object,
     case ARG_BITRATE:
       divxenc->bitrate = g_value_get_ulong(value);
       break;
-    case ARG_BUFSIZE:
-      divxenc->buffer_size = g_value_get_ulong(value);
-      break;
     case ARG_MAXKEYINTERVAL:
       divxenc->max_key_interval = g_value_get_int(value);
+      break;
+    case ARG_QUALITY:
+      divxenc->quality = g_value_get_int(value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -444,6 +512,9 @@ gst_divxenc_get_property (GObject    *object,
     case ARG_MAXKEYINTERVAL:
       g_value_set_int(value, divxenc->max_key_interval);
       break;
+    case ARG_QUALITY:
+      g_value_set_int(value, divxenc->quality);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -456,6 +527,15 @@ plugin_init (GModule   *module,
              GstPlugin *plugin)
 {
   GstElementFactory *factory;
+  int lib_version;
+
+  lib_version = encore(NULL, ENC_OPT_VERSION, 0, 0);
+  if (lib_version != ENCORE_VERSION) {
+    g_warning("Version mismatch! This plugin was compiled for "
+              "DivX version %d, while your library has version %d!",
+              ENCORE_VERSION, lib_version);
+    return FALSE;
+  }
 
   if (!gst_library_load("gstvideo"))
     return FALSE;
