@@ -1,3 +1,8 @@
+2004-09-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_blend_buffers):
+	Copy timestamps from the master pad to the output buffers.
+
 2004-09-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/raw1394/gstdv1394src.c:
