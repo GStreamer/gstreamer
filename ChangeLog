@@ -1,3 +1,9 @@
+2004-11-05  Benjamin Otte  <otte@gnome.org>
+
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	  don't overflow data buffer. Flush not needed sync data when syncing
+	  failed.
+
 2004-11-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/alpha/gstalpha.c: (gst_alpha_method_get_type),
