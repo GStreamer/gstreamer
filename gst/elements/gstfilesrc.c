@@ -511,8 +511,9 @@ gst_filesrc_get (GstPad *pad)
 
   /* if we need to touch the buffer (to bring it into memory), do so */
   if (src->touch) {
+    volatile guchar *p = GST_BUFFER_DATA (buf), c;
     for (i=0;i<GST_BUFFER_SIZE(buf);i+=src->pagesize)
-      *(GST_BUFFER_DATA(buf)+i) = *(GST_BUFFER_DATA(buf)+i);
+      c = p[i];
   }
 
   /* we're done, return the buffer */
