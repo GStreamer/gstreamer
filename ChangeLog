@@ -1,3 +1,15 @@
+2004-12-27  David Schleef  <ds@schleef.org>
+
+	* ext/cairo/gsttextoverlay.c: (gst_textoverlay_render_text),
+	(gst_text_overlay_blit_1), (gst_text_overlay_blit_sub2x2),
+	(gst_textoverlay_video_chain), (gst_textoverlay_loop),
+	(gst_textoverlay_font_init), (gst_textoverlay_init),
+	(gst_textoverlay_set_property): Improvements to actually
+	render text as white on black outline on video, including
+	font selection and horizontal/vertical alignment.  (Ronald's
+	christmas present)
+	* ext/cairo/gsttextoverlay.h:
+
 2004-12-26  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* ext/ogg/gstogg.c:
