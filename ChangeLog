@@ -1,5 +1,15 @@
 2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_base_init),
+	(cdparanoia_open), (cdparanoia_event):
+	  fix/add error handling
+	* po/POTFILES.in:
+	  add cdparanoia source
+	* tools/Makefile.am:
+	  make scripts executable
+
+2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* ext/vorbis/Makefile.am:
 	* sys/Makefile.am:
