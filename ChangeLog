@@ -1,3 +1,11 @@
+2004-05-04  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	  check for kdemacros.h, too (should fix #141821)
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_event), (vorbis_dec_chain):
+	  don't crash if no header was sent, but nicely error out (fixes part
+	  of #141554)
+
 2004-05-04  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mpeg2enc/gstmpeg2enc.cc: (gst_mpeg2enc_dispose): call the

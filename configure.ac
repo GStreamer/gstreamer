@@ -1066,7 +1066,7 @@ GST_CHECK_FEATURE(KIO, [kio], kio, [
   fi
 
   for dir in $kde_include_dirs; do
-    if test -r "$dir/kglobal.h"; then
+    if test -r "$dir/kglobal.h" && test -r "$dir/kdemacros.h"; then
       kde_include_dir=$dir
       break
     fi
