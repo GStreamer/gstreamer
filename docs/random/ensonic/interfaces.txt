@@ -19,12 +19,33 @@ $Id$
     - add hints to generate 'good' looking interfaces to elements
     - API:
       GList *get_group_list();
+      struct ui_hint_group {
+        gchar *label;
+        gachr *role;
+        GList *entries;
+      }
+      struct ui_hint_group_entry {
+        enum UiHintGroupEntryType type={PARAM,DPARAM};
+        gchar *name;
+      }
+      roles {
+        /* graphics */
+        "color_selection/rgb",
+        "color_selection/hsv",
+        "aspect_ratio",
+        /* audio */
+        "envelope/adsr",
+      }
     - features
-      - grouping of parameters
-        - each group has a label and references a list of dparams or properties
+      - grouping of parameters, each group has:
+        - a label: giving a title to the group
+        - a role:
+          - this can give the UI a hint about the purpose of the controls
+          - this only makes sense, if we dont make this a thousand templates
+        - a list of dparams or properties
     - question
       - should this be aware of instruments (voice-groups)
-      - do we better use this to tell that a frequency is infact a note
+        - no, instruments should auto-generate those
 
 * new interfaces for audio applications
   * GST_TYPE_MUSIC_GENERATOR
