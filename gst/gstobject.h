@@ -149,7 +149,7 @@ gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
 #ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
-void		gst_object_restore_thyself		(GstObject *object, xmlNodePtr parent);
+void		gst_object_restore_thyself	(GstObject *object, xmlNodePtr parent);
 #else
 #pragma GCC poison gst_object_save_thyself
 #pragma GCC poison gst_object_restore_thyself
