@@ -48,6 +48,8 @@
 
 #include <gst/gsttee.h>
 
+#include <gst/cothreads.h>
+
 /* initialize GST */
 void gst_init(int *argc,char **argv[]);
 
@@ -57,7 +59,7 @@ void gst_main_quit	(void);
 /* debugging */
 #ifndef DEBUG
 #ifdef DEBUG_ENABLED
-#define DEBUG(format, args...) g_print("DEBUG:(%d) " format, getpid() , ##args)
+#define DEBUG(format, args...) g_print("DEBUG:(%d:%d) " format, getpid() , cothread_getcurrent() , ##args)
 #else
 #define DEBUG(format, args...)
 #endif

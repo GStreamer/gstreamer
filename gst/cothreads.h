@@ -65,6 +65,7 @@ cothread_context*		cothread_init();
 cothread_state*			cothread_create		(cothread_context *ctx);
 void 				cothread_setfunc	(cothread_state *thread, cothread_func func, 
 						         int argc, char **argv);
+int				cothread_getcurrent	(void);
 void 				cothread_switch		(cothread_state *thread);
 void 				cothread_set_data	(cothread_state *thread, gchar *key, gpointer data);
 gpointer 			cothread_get_data 	(cothread_state *thread, gchar *key);

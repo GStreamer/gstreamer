@@ -155,7 +155,7 @@ cothread_init (void)
 cothread_state*
 cothread_main(cothread_context *ctx) 
 {
-  DEBUG(stderr,"returning %p, the 0th cothread\n",ctx->threads[0]);
+  DEBUG("returning %p, the 0th cothread\n",ctx->threads[0]);
   return ctx->threads[0];
 }
 
@@ -173,7 +173,18 @@ cothread_stub (void)
   thread->pc = 0;
   thread->sp = thread->top_sp;
   DEBUG("cothread: cothread_stub() exit\n");
-  //printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
+//  printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
+}
+
+/**
+ * cothread_getcurrent:
+ *
+ * Returns: the current cothread id
+ */
+int cothread_getcurrent(void) {
+  cothread_context *ctx = pthread_getspecific(_cothread_key);
+  if (!ctx) return -1;
+  return ctx->current;
 }
 
 /**
