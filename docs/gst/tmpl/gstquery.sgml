@@ -1,0 +1,41 @@
+<!-- ##### SECTION Title ##### -->
+GstQuery
+
+<!-- ##### SECTION Short_Description ##### -->
+Dynamically register new query types
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstQuery functions are used to register a new query types to the gstreamer core. 
+Query types can be used to perform queries on pads and elements.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstPad, #GstElement
+</para>
+
+<!-- ##### ENUM GstQueryType ##### -->
+<para>
+Standard predefined Query types
+</para>
+
+@GST_QUERY_NONE: 
+@GST_QUERY_TOTAL: 
+@GST_QUERY_POSITION: 
+@GST_QUERY_LATENCY: 
+@GST_QUERY_JITTER: 
+@GST_QUERY_START: 
+@GST_QUERY_SEGMENT_END: 
+@GST_QUERY_RATE: 
+
+<!-- ##### MACRO GST_QUERY_TYPE_FUNCTION ##### -->
+<para>
+Convenience function to define a function that returns an array of query types.
+</para>
+
+@type: Type of first argument for function
+@functionname: The name of the function
+@...: query types, 0 to end the list
+
+
