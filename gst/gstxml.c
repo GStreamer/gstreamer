@@ -179,7 +179,9 @@ gst_xml_write_file (GstElement *element, FILE *out)
   ret = xmlSaveFormatFileTo(buf, cur, NULL, 1);
   xmlIndentTreeOutput = indent;
 #else
-  ret = xmlDocDump (out, cur);
+  /* apparently this doesn't return anything in libxml1 */
+  xmlDocDump (out, cur);
+  ret = 1;
 #endif
   
   return ret;
