@@ -55,6 +55,8 @@ GST_STATIC_PAD_TEMPLATE (
   )
 );
 
+static void gst_xvimagesink_buffer_free (GstBuffer *buffer);
+
 static GstVideoSinkClass *parent_class = NULL;
 
 /* ============================================================= */
@@ -899,7 +901,8 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
   
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
-  if (GST_BUFFER_PRIVATE (buf))
+  /* FIXME: need to check for correct xvimagesink here? */
+  if (GST_BUFFER_FREE_DATA_FUNC (buf) == gst_xvimagesink_buffer_free)
     {
       gst_xvimagesink_xvimage_put (xvimagesink, GST_BUFFER_PRIVATE (buf));
     }
@@ -933,18 +936,15 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
 /* Buffer management */
 
 static void
-gst_xvimagesink_buffer_free (GstData *data)
+gst_xvimagesink_buffer_free (GstBuffer *buffer)
 {
   GstXvImageSink *xvimagesink;
   GstXvImage *xvimage;
-  GstBuffer *buffer;
   
-  xvimage = GST_BUFFER_PRIVATE (data);
+  xvimage = GST_BUFFER_PRIVATE (buffer);
   
   g_assert (GST_IS_XVIMAGESINK (xvimage->xvimagesink));
   xvimagesink = xvimage->xvimagesink;
-  
-  buffer = GST_BUFFER (data);
   
   /* If our geometry changed we can't reuse that image. */
   if ( (xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
@@ -957,10 +957,6 @@ gst_xvimagesink_buffer_free (GstData *data)
                                                  xvimage);
       g_mutex_unlock (xvimagesink->pool_lock);
     }
-    
-  GST_BUFFER_DATA (buffer) = NULL;
-
-  gst_buffer_default_free (buffer);
 }
 
 static GstBuffer *
@@ -1017,7 +1013,7 @@ gst_xvimagesink_buffer_alloc (GstPad *pad, guint64 offset, guint size)
       GST_BUFFER_PRIVATE (buffer) = xvimage;
       
       GST_BUFFER_DATA (buffer) = xvimage->xvimage->data;
-      GST_DATA_FREE_FUNC (buffer) = gst_xvimagesink_buffer_free;
+      GST_BUFFER_FREE_DATA_FUNC (buffer) = gst_xvimagesink_buffer_free;
       GST_BUFFER_SIZE (buffer) = xvimage->size;
       return buffer;
     }

@@ -49,6 +49,8 @@ GST_STATIC_PAD_TEMPLATE (
     "height = (int) [ 0, MAX ]")
 );
 
+static void gst_ximagesink_buffer_free (GstBuffer *buffer);
+
 static GstVideoSinkClass *parent_class = NULL;
 
 /* ============================================================= */
@@ -739,7 +741,8 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
   
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
-  if (GST_BUFFER_PRIVATE (buf))
+  /* FIXME: need to check for correct xvimagesink here? */
+  if (GST_BUFFER_FREE_DATA_FUNC (buf) == gst_ximagesink_buffer_free)
     {
       gst_ximagesink_ximage_put (ximagesink, GST_BUFFER_PRIVATE (buf));
     }
@@ -773,18 +776,15 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
 /* Buffer management */
 
 static void
-gst_ximagesink_buffer_free (GstData *data)
+gst_ximagesink_buffer_free (GstBuffer *buffer)
 {
   GstXImageSink *ximagesink;
   GstXImage *ximage;
-  GstBuffer *buffer;
   
-  ximage = GST_BUFFER_PRIVATE (data);
+  ximage = GST_BUFFER_PRIVATE (buffer);
   
   g_assert (GST_IS_XIMAGESINK (ximage->ximagesink));
   ximagesink = ximage->ximagesink;
-  
-  buffer = GST_BUFFER (data);
   
   /* If our geometry changed we can't reuse that image. */
   if ( (ximage->width != GST_VIDEOSINK_WIDTH (ximagesink)) ||
@@ -796,10 +796,6 @@ gst_ximagesink_buffer_free (GstData *data)
       ximagesink->image_pool = g_slist_prepend (ximagesink->image_pool, ximage);
       g_mutex_unlock (ximagesink->pool_lock);
     }
-    
-  GST_BUFFER_DATA (buffer) = NULL;
-
-  gst_buffer_default_free (buffer);
 }
 
 static GstBuffer *
@@ -856,7 +852,7 @@ gst_ximagesink_buffer_alloc (GstPad *pad, guint64 offset, guint size)
       GST_BUFFER_PRIVATE (buffer) = ximage;
       
       GST_BUFFER_DATA (buffer) = ximage->ximage->data;
-      GST_DATA_FREE_FUNC (buffer) = gst_ximagesink_buffer_free;
+      GST_BUFFER_FREE_DATA_FUNC (buffer) = gst_ximagesink_buffer_free;
       GST_BUFFER_SIZE (buffer) = ximage->size;
       return buffer;
     }

@@ -24,7 +24,6 @@
 #include <string.h>
 #include <sys/time.h>
 #include "v4lsrc_calls.h"
-#include <gst/video/video.h>
 
 /* elementfactory information */
 static GstElementDetails gst_v4lsrc_details = GST_ELEMENT_DETAILS (
@@ -391,18 +390,18 @@ gst_v4lsrc_palette_to_caps (int            palette)
 	    "bpp = (int) 24, "
 	    "depth = (int) 24, "
 	    "endianness = (int) BIG_ENDIAN, "
-	    "red_mask = " R_MASK_24 ", "
-	    "green_mask = " G_MASK_24 ", "
-	    "blue_mask = " B_MASK_24);
+	    "red_mask = 0xFF0000, "
+	    "green_mask = 0x00FF00, "
+	    "blue_mask = 0x0000FF");
         break;
       case VIDEO_PALETTE_RGB32:
 	caps = gst_caps_from_string ("video/x-raw-rgb, "
 	    "bpp = (int) 24, "
 	    "depth = (int) 32, "
 	    "endianness = (int) BIG_ENDIAN, "
-	    "red_mask = " R_MASK_32 ", "
-	    "green_mask = " G_MASK_32 ", "
-	    "blue_mask = " B_MASK_32);
+	    "red_mask = 0xFF000000, "
+	    "green_mask = 0x00FF0000, "
+	    "blue_mask = 0x0000FF00");
         break;
       default:
         g_assert_not_reached();
