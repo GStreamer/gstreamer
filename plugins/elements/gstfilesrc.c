@@ -198,8 +198,8 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
     g_param_spec_string("location","File Location","Location of the file to read",
                         NULL,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FILESIZE,
-    g_param_spec_ulong("filesize","File Size","Size of the file being read",
-                       0,G_MAXULONG,0,G_PARAM_READABLE));
+    g_param_spec_int64("filesize","File Size","Size of the file being read",
+                       0,G_MAXINT64,0,G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FD,
     g_param_spec_int("fd","File-descriptor","File-descriptor for the file being read",
                      0,G_MAXINT,0,G_PARAM_READABLE));
@@ -207,8 +207,8 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
     g_param_spec_ulong("blocksize","Block Size","Block size to read per buffer",
                        0,G_MAXULONG,4096,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
-    g_param_spec_ulong("offset","File Offset","Byte offset of current read pointer",
-                       0,G_MAXULONG,0,G_PARAM_READWRITE));
+    g_param_spec_int64("offset","File Offset","Byte offset of current read pointer",
+                       0,G_MAXINT64,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAPSIZE,
     g_param_spec_ulong("mmapsize","mmap() Block Size","Size in bytes of mmap()d regions",
                        0,G_MAXULONG,4*1048576,G_PARAM_READWRITE));
@@ -292,7 +292,7 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       src->block_size = g_value_get_ulong (value);
       break;
     case ARG_OFFSET:
-      src->curoffset = g_value_get_ulong (value);
+      src->curoffset = g_value_get_int64 (value);
       break;
     case ARG_MAPSIZE:
       if ((src->mapsize % src->pagesize) == 0)
@@ -323,7 +323,7 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       g_value_set_string (value, src->filename);
       break;
     case ARG_FILESIZE:
-      g_value_set_ulong (value, src->filelen);
+      g_value_set_int64 (value, src->filelen);
       break;
     case ARG_FD:
       g_value_set_int (value, src->fd);
@@ -332,7 +332,7 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       g_value_set_ulong (value, src->block_size);
       break;
     case ARG_OFFSET:
-      g_value_set_ulong (value, src->curoffset);
+      g_value_set_int64 (value, src->curoffset);
       break;
     case ARG_MAPSIZE:
       g_value_set_ulong (value, src->mapsize);

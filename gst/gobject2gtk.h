@@ -5,6 +5,7 @@
 
 #define G_MAXUINT UINT_MAX
 #define G_MAXULONG ULONG_MAX
+#define G_MAXINT64 G_MAXULONG
 
 #define G_E     2.7182818284590452354E0
 #define G_LN2   6.9314718055994530942E-1
@@ -305,6 +306,10 @@ GParamSpec *g2g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *de
 #define g_value_get_pointer(value)		GTK_VALUE_POINTER(*value)
 #define g_value_set_pointer(value,data)		(GTK_VALUE_POINTER(*value) = (data))
 
+/* FIXME semi 64-bit support, we map to ulong here... */
+#define g_param_spec_int64			g2g_param_spec_ulong
+#define g_value_get_int64(value)		GTK_VALUE_ULONG(*value)
+#define g_value_set_int64(value,data)		(GTK_VALUE_ULONG(*value) = (data))
 
 #define G_VALUE_HOLDS_CHAR(value) (((value)->type)==GTK_TYPE_CHAR)
 #define G_VALUE_HOLDS_UCHAR(value) (((value)->type)==GTK_TYPE_UCHAR)
