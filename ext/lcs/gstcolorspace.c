@@ -91,6 +91,7 @@ GST_PAD_TEMPLATE_FACTORY (colorspace_src_template_factory,
     "video/raw",
       "format",		GST_PROPS_LIST (
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
 	                ),
@@ -108,6 +109,7 @@ GST_PAD_TEMPLATE_FACTORY (colorspace_sink_template_factory,
     "video/raw",
       "format",		GST_PROPS_LIST (
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
 	                ),
@@ -178,8 +180,8 @@ colorspace_find_lcs_format (GstCaps *caps)
     format = lcs_format_new_simple_rgb_packed (red_bits, green_bits, blue_bits, 0,
 		    red_shift, green_shift, blue_shift, 0, depth, G_BYTE_ORDER);
 
-    g_print ("%lu %lu %lu %lu %lu %lu %s\n", red_bits, green_bits, blue_bits, 
-		    red_shift, green_shift, blue_shift, lcs_format_get_layout (format));
+    GST_DEBUG (GST_CAT_NEGOTIATION, "%lu %lu %lu %lu %lu %lu %u %s\n", red_bits, green_bits, blue_bits, 
+		    red_shift, green_shift, blue_shift, depth, lcs_format_get_layout (format));
   }
   else {
     gchar fourcc[5];
@@ -196,16 +198,22 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 {
   const LCSFormat *from_format = NULL;
   const LCSFormat *to_format = NULL;
+  guint32 from_space, to_space;
 
   g_return_val_if_fail (to_caps != NULL, FALSE);
   g_return_val_if_fail (from_caps != NULL, FALSE);
 
+  gst_caps_get_fourcc_int (from_caps, "format", &from_space);
+  gst_caps_get_fourcc_int (to_caps, "format", &to_space);
+
   from_format 	= colorspace_find_lcs_format (from_caps);
   to_format 	= colorspace_find_lcs_format (to_caps);
 	  
+  GST_DEBUG (GST_CAT_NEGOTIATION, "trying from %4.4s to %4.4s\n", (gchar*)&from_space, (gchar*)&to_space);
   space->converter = lcs_get_converter (from_format, to_format, LCS_FLAG_FAST);
 
   if (space->converter) {
+    GST_DEBUG (GST_CAT_NEGOTIATION, "converting from %4.4s to %4.4s\n", (gchar*)&from_space, (gchar*)&to_space);
     space->type = GST_COLORSPACE_LCS;
     return TRUE;
   }
@@ -255,7 +263,7 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
 
   peer = gst_pad_get_peer (pad);
   if (peer) {
-    if (!gst_colorspace_srcconnect_func (pad, gst_pad_get_allowed_caps (space->srcpad), FALSE)) {
+    if (gst_colorspace_srcconnect_func (pad, gst_pad_get_allowed_caps (space->srcpad), FALSE) < 1) {
       space->sinkcaps = NULL;
       return GST_PAD_CONNECT_REFUSED;
     }
@@ -323,7 +331,7 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     peercaps = peercaps->next;
   }
   
-  gst_element_error (GST_ELEMENT (space), "could not agree on caps with peer pads");
+  //gst_element_error (GST_ELEMENT (space), "could not agree on caps with peer pads");
   /* we disable ourself here */
   space->disabled = TRUE;
 
@@ -426,7 +434,7 @@ gst_colorspace_chain (GstPad *pad,GstBuffer *buf)
 		      space->width, space->height, &size);
 
       GST_BUFFER_SIZE (outbuf) = size;
-      GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
+      GST_BUFFER_DATA (outbuf) = g_malloc (size);
     }
 
     if (space->type == GST_COLORSPACE_LCS) {
