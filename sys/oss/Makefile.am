@@ -2,7 +2,7 @@ plugindir = $(libdir)/gst
 
 plugin_LTLIBRARIES = libgstossaudio.la
 
-noinst_LTLIBRARIES = libgstosshelper.la
+EXTRA_LTLIBRARIES = libgstosshelper.la
 
 libgstossaudio_la_SOURCES = gstosssink.c gstosssrc.c gstossaudio.c gstossgst.c gstossclock.c
 libgstossaudio_la_CFLAGS = $(GST_CFLAGS)
