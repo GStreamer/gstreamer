@@ -11,7 +11,7 @@ libgstmonkeyaudio_la_LIBADD = $(top_builddir)/gst/monkeyaudio/libmonkeyaudio/lib
 # we add stdc++ because it'll be used by C programs
 libgstmonkeyaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -lstdc++
 
-noinst_HEADERS = gstmonkeyaudio.h gstmonkeydec.h
+noinst_HEADERS = gstmonkeyaudio.h gstmonkeydec.h monkey_io.h gstmonkeyenc.h
 
 # this is the silliest hack I ever did, but for some reason some dependency
 # tracking is not able to figure out that the actual file is gstmonkeyaudio.cc

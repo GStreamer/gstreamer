@@ -26,4 +26,4 @@ noinst_HEADERS = All.h APEDecompress.h BitArray.h NNFilter.h RollBuffer.h UnBitA
 		 UnBitArray.h APECompressCreate.h APELink.h ID3Genres.h MACProgressHelper.h Predictor.h \
 		 SmartPtr.h WAVInputSource.h APECompress.h APETag.h IO.h NewPredictor.h Prepare.h StdLibFileIO.h
 
-EXTRA_DIST = changes.txt
+EXTRA_DIST =
