@@ -1,3 +1,8 @@
+2004-07-19  Benjamin Otte  <otte@gnome.org>
+
+	* ext/ladspa/gstladspa.c: (gst_ladspa_base_init):
+	  make sure longname, description and author are valid UTF-8
+
 2004-07-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_change_state),
