@@ -270,7 +270,7 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
 		       "height", 	GST_PROPS_INT (synaesthesia->height)
 		   );
 
-    if (!gst_pad_try_set_caps (synaesthesia->srcpad, caps)) {
+    if (gst_pad_try_set_caps (synaesthesia->srcpad, caps) <= 0) {
       gst_element_error (GST_ELEMENT (synaesthesia), "could not set caps");
       return;
     }

@@ -921,7 +921,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
         }
       }
       if (mad->caps_set == FALSE) {
-        if (!gst_pad_try_set_caps (mad->srcpad,
+        if (gst_pad_try_set_caps (mad->srcpad,
   	      gst_caps_new (
   	        "mad_src",
                 "audio/raw",
@@ -938,7 +938,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
                   "rate",        GST_PROPS_INT (mad->header.samplerate),
 #endif
                   "channels",    GST_PROPS_INT (nchannels),
-                  NULL)))) {
+                  NULL))) <= 0) {
           gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
         }
         mad->caps_set = TRUE;

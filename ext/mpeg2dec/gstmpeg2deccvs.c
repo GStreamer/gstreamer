@@ -259,7 +259,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
     GstCaps *to_try = gst_caps_copy_1 (trylist);
 
     /* try each format */
-    if (gst_pad_try_set_caps (mpeg2dec->srcpad, to_try)) {
+    if (gst_pad_try_set_caps (mpeg2dec->srcpad, to_try) > 0) {
       guint32 fourcc;
 
       /* it worked, try to find what it was again */
