@@ -127,11 +127,11 @@ passthrough_connect_sink (GstPad *pad, GstCaps *caps)
   
   if (strcmp (format, "int") == 0) {
     filter->format        = GST_PASSTHROUGH_FORMAT_INT;
-    gst_caps_get_int (caps, "width",      &filter->width);
-    gst_caps_get_int (caps, "depth",      &filter->depth);
-    gst_caps_get_int (caps, "law",        &filter->law);
-    gst_caps_get_int (caps, "endianness", &filter->endianness);
-    gst_caps_get_int (caps, "signed",     &filter->is_signed);
+    gst_caps_get_int	 (caps, "width",      &filter->width);
+    gst_caps_get_int	 (caps, "depth",      &filter->depth);
+    gst_caps_get_int	 (caps, "law",        &filter->law);
+    gst_caps_get_int	 (caps, "endianness", &filter->endianness);
+    gst_caps_get_boolean (caps, "signed",     &filter->is_signed);
 
     if (! filter->silent) {
       g_print ("Passthrough : channels %d, rate %d\n",  
