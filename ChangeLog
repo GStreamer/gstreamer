@@ -1,5 +1,16 @@
 2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_init),
+	(gst_asf_demux_commit_taglist), (gst_asf_demux_process_comment),
+	(gst_asf_demux_process_ext_content_desc),
+	(gst_asf_demux_change_state), (gst_asf_demux_add_audio_stream),
+	(gst_asf_demux_add_video_stream), (gst_asf_demux_setup_pad):
+	* gst/asfdemux/gstasfdemux.h:
+	  Improve metadata display, e.g. if the metadata comes before the
+	  streams are loaded (which is perfectly valid).
+
+2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* tools/gst-launch-ext-m.m:
 	  Fix AVI/ASF pipelines (#165340).
 
