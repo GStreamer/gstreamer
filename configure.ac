@@ -464,7 +464,7 @@ GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
 dnl *** arts ***
 dnl if mcopidl can't be found there's no use in compiling it
 AC_CHECK_PROG(MCOPIDL, mcopidl, yes, no)
-if test "xHAVE_MCOPIDL" = "xno";
+if test "x$HAVE_MCOPIDL" = "xno";
 then
   USE_ARTS=no
 fi
@@ -486,9 +486,13 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_AUDIOFILE, true)
 GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
   translit(dnm, m, l) AC_SUBST(AUDIOFILE_LIBS)
   translit(dnm, m, l) AC_SUBST(AUDIOFILE_CFLAGS)
-  GST_CHECK_CONFIGPROG(AUDIOFILE, audiofile-config)
-  dnl we need this function
-  AC_CHECK_LIB(audiofile, afOpenVirtualFile, , HAVE_AUDIOFILE="no")
+  dnl check with pkg-config first
+  PKG_CHECK_MODULES(AUDIOFILE, audiofile, HAVE_AUDIOFILE="yes", HAVE_AUDIOFILE="no")
+  if test "x$HAVE_AUDIOFILE" = "xno"; then
+    GST_CHECK_CONFIGPROG(AUDIOFILE, audiofile-config)
+    dnl we need this function
+    AC_CHECK_LIB(audiofile, afOpenVirtualFile, , HAVE_AUDIOFILE="no")
+  fi
 ])
 
 dnl *** CDParanoia ***
@@ -757,14 +761,19 @@ dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
 GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
-  AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
-  if test "x$HAVE_MAD" = "xyes"; then
-    # installed with mad >= 0.14
-    HAVE_MAD="no"
-    save_libs=$LIBS
-    LIBS="-lz"
-    AC_CHECK_LIB(id3tag, id3_tag_query, HAVE_MAD="yes" MAD_LIBS="$MAD_LIBS -lid3tag")
-    LIBS=$save_LIBS
+  dnl check with pkg-config first
+  PKG_CHECK_MODULES(MAD, mad id3tag, HAVE_MAD="yes", HAVE_MAD="no")
+  if test "x$HAVE_MAD" = "xno"; then
+    dnl fall back to oldskool detection
+    AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
+    if test "x$HAVE_MAD" = "xyes"; then
+      # installed with mad >= 0.14
+      HAVE_MAD="no"
+      save_libs=$LIBS
+      LIBS="-lz"
+      AC_CHECK_LIB(id3tag, id3_tag_query, HAVE_MAD="yes" MAD_LIBS="$MAD_LIBS -lid3tag")
+      LIBS=$save_LIBS
+    fi
   fi    
 ])
 AC_SUBST(MAD_LIBS)
