@@ -52,6 +52,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4LELEMENT))
 #define GST_IS_V4LELEMENT_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LELEMENT))
+#define GST_V4LELEMENT_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4LELEMENT, GstV4lElementClass))
 
 typedef struct _GstV4lElement GstV4lElement;
 typedef struct _GstV4lElementClass GstV4lElementClass;
@@ -89,6 +91,9 @@ struct _GstV4lElement {
 
 struct _GstV4lElementClass {
   GstElementClass parent_class;
+
+  /* probed devices */
+  GList *devices;
 
   /* signals */
   void     (*open)           (GstElement  *element,
