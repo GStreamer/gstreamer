@@ -4,13 +4,8 @@ else
 SUBDIRS_DOCS =
 endif
 
-if GST_0_6
-INTERFACESDIR =
-PLAYDIR =
-else
 INTERFACESDIR = gstinterfaces
 PLAYDIR = gstplay
-endif
 
 UNCONDDIRS = gstreamer pkgconfig examples testsuite
 SUBDIRS = \

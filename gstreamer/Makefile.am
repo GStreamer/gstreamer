@@ -13,31 +13,26 @@ pygstreamer_PYTHON = gstreamer.py
 
 pygstexecdir = $(pkgpyexecdir)
 
-GST_OVERRIDES = \
-	gstreamer.override		\
-	gstpad-handlers.override
+GST_OVERRIDES = gst.override gstpad-handlers.override
 
 pygstexec_LTLIBRARIES = _gstmodule.la
-_gstmodule_la_SOURCES = \
-	gstreamermodule.c 		\
-	gst-types.c 			\
-	$(VERSOURCES)
+_gstmodule_la_SOURCES = gstmodule.c gst-types.c
 
 _gstmodule_la_CFLAGS = $(GST_CFLAGS) -fno-strict-aliasing
 _gstmodule_la_LIBADD = $(GST_LIBS)
 _gstmodule_la_LDFLAGS = -module -avoid-version -export-symbols-regex init_gst
-nodist__gstmodule_la_SOURCES = gstreamer.c
+nodist__gstmodule_la_SOURCES = gst.c
 
-CLEANFILES = gstreamer.c
-EXTRA_DIST = gstreamer.defs $(GST_OVERRIDES) arg-types.py
+CLEANFILES = gst.c
+EXTRA_DIST = gst.defs $(GST_OVERRIDES) arg-types.py
 
-gstreamer.c: $(srcdir)/gstreamer.defs $(srcdir)/arg-types.py $(GST_OVERRIDES)
+gst.c: $(srcdir)/gst.defs $(srcdir)/arg-types.py $(GST_OVERRIDES)
 	$(PYGTK_CODEGEN) \
 		--load-types $(srcdir)/arg-types.py \
 	        --register $(srcdir)/gst-types.defs \
-		--override $(srcdir)/gstreamer.override \
-		--prefix pygst gstreamer.defs > gen-gstreamer.c \
+		--override $(srcdir)/gst.override \
+		--prefix pygst gst.defs > gen-gst.c \
         && rm -fr gtreamer.c \
-        && echo '/* GENERATED FILE - DO NOT EDIT */' >> gstreamer.c \
-	&& cat gen-gstreamer.c >> gstreamer.c \
-	&& rm -f gen-gstreamer.c
+        && echo '/* GENERATED FILE - DO NOT EDIT */' >> gst.c \
+	&& cat gen-gst.c >> gst.c \
+	&& rm -f gen-gst.c

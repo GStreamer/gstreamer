@@ -6,7 +6,7 @@ AC_CANONICAL_TARGET
 AS_VERSION(gst-python, GST_PYTHON_VERSION, 0, 1, 0, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
-AC_CONFIG_SRCDIR([gstreamer/gstreamermodule.c])
+AC_CONFIG_SRCDIR([gstreamer/gstmodule.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
@@ -16,7 +16,7 @@ dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.0.0)
 AC_SUBST(GLIB_REQ,  2.0.0)
 AC_SUBST(GTK_REQ,   2.0.0)
-AC_SUBST(GST_REQ,   0.6.0)
+AC_SUBST(GST_REQ,   0.7.5)
 
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
@@ -41,26 +41,15 @@ fi
 AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
 
 dnl check for GStreamer
-dnl start with 0.7
 GST_MAJORMINOR=0.7
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
                   HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
-
-dnl try 0.6
-if test "x$HAVE_GSTREAMER" = "xno"; then
-  GST_MAJORMINOR=0.6
-  PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
-                    HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
-fi
 
 dnl Give error and exit if we don't have gstreamer
 if test "x$HAVE_GSTREAMER" = "xno"; then
   AC_MSG_ERROR(you need gstreamer development packages installed !)
 fi
-
 AC_SUBST(GST_MAJORMINOR)
-AM_CONDITIONAL(GST_0_6, test $GST_MAJORMINOR = 0.6)
-AM_CONDITIONAL(GST_0_7, test $GST_MAJORMINOR = 0.7)
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
@@ -93,28 +82,23 @@ if test "x$GST_INCLUDEDIR" = "x"; then
 fi
 AC_SUBST(GST_INCLUDEDIR)
 
-if test "x$GST_MAJORMINOR" != "x0.6"; then
-  AC_MSG_CHECKING(for GStreamer interfaces include dir)
-  PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR)
-  GST_INTERFACES_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-interfaces-$GST_MAJORMINOR`
-  AC_MSG_RESULT($GST_INTERFACES_INCLUDEDIR)
-  if test "x$GST_INTERFACES_INCLUDEDIR" = "x"; then
-    AC_MSG_ERROR(no GStreamer interfaces include dir found)
-  fi
-  AC_SUBST(GST_INTERFACES_INCLUDEDIR)
+AC_MSG_CHECKING(for GStreamer interfaces include dir)
+PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR)
+GST_INTERFACES_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-interfaces-$GST_MAJORMINOR`
+AC_MSG_RESULT($GST_INTERFACES_INCLUDEDIR)
+if test "x$GST_INTERFACES_INCLUDEDIR" = "x"; then
+  AC_MSG_ERROR(no GStreamer interfaces include dir found)
 fi
+AC_SUBST(GST_INTERFACES_INCLUDEDIR)
 
-if test "x$GST_MAJORMINOR" != "x0.6"; then
-  AC_MSG_CHECKING(for GStreamer play include dir)
-  PKG_CHECK_MODULES(GST_PLAY, gstreamer-play-$GST_MAJORMINOR)
-  GST_PLAY_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-play-$GST_MAJORMINOR`
-  AC_MSG_RESULT($GST_PLAY_INCLUDEDIR)
-  if test "x$GST_PLAY_INCLUDEDIR" = "x"; then
-    AC_MSG_ERROR(no GStreamer play include dir found)
-  fi
-  AC_SUBST(GST_PLAY_INCLUDEDIR)
+AC_MSG_CHECKING(for GStreamer play include dir)
+PKG_CHECK_MODULES(GST_PLAY, gstreamer-play-$GST_MAJORMINOR)
+GST_PLAY_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer-play-$GST_MAJORMINOR`
+AC_MSG_RESULT($GST_PLAY_INCLUDEDIR)
+if test "x$GST_PLAY_INCLUDEDIR" = "x"; then
+  AC_MSG_ERROR(no GStreamer play include dir found)
 fi
-
+AC_SUBST(GST_PLAY_INCLUDEDIR)
 
 AC_CHECK_PROG(HAVE_XMLTO, xmlto, true, false)
 AC_CHECK_PROG(HAVE_XMLCATALOG, xmlcatalog, true, false)

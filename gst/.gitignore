@@ -7,8 +7,5 @@ Makefile.in
 *.py[co]
 .libs
 .deps
-gstreamer.c
-gstreamer-base.defs
-gstreamer.defs
-gstreamer.override
-h2def.defs
+gst.c
+gst.defs

@@ -1,5 +1,7 @@
 2004-02-27  Johan Dahlin  <johan@gnome.org>
 
+	* gstreamer/: All over the place, more rename work (gstreamer -> gst)
+
 	* examples/gstreamer/filesrc.py,player.py: New examples
 	
 	* gstreamer/gstreamer.override: Add a dict like interface to GstTagList
