@@ -2,13 +2,13 @@
 SUBDIRS = instantiate memchunk muxing sched threadstate seeking # bufspeed
 
 if GST_DISABLE_TRACE
-noinst_PROGRAMS = 
+LAT = 
 else
-noinst_PROGRAMS = lat
+LAT = lat
 
 endif
 
-noinst_PROGRAMS += spidey_bench
+noinst_PROGRAMS = $(LAT) spidey_bench
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
 LIBS = $(GST_OBJ_LIBS)
