@@ -43,10 +43,10 @@ struct _GstQuarkTV
   GstPad *sinkpad, *srcpad;
 
   gint width, height;
+  gint area;
   gint planes;
   gint current_plane;
-  guint32 *buffer;
-  guint32 **planetable;
+  GstBuffer **planetable;
 };
 
 struct _GstQuarkTVClass
@@ -77,21 +77,23 @@ enum
   ARG_PLANES,
 };
 
-static void 	gst_quarktv_class_init 	(GstQuarkTVClass * klass);
+static void 	gst_quarktv_class_init 		(GstQuarkTVClass * klass);
 static void 	gst_quarktv_init 		(GstQuarkTV * filter);
+
+static GstElementStateReturn
+		gst_quarktv_change_state 	(GstElement *element);
+		
 static void 	gst_quarktv_set_property 	(GObject * object, guint prop_id,
 					  	 const GValue * value, GParamSpec * pspec);
 static void 	gst_quarktv_get_property 	(GObject * object, guint prop_id,
 					  	 GValue * value, GParamSpec * pspec);
-
-/* static void 	gst_quarktv_reset_handler 	(GstElement *element); */
 
 static void 	gst_quarktv_chain 		(GstPad * pad, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
 /* static guint gst_quarktv_signals[LAST_SIGNAL] = { 0 }; */
 
-static unsigned int 
+static inline guint32
 fastrand (void)
 {
   static unsigned int fastrand_val;
@@ -138,13 +140,14 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
        
   gobject_class->set_property = gst_quarktv_set_property;
   gobject_class->get_property = gst_quarktv_get_property;
+
+  gstelement_class->change_state = gst_quarktv_change_state;
 }
 
 static GstPadConnectReturn
 gst_quarktv_sinkconnect (GstPad * pad, GstCaps * caps)
 {
   GstQuarkTV *filter;
-  gint area;
   gint i;
 
   filter = GST_QUARKTV (gst_pad_get_parent (pad));
@@ -155,16 +158,13 @@ gst_quarktv_sinkconnect (GstPad * pad, GstCaps * caps)
   gst_caps_get_int (caps, "width", &filter->width);
   gst_caps_get_int (caps, "height", &filter->height);
 
-  area = filter->width * filter->height;
+  filter->area = filter->width * filter->height;
 
-  g_free (filter->buffer);
-  filter->buffer = (guint32 *) g_malloc (area * filter->planes * sizeof(guint32));
   g_free (filter->planetable);
-  filter->planetable = (guint32 **) g_malloc(filter->planes * sizeof(guint32 *));
+  filter->planetable = (GstBuffer **) g_malloc(filter->planes * sizeof(GstBuffer *));
 
-  bzero (filter->buffer, area * filter->planes * sizeof(guint32));
   for(i = 0; i < filter->planes; i++) {
-    filter->planetable[i] = &(filter->buffer[area * i]);
+    filter->planetable[i] = NULL;
   }
 
   if (gst_pad_try_set_caps (filter->srcpad, caps)) {
@@ -187,7 +187,6 @@ gst_quarktv_init (GstQuarkTV * filter)
 
   filter->planes = PLANES;
   filter->current_plane = filter->planes - 1;
-  filter->buffer = NULL;
   filter->planetable = NULL;
 }
 
@@ -198,28 +197,31 @@ gst_quarktv_chain (GstPad * pad, GstBuffer * buf)
   guint32 *src, *dest;
   GstBuffer *outbuf;
   gint area;
-  gint i;
-  gint cf;
 
   filter = GST_QUARKTV (gst_pad_get_parent (pad));
 
   src = (guint32 *) GST_BUFFER_DATA (buf);
 
-  area = filter->width * filter->height;
+  area = filter->area;
 
   outbuf = gst_buffer_new ();
   GST_BUFFER_SIZE (outbuf) = area * sizeof(guint32);
   dest = (guint32 *) GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
   
-  memcpy (filter->planetable[filter->current_plane], src, area * sizeof(guint32));
+  if (filter->planetable[filter->current_plane]) 
+    gst_buffer_unref (filter->planetable[filter->current_plane]);
 
-  for (i = area - 1; i >= 0; i--) {
-    cf = (filter->current_plane + (fastrand () >> 24)) & (filter->planes - 1);
-    dest[i] = (filter->planetable[cf])[i];
+  filter->planetable[filter->current_plane] = buf;
+
+  while (--area) {
+    GstBuffer *rand;
+    
+    /* pick a random buffer */
+    rand = filter->planetable[(filter->current_plane + (fastrand () >> 24)) & (filter->planes - 1)];
+    
+    dest[area] = (rand ? ((guint32 *)GST_BUFFER_DATA (rand))[area] : 0);
   }
-
-  gst_buffer_unref (buf);
 
   gst_pad_push (filter->srcpad, outbuf);
 
@@ -228,6 +230,33 @@ gst_quarktv_chain (GstPad * pad, GstBuffer * buf)
   if (filter->current_plane < 0) 
     filter->current_plane = filter->planes - 1;
 }
+
+static GstElementStateReturn
+gst_quarktv_change_state (GstElement *element)
+{ 
+  GstQuarkTV *filter = GST_QUARKTV (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+    {
+      gint i;
+
+      for (i = 0; i < filter->planes; i++) {
+        if (filter->planetable[i])
+          gst_buffer_unref (filter->planetable[i]);
+        filter->planetable[i] = NULL;
+      }
+      g_free (filter->planetable);
+      filter->planetable = NULL;
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+}
+
 
 static void
 gst_quarktv_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec)
