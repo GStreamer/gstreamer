@@ -168,7 +168,7 @@ gst_ffmpegcsp_srcconnect_func (GstPad  *pad,
   GstFFMpegCsp *space;
   GstCaps *peercaps;
   GstCaps *ourcaps;
-  
+
   space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
 
   /* we cannot operate if we didn't get src caps */
@@ -281,7 +281,7 @@ gst_ffmpegcsp_sinkconnect (GstPad  *pad,
   if ((peer = gst_pad_get_peer (pad)) != NULL) {
     GstPadLinkReturn ret;
     ret = gst_ffmpegcsp_srcconnect_func (pad,
-					 gst_pad_get_allowed_caps (space->srcpad),
+					 gst_pad_get_caps (GST_PAD_PEER (space->srcpad)),
 					 FALSE);
     if (ret <= 0) {
       space->sinkcaps = NULL;
