@@ -1,5 +1,10 @@
 2004-04-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+          add newly added API
+
+2004-04-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/elements/gstfilesrc.c: (gst_filesrc_init),
 	(gst_filesrc_get_mmap), (gst_filesrc_get_read), (gst_filesrc_get),
 	(gst_filesrc_open_file), (gst_filesrc_close_file),

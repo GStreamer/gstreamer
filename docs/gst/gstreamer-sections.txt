@@ -115,8 +115,10 @@ gst_caps_is_any
 gst_caps_is_empty
 gst_caps_is_chained
 gst_caps_is_fixed
+gst_caps_is_equal
 gst_caps_is_equal_fixed
 gst_caps_is_always_compatible
+gst_caps_is_subset
 gst_caps_intersect
 gst_caps_union
 gst_caps_normalize
@@ -128,6 +130,7 @@ gst_caps_to_string
 gst_caps_from_string
 gst_caps_structure_fixate_field_nearest_int
 gst_caps_structure_fixate_field_nearest_double
+gst_caps_subtract
 <SUBSECTION Standard>
 GST_CAPS
 GST_IS_CAPS
@@ -961,12 +964,13 @@ gst_structure_copy
 gst_structure_free
 gst_structure_get_name
 gst_structure_set_name
+gst_structure_get_name_id
+gst_structure_id_get_value
 gst_structure_id_set_value
+gst_structure_get_value
 gst_structure_set_value
 gst_structure_set
 gst_structure_set_valist
-gst_structure_id_get_value
-gst_structure_get_value
 gst_structure_remove_field
 gst_structure_remove_fields
 gst_structure_remove_fields_valist
@@ -1992,6 +1996,7 @@ GstValueSerializeFunc
 GstValueDeserializeFunc
 GstValueUnionFunc
 GstValueIntersectFunc
+GstValueSubtractFunc
 GstValueTable
 gst_type_fourcc
 gst_type_int_range
@@ -2022,6 +2027,9 @@ gst_value_can_compare
 gst_value_union
 gst_value_can_union
 gst_value_register_union_func
+gst_value_subtract
+gst_value_can_subtract
+gst_value_register_subtract_func
 gst_value_intersect
 gst_value_can_intersect
 gst_value_register_intersect_func
