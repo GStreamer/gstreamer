@@ -390,7 +390,8 @@ gst_thread_signal_thread (GstThread *thread, guint syncflag, gboolean set)
     GST_FLAG_UNSET(thread,syncflag);
   g_cond_signal (thread->cond);
   g_mutex_unlock (thread->lock[syncflag-GST_THREAD_STATE_STARTED]);
-  GST_DEBUG (0,"sync: done signaling thread with %u set to %d\n",syncflag,set);
+  GST_DEBUG (0,"sync: done signaling thread with %u set to %d..should be %d\n",syncflag,
+	     GST_FLAG_ISSET(thread,syncflag),set);
 }
 
 // the set flag is to see what flag to wait for
