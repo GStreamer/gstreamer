@@ -135,7 +135,7 @@ autoconf || {
 	#exit 1
 }
 echo "+ running automake ... "
-automake --add-missing || {
+automake -a -c || {
 	echo
 	echo "automake failed"
 	#exit 1
