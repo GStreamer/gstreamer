@@ -365,7 +365,6 @@ static void
 gst_filesink_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstFileSink *filesink;
-  gint bytes_written = 0;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -381,13 +380,21 @@ gst_filesink_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN))
   {
-    bytes_written = fwrite (GST_BUFFER_DATA (buf), 1,
-                            GST_BUFFER_SIZE (buf), filesink->file);
-    if (bytes_written < GST_BUFFER_SIZE (buf))
-    {
-      g_warning ("filesink: %d bytes should be written, only %d bytes written\n",
-      		  GST_BUFFER_SIZE (buf), bytes_written);
-    }
+    size_t bytes_written = 0;
+    do {
+      size_t wrote = fwrite (GST_BUFFER_DATA (buf) + bytes_written, 1,
+			     GST_BUFFER_SIZE (buf) - bytes_written,
+			     filesink->file);
+      if (wrote <= 0) {
+	gst_element_error (GST_ELEMENT (filesink),
+			   "Only %d of %d bytes written: %s",
+			   bytes_written, GST_BUFFER_SIZE (buf),
+			   strerror (errno));
+	break;
+      }
+      bytes_written += wrote;
+    } while (bytes_written < GST_BUFFER_SIZE (buf));
+
     filesink->data_written += bytes_written;
   }
 
