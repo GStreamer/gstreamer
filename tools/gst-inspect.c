@@ -314,11 +314,8 @@ print_element_info (GstElementFactory *factory)
 
           printf("Enum \"%s\" (default %d)", g_type_name (G_VALUE_TYPE (&value)),
 				  g_value_get_enum (&value));
-#ifdef USE_GLIB2
 	  values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
-#else
-	  values = gtk_type_enum_get_values (param->value_type);
-#endif
+
 	  while (values[j].value_name) {
             printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
 	    j++; 
@@ -340,11 +337,7 @@ print_element_info (GstElementFactory *factory)
     guint *signals;
     guint nsignals;
     gint i;
-#ifdef USE_GLIB2
     GSignalQuery *query;
-#else
-    GtkSignalQuery *query;
-#endif
 
     printf("\nElement Signals:\n");
     
@@ -356,18 +349,11 @@ print_element_info (GstElementFactory *factory)
       const GType *param_types;
       gint j;
       
-#ifdef USE_GLIB2
       query = g_new0(GSignalQuery,1);
       g_signal_query (signals[i], query);
       n_params = query->n_params;
       return_type = query->return_type;
       param_types = query->param_types;
-#else
-      query = gtk_signal_query (signals[i]);
-      n_params = query->nparams;
-      return_type = query->return_val;
-      param_types = query->params;
-#endif
 
       printf ("  \"%s\" :\t %s user_function (%s* object, \n", query->signal_name, g_type_name (return_type),
 		      g_type_name (G_OBJECT_TYPE (element)));

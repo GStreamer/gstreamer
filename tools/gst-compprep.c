@@ -84,11 +84,7 @@ int main(int argc,char *argv[]) {
           GEnumValue *values;
           gint j;
 
-#ifdef USE_GLIB2
           values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
-#else
-          values = gtk_type_enum_get_values (param->value_type);
-#endif
           for (j=0;values[j].value_name;j++) {
             gchar *value = g_strdup_printf("%d",values[j].value);
             optionnode = xmlNewChild (argnode, NULL, "option", value);

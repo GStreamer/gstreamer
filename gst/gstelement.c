@@ -1484,7 +1484,6 @@ gst_element_save_thyself (GstObject *object,
 /*  if (element->manager) */
 /*    xmlNewChild(parent, NULL, "manager", GST_ELEMENT_NAME(element->manager)); */
 
-#ifdef USE_GLIB2
   /* params */
   specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &nspecs);
   
@@ -1509,7 +1508,6 @@ gst_element_save_thyself (GstObject *object,
       g_value_unset(&value);
     }
   }
-#endif
 
   pads = GST_ELEMENT_PADS (element);
 

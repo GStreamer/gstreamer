@@ -496,98 +496,42 @@ gst_print_pad_caps (GString * buf, gint indent, GstPad * pad)
 void
 gst_print_element_args (GString * buf, gint indent, GstElement * element)
 {
-  gint num_properties;
-  gint px;
   guint width;
+  GValue value = { 0, }; /* the important thing is that value.type = 0 */
+  gchar *str = 0;
+  GParamSpec *spec, **specs, **walk;
 
-  GParamSpec **property_specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (element),
-								&num_properties);
-
+  specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (element), NULL);
+  
   width = 0;
-  for (px = 0; px < num_properties; px++) {
-    GParamSpec *param = property_specs[px];
-
-    if (width < strlen (param->name))
-      width = strlen (param->name);
+  for (walk = specs; *walk; walk++) {
+    spec = *walk;
+    if (width < strlen (spec->name))
+      width = strlen (spec->name);
   }
 
-  for (px = 0; px < num_properties; px++) {
-    GParamSpec *param = property_specs[px];
-    GValue value;
-
-    ZERO (value);
-
-    g_value_init (&value, param->value_type);
-    g_object_get_property (G_OBJECT (element), param->name, &value);
+  for (walk = specs; *walk; walk++) {
+    spec = *walk;
+    
+    if (spec->flags & G_PARAM_READABLE) {
+      g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (spec));
+      g_object_get_property (G_OBJECT (element), spec->name, &value);
+      str = g_strdup_value_contents (&value);
+      g_value_unset(&value);
+    } else {
+      str = g_strdup ("Parameter not readable.");
+    }
 
     string_append_indent (buf, indent);
-    g_string_append (buf, param->name);
-    string_append_indent (buf, 2 + width - strlen (param->name));
-
-    if (G_IS_PARAM_SPEC_ENUM (param)) {
-      GEnumValue *values;
-
-#ifdef USE_GLIB2
-      values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
-#else
-      values = gtk_type_enum_get_values (param->value_type);
-#endif
-
-      g_string_append_printf (buf, "%s (%s)",
-			      values[g_value_get_enum (&value)].value_nick,
-			      g_type_name (G_VALUE_TYPE (&value)));
-    }
-    else {
-      switch (G_VALUE_TYPE (&value)) {
-	case G_TYPE_STRING:
-	  g_string_append_printf (buf, "\"%s\"", g_value_get_string (&value));
-	  break;
-	case G_TYPE_BOOLEAN:
-	  g_string_append (buf, g_value_get_boolean (&value) ? "TRUE" : "FALSE");
-	  break;
-	case G_TYPE_ULONG:{
-	  gulong val = g_value_get_ulong (&value);
-
-	  g_string_append_printf (buf, "%lu (0x%lx)", val, val);
-	  break;
-	}
-	case G_TYPE_LONG:{
-	  glong val = g_value_get_long (&value);
-
-	  g_string_append_printf (buf, "%ld (0x%lx)", val, val);
-	  break;
-	}
-	case G_TYPE_UINT:{
-	  guint val = g_value_get_uint (&value);
-
-	  g_string_append_printf (buf, "%u (0x%x)", val, val);
-	  break;
-	}
-	case G_TYPE_INT:{
-	  gint val = g_value_get_int (&value);
-
-	  g_string_append_printf (buf, "%d (0x%x)", val, val);
-	  break;
-	}
-	case G_TYPE_FLOAT:
-	  g_string_append_printf (buf, "%f", g_value_get_float (&value));
-	  break;
-	case G_TYPE_DOUBLE:
-	  g_string_append_printf (buf, "%f", g_value_get_double (&value));
-	  break;
-	default:
-	  g_string_append_printf (buf, "unknown value_type %d", G_VALUE_TYPE (&value));
-	  break;
-      }
-    }
-
+    g_string_append (buf, spec->name);
+    string_append_indent (buf, 2 + width - strlen (spec->name));
+    g_string_append (buf, str);
     g_string_append_c (buf, '\n');
-
-    if (G_VALUE_TYPE (&value)) {
-      g_value_unset (&value);
-    }
+    
+    g_free (str);
   }
-  g_free (property_specs);
+
+  g_free (specs);
 }
 
 /**

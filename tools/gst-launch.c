@@ -42,95 +42,26 @@ idle_func (gpointer data)
   return busy;
 }
 
-/* TODO: write more outputs for ParamSpecs*/
 static void
 property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec)
 {
-#ifdef USE_GLIB2
-  if (G_IS_PARAM_SPEC_STRING (pspec))
-  {
-    gchar *str;
-    g_object_get (orig, pspec->name, &str, NULL);
-    g_print ("%s: %s = \"%s\"\n", GST_OBJECT_NAME (orig), pspec->name, str);
-    g_free (str);
-  } else if (G_IS_PARAM_SPEC_CHAR (pspec)) {
-    gchar str;
-    g_object_get (orig, pspec->name, &str, NULL);
-    g_print ("%s: %s = \"%c\"\n", GST_OBJECT_NAME (orig), pspec->name, str);
-  } else if (G_IS_PARAM_SPEC_INT (pspec)) {
-    gint i;
-    g_object_get (orig, pspec->name, &i, NULL);
-    g_print ("%s: %s = %d\n", GST_OBJECT_NAME (orig), pspec->name, i);
-  } else if (G_IS_PARAM_SPEC_INT64 (pspec)) {
-    gint64 i;
-    g_object_get (orig, pspec->name, &i, NULL);
-    g_print ("%s: %s = %lld\n", GST_OBJECT_NAME (orig), pspec->name, i);
-  } else if (G_IS_PARAM_SPEC_UINT (pspec)) {
-    guint i;
-    g_object_get (orig, pspec->name, &i, NULL);
-    g_print ("%s: %s = %u\n", GST_OBJECT_NAME (orig), pspec->name, i);
-  } else if (G_IS_PARAM_SPEC_UINT (pspec)) {
-    guint64 i;
-    g_object_get (orig, pspec->name, &i, NULL);
-    g_print ("%s: %s = %llu\n", GST_OBJECT_NAME (orig), pspec->name, i);
-  } else if (G_IS_PARAM_SPEC_ENUM (pspec)) {
-    guint64 i;
-    g_object_get (orig, pspec->name, &i, NULL);
-    g_print ("%s: %s = \"%llu\"\n", GST_OBJECT_NAME (orig), pspec->name, i);
-  } else if (G_IS_PARAM_SPEC_FLOAT (pspec)) {
-    gfloat i;
-    g_object_get (orig, pspec->name, &i, NULL);
-    g_print ("%s: %s = %f\n", GST_OBJECT_NAME (orig), pspec->name, i);
-  } else if (G_IS_PARAM_SPEC_DOUBLE (pspec)) {
-    gdouble i;
-    g_object_get (orig, pspec->name, &i, NULL);
-    g_print ("%s: %s = %f\n", GST_OBJECT_NAME (orig), pspec->name, i);
-  } else {
-    g_print ("%s: changed \"%s\"\n", GST_OBJECT_NAME (orig), pspec->name);
-  }
-#endif /* USE_GLIB2 */
-}
-
-static void 
-print_props (gpointer data, gpointer user_data)
-{
-  GstPropsEntry *entry = (GstPropsEntry *)data;
-  GstElement *element = GST_ELEMENT (user_data);
-
-  g_print ("deprecated: %s: %s: ", gst_element_get_name (element), 
-		  g_quark_to_string (entry->propid));
-  switch (entry->propstype) {
-    case GST_PROPS_INT_ID:
-      g_print ("%d\n", entry->data.int_data);
-      break;
-    case GST_PROPS_STRING_ID:
-      g_print ("%s\n", entry->data.string_data.string);
-      break;
-    case GST_PROPS_FLOAT_ID:
-      g_print ("%f\n", entry->data.float_data);
-      break;
-    default:
-      g_print ("unknown\n");
-  }
-}
-
-static void 
-event_func (GstElement *element, GstEvent *event)
-{
-  GstProps *props;
-
-  if (event == NULL)
-    return;
+  GValue value = { 0, }; /* the important thing is that value.type = 0 */
+  gchar *str = 0;
   
-  if (GST_EVENT_TYPE (event) == GST_EVENT_INFO) {
-    props = GST_EVENT_INFO_PROPS (event);
-
-    g_list_foreach (props->properties, print_props, GST_EVENT_SRC (event));
+  if (pspec->flags & G_PARAM_READABLE) {
+    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
+    str = g_strdup_value_contents (&value);
+    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
+    g_free (str);
+    g_value_unset(&value);
+  } else {
+    g_warning ("Parameter not readable. What's up with that?");
   }
 }
 
 static GstElement*
-xmllaunch_parse_cmdline (const gchar *argv[]) 
+xmllaunch_parse_cmdline (const gchar **argv) 
 {
   GstElement *pipeline = NULL, *e;
   GstXML *xml;
@@ -141,7 +72,7 @@ xmllaunch_parse_cmdline (const gchar *argv[])
   gint i = 0;
   
   if (!(arg = argv[0])) {
-    g_print ("usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n", arg[0]);
+    g_print ("usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n");
     exit (1);
   }
   
@@ -233,8 +164,6 @@ main(int argc, char *argv[])
     fprintf(stderr, "ERROR: pipeline could not be constructed\n");
     exit(1);
   }
-  
-  g_signal_connect (G_OBJECT (pipeline), "event", G_CALLBACK (event_func), NULL);
   
   g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
   

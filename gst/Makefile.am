@@ -10,14 +10,6 @@ endif
 
 #GST_INSTRUMENT_FLAGS = -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
 
-if USE_GLIB2
-GST_OBJECT_MODEL_SRC = gstmarshal.c
-GST_OBJECT_MODEL_HDR = gstmarshal.h
-else
-GST_OBJECT_MODEL_SRC = gobject2gtk.c
-GST_OBJECT_MODEL_HDR = gobject2gtk.h
-endif
-
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
 else
@@ -50,7 +42,7 @@ else
 GST_TRACE_SRC = gsttrace.c
 endif
 
-EXTRA_libgst_la_SOURCES = gstcpuid_i386.s gstmarshal.list gobject2gtk.c gobject2gtk.h gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
+EXTRA_libgst_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
 SUBDIRS = . types elements $(GST_AUTOPLUG_DIRS) schedulers
 DIST_SUBDIRS = types elements autoplug schedulers
@@ -58,7 +50,7 @@ DIST_SUBDIRS = types elements autoplug schedulers
 libgst_la_SOURCES =		\
 	cothreads.c		\
 	gst.c			\
-	$(GST_OBJECT_MODEL_SRC)	\
+	gstmarshal.c		\
 	gstobject.c		\
 	$(GST_AUTOPLUG_SRC)	\
 	gstbin.c		\
@@ -91,14 +83,6 @@ libgst_la_SOURCES =		\
 	$(GST_LOADSAVE_SRC)
 
 
-##### Oh this sucks so badly.  This isn't funny. #####
-
-# the compiler shoots cothreads.c in the head at -O6
-# FIXME: these manual rules break the dependency generation, so we have a
-# nasty hack here.  
-#LTCOMPILE2=$(LTCOMPILE) -O2
-#COMPILE2=$(COMPILE) -O2
-
 # FIXME this only lists the x86 arch file, we really should merge them all
 cothreads.lo: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h \
   $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h
@@ -107,39 +91,9 @@ cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h
   $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h
 	$(COMPILE) -O2 -c $<
 
-# NOTDEPEND.cothreads.lo: cothreads.c
-# NOTDEPEND	$(LTCOMPILE2) -c $<
-# NOTDEPEND.cothreads.o: cothreads.c
-# NOTDEPEND	$(COMPILE2) -c $<
-
-#cothreads.lo: cothreads.c
-#	@echo '$(LTCOMPILE2) -c $<'; \
-#	$(LTCOMPILE2) -Wp,-MD,.deps/$(*F).pp -c $<
-#	@-sed -e 's/^\([^:]*\)\.o[      ]*:/\1.lo \1.o :/' \
-#	  < .deps/$(*F).pp > .deps/$(*F).P; \
-#	tr ' ' '\012' < .deps/$(*F).pp \
-#	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-#	    >> .deps/$(*F).P; \
-#	rm -f .deps/$(*F).pp
-#cothreads.o: cothreads.c
-#	@echo '$(COMPILE2) -c $<'; \
-#	$(COMPILE2) -Wp,-MD,.deps/$(*F).pp -c $<
-#	@-sed -e 's/^\([^:]*\)\.o[      ]*:/\1.lo \1.o :/' \
-#	  < .deps/$(*F).pp > .deps/$(*F).P; \
-#	tr ' ' '\012' < .deps/$(*F).pp \
-#	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-#	    >> .deps/$(*F).P; \
-#	rm -f .deps/$(*F).pp
-
-##### end immense suckage #####
-
 ##### Other built sources #####
 
-if USE_GLIB2
 BUILT_SOURCES = gstmarshal.h gstmarshal.c
-else
-BUILT_SOURCES = 
-endif
 
 # Generate both marshal files together.  Makes dependency work easier.
 gstmarshal.h: gstmarshal.list
@@ -165,7 +119,7 @@ libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
 	gstconfig.h		\
-	$(GST_OBJECT_MODEL_HDR)	\
+	gstmarshal.h		\
 	gstobject.h		\
 	gsttypes.h		\
 	gstautoplug.h		\
@@ -208,12 +162,7 @@ libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	$(LIBGST_CFLAGS) \
 	-D_GNU_SOURCE \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
-	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
-	-W -Wpointer-arith -Wbad-function-cast \
-	-Wcast-align -Wsign-compare \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs \
-	-Winline -Wno-unused 
+	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\"
 
 libgst_la_LIBADD = $(LIBGST_LIBS)
 

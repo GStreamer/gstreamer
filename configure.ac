@@ -101,7 +101,7 @@ fi
 
 AC_SUBST(HTML_DIR)
 
-AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
+AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scangobj, true, false)
 gtk_doc_min_version=0.6
 if $HAVE_GTK_DOC ; then 
     gtk_doc_version=`gtkdoc-mkdb --version`
@@ -116,8 +116,8 @@ EOF
       HAVE_GTK_DOC=false
    fi
 fi
-GTK_DOC_SCANOBJ=gtkdoc-scanobj
-
+# don't you love undocumented command line options?
+GTK_DOC_SCANOBJ="gtkdoc-scangobj --nogtkinit"
 AC_SUBST(HAVE_GTK_DOC)
 AC_SUBST(GTK_DOC_SCANOBJ)
 
@@ -234,73 +234,26 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 dnl Check for glib2
-translit(dnm, m, l) AM_CONDITIONAL(USE_GLIB2, true)
-GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
-  PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
-    HAVE_GLIB2=yes,HAVE_GLIB2=no)
-  GLIB_LIBS=$GLIB2_LIBS
-  GLIB_CFLAGS=$GLIB2_CFLAGS
-  AC_SUBST(GLIB_LIBS)
-  AC_SUBST(GLIB_CFLAGS)
-  # glib2 is now the default.  so if we don't have it here, then use glib1
-  if test "x$HAVE_GLIB2" = "xno"; then
-    AC_MSG_WARN([no glib2 found, falling back to glib1])
-  fi
-], enabled, [
-  AC_DEFINE(USE_GLIB2)
-  GST_EXT_CFLAGS="$GST_EXT_CFLAGS -DUSE_GLIB2"
-])
-AC_SUBST(USE_GLIB2)
+PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
+  HAVE_GLIB2=yes,HAVE_GLIB2=no)
+GLIB_LIBS=$GLIB2_LIBS
+GLIB_CFLAGS=$GLIB2_CFLAGS
+AC_SUBST(GLIB_LIBS)
+AC_SUBST(GLIB_CFLAGS)
 
-if test x$USE_GLIB2 = xno; then
-  GST_PKG_DEPS="glib >= 1.2.0, gtk+ >= 1.2.0"
-  
-  dnl Check for glib and gtk
-  AM_PATH_GLIB(1.2.0,,
-              AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
-              glib gmodule gthread)
-  AM_PATH_GTK(1.2.0,,
-              AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
-  HAVE_GTK=yes
-
-  GLIB_LIBS="$GLIB_LIBS $GTK_LIBS"
-  GLIB_CFLAGS="$GLIB_CFLAGS $GTK_CFLAGS"
-else
-  GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
-  
-  if $HAVE_GTK_DOC; then  
-    AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scangobj, true, false)
-    if $HAVE_GTK_DOC; then
-      # don't you love undocumented command line options?
-      GTK_DOC_SCANOBJ="gtkdoc-scangobj --nogtkinit"
-    else
-      GTK_DOC_SCANOBJ=false
-    fi
-  fi
+if test "x$HAVE_GLIB2" = "xno"; then
+  AC_MSG_ERROR([GStreamer requires GLib 2.0 to compile.])
 fi
 
+GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
-
-dnl Check for libxml
-if test x$USE_GLIB2 = xno; then
-  LIBXML_PKG=', libxml >= 1.8.1'
-  AC_PATH_PROG(XML_CONFIG, xml-config, no)
-  if test x$XML_CONFIG = xno; then
-    AC_MSG_ERROR(Couldn't find xml-config -- Need version 1.8.1 or better of libxml)
-  fi
-  XML_LIBS="`xml-config --libs`"
-  XML_CFLAGS="`xml-config --cflags`"
-  AC_CHECK_LIB(xml, xmlDocGetRootElement, :,
-    [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
-    $XML_LIBS)
+  
+LIBXML_PKG=', libxml-2.0'
+PKG_CHECK_MODULES(XML, libxml-2.0, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
+if test "x$HAVE_LIBXML2" = "xyes"; then
+  AC_DEFINE(HAVE_LIBXML2)
 else
-  LIBXML_PKG=', libxml-2.0'
-  PKG_CHECK_MODULES(XML, libxml-2.0, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
-  if test "x$HAVE_LIBXML2" = "xyes"; then
-    AC_DEFINE(HAVE_LIBXML2)
-  else
-    AC_ERROR(Need libxml2 for glib2 builds)
-  fi
+  AC_ERROR([Need libxml2 for glib2 builds -- you should be able to do without it -- this needs fixing])
 fi
 AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
