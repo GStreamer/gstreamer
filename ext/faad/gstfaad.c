@@ -60,34 +60,34 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 #define STATIC_CAPS \
   STATIC_INT_CAPS (16)
 #if 0
-"; "
-STATIC_INT_CAPS (24)
-    "; "
-STATIC_INT_CAPS (32)
-    "; "
-STATIC_FLOAT_CAPS (32)
-    "; "
+#define NOTUSED "; " \
+STATIC_INT_CAPS (24) \
+    "; " \
+STATIC_INT_CAPS (32) \
+    "; " \
+STATIC_FLOAT_CAPS (32) \
+    "; " \
 STATIC_FLOAT_CAPS (64)
 #endif
-     static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (STATIC_CAPS)
     );
 
-     static void gst_faad_base_init (GstFaadClass * klass);
-     static void gst_faad_class_init (GstFaadClass * klass);
-     static void gst_faad_init (GstFaad * faad);
+static void gst_faad_base_init (GstFaadClass * klass);
+static void gst_faad_class_init (GstFaadClass * klass);
+static void gst_faad_init (GstFaad * faad);
 
-     static GstPadLinkReturn
-         gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps);
-     static GstPadLinkReturn
-         gst_faad_srcconnect (GstPad * pad, const GstCaps * caps);
-     static GstCaps *gst_faad_srcgetcaps (GstPad * pad);
-     static void gst_faad_chain (GstPad * pad, GstData * data);
-     static GstElementStateReturn gst_faad_change_state (GstElement * element);
+static GstPadLinkReturn
+gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps);
+static GstPadLinkReturn
+gst_faad_srcconnect (GstPad * pad, const GstCaps * caps);
+static GstCaps *gst_faad_srcgetcaps (GstPad * pad);
+static void gst_faad_chain (GstPad * pad, GstData * data);
+static GstElementStateReturn gst_faad_change_state (GstElement * element);
 
-     static GstElementClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 
 /* static guint gst_faad_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -654,7 +654,9 @@ gst_faad_chain (GstPad * pad, GstData * data)
         GST_BUFFER_TIMESTAMP (outbuf) = next_ts;
         GST_BUFFER_DURATION (outbuf) =
             (guint64) GST_SECOND *info->samples / faad->samplerate;
-        next_ts += GST_BUFFER_DURATION (outbuf);
+        if (GST_CLOCK_TIME_IS_VALID (next_ts)) {
+          next_ts += GST_BUFFER_DURATION (outbuf);
+        }
         gst_pad_push (faad->srcpad, GST_DATA (outbuf));
       }
     }
