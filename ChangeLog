@@ -26,6 +26,13 @@
 	  rework the caps negotiation so that dvdec works again instead
 	  of just segfaulting.
 
+=== gst-plugins 0.7.4 ===
+
+2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+                                                                                
+	* NEWS: GStreamer Plugins 0.7.4 "For Great Justice" released
+	* configure.ac: changed for release
+
 2004-02-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/gconf/gstreamer-gconf-uninstalled.pc.in:
@@ -319,8 +326,6 @@
 	* gst/debug/efence.c: Add fallback if MAP_ANONYMOUS isn't defined.
 
 2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-	reviewed by: <delete if not using a buddy>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_open):
 	* ext/alsa/gstalsa.c: (gst_alsa_link), (gst_alsa_xrun_recovery):
