@@ -31,7 +31,7 @@ libmad          (for the mad mp3 decoder plugin)
 libjpeg         (for jpegenc/jpegdec)
 			http://www.ijg.org/
 libopenquicktime (for the QT plugin)
-                        //URL FIXME
+			http://sourceforge.net/projects/openquicktime/
 libXv		(for videosink)
 libxaudio	(for xa mp3 decoder)
 			http://www.xaudio.com/
