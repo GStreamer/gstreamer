@@ -478,6 +478,7 @@ gst_modplug_src_event (GstPad *pad, GstEvent *event)
       flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
 
       modplug->seek_at = GST_EVENT_SEEK_OFFSET (event);
+      break;
     }
     default:
       res = FALSE;
