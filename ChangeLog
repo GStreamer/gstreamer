@@ -1,3 +1,8 @@
+2004-08-17  Iain <iaingnome@gmail.com>
+
+	* ext/flac/gstflacenc.c (gst_flacenc_update_quality): Only set the
+	mid_side and loose_mid_side properties if its a stereo stream.
+
 2004-08-17  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (gst_theora_dec_class_init),
