@@ -294,4 +294,4 @@ DIST_SUBDIRS=\
 	sdl snapshot sndfile \
 	shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis \
-	xvid 
+	xvid speex
