@@ -1,3 +1,11 @@
+2004-12-16  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_pad_link):
+	  Fix memleak (#154815).
+
 2004-12-16  James Bowes  <bowes@cs.dal.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
