@@ -216,7 +216,12 @@ gst_audio_convert_chain (GstPad *pad, GstData *data)
     return;
   }
 
-  g_assert (gst_pad_is_negotiated (this->sink));
+  if (!gst_pad_is_negotiated (this->sink))
+  {
+    GST_ELEMENT_ERROR (this, CORE, NEGOTIATION, NULL,
+                       ("Sink pad not negotiated before chain function"));
+    return;
+  }
   if (!gst_pad_is_negotiated (this->src)) {
     gst_data_unref (data);
     return;
