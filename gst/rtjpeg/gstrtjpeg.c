@@ -49,6 +49,7 @@ conversion utilities");
   dec = gst_element_factory_new("rtjpegdec",GST_TYPE_RTJPEGDEC,
                                &gst_rtjpegdec_details);
   g_return_val_if_fail(dec != NULL, FALSE);
+  gst_element_factory_set_rank (dec, GST_ELEMENT_RANK_PRIMARY);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 
   return TRUE;

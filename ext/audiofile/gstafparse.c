@@ -326,6 +326,7 @@ gst_afparse_plugin_init (GModule *module, GstPlugin *plugin)
   
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (afparse_src_factory));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (afparse_sink_factory));
+  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
