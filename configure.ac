@@ -461,6 +461,12 @@ GST_CHECK_FEATURE(QCAM, [QuickCam], qcamsrc, [
   fi
 ])
 
+dnl *** Sun Audio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SUNAUDIO, true)
+GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudiosrc, [
+  AC_CHECK_HEADER(sys/audioio.h, HAVE_SUNAUDIO="yes", HAVE_SUNAUDIO="no")
+])
+
 dnl *** Video CD ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
 GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
@@ -1786,6 +1792,7 @@ sys/dxr3/Makefile
 sys/glsink/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
+sys/sunaudio/Makefile
 sys/v4l/Makefile
 sys/v4l2/Makefile
 sys/vcd/Makefile

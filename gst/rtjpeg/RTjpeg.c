@@ -3370,7 +3370,7 @@ RTjpeg_yuvrgb16 (__u8 * buf, __u8 * rgb)
 void
 RTjpeg_yuvrgb8 (__u8 * buf, __u8 * rgb)
 {
-  bcopy (buf, rgb, RTjpeg_width * RTjpeg_height);
+  memcpy (rgb, buf, RTjpeg_width * RTjpeg_height);
 }
 
 void

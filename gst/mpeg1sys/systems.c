@@ -70,7 +70,7 @@ create_sector (sector, pack, sys_header,
 
   if (pack != NULL) {
     i = sizeof (pack->buf);
-    bcopy (pack->buf, index, i);
+    memcpy (index, pack->buf, i);
     index += i;
     sector->length_of_sector += i;
   }
@@ -84,7 +84,7 @@ create_sector (sector, pack, sys_header,
     if (which_streams != STREAMS_BOTH)
       i -= 3;
 
-    bcopy (sys_header->buf, index, i);
+    memcpy (index, sys_header->buf, i);
     index += i;
     sector->length_of_sector += i;
   }
