@@ -266,7 +266,7 @@ static void
 gst_element_threadsafe_properties_pre_run (GstElement *element)
 {
   GST_DEBUG (GST_CAT_THREAD, "locking element %s", GST_OBJECT_NAME (element));
-  //g_mutex_lock (element->property_mutex);
+  g_mutex_lock (element->property_mutex);
   gst_element_set_pending_properties (element);
 }
 
@@ -274,7 +274,7 @@ static void
 gst_element_threadsafe_properties_post_run (GstElement *element)
 {
   GST_DEBUG (GST_CAT_THREAD, "unlocking element %s", GST_OBJECT_NAME (element));
-  //g_mutex_unlock (element->property_mutex);
+  g_mutex_unlock (element->property_mutex);
 }
 
 void
