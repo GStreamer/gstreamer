@@ -1,3 +1,11 @@
+2005-01-17  Gergely Nagy  <algernon@bonehunter.rulez.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_caps_to_pixfmt):
+	  alpha_mask can be RGBA/ABGR. Fixes #164265.
+
 2005-01-17  Francis Labonte  <francis_labonte@hotmail.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
