@@ -30,6 +30,7 @@ extern "C" {
 
 #include <netdb.h>                        /* sockaddr_in */
 #include <netinet/in.h>			  /* sockaddr_in */
+#include <unistd.h>
 #include "gsttcp.h"
 
 #define GST_TYPE_TCPCLIENTSRC \

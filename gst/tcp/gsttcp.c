@@ -36,6 +36,10 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/dataprotocol/dataprotocol.h>
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 /* resolve host to IP address, throwing errors if it fails */
 /* host can already be an IP address */
 /* returns a newly allocated gchar * with the dotted ip address */
