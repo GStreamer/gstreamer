@@ -24,9 +24,11 @@ upload: $(FORMATS)
         else export DOCVERSION=head; \
         fi; \
         export DIR=$(DOC_BASE)/gstreamer/$$DOCVERSION/$(DOC); \
-	echo Uploading docs to $(DOC_SERVER):$$DIR; \
 	ssh $(DOC_SERVER) mkdir -p $$DIR; \
-	if echo $(FORMATS) | grep html > /dev/null; then rsync -arv -e ssh html $(DOC_SERVER):$$DIR; fi; \
-	if echo $(FORMATS) | grep ps > /dev/null; then rsync -arv -e ssh $(DOC).ps $(DOC_SERVER):$$DIR; fi; \
-	if echo $(FORMATS) | grep pdf > /dev/null; then rsync -arv -e ssh $(DOC).pdf $(DOC_SERVER):$$DIR; fi; \
+	if echo $(FORMATS) | grep html > /dev/null; then export SRC="$$SRC html"; fi; \
+	if echo $(FORMATS) | grep ps > /dev/null; then export SRC="$$SRC $(DOC).ps"; fi; \
+	if echo $(FORMATS) | grep pdf > /dev/null; then export SRC="$$SRC $(DOC).pdf"; fi; \
+	echo Uploading $$SRC to $(DOC_SERVER):$$DIR; \
+	rsync -rv -e ssh $$SRC $(DOC_SERVER):$$DIR; \
+	ssh $(DOC_SERVER) chmod -R g+w $$DIR; \
 	echo Done
