@@ -103,6 +103,7 @@ fi
 
 AC_CONFIG_FILES(
 Makefile
+gst-ffmpeg.spec
 ext/Makefile
 ext/ffmpeg/Makefile
 gst-libs/Makefile
