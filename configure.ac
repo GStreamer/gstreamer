@@ -525,9 +525,11 @@ GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
 AC_SUBST(MAD_LIBS)
 
 dnl *** mikmod ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMIKMOD, true)
+translit(dnm, m, l) AM_CONDITIONAL(USE_MIKMOD, true)
 GST_CHECK_FEATURE(MIKMOD, [mikmod plugin], mikmod, [
-  AM_PATH_LIBMIKMOD(, HAVE_LIBMIKMOD=yes, HAVE_LIBMIKMOD=no)
+  AM_PATH_LIBMIKMOD(, HAVE_MIKMOD=yes, HAVE_MIKMOD=no)
+  AC_SUBST(MIKMOD_LIBS, "$LIBMIKMOD_LIBS")
+  AC_SUBST(MIKMOD_CFLAGS, "$LIBMIKMODCFLAGS")
 ])
 
 dnl *** mpeg2dec ***
