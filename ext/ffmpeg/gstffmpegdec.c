@@ -660,7 +660,9 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
 {
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
-      avcodec_flush_buffers (ffmpegdec->context);
+      if (ffmpegdec->opened) {
+        avcodec_flush_buffers (ffmpegdec->context);
+      }
       goto forward;
     case GST_EVENT_DISCONTINUOUS: {
       gint64 value;
@@ -685,7 +687,9 @@ gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
         GST_WARNING_OBJECT (ffmpegdec,
             "Received discont with no useful value...");
       }
-      avcodec_flush_buffers (ffmpegdec->context);
+      if (ffmpegdec->opened) {
+        avcodec_flush_buffers (ffmpegdec->context);
+      }
       /* fall-through */
     }
     default:
