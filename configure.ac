@@ -1,10 +1,19 @@
 -*- mode: m4 -*-
 AC_PREREQ(2.57)
+
 AC_INIT
 AC_CANONICAL_TARGET
 
-AS_VERSION(gst-python, GST_PYTHON_VERSION, 0, 1, 0, 1)
-AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
+m4_define(pygst_major_version, 2)
+m4_define(pygst_minor_version, 1)
+m4_define(pygst_micro_version, 0)
+m4_define(pygst_version, pygst_major_version.pygst_minor_version.pygst_micro_version)
+
+AM_INIT_AUTOMAKE(gst-python, pygst_version)
+
+AC_DEFINE(PYGST_MAJOR_VERSION, pygst_major_version, [PyGst major version])
+AC_DEFINE(PYGST_MINOR_VERSION, pygst_minor_version, [PyGst minor version])
+AC_DEFINE(PYGST_MICRO_VERSION, pygst_micro_version, [PyGst macro version])
 
 AC_CONFIG_SRCDIR([gst/gstmodule.c])
 AM_CONFIG_HEADER(config.h)
@@ -53,10 +62,6 @@ AC_SUBST(GST_MAJORMINOR)
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
-AC_PATH_PROG(PYGTK_CODEGEN, pygtk-codegen-2.0, no)
-if test "x$PYGTK_CODEGEN" = xno; then
-  AC_MSG_ERROR(could not find pygtk-codegen-2.0 script)
-fi
 
 AC_MSG_CHECKING(for pygtk defs)
 PYGTK_DEFSDIR=`$PKG_CONFIG --variable=defsdir pygtk-2.0`
@@ -64,9 +69,16 @@ AC_SUBST(PYGTK_DEFSDIR)
 AC_MSG_RESULT($PYGTK_DEFSDIR)
 
 AC_MSG_CHECKING(for pygtk h2def)
-PYGTK_H2DEF=`$PKG_CONFIG --variable=datadir pygtk-2.0`/pygtk/2.0/codegen/h2def.py
+PYGTK_H2DEF=`$PKG_CONFIG --variable=codegendir pygtk-2.0`/h2def.py
 AC_SUBST(PYGTK_H2DEF)
 AC_MSG_RESULT($PYGTK_H2DEF)
+
+dnl AC_MSG_CHECKING(for pygtk codegen)
+dnl PYGTK_CODEGEN="$PYTHON `$PKG_CONFIG --variable=codegendir pygtk-2.0`/codegen.py"
+dnl AC_SUBST(PYGTK_CODEGEN)
+dnl AC_MSG_RESULT($PYGTK_CODEGEN)
+PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
+AC_SUBST(PYGTK_CODEGEN)
 
 #dnl check for glib
 #AM_PATH_GLIB_2_0(glib_required_version,,[AC_MSG_ERROR(maybe you want the gtk-gnome-1-2 branch?)],$extra_mods)
