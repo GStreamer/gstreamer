@@ -17,326 +17,351 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* #define GST_DEBUG_ENABLED */
-
 #include "gstcdplayer.h"
 
 /* props */
-enum {
-	ARG_0,
-	ARG_DEVICE,
-	ARG_NUM_TRACKS,
-	ARG_START_TRACK,
-	ARG_END_TRACK,
-	ARG_CURRENT_TRACK,
-	ARG_CDDB_DISCID,
+enum
+{
+  ARG_0,
+  ARG_DEVICE,
+  ARG_NUM_TRACKS,
+  ARG_START_TRACK,
+  ARG_END_TRACK,
+  ARG_CURRENT_TRACK,
+  ARG_CDDB_DISCID,
 };
 
 /* signals */
-enum {
-	TRACK_CHANGE,
-	LAST_SIGNAL,
+enum
+{
+  TRACK_CHANGE,
+  LAST_SIGNAL,
 };
 
-static void cdplayer_class_init(CDPlayerClass *klass);
-static void cdplayer_init(CDPlayer *cdp);
-static void cdplayer_set_property(GObject *object,guint prop_id,const GValue *value,GParamSpec *spec);
-static void cdplayer_get_property(GObject *object,guint prop_id,GValue *value,GParamSpec *spec);
-static void cdplayer_dispose(GObject *object);
-static gboolean cdplayer_iterate(GstBin *bin);
-static GstElementStateReturn cdplayer_change_state(GstElement *element);
+static void 		cdplayer_class_init 		(CDPlayerClass *klass);
+static void 		cdplayer_init 			(CDPlayer *cdp);
+static void 		cdplayer_dispose 		(GObject *object);
 
-static gboolean plugin_init(GModule *module,GstPlugin *plugin);
+static void 		cdplayer_set_property 		(GObject *object, guint prop_id, 
+							 const GValue *value, GParamSpec *spec);
+static void 		cdplayer_get_property 		(GObject *object, guint prop_id,
+							 GValue *value, GParamSpec *spec);
+static gboolean 	cdplayer_iterate 		(GstBin *bin);
 
-
+static GstElementStateReturn 
+			cdplayer_change_state 		(GstElement * element);
 
 static GstElementClass *parent_class;
- static guint cdplayer_signals[LAST_SIGNAL] = {0};
-
+static guint cdplayer_signals[LAST_SIGNAL] = { 0 };
 
 static GstElementDetails cdplayer_details = {
-	"CD Player",
-	"Generic/Bin",
-	"LGPL",
-	"Play CD audio through the CD Drive",
-	VERSION,
-	"Charles Schmidt <cbschmid@uiuc.edu>",
-	"(C) 2002",
+  "CD Player",
+  "Generic/Bin",
+  "Play CD audio through the CD Drive",
+  VERSION,
+  "Charles Schmidt <cbschmid@uiuc.edu>",
+  "Wim Taymans <wim.taymans@chello.be>",
+  "(C) 2002",
 };
 
 
-
-GType cdplayer_get_type(void)
+GType
+cdplayer_get_type (void)
 {
-	static GType cdplayer_type = 0;
+  static GType cdplayer_type = 0;
 
-	if (!cdplayer_type) {
-		static const GTypeInfo cdplayer_info = {
-			sizeof(CDPlayerClass),
-			NULL,
-			NULL,
-			(GClassInitFunc)cdplayer_class_init,
-			NULL,
-			NULL,
-			sizeof(CDPlayer),
-			0,
-			(GInstanceInitFunc)cdplayer_init,
-			NULL
-		};
+  if (!cdplayer_type) {
+    static const GTypeInfo cdplayer_info = {
+      sizeof (CDPlayerClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) cdplayer_class_init,
+      NULL,
+      NULL,
+      sizeof (CDPlayer),
+      0,
+      (GInstanceInitFunc) cdplayer_init,
+      NULL
+    };
 
-		cdplayer_type = g_type_register_static(GST_TYPE_BIN,"CDPlayer",&cdplayer_info,0);
-	}
+    cdplayer_type = g_type_register_static (GST_TYPE_BIN, "CDPlayer", &cdplayer_info, 0);
+  }
 
-	return cdplayer_type;
+  return cdplayer_type;
 }
 
-static void cdplayer_class_init(CDPlayerClass *klass)
+static void
+cdplayer_class_init (CDPlayerClass * klass)
 {
-	GObjectClass *gobject_klass;
-	GstElementClass *gstelement_klass;
-	GstBinClass *gstbin_klass;
+  GObjectClass *gobject_klass;
+  GstElementClass *gstelement_klass;
+  GstBinClass *gstbin_klass;
 
-	gobject_klass = (GObjectClass *)klass;
-	gstelement_klass = (GstElementClass *)klass;
-	gstbin_klass = (GstBinClass *)klass;
+  gobject_klass = (GObjectClass *) klass;
+  gstelement_klass = (GstElementClass *) klass;
+  gstbin_klass = (GstBinClass *) klass;
 
-	parent_class = g_type_class_ref(gst_bin_get_type());
+  parent_class = g_type_class_ref (gst_bin_get_type ());
 
-	gobject_klass->dispose = GST_DEBUG_FUNCPTR(cdplayer_dispose);
+  gobject_klass->dispose = GST_DEBUG_FUNCPTR (cdplayer_dispose);
 
-	gstelement_klass->change_state = GST_DEBUG_FUNCPTR(cdplayer_change_state);
-	gstbin_klass->iterate = GST_DEBUG_FUNCPTR(cdplayer_iterate);
+  gstelement_klass->change_state = GST_DEBUG_FUNCPTR (cdplayer_change_state);
+  gstbin_klass->iterate = GST_DEBUG_FUNCPTR (cdplayer_iterate);
 
-	g_object_class_install_property(gobject_klass,ARG_DEVICE,g_param_spec_string("device","device","CDROM device",NULL,G_PARAM_READWRITE));
-	g_object_class_install_property(gobject_klass,ARG_NUM_TRACKS,g_param_spec_int("num_tracks","num_tracks","Number of Tracks",G_MININT,G_MAXINT,0,G_PARAM_READABLE));
-	g_object_class_install_property(gobject_klass,ARG_START_TRACK,g_param_spec_int("start_track","start_track","Track to start playback on",1,CDPLAYER_MAX_TRACKS-1,1,G_PARAM_READWRITE));
-	g_object_class_install_property(gobject_klass,ARG_END_TRACK,g_param_spec_int("end_track","end_track","Track to end playback on",0,CDPLAYER_MAX_TRACKS-1,0,G_PARAM_READWRITE));
-	g_object_class_install_property(gobject_klass,ARG_CURRENT_TRACK,g_param_spec_int("current_track","current_track","Current track playing",1,CDPLAYER_MAX_TRACKS-1,1,G_PARAM_READABLE));
-	g_object_class_install_property(gobject_klass,ARG_CDDB_DISCID,g_param_spec_uint("cddb_discid","cddb_discid","CDDB Disc ID",0,G_MAXUINT,1,G_PARAM_READABLE));
+  gobject_klass->set_property = cdplayer_set_property;
+  gobject_klass->get_property = cdplayer_get_property;
 
-	cdplayer_signals[TRACK_CHANGE] = g_signal_new("track_change",G_TYPE_FROM_CLASS(klass),G_SIGNAL_RUN_LAST,G_STRUCT_OFFSET(CDPlayerClass,track_change),NULL,NULL,gst_marshal_VOID__INT,G_TYPE_NONE,1,G_TYPE_INT);
+  g_object_class_install_property (gobject_klass, ARG_DEVICE,
+     g_param_spec_string ("device", "device", "CDROM device", NULL,
+			  G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_NUM_TRACKS,
+    g_param_spec_int ("num_tracks", "num_tracks", "Number of Tracks",
+		      G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_START_TRACK,
+    g_param_spec_int ("start_track", "start_track",
+		      "Track to start playback on", 1,
+		      CDPLAYER_MAX_TRACKS - 1, 1,
+		      G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_END_TRACK,
+    g_param_spec_int ("end_track", "end_track",
+		      "Track to end playback on", 0,
+		      CDPLAYER_MAX_TRACKS - 1, 0,
+		      G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_CURRENT_TRACK,
+    g_param_spec_int ("current_track", "current_track",
+		      "Current track playing", 1,
+		      CDPLAYER_MAX_TRACKS - 1, 1, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_CDDB_DISCID,
+    g_param_spec_uint ("cddb_discid", "cddb_discid", "CDDB Disc ID",
+		       0, G_MAXUINT, 1, G_PARAM_READABLE));
 
-	gobject_klass->set_property = cdplayer_set_property;
-	gobject_klass->get_property = cdplayer_get_property;
+  cdplayer_signals[TRACK_CHANGE] =
+    g_signal_new ("track_change", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+		  G_STRUCT_OFFSET (CDPlayerClass, track_change), NULL, NULL, 
+		  gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
-	return;
+  return;
 }
 
-static void cdplayer_init(CDPlayer *cdp)
+static void
+cdplayer_init (CDPlayer * cdp)
 {
-	cdp->device = g_strdup("/dev/cdrom");
-	cdp->num_tracks = -1;
-	cdp->start_track = 1;
-	cdp->end_track = 0;
-	cdp->current_track = 1;
+  cdp->device = g_strdup ("/dev/cdrom");
+  cdp->num_tracks = -1;
+  cdp->start_track = 1;
+  cdp->end_track = 0;
+  cdp->current_track = 1;
 
-	cdp->paused = FALSE;
+  cdp->paused = FALSE;
 
-//	GST_FLAG_SET(cdp,GST_BIN_FLAG_MANAGER);
+  GST_FLAG_SET (cdp, GST_BIN_FLAG_MANAGER);
 
-	return;
+  return;
 }
 
-static void cdplayer_set_property(GObject *object,guint prop_id,const GValue *value,GParamSpec *spec)
+static void
+cdplayer_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * spec)
 {
-	CDPlayer *cdp;
+  CDPlayer *cdp;
 
-	g_return_if_fail(GST_IS_CDPLAYER(object));
+  g_return_if_fail (GST_IS_CDPLAYER (object));
 
-	cdp = CDPLAYER(object);
+  cdp = CDPLAYER (object);
 
-	switch (prop_id) {
-		case ARG_DEVICE:
+  switch (prop_id) {
+    case ARG_DEVICE:
 // FIXME prolly should uhh.. stop it or something
-			if (cdp->device) {
-				g_free(cdp->device);
-			} 
-			
-			cdp->device = g_strdup(g_value_get_string(value));
-			break;
-		case ARG_START_TRACK:
+      if (cdp->device) {
+	g_free (cdp->device);
+      }
+
+      cdp->device = g_strdup (g_value_get_string (value));
+      break;
+    case ARG_START_TRACK:
 // FIXME prolly should uhh.. restart play, i guess... or something whatever
 // FIXME we should only set current_track if its not playing...
-			cdp->current_track = cdp->start_track = g_value_get_int(value);
-			break;
-		case ARG_END_TRACK:
+      cdp->current_track = cdp->start_track = g_value_get_int (value);
+      break;
+    case ARG_END_TRACK:
 // FIXME prolly should restart play, maybe, or try to set it without interrupt..
-			cdp->end_track = g_value_get_int(value);
-			break;
-		default:
-			break;
-	}
+      cdp->end_track = g_value_get_int (value);
+      break;
+    default:
+      break;
+  }
 
-	return;
+  return;
 }
 
 
-static void cdplayer_get_property(GObject *object,guint prop_id,GValue *value,GParamSpec *spec)
+static void
+cdplayer_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * spec)
 {
-	CDPlayer *cdp;
+  CDPlayer *cdp;
 
-	g_return_if_fail(GST_IS_CDPLAYER(object));
+  g_return_if_fail (GST_IS_CDPLAYER (object));
 
-	cdp = CDPLAYER(object);
+  cdp = CDPLAYER (object);
 
-	switch (prop_id) {
-		case ARG_DEVICE:
-			g_value_set_string(value,cdp->device);
-			break;
-		case ARG_NUM_TRACKS:
-			g_value_set_int(value,cdp->num_tracks);
-			break;
-		case ARG_START_TRACK:
-			g_value_set_int(value,cdp->start_track);
-			break;
-		case ARG_END_TRACK:
-			g_value_set_int(value,cdp->end_track);
-		case ARG_CURRENT_TRACK:
-			g_value_set_int(value,cdp->current_track);
-			break;	
-		case ARG_CDDB_DISCID:
-			g_value_set_uint(value,cdp->cddb_discid);
-		default:
-			break;
-	}
+  switch (prop_id) {
+    case ARG_DEVICE:
+      g_value_set_string (value, cdp->device);
+      break;
+    case ARG_NUM_TRACKS:
+      g_value_set_int (value, cdp->num_tracks);
+      break;
+    case ARG_START_TRACK:
+      g_value_set_int (value, cdp->start_track);
+      break;
+    case ARG_END_TRACK:
+      g_value_set_int (value, cdp->end_track);
+    case ARG_CURRENT_TRACK:
+      g_value_set_int (value, cdp->current_track);
+      break;
+    case ARG_CDDB_DISCID:
+      g_value_set_uint (value, cdp->cddb_discid);
+    default:
+      break;
+  }
 
-	return;
+  return;
 }
 
-static void cdplayer_dispose(GObject *object)
+static void
+cdplayer_dispose (GObject * object)
 {
-	CDPlayer *cdp;
+  CDPlayer *cdp;
 
-	g_return_if_fail(GST_IS_CDPLAYER(object));
+  g_return_if_fail (GST_IS_CDPLAYER (object));
 
-	cdp = CDPLAYER(object);
-	g_free(cdp->device);
+  cdp = CDPLAYER (object);
+  g_free (cdp->device);
 
-	if (G_OBJECT_CLASS(parent_class)->dispose) {
-		G_OBJECT_CLASS(parent_class)->dispose(object);
-	}
+  if (G_OBJECT_CLASS (parent_class)->dispose) {
+    G_OBJECT_CLASS (parent_class)->dispose (object);
+  }
 
-	return;
+  return;
 }
 
-static gboolean cdplayer_iterate(GstBin *bin)
+static gboolean
+cdplayer_iterate (GstBin * bin)
 {
-	CDPlayer *cdp = CDPLAYER(bin);
-	gint current_track;
+  CDPlayer *cdp = CDPLAYER (bin);
+  gint current_track;
 
-	switch (cd_status(CDPLAYER_CD(cdp))) {
-		case CD_PLAYING:
-			current_track = cd_current_track(CDPLAYER_CD(cdp));
-			if (current_track > cdp->end_track && cdp->end_track != 0) {
-				return FALSE;
-			}
+  switch (cd_status (CDPLAYER_CD (cdp))) {
+    case CD_PLAYING:
+      current_track = cd_current_track (CDPLAYER_CD (cdp));
+      if (current_track > cdp->end_track && cdp->end_track != 0) {
+	return FALSE;
+      }
 
-			if (current_track != -1 && current_track != cdp->current_track) {
-				cdp->current_track = current_track;
-				g_signal_emit(G_OBJECT(cdp),cdplayer_signals[TRACK_CHANGE],0,cdp->current_track);
-			}
+      if (current_track != -1 && current_track != cdp->current_track) {
+	cdp->current_track = current_track;
+	g_signal_emit (G_OBJECT (cdp), cdplayer_signals[TRACK_CHANGE], 0, cdp->current_track);
+      }
 
-			return TRUE;
-			break;
-		case CD_ERROR:
-			gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PAUSED);
-			return FALSE;
-			break;
-		case CD_COMPLETED:
-			gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PAUSED);
-			gst_element_set_eos(GST_ELEMENT(bin));
-			return FALSE;
-			break;
-	}
+      return TRUE;
+      break;
+    case CD_ERROR:
+      gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+      return FALSE;
+      break;
+    case CD_COMPLETED:
+      gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+      gst_element_set_eos (GST_ELEMENT (bin));
+      return FALSE;
+      break;
+  }
 
-	return FALSE;	
-}
-
-
-static GstElementStateReturn cdplayer_change_state(GstElement *element)
-{
-	CDPlayer *cdp;
-	GstElementState state = GST_STATE(element);
-	GstElementState pending = GST_STATE_PENDING(element);
-
-	g_return_val_if_fail(GST_IS_CDPLAYER(element),GST_STATE_FAILURE);
-
-	cdp = CDPLAYER(element);
-
-	switch (pending) {
-		case GST_STATE_READY:
-			if (state != GST_STATE_PAUSED) {
-				if (cd_init(CDPLAYER_CD(cdp),cdp->device) == FALSE) {
-					return GST_STATE_FAILURE;
-				}
-				cdp->num_tracks = cdp->cd.num_tracks;
-				cdp->cddb_discid = cd_cddb_discid(CDPLAYER_CD(cdp));
-			}
-			break;
-		case GST_STATE_PAUSED:
-			/* ready->paused is not useful */
-			if (state != GST_STATE_READY) {
-				if (cd_pause(CDPLAYER_CD(cdp)) == FALSE) {
-					return GST_STATE_FAILURE;
-				}
-
-				cdp->paused = TRUE;
-			}
-
-			break;
-		case GST_STATE_PLAYING:
-			if (cdp->paused == TRUE) {
-				if (cd_resume(CDPLAYER_CD(cdp)) == FALSE) {
-					return GST_STATE_FAILURE;
-				}
-
-				cdp->paused = FALSE;
-			} else {
-				if (cd_start(CDPLAYER_CD(cdp),cdp->start_track,cdp->end_track) == FALSE) {
-					return GST_STATE_FAILURE;
-				}
-			}
-
-			break;
-		case GST_STATE_NULL:
-			/* stop & close fd */
-			if (cd_stop(CDPLAYER_CD(cdp)) == FALSE || cd_close(CDPLAYER_CD(cdp)) == FALSE) {
-				return GST_STATE_FAILURE;
-			}
-
-			break;
-		default:
-			break;
-	}
-
-	if (GST_ELEMENT_CLASS(parent_class)->change_state) {
-		GST_ELEMENT_CLASS(parent_class)->change_state(element);
-	}
-
-	return GST_STATE_SUCCESS;
+  return FALSE;
 }
 
 
-static gboolean plugin_init(GModule *module,GstPlugin *plugin)
+static GstElementStateReturn
+cdplayer_change_state (GstElement * element)
 {
-	GstElementFactory *factory;
+  CDPlayer *cdp;
+  GstElementState state = GST_STATE (element);
+  GstElementState pending = GST_STATE_PENDING (element);
 
-	factory = gst_element_factory_new("cdplayer",GST_TYPE_CDPLAYER,&cdplayer_details);
-	g_return_val_if_fail(factory != NULL,FALSE);
-	gst_plugin_add_feature(plugin,GST_PLUGIN_FEATURE(factory));
+  g_return_val_if_fail (GST_IS_CDPLAYER (element), GST_STATE_FAILURE);
 
-	gst_plugin_set_longname(plugin,"CD Player");
-	
-	return TRUE;
+  cdp = CDPLAYER (element);
+
+  switch (pending) {
+    case GST_STATE_READY:
+      if (state != GST_STATE_PAUSED) {
+	if (cd_init (CDPLAYER_CD (cdp), cdp->device) == FALSE) {
+	  return GST_STATE_FAILURE;
+	}
+	cdp->num_tracks = cdp->cd.num_tracks;
+	cdp->cddb_discid = cd_cddb_discid (CDPLAYER_CD (cdp));
+      }
+      break;
+    case GST_STATE_PAUSED:
+      /* ready->paused is not useful */
+      if (state != GST_STATE_READY) {
+	if (cd_pause (CDPLAYER_CD (cdp)) == FALSE) {
+	  return GST_STATE_FAILURE;
+	}
+
+	cdp->paused = TRUE;
+      }
+
+      break;
+    case GST_STATE_PLAYING:
+      if (cdp->paused == TRUE) {
+	if (cd_resume (CDPLAYER_CD (cdp)) == FALSE) {
+	  return GST_STATE_FAILURE;
+	}
+
+	cdp->paused = FALSE;
+      } else {
+	if (cd_start (CDPLAYER_CD (cdp), cdp->start_track, cdp->end_track) == FALSE) {
+	  return GST_STATE_FAILURE;
+	}
+      }
+
+      break;
+    case GST_STATE_NULL:
+      /* stop & close fd */
+      if (cd_stop (CDPLAYER_CD (cdp)) == FALSE || cd_close (CDPLAYER_CD (cdp)) == FALSE) {
+	return GST_STATE_FAILURE;
+      }
+
+      break;
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
+    GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  }
+
+  return GST_STATE_SUCCESS;
+}
+
+
+static gboolean
+plugin_init (GModule * module, GstPlugin * plugin)
+{
+  GstElementFactory *factory;
+
+  factory = gst_element_factory_new ("cdplayer", GST_TYPE_CDPLAYER, &cdplayer_details);
+  g_return_val_if_fail (factory != NULL, FALSE);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+  gst_plugin_set_longname (plugin, "CD Player");
+
+  return TRUE;
 
 }
 
 GstPluginDesc plugin_desc = {
-    GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "cdplayer",
-    plugin_init
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "cdplayer",
+  plugin_init
 };
-
-	
-
