@@ -1374,6 +1374,8 @@ gst_element_dispose (GObject *object)
   
   GST_DEBUG_ELEMENT (GST_CAT_REFCOUNTING, element, "dispose\n");
 
+  gst_element_set_state (element, GST_STATE_NULL);
+
   /* first we break all our connections with the ouside */
   if (element->pads) {
     GList *orig;

@@ -654,6 +654,9 @@ gst_bin_dispose (GObject * object)
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "dispose\n");
 
+  if (gst_element_get_state (GST_ELEMENT (object)) == GST_STATE_PLAYING)
+    gst_element_set_state (GST_ELEMENT (object), GST_STATE_PAUSED);
+
   if (bin->children) {
     orig = children = g_list_copy (bin->children);
     while (children) {
