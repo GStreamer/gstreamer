@@ -100,7 +100,6 @@ Use the regular gst_object_destroy() call to destroy the autoplugger.
 
 </para>
 
-@object: 
 
 <!-- ##### ENUM GstAutoplugFlags ##### -->
 <para>
@@ -116,9 +115,6 @@ The type of the autoplugger.
 
 </para>
 
-@feature: 
-@longdesc: 
-@type: 
 
 <!-- ##### FUNCTION gst_autoplug_signal_new_object ##### -->
 <para>

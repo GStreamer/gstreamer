@@ -56,10 +56,6 @@ gst_plugin_add_feature() as shown in the example:
 The struct with the typefactory information.
 </para>
 
-@feature: 
-@mime: 
-@exts: 
-@typefindfunc: 
 
 <!-- ##### STRUCT GstTypeDefinition ##### -->
 <para>

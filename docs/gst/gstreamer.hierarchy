@@ -47,3 +47,11 @@ GtkObject
         GstQueue
         GstTypeFind
       GstPad
+      GstPluginFeature
+        GstAutoplugFactory
+        GstTypeFactory
+        GstElementFactory
+      GstSchedule
+      GstAutoplug
+        GstStaticAutoplug
+        GstStaticAutoplugRender

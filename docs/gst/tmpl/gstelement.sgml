@@ -225,12 +225,6 @@ of the element, the GtkType value for it, as well as a pointer to the
 GstElementDetails struct for the element.
 </para>
 
-@feature: 
-@type: 
-@details_dynamic: 
-@details: 
-@padtemplates: 
-@numpadtemplates: 
 
 <!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
 <para>

@@ -9,6 +9,12 @@ gst_pipeline_get_type
 gst_pad_get_type
 gst_thread_get_type
 gst_tee_get_type
+gst_plugin_feature_get_type
+gst_schedule_get_type
+gst_autoplugfactory_get_type
+gst_typefactory_get_type
+gst_elementfactory_get_type
+gst_xml_get_type
 
 gst_aggregator_get_type
 gst_fakesrc_get_type

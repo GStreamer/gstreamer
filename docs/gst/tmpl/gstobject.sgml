@@ -296,3 +296,8 @@ this signal to insert custom XML tags into the core XML.
 @gstobject: the object which received the signal.
 @arg1: the xmlNodePtr of the parent node
 
+<!-- ##### ARG GstObject:name ##### -->
+<para>
+
+</para>
+
