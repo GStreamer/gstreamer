@@ -21,14 +21,16 @@
 
 /*#define DEBUG_ENABLED */
 #include <gstvideobalance.h>
+#include <string.h>
+#include <math.h>
 
 
 /* elementfactory information */
 static GstElementDetails videobalance_details = {
-  "Video Filter Template",
+  "Video Balance control",
   "Filter/Video",
   "LGPL",
-  "Template for a video filter",
+  "Adjusts brightness, contrast, hue, saturation on a video stream",
   VERSION,
   "David Schleef <ds@schleef.org>",
   "(C) 2003",
@@ -42,6 +44,10 @@ enum {
 
 enum {
   ARG_0,
+  ARG_CONTRAST,
+  ARG_BRIGHTNESS,
+  ARG_HUE,
+  ARG_SATURATION,
   /* FILL ME */
 };
 
@@ -95,12 +101,18 @@ gst_videobalance_class_init (GstVideobalanceClass *klass)
   gstelement_class = (GstElementClass*)klass;
   gstvideofilter_class = (GstVideofilterClass *)klass;
 
-#if 0
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
-      g_param_spec_enum("method","method","method",
-      GST_TYPE_VIDEOBALANCE_METHOD, GST_VIDEOBALANCE_METHOD_90R,
-      G_PARAM_READWRITE));
-#endif
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CONTRAST,
+      g_param_spec_double("contrast","Contrast","contrast",
+      0, 2, 1, G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BRIGHTNESS,
+      g_param_spec_double("brightness","Brightness","brightness",
+      -1, 1, 0, G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HUE,
+      g_param_spec_double("hue","Hue","hue",
+      -1, 1, 0, G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SATURATION,
+      g_param_spec_double("saturation","Saturation","saturation",
+      0, 2, 1, G_PARAM_READWRITE));
 
   this_class = klass;
   parent_class = g_type_class_ref(GST_TYPE_VIDEOFILTER);
@@ -176,6 +188,11 @@ gst_videobalance_init (GstVideobalance *videobalance)
 		  GST_PAD_TEMPLATE_GET (gst_videobalance_src_template_factory),
 		  "src");
 
+  videobalance->contrast = 1;
+  videobalance->brightness = 0;
+  videobalance->saturation = 1;
+  videobalance->hue = 0;
+
   gst_videofilter_postinit(GST_VIDEOFILTER(videobalance));
 }
 
@@ -190,11 +207,18 @@ gst_videobalance_set_property (GObject *object, guint prop_id, const GValue *val
 
   GST_DEBUG("gst_videobalance_set_property");
   switch (prop_id) {
-#if 0
-    case ARG_METHOD:
-      src->method = g_value_get_enum (value);
+    case ARG_CONTRAST:
+      src->contrast = g_value_get_double (value);
       break;
-#endif
+    case ARG_BRIGHTNESS:
+      src->brightness = g_value_get_double (value);
+      break;
+    case ARG_HUE:
+      src->hue = g_value_get_double (value);
+      break;
+    case ARG_SATURATION:
+      src->saturation = g_value_get_double (value);
+      break;
     default:
       break;
   }
@@ -210,11 +234,18 @@ gst_videobalance_get_property (GObject *object, guint prop_id, GValue *value, GP
   src = GST_VIDEOBALANCE(object);
 
   switch (prop_id) {
-#if 0
-    case ARG_METHOD:
-      g_value_set_enum (value, src->method);
+    case ARG_CONTRAST:
+      g_value_set_double (value, src->contrast);
       break;
-#endif
+    case ARG_BRIGHTNESS:
+      g_value_set_double (value, src->brightness);
+      break;
+    case ARG_HUE:
+      g_value_set_double (value, src->hue);
+      break;
+    case ARG_SATURATION:
+      g_value_set_double (value, src->saturation);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -255,18 +286,77 @@ static void gst_videobalance_setup(GstVideofilter *videofilter)
   g_return_if_fail(GST_IS_VIDEOBALANCE(videofilter));
   videobalance = GST_VIDEOBALANCE(videofilter);
 
-  /* if any setup needs to be done, do it here */
-
 }
 
 static void gst_videobalance_planar411(GstVideofilter *videofilter,
     void *dest, void *src)
 {
   GstVideobalance *videobalance;
+  int width;
+  int height;
+  int x,y;
 
   g_return_if_fail(GST_IS_VIDEOBALANCE(videofilter));
   videobalance = GST_VIDEOBALANCE(videofilter);
 
-  /* do something interesting here */
+  width = videofilter->from_width;
+  height = videofilter->from_height;
+
+  {
+    double Y;
+    double contrast;
+    double brightness;
+    guint8 *cdest = dest;
+    guint8 *csrc = src;
+
+    contrast = videobalance->contrast;
+    brightness = videobalance->brightness;
+
+    for(y=0;y<height;y++){
+      for(x=0;x<width;x++){
+        Y = csrc[y*width + x];
+        Y = 16 + ((Y-16) * contrast + brightness*255);
+        if(Y<0)Y=0;
+        if(Y>255)Y=255;
+        cdest[y*width + x] = rint(Y);
+      }
+    }
+  }
+
+  {
+    double u, v;
+    double u1, v1;
+    double saturation;
+    double hue_cos, hue_sin;
+    guint8 *usrc, *vsrc;
+    guint8 *udest, *vdest;
+
+    saturation = videobalance->saturation;
+
+    usrc = src + width*height;
+    udest = dest + width*height;
+    vsrc = src + width*height + (width/2)*(height/2);
+    vdest = dest + width*height + (width/2)*(height/2);
+
+    /* FIXME this is a bogus transformation for hue, but you get
+     * the idea */
+    hue_cos = cos(M_PI*videobalance->hue);
+    hue_sin = sin(M_PI*videobalance->hue);
+  
+    for(y=0;y<height/2;y++){
+      for(x=0;x<width/2;x++){
+        u1 = usrc[y*(width/2) + x] - 128;
+        v1 = vsrc[y*(width/2) + x] - 128;
+        u = 128 + (( u1 * hue_cos + v1 * hue_sin) * saturation);
+        v = 128 + ((-u1 * hue_sin + v1 * hue_cos) * saturation);
+        if(u<0)u=0;
+        if(u>255)u=255;
+        if(v<0)v=0;
+        if(v>255)v=255;
+        udest[y*(width/2) + x] = rint(u);
+        vdest[y*(width/2) + x] = rint(v);
+      }
+    }
+  }
 }
 

@@ -1,6 +1,7 @@
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
-plugin_LTLIBRARIES = libgstvideofilter.la libgstvideoflip.la
+plugin_LTLIBRARIES = libgstvideofilter.la libgstvideoflip.la \
+	libgstvideobalance.la
 noinst_LTLIBRARIES = libgstvideoexample.la
 
 noinst_HEADERS = gstvideofilter.h gstvideoexample.h gstvideoflip.h
@@ -22,6 +23,11 @@ libgstvideoflip_la_SOURCES = gstvideoflip.c
 libgstvideoflip_la_CFLAGS = $(GST_CFLAGS)
 libgstvideoflip_la_LIBADD =
 libgstvideoflip_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+libgstvideobalance_la_SOURCES = gstvideobalance.c
+libgstvideobalance_la_CFLAGS = $(GST_CFLAGS)
+libgstvideobalance_la_LIBADD =
+libgstvideobalance_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -lm
 
 
 # no, this doesn't work if $(srcdir) != (builddir)
