@@ -1,5 +1,10 @@
 2004-05-03  Johan Dahlin  <johan@gnome.org>
 
+	* configure.ac: define HAVE_OLD_PYGTK if we're on pygtk 2.3.91 or earlier.
+
+	* gst/common.h: Add backwards compatible typedef for python < 2.3
+	and pygtk < 2.3.92
+
 	* codegen/codegen.py: Resync (add support for tp_as_buffer)
 
 	* gst/gst.override: Support buffer interface for GstBuffer. Move

@@ -26,6 +26,10 @@
 
 #include "pygobject.h"
 
+#if defined HAVE_OLD_PYGTK && PY_VERSION_HEX < 0x02030000
+  typedef destructor freefunc;
+#endif
+
 typedef struct {
      PyGObject *pad;
      PyObject *link_function;
