@@ -454,6 +454,42 @@ channels = 1 - MAXINT (INT, number of audio channels)
      Encoder:
      Decoder:
 
+17 - Ensoniq PARIS audio
+     MIME type: audio/x-paris
+     Properties:
+     Encoder:
+     Decoder:
+
+18 - Amiga IFF / SVX8 / SV16 audio
+     MIME type: audio/x-svx
+     Properties:
+     Encoder:
+     Decoder:
+
+19 - Sphere NIST audio
+     MIME type: audio/x-nist
+     Properties:
+     Encoder:
+     Decoder:
+
+20 - Sound Blaster VOC audio
+     MIME type: audio/x-voc
+     Properties:
+     Encoder:
+     Decoder:
+
+21 - Berkeley/IRCAM/CARL audio
+     MIME type: audio/x-ircam
+     Properties:
+     Encoder:
+     Decoder:
+
+22 - Sonic Foundry's 64 bit RIFF/WAV
+     MIME type: audio/x-w64
+     Properties:
+     Encoder:
+     Decoder:
+
 TODO: adpcm/dv needs confirmation from someone with knowledge...
 
 Raw formats

@@ -701,6 +701,8 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
 
   if (oclass->release_pad)
     (oclass->release_pad) (element, pad);
+  else
+    gst_element_remove_pad (element, pad);
 }
 
 /**

@@ -607,6 +607,91 @@ plugin_init (GstPlugin *plugin)
               The version of the WMA codec used to encode the stream.
             </entry>
           </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-paris</entry>
+            <entry>Ensoniq PARIS audio</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-svx</entry>
+            <entry>Amiga IFF / SVX8 / SV16 audio</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-nist</entry>
+            <entry>Sphere NIST audio</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-voc</entry>
+            <entry>Sound Blaster VOC audio</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-ircam</entry>
+            <entry>Berkeley/IRCAM/CARL audio</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>audio/x-w64</entry>
+            <entry>Sonic Foundry's 64 bit RIFF/WAV</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
         </tbody>
         </tgroup>
       </table>
