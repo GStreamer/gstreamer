@@ -410,81 +410,95 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
 }
 /* This loop function is only needed when typefinding.
  */
+typedef struct {
+  GstBuffer *buffer;
+  guint best_probability;
+  GstCaps *caps;
+} SpiderTypeFind;
+guint8 *
+spider_find_peek (gpointer data, gint64 offset, guint size)
+{
+  SpiderTypeFind *find = (SpiderTypeFind *) data;
+  gint64 buffer_offset = GST_BUFFER_OFFSET_IS_VALID (find->buffer) ? 
+			 GST_BUFFER_OFFSET (find->buffer) : 0;
+  
+  if (offset >= buffer_offset && offset + size <= buffer_offset + GST_BUFFER_SIZE (find->buffer)) {
+    return GST_BUFFER_DATA (find->buffer) + offset - buffer_offset;
+  } else {
+    return NULL;
+  }
+}
+void spider_find_suggest (gpointer data, guint probability, GstCaps *caps)
+{
+  SpiderTypeFind *find = (SpiderTypeFind *) data;
+
+  if (probability > find->best_probability) {
+    gst_caps_replace (&find->caps, caps);
+    find->best_probability = probability;
+  }
+}
 static void
 gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
 {
-  GstBuffer *buf = NULL;
-  GList *type_list;
-  GstCaps *caps;
-  GstByteStream *bs;
+  GstData *data;
+  GList *type_list = NULL;
+  GstTypeFind gst_find;
+  SpiderTypeFind find;
 
   g_return_if_fail (GST_IS_SPIDER_IDENTITY (ident));
 
-  /* get a bytestream object */
-  bs = gst_bytestream_new (ident->sink);
-  if (gst_bytestream_peek (bs, &buf, 1) != 1 || !buf) {
-    buf = NULL;
-    g_warning ("Failed to read fake buffer - serious idiocy going on here");
-    goto end;
-  } else {
-    gst_buffer_unref (buf);
-    buf = NULL;
+  data = gst_pad_pull (ident->sink);
+  while (!GST_IS_BUFFER (data)) {
+    gst_spider_identity_chain (ident->sink, GST_BUFFER (data));
+    data = gst_pad_pull (ident->sink);
   }
-
+  
   /* maybe there are already valid caps now? */
-  if ((caps = gst_pad_get_caps (ident->sink)) != NULL) {
+  if ((find.caps = gst_pad_get_caps (ident->sink)) != NULL) {
+    gst_caps_ref (find.caps); /* it's unrefed later below */
     goto plug;
   }
   
   /* now do the actual typefinding with the supplied buffer */
-  type_list = (GList *) gst_type_get_list ();
+  type_list = gst_type_find_factory_get_list ();
     
+  find.buffer = GST_BUFFER (data);
+  find.best_probability = 0;
+  find.caps = NULL;
+  gst_find.data = &find;
+  gst_find.peek = spider_find_peek;
+  gst_find.suggest = spider_find_suggest;
   while (type_list) {
-    GstType *type = (GstType *) type_list->data;
-    GSList *factories = type->factories;
+    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (type_list->data);
 
-    while (factories) {
-      GstTypeFactory *factory = GST_TYPE_FACTORY (factories->data);
-      GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
-
-      GST_DEBUG ("trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
-      if (typefindfunc && (caps = typefindfunc (bs, factory))) {
-        GST_INFO ("typefind function %s found caps", GST_PLUGIN_FEATURE_NAME (factory));
-        if (gst_pad_try_set_caps (ident->src, caps) <= 0) {
-          g_warning ("typefind: found type but peer didn't accept it");
-	  gst_caps_sink (caps);
-        } else {
-          goto plug;
-	}
-      }
-      factories = g_slist_next (factories);
-    }
+    GST_DEBUG ("trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
+    gst_type_find_factory_call_function (factory, &gst_find);
+    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
+      goto plug;
     type_list = g_list_next (type_list);
   }
+  if (find.best_probability > 0)
+    goto plug;
   gst_element_error(GST_ELEMENT(ident), "Could not find media type", NULL);
-  buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+  find.buffer = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 
 end:
-
   /* remove loop function */
   gst_element_set_loop_function (GST_ELEMENT (ident), 
                                 (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_dumb_loop));
   
   /* push the buffer */
-  gst_spider_identity_chain (ident->sink, buf);
-
-  /* bytestream no longer needed */
-  gst_bytestream_destroy (bs);
+  gst_spider_identity_chain (ident->sink, find.buffer);
   
   return;
 
 plug:
-  gst_caps_debug (caps, "spider starting caps");
-  gst_caps_sink (caps);
+  GST_INFO ("typefind function found caps"); 
+  g_assert (gst_pad_try_set_caps (ident->src, find.caps) > 0);
+  gst_caps_debug (find.caps, "spider starting caps");
+  gst_caps_unref (find.caps);
 
   gst_spider_identity_plug (ident);
-
-  gst_bytestream_read (bs, &buf, bs->listavail);
 
   goto end;
 }

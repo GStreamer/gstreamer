@@ -159,7 +159,7 @@ print_props (GstProps *properties, gint pfx)
 }
 
 static void
-print_caps (const GstCaps *caps, gint pfx)
+print_caps (GstCaps *caps, gint pfx)
 {
   if (!caps)
     return;
@@ -167,16 +167,10 @@ print_caps (const GstCaps *caps, gint pfx)
   PUT_START_TAG (pfx, "capscomp");
 
   while (caps) {
-    GstType *type;
-
     PUT_START_TAG (pfx + 1, "caps");
     PUT_ESCAPED (pfx + 2, "name", caps->name);
 
-    type = gst_type_find_by_id (caps->id);
-    if (type)
-      PUT_ESCAPED (pfx + 2, "type", type->mime);
-    else
-      PUT_ESCAPED (pfx + 2, "type", "unkown/unknown");
+    PUT_ESCAPED (pfx + 2, "type", gst_caps_get_mime (caps));
 
     if (caps->properties) {
       print_props(caps->properties, pfx + 2);
@@ -855,16 +849,19 @@ print_element_list (void)
                 GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
 #endif
-      else if (GST_IS_TYPE_FACTORY (feature)) {
-        GstTypeFactory *factory;
+      else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+        GstTypeFindFactory *factory;
 
-        factory = GST_TYPE_FACTORY (feature);
-        g_print ("%s type:  %s: %s\n", plugin->name,
-                factory->mime, factory->exts);
-
-        if (factory->typefindfunc)
-          g_print ("      Has typefind function: %s\n",
-                  GST_DEBUG_FUNCPTR_NAME (factory->typefindfunc));
+	factory = GST_TYPE_FIND_FACTORY (feature);
+        if (factory->extensions) {
+	  guint i;
+	  g_print ("%s type: ", plugin->name);
+	  while (factory->extensions[i]) {
+	    g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
+	    i++;
+	  }
+	} else
+	  g_print ("%s type: N/A\n", plugin->name);
       }
       else if (GST_IS_SCHEDULER_FACTORY (feature)) {
         GstSchedulerFactory *factory;
@@ -945,15 +942,19 @@ print_plugin_info (GstPlugin *plugin)
       num_indexes++;
     }
 #endif
-    else if (GST_IS_TYPE_FACTORY (feature)) {
-      GstTypeFactory *factory;
+    else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+      GstTypeFindFactory *factory;
 
-      factory = GST_TYPE_FACTORY (feature);
-      g_print ("  %s: %s\n", factory->mime, factory->exts);
-
-      if (factory->typefindfunc)
-        g_print ("      Has typefind function: %s\n",
-                GST_DEBUG_FUNCPTR_NAME (factory->typefindfunc));
+      factory = GST_TYPE_FIND_FACTORY (feature);
+      if (factory->extensions) {
+	guint i;
+	g_print ("%s type: ", plugin->name);
+	while (factory->extensions[i]) {
+	  g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
+	  i++;
+	}
+      } else
+	g_print ("%s type: N/A\n", plugin->name);
       num_types++;
     }
     else if (GST_IS_SCHEDULER_FACTORY (feature)) {
@@ -1059,9 +1060,9 @@ main (int argc, char *argv[])
          }
 #endif
          feature = gst_registry_pool_find_feature (argv[1],
-                                                   GST_TYPE_TYPE_FACTORY);
+                                                   GST_TYPE_TYPE_FIND_FACTORY);
          if (feature) {
-           g_print ("%s: an type\n", argv[1]);
+           g_print ("%s: a type find function\n", argv[1]);
            return 0;
          }
 #ifndef GST_DISABLE_URI

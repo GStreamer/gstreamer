@@ -34,7 +34,7 @@
 
 #include <gst/gst_private.h>
 #include <gst/gstelement.h>
-#include <gst/gsttype.h>
+#include <gst/gsttypefind.h>
 #include <gst/gstscheduler.h>
 #include <gst/gstautoplug.h>
 #include <gst/gsturi.h>
@@ -712,19 +712,42 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
 }
 
 static gboolean
-gst_xml_registry_parse_type_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
-                                     gsize text_len, GstXMLRegistry *registry, GError **error)
+gst_xml_registry_parse_type_find_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
+					  gsize text_len, GstXMLRegistry *registry, GError **error)
 {
-  GstTypeFactory *factory = GST_TYPE_FACTORY (registry->current_feature);
+  GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (registry->current_feature);
 
   if (!strcmp (tag, "name")) {
     registry->current_feature->name = g_strndup (text, text_len);
   }
-  else if (!strcmp (tag, "mime")) {
-    factory->mime = g_strndup (text, text_len);
+  else if (!strcmp(tag, "rank")) {
+    glong rank;
+    gchar *ret;
+     rank = strtol (text, &ret, 0);
+    if (ret == text + text_len) {
+     gst_element_factory_set_rank (factory, rank);
+    }
   }
-  else if (!strcmp(tag, "extensions")) {
-    factory->exts = g_strndup (text, text_len);
+  /* FIXME!!
+  else if (!strcmp (tag, "caps")) {
+    factory->caps = g_strndup (text, text_len);
+  }*/
+  else if (!strcmp(tag, "extension")) {
+    gchar **new;
+    gchar **old = factory->extensions;
+    gint i = 0;
+    
+    /* expensive, but cycles are cheap... */
+    if (old)
+      while (old[i]) i++;
+    new = g_new0 (gchar *, i + 2);
+    new[i] = g_strndup (text, text_len);
+    while (i > 0) {
+      i--;
+      new[i] = old[i];
+    }
+    g_free (old);
+    factory->extensions = new;
   }
 
   return TRUE;
@@ -905,8 +928,8 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 	    xmlregistry->parser = gst_xml_registry_parse_element_factory;
 	    break;
 	  }
-	  else if (GST_IS_TYPE_FACTORY (feature)) {
-	    xmlregistry->parser = gst_xml_registry_parse_type_factory;
+	  else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+	    xmlregistry->parser = gst_xml_registry_parse_type_find_factory;
 	  }
 	  else if (GST_IS_SCHEDULER_FACTORY (feature)) {
 	    xmlregistry->parser = gst_xml_registry_parse_scheduler_factory;
@@ -1087,19 +1110,10 @@ gst_xml_registry_end_element (GMarkupParseContext *context,
       break;
     case GST_XML_REGISTRY_FEATURE:
       if (!strcmp (element_name, "feature")) {
-	if (GST_IS_TYPE_FACTORY (xmlregistry->current_feature)) {
-          GstTypeFactory *factory = GST_TYPE_FACTORY (xmlregistry->current_feature);
-	  gst_type_register (factory);
-	}
 	xmlregistry->state = GST_XML_REGISTRY_PLUGIN;
 	xmlregistry->parser = gst_xml_registry_parse_plugin;
 	gst_plugin_add_feature (xmlregistry->current_plugin, xmlregistry->current_feature);
 	xmlregistry->current_feature = NULL;
-      }
-      else if (!strcmp (element_name, "typefind")) {
-        GstTypeFactory *factory = GST_TYPE_FACTORY (xmlregistry->current_feature);
-
-        factory->typefindfunc = gst_type_type_find_dummy;
       }
       break;
     case GST_XML_REGISTRY_PADTEMPLATE:
@@ -1270,12 +1284,19 @@ gst_xml_registry_paths_text (GMarkupParseContext *context, const gchar *text,
 #define PUT_ESCAPED(tag,value) 					\
 G_STMT_START{ 							\
   const gchar *toconv = value;					\
-  if (value) {							\
+  if (toconv) {							\
     gchar *v = g_markup_escape_text (toconv, strlen (toconv));	\
     CLASS (xmlregistry)->save_func (xmlregistry, "<%s>%s</%s>\n", tag, v, tag);			\
     g_free (v);							\
   }								\
 }G_STMT_END
+#define PUT_ESCAPED_INT(tag,value)				\
+G_STMT_START{ 							\
+  gchar *save = g_strdup_printf ("%ld", (glong) value);		\
+  CLASS (xmlregistry)->save_func (xmlregistry, "<%s>%s</%s>\n", tag, save, tag);		\
+  g_free (save);      						\
+}G_STMT_END
+
 
 static gboolean
 gst_xml_registry_save_props_func (GstPropsEntry *entry, 
@@ -1381,7 +1402,7 @@ gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, GstCaps *caps)
   while (caps) {
     CLASS (xmlregistry)->save_func (xmlregistry, "<capscomp>\n");
     PUT_ESCAPED ("name", caps->name);
-    PUT_ESCAPED ("type", gst_type_find_by_id (caps->id)->mime);
+    PUT_ESCAPED ("type", gst_caps_get_mime (caps));
 
     if (caps->properties) {
       CLASS (xmlregistry)->save_func (xmlregistry, "<properties>\n");
@@ -1460,13 +1481,18 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
       templates = g_list_next (templates);
     }
   }
-  else if (GST_IS_TYPE_FACTORY (feature)) {
-    GstTypeFactory *factory = GST_TYPE_FACTORY (feature);
-
-    PUT_ESCAPED ("mime", factory->mime);
-    PUT_ESCAPED ("extensions", factory->exts);
-    if (factory->typefindfunc) {
-      CLASS (xmlregistry)->save_func (xmlregistry, "<typefind/>\n");
+  else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
+    gint i = 0;
+    /* FIXME 
+    if (factory->caps) {
+      CLASS (xmlregistry)->save_func (xmlregistry, "<caps>\n");
+      gst_xml_registry_save_caps (xmlregistry, factory->caps);
+      CLASS (xmlregistry)->save_func (xmlregistry, "</caps>\n");
+    } */
+    while (factory->extensions[i]) {
+      PUT_ESCAPED ("extension", factory->extensions[i]);
+      i++;
     }
   }
   else if (GST_IS_SCHEDULER_FACTORY (feature)) {

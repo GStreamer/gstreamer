@@ -63,7 +63,7 @@ typedef enum {
 struct _GstCaps {
   /* --- public --- */
   gchar 	*name;			/* the name of this caps */
-  guint16 	 id;			/* type id (major type) representing 
+  GQuark 	 id;			/* type id (major type) representing 
 					   the mime type, it's stored as a GQuark 
 					   for speed/space reasons */
 
@@ -126,7 +126,7 @@ void		_gst_caps_initialize			(void);
 /* creating new caps */
 GType		gst_caps_get_type			(void);
 GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime, GstProps *props);
-GstCaps*	gst_caps_new_id				(const gchar *name, const guint16 id, GstProps *props);
+GstCaps*	gst_caps_new_id				(const gchar *name, const GQuark id, GstProps *props);
 GstCaps*	gst_caps_get_any			(void);
 /* replace pointer to caps, doing proper refcounting */
 void		gst_caps_replace			(GstCaps **oldcaps, GstCaps *newcaps);
@@ -150,9 +150,6 @@ void		gst_caps_set_name			(GstCaps *caps, const gchar *name);
 
 const gchar*	gst_caps_get_mime			(GstCaps *caps);
 void		gst_caps_set_mime			(GstCaps *caps, const gchar *mime);
-
-guint16		gst_caps_get_type_id			(GstCaps *caps);
-void		gst_caps_set_type_id			(GstCaps *caps, guint16 type_id);
 
 GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);

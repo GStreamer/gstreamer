@@ -25,7 +25,6 @@
 #include "gstpad.h"
 #include "gstutils.h"
 #include "gstelement.h"
-#include "gsttype.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
 #include "gstevent.h"

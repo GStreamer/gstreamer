@@ -78,7 +78,6 @@ extern GstDebugCategory *GST_CAT_PLUGIN_LOADING;
 extern GstDebugCategory *GST_CAT_PLUGIN_INFO;
 extern GstDebugCategory *GST_CAT_PROPERTIES;
 extern GstDebugCategory *GST_CAT_THREAD;
-extern GstDebugCategory *GST_CAT_TYPES;
 extern GstDebugCategory *GST_CAT_XML;
 extern GstDebugCategory *GST_CAT_NEGOTIATION;
 extern GstDebugCategory *GST_CAT_REFCOUNTING;

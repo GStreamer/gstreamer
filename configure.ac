@@ -372,8 +372,6 @@ GST_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
 
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
 GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TYPEFIND, true)
-GST_SUBSYSTEM_DISABLE(TYPEFIND,[typefind plugin],)
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_AUTOPLUG, true)
 GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
 translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PARSE, true)
@@ -562,12 +560,12 @@ gst/indexers/Makefile
 gst/elements/Makefile
 gst/parse/Makefile
 gst/schedulers/Makefile
-gst/types/Makefile
 gst/registries/Makefile
 libs/Makefile
 libs/gst/Makefile
-libs/gst/getbits/Makefile
+libs/gst/bytestream/Makefile
 libs/gst/control/Makefile
+libs/gst/getbits/Makefile
 libs/ext/Makefile
 po/Makefile.in
 tests/Makefile

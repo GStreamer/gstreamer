@@ -80,6 +80,7 @@ gboolean	gst_plugin_feature_type_name_filter	(GstPluginFeature *feature,
 							 GstTypeNameData *data);
 
 void		gst_plugin_feature_set_rank		(GstPluginFeature *feature, guint16 rank);
+void		gst_plugin_feature_set_name		(GstPluginFeature *feature, const gchar *name);
 
 G_END_DECLS
 

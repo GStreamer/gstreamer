@@ -23,7 +23,6 @@
 #include "gst_private.h"
 
 #include "gstcaps.h"
-#include "gsttype.h"
 #include "gstmemchunk.h"
 #include "gstinfo.h"
 
@@ -192,30 +191,6 @@ gst_caps_get_type (void)
 {
   return _gst_caps_type;
 }
-
-static guint16
-get_type_for_mime (const gchar *mime)
-{
-  guint16 typeid;
-
-  typeid = gst_type_find_by_mime (mime);
-  if (typeid == 0) {
-     GstTypeDefinition definition;
-     GstTypeFactory *factory;
-
-     definition.name = "capstype";
-     definition.mime = g_strdup (mime);
-     definition.exts = NULL;
-     definition.typefindfunc = NULL;
-
-     factory = gst_type_factory_new (&definition);
-     typeid = gst_type_register (factory);
-
-     g_free (definition.mime);
-  }
-  return typeid;
-}
-
 /**
  * gst_caps_new:
  * @name: the name of this capability
@@ -231,9 +206,8 @@ gst_caps_new (const gchar *name, const gchar *mime, GstProps *props)
 {
   g_return_val_if_fail (mime != NULL, NULL);
 
-  return gst_caps_new_id (name, get_type_for_mime (mime), props);
+  return gst_caps_new_id (name, g_quark_from_string (mime), props);
 }
-
 /**
  * gst_caps_new_id:
  * @name: the name of this capability
@@ -245,7 +219,7 @@ gst_caps_new (const gchar *name, const gchar *mime, GstProps *props)
  * Returns: a new capability
  */
 GstCaps*
-gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
+gst_caps_new_id (const gchar *name, const GQuark id, GstProps *props)
 {
   GstCaps *caps;
 
@@ -584,7 +558,6 @@ gst_caps_set_name (GstCaps *caps, const gchar *name)
   g_free (caps->name);
   caps->name = g_strdup (name);
 }
-
 /**
  * gst_caps_get_mime:
  * @caps: the caps to get the mime type from
@@ -596,18 +569,10 @@ gst_caps_set_name (GstCaps *caps, const gchar *name)
 const gchar*
 gst_caps_get_mime (GstCaps *caps)
 {
-  GstType *type;
-
   g_return_val_if_fail (caps != NULL, NULL);
 
-  type = gst_type_find_by_id (caps->id);
-
-  if (type)
-    return type->mime;
-  else
-    return "unknown/unknown";
+  return g_quark_to_string (caps->id);
 }
-
 /**
  * gst_caps_set_mime:
  * @caps: the caps to set the mime type to
@@ -621,40 +586,8 @@ gst_caps_set_mime (GstCaps *caps, const gchar *mime)
   g_return_if_fail (caps != NULL);
   g_return_if_fail (mime != NULL);
 
-  caps->id = get_type_for_mime (mime);
+  caps->id = g_quark_from_string (mime);
 }
-
-/**
- * gst_caps_get_type_id:
- * @caps: the caps to get the type id from
- *
- * Get the type id of the caps.
- *
- * Returns: the type id of the caps
- */
-guint16
-gst_caps_get_type_id (GstCaps *caps)
-{
-  g_return_val_if_fail (caps != NULL, 0);
-
-  return caps->id;
-}
-
-/**
- * gst_caps_set_type_id:
- * @caps: the caps to set the type id to
- * @type_id: the type id to set
- *
- * Set the type id of the caps.
- */
-void
-gst_caps_set_type_id (GstCaps *caps, guint16 type_id)
-{
-  g_return_if_fail (caps != NULL);
-
-  caps->id = type_id;
-}
-
 /**
  * gst_caps_set_props:
  * @caps: the caps to attach the properties to
@@ -880,8 +813,8 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps->id != tocaps->id) {
     GST_CAT_DEBUG (GST_CAT_CAPS,"mime types differ (%s to %s)",
-	       gst_type_find_by_id (fromcaps->id)->mime, 
-	       gst_type_find_by_id (tocaps->id)->mime);
+	       gst_caps_get_mime (fromcaps), 
+	       gst_caps_get_mime (tocaps));
     return FALSE;
   }
 
@@ -963,8 +896,8 @@ gst_caps_intersect_func (GstCaps *caps1, GstCaps *caps2)
 
   if (caps1->id != caps2->id) {
     GST_CAT_DEBUG (GST_CAT_CAPS, "mime types differ (%s to %s)",
-	       gst_type_find_by_id (caps1->id)->mime, 
-	       gst_type_find_by_id (caps2->id)->mime);
+	       gst_caps_get_mime (caps1), 
+	       gst_caps_get_mime (caps2));
     return NULL;
   }
 
@@ -1127,7 +1060,7 @@ gst_caps_save_thyself (GstCaps *caps, xmlNodePtr parent)
     subtree = xmlNewChild (parent, NULL, "capscomp", NULL);
 
     xmlNewChild (subtree, NULL, "name", caps->name);
-    xmlNewChild (subtree, NULL, "type", gst_type_find_by_id (caps->id)->mime);
+    xmlNewChild (subtree, NULL, "type", gst_caps_get_mime (caps));
     if (caps->properties) {
       subsubtree = xmlNewChild (subtree, NULL, "properties", NULL);
 
@@ -1175,7 +1108,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
         }
         if (!strcmp (subfield->name, "type")) {
           content = xmlNodeGetContent (subfield);
-          caps->id = get_type_for_mime (content);
+          caps->id = g_quark_from_string (content);
           g_free (content);
         }
         else if (!strcmp (subfield->name, "properties")) {

@@ -27,9 +27,6 @@
 
 #include "gst.h"
 #include "gstqueue.h"
-#ifndef GST_DISABLE_TYPEFIND
-#include "gsttypefind.h"
-#endif /* GST_DISABLE_TYPEFIND */
 #ifndef GST_DISABLE_REGISTRY
 #include "registries/gstxmlregistry.h"
 #endif /* GST_DISABLE_REGISTRY */
@@ -461,10 +458,6 @@ gst_register_core_elements (GModule *module, GstPlugin *plugin)
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   factory = gst_element_factory_new ("queue", gst_queue_get_type (), &gst_queue_details);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-#ifndef GST_DISABLE_TYPEFIND
-  factory = gst_element_factory_new ("typefind", gst_type_find_get_type (), &gst_type_find_details);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-#endif /* GST_DISABLE_TYPEFIND */
 
   return TRUE;
 }
@@ -510,8 +503,8 @@ init_post (void)
   gst_ghost_pad_get_type ();
   gst_element_factory_get_type ();
   gst_element_get_type ();
-  gst_type_factory_get_type ();
   gst_scheduler_factory_get_type ();
+  gst_type_find_factory_get_type ();
   gst_bin_get_type ();
 #ifndef GST_DISABLE_AUTOPLUG
   gst_autoplug_factory_get_type ();
