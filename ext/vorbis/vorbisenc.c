@@ -64,6 +64,8 @@ static void 	gst_vorbisenc_get_property 	(GObject * object, guint prop_id, GValu
 						 GParamSpec * pspec);
 static void 	gst_vorbisenc_set_property 	(GObject * object, guint prop_id, const GValue * value,
 						 GParamSpec * pspec);
+static GstElementStateReturn
+		gst_vorbisenc_change_state 	(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_vorbisenc_signals[LAST_SIGNAL] = { 0 }; */
@@ -108,6 +110,8 @@ gst_vorbisenc_class_init (VorbisEncClass * klass)
 
   gobject_class->set_property = gst_vorbisenc_set_property;
   gobject_class->get_property = gst_vorbisenc_get_property;
+
+  gstelement_class->change_state = gst_vorbisenc_change_state;
 }
 
 static GstPadConnectReturn
@@ -142,10 +146,11 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
   vorbisenc->srcpad = gst_pad_new_from_template (gst_vorbisenc_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->srcpad);
 
-  vorbisenc->channels = 2;
-  vorbisenc->frequency = 44100;
+  vorbisenc->channels = -1;
+  vorbisenc->frequency = -1;
   vorbisenc->bitrate = 128000;
   vorbisenc->setup = FALSE;
+  vorbisenc->eos = FALSE;
 
   /* we're chained and we can deal with events */
   GST_FLAG_SET (vorbisenc, GST_ELEMENT_EVENT_AWARE);
@@ -216,27 +221,21 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
 
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
 
-  if (!vorbisenc->setup) {
-    gst_element_error (GST_ELEMENT (vorbisenc), "encoder not initialized (input is not audio?)");
-    if (GST_IS_BUFFER (buf))
-      gst_buffer_unref (buf);
-    else
-      gst_pad_event_default (pad, GST_EVENT (buf));
-    return;
-  }
-
   if (GST_IS_EVENT (buf)) {
-    switch (GST_EVENT_TYPE (buf)) {
+    GstEvent *event = GST_EVENT (buf);
+
+    switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
         /* end of file.  this can be done implicitly in the mainline,
            but it's easier to see here in non-clever fashion.
            Tell the library we're at end of stream so that it can handle
            the last frame and mark end of stream in the output properly */
         vorbis_analysis_wrote (&vorbisenc->vd, 0);
+	gst_event_unref (event);
 	break;
       default:
-	gst_pad_event_default (pad, GST_EVENT (buf));
-	break;
+	gst_pad_event_default (pad, event);
+        return;
     }
   }
   else {
@@ -244,18 +243,25 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
     gulong size;
     gulong i, j;
     float **buffer;
+
+    if (!vorbisenc->setup) {
+      gst_element_error (GST_ELEMENT (vorbisenc), "encoder not initialized (input is not audio?)");
+      gst_buffer_unref (buf);
+      return;
+    }
   
     /* data to encode */
     data = (gint16 *) GST_BUFFER_DATA (buf);
-    size = GST_BUFFER_SIZE (buf) / 2;
+    size = GST_BUFFER_SIZE (buf) >> 1;
 
     /* expose the buffer to submit data */
     buffer = vorbis_analysis_buffer (&vorbisenc->vd, size / vorbisenc->channels);
 
     /* uninterleave samples */
     for (i = 0; i < size / vorbisenc->channels; i++) {
-      for (j = 0; j < vorbisenc->channels; j++)
+      for (j = 0; j < vorbisenc->channels; j++) {
 	buffer[j][i] = data[i * vorbisenc->channels + j] / 32768.f;
+      }
     }
 
     /* tell the library how much we actually submitted */
@@ -273,7 +279,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
     vorbis_analysis (&vorbisenc->vb, NULL);
     vorbis_bitrate_addblock(&vorbisenc->vb);
     
-    while(vorbis_bitrate_flushpacket(&vorbisenc->vd, &vorbisenc->op)) {
+    while (vorbis_bitrate_flushpacket (&vorbisenc->vd, &vorbisenc->op)) {
 
       /* weld the packet into the bitstream */
       ogg_stream_packetin (&vorbisenc->os, &vorbisenc->op);
@@ -286,15 +292,17 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
         if (result == 0)
 	  break;
 
-        outbuf = gst_buffer_new ();
-        GST_BUFFER_DATA (outbuf) = g_malloc (vorbisenc->og.header_len + vorbisenc->og.body_len);
-        GST_BUFFER_SIZE (outbuf) = vorbisenc->og.header_len + vorbisenc->og.body_len;
+        outbuf = gst_buffer_new_and_alloc (vorbisenc->og.header_len + 
+			                   vorbisenc->og.body_len);
 
-        memcpy (GST_BUFFER_DATA (outbuf), vorbisenc->og.header, vorbisenc->og.header_len);
-        memcpy (GST_BUFFER_DATA (outbuf) + vorbisenc->og.header_len, vorbisenc->og.body,
-	        vorbisenc->og.body_len);
+        memcpy (GST_BUFFER_DATA (outbuf), vorbisenc->og.header, 
+					  vorbisenc->og.header_len);
+        memcpy (GST_BUFFER_DATA (outbuf) + vorbisenc->og.header_len, 
+			                   vorbisenc->og.body,
+	        		           vorbisenc->og.body_len);
 
-        GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+        GST_DEBUG (0, "vorbisenc: encoded buffer of %d bytes", 
+			GST_BUFFER_SIZE (outbuf));
 
         gst_pad_push (vorbisenc->srcpad, outbuf);
 
@@ -357,3 +365,31 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id, const GValue * valu
       break;
   }
 }
+
+static GstElementStateReturn
+gst_vorbisenc_change_state (GstElement *element)
+{
+  VorbisEnc *vorbisenc = GST_VORBISENC (element);
+    
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+    case GST_STATE_READY_TO_PAUSED:
+      vorbisenc->eos = FALSE;
+      vorbisenc->setup = FALSE;
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_READY_TO_NULL:
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
+}
+
