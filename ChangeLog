@@ -1,3 +1,9 @@
+2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/LINGUAS:
+	* po/ca.po:
+	  adding Catalan translation (Jordi Mallach)
+
 2004-07-20  Wim Taymans  <wim@fluendo.com>
 
 	* testsuite/schedulers/147894-2.c: (queue_empty), (queue_filled),
