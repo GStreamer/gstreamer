@@ -48,10 +48,9 @@ enum {
 
 enum {
   ARG_0,
-  ARG_BIT_RATE,
-  ARG_MPEG2,
   ARG_SYNC,
   ARG_MAX_DISCONT,
+  ARG_STREAMINFO,
   /* FILL ME */
 };
 
@@ -139,18 +138,15 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BIT_RATE,
-    g_param_spec_uint("bitrate","bitrate","bitrate",
-                      0, G_MAXUINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MPEG2,
-    g_param_spec_boolean ("mpeg2", "mpeg2", "is this an mpeg2 stream",
-                          FALSE, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
     g_param_spec_boolean ("sync", "Sync", "Synchronize on the stream SCR",
                           FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DISCONT,
     g_param_spec_int ("max_discont", "Max Discont", "The maximun allowed SCR discontinuity",
                       0, G_MAXINT, DEFAULT_MAX_DISCONT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
+    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
+                        GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_mpeg_parse_get_property;
   gobject_class->set_property = gst_mpeg_parse_set_property;
@@ -197,6 +193,7 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   mpeg_parse->max_discont = DEFAULT_MAX_DISCONT;
   mpeg_parse->provided_clock = gst_mpeg_clock_new ("MPEGParseClock", 
 		  gst_mpeg_parse_get_time, mpeg_parse);
+  mpeg_parse->streaminfo = NULL;
 
   GST_FLAG_SET (mpeg_parse, GST_ELEMENT_EVENT_AWARE);
 }
@@ -227,6 +224,31 @@ gst_mpeg_parse_get_time (GstClock *clock, gpointer data)
 }
 
 static void
+gst_mpeg_parse_update_streaminfo (GstMPEGParse *mpeg_parse)
+{
+  GstProps *props;
+  GstPropsEntry *entry;
+  gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
+
+  props = gst_props_empty_new ();
+
+  entry = gst_props_entry_new ("mpegversion", GST_PROPS_INT (mpeg2 ? 2 : 1));
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT (mpeg_parse->mux_rate * 400)); 
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  if (mpeg_parse->streaminfo) 
+    gst_caps_unref (mpeg_parse->streaminfo);
+
+  mpeg_parse->streaminfo = gst_caps_new ("mpeg_streaminfo",
+		                         "application/x-gst-streaminfo",
+					  props);
+
+  g_object_notify (G_OBJECT (mpeg_parse), "streaminfo");
+}
+
+static void
 gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime time)
 {
   if (GST_IS_EVENT (data)) {
@@ -242,14 +264,18 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
     if (!GST_PAD_CAPS (mpeg_parse->srcpad)) {
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
 
-      gst_pad_try_set_caps (mpeg_parse->srcpad,
+      if (gst_pad_try_set_caps (mpeg_parse->srcpad,
 		      GST_CAPS_NEW (
     			"mpeg_parse_src",
     			"video/mpeg",
     			  "mpegversion",  GST_PROPS_INT (mpeg2 ? 2 : 1),
     			  "systemstream", GST_PROPS_BOOLEAN (TRUE),
     			  "parsed",       GST_PROPS_BOOLEAN (TRUE)
-			      ));
+			      )) < 0)
+      {
+	gst_element_error (GST_ELEMENT (mpeg_parse), "could no set source caps");
+	return;
+      }
     }
 
     GST_BUFFER_TIMESTAMP (data) = time;
@@ -366,7 +392,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   if (mpeg_parse->mux_rate != new_rate) {
     mpeg_parse->mux_rate = new_rate;
 
-    g_object_notify (G_OBJECT (mpeg_parse), "bitrate");
+    gst_mpeg_parse_update_streaminfo (mpeg_parse);
     GST_DEBUG (0, "stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
   }
 
@@ -467,6 +493,23 @@ gst_mpeg_parse_loop (GstElement *element)
 
     size = GST_BUFFER_SIZE (data);
     mpeg_parse->bytes_since_scr += size;
+
+    if (!GST_PAD_CAPS (mpeg_parse->sinkpad)) {
+      gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
+
+      if (gst_pad_try_set_caps (mpeg_parse->sinkpad,
+		      GST_CAPS_NEW (
+    			"mpeg_parse_src",
+    			"video/mpeg",
+    			  "mpegversion",  GST_PROPS_INT (mpeg2 ? 2 : 1),
+    			  "systemstream", GST_PROPS_BOOLEAN (TRUE),
+    			  "parsed",       GST_PROPS_BOOLEAN (TRUE)
+			      )) < 0)
+      {
+	gst_element_error (GST_ELEMENT (mpeg_parse), "could no set sink caps");
+	return;
+      }
+    }
 
     if (CLASS (mpeg_parse)->send_data)
       CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
@@ -771,20 +814,14 @@ gst_mpeg_parse_get_property (GObject *object, guint prop_id, GValue *value, GPar
   mpeg_parse = GST_MPEG_PARSE(object);
 
   switch (prop_id) {
-    case ARG_BIT_RATE: 
-      g_value_set_uint (value, mpeg_parse->mux_rate * 400); 
-      break;
-    case ARG_MPEG2:
-      if (mpeg_parse->packetize)
-        g_value_set_boolean (value, GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize));
-      else
-        g_value_set_boolean (value, FALSE);
-      break;
     case ARG_SYNC: 
       g_value_set_boolean (value, mpeg_parse->sync);
       break;
     case ARG_MAX_DISCONT: 
       g_value_set_int (value, mpeg_parse->max_discont);
+      break;
+    case ARG_STREAMINFO: 
+      g_value_set_boxed (value, mpeg_parse->streaminfo);
       break;
     default: 
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
