@@ -1,0 +1,5591 @@
+<!-- ##### SECTION ./tmpl/GstElement.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstElement.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstElement.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/GstElement.sgml:Title ##### -->
+GstElement
+
+
+<!-- ##### SECTION ./tmpl/audioraw.sgml:Long_Description ##### -->
+<para>
+Information about audio buffers.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/audioraw.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/audioraw.sgml:Short_Description ##### -->
+Information about audio buffers.
+
+
+<!-- ##### SECTION ./tmpl/audioraw.sgml:Title ##### -->
+audioraw
+
+
+<!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Long_Description ##### -->
+<para>
+Reads data from a file. You can seek to a specific location by setting
+the offset.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstasyncdisksrc.sgml:Title ##### -->
+GstAsyncDiskSrc
+
+
+<!-- ##### SECTION ./tmpl/gstaudiosink.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstaudiosink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstaudiosink.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstaudiosink.sgml:Title ##### -->
+GstAudioSink
+
+
+<!-- ##### SECTION ./tmpl/gstaudiosrc.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstaudiosrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstaudiosrc.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstaudiosrc.sgml:Title ##### -->
+GstAudioSrc
+
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Title ##### -->
+GstColorSpace
+
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:Long_Description ##### -->
+<para>
+A connection is a bas class for a generic connection between
+elements. A connection is typically a bas class for queues.
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:Short_Description ##### -->
+Generic connection between elements.
+
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:Title ##### -->
+GstConnection
+
+
+<!-- ##### SECTION ./tmpl/gstdisksrc.sgml:Long_Description ##### -->
+<para>
+Asynchonously read buffers from a file. 
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstdisksrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstdisksrc.sgml:Short_Description ##### -->
+Asynchronous read from a file (disksrc)
+
+
+<!-- ##### SECTION ./tmpl/gstdisksrc.sgml:Title ##### -->
+GstDiskSrc
+
+
+<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstesdsink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Title ##### -->
+GstEsdSink
+
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:Long_Description ##### -->
+<para>
+Filters take data in and spit data out. They are the main Element in a filter graph.
+Filters have zero or more inputs and zero or more outputs. Filters are connected
+together to form filter graphs. A GstFilter is the base class and is not very usefull
+on its own.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:Short_Description ##### -->
+Take data in and spit data out
+
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:Title ##### -->
+GstFilter
+
+
+<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstgetbits.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Title ##### -->
+GstGetbits
+
+
+<!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:Long_Description ##### -->
+<para>
+Reads data from a URL.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:Short_Description ##### -->
+Reads data from a URL. (httpsrc)
+
+
+<!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:Title ##### -->
+GstHttpSrc
+
+
+<!-- ##### SECTION ./tmpl/gstmeta.sgml:Long_Description ##### -->
+<para>
+The point of the metadata is to provide some context for each buffer.  In
+the case of audio data, for instance, it would provide the samplerate, bit
+depth, and channel count.
+</para>
+
+<para>
+The trick is that there may be multiple types of metadata ganged onto a
+single buffer.  This is why they're going to be a GList.  This does mean
+extra overhead in all cases, but I think it's minimal.  The GList type
+uses a chunk allocater so we're not wasting too much memory or time when
+adding to the list.
+</para>
+
+<para>
+The trick is dealing with these structs as they pass through a pipeline,
+since they have potentially different mutability properties.  For
+instance, if you've got a mp3 decoder connected to a tee, which sends the
+buffers off to both the decoder and a spectrum analyzer (and then a
+visualization element).  The preferred setup would be where every time a
+audio/raw metadata comes down the pipe (indicating a potential change in
+audio format), the audiosink and spectrum would just save off pointers.
+</para>
+
+<para>
+So when exactly does this metadata go away (deallocated)?  Well, that
+means metadata has to be refcounted.  But that gets rather hairy.  OK, in
+the simple case you create a metadata struct, it comes with refcount set
+to 1.  You pass it through, it stays one, eventually someone drops the
+last reference on the buffer it's tied to, you free the metadata too.
+Easy.  What if you tee?  You could go through and for every metadata in
+the buffer, increment the refcount by the same as the buffer.  So in the
+above case (tee'd), the audiosink and spectrum would get the buffer with a
+refcount of 2, and it'd have a metadata with refcount 2.  Do they ref it
+each themselves, then unref the buffer?  Or do they remove the metadata?
+Removing the metadata would require a buffer CoW, which would suck, so
+yes, they'd just ref the metadata.
+</para>
+
+<para>
+But....  what if they're all in different threads?  Then we're off into
+the magical world of mutexes.  Everything with a refcount in a threaded
+world must be mutexed, else you can do atomic increment and atomic
+dec and test.  Can this be done from C easily?  Perhaps it needs to be found
+from kernel includes via autoconf?
+</para>
+
+<para>
+The goal in designing the way metadata will be defined and used is to keep
+it as simple as possible.  The basis for accomplishing this is the fact
+that in order to actually use (rather than just pass) the metadata, you
+have to know what the fields are, which means you have to have compiled in
+support for that metadata at build time.  Therefore, if you're using
+metadata, you must have build-time access to the necessary include file
+that defines it.
+</para>
+
+<para>
+So, given that you've got an include file, it would be nice if the whole
+thing could be contained there.  This would limit the need to be linked
+against something, or have load-time requirements as to that has to be
+loaded before you are.
+</para>
+
+<para>
+Given that really all metadata is is a region of memory of a given size
+with a certain signature, this isn't all that hard.  First you lay out the
+struct that defines the metadata.  Then you set up #defines that expand to
+the size of the struct in question, as well as the four-cc code that
+defines the type.
+</para>
+
+<para>
+The work is done by a few #defines, a la the #defines used in all Gtk
+objects.  The first is a NEW() method that allocates the memory for the
+metadata and fills in all the normal fields (type, size, utility
+functions).  Because of the way it's defined (as a #define, no less),
+you'll have to invoke it as META_NEW(meta), since it can't return()
+anything.
+</para>
+
+<para>
+Another #define will check to make sure a meta is indeed that type by
+verifying the type code and size.  Theoretically, meta types can overlap
+with the same fourcc code, as long as they have different sizes.  But I
+probably ought to have a global public registry so people writing things
+don't conflict.  MSFT got that right, at least.
+</para>
+
+<para>
+So, a hairy problem is what to do when there are utility functions
+associated with one of these things.  One option is to not bother with
+them.  This is very likely a possible solution, since metadata is supposed
+to be flat memory of a given size.  Not much to do to either free or copy
+it, is there?
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmeta.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstmeta.sgml:Short_Description ##### -->
+Provide context for buffers
+
+
+<!-- ##### SECTION ./tmpl/gstmeta.sgml:Title ##### -->
+GstMeta
+
+
+<!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Long_Description ##### -->
+<para>
+Create a sine wave of a given frequency and volume.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsinesrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Short_Description ##### -->
+Create a sine wave of a given frequency and volume. (sinesrc)
+
+
+<!-- ##### SECTION ./tmpl/gstsinesrc.sgml:Title ##### -->
+GstSineSrc
+
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:Long_Description ##### -->
+<para>
+The sink is the end of the filter graph. A typical sink would be an audio
+or a video card.
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:Short_Description ##### -->
+The end point of a filter graph
+
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:Title ##### -->
+GstSink
+
+
+<!-- ##### SECTION ./tmpl/gstsrc.sgml:Long_Description ##### -->
+<para>
+A GstSrc is the start of a filter graph. It typically is a file or an
+audio source. It provides data for the next element in the graph.
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsrc.sgml:Short_Description ##### -->
+The start point of a filter graph
+
+
+<!-- ##### SECTION ./tmpl/gstsrc.sgml:Title ##### -->
+GstSrc
+
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Title ##### -->
+plugin
+
+
+<!-- ##### SECTION ./tmpl/spectrum.sgml:Long_Description ##### -->
+<para>
+Frequencies of a spectrum analysis.
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/spectrum.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/spectrum.sgml:Short_Description ##### -->
+Frequencies of a spectrum analysis.
+
+
+<!-- ##### SECTION ./tmpl/spectrum.sgml:Title ##### -->
+spectrum
+
+
+<!-- ##### SECTION ./tmpl/videoraw.sgml:Long_Description ##### -->
+<para>
+Information about video buffers.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/videoraw.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/videoraw.sgml:Short_Description ##### -->
+Information about video buffers.
+
+
+<!-- ##### SECTION ./tmpl/videoraw.sgml:Title ##### -->
+videoraw
+
+
+<!-- ##### MACRO COTHREAD_MAXTHREADS ##### -->
+<para>
+The maximum number of cothreads we are going to support.
+</para>
+
+
+<!-- ##### MACRO COTHREAD_STACKSIZE ##### -->
+<para>
+The default stack size of a cothread.
+</para>
+
+
+<!-- ##### MACRO DEBUG ##### -->
+<para>
+Use this macro to show debugging info. This is only usefull when developing new
+plugin elements.
+If you #define DEBUG_ENABLED before including gst/gst.h, this macro will produce
+g_print messages.
+</para>
+
+@format: the format specification as in g_print
+@args...: arguments
+
+<!-- ##### MACRO DEBUG_ENTER ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+<!-- ##### MACRO DEBUG_ENTER_STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DEBUG_LEAVE ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+<!-- ##### MACRO DEBUG_LEAVE_STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DEBUG_NOPREFIX ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+<!-- ##### MACRO DEBUG_SET_STRING ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+<!-- ##### MACRO ERROR ##### -->
+<para>
+
+</para>
+
+@element: 
+@format: 
+@args...: 
+
+<!-- ##### MACRO ERROR_OBJECT ##### -->
+<para>
+
+</para>
+
+@element: 
+@object: 
+@format: 
+@args...: 
+
+<!-- ##### MACRO GBaseInitFunc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GCallback ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GClassInitFunc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GEnumValue ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GInstanceInitFunc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GObject ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GParamFlags ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GParamSpec ##### -->
+<para>
+
+</para>
+
+@name: 
+@value_type: 
+@flags: 
+
+<!-- ##### MACRO GST_ASYNCDISKSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_AUDIOSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_AUDIOSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_AUDIOSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_AUDIOSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_BIN ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_BIN_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_BUFFER_POOL ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+<!-- ##### MACRO GST_BUFFER_TYPE ##### -->
+<para>
+Retrieves the type id of the data in the buffer.
+</para>
+
+@buf: GstBuffer
+
+<!-- ##### MACRO GST_CONNECTION ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_CONNECTION_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->
+<para>
+A flag indicating that MMX instructions are supported.
+</para>
+
+
+<!-- ##### MACRO GST_CPU_FLAG_SSE ##### -->
+<para>
+A flag indicating that SSE instructions are supported.
+</para>
+
+
+<!-- ##### MACRO GST_DATA ##### -->
+<para>
+
+</para>
+
+@data: 
+
+<!-- ##### MACRO GST_DATA_TYPE ##### -->
+<para>
+
+</para>
+
+@data: 
+
+<!-- ##### MACRO GST_DEBUG_CHAR_MODE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_DEBUG_ENABLED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_DEBUG_ENABLE_CATEGORIES ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_DEBUG_ENTER_STRING ##### -->
+<para>
+Combine #GST_DEBUG_ENTER and #GST_DEBUG_SET_STRING.
+</para>
+
+
+<!-- ##### MACRO GST_DEBUG_LEAVE_STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_DEBUG_NOPREFIX ##### -->
+<para>
+
+</para>
+
+@cat: 
+@format: 
+@args...: 
+
+<!-- ##### MACRO GST_DEBUG_PREFIX ##### -->
+<para>
+
+</para>
+
+@cat: 
+@format: 
+@args...: 
+
+<!-- ##### MACRO GST_DEBUG_SET_STRING ##### -->
+<para>
+Set the debug string for the current function, typically containing the arguments
+to the current function, i.e. "('element')"
+</para>
+
+@format: printf-style format string
+@args...: printf arguments
+
+<!-- ##### MACRO GST_DISKSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_DISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_ELEMENT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_ELEMENT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_ELEMENT_IS_COTHREAD_STOPPING ##### -->
+<para>
+Queries whether the cothread holding this element needs to be stopped.
+</para>
+
+@obj: The element to query
+
+<!-- ##### MACRO GST_ELEMENT_IS_MULTI_IN ##### -->
+<para>
+Query whether this object has multiple input pads.
+
+</para>
+
+@obj: Element to query for multiple input pads.
+
+<!-- ##### MACRO GST_ESDSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: <<<<<<< gstreamer-unused.sgml
+
+<!-- ##### MACRO GST_FAKESINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_FAKESINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_FAKESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_FAKESRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_FDSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_FDSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_FDSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_FDSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_FILTER ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_FILTER_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_FILTER_FLAG_LAST ##### -->
+<para>
+subclass use this to start their flag enumeration
+</para>
+
+
+<!-- ##### MACRO GST_HTTPSRC ##### -->
+>>>>>>> 1.23.2.3
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_IDENTITY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IDENTITY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_IS_ASYNCDISKSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_ASYNCDISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_AUDIOSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_AUDIOSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_AUDIOSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_AUDIOSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_BIN ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_BIN_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_CONNECTION ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_CONNECTION_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_DISKSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_DISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_ELEMENT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_ELEMENT_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_ESDSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_ESDSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FAKESINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FAKESINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FAKESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FAKESRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FDSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FDSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FDSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FDSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FILTER ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FILTER_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_HTTPSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_HTTPSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_IDENTITY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_IDENTITY_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_OBJECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_OBJECT_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_PIPELINE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_PIPELINE_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_QUEUE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_QUEUE_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_SINESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_SINESRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_SINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_SINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_SRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_SRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_TEE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_TEE_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_THREAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_THREAD_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_META ##### -->
+<para>
+
+</para>
+
+@meta: 
+
+<!-- ##### MACRO GST_META_FLAGS ##### -->
+<para>
+Retrieve the flags of the given meta information.
+</para>
+
+@meta: the meta information
+
+<!-- ##### MACRO GST_META_FLAG_IS_SET ##### -->
+<para>
+Check if a given flag is set.
+</para>
+
+@meta: the meta data to test
+@flag: the flag to test
+
+<!-- ##### MACRO GST_META_FLAG_SET ##### -->
+<para>
+Set a flag in the meta data.
+</para>
+
+@meta: the meta data
+@flag: the flag to set
+
+<!-- ##### MACRO GST_META_FLAG_UNSET ##### -->
+<para>
+Clear a flag in the meta data.
+</para>
+
+@meta: the meta data
+@flag: the flag to clear
+
+<!-- ##### MACRO GST_OBJECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_OBJECT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_OBJECT_FLAG_LAST ##### -->
+<para>
+subclasses can use this value to start the enumeration of their flags
+</para>
+
+
+<!-- ##### MACRO GST_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_PAD_CONNECTED ##### -->
+<para>
+Is this pad connected.
+</para>
+
+@pad: the pad to check
+
+<!-- ##### MACRO GST_PAD_FACTORY_ALWAYS ##### -->
+<para>
+Indicate that this pad will always be available.
+Use this in the factory definition.
+</para>
+
+
+<!-- ##### MACRO GST_PAD_FACTORY_CAPS ##### -->
+<para>
+Starts the declaration of a the capabilities for this padtemplate.
+</para>
+
+@a...: a capability factory
+
+<!-- ##### MACRO GST_PAD_FACTORY_REQUEST ##### -->
+<para>
+Indicates that this pad will be available on request. Use 
+this in the factory definition. 
+</para>
+
+
+<!-- ##### MACRO GST_PAD_FACTORY_SINK ##### -->
+<para>
+Indicates a sinkpad for the padfactory.
+</para>
+
+
+<!-- ##### MACRO GST_PAD_FACTORY_SOMETIMES ##### -->
+<para>
+Indicate that this pad will become available depending
+on the media type. Use this in the factory definition.
+</para>
+
+
+<!-- ##### MACRO GST_PAD_FACTORY_SRC ##### -->
+<para>
+Indicates a srcpad for the padfactory.
+</para>
+
+
+<!-- ##### MACRO GST_PIPELINE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_PIPELINE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_PROPS_BOOL_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PROPS_FLOAT_RANGE_STRING ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+<!-- ##### MACRO GST_PROPS_FLOAT_STRING ##### -->
+<para>
+
+</para>
+
+@a: 
+
+<!-- ##### MACRO GST_PROPS_FOURCC_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PROPS_FOURCC_INT ##### -->
+<para>
+Create a fourcc property out of an integer value.
+</para>
+
+@a: the integer value
+
+<!-- ##### MACRO GST_PROPS_INT_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PROPS_INT_RANGE_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PROPS_LIST_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_QUEUE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_QUEUE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_RPAD_EOSFUNC ##### -->
+<para>
+Get the EOS function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+<!-- ##### MACRO GST_RPAD_NEGOTIATEFUNC ##### -->
+<para>
+Get the negotiate function from the real pad.
+</para>
+
+@pad: the real pad to query.
+
+<!-- ##### MACRO GST_RPAD_NEWCAPSFUNC ##### -->
+<para>
+Get the newcaps function from the real pad.
+</para>
+
+@pad: the real pad to query.
+
+<!-- ##### MACRO GST_RPAD_PULLFUNC ##### -->
+<para>
+Get the pullfunction of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+<!-- ##### MACRO GST_RPAD_PUSHFUNC ##### -->
+<para>
+Get the pushfunction of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+<!-- ##### MACRO GST_RPAD_QOSFUNC ##### -->
+<para>
+Get the QoS function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+<!-- ##### MACRO GST_SCHEDULE_ADD_ELEMENT ##### -->
+<para>
+Fast macro to add an element to the scheduler.
+</para>
+
+@sched: The scheduler to add the element to.
+@element: The element to add to the scheduler.
+
+<!-- ##### MACRO GST_SCHEDULE_DISABLE_ELEMENT ##### -->
+<para>
+Fast macro to disable the element.
+</para>
+
+@sched: The scheduler.
+@element: The element to disable.
+
+<!-- ##### MACRO GST_SCHEDULE_ENABLE_ELEMENT ##### -->
+<para>
+Fast macro to enable the element in the scheduler.
+</para>
+
+@sched: The scheduler.
+@element: The element to activate.
+
+<!-- ##### MACRO GST_SCHEDULE_ITERATE ##### -->
+<para>
+Fast macro to perform one iteration of the scheduler.
+</para>
+
+@sched: The scheduler to iterate.
+
+<!-- ##### MACRO GST_SCHEDULE_LOCK_ELEMENT ##### -->
+<para>
+Fast macro to lock a given element.
+</para>
+
+@sched: The scheduler.
+@element: The element to lock.
+
+<!-- ##### MACRO GST_SCHEDULE_PAD_CONNECT ##### -->
+<para>
+Fast macro to connect two pads.
+</para>
+
+@sched: The scheduler.
+@srcpad: The source pad.
+@sinkpad: The sink pad.
+
+<!-- ##### MACRO GST_SCHEDULE_PAD_DISCONNECT ##### -->
+<para>
+Fast macro to disconnect two pads.
+</para>
+
+@sched: The scheduler.
+@srcpad: The source pad.
+@sinkpad: The sink pad.
+
+<!-- ##### MACRO GST_SCHEDULE_REMOVE_ELEMENT ##### -->
+<para>
+Fast macro to remove an element from the scheduler.
+</para>
+
+@sched: The scheduler to remove the element from.
+@element: The element to remove from the scheduler.
+
+<!-- ##### MACRO GST_SCHEDULE_SAFETY ##### -->
+<para>
+Handy macro to check for a non NULL scheduler. The next block of statements
+will only be axecuted if the scheduler is not NULL.
+</para>
+
+@sched: the scheduler to query.
+
+<!-- ##### MACRO GST_SCHEDULE_UNLOCK_ELEMENT ##### -->
+<para>
+Fast macro to unlock a given element.
+</para>
+
+@sched: The scheduler.
+@element: The element to unlock.
+
+<!-- ##### MACRO GST_SCHED_PARENT ##### -->
+<para>
+Get the parent #GstElement of this scheduler.
+
+</para>
+
+@sched: the scheduler to query.
+
+<!-- ##### MACRO GST_SHOW_INFO ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_SINESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_SINESRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_SINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_SINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_SINK_FLAG_LAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_SRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_SRC_ASYNC ##### -->
+<para>
+This macro checks to see if the GST_SRC_ASYNC flag is set.
+</para>
+
+@obj: GstSrc to check for flag in.
+
+<!-- ##### MACRO GST_SRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_SRC_FLAGS ##### -->
+<para>
+This macro returns the entire set of flags for the object.
+</para>
+
+@obj: GstSrc to return flags for.
+
+<!-- ##### MACRO GST_SRC_IS_ASYNC ##### -->
+<para>
+Query a GstSrc for the ASYNC flag
+</para>
+
+@obj: The GstSrc to query
+
+<!-- ##### MACRO GST_SRC_SET_FLAGS ##### -->
+<para>
+This macro sets the given flags.
+</para>
+
+@src: 
+@flag: Flag to set, can by any number of bits in guint32.
+@obj: GstSrc to set flag in.
+
+<!-- ##### MACRO GST_SRC_UNSET_FLAGS ##### -->
+<para>
+This macro usets the given flags.
+</para>
+
+@src: 
+@flag: Flag to set, must be a single bit in guint32.
+@obj: GstSrc to unset flag in.
+
+<!-- ##### MACRO GST_STATE_IS_SET ##### -->
+<para>
+This macro checks to see if the given state is set.
+</para>
+
+@obj: Element to check for state.
+@flag: State to check for, must be a single bit in guint32.
+
+<!-- ##### MACRO GST_STATE_PLAYING_TO_READY ##### -->
+<para>
+The Element is going from the PLAYING state to the READY state.
+</para>
+
+
+<!-- ##### MACRO GST_STATE_READY_TO_PLAYING ##### -->
+<para>
+The Element is going from the READY state to the PLAYING state.
+</para>
+
+
+<!-- ##### MACRO GST_STATE_SET ##### -->
+<para>
+This macro sets the given state on the element.
+</para>
+
+@obj: Element to set state of.
+@flag: State to set, can be any number of bits in guint32.
+
+<!-- ##### MACRO GST_STATE_UNSET ##### -->
+<para>
+This macro unsets the given state on the element.
+</para>
+
+@obj: Element to unset state of.
+@flag: State to unset, can be any number of bits in guint32.
+
+<!-- ##### MACRO GST_TEE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_TEE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_THREAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_THREAD_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
+>>>>>>> 1.23.2.3
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_AUDIOSINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_AUDIOSRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_BIN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_CONNECTION ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_DISKSRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_ELEMENT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_ESDSINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_FAKESINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_FAKESRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_FDSINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_FDSRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_FILTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_HTTPSRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_IDENTITY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_OBJECT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PIPELINE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_QUEUE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SINESRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_TEE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_THREAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GType ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GTypeFlags ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GTypeInfo ##### -->
+<para>
+
+</para>
+
+@class_size: 
+@base_init: 
+@base_finalize: 
+@class_init: 
+@class_finalize: 
+@class_data: 
+@instance_size: 
+@n_preallocs: 
+@instance_init: 
+@value_table: 
+
+<!-- ##### MACRO GValue ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_BEGIN_DECLS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_CALLBACK ##### -->
+<para>
+
+</para>
+
+@f: 
+
+<!-- ##### MACRO G_E ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_END_DECLS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_IS_PARAM_SPEC_ENUM ##### -->
+<para>
+
+</para>
+
+@pspec: 
+
+<!-- ##### MACRO G_LN10 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_LN2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_MAXUINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_MAXULONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_OBJECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO G_OBJECT_CLASS_TYPE ##### -->
+<para>
+
+</para>
+
+@gclass: 
+
+<!-- ##### MACRO G_OBJECT_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_OBJECT_WARN_INVALID_PROPERTY_ID ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+@c: 
+
+<!-- ##### MACRO G_PARAM_READABLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PARAM_READWRITE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PARAM_WRITABLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PI ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PI_2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_PI_4 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_NO_HOOKS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_NO_RECURSE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_RUN_CLEANUP ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_RUN_FIRST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SIGNAL_RUN_LAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_SQRT2 ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_BOOLEAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_BOXED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHECK_CLASS_CAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHECK_CLASS_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHECK_INSTANCE_CAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_CHECK_INSTANCE_TYPE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_DOUBLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_ENUM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_FLAG_ABSTRACT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_FLOAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_FROM_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO G_TYPE_INSTANCE_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@o: 
+@t: 
+@c: 
+
+<!-- ##### MACRO G_TYPE_INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_LONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_NONE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_PARAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_UCHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_UINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_TYPE_ULONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_VALUE_HOLDS_BOOLEAN ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_CHAR ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_DOUBLE ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_FLOAT ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_INT ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_LONG ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_POINTER ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_STRING ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_UCHAR ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_UINT ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_HOLDS_ULONG ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO G_VALUE_TYPE ##### -->
+<para>
+
+</para>
+
+@v: 
+
+<!-- ##### STRUCT GstAsyncDiskSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAsyncDiskSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+</para>
+
+
+<!-- ##### ARG GstAsyncDiskSrc:length ##### -->
+<para>
+Get the size of the current file.
+</para>
+
+
+<!-- ##### ARG GstAsyncDiskSrc:location ##### -->
+<para>
+Specify the location of the file to read.
+</para>
+
+
+<!-- ##### ARG GstAsyncDiskSrc:offset ##### -->
+<para>
+Specify the current offset in the file.
+</para>
+
+
+<!-- ##### ARG GstAsyncDiskSrc:size ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstAsyncDiskSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstAsyncDiskSrcFlags ##### -->
+<para>
+<informaltable pgwide=1 frame="none" role="enum">
+<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
+<tbody>
+<row>
+<entry>GST_ASYNCDISKSRC_OPEN</entry>
+<entry>the asyncdisksrc is open for reading</entry>
+</row>
+
+</tbody></tgroup></informaltable>
+
+</para>
+
+@GST_ASYNCDISKSRC_OPEN: 
+@GST_ASYNCDISKSRC_FLAG_LAST: 
+
+<!-- ##### STRUCT GstAudioSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GstAudioSink::handoff ##### -->
+<para>
+The buffer is sent to the sound card.
+</para>
+
+@gstaudiosink: the object which received the signal.
+@arg1: the audiosink.
+
+<!-- ##### ARG GstAudioSink:channels ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAudioSink:format ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAudioSink:frequency ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAudioSink:mute ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstAudioSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstAudioSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAudioSrc:bytes-per-read ##### -->
+<para>
+The number of bytes per read.
+</para>
+
+
+<!-- ##### ARG GstAudioSrc:channels ##### -->
+<para>
+The number of channels (mono, stereo, ...)
+</para>
+
+
+<!-- ##### ARG GstAudioSrc:curoffset ##### -->
+<para>
+Get the current number of bytes read.
+</para>
+
+
+<!-- ##### ARG GstAudioSrc:format ##### -->
+<para>
+The audio format as defined in soundcard.h
+</para>
+
+
+<!-- ##### ARG GstAudioSrc:frequency ##### -->
+<para>
+The frequency.
+</para>
+
+
+<!-- ##### STRUCT GstAudioSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstBinClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### USER_FUNCTION GstBufferPoolCreateFunction ##### -->
+<para>
+The function called when a buffer has to be created for this pool.
+</para>
+
+@pool: the pool from which to create the buffer
+@user_data: any user data
+@Returns: a new buffer from the pool
+
+<!-- ##### USER_FUNCTION GstBufferPoolDestroyFunction ##### -->
+<para>
+This function will be called when the given buffer has to be returned to
+the pool.
+</para>
+
+@pool: the pool to return the buffer to
+@buffer: the buffer to return
+@user_data: any user data
+
+<!-- ##### ENUM GstCapsDefinition ##### -->
+<para>
+
+</para>
+
+@GST_CAPS_ALWAYS: 
+@GST_CAPS_MAYBE: 
+
+<!-- ##### TYPEDEF GstCapsFactory ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstCapsFactoryEntry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstCapsFactory[] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstConnection ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstConnectionClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GstDiskSink::handoff ##### -->
+<para>
+Is emited after the buffer has been written to the disk.
+</para>
+
+@gstdisksink: the object which received the signal.
+
+<!-- ##### ARG GstDiskSink:closed ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstDiskSink:location ##### -->
+<para>
+The filename to write to.
+</para>
+
+
+<!-- ##### STRUCT GstDiskSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstDiskSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+</para>
+
+
+<!-- ##### ARG GstDiskSrc:filesize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstDiskSrc:location ##### -->
+<para>
+Specify the location of the file to read.
+</para>
+
+
+<!-- ##### ARG GstDiskSrc:offset ##### -->
+<para>
+Get/set the current offset in the file.
+</para>
+
+
+<!-- ##### ARG GstDiskSrc:size ##### -->
+<para>
+Get the size of the file.
+</para>
+
+
+<!-- ##### STRUCT GstDiskSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstDiskSrcFlags ##### -->
+<para>
+<informaltable pgwide=1 frame="none" role="enum">
+<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
+<tbody>
+<row>
+<entry>GST_DISKSRC_OPEN</entry>
+<entry>the disksrc is open for reading</entry>
+</row>
+
+</tbody></tgroup></informaltable>
+
+</para>
+
+@GST_DISKSRC_OPEN: 
+@GST_DISKSRC_FLAG_LAST: 
+
+<!-- ##### SIGNAL GstElement::ghost-pad-removed ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: The ghost pad that was removed.
+
+<!-- ##### SIGNAL GstElement::new-ghost-pad ##### -->
+<para>
+
+Is trigered whenever a new ghost pad is added to an element
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new ghost pad that was added
+
+<!-- ##### STRUCT GstElementClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstElementFactory ##### -->
+<para>
+This factory is used when registering the element, and contains the name
+of the element, the GtkType value for it, as well as a pointer to the
+GstElementDetails struct for the element.
+</para>
+
+
+<!-- ##### STRUCT GstEsdSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstEsdSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFakeSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSink:num-sources ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFakeSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFakeSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstFakeSrc:patern ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFakeSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFdSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFdSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFdSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFdSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFilter ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFilterClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstHttpSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstHttpSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+
+</para>
+
+
+<!-- ##### ARG GstHttpSrc:location ##### -->
+<para>
+Specify the location of the file. The location must be a fully qualified URL.
+</para>
+
+
+<!-- ##### STRUCT GstHttpSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstIdentity ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:control ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstIdentityClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstMeta ##### -->
+<para>
+
+</para>
+
+@lock: for locking purposes
+@flags: the flags of the meta data
+@data: the meta data
+@size: the size of the meta data
+
+<!-- ##### ENUM GstMetaFlags ##### -->
+<para>
+Flags indicating properties about the meta data.
+</para>
+
+@GST_META_FREEABLE: the meta data can be freed
+
+<!-- ##### STRUCT GstObjectClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstPad:active ##### -->
+<para>
+Indicates this pad is active
+</para>
+
+
+<!-- ##### STRUCT GstPadClass ##### -->
+<para>
+
+</para>
+
+
+<<<<<<< gstreamer-unused.sgml
+
+
+<!-- ##### USER_FUNCTION GstPadEOSFunction ##### -->
+<para>
+The function that will be called in an EOS case.
+</para>
+
+@pad: the pad that needs to be set to EOS state
+@Returns: TRUE if EOS was successful, FALSE otherwise
+
+<!-- ##### TYPEDEF GstPadFactoryEntry ##### -->
+<para>
+Defines an entry for a padfactory.
+</para>
+
+
+<!-- ##### TYPEDEF GstPadFactory[] ##### -->
+<para>
+The padfactory.
+</para>
+
+
+<!-- ##### USER_FUNCTION GstPadNegotiateFunction ##### -->
+<para>
+The function that will be called when negotiating.
+</para>
+
+@pad: The pad that is being negotiated
+@caps: The current caps that are being negotiated
+@data: A generic gpointer that can be used to store user_data
+@Returns: The result of the negotiation process
+
+<!-- ##### ENUM GstPadNegotiateReturn ##### -->
+<para>
+The possible results from padnegotiation.
+</para>
+
+@GST_PAD_NEGOTIATE_FAIL: The pads could not agree about the media type.
+@GST_PAD_NEGOTIATE_AGREE: The pads agreed about the media type.
+@GST_PAD_NEGOTIATE_TRY: The pad did not agree and suggests another media type.
+
+<!-- ##### USER_FUNCTION GstPadNewCapsFunction ##### -->
+<para>
+The function that will be called when the caps of the pad has
+changed.
+</para>
+
+@pad: The pad that has its caps changed
+@caps: the new caps of the pad
+
+<!-- ##### USER_FUNCTION GstPadPullFunction ##### -->
+<para>
+The function that will be called when pulling buffers.
+</para>
+
+@pad: the pad to pull
+@Returns: a GstBuffer
+
+<!-- ##### USER_FUNCTION GstPadPushFunction ##### -->
+<para>
+
+The function that will be called when pushing a buffers.
+</para>
+
+@pad: the pad to push
+@buf: a GstBuffer to push
+
+<!-- ##### USER_FUNCTION GstPadQoSFunction ##### -->
+<para>
+The function that will be called when a QoS message is sent.
+</para>
+
+@pad: the pad that sent the QoS message
+@qos_message: the message
+
+<!-- ##### SIGNAL GstPadTemplate::pad-created ##### -->
+<para>
+
+</para>
+
+@gstpadtemplate: the object which received the signal.
+@arg1: 
+
+<!-- ##### STRUCT GstPipelineClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstPluginElement ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstPropsFactory[] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstPropsId ##### -->
+<para>
+
+</para>
+
+@GST_PROPS_END_ID_NUM: 
+@GST_PROPS_LIST_ID_NUM: 
+@GST_PROPS_INT_ID_NUM: 
+@GST_PROPS_INT_RANGE_ID_NUM: 
+@GST_PROPS_FOURCC_ID_NUM: 
+@GST_PROPS_BOOL_ID_NUM: 
+
+<!-- ##### TYPEDEF GstPropsListFactory[] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstQueue ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstQueue:block ##### -->
+<para>
+Specify wether the queue blocks or not. 
+</para>
+
+
+<!-- ##### ARG GstQueue:timeout ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstQueueClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstScheduleChain ##### -->
+<para>
+
+</para>
+
+@sched: 
+@disabled: 
+@elements: 
+@num_elements: 
+@entry: 
+@cothreaded_elements: 
+@schedule: 
+
+<!-- ##### STRUCT GstSineSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstSineSrc:buffersize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstSineSrc:channels ##### -->
+<para>
+The number of channels.
+</para>
+
+
+<!-- ##### ARG GstSineSrc:format ##### -->
+<para>
+The format ad defined in soundcard.h
+</para>
+
+
+<!-- ##### ARG GstSineSrc:freq ##### -->
+<para>
+The frequency.
+</para>
+
+
+<!-- ##### ARG GstSineSrc:frequency ##### -->
+<para>
+The fequency.
+</para>
+
+
+<!-- ##### ARG GstSineSrc:samplerate ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstSineSrc:tablesize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstSineSrc:volume ##### -->
+<para>
+The volume as a double 0.0 is silent, 1.0 is loudest.
+</para>
+
+
+<!-- ##### STRUCT GstSineSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GstSrc::eos ##### -->
+<para>
+An eos signal is triggered whenever the GstSrc has reached the end of 
+the stream.
+
+</para>
+
+@gstsrc: the object which received the signal.
+@arg1: the object which received the signal
+
+<!-- ##### STRUCT GstSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstSrcFlags ##### -->
+<para>
+Flags for the GstSrc element
+</para>
+
+@GST_SRC_ASYNC: Indicates that this src is asynchronous
+@GST_SRC_FLAG_LAST: subclasses can use this to number their flags
+
+<!-- ##### STRUCT GstTee ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstTeeClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstThread:create-thread ##### -->
+<para>
+TRUE if the thread should be created.
+
+</para>
+
+
+<!-- ##### STRUCT GstThreadClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstTrace ##### -->
+<para>
+
+</para>
+
+@filename: 
+@fd: 
+@buf: 
+@bufsize: 
+@bufoffset: 
+
+<!-- ##### STRUCT GstTraceEntry ##### -->
+<para>
+
+</para>
+
+@timestamp: 
+@sequence: 
+@data: 
+@message: 
+
+<!-- ##### ARG GstTypeFind:type ##### -->
+<para>
+Query the element for the current mime type
+</para>
+
+
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
+<para>
+Is trigered whenever the state of an element changes
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: the new state of the object
+
+<!-- ##### MACRO INFO ##### -->
+<para>
+
+</para>
+
+@cat: 
+@format: 
+@args...: 
+
+<!-- ##### MACRO INFO_ELEMENT ##### -->
+<para>
+
+</para>
+
+@cat: 
+@element: 
+@format: 
+@args...: 
+
+<!-- ##### STRUCT MetaAudioRaw ##### -->
+<para>
+
+</para>
+
+@meta: 
+@format: 
+@channels: 
+@frequency: 
+@bps: 
+
+<!-- ##### STRUCT MetaAudioSpectrum ##### -->
+<para>
+
+</para>
+
+@meta: 
+@bands: 
+@channels: 
+@interleaved: 
+@lowfreq: 
+@highfreq: 
+@steps: 
+
+<!-- ##### STRUCT MetaDGA ##### -->
+<para>
+
+</para>
+
+@base: 
+@swidth: 
+@sheight: 
+@bytes_per_line: 
+
+<!-- ##### STRUCT MetaOverlay ##### -->
+<para>
+
+</para>
+
+@wx: 
+@wy: 
+@overlay_element: 
+@clip_count: 
+@overlay_clip: 
+@width: 
+@height: 
+@did_overlay: 
+@fully_obscured: 
+
+<!-- ##### STRUCT MetaVideoRaw ##### -->
+<para>
+
+</para>
+
+@meta: 
+@format: 
+@visual: 
+@width: 
+@height: 
+@overlay_info: 
+@dga_info: 
+
+<!-- ##### STRUCT OverlayClip ##### -->
+<para>
+
+</para>
+
+@x1: 
+@x2: 
+@y1: 
+@y2: 
+
+<!-- ##### MACRO STACK_SIZE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TRACE_ENABLE ##### -->
+<para>
+must be defined to activate the tracing functionality.
+</para>
+
+
+<!-- ##### FUNCTION cothread_getcurrent ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION cothread_init ##### -->
+<para>
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION g2g_object_class_find_property ##### -->
+<para>
+
+</para>
+
+@oclass: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_object_class_install_property ##### -->
+<para>
+
+</para>
+
+@oclass: 
+@property_id: 
+@pspec: 
+
+<!-- ##### FUNCTION g2g_object_class_list_properties ##### -->
+<para>
+
+</para>
+
+@oclass: 
+@n_properties: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_object_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@blah_varargs_stuff: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_object_run_dispose ##### -->
+<para>
+
+</para>
+
+@object: 
+
+<!-- ##### FUNCTION g2g_param_spec_boolean ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_double ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_enum ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@e: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_float ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_int ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_long ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_pointer ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_string ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_uint ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_param_spec_ulong ##### -->
+<para>
+
+</para>
+
+@name: 
+@nick: 
+@blurb: 
+@min: 
+@max: 
+@def: 
+@flags: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_signal_new ##### -->
+<para>
+
+</para>
+
+@signal_name: 
+@object_type: 
+@signal_flags: 
+@function_offset: 
+@accumulator: 
+@Returns: 
+
+<!-- ##### FUNCTION g2g_type_register_static ##### -->
+<para>
+
+</para>
+
+@parent_type: 
+@type_name: 
+@info: 
+@flags: 
+@Returns: 
+
+<!-- ##### MACRO g_cclosure_marshal_STRING__OBJECT_POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__BOOLEAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__BOXED ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__CHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__DOUBLE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__ENUM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__FLAGS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__FLOAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__LONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__PARAM ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__UCHAR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__UINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__UINT_POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__ULONG ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_cclosure_marshal_VOID__VOID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_enum_register_static ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION g_list_delete_link ##### -->
+<para>
+
+</para>
+
+@list: 
+@llink: 
+@Returns: 
+
+<!-- ##### VARIABLE g_log_domain_gstreamer ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_class_find_property ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_class_install_property ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_class_list_properties ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_get_property ##### -->
+<para>
+
+</para>
+
+@obj: 
+@argname: 
+@pspec: 
+
+<!-- ##### FUNCTION g_object_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO g_object_new ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_ref ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO g_object_run_dispose ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_object_set ##### -->
+<para>
+
+</para>
+
+@o: 
+@args...: 
+
+<!-- ##### MACRO g_object_unref ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO g_param_spec_boolean ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_double ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_enum ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_float ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_int ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_long ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_pointer ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_string ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_uint ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_param_spec_ulong ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_signal_handler_block ##### -->
+<para>
+
+</para>
+
+@o: 
+@id: 
+
+<!-- ##### MACRO g_signal_handler_unblock ##### -->
+<para>
+
+</para>
+
+@o: 
+@id: 
+
+<!-- ##### MACRO g_signal_handlers_destroy ##### -->
+<para>
+
+</para>
+
+@x: 
+
+<!-- ##### FUNCTION g_signal_list_ids ##### -->
+<para>
+
+</para>
+
+@type: 
+@n_ids: 
+@Returns: 
+
+<!-- ##### MACRO g_signal_lookup ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_signal_new ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION g_slist_delete_link ##### -->
+<para>
+
+</para>
+
+@list: 
+@llink: 
+@Returns: 
+
+<!-- ##### MACRO g_string_printf ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_string_printfa ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_type_class_peek_parent ##### -->
+<para>
+
+</para>
+
+@c: 
+
+<!-- ##### MACRO g_type_class_ref ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_type_class_unref ##### -->
+<para>
+
+</para>
+
+@c: 
+
+<!-- ##### MACRO g_type_from_name ##### -->
+<para>
+
+</para>
+
+@t: 
+
+<!-- ##### MACRO g_type_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_type_is_a ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_type_name ##### -->
+<para>
+
+</para>
+
+@t: 
+
+<!-- ##### MACRO g_type_parent ##### -->
+<para>
+
+</para>
+
+@t: 
+
+<!-- ##### MACRO g_type_register_static ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO g_value_copy ##### -->
+<para>
+
+</para>
+
+@src_val: 
+@dest_val: 
+
+<!-- ##### MACRO g_value_get_boolean ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_char ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_double ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_enum ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_float ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_int ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_long ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_pointer ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_string ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_uchar ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_uint ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_get_ulong ##### -->
+<para>
+
+</para>
+
+@value: 
+
+<!-- ##### MACRO g_value_init ##### -->
+<para>
+
+</para>
+
+@value: 
+@t: 
+
+<!-- ##### MACRO g_value_set_boolean ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_char ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_double ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_enum ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_float ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_int ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_long ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_pointer ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_string ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_uchar ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_uint ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_set_ulong ##### -->
+<para>
+
+</para>
+
+@value: 
+@data: 
+
+<!-- ##### MACRO g_value_unset ##### -->
+<para>
+
+</para>
+
+@val: 
+
+<!-- ##### VARIABLE gst_aggregator_details ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_asyncdisksrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_audiosink_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_audiosink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_audiosink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_audiosink_set_channels ##### -->
+<para>
+
+</para>
+
+@audiosink: 
+@channels: 
+
+<!-- ##### FUNCTION gst_audiosink_set_format ##### -->
+<para>
+
+</para>
+
+@audiosink: 
+@format: 
+
+<!-- ##### FUNCTION gst_audiosink_set_frequency ##### -->
+<para>
+
+</para>
+
+@audiosink: 
+@frequency: 
+
+<!-- ##### FUNCTION gst_audiosink_sync_parms ##### -->
+<para>
+
+</para>
+
+@audiosink: 
+
+<!-- ##### FUNCTION gst_audiosrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_audiosrc_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_audiosrc_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### FUNCTION gst_autoplug_caps_list ##### -->
+<para>
+
+</para>
+
+@autoplug: 
+@srcpad: 
+@sinkpad: 
+@Varargs: 
+@Returns: 
+@srccaps: 
+@sinkcaps: 
+
+<!-- ##### FUNCTION gst_autoplugfactory_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_autoplugfactory_save_thyself ##### -->
+<para>
+
+</para>
+
+@factory: 
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_bin_add_managed_element ##### -->
+<para>
+
+</para>
+
+@bin: 
+@element: 
+
+<!-- ##### FUNCTION gst_bin_create_plan ##### -->
+<para>
+
+</para>
+
+@bin: 
+
+<!-- ##### FUNCTION gst_bin_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_bin_remove_managed_element ##### -->
+<para>
+
+</para>
+
+@bin: 
+@element: 
+
+<!-- ##### FUNCTION gst_bin_schedule ##### -->
+<para>
+
+</para>
+
+@bin: 
+
+<!-- ##### FUNCTION gst_bin_schedule_func ##### -->
+<para>
+
+</para>
+
+@bin: 
+
+<!-- ##### FUNCTION gst_bin_set_element_manager ##### -->
+<para>
+
+</para>
+
+@element: 
+@manager: 
+
+<!-- ##### FUNCTION gst_buffer_add_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@meta: 
+
+<!-- ##### FUNCTION gst_buffer_get_first_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_buffer_get_metas ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_buffer_pool_destroy_buffer ##### -->
+<para>
+
+</para>
+
+@pool: 
+@buffer: 
+
+<!-- ##### FUNCTION gst_buffer_pool_new_buffer ##### -->
+<para>
+
+</para>
+
+@pool: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_buffer_pool_set_create_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@create: 
+@user_data: 
+
+<!-- ##### FUNCTION gst_buffer_pool_set_destroy_function ##### -->
+<para>
+
+</para>
+
+@pool: 
+@destroy: 
+@user_data: 
+
+<!-- ##### FUNCTION gst_buffer_remove_meta ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@meta: 
+
+<!-- ##### FUNCTION gst_caps_list_check_compatibility ##### -->
+<para>
+
+</para>
+
+@fromcaps: 
+@tocaps: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_caps_new_with_props ##### -->
+<para>
+
+</para>
+
+@name: 
+@mime: 
+@props: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_caps_register ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_caps_register_count ##### -->
+<para>
+
+</para>
+
+@factory: 
+@counter: 
+@Returns: 
+@count: 
+
+<!-- ##### FUNCTION gst_connection_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_connection_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_connection_push ##### -->
+<para>
+
+</para>
+
+@connection: 
+
+<!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_disksrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_change_state ##### -->
+<para>
+
+</para>
+
+@element: 
+@state: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_load_thyself ##### -->
+<para>
+
+</para>
+
+@self: 
+@parent: 
+@Returns: 
+@elements: 
+
+<!-- ##### FUNCTION gst_element_loopfunc_wrapper ##### -->
+<para>
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_request_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@Returns: 
+@temp: 
+
+<!-- ##### FUNCTION gst_element_restore_thyself ##### -->
+<para>
+
+</para>
+
+@self: 
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_save_thyself ##### -->
+<para>
+
+</para>
+
+@element: 
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_signal_eos ##### -->
+<para>
+
+</para>
+
+@element: 
+
+<!-- ##### FUNCTION gst_elementfactory_add_sink ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+@id: 
+
+<!-- ##### FUNCTION gst_elementfactory_add_src ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+@id: 
+
+<!-- ##### FUNCTION gst_elementfactory_can_sink_caps_list ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_elementfactory_can_src_caps_list ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_elementfactory_destroy ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+
+<!-- ##### FUNCTION gst_elementfactory_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_elementfactory_register ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+
+<!-- ##### FUNCTION gst_elementfactory_save_thyself ##### -->
+<para>
+
+</para>
+
+@factory: 
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_esdsink_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_esdsink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_esdsink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_esdsink_set_channels ##### -->
+<para>
+
+</para>
+
+@esdsink: 
+@channels: 
+
+<!-- ##### FUNCTION gst_esdsink_set_format ##### -->
+<para>
+
+</para>
+
+@esdsink: 
+@format: 
+
+<!-- ##### FUNCTION gst_esdsink_set_frequency ##### -->
+<para>
+
+</para>
+
+@esdsink: 
+@frequency: 
+
+<!-- ##### FUNCTION gst_esdsink_sync_parms ##### -->
+<para>
+
+</para>
+
+@esdsink: 
+
+<!-- ##### FUNCTION gst_extra_get_filename_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_fakesink_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_fakesink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_fakesink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_fakesrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_fakesrc_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_fakesrc_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### FUNCTION gst_fdsink_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_fdsink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_fdsink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_fdsink_new_with_fd ##### -->
+<para>
+
+</para>
+
+@name: 
+@fd: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_fdsrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_filter_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_filter_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_identity_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_identity_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_identity_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO gst_info ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+<!-- ##### MACRO gst_marshal_VOID__BOOLEAN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__INT_INT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__OBJECT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__OBJECT_POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__POINTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_marshal_VOID__VOID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO gst_meta_new ##### -->
+<para>
+Create new meta data.
+</para>
+
+@type: the type of the meta data to create
+
+<!-- ##### FUNCTION gst_meta_new_size ##### -->
+<para>
+
+</para>
+
+@size: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_meta_ref ##### -->
+<para>
+
+</para>
+
+@meta: 
+
+<!-- ##### FUNCTION gst_meta_unref ##### -->
+<para>
+
+</para>
+
+@meta: 
+
+<!-- ##### FUNCTION gst_object_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_object_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_add_ghost_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+
+<!-- ##### MACRO gst_pad_eos ##### -->
+<para>
+Call the EOS function of the pad
+</para>
+
+@pad: the pad to call the eos function of.
+
+<!-- ##### FUNCTION gst_pad_eos_func ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_event ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+@timestamp: 
+@data: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_caps_by_name ##### -->
+<para>
+
+</para>
+
+@pad: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_caps_list ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_directory ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_ghost_parents ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_type_id ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_handle_qos ##### -->
+<para>
+
+</para>
+
+@pad: 
+@qos_message: 
+
+<!-- ##### FUNCTION gst_pad_negotiate_proxy ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@destpad: 
+@caps: 
+@Returns: 
+@counter: 
+@count: 
+
+<!-- ##### FUNCTION gst_pad_pull_region ##### -->
+<para>
+
+</para>
+
+@pad: 
+@offset: 
+@size: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+
+<!-- ##### FUNCTION gst_pad_renegotiate ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_set_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_set_caps_list ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+
+<!-- ##### FUNCTION gst_pad_set_eos ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_set_eos_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@eos: 
+
+<!-- ##### FUNCTION gst_pad_set_negotiate_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@nego: 
+
+<!-- ##### FUNCTION gst_pad_set_newcaps_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@newcaps: 
+
+<!-- ##### FUNCTION gst_pad_set_pull_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@pull: 
+
+<!-- ##### FUNCTION gst_pad_set_qos_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@qos: 
+
+<!-- ##### FUNCTION gst_pad_set_type_id ##### -->
+<para>
+
+</para>
+
+@pad: 
+@id: 
+
+<!-- ##### FUNCTION gst_pad_try_connect ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_padtemplate_create ##### -->
+<para>
+
+</para>
+
+@name_template: 
+@direction: 
+@presence: 
+@caps: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pipeline_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_pipeline_iterate ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+
+<!-- ##### FUNCTION gst_plugin_add_autoplugger ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@factory: 
+
+<!-- ##### FUNCTION gst_plugin_add_factory ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@factory: 
+
+<!-- ##### FUNCTION gst_plugin_add_type ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@factory: 
+
+<!-- ##### FUNCTION gst_plugin_feature_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_plugin_get_autoplug_list ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_plugin_get_factory_list ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_plugin_get_type_list ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_plugin_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_plugin_load_autoplugfactory ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_plugin_load_elementfactory ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_plugin_load_typefactory ##### -->
+<para>
+
+</para>
+
+@mime: 
+
+<!-- ##### FUNCTION gst_plugin_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@major: 
+@minor: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_props_register ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_props_register_count ##### -->
+<para>
+
+</para>
+
+@factory: 
+@counter: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_queue_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_queue_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_queue_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_queue_push ##### -->
+<para>
+
+</para>
+
+@connection: 
+
+<!-- ##### FUNCTION gst_schedule_add_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedule_disable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedule_enable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedule_iterate ##### -->
+<para>
+
+</para>
+
+@sched: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_schedule_new ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_schedule_pad_connect ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
+
+<!-- ##### FUNCTION gst_schedule_pad_disconnect ##### -->
+<para>
+
+</para>
+
+@sched: 
+@srcpad: 
+@sinkpad: 
+
+<!-- ##### FUNCTION gst_schedule_pad_select ##### -->
+<para>
+
+</para>
+
+@sched: 
+@padlist: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_schedule_remove_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedule_show ##### -->
+<para>
+
+</para>
+
+@sched: 
+
+<!-- ##### FUNCTION gst_scheduler_disable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_scheduler_enable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_schedulerfactory_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_sinesrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_sinesrc_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_sinesrc_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### FUNCTION gst_sink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_sink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_src_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_src_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### FUNCTION gst_src_push_region ##### -->
+<para>
+
+</para>
+
+@src: 
+@offset: 
+@size: 
+
+<!-- ##### FUNCTION gst_src_signal_eos ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### FUNCTION gst_tee_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_tee_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_tee_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_tee_new_pad ##### -->
+<para>
+
+</para>
+
+@tee: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_thread_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_thread_iterate ##### -->
+<para>
+
+</para>
+
+@thread: 
+
+<!-- ##### FUNCTION gst_thread_main_loop ##### -->
+<para>
+
+</para>
+
+@arg: 
+
+<!-- ##### MACRO gst_trace_add_entry ##### -->
+<para>
+
+</para>
+
+@trace: 
+@seq: 
+@data: 
+@msg: 
+
+<!-- ##### FUNCTION gst_trace_destroy ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### FUNCTION gst_trace_flush ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### MACRO gst_trace_get_offset ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### MACRO gst_trace_get_remaining ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### MACRO gst_trace_get_size ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### FUNCTION gst_trace_new ##### -->
+<para>
+
+</para>
+
+@filename: 
+@size: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_trace_read_tsc ##### -->
+<para>
+
+</para>
+
+@dst: 
+
+<!-- ##### FUNCTION gst_trace_set_default ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### FUNCTION gst_trace_text_flush ##### -->
+<para>
+
+</para>
+
+@trace: 
+
+<!-- ##### FUNCTION gst_type_add_sink ##### -->
+<para>
+
+</para>
+
+@id: 
+@sink: 
+
+<!-- ##### FUNCTION gst_type_add_src ##### -->
+<para>
+
+</para>
+
+@id: 
+@src: 
+
+<!-- ##### FUNCTION gst_type_dump ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_type_get_sink_to_src ##### -->
+<para>
+
+</para>
+
+@sinkid: 
+@srcid: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_type_get_sinks ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_type_get_srcs ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_type_initialize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_type_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_type_save_thyself ##### -->
+<para>
+
+</para>
+
+@type: 
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_typefactory_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_typefactory_save_thyself ##### -->
+<para>
+
+</para>
+
+@factory: 
+@parent: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_util_get_widget_arg ##### -->
+<para>
+
+</para>
+
+@object: 
+@argname: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_xml_new_from_memory ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@root: 
+@Returns: 
+
+<!-- ##### FUNCTION plugin_initialize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION plugin_load ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION plugin_load_absolute ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION plugin_load_all ##### -->
+<para>
+
+</para>
+
+

@@ -1,0 +1,226 @@
+<!-- ##### SECTION Title ##### -->
+GstPadTemplate
+
+<!-- ##### SECTION Short_Description ##### -->
+Describe the media type of a pad.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Padtemplates describe the possible media types a pad or an elementfactory can
+handle. 
+</para>
+<para>
+Pad and PadTemplates have #GstCaps attached to it to describe the media type they
+are capable of dealing with.  gst_padtemplate_get_caps() is used to get the
+caps of a padtemplate. It's not possible to modify the caps of a padtemplate after
+creation. 
+</para>
+<para>
+Padtemplates can be created with gst_padtemplate_new() or with the convenient
+GST_PADTEMPLATE_FACTORY() macro. A padtemplate can be used to create a pad or 
+to add to an elementfactory.
+</para>
+<para>
+The following code example shows the code to create a pad from a padtemplate.
+<programlisting>
+  GST_PADTEMPLATE_FACTORY (my_template_factory,
+    "sink",		/* the name of the pad */
+    GST_PAD_SINK,	/* the direction of the pad */
+    GST_PAD_ALWAYS, 	/* when this pad will be present */
+    GST_CAPS_NEW (	/* the capabilities of the padtemplate */
+      "my_caps",
+      "audio/raw",
+        "format",	GST_PROPS_STRING ("int"),
+        "channels",	GST_PROPS_INT_RANGE (1, 6)
+    )
+  )
+
+  void
+  my_method (void) 
+  {
+    GstPad *pad;
+  
+    pad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (my_template_factory), "sink");
+    ...
+  }
+</programlisting>
+</para>
+<para>
+The following example shows you how to add the padtemplate to an elementfactory:
+<programlisting>
+  gboolean
+  my_factory_init (GstPlugin *plugin)
+  {
+    GstElementFactory *factory;
+
+    factory = gst_elementfactory_new ("my_factory", GST_TYPE_MYFACTORY, &amp;gst_myfactory_details);
+    g_return_val_if_fail (factory != NULL, FALSE);
+
+    gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (my_template_factory));
+
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+    return TRUE;
+  }
+
+</programlisting>
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstPad, #GstElementFactory
+</para>
+
+<!-- ##### ENUM GstPadPresence ##### -->
+<para>
+Indicates when this pad will become available.
+</para>
+
+@GST_PAD_ALWAYS: the pad is always available
+@GST_PAD_SOMETIMES: the pad will become available depending on the media stream
+@GST_PAD_REQUEST: th pad is only available on request with 
+gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
+
+<!-- ##### STRUCT GstPadTemplate ##### -->
+<para>
+
+</para>
+
+@object: 
+@name_template: 
+@direction: 
+@presence: 
+@caps: 
+@fixed: 
+
+<!-- ##### MACRO GST_PADTEMPLATE_CAPS ##### -->
+<para>
+Get a handle to the padtemplate #GstCaps
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_DIRECTION ##### -->
+<para>
+Get the direction of the padtemplate.
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_NAME_TEMPLATE ##### -->
+<para>
+Get the nametemplate of the padtemplate.
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_PRESENCE ##### -->
+<para>
+Get the presence of the padtemplate.
+</para>
+
+@templ: the template to query
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_NEW ##### -->
+<para>
+Create a new padtemplate.
+</para>
+
+@padname: the nametemplate for the pads that will be created with this template
+@dir: the direction of the pads.
+@pres: the presence of the pads.
+@a...: the capabilities of this padtemplate usually created with GST_CAPS_NEW()
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_FACTORY ##### -->
+<para>
+Create a factory for a padtemplate. This can be used if you only want one instance
+of the padtemplate. Use GST_PADTEMPLATE_GET() to get the unique padtemplate.
+</para>
+
+@name: th name of the factory
+@padname: the nametemplate of the pads
+@dir: the direction of the pads.
+@pres: the presence of the pads.
+@a...: the capabilities of this padtemplate, usually created with GST_CAPS_NEW()
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_GET ##### -->
+<para>
+Get the padtemplate of the factory created with GST_PADTEMPLATE_FACTORY()
+</para>
+
+@fact: the factory name to get the padtemplate from.
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_FIXED ##### -->
+<para>
+
+</para>
+
+@templ: 
+
+
+<!-- ##### MACRO GST_PADTEMPLATE_IS_FIXED ##### -->
+<para>
+
+</para>
+
+@templ: 
+
+
+<!-- ##### FUNCTION gst_padtemplate_new ##### -->
+<para>
+
+</para>
+
+@name_template: 
+@direction: 
+@presence: 
+@caps: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_padtemplate_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_padtemplate_save_thyself ##### -->
+<para>
+
+</para>
+
+@templ: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_padtemplate_get_caps ##### -->
+<para>
+
+</para>
+
+@templ: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_padtemplate_get_caps_by_name ##### -->
+<para>
+
+</para>
+
+@templ: 
+@name: 
+@Returns: 
+
+

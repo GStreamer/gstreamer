@@ -1,0 +1,31 @@
+<!-- ##### SECTION Title ##### -->
+GstFdSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+Read buffers from a file descriptor. (fdsrc)
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Read buffers from a file descriptor.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFdSrc:location ##### -->
+<para>
+The filedescriptor to read from. Pass the argument as a char* (???)
+</para>
+
+<!-- ##### ARG GstFdSrc:bytesperread ##### -->
+<para>
+The number of bytes per read.
+</para>
+
+<!-- ##### ARG GstFdSrc:offset ##### -->
+<para>
+Get the current offset in the file.
+</para>
+

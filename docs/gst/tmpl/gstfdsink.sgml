@@ -1,0 +1,21 @@
+<!-- ##### SECTION Title ##### -->
+GstFdSink
+
+<!-- ##### SECTION Short_Description ##### -->
+Write data to a file descriptor. (fdsink)
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Write data to a file descriptor.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFdSink:fd ##### -->
+<para>
+The filedescriptor to write to.
+</para>
+

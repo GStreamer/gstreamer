@@ -1,0 +1,51 @@
+<!-- ##### SECTION Title ##### -->
+GstFileSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:location ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:filesize ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:fd ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:blocksize ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:offset ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:mmapsize ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:touch ##### -->
+<para>
+
+</para>
+

@@ -1,0 +1,324 @@
+<!-- ##### SECTION Title ##### -->
+GstInfo
+
+<!-- ##### SECTION Short_Description ##### -->
+info/debugging/error handling
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+gstinfo.c contains a number of debuggins subsystems.
+</para>
+
+<para>The INFO subsystem is used to provide informative printouts to 
+application and plugin developers.  These messages can be enabled and  
+disabled via a category system, which is a bitmask enabling you to turn 
+on and off any subset of categories.</para>
+
+<para>The DEBUG subsystem is similar, but is intended for core developers
+and those writing more complex pipelines or filters.  It uses the same
+category system, but must be enabled at configure time else it's not
+compiled into the library.  autogen.sh automatically enables the DEBUG
+subsystem.
+</para>
+
+<para>The ERROR subsystem doesn't use categories, but will print out a
+more verbose message, and attempt to print out a stack trace of the error
+before aborting the application.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gst_get_category_name ##### -->
+<para>
+
+</para>
+
+@category: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_info_get_categories ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_info_set_categories ##### -->
+<para>
+
+</para>
+
+@categories: 
+
+
+<!-- ##### FUNCTION gst_info_enable_category ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### FUNCTION gst_info_disable_category ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### FUNCTION gst_default_info_handler ##### -->
+<para>
+
+</para>
+
+@category: 
+@incore: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
+
+
+<!-- ##### MACRO GST_INFO_ENABLED ##### -->
+<para>
+When defined, INFO printouts are compiled into the library.
+</para>
+
+
+
+<!-- ##### MACRO GST_INFO ##### -->
+<para>
+Print out any information usable at run-time by application developers.
+</para>
+
+@cat: the GST_CAT_... category for the information
+@format: printf-style format string
+@args...: printf arguments
+
+
+<!-- ##### MACRO GST_INFO_ELEMENT ##### -->
+<para>
+Print out information like #GST_INFO, but with an element pointer to clarify things.
+</para>
+
+@cat: the GST_CAT_... category for the information
+@element: pointer to the #GstElement in question
+@format: printf-style format string
+@args...: printf arguments
+
+
+<!-- ##### FUNCTION gst_debug_get_categories ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_debug_set_categories ##### -->
+<para>
+
+</para>
+
+@categories: 
+
+
+<!-- ##### FUNCTION gst_debug_enable_category ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### FUNCTION gst_debug_disable_category ##### -->
+<para>
+
+</para>
+
+@category: 
+
+
+<!-- ##### MACRO GST_DEBUG_ENTER ##### -->
+<para>
+Called at the beginning of a function, it simply prints out a DEBUG string of "entering"
+in addition to the given string.
+</para>
+
+@format: printf-style format string
+@args...: printf arguments
+
+
+<!-- ##### MACRO GST_DEBUG_LEAVE ##### -->
+<para>
+Called at the end of a function, it simply prints out a DEBUG string of "leaving"
+in addition to the given string.
+</para>
+
+@format: printf-stype format string
+@args...: printf arguments
+
+
+<!-- ##### MACRO GST_DEBUG ##### -->
+<para>
+Print out debugging information.
+</para>
+
+@cat: the GST_CAT_... the debug falls within
+@format: printf-style format string
+@args...: printf arguments
+
+
+<!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
+<para>
+Add a function to the global function pointer table used for debugging.
+</para>
+
+@ptr: The pointer to add to the function table.
+
+
+<!-- ##### MACRO GST_DEBUG_FUNCPTR_NAME ##### -->
+<para>
+Get the name of the given function pointer by looking up its name in the global
+function table.
+</para>
+
+@ptr: The pointer to look up.
+
+
+<!-- ##### MACRO GST_DEBUG_PAD_NAME ##### -->
+<para>
+Print out debugging statements for a pad.
+</para>
+
+@pad: The pad to debug.
+
+
+<!-- ##### MACRO GST_DEBUG_THREAD_ARGS ##### -->
+<para>
+Part of the colorized debug functions for threads
+</para>
+
+@id: The thread id.
+
+
+<!-- ##### MACRO GST_DEBUG_THREAD_FORMAT ##### -->
+<para>
+Part of the colorized debug functions for threads
+</para>
+
+
+
+<!-- ##### MACRO GST_DEBUG_ELEMENT ##### -->
+<para>
+Print out usefull debugging info of an element.
+</para>
+
+@cat: The category of this debugging statement.
+@element: The element to debug.
+@format: A printf-like string.
+@args...: The argument for the printf-like string.
+
+
+<!-- ##### MACRO GST_ERROR ##### -->
+<para>
+Print out an error condition and abort the application.
+</para>
+
+@element: the #GstElement in question
+@format: printf-style format string
+@args...: printf arguments
+
+
+<!-- ##### MACRO GST_ERROR_OBJECT ##### -->
+<para>
+Print out an error condition and abort the application.
+</para>
+
+@element: the #GstElement in question
+@object: pointer to a 'contributing' object
+@format: printf-style format string
+@args...: printf arguments
+
+
+<!-- ##### USER_FUNCTION GstDebugHandler ##### -->
+<para>
+
+</para>
+
+@category: 
+@core: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
+
+
+<!-- ##### FUNCTION gst_default_debug_handler ##### -->
+<para>
+
+</para>
+
+@category: 
+@incore: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
+
+
+<!-- ##### FUNCTION gst_default_error_handler ##### -->
+<para>
+
+</para>
+
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@object: 
+@string: 
+
+
+<!-- ##### USER_FUNCTION GstInfoHandler ##### -->
+<para>
+
+</para>
+
+@category: 
+@incore: 
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@string: 
+
+
+<!-- ##### USER_FUNCTION GstErrorHandler ##### -->
+<para>
+
+</para>
+
+@file: 
+@function: 
+@line: 
+@debug_string: 
+@element: 
+@object: 
+@string: 
+
+

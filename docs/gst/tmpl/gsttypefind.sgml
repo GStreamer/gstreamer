@@ -1,0 +1,30 @@
+<!-- ##### SECTION Title ##### -->
+GstTypeFind
+
+<!-- ##### SECTION Short_Description ##### -->
+Detect the mime type of a media stream
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+This element can be added to the pipeline and will notify the listener of
+the detected mime type of the stream. It is used in autoplugging.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SIGNAL GstTypeFind::have-type ##### -->
+<para>
+The signal to indicate the mime type was detected.
+</para>
+
+@gsttypefind: the object which received the signal.
+@arg1: The mime type that was detected
+
+<!-- ##### ARG GstTypeFind:caps ##### -->
+<para>
+
+</para>
+

@@ -1,0 +1,94 @@
+<!-- ##### SECTION Title ##### -->
+GstFakeSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+Generate empty buffers. (fakesrc)
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SIGNAL GstFakeSrc::handoff ##### -->
+<para>
+
+</para>
+
+@gstfakesrc: the object which received the signal.
+@arg1: 
+
+<!-- ##### ARG GstFakeSrc:num-sources ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:loop-based ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:output ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:data ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizetype ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizemin ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:sizemax ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:filltype ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:pattern ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:num-buffers ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:eos ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:silent ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:dump ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFakeSrc:parentsize ##### -->
+<para>
+
+</para>
+

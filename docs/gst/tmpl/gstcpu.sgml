@@ -1,0 +1,40 @@
+<!-- ##### SECTION Title ##### -->
+GstCpu
+
+<!-- ##### SECTION Short_Description ##### -->
+
+Request the features of the CPU.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+This module can be used when developing plugins. It is
+typically used to enable special optimisations based on the
+features of the CPU.
+</para>
+<para>
+You'll get a bitmask of flags with gst_cpu_get_flags().
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstCPUFlags ##### -->
+<para>
+
+</para>
+
+@GST_CPU_FLAG_MMX: 
+@GST_CPU_FLAG_SSE: 
+@GST_CPU_FLAG_MMXEXT: 
+@GST_CPU_FLAG_3DNOW: 
+
+<!-- ##### FUNCTION gst_cpu_get_flags ##### -->
+<para>
+Request a set of bits specifiying the features of the CPU.
+</para>
+
+@Returns: the features of the CPU
+
+

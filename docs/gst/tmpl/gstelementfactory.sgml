@@ -1,0 +1,149 @@
+<!-- ##### SECTION Title ##### -->
+GstElementFactory
+
+<!-- ##### SECTION Short_Description ##### -->
+Create GstElements from a factory
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstElementFactory is used to create instances of elements. A GstElementfactory
+can be added to a #GstPlugin as it is also a #GstPluginFeature.
+</para>
+<para>
+Use gst_elementfactory_new() to create a new factory which can be added to a plugin 
+with gst_plugin_add_feature().
+</para>
+<para>
+gst_elementfactory_get_list() is used to get a list of all available factories in
+the plugin repository.
+</para>
+<para>
+gst_elementfactory_add_padtemplate() is used to add a padtemplate to the factory.
+This function will enable the application to query for elementfactories that handle
+a specific media type.
+</para>
+<para>
+Use the gst_elementfactory_find() and gst_elementfactory_create() functions
+to create element instances or use gst_elementfactory_make() as a convenient 
+shortcut.
+</para>
+<para>
+The following code example shows you how to create a GstDiskSrc element.
+</para>
+
+<para>
+  <programlisting role="C">
+  #include &lt;gst/gst.h&gt;
+
+  GstElement *src;
+  GstElementFactory *srcfactory;
+
+  gst_init(&amp;argc,&amp;argv);
+
+  srcfactory = gst_elementfactory_find("filesrc");
+  g_return_if_fail(srcfactory != NULL);
+
+  src = gst_elementfactory_create(srcfactory,"src");
+  g_return_if_fail(src != NULL);
+  ...
+  </programlisting>
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
+</para>
+
+<!-- ##### STRUCT GstElementDetails ##### -->
+<para>
+This struct is used to define public information about the element.  It
+describes the element, mostly for the benefit of editors.
+</para>
+
+@longname: 
+@klass: 
+@description: 
+@version: 
+@author: 
+@copyright: 
+
+<!-- ##### FUNCTION gst_elementfactory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@type: 
+@details: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_get_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_add_padtemplate ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+@templ: 
+<!-- # Unused Parameters # -->
+@temp: 
+@pad: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_can_src_caps ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_can_sink_caps ##### -->
+<para>
+
+</para>
+
+@factory: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_create ##### -->
+<para>
+
+</para>
+
+@factory: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_elementfactory_make ##### -->
+<para>
+
+</para>
+
+@factoryname: 
+@name: 
+@Returns: 
+
+

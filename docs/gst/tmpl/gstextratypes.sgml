@@ -1,0 +1,23 @@
+<!-- ##### SECTION Title ##### -->
+GstExtraTypes
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GST_TYPE_FILENAME ##### -->
+<para>
+A type that can be used to indicate a filename.
+</para>
+
+
+

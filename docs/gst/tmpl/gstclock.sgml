@@ -1,0 +1,118 @@
+<!-- ##### SECTION Title ##### -->
+GstClock
+
+<!-- ##### SECTION Short_Description ##### -->
+Clocking and synchronisation.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+GstClock provides an easy way to synchonize against a global clock.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### TYPEDEF GstClockTime ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstClockTimeDiff ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_CLOCK_DIFF ##### -->
+<para>
+Calculate the difference between to timestamps. This does not create
+and absolute difference so the result might be negative if the first 
+timestamp is less than the second timestamp.
+</para>
+
+@s: first timestamp
+@e: second timestamp
+
+
+<!-- ##### STRUCT GstClock ##### -->
+<para>
+
+</para>
+
+@name: 
+@start_time: 
+@current_time: 
+@adjust: 
+@locking: 
+@sinkobjects: 
+@num: 
+@num_locked: 
+@sinkmutex: 
+@lock: 
+
+<!-- ##### FUNCTION gst_clock_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_get_system ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_clock_register ##### -->
+<para>
+
+</para>
+
+@clock: 
+@obj: 
+
+
+<!-- ##### FUNCTION gst_clock_set ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+
+
+<!-- ##### FUNCTION gst_clock_reset ##### -->
+<para>
+
+</para>
+
+@clock: 
+
+
+<!-- ##### FUNCTION gst_clock_wait ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@obj: 
+
+
+<!-- ##### FUNCTION gst_clock_current_diff ##### -->
+<para>
+
+</para>
+
+@clock: 
+@time: 
+@Returns: 
+
+

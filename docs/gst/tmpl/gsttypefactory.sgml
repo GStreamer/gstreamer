@@ -1,0 +1,107 @@
+<!-- ##### SECTION Title ##### -->
+GstTypeFactory
+
+<!-- ##### SECTION Short_Description ##### -->
+Add types to plugins.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+A GstTypeFactory is used to add a new type and a typedetection function 
+to a plugin. Typefactories are named so they can be found with
+gst_typefactory_find().
+</para>
+<para>
+gst_typefactory_new() is used to create a new typefactory from the given
+#GstTypeDefinition. A typefactory is added to a #GstPlugin with 
+gst_plugin_add_feature() as shown in the example:
+<programlisting>
+  static GstCaps*
+  avi_typefind (GstBuffer *buf, gpointer private)
+  {
+    gchar *data = GST_BUFFER_DATA (buf);
+		      
+    if (strncmp (&amp;data[0], "RIFF", 4)) return NULL;
+    if (strncmp (&amp;data[8], "AVI ", 4)) return NULL;
+			      
+    return gst_caps_new ("avi_typefind","video/avi", NULL);
+  }
+
+  /* typedefinition for 'avi' */
+  static GstTypeDefinition avidefinition = {
+    "avidecoder_video/avi",   /* the name of this definition */
+    "video/avi",              /* the mime type */
+    ".avi",                   /* the file extensions */
+    avi_typefind,             /* a pointer to a GstTypeFindFunc function */
+  };
+
+  static gboolean
+  plugin_init (GModule *module, GstPlugin *plugin)
+  {
+    GstTypeFactory *type;
+    ...
+    type = gst_typefactory_new (&amp;avidefinition);
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
+    ...
+  }
+</programlisting>
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstPluginFeature, #GstPlugin
+</para>
+
+<!-- ##### STRUCT GstTypeFactory ##### -->
+<para>
+The struct with the typefactory information.
+</para>
+
+
+<!-- ##### STRUCT GstTypeDefinition ##### -->
+<para>
+
+</para>
+
+@name: The name of this factory
+@mime: The mime type of the new type.
+@exts: The extensions of this type.
+@typefindfunc: An optional typefind function.
+
+<!-- ##### USER_FUNCTION GstTypeFindFunc ##### -->
+<para>
+This is the function that will be called when a typefind has to be
+performed by a plugin.
+</para>
+
+@buf: the buffer with media on which to perform the typefind
+@priv: private; don't touch
+@Returns: A #GstCaps structure describing the type or NULL if the
+	  type was not recognized by this function;
+
+
+<!-- ##### FUNCTION gst_typefactory_new ##### -->
+<para>
+
+</para>
+
+@definition: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_typefactory_find ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_typefactory_get_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

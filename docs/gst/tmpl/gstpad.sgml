@@ -1,0 +1,955 @@
+<!-- ##### SECTION Title ##### -->
+GstPad
+
+<!-- ##### SECTION Short_Description ##### -->
+The connection between Elements
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+#GstElement are connected to each other via "pads", which are extremely light-weight generic 
+connections. After two pad are retrieved from an element with gst_element_get_pad(), the pads
+can be connected with gst_pad_connect().
+</para>
+<para>
+Pads are typically created from a #GstPadTemplate with gst_pad_new_from_template().
+</para>
+<para>
+Pad have #GstCaps attached to it to describe the media type they
+are capable of dealing with. gst_pad_get_caps() and gst_pad_set_caps() are used to
+manipulate the caps of the pads. 
+Pads created from a padtemplate cannot set capabilities that are incompatible with
+the padtemplates capabilities.
+</para>
+<para>
+Pads without padtemplates can be created with gst_pad_new() which takes a direction and
+a name as an argument.
+</para>
+<para>
+gst_pad_get_parent() will retrieve the #GstElement that owns the pad.
+</para>
+<para>
+GstElements creating a pad will typicilally use the various gst_pad_set_*_function() calls
+to register callbacks for various events on the pads.
+</para>
+<para>
+GstElements will use gst_pad_push() and gst_pad_pull() to push out or pull a buffer in. The
+gst_pad_pullregion() function can be used to request for a buffer with a specific offset (in
+time or in bytes). gst_pad_select() and gst_pad_selectv() are use by plugins to wait on a set
+of pads for a new #GstBuffer or #GstEvent.
+</para>
+<para>
+To send an event on a pad, use gst_pad_send_event().
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+#GstPadTemplate, #GstElement, #GstEvent
+</para>
+
+<!-- ##### MACRO GST_PAD_NAME ##### -->
+<para>
+Get the name of the pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_ELEMENT_PRIVATE ##### -->
+<para>
+Get the private data set by the element that owns the pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_PARENT ##### -->
+<para>
+Get the parent element of this pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_PADTEMPLATE ##### -->
+<para>
+Get the padtemplate that was used to create this pad. NULL if no padtemplate
+was used.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_REALIZE ##### -->
+<para>
+Return the real pad of this pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_DIRECTION ##### -->
+<para>
+Get the pad direction.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_CAPS ##### -->
+<para>
+Get the capabilities of a pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_PEER ##### -->
+<para>
+Get the peerpad of this pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_CAN_PULL ##### -->
+<para>
+Can this pad be used to pull a buffer.
+</para>
+
+@pad: the pad to check
+
+
+<!-- ##### MACRO GST_PAD_IS_SINK ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PAD_IS_SRC ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_PAD_IS_CONNECTED ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### STRUCT GstPad ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### USER_FUNCTION GstPadChainFunction ##### -->
+<para>
+The function that will be called when chaining buffers.
+</para>
+
+@pad: the pad that performed the chain
+@buf: the buffer that is chained
+
+
+<!-- ##### USER_FUNCTION GstPadGetFunction ##### -->
+<para>
+The function that will be called when pulling a buffer.
+</para>
+
+@pad: the pad to get a buffer from
+@Returns: a #GstBuffer
+
+
+<!-- ##### USER_FUNCTION GstPadGetRegionFunction ##### -->
+<para>
+The function that will be called when pulling a region buffer.
+You can specify which buffer to get using an offset/length pair or
+a start/stop timecode pair.
+</para>
+
+@pad: the pad to get a buffer from
+@type: the type of region to get (time or offset based)
+@offset: the offset of the region to get
+@len: the length of the region to get
+@Returns: a #GstBuffer
+
+
+<!-- ##### USER_FUNCTION GstPadBufferPoolFunction ##### -->
+<para>
+The function that will be called when a bufferpool is requested
+from this pad.
+</para>
+
+@pad: the pad with the bufferpool
+@Returns: the GstBufferPool associated with this pad.
+
+
+<!-- ##### USER_FUNCTION GstPadGetCapsFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### ENUM GstRegionType ##### -->
+<para>
+the region types for #gst_pad_pullregion.
+</para>
+
+@GST_REGION_VOID: 
+@GST_REGION_OFFSET_LEN: an offet/length pair
+@GST_REGION_TIME_LEN: a time start/length pair
+
+<!-- ##### USER_FUNCTION GstPadPullRegionFunction ##### -->
+<para>
+The function that will be called when pulling a region buffer.
+You can specify which buffer to get using an offset/length pair or
+a start/stop timecode pair.
+</para>
+
+@pad: the pad to get a buffer from
+@type: the type of region to get (time or offset based)
+@offset: the offset of the region to get
+@len: the length of the region to get
+@Returns: a #GstBuffer
+
+
+<!-- ##### USER_FUNCTION GstPadEventFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GstPadConnectFunction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### ENUM GstPadConnectReturn ##### -->
+<para>
+
+</para>
+
+@GST_PAD_CONNECT_REFUSED: 
+@GST_PAD_CONNECT_OK: 
+@GST_PAD_CONNECT_DONE: 
+@GST_PAD_CONNECT_DELAYED: 
+
+<!-- ##### ENUM GstPadDirection ##### -->
+<para>
+The direction this pad is.
+</para>
+
+@GST_PAD_UNKNOWN: direction is unknown
+@GST_PAD_SRC: this is a source pad
+@GST_PAD_SINK: this is a sink pad
+
+<!-- ##### ENUM GstPadFlags ##### -->
+<para>
+Flags for the pad.
+</para>
+
+@GST_PAD_DISABLED: the pad is disabled
+@GST_PAD_EOS: the pad is in end of stream state
+@GST_PAD_FLAG_LAST: subclasses can use this number to enumerate their flags
+
+<!-- ##### FUNCTION gst_pad_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@direction: 
+@Returns: 
+
+
+<!-- ##### MACRO gst_pad_destroy ##### -->
+<para>
+Destroy the pad.
+</para>
+
+@pad: the pad to destroy
+
+
+<!-- ##### FUNCTION gst_pad_new_from_template ##### -->
+<para>
+
+</para>
+
+@templ: 
+@name: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@temp: 
+
+
+<!-- ##### FUNCTION gst_pad_get_direction ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_chain_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@chain: 
+
+
+<!-- ##### FUNCTION gst_pad_set_get_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@get: 
+
+
+<!-- ##### FUNCTION gst_pad_set_getregion_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@getregion: 
+
+
+<!-- ##### FUNCTION gst_pad_set_bufferpool_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@bufpool: 
+
+
+<!-- ##### FUNCTION gst_pad_set_connect_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@connect: 
+
+
+<!-- ##### FUNCTION gst_pad_set_getcaps_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@getcaps: 
+
+
+<!-- ##### FUNCTION gst_pad_try_set_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_check_compatibility ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_name ##### -->
+<para>
+
+</para>
+
+@pad: 
+@name: 
+
+
+<!-- ##### FUNCTION gst_pad_get_name ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_element_private ##### -->
+<para>
+
+</para>
+
+@pad: 
+@priv: 
+
+
+<!-- ##### FUNCTION gst_pad_get_element_private ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+
+
+<!-- ##### FUNCTION gst_pad_get_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_sched ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_sched ##### -->
+<para>
+
+</para>
+
+@pad: 
+@sched: 
+
+
+<!-- ##### FUNCTION gst_pad_get_real_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_add_ghost_pad ##### -->
+<para>
+
+</para>
+
+@pad: 
+@ghostpad: 
+
+
+<!-- ##### FUNCTION gst_pad_remove_ghost_pad ##### -->
+<para>
+
+</para>
+
+@pad: 
+@ghostpad: 
+
+
+<!-- ##### FUNCTION gst_pad_get_ghost_pad_list ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_peer ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_connect ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_connect_filtered ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+@filtercaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_reconnect_filtered ##### -->
+<para>
+
+</para>
+
+@pad: 
+@filtercaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_try_reconnect_filtered ##### -->
+<para>
+
+</para>
+
+@pad: 
+@filtercaps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_disconnect ##### -->
+<para>
+
+</para>
+
+@srcpad: 
+@sinkpad: 
+
+
+<!-- ##### FUNCTION gst_pad_push ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+<!-- # Unused Parameters # -->
+@buffer: 
+
+
+<!-- ##### FUNCTION gst_pad_pull ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_pullregion ##### -->
+<para>
+
+</para>
+
+@pad: 
+@type: 
+@offset: 
+@len: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@size: 
+
+
+<!-- ##### FUNCTION gst_pad_get_bufferpool ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_load_and_connect ##### -->
+<para>
+
+</para>
+
+@self: 
+@parent: 
+<!-- # Unused Parameters # -->
+@element: 
+@elements: 
+
+
+<!-- ##### FUNCTION gst_pad_proxy_connect ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_padtemplate ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_padtemplate_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_get_allowed_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_recalc_allowed_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_ghost_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@bin: 
+@parent: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_peek ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_select ##### -->
+<para>
+
+</para>
+
+@padlist: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_selectv ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_send_event ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_event_default ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+
+
+<!-- ##### FUNCTION gst_pad_set_event_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@event: 
+
+
+<!-- ##### STRUCT GstRealPad ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+@filter: 
+@appfilter: 
+@direction: 
+@sched: 
+@sched_private: 
+@peer: 
+@bufpen: 
+@regiontype: 
+@offset: 
+@len: 
+@chainfunc: 
+@chainhandler: 
+@getfunc: 
+@gethandler: 
+@eventfunc: 
+@eventhandler: 
+@getregionfunc: 
+@pullregionfunc: 
+@getcapsfunc: 
+@connectfunc: 
+@bufferpoolfunc: 
+@ghostpads: 
+
+<!-- ##### MACRO GST_RPAD_LEN ##### -->
+<para>
+Get the length of the region that is being pulled.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_OFFSET ##### -->
+<para>
+Get the offset of the region that is being pulled.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_SCHED ##### -->
+<para>
+Get the scheduler of this real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_REGIONTYPE ##### -->
+<para>
+Get the type of the region that is being pulled.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
+<para>
+Get the direction of the real pad.
+</para>
+
+@pad: the realpad to query.
+
+
+<!-- ##### MACRO GST_RPAD_CAPS ##### -->
+<para>
+Get the caps of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_PEER ##### -->
+<para>
+Get the peer element of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_BUFPEN ##### -->
+<para>
+Get the bufpen of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_CHAINFUNC ##### -->
+<para>
+Get the chain function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_FILTER ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_RPAD_APPFILTER ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_RPAD_GETFUNC ##### -->
+<para>
+Get get getfunction of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_GETREGIONFUNC ##### -->
+<para>
+Get the getregion function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_PULLREGIONFUNC ##### -->
+<para>
+Get the pullregion function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_BUFFERPOOLFUNC ##### -->
+<para>
+Get the bufferpoolfunction from the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_CHAINHANDLER ##### -->
+<para>
+Get the eventhandler function from the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_EVENTFUNC ##### -->
+<para>
+Get the event function of this real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_EVENTHANDLER ##### -->
+<para>
+Get the eventhandler function of this real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_GETHANDLER ##### -->
+<para>
+Get the gethandler function of this real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_CONNECTFUNC ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_RPAD_GETCAPSFUNC ##### -->
+<para>
+
+</para>
+
+@pad: 
+
+
+<!-- ##### MACRO GST_GPAD_REALPAD ##### -->
+<para>
+Get the real pad of this ghost pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### STRUCT GstGhostPad ##### -->
+<para>
+
+</para>
+
+@pad: 
+@realpad: 
+
+<!-- ##### FUNCTION gst_ghost_pad_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@pad: 
+@Returns: 
+
+

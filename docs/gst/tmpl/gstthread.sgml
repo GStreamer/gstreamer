@@ -1,0 +1,45 @@
+<!-- ##### SECTION Title ##### -->
+GstThread
+
+<!-- ##### SECTION Short_Description ##### -->
+A bin that will become a thread
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+A bin that will become a thread if possible when the pipeline is started
+up.  Can contain any set of GstObjects except another GstThread.  All
+starting points and/or clocked events must be registered with this object,
+to be dealt with in the separate thread.
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GstThreadState ##### -->
+<para>
+Thread flags:
+</para>
+
+@GST_THREAD_STATE_STARTED: 
+@GST_THREAD_STATE_SPINNING: The thread is runnning
+@GST_THREAD_STATE_REAPING: The thread is ending.
+@GST_THREAD_FLAG_LAST: subclass use this to start their enumeration
+
+<!-- ##### STRUCT GstThread ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_thread_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
