@@ -55,16 +55,20 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
   GST_CAPS_NEW (
     "mpeg2dec_src",
     "video/raw",
-      "format",    GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
-      "width",     GST_PROPS_INT_RANGE (16, 4096),
-      "height",    GST_PROPS_INT_RANGE (16, 4096)
+      "format",       GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y','V','1','2')),
+      "width",        GST_PROPS_INT_RANGE (16, 4096),
+      "height",       GST_PROPS_INT_RANGE (16, 4096),
+      "pixel_width",  GST_PROPS_INT_RANGE (1, 255),
+      "pixel_height", GST_PROPS_INT_RANGE (1, 255)
   ),
   GST_CAPS_NEW (
     "mpeg2dec_src",
     "video/raw",
-      "format",    GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
-      "width",     GST_PROPS_INT_RANGE (16, 4096),
-      "height",    GST_PROPS_INT_RANGE (16, 4096)
+      "format",       GST_PROPS_FOURCC (GST_MAKE_FOURCC ('I','4','2','0')),
+      "width",        GST_PROPS_INT_RANGE (16, 4096),
+      "height",       GST_PROPS_INT_RANGE (16, 4096),
+      "pixel_width",  GST_PROPS_INT_RANGE (1, 255),
+      "pixel_height", GST_PROPS_INT_RANGE (1, 255)
   )
 );
 
@@ -251,8 +255,10 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
                                 GST_CAPS_NEW (
                                   "mpeg2dec_negotiate",
                                      "video/raw",
-                          	     "width",  GST_PROPS_INT (mpeg2dec->width),
- 	                             "height", GST_PROPS_INT (mpeg2dec->height)
+                          	     "width",        GST_PROPS_INT (mpeg2dec->width),
+ 	                             "height",       GST_PROPS_INT (mpeg2dec->height),
+                          	     "pixel_width",  GST_PROPS_INT (mpeg2dec->pixel_width),
+ 	                             "pixel_height", GST_PROPS_INT (mpeg2dec->pixel_height)
                                 ));
   /* prepare for looping */
   trylist = gst_caps_normalize (trylist);
@@ -277,7 +283,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
     }
     trylist = trylist->next;
   }
-  /* oops list exhausted an nothing was found... */
+  /* oops list exhausted and nothing was found... */
   if (!trylist) {
     return FALSE;
   }
@@ -343,6 +349,8 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       {
 	mpeg2dec->width = info->sequence->width;
 	mpeg2dec->height = info->sequence->height;
+	mpeg2dec->pixel_width = info->sequence->pixel_width;
+	mpeg2dec->pixel_height = info->sequence->pixel_height;
 	mpeg2dec->total_frames = 0;
 
 	if (!gst_mpeg2dec_negotiate_format (mpeg2dec)) {
@@ -357,8 +365,10 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
         break;
       case STATE_PICTURE:
 	gst_mpeg2dec_alloc_buffer (mpeg2dec, info);
-        if (info->current_picture && (info->current_picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && 
-			mpeg2dec->discont_pending) {
+        if (info->current_picture && 
+	    (info->current_picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && 
+	    mpeg2dec->discont_pending) 
+	{
 	  mpeg2dec->discont_pending = FALSE;
 	  mpeg2dec->first = TRUE;
           if (pts != -1 && mpeg2dec->last_PTS == -1) {
