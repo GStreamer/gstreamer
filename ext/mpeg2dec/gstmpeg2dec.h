@@ -43,34 +43,49 @@ extern "C" {
 #define GST_IS_MPEG2DEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG2DEC))
 
+#define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
+#define GSTTIME_TO_MPEGTIME(time) (((time) * 9LL) / (GST_MSECOND/10))
+
 typedef struct _GstMpeg2dec GstMpeg2dec;
 typedef struct _GstMpeg2decClass GstMpeg2decClass;
 
+typedef enum
+{
+  MPEG2DEC_FORMAT_NONE,
+  MPEG2DEC_FORMAT_I420,
+  MPEG2DEC_FORMAT_YV12,
+} Mpeg2decFormat;
+
 struct _GstMpeg2dec {
-  GstElement element;
+  GstElement 	 element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad 	*sinkpad,
+  		*srcpad;
   GstBufferPool *peerpool;
 
-  mpeg2dec_t *decoder;
-  guint32 accel;
-  vo_instance_t *vo;
-  gboolean closed;
+  mpeg2dec_t 	*decoder;
+  guint32	 accel;
+  gboolean	 closed;
 
   /* the timestamp of the next frame */
-  gboolean first;
-  gint64 next_time;
-  gint64 last_PTS;
-  gint frames_per_PTS;
-  gint adjust;
+  gboolean	 first;
+  gboolean	 discont_pending;
+  gint64	 next_time;
+  gint64	 last_PTS;
 
   /* video state */
-  gint format;
-  gint width;
-  gint height;
-  gint frame_rate_code;
-  gint64 total_frames;
+  Mpeg2decFormat format;
+  gint		 width;
+  gint		 height;
+  gint		 pixel_width;
+  gint		 pixel_height;
+  gint		 frame_rate_code;
+  gint64	 total_frames;
+  gint64	 frame_period;
+
+  GstCache	*cache;
+  gint		 cache_id;
 };
 
 struct _GstMpeg2decClass {
