@@ -323,6 +323,8 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
   
   g_mutex_unlock (ximagesink->x_lock);
   
+  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (ximagesink), xwindow->win);
+  
   return xwindow;
 }
 

@@ -340,6 +340,8 @@ gst_xvimagesink_xwindow_new (GstXvImageSink *xvimagesink,
   
   g_mutex_unlock (xvimagesink->x_lock);
   
+  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (xvimagesink), xwindow->win);
+  
   return xwindow;
 }
 
