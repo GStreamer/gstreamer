@@ -566,6 +566,28 @@ gst_structure_n_fields(GstStructure *structure)
 }
 
 /**
+ * gst_structure_field_foreach:
+ * @structure: a #GstStructure
+ * @func: a function to call for each field
+ * @user_data: private data
+ *
+ * Calls the provided function once for each field in the #GstStructure.
+ */
+void
+gst_structure_field_foreach (GstStructure *structure,
+    GstStructureForeachFunc func, gpointer user_data)
+{
+  int i;
+  GstStructureField *field;
+
+  for(i=0;i<structure->fields->len;i++){
+    field = GST_STRUCTURE_FIELD(structure, i);
+
+    func (structure, field->name, &field->value, user_data);
+  }
+}
+
+/**
  * gst_structure_has_field:
  * @structure: a #GstStructure
  * @fieldname: the name of a field

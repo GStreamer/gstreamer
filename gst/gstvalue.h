@@ -24,6 +24,13 @@
 
 G_BEGIN_DECLS
 
+typedef int (* GstValueCompareFunc) (const GValue *value1,
+    const GValue *value2);
+typedef int (* GstValueUnionFunc) (GValue *dest, const GValue *value1,
+    const GValue *value2);
+typedef int (* GstValueIntersectFunc) (GValue *dest, const GValue *value1,
+    const GValue *value2);
+
 #define GST_VALUE_HOLDS_FOURCC(x) TRUE
 
 #define GST_TYPE_FOURCC gst_type_fourcc
@@ -38,8 +45,8 @@ void gst_value_set_fourcc (GValue *value, guint32 fourcc);
 guint32 gst_value_get_fourcc (const GValue *value);
 
 void gst_value_set_int_range (GValue *value, int start, int end);
-int gst_value_get_int_range_start (const GValue *value);
-int gst_value_get_int_range_end (const GValue *value);
+int gst_value_get_int_range_min (const GValue *value);
+int gst_value_get_int_range_max (const GValue *value);
 
 void gst_value_set_double_range (GValue *value, double start, double end);
 double gst_value_get_double_range_start (const GValue *value);

@@ -28,6 +28,9 @@ G_BEGIN_DECLS
 typedef struct _GstStructure GstStructure;
 typedef struct _GstStructureField GstStructureField;
 
+typedef void (*GstStructureForeachFunc) (GstStructure *structure,
+    GQuark field_id, GValue *value, gpointer user_data);
+
 struct _GstStructure {
   int len;
 
@@ -76,6 +79,8 @@ void gst_structure_remove_field(GstStructure *structure, const gchar *field);
 
 GType gst_structure_get_field_type(GstStructure *structure,
     const gchar *field);
+void gst_structure_field_foreach (GstStructure *structure,
+    GstStructureForeachFunc func, gpointer user_data);
 gint gst_structure_n_fields(GstStructure *structure);
 gboolean gst_structure_has_field(GstStructure *structure, const gchar *field);
 gboolean gst_structure_has_field_typed(GstStructure *structure,
