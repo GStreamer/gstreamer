@@ -66,6 +66,7 @@ struct _GstDVDec {
   guint64	 next_ts;
   guint64	 end_position;
   gboolean	 need_discont;
+  gboolean	 new_media;
   gboolean	 loop;
   
   gboolean found_header;

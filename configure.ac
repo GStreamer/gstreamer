@@ -1157,7 +1157,7 @@ GST_CHECK_FEATURE(LCS, Lcs, lcs, [
 dnl *** libdv ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
 GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
-  PKG_CHECK_MODULES(LIBDV, libdv >= 0.98, HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  PKG_CHECK_MODULES(LIBDV, libdv >= 0.100, HAVE_LIBDV="yes", HAVE_LIBDV="no")
   AC_SUBST(LIBDV_CFLAGS)
   AC_SUBST(LIBDV_LIBS)
 ])
@@ -1499,11 +1499,16 @@ GST_CHECK_FEATURE(OGG, [ogg de/encoder], oggdemux oggmux, [
 ])
 
 dnl *** theora ***
-dnl FIXME: theora doesn't have proper pc/m4 files yet, change this when this happens
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
 GST_CHECK_FEATURE(THEORA, [ogg theora codec], theoradec, [
-  GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, , theora/theora.h, THEORA_LIBS="-ltheora")
-  AC_SUBST(THEORA_LIBS)
+  PKG_CHECK_MODULES(THEORA, theora, [
+    HAVE_THEORA="yes"
+    AC_SUBST(THEORA_LIBS)
+    AC_SUBST(THEORA_CFLAGS)
+  ], [
+    GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, , theora/theora.h, THEORA_LIBS="-ltheora")
+    AC_SUBST(THEORA_LIBS)
+  ])
 ])
 
 dnl *** vorbis ***
