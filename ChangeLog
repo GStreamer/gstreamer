@@ -1,3 +1,9 @@
+2004-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (setup_source):
+	Cleanup the previous pipeline a little earlier for the
+	case that a source element provides raw data.
+
 2004-10-11  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):
@@ -84,6 +90,11 @@
 	cdparanoia.
 	disconnect the preroll overrun signal when we don't need it anymore.
 
+2004-10-08  Milosz Derezynski  <internalerror.rez@fhtw-berlin.de>
+
+	* ext/cdparanoia/gstcdparanoia.c: (_do_init),
+	Added reworked patch from #154903 from milosz derezynski (deadchip).
+
 2004-10-08  Wim Taymans  <wim@fluendo.com>
 
 	* ext/cdparanoia/gstcdparanoia.c: (_do_init),
@@ -93,7 +104,6 @@
 	(cdparanoia_uri_get_protocols), (cdparanoia_uri_get_uri),
 	(cdparanoia_uri_set_uri), (cdparanoia_uri_handler_init):
 	* ext/cdparanoia/gstcdparanoia.h:
-	Added reworked patch from #154903 from milosz derezynski (deadchip).
 	This adds the cdda://<tracknum> uri.
 
 2004-10-08  Wim Taymans  <wim@fluendo.com>
