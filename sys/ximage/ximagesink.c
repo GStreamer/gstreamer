@@ -124,14 +124,21 @@ gst_ximagesink_check_xshm_calls (GstXContext *xcontext)
       shmdt (ximage->SHMInfo.shmaddr);
       shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
       g_free (ximage);
-      XSync(xcontext->disp, 0);
+      XSync (xcontext->disp, FALSE);
       return FALSE;
     }
   else
-#endif /* HAVE_XSHM */
     {
-      return TRUE;
+      XShmDetach (xcontext->disp, &ximage->SHMInfo);
+      XDestroyImage (ximage->ximage);
+      shmdt (ximage->SHMInfo.shmaddr);
+      shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
+      g_free (ximage);
+      XSync (xcontext->disp, FALSE);
     }
+#endif /* HAVE_XSHM */
+  
+  return TRUE;
 }
 
 /* This function handles GstXImage creation depending on XShm availability */
@@ -189,7 +196,7 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
   
   if (ximage->ximage)
     {
-      XSync(ximagesink->xcontext->disp, 0);
+      XSync (ximagesink->xcontext->disp, FALSE);
     }
   else
     {
@@ -238,7 +245,7 @@ gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
         XDestroyImage (ximage->ximage);
     }
     
-  XSync(ximagesink->xcontext->disp, 0);
+  XSync (ximagesink->xcontext->disp, FALSE);
     
   g_mutex_unlock (ximagesink->x_lock);
   
@@ -276,7 +283,7 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
                  0, 0, x, y, ximage->width, ximage->height);
     }
   
-  XSync(ximagesink->xcontext->disp, FALSE);
+  XSync (ximagesink->xcontext->disp, FALSE);
   
   g_mutex_unlock (ximagesink->x_lock);
 }
@@ -302,9 +309,7 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
                                       ximagesink->xcontext->root, 
                                       0, 0, xwindow->width, xwindow->height, 
                                       0, 0, ximagesink->xcontext->black);
-    
-  XMapRaised (ximagesink->xcontext->disp, xwindow->win);
-  
+
   XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
                 StructureNotifyMask | PointerMotionMask | KeyPressMask |
                 KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
@@ -312,6 +317,10 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
   xwindow->gc = XCreateGC (ximagesink->xcontext->disp,
                            xwindow->win, 0, NULL);
 
+  XMapRaised (ximagesink->xcontext->disp, xwindow->win);
+  
+  XSync (ximagesink->xcontext->disp, FALSE);
+  
   g_mutex_unlock (ximagesink->x_lock);
   
   return xwindow;
@@ -334,6 +343,8 @@ gst_ximagesink_xwindow_destroy (GstXImageSink *ximagesink, GstXWindow *xwindow)
     XSelectInput (ximagesink->xcontext->disp, xwindow->win, 0);
     
   XFreeGC (ximagesink->xcontext->disp, xwindow->gc);
+  
+  XSync (ximagesink->xcontext->disp, FALSE);
   
   g_mutex_unlock (ximagesink->x_lock);
   

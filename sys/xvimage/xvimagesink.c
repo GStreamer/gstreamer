@@ -136,14 +136,21 @@ gst_xvimagesink_check_xshm_calls (GstXContext *xcontext)
       shmdt (xvimage->SHMInfo.shmaddr);
       shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
       g_free (xvimage);
-      XSync(xcontext->disp, 0);
+      XSync (xcontext->disp, FALSE);
       return FALSE;
     }
   else
-#endif /* HAVE_XSHM */
     {
-      return TRUE;
+      XShmDetach (xcontext->disp, &xvimage->SHMInfo);
+      XFree (xvimage->xvimage);
+      shmdt (xvimage->SHMInfo.shmaddr);
+      shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
+      g_free (xvimage);
+      XSync (xcontext->disp, FALSE);
     }
+#endif /* HAVE_XSHM */
+  
+  return TRUE;
 }
 
 /* This function handles GstXvImage creation depending on XShm availability */
@@ -200,7 +207,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
 
   if (xvimage->xvimage)
     {
-      XSync(xvimagesink->xcontext->disp, 0);
+      XSync (xvimagesink->xcontext->disp, FALSE);
     }
   else
     {
@@ -250,7 +257,7 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink *xvimagesink,
         XFree (xvimage->xvimage);
     }
 
-  XSync(xvimagesink->xcontext->disp, 0);
+  XSync (xvimagesink->xcontext->disp, FALSE);
     
   g_mutex_unlock (xvimagesink->x_lock);
   
@@ -329,6 +336,8 @@ gst_xvimagesink_xwindow_new (GstXvImageSink *xvimagesink,
   
   XMapRaised (xvimagesink->xcontext->disp, xwindow->win);
   
+  XSync(xvimagesink->xcontext->disp, FALSE);
+  
   g_mutex_unlock (xvimagesink->x_lock);
   
   return xwindow;
@@ -352,6 +361,8 @@ gst_xvimagesink_xwindow_destroy (GstXvImageSink *xvimagesink, GstXWindow *xwindo
   
   XFreeGC (xvimagesink->xcontext->disp, xwindow->gc);
   
+  XSync(xvimagesink->xcontext->disp, FALSE);
+  
   g_mutex_unlock (xvimagesink->x_lock);
   
   g_free (xwindow);
@@ -374,6 +385,8 @@ gst_xvimagesink_xwindow_resize (GstXvImageSink *xvimagesink,
   XResizeWindow (xvimagesink->xcontext->disp, xwindow->win,
                  xwindow->width, xwindow->height);
 
+  XSync(xvimagesink->xcontext->disp, FALSE);
+  
   g_mutex_unlock (xvimagesink->x_lock);
 }
 
@@ -615,6 +628,12 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
         {
           GstCaps *format_caps = NULL;
           
+          /* We set the image format of the xcontext to an existing one. Sink
+             connect method will override that but we need to have at least a
+             valid image format so that we can make our xshm calls check before
+             caps negotiation really happens. */
+          xcontext->im_format = formats[i].id;
+          
           switch (formats[i].type)
             {
               case XvRGB:
@@ -769,13 +788,11 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
     {
       xcontext->use_xshm = TRUE;
       GST_DEBUG ("xvimagesink is using XShm extension");
-      g_message ("using XShm");
     }
   else
     {
       xcontext->use_xshm = FALSE;
       GST_DEBUG ("xvimagesink is not using XShm extension");
-      g_message ("not using XShm");
     }
 #endif /* HAVE_XSHM */
     
