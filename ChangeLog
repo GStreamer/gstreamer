@@ -1,5 +1,36 @@
 2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/v4l/Makefile.am:
+	* sys/v4l/gstv4l.c: (plugin_init):
+	* sys/v4l/gstv4lelement.c: (gst_v4lelement_get_type),
+	(gst_v4lelement_init), (gst_v4lelement_dispose),
+	(gst_v4lelement_change_state):
+	* sys/v4l/gstv4lelement.h:
+	* sys/v4l/gstv4lxoverlay.c: (gst_v4l_xoverlay_open),
+	(gst_v4l_xoverlay_close), (idle_refresh),
+	(gst_v4l_xoverlay_set_xwindow_id):
+	* sys/v4l/gstv4lxoverlay.h:
+	* sys/v4l/v4l-overlay_calls.c:
+	* sys/v4l/v4l_calls.h:
+	* sys/v4l2/Makefile.am:
+	* sys/v4l2/gstv4l2.c: (plugin_init):
+	* sys/v4l2/gstv4l2element.c: (gst_v4l2element_get_type),
+	(gst_v4l2element_init), (gst_v4l2element_dispose),
+	(gst_v4l2element_change_state):
+	* sys/v4l2/gstv4l2element.h:
+	* sys/v4l2/gstv4l2xoverlay.c: (gst_v4l2_xoverlay_open),
+	(gst_v4l2_xoverlay_close), (idle_refresh),
+	(gst_v4l2_xoverlay_set_xwindow_id):
+	* sys/v4l2/gstv4l2xoverlay.h:
+	* sys/v4l2/v4l2-overlay_calls.c:
+	* sys/v4l2/v4l2_calls.h:
+	  Remove client-side overlay handling, use the X-server v4l plugin
+	  for that. Nicer overlay, less code. Also make the plugin
+	  compileable without X (but then without overlay, obviously).
+	  Makes xwindowlistener obsolete, should we remove that?
+
+2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/oss/gstosssrc.c: (gst_osssrc_get_time), (gst_osssrc_get),
 	(gst_osssrc_src_query):
 	* sys/oss/gstosssrc.h:
