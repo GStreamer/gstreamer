@@ -6,17 +6,16 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.8.2\n"
+"Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2004-08-02 13:00+0200\n"
-"PO-Revision-Date: 2004-07-06 02:29+0200\n"
+"PO-Revision-Date: 2004-08-08 22:58+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
-"10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
 #, c-format
@@ -71,17 +70,16 @@ msgstr "Žádný nebo neplatný vstup zvuku, proud AVI bude poškozen."
 
 #: gst-libs/gst/play/play.c:110
 #, c-format
-msgid ""
-"The %s element could not be found. This element is essential for playback. "
-"Please install the right plug-in and verify that it works by running 'gst-"
-"inspect %s'"
-msgstr ""
+msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
+msgstr "Element %s nelze najít. Tento element je pro přehrávání nutný. Nainstalujte prosím potřebný modul a ověřte, že funguje, spuštěním 'gst-inspect %s'"
 
 #: gst-libs/gst/play/play.c:139
 msgid ""
 "No usable colorspace element could be found.\n"
 "Please install one and restart."
 msgstr ""
+"Nenalezen použitelný element colorspace.\n"
+"Nainstalujte prosím nějaký a restartujte."
 
 #: sys/dxr3/dxr3audiosink.c:298
 #, c-format
@@ -154,9 +152,8 @@ msgid "Could not open device \"%s\" for reading."
 msgstr "Nemohu otevřít zažízení \"%s\" pro čtení."
 
 #: sys/oss/gstosselement.c:1131
-#, fuzzy
 msgid "Your OSS device could not be probed correctly"
-msgstr "Vaše zařízení oss nebyl možné správně najít"
+msgstr "Vaše zařízení OSS nebylo možné správně najít"
 
 #: sys/oss/gstossmixer.c:98
 msgid "Volume"

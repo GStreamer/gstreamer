@@ -1,5 +1,13 @@
 2004-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/LINGUAS:
+	* po/sq.po:
+	  Added Albanian translation (Laurent Dhima)
+	* po/cs.po:
+	  updated
+
+2004-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/lame/gstlame.c:
 	  fix/add debugging
 
