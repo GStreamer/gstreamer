@@ -653,6 +653,8 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
     }
   }
   else {
+    gint64 duration;
+
     if (!lame->initialized) {
       gst_buffer_unref (buf);
       gst_element_error (GST_ELEMENT (lame), "encoder not initialized (input is not audio?)");
@@ -681,9 +683,22 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 	       "encoded %d bytes of audio to %d bytes of mp3", 
 	       GST_BUFFER_SIZE (buf), mp3_size);
 
+    duration = (GST_SECOND * GST_BUFFER_SIZE (buf) /
+		(2 * lame->samplerate * lame->num_channels));
+
+    if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
+	GST_BUFFER_DURATION (buf) != duration)
+      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+		 "mad: incoming buffer had incorrect duration %lld, "
+		 "outgoing buffer will have correct duration %lld",
+		 GST_BUFFER_DURATION (buf), duration);
+
     if (lame->last_ts == GST_CLOCK_TIME_NONE) {
-      lame->last_ts   = GST_BUFFER_TIMESTAMP (buf);
-      lame->last_offs = GST_BUFFER_OFFSET (buf);
+      lame->last_ts       = GST_BUFFER_TIMESTAMP (buf);
+      lame->last_offs     = GST_BUFFER_OFFSET (buf);
+      lame->last_duration = duration;
+    } else {
+      lame->last_duration += duration;
     }
 
     gst_buffer_unref (buf);
@@ -695,6 +710,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
     GST_BUFFER_SIZE (outbuf)      = mp3_size;
     GST_BUFFER_TIMESTAMP (outbuf) = lame->last_ts;
     GST_BUFFER_OFFSET (outbuf)    = lame->last_offs;
+    GST_BUFFER_DURATION (outbuf)  = lame->last_duration;
 
     gst_pad_push (lame->srcpad,outbuf);
 
