@@ -218,7 +218,7 @@ static void
 gst_disksink_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstDiskSink *disksink;
-  guint16 bytes_written = 0;
+  gint bytes_written = 0;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
