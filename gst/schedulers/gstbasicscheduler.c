@@ -300,13 +300,13 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
-  gst_object_unref (GST_OBJECT (element));
 
   /* this will return to cothread 0, so we need to unlock the current element */
   if (element->post_run_func)
     element->post_run_func (element);
 
   GST_DEBUG_LEAVE ("(%d,'%s')", argc, name);
+  gst_object_unref (GST_OBJECT (element));
   return 0;
 }
 
@@ -381,6 +381,8 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
       GST_DEBUG (GST_CAT_DATAFLOW, "new pad in mid-switch!");
       pad = (GstPad *) GST_RPAD_PEER (peer);
     }
+    parent = GST_PAD_PARENT (pad);
+    peer = GST_RPAD_PEER (pad);
   }
 
   if (loop_count == 0) {
@@ -432,14 +434,15 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
   GstElement *parent;
   GstRealPad *peer;
 
+  GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
+
   parent = GST_PAD_PARENT (pad);
   peer = GST_RPAD_PEER (pad);
-
-  GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
   /* FIXME this should be bounded */
   /* we will loop switching to the peer until it's filled up the bufferpen */
   while (GST_RPAD_BUFPEN (pad) == NULL) {
+
     GST_DEBUG (GST_CAT_DATAFLOW, "switching to \"%s\": %p to fill bufpen",
 	       GST_ELEMENT_NAME (parent),
 	       GST_ELEMENT_THREADSTATE (parent));
@@ -453,6 +456,8 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
       if (!pad) {
 	gst_element_error (parent, "pad unconnected");
       }
+      parent = GST_PAD_PARENT (pad);
+      peer = GST_RPAD_PEER (pad);
     }
   }
   GST_DEBUG (GST_CAT_DATAFLOW, "done switching");
@@ -962,6 +967,13 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from scheduler",
 	      GST_ELEMENT_NAME (element));
 
+    /* if we are removing the currently scheduled element */
+    if (bsched->current == element) {
+       GST_FLAG_SET(element, GST_ELEMENT_COTHREAD_STOPPING);
+       if (element->post_run_func)
+         element->post_run_func (element);
+       bsched->current = NULL;
+    }
     /* find what chain the element is in */
     chain = gst_basic_scheduler_find_chain (bsched, element);
 
@@ -974,7 +986,6 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
 
     /* unset the scheduler pointer in the element */
     GST_ELEMENT_SCHED (element) = NULL;
-    
   }
 }
 
@@ -1265,8 +1276,15 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
             entry->pre_run_func (entry);
 
           bsched->current = entry;
+
 	  do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));
 
+	  /*
+          if (bsched->current && bsched->current->post_run_func) {
+            bsched->current->post_run_func (bsched->current);
+	  }
+	  */
+          
 	  state = GST_SCHEDULER_STATE (sched);
 	  /* if something changed, return - go on else */
 	  if (GST_FLAG_IS_SET(bsched, GST_BASIC_SCHEDULER_CHANGE) &&
