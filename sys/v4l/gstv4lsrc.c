@@ -814,7 +814,7 @@ gst_v4lsrc_getcaps (GstPad * pad)
   GstCaps *list;
   GstV4lSrc *v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
   struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
-  gfloat fps = 0.0;
+  gdouble fps;
   GList *item;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
@@ -824,6 +824,7 @@ gst_v4lsrc_getcaps (GstPad * pad)
     /* FIXME: query current caps and return those, with _any appended */
     return gst_caps_new_any ();
   }
+  fps = gst_v4lsrc_get_fps (v4lsrc);
 
   /*
      FIXME: if we choose a fixed one because we didn't probe, fixated caps don't
@@ -862,6 +863,8 @@ gst_v4lsrc_getcaps (GstPad * pad)
       GstStructure *structure = gst_caps_get_structure (one, 0);
 
       gst_structure_set_value (structure, "framerate", v4lsrc->fps_list);
+    } else {
+      gst_caps_set_simple (one, "framerate", G_TYPE_DOUBLE, fps, NULL);
     }
 /* see higher up why we comment this
 else {
