@@ -1,3 +1,22 @@
+2004-01-11  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* ext/Makefile.am: Fixes to make ext/libcaca compile.
+	* ext/divx/gstdivxdec.c:
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_link),
+	(gst_gdk_pixbuf_init), (gst_gdk_pixbuf_chain): Make gdkpixbufdec
+	handle images that span multiple buffers.  Now work with both
+	filesrc ! gdkpixbufdec and qtdemux ! gdkpixbufdec.
+	* ext/gdk_pixbuf/gstgdkpixbuf.h:
+	* ext/libcaca/gstcacasink.h: Fixes needed due to recent
+	video/video.h changes
+	* ext/xvid/gstxvid.c: (gst_xvid_csp_to_caps): same
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_get),
+	(gst_v4lmjpegsrc_buffer_free): Use buffer free function instead
+	of GstData free function.
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_get), (gst_v4lsrc_buffer_free):
+	same.
+
 2004-01-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* sys/v4l2/gstv4l2element.c: (gst_v4l2element_class_init),

@@ -48,6 +48,9 @@ struct _GstGdkPixbuf
 
   GstPad *sinkpad, *srcpad;
 
+  GstClockTime    last_timestamp;
+  GdkPixbufLoader *pixbuf_loader;
+
   int width;
   int height;
   int rowstride;

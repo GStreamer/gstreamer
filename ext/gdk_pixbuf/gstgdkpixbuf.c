@@ -109,7 +109,7 @@ gst_gdk_pixbuf_sink_link (GstPad *pad, const GstCaps *caps)
   g_return_val_if_fail (GST_IS_GDK_PIXBUF (filter),
                         GST_PAD_LINK_REFUSED);
 
-  return GST_PAD_LINK_DELAYED;
+  return GST_PAD_LINK_OK;
 }
 
 #if GDK_PIXBUF_MAJOR == 2 && GDK_PIXBUF_MINOR < 2
@@ -226,6 +226,7 @@ gst_gdk_pixbuf_init (GstGdkPixbuf *filter)
       gst_static_pad_template_get( &gst_gdk_pixbuf_sink_template), "sink");
   gst_pad_set_link_function (filter->sinkpad, gst_gdk_pixbuf_sink_link);
   gst_pad_set_getcaps_function (filter->sinkpad, gst_gdk_pixbuf_sink_getcaps);
+
   filter->srcpad = gst_pad_new_from_template (
       gst_static_pad_template_get( &gst_gdk_pixbuf_src_template), "src");
   gst_pad_use_explicit_caps (filter->srcpad);
@@ -234,6 +235,7 @@ gst_gdk_pixbuf_init (GstGdkPixbuf *filter)
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_gdk_pixbuf_chain);
 
+  GST_FLAG_SET (GST_ELEMENT (filter), GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -241,10 +243,10 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstData *_data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstGdkPixbuf *filter;
-  GdkPixbufLoader *pixbuf_loader;
-  GdkPixbuf *pixbuf;
-  GstBuffer *outbuf;
   GError *error = NULL;
+  gboolean push_buffer = FALSE;
+  gboolean dump_buffer = FALSE;
+  gboolean got_eos = FALSE;
 
   GST_DEBUG ("gst_gdk_pixbuf_chain");
 
@@ -254,47 +256,97 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstData *_data)
   filter = GST_GDK_PIXBUF (GST_OBJECT_PARENT (pad));
   g_return_if_fail (GST_IS_GDK_PIXBUF (filter));
 
-  pixbuf_loader = gdk_pixbuf_loader_new();
-  //pixbuf_loader = gdk_pixbuf_loader_new_with_type("gif");
-  
-  gdk_pixbuf_loader_write(pixbuf_loader, GST_BUFFER_DATA(buf),
-      GST_BUFFER_SIZE(buf), &error);
-  gdk_pixbuf_loader_close(pixbuf_loader, &error);
-  pixbuf = gdk_pixbuf_loader_get_pixbuf(pixbuf_loader);
+  if (GST_IS_EVENT (_data)) {
+    GstEvent *event = GST_EVENT (buf);
 
-  g_print("width=%d height=%d\n", gdk_pixbuf_get_width(pixbuf),
-      gdk_pixbuf_get_height(pixbuf));
-
-  if(filter->image_size == 0){
-    GstCaps *caps;
-
-    filter->width = gdk_pixbuf_get_width(pixbuf);
-    filter->height = gdk_pixbuf_get_height(pixbuf);
-    filter->rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    filter->image_size = filter->rowstride * filter->height;
-
-    caps = gst_pad_get_caps(filter->srcpad);
-    gst_caps_set_simple (caps,
-        "width", G_TYPE_INT, filter->width,
-        "height", G_TYPE_INT, filter->height,
-        "framerate", G_TYPE_DOUBLE, 0., NULL);
-
-    gst_pad_set_explicit_caps (filter->srcpad, caps);
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_EOS:
+        push_buffer = TRUE;
+        got_eos = TRUE;
+        break;
+      case GST_EVENT_DISCONTINUOUS:
+        dump_buffer = TRUE;
+        break;
+      default:
+        gst_pad_event_default (pad, event);
+        return;
+    }
   }
 
-  outbuf = gst_buffer_new();
-  GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
-  GST_BUFFER_DURATION(outbuf) = GST_BUFFER_DURATION(buf);
-  
-  GST_BUFFER_SIZE(outbuf) = filter->image_size;
-  GST_BUFFER_DATA(outbuf) = g_malloc(filter->image_size);
+  if (filter->last_timestamp != GST_BUFFER_TIMESTAMP (buf)) {
+    push_buffer = TRUE;
+  }
 
-  memcpy(GST_BUFFER_DATA(outbuf), gdk_pixbuf_get_pixels(pixbuf),
-      filter->image_size);
+  if (push_buffer) {
+    if (filter->pixbuf_loader != NULL) {
+      GstBuffer *outbuf;
+      GdkPixbuf *pixbuf;
 
-  g_object_unref(G_OBJECT(pixbuf_loader));
+      gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL);
+#if 0
+      if (gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL)) {
+        gst_element_error (GST_ELEMENT(filter), "error");
+        return;
+      }
+#endif
 
-  gst_pad_push (filter->srcpad, GST_DATA (outbuf));
+      pixbuf = gdk_pixbuf_loader_get_pixbuf (filter->pixbuf_loader);
+
+      if(filter->image_size == 0){
+        GstCaps *caps;
+
+        filter->width = gdk_pixbuf_get_width(pixbuf);
+        filter->height = gdk_pixbuf_get_height(pixbuf);
+        filter->rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+        filter->image_size = filter->rowstride * filter->height;
+
+        caps = gst_pad_get_caps(filter->srcpad);
+        gst_caps_set_simple (caps,
+            "width", G_TYPE_INT, filter->width,
+            "height", G_TYPE_INT, filter->height,
+            "framerate", G_TYPE_DOUBLE, 0., NULL);
+
+        gst_pad_set_explicit_caps (filter->srcpad, caps);
+      }
+
+      outbuf = gst_pad_alloc_buffer (filter->srcpad, GST_BUFFER_OFFSET_NONE,
+          filter->image_size);
+      GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
+      GST_BUFFER_DURATION(outbuf) = GST_BUFFER_DURATION(buf);
+      
+      memcpy(GST_BUFFER_DATA(outbuf), gdk_pixbuf_get_pixels(pixbuf),
+          filter->image_size);
+
+      gst_pad_push (filter->srcpad, GST_DATA (outbuf));
+
+      g_object_unref(G_OBJECT(filter->pixbuf_loader));
+      filter->pixbuf_loader = NULL;
+      dump_buffer = FALSE;
+    }
+  }
+
+  if (dump_buffer) {
+    if (filter->pixbuf_loader != NULL) {
+      gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL);
+      g_object_unref(G_OBJECT(filter->pixbuf_loader));
+      filter->pixbuf_loader = NULL;
+    }
+  }
+
+  if (GST_IS_BUFFER (_data)) {
+    if (filter->pixbuf_loader == NULL) {
+      filter->pixbuf_loader = gdk_pixbuf_loader_new();
+      filter->last_timestamp = GST_BUFFER_TIMESTAMP (buf);
+    }
+    
+    gdk_pixbuf_loader_write(filter->pixbuf_loader, GST_BUFFER_DATA(buf),
+        GST_BUFFER_SIZE(buf), &error);
+    gst_buffer_unref (buf);
+  }
+
+  if (got_eos) {
+    gst_pad_event_default (pad, GST_EVENT (_data));
+  }
 }
 
 static void
