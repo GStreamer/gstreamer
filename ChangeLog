@@ -1,3 +1,9 @@
+2004-12-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	  Remove rank from ffdec_h263i until I know how it's different
+	  from ffdec_h263. Fixes #155163.
+
 2004-12-18  David Schleef  <ds@schleef.org>
 
 	* autogen.sh: execute ffmpeg's autogen.sh directly

@@ -719,11 +719,18 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
     /* (Ronald) MPEG-4 gets a higher priority because it has been well-
      * tested and by far outperforms divxdec/xviddec - so we prefer it.
-     * msmpeg4v3 same, as it outperforms divxdec for divx3 playback. */
+     * msmpeg4v3 same, as it outperforms divxdec for divx3 playback.
+     * H263 has the same mimetype as H263I and since H263 works for the
+     * few streams that I've tried (see, e.g., #155163), I'll use that
+     * and use rank=none for H263I for now, until I know what the diff
+     * is. */
     switch (in_plugin->id) {
       case CODEC_ID_MPEG4:
       case CODEC_ID_MSMPEG4V3:
         rank = GST_RANK_PRIMARY;
+        break;
+      case CODEC_ID_H263I:
+        rank = GST_RANK_NONE;
         break;
       default:
         rank = GST_RANK_MARGINAL;
