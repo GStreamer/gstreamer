@@ -1,3 +1,30 @@
+2004-09-28  Wim Taymans  <wim@fluendo.com>
+
+	* ext/speex/gstspeex.c: (plugin_init):
+	* ext/speex/gstspeexdec.c: (gst_speex_dec_base_init),
+	(gst_speex_dec_class_init), (speex_dec_get_formats),
+	(speex_get_event_masks), (speex_get_query_types),
+	(gst_speex_dec_init), (speex_dec_convert), (speex_dec_src_query),
+	(speex_dec_src_event), (speex_dec_event), (speex_dec_chain),
+	(gst_speexdec_get_property), (gst_speexdec_set_property),
+	(speex_dec_change_state):
+	* ext/speex/gstspeexdec.h:
+	* ext/speex/gstspeexenc.c: (gst_speexenc_get_formats),
+	(gst_speexenc_get_type), (speex_caps_factory), (raw_caps_factory),
+	(gst_speexenc_base_init), (gst_speexenc_class_init),
+	(gst_speexenc_sinkconnect), (gst_speexenc_convert_src),
+	(gst_speexenc_convert_sink), (gst_speexenc_get_query_types),
+	(gst_speexenc_src_query), (gst_speexenc_init),
+	(gst_speexenc_get_tag_value), (comment_init), (comment_add),
+	(gst_speexenc_metadata_set1), (gst_speexenc_set_metadata),
+	(gst_speexenc_setup), (gst_speexenc_buffer_from_data),
+	(gst_speexenc_push_buffer), (gst_speexenc_set_header_on_caps),
+	(gst_speexenc_chain), (gst_speexenc_get_property),
+	(gst_speexenc_set_property), (gst_speexenc_change_state):
+	* ext/speex/gstspeexenc.h:
+	Rewrote speex encoder, make sure it can be embedded in ogg.
+	Implemented speex decoder.
+
 2004-09-28  Christian Schaller <christian@fluendo.com>
 
 	* configure.ac:
