@@ -20,7 +20,7 @@
 #ifndef __GST_SDLVIDEOSINK_H__
 #define __GST_SDLVIDEOSINK_H__
 
-#include <gst/video/gstvideosink.h>
+#include <gst/video/videosink.h>
 
 #include <SDL.h>
 
