@@ -931,10 +931,10 @@ gst_bin_get_list (GstBin * bin)
  * @bin: bin to find element in
  * @interface: interface to be implemented by interface
  *
- * Looks for the first element inside the bin that implements the given 
+ * Looks for the first element inside the bin that implements the given
  * interface. If such an element is found, it returns the element. You can
  * cast this element to the given interface afterwards.
- * If you want all elements that implement the interface, use 
+ * If you want all elements that implement the interface, use
  * gst_bin_get_all_by_interface(). The function recurses bins inside bins.
  *
  * Returns: An element inside the bin implementing the interface.
@@ -969,9 +969,9 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
  * @bin: bin to find elements in
  * @interface: interface to be implemented by interface
  *
- * Looks for all element inside the bin that implements the given 
+ * Looks for all elements inside the bin that implements the given
  * interface. You can safely cast all returned elements to the given interface.
- * The function recurses bins inside bins. You need to free the list using 
+ * The function recurses bins inside bins. You need to free the list using
  * g_list_free() after use.
  *
  * Returns: An element inside the bin implementing the interface.
@@ -986,8 +986,11 @@ gst_bin_get_all_by_interface (GstBin * bin, GType interface)
 
   walk = bin->children;
   while (walk) {
-    if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface))
+    if (G_TYPE_CHECK_INSTANCE_TYPE (walk->data, interface)) {
+      GST_DEBUG_OBJECT (bin, "element %s implements requested interface",
+          GST_ELEMENT_NAME (GST_ELEMENT (walk->data)));
       ret = g_list_prepend (ret, walk->data);
+    }
     if (GST_IS_BIN (walk->data)) {
       ret = g_list_concat (ret,
           gst_bin_get_all_by_interface (GST_BIN (walk->data), interface));
