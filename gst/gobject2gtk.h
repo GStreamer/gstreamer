@@ -17,7 +17,9 @@
 // lists functions not in glib 1.2
 GList *g_list_delete_link (GList *list, GList *llink);
 GSList *g_slist_delete_link (GSList *list, GSList *llink);
-  
+
+#define g_string_append_printf g_string_printfa
+
 
 // GObject
 typedef struct _GObject GObject;

@@ -375,30 +375,30 @@ gst_print_props (GString *buf, gint indent,
 
       switch (prop->propstype) {
       case GST_PROPS_INT_ID:
-	g_string_printfa (buf, "%d (int)\n", prop->data.int_data);
+	g_string_append_printf (buf, "%d (int)\n", prop->data.int_data);
 	break;
       case GST_PROPS_INT_RANGE_ID:
-	g_string_printfa (buf, "%d - %d (int)\n",
+	g_string_append_printf (buf, "%d - %d (int)\n",
 			  prop->data.int_range_data.min,
 			  prop->data.int_range_data.max);
 	break;
       case GST_PROPS_FLOAT_ID:
-	g_string_printfa (buf, "%f (float)\n", prop->data.float_data);
+	g_string_append_printf (buf, "%f (float)\n", prop->data.float_data);
       break;
       case GST_PROPS_FLOAT_RANGE_ID:
-	g_string_printfa (buf, "%f - %f (float)\n",
+	g_string_append_printf (buf, "%f - %f (float)\n",
 			  prop->data.float_range_data.min,
 			  prop->data.float_range_data.max);
 	break;
       case GST_PROPS_BOOL_ID:
-	g_string_printfa (buf, "%s\n",
+	g_string_append_printf (buf, "%s\n",
 			  prop->data.bool_data ? "TRUE" : "FALSE");
 	break;
       case GST_PROPS_STRING_ID:
-	g_string_printfa (buf, "\"%s\"\n", prop->data.string_data.string);
+	g_string_append_printf (buf, "\"%s\"\n", prop->data.string_data.string);
 	break;
       case GST_PROPS_FOURCC_ID:
-	g_string_printfa (buf, "'%c%c%c%c' (fourcc)\n",
+	g_string_append_printf (buf, "'%c%c%c%c' (fourcc)\n",
 			  prop->data.fourcc_data & 0xff,
 			  prop->data.fourcc_data>>8 & 0xff,
 			  prop->data.fourcc_data>>16 & 0xff,
@@ -408,7 +408,7 @@ gst_print_props (GString *buf, gint indent,
 	gst_print_props (buf, indent+2, prop->data.list_data.entries, FALSE);
 	break;
       default:
-	g_string_printfa (buf, "unknown proptype %d\n", prop->propstype);
+	g_string_append_printf (buf, "unknown proptype %d\n", prop->propstype);
 	break;
       }
   }
@@ -436,11 +436,11 @@ void gst_print_pad_caps (GString *buf, gint indent, GstPad *pad)
 	GstType *type;
 
 	string_append_indent (buf, indent);
-	g_string_printfa (buf, "Cap[%d]: %s\n", capx++, caps->name);
+	g_string_append_printf (buf, "Cap[%d]: %s\n", capx++, caps->name);
 
 	type = gst_type_find_by_id (caps->id);
 	string_append_indent (buf, indent+2);
-	g_string_printfa (buf, "MIME type: %s\n",
+	g_string_append_printf (buf, "MIME type: %s\n",
 			  type->mime? type->mime : "unknown/unknown");
 
 	if (caps->properties)
@@ -491,42 +491,42 @@ void gst_print_element_args (GString *buf, gint indent, GstElement *element)
       values = gtk_type_enum_get_values (param->value_type);
 #endif
 
-      g_string_printfa (buf, "%s (%s)",
+      g_string_append_printf (buf, "%s (%s)",
 			values [g_value_get_enum (&value)].value_nick,
 			g_type_name (G_VALUE_TYPE (&value)));
     }
     else
       switch (G_VALUE_TYPE (&value)) {
       case G_TYPE_STRING:
-	g_string_printfa (buf, "\"%s\"", g_value_get_string (&value));
+	g_string_append_printf (buf, "\"%s\"", g_value_get_string (&value));
 	break;
       case G_TYPE_BOOLEAN:
 	g_string_append (buf, g_value_get_boolean (&value)? "TRUE":"FALSE");
 	break;
       case G_TYPE_ULONG:{
 	gulong val = g_value_get_ulong (&value);
-	g_string_printfa (buf, "%lu (0x%lx)", val, val);
+	g_string_append_printf (buf, "%lu (0x%lx)", val, val);
 	break;}
       case G_TYPE_LONG:{
 	glong val = g_value_get_long (&value);
-	g_string_printfa (buf, "%ld (0x%lx)", val, val);
+	g_string_append_printf (buf, "%ld (0x%lx)", val, val);
 	break;}
       case G_TYPE_UINT:{
 	guint val = g_value_get_uint (&value);
-	g_string_printfa (buf, "%u (0x%x)", val, val);
+	g_string_append_printf (buf, "%u (0x%x)", val, val);
 	break;}
       case G_TYPE_INT:{
 	gint val = g_value_get_int (&value);
-	g_string_printfa (buf, "%d (0x%x)", val, val);
+	g_string_append_printf (buf, "%d (0x%x)", val, val);
 	break;}
       case G_TYPE_FLOAT:
-	g_string_printfa (buf, "%f", g_value_get_float (&value));
+	g_string_append_printf (buf, "%f", g_value_get_float (&value));
 	break;
       case G_TYPE_DOUBLE:
-	g_string_printfa (buf, "%f", g_value_get_double (&value));
+	g_string_append_printf (buf, "%f", g_value_get_double (&value));
 	break;
       default:
-	g_string_printfa (buf, "unknown value_type %d", G_VALUE_TYPE (&value));
+	g_string_append_printf (buf, "unknown value_type %d", G_VALUE_TYPE (&value));
 	break;
       }
 
