@@ -74,5 +74,4 @@ main (int argc, char *argv[])
   xmlSaveFile ("autoplug2_6.gst", gst_xml_write (element));
 
   exit (0);
-  exit (0);
 }
