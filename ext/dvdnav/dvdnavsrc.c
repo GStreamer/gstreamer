@@ -71,6 +71,7 @@ struct _DVDNavSrcClass {
   void (*button_pressed) (DVDNavSrc *src, int button);
   void (*pointer_select) (DVDNavSrc *src, int x, int y);
   void (*pointer_activate) (DVDNavSrc *src, int x, int y);
+  void (*user_op) (DVDNavSrc *src, int op);
 };
 
 /* elementfactory information */
@@ -90,6 +91,7 @@ enum {
   BUTTON_PRESSED_SIGNAL,
   POINTER_SELECT_SIGNAL,
   POINTER_ACTIVATE_SIGNAL,
+  USER_OP_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -144,6 +146,7 @@ static void		dvdnavsrc_update_buttoninfo (DVDNavSrc *src);
 static void		dvdnavsrc_button_pressed (DVDNavSrc *src, int button);
 static void		dvdnavsrc_pointer_select (DVDNavSrc *src, int x, int y);
 static void		dvdnavsrc_pointer_activate (DVDNavSrc *src, int x, int y);
+static void		dvdnavsrc_user_op (DVDNavSrc *src, int op);
 
 static GstElementStateReturn 	dvdnavsrc_change_state 	(GstElement *element);
 
@@ -223,9 +226,20 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
         G_TYPE_NONE, 2,
         G_TYPE_INT, G_TYPE_INT);
 
+  dvdnavsrc_signals[USER_OP_SIGNAL] =
+    g_signal_new ("user_op",
+        G_TYPE_FROM_CLASS (klass),
+        G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+        G_STRUCT_OFFSET (DVDNavSrcClass, user_op),
+        NULL, NULL,
+        gst_marshal_VOID__INT,
+        G_TYPE_NONE, 1,
+        G_TYPE_INT);
+
   klass->button_pressed = dvdnavsrc_button_pressed;
   klass->pointer_select = dvdnavsrc_pointer_select;
   klass->pointer_activate = dvdnavsrc_pointer_activate;
+  klass->user_op = dvdnavsrc_user_op;
     
   g_object_class_install_property(gobject_class, ARG_LOCATION,
     g_param_spec_string("location", "location", "location",
@@ -238,7 +252,7 @@ dvdnavsrc_class_init (DVDNavSrcClass *klass)
                      0,99,1,G_PARAM_READWRITE));
   g_object_class_install_property(gobject_class, ARG_CHAPTER,
     g_param_spec_int("chapter", "chapter", "chapter",
-                     1,999,1,G_PARAM_READWRITE));
+                     1,99,1,G_PARAM_READWRITE));
   g_object_class_install_property(gobject_class, ARG_ANGLE,
     g_param_spec_int("angle", "angle", "angle",
                      1,9,1,G_PARAM_READWRITE));
@@ -584,6 +598,97 @@ static void
 dvdnavsrc_pointer_activate (DVDNavSrc *src, int x, int y)
 {
   dvdnav_mouse_activate(src->dvdnav, x, y);
+}
+
+static void
+dvdnavsrc_user_op (DVDNavSrc *src, int op)
+{
+  fprintf (stderr, "user_op %d\n", op);
+  /* Magic user_op ids */
+  switch (op) {
+    case 0: /* None */
+      break;
+    case 1: /* Upper */
+      if (dvdnav_upper_button_select(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 2: /* Lower */
+      if (dvdnav_lower_button_select(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 3: /* Left */
+      if (dvdnav_left_button_select(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 4: /* Right */
+      if (dvdnav_right_button_select(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 5: /* Activate */
+      if (dvdnav_button_activate(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 6: /* GoUp */
+      if (dvdnav_go_up(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 7: /* TopPG */
+      if (dvdnav_top_pg_search(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 8: /* PrevPG */
+      if (dvdnav_prev_pg_search(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 9: /* NextPG */
+      if (dvdnav_next_pg_search(src->dvdnav) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 10: /* Menu - Title */
+      if (dvdnav_menu_call(src->dvdnav, DVD_MENU_Title) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 11: /* Menu - Root */
+      if (dvdnav_menu_call(src->dvdnav, DVD_MENU_Root) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 12: /* Menu - Subpicture */
+      if (dvdnav_menu_call(src->dvdnav, DVD_MENU_Subpicture) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 13: /* Menu - Audio */
+      if (dvdnav_menu_call(src->dvdnav, DVD_MENU_Audio) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 14: /* Menu - Angle */
+      if (dvdnav_menu_call(src->dvdnav, DVD_MENU_Angle) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+    case 15: /* Menu - Part */
+      if (dvdnav_menu_call(src->dvdnav, DVD_MENU_Part) != DVDNAV_STATUS_OK) {
+        goto naverr;
+      }
+      break;
+  }
+  return;
+naverr:
+  gst_element_error(GST_ELEMENT(src), "user op %d failure: %d",
+      op, dvdnav_err_to_string(src->dvdnav));
+
 }
 
 static gchar *
