@@ -29,7 +29,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "gstputbits.h"
+#include <gst/putbits/putbits.h>
 
 /* initialize buffer, call once before first putbits or alignbits */
 void gst_putbits_init(gst_putbits_t *pb)

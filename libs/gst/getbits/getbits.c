@@ -1,7 +1,6 @@
-
 #include "config.h"
 
-#include "gstgetbits.h"
+#include <gst/getbits/getbits.h>
 
 /* Defined in gstgetbits_i386.s */
 extern unsigned long _gst_get1bit_i386(gst_getbits_t *gb, unsigned long bits);
