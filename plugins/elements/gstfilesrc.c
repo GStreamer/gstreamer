@@ -860,8 +860,9 @@ gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event)
 
       switch (GST_EVENT_SEEK_METHOD (event)) {
         case GST_SEEK_METHOD_SET:
-          if (offset > src->filelen && (!gst_filesrc_check_filesize (src)
-                  || offset > src->filelen)) {
+          if (offset < 0 ||
+              (offset > src->filelen && (!gst_filesrc_check_filesize (src)
+                      || offset > src->filelen))) {
             goto error;
           }
           src->curoffset = offset;

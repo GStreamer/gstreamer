@@ -1838,9 +1838,11 @@ gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
 
   gst_object_replace ((GstObject **) & pad->padtemplate, (GstObject *) templ);
 
-  if (templ)
+  if (templ) {
+    gst_object_sink (GST_OBJECT (templ));
     g_signal_emit (G_OBJECT (templ),
         gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
+  }
 }
 
 /**

@@ -395,6 +395,7 @@ gst_buffer_store_get_buffer (GstBufferStore * store, guint64 offset, guint size)
         data += tmp;
         size -= tmp;
       }
+      goto out;
     }
     if (!have_offset) {
       cur_offset += GST_BUFFER_SIZE (current);
