@@ -23,7 +23,7 @@ int main(int argc,char *argv[])
   }
 
   /* create a new bin to hold the elements */
-  bin = gst_bin_new("bin");
+  bin = gst_pipeline_new("pipeline");
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
