@@ -1,10 +1,15 @@
+2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/cvs.xml:
+	  notes about new fdo account request
+
 2004-12-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/tmpl/gstenumtypes.sgml:
 	* docs/gst/tmpl/gstplugin.sgml:
 	* docs/libs/gstreamer-libs-docs.sgml:
-      Added missing short docs. Added ids for navigation.
+	  Added missing short docs. Added ids for navigation.
 
 2004-12-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
