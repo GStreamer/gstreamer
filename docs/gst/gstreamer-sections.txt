@@ -1065,7 +1065,7 @@ gst_caps_set_mime
 gst_caps_get_mime
 gst_caps_set_props
 gst_caps_get_props
-gst_caps_check_compatibility
+gst_caps_is_always_compatible
 gst_caps_has_property
 gst_caps_has_fixed_property
 gst_caps_has_property_typed
