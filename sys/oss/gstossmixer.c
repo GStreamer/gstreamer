@@ -459,7 +459,7 @@ gst_ossmixer_build_list (GstOssElement *oss)
 
       /* do we want this in our list? */
       if ((dir == GST_PAD_SRC && input == FALSE) ||
-          (dir == GST_PAD_SINK && i == SOUND_MIXER_PCM))
+          (dir == GST_PAD_SINK && i != SOUND_MIXER_PCM))
         continue;
 
       /* add track to list */
