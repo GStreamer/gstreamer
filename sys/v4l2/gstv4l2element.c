@@ -23,10 +23,11 @@
 
 #include "v4l2_calls.h"
 
-
+/* elementfactory details */
 static GstElementDetails gst_v4l2element_details = {
 	"Generic video4linux2 Element",
 	"None/Video",
+	"LGPL",
 	"Generic plugin for handling common video4linux2 calls",
 	VERSION,
 	"Ronald Bultje <rbultje@ronald.bitfreak.net>",
