@@ -1,5 +1,11 @@
 2004-02-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):
+	  remove v1 tag even if we can't read it (makes sure we don't detect
+	  it again)
+
+2004-02-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_pcm_wait),
 	(gst_alsa_xrun_recovery):
 	* ext/alsa/gstalsa.h:
