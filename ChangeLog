@@ -1,3 +1,17 @@
+2004-01-02  David Schleef  <ds@schleef.org>
+
+	* gst/gstcaps.c: (_gst_structure_is_equal_foreach),
+	(gst_caps_is_equal_fixed): Add new function.
+	* gst/gstcaps.h: ditto.
+	* gst/gstpad.c: (gst_real_pad_class_init),
+	(gst_pad_link_call_link_functions), (gst_pad_try_set_caps),
+	(gst_pad_set_explicit_caps), (gst_pad_get_caps):  In try_set_caps,
+	check new caps against existing caps -- if they're the same, return
+	OK without renegotiating.  caps-nego-failed signal fixed so that
+	the marshaller isn't VOID__OBJECT.  Also changed to G_TYPE_POINTER
+	to save an extra caps copy.  Don't complete negotiation if a pad
+	link function returns DELAYED.
+
 2004-01-02  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstpad.c: (gst_pad_try_relink_filtered):

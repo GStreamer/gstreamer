@@ -178,8 +178,8 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
     g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
-                  gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-                  GST_TYPE_CAPS);
+                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                  G_TYPE_POINTER);
   gst_real_pad_signals[REAL_LINKED] =
     g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
@@ -1116,7 +1116,7 @@ gst_pad_link_call_link_functions (GstPadLink *link)
     GST_DEBUG ("got reply %d from link function on pad %s:%s",
         res, GST_DEBUG_PAD_NAME (link->srcpad));
 
-    if (res == GST_PAD_LINK_REFUSED) {
+    if (GST_PAD_LINK_FAILED (res)) {
       GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
 		GST_DEBUG_PAD_NAME (link->srcpad));
       return FALSE;
@@ -1142,7 +1142,7 @@ gst_pad_link_call_link_functions (GstPadLink *link)
     GST_DEBUG ("got reply %d from link function on pad %s:%s",
         res, GST_DEBUG_PAD_NAME (link->sinkpad));
 
-    if (res == GST_PAD_LINK_REFUSED) {
+    if (GST_PAD_LINK_FAILED (res)) {
       GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
 		GST_DEBUG_PAD_NAME (link->sinkpad));
       return FALSE;
@@ -1283,6 +1283,12 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
 
   /* we allow setting caps on non-linked pads.  It's ignored */
   if (!GST_PAD_PEER (pad)) {
+    return GST_PAD_LINK_OK;
+  }
+
+  /* if the desired caps are already there, it's trivially ok */
+  if (GST_PAD_CAPS (pad) && gst_caps_is_equal_fixed (caps,
+        GST_PAD_CAPS (pad))) {
     return GST_PAD_LINK_OK;
   }
 
@@ -2281,14 +2287,27 @@ gst_pad_get_caps (GstPad *pad)
     return caps;
   } else if (GST_PAD_PAD_TEMPLATE (realpad)) {
     GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (realpad);
+    const GstCaps *caps;
+
     GST_CAT_DEBUG (GST_CAT_CAPS, "using pad template %p with caps %p", 
 	       templ, GST_PAD_TEMPLATE_CAPS (templ));
+
+    caps = GST_PAD_TEMPLATE_CAPS (templ);
+#if 0
+    /* FIXME we should enable something like this someday, but this is
+     * a bit buggy */
+    if (!gst_caps_is_fixed (caps)) {
+      g_warning("pad %s:%s (%p) has no getcaps function and the pad template returns non-fixed caps.  Element is probably broken.\n",
+          GST_DEBUG_PAD_NAME (realpad), realpad);
+    }
+#endif
+
     return gst_caps_copy (GST_PAD_TEMPLATE_CAPS (templ));
   }
   GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
 
 #if 0
-  /* FIXME this should be enabled some day */
+  /* FIXME enable */
   g_warning("pad %s:%s (%p) has no pad template\n",
       GST_DEBUG_PAD_NAME (realpad), realpad);
 #endif

@@ -94,6 +94,7 @@ gboolean gst_caps_is_any (const GstCaps *caps);
 gboolean gst_caps_is_empty (const GstCaps *caps);
 gboolean gst_caps_is_chained (const GstCaps *caps);
 gboolean gst_caps_is_fixed (const GstCaps *caps);
+gboolean gst_caps_is_equal_fixed (const GstCaps *caps1, const GstCaps *caps2);
 gboolean gst_caps_is_always_compatible (const GstCaps *caps1,
     const GstCaps *caps2);
 

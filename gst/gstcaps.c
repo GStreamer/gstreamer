@@ -347,6 +347,42 @@ gboolean gst_caps_is_fixed (const GstCaps *caps)
 }
 
 static gboolean
+_gst_structure_is_equal_foreach (GQuark field_id, 
+    GValue *val2, gpointer data)
+{
+  GstStructure *struct1 = (GstStructure *) data;
+  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
+
+  if (val1 == NULL) return FALSE;
+  if (gst_value_compare (val1, val2) == GST_VALUE_EQUAL) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+gboolean gst_caps_is_equal_fixed (const GstCaps *caps1, const GstCaps *caps2)
+{
+  GstStructure *struct1, *struct2;
+
+  g_return_val_if_fail (gst_caps_is_fixed(caps1), FALSE);
+  g_return_val_if_fail (gst_caps_is_fixed(caps2), FALSE);
+
+  struct1 = gst_caps_get_structure (caps1, 0);
+  struct2 = gst_caps_get_structure (caps2, 0);
+
+  if (struct1->name != struct2->name) {
+    return FALSE;
+  }
+  if (struct1->fields->len != struct2->fields->len) {
+    return FALSE;
+  }
+
+  return gst_structure_foreach (struct1, _gst_structure_is_equal_foreach,
+      struct2);
+}
+
+static gboolean
 _gst_structure_field_has_compatible (GQuark field_id, 
     GValue *val2, gpointer data)
 {
