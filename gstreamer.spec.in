@@ -164,7 +164,7 @@ Requires: cdparanoia >= alpha9.7
 Requires: %{name} = %{ver}
 
 %description -n gstreamer-cdparanoia
-Plugin for ripping audio tracks using cdparania under GStreamer
+Plugin for ripping audio tracks using cdparanoia under GStreamer
 
 %files -n gstreamer-cdparanoia
 %defattr(-, root, root)
@@ -213,7 +213,7 @@ Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
 %description -n gstreamer-flac
-Plugin for the free FLAC lossless audioformat. 
+Plugin for the free FLAC lossless audio format. 
 
 %files -n gstreamer-flac
 %defattr(-, root, root)
@@ -325,8 +325,8 @@ Requires: %{name} = %{ver}
 
 %description -n gstreamer-mp3
 Plugins for decoding mp3 files. We do recommend you
-use Ogg Vorbis format instead however since it is both free and
-better.
+use Ogg Vorbis format instead however since it is both unencumbered by patents 
+and better.
 
 %files -n gstreamer-mp3
 %defattr(-, root, root)
@@ -354,7 +354,7 @@ Requires: libvorbis >= 1.0beta4
 Requires: %{name} = %{ver}
 
 %description -n gstreamer-vorbis
-Plugins for creating end playing Ogg Vorbis audio files.
+Plugins for creating and playing Ogg Vorbis audio files.
 
 %files -n gstreamer-vorbis
 %defattr(-, root, root)
@@ -381,7 +381,7 @@ Requires: %{name} = %{ver}
 
 %description -n gstreamer-oss
 Plugins for output and input to the OpenSoundSytem audio
-drivers found in the Linux kernels or comercially available 
+drivers found in the Linux kernels or commercially available 
 from OpenSound.
 
 %files -n gstreamer-oss
@@ -448,7 +448,7 @@ Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
 %description -n gstreamer-v4l
-Plugin for inputing video for Linux streams.
+Plugin for accessing video for Linux streams.
 
 %files -n gstreamer-v4l
 %defattr(-, root, root)
@@ -542,7 +542,7 @@ Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
 %description -n gstreamer-mikmod
-Plugin for playback of mikmod files under GStreamer
+Plugin for playback of module files supported by mikmod under GStreamer
 
 %files -n gstreamer-mikmod
 %defattr(-, root, root)
@@ -578,7 +578,7 @@ Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
 %description -n gstreamer-silence
-Plugin for generation of Silence
+Plugin for generation of silence
 
 %files -n gstreamer-silence
 %defattr(-, root, root)
@@ -590,7 +590,7 @@ Group: Libraries/Multimedia
 Requires: %{name} = %{ver}
 
 %description -n gstreamer-sine
-Plugin for Sine effect
+Plugin for generating sine waves.
 
 %files -n gstreamer-sine
 %defattr(-, root, root)
