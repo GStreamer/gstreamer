@@ -271,7 +271,11 @@ gst_thread_change_state (GstElement * element)
       g_mutex_lock (thread->lock);
 
       /* create the thread */
-      pthread_create (&thread->thread_id, NULL, gst_thread_main_loop, thread);
+      if (pthread_create (&thread->thread_id, NULL, gst_thread_main_loop, thread) != 0) {
+	g_mutex_unlock (thread->lock);
+        THR_DEBUG ("could not create thread \"%s\"", GST_ELEMENT_NAME (element));
+	return GST_STATE_FAILURE;
+      }
 
       /* wait for it to 'spin up' */
       THR_DEBUG ("waiting for child thread spinup");

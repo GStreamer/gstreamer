@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "gst_private.h"
 #include "gstutils.h"
@@ -213,7 +214,18 @@ gst_util_dump_mem (guchar * mem, guint size)
   i = j = 0;
   while (i < size) {
     if (j == 0) {
-      g_print ("\n%08x : ", i);
+      if (i != 0) {
+	guint k;
+
+	for (k = i - 16; k < i; k++) {
+          if (isprint (mem[k]))
+            g_print ("%c", mem[k]);
+	  else 
+            g_print (".");
+	}
+        g_print ("\n");
+      }
+      g_print ("%08x : ", i);
       j = 15;
     }
     else {
