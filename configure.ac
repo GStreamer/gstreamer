@@ -643,10 +643,11 @@ AC_PATH_LIBSIDPLAY
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
-AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
-AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
-AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
-AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
+dnl FIXME header check needs to use GLIB_CFLAGS in order to succeed for rtp
+dnl AC_CHECK_HEADERS(rtp/rtp.h, HAVE_LIBRTP=yes, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
+dnl AC_CHECK_HEADERS(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl Check for FLAC
 dnl thomas : checking for compile with main instead of actual function,
