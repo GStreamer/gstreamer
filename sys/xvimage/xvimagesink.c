@@ -1297,7 +1297,7 @@ gst_xvimagesink_colorbalance_get_value (GstColorBalance        *balance,
 static void
 gst_xvimagesink_colorbalance_init (GstColorBalanceClass *iface)
 {
-  iface->balance_type = GST_COLOR_BALANCE_HARDWARE;
+  GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;
   iface->list_channels = gst_xvimagesink_colorbalance_list_channels;
   iface->set_value = gst_xvimagesink_colorbalance_set_value;
   iface->get_value = gst_xvimagesink_colorbalance_get_value;

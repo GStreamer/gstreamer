@@ -41,6 +41,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_COLOR_BALANCE))
 #define GST_COLOR_BALANCE_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_COLOR_BALANCE, GstColorBalanceClass))
+  
+#define GST_COLOR_BALANCE_TYPE(klass) (klass->balance_type)
 
 typedef struct _GstColorBalance GstColorBalance;
   

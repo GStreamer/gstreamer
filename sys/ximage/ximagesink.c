@@ -1002,8 +1002,9 @@ gst_ximagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
       
       /* If that new window geometry differs from our one we try to 
          renegotiate caps */
-      if (xwindow->width != GST_VIDEOSINK_WIDTH (ximagesink) ||
-          xwindow->height != GST_VIDEOSINK_HEIGHT (ximagesink))
+      if (gst_pad_is_negotiated (GST_VIDEOSINK_PAD (ximagesink)) &&
+          (xwindow->width != GST_VIDEOSINK_WIDTH (ximagesink) ||
+           xwindow->height != GST_VIDEOSINK_HEIGHT (ximagesink)))
         {
           GstPadLinkReturn r;
           r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink),
