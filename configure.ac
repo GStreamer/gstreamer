@@ -506,6 +506,21 @@ dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
+dnl *** DIVX ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIVX, true)
+GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
+  HAVE_DIVX=yes
+  AC_CHECK_HEADER(encore2.h, ,
+                  [ AC_MSG_WARN([Divx4linux headers not found]) &&
+                    HAVE_DIVX=no ] )
+  LIBS="-lm"
+  AC_CHECK_LIB(divxencore, encore, ,
+               [ AC_MSG_WARN([Divx4linux libs not found]) &&
+                 HAVE_DIVX=no ] )
+  DIVX_LIBS="-lxvidcore -lm"
+  AC_SUBST(DIVX_LIBS)
+])
+
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
 GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
@@ -875,6 +890,22 @@ GST_CHECK_FEATURE(XMMS, [xmms plug-in], xmms, [
   AM_PATH_XMMS(0.1.0, HAVE_XMMS=yes, HAVE_XMMS=no)
 ])
 
+dnl *** XVID ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
+GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
+  HAVE_XVID=yes
+  AC_CHECK_HEADER(xvid.h, ,
+                  [ AC_MSG_WARN([Xvid headers not found]) &&
+                    HAVE_XVID=no ] )
+  LIBS="-lm"
+  AC_CHECK_LIB(xvidcore, xvid_encore, ,
+               [ AC_MSG_WARN([Xvid libs not found]) &&
+                 HAVE_XVID=no ] )
+  XVID_LIBS="-lxvidcore -lm"
+  AC_SUBST(XVID_LIBS)
+])
+
+
 fi dnl of EXT plugins
 
 dnl Check for atomic.h
@@ -1127,6 +1158,7 @@ ext/artsd/Makefile
 ext/audiofile/Makefile
 ext/avifile/Makefile
 ext/cdparanoia/Makefile
+ext/divx/Makefile
 ext/dv/Makefile
 ext/dvdread/Makefile
 ext/dvdnav/Makefile
@@ -1162,6 +1194,7 @@ ext/swfdec/Makefile
 ext/vorbis/Makefile
 ext/tarkin/Makefile
 ext/xmms/Makefile
+ext/xvid/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
