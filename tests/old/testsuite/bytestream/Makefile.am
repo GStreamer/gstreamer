@@ -7,4 +7,5 @@ tests_ignore =
 test1_SOURCES = test1.c gstbstest.c
 test1_LDFLAGS = $(top_builddir)/libs/gst/bytestream/libgstbytestream.la
 
+filepadsink_CFLAGS = $(AM_CFLAGS) -DTHE_FILE=\""$(top_srcdir)/configure.ac"\"
 filepadsink_LDFLAGS = $(top_builddir)/libs/gst/bytestream/libgstbytestream.la
