@@ -1,7 +1,7 @@
 #ifndef __WAVELET_H
 #define __WAVELET_H
 
-#include <stdint.h>
+#include "_stdint.h"
 
 
 typedef struct {

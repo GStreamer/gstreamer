@@ -1,3 +1,12 @@
+2005-02-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/tarkin/mem.h:
+	* ext/tarkin/wavelet.h:
+	* ext/tarkin/yuv.h:
+	* gst/ffmpegcolorspace/avcodec.h:
+	  Include "_stdint.h" instead of <stdint.h>. Fixes build on
+	  systems that don't have stdint.h, like Solaris9 (fixes #166631).
+
 2005-02-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_change_state):
