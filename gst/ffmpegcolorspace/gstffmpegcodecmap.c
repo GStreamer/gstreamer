@@ -490,7 +490,14 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         switch (bpp) {
           case 32:
             if (gst_structure_get_int (structure, "alpha_mask", &amask)) {
-              context->pix_fmt = PIX_FMT_RGBA32;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+              if (rmask == 0x00ff0000)
+#else
+              if (rmask == 0x0000ff00)
+#endif
+                context->pix_fmt = PIX_FMT_BGRA32;
+              else
+                context->pix_fmt = PIX_FMT_RGBA32;
             } else {
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
               if (rmask == 0x00ff0000)
