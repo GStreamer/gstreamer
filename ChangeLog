@@ -1,3 +1,13 @@
+2004-10-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query),
+	(gst_ogg_demux_src_event), (gst_ogg_pad_push):
+	* ext/theora/theoradec.c: (theora_dec_sink_convert),
+	(theora_dec_chain):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_get_formats),
+	(gst_vorbis_dec_init), (vorbis_dec_convert), (vorbis_dec_chain):
+	  Seeking and querying finetune.
+
 2004-10-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
