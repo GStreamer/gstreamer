@@ -1,8 +1,11 @@
 EXTRA_DIST=html2xml.py
 
-all-am: devhelp
+all-am: chmod devhelp
 
 devhelp: gstreamer.devhelp gstreamer-libs.devhelp
+
+chmod:
+	chmod +x html2xml.py
 
 gstreamer.devhelp:
 	cd ../gst && make
