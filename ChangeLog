@@ -1,3 +1,15 @@
+2004-04-22  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_create_sourcepad),
+	(gst_wavparse_parse_fmt), (gst_wavparse_handle_sink_event),
+	(gst_wavparse_loop):
+	  Missing variable initialization. Add handling of DVI ADPCM. Fix
+	  mis-parsing of LIST chunks. This works around a bug where we mis-
+	  parse non-aligning LIST chunks (so LIST chunks where the contents
+	  don't align with the actual LIST size). The correct fix is to use
+	  rifflib, I'm not going to fix wavparse - too much work. All this
+	  fixes #104878.
+
 2004-04-22  Zaheer Abbas Merali <zaheerabbas@merali.org>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>
