@@ -143,6 +143,7 @@ gst_stream_selector_init (GstStreamSelector * sel)
   /* sinkpad management */
   sel->last_active_sinkpad = NULL;
   sel->nb_sinkpads = 0;
+  sel->in_chain = FALSE;
 }
 
 static void
@@ -172,6 +173,7 @@ gst_stream_selector_get_linked_pad (GstPad * pad)
 static GstCaps *
 gst_stream_selector_get_caps (GstPad * pad)
 {
+  GstStreamSelector *sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
   GstPad *otherpad = gst_stream_selector_get_linked_pad (pad);
 
   if (!otherpad) {
@@ -179,6 +181,8 @@ gst_stream_selector_get_caps (GstPad * pad)
         "Pad %s not linked, returning ANY", gst_pad_get_name (pad));
 
     return gst_caps_new_any ();
+  } else if (otherpad == sel->last_active_sinkpad && sel->in_chain) {
+    return gst_caps_copy (GST_PAD_CAPS (sel->last_active_sinkpad));
   }
 
   GST_DEBUG_OBJECT (gst_pad_get_parent (pad),
@@ -265,7 +269,9 @@ gst_stream_selector_chain (GstPad * pad, GstData * data)
         gst_pad_get_name (sel->last_active_sinkpad) : "none",
         gst_pad_get_name (pad));
     sel->last_active_sinkpad = pad;
-    ret = gst_pad_renegotiate (pad);
+    sel->in_chain = TRUE;
+    ret = gst_pad_renegotiate (sel->srcpad);
+    sel->in_chain = FALSE;
     if (GST_PAD_LINK_FAILED (ret)) {
       GST_ELEMENT_ERROR (sel, CORE, NEGOTIATION, (NULL), (NULL));
       sel->last_active_sinkpad = NULL;

@@ -1,5 +1,13 @@
 2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gststreamselector.c: (gst_stream_selector_init),
+	(gst_stream_selector_get_caps), (gst_stream_selector_chain):
+	* gst/playback/gststreamselector.h:
+	  Be more selective when we're redoing caps negotiation from
+	  within the chain function on a stream change.
+
+2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/amrnb/Makefile.am:
