@@ -65,6 +65,9 @@ struct _GstVideotestsrc {
   GstVideoTestSrcMethod method;
   
   /* private */
+  gint64 timestamp;
+  gint64 interval;
+
   guchar *temp;
 };
 

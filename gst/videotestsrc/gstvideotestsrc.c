@@ -186,6 +186,9 @@ gst_videotestsrc_init (GstVideotestsrc *videotestsrc)
 
   videotestsrc->width = 640;
   videotestsrc->height = 480;
+
+  videotestsrc->timestamp = 0;
+  videotestsrc->interval = GST_SECOND/30;
 }
 
 
@@ -214,7 +217,9 @@ gst_videotestsrc_get (GstPad *pad)
   GST_BUFFER_SIZE(buf) = newsize;
   GST_BUFFER_DATA(buf) = g_malloc (newsize);
   g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, NULL);
-  //GST_BUFFER_TIMESTAMP(buf) = GST_BUFFER_TIMESTAMP(buf);
+
+  videotestsrc->timestamp += videotestsrc->interval;
+  GST_BUFFER_TIMESTAMP(buf) = videotestsrc->timestamp;
 
   gst_videotestsrc_random_yuv(videotestsrc, (void *)GST_BUFFER_DATA(buf),
 		  videotestsrc->width, videotestsrc->height);
@@ -345,7 +350,7 @@ paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h, unsigne
 }
 
 /*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
-static int y_colors[] = { 255, 226, 179, 150, 105,  76,  29,   0,   0,   0 };
+static int y_colors[] = { 255, 226, 179, 150, 105,  76,  29,  16,  16,   0 };
 static int u_colors[] = { 128,   0, 170,  46, 212,  85, 255, 128,   0, 128 };
 static int v_colors[] = { 128, 155,   0,  21, 235, 255, 107, 128, 128, 255 };
 
