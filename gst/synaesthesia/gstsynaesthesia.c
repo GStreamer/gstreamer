@@ -283,7 +283,7 @@ gst_synaesthesia_chain (GstPad *pad, GstBuffer *bufin)
   GST_BUFFER_TIMESTAMP (bufout) = synaesthesia->next_time;
   GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
 
-  synaesthesia->next_time += 1000000LL / synaesthesia->fps;
+  synaesthesia->next_time += GST_SECOND / synaesthesia->fps;
 
   gst_pad_push (synaesthesia->srcpad, bufout);
 
