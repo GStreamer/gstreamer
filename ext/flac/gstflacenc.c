@@ -174,10 +174,10 @@ flac_caps_factory (void)
    gst_caps_new (
   	"flac_flac",
   	"application/x-flac",
-	/*gst_props_new (
+	/* gst_props_new (
  	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
     	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL)*/ NULL);
+	    NULL) */NULL);
 }
 
 static GstCaps*
@@ -386,7 +386,7 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "rate", &flacenc->sample_rate);
   
   caps = GST_CAPS_NEW ("flacenc_srccaps",
-                       "audio/x-flac",
+                       "application/x-flac",
                          "channels", GST_PROPS_INT (flacenc->channels),
                          "rate", GST_PROPS_INT (flacenc->sample_rate));
   ret = gst_pad_try_set_caps (flacenc->srcpad, caps);
@@ -776,8 +776,11 @@ gst_flacenc_change_state (GstElement *element)
       flacenc->first_buf = NULL;
       g_free (flacenc->data);
       flacenc->data = NULL;
-      FLAC__metadata_object_delete (flacenc->meta[0]);
-      g_free (flacenc->meta);
+      if (flacenc->meta) {
+	FLAC__metadata_object_delete (flacenc->meta[0]);
+	g_free (flacenc->meta);
+	flacenc->meta = NULL;
+      }
       break;
     case GST_STATE_READY_TO_NULL:
     default:
