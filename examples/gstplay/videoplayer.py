@@ -5,6 +5,10 @@ import pygtk
 pygtk.require('2.0')
 
 import gtk
+
+if gtk.pygtk_version < (2,3,91):
+   raise SystemExit, "PyGTK 2.3.91 or higher required"
+
 import gst.play
 import gst.interfaces
 
@@ -97,23 +101,20 @@ class PlayerWidget(gtk.DrawingArea):
         self.player.set_video_sink(self.imagesink)
 
     def destroy_cb(self, da):
-        overlay = gst.interfaces.XOverlay(self.imagesink)
-        overlay.set_xwindow_id(0L)
+        self.imagesink.set_xwindow_id(0L)
 
     def after_realize_cb(self, window):
         # Sort of a hack, but it works for now.
         gtk.idle_add(self.idler)
 
     def idler(self):
-        overlay = gst.interfaces.XOverlay(self.imagesink)
-        overlay.set_xwindow_id(self.window.xid)
+        self.imagesink.set_xwindow_id(self.window.xid)
         
     def stop(self):
         self.player.set_state(gst.STATE_NULL)
 
     def play(self):
-        overlay = gst.interfaces.XOverlay(self.imagesink)
-        overlay.set_xwindow_id(self.window.xid)
+        self.imagesink.set_xwindow_id(self.window.xid)
         self.player.set_state(gst.STATE_PLAYING)
 
     def pause(self):
