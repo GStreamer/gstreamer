@@ -54,24 +54,26 @@ struct _GstMPEGStream {
   GstPad 	*pad;
   guint64	 pts;
   gint	 	 index_id;
+  gint		 size_bound;
 };
 
 struct _GstMPEGDemux {
-  GstMPEGParse parent;
+  GstMPEGParse	 parent;
 
   /* previous partial chunk and bytes remaining in it */
-  gboolean in_flush;
+  gboolean 	 in_flush;
 
   /* program stream header values */
-  guint16 header_length;
-  guint32 rate_bound;
-  guint8 audio_bound;
-  gboolean fixed;
-  gboolean constrained;
-  gboolean audio_lock;
-  gboolean video_lock;
-  guint8 video_bound;
-  gboolean packet_rate_restriction;
+  guint16	 header_length;
+  guint32	 rate_bound;
+  guint8 	 audio_bound;
+  gboolean 	 fixed;
+  gboolean 	 constrained;
+  gboolean 	 audio_lock;
+  gboolean 	 video_lock;
+  guint8 	 video_bound;
+  gboolean 	 packet_rate_restriction;
+  gint64	 total_size_bound;
 
 #define NUM_PRIVATE_1_STREAMS 	 8
 #define NUM_SUBTITLE_STREAMS 	16

@@ -138,6 +138,7 @@ static void		gst_mpeg_demux_send_data 	(GstMPEGParse *mpeg_parse,
 							 GstData *data, GstClockTime time);
 
 static void		gst_mpeg_demux_handle_discont 	(GstMPEGParse *mpeg_parse);
+static gboolean 	gst_mpeg_demux_handle_src_event (GstPad *pad, GstEvent *event);
 
 static void 		gst_mpeg_demux_set_index 	(GstElement *element, GstIndex *index);
 static GstIndex* 	gst_mpeg_demux_get_index 	(GstElement *element);
@@ -421,12 +422,17 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	gst_pad_try_set_caps (*outpad, gst_pad_get_pad_template_caps (*outpad));
 
 	gst_pad_set_formats_function (*outpad, gst_mpeg_parse_get_src_formats);
+	gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
 	gst_pad_set_event_mask_function (*outpad, gst_mpeg_parse_get_src_event_masks);
-	gst_pad_set_event_function (*outpad, gst_mpeg_parse_handle_src_event);
+	gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
 	gst_pad_set_query_type_function (*outpad, gst_mpeg_parse_get_src_query_types);
 	gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
 
 	gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
+	gst_pad_set_element_private (*outpad, *outstream);
+
+	(*outstream)->size_bound = buf_byte_size_bound;
+	mpeg_demux->total_size_bound += buf_byte_size_bound;
 
 	if (mpeg_demux->index) {
           gst_index_get_writer_id (mpeg_demux->index, GST_OBJECT (*outpad),
@@ -854,12 +860,14 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       gst_pad_try_set_caps (*outpad, gst_pad_get_pad_template_caps (*outpad));
 
       gst_pad_set_formats_function (*outpad, gst_mpeg_parse_get_src_formats);
+      gst_pad_set_convert_function (*outpad, gst_mpeg_parse_convert_src);
       gst_pad_set_event_mask_function (*outpad, gst_mpeg_parse_get_src_event_masks);
-      gst_pad_set_event_function (*outpad, gst_mpeg_parse_handle_src_event);
+      gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
       gst_pad_set_query_type_function (*outpad, gst_mpeg_parse_get_src_query_types);
       gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
 
       gst_element_add_pad(GST_ELEMENT(mpeg_demux), *outpad);
+      gst_pad_set_element_private (*outpad, *outstream);
 
       if (mpeg_demux->index) {
         gst_index_get_writer_id (mpeg_demux->index, GST_OBJECT (*outpad),
@@ -909,6 +917,78 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   }
 
   return TRUE;
+}
+
+static gboolean
+index_seek (GstPad *pad, GstEvent *event, gint64 *offset)
+{
+  GstIndexEntry *entry;
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (gst_pad_get_parent (pad));
+  GstMPEGStream *stream = gst_pad_get_element_private (pad);
+
+  entry = gst_index_get_assoc_entry (mpeg_demux->index, stream->index_id,
+                                     GST_INDEX_LOOKUP_BEFORE, 0,
+                                     GST_EVENT_SEEK_FORMAT (event),
+                                     GST_EVENT_SEEK_OFFSET (event));
+  if (!entry)
+    return FALSE;
+
+  if (gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, offset)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
+normal_seek (GstPad *pad, GstEvent *event, gint64 *offset)
+{
+  gboolean res = FALSE;
+  gint64 adjust;
+  GstFormat format;
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (gst_pad_get_parent (pad));
+
+  format = GST_EVENT_SEEK_FORMAT (event);
+
+  res = gst_pad_convert (pad, GST_FORMAT_BYTES, mpeg_demux->total_size_bound,
+		         &format, &adjust);
+
+  GST_DEBUG (0, "seek adjusted from %lld bytes to %lld\n", mpeg_demux->total_size_bound, adjust);
+
+  if (res) 
+    *offset = MAX (GST_EVENT_SEEK_OFFSET (event) - adjust, 0);
+
+   return res;
+}
+
+static gboolean
+gst_mpeg_demux_handle_src_event (GstPad *pad, GstEvent *event)
+{   
+  gboolean res = FALSE;
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      guint64 desired_offset;
+
+      if (mpeg_demux->index) 
+	res = index_seek (pad, event, &desired_offset);
+      if (!res)
+	res = normal_seek (pad, event, &desired_offset);
+
+      if (res) {
+        GstEvent *new_event;
+
+        new_event = gst_event_new_seek (GST_EVENT_SEEK_TYPE (event), desired_offset);
+        gst_event_unref (event);
+        res = gst_mpeg_parse_handle_src_event (pad, new_event);
+      }
+      break;
+    }
+    default:
+      break;
+  } 
+  return res;
 }
 
 static GstElementStateReturn

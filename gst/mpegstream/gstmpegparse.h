@@ -44,6 +44,7 @@ extern "C" {
 #define GST_MPEG_PARSE_IS_MPEG2(parse) (GST_MPEG_PACKETIZE_IS_MPEG2 (GST_MPEG_PARSE (parse)->packetize))
 
 #define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
+#define GSTTIME_TO_MPEGTIME(time) (((time) * 9) / (GST_MSECOND/10))
 
 typedef struct _GstMPEGParse GstMPEGParse;
 typedef struct _GstMPEGParseClass GstMPEGParseClass;
@@ -96,6 +97,8 @@ gboolean 	gst_mpeg_parse_plugin_init 		(GModule *module, GstPlugin *plugin);
 const GstFormat*
 		gst_mpeg_parse_get_src_formats 		(GstPad *pad);
 	
+gboolean 	gst_mpeg_parse_convert_src 		(GstPad *pad, GstFormat src_format, gint64 src_value,
+		            				 GstFormat *dest_format, gint64 *dest_value);
 const GstEventMask*
 		gst_mpeg_parse_get_src_event_masks 	(GstPad *pad);
 gboolean 	gst_mpeg_parse_handle_src_event 	(GstPad *pad, GstEvent *event);

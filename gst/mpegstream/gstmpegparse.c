@@ -159,7 +159,6 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   gstelement_class->get_index    = gst_mpeg_parse_get_index;
   gstelement_class->set_index    = gst_mpeg_parse_set_index;
 
-
   klass->parse_packhead = gst_mpeg_parse_parse_packhead;
   klass->parse_syshead 	= NULL;
   klass->parse_packet 	= NULL;
@@ -174,11 +173,14 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   mpeg_parse->sinkpad = gst_pad_new_from_template(
 		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->sinkpad);
+  gst_pad_set_formats_function (mpeg_parse->sinkpad, gst_mpeg_parse_get_src_formats);
+  gst_pad_set_convert_function (mpeg_parse->sinkpad, gst_mpeg_parse_convert_src);
 
   mpeg_parse->srcpad = gst_pad_new_from_template(
 		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->srcpad);
   gst_pad_set_formats_function (mpeg_parse->srcpad, gst_mpeg_parse_get_src_formats);
+  gst_pad_set_convert_function (mpeg_parse->srcpad, gst_mpeg_parse_convert_src);
   gst_pad_set_event_mask_function (mpeg_parse->srcpad, gst_mpeg_parse_get_src_event_masks);
   gst_pad_set_event_function (mpeg_parse->srcpad, gst_mpeg_parse_handle_src_event);
   gst_pad_set_query_type_function (mpeg_parse->srcpad, gst_mpeg_parse_get_src_query_types);
@@ -186,17 +188,8 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
 
   gst_element_set_loop_function (GST_ELEMENT (mpeg_parse), gst_mpeg_parse_loop);
 
-  /* initialize parser state */
   mpeg_parse->packetize = NULL;
-  mpeg_parse->current_scr = 0;
-  mpeg_parse->bytes_since_scr = 0;
-  mpeg_parse->adjust = 0;
   mpeg_parse->sync = FALSE;
-
-  /* zero counters (should be done at RUNNING?) */
-  mpeg_parse->mux_rate = 0;
-  mpeg_parse->discont_pending = FALSE;
-  mpeg_parse->scr_pending = TRUE;
   mpeg_parse->max_discont = DEFAULT_MAX_DISCONT;
   mpeg_parse->provided_clock = gst_mpeg_clock_new ("MPEGParseClock", 
 		  gst_mpeg_parse_get_time, mpeg_parse);
@@ -207,9 +200,9 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
 static GstClock*
 gst_mpeg_parse_get_clock (GstElement *element)
 {   
-  //GstMPEGParse *parse = GST_MPEG_PARSE (element);
+  /* GstMPEGParse *parse = GST_MPEG_PARSE (element); */
 
-  //return parse->provided_clock;
+  /* return parse->provided_clock; */
   return NULL;
 }
 
@@ -329,6 +322,10 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   mpeg_parse->bytes_since_scr = 0;
   scr_adj = scr + mpeg_parse->adjust;
 
+  if (mpeg_parse->next_scr == -1) {
+    mpeg_parse->next_scr = scr;
+  }
+
   GST_DEBUG (0, "SCR is %llu (%llu) next: %lld (%lld) diff: %lld (%lld)", 
 		  scr, 
 		  MPEGTIME_TO_GSTTIME (scr),
@@ -356,8 +353,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     gst_index_add_association (mpeg_parse->index, mpeg_parse->index_id, 
 		    	       GST_ACCOCIATION_FLAG_KEY_UNIT,
 		               GST_FORMAT_BYTES, GST_BUFFER_OFFSET (buffer), 
-			       GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (scr), 
-			       scr_format, scr_orig, 0);
+			       GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (scr), 0);
   }
 
   mpeg_parse->current_scr = scr;
@@ -367,9 +363,8 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     mpeg_parse->mux_rate = new_rate;
 
     g_object_notify (G_OBJECT (mpeg_parse), "bitrate");
+    GST_DEBUG (0, "stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
   }
-
-  GST_DEBUG (0, "stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
 
   return TRUE;
 }
@@ -433,7 +428,6 @@ gst_mpeg_parse_loop (GstElement *element)
         GST_DEBUG (GST_CAT_EVENT, "event: %d\n", GST_EVENT_TYPE (data));
 
         mpeg_parse->discont_pending = TRUE;
-        mpeg_parse->scr_pending = TRUE;
         mpeg_parse->packetize->resync = TRUE;
 	gst_event_unref (event);
 	return;
@@ -478,6 +472,7 @@ gst_mpeg_parse_loop (GstElement *element)
       gst_element_clock_wait (GST_ELEMENT (mpeg_parse), mpeg_parse->clock, time, NULL);
     }
 
+    if (mpeg_parse->current_scr != -1)
     {
       guint64 scr, bss, br;
 
@@ -521,6 +516,46 @@ gst_mpeg_parse_get_src_formats (GstPad *pad)
   return formats;
 }
 
+gboolean
+gst_mpeg_parse_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
+		            GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+	  if (mpeg_parse->mux_rate == 0)
+	    res = FALSE;
+	  else
+            *dest_value = src_value * GST_SECOND / (mpeg_parse->mux_rate * 50);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+          *dest_value = mpeg_parse->mux_rate * 50 * src_value / GST_SECOND;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+}
+
 const GstPadQueryType*
 gst_mpeg_parse_get_src_query_types (GstPad *pad)
 {
@@ -538,6 +573,8 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
 {
   gboolean res = TRUE;
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
+  GstFormat src_format;
+  gint64 src_value;
 
   switch (type) {
     case GST_PAD_QUERY_TOTAL:
@@ -546,27 +583,13 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
           /* fallthrough */
-        case GST_FORMAT_TIME:
-	{
-          GstFormat peer_format;
-	  gint64 peer_value;
-
-	  if (mpeg_parse->mux_rate == 0) 
-	    return FALSE;
-
-	  peer_format = GST_FORMAT_BYTES;
-	  if (gst_pad_query (GST_PAD_PEER (mpeg_parse->sinkpad),
-			     GST_PAD_QUERY_TOTAL, &peer_format, &peer_value)) 
-	  {
-            /* multiply bywith 8 because vbr is in bits/second */
-            *value = peer_value * GST_SECOND / (mpeg_parse->mux_rate * 50);
-          }
-	  else 
-	    res = FALSE;
-	  break;
-	}
 	default:
-	  res = FALSE;
+	  src_format = GST_FORMAT_BYTES;
+	  if (!gst_pad_query (GST_PAD_PEER (mpeg_parse->sinkpad),
+			      GST_PAD_QUERY_TOTAL, &src_format, &src_value)) 
+	  {
+	    res = FALSE;
+	  }
 	  break;
       }
       break;
@@ -577,11 +600,9 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
         case GST_FORMAT_DEFAULT:
           *format = GST_FORMAT_TIME;
           /* fallthrough */
-        case GST_FORMAT_TIME:
-          *value = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
-	  break;
 	default:
-	  res = FALSE;
+	  src_format = GST_FORMAT_TIME;
+          src_value = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
 	  break;
       }
       break;
@@ -590,6 +611,10 @@ gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type,
       res = FALSE;
       break;
   }
+
+  /* bring to requested format */
+  if (res)
+    res = gst_pad_convert (pad, src_format, src_value, format, value);
 
   return res;
 }
@@ -605,21 +630,55 @@ gst_mpeg_parse_get_src_event_masks (GstPad *pad)
 }
 
 static gboolean
-seek_index (GstMPEGParse *parse, GstEvent *event, guint64 *offset)
+index_seek (GstPad *pad, GstEvent *event, guint64 *offset, gint64 *scr)
 {
   GstIndexEntry *entry;
+  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
 
-  entry = gst_index_get_assoc_entry (parse->index, parse->index_id,
-                                     GST_INDEX_LOOKUP_BEFORE,
+  entry = gst_index_get_assoc_entry (mpeg_parse->index, mpeg_parse->index_id,
+                                     GST_INDEX_LOOKUP_BEFORE, 0,
                                      GST_EVENT_SEEK_FORMAT (event),
 	                             GST_EVENT_SEEK_OFFSET (event));
   if (!entry)
     return FALSE;
 
   if (gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, offset)) {
+    gint64 time;
+
+    if (gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time)) {
+      *scr = GSTTIME_TO_MPEGTIME (time);
+    }
     return TRUE;
   }
   return FALSE;
+}
+
+static gboolean
+normal_seek (GstPad *pad, GstEvent *event, guint64 *offset, gint64 *scr)
+{
+  gboolean res;
+  GstFormat format;
+  gint64 time;
+
+  /* bring offset to bytes */
+  format = GST_FORMAT_BYTES;
+  res  = gst_pad_convert (pad, 
+		          GST_EVENT_SEEK_FORMAT (event),
+		          GST_EVENT_SEEK_OFFSET (event),
+		          &format,
+		          offset);
+  /* bring offset to time */
+  format = GST_FORMAT_TIME;
+  res &= gst_pad_convert (pad, 
+		          GST_EVENT_SEEK_FORMAT (event),
+		          GST_EVENT_SEEK_OFFSET (event),
+			  &format,
+			  &time);
+
+  /* convert to scr */
+  *scr = GSTTIME_TO_MPEGTIME (time);
+
+  return res;
 }
 
 gboolean
@@ -632,37 +691,32 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
     case GST_EVENT_SEEK:
     {
       guint64 desired_offset;
+      guint64 expected_scr;
 
-      switch (GST_EVENT_SEEK_FORMAT (event)) {
-	case GST_FORMAT_BYTES:
-          if (mpeg_parse->index) {
-	    if (!seek_index (mpeg_parse, event, &desired_offset)) {
-              goto done;
-	    }
-	  }
-	  else {
-            desired_offset = GST_EVENT_SEEK_OFFSET (event);
-	  }
-          break;
-	case GST_FORMAT_TIME:
-          desired_offset = mpeg_parse->mux_rate * 50 * GST_EVENT_SEEK_OFFSET (event) / (GST_SECOND);
-          break;
-        default:
-          goto done;
-      }
+      /* first to to use the index if we have one */
+      if (mpeg_parse->index) 
+        res = index_seek (pad, event, &desired_offset, &expected_scr);
+      /* nothing found, try fuzzy seek */
+      if (!res) 
+        res = normal_seek (pad, event, &desired_offset, &expected_scr);
 
-      if (!gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
-        goto done;
+      if (!res)
+	break;
+	      
+      GST_DEBUG (0, "sending seek to %lld", desired_offset);
+      if (gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
+        mpeg_parse->discont_pending = TRUE;
+        mpeg_parse->scr_pending = TRUE;
+        mpeg_parse->next_scr = expected_scr;
+        mpeg_parse->current_scr = -1;
+        mpeg_parse->adjust = 0;
+        res = TRUE;
       }
-      mpeg_parse->discont_pending = TRUE;
-      mpeg_parse->scr_pending = TRUE;
-      res = TRUE;
       break;
     }
     default:
       break;
   }
-done:
   gst_event_unref (event);
   return res;
 }
@@ -677,6 +731,16 @@ gst_mpeg_parse_change_state (GstElement *element)
       if (!mpeg_parse->packetize) {
         mpeg_parse->packetize = gst_mpeg_packetize_new (mpeg_parse->sinkpad, GST_MPEG_PACKETIZE_SYSTEM);
       }
+      /* initialize parser state */
+      mpeg_parse->current_scr = 0;
+      mpeg_parse->bytes_since_scr = 0;
+      mpeg_parse->adjust = 0;
+      mpeg_parse->next_scr = 0;
+
+      /* zero counters (should be done at RUNNING?) */
+      mpeg_parse->mux_rate = 0;
+      mpeg_parse->discont_pending = FALSE;
+      mpeg_parse->scr_pending = FALSE;
       break;
     case GST_STATE_PAUSED_TO_READY:
       if (mpeg_parse->packetize) {
@@ -696,7 +760,6 @@ gst_mpeg_parse_get_property (GObject *object, guint prop_id, GValue *value, GPar
 {
   GstMPEGParse *mpeg_parse;
 
-  /* it's not null if we got it, but it might not be ours */
   mpeg_parse = GST_MPEG_PARSE(object);
 
   switch (prop_id) {

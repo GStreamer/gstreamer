@@ -250,8 +250,6 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
       gst_bytestream_get_status (packetize->bs, &remaining, &event);
       etype = event? GST_EVENT_TYPE (event) : GST_EVENT_EOS;
 
-      g_print ("remaining %d\n", remaining);
-
       switch (etype) {
         case GST_EVENT_DISCONTINUOUS:
           GST_DEBUG (GST_CAT_EVENT, "packetize: discont\n");
