@@ -49,7 +49,7 @@ guint16 gst_type_register(GstTypeFactory *factory) {
 //  id = gst_type_find_by_mime(factory->mime);
   id = 0;
   if (!id) {
-    type = (GstType *)malloc(sizeof(GstType));
+    type = (GstType *)g_malloc(sizeof(GstType));
 
     type->id = _gst_maxtype++;
     type->mime = factory->mime;

@@ -144,6 +144,8 @@ int main(int argc,char *argv[]) {
   xmlSaveFile("mp1parse.xml",gst_xml_write(GST_ELEMENT(pipeline)));
 
   g_print("about to enter loop\n");
-  while (1)
+  while (1) {
     gst_src_push(GST_SRC(src));
+	}
+
 }

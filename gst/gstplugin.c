@@ -200,7 +200,7 @@ gboolean gst_plugin_load_absolute(gchar *name) {
  * Returns: new plugin
  */
 GstPlugin *gst_plugin_new(gchar *name) {
-  GstPlugin *plugin = (GstPlugin *)malloc(sizeof(GstPlugin));
+  GstPlugin *plugin = (GstPlugin *)g_malloc(sizeof(GstPlugin));
 
   plugin->name = g_strdup(name);
   plugin->longname = NULL;

@@ -124,10 +124,12 @@ void gst_buffer_destroy(GstBuffer *buffer) {
 
   g_return_if_fail(buffer != NULL);
 
-  if (buffer->parent != NULL)
+  if (buffer->parent != NULL) {
     DEBUG("BUF: freeing subbuffer %p\n",buffer);
-  else
+	}
+  else {
     DEBUG("BUF: freeing buffer %p\n",buffer);
+	}
 
   // free the data only if there is some, DONTFREE isn't set, and not sub
   if (GST_BUFFER_DATA(buffer) &&
@@ -162,7 +164,7 @@ void gst_buffer_ref(GstBuffer *buffer) {
   DEBUG("BUF: referencing buffer %p\n",buffer);
 
 #ifdef HAVE_ATOMIC_H
-  g_return_if_fail(atomic_read(&(buffer->refcount)) > 0);
+  //g_return_if_fail(atomic_read(&(buffer->refcount)) > 0);
   atomic_inc(&(buffer->refcount))
 #else
   g_return_if_fail(buffer->refcount > 0);

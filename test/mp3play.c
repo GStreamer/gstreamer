@@ -62,6 +62,7 @@ int main(int argc,char *argv[]) {
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
 
   g_print("about to enter loop\n");
-  while (1)
+  while (1) {
     gst_src_push(GST_SRC(src));
+	}
 }

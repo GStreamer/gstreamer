@@ -198,6 +198,7 @@ void gst_queue_push(GstConnection *connection) {
   buf = (GstBuffer *)(front->data);
   queue->queue = g_list_remove_link(queue->queue,front);
   gst_pad_push(queue->srcpad,buf);
+  g_list_free(front);
   queue->level_buffers--;
 //  g_print("-");
 
