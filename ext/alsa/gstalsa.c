@@ -81,53 +81,69 @@ static GstElementDetails gst_alsa_src_details = {
 };
 
 /* GObject functions */
-static void gst_alsa_class_init (GstAlsaClass *klass);
-static void gst_alsa_init (GstAlsa *this);
-static void gst_alsa_dispose (GObject *object);
-static void gst_alsa_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_alsa_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void			gst_alsa_class_init		(GstAlsaClass *klass);
+static void			gst_alsa_init			(GstAlsa *this);
+static void			gst_alsa_dispose		(GObject *object);
+static void			gst_alsa_set_property		(GObject *object,
+								 guint prop_id,
+								 const GValue *value,
+								 GParamSpec *pspec);
+static void			gst_alsa_get_property		(GObject *object,
+								 guint prop_id,
+								 GValue *value,
+								 GParamSpec *pspec);
 
 /* GStreamer functions for pads and state changing */
-static GstPadTemplate   *gst_alsa_src_pad_factory ();
-static GstPadTemplate   *gst_alsa_src_request_pad_factory ();
-static GstPadTemplate   *gst_alsa_sink_pad_factory ();
-static GstPadTemplate   *gst_alsa_sink_request_pad_factory ();
+static GstPadTemplate *		gst_alsa_src_pad_factory 	(void);
+static GstPadTemplate *		gst_alsa_src_request_pad_factory (void);
+static GstPadTemplate *		gst_alsa_sink_pad_factory 	(void);
+static GstPadTemplate *		gst_alsa_sink_request_pad_factory (void);
 
-static GstPad           *gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *name);
-static GstPadLinkReturn  gst_alsa_link (GstPad *pad, GstCaps *caps);
-static GstCaps          *gst_alsa_get_caps (GstPad *pad, GstCaps *caps);
-static GstCaps          *gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels);
+static GstPad *			gst_alsa_request_new_pad	(GstElement *element, 
+								 GstPadTemplate *templ,
+								 const gchar *name);
+static GstPadLinkReturn		gst_alsa_link 			(GstPad *pad, 
+								 GstCaps *caps);
+static GstCaps *		gst_alsa_get_caps		(GstPad *pad,
+								 GstCaps *caps);
+static GstCaps *		gst_alsa_caps			(snd_pcm_format_t format,
+								 gint rate,
+								 gint channels);
 
-static GstBufferPool    *gst_alsa_src_get_buffer_pool (GstPad *pad);
+static GstBufferPool *		gst_alsa_src_get_buffer_pool	(GstPad *pad);
 
-static GstElementStateReturn gst_alsa_change_state (GstElement *element);
+static GstElementStateReturn	gst_alsa_change_state		(GstElement *element);
 
 /* audio processing functions */
-static int      	gst_alsa_do_mmap (GstAlsa *this, snd_pcm_sframes_t *avail);
+static int			gst_alsa_do_mmap		(GstAlsa *this, 
+								 snd_pcm_sframes_t *avail);
 
-static void     	gst_alsa_sink_loop (GstElement *element);
-static void     	gst_alsa_src_loop (GstElement *element);
-static void     	gst_alsa_xrun_recovery (GstAlsa *this);
+static void			gst_alsa_sink_loop		(GstElement *element);
+static void			gst_alsa_src_loop		(GstElement *element);
+static void			gst_alsa_xrun_recovery		(GstAlsa *this);
 
-static gboolean 	gst_alsa_sink_check_event (GstAlsa *this, gint pad_nr, GstEvent *event);
+static gboolean			gst_alsa_sink_check_event	(GstAlsa *this, 
+								 gint pad_nr,
+								 GstEvent *event);
 
 /* alsa setup / start / stop functions */
-static void     	gst_alsa_set_eos (GstAlsa *this);
+static void			gst_alsa_set_eos		(GstAlsa *this);
 
-static gboolean 	gst_alsa_probe_hw_params (GstAlsa *this, GstAlsaFormat *format);
-static gboolean 	gst_alsa_set_hw_params (GstAlsa *this);
-static gboolean 	gst_alsa_set_sw_params (GstAlsa *this);
+static gboolean			gst_alsa_probe_hw_params	(GstAlsa *this, 
+								 GstAlsaFormat *format);
+static gboolean			gst_alsa_set_hw_params		(GstAlsa *this);
+static gboolean			gst_alsa_set_sw_params		(GstAlsa *this);
 
-static gboolean 	gst_alsa_open_audio (GstAlsa *this);
-static gboolean 	gst_alsa_start_audio (GstAlsa *this);
-static gboolean 	gst_alsa_drain_audio (GstAlsa *this);
-static gboolean 	gst_alsa_stop_audio (GstAlsa *this);
-static gboolean 	gst_alsa_close_audio (GstAlsa *this);
+static gboolean			gst_alsa_open_audio		(GstAlsa *this);
+static gboolean			gst_alsa_start_audio		(GstAlsa *this);
+static gboolean			gst_alsa_drain_audio		(GstAlsa *this);
+static gboolean 		gst_alsa_stop_audio		(GstAlsa *this);
+static gboolean 		gst_alsa_close_audio		(GstAlsa *this);
 
 /* clock functions */
 static void	 		gst_alsa_clock_class_init 	(GstAlsaClockClass *klass);
 static void 			gst_alsa_clock_init 		(GstAlsaClock *clock);
-static GstAlsaClock*		gst_alsa_clock_new		(gchar *name, 
+static GstAlsaClock *		gst_alsa_clock_new		(gchar *name, 
 								 GstAlsaClockGetTimeFunc func,
 								 GstAlsa* owner);
 
