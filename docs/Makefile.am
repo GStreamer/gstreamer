@@ -6,6 +6,7 @@ SUBDIRS_PLUGINS =
 endif
 
 SUBDIRS = manual fwg gst libs $(SUBDIRS_PLUGINS)
+DIST_SUBDIRS = manual fwg gst libs plugins
 
 EXTRA_DIST = random slides manuals.mak
 
