@@ -10,4 +10,6 @@
 #define JUMP(target) \
     __asm__("jmp " SYMBOL_NAME_STR(cothread_stub))
 
+#define SETUP_STACK(sp) do ; while(0)
+
 #endif /* GST_HGUARD_GSTI386_H */

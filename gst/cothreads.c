@@ -152,6 +152,7 @@ void cothread_switch(cothread_state *thread) {
     // switch to it
     longjmp(thread->jmp,1);
   } else {
+    SETUP_STACK(thread->sp);
     SET_SP(thread->sp);
     // start it
     //JUMP(cothread_stub);
