@@ -22,7 +22,9 @@ GST_REQ=0.7.5
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_FFMPEG_VERSION_MAJOR.$GST_FFMPEG_VERSION_MINOR
+#GST_MAJORMINOR=$GST_FFMPEG_VERSION_MAJOR.$GST_FFMPEG_VERSION_MINOR
+dnl hack while GST_MAJORMINOR doesn't match the release
+GST_MAJORMINOR=0.8
 AC_SUBST(GST_MAJORMINOR)
                                                                                 
 dnl CURRENT, REVISION, AGE

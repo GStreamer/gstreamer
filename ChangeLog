@@ -1,3 +1,7 @@
+2004-03-10  David Schleef  <ds@schleef.org>
+
+	* configure.ac: bump gstreamer API number to 0.8
+
 2004-03-09  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/Makefile.am:
