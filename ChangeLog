@@ -1,5 +1,11 @@
 2004-10-15  Wim Taymans  <wim@fluendo.com>
 
+	* ext/speex/gstspeexenc.c: (gst_speexenc_class_init),
+	(gst_speexenc_chain):
+	Fix speex timestamps so that it gets muxed properly.
+
+2004-10-15  Wim Taymans  <wim@fluendo.com>
+
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_get_type),
 	(gst_dv1394src_base_init), (gst_dv1394src_class_init),
 	(gst_dv1394src_init), (gst_dv1394src_dispose),
