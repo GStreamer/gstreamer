@@ -196,11 +196,15 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gdouble fps)
 
       switch (csp) {
         case XVID_CSP_RGB555:
-          r_mask = R_MASK_15_INT; g_mask = G_MASK_15_INT; b_mask = B_MASK_15_INT;
+          r_mask = GST_VIDEO_RED_MASK_15_INT;
+          g_mask = GST_VIDEO_GREEN_MASK_15_INT;
+          b_mask = GST_VIDEO_BLUE_MASK_15_INT;
           endianness = G_BYTE_ORDER; depth = 15; bpp = 16;
           break;
         case XVID_CSP_RGB565:
-          r_mask = R_MASK_16_INT; g_mask = G_MASK_16_INT; b_mask = B_MASK_16_INT;
+          r_mask = GST_VIDEO_RED_MASK_16_INT;
+          g_mask = GST_VIDEO_GREEN_MASK_16_INT;
+          b_mask = GST_VIDEO_BLUE_MASK_16_INT;
           endianness = G_BYTE_ORDER; depth = 16; bpp = 16;
           break;
         case XVID_CSP_BGR:

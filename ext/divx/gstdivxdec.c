@@ -369,11 +369,15 @@ gst_divxdec_negotiate (GstDivxDec *divxdec)
           break;
         case 24:
           endianness = G_BIG_ENDIAN;
-          r_mask = R_MASK_24; g_mask = G_MASK_24; b_mask = B_MASK_24;
+          r_mask = GST_VIDEO_BYTE1_MASK_24_INT;
+          g_mask = GST_VIDEO_BYTE2_MASK_24_INT;
+          b_mask = GST_VIDEO_BYTE3_MASK_24_INT
           break;
         case 32:
           endianness = G_BIG_ENDIAN;
-          r_mask = R_MASK_32; g_mask = G_MASK_32; b_mask = B_MASK_32;
+          r_mask = GST_VIDEO_BYTE1_MASK_32_INT;
+          g_mask = GST_VIDEO_BYTE2_MASK_32_INT;
+          b_mask = GST_VIDEO_BYTE3_MASK_32_INT
           break;
       }
       caps = GST_CAPS_NEW("divxdec_src_pad_rgb",

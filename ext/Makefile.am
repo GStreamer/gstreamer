@@ -154,6 +154,12 @@ else
 LCS_DIR=
 endif
 
+if USE_LIBCACA
+LIBCACA_DIR=libcaca
+else
+LIBCACA_DIR=
+endif
+
 if USE_LIBDV
 LIBDV_DIR=dv
 else
@@ -323,6 +329,7 @@ SUBDIRS=\
 	$(LADSPA_DIR) \
 	$(LAME_DIR) \
 	$(LCS_DIR) \
+	$(LIBCACA_DIR) \
 	$(LIBDV_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBPNG_DIR) \
@@ -376,6 +383,7 @@ DIST_SUBDIRS=\
 	ladspa \
 	lame \
 	lcs \
+	libcaca \
 	libfame \
 	libpng \
 	librfb \
