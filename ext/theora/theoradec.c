@@ -392,6 +392,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
       guint64 value;
+      GstEvent *real_seek;
 
       /* we have to ask our peer to seek to time here as we know
        * nothing about how to generate a granulepos from the src
@@ -406,7 +407,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
         goto error;
 
       /* then seek with time on the peer */
-      GstEvent *real_seek = gst_event_new_seek (
+      real_seek = gst_event_new_seek (
           (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
           format, value);
 
