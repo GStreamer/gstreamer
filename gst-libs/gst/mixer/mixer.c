@@ -1,6 +1,5 @@
-/* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wim.taymans@chello.be>
+/* GStreamer Mixer
+ * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * mixer.c: mixer design virtual class function wrappers
  *
