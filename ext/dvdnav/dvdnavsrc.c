@@ -591,45 +591,51 @@ dvdnavsrc_button_pressed (DVDNavSrc *src, int button)
 static void
 dvdnavsrc_pointer_select (DVDNavSrc *src, int x, int y)
 {
-  dvdnav_mouse_select(src->dvdnav, x, y);
+  dvdnav_mouse_select(src->dvdnav,
+                      dvdnav_get_current_nav_pci(src->dvdnav),
+                      x, y);
 }
 
 static void
 dvdnavsrc_pointer_activate (DVDNavSrc *src, int x, int y)
 {
-  dvdnav_mouse_activate(src->dvdnav, x, y);
+  dvdnav_mouse_activate(src->dvdnav,
+                        dvdnav_get_current_nav_pci(src->dvdnav),
+                        x, y);
 }
 
 static void
 dvdnavsrc_user_op (DVDNavSrc *src, int op)
 {
+  pci_t *pci = dvdnav_get_current_nav_pci(src->dvdnav);
+
   fprintf (stderr, "user_op %d\n", op);
   /* Magic user_op ids */
   switch (op) {
     case 0: /* None */
       break;
     case 1: /* Upper */
-      if (dvdnav_upper_button_select(src->dvdnav) != DVDNAV_STATUS_OK) {
+      if (dvdnav_upper_button_select(src->dvdnav, pci) != DVDNAV_STATUS_OK) {
         goto naverr;
       }
       break;
     case 2: /* Lower */
-      if (dvdnav_lower_button_select(src->dvdnav) != DVDNAV_STATUS_OK) {
+      if (dvdnav_lower_button_select(src->dvdnav, pci) != DVDNAV_STATUS_OK) {
         goto naverr;
       }
       break;
     case 3: /* Left */
-      if (dvdnav_left_button_select(src->dvdnav) != DVDNAV_STATUS_OK) {
+      if (dvdnav_left_button_select(src->dvdnav, pci) != DVDNAV_STATUS_OK) {
         goto naverr;
       }
       break;
     case 4: /* Right */
-      if (dvdnav_right_button_select(src->dvdnav) != DVDNAV_STATUS_OK) {
+      if (dvdnav_right_button_select(src->dvdnav, pci) != DVDNAV_STATUS_OK) {
         goto naverr;
       }
       break;
     case 5: /* Activate */
-      if (dvdnav_button_activate(src->dvdnav) != DVDNAV_STATUS_OK) {
+      if (dvdnav_button_activate(src->dvdnav, pci) != DVDNAV_STATUS_OK) {
         goto naverr;
       }
       break;
