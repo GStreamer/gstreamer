@@ -503,7 +503,6 @@ GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 GstCaps*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
 xmlNodePtr              gst_ghost_pad_save_thyself   		(GstPad *pad,
-						     		 GstElement *bin,
 						     		 xmlNodePtr parent);
 
 G_END_DECLS
