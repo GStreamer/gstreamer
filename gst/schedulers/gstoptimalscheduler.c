@@ -123,6 +123,10 @@ typedef enum {
   GST_OPT_SCHEDULER_GROUP_LOOP			= 2,
 } GstOptSchedulerGroupType;
 
+#define GST_OPT_SCHEDULER_GROUP_SET_FLAG(group,flag) 	((group)->flags |= (flag))
+#define GST_OPT_SCHEDULER_GROUP_UNSET_FLAG(group,flag) 	((group)->flags &= (flag))
+#define GST_OPT_SCHEDULER_GROUP_IS_FLAG_SET(group,flag) ((group)->flags & (flag))
+
 #define GST_OPT_SCHEDULER_GROUP_DISABLE(group) 		((group)->flags |= GST_OPT_SCHEDULER_GROUP_DISABLED)
 #define GST_OPT_SCHEDULER_GROUP_ENABLE(group) 		((group)->flags &= ~GST_OPT_SCHEDULER_GROUP_DISABLED)
 #define GST_OPT_SCHEDULER_GROUP_IS_ENABLED(group) 	(!((group)->flags & GST_OPT_SCHEDULER_GROUP_DISABLED))
@@ -583,6 +587,13 @@ remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
   }
 }
 
+static void
+group_error_handler (GstOptSchedulerGroup *group) 
+{
+  chain_group_set_enabled (group->chain, group, FALSE);
+  group->chain->sched->state = GST_OPT_SCHEDULER_STATE_ERROR;
+}
+
 /* this function enables/disables an element, it will set/clear a flag on the element 
  * and tells the chain that the group is enabled if all elements inside the group are
  * enabled */
@@ -621,6 +632,9 @@ group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gbo
 static gboolean 
 schedule_group (GstOptSchedulerGroup *group) 
 {
+  if (!group->entry)
+    return FALSE;
+
 #ifdef USE_COTHREADS
   if (group->cothread)
     do_cothread_switch (group->cothread);
@@ -649,7 +663,10 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 
     GST_INFO (GST_CAT_SCHEDULING, "scheduling %p", group);
 
-    schedule_group (group);
+    if (!schedule_group (group)) {
+      g_warning  ("error scheduling group %p", group);
+      group_error_handler (group);
+    }
 
     GST_INFO (GST_CAT_SCHEDULING, "done scheduling %p", group);
   }
@@ -763,8 +780,7 @@ unkown_group_schedule_function (int argc, char *argv[])
   GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) argv;
 
   g_warning ("(internal error) unkown group type %d, disabling\n", group->type);
-  chain_group_set_enabled (group->chain, group, FALSE);
-  group->chain->sched->state = GST_OPT_SCHEDULER_STATE_ERROR;
+  group_error_handler (group);
 
   return 0;
 }
@@ -787,8 +803,7 @@ gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstBuffer *buffer)
 #ifdef USE_COTHREADS
   if (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad))) {
     g_warning ("deadlock detected, disabling group %p", group);
-    chain_group_set_enabled (group->chain, group, FALSE);
-    group->chain->sched->state = GST_OPT_SCHEDULER_STATE_ERROR;
+    group_error_handler (group);
   }
   else {
     GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), buffer);
@@ -834,8 +849,7 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
     }
     else {
       g_warning ("deadlock detected, disabling group %p", group);
-      chain_group_set_enabled (group->chain, group, FALSE);
-      group->chain->sched->state = GST_OPT_SCHEDULER_STATE_ERROR;
+      group_error_handler (group);
       return NULL;
     }
 #endif
@@ -1167,6 +1181,10 @@ static void
 gst_opt_scheduler_error (GstScheduler *sched, GstElement *element)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptSchedulerGroup *group;
+  get_group (element, &group);
+  if (group)
+    group_error_handler (group);
 
   osched->state = GST_OPT_SCHEDULER_STATE_ERROR;
 }
@@ -1200,11 +1218,17 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
 	/* this could be tricky, the get based source could 
 	 * already be part of a loop based group in another pad,
 	 * we assert on that for now */
-	if (GST_ELEMENT_SCHED_CONTEXT (element1) &&
+	if (GST_ELEMENT_SCHED_CONTEXT (element1) != NULL &&
 	    GST_ELEMENT_SCHED_GROUP (element1) != NULL) 
 	{
-          g_error ("internal error: cannot schedule get to loop with get in group");
-	  return;
+          GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (element1);
+
+	  /* if the loop based element is the entry point we're ok, if it
+	   * isn't then we have multiple loop based elements in this group */
+	  if (group->entry != element2) {
+            g_error ("internal error: cannot schedule get to loop in multi-loop based group");
+	    return;
+	  }
 	}
       }
       else
@@ -1215,11 +1239,17 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
         type = GST_OPT_GET_TO_CHAIN;
 	/* the get based source could already be part of a loop 
 	 * based group in another pad, we assert on that for now */
-	if (GST_ELEMENT_SCHED_CONTEXT (element1) &&
+	if (GST_ELEMENT_SCHED_CONTEXT (element1) != NULL &&
 	    GST_ELEMENT_SCHED_GROUP (element1) != NULL) 
 	{
-          g_error ("internal error: cannot schedule get to loop with get in group");
-	  return;
+          GstOptSchedulerGroup *group = GST_ELEMENT_SCHED_GROUP (element1);
+
+	  /* if the get based element is the entry point we're ok, if it
+	   * isn't then we have a mixed loop/chain based group */
+	  if (group->entry != element1) {
+            g_error ("internal error: cannot schedule get to chain with mixed loop/chain based group");
+	    return;
+	  }
 	}
       }
       else 
