@@ -161,7 +161,7 @@ SHOUT_DIR=
 endif
 
 if USE_SMOOTHWAVE
-SMOOTHWAVE_DIR=smooothwave
+SMOOTHWAVE_DIR=smoothwave
 else
 SMOOTHWAVE_DIR=
 endif
