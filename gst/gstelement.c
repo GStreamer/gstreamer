@@ -734,6 +734,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
   g_return_val_if_fail (element != NULL, GST_STATE_FAILURE);
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
+  g_return_val_if_fail (element->sched != NULL, GST_STATE_FAILURE);
 
   GST_DEBUG (GST_CAT_STATES,"setting element '%s' to state %s\n",GST_ELEMENT_NAME (element),
              _gst_print_statename(state));

@@ -1281,6 +1281,7 @@ g_return_val_if_fail (chains != NULL, FALSE);
       GST_DEBUG (GST_CAT_DATAFLOW,"starting iteration via cothreads\n");
 
       if (chain->elements) {
+        entry = NULL; //MattH ADDED?
         elements = chain->elements;
 //printf("searching for non-decoupled element\n");
         while (elements) {
