@@ -1,3 +1,10 @@
+2004-11-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_get_audio_stream),
+	(gst_dvd_demux_process_private):
+	* gst/mpegstream/gstdvddemux.h:
+	  Fix crash (#159759). Doesn't work, though. :-(.
+
 2004-11-28  Benjamin Otte  <otte@gnome.org>
 
 	* gst/audioconvert/gstchannelmix.c: (gst_audio_convert_mix):
