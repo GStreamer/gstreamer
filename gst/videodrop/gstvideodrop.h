@@ -45,8 +45,9 @@ struct _GstVideodrop {
 
   /* video state */
   gboolean inited;
-  float from_fps,
-	to_fps;
+  gfloat from_fps,
+	 to_fps;
+  gfloat speed;
   guint64 pass, total;
 };
 

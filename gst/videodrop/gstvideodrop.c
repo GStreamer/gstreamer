@@ -39,6 +39,7 @@ enum {
 
 enum {
   ARG_0,
+  ARG_SPEED
   /* FILL ME */
 };
 
@@ -87,6 +88,18 @@ static void	gst_videodrop_class_init	(GstVideodropClass *klass);
 static void	gst_videodrop_init		(GstVideodrop *videodrop);
 static void	gst_videodrop_chain		(GstPad *pad, GstData *_data);
 
+static void	gst_videodrop_set_property	(GObject *object,
+						 guint prop_id, 
+		 				 const GValue *value,
+						 GParamSpec *pspec);
+static void	gst_videodrop_get_property	(GObject *object,
+						 guint prop_id, 
+						 GValue *value,
+						 GParamSpec *pspec);
+
+static GstElementStateReturn
+		gst_videodrop_change_state	(GstElement *element);
+
 static GstElementClass *parent_class = NULL;
 /*static guint gst_videodrop_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -131,7 +144,20 @@ gst_videodrop_base_init (gpointer g_class)
 static void
 gst_videodrop_class_init (GstVideodropClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
   parent_class = g_type_class_peek_parent (klass);
+
+  g_object_class_install_property (object_class, ARG_SPEED,
+    g_param_spec_float ("speed", "Speed",
+			"Output speed (relative to input)",
+                        0.01, 100, 1, G_PARAM_READWRITE));
+
+  object_class->set_property = gst_videodrop_set_property;
+  object_class->get_property = gst_videodrop_get_property;
+
+  element_class->change_state = gst_videodrop_change_state;
 }
 
 #define gst_caps_get_float_range(caps, name, min, max) \
@@ -206,36 +232,88 @@ gst_videodrop_init (GstVideodrop *videodrop)
 
   videodrop->inited = FALSE;
   videodrop->total = videodrop->pass = 0;
+  videodrop->speed = 1.;
 }
 
 static void
-gst_videodrop_chain (GstPad *pad, GstData *_data)
+gst_videodrop_chain (GstPad *pad, GstData *data)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstVideodrop *videodrop;
+  GstVideodrop *videodrop = GST_VIDEODROP (gst_pad_get_parent (pad));
+  GstBuffer *buf;
 
-  GST_DEBUG ("gst_videodrop_chain");
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
-  videodrop = GST_VIDEODROP (gst_pad_get_parent (pad));
-
-  if (GST_IS_EVENT (buf)) {
-    gst_pad_push (videodrop->srcpad, GST_DATA (buf));
+  if (GST_IS_EVENT (data)) {
+    gst_pad_event_default (videodrop->srcpad, GST_EVENT (data));
     return;
   }
 
+  buf = GST_BUFFER (data);
+
   videodrop->total++;
-  while (videodrop->to_fps / videodrop->from_fps >
+  while (videodrop->to_fps / (videodrop->from_fps * videodrop->speed) >
 	 (gfloat) videodrop->pass / videodrop->total) {
     videodrop->pass++;
     gst_buffer_ref (buf);
+    GST_BUFFER_TIMESTAMP (buf) /= videodrop->speed;
     gst_pad_push (videodrop->srcpad, GST_DATA (buf));
   }
 
   gst_buffer_unref (buf);
+}
+
+static void
+gst_videodrop_set_property (GObject      *object,
+			    guint         prop_id, 
+		 	    const GValue *value,
+			    GParamSpec   *pspec)
+{
+  GstVideodrop *videodrop = GST_VIDEODROP (object);
+
+  switch (prop_id) {
+    case ARG_SPEED:
+      videodrop->speed = g_value_get_float (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_videodrop_get_property (GObject    *object,
+			    guint       prop_id, 
+			    GValue     *value,
+			    GParamSpec *pspec)
+{
+  GstVideodrop *videodrop = GST_VIDEODROP (object);
+
+  switch (prop_id) {
+    case ARG_SPEED:
+      g_value_set_float (value, videodrop->speed);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static GstElementStateReturn
+gst_videodrop_change_state (GstElement *element)
+{
+  GstVideodrop *videodrop = GST_VIDEODROP (element);
+
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_PAUSED_TO_READY:
+      videodrop->inited = FALSE;
+      videodrop->total = videodrop->pass = 0;
+      break;
+    default:
+      break;
+  }
+
+  if (parent_class->change_state)
+    return parent_class->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
 static gboolean
