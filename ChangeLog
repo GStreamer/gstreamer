@@ -1,3 +1,8 @@
+2004-06-07  Benjamin Otte  <otte@gnome.org>
+
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
+	  handle discont events if they happen before caps nego
+
 2004-06-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/multipart/multipartdemux.c: (gst_multipart_demux_base_init),
@@ -20,6 +25,7 @@
 	  - check for soundcard.h in different places for some BSD
 
 2004-06-07  Jan Schmidt <thaytan@mad.scientist.com>
+
 	* AUTHORS:
 	Add me to the authors file
 	* configure.ac:
