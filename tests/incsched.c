@@ -1,3 +1,5 @@
+<<<<<<< incsched.c
+<<<<<<< incsched.c
 #include <stdlib.h>
 #include <gst/gst.h>
 
@@ -118,8 +120,11 @@ int main(int argc,char *argv[]) {
   g_print("\n\nIterating:\n");
   gst_bin_iterate(thread);
 
-return;
+//return;
   g_print("\n\nSetting EOS on fakesrc and iterating again:\n");
   gtk_object_set(GTK_OBJECT(src),"eos",TRUE,NULL);
+  gst_bin_iterate(thread);
+
+  g_print("\n\nIterating:\n");
   gst_bin_iterate(thread);
 }

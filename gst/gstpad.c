@@ -1205,6 +1205,8 @@ gst_pad_eos_func(GstPad *pad)
   GST_INFO (GST_CAT_PADS,"set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
   GST_FLAG_SET (pad, GST_PAD_EOS);
 
+  gst_element_set_state (GST_ELEMENT(GST_PAD_PARENT(pad)), GST_STATE_READY);
+
   return TRUE;
 }
 
@@ -1231,6 +1233,8 @@ gst_pad_set_eos(GstPad *pad)
 
   GST_INFO (GST_CAT_PADS,"set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
   GST_FLAG_SET (pad, GST_PAD_EOS);
+
+  gst_element_set_state (GST_ELEMENT(GST_PAD_PARENT(pad)), GST_STATE_READY);
 
   gst_element_signal_eos (GST_ELEMENT (GST_PAD_PARENT (pad)));
 

@@ -721,7 +721,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     /* if that outright didn't work, we need to bail right away */
     /* NOTE: this will bail on ASYNC as well! */
     if (return_val == GST_STATE_FAILURE) {
-//      GST_DEBUG (0,"have async return from '%s'\n",GST_ELEMENT_NAME (element));
+      GST_DEBUG (GST_CAT_STATES,"have failed change_state return from '%s'\n",GST_ELEMENT_NAME (element));
       return return_val;
     }
   }

@@ -114,7 +114,7 @@ gst_bin_class_init (GstBinClass *klass)
 
   klass->change_state_type =		gst_bin_change_state_type;
   klass->create_plan =			gst_bin_create_plan_func;
-  klass->schedule =			gst_bin_schedule_func;
+//  klass->schedule =			gst_bin_schedule_func;
   klass->iterate =			gst_bin_iterate_func;
 
   gstobject_class->save_thyself =	gst_bin_save_thyself;
@@ -316,7 +316,7 @@ gst_bin_remove (GstBin *bin,
 		    (GST_STATE (bin) == GST_STATE_PAUSED));
 
   // the element must have its parent set to the current bin
-  g_return_if_fail (GST_ELEMENT_PARENT(element) == bin);
+  g_return_if_fail (GST_ELEMENT_PARENT(element) == (GstElement *)bin);
 
   // the element must be in the bin's list of children
   if (g_list_find(bin->children, element) == NULL) {
@@ -415,10 +415,10 @@ gst_bin_change_state (GstElement *element)
 static GstElementStateReturn
 gst_bin_change_state_norecurse (GstBin *bin)
 {
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
+    GST_DEBUG(GST_CAT_STATES, "setting bin's own state\n");
     return GST_ELEMENT_CLASS (parent_class)->change_state (GST_ELEMENT (bin));
-  else
+  } else
     return GST_STATE_FAILURE;
 }
 
@@ -738,9 +738,11 @@ typedef struct {
 } region_struct;
 
 
+/* seriously depracated!!! */
 static void
 gst_bin_create_plan_func (GstBin *bin)
 {
+/*
   GstElement *manager;
   GList *elements;
   GstElement *element;
@@ -749,6 +751,7 @@ gst_bin_create_plan_func (GstBin *bin)
 #endif
   GSList *pending = NULL;
   GstBin *pending_bin;
+*/
 
   GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (bin));
 
@@ -943,7 +946,21 @@ gst_bin_iterate_func (GstBin *bin)
       // FIXME this should be lots more intelligent about where to start
       GST_DEBUG (0,"starting iteration via cothreads\n");
 
-      entry = GST_ELEMENT (chain->elements->data);
+      entries = chain->elements;
+      entry = NULL;
+
+      // find an element with a threadstate to start with
+      while (entries) {
+        entry = GST_ELEMENT (entries->data);
+
+        if (entry->threadstate)
+          break;
+        entries = g_list_next (entries);
+      }
+      // if we couldn't find one, bail out
+      if (entries == NULL)
+        GST_ERROR(GST_ELEMENT(bin),"no cothreaded elements found!");
+
       GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
       GST_DEBUG (0,"set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
             GST_ELEMENT_NAME (entry),entry);

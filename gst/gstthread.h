@@ -66,6 +66,7 @@ struct _GstThread {
   pthread_t thread_id;		/* id of the thread, if any */
   GMutex *lock;			/* thread lock/condititon pair... */
   GCond *cond;			/* used to control the thread */
+  gboolean signaling;
 
   gint transition;		/* the current state transition */
 };
