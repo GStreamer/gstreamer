@@ -970,7 +970,6 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
       }
 
       structure = gst_caps_get_structure (caps, 0);
-      gst_caps_free (caps);
       mimetype = gst_structure_get_name (structure);
 
       if (g_str_has_prefix (mimetype, "audio/x-raw") ||
@@ -979,6 +978,8 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
             play_base_bin);
         is_raw = TRUE;
       }
+
+      gst_caps_free (caps);
     }
     if (is_raw) {
       no_more_pads (play_base_bin->source, play_base_bin);

@@ -1,3 +1,10 @@
+2005-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Tim-Philipp Müller  <t.i.m@zen.co.uk>
+
+	* gst/playback/gstplaybasebin.c:
+	 Fix for #162924 - free caps after use, not before
+
 2005-01-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Ronald Bultje <rbultje@ronald.bitfreak.net>
