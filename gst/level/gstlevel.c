@@ -201,6 +201,7 @@ gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
 
   in_data = (gint16 *) GST_BUFFER_DATA (buf);
 
+  /* total number of interleaved samples */
   num_samples = GST_BUFFER_SIZE (buf) / (filter->width / 8);
   if (num_samples % filter->channels != 0)
     g_warning

@@ -1,3 +1,8 @@
+/*
+static void inline
+gst_level_fast_16bit_chain (gint16 * in, guint num, gint channels,
+    gint resolution, double *CS, double *peak)
+*/
 /* process one (interleaved) channel of incoming samples
  * calculate square sum of samples
  * normalize and return normalized Cumulative Square
