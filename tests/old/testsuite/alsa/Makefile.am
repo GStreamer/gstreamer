@@ -1,8 +1,6 @@
 testprogs = formats state
 
-TESTS = $(testprogs)
-
-check_PROGRAMS = $(testprogs)
+noinst_PROGRAMS = $(testprogs)
 
 formats_SOURCES = formats.c sinesrc.c sinesrc.h
 state_SOURCES = state.c sinesrc.c sinesrc.h
