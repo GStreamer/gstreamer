@@ -22,7 +22,7 @@ check_PROGRAMS = ieeetest
 
 ieeetest_SOURCES = ieeetest.c
 ieeetest_LDADD = libgstidct.la
-ieeetest_CFLAGS = $(GNOME_CFLAGS) $(GST_CFLAGS)
+ieeetest_CFLAGS = $(GNOME_CFLAGS) $(GST_CFLAGS) $(XML_CFLAGS)
 ieeetest_LDFLAGS = $(GNOME_LIBS) $(GST_LIBS)
 
 noinst_HEADERS = dct.h
