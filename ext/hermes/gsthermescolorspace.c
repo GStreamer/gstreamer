@@ -656,7 +656,7 @@ plugin_init (GstPlugin * plugin)
   hermes_res = Hermes_Init ();
   g_return_val_if_fail (hermes_res != 0, FALSE);
 
-  if (!gst_element_register (plugin, "hermescolorspace", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "hermescolorspace", GST_RANK_PRIMARY - 2,
           GST_TYPE_COLORSPACE))
     return FALSE;
 
