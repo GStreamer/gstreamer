@@ -1,1 +1,73 @@
-This is CVS of GStreamer.
+
+GStreamer: Release notes for GStreamer 0.7.6 "Almost"
+        
+
+The GStreamer team is happy to announce a new release in the
+0.7.x development series of the GStreamer streaming-media framework.
+The goal of this release series is to stabilize towards a 0.8
+release series which will be part of the GNOME 2.6 releases
+and hopefully eventually KDE 4.x. 
+
+
+0.7.6 is a Release Candidate for GStreamer 0.8.0
+It is released to shake out the last bugs that might be still present
+due to major/minor number differences.
+
+
+The 0.7 series is a development series and is aimed at developers.
+It is NOT API or ABI compatible with the stable 0.6.x series or
+with other releases in the series.  This means you can not use this
+release to upgrade your current GStreamer installation and expect your
+GStreamer applications to keep working without a recompile.
+It is, however, parallel installable with the 0.6.x series.
+
+  
+Features of this release
+    
+      * uses 0.8 as the major/minor number
+      * opt scheduler fixes
+      * don't link non-versioned tools to gstreamer
+      * bindings-related fixes and additions
+
+Download
+
+You find source releases of gstreamer in the download directory:
+http://gstreamer.freedesktop.org/src/gstreamer/
+
+GStreamer Homepage
+
+More details can be found on the project's website:
+http://gstreamer.freedesktop.org/
+
+Support and Bugs
+
+We use GNOME's bugzilla for bug reports and feature requests:
+http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+
+Developers
+
+CVS is hosted on cvs.freedesktop.org.
+All code is in CVS and can be checked out from there.
+Interested developers of the core library, plug-ins, and applications should
+subscribe to the gstreamer-devel list. If there is sufficient interest we
+will create more lists as necessary.
+
+        
+Applications
+
+Applications are supposed to update their pkg-config checks for GStreamer,
+and start checking for 0.8 as the major/minor number.
+
+  
+Contributors to this release
+    
+      * Christian Schaller
+      * Thomas Vander Stichele
+      * David Schleef
+      * Johan Dahlin
+      * Benjamin Otte
+      * Christophe Fergeau
+      * Andy Wingo
+      * Ronald Bultje
+      * Jan Schmidt
+ 

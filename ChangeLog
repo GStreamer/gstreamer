@@ -1,3 +1,17 @@
+=== release 0.7.6 ===
+
+2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+          releasing 0.7.6, "Almost"
+	* po/fr.po:
+	* po/nl.po:
+	* tools/Makefile.am:
+	* tools/gst-feedback-m.m:
+          unversioned source
+
 2004-03-09  Johan Dahlin  <johan@gnome.org>
 
 	Reviewed by: Thomas Vander Stichele
@@ -54,8 +68,6 @@
 
 2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	reviewed by: <delete if not using a buddy>
-
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/gsttag.sgml:
 	* docs/gst/tmpl/gstxml.sgml:
@@ -68,8 +80,6 @@
 	leak
 
 2004-03-05  David Schleef  <ds@schleef.org>
-
-	reviewed by: <delete if not using a buddy>
 
 	* REQUIREMENTS: Add bison and flex.
 	* configure.ac: Fix comment about bison.

@@ -40,8 +40,16 @@ TODO :
     - update your local copy to the branch:
       cvs update -r BRANCH-RELEASE-0_3_3
   - Set the nano to 2 (in configure.ac, AS_VERSION)
+  - If this is a release candidate for a new major version, override
+    MAJOR/MINOR in configure.ac
   - Do all updates/patches/changes for the release tarball in this branch
   - Think of a good codename for the release
+  - Check the bug lists:
+    - The idea is to have all bugs for this milestone listed as fixed
+    - Check all of the bug reports with this version as a milestone, and verify
+      that these bugs are fixed, or reassign to a later milestone if not
+    - Check later milestone bugs, and if any of them are fixed, reassign to
+      this milestone
   - create a new $(version).xml file in www/src/htdocs/releases/$(module)
     and add that to cvs
   - Start updating the release notes on the www cvs tree
@@ -49,9 +57,12 @@ TODO :
     - add the generated targets (text and html) for this to the Makefile.am
     - grepping ChangeLog for contributors:
  grep "<.*>" ChangeLog | perl -i -p -e 's@\d*-\d*-\d*\s*(.*)\s*<.*$@$1@' | sort | uniq
+    - use www/bin/bugzilla (module) (version) to get an xml list of the
+      bugs fixed in this version, and add it to the release .xml
   - depending on how the API has changed update the libtool versioning
     in configure.ac, AS_LIBTOOL 
     (Look at the libtool info page about versioning for guidelines)
+    (if MAJOR/MINOR version has changed, however, you can reset all to 0)
   - FIXME: autotools have latest config.{guess,sub}
            This is needed in order to support newer platforms.
            On Debian install the autotools-dev package to get these.

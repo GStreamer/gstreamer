@@ -72,6 +72,10 @@ gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c
 gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_CFLAGS)
 gst_xmlinspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_LIBS)
 
+gst-feedback-@GST_MAJORMINOR@: gst-feedback-m.m
+	cp $(srcdir)/gst-feedback-m.m $@
+	chmod +x $@
+
 # make sure each unversioned tool comes from gst-run.c
 if !GST_DISABLE_REGISTRY
 gst_register_SOURCES = gst-run.c
@@ -122,7 +126,7 @@ GST_OTHER_MAN = \
 
 manpages = $(GST_REGISTRY_MAN) $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
 
-CLEANFILES = $(manpages)
+CLEANFILES = $(manpages) $(bin_SCRIPTS)
 man_MANS = $(manpages)
 
 EXTRA_DIST = \
@@ -135,7 +139,7 @@ EXTRA_DIST = \
 	gst-register.1.in \
 	gst-typefind.1.in \
 	gst-xmllaunch.1.in \
-	gst-feedback-@GST_MAJORMINOR@
+	gst-feedback-m.m
 
 %-@GST_MAJORMINOR@.1: %.1.in
 	sed \

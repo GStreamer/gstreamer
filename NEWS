@@ -1,4 +1,11 @@
-This is GStreamer 0.7.5
+This is GStreamer 0.7.6
+
+Changes since 0.7.5:
+                                                                                
+      * uses 0.8 as the major/minor number
+      * opt scheduler fixes
+      * don't link non-versioned tools to gstreamer
+      * bindings-related fixes and additions
  
 Changes since 0.7.4:
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-27 12:03+0100\n"
+"POT-Creation-Date: 2004-03-09 16:16+0100\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -133,168 +133,168 @@ msgid ""
 "%s\n"
 msgstr ""
 
-#: gst/gsterror.c:44
+#: gst/gsterror.c:56
 msgid "GStreamer encountered a general core library error."
 msgstr ""
 
-#: gst/gsterror.c:46 gst/gsterror.c:82 gst/gsterror.c:104 gst/gsterror.c:142
+#: gst/gsterror.c:58 gst/gsterror.c:94 gst/gsterror.c:116 gst/gsterror.c:154
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error.  "
 "Please file a bug."
 msgstr ""
 
-#: gst/gsterror.c:49
+#: gst/gsterror.c:61
 msgid "Internal GStreamer error: code not implemented.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:51
+#: gst/gsterror.c:63
 msgid "Internal GStreamer error: state change failed.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:53
+#: gst/gsterror.c:65
 msgid "Internal GStreamer error: pad problem.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:55
+#: gst/gsterror.c:67
 msgid "Internal GStreamer error: thread problem.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:57
+#: gst/gsterror.c:69
 msgid "Internal GStreamer error: scheduler problem.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:59
+#: gst/gsterror.c:71
 msgid "Internal GStreamer error: negotiation problem.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:61
+#: gst/gsterror.c:73
 msgid "Internal GStreamer error: event problem.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:63
+#: gst/gsterror.c:75
 msgid "Internal GStreamer error: seek problem.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:65
+#: gst/gsterror.c:77
 msgid "Internal GStreamer error: caps problem.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:67
+#: gst/gsterror.c:79
 msgid "Internal GStreamer error: tag problem.  File a bug."
 msgstr ""
 
-#: gst/gsterror.c:80 gst/gsterror.c:102 gst/gsterror.c:140
+#: gst/gsterror.c:92 gst/gsterror.c:114 gst/gsterror.c:152
 msgid "GStreamer encountered a general supporting library error."
 msgstr ""
 
-#: gst/gsterror.c:85
+#: gst/gsterror.c:97
 msgid "Could not initialize supporting library."
 msgstr ""
 
-#: gst/gsterror.c:87 gst/gsterror.c:89
+#: gst/gsterror.c:99 gst/gsterror.c:101
 #, fuzzy
 msgid "Could not close supporting library."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:107
+#: gst/gsterror.c:119
 msgid "Resource not found."
 msgstr ""
 
-#: gst/gsterror.c:109
+#: gst/gsterror.c:121
 msgid "Resource busy or not available."
 msgstr ""
 
-#: gst/gsterror.c:111
+#: gst/gsterror.c:123
 #, fuzzy
 msgid "Could not open resource for reading."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:113
+#: gst/gsterror.c:125
 #, fuzzy
 msgid "Could not open resource for writing."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:115
+#: gst/gsterror.c:127
 msgid "Could not open resource for reading and writing."
 msgstr ""
 
-#: gst/gsterror.c:117
+#: gst/gsterror.c:129
 #, fuzzy
 msgid "Could not close resource."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:119
+#: gst/gsterror.c:131
 #, fuzzy
 msgid "Could not read from resource."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:121
+#: gst/gsterror.c:133
 #, fuzzy
 msgid "Could not write to resource."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:135
 #, fuzzy
 msgid "Could not perform seek on resource."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:137
 #, fuzzy
 msgid "Could not synchronize on resource."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:139
 #, fuzzy
 msgid "Could not get/set settings from/on resource."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:145
+#: gst/gsterror.c:157
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:160
 #, fuzzy
 msgid "Could not determine type of stream."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:150
+#: gst/gsterror.c:162
 msgid "The stream is of a different type than handled by this element."
 msgstr ""
 
-#: gst/gsterror.c:152
+#: gst/gsterror.c:164
 msgid "There is no codec present that can handle the stream's type."
 msgstr ""
 
-#: gst/gsterror.c:154
+#: gst/gsterror.c:166
 #, fuzzy
 msgid "Could not decode stream."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:156
+#: gst/gsterror.c:168
 #, fuzzy
 msgid "Could not encode stream."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:158
+#: gst/gsterror.c:170
 #, fuzzy
 msgid "Could not demultiplex stream."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:172
 #, fuzzy
 msgid "Could not multiplex stream."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:162
+#: gst/gsterror.c:174
 msgid "Stream is of the wrong format."
 msgstr ""
 
-#: gst/gsterror.c:209
+#: gst/gsterror.c:221
 #, c-format
 msgid "No error message for domain %s."
 msgstr ""
 
-#: gst/gsterror.c:214
+#: gst/gsterror.c:226
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr ""
@@ -585,7 +585,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:418
+#: gst/autoplug/gstspider.c:419
 #, c-format
 msgid "There is no element present to handle the stream's mime type %s."
 msgstr ""
@@ -646,28 +646,28 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: gst/parse/grammar.y:169
+#: gst/parse/grammar.y:170
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "conteneur vide specifié \"%s\", non autorisé"
 
-#: gst/parse/grammar.y:174
+#: gst/parse/grammar.y:175
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "pas de conteneur \"%s\", ignoré"
 
-#: gst/parse/grammar.y:318
+#: gst/parse/grammar.y:319
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "pas de proprieté \"%s\" dans l'element \"%s\""
 
-#: gst/parse/grammar.y:331
+#: gst/parse/grammar.y:332
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "impossible de definir la proprieté \"%s\" dans l'element \"%s\" comme \"%s\""
 
-#: gst/parse/grammar.y:336
+#: gst/parse/grammar.y:337
 #, c-format
 msgid ""
 "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
@@ -675,59 +675,59 @@ msgstr ""
 "impossible de convertir \"%s\" de manière a correspondre avec la proprieté "
 "\"%s\" dans l'element \"%s\" "
 
-#: gst/parse/grammar.y:516
+#: gst/parse/grammar.y:525
 #, c-format
 msgid "could not link %s to %s"
 msgstr "impossible de connecter %s a %s"
 
-#: gst/parse/grammar.y:561
+#: gst/parse/grammar.y:570
 #, c-format
 msgid "no element \"%s\""
 msgstr "pas d'element \"%s\""
 
-#: gst/parse/grammar.y:612
+#: gst/parse/grammar.y:621
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "impossible d'interpreter les capacités \"%s\""
 
-#: gst/parse/grammar.y:634 gst/parse/grammar.y:688 gst/parse/grammar.y:704
-#: gst/parse/grammar.y:762
+#: gst/parse/grammar.y:643 gst/parse/grammar.y:697 gst/parse/grammar.y:713
+#: gst/parse/grammar.y:771
 msgid "link without source element"
 msgstr "lien sans element source"
 
-#: gst/parse/grammar.y:640 gst/parse/grammar.y:685 gst/parse/grammar.y:771
+#: gst/parse/grammar.y:649 gst/parse/grammar.y:694 gst/parse/grammar.y:780
 msgid "link without sink element"
 msgstr "lien sans element destination"
 
-#: gst/parse/grammar.y:722
+#: gst/parse/grammar.y:731
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "pas d'element source pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:732
+#: gst/parse/grammar.y:741
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "pas d'element avec lequel lier l'URI \"%s\""
 
-#: gst/parse/grammar.y:740
+#: gst/parse/grammar.y:749
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "pas d'element destination pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:744
+#: gst/parse/grammar.y:753
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "impossible de lier un element destination pour l'URI \"%s\""
 
-#: gst/parse/grammar.y:756
+#: gst/parse/grammar.y:765
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
-#: tools/gst-inspect.c:916
+#: tools/gst-inspect.c:917
 msgid "Show plugin details"
 msgstr ""
 
-#: tools/gst-inspect.c:918
+#: tools/gst-inspect.c:919
 msgid "Show scheduler details"
 msgstr ""
 
