@@ -52,7 +52,11 @@ int main (int argc, char *argv[])
     
     gst_element_set_state(pipe2, GST_STATE_PLAYING);
     g_idle_add(idle_func, pipe2);
-    g_main_loop_run(g_main_loop_new(NULL, FALSE));
+#ifdef USE_GLIB2
+    g_main_loop_run (g_main_loop_new (NULL, FALSE));
+#else
+    gst_main();
+#endif
     gst_element_set_state(pipe2, GST_STATE_NULL);
     
     return 0;
