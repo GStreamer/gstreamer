@@ -58,7 +58,7 @@ struct _GstMD5Sink {
 
   guint32 total[2];
   guint32 buflen;
-  gchar buffer[128] __attribute__ ((__aligned__ (__alignof__ (guint32))));
+  gchar buffer[128];
   
   /* latest md5 */
   guchar md5[16];

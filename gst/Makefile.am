@@ -114,6 +114,7 @@ gst_headers =			\
 	gstformat.h		\
 	gstinfo.h		\
 	gstlog.h		\
+	gstmacros.h		\
 	gstmemchunk.h		\
 	gstpad.h		\
 	gstpipeline.h		\

@@ -28,6 +28,7 @@
 
 #include <gmodule.h>
 #include <gst/gstpluginfeature.h>
+#include <gst/gstmacros.h>
 
 G_BEGIN_DECLS
 
@@ -80,8 +81,8 @@ GstPluginDesc plugin_desc = {				\
 #define GST_PLUGIN_DESC_DYNAMIC(major,minor,name,init)
 #endif
 #define GST_PLUGIN_DESC_STATIC(major,minor,name,init)	\
-static void __attribute__ ((constructor))		\
-_gst_plugin_static_init__ ##init (void)				\
+static void GST_GNUC_CONSTRUCTOR			\
+_gst_plugin_static_init__ ##init (void)			\
 {							\
   static GstPluginDesc plugin_desc_ = {			\
     major,						\
