@@ -603,7 +603,10 @@ AC_CHECK_HEADER(libraw1394/raw1394.h, :, HAVE_RAW1394=no)
 dnl Check for libdv
 AC_MSG_CHECKING(libdv)
 AC_CHECK_LIB(dv, dv_init, HAVE_LIBDV=yes, HAVE_LIBDV=no, -lm $GLIB_LIBS $GLIB_CFLAGS)
+CPPFLAGS="$libdvcheck_save_CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $GLIB_CFLAGS"
 AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
+libdvcheck_save_CPPFLAGS="$CPPFLAGS"
 
 dnl Check for aalib
 AC_MSG_CHECKING(aalib)
@@ -636,7 +639,6 @@ if sdl-config --libs > /dev/null 2>&1; then
   SDL_LIBS="`sdl-config --libs`"
   SDL_CFLAGS="`sdl-config --cflags`"
   AC_CHECK_LIB(SDL, SDL_Init, :, HAVE_LIBSDL=no, $SDL_LIBS)
-  dnl FIXME: CPPFLAGS should be set from SDL_CFLAGS for the next check
   dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
   dnl Assume only suitable flags result from artsc-config --cflags
   CPPFLAGS="$sdlcheck_save_CPPFLAGS"
