@@ -132,9 +132,9 @@ GType		gst_object_get_type		(void);
 
 /* name routines */
 gboolean	gst_object_set_name		(GstObject *object, const gchar *name);
-gchar* 		gst_object_get_name		(GstObject *object);
-void            gst_object_set_name_prefix      (GstObject *object, const gchar *name_prefix);
-gchar*          gst_object_get_name_prefix      (GstObject *object);
+gchar*		gst_object_get_name		(GstObject *object);
+void		gst_object_set_name_prefix	(GstObject *object, const gchar *name_prefix);
+gchar*		gst_object_get_name_prefix	(GstObject *object);
 
 /* parentage routines */
 gboolean	gst_object_set_parent		(GstObject *object, GstObject *parent);
@@ -142,7 +142,7 @@ GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
 
 void            gst_object_default_deep_notify 	(GObject *object, GstObject *orig, 
-		                                 GParamSpec *pspec, gchar **excluded_props);
+                                                 GParamSpec *pspec, gchar **excluded_props);
 
 /* refcounting + life cycle */
 GstObject *	gst_object_ref			(GstObject *object);

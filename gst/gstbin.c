@@ -1114,11 +1114,12 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
     GstObject *parent;
 
     parent = gst_object_get_parent (GST_OBJECT_CAST (bin));
-
-    if (parent && GST_IS_BIN (parent)) {
-      result = gst_bin_get_by_name_recurse_up (GST_BIN_CAST (parent), name);
+    if (parent) {
+      if (GST_IS_BIN (parent)) {
+        result = gst_bin_get_by_name_recurse_up (GST_BIN_CAST (parent), name);
+      }
+      gst_object_unref (parent);
     }
-    gst_object_unref (parent);
   }
 
   return result;

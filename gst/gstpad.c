@@ -965,14 +965,14 @@ gst_pad_set_fixate_function (GstPad * pad, GstPadFixateFunction fixate)
  * but this is discouraged.
  *
  * You do not need to call this function if @pad's allowed caps are always the
- * same as the pad template caps.
+ * same as the pad template caps. This can only be true if the padtemplate 
+ * has fixed simple caps.
  *
  * For most filters, the caps returned by @getcaps is directly affected by the
  * allowed caps on other pads. For demuxers and decoders, the caps returned by
  * the srcpad's getcaps function is directly related to the stream data. Again,
  * @getcaps should return the most specific caps it reasonably can, since this
- * helps with autoplugging. However, the returned caps should not depend on the
- * stream type currently negotiated for @pad.
+ * helps with autoplugging. 
  *
  * Note that the return value from @getcaps is owned by the caller.
  */
@@ -1970,22 +1970,6 @@ gst_pad_remove_ghost_pad (GstPad * pad, GstPad * ghostpad)
   gst_pad_set_pad_template (GST_PAD (ghostpad), NULL);
   realpad->ghostpads = g_list_remove (realpad->ghostpads, ghostpad);
   GST_GPAD_REALPAD (ghostpad) = NULL;
-}
-
-/**
- * gst_pad_get_ghost_pad_list:
- * @pad: a #GstPad to get the ghost pads of.
- *
- * Gets the ghost pads of this pad.
- *
- * Returns: a #GList of ghost pads.
- */
-GList *
-gst_pad_get_ghost_pad_list (GstPad * pad)
-{
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  return GST_PAD_REALIZE (pad)->ghostpads;
 }
 
 static gboolean
@@ -4227,7 +4211,7 @@ gst_pad_query (GstPad * pad, GstQueryType type,
   g_return_val_if_fail (rpad, FALSE);
 
   if (GST_RPAD_QUERYFUNC (rpad))
-    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD (rpad), type, format, value);
+    return GST_RPAD_QUERYFUNC (rpad) (GST_PAD_CAST (rpad), type, format, value);
 
   return FALSE;
 }

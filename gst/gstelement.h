@@ -87,7 +87,6 @@ GST_EXPORT GType _gst_element_type;
 #define GST_ELEMENT_CAST(obj)		((GstElement*)(obj))
 
 /* convenience functions */
-#ifndef GST_DISABLE_DEPRECATED
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_ELEMENT_QUERY_TYPE_FUNCTION(functionname, ...) \
 	GST_QUERY_TYPE_FUNCTION (GstElement*, functionname, __VA_ARGS__);
@@ -102,7 +101,6 @@ GST_EXPORT GType _gst_element_type;
 	GST_FORMATS_FUNCTION (GstElement*, functionname, a);
 #define GST_ELEMENT_EVENT_MASK_FUNCTION(functionname, a...) \
 	GST_EVENT_MASK_FUNCTION (GstElement*, functionname, a);
-#endif
 #endif
 
 typedef enum
@@ -135,6 +133,7 @@ typedef enum
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
 #define GST_ELEMENT_IS_EVENT_AWARE(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_EVENT_AWARE))
 #define GST_ELEMENT_IS_DECOUPLED(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_DECOUPLED))
+#define GST_ELEMENT_IS_LOCKED_STATE(obj)        (GST_FLAG_IS_SET(obj,GST_ELEMENT_LOCKED_STATE))
 
 #define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
 #define GST_ELEMENT_PARENT(obj)			(GST_OBJECT_PARENT(obj))

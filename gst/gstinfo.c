@@ -156,6 +156,7 @@ GstDebugCategory *GST_CAT_NEGOTIATION = NULL;
 GstDebugCategory *GST_CAT_REFCOUNTING = NULL;
 GstDebugCategory *GST_CAT_ERROR_SYSTEM = NULL;
 GstDebugCategory *GST_CAT_EVENT = NULL;
+GstDebugCategory *GST_CAT_MESSAGE = NULL;
 GstDebugCategory *GST_CAT_PARAMS = NULL;
 GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
 GstDebugCategory *GST_CAT_SEEK = NULL;
@@ -283,6 +284,8 @@ _gst_debug_init (void)
 
   GST_CAT_EVENT = _gst_debug_category_new ("GST_EVENT",
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLUE, NULL);
+  GST_CAT_MESSAGE = _gst_debug_category_new ("GST_MESSAGE",
+      GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_PARAMS = _gst_debug_category_new ("GST_PARAMS",
       GST_DEBUG_BOLD | GST_DEBUG_FG_BLACK | GST_DEBUG_BG_YELLOW, NULL);
   GST_CAT_CALL_TRACE = _gst_debug_category_new ("GST_CALL_TRACE",

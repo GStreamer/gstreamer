@@ -1,3 +1,26 @@
+2005-03-09  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* gst/gst_private.h:
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_add),
+	(gst_bin_remove_func), (gst_bin_remove),
+	(gst_bin_get_by_name_recurse_up):
+	* gst/gstclock.c: (gst_clock_id_ref), (gst_clock_id_unref),
+	(gst_clock_id_compare_func), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_init),
+	(gst_clock_adjust_unlocked), (gst_clock_get_time):
+	* gst/gstelement.h:
+	* gst/gstinfo.c: (_gst_debug_init):
+	* gst/gstobject.h:
+	* gst/gstpad.c: (_gst_pad_default_fixate_foreach),
+	(gst_pad_collectv), (gst_pad_collect_valist), (gst_pad_query):
+	* gst/gstpad.h:
+	Bump version number, we're now 0.9.0
+	Add future debugging category.
+	Fix NULL _unref() in _get_by_name_recurse_up
+	Rearrange gstpad.h.
+	Update some docs.
+
 2005-03-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstaggregator.c: (gst_aggregator_class_init):
