@@ -7,16 +7,18 @@ dnl this goes before AS_LIBTOOL to appease autoconf
 dnl *NOTE*: dnl this line before release, so release does static too
 AM_DISABLE_STATIC
 
-if test x$program_suffix = xNONE ; then
-  program_suffix=-$GST_VERSION_MAJOR.$GST_VERSION_MINOR
-fi
-
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
 AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 0, 1, GST_CVS="no", GST_CVS="yes")
+
+dnl add a suffix to apps
+if test x$program_suffix = xNONE ; then
+  program_suffix=-$GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR
+fi
+
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
