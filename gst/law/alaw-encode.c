@@ -212,8 +212,8 @@ gst_alawenc_chain (GstPad *pad,GstBuffer *buf)
   alaw_data = (guint8*)GST_BUFFER_DATA(outbuf);
   for (i = 0; i < GST_BUFFER_SIZE(outbuf); i++) {
     *alaw_data = s16_to_alaw (*linear_data);
-    *alaw_data++;
-    *linear_data++;
+    *alaw_data += 1;
+    *linear_data += 1;
   }
   gst_buffer_unref(buf);
   gst_pad_push(alawenc->srcpad,outbuf);
