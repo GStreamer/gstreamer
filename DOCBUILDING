@@ -41,16 +41,8 @@ pdftops
 
 DEVHELP INTEGRATION
 -------------------
-Check http://devhelp.sourceforge.net/
+Check http://www.imendio.com/projects/devhelp/
 It's a really nice development app allowing you to look up API stuff
 from various gtk-doc'd libraries.  GStreamer is one of these ;)
 
-Currently we keep our devhelp files in CVS until devhelp has settled down.
-
-We'll keep them in a devhelp/ directory
-
-For now, I put tools to generate the devhelp files in this dir, as well as
-the generated devhelp files.  It's easier to have one person generate the
-devhelp files once in a while than to do it in every build.  Until devhelp
-settles down or we get a clue, that is ;)
-
+gtk-doc generates both html API docs and the matching .devhelp files
