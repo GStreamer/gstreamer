@@ -256,14 +256,13 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
 {
   GstTee *tee;
   GList *pads;
-  gint i;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
   tee = GST_TEE (gst_pad_get_parent (pad));
-/*  gst_trace_add_entry (NULL, 0, buf, "tee buffer");*/
+  /*gst_trace_add_entry (NULL, 0, buf, "tee buffer");*/
 
   gst_buffer_ref_by_count (buf, GST_ELEMENT (tee)->numsrcpads - 1);
   
