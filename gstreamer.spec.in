@@ -17,7 +17,7 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 Requires: 	glib2 >= %_glib2
 Requires: 	libxml2 >= %_libxml2
 Requires:	popt > 1.6
-Requires:	%{name}-tools >= %{version}
+Prereq:		%{name}-tools >= %{version}
 BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	bison
@@ -139,7 +139,6 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer %{_datadir}/devhelp/books
 ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 %post tools
-%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 
 %postun
 /sbin/ldconfig
@@ -147,6 +146,9 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %files
 %defattr(-, root, root)
 %doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING RELEASE 
+%post tools
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
