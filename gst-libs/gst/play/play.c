@@ -131,6 +131,12 @@ G_STMT_START {							\
     return FALSE;						\
 } G_STMT_END
 
+#define GST_PLAY_HASH_LOOKUP(element, key, retval_if_fail)	\
+G_STMT_START {							\
+  (element) = g_hash_table_lookup (play->priv->elements, (key));\
+  if (!element)							\
+    return (retval_if_fail);					\
+} G_STMT_END
 
 /* setup parts of the pipeline
  * only put decoding part in the thread
@@ -749,23 +755,13 @@ gst_play_set_location (GstPlay * play, const char *location)
       return FALSE;
   }
 
-  work_thread = g_hash_table_lookup (play->priv->elements, "work_thread");
-  if (!GST_IS_ELEMENT (work_thread))
-    return FALSE;
-  source = g_hash_table_lookup (play->priv->elements, "source");
-  if (!GST_IS_ELEMENT (source))
-    return FALSE;
-  autoplugger = g_hash_table_lookup (play->priv->elements, "autoplugger");
-  if (!GST_IS_ELEMENT (autoplugger))
-    return FALSE;
-  audioconvert = g_hash_table_lookup (play->priv->elements, "audioconvert");
-  if (!GST_IS_ELEMENT (audioconvert))
-    return FALSE;
-  identity = g_hash_table_lookup (play->priv->elements, "identity");
-  if (!GST_IS_ELEMENT (identity))
-    return FALSE;
+  GST_PLAY_HASH_LOOKUP (work_thread, "work_thread", FALSE);
+  GST_PLAY_HASH_LOOKUP (source, "source", FALSE);
+  GST_PLAY_HASH_LOOKUP (autoplugger, "autoplugger", FALSE);
+  GST_PLAY_HASH_LOOKUP (audioconvert, "audioconvert", FALSE);
+  GST_PLAY_HASH_LOOKUP (identity, "identity", FALSE);
 
-  /* Spider can autoplugg only once. We remove the actual one and put a new
+  /* Spider can autoplug only once. We remove the actual one and put a new
      autoplugger */
   gst_element_unlink (source, autoplugger);
   gst_element_unlink (autoplugger, identity);
@@ -901,15 +897,9 @@ gst_play_set_data_src (GstPlay * play, GstElement * data_src)
   }
 
   /* Getting needed objects */
-  work_thread = g_hash_table_lookup (play->priv->elements, "work_thread");
-  if (!GST_IS_ELEMENT (work_thread))
-    return FALSE;
-  old_data_src = g_hash_table_lookup (play->priv->elements, "source");
-  if (!GST_IS_ELEMENT (old_data_src))
-    return FALSE;
-  autoplugger = g_hash_table_lookup (play->priv->elements, "autoplugger");
-  if (!GST_IS_ELEMENT (autoplugger))
-    return FALSE;
+  GST_PLAY_HASH_LOOKUP (work_thread, "work_thread", FALSE);
+  GST_PLAY_HASH_LOOKUP (old_data_src, "source", FALSE);
+  GST_PLAY_HASH_LOOKUP (autoplugger, "autoplugger", FALSE);
 
   /* Unlinking old source from autoplugger, removing it from pipeline, adding
      the new one and connecting it to autoplugger FIXME: we should put a new
@@ -954,15 +944,9 @@ gst_play_set_video_sink (GstPlay * play, GstElement * video_sink)
   }
 
   /* Getting needed objects */
-  video_thread = g_hash_table_lookup (play->priv->elements, "video_thread");
-  if (!GST_IS_ELEMENT (video_thread))
-    return FALSE;
-  old_video_sink = g_hash_table_lookup (play->priv->elements, "video_sink");
-  if (!GST_IS_ELEMENT (old_video_sink))
-    return FALSE;
-  video_scaler = g_hash_table_lookup (play->priv->elements, "video_scaler");
-  if (!GST_IS_ELEMENT (video_scaler))
-    return FALSE;
+  GST_PLAY_HASH_LOOKUP (video_thread, "video_thread", FALSE);
+  GST_PLAY_HASH_LOOKUP (old_video_sink, "video_sink", FALSE);
+  GST_PLAY_HASH_LOOKUP (video_scaler, "video_scaler", FALSE);
 
   /* Unlinking old video sink from video scaler, removing it from pipeline,
      adding the new one and linking it */
@@ -1021,15 +1005,9 @@ gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink)
   }
 
   /* Getting needed objects */
-  old_audio_sink = g_hash_table_lookup (play->priv->elements, "audio_sink");
-  if (!GST_IS_ELEMENT (old_audio_sink))
-    return FALSE;
-  audio_thread = g_hash_table_lookup (play->priv->elements, "audio_thread");
-  if (!GST_IS_ELEMENT (audio_thread))
-    return FALSE;
-  volume = g_hash_table_lookup (play->priv->elements, "volume");
-  if (!GST_IS_ELEMENT (volume))
-    return FALSE;
+  GST_PLAY_HASH_LOOKUP (audio_thread, "audio_thread", FALSE);
+  GST_PLAY_HASH_LOOKUP (volume, "volume", FALSE);
+  GST_PLAY_HASH_LOOKUP (old_audio_sink, "audio_sink", FALSE);
 
   /* Unlinking old audiosink, removing it from pipeline, putting the new one
      and linking it */
@@ -1075,18 +1053,10 @@ gst_play_set_visualization (GstPlay * play, GstElement * vis_element)
   g_return_val_if_fail (GST_IS_ELEMENT (vis_element), FALSE);
 
   /* Getting needed objects */
-  vis_bin = g_hash_table_lookup (play->priv->elements, "vis_bin");
-  if (!GST_IS_ELEMENT (vis_bin))
-    return FALSE;
-  vis_queue = g_hash_table_lookup (play->priv->elements, "vis_queue");
-  if (!GST_IS_ELEMENT (vis_queue))
-    return FALSE;
-  old_vis_element = g_hash_table_lookup (play->priv->elements, "vis_element");
-  if (!GST_IS_ELEMENT (old_vis_element))
-    return FALSE;
-  vis_cs = g_hash_table_lookup (play->priv->elements, "vis_cs");
-  if (!GST_IS_ELEMENT (vis_cs))
-    return FALSE;
+  GST_PLAY_HASH_LOOKUP (vis_bin, "vis_bin", FALSE);
+  GST_PLAY_HASH_LOOKUP (vis_queue, "vis_queue", FALSE);
+  GST_PLAY_HASH_LOOKUP (old_vis_element, "vis_element", FALSE);
+  GST_PLAY_HASH_LOOKUP (vis_cs, "vis_cs", FALSE);
 
   /* We bring back the pipeline to PAUSED */
   if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
@@ -1140,24 +1110,13 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
   return TRUE;
 
   /* Getting needed objects */
-  video_thread = g_hash_table_lookup (play->priv->elements, "video_thread");
-  if (!GST_IS_ELEMENT (video_thread))
-    return FALSE;
-  vis_bin = g_hash_table_lookup (play->priv->elements, "vis_bin");
-  if (!GST_IS_ELEMENT (vis_bin))
-    return FALSE;
-  vis_queue = g_hash_table_lookup (play->priv->elements, "vis_queue");
-  if (!GST_IS_ELEMENT (vis_queue))
-    return FALSE;
-  video_switch = g_hash_table_lookup (play->priv->elements, "video_switch");
-  if (!GST_IS_ELEMENT (video_switch))
-    return FALSE;
-  identity = g_hash_table_lookup (play->priv->elements, "identity");
-  if (!GST_IS_ELEMENT (identity))
-    return FALSE;
-  tee_pad1 = g_hash_table_lookup (play->priv->elements, "tee_pad1");
-  if (!GST_IS_PAD (tee_pad1))
-    return FALSE;
+  GST_PLAY_HASH_LOOKUP (video_thread, "video_thread", FALSE);
+  GST_PLAY_HASH_LOOKUP (vis_bin, "vis_bin", FALSE);
+  GST_PLAY_HASH_LOOKUP (vis_queue, "vis_queue", FALSE);
+  GST_PLAY_HASH_LOOKUP (video_switch, "video_switch", FALSE);
+  GST_PLAY_HASH_LOOKUP (identity, "identity", FALSE);
+
+  GST_PLAY_HASH_LOOKUP (tee_pad1, "tee_pad1", FALSE);
 
   vis_queue_pad = gst_element_get_pad (vis_queue, "sink");
 
@@ -1246,9 +1205,7 @@ gst_play_get_framerate (GstPlay * play)
 
   g_return_val_if_fail (GST_IS_PLAY (play), 0);
 
-  video_element = g_hash_table_lookup (play->priv->elements, "video_sink");
-  if (!GST_IS_ELEMENT (video_element))
-    return 0;
+  GST_PLAY_HASH_LOOKUP (video_element, "video_sink", 0);
   video_pad = gst_element_get_pad (video_element, "sink");
   if (!GST_IS_PAD (video_pad))
     return 0;
