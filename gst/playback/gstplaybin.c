@@ -419,7 +419,6 @@ gen_video_element (GstPlayBin * play_bin)
 
   gst_element_set_state (element, GST_STATE_READY);
 
-  /* ref before adding to the cache */
   g_hash_table_insert (play_bin->cache, "vbin", element);
 
 done:
@@ -490,7 +489,6 @@ gen_audio_element (GstPlayBin * play_bin)
 
   gst_element_set_state (element, GST_STATE_READY);
 
-  /* ref before adding to the cache */
   g_hash_table_insert (play_bin->cache, "abin", element);
 
 done:

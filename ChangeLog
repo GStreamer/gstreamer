@@ -1,3 +1,8 @@
+2004-11-26  Christophe Fergeau  <teuf@gnome.org>
+
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element): Removed 2 obsolete comments
+
 2004-11-26  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* ext/vorbis/oggvorbisenc.c
