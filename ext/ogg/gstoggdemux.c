@@ -508,6 +508,16 @@ gst_ogg_demux_chain (GstPad *pad, GstData *buffer)
 	 * we only have the END_OFFSET */
 	break;
       case 0:
+	if (ogg->state == GST_OGG_STATE_SETUP) {
+	  guint64 length;
+	  GstFormat format = GST_FORMAT_BYTES;
+	  if (!gst_pad_query (GST_PAD_PEER (ogg->sinkpad), GST_QUERY_TOTAL, &format, &length))
+	    length = 0;
+	  if (length <= offset_end) {
+	    gst_ogg_start_playing (ogg);
+	    goto out;
+	  }
+	}
 	break;
       case 1:
 	GST_LOG_OBJECT (ogg, "processing ogg page (serial %d, packet %ld, granule pos %llu",
@@ -515,8 +525,6 @@ gst_ogg_demux_chain (GstPad *pad, GstData *buffer)
 	switch (ogg->state) {
 	  case GST_OGG_STATE_SETUP:
 	    if (ogg_page_eos (&page)) {
-	      guint64 length;
-	      GstFormat format = GST_FORMAT_BYTES;
 	      GstOggPad *cur = gst_ogg_pad_get_in_current_chain (ogg, ogg_page_serialno (&page));
 	      GST_FLAG_SET (ogg, GST_OGG_FLAG_EOS);
 	      if (!cur) {
@@ -524,12 +532,6 @@ gst_ogg_demux_chain (GstPad *pad, GstData *buffer)
 	      } else {
 		cur->pages = ogg_page_pageno (&page);
 		cur->length = ogg_page_granulepos (&page);
-	      }
-	      if (!gst_pad_query (GST_PAD_PEER (ogg->sinkpad), GST_QUERY_TOTAL, &format, &length))
-		length = 0;
-	      if (length >= offset_end) {
-		gst_ogg_start_playing (ogg);
-		goto out;
 	      }
 	    } else {
 	      if (GST_FLAG_IS_SET (ogg, GST_OGG_FLAG_EOS) && ogg_page_bos (&page)) {
