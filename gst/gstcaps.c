@@ -945,6 +945,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
      You can only remove everything or nothing and that is done above.
      Note: there's a test that checks this behaviour. */
   g_return_val_if_fail (!gst_caps_is_any (minuend), NULL);
+  g_assert (subtrahend->structs->len > 0);
 
   src = gst_caps_copy (minuend);
   for (i = 0; i < subtrahend->structs->len; i++) {
@@ -977,6 +978,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
       return dest;
   }
 
+  gst_caps_free (src);
   gst_caps_do_simplify (dest);
   return dest;
 }
@@ -1180,12 +1182,23 @@ gst_caps_structure_simplify (GstStructure ** result,
           gst_caps_structure_figure_out_union, &field)) {
     gboolean ret = FALSE;
 
-    if (gst_structure_n_fields (simplify) == gst_structure_n_fields (compare)) {
-      gst_structure_id_set_value (compare, field.name, &field.value);
-      *result = NULL;
-      ret = TRUE;
+    if (G_IS_VALUE (&field.value)) {
+      if (gst_structure_n_fields (simplify) == gst_structure_n_fields (compare)) {
+        gst_structure_id_set_value (compare, field.name, &field.value);
+        *result = NULL;
+        ret = TRUE;
+      }
+      g_value_unset (&field.value);
+    } else {
+      gchar *one = gst_structure_to_string (simplify);
+      gchar *two = gst_structure_to_string (compare);
+
+      GST_ERROR
+          ("caps mismatch: structures %s and %s claim to be possible to unify, but aren't",
+          one, two);
+      g_free (one);
+      g_free (two);
     }
-    g_value_unset (&field.value);
     return ret;
   }
 

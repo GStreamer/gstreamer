@@ -1,3 +1,8 @@
+2004-04-25  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstcaps.c: (gst_caps_subtract):
+	  fix memleak
+
 2004-04-23  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstvalue.c: (gst_value_compare_buffer),
