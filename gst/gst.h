@@ -27,42 +27,44 @@
 #include <glib.h>
 #include <popt.h>
 
-#include <gst/gstversion.h>
+#include <gst/gstenumtypes.h>
 #include <gst/gsttypes.h>
+#include <gst/gstversion.h>
 
-#include <gst/gstinfo.h>
-#include <gst/gstobject.h>
-#include <gst/gstpad.h>
+#include <gst/gstautoplug.h>
+#include <gst/gstbin.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferpool-default.h>
+#include <gst/gstcaps.h>
+#include <gst/gstclock.h>
 #include <gst/gstcpu.h>
 #include <gst/gstelement.h>
-#include <gst/gstbin.h>
+#include <gst/gstevent.h>
 #include <gst/gstindex.h>
+#include <gst/gstinfo.h>
+#include <gst/gstinterface.h>
+#include <gst/gstobject.h>
+#include <gst/gstpad.h>
 #include <gst/gstpipeline.h>
-#include <gst/gstthread.h>
-#include <gst/gsttypefind.h>
-#include <gst/gstautoplug.h>
-#include <gst/gstcaps.h>
-#include <gst/gststructure.h>
-#include <gst/gstprops.h>
 #include <gst/gstplugin.h>
+#include <gst/gstprops.h>
+#include <gst/gstscheduler.h>
+#include <gst/gststructure.h>
+#include <gst/gstsystemclock.h>
+#include <gst/gsttag.h>
+#include <gst/gsttaginterface.h>
+#include <gst/gstthread.h>
+#include <gst/gsttrace.h>
+#include <gst/gsttypefind.h>
 #include <gst/gsturi.h>
 #include <gst/gsturitype.h>
 #include <gst/gstutils.h>
-#include <gst/gsttrace.h>
-#include <gst/gstxml.h>
-#include <gst/gstscheduler.h>
-#include <gst/gstevent.h>
-#include <gst/gstclock.h>
-#include <gst/gstsystemclock.h>
-#include <gst/gstinterface.h>
 #include <gst/gstvalue.h>
+#include <gst/gstxml.h>
 
 #include <gst/gstparse.h>
 #include <gst/gstregistry.h>
 #include <gst/gstregistrypool.h>
-#include <gst/gstenumtypes.h>
 
 /* API compatibility stuff */
 #include <gst/gstcompat.h>

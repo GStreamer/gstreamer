@@ -162,7 +162,7 @@ void		gst_debug_log			(GstDebugCategory *	category,
 						 GObject *		object,
 						 gchar *		format,
 						 ...)  G_GNUC_PRINTF (7, 8) G_GNUC_NO_INSTRUMENT;
-void		gst_debug_logv			(GstDebugCategory *	category,
+void		gst_debug_log_valist  		(GstDebugCategory *	category,
 						 GstDebugLevel		level,
 						 const gchar *		file,
 						 const gchar *		function,
@@ -388,7 +388,7 @@ const gchar*	_gst_debug_nameof_funcptr 	(void *			ptr);
 
 #ifdef __GNUC__
 #  pragma GCC poison gst_debug_log
-#  pragma GCC poison gst_debug_logv
+#  pragma GCC poison gst_debug_log_valist
 #  pragma GCC poison gst_debug_log_default
 #  pragma GCC poison _gst_debug_category_new
 #endif

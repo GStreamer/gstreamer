@@ -98,17 +98,3 @@ gst_type_find_factory_register()
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_type_find_factory_register ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@name: 
-@rank: 
-@func: 
-@extensions: 
-@possible_caps: 
-@data: 
-
-

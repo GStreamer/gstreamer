@@ -262,6 +262,7 @@ The basic structure of a buffer.
 @timestamp: 
 @duration: 
 @offset: 
+@offset_end: 
 @pool: 
 @pool_private: 
 

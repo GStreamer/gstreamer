@@ -687,8 +687,9 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
   GstElementFactory *factory = GST_ELEMENT_FACTORY (registry->current_feature);
 
   if (!strcmp (tag, "name")) {
-    g_free (registry->current_feature->name);
-    registry->current_feature->name = g_strndup (text, text_len);
+    gchar *name = g_strndup (text, text_len);
+    gst_plugin_feature_set_name (registry->current_feature, name);
+    g_free (name);
   }
   else if (!strcmp (tag, "longname")) {
     g_free (factory->details.longname);
@@ -709,12 +710,18 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
   else if (!strcmp(tag, "rank")) {
     gint rank;
     gchar *ret;
-     rank = strtol (text, &ret, 0);
+    
+    rank = strtol (text, &ret, 0);
     if (ret == text + text_len) {
      gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
     }
   }
-  
+  else if (!strcmp(tag, "interface")) {
+    gchar *tmp = g_strndup (text, text_len);
+    __gst_element_factory_add_interface (factory, tmp);
+    g_free (tmp);
+  }
+
   return TRUE;
 }
 
@@ -1464,23 +1471,29 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
     
   if (GST_IS_ELEMENT_FACTORY (feature)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
-    GList *templates;
+    GList *walk;
 
     PUT_ESCAPED ("longname", factory->details.longname);
     PUT_ESCAPED ("class", factory->details.klass);
     PUT_ESCAPED ("description", factory->details.description);
     PUT_ESCAPED ("author", factory->details.author);
     
-    templates = factory->padtemplates;
+    walk = factory->padtemplates;
 
-    while (templates) {
-      GstPadTemplate *template = GST_PAD_TEMPLATE (templates->data);
+    while (walk) {
+      GstPadTemplate *template = GST_PAD_TEMPLATE (walk->data);
 
       CLASS (xmlregistry)->save_func (xmlregistry, "<padtemplate>\n");
       gst_xml_registry_save_pad_template (xmlregistry, template);
       CLASS (xmlregistry)->save_func (xmlregistry, "</padtemplate>\n");
       
-      templates = g_list_next (templates);
+      walk = g_list_next (walk);
+    }
+
+    walk = factory->interfaces;
+    while (walk) {
+      PUT_ESCAPED ("interface", (gchar *) walk->data);
+      walk = g_list_next (walk);
     }
   }
   else if (GST_IS_TYPE_FIND_FACTORY (feature)) {

@@ -3,7 +3,7 @@ AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 7, 1, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gstreamer, GST_VERSION, 0, 7, 2, 1, GST_CVS="no", GST_CVS="yes")
 
 if test x$program_suffix = xNONE ; then
   program_suffix=-$GST_VERSION_MAJOR.$GST_VERSION_MINOR
@@ -615,6 +615,7 @@ testsuite/indexers/Makefile
 testsuite/parse/Makefile
 testsuite/plugin/Makefile
 testsuite/refcounting/Makefile
+testsuite/tags/Makefile
 testsuite/threads/Makefile
 examples/Makefile
 examples/autoplug/Makefile
@@ -630,15 +631,19 @@ examples/queue/Makefile
 examples/queue2/Makefile
 examples/queue3/Makefile
 examples/queue4/Makefile
+examples/retag/Makefile
 examples/thread/Makefile
 examples/typefind/Makefile
 examples/xml/Makefile
 tools/Makefile
 docs/Makefile
+docs/faq/Makefile
 docs/gst/Makefile
 docs/libs/Makefile
+docs/manual/Makefile
 docs/plugins/Makefile
 docs/plugins/gstreamer-plugins.types
+docs/pwg/Makefile
 docs/xsl/Makefile
 docs/version.entities
 pkgconfig/Makefile

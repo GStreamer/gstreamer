@@ -32,6 +32,7 @@
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
 #include <gst/gstindex.h>
+#include <gst/gsttag.h>
 
 G_BEGIN_DECLS
 
@@ -137,7 +138,6 @@ typedef enum {
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
-#define GST_ELEMENT_IS_EOS(obj)			(GST_FLAG_IS_SET(obj,GST_ELEMENT_EOS))
 #define GST_ELEMENT_IS_EVENT_AWARE(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_EVENT_AWARE))
 #define GST_ELEMENT_IS_DECOUPLED(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_DECOUPLED))
 
@@ -206,6 +206,7 @@ struct _GstElementClass {
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*error)		(GstElement *element, GstElement *source, gchar *error);
   void (*eos)		(GstElement *element);
+  void (*found_tag)	(GstElement *element, GstElement *source, GstTagList *tag_list);
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -254,7 +255,6 @@ void			gst_element_class_set_details		(GstElementClass *klass,
 void 			gst_element_default_error		(GObject *object, GstObject *orig, gchar *error);
 
 GType			gst_element_get_type		(void);
-
 void			gst_element_set_loop_function	(GstElement *element,
 							 GstElementLoopFunction loop);
 
@@ -350,6 +350,10 @@ gboolean		gst_element_convert		(GstElement *element,
 		 					 GstFormat  src_format,  gint64  src_value,
 							 GstFormat *dest_format, gint64 *dest_value);
 
+void			gst_element_found_tags		(GstElement *element, GstTagList *tag_list);
+void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstClockTime timestamp, 
+							 GstTagList *list);
+
 void			gst_element_set_eos		(GstElement *element);
 
 void 			gst_element_error 		(GstElement *element, const gchar *error, ...);
@@ -394,6 +398,8 @@ struct _GstElementFactory {
   GList *		padtemplates;
   guint			numpadtemplates;
 
+  GList *interfaces;		/* interfaces this element implements */
+
   GST_OBJECT_PADDING
 };
 
@@ -431,6 +437,8 @@ gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
 
 void			__gst_element_factory_add_pad_template	(GstElementFactory *elementfactory,
 								 GstPadTemplate *templ);
+void			__gst_element_factory_add_interface	(GstElementFactory *elementfactory,
+								 const gchar *interfacename);
 
 
 G_END_DECLS

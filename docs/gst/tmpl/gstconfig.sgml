@@ -108,13 +108,6 @@ If this is defined, the <link linkend="gstreamer-gstinfo">debugging subsystem
 
 
 
-<!-- ##### MACRO GST_DISABLE_TYPEFIND ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### MACRO GST_DISABLE_URI ##### -->
 <para>
 

@@ -62,22 +62,8 @@ describes the element, mostly for the benefit of editors.
 
 @longname: 
 @klass: 
-@license: 
 @description: 
-@version: 
 @author: 
-@copyright: 
-
-<!-- ##### FUNCTION gst_element_factory_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@type: 
-@details: 
-@Returns: 
-
 
 <!-- ##### FUNCTION gst_element_factory_find ##### -->
 <para>
@@ -86,15 +72,6 @@ describes the element, mostly for the benefit of editors.
 
 @name: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_element_factory_add_pad_template ##### -->
-<para>
-
-</para>
-
-@elementfactory: 
-@templ: 
 
 
 <!-- ##### FUNCTION gst_element_factory_can_src_caps ##### -->
@@ -135,53 +112,5 @@ describes the element, mostly for the benefit of editors.
 @factoryname: 
 @name: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_element_factory_make_or_warn ##### -->
-<para>
-
-</para>
-
-@factoryname: 
-@name: 
-@Returns: 
-
-
-<!-- ##### MACRO gst_element_factory_set_rank ##### -->
-<para>
-
-</para>
-
-@factory: 
-@rank: 
-
-
-<!-- ##### MACRO GST_ELEMENT_RANK_MARGINAL ##### -->
-<para>
-The element is only marginally usefull for autoplugging
-</para>
-
-
-
-<!-- ##### MACRO GST_ELEMENT_RANK_NONE ##### -->
-<para>
-The plugin may not be used in autoplugging
-</para>
-
-
-
-<!-- ##### MACRO GST_ELEMENT_RANK_PRIMARY ##### -->
-<para>
-The plugin is well suited for autoplugging
-</para>
-
-
-
-<!-- ##### MACRO GST_ELEMENT_RANK_SECONDARY ##### -->
-<para>
-The plugin is suited for autoplugging but only as a second
-candidate.
-</para>
-
 
 

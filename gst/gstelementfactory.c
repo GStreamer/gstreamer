@@ -84,6 +84,8 @@ gst_element_factory_init (GstElementFactory *factory)
 {
   factory->padtemplates = NULL;
   factory->numpadtemplates = 0;
+
+  factory->interfaces = NULL;
 }
 /**
  * gst_element_factory_find:
@@ -148,6 +150,10 @@ gst_element_factory_cleanup (GstElementFactory *factory)
   g_list_free (factory->padtemplates);
   factory->padtemplates = NULL;
   factory->numpadtemplates = 0;
+  
+  g_list_foreach (factory->interfaces, (GFunc) g_free, NULL);
+  g_list_free (factory->interfaces);
+  factory->interfaces = NULL;
 }
 /**
  * gst_element_register:
@@ -165,6 +171,8 @@ gboolean
 gst_element_register (GstPlugin *plugin, const gchar *name, guint rank, GType type)
 {
   GstElementFactory *factory;
+  GType *interfaces;
+  guint n_interfaces, i;
   GstElementClass *klass;
 
   g_return_val_if_fail (name != NULL, FALSE);
@@ -190,6 +198,12 @@ gst_element_register (GstPlugin *plugin, const gchar *name, guint rank, GType ty
   g_list_foreach (factory->padtemplates, (GFunc) g_object_ref, NULL);
   factory->numpadtemplates = klass->numpadtemplates;
 
+  interfaces = g_type_interfaces (type, &n_interfaces);
+  for (i = 0; i < n_interfaces; i++) {
+    __gst_element_factory_add_interface (factory, g_type_name (interfaces[i]));
+  }
+  g_free (interfaces);
+  
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
@@ -386,6 +400,23 @@ gst_element_factory_get_num_pad_templates (GstElementFactory *factory)
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), 0);
 
   return factory->numpadtemplates;
+}
+/**
+ * __gst_element_factory_add_interface:
+ * @elementfactory: The elementfactory to add the interface to
+ * @interfacename: Name of the interface
+ *
+ * Adds the given interfacename to the list of implemented interfaces of the
+ * element.
+ */
+void
+__gst_element_factory_add_interface (GstElementFactory *elementfactory, const gchar *interfacename)
+{
+  g_return_if_fail (GST_IS_ELEMENT_FACTORY (elementfactory));
+  g_return_if_fail (interfacename != NULL);
+  g_return_if_fail (interfacename[0] != '\0'); /* no empty string */
+  
+  elementfactory->interfaces = g_list_prepend (elementfactory->interfaces, g_strdup (interfacename));
 }
 /**
  * gst_element_factory_get_pad_templates:

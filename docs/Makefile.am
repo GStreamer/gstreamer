@@ -6,7 +6,7 @@ SUBDIRS_PLUGINS =
 endif
 
 if BUILD_DOCS
-SUBDIRS_DOCS = gst libs
+SUBDIRS_DOCS = faq manual pwg gst libs
 else
 SUBDIRS_DOCS =
 endif

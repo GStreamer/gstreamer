@@ -39,6 +39,8 @@ enum {
   PAD_REMOVED,
   ERROR,
   EOS,
+  FOUND_TAG,
+  /* add more above */
   LAST_SIGNAL
 };
 
@@ -65,6 +67,7 @@ static void 			gst_element_dispose 		(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
 static void			gst_element_error_func		(GstElement* element, GstElement *source, gchar *errormsg);
+static void			gst_element_found_tag_func	(GstElement* element, GstElement *source, GstTagList *tag_list);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr parent);
@@ -127,11 +130,16 @@ gst_element_class_init (GstElementClass *klass)
     g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
                   gst_marshal_VOID__OBJECT_STRING, G_TYPE_NONE, 2,
-                  G_TYPE_OBJECT, G_TYPE_STRING);
+                  GST_TYPE_ELEMENT, G_TYPE_STRING);
   gst_element_signals[EOS] =
     g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstElementClass,eos), NULL, NULL,
+                  G_STRUCT_OFFSET (GstElementClass, eos), NULL, NULL,
                   gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
+  gst_element_signals[FOUND_TAG] =
+    g_signal_new ("found-tag", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstElementClass, found_tag), NULL, NULL,
+                  gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
+		  GST_TYPE_ELEMENT, G_TYPE_POINTER);
 
   gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_element_real_set_property);
   gobject_class->get_property 		= GST_DEBUG_FUNCPTR (gst_element_real_get_property);
@@ -145,6 +153,7 @@ gst_element_class_init (GstElementClass *klass)
 
   klass->change_state 			= GST_DEBUG_FUNCPTR (gst_element_change_state);
   klass->error	 			= GST_DEBUG_FUNCPTR (gst_element_error_func);
+  klass->found_tag	 		= GST_DEBUG_FUNCPTR (gst_element_found_tag_func);
   klass->padtemplates 			= NULL;
   klass->numpadtemplates 		= 0;
 
@@ -931,7 +940,9 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
   /* FIXME: what if someone calls _remove_pad instead of 
     _remove_ghost_pad? */
   if (GST_IS_REAL_PAD (pad)) {
-    g_return_if_fail (GST_RPAD_PEER (pad) == NULL);
+    if (GST_RPAD_PEER (pad) != NULL) {
+      gst_pad_unlink (pad, GST_PAD (GST_RPAD_PEER (pad)));
+    }
   }
   
   /* remove it from the list */
@@ -2922,6 +2933,71 @@ gst_element_set_loop_function (GstElement *element,
     if (GST_ELEMENT_SCHED (element)) {
       gst_scheduler_scheduling_change (GST_ELEMENT_SCHED (element), element);
     }
+  }
+}
+static inline void
+gst_element_emit_found_tag (GstElement* element, GstElement *source, GstTagList *tag_list)
+{
+  gst_object_ref (GST_OBJECT (element));
+  g_signal_emit (element, gst_element_signals[FOUND_TAG], 0, source, tag_list);
+  gst_object_unref (GST_OBJECT (element));
+}
+static void
+gst_element_found_tag_func (GstElement* element, GstElement *source, GstTagList *tag_list)
+{
+  /* tell the parent */
+  if (GST_OBJECT_PARENT (element)) {
+    GST_CAT_LOG_OBJECT (GST_CAT_EVENT, element, "forwarding tag event to %s", 
+	       GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
+    gst_element_emit_found_tag (GST_ELEMENT (GST_OBJECT_PARENT (element)), source, tag_list);
+  }  
+}
+/**
+ * gst_element_found_tags:
+ * @element: the element that found the tags
+ * @tag_list: the found tags
+ *
+ * This function emits the found_tags signal. This is a recursive signal, so
+ * every parent will emit that signal, too, before this function returns.
+ * Only emit this signal, when you extracted these tags out of the data stream,
+ * not when you handle an event.
+ */
+void
+gst_element_found_tags (GstElement *element, GstTagList *tag_list)
+{
+  gst_element_emit_found_tag (element, element, tag_list);
+}
+/**
+ * gst_element_found_tags_for_pad:
+ * @element: element that found the tag
+ * @pad: src pad the tags correspond to
+ * @timestamp: time the tags were found
+ * @list: the taglist
+ *
+ * This is a convenience routine for tag finding. Most of the time you only
+ * want to push the found tags down one pad, in that case this function is for
+ * you. It takes ownership of the taglist, emits the found-tag signal and pushes 
+ * a tag event down the pad.
+ */
+void
+gst_element_found_tags_for_pad (GstElement *element, GstPad *pad, GstClockTime timestamp,
+                                GstTagList *list)
+{
+  GstEvent *tag_event;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
+  g_return_if_fail (element == GST_PAD_PARENT (pad));
+  g_return_if_fail (list != NULL);
+
+  tag_event = gst_event_new_tag (list);
+  GST_EVENT_TIMESTAMP (tag_event) = timestamp;
+  gst_element_found_tags (element, gst_event_tag_get_list (tag_event));
+  if (GST_PAD_IS_USABLE (pad)) {
+    gst_pad_push (pad, GST_DATA (tag_event));
+  } else {
+    gst_data_unref (GST_DATA (tag_event));
   }
 }
 

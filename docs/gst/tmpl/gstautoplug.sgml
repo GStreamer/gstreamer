@@ -99,6 +99,14 @@ The autoplug object
 </para>
 
 
+<!-- ##### SIGNAL GstAutoplug::new-object ##### -->
+<para>
+
+</para>
+
+@gstautoplug: the object which received the signal.
+@arg1: 
+
 <!-- ##### ENUM GstAutoplugFlags ##### -->
 <para>
 The type of the autoplugger.
@@ -140,12 +148,4 @@ The type of the autoplugger.
 @Varargs: 
 @Returns: 
 
-
-<!-- ##### SIGNAL GstAutoplug::new-object ##### -->
-<para>
-
-</para>
-
-@gstautoplug: the object which received the signal.
-@arg1: 
 

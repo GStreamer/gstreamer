@@ -221,6 +221,34 @@ fault_setup (void)
   sigaction (SIGQUIT, &action, NULL);
 }
 
+static void
+print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
+{
+  gint i, count;
+
+  count = gst_tag_list_get_tag_size (list, tag);
+
+  for (i = 0; i < count; i++) {
+    
+    gchar *str = g_strdup_value_contents (
+		    gst_tag_list_get_value_index (list, tag, i));
+  
+    if (i == 0) {
+      g_print ("%15s: %s\n", gst_tag_get_nick (tag), str);
+    } else {
+      g_print ("               : %s\n", str);
+    }
+
+    g_free (str);
+  }
+}
+static void
+found_tag (GObject *pipeline, GstElement *source, GstTagList *tags)
+{
+  g_print ("FOUND TAG      : element \"%s\"\n", GST_STR_NULL (GST_ELEMENT_NAME (source)));
+  gst_tag_list_foreach (tags, print_tag, NULL);
+}
+
 /* we only use sighandler here because the registers are not important */
 static void 
 sigint_handler_sighandler (int signum)
@@ -286,11 +314,14 @@ main(int argc, char *argv[])
   gint i, j;
   /* options */
   gboolean verbose = FALSE;
+  gboolean tags = FALSE;
   gboolean no_fault = FALSE;
   gboolean trace = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
+    {"tags",	't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &tags,   0,
+     "output tags (also known as metadata)", NULL},
     {"verbose",	'v',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &verbose,   0,
      "output status information and property notifications", NULL},
     {"exclude", 'X',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &exclude_args,  0,
@@ -301,7 +332,7 @@ main(int argc, char *argv[])
 #endif
     {"no-fault", 'f', POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &no_fault,   0,
      "Do not install a fault handler", NULL},
-    {"trace",   't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &trace,   0,
+    {"trace",   'T',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &trace,   0,
      "print alloc trace if enabled at compile time", NULL},
     {"iterations",'i',POPT_ARG_INT|POPT_ARGFLAG_STRIP,    &max_iterations,   0,
      "number of times to iterate pipeline", NULL},
@@ -381,6 +412,9 @@ main(int argc, char *argv[])
   if (verbose) {
     gchar **exclude_list = exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
     g_signal_connect (pipeline, "deep_notify", G_CALLBACK (gst_element_default_deep_notify), exclude_list);
+  }
+  if (tags) {
+    g_signal_connect (pipeline, "found-tag", G_CALLBACK (found_tag), NULL);
   }
   g_signal_connect (pipeline, "error", G_CALLBACK (gst_element_default_error), NULL);
   

@@ -537,6 +537,7 @@ init_post (void)
   _gst_plugin_initialize ();
   _gst_event_initialize ();
   _gst_buffer_initialize ();
+  _gst_tag_initialize ();
 
 #ifndef GST_DISABLE_REGISTRY
   if (!_gst_registry_fixed) {

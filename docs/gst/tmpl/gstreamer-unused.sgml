@@ -1056,27 +1056,6 @@ Cache time and byteoffsets.
 GstTimeCache
 
 
-<!-- ##### SECTION ./tmpl/gsttypefind.sgml:Long_Description ##### -->
-<para>
-This element can be added to the pipeline and will notify the listener of
-the detected mime type of the stream. It is used in autoplugging.
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gsttypefind.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gsttypefind.sgml:Short_Description ##### -->
-Detect the mime type of a media stream
-
-
-<!-- ##### SECTION ./tmpl/gsttypefind.sgml:Title ##### -->
-GstTypeFind
-
-
 <!-- ##### SECTION ./tmpl/gsttypes.sgml:Long_Description ##### -->
 <para>
 
@@ -1835,6 +1814,12 @@ to the current function, i.e. "('element')"
 @format: printf-style format string
 @args...: printf arguments
 
+<!-- ##### MACRO GST_DISABLE_TYPEFIND ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_DISKSRC ##### -->
 <para>
 
@@ -1898,6 +1883,13 @@ Queries whether the cothread holding this element needs to be stopped.
 
 @obj: The element to query
 
+<!-- ##### MACRO GST_ELEMENT_IS_EOS ##### -->
+<para>
+Query wether this element is in the End Of Stream state.
+</para>
+
+@obj: a #GstElement to query
+
 <!-- ##### MACRO GST_ELEMENT_IS_MULTI_IN ##### -->
 <para>
 Query whether this object has multiple input pads.
@@ -1905,6 +1897,31 @@ Query whether this object has multiple input pads.
 </para>
 
 @obj: Element to query for multiple input pads.
+
+<!-- ##### MACRO GST_ELEMENT_RANK_MARGINAL ##### -->
+<para>
+The element is only marginally usefull for autoplugging
+</para>
+
+
+<!-- ##### MACRO GST_ELEMENT_RANK_NONE ##### -->
+<para>
+The plugin may not be used in autoplugging
+</para>
+
+
+<!-- ##### MACRO GST_ELEMENT_RANK_PRIMARY ##### -->
+<para>
+The plugin is well suited for autoplugging
+</para>
+
+
+<!-- ##### MACRO GST_ELEMENT_RANK_SECONDARY ##### -->
+<para>
+The plugin is suited for autoplugging but only as a second
+candidate.
+</para>
+
 
 <!-- ##### MACRO GST_ESDSINK ##### -->
 <para>
@@ -2768,6 +2785,37 @@ Get the flag indicating the properties are fixed from the template.
 </para>
 
 @plugin: 
+
+<!-- ##### MACRO GST_PLUGIN_DESC ##### -->
+<para>
+A handy macro to define a plugin description. This macro handles with all the issues
+involved with the different linking methods for this plugin.
+</para>
+
+@major: The major version of GStreamer this plugin was compiled against.
+@minor: The minor version of GStreamer this plugin was compiled against.
+@name: The name of the plugin.
+@init: The init function of this plugin.
+
+<!-- ##### MACRO GST_PLUGIN_DESC_DYNAMIC ##### -->
+<para>
+The macro used to define dynamically loaded plugins.
+</para>
+
+@major: The major version of GStreamer this plugin was compiled against.
+@minor: The minor version of GStreamer this plugin was compiled against.
+@name: The name of the plugin.
+@init: The init function of this plugin.
+
+<!-- ##### MACRO GST_PLUGIN_DESC_STATIC ##### -->
+<para>
+A macro used to define a statically linked plugin.
+</para>
+
+@major: The major version of GStreamer this plugin was compiled against.
+@minor: The minor version of GStreamer this plugin was compiled against.
+@name: The name of the plugin.
+@init: The init function of this plugin.
 
 <!-- ##### MACRO GST_PROPS_BOOL_ID ##### -->
 <para>
@@ -5717,6 +5765,15 @@ Query the element for the current mime type
 </para>
 
 
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
+<para>
+
+</para>
+
+@gstxml: the object which received the signal.
+@arg1: 
+@arg2: 
+
 <!-- ##### USER_FUNCTION GstXMLRegistryAddPathList ##### -->
 <para>
 
@@ -7704,6 +7761,14 @@ safely be modified.
 
 @caps: 
 
+<!-- ##### FUNCTION gst_caps_get_type_id ##### -->
+<para>
+
+</para>
+
+@caps: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_caps_list_check_compatibility ##### -->
 <para>
 
@@ -7740,6 +7805,14 @@ safely be modified.
 @counter: 
 @Returns: 
 @count: 
+
+<!-- ##### FUNCTION gst_caps_set_type_id ##### -->
+<para>
+
+</para>
+
+@caps: 
+@type_id: 
 
 <!-- ##### FUNCTION gst_clock_activate ##### -->
 <para>
@@ -7915,6 +7988,20 @@ safely be modified.
 @data: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_debug_logv ##### -->
+<para>
+
+</para>
+
+@category: 
+@level: 
+@file: 
+@function: 
+@line: 
+@object: 
+@format: 
+@args: 
+
 <!-- ##### FUNCTION gst_debug_print_stack_trace ##### -->
 <para>
 
@@ -7998,6 +8085,14 @@ of an element he doesn't need anymore.
 @a: 
 @b: 
 
+<!-- ##### FUNCTION gst_element_factory_add_pad_template ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+@templ: 
+
 <!-- ##### FUNCTION gst_element_factory_add_sink ##### -->
 <para>
 
@@ -8054,6 +8149,25 @@ of an element he doesn't need anymore.
 @parent: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_factory_make_or_warn ##### -->
+<para>
+
+</para>
+
+@factoryname: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_element_factory_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@type: 
+@details: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_element_factory_register ##### -->
 <para>
 
@@ -8069,6 +8183,14 @@ of an element he doesn't need anymore.
 @factory: 
 @parent: 
 @Returns: 
+
+<!-- ##### MACRO gst_element_factory_set_rank ##### -->
+<para>
+
+</para>
+
+@factory: 
+@rank: 
 
 <!-- ##### FUNCTION gst_element_flags_get_type ##### -->
 <para>
@@ -9294,6 +9416,15 @@ Destroys the pipeline.
 @name: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_plugin_load_plugin ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@error: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_plugin_load_thyself ##### -->
 <para>
 
@@ -9308,6 +9439,14 @@ Destroys the pipeline.
 
 @mime: 
 
+<!-- ##### FUNCTION gst_plugin_new ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
 <!-- ##### FUNCTION gst_plugin_save_thyself ##### -->
 <para>
 
@@ -9315,6 +9454,14 @@ Destroys the pipeline.
 
 @parent: 
 @Returns: 
+
+<!-- ##### FUNCTION gst_plugin_set_longname ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@longname: 
 
 <!-- ##### FUNCTION gst_plugin_unload_all ##### -->
 <para>
@@ -10039,6 +10186,19 @@ Destroy the scheduler
 
 </para>
 
+
+<!-- ##### FUNCTION gst_type_find_factory_register ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@name: 
+@rank: 
+@func: 
+@extensions: 
+@possible_caps: 
+@data: 
 
 <!-- ##### FUNCTION gst_type_get_sink_to_src ##### -->
 <para>

@@ -167,6 +167,7 @@ gst_buffer_default_copy (GstBuffer *buffer)
   GST_BUFFER_TIMESTAMP (copy) 	 = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (copy) 	 = GST_BUFFER_DURATION (buffer);
   GST_BUFFER_OFFSET (copy) 	 = GST_BUFFER_OFFSET (buffer);
+  GST_BUFFER_OFFSET_END (copy) 	 = GST_BUFFER_OFFSET_END (buffer);
   GST_BUFFER_BUFFERPOOL (copy)   = NULL;
   GST_BUFFER_POOL_PRIVATE (copy) = NULL;
 
@@ -204,6 +205,7 @@ gst_buffer_new (void)
   GST_BUFFER_TIMESTAMP (newbuf)    = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (newbuf)     = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (newbuf)       = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (newbuf)   = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_BUFFERPOOL (newbuf)   = NULL;
   GST_BUFFER_POOL_PRIVATE (newbuf) = NULL;
 
@@ -335,8 +337,9 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
     GST_BUFFER_TIMESTAMP (buffer)    = GST_CLOCK_TIME_NONE;
     GST_BUFFER_OFFSET (buffer)       = GST_BUFFER_OFFSET_NONE;
   }
-  GST_BUFFER_DURATION (buffer)     = GST_CLOCK_TIME_NONE;
 
+  GST_BUFFER_DURATION (buffer)     = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET_END (buffer)   = GST_BUFFER_OFFSET_NONE;
   /* make sure nobody overwrites data as it would overwrite in the parent.
    * data in parent cannot be overwritten because we hold a ref */
   GST_DATA_FLAG_SET (parent, GST_DATA_READONLY);
@@ -453,13 +456,17 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   /* if we completely merged the two buffers (appended), we can
    * calculate the duration too. Also make sure we's not messing with
    * invalid DURATIONS */
-  if (offset == 0 && buf1->size + buf2->size == len &&
-      GST_BUFFER_DURATION_IS_VALID (buf1) &&
-      GST_BUFFER_DURATION_IS_VALID (buf2)) 
-  {
-    /* add duration */
-    GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf1) + 
-                                   GST_BUFFER_DURATION (buf2);
+  if (offset == 0 && buf1->size + buf2->size == len) {
+    if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
+	GST_BUFFER_DURATION_IS_VALID (buf2)) {
+      /* add duration */
+      GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf1) + 
+				    GST_BUFFER_DURATION (buf2);
+    }
+    if (GST_BUFFER_OFFSET_END_IS_VALID (buf2)) {
+      /* add offset_end */
+      GST_BUFFER_OFFSET_END (newbuf) = GST_BUFFER_OFFSET_END (buf2);
+    }
   }
 
   return newbuf;

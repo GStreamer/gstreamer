@@ -56,20 +56,19 @@ The plugin loading errors
 
 @GST_PLUGIN_ERROR_MODULE: The plugin could not be loaded
 @GST_PLUGIN_ERROR_DEPENDENCIES: The plugin has unresolved dependencies
+@GST_PLUGIN_ERROR_NAME_MISMATCH: 
 
 <!-- ##### STRUCT GstPlugin ##### -->
 <para>
 The plugin object
 </para>
 
-@name: 
-@longname: 
+@desc: 
 @filename: 
 @features: 
 @numfeatures: 
 @manager: 
 @module: 
-@init_called: 
 
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>
@@ -77,9 +76,10 @@ A plugin should provide a pointer to a function of this type in the plugin_desc 
 It will be called by the loader at statup.
 </para>
 
-@module: The <classname>GModule</classname> it was loaded from
 @plugin: The plugin object that can be used to register stuff for this plugin.
 @Returns: A boolean indicating success or failure.
+<!-- # Unused Parameters # -->
+@module: The <classname>GModule</classname> it was loaded from
 
 
 <!-- ##### STRUCT GstPluginDesc ##### -->
@@ -91,50 +91,14 @@ loaded will use this variable to initialize the plugin.
 @major_version: The minor version of the gstreamer library this plugin was created with
 @minor_version: The minor version of the gstreamer library this plugin was created with
 @name: The name of the plugin
+@description: 
 @plugin_init: The init function of this plugin.
-
-<!-- ##### MACRO GST_PLUGIN_DESC ##### -->
-<para>
-A handy macro to define a plugin description. This macro handles with all the issues
-involved with the different linking methods for this plugin.
-</para>
-
-@major: The major version of GStreamer this plugin was compiled against.
-@minor: The minor version of GStreamer this plugin was compiled against.
-@name: The name of the plugin.
-@init: The init function of this plugin.
-
-
-<!-- ##### MACRO GST_PLUGIN_DESC_DYNAMIC ##### -->
-<para>
-The macro used to define dynamically loaded plugins.
-</para>
-
-@major: The major version of GStreamer this plugin was compiled against.
-@minor: The minor version of GStreamer this plugin was compiled against.
-@name: The name of the plugin.
-@init: The init function of this plugin.
-
-
-<!-- ##### MACRO GST_PLUGIN_DESC_STATIC ##### -->
-<para>
-A macro used to define a statically linked plugin.
-</para>
-
-@major: The major version of GStreamer this plugin was compiled against.
-@minor: The minor version of GStreamer this plugin was compiled against.
-@name: The name of the plugin.
-@init: The init function of this plugin.
-
-
-<!-- ##### FUNCTION gst_plugin_new ##### -->
-<para>
-
-</para>
-
-@filename: 
-@Returns: 
-
+@plugin_exit: 
+@version: 
+@license: 
+@copyright: 
+@package: 
+@origin: 
 
 <!-- ##### FUNCTION gst_plugin_set_name ##### -->
 <para>
@@ -161,15 +125,6 @@ A macro used to define a statically linked plugin.
 
 @plugin: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_set_longname ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@longname: 
 
 
 <!-- ##### FUNCTION gst_plugin_get_filename ##### -->
@@ -207,16 +162,6 @@ A macro used to define a statically linked plugin.
 @plugin: 
 @name: 
 @type: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_load_plugin ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@error: 
 @Returns: 
 
 

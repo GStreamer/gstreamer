@@ -48,7 +48,8 @@ typedef enum {
   GST_EVENT_FILLER		= 12,
   GST_EVENT_TS_OFFSET		= 13,
   GST_EVENT_INTERRUPT		= 14,
-  GST_EVENT_NAVIGATION		= 15
+  GST_EVENT_NAVIGATION		= 15,
+  GST_EVENT_TAG			= 16
 } GstEventType;
 
 extern GType _gst_event_type;

@@ -48,6 +48,7 @@ The different major types of events.
 @GST_EVENT_INTERRUPT: mainly used by _get based elements when they were interrupted
                       while waiting for a buffer.
 @GST_EVENT_NAVIGATION: 
+@GST_EVENT_TAG: 
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>

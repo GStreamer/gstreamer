@@ -114,6 +114,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstscheduler.c		\
 	gststructure.c		\
 	gstsystemclock.c	\
+	gsttag.c		\
+	gsttaginterface.c	\
 	gstthread.c		\
 	gstthreaddummy.c	\
 	$(GST_TRACE_SRC)	\
@@ -131,6 +133,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 
 
 BUILT_SOURCES = gstversion.h gstconfig.h gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC) 
+CLEANFILES = gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC)
+DISTCLEANFILES = gstversion.h gstconfig.h
 
 libgstreamer_@GST_MAJORMINOR@_la_CFLAGS = -D_GNU_SOURCE \
 	$(GST_CFLAGS) \
@@ -176,6 +180,8 @@ gst_headers =			\
 	gstscheduler.h		\
 	gststructure.h		\
 	gstsystemclock.h	\
+	gsttag.h		\
+	gsttaginterface.h	\
 	gstthread.h		\
 	gsttrace.h		\
 	gsttrashstack.h		\
@@ -237,13 +243,5 @@ gstenumtypes.c: $(gst_headers)
 	--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
 	--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (\"@EnumName@\", values);\n  }\n  return etype;\n}\n" \
 	$^ > gstenumtypes.c
-
-# Don't want the generated marshal files in the dist
-dist-hook:
-	rm -f $(distdir)/gstmarshal.c $(distdir)/gstmarshal.h
-
-# Clean generated files
-distclean-local:
-	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
 
 EXTRA_DIST = ROADMAP

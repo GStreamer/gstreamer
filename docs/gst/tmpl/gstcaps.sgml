@@ -406,24 +406,6 @@ The name used for tracing
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_set_type_id ##### -->
-<para>
-
-</para>
-
-@caps: 
-@type_id: 
-
-
-<!-- ##### FUNCTION gst_caps_get_type_id ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_caps_set_mime ##### -->
 <para>
 
