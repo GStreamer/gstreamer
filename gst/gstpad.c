@@ -2600,7 +2600,12 @@ gst_pad_event_default_dispatch (GstPad *pad, GstElement *element,
 gboolean 
 gst_pad_event_default (GstPad *pad, GstEvent *event)
 {
-  GstElement *element = GST_PAD_PARENT (pad);
+  GstElement *element;
+  
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (event, FALSE);
+  
+  element = GST_PAD_PARENT (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -2638,7 +2643,7 @@ gst_pad_dispatcher (GstPad *pad, GstPadDispatcherFunction dispatch,
   gboolean res = FALSE;
   GList *int_pads, *orig;
   
-  g_return_val_if_fail (pad, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (data, FALSE);
 
   orig = int_pads = gst_pad_get_internal_connections (pad);
@@ -2675,11 +2680,13 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
   gboolean success = FALSE;
   GstRealPad *rpad;
 
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event, FALSE);
 
   rpad = GST_PAD_REALIZE (pad);
 
-  if (!pad || (GST_PAD_IS_SINK (rpad) && !GST_PAD_IS_USABLE (rpad))) 
+  /* don't send events on usuable pads */
+  if (GST_PAD_IS_SINK (rpad) && !GST_PAD_IS_USABLE (rpad)) 
     return FALSE;
 
   if (GST_EVENT_SRC (event) == NULL)
@@ -2736,7 +2743,7 @@ gst_pad_convert_default (GstPad *pad,
 {
   GstPadConvertData data;
 
-  g_return_val_if_fail (pad, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (dest_format, FALSE);
   g_return_val_if_fail (dest_value, FALSE);
 
@@ -2768,7 +2775,7 @@ gst_pad_convert (GstPad *pad,
 {
   GstRealPad *rpad;
   
-  g_return_val_if_fail (pad, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (dest_format, FALSE);
   g_return_val_if_fail (dest_value, FALSE);
 
@@ -2778,8 +2785,6 @@ gst_pad_convert (GstPad *pad,
   }     
 
   rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, FALSE);
 
   if (GST_RPAD_CONVERTFUNC (rpad)) {
     return GST_RPAD_CONVERTFUNC (rpad) (GST_PAD_CAST (rpad), src_format, 
@@ -2819,7 +2824,7 @@ gst_pad_query_default (GstPad *pad, GstPadQueryType type,
 {
   GstPadQueryData data;
 
-  g_return_val_if_fail (pad, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (format, FALSE);
   g_return_val_if_fail (value, FALSE);
 
@@ -2848,9 +2853,7 @@ gst_pad_query (GstPad *pad, GstPadQueryType type,
 {
   GstRealPad *rpad;
   
-  if (pad == NULL)
-    return FALSE;
-
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (format, FALSE);
   g_return_val_if_fail (value, FALSE);
 
@@ -2907,12 +2910,9 @@ gst_pad_get_formats (GstPad *pad)
 {
   GstRealPad *rpad;
   
-  if (pad == NULL)
-    return FALSE;
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   rpad = GST_PAD_REALIZE (pad);
-
-  g_return_val_if_fail (rpad, FALSE);
 
   if (GST_RPAD_FORMATSFUNC (rpad))
     return GST_RPAD_FORMATSFUNC (rpad) (GST_PAD_CAST (pad));
