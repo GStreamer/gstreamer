@@ -1767,6 +1767,16 @@ gst_pad_proxy_link (GstPad *pad, GstCaps *caps)
   if (gst_pad_try_set_caps_func (realpad, caps, FALSE) < 0)
     return GST_PAD_LINK_REFUSED;
 
+  if (peer) {
+    gst_caps_debug (caps, "proxy link filter");
+
+    GST_INFO (GST_CAT_CAPS, "setting filter on %s:%s and %s:%s",
+              GST_DEBUG_PAD_NAME (peer), GST_DEBUG_PAD_NAME (realpad));
+
+    gst_caps_replace_sink (&GST_RPAD_FILTER (peer), caps); 
+    gst_caps_replace_sink (&GST_RPAD_FILTER (realpad), caps); 
+  }
+
   return GST_PAD_LINK_OK;
 }
 
@@ -1926,14 +1936,17 @@ GstCaps*
 gst_pad_get_allowed_caps (GstPad *pad)
 {
   GstCaps *caps;
+  GstRealPad *realpad;
 
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
+  realpad = GST_PAD_REALIZE (pad);
+
   GST_DEBUG (GST_CAT_PROPERTIES, "get allowed caps of %s:%s", 
              GST_DEBUG_PAD_NAME (pad));
 
-  caps = gst_caps_ref (GST_RPAD_FILTER (pad));
+  caps = gst_caps_ref (GST_RPAD_FILTER (realpad));
 
   return caps;
 }
