@@ -33,7 +33,7 @@ static GMutex *_gst_buffer_chunk_lock;
 void 
 _gst_buffer_initialize (void) 
 {
-  buffersize = sizeof(GstBuffer);
+  int buffersize = sizeof(GstBuffer);
 
   // round up to the nearest 32 bytes for cache-line and other efficiencies
   buffersize = ((buffersize-1 / 32) + 1) * 32;
