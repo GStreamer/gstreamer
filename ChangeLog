@@ -1,3 +1,100 @@
+2004-02-24  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelement.c (gst_element_dispose): Protect against multiple
+	invocations.
+
+	* gst/schedulers/gstoptimalscheduler.c
+	I added a mess of prototypes at the top of the file by way of
+	documentation. Some of the operations on chains and groups were
+	re-organized.
+
+	(create_group): Added a type argument so if the group is enabled,
+	the setup_group_scheduler knows what to do.
+	(group_elements): Added a type argument here, too, to be passed on
+	to create_group.
+	(group_element_set_enabled): If an unlinked PLAYING element is
+	added to a bin, we have to create a new group to hold the element,
+	and this function will be called before the group is added to the
+	chain. Thus we have a valid case for group->chain==NULL. Instead
+	of calling chain_group_set_enabled, just set the flag on the group
+	(the chain's status will be set when the group is added to it).
+	(gst_opt_scheduler_state_transition, chain_group_set_enabled):
+	Setup the group scheduler when the group is enabled, not
+	specifically when an element goes PAUSED->PLAYING. This means
+	PLAYING elements can be added, linked, and scheduled into a
+	PLAYING pipeline, as was intended.
+	(add_to_group): Don't ref the group twice. I don't know when this
+	double-ref got in here. Removing it has the potential to cause
+	segfaults if other parts of the scheduler are buggy. If you find
+	that the scheduler is segfaulting for you, put in an extra ref
+	here and see if that hacks over the underlying issue. Of course,
+	then find out what code is unreffing a group it doesn't own...
+	(create_group): Make the extra refcount floating, and remove it
+	after adding the element. This means that...
+	(unref_group): Destroy when the refcount reaches 0, not 1, like
+	every other refcounted object in the known universe.
+	(remove_from_group): When a group becomes empty, set it to be not
+	active, and remove it from its chain. Don't unref it again,
+	there's no floating reference any more.
+	(destroy_group): We have to remove the group from the chain in
+	remove_from_group (rather than here) to break refcounting cycles
+	(the chain always has a ref on the group). So assert that
+	group->chain==NULL.
+	(ref_group_by_count): Removed, it was commented out anyway.
+	(merge_chains): Use the remove_from_chain and add_to_chain
+	primitives to do the reparenting, instead of rolling our own
+	implementation.
+	(add_to_chain): The first non-disabled group in the chain's group
+	list will be the entry point for the chain. Because buffers can
+	accumulate in loop elements' peer bufpens, we preferentially
+	schedule loop groups before get groups to avoid unnecessary
+	execution of get-based groups when the bufpens are already full.
+	(gst_opt_scheduler_schedule_run_queue): Debug fixes.
+	(get_group_schedule_function): Ditto.
+	(loop_group_schedule_function): Ditto.
+	(gst_opt_scheduler_loop_wrapper): Ditto.
+	(gst_opt_scheduler_iterate): Ditto.
+
+	I understand the opt scheduler now, yippee!
+
+	* gst/gstpad.c: All throughout, added FIXMEs to look at for 0.9.
+	(gst_pad_get_name, gst_pad_set_chain_function) 
+	(gst_pad_set_get_function, gst_pad_set_event_function) 
+	(gst_pad_set_event_mask_function, gst_pad_get_event_masks) 
+	(gst_pad_get_event_masks_default, gst_pad_set_convert_function) 
+	(gst_pad_set_query_function, gst_pad_get_query_types) 
+	(gst_pad_get_query_types_default) 
+	(gst_pad_set_internal_link_function) 
+	(gst_pad_set_formats_function, gst_pad_set_link_function) 
+	(gst_pad_set_fixate_function, gst_pad_set_getcaps_function) 
+	(gst_pad_set_bufferalloc_function, gst_pad_unlink) 
+	(gst_pad_renegotiate, gst_pad_set_parent, gst_pad_get_parent) 
+	(gst_pad_add_ghost_pad, gst_pad_proxy_getcaps) 
+	(gst_pad_proxy_pad_link, gst_pad_proxy_fixate) 
+	(gst_pad_get_pad_template_caps, gst_pad_check_compatibility) 
+	(gst_pad_get_peer, gst_pad_get_allowed_caps) 
+	(gst_pad_alloc_buffer, gst_pad_push, gst_pad_pull) 
+	(gst_pad_selectv, gst_pad_select, gst_pad_template_get_caps) 
+	(gst_pad_event_default_dispatch, gst_pad_event_default) 
+	(gst_pad_dispatcher, gst_pad_send_event, gst_pad_convert_default) 
+	(gst_pad_convert, gst_pad_query_default, gst_pad_query) 
+	(gst_pad_get_formats_default, gst_pad_get_formats): Better
+	argument checks, and some doc fixes.
+
+	(gst_pad_custom_new_from_template): Um, does anyone
+	use these functions? Actually make a custom pad instead of a
+	normal one.
+	(gst_pad_try_set_caps): Transpose some checks.
+	(gst_pad_try_set_caps_nonfixed): Same, and use a macro to check if
+	the pad is in negotiation.
+	(gst_pad_try_relink_filtered): Use pad_link_prepare.
+	
+	* gst/gstelement.c: Remove prototypes also defined in gstclock.h.
+
+	* gst/gstelement.h: 
+	* gst/gstclock.h: Un-deprecate the old clocking API, as discussed
+	on the list.
+
 2004-02-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstbin.c: (gst_bin_add):

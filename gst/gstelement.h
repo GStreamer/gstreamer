@@ -287,10 +287,8 @@ gboolean		gst_element_requires_clock	(GstElement *element);
 gboolean		gst_element_provides_clock	(GstElement *element);
 GstClock*		gst_element_get_clock 		(GstElement *element);
 void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
-#ifndef GST_DISABLE_DEPRECATED
 GstClockReturn		gst_element_clock_wait 		(GstElement *element, 
 							 GstClockID id, GstClockTimeDiff *jitter);
-#endif
 GstClockTime		gst_element_get_time		(GstElement *element);
 gboolean		gst_element_wait		(GstElement *element, GstClockTime timestamp);
 void			gst_element_set_time		(GstElement *element, GstClockTime time);

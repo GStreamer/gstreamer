@@ -835,9 +835,6 @@ gst_element_get_time (GstElement *element)
   }   
 }
 
-GstClockID		gst_clock_new_single_shot_id	(GstClock *clock, 
-							 GstClockTime time); 
-void			gst_clock_id_free		(GstClockID id);
 /**
  * gst_element_wait:
  * @element: element that should wait
@@ -2961,8 +2958,10 @@ gst_element_dispose (GObject *object)
   element->numsrcpads = 0;
   element->numsinkpads = 0;
   element->numpads = 0;
-  g_mutex_free (element->state_mutex);
-  g_cond_free (element->state_cond);
+  if (element->state_mutex)
+    g_mutex_free (element->state_mutex);
+  if (element->state_cond)
+    g_cond_free (element->state_cond);
 
   if (element->prop_value_queue)
     g_async_queue_unref (element->prop_value_queue);

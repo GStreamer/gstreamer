@@ -116,7 +116,7 @@ U gst-template/gst-app/src/Makefile.am
     <para>
       First we will examine the code you would be likely to place in a header
       file (although since the interface to the code is entirely defined by the
-      pluging system, and doesn't depend on reading a header file, this is not
+      plugin system, and doesn't depend on reading a header file, this is not
       crucial.)
 
       The code here can be found in

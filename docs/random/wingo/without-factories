@@ -1,0 +1,62 @@
+-*- outline -*-
+
+* Creating Elements Without Factories
+
+** The purpose of factories
+
+On a typical GStreamer system, there are approximately 6.022*10^23
+plugins. GStreamer knows about all of them because of the registry. The
+goal is to avoid initializing each one of them, when maybe for your
+application you only need one or two.
+
+The problem becomes, how do you create an instance of the plugin? The
+normal way to instantiate a class is via g_object_new (TYPE, ARGS...).
+In the case that the plugin isn't loaded, you don't know its type, and
+can't even get it from the type name.
+
+Element factories exist to solve this problem by associating names (like
+"sinesrc" or "identity") with certain types that are provided by the
+plugin. Then when the user asks for "sinesrc", the appropriate plugin is
+loaded, its types are initialized, and then gst_element_factory_create
+creates the object for you.
+
+** Why not factories?
+
+To review, factories (1) allow plugins to remain unloaded if not
+necessary, and (2) make it easy to create elements.
+
+If you are writing an application that has custom elements (as is the
+case with most serious applications), you will probably have the plugin
+loaded up already, and you will have access to the type of the element.
+To muck about creating a plugin for the app, registering the element
+with the plugin, and then creating it with the element factory API
+actually takes more work than the normal way.
+
+** g_object_new
+
+So you want to avoid factories. To create objects with a simple
+g_object_new call is our strategy. However, to preserve the same
+semantics as gst_element_factory_create, we need to know what else is
+needed to initialize a GStreamer element.
+
+The other things that gst_element_factory_create does are as follows:
+
+*** Sets the ->elementfactory member on the element class
+
+Note that anything trying to get the factory won't work (e.g.
+gst_element_get_factory). Thankfully this is less of a problem after the
+0.7 plugin system changes.
+
+*** Initializes the name of the element
+
+To do this ourselves, we either call gst_object_set_name, or when we
+set the "name" property when creating the object.
+
+** Summary
+
+To create a GStreamer element when you know the type, you can just use
+
+g_object_new (get_type_of_my_element (),
+              "name", the_name_you_want_possibly_null,
+              ... any other properties ...
+              NULL);
