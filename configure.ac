@@ -272,17 +272,67 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
-	ac3parse adder audioscale auparse avi \
-	asfdemux audioconvert cdxaparse chart \
-	cutter debug deinterlace effectv festival \
-	filter flx goom id3 intfloat law level median mixmatrix \
-	mpeg1sys mpeg1videoparse mpeg2sub \
-	mpegaudio mpegaudioparse mpegstream \
-        monoscope oneton overlay passthrough playondemand qtdemux \
-	realmedia rtp rtjpeg silence sine smooth smpte \
-	spectrum speed stereo synaesthesia tcp typefind udp vbidec \
-	videocrop videodrop videofilter videoflip videoscale \
-	videotestsrc volenv volume wavenc wavparse y4m"
+	ac3parse \
+	adder \
+	asfdemux \
+	audioconvert \
+	audioscale \
+	auparse \
+	avi \
+	cdxaparse \
+	chart \
+	cutter \
+	debug \
+	deinterlace \
+	effectv \
+	festival \
+	filter \
+	flx \
+	goom \
+	id3 \
+	intfloat \
+	law \
+	level \
+	median \
+	mixmatrix \
+	mpeg1sys \
+	mpeg1videoparse \
+	mpeg2sub \
+	mpegaudio \
+	mpegaudioparse \
+	mpegstream \
+	monoscope \
+	oneton \
+	overlay \
+	passthrough \
+	playondemand \
+	qtdemux \
+	realmedia \
+	rtjpeg \
+	rtp \
+	silence \
+	sine \
+	smooth \
+	smpte \
+	spectrum \
+	speed \
+	stereo \
+	synaesthesia \
+	tcp \
+	typefind \
+	udp \
+	vbidec \
+	videocrop \
+	videodrop \
+	videoflip \
+	videofilter \
+	videoscale \
+	videotestsrc \
+	volenv \
+	volume \
+	wavenc \
+	wavparse \
+	y4m"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
