@@ -1411,6 +1411,15 @@ GST_CHECK_FEATURE(PANGO, [pango], pango, [
   AC_SUBST(PANGO_LIBS)
 ])
 
+dnl *** polypaudio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_POLYP, true)
+GST_CHECK_FEATURE(POLYP, [polyp], polyp, [
+  PKG_CHECK_MODULES(POLYP, polyplib >= 0.6,
+      HAVE_POLYP="yes", HAVE_POLYP="no")
+  AC_SUBST(POLYP_CFLAGS)
+  AC_SUBST(POLYP_CFLAGS)
+])
+
 dnl *** dv1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV1394, true)
 GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], dv1394src, [
@@ -1970,6 +1979,7 @@ ext/musicbrainz/Makefile
 ext/nas/Makefile
 ext/ogg/Makefile
 ext/pango/Makefile
+ext/polyp/Makefile
 ext/raw1394/Makefile
 ext/sdl/Makefile
 ext/shout/Makefile
@@ -1988,6 +1998,7 @@ ext/xvid/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
+gst-libs/gst/cache/Makefile
 gst-libs/gst/colorbalance/Makefile
 gst-libs/gst/floatcast/Makefile
 gst-libs/gst/gconf/Makefile

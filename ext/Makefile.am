@@ -190,6 +190,12 @@ else
 LIBPNG_DIR=
 endif
 
+if USE_POLYP
+POLYP_DIR=polyp
+else
+POLYP_DIR=
+endif
+
 if USE_LIBRFB
 LIBRFB_DIR=librfb
 else
@@ -409,6 +415,7 @@ SUBDIRS=\
 	$(MUSICBRAINZ_DIR) \
 	$(OGG_DIR) \
 	$(PANGO_DIR) \
+	$(POLYP_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
 	$(SHOUT2_DIR) \
@@ -470,6 +477,7 @@ DIST_SUBDIRS=\
 	nas \
 	ogg \
 	pango \
+	polyp \
 	raw1394 \
 	sdl \
 	snapshot \
