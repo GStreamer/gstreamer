@@ -20,7 +20,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;..\;..\libs;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32;..\..\gettext\include"
+				AdditionalIncludeDirectories=".\;..\;..\libs;c:\usr\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_CONFIG_H"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -38,7 +38,7 @@
 				OutputFile="$(OutDir)/gst-inspect.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\gettext\lib"
+				AdditionalLibraryDirectories="c:\usr\lib"
 				IgnoreAllDefaultLibraries="FALSE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/gst-inspect.pdb"
@@ -74,7 +74,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=".\;..\;..\libs;..\..\libxml2\include\libxml2;..\..\popt\include;..\..\glib;..\..\glib\glib;..\..\glib\gmodule;..\..\glib\win32;..\..\gettext\include"
+				AdditionalIncludeDirectories=".\;..\;..\libs;c:\usr\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GST_DISABLE_GST_DEBUG;HAVE_CONFIG_H"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -90,7 +90,7 @@
 				OutputFile="$(OutDir)/gst-inspect.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\gettext\lib"
+				AdditionalLibraryDirectories="c:\usr\lib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"

@@ -21,11 +21,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="D:\Perso\Programmes\GStreamer\gstreamer\win32;.\;..\;..\libs;..\..\popt\include;..\..\glib\gmodule;..\..\gettext\include;..\..\libiconv\include;..\..\libxml2\include\libxml2;..\..\glib;..\..\glib\glib;..\..\glib\build\win32"
+				AdditionalIncludeDirectories=".\;..\;..\libs;c:\usr\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				BufferSecurityCheck="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="config.h"
 				WarningLevel="3"
@@ -36,11 +37,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
+				AdditionalDependencies="popt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
 				OutputFile="$(OutDir)/libgtreamer-0.8.dll"
 				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\glib\gthread;..\..\glib\gmodule;..\..\popt\lib;..\..\gettext\lib;..\..\libxml2\lib"
+				AdditionalLibraryDirectories="c:\usr\lib"
 				IgnoreAllDefaultLibraries="FALSE"
 				ModuleDefinitionFile="gst.def"
 				DelayLoadDLLs=""
@@ -65,11 +66,11 @@ copy $(ProjectDir)\gstversion.h $(ProjectDir)\..\gst\gstversion.h
 copy $(ProjectDir)\gstenumtypes.h $(ProjectDir)\..\gst\gstenumtypes.h
 copy $(ProjectDir)\gstenumtypes.c $(ProjectDir)\..\gst\gstenumtypes.c
 echo #include &quot;gst/gstconfig.h&quot; &gt; gstmarshal.h.tmp
-$(ProjectDir)..\..\glib\gobject\glib-genmarshal --header --prefix=gst_marshal $(ProjectDir)..\gst\gstmarshal.list &gt;&gt; gstmarshal.h.tmp
+glib-genmarshal --header --prefix=gst_marshal $(ProjectDir)..\gst\gstmarshal.list &gt;&gt; gstmarshal.h.tmp
 move gstmarshal.h.tmp $(ProjectDir)..\gst\gstmarshal.h
 echo #include &quot;glib-object.h&quot; &gt; gstmarshal.c.tmp
 echo #include &quot;gstmarshal.h&quot; &gt;&gt; gstmarshal.c.tmp
-$(ProjectDir)..\..\glib\gobject\glib-genmarshal --body --prefix=gst_marshal $(ProjectDir)..\gst\gstmarshal.list &gt;&gt; gstmarshal.c.tmp
+glib-genmarshal --body --prefix=gst_marshal $(ProjectDir)..\gst\gstmarshal.list &gt;&gt; gstmarshal.c.tmp
 move gstmarshal.c.tmp $(ProjectDir)..\gst\gstmarshal.c
 bison -d -v -p_gst_parse__yy $(ProjectDir)..\gst\parse\grammar.y -o $(ProjectDir)..\gst\parse\grammar.tab.c
 flex -P_gst_parse_yy $(ProjectDir)..\gst\parse\parse.l
@@ -100,7 +101,7 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=".\;..\;..\libs;..\..\popt\include;..\..\glib\gmodule;..\..\gettext\include;..\..\libiconv\include;..\..\libxml2\include\libxml2;..\..\glib;..\..\glib\glib;..\..\glib\win32"
+				AdditionalIncludeDirectories=".\;..\;..\libs;c:\usr\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_DISABLE_GST_DEBUG;GST_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -113,14 +114,15 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
+				AdditionalDependencies="popt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
 				OutputFile="$(OutDir)/libgtreamer-0.8.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\glib\glib;..\..\glib\gobject;..\..\glib\gthread;..\..\glib\gmodule;..\..\popt\lib;..\..\gettext\lib;..\..\libxml2\lib"
+				AdditionalLibraryDirectories="c:\usr\lib"
 				IgnoreAllDefaultLibraries="FALSE"
 				ModuleDefinitionFile="gst.def"
 				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile="$(OutDir)/GStreamer.pdb"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -140,11 +142,11 @@ copy $(ProjectDir)\gstversion.h $(ProjectDir)\..\gst\gstversion.h
 copy $(ProjectDir)\gstenumtypes.h $(ProjectDir)\..\gst\gstenumtypes.h
 copy $(ProjectDir)\gstenumtypes.c $(ProjectDir)\..\gst\gstenumtypes.c
 echo #include &quot;gst/gstconfig.h&quot; &gt; gstmarshal.h.tmp
-$(ProjectDir)..\..\glib\gobject\glib-genmarshal --header --prefix=gst_marshal $(ProjectDir)..\gst\gstmarshal.list &gt;&gt; gstmarshal.h.tmp
+glib-genmarshal --header --prefix=gst_marshal $(ProjectDir)..\gst\gstmarshal.list &gt;&gt; gstmarshal.h.tmp
 move gstmarshal.h.tmp $(ProjectDir)..\gst\gstmarshal.h
 echo #include &quot;glib-object.h&quot; &gt; gstmarshal.c.tmp
 echo #include &quot;gstmarshal.h&quot; &gt;&gt; gstmarshal.c.tmp
-$(ProjectDir)..\..\glib\gobject\glib-genmarshal --body --prefix=gst_marshal $(ProjectDir)..\gst\gstmarshal.list &gt;&gt; gstmarshal.c.tmp
+glib-genmarshal --body --prefix=gst_marshal $(ProjectDir)..\gst\gstmarshal.list &gt;&gt; gstmarshal.c.tmp
 move gstmarshal.c.tmp $(ProjectDir)..\gst\gstmarshal.c
 bison -d -v -p_gst_parse__yy $(ProjectDir)..\gst\parse\grammar.y -o $(ProjectDir)..\gst\parse\grammar.tab.c
 flex -P_gst_parse_yy $(ProjectDir)..\gst\parse\parse.l

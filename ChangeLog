@@ -1,5 +1,19 @@
 2004-08-09  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* win32/gstbytestream.vcproj:
+	* win32/gstelements.vcproj:
+	* win32/gstgetbits.vcproj:
+	* win32/gst-inspect.vcproj:
+	* win32/gst-launch.vcproj:
+	* win32/gstoptimalscheduler.vcproj:
+	* win32/GStreamer.vcproj:
+	* win32/gst-register.vcproj:
+	* win32/gstspider.vcproj:
+	  update the include and lib dirs to fit standard libraries as
+      described in the Win32 manual
+
+2004-08-09  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/config.h:
 	* win32/gstversion.h:
 	  enable NLS again, push the version number for the coming 0.8.5 release
