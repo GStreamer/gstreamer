@@ -446,7 +446,10 @@ gst_v4lsrc_get_property (GObject    *object,
       break;
 
     case ARG_BUFSIZE:
-      g_value_set_int(value, v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
+      if (v4lsrc->mbuf.frames == 0)
+        g_value_set_int(value, 0);
+      else
+        g_value_set_int(value, v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
       break;
 
     default:
