@@ -1,5 +1,12 @@
 2004-12-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	* gst/ffmpegcolorspace/imgconvert.c:
+	  clean up the mess that made me cry and avoid needless duplication
+
+2004-12-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/ffmpegcolorspace/imgconvert.c:
 	  give some indication of why we're segfaulting
 
@@ -13,6 +20,7 @@
 	  Initialize caps cache to NULL.
 	* gst/playback/gstplaybin.c: (gst_play_bin_change_state):
 	  Only change state on audiosink if it exists.
+
 
 2004-12-28  Maciej Katafiasz  <mathrick@mathrick.org>
 
