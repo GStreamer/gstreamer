@@ -585,7 +585,7 @@ plugin_init (GstPlugin *plugin)
 
           <row>
             <entry>audio/x-vorbis</entry>
-            <entry>Vorbis audio data.</entry>
+            <entry>Vorbis audio data</entry>
             <entry></entry>
             <entry></entry>
             <entry></entry>
@@ -602,7 +602,7 @@ plugin_init (GstPlugin *plugin)
             <entry>Windows Media Audio</entry>
             <entry>wmaversion</entry>
             <entry>integer</entry>
-            <entry>1 or 2</entry>
+            <entry>1,2 or 3</entry>
             <entry>
               The version of the WMA codec used to encode the stream.
             </entry>
@@ -1044,10 +1044,10 @@ plugin_init (GstPlugin *plugin)
 
           <row>
             <entry>video/x-wmv</entry>
-            <entry>Windows Media Video.</entry>
+            <entry>Windows Media Video</entry>
             <entry>wmvversion</entry>
             <entry>integer</entry>
-            <entry>1 or 2</entry>
+            <entry>1,2 or 3</entry>
             <entry>
               Version of the WMV codec that the stream was encoded with.
             </entry>
