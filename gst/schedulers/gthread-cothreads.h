@@ -40,54 +40,55 @@ typedef int (*cothread_func) (int, char **);
 typedef struct _cothread cothread;
 typedef struct _cothread_context cothread_context;
 
-struct _cothread_context
-{
-  GSList *cothreads;		/* contains all threads but main */
-  cothread *main;
-  cothread *current;
-  GMutex *mutex;
-  GstThread *gst_thread;	/* the GstThread we're running from */
+struct _cothread_context {
+  GSList *              cothreads; /* contains all threads but main */
+  cothread *            main;
+  cothread *            current;
+  GMutex *              mutex;
+  GstThread *		gst_thread; /* the GstThread we're running from */
 };
 
-struct _cothread
-{
-  GThread *thread;
-  GCond *cond;
-  cothread_func run;
-  int argc;
-  char **argv;
-  cothread *creator;
-  gboolean die;
-  cothread_context *context;
+struct _cothread {
+  GThread *             thread;
+  GCond *               cond;
+  cothread_func         run;
+  int                   argc;
+  char **               argv;
+  cothread *            creator;
+  gboolean              die;
+  cothread_context *    context;
 };
 
 /* define functions
  * Functions starting with "do_" are used by the scheduler.
  */
-static void do_cothreads_init (void *unused);
-static cothread_context *do_cothread_context_init (void);
-static void do_cothread_context_destroy (cothread_context * context);
-static cothread *cothread_create (cothread_context * context,
-    cothread_func func, int argc, char **argv);
+static void             do_cothreads_init               (void *unused);
+static cothread_context *do_cothread_context_init       (void);
+static void             do_cothread_context_destroy     (cothread_context *context);
+static cothread *       cothread_create                 (cothread_context *context,
+                                                         cothread_func func,
+                                                         int argc, 
+                                                         char **argv);
 #define do_cothread_create(new_cothread, context, func, argc, argv)         \
   G_STMT_START{                                                             \
     new_cothread = cothread_create ((context), (func), argc, (char**) (argv)); \
   }G_STMT_END
-static void do_cothread_switch (cothread * to);
-static void do_cothread_setfunc (cothread * thread,
-    cothread_context * context, cothread_func func, int argc, char **argv);
-static void do_cothread_destroy (cothread * thread);
-
-#define do_cothread_lock(cothread)	/* FIXME */
-#define do_cothread_unlock(cothread)	/* FIXME */
+static void             do_cothread_switch              (cothread *to);
+static void             do_cothread_setfunc             (cothread *thread, 
+                                                         cothread_context *context, 
+                                                         cothread_func func, 
+                                                         int argc, 
+                                                         char **argv);
+static void             do_cothread_destroy             (cothread *thread);
+#define do_cothread_lock(cothread)		/* FIXME */
+#define do_cothread_unlock(cothread)		/* FIXME */
 #define do_cothread_get_current(context) ((context)->current)
 #define do_cothread_get_main(context) ((context)->main)
 
 static void
 do_cothreads_init (void *unused)
 {
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
+  if (!g_thread_supported ()) g_thread_init (NULL);   
 }
 static cothread_context *
 do_cothread_context_init (void)
@@ -102,40 +103,37 @@ do_cothread_context_init (void)
   ret->mutex = g_mutex_new ();
   ret->cothreads = NULL;
   ret->current = ret->main;
-  ret->gst_thread = gst_thread_get_current ();
+  ret->gst_thread = gst_thread_get_current();
   g_mutex_lock (ret->mutex);
-
+  
   return ret;
 }
 static void
-do_cothread_context_destroy (cothread_context * context)
+do_cothread_context_destroy (cothread_context *context)
 {
-  g_assert (g_thread_self () == context->main->thread);
-
+  g_assert (g_thread_self() == context->main->thread);
+  
   while (context->cothreads) {
     do_cothread_destroy ((cothread *) context->cothreads->data);
   }
   g_mutex_unlock (context->mutex);
   g_mutex_free (context->mutex);
-
+  
   g_free (context);
 }
 static void
-die (cothread * to_die)
-{
+die (cothread *to_die) {
   g_cond_free (to_die->cond);
-  to_die->context->cothreads =
-      g_slist_remove (to_die->context->cothreads, to_die);
+  to_die->context->cothreads = g_slist_remove (to_die->context->cothreads, to_die);
   g_free (to_die);
   g_thread_exit (to_die);
   /* don't unlock the mutex here, the thread waiting for us to die is gonna take it */
 }
-
 static gpointer
 run_new_thread (gpointer data)
 {
   cothread *self = (cothread *) data;
-
+  
   g_mutex_lock (self->context->mutex);
   g_private_set (gst_thread_current, self->context->gst_thread);
   g_cond_signal (self->creator->cond);
@@ -151,11 +149,10 @@ run_new_thread (gpointer data)
   return NULL;
 }
 static cothread *
-cothread_create (cothread_context * context, cothread_func func, int argc,
-    char **argv)
+cothread_create (cothread_context *context, cothread_func func, int argc, char **argv)
 {
   cothread *ret;
-
+  
   if ((ret = g_new (cothread, 1)) == NULL) {
     goto out1;
   }
@@ -165,11 +162,10 @@ cothread_create (cothread_context * context, cothread_func func, int argc,
   ret->argv = argv;
   ret->creator = do_cothread_get_current (context);
   ret->die = FALSE;
-  ret->context = context;
-  context->cothreads = g_slist_prepend (context->cothreads, ret);
+  ret->context = context; 
+  context->cothreads = g_slist_prepend (context->cothreads, ret);  
   ret->thread = g_thread_create (run_new_thread, ret, TRUE, NULL);
-  if (ret->thread == NULL)
-    goto out2;
+  if (ret->thread == NULL) goto out2;
   g_cond_wait (do_cothread_get_current (context)->cond, context->mutex);
   return ret;
 
@@ -180,11 +176,10 @@ out1:
   return NULL;
 }
 
-static void
-do_cothread_switch (cothread * to)
+static void do_cothread_switch (cothread *to)
 {
-  cothread *self = do_cothread_get_current (to->context);
-
+  cothread *self = do_cothread_get_current(to->context);
+  
   if (self == to) {
     g_warning ("trying to switch to the same cothread, not allowed");
   } else {
@@ -197,22 +192,21 @@ do_cothread_switch (cothread * to)
 }
 
 static void
-do_cothread_setfunc (cothread * thread, cothread_context * context,
-    cothread_func func, int argc, char **argv)
+do_cothread_setfunc (cothread *thread, cothread_context *context, 
+                     cothread_func func, int argc, char **argv)
 {
   thread->run = func;
   thread->argc = argc;
   thread->argv = argv;
 }
 static void
-do_cothread_destroy (cothread * thread)
+do_cothread_destroy (cothread *thread)
 {
   GThread *join;
   cothread_context *context;
-
   g_return_if_fail (thread != thread->context->main);
   g_return_if_fail (thread != thread->context->current);
-
+  
   thread->die = TRUE;
   join = thread->thread;
   context = thread->context;
@@ -221,9 +215,9 @@ do_cothread_destroy (cothread * thread)
   g_thread_join (join);
   /* the mutex was locked by the thread that we joined, no need to lock again */
 }
-
-#define do_cothread_lock(cothread)	/* FIXME */
-#define do_cothread_unlock(cothread)	/* FIXME */
+  
+#define do_cothread_lock(cothread)		/* FIXME */
+#define do_cothread_unlock(cothread)		/* FIXME */
 
 #define do_cothread_get_current(context) ((context)->current)
 #define do_cothread_get_main(context) ((context)->main)
