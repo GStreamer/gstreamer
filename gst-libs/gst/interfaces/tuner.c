@@ -24,7 +24,7 @@
 #endif
 
 #include "tuner.h"
-#include "tunermarshal.h"
+#include "tuner-marshal.h"
 
 #include <string.h>
 

@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <gst/tuner/tunernorm.h>
 #include <gst/tuner/tunerchannel.h>
-#include <gst/tuner/tunerenumtypes.h>
+#include <gst/tuner/tuner-enumtypes.h>
 
 G_BEGIN_DECLS
 

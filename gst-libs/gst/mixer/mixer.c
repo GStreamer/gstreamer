@@ -24,7 +24,7 @@
 #endif
 
 #include "mixer.h"
-#include "mixermarshal.h"
+#include "mixer-marshal.h"
 
 enum {
   MUTE_TOGGLED,

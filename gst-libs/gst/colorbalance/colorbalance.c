@@ -25,7 +25,7 @@
 #endif
 
 #include "colorbalance.h"
-#include "colorbalancemarshal.h"
+#include "colorbalance-marshal.h"
 
 enum {
   VALUE_CHANGED,
