@@ -15,6 +15,7 @@ BuildRoot: /var/tmp/%{name}-%{ver}-root
 Docdir: %{prefix}/doc
 Prefix: %prefix
 Requires: libxml >= 1.8.0
+Requires: gstreamer >= %{ver}
 BuildRequires: nasm => 0.90
 
 %description
@@ -69,6 +70,71 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ESD_TRUE@%postun -n gstreamer-esd
 @USE_ESD_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 @USE_ESD_TRUE@/sbin/ldconfig
+
+### FESTIVAL ###
+@USE_FESTIVAL_TRUE@%package -n gstreamer-festival
+@USE_FESTIVAL_TRUE@Summary: GStreamer plugin for text-to-speech support using Festival
+@USE_FESTIVAL_TRUE@Group: Libraries/Multimedia
+@USE_FESTIVAL_TRUE@Requires: gstreamer >= %{ver}
+@USE_FESTIVAL_TRUE@Requires: festival >= 1.4.1
+@USE_FESTIVAL_TRUE@
+@USE_FESTIVAL_TRUE@%description -n gstreamer-festival
+@USE_FESTIVAL_TRUE@Element for text-to-speech using the festival server.
+@USE_FESTIVAL_TRUE@
+@USE_FESTIVAL_TRUE@%files -n gstreamer-festival
+@USE_FESTIVAL_TRUE@%defattr(-, root, root)
+@USE_FESTIVAL_TRUE@%{prefix}/lib/gst/libgstfestival*
+@USE_FESTIVAL_TRUE@
+@USE_FESTIVAL_TRUE@%post -n gstreamer-festival
+@USE_FESTIVAL_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+
+### HERMES ###
+@USE_HERMES_TRUE@%package -n gstreamer-xvideosink
+@USE_HERMES_TRUE@Summary: Gstreamer XFree output plugin
+@USE_HERMES_TRUE@Group: Libraries/Multimedia
+@USE_HERMES_TRUE@Requires: gstreamer >= %{ver}
+@USE_HERMES_TRUE@Requires: Hermes => 1.3.0
+@USE_HERMES_TRUE@%description -n gstreamer-xvideosink
+@USE_HERMES_TRUE@Xfree86 video sink
+@USE_HERMES_TRUE@
+@USE_HERMES_TRUE@%files -n gstreamer-xvideosink
+@USE_HERMES_TRUE@%defattr(-, root, root)
+@USE_HERMES_TRUE@%{prefix}/lib/gst/libxvideosink*
+@USE_HERMES_TRUE@
+@USE_HERMES_TRUE@%post -n gstreamer-xvideosink
+@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+
+@USE_HERMES_TRUE@%package -n gstreamer-colorspace
+@USE_HERMES_TRUE@Summary: Gstreamer colorspace conversion plugin
+@USE_HERMES_TRUE@Group: Libraries/Multimedia
+@USE_HERMES_TRUE@Requires: gstreamer >= %{ver}
+@USE_HERMES_TRUE@Requires: Hermes => 1.3.0
+@USE_HERMES_TRUE@%description -n gstreamer-colorspace
+@USE_HERMES_TRUE@Colorspace plugin based on Hermes library
+@USE_HERMES_TRUE@
+@USE_HERMES_TRUE@%files -n gstreamer-colorspace
+@USE_HERMES_TRUE@%defattr(-, root, root)
+@USE_HERMES_TRUE@%{prefix}/lib/gst/libgstcolorspace*
+@USE_HERMES_TRUE@
+@USE_HERMES_TRUE@%post -n gstreamer-colorspace
+@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+
+
+### LAME ###
+@USE_LAME_TRUE@%package -n gstreamer-lame
+@USE_LAME_TRUE@Summary: GStreamer plugin encoding mp3 songs
+@USE_LAME_TRUE@Group: Libraries/Multimedia
+@USE_LAME_TRUE@Requires: gstreamer >= %{ver}
+@USE_LAME_TRUE@
+@USE_LAME_TRUE@%description -n gstreamer-lame
+@USE_LAME_TRUE@Plugin for encoding mp3 with lame
+@USE_LAME_TRUE@
+@USE_LAME_TRUE@%files -n gstreamer-lame
+@USE_LAME_TRUE@%defattr(-, root, root)
+@USE_LAME_TRUE@%{prefix}/lib/gst/libgstlame*
+@USE_LAME_TRUE@
+@USE_LAME_TRUE@%post -n gstreamer-lame
+@USE_LAME_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 
 ### MAD ###
 @USE_MAD_TRUE@%package -n gstreamer-mad  
@@ -259,6 +325,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_MPEG2DEC_TRUE@Requires: gstreamer >= %{ver}
 @USE_MPEG2DEC_TRUE@Requires: mpeg2dec => 0.2.0
 @USE_MPEG2DEC_TRUE@Requires: gst-plugins => %{ver}
+@USE_MPEG2DEC_TRUE@Requires: gst-plugin-libs => %{ver}
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg1
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg2
 @USE_MPEG2DEC_TRUE@
@@ -652,37 +719,6 @@ Video deinterlace plugin
 %post -n gstreamer-deinterlace
 %{prefix}/bin/gst-register --gst-mask=0
 
-@USE_FESTIVAL_TRUE@%package -n gstreamer-festival
-@USE_FESTIVAL_TRUE@Summary: GStreamer plugin for text-to-speech support using Festival
-@USE_FESTIVAL_TRUE@Group: Libraries/Multimedia
-@USE_FESTIVAL_TRUE@Requires: gstreamer >= %{ver}
-@USE_FESTIVAL_TRUE@Requires: festival >= 1.4.1
-@USE_FESTIVAL_TRUE@
-@USE_FESTIVAL_TRUE@%description -n gstreamer-festival
-@USE_FESTIVAL_TRUE@Element for text-to-speech using the festival server.
-@USE_FESTIVAL_TRUE@
-@USE_FESTIVAL_TRUE@%files -n gstreamer-festival
-@USE_FESTIVAL_TRUE@%defattr(-, root, root)
-@USE_FESTIVAL_TRUE@%{prefix}/lib/gst/libgstfestival*
-@USE_FESTIVAL_TRUE@
-@USE_FESTIVAL_TRUE@%post -n gstreamer-festival
-@USE_FESTIVAL_TRUE@%{prefix}/bin/gst-register --gst-mask=0
-
-@USE_LAME_TRUE@%package -n gstreamer-lame
-@USE_LAME_TRUE@Summary: GStreamer plugin encoding mp3 songs
-@USE_LAME_TRUE@Group: Libraries/Multimedia
-@USE_LAME_TRUE@Requires: gstreamer >= %{ver}
-@USE_LAME_TRUE@
-@USE_LAME_TRUE@%description -n gstreamer-lame
-@USE_LAME_TRUE@Plugin for encoding mp3 with lame
-@USE_LAME_TRUE@
-@USE_LAME_TRUE@%files -n gstreamer-lame
-@USE_LAME_TRUE@%defattr(-, root, root)
-@USE_LAME_TRUE@%{prefix}/lib/gst/libgstlame*
-@USE_LAME_TRUE@
-@USE_LAME_TRUE@%post -n gstreamer-lame
-@USE_LAME_TRUE@%{prefix}/bin/gst-register --gst-mask=0
-
 
 %package -n gstreamer-chart
 Summary: GStreamer plugin for converting audio into video
@@ -715,36 +751,6 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 
 %post -n gstreamer-visualisation
 %{prefix}/bin/gst-register --gst-mask=0
-
-@USE_HERMES_TRUE@%package -n gstreamer-xvideosink
-@USE_HERMES_TRUE@Summary: Gstreamer XFree output plugin
-@USE_HERMES_TRUE@Group: Libraries/Multimedia
-@USE_HERMES_TRUE@Requires: gstreamer >= %{ver}
-@USE_HERMES_TRUE@Requires: Hermes => 1.3.0
-@USE_HERMES_TRUE@%description -n gstreamer-xvideosink
-@USE_HERMES_TRUE@Xfree86 video sink
-@USE_HERMES_TRUE@
-@USE_HERMES_TRUE@%files -n gstreamer-xvideosink
-@USE_HERMES_TRUE@%defattr(-, root, root)
-@USE_HERMES_TRUE@%{prefix}/lib/gst/libxvideosink*
-@USE_HERMES_TRUE@
-@USE_HERMES_TRUE@%post -n gstreamer-xvideosink
-@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0
-
-@USE_HERMES_TRUE@%package -n gstreamer-colorspace
-@USE_HERMES_TRUE@Summary: Gstreamer colorspace conversion plugin
-@USE_HERMES_TRUE@Group: Libraries/Multimedia
-@USE_HERMES_TRUE@Requires: gstreamer >= %{ver}
-@USE_HERMES_TRUE@Requires: Hermes => 1.3.0
-@USE_HERMES_TRUE@%description -n gstreamer-colorspace
-@USE_HERMES_TRUE@Colorspace plugin based on Hermes library
-@USE_HERMES_TRUE@
-@USE_HERMES_TRUE@%files -n gstreamer-colorspace
-@USE_HERMES_TRUE@%defattr(-, root, root)
-@USE_HERMES_TRUE@%{prefix}/lib/gst/libgstcolorspace*
-@USE_HERMES_TRUE@
-@USE_HERMES_TRUE@%post -n gstreamer-colorspace
-@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 
 %package -n gstreamer-plugin-libs
 Summary: GStreamer support libraries
