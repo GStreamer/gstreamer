@@ -433,6 +433,36 @@ gst_props_get_int (GstProps *props, const gchar *name)
 }
 
 /**
+ * gst_props_get_float:
+ * @props: the props to get the float value from
+ * @name: the name of the props entry to get.
+ *
+ * Get the named entry as a float.
+ *
+ * Returns: the float value of the named entry, 0.0 if not found.
+ */
+gfloat
+gst_props_get_float (GstProps *props, const gchar *name)
+{
+  GList *lentry;
+  GQuark quark;
+  
+  quark = g_quark_from_string (name);
+
+  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+
+  if (lentry) {
+    GstPropsEntry *thisentry;
+
+    thisentry = (GstPropsEntry *)lentry->data;
+
+    return thisentry->data.float_data;
+  }
+  
+  return 0.0F;
+}
+
+/**
  * gst_props_get_fourcc_int:
  * @props: the props to get the fourcc value from
  * @name: the name of the props entry to get.
