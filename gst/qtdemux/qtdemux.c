@@ -513,6 +513,7 @@ gst_qtdemux_loop_header (GstElement * element)
     case QTDEMUX_STATE_HEADER:
     {
       do {
+        /* FIXME: we peek for 16 bytes, but what if the atom is smaller ? */
         ret = gst_bytestream_peek_bytes (qtdemux->bs, &data, 16);
         if (ret < 16) {
           if (!gst_qtdemux_handle_sink_event (qtdemux)) {
@@ -526,12 +527,14 @@ gst_qtdemux_loop_header (GstElement * element)
       length = GST_READ_UINT32_BE (data);
       GST_DEBUG ("length %08x", length);
       fourcc = GST_READ_UINT32_LE (data + 4);
-      GST_DEBUG ("fourcc " GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      GST_DEBUG ("atom type " GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
 
       if (length == 0) {
         length = gst_bytestream_length (qtdemux->bs) - cur_offset;
       }
       if (length == 1) {
+        /* this means we have an extended size, which is the 64 bit value of
+         * the next 8 bytes */
         guint32 length1, length2;
 
         length1 = GST_READ_UINT32_BE (data + 8);
@@ -539,6 +542,7 @@ gst_qtdemux_loop_header (GstElement * element)
         length2 = GST_READ_UINT32_BE (data + 12);
         GST_DEBUG ("length2 %08x", length2);
 
+        /* FIXME: I guess someone didn't want to make 64 bit size work :) */
         length = length2;
       }
 
@@ -554,6 +558,7 @@ gst_qtdemux_loop_header (GstElement * element)
           GstBuffer *moov;
 
           do {
+            /* read in the complete data from the moov atom */
             ret = gst_bytestream_read (qtdemux->bs, &moov, length);
             if (ret < length) {
               GST_DEBUG ("read failed (%d < %d)", ret, length);
@@ -942,6 +947,7 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, void *buffer, int length)
 
   qtdemux->moov_node = g_node_new (buffer);
 
+  GST_DEBUG_OBJECT (qtdemux, "parsing 'moov' atom");
   qtdemux_parse (qtdemux, qtdemux->moov_node, buffer, length);
 
   cmov = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_cmov);
@@ -983,7 +989,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
   QtNodeType *type;
   void *end;
 
-  GST_LOG ("qtdemux_parse %p %d", buffer, length);
+  GST_LOG ("qtdemux_parse buffer %p length %d", buffer, length);
 
   node_length = QTDEMUX_GUINT32_GET (buffer);
   fourcc = QTDEMUX_FOURCC_GET (buffer + 4);
@@ -1026,6 +1032,8 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       void *buf;
       guint32 len;
 
+      GST_DEBUG_OBJECT (qtdemux,
+          "parsing stsd (sample table, sample description) atom");
       buf = buffer + 16;
       end = buffer + length;
       while (buf < end) {

@@ -246,13 +246,13 @@ gst_jpegenc_getcaps (GstPad * pad)
 
     gst_structure_set_name (structure, name);
     gst_structure_remove_field (structure, "format");
+    /* ... but for the sink pad, we only do I420 anyway, so add that */
+    if (pad == jpegenc->sinkpad) {
+      gst_structure_set (structure, "format", GST_TYPE_FOURCC,
+          GST_STR_FOURCC ("I420"), NULL);
+    }
   }
 
-  /* ... but for the sink pad, we only do I420 anyway, so add that */
-  if (pad == jpegenc->sinkpad) {
-    gst_structure_set (structure, "format", GST_TYPE_FOURCC,
-        GST_STR_FOURCC ("I420"), NULL);
-  }
   return caps;
 }
 
