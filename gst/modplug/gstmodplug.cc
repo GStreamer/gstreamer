@@ -41,7 +41,7 @@
 /* elementfactory information */
 GstElementDetails modplug_details = {
   "ModPlug",
-  "Codec/Audio/Decoder",
+  "Codec/Decoder/Audio",
   "Module decoder based on modplug engine",
   "Jeremy SIMON <jsimon13@yahoo.fr>"
 };

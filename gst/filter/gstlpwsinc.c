@@ -40,7 +40,7 @@
 
 static GstElementDetails gst_lpwsinc_details = GST_ELEMENT_DETAILS (
   "LPWSinc",
-  "Filter/Audio/Effect",
+  "Filter/Effect/Audio",
   "Low-pass Windowed sinc filter",
   "Thomas <thomas@apestaart.org>, "
   "Steven W. Smith"

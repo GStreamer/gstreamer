@@ -30,8 +30,8 @@
 /* elementfactory information */
 static GstElementDetails stereo_details = GST_ELEMENT_DETAILS (
   "Stereo effect",
-  "Filter/Audio/Effect",
-  "Muck with the stereo signal, enhance it's 'stereo-ness'",
+  "Filter/Effect/Audio",
+  "Muck with the stereo signal to enhance its 'stereo-ness'",
   "Erik Walthinsen <omega@cse.ogi.edu>"
 );
 

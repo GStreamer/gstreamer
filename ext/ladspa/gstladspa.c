@@ -119,7 +119,7 @@ gst_ladspa_base_init (GstLADSPAClass *klass)
   /* construct the element details struct */
   details = g_new0(GstElementDetails,1);
   details->longname = g_strdup(desc->Name);
-  details->klass = "Filter/Audio/LADSPA";
+  details->klass = "Filter/Effect/Audio/LADSPA";
   details->description = details->longname;
   details->author = g_strdup(desc->Maker);
   gst_element_class_set_details (element_class, details);

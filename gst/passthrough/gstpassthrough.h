@@ -22,14 +22,9 @@
 #ifndef __GST_PASSTHROUGH_H__
 #define __GST_PASSTHROUGH_H__
 
-
 #include <gst/gst.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_PASSTHROUGH \
   (gst_passthrough_get_type())
@@ -65,11 +60,11 @@ struct _GstPassthrough {
   guint channels;
   guint width;
   guint endianness;
+  guint buffer_size;
 
-  /* the next are valid only for format==GST_PASSTHROUGH_FORMAT_INT */
+  /* the next are valid only for int formats */
   guint depth;
   gboolean is_signed;
-
 };
 
 struct _GstPassthroughClass {
@@ -78,9 +73,6 @@ struct _GstPassthroughClass {
 
 GType gst_passthrough_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_PASSTHROUGH_H__ */

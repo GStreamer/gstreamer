@@ -30,7 +30,7 @@
 
 static GstElementDetails colorspace_details = {
   "Colorspace converter",
-  "Filter/Convert",
+  "Filter/Converter/Video",
   "Converts video from one colorspace to another using libhermes",
   "Wim Taymans <wim.taymans@chello.be>",
 };

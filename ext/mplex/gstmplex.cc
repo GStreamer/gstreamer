@@ -32,7 +32,7 @@
 /* elementfactory information */
 static GstElementDetails gst_mplex_details = {
   "MPlex multiplexer",
-  "Codec/Audio/Decoder",
+  "Codec/Muxer",
   "multiplex mpeg audio and video into a system stream",
   "Wim Taymans <wim.taymans@chello.be> ",
 };

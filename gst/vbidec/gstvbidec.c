@@ -65,7 +65,7 @@ GType gst_vbidec_get_type(void);
 /* elementfactory information */
 static GstElementDetails gst_vbidec_details = GST_ELEMENT_DETAILS (
   "VBI decoder",
-  "Codec/Video/Decoder",
+  "Codec/Decoder/Video",
   "Decodes closed captions and XDS data from VBI data",
   "David I. Lehn <dlehn@users.sourceforge.net>"
 );

@@ -68,7 +68,7 @@ struct _GstMixMatrixClass {
 /* elementfactory information */
 static GstElementDetails mixmatrix_details = {
   "Mixing Matrix",
-  "Filter/Audio",
+  "Filter/Editor/Audio",
   "Mix N audio channels together into M channels",
   "Erik Walthinsen <omega@temple-baptist.com>"
 };

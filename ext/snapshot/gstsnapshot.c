@@ -31,7 +31,7 @@
 /* elementfactory information */
 static GstElementDetails snapshot_details = {
   "snapshot",
-  "Filter/Video",
+  "Filter/Editor/Video",
   "Dump a frame to a png file",
   "Jeremy SIMON <jsimon13@yahoo.fr>",
 };

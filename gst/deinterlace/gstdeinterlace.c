@@ -29,7 +29,7 @@
 /* elementfactory information */
 static GstElementDetails deinterlace_details = GST_ELEMENT_DETAILS (
   "Deinterlace",
-  "Filter/Video",
+  "Filter/Effect/Video",
   "Deinterlace video",
   "Wim Taymans <wim.taymans@chello.be>"
 );

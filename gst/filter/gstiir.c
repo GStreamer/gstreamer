@@ -27,7 +27,7 @@
 
 static GstElementDetails gst_iir_details = GST_ELEMENT_DETAILS (
   "IIR",
-  "Filter/Audio/Effect",
+  "Filter/Effect/Audio",
   "IIR filter based on vorbis code",
   "Monty <monty@xiph.org>, "
   "Thomas <thomas@apestaart.org>"

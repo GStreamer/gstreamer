@@ -38,7 +38,7 @@
 /* elementfactory information */
 static GstElementDetails speed_details = GST_ELEMENT_DETAILS (
   "Speed",
-  "Filter/Audio/Effect",
+  "Filter/Effect/Audio",
   "Set speed/pitch on audio/raw streams (resampler)",
   "Andy Wingo <apwingo@eos.ncsu.edu>"
 );

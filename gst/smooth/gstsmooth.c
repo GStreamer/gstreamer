@@ -27,7 +27,7 @@
 /* elementfactory information */
 static GstElementDetails smooth_details = {
   "Smooth effect",
-  "Filter/Video",
+  "Filter/Effect/Video",
   "Apply a smooth filter to an image",
   "Wim Taymans <wim.taymans@chello.be>"
 };

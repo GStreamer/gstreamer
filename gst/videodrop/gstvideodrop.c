@@ -26,7 +26,7 @@
 /* elementfactory information */
 static GstElementDetails videodrop_details = GST_ELEMENT_DETAILS (
   "Video frame dropper",
-  "Filter/Video",
+  "Filter/Effect/Video",
   "Re-FPS'es video",
   "Ronald Bultje <rbultje@ronald.bitfreak.net>"
 );

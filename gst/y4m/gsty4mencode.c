@@ -28,7 +28,7 @@
 
 static GstElementDetails y4mencode_details = GST_ELEMENT_DETAILS (
   "Y4mEncode",
-  "Codec/Video/Encoder",
+  "Codec/Encoder/Video",
   "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
   "Wim Taymans <wim.taymans@chello.be>"
 );

@@ -29,9 +29,9 @@ static GstPadTemplate *gsmenc_src_template, *gsmenc_sink_template;
 
 /* elementfactory information */
 GstElementDetails gst_gsmenc_details = {
-  "gsm audio encoder",
-  "Codec/Audio/Encoder",
-  ".gsm",
+  "GSM audio encoder",
+  "Codec/Encoder/Audio",
+  "Encodes audio using GSM",
   "Wim Taymans <wim.taymans@chello.be>",
 };
 

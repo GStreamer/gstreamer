@@ -26,7 +26,7 @@
 /* elementfactory information */
 GstElementDetails gst_rtjpegenc_details = {
   "RTjpeg encoder",
-  "Codec/Video/Encoder",
+  "Codec/Encoder/Video",
   "Encodes video in RTjpeg format",
   "Erik Walthinsen <omega@cse.ogi.edu>"
 };

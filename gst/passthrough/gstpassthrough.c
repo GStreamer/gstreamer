@@ -32,7 +32,7 @@
 /* elementfactory information */
 static GstElementDetails passthrough_details = {
   "Passthrough",
-  "Filter/Audio/Effect",
+  "Filter/Effect/Audio",
   "Transparent filter for audio/raw (boilerplate for effects)",
   "Thomas <thomas@apestaart.org>, "\
   "Andy Wingo <apwingo@eos.ncsu.edu>"

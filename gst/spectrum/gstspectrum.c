@@ -27,7 +27,7 @@
 /* elementfactory information */
 static GstElementDetails gst_spectrum_details = GST_ELEMENT_DETAILS (
   "Spectrum analyzer",
-  "Filter/Audio/Analysis",
+  "Filter/Analyzer/Audio",
   "Run an FFT on the audio signal, output spectrum data",
   "Erik Walthinsen <omega@cse.ogi.edu>"
 );

@@ -27,7 +27,7 @@
 /* elementfactory information */
 static GstElementDetails gst_swfdec_details = GST_ELEMENT_DETAILS (
   "SWF video decoder",
-  "Codec/Video/Decoder",
+  "Codec/Decoder/Video",
   "Uses libswfdec to decode Flash video streams",
   "David Schleef <ds@schleef.org>"
 );

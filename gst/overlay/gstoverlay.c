@@ -26,7 +26,7 @@
 /* elementfactory information */
 static GstElementDetails overlay_details = {
   "Video Overlay",
-  "Filter/Video",
+  "Filter/Editor/Video",
   "Overlay multiple video streams",
   "David Schleef <ds@schleef.org>"
 };
