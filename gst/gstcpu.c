@@ -30,7 +30,7 @@
 
 static guint32 _gst_cpu_flags = 0;
 
-#ifdef HAVE_CPU_I386
+#if defined(HAVE_CPU_I386) && defined(__GNUC__)
 #define _gst_cpu_initialize_arch _gst_cpu_initialize_i386
 gboolean _gst_cpu_initialize_i386 (gulong * flags, GString * featurelist);
 #else
@@ -62,7 +62,7 @@ _gst_cpu_initialize_none (gulong * flags, GString * featurelist)
   return FALSE;
 }
 
-#ifdef HAVE_CPU_I386
+#if defined(HAVE_CPU_I386) && defined(__GNUC__)
 static void
 gst_cpuid_i386 (int x, unsigned long *eax, unsigned long *ebx,
     unsigned long *ecx, unsigned long *edx)
