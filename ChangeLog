@@ -1,5 +1,11 @@
 2004-11-03  Christophe Fergeau  <teuf@gnome.org>
 
+	* gst/elements/gstfakesink.c: (gst_fakesink_class_init):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init): more
+	POINTER=>BOXED changes to marshal GstBuffers
+
+2004-11-03  Christophe Fergeau  <teuf@gnome.org>
+
 	* gst/elements/gstidentity.c: (gst_identity_class_init): GstBuffer is 
 	a boxed type, marshal the signal with VOID__BOXED, not VOID__POINTER
 
