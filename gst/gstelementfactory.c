@@ -195,7 +195,7 @@ gst_element_factory_create (GstElementFactory *factory,
 
   GST_DEBUG (GST_CAT_ELEMENT_FACTORY,
              "creating element from factory \"%s\" (name \"%s\", type %d)", 
-             GST_OBJECT_NAME (factory), name, (gint) factory->type);
+             GST_PLUGIN_FEATURE_NAME (factory), name, (gint) factory->type);
 
   if (factory->type == 0) {
       g_critical ("Factory for `%s' has no type",
@@ -210,7 +210,7 @@ gst_element_factory_create (GstElementFactory *factory,
   /* attempt to set the elemenfactory class pointer if necessary */
   oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
   if (oclass->elementfactory == NULL) {
-    GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "class %s", GST_OBJECT_NAME (factory));
+    GST_DEBUG (GST_CAT_ELEMENT_FACTORY, "class %s", GST_PLUGIN_FEATURE_NAME (factory));
     oclass->elementfactory = factory;
 
     /* copy pad template pointers to the element class, 

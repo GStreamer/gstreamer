@@ -41,11 +41,11 @@ int main(int argc,char *argv[]) {
 
       factorynode = xmlNewChild (doc->xmlRootNode, NULL, "element", NULL);
       xmlNewChild (factorynode, NULL, "name", 
-		GST_PLUGIN_FEATURE_NAME(GST_PLUGIN_FEATURE(factory)));
+		GST_PLUGIN_FEATURE_NAME(factory));
 
       element = gst_element_factory_create(factory,NULL);
       GST_DEBUG(GST_CAT_PLUGIN_LOADING, "adding factory %s", 
-              gst_object_get_name (GST_OBJECT (factory)));
+              GST_PLUGIN_FEATURE_NAME(factory));
       if (element == NULL) {
         fprintf(stderr,"couldn't construct element from factory %s\n", 
 			gst_object_get_name (GST_OBJECT (factory)));
