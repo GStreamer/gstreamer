@@ -1,6 +1,5 @@
-SUBDIRS=spider #seeking ##autoplug
-##DIST_SUBDIRS=##autoplug
-DIST_SUBDIRS=spider
+SUBDIRS=autoplug spider #seeking
+DIST_SUBDIRS=autoplug spider
 
 GST_PLUGIN_PATH=$(shell cd $(top_builddir) && pwd)
 
