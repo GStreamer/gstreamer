@@ -1,5 +1,5 @@
 
-plugin_LTLIBRARIES = libgsttagediting.la
+plugin_LTLIBRARIES = libgsttagedit.la
 
 libgsttagediting_la_SOURCES = gstvorbistag.c gsttagediting.c gstid3tag.c
 libgsttagediting_la_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/gst/tags
