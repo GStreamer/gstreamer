@@ -1,5 +1,16 @@
 2004-01-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/media-info/media-info-priv.c: (have_type_callback),
+	(deep_notify_callback), (gmi_set_decoder), (gmi_clear_decoder),
+	(gmip_find_type_pre):
+	* gst-libs/gst/media-info/media-info-priv.h:
+	* gst-libs/gst/media-info/media-info.c:
+	(gst_media_info_instance_init), (gst_media_info_read_idler):
+        add fakesink to get caps on decoder src pad again
+        fix callback prototype to match new have_type signal signature
+
+2004-01-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/adder/gstadder.c: (gst_adder_link):
           fix non-compile and cut-n-paste code
 
