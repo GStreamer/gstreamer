@@ -11,7 +11,7 @@ main (gint argc, gchar *argv[])
 
   gst_init (&argc, &argv);
 
-  i = 10000;
+  i = 1000;
 
   pipeline = gst_pipeline_new ("main_pipeline");
 

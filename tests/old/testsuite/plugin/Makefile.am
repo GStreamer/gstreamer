@@ -1,3 +1,4 @@
+
 include ../Rules
 
 plugin_LTLIBRARIES = libtestplugin.la libtestplugin2.la

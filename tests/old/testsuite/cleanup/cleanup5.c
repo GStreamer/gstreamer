@@ -3,7 +3,7 @@
 int main(int argc,char *argv[]) 
 {
   GstElement *bin, *element;
-  gint i = 100000;
+  gint i = 1000;
   gint step = 100;
   
 
