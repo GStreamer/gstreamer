@@ -120,7 +120,6 @@ gst_osssink_get_type (void)
       (GInstanceInitFunc)gst_osssink_init,
     };
     osssink_type = g_type_register_static (GST_TYPE_OSSELEMENT, "GstOssSink", &osssink_info, 0);
-    //GST_DEBUG_CATEGORY_INIT (oss_debug, "oss", 0, "OSS element");
   }
 
   return osssink_type;
