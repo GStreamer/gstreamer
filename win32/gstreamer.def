@@ -21,7 +21,9 @@ EXPORTS
         gst_pad_get_event_masks
         gst_pad_get_event_masks_default
         gst_pad_event_default
+        gst_pad_convert
         gst_pad_convert_default
+        gst_pad_set_convert_function
         gst_pad_get_formats
         gst_pad_get_formats_default
         gst_pad_get_name
@@ -36,6 +38,7 @@ EXPORTS
         gst_element_factory_create
         gst_structure_foreach
         gst_structure_get_name
+        gst_structure_get_boolean
         gst_caps_get_structure
         gst_caps_get_size
         gst_caps_set_simple
@@ -52,6 +55,7 @@ EXPORTS
         gst_plugin_get_feature_list
         gst_registry_pool_plugin_list
         gst_object_get_name
+        gst_object_set_name
         gst_main_quit
         gst_bin_iterate
         gst_object_unref
@@ -108,6 +112,7 @@ EXPORTS
         gst_static_pad_template_get
         gst_element_add_pad
         gst_element_remove_pad
+        gst_element_no_more_pads
         gst_pad_set_getcaps_function
         gst_pad_proxy_getcaps
         gst_pad_new
@@ -120,6 +125,7 @@ EXPORTS
         gst_buffer_get_type
         gst_data_ref
         gst_data_copy
+        gst_data_is_writable
         gst_buffer_new_and_alloc
         gst_element_register
         gst_util_dump_mem
@@ -200,6 +206,7 @@ EXPORTS
         gst_caps_is_fixed
         gst_caps_to_string
         gst_caps_from_string
+        gst_type_list
         gst_type_fourcc
         gst_type_double_range
         gst_type_int_range
@@ -215,6 +222,9 @@ EXPORTS
         gst_structure_set
         gst_structure_set_value
         gst_library_load
+        gst_system_clock_get_type
+        gst_clock_get_type
+        gst_clock_get_event_time
         gst_marshal_VOID__UINT_BOXED
         gst_marshal_BOOLEAN__POINTER
         gst_marshal_VOID__POINTER_OBJECT
