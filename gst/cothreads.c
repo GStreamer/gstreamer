@@ -173,14 +173,18 @@ cothread_stub (void)
   register cothread_state *thread = ctx->threads[ctx->current];
 
   GST_DEBUG_ENTER("");
+
   thread->flags |= COTHREAD_STARTED;
-  if (thread->func)
+  while (1) {
     thread->func(thread->argc,thread->argv);
+    // we do this to avoid ever returning, we just switch to 0th thread
+    cothread_switch(cothread_main(ctx));
+  }
   thread->flags &= ~COTHREAD_STARTED;
   thread->pc = 0;
   thread->sp = thread->top_sp;
+  fprintf(stderr,"uh, yeah, we shouldn't be here, but we should deal anyway\n");
   GST_DEBUG_LEAVE("");
-//  fprintf(stderr,"uh, yeah, we shouldn't be here, but we should deal anyway\n");
 }
 
 /**
