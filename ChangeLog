@@ -1,3 +1,53 @@
+2004-06-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/v4l/gstv4l.c: (plugin_init):
+	* sys/v4l/gstv4lcolorbalance.c:
+	* sys/v4l/gstv4lcolorbalance.h:
+	* sys/v4l/gstv4lelement.c:
+	* sys/v4l/gstv4lelement.h:
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_class_init):
+	* sys/v4l/gstv4lmjpegsink.h:
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_class_init):
+	* sys/v4l/gstv4lmjpegsrc.h:
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_get_fps_list),
+	(gst_v4lsrc_get_fps), (gst_v4lsrc_srcconnect),
+	(gst_v4lsrc_getcaps), (gst_v4lsrc_get):
+	* sys/v4l/gstv4lsrc.h:
+	* sys/v4l/gstv4ltuner.c:
+	* sys/v4l/gstv4ltuner.h:
+	* sys/v4l/gstv4lxoverlay.c:
+	* sys/v4l/gstv4lxoverlay.h:
+	* sys/v4l/v4l-overlay_calls.c: (gst_v4l_set_overlay),
+	(gst_v4l_set_window), (gst_v4l_enable_overlay):
+	* sys/v4l/v4l_calls.c: (gst_v4l_set_window_properties),
+	(gst_v4l_open), (gst_v4l_get_picture), (gst_v4l_get_audio),
+	(gst_v4l_set_audio):
+	* sys/v4l/v4l_calls.h:
+	* sys/v4l/v4lmjpegsink_calls.c: (gst_v4lmjpegsink_sync_thread),
+	(gst_v4lmjpegsink_queue_frame), (gst_v4lmjpegsink_sync_frame),
+	(gst_v4lmjpegsink_set_buffer), (gst_v4lmjpegsink_set_playback),
+	(gst_v4lmjpegsink_playback_init),
+	(gst_v4lmjpegsink_playback_start), (gst_v4lmjpegsink_get_buffer),
+	(gst_v4lmjpegsink_play_frame), (gst_v4lmjpegsink_wait_frame),
+	(gst_v4lmjpegsink_playback_stop),
+	(gst_v4lmjpegsink_playback_deinit):
+	* sys/v4l/v4lmjpegsink_calls.h:
+	* sys/v4l/v4lmjpegsrc_calls.c: (gst_v4lmjpegsrc_queue_frame),
+	(gst_v4lmjpegsrc_sync_next_frame), (gst_v4lmjpegsrc_set_buffer),
+	(gst_v4lmjpegsrc_set_capture), (gst_v4lmjpegsrc_set_capture_m),
+	(gst_v4lmjpegsrc_capture_init), (gst_v4lmjpegsrc_capture_start),
+	(gst_v4lmjpegsrc_grab_frame), (gst_v4lmjpegsrc_requeue_frame),
+	(gst_v4lmjpegsrc_capture_stop), (gst_v4lmjpegsrc_capture_deinit):
+	* sys/v4l/v4lmjpegsrc_calls.h:
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_queue_frame),
+	(gst_v4lsrc_sync_frame), (gst_v4lsrc_set_capture),
+	(gst_v4lsrc_capture_init), (gst_v4lsrc_capture_start),
+	(gst_v4lsrc_grab_frame), (gst_v4lsrc_requeue_frame),
+	(gst_v4lsrc_capture_stop), (gst_v4lsrc_capture_deinit),
+	(gst_v4lsrc_try_palette):
+	* sys/v4l/v4lsrc_calls.h:
+	  bunch of paranoia cleanups
+
 2004-06-14  David Schleef  <ds@schleef.org>
 
 	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_init),
@@ -10,7 +60,7 @@
 
 	* ext/alsa/gstalsa.c: Use snd_pcm_hw_params_set_rate _near instead of
 	  snd_pcm_hw_params_set_rate  since the latter fails for no good 
-	  reason on some setups.<
+	  reason on some setups.
 
 2004-06-14  David Schleef  <ds@schleef.org>
 
@@ -21,7 +71,7 @@
 
 	* gst/ffmpegcolorspace/imgconvert.c: (img_convert):
 	Patch 1.3 broke the ordering of the colorspace info and
-	made the plugin basically work by coincidence, reodered
+	made the plugin basically work by coincidence, reordered
 	the info.
 
 2004-06-14  Thomas Vander Stichele  <thomas at apestaart dot org>
