@@ -1,5 +1,10 @@
 2004-11-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_add_element):
+	We can remove this hack now.
+
+2004-11-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videomixer/videomixer.c: (gst_videomixer_blend_ayuv_ayuv),
 	(gst_videomixer_fill_checker), (gst_videomixer_fill_color),
 	(gst_videomixer_blend_buffers), (gst_videomixer_loop):
