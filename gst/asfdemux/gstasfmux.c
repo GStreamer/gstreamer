@@ -66,7 +66,7 @@ enum
 
 enum
 {
-  ARG_0,
+  ARG_0
 };
 
 static GstStaticPadTemplate gst_asfmux_src_template =
