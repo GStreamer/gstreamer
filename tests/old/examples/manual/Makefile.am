@@ -20,7 +20,7 @@ gnome_CFLAGS = $(GST_OBJ_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 EXTRA_DIST = extract.pl
 
 EXAMPLES = \
-	dynamic $(GNOME) factorymake helloworld \
+	dynamic $(GNOME) elementmake elementget helloworld \
 	init popt queue threads $(GST_LOADSAVE_SRC)
 
 dynamic.c: $(top_srcdir)/docs/manual/dynamic.xml
