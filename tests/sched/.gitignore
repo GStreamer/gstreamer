@@ -8,3 +8,4 @@ Makefile.in
 
 runxml
 log.txt
+dynamic-pipeline

@@ -13,3 +13,9 @@ gstreamer-compprep
 gstreamer-complete
 gstreamer-guilaunch
 *.xml
+gst-complete
+gst-compprep
+gst-inspect
+gst-launch
+gst-register
+gst-xmllaunch

@@ -21,3 +21,5 @@ missing
 stamp-h
 stamp-h.in
 stamp.h
+autom4te.cache
+stamp-h1
