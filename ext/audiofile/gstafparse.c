@@ -32,7 +32,7 @@
 /* elementfactory information */
 static GstElementDetails afparse_details = {
   "Audiofile Parse",
-  "Codec/Parser/Audio",
+  "Codec/Demuxer/Audio",
   "Audiofile parser for audio/raw",
   "Steve Baker <stevebaker_org@yahoo.co.uk>",
 };
