@@ -574,9 +574,8 @@ AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 dnl Check for sidplay
 AC_PATH_LIBSIDPLAY
 
-dnl Check for flac
 AC_MSG_CHECKING(FLAC library)
-AC_CHECK_LIB(FLAC, FLAC__stream_decoder_new, HAVE_FLAC=yes, HAVE_FLAC=no, -lm)
+AC_CHECK_LIB(FLAC, main, HAVE_FLAC=yes, HAVE_FLAC=no, -lm)
 AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLAC=no)
 
 dnl Check for librtp
@@ -925,8 +924,8 @@ if test "x$HAVE_MPEG2DEC" = xyes; then
   AC_DEFINE(HAVE_MPEG2DEC)
 fi
 
-if test "x$HAVE_FLAC" = xyes; then
-  AC_DEFINE(HAVE_FLAC)
+if test "x$HAVE_FLACLIB" = xyes; then
+  AC_DEFINE(HAVE_FLACLIB)
 fi
 
 if test "x$HAVE_LIBGSM" = xyes; then
@@ -975,11 +974,11 @@ AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 dnl thomas : the next line gives errors, this is how it is in CVS
-AM_CONDITIONAL(HAVE_FLAC,      	    test "x$HAVE_FLAC" = "xyes")
+dnl AM_CONDITIONAL(HAVE_FLAC,      	    test "x$HAVE_FLAC" = "xyes")
 dnl thomas : the next line gives errors as well, I commented it
 dnl AM_CONDITIONAL(HAVE_LAC,      	    test "x$HAVE_FAC" = "xyes")
 dnl thomas: the next line doesn't give errors
-dnl AM_CONDITIONAL(HAVE_FLC,      	    test "x$HAVE_FLC" = "xyes")
+AM_CONDITIONAL(HAVE_FLACLIB,        test "x$HAVE_FLACLIB" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
