@@ -1982,6 +1982,7 @@ gst_type_fourcc
 gst_type_int_range
 gst_type_double_range
 gst_type_list
+gst_type_is_fixed
 gst_value_register
 gst_value_init_and_copy
 gst_value_serialize

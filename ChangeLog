@@ -1,3 +1,7 @@
+2004-04-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+
 2004-04-17  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelement.c: (gst_element_dispose):
