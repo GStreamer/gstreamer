@@ -11,6 +11,7 @@ static GList *seekable_elements = NULL;
 static GstElement *pipeline;
 static guint64 duration;
 static GtkAdjustment *adjustment;
+static GtkWidget *hscale;
 static gboolean stats = FALSE;
 static gboolean elem_seek = FALSE;
 static gboolean verbose = FALSE;
@@ -789,9 +790,12 @@ update_scale (gpointer data)
     }
     query_rates ();
   }
+  if (position >= duration)
+    duration = position;
 
   if (duration > 0) {
     gtk_adjustment_set_value (adjustment, position * 100.0 / duration);
+    gtk_widget_queue_draw (hscale);
   }
 
   return TRUE;
@@ -945,8 +949,7 @@ print_usage (int argc, char **argv)
 int
 main (int argc, char **argv)
 {
-  GtkWidget *window, *hbox, *vbox,
-      *play_button, *pause_button, *stop_button, *hscale;
+  GtkWidget *window, *hbox, *vbox, *play_button, *pause_button, *stop_button;
   struct poptOption options[] = {
     {"stats", 's', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &stats, 0,
         "Show pad stats", NULL},
