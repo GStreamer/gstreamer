@@ -1,10 +1,16 @@
 #include <gst/gst.h>
 
+/*
+ * FIXME:
+ * these tests should have a maximum run length, so that they get killed
+ * if they lock up, which they're bound to do.
+ */
+
 void
 usage (void)
 {
-  g_print ("usage: thread <testnum>  \n"
-           "   available testnums:   \n"
+  g_print ("compile this test with TESTNUM defined.\n"
+           "   available TESTNUMs:   \n"
            "          1: stress test state change      \n"
            "          2: iterate once                  \n"
            "          3: iterate twice                 \n"
@@ -37,26 +43,23 @@ change_state (GstElement *element, GstBuffer *buf, GstElement *pipeline)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 }
 
-gint
+int
 main (gint argc, gchar *argv[])
 {
   GstElement *pipeline;
-  gint testnum;
   
   gst_init (&argc, &argv);
 
-  if (argc < 2) {
-    usage();
-    return 0;
-  }
+#ifndef TESTNUM
+  usage ();
+  return -1;
+#endif
 
-  testnum = atoi (argv[1]);
-  
   pipeline = gst_pipeline_new ("main_pipeline");
   construct_pipeline (pipeline);
 
-  if (testnum == 1) {
-    g_print ("stress test state changes...\n");
+  if (TESTNUM == 1) {
+    g_print ("thread test 1: stress test state changes...\n");
 
     g_print ("NULL\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -79,19 +82,19 @@ main (gint argc, gchar *argv[])
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
 
-  if (testnum == 2 || testnum == 3) {
+  if (TESTNUM == 2 || TESTNUM == 3) {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     g_print ("running ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
-  if (testnum == 3) {
+  if (TESTNUM == 3) {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     g_print ("running2 ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
-  if (testnum == 4) {
+  if (TESTNUM == 4) {
     gint run;
 
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -101,7 +104,7 @@ main (gint argc, gchar *argv[])
     }
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
-  if (testnum == 5) {
+  if (TESTNUM == 5) {
     GstElement *sink;
 
     sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
