@@ -148,6 +148,8 @@ gst_udpsrc_init (GstUDPSrc *udpsrc)
   udpsrc->port = UDP_DEFAULT_PORT;
   udpsrc->control = CONTROL_UDP;
   udpsrc->clock = NULL;
+  udpsrc->sock = -1;
+  udpsrc->control_sock = -1;
 
   udpsrc->first_buf = TRUE;
 }
@@ -170,18 +172,14 @@ gst_udpsrc_get (GstPad *pad)
 
   FD_ZERO (&read_fds);
   FD_SET (udpsrc->sock, &read_fds);
-  
   if (udpsrc->control != CONTROL_NONE) {
      FD_SET (udpsrc->control_sock, &read_fds);
-     max_sock = udpsrc->control_sock;
   }
-
-  else {
-     max_sock = udpsrc->sock;
-  }
+  max_sock = MAX(udpsrc->sock, udpsrc->control_sock);
 
   if (select (max_sock+1, &read_fds, NULL, NULL, NULL) > 0) {
-    if (FD_ISSET (udpsrc->control_sock, &read_fds)) {
+    if ((udpsrc->control_sock != -1) &&
+        FD_ISSET (udpsrc->control_sock, &read_fds)) {
 #ifndef GST_DISABLE_LOADSAVE
       guchar *buf;
       int ret;
@@ -203,6 +201,7 @@ gst_udpsrc_get (GstPad *pad)
       	    ret = read (fdread, buf, 1024*10);
 	    break;
     	case CONTROL_UDP:
+      	    len = sizeof (struct sockaddr);
       	    ret = recvfrom (udpsrc->control_sock, buf, 1024*10, 0, (struct sockaddr *)&tmpaddr, &len);
       	    if (ret < 0) {
 		perror ("recvfrom");
@@ -253,6 +252,7 @@ gst_udpsrc_get (GstPad *pad)
       	GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
       }
 
+      len = sizeof (struct sockaddr);
       numbytes = recvfrom (udpsrc->sock, GST_BUFFER_DATA (outbuf),
 		  GST_BUFFER_SIZE (outbuf), 0, (struct sockaddr *)&tmpaddr, &len);
 
@@ -394,8 +394,14 @@ gst_udpsrc_init_receive (GstUDPSrc *src)
 static void
 gst_udpsrc_close (GstUDPSrc *src)
 {
-  close (src->sock);
-  close (src->control_sock);
+  if (src->sock != -1) {
+    close (src->sock);
+    src->sock = -1;
+  }
+  if (src->control_sock != -1) {
+    close (src->control_sock);
+    src->control_sock = -1;
+  }
 
   GST_FLAG_UNSET (src, GST_UDPSRC_OPEN);
 }
