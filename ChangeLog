@@ -111,7 +111,6 @@
 	* ext/lame/gstlame.c:
 	correct defaults that lame_init puts out of range
 
->>>>>>> 1.601
 2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/divx/gstdivxenc.c: (gst_divxenc_get_type),
