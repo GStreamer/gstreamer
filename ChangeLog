@@ -1,3 +1,8 @@
+2004-05-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_comment):
+	  Fix some odd cases and fix BE metadata parsing of unicode16 text.
+
 2004-05-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/switch/gstswitch.c: (gst_switch_release_pad),

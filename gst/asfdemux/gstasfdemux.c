@@ -525,7 +525,7 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
     GST_TAG_COMMENT, NULL       /* ? */
   };
   guint16 *lengths = (guint16 *) & object;
-  gint i;
+  gint i, n;
   gsize in, out;
   GstTagList *taglist;
   const GList *padlist;
@@ -539,7 +539,6 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
       ("Comment lengths: title=%d author=%d copyright=%d description=%d rating=%d",
       object.title_length, object.author_length, object.copyright_length,
       object.description_length, object.rating_length);
-  g_print ("comment\n");
   for (i = 0; i < 5; i++) {
     /* might be just '/0', '/0'... */
     if (lengths[i] > 2 && lengths[i] % 2 == 0) {
@@ -552,8 +551,13 @@ gst_asf_demux_process_comment (GstASFDemux * asf_demux, guint64 * obj_size)
         continue;
 
       /* convert to UTF-8 */
+      for (n = 0; n < lengths[i] / 2 - 1; n++)
+        ((gint16 *) data)[n] = GUINT16_FROM_LE (((gint16 *) data)[n]);
       utf8_comments[i] = g_convert (data, lengths[i],
           "UTF-8", "Unicode", &in, &out, NULL);
+    } else {
+      if (lengths[i] > 0 && !gst_bytestream_flush (bs, lengths[i]))
+        goto fail;
     }
   }
 
