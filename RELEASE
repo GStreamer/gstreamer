@@ -1,60 +1,60 @@
 
-GStreamer: Release notes for GStreamer Plugins 0.7.6 "There"
+GStreamer: Release notes for GStreamer Plugins 0.8.0 "Pharmaceutical Itch"
         
 
-The GStreamer team is happy to announce a new release in the
-0.7.x development series of the GStreamer Plugins.
-The goal of this release series is to stabilize towards a 0.8
-release series which will be part of the GNOME 2.6 releases
-and hopefully eventually KDE 4.x. 
+The GStreamer team is happy to announce the first release
+in the 0.8.x stable series
+of the GStreamer Plugins.
 
 
-0.7.6 is a Release Candidate for GStreamer Plugins 0.8.0
-It is released to shake out the last bugs that might be still present
-due to major/minor number differences.
-
-
-The 0.7 series is a development series and is aimed at developers.
-It is NOT API or ABI compatible with the stable 0.6.x series or
-with other releases in the series.  This means you can not use this
-release to upgrade your current GStreamer installation and expect your
-GStreamer applications to keep working without a recompile.
+The 0.8.x series is a stable series aimed at end users.
+It is not API or ABI compatible with the stable 0.6.x series.
 It is, however, parallel installable with the 0.6.x series.
+
+
+This module contains plugins providing media encoding and decoding,
+conversion, effects, and other elements that provide actual media
+handling functionality to the core.  You need the GStreamer core module
+to make them work.  The versions do not need to match exactly, as long
+as all of them are in the 0.8.x series.
+
+
+The FFmpeg-based decoder element has been moved to its own module.  If you
+want support for a lot of popular video formats, you need to install this
+module along with the GStreamer Core and Plugins.  An FFmpeg-based colorspace
+element has been added to the Plugins however.
 
   
 Features of this release
     
-      * uses 0.8 as the major/minor number
-      * dist fixes for generated files
-      * MPEG video playback fixed
-      * error call fixes
-      * videodrop fixes
-      * alsa oss emulation mixer fixes
-      * audioconvert fixes
-      * gconf versioning fixes
-      * mad xing header fixes
-      * vorbisdec fixes
-      * mad leak and stream reporting fixes
-      * media-info fixed
-      * buffer leak fixes
-      * osssink timing fixes
-      * NAS fixes
-      * cdparanoia error
+      * Parallel installability with 0.6.x series
+      * Internationalization
+      * Dutch, French and Serbian translations
+      * Updated to the new core 0.8 subsystems
+      * Reworked play and media-info libraries
+      * Audio sinks synchronize on timestamps
+      * New demuxer: ogg
+      * New decoder: theora
+      * New elements: rfb, switch, trm, ffmpegcolorspace
+      * New sinks: ximagesink, xvimagesink
+      * Fixes to all other elements, including audioconvert, interleave, alsa, videotestsrc
+      * Portability fixes
+      * ChangeLog use
+      * Coding style consistency
 
 Bugs fixed in this release
     
-      * 114560 : rfc2250enc produces empty buffers
-      * 122279 : goom's first timestamp is broken
-      * 131128 : aasink and sdlvideosink are broken
-      * 133541 : int2float and int2floatnew conflict should be resolved
-      * 133783 : remove deprecated plugins
-      * 135597 : make gstosselement properly deal with symlinks
-      * 136334 : udpsrc pads / caps error
+      * 126999 : [API]: "gstreamer-libs-0.7.pc" should be renamed
+      * 129299 : complied errors in alsa-lib-1.0.0-0.rc2
+      * 131270 : pkg-config-ification patch (alsa, esd, shout2, ogg, speex, .
+      * 135921 : speexenc support won't compile with 1.1.x
+      * 136590 : mod plugins doesn't work atm
+      * 137044 : GConf schemas unreadable
 
 Download
 
-You find source releases of gstreamer in the download directory:
-http://gstreamer.freedesktop.org/src/gstreamer/
+You find source releases of gst-plugins in the download directory:
+http://gstreamer.freedesktop.org/src/gst-plugins/
 
 GStreamer Homepage
 
@@ -77,18 +77,36 @@ will create more lists as necessary.
         
 Applications
 
-Applications are supposed to update their pkg-config checks for GStreamer,
-and start checking for 0.8 as the major/minor number.
+The GConf settings have moved to a versioned location and can now be found
+under /system/gstreamer/0.8.  Applications should use the gconf library,
+as provided by gstreamer-gconf-0.8.pc, to access the default settings.
 
   
 Contributors to this release
     
-      * David Schleef
+      * Amaury Jacquot
+      * Andy Wingo
+      * Arwed v. Merkatz
       * Benjamin Otte
-      * Ronald Bultje
-      * Thomas Vander Stichele
-      * Christophe Fergeau
-      * Julien Moutte
-      * Stefan Kost
+      * Brian Cameron
       * Christian Schaller
+      * Christophe Fergeau
+      * Colin Walters
+      * Danilo Segan
+      * David I. Lehn
+      * David Schleef
+      * Iain Holmes
+      * Jan Schmidt
+      * Jérémy Simon
+      * Johan Dahlin
+      * Jon Trowbridge
+      * Julien Moutte
+      * Julio M. Merino Vidal
+      * Leif Morgan Johnson
+      * Ramon Garcia
+      * Ronald Bultje
+      * Steve Baker
+      * Thomas Canty
+      * Thomas Vander Stichele
+      * Stefan Kost
  

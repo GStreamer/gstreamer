@@ -1,4 +1,13 @@
-This is GStreamer Plugins 0.7.6
+This is GStreamer Plugins 0.8.0
+
+Bugs fixed since 0.7.6:
+                                                                                
+      * 126999 : [API]: "gstreamer-libs-0.7.pc" should be renamed
+      * 129299 : complied errors in alsa-lib-1.0.0-0.rc2
+      * 131270 : pkg-config-ification patch (alsa, esd, shout2, ogg, speex, .
+      * 135921 : speexenc support won't compile with 1.1.x
+      * 136590 : mod plugins doesn't work atm
+      * 137044 : GConf schemas unreadable
 
 Changes since 0.7.5:
 
