@@ -47,6 +47,9 @@ au_type_find (GstBuffer *buf, gpointer private)
   GstCaps *new = NULL;
   gulong *head = (gulong *) GST_BUFFER_DATA (buf);
 
+  if (GST_BUFFER_SIZE (buf) < 4)
+    return NULL;
+
   if (*head == 0x2e736e64 || *head == 0x646e732e)
     new = gst_caps_new ("au_type_find", "audio/au", NULL);
 

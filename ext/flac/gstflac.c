@@ -71,8 +71,12 @@ static GstTypeDefinition flacdefinition = {
 static GstCaps* 
 flac_type_find (GstBuffer *buf, gpointer private) 
 {
-  guint32 head = GUINT32_FROM_BE (*((guint32 *)GST_BUFFER_DATA (buf)));
+  guint32 head;
+  
+  if (GST_BUFFER_SIZE (buf) < 4)
+    return NULL;
 
+  head = GUINT32_FROM_BE (*((guint32 *)GST_BUFFER_DATA (buf)));
   if (head  != 0x664C6143)
     return NULL;
 

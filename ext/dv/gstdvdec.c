@@ -161,8 +161,13 @@ GST_PAD_TEMPLATE_FACTORY ( audio_src_temp,
 static GstCaps*
 dv_type_find (GstBuffer *buf, gpointer private)
 {
-  guint32 head = GUINT32_FROM_BE(*((guint32 *)GST_BUFFER_DATA(buf)));
+  guint32 head;
   GstCaps *new = NULL;
+
+  if (GST_BUFFER_SIZE (buf) < 5)
+    return NULL;
+
+  head = GUINT32_FROM_BE(*((guint32 *)GST_BUFFER_DATA(buf)));
 
   /* check for DIF  and DV flag */
   if ((head & 0xffffff00) == 0x1f070000 && !(GST_BUFFER_DATA(buf)[4] & 0x01)) {
