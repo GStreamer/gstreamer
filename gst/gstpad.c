@@ -2717,6 +2717,15 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
       gst_element_yield (element);
       break;
     case GST_EVENT_DISCONTINUOUS:
+    {
+      guint64 time;
+	      
+      if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
+      	if (gst_element_requires_clock (element) && element->clock) {
+	  gst_clock_handle_discont (element->clock, time); 
+  	}
+      }
+    }
     case GST_EVENT_FLUSH:
     default:
       return gst_pad_event_default_dispatch (pad, element, event);
