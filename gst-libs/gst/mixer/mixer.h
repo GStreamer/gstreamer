@@ -39,27 +39,33 @@ G_BEGIN_DECLS
 #define GST_MIXER_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_MIXER, GstMixerClass))
 
-/* I fully realise that this naming being used here is confusing.
- * A channel is referred to both as the number of simultaneous
- * sound streams the input can handle as well as the in-/output
- * itself. We need to fix this some day, I just cannot come up
- * with something better.
+/* In this interface, a `track' is a unit of recording or playback, pretty much
+ * equivalent to what comes in or goes out through a GstPad. Each track can have
+ * one or more `channels', which are logical parts of the track. A `stereo
+ * track', then, would be one stream with two channels, while a `mono track'
+ * would be a stream with a single channel. More complex examples are possible
+ * as well ; for example, professional audio hardware might handle audio tracks
+ * with 8 or 16 channels each.
+ *
+ * All these are audio terms. I don't know exactly what this would translate to
+ * for video, but a track might be an entire video stream, and a channel might
+ * be the information for one of the colors in the stream.
  */
 
-#define GST_MIXER_CHANNEL_INPUT  (1<<0)
-#define GST_MIXER_CHANNEL_OUTPUT (1<<1)
-#define GST_MIXER_CHANNEL_MUTE   (1<<2)
-#define GST_MIXER_CHANNEL_RECORD (1<<3)
+#define GST_MIXER_TRACK_INPUT  (1<<0)
+#define GST_MIXER_TRACK_OUTPUT (1<<1)
+#define GST_MIXER_TRACK_MUTE   (1<<2)
+#define GST_MIXER_TRACK_RECORD (1<<3)
 
-typedef struct _GstMixerChannel {
+typedef struct _GstMixerTrack {
   gchar *label;
   gint   num_channels,
          flags,
 	 min_volume, max_volume;
-} GstMixerChannel;
+} GstMixerTrack;
 
-#define GST_MIXER_CHANNEL_HAS_FLAG(channel, flag) \
-  ((channel)->flags & flag)
+#define GST_MIXER_TRACK_HAS_FLAG(track, flag) \
+  ((track)->flags & flag)
 
 typedef struct _GstMixer GstMixer;
 
@@ -67,21 +73,21 @@ typedef struct _GstMixerClass {
   GTypeInterface klass;
 
   /* virtual functions */
-  const GList *  (* list_channels) (GstMixer        *mixer);
+  const GList *  (* list_tracks)   (GstMixer      *mixer);
 
-  void           (* set_volume)    (GstMixer        *mixer,
-				    GstMixerChannel *channel,
-				    gint            *volumes);
-  void           (* get_volume)    (GstMixer        *mixer,
-				    GstMixerChannel *channel,
-				    gint            *volumes);
+  void           (* set_volume)    (GstMixer      *mixer,
+				    GstMixerTrack *track,
+				    gint          *volumes);
+  void           (* get_volume)    (GstMixer      *mixer,
+				    GstMixerTrack *track,
+				    gint          *volumes);
 
-  void           (* set_mute)      (GstMixer        *mixer,
-				    GstMixerChannel *channel,
-				    gboolean         mute);
-  void           (* set_record)    (GstMixer        *mixer,
-				    GstMixerChannel *channel,
-				    gboolean         record);
+  void           (* set_mute)      (GstMixer      *mixer,
+				    GstMixerTrack *track,
+				    gboolean       mute);
+  void           (* set_record)    (GstMixer      *mixer,
+				    GstMixerTrack *track,
+				    gboolean       record);
 
   GST_CLASS_PADDING
 } GstMixerClass;
@@ -89,19 +95,19 @@ typedef struct _GstMixerClass {
 GType		gst_mixer_get_type	(void);
 
 /* virtual class function wrappers */
-const GList *	gst_mixer_list_channels	(GstMixer        *mixer);
-void		gst_mixer_set_volume	(GstMixer        *mixer,
-					 GstMixerChannel *channel,
-					 gint            *volumes);
-void		gst_mixer_get_volume	(GstMixer        *mixer,
-					 GstMixerChannel *channel,
-					 gint            *volumes);
-void		gst_mixer_set_mute	(GstMixer        *mixer,
-					 GstMixerChannel *channel,
-					 gboolean         mute);
-void		gst_mixer_set_record	(GstMixer        *mixer,
-					 GstMixerChannel *channel,
-					 gboolean         record);
+const GList *	gst_mixer_list_tracks	(GstMixer      *mixer);
+void		gst_mixer_set_volume	(GstMixer      *mixer,
+					 GstMixerTrack *track,
+					 gint          *volumes);
+void		gst_mixer_get_volume	(GstMixer      *mixer,
+					 GstMixerTrack *track,
+					 gint          *volumes);
+void		gst_mixer_set_mute	(GstMixer      *mixer,
+					 GstMixerTrack *track,
+					 gboolean       mute);
+void		gst_mixer_set_record	(GstMixer      *mixer,
+					 GstMixerTrack *track,
+					 gboolean       record);
 
 G_END_DECLS
 
