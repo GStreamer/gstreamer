@@ -60,6 +60,7 @@ GtkType 		gst_editor_project_get_type		(void);
 
 GstEditorProject*	gst_editor_project_new			(void);
 GstEditorProject*	gst_editor_project_new_from_file	(const guchar *fname);
+void			gst_editor_project_load			(GstEditorProject *project, const guchar *fname);
 void			gst_editor_project_save			(GstEditorProject *project);
 void			gst_editor_project_save_as		(GstEditorProject *project,
 		   						 const guchar *fname);

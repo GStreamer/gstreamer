@@ -28,38 +28,40 @@
 #include "gsteditorproperty.h"
 
 /* class functions */
-static void gst_editor_element_class_init(GstEditorElementClass *klass);
-static void gst_editor_element_init(GstEditorElement *element);
-static void gst_editor_element_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_element_get_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_element_realize(GstEditorElement *element);
-static gint gst_editor_element_event(GnomeCanvasItem *item,
-                                     GdkEvent *event,
-                                     GstEditorElement *element);
+static void 	gst_editor_element_class_init		(GstEditorElementClass *klass);
+static void 	gst_editor_element_init			(GstEditorElement *element);
+
+static void 	gst_editor_element_set_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void 	gst_editor_element_get_arg		(GtkObject *object,GtkArg *arg,guint id);
+
+static void 	gst_editor_element_realize		(GstEditorElement *element);
+static gint 	gst_editor_element_event		(GnomeCanvasItem *item,
+                                     			 GdkEvent *event,
+                                     			 GstEditorElement *element);
 
 /* events fired by items within self */
-static gint gst_editor_element_resizebox_event(GnomeCanvasItem *item,
-                                               GdkEvent *event,
-                                               GstEditorElement *element);
-static gint gst_editor_element_group_event(GnomeCanvasItem *item,
-                                           GdkEvent *event,
-                                           GstEditorElement *element);
-static gint gst_editor_element_state_event(GnomeCanvasItem *item,
-                                           GdkEvent *event,
-                                           gpointer data);
+static gint 	gst_editor_element_resizebox_event	(GnomeCanvasItem *item,
+                                               		 GdkEvent *event,
+                                               		 GstEditorElement *element);
+static gint 	gst_editor_element_group_event		(GnomeCanvasItem *item,
+                                           		 GdkEvent *event,
+                                           		 GstEditorElement *element);
+static gint 	gst_editor_element_state_event		(GnomeCanvasItem *item,
+                                           		 GdkEvent *event,
+                                           		 gpointer data);
 
 /* external events (from GstElement) */
-static void gst_editor_element_state_change(GstElement *element,
-                                            gint state,
-                                            GstEditorElement *editorelement);
+static void 	gst_editor_element_state_change		(GstElement *element,
+                                            		 gint state,
+                                            		 GstEditorElement *editorelement);
 
 /* utility functions */
-static void gst_editor_element_resize(GstEditorElement *element);
-static void gst_editor_element_set_state(GstEditorElement *element,
-                                         gint id,gboolean set);
-static void gst_editor_element_sync_state(GstEditorElement *element);
-static void gst_editor_element_move(GstEditorElement *element,
-                                    gdouble dx,gdouble dy);
+static void 	gst_editor_element_resize		(GstEditorElement *element);
+static void 	gst_editor_element_set_state		(GstEditorElement *element,
+                                         		 gint id,gboolean set);
+static void 	gst_editor_element_sync_state		(GstEditorElement *element);
+static void 	gst_editor_element_move			(GstEditorElement *element,
+                                    			 gdouble dx,gdouble dy);
 
 
 static gchar *_gst_editor_element_states[] = { "S","R","P","F" };
@@ -82,17 +84,22 @@ enum {
   ARG_X2,
   ARG_Y2,
   ARG_ELEMENT,
+  ARG_ACTIVE,
 };
 
 enum {
   NAME_CHANGED,
+  POSITION_CHANGED,
+  SIZE_CHANGED,
   LAST_SIGNAL
 };
 
 static GtkObjectClass *parent_class;
 static guint gst_editor_element_signals[LAST_SIGNAL] = { 0 };
 
-GtkType gst_editor_element_get_type() {
+GtkType 
+gst_editor_element_get_type(void) 
+{
   static GtkType element_type = 0;
 
   if (!element_type) {
@@ -111,7 +118,9 @@ GtkType gst_editor_element_get_type() {
   return element_type;
 }
 
-static void gst_editor_element_class_init(GstEditorElementClass *klass) {
+static void 
+gst_editor_element_class_init (GstEditorElementClass *klass) 
+{
   GtkObjectClass *object_class;
 
   object_class = (GtkObjectClass*)klass;
@@ -119,10 +128,20 @@ static void gst_editor_element_class_init(GstEditorElementClass *klass) {
   parent_class = gtk_type_class(gtk_object_get_type());
 
   gst_editor_element_signals[NAME_CHANGED] =
-    gtk_signal_new("name_changed",GTK_RUN_FIRST,object_class->type,
-                   GTK_SIGNAL_OFFSET(GstEditorElementClass,name_changed),
-                   gtk_marshal_NONE__POINTER,GTK_TYPE_NONE,1,
-                   GST_TYPE_EDITOR_ELEMENT);
+    gtk_signal_new ("name_changed", GTK_RUN_FIRST, object_class->type,
+                    GTK_SIGNAL_OFFSET (GstEditorElementClass, name_changed),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_EDITOR_ELEMENT);
+  gst_editor_element_signals[POSITION_CHANGED] =
+    gtk_signal_new ("position_changed", GTK_RUN_FIRST, object_class->type,
+                    GTK_SIGNAL_OFFSET (GstEditorElementClass, position_changed),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_EDITOR_ELEMENT);
+  gst_editor_element_signals[SIZE_CHANGED] =
+    gtk_signal_new ("size_changed", GTK_RUN_FIRST, object_class->type,
+                    GTK_SIGNAL_OFFSET (GstEditorElementClass, size_changed),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_EDITOR_ELEMENT);
 
   gtk_object_class_add_signals(object_class,gst_editor_element_signals,LAST_SIGNAL);
 
@@ -139,15 +158,17 @@ static void gst_editor_element_class_init(GstEditorElementClass *klass) {
                           GTK_ARG_READWRITE|GTK_ARG_CONSTRUCT_ONLY,
                           ARG_HEIGHT);
   gtk_object_add_arg_type("GstEditorElement::x1",GTK_TYPE_DOUBLE,
-                          GTK_ARG_READWRITE,ARG_X1);
+                          GTK_ARG_READWRITE, ARG_X1);
   gtk_object_add_arg_type("GstEditorElement::y1",GTK_TYPE_DOUBLE,
-                          GTK_ARG_READWRITE,ARG_Y1);
+                          GTK_ARG_READWRITE, ARG_Y1);
   gtk_object_add_arg_type("GstEditorElement::x2",GTK_TYPE_DOUBLE,
-                          GTK_ARG_READWRITE,ARG_X2);
+                          GTK_ARG_READWRITE, ARG_X2);
   gtk_object_add_arg_type("GstEditorElement::y2",GTK_TYPE_DOUBLE,
-                          GTK_ARG_READWRITE,ARG_Y2);
+                          GTK_ARG_READWRITE, ARG_Y2);
   gtk_object_add_arg_type("GstEditorElement::element",GTK_TYPE_POINTER,
-                          GTK_ARG_READABLE,ARG_ELEMENT);
+                          GTK_ARG_READABLE, ARG_ELEMENT);
+  gtk_object_add_arg_type("GstEditorElement::active",GTK_TYPE_BOOL,
+                          GTK_ARG_READWRITE, ARG_ACTIVE);
 
   klass->realize = gst_editor_element_realize;
   klass->event = gst_editor_element_event;
@@ -156,32 +177,37 @@ static void gst_editor_element_class_init(GstEditorElementClass *klass) {
   object_class->get_arg = gst_editor_element_get_arg;
 }
 
-static void gst_editor_element_init(GstEditorElement *element) {
+static void 
+gst_editor_element_init (GstEditorElement *element) 
+{
+  element->active = FALSE;
 }
 
-GstEditorElement *gst_editor_element_new(GstEditorBin *parent,
-                                         GstElement *element,
-                                         const gchar *first_arg_name, ...) {
+GstEditorElement*
+gst_editor_element_new (GstElement *element,
+                        const gchar *first_arg_name, ...) 
+{
   GstEditorElement *editorelement;
   va_list args;
 
-  g_return_val_if_fail(parent != NULL, NULL);
-  g_return_val_if_fail(GST_IS_EDITOR_BIN(parent), NULL);
   g_return_val_if_fail(element != NULL, NULL);
   g_return_val_if_fail(GST_IS_ELEMENT(element), NULL);
 
   editorelement = GST_EDITOR_ELEMENT(gtk_type_new(GST_TYPE_EDITOR_ELEMENT));
   editorelement->element = element;
+  GST_EDITOR_SET_OBJECT(element, editorelement);
 
   va_start(args,first_arg_name);
-  gst_editor_element_construct(editorelement,parent,first_arg_name,args);
+  gst_editor_element_construct(editorelement,first_arg_name,args);
   va_end(args);
 
   return editorelement;
 }
 
-void gst_editor_element_set_name(GstEditorElement *element,
-                                  const gchar *name) {
+void 
+gst_editor_element_set_name (GstEditorElement *element,
+                             const gchar *name) 
+{
   g_return_if_fail(GST_IS_EDITOR_ELEMENT(element));
   g_return_if_fail(name != NULL);
 
@@ -190,22 +216,22 @@ void gst_editor_element_set_name(GstEditorElement *element,
   gtk_signal_emit(GTK_OBJECT(element),gst_editor_element_signals[NAME_CHANGED], element);
 }
 
-const gchar *gst_editor_element_get_name(GstEditorElement *element) {
+const gchar*
+gst_editor_element_get_name (GstEditorElement *element) 
+{
   g_return_val_if_fail(GST_IS_EDITOR_ELEMENT(element), NULL);
 
   return gst_element_get_name(element->element);
 }
 
 void 
-gst_editor_element_construct(GstEditorElement *element,
-                             GstEditorBin *parent,
-                             const gchar *first_arg_name,
-                             va_list args) 
+gst_editor_element_construct (GstEditorElement *element,
+                              const gchar *first_arg_name,
+                              va_list args) 
 {
   GtkObject *obj = GTK_OBJECT(element);
   GSList *arg_list = NULL, *info_list = NULL;
   gchar *error;
-  GstEditorElementClass *elementclass;
 
 //  g_print("in gst_editor_element_construct()\n");
 
@@ -221,18 +247,11 @@ gst_editor_element_construct(GstEditorElement *element,
       gtk_object_arg_set(obj,arg->data,info->data);
     gtk_args_collect_cleanup(arg_list,info_list);
   }
-
-  if (parent)
-    gst_editor_bin_add(parent,element);
-  else if (!GST_IS_EDITOR_BIN(element))
-    g_warning("floating element...\n");
-
-  elementclass = GST_EDITOR_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
-  if (elementclass->realize)
-    (elementclass->realize)(element);
 }
 
-static void gst_editor_element_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_element_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstEditorElement *element;
 
   /* get the major types of this object */
@@ -271,13 +290,20 @@ static void gst_editor_element_set_arg(GtkObject *object,GtkArg *arg,guint id) {
       element->height = MAX(GTK_VALUE_DOUBLE(*arg),element->minheight);
       element->resize = TRUE;
       break;
+    case ARG_ACTIVE:
+      element->active = GTK_VALUE_BOOL(*arg);
+      gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->border),
+                           "width_units", (element->active ? 2.0 : 1.0),  NULL);
+      break;
     default:
       g_warning("gsteditorelement: unknown arg!");
       break;
   }
 }
 
-static void gst_editor_element_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_element_get_arg(GtkObject *object, GtkArg *arg, guint id) 
+{
   GstEditorElement *element;
 
   /* get the major types of this object */
@@ -311,13 +337,32 @@ static void gst_editor_element_get_arg(GtkObject *object,GtkArg *arg,guint id) {
     case ARG_ELEMENT:
       GTK_VALUE_POINTER(*arg) = element->element;
       break;
+    case ARG_ACTIVE:
+      GTK_VALUE_BOOL(*arg) = element->active;
+      break;
     default:
       arg->type = GTK_TYPE_INVALID;
       break;
   }
 }
 
-static void gst_editor_element_realize(GstEditorElement *element) {
+static GtkMenu* 
+gst_editor_element_get_popup_menu (GstEditorElement *element) 
+{
+  GtkMenu *menu;
+
+  menu = GTK_MENU (gtk_menu_new ());
+  gtk_menu_append (menu, gtk_menu_item_new_with_label ("cut"));
+  gtk_menu_append (menu, gtk_menu_item_new_with_label ("copy"));
+  gtk_menu_append (menu, gtk_menu_item_new_with_label ("paste"));
+  gtk_widget_show_all (GTK_WIDGET (menu));
+
+  return menu;  
+}
+
+static void 
+gst_editor_element_realize (GstEditorElement *element) 
+{
   GnomeCanvasGroup *parentgroup;
   gint i;
   gdouble x1,y1,x2,y2;
@@ -359,7 +404,7 @@ static void gst_editor_element_realize(GstEditorElement *element) {
   /* create bordering box */
   element->border = gnome_canvas_item_new(element->group,
     gnome_canvas_rect_get_type(),
-    "width_units",2.0,"fill_color","white","outline_color","black", 
+    "width_units",1.0,"fill_color","white","outline_color","black", 
     "x1",x1,"y1",y1,"x2",x2,"y2",y2,NULL);
   g_return_if_fail(element->border != NULL);
   GST_EDITOR_SET_OBJECT(element->border,element);
@@ -414,6 +459,7 @@ static void gst_editor_element_realize(GstEditorElement *element) {
   while (pads) {
     pad = GST_PAD(pads->data);
     gst_editor_element_add_pad(element,pad);
+    
     pads = g_list_next(pads);
   }
 
@@ -436,7 +482,9 @@ static void gst_editor_element_realize(GstEditorElement *element) {
 }
 
 
-static void gst_editor_element_resize(GstEditorElement *element) {
+static void 
+gst_editor_element_resize (GstEditorElement *element) 
+{
   gdouble itemwidth,itemheight;
   gdouble groupwidth,groupheight;
   GList *pads;
@@ -523,7 +571,9 @@ static void gst_editor_element_resize(GstEditorElement *element) {
 //  g_print("is now %.2fx%.2f\n",element->width,element->height);
 }
 
-void gst_editor_element_repack(GstEditorElement *element) {
+void 
+gst_editor_element_repack (GstEditorElement *element) 
+{
   GList *pads;
   GstEditorPad *editorpad;
   gint sinks;
@@ -611,11 +661,14 @@ void gst_editor_element_repack(GstEditorElement *element) {
 }
 
 
-GstEditorPad *gst_editor_element_add_pad(GstEditorElement *element,
-                                         GstPad *pad) {
+GstEditorPad*
+gst_editor_element_add_pad (GstEditorElement *element,
+                            GstPad *pad) 
+{
   GstEditorPad *editorpad;
 
-  editorpad = gst_editor_pad_new(element,pad,NULL);
+  editorpad = gst_editor_pad_new (element, pad, NULL);
+
   if (pad->direction == GST_PAD_SINK) {
     element->sinkpads = g_list_prepend(element->sinkpads,editorpad);
     element->sinks++;
@@ -627,15 +680,16 @@ GstEditorPad *gst_editor_element_add_pad(GstEditorElement *element,
   } else
     g_print("HUH?!?  Don't know which direction this pad is...\n");
 
-  element->padlistchange = TRUE;
   gst_editor_element_repack(element);
   return editorpad;
 }
 
 
-static gint gst_editor_element_group_event(GnomeCanvasItem *item,
-                                           GdkEvent *event,
-                                           GstEditorElement *element) {
+static gint 
+gst_editor_element_group_event (GnomeCanvasItem *item,
+                                GdkEvent *event,
+                                GstEditorElement *element) 
+{
   switch(event->type) {
     case GDK_BUTTON_PRESS:
       gst_editor_property_show(gst_editor_property_get(), element);
@@ -651,8 +705,11 @@ static gint gst_editor_element_group_event(GnomeCanvasItem *item,
 }
 
 
-static gint gst_editor_element_event(GnomeCanvasItem *item,GdkEvent *event,
-                                     GstEditorElement *element) {
+static gint 
+gst_editor_element_event(GnomeCanvasItem *item,
+		         GdkEvent *event,
+                         GstEditorElement *element) 
+{
   gdouble dx,dy;
   GdkCursor *fleur;
 
@@ -660,25 +717,42 @@ static gint gst_editor_element_event(GnomeCanvasItem *item,GdkEvent *event,
 
   switch(event->type) {
     case GDK_ENTER_NOTIFY:
-      break;
+      gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->border),
+                        "fill_color_rgba", 0xeeeeee80, NULL);
+      return TRUE;
     case GDK_LEAVE_NOTIFY:
-      break;
+      gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->border),
+                        "fill_color", "white", NULL);
+      return TRUE;
     case GDK_BUTTON_PRESS:
-      // dragxy coords are world coords of button press
-      element->dragx = event->button.x;
-      element->dragy = event->button.y;
-      // set some flags
-      element->dragging = TRUE;
-      element->moved = FALSE;
-      fleur = gdk_cursor_new(GDK_FLEUR);
-      gnome_canvas_item_grab(item,
+    {
+      if (event->button.button == 3) {
+	GtkMenu *menu;
+
+	menu = gst_editor_element_get_popup_menu (element);
+
+	gtk_menu_popup (menu, NULL, NULL, NULL, NULL, 
+		        event->button.button, event->button.time);
+
+	return TRUE;
+      }
+      else {
+        // dragxy coords are world coords of button press
+        element->dragx = event->button.x;
+        element->dragy = event->button.y;
+        // set some flags
+        element->dragging = TRUE;
+        element->moved = FALSE;
+        fleur = gdk_cursor_new (GDK_FLEUR);
+        gnome_canvas_item_grab(item,
                              GDK_POINTER_MOTION_MASK |
 //                             GDK_ENTER_NOTIFY_MASK |
 //                             GDK_LEAVE_NOTIFY_MASK |
                              GDK_BUTTON_RELEASE_MASK,
                              fleur,event->button.time);
-      return TRUE;
-      break;
+        return TRUE;
+      }
+    }
     case GDK_MOTION_NOTIFY:
       if (element->dragging) {
         dx = event->button.x - element->dragx;
@@ -689,7 +763,6 @@ static gint gst_editor_element_event(GnomeCanvasItem *item,GdkEvent *event,
         element->moved = TRUE;
       }
       return TRUE;
-      break;
     case GDK_BUTTON_RELEASE:
       if (element->dragging) {
         element->dragging = FALSE;
@@ -702,9 +775,8 @@ static gint gst_editor_element_event(GnomeCanvasItem *item,GdkEvent *event,
           (elementclass->button_event)(item,event,element);
       }
 //g_print("in element group_event, setting inchild");
-      element->canvas->inchild = TRUE;
+      //element->canvas->inchild = TRUE;
       return TRUE;
-      break;
 
     default:
       break;
@@ -713,9 +785,11 @@ static gint gst_editor_element_event(GnomeCanvasItem *item,GdkEvent *event,
 }
 
 
-static gint gst_editor_element_resizebox_event(GnomeCanvasItem *item,
-                                               GdkEvent *event,
-                                               GstEditorElement *element) {
+static gint 
+gst_editor_element_resizebox_event (GnomeCanvasItem *item,
+                                    GdkEvent *event,
+                                    GstEditorElement *element) 
+{
   GdkCursor *bottomright;
   gdouble item_x,item_y;
 
@@ -728,9 +802,15 @@ static gint gst_editor_element_resizebox_event(GnomeCanvasItem *item,
 
   switch(event->type) {
     case GDK_ENTER_NOTIFY:
+      gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->resizebox),
+                        "fill_color", "red" , NULL);
+      return TRUE;
       break;
     case GDK_LEAVE_NOTIFY:
+      gnome_canvas_item_set(GNOME_CANVAS_ITEM(element->resizebox),
+                        "fill_color", "white" , NULL);
       element->hesitating = FALSE;
+      return TRUE;
       break;
     case GDK_BUTTON_PRESS:
       element->dragx = event->button.x;
@@ -761,7 +841,7 @@ static gint gst_editor_element_resizebox_event(GnomeCanvasItem *item,
         element->resizing = FALSE;
         gnome_canvas_item_ungrab(item,event->button.time);
 //g_print("in element resizebox_event, setting inchild");
-        element->canvas->inchild = TRUE;
+        //element->canvas->inchild = TRUE;
         return TRUE;
       }
       break;
@@ -772,14 +852,16 @@ static gint gst_editor_element_resizebox_event(GnomeCanvasItem *item,
 }
 
 
-static gint gst_editor_element_state_event(GnomeCanvasItem *item,
-                                           GdkEvent *event,
-                                           gpointer data) {
+static gint 
+gst_editor_element_state_event(GnomeCanvasItem *item,
+                               GdkEvent *event,
+                               gpointer data) 
+{
   GstEditorElement *element;
   gint id = GPOINTER_TO_INT(data);
   GdkCursor *uparrow;
 
-  element = GST_EDTIOR_GET_OBJECT(item);
+  element = GST_EDITOR_GET_OBJECT(item);
 
   switch (event->type) {
     case GDK_ENTER_NOTIFY:
@@ -796,17 +878,28 @@ static gint gst_editor_element_state_event(GnomeCanvasItem *item,
       gnome_canvas_item_ungrab(item,event->button.time);
       break;
     case GDK_BUTTON_PRESS:
-      return TRUE;
-      break;
+    {
+      GdkEventButton *buttonevent = (GdkEventButton *)event;
+
+      if (buttonevent->button == 1)
+	return TRUE;
+      return FALSE;
+    }
     case GDK_BUTTON_RELEASE:
+    {
+      GdkEventButton *buttonevent = (GdkEventButton *)event;
+
+      if (buttonevent->button != 1)
+	return FALSE;
+
       if (id < 4) {
         gst_editor_element_set_state(element,id,TRUE);
       } else
         g_warning("Uh, shouldn't have gotten here, unknown state\n");
 //g_print("in element statebox_event, setting inchild");
-      element->canvas->inchild = TRUE;
+      //element->canvas->inchild = TRUE;
       return TRUE;
-      break;
+    }
     default:
       break;
   }
@@ -814,8 +907,10 @@ static gint gst_editor_element_state_event(GnomeCanvasItem *item,
 }
 
 
-static void gst_editor_element_set_state(GstEditorElement *element,
-                                         gint id,gboolean set) {
+static void 
+gst_editor_element_set_state(GstEditorElement *element,
+                             gint id,gboolean set) 
+{
   gboolean stateset = TRUE;	/* if we have no element, set anyway */
   //g_print("element set state %d\n", id);
   if (element->element)
@@ -823,16 +918,20 @@ static void gst_editor_element_set_state(GstEditorElement *element,
 }
 
 
-static void gst_editor_element_state_change(GstElement *element,
-                                            gint state,
-                                            GstEditorElement *editorelement) {
+static void 
+gst_editor_element_state_change(GstElement *element,
+                                gint state,
+                                GstEditorElement *editorelement) 
+{
   g_return_if_fail(editorelement != NULL);
 
   //g_print("gst_editor_element_state_change got state 0x%08x\n",state);
   gst_editor_element_sync_state(editorelement);
 }
 
-static void gst_editor_element_sync_state(GstEditorElement *element) {
+static void 
+gst_editor_element_sync_state (GstEditorElement *element) 
+{
   gint id;
   GstElementState state = GST_STATE(element->element);
 
@@ -852,8 +951,10 @@ static void gst_editor_element_sync_state(GstEditorElement *element) {
   }
 }
 
-static void gst_editor_element_move(GstEditorElement *element,
-                                    gdouble dx,gdouble dy) {
+static void 
+gst_editor_element_move(GstEditorElement *element,
+                        gdouble dx,gdouble dy) 
+{
   GList *pads;
   GstEditorPad *pad;
 

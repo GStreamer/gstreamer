@@ -186,6 +186,9 @@ gst_audiosink_init (GstAudioSink *audiosink)
 
   audiosink->fd = -1;
   audiosink->clock = gst_clock_get_system();
+  audiosink->format = 16;
+  audiosink->channels = 2;
+  audiosink->frequency = 44100;
   
   gst_clock_register (audiosink->clock, GST_OBJECT (audiosink));
 

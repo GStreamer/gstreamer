@@ -31,24 +31,15 @@ enum {
 
 enum {
   ARG_0,
-  ARG_CANVAS,
 };
 
-static void gst_editor_canvas_class_init(GstEditorCanvasClass *klass);
-static void gst_editor_canvas_init(GstEditorCanvas *editorcanvas);
-static void gst_editor_canvas_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_canvas_get_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_canvas_realize(GstEditorElement *element);
+static void 	gst_editor_canvas_class_init	(GstEditorCanvasClass *klass);
+static void 	gst_editor_canvas_init		(GstEditorCanvas *editorcanvas);
 
+static void 	gst_editor_canvas_set_arg	(GtkObject *object,GtkArg *arg,guint id);
+static void 	gst_editor_canvas_get_arg	(GtkObject *object,GtkArg *arg,guint id);
 
-static gint gst_editor_canvas_button_release(GtkWidget *widget,
-                                             GdkEvent *event,
-                                             GstEditorCanvas *canvas);
-static gint gst_editor_canvas_event(GnomeCanvasItem *item,
-                                    GdkEvent *event,
-                                    GstEditorElement *element);
-static void gst_editor_canvas_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_canvas_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void 	gst_editor_canvas_realize 	(GtkWidget *widget);
 
 
 //gint gst_editor_canvas_verbose_event(GtkWidget *widget,GdkEvent *event);
@@ -56,7 +47,9 @@ static void gst_editor_canvas_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 static GstEditorBinClass *parent_class = NULL;
 
-GtkType gst_editor_canvas_get_type(void) {
+GtkType 
+gst_editor_canvas_get_type (void) 
+{
   static GtkType editor_canvas_type = 0;
 
   if (!editor_canvas_type) {
@@ -70,76 +63,84 @@ GtkType gst_editor_canvas_get_type(void) {
       NULL,
       (GtkClassInitFunc)NULL,
     };
-    editor_canvas_type = gtk_type_unique(gst_editor_bin_get_type(),&editor_canvas_info);
+    editor_canvas_type = gtk_type_unique (gnome_canvas_get_type (), &editor_canvas_info);
   }
   return editor_canvas_type;
 }
 
-static void gst_editor_canvas_class_init(GstEditorCanvasClass *klass) {
+static void 
+gst_editor_canvas_class_init (GstEditorCanvasClass *klass) 
+{
   GtkObjectClass *object_class;
-  GstEditorElementClass *element_class;
+  GtkWidgetClass *widget_class;
 
   object_class = (GtkObjectClass*)klass;
+  widget_class = (GtkWidgetClass *)klass;
 
-  element_class = (GstEditorElementClass*)klass;
-
-  parent_class = gtk_type_class(gst_editor_bin_get_type());
-
-  gtk_object_add_arg_type("GstEditorCanvas::canvas",GTK_TYPE_POINTER,
-                          GTK_ARG_READABLE,ARG_CANVAS);
+  parent_class = gtk_type_class (gnome_canvas_get_type ());
 
   object_class->set_arg = gst_editor_canvas_set_arg;
   object_class->get_arg = gst_editor_canvas_get_arg;
 
-  element_class->realize = gst_editor_canvas_realize;
+  widget_class->realize = gst_editor_canvas_realize;
 }
 
-static void gst_editor_canvas_init(GstEditorCanvas *editorcanvas) {
+static void 
+gst_editor_canvas_init (GstEditorCanvas *editorcanvas) 
+{
 }
 
-GstEditorCanvas *gst_editor_canvas_new(GstBin *bin,
-                                       const gchar *first_arg_name,...) {
+GstEditorCanvas*
+gst_editor_canvas_new (void)
+{
   GstEditorCanvas *editorcanvas;
-  va_list args;
-
-  g_return_val_if_fail(bin != NULL, NULL);
-  g_return_val_if_fail(GST_IS_BIN(bin), NULL);
 
   editorcanvas = GST_EDITOR_CANVAS(gtk_type_new(GST_TYPE_EDITOR_CANVAS));
-  GST_EDITOR_ELEMENT(editorcanvas)->element = GST_ELEMENT(bin);
-  GST_EDITOR_ELEMENT(editorcanvas)->parent = GST_EDITOR_BIN(editorcanvas);
-
-  va_start(args,first_arg_name);
-  gst_editor_element_construct(GST_EDITOR_ELEMENT(editorcanvas),NULL,
-                               first_arg_name,args);
-  va_end(args);
 
   return editorcanvas;
 }
 
-static void gst_editor_canvas_realize(GstEditorElement *element) {
-  GstEditorCanvas *canvas = GST_EDITOR_CANVAS(element);
+GstEditorCanvas*
+gst_editor_canvas_new_with_bin (GstEditorBin *bin) 
+{
+  GstEditorCanvas *editorcanvas;
 
-  canvas->canvas = GNOME_CANVAS(gnome_canvas_new());
-  element->canvas = canvas;
-  gtk_signal_connect(GTK_OBJECT(canvas->canvas),
-                     "event",
-                     GTK_SIGNAL_FUNC(gst_editor_canvas_event),
-                     canvas);
-  gtk_signal_connect_after(GTK_OBJECT(canvas->canvas),
-                     "button_release_event",
-                     GTK_SIGNAL_FUNC(gst_editor_canvas_button_release),
-                     canvas);
-  GST_EDITOR_SET_OBJECT(canvas->canvas,canvas);
+  g_return_val_if_fail(bin != NULL, NULL);
 
-  element->group = gnome_canvas_root(canvas->canvas);
+  editorcanvas = gst_editor_canvas_new ();
+  editorcanvas->bin = bin;
 
-  if (GST_EDITOR_ELEMENT_CLASS(parent_class)->realize) {
-    GST_EDITOR_ELEMENT_CLASS(parent_class)->realize(element);
+  GST_EDITOR_ELEMENT(bin)->parent = bin;
+  GST_EDITOR_ELEMENT(bin)->canvas = editorcanvas;
+
+  return editorcanvas;
+}
+
+static void 
+gst_editor_canvas_realize (GtkWidget *widget) 
+{
+  GstEditorCanvas *canvas = GST_EDITOR_CANVAS (widget);
+
+  if (GTK_WIDGET_CLASS(parent_class)->realize) {
+    GTK_WIDGET_CLASS(parent_class)->realize(GTK_WIDGET(canvas));
+  }
+
+  if (canvas->bin) {
+    GstEditorElementClass *element_class;
+    
+    GST_EDITOR_ELEMENT(canvas->bin)->group = gnome_canvas_root(GNOME_CANVAS(canvas));
+
+    element_class = GST_EDITOR_ELEMENT_CLASS(GTK_OBJECT(canvas->bin)->klass);
+
+    if (element_class->realize) {
+      element_class->realize(GST_EDITOR_ELEMENT(canvas->bin));
+    }
   }
 }
 
-static void gst_editor_canvas_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_canvas_set_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorCanvas *canvas;
 
   canvas = GST_EDITOR_CANVAS(object);
@@ -151,111 +152,17 @@ static void gst_editor_canvas_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static void gst_editor_canvas_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_canvas_get_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorCanvas *canvas;
 
   canvas = GST_EDITOR_CANVAS(object);
 
   switch (id) {
-    case ARG_CANVAS:
-      GTK_VALUE_POINTER(*arg) = canvas->canvas;
-      break;
     default:
       arg->type = GTK_TYPE_INVALID;
       break;
   }
 }
 
-GtkWidget *gst_editor_canvas_get_canvas(GstEditorCanvas *canvas) {
-  return GTK_WIDGET(canvas->canvas);
-}
-
-
-static gint gst_editor_canvas_button_release(GtkWidget *widget,
-                                             GdkEvent *event,
-                                             GstEditorCanvas *canvas) {
-  //GstEditorBin *bin = GST_EDITOR_BIN(canvas);
-  gdouble x,y;
-  GstEditorElement *element;
-
-//  g_print("canvas got button press at %.2fx%.2f\n",
-//          event->button.x,event->button.y);
-  if (event->type != GDK_BUTTON_RELEASE) return FALSE;
-
-  // if we're connecting a pair of objects in the canvas, fall through
-//  if (bin->connection) {
-//    g_print("we're in a connection, not handling\n");
-//    return FALSE;
-//  }
-
-  if (canvas->inchild) {
-//    g_print("inchild, not responding to button_release\n");
-    canvas->inchild = FALSE;
-    return FALSE;
-  }
-
-  gnome_canvas_window_to_world(GNOME_CANVAS(widget),
-                               event->button.x,event->button.y,&x,&y);
-//  g_print("calling gst_editor_create_item()\n");
-  if ((element = gst_editor_create_item(GST_EDITOR_BIN(canvas),x,y)) != NULL)
-    return TRUE;
-  return FALSE;
-}
-
-
-/* FIXME: guerilla prototype... */
-void gst_editor_bin_connection_drag(GstEditorBin *bin,
-                                    gdouble wx,gdouble wy);
-
-static gint gst_editor_canvas_event(GnomeCanvasItem *item,
-                                    GdkEvent *event,
-                                    GstEditorElement *element) {
-//  if (GST_EDITOR_ELEMENT_CLASS(parent_class)->event)
-//    return (*GST_EDITOR_ELEMENT_CLASS(parent_class)->event)(
-//      element->group,event,element);
-
-  GstEditorBin *bin = GST_EDITOR_BIN(element);
-  GstEditorCanvas *canvas = GST_EDITOR_CANVAS(element);
-
-  //g_print("canvas got event %d at %.2fx%.2f\n",event->type,
-  //        event->button.x,event->button.y);
-
-  switch (event->type) {
-    case GDK_BUTTON_RELEASE:
-      if (bin->connecting) {
-//        g_print("canvas got button release during drag\n");
-        gnome_canvas_item_ungrab(
-          GNOME_CANVAS_ITEM(element->group),
-          event->button.time);
-        if (bin->connection->topad)
-          gst_editor_connection_connect(bin->connection);
-        else
-          gtk_object_destroy(GTK_OBJECT(bin->connection));
-        bin->connecting = FALSE;
-//g_print("finished dragging connection on canvas, setting inchild\n");
-        element->canvas->inchild = TRUE;
-        return TRUE;
-      } else {
-//        g_print("got release, calling button_release()\n");
-//        gst_editor_canvas_button_release(canvas->canvas,event,canvas);
-        return FALSE;
-      }
-      break;
-    case GDK_MOTION_NOTIFY:
-      if (bin->connecting) {
-        gdouble x,y;
-        x = event->button.x;y = event->button.y;
-        gnome_canvas_window_to_world(canvas->canvas,
-                               event->button.x,event->button.y,&x,&y);
-//        g_print("canvas has motion during connection draw at
-//%.2fx%.2f\n",
-//                x,y);
-        gst_editor_bin_connection_drag(bin,x,y);
-        return TRUE;
-      }
-      break;
-    default:
-      break;
-  }
-  return FALSE;
-}

@@ -20,5 +20,4 @@
 
 #include "gsteditor.h"
 
-GstEditorElement *gst_editor_create_item(GstEditorBin *bin,
-                                         gdouble x,gdouble y);
+GstEditorElement *gst_editor_create_item(gdouble x,gdouble y);

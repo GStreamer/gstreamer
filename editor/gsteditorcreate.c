@@ -24,9 +24,11 @@
 
 #include "gsteditor.h"
 #include "gstelementselect.h"
+#include "gsteditorcreate.h"
 
-GstEditorElement *gst_editor_create_item(GstEditorBin *bin,
-                                         gdouble x,gdouble y) {
+GstEditorElement*
+gst_editor_create_item(gdouble x,gdouble y) 
+{
   GstElementFactory *factory;
   GstElement *element;
   GstEditorElement *editorelement;
@@ -39,11 +41,10 @@ GstEditorElement *gst_editor_create_item(GstEditorBin *bin,
       if (GST_IS_BIN(element)) {
 //        g_print("factory is a bin\n");
         editorelement = GST_EDITOR_ELEMENT(gst_editor_bin_new(
-          GST_EDITOR_BIN(bin),GST_BIN(element),
-          "x",x,"y",y,"width",50.0,"height",20.0,NULL));
+          GST_BIN(element), "x",x,"y",y,"width",50.0,"height",20.0,NULL));
       } else {
 //        g_print("factory is an element\n");
-        editorelement = gst_editor_element_new(bin,element,
+        editorelement = gst_editor_element_new(element,
           "x",x,"y",y,"width",50.0,"height",20.0,NULL);
       }
 //      g_print("created element \"%s\" at %.2fx%.2f\n",

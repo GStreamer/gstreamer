@@ -6,12 +6,14 @@
 #include "gsteditor.h"
 
 /* class functions */
-static void gst_editor_connection_class_init(GstEditorConnectionClass *klass);
-static void gst_editor_connection_init(GstEditorConnection *connection);
-static void gst_editor_connection_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_connection_get_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_connection_destroy(GtkObject *object);
-static void gst_editor_connection_realize(GstEditorConnection *connection);
+static void 	gst_editor_connection_class_init	(GstEditorConnectionClass *klass);
+static void 	gst_editor_connection_init		(GstEditorConnection *connection);
+
+static void 	gst_editor_connection_set_arg		(GtkObject *object,GtkArg *arg,guint id);
+static void 	gst_editor_connection_get_arg		(GtkObject *object,GtkArg *arg,guint id);
+
+static void 	gst_editor_connection_destroy		(GtkObject *object);
+static void 	gst_editor_connection_realize		(GstEditorConnection *connection);
 
 /* events fired by items within self */
 //static gint gst_editor_connection_line_event(GnomeCanvasItem *item,
@@ -37,7 +39,9 @@ enum {
 static GtkObjectClass *parent_class;
 //static guint gst_editor_connection_signals[LAST_SIGNAL] = { 0 };
 
-GtkType gst_editor_connection_get_type() {
+GtkType 
+gst_editor_connection_get_type (void) 
+{
   static GtkType connection_type = 0;
 
   if (!connection_type) {
@@ -51,12 +55,14 @@ GtkType gst_editor_connection_get_type() {
       NULL,
       (GtkClassInitFunc)NULL,
     };
-    connection_type = gtk_type_unique(gtk_object_get_type(),&connection_info);
+    connection_type = gtk_type_unique (gtk_object_get_type (), &connection_info);
   }
   return connection_type;
 }
 
-static void gst_editor_connection_class_init(GstEditorConnectionClass *klass) {
+static void 
+gst_editor_connection_class_init (GstEditorConnectionClass *klass) 
+{
   GtkObjectClass *object_class;
 
   object_class = (GtkObjectClass*)klass;
@@ -78,19 +84,24 @@ static void gst_editor_connection_class_init(GstEditorConnectionClass *klass) {
 
   object_class->set_arg = gst_editor_connection_set_arg;
   object_class->get_arg = gst_editor_connection_get_arg;
+  
   object_class->destroy = gst_editor_connection_destroy;
 }
 
-static void gst_editor_connection_init(GstEditorConnection *connection) {
+static void 
+gst_editor_connection_init (GstEditorConnection *connection) 
+{
   connection->points = gnome_canvas_points_new(2);
 }
 
-GstEditorConnection *gst_editor_connection_new(GstEditorBin *parent,
-                                               GstEditorPad *frompad) {
+GstEditorConnection*
+gst_editor_connection_new (GstEditorElement *parent,
+                           GstEditorPad *frompad) 
+{
   GstEditorConnection *connection;
 
   g_return_val_if_fail(parent != NULL, NULL);
-  g_return_val_if_fail(GST_IS_EDITOR_BIN(parent), NULL);
+  g_return_val_if_fail(GST_IS_EDITOR_ELEMENT(parent), NULL);
   g_return_val_if_fail(frompad != NULL, NULL);
   g_return_val_if_fail(GST_IS_EDITOR_PAD(frompad), NULL);
 
@@ -98,7 +109,7 @@ GstEditorConnection *gst_editor_connection_new(GstEditorBin *parent,
   connection->frompad = frompad;
   connection->frompad->connection = connection;
   connection->fromsrc = connection->frompad->issrc;
-  connection->parent = GST_EDITOR_ELEMENT(parent);
+  connection->parent = parent;
 
   gst_editor_connection_realize(connection);
 
@@ -106,7 +117,9 @@ GstEditorConnection *gst_editor_connection_new(GstEditorBin *parent,
 }
 
 
-static void gst_editor_connection_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_connection_set_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorConnection *connection;
 
   /* get the major types of this object */
@@ -151,7 +164,9 @@ static void gst_editor_connection_set_arg(GtkObject *object,GtkArg *arg,guint id
   gst_editor_connection_resize(connection);
 }
 
-static void gst_editor_connection_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_connection_get_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorConnection *connection;
 
   /* get the major types of this object */
@@ -171,7 +186,9 @@ static void gst_editor_connection_get_arg(GtkObject *object,GtkArg *arg,guint id
 }
 
 
-static void gst_editor_connection_realize(GstEditorConnection *connection) {
+static void 
+gst_editor_connection_realize (GstEditorConnection *connection) 
+{
   connection->points->coords[0] = 0.0;
   connection->points->coords[1] = 0.0;
   connection->points->coords[2] = 0.0;
@@ -182,13 +199,17 @@ static void gst_editor_connection_realize(GstEditorConnection *connection) {
     "points",connection->points,"width_units",2.0, NULL);
 }
 
-static void gst_editor_connection_destroy(GtkObject *object) {
+static void 
+gst_editor_connection_destroy (GtkObject *object) 
+{
   GstEditorConnection *connection = GST_EDITOR_CONNECTION(object);
 
   gtk_object_destroy(GTK_OBJECT(connection->line));
 }
 
-void gst_editor_connection_resize(GstEditorConnection *connection) {
+void 
+gst_editor_connection_resize (GstEditorConnection *connection) 
+{
   gdouble x1,y1,x2,y2;
 
   if (connection->resize != TRUE) return;
@@ -241,8 +262,10 @@ void gst_editor_connection_resize(GstEditorConnection *connection) {
                         "points",connection->points,NULL);
 }
 
-void gst_editor_connection_set_endpoint(GstEditorConnection *connection,
-                                        gdouble x,gdouble y) {
+void 
+gst_editor_connection_set_endpoint (GstEditorConnection *connection,
+                                    gdouble x,gdouble y) 
+{
   connection->x = x;
   connection->y = y;
   if (connection->topad) {
@@ -256,8 +279,10 @@ void gst_editor_connection_set_endpoint(GstEditorConnection *connection,
   gst_editor_connection_resize(connection);
 }
 
-void gst_editor_connection_set_endpad(GstEditorConnection *connection,
-                                      GstEditorPad *pad) {
+void 
+gst_editor_connection_set_endpad (GstEditorConnection *connection,
+                                  GstEditorPad *pad) 
+{
   // first check for the trivial case
   if (connection->topad == pad) return;
 
@@ -277,7 +302,9 @@ void gst_editor_connection_set_endpad(GstEditorConnection *connection,
   gst_editor_connection_resize(connection);
 }
 
-void gst_editor_connection_connect(GstEditorConnection *connection) {
+void 
+gst_editor_connection_connect (GstEditorConnection *connection) 
+{
   if (connection->ghost) {
     g_print("uhhh.... Boo!\n");
   } else {

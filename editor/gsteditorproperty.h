@@ -36,6 +36,11 @@
 #define GST_IS_EDITOR_PROPERTY_CLASS(obj) \
   (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EDITOR_PROPERTY))
 
+#define GST_EDITOR_PROPERTY_SET_OBJECT(item,object) \
+  (gtk_object_set_data(GTK_OBJECT(item),"gsteditorproperty",(object)))
+#define GST_EDITOR_PROPERTY_GET_OBJECT(item) \
+  (gtk_object_get_data(GTK_OBJECT(item),"gsteditorproperty"))
+
 typedef struct _GstEditorProperty GstEditorProperty;
 typedef struct _GstEditorPropertyClass GstEditorPropertyClass;
 
@@ -43,8 +48,7 @@ struct _GstEditorProperty {
   GtkObject object;
 
   GladeXML *xml;
-  GHashTable *panels;
-  gpointer *current;
+  GstEditorElement *shown_element;
 };
 
 struct _GstEditorPropertyClass {

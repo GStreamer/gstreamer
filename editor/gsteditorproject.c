@@ -124,7 +124,7 @@ gst_editor_project_new_from_file (const guchar *fname)
   GstXML *xml;
   GList *elements;
 
-  g_return_if_fail (fname != NULL);
+  g_return_val_if_fail (fname != NULL, NULL);
 
   editorproject = gst_editor_project_new();
 
@@ -141,6 +141,11 @@ gst_editor_project_new_from_file (const guchar *fname)
   }
   
   return editorproject;
+}
+
+void
+gst_editor_project_load (GstEditorProject *project, const guchar *fname) 
+{
 }
 
 void 
@@ -163,7 +168,8 @@ gst_editor_project_save_as (GstEditorProject *project, const guchar *fname)
 }
 
 void 
-gst_editor_project_add_toplevel_element (GstEditorProject *project, GstElement *element) 
+gst_editor_project_add_toplevel_element (GstEditorProject *project, 
+		                         GstElement *element) 
 {
   g_return_if_fail(project != NULL);
   g_return_if_fail(GST_IS_EDITOR_PROJECT(project));

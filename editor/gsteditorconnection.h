@@ -57,8 +57,9 @@ struct _GstEditorConnectionClass {
 };
 
 GtkType gst_editor_connection_get_type();
-GstEditorConnection *gst_editor_connection_new(GstEditorBin *parent,
-	                                       GstEditorPad *frompad);
+
+GstEditorConnection*	gst_editor_connection_new	(GstEditorBin *parent,
+	                                       		 GstEditorPad *frompad);
 
 
 #endif /* __GST_EDITOR_CONNECTION_H__ */

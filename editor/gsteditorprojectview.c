@@ -152,7 +152,7 @@ view_on_element_added (GstEditorProjectView *view, GstElement *element)
   GstEditor *editor;
 
   image = gst_editor_image_get_for_type(GTK_OBJECT_TYPE(element));
-  name = gst_element_get_name(element);
+  name = (gchar *)gst_element_get_name(element);
   row = gtk_clist_append(GTK_CLIST(view->list), &name);
   editor =  gst_editor_new(element);
 
@@ -215,7 +215,7 @@ on_load_file_selected (GtkWidget *button,
   GstEditorProjectView *view = data->view;
 
   gchar *file_name = gtk_file_selection_get_filename (GTK_FILE_SELECTION(selector));
-  //gst_editor_project_load (view->project, file_name);
+  gst_editor_project_load (view->project, file_name);
 
   g_free (data);
 }
@@ -286,7 +286,6 @@ gst_editor_project_view_new (GstEditorProject *project)
   while (elements) {
     GstElement *element = (GstElement *)elements->data;
 
-    g_print ("add\n");
     view_on_element_added (view, element);
 
     elements = g_list_next (elements);

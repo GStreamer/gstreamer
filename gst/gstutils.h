@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 
 gint 		gst_util_get_int_arg		(GtkObject *object, guchar *argname);
+gboolean	gst_util_get_bool_arg		(GtkObject *object, guchar *argname);
 glong 		gst_util_get_long_arg		(GtkObject *object, guchar *argname);
 gfloat 		gst_util_get_float_arg		(GtkObject *object, guchar *argname);
 gdouble 	gst_util_get_double_arg		(GtkObject *object, guchar *argname);

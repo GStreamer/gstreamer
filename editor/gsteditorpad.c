@@ -106,8 +106,10 @@ static void gst_editor_pad_class_init(GstEditorPadClass *klass) {
 static void gst_editor_pad_init(GstEditorPad *pad) {
 }
 
-GstEditorPad *gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
-                                 const gchar *first_arg_name, ...) {
+GstEditorPad*
+gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
+                   const gchar *first_arg_name, ...) 
+{
   GstEditorPad *editorpad;
   va_list args;
 
@@ -118,10 +120,27 @@ GstEditorPad *gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
 
   editorpad = GST_EDITOR_PAD(gtk_type_new(GST_TYPE_EDITOR_PAD));
   editorpad->pad = pad;
+  GST_EDITOR_SET_OBJECT(pad, editorpad);
 
   va_start(args,first_arg_name);
   gst_editor_pad_construct(editorpad,parent,first_arg_name,args);
   va_end(args);
+
+  if (GST_PAD_CONNECTED (pad)) {
+    GstPad *peerpad;
+    GstEditorPad *peereditorpad;
+
+    peerpad = pad->peer;
+
+    peereditorpad = GST_EDITOR_GET_OBJECT (peerpad);
+
+    if (peereditorpad) { 
+      GstEditorConnection *connection;
+
+      connection = gst_editor_connection_new (parent, editorpad);
+      gst_editor_connection_set_endpad (connection, peereditorpad);
+    }
+  }
 
   return editorpad;
 }
@@ -245,7 +264,8 @@ static void gst_editor_pad_realize(GstEditorPad *pad) {
       "x1",0.0,"y1",2.0,"x2",4.0,"y2",pad->height-2.0,NULL);
   g_return_if_fail(pad->padbox != NULL);
   GST_EDITOR_SET_OBJECT(pad->padbox,pad);
-  gtk_signal_connect(GTK_OBJECT(pad->padbox),"event",
+
+  gtk_signal_connect(GTK_OBJECT(pad->group),"event",
     GTK_SIGNAL_FUNC(gst_editor_pad_padbox_event),pad);
 
   pad->title = gnome_canvas_item_new(pad->group,
@@ -381,10 +401,14 @@ static gint gst_editor_pad_padbox_event(GnomeCanvasItem *item,
 
   switch(event->type) {
     case GDK_ENTER_NOTIFY:
+      gtk_object_set(GTK_OBJECT(pad->border),
+                 "fill_color_rgba", 0xBBDDBB00, NULL);
 //      g_print("entered pad '%s'\n",
 //              gst_pad_get_name(pad->pad));
       break;
     case GDK_LEAVE_NOTIFY:
+      gtk_object_set(GTK_OBJECT(pad->border),
+                 "fill_color_rgba", 0xCCFFCC00, NULL);
 //      g_print("left pad '%s'\n",
 //              gst_pad_get_name(pad->pad));
       break;

@@ -25,7 +25,9 @@ static void	gst_xml_init			(GstXML *xml);
 
 static GstObjectClass *parent_class = NULL;
 
-GtkType gst_xml_get_type(void) {
+GtkType 
+gst_xml_get_type(void) 
+{
   static GtkType xml_type = 0;
 
   if (!xml_type) {
@@ -39,17 +41,20 @@ GtkType gst_xml_get_type(void) {
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    xml_type = gtk_type_unique(GST_TYPE_XML,&xml_info);
+    xml_type = gtk_type_unique (GST_TYPE_XML, &xml_info);
   }
   return xml_type;
 }
 
 static void
-gst_xml_class_init(GstXMLClass *klass) {
-  parent_class = gtk_type_class(GST_TYPE_OBJECT);
+gst_xml_class_init (GstXMLClass *klass) 
+{
+  parent_class = gtk_type_class (GST_TYPE_OBJECT);
 }
 
-static void gst_xml_init(GstXML *xml) {
+static void 
+gst_xml_init(GstXML *xml) 
+{
 }
 
 /**
@@ -60,13 +65,15 @@ static void gst_xml_init(GstXML *xml) {
  *
  * Returns: a pointer to an XML document
  */
-xmlDocPtr gst_xml_write(GstElement *element) {
+xmlDocPtr 
+gst_xml_write (GstElement *element) 
+{
   xmlDocPtr doc;
 
-  doc = xmlNewDoc("1.0");
-  doc->root = xmlNewDocNode(doc,NULL,"GST-Pipeline",NULL);
+  doc = xmlNewDoc ("1.0");
+  doc->root = xmlNewDocNode (doc, NULL, "GST-Pipeline", NULL);
 
-  gst_element_save_thyself(element,doc->root);
+  gst_element_save_thyself (element, doc->root);
 
   return doc;
 }

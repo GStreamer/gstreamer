@@ -38,6 +38,23 @@ gint gst_util_get_int_arg(GtkObject *object,guchar *argname) {
 }
 
 /**
+ * gst_util_get_bool_arg:
+ * @object: the object to query
+ * @argname: the name of the argument
+ *
+ * retrieves a property of an object as a boolean
+ *
+ * Returns: the property of the object
+ */
+gint gst_util_get_bool_arg(GtkObject *object,guchar *argname) {
+  GtkArg arg;
+
+  arg.name = argname;
+  gtk_object_getv(GTK_OBJECT(object),1,&arg);
+  return GTK_VALUE_BOOL(arg);
+}
+
+/**
  * gst_util_get_long_arg:
  * @object: the object to query
  * @argname: the name of the argument

@@ -21,17 +21,22 @@
 #include <ctype.h>
 #include <gnome.h>
 #include <gst/gst.h>
+#include <gst/gstpropsprivate.h>
 
 #include "gsteditorproperty.h"
 #include "gsteditorimage.h"
 
 /* class functions */
-static void gst_editor_property_class_init(GstEditorPropertyClass *klass);
-static void gst_editor_property_init(GstEditorProperty *property);
-static void gst_editor_property_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_editor_property_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void 		gst_editor_property_class_init	(GstEditorPropertyClass *klass);
+static void 		gst_editor_property_init	(GstEditorProperty *property);
 
-static GtkWidget *create_property_entry(GtkArg *arg, GstElement *element);
+static void 		gst_editor_property_set_arg	(GtkObject *object,GtkArg *arg,guint id);
+static void 		gst_editor_property_get_arg	(GtkObject *object,GtkArg *arg,guint id);
+
+static GtkWidget*	create_property_entry		(GtkArg *arg, GstElement *element);
+
+static GtkWidget* 	gst_editor_property_create 	(GstEditorProperty *property, GstEditorElement *element);
+
 
 enum {
   ARG_0,
@@ -48,7 +53,9 @@ static guint gst_editor_property_signals[LAST_SIGNAL] = { 0 };
 
 static GstEditorProperty *_the_property = NULL;
 
-GtkType gst_editor_property_get_type() {
+GtkType 
+gst_editor_property_get_type (void) 
+{
   static GtkType property_type = 0;
 
   if (!property_type) {
@@ -67,7 +74,9 @@ GtkType gst_editor_property_get_type() {
   return property_type;
 }
 
-static void gst_editor_property_class_init(GstEditorPropertyClass *klass) {
+static void 
+gst_editor_property_class_init (GstEditorPropertyClass *klass) 
+{
   GtkObjectClass *object_class;
 
   object_class = (GtkObjectClass*)klass;
@@ -92,10 +101,10 @@ static void gst_editor_property_class_init(GstEditorPropertyClass *klass) {
   object_class->get_arg = gst_editor_property_get_arg;
 }
 
-static void gst_editor_property_init(GstEditorProperty *property) {
-
-  property->panels = g_hash_table_new(NULL, NULL);
-  property->current = NULL;
+static void 
+gst_editor_property_init (GstEditorProperty *property) 
+{
+  property->shown_element = NULL;
 }
 
 typedef struct {
@@ -104,7 +113,8 @@ typedef struct {
 } connect_struct;
   
 /* we need more control here so... */
-static void gst_editor_property_connect_func (const gchar *handler_name,
+static void 
+gst_editor_property_connect_func (const gchar *handler_name,
 		             GtkObject *object,
 			     const gchar *signal_name,
 			     const gchar *signal_data,
@@ -125,7 +135,9 @@ static void gst_editor_property_connect_func (const gchar *handler_name,
   }
 }
 
-static GstEditorProperty *gst_editor_property_new() {
+static GstEditorProperty*
+gst_editor_property_new (void) 
+{
   GstEditorProperty *property;
   GtkWidget *property_window;
   connect_struct data;
@@ -147,14 +159,18 @@ static GstEditorProperty *gst_editor_property_new() {
   return property;
 }
 
-GstEditorProperty *gst_editor_property_get() {
+GstEditorProperty*
+gst_editor_property_get (void) 
+{
   if (!_the_property) {
     _the_property = gst_editor_property_new();
   }
   return _the_property;
 }
 
-static void gst_editor_property_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_property_set_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorProperty *property;
 
   /* get the major types of this object */
@@ -167,7 +183,9 @@ static void gst_editor_property_set_arg(GtkObject *object,GtkArg *arg,guint id) 
   }
 }
 
-static void gst_editor_property_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_editor_property_get_arg (GtkObject *object,GtkArg *arg,guint id) 
+{
   GstEditorProperty *property;
 
   /* get the major types of this object */
@@ -180,11 +198,15 @@ static void gst_editor_property_get_arg(GtkObject *object,GtkArg *arg,guint id) 
   }
 }
 
-static void on_name_changed(GtkEntry *entry, GstEditorElement *element) {
+static void 
+on_name_changed (GtkEntry *entry, GstEditorElement *element) 
+{
   gst_editor_element_set_name(element, gtk_entry_get_text(GTK_ENTRY(entry)));
 }
 
-static gchar *make_readable_name(gchar *name) {
+static gchar*
+make_readable_name (gchar *name) 
+{
   gchar *new;
   gchar *colon;
   gboolean inupper;
@@ -211,76 +233,222 @@ static gchar *make_readable_name(gchar *name) {
   return new;
 }
 
-void gst_editor_property_show(GstEditorProperty *property, GstEditorElement *element) {
+static gchar* 
+gst_editor_props_show_func (GstPropsEntry *entry) 
+{
+  switch (entry->propstype) {
+    case GST_PROPS_INT_ID_NUM:
+      return g_strdup_printf ("%d", entry->data.int_data);
+      break;
+    case GST_PROPS_INT_RANGE_ID_NUM:
+      return g_strdup_printf ("%d-%d", entry->data.int_range_data.min, entry->data.int_range_data.max);
+      break;
+    case GST_PROPS_FOURCC_ID_NUM:
+      return g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data);
+      break;
+    case GST_PROPS_BOOL_ID_NUM:
+      return g_strdup_printf ("%s", (entry->data.bool_data ? "TRUE" : "FALSE"));
+      break;
+    default:
+      break;
+  }
+  return g_strdup ("unknown");
+}
+
+static GtkWidget* 
+gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element) 
+{
+  GstElement *realelement = element->element;
+  GList *pads;
+  GtkWidget *tree;
+  gchar *columns[2];
+
+  pads = gst_element_get_pad_list(realelement);
+
+  columns[0] = "name";
+  columns[1] = "info";
+
+  tree = gtk_ctree_new_with_titles (2, 0, columns);
+  gtk_clist_set_column_width (GTK_CLIST (tree), 0, 150);
+  
+  gtk_clist_freeze (GTK_CLIST (tree));
+  while (pads) {
+    GstPad *pad = (GstPad *)pads->data;
+    GstCaps *caps = gst_pad_get_caps (pad);
+    gchar *mime;
+    gchar *data[2];
+    GtkCTreeNode *padnode;
+
+    if (caps) {
+      GstType *type;
+      type = gst_type_find_by_id (caps->id);
+      mime = type->mime;
+    }
+    else {
+      mime = "unknown/unknown";
+    }
+
+    data[0] = g_strdup (gst_pad_get_name (pad));
+    data[1] = mime;
+    padnode = gtk_ctree_insert_node (GTK_CTREE (tree), NULL, NULL, data, 0, 
+		    NULL, NULL, NULL, NULL, FALSE, TRUE);
+    if (caps) {
+      GstProps *props = gst_caps_get_props (caps);
+      if (props) {
+        GSList *propslist = props->properties;
+
+        while (propslist) {
+	  GstPropsEntry *entry = (GstPropsEntry *)propslist->data;
+
+          data[0] = g_quark_to_string (entry->propid);
+
+	  switch (entry->propstype) {
+ 	    case GST_PROPS_LIST_ID_NUM:
+	    {
+	      GList *list;
+	      guint count = 0;
+	      data[1] = "";
+
+	      list = entry->data.list_data.entries;
+
+	      while (list) {
+	        data[1] = g_strconcat (data[1], (count++?", ":""),
+			      gst_editor_props_show_func ((GstPropsEntry *)list->data), NULL);
+	        list = g_list_next (list);
+	      }
+	      break;
+	    }
+	    default:
+	      data[1] = gst_editor_props_show_func (entry);
+	      break;
+	  }
+          gtk_ctree_insert_node (GTK_CTREE (tree), padnode, NULL, data, 0, 
+		      NULL, NULL, NULL, NULL, TRUE, TRUE);
+	
+	  propslist = g_slist_next (propslist);
+	}
+      }
+    }
+    pads = g_list_next (pads);
+  }
+  gtk_clist_thaw (GTK_CLIST (tree));
+
+  gtk_widget_show(tree);
+  gtk_object_ref(GTK_OBJECT(tree));
+  return tree;
+}
+
+typedef struct {
+  GtkWidget *properties;
+  GtkWidget *pads;
+  GtkWidget *signals;
+} properties_widgets;
+  
+void 
+gst_editor_property_show (GstEditorProperty *property, GstEditorElement *element) 
+{
   GtkType type;
-  GtkWidget *table, *vbox;
-  GtkWidget *label, *entry, *panel = NULL;
+
+  if (property->shown_element != element) {
+    gtk_object_set (GTK_OBJECT (element), "active",TRUE,  NULL);
+    if (property->shown_element) {
+      gtk_object_set (GTK_OBJECT (property->shown_element), "active",FALSE,  NULL);
+    }
+  }
+  else return;
 
   type = GTK_OBJECT_TYPE(element->element);
   if (type != GTK_TYPE_INVALID) {
-    panel = (GtkWidget *)g_hash_table_lookup(property->panels, GINT_TO_POINTER(type));
-    vbox = glade_xml_get_widget(property->xml, "property_vbox");
+    GtkWidget *property_box, *pads_window;
+    properties_widgets *widgets;
 
-    if (panel && property->current == (gpointer) panel) return;
+    property_box = glade_xml_get_widget(property->xml, "property_vbox");
+    pads_window = glade_xml_get_widget(property->xml, "pads_window");
 
-    if (property->current)
-      gtk_container_remove(GTK_CONTAINER(vbox), GTK_WIDGET(property->current));
+    if (property->shown_element) {
+      properties_widgets *oldwidgets;
 
-    if (panel) {
-      gtk_box_pack_start(GTK_BOX(vbox), panel, FALSE, TRUE, 0);
-      property->current = (gpointer) panel;
+      oldwidgets = (properties_widgets *) GST_EDITOR_PROPERTY_GET_OBJECT (property->shown_element);
+
+      gtk_container_remove(GTK_CONTAINER(property_box), oldwidgets->properties);
+      gtk_container_remove(GTK_CONTAINER(pads_window), oldwidgets->pads);
     }
-    else {
-      GtkArg *args;
-      guint32 *flags;
-      guint num_args, i, count;
-    
-      table = gtk_table_new(1, 2, FALSE);
-      gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-      gtk_widget_show(table);
 
-      label = gtk_label_new(_("Name:"));
-      gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
-      gtk_object_set(GTK_OBJECT(label), "width", 100, NULL);
-      gtk_widget_show(label);
-      entry = gtk_entry_new();
-      gtk_widget_show(entry);
-      gtk_entry_set_text(GTK_ENTRY(entry), gst_element_get_name(element->element));
-      gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
-      gtk_table_attach(GTK_TABLE(table), entry, 1, 2, 0, 1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+    widgets = (properties_widgets *)GST_EDITOR_PROPERTY_GET_OBJECT(element);
 
-      gtk_signal_connect(GTK_OBJECT(entry), "changed", on_name_changed, element);
+    if (!widgets) {
+      widgets = g_new0 (properties_widgets, 1);
 
-      args = gtk_object_query_args(type, &flags, &num_args);
-      count = 1;
-      for (i=0; i<num_args; i++) {
-        if (flags[i] & GTK_ARG_READABLE) {
-          gtk_object_getv(GTK_OBJECT(element->element), 1, &args[i]);
+      widgets->properties = gst_editor_property_create (property, element);
+      widgets->pads = gst_editor_pads_create (property, element);
 
-	  entry = create_property_entry(&args[i], element->element);
-
-	  if (entry) {
-	    label = gtk_label_new(g_strconcat(make_readable_name(args[i].name), ":", NULL));
-	    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
-	    gtk_object_set(GTK_OBJECT(label), "width", 100, NULL);
-	    gtk_widget_show(label);
-
-            gtk_table_attach(GTK_TABLE(table), label, 0, 1, count, count+1, GTK_FILL, 0, 0, 0);
-            gtk_table_attach(GTK_TABLE(table), entry, 1, 2, count, count+1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
-
-	    count++;
-	  }
-        }
-      }
-      gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, TRUE, 2);
-      g_hash_table_insert(property->panels, GINT_TO_POINTER(type), table);
-      gtk_object_ref(GTK_OBJECT(table));
-      property->current = (gpointer) table;
+      GST_EDITOR_PROPERTY_SET_OBJECT(element, widgets);
     }
+
+    gtk_box_pack_start(GTK_BOX(property_box), widgets->properties, FALSE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(pads_window), widgets->pads);
+
+    property->shown_element = element;
   }
 }
 
-static void widget_show_toggled(GtkToggleButton *button, GtkArg *arg) {
+static GtkWidget* 
+gst_editor_property_create (GstEditorProperty *property, GstEditorElement *element) 
+{
+  GtkWidget *table;
+  GtkType type;
+  GtkArg *args;
+  guint32 *flags;
+  guint num_args, i, count;
+  GtkWidget *label, *entry;
+
+  type = GTK_OBJECT_TYPE(element->element);
+
+  table = gtk_table_new(1, 2, FALSE);
+  gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+
+  label = gtk_label_new(_("Name:"));
+  gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+  gtk_object_set(GTK_OBJECT(label), "width", 100, NULL);
+  gtk_widget_show(label);
+  entry = gtk_entry_new();
+  gtk_widget_show(entry);
+  gtk_entry_set_text(GTK_ENTRY(entry), gst_element_get_name(element->element));
+  gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 0, 0);
+  gtk_table_attach(GTK_TABLE(table), entry, 1, 2, 0, 1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+
+  gtk_signal_connect(GTK_OBJECT(entry), "changed", on_name_changed, element);
+
+  args = gtk_object_query_args(type, &flags, &num_args);
+  count = 1;
+  for (i=0; i<num_args; i++) {
+    if (flags[i] & GTK_ARG_READABLE) {
+      gtk_object_getv(GTK_OBJECT(element->element), 1, &args[i]);
+
+      entry = create_property_entry(&args[i], element->element);
+
+      if (entry) {
+        label = gtk_label_new(g_strconcat(make_readable_name(args[i].name), ":", NULL));
+	gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+	gtk_object_set(GTK_OBJECT(label), "width", 100, NULL);
+	gtk_widget_show(label);
+
+        gtk_table_attach(GTK_TABLE(table), label, 0, 1, count, count+1, GTK_FILL, 0, 0, 0);
+        gtk_table_attach(GTK_TABLE(table), entry, 1, 2, count, count+1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+
+	count++;
+      }
+    }
+  }
+
+  gtk_widget_show(table);
+  gtk_object_ref(GTK_OBJECT(table));
+  return table;
+}
+
+static void 
+widget_show_toggled (GtkToggleButton *button, GtkArg *arg) 
+{
   GtkWidget *window;
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -293,15 +461,29 @@ static void widget_show_toggled(GtkToggleButton *button, GtkArg *arg) {
 typedef struct {
   GtkArg *arg;
   GstElement *element;
-} file_select;
+} arg_data;
+
+static void 
+widget_bool_toggled (GtkToggleButton *button, arg_data *arg) 
+{
+  gboolean toggled;
+
+  toggled = gtk_toggle_button_get_active(button);
+  gtk_object_set (GTK_OBJECT (button), "label", (toggled? _("Yes"):_("No")), NULL);
+
+  gtk_object_set (GTK_OBJECT (arg->element), arg->arg->name, toggled, NULL);
+}
   
-static void on_file_selected(GtkEditable *entry, file_select *fs)
+static void 
+on_file_selected (GtkEditable *entry, arg_data *fs)
 {
   gtk_object_set(GTK_OBJECT(fs->element), fs->arg->name, 
 		  gtk_entry_get_text(GTK_ENTRY(entry)), NULL);
 }
 
-static GtkWidget *create_property_entry(GtkArg *arg, GstElement *element) {
+static GtkWidget*
+create_property_entry (GtkArg *arg, GstElement *element) 
+{
   GtkWidget *entry = NULL;
 
   // basic types
@@ -317,10 +499,16 @@ static GtkWidget *create_property_entry(GtkArg *arg, GstElement *element) {
     }
     case GTK_TYPE_BOOL:
     {
-      gboolean toggle;
-      toggle = GTK_VALUE_BOOL(*arg);
-      entry = gtk_toggle_button_new_with_label((toggle? _("Yes"):_("No")));
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(entry), toggle);
+      gboolean toggled;
+      arg_data *data = g_new0(arg_data, 1);
+
+      data->element = element;
+      data->arg = arg;
+
+      toggled = GTK_VALUE_BOOL(*arg);
+      entry = gtk_toggle_button_new_with_label((toggled? _("Yes"):_("No")));
+      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(entry), toggled);
+      gtk_signal_connect(GTK_OBJECT(entry), "toggled", widget_bool_toggled, data);
       break;
     }
     case GTK_TYPE_ULONG:
@@ -362,8 +550,10 @@ static GtkWidget *create_property_entry(GtkArg *arg, GstElement *element) {
     }
     else if (GTK_FUNDAMENTAL_TYPE(arg->type) == GTK_TYPE_ENUM) {
       GtkEnumValue *values;
-      gint i=0;
+      guint i = 0;
       GtkWidget *menu;
+      guint value = GTK_VALUE_ENUM (*arg);
+      guint active = 0;
 
       entry = gtk_option_menu_new();
       menu = gtk_menu_new();
@@ -374,12 +564,15 @@ static GtkWidget *create_property_entry(GtkArg *arg, GstElement *element) {
 
 	gtk_menu_append(GTK_MENU(menu), menuitem);
 	gtk_widget_show(menuitem);
+
+	if (value == values[i].value) active = i;
 	i++;
       }
+      gtk_menu_set_active(GTK_MENU(menu), active);
       gtk_option_menu_set_menu(GTK_OPTION_MENU(entry), menu);
     }
     else if (arg->type == GST_TYPE_FILENAME) {
-      file_select *fs = g_new0(file_select, 1);
+      arg_data *fs = g_new0(arg_data, 1);
 
       entry = gnome_file_entry_new(NULL, NULL);
 
@@ -399,19 +592,4 @@ static GtkWidget *create_property_entry(GtkArg *arg, GstElement *element) {
 
   return entry;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
