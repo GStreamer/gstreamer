@@ -137,6 +137,7 @@ AC_C_BIGENDIAN
 dnl Check for essential libraries first:
 dnl ====================================
 
+GST_GLIB2_CHECK()
 PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
 GTK_CFLAGS=$GTK2_CFLAGS
 GTK_LIBS=$GTK2_LIBS

@@ -8,7 +8,6 @@
 
 use File::Basename;
 
-
 my (%pipes, %cfg);
 
 sub extension
@@ -79,17 +78,17 @@ sub playfile($$)
 
 read_config ();
 
+###  "ac3", "ac3parse ! $cfg{AUDIOSINK}",
 %pipes = ( 
-  "mp3", "mad ! $cfg{AUDIOSINK}",
-  "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
-  "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
+  "au", "auparse ! $cfg{AUDIOSINK}",
   "avi", "avidemux video_00! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
-  "vob", "mpegdemux video_00! { queue max_level=500 ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.private_stream_1.0! { queue max_level=500 ! a52dec ! $cfg{AUDIOSINK} }",
-  "wav", "wavparse ! $cfg{AUDIOSINK}",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "mod", "modplug !  $cfg{AUDIOSINK}",
+  "mp3", "mad ! $cfg{AUDIOSINK}",
+  "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
+  "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
   "sid", "siddec ! $cfg{AUDIOSINK}",
-  "au", "auparse ! $cfg{AUDIOSINK}"
+  "vob", "mpegdemux video_00! { queue max_level=500 ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.private_stream_1.0! { queue max_level=500 ! a52dec ! $cfg{AUDIOSINK} }",
 );
 
 if ($cfg{VISUALIZER}) {
