@@ -116,6 +116,8 @@ static void gst_queue_chain (GstPad * pad, GstData * data);
 static GstData *gst_queue_get (GstPad * pad);
 
 static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_queue_handle_src_query (GstPad * pad,
+    GstQueryType type, GstFormat * fmt, gint64 * value);
 
 static GstCaps *gst_queue_getcaps (GstPad * pad);
 static GstPadLinkReturn gst_queue_link (GstPad * pad, const GstCaps * caps);
@@ -301,6 +303,8 @@ gst_queue_init (GstQueue * queue)
       GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_event_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
+  gst_pad_set_query_function (queue->srcpad,
+      GST_DEBUG_FUNCPTR (gst_queue_handle_src_query));
   gst_pad_set_active (queue->srcpad, TRUE);
 
   queue->cur_level.buffers = 0; /* no content */
@@ -900,6 +904,35 @@ handled:
   GST_QUEUE_MUTEX_UNLOCK;
 
   return res;
+}
+
+static gboolean
+gst_queue_handle_src_query (GstPad * pad,
+    GstQueryType type, GstFormat * fmt, gint64 * value)
+{
+  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
+  gboolean res;
+
+  res = gst_pad_query (GST_PAD_PEER (queue->sinkpad), type, fmt, value);
+  if (!res)
+    return FALSE;
+
+  if (type == GST_QUERY_POSITION) {
+    /* FIXME: this code assumes that there's no discont in the queue */
+    switch (*fmt) {
+      case GST_FORMAT_BYTES:
+        *value -= queue->cur_level.bytes;
+        break;
+      case GST_FORMAT_TIME:
+        *value -= queue->cur_level.time;
+        break;
+      default:
+        /* FIXME */
+        break;
+    }
+  }
+
+  return TRUE;
 }
 
 static gboolean

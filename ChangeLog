@@ -1,3 +1,8 @@
+2004-10-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_handle_src_query):
+	  Subtract current queue contents from position queries.
+
 2004-10-11  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gsturi.c (gst_uri_get_location): unescape string
