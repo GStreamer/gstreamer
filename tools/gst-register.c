@@ -135,6 +135,7 @@ main (int argc, char *argv[])
        spill paths that could not be registered */
       /* Until that is done, don't spill paths when registry is not writable
          (e.g. case of user running gst-register and sysreg not writable) */
+
       /*
          path_spill = g_list_concat (path_spill,
          gst_registry_get_path_list (registry));
