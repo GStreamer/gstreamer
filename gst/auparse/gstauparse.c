@@ -51,10 +51,11 @@ static GstStaticPadTemplate gst_auparse_src_template =
     GST_PAD_SOMETIMES,          /* FIXME: spider */
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "       /* 24-bit PCM is barely supported by gstreamer actually */
         GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS "; "  /* 64-bit float is barely supported by gstreamer actually */
-        "audio/x-alaw, " "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]; " "audio/x-mulaw, " "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]"        /*"; "
-                                                                                                                                                                                   "audio/x-adpcm, "
-                                                                                                                                                                                   "layout = (string) { g721, g722, g723_3, g723_5 }" */ )
-    /* Nothing to decode those ADPCM streams for now */
+        "audio/x-alaw, " "rate = (int) [ 8000, 192000 ], "
+        "channels = (int) [ 1, 2 ]" "; " "audio/x-mulaw, "
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]" "; "
+        /* Nothing to decode those ADPCM streams for now */
+        "audio/x-adpcm, " "layout = (string) { g721, g722, g723_3, g723_5 }")
     );
 
 /* AuParse signals and args */
@@ -165,6 +166,9 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
   glong size;
   GstCaps *tempcaps;
   gint law = 0, depth, ieee = 0;
+  gchar layout[7];
+
+  layout[0] = 0;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -184,34 +188,36 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
     guint32 *head = (guint32 *) data;
 
     /* normal format is big endian (au is a Sparc format) */
-    if (GUINT32_FROM_BE (*head) == 0x2e736e64) {        /* ".snd" */
+    if (GST_READ_UINT32_BE (head) == 0x2e736e64) {      /* ".snd" */
       head++;
       auparse->le = 0;
-      auparse->offset = GUINT32_FROM_BE (*head);
+      auparse->offset = GST_READ_UINT32_BE (head);
       head++;
-      auparse->size = GUINT32_FROM_BE (*head);  /* Do not trust size, could be set to -1 : unknown */
+      /* Do not trust size, could be set to -1 : unknown */
+      auparse->size = GST_READ_UINT32_BE (head);
       head++;
-      auparse->encoding = GUINT32_FROM_BE (*head);
+      auparse->encoding = GST_READ_UINT32_BE (head);
       head++;
-      auparse->frequency = GUINT32_FROM_BE (*head);
+      auparse->frequency = GST_READ_UINT32_BE (head);
       head++;
-      auparse->channels = GUINT32_FROM_BE (*head);
+      auparse->channels = GST_READ_UINT32_BE (head);
       head++;
 
       /* and of course, someone had to invent a little endian
        * version.  Used by DEC systems. */
-    } else if (GUINT32_FROM_LE (*head) == 0x0064732E) { /* other source say it is "dns." */
+    } else if (GST_READ_UINT32_LE (head) == 0x0064732E) {       /* other source say it is "dns." */
       head++;
       auparse->le = 1;
-      auparse->offset = GUINT32_FROM_LE (*head);
+      auparse->offset = GST_READ_UINT32_LE (head);
       head++;
-      auparse->size = GUINT32_FROM_LE (*head);  /* Do not trust size, could be set to -1 : unknown */
+      /* Do not trust size, could be set to -1 : unknown */
+      auparse->size = GST_READ_UINT32_LE (head);
       head++;
-      auparse->encoding = GUINT32_FROM_LE (*head);
+      auparse->encoding = GST_READ_UINT32_LE (*head);
       head++;
-      auparse->frequency = GUINT32_FROM_LE (*head);
+      auparse->frequency = GST_READ_UINT32_LE (*head);
       head++;
-      auparse->channels = GUINT32_FROM_LE (*head);
+      auparse->channels = GST_READ_UINT32_LE (*head);
       head++;
 
     } else {
@@ -268,6 +274,19 @@ Samples :
         depth = 64;
         break;
 
+      case 23:                 /* 4-bit CCITT G.721   ADPCM 32kbps -> modplug/libsndfile (compressed 8-bit mu-law) */
+        strcpy (layout, "g721");
+        break;
+      case 24:                 /* 8-bit CCITT G.722   ADPCM        -> rtp */
+        strcpy (layout, "g722");
+        break;
+      case 25:                 /* 3-bit CCITT G.723.3 ADPCM 24kbps -> rtp/xine/modplug/libsndfile */
+        strcpy (layout, "g723_3");
+        break;
+      case 26:                 /* 5-bit CCITT G.723.5 ADPCM 40kbps -> rtp/xine/modplug/libsndfile */
+        strcpy (layout, "g723_5");
+        break;
+
       case 8:                  /* Fragmented sample data */
       case 9:                  /* AU_ENCODING_NESTED */
 
@@ -286,11 +305,6 @@ Samples :
 
       case 21:                 /* Music kit DSP commands */
       case 22:                 /* Music kit DSP commands samples */
-
-      case 23:                 /* 4-bit CCITT G.721   ADPCM 32kbps -> modplug/libsndfile (compressed 8-bit mu-law) */
-      case 24:                 /* 8-bit CCITT G.722   ADPCM        -> rtp */
-      case 25:                 /* 3-bit CCITT G.723.3 ADPCM 24kbps -> rtp/xine/modplug/libsndfile */
-      case 26:                 /* 5-bit CCITT G.723.5 ADPCM 40kbps -> rtp/xine/modplug/libsndfile */
 
       default:
         GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
@@ -313,11 +327,9 @@ Samples :
           "width", G_TYPE_INT, depth,
           "endianness", G_TYPE_INT,
           auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, NULL);
-/*
-    } else if (layout) {
+    } else if (layout[0]) {
       tempcaps = gst_caps_new_simple ("audio/x-adpcm",
           "layout", G_TYPE_STRING, layout, NULL);
-*/
     } else {
       tempcaps = gst_caps_new_simple ("audio/x-raw-int",
           "endianness", G_TYPE_INT,
