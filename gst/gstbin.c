@@ -701,15 +701,102 @@ gst_bin_child_state_change_func (GstBin * bin, GstElementState oldstate,
   GST_UNLOCK (bin);
 }
 
+typedef gint (*GstBinForeachFunc) (GstBin * bin, GstElement * element,
+    gpointer data);
+
+/* Call FUNC on each child of BIN, in the order that they are in bin->children.
+
+   It is assumed that calling FUNC may alter the set of BIN's children. FUNC
+   will only be called on children that were in BIN when the gst_bin_foreach was
+   called, and that are still in BIN when the child is reached.
+
+   The return value semantics are a bit odd in this one:
+
+   If FUNC returns a nonnegative number, the number is added on to the eventual
+   return value of gst_bin_foreach, which starts at 0.
+
+   If any FUNC returns a negative number, that value is immediately returned to
+   the caller. In that case, the child list might only be partially traversed.
+*/
+static gint
+gst_bin_foreach (GstBin * bin, GstBinForeachFunc func, gpointer data)
+{
+  gint sum = 0;
+  GList *kids = g_list_copy (bin->children);
+
+  while (kids) {
+    GstElement *element = (GstElement *) kids->data;
+    gint res = 0;
+
+    if (g_list_find (bin->children, element))
+      res = func (bin, element, data);
+
+    if (res < 0)
+      return res;
+
+    sum += res;
+
+    kids = kids->next;
+  }
+
+  g_list_free (kids);
+  return sum;
+}
+
+static int
+set_kid_state_func (GstBin * bin, GstElement * child, gpointer data)
+{
+  GstElementState old_child_state, pending;
+
+  pending = (GstElementState) (GPOINTER_TO_INT (data));
+
+  if (GST_FLAG_IS_SET (child, GST_ELEMENT_LOCKED_STATE)) {
+    return 0;
+  }
+
+  old_child_state = GST_STATE (child);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+      "changing state of child %s from current %s to pending %s",
+      GST_ELEMENT_NAME (child), gst_element_state_get_name (old_child_state),
+      gst_element_state_get_name (pending));
+
+  switch (gst_element_set_state (child, pending)) {
+    case GST_STATE_FAILURE:
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
+          "child '%s' failed to go to state %d(%s)",
+          GST_ELEMENT_NAME (child),
+          pending, gst_element_state_get_name (pending));
+
+      gst_element_set_state (child, old_child_state);
+      return -1;                /* error out to the caller */
+
+    case GST_STATE_ASYNC:
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
+          "child '%s' is changing state asynchronously",
+          GST_ELEMENT_NAME (child));
+      return 1;
+
+    case GST_STATE_SUCCESS:
+      GST_CAT_DEBUG (GST_CAT_STATES,
+          "child '%s' changed state to %d(%s) successfully",
+          GST_ELEMENT_NAME (child), pending,
+          gst_element_state_get_name (pending));
+      return 0;
+
+    default:
+      g_assert_not_reached ();
+      return -1;                /* satisfy gcc */
+  }
+}
+
 static GstElementStateReturn
 gst_bin_change_state (GstElement * element)
 {
   GstBin *bin;
-  GList *children;
-  GstElement *child;
   GstElementStateReturn ret;
   GstElementState old_state, pending;
-  gint transition;
+  gint transition, kid_return;
   gboolean have_async = FALSE;
 
   g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
@@ -728,69 +815,15 @@ gst_bin_change_state (GstElement * element)
   if (pending == GST_STATE_VOID_PENDING)
     return GST_STATE_SUCCESS;
 
-  /* we want to recurse into children anyway, regardless of our old
-   * state */
-  /*
-     if (old_state == pending) {
-     GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
-     "old and pending state are both %s, returning",
-     gst_element_state_get_name (pending));
-     return GST_STATE_SUCCESS;
-     }
-   */
+  kid_return = gst_bin_foreach (bin, set_kid_state_func,
+      GINT_TO_POINTER ((int) pending));
 
-  children = bin->children;
-
-  while (children) {
-    GstElementState old_child_state;
-
-    child = GST_ELEMENT (children->data);
-
-    if (GST_FLAG_IS_SET (child, GST_ELEMENT_LOCKED_STATE)) {
-      children = g_list_next (children);
-      continue;
-    }
-
-    old_child_state = GST_STATE (child);
-
-    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-        "changing state of child %s from current %s to pending %s",
-        GST_ELEMENT_NAME (child), gst_element_state_get_name (old_child_state),
-        gst_element_state_get_name (pending));
-
-    switch (gst_element_set_state (child, pending)) {
-      case GST_STATE_FAILURE:
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-            "child '%s' failed to go to state %d(%s)",
-            GST_ELEMENT_NAME (child),
-            pending, gst_element_state_get_name (pending));
-
-        gst_element_set_state (child, old_child_state);
-        /* There was a check for elements being in the same scheduling group
-           here. Removed by dolphy <julien@moutte.net>. No matter the 
-           scheduling group we should always return a failure. This change
-           seems to work on my machine and fixes tons of issues. If anyone
-           want to revert please tell me what it breaks first, Thanks. */
-        GST_STATE_PENDING (element) = old_state;
-        return GST_STATE_FAILURE;
-        break;
-      case GST_STATE_ASYNC:
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-            "child '%s' is changing state asynchronously",
-            GST_ELEMENT_NAME (child));
-        have_async = TRUE;
-        break;
-      case GST_STATE_SUCCESS:
-        GST_CAT_DEBUG (GST_CAT_STATES,
-            "child '%s' changed state to %d(%s) successfully",
-            GST_ELEMENT_NAME (child), pending,
-            gst_element_state_get_name (pending));
-        break;
-    }
-    /* we need to do this down here, because there might be elements removed 
-     * from this bin during state changes, so g_list_next (children) might
-     * change as well */
-    children = g_list_next (children);
+  /* see gst_bin_foreach return value semantics above */
+  if (kid_return < 0) {
+    GST_STATE_PENDING (element) = old_state;
+    return GST_STATE_FAILURE;
+  } else if (kid_return > 0) {
+    have_async = TRUE;
   }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
