@@ -364,7 +364,7 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 
 		g_free(src->filename);
 
-		/* clear the filename if we get a NULL (is that possible?) */
+		/* clear the filename if we get a NULL */
 		if (g_value_get_string (value) == NULL) {
 			gst_element_set_state(GST_ELEMENT(object), GST_STATE_NULL);
 			src->filename = NULL;
@@ -441,6 +441,39 @@ static void gst_gnomevfssrc_get_property(GObject *object, guint prop_id, GValue 
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+static char *
+unicodify (const char *str, int len, ...)
+{
+	char *ret = NULL, *cset;
+	va_list args;
+	int bytes_read, bytes_written;
+
+	if (g_utf8_validate (str, len, NULL))
+		return g_strndup (str, len >= 0 ? len : strlen (str));
+
+	va_start (args, len);
+	while ((cset = va_arg (args, char *)) != NULL)
+	{
+		if (!strcmp (cset, "locale"))
+			ret = g_locale_to_utf8 (str, len, &bytes_read,
+						&bytes_written, NULL);
+		else
+			ret = g_convert (str, len, "UTF-8", cset,
+					 &bytes_read, &bytes_written, NULL);
+		if (ret)
+			break;
+	}
+	va_end (args);
+
+	return ret;
+}
+
+static char *
+gst_gnomevfssrc_unicodify (const char *str)
+{
+	return unicodify (str, -1, "locale", "ISO-8859-1", NULL);
 }
 
 /*
@@ -537,7 +570,6 @@ static void audiocast_do_notifications(GstGnomeVFSSrc *src)
 static gpointer audiocast_thread_run(GstGnomeVFSSrc *src)
 {
 	char buf[1025], **lines;
-	char *valptr;
 	gsize len;
 	fd_set fdset, readset;
 	struct sockaddr_in from;
@@ -571,6 +603,7 @@ static gpointer audiocast_thread_run(GstGnomeVFSSrc *src)
 		else if (len >= 0)
 		{
 			int i;
+			char *valptr, *value;
 			buf[len] = '\0';
 			lines = g_strsplit(buf, "\n", 0);
 			if (!lines)
@@ -591,32 +624,42 @@ static gpointer audiocast_thread_run(GstGnomeVFSSrc *src)
 				g_strstrip(valptr);
 				if (!strlen(valptr))
 					continue;
+
+				value = gst_gnomevfssrc_unicodify (valptr);
+				if (!value)
+				{
+					g_print ("Unable to convert \"%s\" to UTF-8!\n", valptr);
+					continue;
+				}
 		
 				if (!strncmp(lines[i], "x-audiocast-streamtitle", 23)) {
 					g_mutex_lock(src->audiocast_udpdata_mutex);
-					if (src->iradio_title)
-						g_free(src->iradio_title);
-					src->iradio_title = g_strdup(valptr);
+					g_free(src->iradio_title);
+					src->iradio_title = value;
 					g_mutex_unlock(src->audiocast_udpdata_mutex);
+
 					g_mutex_lock(src->audiocast_queue_mutex);
 					src->audiocast_notify_queue = g_list_append(src->audiocast_notify_queue, "iradio-title");
 					GST_DEBUG(0,"audiocast title: %s\n", src->iradio_title);
 					g_mutex_unlock(src->audiocast_queue_mutex);
 				} else if (!strncmp(lines[i], "x-audiocast-streamurl", 21)) {
 					g_mutex_lock(src->audiocast_udpdata_mutex);
-					if (src->iradio_url)
-						g_free(src->iradio_url);
-					src->iradio_url = g_strdup(valptr);
+					g_free(src->iradio_url);
+					src->iradio_url = value;
 					g_mutex_unlock(src->audiocast_udpdata_mutex);
+
 					g_mutex_lock(src->audiocast_queue_mutex);
 					src->audiocast_notify_queue = g_list_append(src->audiocast_notify_queue, "iradio-url");
 					GST_DEBUG(0,"audiocast url: %s\n", src->iradio_title);
 					g_mutex_unlock(src->audiocast_queue_mutex);
 				} else if (!strncmp(lines[i], "x-audiocast-udpseqnr", 20)) {
 					gchar outbuf[120];
-					sprintf(outbuf, "x-audiocast-ack: %ld \r\n", atol(valptr));
+
+					sprintf(outbuf, "x-audiocast-ack: %ld \r\n", atol(value));
+					g_free (value);
+
 					if (sendto(src->audiocast_fd, outbuf, strlen(outbuf), 0, (struct sockaddr *) &from, fromlen) <= 0) {
-						fprintf(stderr, "Error sending response to server: %s\n", strerror(errno));
+						g_print("Error sending response to server: %s\n", strerror(errno));
 						continue;
 					}
 					GST_DEBUG(0,"sent audiocast ack: %s\n", outbuf);
@@ -717,20 +760,20 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
 
 		GST_DEBUG (0,"key: %s", key);
                 if (!strncmp (key, "name", 4)) {
+			g_free (src->iradio_name);
+			src->iradio_name = gst_gnomevfssrc_unicodify (value);
 			if (src->iradio_name)
-				g_free (src->iradio_name);
-			src->iradio_name = g_strdup (value);
-			g_object_notify (G_OBJECT (src), "iradio-name");
+				g_object_notify (G_OBJECT (src), "iradio-name");
                 } else if (!strncmp (key, "genre", 5)) {
+			g_free (src->iradio_genre);
+			src->iradio_genre = gst_gnomevfssrc_unicodify (value);
 			if (src->iradio_genre)
-				g_free (src->iradio_genre);
-			src->iradio_genre = g_strdup (value);
-			g_object_notify (G_OBJECT (src), "iradio-genre");
+				g_object_notify (G_OBJECT (src), "iradio-genre");
                 } else if (!strncmp (key, "url", 3)) {
+			g_free (src->iradio_url);
+			src->iradio_url = gst_gnomevfssrc_unicodify (value);
 			if (src->iradio_url)
-				g_free (src->iradio_url);
-			src->iradio_url = g_strdup (value);
-			g_object_notify (G_OBJECT (src), "iradio-url");
+				g_object_notify (G_OBJECT (src), "iradio-url");
 		}
         }
 }
@@ -813,19 +856,30 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc *src)
 	{
 		if (!g_ascii_strncasecmp(tags[i], "StreamTitle=", 12))
 		{
+			g_free (src->iradio_title);
+			src->iradio_title = gst_gnomevfssrc_unicodify (tags[i]+13);
 			if (src->iradio_title)
-				g_free (src->iradio_title);
-			src->iradio_title = g_strdup(tags[i]+13);
-			GST_DEBUG(0, "sending notification on icecast title");
-			g_object_notify (G_OBJECT (src), "iradio-title");
+			{
+				GST_DEBUG(0, "sending notification on icecast title");
+				g_object_notify (G_OBJECT (src), "iradio-title");
+			}
+			else
+				g_print ("Unable to convert icecast title \"%s\" to UTF-8!\n",
+					 tags[i]+13);
+			
 		}
 		if (!g_ascii_strncasecmp(tags[i], "StreamUrl=", 10))
 		{
+			g_free (src->iradio_url);
+			src->iradio_url = gst_gnomevfssrc_unicodify (tags[i]+11);
 			if (src->iradio_url)
-				g_free (src->iradio_url);
-			src->iradio_url = g_strdup(tags[i]+11);
-			GST_DEBUG(0, "sending notification on icecast url");
-			g_object_notify (G_OBJECT (src), "iradio-url");
+			{
+				GST_DEBUG(0, "sending notification on icecast url");
+				g_object_notify (G_OBJECT (src), "iradio-url");
+			}
+			else
+				g_print ("Unable to convert icecast url \"%s\" to UTF-8!\n",
+					 tags[i]+11);
 		}
 	}
 
