@@ -23,53 +23,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gst.h>
+#include "esdmon.h"
 #include <esd.h>
 #include <unistd.h>
 
-#define GST_TYPE_ESDMON \
-  (gst_esdmon_get_type())
-#define GST_ESDMON(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ESDMON,GstEsdmon))
-#define GST_ESDMON_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ESDMON,GstEsdmon))
-#define GST_IS_ESDMON(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ESDMON))
-#define GST_IS_ESDMON_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDMON))
-
-typedef enum {
-  GST_ESDMON_OPEN            = GST_ELEMENT_FLAG_LAST,
-  GST_ESDMON_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2,
-} GstEsdSrcFlags;
-
-typedef struct _GstEsdmon GstEsdmon;
-typedef struct _GstEsdmonClass GstEsdmonClass;
-
-struct _GstEsdmon {
-  GstElement element;
-
-  GstPad *srcpad;
-
-  gchar* host;
-
-  int fd;
-
-  gint depth;
-  gint channels;
-  gint frequency;
-
-  guint64 basetime;
-  guint64 samples_since_basetime;
-  guint64 curoffset;
-  guint64 bytes_per_read;
-};
-
-struct _GstEsdmonClass {
-  GstElementClass parent_class;
-};
-
-GType gst_esdmon_get_type(void);
 
 /* elementfactory information */
 static GstElementDetails esdmon_details = {
@@ -405,8 +362,8 @@ gst_esdmon_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
   }
 }
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+gboolean
+gst_esdmon_factory_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
@@ -420,13 +377,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   return TRUE;
 }
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "esdmon",
-  plugin_init
-};
 
 static gboolean
 gst_esdmon_open_audio (GstEsdmon *src)

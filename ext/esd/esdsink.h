@@ -61,6 +61,7 @@ struct _GstEsdsinkClass {
 };
 
 GType gst_esdsink_get_type(void);
+gboolean gst_esdsink_factory_init (GstPlugin *plugin);
 
 
 G_END_DECLS

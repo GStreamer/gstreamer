@@ -317,8 +317,8 @@ gst_esdsink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
   }
 }
 
-static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+gboolean
+gst_esdsink_factory_init (GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
@@ -326,19 +326,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
 				   &esdsink_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
-  gst_element_factory_add_pad_template(factory, GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_factory_add_pad_template(factory,
+      GST_PAD_TEMPLATE_GET (sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   return TRUE;
 }
-
-GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "esdsink",
-  plugin_init
-};
 
 static gboolean
 gst_esdsink_open_audio (GstEsdsink *sink)
