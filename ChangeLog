@@ -1,3 +1,8 @@
+2003-02-06  Colin Walters  <walters@gnu.org>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: Port all the fixes from
+	BRANCH-GSTREAMER-0_6.
+
 2003-01-25  Colin Walters  <walters@gnu.org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c (gst_gnomevfssrc_open_file): Don't
