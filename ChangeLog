@@ -1,5 +1,12 @@
 2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_caps_with_data),
+	(gst_riff_create_video_template_caps):
+	  Add intel-h263.
+
+2005-01-19  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/mad/gstmad.c: (gst_mad_check_caps_reset), (gst_mad_chain):
 	  Fail if caps negotiation fails. Should fix #162184, and should
 	  definately be in there regardless of it fixing the actual bug.
