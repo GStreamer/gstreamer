@@ -567,8 +567,8 @@ gst_v4lsrc_palette_to_caps (int palette)
             "bpp = (int) 24, "
             "depth = (int) 24, "
             "endianness = (int) BIG_ENDIAN, "
-            "red_mask = 0xFF0000, "
-            "green_mask = 0x00FF00, " "blue_mask = 0x0000FF");
+            "red_mask = 0x0000FF, "
+            "green_mask = 0x00FF00, " "blue_mask = 0xFF0000");
         break;
       case VIDEO_PALETTE_RGB32:
         caps = gst_caps_from_string ("video/x-raw-rgb, "
@@ -817,7 +817,8 @@ gst_v4lsrc_getcaps (GstPad * pad)
 
     one = gst_v4lsrc_palette_to_caps (GPOINTER_TO_INT (item->data));
     if (!one)
-      g_print ("Palette %d gave no caps\n", GPOINTER_TO_INT (item->data));
+      GST_WARNING_OBJECT (v4lsrc, "Palette %d gave no caps\n",
+          GPOINTER_TO_INT (item->data));
     GST_DEBUG_OBJECT (v4lsrc,
         "Device reports w: %d-%d, h: %d-%d, fps: %f for palette %d",
         vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight, fps,
@@ -1013,7 +1014,7 @@ gst_v4lsrc_get (GstPad * pad)
     GST_LOG_OBJECT (v4lsrc, "waiting until %" GST_TIME_FORMAT,
         GST_TIME_ARGS (until));
     if (!gst_element_wait (GST_ELEMENT (v4lsrc), until))
-      g_warning ("waiting from now %" GST_TIME_FORMAT
+      GST_WARNING_OBJECT (v4lsrc, "waiting from now %" GST_TIME_FORMAT
           " until %" GST_TIME_FORMAT " failed",
           GST_TIME_ARGS (now), GST_TIME_ARGS (until));
     GST_LOG_OBJECT (v4lsrc, "wait done.");

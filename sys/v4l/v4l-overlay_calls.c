@@ -90,7 +90,7 @@ gst_v4l_set_overlay (GstV4lElement * v4lelement)
        * always fatal (like not having overlay support) */
       gint status = WEXITSTATUS (ret);
 
-      g_warning ("v4l-conf returned %d.", status);
+      GST_WARNING_OBJECT (v4lelement, "v4l-conf returned %d.", status);
       g_free (buff);
       return TRUE;
     }
