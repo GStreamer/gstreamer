@@ -402,16 +402,17 @@ gst_flacenc_metadata_callback (const FLAC__StreamEncoder *encoder,
   if (flacenc->stopped) 
     return;
 
-  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, 0, NULL);
+  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, (gint64) 0, GST_FORMAT_UNDEFINED);
   gst_pad_push (flacenc->srcpad, GST_BUFFER (event));
 
-  if (flacenc->first_buf) {
+  /* FIXME: the first buffer seems to be 4 bytes only, so this'll never be true */
+  if (flacenc->first_buf && GST_BUFFER_SIZE (flacenc->first_buf) >= 42) {
     const FLAC__uint64 samples = metadata->data.stream_info.total_samples;
     const unsigned min_framesize = metadata->data.stream_info.min_framesize;
     const unsigned max_framesize = metadata->data.stream_info.max_framesize;
 
-    guint8 *data = GST_BUFFER_DATA (flacenc->first_buf);
-    GstBuffer *outbuf = flacenc->first_buf;
+    GstBuffer *outbuf = gst_buffer_copy_on_write (flacenc->first_buf);
+    guint8 *data = GST_BUFFER_DATA (outbuf);
 
     /* this looks evil but is actually how one is supposed to write
      * the stream stats according to the FLAC examples */
@@ -690,4 +691,3 @@ gst_flacenc_change_state (GstElement *element)
 
   return GST_STATE_SUCCESS;
 }
-
