@@ -1,4 +1,3 @@
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstvideofilter.la libgstvideoflip.la \
 	libgstvideobalance.la
