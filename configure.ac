@@ -751,7 +751,7 @@ GST_CHECK_FEATURE(LIBPNG, [snapshot plug-in], snapshot, [
 dnl *** swfdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
-  PKG_CHECK_MODULES(SWFDEC, libswfdec, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
+  PKG_CHECK_MODULES(SWFDEC, swfdec, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
   AC_SUBST(SWFDEC_CFLAGS)
   AC_SUBST(SWFDEC_LIBS)
 ])
