@@ -21,7 +21,7 @@
  */
 
 #include <gst/gst.h>
-#include "gstbytestream2.h"
+#include "gstbytestream.h"
 
 #define GST_TYPE_IDENTITY \
   (gst_identity_get_type())
@@ -43,7 +43,7 @@ struct _GstIdentity {
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  GstByteStream2 *bs;
+  GstByteStream *bs;
   gint byte_size;
   gint count;
 };
@@ -56,9 +56,9 @@ GType gst_identity_get_type(void);
 
 
 GstElementDetails gst_identity_details = {
-  "ByteStream2Test",
+  "ByteStreamTest",
   "Filter",
-  "Test for the GstByteStream2 code",
+  "Test for the GstByteStream code",
   VERSION,
   "Erik Walthinsen <omega@temple-baptist.com>",
   "(C) 2001",
@@ -166,7 +166,7 @@ gst_identity_init (GstIdentity *identity)
   identity->byte_size = 384;
   identity->count = 5;
 
-  identity->bs = gst_bytestream2_new(identity->sinkpad);
+  identity->bs = gst_bytestream_new(identity->sinkpad);
 }
 
 static void 
@@ -187,12 +187,12 @@ gst_identity_loop (GstElement *element)
 
     for (i=0;i<identity->count;i++) {
 //      g_print("bstest: getting a buffer of %d bytes\n",identity->byte_size);
-      buf = gst_bytestream2_read(identity->bs,identity->byte_size);
+      buf = gst_bytestream_read(identity->bs,identity->byte_size);
       if (!buf) g_print("BUFFER IS BOGUS\n");
 //      g_print("pushing the buffer, %d bytes at %d\n",GST_BUFFER_SIZE(buf),GST_BUFFER_OFFSET(buf));
       gst_pad_push(identity->srcpad,buf);
 //      g_print("\n");
-      gst_bytestream2_print_status(identity->bs);
+      gst_bytestream_print_status(identity->bs);
 //      g_print("\n\n");
     }
 
@@ -205,11 +205,11 @@ gst_identity_loop (GstElement *element)
     for (i=0;i<identity->count;i++) {
       buf = gst_buffer_new();
       // note that this is dangerous, as it does *NOT* refcount the data, it can go away!!!
-      GST_BUFFER_DATA(buf) = gst_bytestream2_peek_bytes(identity->bs,identity->byte_size);
+      GST_BUFFER_DATA(buf) = gst_bytestream_peek_bytes(identity->bs,identity->byte_size);
       GST_BUFFER_SIZE(buf) = identity->byte_size;
       GST_BUFFER_FLAG_SET(buf,GST_BUFFER_DONTFREE);
       gst_pad_push(identity->srcpad,buf);
-      gst_bytestream2_flush(identity->bs,identity->byte_size);
+      gst_bytestream_flush(identity->bs,identity->byte_size);
     }
 
     exit(1);
