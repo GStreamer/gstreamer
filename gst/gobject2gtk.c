@@ -298,3 +298,15 @@ g2g_signal_newc (const gchar       *name,
     
   return signal_id;
 }
+
+gint* g_signal_list_ids (GType type, guint *n_ids)
+{
+  GtkObjectClass *class;
+
+  class = gtk_type_class (type);
+
+  *n_ids = class->nsignals;
+  
+  return class->signals;
+}
+

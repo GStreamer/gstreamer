@@ -82,6 +82,7 @@ G_STMT_START{ \
 #define g_type_class_unref(c)
 #define g_type_name(t)				gtk_type_name(t)
 #define g_type_from_name(t)			gtk_type_from_name(t)
+#define g_type_parent(t)			gtk_type_parent(t)
 #define GEnumValue				GtkEnumValue
 #define g_enum_register_static			gtk_type_register_enum
 
@@ -170,7 +171,7 @@ gtk_signal_handler_pending ((GtkObject *)object,name,may_block)
 #define g_signal_handler_block		gtk_signal_handler_block
 #define g_signal_handler_unblock	gtk_signal_handler_unblock
 
-
+gint* g_signal_list_ids (GType type, guint *n_ids);
 
 
 // arguments/parameters
