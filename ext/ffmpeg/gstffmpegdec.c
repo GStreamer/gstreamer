@@ -596,8 +596,6 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             ffmpegdec->context->frame_rate_base /
             ffmpegdec->context->frame_rate;
         ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
-      } else {
-        gst_buffer_unref (outbuf);
       }
       break;
 
