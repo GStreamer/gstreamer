@@ -802,8 +802,8 @@ plugin_init (GstPlugin *plugin)
 GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "monoscope",
-  "Monoscope visualization",
+  "modplug",
+  ".MOD audio decoding",
   plugin_init,
   VERSION,
   "LGPL",
