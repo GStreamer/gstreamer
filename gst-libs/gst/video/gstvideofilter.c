@@ -111,9 +111,10 @@ gst_videofilter_src_template_factory(void)
   static GstPadTemplate *templ = NULL;
 
   if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/raw",
+    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
     caps = gst_caps_intersect(caps, gst_videofilter_get_capslist ());
 
@@ -128,9 +129,10 @@ gst_videofilter_sink_template_factory(void)
   static GstPadTemplate *templ = NULL;
 
   if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("sink","video/raw",
+    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
     caps = gst_caps_intersect(caps, gst_videofilter_get_capslist ());
 
@@ -151,7 +153,7 @@ static GstCaps *gst_videofilter_format_get_caps(GstVideofilterFormat *format)
   fourcc = GST_MAKE_FOURCC(format->fourcc[0],format->fourcc[1],format->fourcc[2],format->fourcc[3]);
 
   if(format->bpp){
-    caps = GST_CAPS_NEW ("videoflip", "video/raw",
+    caps = GST_CAPS_NEW ("videofilter", "video/x-raw-rgb",
 		"format", GST_PROPS_FOURCC (fourcc),
 		"depth", GST_PROPS_INT(format->bpp),
 		"bpp", GST_PROPS_INT(format->depth),
@@ -160,8 +162,12 @@ static GstCaps *gst_videofilter_format_get_caps(GstVideofilterFormat *format)
 		"green_mask", GST_PROPS_INT(format->green_mask),
 		"blue_mask", GST_PROPS_INT(format->blue_mask));
   }else{
-    caps = GST_CAPS_NEW ("videoflip", "video/raw",
-		"format", GST_PROPS_FOURCC (fourcc));
+    caps = GST_CAPS_NEW ("videoflip", "video/x-raw-yuv",
+		"format", GST_PROPS_FOURCC (fourcc),
+		"height", GST_PROPS_INT_RANGE (1,G_MAXINT),
+		"width", GST_PROPS_INT_RANGE (1,G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0,G_MAXFLOAT)
+		);
   }
 
   return caps;
@@ -204,7 +210,7 @@ gst_videofilter_sink_getcaps (GstPad *pad, GstCaps *caps)
 
   /* get list of peer's caps */
   peercaps = gst_pad_get_allowed_caps (videofilter->srcpad);
-  g_print("peercaps: %s\n", gst_caps_to_string(peercaps));
+  //g_print("peercaps: %s\n", gst_caps_to_string(peercaps));
 
   /* FIXME videofilter doesn't allow passthru of video formats it
    * doesn't understand. */
@@ -216,29 +222,25 @@ gst_videofilter_sink_getcaps (GstPad *pad, GstCaps *caps)
     GstCaps *fromcaps = gst_videofilter_format_get_caps(g_ptr_array_index(
 	  klass->formats,i));
 
-    g_print("testing caps: %s\n", gst_caps_to_string(fromcaps));
+    //g_print("testing caps: %s\n", gst_caps_to_string(fromcaps));
 
     icaps = gst_caps_intersect(fromcaps, peercaps);
     //if(gst_caps_is_always_compatible(fromcaps, peercaps)){
     if(icaps != NULL){
       capslist = gst_caps_append(capslist, fromcaps);
-      g_print("(yes)\n");
-    }else{
-      g_print("(no)\n");
     }
     //gst_caps_unref (fromcaps);
     if(icaps) gst_caps_unref (icaps);
   }
   gst_caps_unref (peercaps);
 
-  sizecaps = GST_CAPS_NEW("videofilter_size","video/raw",
+  sizecaps = GST_CAPS_NEW("videofilter_size","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
   caps = gst_caps_intersect(capslist, sizecaps);
   gst_caps_unref (sizecaps);
-
-  g_print("getcaps: %s\n",gst_caps_to_string(caps));
 
   return caps;
 }
@@ -307,6 +309,7 @@ gst_videofilter_sink_link (GstPad *pad, GstCaps *caps)
 
   gst_caps_get_int (caps, "width", &videofilter->from_width);
   gst_caps_get_int (caps, "height", &videofilter->from_height);
+  gst_caps_get_float (caps, "framerate", &videofilter->framerate);
 
   gst_videofilter_setup(videofilter);
 
@@ -314,10 +317,13 @@ gst_videofilter_sink_link (GstPad *pad, GstCaps *caps)
 
   gst_caps_set(peercaps, "width", GST_PROPS_INT (videofilter->to_width));
   gst_caps_set(peercaps, "height", GST_PROPS_INT (videofilter->to_height));
+  gst_caps_set(peercaps, "framerate", GST_PROPS_FLOAT (videofilter->framerate));
+
+  g_print("setting %s\n",gst_caps_to_string(peercaps));
 
   ret = gst_pad_try_set_caps (videofilter->srcpad, peercaps);
 
-  gst_caps_unref(peercaps);
+  //gst_caps_unref(peercaps);
 
   if(ret==GST_PAD_LINK_OK || ret==GST_PAD_LINK_DONE){
     caps = gst_pad_get_caps (videofilter->srcpad);
@@ -482,13 +488,16 @@ void gst_videofilter_set_output_size(GstVideofilter *videofilter,
 
   srccaps = gst_caps_copy(gst_pad_get_caps(videofilter->srcpad));
 
+  if(!GST_CAPS_IS_FIXED(srccaps)){
+    return;
+  }
+
   gst_caps_set(srccaps, "width", GST_PROPS_INT (videofilter->to_width));
   gst_caps_set(srccaps, "height", GST_PROPS_INT (videofilter->to_height));
 
   ret = gst_pad_try_set_caps (videofilter->srcpad, srccaps);
 
-  g_print("try_set_caps() returned %d\n", ret);
-
+  g_return_if_fail(ret<0);
 }
 
 static void gst_videofilter_setup(GstVideofilter *videofilter)
