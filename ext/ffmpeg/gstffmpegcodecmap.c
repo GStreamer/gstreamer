@@ -932,9 +932,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
           break;
         case 32:
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-          if (rmask == 0xff0000) {
+          if (rmask == 0x00ff0000) {
 #else
-          if (rmask == 0x0000ff) {
+          if (rmask == 0x0000ff00) {
 #endif
             pix_fmt = PIX_FMT_RGBA32;
           }

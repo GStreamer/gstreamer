@@ -32,38 +32,33 @@
 
 #include "gstffmpegcodecmap.h"
 
-GST_DEBUG_CATEGORY_STATIC (debug_ffmpeg_csp);
-#define GST_CAT_DEFAULT debug_ffmpeg_csp
-
-#define GST_TYPE_FFMPEG_CSP \
+#define GST_TYPE_FFMPEGCSP \
   (gst_ffmpegcsp_get_type())
-#define GST_FFMPEG_CSP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEG_CSP,GstFFMpegCsp))
-#define GST_FFMPEG_CSP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEG_CSP,GstFFMpegCsp))
-#define GST_IS_FFMPEG_CSP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEG_CSP))
-#define GST_IS_FFMPEG_CSP_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEG_CSP))
+#define GST_FFMPEGCSP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
+#define GST_FFMPEGCSP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
+#define GST_IS_FFMPEGCSP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGCSP))
+#define GST_IS_FFMPEGCSP_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGCSP))
 
 typedef struct _GstFFMpegCsp GstFFMpegCsp;
 typedef struct _GstFFMpegCspClass GstFFMpegCspClass;
 
 struct _GstFFMpegCsp {
-  GstElement		element;
+  GstElement 	 element;
 
-  GstPad *		sinkpad;
-  GstPad *		srcpad;
-  gboolean		need_caps_nego;
+  GstPad 	*sinkpad, *srcpad;
 
-  gint			width;
-  gint			height;
-  gdouble		fps;
-  
-  enum PixelFormat	from_pixfmt;
-  enum PixelFormat	to_pixfmt;
-  AVFrame *		from_frame;
-  AVFrame *		to_frame;
+  gint 		width, height;
+  gfloat	fps;
+  enum PixelFormat
+		from_pixfmt,
+		to_pixfmt;
+  AVFrame	*from_frame,
+		*to_frame;
+  GstCaps	*sinkcaps;
 };
 
 struct _GstFFMpegCspClass {
@@ -91,92 +86,160 @@ enum {
 
 static GType	gst_ffmpegcsp_get_type 		(void);
 
-static void	gst_ffmpegcsp_base_init		(gpointer g_class);
-static void	gst_ffmpegcsp_class_init	(gpointer g_class, gpointer class_data);
-static void	gst_ffmpegcsp_init		(GTypeInstance *instance, gpointer g_class);
+static void	gst_ffmpegcsp_base_init		(GstFFMpegCspClass *klass);
+static void	gst_ffmpegcsp_class_init	(GstFFMpegCspClass *klass);
+static void	gst_ffmpegcsp_init		(GstFFMpegCsp *space);
+
+static void	gst_ffmpegcsp_set_property	(GObject    *object,
+						 guint       prop_id, 
+						 const GValue *value,
+						 GParamSpec *pspec);
+static void	gst_ffmpegcsp_get_property	(GObject    *object,
+						 guint       prop_id, 
+						 GValue     *value,
+						 GParamSpec *pspec);
 
 static GstPadLinkReturn
-		gst_ffmpegcsp_connect		(GstPad		*pad,
+		gst_ffmpegcsp_sinkconnect	(GstPad     *pad,
 						 const GstCaps *caps);
 static GstPadLinkReturn
-		gst_ffmpegcsp_try_connect 	(GstPad		*pad,
-						 AVCodecContext	*ctx,
-						 double		 fps);
+		gst_ffmpegcsp_srcconnect 	(GstPad     *pad,
+						 const GstCaps *caps);
+static GstPadLinkReturn
+		gst_ffmpegcsp_srcconnect_func 	(GstPad     *pad,
+						 const GstCaps *caps,
+						 gboolean    newcaps);
 
-static void	gst_ffmpegcsp_chain		(GstPad		*pad,
-						 GstData	*data);
+static void	gst_ffmpegcsp_chain		(GstPad     *pad,
+						 GstData    *data);
 static GstElementStateReturn
-		gst_ffmpegcsp_change_state 	(GstElement	*element);
+		gst_ffmpegcsp_change_state 	(GstElement *element);
 
+static GstPadTemplate *srctempl, *sinktempl;
 static GstElementClass *parent_class = NULL;
 /*static guint gst_ffmpegcsp_signals[LAST_SIGNAL] = { 0 }; */
 
-/* does caps nego on a pad */
-static GstPadLinkReturn
-gst_ffmpegcsp_try_connect (GstPad *pad, AVCodecContext *ctx, double fps)
+static GstCaps *
+gst_ffmpegcsp_getcaps (GstPad  *pad)
 {
-  gint i, ret;
   GstFFMpegCsp *space;
-  gboolean try_all = (ctx->pix_fmt != PIX_FMT_NB);
-  GstCaps *caps;
+  GstCaps *peercaps;
+  GstCaps *ourcaps;
   
-  space = GST_FFMPEG_CSP (gst_pad_get_parent (pad));
+  space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
 
-  /* loop over all possibilities and select the first one we can convert and
-   * is accepted by the peer */
-  caps = gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, ctx);
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
-    GstCaps *setcaps;
+  /* we can do everything our peer can... */
+  peercaps = gst_caps_copy (gst_pad_get_allowed_caps (space->srcpad));
 
-    if (fps > 0)
-      gst_structure_set (structure, "framerate", G_TYPE_DOUBLE, fps, NULL);
+  /* and our own template of course */
+  ourcaps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 
-    setcaps = gst_caps_new_full (gst_structure_copy (structure), NULL);
-    
-    ret = gst_pad_try_set_caps (pad, setcaps);
-    gst_caps_free (setcaps);
-    if (ret >= 0) {
-      if (ctx->pix_fmt == PIX_FMT_NB)
-	gst_ffmpeg_caps_to_codectype (CODEC_TYPE_VIDEO, caps, ctx);
-      gst_caps_free (caps);
+  /* merge them together, we prefer the peercaps first */
+  gst_caps_append (peercaps, ourcaps);
 
-      return ret;
-    }
-  }
-
-  if (try_all) {
-    ctx->pix_fmt = PIX_FMT_NB;
-    return gst_ffmpegcsp_try_connect (pad, ctx, fps);
-  } else {
-    return GST_PAD_LINK_REFUSED;
-  }
+  return peercaps;
 }
 
 static GstPadLinkReturn
-gst_ffmpegcsp_connect (GstPad *pad, const GstCaps *caps)
+gst_ffmpegcsp_srcconnect_func (GstPad        *pad,
+			       const GstCaps *caps,
+			       gboolean       newcaps)
+{
+  GstStructure *structure;
+  guint n;
+  AVCodecContext *ctx;
+  GstFFMpegCsp *space;
+  GstCaps *peercaps, *ourcaps, *one;
+
+  space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
+
+  /* we cannot operate if we didn't get src caps */
+  if (!(ourcaps = space->sinkcaps)) {
+#if 0
+    if (!newcaps) {
+      gst_pad_recalc_allowed_caps (pad);
+    }
+#endif
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  /* then see what the peer has that matches the size */
+  caps = gst_caps_intersect (caps,
+		  gst_caps_new_full (
+		  gst_structure_new (
+		   "video/x-raw-yuv",
+		     "width",     G_TYPE_INT,    space->width,
+		     "height",    G_TYPE_INT,    space->height,
+		     "framerate", G_TYPE_DOUBLE, space->fps, NULL
+		  ), gst_structure_new (
+		   "video/x-raw-rgb",
+		     "width",     G_TYPE_INT,    space->width,
+		     "height",    G_TYPE_INT,    space->height,
+		     "framerate", G_TYPE_DOUBLE, space->fps, NULL
+		  ), NULL));
+
+  /* first see if we can do the format natively by filtering the peer caps 
+   * with our incomming caps */
+  if ((peercaps = gst_caps_intersect (caps, ourcaps)) != NULL) {
+    for (n = 0; n < gst_caps_get_size (peercaps); n++) {
+      structure = gst_caps_get_structure (peercaps, n);
+      one = gst_caps_new_full (gst_structure_copy (structure), NULL);
+
+      /* see if the peer likes it too, it should as the caps say so.. */
+      if (gst_pad_try_set_caps (space->srcpad, one) > 0) {
+        space->from_pixfmt = space->to_pixfmt = -1;
+        return GST_PAD_LINK_DONE;
+      }
+    }
+  }
+
+  /* loop over all possibilities and select the first one we can convert and
+   * is accepted by the peer */
+  ctx = avcodec_alloc_context ();
+  for (n = 0; n < gst_caps_get_size (caps); n++) {
+    structure = gst_caps_get_structure (caps, n);
+    one = gst_caps_new_full (gst_structure_copy (structure), NULL);
+    ctx->width = space->width;
+    ctx->height = space->height;
+    ctx->pix_fmt = PIX_FMT_NB;
+    gst_ffmpeg_caps_to_codectype (CODEC_TYPE_VIDEO, one, ctx);
+    if (ctx->pix_fmt != PIX_FMT_NB) {
+      if (gst_pad_try_set_caps (space->srcpad, one) > 0) {
+        space->to_pixfmt = ctx->pix_fmt;
+        av_free (ctx);
+        if (space->from_frame)
+          av_free (space->from_frame);
+        if (space->to_frame)
+          av_free (space->to_frame);
+        space->from_frame = avcodec_alloc_frame ();
+        space->to_frame = avcodec_alloc_frame ();
+        return GST_PAD_LINK_DONE;
+      }
+      gst_caps_free (one);
+    }
+  }
+  av_free (ctx);
+  
+  /* we disable ourself here */
+  space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
+
+  return GST_PAD_LINK_REFUSED;
+}
+
+static GstPadLinkReturn
+gst_ffmpegcsp_sinkconnect (GstPad        *pad,
+			   const GstCaps *caps)
 {
   AVCodecContext *ctx;
   GstFFMpegCsp *space;
-  gdouble fps;
-  enum PixelFormat pixfmt;
-  GstPad *other;
-  enum PixelFormat *format, *other_format;
+  GstPad *peer;
 
-  space = GST_FFMPEG_CSP (gst_pad_get_parent (pad));
+  space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
 
-  if (space->sinkpad == pad) {
-    other = space->srcpad;
-    format = &space->from_pixfmt;
-    other_format = &space->to_pixfmt;
-  } else if (space->srcpad == pad) {
-    other = space->sinkpad;
-    format = &space->to_pixfmt;
-    other_format = &space->from_pixfmt;
-  } else {
-    g_assert_not_reached ();
-    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_is_fixed (caps)) {
+    return GST_PAD_LINK_DELAYED;
   }
+
   ctx = avcodec_alloc_context ();
   ctx->width = 0;
   ctx->height = 0;
@@ -184,37 +247,40 @@ gst_ffmpegcsp_connect (GstPad *pad, const GstCaps *caps)
 
   gst_ffmpeg_caps_to_codectype (CODEC_TYPE_VIDEO, caps, ctx);
   if (!ctx->width || !ctx->height || ctx->pix_fmt == PIX_FMT_NB) {
-    av_free (ctx);
     return GST_PAD_LINK_REFUSED;
   }
 
-  if (!gst_structure_get_double (gst_caps_get_structure (caps, 0), 
-	"framerate", &fps))
-    fps = 0;
-  
-  pixfmt = ctx->pix_fmt;
-  if (*other_format == PIX_FMT_NB ||
-      space->width != ctx->width ||
-      space->height != ctx->height ||
-      space->fps != fps) {
-    GST_DEBUG_OBJECT (space, "Need caps nego on pad %s for size %dx%d", 
-	GST_PAD_NAME (other), ctx->width, ctx->height);
-    /* ctx->pix_fmt is set to preferred format */
-    if (gst_ffmpegcsp_try_connect (space->sinkpad, ctx, fps) <= 0) {
-      av_free (ctx);
-      return GST_PAD_LINK_REFUSED;
-    }
-    *other_format = ctx->pix_fmt;
-  }
+  space->fps = 1. * ctx->frame_rate / ctx->frame_rate_base;
   space->width = ctx->width;
   space->height = ctx->height;
-  space->fps = fps;
-  *format = pixfmt;
+  space->from_pixfmt = ctx->pix_fmt;
   av_free (ctx);
 
   GST_INFO ( "size: %dx%d", space->width, space->height);
 
+  space->sinkcaps = (GstCaps *) caps;
+
+  if ((peer = gst_pad_get_peer (pad)) != NULL) {
+    GstPadLinkReturn ret;
+    ret = gst_ffmpegcsp_srcconnect_func (pad,
+					 gst_pad_get_caps (GST_PAD_PEER (space->srcpad)),
+					 FALSE);
+    if (ret <= 0) {
+      space->sinkcaps = NULL;
+      return ret;
+    }
+
+    return GST_PAD_LINK_DONE;
+  }
+
   return GST_PAD_LINK_OK;
+}
+
+static GstPadLinkReturn
+gst_ffmpegcsp_srcconnect (GstPad        *pad,
+			  const GstCaps *caps)
+{
+  return gst_ffmpegcsp_srcconnect_func (pad, caps, TRUE);
 }
 
 static GType
@@ -225,78 +291,63 @@ gst_ffmpegcsp_get_type (void)
   if (!ffmpegcsp_type) {
     static const GTypeInfo ffmpegcsp_info = {
       sizeof (GstFFMpegCspClass),
-      gst_ffmpegcsp_base_init,
+      (GBaseInitFunc) gst_ffmpegcsp_base_init,
       NULL,
-      gst_ffmpegcsp_class_init,
+      (GClassInitFunc) gst_ffmpegcsp_class_init,
       NULL,
       NULL,
       sizeof (GstFFMpegCsp),
       0,
-      gst_ffmpegcsp_init,
+      (GInstanceInitFunc) gst_ffmpegcsp_init,
     };
 
     ffmpegcsp_type = g_type_register_static (GST_TYPE_ELEMENT,
 					     "GstFFMpegColorspace",
 					     &ffmpegcsp_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (debug_ffmpeg_csp, "ffcolorspace", 0, "FFMpeg colorspace converter");
   }
 
   return ffmpegcsp_type;
 }
 
 static void
-gst_ffmpegcsp_base_init (gpointer g_class)
+gst_ffmpegcsp_base_init (GstFFMpegCspClass *klass)
 {
-  GstCaps *caps, *capscopy;
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  /* template caps */
-  caps = gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
-  capscopy = gst_caps_copy (caps);
-  
-  /* build templates */
-  gst_element_class_add_pad_template (element_class, 
-      gst_pad_template_new ("src",
-			    GST_PAD_SRC,
-			    GST_PAD_ALWAYS,
-			    caps));
-  gst_element_class_add_pad_template (element_class, 
-      gst_pad_template_new ("sink",
-			    GST_PAD_SINK,
-			    GST_PAD_ALWAYS,
-			    capscopy));
-
+  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_add_pad_template (element_class, sinktempl);
   gst_element_class_set_details (element_class, &ffmpegcsp_details);
 }
 
 static void
-gst_ffmpegcsp_class_init (gpointer g_class, gpointer class_data)
+gst_ffmpegcsp_class_init (GstFFMpegCspClass *klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
-  parent_class = g_type_class_peek_parent (g_class);
+  gobject_class = (GObjectClass*) klass;
+  gstelement_class = (GstElementClass*) klass;
+
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  gobject_class->set_property = gst_ffmpegcsp_set_property;
+  gobject_class->get_property = gst_ffmpegcsp_get_property;
 
   gstelement_class->change_state = gst_ffmpegcsp_change_state;
 }
 
 static void
-gst_ffmpegcsp_init (GTypeInstance *instance, gpointer g_class)
+gst_ffmpegcsp_init (GstFFMpegCsp *space)
 {
-  GstFFMpegCsp *space = GST_FFMPEG_CSP (instance);
-  
-  space->sinkpad = gst_pad_new_from_template (
-      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (space), "sink"), 
-      "sink");
-  gst_pad_set_link_function (space->sinkpad, gst_ffmpegcsp_connect);
+  space->sinkpad = gst_pad_new_from_template (sinktempl, "sink");
+  gst_pad_set_link_function (space->sinkpad, gst_ffmpegcsp_sinkconnect);
+  gst_pad_set_getcaps_function (space->sinkpad, gst_ffmpegcsp_getcaps);
   gst_pad_set_chain_function (space->sinkpad,gst_ffmpegcsp_chain);
   gst_element_add_pad (GST_ELEMENT(space), space->sinkpad);
 
-  space->srcpad = gst_pad_new_from_template (
-      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (space), "src"), 
-      "src");
+  space->srcpad = gst_pad_new_from_template (srctempl, "src");
   gst_element_add_pad (GST_ELEMENT (space), space->srcpad);
-  gst_pad_set_link_function (space->srcpad, gst_ffmpegcsp_connect);
+  gst_pad_set_link_function (space->srcpad, gst_ffmpegcsp_srcconnect);
 
   space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
   space->from_frame = space->to_frame = NULL;
@@ -306,18 +357,18 @@ static void
 gst_ffmpegcsp_chain (GstPad  *pad,
 		     GstData *data)
 {
-  GstFFMpegCsp *space;
   GstBuffer *inbuf = GST_BUFFER (data);
+  GstFFMpegCsp *space;
   GstBuffer *outbuf = NULL;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (inbuf != NULL);
 
-  space = GST_FFMPEG_CSP (gst_pad_get_parent (pad));
+  space = GST_FFMPEGCSP (gst_pad_get_parent (pad));
   
   g_return_if_fail (space != NULL);
-  g_return_if_fail (GST_IS_FFMPEG_CSP (space));
+  g_return_if_fail (GST_IS_FFMPEGCSP (space));
 
   if (space->from_pixfmt == PIX_FMT_NB ||
       space->to_pixfmt == PIX_FMT_NB) {
@@ -328,10 +379,10 @@ gst_ffmpegcsp_chain (GstPad  *pad,
   if (space->from_pixfmt == space->to_pixfmt) {
     outbuf = inbuf;
   } else {
+    /* use bufferpool here */
     guint size = avpicture_get_size (space->to_pixfmt,
 				     space->width,
 				     space->height);
-    /* use bufferpools here */
     outbuf = gst_buffer_new_and_alloc (size);
 
     /* convert */
@@ -343,7 +394,8 @@ gst_ffmpegcsp_chain (GstPad  *pad,
 		 (AVPicture *) space->from_frame, space->from_pixfmt,
 		 space->width, space->height);
 
-    gst_buffer_stamp (outbuf, inbuf);
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
+    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
 
     gst_buffer_unref (inbuf);
   }
@@ -356,12 +408,9 @@ gst_ffmpegcsp_change_state (GstElement *element)
 {
   GstFFMpegCsp *space;
 
-  space = GST_FFMPEG_CSP (element);
+  space = GST_FFMPEGCSP (element);
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_PAUSED:
-      space->need_caps_nego = TRUE;
-      break;
     case GST_STATE_PAUSED_TO_READY:
       if (space->from_frame)
         av_free (space->from_frame);
@@ -378,9 +427,61 @@ gst_ffmpegcsp_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
+static void
+gst_ffmpegcsp_set_property (GObject      *object,
+			    guint         prop_id,
+			    const GValue *value,
+			    GParamSpec   *pspec)
+{
+  GstFFMpegCsp *space;
+
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_FFMPEGCSP (object));
+  space = GST_FFMPEGCSP (object);
+
+  switch (prop_id) {
+    default:
+      break;
+  }
+}
+
+static void
+gst_ffmpegcsp_get_property (GObject    *object,
+			    guint       prop_id,
+			    GValue     *value,
+			    GParamSpec *pspec)
+{
+  GstFFMpegCsp *space;
+
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_FFMPEGCSP (object));
+  space = GST_FFMPEGCSP (object);
+
+  switch (prop_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 gboolean
 gst_ffmpegcsp_register (GstPlugin *plugin)
 {
+  GstCaps *caps;
+
+  /* template caps */
+  caps = gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
+
+  /* build templates */
+  srctempl  = gst_pad_template_new ("src",
+				    GST_PAD_SRC,
+				    GST_PAD_ALWAYS,
+				    gst_caps_copy (caps));
+  sinktempl = gst_pad_template_new ("sink",
+				    GST_PAD_SINK,
+				    GST_PAD_ALWAYS,
+				    caps);
+
   return gst_element_register (plugin, "ffcolorspace",
-			       GST_RANK_NONE, GST_TYPE_FFMPEG_CSP);
+			       GST_RANK_NONE, GST_TYPE_FFMPEGCSP);
 }
