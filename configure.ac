@@ -13,7 +13,7 @@ GST_VERSION_MICRO=1
 dnl we use a datestamped release tag and a fourth version ".1" number
 dnl during CVS development
 GST_VERSION_RELEASE=`date +%Y%m%d`
-GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO.1
+GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO.2
 dnl we use a normal release tag increased manually when releasing
 dnl GST_VERSION_RELEASE=1
 dnl GST_VERSION=$GST_VERSION_MAJOR.$GST_VERSION_MINOR.$GST_VERSION_MICRO
