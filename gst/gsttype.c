@@ -68,7 +68,7 @@ gst_type_register (GstTypeFactory *factory)
 
   g_return_val_if_fail (factory != NULL, 0);
 
-//  INFO(GST_INFO_TYPES,"type register %s", factory->mime);
+//  GST_INFO (GST_CAT_TYPES,"type register %s", factory->mime);
   id = gst_type_find_by_mime (factory->mime);
   
   if (!id) {
@@ -107,12 +107,12 @@ guint16 gst_type_find_by_mime_func (gchar *mime)
   g_return_val_if_fail (mime != NULL, 0);
 
   walk = _gst_types;
-//  DEBUG("searching for '%s'\n",mime);
+//  GST_DEBUG (0,"searching for '%s'\n",mime);
   mimelen = strlen (mime);
   while (walk) {
     type = (GstType *)walk->data;
     search = type->mime;
-//    DEBUG("checking against '%s'\n",search);
+//    GST_DEBUG (0,"checking against '%s'\n",search);
     typelen = strlen (search);
     while ((search - type->mime) < typelen) {
       found = strstr (search, mime);
@@ -231,7 +231,7 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
   guint16 typeid;
   GSList *funcs;
 
-  DEBUG ("gsttype: need to load typefind function for %s\n", type->mime);
+  GST_DEBUG (0,"gsttype: need to load typefind function for %s\n", type->mime);
 
   type->typefindfuncs = NULL;
   gst_plugin_load_typefactory (type->mime);

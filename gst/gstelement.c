@@ -158,7 +158,7 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   g_return_if_fail (GST_IS_PAD (pad));
 
   /* set the pad's parent */
-  DEBUG("setting parent of pad '%s'(%p) to '%s'(%p)\n",
+  GST_DEBUG (0,"setting parent of pad '%s'(%p) to '%s'(%p)\n",
         gst_pad_get_name(pad),pad,gst_element_get_name(element),element);
   gst_pad_set_parent (pad,GST_OBJECT (element));
 
@@ -317,12 +317,12 @@ gst_element_connect (GstElement *src, gchar *srcpadname,
   /* obtain the pads requested */
   srcpad = gst_element_get_pad (src, srcpadname);
   if (srcpad == NULL) {
-    ERROR(src,"source element has no pad \"%s\"",srcpadname);
+    GST_ERROR(src,"source element has no pad \"%s\"",srcpadname);
     return;
   }
   destpad = gst_element_get_pad (dest, destpadname);
   if (srcpad == NULL) {
-    ERROR(dest,"destination element has no pad \"%s\"",destpadname);
+    GST_ERROR(dest,"destination element has no pad \"%s\"",destpadname);
     return;
   }
 
@@ -332,7 +332,7 @@ gst_element_connect (GstElement *src, gchar *srcpadname,
 
   /* have to make sure that they have the same parents... */
   if (srcparent != destparent) {
-    ERROR_OBJECT(srcparent,destparent,"%s and %s have different parents",
+    GST_ERROR_OBJECT(srcparent,destparent,"%s and %s have different parents",
                  gst_element_get_name(src),gst_element_get_name(dest));
     return;
   }
@@ -404,7 +404,7 @@ gst_element_set_state (GstElement *element, GstElementState state)
     /* if that outright didn't work, we need to bail right away */
     /* NOTE: this will bail on ASYNC as well! */
     if (return_val == GST_STATE_FAILURE) {
-//      DEBUG("have async return from '%s'\n",gst_element_get_name(element));
+//      GST_DEBUG (0,"have async return from '%s'\n",gst_element_get_name(element));
       return return_val;
     }
   }
@@ -682,7 +682,7 @@ gst_element_load_thyself (xmlNodePtr parent,
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type != NULL, NULL);
 
-  INFO(GST_INFO_XML,"loading \"%s\" of type \"%s\"\n", name, type);
+  GST_INFO (GST_CAT_XML,"loading \"%s\" of type \"%s\"\n", name, type);
 
   element = gst_elementfactory_make (type, name);
 

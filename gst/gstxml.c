@@ -179,7 +179,7 @@ gst_xml_get_element (GstXML *xml, const guchar *name)
   g_return_val_if_fail(xml != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  DEBUG ("gstxml: getting element \"%s\"\n", name);
+  GST_DEBUG (0,"gstxml: getting element \"%s\"\n", name);
 
   element = g_hash_table_lookup(xml->elements, name);
 

@@ -39,7 +39,7 @@ gst_buffer_pool_new (void)
   GstBufferPool *pool;
 
   pool = g_malloc (sizeof(GstBufferPool));
-  DEBUG("BUF: allocating new buffer pool %p\n", pool);
+  GST_DEBUG (0,"BUF: allocating new buffer pool %p\n", pool);
 
   pool->new_buffer = NULL;
   pool->destroy_buffer = NULL;

@@ -236,7 +236,7 @@ gst_disksrc_get (GstPad *pad)
   /* if we didn't get as many bytes as we asked for, we're at EOF */
   if (readbytes < src->bytes_per_read) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_EOS);
-    DEBUG("setting GST_BUFFER_EOS\n");
+    GST_DEBUG (0,"setting GST_BUFFER_EOS\n");
   }
 
   /* if we have a new buffer from a seek, mark it */
@@ -249,9 +249,9 @@ gst_disksrc_get (GstPad *pad)
   GST_BUFFER_SIZE (buf) = readbytes;
   src->curoffset += readbytes;
 
-  DEBUG("pushing %d bytes with offset %d\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
+  GST_DEBUG (0,"pushing %d bytes with offset %d\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
   /* we're done, push the buffer off now */
-  DEBUG("returning %d bytes with offset %d done\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
+  GST_DEBUG (0,"returning %d bytes with offset %d done\n", GST_BUFFER_SIZE(buf), GST_BUFFER_OFFSET (buf));
   return buf;
 }
 
@@ -277,7 +277,7 @@ gst_disksrc_open_file (GstDiskSrc *src)
   }
   else {
     src->size = f_stat.st_size;
-    DEBUG("gstdisksrc: file size %ld\n", src->size);
+    GST_DEBUG (0,"gstdisksrc: file size %ld\n", src->size);
   }
   GST_FLAG_SET (src, GST_DISKSRC_OPEN);
   return TRUE;
@@ -306,7 +306,7 @@ gst_disksrc_change_state (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_DISKSRC (element), GST_STATE_FAILURE);
 
-  DEBUG("gstdisksrc: state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG (0,"gstdisksrc: state pending %d\n", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {

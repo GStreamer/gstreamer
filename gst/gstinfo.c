@@ -74,7 +74,7 @@ gst_default_info_handler (gint category, gchar *file, gchar *function,
   gchar *elementname = empty,*location = empty;
 
   if (debug_string == NULL) debug_string = "";
-  if (category != GST_INFO_GST_INIT)
+  if (category != GST_CAT_GST_INIT)
     location = g_strdup_printf("%s:%d%s:",function,line,debug_string);
   if (element && GST_IS_ELEMENT (element))
     elementname = g_strdup_printf (" [%s]",gst_element_get_name (element));
@@ -98,8 +98,11 @@ gst_info_get_categories () {
 }
 
 const gchar *
-gst_info_get_category_name (gint category) {
-  return _gst_info_category_strings[category];
+gst_get_category_name (gint category) {
+  if ((category >= 0) && (category < GST_CAT_MAX_CATEGORY))
+    return _gst_info_category_strings[category];
+  else
+    return NULL;
 }
 
 void

@@ -68,7 +68,7 @@ gst_elementfactory_find (gchar *name)
 
   g_return_val_if_fail(name != NULL, NULL);
 
-  DEBUG("gstelementfactory: find \"%s\"\n", name);
+  GST_DEBUG (0,"gstelementfactory: find \"%s\"\n", name);
 
   walk = _gst_elementfactories;
   while (walk) {
@@ -145,7 +145,7 @@ gst_elementfactory_create (GstElementFactory *factory,
   g_return_val_if_fail(factory != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  DEBUG("gstelementfactory: create \"%s\" \"%s\"\n", factory->name, name);
+  GST_DEBUG (0,"gstelementfactory: create \"%s\" \"%s\"\n", factory->name, name);
 
   // it's not loaded, try to load the plugin
   if (factory->type == 0) {
@@ -162,7 +162,7 @@ gst_elementfactory_create (GstElementFactory *factory,
   // attempt to set the elemenfactory class pointer if necessary
   oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
   if (oclass->elementfactory == NULL) {
-    DEBUG ("gstelementfactory: class %s\n", factory->name);
+    GST_DEBUG (0,"gstelementfactory: class %s\n", factory->name);
     oclass->elementfactory = factory;
   }
 
@@ -191,7 +191,7 @@ gst_elementfactory_make (gchar *factoryname, gchar *name)
   g_return_val_if_fail(factoryname != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  DEBUG("gstelementfactory: make \"%s\" \"%s\"\n", factoryname, name);
+  GST_DEBUG (0,"gstelementfactory: make \"%s\" \"%s\"\n", factoryname, name);
 
   //gst_plugin_load_elementfactory(factoryname);
   factory = gst_elementfactory_find(factoryname);

@@ -244,7 +244,7 @@ gst_asyncdisksrc_get (GstPad *pad)
   } else
     GST_BUFFER_SIZE (buf) = src->bytes_per_read;
 
-  DEBUG ("map %p, offset %d, size %ld\n", src->map, src->curoffset, GST_BUFFER_SIZE (buf));
+  GST_DEBUG (0,"map %p, offset %d, size %ld\n", src->map, src->curoffset, GST_BUFFER_SIZE (buf));
 
   //gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
@@ -252,7 +252,7 @@ gst_asyncdisksrc_get (GstPad *pad)
 
   if (src->new_seek) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
-    DEBUG ("new seek\n");
+    GST_DEBUG (0,"new seek\n");
     src->new_seek = FALSE;
   }
 
@@ -303,7 +303,7 @@ gst_asyncdisksrc_get_region (GstPad *pad, gulong offset, gulong size)
   } else
     GST_BUFFER_SIZE (buf) = size;
 
-  DEBUG ("map %p, offset %d, size %ld\n", src->map, offset, GST_BUFFER_SIZE (buf));
+  GST_DEBUG (0,"map %p, offset %d, size %ld\n", src->map, offset, GST_BUFFER_SIZE (buf));
 
   /* we're done, return the buffer off now */
   return buf;

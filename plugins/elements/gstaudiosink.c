@@ -247,7 +247,7 @@ gst_audiosink_chain (GstPad *pad, GstBuffer *buf)
 //  g_return_if_fail(GST_FLAG_IS_SET(audiosink,GST_STATE_RUNNING));
 
   if ((in_flush = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLUSH))) {
-    DEBUG ("audiosink: flush\n");
+    GST_DEBUG (0,"audiosink: flush\n");
     ioctl (audiosink->fd, SNDCTL_DSP_RESET, 0);
   }
 
@@ -277,7 +277,7 @@ gst_audiosink_chain (GstPad *pad, GstBuffer *buf)
       if (!audiosink->mute) {
         gst_clock_wait (audiosink->clock, GST_BUFFER_TIMESTAMP (buf), GST_OBJECT (audiosink));
         ioctl (audiosink->fd, SNDCTL_DSP_GETOSPACE, &ospace);
-        DEBUG ("audiosink: (%d bytes buffer) %d %p %d\n", ospace.bytes, 
+        GST_DEBUG (0,"audiosink: (%d bytes buffer) %d %p %d\n", ospace.bytes, 
 			audiosink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
         write (audiosink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
         //write(STDOUT_FILENO,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));

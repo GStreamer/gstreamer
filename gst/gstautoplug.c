@@ -89,7 +89,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
 	if (gst_caps_list_check_compatibility (srctemp->caps, desttemp->caps)) {
-	  INFO(0,"factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
+	  GST_INFO (0,"factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
           return TRUE;
 	}
       }
@@ -98,7 +98,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     }
     srctemps = g_list_next (srctemps);
   }
-  INFO(0,"factory \"%s\" cannot connect with factory \"%s\"", src->name, dest->name);
+  GST_INFO (0,"factory \"%s\" cannot connect with factory \"%s\"", src->name, dest->name);
   return FALSE;
 }
 	
@@ -123,15 +123,15 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
 
   if (IS_CAPS (src) && IS_CAPS (dest)) {
     res = gst_caps_list_check_compatibility ((GList *)src, (GList *)dest);
-    //INFO (0,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res);
+    //GST_INFO (0,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res);
   }
   else if (IS_CAPS (src)) {
     res = gst_elementfactory_can_sink_caps_list ((GstElementFactory *)dest, (GList *)src);
-    //INFO (0,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
+    //GST_INFO (0,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
   }
   else if (IS_CAPS (dest)) {
     res = gst_elementfactory_can_src_caps_list ((GstElementFactory *)src, (GList *)dest);
-    //INFO (0,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
+    //GST_INFO (0,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
   }
   else {
     res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
@@ -161,7 +161,7 @@ gst_autoplug_caps (GstCaps *srccaps, GstCaps *sinkcaps)
   caps.src = g_list_prepend (NULL,srccaps);
   caps.sink = g_list_prepend (NULL,sinkcaps);
 
-  INFO (0,"autoplugging two caps structures");
+  GST_INFO (0,"autoplugging two caps structures");
 
   return gst_autoplug_func (caps.src, caps.sink, 
       	  		    gst_autoplug_elementfactory_get_list, 
@@ -187,7 +187,7 @@ gst_autoplug_caps_list (GList *srccaps, GList *sinkcaps)
   caps.src = srccaps;
   caps.sink = sinkcaps;
 
-  INFO (0,"autoplugging two caps list structures");
+  GST_INFO (0,"autoplugging two caps list structures");
 
   return gst_autoplug_func (caps.src, caps.sink, 
       	  		    gst_autoplug_elementfactory_get_list, 
@@ -213,7 +213,7 @@ gst_autoplug_pads (GstPad *srcpad, GstPad *sinkpad)
   caps.src = srcpad->caps;
   caps.sink = sinkpad->caps;
 
-  INFO (0,"autoplugging two caps structures");
+  GST_INFO (0,"autoplugging two caps structures");
 
   return gst_autoplug_func (caps.src, caps.sink, 
       	  		    gst_autoplug_elementfactory_get_list, 
@@ -240,7 +240,7 @@ construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
   
   current = rgnNodes[find_factory(rgnNodes, factory)].iPrev;
 
-  INFO (0,"factories found in autoplugging (reversed order)");
+  GST_INFO (0,"factories found in autoplugging (reversed order)");
 
   while (current != NULL)
   { 
@@ -249,7 +249,7 @@ construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
     next = rgnNodes[find_factory(rgnNodes, current)].iPrev;
     if (next) {
       factories = g_list_prepend (factories, current);
-      INFO (0,"factory: \"%s\"", current->name);
+      GST_INFO (0,"factory: \"%s\"", current->name);
     }
     current = next;
   }

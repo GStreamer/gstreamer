@@ -52,7 +52,7 @@ gst_init (int *argc, char **argv[])
 {
   GstTrace *gst_trace;
 
-  INFO (GST_INFO_GST_INIT, "Initializing GStreamer Core Library");
+  GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
 
   if (!g_thread_supported ()) g_thread_init (NULL);
 

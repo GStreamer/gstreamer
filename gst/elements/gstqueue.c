@@ -149,7 +149,7 @@ gst_queue_init (GstQueue *queue)
 static void 
 gst_queue_cleanup_buffers (gpointer data, const gpointer user_data) 
 {
-  DEBUG("queue: %s cleaning buffer %p\n", (gchar *)user_data, data);
+  GST_DEBUG (0,"queue: %s cleaning buffer %p\n", (gchar *)user_data, data);
   
   gst_buffer_unref (GST_BUFFER (data));
 }
@@ -181,19 +181,19 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 
   /* we have to lock the queue since we span threads */
 
-  DEBUG("queue: try have queue lock\n");
+  GST_DEBUG (0,"queue: try have queue lock\n");
   GST_LOCK (queue);
-  DEBUG("queue: %s adding buffer %p %ld\n", name, buf, pthread_self ());
-  DEBUG("queue: have queue lock\n");
+  GST_DEBUG (0,"queue: %s adding buffer %p %ld\n", name, buf, pthread_self ());
+  GST_DEBUG (0,"queue: have queue lock\n");
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLUSH)) {
     gst_queue_flush (queue);
   }
 
-  DEBUG("queue: %s: chain %d %p\n", name, queue->level_buffers, buf);
+  GST_DEBUG (0,"queue: %s: chain %d %p\n", name, queue->level_buffers, buf);
 
   while (queue->level_buffers >= queue->max_buffers) {
-    DEBUG("queue: %s waiting %d\n", name, queue->level_buffers);
+    GST_DEBUG (0,"queue: %s waiting %d\n", name, queue->level_buffers);
     STATUS("%s: O\n");
     GST_UNLOCK (queue);
     g_mutex_lock (queue->fulllock);
@@ -201,20 +201,20 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
     g_mutex_unlock (queue->fulllock);
     GST_LOCK (queue);
     STATUS("%s: O+\n");
-    DEBUG("queue: %s waiting done %d\n", name, queue->level_buffers);
+    GST_DEBUG (0,"queue: %s waiting done %d\n", name, queue->level_buffers);
   }
 
   /* put the buffer on the tail of the list */
   queue->queue = g_slist_append (queue->queue, buf);
 //  STATUS("%s: +\n");
-  DEBUG("(%s:%s)+ ",GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG (0,"(%s:%s)+ ",GST_DEBUG_PAD_NAME(pad));
 
   /* if we were empty, but aren't any more, signal a condition */
   tosignal = (queue->level_buffers >= 0);
   queue->level_buffers++;
 
   /* we can unlock now */
-  DEBUG("queue: %s chain %d end signal(%d,%p)\n", name, queue->level_buffers, tosignal, queue->emptycond);
+  GST_DEBUG (0,"queue: %s chain %d end signal(%d,%p)\n", name, queue->level_buffers, tosignal, queue->emptycond);
   GST_UNLOCK (queue);
 
   if (tosignal) {
@@ -238,10 +238,10 @@ gst_queue_get (GstPad *pad)
   name = gst_element_get_name (GST_ELEMENT (queue));
 
   /* have to lock for thread-safety */
-  DEBUG("queue: %s try have queue lock\n", name);
+  GST_DEBUG (0,"queue: %s try have queue lock\n", name);
   GST_LOCK (queue);
-  DEBUG("queue: %s push %d %ld %p\n", name, queue->level_buffers, pthread_self (), queue->emptycond);
-  DEBUG("queue: %s have queue lock\n", name);
+  GST_DEBUG (0,"queue: %s push %d %ld %p\n", name, queue->level_buffers, pthread_self (), queue->emptycond);
+  GST_DEBUG (0,"queue: %s have queue lock\n", name);
 
   // we bail if there's nothing there
   if (!queue->level_buffers && !queue->block) {
@@ -261,13 +261,13 @@ gst_queue_get (GstPad *pad)
 
   front = queue->queue;
   buf = (GstBuffer *)(front->data);
-  DEBUG("retrieved buffer %p from queue\n",buf);
+  GST_DEBUG (0,"retrieved buffer %p from queue\n",buf);
   queue->queue = g_slist_remove_link (queue->queue, front);
   g_slist_free (front);
 
   queue->level_buffers--;
 //  STATUS("%s: -\n");
-  DEBUG("(%s:%s)- ",GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG (0,"(%s:%s)- ",GST_DEBUG_PAD_NAME(pad));
   tosignal = queue->level_buffers < queue->max_buffers;
   GST_UNLOCK(queue);
 
@@ -279,9 +279,9 @@ gst_queue_get (GstPad *pad)
     g_mutex_unlock (queue->fulllock);
   }
 
-//  DEBUG("queue: %s pushing %d %p \n", name, queue->level_buffers, buf);
+//  GST_DEBUG (0,"queue: %s pushing %d %p \n", name, queue->level_buffers, buf);
 //  gst_pad_push (queue->srcpad, buf);
-//  DEBUG("queue: %s pushing %d done \n", name, queue->level_buffers);
+//  GST_DEBUG (0,"queue: %s pushing %d done \n", name, queue->level_buffers);
 
   return buf;
   /* unlock now */
@@ -294,7 +294,7 @@ gst_queue_change_state (GstElement *element)
   g_return_val_if_fail (GST_IS_QUEUE (element), GST_STATE_FAILURE);
 
   queue = GST_QUEUE (element);
-  DEBUG("gstqueue: state pending %d\n", GST_STATE_PENDING (element));
+  GST_DEBUG (0,"gstqueue: state pending %d\n", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, clear out buffers*/
   if (GST_STATE_PENDING (element) == GST_STATE_READY) {

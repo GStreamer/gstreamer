@@ -143,7 +143,7 @@ gst_plugin_load_all(void)
     gst_plugin_load_recurse(path->data,NULL);
     path = g_list_next(path);
   }
-  INFO(GST_INFO_PLUGIN_LOADING,"loaded %d plugins with %d elements and %d types",
+  GST_INFO (GST_CAT_PLUGIN_LOADING,"loaded %d plugins with %d elements and %d types",
        _gst_plugins_seqno,_gst_plugin_elementfactories,_gst_plugin_types);
 }
 
@@ -264,7 +264,7 @@ gst_plugin_load_absolute (gchar *name)
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
       if ((plugin = (initfunc)(module))) {
-        INFO(GST_INFO_PLUGIN_LOADING,"plugin \"%s\" loaded: %d elements, %d types",
+        GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" loaded: %d elements, %d types",
              plugin->name,plugin->numelements,plugin->numtypes);
         plugin->filename = g_strdup(name);
         plugin->loaded = TRUE;
@@ -420,10 +420,10 @@ gst_plugin_load_elementfactory (gchar *name)
           gchar *filename = g_strdup (plugin->filename);
 	  gchar *pluginname = g_strdup (plugin->name);
 	  
-          INFO(GST_INFO_PLUGIN_LOADING,"loaded elementfactory %s from plugin %s",name,plugin->name);
+          GST_INFO (GST_CAT_PLUGIN_LOADING,"loaded elementfactory %s from plugin %s",name,plugin->name);
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
-	    DEBUG("gstplugin: error loading element factory %s from plugin %s\n", name, pluginname);
+	    GST_DEBUG (0,"gstplugin: error loading element factory %s from plugin %s\n", name, pluginname);
 	  }
 	  g_free (pluginname);
 	  g_free (filename);
@@ -467,11 +467,11 @@ gst_plugin_load_typefactory (gchar *mime)
           gchar *filename = g_strdup (plugin->filename);
 	  gchar *pluginname = g_strdup (plugin->name);
 	  
-          INFO(GST_INFO_PLUGIN_LOADING,"loading type factory for \"%s\" from plugin %s",mime,plugin->name);
+          GST_INFO (GST_CAT_PLUGIN_LOADING,"loading type factory for \"%s\" from plugin %s",mime,plugin->name);
 	  plugin->loaded = TRUE;
 	  gst_plugin_remove(plugin);
 	  if (!gst_plugin_load_absolute(filename)) {
-	    DEBUG("gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, pluginname);
+	    GST_DEBUG (0,"gstplugin: error loading type factory \"%s\" from plugin %s\n", mime, pluginname);
 	  }
 	  g_free (filename);
 	  g_free (pluginname);
@@ -644,6 +644,6 @@ gst_plugin_load_thyself (xmlNodePtr parent)
 
     kinderen = kinderen->next;
   }
-  INFO(GST_INFO_PLUGIN_LOADING,"added %d registered factories and %d types",elementcount,typecount);
+  GST_INFO (GST_CAT_PLUGIN_LOADING,"added %d registered factories and %d types",elementcount,typecount);
 }
 

@@ -175,7 +175,7 @@ gst_bin_add (GstBin *bin,
   bin->numchildren++;
   gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (bin));
 
-  INFO_ELEMENT (GST_INFO_PARENTAGE, bin, "added child %s", gst_element_get_name(element));
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child %s", gst_element_get_name(element));
 
   /* we know we have at least one child, we just added one... */
 //  if (GST_STATE(element) < GST_STATE_READY)
@@ -207,7 +207,7 @@ gst_bin_remove (GstBin *bin,
 
   if (g_list_find(bin->children, element) == NULL) {
     // FIXME this should be a warning!!!
-    ERROR_OBJECT(bin,element,"no such element in bin");
+    GST_ERROR_OBJECT(bin,element,"no such element in bin");
     return;
   }
 
@@ -215,7 +215,7 @@ gst_bin_remove (GstBin *bin,
   bin->children = g_list_remove (bin->children, element);
   bin->numchildren--;
 
-  INFO_ELEMENT (GST_INFO_PARENTAGE, bin, "removed child %s", gst_element_get_name(element));
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "removed child %s", gst_element_get_name(element));
 
   /* if we're down to zero children, force state to NULL */
   if (bin->numchildren == 0)
@@ -230,17 +230,17 @@ gst_bin_change_state (GstElement *element)
   GList *children;
   GstElement *child;
 
-  DEBUG_ENTER("(\"%s\")",gst_element_get_name (element));
+  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name (element));
 
   g_return_val_if_fail (GST_IS_BIN (element), GST_STATE_FAILURE);
 
   bin = GST_BIN (element);
 
-//  DEBUG("currently %d(%s), %d(%s) pending\n",GST_STATE (element),
+//  GST_DEBUG (0,"currently %d(%s), %d(%s) pending\n",GST_STATE (element),
 //          _gst_print_statename (GST_STATE (element)), GST_STATE_PENDING (element),
 //          _gst_print_statename (GST_STATE_PENDING (element)));
 
-  INFO_ELEMENT (GST_INFO_STATES, element, "changing bin's state from %s to %s",
+  GST_INFO_ELEMENT (GST_CAT_STATES, element, "changing bin's state from %s to %s",
                 _gst_print_statename (GST_STATE (element)),
                 _gst_print_statename (GST_STATE_PENDING (element)));
 
@@ -250,16 +250,16 @@ gst_bin_change_state (GstElement *element)
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    DEBUG("setting state on '%s'\n",gst_element_get_name (child));
+    GST_DEBUG (0,"setting state on '%s'\n",gst_element_get_name (child));
     switch (gst_element_set_state (child, GST_STATE_PENDING (element))) {
       case GST_STATE_FAILURE:
         GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;
-        DEBUG("child '%s' failed to go to state %d(%s)\n", gst_element_get_name (child),
+        GST_DEBUG (0,"child '%s' failed to go to state %d(%s)\n", gst_element_get_name (child),
               GST_STATE_PENDING (element), _gst_print_statename (GST_STATE_PENDING (element)));
         return GST_STATE_FAILURE;
         break;
       case GST_STATE_ASYNC:
-        DEBUG("child '%s' is changing state asynchronously\n", gst_element_get_name (child));
+        GST_DEBUG (0,"child '%s' is changing state asynchronously\n", gst_element_get_name (child));
         break;
     }
 //    g_print("\n");
@@ -348,7 +348,7 @@ gst_bin_set_state_type (GstBin *bin,
 {
   GstBinClass *oclass;
 
-  DEBUG("gst_bin_set_state_type(\"%s\",%d,%d)\n",
+  GST_DEBUG (0,"gst_bin_set_state_type(\"%s\",%d,%d)\n",
           gst_element_get_name (GST_ELEMENT (bin)), state,type);
 
   g_return_val_if_fail (bin != NULL, FALSE);
@@ -368,7 +368,7 @@ gst_bin_real_destroy (GtkObject *object)
   GList *children;
   GstElement *child;
 
-  DEBUG("in gst_bin_real_destroy()\n");
+  GST_DEBUG (0,"in gst_bin_real_destroy()\n");
 
   children = bin->children;
   while (children) {
@@ -400,7 +400,7 @@ gst_bin_get_by_name (GstBin *bin,
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  INFO_ELEMENT (GST_INFO_PARENTAGE, bin, "looking up child element %s", name);
+  GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "looking up child element %s", name);
 
   children = bin->children;
   while (children) {
@@ -449,7 +449,7 @@ gst_bin_save_thyself (GstElement *element,
 
   childlist = xmlNewChild (parent,NULL,"children",NULL);
 
-  INFO_ELEMENT (GST_INFO_XML, bin, "saving %d children", bin->numchildren);
+  GST_INFO_ELEMENT (GST_CAT_XML, bin, "saving %d children", bin->numchildren);
 
   children = bin->children;
   while (children) {
@@ -473,7 +473,7 @@ gst_bin_restore_thyself (GstElement *element,
 
   while (field) {
     if (!strcmp (field->name, "children")) {
-      INFO_ELEMENT (GST_INFO_XML, element, "loading children");
+      GST_INFO_ELEMENT (GST_CAT_XML, element, "loading children");
       childlist = field->childs;
       while (childlist) {
         if (!strcmp (childlist->name, "element")) {
@@ -510,14 +510,14 @@ gst_bin_iterate (GstBin *bin)
 {
   GstBinClass *oclass;
 
-  DEBUG_ENTER("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
 
   oclass = GST_BIN_CLASS (GTK_OBJECT (bin)->klass);
   
   if (oclass->iterate)
     (oclass->iterate) (bin);
 
-  DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+  GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
 }
 
 /**
@@ -572,34 +572,34 @@ gst_bin_create_plan_func (GstBin *bin)
   GSList *pending = NULL;
   GstBin *pending_bin;
 
-  DEBUG_SET_STRING("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
-  DEBUG_ENTER_STRING;
+  GST_DEBUG_SET_STRING("(\"%s\")",gst_element_get_name (GST_ELEMENT (bin)));
+  GST_DEBUG_ENTER_STRING;
 
-  INFO_ELEMENT (GST_INFO_PLANNING, bin, "creating plan");
+  GST_INFO_ELEMENT (GST_CAT_PLANNING, bin, "creating plan");
 
   // first figure out which element is the manager of this and all child elements
   // if we're a managing bin ourselves, that'd be us
   if (GST_FLAG_IS_SET (bin, GST_BIN_FLAG_MANAGER)) {
     manager = GST_ELEMENT (bin);
-    DEBUG("setting manager to self\n");
+    GST_DEBUG (0,"setting manager to self\n");
   // otherwise, it's what our parent says it is
   } else {
     manager = gst_element_get_manager (GST_ELEMENT (bin));
     if (!manager) {
-      DEBUG("manager not set for element \"%s\" assuming manager is self\n", gst_element_get_name (GST_ELEMENT (bin)));
+      GST_DEBUG (0,"manager not set for element \"%s\" assuming manager is self\n", gst_element_get_name (GST_ELEMENT (bin)));
       manager = GST_ELEMENT (bin);
       GST_FLAG_SET (bin, GST_BIN_FLAG_MANAGER);
     }
-    DEBUG("setting manager to \"%s\"\n", gst_element_get_name (manager));
+    GST_DEBUG (0,"setting manager to \"%s\"\n", gst_element_get_name (manager));
   }
 
   // perform the first recursive pass of plan generation
   // we set the manager of every element but those who manage themselves
   // the need for cothreads is also determined recursively
-  DEBUG("performing first-phase recursion\n");
+  GST_DEBUG (0,"performing first-phase recursion\n");
   bin->need_cothreads = bin->use_cothreads;
   if (bin->need_cothreads)
-    DEBUG("requiring cothreads because we're forced to\n");
+    GST_DEBUG (0,"requiring cothreads because we're forced to\n");
 
   elements = bin->children;
   while (elements) {
@@ -608,35 +608,35 @@ gst_bin_create_plan_func (GstBin *bin)
 #ifdef GST_DEBUG_ENABLED
     elementname = gst_element_get_name (element);
 #endif
-    DEBUG("have element \"%s\"\n",elementname);
+    GST_DEBUG (0,"have element \"%s\"\n",elementname);
 
     // first set their manager
-    DEBUG("setting manager of \"%s\" to \"%s\"\n",elementname,gst_element_get_name(manager));
+    GST_DEBUG (0,"setting manager of \"%s\" to \"%s\"\n",elementname,gst_element_get_name(manager));
     gst_element_set_manager (element, manager);
 
     // we do recursion and such for Bins
     if (GST_IS_BIN (element)) {
       // recurse into the child Bin
-      DEBUG("recursing into child Bin \"%s\"\n",elementname);
+      GST_DEBUG (0,"recursing into child Bin \"%s\"\n",elementname);
       gst_bin_create_plan (GST_BIN (element));
       // check to see if it needs cothreads and isn't self-managing
       if (((GST_BIN (element))->need_cothreads) && !GST_FLAG_IS_SET(element,GST_BIN_FLAG_MANAGER)) {
-        DEBUG("requiring cothreads because child bin \"%s\" does\n",elementname);
+        GST_DEBUG (0,"requiring cothreads because child bin \"%s\" does\n",elementname);
         bin->need_cothreads = TRUE;
       }
     } else {
       // then we need to determine whether they need cothreads
       // if it's a loop-based element, use cothreads
       if (element->loopfunc != NULL) {
-        DEBUG("requiring cothreads because \"%s\" is a loop-based element\n",elementname);
+        GST_DEBUG (0,"requiring cothreads because \"%s\" is a loop-based element\n",elementname);
         GST_FLAG_SET (element, GST_ELEMENT_USE_COTHREAD);
       // if it's a 'complex' element, use cothreads
       } else if (GST_FLAG_IS_SET (element, GST_ELEMENT_COMPLEX)) {
-        DEBUG("requiring cothreads because \"%s\" is complex\n",elementname);
+        GST_DEBUG (0,"requiring cothreads because \"%s\" is complex\n",elementname);
         GST_FLAG_SET (element, GST_ELEMENT_USE_COTHREAD);
       // if the element has more than one sink pad, use cothreads
       } else if (element->numsinkpads > 1) {
-        DEBUG("requiring cothreads because \"%s\" has more than one sink pad\n",elementname);
+        GST_DEBUG (0,"requiring cothreads because \"%s\" has more than one sink pad\n",elementname);
         GST_FLAG_SET (element, GST_ELEMENT_USE_COTHREAD);
       }
       if (GST_FLAG_IS_SET (element, GST_ELEMENT_USE_COTHREAD))
@@ -647,7 +647,7 @@ gst_bin_create_plan_func (GstBin *bin)
 
   // if we're not a manager thread, we're done.
   if (!GST_FLAG_IS_SET (bin, GST_BIN_FLAG_MANAGER)) {
-    DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+    GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
     return;
   }
 
@@ -658,7 +658,7 @@ gst_bin_create_plan_func (GstBin *bin)
 
   // find all the managed children
   // here we pull off the trick of walking an entire arbitrary tree without recursion
-  DEBUG("attempting to find all the elements to manage\n");
+  GST_DEBUG (0,"attempting to find all the elements to manage\n");
   pending = g_slist_prepend (pending, bin);
   do {
     // retrieve the top of the stack and pop it
@@ -666,7 +666,7 @@ gst_bin_create_plan_func (GstBin *bin)
     pending = g_slist_remove (pending, pending_bin);
 
     // walk the list of elements, find bins, and do stuff
-    DEBUG("checking Bin \"%s\" for managed elements\n",
+    GST_DEBUG (0,"checking Bin \"%s\" for managed elements\n",
           gst_element_get_name (GST_ELEMENT (pending_bin)));
     elements = pending_bin->children;
     while (elements) {
@@ -680,11 +680,11 @@ gst_bin_create_plan_func (GstBin *bin)
       if (element->manager == GST_ELEMENT(bin)) {
         // if it's a Bin, add it to the list of Bins to check
         if (GST_IS_BIN (element)) {
-          DEBUG("flattened recurse into \"%s\"\n",elementname);
+          GST_DEBUG (0,"flattened recurse into \"%s\"\n",elementname);
           pending = g_slist_prepend (pending, element);
         // otherwise add it to the list of elements
         } else {
-          DEBUG("found element \"%s\" that I manage\n",elementname);
+          GST_DEBUG (0,"found element \"%s\" that I manage\n",elementname);
           bin->managed_elements = g_list_prepend (bin->managed_elements, element);
           bin->num_managed_elements++;
         }
@@ -692,11 +692,11 @@ gst_bin_create_plan_func (GstBin *bin)
     }
   } while (pending);
 
-  DEBUG("have %d elements to manage, implementing plan\n",bin->num_managed_elements);
+  GST_DEBUG (0,"have %d elements to manage, implementing plan\n",bin->num_managed_elements);
 
   gst_bin_schedule(bin);
 
-  DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
+  GST_DEBUG_LEAVE("(\"%s\")",gst_element_get_name(GST_ELEMENT(bin)));
 }
 
 static void 
@@ -710,8 +710,8 @@ gst_bin_iterate_func (GstBin *bin)
   GstPad *pad;
   GstBuffer *buf = NULL;
 
-  DEBUG_SET_STRING("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
-  DEBUG_ENTER_STRING;
+  GST_DEBUG_SET_STRING("(\"%s\")", gst_element_get_name (GST_ELEMENT (bin)));
+  GST_DEBUG_ENTER_STRING;
 
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
@@ -726,16 +726,16 @@ gst_bin_iterate_func (GstBin *bin)
     if (chain->need_cothreads) {
       // all we really have to do is switch to the first child
       // FIXME this should be lots more intelligent about where to start
-      DEBUG("starting iteration via cothreads\n");
+      GST_DEBUG (0,"starting iteration via cothreads\n");
 
       entry = GST_ELEMENT (chain->elements->data);
       GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
-      DEBUG("set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
+      GST_DEBUG (0,"set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
             gst_element_get_name(entry),entry);
       cothread_switch (entry->threadstate);
 
     } else {
-      DEBUG("starting iteration via chain-functions\n");
+      GST_DEBUG (0,"starting iteration via chain-functions\n");
 
       entries = chain->entries;
 
@@ -745,7 +745,7 @@ gst_bin_iterate_func (GstBin *bin)
         entry = GST_ELEMENT (entries->data);
         entries = g_list_next (entries);
 
-        DEBUG("have entry \"%s\"\n",gst_element_get_name(entry));
+        GST_DEBUG (0,"have entry \"%s\"\n",gst_element_get_name(entry));
 
         if (GST_IS_BIN (entry)) {
           gst_bin_iterate (GST_BIN (entry));
@@ -754,7 +754,7 @@ gst_bin_iterate_func (GstBin *bin)
           while (pads) {
             pad = GST_PAD (pads->data);
             if (pad->direction == GST_PAD_SRC) {
-              DEBUG("calling getfunc of %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+              GST_DEBUG (0,"calling getfunc of %s:%s\n",GST_DEBUG_PAD_NAME(pad));
               if (pad->getfunc == NULL) 
                 fprintf(stderr, "error, no getfunc in \"%s\"\n", gst_element_get_name (entry));
               else
@@ -768,5 +768,5 @@ gst_bin_iterate_func (GstBin *bin)
     }
   }
 
-  DEBUG_LEAVE("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
+  GST_DEBUG_LEAVE("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
 }

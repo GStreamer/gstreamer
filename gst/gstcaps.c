@@ -209,7 +209,7 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   g_return_val_if_fail (tocaps != NULL, FALSE);
 	
   if (fromcaps->id != tocaps->id) {
-    DEBUG ("gstcaps: mime types wrong\n");
+    GST_DEBUG (0,"gstcaps: mime types wrong\n");
     return FALSE;
   }
 
@@ -218,13 +218,13 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
       return gst_props_check_compatibility (fromcaps->properties, tocaps->properties);
     }
     else {
-      DEBUG ("gstcaps: no source caps\n");
+      GST_DEBUG (0,"gstcaps: no source caps\n");
       return FALSE;
     }
   }
   else {
     // assume it accepts everything
-    DEBUG ("gstcaps: no caps\n");
+    GST_DEBUG (0,"gstcaps: no caps\n");
     return TRUE;
   }
 }

@@ -117,7 +117,7 @@ void gst_object_set_parent(GstObject *object,GstObject *parent) {
   g_return_if_fail(object != parent);
 
   if (object->parent != NULL) {
-    ERROR_OBJECT(object,object->parent,"object's parent is already set, must unparent first");
+    GST_ERROR_OBJECT(object,object->parent,"object's parent is already set, must unparent first");
     return;
   }
 

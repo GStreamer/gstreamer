@@ -38,6 +38,8 @@
  * DEBUG system
  **********************************************************************/
 
+extern guint32 _gst_debug_categories;
+
 /* for include files that make too much noise normally */
 #ifdef GST_DEBUG_FORCE_DISABLE
 #undef GST_DEBUG_ENABLED
@@ -47,6 +49,10 @@
 #define GST_DEBUG_ENABLED
 #endif
 
+#ifndef GST_DEBUG_ENABLE_CATEGORIES
+#define GST_DEBUG_ENABLE_CATEGORIES 0x00000000
+#endif
+
 /* fallback, this should probably be a 'weak' symbol or something */
 G_GNUC_UNUSED static gchar *_debug_string = NULL;
 
@@ -54,27 +60,47 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
 "DEBUG(%d:%d)" __PRETTY_FUNCTION__ ":%d" format , getpid() , cothread_getcurrent() , __LINE__ , ## args
 
 #ifdef GST_DEBUG_ENABLED
-#define DEBUG(format,args...) \
-  (_debug_string != NULL) ? \
-    fprintf(stderr,GST_DEBUG_PREFIX("%s: "format , _debug_string , ## args )) : \
-    fprintf(stderr,GST_DEBUG_PREFIX(": "format , ## args ))
-#define DEBUG_NOPREFIX(format,args...) fprintf(stderr,format , ## args )
-#define DEBUG_ENTER(format, args...) \
-  fprintf(stderr,GST_DEBUG_PREFIX(format": entering\n" , ## args ))
-#define DEBUG_SET_STRING(format, args...) \
+#define GST_DEBUG(cat,format,args...) G_STMT_START{ \
+  if (((1<<cat) & GST_DEBUG_ENABLE_CATEGORIES) && \
+      ((1<<cat) & _gst_debug_categories)) \
+    (_debug_string != NULL) ? \
+      fprintf(stderr,GST_DEBUG_PREFIX("%s: "format , _debug_string , ## args )) : \
+      fprintf(stderr,GST_DEBUG_PREFIX(": "format , ## args )); \
+}G_STMT_END
+
+#define GST_DEBUG_NOPREFIX(cat,format,args...) G_STMT_START{ \
+  if (((1<<cat) & GST_DEBUG_ENABLE_CATEGORIES) && \
+      ((1<<cat) & _gst_debug_categories)) \
+    fprintf(stderr,format , ## args ); \
+}G_STMT_END
+
+#define GST_DEBUG_ENTER(format, args...) G_STMT_START{ \
+  if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
+      ((1<<31) & _gst_debug_categories)) \
+    fprintf(stderr,GST_DEBUG_PREFIX(format": entering\n" , ## args )); \
+}G_STMT_END
+
+#define GST_DEBUG_SET_STRING(format, args...) \
   gchar *_debug_string = g_strdup_printf(format , ## args )
-#define DEBUG_ENTER_STRING DEBUG_ENTER("%s",_debug_string)
-#define DEBUG_LEAVE(format, args...) \
-  if (_debug_string != NULL) g_free(_debug_string),\
-    fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args ))
-#define DEBUG_LEAVE_STRING DEBUG_LEAVE("%s",_debug_string)
+
+#define GST_DEBUG_ENTER_STRING GST_DEBUG_ENTER("%s",_debug_string)
+
+#define GST_DEBUG_LEAVE(format, args...) G_STMT_START{ \
+  if (((1<<31) & GST_DEBUG_ENABLE_CATEGORIES) && \
+      ((1<<31) & _gst_debug_categories)) \
+    if (_debug_string != NULL) g_free(_debug_string),\
+      fprintf(stderr,GST_DEBUG_PREFIX(format": leaving\n" , ## args )); \
+}G_STMT_END
+
+#define GST_DEBUG_LEAVE_STRING GST_DEBUG_LEAVE("%s",_debug_string)
+
 #else
-#define DEBUG(format, args...)
-#define DEBUG_NOPREFIX(format, args...)
-#define DEBUG_ENTER(format, args...)
-#define DEBUG_LEAVE(format, args...)
-#define DEBUG_SET_STRING(format, args...)
-#define DEBUG_ENTER_STRING
+#define GST_DEBUG(format, args...)
+#define GST_DEBUG_NOPREFIX(format, args...)
+#define GST_DEBUG_ENTER(format, args...)
+#define GST_DEBUG_LEAVE(format, args...)
+#define GST_DEBUG_SET_STRING(format, args...)
+#define GST_DEBUG_ENTER_STRING
 #endif
 
 
@@ -189,53 +215,56 @@ extern guint32 _gst_info_categories;
 #endif
 
 #ifdef GST_INFO_ENABLED
-#define INFO(cat,format,args...) G_STMT_START{ \
+#define GST_INFO(cat,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
     _gst_info_handler(cat,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
                       NULL,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
-#define INFO_ELEMENT(cat,element,format,args...) G_STMT_START{ \
+#define GST_INFO_ELEMENT(cat,element,format,args...) G_STMT_START{ \
   if ((1<<cat) & _gst_info_categories) \
     _gst_info_handler(cat,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
                       element,g_strdup_printf( format , ## args )); \
 }G_STMT_END
 
 #else
-#define INFO(cat,format,args...) 
-#define INFO_ELEMENT(cat,element,format,args...)
+#define GST_INFO(cat,format,args...) 
+#define GST_INFO_ELEMENT(cat,element,format,args...)
 #endif
+
 
 void		gst_info_set_categories		(guint32 categories);
 guint32		gst_info_get_categories		(void);
-const gchar *	gst_info_get_category_name	(gint category);
 void		gst_info_enable_category	(gint category);
 void		gst_info_disable_category	(gint category);
+const gchar *	gst_get_category_name	(gint category);
 
 enum {
-  GST_INFO_GST_INIT = 0,	// Library initialization
-  GST_INFO_COTHREADS,		// Cothread creation, etc.
-  GST_INFO_COTHREAD_SWITCH,	// Cothread switching
-  GST_INFO_AUTOPLUG,		// Successful autoplug results
-  GST_INFO_AUTOPLUG_ATTEMPT,	// Attempted autoplug operations
-  GST_INFO_PARENTAGE,		// GstBin parentage issues
-  GST_INFO_STATES,		// State changes and such
-  GST_INFO_PLANNING,		// Plan generation
-  GST_INFO_SCHEDULING,		// Schedule construction
-  GST_INFO_OPERATION,		// Events during actual data movement
-  GST_INFO_BUFFER,		// Buffer creation/destruction
-  GST_INFO_CAPS,		// Capabilities matching
-  GST_INFO_CLOCK,		// Clocking
-  GST_INFO_ELEMENT_PADS,	// Element pad management
-  GST_INFO_ELEMENTFACTORY,	// Elementfactory stuff
-  GST_INFO_PADS,		// Pad creation/connection
-  GST_INFO_PIPELINE,		// Pipeline stuff
-  GST_INFO_PLUGIN_LOADING,	// Plugin loading
-  GST_INFO_PLUGIN_ERRORS,	// Errors during plugin loading
-  GST_INFO_PROPERTIES,		// Properties
-  GST_INFO_THREAD,		// Thread creation/management
-  GST_INFO_TYPES,		// Typing
-  GST_INFO_XML,			// XML load/save of everything
+  GST_CAT_GST_INIT = 0,		// Library initialization
+  GST_CAT_COTHREADS,		// Cothread creation, etc.
+  GST_CAT_COTHREAD_SWITCH,	// Cothread switching
+  GST_CAT_AUTOPLUG,		// Successful autoplug results
+  GST_CAT_AUTOPLUG_ATTEMPT,	// Attempted autoplug operations
+  GST_CAT_PARENTAGE,		// GstBin parentage issues
+  GST_CAT_STATES,		// State changes and such
+  GST_CAT_PLANNING,		// Plan generation
+  GST_CAT_SCHEDULING,		// Schedule construction
+  GST_CAT_OPERATION,		// Events during actual data movement
+  GST_CAT_BUFFER,		// Buffer creation/destruction
+  GST_CAT_CAPS,			// Capabilities matching
+  GST_CAT_CLOCK,		// Clocking
+  GST_CAT_ELEMENT_PADS,		// Element pad management
+  GST_CAT_ELEMENTFACTORY,	// Elementfactory stuff
+  GST_CAT_PADS,			// Pad creation/connection
+  GST_CAT_PIPELINE,		// Pipeline stuff
+  GST_CAT_PLUGIN_LOADING,	// Plugin loading
+  GST_CAT_PLUGIN_ERRORS,	// Errors during plugin loading
+  GST_CAT_PROPERTIES,		// Properties
+  GST_CAT_THREAD,		// Thread creation/management
+  GST_CAT_TYPES,		// Typing
+  GST_CAT_XML,			// XML load/save of everything
+
+  GST_CAT_MAX_CATEGORY,
 };
 
 
@@ -255,11 +284,11 @@ void gst_default_error_handler (gchar *file,gchar *function,
 
 extern GstErrorHandler _gst_error_handler;
 
-#define ERROR(element,format,args...) \
+#define GST_ERROR(element,format,args...) \
   _gst_error_handler(__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
                      element,NULL,g_strdup_printf( format , ## args ))
 
-#define ERROR_OBJECT(element,object,format,args...) \
+#define GST_ERROR_OBJECT(element,object,format,args...) \
   _gst_error_handler(__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
                      element,object,g_strdup_printf( format , ## args ))
 

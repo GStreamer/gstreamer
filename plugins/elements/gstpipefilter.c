@@ -139,12 +139,12 @@ static gboolean gst_pipefilter_read_and_push(GstPipefilter *pipefilter) {
   g_return_val_if_fail(GST_BUFFER_DATA(newbuf) != NULL, FALSE);
 
   /* read it in from the file */
-  DEBUG("attemting to read %ld bytes\n", pipefilter->bytes_per_read);
+  GST_DEBUG (0,"attemting to read %ld bytes\n", pipefilter->bytes_per_read);
   readbytes = read(pipefilter->fdout[0],GST_BUFFER_DATA(newbuf),pipefilter->bytes_per_read);
-  DEBUG("read %ld bytes\n", readbytes);
+  GST_DEBUG (0,"read %ld bytes\n", readbytes);
   if (readbytes < 0) {
     if (errno == EAGAIN) {
-      DEBUG("no input yet\n");
+      GST_DEBUG (0,"no input yet\n");
       gst_buffer_unref(newbuf);
       return FALSE;
     }
@@ -186,9 +186,9 @@ void gst_pipefilter_chain(GstPad *pad,GstBuffer *buf) {
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  DEBUG("attemting to write %ld bytes\n", size);
+  GST_DEBUG (0,"attemting to write %ld bytes\n", size);
   writebytes = write(pipefilter->fdin[1],data,size);
-  DEBUG("written %ld bytes\n", writebytes);
+  GST_DEBUG (0,"written %ld bytes\n", writebytes);
   if (writebytes < 0) {
     perror("write");
     gst_element_error(GST_ELEMENT(pipefilter),"writing");

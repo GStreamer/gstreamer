@@ -71,7 +71,7 @@ void
 gst_clock_register (GstClock *clock, GstObject *obj) 
 {
   if ((GST_ELEMENT(obj))->numsrcpads == 0) {
-    DEBUG("gst_clock: setting registered sink object 0x%p\n", obj);
+    GST_DEBUG (0,"gst_clock: setting registered sink object 0x%p\n", obj);
     clock->sinkobjects = g_list_append (clock->sinkobjects, obj);
     clock->num++;
   }
@@ -88,7 +88,7 @@ gst_clock_set (GstClock *clock, GstClockTime time)
   g_mutex_lock (clock->lock);
   clock->start_time = now - time;
   g_mutex_unlock (clock->lock);
-  DEBUG("gst_clock: setting clock to %llu %llu %llu\n", time, now, clock->start_time);
+  GST_DEBUG (0,"gst_clock: setting clock to %llu %llu %llu\n", time, now, clock->start_time);
 }
 
 GstClockTimeDiff 
@@ -115,7 +115,7 @@ gst_clock_reset (GstClock *clock)
   clock->start_time = ((guint64)tfnow.tv_sec)*1000000LL+tfnow.tv_usec;
   clock->current_time = clock->start_time;
   clock->adjust = 0LL;
-  DEBUG("gst_clock: setting start clock %llu\n", clock->start_time);
+  GST_DEBUG (0,"gst_clock: setting start clock %llu\n", clock->start_time);
   g_mutex_unlock (clock->lock);
 }
 
@@ -133,7 +133,7 @@ gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
 
   diff = GST_CLOCK_DIFF (time, now);
   // if we are not behind wait a bit
-  DEBUG("gst_clock: %s waiting for time %08llu %08llu %08lld\n", gst_element_get_name(GST_ELEMENT(obj)), time, now, diff);
+  GST_DEBUG (0,"gst_clock: %s waiting for time %08llu %08llu %08lld\n", gst_element_get_name(GST_ELEMENT(obj)), time, now, diff);
    
   g_mutex_unlock (clock->lock);
   if (diff > 10000 ) {
@@ -143,8 +143,8 @@ gst_clock_wait (GstClock *clock, GstClockTime time, GstObject *obj)
     if (!tfnow.tv_sec) {
       select(0, NULL, NULL, NULL, &tfnow);
     }
-    else DEBUG("gst_clock: %s waiting %u %llu %llu %llu seconds\n", gst_element_get_name(GST_ELEMENT(obj)), 
+    else GST_DEBUG (0,"gst_clock: %s waiting %u %llu %llu %llu seconds\n", gst_element_get_name(GST_ELEMENT(obj)), 
 		    (int)tfnow.tv_sec, now, diff, time);
   }
-  DEBUG("gst_clock: %s waiting for time %08llu %08llu %08lld done \n", gst_element_get_name(GST_ELEMENT(obj)), time, now, diff);
+  GST_DEBUG (0,"gst_clock: %s waiting for time %08llu %08llu %08lld done \n", gst_element_get_name(GST_ELEMENT(obj)), time, now, diff);
 }

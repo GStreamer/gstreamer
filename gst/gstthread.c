@@ -123,7 +123,7 @@ gst_thread_class_init (GstThreadClass *klass)
 static void 
 gst_thread_init (GstThread *thread) 
 {
-  DEBUG("initializing thread '%s'\n",gst_element_get_name(GST_ELEMENT(thread)));
+  GST_DEBUG (0,"initializing thread '%s'\n",gst_element_get_name(GST_ELEMENT(thread)));
 
   // we're a manager by default
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
@@ -142,7 +142,7 @@ gst_thread_create_plan_dummy (GstBin *bin)
   g_return_if_fail (GST_IS_THREAD (bin));
 
   if (!GST_FLAG_IS_SET (GST_THREAD (bin), GST_THREAD_STATE_SPINNING)) 
-    INFO(GST_INFO_THREAD,"gstthread: create plan delayed until thread starts");
+    GST_INFO (GST_CAT_THREAD,"gstthread: create plan delayed until thread starts");
 }
 
 static void 
@@ -156,13 +156,13 @@ gst_thread_set_arg (GtkObject *object,
   switch(id) {
     case ARG_CREATE_THREAD:
       if (GTK_VALUE_BOOL (*arg)) {
-        INFO(GST_INFO_THREAD,"gstthread: turning ON the creation of the thread");
+        GST_INFO (GST_CAT_THREAD,"gstthread: turning ON the creation of the thread");
         GST_FLAG_SET (object, GST_THREAD_CREATE);
-        DEBUG("gstthread: flags are 0x%08x\n", GST_FLAGS (object));
+        GST_DEBUG (0,"gstthread: flags are 0x%08x\n", GST_FLAGS (object));
       } else {
-        INFO(GST_INFO_THREAD,"gstthread: turning OFF the creation of the thread");
+        GST_INFO (GST_CAT_THREAD,"gstthread: turning OFF the creation of the thread");
         GST_FLAG_UNSET (object, GST_THREAD_CREATE);
-        DEBUG("gstthread: flags are 0x%08x\n", GST_FLAGS (object));
+        GST_DEBUG (0,"gstthread: flags are 0x%08x\n", GST_FLAGS (object));
       }
       break;
     default:
@@ -212,11 +212,11 @@ gst_thread_change_state (GstElement *element)
   gint pending, transition;
 
   g_return_val_if_fail (GST_IS_THREAD(element), FALSE);
-  DEBUG_ENTER("(\"%s\")",gst_element_get_name(element));
+  GST_DEBUG_ENTER("(\"%s\")",gst_element_get_name(element));
 
   thread = GST_THREAD (element);
 
-  INFO (GST_INFO_THREAD,"gstthread: thread \"%s\" change state %d",
+  GST_INFO (GST_CAT_THREAD,"gstthread: thread \"%s\" change state %d",
                gst_element_get_name (GST_ELEMENT (element)), 
 	       GST_STATE_PENDING (element));
 
@@ -230,23 +230,23 @@ gst_thread_change_state (GstElement *element)
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     stateset = GST_ELEMENT_CLASS (parent_class)->change_state (element);
   
-  INFO (GST_INFO_THREAD, "gstthread: stateset %d %d %d %02x", GST_STATE (element), stateset, 
+  GST_INFO (GST_CAT_THREAD, "gstthread: stateset %d %d %d %02x", GST_STATE (element), stateset, 
 		  GST_STATE_PENDING (element), GST_STATE_TRANSITION (element));
 
   switch (transition) {
     case GST_STATE_NULL_TO_READY:
 //      if (!stateset) return FALSE;
       // we want to prepare our internal state for doing the iterations
-      INFO(GST_INFO_THREAD, "gstthread: preparing thread \"%s\" for iterations:",
+      GST_INFO (GST_CAT_THREAD, "gstthread: preparing thread \"%s\" for iterations:",
                gst_element_get_name (GST_ELEMENT (element)));
 
       // set the state to idle
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
       // create the thread if that's what we're supposed to do
-      INFO(GST_INFO_THREAD, "gstthread: flags are 0x%08x", GST_FLAGS (thread));
+      GST_INFO (GST_CAT_THREAD, "gstthread: flags are 0x%08x", GST_FLAGS (thread));
 
       if (GST_FLAG_IS_SET (thread, GST_THREAD_CREATE)) {
-        INFO(GST_INFO_THREAD, "gstthread: starting thread \"%s\"",
+        GST_INFO (GST_CAT_THREAD, "gstthread: starting thread \"%s\"",
                  gst_element_get_name (GST_ELEMENT (element)));
 
         // create the thread
@@ -256,28 +256,28 @@ gst_thread_change_state (GstElement *element)
         // wait for it to 'spin up'
 //        gst_thread_wait_thread (thread);
       } else {
-        INFO(GST_INFO_THREAD, "gstthread: NOT starting thread \"%s\"",
+        GST_INFO (GST_CAT_THREAD, "gstthread: NOT starting thread \"%s\"",
                 gst_element_get_name (GST_ELEMENT (element)));
       }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_READY_TO_PLAYING:
       if (!stateset) return FALSE;
-      INFO(GST_INFO_THREAD, "gstthread: starting thread \"%s\"",
+      GST_INFO (GST_CAT_THREAD, "gstthread: starting thread \"%s\"",
               gst_element_get_name (GST_ELEMENT (element)));
 
       GST_FLAG_SET (thread, GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread (thread);
       break;  
     case GST_STATE_PLAYING_TO_PAUSED:
-      INFO(GST_INFO_THREAD,"gstthread: pausing thread \"%s\"",
+      GST_INFO (GST_CAT_THREAD,"gstthread: pausing thread \"%s\"",
               gst_element_get_name (GST_ELEMENT (element)));
       
       //GST_FLAG_UNSET(thread,GST_THREAD_STATE_SPINNING);
       gst_thread_signal_thread (thread);
       break;
     case GST_STATE_READY_TO_NULL:
-      INFO(GST_INFO_THREAD,"gstthread: stopping thread \"%s\"",
+      GST_INFO (GST_CAT_THREAD,"gstthread: stopping thread \"%s\"",
               gst_element_get_name (GST_ELEMENT (element)));
       
       GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
@@ -302,7 +302,7 @@ gst_thread_main_loop (void *arg)
 {
   GstThread *thread = GST_THREAD (arg);
 
-  INFO(GST_INFO_THREAD,"gstthread: thread \"%s\" is running with PID %d",
+  GST_INFO (GST_CAT_THREAD,"gstthread: thread \"%s\" is running with PID %d",
 		  gst_element_get_name (GST_ELEMENT (thread)), getpid ());
 
   // construct the plan and signal back
@@ -321,7 +321,7 @@ gst_thread_main_loop (void *arg)
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
 //  pthread_join (thread->thread_id, 0);
 
-  INFO(GST_INFO_THREAD, "gstthread: thread \"%s\" is stopped",
+  GST_INFO (GST_CAT_THREAD, "gstthread: thread \"%s\" is stopped",
 		  gst_element_get_name (GST_ELEMENT (thread)));
   return NULL;
 }
@@ -329,7 +329,7 @@ gst_thread_main_loop (void *arg)
 static void 
 gst_thread_signal_thread (GstThread *thread) 
 {
-  DEBUG("signaling thread\n");
+  GST_DEBUG (0,"signaling thread\n");
   g_mutex_lock (thread->lock);
   g_cond_signal (thread->cond);
   g_mutex_unlock (thread->lock);
@@ -338,7 +338,7 @@ gst_thread_signal_thread (GstThread *thread)
 static void
 gst_thread_wait_thread (GstThread *thread)
 {
-  DEBUG("waiting for thread\n");
+  GST_DEBUG (0,"waiting for thread\n");
   g_mutex_lock (thread->lock);
   g_cond_wait (thread->cond, thread->lock);
   g_mutex_unlock (thread->lock);
@@ -350,7 +350,7 @@ gst_thread_restore_thyself (GstElement *element,
 		            xmlNodePtr parent, 
 			    GHashTable *elements) 
 {
-  DEBUG("gstthread: restore\n");
+  GST_DEBUG (0,"gstthread: restore\n");
 
   if (GST_ELEMENT_CLASS (parent_class)->restore_thyself)
     GST_ELEMENT_CLASS (parent_class)->restore_thyself (element,parent, elements);

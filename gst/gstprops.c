@@ -216,7 +216,7 @@ gst_props_new (GstPropsFactoryEntry entry, ...)
   GstProps *props;
 
 #define add_value(value) {\
-    DEBUG ("%d %p\n", i, value);\
+    GST_DEBUG (0,"%d %p\n", i, value);\
     factory[i++] = value;  \
     if (i >= size) {       \
       size += 16;          \
@@ -325,7 +325,7 @@ gst_props_entry_check_list_compatibility (GstPropsEntry *entry1, GstPropsEntry *
 static gboolean
 gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry2)
 {
-  DEBUG ("compare: %s %s\n", g_quark_to_string (entry1->propid),
+  GST_DEBUG (0,"compare: %s %s\n", g_quark_to_string (entry1->propid),
 	                     g_quark_to_string (entry2->propid));
   switch (entry1->propstype) {
     case GST_PROPS_LIST_ID_NUM:
@@ -432,14 +432,14 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
     entry2 = (GstPropsEntry *)sinklist->data;
 
     while (entry1->propid < entry2->propid) {
-      DEBUG ("source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
+      GST_DEBUG (0,"source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
       more++;
       sourcelist = g_slist_next (sourcelist);
       if (sourcelist) entry1 = (GstPropsEntry *)sourcelist->data;
       else goto end;
     }
     while (entry1->propid > entry2->propid) {
-      DEBUG ("source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
+      GST_DEBUG (0,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
       missing++;
       sinklist = g_slist_next (sinklist);
       if (sinklist) entry2 = (GstPropsEntry *)sinklist->data;
@@ -455,7 +455,7 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
     GstPropsEntry *entry2;
     entry2 = (GstPropsEntry *)sinklist->data;
     missing++;
-    DEBUG ("source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
+    GST_DEBUG (0,"source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
   }
 end:
 

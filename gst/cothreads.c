@@ -55,18 +55,18 @@ cothread_create (cothread_context *ctx)
 {
   cothread_state *s;
 
-  DEBUG("pthread_self() %ld\n",pthread_self());
+  GST_DEBUG (0,"pthread_self() %ld\n",pthread_self());
   //if (0) {
   if (pthread_self() == 0) {
     s = (cothread_state *)malloc(sizeof(int) * COTHREAD_STACKSIZE);
-    DEBUG("new stack (case 1) at %p\n",s);
+    GST_DEBUG (0,"new stack (case 1) at %p\n",s);
   } else {
     char *sp = CURRENT_STACK_FRAME;
     unsigned long *stack_end = (unsigned long *)((unsigned long)sp &
       ~(STACK_SIZE - 1));
     s = (cothread_state *)(stack_end + ((ctx->nthreads - 1) *
                            COTHREAD_STACKSIZE));
-    DEBUG("new stack (case 2) at %p\n",s);
+    GST_DEBUG (0,"new stack (case 2) at %p\n",s);
     if (mmap((char *)s,COTHREAD_STACKSIZE*(sizeof(int)),
              PROT_READ|PROT_WRITE|PROT_EXEC,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS,
              -1,0) < 0) {
@@ -81,7 +81,7 @@ cothread_create (cothread_context *ctx)
   s->sp = ((int *)s + COTHREAD_STACKSIZE);
   s->top_sp = s->sp;
 
-  INFO(GST_INFO_COTHREADS,"created cothread #%d: %p at sp:%p", ctx->nthreads, s, s->sp);
+  GST_INFO (GST_CAT_COTHREADS,"created cothread #%d: %p at sp:%p", ctx->nthreads, s, s->sp);
 
   ctx->threads[ctx->nthreads++] = s;
 
@@ -121,7 +121,7 @@ cothread_init (void)
 {
   cothread_context *ctx = (cothread_context *)malloc(sizeof(cothread_context));
 
-  INFO(GST_INFO_COTHREADS,"initializing cothreads");
+  GST_INFO (GST_CAT_COTHREADS,"initializing cothreads");
 
   if (_cothread_key == -1) {
     if (pthread_key_create (&_cothread_key,NULL) != 0) {
@@ -143,7 +143,7 @@ cothread_init (void)
   ctx->threads[0]->sp = (int *)CURRENT_STACK_FRAME;
   ctx->threads[0]->pc = 0;
 
-  INFO(GST_INFO_COTHREADS,"0th thread is %p at sp:%p",ctx->threads[0], ctx->threads[0]->sp);
+  GST_INFO (GST_CAT_COTHREADS,"0th thread is %p at sp:%p",ctx->threads[0], ctx->threads[0]->sp);
 
   // we consider the initiating process to be cothread 0
   ctx->nthreads = 1;
@@ -162,7 +162,7 @@ cothread_init (void)
 cothread_state*
 cothread_main(cothread_context *ctx) 
 {
-  DEBUG("returning %p, the 0th cothread\n",ctx->threads[0]);
+  GST_DEBUG (0,"returning %p, the 0th cothread\n",ctx->threads[0]);
   return ctx->threads[0];
 }
 
@@ -172,14 +172,14 @@ cothread_stub (void)
   cothread_context *ctx = pthread_getspecific(_cothread_key);
   register cothread_state *thread = ctx->threads[ctx->current];
 
-  DEBUG_ENTER("");
+  GST_DEBUG_ENTER("");
   thread->flags |= COTHREAD_STARTED;
   if (thread->func)
     thread->func(thread->argc,thread->argv);
   thread->flags &= ~COTHREAD_STARTED;
   thread->pc = 0;
   thread->sp = thread->top_sp;
-  DEBUG_LEAVE("");
+  GST_DEBUG_LEAVE("");
 //  printf("uh, yeah, we shouldn't be here, but we should deal anyway\n");
 }
 
@@ -259,24 +259,24 @@ cothread_switch (cothread_state *thread)
 
   // find the number of the thread to switch to
   ctx->current = thread->threadnum;
-  INFO(GST_INFO_COTHREAD_SWITCH,"switching to thread #%d",ctx->current);
+  GST_INFO (GST_CAT_COTHREAD_SWITCH,"switching to thread #%d",ctx->current);
 
   /* save the current stack pointer, frame pointer, and pc */
   GET_SP(current->sp);
   enter = setjmp(current->jmp);
   if (enter != 0) {
-    DEBUG("enter thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
+    GST_DEBUG (0,"enter thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
 		    current->sp, current->top_sp, current->top_sp-current->sp);
     return;
   }
-  DEBUG("exit thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
+  GST_DEBUG (0,"exit thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
 		    current->sp, current->top_sp, current->top_sp-current->sp);
   enter = 1;
 
-  DEBUG("set stack to %p\n", thread->sp);
+  GST_DEBUG (0,"set stack to %p\n", thread->sp);
   /* restore stack pointer and other stuff of new cothread */
   if (thread->flags & COTHREAD_STARTED) {
-    DEBUG("in thread \n");
+    GST_DEBUG (0,"in thread \n");
     SET_SP(thread->sp);
     // switch to it
     longjmp(thread->jmp,1);
@@ -285,7 +285,7 @@ cothread_switch (cothread_state *thread)
     SET_SP(thread->sp);
     // start it
     cothread_stub();
-    DEBUG("exit thread \n");
+    GST_DEBUG (0,"exit thread \n");
     ctx->current = 0;
   }
 

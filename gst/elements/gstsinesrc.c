@@ -26,6 +26,7 @@
 #include <sys/soundcard.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <gstsinesrc.h>
 

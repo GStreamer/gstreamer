@@ -302,10 +302,10 @@ gst_pad_set_get_function (GstPad *pad,
   g_return_if_fail (GST_IS_PAD (pad));
 
   // the if and such should optimize out when DEBUG is off
-  DEBUG("setting get function for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG (0,"setting get function for %s:%s\n",GST_DEBUG_PAD_NAME(pad));
 
   pad->getfunc = get;
-  DEBUG("getfunc for %s:%s(@%p) at %p is set to %p\n",GST_DEBUG_PAD_NAME(pad),pad,&pad->getfunc,get);
+  GST_DEBUG (0,"getfunc for %s:%s(@%p) at %p is set to %p\n",GST_DEBUG_PAD_NAME(pad),pad,&pad->getfunc,get);
 }
 
 /**
@@ -322,7 +322,7 @@ gst_pad_set_getregion_function (GstPad *pad,
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
 
-  DEBUG("gstpad: pad setting getregion function\n");
+  GST_DEBUG (0,"gstpad: pad setting getregion function\n");
 
   pad->getregionfunc = getregion;
 }
@@ -367,10 +367,10 @@ static void
 gst_pad_push_func(GstPad *pad, GstBuffer *buf) 
 {
   if (pad->peer->chainfunc != NULL) {
-    DEBUG("calling chain function\n");
+    GST_DEBUG (0,"calling chain function\n");
     (pad->peer->chainfunc)(pad,buf);
   } else {
-    DEBUG("got a problem here: default pad_push handler in place, no chain function\n");
+    GST_DEBUG (0,"got a problem here: default pad_push handler in place, no chain function\n");
   }
 }
 
@@ -408,7 +408,7 @@ gst_pad_handle_qos(GstPad *pad,
   GList *pads;
   GstPad *target_pad;
 
-  DEBUG("gst_pad_handle_qos(\"%s\",%08ld)\n", GST_ELEMENT(pad->parent)->name,qos_message);
+  GST_DEBUG (0,"gst_pad_handle_qos(\"%s\",%08ld)\n", GST_ELEMENT(pad->parent)->name,qos_message);
 
   if (pad->qosfunc) {
     (pad->qosfunc) (pad,qos_message);
@@ -417,7 +417,7 @@ gst_pad_handle_qos(GstPad *pad,
     element = GST_ELEMENT (pad->peer->parent);
 
     pads = element->pads;
-    DEBUG("gst_pad_handle_qos recurse(\"%s\",%08ld)\n", element->name,qos_message);
+    GST_DEBUG (0,"gst_pad_handle_qos recurse(\"%s\",%08ld)\n", element->name,qos_message);
     while (pads) {
       target_pad = GST_PAD (pads->data);
       if (target_pad->direction == GST_PAD_SINK) {
@@ -495,7 +495,7 @@ gst_pad_connect (GstPad *srcpad,
                        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   }
   else {
-    DEBUG ("gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
+    GST_DEBUG (0,"gstpad: connecting compatible pads (%s:%s) and (%s:%s)\n",
                        GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
   }
 
@@ -700,7 +700,7 @@ gst_pad_check_compatibility (GstPad *srcpad, GstPad *sinkpad)
     }
   }
   else {
-    DEBUG ("gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n", 
+    GST_DEBUG (0,"gstpad: could not check capabilities of pads (%s:%s) and (%s:%s)\n", 
 		    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
     return TRUE;
   }
@@ -844,26 +844,26 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 
 #ifndef gst_pad_push
 void gst_pad_push(GstPad *pad,GstBuffer *buf) {
-  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
   if (pad->peer->pushfunc) {
-    DEBUG("calling pushfunc &%s of peer pad %s:%s\n",
+    GST_DEBUG (0,"calling pushfunc &%s of peer pad %s:%s\n",
           GST_DEBUG_FUNCPTR_NAME(pad->peer->pushfunc),GST_DEBUG_PAD_NAME(pad->peer));
     (pad->peer->pushfunc)(pad->peer,buf);
   } else
-    DEBUG("no pushfunc\n");
+    GST_DEBUG (0,"no pushfunc\n");
 }
 #endif
 
 #ifndef gst_pad_pull
 GstBuffer *gst_pad_pull(GstPad *pad) {
   GstPad *peer = pad->peer;
-  DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
+  GST_DEBUG_ENTER("(%s:%s)",GST_DEBUG_PAD_NAME(pad));
   if (peer->pullfunc) {
-    DEBUG("calling pullfunc &%s (@%p) of peer pad %s:%s\n",
+    GST_DEBUG (0,"calling pullfunc &%s (@%p) of peer pad %s:%s\n",
       GST_DEBUG_FUNCPTR_NAME(peer->pullfunc),&peer->pullfunc,GST_DEBUG_PAD_NAME(peer));
     return (peer->pullfunc)(peer);
   } else {
-    DEBUG("no pullfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(peer),&peer->pullfunc);
+    GST_DEBUG (0,"no pullfunc for peer pad %s:%s at %p\n",GST_DEBUG_PAD_NAME(peer),&peer->pullfunc);
     return NULL;
   }
 }
@@ -871,13 +871,13 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
 
 #ifndef gst_pad_pullregion
 GstBuffer *gst_pad_pullregion(GstPad *pad,gulong offset,gulong size) {
-  DEBUG_ENTER("(%s:%s,%ld,%ld)",GST_DEBUG_PAD_NAME(pad),offset,size);
+  GST_DEBUG_ENTER("(%s:%s,%ld,%ld)",GST_DEBUG_PAD_NAME(pad),offset,size);
   if (pad->peer->pullregionfunc) {
-    DEBUG("calling pullregionfunc &%s of peer pad %s:%s\n",
+    GST_DEBUG (0,"calling pullregionfunc &%s of peer pad %s:%s\n",
           GST_DEBUG_FUNCPTR_NAME(pad->peer->pullregionfunc),GST_DEBUG_PAD_NAME(pad->peer));
     return (pad->peer->pullregionfunc)(pad->peer,offset,size);
   } else {
-    DEBUG("no pullregionfunc\n");
+    GST_DEBUG (0,"no pullregionfunc\n");
     return NULL;
   }
 }
@@ -1050,7 +1050,7 @@ gst_pad_eos_func(GstPad *pad)
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD(pad), FALSE);
 
-  INFO(GST_INFO_PADS,"attempting to set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+  GST_INFO (GST_CAT_PADS,"attempting to set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
 
   element = GST_ELEMENT(gst_pad_get_parent (pad));
 //  g_return_val_if_fail (element != NULL, FALSE);
@@ -1069,7 +1069,7 @@ gst_pad_eos_func(GstPad *pad)
 
   if (result == FALSE) return FALSE;
 
-  INFO(GST_INFO_PADS,"set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+  GST_INFO (GST_CAT_PADS,"set EOS on sink pad %s:%s",GST_DEBUG_PAD_NAME(pad));
   GST_FLAG_SET (pad, GST_PAD_EOS);
 
   return TRUE;
@@ -1082,11 +1082,11 @@ gst_pad_set_eos(GstPad *pad)
   g_return_val_if_fail (GST_IS_PAD(pad), FALSE);
   g_return_val_if_fail (GST_PAD_CONNECTED(pad), FALSE);
 
-  INFO(GST_INFO_PADS,"attempting to set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+  GST_INFO (GST_CAT_PADS,"attempting to set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
 
   if (!gst_pad_eos(pad)) return FALSE;
 
-  INFO(GST_INFO_PADS,"set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
+  GST_INFO (GST_CAT_PADS,"set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
   GST_FLAG_SET (pad, GST_PAD_EOS);
 
   return TRUE;

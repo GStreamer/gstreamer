@@ -273,7 +273,7 @@ gst_audiosrc_open_audio (GstAudioSrc *src)
 
     /* set card state */
     gst_audiosrc_sync_parms (src);
-    DEBUG("opened audio\n");
+    GST_DEBUG (0,"opened audio\n");
     
     GST_FLAG_SET (src, GST_AUDIOSRC_OPEN);
     return TRUE;
