@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-#ifdef FIONREAD_IN_SYS_FILIO
+#ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
 #endif
 
