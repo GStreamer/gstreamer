@@ -39,28 +39,10 @@ struct _GstByteStream {
 GstByteStream*		gst_bytestream_new		(GstPad *pad);
 void			gst_bytestream_destroy		(GstByteStream *bs);
 
-GstBuffer*		gst_bytestream_read_loc		(GST_WHERE_ARGS_ GstByteStream *bs, guint32 len);
-GstBuffer*		gst_bytestream_peek_loc		(GST_WHERE_ARGS_ GstByteStream *bs, guint32 len);
+GstBuffer*		gst_bytestream_read		(GstByteStream *bs, guint32 len);
 guint8*			gst_bytestream_peek_bytes	(GstByteStream *bs, guint32 len);
 gboolean		gst_bytestream_flush		(GstByteStream *bs, guint32 len);
-void                    gst_bytestream_flush_fast       (GstByteStream * bs, guint32 len);
 
 void 			gst_bytestream_print_status	(GstByteStream *bs);
-
-#ifdef GST_BUFFER_WHERE
-
-# define gst_bytestream_read(bs, len) \
-    gst_bytestream_read_loc(__FILE__, __LINE__, bs, len)
-# define gst_bytestream_peek(bs, len) \
-    gst_bytestream_peek_loc(__FILE__, __LINE__, bs, len)
-
-#else /* GST_BUFFER_WHERE */
-
-# define gst_bytestream_read(bs, len) \
-    gst_bytestream_read_loc(bs, len)
-# define gst_bytestream_peek(bs, len) \
-    gst_bytestream_peek_loc(bs, len)
-
-#endif
 
 #endif /* __GST_BYTESTREAM_H__ */
