@@ -1,3 +1,9 @@
+2002-11-17  Ken MacLeod  <ken@bitsko.slc.ut.us>
+
+	* gst/modplug/modplug_types.cc: Renamed from
+	gst/modplug/modplug_types.c.  Change GST_BUFFER_DATA(buf) result
+	type from 'gchar' to 'gunit8'.
+
 2002-07-07  Richard Boulton <richard@tartarus.org>
 
 	* LICENSE_readme: Mention that synaesthesia is derived from GPL
