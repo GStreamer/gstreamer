@@ -25,8 +25,7 @@
 #define __GST_QUEUE_H__
 
 
-#include <config.h>
-#include <gst/gst.h>
+#include <gst/gstelement.h>
 
 
 #ifdef __cplusplus

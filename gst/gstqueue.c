@@ -28,9 +28,12 @@
 #define STATUS(A) 
 #endif
 
-#include "gstqueue.h"
+#include <pthread.h>
 
-#include <gst/gstarch.h>
+#include "config.h"
+#include "gst_private.h"
+
+#include "gstqueue.h"
 
 GstElementDetails gst_queue_details = {
   "Queue",
