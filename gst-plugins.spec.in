@@ -633,11 +633,12 @@ Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
 %description -n gstreamer-vcd
-Video CD playback plugin
+Video CD parsing and playback
 
 %files -n gstreamer-vcd
 %defattr(-, root, root)
 %{prefix}/lib/gst/libvcd*
+%{prefix}/lib/gst/ibgstcdxa*
 
 %package -n gstreamer-ladspa
 Summary: Gstreamer wrapper for LADSPA plugins
@@ -749,6 +750,21 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 %{prefix}/lib/gst/libgstvu*
 
 %post -n gstreamer-visualisation
+%{prefix}/bin/gst-register --gst-mask=0
+
+%package -n gstreamer-jpegmmx
+Summary: Gstreamer mjpegtools
+Group: Libraries/Multimedia
+Requires: gstreamer >= %{ver}
+
+%description -n gstreamer-visualisation
+Mgpegtools based encoding and decoding plugin
+
+%files -n gstreamer-visualisation
+%defattr(-, root, root)
+%{prefix}/lib/gst/libgstjpegmmx*
+
+%post -n gstreamer-gstreamer-jpegmmx
 %{prefix}/bin/gst-register --gst-mask=0
 
 %package -n gstreamer-plugin-libs
