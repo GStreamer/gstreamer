@@ -58,7 +58,7 @@ struct _GstFFMpegDecClass {
 typedef struct {
   AVCodec *in_plugin;
   GstPadTemplate *srctempl, *sinktempl;
-} GstFFMpegClassParams;
+} GstFFMpegDecClassParams;
 
 #define GST_TYPE_FFMPEGDEC \
   (gst_ffmpegdec_get_type())
@@ -111,7 +111,7 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstFFMpegClassParams *params;
+  GstFFMpegDecClassParams *params;
 
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
@@ -213,6 +213,9 @@ gst_ffmpegdec_connect (GstPad  *pad,
   if (oclass->in_plugin->capabilities & CODEC_CAP_TRUNCATED)
     ffmpegdec->context->flags |= CODEC_FLAG_TRUNCATED;
 
+  /* do *not* draw edges */
+  ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
+
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
    * during playback... */
@@ -230,7 +233,6 @@ gst_ffmpegdec_connect (GstPad  *pad,
 }
 
 /* innocent hacks */
-#define EDGE_WIDTH 16
 #define ALIGN(x) (((x)+alignment)&~alignment)
 
 static int
@@ -254,12 +256,6 @@ gst_ffmpegdec_get_buffer (AVCodecContext *context,
   /* set start size */
   width = ALIGN (context->width);
   height = ALIGN (context->height);
-
-  /* edge */
-  if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
-    width  += EDGE_WIDTH * 2;
-    height += EDGE_WIDTH * 2;
-  }
 
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
@@ -322,31 +318,17 @@ gst_ffmpegdec_get_buffer (AVCodecContext *context,
   if (hor_chr_dec > 0 && ver_chr_dec > 0) {
     picture->linesize[0] = width;
     picture->data[0] = base;
-    if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
-      picture->data[0] += (picture->linesize[0] * EDGE_WIDTH) + EDGE_WIDTH;
-    }
 
     base += width * height;
     picture->linesize[1] = picture->linesize[0] / hor_chr_dec;
     picture->data[1] = base;
-    if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
-      picture->data[1] += (picture->linesize[1] * EDGE_WIDTH / ver_chr_dec) +
-			    (EDGE_WIDTH / hor_chr_dec);
-    }
 
     base += (width * height) / (ver_chr_dec * hor_chr_dec);
     picture->linesize[2] = picture->linesize[1];
     picture->data[2] = base;
-    if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
-      picture->data[2] += (picture->linesize[2] * EDGE_WIDTH / ver_chr_dec) +
-                            (EDGE_WIDTH / hor_chr_dec);
-    }
   } else {
     picture->linesize[0] = GST_BUFFER_MAXSIZE (buf) / height;
     picture->data[0] = base;
-    if (!(context->flags & CODEC_FLAG_EMU_EDGE)) {
-      picture->data[0] += (picture->linesize[0] * EDGE_WIDTH) + EDGE_WIDTH;
-    }
 
     picture->linesize[1] = picture->linesize[2] = 0;
     picture->data[1] = picture->data[2] = NULL;
@@ -433,16 +415,8 @@ gst_ffmpegdec_chain (GstPad    *pad,
     if (have_data) {
       if (!GST_PAD_CAPS (ffmpegdec->srcpad)) {
         GstCaps *caps;
-	if (!(ffmpegdec->context->flags & CODEC_FLAG_EMU_EDGE)) {
-	  ffmpegdec->context->width  += EDGE_WIDTH * 2;
-	  ffmpegdec->context->height += EDGE_WIDTH * 2;
-	}
         caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
 					     ffmpegdec->context);
-	if (!(ffmpegdec->context->flags & CODEC_FLAG_EMU_EDGE)) {
-	  ffmpegdec->context->width  -= EDGE_WIDTH * 2;
-	  ffmpegdec->context->height -= EDGE_WIDTH * 2;
-	}
         if (caps == NULL ||
             gst_pad_try_set_caps (ffmpegdec->srcpad, caps) <= 0) {
           gst_element_error (GST_ELEMENT (ffmpegdec),
@@ -517,7 +491,7 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     gchar *codec_type;
     GstPadTemplate *sinktempl, *srctempl;
     GstCaps *sinkcaps, *srccaps;
-    GstFFMpegClassParams *params;
+    GstFFMpegDecClassParams *params;
 
     if (in_plugin->decode) {
       codec_type = "dec";
@@ -547,12 +521,12 @@ gst_ffmpegdec_register (GstPlugin *plugin)
     /* construct the element details struct */
     details = g_new0 (GstElementDetails, 1);
     details->longname = g_strdup(in_plugin->name);
-    details->klass = g_strdup_printf("Codec/%s/%s",
+    details->klass = g_strdup_printf("Codec/%s/Decoder",
 				     (in_plugin->type == CODEC_TYPE_VIDEO) ?
-				     "Video" : "Audio",
-				     type_name);
+				     "Video" : "Audio");
     details->license = g_strdup("LGPL");
-    details->description = g_strdup(in_plugin->name);
+    details->description = g_strdup_printf("FFMPEG %s decoder",
+					   in_plugin->name);
     details->version = g_strdup(VERSION);
     details->author = g_strdup("The FFMPEG crew\n"
 				"Wim Taymans <wim.taymans@chello.be>\n"
@@ -573,7 +547,7 @@ gst_ffmpegdec_register (GstPlugin *plugin)
 				     GST_PAD_ALWAYS, srccaps, NULL);
     gst_element_factory_add_pad_template (factory, srctempl);
 
-    params = g_new0 (GstFFMpegClassParams, 1);
+    params = g_new0 (GstFFMpegDecClassParams, 1);
     params->in_plugin = in_plugin;
     params->sinktempl = sinktempl;
     params->srctempl = srctempl;
