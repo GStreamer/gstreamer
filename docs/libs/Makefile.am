@@ -13,51 +13,33 @@ HTML_DIR=$(datadir)/gstreamer/html
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
-tmpl_sources =				\
-	tmpl/videoraw.sgml
-
-gstreamer_docdir = $(HTML_DIR)
-gstreamer_doc_DATA =		\
-	$(DOC_MODULE).html		\
-	$(DOC_MODULE)-decl.txt	\
-	$(DOC_MODULE)-sections.txt
-
 if HAVE_GTK_DOC
-gstreamer.html: html/book1.html
-	-cd $(srcdir) && cp html/book1.html gstreamer.html
+html: html/book1.html
 else
-gstreamer.html:
+html:
 endif
 
-html/book1.html: sgml/gstreamer-doc.bottom
-	$(MAKE) html
-
-sgml/gstreamer-doc.bottom: $(tmpl_sources)
-	$(MAKE) sgml
-
-gstreamer-decl.txt:
-	$(MAKE) scan
-
-scan:
-	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
-
-tmpl: scan
-	gtkdoc-mktmpl --module=$(DOC_MODULE)
-
-sgml: tmpl
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
-
-html:
+# rule to make the html 
+html/book1.html: sgml/$(DOC_MODULE)-doc.bottom $(DOC_MAIN_SGML_FILE)
 	if ! test -d html ; then mkdir html ; fi
 	-cd html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
 
+# rule to cause scanning to be done
+$(DOC_MODULE)-decl.txt:
+	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
+
+# rule to cause tmpls to be made
+tmpl/$(DOC_MODULE)-unused.sgml: $(DOC_MODULE)-decl.txt $(DOC_MODULE)-sections.txt
+	gtkdoc-mktmpl --module=$(DOC_MODULE)
+
+# rule to make sgml
+sgml/$(DOC_MODULE)-doc.bottom: tmpl/$(DOC_MODULE)-unused.sgml
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
+
 clean-local:
-	rm -f *~ *.bak *.signals *-unused.txt *.args
+	$(RM) -rf *~ *.bak *.signals *-unused.txt *.args tmpl html sgml tmpl/*.bak $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
 
-maintainer-clean-local: clean
-	rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
-
-install-data-local:
+install-data-local: html
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
 	(installfiles=`echo $(srcdir)/html/*.html`; \
 	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
@@ -73,7 +55,7 @@ install-data-local:
 	  gtkdoc-fixxref --module=$(DOC_MODULE) --html-dir=$(HTML_DIR)|| true; \
 	fi)
 
-dist-hook:
+dist-hook: html
 	mkdir $(distdir)/html
 	mkdir $(distdir)/sgml
 	mkdir $(distdir)/tmpl
@@ -82,4 +64,4 @@ dist-hook:
 	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
 	-cp $(srcdir)/sgml/*.bottom $(srcdir)/sgml/*.top $(distdir)/sgml
 
-.PHONY : html sgml templates scan
+.PHONY : html
