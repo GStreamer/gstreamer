@@ -1,3 +1,12 @@
+2004-05-12  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* ext/tarkin/gsttarkin.c :
+	  - Change RANK from NONE to PRIMARY
+	* ext/gdk_pixbuf/gstgdkpixbuf.c :
+	  - Change RANK from NONE to MARGINAL
+	* ext/divx/gstdivxenc.c :
+	  - Change RANK from PRIMARY to NONE (encoder/spider issue)
+
 2004-05-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/vorbisenc.c: (vorbis_granule_time_copy),
