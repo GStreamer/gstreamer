@@ -852,7 +852,7 @@ id3_to_caps(struct id3_tag const *tag)
         if (latin1 == 0)
 	  goto fail;
 
-        entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, latin1, NULL);
+        entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, latin1);
 	values = g_list_prepend (values, entry);
         free(latin1);
       }
@@ -863,7 +863,7 @@ id3_to_caps(struct id3_tag const *tag)
           gst_props_add_entry (props, (GstPropsEntry *) values->data);
         }
         else {
-          entry = gst_props_entry_new(name, GST_PROPS_LIST_TYPE, values, NULL);
+          entry = gst_props_entry_new(name, GST_PROPS_GLIST_TYPE, values);
           gst_props_add_entry (props, (GstPropsEntry *) entry);
         }
         g_list_free (values);
@@ -887,7 +887,7 @@ id3_to_caps(struct id3_tag const *tag)
     if (latin1 == 0)
       goto fail;
 
-    entry = gst_props_entry_new ("Comment", GST_PROPS_STRING_TYPE, latin1, NULL);
+    entry = gst_props_entry_new ("Comment", GST_PROPS_STRING_TYPE, latin1);
     values = g_list_prepend (values, entry);
   }
   if (values) {
@@ -897,7 +897,7 @@ id3_to_caps(struct id3_tag const *tag)
       gst_props_add_entry (props, (GstPropsEntry *) values->data);
     }
     else {
-      entry = gst_props_entry_new("Comment", GST_PROPS_LIST_TYPE, values, NULL);
+      entry = gst_props_entry_new("Comment", GST_PROPS_GLIST_TYPE, values);
       gst_props_add_entry (props, (GstPropsEntry *) entry);
     }
     g_list_free (values);
