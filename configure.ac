@@ -487,6 +487,14 @@ GST_CHECK_FEATURE(LCS, Lcs, lcs, [
   AC_SUBST(LCS_LIBS)
 ])
 
+dnl *** libfame ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBFAME, true)
+GST_CHECK_FEATURE(LIBFAME, [libfame MPEG1/4 encoder], libfame, [
+  AM_PATH_LIBFAME(0.9.0, HAVE_LIBFAME="yes", HAVE_LIBFAME="no")
+  AC_SUBST(LIBFAME_CFLAGS)
+  AC_SUBST(LIBFAME_LIBS)
+])
+
 dnl FIXME : check if these CPP flags can be dealt with otherwise
 dnl libdvcheck_save_CPPFLAGS="$CPPFLAGS"
 dnl CPPFLAGS="$CPPFLAGS $GST_CFLAGS"
@@ -844,9 +852,10 @@ ext/hermes/Makefile
 ext/http/Makefile
 ext/jack/Makefile
 ext/jpeg/Makefile
-ext/lcs/Makefile
 ext/ladspa/Makefile
 ext/lame/Makefile
+ext/lcs/Makefile
+ext/libfame/Makefile
 ext/mad/Makefile
 ext/mikmod/Makefile
 ext/mjpegtools/Makefile
@@ -869,6 +878,7 @@ gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/floatcast/Makefile
 examples/capsfilter/Makefile
+examples/seeking/Makefile
 examples/Makefile
 tools/Makefile
 gconf/Makefile
