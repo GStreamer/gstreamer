@@ -526,6 +526,8 @@ init_post (void)
   _gst_plugin_register_static (&plugin_desc);
  
   _gst_cpu_initialize (_gst_enable_cpu_opt);
+  _gst_structure_initialize ();
+  _gst_value_initialize ();
   _gst_props_initialize ();
   _gst_caps_initialize ();
   _gst_plugin_initialize ();

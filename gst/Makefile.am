@@ -112,6 +112,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstqueue.c		\
 	gstquery.c		\
 	gstscheduler.c		\
+	gststructure.c		\
 	gstsystemclock.c	\
 	gstthread.c		\
 	gstthreaddummy.c	\
@@ -121,6 +122,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	$(GST_URI_SRC)		\
 	gsturitype.c		\
 	gstutils.c		\
+	gstvalue.c		\
 	$(GST_REGISTRY_SRC)	\
 	gstregistrypool.c	\
 	$(GST_PARSE_SRC)	\
@@ -173,6 +175,7 @@ gst_headers =			\
 	gstqueue.h		\
 	gstquery.h		\
 	gstscheduler.h		\
+	gststructure.h		\
 	gstsystemclock.h	\
 	gstthread.h		\
 	gsttrace.h		\
@@ -182,6 +185,7 @@ gst_headers =			\
 	gsturi.h		\
 	gsturitype.h		\
 	gstutils.h		\
+	gstvalue.h		\
 	gstregistry.h		\
 	gstregistrypool.h	\
 	gstparse.h		\

@@ -44,6 +44,7 @@
 #include <gst/gsttypefind.h>
 #include <gst/gstautoplug.h>
 #include <gst/gstcaps.h>
+#include <gst/gststructure.h>
 #include <gst/gstprops.h>
 #include <gst/gstplugin.h>
 #include <gst/gsturi.h>
@@ -56,6 +57,7 @@
 #include <gst/gstclock.h>
 #include <gst/gstsystemclock.h>
 #include <gst/gstinterface.h>
+#include <gst/gstvalue.h>
 
 #include <gst/gstparse.h>
 #include <gst/gstregistry.h>
