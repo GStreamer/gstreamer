@@ -1,46 +1,69 @@
+#ifndef __GST_PARSE_TYPES_H__
+#define __GST_PARSE_TYPES_H__
+
 #include <glib-object.h>
 #include "../gstelement.h"
 
-typedef struct {
-    gchar *type;
-    gint index;
-    GList *property_values;
-    GstElement *element;
-} element_t;
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 typedef struct {
-    gchar *name;
-    GValue *value;
-} property_t;
-
-typedef struct {
-    /* if the names are present, upon link we'll search out the pads of the
-       proper name and use those. otherwise, we'll search for elements of
-       src_index and sink_index. */
-    char *src_name;
-    char *sink_name;
-    int src_index;
-    int sink_index;
-    GList *src_pads;
-    GList *sink_pads;
-    GstCaps *caps;
+  GstElement *src;
+  GstElement *sink;
+  gchar *src_name;
+  gchar *sink_name;
+  GSList *src_pads;
+  GSList *sink_pads;
+  GstCaps *caps;
 } link_t;
 
-typedef struct _graph_t graph_t;
+typedef struct {
+  GSList *elements;
+  GstElement *first;
+  GstElement *last;
+  link_t *front;
+  link_t *back;
+} chain_t;
 
+typedef struct _graph_t graph_t;
 struct _graph_t {
-    element_t *first;
-    element_t *current;
-    graph_t *parent;
-    gchar *current_bin_type;
-    GList *elements;
-    GList *links;
-    GList *links_pending;
-    GList *bins;
-    GstElement *bin;
+  chain_t *chain; /* links are supposed to be done now */
+  GSList *links;
+  GError **error;
 };
 
-graph_t * _gst_parse_launch (const gchar *str, GError **error);
 
-gchar *_gst_parse_escape (const gchar *str);
-void _gst_parse_unescape (gchar *str);
+/** 
+ * Memory checking. Should probably be done with gsttrace stuff, but that 
+ * doesn't really work.
+ * This is not safe from reentrance issues, but that doesn't matter as long as
+ * we lock a mutex before parsing anyway.
+ */
+#ifdef GST_DEBUG_ENABLED
+#  define __GST_PARSE_TRACE
+#endif
+
+#ifdef __GST_PARSE_TRACE
+gchar  *__gst_parse_strdup (gchar *org);
+void	__gst_parse_strfree (gchar *str);
+link_t *__gst_parse_link_new ();
+void	__gst_parse_link_free (link_t *data);
+chain_t *__gst_parse_chain_new ();
+void	__gst_parse_chain_free (chain_t *data);
+#  define gst_parse_strdup __gst_parse_strdup
+#  define gst_parse_strfree __gst_parse_strfree
+#  define gst_parse_link_new __gst_parse_link_new
+#  define gst_parse_link_free __gst_parse_link_free
+#  define gst_parse_chain_new __gst_parse_chain_new
+#  define gst_parse_chain_free __gst_parse_chain_free
+#else /* __GST_PARSE_TRACE */
+#  define gst_parse_strdup g_strdup
+#  define gst_parse_strfree g_free
+#  define gst_parse_link_new() g_new0 (link_t, 1)
+#  define gst_parse_link_free g_free
+#  define gst_parse_chain_new() g_new0 (chain_t, 1)
+#  define gst_parse_chain_free g_free
+#endif /* __GST_PARSE_TRACE */
+
+#endif /* __GST_PARSE_TYPES_H__ */

@@ -26,24 +26,8 @@
 #include "gstparse.h"
 #include "gstinfo.h"
 #include "gstlog.h"
-#include "parse/types.h"
 
-typedef struct _gst_parse_delayed_pad gst_parse_delayed_pad;
-struct _gst_parse_delayed_pad
-{
-  gchar *name;
-  GstPad *peer;
-};
-
-typedef struct
-{
-  gchar *srcpadname;
-  GstPad *target_pad;
-  GstElement *target_element;
-  GstElement *pipeline;
-}
-dynamic_link_t;
-
+extern GstElement *_gst_parse_launch (const gchar *, GError **);
 
 GQuark 
 gst_parse_error_quark (void)
@@ -54,413 +38,38 @@ gst_parse_error_quark (void)
   return quark;
 }
 
-G_GNUC_UNUSED static void
-dynamic_link (GstElement * element, GstPad * newpad, gpointer data)
+static gchar *_gst_parse_escape (const gchar *str)
 {
-  dynamic_link_t *dc = (dynamic_link_t *) data;
-  gboolean warn = TRUE;
-
-  /* do we know the exact srcpadname? */
-  if (dc->srcpadname) {
-    GstPadTemplate *templ = gst_pad_get_pad_template (newpad);
-
-    /* see if this is the one */
-    if (strcmp (gst_pad_get_name (newpad), dc->srcpadname) && 
-        strcmp (gst_object_get_name (GST_OBJECT (templ)), dc->srcpadname)) {
-      return;
-    }
+  GString *gstr = NULL;
+  
+  g_return_val_if_fail (str != NULL, NULL);
+  
+  gstr = g_string_sized_new (strlen (str));
+  
+  while (*str) {
+    if (*str == ' ')
+      g_string_append_c (gstr, '\\');
+    g_string_append_c (gstr, *str);
+    str++;
   }
-
-  /* try to find a target pad if we don't know it yet */
-  if (!dc->target_pad) {
-    if (!GST_PAD_IS_LINKED (newpad)) {
-      dc->target_pad = gst_element_get_compatible_pad (dc->target_element, newpad);
-      warn = FALSE;
-    }
-    else {
-      return;
-    }
-  }
-  if (!GST_PAD_IS_LINKED (dc->target_pad) && !GST_PAD_IS_LINKED (newpad)) {
-    gst_element_set_state (dc->pipeline, GST_STATE_PAUSED);
-    if (!gst_pad_link (newpad, dc->target_pad) && warn) {
-      g_warning ("could not link %s:%s to %s:%s", GST_DEBUG_PAD_NAME (newpad), 
-                 GST_DEBUG_PAD_NAME (dc->target_pad));
-    }
-    gst_element_set_state (dc->pipeline, GST_STATE_PLAYING);
-  }
+  
+  return gstr->str;
 }
-
-static gboolean
-make_elements (graph_t *g, GError **error) 
-{
-  GList *l = NULL;
-  gchar *bin_type;
-  element_t *e;
-  
-  if (!(g->bins || g->elements)) {
-    g_set_error (error,
-                 GST_PARSE_ERROR,
-                 GST_PARSE_ERROR_SYNTAX,
-                 "Empty bin");
-    return FALSE;
-  }
-
-  if (g->current_bin_type)
-    bin_type = g->current_bin_type;
-  else
-    bin_type = "pipeline";
-  
-  if (!(g->bin = gst_element_factory_make (bin_type, NULL))) {
-    g_set_error (error,
-                 GST_PARSE_ERROR,
-                 GST_PARSE_ERROR_NO_SUCH_ELEMENT,
-                 "No such bin type %s", bin_type);
-    return FALSE;
-  }
-  
-  l = g->elements;
-  while (l) {
-    e = (element_t*)l->data;
-    if (!(e->element = gst_element_factory_make (e->type, NULL))) {
-      g_set_error (error,
-                   GST_PARSE_ERROR,
-                   GST_PARSE_ERROR_NO_SUCH_ELEMENT,
-                   "No such element %s", e->type);
-      return FALSE;
-    }
-    gst_bin_add (GST_BIN (g->bin), e->element);
-    l = g_list_next (l);
-  }
-  
-  l = g->bins;
-  while (l) {
-    if (!make_elements ((graph_t*)l->data, error))
-      return FALSE;
-    gst_bin_add (GST_BIN (g->bin), ((graph_t*)l->data)->bin);
-    l = g_list_next (l);
-  }
-
-  return TRUE;
-}
-
-static gboolean
-set_properties (graph_t *g, GError **error)
-{
-  GList *l, *l2;
-  element_t *e;
-  property_t *p;
-  GParamSpec *pspec;
-  
-  l = g->elements;
-  while (l) {
-    e = (element_t*)l->data;
-    l2 = e->property_values;
-    while (l2) {
-      p = (property_t*)l2->data;
-      if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (e->element), p->name))) {
-        g_object_set_property (G_OBJECT (e->element), p->name, p->value);
-      } else {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_NO_SUCH_PROPERTY,
-                     "No such property '%s' in element '%s'",
-                     p->name, GST_OBJECT_NAME (GST_OBJECT (e->element)));
-        return FALSE;
-      }
-      l2 = g_list_next (l2);
-    }
-    l = g_list_next (l);
-  }
-  
-  l = g->bins;
-  while (l) {
-    if (!set_properties ((graph_t*)l->data, error))
-      return FALSE;
-    l = g_list_next (l);
-  }
-  
-  return TRUE;
-}
-
-static GstElement*
-find_element_by_index_recurse (graph_t *g, gint i)
-{
-  GList *l;
-  element_t *e;
-  GstElement *element;
-  
-  l = g->elements;
-  while (l) {
-    e = (element_t*)l->data;
-    if (e->index == i) {
-      return e->element;
-    }
-    l = g_list_next (l);
-  }
-  
-  l = g->bins;
-  while (l) {
-    if ((element = find_element_by_index_recurse ((graph_t*)l->data, i)))
-      return element;
-    l = g_list_next (l);
-  }
-  
-  return NULL;
-}
-
-static GstElement*
-find_element_by_index (graph_t *g, gint i) 
-{
-  while (g->parent)
-    g = g->parent;
-
-  return find_element_by_index_recurse (g, i);
-}
-
-static gboolean
-make_links (graph_t *g, GError **error)
-{
-  GList *l, *a, *b;
-  link_t *c;
-  dynamic_link_t *dc;
-  GstElement *src, *sink;
-  GstPad *p1, *p2;
-  GstPadTemplate *pt1, *pt2;
-  GstCaps *caps;
-  
-  l = g->links;
-  while (l) {
-    c = (link_t*)l->data;
-    if (c->src_name) {
-      if (!(src = gst_bin_get_by_name (GST_BIN (g->bin), c->src_name))) {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_NO_SUCH_ELEMENT,
-                     "No such element '%s'",
-                     c->src_name);
-        return FALSE;
-      }
-    } else {
-      src = find_element_by_index (g, c->src_index);
-      g_assert (src);
-    }
-    if (c->sink_name) {
-      if (!(sink = gst_bin_get_by_name (GST_BIN (g->bin), c->sink_name))) {
-        g_set_error (error,
-                     GST_PARSE_ERROR,
-                     GST_PARSE_ERROR_NO_SUCH_ELEMENT,
-                     "No such element '%s'",
-                     c->sink_name);
-        return FALSE;
-      }
-    } else {
-      sink = find_element_by_index (g, c->sink_index);
-      g_assert (sink);
-    }
-    
-    a = c->src_pads;
-    b = c->sink_pads;
-    caps = c->caps;
-    gst_caps_ref (caps);
-    gst_caps_sink (caps);
-
-    gst_caps_debug (caps, "foo");
-    /* g_print ("a: %p, b: %p\n", a, b); */
-    if (a && b) {
-      /* balanced multipad link */
-      while (a && b) {
-        p1 = gst_element_get_pad (src, (gchar*)a->data);
-        p2 = gst_element_get_pad (sink, (gchar*)b->data);
-
-        if (!p2)
-          goto could_not_get_pad_b;
-        
-        if (!p1 && p2 && (pt1 = gst_element_get_pad_template (src, (gchar*)a->data)) &&
-            pt1->presence == GST_PAD_SOMETIMES) {
-          dc = g_new0 (dynamic_link_t, 1);
-          dc->srcpadname = (gchar*)a->data;
-          dc->target_pad = p2;
-          dc->target_element = sink;
-          dc->pipeline = g->bin;
-          
-          GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic link %s:%s and %s:%s",
-                     GST_OBJECT_NAME (GST_OBJECT (src)),
-                     (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
-          
-          g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_link), dc);
-        } else if (!p1) {
-          goto could_not_get_pad_a;
-        } else if (!gst_pad_link_filtered (p1, p2, caps)) {
-          goto could_not_link_pads;
-        }
-        a = g_list_next (a);
-        b = g_list_next (b);
-      }
-    } else if (a) {
-      if ((pt1 = gst_element_get_pad_template (src, (gchar*)a->data))) {
-        if ((p1 = gst_element_get_pad (src, (gchar*)a->data)) || pt1->presence == GST_PAD_SOMETIMES) {
-          if (!p1) {
-            /* sigh, a hack until i fix the gstelement api... */
-            if ((pt2 = gst_element_get_compatible_pad_template (sink, pt1))) {
-              if ((p2 = gst_element_get_pad (sink, pt2->name_template))) {
-                dc = g_new0 (dynamic_link_t, 1);
-                dc->srcpadname = (gchar*)a->data;
-                dc->target_pad = p2;
-                dc->target_element = NULL;
-                dc->pipeline = g->bin;
-              
-                GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic link %s:%s and %s:%s",
-                           GST_OBJECT_NAME (GST_OBJECT (src)),
-                           (gchar*)a->data, GST_DEBUG_PAD_NAME (p2));
-              
-                g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_link), dc);
-		goto next;
-              } else {
-                /* both pt1 and pt2 are sometimes templates. sheesh. */
-                goto both_templates_have_sometimes_presence;
-              }
-            } else {
-	      /* if the target pad has no padtemplate we will figure out a target 
-	       * pad later on */
-              dc = g_new0 (dynamic_link_t, 1);
-              dc->srcpadname = (gchar*)a->data;
-              dc->target_pad = NULL;
-              dc->target_element = sink;
-              dc->pipeline = g->bin;
-              
-              GST_DEBUG (GST_CAT_PIPELINE, "setting up dynamic link %s:%s, and some pad in %s",
-                           GST_OBJECT_NAME (GST_OBJECT (src)),
-                           (gchar*)a->data, GST_OBJECT_NAME (sink));
-              
-              g_signal_connect (G_OBJECT (src), "new_pad", G_CALLBACK (dynamic_link), dc);
-   	      goto next;
-            }
-          } else {
-            goto could_not_get_compatible_to_a;
-          }
-        } else {
-          goto could_not_get_pad_a;
-        }
-      } else {
-        goto could_not_get_pad_a;
-      }
-      
-      if (!gst_pad_link_filtered (p1, p2, caps)) {
-        goto could_not_link_pads;
-      }
-    } else if (b) {
-      /* we don't support dynamic links on this side yet, if ever */
-      if (!(p2 = gst_element_get_pad (sink, (gchar*)b->data))) {
-        goto could_not_get_pad_b;
-      }
-      if (!(p1 = gst_element_get_compatible_pad (src, p2))) {
-        goto could_not_get_compatible_to_b;
-      }
-      if (!gst_pad_link_filtered (p1, p2, caps)) {
-        goto could_not_link_pads;
-      }
-    } else {
-      if (!gst_element_link_filtered (src, sink, caps)) {
-        goto could_not_link_elements;
-      }
-    }
-next:
-    gst_caps_unref (caps);
-    l = g_list_next (l);
-  }
-  
-  l = g->bins;
-  while (l) {
-    if (!make_links ((graph_t*)l->data, error))
-      return FALSE;
-    l = g_list_next (l);
-  }
-  
-  return TRUE;
-
-could_not_get_pad_a:
-  g_set_error (error,
-               GST_PARSE_ERROR,
-               GST_PARSE_ERROR_LINK,
-               "Could not get a pad %s from element %s",
-               (gchar*)a->data, GST_OBJECT_NAME (src));
-  return FALSE;
-could_not_get_pad_b:
-  g_set_error (error,
-               GST_PARSE_ERROR,
-               GST_PARSE_ERROR_LINK,
-               "Could not get a pad %s from element %s",
-               (gchar*)b->data, GST_OBJECT_NAME (sink));
-  return FALSE;
-could_not_get_compatible_to_a:
-  g_set_error (error,
-               GST_PARSE_ERROR,
-               GST_PARSE_ERROR_LINK,
-               "Could not find a compatible pad in element %s to for %s:%s",
-               GST_OBJECT_NAME (sink), GST_OBJECT_NAME (src), (gchar*)a->data);
-  return FALSE;
-could_not_get_compatible_to_b:
-  g_set_error (error,
-               GST_PARSE_ERROR,
-               GST_PARSE_ERROR_LINK,
-               "Could not find a compatible pad in element %s to for %s:%s",
-               GST_OBJECT_NAME (src), GST_OBJECT_NAME (sink), (gchar*)b->data);
-  return FALSE;
-both_templates_have_sometimes_presence:
-  g_set_error (error,
-               GST_PARSE_ERROR,
-               GST_PARSE_ERROR_LINK,
-               "Both %s:%s and %s:%s have GST_PAD_SOMETIMES presence, operation not supported",
-               GST_OBJECT_NAME (src), pt1->name_template, GST_OBJECT_NAME (sink), pt2->name_template);
-  return FALSE;
-could_not_link_pads:
-  g_set_error (error,
-               GST_PARSE_ERROR,
-               GST_PARSE_ERROR_LINK,
-               "Could not link %s:%s to %s:%s",
-               GST_DEBUG_PAD_NAME (p1),
-               GST_DEBUG_PAD_NAME (p2));
-  return FALSE;
-could_not_link_elements:
-  g_set_error (error,
-               GST_PARSE_ERROR,
-               GST_PARSE_ERROR_LINK,
-               "Could not link element %s to %s",
-               GST_OBJECT_NAME (src),
-               GST_OBJECT_NAME (sink));
-  return FALSE;
-}
-
-static GstBin*
-pipeline_from_graph (graph_t *g, GError **error)
-{
-  if (!make_elements (g, error))
-    return NULL;
-  
-  if (!set_properties (g, error))
-    return NULL;
-  
-  if (!make_links (g, error))
-    return NULL;
-  
-  return (GstBin*)g->bin;
-}
-
 /**
  * gst_parse_launchv:
  * @argv: null-terminated array of arguments
- * @error: pointer to GError
+ * @error: pointer to a #GError
  *
- * Create a new pipeline based on command line syntax.
+ * Create a new element based on command line syntax.
+ * #error will contain an error message if pipeline creation fails and can
+ * contain an error message, when a recoverable error happened.
  *
- * Returns: a new pipeline on success, NULL on failure and error
- * will contain the error message.
+ * Returns: a new element on success and NULL on failure.
  */
-GstBin *
+GstElement *
 gst_parse_launchv (const gchar **argv, GError **error)
 {
-  GstBin *pipeline;
+  GstElement *element;
   GString *str;
   const gchar **argvp, *arg;
   gchar *tmp;
@@ -480,47 +89,11 @@ gst_parse_launchv (const gchar **argv, GError **error)
     argvp++;
   }
   
-  pipeline = gst_parse_launch (str->str, error);
+  element = gst_parse_launch (str->str, error);
 
   g_string_free (str, TRUE);
 
-  return pipeline;
-}
-
-gchar *_gst_parse_escape (const gchar *str)
-{
-  GString *gstr = NULL;
-  
-  g_return_val_if_fail (str != NULL, NULL);
-  
-  gstr = g_string_sized_new (strlen (str));
-  
-  while (*str) {
-    if (*str == ' ')
-      g_string_append_c (gstr, '\\');
-    g_string_append_c (gstr, *str);
-    str++;
-  }
-  
-  return gstr->str;
-}
-
-void _gst_parse_unescape (gchar *str)
-{
-  gchar *walk;
-  
-  g_return_if_fail (str != NULL);
-  
-  walk = str;
-  
-  while (*walk) {
-    if (*walk == '\\')
-      walk++;
-    *str = *walk;
-    str++;
-    walk++;
-  }
-  *str = '\0';
+  return element;
 }
 
 /**
@@ -533,10 +106,10 @@ void _gst_parse_unescape (gchar *str)
  * Returns: a new bin on success, NULL on failure. By default the bin is
  * a GstPipeline, but it depends on the pipeline_description.
  */
-GstBin *
+GstElement *
 gst_parse_launch (const gchar * pipeline_description, GError **error)
 {
-  graph_t *graph;
+  GstElement *element;
   static GStaticMutex flex_lock = G_STATIC_MUTEX_INIT;
 
   g_return_val_if_fail (pipeline_description != NULL, NULL);
@@ -546,11 +119,8 @@ gst_parse_launch (const gchar * pipeline_description, GError **error)
 
   /* the need for the mutex will go away with flex 2.5.6 */
   g_static_mutex_lock (&flex_lock);
-  graph = _gst_parse_launch (pipeline_description, error);
+  element = _gst_parse_launch (pipeline_description, error);
   g_static_mutex_unlock (&flex_lock);
 
-  if (!graph)
-    return NULL;
-  
-  return pipeline_from_graph (graph, error);
+  return element;
 }

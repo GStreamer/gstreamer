@@ -37,12 +37,13 @@ typedef enum
   GST_PARSE_ERROR_SYNTAX,
   GST_PARSE_ERROR_NO_SUCH_ELEMENT,
   GST_PARSE_ERROR_NO_SUCH_PROPERTY,
-  GST_PARSE_ERROR_LINK
+  GST_PARSE_ERROR_LINK,
+  GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
 } GstParseError;
 
 
-GstBin*		gst_parse_launch	(const gchar *pipeline_description, GError **error);
-GstBin*		gst_parse_launchv	(const gchar **argv, GError **error);
+GstElement*	gst_parse_launch	(const gchar *pipeline_description, GError **error);
+GstElement*	gst_parse_launchv	(const gchar **argv, GError **error);
 
 #else /* GST_DISABLE_PARSE */
 
