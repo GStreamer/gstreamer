@@ -204,13 +204,13 @@ gst_v4l2src_srcconvert (GstPad    *pad,
 
 	v4l2src = GST_V4L2SRC (gst_pad_get_parent (pad));
 
-	if (!GST_V4L2_IS_OPEN(v4l2src))
+	if (!GST_V4L2_IS_OPEN(GST_V4L2ELEMENT(v4l2src)))
 		return FALSE;
 
-	if (!gst_v4l2_get_norm(v4l2src, &norm))
+	if (!gst_v4l2_get_norm(GST_V4L2ELEMENT(v4l2src), &norm))
 		return FALSE;
 
-	std = &((struct v4l2_enumstd *) g_list_nth_data(v4l2src->norms, norm))->std;
+	std = &((struct v4l2_enumstd *) g_list_nth_data(GST_V4L2ELEMENT(v4l2src)->norms, norm))->std;
 	fps = std->framerate.numerator / std->framerate.denominator;
 
 	switch (src_format) {
