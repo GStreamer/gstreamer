@@ -41,25 +41,6 @@ make_bin (gint count)
   return bin;
 }
 
-static void
-property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec, gpointer data)
-{
-  GValue value = { 0, }; /* the important thing is that value.type = 0 */
-  gchar *str = 0;
-	        
-  if (pspec->flags & G_PARAM_READABLE) {
-    /* let's not print these out for excluded properties... */
-    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-    g_object_get_property (G_OBJECT (orig), pspec->name, &value);
-    str = g_strdup_value_contents (&value);
-    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
-    g_free (str);
-    g_value_unset(&value);
-  } else { 
-    g_warning ("Parameter not readable. What's up with that?");
-  } 
-}
-
 gint
 main (gint argc, gchar *argv[]) 
 {
@@ -72,7 +53,8 @@ main (gint argc, gchar *argv[])
   gst_init (&argc, &argv);
 
   pipeline = gst_pipeline_new ("main");
-  g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
+  g_signal_connect (pipeline, "deep_notify", 
+		    G_CALLBACK (gst_element_default_deep_notify), NULL);
   
   aggregator = gst_element_factory_make ("aggregator", "mixer");
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -99,14 +81,12 @@ main (gint argc, gchar *argv[])
 
   g_print ("pause bin1\n");
   gst_element_set_state (bin1, GST_STATE_PAUSED);
-  gst_pad_set_active (pad1, FALSE);
 
   i = 4;
   while (i--)
     gst_bin_iterate (GST_BIN (pipeline));
 		  
   g_print ("playing bin1\n");
-  gst_pad_set_active (pad1, TRUE);
   gst_element_set_state (bin1, GST_STATE_PLAYING);
 
   i = 4;
