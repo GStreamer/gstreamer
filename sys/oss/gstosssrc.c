@@ -31,6 +31,7 @@
 
 #include <gstosssrc.h>
 #include <gstosscommon.h>
+#include <gstossclock.h>
 
 /* elementfactory information */
 static GstElementDetails gst_osssrc_details = {
@@ -99,6 +100,10 @@ static void 			gst_osssrc_get_property	(GObject *object, guint prop_id,
 							 GValue *value, GParamSpec *pspec);
 static GstElementStateReturn 	gst_osssrc_change_state	(GstElement *element);
 
+static void		 	gst_osssrc_set_clock	(GstElement *element, GstClock *clock);
+static GstClock* 		gst_osssrc_get_clock	(GstElement *element);
+static GstClockTime 		gst_osssrc_get_time 	(GstClock *clock, gpointer data);
+
 static const GstEventMask* 	gst_osssrc_get_event_masks (GstPad *pad);
 static gboolean 		gst_osssrc_src_event 	(GstPad *pad, GstEvent *event);
 static gboolean                 gst_osssrc_send_event 	(GstElement *element, GstEvent *event);
@@ -160,6 +165,9 @@ gst_osssrc_class_init (GstOssSrcClass *klass)
 
   gstelement_class->change_state = gst_osssrc_change_state;
   gstelement_class->send_event = gst_osssrc_send_event;
+
+  gstelement_class->set_clock = gst_osssrc_set_clock;
+  gstelement_class->get_clock = gst_osssrc_get_clock;
 }
 
 static void 
@@ -183,6 +191,11 @@ gst_osssrc_init (GstOssSrc *osssrc)
 
   osssrc->buffersize = 4096;
   osssrc->curoffset = 0;
+
+  osssrc->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock",
+							 gst_osssrc_get_time,
+							 osssrc));
+  osssrc->clock = NULL;
 }
 
 static GstPadLinkReturn 
@@ -239,6 +252,41 @@ gst_osssrc_negotiate (GstPad *pad)
   }
   return TRUE;
 }
+
+static GstClockTime 
+gst_osssrc_get_time (GstClock *clock, gpointer data) 
+{
+  GstOssSrc *osssrc = GST_OSSSRC (data);
+  audio_buf_info info;
+
+  if (!osssrc->common.bps)
+    return 0;
+
+  if (ioctl(osssrc->common.fd, SNDCTL_DSP_GETISPACE, &info) < 0)
+    return 0;
+
+  return (osssrc->curoffset + info.bytes) * GST_SECOND / osssrc->common.bps;
+}
+
+static GstClock*
+gst_osssrc_get_clock (GstElement *element)
+{
+  GstOssSrc *osssrc;
+	    
+  osssrc = GST_OSSSRC (element);
+
+  return GST_CLOCK (osssrc->provided_clock);
+}
+
+static void
+gst_osssrc_set_clock (GstElement *element, GstClock *clock)
+{
+  GstOssSrc *osssrc;
+  
+  osssrc = GST_OSSSRC (element);
+
+  osssrc->clock = clock;
+}
 	
 static GstBuffer *
 gst_osssrc_get (GstPad *pad)
@@ -289,6 +337,8 @@ gst_osssrc_get (GstPad *pad)
 
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
+
+  /* FIXME: we are falsely assuming that we are the master clock here */
   GST_BUFFER_TIMESTAMP (buf) = src->curoffset * GST_SECOND / src->common.bps;
 
   src->curoffset += readbytes;
@@ -355,8 +405,6 @@ gst_osssrc_change_state (GstElement *element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_PAUSED:
       if (!GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) { 
 	gchar *error;
         if (!gst_osscommon_open_audio (&osssrc->common, GST_OSSCOMMON_READ, &error)) {
@@ -367,18 +415,25 @@ gst_osssrc_change_state (GstElement *element)
         GST_FLAG_SET (osssrc, GST_OSSSRC_OPEN);
       }
       break;
+    case GST_STATE_READY_TO_PAUSED:
+      osssrc->curoffset = 0;
+      break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      gst_oss_clock_set_active (osssrc->provided_clock, TRUE);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
+      gst_oss_clock_set_active (osssrc->provided_clock, FALSE);
       break;
     case GST_STATE_PAUSED_TO_READY:
+      if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN))
+        ioctl (osssrc->common.fd, SNDCTL_DSP_RESET, 0);
+      break;
+    case GST_STATE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, GST_OSSSRC_OPEN)) {
         gst_osscommon_close_audio (&osssrc->common);
         GST_FLAG_UNSET (osssrc, GST_OSSSRC_OPEN);
       }
       gst_osscommon_init (&osssrc->common);
-      break;
-    case GST_STATE_READY_TO_NULL:
       break;
   }
 

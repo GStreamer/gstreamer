@@ -63,6 +63,9 @@ struct _GstOssSrc {
   /* blocking */
   gulong 	 curoffset;
   gulong 	 buffersize;
+
+  /* clocks */
+  GstClock *provided_clock, *clock;
 };
 
 struct _GstOssSrcClass {
