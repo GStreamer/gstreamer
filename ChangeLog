@@ -1,5 +1,10 @@
 2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* gst-libs/gst/riff/riff-media.c:
+	  fail on error, don't try to set stuff on NULL caps
+
+2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/kio/Makefile.am:
