@@ -1,3 +1,10 @@
+2004-04-22  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/pwg.xml:
+	  Just found out that this so-called "ima-wav" format is really
+	  just "dvi adpcm" (according to the MS WAV documentation). So
+	  renaming it. We didn't use it yet anyway.
+
 2004-04-23  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstcaps.c: (gst_caps_is_always_compatible):

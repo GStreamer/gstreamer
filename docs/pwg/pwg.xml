@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-                  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+                  "/usr/share/sgml/docbook/xml-dtd-4.2-1.0-17/docbookx.dtd" [
 <!ENTITY % image-entities SYSTEM "image.entities">
 %image-entities;
 <!ENTITY % version-entities SYSTEM "version.entities">
