@@ -531,16 +531,48 @@ GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
   AC_CHECK_HEADER(encore2.h, ,
                   [ AC_MSG_WARN([Divx4linux encore headers not found]) &&
                     HAVE_DIVX=no ] )
-  AC_CHECK_HEADER(decore.h, ,
-                  [ AC_MSG_WARN([Divx4linux decoder headers not found]) &&
-                    HAVE_DIVX=no ] )
+  if [ test x$HAVE_DIVX = xyes ]; then
+    AC_MSG_CHECKING([Checking for valid divx4linux encore version])
+    AC_TRY_COMPILE([
+#include <encore2.h>
+#if ENCORE_VERSION != 20021024
+#error Wrong version of divx encore libraries
+#endif
+    ], [
+return 0;
+    ], [ HAVE_DIVX=yes && AC_MSG_RESULT(yes)],
+       [ HAVE_DIVX=no  && AC_MSG_RESULT(no) &&
+         AC_MSG_WARN([Wrong version of divx4linux installed]) ])
+  fi
+  if [ test x$HAVE_DIVX = xyes ]; then
+    AC_CHECK_HEADER(decore.h, ,
+                    [ AC_MSG_WARN([Divx4linux decoder headers not found]) &&
+                      HAVE_DIVX=no ] )
+  fi
+  if [ test x$HAVE_DIVX = xyes ]; then
+    AC_MSG_CHECKING([Checking for valid divx4linux decore version])
+    AC_TRY_COMPILE([
+#include <decore.h>
+#if DECORE_VERSION != 20021112
+#error Wrong version of divx decore libraries
+#endif
+    ], [
+return 0;
+    ], [ HAVE_DIVX=yes && AC_MSG_RESULT(yes)],
+       [ HAVE_DIVX=no  && AC_MSG_RESULT(no) &&
+         AC_MSG_WARN([Wrong version of divx4linux installed]) ])
+  fi
   LIBS="-lm"
-  AC_CHECK_LIB(divxencore, encore, ,
-               [ AC_MSG_WARN([Divx4linux encore libs not found]) &&
-                 HAVE_DIVX=no ] )
-  AC_CHECK_LIB(divxdecore, decore, ,
-               [ AC_MSG_WARN([Divx4linux decore libs not found]) &&
-                 HAVE_DIVX=no ] )
+  if test x$HAVE_DIVX = xyes; then
+    AC_CHECK_LIB(divxencore, encore, ,
+                 [ AC_MSG_WARN([Divx4linux encore libs not found]) &&
+                   HAVE_DIVX=no ] )
+  fi
+  if test x$HAVE_DIVX = xyes; then
+    AC_CHECK_LIB(divxdecore, decore, ,
+                 [ AC_MSG_WARN([Divx4linux decore libs not found]) &&
+                   HAVE_DIVX=no ] )
+  fi
   if test x$HAVE_DIVX = xyes; then
     DIVXENC_LIBS="-ldivxencore -lm"
     DIVXDEC_LIBS="-ldivxdecore -lm"
