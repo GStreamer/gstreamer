@@ -129,7 +129,7 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
 
   ximage->size =  (ximagesink->xcontext->bpp / 8) * ximage->width * ximage->height;
   
-#ifdef HAVE_SHM
+#ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm)
     {
       ximage->ximage = XShmCreateImage (ximagesink->xcontext->disp,
@@ -170,7 +170,7 @@ gst_ximagesink_ximage_new (GstXImageSink *ximagesink, gint width, gint height)
                                  ximage->width, ximage->height,
                                  ximagesink->xcontext->bpp,
                                  ximage->width * (ximagesink->xcontext->bpp / 8));
-#endif /* HAVE_SHM */
+#endif /* HAVE_XSHM */
   
   if (ximage->ximage)
     {
@@ -201,7 +201,7 @@ gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
   
   g_mutex_lock (ximagesink->x_lock);
   
-#ifdef HAVE_SHM
+#ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm)
     {
       if (ximage->SHMInfo.shmaddr)
@@ -224,7 +224,7 @@ gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
 #else
   if (ximage->ximage)
     XDestroyImage (ximage->ximage);
-#endif /* HAVE_SHM */ 
+#endif /* HAVE_XSHM */ 
   
   g_mutex_unlock (ximagesink->x_lock);
   
@@ -251,7 +251,7 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
   x = MAX (0, (attr.width - ximage->width) / 2);
   y = MAX (0, (attr.height - ximage->height) / 2);
 
-#ifdef HAVE_SHM
+#ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm)
     {  
       XShmPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win, 
@@ -269,7 +269,7 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
   XPutImage (ximagesink->xcontext->disp, ximagesink->xwindow->win, 
              ximagesink->xwindow->gc, ximage->ximage,  
              0, 0, x, y, ximage->width, ximage->height);
-#endif /* HAVE_SHM */
+#endif /* HAVE_XSHM */
   
   XSync(ximagesink->xcontext->disp, FALSE);
   
@@ -507,7 +507,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
     
   xcontext->endianness = (ImageByteOrder (xcontext->disp) == LSBFirst) ? G_LITTLE_ENDIAN:G_BIG_ENDIAN;
   
-#ifdef HAVE_SHM
+#ifdef HAVE_XSHM
   /* Search for XShm extension support */
   if (XQueryExtension (xcontext->disp, "MIT-SHM", &i, &i, &i))
     {
@@ -519,7 +519,7 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
       xcontext->use_xshm = FALSE;
       GST_DEBUG ("ximagesink is not using XShm extension");
     }
-#endif /* HAVE_SHM */
+#endif /* HAVE_XSHM */
   
   /* What the hell is that ? */
   if (xcontext->endianness == G_LITTLE_ENDIAN && xcontext->depth == 24)

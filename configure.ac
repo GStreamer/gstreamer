@@ -254,19 +254,6 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(HAVE_GTK)
 AM_CONDITIONAL(HAVE_GDK_LOADERS, test "x$HAVE_GTK_22" = "xyes")
 
-dnl Check for X11 extensions
-AC_PATH_XTRA
-if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
-  AC_MSG_NOTICE([cannot find X11, the build system needs fixage])
-fi
-dnl AC_PATH_XTRA only defines the path needed to find the X libs, not the libs
-dnl therefore we add them here
-X_LIBS="$X_LIBS -lX11"
-AC_SUBST(X_CFLAGS)
-AC_SUBST(X_PRE_LIBS)
-AC_SUBST(X_EXTRA_LIBS)
-AC_SUBST(X_LIBS)
-
 dnl ===========================================================================
 dnl ============================= gst plug-ins ================================
 dnl ===========================================================================
@@ -477,16 +464,23 @@ dnl		;;
   fi
 ])
 
-dnl *** X check ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_XFREE, true)
-GST_CHECK_FEATURE(XFREE, [X11 XFree86],
-                  [ximagesink xvideosink], [
-   if test "$X_CFLAGS" = "-DX_DISPLAY_MISSING"; then
-     HAVE_XFREE=no
-   else
-     HAVE_XFREE=yes
-   fi
-])
+dnl Check for X11
+AC_PATH_XTRA
+if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
+  AC_MSG_NOTICE([cannot find X11, the build system needs fixage])
+  HAVE_X="no"
+else
+  dnl this is much more than we want
+  X_LIBS="$X_LIBS $X_PRE_LIBS $X_EXTRA_LIBS"
+  dnl AC_PATH_XTRA only defines the path needed to find the X libs, not the libs
+  dnl therefore we add them here
+  X_LIBS="$X_LIBS -lX11"
+  AC_SUBST(X_CFLAGS)
+  AC_SUBST(X_LIBS)
+  HAVE_X="yes";
+fi
+AC_SUBST(HAVE_X)
+AM_CONDITIONAL(USE_X, test "-DX_DISPLAY_MISSING" != "$X_CFLAGS")
 
 dnl *** XVideo ***
 dnl Look for the PIC library first, Debian requires it.
@@ -507,10 +501,10 @@ dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
                   [xvimagesink xvideosink], [
-  if test x$HAVE_XFREE = xyes; then
+  if test x$HAVE_X = xyes; then
     AC_CHECK_LIB(Xv_pic, XvQueryExtension,
 		 HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
-		 $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+		 $X_LIBS -lXext)
 
     if test x$HAVE_XVIDEO = xyes; then
       XVIDEO_LIBS="-lXv_pic -lXext"
@@ -520,7 +514,7 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
       if test x$HAVE_XVIDEO = xno; then
         AC_CHECK_LIB(Xv, XvQueryExtension,
 		   HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
-		   $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+		   $X_LIBS -lXext)
 
         if test x$HAVE_XVIDEO = xyes; then
           XVIDEO_LIBS="-lXv -lXext"
@@ -531,11 +525,29 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
   fi
 ])
 
-dnl check for Shm
-translit(dnm, m, l) AM_CONDITIONAL(USE_SHM, true)
-GST_CHECK_FEATURE(SHM, [Shared Memory], ximage with shm, [
-  AC_CHECK_HEADER(sys/shm.h, HAVE_SHM="yes", HAVE_SHM="no")
-])
+dnl check for X Shm
+translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
+GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], xshm, [
+  if test x$HAVE_X = xyes; then
+    AC_CHECK_LIB(Xext, XShmAttach, 
+		 HAVE_XSHM="yes", HAVE_XSHM="no",
+		 $X_LIBS) 
+    if test "x$HAVE_XSHM" = "xyes"; then
+      XSHM_LIBS="-lXext"
+    else
+      dnl On AIX, it is in XextSam instead, but we still need -lXext
+      AC_CHECK_LIB(XextSam, XShmAttach, 
+		   HAVE_XSHM="yes", HAVE_XSHM="no",
+		   $X_LIBS) 
+      if test "x$HAVE_XSHM" = "xyes"; then
+	XSHM_LIBS="-lXext -lXextSam"
+      fi
+    fi
+  fi
+], , [ 
+  AC_SUBST(HAVE_XSHM) 
+  AC_SUBST(XSHM_LIBS) 
+] )
 
 dnl Next, check for the optional libraries:
 dnl These are all libraries used in building plug-ins
@@ -1341,14 +1353,15 @@ gst/y4m/Makefile
 sys/Makefile
 sys/cdrom/Makefile
 sys/dxr3/Makefile
+sys/glsink/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
 sys/v4l/Makefile
 sys/v4l2/Makefile
 sys/vcd/Makefile
-sys/xvideo/Makefile
 sys/ximage/Makefile
-sys/glsink/Makefile
+sys/xvimage/Makefile
+sys/xvideo/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
