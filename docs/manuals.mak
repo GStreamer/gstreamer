@@ -103,7 +103,7 @@ html/index.html: $(BUILDDIR)/$(DOC).xml $(PNG_BUILT) $(FIG_SRC)
 $(DOC).ps: $(BUILDDIR)/$(DOC).xml $(EPS_BUILT) $(PNG_SRC) $(FIG_SRC)
 	@echo "*** Generating PS output ***"
 	@cp $(srcdir)/../image-eps $(BUILDDIR)/image.entities
-	@LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(DOC).xml
+	@export LC_PAPER=$(PAPER_LOCALE) && cd $(BUILDDIR) && xmlto ps -o .. $(DOC).xml
 
 $(DOC).pdf: $(DOC).ps
 	@echo "*** Generating PDF output ***"
@@ -162,3 +162,9 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 # make sure xml validates properly
 check-local:
 	xmllint -noout -valid $(MAIN)
+
+### this is a website upload target
+upload: html ps pdf
+	export RSYNC_RSH=ssh
+	rsync -arv $(DOC).ps $(DOC).pdf html thomasvs@shell.sf.net:/home/groups/g/gs/gstreamer/htdocs/docs/$(VERSION)/$(DOC)
+

@@ -29,4 +29,3 @@ docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)/$(DOC)
 doc_DATA = $(PDF_DAT) $(PS_DAT)
                                                                                 
 include $(srcdir)/../htmlinstall.mak
-
