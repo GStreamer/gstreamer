@@ -1,3 +1,9 @@
+2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  Fix divx caps mismatch and move from video/x-jpeg to image/jpeg
+	  so that MJPEG plays back.
+
 2004-04-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/mpeg1videoparse/gstmp1videoparse.c: (gst_mp1videoparse_init),
