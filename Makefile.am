@@ -1,3 +1,9 @@
+if BUILD_DOCS
+SUBDIRS_DOCS = docs
+else
+SUBDIRS_DOCS =
+endif
+
 if USE_GCONFTOOL
 GCONF_DIR=gconf
 else
@@ -25,7 +31,8 @@ SUBDIRS=gst-libs \
 	po \
 	common \
 	m4 \
-	pkgconfig
+	pkgconfig \
+	$(SUBDIRS_DOCS)
 
 DIST_SUBDIRS=ext gst-libs \
 	gst sys \
