@@ -118,17 +118,17 @@ gst_buffer_new (void)
  * Returns: new buffer
  */
 GstBuffer*
-gst_buffer_new_from_pool (GstBufferPool *pool, guint32 offset, guint32 size)
+gst_buffer_new_from_pool (gpointer pool, guint32 offset, guint32 size)
 {
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
 
-  g_return_val_if_fail (pool != NULL, NULL);
+  /*g_return_val_if_fail (pool != NULL, NULL);
   g_return_val_if_fail (pool->buffer_new != NULL, NULL);
   
   buffer = pool->buffer_new (pool, offset, size, pool->user_data);
   buffer->pool = pool;
   buffer->free = pool->buffer_free;
-  buffer->copy = pool->buffer_copy;
+  buffer->copy = pool->buffer_copy;*/
   
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p from pool %p (size %x, offset %x)", 
 		  buffer, pool, size, offset);

@@ -95,8 +95,6 @@ typedef void       (*GstBufferFreeFunc)	(GstBuffer *buf);
 typedef GstBuffer *(*GstBufferCopyFunc)	(GstBuffer *srcbuf);
 
 
-#include <gst/gstbufferpool.h>
-
 struct _GstBuffer {
   GstData 		data_type;
 
@@ -129,7 +127,7 @@ struct _GstBuffer {
   GstBuffer 		*parent;
 
   /* this is a pointer to the buffer pool (if any) */
-  GstBufferPool 	*pool;
+  gpointer	 	pool;
   gpointer 		pool_private;
 
   /* utility function pointers */
@@ -141,7 +139,7 @@ struct _GstBuffer {
 void 		_gst_buffer_initialize		(void);
 /* creating a new buffer from scratch */
 GstBuffer*	gst_buffer_new			(void);
-GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint32 offset, guint32 size);
+GstBuffer*	gst_buffer_new_from_pool 	(gpointer pool, guint32 offset, guint32 size);
 
 /* creating a subbuffer */
 GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint32 offset, guint32 size);
