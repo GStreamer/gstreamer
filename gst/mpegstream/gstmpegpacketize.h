@@ -27,9 +27,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 #define PICTURE_START_CODE		0x00
 #define SLICE_MIN_START_CODE		0x01
@@ -45,39 +44,36 @@ extern "C"
 #define PACK_START_CODE			0xba
 #define SYS_HEADER_START_CODE		0xbb
 
-  typedef struct _GstMPEGPacketize GstMPEGPacketize;
+typedef struct _GstMPEGPacketize GstMPEGPacketize;
 
 #define GST_MPEG_PACKETIZE_ID(pack) 		((pack)->id)
 #define GST_MPEG_PACKETIZE_IS_MPEG2(pack) 	((pack)->MPEG2)
 
-  typedef enum
-  {
-    GST_MPEG_PACKETIZE_SYSTEM,
-    GST_MPEG_PACKETIZE_VIDEO,
-  } GstMPEGPacketizeType;
+typedef enum {
+  GST_MPEG_PACKETIZE_SYSTEM,
+  GST_MPEG_PACKETIZE_VIDEO,
+} GstMPEGPacketizeType;
 
-  struct _GstMPEGPacketize
-  {
-    /* current parse state */
-    guchar id;
+struct _GstMPEGPacketize {
+  /* current parse state */
+  guchar id;
 
-    GstPad *pad;
-    GstByteStream *bs;
-    GstMPEGPacketizeType type;
+  GstPad *pad;
+  GstByteStream *bs;
+  GstMPEGPacketizeType type;
 
-    gboolean MPEG2;
-    gboolean resync;
-  };
+  gboolean MPEG2;
+  gboolean resync;
+};
 
-  GstMPEGPacketize *gst_mpeg_packetize_new (GstPad * pad,
-      GstMPEGPacketizeType type);
-  void gst_mpeg_packetize_destroy (GstMPEGPacketize * packetize);
+GstMPEGPacketize* 	gst_mpeg_packetize_new 		(GstPad *pad, GstMPEGPacketizeType type);
+void		 	gst_mpeg_packetize_destroy 	(GstMPEGPacketize *packetize);
 
-  GstData *gst_mpeg_packetize_read (GstMPEGPacketize * packetize);
+GstData* 		gst_mpeg_packetize_read 	(GstMPEGPacketize *packetize);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __MPEGPACKETIZE_H__ */
+#endif /* __MPEGPACKETIZE_H__ */

@@ -25,9 +25,8 @@
 #include <gst/bytestream/bytestream.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_RMDEMUX \
@@ -43,49 +42,47 @@ extern "C"
 
 #define GST_RMDEMUX_MAX_STREAMS		8
 
-  typedef struct _GstRMDemux GstRMDemux;
-  typedef struct _GstRMDemuxClass GstRMDemuxClass;
-  typedef struct _GstRMDemuxStream GstRMDemuxStream;
+typedef struct _GstRMDemux GstRMDemux;
+typedef struct _GstRMDemuxClass GstRMDemuxClass;
+typedef struct _GstRMDemuxStream GstRMDemuxStream;
 
-  struct _GstRMDemux
-  {
-    GstElement element;
+struct _GstRMDemux {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad;
+  /* pads */
+  GstPad *sinkpad;
 
-    GstRMDemuxStream *streams[GST_RMDEMUX_MAX_STREAMS];
-    int n_streams;
-    int n_video_streams;
-    int n_audio_streams;
+  GstRMDemuxStream *streams[GST_RMDEMUX_MAX_STREAMS];
+  int n_streams;
+  int n_video_streams;
+  int n_audio_streams;
 
-    GstByteStream *bs;
+  GstByteStream *bs;
 
-    GNode *moov_node;
-    GNode *moov_node_compressed;
+  GNode *moov_node;
+  GNode *moov_node_compressed;
 
-    guint32 timescale;
-    guint32 duration;
+  guint32 timescale;
+  guint32 duration;
 
-    int state;
+  int state;
 
-    int offset;
-    int data_offset;
+  int offset;
+  int data_offset;
 
-    int n_chunks;
-    int chunk_index;
+  int n_chunks;
+  int chunk_index;
 
-    guint64 length;
+  guint64 length;
 
-  };
+};
 
-  struct _GstRMDemuxClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstRMDemuxClass {
+  GstElementClass parent_class;
+};
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* __GST_RMDEMUX_H__ */
+#endif /* __GST_RMDEMUX_H__ */

@@ -23,9 +23,11 @@
 
 #include <gst/gst.h>
 
-G_BEGIN_DECLS typedef struct GstMediaInfoPriv GstMediaInfoPriv;
-typedef struct _GstMediaInfo GstMediaInfo;
-typedef struct _GstMediaInfoClass GstMediaInfoClass;
+G_BEGIN_DECLS
+
+typedef struct GstMediaInfoPriv		GstMediaInfoPriv;
+typedef struct _GstMediaInfo            GstMediaInfo;
+typedef struct _GstMediaInfoClass       GstMediaInfoClass;
 
 struct _GstMediaInfo
 {
@@ -41,9 +43,8 @@ struct _GstMediaInfoClass
   GObjectClass parent_class;
 
   /* signals */
-  void (*media_info_signal) (GstMediaInfo * gst_media_info);
-  void (*error_signal) (GstMediaInfo * gst_media_info, GError * error,
-      const gchar * debug);
+  void (*media_info_signal)		(GstMediaInfo *gst_media_info);
+  void (*error_signal)			(GstMediaInfo *gst_media_info, GError *error, const gchar *debug);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -99,25 +100,34 @@ typedef struct
 #define GST_MEDIA_INFO_FORMAT		1 << 5
 #define GST_MEDIA_INFO_ALL		((1 << 6) - 1)
 
-GQuark gst_media_info_error_quark (void);
+GQuark		gst_media_info_error_quark	(void);
 
-void gst_media_info_init (void);
-GType gst_media_info_get_type (void);
+void		gst_media_info_init		(void);
+GType           gst_media_info_get_type		(void);
 
-GstMediaInfo *gst_media_info_new (GError ** error);
+GstMediaInfo *	gst_media_info_new		(GError **error);
 
-gboolean gst_media_info_set_source (GstMediaInfo * info,
-    const char *source, GError ** error);
-void gst_media_info_read_with_idler (GstMediaInfo * media_info,
-    const char *location, guint16 GST_MEDIA_INFO_FLAGS, GError ** error);
-gboolean gst_media_info_read_idler (GstMediaInfo * media_info,
-    GstMediaInfoStream ** streamp, GError ** error);
-GstMediaInfoStream *gst_media_info_read (GstMediaInfo * media_info,
-    const char *location, guint16 GST_MEDIA_INFO_FLAGS, GError ** error);
-gboolean gst_media_info_read_many (GstMediaInfo * media_info,
-    GList * locations, guint16 GST_MEDIA_INFO_FLAGS, GError ** error);
-GstCaps *gst_media_info_get_next (GstMediaInfo * media_info, GError ** error);
-
+gboolean	gst_media_info_set_source	(GstMediaInfo *info,
+						 const char *source,
+						 GError **error);
+void		gst_media_info_read_with_idler	(GstMediaInfo *media_info,
+						 const char *location,
+						 guint16 GST_MEDIA_INFO_FLAGS,
+						 GError **error);
+gboolean	gst_media_info_read_idler	(GstMediaInfo *media_info,
+						 GstMediaInfoStream **streamp,
+						 GError **error);
+GstMediaInfoStream *
+		gst_media_info_read		(GstMediaInfo *media_info,
+						 const char *location,
+						 guint16 GST_MEDIA_INFO_FLAGS,
+						 GError **error);
+gboolean	gst_media_info_read_many	(GstMediaInfo *media_info,
+						 GList *locations,
+						 guint16 GST_MEDIA_INFO_FLAGS,
+						 GError **error);
+GstCaps *	gst_media_info_get_next		(GstMediaInfo *media_info,
+						 GError **error);
 /*
  * FIXME: reset ?
 gboolean	gst_media_info_write	(GstMediaInfo *media_info,
@@ -126,4 +136,5 @@ gboolean	gst_media_info_write	(GstMediaInfo *media_info,
 					 */
 
 G_END_DECLS
+
 #endif /* __GST_MEDIA_INFO_H__ */

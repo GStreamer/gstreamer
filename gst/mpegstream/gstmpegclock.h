@@ -27,9 +27,8 @@
 #include <gst/gstsystemclock.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_MPEG_CLOCK \
@@ -43,33 +42,30 @@ extern "C"
 #define GST_IS_MPEG_CLOCK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG_CLOCK))
 
-  typedef struct _GstMPEGClock GstMPEGClock;
-  typedef struct _GstMPEGClockClass GstMPEGClockClass;
+typedef struct _GstMPEGClock GstMPEGClock;
+typedef struct _GstMPEGClockClass GstMPEGClockClass;
 
-  typedef GstClockTime (*GstMPEGClockGetTimeFunc) (GstClock * clock,
-      gpointer user_data);
+typedef GstClockTime (*GstMPEGClockGetTimeFunc) (GstClock *clock, gpointer user_data);
 
 
-  struct _GstMPEGClock
-  {
-    GstSystemClock clock;
+struct _GstMPEGClock {
+  GstSystemClock clock;
 
-    GstMPEGClockGetTimeFunc func;
-    gpointer user_data;
-  };
+  GstMPEGClockGetTimeFunc func;
+  gpointer user_data;
+};
 
-  struct _GstMPEGClockClass
-  {
-    GstSystemClockClass parent_class;
-  };
+struct _GstMPEGClockClass {
+  GstSystemClockClass parent_class;
+};
 
-  GType gst_mpeg_clock_get_type (void);
-  GstClock *gst_mpeg_clock_new (gchar * name, GstMPEGClockGetTimeFunc func,
-      gpointer user_data);
+GType                   gst_mpeg_clock_get_type 	(void);
+GstClock*		gst_mpeg_clock_new		(gchar *name, GstMPEGClockGetTimeFunc func,
+							 gpointer user_data);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_MPEG_CLOCK_H__ */
+#endif /* __GST_MPEG_CLOCK_H__ */

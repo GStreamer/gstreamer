@@ -29,46 +29,53 @@
 #include <glib/gtypes.h>
 
 G_BEGIN_DECLS
+
 #if (HAVE_LRINT && HAVE_LRINTF)
-    /*      These defines enable functionality introduced with the 1999 ISO C
-     **     standard. They must be defined before the inclusion of math.h to
-     **     engage them. If optimisation is enabled, these functions will be 
-     **     inlined. With optimisation switched off, you have to link in the
-     **     maths library using -lm.
-     */
-#define	_ISOC9X_SOURCE	1
-#define _ISOC99_SOURCE	1
-#define	__USE_ISOC9X	1
-#define	__USE_ISOC99	1
-#include	<math.h>
-#define gst_cast_float(x)	((gint)lrintf(x))
-#define gst_cast_double(x)	((gint)lrint(x))
+
+	/*	These defines enable functionality introduced with the 1999 ISO C
+	**	standard. They must be defined before the inclusion of math.h to
+	**	engage them. If optimisation is enabled, these functions will be 
+	**	inlined. With optimisation switched off, you have to link in the
+	**	maths library using -lm.
+	*/
+
+	#define	_ISOC9X_SOURCE	1
+	#define _ISOC99_SOURCE	1
+
+	#define	__USE_ISOC9X	1
+	#define	__USE_ISOC99	1
+
+	#include	<math.h>
+
+	#define gst_cast_float(x)	((gint)lrintf(x))
+	#define gst_cast_double(x)	((gint)lrint(x))
+
 #else
-    /* use a standard c cast, but do rounding correctly */
-#define gst_cast_float(x)	((gint)floor((x)+0.5))
-#define gst_cast_double(x)	((gint)floor((x)+0.5))
+	/* use a standard c cast, but do rounding correctly */
+	#define gst_cast_float(x)	((gint)floor((x)+0.5))
+	#define gst_cast_double(x)	((gint)floor((x)+0.5))
+
 #endif
+
 inline static gfloat
-GFLOAT_SWAP_LE_BE (gfloat in)
+GFLOAT_SWAP_LE_BE(gfloat in)
 {
   gint32 swap;
   gfloat out;
-
-  memcpy (&swap, &in, 4);
+  memcpy(&swap, &in, 4);
   swap = GUINT32_SWAP_LE_BE_CONSTANT (swap);
-  memcpy (&out, &swap, 4);
+  memcpy(&out, &swap, 4);
   return out;
 }
 
 inline static gdouble
-GDOUBLE_SWAP_LE_BE (gdouble in)
+GDOUBLE_SWAP_LE_BE(gdouble in)
 {
   gint64 swap;
   gdouble out;
-
-  memcpy (&swap, &in, 8);
+  memcpy(&swap, &in, 8);
   swap = GUINT64_SWAP_LE_BE_CONSTANT (swap);
-  memcpy (&out, &swap, 8);
+  memcpy(&out, &swap, 8);
   return out;
 }
 
@@ -94,4 +101,6 @@ GDOUBLE_SWAP_LE_BE (gdouble in)
 #define GDOUBLE_FROM_BE(val) (GDOUBLE_TO_BE (val))
 
 G_END_DECLS
+
 #endif /* __FLOATCAST_H__ */
+

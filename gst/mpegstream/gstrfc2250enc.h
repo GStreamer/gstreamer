@@ -28,9 +28,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_RFC2250_ENC \
@@ -46,47 +45,44 @@ extern "C"
 
 #define GST_RFC2250_ENC_IS_MPEG2(parse) (GST_MPEG_PACKETIZE_IS_MPEG2 (GST_RFC2250_ENC (parse)->packetize))
 
-  typedef enum
-  {
-    ENC_HAVE_SEQ = (1 << 0),
-    ENC_HAVE_GOP = (1 << 1),
-    ENC_HAVE_PIC = (1 << 2),
-    ENC_HAVE_DATA = (1 << 3),
-  } GstEncFlags;
+typedef enum {
+  ENC_HAVE_SEQ 		= (1 << 0),
+  ENC_HAVE_GOP 		= (1 << 1),
+  ENC_HAVE_PIC 		= (1 << 2),
+  ENC_HAVE_DATA 	= (1 << 3),
+} GstEncFlags;
+  
+typedef struct _GstRFC2250Enc GstRFC2250Enc;
+typedef struct _GstRFC2250EncClass GstRFC2250EncClass;
 
-  typedef struct _GstRFC2250Enc GstRFC2250Enc;
-  typedef struct _GstRFC2250EncClass GstRFC2250EncClass;
+struct _GstRFC2250Enc {
+  GstElement element;
 
-  struct _GstRFC2250Enc
-  {
-    GstElement element;
+  GstPad *sinkpad, *srcpad;
 
-    GstPad *sinkpad, *srcpad;
+  GstMPEGPacketize *packetize;
 
-    GstMPEGPacketize *packetize;
+  /* pack header values */
+  guint32 bit_rate;
+  guint64 next_ts;
+  GstBuffer *packet;
+  GstEncFlags flags;
+  gint MTU;
+  gint remaining;
+};
 
-    /* pack header values */
-    guint32 bit_rate;
-    guint64 next_ts;
-    GstBuffer *packet;
-    GstEncFlags flags;
-    gint MTU;
-    gint remaining;
-  };
+struct _GstRFC2250EncClass {
+  GstElementClass parent_class;
+};
 
-  struct _GstRFC2250EncClass
-  {
-    GstElementClass parent_class;
-  };
+GType gst_rfc2250_enc_get_type(void);
 
-  GType gst_rfc2250_enc_get_type (void);
-
-  gboolean gst_rfc2250_enc_plugin_init (GstPlugin * plugin);
+gboolean gst_rfc2250_enc_plugin_init 	(GstPlugin *plugin);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __RFC2250_ENC_H__ */
+#endif /* __RFC2250_ENC_H__ */

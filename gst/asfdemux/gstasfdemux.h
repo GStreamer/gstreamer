@@ -26,6 +26,7 @@
 #include "asfheaders.h"
 
 G_BEGIN_DECLS
+  
 #define GST_TYPE_ASF_DEMUX \
   (asf_demux_get_type())
 #define GST_ASF_DEMUX(obj) \
@@ -36,11 +37,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ASF_DEMUX))
 #define GST_IS_ASF_DEMUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ASF_DEMUX))
+
 typedef struct _GstASFDemux GstASFDemux;
 typedef struct _GstASFDemuxClass GstASFDemuxClass;
 
-struct _GstASFStreamContext
-{
+struct _GstASFStreamContext {
   GstPad *pad;
   guint64 pts;
 };
@@ -48,7 +49,7 @@ struct _GstASFStreamContext
 
 typedef struct
 {
-  GstPad *pad;
+  GstPad  *pad;
   guint16 id;
   guint32 frag_offset;
   guint32 sequence;
@@ -56,12 +57,11 @@ typedef struct
   GstBuffer *payload;
 } asf_stream_context;
 
-struct _GstASFDemux
-{
-  GstElement element;
+struct _GstASFDemux {
+  GstElement 	 element;
 
   /* pads */
-  GstPad *sinkpad;
+  GstPad 	*sinkpad;
 
   GstByteStream *bs;
 
@@ -77,7 +77,7 @@ struct _GstASFDemux
   GstPad *audio_pad[GST_ASF_DEMUX_NUM_AUDIO_PADS];
   gint64 audio_PTS[GST_ASF_DEMUX_NUM_AUDIO_PADS];
 
-  guint64 last_seek;
+  guint64  last_seek;
   gboolean restart;
 
   guint32 bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
@@ -96,23 +96,23 @@ struct _GstASFDemux
   guint64 pts;
 
   /* Descrambler settings */
-  guint8 span;
+  guint8  span;
   guint16 ds_packet_size;
   guint16 ds_chunk_size;
   guint16 ds_data_size;
 
 };
 
-struct _GstASFDemuxClass
-{
+struct _GstASFDemuxClass {
   GstElementClass parent_class;
 };
 
-GType gst_asf_demux_get_type (void);
+GType gst_asf_demux_get_type(void);
 
-gboolean gst_asf_demux_plugin_init (GModule * module, GstPlugin * plugin);
+gboolean 	gst_asf_demux_plugin_init 	(GModule *module, GstPlugin *plugin);
 
 
 
 G_END_DECLS
+
 #endif /* __ASF_DEMUX_H__ */

@@ -27,9 +27,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_MPEG_DEMUX \
@@ -43,39 +42,37 @@ extern "C"
 #define GST_IS_MPEG_DEMUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG_DEMUX))
 
-  typedef struct _GstMPEGDemux GstMPEGDemux;
-  typedef struct _GstMPEGDemuxClass GstMPEGDemuxClass;
+typedef struct _GstMPEGDemux GstMPEGDemux;
+typedef struct _GstMPEGDemuxClass GstMPEGDemuxClass;
 
-  typedef struct _GstMPEGStream GstMPEGStream;
+typedef struct _GstMPEGStream GstMPEGStream;
 
-  struct _GstMPEGStream
-  {
-    gint8 STD_buffer_bound_scale;
-    gint16 STD_buffer_size_bound;
-    GstPad *pad;
-    guint64 pts;
-    gint index_id;
-    gint size_bound;
-  };
+struct _GstMPEGStream {
+  gint8 	 STD_buffer_bound_scale;
+  gint16 	 STD_buffer_size_bound;
+  GstPad 	*pad;
+  guint64	 pts;
+  gint	 	 index_id;
+  gint		 size_bound;
+};
 
-  struct _GstMPEGDemux
-  {
-    GstMPEGParse parent;
+struct _GstMPEGDemux {
+  GstMPEGParse	 parent;
 
-    /* previous partial chunk and bytes remaining in it */
-    gboolean in_flush;
+  /* previous partial chunk and bytes remaining in it */
+  gboolean 	 in_flush;
 
-    /* program stream header values */
-    guint16 header_length;
-    guint32 rate_bound;
-    guint8 audio_bound;
-    gboolean fixed;
-    gboolean constrained;
-    gboolean audio_lock;
-    gboolean video_lock;
-    guint8 video_bound;
-    gboolean packet_rate_restriction;
-    gint64 total_size_bound;
+  /* program stream header values */
+  guint16	 header_length;
+  guint32	 rate_bound;
+  guint8 	 audio_bound;
+  gboolean 	 fixed;
+  gboolean 	 constrained;
+  gboolean 	 audio_lock;
+  gboolean 	 video_lock;
+  guint8 	 video_bound;
+  gboolean 	 packet_rate_restriction;
+  gint64	 total_size_bound;
 
 #define NUM_PRIVATE_1_STREAMS 	 8
 #define NUM_PCM_STREAMS 	 8
@@ -83,34 +80,33 @@ extern "C"
 #define NUM_VIDEO_STREAMS 	16
 #define NUM_AUDIO_STREAMS 	32
 
-    /* stream output */
-    GstMPEGStream *private_1_stream[NUM_PRIVATE_1_STREAMS];	/* up to 8 ac3 audio tracks */
-    GstMPEGStream *pcm_stream[NUM_PCM_STREAMS];
-    GstMPEGStream *subtitle_stream[NUM_SUBTITLE_STREAMS];
-    GstMPEGStream *private_2_stream;
-    GstMPEGStream *video_stream[NUM_VIDEO_STREAMS];
-    GstMPEGStream *audio_stream[NUM_AUDIO_STREAMS];
+  /* stream output */
+  GstMPEGStream *private_1_stream[NUM_PRIVATE_1_STREAMS];	/* up to 8 ac3 audio tracks */
+  GstMPEGStream *pcm_stream[NUM_PCM_STREAMS];
+  GstMPEGStream *subtitle_stream[NUM_SUBTITLE_STREAMS];
+  GstMPEGStream *private_2_stream;
+  GstMPEGStream *video_stream[NUM_VIDEO_STREAMS];
+  GstMPEGStream *audio_stream[NUM_AUDIO_STREAMS];
 
-    /* The type of linear PCM samples associated to each channel. The
-       values are bit fields with the same format of the sample_info
-       field in the linear PCM header. */
-    guint8 lpcm_sample_info[NUM_PCM_STREAMS];
+  /* The type of linear PCM samples associated to each channel. The
+     values are bit fields with the same format of the sample_info
+     field in the linear PCM header. */
+  guint8	 lpcm_sample_info[NUM_PCM_STREAMS];		
 
-    GstIndex *index;
-  };
+  GstIndex	*index;
+};
 
-  struct _GstMPEGDemuxClass
-  {
-    GstMPEGParseClass parent_class;
-  };
+struct _GstMPEGDemuxClass {
+  GstMPEGParseClass parent_class;
+};
 
-  GType gst_mpeg_demux_get_type (void);
+GType gst_mpeg_demux_get_type(void);
 
-  gboolean gst_mpeg_demux_plugin_init (GstPlugin * plugin);
+gboolean gst_mpeg_demux_plugin_init 	(GstPlugin *plugin);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __MPEG_DEMUX_H__ */
+#endif /* __MPEG_DEMUX_H__ */

@@ -25,9 +25,8 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 #include <lame/lame.h>
 
@@ -42,76 +41,73 @@ extern "C"
 #define GST_IS_LAME_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LAME))
 
-  typedef enum
-  {
-    GST_LAME_OPEN = GST_ELEMENT_FLAG_LAST,
+typedef enum {
+  GST_LAME_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-    GST_LAME_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-  } GstLameFlags;
+  GST_LAME_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+} GstLameFlags;
 
-  typedef struct _GstLame GstLame;
-  typedef struct _GstLameClass GstLameClass;
+typedef struct _GstLame GstLame;
+typedef struct _GstLameClass GstLameClass;
 
-  struct _GstLame
-  {
-    GstElement element;
-    /* pads */
-    GstPad *srcpad, *sinkpad;
+struct _GstLame {
+  GstElement element;
+  /* pads */
+  GstPad *srcpad, *sinkpad;
 
-    gint samplerate;
-    gint num_channels;
-    gboolean initialized;
+  gint samplerate;
+  gint num_channels;
+  gboolean initialized;
 
-    gint bitrate;
-    gfloat compression_ratio;
-    gint quality;
-    gint mode;
-    gboolean force_ms;
-    gboolean free_format;
-    gboolean copyright;
-    gboolean original;
-    gboolean error_protection;
-    gint padding_type;
-    gboolean extension;
-    gboolean strict_iso;
-    gboolean disable_reservoir;
-    gboolean vbr;
-    gint vbr_mean_bitrate;
-    gint vbr_min_bitrate;
-    gint vbr_max_bitrate;
-    gint vbr_hard_min;
-    gint lowpass_freq;
-    gint lowpass_width;
-    gint highpass_freq;
-    gint highpass_width;
-    gboolean ath_only;
-    gboolean ath_short;
-    gboolean no_ath;
-    gint ath_type;
-    gint ath_lower;
-    gint cwlimit;
-    gboolean allow_diff_short;
-    gboolean no_short_blocks;
-    gboolean emphasis;
+  gint bitrate;
+  gfloat compression_ratio;
+  gint quality;
+  gint mode;
+  gboolean force_ms;
+  gboolean free_format;
+  gboolean copyright;
+  gboolean original;
+  gboolean error_protection;
+  gint padding_type;
+  gboolean extension;
+  gboolean strict_iso;
+  gboolean disable_reservoir;
+  gboolean vbr;
+  gint vbr_mean_bitrate;
+  gint vbr_min_bitrate;
+  gint vbr_max_bitrate;
+  gint vbr_hard_min;
+  gint lowpass_freq;
+  gint lowpass_width;
+  gint highpass_freq;
+  gint highpass_width;
+  gboolean ath_only;
+  gboolean ath_short;
+  gboolean no_ath;
+  gint ath_type;
+  gint ath_lower;
+  gint cwlimit;
+  gboolean allow_diff_short;
+  gboolean no_short_blocks;
+  gboolean emphasis;
 
-    lame_global_flags *lgf;
+  lame_global_flags *lgf;
 
-    GstTagList *tags;
+  GstTagList *tags;
 
-    /* time tracker */
-    guint64 last_ts, last_offs, last_duration;
-  };
+  /* time tracker */
+  guint64 last_ts, last_offs, last_duration;
+};
 
-  struct _GstLameClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstLameClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_lame_get_type (void);
+GType gst_lame_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_LAME_H__ */
+#endif /* __GST_LAME_H__ */

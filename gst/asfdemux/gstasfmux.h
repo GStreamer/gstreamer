@@ -24,9 +24,8 @@
 #include "asfheaders.h"
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 #define GST_TYPE_ASFMUX \
   (gst_asfmux_get_type())
@@ -41,55 +40,50 @@ extern "C"
 
 #define MAX_ASF_OUTPUTS 16
 
-  typedef struct _GstAsfMuxStream
-  {
-    guint index;
+typedef struct _GstAsfMuxStream {
+  guint index;
 
-    gint type;			/* ASF_STREAM_VIDEO/AUDIO */
-    GstPad *pad;
-    guint64 time;
-    GstBuffer *queue;
-    gboolean connected, eos;
-    guint seqnum;
-    guint bitrate;
+  gint type; /* ASF_STREAM_VIDEO/AUDIO */
+  GstPad *pad;
+  guint64 time;
+  GstBuffer *queue;
+  gboolean connected, eos;
+  guint seqnum;
+  guint bitrate;
 
-    union
-    {
-      asf_stream_audio audio;
-      struct
-      {
-	asf_stream_video stream;
-	asf_stream_video_format format;
-      } video;
-    } header;
-  } GstAsfMuxStream;
+  union {
+    asf_stream_audio        audio;
+    struct {
+      asf_stream_video        stream;
+      asf_stream_video_format format;
+    } video;
+  } header;
+} GstAsfMuxStream;
 
-  typedef struct _GstAsfMux
-  {
-    GstElement element;
+typedef struct _GstAsfMux {
+  GstElement element;
 
-    /* pads */
-    GstPad *srcpad;
-    GstAsfMuxStream output[MAX_ASF_OUTPUTS];
-    guint num_outputs, num_video, num_audio;
-    gboolean write_header;
+  /* pads */
+  GstPad *srcpad;
+  GstAsfMuxStream output[MAX_ASF_OUTPUTS];
+  guint num_outputs, num_video, num_audio;
+  gboolean write_header;
 
-    /* packet */
-    GstBuffer *packet;
-    guint num_packets, packet_frames;
-    guint sequence;
-    guint64 data_offset;
-  } GstAsfMux;
+  /* packet */
+  GstBuffer *packet;
+  guint num_packets, packet_frames;
+  guint sequence;
+  guint64 data_offset;
+} GstAsfMux;
 
-  typedef struct _GstAsfMuxClass
-  {
-    GstElementClass parent_class;
-  } GstAsfMuxClass;
+typedef struct _GstAsfMuxClass {
+  GstElementClass parent_class;
+} GstAsfMuxClass;
 
-  GType gst_asfmux_get_type (void);
+GType gst_asfmux_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* __GST_ASFMUX_H__ */
+#endif /* __GST_ASFMUX_H__ */

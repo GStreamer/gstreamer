@@ -27,6 +27,7 @@
 #include <gst/bytestream/bytestream.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_RIFF_READ \
   (gst_riff_read_get_type ())
 #define GST_RIFF_READ(obj) \
@@ -39,13 +40,13 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_RIFF_READ))
 #define GST_RIFF_READ_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RIFF_READ, GstRiffReadClass))
-    typedef struct _GstRiffLevel
-{
-  guint64 start, length;
+
+typedef struct _GstRiffLevel {
+  guint64 start,
+	  length;
 } GstRiffLevel;
 
-typedef struct _GstRiffRead
-{
+typedef struct _GstRiffRead {
   GstElement parent;
 
   GstPad *sinkpad;
@@ -54,35 +55,43 @@ typedef struct _GstRiffRead
   GList *level;
 } GstRiffRead;
 
-typedef struct _GstRiffReadClass
-{
+typedef struct _GstRiffReadClass {
   GstElementClass parent;
 } GstRiffReadClass;
 
-GType gst_riff_read_get_type (void);
+GType    gst_riff_read_get_type  (void);
 
-guint32 gst_riff_peek_tag (GstRiffRead * riff, guint * level_up);
-guint32 gst_riff_peek_list (GstRiffRead * riff);
+guint32  gst_riff_peek_tag       (GstRiffRead *riff,
+				  guint       *level_up);
+guint32  gst_riff_peek_list      (GstRiffRead *riff);
 
-GstEvent *gst_riff_read_seek (GstRiffRead * riff, guint64 offset);
-gboolean gst_riff_read_skip (GstRiffRead * riff);
-gboolean gst_riff_read_data (GstRiffRead * riff,
-    guint32 * tag, GstBuffer ** buf);
-gboolean gst_riff_read_ascii (GstRiffRead * riff, guint32 * tag, gchar ** str);
-gboolean gst_riff_read_list (GstRiffRead * riff, guint32 * tag);
-gboolean gst_riff_read_header (GstRiffRead * read, guint32 * doctype);
+GstEvent *gst_riff_read_seek      (GstRiffRead *riff,
+				  guint64      offset);
+gboolean gst_riff_read_skip      (GstRiffRead *riff);
+gboolean gst_riff_read_data      (GstRiffRead *riff,
+				  guint32     *tag,
+				  GstBuffer  **buf);
+gboolean gst_riff_read_ascii     (GstRiffRead *riff,
+				  guint32     *tag,
+				  gchar      **str);
+gboolean gst_riff_read_list      (GstRiffRead *riff,
+				  guint32     *tag);
+gboolean gst_riff_read_header    (GstRiffRead *read,
+				  guint32     *doctype);
 
 /*
  * Utility functions (including byteswapping).
  */
-gboolean gst_riff_read_strh (GstRiffRead * riff, gst_riff_strh ** header);
-gboolean gst_riff_read_strf_vids (GstRiffRead * riff,
-    gst_riff_strf_vids ** header);
-gboolean gst_riff_read_strf_auds (GstRiffRead * riff,
-    gst_riff_strf_auds ** header);
-gboolean gst_riff_read_strf_iavs (GstRiffRead * riff,
-    gst_riff_strf_iavs ** header);
-gboolean gst_riff_read_info (GstRiffRead * riff);
+gboolean gst_riff_read_strh      (GstRiffRead *riff,
+				  gst_riff_strh **header);
+gboolean gst_riff_read_strf_vids (GstRiffRead *riff,
+				  gst_riff_strf_vids **header);
+gboolean gst_riff_read_strf_auds (GstRiffRead *riff,
+				  gst_riff_strf_auds **header);
+gboolean gst_riff_read_strf_iavs (GstRiffRead *riff,
+				  gst_riff_strf_iavs **header);
+gboolean gst_riff_read_info      (GstRiffRead *riff);
 
 G_END_DECLS
+
 #endif /* __GST_RIFF_READ_H__ */

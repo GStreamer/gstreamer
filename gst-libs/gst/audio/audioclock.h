@@ -27,6 +27,7 @@
 #include <gst/gstsystemclock.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_AUDIO_CLOCK \
   (gst_audio_clock_get_type())
 #define GST_AUDIO_CLOCK(obj) \
@@ -37,15 +38,14 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_CLOCK))
 #define GST_IS_AUDIO_CLOCK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_CLOCK))
+
 typedef struct _GstAudioClock GstAudioClock;
 typedef struct _GstAudioClockClass GstAudioClockClass;
 
-typedef GstClockTime (*GstAudioClockGetTimeFunc) (GstClock * clock,
-    gpointer user_data);
+typedef GstClockTime (*GstAudioClockGetTimeFunc) (GstClock *clock, gpointer user_data);
 
 
-struct _GstAudioClock
-{
+struct _GstAudioClock {
   GstSystemClock clock;
 
   GstClockTime prev1, prev2;
@@ -63,19 +63,19 @@ struct _GstAudioClock
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstAudioClockClass
-{
+struct _GstAudioClockClass {
   GstSystemClockClass parent_class;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_audio_clock_get_type (void);
-GstClock *gst_audio_clock_new (gchar * name, GstAudioClockGetTimeFunc func,
-    gpointer user_data);
-void gst_audio_clock_set_active (GstAudioClock * aclock, gboolean active);
+GType           gst_audio_clock_get_type 	(void);
+GstClock*	gst_audio_clock_new		(gchar *name, GstAudioClockGetTimeFunc func,
+                                                 gpointer user_data);
+void		gst_audio_clock_set_active 	(GstAudioClock *aclock, gboolean active);
 
-void gst_audio_clock_update_time (GstAudioClock * aclock, GstClockTime time);
+void		gst_audio_clock_update_time	(GstAudioClock *aclock, GstClockTime time);
 
 G_END_DECLS
+
 #endif /* __GST_AUDIO_CLOCK_H__ */
