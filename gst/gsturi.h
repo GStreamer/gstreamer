@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstscheduler.h: Header for default scheduler code
+ * gsturi.h: Header for uri to element mappings
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -43,6 +43,7 @@ typedef struct _GstURIHandlerClass GstURIHandlerClass;
 struct _GstURIHandler {
   GstPluginFeature feature;
 
+  /* --- public ---- */
   gchar *uri;              /* The uri that is described */
   gchar *longdesc;         /* description of the uri */
   gchar *element;          /* The element that can handle this uri */
@@ -58,12 +59,12 @@ GType			gst_uri_handler_get_type	(void);
 GstURIHandler*		gst_uri_handler_new		(const gchar *name, 
 		          				 const gchar *uri, const gchar *longdesc, 
 							 const gchar *element, gchar *property);
-void                    gst_uri_handler_destroy		(GstURIHandler *factory);
+void                    gst_uri_handler_destroy		(GstURIHandler *handler);
 
 GstURIHandler*		gst_uri_handler_find		(const gchar *name);
 GstURIHandler*		gst_uri_handler_find_by_uri	(const gchar *uri);
 
-GstElement*		gst_uri_handler_create		(GstURIHandler *factory, const gchar *name);
+GstElement*		gst_uri_handler_create		(GstURIHandler *handler, const gchar *name);
 GstElement*		gst_uri_handler_make_by_uri	(const gchar *uri, const gchar *name);
 
 G_END_DECLS

@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gsttype.c: Media-type management functions
+ * gsturi.c: register URI handlers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,13 +18,6 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
- */
-
-/* TODO:
- * probably should set up a hash table for the type id's, since currently
- * it's a rather pathetic linear search.  Eventually there may be dozens
- * of id's, but in reality there are only so many instances of lookup, so
- * I'm not overly worried yet...
  */
 
 #include "gst_private.h"
@@ -43,10 +36,10 @@ static GstPluginFeatureClass *parent_class = NULL;
 GType
 gst_uri_handler_get_type (void)
 {
-  static GType typefactory_type = 0;
+  static GType urihandler_type = 0;
 
-  if (!typefactory_type) {
-    static const GTypeInfo typefactory_info = {
+  if (!urihandler_type) {
+    static const GTypeInfo urihandler_info = {
       sizeof (GstURIHandlerClass),
       NULL,
       NULL,
@@ -58,10 +51,10 @@ gst_uri_handler_get_type (void)
       (GInstanceInitFunc) gst_uri_handler_init,
       NULL
     };
-    typefactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-                                               "GstURIHandler", &typefactory_info, 0);
+    urihandler_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
+                                               "GstURIHandler", &urihandler_info, 0);
   }
-  return typefactory_type;
+  return urihandler_type;
 }
 
 static void
@@ -85,11 +78,16 @@ gst_uri_handler_init (GstURIHandler *factory)
 
 /**
  * gst_uri_handler_new:
- * @definition: the definition to use
+ * @name: the name of the feature
+ * @uri: the uri to register
+ * @longdesc: a description for this uri
+ * @element: an element that can handle the uri
+ * @property: the property on the element to set the uri
  *
- * Creata a new typefactory from the given definition.
+ * Creates a plugin feature to register an element that can
+ * handle the given uri on the given property.
  *
- * Returns: the new typefactory
+ * Returns: the new urihandler
  */
 GstURIHandler*
 gst_uri_handler_new (const gchar *name, 
@@ -120,7 +118,7 @@ gst_uri_handler_new (const gchar *name,
 
 /**
  * gst_uri_handler_find:
- * @name: the name of the typefactory to find
+ * @name: the name of the urihandler to find
  *
  * Return the URIHandler with the given name. 
  *
@@ -140,6 +138,14 @@ gst_uri_handler_find (const gchar *name)
   return NULL;
 }
 
+/**
+ * gst_uri_handler_find_by_uri:
+ * @uri: the uri to find a handler for
+ *
+ * Find a URIHandler for the given uri.
+ *
+ * Returns: a GstURIHandler that can handle the given uri.
+ */
 GstURIHandler*
 gst_uri_handler_find_by_uri (const gchar *uri)
 {
@@ -163,18 +169,37 @@ gst_uri_handler_find_by_uri (const gchar *uri)
   return handler;
 }
 
+/**
+ * gst_uri_handler_create:
+ * @handler: the uri handler to use
+ * @name: the name of the element
+ *
+ * Create an element with the given name from the given handler.
+ *
+ * Returns: a new element associated with the handler.
+ */
 GstElement*
-gst_uri_handler_create (GstURIHandler *factory, const gchar *name)
+gst_uri_handler_create (GstURIHandler *handler, const gchar *name)
 {
   GstElement *element = NULL;
 
-  g_return_val_if_fail (factory != NULL, NULL);
+  g_return_val_if_fail (handler != NULL, NULL);
 
-  element = gst_element_factory_make (factory->element, name);
+  element = gst_element_factory_make (handler->element, name);
 
   return element;
 }
 
+/**
+ * gst_uri_handler_make_by_uri:
+ * @uri: the uri
+ * @name: the name of the element
+ *
+ * Create an element with the given name that can handle the given
+ * uri. This function will also use set the uri on the element.
+ *
+ * Returns: a new element that can handle the uri.
+ */
 GstElement*
 gst_uri_handler_make_by_uri (const gchar *uri, const gchar *name)
 {

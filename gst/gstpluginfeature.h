@@ -41,11 +41,13 @@ typedef struct _GstPluginFeature GstPluginFeature;
 typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
 
 struct _GstPluginFeature {
-  GObject object;
+  GObject 	 object;
 
-  gchar *name;
+  gchar 	*name;
+  gint   	 rank;
 
-  gpointer manager;
+  /* --- private --- */
+  gpointer 	 manager;
 };
 
 struct _GstPluginFeatureClass {
