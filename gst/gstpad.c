@@ -1304,10 +1304,10 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
   }
   if (link->srcpad == pad) {
     link->srccaps = gst_caps_copy(caps);
-    link->sinkcaps = gst_pad_get_allowed_caps (link->sinkpad);
+    link->sinkcaps = gst_pad_get_caps (link->sinkpad);
     link->srcnotify = FALSE;
   } else {
-    link->srccaps = gst_pad_get_allowed_caps (link->srcpad);
+    link->srccaps = gst_pad_get_caps (link->srcpad);
     link->sinkcaps = gst_caps_copy(caps);
     link->sinknotify = FALSE;
   }
@@ -2120,22 +2120,19 @@ gst_pad_set_explicit_caps (GstPad *pad, GstCaps *caps)
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  if (caps == NULL) {
-    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
-    return TRUE;
-  }
+  GST_CAT_DEBUG (GST_CAT_PADS, "setting explicit caps to %s",
+      gst_caps_to_string (caps));
 
-  if (!GST_PAD_IS_LINKED (pad)) {
-    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), caps);
+  gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), caps);
+
+  if (caps == NULL || !GST_PAD_IS_LINKED (pad)) {
     return TRUE;
   }
   link_ret = gst_pad_try_set_caps (pad, caps);
-  if (GST_PAD_LINK_FAILED (link_ret)) {
+  if (link_ret == GST_PAD_LINK_REFUSED) {
     gst_element_error (gst_pad_get_parent (pad), "negotiation failed");
     return FALSE;
   }
-
-  gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), caps);
 
   return TRUE;
 }
@@ -2146,7 +2143,9 @@ gst_pad_explicit_getcaps (GstPad *pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   if (GST_RPAD_EXPLICIT_CAPS (pad) == NULL) {
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    const GstCaps *caps = gst_pad_get_pad_template_caps (pad);
+
+    return gst_caps_copy (caps);
   }
   return gst_caps_copy (GST_RPAD_EXPLICIT_CAPS (pad));
 }
