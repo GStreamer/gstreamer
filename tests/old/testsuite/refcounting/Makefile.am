@@ -5,7 +5,7 @@ testprogs = bin
 # element_SOURCES = element.c mem.c
 pad_SOURCES = pad.c mem.c
 # element_pad_SOURCES = element_pad.c mem.c
-$ bin_SOURCES = bin.c mem.c
+# bin_SOURCES = bin.c mem.c
 
 TESTS = $(testprogs)
 
