@@ -90,7 +90,7 @@ typedef cothread cothread_context;
  */
 #define do_cothreads_init(x) G_STMT_START{	\
     if (!cothreads_initialized())	\
-      cothreads_init(x);	\
+      cothreads_init(0x0200000, 32);	\
   }G_STMT_END
 
 #define do_cothreads_stackquery(stack,size)	\
