@@ -1,3 +1,11 @@
+2004-03-12  Benjamin Otte  <otte@gnome.org>
+
+	* gst-libs/gst/xoverlay/xoverlay.c: (gst_x_overlay_set_xwindow_id),
+	(gst_x_overlay_got_xwindow_id):
+	* gst-libs/gst/xoverlay/xoverlay.h:
+	  replace XID with unsigned long to get rid of the xlibs dependency in
+	  XOverlay (fixes #137004)
+
 2004-03-13  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/effectv/gstaging.c: (gst_agingtv_base_init),
 	(gst_agingtv_setup):
