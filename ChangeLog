@@ -1,3 +1,18 @@
+2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/audiofile/gstafsink.c: (gst_afsink_plugin_init):
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_plugin_init):
+	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
+	* ext/sndfile/gstsf.c: (plugin_init):
+	* gst/avi/gstavi.c: (plugin_init):
+	* sys/dxr3/dxr3init.c: (plugin_init):
+	* sys/oss/gstossaudio.c: (plugin_init):
+	* sys/v4l/gstv4l.c: (plugin_init):
+	* sys/v4l2/gstv4l2.c: (plugin_init):
+          remove textdomain calls
+	* po/nl.po:
+          update Dutch translation
+
 2004-02-02  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup),
