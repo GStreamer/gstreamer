@@ -20,6 +20,8 @@
 
 #include <string.h>
 
+#include <gst/gstbytestream.h>
+
 #include "gstsiddec.h"
 
 /* elementfactory information */
@@ -33,7 +35,7 @@ static GstElementDetails gst_siddec_details = {
   "(C) 2001",
 };
 
-static GstCaps* sid_typefind (GstBuffer *buf, gpointer priv);
+static GstCaps* sid_typefind (GstByteStream *bs, gpointer priv);
 
 /* typefactory for 'sid' */
 static GstTypeDefinition siddefinition = {
@@ -184,12 +186,16 @@ gst_siddec_get_type (void)
 }
 
 static GstCaps*
-sid_typefind (GstBuffer *buf, gpointer priv)
+sid_typefind (GstByteStream *bs, gpointer priv)
 {
-  guchar *data = GST_BUFFER_DATA (buf);
+  guchar *data;
+  GstBuffer *buffer;
   GstCaps *newcaps;
 
   GST_DEBUG ("sid_demux: typefind");
+
+  gst_bytestream_peek (bs, &buffer, 4);
+  data = GST_BUFFER_DATA (buffer);
 
   if (strncmp ((const char *)data, "PSID", 4))
     return NULL;
