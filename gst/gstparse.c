@@ -354,6 +354,7 @@ gst_parse_launch(const gchar *cmdline,GstBin *parent)
   gint newargc;
   gint i;
   const gchar *cp, *start, *end;
+  gchar *temp;
   GSList *string_list = NULL, *slist;
 
   priv.bincount = 0;
@@ -366,20 +367,32 @@ gst_parse_launch(const gchar *cmdline,GstBin *parent)
   end = cmdline + strlen(cmdline);
   newargc = 0;
 
+  temp = "";
+
   // Extract the arguments to a gslist in reverse order
   for (cp = cmdline; cp < end; ) {
-    i = strcspn(cp, "([{}]) \"");
+    i = strcspn(cp, "([{}]) \"\\");
 
     if (i > 0) {
-      // normal argument - copy and add to the list
-      string_list = g_slist_prepend(string_list, g_strndup(cp, i));
-      newargc++;
+      temp = g_strconcat (temp, g_strndup (cp, i), NULL);
+      
+      // see if we have an escape char
+      if (cp[i] != '\\') {
+        // normal argument - copy and add to the list
+        string_list = g_slist_prepend(string_list, temp);
+        newargc++;
+	temp = "";
+      }
+      else {
+        temp = g_strconcat (temp, g_strndup (&cp[++i], 1), NULL);
+      }
       cp += i;
     }
 
     // skip spaces
-    while (cp < end && *cp == ' ')
+    while (cp < end && *cp == ' ') {
       cp++;
+    }
 
     // handle quoted arguments
     if (*cp == '"') {
