@@ -8,15 +8,10 @@ else
 GSTARCH_SRCS = 
 endif
 
-EXTRA_libgst_la_SOURCES =	\
-	gstcpuid_i386.s
-
 if USE_GLIB2
-GST_OBJECT_MODEL_SRC = gstmarshal.c
-GST_OBJECT_MODEL_HDR = gstmarshal.h
+GST_OBJECT_MODEL_SRC = gstmarshal.c gstmarshal.h
 else
-GST_OBJECT_MODEL_SRC = gobject2gtk.c
-GST_OBJECT_MODEL_HDR = gobject2gtk.h
+GST_OBJECT_MODEL_SRC = gobject2gtk.c gobject2gtk.h
 endif
 
 if GST_DISABLE_LOADSAVE
@@ -51,7 +46,10 @@ else
 GST_TRACE_SRC = gsttrace.c
 endif
 
+EXTRA_libgst_la_SOURCES = gstcpuid_i386.s gstmarshal.list gobject2gtk.c gobject2gtk.h gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
+
 SUBDIRS = . types elements $(GST_AUTOPLUG_DIRS)
+DIST_SUBDIRS = types elements autoplug
 
 libgst_la_SOURCES =		\
 	cothreads.c		\
@@ -142,7 +140,6 @@ libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
-	$(GST_OBJECT_MODEL_HDR)	\
 	gstobject.h		\
 	gsttypes.h		\
 	gstautoplug.h		\
@@ -185,4 +182,4 @@ CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""@sysconfdir@/gstream
 LIBS = $(LIBGST_LIBS)
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
-EXTRA_DIST = ROADMAP gstmarshal.list
+EXTRA_DIST = ROADMAP
