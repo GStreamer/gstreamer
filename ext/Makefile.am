@@ -238,6 +238,12 @@ endif
 #MAS_DIR=
 #endif
 
+if USE_MUSEPACK
+MUSEPACK_DIR=musepack
+else
+MUSEPACK_DIR=
+endif
+
 if USE_MUSICBRAINZ
 MUSICBRAINZ_DIR=musicbrainz
 else
@@ -399,6 +405,7 @@ SUBDIRS=\
 	$(MPEG2DEC_DIR) \
 	$(MPEG2ENC_DIR) \
 	$(MPLEX_DIR) \
+	$(MUSEPACK_DIR) \
 	$(MUSICBRAINZ_DIR) \
 	$(OGG_DIR) \
 	$(PANGO_DIR) \
@@ -458,6 +465,7 @@ DIST_SUBDIRS=\
 	mpeg2dec \
 	mpeg2enc \
 	mplex \
+	musepack \
 	musicbrainz \
 	nas \
 	ogg \
