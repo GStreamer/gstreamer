@@ -315,7 +315,7 @@ gst_element_default_error (GObject *object, GstObject *orig, gchar *error)
 
 typedef struct {
   const GParamSpec *pspec;
-  const GValue *value;
+  GValue value;
 } prop_value_t;
 
 static void
@@ -324,7 +324,7 @@ element_set_property (GstElement *element, const GParamSpec *pspec, const GValue
   prop_value_t *prop_value = g_new0 (prop_value_t, 1);
 
   prop_value->pspec = pspec;
-  prop_value->value = value;
+  prop_value->value = *value;
 
   g_async_queue_push (element->prop_value_queue, prop_value);
 }
@@ -405,7 +405,8 @@ gst_element_set_pending_properties (GstElement *element)
   prop_value_t *prop_value;
 
   while ((prop_value = g_async_queue_try_pop (element->prop_value_queue))) {
-    g_object_set_property ((GObject*)element, prop_value->pspec->name, prop_value->value);
+    g_object_set_property ((GObject*)element, prop_value->pspec->name, &prop_value->value);
+    g_value_unset (&prop_value->value);
     g_free (prop_value);
   }
 }
