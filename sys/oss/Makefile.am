@@ -22,5 +22,4 @@ noinst_HEADERS = gstosssink.h	\
 		gstossgst.h	\
 		gstosshelper.h	\
 		gstosselement.h\
-		gstossmixer.c	\
 		gstossmixer.h
