@@ -82,7 +82,10 @@ static gboolean
 gst_v4l_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   g_assert (iface_type == GST_TYPE_TUNER ||
-      iface_type == GST_TYPE_X_OVERLAY || iface_type == GST_TYPE_COLOR_BALANCE);
+#ifdef HAVE_XVIDEO
+      iface_type == GST_TYPE_X_OVERLAY ||
+#endif
+      iface_type == GST_TYPE_COLOR_BALANCE);
 
   return TRUE;
 }
