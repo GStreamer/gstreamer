@@ -494,8 +494,10 @@ gst_thread_child_state_change (GstBin *bin, GstElementState oldstate,
 			       GstElementState newstate, GstElement *element)
 {
   GST_DEBUG (GST_CAT_THREAD, "%s (from thread %s) child %s changed state from %s to %s\n",
-              GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (gst_thread_get_current()), GST_ELEMENT_NAME (element), 
-              gst_element_state_get_name (oldstate), gst_element_state_get_name (newstate));
+              GST_ELEMENT_NAME (bin), 
+              gst_thread_get_current() ? GST_ELEMENT_NAME (gst_thread_get_current()) : "(none)", 
+              GST_ELEMENT_NAME (element), gst_element_state_get_name (oldstate),
+              gst_element_state_get_name (newstate));
   if (parent_class->child_state_change)
     parent_class->child_state_change (bin, oldstate, newstate, element);
   /* We'll wake up the main thread now. Note that we can't lock the thread here, 
