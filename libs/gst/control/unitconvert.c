@@ -299,7 +299,7 @@ gst_unitconv_register_unit(const gchar *domain_name,
 			g_hash_table_lookup(_gst_unit_domain_defaults, domain_name) == NULL, FALSE);
 	}
 	
-	GST_DEBUG (GST_CAT_PARAMS,"creating unit: %s\n", unit_name);
+	GST_DEBUG (GST_CAT_PARAMS,"creating unit: %s", unit_name);
 
 	unit = g_new0(GstUnit,1);
 	
