@@ -1,3 +1,13 @@
+2004-12-28  Maciej Katafiasz  <mathrick@mathrick.org>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-demux.h:
+	Fix Vorbis streams failing to decode in some files, where cluster_time
+	isn't 0, because then it doesn't send codec_priv before actual data.
+	Remove time-based test and replace it with marker set on beginning of
+	new stream
+
 2004-12-28  David Schleef  <ds@schleef.org>
 
 	Merge patch from Ronald fixing problems with streaming
@@ -612,7 +622,7 @@
 
 2004-12-01  Christophe Fergeau  <teuf@gnome.org>
 
-	* ext/mad/gstmad.c: (mpg123_parse_xing_header): fix xing header 
+	* ext/mad/gstmad.c: (mpg123_parse_xing_header): fix xing header
 	detection on mono and stereo mp3 files.
 
 2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
@@ -745,9 +755,9 @@
 
 2004-11-28  Martin Soto  <martinsoto@users.sourceforge.net>
 
-	* ext/alsa/gstalsasink.c (gst_alsa_sink_loop): 
-	* ext/alsa/gstalsa.h: 
-	* ext/alsa/gstalsa.c (gst_alsa_set_clock): 
+	* ext/alsa/gstalsasink.c (gst_alsa_sink_loop):
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsa.c (gst_alsa_set_clock):
 	Make alsasink actually honor gst_element_set_clock and use that
 	clock instead of ist internal one.
 
@@ -1058,7 +1068,7 @@
 2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/videorate/gstvideorate.c:
-	  Handle all video formats. Fixes #159186. 
+	  Handle all video formats. Fixes #159186.
 
 2004-11-16  Jan Schmidt  <thaytan@mad.scientist.com>
 	* gst/synaesthesia/gstsynaesthesia.c:
@@ -1263,7 +1273,7 @@
 	* ext/libcaca/gstcacasink.c: (gst_cacasink_class_init),
 	(gst_cacasink_init), (gst_cacasink_chain):
 	* ext/libcaca/gstcacasink.h:
-	Cacasink inherits from VideoSink, so let that store the clock. 
+	Cacasink inherits from VideoSink, so let that store the clock.
 
 2004-11-09  Wim Taymans  <wim@fluendo.com>
 
@@ -1498,7 +1508,7 @@
 	(gst_alpha_get_property), (gst_alpha_add), (gst_alpha_chroma_key),
 	(gst_alpha_init_params), (gst_alpha_chain),
 	(gst_alpha_change_state):
-	Updated the chroma keying algorithm with something more 
+	Updated the chroma keying algorithm with something more
 	sophisticated.
 
 2004-11-03  Wim Taymans  <wim@fluendo.com>
@@ -1733,7 +1743,7 @@
 	* gst-libs/gst/riff/riff-media.c:
 	(gst_riff_create_audio_caps_with_data),
 	(gst_riff_create_audio_template_caps):
-	  Allow WMAV3, with up to 6 channels. 
+	  Allow WMAV3, with up to 6 channels.
 	* gst/asfdemux/gstasfmux.c: (gst_asfmux_request_new_pad):
 	  Don't call gst_pad_set_event_function on a sink pad.
 	* gst/mpegstream/gstdvddemux.c:
@@ -1844,7 +1854,7 @@
 	(gst_iir_equalizer_set_property), (gst_iir_equalizer_get_property),
 	(gst_iir_equalizer_filter_inplace), (gst_iir_equalizer_setup),
 	(plugin_init):
-	  add an equalizer  
+	  add an equalizer
 
 2004-10-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -2298,9 +2308,9 @@
 	* ext/raw1394/gstdv1394src.h:
 	Added conversion/query functions.
 	Update buffer timestamps,
-	Added signals. 
-	Added uri dv:// so it might play from the firewire in playbin. 
-	Fix a possible leak. 
+	Added signals.
+	Added uri dv:// so it might play from the firewire in playbin.
+	Fix a possible leak.
 	Added debugging.
 
 2004-10-15  Wim Taymans  <wim@fluendo.com>
@@ -2645,7 +2655,7 @@
 	can happen ASAP.
 	Addes some more debug info.
 	Do not try to plug pads with multiple caps structures or ANY
-	because it is too dangerous since we do not do dynamic 
+	because it is too dangerous since we do not do dynamic
 	replugging.
 
 2004-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
@@ -2754,7 +2764,7 @@
 2004-10-04 Iain <iaingnome@gmail.com>
 
 	* ext/speex/gstspeexdec.h: Revert the includes changes.
-		
+
 	* ext/speex/gstspeexenc.[ch]: Revert the includes changes.
 
 2004-09-30 Iain <iaingnome@gmail.com>
@@ -3073,7 +3083,7 @@
 
 	* gst/interleave/interleave.c (all_channels_new_media): Checks if all
 	the channels have received a new media event.
-	(interleave_buffered_loop): Compresses a new media event on all 
+	(interleave_buffered_loop): Compresses a new media event on all
 	channels into one.
 
 2004-09-26 Iain <iaingnome@gmail.com>
@@ -3089,7 +3099,7 @@
 	* Update SPEC file to be usable in conjunction with Fedora Core,
 	  Fedora.us and freshrpms packages
 	* Fix typo in multifilesrc test Makefile
-	
+
 2004-09-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (new_decoded_pad):
@@ -3162,7 +3172,7 @@
 2004-09-22  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_destroy):
-	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls): Fix 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls): Fix
 	mistakes from thaytan's patches.
 
 2004-09-23  Jan Schmidt  <thaytan@mad.scientist.com>
@@ -3644,7 +3654,7 @@
 2004-08-27  David Schleef  <ds@schleef.org>
 
 	* sys/sunaudio/Makefile.am: Add sunaudiosrc patch from Bala
-	* sys/sunaudio/gstsunaudiosrc.c: 
+	* sys/sunaudio/gstsunaudiosrc.c:
 	* sys/sunaudio/gstsunaudiosrc.h:
 
 2004-08-27 Arwed v. Merkatz <v.merkatz@gmx.net>
@@ -3704,7 +3714,7 @@
 	fixes playback of packed bitstream and xvid with bframes, bug #135407.
 
 2004-08-24  Sebastien Cote  <sc5@hermes.usherb.ca>
- 
+
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head),
 	(gst_riff_read_element_data), (gst_riff_read_seek),
 	(gst_riff_read_skip): fix infinite loop in wavparse, fixes bug
@@ -3891,7 +3901,7 @@
 	(gst_lame_sink_link), (gst_lame_init), (gst_lame_set_property),
 	(gst_lame_get_property), (gst_lame_setup):
 	* ext/lame/gstlame.h:
-	fix lame's broken vbr stuff, allow it to resample if need be, and also 
+	fix lame's broken vbr stuff, allow it to resample if need be, and also
 	make xing header optional
 
 2004-08-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
@@ -4023,7 +4033,7 @@
 	(gst_multifdsink_queue_buffer), (gst_multifdsink_handle_clients),
 	(gst_multifdsink_chain), (gst_multifdsink_close):
 	* gst/tcp/gstmultifdsink.h:
-	Added more debugging info. Changed the way clients are 
+	Added more debugging info. Changed the way clients are
 	removed from the lists. Fixed a bug where a bad file descriptor
 	could cause many clients to be removed.
 
@@ -4120,7 +4130,7 @@
 	(gst_multifdsink_handle_client_read),
 	(gst_multifdsink_handle_client_write),
 	(gst_multifdsink_queue_buffer), (gst_multifdsink_handle_clients):
-	Make sure we don't try to read more from a client that what 
+	Make sure we don't try to read more from a client that what
 	ioctl says us or we deadlock.
 
 2004-08-05  Thomas Vander Stichele  <thomas at apestaart dot org>
@@ -4436,7 +4446,7 @@
 	(theora_dec_src_query), (theora_dec_src_event), (theora_dec_event),
 	(theora_dec_chain):
 	* ext/theora/theoraenc.c: (theora_enc_sink_link):
-	Added first attempt at cropping of the image as required by the 
+	Added first attempt at cropping of the image as required by the
 	theora spec. We need more properties in the caps (offset_x,
 	offset_y,stride) to implement this correctly.
 
@@ -4976,7 +4986,7 @@
 2004-07-23  Benjamin Otte  <otte@gnome.org>
 
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_link):
-	  don't enfore negotiation from source side, it breaks 
+	  don't enfore negotiation from source side, it breaks
 	  sinesrc ! audioconvert ! osssink
 
 2004-07-22  David Schleef  <ds@schleef.org>
@@ -5114,7 +5124,7 @@
 	(vorbis_dec_src_query), (vorbis_dec_src_event), (vorbis_dec_event):
 	Added query/convert/formats functions to vorbis and theora decoders
 	so that the outside world can use them too. Fixed seeking on an
-	ogg/theora/vorbis file by disabling the seeking seeking on the 
+	ogg/theora/vorbis file by disabling the seeking seeking on the
 	theora srcpad.
 
 2004-07-21  Julien MOUTTE  <julien@moutte.net>
@@ -5349,14 +5359,14 @@
 
 2004-07-13  Johan Dahlin  <johan@gnome.org>
 
-	* gst/playback/gstplaybin.c (gst_play_bin_set_property) 
+	* gst/playback/gstplaybin.c (gst_play_bin_set_property)
 	(gst_play_bin_get_property): Impl.
 
 2004-07-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_seek_before):
 	When trying to find the stream length, seek back N pages
-	instead of just one, where N is the number of streams in 
+	instead of just one, where N is the number of streams in
 	the current chain.
 
 2004-07-13  Wim Taymans  <wim@fluendo.com>
@@ -5799,7 +5809,7 @@
 
 	* ext/ogg/gstogg.c: (plugin_init):
 	  we require bytestream now
-	* ext/ogg/gstoggdemux.c: 
+	* ext/ogg/gstoggdemux.c:
 	  huge diff to implement chain setup in a fast and generic way. This
 	  improves tag reading and startup of huge files (read: Theora videos)
 	  quite a bit. It probably contains bugs, too, so please test.
@@ -5958,7 +5968,7 @@
 	(gst_v4lsrc_get), (gst_v4lsrc_set_property),
 	(gst_v4lsrc_get_property):
 	* sys/v4l/gstv4lsrc.h:
-	  add latency offset property 
+	  add latency offset property
 
 2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -6005,7 +6015,7 @@
 
 2004-06-25  Iain <iain@prettypeople.org>
 
-	* gst-libs/gst/media-info/media-info-priv.c (gmi_set_mime): Add 
+	* gst-libs/gst/media-info/media-info-priv.c (gmi_set_mime): Add
 	name=source for the wavparse pipeline.
 
 2004-06-24  Johan Dahlin  <johan@gnome.org>
@@ -6157,7 +6167,7 @@
 	* sys/osxaudio/Makefile.am:
         Workaround so that the osxaudio .so file gets linked with the
         CoreAudio framework
- 
+
 2004-06-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
@@ -6175,7 +6185,7 @@
         * sys/osxvideo/cocoawindow.h:
         * sys/osxvideo/cocoawindow.m:
         Add osxvideosink, a cocoa-based osx video sink
-        
+
 
 2004-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/dvdnav/gst-dvd:
@@ -6300,7 +6310,7 @@
 	* sys/v4l/v4l-overlay_calls.c: (gst_v4l_set_overlay):
 	Added a sync mode enum property to control v4lsrc timestamp method
 	Removed the use-fixed-fps property and moved functionality in
-	the enum. 
+	the enum.
 	Don't error on an error value from v4l-conf, it might not always
 	be a real error.
 
@@ -6318,7 +6328,7 @@
 2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	fixed a potential leak with previous commit
-	
+
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head):
 
 2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
@@ -6388,7 +6398,7 @@
 2004-06-14  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: Use snd_pcm_hw_params_set_rate _near instead of
-	  snd_pcm_hw_params_set_rate  since the latter fails for no good 
+	  snd_pcm_hw_params_set_rate  since the latter fails for no good
 	  reason on some setups.
 
 2004-06-14  David Schleef  <ds@schleef.org>
@@ -6422,7 +6432,7 @@
 2004-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/esd/esdsink.c: (gst_esdsink_change_state):
 	* ext/esd/esdsink.h:
-	Close the esd connection on pause, because esd will just wait -  
+	Close the esd connection on pause, because esd will just wait -
 	blocking all other esd clients indefinitely.
 
 2004-06-12  Christophe Fergeau  <teuf@gnome.org>
@@ -6447,14 +6457,14 @@
 	* gst/tcp/gsttcpserversink.h:
 	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_init_receive):
 	* gst/tcp/gsttcpserversrc.h:
-	Modified the tcp plugins so they are portable (IPv4,IPv6, any future 
+	Modified the tcp plugins so they are portable (IPv4,IPv6, any future
         version of IP)
 
 2004-06-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
 	Added ogg library so that OSX detects libtheora properly
-	
+
 2004-06-11  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_dec_chain),
@@ -6514,7 +6524,7 @@
 
 2004-06-10  Christophe Fergeau  <teuf@gnome.org>
 
-	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_add): make sure parsed 
+	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_add): make sure parsed
 	  vorbis comments are properly encoded in UTF-8 before adding them
 	  to a GstTagList
 
@@ -6522,7 +6532,7 @@
 
 	* ext/alsa/gstalsa.c: (add_channels):
 	  handle min <= max correctly
-	* ext/alsa/gstalsa.c: (gst_alsa_fixate_to_mimetype), 
+	* ext/alsa/gstalsa.c: (gst_alsa_fixate_to_mimetype),
 	(gst_alsa_fixate_field_nearest_int), (gst_alsa_fixate):
 	  add fixation functions so we fixate correctly. No preferring of alaw
 	  anymore because it's the first structure.
@@ -6765,8 +6775,8 @@
 
 2004-06-06  Benjamin Otte  <otte@gnome.org>
 
-	* ext/alsa/gstalsa.c: (gst_alsa_probe_hw_params), 
-	(gst_alsa_set_hw_params), (gst_alsa_set_sw_params), 
+	* ext/alsa/gstalsa.c: (gst_alsa_probe_hw_params),
+	(gst_alsa_set_hw_params), (gst_alsa_set_sw_params),
 	(gst_alsa_start_audio):
 	  - don't call set_periods_integer anymore, it breaks the
 	  configuration randomly
@@ -6880,10 +6890,10 @@
 2004-06-01  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/flac/gstflactag.c: strip ending framing bit from vorbiscomment
-	  buffer since libflac doesn't expect it (reports a sync error when 
+	  buffer since libflac doesn't expect it (reports a sync error when
 	  it encounters that)
 
-	
+
 2004-06-01  Owen Fraser-Green  <owen@discobabe.net>
 
 	* gst-libs/gst/mixer/mixertrack.h: Changed struct syntax
@@ -6892,7 +6902,7 @@
 	(get_mixer_track_get_property): Added property accessors
 	* gst-libs/gst/mixer/mixeroptions.h: Changed struct syntax
 	* gst-libs/gst/mixer/mixeroptions.c:
-	(gst_mixer_options_get_values): Added	
+	(gst_mixer_options_get_values): Added
 	* gst-libs/gst/mixer/mixer.h: Changed GstMixerClass syntax
 	* gst-libs/gst/mixer/mixer.c: Fixed comment
 
@@ -7279,8 +7289,8 @@
 
 2004-05-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
-	* gst/debug/testplugin.c: 
-	* gst/debug/tests.c: 
+	* gst/debug/testplugin.c:
+	* gst/debug/tests.c:
 	* gst/debug/tests.h:
 	  add new extensible and configurable testing element. Current tests
 	  include buffer count, stream length, timestamp/duration matching and
@@ -7354,7 +7364,7 @@
 	* gst/asfdemux/asfheaders.h :
 	* gst/asfdemux/gstasfdemux.c :
 	  - fix ASF_OBJ_PADDING guid
-	  - add 3 new object guids (language list, metadata, 
+	  - add 3 new object guids (language list, metadata,
             extended stream properties)
           - add a function to parse extended header objects
 
@@ -7726,7 +7736,7 @@
 	(gst_vorbisenc_get_property), (gst_vorbisenc_set_property):
 	* ext/vorbis/vorbisenc.h:
 	Added a raw vorbis encoder to be used with the oggmuxer.
-	We still need the old encoder for some gnome applications, 
+	We still need the old encoder for some gnome applications,
 	read the README to find out how that works.
 	The raw encoder is called "rawvorbisenc" until 0.9.
 
@@ -7883,7 +7893,7 @@
 	* gst/volume/gstvolume.c (gst_volume_dispose): Unref dpman.
 	* ext/flac/gstflacdec.c (gst_flacdec_dispose): Add dispose
 	function.
-	* gst/audioscale/gstaudioscale.c (gst_audioscale_dispose): 
+	* gst/audioscale/gstaudioscale.c (gst_audioscale_dispose):
 	Add dispose function.
 
 2004-05-08  Jan Schmidt  <thaytan@mad.scientist.com>
@@ -7975,7 +7985,7 @@
 	* ext/mpeg2dec/gstmpeg2dec.h:
 	  removed the static pad template so that we can add the
 	  more accurate framerate value to the caps.
-	  
+
 
 2004-05-04  Benjamin Otte  <otte@gnome.org>
 
@@ -8086,7 +8096,7 @@
 
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_parse_metadata):
-	* gst/matroska/matroska-ids.h:	
+	* gst/matroska/matroska-ids.h:
 	  Basic tag reading support.
 
 2004-04-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
@@ -8122,7 +8132,7 @@
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/libvisual/Makefile.am:
-	* ext/libvisual/visual.c: 
+	* ext/libvisual/visual.c:
 	  add initial support for libvisual (http://libvisual.sourceforge.net)
 	  libvisual is still quite alpha, so expect crashes in there :)
 
@@ -8450,11 +8460,11 @@
 	* pkgconfig/Makefile.am: Remove GNU extension in Makefile target
 
 2004-04-19  Thomas Vander Stichele  <thomas at apestaart dot org>
-                                                                                
+
 	* po/LINGUAS:
 	* po/uk.po:
           Added Ukrainian translation (Maxim V. Dziumanenko)
-                                                                                
+
 2004-04-18  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init), (gst_gsmdec_getcaps),
@@ -8620,11 +8630,11 @@
 	(gst_cacasink_chain), (gst_cacasink_open), (gst_cacasink_close):
           init/end library during state transition, not object
           creation/disposal.  get rid of custom dispose handler.
-         
+
 
 2004-04-12  Christian Schaller <Uraeus@gnome.org>
 
-	* sys/oss/gstosselement.c: s/lstat/stat/ from freeBSD, since it can 
+	* sys/oss/gstosselement.c: s/lstat/stat/ from freeBSD, since it can
 	be a symlink
 
 2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
@@ -8697,7 +8707,7 @@
 	  free caps
 	* gst/typefind/gsttypefindfunctions.c:
 	(mpeg_video_stream_type_find):
-	  fix invalid read 
+	  fix invalid read
 
 2004-04-08  David Schleef  <ds@schleef.org>
 
@@ -8784,7 +8794,7 @@
 
 	* ext/ladspa/gstladspa.c: (gst_ladspa_class_init):
 	  check for broken LADSPA parameters (fixes #138635)
-	
+
 2004-04-05  Benjamin Otte  <otte@gnome.org>
 
 	* gst/audioconvert/gstaudioconvert.c: (gst_audio_convert_getcaps):
@@ -8888,7 +8898,7 @@
 	(gst_navseek_get_property), (gst_navseek_chain),
 	(gst_navseek_plugin_init):
 	* gst/debug/gstnavseek.h:
-	  Add the navseek debug element for seeking back and forth in a 
+	  Add the navseek debug element for seeking back and forth in a
 	  video stream using arrow keys.
 	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_get_type),
 	(gst_mpeg2subt_base_init), (gst_mpeg2subt_class_init),
@@ -9040,7 +9050,7 @@
 
 2004-03-27  Martin Soto  <martinsoto@users.sourceforge.net>
 
-	* gst/mpegstream/gstmpegdemux.c: 
+	* gst/mpegstream/gstmpegdemux.c:
 	* gst/mpegstream/gstmpegdemux.h: Complete overhaul. All DVD
 	specific functionality split to the new dvddemux element.
 	* gst/mpegstream/gstdvddemux.c:
@@ -9119,7 +9129,7 @@
 2004-03-25  Benjamin Otte  <otte@gnome.org>
 
 	* gst/debug/Makefile.am:
-	* gst/debug/breakmydata.c: 
+	* gst/debug/breakmydata.c:
 	  add element that quasi-randomly changes bytes in the stream.
 	  Intended use is robustness checking of demuxers and decoders in
 	  media tests.
@@ -9184,7 +9194,7 @@
 
 2004-03-23  Johan Dahlin  <johan@gnome.org>
 
-	* gst-libs/gst/play/play.c (gst_play_audio_fixate) 
+	* gst-libs/gst/play/play.c (gst_play_audio_fixate)
 	(gst_play_video_fixate): Check so the structure has the field
 	before trying to fixate them, this makes it possible to have
 	fakesinks for video and audio output without printing errors on
@@ -9222,7 +9232,7 @@
 
 2004-03-19  Iain <iain@prettypeople.org>
 
-	* gst/interleave/deinterleave.c (deinterleave_sink_link): Use the 
+	* gst/interleave/deinterleave.c (deinterleave_sink_link): Use the
 	is_int in the structure, not the local variable.
 
 2004-03-19  David Schleef  <ds@schleef.org>
@@ -9337,7 +9347,7 @@
           generate media-info pc files
 
 2004-03-15  Johan Dahlin  <johan@gnome.org>
-	
+
 	* *.h: Revert indenting
 
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
@@ -9386,7 +9396,7 @@
 	* gst/ffmpegcolorspace/mmx.h:
 	* gst/ffmpegcolorspace/utils.c: (avcodec_init):
           adding ffmpegcolorspace element supplied by Ronald after cleaning
-          up and pulling in the right bits of upstream source. 
+          up and pulling in the right bits of upstream source.
           I'm sure a better C/compiler wizard could do some cleaning up (for
           example use GLIB's malloc stuff), but as a first pass this
           works very well
@@ -9675,11 +9685,11 @@
 
 	* ext/nas/nassink.c and /ext/nas/nassink.h:
 	More NAS love from Arwed von Merkatz
-	So lets all sing 'Can you feel the NAS tonight'	
+	So lets all sing 'Can you feel the NAS tonight'
 
 2004-03-08  Christian Schaller <Uraeus@gnome.org>
 
-	* tools/gst-launch-ext.in: 
+	* tools/gst-launch-ext.in:
 	Replace vorbisfile with oggdemux/vorbisdec/audioconvert
 
 2004-03-08  Thomas Vander Stichele  <thomas at apestaart dot org>
@@ -9759,7 +9769,7 @@
 	Fix several misuse of gst_buffer_merge (it doesn't take ownership
 	of any buffer), should fix some leaks. I hope I didn't unref buffers
 	that shouldn't be...
-	
+
 2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/media-info/media-info-priv.c: (have_type_callback),
@@ -9824,7 +9834,7 @@
 
 2004-03-06  Christophe Fergeau  <teuf@gnome.org>
 
-	For some reason, I only committed a ChangeLog entry yesterday and 
+	For some reason, I only committed a ChangeLog entry yesterday and
 	not the corresponding code...
 	* ext/mad/gstmad.c: Fix detection of Xing headers
 	* gst/tags/gstid3tag.c: Changes to support TLEN tags
@@ -10121,7 +10131,7 @@
 
 	* sys/oss/gstosselement.c: (gst_osselement_probe),
 	(device_combination_append), (gst_osselement_class_probe_devices):
-	* sys/oss/gstosselement.h: 
+	* sys/oss/gstosselement.h:
 	  Reworked enumeration of oss dsps and mixers so that gst-mixer works
 	  on my system using alsa oss emulation, fixes bug #135597
 
@@ -10307,7 +10317,7 @@
 	* gst/avi/gstavidemux.c: (gst_avi_demux_add_stream):
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),
 	(gst_matroska_demux_video_caps), (gst_matroska_demux_audio_caps),
-	(gst_matroska_demux_plugin_init): First batch implementing audio and 
+	(gst_matroska_demux_plugin_init): First batch implementing audio and
 	video codec tags in demuxers.
 
 2004-02-22  Benjamin Otte  <otte@gnome.org>
@@ -10370,7 +10380,7 @@
 2004-02-22 Ramon Garcia <ramon_garcia_f@yahoo.com>
 
 	* configure.ac: Export only gst_plugin_desc from plugins.
-         Note that this change only makes any effect with Linux using libtool 
+         Note that this change only makes any effect with Linux using libtool
 	 1.5.2 or higher. Otherwise it is silently ignored, but it would build
          fine. And don't try to have several versions of libtool in different
          directories.
@@ -10392,15 +10402,15 @@
 
 	* gst/audioconvert/gstaudioconvert.c: Change to support int2float
 	and float2int operation. int2float has scheduling problems as
-	noted in in2float_chain. 
+	noted in in2float_chain.
 
 2004-02-20  Benjamin Otte  <otte@gnome.org>
 
 	* ext/xine/Makefile.am:
 	* ext/xine/gstxine.h:
-	* ext/xine/xine.c: 
-	* ext/xine/xineaudiodec.c: 
-	* ext/xine/xinecaps.c: 
+	* ext/xine/xine.c:
+	* ext/xine/xineaudiodec.c:
+	* ext/xine/xinecaps.c:
 	  add first version of xine plugin wrapper. Currently only wraps the
 	  QDM2 win32 DLL, and even that only in proof-of-concept quality.
 	* configure.ac:
@@ -10453,12 +10463,12 @@
 	(gst_ximagesink_renegotiate_size), (gst_ximagesink_handle_xevents),
 	(gst_ximagesink_change_state), (gst_ximagesink_expose),
 	(gst_ximagesink_init): Rework the way software video scaling works. So
-	now we check on each chain call if the video frames are feeling the 
+	now we check on each chain call if the video frames are feeling the
 	window. If not we try to renegotiate caps. On failure we memorize that
 	and we won't try again for that PLAYING sessions.
 	* sys/ximage/ximagesink.h: Adding a boolean to store the caps renego
 	failure.
-	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_init): initialize the 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_init): initialize the
 	synchronous flag.
 
 2004-02-18  Thomas Vander Stichele  <thomas at apestaart dot org>
@@ -10544,7 +10554,7 @@
 
 2004-02-15  Julien MOUTTE  <julien@moutte.net>
 
-	* gst/switch/gstswitch.c: (gst_switch_loop): More fixes for 
+	* gst/switch/gstswitch.c: (gst_switch_loop): More fixes for
 	correct data refcounting.
 
 2004-02-15  Julien MOUTTE  <julien@moutte.net>
@@ -10555,7 +10565,7 @@
 
 2004-02-15  Julien MOUTTE  <julien@moutte.net>
 
-	* examples/gstplay/player.c: (got_eos), (main): Adding some 
+	* examples/gstplay/player.c: (got_eos), (main): Adding some
 	output for debugging.
 	* gst-libs/gst/play/play.c: (gst_play_state_change): Stop our
 	timeouts if we go to any state different from PLAYING.
@@ -10808,7 +10818,7 @@
 === release 0.7.4 ===
 
 2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
-                                                                                
+
 	* NEWS: GStreamer Plugins 0.7.4 "For Great Justice" released
 	* configure.ac: changed for release
 
@@ -10916,7 +10926,7 @@
 	(gst_xvimagesink_xvimage_put), (gst_xvimagesink_expose),
 	(gst_xvimagesink_xoverlay_init), (gst_xvimagesink_init):
 	* sys/xvimage/xvimagesink.h: Implement expose method from XOverlay
-	interface 
+	interface
 
 2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
@@ -11058,7 +11068,7 @@
 2004-02-02  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/play/play.c: (gst_play_pipeline_setup),
-	(gst_play_set_audio_sink): Moving volume in the audio thread for 
+	(gst_play_set_audio_sink): Moving volume in the audio thread for
 	instantaneous volume change. Maybe i will add another volume in front
 	of visualization later, not sure yet though.
 
@@ -11320,7 +11330,7 @@
           add error handling during creation
 	* examples/gstplay/player.c: (main):
           use new gst_play_new
-          
+
 
 2004-01-31  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
@@ -11362,7 +11372,7 @@
           after CVS surgery by moving, remove
 	* gst-libs/gst/play/playpipelines.c:
           remove
-          
+
 	* gst/intfloat/float22int.c: (gst_float2_2_int_chain):
           add negotiation error
 
@@ -11380,7 +11390,7 @@
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/theora/Makefile.am:
-	* ext/theora/theoradec.c: 
+	* ext/theora/theoradec.c:
 	  add theora video decoder. Does just do simple decoding for now and
 	  has been tested against Theora cvs only. It only works when theora
 	  is compiled with --enable-static.
@@ -11452,11 +11462,11 @@
 
 2004-01-29  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
-	* ext/ogg/gstoggdemux.c: 
+	* ext/ogg/gstoggdemux.c:
 	  lots of changes - mainly support for chained bitstreams, seeking,
 	  querying and bugfixes of course
 	* ext/vorbis/Makefile.am:
-	* ext/vorbis/vorbisdec.c: 
+	* ext/vorbis/vorbisdec.c:
 	* ext/vorbis/vorbisdec.h:
 	  add vorbisdec raw vorbis decoder
 	* ext/vorbis/vorbis.c: (plugin_init):
@@ -11521,7 +11531,7 @@
 	server claims that it has XShm support (remote displays most of the
 	time). We then log the error as a GST_DEBUG and set use_shm to FALSE
 	so that we use non XShm functions. This feature is almost useless for
-	xvimagesink as Xv is not supported on remote displays anyway, but 
+	xvimagesink as Xv is not supported on remote displays anyway, but
 	it might happen than even on the local display XShm calls fail.
 
 2004-01-27  David Schleef  <ds@schleef.org>
@@ -11570,7 +11580,7 @@
 2004-01-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/asfdemux/asfheaders.h:
-	* gst/asfdemux/gstasfdemux.c: 
+	* gst/asfdemux/gstasfdemux.c:
 	* gst/asfdemux/gstasfmux.c: (gst_asfmux_put_guid),
 	(gst_asfmux_put_string), (gst_asfmux_put_wav_header),
 	(gst_asfmux_put_vid_header), (gst_asfmux_put_bmp_header):
@@ -11632,7 +11642,7 @@
 	(gst_play_identity_handoff), (gst_play_set_location),
 	(gst_play_set_visualization), (gst_play_connect_visualization): Another
 	try in visualization implementation. Still have an issue with switch
-	blocking when pulling from video_queue and only audio comes out of 
+	blocking when pulling from video_queue and only audio comes out of
 	spider.
 	* gst/switch/gstswitch.c: (gst_switch_release_pad),
 	(gst_switch_poll_sinkpads), (gst_switch_class_init): Implementing pad
@@ -11750,7 +11760,7 @@
 2004-01-23  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/typefind/gsttypefindfunctions.c:
-	(mp3_type_frame_length_from_header): fix bug in length computation 
+	(mp3_type_frame_length_from_header): fix bug in length computation
 	(mp3_type_find): improve debugging output
 
 2004-01-23  Julien MOUTTE  <julien@moutte.net>
@@ -11773,12 +11783,12 @@
 	(gst_xvimagesink_init): Same xcontext cleaning than ximagesink in state
 	change from READY to NULL and fixed some stupid bugs in colorbalance
 	get/set values. Also added the following feature : when nobody tries to
-	set some values to the colorbalance levels before the xcontext is 
+	set some values to the colorbalance levels before the xcontext is
 	grabbed, then when creating channels list from Xv attributes we set the
 	internal values to the Xv defaults. This way we handle buggy Xv drivers
 	that set default hue values far from the middle of the range (Thanks
 	to Jon Trowbridge for pointing that issue).
-	* sys/xvimage/xvimagesink.h: Adding a cb_changed boolean to know if 
+	* sys/xvimage/xvimagesink.h: Adding a cb_changed boolean to know if
 	colorbalance levels have been set before xcontext is grabbed.
 
 2004-01-22  Ronald Bultje  <rbultje@ronald.bitfreak.net>
@@ -11969,7 +11979,7 @@
 	(gst_v4l2_set_frequency), (gst_v4l2_signal_strength),
 	(gst_v4l2_get_attribute), (gst_v4l2_set_attribute):
 	  make sure locale and translation domain are set
-          fix translated strings 
+          fix translated strings
 	* po/.cvsignore:
 	* po/LINGUAS:
 	* po/Makevars:
@@ -12162,12 +12172,12 @@
 	* ext/musicbrainz/gsttrm.c:
 	* ext/musicbrainz/gsttrm.h:
 	* ext/musicbrainz/Makefile.am:
-	Add a trm plugin 
+	Add a trm plugin
 
 2004-01-18  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_set_property),
-	(gst_ximagesink_get_property), (gst_ximagesink_class_init): Adding 
+	(gst_ximagesink_get_property), (gst_ximagesink_class_init): Adding
 	synchronous property for debugging.
 	* sys/ximage/ximagesink.h: Adding the synchronous boolean flag.
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get),
@@ -12178,7 +12188,7 @@
 
 	* gst/videofilter/gstvideobalance.c: Fix regression; changing a
 	property affects the video stream.
-	* sys/xvimage/xvimagesink.c: 
+	* sys/xvimage/xvimagesink.c:
 	* sys/xvimage/xvimagesink.h:
 	Add synchronous property for debugging.  Should probably be
 	disabled in non-CVS builds.  Make sure that the Xv attribute
@@ -12254,7 +12264,7 @@
 
 2004-01-15  Julien MOUTTE  <julien@moutte.net>
 
-	* sys/ximage/ximagesink.c: (gst_ximagesink_chain): 
+	* sys/ximage/ximagesink.c: (gst_ximagesink_chain):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain): Making both of
 	them use the buffer free function to test how the buffer was allocated.
 
@@ -12426,7 +12436,7 @@
 2004-01-14  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup),
-	(gst_play_set_location), (gst_play_set_visualization): Preparing 
+	(gst_play_set_location), (gst_play_set_visualization): Preparing
 	switch integration, adding videobalance in the pipeline.
 
 2004-01-14  Julien MOUTTE <julien@moutte.net>
@@ -12697,9 +12707,9 @@
 	* sys/v4l2/gstv4l2tuner.c:
 	  fixes for tuner interface changes
 	* sys/v4l2/gstv4l2element.h:
-	* sys/v4l2/gstv4l2src.c: 
+	* sys/v4l2/gstv4l2src.c:
 	* sys/v4l2/gstv4l2src.h:
-	* sys/v4l2/v4l2src_calls.c: 
+	* sys/v4l2/v4l2src_calls.c:
 	* sys/v4l2/v4l2src_calls.h:
 	  rework v4l2src to work with saa1734 cards and allow mmaped buffers.
 
@@ -12761,7 +12771,7 @@
 
 2004-01-11  Julien MOUTTE  <julien@moutte.net>
 
-	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain): Fixing the 
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain): Fixing the
 	pad_alloc_buffer implementation to use ->srcpad
 	* ext/hermes/gstcolorspace.c: (gst_colorspace_chain): Fixing the
         pad_alloc_buffer implementation to use ->srcpad
@@ -12937,7 +12947,7 @@
 	* gst-libs/gst/play/gstplay.c: (gst_play_set_video_sink): Connecting to 	the XOverlay size signal instead of GstVideoSink.
 	* gst-libs/gst/play/gstplay.h: Including the XOverlay interface to check
 	GST_IS_X_OVERLAY before signal connect.
-	* gst-libs/gst/video/gstvideosink.c: (gst_videosink_class_init): 
+	* gst-libs/gst/video/gstvideosink.c: (gst_videosink_class_init):
 	Removing the have_video_size signal.
 	* gst-libs/gst/video/gstvideosink.h: Removing the have_video_size signal
 	and associated public method.
@@ -13068,7 +13078,7 @@
 	(gst_videotestsrc_src_fixate):
 	These fixate functions were broken - they never actually
 	fixated :)
-	
+
 2004-01-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/shout/gstshout.c: (gst_icecastsend_base_init),
@@ -13085,7 +13095,7 @@
 	(gst_xvid_csp_to_caps):
 	* ext/xvid/gstxviddec.c: (gst_xviddec_src_getcaps):
 	* ext/xvid/gstxvidenc.c:
-	ifdef out ARGB type when it isn't available 
+	ifdef out ARGB type when it isn't available
 	in xvidcore 1.0.0beta2
 
 2004-01-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
@@ -13097,7 +13107,7 @@
 
 2004-01-06  Iain <iain@prettypeople.org>
 
-	* gst/intfloat/gstint2float.c (gst_int2float_link): Set the 
+	* gst/intfloat/gstint2float.c (gst_int2float_link): Set the
 	  buffer-frames caps too.
 
 	* gst/oneton/gstoneton.c (gst_oneton_sink_connect): Only create the new
@@ -13549,7 +13559,7 @@
 
 2003-12-27  Amaury Jacquot <sxpert@esitcom.org>
 
-	* ext/ivorbis/vorbis.c: 
+	* ext/ivorbis/vorbis.c:
 	* ext/ivorbis/vorbisenc.h:
 	* ext/ivorbis/vorbisfile.c:
 	  Modify so that it uses the new caps things
@@ -13639,14 +13649,14 @@
 
 	* ext/faad/gstfaad.c: (gst_faad_base_init), (gst_faad_init),
 	(gst_faad_sinkconnect), (gst_faad_srcgetcaps),
-	(gst_faad_srcconnect): 
+	(gst_faad_srcconnect):
 	  Port to new caps system.
 
 2003-12-21  Julien MOUTTE  <julien@moutte.net>
 
 	* examples/gstplay/player.c: (got_time_tick), (got_stream_length),
 	(got_video_size), (main): using g_print instead of g_message.
-	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup): Fixing EOS 
+	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup): Fixing EOS
 	signal which was not emitted because of "switch" element added to the
 	bin but not connected. (Removing from the bin temporarily)
 
