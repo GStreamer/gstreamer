@@ -205,7 +205,10 @@ gst_dpman_add_required_dparam_callback (GstDParamManager * dpman,
   dpwrap =
       gst_dpman_new_wrapper (dpman, param_spec, unit_name, GST_DPMAN_CALLBACK);
 
-  g_return_val_if_fail (dpwrap != NULL, FALSE);
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain a new dparam wrapper");
+    return FALSE;
+  }
 
   GST_DEBUG ("adding required callback dparam '%s'",
       g_param_spec_get_name (param_spec));
@@ -244,7 +247,10 @@ gst_dpman_add_required_dparam_direct (GstDParamManager * dpman,
   dpwrap =
       gst_dpman_new_wrapper (dpman, param_spec, unit_name, GST_DPMAN_DIRECT);
 
-  g_return_val_if_fail (dpwrap != NULL, FALSE);
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain a new dparam wrapper");
+    return FALSE;
+  }
 
   GST_DEBUG ("adding required direct dparam '%s'",
       g_param_spec_get_name (param_spec));
@@ -282,7 +288,10 @@ gst_dpman_add_required_dparam_array (GstDParamManager * dpman,
   dpwrap =
       gst_dpman_new_wrapper (dpman, param_spec, unit_name, GST_DPMAN_ARRAY);
 
-  g_return_val_if_fail (dpwrap != NULL, FALSE);
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain a new dparam wrapper");
+    return FALSE;
+  }
 
   GST_DEBUG ("adding required array dparam '%s'",
       g_param_spec_get_name (param_spec));
@@ -353,7 +362,12 @@ gst_dpman_attach_dparam (GstDParamManager * dpman, const gchar * dparam_name,
 
   dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
 
-  g_return_val_if_fail (dpwrap != NULL, FALSE);
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain get the dparam wrapper for parameter '%s'",
+        dparam_name);
+    return FALSE;
+  }
+  // FIXME: if these are triggered convert them to messages + returns as well
   g_return_val_if_fail (dpwrap->value != NULL, FALSE);
   g_return_val_if_fail (G_PARAM_SPEC_VALUE_TYPE (dpwrap->param_spec) ==
       GST_DPARAM_TYPE (dparam), FALSE);
@@ -407,7 +421,12 @@ gst_dpman_get_dparam (GstDParamManager * dpman, const gchar * dparam_name)
   g_return_val_if_fail (dparam_name != NULL, NULL);
 
   dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
-  g_return_val_if_fail (dpwrap != NULL, NULL);
+
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain get the dparam wrapper for parameter '%s'",
+        dparam_name);
+    return NULL;
+  }
 
   return dpwrap->dparam;
 }
@@ -431,7 +450,12 @@ gst_dpman_get_dparam_type (GstDParamManager * dpman, const gchar * dparam_name)
   g_return_val_if_fail (dparam_name != NULL, 0);
 
   dpwrap = gst_dpman_get_wrapper (dpman, dparam_name);
-  g_return_val_if_fail (dpwrap != NULL, 0);
+
+  if (!dpwrap) {
+    GST_INFO ("failed to obtain get the dparam wrapper for parameter '%s'",
+        dparam_name);
+    return 0;
+  }
 
   return G_VALUE_TYPE (dpwrap->value);
 }
@@ -612,7 +636,7 @@ gst_dpman_set_parent (GstDParamManager * dpman, GstElement * parent)
  * Fetch the GstElement that parameters are handled by this manager.
  *
  * Returns: the GstDParamManager which belongs to this element or NULL
- * if it doesn't exist
+ * if it doesn't exist. Do not call g_object_unref() on it.
  */
 GstDParamManager *
 gst_dpman_get_manager (GstElement * parent)
@@ -623,6 +647,7 @@ gst_dpman_get_manager (GstElement * parent)
   g_return_val_if_fail (GST_IS_ELEMENT (parent), NULL);
 
   dpman = (GstDParamManager *) g_hash_table_lookup (_element_registry, parent);
+  /* FIXME: shouldn't this be g_object_ref(dpman); */
   return dpman;
 }
 
@@ -649,7 +674,7 @@ gst_dpman_bypass_dparam (GstDParamManager * dpman, const gchar * dparam_name)
   g_return_if_fail (dpwrap != NULL);
 
   if (dpwrap->dparam != NULL) {
-    g_warning ("Bypassing attached dparam '%s'. It will be detached",
+    GST_WARNING ("Bypassing attached dparam '%s'. It will be detached",
         dparam_name);
     gst_dpman_detach_dparam (dpman, dparam_name);
   }
@@ -835,7 +860,7 @@ gst_dpman_preprocess_asynchronous (GstDParamManager * dpman, guint frames,
 
 
   if (GST_DPMAN_RATE (dpman) == 0) {
-    g_warning ("The element hasn't given GstDParamManager a frame rate");
+    GST_WARNING ("The element hasn't given GstDParamManager a frame rate");
     return FALSE;
   }
   dpman->rate_ratio = (guint) (1000000000LL / (gint64) GST_DPMAN_RATE (dpman));
@@ -950,14 +975,14 @@ gst_dpman_process_asynchronous (GstDParamManager * dpman, guint frame_count)
   GST_DEBUG ("in gst_dpman_process_asynchronous");
 
   if (frame_count >= dpman->num_frames) {
-    g_warning ("there is no more buffer to process");
+    GST_WARNING ("there is no more buffer to process");
     dpman->next_update_frame = dpman->num_frames;
     dpman->frames_to_process = 0;
     return FALSE;
   }
 
   if (frame_count != dpwrap->next_update_frame) {
-    g_warning ("frame count %u does not match update frame %u",
+    GST_WARNING ("frame count %u does not match update frame %u",
         frame_count, dpwrap->next_update_frame);
   }
 
@@ -1040,7 +1065,7 @@ gst_dpman_preprocess_noop (GstDParamManager * dpman, guint frames,
 static gboolean
 gst_dpman_process_noop (GstDParamManager * dpman, guint frame_count)
 {
-  g_warning
+  GST_WARNING
       ("gst_dpman_process_noop should never be called - something might be wrong with your processing loop");
   return FALSE;
 }

@@ -123,6 +123,15 @@ Atomic operations
   Atomic operations are generally used for refcounting and for the allocation of
   small fixed size objects in a memchunk. They can also be used to implement a
   lockfree list or stack.
+
+Compare and swap
+
+  As part of the atomic operations, compare-and-swap (CAS) can be used to access
+  or update a single property or pointer in an object without having to take a
+  lock.
+
+  This technique is currently not used in GStreamer but might be added in the
+  future in performance critical places.
  
 
 Objects
@@ -198,7 +207,8 @@ Objects
   corresponding macros. The public object properties are marked in the .h files
   with /*< public >*/. The public properties that require a lock to be held are
   marked with /*< public >*/ /* with <lock_type> */, where <lock_type> can be
-  "LOCK" or "STATE_LOCK" to mark the type(s) of lock to be held.
+  "LOCK" or "STATE_LOCK" or any other lock to mark the type(s) of lock to be 
+  held.
 
   Example:
 
@@ -225,7 +235,7 @@ Objects
 * Property lifetime
 
   All properties requiring a lock can change after releasing the associated
-  lock. This means that as soon as long as you hold the lock, the state of the
+  lock. This means that as long as you hold the lock, the state of the
   object regarding the locked properties is consistent with the information
   obtained. As soon as the lock is released, any values required from the
   properties might not be valid anymore and can as best be described as a
@@ -259,6 +269,16 @@ Objects
     anymore of the pad. If you need to be sure it is, you need to extend the
     critical section to include the operations on the peer.
 
+    The following code is equivalent to the above but with using the functions
+    to access object properties.
+
+      peer = gst_pad_get_parent (pad);
+      if (peer) {
+        ... use peer ...
+
+        gst_object_unref (GST_OBJECT (peer));
+      }
+
   Example:
 
     Accessing the name of an object makes a copy of the name. The caller of the
@@ -267,6 +287,14 @@ Objects
       GST_LOCK (object)
       name = g_strdup (object->name);
       GST_UNLOCK (object)
+      ... use name ...
+
+      g_free (name);
+
+    or:
+
+      name = gst_object_get_name (object);
+
       ... use name ...
 
       g_free (name);
@@ -349,7 +377,7 @@ Objects
 * GstIterator
 
   GstIterator provides an easier way of retrieving elements in a concurrent
-  list. The followgin code example is equivalent to the previous example.
+  list. The following code example is equivalent to the previous example.
   
   Example:
     

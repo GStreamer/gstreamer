@@ -143,15 +143,17 @@ fault_handler_sighandler (int signum)
 {
   fault_restore ();
 
+  /* printf is used instead of g_print(), since it's less likely to
+   * deadlock */
   switch (signum) {
     case SIGSEGV:
-      g_print ("Caught SIGSEGV\n");
+      printf ("Caught SIGSEGV\n");
       break;
     case SIGQUIT:
-      g_print ("Caught SIGQUIT\n");
+      printf ("Caught SIGQUIT\n");
       break;
     default:
-      g_print ("signo:  %d\n", signum);
+      printf ("signo:  %d\n", signum);
       break;
   }
 
@@ -165,17 +167,19 @@ fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
 {
   fault_restore ();
 
+  /* printf is used instead of g_print(), since it's less likely to
+   * deadlock */
   switch (si->si_signo) {
     case SIGSEGV:
-      g_print ("Caught SIGSEGV accessing address %p\n", si->si_addr);
+      printf ("Caught SIGSEGV accessing address %p\n", si->si_addr);
       break;
     case SIGQUIT:
-      g_print ("Caught SIGQUIT\n");
+      printf ("Caught SIGQUIT\n");
       break;
     default:
-      g_print ("signo:  %d\n", si->si_signo);
-      g_print ("errno:  %d\n", si->si_errno);
-      g_print ("code:   %d\n", si->si_code);
+      printf ("signo:  %d\n", si->si_signo);
+      printf ("errno:  %d\n", si->si_errno);
+      printf ("code:   %d\n", si->si_code);
       break;
   }
 
@@ -194,7 +198,7 @@ fault_spin (void)
   wait (NULL);
 
   /* FIXME how do we know if we were run by libtool? */
-  g_print ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
+  printf ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
       "Ctrl-C to quit, or Ctrl-\\ to dump core.\n", (gint) getpid ());
   while (spinning)
     g_usleep (1000000);

@@ -1,16 +1,40 @@
 Ownership of dynamic objects
 ----------------------------
 
-Any object-oriented system or language that doesn't have automatic garbage collection has many potential pitfalls as 
-far as the pointers go.  Therefore, some standards must be adhered to as far as who owns what.
+Any object-oriented system or language that doesn't have automatic garbage 
+collection has many potential pitfalls as far as the pointers go. Therefore, 
+some standards must be adhered to as far as who owns what.
 
-Strings:
-Arguments passed into a function are owned by the caller, and the function will make a copy of the string for its own 
-internal use.  The string should be const gchar *.  Strings returned from a function remain the property of the 
-function called, and the caller must make a copy if it is to use the string for an extended duration.
+Strings
+-------
 
-Objects:
-The ownership of an object during a function call depends on the type of function.  If the function is simply returning 
-something from the object, such as _get_name(), the caller retains ownership.  If the object passed is to be 
-manipulated in some way, it is generally the case that the function will take over the ownership.  This should be 
-expressed as a reference increment on that object, but isn't in the general case (yet).
+Arguments passed into a function are owned by the caller, and the function 
+will make a copy of the string for its own internal use.  The string should 
+be const gchar *.  Strings returned from a function are always a copy of the
+original and should be freed after usage by the caller.
+
+  ex:
+
+     name = gst_element_get_name (element);   /* copy of name is made */
+     .. use name ..
+     g_free (name);                           /* free after usage */
+
+
+Objects
+-------
+
+Objects passed into a function are owned by the caller, any additional 
+reference held to the object after leaving the function should increase the 
+refcount of that object. 
+
+Objects returned from a function are owned by the caller. This means that the
+called should _free() or _unref() the object after usage.
+
+  ex:
+
+     peer = gst_pad_get_peer (pad);          /* peer with increased refcount */
+     if (peer) {
+       .. use peer ..
+       gst_object_unref (GST_OBJECT (peer)); /* unref peer after usage */
+     }
+

@@ -8,8 +8,6 @@
 
 #include <gst/gst.h>
 
-static GstClock *clock = NULL;
-
 void
 gst_clock_debug (GstClock * clock, GstElement * fakesink)
 {
@@ -34,6 +32,7 @@ element_wait (GstElement * element, GstClockTime time)
 int
 main (int argc, char *argv[])
 {
+  GstClock *clock = NULL;
   GstElement *pipeline, *fakesrc, *fakesink;
 
   gst_init (&argc, &argv);

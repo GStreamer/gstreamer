@@ -134,6 +134,9 @@ struct _GstDParamAsyncToUpdate {
                          (dpman->next_update_frame < dpman->num_frames \
                           && (GST_DPMAN_PROCESSFUNC(dpman)(dpman, frame_count))))
 
+/* FIXME: this should pass dpwrap->dparam as the first arg
+ * the first arg in callback is usually object that triggered the callback
+ */
 #define GST_DPMAN_CALLBACK_UPDATE(dpwrap, value) ((dpwrap->update_func)(value, dpwrap->update_data))
 
 void _gst_dpman_initialize(void);

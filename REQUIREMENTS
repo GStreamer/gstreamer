@@ -8,7 +8,7 @@ report at http://sourceforge.net/bugs/?group_id=1936.
 Required libraries:
 ===================
 
-the latest glib2, currently at v2.0.4
+glib2
 libxml2         (also called gnome-xml, available from http://xmlsoft.org/)
 
 These libraries are all central parts of gnome, and are available from the

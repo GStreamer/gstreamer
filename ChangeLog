@@ -1,3 +1,33 @@
+2005-03-10  Wim Taymans  <wim@fluendo.com>
+
+	* REQUIREMENTS:
+	* docs/design/part-MT-refcounting.txt:
+	* docs/design/part-clocks.txt:
+	* docs/design/part-conventions.txt:
+	* docs/design/part-gstobject.txt:
+	* docs/design/part-relations.txt:
+	* docs/design/part-standards.txt:
+	* libs/gst/control/dparam.c: (gst_dparam_attach):
+	* libs/gst/control/dparam.h:
+	* libs/gst/control/dparammanager.c:
+	(gst_dpman_add_required_dparam_callback),
+	(gst_dpman_add_required_dparam_direct),
+	(gst_dpman_add_required_dparam_array), (gst_dpman_attach_dparam),
+	(gst_dpman_get_dparam), (gst_dpman_get_dparam_type),
+	(gst_dpman_get_manager), (gst_dpman_bypass_dparam),
+	(gst_dpman_preprocess_asynchronous),
+	(gst_dpman_process_asynchronous), (gst_dpman_process_noop):
+	* libs/gst/control/dparammanager.h:
+	* testsuite/clock/clock2.c: (gst_clock_debug), (element_wait),
+	(main):
+	* testsuite/threads/signals.c: (run_thread), (main):
+	* testsuite/threads/thread.c: (main):
+	* tools/gst-launch.c: (fault_handler_sighandler),
+	(fault_handler_sigaction), (fault_spin):
+	Doc updates,
+	Head backporting.
+	Fix some testcases.
+
 2005-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_get_direction):

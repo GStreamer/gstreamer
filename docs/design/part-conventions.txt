@@ -30,8 +30,6 @@ ASYNC.  Where there is a prefix, as in the element flags, this is usually droppe
 element flags should be cross-checked with the header, as there are currently two conventions in use: with and without 
 _FLAGS_ in the middle.
 
-FIXME: check flags for consistency.
-
 Drawing conventions
 ===================
 

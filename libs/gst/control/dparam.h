@@ -55,7 +55,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstDParamClass GstDParamClass;
 
-
 typedef enum {
   GST_DPARAM_UPDATE_FIRST,
   GST_DPARAM_UPDATE_NORMAL
