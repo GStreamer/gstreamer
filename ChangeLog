@@ -1,3 +1,13 @@
+2005-03-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gstfdsrc.c: (_do_init), (gst_fdsrc_class_init),
+	(gst_fdsrc_dispose), (gst_fdsrc_init), (gst_fdsrc_set_property),
+	(gst_fdsrc_uri_get_type), (gst_fdsrc_uri_get_protocols),
+	(gst_fdsrc_uri_get_uri), (gst_fdsrc_uri_set_uri),
+	(gst_fdsrc_uri_handler_init):
+	* gst/elements/gstfdsrc.h:
+	  Let's implement the URI interface.
+
 2005-03-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gsterror.c: (_gst_library_errors_init):
