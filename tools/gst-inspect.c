@@ -862,7 +862,7 @@ print_children_info (GstElement * element)
 }
 
 static void
-print_element_list (gboolean print_all, gboolean print_names)
+print_element_list (gboolean print_all)
 {
   GList *plugins;
 
@@ -885,7 +885,7 @@ print_element_list (gboolean print_all, gboolean print_names)
 
         factory = GST_ELEMENT_FACTORY (feature);
         if (print_all)
-          print_element_info (factory, print_names);
+          print_element_info (factory, TRUE);
         else
           g_print ("%s:  %s: %s\n", plugin->desc.name,
               GST_PLUGIN_FEATURE_NAME (factory), factory->details.longname);
@@ -1112,11 +1112,8 @@ main (int argc, char *argv[])
   GstElementFactory *factory;
   GstPlugin *plugin;
   gchar *so;
-  gboolean print_names = FALSE;
   gboolean print_all = FALSE;
   struct poptOption options[] = {
-    {"print-names", 'n', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &print_names, 0,
-        N_("Print element names in the beginning of each line"), NULL},
     {"print-all", 'a', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &print_all, 0,
         N_("Print all elements"), NULL},
     POPT_TABLEEND
@@ -1134,14 +1131,11 @@ main (int argc, char *argv[])
   if (print_all && argc > 2) {
     g_print ("-a requires no extra arguments\n");
     return 1;
-  } else if (print_names && argc < 3) {
-    g_print ("-n requires an element name\n");
-    return 1;
   }
 
   /* if no arguments, print out list of elements */
   if (argc == 1 || print_all) {
-    print_element_list (print_all, print_names);
+    print_element_list (print_all);
     /* else we try to get a factory */
   } else {
     const char *arg = argv[argc - 1];
@@ -1153,7 +1147,7 @@ main (int argc, char *argv[])
       factory = gst_element_factory_find (arg);
       /* if there's a factory, print out the info */
       if (factory) {
-        retval = print_element_info (factory, print_names);
+        retval = print_element_info (factory, print_all);
       } else {
         retval = print_element_features (arg);
       }
