@@ -1,3 +1,16 @@
+2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/v4l/gstv4lelement.h:
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_class_init):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_get_fps), (gst_v4lsrc_getcaps),
+	(gst_v4lsrc_buffer_free):
+	* sys/v4l/v4l_calls.c: (gst_v4l_get_capabilities):
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_queue_frame),
+	(gst_v4lsrc_sync_frame), (gst_v4lsrc_grab_frame),
+	(gst_v4lsrc_requeue_frame):
+        move some debugging categories around
+        query for fps index and set accordingly if found
+
 2004-05-03  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* ext/lame/gstlame.c:
