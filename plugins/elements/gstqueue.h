@@ -63,14 +63,15 @@ struct _GstQueue {
   GstPad *srcpad;
 
   /* the queue of buffers we're keeping our grubby hands on */
-  GSList *queue;
+  GList *queue;
+  gint count;
 
-  gint level_buffers;	/* number of buffers queued here */
-  gint level_bytes;	/* number of bytes queued here */
+  guint level_buffers;	/* number of buffers queued here */
+  guint level_bytes;	/* number of bytes queued here */
   guint64 level_time;	/* amount of time queued here */
 
-  gint size_buffers;	/* size of queue in buffers */
-  gint size_bytes;	/* size of queue in bytes */
+  guint size_buffers;	/* size of queue in buffers */
+  guint size_bytes;	/* size of queue in bytes */
   guint64 size_time;	/* size of queue in time */
 
   gint leaky;		/* whether the queue is leaky, and if so at which end */
