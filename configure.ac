@@ -642,8 +642,8 @@ CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
 dnl Check for aalib
 AC_MSG_CHECKING(aalib)
-AC_CHECK_LIB(aa, aa_init, HAVE_LIBAA=yes, HAVE_LIBAA=no, )
-AC_CHECK_HEADER(aalib.h, :, HAVE_LIBAA=no)
+AC_CHECK_LIB(aa, aa_init, HAVE_AA=yes, HAVE_AA=no, )
+AC_CHECK_HEADER(aalib.h, :, HAVE_AA=no)
 
 dnl Check for quicktime
 AC_MSG_CHECKING(openquicktime)
