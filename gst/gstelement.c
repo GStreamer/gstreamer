@@ -795,6 +795,14 @@ gst_element_error (GstElement *element, const gchar *error)
 }
 
 
+GstElementState
+gst_element_get_state (GstElement *elem)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (elem), GST_STATE_VOID_PENDING);
+
+  return GST_STATE (elem);
+}
+
 /**
  * gst_element_set_state:
  * @element: element to change state of
@@ -859,7 +867,6 @@ gst_element_set_state (GstElement *element, GstElementState state)
     }
   }
 
-  /* this is redundant, really, it will always return SUCCESS */
   return return_val;
 }
 

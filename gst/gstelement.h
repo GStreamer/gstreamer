@@ -218,6 +218,7 @@ void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
 void			gst_element_signal_eos		(GstElement *element);
 
 
+GstElementState         gst_element_get_state           (GstElement *elem);
 /* called by the app to set the state of the element */
 gint			gst_element_set_state		(GstElement *element, GstElementState state);
 const gchar *		gst_element_statename		(GstElementState state);
