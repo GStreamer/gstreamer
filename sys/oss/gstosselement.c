@@ -1038,7 +1038,7 @@ gst_osselement_probe_caps (GstOssElement * oss)
   caps = gst_caps_new_empty ();
 
   /* assume that the most significant bit of format_mask is 0 */
-  for (format_bit = 1; format_bit < format_mask; format_bit <<= 1) {
+  for (format_bit = 1; format_bit <= format_mask; format_bit <<= 1) {
     if (format_bit & format_mask) {
       GValue rate_value = { 0 };
 
@@ -1257,6 +1257,8 @@ gst_osselement_rate_check_rate (GstOssProbe * probe, int irate)
   format = probe->format;
   n_channels = probe->n_channels;
 
+  GST_LOG ("checking format %d, channels %d, rate %d",
+      format, n_channels, rate);
   ret = ioctl (probe->fd, SNDCTL_DSP_SETFMT, &format);
   if (ret < 0)
     return -1;
