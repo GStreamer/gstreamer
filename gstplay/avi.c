@@ -11,6 +11,7 @@ extern GstElement *video_render_queue, *audio_render_queue;
 void avi_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) 
 {
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   // connect to audio pad
   //if (0) {
@@ -25,6 +26,7 @@ void avi_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     gst_pad_connect(pad,
                     gst_element_get_pad(video_render_queue,"sink"));
   }
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
   g_print("\n");
 }
 

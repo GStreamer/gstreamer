@@ -14,6 +14,7 @@
 
 extern gboolean _gst_plugin_spew;
 extern GstElement *video_render_queue, *audio_render_queue;
+GstElement *merge_subtitles;
 
 void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) 
 {
@@ -22,10 +23,12 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
   GstElement *audio_thread;
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   // connect to audio pad
   if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
     mpeg2_setup_video_thread(pad, video_render_queue, pipeline);
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
     return;
   }
   else if (strncmp(gst_pad_get_name(pad), "private_stream_1.0", 18) == 0) {
@@ -36,7 +39,12 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     g_return_if_fail(parse_audio != NULL);
     decode = gst_elementfactory_make("ac3dec","decode_audio");
     g_return_if_fail(decode != NULL);
-  } 
+  } else if (strncmp(gst_pad_get_name(pad), "subtitle_stream_4", 17) == 0) {
+    gst_pad_connect(pad,
+                    gst_element_get_pad(merge_subtitles,"subtitle"));
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
+    return;
+  }
   else if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
     gst_plugin_load("mp3parse");
     gst_plugin_load("mpg123");
@@ -46,7 +54,10 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
     decode = gst_elementfactory_make("mpg123","decode_audio");
     g_return_if_fail(decode != NULL);
   }
-  else return;
+  else {
+    gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
+    return;
+  }
 
   // create the thread and pack stuff into it
   audio_thread = gst_thread_new("audio_thread");
@@ -74,10 +85,8 @@ void mpeg2_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline)
 
   // set up thread state and kick things off
   gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
-  g_print("setting to RUNNING state\n");
-  gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_RUNNING);
-  g_print("setting to PLAYING state\n");
-  gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_PLAYING);
+  g_print("setting to READY state\n");
+  gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
 
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 }
@@ -90,17 +99,22 @@ void mpeg2_setup_video_thread(GstPad *pad, GstElement *show, GstElement *pipelin
 
   gst_plugin_load("mp1videoparse");
   gst_plugin_load(VIDEO_DECODER);
+  gst_plugin_load("mpeg2subt");
   // construct internal pipeline elements
   parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
   g_return_if_fail(parse_video != NULL);
   decode_video = gst_elementfactory_make(VIDEO_DECODER,"decode_video");
   g_return_if_fail(decode_video != NULL);
+  merge_subtitles = gst_elementfactory_make("mpeg2subt","merge_subtitles");
+  g_return_if_fail(merge_subtitles != NULL);
 
   // create the thread and pack stuff into it
   video_thread = gst_thread_new("video_thread");
   g_return_if_fail(video_thread != NULL);
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
   gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
+  gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(merge_subtitles));
+  gst_bin_use_cothreads(GST_BIN(video_thread), FALSE);
 
   // set up pad connections
   gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
@@ -108,6 +122,8 @@ void mpeg2_setup_video_thread(GstPad *pad, GstElement *show, GstElement *pipelin
   gst_pad_connect(gst_element_get_pad(parse_video,"src"),
                   gst_element_get_pad(decode_video,"sink"));
   gst_pad_connect(gst_element_get_pad(decode_video,"src"),
+                  gst_element_get_pad(merge_subtitles,"video"));
+  gst_pad_connect(gst_element_get_pad(merge_subtitles,"src"),
                   gst_element_get_pad(video_render_queue,"sink"));
 
   // construct queue and connect everything in the main pipeline
@@ -123,8 +139,7 @@ void mpeg2_setup_video_thread(GstPad *pad, GstElement *show, GstElement *pipelin
   // set up thread state and kick things off
   gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
   g_print("setting to RUNNING state\n");
-  gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_RUNNING);
-  gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_PLAYING);
+  gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_READY);
   
   g_print("\n");
 }

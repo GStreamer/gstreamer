@@ -18,56 +18,64 @@ extern GstElement *audio_render_queue;
 
 void mpeg1_new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) 
 {
-  GstElement *parse_audio, *decode;
-  GstElement *audio_queue;
-  GstElement *audio_thread;
 
   g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
 
   // connect to audio pad
   //if (0) {
   if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0 && audio_render_queue) {
-    gst_plugin_load("mp3parse");
-    gst_plugin_load("mpg123");
-    // construct internal pipeline elements
-    parse_audio = gst_elementfactory_make("mp3parse","parse_audio");
-    g_return_if_fail(parse_audio != NULL);
-    decode = gst_elementfactory_make("mpg123","decode_audio");
-    g_return_if_fail(decode != NULL);
-
-    // create the thread and pack stuff into it
-    audio_thread = gst_thread_new("audio_thread");
-    g_return_if_fail(audio_thread != NULL);
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
-
-    // set up pad connections
-    gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
-                              gst_element_get_pad(parse_audio,"sink"));
-    gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
-                    gst_element_get_pad(decode,"sink"));
-    gst_pad_connect(gst_element_get_pad(decode,"src"),
-                    gst_element_get_pad(audio_render_queue,"sink"));
-
-    // construct queue and connect everything in the main pipelie
-    audio_queue = gst_elementfactory_make("queue","audio_queue");
-    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",BUFFER,NULL);
-    gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
-    gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
-    gst_pad_connect(pad,
-                    gst_element_get_pad(audio_queue,"sink"));
-    gst_pad_connect(gst_element_get_pad(audio_queue,"src"),
-                    gst_element_get_pad(audio_thread,"sink"));
-
-    // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
-    g_print("setting to RUNNING state\n");
-    gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_RUNNING);
+    mpeg1_setup_audio_thread(pad, audio_render_queue, pipeline);
 
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
   //} else if (0) {
     mpeg1_setup_video_thread(pad, video_render_queue, pipeline);
   }
+  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
+}
+
+void mpeg1_setup_audio_thread(GstPad *pad, GstElement *audio_render_queue, GstElement *pipeline)
+{
+  GstElement *parse_audio, *decode;
+  GstElement *audio_queue;
+  GstElement *audio_thread;
+
+  gst_plugin_load("mp3parse");
+  gst_plugin_load("mpg123");
+  // construct internal pipeline elements
+  parse_audio = gst_elementfactory_make("mp3parse","parse_audio");
+  g_return_if_fail(parse_audio != NULL);
+  decode = gst_elementfactory_make("mpg123","decode_audio");
+  g_return_if_fail(decode != NULL);
+
+  // create the thread and pack stuff into it
+  audio_thread = gst_thread_new("audio_thread");
+  g_return_if_fail(audio_thread != NULL);
+  gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
+  gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
+
+  // set up pad connections
+  gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
+                            gst_element_get_pad(parse_audio,"sink"));
+  gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
+                  gst_element_get_pad(decode,"sink"));
+  gst_pad_connect(gst_element_get_pad(decode,"src"),
+                  gst_element_get_pad(audio_render_queue,"sink"));
+
+  // construct queue and connect everything in the main pipelie
+  audio_queue = gst_elementfactory_make("queue","audio_queue");
+  gtk_object_set(GTK_OBJECT(audio_queue),"max_level",BUFFER,NULL);
+  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
+  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
+  gst_pad_connect(pad,
+                  gst_element_get_pad(audio_queue,"sink"));
+  gst_pad_connect(gst_element_get_pad(audio_queue,"src"),
+                  gst_element_get_pad(audio_thread,"sink"));
+
+  // set up thread state and kick things off
+  gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
+  g_print("setting to READY state\n");
+  gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
 }
 
 void mpeg1_setup_video_thread(GstPad *pad, GstElement *video_render_queue, GstElement *pipeline)
@@ -111,6 +119,6 @@ void mpeg1_setup_video_thread(GstPad *pad, GstElement *video_render_queue, GstEl
   // set up thread state and kick things off
   gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
   g_print("setting to RUNNING state\n");
-  gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_RUNNING);
+  gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_READY);
 }
 
