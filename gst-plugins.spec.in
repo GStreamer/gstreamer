@@ -168,7 +168,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_AUDIOFILE_TRUE@%post -n  gstreamer-afs
 @USE_AUDIOFILE_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
 
-@USE_AVIFILE_TRUE@£%package -n gstreamer-avi
+@USE_AVIFILE_TRUE@%package -n gstreamer-avi
 @USE_AVIFILE_TRUE@Summary: Gstreamer plugin for AVI format movie playback
 @USE_AVIFILE_TRUE@Group: Libraries/Multimedia
 @USE_AVIFILE_TRUE@Requires: %{name} = %{ver}
