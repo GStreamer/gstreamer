@@ -1,3 +1,41 @@
+2003-12-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstcaps.c: (gst_caps_append):
+	  add sanity checks
+	* gst/gstcaps.h: (gst_caps_debug):
+	  remove, it doesn't exist anymore.
+	* gst/gstelement.c: (gst_element_threadsafe_properties_pre_run),
+	(gst_element_threadsafe_properties_post_run):
+	  make debugging messages not clutter up THREAD debug category
+	(gst_element_negotiate_pads), (gst_element_clear_pad_caps),
+	(gst_element_change_state):
+	  update to new caps API
+	* gst/gstinterface.c: (gst_implements_interface_cast):
+	  don't put vital code in g_return_if_fail
+	* gst/gstpad.c: (gst_pad_link_try), (gst_pad_try_set_caps), 
+	(gst_pad_link_filtered):
+	  add pst_pad_try_link and use it.
+	(gst_pad_perform_negotiate), (gst_pad_renegotiate):
+	  implement correctly, deprecate first one.
+	(gst_pad_link_unnegotiate), (gst_pad_unnegotiate):
+	  add and implement.
+	(gst_pad_try_relink_filtered), (gst_pad_relink_filtered):
+	  implement.
+	(gst_pad_get_negotiated_caps):
+	  add and implement. Make GST_PAD_CAPS call this function.
+	(gst_pad_get_caps):
+	  remove unneeded check..
+	(gst_pad_recover_caps_error):
+	  disable, always return FALSE.
+	(gst_real_pad_dispose):
+	  don't free caps and appfilter anymore, they're unused.
+	* gst/gstpad.h:
+	  Reflect changes mentioned above.
+	* gst/gstsystemclock.c: (gst_system_clock_wait):
+	  Make 'clock is way behind' a debugging message.
+	* gst/gstthread.c: (gst_thread_change_state):
+	  Fix debugging message
+
 2003-12-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstinfo.h:
