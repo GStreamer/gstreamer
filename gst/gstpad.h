@@ -360,6 +360,7 @@ GstBuffer*		gst_pad_pullregion		(GstPad *pad, GstRegionType type, guint64 offset
 #define			gst_pad_eos(pad)		(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
 gboolean		gst_pad_set_eos			(GstPad *pad);
 
+gboolean		gst_pad_eos_func		(GstPad *pad);
 void			gst_pad_handle_qos		(GstPad *pad, glong qos_message);
 
 void			gst_pad_load_and_connect	(xmlNodePtr self, GstObject *parent);
@@ -383,7 +384,6 @@ GstCaps*		gst_padtemplate_get_caps_by_name	(GstPadTemplate *templ, const gchar *
 xmlNodePtr		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
 
-gboolean		gst_pad_eos_func		(GstPad *pad);
 
 #ifdef __cplusplus
 }

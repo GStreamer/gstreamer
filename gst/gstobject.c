@@ -158,7 +158,8 @@ gst_object_ref (GstObject *object)
 {
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  //g_print ("object_ref\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "ref\n");
+
   gtk_object_ref (GTK_OBJECT (object));
 
   return object;
@@ -177,7 +178,8 @@ gst_object_unref (GstObject *object)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  //g_print ("object_unref\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "unref\n");
+
   gtk_object_unref (GTK_OBJECT (object));
 }
 #define gst_object_unref gst_object_unref
@@ -196,7 +198,7 @@ gst_object_sink (GstObject *object)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  //g_print ("object_sink\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "sink\n");
   if (GST_OBJECT_FLOATING (object))
   {
     GST_FLAG_UNSET (object, GST_FLOATING);
@@ -210,7 +212,7 @@ gst_object_destroy (GstObject *object)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  //g_print ("object_destroy\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy\n");
   if (!GST_OBJECT_DESTROYED (object))
   {
     /* need to hold a reference count around all class method
@@ -225,7 +227,7 @@ gst_object_destroy (GstObject *object)
 static void
 gst_object_shutdown (GtkObject *object)
 {
-  //g_print ("object_shutdown\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "shutdown\n");
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
   parent_class->shutdown (GTK_OBJECT (object));
 }
@@ -234,6 +236,8 @@ gst_object_shutdown (GtkObject *object)
 static void
 gst_object_real_destroy (GtkObject *gtk_object)
 {
+  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy\n");
+
   parent_class->destroy (gtk_object);
 }
 
@@ -245,7 +249,7 @@ gst_object_finalize (GtkObject *gtk_object)
 
   object = GST_OBJECT (gtk_object);
 
-  //g_print ("object_finalize\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "finalize\n");
   if (object->name != NULL)
     g_free (object->name);
 

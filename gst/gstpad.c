@@ -272,6 +272,8 @@ gst_pad_new_from_template (GstPadTemplate *templ,
   g_return_val_if_fail (templ != NULL, NULL);
 
   pad = gst_pad_new (name, templ->direction);
+  gst_object_ref (GST_OBJECT (templ));
+  gst_object_sink (GST_OBJECT (templ));
   GST_PAD_PADTEMPLATE(pad) = templ;
 
   return pad;
@@ -554,6 +556,14 @@ gst_pad_disconnect (GstPad *srcpad,
   g_return_if_fail (GST_RPAD_PEER(realsrc) != NULL);
   g_return_if_fail (GST_RPAD_PEER(realsink) != NULL);
 
+  if ((GST_RPAD_DIRECTION(realsrc) == GST_PAD_SINK) &&
+      (GST_RPAD_DIRECTION(realsink) == GST_PAD_SRC)) {
+    GstRealPad *temppad;
+
+    temppad = realsrc;
+    realsrc = realsink;
+    realsink = temppad;
+  }
   g_return_if_fail ((GST_RPAD_DIRECTION(realsrc) == GST_PAD_SRC) &&
                     (GST_RPAD_DIRECTION(realsink) == GST_PAD_SINK));
 
@@ -566,7 +576,10 @@ gst_pad_disconnect (GstPad *srcpad,
   gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_DISCONNECTED], realsrc);
 
   // now tell the scheduler
-  GST_SCHEDULE_PAD_DISCONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
+  if (realsrc->sched)
+    GST_SCHEDULE_PAD_DISCONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
+  if (realsink->sched)
+    GST_SCHEDULE_PAD_DISCONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
@@ -586,7 +599,6 @@ gst_pad_connect (GstPad *srcpad,
 		 GstPad *sinkpad)
 {
   GstRealPad *realsrc, *realsink;
-  GstRealPad *temppad;
   gboolean negotiated = FALSE;
 
   /* generic checks */
@@ -605,6 +617,8 @@ gst_pad_connect (GstPad *srcpad,
   /* check for reversed directions and swap if necessary */
   if ((GST_RPAD_DIRECTION(realsrc) == GST_PAD_SINK) &&
       (GST_RPAD_DIRECTION(realsink) == GST_PAD_SRC)) {
+    GstRealPad *temppad;
+
     temppad = realsrc;
     realsrc = realsink;
     realsink = temppad;
@@ -996,15 +1010,23 @@ gst_pad_get_bufferpool (GstPad *pad)
 }
 
 
-// FIXME this needs to be rethought soon
 static void
 gst_real_pad_destroy (GtkObject *object)
 {
   GstPad *pad = GST_PAD (object);
 
-//  g_print("in gst_pad_real_destroy()\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy\n");
+
+  if (GST_PAD (pad)->padtemplate)
+    gst_object_unref (GST_OBJECT (GST_PAD (pad)->padtemplate));
+
+  if (GST_PAD_PEER (object)) 
+    gst_pad_disconnect (GST_PAD (object), GST_PAD (GST_PAD_PEER (object)));
 
   g_list_free (GST_REAL_PAD(pad)->ghostpads);
+
+  if (GTK_OBJECT_CLASS (real_pad_parent_class)->destroy)
+    GTK_OBJECT_CLASS (real_pad_parent_class)->destroy (object);
 }
 
 
