@@ -304,8 +304,6 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   gint state;
   gboolean done = FALSE;
 
-  GST_DEBUG (0, "MPEG2DEC: chain called");
-
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
 
@@ -314,7 +312,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       {
 	//gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
 	//mpeg2dec->decoder->is_sequence_needed = 1;
-	GST_DEBUG (GST_CAT_EVENT, "mpeg2dec: discont\n"); 
+	GST_DEBUG (GST_CAT_EVENT, "discont\n"); 
         mpeg2dec->first = TRUE;
         mpeg2dec->last_PTS = -1;
         mpeg2dec->next_time = 0;
@@ -337,12 +335,21 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   data = GST_BUFFER_DATA (buf);
   pts = GST_BUFFER_TIMESTAMP (buf);
 
-  GST_DEBUG (GST_CAT_CLOCK, "mpeg2dec: pts %llu\n", pts);
-
   info = mpeg2_info (mpeg2dec->decoder);
   end = data + size;
 
-  mpeg2_pts (mpeg2dec->decoder, GSTTIME_TO_MPEGTIME (pts));
+  if (pts != -1) {
+    gint64 mpeg_pts = GSTTIME_TO_MPEGTIME (pts);
+
+    GST_DEBUG (0, "have pts: %lld (%lld)", 
+		  mpeg_pts, MPEGTIME_TO_GSTTIME (mpeg_pts));
+
+    mpeg2_pts (mpeg2dec->decoder, mpeg_pts);
+  }
+  else {
+    GST_DEBUG (GST_CAT_CLOCK, "no pts");
+  }
+
   mpeg2_buffer (mpeg2dec->decoder, data, end);
 
   while (!done) {
@@ -357,6 +364,9 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	mpeg2dec->total_frames = 0;
         mpeg2dec->frame_period = info->sequence->frame_period * GST_USECOND / 27;
 
+	GST_DEBUG (0, "sequence flags: %d, frame period: %d", 
+		      info->sequence->flags, info->sequence->frame_period);
+
 	if (!gst_mpeg2dec_negotiate_format (mpeg2dec)) {
           gst_element_error (GST_ELEMENT (mpeg2dec), "could not negotiate format");
 	  return;
@@ -366,6 +376,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
         break;
       }
       case STATE_SEQUENCE_REPEATED:
+	GST_DEBUG (0, "sequence repeated");
         break;
       case STATE_GOP:
         break;
@@ -384,8 +395,10 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	}
         break;
       case STATE_SLICE_1ST:
+	GST_DEBUG (0, "slice 1st");
         break;
       case STATE_PICTURE_2ND:
+	GST_DEBUG (0, "picture second\n");
         break;
       case STATE_SLICE:
       case STATE_END:
@@ -403,12 +416,18 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 
             GST_BUFFER_TIMESTAMP (outbuf) = time;
 
-            mpeg2dec->next_time = time + mpeg2dec->frame_period;
+            mpeg2dec->next_time = time;
 	  }
 	  else {
             GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
-            mpeg2dec->next_time += mpeg2dec->frame_period;
 	  }
+          mpeg2dec->next_time += (mpeg2dec->frame_period * picture->nb_fields) >> 1;
+	  
+	  GST_DEBUG (0, "picture: %s %s fields:%d ts:%lld", 
+			  (picture->flags & PIC_FLAG_TOP_FIELD_FIRST ? "tff " : "    "),
+			  (picture->flags & PIC_FLAG_PROGRESSIVE_FRAME ? "prog" : "    "),
+			  picture->nb_fields, 
+	                  GST_BUFFER_TIMESTAMP (outbuf));
 
 	  /*
 	  if (picture->flags & PIC_FLAG_SKIP ||
