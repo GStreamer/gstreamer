@@ -521,7 +521,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat  pix_fmt,
       /* .. */
       break;
     case PIX_FMT_RGBA32:
-      bpp = depth = 32;
+      bpp = 32; depth = 24;
       endianness = G_BIG_ENDIAN;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
       r_mask = 0x00ff0000; g_mask = 0x0000ff00; b_mask = 0x000000ff;
@@ -876,9 +876,9 @@ gst_ffmpeg_caps_to_pixfmt (GstCaps        *caps,
       switch (bpp) {
         case 32:
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-          if (rmask == 0xff0000)
+          if (rmask == 0x00ff0000)
 #else
-          if (rmask == 0x0000ff)
+          if (rmask == 0x0000ff00)
 #endif
             context->pix_fmt = PIX_FMT_RGBA32;
           break;
