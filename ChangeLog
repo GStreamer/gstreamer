@@ -1,3 +1,8 @@
+2005-01-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* testsuite/embed/Makefile.am:
+	  test->noinst, fix make test in buildbot.
+
 2005-01-09  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
 	* ext/dvdread/stream_labels.c: new file
