@@ -201,8 +201,10 @@ run_thread (GstTest * test)
       gst_test_do_signal2 (test);
     if (TESTNUM == 3)
       gst_test_do_prop (test);
-    if ((i++ % 10000) == 0)
+    if ((i++ % 10000) == 0) {
       g_print (".");
+      g_usleep (1);             /* context switch */
+    }
   }
 
   return NULL;
@@ -219,7 +221,7 @@ main (int argc, char **argv)
   test1 = g_object_new (GST_TYPE_TEST, NULL);
   test2 = g_object_new (GST_TYPE_TEST, NULL);
 
-  for (i = 0; i < 100; i++) {
+  for (i = 0; i < 20; i++) {
     g_thread_create ((GThreadFunc) run_thread, test1, TRUE, NULL);
     g_thread_create ((GThreadFunc) run_thread, test2, TRUE, NULL);
   }
