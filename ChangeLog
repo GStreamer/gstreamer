@@ -1,5 +1,10 @@
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
+	* testsuite/refcounting/pad.c: (main):
+	  fix test
+
+2004-04-22  Benjamin Otte  <otte@gnome.org>
+
 	* gst/gstcaps.c: (gst_caps_subtract):
 	  allow subtracting ANY and EMPTY from ANY caps
 

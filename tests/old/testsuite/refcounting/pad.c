@@ -132,14 +132,16 @@ main (int argc, gchar * argv[])
 
   for (i = 0; i < iters; i++) {
     padtempl =
-        gst_pad_template_new ("sink%d", GST_PAD_SINK, GST_PAD_SOMETIMES, NULL);
+        gst_pad_template_new ("sink%d", GST_PAD_SINK, GST_PAD_SOMETIMES,
+        gst_caps_new_any ());
     gst_object_unref (GST_OBJECT (padtempl));
   }
   g_print ("%d padtemplates create/unref %ld\n", iters, vmsize () - usage1);
 
   for (i = 0; i < iters; i++) {
     padtempl =
-        gst_pad_template_new ("sink%d", GST_PAD_SINK, GST_PAD_SOMETIMES, NULL);
+        gst_pad_template_new ("sink%d", GST_PAD_SINK, GST_PAD_SOMETIMES,
+        gst_caps_new_any ());
     pad = gst_pad_new_from_template (padtempl, "sink1");
     gst_object_unref (GST_OBJECT (pad));
   }
