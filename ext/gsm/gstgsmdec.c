@@ -51,8 +51,8 @@ static void gst_gsmdec_class_init (GstGSMDec * klass);
 static void gst_gsmdec_init (GstGSMDec * gsmdec);
 
 static void gst_gsmdec_chain (GstPad * pad, GstData * _data);
-static GstPadLinkReturn gst_gsmdec_sinkconnect (GstPad * pad,
-    const GstCaps * caps);
+static GstCaps *gst_gsmdec_getcaps (GstPad * pad);
+static GstPadLinkReturn gst_gsmdec_link (GstPad * pad, const GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -133,41 +133,77 @@ gst_gsmdec_init (GstGSMDec * gsmdec)
   gsmdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gsmdec_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->sinkpad);
   gst_pad_set_chain_function (gsmdec->sinkpad, gst_gsmdec_chain);
-  gst_pad_set_link_function (gsmdec->sinkpad, gst_gsmdec_sinkconnect);
+  gst_pad_set_getcaps_function (gsmdec->sinkpad, gst_gsmdec_getcaps);
+  gst_pad_set_link_function (gsmdec->sinkpad, gst_gsmdec_link);
+  gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->sinkpad);
 
   gsmdec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gsmdec_src_template), "src");
+  gst_pad_set_getcaps_function (gsmdec->srcpad, gst_gsmdec_getcaps);
+  gst_pad_set_link_function (gsmdec->srcpad, gst_gsmdec_link);
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->srcpad);
 
   gsmdec->state = gsm_create ();
   gsmdec->bufsize = 0;
 }
 
-static GstPadLinkReturn
-gst_gsmdec_sinkconnect (GstPad * pad, const GstCaps * caps)
+static GstCaps *
+gst_gsmdec_getcaps (GstPad * pad)
 {
-  GstGSMDec *gsmdec;
+  GstGSMDec *gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
+  const GValue *rate_value;
+  GstPad *otherpad;
+  GstCaps *othercaps, *basecaps;
+
+  if (pad == gsmdec->srcpad) {
+    otherpad = gsmdec->sinkpad;
+    basecaps = gst_caps_new_simple ("audio/x-raw-int",
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "signed", G_TYPE_BOOLEAN, TRUE,
+        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
+  } else {
+    otherpad = gsmdec->srcpad;
+    basecaps = gst_caps_new_simple ("audio/x-gsm", NULL);
+  }
+
+  othercaps = gst_pad_get_allowed_caps (otherpad);
+  rate_value = gst_structure_get_value (gst_caps_get_structure (othercaps,
+          0), "rate");
+  gst_structure_set_value (gst_caps_get_structure (basecaps, 0), "rate",
+      rate_value);
+
+  return basecaps;
+}
+
+static GstPadLinkReturn
+gst_gsmdec_link (GstPad * pad, const GstCaps * caps)
+{
+  GstGSMDec *gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
+  GstPad *otherpad;
+  GstCaps *othercaps;
   gint rate;
   GstStructure *structure;
-
-  gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "rate", &rate);
 
-  if (gst_pad_try_set_caps (gsmdec->srcpad,
-          gst_caps_new_simple ("audio/x-raw-int",
-              "endianness", G_TYPE_INT, G_BYTE_ORDER,
-              "signed", G_TYPE_BOOLEAN, TRUE,
-              "width", G_TYPE_INT, 16,
-              "depth", G_TYPE_INT, 16,
-              "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL)) > 0) {
-    return GST_PAD_LINK_OK;
+  if (pad == gsmdec->sinkpad) {
+    otherpad = gsmdec->srcpad;
+    othercaps = gst_caps_new_simple ("audio/x-raw-int",
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "signed", G_TYPE_BOOLEAN, TRUE,
+        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
+  } else {
+    otherpad = gsmdec->sinkpad;
+    othercaps = gst_caps_new_simple ("audio/x-gsm", NULL);
   }
-  return GST_PAD_LINK_REFUSED;
+
+  gst_caps_set_simple (othercaps,
+      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL);
+
+  return gst_pad_try_set_caps (otherpad, othercaps);
 }
 
 static void
@@ -211,12 +247,8 @@ gst_gsmdec_chain (GstPad * pad, GstData * _data)
   while (size >= 33) {
     GstBuffer *outbuf;
 
-    outbuf = gst_buffer_new ();
-    GST_BUFFER_DATA (outbuf) = g_malloc (160 * sizeof (gsm_signal));
-    GST_BUFFER_SIZE (outbuf) = 160 * sizeof (gsm_signal);
-
+    outbuf = gst_buffer_new_and_alloc (160 * sizeof (gsm_signal));
     gsm_decode (gsmdec->state, data, (gsm_signal *) GST_BUFFER_DATA (outbuf));
-
     gst_pad_push (gsmdec->srcpad, GST_DATA (outbuf));
 
     size -= 33;
