@@ -2031,6 +2031,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data)
             "bitrate", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 40),
             "blocksize", G_TYPE_INT, QTDEMUX_GUINT32_GET (data + 44), NULL);
       }
+    case GST_MAKE_FOURCC ('a', 'g', 's', 'm'):
+      return gst_caps_new_simple ("audio/x-gsm", NULL);
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
       /* ? */
     case GST_MAKE_FOURCC ('Q', 'D', 'M', 'C'):
@@ -2039,8 +2041,6 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data)
       /* IMA 4:1 */
     case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
       /* QUALCOMM PureVoice */
-    case GST_MAKE_FOURCC ('a', 'g', 's', 'm'):
-      /* ? */
     default:
       g_critical ("Don't know how to convert fourcc '" GST_FOURCC_FORMAT
           "' to caps\n", GST_FOURCC_ARGS (fourcc));
