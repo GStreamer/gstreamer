@@ -30,6 +30,7 @@
 #include <gst/gstbuffer.h>
 #include <gst/gstcaps.h>
 #include <gst/gstevent.h>
+#include <gst/gstprobe.h>
 
 
 G_BEGIN_DECLS
@@ -221,20 +222,17 @@ struct _GstRealPad {
   GstPadIntConnFunction		 intconnfunc;
 
   GstPadBufferPoolFunction 	 bufferpoolfunc;
+
+  GstProbeDispatcher 		 probedisp;
 };
 
 struct _GstRealPadClass {
   GstPadClass parent_class;
 
   /* signal callbacks */
-  void (*set_active)		(GstPad *pad, gboolean active);
-  void (*caps_changed)		(GstPad *pad, GstCaps *newcaps);
   void (*caps_nego_failed)	(GstPad *pad);
   void (*connected)		(GstPad *pad, GstPad *peer);
   void (*disconnected)		(GstPad *pad, GstPad *peer);
-  void (*event_received)	(GstPad *pad, GstEvent *event);
-
-  void (*eos)			(GstPad *pad);
 };
 
 struct _GstGhostPad {
@@ -473,6 +471,11 @@ GList*	 		gst_pad_get_internal_connections_default (GstPad *pad);
 /* misc helper functions */
 gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch, 
 								 gpointer data);
+
+#define			gst_pad_add_probe(pad, probe) \
+				(gst_probe_dispatcher_add_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
+#define			gst_pad_remove_probe(pad, probe) \
+				(gst_probe_dispatcher_remove_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
 
 
 #ifndef GST_DISABLE_LOADSAVE

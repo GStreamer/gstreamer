@@ -92,18 +92,16 @@ gst_pad_init (GstPad *pad)
 /***** Then do the Real Pad *****/
 /* Pad signals and args */
 enum {
-  REAL_SET_ACTIVE,
-  REAL_CAPS_CHANGED,
   REAL_CAPS_NEGO_FAILED,
   REAL_CONNECTED,
   REAL_DISCONNECTED,
-  REAL_EVENT_RECEIVED,
   /* FILL ME */
   REAL_LAST_SIGNAL
 };
 
 enum {
   REAL_ARG_0,
+  REAL_ARG_CAPS,
   REAL_ARG_ACTIVE,
   /* FILL ME */
 };
@@ -119,8 +117,6 @@ static void	gst_real_pad_get_property	(GObject *object, guint prop_id,
 						 GParamSpec *pspec);
 
 static void	gst_real_pad_dispose		(GObject *object);
-
-static void	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
 
 GType _gst_real_pad_type = 0;
 
@@ -158,16 +154,6 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gobject_class->set_property  = GST_DEBUG_FUNCPTR (gst_real_pad_set_property);
   gobject_class->get_property  = GST_DEBUG_FUNCPTR (gst_real_pad_get_property);
 
-  gst_real_pad_signals[REAL_SET_ACTIVE] =
-    g_signal_new ("set_active", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstRealPadClass, set_active), NULL, NULL,
-                  gst_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1,
-                  G_TYPE_BOOLEAN);
-  gst_real_pad_signals[REAL_CAPS_CHANGED] =
-    g_signal_new ("caps_changed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstRealPadClass, caps_changed), NULL, NULL,
-                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
     g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
@@ -183,17 +169,15 @@ gst_real_pad_class_init (GstRealPadClass *klass)
                   G_STRUCT_OFFSET (GstRealPadClass, disconnected), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
-  gst_real_pad_signals[REAL_EVENT_RECEIVED] =
-    g_signal_new ("event_received", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GstRealPadClass, event_received), NULL, NULL,
-                  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
 
 /*  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN, */
 /*                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE); */
   g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_ACTIVE,
     g_param_spec_boolean ("active", "Active", "Whether the pad is active.",
                           TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), REAL_ARG_CAPS,
+    g_param_spec_boxed ("caps", "Caps", "The capabilities of the pad",
+                        GST_TYPE_CAPS, G_PARAM_READABLE));
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);
@@ -210,7 +194,7 @@ gst_real_pad_init (GstRealPad *pad)
   pad->chainfunc = NULL;
   pad->getfunc = NULL;
 
-  pad->chainhandler = GST_DEBUG_FUNCPTR (gst_pad_push_func);
+  pad->chainhandler = NULL;
   pad->gethandler = NULL;
 
   pad->bufferpoolfunc = NULL;
@@ -229,6 +213,8 @@ gst_real_pad_init (GstRealPad *pad)
   pad->eventmaskfunc 	= gst_pad_get_event_masks_default;
   pad->formatsfunc 	= gst_pad_get_formats_default;
   pad->querytypefunc 	= gst_pad_get_query_types_default;
+
+  gst_probe_dispatcher_init (&pad->probedisp);
 }
 
 static void
@@ -256,6 +242,9 @@ gst_real_pad_get_property (GObject *object, guint prop_id,
   switch (prop_id) {
     case REAL_ARG_ACTIVE:
       g_value_set_boolean (value, !GST_FLAG_IS_SET (object, GST_PAD_DISABLED));
+      break;
+    case REAL_ARG_CAPS:
+      g_value_set_boxed (value, GST_PAD_CAPS (GST_REAL_PAD (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -384,6 +373,7 @@ void
 gst_pad_set_active (GstPad *pad, gboolean active)
 {
   GstRealPad *realpad;
+  gboolean old;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -392,6 +382,8 @@ gst_pad_set_active (GstPad *pad, gboolean active)
     return;
 
   realpad = GST_PAD_REALIZE (pad);
+
+  old = GST_FLAG_IS_SET (realpad, GST_PAD_DISABLED);
 
   if (active) {
     GST_DEBUG (GST_CAT_PADS, "activating pad %s:%s", 
@@ -402,8 +394,8 @@ gst_pad_set_active (GstPad *pad, gboolean active)
 	       GST_DEBUG_PAD_NAME (realpad));
     GST_FLAG_SET (realpad, GST_PAD_DISABLED);
   }
-  g_signal_emit (G_OBJECT (realpad), gst_real_pad_signals[REAL_SET_ACTIVE], 0,
-                 !GST_FLAG_IS_SET (realpad, GST_PAD_DISABLED));
+  if (old != active)
+    g_object_notify (G_OBJECT (realpad), "active");
 }
 
 /**
@@ -754,22 +746,6 @@ gst_pad_set_bufferpool_function (GstPad *pad,
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (bufpool));
 }
 
-static void
-gst_pad_push_func (GstPad *pad, GstBuffer *buf)
-{
-  if (GST_RPAD_CHAINFUNC (GST_RPAD_PEER (pad)) != NULL) {
-    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function %s",
-               GST_DEBUG_FUNCPTR_NAME (GST_RPAD_CHAINFUNC (GST_RPAD_PEER (pad))));
-    (GST_RPAD_CHAINFUNC (GST_RPAD_PEER (pad))) (pad, buf);
-  } else {
-    GST_DEBUG (GST_CAT_DATAFLOW, 
-	       "default pad_push handler in place, no chain function");
-    g_warning ("(internal error) default pad_push in place for pad %s:%s"
-               "but it has no chain function", GST_DEBUG_PAD_NAME (pad));
-  }
-}
-
-
 /**
  * gst_pad_disconnect:
  * @srcpad: the source #GstPad to disconnect.
@@ -828,12 +804,10 @@ gst_pad_disconnect (GstPad *srcpad,
   }
 
   /* now tell the scheduler */
-  if (src_sched) 
+  if (src_sched && src_sched == sink_sched) {
     gst_scheduler_pad_disconnect (src_sched, 
 	                          GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
-  else if (sink_sched)
-    gst_scheduler_pad_disconnect (sink_sched, 
-	                          GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
+  }
 
   /* hold a reference, as they can go away in the signal handlers */
   gst_object_ref (GST_OBJECT (realsrc));
@@ -1050,12 +1024,10 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
   sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (realsink));
 
   /* now tell the scheduler */
-  if (src_sched) 
+  if (src_sched && src_sched == sink_sched) {
     gst_scheduler_pad_connect (src_sched, 
 	                       GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
-  else if (sink_sched)
-    gst_scheduler_pad_connect (sink_sched, 
-	                       GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
+  }
 
   GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s, successful",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
@@ -1349,6 +1321,8 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
     if (caps) gst_caps_ref (caps);
     GST_PAD_CAPS (pad) = caps;
     if (oldcaps) gst_caps_unref (oldcaps);
+
+    g_object_notify (G_OBJECT (pad), "caps");
   }
   else {
     GST_INFO (GST_CAT_CAPS, 
@@ -2095,6 +2069,9 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
 
+  if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), GST_DATA (buf)))
+    return;
+
   if (!peer) {
     g_warning ("push on pad %s:%s but it is unconnected", 
 	       GST_DEBUG_PAD_NAME (pad));
@@ -2106,6 +2083,9 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 	           "calling chainhandler &%s of peer pad %s:%s",
                    GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), 
 		   GST_DEBUG_PAD_NAME (GST_PAD (peer)));
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, GST_DATA (buf)))
+          return;
+
         (peer->chainhandler) (GST_PAD_CAST (peer), buf);
 	return;
       }
@@ -2159,8 +2139,12 @@ gst_pad_pull (GstPad *pad)
 
       buf = (peer->gethandler) (GST_PAD_CAST (peer));
 
-      if (buf)
+      if (buf) {
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, GST_DATA (buf)))
+          return NULL;
+
         return buf;
+      }
 
       /* no null buffers allowed */
       gst_element_error (GST_PAD_PARENT (pad), 
@@ -2618,9 +2602,6 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
 {
   GstElement *element = GST_PAD_PARENT (pad);
 
-  g_signal_emit (G_OBJECT (pad), gst_real_pad_signals[REAL_EVENT_RECEIVED], 
-                 0, event);
- 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       gst_pad_event_default_dispatch (pad, element, event);
@@ -2630,15 +2611,6 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
       gst_element_yield (element);
       break;
     case GST_EVENT_DISCONTINUOUS:
-    {
-      guint64 time;
-      
-      if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
-	if (element->setclockfunc && element->clock) {
-	  gst_clock_handle_discont (element->clock, time); 
-	}
-      }
-    }
     case GST_EVENT_FLUSH:
     default:
       return gst_pad_event_default_dispatch (pad, element, event);
@@ -2701,23 +2673,26 @@ gboolean
 gst_pad_send_event (GstPad *pad, GstEvent *event)
 {
   gboolean success = FALSE;
+  GstRealPad *rpad;
 
   g_return_val_if_fail (event, FALSE);
 
-  if (!pad || (GST_PAD_IS_SINK (pad) && !GST_PAD_IS_USABLE (pad))) 
+  rpad = GST_PAD_REALIZE (pad);
+
+  if (!pad || (GST_PAD_IS_SINK (rpad) && !GST_PAD_IS_USABLE (rpad))) 
     return FALSE;
 
   if (GST_EVENT_SRC (event) == NULL)
-    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (pad));
+    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (rpad));
 
   GST_DEBUG (GST_CAT_EVENT, "have event %d on pad %s:%s",
-		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
+		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (rpad));
 
-  if (GST_RPAD_EVENTFUNC (pad))
-    success = GST_RPAD_EVENTFUNC (pad) (pad, event);
+  if (GST_RPAD_EVENTFUNC (rpad))
+    success = GST_RPAD_EVENTFUNC (rpad) (GST_PAD_CAST (rpad), event);
   else {
     GST_DEBUG (GST_CAT_EVENT, "there's no event function for pad %s:%s", 
-	       GST_DEBUG_PAD_NAME (pad));
+	       GST_DEBUG_PAD_NAME (rpad));
     gst_event_unref (event);
   }
 
