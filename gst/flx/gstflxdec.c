@@ -118,7 +118,7 @@ flxdec_type_find (GstBuffer *buf, gpointer private)
   guchar *data = GST_BUFFER_DATA(buf);
   GstCaps *new;
 
-  if(GST_BUFFER_SIZE(buf) < 134){
+  if (GST_BUFFER_SIZE(buf) < 134){
     return NULL;
   }
 
@@ -127,8 +127,8 @@ flxdec_type_find (GstBuffer *buf, gpointer private)
        || data[4] == 0x30 || data[4] == 0x44) && data[5] == 0xaf) {
       /* check the frame type of the first frame */
       if ((data[132] == 0x00 || data[132] == 0xfa) && data[133] == 0xf1) {
-        g_print("GstFlxDec: found supported flx format\n");
-        new = gst_caps_new("flxdec_type_find","video/fli", NULL);
+        GST_DEBUG ("GstFlxDec: found supported flx format");
+        new = gst_caps_new("flxdec_type_find","video/x-fli", NULL);
         return new;
       }
   }
