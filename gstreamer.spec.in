@@ -1,0 +1,60 @@
+%define name    gstreamer
+%define ver     @VERSION@
+%define rel     SNAP
+%define prefix  /usr
+
+Summary: Streaming-media framework
+Name: %name
+Version: %ver
+Release: %rel
+Copyright: LGPL
+Group: Libraries
+Source: %{name}-%{ver}.tar.gz
+BuildRoot: /var/tmp/%{name}-%{ver}-root
+Docdir: %{prefix}/doc
+Prefix: %prefix
+
+%description
+GStreamer is a streaming-media framework, based on graphs of filters which
+operate on media data. Applications using this library can do anything
+from real-time sound processing to playing videos, and just about anything
+else media-related.  It's plugin-based architecture means that new data
+types or processing capabilities can be added simply by installing a new
+package.
+
+%changelog
+* Sun Jan 30 2000 Erik Walthinsen <omega@cse.ogi.edu>
+- first draft of spec file
+
+%prep
+%setup
+
+%build
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix
+
+if [ "$SMP" != "" ]; then
+  (make "MAKE=make -k -j $SMP"; exit 0)
+  make
+else
+  make
+fi
+
+%install  
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+make prefix=$RPM_BUILD_ROOT%{prefix} install
+
+%clean
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+  
+%files
+%defattr(-, root, root)
+
+%{prefix}/bin/*
+%{prefix}/lib/*
+%{prefix}/lib/gst/*
+%{prefix}/include/gst/*

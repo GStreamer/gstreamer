@@ -5,3 +5,5 @@ Makefile.in
 *.la
 .deps
 .libs
+
+test

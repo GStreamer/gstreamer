@@ -21,8 +21,8 @@ libgsteditorinclude_HEADERS =	\
 	gsteditor.h
 
 
-bin_PROGRAMS = editor
-editor_LDFLAGS = libgsteditor.la
+bin_PROGRAMS = gsteditor
+gsteditor_LDFLAGS = libgsteditor.la
 
 
 noinst_HEADERS =		\

@@ -1,0 +1,5 @@
+This is my test code for reading and writing an XML registry of the
+plugins.  This will be eventually folded back into the main library, such
+that when you query the list of plugins, you get all the plugins that are
+either loaded or listed in the registry.  When you actually ask for a
+given plugin, it will load it if necessary.  Pretty cool, huh?
