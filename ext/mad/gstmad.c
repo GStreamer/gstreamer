@@ -925,6 +925,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
   GstMad *mad;
   gchar *data;
   glong size;
+  gboolean new_pts = FALSE;
 
   mad = GST_MAD (gst_pad_get_parent (pad));
 
@@ -957,6 +958,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	      time = 0;
 	    }
 
+	    /* for now, this is the best we can do. Let's hope a real timestamp
+	     * arrives with the next buffer */
 	    mad->base_time = time;
 
             gst_event_unref (event);
@@ -979,8 +982,17 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
   }
 
   if (GST_BUFFER_TIMESTAMP (buffer) != -1) {
-    mad->base_time = GST_BUFFER_TIMESTAMP (buffer);
-    mad->total_samples = 0;
+    /* if there is nothing queued (partial buffer), we prepare to set the
+     * timestamp on the next buffer */
+    if (mad->tempsize == 0) {
+      mad->base_time = GST_BUFFER_TIMESTAMP (buffer);
+      mad->total_samples = 0;
+    }
+    /* else we need to finish the current partial frame with the old timestamp
+     * and queue this timestamp for the next frame */
+    else {
+      new_pts = TRUE;
+    }
   }
 
   /* end of new bit */
@@ -1124,6 +1136,14 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
         mad->total_samples += nsamples;
       }
 
+      /* we have a queued timestamp on the incomming buffer that we should
+       * use for the next frame */
+      if (new_pts) {
+	new_pts = FALSE;
+        mad->base_time = GST_BUFFER_TIMESTAMP (buffer);
+        mad->total_samples = 0;
+      }
+
       if (mad->restart) {
 	mad->restart = FALSE;
 	mad->tempsize = 0;
@@ -1131,7 +1151,6 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       }
 
 next:
-
       /* figure out how many bytes mad consumed */
       consumed = mad->stream.next_frame - mad_input_buffer;
 
