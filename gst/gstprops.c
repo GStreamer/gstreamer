@@ -80,6 +80,8 @@ static GList* 		gst_props_list_copy 			(GList *propslist);
 
 static GstPropsEntry*	gst_props_alloc_entry			(void);
 
+static void		gst_props_destroy			(GstProps *props);
+
 static gchar *
 gst_props_entry_to_string (GstPropsEntry *entry)
 {
@@ -1342,7 +1344,7 @@ gst_props_sink (GstProps *props)
  * Destroy the property, freeing all the memory that
  * was allocated.
  */
-void
+static void
 gst_props_destroy (GstProps *props)
 {
   if (props == NULL)

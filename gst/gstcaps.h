@@ -131,7 +131,6 @@ void		gst_caps_replace_sink			(GstCaps **oldcaps, GstCaps *newcaps);
 GstCaps*	gst_caps_unref				(GstCaps *caps);
 GstCaps*	gst_caps_ref				(GstCaps *caps);
 void		gst_caps_sink				(GstCaps *caps);
-void		gst_caps_destroy			(GstCaps *caps);
 
 /* write debug lines to the log */
 void		gst_caps_debug				(GstCaps *caps, const gchar *label);

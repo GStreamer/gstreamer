@@ -44,6 +44,9 @@ extern gboolean		__gst_props_parse_string		(gchar *r, gchar **end, gchar **next)
 /* transform functions */
 static void		gst_caps_transform_to_string		(const GValue *src_value, GValue *dest_value);
 
+static void		gst_caps_destroy			(GstCaps *caps);
+
+
 static void
 gst_caps_transform_to_string (const GValue *src_value, GValue *dest_value)
 {
@@ -308,7 +311,7 @@ gst_caps_replace_sink (GstCaps **oldcaps, GstCaps *newcaps)
  * Frees the memory used by this caps structure and all
  * the chained caps and properties.
  */
-void
+static void
 gst_caps_destroy (GstCaps *caps)
 {
   GstCaps *next;

@@ -135,7 +135,6 @@ void                    gst_props_replace_sink          (GstProps **oldprops, Gs
 GstProps*            	gst_props_unref			(GstProps *props);
 GstProps*            	gst_props_ref			(GstProps *props);
 void            	gst_props_sink			(GstProps *props);
-void            	gst_props_destroy		(GstProps *props);
 
 /* dump property debug info to the log */
 void            	gst_props_debug 		(GstProps *props);
