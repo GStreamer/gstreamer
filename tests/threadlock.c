@@ -5,9 +5,9 @@ int main(int argc,char *argv[]) {
   GstBin *pipeline, *thread;
   GstElement *src, *queue1, *sink;
 
-  gst_init(&argc,&argv);
   gst_info_set_categories(-1);
   gst_debug_set_categories(-1);
+  gst_init(&argc,&argv);
 
   pipeline = gst_pipeline_new("pipeline");
   thread = gst_thread_new("thread");
@@ -27,7 +27,9 @@ int main(int argc,char *argv[]) {
   while (1) {
     fprintf(stderr,"\nSWITCHING to PLAYING:\n");
     gst_element_set_state (thread, GST_STATE_PLAYING);
+    sleep(1);
     fprintf(stderr,"\nSWITCHING to PAUSED:\n");
     gst_element_set_state (thread, GST_STATE_PAUSED);
+    sleep(1);
   }
 }
