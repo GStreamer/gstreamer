@@ -49,29 +49,7 @@ gstreamer and gst-plugins (for example, against CVS copies).
 The easiest way to do this is to use a script like this (for bash):
 
 <programlisting>
-#!/bin/bash -i
-# set up environment to use and develop gstreamer from uninstalled
-# this is run -i so that PS1 doesn't get cleared
-                                                                                
-# extract version from $0
-# gst-cvs -> cvs
-VERSION=`echo $0 | sed s/.*gst-//g`
-echo $VERSION
-                                                                                
-# base path under which dirs are installed
-GST=~/gst/$VERSION
-if test ! -e $GST; then
-  echo "$GST does not exist !"
-  exit
-fi
-                                                                                
-# set up a bunch of paths
-PATH=$GST/gstreamer/tools:$GST/gst-plugins/tools:$PATH
-export PKG_CONFIG_PATH=$GST/gstreamer/pkgconfig:$GST/gst-plugins/pkgconfig
-export GST_PLUGIN_PATH=$GST/gstreamer:$GST/gst-plugins
-                                                                                
-# set up prompt to help us remember we're in a subshell and start bash
-PS1="[gst-$VERSION] $PS1" bash
+&gst-uninstalled;
 </programlisting>
 If you put this script in your path, and symlink it to gst-cvs (if you want
 to develop against cvs HEAD) or to gst-0.6 (if you want to develop against the

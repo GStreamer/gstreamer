@@ -1,5 +1,17 @@
 2004-02-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/faq/Makefile.am:
+          add script to run gstreamer uninstalled 
+	* docs/faq/faq.xml:
+	* docs/faq/developing.xml:
+	* docs/faq/gst-uninstalled:
+          extract script to run gstreamer uninstalled
+	* docs/manuals.mak:
+          add EXTRA_SOURCES variable for Makefile.am's to set to
+          use additional SOURCE files for the doc build
+
+2004-02-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstatomic_impl.h: Fedora 2 test package patch for S390
 
 2004-02-15  Julien MOUTTE  <julien@moutte.net>

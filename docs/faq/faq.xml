@@ -7,6 +7,8 @@
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
 
+<!ENTITY gst-uninstalled SYSTEM "gst-uninstalled">
+
 <!ENTITY START SYSTEM "start.xml">
 <!ENTITY GENERAL SYSTEM "general.xml">
 <!ENTITY DEPENDENCIES SYSTEM "dependencies.xml">

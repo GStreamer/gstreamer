@@ -1,0 +1,55 @@
+#!/bin/bash -i
+# set up environment to use and develop gstreamer and friends uninstalled
+#
+# set up PATH, LD_LIBRARY_PATH, PKG_CONFIG_PATH, GST_PLUGIN_PATH, MANPATH,
+# PYTHONPATH
+#
+# prefer uninstalled versions, but also put installed ones on the path
+#
+# this script assumes that the relevant modules are checked out one by one
+# under a given tree specified below in MYGST
+#
+# symlink this script in a directory in your path (for example $HOME/bin)
+# to a name that reflects the version of your checkout
+#
+# e.g.:
+# - mkdir $HOME/gst/head
+# - ln -sf gst-uninstalled $HOME/bin/gst-head
+# - checkout copies of gstreamer modules in $HOME/gst/head
+# - gst-head
+
+# this script is run -i so that PS1 doesn't get cleared
+
+# change this variable to a different location depending on where you
+# store your cvs checkouts
+MYGST=$HOME/gst
+
+# extract version from $0
+# if this script is called "gst-head" then version will be "head"
+VERSION=`echo $0 | sed s/.*gst-//g`
+
+# base path under which dirs are installed
+GST=$MYGST/$VERSION
+if test ! -e $GST; then
+  echo "$GST does not exist !"
+  exit
+fi
+
+# set up a bunch of paths
+PATH=$GST/gstreamer/tools:$GST/gst-plugins/tools:$GST/gst-player/src:$GST/gst-editor/src:$GST/prefix/bin:$PATH
+export LD_LIBRARY_PATH=$GST/prefix/lib:$LD_LIBRARY_PATH
+export PKG_CONFIG_PATH=$GST/gstreamer/pkgconfig:$GST/gst-plugins/pkgconfig
+export GST_PLUGIN_PATH=$GST/gstreamer:$GST/gst-plugins:$GST/gst-ffmpeg
+export MANPATH=$GST/gstreamer/tools:$GST/prefix/share/man:$MANPATH
+export PYTHONPATH=$GST/gst-python:$PYTHONPATH
+
+# if we got a command, run it, else start a shell
+if test ! -z "$1";
+then
+  $@
+  exit $?
+fi
+
+# set up prompt to help us remember we're in a subshell and start $SHELL
+cd $GST
+PS1="[gst-$VERSION] $PS1" $SHELL
