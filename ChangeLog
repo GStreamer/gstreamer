@@ -1,4 +1,9 @@
 2004-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstconfig.sgml:
+	Add the GSTREAMER_EXPORT macro to the docs
+
+2004-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tools/gst-compprep.c: (handle_xmlerror), (main):
 	Add a check for the version that introduced SetStructuredError to fix

@@ -122,3 +122,10 @@ If this is defined, the <link linkend="gstreamer-gstinfo">debugging subsystem
 
 
 
+<!-- ##### MACRO GSTREAMER_EXPORT ##### -->
+<para>
+
+</para>
+
+
+
