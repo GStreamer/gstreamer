@@ -173,6 +173,7 @@ typedef struct gst_mpeg2dec_vo_instance_s {
 
 } gst_mpeg2dec_vo_instance_t;
 
+/* defined but not used
 static void
 gst_mpeg2dec_vo_frame_copy (vo_frame_t * frame, uint8_t ** src)
 {
@@ -184,6 +185,7 @@ gst_mpeg2dec_vo_frame_field (vo_frame_t * frame, int flags)
 {
   GST_INFO (GST_CAT_PLUGIN_INFO, "VO: field");
 }
+*/
 
 static void
 gst_mpeg2dec_vo_frame_draw (vo_frame_t * frame)
