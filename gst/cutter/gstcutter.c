@@ -207,7 +207,6 @@ gst_cutter_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (filter != NULL);
   g_return_if_fail (GST_IS_CUTTER (filter));
 
-  /* FIXME: this doesn't seem to be working well anymore */
   if (gst_audio_is_buffer_framed (pad, buf) == FALSE)
     g_warning ("cutter: audio buffer is not framed !\n");
   
