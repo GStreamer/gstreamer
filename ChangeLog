@@ -1,3 +1,8 @@
+2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+          bump glib required version to 2.3.0 for g_value_takes_boxed
+
  2004-02-25  Christian Fredrik Kalager Schaller <uraeus@gnome.org>
 
 	* common/m4/gst-docs.m4

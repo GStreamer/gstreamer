@@ -209,7 +209,7 @@ dnl ====================================
 dnl === GLib 2 ===
 dnl Minimum required version of GLib2
 dnl required for compilation without warnings
-GLIB2_REQ="2.2"
+GLIB2_REQ="2.3"
 AC_SUBST(GLIB2_REQ)
 
 dnl Check for glib2
@@ -220,7 +220,7 @@ AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 
 if test "x$HAVE_GLIB2" = "xno"; then
-  AC_MSG_ERROR([GStreamer requires GLib 2.0 to compile.])
+  AC_MSG_ERROR([GStreamer requires GLib $GLIB2_REQ to compile.])
 fi
 
 GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
