@@ -1454,8 +1454,9 @@ plugin_init (GstPlugin * plugin)
       asf_exts,
       "\060\046\262\165\216\146\317\021\246\331\000\252\000\142\316\154", 16,
       GST_TYPE_FIND_MAXIMUM);
+  /* -1 so id3v1 or apev1/2 are detected with higher preference */
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-musepack", GST_RANK_PRIMARY,
-      musepack_exts, "MP+", 3, GST_TYPE_FIND_MAXIMUM);
+      musepack_exts, "MP+", 3, GST_TYPE_FIND_MAXIMUM - 1);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-au", GST_RANK_MARGINAL,
       au_exts, ".snd", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-msvideo", GST_RANK_PRIMARY,
