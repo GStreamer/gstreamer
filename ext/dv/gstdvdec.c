@@ -199,7 +199,7 @@ gst_dvdec_class_init (GstDVDecClass *klass)
   gstelement_class->change_state = gst_dvdec_change_state;
 
   /* table initialization, only do once */
-  dv_init();
+  dv_init(0, 0);
 }
 
 /* This function is responsible for initializing a specific instance of
@@ -219,7 +219,7 @@ gst_dvdec_init(GstDVDec *dvdec)
 
   gst_element_set_loop_function (GST_ELEMENT (dvdec), gst_dvdec_loop);
 
-  dvdec->decoder = dv_decoder_new ();
+  dvdec->decoder = dv_decoder_new (0, 0, 0);
   dvdec->decoder->quality = DV_QUALITY_BEST;
   dvdec->pool = NULL;
 }
@@ -313,7 +313,7 @@ gst_dvdec_loop (GstElement *element)
     trylist = gst_caps_normalize (trylist);
 
     while (trylist) {
-      GstCaps *to_try = gst_caps_copy_1 (trylist);
+      GstCaps *to_try = gst_caps_copy_first (trylist);
 
       /* try each format */
       if (gst_pad_try_set_caps (dvdec->videosrcpad, to_try)) {
