@@ -47,23 +47,23 @@ enum _GstSpeedFormat {
 };
 
 struct _GstSpeed {
-  GstElement element;
+  GstElement     element;
 
-  GstPad *sinkpad, *srcpad;
+  GstPad        *sinkpad;
+  GstPad        *srcpad;
 
-  gfloat speed;
+  gfloat         speed;
 
-  /* valid for both int and float */
+  gint64         offset;
+  gint64         timestamp;
+
+  guint          rate;
+  guint          channels;
+  guint          width;
+  guint          buffer_frames;
+
+  guint          sample_size;
   GstSpeedFormat format;
-  guint rate;
-  guint channels;
-  guint width;
-  guint endianness;
-  guint buffer_frames;
-
-  /* valid only for format==GST_SPEED_FORMAT_INT */
-  guint depth;
-  gboolean is_signed;
 };
 
 struct _GstSpeedClass {

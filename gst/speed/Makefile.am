@@ -6,7 +6,7 @@ libgstspeed_la_CFLAGS = $(GST_CFLAGS)
 libgstspeed_la_LIBADD =
 libgstspeed_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstspeed.h filter.func
+noinst_HEADERS = gstspeed.h
 
 if HAVE_GTK
 noinst_PROGRAMS = demo-mp3

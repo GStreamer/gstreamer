@@ -37,7 +37,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *vbox, *hscale, *button;
-  GstElement *filesrc, *mad, *stereo2mono, *speed, *audiosink, *pipeline;
+  GstElement *filesrc, *mad, *audioconvert, *speed, *audiosink, *pipeline;
 
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
@@ -65,18 +65,17 @@ main (int argc, char **argv)
 
   filesrc = gst_element_factory_make ("filesrc", "filesrc");
   mad = gst_element_factory_make ("mad", "mad");
-  stereo2mono = gst_element_factory_make ("stereo2mono", "stereo2mono");
+  audioconvert = gst_element_factory_make ("audioconvert", "audioconvert0");
   speed = gst_element_factory_make ("speed", "speed");
   audiosink = gst_element_factory_make (DEFAULT_AUDIOSINK, "audiosink");
-  g_object_set (audiosink, "fragment", 0x00180008, NULL);
 
   gtk_signal_connect (GTK_OBJECT (gtk_range_get_adjustment (GTK_RANGE
               (hscale))), "value_changed", G_CALLBACK (set_speed), speed);
 
   pipeline = gst_pipeline_new ("app");
-  gst_bin_add_many (GST_BIN (pipeline), filesrc, mad, stereo2mono, speed,
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, mad, audioconvert, speed,
       audiosink, NULL);
-  gst_element_link_many (filesrc, mad, stereo2mono, speed, audiosink, NULL);
+  gst_element_link_many (filesrc, mad, audioconvert, speed, audiosink, NULL);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
