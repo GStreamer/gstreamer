@@ -163,7 +163,8 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
   if (!identity->silent)
-    g_print("identity: ******* (%s:%s)i \n",GST_DEBUG_PAD_NAME(pad));
+    g_print("identity: chain ******* (%s:%s)i (%d bytes, %llu) \n",
+	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
   
   gst_pad_push (identity->srcpad, buf);
 
@@ -185,7 +186,10 @@ gst_identity_loop (GstElement *element)
   do {
     buf = gst_pad_pull (identity->sinkpad);
     if (!identity->silent)
-      g_print("identity: ******* (%s:%s)i \n",GST_DEBUG_PAD_NAME(identity->sinkpad));
+      g_print("identity: loop  ******* (%s:%s)i (%d bytes, %llu) \n",
+		      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+
+
 
     gst_pad_push (identity->srcpad, buf);
 

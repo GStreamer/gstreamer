@@ -48,13 +48,15 @@ enum {
 };
 
 
-static void	gst_fakesink_class_init	(GstFakeSinkClass *klass);
-static void	gst_fakesink_init	(GstFakeSink *fakesink);
+static void	gst_fakesink_class_init		(GstFakeSinkClass *klass);
+static void	gst_fakesink_init		(GstFakeSink *fakesink);
 
-static void	gst_fakesink_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_fakesink_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void	gst_fakesink_set_property	(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void	gst_fakesink_get_property	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
 
-static void	gst_fakesink_chain	(GstPad *pad,GstBuffer *buf);
+static void	gst_fakesink_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
@@ -192,7 +194,8 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
   if (!fakesink->silent)
-    g_print("fakesink: ******* (%s:%s)< (%d bytes) \n",GST_DEBUG_PAD_NAME(pad),GST_BUFFER_SIZE(buf));
+    g_print("fakesink: chain ******* (%s:%s)< (%d bytes, %llu) \n",
+		    GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
   
   g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0,
                    buf);

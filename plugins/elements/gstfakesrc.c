@@ -74,14 +74,14 @@ gst_fakesrc_output_get_type(void) {
   return fakesrc_output_type;
 }
 
-static void		gst_fakesrc_class_init	(GstFakeSrcClass *klass);
-static void		gst_fakesrc_init	(GstFakeSrc *fakesrc);
+static void		gst_fakesrc_class_init		(GstFakeSrcClass *klass);
+static void		gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
 static void		gst_fakesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_fakesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstBuffer*	gst_fakesrc_get		(GstPad *pad);
-static void 		gst_fakesrc_loop	(GstElement *element);
+static GstBuffer*	gst_fakesrc_get			(GstPad *pad);
+static void 		gst_fakesrc_loop		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
@@ -137,7 +137,7 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                          TRUE,G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
     g_param_spec_boolean("silent","silent","silent",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         FALSE, G_PARAM_READWRITE)); // CHECKME
 
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
     g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -158,9 +158,9 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->numsrcpads = 1;
 
   // create our first output pad
-  pad = gst_pad_new("src",GST_PAD_SRC);
-  gst_element_add_pad(GST_ELEMENT(fakesrc),pad);
-  fakesrc->srcpads = g_slist_append(NULL,pad);
+  pad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (fakesrc), pad);
+  fakesrc->srcpads = g_slist_append (NULL, pad);
 
   fakesrc->loop_based = TRUE;
 
@@ -170,6 +170,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
     gst_pad_set_get_function(pad,gst_fakesrc_get);
 
   fakesrc->num_buffers = -1;
+  fakesrc->buffer_count = 0;
   fakesrc->silent = FALSE;
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
@@ -211,7 +212,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       new_numsrcs = g_value_get_int (value);
       if (new_numsrcs > src->numsrcpads) {
         while (src->numsrcpads != new_numsrcs) {
-          pad = gst_pad_new(g_strdup_printf("src%d",src->numsrcpads),GST_PAD_SRC);
+          pad = gst_pad_new (g_strdup_printf ("src%d", src->numsrcpads), GST_PAD_SRC);
           gst_element_add_pad(GST_ELEMENT(src),pad);
           src->srcpads = g_slist_append(src->srcpads,pad);
           src->numsrcpads++;
@@ -316,9 +317,12 @@ gst_fakesrc_get(GstPad *pad)
     return NULL;
   }
 
-  if (!src->silent)
-    g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
   buf = gst_buffer_new();
+  GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
+
+  if (!src->silent)
+    g_print("fakesrc: get    ******* (%s:%s)> (%d bytes, %llu) \n",
+               GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
   g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                    buf);
@@ -367,8 +371,11 @@ gst_fakesrc_loop(GstElement *element)
       }
 
       buf = gst_buffer_new();
+      GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
+
       if (!src->silent)
-        g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
+        g_print("fakesrc:  loop  ******* (%s:%s)  > (%d bytes, %llu) \n",
+               GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
       g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                        buf);

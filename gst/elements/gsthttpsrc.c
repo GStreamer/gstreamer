@@ -51,17 +51,19 @@ enum {
   ARG_OFFSET
 };
 
-static void 			gst_httpsrc_class_init	(GstHttpSrcClass *klass);
-static void 			gst_httpsrc_init	(GstHttpSrc *httpsrc);
+static void 			gst_httpsrc_class_init		(GstHttpSrcClass *klass);
+static void 			gst_httpsrc_init		(GstHttpSrc *httpsrc);
 
-static void 			gst_httpsrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void 			gst_httpsrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void 			gst_httpsrc_set_property	(GObject *object, guint prop_id, 
+								 const GValue *value, GParamSpec *pspec);
+static void 			gst_httpsrc_get_property	(GObject *object, guint prop_id, 
+								 GValue *value, GParamSpec *pspec);
 static GstElementStateReturn	gst_httpsrc_change_state	(GstElement *element);
 
-static GstBuffer *		gst_httpsrc_get		(GstPad *pad);
+static GstBuffer *		gst_httpsrc_get			(GstPad *pad);
 
-static gboolean			gst_httpsrc_open_url	(GstHttpSrc *src);
-static void			gst_httpsrc_close_url	(GstHttpSrc *src);
+static gboolean			gst_httpsrc_open_url		(GstHttpSrc *src);
+static void			gst_httpsrc_close_url		(GstHttpSrc *src);
 
 
 static GstElementClass *parent_class = NULL;

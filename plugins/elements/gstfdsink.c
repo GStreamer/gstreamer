@@ -46,13 +46,15 @@ enum {
 };
 
 
-static void gst_fdsink_class_init	(GstFdSinkClass *klass);
-static void gst_fdsink_init		(GstFdSink *fdsink);
+static void 	gst_fdsink_class_init	(GstFdSinkClass *klass);
+static void 	gst_fdsink_init		(GstFdSink *fdsink);
 
-static void gst_fdsink_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_fdsink_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void 	gst_fdsink_set_property	(GObject *object, guint prop_id, 
+					 const GValue *value, GParamSpec *pspec);
+static void 	gst_fdsink_get_property	(GObject *object, guint prop_id, 
+					 GValue *value, GParamSpec *pspec);
 
-static void gst_fdsink_chain		(GstPad *pad,GstBuffer *buf);
+static void 	gst_fdsink_chain	(GstPad *pad,GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };

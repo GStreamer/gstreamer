@@ -56,19 +56,21 @@ enum {
 };
 
 
-static void		gst_disksrc_class_init	(GstDiskSrcClass *klass);
+static void		gst_disksrc_class_init		(GstDiskSrcClass *klass);
 static void		gst_disksrc_init		(GstDiskSrc *disksrc);
 
-static void		gst_disksrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_disksrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_disksrc_set_property	(GObject *object, guint prop_id, 
+							 const GValue *value, GParamSpec *pspec);
+static void		gst_disksrc_get_property	(GObject *object, guint prop_id, 
+							 GValue *value, GParamSpec *pspec);
 
-static GstBuffer *	gst_disksrc_get		(GstPad *pad);
-static GstBuffer *	gst_disksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
+static GstBuffer *	gst_disksrc_get			(GstPad *pad);
+static GstBuffer *	gst_disksrc_get_region		(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
 
 static GstElementStateReturn	gst_disksrc_change_state	(GstElement *element);
 
-static gboolean		gst_disksrc_open_file	(GstDiskSrc *src);
-static void		gst_disksrc_close_file	(GstDiskSrc *src);
+static gboolean		gst_disksrc_open_file		(GstDiskSrc *src);
+static void		gst_disksrc_close_file		(GstDiskSrc *src);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };

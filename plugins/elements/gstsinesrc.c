@@ -54,58 +54,56 @@ enum {
   ARG_BUFFER_SIZE,
 };
 
-static GstPadTemplate*
-sinesrc_src_factory (void)
-{
-  return 
-    gst_padtemplate_new (
-    "src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    gst_caps_new (
+// FIXME: this is not core business...
+GST_PADTEMPLATE_FACTORY (sinesrc_src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
     "sinesrc_src",
-      "audio/raw",
-      gst_props_new (
-      "format",   GST_PROPS_STRING ("int"),
-        "law",     GST_PROPS_INT (0),
-        "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
-        "signed",   GST_PROPS_BOOLEAN (TRUE),
-        "width",   GST_PROPS_INT (16),
-        "depth",    GST_PROPS_INT (16),
-      "rate",     GST_PROPS_INT_RANGE (8000, 48000),
-      "channels", GST_PROPS_INT (1),
-    NULL)),
-  NULL);
-}
+    "audio/raw",
+      "format",   	GST_PROPS_STRING ("int"),
+        "law",     	GST_PROPS_INT (0),
+        "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+        "signed",   	GST_PROPS_BOOLEAN (TRUE),
+        "width",   	GST_PROPS_INT (16),
+        "depth",    	GST_PROPS_INT (16),
+        "rate",     	GST_PROPS_INT_RANGE (8000, 48000),
+        "channels", 	GST_PROPS_INT (1)
+  )
+);
 
-static GstPadTemplate *src_temp;
-
-static void gst_sinesrc_class_init(GstSineSrcClass *klass);
-static void gst_sinesrc_init(GstSineSrc *src);
-static GstPadNegotiateReturn gst_sinesrc_negotiate (GstPad *pad, GstCaps **caps, gpointer *data); 
-static void gst_sinesrc_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_sinesrc_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void 			gst_sinesrc_class_init		(GstSineSrcClass *klass);
+static void 			gst_sinesrc_init		(GstSineSrc *src);
+static GstPadNegotiateReturn 	gst_sinesrc_negotiate 		(GstPad *pad, GstCaps **caps, gpointer *data); 
+static void 			gst_sinesrc_set_property	(GObject *object, guint prop_id, 
+								 const GValue *value, GParamSpec *pspec);
+static void 			gst_sinesrc_get_property	(GObject *object, guint prop_id, 
+								 GValue *value, GParamSpec *pspec);
 //static gboolean gst_sinesrc_change_state(GstElement *element,
 //                                          GstElementState state);
 //static void gst_sinesrc_close_audio(GstSineSrc *src);
 //static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
-static void gst_sinesrc_populate_sinetable(GstSineSrc *src);
-static inline void gst_sinesrc_update_table_inc(GstSineSrc *src);
-static inline void gst_sinesrc_update_vol_scale(GstSineSrc *src);
-static void gst_sinesrc_force_caps(GstSineSrc *src);
 
-static GstBuffer * gst_sinesrc_get(GstPad *pad);
+static void 			gst_sinesrc_populate_sinetable	(GstSineSrc *src);
+static inline void 		gst_sinesrc_update_table_inc	(GstSineSrc *src);
+static inline void 		gst_sinesrc_update_vol_scale	(GstSineSrc *src);
+static void 			gst_sinesrc_force_caps		(GstSineSrc *src);
+
+static GstBuffer* 		gst_sinesrc_get			(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
 
 GType
-gst_sinesrc_get_type(void) {
+gst_sinesrc_get_type (void)
+{
   static GType sinesrc_type = 0;
 
   if (!sinesrc_type) {
     static const GTypeInfo sinesrc_info = {
-      sizeof(GstSineSrcClass),      NULL,
+      sizeof(GstSineSrcClass),      
+      NULL,
       NULL,
       (GClassInitFunc)gst_sinesrc_class_init,
       NULL,
@@ -114,13 +112,14 @@ gst_sinesrc_get_type(void) {
       0,
       (GInstanceInitFunc)gst_sinesrc_init,
     };
-    sinesrc_type = g_type_register_static(GST_TYPE_ELEMENT, "GstSineSrc", &sinesrc_info, 0);
+    sinesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstSineSrc", &sinesrc_info, 0);
   }
   return sinesrc_type;
 }
 
 static void
-gst_sinesrc_class_init(GstSineSrcClass *klass) {
+gst_sinesrc_class_init (GstSineSrcClass *klass) 
+{
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
@@ -155,10 +154,10 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
 }
 
 static void 
-gst_sinesrc_init(GstSineSrc *src) {
-
-  src->srcpad = gst_pad_new_from_template (src_temp, "src");
-
+gst_sinesrc_init (GstSineSrc *src) 
+{
+  src->srcpad = gst_pad_new_from_template (
+		  GST_PADTEMPLATE_GET (sinesrc_src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(src), src->srcpad);
   gst_pad_set_negotiate_function (src->srcpad, gst_sinesrc_negotiate);
   
@@ -179,7 +178,6 @@ gst_sinesrc_init(GstSineSrc *src) {
   src->buffer_size=1024;
   
   src->seq = 0;
-
 }
 
 static GstPadNegotiateReturn 
@@ -252,7 +250,8 @@ gst_sinesrc_get(GstPad *pad)
 }
 
 static void 
-gst_sinesrc_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) {
+gst_sinesrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
+{
   GstSineSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
@@ -294,7 +293,8 @@ gst_sinesrc_set_property(GObject *object, guint prop_id, const GValue *value, GP
 }
 
 static void 
-gst_sinesrc_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) {
+gst_sinesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) 
+{
   GstSineSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
@@ -350,7 +350,7 @@ static gboolean gst_sinesrc_change_state(GstElement *element,
 */
 
 static void 
-gst_sinesrc_populate_sinetable(GstSineSrc *src)
+gst_sinesrc_populate_sinetable (GstSineSrc *src)
 {
   gint i;
   gdouble pi2scaled = M_PI * 2 / src->table_size;
@@ -365,13 +365,13 @@ gst_sinesrc_populate_sinetable(GstSineSrc *src)
 }
 
 static inline void 
-gst_sinesrc_update_table_inc(GstSineSrc *src)
+gst_sinesrc_update_table_inc (GstSineSrc *src)
 {
   src->table_inc = src->table_size * src->freq / src->samplerate;
 }
 
 static inline void 
-gst_sinesrc_update_vol_scale(GstSineSrc *src)
+gst_sinesrc_update_vol_scale (GstSineSrc *src)
 {
   src->vol_scale = 32767 * src->volume;
 }
@@ -407,8 +407,7 @@ gst_sinesrc_force_caps(GstSineSrc *src) {
 gboolean 
 gst_sinesrc_factory_init (GstElementFactory *factory) 
 {
-  src_temp = sinesrc_src_factory();
-  gst_elementfactory_add_padtemplate (factory, src_temp);
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (sinesrc_src_factory));
   
   return TRUE;
 }

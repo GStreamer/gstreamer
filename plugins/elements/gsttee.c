@@ -45,32 +45,27 @@ enum {
   /* FILL ME */
 };
 
-static GstPadTemplate*
-tee_src_factory_create (void)
-{
-  return 
-    gst_padtemplate_new (
-       	"src%d",
-  	GST_PAD_SRC,
-  	GST_PAD_REQUEST,
-  	NULL			/* no caps */
-    );
-}
-
+GST_PADTEMPLATE_FACTORY (tee_src_factory,
+  "src%d",
+  GST_PAD_SRC,
+  GST_PAD_REQUEST,
+  NULL			/* no caps */
+);
 
 static void 	gst_tee_class_init	(GstTeeClass *klass);
 static void 	gst_tee_init		(GstTee *tee);
 
 static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp);
 
-static void 	gst_tee_set_property 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void 	gst_tee_get_property 	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void 	gst_tee_set_property 	(GObject *object, guint prop_id, 
+					 const GValue *value, GParamSpec *pspec);
+static void 	gst_tee_get_property 	(GObject *object, guint prop_id, 
+					 GValue *value, GParamSpec *pspec);
 
 static void  	gst_tee_chain 		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_tee_signals[LAST_SIGNAL] = { 0 };
-static GstPadTemplate *gst_tee_src_template;
 
 GType
 gst_tee_get_type(void) {
@@ -103,9 +98,9 @@ gst_tee_class_init (GstTeeClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_PADS,
-    g_param_spec_int("num_pads","num_pads","num_pads",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_PADS,
+    g_param_spec_int ("num_pads", "num_pads", "num_pads",
+                      0, G_MAXINT, 0, G_PARAM_READABLE)); 
 
   gobject_class->set_property = gst_tee_set_property;
   gobject_class->get_property = gst_tee_get_property;
@@ -201,7 +196,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
 {
   GstTee *tee;
   GSList *srcpads;
-  int i;
+  gint i;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -223,8 +218,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
 gboolean
 gst_tee_factory_init (GstElementFactory *factory)
 {
-  gst_tee_src_template = tee_src_factory_create ();
-  gst_elementfactory_add_padtemplate (factory, gst_tee_src_template);
+  gst_elementfactory_add_padtemplate (factory, GST_PADTEMPLATE_GET (tee_src_factory));
 
   return TRUE;
 }

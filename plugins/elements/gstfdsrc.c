@@ -57,8 +57,10 @@ enum {
 static void		gst_fdsrc_class_init	(GstFdSrcClass *klass);
 static void		gst_fdsrc_init		(GstFdSrc *fdsrc);
 
-static void		gst_fdsrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_fdsrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void		gst_fdsrc_set_property	(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void		gst_fdsrc_get_property	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
 
 static GstBuffer *	gst_fdsrc_get		(GstPad *pad);
 

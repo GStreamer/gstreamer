@@ -48,16 +48,18 @@ enum {
 };
 
 
-static void	gst_disksink_class_init	(GstDiskSinkClass *klass);
-static void	gst_disksink_init	(GstDiskSink *disksink);
+static void	gst_disksink_class_init		(GstDiskSinkClass *klass);
+static void	gst_disksink_init		(GstDiskSink *disksink);
 
-static void	gst_disksink_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_disksink_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void	gst_disksink_set_property	(GObject *object, guint prop_id, 
+						 const GValue *value, GParamSpec *pspec);
+static void	gst_disksink_get_property	(GObject *object, guint prop_id, 
+						 GValue *value, GParamSpec *pspec);
 
-static gboolean gst_disksink_open_file 	(GstDiskSink *sink);
-static void 	gst_disksink_close_file (GstDiskSink *sink);
+static gboolean gst_disksink_open_file 		(GstDiskSink *sink);
+static void 	gst_disksink_close_file 	(GstDiskSink *sink);
 
-static void	gst_disksink_chain	(GstPad *pad,GstBuffer *buf);
+static void	gst_disksink_chain		(GstPad *pad,GstBuffer *buf);
 
 static GstElementStateReturn gst_disksink_change_state (GstElement *element);
 
