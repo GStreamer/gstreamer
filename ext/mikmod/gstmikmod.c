@@ -22,7 +22,6 @@
 #endif
 #include "gstmikmod.h"
 
-#include <gst/audio/audio.h>
 #include <stdlib.h>
 
 /* elementfactory information */
@@ -57,13 +56,32 @@ enum {
   ARG_SOFT_SNDFX
 };
 
+MODULE *module;
+MREADER *reader;
+GstPad *srcpad;
+GstClockTime timestamp;
+int need_sync;
 
 static GstStaticPadTemplate mikmod_src_factory =
 GST_STATIC_PAD_TEMPLATE (
     "src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (
+      "audio/x-raw-int, "
+	"endianness = (int) BYTE_ORDER, "
+	"signed = (boolean) TRUE, "
+	"width = (int) 16, "
+	"depth = (int) 16, "
+	"rate = (int) { 8000, 11025, 22050, 44100 }, "
+	"channels = (int) [ 1, 2 ]; "
+      "audio/x-raw-int, "
+	"signed = (boolean) FALSE, "
+	"width = (int) 8, "
+	"depth = (int) 8, "
+	"rate = (int) { 8000, 11025, 22050, 44100 }, "
+	"channels = (int) [ 1, 2 ]"
+    )
 );
 
 static GstStaticPadTemplate mikmod_sink_factory =
@@ -80,6 +98,7 @@ static void		gst_mikmod_init			(GstMikMod *filter);
 static void		gst_mikmod_set_property 	(GObject *object, guint id, const GValue *value, GParamSpec *pspec );
 static void		gst_mikmod_get_property		(GObject *object, guint id, GValue *value, GParamSpec *pspec );
 static GstPadLinkReturn	gst_mikmod_srclink		(GstPad *pad, const GstCaps *caps);
+static GstCaps *	gst_mikmod_srcfixate		(GstPad *pad, const GstCaps *caps);
 static void             gst_mikmod_loop                 (GstElement *element);
 static gboolean		gst_mikmod_setup 		(GstMikMod *mikmod);
 static GstElementStateReturn  gst_mikmod_change_state 	(GstElement *element);
@@ -188,11 +207,11 @@ gst_mikmod_init (GstMikMod *filter)
       gst_static_pad_template_get (&mikmod_sink_factory),"sink");
   filter->srcpad = gst_pad_new_from_template(
     gst_static_pad_template_get (&mikmod_src_factory),"src");
-  gst_pad_use_explicit_caps (filter->srcpad);
 
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
   gst_pad_set_link_function (filter->srcpad, gst_mikmod_srclink);
+  gst_pad_set_fixate_function (filter->srcpad, gst_mikmod_srcfixate);
   
   gst_element_set_loop_function (GST_ELEMENT (filter), gst_mikmod_loop);
   
@@ -213,31 +232,27 @@ gst_mikmod_init (GstMikMod *filter)
   filter->modtype     = NULL;
 }
 
-
-static GstPadLinkReturn
-gst_mikmod_negotiate (GstMikMod *mikmod)
+static GstCaps *
+gst_mikmod_srcfixate (GstPad *pad, const GstCaps *caps)
 {
-  gint width, sign;
+  GstCaps *ret;
+  GstStructure *structure;
+  
+  /* FIXME: select est caps here */
+  if (gst_caps_get_size (caps) > 1)
+    return NULL;
 
-  if ( mikmod->_16bit ) {
-    width = 16;
-    sign = TRUE;
-  } else {
-    width = 8;
-    sign = FALSE;
-  }
+  ret = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (ret, 0);
+  
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2))
+    return ret;
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100))
+    return ret;
 
-  return gst_pad_set_explicit_caps (mikmod->srcpad,
-      gst_caps_new_simple ( "audio/x-raw-int",
-	"endianness",  G_TYPE_INT, G_BYTE_ORDER,
-	"signed",      G_TYPE_BOOLEAN, sign,
-	"width",       G_TYPE_INT, width,
-	"depth",       G_TYPE_INT, width,
-	"rate",        G_TYPE_INT, mikmod->mixfreq,
-	"channels",    G_TYPE_INT, mikmod->stereo ? 2 : 1,
-	NULL));
+  gst_caps_free (ret);
+  return NULL;
 }
-
 
 static GstPadLinkReturn
 gst_mikmod_srclink (GstPad *pad, const GstCaps *caps)
@@ -256,10 +271,9 @@ gst_mikmod_srclink (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "channels", &channels);
   filter->stereo = (channels == 2);
   gst_structure_get_int (structure, "rate", &filter->mixfreq);
-
-  return gst_mikmod_negotiate(filter);
+  
+  return gst_mikmod_setup (filter) ? GST_PAD_LINK_OK : GST_PAD_LINK_REFUSED;
 }
-
 
 static void
 gst_mikmod_loop (GstElement *element)
@@ -293,12 +307,11 @@ gst_mikmod_loop (GstElement *element)
   }  
   
   if (!GST_PAD_CAPS (mikmod->srcpad)) {
-    if (gst_mikmod_negotiate (mikmod) <= 0) {
+    if (GST_PAD_LINK_SUCCESSFUL (gst_pad_renegotiate (mikmod->srcpad))) {
       GST_ELEMENT_ERROR (mikmod, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
   }
-  gst_mikmod_setup( mikmod );
   
   MikMod_RegisterDriver(&drv_gst);
   MikMod_RegisterAllLoaders();
