@@ -58,6 +58,7 @@ struct _GstLame {
 
   gint samplerate;
   gint num_channels;
+  gboolean initialized;
 
   gint bitrate;
   gfloat compression_ratio;
