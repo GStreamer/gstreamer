@@ -36,9 +36,9 @@ AM_PROG_AS
 AS="${CC}"
 
 dnl decide on error flags
-AS_COMPILER_FLAG(-Wall,GST_ERROR="$GST_ERROR -Wall",)
+AS_COMPILER_FLAG(-Wall,GST_ERROR="$GST_ERROR -Wall",GST_ERROR="$GST_ERROR")
 if test "x$GST_CVS"="xyes"; then
-  AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",)
+  AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
 fi
 
 dnl We disable static building for development, for time savings
