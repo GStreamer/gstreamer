@@ -1,3 +1,9 @@
+2004-11-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/appendix-checklist.xml:
+	  Add some random notes on thinks to check when writing an element.
+	  This list can be extended as people see fit.
+
 2004-11-23  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/gstqueue.c (gst_queue_init, gst_queue_link_sink)
