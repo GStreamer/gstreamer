@@ -218,9 +218,11 @@ volume_init (GstVolume *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(
       gst_static_pad_template_get (&volume_sink_factory),"sink");
+  gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function(filter->sinkpad,volume_connect);
   filter->srcpad = gst_pad_new_from_template(
       gst_static_pad_template_get (&volume_src_factory),"src");
+  gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function(filter->srcpad,volume_connect);
   
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
