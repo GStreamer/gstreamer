@@ -23,28 +23,41 @@ static GstElement*
 make_spider_pipeline (const gchar *location) 
 {
   GstElement *pipeline;
-  GstElement *src, *decoder, *audiosink;
-  GstElement *seekable;
+  GstElement *src, *decoder, *audiosink, *videosink, *a_thread, *v_thread, *a_queue, *v_queue;
   
   pipeline = gst_pipeline_new ("app");
 
   src = gst_element_factory_make (SOURCE, "src");
   decoder = gst_element_factory_make ("spider", "decoder");
-  audiosink = gst_element_factory_make ("osssink", "sink");
+  a_thread = gst_thread_new ("a_thread");
+  a_queue = gst_element_factory_make ("queue", "a_queue");
+  audiosink = gst_element_factory_make ("osssink", "a_sink");
+  v_thread = gst_thread_new ("v_thread");
+  v_queue = gst_element_factory_make ("queue", "v_queue");
+  videosink = gst_element_factory_make ("xvideosink", "v_sink");
   //g_object_set (G_OBJECT (audiosink), "sync", FALSE, NULL);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), decoder);
-  gst_bin_add (GST_BIN (pipeline), audiosink);
+  gst_bin_add (GST_BIN (a_thread), a_queue);
+  gst_bin_add (GST_BIN (a_thread), audiosink);
+  gst_bin_add (GST_BIN (v_thread), v_queue);
+  gst_bin_add (GST_BIN (v_thread), videosink);
+  gst_bin_add (GST_BIN (pipeline), a_thread);
+  gst_bin_add (GST_BIN (pipeline), v_thread);
 
   gst_element_connect (src, decoder);
-  gst_element_connect (decoder, audiosink);
+  gst_element_connect (v_queue, videosink);
+  gst_element_connect (decoder, v_queue);
+  gst_element_connect (a_queue, audiosink);
+  gst_element_connect (decoder, a_queue);
 
-  seekable = audiosink;
-  seekable_elements = g_list_prepend (seekable_elements, seekable);
+  seekable_elements = g_list_prepend (seekable_elements, videosink);
+  seekable_elements = g_list_prepend (seekable_elements, audiosink);
   rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (audiosink, "sink"));
+  rate_pads = g_list_prepend (rate_pads, gst_element_get_pad (videosink, "sink"));
 
   return pipeline;
 }
@@ -157,8 +170,6 @@ query_positions (GstElement *element)
     res = gst_element_query (element, GST_PAD_QUERY_POSITION, &format, &value);
     if (res) {
       g_print ("%s %13lld | ", seek_formats[i].name, value);
-      if (seek_formats[i].format == GST_FORMAT_TIME)
-	position = value;
     }
     else {
       g_print ("%s %13.13s | ", seek_formats[i].name, "*NA*");
@@ -176,7 +187,8 @@ update_scale (gpointer data)
 
   clock = gst_bin_get_clock (GST_BIN (pipeline));
 
-  g_print ("clock:                  %13llu  (%s)\n", gst_clock_get_time (clock), gst_object_get_name (GST_OBJECT (clock)));
+  position = gst_clock_get_time (clock);
+  g_print ("clock:                  %13llu  (%s)\n", position, gst_object_get_name (GST_OBJECT (clock)));
 
   while (walk) {
     GstElement *element = GST_ELEMENT (walk->data);
