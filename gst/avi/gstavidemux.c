@@ -603,23 +603,21 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 
 	if (*chunksize) {
           buf = gst_bytestream_peek (bs, *chunksize);
-	}
-	else {
-          buf = gst_buffer_new ();
-	}
-        GST_BUFFER_TIMESTAMP (buf) = avi_demux->next_time;
-        avi_demux->next_time += avi_demux->time_interval;
 
-        if (avi_demux->video_need_flush[0]) {
-           /* FIXME, do some flush event here */
-          avi_demux->video_need_flush[0] = FALSE;
-        }
+          GST_BUFFER_TIMESTAMP (buf) = avi_demux->next_time;
+          avi_demux->next_time += avi_demux->time_interval;
 
-        GST_DEBUG (0,"gst_avi_demux_chain: send video buffer %08x\n", *chunksize);
-        gst_pad_push(avi_demux->video_pad[0], buf);
-        GST_DEBUG (0,"gst_avi_demux_chain: sent video buffer %08x %p\n",
-	  	      *chunksize, &avi_demux->video_pad[0]);
-        avi_demux->current_frame++;
+          if (avi_demux->video_need_flush[0]) {
+             /* FIXME, do some flush event here */
+            avi_demux->video_need_flush[0] = FALSE;
+          }
+
+          GST_DEBUG (0,"gst_avi_demux_chain: send video buffer %08x\n", *chunksize);
+          gst_pad_push(avi_demux->video_pad[0], buf);
+          GST_DEBUG (0,"gst_avi_demux_chain: sent video buffer %08x %p\n",
+	    	      *chunksize, &avi_demux->video_pad[0]);
+          avi_demux->current_frame++;
+	}
       }
       *chunksize = (*chunksize + 1) & ~1;
       break;
@@ -634,20 +632,17 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 *filepos,
 
 	if (*chunksize) {
           buf = gst_bytestream_peek (bs, *chunksize);
-	}
-	else {
-          buf = gst_buffer_new ();
-	}
 
-        if (avi_demux->audio_need_flush[0]) {
-  	  GST_DEBUG (0,"audio flush\n");
-          avi_demux->audio_need_flush[0] = FALSE;
-           /* FIXME, do some flush event here */
-        }
+          if (avi_demux->audio_need_flush[0]) {
+  	    GST_DEBUG (0,"audio flush\n");
+            avi_demux->audio_need_flush[0] = FALSE;
+            /* FIXME, do some flush event here */
+          }
 
-        GST_DEBUG (0,"gst_avi_demux_chain: send audio buffer %08x\n", *chunksize);
-        gst_pad_push (avi_demux->audio_pad[0], buf);
-        GST_DEBUG (0,"gst_avi_demux_chain: sent audio buffer %08x\n", *chunksize);
+          GST_DEBUG (0,"gst_avi_demux_chain: send audio buffer %08x\n", *chunksize);
+          gst_pad_push (avi_demux->audio_pad[0], buf);
+          GST_DEBUG (0,"gst_avi_demux_chain: sent audio buffer %08x\n", *chunksize);
+	}
       }
       *chunksize = (*chunksize + 1) & ~1;
       break;
