@@ -1,5 +1,11 @@
 2004-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/vorbis/vorbisenc.c: (raw_caps_factory),
+	(gst_vorbisenc_setup):
+	  fix sample rate range
+
+2004-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/vorbis/oggvorbisenc.c: (gst_oggvorbisenc_class_init),
 	(gst_oggvorbisenc_setup):
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_class_init),
