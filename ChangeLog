@@ -1,3 +1,11 @@
+2005-03-12  Torsten Schoenfeld  <kaffeetisch@gmx.de>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstevent.c: (_gst_event_initialize), (gst_event_get_type):
+	  Register type in _get_type(), as we do for all types. Fixes
+	  some issues for bindings (#169405).
+
 2005-03-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstindex.c: (gst_index_factory_new):

@@ -47,8 +47,7 @@ void
 _gst_event_initialize (void)
 {
   /* register the type */
-  _gst_event_type = g_boxed_type_register_static ("GstEvent",
-      (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+  gst_event_get_type ();
 
 #ifndef GST_DISABLE_TRACE
   _event_trace = gst_alloc_trace_register (GST_EVENT_TRACE_NAME);
@@ -151,6 +150,11 @@ gst_event_masks_contains (const GstEventMask * masks, GstEventMask * mask)
 GType
 gst_event_get_type (void)
 {
+  if (!_gst_event_type) {
+    _gst_event_type = g_boxed_type_register_static ("GstEvent",
+        (GBoxedCopyFunc) gst_data_copy, (GBoxedFreeFunc) gst_data_unref);
+  }
+
   return _gst_event_type;
 }
 
