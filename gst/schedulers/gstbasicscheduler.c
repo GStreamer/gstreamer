@@ -387,7 +387,7 @@ gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
   g_print ("%p %s\n", GST_ELEMENT (GST_PAD_PARENT (pad)),
 	   gst_element_get_name (GST_ELEMENT (GST_PAD_PARENT (pad))));
   GST_ELEMENT (GST_PAD_PARENT (pad))->select_pad = pad;
-  GST_FLAG_UNSET (GST_PAD_PARENT (pad), GST_ELEMENT_COTHREAD_STOPPING);
+
   cothread_switch (GST_ELEMENT_THREADSTATE (GST_PAD_PARENT (pad)));
 
   g_print ("done switching\n");

@@ -270,6 +270,14 @@ cothread_setfunc (cothread_state * thread, cothread_func func, int argc, char **
   thread->pc = (void *) func;
 }
 
+void
+cothread_stop (cothread_state * thread)
+{
+  thread->flags &= ~COTHREAD_STARTED;
+  thread->pc = 0;
+  thread->sp = thread->top_sp;
+}
+
 /**
  * cothread_main:
  * @ctx: cothread context to find main thread of
@@ -320,10 +328,6 @@ cothread_stub (void)
     /* we do this to avoid ever returning, we just switch to 0th thread */
     cothread_switch (cothread_main (ctx));
   }
-  thread->flags &= ~COTHREAD_STARTED;
-  thread->pc = 0;
-  thread->sp = thread->top_sp;
-  fprintf (stderr, "uh, yeah, we shouldn't be here, but we should deal anyway\n");
   GST_DEBUG_LEAVE ("");
 }
 

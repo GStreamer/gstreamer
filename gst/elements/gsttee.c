@@ -57,6 +57,7 @@ static void 	gst_tee_class_init	(GstTeeClass *klass);
 static void 	gst_tee_init		(GstTee *tee);
 
 static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp, const gchar *unused);
+static gboolean gst_tee_event_handler 	(GstPad *pad, GstEvent *event);
 
 static void 	gst_tee_set_property 	(GObject *object, guint prop_id, 
 					 const GValue *value, GParamSpec *pspec);
@@ -124,8 +125,6 @@ gst_tee_init (GstTee *tee)
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
   gst_pad_set_negotiate_function (tee->sinkpad, GST_DEBUG_FUNCPTR(gst_tee_handle_negotiate_sink));
 
-  tee->numsrcpads = 0;
-  tee->srcpads = NULL;
   tee->silent = FALSE;
 }
 
@@ -145,15 +144,36 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
 
   tee = GST_TEE (element);
 
-  name = g_strdup_printf ("src%d",tee->numsrcpads);
+  name = g_strdup_printf ("src%d", GST_ELEMENT (tee)->numsrcpads);
   
   srcpad = gst_pad_new_from_template (templ, name);
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
+  gst_pad_set_event_function (srcpad, gst_tee_event_handler);
+  GST_PAD_ELEMENT_PRIVATE (srcpad) = NULL;
 
-  tee->srcpads = g_slist_prepend (tee->srcpads, srcpad);
-  tee->numsrcpads++;
-  
+  if (GST_PAD_CAPS (tee->sinkpad)) {
+    gst_pad_set_caps (srcpad, GST_PAD_CAPS (tee->sinkpad));
+  }
+
   return srcpad;
+}
+
+static gboolean
+gst_tee_event_handler (GstPad *pad, GstEvent *event)
+{
+  GstTee *tee;
+	    
+  tee = GST_TEE (gst_pad_get_parent (pad));
+	      
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
+      GST_PAD_ELEMENT_PRIVATE (pad) = gst_event_new (GST_EVENT_TYPE (event));
+      break; 
+    default:
+      break;
+  }
+
+  return TRUE;
 }
 
 static void
@@ -187,7 +207,7 @@ gst_tee_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
 
   switch (prop_id) {
     case ARG_NUM_PADS:
-      g_value_set_int (value, tee->numsrcpads);
+      g_value_set_int (value, GST_ELEMENT (tee)->numsrcpads);
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, tee->silent);
@@ -208,7 +228,7 @@ static void
 gst_tee_chain (GstPad *pad, GstBuffer *buf) 
 {
   GstTee *tee;
-  GSList *srcpads;
+  GList *pads;
   gint i;
 
   g_return_if_fail (pad != NULL);
@@ -218,19 +238,36 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
   tee = GST_TEE (gst_pad_get_parent (pad));
 /*  gst_trace_add_entry (NULL, 0, buf, "tee buffer");*/
 
-  for (i=0; i<tee->numsrcpads-1; i++)
-    gst_buffer_ref (buf);
+  gst_buffer_ref_by_count (buf, GST_ELEMENT (tee)->numsrcpads);
   
-  srcpads = tee->srcpads;
-  while (srcpads) {
-    GstPad *outpad = GST_PAD (srcpads->data);
-    srcpads = g_slist_next (srcpads);
+  pads = gst_element_get_pad_list (GST_ELEMENT (tee));
 
-    if (!tee->silent)
-      g_print("tee: chain        ******* (%s:%s)t (%d bytes, %llu) \n",
+  while (pads) {
+    GstPad *outpad = GST_PAD (pads->data);
+    pads = g_list_next (pads);
+
+    if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC)
+      continue;
+
+    if (GST_PAD_ELEMENT_PRIVATE (outpad)) {
+      GstEvent *event = GST_EVENT (GST_PAD_ELEMENT_PRIVATE (outpad));
+	
+      GST_PAD_ELEMENT_PRIVATE (outpad) = NULL;
+      if (GST_PAD_CONNECTED (outpad))
+        gst_pad_push (outpad, GST_BUFFER (event));
+      else
+	gst_event_free (event);
+    }
+
+    if (!tee->silent) {
+      gst_element_info (GST_ELEMENT (tee), "chain        ******* (%s:%s)t (%d bytes, %llu) \n",
               GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+    }
 
-    gst_pad_push (outpad, buf);
+    if (GST_PAD_CONNECTED (outpad))
+      gst_pad_push (outpad, buf);
+    else
+      gst_buffer_unref (buf);
   }
 }
 
@@ -247,16 +284,23 @@ gst_tee_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gpointer* data)
 {
   GstCaps* tempcaps;
   gint i;
-  GstTee* tee=GST_TEE (GST_OBJECT_PARENT (pad));
+  GstTee* tee = GST_TEE (GST_OBJECT_PARENT (pad));
+  GList *pads;
   
   if (*caps==NULL) 
     return GST_PAD_NEGOTIATE_FAIL;
 
-  // go through all the src pads
-  for(i=0;i<tee->numsrcpads;i++) {
+  /* go through all the src pads */
+  pads = gst_element_get_pad_list (GST_ELEMENT (tee));
+
+  while (pads) {
+    GstPad *outpad = GST_PAD (pads->data);
+    pads = g_list_next (pads);
  
-    if (!(gst_pad_set_caps (GST_PAD(g_slist_nth_data(tee->srcpads,i)), 
-			    *caps))) {
+    if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC || !GST_PAD_CONNECTED (outpad))
+      continue;
+
+    if (!(gst_pad_set_caps (outpad, *caps))) {
       return GST_PAD_NEGOTIATE_FAIL;
     }
   }

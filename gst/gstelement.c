@@ -338,9 +338,7 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
 
   g_signal_emit (G_OBJECT (element), gst_element_signals[PAD_REMOVED], 0, pad);
 
-  //gst_object_ref (GST_OBJECT (pad));
   gst_object_unparent (GST_OBJECT (pad));
-  //gst_object_unref (GST_OBJECT (pad));
 }
 
 /**
@@ -780,6 +778,9 @@ gst_element_message (GstElement *element, const gchar *type, const gchar *info, 
   
   string = g_strdup_vprintf (info, var_args);
 
+  GST_INFO (GST_CAT_EVENT, "%s sends message %s", GST_ELEMENT_NAME (element),
+		  string);
+
   event = gst_event_new_info (type, GST_PROPS_STRING (string), NULL);
   gst_element_send_event (element, event);
 
@@ -1011,15 +1012,16 @@ gst_element_change_state (GstElement *element)
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 
-  g_mutex_lock (element->state_mutex);
-  g_cond_signal (element->state_cond);
-  g_mutex_unlock (element->state_mutex);
-
   parent = GST_ELEMENT_PARENT (element);
 
   if (parent && GST_IS_BIN (parent)) {
     gst_bin_child_state_change (GST_BIN (parent), old_state, GST_STATE (element), element);
   }
+
+  g_mutex_lock (element->state_mutex);
+  g_cond_signal (element->state_cond);
+  g_mutex_unlock (element->state_mutex);
+
 
   return GST_STATE_SUCCESS;
 }

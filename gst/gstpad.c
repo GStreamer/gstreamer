@@ -88,6 +88,7 @@ enum {
   REAL_CAPS_NEGO_FAILED,
   REAL_CONNECTED,
   REAL_DISCONNECTED,
+  REAL_EVENT_RECEIVED,
   /* FILL ME */
   REAL_LAST_SIGNAL
 };
@@ -139,38 +140,43 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstobject_class = (GstObjectClass*)klass;
+  gobject_class = (GObjectClass*) klass;
+  gstobject_class = (GstObjectClass*) klass;
 
-  real_pad_parent_class = g_type_class_ref(GST_TYPE_PAD);
+  real_pad_parent_class = g_type_class_ref (GST_TYPE_PAD);
 
-  gobject_class->dispose  = GST_DEBUG_FUNCPTR(gst_real_pad_dispose);
-  gobject_class->set_property  = GST_DEBUG_FUNCPTR(gst_real_pad_set_property);
-  gobject_class->get_property  = GST_DEBUG_FUNCPTR(gst_real_pad_get_property);
+  gobject_class->dispose  = GST_DEBUG_FUNCPTR (gst_real_pad_dispose);
+  gobject_class->set_property  = GST_DEBUG_FUNCPTR (gst_real_pad_set_property);
+  gobject_class->get_property  = GST_DEBUG_FUNCPTR (gst_real_pad_get_property);
 
   gst_real_pad_signals[REAL_SET_ACTIVE] =
-    g_signal_new ("set_active", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("set_active", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, set_active), NULL, NULL,
                     gst_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1,
                     G_TYPE_BOOLEAN);
   gst_real_pad_signals[REAL_CAPS_CHANGED] =
-    g_signal_new ("caps_changed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("caps_changed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, caps_changed), NULL, NULL,
                     gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
-    g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
                     gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_CONNECTED] =
-    g_signal_new ("connected", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("connected", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, connected), NULL, NULL,
                     gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
   gst_real_pad_signals[REAL_DISCONNECTED] =
-    g_signal_new ("disconnected", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("disconnected", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, disconnected), NULL, NULL,
+                    gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
+  gst_real_pad_signals[REAL_EVENT_RECEIVED] =
+    g_signal_new ("event_received", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstRealPadClass, event_received), NULL, NULL,
                     gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
 
@@ -1574,6 +1580,7 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
       break;
     }
   }
+  /* FIXME */
   while (result && ! GST_BUFFER_FLAG_IS_SET (result, GST_BUFFER_EOS) 
 	   && !(GST_BUFFER_OFFSET (result) == offset && 
 	   GST_BUFFER_SIZE (result) == len));
@@ -1989,6 +1996,29 @@ gst_ghost_pad_new (gchar *name,
   return GST_PAD(ghostpad);
 }
 
+static void 
+gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *event)
+{
+  GList *pads = element->pads;
+
+  while (pads) {
+    GstPad *eventpad = GST_PAD (pads->data);
+    pads = g_list_next (pads);
+
+    /* for all pads in the opposite direction that are connected */
+    if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) && GST_PAD_CONNECTED (eventpad)) {
+      if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
+        gst_pad_push (eventpad, GST_BUFFER (gst_event_new (GST_EVENT_TYPE (event))));
+	
+      }
+      else {
+	GstPad *peerpad = GST_PAD_CAST (GST_RPAD_PEER (eventpad));
+
+        gst_pad_send_event (peerpad, gst_event_new (GST_EVENT_TYPE (event)));
+      }
+    }
+  }
+}
 
 /**
  * gst_pad_event_default:
@@ -2001,28 +2031,20 @@ void
 gst_pad_event_default (GstPad *pad, GstEvent *event)
 {
   GstElement *element = GST_PAD_PARENT (pad);
+
+  g_signal_emit (G_OBJECT (pad), gst_real_pad_signals[REAL_EVENT_RECEIVED], 0, event);
  
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
     case GST_EVENT_EOS:
-/*      gst_element_signal_eos (element); */
       gst_element_set_state (element, GST_STATE_PAUSED);
-      {
-	GList *pads = element->pads;
-
-	while (pads) {
-          if (GST_PAD_DIRECTION (pads->data) == GST_PAD_SRC && GST_PAD_CONNECTED (pads->data)) {
-            gst_pad_push (GST_PAD (pads->data), GST_BUFFER (gst_event_new (GST_EVENT_TYPE (event))));
-	  }
-          pads = g_list_next (pads);
-	}
-      }
+      gst_pad_event_default_dispatch (pad, element, event);
       gst_event_free (event);
       /* we have to try to schedule another element because this one is disabled */
       gst_element_yield (element);
       break;
+    case GST_EVENT_FLUSH:
     default:
-      g_warning ("no default handler for event\n");
+      gst_pad_event_default_dispatch (pad, element, event);
       gst_event_free (event);
       break;
   }
@@ -2057,7 +2079,7 @@ gst_pad_send_event (GstPad *pad, GstEvent *event)
   }
 
   if (!handled) {
-    GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
+    GST_DEBUG(GST_CAT_EVENT, "proceeding with default event behavior here\n");
     gst_pad_event_default (pad, event);
     handled = TRUE;
   }

@@ -206,6 +206,7 @@ struct _GstRealPadClass {
   void (*caps_nego_failed)	(GstPad *pad);
   void (*connected)		(GstPad *pad, GstPad *peer);
   void (*disconnected)		(GstPad *pad, GstPad *peer);
+  void (*event_received)	(GstPad *pad, GstEvent *event);
 
   void (*eos)			(GstPad *pad);
 };

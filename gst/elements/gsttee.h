@@ -53,8 +53,6 @@ struct _GstTee {
   GstPad *sinkpad;
 
   gboolean silent;
-  gint numsrcpads;
-  GSList *srcpads;
 };
 
 struct _GstTeeClass {
