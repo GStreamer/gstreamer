@@ -1,5 +1,11 @@
 2004-08-11  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* win32/config.h:
+	* win32/GStreamer.vcproj:
+	  compile and install the locales
+
+2004-08-11  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* gst/gstvalue.c:
 	  fix a possible memory leak under Windows
 

@@ -20,7 +20,7 @@
 #define GST_LICENSE "LGPL"
 
 /* Define the location where the catalogs will be installed */
-#define LOCALEDIR ".\locale"
+#define LOCALEDIR GST_CACHE_DIR"\\locale"
 
 /* package origin */
 #define GST_ORIGIN "http://gstreamer.net"
