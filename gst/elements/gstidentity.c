@@ -50,7 +50,7 @@ static void gst_identity_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 
 static GstFilterClass *parent_class = NULL;
-static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_identity_get_type(void) {

@@ -181,8 +181,8 @@ void gst_element_add_ghost_pad(GstElement *element,GstPad *pad) {
 GstPad *gst_element_get_pad(GstElement *element,gchar *name) {
   GList *walk;
 
-  g_return_if_fail(element != NULL);
-  g_return_if_fail(GST_IS_ELEMENT(element));
+  g_return_val_if_fail(element != NULL, NULL);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), NULL);
   if (name == NULL)
     return NULL;
   if (!element->numpads)
@@ -207,8 +207,8 @@ GstPad *gst_element_get_pad(GstElement *element,gchar *name) {
  * Returns: <type>GList</type> of pads
  */
 GList *gst_element_get_pad_list(GstElement *element) {
-  g_return_if_fail(element != NULL);
-  g_return_if_fail(GST_IS_ELEMENT(element));
+  g_return_val_if_fail(element != NULL, NULL);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), NULL);
 
   return element->pads;
 }
@@ -290,8 +290,8 @@ gboolean gst_element_set_state(GstElement *element,GstElementState state) {
 //  g_print("gst_element_set_state(\"%s\",%08lx)\n",
 //          element->name,state);
 
-  g_return_if_fail(element != NULL);
-  g_return_if_fail(GST_IS_ELEMENT(element));
+  g_return_val_if_fail(element != NULL, FALSE);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), FALSE);
 
   oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
 
@@ -313,8 +313,8 @@ gboolean gst_element_set_state(GstElement *element,GstElementState state) {
 /* class function to set the state of a simple element */
 gboolean gst_element_change_state(GstElement *element,
                                   GstElementState state) {
-  g_return_if_fail(element != NULL);
-  g_return_if_fail(GST_IS_ELEMENT(element));
+  g_return_val_if_fail(element != NULL, FALSE);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), FALSE);
 
 //  g_print("gst_element_change_state(\"%s\",%d)\n",
 //          element->name,state);
@@ -328,6 +328,7 @@ gboolean gst_element_change_state(GstElement *element,
 //  g_print(", is now %08lx\n",GST_STATE(element));
   gtk_signal_emit(GTK_OBJECT(element),gst_element_signals[STATE_CHANGE],
                   state);
+	return TRUE;
 }
 
 /**
@@ -358,8 +359,8 @@ void gst_element_set_name(GstElement *element,gchar *name) {
  * Returns: name of the element
  */
 gchar *gst_element_get_name(GstElement *element) {
-  g_return_if_fail(element != NULL);
-  g_return_if_fail(GST_IS_ELEMENT(element));
+  g_return_val_if_fail(element != NULL, NULL);
+  g_return_val_if_fail(GST_IS_ELEMENT(element), NULL);
 
   return element->name;
 }
@@ -384,7 +385,7 @@ static void gst_element_real_destroy(GtkObject *object) {
   g_list_free(element->pads);
 }
 
-
+/*
 static gchar *_gst_element_type_names[] = {
   "invalid",
   "none",
@@ -399,6 +400,7 @@ static gchar *_gst_element_type_names[] = {
   "double",
   "string",
 };
+*/
 
 xmlNodePtr gst_element_save_thyself(GstElement *element,xmlNodePtr parent) {
   xmlNodePtr self, arglist;

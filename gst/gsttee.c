@@ -44,11 +44,10 @@ enum {
 static void gst_tee_class_init(GstTeeClass *klass);
 static void gst_tee_init(GstTee *tee);
 
-static xmlNodePtr gst_tee_save_thyself(GstElement *element,xmlNodePtr parent);
-
+//static xmlNodePtr gst_tee_save_thyself(GstElement *element,xmlNodePtr parent);
 
 static GstFilterClass *parent_class = NULL;
-static guint gst_tee_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_tee_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_tee_get_type(void) {
@@ -98,8 +97,8 @@ gchar *gst_tee_new_pad(GstTee *tee) {
   gchar *name;
   GstPad *srcpad;
 
-  g_return_if_fail(tee != NULL);
-  g_return_if_fail(GST_IS_TEE(tee));
+  g_return_val_if_fail(tee != NULL, NULL);
+  g_return_val_if_fail(GST_IS_TEE(tee), NULL);
 
   name = g_strdup_printf("src%d",tee->numsrcpads);
   srcpad = gst_pad_new(name,GST_PAD_SRC);

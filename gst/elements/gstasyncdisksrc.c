@@ -64,7 +64,7 @@ static gboolean gst_asyncdisksrc_change_state(GstElement *element,
 
 
 static GstSrcClass *parent_class = NULL;
-static guint gst_asyncdisksrc_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_asyncdisksrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_asyncdisksrc_get_type(void) {
@@ -280,7 +280,7 @@ void gst_asyncdisksrc_push_region(GstSrc *src,gulong offset,gulong size) {
 
 /* open the file and mmap it, necessary to go to RUNNING state */
 static gboolean gst_asyncdisksrc_open_file(GstAsyncDiskSrc *src) {
-  g_return_if_fail(!GST_FLAG_IS_SET(src,GST_ASYNCDISKSRC_OPEN));
+  g_return_val_if_fail(!GST_FLAG_IS_SET(src,GST_ASYNCDISKSRC_OPEN), FALSE);
 
   /* open the file */
   src->fd = open(src->filename,O_RDONLY);
@@ -326,7 +326,7 @@ static void gst_asyncdisksrc_close_file(GstAsyncDiskSrc *src) {
 
 static gboolean gst_asyncdisksrc_change_state(GstElement *element,
                                               GstElementState state) {
-  g_return_if_fail(GST_IS_ASYNCDISKSRC(element));
+  g_return_val_if_fail(GST_IS_ASYNCDISKSRC(element), FALSE);
 
   switch (state) {
     case GST_STATE_RUNNING:

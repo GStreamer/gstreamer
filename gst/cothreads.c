@@ -56,7 +56,7 @@ cothread_context *cothread_init() {
   if (_cothread_key == -1) {
     if (pthread_key_create(&_cothread_key,NULL) != 0) {
       perror("pthread_key_create");
-      return;
+      return NULL;
     }
   }
   pthread_setspecific(_cothread_key,ctx);

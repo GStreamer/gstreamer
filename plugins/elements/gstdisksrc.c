@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <gstdisksrc.h>
 
@@ -54,13 +55,13 @@ static void gst_disksrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_disksrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 static void gst_disksrc_push(GstSrc *src);
-static void gst_disksrc_push_region(GstSrc *src,gulong offset,gulong size);
+//static void gst_disksrc_push_region(GstSrc *src,gulong offset,gulong size);
 static gboolean gst_disksrc_change_state(GstElement *element,
                                          GstElementState state);
 
 
 static GstSrcClass *parent_class = NULL;
-static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_disksrc_get_type(void) {
@@ -217,7 +218,7 @@ void gst_disksrc_push(GstSrc *src) {
 
 /* open the file, necessary to go to RUNNING state */
 static gboolean gst_disksrc_open_file(GstDiskSrc *src) {
-  g_return_if_fail(!GST_FLAG_IS_SET(src,GST_DISKSRC_OPEN));
+  g_return_val_if_fail(!GST_FLAG_IS_SET(src,GST_DISKSRC_OPEN), FALSE);
 
   /* open the file */
   src->fd = open(src->filename,O_RDONLY);
@@ -247,7 +248,7 @@ static void gst_disksrc_close_file(GstDiskSrc *src) {
 
 static gboolean gst_disksrc_change_state(GstElement *element,
                                          GstElementState state) {
-  g_return_if_fail(GST_IS_DISKSRC(element));
+  g_return_val_if_fail(GST_IS_DISKSRC(element), FALSE);
 
   switch (state) {
     case GST_STATE_RUNNING:

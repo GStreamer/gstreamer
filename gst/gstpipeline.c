@@ -51,7 +51,7 @@ static void gst_pipeline_prepare(GstPipeline *pipeline);
 
 
 static GstBin *parent_class = NULL;
-static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_pipeline_get_type(void) {
@@ -113,7 +113,7 @@ static gboolean gst_pipeline_change_state(GstElement *element,
                                           GstElementState state) {
   GstPipeline *pipeline;
 
-  g_return_if_fail(GST_IS_PIPELINE(element));
+  g_return_val_if_fail(GST_IS_PIPELINE(element), FALSE);
   pipeline = GST_PIPELINE(element);
 
   switch (state) {

@@ -48,7 +48,7 @@ static void gst_fakesink_init(GstFakeSink *fakesink);
 
 
 static GstSinkClass *parent_class = NULL;
-static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_fakesink_get_type(void) {

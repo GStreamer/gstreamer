@@ -80,9 +80,9 @@ GstBuffer *gst_buffer_new() {
 GstBuffer *gst_buffer_create_sub(GstBuffer *parent,guint32 offset,guint32 size) {
   GstBuffer *buffer;
 
-  g_return_if_fail(parent != NULL);
-  g_return_if_fail(size > 0);
-  g_return_if_fail((offset+size) <= parent->size);
+  g_return_val_if_fail(parent != NULL, NULL);
+  g_return_val_if_fail(size > 0, NULL);
+  g_return_val_if_fail((offset+size) <= parent->size, NULL);
 
   buffer = g_mem_chunk_alloc(_gst_buffer_chunk);
   DEBUG("BUF: allocating new subbuffer %p, parent %p\n",buffer,parent);
@@ -220,13 +220,13 @@ void gst_buffer_add_meta(GstBuffer *buffer,GstMeta *meta) {
 }
 
 GSList *gst_buffer_get_metas(GstBuffer *buffer) {
-  g_return_if_fail(buffer != NULL);
+  g_return_val_if_fail(buffer != NULL, NULL);
 
   return buffer->metas;
 }
 
 GstMeta *gst_buffer_get_first_meta(GstBuffer *buffer) {
-  g_return_if_fail(buffer != NULL);
+  g_return_val_if_fail(buffer != NULL, NULL);
 
   if (buffer->metas == NULL)
     return NULL;

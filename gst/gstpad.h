@@ -97,7 +97,7 @@ GstPadDirection gst_pad_get_direction(GstPad *pad);
 void gst_pad_set_chain_function(GstPad *pad,GstPadChainFunction chain);
 void gst_pad_set_pull_function(GstPad *pad, GstPadPullFunction pull);
 
-guint32 gst_pad_get_type_id(GstPad *pad);
+guint16 gst_pad_get_type_id(GstPad *pad);
 void gst_pad_set_type_id(GstPad *pad,guint16 id);
 
 void gst_pad_set_name(GstPad *pad,gchar *name);

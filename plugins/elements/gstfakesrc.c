@@ -48,7 +48,7 @@ static void gst_fakesrc_init(GstFakeSrc *fakesrc);
 
 
 static GstSrcClass *parent_class = NULL;
-static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_fakesrc_get_type(void) {

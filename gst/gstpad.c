@@ -41,7 +41,7 @@ static void gst_pad_real_destroy(GtkObject *object);
 
 
 static GstObject *parent_class = NULL;
-static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_pad_get_type(void) {
@@ -96,8 +96,8 @@ static void gst_pad_init(GstPad *pad) {
 GstPad *gst_pad_new(gchar *name,GstPadDirection direction) {
   GstPad *pad;
 
-  g_return_if_fail(name != NULL);
-  g_return_if_fail(direction != GST_PAD_UNKNOWN);
+  g_return_val_if_fail(name != NULL, NULL);
+  g_return_val_if_fail(direction != GST_PAD_UNKNOWN, NULL);
 
   pad = GST_PAD(gtk_type_new(gst_pad_get_type()));
   pad->name = g_strdup(name);
@@ -106,8 +106,8 @@ GstPad *gst_pad_new(gchar *name,GstPadDirection direction) {
 }
 
 GstPadDirection gst_pad_get_direction(GstPad *pad) {
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_val_if_fail(pad != NULL, GST_PAD_UNKNOWN);
+  g_return_val_if_fail(GST_IS_PAD(pad), GST_PAD_UNKNOWN);
 
   return pad->direction;
 }
@@ -123,8 +123,8 @@ void gst_pad_set_name(GstPad *pad,gchar *name) {
 }
 
 gchar *gst_pad_get_name(GstPad *pad) {
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_val_if_fail(pad != NULL, NULL);
+  g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
   return pad->name;
 }
@@ -170,8 +170,8 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
   GstElement *peerparent;
   cothread_state *state;
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_val_if_fail(pad != NULL, NULL);
+  g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
 	// if the pull function exists for the pad, call it directly
 	if (pad->pull) {
@@ -195,6 +195,7 @@ GstBuffer *gst_pad_pull(GstPad *pad) {
     pad->bufpen = NULL;
     return buf;
   }
+	return NULL;
 }
 
 void gst_pad_chain(GstPad *pad) {
@@ -273,22 +274,22 @@ void gst_pad_remove_ghost_parent(GstPad *pad,GstObject *parent) {
 }
 
 GstObject *gst_pad_get_parent(GstPad *pad) {
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_val_if_fail(pad != NULL, NULL);
+  g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
   return pad->parent;
 }
 
 GList *gst_pad_get_ghost_parents(GstPad *pad) {
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_val_if_fail(pad != NULL, NULL);
+  g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
   return pad->ghostparents;
 }
 
-guint32 gst_pad_get_type_id(GstPad *pad) {
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+guint16 gst_pad_get_type_id(GstPad *pad) {
+  g_return_val_if_fail(pad != NULL, 0);
+  g_return_val_if_fail(GST_IS_PAD(pad), 0);
 
   return pad->type;
 }
@@ -302,15 +303,15 @@ void gst_pad_set_type_id(GstPad *pad,guint16 id) {
 }
 
 GstPad *gst_pad_get_peer(GstPad *pad) {
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_val_if_fail(pad != NULL, NULL);
+  g_return_val_if_fail(GST_IS_PAD(pad), NULL);
 
   return pad->peer;
 }
 
 GstPadDirection gst_pad_get_directory(GstPad *pad) {
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
+  g_return_val_if_fail(pad != NULL, GST_PAD_UNKNOWN);
+  g_return_val_if_fail(GST_IS_PAD(pad), GST_PAD_UNKNOWN);
 
   return pad->direction;
 }
@@ -346,7 +347,6 @@ xmlNodePtr gst_pad_save_thyself(GstPad *pad,xmlNodePtr parent) {
 
 xmlNodePtr gst_pad_ghost_save_thyself(GstPad *pad,GstElement *bin,xmlNodePtr parent) {
   xmlNodePtr self;
-  GstPad *peer;
 
   self = xmlNewChild(parent,NULL,"ghostpad",NULL);
   xmlNewChild(self,NULL,"name",pad->name);

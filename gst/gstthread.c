@@ -56,7 +56,7 @@ static void gst_thread_signal_thread(GstThread *thread);
 
 
 static GstBin *parent_class = NULL;
-static guint gst_thread_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_thread_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_thread_get_type(void) {
@@ -210,7 +210,7 @@ static gboolean gst_thread_change_state(GstElement *element,
   GstThread *thread;
   gboolean stateset = TRUE;
 
-  g_return_if_fail(GST_IS_THREAD(element));
+  g_return_val_if_fail(GST_IS_THREAD(element), FALSE);
   thread = GST_THREAD(element);
 
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
@@ -324,9 +324,9 @@ static void gst_thread_signal_thread(GstThread *thread) {
 }
 
 static xmlNodePtr gst_thread_save_thyself(GstElement *element,xmlNodePtr parent) {
-  GstThread *thread = GST_THREAD(element);
   xmlNewChild(parent,NULL,"type","thread");
 
   if (GST_ELEMENT_CLASS(parent_class)->save_thyself)
     GST_ELEMENT_CLASS(parent_class)->save_thyself(element,parent);
+	return NULL;
 }

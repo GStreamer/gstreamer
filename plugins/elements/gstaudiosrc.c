@@ -21,6 +21,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/soundcard.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #include <gstaudiosrc.h>
 
@@ -64,7 +66,7 @@ void gst_audiosrc_sync_parms(GstAudioSrc *audiosrc);
 
 
 static GstSrcClass *parent_class = NULL;
-static guint gst_audiosrc_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_audiosrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_audiosrc_get_type(void) {
@@ -246,7 +248,7 @@ static void gst_audiosrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
 
 static gboolean gst_audiosrc_change_state(GstElement *element,
                                           GstElementState state) {
-  g_return_if_fail(GST_IS_AUDIOSRC(element));
+  g_return_val_if_fail(GST_IS_AUDIOSRC(element), FALSE);
 
   switch (state) {
     case GST_STATE_RUNNING:
@@ -266,7 +268,7 @@ static gboolean gst_audiosrc_change_state(GstElement *element,
 }
 
 static gboolean gst_audiosrc_open_audio(GstAudioSrc *src) {
-  g_return_if_fail(src->fd == -1);
+  g_return_val_if_fail(src->fd == -1, FALSE);
 
   /* first try to open the sound card */
   src->fd = open("/dev/dsp",O_RDONLY);

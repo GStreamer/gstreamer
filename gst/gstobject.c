@@ -128,8 +128,8 @@ void gst_object_set_parent(GstObject *object,GstObject *parent) {
  * Returns: parent of the object
  */
 GstObject *gst_object_get_parent(GstObject *object) {
-  g_return_if_fail(object != NULL);
-  g_return_if_fail(GST_IS_OBJECT(object));
+  g_return_val_if_fail(object != NULL, NULL);
+  g_return_val_if_fail(GST_IS_OBJECT(object), NULL);
 
   return object->parent;
 }

@@ -191,9 +191,9 @@ static gboolean gst_bin_change_state(GstElement *element,
 //  g_print("gst_bin_change_state(\"%s\",%d);\n",
 //          gst_object_get_name(GST_OBJECT(bin)),state);
 
-  g_return_if_fail(GST_IS_BIN(element));
+  g_return_val_if_fail(GST_IS_BIN(element), FALSE);
   bin = GST_BIN(element);
-  g_return_if_fail(bin->numchildren != 0);
+  g_return_val_if_fail(bin->numchildren != 0, FALSE);
 
 //  g_print("-->\n");
   children = bin->children;
@@ -220,9 +220,9 @@ static gboolean gst_bin_change_state_norecurse(GstElement *element,
                                      GstElementState state) {
   GstBin *bin;
 
-  g_return_if_fail(GST_IS_BIN(element));
+  g_return_val_if_fail(GST_IS_BIN(element), FALSE);
   bin = GST_BIN(element);
-  g_return_if_fail(bin->numchildren != 0);
+  g_return_val_if_fail(bin->numchildren != 0, FALSE);
 
   if (GST_ELEMENT_CLASS(parent_class)->change_state)
     return GST_ELEMENT_CLASS(parent_class)->change_state(element,state);
@@ -238,8 +238,8 @@ static gboolean gst_bin_change_state_type(GstBin *bin,
 //  g_print("gst_bin_change_state_type(\"%s\",%d,%d);\n",
 //          gst_object_get_name(GST_OBJECT(bin)),state,type);
 
-  g_return_if_fail(GST_IS_BIN(bin));
-  g_return_if_fail(bin->numchildren != 0);
+  g_return_val_if_fail(GST_IS_BIN(bin), FALSE);
+  g_return_val_if_fail(bin->numchildren != 0, FALSE);
 
 //  g_print("-->\n");
   children = bin->children;
@@ -271,13 +271,14 @@ gboolean gst_bin_set_state_type(GstBin *bin,
 //  g_print("gst_bin_set_state_type(\"%s\",%d,%d)\n",
 //          gst_object_get_name(GST_OBJECT(bin)),state,type);
 
-  g_return_if_fail(bin != NULL);
-  g_return_if_fail(GST_IS_BIN(bin));
+  g_return_val_if_fail(bin != NULL, FALSE);
+  g_return_val_if_fail(GST_IS_BIN(bin), FALSE);
 
   oclass = GST_BIN_CLASS(GTK_OBJECT(bin)->klass);
 
   if (oclass->change_state_type)
     (oclass->change_state_type)(bin,state,type);
+	return TRUE;
 }
 
 void gst_bin_real_destroy(GtkObject *object) {
@@ -301,9 +302,9 @@ GstElement *gst_bin_get_by_name(GstBin *bin,gchar *name) {
   GList *children;
   GstElement *child;
 
-  g_return_if_fail(bin != NULL);
-  g_return_if_fail(GST_IS_BIN(bin));
-  g_return_if_fail(name != NULL);
+  g_return_val_if_fail(bin != NULL, NULL);
+  g_return_val_if_fail(GST_IS_BIN(bin), NULL);
+  g_return_val_if_fail(name != NULL, NULL);
 
   children = bin->children;
   while (children) {
@@ -317,8 +318,8 @@ GstElement *gst_bin_get_by_name(GstBin *bin,gchar *name) {
 }
 
 GList *gst_bin_get_list(GstBin *bin) {
-  g_return_if_fail(bin != NULL);
-  g_return_if_fail(GST_IS_BIN(bin));
+  g_return_val_if_fail(bin != NULL, NULL);
+  g_return_val_if_fail(GST_IS_BIN(bin), NULL);
 
   return bin->children;
 }
@@ -340,6 +341,7 @@ static xmlNodePtr gst_bin_save_thyself(GstElement *element,xmlNodePtr parent) {
     gst_element_save_thyself(child,childlist);
     children = g_list_next(children);
   }
+	return childlist;
 }
 
 void gst_bin_iterate(GstBin *bin) {

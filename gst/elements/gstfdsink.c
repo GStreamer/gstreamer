@@ -18,6 +18,7 @@
  */
 
 #include <gstfdsink.h>
+#include <unistd.h>
 
 
 GstElementDetails gst_fdsink_details = {
@@ -49,7 +50,7 @@ static void gst_fdsink_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 
 static GstSinkClass *parent_class = NULL;
-static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_fdsink_get_type(void) {

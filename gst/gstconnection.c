@@ -37,7 +37,7 @@ static void gst_connection_init(GstConnection *connection);
 
 
 static GstElementClass *parent_class = NULL;
-static guint gst_connection_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_connection_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_connection_get_type(void) {

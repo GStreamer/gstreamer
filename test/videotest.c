@@ -5,6 +5,7 @@ extern gboolean _gst_plugin_spew;
 
 gboolean idle_func(gpointer data);
 
+GstElement *videosink;
 GstElement *src;
 
 void eof(GstSrc *src) {
@@ -12,9 +13,9 @@ void eof(GstSrc *src) {
   exit(0);
 }
 
-void resize(GstSink *sink) {
-  g_print("have resize\n");
-  gtk_object_set(GTK_OBJECT(src),"width",640,"height",480,NULL);
+void resize(GtkWidget *wid, GtkRequisition *req, gpointer sink) {
+  g_print("have resize %d %d\n", req->width, req->height);
+  gtk_object_set(GTK_OBJECT(videosink),"width",req->width,"height",req->height,NULL);
 }
 
 
@@ -22,7 +23,6 @@ int main(int argc,char *argv[]) {
   GstElement *bin;
   GstElementFactory *srcfactory;
   GstElementFactory *videosinkfactory;
-  GstElement *videosink;
 
   GtkWidget *appwindow;
 
@@ -57,6 +57,11 @@ int main(int argc,char *argv[]) {
   appwindow = gnome_app_new("Videotest","Videotest");
   gnome_app_set_contents(GNOME_APP(appwindow),
 									gst_util_get_widget_arg(GTK_OBJECT(videosink),"widget"));
+  gtk_object_set(GTK_OBJECT(appwindow),"allow_grow",TRUE,NULL);
+  gtk_object_set(GTK_OBJECT(appwindow),"allow_shrink",TRUE,NULL);
+	gtk_signal_connect(GTK_OBJECT(appwindow),"size-request",
+						         GTK_SIGNAL_FUNC(resize),videosink);
+
   gtk_widget_show_all(appwindow);
 
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_RUNNING);

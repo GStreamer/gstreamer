@@ -70,7 +70,7 @@ static gboolean gst_plugin_load_recurse(gchar *directory,gchar *name) {
 
   dir = opendir(directory);
   if (dir) {
-    while (dirent = readdir(dir)) {
+    while ((dirent = readdir(dir))) {
       /* don't want to recurse in place or backwards */
       if (strcmp(dirent->d_name,".") && strcmp(dirent->d_name,"..")) {
         gst_plugin_load_recurse(g_strjoin("/",directory,dirent->d_name,
@@ -162,13 +162,13 @@ gboolean gst_plugin_load_absolute(gchar *name) {
 
   if (g_module_supported() == FALSE) {
     g_print("wow, you built this on a platform without dynamic loading???\n");
-    return;
+    return FALSE;
   }
 
   module = g_module_open(name,0);
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
-      if (plugin = (initfunc)(module)) {
+      if ((plugin = (initfunc)(module))) {
         GList *factories;
         plugin->filename = g_strdup(name);
         _gst_modules = g_list_append(_gst_modules,module);
@@ -235,7 +235,7 @@ void gst_plugin_set_longname(GstPlugin *plugin,gchar *longname) {
 GstPlugin *gst_plugin_find(gchar *name) {
   GList *plugins = _gst_plugins;
 
-  g_return_if_fail(name != NULL);
+  g_return_val_if_fail(name != NULL, NULL);
 
   while (plugins) {
     GstPlugin *plugin = (GstPlugin *)plugins->data;
@@ -261,7 +261,7 @@ GstElementFactory *gst_plugin_find_elementfactory(gchar *name) {
   GList *plugins, *factories;
   GstElementFactory *factory;
 
-  g_return_if_fail(name != NULL);
+  g_return_val_if_fail(name != NULL, NULL);
 
   plugins = _gst_plugins;
   while (plugins) {

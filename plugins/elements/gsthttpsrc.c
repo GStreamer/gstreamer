@@ -20,6 +20,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <gsthttpsrc.h>
 
@@ -62,7 +64,7 @@ static void gst_httpsrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 
 static GstSrcClass *parent_class = NULL;
-static guint gst_httpsrc_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_httpsrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_httpsrc_get_type(void) {
@@ -153,9 +155,9 @@ static void gst_httpsrc_push(GstSrc *src) {
 static gboolean gst_httpsrc_open_url(GstHttpSrc *httpsrc) {
   gint status;
 
-  g_return_if_fail(httpsrc != NULL);
-  g_return_if_fail(GST_IS_HTTPSRC(httpsrc));
-  g_return_if_fail(httpsrc->url != NULL);
+  g_return_val_if_fail(httpsrc != NULL, FALSE);
+  g_return_val_if_fail(GST_IS_HTTPSRC(httpsrc), FALSE);
+  g_return_val_if_fail(httpsrc->url != NULL, FALSE);
 
   httpsrc->request = ghttp_request_new();
   ghttp_set_uri(httpsrc->request,httpsrc->url);
@@ -237,7 +239,7 @@ static void gst_httpsrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
 
 static gboolean gst_httpsrc_change_state(GstElement *element,
                                          GstElementState state) {
-  g_return_if_fail(GST_IS_HTTPSRC(element));
+  g_return_val_if_fail(GST_IS_HTTPSRC(element), FALSE);
 
   switch (state) {
     case GST_STATE_RUNNING:

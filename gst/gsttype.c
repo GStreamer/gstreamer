@@ -26,6 +26,7 @@
 
 
 #include <gst/gst.h>
+#include <string.h>
 
 
 /* global list of registered types */
@@ -44,7 +45,7 @@ guint16 gst_type_register(GstTypeFactory *factory) {
   guint16 id;
   GstType *type;
 
-  g_return_if_fail(factory != NULL);
+  g_return_val_if_fail(factory != NULL, 0);
 
 //  id = gst_type_find_by_mime(factory->mime);
   id = 0;
@@ -142,7 +143,7 @@ void gst_type_add_sink(guint16 id,GstElementFactory *sink) {
 GList *gst_type_get_srcs(guint16 id) {
   GstType *type = gst_type_find_by_id(id);
 
-  g_return_if_fail(type != NULL);
+  g_return_val_if_fail(type != NULL, NULL);
 
   return type->srcs;
 }
@@ -150,7 +151,7 @@ GList *gst_type_get_srcs(guint16 id) {
 GList *gst_type_get_sinks(guint16 id) {
   GstType *type = gst_type_find_by_id(id);
 
-  g_return_if_fail(type != 0);
+  g_return_val_if_fail(type != 0, NULL);
 
   return type->sinks;
 }

@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <sys/soundcard.h>
 #include <math.h>
+#include <stdlib.h>
 
 #include <gstsinesrc.h>
 
@@ -58,13 +59,13 @@ static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 //static gboolean gst_sinesrc_change_state(GstElement *element,
 //                                          GstElementState state);
-static void gst_sinesrc_close_audio(GstSineSrc *src);
-static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
+//static void gst_sinesrc_close_audio(GstSineSrc *src);
+//static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
 void gst_sinesrc_sync_parms(GstSineSrc *sinesrc);
 
 
 static GstSrcClass *parent_class = NULL;
-static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_sinesrc_get_type(void) {
@@ -161,7 +162,7 @@ void gst_sinesrc_push(GstSrc *src) {
   g_return_if_fail(buf);
   GST_BUFFER_DATA(buf) = (gpointer)malloc(4096);
   samples = (gint16*)GST_BUFFER_DATA(buf);
-  GST_BUFFER_DATA(buf) = 4096;
+  GST_BUFFER_SIZE(buf) = 4096;
 
   volume = 65535 * sinesrc->volume;
   for (i=0;i<1024;i++) {

@@ -20,6 +20,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 #include <gstfdsrc.h>
 
@@ -54,11 +57,11 @@ static void gst_fdsrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_fdsrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 static void gst_fdsrc_push(GstSrc *src);
-static void gst_fdsrc_push_region(GstSrc *src,gulong offset,gulong size);
+//static void gst_fdsrc_push_region(GstSrc *src,gulong offset,gulong size);
 
 
 static GstSrcClass *parent_class = NULL;
-static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_fdsrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_fdsrc_get_type(void) {

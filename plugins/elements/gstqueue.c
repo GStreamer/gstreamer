@@ -51,7 +51,7 @@ static void gst_queue_get_arg(GtkObject *object,GtkArg *arg,guint id);
 
 
 static GstConnectionClass *parent_class = NULL;
-static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
+//static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
 gst_queue_get_type(void) {

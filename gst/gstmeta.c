@@ -53,5 +53,6 @@ void gst_meta_unref(GstMeta *meta) {
 
 
 GstMeta *gst_meta_cow(GstMeta *meta) {
-  g_return_if_fail(meta != NULL);
+  g_return_val_if_fail(meta != NULL, NULL);
+	return NULL;
 }

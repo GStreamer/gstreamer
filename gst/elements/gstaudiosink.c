@@ -20,8 +20,10 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <sys/soundcard.h>
+#include <unistd.h>
 
 #include <gstaudiosink.h>
 #include <gst/meta/audioraw.h>
@@ -221,7 +223,7 @@ void gst_audiosink_set_frequency(GstAudioSink *audiosink,gint frequency) {
 }
 
 static gboolean gst_audiosink_open_audio(GstAudioSink *sink) {
-  g_return_if_fail(sink->fd == -1);
+  g_return_val_if_fail(sink->fd == -1, FALSE);
 
   g_print("attempting to open sound device\n");
 
@@ -252,7 +254,7 @@ static void gst_audiosink_close_audio(GstAudioSink *sink) {
 
 static gboolean gst_audiosink_start(GstElement *element,
                                     GstElementState state) {
-  g_return_if_fail(GST_IS_AUDIOSINK(element));
+  g_return_val_if_fail(GST_IS_AUDIOSINK(element), FALSE);
 
   if (gst_audiosink_open_audio(GST_AUDIOSINK(element)) == TRUE) {
     gst_element_set_state(element,GST_STATE_RUNNING | state);
@@ -262,7 +264,7 @@ static gboolean gst_audiosink_start(GstElement *element,
 }
 
 static gboolean gst_audiosink_stop(GstElement *element) {
-  g_return_if_fail(GST_IS_AUDIOSINK(element));
+  g_return_val_if_fail(GST_IS_AUDIOSINK(element), FALSE);
 
   gst_audiosink_close_audio(GST_AUDIOSINK(element));
   gst_element_set_state(element,~GST_STATE_RUNNING);
@@ -271,7 +273,7 @@ static gboolean gst_audiosink_stop(GstElement *element) {
 
 static gboolean gst_audiosink_change_state(GstElement *element,
                                            GstElementState state) {
-  g_return_if_fail(GST_IS_AUDIOSINK(element));
+  g_return_val_if_fail(GST_IS_AUDIOSINK(element), FALSE);
       
   switch (state) {
     case GST_STATE_RUNNING:
