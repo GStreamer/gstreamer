@@ -1,3 +1,34 @@
+2005-02-11  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-clocks.txt:
+	* docs/design/part-events.txt:
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_get_event_mask),
+	(gst_fakesrc_event_handler), (gst_fakesrc_loop),
+	(gst_fakesrc_activate):
+	* gst/gstclock.c: (gst_clock_id_ref), (gst_clock_id_unref),
+	(gst_clock_id_compare_func), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_init),
+	(gst_clock_adjust_unlocked), (gst_clock_get_time):
+	* gst/gstevent.c: (gst_event_new_discontinuous_valist),
+	(gst_event_discont_get_value), (gst_event_new_segment_seek):
+	* gst/gstevent.h:
+	* gst/gstpipeline.c: (gst_pipeline_init), (is_eos),
+	(pipeline_bus_handler), (gst_pipeline_change_state):
+	* gst/gstpipeline.h:
+	* gst/gstsystemclock.c: (gst_system_clock_init),
+	(gst_system_clock_async_thread),
+	(gst_system_clock_id_wait_unlocked),
+	(gst_system_clock_id_wait_async), (gst_system_clock_id_unschedule):
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_event),
+	(gst_dp_event_from_packet):
+	* testsuite/clock/Makefile.am:
+	* testsuite/clock/clock4.c: (gst_clock_debug), (ok_callback),
+	(error_callback), (main):
+	Added more docs.
+	Remove more silly events.
+	Implement periodic clock notifications.
+	Add async testsuite.
+
 2005-02-11  Andy Wingo  <wingo@pobox.com>
 
 	* tools/gst-inspect.c (print_field): Change prototype for

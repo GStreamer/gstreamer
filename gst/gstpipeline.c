@@ -134,6 +134,7 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
   gst_bus_set_sync_handler (bus,
       (GstBusSyncHandler) pipeline_bus_handler, pipeline);
   pipeline->eosed = NULL;
+  pipeline->delay = 0;
   /* we are our own manager */
   GST_ELEMENT_MANAGER (pipeline) = pipeline;
   gst_element_set_bus (GST_ELEMENT (pipeline), bus);
@@ -288,13 +289,17 @@ gst_pipeline_change_state (GstElement * element)
     }
     case GST_STATE_PAUSED_TO_PLAYING:
       if (element->clock) {
-        /* we set time slightly ahead because of context switches */
-        pipeline->start_time = gst_clock_get_time (element->clock);     // + 10*GST_MSECOND;
-        element->base_time = pipeline->start_time - pipeline->stream_time;
+        GstClockTime start_time = gst_clock_get_time (element->clock);
+
+        element->base_time = start_time -
+            pipeline->stream_time + pipeline->delay;
+        GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
+            GST_TIME_FORMAT, GST_TIME_ARGS (pipeline->stream_time),
+            GST_TIME_ARGS (start_time));
+      } else {
+        element->base_time = 0;
+        GST_DEBUG ("no clock, using base time of 0");
       }
-      GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
-          GST_TIME_FORMAT, GST_TIME_ARGS (pipeline->stream_time),
-          GST_TIME_ARGS (pipeline->start_time));
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
     case GST_STATE_PAUSED_TO_READY:
@@ -315,9 +320,8 @@ gst_pipeline_change_state (GstElement * element)
         pipeline->stream_time = gst_clock_get_time (element->clock) -
             element->base_time;
       }
-      GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
-          GST_TIME_FORMAT, GST_TIME_ARGS (pipeline->stream_time),
-          GST_TIME_ARGS (pipeline->start_time));
+      GST_DEBUG ("stream_time=%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (pipeline->stream_time));
       break;
     case GST_STATE_PAUSED_TO_READY:
       break;

@@ -330,15 +330,6 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
       *payload = NULL;
       break;
     case GST_EVENT_SEEK:
-      pl_length = 4 + 8 + 4;
-      *payload = g_malloc0 (pl_length);
-      GST_WRITE_UINT32_BE (*payload, (guint32) GST_EVENT_SEEK_TYPE (event));
-      GST_WRITE_UINT64_BE (*payload + 4,
-          (guint64) GST_EVENT_SEEK_OFFSET (event));
-      GST_WRITE_UINT32_BE (*payload + 12,
-          (guint32) GST_EVENT_SEEK_ACCURACY (event));
-      break;
-    case GST_EVENT_SEEK_SEGMENT:
       pl_length = 4 + 8 + 8 + 4;
       *payload = g_malloc0 (pl_length);
       GST_WRITE_UINT32_BE (*payload, (guint32) GST_EVENT_SEEK_TYPE (event));
@@ -350,7 +341,6 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
           (guint32) GST_EVENT_SEEK_ACCURACY (event));
       break;
     case GST_EVENT_QOS:
-    case GST_EVENT_SEGMENT_DONE:
     case GST_EVENT_SIZE:
     case GST_EVENT_RATE:
     case GST_EVENT_NAVIGATION:
@@ -492,20 +482,6 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
     case GST_EVENT_SEEK:
     {
       GstSeekType type;
-      gint64 offset;
-      GstSeekAccuracy accuracy;
-
-      type = (GstSeekType) GST_READ_UINT32_BE (payload);
-      offset = (gint64) GST_READ_UINT64_BE (payload + 4);
-      accuracy = (GstSeekAccuracy) GST_READ_UINT32_BE (payload + 12);
-      event = gst_event_new_seek (type, offset);
-      GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
-      GST_EVENT_SEEK_ACCURACY (event) = accuracy;
-      break;
-    }
-    case GST_EVENT_SEEK_SEGMENT:
-    {
-      GstSeekType type;
       gint64 offset, endoffset;
       GstSeekAccuracy accuracy;
 
@@ -519,7 +495,6 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
       break;
     }
     case GST_EVENT_QOS:
-    case GST_EVENT_SEGMENT_DONE:
     case GST_EVENT_SIZE:
     case GST_EVENT_RATE:
     case GST_EVENT_NAVIGATION:

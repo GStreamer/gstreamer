@@ -211,7 +211,14 @@ gst_clock_id_compare_func (gconstpointer id1, gconstpointer id2)
   entry1 = (GstClockEntry *) id1;
   entry2 = (GstClockEntry *) id2;
 
-  return GST_CLOCK_ENTRY_TIME (entry1) - GST_CLOCK_ENTRY_TIME (entry2);
+  if (GST_CLOCK_ENTRY_TIME (entry1) > GST_CLOCK_ENTRY_TIME (entry2)) {
+    return 1;
+  }
+  if (GST_CLOCK_ENTRY_TIME (entry1) < GST_CLOCK_ENTRY_TIME (entry2)) {
+    return -1;
+  }
+
+  return entry1 - entry2;
 }
 
 /**
@@ -262,6 +269,9 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
     goto invalid_time;
 
+  if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
+    goto unscheduled;
+
   clock = GST_CLOCK_ENTRY_CLOCK (entry);
   cclass = GST_CLOCK_GET_CLASS (clock);
 
@@ -275,6 +285,9 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
       GstClockTime now = gst_clock_get_time (clock);
 
       *jitter = now - requested;
+    }
+    if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
+      entry->time += entry->interval;
     }
 
     if (clock->stats) {
@@ -290,6 +303,11 @@ invalid_time:
   {
     GST_CAT_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _BADTIME");
     return GST_CLOCK_BADTIME;
+  }
+unscheduled:
+  {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "entry was unscheduled return _UNSCHEDULED");
+    return GST_CLOCK_UNSCHEDULED;
   }
 }
 
@@ -329,6 +347,9 @@ gst_clock_id_wait_async (GstClockID id,
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
     goto invalid_time;
 
+  if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
+    goto unscheduled;
+
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   if (cclass->wait_async) {
@@ -348,6 +369,11 @@ invalid_time:
     GST_CAT_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _BADTIME");
     return GST_CLOCK_BADTIME;
   }
+unscheduled:
+  {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "entry was unscheduled return _UNSCHEDULED");
+    return GST_CLOCK_UNSCHEDULED;
+  }
 }
 
 /**
@@ -356,6 +382,8 @@ invalid_time:
  *
  * Cancel an outstanding request with the given ID. This can either
  * be an outstanding async notification or a pending sync notification.
+ * After this call, the @id cannot be used anymore to receive sync or
+ * async notifications, you need to create a new GstClockID.
  *
  * MT safe.
  */

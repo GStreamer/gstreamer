@@ -244,6 +244,7 @@ gst_system_clock_async_thread (GstClock * clock)
         goto next_entry;
       case GST_CLOCK_OK:
       case GST_CLOCK_EARLY:
+      {
         /* entry timed out normally, fire the callback and move to the next
          * entry */
         GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p unlocked", entry);
@@ -251,7 +252,18 @@ gst_system_clock_async_thread (GstClock * clock)
           entry->func (clock, entry->time, (GstClockID) entry,
               entry->user_data);
         }
-        goto next_entry;
+        if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
+          /* adjust time now */
+          entry->time += entry->interval;
+          /* and resort the list now */
+          clock->entries =
+              g_list_sort (clock->entries, gst_clock_id_compare_func);
+          /* and restart */
+          continue;
+        } else {
+          goto next_entry;
+        }
+      }
       case GST_CLOCK_BUSY:
         /* somebody unlocked the entry but is was not canceled, This means that
          * either a new entry was added in front of the queue or some other entry 
@@ -313,6 +325,7 @@ gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
   GstClockTime real, current, target;
   GstClockTimeDiff diff;
 
+  /* need to call the overridden method */
   real = GST_CLOCK_GET_CLASS (clock)->get_internal_time (clock);
   target = GST_CLOCK_ENTRY_TIME (entry);
 
@@ -389,7 +402,7 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
 
   /* only need to send the signal if the entry was added to the
    * front, else the thread is just waiting for another entry and
-   * will discard this entry automatically. */
+   * will get to this entry automatically. */
   if (clock->entries->data == entry) {
     GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
     GST_CLOCK_SIGNAL (clock);

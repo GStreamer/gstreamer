@@ -419,8 +419,7 @@ static const GstEventMask *
 gst_fakesrc_get_event_mask (GstPad * pad)
 {
   static const GstEventMask masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH},
-    {GST_EVENT_SEEK_SEGMENT, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP},
+    {GST_EVENT_SEEK, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT_LOOP},
     {GST_EVENT_FLUSH, 0},
     {0, 0},
   };
@@ -437,18 +436,12 @@ gst_fakesrc_event_handler (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      src->buffer_count = GST_EVENT_SEEK_OFFSET (event);
-
-      if (!GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
-        break;
-      }
-      /* else we do a flush too */
-    case GST_EVENT_SEEK_SEGMENT:
       src->segment_start = GST_EVENT_SEEK_OFFSET (event);
       src->segment_end = GST_EVENT_SEEK_ENDOFFSET (event);
       src->buffer_count = src->segment_start;
       src->segment_loop =
           GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_SEGMENT_LOOP;
+      src->need_flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
       break;
     case GST_EVENT_FLUSH:
       src->need_flush = TRUE;
@@ -795,7 +788,7 @@ gst_fakesrc_loop (GstPad * pad)
 
   if (src->buffer_count == src->segment_end) {
     if (src->segment_loop) {
-      gst_pad_push_event (pad, gst_event_new (GST_EVENT_SEGMENT_DONE));
+      //gst_pad_push_event (pad, gst_event_new (GST_EVENT_SEGMENT_DONE));
     } else {
       gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
       gst_task_pause (src->task);

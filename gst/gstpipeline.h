@@ -50,8 +50,8 @@ struct _GstPipeline {
 
   /*< public >*/ /* with LOCK */
   GstClock      *fixed_clock;	/* fixed clock if any */
-  GstClockTime   start_time;
   GstClockTime   stream_time;
+  GstClockTime   delay;
 
   GList		*eosed;		/* list of elements that posted EOS */
 

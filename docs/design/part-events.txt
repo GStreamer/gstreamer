@@ -24,9 +24,9 @@ Different types of events exist to implement various functionalities.
 EOS
 ---
 
-The EOS event can only be send on a sinkpad. It is typically emited by the
-source element when it has finished sending data. This event is mainly send
-in the streaming thread but can also be send from the application thread.
+The EOS event can only be sent on a sinkpad. It is typically emited by the
+source element when it has finished sending data. This event is mainly sent
+in the streaming thread but can also be sent from the application thread.
 
 The downstream element should forward the EOS event to its downstream peer
 elements. This way the event will eventually reach the renderers which should
@@ -58,7 +58,7 @@ goes to PLAYING.
 FLUSH
 -----
 
-A flush event is send both downstream and upstream to clear any pending data 
+A flush event is sent both downstream and upstream to clear any pending data 
 from the pipeline. This might be neede to make the graph more responsive 
 when the normal dataflow gets interrupted by for example a seek event.
 
@@ -90,10 +90,10 @@ unlocks and any pending buffers are cleared in the upstream elements.
 DISCONTINUOUS
 -------------
 
-A discont event is send downstream by an element to indicate that the following
+A discont event is sent downstream by an element to indicate that the following
 group of buffers start and end at the specified time.
 
-After a seek event for example, a discont event is send.
+After a seek event for example, a discont event is sent.
 
 
 SEEK
@@ -168,7 +168,7 @@ Navigation events travel downstream.
 TAG
 ---    
   
-The tag event is send downstream when an element has discovered metadata
+The tag event is sent downstream when an element has discovered metadata
 tags in a media file. Encoders can use this event to adjust their tagging
 system.
 
