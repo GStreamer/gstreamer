@@ -22,7 +22,7 @@ gst_data_init (GstData *data)
   data->flags = 0;
   for (i = 0; i < GST_OFFSET_TYPES; i++)
   {
-    data->offset[i] = 0;
+    data->offset[i] = GST_OFFSET_INVALID;
   }
 }
 void

@@ -53,6 +53,13 @@ enum {
   GST_QUEUE_LEAK_DOWNSTREAM	= 2
 };
 
+enum {
+  GST_QUEUE_NEED_NOTHING	= 0x0,
+  GST_QUEUE_NEED_DISCONTINUOUS	= 0x1,
+  GST_QUEUE_NEED_EOS		= 0x3,
+  GST_QUEUE_NEED_NEWMEDIA	= 0x7,
+};
+
 typedef struct _GstQueue GstQueue;
 typedef struct _GstQueueClass GstQueueClass;
 
@@ -63,27 +70,21 @@ struct _GstQueue {
   GstPad *srcpad;
 
   /* the queue of buffers we're keeping our grubby hands on */
-  GList *queue;
+  GAsyncQueue *queue;
+  GCond *not_full;	/* signals space now available for writing */
+  /* lock queue before changing next two values */
+  guint8 need_src; 	/* we need this event before pushing the next buffer */
+  guint8 need_sink; 	/* we need this event before popping the next buffer */
 
-  guint level_buffers;	/* number of buffers queued here */
-  guint level_bytes;	/* number of bytes queued here */
-  guint64 level_time;	/* amount of time queued here */
-
-  guint size_buffers;	/* size of queue in buffers */
-  guint size_bytes;	/* size of queue in bytes */
-  guint64 size_time;	/* size of queue in time */
-
+  gint size;		/* size of queue in buffers */
   gint leaky;		/* whether the queue is leaky, and if so at which end */
   gboolean may_deadlock; /* it the queue should fail on possible deadlocks */
-
-  GMutex *qlock;	/* lock for queue (vs object lock) */
-  /* we are single reader and single writer queue */
-  gboolean reader;	/* reader waiting on empty queue */
-  gboolean writer;	/* writer waiting on full queue */
-  GCond *not_empty;	/* signals buffers now available for reading */
-  GCond *not_full;	/* signals space now available for writing */
-
-  GTimeVal *timeval;	/* the timeout for the queue locking */
+  gulong max_wait;	/* the timeout for locking in microseconds */
+  
+  GstData *upstream_event;
+  gpointer upstream_return;
+  GMutex *upstream_mutex;
+  GCond *upstream_cond;
 };
 
 struct _GstQueueClass {

@@ -170,7 +170,6 @@ gst_thread_dispose (GObject *object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
   if (GST_ELEMENT_SCHED (thread)) {
-    gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
     gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
   }
 }
@@ -338,11 +337,8 @@ gst_thread_change_state (GstElement * element)
    * FIXME also make this more efficient by keeping list of managed queues
    */
 	  THR_DEBUG ("waking queue \"%s\"\n", GST_ELEMENT_NAME (element));
-	  g_mutex_lock (queue->qlock);
 	  GST_STATE_PENDING (element) = GST_STATE_PAUSED;
 	  g_cond_signal (queue->not_full);
-	  g_cond_signal (queue->not_empty);
-	  g_mutex_unlock (queue->qlock);
 	}
 	else {
 	  GList *pads = GST_ELEMENT_PADS (element);
@@ -376,10 +372,7 @@ gst_thread_change_state (GstElement * element)
 
 	      THR_DEBUG ("  element \"%s\" has pad cross sched boundary\n", GST_ELEMENT_NAME (element));
 	      /* FIXME!! */
-	      g_mutex_lock (queue->qlock);
 	      g_cond_signal (queue->not_full);
-	      g_cond_signal (queue->not_empty);
-	      g_mutex_unlock (queue->qlock);
 	    }
 	  }
 	}

@@ -58,6 +58,7 @@ typedef enum {
 #define GST_EVENT_UNLOCK(event)		((GstEventUnLock *) (event))
 
 #define GST_EVENT_SEEK_TYPE(event)	(GST_EVENT_SEEK(event)->type)
+#define GST_EVENT_SEEK_FLUSH(event)	(GST_EVENT_SEEK(event)->flush)
 
 typedef struct _GstEventEOS GstEventEOS;
 typedef struct _GstEventDiscontinuous GstEventDiscontinuous;

@@ -89,8 +89,8 @@ struct _GstBasicScheduler {
   GList *chains;
   gint num_chains;
   
-  GMutex *event_lock;
-  GList *event_queue;
+  GAsyncQueue *event_queue;
+  gboolean has_events;  /* speed up knowing if events are waiting - must only be set when event_queue is locked */
 
   GstBasicSchedulerState state;
 };
@@ -124,7 +124,7 @@ static GstSchedulerState
 			gst_basic_scheduler_iterate    		(GstScheduler *sched);
 static void		gst_basic_scheduler_insert_event	(GstScheduler *sched, GstPad *pad, GstData *event);
 static void		gst_basic_scheduler_handle_events	(GstBasicScheduler *sched);
-#define			gst_basic_scheduler_events(sched)	G_STMT_START{ if ((sched) && (GST_BASIC_SCHEDULER (sched)->event_queue)) \
+#define			gst_basic_scheduler_events(sched)	G_STMT_START{ if ((sched) && (GST_BASIC_SCHEDULER (sched)->has_events)) \
 					    gst_basic_scheduler_handle_events(GST_BASIC_SCHEDULER (sched)); }G_STMT_END
 
 static void     	gst_basic_scheduler_show  		(GstScheduler *sched);
@@ -194,26 +194,24 @@ gst_basic_scheduler_init (GstBasicScheduler *scheduler)
   scheduler->num_elements = 0;
   scheduler->chains = NULL;
   scheduler->num_chains = 0;
-  scheduler->event_lock = g_mutex_new();
-  scheduler->event_queue = NULL;
+  scheduler->event_queue = g_async_queue_new ();
+  scheduler->has_events = FALSE;
 }
 
 static void
 gst_basic_scheduler_dispose (GObject *object)
 {
+  GstBasicSchedulerEvent *ev;
   GstBasicScheduler *sched = GST_BASIC_SCHEDULER (object);
-  GList *list;
   
-  g_mutex_free (sched->event_lock);
-  list = sched->event_queue;
-  while (list)
+  g_async_queue_lock (sched->event_queue);
+  while ((ev = (GstBasicSchedulerEvent *) g_async_queue_try_pop_unlocked (sched->event_queue)) != NULL)
   {
-    GstBasicSchedulerEvent *ev = (GstBasicSchedulerEvent *) list->data;
     gst_data_unref (GST_DATA (ev->event));
     g_free (ev);
-    list = g_list_next (list);
   }
-  g_list_free (sched->event_queue);
+  g_async_queue_unlock (sched->event_queue);
+  g_async_queue_unref (sched->event_queue);
   
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1051,10 +1049,7 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     if (GST_ELEMENT_IS_COTHREAD_STOPPING (element)) {
       GstElement *entry = GST_ELEMENT (cothread_get_private (cothread_current ()));
 
-      if (entry == element) {
-        g_warning ("removing currently running element! %s", GST_ELEMENT_NAME (entry));
-      }
-      else if (entry) {
+      if (entry && entry != element) {
         GST_INFO (GST_CAT_SCHEDULING, "moving stopping to element \"%s\"",
 	      GST_ELEMENT_NAME (entry));
 	GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
@@ -1385,16 +1380,17 @@ gst_basic_scheduler_handle_events (GstBasicScheduler *sched)
 {
   GstBasicSchedulerEvent *ev;
   
-  while (sched->event_queue)
+  g_async_queue_lock (sched->event_queue);
+  while ((ev = (GstBasicSchedulerEvent *) g_async_queue_try_pop_unlocked (sched->event_queue)) != NULL)
   {
+    g_async_queue_unlock (sched->event_queue);  
     GST_DEBUG (GST_CAT_DATAFLOW, "handling asynchronous event");
-    g_mutex_lock (sched->event_lock);
-    ev = sched->event_queue->data;
-    sched->event_queue = g_list_delete_link (sched->event_queue, sched->event_queue);
-    g_mutex_unlock (sched->event_lock);
     gst_pad_send_event (ev->pad, ev->event);
     g_free (ev);
+    g_async_queue_lock (sched->event_queue);  
   }
+  sched->has_events = FALSE;
+  g_async_queue_unlock (sched->event_queue);  
 }
 
 static void
@@ -1404,9 +1400,10 @@ gst_basic_scheduler_insert_event (GstScheduler *scheduler, GstPad *pad, GstData 
   GstBasicSchedulerEvent *ev = g_new (GstBasicSchedulerEvent, 1);
   ev->pad = pad;
   ev->event = event;
-  g_mutex_lock (sched->event_lock);
-  sched->event_queue = g_list_prepend (sched->event_queue, ev);
-  g_mutex_unlock (sched->event_lock);
+  g_async_queue_lock (sched->event_queue);  
+  g_async_queue_push_unlocked (sched->event_queue, ev);
+  sched->has_events = TRUE;
+  g_async_queue_unlock (sched->event_queue);  
 }
 
 static void

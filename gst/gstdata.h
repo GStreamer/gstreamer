@@ -65,7 +65,9 @@ typedef enum {
 } GstDataType;
 
 /* number of types */
-#define GST_OFFSET_TYPES 3
+#define GST_OFFSET_TYPES 		3					/* number of different GstOffsetType types */
+#define GST_OFFSET_INVALID 		(~((guint64) 0))			/* invalid (or unitialized) offset */
+#define GST_OFFSET_IS_INVLAID(ofset)	(offset == GST_OFFSET_INVALID)
 typedef enum {
   GST_OFFSET_TIME	= 0,
   GST_OFFSET_BYTES	= 1,

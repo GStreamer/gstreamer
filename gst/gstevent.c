@@ -129,7 +129,7 @@ gst_event_seek_init (GstEventSeek *event, GstSeekType type, GstOffsetType offset
   event->original = offset_type;
   for (i = 0; i < GST_OFFSET_TYPES; i++)
   {
-    event->offset[i] = 0;
+    event->offset[i] = GST_OFFSET_INVALID;
     event->accuracy[i] = GST_ACCURACY_NONE;
   }
   event->flush = TRUE;
@@ -275,7 +275,7 @@ gst_event_length_init (GstEventLength *event)
   for (i = 0; i < GST_OFFSET_TYPES; i++)
   {
     event->accuracy[i] = GST_ACCURACY_NONE;
-    event->length[i] = 0;
+    event->length[i] = GST_OFFSET_INVALID;
   }
 }
 /**
