@@ -1322,6 +1322,8 @@ gst_pad_link_negotiate (GstPadLink * link)
   if (!gst_pad_link_ready_for_negotiation (link)) {
     return GST_PAD_LINK_DELAYED;
   }
+  GST_DEBUG ("trying to call link function on caps %" GST_PTR_FORMAT,
+      link->caps);
 
   return gst_pad_link_call_link_functions (link);
 }
@@ -1352,8 +1354,10 @@ gst_pad_link_try (GstPadLink * link)
   oldlink = GST_RPAD_LINK (srcpad);
   g_assert (oldlink == GST_RPAD_LINK (sinkpad));
 
+  GST_DEBUG ("negotiating given link");
   ret = gst_pad_link_negotiate (link);
   if (GST_PAD_LINK_FAILED (ret) && oldlink && oldlink->caps) {
+    GST_DEBUG ("negotiating failed, but there was a valid old link");
     oldlink->srcnotify = link->srcnotify;
     oldlink->sinknotify = link->sinknotify;
     if (GST_PAD_LINK_FAILED (gst_pad_link_call_link_functions (oldlink))) {
@@ -1361,16 +1365,19 @@ gst_pad_link_try (GstPadLink * link)
     }
   }
   if (ret == GST_PAD_LINK_REFUSED) {
+    GST_DEBUG ("link refused, returning");
     gst_pad_link_free (link);
     return ret;
   }
   if (ret == GST_PAD_LINK_DELAYED) {
+    GST_DEBUG ("link delayed, replacing link caps and returning");
     gst_caps_replace (&link->caps, NULL);
   }
 
   GST_RPAD_PEER (srcpad) = GST_REAL_PAD (link->sinkpad);
   GST_RPAD_PEER (sinkpad) = GST_REAL_PAD (link->srcpad);
   if (oldlink) {
+    GST_DEBUG ("copying stuff from oldlink");
     link->temp_store = oldlink->temp_store;
     link->engaged = oldlink->engaged;
     oldlink->temp_store = NULL;
@@ -1379,6 +1386,7 @@ gst_pad_link_try (GstPadLink * link)
   GST_RPAD_LINK (srcpad) = link;
   GST_RPAD_LINK (sinkpad) = link;
   if (ret == GST_PAD_LINK_OK) {
+    GST_DEBUG ("notifying caps after successful link");
     g_object_notify (G_OBJECT (srcpad), "caps");
     g_object_notify (G_OBJECT (sinkpad), "caps");
   }
@@ -1477,6 +1485,7 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
 
   /* we allow setting caps on non-linked pads.  It's ignored */
   if (!GST_PAD_PEER (pad)) {
+    GST_DEBUG ("unlinked pad %s:%s, returning OK", GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_LINK_OK;
   }
 
@@ -1485,6 +1494,7 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
 
   /* if the desired caps are already there, it's trivially ok */
   if (GST_PAD_CAPS (pad) && gst_caps_is_equal (caps, GST_PAD_CAPS (pad))) {
+    GST_DEBUG ("pad %s:%s already has these caps", GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_LINK_OK;
   }
 
@@ -1494,6 +1504,7 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
   link->sinkpad = GST_PAD_LINK_SINK (pad);
 
   if (!gst_pad_link_ready_for_negotiation (link)) {
+    GST_DEBUG ("link not ready for negotiating, delaying");
     gst_pad_link_free (link);
     return GST_PAD_LINK_DELAYED;
   }
@@ -1512,6 +1523,7 @@ gst_pad_try_set_caps (GstPad * pad, const GstCaps * caps)
     link->sinknotify = FALSE;
   }
 
+  GST_DEBUG ("trying to link");
   ret = gst_pad_link_try (link);
 
   return ret;
