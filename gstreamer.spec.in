@@ -166,6 +166,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
 
 %files tools
+%{_bindir}/gst-xmlinspect
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
