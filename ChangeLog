@@ -1,5 +1,17 @@
 2004-01-31  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
+	* ext/alsa/gstalsa.c: (gst_alsa_change_state), (gst_alsa_start),
+	(gst_alsa_drain_audio), (gst_alsa_stop_audio):
+	  really start/stop clock only on PLAYING <=> PAUSED
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_loop):
+	  remove \n from debugging lines
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain):
+	  make it work when seeking does not
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_event):
+	  reset on DISCONT
+
+2004-01-31  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_change_state), (gst_alsa_start):
 	  start clock on PAUSED=>PLAYING, not later
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event):
