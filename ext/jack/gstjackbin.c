@@ -102,7 +102,7 @@ gst_jack_bin_change_state (GstElement *element)
     
     switch (GST_STATE_PENDING (element)) {
     case GST_STATE_NULL:
-        g_message ("jack: NULL state");
+        g_message ("jackbin: NULL state");
         if (this->client) {
             g_message ("jack: closing client");
             jack_client_close (this->client);
@@ -113,7 +113,7 @@ gst_jack_bin_change_state (GstElement *element)
         break;
         
     case GST_STATE_READY:
-        g_message ("jack: READY");
+        g_message ("jackbin: READY");
         if (!this->client) {
           if (!(this->client = jack_client_new ("gst-jack"))) {
             g_warning ("jack server not running?");
@@ -154,24 +154,25 @@ gst_jack_bin_change_state (GstElement *element)
         break;
         
     case GST_STATE_PAUSED:
-        g_message ("jack: PAUSED");
+        g_message ("jackbin: PAUSED");
         
         if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
             l = this->src_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
                 g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
-                pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+                pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput|JackPortIsTerminal, 0);
                 l = g_list_next (l);
             }
             l = this->sink_pads;
             while (l) {
                 pad = GST_JACK_PAD (l);
                 g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
-                pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+                pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput|JackPortIsTerminal, 0);
                 l = g_list_next (l);
             }
 
+            /* must activate before connecting */
             if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
                 g_message ("jack: activating client");
                 jack_activate (this->client);
@@ -201,7 +202,7 @@ gst_jack_bin_change_state (GstElement *element)
                 l = g_list_next (l);
             }
 
-            g_message ("jack: setting OPEN flag");
+            g_message ("jackbin: setting OPEN flag");
             GST_FLAG_SET (GST_OBJECT (this), GST_JACK_OPEN);
         } else {
             g_cond_wait (this->cond, this->lock);
