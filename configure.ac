@@ -43,7 +43,17 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
-
+dnl objective-c for OSX (should check if os is darwin)
+case "$host" in
+  *-*darwin*)
+  AM_CONDITIONAL([am__fastdepOBJC], false)
+  OBJC="${CC}"
+  AC_SUBST(OBJC)
+  OBJCFLAGS="${CFLAGS}"
+  AC_SUBST(OBJCFLAGS)
+  _AM_DEPENDENCIES(OBJC)
+  ;;
+esac
 dnl the gettext stuff needed
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
@@ -475,6 +485,17 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_AUDIO, true)
 GST_CHECK_FEATURE(OSX_AUDIO, [OSX audio], osxaudiosrc osxaudiosink, [
   AC_CHECK_HEADER(CoreAudio/CoreAudio.h, HAVE_OSX_AUDIO="yes", HAVE_OSX_AUDIO="no")
 ])
+
+dnl *** OS X video ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
+HAVE_OSX_VIDEO="no"
+case "$host" in
+  *-*darwin*)
+    GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
+      AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
+    ])
+    ;;
+esac
 
 dnl *** QuickCam ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_QCAM, true)
@@ -1856,6 +1877,7 @@ sys/dxr3/Makefile
 sys/glsink/Makefile
 sys/oss/Makefile
 sys/osxaudio/Makefile
+sys/osxvideo/Makefile
 sys/qcam/Makefile
 sys/sunaudio/Makefile
 sys/v4l/Makefile
