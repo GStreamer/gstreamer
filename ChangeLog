@@ -1,3 +1,9 @@
+2004-04-20  David Schleef  <ds@schleef.org>
+
+	* ext/sdl/Makefile.am: Link against libgstinterfaces, not
+	libgstxoverlay.  jmmv@menta.net (Julio M. Merino Vidal)
+	(bug #140384)
+
 2004-04-20  Daniel Gazard  <daniel.gazard@epita.fr>
 
 	reviewed by David Schleef
