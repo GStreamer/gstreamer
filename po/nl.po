@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-02 23:08+0100\n"
+"POT-Creation-Date: 2004-02-04 22:48+0100\n"
 "PO-Revision-Date: 2004-02-02 23:08+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -30,7 +30,7 @@ msgstr "Kon bestand \"%s\" niet sluiten."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon bestand \"%s\" niet openen voor lezen."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1047 ext/gnomevfs/gstgnomevfssrc.c:1070
+#: ext/gnomevfs/gstgnomevfssrc.c:1066 ext/gnomevfs/gstgnomevfssrc.c:1089
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Kon vfs-bestand \"%s\" niet openen voor lezen."
