@@ -83,7 +83,7 @@ static GstElementStateReturn gst_shout2send_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
-static guint gst_shout2send_signals[LAST_SIGNAL] = { 0, 0 };
+static guint gst_shout2send_signals[LAST_SIGNAL] = { 0 };
 
 #define GST_TYPE_SHOUT_PROTOCOL (gst_shout2send_protocol_get_type())
 static GType
