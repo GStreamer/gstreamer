@@ -258,7 +258,8 @@ static void
 gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstUDPSink *udpsink;
-  guint tolen, i;
+  guint tolen;
+  /*guint tolen, i;*/
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -276,7 +277,13 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
   
   tolen = sizeof(udpsink->theiraddr);
   
-  for (i = 0; i < GST_BUFFER_SIZE (buf); i += udpsink->mtu) {
+  if (sendto (udpsink->sock, GST_BUFFER_DATA (buf), 
+	 GST_BUFFER_SIZE (buf), 0, (struct sockaddr *) &udpsink->theiraddr, 
+	 tolen) == -1) {
+    		perror("sending");
+  } 
+  
+  /*for (i = 0; i < GST_BUFFER_SIZE (buf); i += udpsink->mtu) {
     if (GST_BUFFER_SIZE (buf) - i > udpsink->mtu) {
   	if (sendto (udpsink->sock, GST_BUFFER_DATA (buf) + i, 
 	    udpsink->mtu, 0, (struct sockaddr *) &udpsink->theiraddr, 
@@ -291,7 +298,7 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
     		perror("sending");
   	} 
     }
-  }
+  }*/
 
   gst_buffer_unref(buf);
 }
