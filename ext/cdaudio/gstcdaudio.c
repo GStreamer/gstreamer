@@ -278,7 +278,9 @@ print_track_info (GstCDAudio *cdaudio)
   gint i;
 
   for (i = 0; i < cdaudio->info.disc_total_tracks; i++) {
-    g_print ("%d %d:%02d\n", i, 
+    g_print ("%d %d %d %d:%02d\n", i, 
+		    cdaudio->info.disc_track[i].track_length.frames,
+		    cdaudio->info.disc_track[i].track_pos.frames,
 		    cdaudio->info.disc_track[i].track_length.minutes,
 		    cdaudio->info.disc_track[i].track_length.seconds);
   }
@@ -371,12 +373,7 @@ gst_cdaudio_send_event (GstElement *element, GstEvent *event)
       switch (GST_EVENT_SEEK_FORMAT (event)) {
 	case GST_FORMAT_TIME:
         {
-	  struct disc_timeval time;
-
-	  time.minutes = GST_EVENT_SEEK_OFFSET (event) / (60 * GST_SECOND);
-	  time.seconds = (GST_EVENT_SEEK_OFFSET (event) / GST_SECOND) % 60;
-		
-          cd_advance (cdaudio->cd_desc, time);
+          cd_play_pos (cdaudio->cd_desc, 1, GST_EVENT_SEEK_OFFSET (event) / (60 * GST_SECOND));
           break;
 	}
         default:
@@ -398,7 +395,7 @@ gst_cdaudio_get_formats (GstElement *element)
   static GstFormat formats[] = {
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     0,			/* fillted below */
     0,			/* fillted below */
     0,
@@ -444,7 +441,7 @@ gst_cdaudio_query (GstElement *element, GstQueryType type,
 
   /* take new snapshot every 100000 miliseconds */
   seconds = g_timer_elapsed (cdaudio->timer, &micros);
-  if (micros > 100000) {
+  if (micros > 100000 || seconds > 1) {
     cd_stat (cdaudio->cd_desc, &cdaudio->info);
     g_timer_start (cdaudio->timer);
   }
@@ -452,8 +449,6 @@ gst_cdaudio_query (GstElement *element, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-	  *format = GST_FORMAT_TIME;
 	case GST_FORMAT_TIME:
           *value = (cdaudio->info.disc_length.minutes * 60 +
                     cdaudio->info.disc_length.seconds) * GST_SECOND;
@@ -472,8 +467,6 @@ gst_cdaudio_query (GstElement *element, GstQueryType type,
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-	case GST_FORMAT_DEFAULT:
-	  *format = GST_FORMAT_TIME;
 	case GST_FORMAT_TIME:
           *value = (cdaudio->info.disc_time.minutes * 60 +
                     cdaudio->info.disc_time.seconds) * GST_SECOND;
