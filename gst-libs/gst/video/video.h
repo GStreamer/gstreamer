@@ -76,33 +76,17 @@
 
 /* properties for pad templates */
 #define GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24_32 \
-	    "video/x-raw-rgb, " \
-            "bpp = (int) { 24, 32 }, " \
-            "depth = (int) { 24, 32 }, " \
-            "endianness = (int) BIG_ENDIAN, " \
-            "red_mask = (int) { " R_MASK_32 ", " R_MASK_24 " }, " \
-            "green_mask = (int) { " G_MASK_32 ", " G_MASK_24 " }, " \
-            "blue_mask = (int) { " B_MASK_32 ", " B_MASK_24 " }, " \
-            "width = " SIZE_RANGE ", " \
-            "height = " SIZE_RANGE ", " \
-            "framerate = " FPS_RANGE
+    GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32 "; " \
+    GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24
 
 #define GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24_32_REVERSE \
-	    "video/x-raw-rgb, " \
-            "bpp = (int) { 24, 32 }, " \
-            "depth = (int) { 24, 32 }, " \
-            "endianness = (int) BIG_ENDIAN, " \
-            "red_mask = (int) { " R_MASK_32_REVERSE ", " R_MASK_24_REVERSE "}, " \
-            "green_mask = (int) { " G_MASK_32_REVERSE ", " G_MASK_24_REVERSE "}, " \
-            "blue_mask = (int) { " B_MASK_32_REVERSE ", " B_MASK_24_REVERSE "}, " \
-            "width = " SIZE_RANGE ", " \
-            "height = " SIZE_RANGE ", " \
-            "framerate = " FPS_RANGE
+    GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32_REVERSE "; " \
+    GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24_REVERSE
 
 #define GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32 \
 	    "video/x-raw-rgb, " \
             "bpp = (int) 32, " \
-            "depth = (int) 32, " \
+            "depth = (int) 24, " \
             "endianness = (int) BIG_ENDIAN, " \
             "red_mask = (int) " R_MASK_32 ", " \
             "green_mask = (int) " G_MASK_32 ", " \
@@ -126,7 +110,7 @@
 #define GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32_REVERSE \
 	    "video/x-raw-rgb, " \
             "bpp = (int) 32, " \
-            "depth = (int) 32, " \
+            "depth = (int) 24, " \
             "endianness = (int) BIG_ENDIAN, " \
             "red_mask = (int) " R_MASK_32_REVERSE ", " \
             "green_mask = (int) " G_MASK_32_REVERSE ", " \
