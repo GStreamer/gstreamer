@@ -1,16 +1,14 @@
 #include <gst/gst.h>
 
+GstElement *audiothread;
+GstElement *audioqueue;
+GstElement *audiodecode;
+GstElement *audiosink;
+
 void new_pad(GstElement *parse,GstPad *pad,GstElement *pipeline) {
-  GstElement *audiothread;
-  GstElement *audioqueue;
-  GstElement *audiodecode;
-  GstElement *audiosink;
 
   if (!strncmp(gst_pad_get_name(pad), "audio_", 6)) {
     fprintf(stderr,"have audio pad\n");
-
-//    fprintf(stderr,"setting state to PAUSED\n");
-//    gst_element_set_state(pipeline,GST_STATE_PAUSED);
 
     fprintf(stderr,"creating thread\n");
     audiothread = gst_elementfactory_make("thread","audiothread");
@@ -39,12 +37,13 @@ void new_pad(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 }
 
 int main(int argc,char *argv[]) {
-  GstElement *pipeline, *src, *parse;
+  GstElement *pipeline, *sourcethread, *src, *parse;
   int i;
 
   gst_init(&argc,&argv);
 
   pipeline = gst_pipeline_new("pipeline");
+  sourcethread = gst_elementfactory_make("thread","sourcethread");
   src = gst_elementfactory_make("disksrc","src");
   gtk_object_set(GTK_OBJECT(src),"location","/home/omega/media/AlienSong.mpg",NULL);
   parse = gst_elementfactory_make("mpeg1parse","parse");
@@ -52,15 +51,26 @@ int main(int argc,char *argv[]) {
   gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
                       GTK_SIGNAL_FUNC(new_pad),pipeline);
 
-  gst_bin_add(GST_BIN(pipeline),src);
-  gst_bin_add(GST_BIN(pipeline),parse);
+  gst_bin_add(GST_BIN(sourcethread),src);
+  gst_bin_add(GST_BIN(sourcethread),parse);
 
   gst_element_connect(src,"src",parse,"sink");
 
-  gst_element_set_state(pipeline,GST_STATE_PLAYING);
+  gst_bin_add(GST_BIN(pipeline),sourcethread);
+
   gst_schedule_show(GST_ELEMENT_SCHED(pipeline));
 
+  gst_element_set_state(pipeline,GST_STATE_PLAYING);
+  sleep(1);
+
+  while (1) {
+//    sleep(1);
+    gst_element_set_state(pipeline,GST_STATE_PAUSED);fprintf(stderr,"paused... ");
+//    sleep(1);
+    gst_element_set_state(pipeline,GST_STATE_PLAYING);fprintf(stderr,"playing.\n");
+  }
+
 //  for (i=0;i<10;i++)
-  while (1)
-    gst_bin_iterate(GST_BIN(pipeline));
+//  while (1)
+//    gst_bin_iterate(GST_BIN(pipeline));
 }
