@@ -7,7 +7,10 @@ import pygtk
 pygtk.require('2.0')
 
 import gobject
-gobject.threads_init()
+try:
+    gobject.threads_init()
+except:
+    print "WARNING: gobject doesn't have threads_init, no threadsafety"
 
 # Don't insert before .
 sys.path.insert(1, os.path.join('..'))
