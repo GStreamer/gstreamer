@@ -89,7 +89,7 @@ struct _GstAFSinkClass {
 };
 
 GType 		gst_afsink_get_type	(void);
-gboolean 	gst_afsink_plugin_init 	(GModule *module, GstPlugin *plugin);
+gboolean 	gst_afsink_plugin_init 	(GstPlugin *plugin);
 
 
 

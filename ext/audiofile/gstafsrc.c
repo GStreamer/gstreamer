@@ -32,11 +32,8 @@
 static GstElementDetails afsrc_details = {
   "Audiofile Src",
   "Source/Audio",
-  "LGPL",
   "Read audio files from disk using libaudiofile",
-  VERSION,
   "Thomas <thomas@apestaart.org>",
-  "(C) 2001"
 };
 
 
@@ -99,6 +96,7 @@ gst_afsrc_types_get_type (void)
   return afsrc_types_type;
 }
 */
+static void             gst_afsrc_base_init             (gpointer g_class);
 static void		gst_afsrc_class_init		(GstAFSrcClass *klass);
 static void		gst_afsrc_init			(GstAFSrc *afsrc);
 
@@ -124,7 +122,8 @@ gst_afsrc_get_type (void)
 
   if (!afsrc_type) {
     static const GTypeInfo afsrc_info = {
-      sizeof (GstAFSrcClass),      NULL,
+      sizeof (GstAFSrcClass),
+      gst_afsrc_base_init,
       NULL,
       (GClassInitFunc) gst_afsrc_class_init,
       NULL,
@@ -136,6 +135,15 @@ gst_afsrc_get_type (void)
     afsrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAFSrc", &afsrc_info, 0);
   }
   return afsrc_type;
+}
+
+static void
+gst_afsrc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (afsrc_src_factory));
+  gst_element_class_set_details (element_class, &afsrc_details);
 }
 
 static void
@@ -274,20 +282,13 @@ gst_afsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
 }
 
 gboolean
-gst_afsrc_plugin_init (GModule *module, GstPlugin *plugin)
+gst_afsrc_plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-  
-  factory = gst_element_factory_new ("afsrc", GST_TYPE_AFSRC,
-                                    &afsrc_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (afsrc_src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
   /* load audio support library */
   if (!gst_library_load ("gstaudio"))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "afsrc", GST_RANK_NONE, GST_TYPE_AFSRC))
     return FALSE;
   
   return TRUE;

@@ -31,11 +31,8 @@
 static GstElementDetails afsink_details = {
   "Audiofile Sink",
   "Sink/Audio",
-  "LGPL",
   "Write audio streams to disk using libaudiofile",
-  VERSION,
   "Thomas <thomas@apestaart.org>",
-  "(C) 2001"
 };
 
 
@@ -98,6 +95,7 @@ gst_afsink_types_get_type (void)
   return afsink_types_type;
 }
 
+static void             gst_afsink_base_init    (gpointer g_class);
 static void		gst_afsink_class_init	(GstAFSinkClass *klass);
 static void		gst_afsink_init		(GstAFSink *afsink);
 
@@ -125,7 +123,8 @@ gst_afsink_get_type (void)
 
   if (!afsink_type) {
     static const GTypeInfo afsink_info = {
-      sizeof (GstAFSinkClass),      NULL,
+      sizeof (GstAFSinkClass),
+      gst_afsink_base_init,
       NULL,
       (GClassInitFunc) gst_afsink_class_init,
       NULL,
@@ -137,6 +136,15 @@ gst_afsink_get_type (void)
     afsink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAFSink", &afsink_info, 0);
   }
   return afsink_type;
+}
+
+static void
+gst_afsink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (afsink_sink_factory));
+  gst_element_class_set_details (element_class, &afsink_details);
 }
 
 static void
@@ -263,17 +271,10 @@ gst_afsink_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 }
 
 gboolean
-gst_afsink_plugin_init (GModule *module, GstPlugin *plugin)
+gst_afsink_plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-  
-  factory = gst_element_factory_new ("afsink", GST_TYPE_AFSINK,
-                                    &afsink_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (afsink_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "afsink", GST_RANK_NONE, GST_TYPE_AFSINK))
+    return FALSE;
   
   return TRUE;
 }

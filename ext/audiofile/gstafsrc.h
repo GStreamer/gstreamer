@@ -95,7 +95,7 @@ struct _GstAFSrcClass {
 };
 
 GType 		gst_afsrc_get_type	(void);
-gboolean        gst_afsrc_plugin_init  (GModule *module, GstPlugin *plugin);
+gboolean        gst_afsrc_plugin_init  (GstPlugin *plugin);
 
 
 

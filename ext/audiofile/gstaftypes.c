@@ -106,13 +106,14 @@ gst_aftypes_type_find(GstTypeFind *tf, gpointer private)
 }
 
 gboolean
-gst_aftypes_plugin_init (GModule *module, GstPlugin *plugin)
+gst_aftypes_plugin_init (GstPlugin *plugin)
 {
   static gchar * af_exts[] = { "aiff", "aif", "aifc", "wav", "au", "snd", NULL };
  
-  gst_type_find_factory_register (plugin, "audio/x-mod",
-      GST_ELEMENT_RANK_MARGINAL, gst_aftypes_type_find, af_exts,
-      GST_CAPS_ANY, NULL);
+  gst_type_find_register (plugin, "audio/x-mod",
+			  GST_RANK_MARGINAL,
+			  gst_aftypes_type_find, af_exts,
+			  GST_CAPS_ANY, NULL);
   
   return TRUE;
 }

@@ -33,11 +33,8 @@
 static GstElementDetails afparse_details = {
   "Audiofile Parse",
   "Codec/Parser",
-  "LGPL",
   "Audiofile parser for audio/raw",
-  VERSION,
   "Steve Baker <stevebaker_org@yahoo.co.uk>",
-  "(C) 2002"
 };
 
 
@@ -90,6 +87,7 @@ GST_PAD_TEMPLATE_FACTORY (afparse_sink_factory,
   )
 )
 
+static void gst_afparse_base_init (gpointer g_class);
 static void gst_afparse_class_init(GstAFParseClass *klass);
 static void gst_afparse_init (GstAFParse *afparse);
 
@@ -113,7 +111,8 @@ gst_afparse_get_type (void)
 
   if (!afparse_type) {
     static const GTypeInfo afparse_info = {
-      sizeof (GstAFParseClass),      NULL,
+      sizeof (GstAFParseClass),
+      gst_afparse_base_init,
       NULL,
       (GClassInitFunc) gst_afparse_class_init,
       NULL,
@@ -125,6 +124,17 @@ gst_afparse_get_type (void)
     afparse_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAFParse", &afparse_info, 0);
   }
   return afparse_type;
+}
+
+static void
+gst_afparse_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (afparse_src_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (afparse_sink_factory));
+
+  gst_element_class_set_details (element_class, &afparse_details);
 }
 
 static void
@@ -320,22 +330,13 @@ gst_afparse_get_property (GObject *object, guint prop_id,
 }
 
 gboolean
-gst_afparse_plugin_init (GModule *module, GstPlugin *plugin)
+gst_afparse_plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-  
-  factory = gst_element_factory_new ("afparse", GST_TYPE_AFPARSE,
-                                    &afparse_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (afparse_src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (afparse_sink_factory));
-  /* gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);*/
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  /* load audio support library */
+    /* load audio support library */
   if (!gst_library_load ("gstaudio"))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "afparse", GST_RANK_NONE, GST_TYPE_AFPARSE))
     return FALSE;
 
   return TRUE;
