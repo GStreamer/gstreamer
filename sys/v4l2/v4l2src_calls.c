@@ -72,6 +72,8 @@ gst_v4l2src_fill_format_list (GstV4l2Src *v4l2src)
 		fmtptr = g_malloc(sizeof(format));
 		memcpy(fmtptr, &format, sizeof(format));
 		v4l2src->formats = g_list_append(v4l2src->formats, fmtptr);
+
+		v4l2src->format_list = g_list_append(v4l2src->format_list, fmtptr->description);
 	}
 
 	return TRUE;
@@ -92,6 +94,8 @@ gst_v4l2src_empty_format_list (GstV4l2Src *v4l2src)
 		v4l2src->formats = g_list_remove(v4l2src->formats, data);
 		g_free(data);
 	}
+	g_list_free(v4l2src->format_list);
+	v4l2src->format_list = NULL;
 
 	return TRUE;
 }
@@ -398,50 +402,4 @@ gst_v4l2src_capture_deinit (GstV4l2Src *v4l2src)
 	GST_V4L2ELEMENT(v4l2src)->buffer = NULL;
 
 	return TRUE;
-}
-
-
-/******************************************************
- * gst_v4l2src_get_fourcc_list():
- *   create a list of all available fourccs
- * return value: the list
- ******************************************************/
-
-GList *
-gst_v4l2src_get_fourcc_list (GstV4l2Src *v4l2src)
-{
-	GList *list = NULL;
-	gint n;
-
-	for (n=0;n<g_list_length(v4l2src->formats);n++) {
-		struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, n);
-		guint32 print_format = GUINT32_FROM_LE(fmt->pixelformat);
-		gchar *print_format_str = (gchar *) &print_format;
-
-		list = g_list_append(list, g_strndup(print_format_str, 4));
-	}
-
-	return list;
-}
-
-
-/******************************************************
- * gst_v4l2src_get_format_list():
- *   create a list of all available capture formats
- * return value: the list
- ******************************************************/
-
-GList *
-gst_v4l2src_get_format_list (GstV4l2Src *v4l2src)
-{
-	GList *list = NULL;
-	gint n;
-
-	for (n=0;n<g_list_length(v4l2src->formats);n++) {
-		struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, n);
-
-		list = g_list_append(list, g_strdup(fmt->description));
-	}
-
-	return list;
 }

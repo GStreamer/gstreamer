@@ -45,8 +45,6 @@ enum {
 	ARG_HEIGHT,
 	ARG_PALETTE,
 	ARG_PALETTE_NAMES,
-	ARG_FOURCC,
-	ARG_FOURCC_LIST,
 	ARG_NUMBUFS,
 	ARG_BUFSIZE
 };
@@ -154,12 +152,6 @@ gst_v4l2src_class_init (GstV4l2SrcClass *klass)
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PALETTE_NAMES,
 		g_param_spec_pointer("palette_name","palette_name","palette_name",
 		G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FOURCC,
-		g_param_spec_string("fourcc","fourcc","fourcc",
-		NULL,G_PARAM_READWRITE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FOURCC_LIST,
-		g_param_spec_pointer("fourcc_list","fourcc_list","fourcc_list",
-		G_PARAM_READABLE));
 
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUMBUFS,
 		g_param_spec_int("num_buffers","num_buffers","num_buffers",
@@ -201,6 +193,7 @@ gst_v4l2src_init (GstV4l2Src *v4l2src)
 	v4l2src->breq.count = 0;
 
 	v4l2src->formats = NULL;
+	v4l2src->format_list = NULL;
 }
 
 
@@ -742,19 +735,6 @@ gst_v4l2src_set_property (GObject      *object,
 			}
 			break;
 
-		case ARG_FOURCC:
-			if (!GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src))) {
-				gint i;
-				const gchar *formatstr = g_value_get_string(value);
-				guint32 fourcc = GST_MAKE_FOURCC(formatstr[0],formatstr[1],formatstr[2],formatstr[3]);
-				for (i=0;i<g_list_length(v4l2src->formats);i++) {
-					struct v4l2_fmtdesc *fmt = (struct v4l2_fmtdesc *) g_list_nth_data(v4l2src->formats, i);
-					if (fmt->pixelformat == fourcc)
-						v4l2src->palette = i;
-				}
-			}
-			break;
-
 		case ARG_NUMBUFS:
 			if (!GST_V4L2_IS_ACTIVE(GST_V4L2ELEMENT(v4l2src))) {
 				v4l2src->breq.count = g_value_get_int(value);
@@ -793,18 +773,7 @@ gst_v4l2src_get_property (GObject    *object,
 			break;
 
 		case ARG_PALETTE_NAMES:
-			g_value_set_pointer(value, gst_v4l2src_get_format_list(v4l2src));
-			break;
-
-		case ARG_FOURCC: {
-			struct v4l2_fmtdesc *fmt = g_list_nth_data(v4l2src->formats, v4l2src->palette);
-			guint32 print_format = GUINT32_FROM_LE(fmt->pixelformat);
-			gchar *print_format_str = (gchar *) &print_format;
-			g_value_set_string(value, g_strndup(print_format_str, 4));
-			break; }
-
-		case ARG_FOURCC_LIST:
-			g_value_set_pointer(value, gst_v4l2src_get_fourcc_list(v4l2src));
+			g_value_set_pointer(value, v4l2src->format_list);
 			break;
 
 		case ARG_NUMBUFS:
