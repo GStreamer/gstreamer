@@ -172,7 +172,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
 
       GST_DEBUG (0,"gst_riff_parser: chunk id offset %08x is 0x%08x '%s' and is 0x%08x long\n",
 		riff->nextlikely, GUINT32_FROM_LE (words[0]),
-            	gst_riff_id_to_fourcc(words[0]), GUINT32_FROM_LE (words[1]));
+            	gst_riff_id_to_fourcc(GUINT32_FROM_LE (words[0])), GUINT32_FROM_LE (words[1]));
 
       riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
       // if this buffer is incomplete
