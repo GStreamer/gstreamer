@@ -522,6 +522,113 @@ gst_id3_tag_src_event (GstPad * pad, GstEvent * event)
   return FALSE;
 }
 
+static id3_utf8_t *
+mad_id3_parse_latin1_string (const id3_ucs4_t * ucs4)
+{
+  gsize bytes_read, size;
+  const gchar *env;
+  char *latin1, *ret = NULL;
+
+  latin1 = id3_ucs4_latin1duplicate (ucs4);
+  if (latin1 == NULL)
+    return NULL;
+
+  size = strlen (latin1);
+
+  env = g_getenv ("GST_ID3V2_TAG_ENCODING");
+  if (!env || *env == '\0')
+    env = g_getenv ("GST_ID3_TAG_ENCODING");
+  if (!env || *env == '\0')
+    env = g_getenv ("GST_TAG_ENCODING");
+
+  if (env && *env != '\0') {
+    gchar **c, **csets;
+
+    csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
+
+    for (c = csets; !ret && c && *c; ++c) {
+      gchar *utf8;
+
+      if ((utf8 =
+              g_convert (latin1, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
+        if (bytes_read == size) {
+          ret = strdup (utf8);
+        }
+        g_free (utf8);
+      }
+    }
+    g_strfreev (csets);
+  }
+
+  /* Try current locale (if not UTF-8). Should we really do this?
+   *  What if the tag is really correct and in ISO-8859-1 and the
+   *  current locale is some other charset where the full byte range
+   *  is valid? In those cases ISO-8859-1 would have to be put into
+   *  one of the above environment variables. Do the most common
+   *  non-Western and non-UTF8 character sets modify only the range
+   *  from 0x80-0xff, so that ASCII is still covered at least?) */
+  if (!ret && !g_get_charset (&env)) {
+    gchar *utf8;
+
+    if ((utf8 = g_locale_to_utf8 (latin1, size, &bytes_read, NULL, NULL))) {
+      if (bytes_read == size) {
+        ret = strdup (utf8);
+      }
+      g_free (utf8);
+    }
+  }
+
+  /* Try ISO-8859-1 (this conversion should always suceed) */
+  if (!ret) {
+    gchar *utf8;
+
+    utf8 =
+        g_convert (latin1, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL,
+        NULL);
+    if (utf8 != NULL && bytes_read == size) {
+      ret = strdup (utf8);
+    }
+    g_free (utf8);
+  }
+
+  free (latin1);
+  return ret;
+}
+
+static void
+mad_id3_parse_comment_frame (GstTagList * tlist, const struct id3_frame *frame)
+{
+  const id3_ucs4_t *ucs4;
+  id3_utf8_t *utf8;
+
+  g_assert (frame->nfields >= 4);
+
+  ucs4 = id3_field_getfullstring (&frame->fields[3]);
+  g_assert (ucs4);
+
+  if (frame->fields[0].type == ID3_FIELD_TYPE_TEXTENCODING
+      && frame->fields[0].number.value == ID3_FIELD_TEXTENCODING_ISO_8859_1) {
+    utf8 = mad_id3_parse_latin1_string (ucs4);
+  } else {
+    utf8 = id3_ucs4_utf8duplicate (ucs4);
+  }
+
+  if (utf8 == NULL)
+    return;
+
+  if (!g_utf8_validate (utf8, -1, NULL)) {
+    g_warning ("converted string is not valid utf-8");
+    g_free (utf8);
+    return;
+  }
+
+  g_strchomp (utf8);
+
+  gst_tag_list_add (tlist, GST_TAG_MERGE_APPEND, GST_TAG_COMMENT, utf8, NULL);
+
+  g_free (utf8);
+}
+
 GstTagList *
 gst_mad_id3_to_tag_list (const struct id3_tag * tag)
 {
@@ -534,52 +641,45 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
   tag_list = gst_tag_list_new ();
 
   while ((frame = id3_tag_findframe (tag, NULL, i++)) != NULL) {
-    const union id3_field *field;
+    const union id3_field *field, *encfield;
     unsigned int nstrings, j;
     const gchar *tag_name;
 
-    /* find me the function to query the frame id */
-    gchar *id = g_strndup (frame->id, 5);
+    tag_name = gst_tag_from_id3_tag (frame->id);
+    if (tag_name == NULL)
+      continue;
 
-    tag_name = gst_tag_from_id3_tag (id);
-    if (tag_name == NULL) {
-      g_free (id);
+    if (strncmp (frame->id, "COMM", 5) == 0) {
+      mad_id3_parse_comment_frame (tag_list, frame);
       continue;
     }
 
-    if (strcmp (id, "COMM") == 0) {
-      ucs4 = id3_field_getfullstring (&frame->fields[3]);
-      g_assert (ucs4);
-
-      utf8 = id3_ucs4_utf8duplicate (ucs4);
-      if (utf8 == 0)
-        continue;
-
-      if (!g_utf8_validate (utf8, -1, NULL)) {
-        g_warning ("converted string is not valid utf-8");
-        g_free (utf8);
-        continue;
-      }
-
-      gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-          GST_TAG_COMMENT, utf8, NULL);
-
-      g_free (utf8);
+    if (frame->id[0] != 'T') {
+      g_warning ("don't know how to parse ID3v2 frame with ID '%s'", frame->id);
       continue;
     }
+
+    g_assert (frame->nfields >= 2);
 
     field = &frame->fields[1];
     nstrings = id3_field_getnstrings (field);
+    encfield = &frame->fields[0];
 
     for (j = 0; j < nstrings; ++j) {
       ucs4 = id3_field_getstrings (field, j);
       g_assert (ucs4);
 
-      if (strcmp (id, ID3_FRAME_GENRE) == 0)
+      if (strncmp (frame->id, ID3_FRAME_GENRE, 5) == 0)
         ucs4 = id3_genre_name (ucs4);
 
-      utf8 = id3_ucs4_utf8duplicate (ucs4);
-      if (utf8 == 0)
+      if (encfield->type == ID3_FIELD_TYPE_TEXTENCODING
+          && encfield->number.value == ID3_FIELD_TEXTENCODING_ISO_8859_1) {
+        utf8 = mad_id3_parse_latin1_string (ucs4);
+      } else {
+        utf8 = id3_ucs4_utf8duplicate (ucs4);
+      }
+
+      if (utf8 == NULL)
         continue;
 
       if (!g_utf8_validate (utf8, -1, NULL)) {
@@ -654,13 +754,13 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
         }
         default:
           g_assert (gst_tag_get_type (tag_name) == G_TYPE_STRING);
+          g_strchomp (utf8);
           gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, utf8,
               NULL);
           break;
       }
       free (utf8);
     }
-    g_free (id);
   }
 
   return tag_list;
