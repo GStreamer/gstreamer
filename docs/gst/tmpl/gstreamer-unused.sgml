@@ -1,219 +1,14 @@
-<!-- ##### MACRO GST_IS_QUEUE_CLASS ##### -->
+<!-- ##### FUNCTION gst_fakesink_chain ##### -->
 <para>
 
 </para>
 
-@obj: 
+@pad: 
+@buf: 
 
-<!-- ##### STRUCT GstSineSrc ##### -->
+<!-- ##### ARG GstTypeFind:type ##### -->
 <para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/GstElement.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO DEBUG_SET_STRING ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-<!-- ##### FUNCTION gst_type_add_sink ##### -->
-<para>
-
-</para>
-
-@id: 
-@sink: 
-
-<!-- ##### FUNCTION gst_fakesrc_push ##### -->
-<para>
-
-</para>
-
-@src: 
-
-<!-- ##### FUNCTION gst_tee_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_FAKESRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_ESDSINK_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### SIGNAL GstSrc::eos ##### -->
-<para>
-An eos signal is triggered whenever the GstSrc has reached the end of 
-the stream.
-
-</para>
-
-@gstsrc: the object which received the signal.
-@arg1: the object which received the signal
-
-<!-- ##### FUNCTION gst_fdsink_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### STRUCT GstAsyncDiskSrcClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_FILTER_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### STRUCT GstPadClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstBinClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstConnection ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_FDSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_AUDIOSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_fakesink_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### MACRO GST_PIPELINE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_TYPE_SINK ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO DEBUG_ENTER ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-<!-- ##### MACRO GST_IS_HTTPSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_ELEMENT ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### STRUCT GstQueue ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### MACRO GST_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_PIPELINE_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_IS_ASYNCDISKSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION plugin_initialize ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_pad_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_PROPS_INT_RANGE_ID ##### -->
-<para>
-
+Query the element for the current mime type
 </para>
 
 
@@ -224,571 +19,48 @@ the stream.
 
 @Returns: 
 
-<!-- ##### MACRO GST_SINESRC ##### -->
+<!-- ##### STRUCT GstSineSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFakeSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_tee_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_IS_SINK ##### -->
 <para>
 
 </para>
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
+<!-- ##### MACRO GST_META ##### -->
 <para>
 
 </para>
 
+@meta: 
 
-<!-- ##### MACRO GST_QUEUE_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### FUNCTION gst_audiosrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO DEBUG ##### -->
-<para>
-Use this macro to show debugging info. This is only usefull when developing new
-plugin elements.
-If you #define DEBUG_ENABLED before including gst/gst.h, this macro will produce
-g_print messages.
-</para>
-
-@format: the format specification as in g_print
-@args...: arguments
-
-<!-- ##### MACRO DEBUG_LEAVE_STRING ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_QUEUE ##### -->
+<!-- ##### MACRO GST_IS_CONNECTION ##### -->
 <para>
 
 </para>
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/gstsink.sgml:Long_Description ##### -->
+<!-- ##### MACRO GST_TYPE_FAKESINK ##### -->
 <para>
-The sink is the end of the filter graph. A typical sink would be an audio
-or a video card.
-
-</para>
-
-
-<!-- ##### FUNCTION gst_queue_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_fdsrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_TYPE_DISKSRC ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PROPS_LIST_ID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION plugin_load ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### SECTION ./tmpl/gstgetbits.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_SRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_queue_push ##### -->
-<para>
-
-</para>
-
-@connection: 
-
-<!-- ##### MACRO GST_SRC_ASYNC ##### -->
-<para>
-This macro checks to see if the GST_SRC_ASYNC flag is set.
-</para>
-
-@obj: GstSrc to check for flag in.
-
-<!-- ##### STRUCT GstFilter ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TEE_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### FUNCTION gst_thread_main_loop ##### -->
-<para>
-
-</para>
-
-@arg: 
-
-<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Title ##### -->
-GstEsdSink
-
-
-<!-- ##### MACRO GST_TYPE_BIN ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_IDENTITY_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_TYPE_TEE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GstQueue:timeout ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_fakesrc_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:Long_Description ##### -->
-<para>
-A connection is a bas class for a generic connection between
-elements. A connection is typically a bas class for queues.
-
-</para>
-
-
-<!-- ##### FUNCTION gst_src_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### STRUCT GstDiskSrcClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PROPS_INT_ID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_fakesink_chain ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
-
-<!-- ##### FUNCTION gst_type_add_src ##### -->
-<para>
-
-</para>
-
-@id: 
-@src: 
-
-<!-- ##### FUNCTION gst_esdsink_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_esdsink_chain ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
-
-<!-- ##### MACRO INFO ##### -->
-<para>
-
-</para>
-
-@cat: 
-@format: 
-@args...: 
-
-<!-- ##### FUNCTION gst_type_get_sinks ##### -->
-<para>
-
-</para>
-
-@id: 
-@Returns: 
-
-<!-- ##### MACRO GST_TYPE_HTTPSRC ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_ELEMENT ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstFakeSink ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_THREAD_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_BIN_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_TYPE_OBJECT ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_ASYNCDISKSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_FDSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_FAKESINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Title ##### -->
-GstColorSpace
-
-
-<!-- ##### STRUCT GstEsdSink ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### STRUCT GstSink ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_AUDIOSINK_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### SECTION ./tmpl/gstsrc.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_type_get_srcs ##### -->
-<para>
-
-</para>
-
-@id: 
-@Returns: 
-
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:Short_Description ##### -->
-Take data in and spit data out
-
-
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:Long_Description ##### -->
-<para>
-Filters take data in and spit data out. They are the main Element in a filter graph.
-Filters have zero or more inputs and zero or more outputs. Filters are connected
-together to form filter graphs. A GstFilter is the base class and is not very usefull
-on its own.
-</para>
-
-
-<!-- ##### FUNCTION plugin_load_absolute ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_sinesrc_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_audiosrc_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### MACRO DEBUG_NOPREFIX ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-<!-- ##### MACRO GST_QUEUE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_FILTER ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_src_push ##### -->
-<para>
-
-</para>
-
-@src: 
-
-<!-- ##### FUNCTION gst_filter_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### STRUCT GstThreadClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_OBJECT ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### SIGNAL GstXML::object-loaded ##### -->
-<para>
-Is trigered whenever the state of an element changes
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: the new state of the object
-
-<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Title ##### -->
-GstGetbits
-
-
-<!-- ##### MACRO GST_FILTER_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO ERROR ##### -->
-<para>
-
-</para>
-
-@element: 
-@format: 
-@args...: 
-
-<!-- ##### MACRO GST_IS_PAD_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_src_push_region ##### -->
-<para>
-
-</para>
-
-@src: 
-@offset: 
-@size: 
-
-<!-- ##### FUNCTION gst_src_signal_eos ##### -->
-<para>
-
-</para>
-
-@src: 
-
-<!-- ##### MACRO GST_SINESRC_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_IS_FAKESRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_connection_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_sink_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### STRUCT GstTee ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_ELEMENT_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### SECTION ./tmpl/gstsrc.sgml:Long_Description ##### -->
-<para>
-A GstSrc is the start of a filter graph. It typically is a file or an
-audio source. It provides data for the next element in the graph.
 
 </para>
 
@@ -801,29 +73,7 @@ audio source. It provides data for the next element in the graph.
 @pad: 
 @buf: 
 
-<!-- ##### MACRO GST_IS_IDENTITY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_esdsink_set_channels ##### -->
-<para>
-
-</para>
-
-@esdsink: 
-@channels: 
-
-<!-- ##### MACRO GST_FDSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### FUNCTION gst_pad_add_ghost_parent ##### -->
+<!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
 <para>
 
 </para>
@@ -831,142 +81,52 @@ audio source. It provides data for the next element in the graph.
 @pad: 
 @parent: 
 
-<!-- ##### MACRO GST_SINK_CLASS ##### -->
+<!-- ##### MACRO GST_SRC_UNSET_FLAGS ##### -->
+<para>
+This macro usets the given flags.
+</para>
+
+@src: 
+@flag: Flag to set, must be a single bit in guint32.
+@obj: GstSrc to unset flag in.
+
+<!-- ##### FUNCTION gst_identity_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_audiosink_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_connection_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_PIPELINE_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
 
-<!-- ##### STRUCT GstPipelineClass ##### -->
+<!-- ##### FUNCTION gst_elementfactory_add_src ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### SECTION ./tmpl/gstsrc.sgml:Title ##### -->
-GstSrc
-
-
-<!-- ##### MACRO GST_IS_FDSINK_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_ASYNCDISKSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_asyncdisksrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_ESDSINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_pipeline_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### ARG GstSineSrc:freq ##### -->
-<para>
-The frequency.
-</para>
-
-
-<!-- ##### STRUCT GstIdentityClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstSinkClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_TEE_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_STATE_UNSET ##### -->
-<para>
-This macro unsets the given state on the element.
-</para>
-
-@obj: Element to unset state of.
-@flag: State to unset, can be any number of bits in guint32.
-
-<!-- ##### STRUCT GstDiskSrc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_SRC_FLAGS ##### -->
-<para>
-This macro returns the entire set of flags for the object.
-</para>
-
-@obj: GstSrc to return flags for.
-
-<!-- ##### FUNCTION gst_sink_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_tee_new_pad ##### -->
-<para>
-
-</para>
-
-@tee: 
-@Returns: 
-
-<!-- ##### MACRO GST_TYPE_AUDIOSRC ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_SRC_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### SECTION ./tmpl/gstsrc.sgml:Short_Description ##### -->
-The start point of a filter graph
-
-
-<!-- ##### MACRO GST_FAKESINK_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
+@elementfactory: 
+@id: 
 
 <!-- ##### MACRO GST_IS_SINK_CLASS ##### -->
 <para>
@@ -981,201 +141,6 @@ The start point of a filter graph
 </para>
 
 
-<!-- ##### MACRO GST_IS_PAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### STRUCT GstFdSinkClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_type_load_thyself ##### -->
-<para>
-
-</para>
-
-@parent: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_plugin_init ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### MACRO DEBUG_LEAVE ##### -->
-<para>
-
-</para>
-
-@format: 
-@args...: 
-
-<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_IS_BIN_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_element_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### STRUCT GstSineSrcClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_PIPELINE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:Title ##### -->
-GstConnection
-
-
-<!-- ##### MACRO GST_TYPE_THREAD ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstHttpSrc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_STATE_SET ##### -->
-<para>
-This macro sets the given state on the element.
-</para>
-
-@obj: Element to set state of.
-@flag: State to set, can be any number of bits in guint32.
-
-<!-- ##### MACRO DEBUG_ENTER_STRING ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_AUDIOSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### ENUM GstCapsDefinition ##### -->
-<para>
-
-</para>
-
-@GST_CAPS_ALWAYS: 
-@GST_CAPS_MAYBE: 
-
-<!-- ##### MACRO GST_DISKSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### SECTION ./tmpl/gstconnection.sgml:Short_Description ##### -->
-Generic connection between elements.
-
-
-<!-- ##### MACRO GST_TYPE_AUDIOSINK ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstFdSrcClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_esdsink_sync_parms ##### -->
-<para>
-
-</para>
-
-@esdsink: 
-
-<!-- ##### MACRO GST_IS_SINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_THREAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_SINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_TYPE_FDSINK ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_DISKSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
 <!-- ##### MACRO GST_IS_PIPELINE_CLASS ##### -->
 <para>
 
@@ -1183,244 +148,32 @@ Generic connection between elements.
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/plugin.sgml:Title ##### -->
-plugin
-
-
-<!-- ##### MACRO GST_TYPE_SRC ##### -->
+<!-- ##### MACRO GST_PROPS_INT_RANGE_ID ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### FUNCTION gst_identity_chain ##### -->
+<!-- ##### MACRO DEBUG ##### -->
+<para>
+Use this macro to show debugging info. This is only usefull when developing new
+plugin elements.
+If you #define DEBUG_ENABLED before including gst/gst.h, this macro will produce
+g_print messages.
+</para>
+
+@format: the format specification as in g_print
+@args...: arguments
+
+<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Title ##### -->
+GstEsdSink
+
+
+<!-- ##### MACRO GST_TYPE_IDENTITY ##### -->
 <para>
 
 </para>
 
-@pad: 
-@buf: 
-
-<!-- ##### STRUCT GstAsyncDiskSrc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_identity_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### MACRO GST_IS_HTTPSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_FAKESRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### STRUCT GstHttpSrcClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_PROPS_FOURCC_ID ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_SRC_UNSET_FLAGS ##### -->
-<para>
-This macro usets the given flags.
-</para>
-
-@src: 
-@flag: Flag to set, must be a single bit in guint32.
-@obj: GstSrc to unset flag in.
-
-<!-- ##### FUNCTION gst_audiosink_sync_parms ##### -->
-<para>
-
-</para>
-
-@audiosink: 
-
-<!-- ##### FUNCTION gst_tee_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### MACRO GST_IS_OBJECT_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_pad_get_directory ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-<!-- ##### MACRO GST_HTTPSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_ELEMENT ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_CPU_FLAG_SSE ##### -->
-<para>
-A flag indicating that SSE instructions are supported.
-</para>
-
-
-<!-- ##### FUNCTION gst_pad_set_type_id ##### -->
-<para>
-
-</para>
-
-@pad: 
-@id: 
-
-<!-- ##### STRUCT GstAudioSrcClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_FDSINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### SECTION ./tmpl/GstElement.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GstIdentity:control ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Short_Description ##### -->
-
-
-
-<!-- ##### SECTION ./tmpl/gstsink.sgml:Short_Description ##### -->
-The end point of a filter graph
-
-
-<!-- ##### FUNCTION gst_connection_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_FDSINK_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### STRUCT GstFakeSrcClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_OBJECT ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_thread_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_IS_SRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_bin_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_element_request_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@templ: 
-@Returns: 
-@temp: 
-
-<!-- ##### FUNCTION gst_pad_set_caps ##### -->
-<para>
-
-</para>
-
-@pad: 
-@caps: 
-
-<!-- ##### MACRO GST_IS_FAKESINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_STATE_IS_SET ##### -->
-<para>
-This macro checks to see if the given state is set.
-</para>
-
-@obj: Element to check for state.
-@flag: State to check for, must be a single bit in guint32.
 
 <!-- ##### FUNCTION gst_type_save_thyself ##### -->
 <para>
@@ -1431,364 +184,37 @@ This macro checks to see if the given state is set.
 @parent: 
 @Returns: 
 
-<!-- ##### MACRO GST_IS_SINESRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_sinesrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_BIN ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION plugin_load_all ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TEE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_fdsink_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_SRC_SET_FLAGS ##### -->
-<para>
-This macro sets the given flags.
-</para>
-
-@src: 
-@flag: Flag to set, can by any number of bits in guint32.
-@obj: GstSrc to set flag in.
-
-<!-- ##### MACRO GST_SRC_IS_ASYNC ##### -->
-<para>
-Query a GstSrc for the ASYNC flag
-</para>
-
-@obj: The GstSrc to query
-
-<!-- ##### MACRO GST_TYPE_IDENTITY ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_element_loopfunc_wrapper ##### -->
-<para>
-</para>
-
-@argc: 
-@argv: 
-@Returns: 
-
-<!-- ##### MACRO GST_TYPE_FDSRC ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_type_initialize ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_pad_get_ghost_parents ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
 <!-- ##### STRUCT GstAudioSrc ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### SECTION ./tmpl/gstsink.sgml:Title ##### -->
-GstSink
-
-
-<!-- ##### FUNCTION gst_type_get_sink_to_src ##### -->
-<para>
-
-</para>
-
-@sinkid: 
-@srcid: 
-@Returns: 
-
-<!-- ##### MACRO GST_TYPE_FAKESRC ##### -->
+<!-- ##### MACRO GST_TYPE_ELEMENT ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### MACRO GST_SINK_FLAG_LAST ##### -->
+<!-- ##### FUNCTION gst_audiosrc_push ##### -->
 <para>
 
 </para>
 
+@src: 
 
-<!-- ##### FUNCTION gst_queue_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### STRUCT GstSrc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_connection_push ##### -->
-<para>
-
-</para>
-
-@connection: 
-
-<!-- ##### MACRO GST_TYPE_CONNECTION ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_AUDIOSRC ##### -->
+<!-- ##### MACRO GST_IS_FAKESRC_CLASS ##### -->
 <para>
 
 </para>
 
 @obj: 
 
-<!-- ##### MACRO GST_BUFFER ##### -->
-<para>
-
-</para>
-
-@buf: 
-
-<!-- ##### STRUCT GstQueueClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ARG GstTypeFind:type ##### -->
-<para>
-Query the element for the current mime type
-</para>
-
-
-<!-- ##### SECTION ./tmpl/GstElement.sgml:Short_Description ##### -->
-
-
-
 <!-- ##### ARG GstFakeSrc:patern ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### FUNCTION gst_xml_new_from_memory ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@size: 
-@root: 
-@Returns: 
-
-<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Long_Description ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_fakesink_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_element_change_state ##### -->
-<para>
-
-</para>
-
-@element: 
-@state: 
-@Returns: 
-
-<!-- ##### MACRO GST_FAKESRC_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### FUNCTION gst_type_dump ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstAudioSinkClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IDENTITY_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### STRUCT GstFdSink ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ENUM GstPropsId ##### -->
-<para>
-
-</para>
-
-@GST_PROPS_END_ID_NUM: 
-@GST_PROPS_LIST_ID_NUM: 
-@GST_PROPS_INT_ID_NUM: 
-@GST_PROPS_INT_RANGE_ID_NUM: 
-@GST_PROPS_FOURCC_ID_NUM: 
-@GST_PROPS_BOOL_ID_NUM: 
-
-<!-- ##### FUNCTION gst_pad_eos_func ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-<!-- ##### STRUCT GstEsdSinkClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_esdsink_set_frequency ##### -->
-<para>
-
-</para>
-
-@esdsink: 
-@frequency: 
-
-<!-- ##### ARG GstAsyncDiskSrc:length ##### -->
-<para>
-Get the size of the current file.
-</para>
-
-
-<!-- ##### MACRO GST_FILTER_FLAG_LAST ##### -->
-<para>
-subclass use this to start their flag enumeration
-</para>
-
-
-<!-- ##### MACRO ERROR_OBJECT ##### -->
-<para>
-
-</para>
-
-@element: 
-@object: 
-@format: 
-@args...: 
-
-<!-- ##### ENUM GstSrcFlags ##### -->
-<para>
-Flags for the GstSrc element
-</para>
-
-@GST_SRC_ASYNC: Indicates that this src is asynchronous
-@GST_SRC_FLAG_LAST: subclasses can use this to number their flags
-
-<!-- ##### MACRO GST_TYPE_PIPELINE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_SINESRC ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_esdsink_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_audiosink_set_channels ##### -->
-<para>
-
-</para>
-
-@audiosink: 
-@channels: 
-
-<!-- ##### STRUCT GstSrcClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_thread_iterate ##### -->
-<para>
-
-</para>
-
-@thread: 
 
 <!-- ##### MACRO GST_AUDIOSINK ##### -->
 <para>
@@ -1797,323 +223,7 @@ Flags for the GstSrc element
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/plugin.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_BIN ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_TYPE_PAD ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_TEE ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_elementfactory_add_sink ##### -->
-<para>
-
-</para>
-
-@elementfactory: 
-@id: 
-
-<!-- ##### FUNCTION gst_fakesrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_tee_chain ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
-
-<!-- ##### TYPEDEF GstPropsListFactory[] ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_pad_get_type_id ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-<!-- ##### SECTION ./tmpl/gstsink.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_queue_chain ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
-
-<!-- ##### STRUCT GstAudioSink ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_audiosink_chain ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
-
-<!-- ##### ARG GstPad:active ##### -->
-<para>
-Indicates this pad is active
-</para>
-
-
-<!-- ##### MACRO GST_OBJECT_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### MACRO GST_THREAD ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_FAKESINK_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_CONNECTION_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-<!-- ##### STRUCT GstFdSrc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstTeeClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_element_save_thyself ##### -->
-<para>
-
-</para>
-
-@element: 
-@parent: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_sinesrc_push ##### -->
-<para>
-
-</para>
-
-@src: 
-
-<!-- ##### FUNCTION gst_audiosink_set_frequency ##### -->
-<para>
-
-</para>
-
-@audiosink: 
-@frequency: 
-
-<!-- ##### MACRO GST_TYPE_QUEUE ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_elementfactory_register ##### -->
-<para>
-
-</para>
-
-@elementfactory: 
-
-<!-- ##### FUNCTION gst_audiosink_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_META ##### -->
-<para>
-
-</para>
-
-@meta: 
-
-<!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### FUNCTION gst_identity_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_IS_ESDSINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_disksrc_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_FDSINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_pad_save_thyself ##### -->
-<para>
-
-</para>
-
-@pad: 
-@parent: 
-@Returns: 
-
-<!-- ##### STRUCT GstElementClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_TYPE_FILTER ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### MACRO GST_IS_SINESRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_AUDIOSRC_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_FDSRC ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### STRUCT GstObjectClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_pad_remove_ghost_parent ##### -->
-<para>
-
-</para>
-
-@pad: 
-@parent: 
-
-<!-- ##### SECTION ./tmpl/GstElement.sgml:Title ##### -->
-GstElement
-
-
-<!-- ##### MACRO GST_IS_ELEMENT_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### STRUCT GstFilterClass ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GstFakeSrc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SECTION ./tmpl/gstesdsink.sgml:See_Also ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_pad_set_pull_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@pull: 
-
-<!-- ##### STRUCT GstFakeSinkClass ##### -->
+<!-- ##### SECTION ./tmpl/gstsrc.sgml:See_Also ##### -->
 <para>
 
 </para>
@@ -2127,6 +237,424 @@ GstElement
 @esdsink: 
 @format: 
 
+<!-- ##### SIGNAL GstSrc::eos ##### -->
+<para>
+An eos signal is triggered whenever the GstSrc has reached the end of 
+the stream.
+
+</para>
+
+@gstsrc: the object which received the signal.
+@arg1: the object which received the signal
+
+<!-- ##### STRUCT GstIdentity ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_FDSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_thread_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_QUEUE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_disksrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_THREAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_DISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_fakesink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_tee_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_pad_get_directory ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/gstsrc.sgml:Title ##### -->
+GstSrc
+
+
+<!-- ##### MACRO DEBUG_ENTER_STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_ESDSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### SECTION ./tmpl/gstgetbits.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_SRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_TYPE_AUDIOSRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_sink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### FUNCTION plugin_load_all ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_SINESRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_IS_TEE_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_thread_main_loop ##### -->
+<para>
+
+</para>
+
+@arg: 
+
+<!-- ##### FUNCTION gst_pad_save_thyself ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+@Returns: 
+
+<!-- ##### MACRO GST_IS_AUDIOSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### STRUCT GstDiskSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:Title ##### -->
+GstConnection
+
+
+<!-- ##### MACRO GST_TYPE_FDSRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_SRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### ARG GstSineSrc:freq ##### -->
+<para>
+The frequency.
+</para>
+
+
+<!-- ##### ARG GstAsyncDiskSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_PIPELINE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstHttpSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_filter_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/GstElement.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gstesdsink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_sink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_TYPE_TEE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_queue_push ##### -->
+<para>
+
+</para>
+
+@connection: 
+
+<!-- ##### MACRO GST_FILTER_FLAG_LAST ##### -->
+<para>
+subclass use this to start their flag enumeration
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstElement.sgml:Title ##### -->
+GstElement
+
+
+<!-- ##### MACRO GST_BIN ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_type_get_sinks ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+<!-- ##### MACRO GST_BUFFER_POOL ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+<!-- ##### FUNCTION gst_audiosink_set_channels ##### -->
+<para>
+
+</para>
+
+@audiosink: 
+@channels: 
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:Short_Description ##### -->
+Generic connection between elements.
+
+
+<!-- ##### STRUCT GstSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstEsdSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFilterClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_FDSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO ERROR ##### -->
+<para>
+
+</para>
+
+@element: 
+@format: 
+@args...: 
+
+<!-- ##### MACRO GST_IS_FAKESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_FILTER ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:Long_Description ##### -->
+<para>
+The sink is the end of the filter graph. A typical sink would be an audio
+or a video card.
+
+</para>
+
+
+<!-- ##### FUNCTION gst_esdsink_set_channels ##### -->
+<para>
+
+</para>
+
+@esdsink: 
+@channels: 
+
+<!-- ##### FUNCTION gst_esdsink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_IS_BIN_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### SECTION ./tmpl/GstElement.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_ELEMENT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### STRUCT GstEsdSinkClass ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_ELEMENT_IS_MULTI_IN ##### -->
 <para>
 Query whether this object has multiple input pads.
@@ -2135,12 +663,251 @@ Query whether this object has multiple input pads.
 
 @obj: Element to query for multiple input pads.
 
-<!-- ##### MACRO GST_DISKSRC_CLASS ##### -->
+<!-- ##### FUNCTION gst_pad_pull_region ##### -->
+<para>
+
+</para>
+
+@pad: 
+@offset: 
+@size: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_fdsink_new_with_fd ##### -->
+<para>
+
+</para>
+
+@name: 
+@fd: 
+@Returns: 
+
+<!-- ##### MACRO DEBUG_NOPREFIX ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFdSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_ELEMENT_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### STRUCT GstSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstThreadClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstIdentity:control ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstPropsListFactory[] ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_pad_set_pull_function ##### -->
+<para>
+
+</para>
+
+@pad: 
+@pull: 
+
+<!-- ##### STRUCT GstSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_pipeline_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_IS_THREAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_TYPE_THREAD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstAsyncDiskSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_src_signal_eos ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### STRUCT GstHttpSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO DEBUG_SET_STRING ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+<!-- ##### STRUCT GstSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_THREAD_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_bin_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### ARG GstAsyncDiskSrc:offset ##### -->
+<para>
+Specify the current offset in the file.
+</para>
+
+
+<!-- ##### FUNCTION gst_queue_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO GST_THREAD_CLASS ##### -->
 <para>
 
 </para>
 
 @klass: 
+
+<!-- ##### MACRO GST_IS_FILTER_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_TYPE_AUDIOSINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_CONNECTION_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_connection_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO GST_FILTER_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### FUNCTION gst_identity_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_SINK ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### MACRO GST_PROPS_BOOL_ID ##### -->
 <para>
@@ -2148,7 +915,744 @@ Query whether this object has multiple input pads.
 </para>
 
 
-<!-- ##### MACRO GST_TYPE_FAKESINK ##### -->
+<!-- ##### MACRO GST_FDSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_TYPE_FAKESRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### FUNCTION gst_pad_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### STRUCT GstSineSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_AUDIOSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:Long_Description ##### -->
+<para>
+Filters take data in and spit data out. They are the main Element in a filter graph.
+Filters have zero or more inputs and zero or more outputs. Filters are connected
+together to form filter graphs. A GstFilter is the base class and is not very usefull
+on its own.
+</para>
+
+
+<!-- ##### FUNCTION gst_tee_new_pad ##### -->
+<para>
+
+</para>
+
+@tee: 
+@Returns: 
+
+<!-- ##### MACRO GST_OBJECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FDSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_DISKSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_FAKESINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### MACRO GST_TYPE_FDSINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/GstElement.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_FAKESINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_pad_set_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+
+<!-- ##### MACRO GST_AUDIOSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_IS_FILTER ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### STRUCT GstAudioSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_FILTER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_identity_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO GST_IS_AUDIOSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_audiosrc_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### STRUCT GstIdentityClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_PAD_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### STRUCT GstConnection ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstQueueClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_SINK_FLAG_LAST ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IDENTITY_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_IS_FDSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_fakesrc_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### FUNCTION gst_type_add_sink ##### -->
+<para>
+
+</para>
+
+@id: 
+@sink: 
+
+<!-- ##### MACRO GST_IS_IDENTITY_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### STRUCT GstFakeSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_SRC_FLAGS ##### -->
+<para>
+This macro returns the entire set of flags for the object.
+</para>
+
+@obj: GstSrc to return flags for.
+
+<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Title ##### -->
+GstGetbits
+
+
+<!-- ##### ARG GstAsyncDiskSrc:length ##### -->
+<para>
+Get the size of the current file.
+</para>
+
+
+<!-- ##### MACRO GST_FDSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### FUNCTION gst_fdsink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### SECTION ./tmpl/gstsrc.sgml:Short_Description ##### -->
+The start point of a filter graph
+
+
+<!-- ##### FUNCTION gst_src_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### FUNCTION gst_element_save_thyself ##### -->
+<para>
+
+</para>
+
+@element: 
+@parent: 
+@Returns: 
+
+<!-- ##### MACRO GST_IS_TEE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_type_get_sink_to_src ##### -->
+<para>
+
+</para>
+
+@sinkid: 
+@srcid: 
+@Returns: 
+
+<!-- ##### MACRO GST_IS_ESDSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_PROPS_INT_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstTeeClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_sinesrc_push ##### -->
+<para>
+
+</para>
+
+@src: 
+
+<!-- ##### MACRO GST_FAKESINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_type_get_srcs ##### -->
+<para>
+
+</para>
+
+@id: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_esdsink_set_frequency ##### -->
+<para>
+
+</para>
+
+@esdsink: 
+@frequency: 
+
+<!-- ##### MACRO GST_FAKESRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### SECTION ./tmpl/gstgetbits.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### ARG GstQueue:timeout ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstesdsink.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstBinClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_DISKSRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_TYPE_SRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_audiosrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_FAKESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_httpsrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_IS_HTTPSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_DISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_IDENTITY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_HTTPSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_ESDSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_TYPE_ASYNCDISKSRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_audiosink_sync_parms ##### -->
+<para>
+
+</para>
+
+@audiosink: 
+
+<!-- ##### FUNCTION gst_elementfactory_add_sink ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+@id: 
+
+<!-- ##### MACRO GST_IS_OBJECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_STATE_UNSET ##### -->
+<para>
+This macro unsets the given state on the element.
+</para>
+
+@obj: Element to unset state of.
+@flag: State to unset, can be any number of bits in guint32.
+
+<!-- ##### MACRO GST_IS_FAKESINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_QUEUE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### FUNCTION gst_pad_set_type_id ##### -->
+<para>
+
+</para>
+
+@pad: 
+@id: 
+
+<!-- ##### MACRO GST_TYPE_OBJECT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_src_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_add_ghost_parent ##### -->
+<para>
+
+</para>
+
+@pad: 
+@parent: 
+
+<!-- ##### FUNCTION gst_tee_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_audiosink_set_frequency ##### -->
+<para>
+
+</para>
+
+@audiosink: 
+@frequency: 
+
+<!-- ##### MACRO GST_TYPE_BIN ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstAudioSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_elementfactory_register ##### -->
+<para>
+
+</para>
+
+@elementfactory: 
+
+<!-- ##### MACRO GST_IS_QUEUE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_element_loopfunc_wrapper ##### -->
+<para>
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
+<!-- ##### MACRO GST_IS_SINESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_FDSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_sinesrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO ERROR_OBJECT ##### -->
+<para>
+
+</para>
+
+@element: 
+@object: 
+@format: 
+@args...: 
+
+<!-- ##### MACRO GST_IS_IDENTITY ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_AUDIOSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_TYPE_ESDSINK ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_FDSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_OBJECT_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_esdsink_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### FUNCTION gst_pad_eos_func ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_audiosink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_OBJECT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:Long_Description ##### -->
+<para>
+A connection is a bas class for a generic connection between
+elements. A connection is typically a bas class for queues.
+
+</para>
+
+
+<!-- ##### MACRO GST_BUFFER ##### -->
+<para>
+
+</para>
+
+@buf: 
+
+<!-- ##### MACRO GST_SRC_IS_ASYNC ##### -->
+<para>
+Query a GstSrc for the ASYNC flag
+</para>
+
+@obj: The GstSrc to query
+
+<!-- ##### MACRO GST_PIPELINE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_STATE_SET ##### -->
+<para>
+This macro sets the given state on the element.
+</para>
+
+@obj: Element to set state of.
+@flag: State to set, can be any number of bits in guint32.
+
+<!-- ##### FUNCTION gst_queue_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
+<!-- ##### MACRO GST_TYPE_QUEUE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_fakesink_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_TYPE_CONNECTION ##### -->
 <para>
 
 </para>
@@ -2161,124 +1665,64 @@ Query whether this object has multiple input pads.
 
 @obj: 
 
-<!-- ##### SECTION ./tmpl/plugin.sgml:Short_Description ##### -->
+<!-- ##### MACRO GST_TYPE_HTTPSRC ##### -->
+<para>
+
+</para>
 
 
+<!-- ##### MACRO GST_TYPE_PAD ##### -->
+<para>
 
-<!-- ##### FUNCTION gst_audiosrc_push ##### -->
+</para>
+
+
+<!-- ##### FUNCTION gst_src_push_region ##### -->
 <para>
 
 </para>
 
 @src: 
+@offset: 
+@size: 
 
-<!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
+<!-- ##### FUNCTION gst_fdsink_get_type ##### -->
 <para>
 
 </para>
 
-@klass: 
-
-<!-- ##### MACRO GST_IS_CONNECTION_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_FILTER ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IS_THREAD_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### MACRO GST_IDENTITY ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### STRUCT GstIdentity ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### FUNCTION gst_fdsink_new_with_fd ##### -->
-<para>
-
-</para>
-
-@name: 
-@fd: 
 @Returns: 
 
-<!-- ##### SECTION ./tmpl/gstfilter.sgml:Title ##### -->
-GstFilter
-
-
-<!-- ##### FUNCTION gst_elementfactory_add_src ##### -->
+<!-- ##### STRUCT GstPipelineClass ##### -->
 <para>
 
 </para>
 
-@elementfactory: 
-@id: 
 
-<!-- ##### MACRO GST_BUFFER_POOL ##### -->
+<!-- ##### MACRO GST_IS_AUDIOSRC ##### -->
 <para>
 
 </para>
 
-@buf: 
+@obj: 
 
-<!-- ##### FUNCTION gst_pad_get_caps ##### -->
+<!-- ##### MACRO DEBUG_ENTER ##### -->
 <para>
 
 </para>
 
-@pad: 
-@Returns: 
-
-<!-- ##### FUNCTION gst_audiosink_set_format ##### -->
-<para>
-
-</para>
-
-@audiosink: 
 @format: 
+@args...: 
 
-<!-- ##### MACRO GST_AUDIOSINK_CLASS ##### -->
+<!-- ##### SIGNAL GstXML::object-loaded ##### -->
 <para>
-
+Is trigered whenever the state of an element changes
 </para>
 
-@klass: 
+@gstelement: the object which received the signal.
+@arg1: the new state of the object
 
-<!-- ##### MACRO GST_IS_AUDIOSINK ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-<!-- ##### FUNCTION gst_filter_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-<!-- ##### MACRO GST_SRC ##### -->
+<!-- ##### MACRO GST_DISKSRC ##### -->
 <para>
 
 </para>
@@ -2295,19 +1739,137 @@ GstFilter
 @format: 
 @args...: 
 
-<!-- ##### MACRO GST_IS_CONNECTION ##### -->
+<!-- ##### MACRO GST_ELEMENT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### FUNCTION gst_fakesrc_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO GST_SINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### STRUCT GstAudioSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_type_add_src ##### -->
+<para>
+
+</para>
+
+@id: 
+@src: 
+
+<!-- ##### STRUCT GstFdSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_fakesrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_IS_PIPELINE ##### -->
 <para>
 
 </para>
 
 @obj: 
 
-<!-- ##### MACRO GST_IS_DISKSRC ##### -->
+<!-- ##### STRUCT GstFdSinkClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_SINESRC_CLASS ##### -->
 <para>
 
 </para>
 
 @obj: 
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:Short_Description ##### -->
+Take data in and spit data out
+
+
+<!-- ##### MACRO GST_SRC_ASYNC ##### -->
+<para>
+This macro checks to see if the GST_SRC_ASYNC flag is set.
+</para>
+
+@obj: GstSrc to check for flag in.
+
+<!-- ##### MACRO GST_TYPE_SINESRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_ASYNCDISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### STRUCT GstFdSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_CPU_FLAG_SSE ##### -->
+<para>
+A flag indicating that SSE instructions are supported.
+</para>
+
+
+<!-- ##### FUNCTION gst_esdsink_sync_parms ##### -->
+<para>
+
+</para>
+
+@esdsink: 
+
+<!-- ##### MACRO GST_IS_CONNECTION_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_connection_push ##### -->
+<para>
+
+</para>
+
+@connection: 
+
+<!-- ##### STRUCT GstDiskSrcClass ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### FUNCTION gst_audiosink_new ##### -->
 <para>
@@ -2317,10 +1879,499 @@ GstFilter
 @name: 
 @Returns: 
 
-<!-- ##### MACRO GST_TYPE_ESDSINK ##### -->
+<!-- ##### ARG GstAsyncDiskSrc:size ##### -->
 <para>
 
 </para>
+
+
+<!-- ##### FUNCTION gst_element_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_ESDSINK ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### STRUCT GstElementClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_SRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_type_initialize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstfilter.sgml:Title ##### -->
+GstFilter
+
+
+<!-- ##### MACRO GST_TEE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_IS_QUEUE_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_fdsrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### ENUM GstPropsId ##### -->
+<para>
+
+</para>
+
+@GST_PROPS_END_ID_NUM: 
+@GST_PROPS_LIST_ID_NUM: 
+@GST_PROPS_INT_ID_NUM: 
+@GST_PROPS_INT_RANGE_ID_NUM: 
+@GST_PROPS_FOURCC_ID_NUM: 
+@GST_PROPS_BOOL_ID_NUM: 
+
+<!-- ##### FUNCTION gst_pad_get_caps ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_pad_get_type_id ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_thread_iterate ##### -->
+<para>
+
+</para>
+
+@thread: 
+
+<!-- ##### ENUM GstCapsDefinition ##### -->
+<para>
+
+</para>
+
+@GST_CAPS_ALWAYS: 
+@GST_CAPS_MAYBE: 
+
+<!-- ##### STRUCT GstPadClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM GstSrcFlags ##### -->
+<para>
+Flags for the GstSrc element
+</para>
+
+@GST_SRC_ASYNC: Indicates that this src is asynchronous
+@GST_SRC_FLAG_LAST: subclasses can use this to number their flags
+
+<!-- ##### MACRO GST_HTTPSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Title ##### -->
+GstColorSpace
+
+
+<!-- ##### ENUM GstAsyncDiskSrcFlags ##### -->
+<para>
+<informaltable pgwide=1 frame="none" role="enum">
+<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
+<tbody>
+<row>
+<entry>GST_ASYNCDISKSRC_OPEN</entry>
+<entry>the asyncdisksrc is open for reading</entry>
+</row>
+
+</tbody></tgroup></informaltable>
+
+</para>
+
+@GST_ASYNCDISKSRC_OPEN: 
+@GST_ASYNCDISKSRC_FLAG_LAST: 
+
+<!-- ##### STRUCT GstAsyncDiskSrc ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_element_change_state ##### -->
+<para>
+
+</para>
+
+@element: 
+@state: 
+@Returns: 
+
+<!-- ##### STRUCT GstQueue ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_pad_get_ghost_parents ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+<!-- ##### STRUCT GstFilter ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_BIN ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION plugin_initialize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstAsyncDiskSrc:location ##### -->
+<para>
+Specify the location of the file to read.
+</para>
+
+
+<!-- ##### MACRO GST_TEE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### FUNCTION gst_queue_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gst_asyncdisksrc_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### MACRO GST_AUDIOSINK_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_SRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### SECTION ./tmpl/gstcolorspace.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_type_load_thyself ##### -->
+<para>
+
+</para>
+
+@parent: 
+@Returns: 
+
+<!-- ##### MACRO GST_PROPS_FOURCC_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_esdsink_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO DEBUG_LEAVE ##### -->
+<para>
+
+</para>
+
+@format: 
+@args...: 
+
+<!-- ##### FUNCTION gst_element_request_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@Returns: 
+@temp: 
+
+<!-- ##### FUNCTION gst_audiosink_set_format ##### -->
+<para>
+
+</para>
+
+@audiosink: 
+@format: 
+
+<!-- ##### MACRO GST_SINESRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:Short_Description ##### -->
+The end point of a filter graph
+
+
+<!-- ##### MACRO INFO ##### -->
+<para>
+
+</para>
+
+@cat: 
+@format: 
+@args...: 
+
+<!-- ##### MACRO GST_IS_ASYNCDISKSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### FUNCTION gst_sinesrc_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gst_plugin_init ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstFakeSink ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/plugin.sgml:Title ##### -->
+plugin
+
+
+<!-- ##### MACRO GST_STATE_IS_SET ##### -->
+<para>
+This macro checks to see if the given state is set.
+</para>
+
+@obj: Element to check for state.
+@flag: State to check for, must be a single bit in guint32.
+
+<!-- ##### FUNCTION gst_xml_new_from_memory ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@root: 
+@Returns: 
+
+<!-- ##### MACRO GST_IS_PAD ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_PROPS_LIST_ID ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstconnection.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION plugin_load ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### MACRO GST_IS_ELEMENT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### STRUCT GstFakeSrcClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gst_type_dump ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GST_IS_ASYNCDISKSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_SRC_SET_FLAGS ##### -->
+<para>
+This macro sets the given flags.
+</para>
+
+@src: 
+@flag: Flag to set, can by any number of bits in guint32.
+@obj: GstSrc to set flag in.
+
+<!-- ##### MACRO GST_BIN_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GST_ASYNCDISKSRC ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GST_HTTPSRC_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO DEBUG_LEAVE_STRING ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstPad:active ##### -->
+<para>
+Indicates this pad is active
+</para>
+
+
+<!-- ##### FUNCTION gst_filter_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION plugin_load_absolute ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### STRUCT GstTee ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsrc.sgml:Long_Description ##### -->
+<para>
+A GstSrc is the start of a filter graph. It typically is a file or an
+audio source. It provides data for the next element in the graph.
+
+</para>
+
+
+<!-- ##### STRUCT GstObjectClass ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstsink.sgml:Title ##### -->
+GstSink
 
 
 <!-- ##### MACRO GST_CPU_FLAG_MMX ##### -->

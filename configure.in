@@ -345,7 +345,7 @@ AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl Check for liblame
 AC_MSG_CHECKING(LAME library)
 AC_CHECK_LIB(mp3lame, lame_init, HAVE_LIBLAME=yes, HAVE_LIBLAME=no, )
-AC_CHECK_HEADER(lame.h, :, HAVE_LIBLAME=no)
+AC_CHECK_HEADER(lame/lame.h, :, HAVE_LIBLAME=no)
 
 dnl Check for libshout
 AC_MSG_CHECKING(Shout library)
