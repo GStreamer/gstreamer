@@ -1254,38 +1254,33 @@ gst_alloc_trace_flags_get_type
 </SECTION>
 
 <SECTION>
-<FILE>gsttype</FILE>
-<TITLE>GstType</TITLE>
-GstType
-gst_type_register
-gst_type_find_by_mime
-gst_type_find_by_ext
-gst_type_find_by_id
-gst_type_get_list
-<SUBSECTION Standard>
+<FILE>gsttypefind</FILE>
+<TITLE>Writing typefind functions</TITLE>
+GstTypeFind
+GstTypeFindFunction
+gst_type_find_peek
+gst_type_find_suggest
+gst_type_find_get_length
+gst_type_find_factory_register
 </SECTION>
 
 <SECTION>
-<FILE>gsttypefactory</FILE>
-<TITLE>GstTypeFactory</TITLE>
-GstTypeFactory
-GstTypeDefinition
-GstTypeFindFunc
-gst_type_factory_new
-gst_type_factory_find
+<FILE>gsttypefindfactory</FILE>
+<TITLE>GstTypeFindFactory</TITLE>
+GstTypeFindFactory
+GstTypeFindFactoryClass
+gst_type_find_factory_get_list
+gst_type_find_factory_get_extensions
+gst_type_find_factory_get_caps
+gst_type_find_factory_call_function
 <SUBSECTION Standard>
-GstTypeFind
-GstTypeFindClass
-GST_TYPE_FACTORY
-GST_IS_TYPE_FACTORY
-GST_TYPE_TYPE_FACTORY
-gst_type_factory_get_type
-GST_TYPE_FACTORY_CLASS
-GST_IS_TYPE_FACTORY_CLASS
-GST_IS_TYPE_FIND
-GST_IS_TYPE_FIND_CLASS
-GST_TYPE_FACTORY_GET_CLASS
-GstTypeFactoryClass
+GST_TYPE_FIND_FACTORY
+GST_IS_TYPE_FIND_FACTORY
+GST_TYPE_TYPE_FIND_FACTORY
+gst_type_find_factory_get_type
+GST_TYPE_FIND_FACTORY_CLASS
+GST_IS_TYPE_FIND_FACTORY_CLASS
+GST_TYPE_FIND_FACTORY_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -1325,8 +1320,6 @@ gst_caps_replace_sink
 gst_caps_sink
 gst_caps_set_name
 gst_caps_get_name
-gst_caps_set_type_id
-gst_caps_get_type_id
 gst_caps_set_mime
 gst_caps_get_mime
 gst_caps_set_props
