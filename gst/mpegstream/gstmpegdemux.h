@@ -32,28 +32,78 @@ extern "C" {
 
 
 #define GST_TYPE_MPEG_DEMUX \
-  (mpeg_demux_get_type())
+  (gst_mpeg_demux_get_type())
 #define GST_MPEG_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MPEG_DEMUX,GstMPEGDemux))
 #define GST_MPEG_DEMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MPEG_DEMUX,GstMPEGDemux))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MPEG_DEMUX,GstMPEGDemuxClass))
 #define GST_IS_MPEG_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MPEG_DEMUX))
 #define GST_IS_MPEG_DEMUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG_DEMUX))
 
+/* Supported kinds of streams. */
+enum {
+  GST_MPEG_DEMUX_STREAM_VIDEO = 1,
+  GST_MPEG_DEMUX_STREAM_AUDIO,
+  GST_MPEG_DEMUX_STREAM_PRIVATE,
+  GST_MPEG_DEMUX_STREAM_LAST,
+};
+
+/* Supported number of streams. */
+#define GST_MPEG_DEMUX_NUM_VIDEO_STREAMS 	16
+#define GST_MPEG_DEMUX_NUM_AUDIO_STREAMS 	32
+#define GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS 	2
+
+/* How to make stream type values. */
+#define GST_MPEG_DEMUX_STREAM_TYPE(kind, serial) \
+  (((kind) << 16) + (serial))
+
+/* How to retrieve the stream kind back from a type. */
+#define GST_MPEG_DEMUX_STREAM_KIND(type) ((type) >> 16)
+
+/* The recognized video types. */
+enum {
+  GST_MPEG_DEMUX_VIDEO_UNKNOWN =
+    GST_MPEG_DEMUX_STREAM_TYPE (GST_MPEG_DEMUX_STREAM_VIDEO, 1),
+  GST_MPEG_DEMUX_VIDEO_MPEG,
+  GST_MPEG_DEMUX_VIDEO_LAST,
+};
+
+/* The recognized audio types. */
+enum {
+  GST_MPEG_DEMUX_AUDIO_UNKNOWN =
+    GST_MPEG_DEMUX_STREAM_TYPE (GST_MPEG_DEMUX_STREAM_AUDIO, 1),
+  GST_MPEG_DEMUX_AUDIO_MPEG,
+  GST_MPEG_DEMUX_AUDIO_LAST,
+};
+
+/* The recognized private stream types. */
+enum {
+  GST_MPEG_DEMUX_PRIVATE_UNKNOWN =
+    GST_MPEG_DEMUX_STREAM_TYPE (GST_MPEG_DEMUX_STREAM_PRIVATE, 1),
+  GST_MPEG_DEMUX_PRIVATE_LAST,
+};
+
+typedef struct _GstMPEGStream GstMPEGStream;
+typedef struct _GstMPEGVideoStream GstMPEGVideoStream;
 typedef struct _GstMPEGDemux GstMPEGDemux;
 typedef struct _GstMPEGDemuxClass GstMPEGDemuxClass;
 
-typedef struct _GstMPEGStream GstMPEGStream;
-
+/* Information associated to a single MPEG stream. */
 struct _GstMPEGStream {
-  gint8 	 STD_buffer_bound_scale;
-  gint16 	 STD_buffer_size_bound;
+  gint		type;
+  gint		number;
   GstPad 	*pad;
-  guint64	 pts;
-  gint	 	 index_id;
-  gint		 size_bound;
+  gint	 	index_id;
+  gint		size_bound;
+};
+
+/* Extended structure to hold additional information for video
+   streams. */
+struct _GstMPEGVideoStream {
+  GstMPEGStream	parent;
+  gint		mpeg_version;
 };
 
 struct _GstMPEGDemux {
@@ -74,35 +124,69 @@ struct _GstMPEGDemux {
   gboolean 	 packet_rate_restriction;
   gint64	 total_size_bound;
 
-#define NUM_PRIVATE_1_STREAMS 	 8
-#define NUM_PCM_STREAMS 	 8
-#define NUM_SUBTITLE_STREAMS 	16
-#define NUM_VIDEO_STREAMS 	16
-#define NUM_AUDIO_STREAMS 	32
+  GstIndex	*index;
 
   /* stream output */
-  GstMPEGStream *private_1_stream[NUM_PRIVATE_1_STREAMS];	/* up to 8 ac3 audio tracks */
-  GstMPEGStream *pcm_stream[NUM_PCM_STREAMS];
-  GstMPEGStream *subtitle_stream[NUM_SUBTITLE_STREAMS];
-  GstMPEGStream *private_2_stream;
-  GstMPEGStream *video_stream[NUM_VIDEO_STREAMS];
-  GstMPEGStream *audio_stream[NUM_AUDIO_STREAMS];
+  GstMPEGStream *video_stream[GST_MPEG_DEMUX_NUM_VIDEO_STREAMS];
+  GstMPEGStream *audio_stream[GST_MPEG_DEMUX_NUM_AUDIO_STREAMS];
+  GstMPEGStream *private_stream[GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS];
 
-  /* The type of linear PCM samples associated to each channel. The
-     values are bit fields with the same format of the sample_info
-     field in the linear PCM header. */
-  guint8	 lpcm_sample_info[NUM_PCM_STREAMS];		
-
-  GstIndex	*index;
+  GstClockTimeDiff adjust;	 /* Added to all PTS timestamps. This element
+                                   keeps always this value in 0, but it is
+                                   there for the benefit of subclasses. */
 };
 
 struct _GstMPEGDemuxClass {
   GstMPEGParseClass parent_class;
+
+  GstPadTemplate *video_template;
+  GstPadTemplate *audio_template;
+  GstPadTemplate *private_template;
+
+  GstPad *	(*new_output_pad)	(GstMPEGDemux *mpeg_demux,
+                                         const gchar *name,
+                                         GstPadTemplate *temp);
+  void		(*init_stream)		(GstMPEGDemux *mpeg_demux,
+                                         gint type,
+                                         GstMPEGStream *str,
+                                         gint number,
+                                         const gchar *name,
+                                         GstPadTemplate *temp);
+
+  GstMPEGStream *
+  		(*get_video_stream)	(GstMPEGDemux *mpeg_demux,
+                                         guint8 stream_nr,
+                                         gint type,
+                                         const gpointer info);
+  GstMPEGStream *
+  		(*get_audio_stream)	(GstMPEGDemux *mpeg_demux,
+                                         guint8 stream_nr,
+                                         gint type,
+                                         const gpointer info);
+  GstMPEGStream *
+  		(*get_private_stream)	(GstMPEGDemux *mpeg_demux,
+                                         guint8 stream_nr,
+                                         gint type,
+                                         const gpointer info);
+
+  void		(*send_subbuffer)	 (GstMPEGDemux *mpeg_demux,
+                                          GstMPEGStream *outstream,
+                                          GstBuffer *buffer,
+                                          GstClockTime timestamp,
+                                          guint offset,
+                                          guint size);
+
+
+  void		(*process_private) 	(GstMPEGDemux *mpeg_demux,
+                                         GstBuffer *buffer,
+                                         guint stream_nr,
+                                         GstClockTime timestamp,
+                                         guint headerlen, guint datalen);
 };
 
-GType gst_mpeg_demux_get_type(void);
+GType		gst_mpeg_demux_get_type		(void);
 
-gboolean gst_mpeg_demux_plugin_init 	(GstPlugin *plugin);
+gboolean	gst_mpeg_demux_plugin_init 	(GstPlugin *plugin);
 
 #ifdef __cplusplus
 }

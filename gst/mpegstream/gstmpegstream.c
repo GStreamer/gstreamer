@@ -23,6 +23,7 @@
 #endif
 #include "gstmpegparse.h"
 #include "gstmpegdemux.h"
+#include "gstdvddemux.h"
 #include "gstrfc2250enc.h"
 
 static gboolean
@@ -38,6 +39,7 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_mpeg_parse_plugin_init (plugin) ||
       !gst_mpeg_demux_plugin_init (plugin) ||
+      !gst_dvd_demux_plugin_init (plugin) ||
       !gst_rfc2250_enc_plugin_init (plugin))
     return FALSE;
 
