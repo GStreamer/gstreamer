@@ -47,6 +47,7 @@ enum
 {
   ARG_0,
   ARG_LOCATION,
+  ARG_DEVICE,
   ARG_TRACK,
   ARG_BYTESPERREAD,
   ARG_OFFSET,
@@ -145,6 +146,10 @@ gst_vcdsrc_class_init (GstVCDSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "Location",
+          "CD device location (deprecated; use device)",
+          NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_DEVICE,
+      g_param_spec_string ("device", "Device",
           "CD device location", NULL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_TRACK,
       g_param_spec_int ("track", "Track",
@@ -211,12 +216,12 @@ gst_vcdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
   src = GST_VCDSRC (object);
 
   switch (prop_id) {
+    case ARG_DEVICE:
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
 /*      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
-      if (src->device)
-        g_free (src->device);
+      g_free (src->device);
       /* clear the filename if we get a NULL (is that possible?) */
       if (g_value_get_string (value) == NULL)
         src->device = NULL;
@@ -251,6 +256,7 @@ gst_vcdsrc_get_property (GObject * object, guint prop_id, GValue * value,
   src = GST_VCDSRC (object);
 
   switch (prop_id) {
+    case ARG_DEVICE:
     case ARG_LOCATION:
       g_value_set_string (value, src->device);
       break;
