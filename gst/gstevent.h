@@ -184,6 +184,8 @@ struct _GstEvent {
       GstCaps		*caps;
     } caps;
   } event_data;
+
+  GST_STRUCT_PADDING
 };
 
 void 		_gst_event_initialize 		(void);

@@ -57,6 +57,8 @@ struct _GstPlugin {
   gpointer 	 manager;		/* managing registry */
   GModule 	*module;		/* contains the module if the plugin is loaded */
   gboolean	 init_called;		/* if the init function has been called */
+
+  GST_STRUCT_PADDING
 };
 
 /* Initialiser function: returns TRUE if plugin initialised successfully */

@@ -58,6 +58,10 @@ typedef enum {
   GST_RESULT_NOT_IMPL
 } GstResult;
 
+#define GST_STRUCT_PADDING  gpointer _gst_reserved[4];
+#define GST_CLASS_PADDING   gpointer _gst_reserved[4];
+#define GST_OBJECT_PADDING  gpointer _gst_reserved[4];
+
 G_END_DECLS
 
 #endif /* __GST_TYPES_H__ */

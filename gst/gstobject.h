@@ -76,6 +76,8 @@ struct _GstObject {
   GstObject 	*parent;
 
   guint32 	flags;
+
+  GST_OBJECT_PADDING
 };
 
 /* signal_object is used to signal to the whole class */
@@ -97,7 +99,7 @@ struct _GstObjectClass {
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
 
-  gpointer	dummy[4];
+  GST_CLASS_PADDING
 };
 
 #define GST_FLAGS(obj)			(GST_OBJECT_CAST (obj)->flags)

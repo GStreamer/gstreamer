@@ -168,7 +168,7 @@ struct _GstIndex {
   GHashTable		*writers;
   gint			 last_id;
 
-  gpointer		 dummy[8];
+  GST_OBJECT_PADDING
 };
 
 struct _GstIndexClass {
@@ -189,7 +189,7 @@ struct _GstIndexClass {
   /* signals */
   void		(*entry_added)		(GstIndex *index, GstIndexEntry *entry);
 
-  gpointer		 dummy[8];
+  GST_CLASS_PADDING;
 };
 
 GType			gst_index_get_type		(void);
@@ -251,10 +251,14 @@ struct _GstIndexFactory {
 	    
   gchar *longdesc;            /* long description of the index (well, don't overdo it..) */
   GType type;                 /* unique GType of the index */
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstIndexFactoryClass {
   GstPluginFeatureClass parent; 
+
+  GST_CLASS_PADDING
 };
 
 GType 			gst_index_factory_get_type 	(void);

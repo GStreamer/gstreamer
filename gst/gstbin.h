@@ -82,7 +82,7 @@ struct _GstBin {
   gpointer	            pre_iterate_data;
   gpointer	            post_iterate_data;
 
-  gpointer	 dummy[8];
+  GST_OBJECT_PADDING
 };
 
 struct _GstBinClass {
@@ -101,7 +101,7 @@ struct _GstBinClass {
   void		(*element_added)	(GstBin *bin, GstElement *child);
   void		(*element_removed)	(GstBin *bin, GstElement *child);
 
-  gpointer	 dummy[8];
+  GST_CLASS_PADDING
 };
 
 GType		gst_bin_get_type		(void);

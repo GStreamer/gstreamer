@@ -65,7 +65,7 @@ struct _GstThread {
   GMutex 	*lock;			/* thread lock/condititon pairs */
   GCond 	*cond;			/* used to control the thread */
 
-  gpointer 	 dummy[8];
+  GST_OBJECT_PADDING
 };
 
 struct _GstThreadClass {
@@ -74,7 +74,7 @@ struct _GstThreadClass {
   /* signals */
   void	(*shutdown)	(GstThread *thread);
 
-  gpointer 	 dummy[8];
+  GST_CLASS_PADDING
 };
 
 GType 	gst_thread_get_type	(void);

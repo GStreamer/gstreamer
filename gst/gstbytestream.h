@@ -47,6 +47,8 @@ struct _GstByteStream {
 
   /* if we are in the seek state (waiting for DISCONT) */
   gboolean	 in_seek;
+
+  GST_OBJECT_PADDING
 };
 
 GstByteStream*		gst_bytestream_new		(GstPad *pad);

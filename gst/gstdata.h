@@ -26,6 +26,7 @@
 
 #include <glib-object.h>
 #include <gst/gstatomic.h>
+#include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
 
@@ -73,6 +74,8 @@ struct _GstData {
   /* utility function pointers, can override default */
   GstDataFreeFunction 	 free;		/* free the data */
   GstDataCopyFunction 	 copy;		/* copy the data */
+
+  GST_STRUCT_PADDING
 };
 
 /* function used by subclasses only */

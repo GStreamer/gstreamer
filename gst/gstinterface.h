@@ -52,6 +52,8 @@ typedef struct _GstInterfaceClass {
   /* virtual functions */
   gboolean (* supported) (GstInterface *iface,
 			  GType         iface_type);
+
+  GST_CLASS_PADDING
 } GstInterfaceClass;
 
 #define GST_INTERFACE_CHECK_INSTANCE_CAST(obj, type, cast_t) \

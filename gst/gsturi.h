@@ -49,10 +49,14 @@ struct _GstURIHandler {
   gchar *longdesc;         /* description of the uri */
   gchar *element;          /* The element that can handle this uri */
   gchar *property;         /* The property on the element to set the uri */
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstURIHandlerClass {
   GstPluginFeatureClass parent;
+
+  GST_CLASS_PADDING
 };
 
 GType			gst_uri_handler_get_type	(void);

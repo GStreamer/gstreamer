@@ -85,6 +85,8 @@ struct _GstQueue {
 
   GTimeVal *timeval;	/* the timeout for the queue locking */
   GAsyncQueue *events;	/* upstream events get decoupled here */
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstQueueClass {
@@ -92,6 +94,8 @@ struct _GstQueueClass {
 
   /* signal callbacks */
   void (*full)		(GstQueue *queue);
+
+  GST_CLASS_PADDING
 };
 
 GType gst_queue_get_type (void);

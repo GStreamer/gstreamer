@@ -137,7 +137,7 @@ struct _GstClock {
   GCond		*active_cond;
   gboolean	 stats;
 
-  gpointer 	 dummy[4];
+  GST_OBJECT_PADDING
 };
 
 struct _GstClockClass {
@@ -158,6 +158,8 @@ struct _GstClockClass {
   GstClockEntryStatus   (*wait_async)           (GstClock *clock, GstClockEntry *entry);
   void                  (*unschedule)        	(GstClock *clock, GstClockEntry *entry);
   void                  (*unlock)            	(GstClock *clock, GstClockEntry *entry);
+
+  GST_CLASS_PADDING
 };
 
 GType           	gst_clock_get_type 		(void);

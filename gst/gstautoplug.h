@@ -54,6 +54,8 @@ typedef enum {
 
 struct _GstAutoplug {
   GstObject object;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstAutoplugClass {
@@ -65,6 +67,8 @@ struct _GstAutoplugClass {
   /* perform the autoplugging */
   GstElement* (*autoplug_to_caps) (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *sinkcaps, va_list args);
   GstElement* (*autoplug_to_renderers) (GstAutoplug *autoplug, GstCaps *srccaps, GstElement *target, va_list args);
+
+  GST_CLASS_PADDING
 };
 
 

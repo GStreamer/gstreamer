@@ -50,6 +50,8 @@ struct _GstTypeFind {
   GstByteStream *bs;
 
   GstCaps 	*caps;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstTypeFindClass {
@@ -58,6 +60,8 @@ struct _GstTypeFindClass {
   /* signals */
   void 			(*have_type) 	(GstElement *element,
 					 GstCaps    *caps);
+
+  GST_CLASS_PADDING
 };
 
 GType gst_type_find_get_type (void);

@@ -45,6 +45,8 @@ struct _GstType {
   gchar *exts;			/* space-delimited list of extensions */
 
   GSList *factories;		/* factories providing this type */
+
+  GST_STRUCT_PADDING
 };
 
 struct _GstTypeDefinition {
@@ -68,13 +70,13 @@ struct _GstTypeFactory {
   gchar 		*exts;
   GstTypeFindFunc 	 typefindfunc;
 
-  gpointer		 dummy[8];
+  GST_OBJECT_PADDING
 };
 
 struct _GstTypeFactoryClass {
   GstPluginFeatureClass parent;
 
-  gpointer		dummy[8];
+  GST_CLASS_PADDING
 };
 
 

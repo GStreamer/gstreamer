@@ -166,7 +166,7 @@ struct _GstElement {
   GAsyncQueue		*prop_value_queue;
   GMutex		*property_mutex;
 
-  gpointer		dummy[8];
+  GST_OBJECT_PADDING
 };
 
 struct _GstElementClass {
@@ -218,8 +218,7 @@ struct _GstElementClass {
   GstIndex*		(*get_index)		(GstElement *element);
   void			(*set_index)		(GstElement *element, GstIndex *index);
 
-  /* padding */
-  gpointer		dummy[8];
+  GST_CLASS_PADDING
 };
 
 void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplate *templ);
@@ -360,6 +359,8 @@ struct _GstElementDetails {
   gchar *version;               /* version of the element */
   gchar *author;                /* who wrote this thing? */
   gchar *copyright;             /* copyright details (year, etc.) */
+
+  GST_STRUCT_PADDING
 };
 
 #define GST_TYPE_ELEMENT_FACTORY 		(gst_element_factory_get_type())
@@ -386,10 +387,14 @@ struct _GstElementFactory {
 
   GList *padtemplates;
   guint16 numpadtemplates;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstElementFactoryClass {
   GstPluginFeatureClass parent_class;
+
+  GST_CLASS_PADDING
 };
 
 GType 			gst_element_factory_get_type 		(void);

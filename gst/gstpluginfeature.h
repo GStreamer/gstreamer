@@ -25,6 +25,7 @@
 #define __GST_PLUGIN_FEATURE_H__
 
 #include <glib-object.h>
+#include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
 
@@ -48,12 +49,16 @@ struct _GstPluginFeature {
 
   /* --- private --- */
   gpointer 	 manager;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstPluginFeatureClass {
   GObjectClass	parent_class;
 
   void          (*unload_thyself)      (GstPluginFeature *feature);
+
+  GST_CLASS_PADDING
 };
 
 typedef struct {

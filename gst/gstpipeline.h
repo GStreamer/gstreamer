@@ -43,13 +43,13 @@ typedef struct _GstPipelineClass GstPipelineClass;
 struct _GstPipeline {
   GstBin 	 bin;
 
-  gpointer	 dummy[32];
+  GST_OBJECT_PADDING
 };
 
 struct _GstPipelineClass {
   GstBinClass parent_class;
 
-  gpointer	 dummy[32];
+  GST_CLASS_PADDING
 };
 
 GType		gst_pipeline_get_type		(void);

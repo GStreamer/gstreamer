@@ -172,10 +172,14 @@ struct _GstPad {
   gpointer 		element_private;
 
   GstPadTemplate 	*padtemplate;	/* the template for this pad */
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstPadClass {
   GstObjectClass parent_class;
+
+  GST_CLASS_PADDING
 };
 
 struct _GstRealPad {
@@ -216,6 +220,8 @@ struct _GstRealPad {
   GstPadBufferPoolFunction 	 bufferpoolfunc;
 
   GstProbeDispatcher 		 probedisp;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstRealPadClass {
@@ -226,16 +232,22 @@ struct _GstRealPadClass {
 
   void 		(*linked)		(GstPad *pad, GstPad *peer);
   void 		(*unlinked)		(GstPad *pad, GstPad *peer);
+
+  GST_CLASS_PADDING
 };
 
 struct _GstGhostPad {
   GstPad pad;
 
   GstRealPad *realpad;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstGhostPadClass {
   GstPadClass parent_class;
+
+  GST_CLASS_PADDING
 };
 
 
@@ -321,6 +333,8 @@ struct _GstPadTemplate {
   GstPadDirection  direction;
   GstPadPresence   presence;
   GstCaps	  *caps;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstPadTemplateClass {
@@ -328,6 +342,8 @@ struct _GstPadTemplateClass {
 
   /* signal callbacks */
   void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
+
+  GST_CLASS_PADDING
 };
 
 #ifdef G_HAVE_ISO_VARARGS
