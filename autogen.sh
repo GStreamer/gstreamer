@@ -54,22 +54,13 @@ if test -z "$*"; then
 fi
 
 libtoolize --copy --force
-aclocal $ACLOCAL_FLAGS
+aclocal $ACLOCAL_FLAGS || {
+	echo "aclocal failed - check that all needed development files are present on system"
+	exit 1
+}
 autoheader
 autoconf
 automake --add-missing
-
-if [ "x$1" = "x--autogen-recurse" ];then
-  exit	# the rest will happen later
-fi
-
-#for dir in `find * -name autogen.sh -print | grep -v '^autogen.sh$' | \
-#            sed 's/autogen.sh$//'`;do
-#  echo "Recursively running autogen.sh in $dir"
-#  pushd $dir > /dev/null
-#  ./autogen.sh --autogen-recurse "$@"
-#  popd > /dev/null
-#done
 
 # now remove the cache, because it can be considered dangerous in this case
 rm -f config.cache

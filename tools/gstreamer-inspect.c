@@ -22,6 +22,13 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
       printf("Integer range: %d - %d\n",prop->data.int_range_data.min,
              prop->data.int_range_data.max);
       break;
+    case GST_PROPS_FLOAT_ID:
+      printf("Float: %f\n",prop->data.float_data);
+      break;
+    case GST_PROPS_FLOAT_RANGE_ID:
+      printf("Float range: %f - %f\n",prop->data.float_range_data.min,
+             prop->data.float_range_data.max);
+      break;
     case GST_PROPS_BOOL_ID:
       printf("Boolean: %s\n",prop->data.bool_data ? "TRUE" : "FALSE");
       break;
@@ -78,6 +85,7 @@ print_element_info (GstElementFactory *factory)
   gint num_args,i;
   GList *children;
   GstElement *child;
+  gboolean have_flags;
 
   element = gst_elementfactory_create(factory,"element");
   if (!element) {
@@ -146,22 +154,26 @@ print_element_info (GstElementFactory *factory)
   } else
     printf("  none\n");
 
+  have_flags = FALSE;
 
-
-  printf("\nElement Flags:\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_COMPLEX))
+  printf("Element Flags:\n");
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_COMPLEX)) {
     printf("  GST_ELEMENT_COMPLEX\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_DECOUPLED))
+    have_flags = TRUE;
+  }
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_DECOUPLED)) {
     printf("  GST_ELEMENT_DECOUPLED\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_THREAD_SUGGESTED))
+    have_flags = TRUE;
+  }
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_THREAD_SUGGESTED)) {
     printf("  GST_ELEMENT_THREADSUGGESTED\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_NO_SEEK))
+    have_flags = TRUE;
+  }
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_NO_SEEK)) {
     printf("  GST_ELEMENT_NO_SEEK\n");
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_NO_ENTRY))
-    printf("  GST_ELEMENT_NO_ENTRY\n");
-  if (! GST_FLAG_IS_SET(element, GST_ELEMENT_COMPLEX | GST_ELEMENT_DECOUPLED |
-                                 GST_ELEMENT_THREAD_SUGGESTED | GST_ELEMENT_NO_SEEK |
-                                 GST_ELEMENT_NO_ENTRY))
+    have_flags = TRUE;
+  }
+  if (!have_flags)
     printf("  no flags set\n");
 
 
@@ -247,7 +259,6 @@ print_element_info (GstElementFactory *factory)
   printf("\nElement Arguments:\n");
   args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
   for (i=0;i<num_args;i++) {
-    gtk_object_getv(GTK_OBJECT(element), 1, &args[i]);
 
 // FIXME should say whether it's read-only or not
 
@@ -278,7 +289,7 @@ print_element_info (GstElementFactory *factory)
         else if (args[i].type == GTK_TYPE_WIDGET)
           printf("GtkWidget");
         else
-          printf("unknown");
+          printf("unknown %d", args[i].type);
         break;
     }
     printf("\n");

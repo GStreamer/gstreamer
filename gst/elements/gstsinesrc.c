@@ -54,9 +54,35 @@ enum {
   ARG_BUFFER_SIZE,
 };
 
+static GstPadTemplate*
+sinesrc_src_factory (void)
+{
+  return 
+    gst_padtemplate_new (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    gst_caps_new (
+    "sinesrc_src",
+      "audio/raw",
+      gst_props_new (
+      "format",   GST_PROPS_STRING ("int"),
+        "law",     GST_PROPS_INT (0),
+        "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
+        "signed",   GST_PROPS_BOOLEAN (TRUE),
+        "width",   GST_PROPS_INT (16),
+        "depth",    GST_PROPS_INT (16),
+      "rate",     GST_PROPS_INT_RANGE (8000, 48000),
+      "channels", GST_PROPS_INT (1),
+    NULL)),
+  NULL);
+}
+
+static GstPadTemplate *src_temp;
 
 static void gst_sinesrc_class_init(GstSineSrcClass *klass);
 static void gst_sinesrc_init(GstSineSrc *src);
+static GstPadNegotiateReturn gst_sinesrc_negotiate (GstPad *pad, GstCaps **caps, gpointer *data); 
 static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 //static gboolean gst_sinesrc_change_state(GstElement *element,
@@ -66,7 +92,7 @@ static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
 static void gst_sinesrc_populate_sinetable(GstSineSrc *src);
 static inline void gst_sinesrc_update_table_inc(GstSineSrc *src);
 static inline void gst_sinesrc_update_vol_scale(GstSineSrc *src);
-void gst_sinesrc_sync_parms(GstSineSrc *src);
+void gst_sinesrc_force_caps(GstSineSrc *src);
 
 static GstBuffer * gst_sinesrc_get(GstPad *pad);
 
@@ -122,29 +148,48 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
 //  gstelement_class->change_state = gst_sinesrc_change_state;
 }
 
-static void gst_sinesrc_init(GstSineSrc *src) {
-	
-  src->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_pad_set_get_function(src->srcpad, gst_sinesrc_get);
+static void 
+gst_sinesrc_init(GstSineSrc *src) {
+
+  src->srcpad = gst_pad_new_from_template (src_temp, "src");
+
   gst_element_add_pad(GST_ELEMENT(src), src->srcpad);
+  gst_pad_set_negotiate_function (src->srcpad, gst_sinesrc_negotiate);
+  
+  gst_pad_set_get_function(src->srcpad, gst_sinesrc_get);
 
   src->volume = 1.0;
   gst_sinesrc_update_vol_scale(src);
 
   src->format = 16;
   src->samplerate = 44100;
-  src->freq = 100.0;
-  src->newcaps = FALSE;
+  src->freq = 440.0;
+  src->newcaps = TRUE;
   
   src->table_pos = 0.0;
   src->table_size = 1024;
   gst_sinesrc_populate_sinetable(src);
   gst_sinesrc_update_table_inc(src);
-  gst_sinesrc_sync_parms(src);
   src->buffer_size=1024;
   
   src->seq = 0;
 
+}
+
+static GstPadNegotiateReturn 
+gst_sinesrc_negotiate (GstPad *pad, GstCaps **caps, gpointer *data) 
+{
+  GstSineSrc *src;
+
+  if (*caps) {
+    g_return_val_if_fail (pad != NULL, GST_PAD_NEGOTIATE_FAIL);
+    src = GST_SINESRC(gst_pad_get_parent (pad));
+    src->samplerate = gst_caps_get_int (*caps, "rate");
+    gst_sinesrc_update_table_inc(src);
+    return GST_PAD_NEGOTIATE_AGREE;
+  }
+
+  return GST_PAD_NEGOTIATE_FAIL;
 }
 
 static GstBuffer *
@@ -194,14 +239,14 @@ gst_sinesrc_get(GstPad *pad)
   }
 
   if (src->newcaps) {
-    src->newcaps = FALSE;
+    gst_sinesrc_force_caps(src);
   }
 
-  //g_print(">");
   return buf;
 }
 
-static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   GstSineSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
@@ -217,11 +262,11 @@ static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
       break;
     case ARG_FORMAT:
       src->format = GTK_VALUE_INT(*arg);
-      gst_sinesrc_sync_parms(src);
+      src->newcaps=TRUE;
       break;
     case ARG_SAMPLERATE:
       src->samplerate = GTK_VALUE_INT(*arg);
-      gst_sinesrc_sync_parms(src);
+      src->newcaps=TRUE;
       gst_sinesrc_update_table_inc(src);
       break;
     case ARG_FREQ: {
@@ -244,7 +289,8 @@ static void gst_sinesrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static void gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_sinesrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   GstSineSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
@@ -299,7 +345,8 @@ static gboolean gst_sinesrc_change_state(GstElement *element,
 }
 */
 
-static void gst_sinesrc_populate_sinetable(GstSineSrc *src)
+static void 
+gst_sinesrc_populate_sinetable(GstSineSrc *src)
 {
   gint i;
   gdouble pi2scaled = M_PI * 2 / src->table_size;
@@ -313,16 +360,51 @@ static void gst_sinesrc_populate_sinetable(GstSineSrc *src)
   src->table_data = table;
 }
 
-static inline void gst_sinesrc_update_table_inc(GstSineSrc *src)
+static inline void 
+gst_sinesrc_update_table_inc(GstSineSrc *src)
 {
   src->table_inc = src->table_size * src->freq / src->samplerate;
 }
 
-static inline void gst_sinesrc_update_vol_scale(GstSineSrc *src)
+static inline void 
+gst_sinesrc_update_vol_scale(GstSineSrc *src)
 {
   src->vol_scale = 32767 * src->volume;
 }
 
-void gst_sinesrc_sync_parms(GstSineSrc *src) {
-  src->newcaps = TRUE;
+void 
+gst_sinesrc_force_caps(GstSineSrc *src) {
+  GstCaps *caps;
+
+  if (!src->newcaps)
+    return;
+  
+  src->newcaps=FALSE;
+
+  caps = gst_caps_new (
+		    "sinesrc_src_caps",
+		    "audio/raw",
+		     gst_props_new (
+		           "format", 		GST_PROPS_STRING ("int"),
+    			     "law",     	GST_PROPS_INT (0),
+    			     "endianness",     	GST_PROPS_INT (G_BYTE_ORDER),
+    			     "signed",   	GST_PROPS_BOOLEAN (TRUE),
+    			     "width",   	GST_PROPS_INT (16),
+			     "depth", 		GST_PROPS_INT (16),
+			     "rate", 		GST_PROPS_INT (src->samplerate),
+			     "channels", 	GST_PROPS_INT (1),
+			     NULL
+			     )
+		    );
+  
+  gst_pad_set_caps (src->srcpad, caps);
+}
+
+gboolean 
+gst_sinesrc_factory_init (GstElementFactory *factory) 
+{
+  src_temp = sinesrc_src_factory();
+  gst_elementfactory_add_padtemplate (factory, src_temp);
+  
+  return TRUE;
 }

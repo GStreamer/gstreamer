@@ -1,8 +1,9 @@
 # FIXME FIXME
 
 if HAVE_GNOME
-GNOME_PROGS = spectrum wave mpeg2parse mp1parse videotest aviparse \
-                  mpeg2parse2 videotest2 video2mp1 dvshow dv2mp1 mpeg2parse3 mpeg2parse4
+GNOME_PROGS = spectrum wave mp1parse videotest aviparse \
+                  videotest2 video2mp1 dvshow dv2mp1 \
+                  mpeg2parse mpeg2parse2 mpeg2parse3
 else
 GNOME_PROGS =
 endif
@@ -11,7 +12,7 @@ noinst_PROGRAMS = qtest $(GNOME_PROGS) record mp3 teardown buffer mp3parse \
 		  mp3play ac3parse ac3play dvdcat fake cobin \
 		  vidcapture avi2mpg mp2tomp1 mp1tomp1 pipetest \
 		  vidcapture2 mp2toavi mp3tovorbis xmmstest \
-		  mp3mad
+		  mp3mad lat
 
 SUBDIRS = xml bindings
 

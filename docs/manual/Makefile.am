@@ -3,6 +3,7 @@ htmlname = index.html
 
 sgml_files = gstreamer-manual.sgml \
 	     advanced.sgml \
+	     autoplugging.sgml \
              bins.sgml \
              buffers.sgml \
              components.sgml \

@@ -86,6 +86,7 @@ struct _GstSineSrcClass {
 };
 
 GtkType gst_sinesrc_get_type(void);
+gboolean gst_sinesrc_factory_init (GstElementFactory *factory);
 
 #ifdef __cplusplus
 }

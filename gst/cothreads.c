@@ -36,6 +36,19 @@
 #include "gstarch.h"
 
 
+#define COTHREAD_STACKSIZE 16384
+#define COTHREAD_MAXTHREADS 128
+#define STACK_SIZE 0x200000
+
+
+struct _cothread_context {
+  cothread_state *threads[COTHREAD_MAXTHREADS];
+  int nthreads;
+  int current;
+  GHashTable *data;
+};
+
+
 pthread_key_t _cothread_key = -1;
 
 /* Disablig this define allows you to shut off a few checks in
@@ -78,7 +91,7 @@ cothread_init (void)
   ctx->threads[0]->argc = 0;
   ctx->threads[0]->argv = NULL;
   ctx->threads[0]->flags = COTHREAD_STARTED;
-  ctx->threads[0]->sp = (int *)CURRENT_STACK_FRAME;
+  ctx->threads[0]->sp = (void *)CURRENT_STACK_FRAME;
   ctx->threads[0]->pc = 0;
 
   // initialize the lock
@@ -99,26 +112,32 @@ cothread_init (void)
  *
  * Create a new cothread state in the given context
  *
- * Returns: the new cothread state
+ * Returns: the new cothread state or NULL on error
  */
 cothread_state*
 cothread_create (cothread_context *ctx) 
 {
   cothread_state *s;
 
+  if (ctx->nthreads == COTHREAD_MAXTHREADS) {
+    GST_DEBUG (0, "attempt to create > COTHREAD_MAXTHREADS\n");
+    return NULL;
+  }
   GST_DEBUG (0,"pthread_self() %ld\n",pthread_self());
   //if (0) {
   if (pthread_self() == 0) {	// FIXME uh, what does this test really do?
-    s = (cothread_state *)malloc(sizeof(int) * COTHREAD_STACKSIZE);
+    s = (cothread_state *)malloc(COTHREAD_STACKSIZE);
     GST_DEBUG (0,"new stack (case 1) at %p\n",s);
   } else {
-    char *sp = CURRENT_STACK_FRAME;
-    unsigned long *stack_end = (unsigned long *)((unsigned long)sp &
-      ~(STACK_SIZE - 1));
+    void *sp = CURRENT_STACK_FRAME;
+    // FIXME this may not be 64bit clean
+    //       could use casts to uintptr_t from inttypes.h
+    //       if only all platforms had inttypes.h
+    void *stack_end = (void *)((unsigned long)sp & ~(STACK_SIZE - 1));
     s = (cothread_state *)(stack_end + ((ctx->nthreads - 1) *
                            COTHREAD_STACKSIZE));
     GST_DEBUG (0,"new stack (case 2) at %p\n",s);
-    if (mmap((char *)s,COTHREAD_STACKSIZE*(sizeof(int)),
+    if (mmap((void *)s,COTHREAD_STACKSIZE,
              PROT_READ|PROT_WRITE|PROT_EXEC,MAP_FIXED|MAP_PRIVATE|MAP_ANON,
              -1,0) < 0) {
       perror("mmap'ing cothread stack space");
@@ -129,7 +148,7 @@ cothread_create (cothread_context *ctx)
   s->ctx = ctx;
   s->threadnum = ctx->nthreads;
   s->flags = 0;
-  s->sp = ((int *)s + COTHREAD_STACKSIZE);
+  s->sp = ((void *)s + COTHREAD_STACKSIZE);
   // is this needed anymore?
   s->top_sp = s->sp;
 
@@ -165,7 +184,7 @@ cothread_setfunc (cothread_state *thread,
   thread->func = func;
   thread->argc = argc;
   thread->argv = argv;
-  thread->pc = (int *)func;
+  thread->pc = (void *)func;
 }
 
 /**

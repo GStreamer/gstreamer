@@ -366,6 +366,15 @@ Get the value of the named property as a string.
 @name: the name of the property to get
 
 
+<!-- ##### MACRO gst_caps_get_float ##### -->
+<para>
+Get the value of the named property as a float.
+</para>
+
+@caps: the caps to query
+@name: the name of the property to get
+
+
 <!-- ##### FUNCTION gst_caps_save_thyself ##### -->
 <para>
 

@@ -52,12 +52,13 @@ enum {
 };
 
 
-static void 			gst_pipeline_class_init		(GstPipelineClass *klass);
-static void 			gst_pipeline_init		(GstPipeline *pipeline);
+static void			gst_pipeline_class_init		(GstPipelineClass *klass);
+static void			gst_pipeline_init		(GstPipeline *pipeline);
 
-static GstElementStateReturn 	gst_pipeline_change_state	(GstElement *element);
+static GstElementStateReturn	gst_pipeline_change_state	(GstElement *element);
 
-static void 			gst_pipeline_prepare		(GstPipeline *pipeline);
+static void			gst_pipeline_prepare		(GstPipeline *pipeline);
+
 
 static GstBinClass *parent_class = NULL;
 //static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 };
@@ -83,7 +84,7 @@ gst_pipeline_get_type (void) {
 }
 
 static void
-gst_pipeline_class_init (GstPipelineClass *klass) 
+gst_pipeline_class_init (GstPipelineClass *klass)
 {
   GstElementClass *gstelement_class;
 
@@ -94,8 +95,8 @@ gst_pipeline_class_init (GstPipelineClass *klass)
   gstelement_class->change_state = gst_pipeline_change_state;
 }
 
-static void 
-gst_pipeline_init (GstPipeline *pipeline) 
+static void
+gst_pipeline_init (GstPipeline *pipeline)
 {
   // we're a manager by default
   GST_FLAG_SET (pipeline, GST_BIN_FLAG_MANAGER);
@@ -123,17 +124,17 @@ gst_pipeline_new (const guchar *name)
 static void 
 gst_pipeline_prepare (GstPipeline *pipeline) 
 {
-  GST_DEBUG (GST_CAT_PIPELINE,"preparing pipeline \"%s\" for playing (DEPRACATED!!)\n", 
-		  GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
+  GST_DEBUG (GST_CAT_PIPELINE,"preparing pipeline \"%s\" for playing (DEPRACATED!!)\n",
+             GST_ELEMENT_NAME(GST_ELEMENT(pipeline)));
 }
 
-static GstElementStateReturn 
-gst_pipeline_change_state (GstElement *element) 
+static GstElementStateReturn
+gst_pipeline_change_state (GstElement *element)
 {
   GstPipeline *pipeline;
 
   g_return_val_if_fail (GST_IS_PIPELINE (element), FALSE);
-  
+
   pipeline = GST_PIPELINE (element);
 
   switch (GST_STATE_TRANSITION (pipeline)) {
@@ -144,13 +145,12 @@ gst_pipeline_change_state (GstElement *element)
     default:
       break;
   }
-    
+
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-  
+
   return GST_STATE_SUCCESS;
 }
-
 
 /**
  * gst_pipeline_iterate:
@@ -158,8 +158,8 @@ gst_pipeline_change_state (GstElement *element)
  *
  * Cause the pipeline's contents to be run through one full 'iteration'.
  */
-void 
-gst_pipeline_iterate (GstPipeline *pipeline) 
+void
+gst_pipeline_iterate (GstPipeline *pipeline)
 {
   g_return_if_fail (pipeline != NULL);
   g_return_if_fail (GST_IS_PIPELINE(pipeline));

@@ -149,8 +149,6 @@ main(int argc, char *argv[])
   
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
-  playing = TRUE;
-
   while (gst_bin_iterate(GST_BIN(bin)));
 
   gst_element_set_state (bin, GST_STATE_NULL);

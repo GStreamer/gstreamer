@@ -90,6 +90,7 @@ gboolean 	gst_props_check_compatibility 	(GstProps *fromprops, GstProps *toprops
 GstProps*	gst_props_set			(GstProps *props, const gchar *name, ...);
 
 gint 		gst_props_get_int		(GstProps *props, const gchar *name);
+gfloat 		gst_props_get_float		(GstProps *props, const gchar *name);
 gulong		gst_props_get_fourcc_int	(GstProps *props, const gchar *name);
 gboolean	gst_props_get_boolean		(GstProps *props, const gchar *name);
 const gchar*	gst_props_get_string		(GstProps *props, const gchar *name);

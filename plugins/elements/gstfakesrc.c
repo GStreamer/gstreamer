@@ -50,6 +50,7 @@ enum {
   ARG_PATTERN,
   ARG_NUM_BUFFERS,
   ARG_EOS,
+  ARG_SILENT
 };
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
@@ -127,6 +128,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                            GTK_ARG_READWRITE, ARG_NUM_BUFFERS);
   gtk_object_add_arg_type ("GstFakeSrc::eos", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, ARG_EOS);
+  gtk_object_add_arg_type ("GstFakeSrc::silent", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_SILENT);
 
   gtkobject_class->set_arg = gst_fakesrc_set_arg;
   gtkobject_class->get_arg = gst_fakesrc_get_arg;
@@ -134,7 +137,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
     gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstFakeSrcClass, handoff),
-                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
 
   gtk_object_class_add_signals (gtkobject_class, gst_fakesrc_signals,
                                 LAST_SIGNAL);
@@ -161,6 +165,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
     gst_pad_set_get_function(pad,gst_fakesrc_get);
 
   fakesrc->num_buffers = -1;
+  fakesrc->silent = FALSE;
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
 }
@@ -224,6 +229,9 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
       src->eos = GTK_VALUE_BOOL (*arg);
 GST_INFO (0, "will EOS on next buffer");
       break;
+    case ARG_SILENT:
+      src->silent = GTK_VALUE_BOOL (*arg);
+      break;
     default:
       break;
   }
@@ -257,6 +265,9 @@ gst_fakesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
       break;
     case ARG_EOS:
       GTK_VALUE_BOOL (*arg) = src->eos;
+    case ARG_SILENT:
+      GTK_VALUE_BOOL (*arg) = src->silent;
+      break;
     default:
       arg->type = GTK_TYPE_INVALID;
       break;
@@ -299,11 +310,12 @@ gst_fakesrc_get(GstPad *pad)
     return NULL;
   }
 
-  g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
+  if (!src->silent)
+    g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
   buf = gst_buffer_new();
 
   gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
-                                  src);
+                   buf);
 
   return buf;
 }
@@ -349,10 +361,11 @@ gst_fakesrc_loop(GstElement *element)
       }
 
       buf = gst_buffer_new();
-      g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
+      if (!src->silent)
+        g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
 
       gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
-                                  src);
+                       buf);
       gst_pad_push (pad, buf);
 
       pads = g_slist_next (pads);

@@ -229,6 +229,7 @@ Print out debugging information.
 
 </para>
 
+@cat: 
 @format: 
 @args...: 
 
@@ -275,6 +276,13 @@ Print out an error condition and abort the application.
 @object: pointer to a 'contributing' object
 @format: printf-style format string
 @args...: printf arguments
+
+
+<!-- ##### MACRO GST_DEBUG_CHAR_MODE ##### -->
+<para>
+
+</para>
+
 
 
 <!-- ##### FUNCTION gst_default_error_handler ##### -->

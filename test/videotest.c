@@ -31,9 +31,9 @@ int main(int argc,char *argv[]) {
   bin = gst_bin_new("bin");
 
   srcfactory = gst_elementfactory_find("v4lsrc");
-  g_return_if_fail(srcfactory != NULL);
+  g_return_val_if_fail(srcfactory != NULL,-1);
   videosinkfactory = gst_elementfactory_find("videosink");
-  g_return_if_fail(videosinkfactory != NULL);
+  g_return_val_if_fail(videosinkfactory != NULL,-1);
 
   src = gst_elementfactory_create(srcfactory,"src");
   gtk_object_set(GTK_OBJECT(src),"format",3,NULL);
@@ -100,10 +100,12 @@ int main(int argc,char *argv[]) {
   g_idle_add(idle_func,bin);
 
   gtk_main();
+
+  return 0;
 }
 
 gboolean idle_func(gpointer data) {
-  static int i=0;
+  //static int i=0;
   //g_print("pushing %d\n",i++);
   gst_bin_iterate(GST_BIN(data));
   return TRUE;

@@ -19,17 +19,6 @@
       
 #include &lt;gst/gst.h&gt;
 
-gboolean playing;
-
-/* eos will be called when the src element has an end of stream */
-void 
-eos (GstSrc *src) 
-{
-  g_print ("have eos, quitting\n");
-
-  playing = FALSE;
-}
-
 int 
 main (int argc, char *argv[]) 
 {
@@ -48,8 +37,6 @@ main (int argc, char *argv[])
   /* create a disk reader */
   disksrc = gst_elementfactory_make ("disksrc", "disk_source");
   gtk_object_set (GTK_OBJECT (disksrc),"location", argv[1], NULL);
-  gtk_signal_connect (GTK_OBJECT (disksrc), "eos",
-                      GTK_SIGNAL_FUNC (eos), NULL);
 
   /* now it's time to get the parser */
   parse = gst_elementfactory_make ("mp3parse", "parse");
@@ -75,11 +62,7 @@ main (int argc, char *argv[])
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
-  playing = TRUE;
-
-  while (playing) {
-    gst_bin_iterate (GST_BIN (bin));
-  }
+  while (gst_bin_iterate (GST_BIN (bin)));
 
   /* stop the bin */
   gst_element_set_state (bin, GST_STATE_NULL);
@@ -150,34 +133,13 @@ main (int argc, char *argv[])
   /* create a disk reader */
   disksrc = gst_elementfactory_make ("disksrc", "disk_source");
   gtk_object_set (GTK_OBJECT (disksrc),"location", argv[1], NULL);
-  gtk_signal_connect (GTK_OBJECT (disksrc), "eos",
-                      GTK_SIGNAL_FUNC (eos), NULL);
     </programlisting>
-    <para>
-      We also connected the eos signal to our function. When the
-      disk source has reached an end-of-stream, this function will be called.
-      We will use it to set a gboolean value to FALSE;
-    </para>
     <note>
       <para>
         You can check if the disksrc != NULL to verify the creation of the
 	disk source element.
       </para>
     </note>
-
-    <programlisting>
-gboolean playing;
-...
-
-/* eos will be called when the src element has an end of stream */
-void 
-eos (GstSrc *src) 
-{
-  g_print ("have eos, quitting\n");
-
-  playing = FALSE;
-}
-    </programlisting>
 
     <para>
       We now create the MP3 decoder element. <application>GStreamer</application> requires you
@@ -249,7 +211,6 @@ eos (GstSrc *src)
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
-  playing = TRUE;
     </programlisting>
     <note>
       <para>
@@ -263,14 +224,12 @@ eos (GstSrc *src)
       call gst_bin_iterate() to execute one iteration of the bin. 
     </para>
     <programlisting>
-  while (playing) {
-    gst_bin_iterate (GST_BIN (bin));
-  }
+  while (gst_bin_iterate (GST_BIN (bin)));
     </programlisting>
     <para>
-      Remember that the variable playing will become false if the disk source
-      has reached an end-of-file. When that happens, the follwing code takes
-      care of the cleanup:
+      The gst_bin_iterate() function will return TRUE as long as something interesting
+      happended inside the bin. When the end-of-file has been reached the _iterate 
+      function will return FALSE and we can end the loop.
     </para>
     <programlisting>
   /* stop the bin */

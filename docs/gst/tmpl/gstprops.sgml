@@ -259,6 +259,16 @@ Create a float range value.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_props_get_float ##### -->
+<para>
+
+</para>
+
+@props: 
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_props_save_thyself ##### -->
 <para>
 

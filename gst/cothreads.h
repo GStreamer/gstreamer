@@ -32,10 +32,6 @@
 
 #undef COTHREAD_ATOMIC
 
-#define COTHREAD_STACKSIZE 32768
-#define COTHREAD_MAXTHREADS 64
-#define STACK_SIZE 0x200000
-
 #ifndef CURRENT_STACK_FRAME
 #define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
 #endif /* CURRENT_STACK_FRAME */
@@ -69,12 +65,6 @@ struct _cothread_state {
 #endif
 };
 
-struct _cothread_context {
-  cothread_state *threads[COTHREAD_MAXTHREADS];
-  int nthreads;
-  int current;
-  GHashTable *data;
-};
 
 cothread_context*		cothread_init();
 cothread_state*			cothread_create		(cothread_context *ctx);

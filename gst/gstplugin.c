@@ -368,6 +368,7 @@ gst_plugin_load_absolute (const gchar *name)
       GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugin \"%s\"...", name);
       plugin = gst_plugin_new(desc->name, desc->major_version, desc->minor_version);
       if (plugin != NULL) {
+        plugin->filename = g_strdup(name);
 	if (!((desc->plugin_init)(module, plugin))) {
           GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" failed to initialise",
              plugin->name);
@@ -379,7 +380,6 @@ gst_plugin_load_absolute (const gchar *name)
       if (plugin != NULL) {
         GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" loaded: %d elements, %d types",
              plugin->name,plugin->numelements,plugin->numtypes);
-        plugin->filename = g_strdup(name);
         plugin->loaded = TRUE;
         _gst_modules = g_list_prepend(_gst_modules,module);
         _gst_modules_seqno++;

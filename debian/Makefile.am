@@ -10,13 +10,17 @@ EXTRA_DIST = \
 	gstmediaplay.files \
 	gstmediaplay.manpages \
 	gstmediaplay.menu \
+	gstreamer-aa.files \
 	gstreamer-alsa.files \
+	gstreamer-arts.files \
 	gstreamer-cdparanoia.files \
+	gstreamer-colorspace.files \
 	gstreamer-common.files \
 	gstreamer-doc.files \
 	gstreamer-elements.files \
 	gstreamer-esd.files \
 	gstreamer-lame.files \
+	gstreamer-mad.files \
 	gstreamer-mpeg2dec.files \
 	gstreamer-mpg123.files \
 	gstreamer-plugin-template.postinst \

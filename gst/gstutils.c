@@ -235,7 +235,7 @@ gst_util_set_object_arg (GtkObject *object, guchar *name, gchar *value)
         case GTK_TYPE_STRING:
           gtk_object_set (GTK_OBJECT (object), name, value, NULL);
           break;
-        case GTK_TYPE_ENUM:
+        case GTK_TYPE_ENUM: 
         case GTK_TYPE_INT: {
           gint i;
           sscanf (value, "%d", &i);

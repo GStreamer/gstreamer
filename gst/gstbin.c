@@ -352,6 +352,7 @@ gst_bin_change_state (GstElement *element)
   GstBin *bin;
   GList *children;
   GstElement *child;
+  GstElementStateReturn ret;
 
   GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME  (element));
 
@@ -415,8 +416,9 @@ gst_bin_change_state (GstElement *element)
   GST_INFO_ELEMENT (GST_CAT_STATES, element, "done changing bin's state from %s to %s",
                 gst_element_statename (GST_STATE (element)),
                 gst_element_statename (GST_STATE_PENDING (element)));
+  ret =  gst_bin_change_state_norecurse (bin);
 
-  return gst_bin_change_state_norecurse (bin);
+  return ret;
 }
 
 

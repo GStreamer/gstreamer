@@ -186,7 +186,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
 
 	gst_pad_set_caps (pad, caps);
 
-{
+{ /* FIXME: this should all be in an _emit() wrapper eventually */
         int oldstate = GST_STATE(typefind);
 	gst_object_ref (GST_OBJECT (typefind));
         gtk_signal_emit (GTK_OBJECT (typefind), gst_typefind_signals[HAVE_TYPE],
@@ -198,6 +198,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
         }
 	gst_object_unref (GST_OBJECT (typefind));
 }
+
         goto end;
       }
       funcs = g_slist_next (funcs);

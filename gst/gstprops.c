@@ -93,39 +93,41 @@ props_find_func (gconstpointer a,
   return (entry1 - entry2->propid);
 }
 
-static void
-gst_props_entry_fill (GstPropsEntry *entry, va_list *var_args)
-{
-  entry->propstype = va_arg (*var_args, GstPropsId);
-
-  switch (entry->propstype) {
-    case GST_PROPS_INT_ID:
-      entry->data.int_data = va_arg (*var_args, gint);
-      break;
-    case GST_PROPS_INT_RANGE_ID:
-      entry->data.int_range_data.min = va_arg (*var_args, gint);
-      entry->data.int_range_data.max = va_arg (*var_args, gint);
-      break;
-    case GST_PROPS_FLOAT_ID:
-      entry->data.float_data = va_arg (*var_args, gdouble);
-      break;
-    case GST_PROPS_FLOAT_RANGE_ID:
-      entry->data.float_range_data.min = va_arg (*var_args, gdouble);
-      entry->data.float_range_data.max = va_arg (*var_args, gdouble);
-      break;
-    case GST_PROPS_FOURCC_ID:
-      entry->data.fourcc_data = va_arg (*var_args, gulong);
-      break;
-    case GST_PROPS_BOOL_ID:
-      entry->data.bool_data = va_arg (*var_args, gboolean);
-      break;
-    case GST_PROPS_STRING_ID:
-      entry->data.string_data.string = g_strdup (va_arg (*var_args, gchar*));
-      break;
-    default:
-      break;
-  }
-}
+/* This is implemented as a huge macro because we cannot pass
+ * va_list variables by reference on some architectures.
+ */
+#define GST_PROPS_ENTRY_FILL(entry, var_args) 					\
+G_STMT_START { 									\
+  entry->propstype = va_arg (var_args, GstPropsId); 				\
+										\
+  switch (entry->propstype) {							\
+    case GST_PROPS_INT_ID:							\
+      entry->data.int_data = va_arg (var_args, gint);				\
+      break;									\
+    case GST_PROPS_INT_RANGE_ID:						\
+      entry->data.int_range_data.min = va_arg (var_args, gint);			\
+      entry->data.int_range_data.max = va_arg (var_args, gint);			\
+      break;									\
+    case GST_PROPS_FLOAT_ID:							\
+      entry->data.float_data = va_arg (var_args, gdouble);			\
+      break;									\
+    case GST_PROPS_FLOAT_RANGE_ID:						\
+      entry->data.float_range_data.min = va_arg (var_args, gdouble);		\
+      entry->data.float_range_data.max = va_arg (var_args, gdouble);		\
+      break;									\
+    case GST_PROPS_FOURCC_ID:							\
+      entry->data.fourcc_data = va_arg (var_args, gulong);			\
+      break;									\
+    case GST_PROPS_BOOL_ID:							\
+      entry->data.bool_data = va_arg (var_args, gboolean);			\
+      break;									\
+    case GST_PROPS_STRING_ID:							\
+      entry->data.string_data.string = g_strdup (va_arg (var_args, gchar*));	\
+      break;									\
+    default:									\
+      break;									\
+  }										\
+} G_STMT_END
 
 /**
  * gst_props_new:
@@ -186,7 +188,7 @@ gst_props_newv (const gchar *firstname, va_list var_args)
     g_mutex_unlock (_gst_props_entries_chunk_lock);
 
     entry->propid = g_quark_from_string (prop_name);
-    gst_props_entry_fill (entry, &var_args);
+    GST_PROPS_ENTRY_FILL (entry, var_args);
 
     switch (entry->propstype) {
       case GST_PROPS_INT_ID:
@@ -210,10 +212,10 @@ gst_props_newv (const gchar *firstname, va_list var_args)
         prop_name = va_arg (var_args, gchar*);
 	continue;
       default:
+	g_warning ("unknown property type found %d for '%s'\n", entry->propstype, prop_name);
         g_mutex_lock (_gst_props_entries_chunk_lock);
         g_mem_chunk_free (_gst_props_entries_chunk, entry);
         g_mutex_unlock (_gst_props_entries_chunk_lock);
-	g_assert_not_reached ();
 	break;
     }
 
@@ -258,7 +260,7 @@ gst_props_set (GstProps *props, const gchar *name, ...)
 
     va_start (var_args, name);
 
-    gst_props_entry_fill (entry, &var_args);
+    GST_PROPS_ENTRY_FILL (entry, var_args);
 
     va_end (var_args);
   }
@@ -430,6 +432,36 @@ gst_props_get_int (GstProps *props, const gchar *name)
   }
   
   return 0;
+}
+
+/**
+ * gst_props_get_float:
+ * @props: the props to get the float value from
+ * @name: the name of the props entry to get.
+ *
+ * Get the named entry as a float.
+ *
+ * Returns: the float value of the named entry, 0.0 if not found.
+ */
+gfloat
+gst_props_get_float (GstProps *props, const gchar *name)
+{
+  GList *lentry;
+  GQuark quark;
+  
+  quark = g_quark_from_string (name);
+
+  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+
+  if (lentry) {
+    GstPropsEntry *thisentry;
+
+    thisentry = (GstPropsEntry *)lentry->data;
+
+    return thisentry->data.float_data;
+  }
+  
+  return 0.0F;
 }
 
 /**

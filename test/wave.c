@@ -51,6 +51,8 @@ int main(int argc,char *argv[]) {
   g_idle_add(idle_func,bin);
 
   gtk_main();
+
+  return 0;
 }
 
 gboolean idle_func(gpointer data) {

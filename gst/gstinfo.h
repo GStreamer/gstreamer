@@ -145,7 +145,7 @@ G_GNUC_UNUSED static gchar *_debug_string = NULL;
     _gst_debug_handler(cat,_GST_DEBUG_INCORE,__FILE__,__PRETTY_FUNCTION__,__LINE__,_debug_string, \
                        element,g_strdup_printf( format , ## args )); \
 }G_STMT_END
-    
+
 #else
 #define GST_DEBUG(cat,format,args...)
 #define GST_DEBUG_ELEMENT(cat,element,format,args...)

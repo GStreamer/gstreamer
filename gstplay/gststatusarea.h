@@ -4,38 +4,32 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
+#define GST_TYPE_STATUS_AREA          (gst_status_area_get_type ())
+#define GST_STATUS_AREA(obj)          (GTK_CHECK_CAST ((obj), GST_TYPE_STATUS_AREA, GstStatusArea))
+#define GST_STATUS_AREA_CLASS(klass)  (GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_STATUS_AREA, GstStatusAreaClass))
+#define GST_IS_STATUS_AREA(obj)       (GTK_CHECK_TYPE ((obj), GST_TYPE_STATUS_AREA))
+#define GST_IS_STATUS_AREA_CLASS(obj) (GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_STATUS_AREA))
+
 typedef struct _GstStatusArea GstStatusArea;
 typedef struct _GstStatusAreaClass GstStatusAreaClass;
 
-#define GST_TYPE_STATUS_AREA \
-  (gst_status_area_get_type())
-#define GST_STATUS_AREA(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_STATUS_AREA,GstStatusArea))
-#define GST_STATUS_AREA_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_STATUS_AREA,GstStatusAreaClass))
-#define GST_IS_STATUS_AREA(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_STATUS_AREA))
-#define GST_IS_STATUS_AREA_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_STATUS_AREA))
-
 typedef enum {
-  GST_STATUS_AREA_STATE_INIT,
-  GST_STATUS_AREA_STATE_PLAYING,
-  GST_STATUS_AREA_STATE_PAUSED,
-  GST_STATUS_AREA_STATE_STOPPED,
+	GST_STATUS_AREA_STATE_INIT,
+	GST_STATUS_AREA_STATE_PLAYING,
+	GST_STATUS_AREA_STATE_PAUSED,
+	GST_STATUS_AREA_STATE_STOPPED,
 } GstStatusAreaState;
 
 struct _GstStatusArea {
-  GtkWidget parent;
-
-  GstStatusAreaState state;
-  guchar *playtime;
-  gboolean expanded;
+	GtkWidget parent;
+	
+	GstStatusAreaState state;
+	guchar *playtime;
+	gboolean expanded;
 };
 
 struct _GstStatusAreaClass {
-  GtkWidgetClass parent_class;
-
+	GtkWidgetClass parent_class;
 };
 
 

@@ -276,6 +276,21 @@ Pads:
 	    A list value: the property can take any value from a list.
           </para>
         </listitem>
+        <listitem>
+          <para>
+	    A float value: the property has this exact floating point value.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    A float range value: denotes a range of possible floating point values.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    A string value.
+          </para>
+        </listitem>
       </itemizedlist>
 
     </sect2>

@@ -608,6 +608,7 @@ gst_pad_connect (GstPad *srcpad,
 		 GstPad *sinkpad)
 {
   GstRealPad *realsrc, *realsink;
+  GstRealPad *temppad;
   gboolean negotiated = FALSE;
 
   /* generic checks */

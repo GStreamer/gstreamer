@@ -196,6 +196,23 @@ Get the maximun age of a buffer.
 @buf: GstBuffer to get the maxage of.
 
 
+<!-- ##### USER_FUNCTION GstBufferCopyFunc ##### -->
+<para>
+This function is used to copy the buffer contents.
+</para>
+
+@srcbuf: the src buffer
+@dstbuf: the destination buffer
+
+
+<!-- ##### USER_FUNCTION GstBufferFreeFunc ##### -->
+<para>
+The function called when the buffer data has to be freed
+</para>
+
+@buf: the buffer to clear the buffer data of.
+
+
 <!-- ##### ENUM GstBufferFlags ##### -->
 <para>
 

@@ -5,7 +5,7 @@
 static guint outcount, incount;
 
 static void
-buffer_handoff_sink (GstElement *src, GstElement *bin)
+buffer_handoff_sink (GstElement *src, GstBuffer *buf, GstElement *bin)
 {
   g_print ("\n\n *** buffer arrived in sink ***\n\n");
   gst_element_set_state(bin, GST_STATE_NULL);
@@ -14,7 +14,7 @@ buffer_handoff_sink (GstElement *src, GstElement *bin)
 }
 
 static void
-buffer_handoff_src (GstElement *src, GstElement *bin)
+buffer_handoff_src (GstElement *src, GstBuffer *buf, GstElement *bin)
 {
   g_print ("\n\n *** buffer started in src ***\n\n");
   incount++;

@@ -255,42 +255,68 @@
 	    <emphasis>audio/raw</emphasis>
 	    - Unstructured and uncompressed raw audio data.
 	  </para><para>
-	    <emphasis>law</emphasis>
-	    - The law used to describe the data.  This is an integer for which
-	    there are three valid values: 0 for linear, 1 for
-	    mu law, 2 for A law.
-	  </para><para>
-	    <emphasis>endianness</emphasis>
-	    - The order of bytes in a sample.  This is a boolean:
-	    0 means little-endian (ie, bytes are least significant first),
-	    1 means big-endian (ie, most significant byte first).
-	  </para><para>
-	    <emphasis>signed</emphasis>
-	    - Whether the samples are signed or not.  This is a boolean:
-	    0 means unsigned, 1 means signed.
-	  </para><para>
-	    <emphasis>width</emphasis>
-	    - The number of bits per sample.  This is extremely likely to be
-	    a multiple of 8, but as ever this is up to each element supporting
-	    this format to specify.
-	  </para><para>
-	    <emphasis>depth</emphasis>
-	    - The number of bits used per sample.  This must be less than or
-	    equal to the width: if less than the width, the low bits are
-	    assumed to be the ones used.  For example, width=32, depth=24
-	    means that each sample is stored in a 32 bit word, but only the
-	    low 24 bits are actually used.
-	  </para><para>
 	    <emphasis>rate</emphasis>
 	    - The sample rate of the data, in samples per second.
 	  </para><para>
 	    <emphasis>channels</emphasis>
 	    - The number of channels of audio data.
+	  </para><para>
+	    <emphasis>format</emphasis>
+	    - This describes the format in which the audio data is passed.
+	    This is a string for which there are currently two valid values:
+	    "int" for integer data and "float" for floating point data.
+	  </para><para>
+	    <emphasis>law</emphasis>
+	    - Valid only if format=int.  The law used to describe the data.
+	    This is an integer for which there are three valid values: 0 for
+	    linear, 1 for mu law, 2 for A law.
+	  </para><para>
+	    <emphasis>endianness</emphasis>
+	    - Valid only if format=int.  The order of bytes in a sample.  This
+	    is a boolean: 0 means little-endian (ie, bytes are least
+	    significant first), 1 means big-endian (ie, most significant byte
+	    first).
+	  </para><para>
+	    <emphasis>signed</emphasis>
+	    - Valid only if format=int.  Whether the samples are signed or not.
+	    This is a boolean: 0 means unsigned, 1 means signed.
+	  </para><para>
+	    <emphasis>width</emphasis>
+	    - Valid only if format=int.  The number of bits per sample.  This
+	    is extremely likely to be a multiple of 8, but as ever this is up
+	    to each element supporting this format to specify.
+	  </para><para>
+	    <emphasis>depth</emphasis>
+	    - Valid only if format=int.  The number of bits used per sample.
+	    This must be less than or equal to the width: if less than the
+	    width, the low bits are assumed to be the ones used.  For example,
+	    width=32, depth=24 means that each sample is stored in a 32 bit
+	    word, but only the low 24 bits are actually used.
+	  </para><para>
+	    <emphasis>layout</emphasis>
+	    - Valid only if format=float.  A string representing the way in
+	    which the floating point data is represented.  For now, the only
+	    valid value is gfloat, meaning that the data is passed as a series
+	    of gfloat values.
+	  </para><para>
+	    <emphasis>intercept</emphasis>
+	    - Valid only if format=float.  A floating point value representing
+	    the value that the signal "centres" on.
+	  </para><para>
+	    <emphasis>slope</emphasis>
+	    - Valid only if format=float.  A floating point value representing
+	    how far the signal deviates from the intercept.  So a slope of 1.0
+	    and an intercept of 0.0 would mean an audio signal with minimum
+	    and maximum values of -1.0 and 1.0.  A slope of 0.5 and intercept
+	    of 0.5 would represent values in the range 0.0 to 1.0.
 	  </para>
 	  <para>
-	    For example: 16 bit, unsigned, linear, monophonic, big-endian,
+	    For example: 16 bit integer, unsigned, linear, monophonic, big-endian,
 	    44100KHz audio would be represented by
-	    "law=0,endianness=1,signed=0,width=16,depth=16,rate=44100,channels=1"
+	    "format=int,law=0,endianness=1,signed=0,width=16,depth=16,rate=44100,channels=1"
+	    and floating point, using gfloat's, in the range -1.0 to 1.0,
+	    8000KHz stereo audio would be represented by
+	    "format=float,layout=gfloat,intercept=0.0,slope=1.0,rate=8000,channels=2"
 	  </para>
         </listitem>
       </itemizedlist>

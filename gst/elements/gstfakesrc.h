@@ -72,6 +72,7 @@ struct _GstFakeSrc {
   gchar *pattern;
   GList *patternlist;
   gint num_buffers;
+  gboolean silent;
 };
 
 struct _GstFakeSrcClass {

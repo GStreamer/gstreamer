@@ -97,7 +97,8 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   gst_fakesink_signals[SIGNAL_HANDOFF] =
     gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstFakeSinkClass, handoff),
-                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
 
   gtk_object_class_add_signals (gtkobject_class, gst_fakesink_signals,
                                     LAST_SIGNAL);
@@ -194,9 +195,8 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   if (!fakesink->silent)
     g_print("fakesink: ******* (%s:%s)< (%d bytes) \n",GST_DEBUG_PAD_NAME(pad),GST_BUFFER_SIZE(buf));
   
-  gst_buffer_unref (buf);
-
   gtk_signal_emit (GTK_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF],
-	                      fakesink);
+                   buf);
 
+  gst_buffer_unref (buf);
 }

@@ -33,7 +33,7 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   gst_bin_remove (GST_BIN (autobin), typefind);
       
   /* and an audio sink */
-  osssink = gst_elementfactory_make("esdsink", "play_audio");
+  osssink = gst_elementfactory_make("osssink", "play_audio");
   g_assert(osssink != NULL);
 
   /* and an video sink */

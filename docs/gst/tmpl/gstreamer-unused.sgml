@@ -651,14 +651,6 @@ Specify the current offset in the file.
 </para>
 
 
-<!-- ##### FUNCTION gst_element_get_manager ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
 <!-- ##### STRUCT MetaDGA ##### -->
 <para>
 
@@ -1711,14 +1703,6 @@ GstSrc
 @mime: 
 @props: 
 @Returns: 
-
-<!-- ##### FUNCTION gst_element_set_manager ##### -->
-<para>
-
-</para>
-
-@element: 
-@manager: 
 
 <!-- ##### MACRO GST_TYPE_AUDIOSRC ##### -->
 <para>

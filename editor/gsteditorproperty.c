@@ -254,6 +254,12 @@ gst_editor_props_show_func (GstPropsEntry *entry)
     case GST_PROPS_INT_RANGE_ID:
       return g_strdup_printf ("%d-%d", entry->data.int_range_data.min, entry->data.int_range_data.max);
       break;
+    case GST_PROPS_FLOAT_ID:
+      return g_strdup_printf ("%f", entry->data.float_data);
+      break;
+    case GST_PROPS_FLOAT_RANGE_ID:
+      return g_strdup_printf ("%f-%f", entry->data.float_range_data.min, entry->data.float_range_data.max);
+      break;
     case GST_PROPS_FOURCC_ID:
       return g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data);
       break;

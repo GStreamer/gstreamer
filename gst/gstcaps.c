@@ -471,7 +471,7 @@ gst_caps_get_by_name (GstCaps *caps, const gchar *name)
 
   return NULL;
 }
-
+                                                                                                                   
 static gboolean
 gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 {

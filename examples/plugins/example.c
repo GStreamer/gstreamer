@@ -266,6 +266,10 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
     /* Then copy the data in the incoming buffer into the new buffer. */
     memcpy (GST_BUFFER_DATA (outbuf), GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (outbuf));
 
+    /* we don't need the incomming buffer anymore so we unref it. When we are
+     * the last plugin with a handle to the buffer, its memory will be freed */
+    gst_buffer_unref (buf);
+
     /* When we're done with the buffer, we push it on to the next element
      * in the pipeline, through the element's source pad, which is stored
      * in the element's structure.

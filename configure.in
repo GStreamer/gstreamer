@@ -117,16 +117,22 @@ dnl ==============================================
 
 dnl Determine CPU
 case "x${target_cpu}" in
-  xi?86)     HAVE_CPU_I386=yes ;
-             AC_DEFINE(HAVE_CPU_I386) ;;
-  xpowerpc)  HAVE_CPU_PPC=yes ;
-             AC_DEFINE(HAVE_CPU_PPC) ;;
-  xalpha)    HAVE_CPU_ALPHA=yes ;
-             AC_DEFINE(HAVE_CPU_ALPHA) ;;
-  xarm*)     HAVE_CPU_ARM=yes ;
-             AC_DEFINE(HAVE_CPU_ARM) ;;
-  xsparc*)   HAVE_CPU_SPARC=yes ;
-             AC_DEFINE(HAVE_CPU_SPARC) ;;
+  xi?86 | k?) HAVE_CPU_I386=yes
+              AC_DEFINE(HAVE_CPU_I386)
+              dnl FIXME could use some better detection
+              dnl       (ie CPUID)
+              case "x${target_cpu}" in
+                xi386 | xi486) ;;
+                *)             AC_DEFINE(HAVE_RDTSC) ;;
+              esac ;;
+  xpowerpc)   HAVE_CPU_PPC=yes
+              AC_DEFINE(HAVE_CPU_PPC) ;;
+  xalpha)     HAVE_CPU_ALPHA=yes
+              AC_DEFINE(HAVE_CPU_ALPHA) ;;
+  xarm*)      HAVE_CPU_ARM=yes
+              AC_DEFINE(HAVE_CPU_ARM) ;;
+  xsparc*)    HAVE_CPU_SPARC=yes
+              AC_DEFINE(HAVE_CPU_SPARC) ;;
 esac
 
 dnl Determine endianness
@@ -219,7 +225,15 @@ if test x$ARTSC_CONFIG = xno; then
 else
   ARTSC_LIBS=`artsc-config --libs`
   ARTSC_CFLAGS=`artsc-config --cflags`
-  HAVE_ARTSC=yes
+  dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
+  dnl Assume only suitable flags result from artsc-config --cflags
+  artsc_save_CPPFLAGS=$CPPFLAGS
+  CPPFLAGS="$CPPFLAGS $ARTSC_CFLAGS"
+  AC_CHECK_HEADER(artsc.h,
+		  HAVE_ARTSC=yes,
+		  HAVE_ARTSC=no
+  )
+  CPPFLAGS=$artsc_save_CPPFLAGS
 fi
 AC_SUBST(ARTSC_LIBS)
 AC_SUBST(ARTSC_CFLAGS)
@@ -235,6 +249,34 @@ AC_ARG_ENABLE(artsd,
 dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
 dnl Check for libasound
+alsa_save_LIBS=$LIBS
+alsa_save_CFLAGS=$CFLAGS
+AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
+LIBS=$alsa_save_LIBS
+CFLAGS=$alsa_save_CFLAGS
+AC_ARG_ENABLE(alsasink,
+[  --enable-alsasink          enable the building of the alsasink],
+[case "${enableval}" in
+	yes) HAVE_LIBASOUND=$HAVE_LIBASOUND ;;
+	no) HAVE_LIBASOUND=no ;;
+	*) AC_MSG_ERROR(bad value ${enableval} for --enable-alsasink) ;;
+esac],
+[HAVE_LIBASOUND=$HAVE_LIBASOUND])
+
+
+dnl Check for libaudiofile
+AC_PATH_PROG(AUDIOFILE_CONFIG, audiofile-config, no)
+if test x$AUDIOFILE_CONFIG = xno; then
+  AC_MSG_WARN(Couldn't find audiofile-config: can't build afsink)
+  AUDIOFILE_LIBS=
+  HAVE_LIBAUDIOFILE=no
+else
+  AC_MSG_WARN(did find audiofile-config: delete this msg)
+  AUDIOFILE_LIBS=`audiofile-config --libs`
+  HAVE_LIBAUDIOFILE=yes
+fi
+AC_SUBST(AUDIOFILE_LIBS)
+
 alsa_save_LIBS=$LIBS
 alsa_save_CFLAGS=$CFLAGS
 AM_PATH_ALSA(0.5.0, HAVE_LIBASOUND=yes, HAVE_LIBASOUND=no)
@@ -323,6 +365,21 @@ fi
 AC_SUBST(LIBGLADE_GNOME_LIBS)
 AC_SUBST(LIBGLADE_GNOME_CFLAGS)
 
+dnl Check for Gnome VFS
+HAVE_GNOME_VFS="no"
+AC_MSG_CHECKING(for Gnome VFS)
+if gnome-config --libs vfs > /dev/null 2>&1; then
+	HAVE_GNOME_VFS="yes"
+	AC_MSG_RESULT(found)
+else
+	AC_MSG_WARN(Did not find Gnome-VFS installed)
+fi
+
+VFS_LIBS="`gnome-config --libs vfs`"
+VFS_CFLAGS="`gnome-config --cflags vfs`"
+
+AC_SUBST(VFS_LIBS)
+AC_SUBST(VFS_CFLAGS)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -367,6 +424,8 @@ AC_CHECK_LIB(Xv, XvQueryExtension,
   $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS
 )
 LIBS=${xvsave_LIBS}
+AC_CHECK_HEADER(X11/extensions/Xv.h, :, HAVE_LIBXV=no)
+AC_CHECK_HEADER(X11/extensions/Xvlib.h, :, HAVE_LIBXV=no)
 
 dnl Check for OSS audio
 AC_CHECK_HEADER(sys/soundcard.h,
@@ -427,6 +486,7 @@ AC_CHECK_LIB(Hermes, Hermes_ConverterInstance,
 )
   HAVE_LIBHERMES=no,
 )
+AC_CHECK_HEADER(Hermes/Hermes.h, :, HAVE_LIBHERMES=no)
 
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
@@ -454,6 +514,9 @@ AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
+AC_CHECK_HEADER(rtp/rtp-packet.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADER(rtp/rtcp-packet.h, :, HAVE_LIBRTP=no)
+AC_CHECK_HEADER(rtp/rtp-audio.h, :, HAVE_LIBRTP=no)
 
 dnl Check for arts
 AC_LANG_SAVE
@@ -466,14 +529,17 @@ AC_LANG_RESTORE
 dnl Check for libraw1394
 AC_MSG_CHECKING(raw1394 library)
 AC_CHECK_LIB(raw1394, raw1394_get_handle, HAVE_RAW1394=yes, HAVE_RAW1394=no, )
+AC_CHECK_HEADER(libraw1394/raw1394.h, :, HAVE_RAW1394=no)
 
 dnl Check for libdv
 AC_MSG_CHECKING(libdv)
 AC_CHECK_LIB(dv, dv_init, HAVE_LIBDV=yes, HAVE_LIBDV=no, -lm $GLIB_LIBS $GLIB_CFLAGS)
+AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
 
 dnl Check for aalib
 AC_MSG_CHECKING(aalib)
 AC_CHECK_LIB(aa, aa_init, HAVE_LIBAA=yes, HAVE_LIBAA=no, )
+AC_CHECK_HEADER(aalib.h, :, HAVE_LIBAA=no)
 
 
 dnl check if css-auth.c exists (FIXME)
@@ -482,21 +548,39 @@ if test -f plugins/dvdsrc/css-auth.c
 then
   AC_MSG_RESULT(yes)
   HAVE_CSSAUTH="yes"
-  AC_DEFINE(HAVE_CSSAUTH) 
 else
   AC_MSG_RESULT(no)
   HAVE_CSSAUTH="no"
 fi
 
+dnl Check for SDLlib
+AC_MSG_CHECKING(SDLlib)
+AC_CHECK_LIB(SDL, SDL_Init, HAVE_LIBSDL=yes, HAVE_LIBSDL=no, -L/usr/lib -L/usr/local/lib -lpthread)
+AC_CHECK_HEADER(SDL/SDL.h, :, HAVE_LIBSDL=no)
+ 
+dnl Check for SDL
+HAVE_LIBSDL="no"
+AC_MSG_CHECKING(for SDL)
+if sdl-config --libs > /dev/null 2>&1; then
+  HAVE_LIBSDL="yes"
+  AC_MSG_RESULT(found)
+else
+  AC_MSG_RESULT(not found)
+fi
+
+SDL_LIBS="`sdl-config --libs`"
+SDL_CFLAGS="`sdl-config --cflags`"
+ 
+AC_SUBST(SDL_LIBS)
+AC_SUBST(SDL_CFLAGS)
+
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
-  AC_DEFINE(HAVE_LINUX_CDROM) 
   HAVE_LINUX_CDROM=yes, []
 )
 
 dnl Check for linux/videodev.h
 AC_CHECK_HEADER(linux/videodev.h,
-  AC_DEFINE(HAVE_LINUX_VIDEODEV) 
   HAVE_LINUX_VIDEODEV=yes, []
 )
 
@@ -706,6 +790,58 @@ else
   FOMIT_FRAME_POINTER="-fomit-frame-pointer"
 fi
 
+if test "x$HAVE_LIBXV" = xyes; then
+  AC_DEFINE(HAVE_LIBXV)
+fi
+
+if test "x$HAVE_OSS" = xyes; then
+  AC_DEFINE(HAVE_OSS)
+fi
+
+if test "x$HAVE_XAUDIO" = xyes; then
+  AC_DEFINE(HAVE_XAUDIO)
+fi
+
+if test "x$HAVE_LIBMAD" = xyes; then
+  AC_DEFINE(HAVE_LIBMAD)
+fi
+
+if test "x$HAVE_VORBIS" = xyes; then
+  AC_DEFINE(HAVE_VORBIS)
+fi
+
+if test "x$HAVE_LIBJPEG" = xyes; then
+  AC_DEFINE(HAVE_LIBJPEG)
+fi
+
+if test "x$HAVE_LIBSDL" = xyes; then
+  AC_DEFINE(HAVE_LIBSDL)
+fi
+
+if test "x$HAVE_LIBHERMES" = "xyes"; then
+  AC_DEFINE(HAVE_LIBHERMES)
+fi
+
+if test "x$HAVE_CSSAUTH" = xyes; then
+  AC_DEFINE(HAVE_CSSAUTH)
+fi
+
+if test "x$HAVE_LINUX_CDROM" = xyes; then
+  AC_DEFINE(HAVE_LINUX_CDROM)
+fi
+
+if test "x$HAVE_LINUX_VIDEODEV" = xyes; then
+  AC_DEFINE(HAVE_LINUX_VIDEODEV)
+fi
+
+if test "x$HAVE_MPEG2DEC" = xyes; then
+  AC_DEFINE(HAVE_MPEG2DEC)
+fi
+
+if test "x$HAVE_LIBAUDIOFILE" = xyes; then
+  AC_DEFINE(HAVE_LIBAUDIOFILE)
+fi
+
 dnl #############################
 dnl # Set automake conditionals #
 dnl #############################
@@ -719,6 +855,7 @@ AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_SPARC,      test "x$HAVE_CPU_SPARC" = "xyes")
 AM_CONDITIONAL(HAVE_GDK_PIXBUF,     test "x$USE_GDK_PIXBUF" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGHTTP,       test "x$USE_LIBGHTTP" = "xyes")
+AM_CONDITIONAL(HAVE_LIBAUDIOFILE,   test "x$HAVE_LIBAUDIOFILE" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
 AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(HAVE_OSS,            test "x$HAVE_OSS" = "xyes")
@@ -729,6 +866,7 @@ AM_CONDITIONAL(HAVE_LINUX_VIDEODEV, test "x$HAVE_LINUX_VIDEODEV" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
 AM_CONDITIONAL(HAVE_VORBIS,         test "x$HAVE_VORBIS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
+AM_CONDITIONAL(HAVE_LIBSDL,         test "x$HAVE_LIBSDL" = "xyes")
 AM_CONDITIONAL(HAVE_LIBHERMES,      test "x$HAVE_LIBHERMES" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
@@ -755,6 +893,7 @@ AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
+AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 
 
 
@@ -856,6 +995,7 @@ plugins/Makefile
 plugins/aasink/Makefile
 plugins/alsa/Makefile
 plugins/au/Makefile
+plugins/audiofile/Makefile
 plugins/audioscale/Makefile
 plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
@@ -898,11 +1038,14 @@ plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
 plugins/filters/ladspa/Makefile
 plugins/filters/stereo2mono/Makefile
+plugins/filters/mono2stereo/Makefile
+plugins/filters/intfloatconvert/Makefile
 plugins/filters/passthrough/Makefile
 plugins/filters/adder/Makefile
 plugins/filters/colorspace/Makefile
 plugins/filters/volenv/Makefile
-plugins/filters/adder/Makefile
+plugins/filters/level/Makefile
+plugins/gnomevfs/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
 plugins/effects/Makefile
@@ -927,9 +1070,11 @@ plugins/cdparanoia/Makefile
 plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
 plugins/artsd/Makefile
+plugins/quicktime/Makefile
 plugins/xmms/Makefile
 plugins/arts/Makefile
 plugins/1394/Makefile
+plugins/sdlsink/Makefile
 plugins/dv/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
