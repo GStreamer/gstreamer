@@ -84,7 +84,7 @@ tarkin                            (http://svn.xiph.org/trunk/tarkin/)
 textoverlay      pango            (http://www.pango.org/)
 dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
 effectv (Our ports was relicensed)(http://effectv.sourceforge.net/)
-
+musepack 			  (http://www.musepack.net/)
 
 Plugins which use a BSD covered library are as follows:
 
@@ -114,6 +114,9 @@ nas                               (http://radscan.com/nas.html)
 
 snapshot         libpng           (http://www.libpng.org/pub/png/)
  - license:      PNG license
+
+mngdec/mngenc	libmng	    	(http://gjuyn.xs4all.nl/libmng)
+ - license 	 PNG license
 
 Plugins using non-free libraries:
 divxdec, divxenc                        (http://www.divx.com/)
