@@ -34,7 +34,7 @@ int main(int argc,char *argv[]) {
 
   src = gst_elementfactory_create(srcfactory,"src");
   g_return_val_if_fail(src != NULL, -1);
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1]);
   mp3 = gst_elementfactory_create(mp3factory,"mp3");
   g_return_val_if_fail(mp3 != NULL, -1);
   sink = gst_elementfactory_create(sinkfactory,"sink");
@@ -49,8 +49,8 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(mp3,"src"),
                   gst_element_get_pad(sink,"sink"));
 
-  gtk_signal_connect(GTK_OBJECT(src),"eof",
-                     GTK_SIGNAL_FUNC(eof),NULL);   
+  g_signal_connectc(G_OBJECT(src),"eof",
+                    G_CALLBACK(eof),NULL,FALSE);   
 
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);

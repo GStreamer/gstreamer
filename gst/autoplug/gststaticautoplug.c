@@ -45,22 +45,23 @@ static GstElement*	gst_static_autoplug_to_caps	(GstAutoplug *autoplug,
 
 static GstAutoplugClass *parent_class = NULL;
 
-GtkType gst_static_autoplug_get_type(void)
+GType gst_static_autoplug_get_type(void)
 {
-  static GtkType static_autoplug_type = 0;
+  static GType static_autoplug_type = 0;
 
   if (!static_autoplug_type) {
-    static const GtkTypeInfo static_autoplug_info = {
-      "GstStaticAutoplug",
-      sizeof(GstElement),
+    static const GTypeInfo static_autoplug_info = {
       sizeof(GstElementClass),
-      (GtkClassInitFunc)gst_static_autoplug_class_init,
-      (GtkObjectInitFunc)gst_static_autoplug_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_static_autoplug_class_init,
+      NULL,
+      NULL,
+      sizeof(GstElement),
+      0,
+      (GInstanceInitFunc)gst_static_autoplug_init,
     };
-    static_autoplug_type = gtk_type_unique (GST_TYPE_AUTOPLUG, &static_autoplug_info);
+    static_autoplug_type = g_type_register_static (GST_TYPE_AUTOPLUG, "GstStaticAutoplug", &static_autoplug_info, 0);
   }
   return static_autoplug_type;
 }
@@ -72,7 +73,7 @@ gst_static_autoplug_class_init(GstStaticAutoplugClass *klass)
 
   gstautoplug_class = (GstAutoplugClass*) klass;
 
-  parent_class = gtk_type_class(GST_TYPE_AUTOPLUG);
+  parent_class = g_type_class_ref(GST_TYPE_AUTOPLUG);
 
   gstautoplug_class->autoplug_to_caps = gst_static_autoplug_to_caps;
 }
@@ -225,8 +226,8 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
   if (!connected) {
     GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
 		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
-    gtk_signal_connect(GTK_OBJECT(src),"new_pad",
-                 GTK_SIGNAL_FUNC(gst_autoplug_pads_autoplug_func), sink);
+    g_signal_connectc (G_OBJECT(src), "new_pad", 
+		    G_CALLBACK (gst_autoplug_pads_autoplug_func), sink, FALSE);
   }
 }
 
@@ -459,10 +460,10 @@ differ:
 	data->i = i;
 
         GST_DEBUG (0,"delaying the creation of a ghostpad for %s\n", GST_ELEMENT_NAME (thesrcelement));
-	gtk_signal_connect (GTK_OBJECT (thesrcelement), "new_pad", 
-			autoplug_dynamic_pad, data);
-        gtk_signal_connect (GTK_OBJECT (thesrcelement), "new_ghost_pad",
-                 	autoplug_dynamic_pad, data);
+	g_signal_connectc (G_OBJECT (thesrcelement), "new_pad", 
+			G_CALLBACK (autoplug_dynamic_pad), data, FALSE);
+        g_signal_connectc (G_OBJECT (thesrcelement), "new_ghost_pad", 
+			G_CALLBACK (autoplug_dynamic_pad), data, FALSE);
       }
     }
   }

@@ -42,13 +42,13 @@ GstElementDetails gst_httpsrc_details;
 #define GST_TYPE_HTTPSRC \
   (gst_httpsrc_get_type())
 #define GST_HTTPSRC(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_HTTPSRC,GstHttpSrc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_HTTPSRC,GstHttpSrc))
 #define GST_HTTPSRC_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_HTTPSRC,GstHttpSrcClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_HTTPSRC,GstHttpSrcClass))
 #define GST_IS_HTTPSRC(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_HTTPSRC))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_HTTPSRC))
 #define GST_IS_HTTPSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_HTTPSRC))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_HTTPSRC))
 
 typedef enum {
   GST_HTTPSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
@@ -76,7 +76,7 @@ struct _GstHttpSrcClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_httpsrc_get_type(void);
+GType gst_httpsrc_get_type(void);
 
 #ifdef __cplusplus
 }

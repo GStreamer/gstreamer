@@ -29,15 +29,15 @@ int main(int argc,char *argv[]) {
 
   paranoia = gst_elementfactory_make("cdparanoia","paranoia");
   g_return_val_if_fail(paranoia != NULL,2);
-  gtk_object_set(GTK_OBJECT(paranoia),"paranoia_mode",0,NULL);
-//  gtk_object_set(GTK_OBJECT(paranoia),"start_sector",0,"end_sector",75,NULL);
+  g_object_set(G_OBJECT(paranoia),"paranoia_mode",0,NULL);
+//  g_object_set(G_OBJECT(paranoia),"start_sector",0,"end_sector",75,NULL);
 
   lame = gst_elementfactory_make("lame","lame");
   g_return_val_if_fail(lame != NULL,3);
-  gtk_object_set(GTK_OBJECT(lame),"bitrate",128,NULL);
+  g_object_set(G_OBJECT(lame),"bitrate",128,NULL);
   sink = gst_elementfactory_make("fdsink","fdsink");
   g_return_val_if_fail(sink != NULL,4);
-  gtk_object_set(GTK_OBJECT(sink),"fd",outfile,NULL);
+  g_object_set(G_OBJECT(sink),"fd",outfile,NULL);
 
   fprintf(stderr,"paranoia is %p, lame is %p, sink is %p\n",paranoia,lame,sink);
   gst_bin_add(GST_BIN(pipeline),paranoia);

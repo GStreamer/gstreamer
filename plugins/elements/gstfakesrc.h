@@ -50,13 +50,13 @@ typedef enum {
 #define GST_TYPE_FAKESRC \
   (gst_fakesrc_get_type())
 #define GST_FAKESRC(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_FAKESRC,GstFakeSrc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FAKESRC,GstFakeSrc))
 #define GST_FAKESRC_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_FAKESRC,GstFakeSrcClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FAKESRC,GstFakeSrcClass))
 #define GST_IS_FAKESRC(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_FAKESRC))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FAKESRC))
 #define GST_IS_FAKESRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESRC))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESRC))
 
 typedef struct _GstFakeSrc GstFakeSrc;
 typedef struct _GstFakeSrcClass GstFakeSrcClass;
@@ -82,7 +82,7 @@ struct _GstFakeSrcClass {
   void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
 };
 
-GtkType gst_fakesrc_get_type(void);
+GType gst_fakesrc_get_type(void);
 
 #ifdef __cplusplus
 }

@@ -41,7 +41,7 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
     gst_bin_add(GST_BIN(autobin),sink);
     gst_element_connect(decoder,"src",sink,"sink");
 
-    gtk_object_set (GTK_OBJECT(cache), "reset", TRUE, NULL);
+    g_object_set (G_OBJECT(cache), "reset", TRUE, NULL);
 
     gst_element_connect(cache,"src",decoder,"sink");
   }
@@ -52,7 +52,7 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
     gst_bin_add(GST_BIN(autobin),sink);
     gst_element_connect(decoder,"src",sink,"sink");
 
-    gtk_object_set (GTK_OBJECT(cache), "reset", TRUE, NULL);
+    g_object_set (G_OBJECT(cache), "reset", TRUE, NULL);
 
     gst_element_connect(cache,"src",decoder,"sink");
   }
@@ -68,14 +68,14 @@ int main (int argc,char *argv[]) {
 
   pipeline = gst_pipeline_new("pipeline");
   src = gst_elementfactory_make ("disksrc","src");
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   gst_bin_add (GST_BIN(pipeline),src);
 
   autobin = gst_bin_new("autobin");
   cache = gst_elementfactory_make ("autoplugcache","cache");
-  gtk_signal_connect (GTK_OBJECT(cache),"cache_empty",GTK_SIGNAL_FUNC(cache_empty),NULL);
+  g_signal_connectc (G_OBJECT(cache),"cache_empty",(GCallback)cache_empty,NULL,FALSE);
   typefind = gst_elementfactory_make ("typefind", "typefind");
-  gtk_signal_connect (GTK_OBJECT(typefind),"have_type",GTK_SIGNAL_FUNC(have_type),&caps);
+  g_signal_connectc (G_OBJECT(typefind),"have_type",(GCallback)have_type,&caps,FALSE);
   gst_bin_add (GST_BIN(autobin),cache);
   gst_bin_add (GST_BIN(autobin),typefind);
   gst_element_connect(cache,"src",typefind,"sink");

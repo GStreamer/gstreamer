@@ -40,13 +40,13 @@ GstElementDetails gst_fakesink_details;
 #define GST_TYPE_FAKESINK \
   (gst_fakesink_get_type())
 #define GST_FAKESINK(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_FAKESINK,GstFakeSink))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FAKESINK,GstFakeSink))
 #define GST_FAKESINK_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_FAKESINK,GstFakeSinkClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FAKESINK,GstFakeSinkClass))
 #define GST_IS_FAKESINK(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_FAKESINK))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FAKESINK))
 #define GST_IS_FAKESINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESINK))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESINK))
 
 typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;
@@ -66,7 +66,7 @@ struct _GstFakeSinkClass {
   void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
 };
 
-GtkType gst_fakesink_get_type(void);
+GType gst_fakesink_get_type(void);
 
 
 #ifdef __cplusplus

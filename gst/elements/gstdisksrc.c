@@ -59,8 +59,8 @@ enum {
 static void		gst_disksrc_class_init	(GstDiskSrcClass *klass);
 static void		gst_disksrc_init		(GstDiskSrc *disksrc);
 
-static void		gst_disksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void		gst_disksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_disksrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void		gst_disksrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstBuffer *	gst_disksrc_get		(GstPad *pad);
 static GstBuffer *	gst_disksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
@@ -73,23 +73,23 @@ static void		gst_disksrc_close_file	(GstDiskSrc *src);
 static GstElementClass *parent_class = NULL;
 //static guint gst_disksrc_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_disksrc_get_type(void)
 {
-  static GtkType disksrc_type = 0;
+  static GType disksrc_type = 0;
 
   if (!disksrc_type) {
-    static const GtkTypeInfo disksrc_info = {
-      "GstDiskSrc",
+    static const GTypeInfo disksrc_info = {
+      sizeof(GstDiskSrcClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_disksrc_class_init,
+      NULL,
+      NULL,
       sizeof(GstDiskSrc),
-      sizeof(GstDiskSrcClass),
-      (GtkClassInitFunc)gst_disksrc_class_init,
-      (GtkObjectInitFunc)gst_disksrc_init,
-      (GtkArgSetFunc)gst_disksrc_set_arg,
-      (GtkArgGetFunc)gst_disksrc_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_disksrc_init,
     };
-    disksrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &disksrc_info);
+    disksrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstDiskSrc", &disksrc_info, 0);
   }
   return disksrc_type;
 }
@@ -97,25 +97,29 @@ gst_disksrc_get_type(void)
 static void
 gst_disksrc_class_init (GstDiskSrcClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstDiskSrc::location", GST_TYPE_FILENAME,
-                           GTK_ARG_READWRITE, ARG_LOCATION);
-  gtk_object_add_arg_type ("GstDiskSrc::bytesperread", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
-  gtk_object_add_arg_type ("GstDiskSrc::offset", GTK_TYPE_LONG,
-                           GTK_ARG_READWRITE, ARG_OFFSET);
-  gtk_object_add_arg_type ("GstDiskSrc::size", GTK_TYPE_LONG,
-                           GTK_ARG_READABLE, ARG_SIZE);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
+    g_param_spec_string("location","location","location",
+                        NULL,G_PARAM_READWRITE)); // CHECKME!
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BYTESPERREAD,
+    g_param_spec_int("bytesperread","bytesperread","bytesperread",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OFFSET,
+    g_param_spec_long("offset","offset","offset",
+                     G_MINLONG,G_MAXLONG,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SIZE,
+    g_param_spec_long("size","size","size",
+                     G_MINLONG,G_MAXLONG,0,G_PARAM_READABLE)); // CHECKME
 
-  gtkobject_class->set_arg = gst_disksrc_set_arg;
-  gtkobject_class->get_arg = gst_disksrc_get_arg;
+  gobject_class->set_property = gst_disksrc_set_property;
+  gobject_class->get_property = gst_disksrc_get_property;
 
   gstelement_class->change_state = gst_disksrc_change_state;
 }
@@ -142,7 +146,7 @@ gst_disksrc_init (GstDiskSrc *disksrc)
 
 
 static void
-gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_disksrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstDiskSrc *src;
 
@@ -151,7 +155,7 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
   src = GST_DISKSRC (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_LOCATION:
       /* the element must be stopped or paused in order to do this */
       g_return_if_fail ((GST_STATE (src) < GST_STATE_PLAYING)
@@ -159,12 +163,12 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
       if (src->filename) g_free (src->filename);
       /* clear the filename if we get a NULL (is that possible?) */
-      if (GTK_VALUE_STRING (*arg) == NULL) {
+      if (g_value_get_string (value) == NULL) {
         gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
         src->filename = NULL;
       /* otherwise set the new filename */
       } else {
-        src->filename = g_strdup (GTK_VALUE_STRING (*arg));
+        src->filename = g_strdup (g_value_get_string (value));
       }
       if ((GST_STATE (src) == GST_STATE_PAUSED) && (src->filename != NULL))
       {
@@ -173,10 +177,10 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
       }
       break;
     case ARG_BYTESPERREAD:
-      src->bytes_per_read = GTK_VALUE_INT (*arg);
+      src->bytes_per_read = g_value_get_int (value);
       break;
     case ARG_OFFSET:
-      src->curoffset = GTK_VALUE_LONG (*arg);
+      src->curoffset = g_value_get_long (value);
       src->new_seek = TRUE;
       break;
     default:
@@ -185,7 +189,7 @@ gst_disksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void
-gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_disksrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstDiskSrc *src;
 
@@ -194,21 +198,21 @@ gst_disksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 
   src = GST_DISKSRC (object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_LOCATION:
-      GTK_VALUE_STRING (*arg) = src->filename;
+      g_value_set_string (value, src->filename);
       break;
     case ARG_BYTESPERREAD:
-      GTK_VALUE_INT (*arg) = src->bytes_per_read;
+      g_value_set_int (value, src->bytes_per_read);
       break;
     case ARG_OFFSET:
-      GTK_VALUE_LONG (*arg) = src->curoffset;
+      g_value_set_long (value, src->curoffset);
       break;
     case ARG_SIZE:
-      GTK_VALUE_LONG (*arg) = src->size;
+      g_value_set_long (value, src->size);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

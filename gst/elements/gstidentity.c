@@ -51,31 +51,31 @@ enum {
 static void gst_identity_class_init	(GstIdentityClass *klass);
 static void gst_identity_init		(GstIdentity *identity);
 
-static void gst_identity_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void gst_identity_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void gst_identity_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void gst_identity_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void gst_identity_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 //static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_identity_get_type (void) 
 {
-  static GtkType identity_type = 0;
+  static GType identity_type = 0;
 
   if (!identity_type) {
-    static const GtkTypeInfo identity_info = {
-      "GstIdentity",
+    static const GTypeInfo identity_info = {
+      sizeof(GstIdentityClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_identity_class_init,
+      NULL,
+      NULL,
       sizeof(GstIdentity),
-      sizeof(GstIdentityClass),
-      (GtkClassInitFunc)gst_identity_class_init,
-      (GtkObjectInitFunc)gst_identity_init,
-      (GtkArgSetFunc)gst_identity_set_arg,
-      (GtkArgGetFunc)gst_identity_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_identity_init,
     };
-    identity_type = gtk_type_unique (GST_TYPE_ELEMENT, &identity_info);
+    identity_type = g_type_register_static (GST_TYPE_ELEMENT, "GstIdentity", &identity_info, 0);
   }
   return identity_type;
 }
@@ -83,21 +83,24 @@ gst_identity_get_type (void)
 static void 
 gst_identity_class_init (GstIdentityClass *klass) 
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstIdentity::loop_based", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_LOOP_BASED);
-  gtk_object_add_arg_type ("GstIdentity::sleep_time", GTK_TYPE_UINT,
-                           GTK_ARG_READWRITE, ARG_SLEEP_TIME);
-  gtk_object_add_arg_type ("GstIdentity::silent", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_SILENT);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOOP_BASED,
+    g_param_spec_boolean("loop_based","loop_based","loop_based",
+                         TRUE,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SLEEP_TIME,
+    g_param_spec_uint("sleep_time","sleep_time","sleep_time",
+                     0,G_MAXUINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
+    g_param_spec_boolean("silent","silent","silent",
+                         TRUE,G_PARAM_READWRITE)); // CHECKME
 
-  gtkobject_class->set_arg = gst_identity_set_arg;  
-  gtkobject_class->get_arg = gst_identity_get_arg;
+  gobject_class->set_property = gst_identity_set_property;  
+  gobject_class->get_property = gst_identity_get_property;
 }
 
 static GstBufferPool*
@@ -193,7 +196,7 @@ gst_identity_loop (GstElement *element)
 }
 
 static void 
-gst_identity_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+gst_identity_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
 {
   GstIdentity *identity;
 
@@ -202,9 +205,9 @@ gst_identity_set_arg (GtkObject *object, GtkArg *arg, guint id)
   
   identity = GST_IDENTITY (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_LOOP_BASED:
-      identity->loop_based = GTK_VALUE_BOOL (*arg);
+      identity->loop_based = g_value_get_boolean (value);
       if (identity->loop_based) {
         gst_element_set_loop_function (GST_ELEMENT (identity), gst_identity_loop);
         gst_pad_set_chain_function (identity->sinkpad, NULL);
@@ -215,17 +218,17 @@ gst_identity_set_arg (GtkObject *object, GtkArg *arg, guint id)
       }
       break;
     case ARG_SLEEP_TIME:
-      identity->sleep_time = GTK_VALUE_UINT (*arg);
+      identity->sleep_time = g_value_get_uint (value);
       break;
     case ARG_SILENT:
-      identity->silent = GTK_VALUE_BOOL (*arg);
+      identity->silent = g_value_get_boolean (value);
       break;
     default:
       break;
   }
 }
 
-static void gst_identity_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void gst_identity_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec) {
   GstIdentity *identity;
 
   /* it's not null if we got it, but it might not be ours */
@@ -233,18 +236,18 @@ static void gst_identity_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   
   identity = GST_IDENTITY (object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_LOOP_BASED:
-      GTK_VALUE_BOOL (*arg) = identity->loop_based;
+      g_value_set_boolean (value, identity->loop_based);
       break;
     case ARG_SLEEP_TIME:
-      GTK_VALUE_UINT (*arg) = identity->sleep_time;
+      g_value_set_uint (value, identity->sleep_time);
       break;
     case ARG_SILENT:
-      GTK_VALUE_BOOL (*arg) = identity->silent;
+      g_value_set_boolean (value, identity->silent);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

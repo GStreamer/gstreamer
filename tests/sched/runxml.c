@@ -54,8 +54,8 @@ int main(int argc,char *argv[])
 
     src = gst_bin_get_by_name (GST_BIN (bin), "fakesrc");
     if (src) {
-      gtk_signal_connect (GTK_OBJECT(src), "handoff",
-                   GTK_SIGNAL_FUNC(buffer_handoff_src), bin);
+      g_signal_connectc (G_OBJECT(src), "handoff",
+                   G_CALLBACK(buffer_handoff_src), bin,FALSE);
     }
     else {
       g_print ("could not find src element\n");
@@ -64,8 +64,8 @@ int main(int argc,char *argv[])
     
     sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink");
     if (sink) {
-      gtk_signal_connect (GTK_OBJECT(sink), "handoff",
-                   GTK_SIGNAL_FUNC(buffer_handoff_sink), bin);
+      g_signal_connectc (G_OBJECT(sink), "handoff",
+                   G_CALLBACK(buffer_handoff_sink), bin,FALSE);
     }
     else {
       g_print ("could not find sink element\n");

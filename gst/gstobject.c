@@ -46,7 +46,7 @@ enum {
 typedef struct _GstSignalObject GstSignalObject;
 typedef struct _GstSignalObjectClass GstSignalObjectClass;
 
-static GtkType		gst_signal_object_get_type	(void);
+static GType		gst_signal_object_get_type	(void);
 static void		gst_signal_object_class_init	(GstSignalObjectClass *klass);
 static void		gst_signal_object_init		(GstSignalObject *object);
 
@@ -55,35 +55,31 @@ static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 static void		gst_object_class_init		(GstObjectClass *klass);
 static void		gst_object_init			(GstObject *object);
 
-static void 		gst_object_real_destroy 	(GtkObject *gtk_object);
-static void 		gst_object_shutdown 		(GtkObject *gtk_object);
-static void 		gst_object_finalize 		(GtkObject *gtk_object);
+static void 		gst_object_real_destroy 	(GObject *object);
+static void 		gst_object_shutdown 		(GObject *object);
+static void 		gst_object_finalize 		(GObject *object);
 
-static GtkObjectClass *parent_class = NULL;
+static GObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 
-void
-gst_object_inititialize (void)
-{
-}
-
-GtkType
+GType
 gst_object_get_type (void)
 {
-  static GtkType object_type = 0;
+  static GType object_type = 0;
 
   if (!object_type) {
-    static const GtkTypeInfo object_info = {
-      "GstObject",
-      sizeof(GstObject),
-      sizeof(GstObjectClass),
-      (GtkClassInitFunc)gst_object_class_init,
-      (GtkObjectInitFunc)gst_object_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+    static const GTypeInfo object_info = {
+      sizeof (GstObjectClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_object_class_init,
+      NULL,
+      NULL,
+      sizeof (GstObject),
+      32,
+      (GInstanceInitFunc) gst_object_init,
     };
-    object_type = gtk_type_unique(gtk_object_get_type(),&object_info);
+    object_type = g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info, G_TYPE_FLAG_ABSTRACT);
   }
   return object_type;
 }
@@ -91,47 +87,38 @@ gst_object_get_type (void)
 static void
 gst_object_class_init (GstObjectClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass*) klass;
+  gobject_class = (GObjectClass*) klass;
 
-  parent_class = gtk_type_class (gtk_object_get_type ());
+  parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
   gst_object_signals[PARENT_SET] =
-    gtk_signal_new ("parent_set", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstObjectClass, parent_set),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GST_TYPE_OBJECT);
+    g_signal_newc("parent_set", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
+                  g_cclosure_marshal_VOID__OBJECT,G_TYPE_NONE,1,
+                  G_TYPE_OBJECT);
 #ifndef GST_DISABLE_XML
   gst_object_signals[OBJECT_SAVED] =
-    gtk_signal_new ("object_saved", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstObjectClass, object_saved),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
+    g_signal_newc("object_saved", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
+                  g_cclosure_marshal_VOID__POINTER,G_TYPE_NONE,1,
+                  G_TYPE_POINTER);
 #endif
-  gtk_object_class_add_signals (gtkobject_class, gst_object_signals, LAST_SIGNAL);
 
   klass->path_string_separator = "/";
-  klass->signal_object = gtk_type_new (gst_signal_object_get_type ());
+// FIXME!!!
+//  klass->signal_object = g_object_new(gst_signal_object_get_type (,NULL));
 
-  gtkobject_class->shutdown = gst_object_shutdown;
-  gtkobject_class->destroy = gst_object_real_destroy;
-  gtkobject_class->finalize = gst_object_finalize;
+  gobject_class->shutdown = gst_object_shutdown;
+//  gobject_class->destroy = gst_object_real_destroy;
+  gobject_class->finalize = gst_object_finalize;
 }
 
 static void
 gst_object_init (GstObject *object)
 {
-  GstObjectClass *oclass;
-
-  oclass = GST_OBJECT_CLASS (GTK_OBJECT (object)->klass);
-
   object->lock = g_mutex_new();
-#ifdef HAVE_ATOMIC_H
-  atomic_set(&(object->refcount),1);
-#else
-  object->refcount = 1;
-#endif
   object->parent = NULL;
 
   object->flags = 0;
@@ -148,7 +135,7 @@ gst_object_init (GstObject *object)
 GstObject*
 gst_object_new (void)
 {
-  return GST_OBJECT (gtk_type_new (gst_object_get_type ()));
+  return GST_OBJECT (g_object_new (gst_object_get_type (), NULL));
 }
 
 /**
@@ -165,9 +152,9 @@ gst_object_ref (GstObject *object)
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "ref '%s' %d->%d\n",GST_OBJECT_NAME(object),
-             GTK_OBJECT(object)->ref_count,GTK_OBJECT(object)->ref_count+1);
+             G_OBJECT(object)->ref_count,G_OBJECT(object)->ref_count+1);
 
-  gtk_object_ref (GTK_OBJECT (object));
+  g_object_ref (G_OBJECT (object));
 
   return object;
 }
@@ -186,9 +173,9 @@ gst_object_unref (GstObject *object)
   g_return_if_fail (GST_IS_OBJECT (object));
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "unref '%s' %d->%d\n",GST_OBJECT_NAME(object),
-             GTK_OBJECT(object)->ref_count,GTK_OBJECT(object)->ref_count-1);
+             G_OBJECT(object)->ref_count,G_OBJECT(object)->ref_count-1);
 
-  gtk_object_unref (GTK_OBJECT (object));
+  g_object_unref (G_OBJECT (object));
 }
 #define gst_object_unref gst_object_unref
 
@@ -227,46 +214,47 @@ gst_object_destroy (GstObject *object)
      * invocations.
      */
     gst_object_ref (object);
-    GTK_OBJECT (object)->klass->shutdown (GTK_OBJECT (object));
+    G_OBJECT_GET_CLASS (object)->shutdown (G_OBJECT (object));
     gst_object_unref (object);
   }
 }
 
 static void
-gst_object_shutdown (GtkObject *object)
+gst_object_shutdown (GObject *object)
 {
   GST_DEBUG (GST_CAT_REFCOUNTING, "shutdown '%s'\n",GST_OBJECT_NAME(object));
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
-  parent_class->shutdown (GTK_OBJECT (object));
+  parent_class->shutdown (object);
 }
 
 /* finilize is called when the object has to free its resources */
 static void
-gst_object_real_destroy (GtkObject *gtk_object)
+gst_object_real_destroy (GObject *g_object)
 {
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy '%s'\n",GST_OBJECT_NAME(gtk_object));
+  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy '%s'\n",GST_OBJECT_NAME(g_object));
 
-  GST_OBJECT_PARENT (gtk_object) = NULL;
+  GST_OBJECT_PARENT (g_object) = NULL;
 
-  parent_class->destroy (gtk_object);
+// FIXME!!
+//  parent_class->destroy (g_object);
 }
 
 /* finilize is called when the object has to free its resources */
 static void
-gst_object_finalize (GtkObject *gtk_object)
+gst_object_finalize (GObject *object)
 {
-  GstObject *object;
+  GstObject *gstobject;
 
-  object = GST_OBJECT (gtk_object);
+  gstobject = GST_OBJECT (object);
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "finalize '%s'\n",GST_OBJECT_NAME(object));
 
-  if (object->name != NULL)
-    g_free (object->name);
+  if (gstobject->name != NULL)
+    g_free (gstobject->name);
 
-  g_mutex_free (object->lock);
+  g_mutex_free (gstobject->lock);
 
-  parent_class->finalize (gtk_object);
+  parent_class->finalize (object);
 }
 
 /**
@@ -333,7 +321,7 @@ gst_object_set_parent (GstObject *object, GstObject *parent)
   gst_object_sink (object);
   object->parent = parent;
 
-  gtk_signal_emit (GTK_OBJECT (object), gst_object_signals[PARENT_SET], parent);
+  g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_SET], 0, parent);
 }
 
 /**
@@ -386,15 +374,16 @@ gst_object_ref (GstObject *object)
   g_return_if_fail (object != NULL, NULL);
   g_return_if_fail (GST_IS_OBJECT (object), NULL);
 
-#ifdef HAVE_ATOMIC_H
-  g_return_if_fail (atomic_read (&(object->refcount)) > 0);
-  atomic_inc (&(object->refcount))
-#else
+//#ifdef HAVE_ATOMIC_H
+//  g_return_if_fail (atomic_read (&(object->refcount)) > 0);
+//  atomic_inc (&(object->refcount))
+//#else
   g_return_if_fail (object->refcount > 0);
   GST_LOCK (object);
-  object->refcount++;
+//  object->refcount++;
+  g_object_ref((GObject *)object);
   GST_UNLOCK (object);
-#endif
+//#endif
 
   return object;
 }
@@ -436,7 +425,7 @@ gst_object_unref (GstObject *object)
     object->refcount = 1;
 #endif
     /* destroy it */
-    gtk_object_destroy (GTK_OBJECT (object));
+    gtk_object_destroy (G_OBJECT (object));
     /* drop the refcount back to zero */
 #ifdef HAVE_ATOMIC_H
     atomic_set (&(object->refcount),0);
@@ -446,7 +435,7 @@ gst_object_unref (GstObject *object)
     /* finalize the object */
     // FIXME this is an evil hack that should be killed
 // FIXMEFIXMEFIXMEFIXME
-//    gtk_object_finalize(GTK_OBJECT(object));
+//    gtk_object_finalize(G_OBJECT(object));
   }
 }
 #endif /* gst_object_unref */
@@ -498,13 +487,13 @@ gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
   g_return_val_if_fail (GST_IS_OBJECT (object), parent);
   g_return_val_if_fail (parent != NULL, parent);
 
-  oclass = GST_OBJECT_CLASS (GTK_OBJECT (object)->klass);
+  oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(object);
 
   if (oclass->save_thyself)
     oclass->save_thyself (object, parent);
 
 #ifndef GST_DISABLE_XML
-  gtk_signal_emit (GTK_OBJECT (object), gst_object_signals[OBJECT_SAVED], parent);
+  g_signal_emit (G_OBJECT (object), gst_object_signals[OBJECT_SAVED], 0, parent);
 #endif
 
   return parent;
@@ -556,7 +545,7 @@ gst_object_get_path_string (GstObject *object)
   parents = parentage;
   while (parents) {
     if (GST_IS_OBJECT (parents->data)) {
-      GstObjectClass *oclass = GST_OBJECT_CLASS (GTK_OBJECT (parents->data)->klass);
+      GstObjectClass *oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(parents->data);
 
       component = gst_object_get_name (parents->data);
       separator = oclass->path_string_separator;
@@ -584,11 +573,11 @@ gst_object_get_path_string (GstObject *object)
 
 
 struct _GstSignalObject {
-  GtkObject object;
+  GObject object;
 };
 
 struct _GstSignalObjectClass {
-  GtkObjectClass        parent_class;
+  GObjectClass        parent_class;
 
   /* signals */
 #ifndef GST_DISABLE_XML
@@ -596,23 +585,24 @@ struct _GstSignalObjectClass {
 #endif GST_DISABLE_XML
 };
 
-static GtkType
+static GType
 gst_signal_object_get_type (void)
 {
-  static GtkType signal_object_type = 0;
+  static GType signal_object_type = 0;
 
   if (!signal_object_type) {
-    static const GtkTypeInfo signal_object_info = {
-      "GstSignalObject",
-      sizeof(GstSignalObject),
+    static const GTypeInfo signal_object_info = {
       sizeof(GstSignalObjectClass),
-      (GtkClassInitFunc)gst_signal_object_class_init,
-      (GtkObjectInitFunc)gst_signal_object_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_signal_object_class_init,
+      NULL,
+      NULL,
+      sizeof(GstSignalObject),
+      16,
+      (GInstanceInitFunc)gst_signal_object_init,
     };
-    signal_object_type = gtk_type_unique(gtk_object_get_type(),&signal_object_info);
+    signal_object_type = g_type_register_static(G_TYPE_OBJECT, "GstSignalObject", &signal_object_info, 0);
   }
   return signal_object_type;
 }
@@ -620,19 +610,18 @@ gst_signal_object_get_type (void)
 static void
 gst_signal_object_class_init (GstSignalObjectClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass*) klass;
+  gobject_class = (GObjectClass*) klass;
 
-  parent_class = gtk_type_class (gtk_object_get_type ());
+  parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
 #ifndef GST_DISABLE_XML
   gst_signal_object_signals[SO_OBJECT_LOADED] =
-    gtk_signal_new ("object_loaded", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstSignalObjectClass, object_loaded),
-                    gtk_marshal_NONE__POINTER_POINTER, GTK_TYPE_NONE, 2,
-                    GST_TYPE_OBJECT, GTK_TYPE_POINTER);
-  gtk_object_class_add_signals (gtkobject_class, gst_signal_object_signals, LAST_SIGNAL);
+    g_signal_newc("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
+                  gst_marshal_VOID__OBJECT_POINTER,G_TYPE_NONE,2,
+                  G_TYPE_OBJECT,G_TYPE_POINTER);
 #endif
 }
 
@@ -655,10 +644,10 @@ gst_signal_object_init (GstSignalObject *object)
 guint
 gst_class_signal_connect (GstObjectClass *klass,
 			  const gchar    *name,
-			  GtkSignalFunc  func,
+			  gpointer  func,
 		          gpointer       func_data)
 {
-  return gtk_signal_connect (klass->signal_object, name, func, func_data);
+  return g_signal_connectc (klass->signal_object, name, func, func_data, FALSE);
 }
 
 #ifndef GST_DISABLE_XML
@@ -677,9 +666,9 @@ gst_class_signal_emit_by_name (GstObject *object,
 {
   GstObjectClass *oclass;
 
-  oclass = GST_OBJECT_CLASS (GTK_OBJECT (object)->klass);
+  oclass = (GstObjectClass *)G_OBJECT_GET_CLASS(object);
 
-  gtk_signal_emit_by_name (oclass->signal_object, name, object, self);
+  g_signal_emit_by_name (oclass->signal_object, name, object, self);
 }
 
 #endif // GST_DISABLE_XML

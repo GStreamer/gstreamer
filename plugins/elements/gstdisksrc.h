@@ -38,13 +38,13 @@ GstElementDetails gst_disksrc_details;
 #define GST_TYPE_DISKSRC \
   (gst_disksrc_get_type())
 #define GST_DISKSRC(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_DISKSRC,GstDiskSrc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DISKSRC,GstDiskSrc))
 #define GST_DISKSRC_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_DISKSRC,GstDiskSrcClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DISKSRC,GstDiskSrcClass))
 #define GST_IS_DISKSRC(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_DISKSRC))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DISKSRC))
 #define GST_IS_DISKSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_DISKSRC))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DISKSRC))
 
 typedef enum {
   GST_DISKSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
@@ -81,7 +81,7 @@ struct _GstDiskSrcClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_disksrc_get_type(void);
+GType gst_disksrc_get_type(void);
 
 #ifdef __cplusplus
 }

@@ -60,7 +60,7 @@ struct _GstExampleClass {
 };
 
 /* Five standard preprocessing macros are used in the Gtk+ object system.
- * The first uses the object's _get_type function to return the GtkType
+ * The first uses the object's _get_type function to return the GType
  * of the object.
  */
 #define GST_TYPE_EXAMPLE \
@@ -69,21 +69,21 @@ struct _GstExampleClass {
  * is not the right type, a warning will be generated on stderr.
  */
 #define GST_EXAMPLE(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
 /* The third is a checking cast of the class instead of the object. */
 #define GST_EXAMPLE_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
 /* The last two simply check to see if the passed pointer is an object or
  * class of the correct type. */
 #define GST_IS_EXAMPLE(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_EXAMPLE))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EXAMPLE))
 #define GST_IS_EXAMPLE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
 
 /* This is the only prototype needed, because it is used in the above
  * GST_TYPE_EXAMPLE macro.
  */
-GtkType gst_example_get_type(void);
+GType gst_example_get_type(void);
 
 
 #ifdef __cplusplus

@@ -20,7 +20,7 @@ int main(int argc,char *argv[]) {
 
   fdsinkfactory = gst_elementfactory_find("fdsink");
   fdsink = gst_elementfactory_create(fdsinkfactory,"fdsink");
-  gtk_object_set(GTK_OBJECT(fdsink),"fd",fd,NULL);
+  g_object_set(G_OBJECT(fdsink),"fd",fd);
 
   /* add objects to the main pipeline */
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(osssrc));

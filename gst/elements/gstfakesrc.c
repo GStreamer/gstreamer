@@ -54,10 +54,10 @@ enum {
 };
 
 #define GST_TYPE_FAKESRC_OUTPUT (gst_fakesrc_output_get_type())
-static GtkType
+static GType
 gst_fakesrc_output_get_type(void) {
-  static GtkType fakesrc_output_type = 0;
-  static GtkEnumValue fakesrc_output[] = {
+  static GType fakesrc_output_type = 0;
+  static GEnumValue fakesrc_output[] = {
     { FAKESRC_FIRST_LAST_LOOP, 		"1", "First-Last loop"},
     { FAKESRC_LAST_FIRST_LOOP, 		"2", "Last-First loop"},
     { FAKESRC_PING_PONG, 		"3", "Ping-Pong"},
@@ -69,7 +69,7 @@ gst_fakesrc_output_get_type(void) {
     {0, NULL, NULL},
   };
   if (!fakesrc_output_type) {
-    fakesrc_output_type = gtk_type_register_enum("GstFakeSrcOutput", fakesrc_output);
+    fakesrc_output_type = g_enum_register_static("GstFakeSrcOutput", fakesrc_output);
   }
   return fakesrc_output_type;
 }
@@ -77,8 +77,8 @@ gst_fakesrc_output_get_type(void) {
 static void		gst_fakesrc_class_init	(GstFakeSrcClass *klass);
 static void		gst_fakesrc_init	(GstFakeSrc *fakesrc);
 
-static void		gst_fakesrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void		gst_fakesrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_fakesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void		gst_fakesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstBuffer*	gst_fakesrc_get		(GstPad *pad);
 static void 		gst_fakesrc_loop	(GstElement *element);
@@ -86,23 +86,24 @@ static void 		gst_fakesrc_loop	(GstElement *element);
 static GstElementClass *parent_class = NULL;
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_fakesrc_get_type (void) 
 {
-  static GtkType fakesrc_type = 0;
+  static GType fakesrc_type = 0;
 
   if (!fakesrc_type) {
-    static const GtkTypeInfo fakesrc_info = {
-      "GstFakeSrc",
-      sizeof(GstFakeSrc),
+    static const GTypeInfo fakesrc_info = {
       sizeof(GstFakeSrcClass),
-      (GtkClassInitFunc)gst_fakesrc_class_init,
-      (GtkObjectInitFunc)gst_fakesrc_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_fakesrc_class_init,
+      NULL,
+      NULL,
+      sizeof(GstFakeSrc),
+      0,
+      (GInstanceInitFunc)gst_fakesrc_init,
     };
-    fakesrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &fakesrc_info);
+    fakesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFakeSrc", &fakesrc_info, 0);
   }
   return fakesrc_type;
 }
@@ -110,38 +111,42 @@ gst_fakesrc_get_type (void)
 static void
 gst_fakesrc_class_init (GstFakeSrcClass *klass) 
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstFakeSrc::num_sources", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_NUM_SOURCES);
-  gtk_object_add_arg_type ("GstFakeSrc::loop_based", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_LOOP_BASED);
-  gtk_object_add_arg_type ("GstFakeSrc::output", GST_TYPE_FAKESRC_OUTPUT,
-                           GTK_ARG_READWRITE, ARG_OUTPUT);
-  gtk_object_add_arg_type ("GstFakeSrc::pattern", GTK_TYPE_STRING,
-                           GTK_ARG_READWRITE, ARG_PATTERN);
-  gtk_object_add_arg_type ("GstFakeSrc::num_buffers", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_NUM_BUFFERS);
-  gtk_object_add_arg_type ("GstFakeSrc::eos", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_EOS);
-  gtk_object_add_arg_type ("GstFakeSrc::silent", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_SILENT);
-
-  gtkobject_class->set_arg = gst_fakesrc_set_arg;
-  gtkobject_class->get_arg = gst_fakesrc_get_arg;
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_SOURCES,
+    g_param_spec_int("num_sources","num_sources","num_sources",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOOP_BASED,
+    g_param_spec_boolean("loop_based","loop_based","loop_based",
+                         TRUE,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT,
+    g_param_spec_enum("output","output","output",
+                      GST_TYPE_FAKESRC_OUTPUT,FAKESRC_FIRST_LAST_LOOP,G_PARAM_READWRITE)); // CHECKME!
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PATTERN,
+    g_param_spec_string("pattern","pattern","pattern",
+                        NULL, G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_BUFFERS,
+    g_param_spec_int("num_buffers","num_buffers","num_buffers",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EOS,
+    g_param_spec_boolean("eos","eos","eos",
+                         TRUE,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
+    g_param_spec_boolean("silent","silent","silent",
+                         TRUE,G_PARAM_READWRITE)); // CHECKME
 
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
-    gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstFakeSrcClass, handoff),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
+    g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
 
-  gtk_object_class_add_signals (gtkobject_class, gst_fakesrc_signals,
-                                LAST_SIGNAL);
+  gobject_class->set_property = gst_fakesrc_set_property;
+  gobject_class->get_property = gst_fakesrc_get_property;
 }
 
 static void 
@@ -192,7 +197,7 @@ gst_fakesrc_update_functions (GstFakeSrc *src)
 }
 
 static void
-gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstFakeSrc *src;
   gint new_numsrcs;
@@ -201,9 +206,9 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
   /* it's not null if we got it, but it might not be ours */
   src = GST_FAKESRC (object);
    
-  switch(id) {
+  switch (prop_id) {
     case ARG_NUM_SOURCES:
-      new_numsrcs = GTK_VALUE_INT (*arg);
+      new_numsrcs = g_value_get_int (value);
       if (new_numsrcs > src->numsrcpads) {
         while (src->numsrcpads != new_numsrcs) {
           pad = gst_pad_new(g_strdup_printf("src%d",src->numsrcpads),GST_PAD_SRC);
@@ -215,7 +220,7 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
       }
       break;
     case ARG_LOOP_BASED:
-      src->loop_based = GTK_VALUE_BOOL (*arg);
+      src->loop_based = g_value_get_boolean (value);
       gst_fakesrc_update_functions (src);
       break;
     case ARG_OUTPUT:
@@ -223,14 +228,14 @@ gst_fakesrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_PATTERN:
       break;
     case ARG_NUM_BUFFERS:
-      src->num_buffers = GTK_VALUE_INT (*arg);
+      src->num_buffers = g_value_get_int (value);
       break;
     case ARG_EOS:
-      src->eos = GTK_VALUE_BOOL (*arg);
+      src->eos = g_value_get_boolean (value);
 GST_INFO (0, "will EOS on next buffer");
       break;
     case ARG_SILENT:
-      src->silent = GTK_VALUE_BOOL (*arg);
+      src->silent = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -238,7 +243,7 @@ GST_INFO (0, "will EOS on next buffer");
 }
 
 static void 
-gst_fakesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_fakesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstFakeSrc *src;
    
@@ -247,29 +252,30 @@ gst_fakesrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
   
   src = GST_FAKESRC (object);
    
-  switch (id) {
+  switch (prop_id) {
     case ARG_NUM_SOURCES:
-      GTK_VALUE_INT (*arg) = src->numsrcpads;
+      g_value_set_int (value, src->numsrcpads);
       break;
     case ARG_LOOP_BASED:
-      GTK_VALUE_BOOL (*arg) = src->loop_based;
+      g_value_set_boolean (value, src->loop_based);
       break;
     case ARG_OUTPUT:
-      GTK_VALUE_INT (*arg) = src->output;
+      g_value_set_int (value, src->output);
       break;
     case ARG_PATTERN:
-      GTK_VALUE_STRING (*arg) = src->pattern;
+      g_value_set_string (value, src->pattern);
       break;
     case ARG_NUM_BUFFERS:
-      GTK_VALUE_INT (*arg) = src->num_buffers;
+      g_value_set_int (value, src->num_buffers);
       break;
     case ARG_EOS:
-      GTK_VALUE_BOOL (*arg) = src->eos;
+      g_value_set_boolean (value, src->eos);
+      break;
     case ARG_SILENT:
-      GTK_VALUE_BOOL (*arg) = src->silent;
+      g_value_set_boolean (value, src->silent);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -314,7 +320,7 @@ gst_fakesrc_get(GstPad *pad)
     g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
   buf = gst_buffer_new();
 
-  gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
+  g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                    buf);
 
   return buf;
@@ -364,7 +370,7 @@ gst_fakesrc_loop(GstElement *element)
       if (!src->silent)
         g_print("fakesrc: ******* (%s:%s)> \n",GST_DEBUG_PAD_NAME(pad));
 
-      gtk_signal_emit (GTK_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF],
+      g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                        buf);
       gst_pad_push (pad, buf);
 

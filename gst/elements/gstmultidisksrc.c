@@ -54,8 +54,8 @@ enum {
 static void		gst_multidisksrc_class_init	(GstMultiDiskSrcClass *klass);
 static void		gst_multidisksrc_init		(GstMultiDiskSrc *disksrc);
 
-static void		gst_multidisksrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void		gst_multidisksrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void		gst_multidisksrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void		gst_multidisksrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstBuffer *	gst_multidisksrc_get		(GstPad *pad);
 //static GstBuffer *	gst_multidisksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);
@@ -68,23 +68,23 @@ static void		gst_multidisksrc_close_file	(GstMultiDiskSrc *src);
 static GstElementClass *parent_class = NULL;
 static guint gst_multidisksrc_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_multidisksrc_get_type(void)
 {
-  static GtkType multidisksrc_type = 0;
+  static GType multidisksrc_type = 0;
 
   if (!multidisksrc_type) {
-    static const GtkTypeInfo multidisksrc_info = {
-      "GstMultiDiskSrc",
+    static const GTypeInfo multidisksrc_info = {
+      sizeof(GstMultiDiskSrcClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_multidisksrc_class_init,
+      NULL,
+      NULL,
       sizeof(GstMultiDiskSrc),
-      sizeof(GstMultiDiskSrcClass),
-      (GtkClassInitFunc)gst_multidisksrc_class_init,
-      (GtkObjectInitFunc)gst_multidisksrc_init,
-      (GtkArgSetFunc)gst_multidisksrc_set_arg,
-      (GtkArgGetFunc)gst_multidisksrc_get_arg,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_multidisksrc_init,
     };
-    multidisksrc_type = gtk_type_unique (GST_TYPE_ELEMENT, &multidisksrc_info);
+    multidisksrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstMultiDiskSrc", &multidisksrc_info, 0);
   }
   return multidisksrc_type;
 }
@@ -92,26 +92,26 @@ gst_multidisksrc_get_type(void)
 static void
 gst_multidisksrc_class_init (GstMultiDiskSrcClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gst_multidisksrc_signals[NEW_FILE] =
-    gtk_signal_new ("new_file", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstMultiDiskSrcClass, new_file),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
-  gtk_object_class_add_signals (gtkobject_class, gst_multidisksrc_signals, LAST_SIGNAL);
+    g_signal_newc ("new_file", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstMultiDiskSrcClass, new_file), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
 
-  gtk_object_add_arg_type ("GstMultiDiskSrc::locations", GTK_TYPE_POINTER,
-                           GTK_ARG_READWRITE, ARG_LOCATIONS);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATIONS,
+    g_param_spec_string("locations","locations","locations",
+                        NULL, G_PARAM_READWRITE)); // CHECKME
 
-  gtkobject_class->set_arg = gst_multidisksrc_set_arg;
-  gtkobject_class->get_arg = gst_multidisksrc_get_arg;
+  gobject_class->set_property = gst_multidisksrc_set_property;
+  gobject_class->get_property = gst_multidisksrc_get_property;
 
   gstelement_class->change_state = gst_multidisksrc_change_state;
 }
@@ -135,7 +135,7 @@ gst_multidisksrc_init (GstMultiDiskSrc *multidisksrc)
 }
 
 static void
-gst_multidisksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_multidisksrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstMultiDiskSrc *src;
 
@@ -144,18 +144,18 @@ gst_multidisksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 
   src = GST_MULTIDISKSRC (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_LOCATIONS:
       /* the element must be stopped in order to do this */
       g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
 
       /* clear the filename if we get a NULL */
-      if (GTK_VALUE_POINTER (*arg) == NULL) {
+      if (g_value_get_pointer (value) == NULL) {
         gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
         src->listptr = NULL;
       /* otherwise set the new filenames */
       } else {
-        src->listptr = GTK_VALUE_POINTER(*arg);
+        src->listptr = g_value_get_pointer (value);
       }
       break;
     default:
@@ -164,7 +164,7 @@ gst_multidisksrc_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void
-gst_multidisksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_multidisksrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstMultiDiskSrc *src;
 
@@ -173,12 +173,12 @@ gst_multidisksrc_get_arg (GtkObject *object, GtkArg *arg, guint id)
 
   src = GST_MULTIDISKSRC (object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_LOCATIONS:
-      GTK_VALUE_POINTER (*arg) = src->listptr;
+      g_value_set_pointer (value, src->listptr);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -215,7 +215,7 @@ gst_multidisksrc_get (GstPad *pad)
       return NULL;
 
   // emitted after the open, as the user may free the list and string from here
-  gtk_signal_emit(GTK_OBJECT(src), gst_multidisksrc_signals[NEW_FILE], list);
+  g_signal_emit(G_OBJECT(src), gst_multidisksrc_signals[NEW_FILE], 0, list);
 
   /* create the buffer */
   // FIXME: should eventually use a bufferpool for this

@@ -54,7 +54,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
-    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",30,NULL);
+    g_object_set(G_OBJECT(audio_queue),"max_level",30,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
     gst_pad_connect(pad,
@@ -63,7 +63,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
                     gst_element_get_pad(audio_thread,"sink"));
 
     // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
+    g_object_set(G_OBJECT(audio_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
     g_print("setting to PLAYING state\n");
@@ -96,7 +96,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
-    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",30,NULL);
+    g_object_set(G_OBJECT(audio_queue),"max_level",30,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
     gst_pad_connect(pad,
@@ -105,7 +105,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
                     gst_element_get_pad(audio_thread,"sink"));
 
     // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(audio_thread),"create_thread",TRUE,NULL);
+    g_object_set(G_OBJECT(audio_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(audio_thread),GST_STATE_READY);
     g_print("setting to PLAYING state\n");
@@ -123,14 +123,14 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(decode_video != NULL);
     encode = gst_elementfactory_make("mpeg2enc","encode");
     g_return_if_fail(encode != NULL);
-    //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
+    //g_object_set(G_OBJECT(show),"width",640, "height", 480,NULL);
     fd = open(outfile,O_CREAT|O_RDWR|O_TRUNC);
 
     fdsinkfactory = gst_elementfactory_find("fdsink");
     g_return_if_fail(fdsinkfactory != NULL);
     fdsink = gst_elementfactory_create(fdsinkfactory,"fdsink");
     g_return_if_fail(fdsink != NULL);
-    gtk_object_set(GTK_OBJECT(fdsink),"fd",fd,NULL);
+    g_object_set(G_OBJECT(fdsink),"fd",fd,NULL);
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
@@ -152,7 +152,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // construct queue and connect everything in the main pipeline
     video_queue = gst_elementfactory_make("queue","video_queue");
-    gtk_object_set(GTK_OBJECT(video_queue),"max_level",30,NULL);
+    g_object_set(G_OBJECT(video_queue),"max_level",30,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_thread));
     gst_pad_connect(pad,
@@ -161,7 +161,7 @@ void mp2tomp1(GstElement *parser,GstPad *pad, GstElement *pipeline) {
                     gst_element_get_pad(video_thread,"sink"));
 
     // set up thread state and kick things off
-    gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
+    g_object_set(G_OBJECT(video_thread),"create_thread",TRUE,NULL);
     g_print("setting to READY state\n");
     gst_element_set_state(GST_ELEMENT(video_thread),GST_STATE_READY);
     g_print("setting to PLAYING state\n");
@@ -188,7 +188,7 @@ int main(int argc,char *argv[]) {
     src = gst_elementfactory_make("disksrc","src");
 
   g_return_val_if_fail(src != NULL, -1);
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
 
   g_print("should be using output file '%s'\n",argv[2]);
@@ -200,9 +200,9 @@ int main(int argc,char *argv[]) {
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
 
-  gtk_signal_connect(GTK_OBJECT(parse),"new_pad",mp2tomp1, pipeline);
+  g_signal_connectc(G_OBJECT(parse),"new_pad",mp2tomp1, pipeline, FALSE);
 
-  gtk_signal_connect(GTK_OBJECT(src),"eos",GTK_SIGNAL_FUNC(eof),NULL);
+  g_signal_connectc(G_OBJECT(src),"eos",G_CALLBACK(eof),NULL, FALSE);
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(parse,"sink"));

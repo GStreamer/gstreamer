@@ -46,11 +46,11 @@ int main(int argc,char *argv[]) {
   pipeline = gst_pipeline_new("pipeline");
   sourcethread = gst_elementfactory_make("thread","sourcethread");
   src = gst_elementfactory_make("disksrc","src");
-  gtk_object_set(GTK_OBJECT(src),"location","/home/omega/media/AlienSong.mpg",NULL);
+  g_object_set(G_OBJECT(src),"location","/home/omega/media/AlienSong.mpg",NULL);
   parse = gst_elementfactory_make("mpeg1parse","parse");
 
-  gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
-                      GTK_SIGNAL_FUNC(new_pad),pipeline);
+  g_signal_connectc(G_OBJECT(parse),"new_pad",
+                      G_CALLBACK(new_pad),pipeline,FALSE);
 
   gst_bin_add(GST_BIN(sourcethread),src);
   gst_bin_add(GST_BIN(sourcethread),parse);

@@ -36,13 +36,13 @@ extern GstElementDetails gst_bin_details;
 #define GST_TYPE_BIN \
   (gst_bin_get_type())
 #define GST_BIN(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_BIN,GstBin))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BIN,GstBin))
 #define GST_BIN_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_BIN,GstBinClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BIN,GstBinClass))
 #define GST_IS_BIN(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_BIN))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BIN))
 #define GST_IS_BIN_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BIN))
 
 typedef enum {
   /* this bin is a manager of child elements, i.e. a pipeline or thread */
@@ -94,7 +94,7 @@ struct _GstBinClass {
   /* change the state of elements of the given type */
   gboolean	(*change_state_type)	(GstBin *bin,
 					 GstElementState state,
-					 GtkType type);
+					 GType type);
   /* run a full iteration of operation */
   gboolean	(*iterate)		(GstBin *bin);
 };
@@ -110,7 +110,7 @@ struct __GstBinChain {
 };
 
 
-GtkType		gst_bin_get_type		(void);
+GType		gst_bin_get_type		(void);
 GstElement*	gst_bin_new			(const gchar *name);
 #define		gst_bin_destroy(bin)		gst_object_destroy(GST_OBJECT(bin))
 
@@ -129,7 +129,7 @@ GList*		gst_bin_get_list		(GstBin *bin);
 
 gboolean	gst_bin_set_state_type		(GstBin *bin,
 						 GstElementState state,
-						 GtkType type);
+						 GType type);
 
 gboolean	gst_bin_iterate			(GstBin *bin);
 

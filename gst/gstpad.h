@@ -45,22 +45,22 @@ extern "C" {
 
 
 #define GST_TYPE_PAD			(gst_pad_get_type ())
-#define GST_PAD(obj)			(GTK_CHECK_CAST ((obj), GST_TYPE_PAD,GstPad))
-#define GST_PAD_CLASS(klass)		(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD,GstPadClass))
-#define GST_IS_PAD(obj)			(GTK_CHECK_TYPE ((obj), GST_TYPE_PAD))
-#define GST_IS_PAD_CLASS(obj)		(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
+#define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD,GstPad))
+#define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD,GstPadClass))
+#define GST_IS_PAD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD))
+#define GST_IS_PAD_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 
 #define GST_TYPE_REAL_PAD		(gst_real_pad_get_type ())
-#define GST_REAL_PAD(obj)		(GTK_CHECK_CAST ((obj), GST_TYPE_REAL_PAD,GstRealPad))
-#define GST_REAL_PAD_CLASS(klass)	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD,GstRealPadClass))
-#define GST_IS_REAL_PAD(obj)		(GTK_CHECK_TYPE ((obj), GST_TYPE_REAL_PAD))
-#define GST_IS_REAL_PAD_CLASS(obj)	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_REAL_PAD))
+#define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD,GstRealPad))
+#define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD,GstRealPadClass))
+#define GST_IS_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_REAL_PAD))
+#define GST_IS_REAL_PAD_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_REAL_PAD))
 
 #define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
-#define GST_GHOST_PAD(obj)		(GTK_CHECK_CAST ((obj), GST_TYPE_GHOST_PAD,GstGhostPad))
-#define GST_GHOST_PAD_CLASS(klass)	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD,GstGhostPadClass))
-#define GST_IS_GHOST_PAD(obj)		(GTK_CHECK_TYPE ((obj), GST_TYPE_GHOST_PAD))
-#define GST_IS_GHOST_PAD_CLASS(obj)	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
+#define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD,GstGhostPad))
+#define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD,GstGhostPadClass))
+#define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))
+#define GST_IS_GHOST_PAD_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
 
 
 //typedef struct _GstPad GstPad;
@@ -74,7 +74,7 @@ typedef struct _GstGhostPadClass GstGhostPadClass;
 
 
 typedef enum {
-  GST_REGION_NONE,
+  GST_REGION_VOID,
   GST_REGION_OFFSET_LEN,
   GST_REGION_TIME_LEN,
 } GstRegionType;
@@ -230,10 +230,10 @@ struct _GstGhostPadClass {
 
 /***** PadTemplate *****/
 #define GST_TYPE_PADTEMPLATE		(gst_padtemplate_get_type ())
-#define GST_PADTEMPLATE(obj)		(GTK_CHECK_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPadTemplate))
-#define GST_PADTEMPLATE_CLASS(klass)	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadTemplateClass))
-#define GST_IS_PADTEMPLATE(obj)		(GTK_CHECK_TYPE ((obj), GST_TYPE_PADTEMPLATE))
-#define GST_IS_PADTEMPLATE_CLASS(obj)	(GTK_CHECK_CLASS_TYPE ((klass), GST_TYPE_PADTEMPLATE))
+#define GST_PADTEMPLATE(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPadTemplate))
+#define GST_PADTEMPLATE_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadTemplateClass))
+#define GST_IS_PADTEMPLATE(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PADTEMPLATE))
+#define GST_IS_PADTEMPLATE_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PADTEMPLATE))
 
 typedef enum {
   GST_PAD_ALWAYS,
@@ -288,9 +288,9 @@ name (void)                                     \
 #define GST_PADTEMPLATE_GET(fact) (fact)()
 
 
-GtkType			gst_pad_get_type		(void);
-GtkType			gst_real_pad_get_type		(void);
-GtkType			gst_ghost_pad_get_type		(void);
+GType			gst_pad_get_type		(void);
+GType			gst_real_pad_get_type		(void);
+GType			gst_ghost_pad_get_type		(void);
 
 GstPad*			gst_pad_new			(gchar *name, GstPadDirection direction);
 #define			gst_pad_destroy(pad)		gst_object_destroy (GST_OBJECT (pad))
@@ -378,7 +378,7 @@ GstPad *		gst_ghost_pad_new		(gchar *name,GstPad *pad);
 
 
 /* templates and factories */
-GtkType			gst_padtemplate_get_type	(void);
+GType			gst_padtemplate_get_type	(void);
 
 GstPadTemplate*		gst_padtemplate_new		(gchar *name_template,
 		                                         GstPadDirection direction, GstPadPresence presence,

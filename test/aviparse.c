@@ -93,7 +93,7 @@ int main(int argc,char *argv[]) {
 
   appwindow = gnome_app_new("AVI player","AVI player");
   gnome_app_set_contents(GNOME_APP(appwindow),
-    gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
+    gst_util_get_pointer_arg(GTK_OBJECT(show),"widget"));
   gtk_widget_show_all(appwindow);
 
   // create the thread and pack stuff into it

@@ -12,9 +12,19 @@ endif
 EXTRA_libgst_la_SOURCES =	\
 	gstcpuid_i386.s
 
+if USE_GLIB2
+GST_OBJECT_MODEL_SRC = gstmarshal.c
+GST_OBJECT_MODEL_HDR = gstmarshal.h
+else
+GST_OBJECT_MODEL_SRC = gobject2gtk.c
+GST_OBJECT_MODEL_HDR = gobject2gtk.h
+endif
+
 libgst_la_SOURCES =		\
 	cothreads.c		\
 	gst.c			\
+	$(GST_OBJECT_MODEL_SRC)	\
+	gstobject.c		\
 	gstautoplug.c		\
 	gstbin.c		\
 	gstbuffer.c		\
@@ -27,7 +37,6 @@ libgst_la_SOURCES =		\
 	gstextratypes.c		\
 	gstinfo.c		\
 	gstmeta.c		\
-	gstobject.c		\
 	gstpad.c		\
 	gstpipeline.c		\
 	gstplugin.c		\
@@ -91,6 +100,8 @@ libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
+	$(GST_OBJECT_MODEL_HDR)	\
+	gstobject.h		\
 	gsttypes.h		\
 	gstautoplug.h		\
 	gstbin.h		\
@@ -104,7 +115,6 @@ libgstinclude_HEADERS =		\
 	gstinfo.h		\
 	gstlog.h		\
 	gstmeta.h		\
-	gstobject.h		\
 	gstpad.h		\
 	gstpipeline.h		\
 	gstplugin.h		\

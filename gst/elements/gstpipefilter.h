@@ -39,13 +39,13 @@ GstElementDetails gst_pipefilter_details;
 #define GST_TYPE_PIPEFILTER \
   (gst_pipefilter_get_type())
 #define GST_PIPEFILTER(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_PIPEFILTER,GstPipefilter))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PIPEFILTER,GstPipefilter))
 #define GST_PIPEFILTER_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_PIPEFILTER,GstPipefilterClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PIPEFILTER,GstPipefilterClass))
 #define GST_IS_PIPEFILTER(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_PIPEFILTER))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PIPEFILTER))
 #define GST_IS_PIPEFILTER_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPEFILTER))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PIPEFILTER))
 
 typedef enum {
   GST_PIPEFILTER_OPEN		= GST_ELEMENT_FLAG_LAST,
@@ -80,7 +80,7 @@ struct _GstPipefilterClass {
   GstElementClass parent_class;
 };
 
-GtkType gst_pipefilter_get_type(void);
+GType gst_pipefilter_get_type(void);
 
 
 #ifdef __cplusplus

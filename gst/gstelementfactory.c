@@ -98,7 +98,7 @@ gst_elementfactory_get_list (void)
 /**
  * gst_elementfactory_new:
  * @name: name of new elementfactory
- * @type: GtkType of new element
+ * @type: GType of new element
  * @details: #GstElementDetails structure with element details
  *
  * Create a new elementfactory capable of insantiating objects of the
@@ -107,7 +107,7 @@ gst_elementfactory_get_list (void)
  * Returns: new elementfactory
  */
 GstElementFactory*
-gst_elementfactory_new (const gchar *name, GtkType type,
+gst_elementfactory_new (const gchar *name, GType type,
                         GstElementDetails *details)
 {
   GstElementFactory *factory;
@@ -159,11 +159,11 @@ gst_elementfactory_create (GstElementFactory *factory,
   g_return_val_if_fail(factory->type != 0, NULL);
 
   // create an instance of the element
-  element = GST_ELEMENT(gtk_type_new(factory->type));
+  element = GST_ELEMENT(g_object_new(factory->type,NULL));
   g_assert(element != NULL);
 
   // attempt to set the elemenfactory class pointer if necessary
-  oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
+  oclass = GST_ELEMENT_CLASS(G_OBJECT_GET_CLASS(element));
   if (oclass->elementfactory == NULL) {
     GST_DEBUG (GST_CAT_ELEMENTFACTORY,"class %s\n", factory->name);
     oclass->elementfactory = factory;

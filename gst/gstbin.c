@@ -38,13 +38,13 @@ GstElementDetails gst_bin_details = {
 };
 
 
-static void			gst_bin_real_destroy		(GtkObject *object);
+static void			gst_bin_real_destroy		(GObject *object);
 
 static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
 static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 static gboolean			gst_bin_change_state_type	(GstBin *bin,
 								 GstElementState state,
-								 GtkType type);
+								 GType type);
 
 static gboolean			gst_bin_iterate_func		(GstBin *bin);
 
@@ -72,23 +72,24 @@ static void gst_bin_init	(GstBin *bin);
 static GstElementClass *parent_class = NULL;
 static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_bin_get_type (void)
 {
-  static GtkType bin_type = 0;
+  static GType bin_type = 0;
 
   if (!bin_type) {
-    static const GtkTypeInfo bin_info = {
-      "GstBin",
-      sizeof(GstBin),
+    static const GTypeInfo bin_info = {
       sizeof(GstBinClass),
-      (GtkClassInitFunc)gst_bin_class_init,
-      (GtkObjectInitFunc)gst_bin_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_bin_class_init,
+      NULL,
+      NULL,
+      sizeof(GstBin),
+      8,
+      (GInstanceInitFunc)gst_bin_init,
     };
-    bin_type = gtk_type_unique (GST_TYPE_ELEMENT, &bin_info);
+    bin_type = g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
   }
   return bin_type;
 }
@@ -96,22 +97,21 @@ gst_bin_get_type (void)
 static void
 gst_bin_class_init (GstBinClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstobject_class = (GstObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gst_bin_signals[OBJECT_ADDED] =
-    gtk_signal_new ("object_added", GTK_RUN_FIRST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstBinClass, object_added),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+    g_signal_newc ("object_added", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_FIRST,
+                    G_STRUCT_OFFSET (GstBinClass, object_added), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     GST_TYPE_ELEMENT);
-  gtk_object_class_add_signals (gtkobject_class, gst_bin_signals, LAST_SIGNAL);
 
   klass->change_state_type =		gst_bin_change_state_type;
   klass->iterate =			gst_bin_iterate_func;
@@ -123,7 +123,8 @@ gst_bin_class_init (GstBinClass *klass)
 
   gstelement_class->change_state =	gst_bin_change_state;
 
-  gtkobject_class->destroy =		gst_bin_real_destroy;
+// FIXME
+//  gobject_class->destroy =		gst_bin_real_destroy;
 }
 
 static void
@@ -295,7 +296,7 @@ gst_bin_add (GstBin *bin,
 
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, bin, "added child \"%s\"", GST_ELEMENT_NAME (element));
 
-  gtk_signal_emit (GTK_OBJECT (bin), gst_bin_signals[OBJECT_ADDED], element);
+  g_signal_emit (G_OBJECT (bin), gst_bin_signals[OBJECT_ADDED], 0, element);
 }
 
 /**
@@ -377,7 +378,7 @@ gst_bin_change_state (GstElement *element)
 //    GST_DEBUG (GST_CAT_STATES,"setting state on '%s'\n",GST_ELEMENT_NAME  (child));
     switch (gst_element_set_state (child, GST_STATE_PENDING (element))) {
       case GST_STATE_FAILURE:
-        GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;
+        GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
         GST_DEBUG (GST_CAT_STATES,"child '%s' failed to go to state %d(%s)\n", GST_ELEMENT_NAME (child),
               GST_STATE_PENDING (element), gst_element_statename (GST_STATE_PENDING (element)));
         return GST_STATE_FAILURE;
@@ -413,7 +414,7 @@ gst_bin_change_state_norecurse (GstBin *bin)
 static gboolean
 gst_bin_change_state_type(GstBin *bin,
                           GstElementState state,
-                          GtkType type)
+                          GType type)
 {
   GList *children;
   GstElement *child;
@@ -431,7 +432,7 @@ gst_bin_change_state_type(GstBin *bin,
     if (GST_IS_BIN (child)) {
       if (!gst_bin_set_state_type (GST_BIN (child), state,type))
         return FALSE;
-    } else if (GTK_CHECK_TYPE (child,type)) {
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE (child,type)) {
       if (!gst_element_set_state (child,state))
         return FALSE;
     }
@@ -457,7 +458,7 @@ gst_bin_change_state_type(GstBin *bin,
 gboolean
 gst_bin_set_state_type (GstBin *bin,
                         GstElementState state,
-                        GtkType type)
+                        GType type)
 {
   GstBinClass *oclass;
 
@@ -467,7 +468,7 @@ gst_bin_set_state_type (GstBin *bin,
   g_return_val_if_fail (bin != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
 
-  oclass = GST_BIN_CLASS (GTK_OBJECT (bin)->klass);
+  oclass = GST_BIN_CLASS (G_OBJECT_GET_CLASS(bin));
 
   if (oclass->change_state_type)
     (oclass->change_state_type) (bin,state,type);
@@ -475,7 +476,7 @@ gst_bin_set_state_type (GstBin *bin,
 }
 
 static void
-gst_bin_real_destroy (GtkObject *object)
+gst_bin_real_destroy (GObject *object)
 {
   GstBin *bin = GST_BIN (object);
   GList *children, *orig;
@@ -500,8 +501,9 @@ gst_bin_real_destroy (GtkObject *object)
 
   g_cond_free (bin->eoscond);
 
-  if (GTK_OBJECT_CLASS (parent_class)->destroy)
-    GTK_OBJECT_CLASS (parent_class)->destroy (object);
+// FIXME!!!
+//  if (G_OBJECT_CLASS (parent_class)->destroy)
+//    G_OBJECT_CLASS (parent_class)->destroy (object);
 }
 
 /**
@@ -666,7 +668,7 @@ gst_bin_iterate (GstBin *bin)
 
   GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME (bin));
 
-  oclass = GST_BIN_CLASS (GTK_OBJECT (bin)->klass);
+  oclass = GST_BIN_CLASS (G_OBJECT_GET_CLASS(bin));
 
   if (oclass->iterate)
     eos = (oclass->iterate) (bin);

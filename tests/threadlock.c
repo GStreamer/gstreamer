@@ -12,9 +12,9 @@ int main(int argc,char *argv[]) {
   pipeline = GST_BIN (gst_pipeline_new("pipeline"));
   thread = GST_BIN (gst_thread_new("thread"));
   src = gst_elementfactory_make("fakesrc","src");
-  gtk_object_set(GTK_OBJECT(src),"silent",TRUE,NULL);
+  g_object_set(G_OBJECT(src),"silent",TRUE,NULL);
   sink = gst_elementfactory_make("fakesink","sink");
-  gtk_object_set(GTK_OBJECT(sink),"silent",TRUE,NULL);
+  g_object_set(G_OBJECT(sink),"silent",TRUE,NULL);
 
   fprintf(stderr,"ADDING src\n");
   gst_bin_add(thread,src);

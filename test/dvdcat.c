@@ -24,13 +24,13 @@ int main(int argc,char *argv[]) {
   src = gst_elementfactory_make("dvdsrc","src");
   g_return_val_if_fail(src != NULL, -1);
 
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
   if (argc >= 3)
-    gtk_object_set(GTK_OBJECT(src),"offset",atoi(argv[2]),NULL);
+    g_object_set(G_OBJECT(src),"offset",atoi(argv[2]),NULL);
 
   sink = gst_elementfactory_make("fdsink","sink");
   g_return_val_if_fail(sink != NULL, -1);
-  gtk_object_set(GTK_OBJECT(sink),"fd",fd,NULL);
+  g_object_set(G_OBJECT(sink),"fd",fd,NULL);
 
   // construct the outer pipeline
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));

@@ -29,14 +29,14 @@ main(int argc,char *argv[])
   g_return_val_if_fail(pipeline != NULL, 1);
 
   src2 = gst_elementfactory_make("fakesrc","src2");
-  gtk_object_set (GTK_OBJECT (src2), "num_buffers", 4, NULL);
+  g_object_set (G_OBJECT (src2), "num_buffers", 4, NULL);
   g_return_val_if_fail(src2 != NULL, 2);
 
   identity2 = gst_elementfactory_make("identity","identity2");
   g_return_val_if_fail(identity2 != NULL, 3);
 
   queue = gst_elementfactory_make("queue","queue");
-  gtk_object_set (GTK_OBJECT (queue), "max_level", 1, NULL);
+  g_object_set (G_OBJECT (queue), "max_level", 1, NULL);
   g_return_val_if_fail(queue != NULL, 4);
 
   gst_element_connect(src2,"src",identity2,"sink");
@@ -47,7 +47,7 @@ main(int argc,char *argv[])
   gst_bin_add(pipeline,GST_ELEMENT(queue));
 
   identity = gst_elementfactory_make("identity","identity");
-  //gtk_object_set (GTK_OBJECT (identity), "sleep_time", 1000000, NULL);
+  //g_object_set (G_OBJECT (identity), "sleep_time", 1000000, NULL);
   g_return_val_if_fail(identity != NULL, 3);
 
   sink = gst_elementfactory_make("fakesink","sink");
@@ -64,10 +64,10 @@ main(int argc,char *argv[])
   gst_element_connect(queue,"src",identity,"sink");
   gst_element_connect(identity,"src",sink,"sink");
 
-  gtk_signal_connect (GTK_OBJECT (src2), "eos", eos_signal_element, NULL);
-  gtk_signal_connect (GTK_OBJECT (queue), "eos", eos_signal_element, NULL);
-  gtk_signal_connect (GTK_OBJECT (pipeline), "eos", eos_signal, NULL);
-  gtk_signal_connect (GTK_OBJECT (thread), "eos", eos_signal_element, NULL);
+  g_signal_connectc (G_OBJECT (src2), "eos", eos_signal_element, NULL, FALSE);
+  g_signal_connectc (G_OBJECT (queue), "eos", eos_signal_element, NULL, FALSE);
+  g_signal_connectc (G_OBJECT (pipeline), "eos", eos_signal, NULL, FALSE);
+  g_signal_connectc (G_OBJECT (thread), "eos", eos_signal_element, NULL, FALSE);
 
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 

@@ -233,10 +233,9 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       argname = arg;
       pos[0] = '\0';
       argval = pos+1;
-      DEBUG("attempting to set argument '%s' to '%s' on element '%s'\n",
+      GST_DEBUG(0,"attempting to set argument '%s' to '%s' on element '%s'\n",
             argname,argval,GST_ELEMENT_NAME(previous));
-      //gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
-      gst_util_set_object_arg (GTK_OBJECT(previous), argname, argval);
+      gst_util_set_object_arg (G_OBJECT(previous), argname, argval);
       g_free(argname);
 
     // element or argument, or beginning of bin or thread
@@ -346,8 +345,8 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
           srcpadname,
           GST_DEBUG_PAD_NAME(GST_PARSE_LISTPAD(sinkpads)));
 
-        gtk_signal_connect (GTK_OBJECT (previous), "new_pad", dynamic_connect, connect);
-        gtk_signal_connect (GTK_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect);
+        g_signal_connectc (G_OBJECT (previous), "new_pad", dynamic_connect, connect, FALSE);
+        g_signal_connectc (G_OBJECT (previous), "new_ghost_pad", dynamic_connect, connect, FALSE);
       }
       else {
         for (j=0; (j<numsrcpads) && (j<numsinkpads); j++){
@@ -369,8 +368,7 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       // thomas: if we're the first element, connect eos signal
       if (elementcount == 1) 
       {
-        gtk_signal_connect (GTK_OBJECT (element), "eos",
-                      GTK_SIGNAL_FUNC (have_eos), NULL);
+        g_signal_connectc (G_OBJECT (element), "eos", have_eos, NULL, FALSE);
 
       }
       // if we're the first element, ghost all the sinkpads

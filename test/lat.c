@@ -41,7 +41,7 @@ GstElement *identity_add(GstPipeline *pipeline, GstElement *first, int count) {
     snprintf(buf, 20, "identity_%03d", i);
     ident = gst_elementfactory_make("identity",buf);
     g_return_val_if_fail(ident != NULL,NULL);
-    gtk_object_set(GTK_OBJECT(ident),"silent",TRUE,NULL);
+    g_object_set(G_OBJECT(ident),"silent",TRUE,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(ident));
     gst_pad_connect(gst_element_get_pad(last,"src"),
                     gst_element_get_pad(ident,"sink"));
@@ -56,10 +56,10 @@ GstElement *fakesrc() {
 
   src = gst_elementfactory_make("fakesrc","src");
   g_return_val_if_fail(src != NULL,NULL);
-  gtk_object_set(GTK_OBJECT(src),"silent",TRUE,NULL);
-  gtk_object_set(GTK_OBJECT(src),"num_buffers",iterations,NULL);
-  gtk_signal_connect(GTK_OBJECT(src),
-      "handoff",GTK_SIGNAL_FUNC(handoff_src),NULL);
+  g_object_set(G_OBJECT(src),"silent",TRUE,NULL);
+  g_object_set(G_OBJECT(src),"num_buffers",iterations,NULL);
+  g_signal_connectc(G_OBJECT(src),
+      "handoff",G_CALLBACK(handoff_src),NULL,FALSE);
 
   return src;
 }
@@ -69,9 +69,9 @@ GstElement *fakesink() {
 
   sink = gst_elementfactory_make("fakesink","fakesink");
   g_return_val_if_fail(sink != NULL,NULL);
-  gtk_object_set(GTK_OBJECT(sink),"silent",TRUE,NULL);
-  gtk_signal_connect(GTK_OBJECT(sink),
-      "handoff",GTK_SIGNAL_FUNC(handoff_sink),NULL);
+  g_object_set(G_OBJECT(sink),"silent",TRUE,NULL);
+  g_signal_connectc(G_OBJECT(sink),
+      "handoff",G_CALLBACK(handoff_sink),NULL,FALSE);
 
   return sink;
 }

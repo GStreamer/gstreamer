@@ -21,7 +21,7 @@ fprintf(stderr,"QUEUE: fakesrc\n");
 fprintf(stderr,"QUEUE: queue\n");
   queue = gst_elementfactory_make("queue","queue");
   g_return_val_if_fail(4,queue != NULL);
-  gtk_object_set(GTK_OBJECT(queue),"max_level",1,NULL);
+  g_object_set(G_OBJECT(queue),"max_level",1,NULL);
 fprintf(stderr,"QUEUE: fakesink\n");
   sink = gst_elementfactory_make("fakesink","sink");
   g_return_val_if_fail(5,sink != NULL);

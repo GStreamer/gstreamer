@@ -10,9 +10,8 @@ int main(int argc,char *argv[]) {
   GstElement *element;
   GstPad *pad;
   GstPadTemplate *padtemplate;
-  GtkArg *args;
-  guint32 *flags;
-  gint num_args,i;
+  GParamSpec **property_specs;
+  gint num_properties,i;
 
   gst_debug_set_categories(0);
   gst_info_set_categories(0);
@@ -64,16 +63,21 @@ int main(int argc,char *argv[]) {
       }
 
       // write out the args
-      args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
-      for (i=0;i<num_args;i++) {
-        argnode = xmlNewChild (factorynode, NULL, "argument", args[i].name);
-        if (args[i].type == GST_TYPE_FILENAME) {
+      property_specs = g_object_class_list_properties(G_OBJECT_GET_CLASS (element), &num_properties);
+      for (i=0;i<num_properties;i++) {
+        GParamSpec *param = property_specs[i];
+        argnode = xmlNewChild (factorynode, NULL, "argument", param->name);
+        if (param->value_type == GST_TYPE_FILENAME) {
           xmlNewChild (argnode, NULL, "filename", NULL);
-        } else if (GTK_FUNDAMENTAL_TYPE (args[i].type) == GTK_TYPE_ENUM) {
-          GtkEnumValue *values;
+        } else if (G_IS_PARAM_SPEC_ENUM (param) == G_TYPE_ENUM) {
+          GEnumValue *values;
           gint j;
 
-          values = gtk_type_enum_get_values (args[i].type);
+#ifdef USE_GLIB2
+          values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
+#else
+          values = gtk_type_enum_get_values (param->value_type);
+#endif
           for (j=0;values[j].value_name;j++) {
             gchar *value = g_strdup_printf("%d",values[j].value);
             optionnode = xmlNewChild (argnode, NULL, "option", value);

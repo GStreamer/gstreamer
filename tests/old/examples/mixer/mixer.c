@@ -270,14 +270,14 @@ create_input_channel (int id, char* location)
   g_assert(channel->disksrc != NULL);    
 
   GST_DEBUG(0, "c_i_p : setting location\n");
-  gtk_object_set(GTK_OBJECT(channel->disksrc),"location", location, NULL);
+  g_object_set(G_OBJECT(channel->disksrc),"location", location, NULL);
 
   /* add disksrc to the bin before autoplug */
   gst_bin_add(GST_BIN(channel->pipe), channel->disksrc);
 
   /* connect signal to eos of disksrc */
-  gtk_signal_connect(GTK_OBJECT(channel->disksrc),"eos",
-                     GTK_SIGNAL_FUNC(eos),NULL);
+  g_signal_connectc (G_OBJECT(channel->disksrc),"eos",
+                     G_CALLBACK(eos),NULL,FALSE);
 
 
 #ifdef DEBUG
@@ -395,7 +395,7 @@ void env_register_cp (GstElement *volenv, double cp_time, double cp_level)
   char buffer[30];
 
   sprintf (buffer, "%f:%f", cp_time, cp_level);
-  gtk_object_set(GTK_OBJECT(volenv), "controlpoint", buffer, NULL);
+  g_object_set(G_OBJECT(volenv), "controlpoint", buffer, NULL);
 
 }
 

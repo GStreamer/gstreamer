@@ -60,22 +60,23 @@ static GstElementStateReturn	gst_pipeline_change_state	(GstElement *element);
 static GstBinClass *parent_class = NULL;
 //static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_pipeline_get_type (void) {
-  static GtkType pipeline_type = 0;
+  static GType pipeline_type = 0;
 
   if (!pipeline_type) {
-    static const GtkTypeInfo pipeline_info = {
-      "GstPipeline",
-      sizeof(GstPipeline),
+    static const GTypeInfo pipeline_info = {
       sizeof(GstPipelineClass),
-      (GtkClassInitFunc)gst_pipeline_class_init,
-      (GtkObjectInitFunc)gst_pipeline_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_pipeline_class_init,
+      NULL,
+      NULL,
+      sizeof(GstPipeline),
+      0,
+      (GInstanceInitFunc)gst_pipeline_init,
     };
-    pipeline_type = gtk_type_unique (gst_bin_get_type (), &pipeline_info);
+    pipeline_type = g_type_register_static (GST_TYPE_BIN, "GstPipeline", &pipeline_info, 0);
   }
   return pipeline_type;
 }
@@ -87,7 +88,7 @@ gst_pipeline_class_init (GstPipelineClass *klass)
 
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class(gst_bin_get_type());
+  parent_class = g_type_class_ref(gst_bin_get_type());
 
   gstelement_class->change_state = gst_pipeline_change_state;
 }

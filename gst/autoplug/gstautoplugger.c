@@ -33,13 +33,13 @@ GstElementDetails gst_autoplugger_details = {
 #define GST_TYPE_AUTOPLUGGER \
   (gst_autoplugger_get_type())
 #define GST_AUTOPLUGGER(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_AUTOPLUGGER,GstAutoplugger))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUTOPLUGGER,GstAutoplugger))
 #define GST_AUTOPLUGGER_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_AUTOPLUGGER,GstAutopluggerClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUTOPLUGGER,GstAutopluggerClass))
 #define GST_IS_AUTOPLUGGER(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_AUTOPLUGGER))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUTOPLUGGER))
 #define GST_IS_AUTOPLUGGER_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUTOPLUGGER))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUTOPLUGGER))
 
 typedef struct _GstAutoplugger GstAutoplugger;
 typedef struct _GstAutopluggerClass GstAutopluggerClass;
@@ -84,8 +84,8 @@ enum {
 static void			gst_autoplugger_class_init	(GstAutopluggerClass *klass);
 static void			gst_autoplugger_init		(GstAutoplugger *queue);
 
-static void			gst_autoplugger_set_arg		(GtkObject *object, GtkArg *arg, guint id);
-static void			gst_autoplugger_get_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void			gst_autoplugger_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void			gst_autoplugger_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 //static GstElementStateReturn	gst_autoplugger_change_state	(GstElement *element);
 
@@ -104,22 +104,23 @@ static void	gst_autoplugger_typefind_have_type		(GstElement *element, GstCaps *c
 static GstElementClass *parent_class = NULL;
 //static guint gst_autoplugger_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_autoplugger_get_type(void) {
-  static GtkType autoplugger_type = 0;
+  static GType autoplugger_type = 0;
 
   if (!autoplugger_type) {
-    static const GtkTypeInfo autoplugger_info = {
-      "GstAutoplugger",
-      sizeof(GstAutoplugger),
+    static const GTypeInfo autoplugger_info = {
       sizeof(GstAutopluggerClass),
-      (GtkClassInitFunc)gst_autoplugger_class_init,
-      (GtkObjectInitFunc)gst_autoplugger_init,
-      (GtkArgSetFunc)gst_autoplugger_set_arg,
-      (GtkArgGetFunc)gst_autoplugger_get_arg,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_autoplugger_class_init,
+      NULL,
+      NULL,
+      sizeof(GstAutoplugger),
+      0,
+      (GInstanceInitFunc)gst_autoplugger_init,
     };
-    autoplugger_type = gtk_type_unique (GST_TYPE_BIN, &autoplugger_info);
+    autoplugger_type = g_type_register_static (GST_TYPE_BIN, "GstAutoplugger", &autoplugger_info, 0);
   }
   return autoplugger_type;
 }
@@ -127,31 +128,32 @@ gst_autoplugger_get_type(void) {
 static void
 gst_autoplugger_class_init (GstAutopluggerClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
 /*
   gst_autoplugger_signals[_EMPTY] =
-    gtk_signal_new ("_empty", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstAutopluggerClass, _empty),
-                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
-  gtk_object_class_add_signals (gtkobject_class, gst_autoplugger_signals, LAST_SIGNAL);
+    g_signal_newc ("_empty", G_OBJECT_TYPE(gobject_class), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstAutopluggerClass, _empty), NULL, NULL,
+                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 */
 
 /*
-  gtk_object_add_arg_type ("GstAutoplugger::buffer_count", GTK_TYPE_INT,
-                           GTK_ARG_READABLE, ARG_BUFFER_COUNT);
-  gtk_object_add_arg_type ("GstAutoplugger::reset", GTK_TYPE_BOOL,
-                           GTK_ARG_WRITABLE, ARG_RESET);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_COUNT,
+    g_param_spec_int("buffer_count","buffer_count","buffer_count",
+                      0,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME!
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RESET,
+    g_param_spec_boolean("reset","reset","reset",
+                         FALSE,G_PARAM_WRITABLE)); // CHECKME!
 */
 
-  gtkobject_class->set_arg = gst_autoplugger_set_arg;
-  gtkobject_class->get_arg = gst_autoplugger_get_arg;
+  gobject_class->set_property = gst_autoplugger_set_property;
+  gobject_class->get_property = gst_autoplugger_get_property;
 
 //  gstelement_class->change_state = gst_autoplugger_change_state;
 }
@@ -166,11 +168,11 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
   g_return_if_fail (autoplugger->cache != NULL);
 
   GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
-  gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
+  g_object_set(G_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
 
   // attach signals to the cache
-  gtk_signal_connect (GTK_OBJECT (autoplugger->cache), "first_buffer",
-                      GTK_SIGNAL_FUNC (gst_autoplugger_cache_first_buffer), autoplugger);
+  g_signal_connectc (G_OBJECT (autoplugger->cache), "first_buffer",
+                     G_CALLBACK (gst_autoplugger_cache_first_buffer), autoplugger, FALSE);
 
   // add the cache to self
   gst_bin_add (GST_BIN(autoplugger), autoplugger->cache);
@@ -180,18 +182,18 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
   autoplugger->cache_srcpad = gst_element_get_pad (autoplugger->cache, "src");
 
   // attach handlers to the typefind pads
-  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_sinkpad), "caps_changed",
-                      GTK_SIGNAL_FUNC (gst_autoplugger_external_sink_caps_changed), autoplugger);
-  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_srcpad), "caps_changed",
-                      GTK_SIGNAL_FUNC (gst_autoplugger_external_src_caps_changed), autoplugger);
-  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_sinkpad), "caps_nego_failed",
-                      GTK_SIGNAL_FUNC (gst_autoplugger_external_sink_caps_nego_failed), autoplugger);
-  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_srcpad), "caps_nego_failed",
-                      GTK_SIGNAL_FUNC (gst_autoplugger_external_src_caps_nego_failed), autoplugger);
-//  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_sinkpad), "connected",
-//                      GTK_SIGNAL_FUNC (gst_autoplugger_external_sink_connected), autoplugger);
-//  gtk_signal_connect (GTK_OBJECT (autoplugger->cache_srcpad), "connected",
-//                      GTK_SIGNAL_FUNC (gst_autoplugger_external_src_connected), autoplugger);
+  g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "caps_changed",
+                     G_CALLBACK (gst_autoplugger_external_sink_caps_changed), autoplugger,FALSE);
+  g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "caps_changed",
+                     G_CALLBACK (gst_autoplugger_external_src_caps_changed), autoplugger,FALSE);
+  g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "caps_nego_failed",
+                     G_CALLBACK (gst_autoplugger_external_sink_caps_nego_failed), autoplugger,FALSE);
+  g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "caps_nego_failed",
+                     G_CALLBACK (gst_autoplugger_external_src_caps_nego_failed), autoplugger,FALSE);
+//  g_signal_connectc (G_OBJECT (autoplugger->cache_sinkpad), "connected",
+//                     gst_autoplugger_external_sink_connected, autoplugger,FALSE);
+//  g_signal_connectc (G_OBJECT (autoplugger->cache_srcpad), "connected",
+//                     gst_autoplugger_external_src_connected, autoplugger,FALSE);
 
   // ghost both of these pads to the outside world
   gst_element_add_ghost_pad (GST_ELEMENT(autoplugger), autoplugger->cache_sinkpad, "sink");
@@ -246,7 +248,7 @@ gst_autoplugger_external_src_connected(GstPad *pad, GstPad *peerpad, GstAutoplug
                  gst_caps_get_mime(peertemplatecaps));
         autoplugger->sinktemplatecaps = peertemplatecaps;
 //        GST_DEBUG(GST_CAT_AUTOPLUG, "turning on caps nego proxying in cache\n");
-//        gtk_object_set(GTK_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
+//        gtk_object_set(G_OBJECT(autoplugger->cache),"caps_proxy",TRUE,NULL);
       }
     }
   }
@@ -482,12 +484,12 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 
   // now reset the autoplugcache
   GST_DEBUG(GST_CAT_AUTOPLUG, "resetting the cache to send first buffer(s) again\n");
-  gtk_object_set(GTK_OBJECT(autoplugger->cache),"reset",TRUE,NULL);
+  g_object_set(G_OBJECT(autoplugger->cache),"reset",TRUE,NULL);
 
   // attach the cache_empty handler
   // FIXME this is the wrong place, it shouldn't be done until we get successful caps nego!
-  gtk_signal_connect(GTK_OBJECT(autoplugger->cache),"cache_empty",
-                     GTK_SIGNAL_FUNC(gst_autoplugger_cache_empty),autoplugger);
+  g_signal_connectc (G_OBJECT(autoplugger->cache),"cache_empty",
+                     G_CALLBACK (gst_autoplugger_cache_empty), autoplugger, FALSE);
 
   autoplugger->paused--;
   if (autoplugger->paused == 0)
@@ -530,8 +532,8 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
       GST_DEBUG(GST_CAT_AUTOPLUG, "creating typefind and setting signal handler\n");
       autoplugger->typefind = gst_elementfactory_make("typefind","unnamed_typefind");
       autoplugger->typefind_sinkpad = gst_element_get_pad(autoplugger->typefind,"sink");
-      gtk_signal_connect(GTK_OBJECT(autoplugger->typefind),"have_type",
-                         GTK_SIGNAL_FUNC (gst_autoplugger_typefind_have_type), autoplugger);
+      g_signal_connectc (G_OBJECT(autoplugger->typefind),"have_type",
+                         G_CALLBACK (gst_autoplugger_typefind_have_type), autoplugger, FALSE);
     }
     // add it to self and attach it
     GST_DEBUG(GST_CAT_AUTOPLUG, "adding typefind to self and connecting to cache\n");
@@ -551,34 +553,34 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
   } else {
 //    // attach the cache_empty handler, since the cache simply isn't needed
-//    gtk_signal_connect(GTK_OBJECT(autoplugger->cache),"cache_empty",
-//                       GTK_SIGNAL_FUNC(gst_autoplugger_cache_empty),autoplugger);  
+//    g_signal_connectc (G_OBJECT(autoplugger->cache),"cache_empty",
+//                       gst_autoplugger_cache_empty,autoplugger,FALSE);
   }
 }
 
 static void
-gst_autoplugger_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_autoplugger_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstAutoplugger *autoplugger;
 
   autoplugger = GST_AUTOPLUGGER (object);
 
-  switch (id) {
+  switch (prop_id) {
     default:
       break;
   }
 }
 
 static void
-gst_autoplugger_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_autoplugger_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstAutoplugger *autoplugger;
 
   autoplugger = GST_AUTOPLUGGER (object);
 
-  switch (id) {
+  switch (prop_id) {
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

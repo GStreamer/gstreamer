@@ -43,7 +43,7 @@ extern "C" {
 
 
 typedef enum {
-  GST_STATE_NONE_PENDING	= 0,
+  GST_STATE_VOID_PENDING	= 0,
   GST_STATE_NULL		= (1 << 0),
   GST_STATE_READY		= (1 << 1),
   GST_STATE_PAUSED		= (1 << 2),
@@ -74,13 +74,13 @@ typedef enum {
 #define GST_TYPE_ELEMENT \
   (gst_element_get_type())
 #define GST_ELEMENT(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_ELEMENT,GstElement))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ELEMENT,GstElement))
 #define GST_ELEMENT_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENT,GstElementClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ELEMENT,GstElementClass))
 #define GST_IS_ELEMENT(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_ELEMENT))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENT))
 #define GST_IS_ELEMENT_CLASS(klass) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT))
 
 typedef enum {
   /* element is complex (for some def.) and generally require a cothread */
@@ -164,12 +164,8 @@ struct _GstElementClass {
   void (*eos)			(GstElement *element);
 
   /* local pointers for get/set */
-  void (*set_arg) (GtkObject *object,
-                   GtkArg    *arg,
-                   guint      arg_id);
-  void (*get_arg) (GtkObject *object,
-                   GtkArg    *arg,
-                   guint      arg_id);      
+  void (*set_property) (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+  void (*get_property) (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
@@ -188,7 +184,7 @@ struct _GstElementDetails {
 
 struct _GstElementFactory {
   gchar *name;			/* name of element */
-  GtkType type;			/* unique GtkType of element */
+  GType type;			/* unique GType of element */
 
   GstElementDetails *details;	/* pointer to details struct */
 
@@ -196,7 +192,7 @@ struct _GstElementFactory {
   guint16 numpadtemplates;
 };
 
-GtkType			gst_element_get_type		(void);
+GType			gst_element_get_type		(void);
 GstElement*		gst_element_new			(void);
 #define			gst_element_destroy(element)	gst_object_destroy (GST_OBJECT (element))
 
@@ -248,7 +244,7 @@ GstElement*		gst_element_restore_thyself	(xmlNodePtr self, GstObject *parent);
  * factories stuff
  *
  **/
-GstElementFactory*	gst_elementfactory_new			(const gchar *name,GtkType type,
+GstElementFactory*	gst_elementfactory_new			(const gchar *name,GType type,
                                                                  GstElementDetails *details);
 void			gst_elementfactory_destroy		(GstElementFactory *elementfactory);
 

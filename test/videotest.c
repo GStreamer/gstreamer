@@ -73,13 +73,13 @@ int main(int argc,char *argv[]) {
   //gtk_widget_set_usize (button, 50, 50);
   //gtk_widget_set_usize (button, 0, 0);
 
-  draw = gst_util_get_widget_arg(GTK_OBJECT(videosink),"widget"),
+  draw = gst_util_get_pointer_arg(GTK_OBJECT(videosink),"widget"),
   gtk_box_pack_start (GTK_BOX (vbox1), 
 				draw,
   				TRUE, TRUE, 0);
   gtk_widget_show (draw);
 
-  draw2 = gst_util_get_widget_arg(GTK_OBJECT(videosink2),"widget"),
+  draw2 = gst_util_get_pointer_arg(GTK_OBJECT(videosink2),"widget"),
   gtk_widget_show (draw2);
 	
   gnome_app_set_contents(GNOME_APP(appwindow), vbox1);

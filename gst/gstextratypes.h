@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstextratypes.h: Header for extra GtkTypes
+ * gstextratypes.h: Header for extra GTypes
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,16 +24,15 @@
 #ifndef __GST_EXTRA_TYPES_H__
 #define __GST_EXTRA_TYPES_H__
 
-#include <gtk/gtk.h>
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+
 #define GST_TYPE_FILENAME (gst_extra_get_filename_type())
 	
-GtkType gst_extra_get_filename_type(void);
+GType gst_extra_get_filename_type(void);
+
 
 #ifdef __cplusplus
 }

@@ -33,13 +33,13 @@ extern "C" {
 #define GST_TYPE_AUTOPLUG \
   (gst_autoplug_get_type())
 #define GST_AUTOPLUG(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_AUTOPLUG,GstAutoplug))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUTOPLUG,GstAutoplug))
 #define GST_AUTOPLUG_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_AUTOPLUG,GstAutoplugClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUTOPLUG,GstAutoplugClass))
 #define GST_IS_AUTOPLUG(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_AUTOPLUG))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUTOPLUG))
 #define GST_IS_AUTOPLUG_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUTOPLUG))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUTOPLUG))
 
 typedef struct _GstAutoplug GstAutoplug;
 typedef struct _GstAutoplugClass GstAutoplugClass;
@@ -72,10 +72,10 @@ typedef struct _GstAutoplugFactory GstAutoplugFactory;
 struct _GstAutoplugFactory {
   gchar *name;                  /* name of autoplugger */
   gchar *longdesc;              /* long description of the autoplugger (well, don't overdo it..) */
-  GtkType type;                 /* unique GtkType of the autoplugger */
+  GType type;                 /* unique GType of the autoplugger */
 };
 
-GtkType			gst_autoplug_get_type			(void);
+GType			gst_autoplug_get_type			(void);
 
 void			gst_autoplug_signal_new_object		(GstAutoplug *autoplug, GstObject *object);
 
@@ -88,7 +88,7 @@ GstElement*		gst_autoplug_to_renderers		(GstAutoplug *autoplug, GstCaps *srccaps
  * creating autopluggers
  *
  */
-GstAutoplugFactory*	gst_autoplugfactory_new			(const gchar *name, const gchar *longdesc, GtkType type);
+GstAutoplugFactory*	gst_autoplugfactory_new			(const gchar *name, const gchar *longdesc, GType type);
 void                    gst_autoplugfactory_destroy		(GstAutoplugFactory *factory);
 
 GstAutoplugFactory*	gst_autoplugfactory_find		(const gchar *name);

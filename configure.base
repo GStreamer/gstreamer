@@ -169,21 +169,62 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 
-dnl Check for glib
-AM_PATH_GLIB(1.2.0,,
-            AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
-            glib gmodule gthread)
-dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
-CORE_LIBS="$GLIB_LIBS"
-CORE_CFLAGS="$GLIB_CFLAGS"
+AC_ARG_ENABLE(glib2,
+[  --enable-glib2            enable the use of glib-2.0 and GObject if available],
+[ case "${enableval}" in
+	yes) USE_GLIB2=yes ;;
+	no) USE_GLIB2=no ;;
+	*) AC_MSG_ERROR(bad value ${enableval} for --enable-glib2) ;;
+	esac],
+[:])
+HAVE_OBJECT_MODEL=no
 
+if test x$USE_GLIB2 = xyes; then
+  AC_MSG_CHECKING(glib-2.0)
+  PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
+    HAVE_GLIB2=yes,HAVE_GLIB2=yes)
 
-dnl Check for gtk
-AM_PATH_GTK(1.2.0,,
-            AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
-dnl Put the gtk flags into $LIBS and $CFLAGS since we always use them
-CORE_LIBS="$CORE_LIBS $GTK_LIBS"
-CORE_CFLAGS="$CORE_CFLAGS $GTK_CFLAGS"
+  if test x$HAVE_GLIB2 = xyes; then
+    CORE_LIBS="$GLIB2_LIBS"
+    CORE_CFLAGS="$GLIB2_CFLAGS"
+    AC_SUBST(GLIB2_LIBS)
+    AC_SUBST(GLIB2_CFLAGS)
+
+    AC_DEFINE(USE_GLIB2)
+
+    HAVE_OBJECT_MODEL=yes
+  else
+    USE_GLIB2=no
+
+    HAVE_OBJECT_MODEL=no
+  fi
+fi
+
+AM_CONDITIONAL(USE_GLIB2, test "x$USE_GLIB2" = "xyes")
+AC_SUBST(USE_GLIB2)
+AM_CONDITIONAL(USE_GTK2, test "x$USE_GTK2" = "xyes")
+AC_SUBST(USE_GTK2)
+AM_CONDITIONAL(USE_GNOME2, test "x$USE_GNOME2" = "xyes")
+AC_SUBST(USE_GNOME2)
+
+if test x$HAVE_OBJECT_MODEL = xno; then
+  dnl Check for glib
+  AM_PATH_GLIB(1.2.0,,
+              AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
+              glib gmodule gthread)
+  dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
+  CORE_LIBS="$GLIB_LIBS"
+  CORE_CFLAGS="$GLIB_CFLAGS"
+
+  dnl Check for gtk
+  AM_PATH_GTK(1.2.0,,
+              AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
+  dnl Put the gtk flags into $LIBS and $CFLAGS since we always use them
+  CORE_LIBS="$CORE_LIBS $GTK_LIBS"
+  CORE_CFLAGS="$CORE_CFLAGS $GTK_CFLAGS"
+
+  HAVE_OBJECT_MODEL=yes
+fi
 
 
 dnl Check for libxml
@@ -381,19 +422,27 @@ AC_SUBST(GDK_PIXBUF_LIBS)
 AC_SUBST(GDK_PIXBUF_CFLAGS)
 
 
-dnl Check for libgnome
-AC_PATH_PROG(GNOME_CONFIG, gnome-config, no)
-if test x$GNOME_CONFIG = xno; then
-  AC_MSG_WARN(Couldn't find gnome-config: can't build editor or gstplay)
+if test x$USE_GLIB2 = xyes; then
+  dnl we don't support gnome/gtk with glib2.0 yet
   GNOME_LIBS=
   GNOME_CFLAGS=
   HAVE_GNOME=no
+  AC_MSG_WARN(gnome disabled for glib2.0)
 else
-  GNOME_LIBS=`gnome-config --libs gnome gnomeui`
-  GNOME_CFLAGS=`gnome-config --cflags gnome gnomeui`
-  GHTTP_LIBS=`gnome-config --libs gnome gnomeui`
-  GHTTP_CFLAGS=`gnome-config --cflags gnome gnomeui`
-  HAVE_GNOME=yes
+  dnl Check for libgnome
+  AC_PATH_PROG(GNOME_CONFIG, gnome-config, no)
+  if test x$GNOME_CONFIG = xno; then
+    AC_MSG_WARN(Couldn't find gnome-config: can't build editor or gstplay)
+    GNOME_LIBS=
+    GNOME_CFLAGS=
+    HAVE_GNOME=no
+  else
+    GNOME_LIBS=`gnome-config --libs gnome gnomeui`
+    GNOME_CFLAGS=`gnome-config --cflags gnome gnomeui`
+    GHTTP_LIBS=`gnome-config --libs gnome gnomeui`
+    GHTTP_CFLAGS=`gnome-config --cflags gnome gnomeui`
+    HAVE_GNOME=yes
+  fi
 fi
 AC_SUBST(GNOME_LIBS)
 AC_SUBST(GNOME_CFLAGS)
@@ -401,57 +450,77 @@ AC_SUBST(GHTTP_LIBS)
 
 dnl Check for libghttp
 dnl FIXME: need to check for header
-AC_CHECK_LIB(ghttp, ghttp_request_new,
-  [GHTTP_LIBS="-lghttp"
-   GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
-   HAVE_LIBGHTTP=yes
-  ],
-  [AC_MSG_WARN(Cannot find libghttp: can't build gsthttpsrc)
-   GHTTP_LIBS=
-   GST_HTTPSRC_GET_TYPE=
-   HAVE_LIBGHTTP=no
-  ],
-  $LIBS)
+if test x$USE_GLIB2 = xyes; then
+  GHTTP_LIBS=
+  GST_HTTPSRC_GET_TYPE=
+  HAVE_LIBGHTTP=no
+  AC_MSG_WARN(ghttp disabled for glib2.0)
+else
+  AC_CHECK_LIB(ghttp, ghttp_request_new,
+    [GHTTP_LIBS="-lghttp"
+     GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
+     HAVE_LIBGHTTP=yes
+    ],
+    [AC_MSG_WARN(Cannot find libghttp: can't build gsthttpsrc)
+     GHTTP_LIBS=
+     GST_HTTPSRC_GET_TYPE=
+     HAVE_LIBGHTTP=no
+    ],
+    $LIBS)
+fi
 AC_SUBST(GST_HTTPSRC_GET_TYPE)
 
 dnl Check for libglade
 HAVE_LIBGLADE_GNOME="no"
-AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
-if test x$LIBGLADE_CONFIG_PATH = xno; then
-  AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
+if test x$USE_GLIB2 = xyes; then
+  dnl no glade for glib2.0
   LIBGLADE_GNOME_LIBS=
   LIBGLADE_GNOME_CFLAGS=
+  AC_MSG_WARN(libglade disabled for glib2.0)
 else
-  LIBGLADE_GNOME_LIBS=`libglade-config --libs gnome`
-  LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
-  libglade_save_CFLAGS="$CFLAGS"
-  libglade_save_LIBS="$LIBS"
-  CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS $GTK_CFLAGS"
-  LIBS="$LIBS $LIBGLADE_GNOME_LIBS $GTK_LIBS"
-  AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
-	      HAVE_LIBGLADE_GNOME="yes",
-	      AC_MSG_WARN(
+  AC_PATH_PROG(LIBGLADE_CONFIG_PATH, libglade-config, no)
+  if test x$LIBGLADE_CONFIG_PATH = xno; then
+    AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
+    LIBGLADE_GNOME_LIBS=
+    LIBGLADE_GNOME_CFLAGS=
+  else
+    LIBGLADE_GNOME_LIBS=`libglade-config --libs gnome`
+    LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
+    libglade_save_CFLAGS="$CFLAGS"
+    libglade_save_LIBS="$LIBS"
+    CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS $GTK_CFLAGS"
+    LIBS="$LIBS $LIBGLADE_GNOME_LIBS $GTK_LIBS"
+    AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
+  	        HAVE_LIBGLADE_GNOME="yes",
+	        AC_MSG_WARN(
       [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
 	     )
-  CFLAGS="$libglade_save_CFLAGS"
-  LIBS="$libglade_save_LIBS"
+    CFLAGS="$libglade_save_CFLAGS"
+    LIBS="$libglade_save_LIBS"
+  fi
 fi
 AC_SUBST(LIBGLADE_GNOME_LIBS)
 AC_SUBST(LIBGLADE_GNOME_CFLAGS)
 
 dnl Check for Gnome VFS
 HAVE_GNOME_VFS="no"
-AC_MSG_CHECKING(for Gnome VFS)
-if gnome-config --libs vfs > /dev/null 2>&1; then
+if test x$USE_GLIB2 = xyes; then
+  VFS_LIBS=
+  VFS_CFLAGS=
+  AC_MSG_WARN(Gnome-VFS disabled for glib2.0)
+else
+  AC_MSG_CHECKING(for Gnome VFS)
+  if gnome-config --libs vfs > /dev/null 2>&1; then
 	HAVE_GNOME_VFS="yes"
 	AC_MSG_RESULT(found)
-else
+        VFS_LIBS="`gnome-config --libs vfs`"
+        VFS_CFLAGS="`gnome-config --cflags vfs`"
+  else
 	AC_MSG_WARN(Did not find Gnome-VFS installed)
+        VFS_LIBS=
+        VFS_CFLAGS=
+  fi
 fi
-
-VFS_LIBS="`gnome-config --libs vfs`"
-VFS_CFLAGS="`gnome-config --cflags vfs`"
-
 AC_SUBST(VFS_LIBS)
 AC_SUBST(VFS_CFLAGS)
 
@@ -459,15 +528,13 @@ dnl Check for Avifile
 HAVE_AVIFILE="no"
 AC_MSG_CHECKING(for Avifile)
 if avifile-config --libs > /dev/null 2>&1; then
-	HAVE_AVIFILE="yes"
-	AC_MSG_RESULT(found)
+        HAVE_AVIFILE="yes"
+        AC_MSG_RESULT(found)
 else
-	AC_MSG_WARN(Did not find Avifile installed)
+        AC_MSG_WARN(Did not find Avifile installed)
 fi
-
 AVIFILE_LIBS="`avifile-config --libs`"
 AVIFILE_CFLAGS="`avifile-config --cflags`"
-
 AC_SUBST(AVIFILE_LIBS)
 AC_SUBST(AVIFILE_CFLAGS)
 
@@ -1148,8 +1215,6 @@ gst/elements/Makefile
 gst/autoplug/Makefile
 libs/Makefile
 libs/riff/Makefile
-libs/colorspace/Makefile
-libs/videoscale/Makefile
 libs/getbits/Makefile
 libs/putbits/Makefile
 libs/idct/Makefile
@@ -1164,6 +1229,7 @@ plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
 plugins/avi/winaudio/Makefile
 plugins/flx/Makefile
+plugins/festival/Makefile
 plugins/flac/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
@@ -1219,6 +1285,7 @@ plugins/icecast/icecastsend/Makefile
 plugins/effects/Makefile
 plugins/effects/stereo/Makefile
 plugins/effects/volume/Makefile
+plugins/udp/Makefile
 plugins/visualization/Makefile
 plugins/visualization/spectrum/Makefile
 plugins/visualization/vumeter/Makefile

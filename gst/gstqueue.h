@@ -39,13 +39,13 @@ GstElementDetails gst_queue_details;
 #define GST_TYPE_QUEUE \
   (gst_queue_get_type())
 #define GST_QUEUE(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_QUEUE,GstQueue))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QUEUE,GstQueue))
 #define GST_QUEUE_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_QUEUE,GstQueueClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QUEUE,GstQueueClass))
 #define GST_IS_QUEUE(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_QUEUE))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUEUE))
 #define GST_IS_QUEUE_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
 
 enum {
   GST_QUEUE_NO_LEAK		= 0,
@@ -90,7 +90,7 @@ struct _GstQueueClass {
   void (*high_watermark)	(GstQueue *queue, gint level);
 };
 
-GtkType gst_queue_get_type (void);
+GType gst_queue_get_type (void);
 
 #ifdef __cplusplus
 }

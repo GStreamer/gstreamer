@@ -23,7 +23,7 @@ int main(int argc,char *argv[]) {
 
   src = gst_elementfactory_make("disksrc","src");
   g_return_val_if_fail(src != NULL, -1);
-  gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
+  g_object_set(G_OBJECT(src),"location",argv[1],NULL);
 //  g_print("should be using file '%s'\n",argv[1]);
   parse = gst_elementfactory_make("ac3parse","parse");
   g_return_val_if_fail(parse != NULL, -1);
@@ -58,7 +58,7 @@ int main(int argc,char *argv[]) {
   xmlSaveFile("ac3play.gst", gst_xml_write(GST_ELEMENT(pipeline)));
 
   // set thread start state
-  gtk_object_set(GTK_OBJECT(decodethread),"create_thread",TRUE,NULL);
+  g_object_set(G_OBJECT(decodethread),"create_thread",TRUE,NULL);
 
   g_print("setting to READY state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);

@@ -7,8 +7,8 @@
 static int launch_argc;
 static char **launch_argv;
 
-GtkWidget *window;
-GtkWidget *gtk_socket;
+//GtkWidget *window;
+//GtkWidget *gtk_socket;
 
 typedef void (*found_handler) (GstElement *element, gint xid, void *priv);
 
@@ -22,6 +22,7 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
 
   children = gst_bin_get_list(bin);
 
+#if 0
   while (children) {
     GstElement *child;
      
@@ -50,6 +51,7 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
       }
     }
   }
+#endif
 
   g_free(ccargname);
 }
@@ -57,13 +59,14 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
 void 
 handle_have_size (GstElement *element,int width,int height) 
 {
-  gtk_widget_set_usize(gtk_socket,width,height);
-  gtk_widget_show_all(window);
+  //gtk_widget_set_usize(gtk_socket,width,height);
+  //gtk_widget_show_all(window);
 }
 
 void 
 xid_handler (GstElement *element, gint xid, void *priv) 
 {
+#if 0
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
   gtk_socket = gtk_socket_new ();
@@ -79,6 +82,7 @@ xid_handler (GstElement *element, gint xid, void *priv)
 
   gtk_signal_connect (GTK_OBJECT (element), "have_size",
                       GTK_SIGNAL_FUNC (handle_have_size), element);
+#endif
 }
 
 gboolean
@@ -149,8 +153,10 @@ main(int argc, char *argv[])
     fprintf(stderr,"RUNNING pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-    gtk_idle_add(idle_func,pipeline);
-    gtk_main();
+//    g_idle_add(idle_func,pipeline);
+//    g_main_loop_run (g_main_loop_new (NULL, FALSE));
+    while (1)
+      gst_bin_iterate (GST_BIN (pipeline));
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }

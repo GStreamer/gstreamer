@@ -24,15 +24,22 @@
 #ifndef __GST_OBJECT_H__
 #define __GST_OBJECT_H__
 
-#include <gtk/gtk.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+
+#ifdef USE_GLIB2
+#include <glib-object.h>
+#include <gst/gstmarshal.h>
+#else
+#include <gst/gobject2gtk.h>
+#endif
+
 #include <gst/gsttrace.h>
 #include <parser.h>
 
 #include <gst/gsttypes.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #ifdef HAVE_ATOMIC_H
 #include <asm/atomic.h>
@@ -49,13 +56,13 @@ extern "C" {
 #define GST_TYPE_OBJECT \
   (gst_object_get_type())
 #define GST_OBJECT(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_OBJECT,GstObject))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OBJECT,GstObject))
 #define GST_OBJECT_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_OBJECT,GstObjectClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OBJECT,GstObjectClass))
 #define GST_IS_OBJECT(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_OBJECT))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OBJECT))
 #define GST_IS_OBJECT_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
 
 //typedef struct _GstObject GstObject;
 //typedef struct _GstObjectClass GstObjectClass;
@@ -69,7 +76,7 @@ typedef enum
 } GstObjectFlags;
 
 struct _GstObject {
-  GtkObject object;
+  GObject object;
 
   gchar *name;
   /* have to have a refcount for the object */
@@ -89,10 +96,10 @@ struct _GstObject {
 };
 
 struct _GstObjectClass {
-  GtkObjectClass	parent_class;
+  GObjectClass	parent_class;
 
   gchar			*path_string_separator;
-  GtkObject		*signal_object;
+  GObject		*signal_object;
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
@@ -127,8 +134,8 @@ struct _GstObjectClass {
 #define GST_GET_LOCK(obj)	(GST_OBJECT(obj)->lock)
 
 
-/* normal GtkObject stuff */
-GtkType		gst_object_get_type		(void);
+/* normal GObject stuff */
+GType		gst_object_get_type		(void);
 GstObject*	gst_object_new			(void);
 
 /* name routines */
@@ -147,19 +154,19 @@ xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
 #endif
 
 /* refcounting */
-GstObject *	gst_object_ref			(GstObject *object);		
-void 		gst_object_unref		(GstObject *object);		
-void 		gst_object_sink			(GstObject *object);		
+GstObject *	gst_object_ref			(GstObject *object);
+void 		gst_object_unref		(GstObject *object);
+void 		gst_object_sink			(GstObject *object);
 
 /* destroying an object */
-void 		gst_object_destroy		(GstObject *object);		
+void 		gst_object_destroy		(GstObject *object);
 
 /* printing out the 'path' of the object */
 gchar *		gst_object_get_path_string	(GstObject *object);
 
 guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 const gchar	*name,
-						 GtkSignalFunc	func,
+						 gpointer	func,
 						 gpointer	func_data);
 
 #ifndef GST_DISABLE_XML

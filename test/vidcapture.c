@@ -28,16 +28,16 @@ int main(int argc,char *argv[]) {
   compress = gst_elementfactory_create(compressfactory,"jpegenc");
   encoderfactory = gst_elementfactory_find("aviencoder");
   encoder = gst_elementfactory_create(encoderfactory,"aviencoder");
-  gtk_object_set(GTK_OBJECT(videosrc),"width",320,"height",240,NULL);
-  gtk_object_set(GTK_OBJECT(videosrc),"format",9,NULL);
+  g_object_set(G_OBJECT(videosrc),"width",320,"height",240,NULL);
+  g_object_set(G_OBJECT(videosrc),"format",9,NULL);
 
-  gtk_object_set(GTK_OBJECT(encoder),"video","00:I420",NULL);
+  g_object_set(G_OBJECT(encoder),"video","00:I420",NULL);
 
   fd = open(argv[1],O_CREAT|O_RDWR|O_TRUNC);
 
   fdsinkfactory = gst_elementfactory_find("fdsink");
   fdsink = gst_elementfactory_create(fdsinkfactory,"fdsink");
-  gtk_object_set(GTK_OBJECT(fdsink),"fd",fd,NULL);
+  g_object_set(G_OBJECT(fdsink),"fd",fd,NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(videosrc));
 
@@ -60,7 +60,7 @@ int main(int argc,char *argv[]) {
 
   // construct queue and connect everything in the main pipeline
   video_queue = gst_elementfactory_make("queue","video_queue");
-  gtk_object_set(GTK_OBJECT(video_queue),"max_level",30,NULL);
+  g_object_set(G_OBJECT(video_queue),"max_level",30,NULL);
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_queue));
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_thread));
   gst_pad_connect(gst_element_get_pad(videosrc, "src"),
@@ -68,7 +68,7 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(video_queue,"src"),
                   gst_element_get_pad(video_thread,"video_00"));
 
-  gtk_object_set(GTK_OBJECT(video_thread),"create_thread",TRUE,NULL);
+  g_object_set(G_OBJECT(video_thread),"create_thread",TRUE,NULL);
   g_print("\neverything's built, setting it up to be runnable\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
   g_print("\nok, runnable, hitting 'play'...\n");

@@ -42,7 +42,7 @@
 
 struct _elements_entry {
   gchar *name;
-  GtkType (*type) (void);
+  GType (*type) (void);
   GstElementDetails *details;
   gboolean (*factoryinit) (GstElementFactory *factory);
 };

@@ -80,9 +80,8 @@ print_element_info (GstElementFactory *factory)
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
-  GtkArg *args, *args2;
-  guint32 *flags;
-  gint num_args,i;
+  gint num_properties,i;
+  GParamSpec **property_specs;
   GList *children;
   GstElement *child;
   gboolean have_flags;
@@ -93,8 +92,8 @@ print_element_info (GstElementFactory *factory)
     return -1;
   }
 
-  gstobject_class = GST_OBJECT_CLASS (GTK_OBJECT (element)->klass);
-  gstelement_class = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
+  gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
+  gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   printf("Factory Details:\n");
   printf("  Long name:\t%s\n",factory->details->longname);
@@ -120,13 +119,13 @@ print_element_info (GstElementFactory *factory)
         printf("  UNKNOWN!!! template: '%s'\n",padtemplate->name_template);
 
       if (padtemplate->presence == GST_PAD_ALWAYS)
-        printf("    Exists: Always\n");
+        printf("    Availability: Always\n");
       else if (padtemplate->presence == GST_PAD_SOMETIMES)
-        printf("    Exists: Sometimes\n");
+        printf("    Availability: Sometimes\n");
       else if (padtemplate->presence == GST_PAD_REQUEST)
-        printf("    Exists: Request\n");
+        printf("    Availability: On request\n");
       else
-        printf("    Exists: UNKNOWN!!!\n");
+        printf("    Availability: UNKNOWN!!!\n");
 
       if (padtemplate->caps) {
         printf("    Capabilities:\n");
@@ -254,52 +253,57 @@ print_element_info (GstElementFactory *factory)
   } else
     printf("  none\n");
 
-
-
+  property_specs = g_object_class_list_properties(G_OBJECT_GET_CLASS (element), &num_properties);
   printf("\nElement Arguments:\n");
-  args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
-  args2 = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
-  for (i=0;i<num_args;i++) {
 
-// FIXME should say whether it's read-only or not
-    gtk_object_getv (GTK_OBJECT (element), num_args, args2);
+  for (i=0;i<num_properties;i++) {
+    GValue value = { 0, };
+    GParamSpec *param = property_specs[i];
 
-    printf("  %-40.40s: ",args[i].name);
-    switch (args[i].type) {
-      case GTK_TYPE_STRING: printf("String (Default \"%s\")", GTK_VALUE_STRING (args2[i]));break;
-      case GTK_TYPE_BOOL: printf("Boolean (Default %s)", (GTK_VALUE_BOOL (args2[i])?"true":"false"));break;
-      case GTK_TYPE_ULONG: printf("Unsigned Long (Default %lu)", GTK_VALUE_ULONG (args2[i]));break;
-      case GTK_TYPE_LONG: printf("Long (Default %ld)", GTK_VALUE_LONG (args2[i]));break;
-      case GTK_TYPE_UINT: printf("Unsigned Integer (Default %u)", GTK_VALUE_UINT (args2[i]));break;
-      case GTK_TYPE_INT: printf("Integer (Default %d)", GTK_VALUE_INT (args2[i]));break;
-      case GTK_TYPE_FLOAT: printf("Float (Default %f)", GTK_VALUE_FLOAT (args2[i]));break;
-      case GTK_TYPE_DOUBLE: printf("Double (Default %lf)", GTK_VALUE_DOUBLE (args2[i]));break;
+    g_value_init (&value, param->value_type);
+    g_object_get_property (G_OBJECT (element), param->name, &value);
+
+    printf("  %-40.40s: ",param->name);
+    switch (G_VALUE_TYPE (&value)) {
+      case G_TYPE_STRING: printf("String (Default \"%s\")", g_value_get_string (&value));break;
+      case G_TYPE_BOOLEAN: printf("Boolean (Default %s)", (g_value_get_boolean (&value)?"true":"false"));break;
+      case G_TYPE_ULONG: printf("Unsigned Long (Default %lu)", g_value_get_ulong (&value));break;
+      case G_TYPE_LONG: printf("Long (Default %ld)", g_value_get_long (&value));break;
+      case G_TYPE_UINT: printf("Unsigned Integer (Default %u)", g_value_get_uint (&value));break;
+      case G_TYPE_INT: printf("Integer (Default %d)", g_value_get_int (&value));break;
+      case G_TYPE_FLOAT: printf("Float (Default %f)", g_value_get_float (&value));break;
+      case G_TYPE_DOUBLE: printf("Double (Default %f)", g_value_get_double (&value));break;
       default:
-        if (args[i].type == GST_TYPE_FILENAME)
+        if (param->value_type == GST_TYPE_FILENAME)
           printf("Filename");
-        else if (GTK_FUNDAMENTAL_TYPE (args[i].type) == GTK_TYPE_ENUM) {
-          GtkEnumValue *values;
+        else if (G_IS_PARAM_SPEC_ENUM (param)) {
+          GEnumValue *values;
 	  guint j = 0;
 
-          printf("Enum (default %d)", GTK_VALUE_ENUM (args[i]));
-	  values = gtk_type_enum_get_values (args[i].type);
+          printf("Enum \"%s\" (default %d)", g_type_name (G_VALUE_TYPE (&value)),
+				  g_value_get_enum (&value));
+#ifdef USE_GLIB2
+	  values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
+#else
+	  values = gtk_type_enum_get_values (param->value_type);
+#endif
 	  while (values[j].value_name) {
             printf("\n    (%d): \t%s", values[j].value, values[j].value_nick);
 	    j++; 
 	  }
+	  //g_type_class_unref (ec);
 	}
-        else if (args[i].type == GTK_TYPE_WIDGET)
-          printf("GtkWidget");
         else
-          printf("unknown %d", args[i].type);
+          printf("unknown %d", param->value_type);
         break;
     }
     printf("\n");
   }
+    /*
   g_free (args);
-  if (num_args == 0) g_print ("  none");
+  */
+  if (num_properties == 0) g_print ("  none");
   printf("\n");
-
 
 
   // for compound elements

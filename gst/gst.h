@@ -36,7 +36,6 @@
 #include <gst/gstcpu.h>
 #include <gst/gstclock.h>
 #include <gst/gstelement.h>
-#include <gst/gstextratypes.h>
 #include <gst/gstbin.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstthread.h>
@@ -52,6 +51,7 @@
 #include <gst/gstscheduler.h>
 
 #include <gst/gstparse.h>
+#include <gst/gstextratypes.h>
 
 #ifdef __cplusplus
 extern "C" {

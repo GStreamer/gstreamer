@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstextratypes.c: Extra GtkTypes: filename type, etc.
+ * gstextratypes.c: Extra GTypes: filename type, etc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,25 +22,27 @@
 
 #include "gst_private.h"
 
-#include "gstextratypes.h"
+#include <gst/gstobject.h>
+#include <gst/gstextratypes.h>
 
-GtkType 
+GType 
 gst_extra_get_filename_type (void) 
 {
-  static GtkType filename_type = 0;
+  static GType filename_type = 0;
 
   if (!filename_type) {
-    static const GtkTypeInfo filename_info = {
-      "GstFilename",
-      0, //sizeof(GstElement),
+    static const GTypeInfo filename_info = {
       0, //sizeof(GstElementClass),
-      (GtkClassInitFunc)NULL,
-      (GtkObjectInitFunc)NULL,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      0, //sizeof(GstElement),
+      0,
+      NULL,
     };
-    filename_type = gtk_type_unique (GTK_TYPE_STRING, &filename_info);
+    filename_type = g_type_register_static (G_TYPE_STRING, "GstFilename", &filename_info, 0);
   }
   return filename_type;
 }

@@ -51,31 +51,31 @@ enum {
 static void	gst_fakesink_class_init	(GstFakeSinkClass *klass);
 static void	gst_fakesink_init	(GstFakeSink *fakesink);
 
-static void	gst_fakesink_set_arg	(GtkObject *object, GtkArg *arg, guint id);
-static void	gst_fakesink_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void	gst_fakesink_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void	gst_fakesink_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void	gst_fakesink_chain	(GstPad *pad,GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_fakesink_get_type (void) 
 {
-  static GtkType fakesink_type = 0;
+  static GType fakesink_type = 0;
 
   if (!fakesink_type) {
-    static const GtkTypeInfo fakesink_info = {
-      "GstFakeSink",
+    static const GTypeInfo fakesink_info = {
+      sizeof(GstFakeSinkClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_fakesink_class_init,
+      NULL,
+      NULL,
       sizeof(GstFakeSink),
-      sizeof(GstFakeSinkClass),
-      (GtkClassInitFunc)gst_fakesink_class_init,
-      (GtkObjectInitFunc)gst_fakesink_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_fakesink_init,
     };
-    fakesink_type = gtk_type_unique (GST_TYPE_ELEMENT, &fakesink_info);
+    fakesink_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFakeSink", &fakesink_info, 0);
   }
   return fakesink_type;
 }
@@ -83,28 +83,27 @@ gst_fakesink_get_type (void)
 static void
 gst_fakesink_class_init (GstFakeSinkClass *klass) 
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gtk_object_add_arg_type ("GstFakeSink::num_sources", GTK_TYPE_INT,
-                           GTK_ARG_READWRITE, ARG_NUM_SOURCES);
-  gtk_object_add_arg_type ("GstFakeSink::silent", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_SILENT);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_SOURCES,
+    g_param_spec_int("num_sources","num_sources","num_sources",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
+    g_param_spec_boolean("silent","silent","silent",
+                         TRUE,G_PARAM_READWRITE)); // CHECKME
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
-    gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstFakeSinkClass, handoff),
-                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
-                    GTK_TYPE_POINTER);
+    g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstFakeSinkClass, handoff), NULL, NULL,
+                    g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+                    G_TYPE_POINTER);
 
-  gtk_object_class_add_signals (gtkobject_class, gst_fakesink_signals,
-                                    LAST_SIGNAL);
-
-  gtkobject_class->set_arg = gst_fakesink_set_arg;
-  gtkobject_class->get_arg = gst_fakesink_get_arg;
+  gobject_class->set_property = gst_fakesink_set_property;
+  gobject_class->get_property = gst_fakesink_get_property;
 }
 
 static void 
@@ -123,7 +122,7 @@ gst_fakesink_init (GstFakeSink *fakesink)
 }
 
 static void
-gst_fakesink_set_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_fakesink_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstFakeSink *sink;
   gint new_numsinks;
@@ -132,9 +131,9 @@ gst_fakesink_set_arg (GtkObject *object, GtkArg *arg, guint id)
   /* it's not null if we got it, but it might not be ours */
   sink = GST_FAKESINK (object);
 
-  switch(id) {
+  switch (prop_id) {
     case ARG_NUM_SOURCES:
-      new_numsinks = GTK_VALUE_INT (*arg);
+      new_numsinks = g_value_get_int (value);
       while (sink->numsinkpads < new_numsinks) {
         pad = gst_pad_new (g_strdup_printf ("sink%d", sink->numsinkpads), GST_PAD_SINK);
         gst_pad_set_chain_function (pad, gst_fakesink_chain);
@@ -144,7 +143,7 @@ gst_fakesink_set_arg (GtkObject *object, GtkArg *arg, guint id)
       }
       break;
     case ARG_SILENT:
-      sink->silent = GTK_VALUE_BOOL (*arg);
+      sink->silent = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -152,7 +151,7 @@ gst_fakesink_set_arg (GtkObject *object, GtkArg *arg, guint id)
 }
 
 static void   
-gst_fakesink_get_arg (GtkObject *object, GtkArg *arg, guint id)
+gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstFakeSink *sink;
  
@@ -161,15 +160,15 @@ gst_fakesink_get_arg (GtkObject *object, GtkArg *arg, guint id)
  
   sink = GST_FAKESINK (object);
   
-  switch (id) {
+  switch (prop_id) {
     case ARG_NUM_SOURCES:
-      GTK_VALUE_INT (*arg) = sink->numsinkpads;
+      g_value_set_int (value, sink->numsinkpads);
       break;
     case ARG_SILENT:
-      GTK_VALUE_BOOL (*arg) = sink->silent;
+      g_value_set_boolean (value, sink->silent);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -195,7 +194,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   if (!fakesink->silent)
     g_print("fakesink: ******* (%s:%s)< (%d bytes) \n",GST_DEBUG_PAD_NAME(pad),GST_BUFFER_SIZE(buf));
   
-  gtk_signal_emit (GTK_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF],
+  g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0,
                    buf);
 
   gst_buffer_unref (buf);

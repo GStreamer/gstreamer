@@ -1,0 +1,326 @@
+#include <gtk/gtk.h>
+
+#define G_MAXUINT UINT_MAX
+#define G_MAXULONG ULONG_MAX
+
+#define g_object_ref(obj)			gtk_object_ref((GtkObject *)(obj))
+#define g_object_unref(obj)			gtk_object_unref((GtkObject *)(obj))
+
+// the helper macros for type checking
+#define G_TYPE_CHECK_INSTANCE_CAST		GTK_CHECK_CAST
+#define G_TYPE_CHECK_INSTANCE_TYPE		GTK_CHECK_TYPE
+#define G_TYPE_CHECK_CLASS_CAST			GTK_CHECK_CLASS_CAST
+#define G_TYPE_CHECK_CLASS_TYPE			GTK_CHECK_CLASS_TYPE
+#define G_TYPE_FROM_CLASS(klass)		(((GtkObjectClass *)(klass))->type)
+#define G_OBJECT_GET_CLASS(object)		(GTK_OBJECT(object)->klass)
+#define G_OBJECT_TYPE				GTK_OBJECT_TYPE
+#define G_OBJECT_CLASS_TYPE(gclass)		(gclass->type)
+
+// types
+#define G_TYPE_NONE				GTK_TYPE_NONE
+#define G_TYPE_CHAR				GTK_TYPE_CHAR
+#define G_TYPE_UCHAR				GTK_TYPE_UCHAR
+#define G_TYPE_BOOLEAN				GTK_TYPE_BOOL
+#define G_TYPE_INT				GTK_TYPE_INT
+#define G_TYPE_UINT				GTK_TYPE_UINT
+#define G_TYPE_LONG				GTK_TYPE_LONG
+#define G_TYPE_ULONG				GTK_TYPE_ULONG
+#define G_TYPE_ENUM				GTK_TYPE_ENUM
+#define G_TYPE_FLAGS				GTK_TYPE_FLAGS
+#define G_TYPE_FLOAT				GTK_TYPE_FLOAT
+#define G_TYPE_DOUBLE				GTK_TYPE_DOUBLE
+#define G_TYPE_STRING				GTK_TYPE_STRING
+#define G_TYPE_POINTER				GTK_TYPE_POINTER
+#define G_TYPE_BOXED				GTK_TYPE_BOXED
+#define G_TYPE_PARAM				GTK_TYPE_PARAM
+
+// marshallers
+#define g_cclosure_marshal_VOID__VOID		gtk_marshal_NONE__NONE
+#define g_cclosure_marshal_VOID__BOOLEAN	gtk_marshal_NONE__BOOL
+#define g_cclosure_marshal_VOID__CHAR		gtk_marshal_NONE__CHAR
+#define g_cclosure_marshal_VOID__UCHAR		gtk_marshal_NONE__UCHAR
+#define g_cclosure_marshal_VOID__INT		gtk_marshal_NONE__INT
+#define g_cclosure_marshal_VOID__UINT		gtk_marshal_NONE__UINT
+#define g_cclosure_marshal_VOID__LONG		gtk_marshal_NONE__LONG
+#define g_cclosure_marshal_VOID__ULONG		gtk_marshal_NONE__ULONG
+#define g_cclosure_marshal_VOID__ENUM		gtk_marshal_NONE__ENUM
+#define g_cclosure_marshal_VOID__FLAGS		gtk_marshal_NONE__FLAGS
+#define g_cclosure_marshal_VOID__FLOAT		gtk_marshal_NONE__FLOAT
+#define g_cclosure_marshal_VOID__DOUBLE		gtk_marshal_NONE__DOUBLE
+#define g_cclosure_marshal_VOID__STRING		gtk_marshal_NONE__STRING
+#define g_cclosure_marshal_VOID__PARAM		gtk_marshal_NONE__PARAM
+#define g_cclosure_marshal_VOID__BOXED		gtk_marshal_NONE__BOXED
+#define g_cclosure_marshal_VOID__POINTER	gtk_marshal_NONE__POINTER
+#define g_cclosure_marshal_VOID__OBJECT		gtk_marshal_NONE__OBJECT
+#define g_cclosure_marshal_STRING__OBJECT_POINTER	gtk_marshal_STRING__OBJECT_POINTER
+#define g_cclosure_marshal_VOID__UINT_POINTER	gtk_marshal_NONE__UINT_POINTER
+
+#define gst_marshal_VOID__OBJECT_POINTER	gtk_marshal_NONE__POINTER_POINTER
+#define gst_marshal_VOID__INT_INT		gtk_marshal_NONE__INT_INT
+
+
+// args
+//#define set_property set_arg
+//#define get_property get_arg
+
+#define g_object_get_property(obj,argname,pspec)\
+G_STMT_START{ \
+  (pspec)->name = (gchar*)argname;\
+  gtk_object_getv ((obj),1,(pspec));\
+}G_STMT_END
+
+#define g_object_set				gtk_object_set
+
+
+// type system
+#define GType					GtkType
+#define GTypeFlags				guint
+#define GClassInitFunc				GtkClassInitFunc
+#define GBaseInitFunc				GtkClassInitFunc
+#define GInstanceInitFunc			GtkObjectInitFunc
+//#define g_type_register_static			gtk_type_unique
+#define g_type_class_ref			gtk_type_class
+#define g_type_class_unref(c)
+#define g_type_name(t)				gtk_type_name(t)
+#define g_type_from_name(t)			gtk_type_from_name(t)
+#define GEnumValue				GtkEnumValue
+#define g_enum_register_static			gtk_type_register_enum
+
+/*********************************
+ * FIXME API NOT in glib2.0
+ ***********************************/
+
+
+// type registration
+typedef struct _GTypeInfo               GTypeInfo;
+struct _GTypeInfo
+{
+  /* interface types, classed types, instantiated types */
+  guint16                class_size;
+
+  gpointer               base_init;
+  gpointer               base_finalize;
+
+  /* classed types, instantiated types */
+  gpointer               class_init;
+  gpointer               class_finalize;
+  gconstpointer          class_data;
+  
+  /* instantiated types */
+  guint16                instance_size;
+  guint16                n_preallocs;
+  gpointer               instance_init;
+
+  /* value handling */
+  const gpointer         value_table;
+};
+
+#define G_TYPE_FLAG_ABSTRACT				0
+
+guint g_type_register_static (GtkType parent_type, gchar *type_name,
+                              const GTypeInfo *info, guint flags);
+
+
+
+// object creation
+gpointer g_object_new(GtkType type,gpointer blah_varargs_stuff);
+
+
+// signals
+#define G_SIGNAL_RUN_LAST				GTK_RUN_LAST
+#define G_SIGNAL_RUN_FIRST				GTK_RUN_FIRST
+
+#define GCallback					gpointer	// FIXME?
+#define G_CALLBACK(f)					((gpointer)(f))
+
+guint
+g_signal_newc (const gchar       *signal_name,
+               GtkType            object_type,
+               GtkSignalRunType   signal_flags,
+               guint              function_offset,
+               gpointer           accumulator,  // GSignalAccumulator   
+               gpointer           accu_data,
+               GtkSignalMarshaller  marshaller,
+               GType              return_type,
+               guint              nparams,
+               ...);
+
+#define \
+g_signal_emit(object,signal,detail,args...) \
+gtk_signal_emit((GtkObject *)object,signal, ## args )
+
+#define \
+g_signal_connectc(object,name,func,func_data,swap) \
+gtk_signal_connect((GtkObject *)object,name,func,func_data)
+
+#define \
+g_signal_emit_by_name(object,name,data,self) \
+gtk_signal_emit_by_name ((GtkObject *)object,name,data,self)
+
+#define \
+g_signal_has_handler_pending(object,name,data,may_block) \
+gtk_signal_handler_pending ((GtkObject *)object,name,may_block)
+
+#define g_signal_lookup			gtk_signal_lookup
+#define g_signal_handler_block		gtk_signal_handler_block
+#define g_signal_handler_unblock	gtk_signal_handler_unblock
+
+
+
+
+// arguments/parameters
+
+// first define GValue and GParamSpec
+#define GValue			GtkArg
+#define GParamFlags		gint
+#define G_VALUE_TYPE(v)		((v)->type)
+#define G_PARAM_READWRITE	GTK_ARG_READWRITE
+#define G_PARAM_READABLE	GTK_ARG_READABLE
+#define G_PARAM_WRITABLE	GTK_ARG_WRITABLE
+#define G_OBJECT_WARN_INVALID_PROPERTY_ID(a,b,c)
+typedef struct _GParamSpec GParamSpec;
+struct _GParamSpec {
+  gchar *name;
+  gint value_type;
+  gint flags;
+};
+
+#define g_value_init(value,t)			((value)->type = (t))
+
+void g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamSpec *pspec);
+GParamSpec *g_object_class_find_property(GtkObjectClass *oclass,gchar *name);
+GParamSpec **g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties);
+
+#define G_IS_PARAM_SPEC_ENUM(pspec)		(GTK_FUNDAMENTAL_TYPE(pspec->value_type) == GTK_TYPE_ENUM)
+
+GParamSpec *g_param_spec_boolean(gchar *name,gchar *nick,gchar *blurb,gboolean def,gint flags);
+GParamSpec *g_param_spec_int(gchar *name,gchar *nick,gchar *blurb,gint min,gint max,gint def,gint flags);
+GParamSpec *g_param_spec_uint(gchar *name,gchar *nick,gchar *blurb,guint min,guint max,guint def,gint flags);
+GParamSpec *g_param_spec_long(gchar *name,gchar *nick,gchar *blurb,glong min,glong max,glong def,gint flags);
+GParamSpec *g_param_spec_ulong(gchar *name,gchar *nick,gchar *blurb,gulong min,gulong max,gulong def,gint flags);
+GParamSpec *g_param_spec_float(gchar *name,gchar *nick,gchar *blurb,float min,float max,float def,gint flags);
+GParamSpec *g_param_spec_double(gchar *name,gchar *nick,gchar *blurb,double min,double max,double def,gint flags);
+GParamSpec *g_param_spec_enum(gchar *name,gchar *nick,gchar *blurb,GtkType e,guint def,gint flags);
+GParamSpec *g_param_spec_pointer(gchar *name,gchar *nick,gchar *blurb,gint flags);
+GParamSpec *g_param_spec_string(gchar *name,gchar *nick,gchar *blurb,gchar *def,gint flags);
+
+#define g_value_get_boolean(value)		GTK_VALUE_BOOL(*value)
+#define g_value_set_boolean(value,data)		(GTK_VALUE_BOOL(*value) = (data))
+#define g_value_get_enum(value)			GTK_VALUE_INT(*value)
+#define g_value_set_enum(value,data)		(GTK_VALUE_INT(*value) = (data))
+#define g_value_get_int(value)			GTK_VALUE_INT(*value)
+#define g_value_set_int(value,data)		(GTK_VALUE_INT(*value) = (data))
+#define g_value_get_uint(value)			GTK_VALUE_UINT(*value)
+#define g_value_set_uint(value,data)		(GTK_VALUE_UINT(*value) = (data))
+#define g_value_get_long(value)			GTK_VALUE_LONG(*value)
+#define g_value_set_long(value,data)		(GTK_VALUE_LONG(*value) = (data))
+#define g_value_get_ulong(value)		GTK_VALUE_ULONG(*value)
+#define g_value_set_ulong(value,data)		(GTK_VALUE_ULONG(*value) = (data))
+#define g_value_get_float(value)		GTK_VALUE_FLOAT(*value)
+#define g_value_set_float(value,data)		(GTK_VALUE_FLOAT(*value) = (data))
+#define g_value_get_double(value)		GTK_VALUE_DOUBLE(*value)
+#define g_value_set_double(value,data)		(GTK_VALUE_DOUBLE(*value) = (data))
+#define g_value_get_string(value)		GTK_VALUE_STRING(*value)
+#define g_value_set_string(value,data)		(GTK_VALUE_STRING(*value) = (data))
+#define g_value_get_pointer(value)		GTK_VALUE_POINTER(*value)
+#define g_value_set_pointer(value,data)		(GTK_VALUE_POINTER(*value) = (data))
+
+
+
+
+
+// the object itself
+//#define GObject				GtkObject
+//#define GObjectClass				GtkObjectClass
+#define G_OBJECT				GTK_OBJECT
+#define G_OBJECT_CLASS				GTK_OBJECT_CLASS
+
+#define G_TYPE_OBJECT \
+  (g_object_get_type())
+//#define G_OBJECT(obj) 
+//  (GTK_CHECK_CAST((obj),G_TYPE_OBJECT,GObject))
+//#define G_OBJECT_CLASS(klass) 
+//  (GTK_CHECK_CLASS_CAST((klass),G_TYPE_OBJECT,GObjectClass)) 
+#define G_IS_OBJECT(obj) \
+  (GTK_CHECK_TYPE((obj),G_TYPE_OBJECT))
+#define G_IS_OBJECT_CLASS(obj) \
+  (GTK_CHECK_CLASS_TYPE((klass),G_TYPE_OBJECT))
+
+typedef struct _GObject GObject;
+typedef struct _GObjectClass GObjectClass;
+
+struct _GObject {
+/***** THE FOLLOWING IS A VERBATIM COPY FROM GTKOBJECT *****/
+  /* GtkTypeObject related fields: */
+  GtkObjectClass *klass;
+ 
+   
+  /* 32 bits of flags. GtkObject only uses 4 of these bits and
+   *  GtkWidget uses the rest. This is done because structs are
+   *  aligned on 4 or 8 byte boundaries. If a new bitfield were
+   *  used in GtkWidget much space would be wasted.
+   */
+  guint32 flags;
+  
+  /* reference count.
+   * refer to the file docs/refcounting.txt on this issue.
+   */
+  guint ref_count;
+  
+  /* A list of keyed data pointers, used for e.g. the list of signal
+   * handlers or an object's user_data.
+   */
+  GData *object_data;
+/***** END OF COPY FROM GTKOBJECT *****/
+};
+
+struct _GObjectClass {
+/***** THE FOLLOWING IS A VERBATIM COPY FROM GTKOBJECT *****/
+  /* GtkTypeClass fields: */               
+  GtkType type;
+
+   
+  /* The signals this object class handles. "signals" is an
+   *  array of signal ID's.
+   */
+  guint *signals;
+     
+  /* The number of signals listed in "signals".
+   */
+  guint nsignals;
+  
+  /* The number of arguments per class.
+   */
+  guint n_args;
+  GSList *construct_args;
+
+  /* Non overridable class methods to set and get per class arguments */
+  void (*set_arg) (GtkObject *object,
+                   GtkArg    *arg,
+                   guint      arg_id);
+  void (*get_arg) (GtkObject *object,
+                   GtkArg    *arg,
+                   guint      arg_id);
+  
+  /* The functions that will end an objects life time. In one way ore
+   *  another all three of them are defined for all objects. If an
+   *  object class overrides one of the methods in order to perform class
+   *  specific destruction then it must still invoke its superclass'
+   *  implementation of the method after it is finished with its
+   *  own cleanup. (See the destroy function for GtkWidget for
+   *  an example of how to do this).   
+   */
+  void (* shutdown) (GObject *object);
+  void (* destroy)  (GObject *object);
+ 
+  void (* finalize) (GObject *object);
+/***** END OF COPY FROM GTKOBJECT *****/
+
+  void (*set_property) (GObject *object, guint prop_id,
+                        const GValue *value, GParamSpec *pspec);
+  void (*get_property) (GObject *object, guint prop_id,
+                        GValue *value, GParamSpec *pspec);
+};
+
+GType g_object_get_type (void);
+

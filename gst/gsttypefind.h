@@ -37,13 +37,13 @@ GstElementDetails gst_typefind_details;
 #define GST_TYPE_TYPEFIND \
   (gst_typefind_get_type())
 #define GST_TYPEFIND(obj) \
-  (GTK_CHECK_CAST((obj),GST_TYPE_TYPEFIND,GstTypeFind))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPEFIND,GstTypeFind))
 #define GST_TYPEFIND_CLASS(klass) \
-  (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_TYPEFIND,GstTypeFindClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TYPEFIND,GstTypeFindClass))
 #define GST_IS_TYPEFIND(obj) \
-  (GTK_CHECK_TYPE((obj),GST_TYPE_TYPEFIND))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TYPEFIND))
 #define GST_IS_TYPEFIND_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPEFIND))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TYPEFIND))
 
 typedef struct _GstTypeFind 		GstTypeFind;
 typedef struct _GstTypeFindClass 	GstTypeFindClass;
@@ -63,7 +63,7 @@ struct _GstTypeFindClass {
   void (*have_type) (GstElement *element);
 };
 
-GtkType gst_typefind_get_type (void);
+GType gst_typefind_get_type (void);
 
 
 #ifdef __cplusplus

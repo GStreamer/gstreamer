@@ -28,13 +28,13 @@ main (int argc,char *argv[])
   //effect = gst_elementfactory_make("XMMS_EFFECT_echo_plugin_1.2.4", "xmms_effect");
   g_return_val_if_fail(effect != NULL, -1);
 
-  gtk_object_set (GTK_OBJECT (src), "location", argv[1], NULL);
-  //gtk_object_set (GTK_OBJECT (src), "filename", "tone://1000", NULL);
+  g_object_set (G_OBJECT (src), "location", argv[1], NULL);
+  //gtk_object_set (G_OBJECT (src), "filename", "tone://1000", NULL);
 
-  g_print ("Song Info (text:length): %s\n",gst_util_get_string_arg (GTK_OBJECT (src), "song_info"));
-  //gtk_object_set (GTK_OBJECT (src), "show_about", TRUE, NULL);
-  //gtk_object_set (GTK_OBJECT (src), "configure", TRUE, NULL);
-  //gtk_object_set (GTK_OBJECT (src), "show_file_info", TRUE, NULL);
+  g_print ("Song Info (text:length): %s\n",gst_util_get_string_arg (G_OBJECT (src), "song_info"));
+  //gtk_object_set (G_OBJECT (src), "show_about", TRUE, NULL);
+  //gtk_object_set (G_OBJECT (src), "configure", TRUE, NULL);
+  //gtk_object_set (G_OBJECT (src), "show_file_info", TRUE, NULL);
 
   osssink = gst_elementfactory_make("osssink", "osssink");
   g_return_val_if_fail(osssink != NULL, -1);
@@ -52,7 +52,7 @@ main (int argc,char *argv[])
 
   g_idle_add(idle_func, bin);
 
-  gtk_main();
+  //gtk_main();
 
   return 0;
 }

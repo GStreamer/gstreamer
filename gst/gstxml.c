@@ -38,23 +38,24 @@ static void	gst_xml_object_loaded		(GstObject *private, GstObject *object, xmlNo
 static GstObjectClass *parent_class = NULL;
 static guint gst_xml_signals[LAST_SIGNAL] = { 0 };
 
-GtkType
+GType
 gst_xml_get_type(void)
 {
-  static GtkType xml_type = 0;
+  static GType xml_type = 0;
 
   if (!xml_type) {
-    static const GtkTypeInfo xml_info = {
-      "GstXML",
-      sizeof(GstXML),
+    static const GTypeInfo xml_info = {
       sizeof(GstXMLClass),
-      (GtkClassInitFunc)gst_xml_class_init,
-      (GtkObjectInitFunc)gst_xml_init,
-      (GtkArgSetFunc)NULL,
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      NULL,
+      NULL,
+      (GClassInitFunc)gst_xml_class_init,
+      NULL,
+      NULL,
+      sizeof(GstXML),
+      0,
+      (GInstanceInitFunc)gst_xml_init,
     };
-    xml_type = gtk_type_unique (GST_TYPE_OBJECT, &xml_info);
+    xml_type = g_type_register_static (GST_TYPE_OBJECT, "GstXml", &xml_info, 0);
   }
   return xml_type;
 }
@@ -62,19 +63,18 @@ gst_xml_get_type(void)
 static void
 gst_xml_class_init (GstXMLClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
 
-  gtkobject_class = (GtkObjectClass *)klass;
+  gobject_class = (GObjectClass *)klass;
 
-  parent_class = gtk_type_class (GST_TYPE_OBJECT);
+  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
   gst_xml_signals[OBJECT_LOADED] =
-    gtk_signal_new ("object_loaded", GTK_RUN_LAST, gtkobject_class->type,
-                    GTK_SIGNAL_OFFSET (GstXMLClass, object_loaded),
-                    gtk_marshal_NONE__POINTER_POINTER, GTK_TYPE_NONE, 2,
-                    GST_TYPE_OBJECT, GTK_TYPE_POINTER);
+    g_signal_newc ("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                    G_STRUCT_OFFSET (GstXMLClass, object_loaded), NULL, NULL,
+                    gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
+                    GST_TYPE_OBJECT, G_TYPE_POINTER);
 
-  gtk_object_class_add_signals (gtkobject_class, gst_xml_signals, LAST_SIGNAL);
 }
 
 static void
@@ -93,7 +93,7 @@ gst_xml_init(GstXML *xml)
 GstXML*
 gst_xml_new (void)
 {
-  return GST_XML (gtk_type_new (GST_TYPE_XML));
+  return GST_XML (g_object_new(GST_TYPE_XML,NULL));
 }
 
 /**
@@ -156,7 +156,7 @@ gst_xml_parse_doc (GstXML *xml, xmlDocPtr doc, const guchar *root)
     return FALSE;
   }
 
-  gst_class_signal_connect (GST_OBJECT_CLASS (GTK_OBJECT (xml)->klass),
+  gst_class_signal_connect (GST_OBJECT_CLASS (G_OBJECT_GET_CLASS(xml)),
 		  "object_loaded", gst_xml_object_loaded, xml);
 
   xml->ns = ns;
@@ -240,7 +240,7 @@ gst_xml_object_loaded (GstObject *private, GstObject *object, xmlNodePtr self, g
   GstXML *xml = GST_XML (data);
 
   // FIXME check that this element was created from the same xmlDocPtr...
-  gtk_signal_emit (GTK_OBJECT (xml), gst_xml_signals[OBJECT_LOADED], object, self);
+  g_signal_emit (G_OBJECT (xml), gst_xml_signals[OBJECT_LOADED], 0, object, self);
 }
 
 /**

@@ -57,20 +57,26 @@ void
 gst_init (int *argc, char **argv[]) 
 {
   GstTrace *gst_trace;
-  gchar *display;
 
   if (!g_thread_supported ()) g_thread_init (NULL);
 
-  /* Only initialise gtk fully if we have an X display.
-   * FIXME: this fails if the display is specified differently, eg, by
-   * a command line parameter. This is okay though, since this is only
-   * a quick hack and should be replaced when we move to gobject.*/
-  display = g_getenv("DISPLAY");
-  if (display == NULL) {
-    gtk_type_init ();
-  } else {
-    gtk_init (argc,argv);
+#ifdef USE_GLIB2
+  g_type_init(0);
+#else
+  {
+    gchar *display;
+    /* Only initialise gtk fully if we have an X display.
+     * FIXME: this fails if the display is specified differently, eg, by
+     * a command line parameter. This is okay though, since this is only
+     * a quick hack and should be replaced when we move to gobject.*/
+    display = g_getenv("DISPLAY");
+    if (display == NULL) {
+      gtk_type_init ();
+    } else {
+      gtk_init (argc,argv);
+    }
   }
+#endif
 
   if (!gst_init_check (argc,argv)) {
     exit (0);				// FIXME!
@@ -220,7 +226,7 @@ gst_init_check (int     *argc,
 
   /* check for ENV variables */
   {
-    gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
+    const gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
     gst_add_paths_func (plugin_path);
   }
 
@@ -270,7 +276,9 @@ gst_init_check (int     *argc,
 void 
 gst_main (void) 
 {
+#ifndef USE_GLIB2
   gtk_main ();
+#endif
 }
 
 /**
@@ -281,5 +289,7 @@ gst_main (void)
 void 
 gst_main_quit (void) 
 {
+#ifndef USE_GLIB2
   gtk_main_quit ();
+#endif
 }

@@ -56,15 +56,15 @@ int main(int argc,char *argv[]) {
 
   src = gst_elementfactory_make("fdsrc","src");
   g_return_val_if_fail(src != NULL,1);
-  gtk_object_set(GTK_OBJECT(src),"location",fdin,NULL);
+  g_object_set(G_OBJECT(src),"location",fdin,NULL);
 
   lame = gst_elementfactory_make("lame","encoder");
   g_return_val_if_fail(lame != NULL,2);
-  gtk_object_set(GTK_OBJECT(lame),"bitrate",bitrate,NULL);
+  g_object_set(G_OBJECT(lame),"bitrate",bitrate,NULL);
 
   sink = gst_elementfactory_make("fdsink","sink");
   g_return_val_if_fail(sink != NULL,3);
-  gtk_object_set(GTK_OBJECT(src),"fd",fdout,NULL);
+  g_object_set(G_OBJECT(src),"fd",fdout,NULL);
 
   gst_bin_add(GST_BIN(pipeline),src);
   gst_bin_add(GST_BIN(pipeline),lame);
