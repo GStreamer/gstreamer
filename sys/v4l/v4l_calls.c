@@ -150,7 +150,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
     return FALSE;
   }
 
-  gst_info ("Opened device \'%s\' (\'%s\') successfully\n",
+  GST_INFO ("Opened device \'%s\' (\'%s\') successfully\n",
       v4lelement->vcap.name, v4lelement->videodev);
 
   /* norms + inputs, for the tuner interface */

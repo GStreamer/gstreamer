@@ -193,7 +193,7 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
     return FALSE;
   }
 
-  gst_info ("Got %d buffers (\'%s\') of size %d KB\n",
+  GST_INFO ("Got %d buffers (\'%s\') of size %d KB\n",
       v4lsrc->mbuf.frames, palette_name[v4lsrc->mmap.format],
       v4lsrc->mbuf.size / (v4lsrc->mbuf.frames * 1024));
 

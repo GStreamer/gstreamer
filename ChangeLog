@@ -1,5 +1,28 @@
 2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/divx/gstdivxenc.c: (gst_divxenc_get_type),
+	(gst_divxenc_class_init):
+        fix range since -1 is the default
+	* gst/mpeg1sys/gstmpeg1systemencode.c:
+	(gst_mpeg1_system_encode_get_type), (gst_system_encode_multiplex):
+	* gst/rtjpeg/gstrtjpegdec.c: (gst_rtjpegdec_get_type),
+	(gst_rtjpegdec_chain):
+	* gst/rtjpeg/gstrtjpegenc.c: (gst_rtjpegenc_get_type),
+	(gst_rtjpegenc_chain):
+	* sys/qcam/gstqcamsrc.c: (gst_autoexp_mode_get_type),
+	(gst_qcamsrc_get_type), (gst_qcamsrc_change_state):
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_get_type):
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_get_type):
+	* sys/v4l/gstv4lsrc.c:
+	* sys/v4l/v4l_calls.c: (gst_v4l_open):
+	* sys/v4l/v4lmjpegsink_calls.c: (gst_v4lmjpegsink_playback_init):
+	* sys/v4l/v4lmjpegsrc_calls.c: (gst_v4lmjpegsrc_capture_init):
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_capture_init):
+	* sys/vcd/vcdsrc.c: (vcdsrc_get_type), (vcdsrc_get):
+          remove gst_info calls
+
+2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	* po/af.po:
 	* po/az.po:

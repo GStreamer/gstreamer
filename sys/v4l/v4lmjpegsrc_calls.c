@@ -336,7 +336,7 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc * v4lmjpegsrc)
     return FALSE;
   }
 
-  gst_info ("Got %ld buffers of size %ld KB\n",
+  GST_INFO ("Got %ld buffers of size %ld KB\n",
       v4lmjpegsrc->breq.count, v4lmjpegsrc->breq.size / 1024);
 
   /* keep track of queued buffers */
