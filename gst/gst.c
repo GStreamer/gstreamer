@@ -405,22 +405,6 @@ init_pre (void)
   }
   _user_registry = gst_xml_registry_new ("user_registry", user_reg);
 
-#ifndef GST_DISABLE_REGISTRY
-  /* this test is a hack; gst-register sets this to false
-   * so this is a test for the current instance being gst-register */
-  if (_gst_registry_auto_load == TRUE)
-  {
-    /* do a sanity check here; either one of the two registries should exist */
-    if (!g_file_test (user_reg, G_FILE_TEST_IS_REGULAR))
-      if (!g_file_test (GLOBAL_REGISTRY_FILE, G_FILE_TEST_IS_REGULAR))
-      {
-        g_print ("Couldn't find user registry %s or global registry %s\n",
-	         user_reg, GLOBAL_REGISTRY_FILE);
-        g_error ("Please run gst-register either as root or user");
-      }
-  }
-#endif
-	  
   g_free (user_reg);
 
   return TRUE;
