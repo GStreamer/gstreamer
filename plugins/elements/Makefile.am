@@ -26,7 +26,7 @@ libgstelements_la_SOURCES =	\
 	gstshaper.c		\
 	gststatistics.c		\
 	gsttee.c		\
-	gsttypefindelement.c
+	gsttypefind.c
 
 libgstelements_la_CFLAGS = $(GST_CFLAGS)
 libgstelements_la_LIBADD =
@@ -48,4 +48,4 @@ noinst_HEADERS =		\
 	gstshaper.h		\
 	gststatistics.h		\
 	gsttee.h		\
-	gsttypefindelement.h
+	gsttypefind.h

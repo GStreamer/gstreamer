@@ -1,5 +1,12 @@
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/elements/Makefile.am:
+	* gst/elements/gsttypefindelement.c:
+	* gst/elements/gsttypefindelement.h:
+          renamed gsttypefindelement to gsttypefind, conserving CVS history
+
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gsttag.c: (_gst_tag_initialize), (gst_tag_list_add_valist):
 	* gst/gsttag.h:
           add some tags used in ogg as well
