@@ -73,7 +73,7 @@
     <programlisting>
   GstDParam *volume;
   ...
-  volume = gst_dparam_new(G_TYPE_FLOAT);
+  volume = gst_dparam_new(G_TYPE_DOUBLE);
   if (gst_dpman_attach_dparam (dpman, "volume", volume)){
     /* the dparam was successfully attached */
     ...
@@ -86,32 +86,32 @@
     <para>
       All interaction with dparams to actually set the dparam value is done through simple GObject properties.
       There is a property value for each type that dparams supports - these currently being 
-      <filename>"value_float"</filename>, <filename>"value_int"</filename> and <filename>"value_int64"</filename>.
+      <filename>"value_double"</filename>, <filename>"value_float"</filename>, <filename>"value_int"</filename> and <filename>"value_int64"</filename>.
       To set the value of a dparam, simply set the property which matches the type of your dparam instance.
     </para>
     <programlisting>
 #define ZERO(mem) memset(&amp;mem, 0, sizeof(mem))
 ...
 
-  gfloat set_to_value;
+  gdouble set_to_value;
   GstDParam *volume;
   GValue set_val;
   ZERO(set_val);
-  g_value_init(&amp;set_val, G_TYPE_FLOAT);
+  g_value_init(&amp;set_val, G_TYPE_DOUBLE);
   ...
-  g_value_set_float(&amp;set_val, set_to_value);
-  g_object_set_property(G_OBJECT(volume), "value_float", &amp;set_val);
+  g_value_set_double(&amp;set_val, set_to_value);
+  g_object_set_property(G_OBJECT(volume), "value_double", &amp;set_val);
     </programlisting>
     <para>Or if you create an actual GValue instance:</para>
     <programlisting>
-  gfloat set_to_value;
+  gdouble set_to_value;
   GstDParam *volume;
   GValue *set_val;
   set_val = g_new0(GValue,1);
-  g_value_init(set_val, G_TYPE_FLOAT);
+  g_value_init(set_val, G_TYPE_DOUBLE);
   ...
-  g_value_set_float(set_val, set_to_value);
-  g_object_set_property(G_OBJECT(volume), "value_float", set_val);
+  g_value_set_double(set_val, set_to_value);
+  g_object_set_property(G_OBJECT(volume), "value_double", set_val);
     </programlisting>
 
   </sect1>
@@ -131,6 +131,9 @@
         It has the following object properties:
       </para>
       <itemizedlist>
+        <listitem><para><filename>"value_double"</filename>
+          - the property to set and get if it is a double dparam
+        </para></listitem>
         <listitem><para><filename>"value_float"</filename>
           - the property to set and get if it is a float dparam
         </para></listitem>
@@ -154,7 +157,7 @@
       <para>
         Some parameter changes can create audible artifacts if they change too rapidly.  The GstDParamSmooth
         implementation can greatly reduce these artifacts by limiting the rate at which the value can change.
-        This is currently only supported for float dparams - the other types fall back to the default implementation.
+        This is currently only supported for double and float dparams - the other types fall back to the default implementation.
         A new instance can be created with the function <filename>GstDParam* gst_dpsmooth_new (GType type)</filename>.
         It has the following object properties:
       </para>
@@ -165,6 +168,9 @@
         </para></listitem>
         <listitem><para><filename>"slope_time"</filename>
           - an int64 value specifying the time period to use in the maximum slope calculation
+        </para></listitem>
+        <listitem><para><filename>"slope_delta_double"</filename>
+          - a double specifying the amount a double value can change in the given slope_time.
         </para></listitem>
         <listitem><para><filename>"slope_delta_float"</filename>
           - a float specifying the amount a float value can change in the given slope_time.
@@ -182,8 +188,8 @@
       <title>Timelined dparams</title>
       <para>
         A yet-to-be-implemented subclass of GstDParam will add an API which allows the creation and manipulation
-        of points on a timeline.  This subclass will also provide a dparam implementation which uses linear
-        interpolation between these points to find the dparam value at any given time.  Further subclasses can 
+        of points on a timeline. This subclass will also provide a dparam implementation which uses linear
+        interpolation between these points to find the dparam value at any given time. Further subclasses can 
         extend this functionality to implement more exotic interpolation algorithms such as splines.
       </para>
     </sect2>

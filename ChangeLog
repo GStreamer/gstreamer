@@ -1,3 +1,8 @@
+2004-03-09  David Schleef  <ds@schleef.org>
+
+	* docs/manual/dparams-app.xml:  Fix to handle double dparams.
+	(bug #134863)
+
 2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: first bug fix due to major/minor bump
