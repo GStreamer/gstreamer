@@ -99,6 +99,8 @@ gst_xmlinspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_M
 # CFLAGS and libs for nonversioned frontend binaries
 AM_CFLAGS = $(GLIB_ONLY_CFLAGS) $(POPT_CFLAGS)
 LDADD = $(GLIB_ONLY_LIBS) $(POPT_LIBS)
+# due to depcomp not using AM_CFLAGS for rh9/yd3, we also set AM_CPPFLAGS
+AM_CPPFLAGS = $(GLIB_ONLY_CFLAGS) $(POPT_CFLAGS)
 
 ### man pages we want to install
 if GST_DISABLE_REGISTRY
