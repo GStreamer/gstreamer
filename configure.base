@@ -868,72 +868,37 @@ esac],
 
 dnl Next, check for the optional cwcomponents:
 dnl ==========================================
-AC_ARG_ENABLE(loadsave,
-[  --disable-loadsave           disable pipeline XML load/save code],
-[case "${enableval}" in
-  yes) GST_DISABLE_LOADSAVE=no ;;
-  no) GST_DISABLE_LOADSAVE=yes ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-loadsave) ;;
-esac],
-[GST_DISABLE_LOADSAVE=no]) dnl Default value
-if test x$GST_DISABLE_LOADSAVE = xyes; then
-  AC_DEFINE(GST_DISABLE_LOADSAVE, 1, [Disable pipeline XML load/save code.])
-fi
-AM_CONDITIONAL(GST_DISABLE_LOADSAVE, test x$GST_DISABLE_LOADSAVE = xyes)
 
-AC_ARG_ENABLE(typefind,
-[  --disable-typefind             disable the typefind features],
+
+AC_DEFUN(GST_SUBSYSTEM_DISABLE,
+[dnl
+dnl Add a subsystem --disable flag and all the necessary symbols and substitions
+dnl
+lower=translit([$1], A-Z, a-z)
+AC_ARG_ENABLE(translit([$1], A-Z, a-z), 
+[  --disable-${lower}           disable $2],
 [ case "${enableval}" in
-    yes) GST_DISABLE_TYPEFIND=no ;;
-    no) GST_DISABLE_TYPEFIND=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --disable-typefind) ;;
+    yes) GST_DISABLE_[$1]=no ;;
+    no) GST_DISABLE_[$1]=yes ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-${lower}) ;;
   esac],
-[GST_DISABLE_TYPEFIND=no]) dnl Default value
-if test x$GST_DISABLE_TYPEFIND = xyes; then
-  AC_DEFINE(GST_DISABLE_TYPEFIND, 1, [Disable typefind code.])
+[GST_DISABLE_[$1]=no]) dnl Default value
+if test x$GST_DISABLE_[$1] = xyes; then
+  AC_DEFINE(GST_DISABLE_[$1], 1, [Disable $2])
+  GST_DISABLE_[$1]_DEFINE=-DGST_DISABLE_[$1]
 fi
-AM_CONDITIONAL(GST_DISABLE_TYPEFIND, test "x$GST_DISABLE_TYPEFIND" = "xyes")
+AM_CONDITIONAL(GST_DISABLE_[$1], test x$GST_DISABLE_[$1] = xyes)
+AC_SUBST(GST_DISABLE_[$1]_DEFINE)
+GST_SUBSYSTEM_DISABLE_DEFINES="$GST_SUBSYTEM_DISABLE_DEFINES $GST_DISABLE_[$1]_DEFINE"
+])
 
 
-AC_ARG_ENABLE(parse,
-[  --disable-parse             disable the command line parser features],
-[ case "${enableval}" in
-    yes) GST_DISABLE_PARSE=no ;;
-    no) GST_DISABLE_PARSE=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --disable-parse) ;;
-  esac],
-[GST_DISABLE_PARSE=no]) dnl Default value
-if test x$GST_DISABLE_PARSE = xyes; then
-  AC_DEFINE(GST_DISABLE_PARSE, 1, [Disable command line parsing code.])
-fi
-AM_CONDITIONAL(GST_DISABLE_PARSE, test "x$GST_DISABLE_PARSE" = "xyes")
-
-AC_ARG_ENABLE(autoplug,
-[  --disable-autoplug             disable the autoplugging features],
-[ case "${enableval}" in
-    yes) GST_DISABLE_AUTOPLUG=no ;;
-    no) GST_DISABLE_AUTOPLUG=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --disable-autoplug) ;;
-  esac],
-[GST_DISABLE_AUTOPLUG=no]) dnl Default value
-if test x$GST_DISABLE_AUTOPLUG = xyes; then
-  AC_DEFINE(GST_DISABLE_AUTOPLUG, 1, [Disable autoplugging code.])
-fi
-AM_CONDITIONAL(GST_DISABLE_AUTOPLUG, test "x$GST_DISABLE_AUTOPLUG" = "xyes")
-
-AC_ARG_ENABLE(trace,
-[  --disable-trace             disable the tracing features],
-[ case "${enableval}" in
-    yes) GST_DISABLE_TRACE=no ;;
-    no) GST_DISABLE_TRACE=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --disable-trace) ;;
-  esac],
-[GST_DISABLE_TRACE=no]) dnl Default value
-if test x$GST_DISABLE_TRACE = xyes; then
-  AC_DEFINE(GST_DISABLE_TRACE, 1, [Disable tracing facilities.])
-fi
-AM_CONDITIONAL(GST_DISABLE_TRACE, test "x$GST_DISABLE_TRACE" = "xyes")
-
+GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
+GST_SUBSYSTEM_DISABLE(TYPEFIND,[typefind plugin],)
+GST_SUBSYSTEM_DISABLE(AUTOPLUG,[autoplugger subsystem])
+GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
+GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
+AC_SUBST(GST_SUBSYSTEM_DISABLE_DEFINES)
 
 
 dnl ################################################
