@@ -246,12 +246,11 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
   g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
-  g_mutex_lock (ximagesink->x_lock);
-  
   /* We center the image in the window */
   x = MAX (0, (ximagesink->xwindow->width - ximage->width) / 2);
   y = MAX (0, (ximagesink->xwindow->height- ximage->height) / 2);
 
+  g_mutex_lock (ximagesink->x_lock);
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm)
     {  
@@ -387,37 +386,40 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
             if ( (ximagesink->xwindow->width != e.xconfigure.width) ||
                  (ximagesink->xwindow->height != e.xconfigure.height) )
               {
+                GstPadLinkReturn r;
                 ximagesink->xwindow->width = e.xconfigure.width;
                 ximagesink->xwindow->height = e.xconfigure.height;
                 
-                gst_pad_try_set_caps (ximagesink->sinkpad,
-                                      GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
-                                                    "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
-                                                    "depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
-                                                    "endianness", GST_PROPS_INT (ximagesink->xcontext->endianness),
-                                                    "red_mask",   GST_PROPS_INT (ximagesink->xcontext->visual->red_mask),
-                                                    "green_mask", GST_PROPS_INT (ximagesink->xcontext->visual->green_mask),
-                                                    "blue_mask",  GST_PROPS_INT (ximagesink->xcontext->visual->blue_mask),
-                                                    "width",      GST_PROPS_INT (e.xconfigure.width),
-                                                    "height",     GST_PROPS_INT (e.xconfigure.height),
-                                                    "framerate",  GST_PROPS_FLOAT (ximagesink->framerate)));
+                r = gst_pad_try_set_caps (ximagesink->sinkpad,
+                                          GST_CAPS_NEW ("ximagesink_ximage_caps", "video/x-raw-rgb",
+                                                       "bpp",        GST_PROPS_INT (ximagesink->xcontext->bpp),
+                                                       "depth",      GST_PROPS_INT (ximagesink->xcontext->depth),
+                                                       "endianness", GST_PROPS_INT (ximagesink->xcontext->endianness),
+                                                       "red_mask",   GST_PROPS_INT (ximagesink->xcontext->visual->red_mask),
+                                                       "green_mask", GST_PROPS_INT (ximagesink->xcontext->visual->green_mask),
+                                                       "blue_mask",  GST_PROPS_INT (ximagesink->xcontext->visual->blue_mask),
+                                                       "width",      GST_PROPS_INT (e.xconfigure.width),
+                                                       "height",     GST_PROPS_INT (e.xconfigure.height),
+                                                       "framerate",  GST_PROPS_FLOAT (ximagesink->framerate)));
                 
-                /* We should check for _try_set_caps result */
-                ximagesink->width = e.xconfigure.width;
-                ximagesink->height = e.xconfigure.height;
-                
-                if ( (ximagesink->ximage) &&
-                     ( (ximagesink->width != ximagesink->ximage->width) ||
-                       (ximagesink->height != ximagesink->ximage->height) ) )
+                if ( (r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE) )
                   {
-                    /* We renew our ximage only if size changed */
-                    gst_ximagesink_ximage_destroy (ximagesink,
-                                                   ximagesink->ximage);
+                    ximagesink->width = e.xconfigure.width;
+                    ximagesink->height = e.xconfigure.height;
                 
-                    ximagesink->ximage = gst_ximagesink_ximage_new (
+                    if ( (ximagesink->ximage) &&
+                         ( (ximagesink->width != ximagesink->ximage->width) ||
+                           (ximagesink->height != ximagesink->ximage->height) ) )
+                      {
+                        /* We renew our ximage only if size changed */
+                        gst_ximagesink_ximage_destroy (ximagesink,
+                                                       ximagesink->ximage);
+                
+                        ximagesink->ximage = gst_ximagesink_ximage_new (
                                                             ximagesink,
                                                             ximagesink->width,
                                                             ximagesink->height);
+                      }
                   }
               }
             break;
