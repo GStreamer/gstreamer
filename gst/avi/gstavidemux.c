@@ -1369,12 +1369,15 @@ gst_avi_demux_massage_index (GstAviDemux * avi)
   /* init frames */
   for (i = 0; i < avi->num_streams; i++) {
     stream = &avi->stream[i];
-    if (stream->strh->type == GST_RIFF_FCC_vids)
-      stream->delay = stream->strh->init_frames * GST_SECOND *
-          stream->strh->scale / stream->strh->rate;
-    else
-      stream->delay = GST_SECOND * stream->strh->init_frames *
-          stream->strh->length / (stream->total_frames * stream->bitrate);
+    if (stream->strh->type == GST_RIFF_FCC_vids) {
+      if (stream->strh->rate != 0)
+        stream->delay = stream->strh->init_frames * GST_SECOND *
+            stream->strh->scale / stream->strh->rate;
+    } else {
+      if (stream->total_frames * stream->bitrate != 0)
+        stream->delay = GST_SECOND * stream->strh->init_frames *
+            stream->strh->length / (stream->total_frames * stream->bitrate);
+    }
   }
   for (i = 0; i < avi->index_size; i++) {
     entry = &avi->index_entries[i];
