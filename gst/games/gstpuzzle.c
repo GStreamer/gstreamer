@@ -81,6 +81,7 @@ enum
 static void gst_puzzle_base_init (gpointer g_class);
 static void gst_puzzle_class_init (gpointer g_class, gpointer class_data);
 static void gst_puzzle_init (GTypeInstance * instance, gpointer g_class);
+static void gst_puzzle_finalize (GObject * object);
 
 static void gst_puzzle_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -89,6 +90,8 @@ static void gst_puzzle_get_property (GObject * object, guint prop_id,
 
 static void gst_puzzle_setup (GstVideofilter * videofilter);
 static void draw_puzzle (GstVideofilter * videofilter, void *destp, void *srcp);
+
+static GstVideofilterClass *parent_class;
 
 GType
 gst_puzzle_get_type (void)
@@ -157,8 +160,11 @@ gst_puzzle_class_init (gpointer g_class, gpointer class_data)
   gobject_class = G_OBJECT_CLASS (g_class);
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
+  parent_class = g_type_class_peek_parent (g_class);
+
   gobject_class->set_property = gst_puzzle_set_property;
   gobject_class->get_property = gst_puzzle_get_property;
+  gobject_class->finalize = gst_puzzle_finalize;
 
   g_object_class_install_property (gobject_class, ARG_ROWS,
       g_param_spec_uint ("rows", "rows", "number of rows in puzzle",
@@ -168,6 +174,17 @@ gst_puzzle_class_init (gpointer g_class, gpointer class_data)
           1, G_MAXUINT, 4, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   videofilter_class->setup = gst_puzzle_setup;
+}
+
+static void
+gst_puzzle_finalize (GObject * object)
+{
+  GstPuzzle *puzzle;
+
+  puzzle = GST_PUZZLE (object);
+  g_free (puzzle->permutation);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void G_GNUC_UNUSED
@@ -367,13 +384,37 @@ nav_event_handler (GstPad * pad, GstEvent * event)
 }
 
 static void
+gst_puzzle_create (GstPuzzle * puzzle)
+{
+  guint i;
+
+  puzzle->tiles = puzzle->rows * puzzle->columns;
+  g_assert (puzzle->tiles);
+  g_free (puzzle->permutation);
+
+  puzzle->permutation = g_new (guint, puzzle->tiles);
+  for (i = 0; i < puzzle->tiles; i++) {
+    puzzle->permutation[i] = i;
+  }
+  puzzle->position = puzzle->tiles - 1;
+  /* shuffle a bit */
+  gst_puzzle_shuffle (puzzle);
+}
+
+static void
 gst_puzzle_init (GTypeInstance * instance, gpointer g_class)
 {
   GstVideofilter *videofilter;
+  GstPuzzle *puzzle;
 
   videofilter = GST_VIDEOFILTER (instance);
+  puzzle = GST_PUZZLE (instance);
   /* FIXME: this is evil */
   gst_pad_set_event_function (videofilter->srcpad, nav_event_handler);
+
+  /* set this so we don't crash when initializing */
+  puzzle->rows = 1;
+  puzzle->columns = 1;
 }
 
 static void
@@ -390,11 +431,11 @@ gst_puzzle_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_COLUMNS:
       src->columns = g_value_get_uint (value);
-      src->tiles = src->columns * src->rows;
+      gst_puzzle_create (src);
       break;
     case ARG_ROWS:
       src->rows = g_value_get_uint (value);
-      src->tiles = src->columns * src->rows;
+      gst_puzzle_create (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -429,19 +470,10 @@ static void
 gst_puzzle_setup (GstVideofilter * videofilter)
 {
   GstPuzzle *puzzle;
-  guint i;
 
   g_return_if_fail (GST_IS_PUZZLE (videofilter));
   puzzle = GST_PUZZLE (videofilter);
 
-  g_free (puzzle->permutation);
-  puzzle->permutation = g_new (guint, puzzle->tiles);
-  for (i = 0; i < puzzle->tiles; i++) {
-    puzzle->permutation[i] = i;
-  }
-  puzzle->position = puzzle->tiles - 1;
-  /* shuffle a bit */
-  gst_puzzle_shuffle (puzzle);
   puzzle->format = NULL;
 }
 
@@ -476,7 +508,7 @@ draw_puzzle (GstVideofilter * videofilter, void *destp, void *srcp)
   }
   if (height * puzzle->rows != gst_videofilter_get_input_height (videofilter)) {
     guint h =
-        gst_videofilter_get_input_width (videofilter) - height * puzzle->rows;
+        gst_videofilter_get_input_height (videofilter) - height * puzzle->rows;
 
     gst_video_image_copy_area (&dest, 0, height * puzzle->rows, &src, 0,
         height * puzzle->rows, gst_videofilter_get_input_width (videofilter),
