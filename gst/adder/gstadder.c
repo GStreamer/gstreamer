@@ -209,20 +209,23 @@ static GstPadLinkReturn
 gst_adder_link (GstPad *pad, const GstCaps *caps)
 {
   GstAdder *adder;
+  GstElement *element;
   const GList *sinkpads;
   GList *remove = NULL;
   GSList *channels;
   GstPad *p;
   const GList *pads;
+  GstPadLinkReturn ret;
 
   g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_REFUSED);
 
-  adder = GST_ADDER (GST_PAD_PARENT (pad));
+  element = GST_PAD_PARENT (pad);
+  adder = GST_ADDER (element);
 
   pads = gst_element_get_pad_list (element);
   while (pads) {
-    GstPad *otherpad = GST_PADD (pads->data);
+    GstPad *otherpad = GST_PAD (pads->data);
 
     if (otherpad != pad) {
       ret = gst_pad_try_set_caps (otherpad, caps);
