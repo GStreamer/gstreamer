@@ -9,4 +9,3 @@ libgstmulaw_la_SOURCES = mulaw-encode.c mulaw-conversion.c mulaw-decode.c mulaw.
 libgstmulaw_la_CFLAGS = $(GST_CFLAGS)
 
 noinst_HEADERS = mulaw-conversion.h alaw-encode.h alaw-decode.h alaw-conversion.h mulaw-encode.h mulaw-decode.h
-filterdir = $(libdir)/gst

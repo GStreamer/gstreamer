@@ -265,81 +265,11 @@ AC_MSG_RESULT(no)
 dnl Check for essential libraries first:
 dnl ====================================
 
-dnl Check for glib2
-translit(dnm, m, l) AM_CONDITIONAL(USE_GLIB2, true)
-GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
-  PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
-    HAVE_GLIB2=yes,HAVE_GLIB2=no)
-  GLIB_LIBS=$GLIB2_LIBS
-  GLIB_CFLAGS=$GLIB2_CFLAGS
-  AC_SUBST(GLIB_LIBS)
-  AC_SUBST(GLIB_CFLAGS)
-], disabled, [
-  AC_DEFINE(USE_GLIB2)
-  GST_CFLAGS="$GST_CFLAGS -DUSE_GLIB2"
-])
-AC_SUBST(USE_GLIB2)
-
-if test x$USE_GLIB2 = xno; then
-  GST_PKG_DEPS="glib >= 1.2.0, gtk+ >= 1.2.0"
-  
-  dnl Check for glib and gtk
-  AM_PATH_GLIB(1.2.0,,
-              AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
-              glib gmodule gthread)
-  AM_PATH_GTK(1.2.0,,
-              AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
-  HAVE_GTK=yes
-
-  GLIB_LIBS="$GLIB_LIBS $GTK_LIBS"
-  GLIB_CFLAGS="$GLIB_CFLAGS $GTK_CFLAGS"
-else
-  GST_PKG_DEPS="glib-2.0 gobject-2.0 gmodule-2.0 gthread-2.0"
-  
-  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
-
-  GTK_FLAGS=$GTK2_CFLAGS
-  GTK_LIBS=$GTK2_LIBS
-  
-  if $HAVE_GTK_DOC; then  
-    AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scangobj, true, false)
-    if $HAVE_GTK_DOC; then
-      GTK_DOC_SCANOBJ=gtkdoc-scangobj
-    fi;
-  fi
-
-  dnl FIXME: check for  gnome2 - this conditional is currently
-  dnl always false.
-  AM_CONDITIONAL(USE_GNOME2, test "x$USE_GNOME2" = "xyes")
-  AC_SUBST(USE_GNOME2)
-fi
-
-AC_SUBST(GST_PKG_DEPS)
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
-
-dnl Check for libxml
-if test x$USE_GLIB2 = xno; then
-  LIBXML_PKG='libxml >= 1.8.1'
-  AC_PATH_PROG(XML_CONFIG, xml-config, no)
-  if test x$XML_CONFIG = xno; then
-    AC_MSG_ERROR(Couldn't find $LIBXML_PKG)
-  fi
-  XML_LIBS="`xml-config --libs`"
-  XML_CFLAGS="`xml-config --cflags`"
-  AC_CHECK_LIB(xml, xmlDocGetRootElement, :,
-    [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
-    $XML_LIBS)
-else
-  LIBXML_PKG='libxml-2.0'
-  PKG_CHECK_MODULES(XML, $LIBXML_PKG, XML_CONFIG=yes, XML_CONFIG=no)
-  AC_PATH_PROG(XML_CONFIG, xml-config, no)
-  AC_DEFINE(HAVE_LIBXML2)
-  GST_CFLAGS="$GST_CFLAGS -DHAVE_LIBXML2"
-fi
-AC_SUBST(LIBXML_PKG)
-AC_SUBST(XML_LIBS)
-AC_SUBST(XML_CFLAGS)
+dnl if test -n "`cat $GST_CFLAGS | grep USE_GLIB2`"; then
+dnl   HAVE_GLIB2=yes
+dnl else
+dnl   HAVE_GLIB2=no
+dnl fi
 
 dnl Check for X11 extensions
 AC_PATH_XTRA
@@ -355,11 +285,31 @@ dnl ==========================================================================
 dnl ============================= gst plugins ================================
 dnl ==========================================================================
 
-dnl *** sine ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SINE, true)
-GST_CHECK_FEATURE(SINE, [sine plugin], sinesrc, [
-  HAVE_SINE="yes"
-])
+GST_PLUGINS_ALL="\
+        ac3parse adder audioscale auparse avi chart\
+        cutter deinterlace flx intfloat lav law level\
+        median mpeg1enc mpeg1sys mpeg2enc mpeg2sub\
+        mpegaudio mpegaudioparse mpegstream mpegtypes\
+        passthrough playondemand rtjpeg silence sine\
+        smooth smoothwave spectrum speed stereo stereomono\
+        synaesthesia udp videoscale volenv volume vumeter wavparse"
+
+AC_SUBST(GST_PLUGINS_ALL)
+
+GST_PLUGINS_SELECTED=""
+
+AC_ARG_WITH(plugins,
+    AC_HELP_STRING([--with-plugins],[comma-separated list of plugins to compile]),
+    [for i in `echo $withval | tr , ' '`; do
+        if test -n `echo $i | grep $GST_PLUGINS_ALL`; then
+            GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED $i"
+        else
+            echo "plugin $i not recognized, ignoring..."
+        fi
+    done],
+    [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
+
+AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl ==========================================================================
 dnl ============================= sys plugins ================================
@@ -613,32 +563,6 @@ GST_CHECK_FEATURE(LIBXMMS, [xmms plugin], xmms, [
   AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 ])
 
-dnl Check for libgdk-pixbuf
-dnl FIXME: not sure that this is still used anywhere.
-dnl DELETEME
-dnl translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
-dnl GST_CHECK_FEATURE(GDK_PIXBUF, [use gdk pixbuf], , [
-dnl translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_LIBS)
-dnl translit(dnm, m, l) AC_SUBST(GDK_PIXBUF_CFLAGS)
-dnl GST_CHECK_CONFIGPROG(GDK_PIXBUF, gdk-pixbuf-config)
-dnl ])
-dnl 
-
-
-if test x$USE_GLIB2 = xyes; then
-  dnl we don't support gnome/gtk with glib2.0 yet
-  GNOME_LIBS=
-  GNOME_CFLAGS=
-  HAVE_GNOME=no
-  AC_MSG_WARN(gnome disabled for glib2.0)
-else
-  dnl Check for libgnome
-  GST_CHECK_CONFIGPROG(GNOME, gnome-config, gnome gnomeui)
-fi
-AC_SUBST(GNOME_LIBS)
-AC_SUBST(GNOME_CFLAGS)
-AC_SUBST(HAVE_GNOME)
-
 dnl Check for libghttp
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBGHTTP, true)
 GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
@@ -657,43 +581,6 @@ GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
   AC_SUBST(GHTTP_LIBS)
   AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
-
-
-dnl thomas : adding an arts check taken from xine with it's own .m4
-dnl FIXME: put this higher up
-dnl AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
-
-dnl also define ARTS_MCOPFLAGS
-dnl ARTS_MCOPFLAGS="$ARTS_CFLAGS"
-dnl AC_SUBST(ARTS_MCOPFLAGS)   
-
-dnl Check for libglade with gnome support; no libglade for glib2.0
-HAVE_LIBGLADE_GNOME="no"
-if test x$USE_GLIB2 = xyes; then
-  AC_MSG_WARN(libglade disabled for glib2.0)
-  PKG_CHECK_MODULES(LIBGLADE_GNOME, libglade-2.0 libgnomeui-2.0, HAVE_LIBGLADE_GNOME=yes, HAVE_LIBGLADE_GNOME=no)
-  if test x$HAVE_LIBGLADE_GNOME = xno; then
-    AC_MSG_WARN(Couldn't find libglade-2.0 - Can't build gstplay)
-    LIBGLADE_GNOME_LIBS=
-    LIBGLADE_GNOME_CFLAGS=
-  fi;
-else
-  AM_PATH_LIBGLADE(HAVE_LIBGLADE_GNOME="yes", HAVE_LIBGLADE_GNOME="no", gnome)
-  if test x$HAVE_LIBGLADE_GNOME = xno; then
-    AC_MSG_WARN(Couldn't find libglade-config - Can't build gstplay)
-  else
-    LIBGLADE_GNOME_LIBS=$LIBGLADE_LIBS
-    LIBGLADE_GNOME_CFLAGS=$LIBGLADE_CFLAGS
-        AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
-                HAVE_LIBGLADE_GNOME="yes"
-                AC_MSG_WARN(
-        [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
-               )
-  fi
-fi
-AC_SUBST(HAVE_LIBGLADE_GNOME)
-AC_SUBST(LIBGLADE_GNOME_LIBS)
-AC_SUBST(LIBGLADE_GNOME_CFLAGS)
 
 dnl Check for atomic.h
 dnl Note: use AC_CHECK_HEADER not AC_CHECK_HEADERS, because the latter
@@ -716,8 +603,6 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
     AC_MSG_WARN(Can't check properly for atomic reference counting.  Assuming OK.)
   ])
 fi
-
-
 
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
@@ -1031,6 +916,7 @@ AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_A52DEC,         test "x$HAVE_A52DEC" = "xyes")
+AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 dnl thomas : the next line gives errors, this is how it is in CVS
 dnl AM_CONDITIONAL(HAVE_FLAC,      	    test "x$HAVE_FLAC" = "xyes")
 dnl thomas : the next line gives errors as well, I commented it
@@ -1141,7 +1027,47 @@ dnl echo "$infomessages", infomessages="$infomessages"
 AC_OUTPUT(
 Makefile
 gst/Makefile
+gst/ac3parse/Makefile
+gst/Makefile
+gst/adder/Makefile
+gst/audioscale/Makefile
+gst/auparse/Makefile
+gst/avi/Makefile
+gst/chart/Makefile
+gst/cutter/Makefile
+gst/deinterlace/Makefile
+gst/flx/Makefile
+gst/intfloat/Makefile
+gst/lav/Makefile
+gst/law/Makefile
+gst/level/Makefile
+gst/median/Makefile
+gst/mpeg1enc/Makefile
+gst/mpeg1sys/Makefile
+gst/mpeg2enc/Makefile
+gst/mpeg2sub/Makefile
+gst/mpegaudio/Makefile
+gst/mpegaudioparse/Makefile
+gst/mpegstream/Makefile
+gst/mpegtypes/Makefile
+gst/passthrough/Makefile
+gst/playondemand/Makefile
+gst/rtjpeg/Makefile
+gst/silence/Makefile
 gst/sine/Makefile
+gst/smooth/Makefile
+gst/smoothwave/Makefile
+gst/spectrum/Makefile
+gst/speed/Makefile
+gst/stereo/Makefile
+gst/stereomono/Makefile
+gst/synaesthesia/Makefile
+gst/udp/Makefile
+gst/videoscale/Makefile
+gst/volenv/Makefile
+gst/volume/Makefile
+gst/vumeter/Makefile
+gst/wavparse/Makefile
 sys/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile

@@ -1,12 +1,3 @@
-if HAVE_AVIFILE
-ARCHSUBDIRS = wincodec
-else
-ARCHSUBDIRS =
-endif
-
-SUBDIRS = $(ARCHSUBDIRS) winaudio
-DIST_SUBDIRS = wincodec winaudio
-
 filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libgstavimux.la libgstavidecoder.la libgstavidemux.la libgstavitypes.la libgstaviaudiodecoder.la
@@ -27,5 +18,3 @@ libgstavimux_la_CFLAGS = -O2 -ffast-math $(GST_CFLAGS)
 libgstaviaudiodecoder_la_CFLAGS = -O2 -ffast-math $(GST_CFLAGS)
 
 EXTRA_DIST = README_win32dll README
-
-noinst_HEADERS = aviaudiodecoder.h
