@@ -78,7 +78,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
     "sink_audio",
-    "audio/mp3",
+    "audio/x-mp3",
     NULL
   )
 )

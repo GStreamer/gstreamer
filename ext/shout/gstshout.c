@@ -75,7 +75,7 @@ sink_template_factory (void)
       GST_PAD_ALWAYS,
       gst_caps_new (
         "icecastsend_sink",
-        "audio/mp3",
+        "audio/x-mp3",
 	NULL),
       NULL);
   }

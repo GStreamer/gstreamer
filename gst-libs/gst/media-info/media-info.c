@@ -409,7 +409,7 @@ gst_media_info_get_decoder (GstMediaInfo *info, const char *mime)
     GMI_DEBUG("DEBUG: no decoder in table, inserting one\n");
     if (strcmp (mime, "application/x-ogg") == 0)
       factory = g_strdup ("vorbisfile");
-    else if (strcmp (mime, "audio/mp3") == 0)
+    else if (strcmp (mime, "audio/x-mp3") == 0)
       factory = g_strdup ("mad");
     else if (strcmp (mime, "audio/x-wav") == 0)
       factory = g_strdup ("wavparse");
