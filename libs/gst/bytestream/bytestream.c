@@ -24,7 +24,7 @@
 #include <stdlib.h>
 
 #include <gst/gstinfo.h>
-#include "gstbytestream.h"
+#include <gst/bytestream/bytestream.h>
 
 //#define BS_DEBUG
 

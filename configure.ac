@@ -1084,7 +1084,7 @@ AC_SUBST(LIBGST_CFLAGS)
 
 dnl Vars for everyone else
 GST_LIBS="\$(top_builddir)/gst/libgst.la $LIBGST_LIBS"
-GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include $LIBGST_CFLAGS"
+GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/libs -I\$(top_srcdir)/include $LIBGST_CFLAGS"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
@@ -1128,13 +1128,9 @@ gst/schedulers/Makefile
 libs/Makefile
 libs/gst/Makefile
 libs/gst/bytestream/Makefile
-libs/riff/Makefile
-libs/getbits/Makefile
-libs/putbits/Makefile
-libs/idct/Makefile
-libs/audio/Makefile
-libs/control/Makefile
-libs/resample/Makefile
+libs/gst/getbits/Makefile
+libs/gst/putbits/Makefile
+libs/gst/control/Makefile
 plugins/Makefile
 plugins/a52dec/Makefile
 plugins/aasink/Makefile

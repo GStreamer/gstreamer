@@ -1,6 +1,6 @@
-libdir = $(libdir)/gst
+librarydir = $(libdir)/gst
 
-lib_LTLIBRARIES = libgstbytestream.la libgstbstest.la
+library_LTLIBRARIES = libgstbytestream.la libgstbstest.la
 
 libgstbytestream_la_SOURCES = bytestream.c 
 libgstbstest_la_SOURCES = bstest.c
