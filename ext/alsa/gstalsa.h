@@ -135,7 +135,6 @@ struct _GstAlsa {
   gchar *			device;
   gchar *                       cardname;
   snd_pcm_t *			handle;
-  snd_pcm_info_t *		info;
   guint				pcm_caps;	/* capabilities of the pcm device, see GstAlsaPcmCaps */
   snd_output_t *		out;
 

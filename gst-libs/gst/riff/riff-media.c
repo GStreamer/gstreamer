@@ -201,6 +201,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Windows Media Video 9");
       break;
 
+    case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
+      caps = gst_caps_new_simple ("video/x-cinepak", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Cinepak video");
+      break;
+
     default:
       GST_WARNING ("Unkown video fourcc " GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
