@@ -24,7 +24,7 @@
 #include "gst_private.h"
 
 #include "gstelement.h"
-#include "gstregistry.h"
+#include "gstregistrypool.h"
 #include "gstlog.h"
 
 static void 		gst_element_factory_class_init 		(GstElementFactoryClass *klass);

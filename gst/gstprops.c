@@ -27,14 +27,15 @@
 #include "gstprops.h"
 #include "gstmemchunk.h"
 
+#ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */
 #include "gsttrace.h"
+static GstAllocTrace *_props_trace;
+static GstAllocTrace *_entries_trace;
+#endif
 
 GType _gst_props_type;
 GType _gst_props_entry_type;
-
-static GstAllocTrace *_props_trace;
-static GstAllocTrace *_entries_trace;
 
 #define GST_PROPS_ENTRY_IS_VARIABLE(a)	(((GstPropsEntry*)(a))->propstype > GST_PROPS_VAR_TYPE)
 
@@ -142,8 +143,10 @@ _gst_props_initialize (void)
 		  (GBoxedCopyFunc) gst_props_entry_copy,
 		  (GBoxedFreeFunc) gst_props_entry_destroy);
 
+#ifndef GST_DISABLE_TRACE
   _props_trace = gst_alloc_trace_register (GST_PROPS_TRACE_NAME);
   _entries_trace = gst_alloc_trace_register (GST_PROPS_ENTRY_TRACE_NAME);
+#endif
 }
 
 static void
@@ -309,7 +312,9 @@ gst_props_alloc_entry (void)
   GstPropsEntry *entry;
 
   entry = gst_mem_chunk_alloc (_gst_props_entries_chunk);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_entries_trace, entry);
+#endif
 
   GST_DEBUG (GST_CAT_PROPERTIES, "new entry %p", entry);
 
@@ -347,7 +352,9 @@ gst_props_entry_destroy (GstPropsEntry *entry)
   gst_props_entry_clean (entry);
 
   gst_mem_chunk_free (_gst_props_entries_chunk, entry);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_entries_trace, entry);
+#endif
 }
 
 /**
@@ -363,7 +370,9 @@ gst_props_empty_new (void)
   GstProps *props;
 
   props = gst_mem_chunk_alloc (_gst_props_chunk);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_props_trace, props);
+#endif
 
   GST_DEBUG (GST_CAT_PROPERTIES, "new %p", props);
 
@@ -915,7 +924,9 @@ gst_props_destroy (GstProps *props)
   g_list_free (props->properties);
 
   gst_mem_chunk_free (_gst_props_chunk, props);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_props_trace, props);
+#endif
 }
 
 /* 

@@ -26,9 +26,8 @@
 
 #include "gst_private.h"
 #include "gstutils.h"
+#include "gsturitype.h"
 #include "gstlog.h"
-
-#include "gstextratypes.h"
 
 /**
  * gst_util_dump_mem:
@@ -254,7 +253,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name, const gchar * val
 	    sscanf (value, "%d", &i);
 	    g_object_set (G_OBJECT (object), name, i, NULL);
 	  }
-	  else if (paramspec->value_type == GST_TYPE_FILENAME) {
+	  else if (paramspec->value_type == GST_TYPE_URI) {
 	    g_object_set (G_OBJECT (object), name, value, NULL);
 	  }
 	  break;

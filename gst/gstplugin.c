@@ -28,7 +28,7 @@
 #include "gst_private.h"
 #include "gstplugin.h"
 #include "gstversion.h"
-#include "gstregistry.h"
+#include "gstregistrypool.h"
 #include "gstlog.h"
 #include "config.h"
 

@@ -4,7 +4,19 @@ else
 GNOME=
 endif
 
-EXAMPLES = dynamic $(GNOME) helloworld helloworld2 queue threads xml-mp3
+if GST_DISABLE_AUTOPLUG
+GST_AUTOPLUG_SRC =
+else
+GST_AUTOPLUG_SRC = helloworld2
+endif
+
+if GST_DISABLE_LOADSAVE
+GST_LOADSAVE_SRC =
+else
+GST_LOADSAVE_SRC = xml-mp3
+endif
+
+EXAMPLES = dynamic $(GNOME) helloworld $(GST_AUTOPLUG_SRC) queue threads $(GST_LOADSAVE_SRC)
 noinst_PROGRAMS = $(EXAMPLES)
 
 LDADD = $(GST_LIBS)

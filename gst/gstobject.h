@@ -29,7 +29,6 @@
 #include <glib-object.h>	/* note that this gets wrapped in __GST_OBJECT_H__ */
 #include <gst/gstmarshal.h>
 
-#include <gst/gsttrace.h>
 #include <gst/gsttypes.h>
 
 G_BEGIN_DECLS
@@ -50,6 +49,12 @@ extern GType _gst_object_type;
 #else
 # define GST_OBJECT                     GST_OBJECT_CAST
 # define GST_OBJECT_CLASS               GST_OBJECT_CLASS_CAST
+#endif
+
+/* make sure we don't change the object size but stil make it compile
+ * without libxml */
+#ifdef GST_DISABLE_LOADSAVE_REGISTRY
+#define xmlNodePtr	gpointer
 #endif
 
 typedef enum
@@ -83,18 +88,14 @@ struct _GstObjectClass {
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
   void		(*parent_unset)		(GstObject *object, GstObject *parent);
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
-#endif
   void 		(*deep_notify)   	(GstObject *object, GstObject *orig, GParamSpec *pspec);
 
   /* functions go here */
   void		(*destroy)		(GstObject *object);
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
-#endif
 
   gpointer	dummy[4];
 };
@@ -156,13 +157,13 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 
 guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 const gchar	*name,
-						 gpointer	func,
-						 gpointer	func_data);
+						 gpointer	 func,
+						 gpointer	 func_data);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
 void		gst_class_signal_emit_by_name	(GstObject	*object,
 		                                 const gchar	*name,
-						 xmlNodePtr self);
+						 xmlNodePtr 	 self);
 #else
 #pragma GCC poison gst_class_signal_emit_by_name
 #endif

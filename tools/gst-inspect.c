@@ -170,6 +170,7 @@ print_query_types (const GstQueryType *types)
 static void 
 print_event_masks (const GstEventMask *masks) 
 {
+#ifndef GST_DISABLE_ENUMTYPES
   GType event_type;
   GEnumClass *klass;
   GType event_flags;
@@ -213,6 +214,7 @@ print_event_masks (const GstEventMask *masks)
     
     masks++;
   }
+#endif
 }
 
 static void
@@ -342,8 +344,8 @@ print_element_properties (GstElement *element)
 	break;
       }
       default:
-        if (param->value_type == GST_TYPE_FILENAME) {
-          g_print("%-23.23s Filename", "");
+        if (param->value_type == GST_TYPE_URI) {
+          g_print("%-23.23s URI", "");
 	}
         if (param->value_type == GST_TYPE_CAPS) {
           GstCaps *caps = g_value_peek_pointer (&value);
@@ -586,6 +588,7 @@ print_element_info (GstElementFactory *factory)
     g_print ("  none\n");
   }
 
+#ifndef GST_DISABLE_INDEX
   g_print ("\nIndexing capabilities:\n");
   if (gst_element_is_indexable (element)) {
     g_print ("  element can do indexing\n");
@@ -593,6 +596,7 @@ print_element_info (GstElementFactory *factory)
   else {
     g_print ("  none\n");
   }
+#endif
 
   g_print ("\nPads:\n");
   if (element->numpads) {
@@ -807,6 +811,7 @@ print_element_list (void)
         g_print ("%s:  %s: %s\n", plugin->name, 
 	        GST_PLUGIN_FEATURE_NAME (factory) ,factory->details->longname);
       }
+#ifndef GST_DISABLE_AUTOPLUG
       else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
         GstAutoplugFactory *factory;
 
@@ -814,6 +819,8 @@ print_element_list (void)
         g_print ("%s:  %s: %s\n", plugin->name, 
 	        GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
+#endif
+#ifndef GST_DISABLE_INDEX
       else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory;
 
@@ -821,6 +828,7 @@ print_element_list (void)
         g_print ("%s:  %s: %s\n", plugin->name, 
 	        GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
+#endif
       else if (GST_IS_TYPE_FACTORY (feature)) {
         GstTypeFactory *factory;
 
@@ -839,6 +847,7 @@ print_element_list (void)
         g_print ("%s:  %s: %s\n", plugin->name, 
 	        GST_PLUGIN_FEATURE_NAME (factory), factory->longdesc);
       }
+#ifndef GST_DISABLE_URI
       else if (GST_IS_URI_HANDLER (feature)) {
         GstURIHandler *handler;
 
@@ -847,6 +856,7 @@ print_element_list (void)
 	        GST_PLUGIN_FEATURE_NAME (handler), handler->uri, handler->longdesc,
 		handler->element, handler->property);
       }
+#endif
       else {
         g_print ("%s:  %s (%s)\n", plugin->name, 
 	        GST_PLUGIN_FEATURE_NAME (feature), 
@@ -891,6 +901,7 @@ print_plugin_info (GstPlugin *plugin)
 	      factory->details->longname);
       num_elements++;
     }
+#ifndef GST_DISABLE_AUTOPLUG
     else if (GST_IS_AUTOPLUG_FACTORY (feature)) {
       GstAutoplugFactory *factory;
 
@@ -898,6 +909,8 @@ print_plugin_info (GstPlugin *plugin)
       g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
       num_autoplug++;
     }
+#endif
+#ifndef GST_DISABLE_INDEX
     else if (GST_IS_INDEX_FACTORY (feature)) {
       GstIndexFactory *factory;
 
@@ -905,6 +918,7 @@ print_plugin_info (GstPlugin *plugin)
       g_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
       num_indexes++;
     }
+#endif
     else if (GST_IS_TYPE_FACTORY (feature)) {
       GstTypeFactory *factory;
 
@@ -997,26 +1011,32 @@ main (int argc, char *argv[])
            g_print ("%s: a scheduler\n", argv[1]);
 	   return 0;
 	 }
+#ifndef GST_DISABLE_INDEX
 	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_INDEX_FACTORY);
 	 if (feature) {
            g_print ("%s: an index\n", argv[1]);
 	   return 0;
 	 }
+#endif
+#ifndef GST_DISABLE_AUTOPLUG
 	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_AUTOPLUG_FACTORY);
 	 if (feature) {
            g_print ("%s: an autoplugger\n", argv[1]);
 	   return 0;
 	 }
+#endif
 	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_TYPE_FACTORY);
 	 if (feature) {
            g_print ("%s: an type\n", argv[1]);
 	   return 0;
 	 }
+#ifndef GST_DISABLE_URI
 	 feature = gst_registry_pool_find_feature (argv[1], GST_TYPE_URI_HANDLER);
 	 if (feature) {
            g_print ("%s: an uri handler\n", argv[1]);
 	   return 0;
 	 }
+#endif
       }
     } else {
       /* strip the .so */

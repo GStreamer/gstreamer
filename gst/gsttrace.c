@@ -252,6 +252,7 @@ gst_alloc_trace_set_flags_all (GstAllocTraceFlags flags)
   while (walk) {
     GstAllocTrace *trace = (GstAllocTrace *) walk->data;
 
+    g_print ("set flags on %p\n", trace);
     gst_alloc_trace_set_flags (trace, flags);
 
     walk = g_list_next (walk);
@@ -299,7 +300,7 @@ gst_alloc_trace_print (const GstAllocTrace *trace)
 
   g_return_if_fail (trace != NULL);
 
-  g_print ("%s: flags %d", trace->name, trace->flags);
+  g_print ("%s (%p): flags %d", trace->name, trace, trace->flags);
 
   if (trace->flags & GST_ALLOC_TRACE_LIVE) {
     g_print (", live %d", trace->live);

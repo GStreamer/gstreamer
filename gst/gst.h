@@ -47,6 +47,7 @@
 #include <gst/gstprops.h>
 #include <gst/gstplugin.h>
 #include <gst/gsturi.h>
+#include <gst/gsturitype.h>
 #include <gst/gstutils.h>
 #include <gst/gsttrace.h>
 #include <gst/gstxml.h>
@@ -57,7 +58,7 @@
 
 #include <gst/gstparse.h>
 #include <gst/gstregistry.h>
-#include <gst/gstextratypes.h>
+#include <gst/gstregistrypool.h>
 #include <gst/gstenumtypes.h>
 
 /* API compatibility stuff */

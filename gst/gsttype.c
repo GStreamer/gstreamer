@@ -30,7 +30,7 @@
 #include "gst_private.h"
 
 #include "gsttype.h"
-#include "gstregistry.h"
+#include "gstregistrypool.h"
 #include "gstobject.h"
 #include "gstlog.h"
 

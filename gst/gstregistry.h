@@ -132,23 +132,6 @@ GstRegistryReturn	gst_registry_load_plugin	(GstRegistry *registry, GstPlugin *pl
 GstRegistryReturn	gst_registry_unload_plugin	(GstRegistry *registry, GstPlugin *plugin);
 GstRegistryReturn	gst_registry_update_plugin	(GstRegistry *registry, GstPlugin *plugin);
 
-/* the pool of registries */
-GList*			gst_registry_pool_list		(void);
-void			gst_registry_pool_add		(GstRegistry *registry, guint priority);
-void			gst_registry_pool_remove	(GstRegistry *registry);
-
-void			gst_registry_pool_add_plugin	(GstPlugin *plugin);
-
-void			gst_registry_pool_load_all	(void);
-
-GList*			gst_registry_pool_plugin_list	(void);
-GList*			gst_registry_pool_feature_list	(GType type);
-
-GstPlugin*		gst_registry_pool_find_plugin	(const gchar *name);
-GstPluginFeature*	gst_registry_pool_find_feature	(const gchar *name, GType type);
-
-GstRegistry*		gst_registry_pool_get_prefered	(GstRegistryFlags flags);
-
 G_END_DECLS
 
 #endif /* __GST_REGISTRY_H__ */

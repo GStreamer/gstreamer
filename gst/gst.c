@@ -27,20 +27,26 @@
 
 #include "gst.h"
 #include "gstqueue.h"
-#ifndef GST_DISABLE_TYPE_FIND
+#ifndef GST_DISABLE_TYPEFIND
 #include "gsttypefind.h"
-#endif
+#endif /* GST_DISABLE_TYPEFIND */
+#ifndef GST_DISABLE_REGISTRY
 #include "registries/gstxmlregistry.h"
+#endif /* GST_DISABLE_REGISTRY */
+#include "gstregistrypool.h"
 
 #define MAX_PATH_SPLIT	16
 #define GST_PLUGIN_SEPARATOR ","
 
 gchar *_gst_progname;
 
+#ifndef GST_DISABLE_REGISTRY
 gboolean _gst_registry_auto_load = TRUE;
 static GstRegistry *_global_registry;
 static GstRegistry *_user_registry;
 static gboolean _gst_registry_fixed = FALSE;
+#endif
+
 static gboolean _gst_use_threads = TRUE;
 
 static gboolean gst_initialized = FALSE;
@@ -303,6 +309,7 @@ gst_init_with_popt_table (int *argc, char **argv[],
   return TRUE;
 }
 
+#ifndef GST_DISABLE_REGISTRY
 static void 
 add_path_func (gpointer data, gpointer user_data)
 {
@@ -311,6 +318,7 @@ add_path_func (gpointer data, gpointer user_data)
   GST_INFO (GST_CAT_GST_INIT, "Adding plugin path: \"%s\"", (gchar *)data);
   gst_registry_add_path (registry, (gchar *)data);
 }
+#endif
 
 static void 
 prepare_for_load_plugin_func (gpointer data, gpointer user_data)
@@ -322,13 +330,21 @@ static void
 load_plugin_func (gpointer data, gpointer user_data)
 {
   gboolean ret;
-  //ret = gst_plugin_load ((gchar *)data);
-  ret = FALSE;
+  GstPlugin *plugin;
+  const gchar *filename;
 
-  if (ret)
-    GST_INFO (GST_CAT_GST_INIT, "Loaded plugin: \"%s\"", (gchar *)data);
+  filename = (const gchar *) data;
+
+  plugin = gst_plugin_new (filename);
+  ret = gst_plugin_load_plugin (plugin, NULL);
+
+  if (ret) {
+    GST_INFO (GST_CAT_GST_INIT, "Loaded plugin: \"%s\"", filename);
+
+    gst_registry_pool_add_plugin (plugin);
+  }
   else
-    GST_INFO (GST_CAT_GST_INIT, "Failed to load plugin: \"%s\"", (gchar *)data);
+    GST_INFO (GST_CAT_GST_INIT, "Failed to load plugin: \"%s\"", filename);
 
   g_free (data);
 }
@@ -372,47 +388,48 @@ split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator, gp
 static gboolean
 init_pre (void)
 {
-  const gchar *homedir;
-  gchar *user_reg;
-
   g_type_init ();
 
-  _global_registry = gst_xml_registry_new ("global_registry", GLOBAL_REGISTRY_FILE);
+#ifndef GST_DISABLE_REGISTRY
+  {
+    gchar *user_reg;
+    const gchar *homedir;
+
+    _global_registry = gst_xml_registry_new ("global_registry", GLOBAL_REGISTRY_FILE);
 
 #ifdef PLUGINS_USE_BUILDDIR
-  /* location libgstelements.so */
-  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/libs/gst");
-  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/elements");
-  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/types");
-  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/autoplug");
-  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/schedulers");
-  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/indexers");
+    /* location libgstelements.so */
+    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/libs/gst");
+    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/elements");
+    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/types");
+    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/autoplug");
+    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/schedulers");
+    gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/indexers");
 #else
-  /* add the main (installed) library path */
-  gst_registry_add_path (_global_registry, PLUGINS_DIR);
+    /* add the main (installed) library path */
+    gst_registry_add_path (_global_registry, PLUGINS_DIR);
 #endif /* PLUGINS_USE_BUILDDIR */
 
-  homedir = g_get_home_dir ();
-  user_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
-  _user_registry = gst_xml_registry_new ("user_registry", user_reg);
+    homedir = g_get_home_dir ();
+    user_reg = g_strjoin ("/", homedir, LOCAL_REGISTRY_FILE, NULL);
+    _user_registry = gst_xml_registry_new ("user_registry", user_reg);
 
-#ifndef GST_DISABLE_REGISTRY
-  /* this test is a hack; gst-register sets this to false
-   * so this is a test for the current instance being gst-register */
-  if (_gst_registry_auto_load == TRUE)
-  {
-    /* do a sanity check here; either one of the two registries should exist */
-    if (!g_file_test (user_reg, G_FILE_TEST_IS_REGULAR))
-      if (!g_file_test (GLOBAL_REGISTRY_FILE, G_FILE_TEST_IS_REGULAR))
-      {
-        g_print ("Couldn't find user registry %s or global registry %s\n",
-	         user_reg, GLOBAL_REGISTRY_FILE);
-        g_error ("Please run gst-register either as root or user");
+    /* this test is a hack; gst-register sets this to false
+     * so this is a test for the current instance being gst-register */
+    if (_gst_registry_auto_load == TRUE) {
+      /* do a sanity check here; either one of the two registries should exist */
+      if (!g_file_test (user_reg, G_FILE_TEST_IS_REGULAR)) {
+        if (!g_file_test (GLOBAL_REGISTRY_FILE, G_FILE_TEST_IS_REGULAR))
+        {
+          g_print ("Couldn't find user registry %s or global registry %s\n",
+	           user_reg, GLOBAL_REGISTRY_FILE);
+          g_error ("Please run gst-register either as root or user");
+        }
       }
+    }
+    g_free (user_reg);
   }
-#endif
-	  
-  g_free (user_reg);
+#endif /* GST_DISABLE_REGISTRY */
 
   return TRUE;
 }
@@ -431,10 +448,10 @@ gst_register_core_elements (GModule *module, GstPlugin *plugin)
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   factory = gst_element_factory_new ("queue", gst_queue_get_type (), &gst_queue_details);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-#ifndef GST_DISABLE_TYPE_FIND
+#ifndef GST_DISABLE_TYPEFIND
   factory = gst_element_factory_new ("typefind", gst_type_find_get_type (), &gst_type_find_details);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-#endif
+#endif /* GST_DISABLE_TYPEFIND */
 
   return TRUE;
 }
@@ -464,7 +481,7 @@ init_post (void)
   const gchar *plugin_path;
 #ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
-#endif
+#endif /* GST_DISABLE_TRACE */
 
   if (!g_thread_supported ()) {
     if (_gst_use_threads)
@@ -493,13 +510,18 @@ init_post (void)
   gst_bin_get_type ();
 #ifndef GST_DISABLE_AUTOPLUG
   gst_autoplug_factory_get_type ();
-#endif
+#endif /* GST_DISABLE_AUTOPLUG */
+#ifndef GST_DISABLE_INDEX
   gst_index_factory_get_type ();
+#endif /* GST_DISABLE_INDEX */
+#ifndef GST_DISABLE_URI
   gst_uri_handler_get_type ();
-
+#endif /* GST_DISABLE_URI */
 
   plugin_path = g_getenv ("GST_PLUGIN_PATH");
+#ifndef GST_DISABLE_REGISTRY
   split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func, _user_registry);
+#endif /* GST_DISABLE_REGISTRY */
 
   /* register core plugins */
   _gst_plugin_register_static (&plugin_desc);
@@ -511,6 +533,7 @@ init_post (void)
   _gst_event_initialize ();
   _gst_buffer_initialize ();
 
+#ifndef GST_DISABLE_REGISTRY
   if (!_gst_registry_fixed) {
     /* don't override command-line options */
     if (g_getenv ("GST_REGISTRY")) {
@@ -529,6 +552,7 @@ init_post (void)
   if (_gst_registry_auto_load) {
     gst_registry_pool_load_all ();
   }
+#endif /* GST_DISABLE_REGISTRY */
 
   /* if we need to preload plugins */
   if (preload_plugins) {
@@ -620,7 +644,9 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
     case ARG_PLUGIN_SPEW:
       break;
     case ARG_PLUGIN_PATH:
+#ifndef GST_DISABLE_REGISTRY
       split_and_iterate (arg, G_SEARCHPATH_SEPARATOR_S, add_path_func, _user_registry);
+#endif /* GST_DISABLE_REGISTRY */
       break;
     case ARG_PLUGIN_LOAD:
       split_and_iterate (arg, ",", prepare_for_load_plugin_func, NULL);
@@ -632,8 +658,10 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       gst_use_threads (FALSE);
       break;
     case ARG_REGISTRY:
+#ifndef GST_DISABLE_REGISTRY
       g_object_set (G_OBJECT (_user_registry), "location", arg, NULL);
       _gst_registry_fixed = TRUE;
+#endif /* GST_DISABLE_REGISTRY */
       break;
     default:
       g_warning ("option %d not recognized", option->val);

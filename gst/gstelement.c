@@ -27,7 +27,6 @@
 #include "gst_private.h"
 
 #include "gstelement.h"
-#include "gstextratypes.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
 #include "gstevent.h"
@@ -766,6 +765,7 @@ gst_element_clock_wait (GstElement *element, GstClockID id, GstClockTimeDiff *ji
   return res;
 }
 
+#ifndef GST_DISABLE_INDEX
 /**
  * gst_element_is_indexable:
  * @element: a #GstElement.
@@ -826,6 +826,7 @@ gst_element_get_index (GstElement *element)
 
   return NULL;
 }
+#endif
 
 /**
  * gst_element_release_locks:

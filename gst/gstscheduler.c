@@ -25,7 +25,7 @@
 #include "gstsystemclock.h"
 #include "gstscheduler.h"
 #include "gstlog.h"
-#include "gstregistry.h"
+#include "gstregistrypool.h"
 
 static void 	gst_scheduler_class_init 	(GstSchedulerClass *klass);
 static void 	gst_scheduler_init 		(GstScheduler *sched);
@@ -897,26 +897,25 @@ gst_scheduler_factory_find (const gchar *name)
 GstScheduler*
 gst_scheduler_factory_create (GstSchedulerFactory *factory, GstElement *parent)
 {
-  GstScheduler *new = NULL;
+  GstScheduler *sched = NULL;
 
   g_return_val_if_fail (factory != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (parent), NULL);
-  g_return_val_if_fail (GST_ELEMENT_SCHED (parent) == NULL, NULL);
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     g_return_val_if_fail (factory->type != 0, NULL);
 
-    new = GST_SCHEDULER (g_object_new (factory->type, NULL));
-    new->parent = parent;
+    sched = GST_SCHEDULER (g_object_new (factory->type, NULL));
+    sched->parent = parent;
 
-    GST_ELEMENT_SCHED (parent) = new;
+    GST_ELEMENT_SCHED (parent) = sched;
 
     /* let's refcount the scheduler */
-    gst_object_ref (GST_OBJECT (new));
-    gst_object_sink (GST_OBJECT (new));
+    gst_object_ref (GST_OBJECT (sched));
+    gst_object_sink (GST_OBJECT (sched));
   }
 
-  return new;
+  return sched;
 }
 
 /**

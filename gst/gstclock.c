@@ -27,8 +27,11 @@
 #include "gstlog.h"
 #include "gstmemchunk.h"
 
+#ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */
-#include "gstmemchunk.h"
+#include "gsttrace.h"
+static GstAllocTrace *_gst_clock_entry_trace;
+#endif
 
 #define DEFAULT_MAX_DIFF	(2 * GST_SECOND)
 
@@ -39,7 +42,6 @@ enum {
 };
 
 static GstMemChunk   *_gst_clock_entries_chunk;
-static GstAllocTrace *_gst_clock_entry_trace;
 
 static void		gst_clock_class_init		(GstClockClass *klass);
 static void		gst_clock_init			(GstClock *clock);
@@ -62,7 +64,9 @@ gst_clock_entry_new (GstClock *clock, GstClockTime time,
   GstClockEntry *entry;
 
   entry = gst_mem_chunk_alloc (_gst_clock_entries_chunk);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_clock_entry_trace, entry);
+#endif
 
   entry->clock = clock;
   entry->time = time;
@@ -283,7 +287,9 @@ gst_clock_id_free (GstClockID id)
 {
   g_return_if_fail (id != NULL);
 
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_clock_entry_trace, id);
+#endif
   gst_mem_chunk_free (_gst_clock_entries_chunk, id);
 }
 
@@ -357,7 +363,9 @@ gst_clock_class_init (GstClockClass *klass)
                      sizeof (GstClockEntry), sizeof (GstClockEntry) * 32,
                      G_ALLOC_AND_FREE);
 
+#ifndef GST_DISABLE_TRACE
   _gst_clock_entry_trace = gst_alloc_trace_register (GST_CLOCK_ENTRY_TRACE_NAME);
+#endif
 
   gobject_class->dispose      = GST_DEBUG_FUNCPTR (gst_clock_dispose);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_clock_set_property);
@@ -454,8 +462,8 @@ gst_clock_set_resolution (GstClock *clock, guint64 resolution)
 {
   GstClockClass *cclass;
 
-  g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
-  g_return_val_if_fail (resolution != 0, 0LL);
+  g_return_val_if_fail (GST_IS_CLOCK (clock), G_GINT64_CONSTANT (0));
+  g_return_val_if_fail (resolution != 0, G_GINT64_CONSTANT (0));
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
@@ -478,14 +486,14 @@ gst_clock_get_resolution (GstClock *clock)
 {
   GstClockClass *cclass;
 
-  g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
+  g_return_val_if_fail (GST_IS_CLOCK (clock), G_GINT64_CONSTANT (0));
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   if (cclass->get_resolution)
     return cclass->get_resolution (clock);
 
-  return 1LL;
+  return G_GINT64_CONSTANT (1);
 }
 
 /**
@@ -499,7 +507,7 @@ gst_clock_get_resolution (GstClock *clock)
 void
 gst_clock_set_active (GstClock *clock, gboolean active)
 {
-  GstClockTime time = 0LL;
+  GstClockTime time = G_GINT64_CONSTANT (0);
   GstClockClass *cclass;
 
   g_return_if_fail (GST_IS_CLOCK (clock));
@@ -554,7 +562,7 @@ gst_clock_is_active (GstClock *clock)
 void
 gst_clock_reset (GstClock *clock)
 {
-  GstClockTime time = 0LL;
+  GstClockTime time = G_GINT64_CONSTANT (0);
   GstClockClass *cclass;
 
   g_return_if_fail (GST_IS_CLOCK (clock));
@@ -568,7 +576,7 @@ gst_clock_reset (GstClock *clock)
   GST_LOCK (clock);
   clock->active = FALSE;
   clock->start_time = time;
-  clock->last_time = 0LL;
+  clock->last_time = G_GINT64_CONSTANT (0);
   g_list_foreach (clock->entries, (GFunc) gst_clock_reschedule_func, NULL);
   GST_UNLOCK (clock);
 }
@@ -587,7 +595,7 @@ gst_clock_reset (GstClock *clock)
 gboolean
 gst_clock_handle_discont (GstClock *clock, guint64 time)
 {
-  GstClockTime itime = 0LL;
+  GstClockTime itime = G_GINT64_CONSTANT (0);
 
   GST_DEBUG (GST_CAT_CLOCK, "clock discont %" G_GUINT64_FORMAT
 		            " %" G_GUINT64_FORMAT " %d",
@@ -642,9 +650,9 @@ gst_clock_handle_discont (GstClock *clock, guint64 time)
 GstClockTime
 gst_clock_get_time (GstClock *clock)
 {
-  GstClockTime ret = 0LL;
+  GstClockTime ret = G_GINT64_CONSTANT (0);
 
-  g_return_val_if_fail (GST_IS_CLOCK (clock), 0LL);
+  g_return_val_if_fail (GST_IS_CLOCK (clock), G_GINT64_CONSTANT (0));
 
   if (!clock->active) {
     /* clock is not active return previous time */

@@ -148,6 +148,22 @@ extern gint _gst_trace_on;
 #pragma GCC poison 	gst_trace_read_tsc
 #pragma GCC poison 	gst_trace_add_entry
 
+#define		gst_alloc_trace_register(name)
+#define		gst_alloc_trace_new(trace, mem) 
+#define		gst_alloc_trace_free(trace, mem)
+
+#define		gst_alloc_trace_available()	FALSE
+#define		gst_alloc_trace_list()		NULL
+#define		_gst_alloc_trace_register(name)	NULL
+                                                                                                                     
+#define		gst_alloc_trace_print_all()	
+#define		gst_alloc_trace_set_flags_all(flags)
+                                                                                                                    
+#define		gst_alloc_trace_get(name)	NULL
+#define		gst_alloc_trace_print(trace)
+#define		gst_alloc_trace_set_flags(trace,flags)
+
+
 #endif /* GST_DISABLE_TRACE */
 
 G_END_DECLS

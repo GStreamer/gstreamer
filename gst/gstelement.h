@@ -258,6 +258,7 @@ GstClock*		gst_element_get_clock 		(GstElement *element);
 void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
 GstClockReturn		gst_element_clock_wait 		(GstElement *element, 
 							 GstClockID id, GstClockTimeDiff *jitter);
+ 
 /* indexs */
 gboolean		gst_element_is_indexable	(GstElement *element);
 void			gst_element_set_index		(GstElement *element, GstIndex *index);

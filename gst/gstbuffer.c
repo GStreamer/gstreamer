@@ -31,14 +31,16 @@
 #include "gstlog.h"
 #include "gstbufferpool-default.h"
 
-/* #define GST_WITH_ALLOC_TRACE */
-#include "gsttrace.h"
-
 GType _gst_buffer_type;
 GType _gst_buffer_pool_type;
 
+#ifndef GST_DISABLE_TRACE
+/* #define GST_WITH_ALLOC_TRACE  */
+#include "gsttrace.h"
+
 static GstAllocTrace *_gst_buffer_trace;
 static GstAllocTrace *_gst_buffer_pool_trace;
+#endif
 
 static GstMemChunk *chunk;
 
@@ -53,8 +55,10 @@ _gst_buffer_initialize (void)
 		            (GBoxedCopyFunc) gst_data_ref,
 			    (GBoxedFreeFunc) gst_data_unref);
 
+#ifndef GST_DISABLE_TRACE
   _gst_buffer_trace = gst_alloc_trace_register (GST_BUFFER_TRACE_NAME);
   _gst_buffer_pool_trace = gst_alloc_trace_register (GST_BUFFER_POOL_TRACE_NAME);
+#endif
 
   chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer), 
                              sizeof (GstBuffer) * 200, 0);
@@ -83,7 +87,9 @@ _gst_buffer_sub_free (GstBuffer *buffer)
   _GST_DATA_DISPOSE (GST_DATA (buffer));
   
   gst_mem_chunk_free (chunk, GST_DATA (buffer));
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_buffer_trace, buffer);
+#endif
 }
 
 /**
@@ -110,7 +116,9 @@ gst_buffer_default_free (GstBuffer *buffer)
   _GST_DATA_DISPOSE (GST_DATA (buffer));
 
   gst_mem_chunk_free (chunk, GST_DATA (buffer));
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_buffer_trace, buffer);
+#endif
 }
 
 static GstBuffer*
@@ -162,7 +170,11 @@ gst_buffer_new (void)
   GstBuffer *buf;
   
   buf = gst_mem_chunk_alloc0 (chunk);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_buffer_trace, buf);
+#endif
+
+  GST_DEBUG (GST_CAT_BUFFER, "new %p", buf);
 
   _GST_DATA_INIT (GST_DATA (buf), 
 		  _gst_buffer_type,
@@ -270,7 +282,11 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
 
   /* create the new buffer */
   buffer = gst_mem_chunk_alloc0 (chunk);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_buffer_trace, buffer);
+#endif
+
+  GST_DEBUG (GST_CAT_BUFFER, "new %p", buf);
 
   /* make sure nobody overwrites data in the new buffer 
    * by setting the READONLY flag */
@@ -416,7 +432,9 @@ gst_buffer_pool_default_free (GstBufferPool *pool)
 
   _GST_DATA_DISPOSE (GST_DATA (pool));
   g_free (pool);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_buffer_pool_trace, pool);
+#endif
 }
 
 /** 
@@ -449,7 +467,9 @@ gst_buffer_pool_new (GstDataFreeFunction free,
   g_return_val_if_fail (buffer_new != NULL, NULL);
 
   pool = g_new0 (GstBufferPool, 1);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_buffer_pool_trace, pool);
+#endif
 
   GST_DEBUG (GST_CAT_BUFFER, "allocating new buffer pool %p\n", pool);
         

@@ -42,6 +42,7 @@ idle_func (gpointer data)
   return busy;
 }
 
+#ifndef GST_DISABLE_LOADSAVE
 static GstElement*
 xmllaunch_parse_cmdline (const gchar **argv) 
 {
@@ -105,6 +106,7 @@ xmllaunch_parse_cmdline (const gchar **argv)
   else
     return l->data;
 }
+#endif
 
 extern volatile gboolean glib_on_error_halt;
 static void fault_restore(void);
@@ -191,8 +193,10 @@ main(int argc, char *argv[])
      "output status information and property notifications", NULL},
     {"exclude", 'X',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &exclude_args,  0,
      "do not output status information of TYPE", "TYPE1,TYPE2,..."},
+#ifndef GST_DISABLE_LOADSAVE
     {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
      "save xml representation of pipeline to FILE and exit", "FILE"},
+#endif
     {"no_fault", 'f', POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &no_fault,   0,
      "Do not install a fault handler", NULL},
     {"trace",   't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &trace,   0,
@@ -224,9 +228,13 @@ main(int argc, char *argv[])
   /* make a null-terminated version of argv */
   argvn = g_new0 (char*, argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
+#ifndef GST_DISABLE_LOADSAVE
   if (strstr (argv[0], "gst-xmllaunch")) {
     pipeline = xmllaunch_parse_cmdline ((const gchar**)argvn);
-  } else {
+  } 
+  else 
+#endif
+  {
     pipeline = (GstElement*) gst_parse_launchv ((const gchar**)argvn, &error);
   }
   g_free (argvn);

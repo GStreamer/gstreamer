@@ -49,12 +49,17 @@ static void 			gst_bin_dispose 		(GObject * object);
 static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
 static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 
+#ifndef GST_DISABLE_INDEX
 static void 			gst_bin_set_index 		(GstElement *element, GstIndex *index);
+#endif
 
 static void 			gst_bin_add_func 		(GstBin *bin, GstElement *element);
 static void 			gst_bin_remove_func 		(GstBin *bin, GstElement *element);
 
-static gboolean 		gst_bin_iterate_func 		(GstBin * bin);
+static GstClock* 		gst_bin_get_clock_func 		(GstBin *bin);
+static void	 		gst_bin_set_clock_func 		(GstBin *bin, GstClock *clock);
+
+static gboolean 		gst_bin_iterate_func 		(GstBin *bin);
 
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr 		gst_bin_save_thyself 		(GstObject * object, xmlNodePtr parent);
@@ -133,7 +138,11 @@ gst_bin_class_init (GstBinClass * klass)
 #endif
 
   gstelement_class->change_state 	= GST_DEBUG_FUNCPTR (gst_bin_change_state);
+#ifndef GST_DISABLE_INDEX
   gstelement_class->set_index	 	= GST_DEBUG_FUNCPTR (gst_bin_set_index);
+#endif
+  gstelement_class->set_clock	 	= GST_DEBUG_FUNCPTR (gst_bin_set_clock_func);
+  gstelement_class->get_clock	 	= GST_DEBUG_FUNCPTR (gst_bin_get_clock_func);
 
   klass->add_element 			= GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element 		= GST_DEBUG_FUNCPTR (gst_bin_remove_func);
@@ -169,6 +178,22 @@ gst_bin_new (const gchar * name)
   return gst_element_factory_make ("bin", name);
 }
 
+static GstClock*
+gst_bin_get_clock_func (GstBin *bin)
+{
+  if (GST_ELEMENT_SCHED (bin)) 
+    return gst_scheduler_get_clock (GST_ELEMENT_SCHED (bin));
+
+  return NULL;
+}
+
+static void
+gst_bin_set_clock_func (GstBin *bin, GstClock *clock)
+{
+  if (GST_ELEMENT_SCHED (bin)) 
+    gst_scheduler_use_clock (GST_ELEMENT_SCHED (bin), clock);
+}
+
 /**
  * gst_bin_get_clock:
  * @bin: a #GstBin to get the clock of
@@ -183,10 +208,7 @@ gst_bin_get_clock (GstBin *bin)
   g_return_val_if_fail (bin != NULL, NULL);
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
-  if (GST_ELEMENT_SCHED (bin)) 
-    return gst_scheduler_get_clock (GST_ELEMENT_SCHED (bin));
-
-  return NULL;
+  return gst_bin_get_clock_func (bin);
 }
 
 /**
@@ -203,8 +225,7 @@ gst_bin_use_clock (GstBin *bin, GstClock *clock)
   g_return_if_fail (bin != NULL);
   g_return_if_fail (GST_IS_BIN (bin));
 
-  if (GST_ELEMENT_SCHED (bin)) 
-    gst_scheduler_use_clock (GST_ELEMENT_SCHED (bin), clock);
+  return gst_bin_set_clock_func (bin, clock);
 }
 
 /**
@@ -223,6 +244,7 @@ gst_bin_auto_clock (GstBin *bin)
     gst_scheduler_auto_clock (GST_ELEMENT_SCHED (bin));
 }
 
+#ifndef GST_DISABLE_INDEX
 static void
 gst_bin_set_index (GstElement *element, GstIndex *index)
 {
@@ -239,6 +261,7 @@ gst_bin_set_index (GstElement *element, GstIndex *index)
     gst_element_set_index (child, index);
   }
 }
+#endif
 
 static void
 gst_bin_set_element_sched (GstElement *element, GstScheduler *sched)

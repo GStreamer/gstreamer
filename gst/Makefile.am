@@ -21,12 +21,6 @@ else
 GST_TYPEFIND_SRC = gsttypefind.c
 endif
 
-if GST_DISABLE_PARSE
-GST_PARSE_SRC = 
-else
-GST_PARSE_SRC = gstparse.c
-endif
-
 if GST_DISABLE_AUTOPLUG
 GST_AUTOPLUG_SRC = 
 GST_AUTOPLUG_DIRS =
@@ -35,21 +29,67 @@ GST_AUTOPLUG_SRC = gstautoplug.c
 GST_AUTOPLUG_DIRS = autoplug
 endif
 
+if GST_DISABLE_PARSE
+GST_PARSE_SRC = 
+GST_PARSE_DIRS = 
+GST_PARSE_LIBADD = 
+else
+GST_PARSE_SRC = gstparse.c
+GST_PARSE_DIRS = parse
+GST_PARSE_LIBADD = parse/libgstparse.la 
+endif
+
 if GST_DISABLE_TRACE
 GST_TRACE_SRC = 
 else
 GST_TRACE_SRC = gsttrace.c
 endif
 
+if GST_DISABLE_REGISTRY
+GST_REGISTRY_SRC = 
+GST_REGISTRY_DIRS =
+GST_REGISTRY_LIBADD = 
+else
+GST_REGISTRY_SRC = gstregistry.c
+GST_REGISTRY_DIRS = registries
+GST_REGISTRY_LIBADD = registries/libgstxmlregistry.la
+endif
+
+if GST_DISABLE_ENUMTYPES
+GST_ENUMTYPES_SRC = 
+else
+GST_ENUMTYPES_SRC = gstenumtypes.c
+endif
+
+if GST_DISABLE_INDEX
+GST_INDEX_SRC = 
+GST_INDEX_DIRS =
+else
+GST_INDEX_SRC = gstindex.c
+GST_INDEX_DIRS = indexers
+endif
+
+if GST_DISABLE_PLUGIN
+GST_PLUGIN_SRC = 
+else
+GST_PLUGIN_SRC = gstplugin.c
+endif
+
+if GST_DISABLE_URI
+GST_URI_SRC = 
+else
+GST_URI_SRC = gsturi.c
+endif
+
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
-SUBDIRS = parse registries . $(GST_AUTOPLUG_DIRS) elements schedulers types indexers
+SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . $(GST_AUTOPLUG_DIRS) elements schedulers types $(GST_INDEX_DIRS) 
 DIST_SUBDIRS = autoplug elements parse registries schedulers types indexers
 
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gst.c			\
 	gstmarshal.c		\
-	gstenumtypes.c		\
+	$(GST_ENUMTYPES_SRC)	\
 	gstobject.c		\
 	$(GST_AUTOPLUG_SRC)	\
 	gstatomic.c		\
@@ -63,9 +103,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstelement.c		\
 	gstelementfactory.c	\
 	gstevent.c		\
-	gstextratypes.c		\
 	gstformat.c		\
-	gstindex.c		\
+	$(GST_INDEX_SRC)	\
 	gstinfo.c		\
 	gstmemchunk.c		\
 	gstpad.c		\
@@ -84,21 +123,23 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gsttrashstack.c		\
 	gsttype.c		\
 	$(GST_TYPEFIND_SRC)	\
-	gsturi.c		\
+	$(GST_URI_SRC)		\
+	gsturitype.c		\
 	gstutils.c		\
-	gstregistry.c		\
+	$(GST_REGISTRY_SRC)	\
+	gstregistrypool.c	\
 	$(GST_PARSE_SRC)	\
 	$(GSTARCH_SRCS)		\
 	$(GST_LOADSAVE_SRC)
 
 
-BUILT_SOURCES = gstmarshal.h gstmarshal.c gstenumtypes.h gstenumtypes.c
+BUILT_SOURCES = gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC) 
 
 libgstreamer_@GST_MAJORMINOR@_la_CFLAGS = -D_GNU_SOURCE \
 	$(GST_CFLAGS) \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
 	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
-libgstreamer_@GST_MAJORMINOR@_la_LIBADD = $(LIBGST_LIBS) parse/libgstparse.la registries/libgstxmlregistry.la
+libgstreamer_@GST_MAJORMINOR@_la_LIBADD = $(LIBGST_LIBS) $(GST_PARSE_LIBADD) $(GST_REGISTRY_LIBADD)
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ 
 
 
@@ -122,7 +163,6 @@ gst_headers =			\
 	gstdata.h		\
 	gstelement.h		\
 	gstevent.h		\
-	gstextratypes.h		\
 	gstformat.h		\
 	gstindex.h		\
 	gstinfo.h		\
@@ -145,8 +185,10 @@ gst_headers =			\
 	gsttype.h		\
 	gsttypefind.h		\
 	gsturi.h		\
+	gsturitype.h		\
 	gstutils.h		\
 	gstregistry.h		\
+	gstregistrypool.h	\
 	gstparse.h		\
 	gstxml.h
 

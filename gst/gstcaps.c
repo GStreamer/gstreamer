@@ -28,12 +28,14 @@
 #include "gstmemchunk.h"
 #include "gstlog.h"
 
+#ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */
 #include "gsttrace.h"
 
-static GstMemChunk *_gst_caps_chunk;
-
 static GstAllocTrace *_gst_caps_trace;
+#endif
+
+static GstMemChunk *_gst_caps_chunk;
 
 GType _gst_caps_type;
 
@@ -83,7 +85,9 @@ _gst_caps_initialize (void)
 		                   G_TYPE_STRING,
 				   transform_func);
 
+#ifndef GST_DISABLE_TRACE
   _gst_caps_trace = gst_alloc_trace_register (GST_CAPS_TRACE_NAME);
+#endif
 }
 
 static guint16
@@ -142,7 +146,9 @@ gst_caps_new_id (const gchar *name, const guint16 id, GstProps *props)
   GstCaps *caps;
 
   caps = gst_mem_chunk_alloc (_gst_caps_chunk);
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_caps_trace, caps);
+#endif
 
   GST_DEBUG (GST_CAT_CAPS, "new %p", caps);
 
@@ -219,7 +225,9 @@ gst_caps_destroy (GstCaps *caps)
   gst_props_unref (caps->properties);
   g_free (caps->name);
 
+#ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_caps_trace, caps);
+#endif
   gst_mem_chunk_free (_gst_caps_chunk, caps);
 
   if (next) 
@@ -956,7 +964,9 @@ gst_caps_load_thyself (xmlNodePtr parent)
       GstCapsFlags fixed = GST_CAPS_FIXED;
 
       caps = gst_mem_chunk_alloc0 (_gst_caps_chunk);
+#ifndef GST_DISABLE_TRACE
       gst_alloc_trace_new (_gst_caps_trace, caps);
+#endif
 
       caps->refcount = 1;
       GST_CAPS_FLAG_SET (caps, GST_CAPS_FLOATING);

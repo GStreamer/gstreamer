@@ -511,8 +511,10 @@ GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 GstCaps*		gst_pad_template_get_caps		(GstPadTemplate *templ);
 GstCaps*		gst_pad_template_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
+#ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr              gst_ghost_pad_save_thyself   		(GstPad *pad,
 						     		 xmlNodePtr parent);
+#endif
 
 G_END_DECLS
 
