@@ -1,5 +1,14 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/ext/ffmpeg/.pc/cvsignore/doc/.cvsignore:
+	* gst-libs/ext/ffmpeg/.pc/cvsignore/libavcodec/i386/.cvsignore:
+	* gst-libs/ext/ffmpeg/configure:
+	* gst-libs/ext/ffmpeg/libavformat/matroska.c: (ebml_read_float):
+	* gst-libs/ext/ffmpeg/patches/matroska.patch:
+          patch from Ronald to work on ppc
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_get_type):
           fix name of static to be in line with code
 
