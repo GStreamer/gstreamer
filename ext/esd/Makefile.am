@@ -5,6 +5,7 @@ plugin_LTLIBRARIES = libesdsink.la
 libesdsink_la_SOURCES = esdsink.c
 libesdsink_la_CFLAGS = $(GST_CFLAGS) $(ESD_CFLAGS)
 libesdsink_la_LIBADD = $(GST_LIBS) $(ESD_LIBS)
+libesdsink_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
 
 noinst_HEADERS = esdsink.h
 EXTRA_DIST = README
