@@ -18,43 +18,29 @@
  */
 
 
-#ifndef __MPEGPACKETIZE_H__
-#define __MPEGPACKETIZE_H__
+#include <riff.h>
+
+//#define debug(format,args...) g_print(format,##args)
+#define debug(format,args...)
 
 
-#include <config.h>
-#include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+gulong gst_riff_fourcc_to_id(gchar *fourcc) {
+  g_return_val_if_fail(fourcc != NULL, 0);
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-
-typedef struct _GstMPEGPacketize GstMPEGPacketize;
-
-#define GST_MPEG_PACKETIZE_ID(pack) 		((pack)->id)
-#define GST_MPEG_PACKETIZE_IS_MPEG2(pack) 	((pack)->MPEG2)
-
-
-struct _GstMPEGPacketize {
-  /* current parse state */
-  guchar id;
-
-  GstByteStream *bs;
-
-  gboolean MPEG2;
-};
-
-GstMPEGPacketize* 	gst_mpeg_packetize_new 		(GstByteStream *bs);
-void		 	gst_mpeg_packetize_destroy 	(GstMPEGPacketize *packetize);
-
-GstData* 		gst_mpeg_packetize_read 	(GstMPEGPacketize *packetize);
-
-#ifdef __cplusplus
+  return (fourcc[0] << 0) | (fourcc[1] << 8) |
+         (fourcc[2] << 16) | (fourcc[3] << 24);
 }
-#endif /* __cplusplus */
 
+gchar *gst_riff_id_to_fourcc(gulong id) {
+  gchar *fourcc = (gchar *)g_malloc(5);
 
-#endif /* __MPEGPACKETIZE_H__ */
+  g_return_val_if_fail(fourcc != NULL, NULL);
+
+  fourcc[0] = (id >> 0) & 0xff;
+  fourcc[1] = (id >> 8) & 0xff;
+  fourcc[2] = (id >> 16) & 0xff;
+  fourcc[3] = (id >> 24) & 0xff;
+  fourcc[4] = 0;
+
+  return fourcc;
+}

@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <libs/bytestream/gstbytestream.h>
+#include <gst/bytestream/bytestream.h>
 #include "gstmpegpacketize.h"
 
 
