@@ -1103,6 +1103,7 @@ gst_xml_registry_save_caps (GstXMLRegistry *xmlregistry, const GstCaps *caps)
 {
   char *s = gst_caps_to_string (caps);
   PUT_ESCAPED ("caps", s);
+  g_free (s);
   return TRUE;
 }
 

@@ -446,11 +446,8 @@ static void
 spider_find_suggest (gpointer data, guint probability, const GstCaps *caps)
 {
   SpiderTypeFind *find = (SpiderTypeFind *) data;
-  G_GNUC_UNUSED gchar *caps_str;
 
-  caps_str = gst_caps_to_string (caps);
-  GST_INFO ("suggest %u, %s", probability, caps_str);
-  g_free (caps_str);
+  GST_INFO ("suggest %u, %" GST_PTR_FORMAT, probability, caps);
   if (probability > find->best_probability) {
     gst_caps_replace (&find->caps, gst_caps_copy (caps));
     find->best_probability = probability;
@@ -525,11 +522,7 @@ plug:
       g_critical("could not set caps on spideridentity src pad\n");
     }
   }
-  {
-    gchar *str = gst_caps_to_string (find.caps);
-    GST_LOG_OBJECT (ident, "spider starting caps: %s", str);
-    g_free (str);
-  }
+  GST_LOG_OBJECT (ident, "spider starting caps: %" GST_PTR_FORMAT, find.caps);
   if (type_list)
     g_list_free (type_list);
 

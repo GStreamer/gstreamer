@@ -25,3 +25,11 @@ config.h.
 
 
 
+
+
+other ideas:
+
+- plugins should avoid using gst_caps_to_string() in debug statement.
+  They should use %"GST_PTR_FORMAT" instead.  Check all usage for leaks.
+
+

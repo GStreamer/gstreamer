@@ -458,10 +458,10 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   g_assert (GST_IS_ELEMENT (src));
   g_assert (GST_IS_ELEMENT (sink));
   
-  GST_CAT_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u with caps \"%s\"", 
+  GST_CAT_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u with caps \"%" GST_PTR_FORMAT "\"", 
                 GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "---", g_slist_length (srcs),
                 GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "---", g_slist_length (sinks),
-	        link->caps ? gst_caps_to_string (link->caps) : "-");
+	        link->caps);
 
   if (!srcs || !sinks) {
     if (gst_element_link_pads_filtered (src, srcs ? (const gchar *) srcs->data : NULL,

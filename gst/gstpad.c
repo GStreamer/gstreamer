@@ -2010,16 +2010,13 @@ gst_pad_try_relink_filtered (GstPad *srcpad, GstPad *sinkpad,
 {
   GstRealPad *realsrc, *realsink;
   GstPadLink *link;
-  gchar *str;
   
   /* generic checks */
   g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
 
-  str = filtercaps ? gst_caps_to_string (filtercaps) : g_strdup ("");
-  GST_CAT_INFO (GST_CAT_PADS, "trying to relink %s:%s and %s:%s with filtercaps %s",
-            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad), str);
-  g_free (str);
+  GST_CAT_INFO (GST_CAT_PADS, "trying to relink %s:%s and %s:%s with filtercaps %" GST_PTR_FORMAT,
+            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad), filtercaps);
 
   /* now we need to deal with the real/ghost stuff */
   realsrc = GST_PAD_REALIZE (srcpad);
@@ -2239,8 +2236,8 @@ gst_pad_set_explicit_caps (GstPad *pad, const GstCaps *caps)
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "setting explicit caps to %s",
-      gst_caps_to_string (caps));
+  GST_CAT_DEBUG (GST_CAT_PADS, "setting explicit caps to %" GST_PTR_FORMAT,
+      caps);
 
   if (caps == NULL) {
     GST_CAT_DEBUG (GST_CAT_PADS, "caps is NULL");

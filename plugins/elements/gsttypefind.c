@@ -119,14 +119,10 @@ static guint gst_type_find_element_signals[LAST_SIGNAL] = { 0 };
 static void
 gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability, const GstCaps *caps)
 {
-  gchar *caps_str;
-  
   g_assert (typefind->caps == NULL);
   g_assert (caps != NULL);
 
-  caps_str = gst_caps_to_string (caps);
-  GST_INFO_OBJECT (typefind, "found caps %s", caps_str);
-  g_free (caps_str);
+  GST_INFO_OBJECT (typefind, "found caps %" GST_PTR_FORMAT, caps);
   typefind->caps = gst_caps_copy (caps);
   gst_pad_set_explicit_caps (typefind->src, gst_caps_copy(caps));
 }
@@ -441,13 +437,10 @@ find_peek (gpointer data, gint64 offset, guint size)
 static void
 find_suggest (gpointer data, guint probability, const GstCaps *caps)
 {
-  gchar *str;
   TypeFindEntry *entry = (TypeFindEntry *) data;
   
-  str = gst_caps_to_string (caps);
-  GST_LOG_OBJECT (entry->self, "'%s' called suggest (%u, %s)", 
-	  GST_PLUGIN_FEATURE_NAME (entry->factory), probability, str);
-  g_free (str);
+  GST_LOG_OBJECT (entry->self, "'%s' called suggest (%u, %" GST_PTR_FORMAT ")", 
+	  GST_PLUGIN_FEATURE_NAME (entry->factory), probability, caps);
   if (((gint) probability) > entry->probability) {
     entry->probability = probability;
     gst_caps_replace (&entry->caps, gst_caps_copy (caps));

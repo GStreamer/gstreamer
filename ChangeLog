@@ -1,5 +1,21 @@
 2004-01-28  David Schleef  <ds@schleef.org>
 
+	* docs/random/ds/element-checklist: Notes about gst_caps_to_string()
+	* gst/registries/gstxmlregistry.c: (gst_xml_registry_save_caps):
+	Fix memory leakage of gst_caps_to_string().
+
+	Use GST_PTR_FORMAT instead of gst_caps_to_string():
+	* gst/autoplug/gstsearchfuncs.c: (gst_autoplug_sp):
+	* gst/autoplug/gstspideridentity.c: (spider_find_suggest),
+	(gst_spider_identity_sink_loop_type_finding):
+	* gst/elements/gsttypefind.c: (gst_type_find_element_have_type),
+	(find_suggest):
+	* gst/gstpad.c: (gst_pad_try_relink_filtered),
+	(gst_pad_set_explicit_caps):
+	* gst/parse/grammar.y:
+
+2004-01-28  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Add detection for HAVE_PRINTF_EXTENSION and
 	GST_PRINTF_EXTENSION_FORMAT_DEFINE.
 	* docs/random/ds/0.9-suggested-changes: Notes from Company.

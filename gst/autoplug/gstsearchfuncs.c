@@ -336,8 +336,8 @@ gst_autoplug_sp (const GstCaps *srccaps, const GstCaps *sinkcaps, GList *factori
   g_return_val_if_fail (srccaps != NULL, NULL);
   g_return_val_if_fail (sinkcaps != NULL, NULL);
   
-  GST_INFO ("attempting to autoplug via shortest path from %s to %s",
-		  gst_caps_to_string(srccaps), gst_caps_to_string(sinkcaps));
+  GST_INFO ("attempting to autoplug via shortest path from %"
+      GST_PTR_FORMAT " to %" GST_PTR_FORMAT, srccaps, sinkcaps);
 
   /* wrap all factories as GstAutoplugNode 
    * initialize the cost */
