@@ -352,7 +352,9 @@ restart:
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding buffer %p of size %d",buf,GST_BUFFER_SIZE(buf));
 
   if (queue->level_buffers == queue->size_buffers) {
+    g_mutex_unlock (queue->qlock);
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[FULL], 0);
+    g_mutex_lock (queue->qlock);
 
     /* if this is a leaky queue... */
     if (queue->leaky) {
