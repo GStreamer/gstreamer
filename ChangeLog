@@ -1,4 +1,23 @@
-2004-06-26  set REAL_NAME environment variable  <set EMAIL_ADDRESS environment variable>
+2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videorate/gstvideorate.c: (gst_videorate_chain):
+	  fix decision for when getting frames with same timestamp
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_class_init), (gst_v4lsrc_init),
+	(gst_v4lsrc_get), (gst_v4lsrc_set_property),
+	(gst_v4lsrc_get_property):
+	* sys/v4l/gstv4lsrc.h:
+	  add latency offset property 
+
+2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_queue_buffer):
+	* gst/videorate/gstvideorate.c: (gst_videorate_chain):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_class_init), (gst_v4lsrc_init),
+	(gst_v4lsrc_get), (gst_v4lsrc_set_property),
+	(gst_v4lsrc_get_property):
+	* sys/v4l/gstv4lsrc.h:
+
+2004-06-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/videorate/gstvideorate.c: (gst_videorate_chain),
 	(plugin_init):
