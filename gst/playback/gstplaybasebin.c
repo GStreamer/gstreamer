@@ -290,7 +290,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   GstPad *srcpad;
   gboolean need_preroll;
 
-  GST_DEBUG ("play base: new decoded pad");
+  GST_DEBUG ("play base: new decoded pad %d", last);
 
   caps = gst_pad_get_caps (pad);
 
@@ -326,8 +326,11 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   }
 
   if (last || !need_preroll) {
+    GST_DEBUG ("play base: pad does not need preroll");
     srcpad = pad;
   } else {
+    GST_DEBUG ("play base: pad needs preroll");
+
     new_element = gen_preroll_element (play_base_bin, pad);
     srcpad = gst_element_get_pad (new_element, "src");
     gst_bin_add (GST_BIN (play_base_bin->thread), new_element);

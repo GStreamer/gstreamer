@@ -118,7 +118,7 @@ static GstElement *try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad,
     GList * factories);
 static void close_link (GstElement * element, GstDecodeBin * decode_bin);
 static void close_pad_link (GstElement * element, GstPad * pad,
-    GstCaps * caps, GstDecodeBin * decode_bin);
+    GstCaps * caps, GstDecodeBin * decode_bin, gboolean more);
 
 static GstElementClass *parent_class;
 static guint gst_decode_bin_signals[LAST_SIGNAL] = { 0 };
@@ -366,7 +366,7 @@ find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
  */
 static void
 close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
-    GstDecodeBin * decode_bin)
+    GstDecodeBin * decode_bin, gboolean more)
 {
   GList *to_try;
   GstStructure *structure;
@@ -398,7 +398,6 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
       g_str_has_prefix (mimetype, "audio/x-raw")) {
     gchar *padname;
     GstPad *ghost;
-    gboolean dynamic;
 
     /* make a unique name for this new pad */
     padname = g_strdup_printf ("src%d", decode_bin->numpads);
@@ -407,14 +406,11 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     /* make it a ghostpad */
     ghost = gst_element_add_ghost_pad (GST_ELEMENT (decode_bin), pad, padname);
 
-    /* see if any more pending dynamic connections exist */
-    dynamic = gst_decode_bin_is_dynamic (decode_bin);
-
     GST_LOG_OBJECT (element, "closed pad %s", padname);
 
     /* our own signal with an extra flag that this is the only pad */
     g_signal_emit (G_OBJECT (decode_bin),
-        gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, ghost, !dynamic);
+        gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, ghost, !more);
 
     g_free (padname);
     return;
@@ -510,7 +506,12 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
 static void
 new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
 {
-  close_pad_link (element, pad, gst_pad_get_caps (pad), dynamic->decode_bin);
+  GstDecodeBin *decode_bin = dynamic->decode_bin;
+
+  /* see if any more pending dynamic connections exist */
+  gboolean more = gst_decode_bin_is_dynamic (decode_bin);
+
+  close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin, more);
 }
 
 /* this signal is fired when an element signals the no_more_pads signal.
@@ -555,6 +556,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
   GList *pads;
   gboolean dynamic = FALSE;
   GList *to_connect = NULL;
+  gboolean more;
 
   GST_DEBUG_OBJECT (decode_bin, "closing links with element %s",
       gst_element_get_name (element));
@@ -636,16 +638,28 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
     decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
   }
 
+  /* Check if this is an element with more than 1 pad. If this element
+   * has more than 1 pad, we need to be carefull not to signal the 
+   * no_more_pads signal after connecting the first pad. */
+  more = g_list_length (to_connect) > 1;
+
   /* now loop over all the pads we need to connect */
   for (pads = to_connect; pads; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
+
+    /* we have more pads if we have more than 1 pad to connect or
+     * dynamics. If we have only 1 pad and no dynamics, more will be
+     * set to FALSE and the no-more-pads signal will be fired. Note
+     * that this can change after the close_pad_link call. */
+    more |= gst_decode_bin_is_dynamic (decode_bin);
 
     GST_DEBUG_OBJECT (decode_bin, "closing pad link for %s",
         gst_pad_get_name (pad));
 
     /* continue autoplugging on the pads */
-    close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin);
+    close_pad_link (element, pad, gst_pad_get_caps (pad), decode_bin, more);
   }
+
   g_list_free (to_connect);
 }
 
@@ -659,9 +673,9 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
-  /* autoplug the new pad with the caps that the signal gave us */
+  /* autoplug the new pad with the caps that the signal gave us. */
   close_pad_link (typefind, gst_element_get_pad (typefind, "src"), caps,
-      decode_bin);
+      decode_bin, FALSE);
 
   dynamic = gst_decode_bin_is_dynamic (decode_bin);
   if (dynamic == FALSE) {

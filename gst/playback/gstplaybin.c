@@ -289,8 +289,6 @@ gen_video_element (GstPlayBin * play_bin)
     sink = play_bin->video_sink;
   } else {
     sink = gst_element_factory_make ("ximagesink", "sink");
-
-    /* g_object_set (G_OBJECT (sink), "pixel-aspect-ratio", "1/1", NULL); */
   }
 
   play_bin->seekables = g_list_append (play_bin->seekables, sink);
