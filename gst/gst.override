@@ -1,4 +1,4 @@
-/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* -*- Mode: C; c-basic-offset: 4 -*- */
 so/* gst-python
  * Copyright (C) 2002 David I. Lehn
  * Copyright (C) 2004 Johan Dahlin
@@ -36,6 +36,33 @@ headers
 
 extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
 static PyObject *_wrap_gst_element_factory_make(PyObject *self, PyObject *args, PyObject *kwargs);
+
+GSList *mainloops = NULL;
+void
+_pygst_main_quit(void)
+{
+    if (!mainloops)
+	    g_error ("Quit more loops than there are");
+    else {
+	GMainLoop *loop = mainloops->data;
+
+	mainloops = g_slist_delete_link (mainloops, mainloops);
+	g_main_loop_quit (loop);
+	g_main_loop_unref (loop);
+    }
+}
+
+void
+_pygst_main(void)
+{
+    GMainLoop *loop;
+
+    loop = g_main_loop_new (NULL, FALSE);
+    mainloops = g_slist_prepend (mainloops, loop);
+
+    g_main_loop_run (loop);
+}
+
 
 %%
 include
@@ -598,6 +625,27 @@ _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
 	return Py_None;
 }
 %%
+override gst_structure_get_int kwargs
+static PyObject *
+_wrap_gst_structure_get_int(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	static char *kwlist[] = { "fieldname", NULL };
+	char *fieldname;
+	int value;
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "s:GstStructure.get_int",
+					 kwlist, &fieldname))
+		return NULL;
+
+	if (gst_structure_get_int(pyg_boxed_get(self, GstStructure), fieldname, &value))
+		return PyInt_FromLong(value);
+
+	/* XXX: Raise exception? */
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+%%
 override-slot GstStructure.tp_as_mapping
 static int
 _wrap_gst_structure_length(PyGObject *self)
@@ -885,9 +933,11 @@ override gst_main noargs
 static PyObject *
 _wrap_gst_main(PyObject *self)
 {
-	pyg_unblock_threads();
-	gst_main();
-	pyg_block_threads();
+	Py_BEGIN_ALLOW_THREADS;
+
+	_pygst_main();
+
+	Py_END_ALLOW_THREADS;
 	
 	if (PyErr_Occurred())
 		return NULL;
@@ -896,6 +946,18 @@ _wrap_gst_main(PyObject *self)
         return Py_None;
 
 }
+%%
+override gst_main_quit args
+static PyObject *
+_wrap_gst_main_quit(PyObject *self)
+{
+
+    _pygst_main_quit();
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 %%
 override-slot GstElement.tp_init kwargs
 static int

@@ -1,3 +1,14 @@
+2004-08-03  Johan Dahlin  <johan@gnome.org>
+
+	* configure.ac: Require python 2.3
+
+	* gst/gstmodule.c (python_do_pending_calls): Use PyGILState and
+	friends here.
+
+	* gst/gst.override (_pygst_main_quit, _pygst_main): Use these two
+	instead of gst_main/gst_main_quit so we can check if we're in a
+	mainloop or not.
+
 2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:

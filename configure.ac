@@ -34,10 +34,10 @@ AC_PROG_LIBTOOL
 dnl check for python
 dnl AM_PATH_PYTHON(2.2)
 AM_PATH_PYTHON
-AC_MSG_CHECKING(for python >= 2.2)
+AC_MSG_CHECKING(for python >= 2.3)
 prog="
 import sys, string
-minver = (2,2,0,'final',0)
+minver = (2,3,0,'final',0)
 if sys.version_info < minver:
   sys.exit(1)
 sys.exit(0)"
@@ -76,12 +76,11 @@ PYGTK_H2DEF=`$PKG_CONFIG --variable=codegendir pygtk-2.0`/h2def.py
 AC_SUBST(PYGTK_H2DEF)
 AC_MSG_RESULT($PYGTK_H2DEF)
 
-dnl AC_MSG_CHECKING(for pygtk codegen)
-dnl PYGTK_CODEGEN="$PYTHON `$PKG_CONFIG --variable=codegendir pygtk-2.0`/codegen.py"
-dnl AC_SUBST(PYGTK_CODEGEN)
-dnl AC_MSG_RESULT($PYGTK_CODEGEN)
-PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
+AC_MSG_CHECKING(for pygtk codegen)
+PYGTK_CODEGEN="$PYTHON `$PKG_CONFIG --variable=codegendir pygtk-2.0`/codegen.py"
+dnl PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
 AC_SUBST(PYGTK_CODEGEN)
+AC_MSG_RESULT($PYGTK_CODEGEN)
 
 dnl Interfaces
 AC_MSG_CHECKING(for GStreamer interfaces include dir)

@@ -33,22 +33,23 @@ void pygst_register_classes (PyObject *d);
 void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
 		
 extern PyMethodDef pygst_functions[];
+extern GSList *mainloops;
 
 static gboolean
 python_do_pending_calls(gpointer data)
 {
     gboolean quit = FALSE;
-      
-    pyg_block_threads();
+    PyGILState_STATE state;
+
+    state = PyGILState_Ensure();
     if (PyErr_CheckSignals() == -1) {
 	PyErr_SetNone(PyExc_KeyboardInterrupt);
 	quit = TRUE;
     }
-    pyg_unblock_threads();
-
-    if (quit)
+    if (quit && mainloops != NULL)
 	gst_main_quit();
     
+    PyGILState_Release(state);
     return TRUE;
 }
 
