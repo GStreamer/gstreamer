@@ -37,7 +37,10 @@ static GstElementDetails gst_v4lmjpegsrc_details = {
 
 /* V4lMjpegSrc signals and args */
 enum {
-  /* FILL ME */
+  SIGNAL_FRAME_CAPTURE,
+  SIGNAL_FRAME_DROP,
+  SIGNAL_FRAME_INSERT,
+  SIGNAL_FRAME_LOST,
   LAST_SIGNAL
 };
 
@@ -54,7 +57,8 @@ enum {
   ARG_HEIGHT,
   ARG_QUALITY,
   ARG_NUMBUFS,
-  ARG_BUFSIZE
+  ARG_BUFSIZE,
+  ARG_USE_FIXED_FPS
 };
 
 
@@ -68,7 +72,7 @@ static gboolean              gst_v4lmjpegsrc_srcconvert   (GstPad         *pad,
                                                            gint64         src_value,
                                                            GstFormat      *dest_format,
                                                            gint64         *dest_value);
-static GstPadLinkReturn   gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
+static GstPadLinkReturn      gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
                                                            GstCaps        *caps);
 static GstBuffer*            gst_v4lmjpegsrc_get          (GstPad         *pad);
 
@@ -81,6 +85,10 @@ static void                  gst_v4lmjpegsrc_get_property (GObject        *objec
                                                            guint          prop_id,
                                                            GValue         *value,
                                                            GParamSpec     *pspec);
+
+/* set_clock function for A/V sync */
+static void                  gst_v4lmjpegsrc_set_clock    (GstElement     *element,
+                                                           GstClock       *clock);
 
 /* state handling */
 static GstElementStateReturn gst_v4lmjpegsrc_change_state (GstElement     *element);
@@ -99,7 +107,7 @@ static GstCaps *capslist = NULL;
 static GstPadTemplate *src_template;
 
 static GstElementClass *parent_class = NULL;
-/*static guint gst_v4lmjpegsrc_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_v4lmjpegsrc_signals[LAST_SIGNAL] = { 0 };
 
 
 GType
@@ -139,46 +147,76 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_X_OFFSET,
     g_param_spec_int("x_offset","x_offset","x_offset",
-    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_Y_OFFSET,
     g_param_spec_int("y_offset","y_offset","y_offset",
-    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_F_WIDTH,
     g_param_spec_int("frame_width","frame_width","frame_width",
-    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_F_HEIGHT,
     g_param_spec_int("frame_height","frame_height","frame_height",
-    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_H_DECIMATION,
     g_param_spec_int("h_decimation","h_decimation","h_decimation",
-    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_V_DECIMATION,
     g_param_spec_int("v_decimation","v_decimation","v_decimation",
-    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
     g_param_spec_int("width","width","width",
-    G_MININT,G_MAXINT,0,G_PARAM_READABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
     g_param_spec_int("height","height","height",
-    G_MININT,G_MAXINT,0,G_PARAM_READABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_READABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_QUALITY,
     g_param_spec_int("quality","quality","quality",
-    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+                     G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUMBUFS,
     g_param_spec_int("num_buffers","num_buffers","num_buffers",
-    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFSIZE,
     g_param_spec_int("buffer_size","buffer_size","buffer_size",
-    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_USE_FIXED_FPS,
+    g_param_spec_boolean("use_fixed_fps", "Use Fixed FPS",
+                         "Drop/Insert frames to reach a certain FPS (TRUE) "
+                         "or adapt FPS to suit the number of frabbed frames",
+                         TRUE, G_PARAM_READWRITE));
+
+  /* signals */
+  gst_v4lmjpegsrc_signals[SIGNAL_FRAME_CAPTURE] =
+    g_signal_new("frame_capture", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(GstV4lMjpegSrcClass, frame_capture),
+                 NULL, NULL, g_cclosure_marshal_VOID__VOID,
+                 G_TYPE_NONE, 0);
+  gst_v4lmjpegsrc_signals[SIGNAL_FRAME_DROP] =
+    g_signal_new("frame_drop", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(GstV4lMjpegSrcClass, frame_drop),
+                 NULL, NULL, g_cclosure_marshal_VOID__VOID,
+                 G_TYPE_NONE, 0);
+  gst_v4lmjpegsrc_signals[SIGNAL_FRAME_INSERT] =
+    g_signal_new("frame_insert", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(GstV4lMjpegSrcClass, frame_insert),
+                 NULL, NULL, g_cclosure_marshal_VOID__VOID,
+                 G_TYPE_NONE, 0);
+  gst_v4lmjpegsrc_signals[SIGNAL_FRAME_LOST] =
+    g_signal_new("frame_lost", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(GstV4lMjpegSrcClass, frame_lost),
+                 NULL, NULL, g_cclosure_marshal_VOID__INT,
+                 G_TYPE_NONE, 1, G_TYPE_INT);
 
   gobject_class->set_property = gst_v4lmjpegsrc_set_property;
   gobject_class->get_property = gst_v4lmjpegsrc_get_property;
 
   gstelement_class->change_state = gst_v4lmjpegsrc_change_state;
+
+  gstelement_class->set_clock = gst_v4lmjpegsrc_set_clock;
 }
 
 
@@ -215,6 +253,43 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
 
   v4lmjpegsrc->numbufs = 64;
   v4lmjpegsrc->bufsize = 256;
+
+  /* no clock */
+  v4lmjpegsrc->clock = NULL;
+
+  /* fps */
+  v4lmjpegsrc->use_fixed_fps = TRUE;
+}
+
+
+static gdouble
+gst_v4lmjpegsrc_get_fps (GstV4lMjpegSrc *v4lmjpegsrc)
+{
+  gint norm;
+  gdouble fps;
+ 
+  if (!v4lmjpegsrc->use_fixed_fps &&
+      v4lmjpegsrc->clock != NULL &&
+      v4lmjpegsrc->handled > 0) {
+    /* try to get time from clock master and calculate fps */
+    GstClockTime time = gst_clock_get_time(v4lmjpegsrc->clock) - v4lmjpegsrc->substract_time;
+    return v4lmjpegsrc->handled * GST_SECOND / time;
+  }
+
+  /* if that failed ... */
+
+  if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc)))
+    return 0.;
+
+  if (!gst_v4l_get_chan_norm(GST_V4LELEMENT(v4lmjpegsrc), NULL, &norm))
+    return 0.;
+
+  if (norm == VIDEO_MODE_NTSC)
+    fps = 30000/1001;
+  else
+    fps = 25.;
+
+  return fps;
 }
 
 
@@ -226,21 +301,12 @@ gst_v4lmjpegsrc_srcconvert (GstPad    *pad,
                             gint64    *dest_value)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
-  gint norm;
   gdouble fps;
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
 
-  if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc)))
+  if ((fps = gst_v4lmjpegsrc_get_fps(v4lmjpegsrc)) == 0)
     return FALSE;
-
-  if (!gst_v4l_get_chan_norm(GST_V4LELEMENT(v4lmjpegsrc), NULL, &norm))
-    return FALSE;
-
-  if (norm == VIDEO_MODE_NTSC)
-    fps = 30000/1001;
-  else
-    fps = 25.;
 
   switch (src_format) {
     case GST_FORMAT_TIME:
@@ -351,10 +417,15 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   GstV4lMjpegSrc *v4lmjpegsrc;
   GstBuffer *buf;
   gint num;
+  gdouble fps = 0;
 
   g_return_val_if_fail (pad != NULL, NULL);
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
+
+  if (v4lmjpegsrc->use_fixed_fps &&
+      (fps = gst_v4lmjpegsrc_get_fps(v4lmjpegsrc)) == 0)
+    return NULL;
 
   buf = gst_buffer_new_from_pool(v4lmjpegsrc->bufferpool, 0, 0);
   if (!buf)
@@ -364,15 +435,86 @@ gst_v4lmjpegsrc_get (GstPad *pad)
     return NULL;
   }
 
-  /* grab a frame from the device */
-  if (!gst_v4lmjpegsrc_grab_frame(v4lmjpegsrc, &num, &(GST_BUFFER_SIZE(buf))))
-    return NULL;
+  if (v4lmjpegsrc->need_writes > 0) {
+    /* use last frame */
+    num = v4lmjpegsrc->last_frame;
+    v4lmjpegsrc->need_writes--;
+  } else if (v4lmjpegsrc->clock && v4lmjpegsrc->use_fixed_fps) {
+    GstClockTime time;
+    gboolean have_frame = FALSE;
+
+    do {
+      /* by default, we use the frame once */
+      v4lmjpegsrc->need_writes = 1;
+
+      /* grab a frame from the device */
+      if (!gst_v4lmjpegsrc_grab_frame(v4lmjpegsrc, &num, &v4lmjpegsrc->last_size))
+        return NULL;
+
+      v4lmjpegsrc->last_frame = num;
+      time = GST_TIMEVAL_TO_TIME(v4lmjpegsrc->bsync.timestamp) -
+               v4lmjpegsrc->substract_time;
+
+      /* first check whether we lost any frames according to the device */
+      if (v4lmjpegsrc->last_seq != 0) {
+        if (v4lmjpegsrc->bsync.seq - v4lmjpegsrc->last_seq > 1) {
+          v4lmjpegsrc->need_writes = v4lmjpegsrc->bsync.seq - v4lmjpegsrc->last_seq;
+          g_signal_emit(G_OBJECT(v4lmjpegsrc),
+                        gst_v4lmjpegsrc_signals[SIGNAL_FRAME_LOST], 0,
+                        v4lmjpegsrc->bsync.seq - v4lmjpegsrc->last_seq - 1);
+        }
+      }
+      v4lmjpegsrc->last_seq = v4lmjpegsrc->bsync.seq;
+
+      /* decide how often we're going to write the frame - set
+       * v4lmjpegsrc->need_writes to (that-1) and have_frame to TRUE
+       * if we're going to write it - else, just continue.
+       * 
+       * time is generally the system or audio clock. Let's
+       * say that we've written one second of audio, then we want
+       * to have written one second of video too, within the same
+       * timeframe. This means that if time - begin_time = X sec,
+       * we want to have written X*fps frames. If we've written
+       * more - drop, if we've written less - dup... */
+      if (v4lmjpegsrc->handled * fps * GST_SECOND - time > 1.5 * fps * GST_SECOND) {
+        /* yo dude, we've got too many frames here! Drop! DROP! */
+        v4lmjpegsrc->need_writes--; /* -= (v4lmjpegsrc->handled - (time / fps)); */
+        g_signal_emit(G_OBJECT(v4lmjpegsrc),
+                      gst_v4lmjpegsrc_signals[SIGNAL_FRAME_DROP], 0);
+      } else if (v4lmjpegsrc->handled * fps * GST_SECOND - time < - 1.5 * fps * GST_SECOND) {
+        /* this means we're lagging far behind */
+        v4lmjpegsrc->need_writes++; /* += ((time / fps) - v4lmjpegsrc->handled); */
+        g_signal_emit(G_OBJECT(v4lmjpegsrc),
+                      gst_v4lmjpegsrc_signals[SIGNAL_FRAME_INSERT], 0);
+      }
+
+      if (v4lmjpegsrc->need_writes > 0) {
+        have_frame = TRUE;
+        v4lmjpegsrc->use_num_times[num] = v4lmjpegsrc->need_writes;
+        v4lmjpegsrc->need_writes--;
+      } else {
+        gst_v4lmjpegsrc_requeue_frame(v4lmjpegsrc, num);
+      }
+    } while (!have_frame);
+  } else {
+    /* grab a frame from the device */
+    if (!gst_v4lmjpegsrc_grab_frame(v4lmjpegsrc, &num, &v4lmjpegsrc->last_size))
+      return NULL;
+
+    v4lmjpegsrc->use_num_times[num] = 1;
+  }
+
   GST_BUFFER_DATA(buf) = gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, num);
-  if (!v4lmjpegsrc->first_timestamp)
-    v4lmjpegsrc->first_timestamp = v4lmjpegsrc->bsync.timestamp.tv_sec * GST_SECOND +
-      v4lmjpegsrc->bsync.timestamp.tv_usec * GST_SECOND/1000000;
-  GST_BUFFER_TIMESTAMP(buf) = v4lmjpegsrc->bsync.timestamp.tv_sec * GST_SECOND +
-    v4lmjpegsrc->bsync.timestamp.tv_usec * GST_SECOND/1000000 - v4lmjpegsrc->first_timestamp;
+  GST_BUFFER_SIZE(buf) = v4lmjpegsrc->last_size;
+  if (v4lmjpegsrc->use_fixed_fps)
+    GST_BUFFER_TIMESTAMP(buf) = v4lmjpegsrc->handled * GST_SECOND / fps;
+  else /* calculate time based on our own clock */
+    GST_BUFFER_TIMESTAMP(buf) = GST_TIMEVAL_TO_TIME(v4lmjpegsrc->bsync.timestamp) -
+                                  v4lmjpegsrc->substract_time;
+
+  v4lmjpegsrc->handled++;
+  g_signal_emit(G_OBJECT(v4lmjpegsrc),
+                gst_v4lmjpegsrc_signals[SIGNAL_FRAME_CAPTURE], 0);
 
   return buf;
 }
@@ -416,6 +558,11 @@ gst_v4lmjpegsrc_set_property (GObject      *object,
       break;
     case ARG_BUFSIZE:
       v4lmjpegsrc->bufsize = g_value_get_int(value);
+      break;
+    case ARG_USE_FIXED_FPS:
+      if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc))) {
+        v4lmjpegsrc->use_fixed_fps = g_value_get_boolean(value);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -469,6 +616,9 @@ gst_v4lmjpegsrc_get_property (GObject    *object,
     case ARG_BUFSIZE:
       g_value_set_int(value, v4lmjpegsrc->breq.size);
       break;
+    case ARG_USE_FIXED_FPS:
+      g_value_set_boolean(value, v4lmjpegsrc->use_fixed_fps);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -481,6 +631,7 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
   GstElementStateReturn parent_value;
+  GTimeVal time;
 
   g_return_val_if_fail(GST_IS_V4LMJPEGSRC(element), GST_STATE_FAILURE);
   
@@ -490,14 +641,24 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
       /* actual buffer set-up used to be done here - but I moved
        * it to capsnego itself */
-      v4lmjpegsrc->first_timestamp = 0;
+      v4lmjpegsrc->handled = 0;
+      v4lmjpegsrc->need_writes = 0;
+      v4lmjpegsrc->last_frame = 0;
+      v4lmjpegsrc->substract_time = 0;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
       if (!gst_v4lmjpegsrc_capture_start(v4lmjpegsrc))
         return GST_STATE_FAILURE;
+      g_get_current_time(&time);
+      v4lmjpegsrc->substract_time = GST_TIMEVAL_TO_TIME(time) -
+                                      v4lmjpegsrc->substract_time;
+      v4lmjpegsrc->last_seq = 0;
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
+      g_get_current_time(&time);
+      v4lmjpegsrc->substract_time = GST_TIMEVAL_TO_TIME(time) -
+                                      v4lmjpegsrc->substract_time;
       /* de-queue all queued buffers */
       if (!gst_v4lmjpegsrc_capture_stop(v4lmjpegsrc))
         return GST_STATE_FAILURE;
@@ -547,6 +708,14 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
 }
 
 
+static void
+gst_v4lmjpegsrc_set_clock (GstElement *element,
+                           GstClock   *clock)
+{
+  GST_V4LMJPEGSRC(element)->clock = clock;
+}
+
+
 static GstBuffer*
 gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
                             guint64       location,
@@ -583,7 +752,10 @@ gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_
   for (n=0;n<v4lmjpegsrc->breq.count;n++)
     if (GST_BUFFER_DATA(buf) == gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, n))
     {
-      gst_v4lmjpegsrc_requeue_frame(v4lmjpegsrc, n);
+      v4lmjpegsrc->use_num_times[n]--;
+      if (v4lmjpegsrc->use_num_times[n] <= 0) {
+        gst_v4lmjpegsrc_requeue_frame(v4lmjpegsrc, n);
+      }
       break;
     }
 

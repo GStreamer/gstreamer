@@ -426,6 +426,15 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
   gst_info("Got %ld buffers of size %ld KB\n",
     v4lmjpegsrc->breq.count, v4lmjpegsrc->breq.size/1024);
 
+  v4lmjpegsrc->use_num_times = (gint *) malloc(sizeof(gint) * v4lmjpegsrc->breq.count);
+  if (!v4lmjpegsrc->use_num_times)
+  {
+    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+      "Error creating sync-use-time tracker: %s",
+      g_strerror(errno));
+    return FALSE;
+  }
+
   /* Map the buffers */
   GST_V4LELEMENT(v4lmjpegsrc)->buffer = mmap(0,
     v4lmjpegsrc->breq.count * v4lmjpegsrc->breq.size, 
@@ -573,6 +582,8 @@ gst_v4lmjpegsrc_capture_deinit (GstV4lMjpegSrc *v4lmjpegsrc)
   /* unmap the buffer */
   munmap(GST_V4LELEMENT(v4lmjpegsrc)->buffer, v4lmjpegsrc->breq.size * v4lmjpegsrc->breq.count);
   GST_V4LELEMENT(v4lmjpegsrc)->buffer = NULL;
+
+  free(v4lmjpegsrc->use_num_times);
 
   return TRUE;
 }

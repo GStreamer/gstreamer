@@ -130,7 +130,13 @@ gst_v4lsrc_hard_sync_frame(GstV4lSrc *v4lsrc,gint num) {
 
     g_mutex_lock(v4lsrc->mutex_soft_sync);
 
-    gettimeofday(&(v4lsrc->timestamp_soft_sync[num]), NULL);
+    if (v4lsrc->clock) {
+      v4lsrc->timestamp_soft_sync[num] = gst_clock_get_time(v4lsrc->clock);
+    } else {
+      GTimeVal time;
+      g_get_current_time(&time);
+      v4lsrc->timestamp_soft_sync[num] = GST_TIMEVAL_TO_TIME(time);
+    }
     v4lsrc->isready_soft_sync[num] = FRAME_SYNCED;
     g_cond_broadcast(v4lsrc->cond_soft_sync[num]);
 
@@ -227,9 +233,10 @@ static gboolean
 gst_v4lsrc_sync_next_frame (GstV4lSrc *v4lsrc,
                             gint      *num)
 {
-
   *num = v4lsrc->sync_frame;
+
   DEBUG("syncing on next frame (%d)", *num);
+
   /* "software sync()" on the frame */
   g_mutex_lock(v4lsrc->mutex_soft_sync);
   while (v4lsrc->isready_soft_sync[*num] == FRAME_DONE)
@@ -242,7 +249,6 @@ gst_v4lsrc_sync_next_frame (GstV4lSrc *v4lsrc,
   if (v4lsrc->isready_soft_sync[*num] != FRAME_SYNCED)
     return FALSE;
   v4lsrc->isready_soft_sync[*num] = FRAME_DONE;
-
 
   v4lsrc->sync_frame = (v4lsrc->sync_frame + 1)%v4lsrc->mbuf.frames;
 
@@ -312,7 +318,7 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
     v4lsrc->mbuf.frames, palette_name[v4lsrc->mmap.format],
     v4lsrc->mbuf.size/(v4lsrc->mbuf.frames*1024));
 
-  /* keep trakc of queued buffers */
+  /* keep track of queued buffers */
   v4lsrc->frame_queued = (gint8 *) malloc(sizeof(gint8) * v4lsrc->mbuf.frames);
   if (!v4lsrc->frame_queued)
   {
@@ -332,8 +338,8 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
       g_strerror(errno));
     return FALSE;
   }
-  v4lsrc->timestamp_soft_sync = (struct timeval *)
-    malloc(sizeof(struct timeval) * v4lsrc->mbuf.frames);
+  v4lsrc->timestamp_soft_sync = (GstClockTime *)
+    malloc(sizeof(GstClockTime) * v4lsrc->mbuf.frames);
   if (!v4lsrc->timestamp_soft_sync)
   {
     gst_element_error(GST_ELEMENT(v4lsrc),
@@ -351,6 +357,14 @@ gst_v4lsrc_capture_init (GstV4lSrc *v4lsrc)
   }
   for (n=0;n<v4lsrc->mbuf.frames;n++)
     v4lsrc->cond_soft_sync[n] = g_cond_new();
+  v4lsrc->use_num_times = (gint *) malloc(sizeof(gint) * v4lsrc->mbuf.frames);
+  if (!v4lsrc->use_num_times)
+  {
+    gst_element_error(GST_ELEMENT(v4lsrc),
+      "Error creating sync-use-time tracker: %s",
+      g_strerror(errno));
+    return FALSE;
+  }
 
   v4lsrc->mutex_queued_frames = g_mutex_new();
   v4lsrc->cond_queued_frames = g_cond_new();
@@ -526,6 +540,7 @@ gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc)
   free(v4lsrc->cond_soft_sync);
   free(v4lsrc->isready_soft_sync);
   free(v4lsrc->timestamp_soft_sync);
+  free(v4lsrc->use_num_times);
 
   /* unmap the buffer */
   munmap(GST_V4LELEMENT(v4lsrc)->buffer, v4lsrc->mbuf.size);

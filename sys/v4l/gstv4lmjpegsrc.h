@@ -55,8 +55,24 @@ struct _GstV4lMjpegSrc {
   struct mjpeg_sync bsync;
   struct mjpeg_requestbuffers breq;
 
-  /* first timestamp */
-  guint64 first_timestamp;
+  /* A/V sync... frame counter and internal cache */
+  gulong handled;
+  gint last_frame;
+  gint last_size;
+  gint need_writes;
+  gulong last_seq;
+
+  /* clock */
+  GstClock *clock;
+
+  /* time to substract from clock time to get back to timestamp */
+  GstClockTime substract_time;
+
+  /* how often are we going to use each frame? */
+  gint *use_num_times;
+
+  /* how are we going to push buffers? */
+  gboolean use_fixed_fps;
 
   /* caching values */
   gint x_offset;
@@ -76,6 +92,12 @@ struct _GstV4lMjpegSrc {
 
 struct _GstV4lMjpegSrcClass {
   GstV4lElementClass parent_class;
+
+  void (*frame_capture) (GObject *object);
+  void (*frame_drop)    (GObject *object);
+  void (*frame_insert)  (GObject *object);
+  void (*frame_lost)    (GObject *object,
+                         gint     num_lost);
 };
 
 GType gst_v4lmjpegsrc_get_type(void);

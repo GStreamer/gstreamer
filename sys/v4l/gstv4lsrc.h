@@ -58,7 +58,7 @@ struct _GstV4lSrc {
 
   /* a seperate GThread for the sync() thread (improves correctness of timestamps) */
   gint8 *isready_soft_sync; /* 1 = ok, 0 = waiting, -1 = error */
-  struct timeval *timestamp_soft_sync;
+  GstClockTime *timestamp_soft_sync;
   GThread * thread_soft_sync;
   GMutex * mutex_soft_sync;
   GCond ** cond_soft_sync;
@@ -69,8 +69,22 @@ struct _GstV4lSrc {
   /* True if we want the soft sync thread to stop */
   gboolean quit;
 
-  /* first timestamp */
-  guint64 first_timestamp;
+  /* A/V sync... frame counter and internal cache */
+  gulong handled;
+  gint last_frame;
+  gint need_writes;
+
+  /* clock */
+  GstClock *clock;
+
+  /* time to substract from clock time to get back to timestamp */
+  GstClockTime substract_time;
+
+  /* how often are we going to use each frame? */
+  gint *use_num_times;
+
+  /* how are we going to push buffers? */
+  gboolean use_fixed_fps;
 
   /* caching values */
   gint width;
@@ -80,6 +94,10 @@ struct _GstV4lSrc {
 
 struct _GstV4lSrcClass {
   GstV4lElementClass parent_class;
+
+  void (*frame_capture) (GObject *object);
+  void (*frame_drop)    (GObject *object);
+  void (*frame_insert)  (GObject *object);
 };
 
 GType gst_v4lsrc_get_type(void);
