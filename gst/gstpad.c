@@ -588,7 +588,6 @@ gboolean
 gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 {
   GstRealPad *realsrc, *realsink;
-  gboolean negotiated = FALSE;
   gint num_decoupled = 0;
 
   /* generic checks */

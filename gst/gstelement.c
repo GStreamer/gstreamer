@@ -48,6 +48,7 @@ enum {
   /* FILL ME */
 };
 
+#define CLASS(element)	GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element))
 
 static void			gst_element_class_init		(GstElementClass *klass);
 static void			gst_element_init		(GstElement *element);
@@ -183,7 +184,7 @@ gst_element_init (GstElement *element)
 static void
 gst_element_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-  GstElementClass *oclass = (GstElementClass *)G_OBJECT_GET_CLASS(object);
+  GstElementClass *oclass = CLASS (object);
 
   if (oclass->set_property)
     (oclass->set_property)(object,prop_id,value,pspec);
@@ -193,7 +194,7 @@ gst_element_set_property (GObject *object, guint prop_id, const GValue *value, G
 static void
 gst_element_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstElementClass *oclass = (GstElementClass *)G_OBJECT_GET_CLASS(object);
+  GstElementClass *oclass = CLASS (object);
 
   if (oclass->get_property)
     (oclass->get_property)(object,prop_id,value,pspec);
@@ -493,14 +494,10 @@ gst_element_class_add_padtemplate (GstElementClass *klass, GstPadTemplate *templ
 GList*
 gst_element_get_padtemplate_list (GstElement *element)
 {
-  GstElementClass *oclass;
-
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
-
-  return oclass->padtemplates;
+  return CLASS (element)->padtemplates;
 }
 
 /**
@@ -601,7 +598,7 @@ gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar
   GstPad *newpad = NULL;
   GstElementClass *oclass;
 
-  oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
+  oclass = CLASS (element);
   if (oclass->request_new_pad)
     newpad = (oclass->request_new_pad)(element, templ, name);
 
@@ -894,7 +891,7 @@ gst_element_send_event_func (GstElement *element, GstEvent *event)
 void
 gst_element_send_event (GstElement *element, GstEvent *event)
 {
-  GstElementClass *oclass = (GstElementClass *) G_OBJECT_GET_CLASS (element);
+  GstElementClass *oclass = CLASS (element);
 
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (event);
@@ -953,47 +950,47 @@ gst_element_set_state (GstElement *element, GstElementState state)
   GstElementState curpending;
   GstElementStateReturn return_val = GST_STATE_SUCCESS;
 
-/*  g_print("gst_element_set_state(\"%s\",%08lx)\n", */
-/*          element->name,state); */
-
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
-  GST_DEBUG_ELEMENT (GST_CAT_STATES,element, "setting state from %s to %s\n",
-                     gst_element_statename(GST_STATE(element)),
-                     gst_element_statename(state));
+  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "setting state from %s to %s\n",
+                     gst_element_statename (GST_STATE (element)),
+                     gst_element_statename (state));
 
   /* start with the current state */
   curpending = GST_STATE(element);
 
   /* loop until the final requested state is set */
-  while (GST_STATE(element) != state && GST_STATE (element) != GST_STATE_VOID_PENDING) {
+  while (GST_STATE (element) != state && GST_STATE (element) != GST_STATE_VOID_PENDING) {
     /* move the curpending state in the correct direction */
-    if (curpending < state) curpending<<=1;
-    else curpending>>=1;
+    if (curpending < state) 
+      curpending<<=1;
+    else 
+      curpending>>=1;
 
     /* set the pending state variable */
     /* FIXME: should probably check to see that we don't already have one */
     GST_STATE_PENDING (element) = curpending;
+
     if (curpending != state)
-      GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"intermediate: setting state to %s\n",
-                         gst_element_statename(curpending));
+      GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "intermediate: setting state to %s\n",
+                         gst_element_statename (curpending));
 
     /* call the state change function so it can set the state */
-    oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
+    oclass = CLASS (element);
     if (oclass->change_state)
-      return_val = (oclass->change_state)(element);
+      return_val = (oclass->change_state) (element);
 
     switch (return_val) {
       case GST_STATE_FAILURE:
-        GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"have failed change_state return\n");
+        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "have failed change_state return\n");
 	return return_val;
       case GST_STATE_ASYNC:
-        GST_DEBUG_ELEMENT (GST_CAT_STATES,element,"element will change state async\n");
+        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element will change state async\n");
 	return return_val;
       default:
         /* Last thing we do is verify that a successful state change really
          * did change the state... */
-        if (GST_STATE(element) != curpending) {
+        if (GST_STATE (element) != curpending) {
           GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element claimed state-change success, but state didn't change\n");
           return GST_STATE_FAILURE;
 	}
@@ -1009,12 +1006,36 @@ gst_element_negotiate_pads (GstElement *element)
 {
   GList *pads = GST_ELEMENT_PADS (element);
 
+  GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "negotiating pads\n");
+
   while (pads) {
-    GstRealPad *srcpad = GST_PAD_REALIZE (pads->data);
+    GstPad *pad = GST_PAD (pads->data);
+    GstRealPad *srcpad;
 
+    pads = g_list_next (pads);
+    
+    if (!GST_IS_REAL_PAD (pad))
+      continue;
+
+    srcpad = GST_PAD_REALIZE (pad);
+
+    /* if we have a connection on this pad and it doesn't have caps
+     * allready, try to negotiate */
     if (GST_PAD_IS_CONNECTED (srcpad) && !GST_PAD_CAPS (srcpad)) {
-      GstRealPad *sinkpad = GST_RPAD_PEER (GST_PAD_REALIZE (srcpad));
+      GstRealPad *sinkpad;
+      GstElementState otherstate;
+      GstElement *parent;
+      
+      sinkpad = GST_RPAD_PEER (GST_PAD_REALIZE (srcpad));
 
+      /* check the parent of the peer pad, if there is no parent do nothing */
+      parent = GST_PAD_PARENT (sinkpad);
+      if (!parent) 
+	continue;
+
+      otherstate = GST_STATE (parent);
+
+      /* swap pads if needed */
       if (!GST_PAD_IS_SRC (srcpad)) {
         GstRealPad *temp;
 
@@ -1023,13 +1044,38 @@ gst_element_negotiate_pads (GstElement *element)
 	sinkpad = temp;
       }
 
-      if (!gst_pad_perform_negotiate (GST_PAD (srcpad), GST_PAD (sinkpad)))
-	return FALSE;
+      /* only try to negotiate if the peer element is in PAUSED or higher too */
+      if (otherstate >= GST_STATE_READY) {
+        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "perform negotiate for %s:%s and %s:%s\n",
+		      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+        if (!gst_pad_perform_negotiate (GST_PAD (srcpad), GST_PAD (sinkpad)))
+	  return FALSE;
+      }
+      else {
+        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "not negotiatiating %s:%s and %s:%s, not in READY yet\n",
+		      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+      }
     }
-    pads = g_list_next (pads);
   }
 
   return TRUE;
+}
+
+static void
+gst_element_clear_pad_caps (GstElement *element)
+{
+  GList *pads = GST_ELEMENT_PADS (element);
+
+  GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "clearing pad caps\n");
+
+  while (pads) {
+    GstRealPad *pad = GST_PAD_REALIZE (pads->data);
+
+    if (GST_PAD_CAPS (pad)) {
+      GST_PAD_CAPS (pad) = NULL;
+    }
+    pads = g_list_next (pads);
+  }
 }
 
 static GstElementStateReturn
@@ -1037,53 +1083,69 @@ gst_element_change_state (GstElement *element)
 {
   GstElementState old_state;
   GstObject *parent;
+  gint old_pending, old_transition;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_FAILURE);
 
   old_state = GST_STATE (element);
+  old_pending = GST_STATE_PENDING (element);
+  old_transition = GST_STATE_TRANSITION (element);
 
-  if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING || old_state == GST_STATE_PENDING (element)) {
+  if (old_pending == GST_STATE_VOID_PENDING || old_state == GST_STATE_PENDING (element)) {
     GST_INFO (GST_CAT_STATES, "no state change needed for element %s (VOID_PENDING)", GST_ELEMENT_NAME (element));
     return GST_STATE_SUCCESS;
   }
   
   GST_INFO (GST_CAT_STATES, "%s default handler sets state from %s to %s %d", GST_ELEMENT_NAME (element),
                      gst_element_statename (old_state),
-                     gst_element_statename (GST_STATE_PENDING (element)),
+                     gst_element_statename (old_pending),
 		     GST_STATE_TRANSITION (element));
 
-  /*"we get here after the plugin went to the ready state */
-  if (GST_STATE_TRANSITION (element) == GST_STATE_NULL_TO_READY) {
+  /* we set the state change early for the negotiation functions */
+  GST_STATE (element) = old_pending;
+  GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+
+  /* if we are going to paused, we try to negotiate the pads */
+  if (old_transition == GST_STATE_NULL_TO_READY) {
     if (!gst_element_negotiate_pads (element)) 
-      return GST_STATE_FAILURE;
+      goto failure;
+  }
+  /* going to the READY state clears all pad caps */
+  else if (old_transition == GST_STATE_READY_TO_NULL) {
+    gst_element_clear_pad_caps (element);
   }
 
   /* tell the scheduler if we have one */
   if (element->sched) {
-    if (gst_scheduler_state_transition (element->sched, element, GST_STATE_TRANSITION (element)) 
+    if (gst_scheduler_state_transition (element->sched, element, old_transition) 
 		    != GST_STATE_SUCCESS) {
-      return GST_STATE_FAILURE;
+      goto failure;
     }
   }
-
-  GST_STATE (element) = GST_STATE_PENDING (element);
-  GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
 
   g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
 		  0, old_state, GST_STATE (element));
 
   parent = GST_ELEMENT_PARENT (element);
 
+  /* tell our parent about the state change */
   if (parent && GST_IS_BIN (parent)) {
     gst_bin_child_state_change (GST_BIN (parent), old_state, GST_STATE (element), element);
   }
 
+  /* signal the state change in case somebody is waiting for us */
   g_mutex_lock (element->state_mutex);
   g_cond_signal (element->state_cond);
   g_mutex_unlock (element->state_mutex);
 
-
   return GST_STATE_SUCCESS;
+
+failure:
+  /* undo the state change */
+  GST_STATE (element) = old_state;
+  GST_STATE_PENDING (element) = old_pending;
+
+  return GST_STATE_FAILURE;
 }
 
 /**
@@ -1101,7 +1163,7 @@ gst_element_get_factory (GstElement *element)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
+  oclass = CLASS (element);
 
   return oclass->elementfactory;
 }
@@ -1157,7 +1219,7 @@ gst_element_save_thyself (GstObject *object,
   GstElementClass *oclass;
   GParamSpec **specs, *spec;
   gint nspecs, i;
-  GValue value = { 0, };
+  GValue value;
   GstElement *element;
   gchar *str;
 
@@ -1165,7 +1227,7 @@ gst_element_save_thyself (GstObject *object,
 
   element = GST_ELEMENT (object);
 
-  oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
+  oclass = CLASS (element);
 
   xmlNewChild(parent, NULL, "name", GST_ELEMENT_NAME(element));
 
