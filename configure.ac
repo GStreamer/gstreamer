@@ -110,19 +110,28 @@ else
   HAVE_NASM="yes"
 fi
 
-dnl check for gconf
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)
-GST_CHECK_FEATURE(GCONF, [GConf stuff], , [
+dnl check for gconftool-2
+translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
+GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
   AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
   if test x$GCONFTOOL = xno; then
     AC_MSG_WARN(Not installing GConf schemas)
-    HAVE_GCONF="no"
+    HAVE_GCONFTOOL="no"
   else
     AM_GCONF_SOURCE_2
-    HAVE_GCONF="yes"
+    HAVE_GCONFTOOL="yes"
   fi
-  AC_SUBST(HAVE_GCONF)
+  AC_SUBST(HAVE_GCONFTOOL)
 ])
+
+dnl check for GConf libraries
+translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)
+GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
+  PKG_CHECK_MODULES(GCONF, gconf-2.0, HAVE_GCONF="yes", HAVE_GCONF="no")
+  AC_SUBST(GCONF_CFLAGS)
+  AC_SUBST(GCONF_LIBS)
+])
+AC_SUBST(HAVE_GCONF)
 
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
 PKG_CHECK_MODULES(GST, gstreamer >= $GST_PLUGINS_MAJOR.$GST_PLUGINS_MINOR.$GST_PLUGINS_MICRO,
@@ -916,10 +925,11 @@ ext/xmms/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
+gst-libs/gst/floatcast/Makefile
+gst-libs/gst/gconf/Makefile
 gst-libs/gst/idct/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
-gst-libs/gst/floatcast/Makefile
 examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
