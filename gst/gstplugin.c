@@ -116,7 +116,7 @@ _gst_plugin_initialize (void)
   }
   else
   {
-    GST_INFO (GST_CAT_PLUGIN_LOADING, " Not reading registry", gst_registry);
+    GST_INFO (GST_CAT_PLUGIN_LOADING, " Not reading registry");
     doc = NULL;
   }
 
