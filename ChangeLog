@@ -1,5 +1,6 @@
 2004-01-19  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* ext/sndfile/gstsf.c:
 	* gst/avi/gstavimux.c:
 	* ext/audiofile/gstafsink.c:
 	* ext/audiofile/gstafsrc.c:
