@@ -336,13 +336,13 @@ vorbis_dec_chain (GstPad *pad, GstData *data)
       }
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
 	  GST_TAG_ENCODER_VERSION, vd->vi.version, NULL);
-      if (vd->vi.bitrate_upper)
+      if (vd->vi.bitrate_upper > 0)
 	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, 
 	    GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
-      if (vd->vi.bitrate_nominal)
+      if (vd->vi.bitrate_nominal > 0)
 	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, 
 	    GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
-      if (vd->vi.bitrate_lower)
+      if (vd->vi.bitrate_lower > 0)
 	gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, 
 	    GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
       gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, 0, list);
