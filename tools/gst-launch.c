@@ -137,17 +137,22 @@ xmllaunch_parse_cmdline (const gchar **argv)
 int
 main(int argc, char *argv[])
 {
+/* options */
+  gboolean silent = FALSE;
+  struct poptOption options[] = {
+    {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,	&silent, 0, "do not output status information", NULL},
+    POPT_TABLEEND
+  };
+
   GstElement *pipeline;
   gchar **argvn;
-  gchar *cmdline;
-  int i;
   gboolean save_pipeline = FALSE;
   gboolean run_pipeline = TRUE;
   gchar *savefile = "";
 
   free (malloc (8)); /* -lefence */
 
-  gst_init (&argc, &argv);
+  gst_init_with_popt_table (&argc, &argv, options);
   
   if (argc >= 3 && !strcmp(argv[1], "-o")) {
     save_pipeline = TRUE;
@@ -175,7 +180,8 @@ main(int argc, char *argv[])
     exit(1);
   }
   
-  g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
+  if (!silent)
+    g_signal_connect (pipeline, "deep_notify", G_CALLBACK (property_change_callback), NULL);
   g_signal_connect (pipeline, "error", G_CALLBACK (error_callback), NULL);
   
 #ifndef GST_DISABLE_LOADSAVE

@@ -79,7 +79,6 @@ enum {
 /* FIXME: put in the extended mask help */
 static const struct poptOption options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
-  {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 0, "Help options:", NULL},
   {"gst-info-mask",   NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_INFO_MASK,   "info bitmask", "MASK"},
   {"gst-debug-mask",  NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_MASK,  "debugging bitmask", "MASK"},
   {"gst-mask",        NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_MASK,        "bitmask for both info and debugging", "MASK"},
@@ -115,12 +114,38 @@ gst_init_get_popt_table (void)
  * registering built-in elements, and loading standard plugins.
  */
 void 
-gst_init (int *argc, char **argv[]) 
+gst_init (int *argc, char **argv[])
+{
+  gst_init_with_popt_table (argc, argv, NULL);
+}
+/**
+ * gst_init_with_popt_table:
+ * @argc: pointer to application's argc
+ * @argv: pointer to application's argv
+ * @popt_options: pointer to a popt table to append
+ *
+ * Initializes the GStreamer library, parsing the options, setting up internal path lists,
+ * registering built-in elements, and loading standard plugins.
+ */
+void
+gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *popt_options)
 {
   poptContext context;
   gint nextopt, i, j, nstrip;
-  const struct poptOption *options;
   gchar **temp;
+  const struct poptOption *options;
+  /* this is probably hacky, no? */
+  const struct poptOption options_with[] = {
+    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 		0, "Help options:", NULL},
+    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
+    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) popt_options, 		0, "Application options:", NULL},
+    POPT_TABLEEND
+  };
+  const struct poptOption options_without[] = {
+    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 		0, "Help options:", NULL},
+    {NULL,              NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
+    POPT_TABLEEND
+  };
 
   if (!argc || !argv) {
     if (argc || argv)
@@ -131,7 +156,11 @@ gst_init (int *argc, char **argv[])
     return;
   }
 
-  options = gst_init_get_popt_table ();
+  if (popt_options == NULL) {
+    options = options_without;
+  } else {
+    options = options_with;
+  }
   context = poptGetContext ("GStreamer", *argc, (const char**)*argv, options, 0);
   
   while ((nextopt = poptGetNextOpt (context)) > 0); /* do nothing, it's all callbacks */
