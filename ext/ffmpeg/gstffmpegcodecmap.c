@@ -362,9 +362,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = GST_FF_VID_CAPS_NEW ("video/x-cinepak", NULL);
       break;
 
+    case CODEC_ID_MSVIDEO1:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-msvideocodec",
+	  "msvideoversion", G_TYPE_INT, 1, NULL);
+      break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_MSRLE:
-    case CODEC_ID_MSVIDEO1:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
     case CODEC_ID_SMC:

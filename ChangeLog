@@ -1,3 +1,8 @@
+2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	  Add MS Video v1 (video/x-msvideocodec, CODEC_ID_MSVIDEO1).
+
 2004-04-08  David Schleef  <ds@schleef.org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
