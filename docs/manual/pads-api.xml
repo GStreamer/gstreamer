@@ -185,7 +185,7 @@ struct _GstCaps {
         While capabilities are mainly used inside a plugin to describe the
         media type of the pads, the application programmer also has to have
         basic understanding of capabilities in order to interface with the
-        plugins, specially when using the autopluggers.
+        plugins, especially when using the autopluggers.
       </para>
       <para> 
         As we said, a capability has a name, a mime-type and some
@@ -249,7 +249,7 @@ GstProps*     gst_props_new   (const gchar *firstname, ...);
           </listitem>
           <listitem>
             <para>
-              GST_PROPS_FLOAT_RANGE(a,b): A float ragne from a to b
+              GST_PROPS_FLOAT_RANGE(a,b): A float range from a to b
             </para>
           </listitem>
         </itemizedlist>
