@@ -103,8 +103,7 @@ gst_registry_pool_add_plugin (GstPlugin *plugin)
 static void
 _registry_load_func (GstRegistry *registry, gpointer user_data)
 {
-  if (registry->flags & GST_REGISTRY_READABLE &&
-      !(registry->flags & GST_REGISTRY_DELAYED_LOADING)) {
+  if (!(registry->flags & GST_REGISTRY_DELAYED_LOADING)) {
     gst_registry_load (registry);
   }
 }
