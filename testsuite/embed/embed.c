@@ -10,6 +10,7 @@ GstElement *filter;
 GdkWindow *wind;
 GstElement *pipeline;
 
+#if 0
 static int
 configure(GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
 {
@@ -28,18 +29,11 @@ map_event(GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
 	printf("map\n");
 	return FALSE;
 }
+#endif
 
-int xid;
-
-static int have_xid(GstElement * xv, gpointer data)
+static int have_xid(GstElement * xv, gint xid, gpointer data)
 {
-	GValue value = { 0 };
-//	int xid;
-
 	printf("have_xid\n");
-	g_value_init(&value, G_TYPE_INT);
-	g_object_get_property(G_OBJECT(xvideosink), "xid", &value);
-	xid = g_value_get_int(&value);
 
 	wind = gdk_window_foreign_new(xid);
 printf("gdk_window_reparent() wind=%p window=%p xid=%d\n",wind,window->window,xid);
@@ -58,12 +52,12 @@ int main(int argc, char *argv[])
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
-
+#if 0
 	gtk_signal_connect(GTK_OBJECT(window), "configure_event",
 			   GTK_SIGNAL_FUNC(configure), NULL);
 	gtk_signal_connect(GTK_OBJECT(window), "map",
 			   GTK_SIGNAL_FUNC(map_event), NULL);
-
+#endif
 	gtk_widget_show_all(window);
 
 	pipeline = gst_element_factory_make("pipeline", NULL);
@@ -78,6 +72,7 @@ int main(int argc, char *argv[])
 #endif
 
 	xvideosink = gst_element_factory_make("xvideosink", NULL);
+	g_object_set(xvideosink, "toplevel", FALSE, NULL);
 	g_signal_connect(xvideosink, "have_xid", (GCallback) (have_xid),
 			 NULL);
 
