@@ -96,7 +96,7 @@ parse_generic (GstMPEGPacketize *packetize)
   GstBuffer *outbuf;
   guint32 got_bytes;
 
-  GST_DEBUG (0, "packetize: in parse_syshead");
+  GST_DEBUG (0, "packetize: in parse_generic");
 
   got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&buf, 2 + 4);
   if (got_bytes < 6) return NULL;
@@ -173,7 +173,6 @@ find_start_code (GstMPEGPacketize *packetize)
     code = (code << 8) | buf[offset++];
     
     GST_DEBUG (0, "  code = %08x", code);
-    /* g_print ("  code = %08x\n", code); */
 
     if (offset == chunksize) {
       if (!gst_bytestream_flush (bs, offset))
@@ -204,6 +203,15 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
     else {
       GST_DEBUG (0, "packetize: have chunk 0x%02X", packetize->id);
       if (packetize->type == GST_MPEG_PACKETIZE_SYSTEM) {
+	if (packetize->resync) {
+          if (packetize->id != PACK_START_CODE) {
+            if (!gst_bytestream_flush (packetize->bs, 4))
+              got_event = TRUE;
+	    continue;
+	  }
+
+	  packetize->resync = FALSE;
+	}
         switch (packetize->id) {
           case PACK_START_CODE:
     	    outbuf = parse_packhead (packetize);
@@ -244,6 +252,7 @@ gst_mpeg_packetize_read (GstMPEGPacketize *packetize)
 
       switch (etype) {
         case GST_EVENT_DISCONTINUOUS:
+          GST_DEBUG (GST_CAT_EVENT, "packetize: discont\n");
 	  gst_bytestream_flush_fast (packetize->bs, remaining);
 	  break;
       }

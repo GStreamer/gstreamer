@@ -58,13 +58,13 @@ static double video_rates[16] =
   50.0,
   60000.0/1001.,
   60.0,
-  1,
-  5,
-  10,
-  12,
-  15,
-  0,
-  0
+  1.0,
+  5.0,
+  10.0,
+  12.0,
+  15.0,
+  0.0,
+  0.0
 };
 
 GST_PAD_TEMPLATE_FACTORY (src_template_factory,
@@ -101,6 +101,15 @@ static void	gst_mpeg2dec_set_property	(GObject *object, guint prop_id,
 						 const GValue *value, GParamSpec *pspec);
 static void	gst_mpeg2dec_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
+
+static gboolean gst_mpeg2dec_src_event       	(GstPad *pad, GstEvent *event);
+static gboolean gst_mpeg2dec_src_query 		(GstPad *pad, GstPadQueryType type,
+		       				 GstFormat *format, gint64 *value);
+
+static gboolean gst_mpeg2dec_convert_sink 	(GstPad *pad, GstFormat src_format, gint64 src_value,
+		         			 GstFormat *dest_format, gint64 *dest_value);
+static gboolean gst_mpeg2dec_convert_src 	(GstPad *pad, GstFormat src_format, gint64 src_value,
+		        	 		 GstFormat *dest_format, gint64 *dest_value);
 
 static GstElementStateReturn
 		gst_mpeg2dec_change_state	(GstElement *element);
@@ -165,27 +174,10 @@ typedef struct gst_mpeg2dec_vo_frame_s {
 
 typedef struct gst_mpeg2dec_vo_instance_s {
   vo_instance_t vo;
-
   GstMpeg2dec *mpeg2dec;
-
   gint prediction_index;
   gst_mpeg2dec_vo_frame_t frames[NUM_FRAMES];
-
 } gst_mpeg2dec_vo_instance_t;
-
-/* defined but not used
-static void
-gst_mpeg2dec_vo_frame_copy (vo_frame_t * frame, uint8_t ** src)
-{
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: copy");
-}
-
-static void
-gst_mpeg2dec_vo_frame_field (vo_frame_t * frame, int flags)
-{
-  GST_INFO (GST_CAT_PLUGIN_INFO, "VO: field");
-}
-*/
 
 static void
 gst_mpeg2dec_vo_frame_draw (vo_frame_t * frame)
@@ -221,20 +213,22 @@ gst_mpeg2dec_vo_frame_draw (vo_frame_t * frame)
     g_object_notify (G_OBJECT (mpeg2dec), "frame_rate");
   }
 
-  pts = mpeg2dec->next_time - 3 * (1000000LL/video_rates[mpeg2dec->decoder->frame_rate_code]);
+  pts = mpeg2dec->next_time - 3 * (GST_SECOND / video_rates[mpeg2dec->decoder->frame_rate_code]);
 
   GST_BUFFER_TIMESTAMP (_frame->buffer) = pts;
 
+  /* g_print ("out: %lld\n", GST_BUFFER_TIMESTAMP (_frame->buffer)); */
   GST_DEBUG (0, "out: %lld %d %lld", GST_BUFFER_TIMESTAMP (_frame->buffer),
 		  mpeg2dec->decoder->frame_rate_code,
-                  (long long)(1000000LL/video_rates[mpeg2dec->decoder->frame_rate_code]));
+                  (long long)(GST_SECOND / video_rates[mpeg2dec->decoder->frame_rate_code]));
 
-  mpeg2dec->next_time += (1000000LL/video_rates[mpeg2dec->decoder->frame_rate_code]) + mpeg2dec->adjust;
+  mpeg2dec->next_time += (GST_SECOND / video_rates[mpeg2dec->decoder->frame_rate_code]) + mpeg2dec->adjust;
 
   GST_BUFFER_FLAG_SET (_frame->buffer, GST_BUFFER_READONLY);
   mpeg2dec->frames_per_PTS++;
   mpeg2dec->first = FALSE;
   _frame->sent = TRUE;
+  mpeg2dec->total_frames++;
   gst_pad_push (mpeg2dec->srcpad, _frame->buffer);
 }
 
@@ -253,6 +247,7 @@ gst_mpeg2dec_vo_setup (vo_instance_t * instance, int width, int height)
   _instance->prediction_index = 1;
   mpeg2dec->width = width;
   mpeg2dec->height = height;
+  mpeg2dec->total_frames = 0;
 
   gst_pad_try_set_caps (mpeg2dec->srcpad, 
 		    gst_caps_new (
@@ -403,19 +398,23 @@ gst_mpeg2dec_vo_destroy (GstMpeg2dec *mpeg2dec)
 static void
 gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
 {
-
   /* create the sink and src pads */
   mpeg2dec->sinkpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->sinkpad);
   gst_pad_set_chain_function (mpeg2dec->sinkpad, gst_mpeg2dec_chain);
+  gst_pad_set_convert_function (mpeg2dec->sinkpad, gst_mpeg2dec_convert_sink);
 
   mpeg2dec->srcpad = gst_pad_new_from_template (
 		  GST_PAD_TEMPLATE_GET (src_template_factory), "src");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->srcpad);
+  gst_pad_set_event_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_src_event));
+  gst_pad_set_query_function (mpeg2dec->srcpad, GST_DEBUG_FUNCPTR (gst_mpeg2dec_src_query));
+  gst_pad_set_convert_function (mpeg2dec->srcpad, gst_mpeg2dec_convert_src);
 
   /* initialize the mpeg2dec decoder state */
   mpeg2dec->decoder = g_new (mpeg2dec_t, 1);
+  mpeg2dec->decoder->frame_rate_code = 0;
   mpeg2dec->accel = mm_accel();
 
   GST_FLAG_SET (GST_ELEMENT (mpeg2dec), GST_ELEMENT_EVENT_AWARE);
@@ -443,13 +442,22 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   GST_DEBUG (0, "MPEG2DEC: chain called");
 
   if (GST_IS_EVENT (buf)) {
-    GstEvent *ev = GST_EVENT (buf);
+    GstEvent *event = GST_EVENT (buf);
 
-    switch (ev->type) {
+    switch (event->type) {
       case GST_EVENT_DISCONTINUOUS:
-	mpeg2dec->decoder->is_sequence_needed = 1;
-        gst_event_free (ev);
+      {
+	//gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
+	//mpeg2dec->decoder->is_sequence_needed = 1;
+	/* g_print ("mpeg2dec: discont %lld\n", value); */
+        mpeg2dec->first = TRUE;
+        mpeg2dec->frames_per_PTS = 0;
+        mpeg2dec->last_PTS = -1;
+        mpeg2dec->adjust = 0;
+        mpeg2dec->next_time = 0;
+        gst_pad_event_default (pad, event);
 	return;
+      }
       case GST_EVENT_EOS:
         if (!mpeg2dec->closed) {
           /* close flushes the last few frames */
@@ -457,7 +465,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  mpeg2dec->closed = TRUE;
         }
       default:
-        gst_pad_event_default (pad, ev);
+        gst_pad_event_default (pad, event);
 	return;
     }
   }
@@ -476,21 +484,22 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
      * - if the PTS and our own counter are adrift bu more than 10 frames, we assume
      *   a discontinuity in the PTS and adjust our own counter.
      */
+  GST_DEBUG (GST_CAT_CLOCK, "mpeg2dec: pts %llu\n", pts);
   if (!mpeg2dec->first) {
     if (mpeg2dec->last_PTS < pts) {
 
       if (pts != mpeg2dec->next_time && mpeg2dec->frames_per_PTS > 10) {
 	gint64 diff = ABS (pts - mpeg2dec->last_PTS);
 
-	if (diff > (1000000LL/video_rates[mpeg2dec->decoder->frame_rate_code])+1000) {
+	if (diff > (GST_SECOND / video_rates[mpeg2dec->decoder->frame_rate_code]) + GST_SECOND/1000) {
           mpeg2dec->adjust = (diff / mpeg2dec->frames_per_PTS +1) - 
-	    (1000000LL/video_rates[mpeg2dec->decoder->frame_rate_code]);
+	    (GST_SECOND / video_rates[mpeg2dec->decoder->frame_rate_code]);
 	}
         mpeg2dec->next_time = pts;
       }
       mpeg2dec->frames_per_PTS = 0;
     }
-    if (ABS (pts - mpeg2dec->last_PTS) > (1000000LL/video_rates[mpeg2dec->decoder->frame_rate_code])*10) {
+    if (ABS (pts - mpeg2dec->last_PTS) > (GST_SECOND / video_rates[mpeg2dec->decoder->frame_rate_code])*10) {
 
       mpeg2dec->frames_per_PTS = 0;
       mpeg2dec->next_time = pts;
@@ -510,6 +519,260 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   gst_buffer_unref(buf);
 }
 
+static gboolean
+gst_mpeg2dec_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
+		           GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  GstMpeg2dec *mpeg2dec;
+	      
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  } 
+  mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+  return res;
+}
+
+static gboolean
+gst_mpeg2dec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
+		          GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+  GstMpeg2dec *mpeg2dec;
+	      
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  } 
+  mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+	  *dest_value = src_value * 6 * (mpeg2dec->width * mpeg2dec->height >> 2) *  
+		  video_rates[mpeg2dec->decoder->frame_rate_code] / GST_SECOND;
+	  break;
+        case GST_FORMAT_FRAMES:
+        case GST_FORMAT_FIELDS:
+	  *dest_value = src_value * video_rates[mpeg2dec->decoder->frame_rate_code] / GST_SECOND;
+	  break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_FRAMES:
+    case GST_FORMAT_FIELDS:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+	  if (video_rates[mpeg2dec->decoder->frame_rate_code] != 0.0) {
+	    *dest_value = src_value * GST_SECOND /
+	      video_rates[mpeg2dec->decoder->frame_rate_code];
+	  }
+	  else
+	    res = FALSE;
+	  break;
+        case GST_FORMAT_BYTES:
+	  *dest_value = src_value * 6 * (mpeg2dec->width * mpeg2dec->height >> 2);
+	  break;
+        case GST_FORMAT_FRAMES:
+        case GST_FORMAT_FIELDS:
+	  *dest_value = src_value;
+	  break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+  return res;
+}
+
+static gboolean 
+gst_mpeg2dec_src_query (GstPad *pad, GstPadQueryType type,
+		        GstFormat *format, gint64 *value)
+{
+  gboolean res = TRUE;
+  GstMpeg2dec *mpeg2dec;
+  static const GstFormat formats[] = { GST_FORMAT_TIME, GST_FORMAT_BYTES };
+#define MAX_SEEK_FORMATS 1 /* we can only do time seeking for now */
+  gint i;
+
+  mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+
+  switch (type) {
+    case GST_PAD_QUERY_TOTAL:
+    {
+      switch (*format) {
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+          /* fallthrough */
+        case GST_FORMAT_TIME:
+        case GST_FORMAT_BYTES:
+        case GST_FORMAT_FRAMES:
+        case GST_FORMAT_FIELDS:
+	{
+          res = FALSE;
+
+          for (i = 0; i < MAX_SEEK_FORMATS && !res; i++) {
+	    GstFormat peer_format;
+	    gint64 peer_value;
+		  
+	    peer_format = formats[i];
+	  
+            /* do the probe */
+            if (gst_pad_query (GST_PAD_PEER (mpeg2dec->sinkpad), GST_PAD_QUERY_TOTAL,
+			       &peer_format, &peer_value)) 
+	    {
+              GstFormat conv_format;
+
+              /* convert to TIME */
+              conv_format = GST_FORMAT_TIME;
+              res = gst_mpeg2dec_convert_sink (pad,
+                              peer_format, peer_value,
+                              &conv_format, value);
+              /* and to final format */
+              res &= gst_mpeg2dec_convert_src (pad,
+                         GST_FORMAT_TIME, *value,
+                         format, value);
+            }
+	  }
+          break;
+	}
+        default:
+	  res = FALSE;
+          break;
+      }
+      break;
+    }
+    case GST_PAD_QUERY_POSITION:
+    {
+      switch (*format) {
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+          /* fallthrough */
+        default:
+          res = gst_mpeg2dec_convert_src (pad,
+                          GST_FORMAT_TIME, mpeg2dec->next_time,
+                          format, value);
+          break;
+      }
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
+}
+
+static gboolean 
+gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
+{
+  gboolean res = TRUE;
+  GstMpeg2dec *mpeg2dec;
+  static const GstFormat formats[] = { GST_FORMAT_TIME, GST_FORMAT_BYTES };
+#define MAX_SEEK_FORMATS 1 /* we can only do time seeking for now */
+  gint i;
+
+  mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    /* the all-formats seek logic */
+    case GST_EVENT_SEEK:
+    {
+      gint64 src_offset;
+      gboolean flush;
+      GstFormat format;
+			                
+      format = GST_FORMAT_TIME;
+
+      /* first bring the src_format to TIME */
+      if (!gst_mpeg2dec_convert_src (pad,
+                GST_EVENT_SEEK_FORMAT (event), GST_EVENT_SEEK_OFFSET (event),
+                &format, &src_offset))
+      {
+        /* didn't work, probably unsupported seek format then */
+        res = FALSE;
+        break;
+      }
+
+      /* shave off the flush flag, we'll need it later */
+      flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+
+      /* assume the worst */
+      res = FALSE;
+
+      /* while we did not exhaust our seek formats without result */
+      for (i = 0; i < MAX_SEEK_FORMATS && !res; i++) {
+        gint64 desired_offset;
+
+        format = formats[i];
+
+        /* try to convert requested format to one we can seek with on the sinkpad */
+        if (gst_mpeg2dec_convert_sink (pad, GST_FORMAT_TIME, src_offset, &format, &desired_offset))
+        {
+          GstEvent *seek_event;
+
+          /* conversion succeeded, create the seek */
+          seek_event = gst_event_new_seek (formats[i] | GST_SEEK_METHOD_SET | flush, desired_offset);
+          /* do the seekk */
+          if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
+            /* seek worked, we're done, loop will exit */
+            res = TRUE;
+          }
+          gst_event_free (seek_event);
+        }
+        /* at this point, either the seek worked or res == FALSE */
+      }
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+}
+
 static GstElementStateReturn
 gst_mpeg2dec_change_state (GstElement *element)
 {
@@ -524,6 +787,7 @@ gst_mpeg2dec_change_state (GstElement *element)
       mpeg2_init (mpeg2dec->decoder, mpeg2dec->accel, mpeg2dec->vo);
 
       mpeg2dec->decoder->is_sequence_needed = 1;
+      mpeg2dec->decoder->frame_rate_code = 0;
       mpeg2dec->next_time = 0;
       mpeg2dec->peerpool = NULL;
       mpeg2dec->closed = FALSE;

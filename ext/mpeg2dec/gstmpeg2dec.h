@@ -70,6 +70,7 @@ struct _GstMpeg2dec {
   gint width;
   gint height;
   gint frame_rate_code;
+  gint64 total_frames;
 };
 
 struct _GstMpeg2decClass {

@@ -133,7 +133,8 @@ static gboolean gst_mpeg_demux_parse_packhead 	(GstMPEGParse *mpeg_parse, GstBuf
 static gboolean gst_mpeg_demux_parse_syshead 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
 static gboolean gst_mpeg_demux_parse_packet 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
 static gboolean gst_mpeg_demux_parse_pes 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
-static void	gst_mpeg_demux_send_data 	(GstMPEGParse *mpeg_parse, GstData *data);
+static void	gst_mpeg_demux_send_data 	(GstMPEGParse *mpeg_parse, GstData *data, GstClockTime time);
+static void	gst_mpeg_demux_handle_discont 	(GstMPEGParse *mpeg_parse);
 
 static GstElementStateReturn
 		gst_mpeg_demux_change_state 	(GstElement *element);
@@ -181,6 +182,7 @@ gst_mpeg_demux_class_init (GstMPEGDemuxClass *klass)
   mpeg_parse_class->parse_packet	= gst_mpeg_demux_parse_packet;
   mpeg_parse_class->parse_pes		= gst_mpeg_demux_parse_pes;
   mpeg_parse_class->send_data		= gst_mpeg_demux_send_data;
+  mpeg_parse_class->handle_discont	= gst_mpeg_demux_handle_discont;
 
 }
 
@@ -209,12 +211,10 @@ gst_mpeg_demux_init (GstMPEGDemux *mpeg_demux)
   mpeg_demux->private_2_offset = 0;
   for (i=0;i<NUM_VIDEO_PADS;i++) {
     mpeg_demux->video_pad[i] = NULL;
-    mpeg_demux->video_offset[i] = 0;
     mpeg_demux->video_PTS[i] = 0;
   }
   for (i=0;i<NUM_AUDIO_PADS;i++) {
     mpeg_demux->audio_pad[i] = NULL;
-    mpeg_demux->audio_offset[i] = 0;
     mpeg_demux->audio_PTS[i] = 0;
   }
 
@@ -222,15 +222,57 @@ gst_mpeg_demux_init (GstMPEGDemux *mpeg_demux)
 }
 
 static void
-gst_mpeg_demux_send_data (GstMPEGParse *mpeg_parse, GstData *data)
+gst_mpeg_demux_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime time)
 {
+  //GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
+
   if (GST_IS_BUFFER (data)) {
     gst_buffer_unref (GST_BUFFER (data));
   }
   else {
     GstEvent *event = GST_EVENT (data);
 
-    gst_pad_event_default (mpeg_parse->sinkpad, event);
+    switch (GST_EVENT_TYPE (event)) {
+      default:
+        //g_print ("demux: default event %d\n", GST_EVENT_TYPE (event));
+        gst_pad_event_default (mpeg_parse->sinkpad, event);
+	break;
+    }
+  }
+}
+
+static void
+gst_mpeg_demux_handle_discont (GstMPEGParse *mpeg_parse)
+{
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
+  gint i;
+  gint64 current_time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
+
+  GST_DEBUG (GST_CAT_EVENT, "mpegdemux: discont %llu\n", current_time);
+
+  for (i=0;i<NUM_VIDEO_PADS;i++) {
+    if (mpeg_demux->video_pad[i] && 
+        GST_PAD_IS_CONNECTED (mpeg_demux->video_pad[i]))
+    {
+      GstEvent *discont;
+
+      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
+			current_time, NULL);
+
+      mpeg_demux->video_PTS[i] = mpeg_parse->current_scr;
+      gst_pad_push (mpeg_demux->video_pad[i], GST_BUFFER (discont));
+    }
+    if (mpeg_demux->audio_pad[i] && 
+        GST_PAD_IS_CONNECTED (mpeg_demux->audio_pad[i]))
+    {
+      GstEvent *discont;
+
+      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
+			current_time, NULL);
+
+      mpeg_demux->audio_PTS[i] = mpeg_parse->current_scr;
+      gst_pad_push (mpeg_demux->audio_pad[i], GST_BUFFER (discont));
+    }
   }
 }
 
@@ -362,7 +404,20 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       if (outpad && *outpad == NULL) {
 	*outpad = gst_pad_new_from_template (newtemp, name);
 	gst_pad_try_set_caps (*outpad, gst_pad_get_pad_template_caps (*outpad));
+	gst_pad_set_event_function (*outpad, gst_mpeg_parse_handle_src_event);
+	gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
+
 	gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
+
+	if (GST_PAD_IS_CONNECTED (*outpad)) {
+          GstEvent *event;
+          gint64 current_time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
+
+          event  = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
+			current_time, NULL);
+
+	  gst_pad_push (*outpad, GST_BUFFER (event));
+	}
       }
       else {
 	/* we won't be needing this. */
@@ -398,7 +453,6 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   gint64 pts = -1;
 
   guint16 datalen;
-  gulong outoffset = 0;   /* wrong XXX FIXME */
 
   GstPad **outpad = NULL;
   GstBuffer *outbuf;
@@ -515,14 +569,10 @@ done:
   } else if ((id >= 0xC0) && (id <= 0xDF)) {
     GST_DEBUG (0,"mpeg_demux::parse_packet: 0x%02X: we have an audio packet", id);
     outpad = &mpeg_demux->audio_pad[id & 0x1F];
-    outoffset = mpeg_demux->audio_offset[id & 0x1F];
-    mpeg_demux->audio_offset[id & 0x1F] += datalen;
   /* video */
   } else if ((id >= 0xE0) && (id <= 0xEF)) {
     GST_DEBUG (0,"mpeg_demux::parse_packet: 0x%02X: we have a video packet", id);
     outpad = &mpeg_demux->video_pad[id & 0x0F];
-    outoffset = mpeg_demux->video_offset[id & 0x1F];
-    mpeg_demux->video_offset[id & 0x1F] += datalen;
     if (pts == -1) 
       pts = mpeg_demux->video_PTS[id & 0x1F];
     else 
@@ -550,13 +600,13 @@ done:
 
     outbuf = gst_buffer_create_sub (buffer, headerlen+4, datalen);
 
-    GST_BUFFER_OFFSET (outbuf) = outoffset;
     if (pts != -1) {
-      GST_BUFFER_TIMESTAMP (outbuf) = (pts * 100LL)/9LL;
+      GST_BUFFER_TIMESTAMP (outbuf) = (pts * GST_SECOND)/90000LL;
     }
     else {
       GST_BUFFER_TIMESTAMP (outbuf) = -1LL;
     }
+
     GST_DEBUG (0,"mpeg_demux::parse_packet: pushing buffer of len %d id %d, ts %lld", 
 		    datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
     gst_pad_push ((*outpad), outbuf);
@@ -576,7 +626,6 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   guint8 header_data_length = 0;
 
   guint16 datalen;
-  gulong outoffset = 0;   /* wrong XXX FIXME  */
   guint16 headerlen;
   guint8 ps_id_code = 0x80;
 
@@ -621,14 +670,14 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       pts |= (*buf++ & 0xFE) << 14;
       pts |=  *buf++         <<  7;
       pts |= (*buf++ & 0xFE) >>  1;
-      GST_DEBUG (0, "mpeg_demux::parse_packet: %x PTS = %llu", id, (pts*1000000LL)/90000LL);
+      GST_DEBUG (0, "mpeg_demux::parse_packet: %x PTS = %llu", id, (pts*GST_SECOND)/90000LL);
     }
     if ((flags2 & 0x40)) {
-      GST_DEBUG (0, "mpeg_demux::parse_packet: %x DTS foundu", id);
+      GST_DEBUG (0, "mpeg_demux::parse_packet: %x DTS found", id);
       buf += 5;
     }
     if ((flags2 & 0x20)) {
-      GST_DEBUG (0, "mpeg_demux::parse_packet: %x ESCR foundu", id);
+      GST_DEBUG (0, "mpeg_demux::parse_packet: %x ESCR found", id);
       buf += 6;
     }
     if ((flags2 & 0x10)) {
@@ -637,7 +686,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       es_rate  = (*buf++ & 0x07) << 14;
       es_rate |= (*buf++       ) << 7;
       es_rate |= (*buf++ & 0xFE) >> 1;
-      GST_DEBUG (0, "mpeg_demux::parse_packet: %x ES Rate foundu", id);
+      GST_DEBUG (0, "mpeg_demux::parse_packet: %x ES Rate found", id);
     }
     /* FIXME: lots of PES parsing missing here... */
 
@@ -663,8 +712,6 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       /* scrap first 4 bytes (so-called "mystery AC3 tag") */
       headerlen += 4;
       datalen -= 4;
-      outoffset = mpeg_demux->private_1_offset[ps_id_code - 0x80];
-      mpeg_demux->private_1_offset[ps_id_code - 0x80] += datalen;
     }
     else if ((ps_id_code >= 0x20) && (ps_id_code <= 0x2f)) {
       GST_DEBUG (0,"mpeg_demux: we have a subtitle_stream packet, track %d",
@@ -672,21 +719,15 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       outpad = &mpeg_demux->subtitle_pad[ps_id_code - 0x20];
       headerlen += 1;
       datalen -= 1;
-      outoffset = mpeg_demux->subtitle_offset[ps_id_code - 0x20];
-      mpeg_demux->subtitle_offset[ps_id_code - 0x20] += datalen;
     }
   /* private_stream_1 */
   } else if (id == 0xBF) {
     GST_DEBUG (0,"mpeg_demux: we have a private_stream_2 packet");
     outpad = &mpeg_demux->private_2_pad;
-    outoffset = mpeg_demux->private_2_offset;
-    mpeg_demux->private_2_offset += datalen;
   /* audio */
   } else if ((id >= 0xC0) && (id <= 0xDF)) {
     GST_DEBUG (0,"mpeg_demux: we have an audio packet");
     outpad = &mpeg_demux->audio_pad[id - 0xC0];
-    outoffset = mpeg_demux->audio_offset[id & 0x1F];
-    mpeg_demux->audio_offset[id & 0x1F] += datalen;
     if (pts == -1) 
       pts = mpeg_demux->audio_PTS[id & 0x1F];
     else 
@@ -695,8 +736,6 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   } else if ((id >= 0xE0) && (id <= 0xEF)) {
     GST_DEBUG (0,"mpeg_demux: we have a video packet");
     outpad = &mpeg_demux->video_pad[id - 0xE0];
-    outoffset = mpeg_demux->video_offset[id & 0x0F];
-    mpeg_demux->video_offset[id & 0x0F] += datalen;
     if (pts == -1) 
       pts = mpeg_demux->video_PTS[id & 0x1F];
     else 
@@ -747,6 +786,8 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       /* create the pad and add it to self */
       (*outpad) = gst_pad_new_from_template (newtemp, name);
       gst_pad_try_set_caps ((*outpad), gst_pad_get_pad_template_caps (*outpad));
+      gst_pad_set_event_function (*outpad, gst_mpeg_parse_handle_src_event);
+      gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
       gst_element_add_pad(GST_ELEMENT(mpeg_demux),(*outpad));
     }
     else {
@@ -762,8 +803,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     GST_DEBUG (0,"mpeg_demux: creating subbuffer len %d", datalen);
 
     outbuf = gst_buffer_create_sub (buffer, headerlen+4, datalen);
-    GST_BUFFER_OFFSET(outbuf) = outoffset;
-    GST_BUFFER_TIMESTAMP(outbuf) = (pts*100LL)/9LL;
+    GST_BUFFER_TIMESTAMP(outbuf) = (pts * GST_SECOND) / 90000LL;
 
     gst_pad_push((*outpad),outbuf);
   }
@@ -783,11 +823,9 @@ gst_mpeg_demux_change_state (GstElement *element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       for (i=0;i<NUM_VIDEO_PADS;i++) {
-        mpeg_demux->video_offset[i] = 0;
         mpeg_demux->video_PTS[i] = 0;
       }
       for (i=0;i<NUM_AUDIO_PADS;i++) {
-        mpeg_demux->audio_offset[i] = 0;
         mpeg_demux->audio_PTS[i] = 0;
       }
       break;

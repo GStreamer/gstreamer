@@ -46,19 +46,29 @@ extern "C" {
 
 #define GST_MPEG_PARSE_IS_MPEG2(parse) (GST_MPEG_PACKETIZE_IS_MPEG2 (GST_MPEG_PARSE (parse)->packetize))
 
+#define MPEGTIME_TO_GSTTIME(time) (((time) * GST_SECOND) / 90000LL)
+
 typedef struct _GstMPEGParse GstMPEGParse;
 typedef struct _GstMPEGParseClass GstMPEGParseClass;
 
 struct _GstMPEGParse {
   GstElement element;
 
-  GstPad *sinkpad, *srcpad;
+  GstPad 	*sinkpad, *srcpad;
 
   GstMPEGPacketize *packetize;
 
   /* pack header values */
-  guint32 bit_rate;
-  guint64 next_ts;
+  guint32	 bit_rate;
+  guint64	 current_scr;
+  guint64	 previous_scr;
+
+  gboolean	 discont_pending;
+  gboolean	 scr_pending;
+
+  GstClock 	*provided_clock;
+  GstClock 	*clock;
+  gboolean	 sync;
 };
 
 struct _GstMPEGParseClass {
@@ -71,13 +81,17 @@ struct _GstMPEGParseClass {
   gboolean 	(*parse_pes)		(GstMPEGParse *parse, GstBuffer *buffer);
 
   /* optional method to send out the data */
-  void	 	(*send_data)		(GstMPEGParse *parse, GstData *data);
+  void	 	(*send_data)		(GstMPEGParse *parse, GstData *data, GstClockTime time);
+  void	 	(*handle_discont)	(GstMPEGParse *parse);
 };
 
 GType gst_mpeg_parse_get_type(void);
 
-gboolean 	gst_mpeg_parse_plugin_init 	(GModule *module, GstPlugin *plugin);
+gboolean 	gst_mpeg_parse_plugin_init 		(GModule *module, GstPlugin *plugin);
 
+gboolean 	gst_mpeg_parse_handle_src_event 	(GstPad *pad, GstEvent *event);
+gboolean 	gst_mpeg_parse_handle_src_query		(GstPad *pad, GstPadQueryType type,
+		                         		 GstFormat *format, gint64 *value);
 
 #ifdef __cplusplus
 }

@@ -64,6 +64,7 @@ struct _GstMPEGPacketize {
   GstMPEGPacketizeType type;
 
   gboolean MPEG2;
+  gboolean resync;
 };
 
 GstMPEGPacketize* 	gst_mpeg_packetize_new 		(GstPad *pad, GstMPEGPacketizeType type);

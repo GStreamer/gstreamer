@@ -20,6 +20,7 @@
 
 /*#define GST_DEBUG_ENABLED*/
 #include "gstmpegparse.h"
+#include "gstmpegclock.h"
 
 /* elementfactory information */
 static GstElementDetails mpeg_parse_details = {
@@ -44,6 +45,7 @@ enum {
   ARG_0,
   ARG_BIT_RATE,
   ARG_MPEG2,
+  ARG_SYNC,
   /* FILL ME */
 };
 
@@ -72,18 +74,25 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
   )
 );
 
-static void 	gst_mpeg_parse_class_init	(GstMPEGParseClass *klass);
-static void 	gst_mpeg_parse_init		(GstMPEGParse *mpeg_parse);
+static void 		gst_mpeg_parse_class_init	(GstMPEGParseClass *klass);
+static void 		gst_mpeg_parse_init		(GstMPEGParse *mpeg_parse);
 static GstElementStateReturn
-		gst_mpeg_parse_change_state	(GstElement *element);
+			gst_mpeg_parse_change_state	(GstElement *element);
 
-static gboolean	gst_mpeg_parse_parse_packhead 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
-static void 	gst_mpeg_parse_send_data	(GstMPEGParse *mpeg_parse, GstData *data);
+static void 		gst_mpeg_parse_set_clock 	(GstElement *element, GstClock *clock);
+static GstClock* 	gst_mpeg_parse_get_clock 	(GstElement *element);
+static GstClockTime	gst_mpeg_parse_get_time 	(GstClock *clock, gpointer data);
 
-static void 	gst_mpeg_parse_loop 		(GstElement *element);
+static gboolean		gst_mpeg_parse_parse_packhead 	(GstMPEGParse *mpeg_parse, GstBuffer *buffer);
+static void 		gst_mpeg_parse_send_data	(GstMPEGParse *mpeg_parse, GstData *data, GstClockTime time);
+static void 		gst_mpeg_parse_handle_discont 	(GstMPEGParse *mpeg_parse);
 
-static void 	gst_mpeg_parse_get_property	(GObject *object, guint prop_id, 
-						 GValue *value, GParamSpec *pspec);
+static void 		gst_mpeg_parse_loop 		(GstElement *element);
+
+static void 		gst_mpeg_parse_get_property	(GObject *object, guint prop_id, 
+							 GValue *value, GParamSpec *pspec);
+static void 		gst_mpeg_parse_set_property	(GObject *object, guint prop_id, 
+							 const GValue *value, GParamSpec *pspec);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_mpeg_parse_signals[LAST_SIGNAL] = { 0 };*/
@@ -126,8 +135,12 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MPEG2,
     g_param_spec_boolean ("mpeg2", "mpeg2", "is this an mpeg2 stream",
                           FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+    g_param_spec_boolean ("sync", "Sync", "Synchronize on the stream SCR",
+                          TRUE, G_PARAM_READWRITE));
 
   gobject_class->get_property = gst_mpeg_parse_get_property;
+  gobject_class->set_property = gst_mpeg_parse_set_property;
 
   gstelement_class->change_state = gst_mpeg_parse_change_state;
 
@@ -136,7 +149,7 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   klass->parse_packet 	= NULL;
   klass->parse_pes 	= NULL;
   klass->send_data 	= gst_mpeg_parse_send_data;
-
+  klass->handle_discont	= gst_mpeg_parse_handle_discont;
 }
 
 static void
@@ -145,30 +158,72 @@ gst_mpeg_parse_init (GstMPEGParse *mpeg_parse)
   mpeg_parse->sinkpad = gst_pad_new_from_template(
 		  GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->sinkpad);
-  gst_element_set_loop_function (GST_ELEMENT (mpeg_parse), gst_mpeg_parse_loop);
+
   mpeg_parse->srcpad = gst_pad_new_from_template(
 		  GST_PAD_TEMPLATE_GET (src_factory), "src");
   gst_element_add_pad(GST_ELEMENT(mpeg_parse),mpeg_parse->srcpad);
+  gst_pad_set_event_function (mpeg_parse->srcpad, gst_mpeg_parse_handle_src_event);
+  gst_pad_set_query_function (mpeg_parse->srcpad, gst_mpeg_parse_handle_src_query);
+
+  gst_element_set_loop_function (GST_ELEMENT (mpeg_parse), gst_mpeg_parse_loop);
 
   /* initialize parser state */
   mpeg_parse->packetize = NULL;
-  mpeg_parse->next_ts = 0;
+  mpeg_parse->current_scr = 0;
+  mpeg_parse->previous_scr = 0;
+  mpeg_parse->sync = TRUE;
 
   /* zero counters (should be done at RUNNING?) */
   mpeg_parse->bit_rate = 0;
+  mpeg_parse->discont_pending = FALSE;
+  mpeg_parse->scr_pending = TRUE;
+  mpeg_parse->provided_clock = gst_mpeg_clock_new ("MPEGParseClock", 
+		  gst_mpeg_parse_get_time, mpeg_parse);
+
+  GST_ELEMENT (mpeg_parse)->getclockfunc    = gst_mpeg_parse_get_clock;
+  GST_ELEMENT (mpeg_parse)->setclockfunc    = gst_mpeg_parse_set_clock;
 
   GST_FLAG_SET (mpeg_parse, GST_ELEMENT_EVENT_AWARE);
 }
 
+static GstClock*
+gst_mpeg_parse_get_clock (GstElement *element)
+{   
+  //GstMPEGParse *parse = GST_MPEG_PARSE (element);
+
+  //return parse->provided_clock;
+  return NULL;
+}
+
 static void
-gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data)
+gst_mpeg_parse_set_clock (GstElement *element, GstClock *clock)
+{   
+  GstMPEGParse *parse = GST_MPEG_PARSE (element);
+
+  parse->clock = clock;
+} 
+
+static GstClockTime
+gst_mpeg_parse_get_time (GstClock *clock, gpointer data)
+{   
+  GstMPEGParse *parse = GST_MPEG_PARSE (data);
+
+  return MPEGTIME_TO_GSTTIME (parse->previous_scr);
+}
+
+static void
+gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime time)
 {
   if (GST_IS_EVENT (data)) {
-    gst_pad_event_default (mpeg_parse->sinkpad, GST_EVENT (data));
+    GstEvent *event = GST_EVENT (data);
+
+    switch (GST_EVENT_TYPE (event)) {
+      default:
+	gst_pad_event_default (mpeg_parse->sinkpad, event);
+	break;
+    }
   }
   else {
-    guint64 size = GST_BUFFER_SIZE (data);
-
     if (!GST_PAD_CAPS (mpeg_parse->srcpad)) {
       gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
 
@@ -182,12 +237,22 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data)
 			      ));
     }
 
-    GST_BUFFER_TIMESTAMP (data) = mpeg_parse->next_ts;
-    gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
-    mpeg_parse->next_ts += ((size * 1000000.0) / (mpeg_parse->bit_rate));
-    GST_DEBUG (0, "mpeg_parse: next_ts %lld", mpeg_parse->next_ts);
+    GST_BUFFER_TIMESTAMP (data) = time;
+    GST_DEBUG (0, "mpeg_parse: current_scr %lld", time);
 
+    gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
   }
+}
+
+static void
+gst_mpeg_parse_handle_discont (GstMPEGParse *mpeg_parse)
+{
+  GstEvent *event;
+
+  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
+		  MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr), NULL);
+
+  gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (event));
 }
 
 static gboolean
@@ -216,7 +281,8 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     
     buf += 6;
     new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0xfffffc00) >> 10;
-    new_rate *= 133; /* FIXME trial and error */
+    //new_rate *= 133; /* FIXME trial and error */
+    new_rate *= 223; /* FIXME trial and error */
   }
   else {
     scr  = (scr1 & 0x0e000000) << 5;
@@ -229,8 +295,17 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     new_rate *= 400;
   }
 
-  GST_DEBUG (0, "mpeg_parse: SCR is %llu", scr);
-  mpeg_parse->next_ts = (scr*100)/9;
+  mpeg_parse->previous_scr = mpeg_parse->current_scr;
+  mpeg_parse->current_scr = scr;
+
+  GST_DEBUG (0, "mpeg_parse: SCR is %llu (%llu)", scr, 
+		  MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
+
+  if (mpeg_parse->previous_scr > mpeg_parse->current_scr) {
+    mpeg_parse->discont_pending = TRUE;
+  }
+		  
+  mpeg_parse->scr_pending = FALSE;
 
   if (mpeg_parse->bit_rate != new_rate) {
     mpeg_parse->bit_rate = new_rate;
@@ -251,6 +326,7 @@ gst_mpeg_parse_loop (GstElement *element)
   GstData *data;
   guint id;
   gboolean mpeg2;
+  GstClockTime time;
 
   data = gst_mpeg_packetize_read (mpeg_parse->packetize);
 
@@ -292,8 +368,150 @@ gst_mpeg_parse_loop (GstElement *element)
     }
   }
 
-  if (CLASS (mpeg_parse)->send_data)
-    CLASS (mpeg_parse)->send_data (mpeg_parse, data);
+  time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
+
+  if (GST_IS_EVENT (data)) {
+    GstEvent *event = GST_EVENT (data);
+
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_DISCONTINUOUS:
+        GST_DEBUG (GST_CAT_EVENT, "event: %d\n", GST_EVENT_TYPE (data));
+
+        mpeg_parse->discont_pending = TRUE;
+        mpeg_parse->scr_pending = TRUE;
+        mpeg_parse->packetize->resync = TRUE;
+	gst_event_free (event);
+	return;
+      default:
+	break;
+    }
+    if (CLASS (mpeg_parse)->send_data)
+      CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
+  }
+  else {
+    guint64 size;
+	    
+    /* we're not sending data as long as no new SCR was found */
+    if (mpeg_parse->discont_pending) {
+      if (!mpeg_parse->scr_pending) {
+	if (CLASS (mpeg_parse)->handle_discont) {
+	  CLASS (mpeg_parse)->handle_discont (mpeg_parse);
+	}
+        mpeg_parse->discont_pending = FALSE;
+      }
+      else {
+	GST_DEBUG (0, "waiting for SCR\n");
+      }
+      gst_buffer_unref (GST_BUFFER (data));
+      return;
+    }
+
+    if (CLASS (mpeg_parse)->send_data)
+      CLASS (mpeg_parse)->send_data (mpeg_parse, data, time);
+
+    if (mpeg_parse->clock && mpeg_parse->sync) {
+      gst_element_clock_wait (GST_ELEMENT (mpeg_parse), mpeg_parse->clock, time, NULL);
+    }
+
+    size = GST_BUFFER_SIZE (data);
+    
+    /* we are interpolating the scr here */
+    mpeg_parse->current_scr += ((size * 90000LL) / (mpeg_parse->bit_rate));
+  }
+}
+
+gboolean
+gst_mpeg_parse_handle_src_query (GstPad *pad, GstPadQueryType type, 
+			         GstFormat *format, gint64 *value)
+{
+  gboolean res = TRUE;
+  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
+
+  switch (type) {
+    case GST_PAD_QUERY_TOTAL:
+    {
+      switch (*format) {
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+          /* fallthrough */
+        case GST_FORMAT_TIME:
+	{
+          GstFormat peer_format;
+	  gint64 peer_value;
+
+	  if (mpeg_parse->bit_rate == 0) 
+	    return FALSE;
+
+	  peer_format = GST_FORMAT_BYTES;
+	  if (gst_pad_query (GST_PAD_PEER (mpeg_parse->sinkpad),
+			     GST_PAD_QUERY_TOTAL, &peer_format, &peer_value)) 
+	  {
+            /* multiply bywith 8 because vbr is in bits/second */
+            *value = peer_value * 8 * GST_SECOND / mpeg_parse->bit_rate;
+          }
+	  else 
+	    res = FALSE;
+	  break;
+	}
+	default:
+	  res = FALSE;
+	  break;
+      }
+      break;
+    }
+    case GST_PAD_QUERY_POSITION:
+    {
+      switch (*format) {
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+          /* fallthrough */
+        case GST_FORMAT_TIME:
+          *value = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
+	  break;
+	default:
+	  res = FALSE;
+	  break;
+      }
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
+}
+
+gboolean
+gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
+{
+  gboolean res = TRUE;
+  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      guint64 desired_offset;
+
+      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_TIME) {
+        return FALSE;
+      }
+
+      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
+      }
+      desired_offset = mpeg_parse->bit_rate * GST_EVENT_SEEK_OFFSET (event) / (8 * GST_SECOND);
+
+      if (!gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
+	return FALSE;
+      }
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
 }
 
 static GstElementStateReturn
@@ -337,6 +555,25 @@ gst_mpeg_parse_get_property (GObject *object, guint prop_id, GValue *value, GPar
         g_value_set_boolean (value, GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize));
       else
         g_value_set_boolean (value, FALSE);
+      break;
+    default: 
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpeg_parse_set_property (GObject *object, guint prop_id, 
+			     const GValue *value, GParamSpec *pspec)
+{
+  GstMPEGParse *mpeg_parse;
+
+  /* it's not null if we got it, but it might not be ours */
+  mpeg_parse = GST_MPEG_PARSE(object);
+
+  switch (prop_id) {
+    case ARG_SYNC: 
+      mpeg_parse->sync = g_value_get_boolean (value); 
       break;
     default: 
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
