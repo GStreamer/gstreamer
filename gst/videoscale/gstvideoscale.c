@@ -435,7 +435,6 @@ plugin_init (GstPlugin *plugin)
   if (!gst_element_register (plugin, "videoscale", GST_RANK_NONE, GST_TYPE_VIDEOSCALE))
     return FALSE;
 
-  g_print ("going to init debug\n");
   GST_DEBUG_CATEGORY_INIT (videoscale_debug, "videoscale", 0, "videoscale element");
 
   return TRUE;
