@@ -207,6 +207,7 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
 				    gboolean            check)
 {
   static gboolean init = FALSE;
+  static GList *device_combinations;
 
   if (!init && !check) {
     gchar *dsp_base[] = { "/dev/dsp", "/dev/sound/dsp", NULL };
@@ -214,12 +215,11 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
     GstOssDeviceCombination devices[16];
     gint n;
 
-    while (klass->device_combinations) {
-      GList *item = klass->device_combinations;
+    while (device_combinations) {
+      GList *item = device_combinations;
       GstOssDeviceCombination *combi = item->data;
 
-      klass->device_combinations =
-	g_list_remove (klass->device_combinations, item);
+      device_combinations = g_list_remove (device_combinations, item);
 
       g_free (combi->dsp);
       g_free (combi->mixer);
@@ -261,8 +261,7 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
         combi->mixer = devices[n].mixer;
         devices[n].dsp = devices[n].mixer = NULL;
 
-        klass->device_combinations =
-		g_list_append (klass->device_combinations, combi);
+        device_combinations = g_list_append (device_combinations, combi);
       }
     }
 
@@ -277,6 +276,8 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
 
     init = TRUE;
   }
+
+  klass->device_combinations = device_combinations;
 
   return init;
 }

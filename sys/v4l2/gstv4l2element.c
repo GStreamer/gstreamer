@@ -125,16 +125,17 @@ gst_v4l2_class_probe_devices (GstV4l2ElementClass *klass,
 			      gboolean             check)
 {
 	static gboolean init = FALSE;
+	static GList *devices = NULL;
 
 	if (!init && !check) {
 		gchar *dev_base[] = { "/dev/video", "/dev/v4l/video", NULL };
 		gint base, n, fd;
 
-		while (klass->devices) {
-			GList *item = klass->devices;
+		while (devices) {
+			GList *item = devices;
 			gchar *device = item->data;
 
-			klass->devices = g_list_remove (klass->devices, item);
+			devices = g_list_remove (devices, item);
 			g_free (device);
 		}
 
@@ -153,8 +154,8 @@ gst_v4l2_class_probe_devices (GstV4l2ElementClass *klass,
 						if (fd > 0)
 							close (fd);
 
-						klass->devices =
-							g_list_append (klass->devices,
+						devices =
+							g_list_append (devices,
 								       device);
 						break;
 					}
@@ -165,6 +166,8 @@ gst_v4l2_class_probe_devices (GstV4l2ElementClass *klass,
 
 		init = TRUE;
 	}
+
+	klass->devices = devices;
 
 	return init;
 }
