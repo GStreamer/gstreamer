@@ -1,6 +1,12 @@
 2004-06-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videorate/gstvideorate.c: (gst_videorate_class_init),
+	(gst_videorate_init):
+	Initialize the property as well.
+
+2004-06-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videorate/gstvideorate.c: (gst_videorate_class_init),
 	(gst_videorate_init), (gst_videorate_chain),
 	(gst_videorate_set_property), (gst_videorate_get_property):
 	Add property to make videorate silent.

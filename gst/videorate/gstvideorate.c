@@ -310,6 +310,7 @@ gst_videorate_init (GstVideorate * videorate)
   videorate->drop = 0;
   videorate->dup = 0;
   videorate->silent = DEFAULT_SILENT;
+  videorate->new_pref = DEFAULT_NEW_PREF;
 }
 
 static void
