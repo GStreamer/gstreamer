@@ -33,6 +33,7 @@
 #undef HAVE_VORBIS
 #undef HAVE_LIBMAD
 #undef HAVE_LIBJPEG
+#undef HAVE_LIBSDL
 #undef HAVE_LIBHERMES
 #undef HAVE_NASM
 #undef HAVE_MPEG2DEC
