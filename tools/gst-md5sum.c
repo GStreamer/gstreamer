@@ -59,7 +59,7 @@ main (int argc, char *argv[])
     POPT_TABLEEND
   };
 
-  GstElement *pipeline;
+  GstElement *pipeline = NULL;
   gchar **argvn;
   GError *error = NULL;
   GstElement *md5sink;
@@ -70,16 +70,39 @@ main (int argc, char *argv[])
   setlocale (LC_ALL, "");
 
   gst_init_with_popt_table (&argc, &argv, options);
-  
-  /* make a null-terminated version of argv with ! md5sink appended 
-   * ! is stored in argvn[argc - 1], md5sink in argvn[argc],
-   * NULL pointer in argvn[argc + 1] */
-  argvn = g_new0 (char *, argc + 2);
-  memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
-  argvn[argc - 1] = g_strdup_printf ("!");
-  argvn[argc] = g_strdup_printf ("md5sink");
 
+  /* make a parseable argvn array */
+  argvn = g_new0 (char *, argc);
+  memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
+
+  /* Check if we have an element already that is called md5sink0
+     in the pipeline; if not, add one */
   pipeline = (GstElement*) gst_parse_launchv ((const gchar**) argvn, &error);
+  if (!pipeline) {
+    if (error)
+    {
+      g_warning ("pipeline could not be constructed: %s\n", error->message);
+      g_error_free (error);
+    }
+    else
+      g_warning ("pipeline could not be constructed\n");
+    return 1;
+  }
+
+  md5sink = gst_bin_get_by_name (GST_BIN (pipeline), "md5sink0");
+  if (md5sink == NULL)
+  {
+    g_print ("adding an md5sink element to the pipeline\n");
+    /* make a null-terminated version of argv with ! md5sink appended
+     * ! is stored in argvn[argc - 1], md5sink in argvn[argc],
+     * NULL pointer in argvn[argc + 1] */
+    g_free (argvn);
+    argvn = g_new0 (char *, argc + 2);
+    memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
+    argvn[argc - 1] = g_strdup_printf ("!");
+    argvn[argc] = g_strdup_printf ("md5sink");
+    pipeline = (GstElement*) gst_parse_launchv ((const gchar**) argvn, &error);
+  }
 
   if (!pipeline) {
     if (error)
