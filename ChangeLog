@@ -1,3 +1,48 @@
+2004-09-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/flac/gstflacdec.c: (gst_flacdec_src_query):
+	  Only return true if we actually filled something in. Prevents
+	  player applications from showing a random length for flac files.
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_class_init),
+	(gst_riff_read_use_event), (gst_riff_read_handle_event),
+	(gst_riff_read_seek), (gst_riff_read_skip), (gst_riff_read_strh),
+	(gst_riff_read_strf_vids_with_data),
+	(gst_riff_read_strf_auds_with_data), (gst_riff_read_strf_iavs):
+	  OK, ok, so I implemented event handling. Apparently it's normal
+	  that we receive random events at random points without asking
+	  for it.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_src_convert), (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_handle_src_event), (gst_avi_demux_stream_index),
+	(gst_avi_demux_sync), (gst_avi_demux_stream_scan),
+	(gst_avi_demux_massage_index), (gst_avi_demux_stream_header),
+	(gst_avi_demux_handle_seek), (gst_avi_demux_process_next_entry),
+	(gst_avi_demux_stream_data), (gst_avi_demux_loop):
+	* gst/avi/gstavidemux.h:
+	  Implement non-lineair chunk handling and subchunk processing.
+	  The first solves playback of AVI files where the audio and video
+	  data of individual buffers that we read are not synchronized.
+	  This should not happen according to the wonderful AVI specs, but
+	  of course it does happen in reality. It is also a prerequisite for
+	  the second. Subchunk processing allows us to cut chunks in small
+	  pieces and process each of these pieces separately. This is
+	  required because I've seen several AVI files with incredibly large
+	  audio chunks, even some files with only one audio chunk for the
+	  whole file. This allows for proper playback including seeking.
+	  This patch is supposed to fix all AVI A/V sync issues.
+	* gst/flx/gstflxdec.c: (gst_flxdec_class_init),
+	(flx_decode_chunks), (flx_decode_color), (gst_flxdec_loop):
+	  Work.
+	* gst/modplug/gstmodplug.cc:
+	  Proper return value setting for the query() function.
+	* gst/playback/gstplaybasebin.c: (setup_source):
+	  Being in non-playing state (after, e.g., EOS) is not necessarily
+	  a bad thing. Allow for that. This fixes playback of short files.
+	  They don't actually playback fully now, because the clock already
+	  runs. This means that small files (<500kB) with a small length
+	  (<2sec) will still not or barely play. Other files, such as mod
+	  or flx, will work correctly, however.
+
 2004-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* ext/speex/gstspeex.c: (plugin_init):
