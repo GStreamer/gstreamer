@@ -37,7 +37,7 @@ tmpl_sources =				\
 	tmpl/gsttype.sgml		\
 	tmpl/gstutils.sgml		\
 	tmpl/gstxml.sgml		\
-	tmpl/plugin.sgml		\
+	tmpl/plugin.sgml		
 
 SCANOBJS_FILES =		\
 	$(DOC_MODULE).signals	\
