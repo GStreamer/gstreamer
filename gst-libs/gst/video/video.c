@@ -43,7 +43,7 @@ gst_video_frame_rate (GstPad *pad)
 
   fps = ((gdouble) dest_value) / NUM_UNITS;
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS, "Framerate request on pad %s:%s - %lf fps",
+  GST_DEBUG(GST_CAT_ELEMENT_PADS, "Framerate request on pad %s:%s - %f fps",
 		GST_ELEMENT_NAME(gst_pad_get_parent (pad)), GST_PAD_NAME(pad), fps);
 
   return fps;
