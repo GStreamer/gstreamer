@@ -41,10 +41,14 @@ target_drag_data_received  (GtkWidget          *widget,
                             gint                y,
                             GtkSelectionData   *data,
                             guint               info,
-                            guint               time)
+                            guint               time,
+			    GstMediaPlay       *play)
 {
   if (strstr (data->data, "file:")) {
-    g_print ("Got: %s\n",data->data);
+    g_print ("Got: %s\n",&data->data[5]);
+    gdk_threads_leave ();
+    gst_media_play_start_uri (play, g_strchomp(&data->data[5])); 
+    gdk_threads_enter ();
   }
 }
 
@@ -166,7 +170,7 @@ gst_media_play_init(GstMediaPlay *mplay)
 	             GDK_ACTION_COPY);
   gtk_signal_connect (GTK_OBJECT (mplay->window), "drag_data_received",
 	              GTK_SIGNAL_FUNC (target_drag_data_received),
-	              NULL);
+	              mplay);
 
   mplay->play = gst_play_new();
 
@@ -240,6 +244,55 @@ gst_media_play_start_uri (GstMediaPlay *play,
     gst_play_play (play->play);
   }
 }
+
+typedef struct {
+  GtkWidget *selection;
+  GstMediaPlay *play;
+} file_select;
+
+static void
+on_load_file_selected (GtkWidget *button,
+		       file_select *data)
+{
+  GtkWidget *selector = data->selection;
+  GstMediaPlay *play = data->play;
+
+  gchar *file_name = gtk_file_selection_get_filename (GTK_FILE_SELECTION(selector));
+  gdk_threads_leave();
+  gst_media_play_start_uri (play, file_name); 
+  gdk_threads_enter();
+
+  g_free (data);
+}
+
+void
+on_open2_activate (GtkWidget *widget,
+                   GstMediaPlay *play)
+{
+  GtkWidget *file_selector;
+  file_select *file_data = g_new0 (file_select, 1);
+
+  file_selector = gtk_file_selection_new("Please select a file to load.");
+
+  file_data->selection = file_selector;
+  file_data->play = play;
+
+  gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION(file_selector)->ok_button),
+                                      "clicked", GTK_SIGNAL_FUNC (on_load_file_selected),
+                                      file_data);
+
+  /* Ensure that the dialog box is destroyed when the user clicks a button. */
+  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selector)->ok_button),
+                                      "clicked", GTK_SIGNAL_FUNC (gtk_widget_destroy),
+                                      (gpointer) file_selector);
+  gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION(file_selector)->cancel_button),
+                                      "clicked", GTK_SIGNAL_FUNC (gtk_widget_destroy),
+                                      (gpointer) file_selector);
+
+  /* Display that dialog */
+  gtk_widget_show (file_selector);
+}
+
 
 static void 
 gst_media_play_set_arg (GtkObject *object,

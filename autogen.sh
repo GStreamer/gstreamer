@@ -2,7 +2,7 @@
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
-package=gstreamer
+package=GStreamer
 srcfile=gst/gstobject.h
 
 (autoconf --version) < /dev/null > /dev/null 2>&1 || {

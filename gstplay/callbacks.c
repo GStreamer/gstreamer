@@ -42,17 +42,6 @@ on_preferences1_activate                      (GtkMenuItem     *menuitem,
 
 }
 
-void
-on_open2_activate                      (GtkMenuItem     *menuitem,
-                                        gpointer         user_data)
-{
-  GladeXML *xml;
-  xml = glade_xml_new(DATADIR "gstmediaplay.glade", "fileselection1");
-  /* connect the signals in the interface */
-  glade_xml_signal_autoconnect(xml);
-  open_file_selection = GTK_FILE_SELECTION(glade_xml_get_widget(xml, "fileselection1"));
-}
-
 void on_about_activate(GtkWidget *widget, gpointer data)
 {
   GladeXML *xml;

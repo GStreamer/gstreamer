@@ -13,6 +13,7 @@
 #undef HAVE_XAUDIO
 #undef HAVE_CSSAUTH
 #undef HAVE_VORBIS
+#undef HAVE_LIBJPEG
 #undef HAVE_NASM
 
 #undef HAVE_ATOMIC_H

@@ -319,7 +319,8 @@ gboolean gst_asyncdisksrc_open_file (GstAsyncDiskSrc *src)
   /* open the file */
   src->fd = open (src->filename, O_RDONLY);
   if (src->fd < 0) {
-    gst_element_error (GST_ELEMENT (src), "opening file");
+    perror ("open");
+    gst_element_error (GST_ELEMENT (src), g_strconcat("opening file \"", src->filename, "\"", NULL));
     return FALSE;
   } else {
     /* find the file length */

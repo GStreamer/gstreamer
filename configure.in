@@ -270,6 +270,13 @@ HAVE_VORBIS=yes
 AC_DEFINE(HAVE_VORBIS),
 HAVE_VORBIS=no, )
 
+dnl Check for libvorbis
+AC_MSG_CHECKING(libjpeg library)
+AC_CHECK_LIB(jpeg, jpeg_set_defaults, 
+HAVE_LIBJPEG=yes 
+AC_DEFINE(HAVE_LIBJPEG),
+HAVE_LIBJPEG=no, )
+
 
 dnl Check for cdparanoia
 AC_MSG_CHECKING(CDparanoia library)
@@ -460,6 +467,7 @@ AM_CONDITIONAL(HAVE_ATOMIC_H,       test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(HAVE_XAUDIO,         test "x$HAVE_XAUDIO" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,        test "x$HAVE_CSSAUTH" = "xyes")
 AM_CONDITIONAL(HAVE_VORBIS,         test "x$HAVE_VORBIS" = "xyes")
+AM_CONDITIONAL(HAVE_LIBJPEG,        test "x$HAVE_LIBJPEG" = "xyes")
 AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
