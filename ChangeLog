@@ -1,5 +1,24 @@
 2004-07-21  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_init),
+	(gst_ogg_demux_get_formats), (gst_ogg_demux_src_query),
+	(gst_ogg_demux_src_event), (gst_ogg_demux_src_convert),
+	(gst_ogg_demux_handle_event), (gst_ogg_demux_seek_before),
+	(_find_chain_get_unknown_part), (_find_streams_check),
+	(gst_ogg_demux_push), (gst_ogg_pad_push):
+	* ext/theora/theoradec.c: (theora_get_formats),
+	(theora_dec_src_convert), (theora_dec_sink_convert),
+	(theora_dec_src_query), (theora_dec_src_event), (theora_dec_event),
+	(theora_dec_chain):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_get_formats),
+	(vorbis_dec_convert), (vorbis_dec_src_query),
+	(vorbis_dec_src_event), (vorbis_dec_event):
+	More seeking fixes, oggdemux now supports seeking to time and
+	uses the downstream element to convert granulepos to time.
+	Seeking in theora-only ogg files now works.
+
+2004-07-21  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoradec.c: (gst_theora_dec_init),
 	(theora_get_formats), (theora_get_event_masks),
 	(theora_get_query_types), (theora_dec_src_convert),
