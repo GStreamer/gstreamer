@@ -247,7 +247,7 @@ GstDebugCategory *_gst_debug_category_new	(gchar *		name,
  * <para>
  * If you define a category for a plugin or a feature of it, name the category 
  * like the feature. So if you wanted to write a "filesrc" element, you would 
- * name the category "filesink". Use lowercase letters only.
+ * name the category "filesrc". Use lowercase letters only.
  * If you define more than one category for the same element, append an 
  * underscore and an identifier to your categories, like this: "filesrc_cache"
  * </para>
