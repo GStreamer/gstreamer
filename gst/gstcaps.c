@@ -486,9 +486,7 @@ gst_caps_append (GstCaps *caps, GstCaps *capstoadd)
 {
   GstCaps *orig = caps;
   
-  g_return_val_if_fail (caps != capstoadd, caps);
-
-  if (caps == NULL)
+  if (caps == NULL || caps == capstoadd)
     return capstoadd;
   
   while (caps->next) {
