@@ -1,0 +1,171 @@
+1) terms
+--------
+
+- the managing container (top half). This is the main thread that
+  will create and control the main_loop.
+
+- the main_loop (bottom half), this is the thread that actually does 
+  the work.
+
+
+
+2) state changes
+================
+
+
+NULL->READY
+-----------
+
+precondition:
+  At this point only the top half exists.
+  flag GST_THREAD_ACTIVE is unset
+
+flow: (TH column 1, BH column 2, ! denotes (possible) thread switch)
+  get mutex
+  pthread create BH
+  wait for spin up (release lock) !
+                                    get mutex
+                                    set flag GST_THREAD_ACTIVE
+			            change state of children to READY (*)
+				    signal TH
+                                  ! wait for commands (release lock)
+  (lock reacquired after wait)
+  unlock mutex
+
+(*) marks a spot that could potentially induce another state change.
+
+
+READY->NULL
+-----------
+
+precondition:
+  BH is waiting for commands.
+  flag GST_THREAD_ACTIVE is set
+
+flow:
+  get mutex
+  set command for BH (NULL)
+  signal for new command
+  wait for ACK (release lock)    !
+                                    (lock reacquired after wait for cmd)
+			            change state of children to NULL (*)
+				    signal TH
+                                    unset flag GST_THREAD_ACTIVE
+				 !  unlock (release lock)
+				 !  exit
+  (lock reacquired after wait)
+  join
+  unlock (release lock)
+
+
+READY->PAUSED
+-------------
+
+precondition:
+  BH is waiting for commands.
+  flag GST_THREAD_ACTIVE is set
+
+flow:
+  get mutex
+  set command for BH (PAUSED)
+  signal for new command
+  wait for ACK (release lock)    !
+                                    (lock reacquired after wait for cmd)
+			            change state of children to READY (*)
+				    signal TH
+                                 !  wait for commands (release lock)
+  (lock reacquired after wait)
+  unlock (release lock)
+
+
+PAUSED->PLAYING
+---------------
+
+precondition:
+  BH is waiting for commands.
+  flag GST_THREAD_ACTIVE is set
+
+flow:
+  get mutex
+  set command for BH (PLAYING)
+  signal for new command
+  wait for ACK (release lock)    !
+                                    (lock reacquired after wait for cmd)
+			            change state of children to PLAYING (*)
+				    set flag GST_THREAD_SPINNING
+				    while (flag SPINNING is set) {
+				      signal TH
+				 !    unlock mutex
+  (lock reacquired after wait)   !
+  unlock (release lock)          !
+				 !    status = iterate()  (*)
+				      lock mutex
+				      if (!status)   // EOS
+				        unset SPINNING flag
+				    }
+				    signal TH
+                                 !  wait for commands (release lock)
+				   
+
+PLAYING->PAUSED
+---------------
+
+precondition:
+  1. either:
+    BH is spinning
+    flag GST_THREAD_ACTIVE is set
+    flag GST_THREAD_SPINNING is set
+  2. or:
+    BH is waiting for commands.
+    flag GST_THREAD_ACTIVE is set
+    flag GST_THREAD_SPINNING is unset
+
+flow:
+
+case 1.
+
+				 !  while (flag SPINNING is set) {
+				 !    signal TH
+                                 !    unlock mutex
+  get mutex                      !
+  set command for BH (PAUSED)    !
+  unset SPINNING flag            !    status = iterate ()
+  signal for new command         !
+  wait for ACK (release lock)    !
+				      lock mutex (reacquired after iteration)
+				      if (!status)   // EOS
+				        unset SPINNING flag
+				    }
+			            if (status) 
+				      change state of children to READY (*) (!EOS)
+				    signal TH
+                                 !  wait for commands (release lock)
+  (lock reacquired after wait)    
+  unlock (release lock)           
+
+case 2.
+
+  get mutex
+  set command for BH (PAUSED)
+  unset SPINNING flag (nop)
+  signal for new command
+  wait for ACK (release lock)    !
+                                    (lock reacquired after wait for cmd)
+			            change state of children to READY (*)
+				    signal TH
+                                 !  wait for commands (release lock)
+  (lock reacquired after wait)
+  unlock (release lock)
+				   
+
+PAUSED->READY
+-------------
+
+similar to READY->PAUSED
+
+TODO
+----
+
+- review
+- figure all all state change scenarios occuring in code marked with (*)
+
