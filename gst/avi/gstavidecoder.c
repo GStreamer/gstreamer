@@ -194,17 +194,17 @@ gst_avi_decoder_new_pad (GstElement *element, GstPad *pad, GstAviDecoder *avi_de
   if (!strcmp (format, "strf_vids")) { 
     targetcaps = gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_video_templ));
     media_type = AVI_TYPE_VIDEO;
-    gpadname = g_strdup_printf ("video_%02d", avi_decoder->count);
+    gpadname = g_strdup_printf ("video_%02d", avi_decoder->video_count++);
   }
   else if (!strcmp (format, "strf_auds")) {
     targetcaps = gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_audio_templ));
     media_type = AVI_TYPE_AUDIO;
-    gpadname = g_strdup_printf ("audio_%02d", avi_decoder->count);
+    gpadname = g_strdup_printf ("audio_%02d", avi_decoder->audio_count++);
   }
   else if (!strcmp (format, "strf_iavs")) {
     targetcaps = gst_padtemplate_get_caps (GST_PADTEMPLATE_GET (src_video_templ));
     media_type = AVI_TYPE_VIDEO;
-    gpadname = g_strdup_printf ("video_%02d", avi_decoder->count);
+    gpadname = g_strdup_printf ("video_%02d", avi_decoder->video_count++);
   }
   else {
     g_assert_not_reached ();
@@ -293,6 +293,8 @@ gst_avi_decoder_init (GstAviDecoder *avi_decoder)
   }
 
   avi_decoder->count = 0;
+  avi_decoder->audio_count = 0;
+  avi_decoder->video_count = 0;
 }
 
 static GstCaps*

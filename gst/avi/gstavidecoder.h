@@ -50,6 +50,8 @@ struct _GstAviDecoder {
 
   GstElement *demuxer;
 
+  gint audio_count;
+  gint video_count;
   gint count;
 };
 
