@@ -92,8 +92,9 @@ gst_y4mencode_get_type (void)
       0,
       (GInstanceInitFunc) gst_y4mencode_init,
     };
+
     y4mencode_type = g_type_register_static (GST_TYPE_ELEMENT,
-	"GstY4mEncode", &y4mencode_info, 0);
+        "GstY4mEncode", &y4mencode_info, 0);
   }
   return y4mencode_type;
 }
@@ -135,9 +136,9 @@ gst_y4mencode_sinkconnect (GstPad * pad, const GstCaps * caps)
   gdouble fps;
   gdouble framerates[] = {
     00.000,
-    23.976, 24.000,		/* 24fps movie */
-    25.000,			/* PAL */
-    29.970, 30.000,		/* NTSC */
+    23.976, 24.000,             /* 24fps movie */
+    25.000,                     /* PAL */
+    29.970, 30.000,             /* NTSC */
     50.000,
     59.940, 60.000
   };
@@ -157,10 +158,10 @@ gst_y4mencode_sinkconnect (GstPad * pad, const GstCaps * caps)
       idx = i;
     } else {
       gdouble old_diff = fabs (framerates[idx] - fps),
-	  new_diff = fabs (framerates[i] - fps);
+          new_diff = fabs (framerates[i] - fps);
 
       if (new_diff < old_diff) {
-	idx = i;
+        idx = i;
       }
     }
   }
