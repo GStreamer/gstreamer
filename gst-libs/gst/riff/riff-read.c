@@ -190,7 +190,7 @@ gst_riff_read_use_event (GstRiffRead * riff, GstEvent * event)
     default:
       GST_WARNING ("don't know how to handle event %d", GST_EVENT_TYPE (event));
       gst_pad_event_default (riff->sinkpad, event);
-      return FALSE;
+      return TRUE;
   }
 
   /* happy */
