@@ -1,6 +1,12 @@
 2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(gst_qtdemux_loop_header), (gst_qtdemux_handle_esds):
+	  More memory leak fixes (#149162).
+
+2005-01-18  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
 	(gst_qtdemux_add_stream):
 	  Fix two memleaks.
 

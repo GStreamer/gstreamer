@@ -524,7 +524,9 @@ gst_qtdemux_change_state (GstElement * element)
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_PAUSED_TO_READY:
+    case GST_STATE_PAUSED_TO_READY:{
+      gint n;
+
       qtdemux->last_ts = GST_CLOCK_TIME_NONE;
       qtdemux->need_discont = FALSE;
       qtdemux->need_flush = FALSE;
@@ -533,7 +535,15 @@ gst_qtdemux_change_state (GstElement * element)
         gst_tag_list_free (qtdemux->tag_list);
         qtdemux->tag_list = NULL;
       }
+      for (n = 0; n < qtdemux->n_streams; n++) {
+        gst_element_remove_pad (element, qtdemux->streams[n]->pad);
+        g_free (qtdemux->streams[n]->samples);
+        gst_caps_free (qtdemux->streams[n]->caps);
+        g_free (qtdemux->streams[n]);
+      }
+      qtdemux->n_streams = 0;
       break;
+    }
     case GST_STATE_READY_TO_NULL:
       break;
     default:
@@ -628,6 +638,9 @@ gst_qtdemux_loop_header (GstElement * element)
             qtdemux_node_dump (qtdemux, qtdemux->moov_node);
           }
           qtdemux_parse_tree (qtdemux);
+          g_node_destroy (qtdemux->moov_node);
+          gst_buffer_unref (moov);
+          qtdemux->moov_node = NULL;
           qtdemux->state = QTDEMUX_STATE_MOVIE;
           break;
         }
@@ -2547,6 +2560,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     gst_caps_set_simple (stream->caps, "codec_data", GST_TYPE_BUFFER,
         buffer, NULL);
+    gst_buffer_unref (buffer);
   }
 }
 
