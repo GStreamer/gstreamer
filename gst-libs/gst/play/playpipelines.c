@@ -20,7 +20,70 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
+/*  
+ *  GST_PLAY_PIPE_AUDIO
+ *  gnomevfssrc ! spider ! volume ! osssink
+ */
+
+static gboolean 
+gst_play_audio_setup (GstPlay *play, GError **error)
+{
+	
+	/* creating gst_bin */
+	play->pipeline = gst_pipeline_new ("main_pipeline");
+	g_return_val_if_fail (GST_IS_PIPELINE (play->pipeline), FALSE);
+
+	/* create source element */
+	play->source = gst_element_factory_make ("gnomevfssrc", "source");
+	if (!play->source)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_GNOMEVFSSRC, error);
+		return FALSE;
+	}
+	
+	/* Adding element to bin */
+	gst_bin_add (GST_BIN (play->pipeline), play->source);
+	
+	/* create audio elements */
+	play->volume = gst_element_factory_make ("volume", "volume");
+	if (!play->volume)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_VOLUME, error);
+		return FALSE;
+	}
+
+	/* creating audio_sink from osssink (?) */
+	play->audio_sink = gst_element_factory_make ("fakesink", "fake_audio");
+	if (play->audio_sink == NULL)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_FAKESINK, error);
+		return FALSE;
+	}
+	
+	g_signal_connect (
+			G_OBJECT (play->audio_sink), "eos",
+			G_CALLBACK (callback_audio_sink_eos), play);
+
+	gst_bin_add_many (
+			GST_BIN (play->pipeline), play->volume,
+			play->audio_sink, NULL);
+	
+	gst_element_connect (play->volume, play->audio_sink);
+	
+	gst_bin_set_pre_iterate_function(
+			GST_BIN (play->pipeline), 
+			(GstBinPrePostIterateFunction) callback_bin_pre_iterate,
+			play->audio_bin_mutex);
+			
+	gst_bin_set_post_iterate_function(
+			GST_BIN (play->pipeline), 
+			(GstBinPrePostIterateFunction) callback_bin_post_iterate,
+			play->audio_bin_mutex);
+
+	return TRUE;
+}
+
 /*
  *  GST_PLAY_PIPE_AUDIO_THREADED
  *  { gnomevfssrc ! spider ! volume ! osssink }
@@ -55,15 +118,13 @@ gst_play_audiot_setup (GstPlay *play, GError **error)
 		return FALSE;
 	}
 
-	/* create audiosink.
-	FIXME : Should use gconf to choose the right one */
-	play->audio_sink = gst_element_factory_make ("osssink", "play_audio");
-	if (!play->audio_sink)
-	  g_warning ("You need the osssink element to use this program.");
-	
-	g_object_set (
-			G_OBJECT (play->audio_sink),
-			"fragment", 0x00180008, NULL);
+	/* creating fake audiosink */
+	play->audio_sink = gst_element_factory_make ("fakesink", "fake_audio");
+	if (play->audio_sink == NULL)
+	{
+		gst_play_error_plugin (GST_PLAY_ERROR_FAKESINK, error);
+		return FALSE;
+	}
 	
 	g_signal_connect (
 			G_OBJECT (play->audio_sink), "eos",
@@ -188,14 +249,11 @@ gst_play_audioht_setup (GstPlay *play, GError **error)
 		return FALSE;
 	}
 
-	/* create audiosink.
-	FIXME : Should use gconf to choose the right one */
-	play->audio_sink = gst_element_factory_make ("osssink", "play_audio");
+	/* create audiosink. */
+	play->audio_sink = gst_element_factory_make ("fakesink", "play_audio");
 	if (!play->audio_sink)
-		g_warning ("You need the osssink element to use this program.\n");
+		g_warning ("You need the fakesink element to use this program.\n");
 
-	g_object_set (G_OBJECT (play->audio_sink), "fragment", 0x00180008, NULL);
-	
 	g_signal_connect (G_OBJECT (play->audio_sink), "eos",
 			  G_CALLBACK (callback_audio_sink_eos), play);
 
