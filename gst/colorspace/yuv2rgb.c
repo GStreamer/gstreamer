@@ -17,18 +17,25 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <math.h>
 #include <stdlib.h>
 
 #include "yuv2rgb.h"
 
-/* #define HAVE_LIBMMX */
+#undef HAVE_LIBMMX
 
 #ifdef HAVE_LIBMMX 
 #include <mmx.h>
 #endif
+
+static int V_r_tab [256];
+static int V_g_tab [256];
+static int U_g_tab [256];
+static int U_b_tab [256];
 
 #define CB_BASE 1
 #define CR_BASE (CB_BASE*CB_RANGE)
@@ -52,215 +59,175 @@
 	                        : Max(-128.0, ((x) * chromaCorrect)))
 
 
-static void gst_colorspace_I420_to_rgb16	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
-static void gst_colorspace_I420_to_rgb24	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
-static void gst_colorspace_I420_to_rgb32	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_I420_to_rgb16	(GstColorspace *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_I420_to_rgb24	(GstColorspace *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_I420_to_rgb32	(GstColorspace *space, unsigned char *src, unsigned char *dest);
 #ifdef HAVE_LIBMMX
-static void gst_colorspace_I420_to_bgr16_mmx	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
-static void gst_colorspace_I420_to_bgr32_mmx	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_I420_to_bgr16_mmx	(GstColorspace *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_I420_to_bgr32_mmx	(GstColorspace *space, unsigned char *src, unsigned char *dest);
 #endif
 
-static void gst_colorspace_YV12_to_rgb16	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
-static void gst_colorspace_YV12_to_rgb24	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
-static void gst_colorspace_YV12_to_rgb32	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_YV12_to_rgb16	(GstColorspace *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_YV12_to_rgb24	(GstColorspace *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_YV12_to_rgb32	(GstColorspace *space, unsigned char *src, unsigned char *dest);
 #ifdef HAVE_LIBMMX
-static void gst_colorspace_YV12_to_bgr16_mmx	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
-static void gst_colorspace_YV12_to_bgr32_mmx	(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_YV12_to_bgr16_mmx	(GstColorspace *space, unsigned char *src, unsigned char *dest);
+void gst_colorspace_YV12_to_bgr32_mmx	(GstColorspace *space, unsigned char *src, unsigned char *dest);
 #endif
 
-static void gst_colorspace_yuv_to_rgb16(GstColorSpaceYUVTables *tables,
+static void
+gst_colorspace_yuv_to_rgb16(GstColorspace *space,
+  unsigned char *out,
+  unsigned char *lum,
+  unsigned char *cr,
+  unsigned char *cb,
+  int cols, int rows);
+static void
+gst_colorspace_yuv_to_rgb24(GstColorspace *space,
+  unsigned char *out,
+  unsigned char *lum,
+  unsigned char *cr,
+  unsigned char *cb,
+  int cols, int rows);
+static void
+gst_colorspace_yuv_to_rgb32(GstColorspace *space,
+  unsigned char *out,
+  unsigned char *lum,
+  unsigned char *cr,
+  unsigned char *cb,
+  int cols, int rows);
+#if 0
+static void gst_colorspace_yuv_to_rgb16(GstColorspaceYUVTables *tables,
 	    				unsigned char *lum,
 	      				unsigned char *cr,
 	        			unsigned char *cb,
 		  			unsigned char *out,
 		    			int cols, int rows);
-static void gst_colorspace_yuv_to_rgb24(GstColorSpaceYUVTables *tables,
+static void gst_colorspace_yuv_to_rgb24(GstColorspaceYUVTables *tables,
 	    				unsigned char *lum,
 	      				unsigned char *cr,
 	        			unsigned char *cb,
 		  			unsigned char *out,
 		    			int cols, int rows);
-static void gst_colorspace_yuv_to_rgb32(GstColorSpaceYUVTables *tables,
+static void gst_colorspace_yuv_to_rgb32(GstColorspaceYUVTables *tables,
 	    				unsigned char *lum,
 	      				unsigned char *cr,
 	        			unsigned char *cb,
 		  			unsigned char *out,
 		    			int cols, int rows);
 #ifdef HAVE_LIBMMX
-static void gst_colorspace_yuv_to_bgr32_mmx(GstColorSpaceYUVTables *tables,
+void gst_colorspace_yuv_to_bgr32_mmx(GstColorspaceYUVTables *tables,
 	    				unsigned char *lum,
 	      				unsigned char *cr,
 	        			unsigned char *cb,
 		  			unsigned char *out,
 		    			int cols, int rows);
-extern void gst_colorspace_yuv_to_bgr16_mmx(GstColorSpaceYUVTables *tables,
+extern void gst_colorspace_yuv_to_bgr16_mmx(GstColorspaceYUVTables *tables,
 	    				unsigned char *lum,
 	      				unsigned char *cr,
 	        			unsigned char *cb,
 		  			unsigned char *out,
 		    			int cols, int rows);
 #endif
+#endif
 
-static GstColorSpaceYUVTables * gst_colorspace_init_yuv(long depth, 
-						long red_mask, long green_mask, long blue_mask);
+#define ROUND_UP_2(x)  (((x)+1)&~1)
+#define ROUND_UP_4(x)  (((x)+3)&~3)
+#define ROUND_UP_8(x)  (((x)+7)&~7)
 
-GstColorSpaceConverter* 
-gst_colorspace_yuv2rgb_get_converter (const GstCaps *from, const GstCaps *to) 
+
+void gst_colorspace_I420_to_rgb32(GstColorspace *space, unsigned char *dest,
+    unsigned char *src) 
 {
-  guint32 from_space;
-  GstColorSpaceConverter *new;
-  gint to_bpp;
-  GstStructure *struct_from, *struct_to;
-  
-  GST_DEBUG ("gst_colorspace_yuv2rgb_get_converter");
+  unsigned char *src_U;
+  unsigned char *src_V;
 
-  new = g_malloc (sizeof (GstColorSpaceConverter));
+  src_U = src + ROUND_UP_4 (space->width) * ROUND_UP_2 (space->height);
+  src_V = src_U + ROUND_UP_8 (space->width)/2 * ROUND_UP_2 (space->height)/2;
 
-  struct_from = gst_caps_get_structure (from, 0);
-  struct_to = gst_caps_get_structure (to, 0);
-
-  gst_structure_get_int (struct_from, "width", &new->width);
-  gst_structure_get_int (struct_from, "height", &new->height);
-  new->color_tables = NULL;
-
-  gst_structure_get_fourcc (struct_from, "format", &from_space);
-  gst_structure_get_int  (struct_to, "bpp", &to_bpp);
-
-  /* FIXME we leak new here. */
-
-  switch(from_space) {
-    case GST_MAKE_FOURCC ('Y','V','1','2'):
-    case GST_MAKE_FOURCC ('I','4','2','0'):
-    {
-      gint red_mask;
-      gint green_mask;
-      gint blue_mask;
-
-      gst_structure_get_int (struct_to, "red_mask",   &red_mask);
-      gst_structure_get_int (struct_to, "green_mask", &green_mask);
-      gst_structure_get_int (struct_to, "blue_mask",  &blue_mask);
-
-      GST_INFO ( "red_mask    %08x", red_mask);
-      GST_INFO ( "green_mask  %08x", green_mask);
-      GST_INFO ( "blue_mask   %08x", blue_mask);
-
-      new->insize 	   = new->width * new->height + new->width * new->height/2;
-      new->color_tables    = gst_colorspace_init_yuv (to_bpp, red_mask, green_mask, blue_mask);
-      new->outsize 	   = new->width * new->height * (to_bpp/8);
-
-      switch(to_bpp) {
-        case 32:
-#ifdef HAVE_LIBMMX
-	  if (red_mask == 0xff0000 && green_mask == 0x00ff00 && blue_mask == 0x0000ff &&
-			  (gst_cpu_get_flags () & GST_CPU_FLAG_MMX) ) {
-	    if (from_space == GST_STR_FOURCC ("I420"))
-              new->convert =  gst_colorspace_I420_to_bgr32_mmx;
-	    else
-              new->convert =  gst_colorspace_YV12_to_bgr32_mmx;
-	  }
-	  else
-#endif
-	    if (from_space == GST_STR_FOURCC ("I420"))
-              new->convert =  gst_colorspace_I420_to_rgb32;
-	    else
-              new->convert =  gst_colorspace_YV12_to_rgb32;
-	  break;
-        case 24:
-	  if (from_space == GST_STR_FOURCC ("I420"))
-            new->convert =  gst_colorspace_I420_to_rgb24;
-	  else
-            new->convert =  gst_colorspace_YV12_to_rgb24;
-	  break;
-        case 15:
-        case 16:
-#ifdef HAVE_LIBMMX
-	  if (red_mask == 0xf800 && green_mask == 0x07e0 && blue_mask == 0x001f &&
-			  (gst_cpu_get_flags () & GST_CPU_FLAG_MMX) ) {
-	    if (from_space == GST_STR_FOURCC ("I420"))
-              new->convert =  gst_colorspace_I420_to_bgr16_mmx;
-	    else
-              new->convert =  gst_colorspace_YV12_to_bgr16_mmx;
-	  }
-	  else
-#endif
-	    if (from_space == GST_STR_FOURCC ("I420"))
-              new->convert =  gst_colorspace_I420_to_rgb16;
-	    else
-              new->convert =  gst_colorspace_YV12_to_rgb16;
-	  break;
-	default:
-          g_print("gst_colorspace_yuv2rgb not implemented\n");
-	  g_free (new);
-	  new = NULL;
-      }
-      break;
-    }
-    default:
-      g_print("gst_colorspace_yuv2rgb not implemented\n");
-      g_free (new);
-      new = NULL;
-  }
-  return new;
+  gst_colorspace_yuv_to_rgb32(space,
+      dest,
+      src, src_U, src_V,
+      space->width, space->height);
 }
 
-void 
-gst_colorspace_converter_destroy (GstColorSpaceConverter *conv) 
+void gst_colorspace_I420_to_rgb24(GstColorspace *space, unsigned char *dest,
+    unsigned char *src) 
 {
-  if (conv)
-    g_free (conv);
+  unsigned char *src_U;
+  unsigned char *src_V;
+
+  src_U = src + ROUND_UP_4 (space->width) * ROUND_UP_2 (space->height);
+  src_V = src_U + ROUND_UP_8 (space->width)/2 * ROUND_UP_2 (space->height)/2;
+
+  gst_colorspace_yuv_to_rgb24(space,
+      dest,
+      src, src_U, src_V,
+      space->width, space->height);
 }
 
-static void gst_colorspace_I420_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 
+void gst_colorspace_I420_to_rgb16(GstColorspace *space, unsigned char *dest,
+    unsigned char *src) 
 {
-  int size;
-  GST_DEBUG ("gst_colorspace_I420_to_rgb32");
+  unsigned char *src_U;
+  unsigned char *src_V;
 
-  size = space->width * space->height;
+  src_U = src + ROUND_UP_4 (space->width) * ROUND_UP_2 (space->height);
+  src_V = src_U + ROUND_UP_8 (space->width)/2 * ROUND_UP_2 (space->height)/2;
 
-  gst_colorspace_yuv_to_rgb32(space->color_tables,
-			src,                                  	/* Y component */
-                        src+size,     				/* cr component */
-			src+size+(size>>2),		   	/* cb component */
-                        dest,
-			space->height,
-			space->width);
-
+  gst_colorspace_yuv_to_rgb16(space,
+      dest,
+      src, src_U, src_V,
+      space->width, space->height);
 }
 
-static void gst_colorspace_I420_to_rgb24(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
-  int size;
-  GST_DEBUG ("gst_colorspace_I420_to_rgb24");
+void gst_colorspace_YV12_to_rgb32(GstColorspace *space, unsigned char *dest,
+    unsigned char *src) 
+{
+  unsigned char *src_U;
+  unsigned char *src_V;
 
-  size = space->width * space->height;
+  src_V = src + ROUND_UP_4 (space->width) * ROUND_UP_2 (space->height);
+  src_U = src_V + ROUND_UP_8 (space->width)/2 * ROUND_UP_2 (space->height)/2;
 
-  gst_colorspace_yuv_to_rgb24(space->color_tables,
-			src,                                  	/* Y component */
-                        src+size,     				/* cr component */
-			src+size+(size>>2),		   	/* cb component */
-                        dest,
-			space->height,
-			space->width);
-
+  gst_colorspace_yuv_to_rgb32(space,
+      dest,
+      src, src_U, src_V,
+      space->width, space->height);
 }
 
-static void gst_colorspace_I420_to_rgb16(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
-  int size;
-  GST_DEBUG ("gst_colorspace_I420_to_rgb16");
+void gst_colorspace_YV12_to_rgb24(GstColorspace *space, unsigned char *dest,
+    unsigned char *src) 
+{
+  unsigned char *src_U;
+  unsigned char *src_V;
 
-  size = space->width * space->height;
+  src_V = src + ROUND_UP_4 (space->width) * ROUND_UP_2 (space->height);
+  src_U = src_V + ROUND_UP_8 (space->width)/2 * ROUND_UP_2 (space->height)/2;
 
-  gst_colorspace_yuv_to_rgb16(space->color_tables,
-			src,                                  	/* Y component */
-                        src+size,     				/* cr component */
-			src+size+(size>>2),		   	/* cb component */
-                        dest,
-			space->height,
-			space->width);
+  gst_colorspace_yuv_to_rgb24(space,
+      dest,
+      src, src_U, src_V,
+      space->width, space->height);
+}
 
+void gst_colorspace_YV12_to_rgb16(GstColorspace *space, unsigned char *dest,
+    unsigned char *src) 
+{
+  unsigned char *src_U;
+  unsigned char *src_V;
+
+  src_V = src + ROUND_UP_4 (space->width) * ROUND_UP_2 (space->height);
+  src_U = src_V + ROUND_UP_8 (space->width)/2 * ROUND_UP_2 (space->height)/2;
+
+  gst_colorspace_yuv_to_rgb16(space,
+      dest,
+      src, src_U, src_V,
+      space->width, space->height);
 }
 
 #ifdef HAVE_LIBMMX
-static void gst_colorspace_I420_to_bgr32_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
+void gst_colorspace_I420_to_bgr32_mmx(GstColorspace *space, unsigned char *src, unsigned char *dest) {
   int size;
   GST_DEBUG ("gst_colorspace_I420_to_rgb32_mmx");
 
@@ -275,7 +242,8 @@ static void gst_colorspace_I420_to_bgr32_mmx(GstColorSpaceConverter *space, unsi
 			space->width);
 
 }
-static void gst_colorspace_I420_to_bgr16_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
+
+void gst_colorspace_I420_to_bgr16_mmx(GstColorspace *space, unsigned char *src, unsigned char *dest) {
   int size;
   GST_DEBUG ("gst_colorspace_I420_to_bgr16_mmx ");
 
@@ -291,60 +259,8 @@ static void gst_colorspace_I420_to_bgr16_mmx(GstColorSpaceConverter *space, unsi
   GST_DEBUG ("gst_colorspace_I420_to_bgr16_mmx done");
 
 }
-#endif
 
-
-static void gst_colorspace_YV12_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 
-{
-  int size;
-  GST_DEBUG ("gst_colorspace_YV12_to_rgb32");
-
-  size = space->width * space->height;
-
-  gst_colorspace_yuv_to_rgb32(space->color_tables,
-			src,                                  	/* Y component */
-			src+size+(size>>2),		   	/* cb component */
-                        src+size,     				/* cr component */
-                        dest,
-			space->height,
-			space->width);
-
-}
-
-static void gst_colorspace_YV12_to_rgb24(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
-  int size;
-  GST_DEBUG ("gst_colorspace_YV12_to_rgb24");
-
-  size = space->width * space->height;
-
-  gst_colorspace_yuv_to_rgb24(space->color_tables,
-			src,                                  	/* Y component */
-			src+size+(size>>2),		   	/* cb component */
-                        src+size,     				/* cr component */
-                        dest,
-			space->height,
-			space->width);
-
-}
-
-static void gst_colorspace_YV12_to_rgb16(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
-  int size;
-  GST_DEBUG ("gst_colorspace_YV12_to_rgb16");
-
-  size = space->width * space->height;
-
-  gst_colorspace_yuv_to_rgb16(space->color_tables,
-			src,                                  	/* Y component */
-			src+size+(size>>2),		   	/* cb component */
-                        src+size,     				/* cr component */
-                        dest,
-			space->height,
-			space->width);
-
-}
-
-#ifdef HAVE_LIBMMX
-static void gst_colorspace_YV12_to_bgr32_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
+void gst_colorspace_YV12_to_bgr32_mmx(GstColorspace *space, unsigned char *src, unsigned char *dest) {
   int size;
   GST_DEBUG ("gst_colorspace_YV12_to_rgb32_mmx");
 
@@ -359,7 +275,8 @@ static void gst_colorspace_YV12_to_bgr32_mmx(GstColorSpaceConverter *space, unsi
 			space->width);
 
 }
-static void gst_colorspace_YV12_to_bgr16_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
+
+void gst_colorspace_YV12_to_bgr16_mmx(GstColorspace *space, unsigned char *src, unsigned char *dest) {
   int size;
   GST_DEBUG ("gst_colorspace_YV12_to_bgr16_mmx ");
 
@@ -436,21 +353,33 @@ unsigned long a;
  *--------------------------------------------------------------
  */
 
-static GstColorSpaceYUVTables *
-gst_colorspace_init_yuv(long depth, long red_mask, long green_mask, long blue_mask)
+void
+gst_colorspace_table_init (GstColorspace *space)
 {
+  int i;
+
+  for (i=0; i<256; i++) {
+    V_r_tab[i] =  (0.419/0.299) * (i-128);
+    V_g_tab[i] = -(0.299/0.419) * (i-128);
+    U_g_tab[i] = -(0.114/0.331) * (i-128);
+    U_b_tab[i] =  (0.587/0.331) * (i-128);
+  }
+#if 0
     int CR, CB, i;
     int *L_tab, *Cr_r_tab, *Cr_g_tab, *Cb_g_tab, *Cb_b_tab;
     long *r_2_pix_alloc;
     long *g_2_pix_alloc;
     long *b_2_pix_alloc;
-    GstColorSpaceYUVTables *tables = g_malloc(sizeof(GstColorSpaceYUVTables));
+    long depth = 32;
+    long red_mask = 0xff0000;
+    long green_mask = 0x00ff00;
+    long blue_mask = 0x0000ff;
 
-    L_tab    = tables->L_tab = (int *)malloc(256*sizeof(int)); 
-    Cr_r_tab = tables->Cr_r_tab = (int *)malloc(256*sizeof(int));
-    Cr_g_tab = tables->Cr_g_tab = (int *)malloc(256*sizeof(int));
-    Cb_g_tab = tables->Cb_g_tab = (int *)malloc(256*sizeof(int));
-    Cb_b_tab = tables->Cb_b_tab = (int *)malloc(256*sizeof(int));
+    L_tab    = space->L_tab = (int *)malloc(256*sizeof(int)); 
+    Cr_r_tab = space->Cr_r_tab = (int *)malloc(256*sizeof(int));
+    Cr_g_tab = space->Cr_g_tab = (int *)malloc(256*sizeof(int));
+    Cb_g_tab = space->Cb_g_tab = (int *)malloc(256*sizeof(int));
+    Cb_b_tab = space->Cb_b_tab = (int *)malloc(256*sizeof(int));
 
     r_2_pix_alloc = (long *)malloc(768*sizeof(long));
     g_2_pix_alloc = (long *)malloc(768*sizeof(long));
@@ -546,234 +475,100 @@ gst_colorspace_init_yuv(long depth, long red_mask, long green_mask, long blue_ma
       b_2_pix_alloc[i+ 512] = b_2_pix_alloc[511];
     }
 
-    tables->r_2_pix = r_2_pix_alloc + 256;
-    tables->g_2_pix = g_2_pix_alloc + 256;
-    tables->b_2_pix = b_2_pix_alloc + 256;
-
-    return tables;
-
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Color16DitherImage --
- *
- *	Converts image into 16 bit color.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------
- */
-
-static void
-gst_colorspace_yuv_to_rgb16(tables, lum, cb, cr, out, rows, cols)
-  GstColorSpaceYUVTables *tables;
-  unsigned char *lum;
-  unsigned char *cr;
-  unsigned char *cb;
-  unsigned char *out;
-  int cols, rows;
-
-{
-    int L, CR, CB;
-    unsigned short *row1, *row2;
-    unsigned char *lum2;
-    int x, y;
-    int cr_r;
-    int crb_g;
-    int cb_b;
-    int cols_2 = cols>>1;
-
-    row1 = (unsigned short *)out;
-    row2 = row1 + cols;
-    lum2 = lum + cols;
-
-    for (y=rows>>1; y; y--) {
-	for (x=cols_2; x; x--) {
-
-	    CR = *cr++;
-	    CB = *cb++;
-	    cr_r = tables->Cr_r_tab[CR];
-	    crb_g = tables->Cr_g_tab[CR] + tables->Cb_g_tab[CB];
-	    cb_b = tables->Cb_b_tab[CB];
-
-            L = tables->L_tab[(int) *lum++];
-
-	    *row1++ = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-
-            L = tables->L_tab[(int) *lum++];
-
-	    *row1++ = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-
-	    /*
-	     * Now, do second row.
-	     */
-	    L = tables->L_tab[(int) *lum2++];
-
-	    *row2++ = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-
-	    L = tables->L_tab[(int) *lum2++];
-
-	    *row2++ = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-	}
-        /*
-         * These values are at the start of the next line, (due
-         * to the ++'s above),but they need to be at the start
-         * of the line after that.
-         */
-	lum = lum2;
-	row1 = row2;
-	lum2 += cols;
-	row2 += cols;
-    }
+    space->r_2_pix = r_2_pix_alloc + 256;
+    space->g_2_pix = g_2_pix_alloc + 256;
+    space->b_2_pix = b_2_pix_alloc + 256;
+#endif
 }
 
 static void
-gst_colorspace_yuv_to_rgb24(tables, lum, cb, cr, out, rows, cols)
-  GstColorSpaceYUVTables *tables;
-  unsigned char *lum;
-  unsigned char *cr;
-  unsigned char *cb;
-  unsigned char *out;
-  int cols, rows;
-
+gst_colorspace_yuv_to_rgb32(GstColorspace *space,
+  unsigned char *dest,
+  unsigned char *Y,
+  unsigned char *U,
+  unsigned char *V,
+  int width, int height)
 {
-    int L, CR, CB;
-    unsigned char *row1, *row2;
-    unsigned char *lum2;
-    int x, y;
-    int cr_r;
-    int crb_g;
-    int cb_b;
-    int cols_2 = cols>>1;
-    int cols_3 = cols*3;
-    unsigned char pixels[4];
+  int x,y;
+  int src_rowstride;
+  int dest_rowstride;
 
-    row1 = out;
-    row2 = row1 + cols_3;
-    lum2 = lum + cols;
-    for (y=rows>>1; y; y--) {
-	for (x=cols_2; x; x--) {
-
-	    CR = *cr++;
-	    CB = *cb++;
-	    cr_r = tables->Cr_r_tab[CR];
-	    crb_g = tables->Cr_g_tab[CR] + tables->Cb_g_tab[CB];
-	    cb_b = tables->Cb_b_tab[CB];
-
-            L = tables->L_tab[(int) *lum++];
-
-	    ((int *)pixels)[0] = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-	    *row1++ = pixels[0]; *row1++ = pixels[1]; *row1++ = pixels[2];
-
-            L = tables->L_tab[(int) *lum++];
-
-	    ((int *)pixels)[0] = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-	    *row1++ = pixels[0]; *row1++ = pixels[1]; *row1++ = pixels[2];
-
-	    /*
-	     * Now, do second row.
-	     */
-
-	    L = tables->L_tab [(int) *lum2++];
-
-	    ((int *)pixels)[0] = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-	    *row2++ = pixels[0]; *row2++ = pixels[1]; *row2++ = pixels[2];
-
-	    L = tables->L_tab [(int) *lum2++];
-
-	    ((int *)pixels)[0] = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-	    *row2++ = pixels[0]; *row2++ = pixels[1]; *row2++ = pixels[2];
-	}
-	lum = lum2;
-	row1 = row2;
-	lum2 += cols;
-	row2 += cols_3;
+  src_rowstride = ROUND_UP_4 (space->width);
+  dest_rowstride = width * 4;
+  for(y=0;y<height;y++){
+    for(x=0;x<width;x++){
+      dest[x*4 + 0] = 0;
+      dest[x*3 + 1] = CLAMP (Y[x] + V_r_tab[V[x/2]], 0, 255);
+      dest[x*3 + 2] = CLAMP (Y[x] + U_g_tab[U[x/2]] + V_g_tab[V[x/2]], 0, 255);
+      dest[x*3 + 3] = CLAMP (Y[x] + U_b_tab[U[x/2]], 0, 255);
     }
+    Y += src_rowstride;
+    dest += dest_rowstride;
+    if (y&1) {
+      U += src_rowstride/2;
+      V += src_rowstride/2;
+    }
+  }
 }
 
-/*
- *--------------------------------------------------------------
- *
- * Color32DitherImage --
- *
- *	Converts image into 32 bit color (or 24-bit non-packed).
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------
- */
+static void
+gst_colorspace_yuv_to_rgb24(GstColorspace *space,
+  unsigned char *dest,
+  unsigned char *Y,
+  unsigned char *U,
+  unsigned char *V,
+  int width, int height)
+{
+  int x,y;
+  int src_rowstride;
+  int dest_rowstride;
 
-/*
- * This is a copysoft version of the function above with ints instead
- * of shorts to cause a 4-byte pixel size
- */
+  src_rowstride = ROUND_UP_4 (space->width);
+  dest_rowstride = ROUND_UP_4 (width * 3);
+  for(y=0;y<height;y++){
+    for(x=0;x<width;x++){
+      dest[x*3 + 0] = CLAMP (Y[x] + V_r_tab[V[x/2]], 0, 255);
+      dest[x*3 + 1] = CLAMP (Y[x] + U_g_tab[U[x/2]] + V_g_tab[V[x/2]], 0, 255);
+      dest[x*3 + 2] = CLAMP (Y[x] + U_b_tab[U[x/2]], 0, 255);
+    }
+    Y += src_rowstride;
+    dest += dest_rowstride;
+    if (y&1) {
+      U += src_rowstride/2;
+      V += src_rowstride/2;
+    }
+  }
+}
 
 static void
-gst_colorspace_yuv_to_rgb32(tables, lum, cb, cr, out, rows, cols)
-  GstColorSpaceYUVTables *tables;
-  unsigned char *lum;
-  unsigned char *cr;
-  unsigned char *cb;
-  unsigned char *out;
-  int cols, rows;
-
+gst_colorspace_yuv_to_rgb16(GstColorspace *space,
+  unsigned char *dest,
+  unsigned char *Y,
+  unsigned char *U,
+  unsigned char *V,
+  int width, int height)
 {
-    int L, CR, CB;
-    unsigned int *row1, *row2;
-    unsigned char *lum2;
-    int x, y;
-    int cr_r;
-    int crb_g;
-    int cb_b;
-    int cols_2 = cols>>1;
+  int x,y;
+  int src_rowstride;
+  int dest_rowstride;
+  int r, g, b;
 
-    row1 = (guint32  *)out;
-    row2 = row1 + cols;
-    lum2 = lum + cols;
-    for (y=rows>>1; y; y--) {
-	for (x=cols_2; x; x--) {
-
-	    CR = *cr++;
-	    CB = *cb++;
-	    cr_r = tables->Cr_r_tab[CR];
-	    crb_g = tables->Cr_g_tab[CR] + tables->Cb_g_tab[CB];
-	    cb_b = tables->Cb_b_tab[CB];
-
-            L = tables->L_tab[(int) *lum++];
-
-	    *row1++ = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-
-            L = tables->L_tab[(int) *lum++];
-
-	    *row1++ = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-
-	    /*
-	     * Now, do second row.
-	     */
-
-	    L = tables->L_tab [(int) *lum2++];
-
-	    *row2++ = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-
-	    L = tables->L_tab [(int) *lum2++];
-
-	    *row2++ = (tables->r_2_pix[L+cr_r] | tables->g_2_pix[L+crb_g] | tables->b_2_pix[L+cb_b]);
-	}
-	lum = lum2;
-	row1 = row2;
-	lum2 += cols;
-	row2 += cols;
+  src_rowstride = ROUND_UP_4 (space->width);
+  dest_rowstride = ROUND_UP_4 (width * 2);
+  for(y=0;y<height;y++){
+    for(x=0;x<width;x++){
+      r = CLAMP (Y[x] + V_r_tab[V[x/2]], 0, 255);
+      g = CLAMP (Y[x] + U_g_tab[U[x/2]] + V_g_tab[V[x/2]], 0, 255);
+      b = CLAMP (Y[x] + U_b_tab[U[x/2]], 0, 255);
+      *(unsigned short *)(dest + x*2) = ((r&0xf8)<<8) | ((g&0xfc)<<3) | (b>>3);
     }
+    Y += src_rowstride;
+    dest += dest_rowstride;
+    if (y&1) {
+      U += src_rowstride/2;
+      V += src_rowstride/2;
+    }
+  }
 }
 
 #ifdef HAVE_LIBMMX
@@ -789,7 +584,7 @@ static mmx_t MMX32_Vgrncoeff     = (mmx_t)(long long)0xffd2ffd2ffd2ffd2LL;
 
 static void
 gst_colorspace_yuv_to_bgr32_mmx(tables, lum, cr, cb, out, rows, cols)
-  GstColorSpaceYUVTables *tables;
+  GstColorspaceYUVTables *tables;
   unsigned char *lum;
   unsigned char *cr;
   unsigned char *cb;

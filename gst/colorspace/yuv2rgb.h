@@ -23,10 +23,14 @@
 #define __YUV2RGB_H__
 
 #include <gst/gst.h>
+#include <gstcolorspace.h>
 
-typedef struct _GstColorSpaceYUVTables GstColorSpaceYUVTables;
+G_BEGIN_DECLS
 
-struct _GstColorSpaceYUVTables {
+#if 0
+typedef struct _GstColorspaceYUVTables GstColorspaceYUVTables;
+
+struct _GstColorspaceYUVTables {
   int gammaCorrectFlag;
   double gammaCorrect;
   int chromaCorrectFlag;
@@ -45,24 +49,49 @@ struct _GstColorSpaceYUVTables {
 };
 
 
-typedef struct _GstColorSpaceConverter GstColorSpaceConverter;
-typedef void (*GstColorSpaceConvertFunction) (GstColorSpaceConverter *space, guchar *src, guchar *dest);
+typedef struct _GstColorspaceConverter GstColorspaceConverter;
+typedef void (*GstColorspaceConvertFunction) (GstColorspaceConverter *space, guchar *src, guchar *dest);
 
-struct _GstColorSpaceConverter {
+struct _GstColorspaceConverter {
   guint width;
   guint height;
   guint insize;
   guint outsize;
   /* private */
-  GstColorSpaceYUVTables *color_tables;
-  GstColorSpaceConvertFunction convert;
+  GstColorspaceYUVTables *color_tables;
+  GstColorspaceConvertFunction convert;
 };
+#endif
+
+void gst_colorspace_table_init (GstColorspace *space);
+
+void gst_colorspace_I420_to_rgb32(GstColorspace *space,
+    unsigned char *src, unsigned char *dest);
+void gst_colorspace_I420_to_rgb24(GstColorspace *space,
+    unsigned char *src, unsigned char *dest);
+void gst_colorspace_I420_to_rgb16(GstColorspace *space,
+    unsigned char *src, unsigned char *dest);
+void gst_colorspace_YV12_to_rgb32(GstColorspace *space,
+    unsigned char *src, unsigned char *dest);
+void gst_colorspace_YV12_to_rgb24(GstColorspace *space,
+    unsigned char *src, unsigned char *dest);
+void gst_colorspace_YV12_to_rgb16(GstColorspace *space,
+    unsigned char *src, unsigned char *dest);
+
+#if 0
+GstColorspaceYUVTables * gst_colorspace_init_yuv(long depth,
+    long red_mask, long green_mask, long blue_mask);
+#endif
 
 
-GstColorSpaceConverter* 	gst_colorspace_yuv2rgb_get_converter	(const GstCaps *from, const GstCaps *to);
+#if 0
+GstColorspaceConverter* 	gst_colorspace_yuv2rgb_get_converter	(const GstCaps *from, const GstCaps *to);
 #define 			gst_colorspace_convert(converter, src, dest) \
 								(converter)->convert((converter), (src), (dest))
-void 				gst_colorspace_converter_destroy	(GstColorSpaceConverter *space);
+void 				gst_colorspace_converter_destroy	(GstColorspaceConverter *space);
+#endif
+
+G_END_DECLS
 
 #endif
 

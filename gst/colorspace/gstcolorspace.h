@@ -17,25 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-#ifndef __GST_COLORSPACE_H__
-#define __GST_COLORSPACE_H__
-
+#ifndef _GST_COLORSPACE_H_
+#define _GST_COLORSPACE_H_
 
 #include <gst/gst.h>
-#include "yuv2rgb.h"
 
-#ifdef HAVE_HERMES
-#  include <Hermes/Hermes.h>
-#endif
-
-/* #include <gst/meta/audioraw.h> */
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_COLORSPACE \
   (gst_colorspace_get_type())
@@ -66,21 +53,19 @@ struct _GstColorspace {
 
   GstPad *sinkpad,*srcpad;
 
-#ifdef HAVE_HERMES
-  HermesHandle h_handle;
-  HermesFormat source, dest;
-#endif
+  int converter_index;
 
-  GstColorSpaceConverter *converter;
+  int src_format_index;
+  int sink_format_index;
 
-  GstColorSpaceConverterType type;
+  int src_size;
+  int sink_size;
+  
+  int src_stride;
+  int sink_stride;
+
   gint width, height;
   gdouble fps;
-  gint srcbpp, destbpp;
-  gboolean passthru;
-
-  GstCaps *sinkcaps;
-  GstCaps *srccaps;
 };
 
 struct _GstColorspaceClass {
@@ -89,9 +74,26 @@ struct _GstColorspaceClass {
 
 GType gst_colorspace_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+typedef struct _GstColorspaceFormat {
+  GstStaticCaps caps;
 
+} GstColorspaceFormat;
 
-#endif /* __GST_COLORSPACE_H */
+typedef enum {
+  GST_COLORSPACE_I420,
+  GST_COLORSPACE_YV12,
+  GST_COLORSPACE_RGB32,
+  GST_COLORSPACE_RGB24,
+  GST_COLORSPACE_RGB16,
+} GstColorSpaceFormatType;
+
+typedef struct _GstColorspaceConverter {
+  GstColorSpaceFormatType from;
+  GstColorSpaceFormatType to;
+  void (*convert) (GstColorspace *colorspace, unsigned char *dest, unsigned char *src);
+} GstColorspaceConverter;
+
+G_END_DECLS
+
+#endif
+
