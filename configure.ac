@@ -495,12 +495,11 @@ GST_CHECK_LIBHEADER(LIBHERMES, Hermes, Hermes_ConverterInstance, , Hermes/Hermes
 ], AC_SUBST(LIBHERMES_LIBS))
 
 dnl *** lame ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBLAME, true)
-GST_CHECK_FEATURE(LIBLAME, [lame mp3 encoder library], lame, [
-GST_CHECK_LIBHEADER(LIBLAME, mp3lame, lame_init, -lm, lame/lame.h, LIBLAME_LIBS="-lmp3lame")
+translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
+GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
+GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h, LAME_LIBS="-lmp3lame")
 ])
-
-dnl AC_SUBST(HAVE_LIBLAME)
+AC_SUBST(LAME_LIBS)
 
 dnl *** libdv ***
 dnl FIXME : check if those GLIB thingies are ok
@@ -1021,7 +1020,6 @@ AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
 AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
-AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_A52DEC,         test "x$HAVE_A52DEC" = "xyes")
@@ -1143,6 +1141,7 @@ sys/vga/Makefile
 sys/xvideo/Makefile
 ext/Makefile
 ext/esd/Makefile
+ext/lame/Makefile
 ext/mad/Makefile
 ext/sdl/Makefile
 ext/vorbis/Makefile
