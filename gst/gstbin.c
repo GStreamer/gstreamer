@@ -1,4 +1,5 @@
 /* GStreamer
+ * 
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
@@ -398,6 +399,10 @@ gst_bin_add (GstBin *bin, GstElement *element)
  * @element: #GstElement to remove
  *
  * Remove the element from its associated bin, unparenting as well.
+ * The element will also be unreferenced so there's no need to call
+ * gst_object_unref on it.
+ * If you want the element to still exist after removing, you need to call
+ * #gst_object_ref before removing it from the bin.
  */
 void
 gst_bin_remove (GstBin *bin, GstElement *element)
