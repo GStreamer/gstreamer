@@ -89,7 +89,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       "depth = (int) { 16, 20, 24 }, " \
       "rate = (int) { 48000, 96000 }, " \
       "channels = (int) [ 1, 8 ];" \
-    "audio/x-ac3" \
+    "audio/x-ac3;" \
+    "audio/x-dts" \
   )
 
 #define SUBPICTURE_CAPS \
