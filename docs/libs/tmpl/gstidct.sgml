@@ -26,6 +26,7 @@ The different IDCT methods available
 @GST_IDCT_FLOAT: accurate float version
 @GST_IDCT_MMX: fast MMX (not IEEE compliant)
 @GST_IDCT_MMX32: accurate MMX
+@GST_IDCT_SSE: 
 
 <!-- ##### STRUCT GstIDCT ##### -->
 <para>

@@ -16,6 +16,7 @@ gst_colorspace_destroy
 <SUBSECTION Standard>
 </SECTION>
 
+
 <SECTION>
 <FILE>gstriff</FILE>
 <INCLUDE>libs/riff/gstriff.h</INCLUDE>
@@ -172,11 +173,13 @@ gst_riff_strf_auds
 gst_riff_riff
 gst_riff_list
 gst_riff_chunk
+gst_riff_index_entry
 GstRiff
 GstRiffChunk
 GstRiffCallback
 gst_riff_parser_new
 gst_riff_parser_next_buffer
+gst_riff_parser_resync
 gst_riff_encoder_new
 gst_riff_encoder_avih
 gst_riff_encoder_strh
@@ -423,10 +426,11 @@ DCTBLOCK[DCTSIZE2]
 INT32
 gst_idct_int_idct
 gst_idct_init_fast_int_idct
+gst_idct_init_float_idct
 gst_idct_fast_int_idct
 gst_idct_mmx_idct
 gst_idct_mmx32_idct
-gst_idct_init_float_idct
+gst_idct_sse_idct
 gst_idct_float_idct
 </SECTION>
 

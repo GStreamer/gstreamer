@@ -1074,6 +1074,15 @@ Create a FOURCC
 @id: 
 @size: 
 
+<!-- ##### STRUCT gst_riff_index_entry ##### -->
+<para>
+
+</para>
+
+@id: 
+@flags: 
+@size: 
+
 <!-- ##### STRUCT GstRiff ##### -->
 <para>
 
@@ -1104,11 +1113,11 @@ Create a FOURCC
 
 <!-- ##### USER_FUNCTION GstRiffCallback ##### -->
 <para>
-
+This function will be called when a new chunk has been decoded
 </para>
 
-@chunk: 
-@data: 
+@chunk: the chunk
+@data: user data
 
 
 <!-- ##### FUNCTION gst_riff_parser_new ##### -->
@@ -1130,6 +1139,15 @@ Subit a new buffer to the parser
 @buf: a buffer
 @off: the offset of the buffer in the stream
 @Returns: one of the return values
+
+
+<!-- ##### FUNCTION gst_riff_parser_resync ##### -->
+<para>
+Resync the parser to a new offset
+</para>
+
+@riff: the parser
+@offset: the new offset to resync to
 
 
 <!-- ##### FUNCTION gst_riff_encoder_new ##### -->

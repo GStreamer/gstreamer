@@ -67,6 +67,13 @@ dct
 
 
 
+<!-- ##### FUNCTION gst_idct_init_float_idct ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### FUNCTION gst_idct_fast_int_idct ##### -->
 <para>
 
@@ -91,11 +98,12 @@ dct
 @block: 
 
 
-<!-- ##### FUNCTION gst_idct_init_float_idct ##### -->
+<!-- ##### FUNCTION gst_idct_sse_idct ##### -->
 <para>
 
 </para>
 
+@block: 
 
 
 <!-- ##### FUNCTION gst_idct_float_idct ##### -->
