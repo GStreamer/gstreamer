@@ -86,6 +86,7 @@ struct _GstMpeg2dec {
   gint		 frame_rate_code;
   gint64	 total_frames;
   gint64	 frame_period;
+  gdouble	 frame_rate;
   gboolean	 need_sequence;
 
   GstEvent	*pending_event;

@@ -43,6 +43,17 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
 GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
 #define GST_CAT_DEFAULT (mpeg2dec_debug)
 
+/* table with framerates expressed as fractions */
+static gdouble fpss[] = { 24.0 / 1.001, 24.0, 25.0,
+  30.0 / 1.001, 30.0, 50.0,
+  60.0 / 1.001, 60.0, 0
+};
+
+/* frame periods */
+static guint frame_periods[] = {
+  1126125, 1125000, 1080000, 900900, 900000, 540000, 450450, 450000, 0
+};
+
 /* elementfactory information */
 static GstElementDetails gst_mpeg2dec_details = {
   "mpeg1 and mpeg2 video decoder",
@@ -64,19 +75,59 @@ enum
   /* FILL ME */
 };
 
-static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { YV12, I420, Y42B }, "
-        "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], "
-        "pixel_width = (int) [ 1, 255 ], "
-        "pixel_height = (int) [ 1, 255 ], "
-        "framerate = (double) { 23.976024, 24.0, "
-        "25.0, 29.970030, 30.0, 50.0, 59.940060, 60.0 }")
-    );
+/*
+ * We can't use fractions in static pad templates, so
+ * we do something manual...
+ */
+static GstPadTemplate *
+src_templ (void)
+{
+  static GstPadTemplate *templ = NULL;
+
+  if (!templ) {
+    GstCaps *caps;
+    GstStructure *structure;
+    GValue list = { 0 }
+    , fps =
+    {
+    0}
+    , fmt = {
+    0};
+    char *fmts[] = { "YV12", "I420", "Y42B", NULL };
+    guint n;
+
+    caps = gst_caps_new_simple ("video/x-raw-yuv",
+        "format", GST_TYPE_FOURCC,
+        GST_MAKE_FOURCC ('I', '4', '2', '0'),
+        "width", GST_TYPE_INT_RANGE, 16, 4096,
+        "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
+
+    structure = gst_caps_get_structure (caps, 0);
+
+    g_value_init (&list, GST_TYPE_LIST);
+    g_value_init (&fps, G_TYPE_DOUBLE);
+    for (n = 0; fpss[n] != 0; n++) {
+      g_value_set_double (&fps, fpss[n]);
+      gst_value_list_append_value (&list, &fps);
+    }
+    gst_structure_set_value (structure, "framerate", &list);
+    g_value_unset (&list);
+    g_value_unset (&fps);
+
+    g_value_init (&list, GST_TYPE_LIST);
+    g_value_init (&fmt, GST_TYPE_FOURCC);
+    for (n = 0; fmts[n] != NULL; n++) {
+      gst_value_set_fourcc (&fmt, GST_STR_FOURCC (fmts[n]));
+      gst_value_list_append_value (&list, &fmt);
+    }
+    gst_structure_set_value (structure, "format", &list);
+    g_value_unset (&list);
+    g_value_unset (&fmt);
+
+    templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
+  }
+  return templ;
+}
 
 #ifdef enable_user_data
 static GstStaticPadTemplate user_data_template_factory =
@@ -162,8 +213,7 @@ gst_mpeg2dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
+  gst_element_class_add_pad_template (element_class, src_templ ());
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template_factory));
 #ifdef enable_user_data
@@ -208,9 +258,7 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
   gst_pad_set_convert_function (mpeg2dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mpeg2dec_convert_sink));
 
-  mpeg2dec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_template_factory), "src");
+  mpeg2dec->srcpad = gst_pad_new_from_template (src_templ (), "src");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->srcpad);
   gst_pad_use_explicit_caps (mpeg2dec->srcpad);
   gst_pad_set_formats_function (mpeg2dec->srcpad,
@@ -377,8 +425,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
       "height", G_TYPE_INT, mpeg2dec->height,
       "pixel_width", G_TYPE_INT, mpeg2dec->pixel_width,
       "pixel_height", G_TYPE_INT, mpeg2dec->pixel_height,
-      "framerate", G_TYPE_DOUBLE, 1. * GST_SECOND / mpeg2dec->frame_period,
-      NULL);
+      "framerate", G_TYPE_DOUBLE, mpeg2dec->frame_rate, NULL);
 
   ret = gst_pad_set_explicit_caps (mpeg2dec->srcpad, caps);
   if (!ret)
@@ -521,16 +568,26 @@ gst_mpeg2dec_chain (GstPad * pad, GstData * _data)
     switch (state) {
       case STATE_SEQUENCE:
       {
+        gint i;
+
         mpeg2dec->width = info->sequence->width;
         mpeg2dec->height = info->sequence->height;
         mpeg2dec->pixel_width = info->sequence->pixel_width;
         mpeg2dec->pixel_height = info->sequence->pixel_height;
         mpeg2dec->total_frames = 0;
+
+        /* find framerate */
+        for (i = 0; i < 9; i++) {
+          if (info->sequence->frame_period == frame_periods[i]) {
+            mpeg2dec->frame_rate = fpss[i];
+          }
+        }
         mpeg2dec->frame_period =
             info->sequence->frame_period * GST_USECOND / 27;
 
-        GST_DEBUG ("sequence flags: %d, frame period: %d",
-            info->sequence->flags, info->sequence->frame_period);
+        GST_DEBUG ("sequence flags: %d, frame period: %d, frame rate: %d",
+            info->sequence->flags, info->sequence->frame_period,
+            mpeg2dec->frame_rate);
         GST_DEBUG ("profile: %02x, colour_primaries: %d",
             info->sequence->profile_level_id, info->sequence->colour_primaries);
         GST_DEBUG ("transfer chars: %d, matrix coef: %d",
