@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/riff/riff.h>
 #include <gst/bytestream/bytestream.h>
+#include "asfheaders.h"
 
 G_BEGIN_DECLS
   
@@ -41,23 +42,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstASFDemux GstASFDemux;
 typedef struct _GstASFDemuxClass GstASFDemuxClass;
-
-typedef struct {
-  guint32 v1;
-  guint32 v2;
-  guint32 v3;
-  guint32 v4;
-} GstASFGuid;
-  
-
-
-typedef struct {
-  guint8     obj_id;
-  GstASFGuid guid; 
-  gboolean (*process_object) (GstASFDemux *asf_demux, 
-			      guint64 *filepos, 
-			      guint64 *obj_size);
-} GstASFGuidHash;
 
 struct _GstASFStreamContext {
   GstPad *pad;

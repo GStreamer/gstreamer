@@ -18,205 +18,8 @@
  */
 
 
-//#define GST_DEBUG_ENABLED
 #include "gstasfdemux.h"
-
-enum {
-  ASF_OBJ_UNDEFINED = 0,
-  ASF_OBJ_STREAM,
-  ASF_OBJ_DATA,
-  ASF_OBJ_FILE,
-  ASF_OBJ_HEADER,
-  ASF_OBJ_CONCEAL_NONE,
-  ASF_OBJ_COMMENT,
-  ASF_OBJ_CODEC_COMMENT1,
-  ASF_OBJ_CODEC_COMMENT2,
-  ASF_OBJ_INDEX,
-  ASF_OBJ_HEAD1,
-  ASF_OBJ_HEAD2,
-  ASF_OBJ_PADDING,
-  ASF_OBJ_BITRATE_PROPS,
-  ASF_OBJ_EXT_CONTENT_DESC
-};
-
-enum {
-  ASF_STREAM_UNDEFINED = 0,
-  ASF_STREAM_VIDEO,
-  ASF_STREAM_AUDIO,
-};
-
-enum {
-  ASF_CORRECTION_UNDEFINED = 0,
-  ASF_CORRECTION_ON,
-  ASF_CORRECTION_OFF,
-};
-
-static GstASFGuidHash asf_correction_guids[] = {
-  { ASF_CORRECTION_ON,     { 0xBFC3CD50, 0x11CF618F, 0xAA00B28B, 0x20E2B400 }},
-  { ASF_CORRECTION_OFF,    { 0x20FB5700, 0x11CF5B55, 0x8000FDA8, 0x2B445C5F }},
-  { ASF_CORRECTION_UNDEFINED,  { 0, 0, 0, 0 }},
-};
-
-static GstASFGuidHash asf_stream_guids[] = {
-  { ASF_STREAM_VIDEO,      { 0xBC19EFC0, 0x11CF5B4D, 0x8000FDA8, 0x2B445C5F }},
-  { ASF_STREAM_AUDIO,      { 0xF8699E40, 0x11CF5B4D, 0x8000FDA8, 0x2B445C5F }},
-  { ASF_STREAM_UNDEFINED,  { 0, 0, 0, 0 }},
-};
-
-struct _asf_obj_header {
-  guint32 num_objects;
-  guint8  unknown1;
-  guint8  unknown2;
-};
-
-typedef struct _asf_obj_header asf_obj_header;
-
-struct _asf_obj_comment {
-  guint16 title_length;
-  guint16 author_length;
-  guint16 copyright_length;
-  guint16 description_length;
-  guint16 rating_length;
-};
-
-typedef struct _asf_obj_comment asf_obj_comment;
-
-struct _asf_obj_file {
-  GstASFGuid file_id;
-  guint64    file_size;
-  guint64    creation_time;
-  guint64    packets_count;
-  guint64    play_time;
-  guint64    send_time;
-  guint64    preroll;
-  guint32    flags;
-  guint32    min_pktsize;
-  guint32    max_pktsize;
-  guint32    min_bitrate;
-};
-
-typedef struct _asf_obj_file asf_obj_file;
-
-struct _asf_obj_stream {
-  GstASFGuid type;
-  GstASFGuid correction;
-  guint64    offset;
-  guint32    unknown1;
-  guint32    unknown2;
-  guint16    id;
-  guint32    unknown3;
-};
-
-typedef struct _asf_obj_stream asf_obj_stream;
-
-struct _asf_stream_audio {
-  guint16   codec_tag;
-  guint16   channels;
-  guint32   sample_rate;
-  guint32   byte_rate;
-  guint16   block_align;
-  guint16   word_size;
-  guint16   size;
-};
-
-typedef struct _asf_stream_audio asf_stream_audio;
-
-struct _asf_stream_correction {
-  guint16 packet_size;
-  guint16 chunk_size;
-  guint16 data_size;
-  guint8  silence_data;
-};
-
-typedef struct _asf_stream_correction asf_stream_correction;
-
-struct _asf_stream_video {
-  guint32 width;
-  guint32 height;
-  guint8  unknown;
-  guint16 size;
-};
-
-typedef struct _asf_stream_video asf_stream_video;
-
-struct _asf_stream_video_format {
-  guint32   size;
-  guint32   width;
-  guint32   height;
-  guint16   planes;
-  guint16   depth;
-  guint32   tag;
-  guint32   image_size;
-  guint32   xpels_meter;
-  guint32   ypels_meter;
-  guint32   num_colors;
-  guint32   imp_colors;
-};
-
-typedef struct _asf_stream_video_format asf_stream_video_format;
-
-struct _asf_obj_data {
-  GstASFGuid file_id;
-  guint64    packets;
-  guint8     unknown1;
-  guint8     unknown2;
-  guint8     correction;
-};
-
-typedef struct _asf_obj_data asf_obj_data;
-
-struct _asf_obj_data_correction {
-  guint8 type;
-  guint8 cycle;
-};
-
-typedef struct _asf_obj_data_correction asf_obj_data_correction;
-
-struct _asf_obj_data_packet {
-  guint8  flags;
-  guint8  property;
-};
-
-typedef struct _asf_obj_data_packet asf_obj_data_packet;
-
-struct _asf_packet_info {
-  guint32  padsize;
-  guint8   replicsizetype;
-  guint8   fragoffsettype;
-  guint8   seqtype;
-  guint8   segsizetype;
-  gboolean multiple;
-  guint32  size_left;
-};
-
-typedef struct _asf_packet_info asf_packet_info;
-
-struct _asf_segment_info {
-  guint8   stream_number;
-  guint32  chunk_size;
-  guint32  frag_offset;
-  guint32  segment_size;
-  guint32  sequence;
-  guint32  frag_timestamp;
-  gboolean compressed;
-};
-
-typedef struct _asf_segment_info asf_segment_info;
-
-struct _asf_replicated_data {
-  guint32 object_size;
-  guint32 frag_timestamp;
-};
-
-typedef struct _asf_replicated_data asf_replicated_data;
-
-struct _asf_bitrate_record {
-  guint16 stream_id;
-  guint32 bitrate;
-};
-
-typedef struct _asf_bitrate_record asf_bitrate_record;
-
+#include "asfheaders.h"
 
 /* elementfactory information */
 static GstElementDetails gst_asf_demux_details = {
@@ -468,8 +271,8 @@ static void     gst_asf_demux_get_property      (GObject *object,
 						 GValue *value, 
 						 GParamSpec *pspec);
 static guint32  gst_asf_demux_identify_guid     (GstASFDemux *asf_demux,
-						 GstASFGuidHash *guids,
-						 GstASFGuid *guid_raw);
+						 ASFGuidHash *guids,
+						 ASFGuid *guid_raw);
 static gboolean gst_asf_demux_process_chunk      (GstASFDemux *asf_demux,
 						  asf_packet_info *packet_info,
 						  asf_segment_info *segment_info);
@@ -1081,43 +884,18 @@ gst_asf_demux_skip_object (GstASFDemux *asf_demux, guint64 *filepos, guint64 *ob
   return TRUE;
 }
 
-static gboolean
-gst_asf_demux_do_nothing (GstASFDemux *asf_demux, guint64 *filepos, guint64 *obj_size)
-{
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Do nothing...");
-  return TRUE;
-}
-
-static GstASFGuidHash asf_object_guids[] = {
-  { ASF_OBJ_STREAM,           { 0xB7DC0791, 0x11CFA9B7, 0xC000E68E, 0x6553200C }, gst_asf_demux_process_stream},
-  { ASF_OBJ_DATA,             { 0x75b22636, 0x11cf668e, 0xAA00D9a6, 0x6Cce6200 }, gst_asf_demux_process_data},
-  { ASF_OBJ_FILE,             { 0x8CABDCA1, 0x11CFA947, 0xC000E48E, 0x6553200C }, gst_asf_demux_process_file},
-  { ASF_OBJ_HEADER,           { 0x75B22630, 0x11CF668E, 0xAA00D9A6, 0x6CCE6200 }, gst_asf_demux_process_header},
-  { ASF_OBJ_CONCEAL_NONE,     { 0x20fb5700, 0x11cf5b55, 0x8000FDa8, 0x2B445C5f }, gst_asf_demux_do_nothing},
-  { ASF_OBJ_COMMENT,          { 0x75b22633, 0x11cf668e, 0xAA00D9a6, 0x6Cce6200 }, gst_asf_demux_process_comment},
-  { ASF_OBJ_CODEC_COMMENT1,   { 0x86D15240, 0x11D0311D, 0xA000A4A3, 0xF64803C9 }, gst_asf_demux_skip_object},
-  { ASF_OBJ_CODEC_COMMENT2,   { 0x86d15241, 0x11d0311d, 0xA000A4a3, 0xF64803c9 }, gst_asf_demux_skip_object},
-  { ASF_OBJ_INDEX,            { 0x33000890, 0x11cfe5b1, 0xA000F489, 0xCB4903c9 }, gst_asf_demux_skip_object},
-  { ASF_OBJ_HEAD1,            { 0x5fbf03b5, 0x11cfa92e, 0xC000E38e, 0x6553200c }, gst_asf_demux_skip_object},
-  { ASF_OBJ_HEAD2,            { 0xabd3d211, 0x11cfa9ba, 0xC000E68e, 0x6553200c }, gst_asf_demux_do_nothing},
-  { ASF_OBJ_PADDING,          { 0x1806D474, 0x4509CADF, 0xAB9ABAA4, 0xE8AA96CD }, gst_asf_demux_skip_object},
-  { ASF_OBJ_BITRATE_PROPS,    { 0x7bf875ce, 0x11d1468d, 0x6000828d, 0xb2a2c997 }, gst_asf_demux_process_bitrate_props_object},
-  { ASF_OBJ_EXT_CONTENT_DESC, { 0xd2d0a440, 0x11d2e307, 0xa000f097, 0x50a85ec9 }, gst_asf_demux_skip_object},
-  { ASF_OBJ_UNDEFINED,        { 0, 0, 0, 0 }, NULL},
-};
-
 static inline gboolean
 gst_asf_demux_read_object_header (GstASFDemux *asf_demux, guint32 *obj_id, guint64 *obj_size)
 {
   guint32       got_bytes;
-  GstASFGuid    *guid;
+  ASFGuid    *guid;
   guint64       *size;
   GstByteStream *bs = asf_demux->bs;
   
   
   /* First get the GUID */
-  got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&guid, sizeof(GstASFGuid));
-  if (got_bytes < sizeof (GstASFGuid)) {
+  got_bytes = gst_bytestream_peek_bytes (bs, (guint8**)&guid, sizeof(ASFGuid));
+  if (got_bytes < sizeof (ASFGuid)) {
     guint32 remaining;
     GstEvent *event;
     
@@ -1129,7 +907,7 @@ gst_asf_demux_read_object_header (GstASFDemux *asf_demux, guint32 *obj_id, guint
   
   *obj_id = gst_asf_demux_identify_guid (asf_demux, asf_object_guids, guid);
   
-  gst_bytestream_flush (bs, sizeof (GstASFGuid));
+  gst_bytestream_flush (bs, sizeof (ASFGuid));
 
   if (*obj_id == ASF_OBJ_UNDEFINED) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "Object found with unknown GUID %08x %08x %08x %08x", guid->v1, guid->v2, guid->v3, guid->v4);
@@ -1169,11 +947,38 @@ gst_asf_demux_process_object    (GstASFDemux *asf_demux,
 
   GST_INFO (GST_CAT_PLUGIN_INFO, "Found object %u with size %llu", obj_id, obj_size);
 
-  if (obj_id == ASF_OBJ_UNDEFINED) {
+  switch (obj_id) {
+  case ASF_OBJ_STREAM:
+    return gst_asf_demux_process_stream (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_DATA:
+    gst_asf_demux_process_data (asf_demux, filepos, &obj_size);
+    /* This is the last object */
+    return FALSE;
+  case ASF_OBJ_FILE:
+    return gst_asf_demux_process_file (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_HEADER:
+    return gst_asf_demux_process_header (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_CONCEAL_NONE:
+    break;
+  case ASF_OBJ_COMMENT:
+    return gst_asf_demux_process_comment (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_CODEC_COMMENT:
+    return gst_asf_demux_skip_object (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_INDEX:
+    return gst_asf_demux_skip_object (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_HEAD1:
+    return gst_asf_demux_skip_object (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_HEAD2:
+    break;
+  case ASF_OBJ_PADDING:
+    return gst_asf_demux_skip_object (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_EXT_CONTENT_DESC:
+    return gst_asf_demux_skip_object (asf_demux, filepos, &obj_size);
+  case ASF_OBJ_BITRATE_PROPS:
+    return gst_asf_demux_process_bitrate_props_object (asf_demux, filepos, &obj_size);
+  default:
     gst_element_error (GST_ELEMENT (asf_demux), "Unknown ASF object");
     return FALSE;
-  } else {
-    return asf_object_guids[obj_id - 1].process_object (asf_demux, filepos, &obj_size);
   }
 
   return TRUE;
@@ -1508,11 +1313,11 @@ gst_asf_demux_change_state (GstElement *element)
 
 static guint32
 gst_asf_demux_identify_guid (GstASFDemux *asf_demux,
-		       GstASFGuidHash *guids,
-		       GstASFGuid *guid_raw)
+		       ASFGuidHash *guids,
+		       ASFGuid *guid_raw)
 {
   guint32 i;
-  GstASFGuid guid;
+  ASFGuid guid;
 
   /* guid_raw is passed in 'as-is' from the file
    * so we must convert it's endianess */
