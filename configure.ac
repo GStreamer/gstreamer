@@ -1164,7 +1164,7 @@ GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
     AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
     if test "x$HAVE_MAD" = "xyes"; then
       HAVE_MAD="no"
-      save_libs=$LIBS
+      save_LIBS=$LIBS
       LIBS="-lz"
       AC_CHECK_LIB(id3tag, id3_tag_options, HAVE_MAD="yes" MAD_LIBS="-lmad -lid3tag -lz")
       LIBS=$save_LIBS
