@@ -70,7 +70,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_return_if_fail(decode_video != NULL);
     show = gst_elementfactory_make("videosink","show");
     g_return_if_fail(show != NULL);
-    //gtk_object_set(GTK_OBJECT(show),"scale",2.0,NULL);
+    gtk_object_set(GTK_OBJECT(show),"scale",2.0,NULL);
 
 		appwindow = gnome_app_new("MPEG1 player","MPEG1 player");
 		gnome_app_set_contents(GNOME_APP(appwindow),

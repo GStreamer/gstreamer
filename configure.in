@@ -323,6 +323,8 @@ plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
 plugins/cobin/Makefile
 plugins/rtjpeg/Makefile
+plugins/capture/Makefile
+plugins/capture/v4l/Makefile
 test/Makefile
 test/xml/Makefile
 test/bindings/Makefile
