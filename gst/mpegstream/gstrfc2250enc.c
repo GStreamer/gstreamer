@@ -208,12 +208,14 @@ gst_rfc2250_enc_add_slice (GstRFC2250Enc *enc, GstBuffer *buffer)
 
       while (slice_length > 0) {
 	GstBuffer *outbuf;
-
+	GstBuffer *newbuf;
 	outbuf = gst_buffer_create_sub (buffer, offset, MIN (enc->remaining, slice_length));
-        gst_buffer_merge (enc->packet, outbuf);
+        newbuf = gst_buffer_merge (enc->packet, outbuf);
 	slice_length -= GST_BUFFER_SIZE (outbuf);
 	offset += GST_BUFFER_SIZE (outbuf);
 	gst_buffer_unref (outbuf);
+	gst_buffer_unref (newbuf);
+	enc->packet = newbuf;
         gst_rfc2250_enc_new_buffer (enc);
       }
       gst_buffer_unref (buffer);

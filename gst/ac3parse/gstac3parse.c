@@ -227,10 +227,11 @@ gst_ac3parse_chain (GstPad *pad, GstData *_data)
 
   /* deal with partial frame from previous buffer */
   if (ac3parse->partialbuf) {
-
-    ac3parse->partialbuf = gst_buffer_merge(ac3parse->partialbuf, buf);
-    /* and the one we received.. */
+    GstBuffer *merge;
+    merge = gst_buffer_merge(ac3parse->partialbuf, buf);
     gst_buffer_unref(buf);
+    gst_buffer_unref(ac3parse->partialbuf);
+    ac3parse->partialbuf = merge;
   }
   else {
     ac3parse->partialbuf = buf;
