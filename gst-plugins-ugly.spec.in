@@ -757,10 +757,10 @@ Summary: Gstreamer mjpegtools
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
-%description -n gstreamer-visualisation
+%description -n gstreamer-jpegmmx
 Mgpegtools based encoding and decoding plugin
 
-%files -n gstreamer-visualisation
+%files -n gstreamer-jpegmmx
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstjpegmmx*
 
