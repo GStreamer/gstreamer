@@ -1,3 +1,17 @@
+2004-03-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/kio/Makefile.am:
+	* ext/kio/kioreceiver.cpp:
+	* ext/kio/kioreceiver.h:
+	* ext/kio/kiosrc.cpp:
+	* ext/kio/kiosrc.h:
+	  add experimental kiosrc plugin
+	* ext/alsa/gstalsaplugin.c: (plugin_init):
+	  initialize debugging category only when we're sure registering the
+	  plugins worked.
+
 2004-03-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* examples/gstplay/player.c: (main):

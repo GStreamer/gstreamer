@@ -979,6 +979,32 @@ GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
   AC_SUBST(JPEG_LIBS)
 ])
 
+dnl *** KDE ***
+AC_PATH_PROG(KDE_CONFIG, kde-config, no)
+translit(dnm, m, l) AM_CONDITIONAL(USE_KIO, true)
+if test x$KDE_CONFIG != xno; then
+  KDE_PREFIX=`$KDE_CONFIG --prefix`
+  KIO_CFLAGS="-I$KDE_PREFIX/include/qt3 -I$KDE_PREFIX/include/kde"
+  KIO_LIBS="-L$KDE_PREFIX/lib -lkio -lqt-mt"
+  GST_CHECK_FEATURE(KIO, [kio], kio, [
+    AC_LANG_PUSH(C++)
+    save_LIBS="$LIBS"
+    save_CPPFLAGS="$CPPFLAGS"
+    LIBS="$LIBS $KIO_LIBS"
+    CPPFLAGS="$CPPFLAGS $KIO_CFLAGS"
+    AC_TRY_LINK([
+#include <kio/job.h>
+		 ], [
+KIO::get ("bla")
+		 ], HAVE_KIO="yes", HAVE_KIO="no")
+    LIBS="$save_LIBS"
+    CPPFLAGS="$save_CPPFLAGS"
+    AC_LANG_POP(C++)
+  ])
+  AC_SUBST(KIO_CFLAGS)
+  AC_SUBST(KIO_LIBS)
+fi
+
 dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
 GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
@@ -1675,6 +1701,7 @@ ext/hermes/Makefile
 dnl ext/http/Makefile
 ext/jack/Makefile
 ext/jpeg/Makefile
+ext/kio/Makefile
 ext/ladspa/Makefile
 ext/lame/Makefile
 ext/ivorbis/Makefile

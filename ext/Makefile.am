@@ -76,12 +76,6 @@ else
 FAAD_DIR=
 endif
 
-if USE_NAS
-NAS_DIR=nas
-else
-NAS_DIR=
-endif
-
 ## if USE_FESTIVAL
 ## FESTIVAL_DIR=festival
 ## else
@@ -128,6 +122,12 @@ if USE_JPEG
 JPEG_DIR=jpeg
 else
 JPEG_DIR=
+endif
+
+if USE_KIO
+KIO_DIR=kio
+else
+KIO_DIR=
 endif
 
 if USE_LADSPA
@@ -212,6 +212,12 @@ if USE_MUSICBRAINZ
 MUSICBRAINZ_DIR=musicbrainz
 else
 MUSICBRAINZ_DIR=
+endif
+
+if USE_NAS
+NAS_DIR=nas
+else
+NAS_DIR=
 endif
 
 if USE_OGG
@@ -338,6 +344,7 @@ SUBDIRS=\
 	$(HERMES_DIR) \
 	$(JACK_DIR) \
 	$(JPEG_DIR) \
+	$(KIO_DIR) \
 	$(LADSPA_DIR) \
 	$(LAME_DIR) \
 	$(LCS_DIR) \
@@ -393,6 +400,7 @@ DIST_SUBDIRS=\
 	ivorbis \
 	jack \
 	jpeg \
+	kio \
 	ladspa \
 	lame \
 	lcs \
