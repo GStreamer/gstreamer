@@ -1,3 +1,15 @@
+2004-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/Makefile.am:
+	* docs/gst/tmpl/gstelement.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* docs/manuals.mak:
+	* docs/pwg/advanced-request.xml:
+	* docs/pwg/advanced-scheduling.xml:
+	* docs/pwg/advanced-tagging.xml:
+          fix non-validating docbook using CDATA
+          make sure make check-local gets run first to check if it validates
+
 2004-01-29  Julien MOUTTE <julien@moutte.net>
 
 	* docs/pwg/advanced-events.xml: Adding documentation on advanced event

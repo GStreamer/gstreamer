@@ -149,6 +149,8 @@ gst_my_filter_loopfunc (GstElement *element)
       useful in practice, but a good example, again.
     </para>
     <programlisting>
+<![CDATA[
+
 typedef struct _GstMyFilterInputContext {
   gboolean   eos;
   GstBuffer *lastbuf;
@@ -196,8 +198,8 @@ gst_my_filter_loopfunc (GstElement *element)
     if (GST_PAD_IS_SRC (pad))
       continue;
 
-    while (GST_PAD_IS_USABLE (pad) &amp;&amp;
-           !context->eos &amp;&amp; !context->lastbuf) {
+    while (GST_PAD_IS_USABLE (pad) &&
+           !context->eos && !context->lastbuf) {
       GstData *data = gst_pad_pull (pad);
 
       if (GST_IS_EVENT (data)) {
@@ -246,6 +248,7 @@ gst_my_filter_loopfunc (GstElement *element)
   gst_pad_push (filter->srcpad, GST_DATA (first_context->lastbuf));
   first_context->lastbuf = NULL;
 }
+]]>
     </programlisting>
     <para>
       Note that a loop-function is allowed to return. Better yet, a loop
@@ -276,6 +279,7 @@ gst_my_filter_loopfunc (GstElement *element)
       over its source pad.
     </para>
     <programlisting>
+<![CDATA[
 static void
 gst_my_filter_loopfunc (GstElement *element)
 {
@@ -284,12 +288,12 @@ gst_my_filter_loopfunc (GstElement *element)
   guint8 *data;
 
   for (n = 0; ; n++) {
-    num = gst_bytestream_peek_bytes (filter->bs, &amp;data, n + 1);
+    num = gst_bytestream_peek_bytes (filter->bs, &data, n + 1);
     if (num != n + 1) {
       GstEvent *event = NULL;
       guint remaining;
 
-      gst_bytestream_get_status (filter->bs, &amp;remaining, &amp;event);
+      gst_bytestream_get_status (filter->bs, &remaining, &event);
       if (event) {
         if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)) {
           /* end-of-file */
@@ -312,7 +316,7 @@ gst_my_filter_loopfunc (GstElement *element)
       GstBuffer *buf = gst_buffer_new_and_alloc (n + 1);
 
       /* read the line of text without newline - then flush the newline */
-      gst_bytestream_peek_data (filter->bs, &amp;data, n);
+      gst_bytestream_peek_data (filter->bs, &data, n);
       memcpy (GST_BUFFER_DATA (buf), data, n);
       GST_BUFFER_DATA (buf)[n] = '\0';
       gst_bytestream_flush_fast (filter->bs, n + 1);
@@ -345,6 +349,7 @@ gst_my_filter_change_state (GstElement *element)
 
   return GST_STATE_SUCCESS;
 }
+]]>
     </programlisting>
     <para>
       In the above example, you'll notice how bytestream handles buffering of

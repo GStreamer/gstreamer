@@ -66,6 +66,7 @@
       <xref linkend="section-reqpad-sometimes"/>.
     </para>
     <programlisting>
+<![CDATA[
 static void
 gst_my_filter_loopfunc (GstElement *element)
 {
@@ -85,7 +86,7 @@ gst_my_filter_loopfunc (GstElement *element)
     type = g_strndup (line, colon_pos - line);
 
     /* content is one character beyond the ':' */
-    colon_pos = &amp;colon_pos[1];
+    colon_pos = &colon_pos[1];
     if (*colon_pos == '\0')
       goto next;
 
@@ -96,14 +97,14 @@ gst_my_filter_loopfunc (GstElement *element)
       GType to_type;
 
       to_type = gst_tag_get_type (type);
-      g_value_init (&amp;from, G_TYPE_STRING);
-      g_value_set_string (&amp;from, colon_pos);
-      g_value_init (&amp;to, to_type);
-      g_value_transform (&amp;from, &amp;to);
-      g_value_unset (&amp;from);
+      g_value_init (&from, G_TYPE_STRING);
+      g_value_set_string (&from, colon_pos);
+      g_value_init (&to, to_type);
+      g_value_transform (&from, &to);
+      g_value_unset (&from);
       gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
-			       type, &amp;to, NULL);
-      g_value_unset (&amp;to);
+			       type, &to, NULL);
+      g_value_unset (&to);
     }
 
 next:
@@ -119,6 +120,7 @@ next:
   gst_pad_send_event (filter->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
   gst_element_set_eos (element);
 }
+]]>
     </programlisting>
     <para>
       We currently assume the core to already <emphasis>know</emphasis> the
@@ -131,6 +133,7 @@ next:
       functions, preferrably <function>_class_init ()</function>.
     </para>
     <programlisting>
+<![CDATA[
 static void
 gst_my_filter_class_init (GstMyFilterClass *klass)
 {
@@ -142,6 +145,7 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
 		    NULL);
 [..]
 }
+]]>
     </programlisting>
   </sect1>
 
@@ -168,6 +172,7 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
       incoming events.
     </para>
     <programlisting>
+<![CDATA[
 GType
 gst_my_filter_get_type (void)
 {
@@ -180,7 +185,7 @@ gst_my_filter_get_type (void)
 [..]
     g_type_add_interface_static (my_filter_type,
 				 GST_TYPE_TAG_SETTER,
-				 &amp;tag_setter_info);
+				 &tag_setter_info);
 [..]
 }
 
@@ -206,20 +211,20 @@ gst_my_filter_write_tag (const GstTagList *taglist,
   const GValue *from;
   GValue to = { 0 };
 
-  g_value_init (&amp;to, G_TYPE_STRING);
+  g_value_init (&to, G_TYPE_STRING);
 
   for (n = 0; n < num_values; n++) {
     from = gst_tag_list_get_value_index (taglist, tagname, n);
-    g_value_transform (from, &amp;to);
+    g_value_transform (from, &to);
 
     buf = gst_buffer_new ();
     GST_BUFFER_DATA (buf) = g_strdup_printf ("%s:%s", tagname,
-					     g_value_get_string (&amp;to));
+					     g_value_get_string (&to));
     GST_BUFFER_SIZE (buf) = strlen (GST_BUFFER_DATA (buf));
     gst_pad_push (filter->srcpad, GST_DATA (buf));
   }
 
-  g_value_unset (&amp;to);
+  g_value_unset (&to);
 }
 
 static void
@@ -270,6 +275,7 @@ gst_my_filter_loopfunc (GstElement *element)
   gst_pad_push (filter->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
   gst_element_set_eos (element);
 }
+]]>
     </programlisting>
     <para>
       Note that normally, elements would not read the full stream before

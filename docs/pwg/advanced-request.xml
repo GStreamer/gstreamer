@@ -46,6 +46,7 @@
       pads, looks like this:
     </para>
     <programlisting>
+<![CDATA[
 typedef struct _GstMyFilter {
 [..]
   gboolean firstrun;
@@ -65,7 +66,7 @@ gst_my_filter_base_init (GstMyFilterClass *klass)
   );
 [..]
   gst_element_class_add_pad_template (element_class,
-	gst_static_pad_template_get (&amp;src_factory));
+	gst_static_pad_template_get (&src_factory));
 [..]
 }
 
@@ -89,7 +90,7 @@ gst_my_filter_getline (GstMyFilter *filter)
 
   /* max. line length is 512 characters - for safety */
   for (n = 0; n < 512; n++) {
-    num = gst_bytestream_peek_bytes (filter->bs, &amp;data, n + 1);
+    num = gst_bytestream_peek_bytes (filter->bs, &data, n + 1);
     if (num != n + 1)
       return NULL;
 
@@ -97,7 +98,7 @@ gst_my_filter_getline (GstMyFilter *filter)
     if (data[n] == '\n') {
       GstBuffer *buf = gst_buffer_new_and_alloc (n + 1);
 
-      gst_bytestream_peek_bytes (filter->bs, &amp;data, n);
+      gst_bytestream_peek_bytes (filter->bs, &data, n);
       memcpy (GST_BUFFER_DATA (buf), data, n);
       GST_BUFFER_DATA (buf)[n] = '\0';
       gst_bytestream_flush_fast (filter->bs, n + 1);
@@ -163,11 +164,11 @@ gst_my_filter_loopfunc (GstElement *element)
 
   /* parse stream number and go beyond the ':' in the data */
   num = atoi (GST_BUFFER_DATA (buf));
-  if (num >= 0 &amp;&amp; num < g_list_length (filter->srcpadlist)) {
+  if (num >= 0 && num < g_list_length (filter->srcpadlist)) {
     pad = GST_PAD (g_list_nth_data (filter->srcpadlist, num);
 
     /* magic buffer parsing foo */
-    for (n = 0; GST_BUFFER_DATA (buf)[n] != ':' &amp;&amp;
+    for (n = 0; GST_BUFFER_DATA (buf)[n] != ':' &&
                 GST_BUFFER_DATA (buf)[n] != '\0'; n++) ;
     if (GST_BUFFER_DATA (buf)[n] != '\0') {
       GstBuffer *sub;
@@ -184,6 +185,7 @@ gst_my_filter_loopfunc (GstElement *element)
   }
   gst_buffer_unref (buf);
 }
+]]>
     </programlisting>
     <para>
       Note that we use a lot of checks everywhere to make sure that the content
@@ -212,6 +214,7 @@ gst_my_filter_loopfunc (GstElement *element)
       example of an aggregator based on request pads.
     </para>
     <programlisting>
+<![CDATA[
 static GstPad *	gst_my_filter_request_new_pad	(GstElement     *element,
 						 GstPadTemplate *templ,
 						 const gchar    *name);
@@ -229,7 +232,7 @@ gst_my_filter_base_init (GstMyFilterClass *klass)
   );
 [..]
   gst_element_class_add_pad_template (klass,
-	gst_static_pad_template_get (&amp;sink_factory));
+	gst_static_pad_template_get (&sink_factory));
 }
 
 static void
@@ -258,6 +261,7 @@ gst_my_filter_request_new_pad (GstElement     *element,
 
   return pad;
 }
+]]>
     </programlisting>
     <para>
       The <function>_loop ()</function> function is the same as the one given

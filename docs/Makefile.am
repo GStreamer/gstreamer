@@ -5,6 +5,8 @@ else
 SUBDIRS_PLUGINS =
 endif
 
+# FIXME: separate this out into docbook and gtk-doc so it doesn't descend
+# for docs it can't build
 if BUILD_DOCS
 SUBDIRS_DOCS = faq manual pwg gst libs
 else
