@@ -1,3 +1,16 @@
+2004-07-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c:
+	(chain_recursively_migrate_group), (create_group),
+	(schedule_group), (gst_opt_scheduler_pad_link),
+	(group_elements_set_visited), (element_get_reachables_func),
+	(element_get_reachables), (group_can_reach_group), (debug_element),
+	(rechain_group), (group_migrate_connected),
+	(gst_opt_scheduler_pad_unlink):
+	* testsuite/schedulers/Makefile.am:
+	Implemented group splitting and rechaining.
+	Fixes 143777 and 143777-2 in the testsuite.
+
 2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_chain):
