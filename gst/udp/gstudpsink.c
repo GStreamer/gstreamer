@@ -28,7 +28,7 @@ GstElementDetails gst_udpsink_details = {
   "UDP packet sender",
   "Sink/Network",
   "LGPL",
-  "",
+  "Send data over the network via UDP",
   VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2001",
