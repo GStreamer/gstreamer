@@ -21,8 +21,7 @@ built_headers =	\
 	mixer-enumtypes.h
 
 libgstmixerinclude_HEADERS = \
-	$(mixer_headers) \
-	mixer-enumtypes.h
+	$(mixer_headers)
 
 # FIXME 0.9: don't include marshal files
 nodist_libgstmixerinclude_HEADERS = \

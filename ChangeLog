@@ -1,3 +1,13 @@
+2004-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* gst-libs/gst/colorbalance/Makefile.am:
+	* gst-libs/gst/mixer/Makefile.am:
+	* gst-libs/gst/play/Makefile.am:
+	* gst-libs/gst/tuner/Makefile.am:
+	  (hopefully) fix both install and dist and make error message useful.
+	  needs testing across automakes.
+
 2004-07-02  Benjamin Otte  <otte@gnome.org>
 
 	* ext/ogg/gstogg.c: (plugin_init):

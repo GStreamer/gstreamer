@@ -48,9 +48,13 @@ DISTCLEANFILES=_stdint.h
 # this in turn ensures that distcheck fails for missing .list files which is currently
 # shadowed when the corresponding .c and .h files are included.
 distcheck-hook:
-	test "x" = "x`find $(distdir) -name \*-enumtypes.[ch]`" && \
+	@test "x" = "x`find $(distdir) -name \*-enumtypes.[ch]`" && \
 	test "x" = "x`find $(distdir) -name \*-marshal.[ch]`" || \
-	( $(ECHO) "*** Still leftover enumtypes or marshal files in the tarball. Please make sure those are not disted." && false )
+	( $(ECHO) "*** Leftover enumtypes or marshal files in the tarball." && \
+          $(ECHO) "*** Make sure the following files are not disted:" && \
+          find $(distdir) -name \*-enumtypes.[ch] && \
+          find $(distdir) -name \*-marshal.[ch] && \
+          false )
 
 include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
