@@ -3,57 +3,57 @@
 
 GstStaticCaps2 caps1 = GST_STATIC_CAPS (
   "video/mpeg, "
-    "mpegtype:int=(1,2)"
+    "mpegtype=(int){1,2}"
 );
 
 GstStaticCaps2 caps2 = GST_STATIC_CAPS (
   "video/mpeg, "
-    "mpegtype:int=(1)"
+    "mpegtype=(int){1}"
 );
 
 GstStaticCaps2 caps3 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=(\"YV12\",\"YUY2\"), "
-    "width:int=[16,4096], "
-    "height:int=[16,4096]"
+    "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
+    "width=(int)[16,4096], "
+    "height=(int)[16,4096]"
 );
 
 GstStaticCaps2 caps4 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=\"YV12\", "
-    "height:int=[16,256]"
+    "fourcc=(fourcc)\"YV12\", "
+    "height=(int)[16,256]"
 );
 
 GstStaticCaps2 caps5 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=(\"YV12\",\"YUY2\"), "
-    "height:int=[16,4096]"
+    "fourcc=(fourcc){\"YV12\",\"YUY2\"}, "
+    "height=(int)[16,4096]"
 );
 
 GstStaticCaps2 caps6 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=(\"YV12\",\"YUYV\"), "
-    "height:int=[16,4096]"
+    "fourcc=(fourcc){\"YV12\",\"YUYV\"}, "
+    "height=(int)[16,4096]"
 );
 
 GstStaticCaps2 caps7 = GST_STATIC_CAPS (
   "video/raw, "
-    "fourcc:fourcc=(\"YVYV\",\"YUY2\"), "
-    "height:int=[16,4096]"
+    "fourcc=(fourcc){\"YVYV\",\"YUY2\"}, "
+    "height=(int)[16,4096]"
 );
 
 GstStaticCaps2 caps8 = GST_STATIC_CAPS (
   "video/raw, "
-    "format:fourcc=\"I420\"; "
+    "format=(fourcc)\"I420\"; "
   "video/raw, "
-    "format:fourcc=\"YUYV\""
+    "format=(fourcc)\"YUYV\""
 );
 
 GstStaticCaps2 caps9 = GST_STATIC_CAPS (
   "video/raw, "
-    "format:fourcc=\"I420\"; "
+    "format=(fourcc)\"I420\"; "
   "video/raw, "
-    "format:fourcc=\"YV12\""
+    "format=(fourcc)\"YV12\""
 );
 
 static gint test = 0;
@@ -144,59 +144,55 @@ bla:
   /* mime types */
   test_string ("audio/raw");
   test_string ("\"audio/raw\"");
-  test_string ("'audio/raw'");
-  test_string ("\\a\\u\\d\\i\\o/\\r\\a\\w");
 
   /* fixed props entries */
-  test_string ("audio/raw  ,test:int=1");
-  test_string ("audio/raw ,test:float= 1");
-  test_string ("audio/raw, test:fourcc =1");
-  test_string ("audio/raw  ,test:i=1");
-  test_string ("audio/raw ,test:f= 1");
-  test_string ("audio/raw, test:4 =1");
-  test_string ("audio/raw,test: fourcc = 0x0000001");
-  test_string ("audio/raw , test:fourcc=   RGB");
-  test_string ("audio/raw,test :fourcc=  \"RGB \"");
-  test_string ("audio/raw    ,   test: string=1");
+  test_string ("audio/raw  ,test=(int)1");
+  test_string ("audio/raw ,test=(float) 1");
+  test_string ("audio/raw, test=(fourcc )1");
+  test_string ("audio/raw  ,test=(i)1");
+  test_string ("audio/raw ,test=(f) 1");
+  test_string ("audio/raw, test=(4 )1");
+  test_string ("audio/raw,test=( fourcc ) 0x0000001");
+  test_string ("audio/raw,test =(fourcc)  \"RGB \"");
+  test_string ("audio/raw    ,   test=( string)1");
   test_string ("audio/raw,test= 1");
   test_string ("audio/raw,test   = 1.0");
-  test_string ("audio/raw ,test= '1.0'");
-  test_string ("audio/raw,test: str= \"1\"");
-  test_string ("audio/raw  ,test:b=False");
-  test_string ("audio/raw  ,test :bool= trUE");
-  test_string ("audio/raw  ,test:b = yes");
-  test_string ("audio/raw  ,test : boolean=no");
+  test_string ("audio/raw ,test= \"1.0\"");
+  test_string ("audio/raw,test=( str) \"1\"");
+  test_string ("audio/raw  ,test=(b)False");
+  test_string ("audio/raw  ,test =(bool) trUE");
+  test_string ("audio/raw  ,test=(b ) yes");
+  test_string ("audio/raw  ,test =( boolean)no");
 
   /* unfixed props entries */
-  test_string_fail ("audio/raw, test= [ 1, 2 ]");
+  test_string ("audio/raw, test= [ 1, 2 ]");
   test_string_fail ("audio/raw, test= [ 1.0 , 2]");
   test_string_fail ("audio/raw, test   = [1, 2.5 ]");
-  test_string_fail ("audio/raw, test= [1.3, 2.1 ]");
-  test_string ("audio/raw, test :int = [1,2]");
-  test_string ("audio/raw, test :double = [1,2]");
-  test_string_fail ("audio/raw, test= [int = 1, 2 ]");
-  test_string_fail ("audio/raw, test:f= [ float=1.0 , 2]");
-  test_string_fail ("audio/raw, test   = [int =1, float = 2.5 ]");
-  test_string_fail ("audio/raw, test:float= [1.3, float=2.1 ]");
-  test_string_fail ("audio/raw, test :i= [int=1,2]");
-  test_string_fail ("audio/raw, test:l= (int=1,2)");
-  test_string_fail ("audio/raw, test:list= (int=1 ,2,3    ,int=   4   , 5   ,6 , int  =7  ,8  , int =   9, 10)");
-  test_string_fail ("audio/raw, test= (1.0)");
-  test_string_fail ("audio/raw, test:list= (\"hi\", 'i dig ya', dude)");
-  test_string_fail ("audio/raw, test:l= (int=1,2)");
-  test_string_fail ("audio/raw, test:list= (int=1,2)");
+  test_string ("audio/raw, test= [1.3, 2.1 ]");
+  test_string ("audio/raw, test =(int ) [1,2]");
+  test_string ("audio/raw, test =(double ) [1,2]");
+  test_string ("audio/raw, test= [(int) 1, 2 ]");
+  test_string ("audio/raw, test=(d) [ (double)1.0 , 2]");
+  test_string ("audio/raw, test=(double) [1.3, (double)2.1 ]");
+  test_string ("audio/raw, test =(i) [(int)1,2]");
+  test_string ("audio/raw, test={(int)1,2}");
+  test_string ("audio/raw, test= {(int)1 ,2,3    ,(int)   4   , 5   ,6 , (int  )7  ,8  , (int )   9, 10}");
+  test_string ("audio/raw, test= {1.0}");
+  test_string ("audio/raw, test= {\"hi\", \"i dig ya\", dude}");
+  test_string ("audio/raw, test= {(int)1,2}");
+  test_string ("audio/raw, test= {(int)1,2}");
   
   /* prop concatenations */
-  test_string_fail ("audio/raw, test:float= [1.3, float=2.1 ], test2= [ 1, 2 ]");
-  test_string ("audio/raw , test:fourcc=   RGB,test2:int=1");
-  test_string_fail ("audio/raw, test= [int = 1, 2 ]      ,test2 :fourcc=  \"RGB \"");
-  test_string_fail ("audio/raw, test= [1.3, 2.1 ] , test2= (1.0)");
-  test_string_fail ("audio/raw, test:list= (int=1 ,2,3    ,int=   4   , 5   ,6 , int  =7  ,8  , int =   9, 10), test2   = [1, 2.5 ]    ,   test3: string=1  ,test4:i=1");
+  test_string ("audio/raw, test=(double) [1.3, (double)2.1 ], test2= [ 1, 2 ]");
+  test_string ("audio/raw , test=(fourcc) \"RGB \",test2=(int)1");
+  test_string ("audio/raw, test= [(int ) 1, 2 ]      ,test2 =(fourcc)  \"RGB \"");
+  test_string ("audio/raw, test= [1.3, 2.1 ] , test2= {1.0}");
+  test_string ("audio/raw, test= {(int)1 ,2,3    ,(int)   4   , 5   ,6 , (int  )7  ,8  , (int )   9, 10}, test2   = [1.0, 2.5 ]    ,   test3= (string)1  ,test4=(i)1");
 
   /* caps concatenations */
-  test_string_fail ("audio/raw, test= [int = 1, 2 ]      ,test2 :fourcc=  \"RGB \";\"audio/raw\"");
-  test_string_fail ("audio/raw, test :float = [1,2]    ;  audio/raw, test:fourcc =1 ;'audio/raw', test:list= (\"hi\", 'i dig ya', dude)");
-  test_string_fail ("audio/raw, test:float= [1.3, float=2.1 ];audio/raw, test :i= [int=1,2]");
+  test_string ("audio/raw, test= [(int ) 1, 2 ]      ,test2 =(fourcc)  \"RGB \";\"audio/raw\"");
+  test_string ("audio/raw, test =(double ) [1,2]    ;  audio/raw, test=(fourcc )1 ;audio/raw, test= {\"hi\", \"i dig ya\", dude}");
+  test_string ("audio/raw, test=(double) [1.3, (double)2.1 ];audio/raw, test =(i) [(int)1,2]");
 
 
   /* mimes */
@@ -204,12 +200,12 @@ bla:
   test_string_fail ("'audio/raw");
   test_string_fail ("'audio/raw\"");
   /* wrong type */
-  test_string_fail ("audio/raw, test:int = [1.0,2]");
-  test_string_fail ("audio/raw, test:int = [1 ,0.2]");
-  test_string_fail ("audio/raw, test:int = [1.0, 2.000]");
+  test_string_fail ("audio/raw, test=(int) [1.0,2]");
+  test_string_fail ("audio/raw, test=(int) [1 ,0.2]");
+  test_string_fail ("audio/raw, test=(int) [1.0, 2.000]");
   /* unmatched */
-  test_string_fail ("audio/raw, test:int = [");
-  test_string_fail ("audio/raw, test:l = (");
+  test_string_fail ("audio/raw, test=(int = [");
+  test_string_fail ("audio/raw, test= {");
   test_string_fail ("audio/raw, test = \"dood'");
   test_string_fail ("audio/raw, test= '");
 

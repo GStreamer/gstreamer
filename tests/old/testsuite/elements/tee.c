@@ -99,8 +99,8 @@ main (int argc, char *argv[])
 
   /* now we try setting caps on the src pad */
   /* FIXME: should we set to pause here ? */
-  src_caps = gst_caps2_from_string ("audio/raw, format:s=\"int\", "
-      "rate:i=44100");
+  src_caps = gst_caps2_from_string ("audio/raw, format=(s)\"int\", "
+      "rate=(i)44100");
 
   g_assert (src_caps != NULL);
   g_print ("Setting caps on fakesrc's src pad\n");
