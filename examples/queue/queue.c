@@ -5,7 +5,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *filesrc, *osssink, *parse, *decode, *queue;
-  GstElement *bin;
+  GstElement *pipeline;
   GstElement *thread;
 
   gst_init (&argc, &argv);
@@ -19,9 +19,9 @@ main (int argc, char *argv[])
   thread = gst_thread_new ("thread");
   g_assert (thread != NULL);
 
-  /* create a new bin to hold the elements */
-  bin = gst_bin_new ("bin");
-  g_assert (bin != NULL);
+  /* create a new pipeline to hold the elements */
+  pipeline = gst_pipeline_new ("pipeline");
+  g_assert (pipeline != NULL);
 
   /* create a disk reader */
   filesrc = gst_element_factory_make ("filesrc", "disk_source");
@@ -29,7 +29,7 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
 
   parse = gst_element_factory_make ("mp3parse", "parse");
-  decode = gst_element_factory_make ("mpg123", "decode");
+  decode = gst_element_factory_make ("mad", "decode");
 
   queue = gst_element_factory_make ("queue", "queue");
 
@@ -38,19 +38,19 @@ main (int argc, char *argv[])
   g_assert (osssink != NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add_many (GST_BIN (bin), filesrc, parse, decode, queue, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, parse, decode, queue, NULL);
 
   gst_bin_add (GST_BIN (thread), osssink);
-  gst_bin_add (GST_BIN (bin), thread);
+  gst_bin_add (GST_BIN (pipeline), thread);
 
   gst_element_link_many (filesrc, parse, decode, queue, osssink, NULL);
 
   /* start playing */
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (GST_BIN (bin)));
+  while (gst_bin_iterate (GST_BIN (pipeline)));
 
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
   exit (0);
 }

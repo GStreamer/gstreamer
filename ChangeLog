@@ -1,3 +1,13 @@
+2004-04-15  David Schleef  <ds@schleef.org>
+
+	* docs/gst/gstreamer-sections.txt: Remove deprecated symbols.
+	* docs/gst/tmpl/gstinfo.sgml: same
+	* docs/gst/tmpl/gstutils.sgml: Remove a bunch of bogus crap that
+	gtk-doc put here.
+	* gst/gstutils.h: Remove the \ that was confusing gtk-doc.
+	* examples/queue/queue.c: (main):  We iterate pipelines, not
+	bins.  (bug #139996)
+
 2004-04-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-types.xml:

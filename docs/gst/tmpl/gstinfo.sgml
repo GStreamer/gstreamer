@@ -692,58 +692,6 @@ Output a logging message in the default category.
 @...: printf-style message to output
 
 
-<!-- ##### MACRO GST_INFO_ELEMENT ##### -->
-<para>
-
-</para>
-
-@cat: 
-@obj: 
-@...: 
-
-
-<!-- ##### MACRO GST_DEBUG_ELEMENT ##### -->
-<para>
-
-</para>
-
-@cat: 
-@obj: 
-@...: 
-
-
-<!-- ##### MACRO GST_DEBUG_ENTER ##### -->
-<para>
-
-</para>
-
-@...: 
-
-
-<!-- ##### MACRO GST_DEBUG_LEAVE ##### -->
-<para>
-
-</para>
-
-@...: 
-
-
-<!-- ##### MACRO GST_INFO_ENTER ##### -->
-<para>
-
-</para>
-
-@...: 
-
-
-<!-- ##### MACRO GST_INFO_LEAVE ##### -->
-<para>
-
-</para>
-
-@...: 
-
-
 <!-- ##### MACRO GST_DEBUG_FUNCPTR ##### -->
 <para>
 Register a pointer to a function with its name, so it can later be used by

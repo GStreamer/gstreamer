@@ -46,8 +46,7 @@ void 		gst_print_element_args 		(GString *buf, gint indent, GstElement *element)
    void additional_initializations (GType type) is for initializing interfaces
    and stuff like that */
 
-#define GST_BOILERPLATE_FULL(type, type_as_function, parent_type,		\
-    parent_type_macro, additional_initializations)     				\
+#define GST_BOILERPLATE_FULL(type, type_as_function, parent_type, parent_type_macro, additional_initializations)     				\
 										\
 static void type_as_function ## _base_init     (gpointer      g_class);		\
 static void type_as_function ## _class_init    (type ## Class *g_class);	\
