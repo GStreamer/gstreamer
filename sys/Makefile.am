@@ -16,6 +16,12 @@ else
 OSX_AUDIO_DIR=
 endif
 
+if USE_OSX_VIDEO
+OSX_VIDEO_DIR=osxvideo
+else
+OSX_VIDEO_DIR=
+endif
+
 if USE_QCAM
 QCAM_DIR=qcam
 else
@@ -64,9 +70,10 @@ else
 CDROM_DIR=
 endif
 
-SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(QCAM_DIR) $(SUNAUDIO_DIR) \
-	$(V4L_DIR) $(V4L2_DIR) $(VCD_DIR) $(CDROM_DIR) $(XI_DIR) $(XV_DIR)
+SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(QCAM_DIR) \
+        $(SUNAUDIO_DIR) $(V4L_DIR) $(V4L2_DIR) $(VCD_DIR) $(CDROM_DIR) \
+        $(XI_DIR) $(XV_DIR)
 
-DIST_SUBDIRS=dxr3 oss osxaudio qcam sunaudio v4l v4l2 vcd ximage xvimage \
-	glsink cdrom
+DIST_SUBDIRS=dxr3 oss osxaudio osxvideo qcam sunaudio v4l v4l2 vcd ximage \
+        xvimage glsink cdrom
 
