@@ -1,5 +1,11 @@
 2004-11-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gststreaminfo.c: (stream_info_mute_pad):
+	  On mute of an unlinked stream, check for pad availability so
+	  we don't crash on unlinked pad.
+
+2004-11-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_index),
 	(gst_avi_demux_massage_index):
 	  Fix quite humiliating bug in omitting 0-sized index chunks but
