@@ -20,30 +20,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef GST_HGUARD_GSTALPHA_H
-#define GST_HGUARD_GSTALPHA_H
+#ifndef __GST_GSTALPHA_H__
+#define __GST_GSTALPHA_H__
 
-#warning in gstalpha.h
-
-#define GET_SP(target) \
-    __asm__("stq $30,%0" : "=m"(target) : : "30");
-
-#define SET_SP(stackpointer) \
+#define GST_ARCH_SET_SP(stackpointer) \
     __asm__("bis $31,%0,$30" : : "r"(stackpointer));
 
-#define CALL(target) \
+#define GST_ARCH_CALL(target) \
     __asm__( "bis $31,%0,$27\n\t" \
              "jsr $26,($27),0" : : "r"(target) );
 
-struct minimal_ppc_stackframe {
+// Need to get more information about the stackframe format
+// and get the fields more correct.  Check GDB sources maybe?
+struct minimal_stackframe {
     unsigned long back_chain;
     unsigned long LR_save;
     unsigned long unused1;
     unsigned long unused2;
 };
 
-#define SETUP_STACK(sp) \
+#define GST_ARCH_SETUP_STACK(sp) \
     sp = ((unsigned long *)(sp)) - 4; \
-    ((struct minimal_ppc_stackframe *)sp)->back_chain = 0;
+    ((struct minimal_stackframe *)sp)->back_chain = 0;
 
-#endif /* GST_HGUARD_GSTALPHA_H */
+#endif /* __GST_GSTALPHA_H__ */

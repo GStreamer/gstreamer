@@ -754,7 +754,7 @@ gst_bin_iterate_func (GstBin *bin)
           pads = entry->pads;
           while (pads) {
             pad = GST_PAD (pads->data);
-            if (GST_REAL_PAD(pad)->direction == GST_PAD_SRC) {
+            if (GST_RPAD_DIRECTION(pad) == GST_PAD_SRC) {
               GST_DEBUG (0,"calling getfunc of %s:%s\n",GST_DEBUG_PAD_NAME(pad));
               if (GST_REAL_PAD(pad)->getfunc == NULL) 
                 fprintf(stderr, "error, no getfunc in \"%s\"\n", gst_element_get_name (entry));

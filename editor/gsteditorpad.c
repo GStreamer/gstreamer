@@ -138,7 +138,8 @@ gst_editor_pad_new(GstEditorElement *parent,GstPad *pad,
     GstPad *peerpad;
     GstEditorPad *peereditorpad;
 
-    peerpad = pad->peer;
+    // FIXME does this need to check for ghost/real?
+    peerpad = GST_PAD_PEER(pad);
 
     peereditorpad = GST_EDITOR_GET_OBJECT (peerpad);
 
@@ -270,7 +271,8 @@ gst_editor_pad_realize (GstEditorPad *pad)
   GST_EDITOR_SET_OBJECT(pad->border,pad);
 
   /* create the pad box on the correct side */
-  pad->issrc = (pad->pad->direction == GST_PAD_SRC);
+  // FIXME does this need to check for ghost/real?
+  pad->issrc = (GST_PAD_DIRECTION(pad->pad) == GST_PAD_SRC);
   if (pad->issrc)
     pad->padbox = gnome_canvas_item_new(pad->group,
       gnome_canvas_rect_get_type(),

@@ -746,11 +746,12 @@ gst_editor_element_add_pad_func (GstEditorElement *element,
 
   editorpad = gst_editor_pad_new (element, pad, NULL);
 
-  if (pad->direction == GST_PAD_SINK) {
+  // FIXME does this need to check for ghost/real?
+  if (GST_PAD_DIRECTION(pad) == GST_PAD_SINK) {
     element->sinkpads = g_list_prepend(element->sinkpads,editorpad);
     element->sinks++;
 //    g_print("added 'new' pad to sink list\n");
-  } else if (pad->direction == GST_PAD_SRC) {
+  } else if (GST_PAD_DIRECTION(pad) == GST_PAD_SRC) {
     element->srcpads = g_list_prepend(element->srcpads,editorpad);
     element->srcs++;
 //    g_print("added 'new' pad to src list\n");

@@ -20,18 +20,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef GST_HGUARD_GSTI386_H
-#define GST_HGUARD_GSTI386_H
+#ifndef __GST_GSTI386_H__
+#define __GST_GSTI386_H__
 
-#define GET_SP(target) \
-  __asm__( "movl %%esp, %0" : "=r"(target) : : "esp", "ebp" );
+#define GST_ARCH_SET_SP(stackpointer) \
+  __asm__( "movl %0, %%esp\n" : : "r"(stackpointer) );
 
-#define SET_SP(source) \
-  __asm__( "movl %0, %%esp\n" : : "r"(source) );
-
-#define CALL(target) \
+#define GST_ARCH_CALL(target) \
     __asm__("call *%0" : : "r"(target) );
 
-#define SETUP_STACK(sp) do ; while(0)
+// assuming the stackframe is 16 bytes
+#define GST_ARCH_SETUP_STACK(sp) sp -= 4
 
-#endif /* GST_HGUARD_GSTI386_H */
+#endif /* __GST_GSTI386_H__ */

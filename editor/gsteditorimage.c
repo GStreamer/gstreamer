@@ -45,12 +45,11 @@ struct _image_entry {
   GtkType (*gtktype) (void);
 };
 
-#define TYPES_SIZE 4
+#define TYPES_SIZE 3
 struct _image_entry _image_types[TYPES_SIZE] = {
   {GST_EDITOR_IMAGE_BIN, gst_bin_get_type },
   {GST_EDITOR_IMAGE_THREAD, gst_thread_get_type },
   {GST_EDITOR_IMAGE_PIPELINE, gst_pipeline_get_type },
-  {GST_EDITOR_IMAGE_TEE, gst_tee_get_type },
 };
 
 GstEditorImage*

@@ -1,6 +1,5 @@
 #include <glib.h>
 #include <gst/gst.h>
-#include <gst/elements/gstqueue.h>
 
 extern gboolean _gst_plugin_spew;
 

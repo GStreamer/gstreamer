@@ -41,12 +41,11 @@ struct _palette_entry {
   gchar *factoryname;
 };
 
-#define CORE_ELEMENT_SIZE 4
+#define CORE_ELEMENT_SIZE 3
 struct _palette_entry _palette_contents_core[CORE_ELEMENT_SIZE] = {
   {"Bin", gst_bin_get_type, "bin" },
   {"Thread", gst_thread_get_type, "thread" },
   {"Pipeline", gst_pipeline_get_type, "pipeline" },
-  {"Tee", gst_tee_get_type, "tee" },
 };
 
 enum {

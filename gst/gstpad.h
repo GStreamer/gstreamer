@@ -107,11 +107,6 @@ struct _GstPadClass {
   GstObjectClass parent_class;
 };
 
-/* quick access macros */
-#define GST_PAD_NAME(pad)		(GST_PAD(pad)->name)
-#define GST_PAD_DIRECTION(pad)		(GST_PAD(pad)->direction)
-#define GST_PAD_PARENT(pad)		(GST_PAD(pad)->parent)
-
 struct _GstRealPad {
   GstPad pad;
 
@@ -137,10 +132,6 @@ struct _GstRealPad {
   GList *ghostparents;
 };
 
-/* quick test to see if the pad is connected */
-#define GST_PAD_CONNECTED(pad) 		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->peer != NULL)
-#define GST_PAD_CAN_PULL(pad) 		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->pullfunc != NULL)
-
 struct _GstRealPadClass {
   GstPadClass parent_class;
 
@@ -160,7 +151,43 @@ struct _GstGhostPadClass {
   GstPadClass parent_class;
 };
 
-/* template */
+
+/***** helper macros *****/
+/* GstPad */
+#define GST_PAD_NAME(pad)		(((GstPad *)(pad))->name)
+#define GST_PAD_ELEMENT_PRIVATE(pad)	(((GstPad *)(pad))->element_private)
+#define GST_PAD_PARENT(pad)		(((GstPad *)(pad))->parent)
+#define GST_PAD_PADTEMPLATE(pad)	(((GstPad *)(pad))->padtemplate)
+
+/* GstRealPad */
+#define GST_RPAD_DIRECTION(pad)		(((GstRealPad *)(pad))->direction)
+#define GST_RPAD_CAPS(pad)		(((GstRealPad *)(pad))->caps)
+#define GST_RPAD_PEER(pad)		(((GstRealPad *)(pad))->peer)
+#define GST_RPAD_BUFPEN(pad)		(((GstRealPad *)(pad))->bufpen)
+#define GST_RPAD_CHAINFUNC(pad)		(((GstRealPad *)(pad))->chainfunc)
+#define GST_RPAD_GETFUNC(pad)		(((GstRealPad *)(pad))->getfunc)
+#define GST_RPAD_GETREGIONFUNC(pad)	(((GstRealPad *)(pad))->getregionfunc)
+#define GST_RPAD_PUSHFUNC(pad)		(((GstRealPad *)(pad))->pushfunc)
+#define GST_RPAD_PULLFUNC(pad)		(((GstRealPad *)(pad))->pullfunc)
+#define GST_RPAD_PULLREGIONFUNC(pad)	(((GstRealPad *)(pad))->pullregionfunc)
+#define GST_RPAD_QOSFUNC(pad)		(((GstRealPad *)(pad))->qosfunc)
+#define GST_RPAD_EOSFUNC(pad)		(((GstRealPad *)(pad))->eosfunc)
+
+/* GstGhostPad */
+#define GST_GPAD_REALPAD(pad)		(((GstGhostPad *)(pad))->realpad)
+
+/* Generic */
+#define GST_PAD_REALIZE(pad) (GST_IS_REAL_PAD(pad) ? ((GstRealPad *)(pad)) : GST_GPAD_REALPAD(pad))
+#define GST_PAD_DIRECTION(pad)		GST_RPAD_DIRECTION(GST_PAD_REALIZE(pad))
+#define GST_PAD_CAPS(pad)		GST_RPAD_CAPS(GST_PAD_REALIZE(pad))
+#define GST_PAD_PEER(pad)		GST_RPAD_PEER(GST_PAD_REALIZE(pad))
+
+/* Some check functions (unused?) */
+#define GST_PAD_CONNECTED(pad) 		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->peer != NULL)
+#define GST_PAD_CAN_PULL(pad) 		(GST_IS_REAL_PAD(pad) && GST_REAL_PAD(pad)->pullfunc != NULL)
+
+
+/***** PadTemplate *****/
 #define GST_TYPE_PADTEMPLATE           	(gst_padtemplate_get_type ())
 #define GST_PADTEMPLATE(obj)           	(GTK_CHECK_CAST ((obj), GST_TYPE_PADTEMPLATE,GstPad))
 #define GST_PADTEMPLATE_CLASS(klass)   	(GTK_CHECK_CLASS_CAST ((klass), GST_TYPE_PADTEMPLATE,GstPadClass))
@@ -261,7 +288,7 @@ GstBuffer*		gst_pad_pull_region		(GstPad *pad, gulong offset, gulong size);
 
 GstPad *		gst_pad_select			(GstPad *nextpad, ...);
 
-#define			gst_pad_eos(pad)		((pad)->peer->eosfunc((pad)->peer))
+#define			gst_pad_eos(pad)	(GST_RPAD_EOSFUNC(GST_RPAD_PEER(pad))(GST_PAD(GST_RPAD_PEER(pad))))
 gboolean		gst_pad_set_eos			(GstPad *pad);
 
 gboolean		gst_pad_eos_func		(GstPad *pad);

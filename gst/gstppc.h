@@ -20,18 +20,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef GST_HGUARD_GSTPPC_H
-#define GST_HGUARD_GSTPPC_H
+#ifndef __GST_GSTPPC_H__
+#define __GST_GSTPPC_H__
 
 /* FIXME: Hmm - does this work?
  */
-#define GET_SP(target) \
-    __asm__("stw 1,%0" : "=m"(target) : : "r1");
 
-#define SET_SP(source) \
-    __asm__("lwz 1,%0" : "=m"(source))
+// should bring this in line with others and use an "r"
+#define GST_ARCH_SET_SP(stackpointer) \
+    __asm__("lwz 1,%0" : : "m"(stackpointer))
 
-#define CALL(target) \
+#define GST_ARCH_CALL(target) \
     __asm__( "mr 0,%0\n\t" \
              "mtlr 0\n\t" \
              "blrl" : : "r"(target) );
@@ -43,8 +42,8 @@ struct minimal_ppc_stackframe {
     unsigned long unused2;
 };
 
-#define SETUP_STACK(sp) \
+#define GST_ARCH_SETUP_STACK(sp) \
     sp = ((unsigned long *)(sp)) - 4; \
     ((struct minimal_ppc_stackframe *)sp)->back_chain = 0;
 
-#endif /* GST_HGUARD_GSTPPC_H */
+#endif /* __GST_GSTPPC_H__ */
