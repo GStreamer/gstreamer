@@ -1,3 +1,10 @@
+2004-12-01  Benjamin Otte  <otte@gnome.org>
+
+	* gst/elements/gstbufferstore.c:
+	(gst_buffer_store_add_buffer_func):
+	  don't try to make subbuffers bigger than they can be. (fixes
+	  #159970)
+
 2004-11-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/gst/gstreamer-sections.txt:

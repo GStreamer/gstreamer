@@ -208,7 +208,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore * store, GstBuffer * buffer)
             start_offset = GST_BUFFER_OFFSET (buffer) > start_offset ? 0 :
                 start_offset - GST_BUFFER_OFFSET (buffer);
             sub = gst_buffer_create_sub (buffer, start_offset,
-                MIN (GST_BUFFER_SIZE (buffer),
+                MIN (GST_BUFFER_SIZE (buffer) - start_offset,
                     GST_BUFFER_OFFSET (current) - start_offset -
                     GST_BUFFER_OFFSET (buffer)));
             g_assert (sub);
