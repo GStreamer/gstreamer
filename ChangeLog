@@ -1,5 +1,20 @@
 2005-02-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/README:
+	* gst/base/gstbasesink.c: (gst_basesink_get_template),
+	(gst_basesink_base_init), (gst_basesink_pad_getcaps),
+	(gst_basesink_pad_setcaps), (gst_basesink_pad_buffer_alloc),
+	(gst_basesink_init), (gst_base_sink_get_template),
+	(gst_base_sink_get_caps), (gst_base_sink_set_caps),
+	(gst_base_sink_buffer_alloc), (gst_basesink_finish_preroll),
+	(gst_basesink_event), (gst_basesink_get_times),
+	(gst_basesink_do_sync), (gst_basesink_change_state):
+	Added small README for base classes.
+	Make default getcaps function in the base class return a 
+	copy of the padtemplate caps if nothing else.
+
+2005-02-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/elements/gstfakesrc.c: (gst_fakesrc_get_range_unlocked):
 	* gst/elements/gstidentity.c: (gst_identity_handle_buffer):
 	* gst/gstelement.c: (gst_element_get_state_func),

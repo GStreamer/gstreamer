@@ -155,6 +155,14 @@ gst_basesink_pad_getcaps (GstPad * pad)
   if (bclass->get_caps)
     caps = bclass->get_caps (bsink);
 
+  if (caps == NULL) {
+    GstStaticPadTemplate *stemplate;
+    GstPadTemplate *template;
+
+    stemplate = gst_basesink_get_template (bsink);
+    template = gst_static_pad_template_get (stemplate);
+    caps = gst_caps_copy (gst_pad_template_get_caps (template));
+  }
   return caps;
 }
 
