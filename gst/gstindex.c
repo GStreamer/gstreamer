@@ -555,7 +555,7 @@ gst_index_get_writer_id (GstIndex *index, GstObject *writer, gint *id)
     }
     /* if the index could not resolve, we allocate one ourselves */
     if (!success) {
-      *id = index->last_id++;
+      *id = ++index->last_id;
     }
 
     entry = gst_index_add_id (index, *id, writer_string);
