@@ -351,7 +351,7 @@ gst_multipart_mux_next_buffer (GstMultipartPad * pad)
   GstData *data = NULL;
 
   while (data == NULL) {
-    GST_LOG ("muxer: pulling %s:%s\n", GST_DEBUG_PAD_NAME (pad->pad));
+    GST_LOG ("muxer: pulling %s:%s", GST_DEBUG_PAD_NAME (pad->pad));
     data = gst_pad_pull (pad->pad);
     /* if it's an event, handle it */
     if (GST_IS_EVENT (data)) {
