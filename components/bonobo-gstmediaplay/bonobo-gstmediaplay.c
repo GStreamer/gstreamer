@@ -225,6 +225,7 @@ control_create_menus (control_data_t *control_data)
   bonobo_ui_util_set_pixbuf (control_data->uic, "/commands/Stop", pixbuf);
   gdk_pixbuf_unref (pixbuf);
 
+  g_print("create menu done\n");
 }
 
 static void

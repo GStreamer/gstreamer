@@ -302,6 +302,16 @@ on_gst_media_play_destroy (GtkWidget *widget,
   gst_main_quit ();
 }
 
+void 
+on_exit_menu_activate (GtkWidget *widget, 
+		       GstMediaPlay *mplay)
+{
+  gdk_threads_leave ();
+  gst_play_stop (mplay->play);
+  gdk_threads_enter ();
+  gst_main_quit ();
+}
+
 gint 
 on_gst_media_play_delete_event (GtkWidget *widget, 
 		                GdkEvent *event, 

@@ -226,12 +226,13 @@ PLUGINS_SRCDIR=`pwd`/$srcdir
 AC_DEFINE_UNQUOTED(PLUGINS_SRCDIR,"$PLUGINS_SRCDIR")
 AC_SUBST(PLUGINS_SRCDIR)
 
-dnl check if css.c exists (FIXME)
+dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
-if test -f plugins/dvdsrc/css.c
+if test -f plugins/dvdsrc/css-auth.c
 then
   AC_MSG_RESULT(yes)
   HAVE_CSSAUTH="yes"
+  AC_DEFINE(HAVE_CSSAUTH) 
 else
   AC_MSG_RESULT(no)
   HAVE_CSSAUTH="no"

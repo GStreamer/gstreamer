@@ -176,7 +176,7 @@
 
     <partintro>
       <para>
-        In this part we will describe how you create a new plugin
+        In this part we will describe how you can create a new plugin
 	to be used in <application>GStreamer</application>.
       </para>      
     </partintro>
