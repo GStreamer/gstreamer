@@ -77,6 +77,12 @@ gst_bytestream_new (GstPad * pad)
   return bs;
 }
 
+/**
+ * gst_bytestream_destroy:
+ * @bs: the bytestream object to destroy
+ *
+ * destroy the bytestream object and free its resources.
+ */
 void
 gst_bytestream_destroy (GstByteStream * bs)
 {
@@ -226,6 +232,20 @@ gst_bytestream_fill_bytes (GstByteStream *bs, guint32 len)
   return TRUE;
 }
 
+/**
+ * gst_bytestream_peek:
+ * @bs: the bytestream to peek
+ * @buf: pointer to a variable that can hold a buffer pointer.
+ * @len: the number of bytes to peek
+ *
+ * Peeks len bytes into the bytestream, the result is returned as
+ * a #GstBuffer. Unref the buffer after usage.
+ * This function can return less bytes than requested. In that casa,
+ * an event might have happened which you can retrieve with
+ * gst_bytestream_get_status().
+ *
+ * Returns: The number of bytes successfully peeked.
+ */
 guint32
 gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
 {
@@ -282,6 +302,22 @@ gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
   return len;
 }
 
+/**
+ * gst_bytestream_peek_bytes:
+ * @bs: the bytestream to peek
+ * @data: pointer to a variable that can hold a guint8 pointer.
+ * @len: the number of bytes to peek
+ *
+ * Peeks len bytes into the bytestream, the result is returned as
+ * a pointer to a guint8*. The data pointed to be data should not
+ * be freed and will become invalid after performing the next bytestream
+ * operation.
+ * This function can return less bytes than requested. In that casa,
+ * an event might have happened which you can retrieve with
+ * gst_bytestream_get_status().
+ *
+ * Returns: The number of bytes successfully peeked.
+ */
 guint32
 gst_bytestream_peek_bytes (GstByteStream *bs, guint8** data, guint32 len)
 {
@@ -373,6 +409,19 @@ gst_bytestream_assemble (GstByteStream *bs, guint32 len)
   return data;
 }
 
+/**
+ * gst_bytestream_flush:
+ * @bs: the bytestream to flush
+ * @len: the number of bytes to flush
+ *
+ * Flush len bytes from the bytestream. 
+ * This function can return FALSE when the number of
+ * bytes could not be flushed due to an event. In that case,
+ * you can get the number of available bytes before the event
+ * with gst_bytestream_get_status().
+ *
+ * Returns: TRUE if the number of bytes could be flushed.
+ */
 gboolean
 gst_bytestream_flush (GstByteStream *bs, guint32 len)
 {
@@ -384,8 +433,9 @@ gst_bytestream_flush (GstByteStream *bs, guint32 len)
   /* make sure we have enough */
   bs_print ("flush: there are %d bytes in the list", bs->listavail);
   if (len > bs->listavail) {
-    if (!gst_bytestream_fill_bytes (bs, len))
+    if (!gst_bytestream_fill_bytes (bs, len)) {
       return FALSE;
+    }
     bs_print ("flush: there are now %d bytes in the list", bs->listavail);
   }
 
@@ -394,6 +444,16 @@ gst_bytestream_flush (GstByteStream *bs, guint32 len)
   return TRUE;
 }
 
+/**
+ * gst_bytestream_flush_fast:
+ * @bs: the bytestream to flush
+ * @len: the number of bytes to flush
+ *
+ * Flushes len bytes from the bytestream. This function
+ * is faster than gst_bytestream_flush() but only works
+ * when you have recently peeked no less than len bytes
+ * with gst_bytestream_peek() or gst_bytestream_peek_bytes().
+ */
 void
 gst_bytestream_flush_fast (GstByteStream *bs, guint32 len)
 {
@@ -454,6 +514,20 @@ gst_bytestream_flush_fast (GstByteStream *bs, guint32 len)
   }
 }
 
+/**
+ * gst_bytestream_seek:
+ * @bs: the bytestream to seek
+ * @offset: the byte offset to seek to
+ * @method: the seek method.
+ *
+ * Perform a seek on the bytestream to the given offset.
+ * The method can be one of GST_SEEK_METHOD_CUR, GST_SEEK_METHOD_SET,
+ * GST_SEEK_METHOD_END.
+ * This seek will also flush any pending data in the bytestream or
+ * peer elements.
+ *
+ * Returns: TRUE when the seek succeeded.
+ */
 gboolean
 gst_bytestream_seek (GstByteStream *bs, gint64 offset, GstSeekType method)
 {
@@ -482,6 +556,14 @@ gst_bytestream_seek (GstByteStream *bs, gint64 offset, GstSeekType method)
   return FALSE;
 }
 
+/**
+ * gst_bytestream_tell
+ * @bs: a bytestream
+ *
+ * Get the current byteoffset in the bytestream.
+ *
+ * Returns: the offset or -1 on error.
+ */
 guint64
 gst_bytestream_tell (GstByteStream *bs)
 {
@@ -499,6 +581,14 @@ gst_bytestream_tell (GstByteStream *bs)
   return -1;
 }
 
+/**
+ * gst_bytestream_length
+ * @bs: a bytestream
+ *
+ * Get the total length of the bytestream.
+ *
+ * Returns: the total length or -1 on error.
+ */
 guint64
 gst_bytestream_length (GstByteStream *bs)
 {
@@ -515,6 +605,20 @@ gst_bytestream_length (GstByteStream *bs)
   return -1;
 }
 
+/**
+ * gst_bytestream_read:
+ * @bs: the bytestream to read
+ * @buf: pointer to a variable that can hold a buffer pointer.
+ * @len: the number of bytes to read
+ *
+ * Read len bytes from the bytestream, the result is returned as
+ * a #GstBuffer. Unref the buffer after usage.
+ * This function can return less bytes than requested. In that casa,
+ * an event might have happened which you can retrieve with
+ * gst_bytestream_get_status().
+ *
+ * Returns: The number of bytes successfully read.
+ */
 guint32
 gst_bytestream_read (GstByteStream *bs, GstBuffer** buf, guint32 len)
 {
@@ -536,7 +640,9 @@ gst_bytestream_read (GstByteStream *bs, GstBuffer** buf, guint32 len)
  * @bs: a bytestream
  * @size: the size to hint
  *
- * Give a hint that we are going to read chunks of the given size
+ * Give a hint that we are going to read chunks of the given size.
+ * Giving size hints to the peer element might improve performance
+ * since less buffers need to be merged.
  *
  * Returns: TRUE if the hint was accepted
  */
@@ -558,13 +664,9 @@ gst_bytestream_size_hint (GstByteStream *bs, guint32 size)
  * @avail_out: total number of bytes buffered
  * @event_out: an event
  *
- * When an event occurs, the bytestream will return NULL.  You must
- * retrieve the event using this API before reading more bytes from
- * the stream.
- *
- * It is possible for the bytestream to return NULL due to running
- * out of buffers, however, this indicates a bug because an EOS
- * event should have been sent.
+ * When an event occurs, the bytestream operations return a value less
+ * than the requested length. You must retrieve the event using this API 
+ * before reading more bytes from the stream.
  */
 void
 gst_bytestream_get_status (GstByteStream *bs,
@@ -590,6 +692,8 @@ gst_bytestream_get_status (GstByteStream *bs,
  * This function will not check input buffer boundries.  It is  possible
  * the next read could span two or more input buffers with different
  * timestamps.
+ *
+ * Returns: a timestamp
  */
 guint64
 gst_bytestream_get_timestamp (GstByteStream *bs)
@@ -613,6 +717,13 @@ gst_bytestream_get_timestamp (GstByteStream *bs)
   return GST_BUFFER_TIMESTAMP (headbuf);
 }
 
+/**
+ * gst_bytestream_print_status
+ * @bs: a bytestream
+ *
+ * Print the current status of the bytestream object. mainly
+ * used for debugging purposes.
+ */
 void
 gst_bytestream_print_status (GstByteStream * bs)
 {
@@ -626,7 +737,8 @@ gst_bytestream_print_status (GstByteStream * bs)
     buf = GST_BUFFER (walk->data);
     walk = g_slist_next (walk);
 
-    bs_print ("STATUS: buffer starts at %llu and is %d bytes long", GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
+    bs_print ("STATUS: buffer starts at %llu and is %d bytes long", 
+	      GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
   }
 }
 
