@@ -1,3 +1,9 @@
+2004-11-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/manual/programs.xml:
+      Added a first batch of gst-launch examples, as provided by Ronald
+      and others from the devel-mlist
+
 2004-11-28  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstelement.c: (gst_element_negotiate_pads):

@@ -19,7 +19,7 @@
       syntax.
     </para> 
     <para> 
-      A simple commandline looks like:
+      A simple commandline to play a mp3 audio file looks like:
 
     <screen>
 gst-launch filesrc location=hello.mp3 ! mad ! osssink
@@ -32,6 +32,8 @@ gst-launch filesrc location=redpill.vob ! mpegdemux name=demux \
  demux.audio_00! { ac3parse ! a52dec ! osssink } \
  demux.video_00! { mpeg2dec ! xvideosink }
     </screen>
+
+	<xref linkend="section-programs-gst-launch-more-examples"/> lists more gst-launch commandlines.
 
     </para>
     <para>
@@ -147,6 +149,69 @@ main (int argc, char *argv[])
         </para>
       </sect3>          
     </sect2>
+    <sect2 id="section-programs-gst-launch-more-examples">
+      <title>More Examples</title>
+      <para>
+        This chapter collects some more complex pipelines. The examples are split into several lines,
+        so make sure to include the trailing backslashes.
+      </para>
+      <para> 
+        Play a remote mp3 audio file:
+        <screen>
+gst-launch gnomevfssrc location=http://www.server.org/hello.mp3 ! mad ! alsasink
+        </screen>
+      </para>
+      <para> 
+        Play a local mp3 audio file with visualisation:
+        <screen>
+gst-launch filesrc location=Hello.mp3 ! mad ! tee name=t ! \
+  { queue ! osssink } \
+  { t. ! queue ! synaesthesia ! ffmpegcolorspace ! xvimagesink }
+        </screen>
+      </para>
+     <para> 
+        Play a local ogg audio file:
+        <screen>
+gst-launch filesrc location=file.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioscale ! alsasink
+        </screen>
+      </para>
+      <para> 
+        Play a local ogg video file:
+        <screen>
+gst-launch filesrc location=file.ogg ! oggdemux name=demux \
+  { demux. ! queue ! theoradec ! ffmpegcolorspace ! videoscale ! xvimagesink } \
+  { demux. ! queue ! vorbisdec ! audioconvert ! audioscale ! alsasink }
+        </screen>
+      </para>
+      <para>
+        Play a local avi video file:
+       <screen>
+gst-launch filesrc location=video.avi ! mpegdemux name=demux \
+  demux.audio_00! { queue ! ac3parse ! a52dec ! osssink } \
+  demux.video_00! { queue ! mpeg2dec ! xvideosink }
+        </screen>
+      </para>
+      <para>
+        Transcoding an audio file from one format into another:
+       <screen>
+gst-launch filesrc location=file.ogg ! oggdemux ! vorbisdec ! audioconvert ! flacenc ! filesink location=file.flac
+        </screen>
+      </para>
+      <para>
+        Transcoding an dvd video into a ogg video:
+       <screen>
+gst-launch-0.8 oggmux name=mux ! filesink location=/tmp/file.ogg \
+  { dvdreadsrc location=/dev/cdrom ! dvddemux name=demux.audio_00 ! \
+    { queue ! a52dec ! audioconvert ! rawvorbisenc ! queue ! mux. } \
+    { demux.video_00 ! queue ! mpeg2dec ! ffcolorspace ! videoscale ! video/x-raw-yuv,width=384,height=288 ! tee name=t ! \
+      { queue ! theoraenc ! queue ! mux. } \
+    } \
+  } \
+  { t. ! queue ! ffcolorspace ! ximagesink }
+        </screen>
+      </para>
+
+	</sect2>
   </sect1>
 
   <sect1 id="section-programs-gst-inspect">
