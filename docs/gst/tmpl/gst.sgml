@@ -29,7 +29,7 @@ it can be used. You should pass a pointer to the main argc and argv variables so
 process its own command line options, as shown in the following example.
 
 <example>
-<title>Initializing the gstreamer libarary</title>
+<title>Initializing the gstreamer library</title>
   <programlisting>
   int 
   main (int argc, char *argv[])
