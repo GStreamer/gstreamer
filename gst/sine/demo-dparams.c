@@ -97,14 +97,14 @@ int main(int argc,char *argv[]) {
   
   g_value_set_float(vals[0], 10.0);
 
-  // this defines the maximum slope that this
-  // param can change.  This says that in 50ms
-  // the value can change by a maximum of one semitone
-  // (the log of one semitone is 0.693)
+  * this defines the maximum slope that this *
+  * param can change.  This says that in 50ms *
+  * the value can change by a maximum of one semitone *
+  * (the log of one semitone is 0.693) *
   g_value_set_float(vals[1], 0.693);
   g_value_set_float(vals[2], 50000000.0);
   
-  // set the default update period to 0.5ms, or 2000Hz
+  * set the default update period to 0.5ms, or 2000Hz *
   GST_DPARAM_DEFAULT_UPDATE_PERIOD(freq) = 2000000LL;
   */
   volume = gst_dparam_new(G_TYPE_FLOAT);
@@ -114,13 +114,13 @@ int main(int argc,char *argv[]) {
   
 /*  vals = GST_DPARAM_GET_POINT(volume, 0LL);
   
-  // this defines the maximum slope that this
-  // param can change.  This says that in 10ms
-  // the value can change by a maximum of 0.2
+  * this defines the maximum slope that this *
+  * param can change.  This says that in 10ms *
+  * the value can change by a maximum of 0.2 *
   g_value_set_float(vals[1], 0.2);
   g_value_set_float(vals[2], 10000000.0);
   
-  // set the default update period to 0.5ms, or 2000Hz
+  * set the default update period to 0.5ms, or 2000Hz *
   GST_DPARAM_DEFAULT_UPDATE_PERIOD(volume) = 2000000LL;
   */
   g_assert(gst_dpman_attach_dparam (dpman, "volume", volume));
@@ -155,7 +155,7 @@ int main(int argc,char *argv[]) {
   
   
   /***** set up the handlers and such *****/
-  //gtk_signal_connect(volume_adj,"value-changed",GTK_SIGNAL_FUNC(volume_changed),sinesrc);
+  /*gtk_signal_connect(volume_adj,"value-changed",GTK_SIGNAL_FUNC(volume_changed),sinesrc); */
   g_signal_connect(volume_adj,"value-changed",
 					 GTK_SIGNAL_FUNC(dynparm_value_changed),
 					 volume);

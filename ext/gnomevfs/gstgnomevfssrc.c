@@ -224,7 +224,7 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 		} else {
 			/* otherwise set the new filename */
                         location = g_value_get_string (value);
-                        /* if it's not a proper uri, default to file:// -- this
+                        /* if it's not a proper uri, default to file: -- this
                          * is a crude test */
                         if (!strchr (location, ':'))
                                 if (*location == '/')

@@ -57,7 +57,7 @@ static GstPad* gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *te
 static void gst_alsa_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_alsa_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstElementStateReturn gst_alsa_change_state(GstElement *element);
-//static GstPadNegotiateReturn gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data);
+/*static GstPadNegotiateReturn gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data); */
 
 static GstCaps* gst_alsa_caps (GstAlsa *this);
 
@@ -305,7 +305,7 @@ gst_alsa_init(GstAlsa *this)
     
     gst_element_add_pad(GST_ELEMENT(this), GST_ALSA_PAD(this->pads)->pad);
     
-    //gst_pad_set_negotiate_function(GST_ALSA_PAD(this->pads)->pad, gst_alsa_negotiate);
+    /*gst_pad_set_negotiate_function(GST_ALSA_PAD(this->pads)->pad, gst_alsa_negotiate); */
     gst_element_set_loop_function(GST_ELEMENT(this), gst_alsa_loop);
 }
 
@@ -358,7 +358,7 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     pad->channel = channel;
     pad->pad = gst_pad_new_from_template (templ, newname);
     gst_element_add_pad (GST_ELEMENT (this), pad->pad);
-    //gst_pad_set_negotiate_function(pad->pad, gst_alsa_negotiate);
+    /*gst_pad_set_negotiate_function(pad->pad, gst_alsa_negotiate); */
     
     if (this->data_interleaved && this->pads) {
         gst_element_remove_pad (GST_ELEMENT (this), GST_ALSA_PAD(this->pads)->pad);
@@ -369,7 +369,7 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gcha
     
     this->pads = g_list_append(this->pads, pad);
     
-    // FIXME: allow interleaved access (for hw:N,M access on consumer hardware)
+    /* FIXME: allow interleaved access (for hw:N,M access on consumer hardware) */
 
     if (this->data_interleaved) {
         this->channels = pad->channel + 1;
@@ -623,7 +623,7 @@ gst_alsa_caps (GstAlsa *this)
                                "channels",   GST_PROPS_INT ((this->data_interleaved ? this->channels : 1)),
                                NULL);
     } else {
-        // we'll just have to assume int, i don't feel like checking
+        /* we'll just have to assume int, i don't feel like checking */
         if (this->format == SND_PCM_FORMAT_MU_LAW) {
             law = 1;
             width = 8;
@@ -727,12 +727,12 @@ gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data)
     
     this = GST_ALSA(gst_pad_get_parent(pad));
     
-    // we decide
+    /* we decide */
     if (user_data == NULL) {
         *caps = NULL;
         return GST_PAD_NEGOTIATE_TRY;
     }
-    // have we got caps?
+    /* have we got caps? */
     else if (*caps) {
         if (this->handle == NULL)
             if (!gst_alsa_open_audio(this))
@@ -748,7 +748,7 @@ gst_alsa_negotiate(GstPad *pad, GstCaps **caps, gpointer *user_data)
             if (GST_FLAG_IS_SET(this, GST_ALSA_OPEN))
                 gst_alsa_close_audio(this);
             
-            // FIXME send out another caps if nego fails
+            /* FIXME send out another caps if nego fails */
             
             if (!gst_alsa_open_audio(this))
                 return GST_PAD_NEGOTIATE_FAIL;
@@ -817,7 +817,7 @@ gst_alsa_loop (GstElement *element)
         xrun_detected = FALSE;
         
         this->avail = snd_pcm_avail_update (this->handle);
-//        g_print ("snd_pcm_avail_update() = %d\n", this->avail);
+/*        g_print ("snd_pcm_avail_update() = %d\n", this->avail); */
         
         if (this->avail < 0) {
             if (this->avail == -EPIPE) {
@@ -871,7 +871,7 @@ gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames)
     GstAlsaPad *pad = NULL;
     GstCaps *caps;
     gint unit;
-//    gint i=0;
+/*    gint i=0; */
     
     static gboolean caps_set = FALSE;
     
@@ -894,14 +894,14 @@ gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames)
     unit = this->sample_bytes * (this->data_interleaved ? this->channels : 1);
     
     while (frames) {
-//        g_print ("(%d) frames to process: %d\n", i++, frames);
+/*        g_print ("(%d) frames to process: %d\n", i++, frames); */
         l = this->pads;
         while (l) {
             pad = GST_ALSA_PAD(l);
             
             if (!pad->buf) {
                 pad->buf = g_malloc(this->period_frames * unit);
-                //  g_print ("created buffer %p of size %d\n", pad->buf, this->period_frames * unit);
+                /*  g_print ("created buffer %p of size %d\n", pad->buf, this->period_frames * unit); */
             }
             /*
             g_print ("pad->buf = %p, offset = %d\n", pad->buf, pad->offset);
@@ -930,8 +930,8 @@ gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames)
             }
             l = l->next;
         }
-        frames -= MIN(frames, this->period_frames - pad->offset); // shouldn't
-        // matter which pad, in theory (tm)
+        frames -= MIN(frames, this->period_frames - pad->offset); /* shouldn't */
+        /* matter which pad, in theory (tm) */
     }
     
     return TRUE;
@@ -1272,7 +1272,7 @@ gst_alsa_stop_audio(GstAlsa *this)
 static void
 gst_alsa_close_audio(GstAlsa *this)
 {
-//    gint err;
+/*    gint err; */
     g_return_if_fail(this != NULL);
     g_return_if_fail(this->handle != NULL);
 
@@ -1304,7 +1304,7 @@ gst_alsa_get_channel_addresses (GstAlsa *this)
     
     GST_DEBUG(0, "got %d mmap'd frames\n", (int)this->avail);
     
-//    g_print ("snd_pcm_mmap_begin() sets avail = %d\n", this->avail);
+/*    g_print ("snd_pcm_mmap_begin() sets avail = %d\n", this->avail); */
     
     l = this->pads;
     while (l) {
@@ -1366,7 +1366,7 @@ gst_alsa_sink_silence_on_channel (GstAlsa *this, guint32 chn, guint32 nframes)
     } else {
         memset (this->access_addr[chn], 0, nframes * this->sample_bytes);
     }
-//    mark_channel_done (chn);
+/*    mark_channel_done (chn); */
 }
 
 /* taken directly from paul davis' memops.cc */

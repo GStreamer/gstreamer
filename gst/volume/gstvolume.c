@@ -96,7 +96,7 @@ static void inline 	volume_fast_8bit_chain 	   (gint8* data, guint numsamples, G
 static void inline 	volume_fast_16bit_chain    (gint16* data, guint numsamples, GstVolume *filter);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_filter_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
 static GstBufferPool*
 volume_get_bufferpool (GstPad *pad)
@@ -206,7 +206,7 @@ volume_class_init (GstVolumeClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
     g_param_spec_boolean("silent","silent","silent",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTED,
     g_param_spec_boolean("muted","muted","muted",

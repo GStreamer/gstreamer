@@ -18,7 +18,7 @@
  */
 
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED */
 #include <gstvideoscale.h>
 
 
@@ -96,7 +96,7 @@ static void	gst_videoscale_get_property		(GObject *object, guint prop_id, GValue
 static void	gst_videoscale_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_videoscale_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_videoscale_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_videoscale_get_type (void)
@@ -130,13 +130,13 @@ gst_videoscale_class_init (GstVideoscaleClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
     g_param_spec_int("width","width","width",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
     g_param_spec_int("height","height","height",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
     g_param_spec_enum("method","method","method",
-                      GST_TYPE_VIDEOSCALE_METHOD,0,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_VIDEOSCALE_METHOD,0,G_PARAM_READWRITE)); /* CHECKME! */
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
@@ -219,21 +219,21 @@ gst_videoscale_init (GstVideoscale *videoscale)
   GST_DEBUG(0,"gst_videoscale_init\n");
   videoscale->sinkpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (sink_templ), "sink");
-  //gst_pad_set_negotiate_function(videoscale->sinkpad,videoscale_negotiate_sink);
+  /*gst_pad_set_negotiate_function(videoscale->sinkpad,videoscale_negotiate_sink); */
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->sinkpad);
   gst_pad_set_chain_function(videoscale->sinkpad,gst_videoscale_chain);
   gst_pad_set_connect_function(videoscale->sinkpad,gst_videoscale_sinkconnect);
 
   videoscale->srcpad = gst_pad_new_from_template (
 		  GST_PADTEMPLATE_GET (src_templ), "src");
-  //gst_pad_set_negotiate_function(videoscale->srcpad,videoscale_negotiate_src);
+  /*gst_pad_set_negotiate_function(videoscale->srcpad,videoscale_negotiate_src); */
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->srcpad);
 
   videoscale->targetwidth = -1;
   videoscale->targetheight = -1;
   videoscale->method = GST_VIDEOSCALE_NEAREST;
-  //videoscale->method = GST_VIDEOSCALE_BILINEAR;
-  //videoscale->method = GST_VIDEOSCALE_POINT_SAMPLE;
+  /*videoscale->method = GST_VIDEOSCALE_BILINEAR; */
+  /*videoscale->method = GST_VIDEOSCALE_POINT_SAMPLE; */
 }
 
 
@@ -275,7 +275,7 @@ GST_DEBUG(0,"size=%ld from=%dx%d to=%dx%d newsize=%d\n",
   GST_BUFFER_DATA(outbuf) = g_malloc (videoscale->targetwidth*videoscale->targetheight*2);
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
-  //g_return_if_fail(videoscale->scale_cc != NULL);
+  /*g_return_if_fail(videoscale->scale_cc != NULL); */
   videoscale->scale_cc(videoscale, data, GST_BUFFER_DATA(outbuf));
 
   GST_DEBUG (0,"gst_videoscale_chain: pushing buffer of %d bytes in '%s'\n",GST_BUFFER_SIZE(outbuf),

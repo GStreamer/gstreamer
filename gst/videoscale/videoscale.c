@@ -54,7 +54,7 @@ gst_videoscale_setup (GstVideoscale *scale)
     case GST_MAKE_FOURCC('R','G','B',' '):
       scale->scale_cc = gst_videoscale_scale_rgb;
       /* XXX */
-      //scale->scale_bytes = gst_caps_get_int(scale->srcpad->caps,"bpp")/8;
+      /*scale->scale_bytes = gst_caps_get_int(scale->srcpad->caps,"bpp")/8; */
       break;
     default:
       g_print("videoscale: unsupported video format %08x\n", scale->format);
@@ -170,8 +170,8 @@ gst_videoscale_bilinear (unsigned char *src, double x, double y, int sw, int sh)
        a*b*RC(j+1,k+1);
 
   color=rint(dest);
-  if (color<0) color=abs(color);  // cannot have negative values !
-  //if (color<0) color=0;  // cannot have negative values !
+  if (color<0) color=abs(color);  /* cannot have negative values ! */
+  /*if (color<0) color=0;  // cannot have negative values ! */
   if (color>255) color=255;
 
   return (unsigned char) color;
@@ -207,7 +207,7 @@ gst_videoscale_bicubic (unsigned char *src, double x, double y, int sw, int sh)
   dest= -b*(1-b)*(1-b)*t1+ (1-2*b*b+b*b*b)*t2+ b*(1+b-b*b)*t3+ b*b*(b-1)*t4;
 
   color=rint(dest);
-  if (color<0) color=abs(color);  // cannot have negative values !
+  if (color<0) color=abs(color);  /* cannot have negative values ! */
   if (color>255) color=255;
 
   return (unsigned char) color;
@@ -237,7 +237,7 @@ gst_videoscale_scale_plane_slow (GstVideoscale *scale, unsigned char *src, unsig
       }
       else {
 	*dest++ = scale->filter(src, xr, yr, sw, sh);
-	//*dest++ = gst_videoscale_bicubic(src, xr, yr, sw, sh);
+	/**dest++ = gst_videoscale_bicubic(src, xr, yr, sw, sh); */
       }
     }
   }

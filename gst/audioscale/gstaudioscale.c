@@ -21,7 +21,7 @@
 #include <string.h>
 #include <math.h>
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED */
 #include <gstaudioscale.h>
 #include <gst/audio/audio.h>
 #include <gst/resample/resample.h>
@@ -112,7 +112,7 @@ static void gst_audioscale_get_property (GObject * object, guint prop_id,
 
 static GstElementClass *parent_class = NULL;
 
-//static guint gst_audioscale_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_audioscale_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 audioscale_get_type (void)
@@ -146,13 +146,13 @@ gst_audioscale_class_init (AudioscaleClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
     g_param_spec_int("frequency","frequency","frequency",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERLEN,
 	g_param_spec_int ("filter_length", "filter_length", "filter_length",
-		G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	// CHECKME
+		G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD,
 	g_param_spec_int ("method", "method", "method",
-		G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	// CHECKME
+		G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
@@ -174,7 +174,7 @@ gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
   r->channels = gst_caps_get_int (caps, "channels");
   
   resample_reinit(r);
-  //g_print("audioscale: unsupported scaling method %d\n", audioscale->method);
+  /*g_print("audioscale: unsupported scaling method %d\n", audioscale->method); */
   
   return GST_PAD_CONNECT_OK;
 }
@@ -215,7 +215,7 @@ gst_audioscale_init (Audioscale *audioscale)
   r->filter_length = 16;
   r->i_rate = -1;
   r->o_rate = -1;
-  //r->verbose = 1;
+  /*r->verbose = 1; */
 
   resample_init(r);
 }

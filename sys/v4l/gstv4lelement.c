@@ -81,7 +81,7 @@ static gboolean              plugin_init                 (GModule            *mo
 
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_v4lelement_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_v4lelement_signals[LAST_SIGNAL] = { 0 }; */
 
 
 GType

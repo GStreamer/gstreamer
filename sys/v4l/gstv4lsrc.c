@@ -84,7 +84,7 @@ static GstCaps *capslist = NULL;
 static GstPadTemplate *src_template;
 
 static GstElementClass *parent_class = NULL;\
-//static guint gst_v4lsrc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_v4lsrc_signals[LAST_SIGNAL] = { 0 }; */
 
 
 GType

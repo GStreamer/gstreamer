@@ -124,12 +124,12 @@ double functable_eval(functable_t *t,double x)
 	w0 = (x - 2 * x2 + x3) * t->offset;
 	w1 = (-x2 + x3) * t->offset;
 
-	//printf("i=%d x=%g f0=%g f1=%g w0=%g w1=%g\n",i,x,f0,f1,w0,w1);
+	/*printf("i=%d x=%g f0=%g f1=%g w0=%g w1=%g\n",i,x,f0,f1,w0,w1); */
 
 	w = t->fx[i] * f0 + t->fx[i + 1] * f1 +
 		t->fdx[i] * w0 + t->fdx[i + 1] * w1;
 
-	//w = t->fx[i] * (1-x) + t->fx[i+1] * x;
+	/*w = t->fx[i] * (1-x) + t->fx[i+1] * x; */
 
 	return w;
 }
@@ -266,37 +266,37 @@ void functable_fir2_altivec(functable_t *t, float *r0, float *r1,
 	sum0 = 0;
 	sum1 = 0;
 	for(j=0;j<len;j++){
-		// t->fx, t->fdx needs to be multiplexed by n
-		// we need 5 consecutive floats, which fit into 2 vecs
-		// load v0, t->fx[i]
-		// load v1, t->fx[i+n]
-		// v2 = v0 (not correct)
-		// v3 = (v0>>32) || (v1<<3*32) (not correct)
-		//
-		// load v4, t->dfx[i]
-		// load v5, t->dfx[i+n]
-		// v6 = v4 (not correct)
-		// v7 = (v4>>32) || (v5<<3*32) (not correct)
-		// 
-		// v8 = splat(f0)
-		// v9 = splat(f1)
-		// v10 = splat(w0)
-		// v11 = splat(w1)
-		//
-		// v12 = v2 * v8
-		// v12 += v3 * v9
-		// v12 += v6 * v10
-		// v12 += v7 * v11
+		/* t->fx, t->fdx needs to be multiplexed by n */
+		/* we need 5 consecutive floats, which fit into 2 vecs */
+		/* load v0, t->fx[i] */
+		/* load v1, t->fx[i+n] */
+		/* v2 = v0 (not correct) */
+		/* v3 = (v0>>32) || (v1<<3*32) (not correct) */
+		/* */
+		/* load v4, t->dfx[i] */
+		/* load v5, t->dfx[i+n] */
+		/* v6 = v4 (not correct) */
+		/* v7 = (v4>>32) || (v5<<3*32) (not correct) */
+		/*  */
+		/* v8 = splat(f0) */
+		/* v9 = splat(f1) */
+		/* v10 = splat(w0) */
+		/* v11 = splat(w1) */
+		/* */
+		/* v12 = v2 * v8 */
+		/* v12 += v3 * v9 */
+		/* v12 += v6 * v10 */
+		/* v12 += v7 * v11 */
 		
 		w = t->fx[i] * f0 + t->fx[i + 1] * f1 +
 			t->fdx[i] * w0 + t->fdx[i + 1] * w1;
 		
-		// v13 = data[j*2]
-		// v14 = data[j*2+4]
-		// v15 = deinterlace_high(v13,v14)
-		// v16 = deinterlace_low(v13,v14)
-		// (sum0) v17 += multsum(v13,v15)
-		// (sum1) v18 += multsum(v14,v16)
+		/* v13 = data[j*2] */
+		/* v14 = data[j*2+4] */
+		/* v15 = deinterlace_high(v13,v14) */
+		/* v16 = deinterlace_low(v13,v14) */
+		/* (sum0) v17 += multsum(v13,v15) */
+		/* (sum1) v18 += multsum(v14,v16) */
 		
 		sum0 += data[j*2] * w;
 		sum1 += data[j*2+1] * w;

@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define DEBUG
+/*#define DEBUG */
 
 #include <sys/types.h>
 #include <sys/stat.h>

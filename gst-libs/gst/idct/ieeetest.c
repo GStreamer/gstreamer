@@ -117,7 +117,7 @@ main(int argc, char **argv)
 	 gst_trace_read_tsc(&tscstart);
     gst_idct_convert(idct, testout);
 	 gst_trace_read_tsc(&tscstop);
-	 //printf("time %llu, %llu %lld\n", tscstart, tscstop, tscstop-tscstart);
+	 /*printf("time %llu, %llu %lld\n", tscstart, tscstop, tscstop-tscstart); */
 	 if (tscstop - tscstart < tscmin) tscmin = tscstop-tscstart;
 	 if (tscstop - tscstart > tscmax) tscmax = tscstop-tscstart;
 

@@ -55,7 +55,7 @@ enum {
   ARG_VOLUME,
 };
 
-// FIXME: this is not core business...
+/* FIXME: this is not core business... */
 GST_PADTEMPLATE_FACTORY (sinesrc_src_factory,
   "src",
   GST_PAD_SRC,
@@ -80,10 +80,10 @@ static void 			gst_sinesrc_set_property	(GObject *object, guint prop_id,
 								 const GValue *value, GParamSpec *pspec);
 static void 			gst_sinesrc_get_property	(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
-//static gboolean gst_sinesrc_change_state(GstElement *element,
-//                                          GstElementState state);
-//static void gst_sinesrc_close_audio(GstSineSrc *src);
-//static gboolean gst_sinesrc_open_audio(GstSineSrc *src);
+/*static gboolean gst_sinesrc_change_state(GstElement *element, */
+/*                                          GstElementState state); */
+/*static void gst_sinesrc_close_audio(GstSineSrc *src); */
+/*static gboolean gst_sinesrc_open_audio(GstSineSrc *src); */
 
 static void gst_sinesrc_update_freq(GValue *value, gpointer data);
 static void 			gst_sinesrc_populate_sinetable	(GstSineSrc *src);
@@ -93,7 +93,7 @@ static void 			gst_sinesrc_force_caps		(GstSineSrc *src);
 static GstBuffer* 		gst_sinesrc_get			(GstPad *pad);
 
 static GstElementClass *parent_class = NULL;
-//static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_sinesrc_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_sinesrc_get_type (void)
@@ -150,7 +150,7 @@ gst_sinesrc_class_init (GstSineSrcClass *klass)
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
 
-//  gstelement_class->change_state = gst_sinesrc_change_state;
+/*  gstelement_class->change_state = gst_sinesrc_change_state; */
 }
 
 static void 
@@ -231,7 +231,7 @@ gst_sinesrc_get(GstPad *pad)
     src->table_lookup_next = src->table_lookup + 1;
     src->table_interp = src->table_pos - src->table_lookup;
 
-    // wrap the array lookups if we're out of bounds
+    /* wrap the array lookups if we're out of bounds */
     if (src->table_lookup_next >= src->table_size){
       src->table_lookup_next -= src->table_size;
       if (src->table_lookup >= src->table_size){
@@ -242,11 +242,11 @@ gst_sinesrc_get(GstPad *pad)
     
     src->table_pos += src->table_inc;
 
-    //no interpolation
-    //samples[i] = src->table_data[src->table_lookup]
-    //               * src->volume * 32767.0;
+    /*no interpolation */
+    /*samples[i] = src->table_data[src->table_lookup] */
+    /*               * src->volume * 32767.0; */
 
-    //linear interpolation
+    /*linear interpolation */
     samples[i++] = ((src->table_interp
                    *(src->table_data[src->table_lookup_next]
                     -src->table_data[src->table_lookup]
@@ -289,10 +289,10 @@ gst_sinesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       src->buffer_size = g_value_get_int (value);
       break;
     case ARG_FREQ:
-      //gst_dpman_handle_set_prop(src->dpman, "freq", value);
+      /*gst_dpman_handle_set_prop(src->dpman, "freq", value); */
       break;
     case ARG_VOLUME:
-      //gst_dpman_handle_set_prop(src->dpman, "volume", value);
+      /*gst_dpman_handle_set_prop(src->dpman, "volume", value); */
       break;
     default:
       break;
@@ -380,7 +380,7 @@ gst_sinesrc_update_freq(GValue *value, gpointer data)
   src->freq = g_value_get_float(value);
   src->table_inc = src->table_size * src->freq / src->samplerate;
   
-  //GST_DEBUG(GST_CAT_PARAMS, "freq %f\n", src->freq);
+  /*GST_DEBUG(GST_CAT_PARAMS, "freq %f\n", src->freq); */
 }
 
 static inline void 

@@ -19,7 +19,7 @@
 
 #include <string.h>
 
-//#define DEBUG_ENABLED
+/*#define DEBUG_ENABLED */
 #include "riff.h"
 
 #define GST_RIFF_ENCODER_BUF_SIZE    1024
