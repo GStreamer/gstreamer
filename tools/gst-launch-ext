@@ -80,11 +80,14 @@ sub playfile($$)
 read_config ();
 
 %pipes = ( 
-  "ac3", "ac3parse ! $cfg{AUDIOSINK}",
+  "ac3", "a52dec ! $cfg{AUDIOSINK}",
   "au", "auparse ! $cfg{AUDIOSINK}",
   "avi", "avidemux video_%02d! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
+  "m1v", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
+  "m2v", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
   "mod", "modplug !  $cfg{AUDIOSINK}",
+  "mp2", "mad ! $cfg{AUDIOSINK}",
   "mp3", "mad ! $cfg{AUDIOSINK}",
   "mpg", "mpegdemux video_%02d! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
