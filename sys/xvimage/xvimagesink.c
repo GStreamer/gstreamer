@@ -393,8 +393,8 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
       GST_DEBUG ("XV Adaptor %s with %ld ports", adaptors[i].name,
                  adaptors[i].num_ports);
         
-      XvFreeAdaptorInfo (&(adaptors[i]));
     }
+  XvFreeAdaptorInfo (adaptors);
     
   if (xcontext->xv_port_id)
     {
