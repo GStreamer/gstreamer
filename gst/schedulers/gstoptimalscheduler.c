@@ -2156,7 +2156,7 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
     /* if there is still a link, we don't need to break this group */
     if (still_link1 && still_link2) {
       GSList *l;
-      GList *m;;
+      GList *m;
       int linkcount;
 
       GST_LOG ("elements still have links with other elements in the group");
