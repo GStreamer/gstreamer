@@ -218,37 +218,36 @@ gst_osssink_class_init (GstOssSinkClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
-    g_param_spec_string("device","device","device",
-                        "/dev/dsp",G_PARAM_READWRITE)); /* CHECKME! */
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
-    g_param_spec_boolean("mute","mute","mute",
-                         TRUE,G_PARAM_READWRITE)); 
-  g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_SYNC,
-    g_param_spec_boolean("sync","Sync","If syncing on timestamps should be enabled",
-                         TRUE, G_PARAM_READWRITE)); 
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
-    g_param_spec_enum ("format","format","format",
-                      GST_TYPE_OSSSINK_FORMAT, AFMT_S16_LE, G_PARAM_READWRITE)); 
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
-    g_param_spec_enum("channels","channels","channels",
-                      GST_TYPE_OSSSINK_CHANNELS,2,G_PARAM_READWRITE)); 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-    g_param_spec_int("frequency","frequency","frequency",
-                     0,G_MAXINT,44100,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FRAGMENT,
-    g_param_spec_int("fragment","fragment","fragment",
-                     0,G_MAXINT,6,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_SIZE,
-    g_param_spec_int("buffer_size","buffer_size","buffer_size",
-                     0,G_MAXINT,4096,G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
+    g_param_spec_string ("device", "Device", "The device to use for output",
+                         "/dev/dsp", G_PARAM_READWRITE)); /* CHECKME! */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE,
+    g_param_spec_boolean ("mute", "Mute", "Mute the audio",
+                          TRUE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+    g_param_spec_boolean ("sync", "Sync", "If syncing on timestamps should be enabled",
+                          TRUE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FORMAT,
+    g_param_spec_enum ("format", "Format", "The format the device is configured for",
+                       GST_TYPE_OSSSINK_FORMAT, AFMT_S16_LE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHANNELS,
+    g_param_spec_enum ("channels", "Channels", "The number of channels used for playback",
+                       GST_TYPE_OSSSINK_CHANNELS, 2, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
+    g_param_spec_int ("frequency", "Frequency", "The frequency of the device",
+                      0, 48000, 44100, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAGMENT,
+    g_param_spec_int ("fragment", "Fragment", 
+	    	      "The fragment as 0xMMMMSSSS (MMMM = total fragments, 2^SSSS = fragment size)",
+                      0, G_MAXINT, 6, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFER_SIZE,
+    g_param_spec_int ("buffer_size", "Buffer size", "The buffer size",
+                      0, G_MAXINT, 4096, G_PARAM_READWRITE));
 
   gst_osssink_signals[SIGNAL_HANDOFF] =
-    g_signal_new("handoff",G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET(GstOssSinkClass,handoff), NULL, NULL,
-                   g_cclosure_marshal_VOID__VOID,G_TYPE_NONE,0);
+    g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstOssSinkClass, handoff), NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
   
   gobject_class->set_property = gst_osssink_set_property;
   gobject_class->get_property = gst_osssink_get_property;
@@ -384,6 +383,7 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   gint target_channels;
   gint target_frequency;
   GObject *object;
+  gint fragscale, frag_ln;
 
   g_return_val_if_fail (osssink != NULL, FALSE);
   g_return_val_if_fail (GST_IS_OSSSINK (osssink), FALSE);
@@ -412,9 +412,18 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   ioctl (osssink->fd, SNDCTL_DSP_CHANNELS, &osssink->channels);
   ioctl (osssink->fd, SNDCTL_DSP_SPEED, &osssink->frequency);
 
-  ioctl (osssink->fd, SNDCTL_DSP_GETBLKSIZE, &osssink->fragment);
+  ioctl (osssink->fd, SNDCTL_DSP_GETBLKSIZE, &osssink->fragment_size);
   ioctl (osssink->fd, SNDCTL_DSP_GETOSPACE, &ospace);
 
+  /* calculate new fragment using a poor man's logarithm function */
+  fragscale = 1;
+  frag_ln = 0;
+  while (fragscale < ospace.fragsize) {
+    fragscale <<= 1;
+    frag_ln++;
+  }
+  osssink->fragment = ospace.fragstotal << 16 | frag_ln;
+	  
   GST_INFO (GST_CAT_PLUGIN_INFO, "osssink: set sound card to %dHz %d bit %s (%d bytes buffer, %08x fragment)",
            osssink->frequency, osssink->format,
            (osssink->channels == 2) ? "stereo" : "mono", ospace.bytes, osssink->fragment);
@@ -427,7 +436,7 @@ gst_osssink_sync_parms (GstOssSink *osssink)
   g_object_notify (object, "format");
   g_object_thaw_notify (object);
 
-  osssink->fragment_time = (1000000 * osssink->fragment) / osssink->bps;
+  osssink->fragment_time = (GST_SECOND * osssink->fragment_size) / osssink->bps;
   GST_INFO (GST_CAT_PLUGIN_INFO, "fragment time %u %llu\n", osssink->bps, osssink->fragment_time);
 
   if (target_format != osssink->format ||
@@ -479,10 +488,6 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
     delay = osssink->handled;
   }
   res =  (osssink->handled - delay) * GST_SECOND / osssink->bps;
-
-  /*
-  g_print ("from osssink: %lld %d %lld %d\n", res, delay, osssink->handled, osssink->bps);
-  */
 
   return res;
 }
@@ -928,6 +933,7 @@ gst_osssink_change_state (GstElement *element)
       }
       break;
     case GST_STATE_READY_TO_PAUSED:
+      break;
     case GST_STATE_PAUSED_TO_PLAYING:
       osssink->resync = TRUE;
       break;
