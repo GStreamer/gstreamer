@@ -1,3 +1,8 @@
+2004-10-11  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gsturi.c (gst_uri_get_location): unescape string
+	(gst_uri_construct): escape string.
+
 2004-10-11  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstpad.c: (gst_pad_renegotiate), (gst_pad_try_set_caps),

@@ -77,6 +77,195 @@ gst_uri_handler_base_init (gpointer g_class)
   }
 }
 
+static const guchar acceptable[96] = {  /* X0   X1   X2   X3   X4   X5   X6   X7   X8   X9   XA   XB   XC   XD   XE   XF */
+  0x00, 0x3F, 0x20, 0x20, 0x20, 0x00, 0x2C, 0x3F, 0x3F, 0x3F, 0x3F, 0x22, 0x20, 0x3F, 0x3F, 0x1C,       /* 2X  !"#$%&'()*+,-./   */
+  0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x38, 0x20, 0x20, 0x2C, 0x20, 0x2C,       /* 3X 0123456789:;<=>?   */
+  0x30, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,       /* 4X @ABCDEFGHIJKLMNO   */
+  0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x20, 0x20, 0x20, 0x20, 0x3F,       /* 5X PQRSTUVWXYZ[\]^_   */
+  0x20, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,       /* 6X `abcdefghijklmno   */
+  0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x20, 0x20, 0x20, 0x3F, 0x20        /* 7X pqrstuvwxyz{|}~DEL */
+};
+
+typedef enum
+{
+  UNSAFE_ALL = 0x1,             /* Escape all unsafe characters   */
+  UNSAFE_ALLOW_PLUS = 0x2,      /* Allows '+'  */
+  UNSAFE_PATH = 0x4,            /* Allows '/' and '?' and '&' and '='  */
+  UNSAFE_DOS_PATH = 0x8,        /* Allows '/' and '?' and '&' and '=' and ':' */
+  UNSAFE_HOST = 0x10,           /* Allows '/' and ':' and '@' */
+  UNSAFE_SLASHES = 0x20         /* Allows all characters except for '/' and '%' */
+} UnsafeCharacterSet;
+
+#define HEX_ESCAPE '%'
+
+/*  Escape undesirable characters using %
+ *  -------------------------------------
+ *
+ * This function takes a pointer to a string in which
+ * some characters may be unacceptable unescaped.
+ * It returns a string which has these characters
+ * represented by a '%' character followed by two hex digits.
+ *
+ * This routine returns a g_malloced string.
+ */
+
+static const gchar hex[16] = "0123456789ABCDEF";
+
+static gchar *
+escape_string_internal (const gchar * string, UnsafeCharacterSet mask)
+{
+#define ACCEPTABLE_CHAR(a) ((a)>=32 && (a)<128 && (acceptable[(a)-32] & use_mask))
+
+  const gchar *p;
+  gchar *q;
+  gchar *result;
+  guchar c;
+  gint unacceptable;
+  UnsafeCharacterSet use_mask;
+
+  g_return_val_if_fail (mask == UNSAFE_ALL
+      || mask == UNSAFE_ALLOW_PLUS
+      || mask == UNSAFE_PATH
+      || mask == UNSAFE_DOS_PATH
+      || mask == UNSAFE_HOST || mask == UNSAFE_SLASHES, NULL);
+
+  if (string == NULL) {
+    return NULL;
+  }
+
+  unacceptable = 0;
+  use_mask = mask;
+  for (p = string; *p != '\0'; p++) {
+    c = *p;
+    if (!ACCEPTABLE_CHAR (c)) {
+      unacceptable++;
+    }
+    if ((use_mask == UNSAFE_HOST) && (unacceptable || (c == '/'))) {
+      /* when escaping a host, if we hit something that needs to be escaped, or we finally
+       * hit a path separator, revert to path mode (the host segment of the url is over).
+       */
+      use_mask = UNSAFE_PATH;
+    }
+  }
+
+  result = g_malloc (p - string + unacceptable * 2 + 1);
+
+  use_mask = mask;
+  for (q = result, p = string; *p != '\0'; p++) {
+    c = *p;
+
+    if (!ACCEPTABLE_CHAR (c)) {
+      *q++ = HEX_ESCAPE;        /* means hex coming */
+      *q++ = hex[c >> 4];
+      *q++ = hex[c & 15];
+    } else {
+      *q++ = c;
+    }
+    if ((use_mask == UNSAFE_HOST) && (!ACCEPTABLE_CHAR (c) || (c == '/'))) {
+      use_mask = UNSAFE_PATH;
+    }
+  }
+
+  *q = '\0';
+
+  return result;
+}
+
+/**
+ * escape_string:
+ * @string: string to be escaped
+ *
+ * Escapes @string, replacing any and all special characters 
+ * with equivalent escape sequences.
+ *
+ * Return value: a newly allocated string equivalent to @string
+ * but with all special characters escaped
+ **/
+gchar *
+escape_string (const gchar * string)
+{
+  return escape_string_internal (string, UNSAFE_ALL);
+}
+
+static int
+hex_to_int (gchar c)
+{
+  return c >= '0' && c <= '9' ? c - '0'
+      : c >= 'A' && c <= 'F' ? c - 'A' + 10
+      : c >= 'a' && c <= 'f' ? c - 'a' + 10 : -1;
+}
+
+static int
+unescape_character (const char *scanner)
+{
+  int first_digit;
+  int second_digit;
+
+  first_digit = hex_to_int (*scanner++);
+  if (first_digit < 0) {
+    return -1;
+  }
+
+  second_digit = hex_to_int (*scanner++);
+  if (second_digit < 0) {
+    return -1;
+  }
+
+  return (first_digit << 4) | second_digit;
+}
+
+/**
+ * unescape_string:
+ * @escaped_string: an escaped URI, path, or other string
+ * @illegal_characters: a string containing a sequence of characters
+ * considered "illegal", '\0' is automatically in this list.
+ *
+ * Decodes escaped characters (i.e. PERCENTxx sequences) in @escaped_string.
+ * Characters are encoded in PERCENTxy form, where xy is the ASCII hex code 
+ * for character 16x+y.
+ * 
+ * Return value: a newly allocated string with the unescaped equivalents, 
+ * or %NULL if @escaped_string contained one of the characters 
+ * in @illegal_characters.
+ **/
+static char *
+unescape_string (const gchar * escaped_string, const gchar * illegal_characters)
+{
+  const gchar *in;
+  gchar *out, *result;
+  gint character;
+
+  if (escaped_string == NULL) {
+    return NULL;
+  }
+
+  result = g_malloc (strlen (escaped_string) + 1);
+
+  out = result;
+  for (in = escaped_string; *in != '\0'; in++) {
+    character = *in;
+    if (*in == HEX_ESCAPE) {
+      character = unescape_character (in + 1);
+
+      /* Check for an illegal character. We consider '\0' illegal here. */
+      if (character <= 0
+          || (illegal_characters != NULL
+              && strchr (illegal_characters, (char) character) != NULL)) {
+        g_free (result);
+        return NULL;
+      }
+      in += 2;
+    }
+    *out++ = (char) character;
+  }
+
+  *out = '\0';
+  g_assert (out - result <= strlen (escaped_string));
+  return result;
+
+}
+
+
 static void
 gst_uri_protocol_check_internal (const gchar * uri, gchar ** endptr)
 {
@@ -172,13 +361,19 @@ gchar *
 gst_uri_get_location (const gchar * uri)
 {
   gchar *colon;
+  gchar *location, *unescaped;
 
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (gst_uri_is_valid (uri), NULL);
 
   colon = strstr (uri, "://");
 
-  return g_strdup (colon + 3);
+  location = g_strdup (colon + 3);
+
+  unescaped = unescape_string (location, "/");
+  g_free (location);
+
+  return unescaped;
 }
 
 /**
@@ -193,10 +388,17 @@ gst_uri_get_location (const gchar * uri)
 gchar *
 gst_uri_construct (const gchar * protocol, const gchar * location)
 {
+  char *escaped;
+  char *retval;
+
   g_return_val_if_fail (gst_uri_protocol_is_valid (protocol), NULL);
   g_return_val_if_fail (location != NULL, NULL);
 
-  return g_strdup_printf ("%s://%s", protocol, location);
+  escaped = escape_string (location);
+  retval = g_strdup_printf ("%s://%s", protocol, escaped);
+  g_free (escaped);
+
+  return retval;
 }
 
 typedef struct
