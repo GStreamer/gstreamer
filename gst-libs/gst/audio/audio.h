@@ -22,6 +22,9 @@
 
 #include <gst/audio/audioclock.h>
 
+#ifndef __GST_AUDIO_AUDIO_H__
+#define __GST_AUDIO_AUDIO_H__
+
 G_BEGIN_DECLS
 
 /* For people that are looking at this source: the purpose of these defines is
@@ -124,3 +127,4 @@ void gst_audio_structure_set_int (GstStructure *structure, GstAudioFieldFlag fla
 
 G_END_DECLS
 
+#endif /* __GST_AUDIO_AUDIO_H__ */
