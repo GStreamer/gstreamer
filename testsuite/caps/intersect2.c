@@ -54,7 +54,8 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   caps1 = gst_caps_copy( gst_static_caps_get (&rawcaps1));
-  caps2 = gst_caps_copy_1 (gst_static_caps_get (&rawcaps1));
+  caps2 = gst_caps_new_full (gst_structure_copy ( gst_caps_get_structure (
+        gst_static_caps_get (&rawcaps1), 0)), NULL);
 
 #if 0
   gst_caps_set(caps1, "height", GST_PROPS_INT(640));

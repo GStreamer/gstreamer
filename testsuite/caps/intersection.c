@@ -112,7 +112,8 @@ main (int argc, char *argv[])
   gst_caps_save_thyself (caps, parent);
 
   caps = gst_caps_intersect (gst_static_caps_get (&rawcaps6),
-      gst_caps_copy_1(gst_static_caps_get (&rawcaps6)));
+      gst_caps_new_full (gst_structure_copy (
+          gst_caps_get_structure (gst_static_caps_get (&rawcaps6), 0)), NULL));
   parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities5", NULL);
   gst_caps_save_thyself (caps, parent);
 

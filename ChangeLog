@@ -1,3 +1,13 @@
+2004-01-15  David Schleef  <ds@schleef.org>
+
+	* gst/gstcaps.h:
+	Added gst_caps_is_simple() macro.
+	* testsuite/caps/caps.c: (test1):
+	* testsuite/caps/intersect2.c: (main):
+	* testsuite/caps/intersection.c: (main):
+	Fixes to make 'make check' work again after removing
+	gst_caps_is_chained().
+
 2004-01-15  Leif Johnson <leif@ambient.2y.net>
 
 	* docs/random/uraeus/gstreamer_and_midi.txt: Rather large edits

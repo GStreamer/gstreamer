@@ -84,6 +84,7 @@ void gst_caps_append (GstCaps *caps1, GstCaps *caps2);
 void gst_caps_append_structure (GstCaps *caps1, GstStructure *structure);
 GstCaps *gst_caps_split_one (GstCaps *caps);
 int gst_caps_get_size (const GstCaps *caps);
+#define gst_caps_is_simple(caps) (gst_caps_get_size(caps) == 1)
 GstStructure *gst_caps_get_structure (const GstCaps *caps, int index);
 #ifndef GST_DISABLE_DEPRECATED
 GstCaps *gst_caps_copy_1 (const GstCaps *caps);
