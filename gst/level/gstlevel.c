@@ -417,10 +417,12 @@ gst_level_init (GstLevel * filter)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&sink_template_factory), "sink");
   gst_pad_set_link_function (filter->sinkpad, gst_level_link);
+  gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
   filter->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&src_template_factory), "src");
   gst_pad_set_link_function (filter->srcpad, gst_level_link);
+  gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_level_chain);
