@@ -169,6 +169,7 @@ GStreamer support libraries header files.
 @USE_ALSA_TRUE@%files -n gstreamer-alsa
 @USE_ALSA_TRUE@%defattr(-, root, root)
 @USE_ALSA_TRUE@%{_libdir}/gst/libgstalsa.so
+@USE_ALSA_TRUE@%{_mandir}/man1/gstalsa*
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%post -n gstreamer-alsa
 @USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
@@ -244,8 +245,7 @@ GStreamer support libraries header files.
 @USE_AVIFILE_TRUE@Group:         Libraries/Multimedia
 @USE_AVIFILE_TRUE@Requires:      gstreamer-plugins >= %{version}
 @USE_AVIFILE_TRUE@Requires:      gstreamer-colorspace >= %{version}
-@USE_AVIFILE_TRUE@Requires:      avifile = 0.6.20011111DD
-@USE_AVIFILE_TRUE@BuildRequires: avifile-devel = 0.6.20011111DD
+@USE_AVIFILE_TRUE@Requires:      libavifile0.7 = 0.7.7
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%description -n gstreamer-avi
 @USE_AVIFILE_TRUE@Plug-ins for playback of AVI format media files.
@@ -784,7 +784,7 @@ GStreamer support libraries header files.
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%files -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%defattr(-, root, root)
-@USE_SIDPLAY_TRUE@%{_libdir}/gst/libgstsiddec.so
+@USE_SIDPLAY_TRUE@%{_libdir}/gst/libgstsid.so
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%post -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
@@ -866,7 +866,7 @@ GStreamer support libraries header files.
 @USE_V4L_TRUE@Summary:       GStreamer Video for Linux plug-in.
 @USE_V4L_TRUE@Group:         Libraries/Multimedia
 @USE_V4L_TRUE@Requires:      gstreamer-plugins >= %{version}
-@USE_V4L_TRUE@BuildRequires: glibc-kernelheaders
+@USE_V4L_TRUE@BuildRequires: glibc-kernheaders
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%description -n gstreamer-v4l
 @USE_V4L_TRUE@Plug-in for accessing Video for Linux devices.
