@@ -51,6 +51,7 @@ libcothreads_la_SOURCES = cothreads.c
 libgstreamer_la_SOURCES =		\
 	gst.c			\
 	gstmarshal.c		\
+	gstenumtypes.c		\
 	gstobject.c		\
 	$(GST_AUTOPLUG_SRC)	\
 	gstbin.c		\
@@ -84,7 +85,7 @@ libgstreamer_la_SOURCES =		\
 	$(GST_LOADSAVE_SRC)
 
 
-BUILT_SOURCES = gstmarshal.h gstmarshal.c
+BUILT_SOURCES = gstmarshal.h gstmarshal.c gstenumtypes.h gstenumtypes.c
 
 gstmarshal.h: gstmarshal.list
 	glib-genmarshal --header --prefix=gst_marshal $(srcdir)/gstmarshal.list > gstmarshal.h.tmp
@@ -96,6 +97,23 @@ gstmarshal.c: gstmarshal.list
 	echo "#include \"gstmarshal.h\"" >> gstmarshal.c.tmp
 	glib-genmarshal --body --prefix=gst_marshal $(srcdir)/gstmarshal.list >> gstmarshal.c.tmp
 	mv gstmarshal.c.tmp gstmarshal.c
+
+gstenumtypes.h:
+	glib-mkenums \
+	--fhead "#ifndef __GST_ENUM_TYPES_H__\n#define __GST_ENUM_TYPES_H__\n\n#include <glib-object.h>\n\nG_BEGIN_DECLS\n" \
+	--fprod "/* enumerations from \"@filename@\" */\n" \
+	--vhead "GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n"         \
+	--ftail "G_END_DECLS\n\n#endif /* __GST_ENUM_TYPES_H__ */" \
+	$(libgstreamerinclude_HEADERS) > gstenumtypes.h
+
+gstenumtypes.c:
+	glib-mkenums \
+	--fhead "#include <gst/gst.h>" \
+	--fprod "\n/* enumerations from \"@filename@\" */" \
+	--vhead "GType\n@enum_name@_get_type (void)\n{\n  static GType etype = 0;\n  if (etype == 0) {\n    static const G@Type@Value values[] = {"     \
+	--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
+	--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (\"@EnumName@\", values);\n  }\n  return etype;\n}\n" \
+	$(libgstreamerinclude_HEADERS) > gstenumtypes.c
 
 # Don't want the generated marshal files in the dist
 dist-hook:
@@ -109,6 +127,7 @@ libgstreamerinclude_HEADERS =		\
 	gst.h			\
 	gstconfig.h		\
 	gstmarshal.h		\
+	gstenumtypes.h		\
 	gstobject.h		\
 	gsttypes.h		\
 	gstautoplug.h		\
