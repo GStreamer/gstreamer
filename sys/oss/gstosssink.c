@@ -102,14 +102,19 @@ enum
 };
 
 static GstStaticPadTemplate osssink_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
+        "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
         "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) { 8, 16 }, "
+        "width = (int) 16, "
         "depth = (int) { 8, 16 }, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
+        "audio/x-raw-int, "
+        "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) 8, "
+        "depth = (int) 8, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 

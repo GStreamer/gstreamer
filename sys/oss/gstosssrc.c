@@ -75,10 +75,15 @@ static GstStaticPadTemplate osssrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
+        "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
         "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) { 8, 16 }, "
+        "width = (int) 16, "
         "depth = (int) { 8, 16 }, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
+        "audio/x-raw-int, "
+        "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) 8, "
+        "depth = (int) 8, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
