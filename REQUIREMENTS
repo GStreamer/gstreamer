@@ -13,16 +13,30 @@ libxml
 
 Optional libraries:
 ===================
-gdk_pixbuf	(for videosink)
-libghttp	(for httpsrc)
+gdk_pixbuf
 libgnomeui	(for gstplay, gsteditor, autoplug example, several tests)
 libglade	(for gstplay, gsteditor)
+
+libghttp	(for httpsrc)
+libXv		(for videosink)
+libxaudio	(for xa mp3 decoder)
+libvorbis	(for vorbisenc, vorbisdec)
+libcdparanoia	(for cdparanoia ripper)
+liblame		(for lame mp3 encoder)
 
 
 
 An extra set of tools is required if you wish to build GStreamer out of
 CVS (using autogen.sh):
 
+Required tools:
+===============
 autoconf
 automake v1.4 or better
 libtool v1.3.5 or better
+
+Optional tools:
+===============
+gtkdoc
+db2html
+fig2dev
