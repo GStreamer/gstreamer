@@ -18,6 +18,12 @@ class ElementTest(unittest.TestCase):
         assert element is not None, 'element is None'
         assert isinstance(element, gst.Element)
         assert element.get_name() == self.alias
+
+    def testGoodConstructor2(self):
+        element = gst.element_factory_make(self.name, self.alias)
+        assert element is not None, 'element is None'
+        assert isinstance(element, gst.Element)
+        assert element.get_name() == self.alias
         
 class FakeSinkTest(ElementTest):
     FAKESINK_STATE_ERROR_NONE           = "0"
@@ -75,14 +81,55 @@ class FakeSinkTest(ElementTest):
     def testStateErrorReadyNull(self):
         self.checkError(gst.STATE_READY, gst.STATE_NULL,
                         self.FAKESINK_STATE_ERROR_READY_NULL)
+
+    def checkStateChange(self, old, new):
+        def state_change_cb(element, old_s, new_s):
+            assert isinstance(element, gst.Element)
+            assert element == self.element
+            assert old_s == old
+            assert new_s == new
+            
+        assert self.element.set_state(old)
+        assert self.element.get_state() == old
+
+        self.element.connect('state-change', state_change_cb)
+
+        assert self.element.set_state(new)
+        assert self.element.get_state() == new
+        
+    def testStateChangeNullReady(self):
+        self.checkStateChange(gst.STATE_NULL, gst.STATE_READY)
+        
+    def testStateChangeReadyPaused(self):
+        self.checkStateChange(gst.STATE_READY, gst.STATE_PAUSED)
+
+    def testStateChangePausedPlaying(self):
+        self.checkStateChange(gst.STATE_PAUSED, gst.STATE_PLAYING)
+        
+    def testStateChangePlayingPaused(self):
+        self.checkStateChange(gst.STATE_PLAYING, gst.STATE_PAUSED)
+        
+    def testStateChangePausedReady(self):
+        self.checkStateChange(gst.STATE_PAUSED, gst.STATE_READY)
+
+    def testStateChangeReadyNull(self):
+        self.checkStateChange(gst.STATE_READY, gst.STATE_NULL)
         
 class NonExistentTest(ElementTest):
     name = 'this-element-does-not-exist'
     alias = 'no-alias'
     
-    def testGoodConstructor(self):
-        pass
+    testGoodConstructor = lambda s: None
+    testGoodConstructor2 = lambda s: None
+
+class FileSrcTest(ElementTest):
+    name = 'filesrc'
+    alias = 'source'
     
+class FileSinkTest(ElementTest):
+    name = 'filesink'
+    alias = 'sink'
+
 class ElementName(unittest.TestCase):
     def testElementStateGetName(self):
         get_name = gst.element_state_get_name

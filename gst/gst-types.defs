@@ -161,6 +161,12 @@
   (gtype-id "GST_TYPE_BUFFER")
   (copy-func "gst_data_copy")
   (release-func "gst_data_unref")
+  (fields 
+     '("guint" "size")
+     '("guint" "maxsize")
+     '("guint64" "offset")
+     '("guint64" "offset_end")
+  )
 )
 
 (define-boxed Caps

@@ -1,3 +1,12 @@
+2004-05-04  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst-types.defs (Buffer): Add some fields
+
+	* gst/gstbuffer.override: Move out from gst.override, add
+	tp_as_sequence support and reorganize the code
+
+	* testsuite/buffer.py (BufferTest): Add new tests
+
 2004-05-03  Johan Dahlin  <johan@gnome.org>
 
 	* gst/__init__.py: Remove pygtk import and import gobject

@@ -1,0 +1,251 @@
+/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* gst-python
+ * Copyright (C) 2002 David I. Lehn
+ * Copyright (C) 2004 Johan Dahlin
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
+ * Author: Johan Dahlin <johan@gnome.org>
+ */
+%%
+headers
+
+static int gst_buffer_getreadbuffer (PyGObject   *self,
+				     int          index,
+				     const void **ptr);
+static int gst_buffer_length        (PyGObject   *self);
+static int gst_buffer_getwritebuf   (PyGObject   *self,
+				     int          index,
+				     const void **ptr);
+static int gst_buffer_getsegcount   (PyGObject   *self,
+				     int         *lenp);
+static int gst_buffer_getcharbuf    (PyGObject   *self,
+				     int          index,
+				     const char **ptr);
+%%
+override gst_buffer_new kwargs
+static int
+_wrap_gst_buffer_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
+{
+	static char *kwlist[] = { "data", "buffer_size", NULL };
+	char *data = NULL;
+	int size;
+	int buf_size = -1;
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|z#i:GstBuffer.__init__", kwlist,
+					 &data, &size, &buf_size))
+		return -1;
+	
+	self->gtype = GST_TYPE_BUFFER;
+	self->free_on_dealloc = FALSE;
+	
+	if (buf_size != -1)
+		self->boxed = gst_buffer_new_and_alloc(buf_size);
+	else
+		self->boxed = gst_buffer_new();
+	
+	if (!self->boxed) {
+		PyErr_SetString(PyExc_RuntimeError, "could not create GstBuffer object");
+		return -1;
+	}
+
+	if (data == NULL)
+		return 0;
+
+	if (buf_size != -1 && buf_size != size) {
+		PyErr_Format(PyExc_TypeError, "data must be of length %d, not %d", size, buf_size);
+		return -1;
+	}
+	
+	GST_BUFFER_DATA (self->boxed) = data;
+	GST_BUFFER_SIZE (self->boxed) = size;
+	
+	return 0;
+}
+%%
+override gst_buffer_get_data
+static PyObject*
+_wrap_gst_buffer_get_data(PyObject *self)
+{
+	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+	return PyString_FromStringAndSize(GST_BUFFER_DATA(buf),
+					  GST_BUFFER_SIZE(buf));
+}
+%%
+override gst_buffer_set_data kwargs
+static PyObject*
+_wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	static char *kwlist[] = {"data", NULL};
+	PyObject *data;
+	GstBuffer *buf;
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstBuffer:set_data", kwlist, &data))
+	{
+		return NULL;
+	}
+	if (!PyString_Check(data)) {
+		PyErr_SetString(PyExc_TypeError, "data should be a string");
+		return NULL;
+	}
+	buf = pyg_boxed_get(self, GstBuffer);
+	if (GST_BUFFER_FLAGS(buf) & GST_BUFFER_READONLY) {
+		PyErr_SetString(PyExc_TypeError, "set_data can't use a READONLY buffer");
+		return NULL;
+	}
+	GST_BUFFER_SIZE(buf) = PyString_Size(data);
+	GST_BUFFER_DATA(buf) = g_new0(char, GST_BUFFER_SIZE(buf));
+
+	memcpy(GST_BUFFER_DATA(buf),
+	       PyString_AsString(data),
+	       PyString_Size(data));
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+#if 0
+override-slot GstBuffer.tp_getattr
+PyObject *
+_wrap_gst_buffer_tp_getattr(PyGObject *self, char *attr)
+{
+	/* We have some GstData methods since it's not a subclass */
+	if (!strcmp(attr, "type"))
+		return pyg_type_wrapper_new(GST_DATA_TYPE(self->obj));
+	else if (!strcmp(attr, "flags"))
+		return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
+#if 0	
+	else if (!strcmp(attr, "size"))
+		return PyInt_FromLong(GST_BUFFER_SIZE(self->obj));
+#endif	
+	else if (!strcmp(attr, "maxsize"))
+		return PyInt_FromLong(GST_BUFFER_MAXSIZE(self->obj));
+	/* XXX: timestamp and duration */
+	else if (!strcmp(attr, "offset"))
+		return PyInt_FromLong(GST_BUFFER_OFFSET(self->obj));
+	else if (!strcmp(attr, "offset_end"))
+		return PyInt_FromLong(GST_BUFFER_OFFSET_END(self->obj));
+
+	return Py_FindMethod(_PyGstBuffer_methods, (PyObject*)self, attr);
+}
+#endif
+%%
+override-attr GstBuffer.size
+static PyObject *
+_wrap_gst_buffer__get_size(PyGObject *self, void *closure)
+{
+	return PyInt_FromLong(GST_BUFFER_SIZE(self->obj));
+}
+%%
+override-attr GstBuffer.maxsize
+static PyObject *
+_wrap_gst_buffer__get_maxsize(PyGObject *self, void *closure)
+{
+	return PyInt_FromLong(GST_BUFFER_MAXSIZE(self->obj));
+}
+%%
+override-attr GstBuffer.offset
+static PyObject *
+_wrap_gst_buffer__get_offset(PyGObject *self, void *closure)
+{
+	return PyInt_FromLong(GST_BUFFER_OFFSET(self->obj));
+}
+%%
+override-attr GstBuffer.offset_end
+static PyObject *
+_wrap_gst_buffer__get_offset_end(PyGObject *self, void *closure)
+{
+	return PyInt_FromLong(GST_BUFFER_OFFSET_END(self->obj));
+}
+%%
+override-slot GstBuffer.tp_str
+static PyObject *
+_wrap_gst_buffer_tp_str(PyGObject *self)
+{
+	return PyString_FromStringAndSize(GST_BUFFER_DATA(self->obj),
+					  GST_BUFFER_SIZE(self->obj));
+}
+%%
+override-slot GstBuffer.tp_as_buffer
+static PyBufferProcs _wrap_gst_buffer_tp_as_buffer = {
+        (getreadbufferproc)gst_buffer_getreadbuffer, /* bf_getreadbuffer */
+	(getwritebufferproc)gst_buffer_getwritebuf,  /* bf_getwritebuffer */
+	(getsegcountproc)gst_buffer_getsegcount,     /* bf_getsegcount */
+	(getcharbufferproc)gst_buffer_getcharbuf,    /* bf_getcharbuffer */
+};
+
+static int
+gst_buffer_getreadbuffer(PyGObject *self, int index, const void **ptr)
+{
+	if ( index != 0 ) {
+		PyErr_SetString(PyExc_SystemError,
+				"accessing non-existent GstBuffer segment");
+		return -1;
+	}
+	
+	*ptr = GST_BUFFER_DATA(self->obj);
+	return GST_BUFFER_SIZE(self->obj);
+}
+
+static int
+gst_buffer_getsegcount(PyGObject *self, int *lenp)
+{
+	if (lenp)
+		*lenp = GST_BUFFER_SIZE(self->obj);
+	return 1;
+}
+
+static int
+gst_buffer_getcharbuf(PyGObject *self, int index, const char **ptr)
+{
+	if ( index != 0 ) {
+		PyErr_SetString(PyExc_SystemError,
+				"accessing non-existent GstBuffer segment");
+		return -1;
+	}
+	
+	*ptr = GST_BUFFER_DATA(self->obj);
+	return GST_BUFFER_SIZE(self->obj);
+}
+
+static int
+gst_buffer_getwritebuf(PyGObject *self, int index, const void **ptr)
+{
+	PyErr_SetString(PyExc_TypeError,
+			"Cannot use GstBuffer as modifiable buffer");
+	return -1;
+}
+
+%%
+override-slot GstBuffer.tp_as_sequence
+static PySequenceMethods _wrap_gst_buffer_tp_as_sequence = {
+	(inquiry)gst_buffer_length,         /* sq_length */
+	NULL,                               /* sq_concat */
+	NULL,                               /* sq_repeat */
+	NULL,                               /* sq_item */
+	NULL,                               /* sq_slice */
+	NULL,                               /* sq_ass_item */
+	NULL,                               /* sq_ass_slice */
+	NULL,                               /* sq_contains */
+	NULL,                               /* sq_inplace_concat */
+	NULL,                               /* sq_inplace_repeat */
+};
+
+static int
+gst_buffer_length(PyGObject *self)
+{
+	return GST_BUFFER_SIZE(self->obj);
+}
+
