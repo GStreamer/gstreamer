@@ -27,7 +27,7 @@ GST_DEBUG_CATEGORY (cat);
 GST_DEBUG_CATEGORY_STATIC (cat_static);
 
 static const gchar* lines[] = {
-  "--gst-disable-debug",
+  "--gst-debug-disable",
   "--gst-debug-no-color",
   "--gst-debug-level=4",
   "--gst-debug=cat:4,cat_*:3",
