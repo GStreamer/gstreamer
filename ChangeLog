@@ -1,3 +1,29 @@
+2004-03-13  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst/effectv/gstaging.c: (gst_agingtv_base_init),
+	(gst_agingtv_setup):
+	* gst/effectv/gstdice.c: (gst_dicetv_get_type),
+	(gst_dicetv_base_init), (gst_dicetv_class_init),
+	(gst_dicetv_setup), (gst_dicetv_init), (gst_dicetv_draw):
+	* gst/effectv/gstedge.c: (gst_edgetv_get_type),
+	(gst_edgetv_base_init), (gst_edgetv_class_init), (gst_edgetv_init),
+	(gst_edgetv_setup), (gst_edgetv_rgb32):
+	* gst/effectv/gsteffectv.c:
+	* gst/effectv/gstquark.c: (gst_quarktv_link), (gst_quarktv_init),
+	(gst_quarktv_set_property):
+	* gst/effectv/gstrev.c: (gst_revtv_get_type),
+	(gst_revtv_base_init), (gst_revtv_class_init), (gst_revtv_init),
+	(gst_revtv_setup), (gst_revtv_rgb32):
+	* gst/effectv/gstshagadelic.c: (gst_shagadelictv_get_type),
+	(gst_shagadelictv_base_init), (gst_shagadelictv_class_init),
+	(gst_shagadelictv_init), (gst_shagadelictv_setup),
+	(gst_shagadelictv_rgb32):
+	* gst/effectv/gstvertigo.c: (gst_vertigotv_get_type),
+	(gst_vertigotv_base_init), (gst_vertigotv_class_init),
+	(gst_vertigotv_setup), (gst_vertigotv_init), (gst_vertigotv_rgb32):
+	* gst/effectv/gstwarp.c:
+	Port everything that can be ported to videofilter and fix up the caps.
+	Can someone with a big-endian machine please check these?
+
 2004-03-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/oss/gstosssink.c: (gst_osssink_init), (gst_osssink_get_time),
