@@ -168,6 +168,7 @@ gst_sinesrc_init (GstSineSrc *src)
   src->table_pos = 0.0;
   src->table_size = 1024;
   src->buffer_size=1024;
+  src->timestamp=0LL;
   
   src->seq = 0;
 
@@ -224,7 +225,9 @@ gst_sinesrc_get(GstPad *pad)
   GST_BUFFER_SIZE(buf) = 2 * src->buffer_size;
   
   dpman = GST_ELEMENT_DPARAM_MANAGER(GST_ELEMENT(src));
-  frame_countdown = GST_DPMAN_PREPROCESS(dpman, src->buffer_size, 0LL);
+  frame_countdown = GST_DPMAN_PREPROCESS(dpman, src->buffer_size, src->timestamp);
+  
+  src->timestamp += (gint64)src->buffer_size * 1000000000LL / (gint64)src->samplerate;
 //  GST_DEBUG(GST_CAT_PARAMS, "vol_scale = %f\n", src->vol_scale);
   
   while(GST_DPMAN_PROCESS_COUNTDOWN(dpman, frame_countdown, i)) {
@@ -369,7 +372,7 @@ gst_sinesrc_update_volume(GValue *value, gpointer data)
 
   src->volume = g_value_get_float(value);
   src->vol_scale = 32767.0 * src->volume;
-  GST_DEBUG(GST_CAT_PARAMS, "volume %f\n", src->volume);
+  //GST_DEBUG(GST_CAT_PARAMS, "volume %f\n", src->volume);
 
 }
 
@@ -382,7 +385,7 @@ gst_sinesrc_update_freq(GValue *value, gpointer data)
   src->freq = g_value_get_float(value);
   src->table_inc = src->table_size * src->freq / src->samplerate;
   
-  GST_DEBUG(GST_CAT_PARAMS, "freq %f\n", src->freq);
+  //GST_DEBUG(GST_CAT_PARAMS, "freq %f\n", src->freq);
 }
 
 static inline void 

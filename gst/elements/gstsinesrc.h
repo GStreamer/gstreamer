@@ -76,6 +76,8 @@ struct _GstSineSrc {
 
   gint buffer_size;
   gulong seq;
+  
+  gint64 timestamp;
 
   gboolean newcaps;
 
