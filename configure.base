@@ -1050,6 +1050,7 @@ AC_SUBST(LIBGST_CFLAGS)
 
 dnl CFLAGS for everyone else
 CFLAGS="$GST_CFLAGS $CFLAGS"
+LDFLAGS="$GST_LIBS $LDFLAGS"
 
 dnl Needed to make automake 1.4g happy.
 dnl FIXME: find as properly, rather than just using CC
