@@ -727,6 +727,13 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
       src->seek_happened = TRUE;
       src->need_flush = GST_EVENT_SEEK_FLAGS(event) & GST_SEEK_FLAG_FLUSH;
       break;
+    case GST_EVENT_SIZE:
+      if (GST_EVENT_SIZE_FORMAT (event) != GST_FORMAT_BYTES) {
+	return FALSE;
+      }
+      src->block_size = GST_EVENT_SIZE_VALUE (event);
+      g_object_notify (G_OBJECT (src), "blocksize");  
+      break;
     case GST_EVENT_FLUSH:
       src->need_flush = TRUE;
       break;

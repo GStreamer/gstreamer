@@ -235,5 +235,17 @@ gst_event_discont_get_value (GstEvent *event, GstFormat format, gint64 *value)
 }
 
 
+GstEvent*
+gst_event_new_size (GstFormat format, gint64 value)
+{
+  GstEvent *event;
+
+  event = gst_event_new (GST_EVENT_SIZE);
+  GST_EVENT_SIZE_FORMAT (event) = format;
+  GST_EVENT_SIZE_VALUE (event) = value;
+  
+  return event;
+}
+
 
 

@@ -41,6 +41,7 @@ typedef enum {
   GST_EVENT_QOS,
   GST_EVENT_SEEK,
   GST_EVENT_FILLER,
+  GST_EVENT_SIZE,
 } GstEventType;
 
 extern GType _gst_event_type;
@@ -93,6 +94,9 @@ typedef struct
 #define GST_EVENT_DISCONT_OFFSET(event,i)	(GST_EVENT(event)->event_data.discont.offsets[i])
 #define GST_EVENT_DISCONT_OFFSET_LEN(event)	(GST_EVENT(event)->event_data.discont.noffsets)
 
+#define GST_EVENT_SIZE_FORMAT(event)		(GST_EVENT(event)->event_data.size.format)
+#define GST_EVENT_SIZE_VALUE(event)		(GST_EVENT(event)->event_data.size.value)
+
 struct _GstEvent {
   GstData data;
 
@@ -111,6 +115,10 @@ struct _GstEvent {
       gint      	noffsets;
       gboolean		new_media;
     } discont;
+    struct {
+      GstFormat 	format;
+      gint64      	value;
+    } size;
   } event_data;
 };
 
@@ -122,6 +130,9 @@ void		gst_event_free 			(GstEvent *event);
 
 /* seek event */
 GstEvent*	gst_event_new_seek		(GstSeekType type, gint64 offset);
+
+/* size events */
+GstEvent*	gst_event_new_size		(GstFormat format, gint64 value);
 
 /* discontinous event */
 GstEvent*	gst_event_new_discontinuous	(gboolean new_media,
