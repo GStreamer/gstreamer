@@ -58,6 +58,8 @@ struct _GstTheoraDec
   guint64 granulepos;
 
   gboolean need_keyframe;
+  gint width, height;
+  gint offset_x, offset_y;
 };
 
 struct _GstTheoraDecClass
@@ -563,6 +565,18 @@ theora_dec_chain (GstPad * pad, GstData * data)
           dec->info.frame_width, dec->info.frame_height,
           dec->info.offset_x, dec->info.offset_y);
 
+      /* add black borders to make width/height/offsets even. we need this because
+       * we cannot express an offset to the peer plugin. */
+      dec->width =
+          ROUND_UP_2 (dec->info.frame_width + (dec->info.offset_x & 1));
+      dec->height =
+          ROUND_UP_2 (dec->info.frame_height + (dec->info.offset_y & 1));
+      dec->offset_x = dec->info.offset_x & ~1;
+      dec->offset_y = dec->info.offset_y & ~1;
+
+      GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
+          dec->width, dec->height, dec->offset_x, dec->offset_y);
+
       /* done */
       theora_decode_init (&dec->state, &dec->info);
       caps = gst_caps_new_simple ("video/x-raw-yuv",
@@ -570,8 +584,8 @@ theora_dec_chain (GstPad * pad, GstData * data)
           "framerate", G_TYPE_DOUBLE,
           ((gdouble) dec->info.fps_numerator) / dec->info.fps_denominator,
           "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
-          "width", G_TYPE_INT, dec->info.frame_width, "height", G_TYPE_INT,
-          dec->info.frame_height, NULL);
+          "width", G_TYPE_INT, dec->width, "height", G_TYPE_INT,
+          dec->height, NULL);
       gst_pad_set_explicit_caps (dec->srcpad, caps);
       gst_caps_free (caps);
     }
@@ -612,18 +626,16 @@ theora_dec_chain (GstPad * pad, GstData * data)
     g_return_if_fail (yuv.y_width == dec->info.width);
     g_return_if_fail (yuv.y_height == dec->info.height);
 
-    width = dec->info.frame_width;
-    height = dec->info.frame_height;
+    width = dec->width;
+    height = dec->height;
+    cwidth = width / 2;
+    cheight = height / 2;
 
     /* should get the stride from the caps, for now we round up to the nearest
      * multiple of 4 because some element needs it. chroma needs special 
      * treatment, see videotestsrc. */
     stride_y = ROUND_UP_4 (width);
     stride_uv = ROUND_UP_8 (width) / 2;
-
-    /* for odd offsets we need to copy one extra line/column of chroma samples */
-    cwidth = width / 2 + (dec->info.offset_x & 1);
-    cheight = height / 2 + (dec->info.offset_y & 1);
 
     out_size = stride_y * height + stride_uv * cheight * 2;
 
@@ -635,6 +647,8 @@ theora_dec_chain (GstPad * pad, GstData * data)
      * complicated and gstreamer doesn't support all the needed caps to do this
      * correctly. For example, when we have an odd offset, we should only combine
      * 1 row/column of luma samples with on chroma sample in colorspace conversion. 
+     * We compensate for this by adding a block border around the image when the
+     * offset of size is odd (see above).
      */
     {
       guint8 *dest_y, *src_y;
@@ -643,9 +657,9 @@ theora_dec_chain (GstPad * pad, GstData * data)
 
       dest_y = GST_BUFFER_DATA (out);
       dest_u = dest_y + stride_y * height;
-      dest_v = dest_u + stride_uv * height / 2;
+      dest_v = dest_u + stride_uv * cheight;
 
-      src_y = yuv.y + dec->info.offset_x + dec->info.offset_y * yuv.y_stride;
+      src_y = yuv.y + dec->offset_x + dec->offset_y * yuv.y_stride;
 
       for (i = 0; i < height; i++) {
         memcpy (dest_y, src_y, width);
@@ -654,12 +668,8 @@ theora_dec_chain (GstPad * pad, GstData * data)
         src_y += yuv.y_stride;
       }
 
-      src_u =
-          yuv.u + dec->info.offset_x / 2 +
-          dec->info.offset_y / 2 * yuv.uv_stride;
-      src_v =
-          yuv.v + dec->info.offset_x / 2 +
-          dec->info.offset_y / 2 * yuv.uv_stride;
+      src_u = yuv.u + dec->offset_x / 2 + dec->offset_y / 2 * yuv.uv_stride;
+      src_v = yuv.v + dec->offset_x / 2 + dec->offset_y / 2 * yuv.uv_stride;
 
       for (i = 0; i < cheight; i++) {
         memcpy (dest_u, src_u, cwidth);
