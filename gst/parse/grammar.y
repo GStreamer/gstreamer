@@ -1,6 +1,7 @@
 %{
 #include <glib.h>
 #include <stdio.h>
+#include <string.h>
 #include "../gstparse.h"
 #include "types.h"
 
