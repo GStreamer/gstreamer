@@ -73,6 +73,11 @@ enum
 };
 
 /* generic templates */
+static GstStaticPadTemplate spider_sink_factory =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
 static GstStaticPadTemplate spider_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src_%d",
     GST_PAD_SRC,
@@ -170,6 +175,8 @@ gst_spider_class_init (GstSpiderClass * klass)
   gobject_class->get_property = gst_spider_get_property;
   gobject_class->dispose = gst_spider_dispose;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&spider_sink_factory));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&spider_src_factory));
   gst_element_class_set_details (gstelement_class, &gst_spider_details);

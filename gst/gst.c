@@ -526,7 +526,7 @@ gst_register_core_elements (GstPlugin * plugin)
           GST_TYPE_PIPELINE) ||
       !gst_element_register (plugin, "thread", GST_RANK_PRIMARY,
           GST_TYPE_THREAD) ||
-      !gst_element_register (plugin, "queue", GST_RANK_PRIMARY, GST_TYPE_QUEUE))
+      !gst_element_register (plugin, "queue", GST_RANK_NONE, GST_TYPE_QUEUE))
     g_assert_not_reached ();
 
   return TRUE;

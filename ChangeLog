@@ -1,3 +1,11 @@
+2004-08-22  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/autoplug/gstspider.c: (gst_spider_class_init),
+	(gst_spider_identity_plug):
+	  add a template for spider's sink
+	* gst/gst.c: (gst_register_core_elements):
+	  queue's rank should be NULL, we don't want spider to add it.
+
 2004-08-18  David Schleef  <ds@schleef.org>
 
 	* docs/gst/Makefile.am: Remove --ignore-fail-on-non-empty (#150331)
