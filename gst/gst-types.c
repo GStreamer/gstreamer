@@ -25,8 +25,6 @@
 gboolean
 pygst_data_from_pyobject(PyObject *object, GstData **data)
 {
-  g_return_val_if_fail(*data != NULL, FALSE);
-  
   if (pyg_boxed_check(object, GST_TYPE_DATA)) {
     *data = pyg_boxed_get(object, GstData);
     return TRUE;

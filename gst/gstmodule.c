@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-basic-offset: 4 -*- */
+/* -*- Mode: C; ; c-file-style: "k&r"; c-basic-offset: 4 -*- */
 /* gst-python
  * Copyright (C) 2002 David I. Lehn
  *
@@ -27,6 +27,7 @@
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
 #include <pygobject.h>
 #include <gst/gst.h>
+#include <gst/gstversion.h>
 
 void pygst_register_classes (PyObject *d);
 void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
@@ -36,47 +37,59 @@ extern PyMethodDef pygst_functions[];
 DL_EXPORT(void)
 init_gst (void)
 {
-	PyObject *m, *d;
-	PyObject *av;
-        int argc, i;
-        char **argv;
+     PyObject *m, *d;
+     PyObject *av, *tuple;
+     int argc, i;
+     char **argv;
 
-	init_pygobject ();
-	
-        /* pull in arguments */
-        av = PySys_GetObject ("argv");
-        if (av != NULL) {
-            argc = PyList_Size (av);
-            argv = g_new (char *, argc);
-            for (i = 0; i < argc; i++)
-                argv[i] = g_strdup (PyString_AsString (PyList_GetItem (av, i)));
-        } else {
-                argc = 0;
-                argv = NULL;
-        }
-                                                                                    
-        if (!gst_init_check (&argc, &argv)) {
-            if (argv != NULL) {
-                for (i = 0; i < argc; i++)
+     init_pygobject ();
+     
+     /* pull in arguments */
+     av = PySys_GetObject ("argv");
+     if (av != NULL) {
+	  argc = PyList_Size (av);
+	  argv = g_new (char *, argc);
+	  for (i = 0; i < argc; i++)
+	       argv[i] = g_strdup (PyString_AsString (PyList_GetItem (av, i)));
+     } else {
+	  argc = 0;
+	  argv = NULL;
+     }
+     
+     if (!gst_init_check (&argc, &argv)) {
+	  if (argv != NULL) {
+	       for (i = 0; i < argc; i++)
                     g_free (argv[i]);
-                g_free (argv);
-            }
-            PyErr_SetString (PyExc_RuntimeError, "can't initialize module gst");
-        }
-        if (argv != NULL) {
-            PySys_SetArgv (argc, argv);
-            for (i = 0; i < argc; i++)
-                g_free (argv[i]);
-            g_free (argv);
-        }
+	       g_free (argv);
+	  }
+	  PyErr_SetString (PyExc_RuntimeError, "can't initialize module gst");
+     }
+     if (argv != NULL) {
+	  PySys_SetArgv (argc, argv);
+	  for (i = 0; i < argc; i++)
+	       g_free (argv[i]);
+	  g_free (argv);
+     }
+     
+     m = Py_InitModule ("_gst", pygst_functions);
+     d = PyModule_GetDict (m);
 
-	m = Py_InitModule ("_gst", pygst_functions);
-	d = PyModule_GetDict (m);
-
-	pygst_register_classes (d);
-	pygst_add_constants (m, "GST_");
-	
-	if (PyErr_Occurred ()) {
-		Py_FatalError ("can't initialize module gst");
-	}
+     /* gst+ version */
+     tuple = Py_BuildValue ("(iii)", GST_VERSION_MAJOR, GST_VERSION_MINOR,
+			    GST_VERSION_MICRO);
+     PyDict_SetItemString(d, "gst_version", tuple);    
+     Py_DECREF(tuple);
+     
+     /* gst-python version */
+     tuple = Py_BuildValue ("(iii)", PYGST_MAJOR_VERSION, PYGST_MINOR_VERSION,
+			    PYGST_MICRO_VERSION);
+     PyDict_SetItemString(d, "pygst_version", tuple);
+     Py_DECREF(tuple);
+     
+     pygst_register_classes (d);
+     pygst_add_constants (m, "GST_");
+     
+     if (PyErr_Occurred ()) {
+	  Py_FatalError ("can't initialize module gst");
+     }
 }

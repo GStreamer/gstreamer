@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-basic-offset: 4 -*- */
+/* -*- Mode: C; ; c-file-style: "python" -*- */
 /* gst-python
  * Copyright (C) 2002 David I. Lehn
  * Copyright (C) 2004 Johan Dahlin
@@ -24,30 +24,31 @@
 headers
 #include <Python.h>
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include "pygobject.h"
 #include <gst/gst.h>
 #include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
 
 typedef struct {
-    PyGObject *pad;
-    PyObject *link_function;
-    PyObject *event_function;
-    PyObject *chain_function;
-    PyObject *get_function; 
+     PyGObject *pad;
+     PyObject *link_function;
+     PyObject *event_function;
+     PyObject *chain_function;
+     PyObject *get_function; 
 } PyGstPadPrivate;
 
 typedef struct {
-    PyObject *func, *data;
+     PyObject *func, *data;
 } PyGstCustomNotify;
 
-void iterate_bin_all(GstBin *bin);
-guint add_iterate_bin(GstBin *bin);
-void remove_iterate_bin(guint id);
-
-extern gboolean
-pygst_data_from_pyobject(PyObject *object, GstData **data);
-
+void            iterate_bin_all          (GstBin *bin);
+guint           add_iterate_bin          (GstBin *bin);
+void            remove_iterate_bin       (guint id);
+extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
 %%
 include
   gstpad-handlers.override
@@ -57,40 +58,36 @@ modulename gst
 import gobject.GObject as PyGObject_Type
 %%
 ignore-glob
- _*
- gstreamer_*init
- *_get_type
- *_copy
- *_free
- *_valist
- *_private
- gst_registry_*
- gst_value_*
+  _*
+  gstreamer_*init
+  *_get_type
+  *_copy
+  *_free
+  *_valist
+  *_private
+  gst_registry_*
+  gst_value_*
+  gst_tag_list_get_*
 %%
 override gst_buffer_get_data
-
 static PyObject*
 _wrap_gst_buffer_get_data(PyObject *self)
 {
-	GstBuffer *buf;
-
-	buf = pyg_boxed_get(self, GstBuffer);
-
-	return PyString_FromStringAndSize(
-			GST_BUFFER_DATA(buf),
-			GST_BUFFER_SIZE(buf));
+	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+	return PyString_FromStringAndSize(GST_BUFFER_DATA(buf),
+					  GST_BUFFER_SIZE(buf));
 }
 %%
 override gst_buffer_set_data kwargs
-
 static PyObject*
 _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 {
 	static char *kwlist[] = {"data", NULL};
 	PyObject *data;
 	GstBuffer *buf;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstBuffer:set_data", kwlist, &data)) {
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstBuffer:set_data", kwlist, &data))
+	{
 		return NULL;
 	}
 	if (!PyString_Check(data)) {
@@ -106,15 +103,14 @@ _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 	GST_BUFFER_DATA(buf) = g_new0(char, GST_BUFFER_SIZE(buf));
 
 	memcpy(GST_BUFFER_DATA(buf),
-			PyString_AsString(data),
-			PyString_Size(data));
+	       PyString_AsString(data),
+	       PyString_Size(data));
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 %%
 override gst_bin_iterate
-
 static PyObject *
 _wrap_gst_bin_iterate(PyGObject *self)
 {
@@ -127,7 +123,6 @@ _wrap_gst_bin_iterate(PyGObject *self)
 }
 %%
 override gst_element_set_state kwargs
-
 static PyObject *
 _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -147,7 +142,6 @@ _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 }
 %%
 override gst_pad_query kwargs
-
 static PyObject *
 _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -165,7 +159,6 @@ _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 }
 %%
 override gst_element_query kwargs
-
 static PyObject *
 _wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -183,7 +176,6 @@ _wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 }
 %%
 override gst_pad_convert kwargs
-
 static PyObject *
 _wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -202,7 +194,6 @@ _wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 }
 %%
 override gst_element_convert kwargs
-
 static PyObject *
 _wrap_gst_element_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -220,259 +211,249 @@ _wrap_gst_element_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 	return Py_BuildValue("(bL)", ret, dest_value);
 }
 %%
-override gst_version noargs
-static PyObject *
-_wrap_gst_version(void)
-{
-	guint major, minor, micro;
-
-	gst_version(&major, &minor, &micro);
-
-	return Py_BuildValue("(iii)", major, minor, micro);
-}
-
-%%
 override gst_bin_add_many args
 static PyObject *
 _wrap_gst_bin_add_many(PyGObject *self, PyObject *args)
 {
-    PyGObject *element;
-    int i;
-    int len;
+	PyGObject *element;
+	int i, len;
 
-    len = PyTuple_Size(args);
-    if (len == 0)
-	{
-	    PyErr_SetString(PyExc_TypeError, "GstBin.add requires at least one argument");
-	    return NULL;
+	len = PyTuple_Size(args);
+	if (len == 0) {
+		PyErr_SetString(PyExc_TypeError, "GstBin.add_many requires at least one argument");
+		return NULL;
 	}
        
     
-    for (i = 0; i < len; i++)
-	{
-	    element = (PyGObject*)PyTuple_GetItem(args, i);
-	    if (!pygobject_check(element, &PyGstElement_Type))
+	for (i = 0; i < len; i++) {
+		element = (PyGObject*)PyTuple_GetItem(args, i);
+		if (!pygobject_check(element, &PyGstElement_Type))
 		{
-		    PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
-		    return NULL;
+			PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
+			return NULL;
 		}
 	}
 	
-    for (i = 0; i < len; i++)
-	{
-	    element = (PyGObject*)PyTuple_GetItem(args, i);
-	    gst_bin_add(GST_BIN(self->obj), GST_ELEMENT(element->obj));
+	for (i = 0; i < len; i++) {
+		element = (PyGObject*)PyTuple_GetItem(args, i);
+		gst_bin_add(GST_BIN(self->obj), GST_ELEMENT(element->obj));
 	}
 
-    Py_INCREF(Py_None);
-    return Py_None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 %%
 override gst_element_link_many args
 static PyObject *
 _wrap_gst_element_link_many(PyObject *self, PyObject *args)
 {
-    PyGObject *element, *element2;
-    int i, len;
+	PyGObject *element, *element2;
+	int i, len;
 
-    len = PyTuple_Size(args);
-    if (len < 2)
-    {
-	PyErr_SetString(PyExc_TypeError, "gst.link_many requires at least two argument");
-	return NULL;
-    }
+	len = PyTuple_Size(args);
+	if (len < 2)
+	{
+		PyErr_SetString(PyExc_TypeError, "gst.element_link_many requires at least two argument");
+		return NULL;
+	}
        
 
-    for (i = 0; i < len; i++)
-    {
-	element = (PyGObject*)PyTuple_GetItem(args, i);
-	if (!pygobject_check(element, &PyGstElement_Type))
+	for (i = 0; i < len; i++)
 	{
-	    PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
-	    return NULL;
+		element = (PyGObject*)PyTuple_GetItem(args, i);
+		if (!pygobject_check(element, &PyGstElement_Type))
+		{
+			PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
+			return NULL;
+		}
 	}
-    }
 
-    /* Mimic the real gst_element_link_many */
-    element = (PyGObject*)PyTuple_GetItem(args, 0);
-    element2 = (PyGObject*)PyTuple_GetItem(args, 1);
+	/* Mimic the real gst_element_link_many */
+	element = (PyGObject*)PyTuple_GetItem(args, 0);
+	element2 = (PyGObject*)PyTuple_GetItem(args, 1);
 
-    i = 2;
-    while (1) {
+	i = 2;
+	while (1) {
 
-	if (!gst_element_link(GST_ELEMENT(element->obj), GST_ELEMENT(element2->obj)))
-	    return PyInt_FromLong(0);
+		if (!gst_element_link(GST_ELEMENT(element->obj), GST_ELEMENT(element2->obj)))
+			return PyInt_FromLong(0);
 
-	if (i >= len)
-	    break;
+		if (i >= len)
+			break;
 		
-	element = element2;
-	element2 = (PyGObject*)PyTuple_GetItem(args, i);
+		element = element2;
+		element2 = (PyGObject*)PyTuple_GetItem(args, i);
 	
-	i++;
-    }
+		i++;
+	}
 
-    return PyInt_FromLong(1);
+	return PyInt_FromLong(1);
 }
 %%
 override-slot GstBuffer.tp_getattr
 PyObject *
 _wrap_gst_buffer_tp_getattr(PyGObject *self, char *attr)
 {
-    if (!strcmp(attr, "type"))
-	return pyg_type_wrapper_new(GST_DATA_TYPE(self->obj));
-    else if (!strcmp(attr, "flags"))
-	return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
+	if (!strcmp(attr, "type"))
+		return pyg_type_wrapper_new(GST_DATA_TYPE(self->obj));
+	else if (!strcmp(attr, "flags"))
+		return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
 
-    return Py_FindMethod(_PyGstBuffer_methods, (PyObject*)self, attr);
+	return Py_FindMethod(_PyGstBuffer_methods, (PyObject*)self, attr);
 }
 %%
 override GstPad.get_negotiated_caps
 static PyObject *
 _wrap_gst_pad_get_negotiated_caps(PyGObject *self)
 {
-    const GstCaps *ret;
+	const GstCaps *ret;
 
-    ret = gst_pad_get_negotiated_caps(GST_PAD(self->obj));
-    /* pyg_boxed_new handles NULL checking */
-    return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
+	ret = gst_pad_get_negotiated_caps(GST_PAD(self->obj));
+	/* pyg_boxed_new handles NULL checking */
+	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
 %%
 override gst_buffer_new kwargs
 static int
 _wrap_gst_buffer_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = { "data", NULL };
-    char *data = NULL;
-    int size;
+	static char *kwlist[] = { "data", "buffer_size", NULL };
+	char *data = NULL;
+	int size;
+	int buf_size = 4096;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|z#:GstBuffer.__init__", kwlist, &data, &size))
-        return -1;
-    self->gtype = GST_TYPE_BUFFER;
-    self->free_on_dealloc = FALSE;
-    self->boxed = gst_buffer_new_and_alloc(size);
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|z#s:GstBuffer.__init__", kwlist,
+					 &data, &size, &buf_size))
+		return -1;
+	self->gtype = GST_TYPE_BUFFER;
+	self->free_on_dealloc = FALSE;
+	self->boxed = gst_buffer_new(); //_and_alloc(buf_size);
 	
-    if (!self->boxed) {
-        PyErr_SetString(PyExc_RuntimeError, "could not create GstBuffer object");
-        return -1;
-    }
+	if (!self->boxed) {
+		PyErr_SetString(PyExc_RuntimeError, "could not create GstBuffer object");
+		return -1;
+	}
+	
+	GST_BUFFER_SIZE (self->boxed) = size;
+	GST_BUFFER_DATA (self->boxed) = data;
+	
+//	if (data)
+//		memcpy(GST_BUFFER_DATA (self->boxed), data, size);
+	
+//	gst_buffer_set_data (self->boxed, data, size);
 
-    if (data)
-	gst_buffer_set_data (self->boxed, data, size);
-    //	memcpy (GST_BUFFER_DATA (self->boxed), data, size);
+//	gst_buffer_ref (GST_BUFFER (self->boxed));
 
-    gst_buffer_ref (GST_BUFFER (self->boxed));
-
-    return 0;
+	return 0;
 }
 %%
-override pygst_tag_list_keys noargs
+define GstTagList.keys noargs
 void
 tag_foreach_func_dict (const GstTagList *list,
 		       const gchar      *tag,
 		       PyObject         *dict)
 {
-    int count;
-    guint i;
-    const GValue *gvalue;
-    PyObject *value;
-    gchar *key;
+	int count;
+	guint i;
+	const GValue *gvalue;
+	PyObject *value;
+	gchar *key;
     
-    count = gst_tag_list_get_tag_size(GST_TAG_LIST(list), tag);
+	count = gst_tag_list_get_tag_size(GST_TAG_LIST(list), tag);
 
-    for (i = 0; i < count; i++) {
-	gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(list), tag, i);
-	value = pyg_value_as_pyobject(gvalue, TRUE);
-	key = g_strdup (tag);
-	PyDict_SetItemString(dict, key, value);
-	g_free (key);
-	Py_DECREF(value);
-    }
+	for (i = 0; i < count; i++) {
+		gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(list), tag, i);
+		value = pyg_value_as_pyobject(gvalue, TRUE);
+		key = g_strdup (tag);
+		PyDict_SetItemString(dict, key, value);
+		g_free (key);
+		Py_DECREF(value);
+	}
 }
 void
 tag_foreach_func_list (const GstTagList *list,
 		       const gchar      *tag,
 		       PyObject         *py_list)
 {
-    int count;
+	int count;
     
-    count = gst_tag_list_get_tag_size(GST_TAG_LIST(list), tag);
-    if (count == 0)
-	PyErr_SetString(PyExc_KeyError, tag);
-    else if (count == 1)
-	PyList_Append(py_list, PyString_FromString(tag));
-    else if (count > 1)
-	PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
+	count = gst_tag_list_get_tag_size(GST_TAG_LIST(list), tag);
+	if (count == 0)
+		PyErr_SetString(PyExc_KeyError, tag);
+	else if (count == 1)
+		PyList_Append(py_list, PyString_FromString(tag));
+	else if (count > 1)
+		PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
 }
 
 static PyObject*
-_wrap_pygst_tag_list_keys(PyGObject *self)
+_wrap_gst_tag_list_keys(PyGObject *self)
 {
-    PyObject *dict;
+	PyObject *dict;
 
-    dict = PyList_New(0);
+	dict = PyList_New(0);
     
-    gst_tag_list_foreach(GST_TAG_LIST(self->obj),
-			 (GstTagForeachFunc)tag_foreach_func_list,
-			 (gpointer)dict);
+	gst_tag_list_foreach(GST_TAG_LIST(self->obj),
+			     (GstTagForeachFunc)tag_foreach_func_list,
+			     (gpointer)dict);
     
-    return dict;
+	return dict;
 }
 %%
 override-slot GstTagList.tp_as_mapping
 static int
-tag_list_length(PyGObject *self)
+_wrap_gst_tag_list_length(PyGObject *self)
 {
-    return gst_structure_n_fields((GstStructure*)self->obj);
+	return gst_structure_n_fields((GstStructure*)self->obj);
 }
 
 static PyObject *
-tag_list_subscript(PyGObject *self, register PyObject *py_key)
+_wrap_gst_tag_list_subscript(PyGObject *self, PyObject *py_key)
 {
-        PyObject *v = NULL;
+	PyObject *v = NULL;
 	char *key = PyString_AsString(py_key);
 	
 	int count = gst_tag_list_get_tag_size(GST_TAG_LIST(self->obj), key);
 	if (count == 0) {
-	    PyErr_SetObject(PyExc_KeyError, py_key);
+		PyErr_SetObject(PyExc_KeyError, py_key);
 	} else if (count == 1) {
-	    const GValue *gvalue;
-	    gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
-	    v = pyg_value_as_pyobject(gvalue, TRUE);
+		const GValue *gvalue;
+		gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
+		v = pyg_value_as_pyobject(gvalue, TRUE);
 	} else {
-	    PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
+		PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
 	}
 		
-        if (v != NULL)
-	    Py_INCREF(v);
-        return v;
+	if (v != NULL)
+		Py_INCREF(v);
+	return v;
 }
 
 static PySequenceMethods _wrap_gst_tag_list_tp_as_mapping = {
-    (inquiry)tag_list_length,         /*mp_length*/
-    (binaryfunc)tag_list_subscript,   /*mp_subscript*/
-    (objobjargproc)NULL,
+	(inquiry)_wrap_gst_tag_list_length,         /* mp_length */
+	(binaryfunc)_wrap_gst_tag_list_subscript,   /* mp_subscript */
+	NULL,
 };
 
 %%
-override pygst_tag_list_has_key args
+define GstTagList.has_key args
 static PyObject*
-_wrap_pygst_tag_list_has_key(PyGObject *self, PyObject *args)
+_wrap_gst_tag_list_has_key(PyGObject *self, PyObject *args)
 {
-    gchar *key;
-    const GValue *gvalue;
+	gchar *key;
+	const GValue *gvalue;
     
-    if (!PyArg_ParseTuple(args, "s:GstTagList.keys", &key))
-	return NULL;
+	if (!PyArg_ParseTuple(args, "s:GstTagList.keys", &key))
+		return NULL;
 
-    gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
+	gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
 
-    return PyInt_FromLong(gvalue != NULL);
+	return PyInt_FromLong(gvalue != NULL);
 }    
 %%
-override pygst_tag_list_get args
+define GstTagList.get
 static PyObject *
-_wrap_pygst_tag_list_get(PyGObject *self, PyObject *args)
+_wrap_gst_tag_list_get(PyGObject *self, PyObject *args)
 {
 	char *key;
 	PyObject *failobj = Py_None;
@@ -480,19 +461,19 @@ _wrap_pygst_tag_list_get(PyGObject *self, PyObject *args)
 	const GValue *gvalue;
 	
 	if (!PyArg_ParseTuple(args, "s|O:GstTagList.get", &key, &failobj))
-	    return NULL;
+		return NULL;
 
 	gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
 	if (gvalue != NULL) {
-	    int count = gst_tag_list_get_tag_size(GST_TAG_LIST(self->obj), key);
-	    if (count == 0) {
-		PyErr_SetString(PyExc_KeyError, key);
-	    } else if (count == 1) {
-		gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
-		val = pyg_value_as_pyobject(gvalue, TRUE);
-	    } else {
-		PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
-	    }
+		int count = gst_tag_list_get_tag_size(GST_TAG_LIST(self->obj), key);
+		if (count == 0) {
+			PyErr_SetString(PyExc_KeyError, key);
+		} else if (count == 1) {
+			gvalue = gst_tag_list_get_value_index(GST_TAG_LIST(self->obj), key, 0);
+			val = pyg_value_as_pyobject(gvalue, TRUE);
+		} else {
+			PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
+		}
 	}
 
 	if (val == NULL)
@@ -524,213 +505,57 @@ py_pad_private(PyGObject *pad)
 	}
 	return private;
 }
-	
-%%
-override gst_bin_iterate
-
-static PyObject *
-_wrap_gst_bin_iterate(PyGObject *self)
-{
-	int ret;
-
-	pyg_unblock_threads();
-	ret = gst_bin_iterate(GST_BIN(self->obj));
-	pyg_block_threads();
-	return PyInt_FromLong(ret);
-}
-%%
-override gst_element_set_state kwargs
-
-static PyObject *
-_wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "state", NULL };
-	PyObject *py_state = NULL;
-	GstElementState state;
-	gint ret;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.set_state", kwlist, &py_state))
-		return NULL;
-	if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_state, (gint *)&state))
-		return NULL;
-	pyg_unblock_threads();
-	ret = gst_element_set_state(GST_ELEMENT(self->obj), state);
-	pyg_block_threads();
-	return PyInt_FromLong(ret);
-}
-%%
-override gst_pad_query kwargs
-
-static PyObject *
-_wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "type", "format", NULL };
-	GstQueryType type;
-	GstFormat format;
-	gint64 value;
-	gboolean ret;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii:GstPad.query", kwlist, &type, &format))
-		return NULL;
-	value = 0;
-	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value);
-	return Py_BuildValue("(bL)", ret, value);
-}
-%%
-override gst_element_query kwargs
-
-static PyObject *
-_wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "type", "format", NULL };
-	GstQueryType type;
-	GstFormat format;
-	gint64 value;
-	gboolean ret;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii:GstElement.query", kwlist, &type, &format))
-		return NULL;
-	value = 0;
-	ret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value);
-	return Py_BuildValue("(bL)", ret, value);
-}
-%%
-override gst_pad_convert kwargs
-
-static PyObject *
-_wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "src_format", "src_value", "dest_format", NULL };
-	GstFormat src_format, dest_format;
-	PyObject *src_value_obj;
-	gint64 src_value, dest_value;
-	gboolean ret;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iOi:GstPad.convert", kwlist, &src_format, &src_value_obj, &dest_format))
-		return NULL;
-	src_value = PyLong_AsLongLong(src_value_obj);
-	dest_value = 0;
-	ret = gst_pad_convert(GST_PAD(self->obj), src_format, src_value, &dest_format, &dest_value);
-	return Py_BuildValue("(bL)", ret, dest_value);
-}
-%%
-override gst_element_convert kwargs
-
-static PyObject *
-_wrap_gst_element_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-	static char *kwlist[] = { "src_format", "src_value", "dest_format", NULL };
-	GstFormat src_format, dest_format;
-	PyObject *src_value_obj;
-	gint64 src_value, dest_value;
-	gboolean ret;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iOi:GstElement.convert", kwlist, &src_format, &src_value_obj, &dest_format))
-		return NULL;
-	src_value = PyLong_AsLongLong(src_value_obj);
-	dest_value = 0;
-	ret = gst_element_convert(GST_ELEMENT(self->obj), src_format, src_value, &dest_format, &dest_value);
-	return Py_BuildValue("(bL)", ret, dest_value);
-}
-%%
-override gst_version noargs
-
-static PyObject *
-_wrap_gst_version(void)
-{
-	guint major, minor, micro;
-
-	gst_version(&major, &minor, &micro);
-
-	return Py_BuildValue("(iii)", major, minor, micro);
-}
-%%
-override gst_bin_add_many args
-static PyObject *
-_wrap_gst_bin_add_many(PyGObject *self, PyObject *args, PyObject *kwargs)
-{
-    PyGObject *element;
-    int i;
-    int len;
-
-    len = PyList_Size(args);
-    if (len == 0)
-	{
-	    PyErr_SetString(PyExc_TypeError, "GstBin.add requires at least one argument");
-	    return NULL;
-	}
-       
-    
-    for (i = 0; i < len; i++)
-	{
-	    element = (PyGObject*)PyList_GetItem(args, i);
-	    if (!pygobject_check(element, &PyGstElement_Type))
-		{
-		    PyErr_SetString(PyExc_TypeError, "argument must be a GstElement");
-		    return NULL;
-		}
-	}
-	
-    for (i = 0; i < len; i++)
-	{
-	    element = (PyGObject*)PyList_GetItem(args, i);
-	    gst_bin_add(GST_BIN(self->obj), GST_ELEMENT(element->obj));
-	}
-
-    Py_INCREF(Py_None);
-    return Py_None;
-}
 %%
 override gst_structure_new kwargs
-
 static int
 _wrap_gst_structure_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = { "name", NULL };
-    char *name;
+	static char *kwlist[] = { "name", NULL };
+	char *name;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:GstStructure.__init__", kwlist, &name))
-        return -1;
-    self->gtype = GST_TYPE_STRUCTURE;
-    self->free_on_dealloc = FALSE;
-    self->boxed = gst_structure_new(name, NULL);
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:GstStructure.__init__", kwlist, &name))
+		return -1;
+	self->gtype = GST_TYPE_STRUCTURE;
+	self->free_on_dealloc = FALSE;
+	self->boxed = gst_structure_new(name, NULL);
 
-    if (!self->boxed) {
-        PyErr_SetString(PyExc_RuntimeError, "could not create GstStructure object");
-        return -1;
-    }
-    self->free_on_dealloc = TRUE;
-    return 0;
+	if (!self->boxed) {
+		PyErr_SetString(PyExc_RuntimeError, "could not create GstStructure object");
+		return -1;
+	}
+	self->free_on_dealloc = TRUE;
+	return 0;
 }
 %%
 override gst_structure_set_value kwargs
-
 static PyObject *
 _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = { "field", "value", NULL };
-    char *field;
-    PyObject *py_value = NULL;
-    GValue value = { 0 };
+	static char *kwlist[] = { "field", "value", NULL };
+	char *field;
+	PyObject *py_value = NULL;
+	GValue value = { 0 };
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sO:GstStructure.set_value", kwlist, &field, &py_value))
-        return NULL;
-    g_value_init(&value, G_TYPE_STRING);
-    if (pyg_value_from_pyobject(&value, py_value) != 0) {
-        return NULL;
-    }
-    gst_structure_set_value(pyg_boxed_get(self, GstStructure), field, &value);
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+					 "sO:GstStructure.set_value",
+					 kwlist, &field, &py_value))
+		return NULL;
+	
+	g_value_init(&value, G_TYPE_STRING);
+	if (pyg_value_from_pyobject(&value, py_value) != 0) {
+		return NULL;
+	}
+	gst_structure_set_value(pyg_boxed_get(self, GstStructure), field, &value);
 
-    Py_INCREF(Py_None);
-    return Py_None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 %%
 override gst_structure_foreach kwargs
-
 static gboolean
 pygst_structure_foreach_marshal(GQuark field_id,
-		GValue *value,
-		gpointer user_data)
+				GValue *value,
+				gpointer user_data)
 {
 	PyGstCustomNotify *cunote = user_data;
 	PyObject *py_field, *py_value, *retobj;
@@ -747,11 +572,11 @@ pygst_structure_foreach_marshal(GQuark field_id,
 	py_value = pyg_value_as_pyobject(value, FALSE);
 	if (cunote->data)
 		retobj = PyEval_CallFunction(cunote->func, "(NNO)",
-				py_field, py_value,
-				cunote->data);
+					     py_field, py_value,
+					     cunote->data);
 	else
 		retobj = PyEval_CallFunction(cunote->func, "(NN)",
-				py_field, py_value);
+					     py_field, py_value);
 
 	if (PyErr_Occurred () || (retobj == NULL) || (retobj == Py_None)) {
 		PyErr_Print ();
@@ -769,17 +594,17 @@ pygst_structure_foreach_marshal(GQuark field_id,
 
 static PyObject *
 _wrap_gst_structure_foreach (PyGObject *self,
-		PyObject *args,
-		PyObject *kwargs)
+			     PyObject *args,
+			     PyObject *kwargs)
 {
 	static char *kwlist[] = { "foreach_function", "args", NULL };
 	PyObject *pyfunc, *pyarg = NULL;
 	PyGstCustomNotify cunote;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-				"O|O:GstStructure.foreach",
-				kwlist,
-				&pyfunc, &pyarg)) {
+					 "O|O:GstStructure.foreach",
+					 kwlist,
+					 &pyfunc, &pyarg)) {
 		return NULL;
 	}
 
@@ -791,8 +616,8 @@ _wrap_gst_structure_foreach (PyGObject *self,
 	cunote.func = pyfunc;
 	cunote.data = pyarg;
 	gst_structure_foreach(pyg_boxed_get(self, GstStructure),
-			pygst_structure_foreach_marshal,
-			&cunote);
+			      pygst_structure_foreach_marshal,
+			      &cunote);
 
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -802,8 +627,8 @@ override gst_tag_list_foreach kwargs
 
 static gboolean
 pygst_tag_list_foreach_marshal(GstTagList *list,
-		const gchar *tag,
-		gpointer user_data)
+			       const gchar *tag,
+			       gpointer user_data)
 {
 	PyGstCustomNotify *cunote = user_data;
 	PyObject *py_list;
@@ -818,13 +643,13 @@ pygst_tag_list_foreach_marshal(GstTagList *list,
 	py_key = Py_BuildValue("s", tag);
 	if (cunote->data)
 		retobj = PyEval_CallFunction(cunote->func, "(NNO)",
-				py_list,
-				py_key,
-				cunote->data);
+					     py_list,
+					     py_key,
+					     cunote->data);
 	else
 		retobj = PyEval_CallFunction(cunote->func, "(NN)",
-				py_list,
-				py_key);
+					     py_list,
+					     py_key);
 
 	if (PyErr_Occurred () || (retobj == NULL) || (retobj == Py_None)) {
 		PyErr_Print ();
@@ -842,19 +667,17 @@ pygst_tag_list_foreach_marshal(GstTagList *list,
 
 static PyObject *
 _wrap_gst_tag_list_foreach (PyGObject *self,
-		PyObject *args,
-		PyObject *kwargs)
+			    PyObject *args,
+			    PyObject *kwargs)
 {
 	static char *kwlist[] = { "foreach_function", "args", NULL };
 	PyObject *pyfunc, *pyarg = NULL;
 	PyGstCustomNotify cunote;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-				"O|O:GstTagList.foreach",
-				kwlist,
-				&pyfunc, &pyarg)) {
+					 "O|O:GstTagList.foreach",
+					 kwlist, &pyfunc, &pyarg))
 		return NULL;
-	}
 
 	if (!PyCallable_Check(pyfunc)) {
 		PyErr_SetString(PyExc_TypeError, "foreach_function not callable");
@@ -872,11 +695,10 @@ _wrap_gst_tag_list_foreach (PyGObject *self,
 }
 %%
 override gst_tag_list_get_value_index kwargs
-
 static PyObject *
 _wrap_gst_tag_list_get_value_index (PyGObject *self,
-		PyObject *args,
-		PyObject *kwargs)
+				    PyObject *args,
+				    PyObject *kwargs)
 {
 	static char *kwlist[] = { "tag", "index", NULL };
 	char *tag;
@@ -884,15 +706,67 @@ _wrap_gst_tag_list_get_value_index (PyGObject *self,
 	const GValue *gvalue;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-				"si:GstTagList.get_value_index",
-				kwlist,
-				&tag, &index)) {
+					 "si:GstTagList.get_value_index",
+					 kwlist, &tag, &index))
 		return NULL;
-	}
 
 	gvalue = gst_tag_list_get_value_index(pyg_boxed_get(self, GstTagList),
 					      tag,
 					      index);
 
 	return pyg_value_as_pyobject(gvalue, FALSE);
+}
+%%
+override gst_pad_get_negotiated_caps noargs
+static PyObject *
+_wrap_gst_pad_get_negotiated_caps(PyGObject *self)
+{
+	GstCaps *ret = (GstCaps*)gst_pad_get_negotiated_caps(GST_PAD(self->obj));
+	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
+}
+%%
+override gst_pad_get_pad_template_caps noargs
+static PyObject *
+_wrap_gst_pad_get_pad_template_caps(PyGObject *self)
+{
+	GstCaps *ret = (GstCaps*)gst_pad_get_pad_template_caps(GST_PAD(self->obj));
+	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
+}
+%%
+override gst_pad_template_get_caps noargs
+static PyObject *
+_wrap_gst_pad_template_get_caps(PyGObject *self)
+{
+	GstCaps *ret = (GstCaps*)gst_pad_template_get_caps(GST_PAD_TEMPLATE(self->obj));
+	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
+}
+%%
+override gst_type_fidn_factory_get_caps noargs
+static PyObject *
+_wrap_gst_type_find_factory_get_caps(PyGObject *self)
+{
+	GstCaps *ret = (GstCaps*)gst_type_find_factory_get_caps(GST_TYPE_FIND_FACTORY(self->obj));
+	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
+}
+%%
+override gst_pad_template_get_caps_ny_name kwargs
+static PyObject *
+_wrap_gst_pad_template_get_caps_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+	static char *kwlist[] = { "name", NULL };
+	char *name;
+	GstCaps *ret;
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:GstPadTemplate.get_caps_by_name", kwlist, &name))
+		return NULL;
+	ret = (GstCaps*)gst_pad_template_get_caps_by_name(GST_PAD_TEMPLATE(self->obj), name);
+	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
+}
+%%
+override gst_type_find_factory_get_caps noargs
+static PyObject *
+_wrap_gst_type_find_factory_get_caps(PyGObject *self)
+{
+	GstCaps *ret = (GstCaps*)gst_type_find_factory_get_caps(GST_TYPE_FIND_FACTORY(self->obj));
+	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
