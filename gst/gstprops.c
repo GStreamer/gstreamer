@@ -107,11 +107,11 @@ gst_props_entry_fill (GstPropsEntry *entry, va_list *var_args)
       entry->data.int_range_data.max = va_arg (*var_args, gint);
       break;
     case GST_PROPS_FLOAT_ID:
-      entry->data.float_data = va_arg (*var_args, gfloat);
+      entry->data.float_data = va_arg (*var_args, gdouble);
       break;
     case GST_PROPS_FLOAT_RANGE_ID:
-      entry->data.float_range_data.min = va_arg (*var_args, gfloat);
-      entry->data.float_range_data.max = va_arg (*var_args, gfloat);
+      entry->data.float_range_data.min = va_arg (*var_args, gdouble);
+      entry->data.float_range_data.max = va_arg (*var_args, gdouble);
       break;
     case GST_PROPS_FOURCC_ID:
       entry->data.fourcc_data = va_arg (*var_args, gulong);
