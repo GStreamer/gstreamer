@@ -578,26 +578,30 @@ else
   HAVE_CSSAUTH="no"
 fi
 
-dnl Check for SDLlib
-AC_MSG_CHECKING(SDLlib)
-AC_CHECK_LIB(SDL, SDL_Init, HAVE_LIBSDL=yes, HAVE_LIBSDL=no, -L/usr/lib -L/usr/local/lib -lpthread)
-AC_CHECK_HEADER(SDL/SDL.h, :, HAVE_LIBSDL=no)
- 
-dnl Check for SDL
-HAVE_LIBSDL="no"
-AC_MSG_CHECKING(for SDL)
+dnl Check for SDL library
+AC_MSG_CHECKING(SDL library)
+HAVE_LIBSDL=no
 if sdl-config --libs > /dev/null 2>&1; then
-  HAVE_LIBSDL="yes"
-  AC_MSG_RESULT(found)
+  HAVE_LIBSDL=yes
+  SDL_VERSION=`sdl-config --version`
+  AC_MSG_RESULT([found (version $SDL_VERSION)])
 else
   AC_MSG_RESULT(not found)
 fi
-
 SDL_LIBS="`sdl-config --libs`"
 SDL_CFLAGS="`sdl-config --cflags`"
- 
 AC_SUBST(SDL_LIBS)
 AC_SUBST(SDL_CFLAGS)
+
+if test "x$HAVE_LIBSDL" == "xyes"; then
+  AC_CHECK_LIB(SDL, SDL_Init, :, HAVE_LIBSDL=no, $SDL_LIBS)
+  AC_CHECK_HEADER(SDL/SDL.h, :, HAVE_LIBSDL=no)
+  AC_CHECK_FUNC(SDL_CreateYUVOverlay, :, [HAVE_LIBSDL=no
+  AC_MSG_WARN(
+***** NOTE: These plugins won't be built: sdlvideosink
+  )])
+fi
+
 
 dnl Check for linux/cdrom.h
 AC_CHECK_HEADER(linux/cdrom.h,
