@@ -1,3 +1,63 @@
+2005-01-26  Jan Schmidt  <thaytan@mad.scientist.com>
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_push),
+	(gst_a52dec_handle_event), (gst_a52dec_chain):
+	Add some debug output. Check that a discont has a valid
+	time associated.
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event),
+	(gst_alsa_sink_loop):
+	Ignore TAG events. A little extra debug for broken timestamps.
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_init), (dvdnavsrc_loop),
+	(dvdnavsrc_change_state):
+	Ensure we send a discont to engage the link before we send any
+	other events.
+	* ext/dvdread/dvdreadsrc.c: (dvdreadsrc_init),
+	(dvdreadsrc_finalize), (_close), (_open), (_seek_title),
+	(_seek_chapter), (seek_sector), (dvdreadsrc_get),
+	(dvdreadsrc_uri_get_uri), (dvdreadsrc_uri_set_uri):
+	Handle URI of the form dvd://title[,chapter[,angle]]. Currently only
+	dvd://title works in totem because typefinding sends a seek that ends
+	up going back to chapter 1 regardless.
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Output correct timestamps and handle disconts.
+	* ext/ogg/gstoggdemux.c: (get_relative):
+	Small guard against a null dereference.
+	* ext/pango/gsttextoverlay.c: (gst_textoverlay_finalize),
+	(gst_textoverlay_set_property):
+	Free memory when done. Don't call gst_event_filler_get_duration on
+	EOS events. Use GST_LOG and GST_WARNING instead of g_message and
+	g_warning.
+	* ext/smoothwave/gstsmoothwave.c: (gst_smoothwave_init),
+	(draw_line), (gst_smoothwave_dispose), (gst_sw_sinklink),
+	(gst_sw_srclink), (gst_smoothwave_chain):
+	Draw solid lines, prettier colours.
+	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_init):
+	Add a default palette that'll work for some movies.
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_init),
+	(gst_dvd_demux_handle_dvd_event), (gst_dvd_demux_send_discont),
+	(gst_dvd_demux_send_subbuffer), (gst_dvd_demux_reset):
+	* gst/mpegstream/gstdvddemux.h:
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_discont),
+	(gst_mpeg_demux_parse_syshead), (gst_mpeg_demux_parse_pes):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_init),
+	(gst_mpeg_parse_handle_discont), (gst_mpeg_parse_parse_packhead):
+	* gst/mpegstream/gstmpegparse.h:
+	Use PTM/NAV events when for timestamp adjustment when connected to 
+	dvdnavsrc. Don't use many discont events where one suffices.
+	* gst/playback/gstplaybasebin.c: (group_destroy),
+	(gen_preroll_element), (gst_play_base_bin_add_element):
+	* gst/playback/gstplaybasebin.h:
+	Make sure we remove subtitles from the same bin we put them in.
+	* gst/subparse/gstsubparse.c: (convert_encoding), (parse_subrip),
+	(gst_subparse_buffer_format_autodetect),
+	(gst_subparse_change_state):
+	Fix some memleaks and invalid accesses.
+	* gst/typefind/gsttypefindfunctions.c: (ogganx_type_find),
+	(oggskel_type_find), (cmml_type_find), (plugin_init):
+	Some typefind functions for Annodex v3.0 files
+	* gst/wavparse/gstwavparse.h:
+	GstRiffReadClass is the correct parent class.
+
 2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-media.c:

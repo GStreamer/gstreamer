@@ -195,6 +195,27 @@ gst_smoothwave_init (GstSmoothWave * smoothwave)
   smoothwave->samples_consumed = 0;
 }
 
+inline guchar *
+draw_line (guchar * cur_pos, gint diff_y, gint stride)
+{
+  gint j;
+
+  if (diff_y > 0) {
+    for (j = diff_y; j > 0; j--) {
+      cur_pos += stride;
+      *cur_pos = 0xff;
+    }
+  } else if (diff_y < 0) {
+    for (j = diff_y; j < 0; j++) {
+      cur_pos -= stride;
+      *cur_pos = 0xff;
+    }
+  } else {
+    *cur_pos = 0xff;
+  }
+  return cur_pos;
+}
+
 static void
 gst_smoothwave_dispose (GObject * object)
 {
@@ -247,7 +268,6 @@ gst_smoothwave_chain (GstPad * pad, GstData * _data)
   GstSmoothWave *smoothwave;
   guint32 bytesperread;
   gint samples_per_frame;
-  gint qheight;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -290,27 +310,60 @@ gst_smoothwave_chain (GstPad * pad, GstData * _data)
   gst_adapter_push (smoothwave->adapter, buf);
   while (gst_adapter_available (smoothwave->adapter) > MAX (bytesperread,
           samples_per_frame * smoothwave->channels * sizeof (gint16))) {
+    guint32 *ptr;
+    gint i;
+    gint qheight;
     const gint16 *samples =
         (const guint16 *) gst_adapter_peek (smoothwave->adapter, bytesperread);
-    register guint32 *ptr;
-    gint i;
+    gint stride = smoothwave->width;
 
     /* First draw the new waveform */
     if (smoothwave->channels == 2) {
+      guchar *cur_pos[2];
+      gint prev_y[2];
+
       qheight = smoothwave->height / 4;
-      for (i = 0; i < smoothwave->width; i++) {
-        gint16 y1 = (gint32) (samples[i * 2] * qheight) / 32768 + qheight;
-        gint16 y2 = (gint32) (samples[(i * 2) + 1] * qheight) / 32768 +
-            (qheight + smoothwave->height / 2);
-        smoothwave->imagebuffer[y1 * smoothwave->width + i] = 0xff;
-        smoothwave->imagebuffer[y2 * smoothwave->width + i] = 0xff;
+      prev_y[0] = (gint32) (*samples) * qheight / 32768;
+      samples++;
+      prev_y[1] = (gint32) (*samples) * qheight / 32768;
+      samples++;
+      cur_pos[0] = smoothwave->imagebuffer + ((prev_y[0] + qheight) * stride);
+      cur_pos[1] =
+          smoothwave->imagebuffer + ((prev_y[1] +
+              (3 * smoothwave->height / 4)) * stride);
+      *(cur_pos[0]) = 0xff;
+      *(cur_pos[1]) = 0xff;
+
+      for (i = 1; i < smoothwave->width; i++) {
+        gint diff_y = (gint) (*samples) * qheight / 32768 - prev_y[0];
+
+        samples++;
+        cur_pos[0] = draw_line (cur_pos[0], diff_y, stride);
+        cur_pos[0]++;
+        prev_y[0] += diff_y;
+
+        diff_y = (gint) (*samples) * qheight / 32768 - prev_y[1];
+        samples++;
+        cur_pos[1] = draw_line (cur_pos[1], diff_y, stride);
+        cur_pos[1]++;
+        prev_y[1] += diff_y;
       }
     } else {
       qheight = smoothwave->height / 2;
-      for (i = 0; i < smoothwave->width; i++) {
-        gint16 y1 = (gint32) (samples[i] * qheight) / 32768 + qheight;
+      guchar *cur_pos;
+      gint prev_y;
 
-        smoothwave->imagebuffer[y1 * smoothwave->width + i] = 0xff;
+      prev_y = (gint32) (*samples) * qheight / 32768;
+      samples++;
+      cur_pos = smoothwave->imagebuffer + ((prev_y + qheight) * stride);
+      *cur_pos = 0xff;
+      for (i = 1; i < smoothwave->width; i++) {
+        gint diff_y = (gint) (*samples) * qheight / 32768 - prev_y;
+
+        samples++;
+        cur_pos = draw_line (cur_pos, diff_y, stride);
+        cur_pos++;
+        prev_y += diff_y;
       }
     }
 
@@ -338,7 +391,6 @@ gst_smoothwave_chain (GstPad * pad, GstData * _data)
       in = smoothwave->imagebuffer;
 
       for (i = 0; i < (smoothwave->width * smoothwave->height); i++) {
-        // guchar t = *in++;
         *out++ = smoothwave->palette[*in++];    // t | (t << 8) | (t << 16) | (t << 24);
       }
       gst_pad_push (smoothwave->srcpad, GST_DATA (bufout));

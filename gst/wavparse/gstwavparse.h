@@ -80,7 +80,7 @@ struct _GstWavParse {
 };
 
 struct _GstWavParseClass {
-  GstElementClass parent_class;
+  GstRiffReadClass parent_class;
 };
 
 GType gst_wavparse_get_type(void);
