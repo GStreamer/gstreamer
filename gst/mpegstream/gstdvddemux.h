@@ -77,12 +77,14 @@ enum {
    streams. */
 struct _GstDVDLPCMStream {
   GstMPEGStream	 parent;
-  guint8	 sample_info;	/* The type of linear PCM samples
+  guint32	 sample_info;	/* The type of linear PCM samples
                                    associated to this stream. The
                                    values are bit fields with the same
                                    format of the sample_info field in
                                    the linear PCM header. */
-  gint rate, channels, width;
+  gint rate, channels, width,
+    dynamic_range;
+  gboolean mute, emphasis;
 };
 
 

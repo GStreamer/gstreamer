@@ -342,6 +342,7 @@ gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec)
   mpeg2dec->segment_end = -1;
   mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
   mpeg2dec->frame_period = 0;
+  gst_pad_set_explicit_caps (mpeg2dec->srcpad, NULL);
   gst_mpeg2dec_open_decoder (mpeg2dec);
   mpeg2dec->need_sequence = TRUE;
 }
@@ -774,7 +775,8 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     if (picture->flags & PIC_FLAG_SKIP) {
       GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer because of skip flag");
       gst_buffer_unref (outbuf);
-    } else if (!GST_PAD_IS_USABLE (mpeg2dec->srcpad)) {
+    } else if (!GST_PAD_IS_USABLE (mpeg2dec->srcpad)
+        || !gst_pad_is_negotiated (mpeg2dec->srcpad)) {
       GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, pad not usable");
       gst_buffer_unref (outbuf);
     } else if (mpeg2dec->discont_state != MPEG2DEC_DISC_NONE) {
@@ -889,7 +891,6 @@ gst_mpeg2dec_flush_decoder (GstMpeg2dec * mpeg2dec)
 #if MPEG2_RELEASE >= MPEG2_VERSION (0, 4, 0)
         case STATE_INVALID_END:
 #endif
-          // mpeg2dec->need_sequence = TRUE;
         case STATE_SLICE:
           if (info->discard_fbuf) {
             if (free_buffer (mpeg2dec, GST_BUFFER (info->discard_fbuf->id))) {

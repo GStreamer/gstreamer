@@ -82,20 +82,19 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
   GST_STATIC_CAPS ( \
     "audio/mpeg, " \
       "mpegversion = (int) 1;" \
-    "audio/x-raw-int, " \
-      "endianness = (int) BIG_ENDIAN, " \
-      "signed = (boolean) TRUE, " \
-      "width = (int) { 16, 24 }, " \
-      "depth = (int) { 16, 20, 24 }, " \
+    "audio/x-dvd-lpcm, " \
+      "width = (int) { 16, 20, 24 }, " \
       "rate = (int) { 48000, 96000 }, " \
-      "channels = (int) [ 1, 8 ];" \
+      "channels = (int) [ 1, 8 ], " \
+      "dynamic_range = (int) [ 0, 255 ], " \
+      "emphasis = (boolean) { FALSE, TRUE }, " \
+      "mute = (boolean) { FALSE, TRUE }; " \
     "audio/x-ac3;" \
     "audio/x-dts" \
   )
 
 #define SUBPICTURE_CAPS \
   GST_STATIC_CAPS ("video/x-dvd-subpicture")
-
 
 static GstStaticPadTemplate cur_video_template =
 GST_STATIC_PAD_TEMPLATE ("current_video",
@@ -429,9 +428,13 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
          the next sequence time. We don't do it here to reduce the
          time gap between the discontinuity and the subsequent data
          blocks. */
+#if 1
       dvd_demux->discont_time = start_ptm + mpeg_demux->adjust;
+#else
+      dvd_demux->discont_time = start_ptm;
+#endif
       GST_DEBUG_OBJECT (dvd_demux, "Set discont time to %" G_GINT64_FORMAT,
-          start_ptm + mpeg_demux->adjust);
+          dvd_demux->discont_time);
 
       dvd_demux->just_flushed = FALSE;
     }
@@ -506,7 +509,7 @@ gst_dvd_demux_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
     gst_dvd_demux_reset (dvd_demux);
   }
 
-  /* before we reset let parent handle and forward discont */
+  /* let parent handle and forward discont */
   if (GST_MPEG_PARSE_CLASS (parent_class)->handle_discont != NULL)
     GST_MPEG_PARSE_CLASS (parent_class)->handle_discont (mpeg_parse, event);
 }
@@ -544,12 +547,11 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
     guint8 stream_nr, gint type, const gpointer info)
 {
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_demux);
-  guint8 sample_info = 0;
+  guint32 sample_info = 0;
   GstMPEGStream *str;
   GstDVDLPCMStream *lpcm_str = NULL;
-  GstCaps *caps;
-  gint width, rate, channels;
   gboolean add_pad = FALSE;
+  GstCaps *caps;
 
   g_return_val_if_fail (stream_nr < GST_MPEG_DEMUX_NUM_AUDIO_STREAMS, NULL);
   g_return_val_if_fail (type > GST_MPEG_DEMUX_AUDIO_UNKNOWN &&
@@ -560,7 +562,7 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
   }
 
   if (type == GST_DVD_DEMUX_AUDIO_LPCM) {
-    sample_info = *((guint8 *) info);
+    sample_info = *((guint32 *) info);
   }
 
   str = mpeg_demux->audio_stream[stream_nr];
@@ -597,15 +599,21 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
   if (type != str->type ||
       (type == GST_DVD_DEMUX_AUDIO_LPCM &&
           sample_info != lpcm_str->sample_info)) {
+    gint width, rate, channels, dynamic_range;
+    gboolean emphasis, mute;
+
     /* We need to set new caps for this pad. */
     switch (type) {
       case GST_DVD_DEMUX_AUDIO_LPCM:
+        /* Dynamic range in the lower byte */
+        dynamic_range = sample_info & 0xff;
+
         /* Determine the sample width. */
-        switch (sample_info & 0xC0) {
-          case 0x80:
+        switch (sample_info & 0xC000) {
+          case 0x8000:
             width = 24;
             break;
-          case 0x40:
+          case 0x4000:
             width = 20;
             break;
           default:
@@ -614,27 +622,34 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
         }
 
         /* Determine the rate. */
-        if (sample_info & 0x10) {
+        if (sample_info & 0x1000) {
           rate = 96000;
         } else {
           rate = 48000;
         }
 
+        mute = ((sample_info & 0x400000) != 0);
+        emphasis = ((sample_info & 0x800000) != 0);
+
         /* Determine the number of channels. */
-        channels = (sample_info & 0x7) + 1;
+        channels = ((sample_info >> 8) & 0x7) + 1;
 
-        caps = gst_caps_new_simple ("audio/x-raw-int",
-            "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-            "signed", G_TYPE_BOOLEAN, TRUE,
+        caps = gst_caps_new_simple ("audio/x-dvd-lpcm",
             "width", G_TYPE_INT, width,
-            "depth", G_TYPE_INT, width,
-            "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
-
+            "rate", G_TYPE_INT, rate,
+            "channels", G_TYPE_INT, channels,
+            "dynamic_range", G_TYPE_INT, dynamic_range,
+            "emphasis", G_TYPE_BOOLEAN, emphasis,
+            "mute", G_TYPE_BOOLEAN, mute, NULL);
 
         lpcm_str->sample_info = sample_info;
         lpcm_str->width = width;
         lpcm_str->rate = rate;
         lpcm_str->channels = channels;
+        lpcm_str->dynamic_range = dynamic_range;
+        lpcm_str->mute = mute;
+        lpcm_str->emphasis = emphasis;
+
         break;
 
       case GST_DVD_DEMUX_AUDIO_AC3:
@@ -718,7 +733,6 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
   return str;
 }
 
-
 static void
 gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
     GstBuffer * buffer,
@@ -726,7 +740,7 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
 {
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_demux);
   guint8 *basebuf;
-  guint8 ps_id_code, lpcm_sample_info;
+  guint8 ps_id_code;
   GstMPEGStream *outstream = NULL;
   guint first_access = 0;
   gint align = 1, len, off;
@@ -739,7 +753,6 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
   /* In the following, the "first access" refers to the location in a
      buffer the time stamp is associated to.  DVDs include this
      information explicitely. */
-
   switch (stream_nr) {
     case 0:
       /* Private stream 1. */
@@ -752,31 +765,47 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
 
         /* Determine the position of the "first access".  This
            should always be the beginning of an AC3 frame. */
-        first_access = *(basebuf + headerlen + 6) * 256 +
-            *(basebuf + headerlen + 7);
+        first_access = (basebuf[headerlen + 6] << 8) | basebuf[headerlen + 7];
+
+        headerlen += 4;
+        datalen -= 4;
+      } else if (ps_id_code >= 0x88 && ps_id_code <= 0x8f) {
+        GST_LOG_OBJECT (dvd_demux,
+            "we have an audio (DTS) packet, track %d", ps_id_code - 0x88);
+        outstream = DEMUX_CLASS (dvd_demux)->get_audio_stream (mpeg_demux,
+            ps_id_code - 0x88, GST_DVD_DEMUX_AUDIO_DTS, NULL);
+
+        /* Determine the position of the "first access".  This
+           should always be the beginning of a DTS frame. */
+        first_access = (basebuf[headerlen + 6] << 8) | basebuf[headerlen + 7];
 
         headerlen += 4;
         datalen -= 4;
       } else if (ps_id_code >= 0xA0 && ps_id_code <= 0xA7) {
         GstDVDLPCMStream *lpcm_str;
+        guint32 lpcm_sample_info;
 
         GST_LOG_OBJECT (dvd_demux,
             "we have an audio (LPCM) packet, track %d", ps_id_code - 0xA0);
-        lpcm_sample_info = basebuf[headerlen + 9];
+
+        /* Compose the sample info from the LPCM header, masking out the frame_num */
+        lpcm_sample_info =
+            basebuf[headerlen + 10] | (basebuf[headerlen +
+                9] << 8) | ((basebuf[headerlen + 8] & 0xc0) << 16);
+
         outstream = DEMUX_CLASS (dvd_demux)->get_audio_stream (mpeg_demux,
             ps_id_code - 0xA0, GST_DVD_DEMUX_AUDIO_LPCM, &lpcm_sample_info);
         lpcm_str = (GstDVDLPCMStream *) outstream;
 
         /* Determine the position of the "first access". */
-        first_access = *(basebuf + headerlen + 6) * 256 +
-            *(basebuf + headerlen + 7);
+        first_access = (basebuf[headerlen + 6] << 8) | basebuf[headerlen + 7];
 
         /* Get rid of the LPCM header. */
         headerlen += 7;
         datalen -= 7;
 
-        /* align by samples */
-        align = lpcm_str->width * lpcm_str->channels / 8;
+        /* align by frame round up to nearest byte */
+        align = (lpcm_str->width * lpcm_str->channels + 7) / 8;
       } else if (ps_id_code >= 0x20 && ps_id_code <= 0x3F) {
         GST_LOG_OBJECT (dvd_demux,
             "we have a subpicture packet, track %d", ps_id_code - 0x20);
