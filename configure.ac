@@ -1077,7 +1077,7 @@ ext/rtp/Makefile
 ext/sdl/Makefile
 ext/shout/Makefile
 ext/sidplay/Makefile
-ext/smooothwave/Makefile
+ext/smoothwave/Makefile
 ext/vorbis/Makefile
 ext/xmms/Makefile
 gst-libs/Makefile
