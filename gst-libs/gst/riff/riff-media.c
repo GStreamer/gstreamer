@@ -226,8 +226,9 @@ gst_riff_create_audio_caps (guint16             codec_id,
   switch (codec_id) {
     case GST_RIFF_WAVE_FORMAT_MPEGL3: /* mp3 */
       caps = GST_CAPS_NEW ("riff_audio_mp1l3",
-				   "audio/mpeg",
-				     "layer", GST_PROPS_INT (3));
+			   "audio/mpeg",
+			     "mpegversion", GST_PROPS_INT (1),
+			     "layer", GST_PROPS_INT (3));
       break;
 
     case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
