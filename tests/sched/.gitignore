@@ -9,3 +9,7 @@ Makefile.in
 runxml
 log.txt
 dynamic-pipeline
+interrupt1
+interrupt2
+interrupt3
+sched-stress
