@@ -67,23 +67,23 @@ audio), but these are usually used in conjunction with each other.
 
 3a) Container formats
 1 - AVI (Microsoft RIFF/AVI)
-  mimetype: video/x-avi
+  mimetype: video/avi
 
 2 - Quicktime (Apple)
-  mimetype: video/x-quicktime
+  mimetype: video/quicktime
 
 3 - MPEG (MPEG LA)
   mimetype: video/mpeg
   properties: 'systemstream' = TRUE (BOOLEAN)
 
 4 - ASF (Microsoft)
-  mimetype: video/x-asf
+  mimetype: video/x-ms-asf
 
 5 - WAV (PCM)
   mimetype: audio/x-wav
 
 6 - RealMedia (Real)
-  mimetype: video/realmedia
+  mimetype: audio/x-pn-realaudio
 
 7 - DV (Digital Video)
   mimetype: video/dv
@@ -94,6 +94,9 @@ audio), but these are usually used in conjunction with each other.
 
 9 - Matroska
   mimetype: video/x-mkv
+
+10 - Shockwave (Macromedia)
+  mimetype: application/x-shockwave-flash
 
 Please note that we try to keep these mimetypes as similar as possible
 to what's used as standard mimetypes in Gnome (Gnome-VFS/Nautilus) and
@@ -117,6 +120,22 @@ Preface - (optional) properties for all video formats:
         discuss this more.
   Note: some formats have multiple fourccs (e.g. IYUV/I420 or YUY2/YUYV).
         For each of these, we only use one (e.g. I420 and YUY2).
+
+  Currently recognized formats:
+  YUY2: packed, Y-U-Y-V order, U/V hor 2x subsampled (YUV-4:2:2, 16 bpp)
+  YVYU: packed, Y-V-Y-U order, U/V hor 2x subsampled (YUV-4:2:2, 16 bpp)
+  UYVY: packed, U-Y-V-Y order, U/V hor 2x subsampled (YUV-4:2:2, 16 bpp)
+
+  Y42B: planar, Y-U-V order, U/V hor 2x subsampled (YUV-4:2:2, 16 bpp)
+  YV12: planar, Y-V-U order, U/V hor+ver 2x subsampled (YUV-4:2:0, 12 bpp)
+  I420: planar, Y-U-V order, U/V hor+ver 2x subsampled (YUV-4:2:0, 12 bpp)
+  Y41B: planar, Y-U-V order, U/V hor 4x subsampled (YUV-4:1:1, 12bpp)
+  YUV9: planar, Y-U-V order, U/V hor+ver 4x subsampled (YUV-4:1:0, 9bpp)
+  YVU9: planar, Y-V-U order, U/V hor+ver 4x subsampled (YUV-4:1:0, 9bpp)
+
+  See http://www.fourcc.org/ for more information.
+
+  Note: YUV-4:4:4 (both planar and packed, in multiple orders) are missing.
 
 1b - Raw Video (RGB)
   mimetype: video/raw
@@ -261,7 +280,7 @@ Preface - (optional) properties for all audio formats:
   properties: 'wmaversion' = 1/2 (INT)
 
 5 - AC3
-  mimetype: audio/ac3
+  mimetype: audio/a52
 
 6 - FLAC (Free Lossless Audio Codec)
   mimetype: audio/x-flac
