@@ -42,10 +42,9 @@
 #include "gstv4lmjpegsrc.h"
 #include "gstv4lmjpegsink.h"
 
-
 GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
 
-#define GST_CATEGORY_DEFAULT v4l_debug
+#define GST_CAT_DEFAULT v4l_debug
 
 static const char *picture_name[] = {
   "Hue",
@@ -98,6 +97,43 @@ gst_v4l_get_capabilities (GstV4lElement * v4lelement)
   return TRUE;
 }
 
+/******************************************************
+ * gst_v4l_set_window_properties():
+ *   set the device's capturing parameters (vwin)
+ * return value: TRUE on success, FALSE on error
+ ******************************************************/
+
+gboolean
+gst_v4l_set_window_properties (GstV4lElement * v4lelement)
+{
+  struct video_window vwin;
+
+  GST_DEBUG_OBJECT (v4lelement, "setting window flags 0x%x to device %s",
+      v4lelement->vwin.flags, v4lelement->videodev);
+  GST_V4L_CHECK_OPEN (v4lelement);
+
+  if (ioctl (v4lelement->video_fd, VIDIOCSWIN, &(v4lelement->vwin)) < 0) {
+    GST_DEBUG_OBJECT (v4lelement,
+        "could not ioctl window properties 0x%x to device %s",
+        v4lelement->vwin.flags, v4lelement->videodev);
+    return FALSE;
+  }
+
+  /* get it again to make sure we have it correctly */
+  if (ioctl (v4lelement->video_fd, VIDIOCGWIN, &(vwin)) < 0) {
+    GST_ELEMENT_ERROR (v4lelement, RESOURCE, SETTINGS, (NULL),
+        ("error getting window properties %s of from device %s",
+            g_strerror (errno), v4lelement->videodev));
+    return FALSE;
+  }
+  if (vwin.flags != v4lelement->vwin.flags) {
+    GST_DEBUG_OBJECT (v4lelement, "set 0x%x but got 0x%x back",
+        v4lelement->vwin.flags, vwin.flags);
+    return FALSE;
+  }
+
+  return TRUE;
+}
 
 /******************************************************
  * gst_v4l_open():

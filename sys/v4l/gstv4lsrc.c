@@ -24,6 +24,10 @@
 #include <string.h>
 #include <sys/time.h>
 #include "v4lsrc_calls.h"
+#include <sys/ioctl.h>
+
+/* FIXME: small cheat */
+gboolean gst_v4l_set_window_properties (GstV4lElement * v4lelement);
 
 /* elementfactory information */
 static GstElementDetails gst_v4lsrc_details =
@@ -273,6 +277,68 @@ gst_v4lsrc_close (GstElement * element, const gchar * device)
   v4lsrc->colourspaces = NULL;
 }
 
+/* get a list of possible framerates
+ * this is only done for webcams;
+ * other devices return NULL here.
+ */
+static GValue *
+gst_v4lsrc_get_fps_list (GstV4lSrc * v4lsrc)
+{
+  gint fps_index;
+  gfloat fps;
+  struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
+  GstV4lElement *v4lelement = GST_V4LELEMENT (v4lsrc);
+
+  /* check if we have vwin window properties giving a framerate,
+   * as is done for webcams
+   * See http://www.smcc.demon.nl/webcam/api.html
+   * which is used for the Philips and qce-ga drivers */
+  fps_index = (vwin->flags >> 16) & 0x3F;       /* 6 bit index for framerate */
+
+  /* webcams have a non-zero fps_index */
+  if (fps_index == 0) {
+    GST_DEBUG_OBJECT (v4lsrc, "fps_index is 0, no webcam");
+    return NULL;
+  }
+  GST_DEBUG_OBJECT (v4lsrc, "fps_index is %d, so webcam", fps_index);
+
+  {
+    gfloat current_fps;
+    int i;
+    GValue *list = NULL;
+    GValue value = { 0 };
+
+    /* webcam detected, so try all framerates and return a list */
+
+    list = g_new0 (GValue, 1);
+    g_value_init (list, GST_TYPE_LIST);
+
+    /* index of 16 corresponds to 15 fps */
+    current_fps = fps_index * 15.0 / 16;
+    GST_DEBUG_OBJECT (v4lsrc, "device reports fps of %.4f", current_fps);
+    for (i = 1; i < 63; ++i) {
+      /* set bits 16 to 21 to 0 */
+      vwin->flags &= (0x3F00 - 1);
+      /* set bits 16 to 21 to the index */
+      vwin->flags |= i << 16;
+      if (gst_v4l_set_window_properties (v4lelement)) {
+        /* setting it succeeded.  FIXME: get it and check. */
+        fps = i * 15.0 / 16;
+        g_value_init (&value, G_TYPE_DOUBLE);
+        g_value_set_double (&value, fps);
+        gst_value_list_append_value (list, &value);
+        g_value_unset (&value);
+      }
+    }
+    /* FIXME: set back the original fps_index */
+    vwin->flags &= (0x3F00 - 1);
+    vwin->flags |= fps_index << 16;
+    gst_v4l_set_window_properties (v4lelement);
+    return list;
+  }
+  return NULL;
+}
+
 static gfloat
 gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
 {
@@ -286,9 +352,16 @@ gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
    * See http://www.smcc.demon.nl/webcam/api.html
    * which is used for the Philips and qce-ga drivers */
   fps_index = (vwin->flags >> 16) & 0x3F;       /* 6 bit index for framerate */
-  if (fps_index != 0)
+
+  /* webcams have a non-zero fps_index */
+  if (fps_index != 0) {
+    gfloat current_fps;
+
     /* index of 16 corresponds to 15 fps */
-    return fps_index * 15.0 / 16;
+    current_fps = fps_index * 15.0 / 16;
+    GST_LOG_OBJECT (v4lsrc, "device reports fps of %.3f", current_fps);
+    return current_fps;
+  }
 
   if (!v4lsrc->use_fixed_fps && v4lsrc->clock != NULL && v4lsrc->handled > 0) {
     /* try to get time from clock master and calculate fps */
@@ -508,6 +581,21 @@ gst_v4lsrc_srcconnect (GstPad * pad, const GstCaps * vscapslist)
   gst_structure_get_int (structure, "height", &h);
   gst_structure_get_double (structure, "framerate", &fps);
 
+  /* set framerate if it's not already correct */
+  if (fps != gst_v4lsrc_get_fps (v4lsrc)) {
+    int fps_index = fps / 15.0 * 16;
+    struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
+
+    GST_DEBUG_OBJECT (v4lsrc, "Trying to set fps index %d", fps_index);
+    /* set bits 16 to 21 to 0 */
+    vwin->flags &= (0x3F00 - 1);
+    /* set bits 16 to 21 to the index */
+    vwin->flags |= fps_index << 16;
+    if (!gst_v4l_set_window_properties (GST_V4LELEMENT (v4lsrc))) {
+      GST_ELEMENT_ERROR (v4lsrc, RESOURCE, SETTINGS, (NULL),
+          ("Could not set framerate of %d fps", fps));
+    }
+  }
   switch (fourcc) {
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       palette = VIDEO_PALETTE_YUV420P;
@@ -626,14 +714,19 @@ gst_v4lsrc_getcaps (GstPad * pad)
   GstCaps *list;
   GstV4lSrc *v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
   struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
-  gfloat fps;
+  gfloat fps = 0.0;
   GList *item;
+  static GValue *fps_list;      /* FIXME: this should be done in a hash table
+                                 * on device name instead */
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
     return gst_caps_new_any ();
   }
-
-  fps = gst_v4lsrc_get_fps (v4lsrc);
+  /* if not cached from last run, get it */
+  if (!fps_list)
+    fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
+  if (!fps_list)
+    fps = gst_v4lsrc_get_fps (v4lsrc);
 
   list = gst_caps_new_empty ();
   for (item = v4lsrc->colourspaces; item != NULL; item = item->next) {
@@ -649,7 +742,18 @@ gst_v4lsrc_getcaps (GstPad * pad)
 
     gst_caps_set_simple (one, "width", GST_TYPE_INT_RANGE, vcap->minwidth,
         vcap->maxwidth, "height", GST_TYPE_INT_RANGE, vcap->minheight,
-        vcap->maxheight, "framerate", G_TYPE_DOUBLE, fps, NULL);
+        vcap->maxheight, NULL);
+
+    if (fps_list) {
+      GstStructure *structure = gst_caps_get_structure (one, 0);
+
+      gst_structure_set_value (structure, "framerate", fps_list);
+    } else {
+      GstStructure *structure = gst_caps_get_structure (one, 0);
+
+      gst_structure_set (structure, "framerate", G_TYPE_DOUBLE, fps, NULL);
+    }
+    GST_DEBUG_OBJECT (v4lsrc, "caps: %" GST_PTR_FORMAT, one);
     gst_caps_append (list, one);
   }
 
