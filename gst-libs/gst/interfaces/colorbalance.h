@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/colorbalance/colorbalancechannel.h>
+#include <gst/colorbalance/colorbalanceenumtypes.h>
 
 G_BEGIN_DECLS
 
