@@ -129,7 +129,11 @@ manpages = $(GST_REGISTRY_MAN) $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
 CLEANFILES = $(manpages) $(bin_SCRIPTS)
 man_MANS = $(manpages)
 
+# developer helper tools, not meant for installation
+noinst_SCRIPTS = gst-indent
+
 EXTRA_DIST = \
+	$(noinst_SCRIPTS) \
 	gst-complete.1.in \
 	gst-compprep.1.in \
 	gst-feedback.1.in \
@@ -154,5 +158,3 @@ EXTRA_DIST = \
 		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
 		$< >$@
 
-# developer helper tools, not meant for installation
-noinst_SCRIPTS = gst-indent
