@@ -90,7 +90,7 @@ gst_props_entry_to_string (GstPropsEntry *entry)
     case GST_PROPS_INT_TYPE:
       return g_strdup_printf ("int = %d", entry->data.int_data);
     case GST_PROPS_FLOAT_TYPE:
-      return g_strdup_printf ("float = %f", entry->data.float_data);
+      return g_strdup_printf ("float = %g", entry->data.float_data);
       break;
     case GST_PROPS_FOURCC_TYPE: {
       gchar fourcc[5] = { GST_FOURCC_ARGS (entry->data.fourcc_data), '\0' }; /* Do all compilers understand that? */
@@ -109,7 +109,7 @@ gst_props_entry_to_string (GstPropsEntry *entry)
     case GST_PROPS_INT_RANGE_TYPE:
       return g_strdup_printf ("int = [%d, %d]", entry->data.int_range_data.min, entry->data.int_range_data.max);
     case GST_PROPS_FLOAT_RANGE_TYPE:
-      return g_strdup_printf ("float = [%f, %f]", entry->data.float_range_data.min, entry->data.float_range_data.max);
+      return g_strdup_printf ("float = [%g, %g]", entry->data.float_range_data.min, entry->data.float_range_data.max);
     case GST_PROPS_LIST_TYPE: {
       GList *walk;
       GString *s;
@@ -134,6 +134,7 @@ gst_props_entry_to_string (GstPropsEntry *entry)
     }
     default:
       /* transforms always succeed */
+      g_warning("corrupt property list, type==%d\n",entry->propstype);
       g_assert_not_reached();
       return NULL;
   }
@@ -598,7 +599,7 @@ gst_props_debug_entry (GstPropsEntry *entry)
       GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: int %d", entry, name, entry->data.int_data);
       break;
     case GST_PROPS_FLOAT_TYPE:
-      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: float %f", entry, name, entry->data.float_data);
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: float %g", entry, name, entry->data.float_data);
       break;
     case GST_PROPS_FOURCC_TYPE:
       GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: fourcc %c%c%c%c", entry, name,
@@ -618,7 +619,7 @@ gst_props_debug_entry (GstPropsEntry *entry)
 		      entry->data.int_range_data.max);
       break;
     case GST_PROPS_FLOAT_RANGE_TYPE:
-      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: float range %f-%f", entry, name, entry->data.float_range_data.min,
+      GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%p: %s: float range %g-%g", entry, name, entry->data.float_range_data.min,
 		      entry->data.float_range_data.max);
       break;
     case GST_PROPS_LIST_TYPE:
@@ -747,7 +748,8 @@ G_STMT_START { 									\
       entry->data.list_data.entries = g_list_copy (va_arg (var_args, GList*));	\
       break;									\
     default:									\
-      g_assert_not_reached ();							\
+      g_warning("attempt to set invalid props type\n");				\
+      break;									\
   }										\
 } G_STMT_END
 
@@ -2554,17 +2556,17 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
     case GST_PROPS_FLOAT_TYPE:
       subtree = xmlNewChild (parent, NULL, "float", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
-      str = g_strdup_printf ("%f", entry->data.float_data);
+      str = g_strdup_printf ("%g", entry->data.float_data);
       xmlNewProp (subtree, "value", str);
       g_free(str);
       break;
     case GST_PROPS_FLOAT_RANGE_TYPE:
       subtree = xmlNewChild (parent, NULL, "floatrange", NULL);
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
-      str = g_strdup_printf ("%f", entry->data.float_range_data.min);
+      str = g_strdup_printf ("%g", entry->data.float_range_data.min);
       xmlNewProp (subtree, "min", str);
       g_free(str);
-      str = g_strdup_printf ("%f", entry->data.float_range_data.max);
+      str = g_strdup_printf ("%g", entry->data.float_range_data.max);
       xmlNewProp (subtree, "max", str);
       g_free(str);
       break;
