@@ -1,5 +1,10 @@
 2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
 
+	* .cvsignore:
+	Ignore generated file _stdint.h.
+
+2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
+
 	* gst-libs/gst/colorbalance/Makefile.am:
 	* gst-libs/gst/colorbalance/colorbalance.h:
 	* gst-libs/gst/mixer/Makefile.am:
