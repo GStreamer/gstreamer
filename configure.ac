@@ -329,6 +329,7 @@ GST_PLUGINS_ALL="\
 	ac3parse \
 	adder \
 	alpha \
+	apetag \
 	asfdemux \
 	audioconvert \
 	audioscale \
@@ -1846,12 +1847,13 @@ gst/Makefile
 gst/ac3parse/Makefile
 gst/adder/Makefile
 gst/alpha/Makefile
+gst/apetag/Makefile
+gst/asfdemux/Makefile
 gst/audioconvert/Makefile
 gst/audioscale/Makefile
 gst/audiorate/Makefile
 gst/auparse/Makefile
 gst/avi/Makefile
-gst/asfdemux/Makefile
 gst/cdxaparse/Makefile
 gst/chart/Makefile
 gst/colorspace/Makefile

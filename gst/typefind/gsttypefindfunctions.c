@@ -190,6 +190,31 @@ id3_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** application/x-ape **************************************************************/
+
+static GstStaticCaps apetag_caps = GST_STATIC_CAPS ("application/x-apetag");
+
+#define APETAG_CAPS gst_static_caps_get(&apetag_caps)
+static void
+apetag_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data;
+
+  /* APEv1/2 at start of file */
+  data = gst_type_find_peek (tf, 0, 8);
+  if (data && !memcmp (data, "APETAGEX", 8)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, APETAG_CAPS);
+    return;
+  }
+
+  /* APEv1/2 at end of file */
+  data = gst_type_find_peek (tf, -32, 8);
+  if (data && !memcmp (data, "APETAGEX", 8)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, APETAG_CAPS);
+    return;
+  }
+}
+
 /*** audio/x-ttafile *********************************************************/
 
 static GstStaticCaps tta_caps = GST_STATIC_CAPS ("audio/x-ttafile");
@@ -1406,6 +1431,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *flx_exts[] = { "flc", "fli", NULL };
   static gchar *id3_exts[] =
       { "mp3", "mp2", "mp1", "mpga", "ogg", "flac", "tta", NULL };
+  static gchar *apetag_exts[] = { "ape", "mpc", NULL };
   static gchar *tta_exts[] = { "tta", NULL };
   static gchar *mod_exts[] = { "669", "amf", "dsm", "gdm", "far", "imf",
     "it", "med", "mod", "mtm", "okt", "sam",
@@ -1472,6 +1498,8 @@ plugin_init (GstPlugin * plugin)
       flx_exts, FLX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-id3", GST_RANK_PRIMARY,
       id3_type_find, id3_exts, ID3_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-apetag", GST_RANK_PRIMARY,
+      apetag_type_find, apetag_exts, APETAG_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ttafile", GST_RANK_PRIMARY,
       tta_type_find, tta_exts, TTA_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-mod", GST_RANK_SECONDARY, mod_type_find,
