@@ -196,8 +196,10 @@ gst_elementfactory_new (const gchar *name, GType type,
   if (!factory->type)
     factory->type = type;
   else if (factory->type != type)
+/* FIXME: g_critical is glib-2.0, not glib-1.2
     g_critical ("`%s' requested type change (!)", name);
-
+*/
+    g_warning ("`%s' requested type change (!)", name);
   gst_object_set_name (GST_OBJECT (factory), name);
 
   return factory;
@@ -231,7 +233,10 @@ gst_elementfactory_create (GstElementFactory *factory,
 
   if (factory->type == 0)
     {
+/* FIXME: g_critical is glib-2.0, not glib-1.2
       g_critical ("Factory for `%s' has no type",
+*/
+      g_warning ("Factory for `%s' has no type",
 		  gst_object_get_name (GST_OBJECT (factory)));
       return NULL;
     }

@@ -566,7 +566,10 @@ gst_pad_connect (GstPad *srcpad,
 		 GstPad *sinkpad)
 {
   if (!gst_pad_try_connect (srcpad, sinkpad))
+/* FIXME: g_critical is glib-2.0, not glib-1.2
     g_critical ("couldn't connect %s:%s and %s:%s",
+*/
+    g_warning ("couldn't connect %s:%s and %s:%s",
 		GST_DEBUG_PAD_NAME (srcpad),
 		GST_DEBUG_PAD_NAME (sinkpad));
 }
@@ -1476,7 +1479,10 @@ gst_pad_pull (GstPad *pad)
 
   if (!peer)
     {
+/* FIXME: g_critical is glib-2.0, not glib-1.2
       g_critical ("gst_pad_pull but %s:%s is unconnected", GST_DEBUG_PAD_NAME(pad));
+*/
+      g_warning ("gst_pad_pull but %s:%s is unconnected", GST_DEBUG_PAD_NAME(pad));
       return NULL;
     }
 
