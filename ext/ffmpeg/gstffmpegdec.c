@@ -394,14 +394,6 @@ gst_ffmpegdec_connect (GstPad * pad, const GstCaps * caps)
     gst_value_init_and_copy (ffmpegdec->par, par);
   }
 
-  /* we dont send complete frames - FIXME: we need a 'framed' property
-   * in caps */
-  if (oclass->in_plugin->capabilities & CODEC_CAP_TRUNCATED &&
-      (oclass->in_plugin->id == CODEC_ID_MPEG1VIDEO ||
-          oclass->in_plugin->id == CODEC_ID_MPEG2VIDEO)) {
-    ffmpegdec->context->flags |= CODEC_FLAG_TRUNCATED;
-  }
-
   /* do *not* draw edges */
   ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
 
@@ -573,7 +565,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
     case CODEC_TYPE_VIDEO:
       len = avcodec_decode_video (ffmpegdec->context,
           ffmpegdec->picture, &have_data, data, size);
-      GST_DEBUG ("Decode video: len=%d, have_data=%d", len, have_data);
+      GST_DEBUG_OBJECT (ffmpegdec,
+          "Decode video: len=%d, have_data=%d", len, have_data);
 
       if (len >= 0 && have_data > 0) {
         /* libavcodec constantly crashes on stupid buffer allocation
@@ -621,7 +614,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
       len = avcodec_decode_audio (ffmpegdec->context,
           (int16_t *) GST_BUFFER_DATA (outbuf), &have_data, data, size);
-      GST_DEBUG ("Decode audio: len=%d, have_data=%d", len, have_data);
+      GST_DEBUG_OBJECT (ffmpegdec,
+          "Decode audio: len=%d, have_data=%d", len, have_data);
 
       if (len >= 0 && have_data > 0) {
         GST_BUFFER_SIZE (outbuf) = have_data;
@@ -653,11 +647,12 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
     *got_data = 0;
     return 0;
   } else {
-    *got_data = have_data ? 1 : 0;
+    /* this is where I lost my last clue on ffmpeg... */
+    *got_data = 1; //(ffmpegdec->pctx || have_data) ? 1 : 0;
   }
 
   if (have_data) {
-    GST_DEBUG ("Decoded data, now pushing");
+    GST_DEBUG_OBJECT (ffmpegdec, "Decoded data, now pushing");
 
     if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
       gst_buffer_unref (outbuf);
@@ -676,7 +671,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 static void
 gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
 {
-  GST_DEBUG ("Handling event of type %d", GST_EVENT_TYPE (event));
+  GST_DEBUG_OBJECT (ffmpegdec,
+      "Handling event of type %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS: {
@@ -757,7 +753,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     return;
   }
 
-  GST_DEBUG ("Received new data of size %d, time %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (ffmpegdec,
+      "Received new data of size %d, time %" GST_TIME_FORMAT,
       GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
 
   /* parse cache joining */
@@ -791,6 +788,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
           in_ts / (GST_SECOND / AV_TIME_BASE),
           in_ts / (GST_SECOND / AV_TIME_BASE));
 
+      GST_DEBUG_OBJECT (ffmpegdec, "Parsed video frame, res=%d, size=%d",
+          res, size);
       if (res == 0 || size == 0)
         break;
       else {
@@ -818,7 +817,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
   if ((ffmpegdec->pctx || oclass->in_plugin->id == CODEC_ID_MP3) &&
       bsize > 0) {
-    GST_DEBUG ("Keeping %d bytes of data", bsize);
+    GST_DEBUG_OBJECT (ffmpegdec, "Keeping %d bytes of data", bsize);
 
     ffmpegdec->pcache = gst_buffer_create_sub (inbuf,
         GST_BUFFER_SIZE (inbuf) - bsize, bsize);
