@@ -3,7 +3,7 @@
 
 DIE=0
 package=gstreamer-plugins
-srcfile=own/sinesrc/gstsinesrc.c
+srcfile=gst/sinesrc/gstsinesrc.c
 #DEBUG=defined
 if test "x$1" = "x-d"; then echo "+ debug output enabled"; DEBUG=defined; fi
 
