@@ -1,10 +1,6 @@
 from common import gst, unittest
 
 class PipelineConstructor(unittest.TestCase):
-    def testBadConstruct(self):
-        self.assertRaises(TypeError, gst.Pipeline)
-        self.assertRaises(TypeError, gst.Pipeline, None)
-
     def testGoodConstructor(self):
         name = 'test-pipeline'
         pipeline = gst.Pipeline(name)

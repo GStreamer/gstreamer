@@ -9,7 +9,7 @@ tests =  \
         pipeline.py
 
 check-local:
-	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs $(PYTHON) $(srcdir)/runtests.py
+	@PYTHONPATH=$(PYTHONPATH):$(top_builddir):$(top_builddir)/gst/.libs $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
 EXTRA_DIST = $(tests) runtests.py

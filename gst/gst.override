@@ -171,9 +171,13 @@ _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 		return NULL;
 	if (pyg_flags_get_value(GST_TYPE_ELEMENT_STATE, py_state, (gint *)&state))
 		return NULL;
-	pyg_unblock_threads();
+
+	Py_BEGIN_ALLOW_THREADS;
+
 	ret = gst_element_set_state(GST_ELEMENT(self->obj), state);
-	pyg_block_threads();
+
+	Py_END_ALLOW_THREADS;
+
 	return PyInt_FromLong(ret);
 }
 %%
@@ -673,10 +677,37 @@ _wrap_gst_structure_subscript(PyGObject *self, PyObject *py_key)
 	return v;
 }
 
-static PySequenceMethods _wrap_gst_structure_tp_as_mapping = {
+static int
+_wrap_gst_structure_ass_subscript(PyGObject *self,
+				  PyObject *py_key,
+				  PyObject *py_value)
+{
+	const char *key;
+	
+	if (py_key != NULL) {
+	    GType gtype;
+	    GValue value = { 0, };
+		
+	    key = PyString_AsString(py_key);
+	    gtype = gst_structure_get_field_type((GstStructure*)self->obj, key);
+	    g_value_init(&value, gtype);
+	    if (pyg_value_from_pyobject(&value, py_value)) {
+		PyErr_SetString(PyExc_TypeError, "can't convert value");
+		return -1;
+	    }
+	    
+	    gst_structure_set_value ((GstStructure*)self->obj, key, &value);
+	    g_value_unset(&value);
+	    
+	}
+	
+	return 0;
+}
+
+static PyMappingMethods _wrap_gst_structure_tp_as_mapping = {
 	(inquiry)_wrap_gst_structure_length,         /* mp_length */
 	(binaryfunc)_wrap_gst_structure_subscript,   /* mp_subscript */
-	NULL,
+	(objobjargproc)_wrap_gst_structure_ass_subscript /* mp_ass_subscript */
 };
 
 %%

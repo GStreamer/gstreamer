@@ -7,6 +7,7 @@ import pygtk
 pygtk.require('2.0')
 
 import gobject
+gobject.threads_init()
 
 # Don't insert before .
 sys.path.insert(1, os.path.join('..'))
