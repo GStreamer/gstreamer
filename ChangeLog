@@ -1,7 +1,17 @@
+2004-08-13  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/lame/gstlame.c: (gst_lame_vbrmode_get_type),
+	(gst_lame_class_init), (gst_lame_src_getcaps),
+	(gst_lame_sink_link), (gst_lame_init), (gst_lame_set_property),
+	(gst_lame_get_property), (gst_lame_setup):
+	* ext/lame/gstlame.h:
+	fix lame's broken vbr stuff, allow it to resample if need be, and also 
+	make xing header optional
+
 2004-08-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/lame/gstlame.c: (gst_lame_src_getcaps), (gst_lame_init):
-	added getcaps function so samplerate doesntget fixated to silly values
+	added getcaps function so samplerate doesnt get fixated to silly values
 
 2004-08-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 

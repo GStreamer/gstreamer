@@ -124,6 +124,26 @@ gst_lame_padding_get_type (void)
   return lame_padding_type;
 }
 
+#define GST_TYPE_LAME_VBRMODE (gst_lame_vbrmode_get_type())
+static GType
+gst_lame_vbrmode_get_type (void)
+{
+  static GType lame_vbrmode_type = 0;
+  static GEnumValue lame_vbrmode[] = {
+    {vbr_off, "0", "CBR"},
+    {vbr_mt, "1", "VBR MT"},
+    {vbr_rh, "2", "VBR RH"},
+    {vbr_abr, "3", "VBR ABR"},
+    {0, NULL, NULL}
+  };
+
+  if (!lame_vbrmode_type) {
+    lame_vbrmode_type = g_enum_register_static ("GstLameVbrmode", lame_vbrmode);
+  }
+
+  return lame_vbrmode_type;
+}
+
 /********** Standard stuff for signals and arguments **********/
 /* GstLame signals and args */
 enum
@@ -164,7 +184,9 @@ enum
   ARG_CWLIMIT,
   ARG_ALLOW_DIFF_SHORT,
   ARG_NO_SHORT_BLOCKS,
-  ARG_EMPHASIS
+  ARG_EMPHASIS,
+  ARG_VBR_QUALITY,
+  ARG_XINGHEADER
 };
 
 static void gst_lame_base_init (gpointer g_class);
@@ -249,8 +271,9 @@ gst_lame_class_init (GstLameClass * klass)
           "let lame choose bitrate to achieve selected compression ratio", 0.0,
           200.0, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
-      g_param_spec_enum ("quality", "Quality", "Encoding Quality",
-          GST_TYPE_LAME_QUALITY, 5, G_PARAM_READWRITE));
+      g_param_spec_enum ("quality", "Quality",
+          "Quality of algorithm used for encoding", GST_TYPE_LAME_QUALITY, 5,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
       g_param_spec_enum ("mode", "Mode", "Encoding mode", GST_TYPE_LAME_MODE, 0,
           G_PARAM_READWRITE));
@@ -284,8 +307,11 @@ gst_lame_class_init (GstLameClass * klass)
           "Disable reservoir", "Disable the bit reservoir", TRUE,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR,
-      g_param_spec_boolean ("vbr", "VBR", "Use variable bitrate", TRUE,
-          G_PARAM_READWRITE));
+      g_param_spec_enum ("vbr", "VBR", "Specify bitrate mode",
+          GST_TYPE_LAME_VBRMODE, vbr_off, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_QUALITY,
+      g_param_spec_enum ("vbr_quality", "VBR Quality", "VBR Quality",
+          GST_TYPE_LAME_QUALITY, 5, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MEAN_BITRATE,
       g_param_spec_int ("vbr_mean_bitrate", "VBR mean bitrate",
           "Specify mean bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
@@ -340,7 +366,9 @@ gst_lame_class_init (GstLameClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EMPHASIS,
       g_param_spec_boolean ("emphasis", "Emphasis", "Emphasis", TRUE,
           G_PARAM_READWRITE));
-
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_XINGHEADER,
+      g_param_spec_boolean ("xingheader", "Output Xing Header",
+          "Output Xing Header", FALSE, G_PARAM_READWRITE));
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
 
@@ -354,10 +382,18 @@ gst_lame_src_getcaps (GstPad * pad)
   GstCaps *caps;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
+
+  if (!gst_lame_setup (lame)) {
+    GST_DEBUG_OBJECT (lame, "problem doing lame setup");
+    return
+        gst_caps_copy (gst_pad_template_get_caps (gst_static_pad_template_get
+            (&gst_lame_src_template)));
+  }
+
   caps = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, 1,
       "layer", G_TYPE_INT, 3,
-      "rate", G_TYPE_INT, lame->samplerate,
+      "rate", G_TYPE_INT, lame_get_out_samplerate (lame->lgf),
       "channels", G_TYPE_INT, lame->num_channels, NULL);
 
   return caps;
@@ -423,6 +459,7 @@ gst_lame_sink_link (GstPad * pad, const GstCaps * caps)
       !gst_structure_get_int (structure, "channels", &lame->num_channels))
     g_return_val_if_reached (GST_PAD_LINK_REFUSED);
 
+  lame_set_out_samplerate (lame->lgf, 0);
   if (!gst_lame_setup (lame)) {
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
         ("could not initialize encoder (wrong parameters?)"));
@@ -480,12 +517,14 @@ gst_lame_init (GstLame * lame)
   lame->extension = lame_get_extension (lame->lgf);
   lame->strict_iso = lame_get_strict_ISO (lame->lgf);
   lame->disable_reservoir = lame_get_disable_reservoir (lame->lgf);
-  lame->vbr = lame_get_VBR_q (lame->lgf);
+  lame->vbr = vbr_off;          /* lame_get_VBR (lame->lgf); */
+  lame->vbr_quality = 5;
   lame->vbr_mean_bitrate = lame_get_VBR_mean_bitrate_kbps (lame->lgf);
   lame->vbr_min_bitrate = lame_get_VBR_min_bitrate_kbps (lame->lgf);
   lame->vbr_max_bitrate = 320;  /* lame_get_VBR_max_bitrate_kbps (lame->lgf); => 0/no vbr possible */
   lame->vbr_hard_min = lame_get_VBR_hard_min (lame->lgf);
-  lame->lowpass_freq = 50000;   /* lame_get_lowpassfreq (lame->lgf); => 0/lowpass on everything ? */
+  //lame->lowpass_freq = 50000;   /* lame_get_lowpassfreq (lame->lgf); => 0/lowpass on everything ? */
+  lame->lowpass_freq = 0;
   lame->lowpass_width = 0;      /* lame_get_lowpasswidth (lame->lgf); => -1/out of range */
   lame->highpass_freq = lame_get_highpassfreq (lame->lgf);
   lame->highpass_width = 0;     /* lame_get_highpasswidth (lame->lgf); => -1/out of range */
@@ -498,6 +537,8 @@ gst_lame_init (GstLame * lame)
   lame->allow_diff_short = lame_get_allow_diff_short (lame->lgf);
   lame->no_short_blocks = TRUE; /* lame_get_no_short_blocks (lame->lgf); */
   lame->emphasis = lame_get_emphasis (lame->lgf);
+  lame->xingheader = FALSE;
+
   lame->tags = gst_tag_list_new ();
 
   id3tag_init (lame->lgf);
@@ -648,7 +689,10 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
       lame->disable_reservoir = g_value_get_boolean (value);
       break;
     case ARG_VBR:
-      lame->vbr = g_value_get_boolean (value);
+      lame->vbr = g_value_get_enum (value);
+      break;
+    case ARG_VBR_QUALITY:
+      lame->vbr_quality = g_value_get_enum (value);
       break;
     case ARG_VBR_MEAN_BITRATE:
       lame->vbr_mean_bitrate = g_value_get_int (value);
@@ -697,6 +741,9 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_EMPHASIS:
       lame->emphasis = g_value_get_boolean (value);
+      break;
+    case ARG_XINGHEADER:
+      lame->xingheader = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -756,7 +803,10 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, lame->disable_reservoir);
       break;
     case ARG_VBR:
-      g_value_set_boolean (value, lame->vbr);
+      g_value_set_enum (value, lame->vbr);
+      break;
+    case ARG_VBR_QUALITY:
+      g_value_set_enum (value, lame->vbr_quality);
       break;
     case ARG_VBR_MEAN_BITRATE:
       g_value_set_int (value, lame->vbr_mean_bitrate);
@@ -806,6 +856,8 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_EMPHASIS:
       g_value_set_boolean (value, lame->emphasis);
       break;
+    case ARG_XINGHEADER:
+      g_value_set_boolean (value, lame->xingheader);
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -937,6 +989,8 @@ gst_lame_setup (GstLame * lame)
     return FALSE; \
   } \
 }G_STMT_END
+  int retval;
+
   GST_DEBUG_OBJECT (lame, "starting setup");
 
   /* check if we're already initialized; if we are, we might want to check
@@ -968,7 +1022,8 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_extension (lame->lgf, lame->extension));
   CHECK_ERROR (lame_set_strict_ISO (lame->lgf, lame->strict_iso));
   CHECK_ERROR (lame_set_disable_reservoir (lame->lgf, lame->disable_reservoir));
-  CHECK_ERROR (lame_set_VBR_q (lame->lgf, lame->vbr));
+  CHECK_ERROR (lame_set_VBR (lame->lgf, lame->vbr));
+  CHECK_ERROR (lame_set_VBR_q (lame->lgf, lame->vbr_quality));
   CHECK_ERROR (lame_set_VBR_mean_bitrate_kbps (lame->lgf,
           lame->vbr_mean_bitrate));
   CHECK_ERROR (lame_set_VBR_min_bitrate_kbps (lame->lgf,
@@ -988,15 +1043,17 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_allow_diff_short (lame->lgf, lame->allow_diff_short));
   CHECK_ERROR (lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks));
   CHECK_ERROR (lame_set_emphasis (lame->lgf, lame->emphasis));
-
+  CHECK_ERROR (lame_set_bWriteVbrTag (lame->lgf, lame->xingheader ? 1 : 0));
   gst_lame_set_metadata (lame);
 
   /* initialize the lame encoder */
-  if (lame_init_params (lame->lgf) >= 0) {
+  if ((retval = lame_init_params (lame->lgf)) >= 0) {
     lame->initialized = TRUE;
     /* FIXME: it would be nice to print out the mode here */
     GST_INFO ("lame encoder initialized (%d kbit/s, %d Hz, %d channels)",
         lame->bitrate, lame->samplerate, lame->num_channels);
+  } else {
+    GST_ERROR_OBJECT (lame, "lame_init_params returned %d", retval);
   }
 
   GST_DEBUG_OBJECT (lame, "done with setup");
