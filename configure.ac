@@ -745,6 +745,14 @@ GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink esdmon, [
   AS_SCRUB_INCLUDE(ESD_CFLAGS)
 ])
 
+dnl **** Free AAC Decoder (FAAD) ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
+GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
+  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, , faad.h, FAAD_LIBS="-lfaad")
+  AS_SCRUB_INCLUDE(FAAD_CFLAGS)
+  AC_SUBST(FAAD_LIBS)
+])
+
 dnl **** festival ****
 dnl translit(dnm, m, l) AM_CONDITIONAL(USE_FESTIVAL, true)
 dnl GST_CHECK_FEATURE(FESTIVAL, [festival plug-ins], festivalsrc, [
@@ -1375,6 +1383,7 @@ ext/dv/Makefile
 ext/dvdread/Makefile
 ext/dvdnav/Makefile
 ext/esd/Makefile
+ext/faad/Makefile
 ext/ffmpeg/Makefile
 ext/flac/Makefile
 ext/gdk_pixbuf/Makefile
