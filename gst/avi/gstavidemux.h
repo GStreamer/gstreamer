@@ -71,6 +71,8 @@ struct _GstAviDemux {
 
   GstByteStream *bs;
 
+  gint frame_rate;
+
   gst_riff_index_entry *index_entries;
   gulong index_size;
   gulong index_offset;

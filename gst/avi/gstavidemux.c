@@ -56,6 +56,7 @@ enum {
   ARG_BITRATE,
   ARG_MEDIA_TIME,
   ARG_CURRENT_TIME,
+  ARG_FRAME_RATE,
   /* FILL ME */
 };
 
@@ -205,6 +206,9 @@ gst_avi_demux_class_init (GstAviDemuxClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_CURRENT_TIME,
     g_param_spec_long ("current_time","current_time","current_time",
                        G_MINLONG, G_MAXLONG, 0, G_PARAM_READABLE)); /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS(klass), ARG_FRAME_RATE,
+    g_param_spec_long ("frame-rate","frame rate","Current (non-averaged) frame rate",
+                       0, G_MAXINT, 0, G_PARAM_READABLE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
   
@@ -336,16 +340,13 @@ gst_avi_demux_strh (GstAviDemux *avi_demux)
       avi_demux->audio_rate = GUINT32_FROM_LE (strh->rate) / scale;
     }
     else if (strh->type == GST_RIFF_FCC_vids) {
-      gfloat frame_rate;
       guint32 scale;
       
       scale = GUINT32_FROM_LE (strh->scale);
       if (!scale)
         scale = 1;
-      frame_rate = (gfloat)GUINT32_FROM_LE (strh->rate) / scale;
-
-      gst_element_send_event (GST_ELEMENT (avi_demux),
-                   gst_event_new_info ("frame_rate", GST_PROPS_FLOAT (frame_rate), NULL));
+      avi_demux->frame_rate = (gint) GUINT32_FROM_LE (strh->rate) / scale;
+      g_object_notify (G_OBJECT (avi_demux), "frame-rate");
     }
 
     return TRUE;
@@ -917,6 +918,9 @@ gst_avi_demux_get_property (GObject *object, guint prop_id, GValue *value,
       break;
     case ARG_CURRENT_TIME:
       g_value_set_long (value, (src->current_frame * src->time_interval) / 1000000);
+      break;
+    case ARG_FRAME_RATE:
+      g_value_set_int (value, (src->frame_rate));
       break;
     default:
       break;
