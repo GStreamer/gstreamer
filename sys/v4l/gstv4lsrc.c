@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ e Boston, MA 02111-1307, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,6 +32,7 @@
 /* FIXME: small cheat */
 gboolean gst_v4l_set_window_properties (GstV4lElement * v4lelement);
 gboolean gst_v4l_get_capabilities (GstV4lElement * v4lelement);
+extern const char *v4l_palette_name[];
 
 /* elementfactory information */
 static GstElementDetails gst_v4lsrc_details =
@@ -64,6 +65,7 @@ enum
   ARG_SYNC_MODE,
   ARG_COPY_MODE,
   ARG_AUTOPROBE,
+  ARG_AUTOPROBE_FPS,
   ARG_LATENCY_OFFSET
 };
 
@@ -213,6 +215,10 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
       g_param_spec_boolean ("autoprobe", "Autoprobe",
           "Whether the device should be probed for all possible features",
           TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_AUTOPROBE_FPS,
+      g_param_spec_boolean ("autoprobe-fps", "Autoprobe FPS",
+          "Whether the device should be probed for framerates",
+          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LATENCY_OFFSET,
       g_param_spec_int ("latency-offset", "Latency offset",
           "A latency offset subtracted from timestamps set on buffers (in ns)",
@@ -278,6 +284,7 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
 
   v4lsrc->is_capturing = FALSE;
   v4lsrc->autoprobe = TRUE;
+  v4lsrc->autoprobe_fps = TRUE;
 
   v4lsrc->latency_offset = 0;
 }
@@ -305,13 +312,18 @@ gst_v4lsrc_open (GstElement * element, const gchar * device)
     -1
   }, i;
 
+  GST_DEBUG_OBJECT (v4lsrc, "Checking supported palettes");
   for (i = 0; palette[i] != -1; i++) {
     /* try palette out */
     if (!gst_v4lsrc_try_capture (v4lsrc, width, height, palette[i]))
       continue;
+    GST_DEBUG_OBJECT (v4lsrc, "Added palette %d (%s) to supported list",
+        palette[i], v4l_palette_name[palette[i]]);
     v4lsrc->colourspaces = g_list_append (v4lsrc->colourspaces,
         GINT_TO_POINTER (palette[i]));
   }
+  GST_DEBUG_OBJECT (v4lsrc, "%d palette(s) supported",
+      g_list_length (v4lsrc->colourspaces));
 }
 
 static void
@@ -326,6 +338,7 @@ gst_v4lsrc_close (GstElement * element, const gchar * device)
 /* get a list of possible framerates
  * this is only done for webcams;
  * other devices return NULL here.
+ * this function takes a LONG time to execute.
  */
 static GValue *
 gst_v4lsrc_get_fps_list (GstV4lSrc * v4lsrc)
@@ -799,7 +812,7 @@ gst_v4lsrc_getcaps (GstPad * pad)
   struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
   gfloat fps = 0.0;
   GList *item;
-  GValue *fps_list;
+  GValue *fps_list = NULL;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
     return gst_caps_new_any ();
@@ -810,7 +823,9 @@ gst_v4lsrc_getcaps (GstPad * pad)
   }
 
   /* FIXME: cache this on gst_v4l_open() */
-  fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
+  if (v4lsrc->autoprobe_fps) {
+    fps_list = gst_v4lsrc_get_fps_list (v4lsrc);
+  }
   if (!fps_list)
     fps = gst_v4lsrc_get_fps (v4lsrc);
 
@@ -1074,6 +1089,13 @@ gst_v4lsrc_set_property (GObject * object,
       }
       break;
 
+    case ARG_AUTOPROBE_FPS:
+      if (!GST_V4L_IS_ACTIVE (GST_V4LELEMENT (v4lsrc))) {
+        v4lsrc->autoprobe_fps = g_value_get_boolean (value);
+      }
+      break;
+
+
     case ARG_LATENCY_OFFSET:
       v4lsrc->latency_offset = g_value_get_int (value);
       break;
@@ -1118,6 +1140,10 @@ gst_v4lsrc_get_property (GObject * object,
 
     case ARG_AUTOPROBE:
       g_value_set_boolean (value, v4lsrc->autoprobe);
+      break;
+
+    case ARG_AUTOPROBE_FPS:
+      g_value_set_boolean (value, v4lsrc->autoprobe_fps);
       break;
 
     case ARG_LATENCY_OFFSET:

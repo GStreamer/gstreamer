@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
 
 #ifndef GST_DISABLE_GST_DEBUG
 /* palette names */
-static const char *palette_name[] = {
+const char *v4l_palette_name[] = {
   "",                           /* 0 */
   "grayscale",                  /* VIDEO_PALETTE_GREY */
   "Hi-420",                     /* VIDEO_PALETTE_HI420 */
@@ -194,7 +194,7 @@ gst_v4lsrc_capture_init (GstV4lSrc * v4lsrc)
   }
 
   GST_INFO_OBJECT (v4lsrc, "Got %d buffers (\'%s\') with total size %d KB",
-      v4lsrc->mbuf.frames, palette_name[v4lsrc->mmap.format],
+      v4lsrc->mbuf.frames, v4l_palette_name[v4lsrc->mmap.format],
       v4lsrc->mbuf.size / (v4lsrc->mbuf.frames * 1024));
 
   /* keep track of queued buffers */
@@ -468,7 +468,7 @@ gst_v4lsrc_try_capture (GstV4lSrc * v4lsrc, gint width, gint height,
   struct video_mmap vmmap;
 
   GST_DEBUG_OBJECT (v4lsrc, "try out %dx%d, palette format %d (%s)",
-      width, height, palette, palette_name[palette]);
+      width, height, palette, v4l_palette_name[palette]);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_NOT_ACTIVE (GST_V4LELEMENT (v4lsrc));
 

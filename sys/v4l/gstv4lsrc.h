@@ -104,7 +104,8 @@ struct _GstV4lSrc
    GstV4lSrcSyncMode syncmode;
 
    gboolean copy_mode;
-   gboolean autoprobe; /* probe on startup ? */
+   gboolean autoprobe;     /* probe features on startup ? */
+   gboolean autoprobe_fps; /* probe fps on startup ? */
 };
 
 struct _GstV4lSrcClass
