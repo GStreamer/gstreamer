@@ -40,6 +40,9 @@ struct _GstPlay
   
   GHashTable *elements;
   
+  gint64 time_nanos;
+  gint64 length_nanos;
+  
   GST_OBJECT_PADDING
 };
 
@@ -55,7 +58,9 @@ struct _GstPlayClass
 };
 
 GType                 gst_play_get_type              (void);
-
+GstPlay *             gst_play_new                   (void);
+gboolean              gst_play_set_data_src          (GstPlay *play,
+                                                      GstElement *data_src);
 gboolean              gst_play_set_video_sink        (GstPlay *play,
                                                       GstElement *video_sink);
 gboolean              gst_play_set_audio_sink        (GstPlay *play,
