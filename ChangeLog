@@ -1,3 +1,10 @@
+2004-12-13  David Schleef  <ds@schleef.org>
+
+	* configure.ac:  Applied patch from bug #143659, making default
+	sources and sinks OS-dependent (for Solaris), and added code
+	for OS/X.
+	* gconf/gstreamer.schemas.in: use OS-dependent sinks in gconf.
+
 2004-12-13  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* gst-libs/gst/riff/riff-media.c:
