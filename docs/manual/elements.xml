@@ -88,7 +88,7 @@
         </mediaobject>
       </figure>
       <para>
-        <xref linkend="section-element-filterimg"/> shows the visualisation of a filter element with
+        <xref linkend="section-element-multifilterimg"/> shows the visualisation of a filter element with
         more than one output pad. An example of such a filter is the AVI
         demultiplexer. This element will parse the input data and
         extract the audio and video data. Most of these filters dynamically
