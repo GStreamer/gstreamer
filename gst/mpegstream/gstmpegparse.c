@@ -470,13 +470,19 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   }
 
   if (mpeg_parse->mux_rate != new_rate) {
-    mpeg_parse->mux_rate =
-        (double) mpeg_parse->bytes_since_scr /
-        MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr -
-        prev_scr) / 50 * 1000000000;
+    if (GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize)) {
+      mpeg_parse->mux_rate = new_rate;
+    } else {
+      mpeg_parse->mux_rate =
+          (double) mpeg_parse->bytes_since_scr /
+          MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr -
+          prev_scr) / 50 * 1000000000;
+    }
 
     //gst_mpeg_parse_update_streaminfo (mpeg_parse);
-    GST_DEBUG ("stream is %1.3fMbs", (mpeg_parse->mux_rate * 400) / 1000000.0);
+    GST_DEBUG ("stream is %1.3fMbs, calculated over %1.3fkB",
+        (mpeg_parse->mux_rate * 400) / 1000000.0,
+        mpeg_parse->bytes_since_scr / 1000.0);
   }
   mpeg_parse->bytes_since_scr = 0;
 
