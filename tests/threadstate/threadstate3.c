@@ -38,9 +38,6 @@ int main(int argc,char *argv[])
     gst_element_set_state(GST_ELEMENT(thread), GST_STATE_NULL);
     sleep(1);
   }
-
-  gst_main();
-
   exit(0);
 }
 
