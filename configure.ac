@@ -174,7 +174,7 @@ dnl ######################################################################
 dnl FIXME: simplify all this down using a few m4 macros
 
 AC_ARG_ENABLE(libmmx,
-AC_HELP_STRING([--enable-libmmx][use libmmx, if available]),
+AC_HELP_STRING([--enable-libmmx],[use libmmx, if available]),
 [case "${enableval}" in
   yes) USE_LIBMMX=$HAVE_LIBMMX ;;
   no)  USE_LIBMMX=no ;;
@@ -183,7 +183,7 @@ esac],
 [USE_LIBMMX=$HAVE_LIBMMX]) dnl Default value
 
 AC_ARG_ENABLE(atomic,
-AC_HELP_STRING([--enable-atomic][use atomic reference counting header]),
+AC_HELP_STRING([--enable-atomic],[use atomic reference counting header]),
 [case "${enableval}" in
   yes) USE_ATOMIC_H=$HAVE_ATOMIC_H;;
   noset) USE_ATOMIC_H=$HAVE_ATOMIC_H;;
@@ -193,7 +193,7 @@ esac],
 [USE_ATOMIC_H=$HAVE_ATOMIC_H]) dnl Default value
 
 AC_ARG_ENABLE(plugin-builddir,
-AC_HELP_STRING([--enable-plugin-builddir][allow tests/demos to use non-installed plugins]),
+AC_HELP_STRING([--enable-plugin-builddir],[allow tests/demos to use non-installed plugins]),
 [case "${enableval}" in
   yes) PLUGINS_USE_BUILDDIR=yes ;;
   no)  PLUGINS_USE_BUILDDIR=no ;;
@@ -204,7 +204,7 @@ esac],
 GST_DEBUGINFO
 
 AC_ARG_ENABLE(profiling,
-AC_HELP_STRING([--enable-profiling][adds -pg to compiler commandline, for profiling]),
+AC_HELP_STRING([--enable-profiling],[adds -pg to compiler commandline, for profiling]),
 [case "${enableval}" in
   yes) USE_PROFILING=yes ;;
   no)  UES_PROFILING=no ;;
@@ -219,7 +219,7 @@ else
   GST_CONFIG_DIR=${sysconfdir}/gstreamer
 fi
 AC_ARG_WITH(configdir,
-AC_HELP_STRING([--with-configdir][specify path to use for plugin and command completion registries]),
+AC_HELP_STRING([--with-configdir],[specify path to use for plugin and command completion registries]),
 [case "${withval}" in
   yes) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
   no) AC_MSG_ERROR(bad value ${withval} for --with-configdir) ;;
@@ -233,7 +233,7 @@ AC_MSG_NOTICE(Using $GST_CONFIG_DIR as configuration dir)
 
 dnl building of tests
 AC_ARG_ENABLE(tests,
-AC_HELP_STRING([--disable-tests][disable building test apps]),
+AC_HELP_STRING([--disable-tests],[disable building test apps]),
 [case "${enableval}" in
   yes) BUILD_TESTS=yes ;;
   no)  BUILD_TESTS=no ;;
@@ -244,7 +244,7 @@ AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 
 dnl tests known to fail
 AC_ARG_ENABLE(failing-tests,
-AC_HELP_STRING([--disable-failing-tests][disable building tests known to fail]),
+AC_HELP_STRING([--disable-failing-tests],[disable building tests known to fail]),
 [case "${enableval}" in
   yes) BUILD_FAILING_TESTS=yes ;;
   no)  BUILD_FAILING_TESTS=no ;;
@@ -254,7 +254,7 @@ esac],
 AM_CONDITIONAL(BUILD_FAILING_TESTS, test "x$BUILD_FAILING_TESTS" = "xyes")
 
 AC_ARG_ENABLE(examples,
-AC_HELP_STRING([--disable-examples][disable building examples]),
+AC_HELP_STRING([--disable-examples],[disable building examples]),
 [case "${enableval}" in
   yes) BUILD_EXAMPLES=yes ;;
   no)  BUILD_EXAMPLES=no ;;
