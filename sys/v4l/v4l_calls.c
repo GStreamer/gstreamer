@@ -47,12 +47,6 @@ GST_DEBUG_CATEGORY_EXTERN (v4l_debug);
 
 #define GST_CATEGORY_DEFAULT v4l_debug
 
-#define DEBUG(format, args...) \
-	GST_DEBUG_OBJECT (\
-		GST_ELEMENT(v4lelement), \
-		"V4L: " format, ##args)
-
-
 static const char *picture_name[] = {
   "Hue",
   "Brightness",
@@ -84,7 +78,7 @@ static const char *norm_name[] = {
 static gboolean
 gst_v4l_get_capabilities (GstV4lElement * v4lelement)
 {
-  DEBUG ("getting capabilities");
+  GST_DEBUG_OBJECT (v4lelement, "getting capabilities");
   GST_V4L_CHECK_OPEN (v4lelement);
 
   if (ioctl (v4lelement->video_fd, VIDIOCGCAP, &(v4lelement->vcap)) < 0) {
@@ -116,7 +110,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
 {
   int num;
 
-  DEBUG ("opening device %s", v4lelement->videodev);
+  GST_DEBUG_OBJECT (v4lelement, "opening device %s", v4lelement->videodev);
   GST_V4L_CHECK_NOT_OPEN (v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE (v4lelement);
 
@@ -185,7 +179,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
     v4lelement->colors = g_list_append (v4lelement->colors, channel);
   }
 
-  DEBUG ("Setting default norm/input");
+  GST_DEBUG_OBJECT (v4lelement, "Setting default norm/input");
   gst_v4l_set_chan_norm (v4lelement, 0, 0);
 
   return TRUE;
@@ -201,7 +195,7 @@ gst_v4l_open (GstV4lElement * v4lelement)
 gboolean
 gst_v4l_close (GstV4lElement * v4lelement)
 {
-  DEBUG ("closing device");
+  GST_DEBUG_OBJECT (v4lelement, "closing device");
   GST_V4L_CHECK_OPEN (v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE (v4lelement);
 
@@ -232,7 +226,7 @@ gst_v4l_close (GstV4lElement * v4lelement)
 gint
 gst_v4l_get_num_chans (GstV4lElement * v4lelement)
 {
-  DEBUG ("getting number of channels");
+  GST_DEBUG_OBJECT (v4lelement, "getting number of channels");
   GST_V4L_CHECK_OPEN (v4lelement);
 
   return v4lelement->vcap.channels;
@@ -252,7 +246,7 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
   GList *list = NULL;
   gint i;
 
-  DEBUG ("getting channel names");
+  GST_DEBUG_OBJECT (v4lelement, "getting channel names");
 
   if (!GST_V4L_IS_OPEN (v4lelement))
     return NULL;
@@ -326,7 +320,7 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
 gboolean
 gst_v4l_get_chan_norm (GstV4lElement * v4lelement, gint * channel, gint * norm)
 {
-  DEBUG ("getting current channel and norm");
+  GST_DEBUG_OBJECT (v4lelement, "getting current channel and norm");
   GST_V4L_CHECK_OPEN (v4lelement);
 
   if (channel)
@@ -348,7 +342,7 @@ gst_v4l_get_chan_norm (GstV4lElement * v4lelement, gint * channel, gint * norm)
 gboolean
 gst_v4l_set_chan_norm (GstV4lElement * v4lelement, gint channel, gint norm)
 {
-  DEBUG ("setting channel = %d, norm = %d (%s)",
+  GST_DEBUG_OBJECT (v4lelement, "setting channel = %d, norm = %d (%s)",
       channel, norm, norm_name[norm]);
   GST_V4L_CHECK_OPEN (v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE (v4lelement);
@@ -383,7 +377,7 @@ gst_v4l_get_signal (GstV4lElement * v4lelement, gint tunernum, guint * signal)
 {
   struct video_tuner tuner;
 
-  DEBUG ("getting tuner signal");
+  GST_DEBUG_OBJECT (v4lelement, "getting tuner signal");
   GST_V4L_CHECK_OPEN (v4lelement);
 
   tuner.tuner = tunernum;
@@ -412,7 +406,7 @@ gst_v4l_get_frequency (GstV4lElement * v4lelement,
   struct video_tuner vtun;
   GstTunerChannel *channel;
 
-  DEBUG ("getting tuner frequency");
+  GST_DEBUG_OBJECT (v4lelement, "getting tuner frequency");
   GST_V4L_CHECK_OPEN (v4lelement);
 
   channel = gst_tuner_get_channel (GST_TUNER (v4lelement));
@@ -449,7 +443,7 @@ gst_v4l_set_frequency (GstV4lElement * v4lelement,
   struct video_tuner vtun;
   GstTunerChannel *channel;
 
-  DEBUG ("setting tuner frequency to %lu", frequency);
+  GST_DEBUG_OBJECT (v4lelement, "setting tuner frequency to %lu", frequency);
   GST_V4L_CHECK_OPEN (v4lelement);
 
   channel = gst_tuner_get_channel (GST_TUNER (v4lelement));
@@ -485,7 +479,8 @@ gst_v4l_get_picture (GstV4lElement * v4lelement,
 {
   struct video_picture vpic;
 
-  DEBUG ("getting picture property type %d (%s)", type, picture_name[type]);
+  GST_DEBUG_OBJECT (v4lelement, "getting picture property type %d (%s)", type,
+      picture_name[type]);
   GST_V4L_CHECK_OPEN (v4lelement);
 
   if (ioctl (v4lelement->video_fd, VIDIOCGPICT, &vpic) < 0) {
@@ -529,7 +524,7 @@ gst_v4l_set_picture (GstV4lElement * v4lelement,
 {
   struct video_picture vpic;
 
-  DEBUG ("setting picture type %d (%s) to value %d",
+  GST_DEBUG_OBJECT (v4lelement, "setting picture type %d (%s) to value %d",
       type, picture_name[type], value);
   GST_V4L_CHECK_OPEN (v4lelement);
 
@@ -580,7 +575,8 @@ gst_v4l_get_audio (GstV4lElement * v4lelement,
 {
   struct video_audio vau;
 
-  DEBUG ("getting audio parameter type %d (%s)", type, audio_name[type]);
+  GST_DEBUG_OBJECT (v4lelement, "getting audio parameter type %d (%s)", type,
+      audio_name[type]);
   GST_V4L_CHECK_OPEN (v4lelement);
 
   vau.audio = audionum;
@@ -622,8 +618,9 @@ gst_v4l_set_audio (GstV4lElement * v4lelement,
 {
   struct video_audio vau;
 
-  DEBUG ("setting audio parameter type %d (%s) to value %d",
-      type, audio_name[type], value);
+  GST_DEBUG_OBJECT (v4lelement,
+      "setting audio parameter type %d (%s) to value %d", type,
+      audio_name[type], value);
   GST_V4L_CHECK_OPEN (v4lelement);
 
   vau.audio = audionum;
