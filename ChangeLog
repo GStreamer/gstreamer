@@ -1,5 +1,15 @@
 2004-03-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/video/Makefile.am:
+	* gst-libs/gst/video/gstvideosink.c:
+	* gst-libs/gst/video/gstvideosink.h:
+          rename gstvideosink.h to videosink.h to match other headers
+	* gst/mixmatrix/Makefile.am:
+          fix plugin filename
+	* gst/tags/Makefile.am: fix plugin filename
+
+2004-03-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/tags/Makefile.am: fix plugin filename
 
 2004-03-01  Thomas Vander Stichele  <thomas at apestaart dot org>
