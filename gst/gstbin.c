@@ -153,11 +153,11 @@ gst_bin_new (const gchar * name)
 
 /**
  * gst_bin_get_clock:
- * @bin: the bin to get the clock of
+ * @bin: a #GstBin to get the clock of
  *
- * Get the current clock of the bin
+ * Gets the current clock of the (scheduler of the) bin.
  *
- * Returns: the clock of the bin
+ * Returns: the #GstClock of the bin
  */
 GstClock*
 gst_bin_get_clock (GstBin *bin)

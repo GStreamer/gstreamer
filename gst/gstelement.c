@@ -208,10 +208,10 @@ gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar
 
 /**
  * gst_element_set_name:
- * @element: GstElement to set name of
+ * @element: a #GstElement to set name of
  * @name: new name of element
  *
- * Set the name of the element, getting rid of the old name if there was
+ * Sets the name of the element, getting rid of the old name if there was
  * one.
  */
 void
@@ -225,9 +225,9 @@ gst_element_set_name (GstElement *element, const gchar *name)
 
 /**
  * gst_element_get_name:
- * @element: GstElement to get name of
+ * @element: a #GstElement to get name of
  *
- * Get the name of the element.
+ * Gets the name of the element.
  *
  * Returns: name of the element
  */
@@ -242,10 +242,10 @@ gst_element_get_name (GstElement *element)
 
 /**
  * gst_element_set_parent:
- * @element: GstElement to set parent of
+ * @element: a #GstElement to set parent of
  * @parent: new parent of the object
  *
- * Set the parent of the element.
+ * Sets the parent of the element.
  */
 void
 gst_element_set_parent (GstElement *element, GstObject *parent)
@@ -262,11 +262,11 @@ gst_element_set_parent (GstElement *element, GstObject *parent)
 
 /**
  * gst_element_get_parent:
- * @element: GstElement to get the parent of
+ * @element: a #GstElement to get the parent of
  *
- * Get the parent of the element.
+ * Gets the parent of the element.
  *
- * Returns: parent of the element
+ * Returns: the #GstElement parent of the element
  */
 GstObject*
 gst_element_get_parent (GstElement *element)
@@ -279,10 +279,10 @@ gst_element_get_parent (GstElement *element)
 
 /**
  * gst_element_set_clock:
- * @element: GstElement to set the clock to
- * @clock: the clock to set for the element
+ * @element: a #GstElement to set the clock for
+ * @clock: the #GstClock to set for the element
  *
- * Set the clock for the element
+ * Sets the clock for the element.
  */
 void
 gst_element_set_clock (GstElement *element, GstClock *clock)
@@ -296,11 +296,11 @@ gst_element_set_clock (GstElement *element, GstClock *clock)
 
 /**
  * gst_element_get_clock:
- * @element: GstElement to get the clock of
+ * @element: a #GstElement to get the clock of
  *
- * Get the clock of the element
+ * Gets the clock of the element.
  *
- * Returns: the clock of the element.
+ * Returns: the #GstClock of the element.
  */
 GstClock*
 gst_element_get_clock (GstElement *element)
@@ -316,13 +316,13 @@ gst_element_get_clock (GstElement *element)
 
 /**
  * gst_element_clock_wait:
- * @element: GstElement to wait for the clock
- * @clock: the clock to wait for
- * @time: the time to wait for
+ * @element: a #GstElement
+ * @clock: the #GstClock to use
+ * @time: the #GstClockTime to wait for on the clock
  *
- * Wait for a specific time on the clock
+ * Waits for a specific time on the clock.
  *
- * Returns: the result of the wait operation
+ * Returns: the #GstClockReturn result of the wait operation
  */
 GstClockReturn
 gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time)
@@ -1971,11 +1971,11 @@ gst_element_class_install_std_props (GstElementClass * klass, const char *first_
 
 /**
  * gst_element_get_managing_bin:
- * @element: the element in question
+ * @element: a #GstElement
  * 
- * Get the managing bin (a pipeline or a thread, for example) of an element.
+ * Gets the managing bin (a pipeline or a thread, for example) of an element.
  *
- * Returns: the bin, or NULL on failure
+ * Returns: the #GstBin, or NULL on failure
  **/
 GstBin*
 gst_element_get_managing_bin (GstElement *element)
