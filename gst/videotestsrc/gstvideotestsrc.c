@@ -73,8 +73,6 @@ static void gst_videotestsrc_get_property (GObject * object, guint prop_id, GVal
 
 static GstBuffer *gst_videotestsrc_get (GstPad * pad);
 
-static void gst_videotestsrc_reset (GstVideotestsrc *videotestsrc);
-
 static GstElementClass *parent_class = NULL;
 
 static GstCaps * gst_videotestsrc_get_capslist (void);
@@ -182,20 +180,16 @@ gst_videotestsrc_set_clock (GstElement *element, GstClock *clock)
 
   v = GST_VIDEOTESTSRC (element);
 
-#if GST_VERSION_MINOR > 6
   gst_object_replace ((GstObject **)&v->clock, (GstObject *)clock);
-#else
-  gst_object_swap ((GstObject **)&v->clock, (GstObject *)clock);
-#endif
 }
 
 static GstPadLinkReturn
-gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
+gst_videotestsrc_src_link (GstPad * pad, GstCaps * caps)
 {
   GstVideotestsrc *videotestsrc;
   GstCaps *caps1;
 
-  GST_DEBUG ("gst_videotestsrc_srcconnect");
+  GST_DEBUG ("gst_videotestsrc_src_link");
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
   for ( ; caps != NULL; caps = caps->next) {
@@ -253,26 +247,44 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG ("size %d x %d", videotestsrc->width, videotestsrc->height);
 
+  videotestsrc->pool = gst_pad_get_bufferpool (videotestsrc->srcpad);
+
   return GST_PAD_LINK_DONE;
+}
+
+static void
+gst_videotestsrc_src_unlink (GstPad * pad)
+{
+  GstVideotestsrc *videotestsrc;
+
+  videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
+
+  if (videotestsrc->pool) {
+    gst_buffer_pool_unref (videotestsrc->pool);
+  }
 }
 
 static GstElementStateReturn
 gst_videotestsrc_change_state (GstElement * element)
 {
-  GstVideotestsrc *v;
+  GstVideotestsrc *videotestsrc;
 
-  v = GST_VIDEOTESTSRC (element);
+  videotestsrc = GST_VIDEOTESTSRC (element);
 
   switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      break;
     case GST_STATE_PAUSED_TO_PLAYING:
-      v->pool = gst_pad_get_bufferpool (v->srcpad);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
-      gst_buffer_pool_unref(v->pool);
-      v->pool = NULL;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      videotestsrc->timestamp_offset = 0;
+      videotestsrc->n_frames = 0;
       break;
     case GST_STATE_READY_TO_NULL:
-      gst_videotestsrc_reset (v);
       break;
   }
 
@@ -380,23 +392,16 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   gst_pad_set_getcaps_function (videotestsrc->srcpad, gst_videotestsrc_getcaps);
   gst_element_add_pad (GST_ELEMENT (videotestsrc), videotestsrc->srcpad);
   gst_pad_set_get_function (videotestsrc->srcpad, gst_videotestsrc_get);
-  gst_pad_set_link_function (videotestsrc->srcpad, gst_videotestsrc_srcconnect);
+  gst_pad_set_link_function (videotestsrc->srcpad, gst_videotestsrc_src_link);
+  gst_pad_set_unlink_function (videotestsrc->srcpad, gst_videotestsrc_src_unlink);
 
   videotestsrc->pool = NULL;
   gst_videotestsrc_set_pattern(videotestsrc, GST_VIDEOTESTSRC_SMPTE);
-  gst_videotestsrc_reset (videotestsrc);
 
   videotestsrc->sync = TRUE;
   videotestsrc->default_width = 320;
   videotestsrc->default_height = 240;
   videotestsrc->default_rate = 30.;
-}
-
-static void
-gst_videotestsrc_reset (GstVideotestsrc *videotestsrc)
-{
-  videotestsrc->timestamp_offset = 0;
-  videotestsrc->n_frames = 0;
 }
 
 
