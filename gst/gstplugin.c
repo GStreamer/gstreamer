@@ -44,7 +44,10 @@ static GList *_gst_plugin_static = NULL;
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
 extern gboolean *_gst_disable_segtrap;  /* see gst.c */
+
+#ifndef HAVE_WIN32
 static gboolean *_gst_plugin_fault_handler_is_setup = FALSE;
+#endif
 
 /* list of valid licenses.
  * One of these must be specified or the plugin won't be loaded 
@@ -210,6 +213,7 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
   return plugin;
 }
 
+#ifndef HAVE_WIN32
 /*
  * _gst_plugin_fault_handler_restore:
  * segfault handler restorer
@@ -272,6 +276,17 @@ _gst_plugin_fault_handler_setup (void)
 
   sigaction (SIGSEGV, &action, NULL);
 }
+#else
+static void
+_gst_plugin_fault_handler_restore (void)
+{
+}
+
+static void
+_gst_plugin_fault_handler_setup (void)
+{
+}
+#endif
 
 static void _gst_plugin_fault_handler_setup ();
 

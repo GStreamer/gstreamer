@@ -1,5 +1,11 @@
 2004-04-15  David Schleef  <ds@schleef.org>
 
+	* gst/gstplugin.c: (_gst_plugin_fault_handler_restore),
+	(_gst_plugin_fault_handler_setup):  Disable more stuff on
+	Windows.
+
+2004-04-15  David Schleef  <ds@schleef.org>
+
 	* gst/gstinfo.c: (_gst_debug_init): Change some internal
 	symbol names to not conflict with new gstinfo.h symbols.
 	* gst/gstinfo.h: Add inline functions for all those crazy
