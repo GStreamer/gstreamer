@@ -904,6 +904,7 @@ remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
 
   g_assert (group != NULL);
   g_assert (element != NULL);
+  /* this assert also catches the decoupled elements */
   g_assert (GST_ELEMENT_SCHED_GROUP (element) == group);
 
   /* first decrement the links that this group has with other groups through
@@ -940,25 +941,6 @@ remove_from_group (GstOptSchedulerGroup * group, GstElement * element)
   group = unref_group (group);
 
   return group;
-}
-
-/* count number of elements in the group. Have to be careful because
- * decoupled elements are added as entry point but are not added to
- * the elements list */
-static gint
-group_num_elements (GstOptSchedulerGroup * group)
-{
-  gint num;
-
-  num = group->num_elements;
-  /* decoupled elements are not added to the group but are
-   * added as an entry */
-  if (group->entry) {
-    if (GST_ELEMENT_IS_DECOUPLED (group->entry)) {
-      num++;
-    }
-  }
-  return num;
 }
 
 /* check if an element is part of the given group. We have to be carefull
@@ -2371,6 +2353,42 @@ rechain_group (GstOptSchedulerGroup * group)
   }
 }
 
+/* make sure that the group does not contain only single element.
+ * Only loop-based groups can contain a single element. */
+static GstOptSchedulerGroup *
+normalize_group (GstOptSchedulerGroup * group)
+{
+  gint num;
+  gboolean have_decoupled = FALSE;
+
+  if (group == NULL)
+    return NULL;
+
+  num = group->num_elements;
+  /* decoupled elements are not added to the group but are
+   * added as an entry */
+  if (group->entry && GST_ELEMENT_IS_DECOUPLED (group->entry)) {
+    num++;
+    have_decoupled = TRUE;
+  }
+
+  if (num == 1 && group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
+    GST_LOG ("removing last element from group %p", group);
+    if (have_decoupled) {
+      group->entry = NULL;
+      if (group->chain) {
+        GST_LOG ("removing group %p from its chain", group);
+        chain_group_set_enabled (group->chain, group, FALSE);
+        remove_from_chain (group->chain, group);
+      }
+      group = unref_group (group);
+    } else {
+      group = remove_from_group (group, GST_ELEMENT (group->elements->data));
+    }
+  }
+  return group;
+}
+
 /* migrate the element and all connected elements to a new group without looking at
  * the brokenpad */
 static GstOptSchedulerGroup *
@@ -2432,23 +2450,14 @@ group_migrate_connected (GstOptScheduler * osched, GstElement * element,
     /* remove last element from the group if any. Make sure not to remove
      * the loop based entry point of a group as this always needs one group */
     if (group != NULL) {
-      if (group_num_elements (group) == 1 &&
-          group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
-        GST_LOG ("removing last element from old group");
-        group = remove_from_group (group, GST_ELEMENT (group->elements->data));
-      }
+      group = normalize_group (group);
     }
   }
 
   if (new_group != NULL) {
-    if (group_num_elements (new_group) == 1 &&
-        new_group->type != GST_OPT_SCHEDULER_GROUP_LOOP) {
-      GST_LOG ("removing last element from new group");
-      new_group =
-          remove_from_group (new_group,
-          GST_ELEMENT (new_group->elements->data));
+    new_group = normalize_group (new_group);
+    if (new_group == NULL)
       return NULL;
-    }
     /* at this point the new group lives in its own chain but might
      * have to be merged with another chain, this happens when the new
      * group has a link with another group in another chain */

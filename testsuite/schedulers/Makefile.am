@@ -8,7 +8,8 @@ tests_pass = \
 	143777 143777-2 \
         147713 \
         147819 \
-        147894 147894-2 group_link
+        147894 147894-2 group_link \
+	queue_link
 
 # don't enable this one unless it actually works.
 #	useless_iteration

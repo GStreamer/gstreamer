@@ -1,3 +1,15 @@
+2004-11-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),
+	(remove_from_group), (normalize_group), (group_migrate_connected),
+	(gst_opt_scheduler_iterate):
+	* testsuite/schedulers/.cvsignore:
+	* testsuite/schedulers/Makefile.am:
+	* testsuite/schedulers/queue_link.c: (main):
+	Added testcase for schduler segfault.
+	Fix scheduler segfault when removing a decoupled
+	entry point as the last element from a group.
+
 2004-11-03  Christophe Fergeau  <teuf@gnome.org>
 
 	* gst/gstmarshal.list: add missing marshaller, fixes build
