@@ -370,6 +370,7 @@ GST_PLUGINS_ALL="\
 	mpegaudioparse \
 	mpegstream \
 	monoscope \
+	multifilesink \
 	multipart \
 	overlay \
 	passthrough \
@@ -1835,6 +1836,7 @@ gst/mpegstream/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/monoscope/Makefile
+gst/multifilesink/Makefile
 gst/multipart/Makefile
 gst/overlay/Makefile
 gst/passthrough/Makefile
@@ -1974,6 +1976,7 @@ examples/switch/Makefile
 examples/Makefile
 testsuite/spider/Makefile
 testsuite/alsa/Makefile
+testsuite/multifilesink/Makefile
 testsuite/Makefile
 tools/Makefile
 gconf/Makefile
