@@ -4,16 +4,17 @@ AC_PREREQ(2.57)
 AC_INIT
 AC_CANONICAL_TARGET
 
-m4_define(pygst_major_version, 0)
-m4_define(pygst_minor_version, 7)
-m4_define(pygst_micro_version, 91)
-m4_define(pygst_version, pygst_major_version.pygst_minor_version.pygst_micro_version)
+dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
+AM_MAINTAINER_MODE
+                                                                                
+dnl when going to/from release please set the nano (fourth number) right !
+AS_VERSION(gst-python, PYGST_VERSION, 0, 7, 92, 1, GST_CVS="no", GST_CVS="yes")
 
-AM_INIT_AUTOMAKE(gst-python, pygst_version)
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
-AC_DEFINE(PYGST_MAJOR_VERSION, pygst_major_version, [PyGst major version])
-AC_DEFINE(PYGST_MINOR_VERSION, pygst_minor_version, [PyGst minor version])
-AC_DEFINE(PYGST_MICRO_VERSION, pygst_micro_version, [PyGst macro version])
+AC_DEFINE_UNQUOTED(PYGST_MAJOR_VERSION, $PYGST_VERSION_MAJOR, [PyGst major version])
+AC_DEFINE_UNQUOTED(PYGST_MINOR_VERSION, $PYGST_VERSION_MINOR, [PyGst minor version])
+AC_DEFINE_UNQUOTED(PYGST_MICRO_VERSION, $PYGST_VERSION_MICRO, [PyGst macro version])
 
 AC_CONFIG_SRCDIR([gst/gstmodule.c])
 AM_CONFIG_HEADER(config.h)
