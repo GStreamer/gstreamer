@@ -43,8 +43,8 @@ libshout	(for the shoutcast plugin)
 			http://www.icecast.org
 libasound	(for the alsa src/sink plugin)
 			http://alsa-project.org/
-librtp		(for the rtp sink plugin, shipped with Gnome-O-Phone)
-			http://sourceforge.net/projects/gphone
+ortp		(for the rtp sink plugin)
+			http://www.linphone.org/ortp/
 aalib		(for the aa sink plugin)
 			http://aa-project.sourceforge.net/aalib/
 aRts		(for the arts plugin wrapper, and the artsd sink)
