@@ -27,7 +27,7 @@
 
 #include "gstthread.h"
 #include "gstscheduler.h"
-
+#include "gstqueue.h"
 
 GstElementDetails gst_thread_details = {
   "Threaded container",
@@ -252,7 +252,8 @@ gst_thread_change_state (GstElement *element)
         GST_DEBUG (GST_CAT_THREAD, "creating thread \"%s\"\n",
                    GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
-        g_mutex_lock (thread->lock);
+        g_mutex_lock(thread->lock);
+
         // create the thread
         pthread_create (&thread->thread_id, NULL,
                         gst_thread_main_loop, thread);
@@ -260,8 +261,8 @@ gst_thread_change_state (GstElement *element)
         // wait for it to 'spin up'
         GST_DEBUG (GST_CAT_THREAD, "sync: waiting for spinup\n");
         g_cond_wait(thread->cond,thread->lock);
-        g_mutex_unlock(thread->lock);
         GST_DEBUG (GST_CAT_THREAD, "sync: thread claims to be up\n");
+        g_mutex_unlock(thread->lock);
       } else {
         GST_INFO (GST_CAT_THREAD, "NOT starting thread \"%s\"",
                 GST_ELEMENT_NAME (GST_ELEMENT (element)));
@@ -284,6 +285,30 @@ gst_thread_change_state (GstElement *element)
       GST_INFO (GST_CAT_THREAD,"pausing thread \"%s\"",
               GST_ELEMENT_NAME (GST_ELEMENT (element)));
 
+      // the following code ensures that the bottom half of thread will run
+      // to perform each elements' change_state() (by calling gstbin.c::
+      // change_state()).
+      // + the pending state was already set by gstelement.c::set_state()
+      // + find every queue we manage, and signal its empty and full conditions
+      {
+      GList *elements = (element->sched)->elements;
+      while (elements)
+      {
+        GstElement *e = GST_ELEMENT(elements->data);
+        g_assert(e);
+        elements = g_list_next(elements);
+        if (GST_IS_QUEUE(e))
+        {
+          //FIXME make this more efficient by only waking queues that are asleep
+          //FIXME and only waking the appropriate condition (depending on if it's
+          //FIXME on up- or down-stream side)
+          //
+          //FIXME also make this more efficient by keeping list of managed queues
+          g_cond_signal((GST_QUEUE(e)->emptycond));
+          g_cond_signal((GST_QUEUE(e)->fullcond));
+        }
+      }
+      }
       gst_thread_signal_thread(thread,FALSE);
       break;
     case GST_STATE_PLAYING_TO_READY:
@@ -375,7 +400,6 @@ gst_thread_main_loop (void *arg)
 	GST_DEBUG(0,"sync: removed spinning state due to failed iteration\n");
       }
     }
-
     GST_DEBUG (GST_CAT_THREAD, "sync: waiting at bottom of while for signal from main process\n");
     g_mutex_lock (thread->lock);
     GST_DEBUG (GST_CAT_THREAD, "sync: signaling that the thread is out of the SPINNING loop\n");
@@ -399,6 +423,10 @@ gst_thread_main_loop (void *arg)
 }
 
 // the set flag is to say whether it should set TRUE or FALSE
+//
+// WARNING: this has synchronization built in!  if you remove or add any
+// locks, waits, signals, or unlocks you need to be sure they match the 
+// code above (in gst_thread_main_loop()).  basically, don't change anything.
 static void
 gst_thread_signal_thread (GstThread *thread, gboolean spinning)
 {

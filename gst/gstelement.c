@@ -791,6 +791,7 @@ gst_element_get_factory (GstElement *element)
   return oclass->elementfactory;
 }
 
+
 /**
  * gst_element_change_state:
  * @element: element to change state of
@@ -822,6 +823,11 @@ GST_ELEMENT_NAME(element),GST_ELEMENT_NAME(GST_ELEMENT_PARENT(element)),GST_ELEM
   GST_STATE (element) = GST_STATE_PENDING (element);
   GST_STATE_PENDING (element) = GST_STATE_NONE_PENDING;
 
+  // note: queues' state_change is a special case because it needs to lock
+  // for synchronization (from another thread).  since this signal may block
+  // or (worse) make another state change, the queue needs to unlock before
+  // calling.  thus, gstqueue.c::gst_queue_state_change() blocks, unblocks,
+  // unlocks, then emits this. 
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[STATE_CHANGE],
                    GST_STATE (element));
   return TRUE;
@@ -1132,4 +1138,3 @@ gst_element_signal_eos (GstElement *element)
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[EOS]);
   GST_FLAG_SET(element,GST_ELEMENT_COTHREAD_STOPPING);
 }
-

@@ -61,7 +61,7 @@ struct _GstQueue {
 
   gint level_buffers;	/* number of buffers queued here */
   gint max_buffers;	/* maximum number of buffers queued here */
-  gboolean block;	/* if set to FALSE, _get returns NULL if queue empty */
+//  gboolean block;	/* if set to FALSE, _get returns NULL if queue empty */
   gint level_bytes;	/* number of bytes queued here */
   gint size_buffers;	/* size of queue in buffers */
   gint size_bytes;	/* size of queue in bytes */

@@ -1297,6 +1297,20 @@ g_return_val_if_fail (chains != NULL, FALSE);
           GST_DEBUG (GST_CAT_DATAFLOW,"set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
                GST_ELEMENT_NAME (entry),entry);
           cothread_switch (entry->threadstate);
+
+          // following is a check to see if the chain was interrupted due to a
+          // top-half state_change().  (i.e., if there's a pending state.)
+          //
+          // if it was, return to gstthread.c::gst_thread_main_loop() to
+          // execute the state change.
+          GST_DEBUG (GST_CAT_DATAFLOW,"cothread switch ended or interrupted\n");
+          if (GST_STATE_PENDING(GST_SCHEDULE(sched)->parent) != GST_STATE_NONE_PENDING)
+          {
+            GST_DEBUG (GST_CAT_DATAFLOW,"handle pending state %d\n",
+                       GST_STATE_PENDING(GST_SCHEDULE(sched)->parent));
+            return 0;
+          }
+
         } else {
           GST_INFO (GST_CAT_DATAFLOW,"no entry into chain!");
         }

@@ -34,6 +34,7 @@
 #include "gst_private.h"
 
 #include "gstqueue.h"
+#include "gstscheduler.h"
 
 GstElementDetails gst_queue_details = {
   "Queue",
@@ -55,7 +56,7 @@ enum {
   ARG_0,
   ARG_LEVEL,
   ARG_MAX_LEVEL,
-  ARG_BLOCK,
+//  ARG_BLOCK,
 };
 
 
@@ -115,8 +116,8 @@ gst_queue_class_init (GstQueueClass *klass)
                            GTK_ARG_READABLE, ARG_LEVEL);
   gtk_object_add_arg_type ("GstQueue::max_level", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_MAX_LEVEL);
-  gtk_object_add_arg_type ("GstQueue::block", GTK_TYPE_BOOL,
-                           GTK_ARG_READWRITE, ARG_BLOCK);
+//  gtk_object_add_arg_type ("GstQueue::block", GTK_TYPE_BOOL,
+//                           GTK_ARG_READWRITE, ARG_BLOCK);
 
   gtkobject_class->set_arg = gst_queue_set_arg;
   gtkobject_class->get_arg = gst_queue_get_arg;
@@ -145,7 +146,7 @@ gst_queue_init (GstQueue *queue)
   queue->queue = NULL;
   queue->level_buffers = 0;
   queue->max_buffers = 100;
-  queue->block = TRUE;
+//  queue->block = TRUE;
   queue->level_bytes = 0;
   queue->size_buffers = 0;
   queue->size_bytes = 0;
@@ -269,10 +270,17 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
   GST_DEBUG (0,"queue: %s: chain %d %p\n", name, queue->level_buffers, buf);
 
   while (queue->level_buffers >= queue->max_buffers) {
+    // if there's a pending state change for this queue or its manager, switch
+    // back to iterator so bottom half of state change executes
+    if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING ||
+        GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+    {
+      GST_UNLOCK(queue);
+      cothread_switch(cothread_current_main());
+    }
+
     GST_DEBUG (0,"queue: %s waiting %d\n", name, queue->level_buffers);
     STATUS("%s: O\n");
-    //g_cond_timed_wait (queue->fullcond, queue->fulllock, queue->timeval);
-    //FIXME need to signal other thread in case signals got lost?
     g_cond_signal (queue->emptycond);
     g_cond_wait (queue->fullcond, GST_OBJECT(queue)->lock);
     STATUS("%s: O+\n");
@@ -281,21 +289,19 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 
   /* put the buffer on the tail of the list */
   queue->queue = g_slist_append (queue->queue, buf);
-//  STATUS("%s: +\n");
   GST_DEBUG (0,"(%s:%s)+ ",GST_DEBUG_PAD_NAME(pad));
 
   /* if we were empty, but aren't any more, signal a condition */
-  tosignal = (queue->level_buffers >= 0);
   queue->level_buffers++;
+//  if (queue->level_buffers >= 0)
+  if (queue->level_buffers == 1)
+  {
+    GST_DEBUG (0,"queue: %s signalling emptycond\n", name);
+    g_cond_signal (queue->emptycond);
+  }
 
-  /* we can unlock now */
   GST_DEBUG (0,"queue: %s chain %d end signal(%d,%p)\n", name, queue->level_buffers, tosignal, queue->emptycond);
 
-  if (tosignal) {
-//    STATUS("%s: >\n");
-    g_cond_signal (queue->emptycond);
-//    STATUS("%s: >>\n");
-  }
   GST_UNLOCK (queue);
 }
 
@@ -307,6 +313,8 @@ gst_queue_get (GstPad *pad)
   GSList *front;
   const guchar *name;
 
+  g_assert(pad != NULL);
+  g_assert(GST_IS_PAD(pad));
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
@@ -320,22 +328,32 @@ gst_queue_get (GstPad *pad)
   GST_DEBUG (0,"queue: %s have queue lock\n", name);
 
   // we bail if there's nothing there
-  if (!queue->level_buffers && !queue->block) {
-    GST_UNLOCK(queue);
-    return NULL;
-  }
+//  g_assert(queue->block); 
+//  if (!queue->level_buffers && !queue->block) {
+//    GST_UNLOCK(queue);
+//    return NULL;
+//  }
 
   while (!queue->level_buffers) {
-    STATUS("queue: %s U released lock\n");
-    //g_cond_timed_wait (queue->emptycond, queue->emptylock, queue->timeval);
     if (GST_FLAG_IS_SET (queue->sinkpad, GST_PAD_EOS)) {
+      STATUS("queue: %s U released lock\n");
+      GST_UNLOCK(queue);
       gst_pad_set_eos (queue->srcpad);
+      // this return NULL shouldn't hurt anything...
       return NULL;
     }
-    //FIXME need to signal other thread in case signals got lost?
+
+    // if there's a pending state change for this queue or its manager, switch
+    // back to iterator so bottom half of state change executes
+    if (GST_STATE_PENDING(queue) != GST_STATE_NONE_PENDING ||
+        GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_NONE_PENDING)
+    {
+      GST_UNLOCK(queue);
+      cothread_switch(cothread_current_main());
+    }
+
     g_cond_signal (queue->fullcond);
     g_cond_wait (queue->emptycond, GST_OBJECT(queue)->lock);
-//    STATUS("queue: %s U- getting lock\n");
   }
 
   front = queue->queue;
@@ -344,32 +362,34 @@ gst_queue_get (GstPad *pad)
   queue->queue = g_slist_remove_link (queue->queue, front);
   g_slist_free (front);
 
+//  if (queue->level_buffers < queue->max_buffers)
+  if (queue->level_buffers == queue->max_buffers)
+  {
+    GST_DEBUG (0,"queue: %s signalling fullcond\n", name);
+    g_cond_signal (queue->fullcond);
+  }
+
   queue->level_buffers--;
-//  STATUS("%s: -\n");
   GST_DEBUG (0,"(%s:%s)- ",GST_DEBUG_PAD_NAME(pad));
 
-  if (queue->level_buffers < queue->max_buffers) {
-//    STATUS("%s: < \n");
-    g_cond_signal (queue->fullcond);
-//    STATUS("%s: << \n");
-  }
   GST_UNLOCK(queue);
 
-//  GST_DEBUG (0,"queue: %s pushing %d %p \n", name, queue->level_buffers, buf);
-//  gst_pad_push (queue->srcpad, buf);
-//  GST_DEBUG (0,"queue: %s pushing %d done \n", name, queue->level_buffers);
-
   return buf;
-  /* unlock now */
 }
 
 static GstElementStateReturn
 gst_queue_change_state (GstElement *element)
 {
   GstQueue *queue;
+  GstElementStateReturn ret;
   g_return_val_if_fail (GST_IS_QUEUE (element), GST_STATE_FAILURE);
 
   queue = GST_QUEUE (element);
+
+  // lock the queue so another thread (not in sync with this thread's state)
+  // can't call this queue's _get (or whatever)
+  GST_LOCK (queue);
+
   GST_DEBUG (0,"gstqueue: state pending %d\n", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, clear out buffers*/
@@ -380,9 +400,41 @@ gst_queue_change_state (GstElement *element)
 
   /* if we haven't failed already, give the parent class a chance to ;-) */
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  {
+    gboolean valid_handler = FALSE;
+    guint state_change_id = gtk_signal_lookup("state_change", GTK_OBJECT_TYPE(element));
 
-  return GST_STATE_SUCCESS;
+    // determine whether we need to block the parent (element) class'
+    // STATE_CHANGE signal so we can UNLOCK before returning.  we block
+    // it if we could find the state_change signal AND there's a signal
+    // handler attached to it.
+    //
+    // note: this assumes that change_state() *only* emits state_change signal.
+    // if element change_state() emits other signals, they need to be blocked
+    // as well.
+    if (state_change_id &&
+        gtk_signal_handler_pending(GTK_OBJECT(element), state_change_id, FALSE))
+      valid_handler = TRUE;
+    if (valid_handler)
+      gtk_signal_handler_block(GTK_OBJECT(element), state_change_id);
+
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+    if (valid_handler)
+      gtk_signal_handler_unblock(GTK_OBJECT(element), state_change_id);
+
+    // UNLOCK, *then* emit signal (if there's one there)
+    GST_UNLOCK(queue);
+    if (valid_handler)
+      gtk_signal_emit(GTK_OBJECT (element), state_change_id, GST_STATE(element));
+  }
+  else
+  {
+    ret = GST_STATE_SUCCESS;
+    GST_UNLOCK(queue);
+  }
+
+  return ret;
 }
 
 
@@ -400,9 +452,9 @@ gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_MAX_LEVEL:
       queue->max_buffers = GTK_VALUE_INT (*arg);
       break;
-    case ARG_BLOCK:
-      queue->block = GTK_VALUE_BOOL (*arg);
-      break;
+//    case ARG_BLOCK:
+//      queue->block = GTK_VALUE_BOOL (*arg);
+//      break;
     default:
       break;
   }
@@ -425,9 +477,9 @@ gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_MAX_LEVEL:
       GTK_VALUE_INT (*arg) = queue->max_buffers;
       break;
-    case ARG_BLOCK:
-      GTK_VALUE_BOOL (*arg) = queue->block;
-      break;
+//    case ARG_BLOCK:
+//      GTK_VALUE_BOOL (*arg) = queue->block;
+//      break;
     default:
       arg->type = GTK_TYPE_INVALID;
       break;
