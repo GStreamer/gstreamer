@@ -1169,6 +1169,7 @@ libs/getbits/Makefile
 libs/putbits/Makefile
 libs/idct/Makefile
 libs/audio/Makefile
+libs/control/Makefile
 plugins/Makefile
 plugins/a52dec/Makefile
 plugins/aasink/Makefile

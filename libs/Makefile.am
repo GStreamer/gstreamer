@@ -1,4 +1,4 @@
 
-SUBDIRS = riff getbits putbits idct audio 
+SUBDIRS = riff getbits putbits idct audio control
 
-DIST_SUBDIRS = riff getbits putbits audio idct
+DIST_SUBDIRS = riff getbits putbits audio idct control
