@@ -28,6 +28,8 @@
 /* Object header */
 #include "ximagesink.h"
 
+static void gst_ximagesink_buffer_free (GstBuffer *buffer);
+
 /* ElementFactory information */
 static GstElementDetails gst_ximagesink_details = GST_ELEMENT_DETAILS (
   "Video sink",
@@ -729,7 +731,7 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
   
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
-  if (GST_BUFFER_PRIVATE (buf))
+  if (GST_BUFFER_FREE_DATA_FUNC (buf) == gst_ximagesink_buffer_free)
     {
       gst_ximagesink_ximage_put (ximagesink, GST_BUFFER_PRIVATE (buf));
     }
