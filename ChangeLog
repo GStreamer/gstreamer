@@ -1,3 +1,10 @@
+2004-01-28  Julien MOUTTE  <julien@moutte.net>
+
+	* gst-libs/gst/play/gstplay.c: (gst_play_seek_to_time): seek on video
+	sink element first.
+	* gst/videoscale/gstvideoscale.c:
+	(gst_videoscale_handle_src_event): Fixing src event handler.
+
 2004-01-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_class_init), (gst_v4lsrc_init),
