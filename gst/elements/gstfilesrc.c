@@ -141,6 +141,7 @@ enum {
   ARG_BLOCKSIZE,
   ARG_OFFSET,
   ARG_MAPSIZE,
+  ARG_TOUCH,
 };
 
 
@@ -209,6 +210,9 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAPSIZE,
     g_param_spec_ulong("mmapsize","mmap() Block Size","Size in bytes of mmap()d regions",
                        0,G_MAXULONG,4*1048576,G_PARAM_READWRITE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TOUCH,
+    g_param_spec_boolean("touch","Touch read data","Touch data to force disk read before push()",
+                         TRUE,G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_filesrc_set_property;
   gobject_class->get_property = gst_filesrc_get_property;
@@ -294,6 +298,9 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       else
         GST_INFO(0, "invalid mapsize, must a multiple of pagesize, which is %d\n",src->pagesize);
       break;
+    case ARG_TOUCH:
+      src->touch = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -327,6 +334,9 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       break;
     case ARG_MAPSIZE:
       g_value_set_ulong (value, src->mapsize);
+      break;
+    case ARG_TOUCH:
+      g_value_set_boolean (value, src->touch);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
