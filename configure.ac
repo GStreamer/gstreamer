@@ -96,9 +96,11 @@ HAVE_BROKEN=yes,disabled,
 [  
   AC_MSG_WARN(building broken plugins)
   USE_VGA="yes"
+  USE_XMMS="yes"
   dnl AC_MSG_NOTICE(actually there are no broken plugins at the moment)
 ],[
   USE_VGA="no"
+  USE_XMMS="no"
   AC_MSG_NOTICE(not building broken plugins)
 ])
 
@@ -293,8 +295,6 @@ GST_PLUGINS_ALL="\
         passthrough playondemand rtjpeg silence sine\
         smooth smoothwave spectrum speed stereo stereomono\
         synaesthesia udp videoscale volenv volume vumeter wavparse y4m"
-
-GST_PLUGINS_ALL=""
 
 AC_SUBST(GST_PLUGINS_ALL)
 
@@ -999,63 +999,51 @@ dnl components/bonobo-gstmediaplay/Makefile
 dnl someone should fix this test/misc/Makefile
 dnl wtay fix this: testsuite/threads/Makefile
 dnl testsuite/refcounting/Makefile
-dnl libs/Makefile
-dnl libs/riff/Makefile
-dnl libs/getbits/Makefile
-dnl libs/putbits/Makefile
-dnl libs/idct/Makefile
-dnl libs/audio/Makefile
-dnl libs/bytestream/Makefile
-dnl libs/control/Makefile
-dnl libs/resample/Makefile
 dnl stamp.h
 dnl echo "$infomessages", infomessages="$infomessages"
-PLUGIN_GST_MAKEFILES="\
-gst/ac3parse/Makefile \
-gst/adder/Makefile \
-gst/audioscale/Makefile \
-gst/auparse/Makefile \
-gst/avi/Makefile \
-gst/chart/Makefile \
-gst/cutter/Makefile \
-gst/deinterlace/Makefile \
-gst/flx/Makefile \
-gst/intfloat/Makefile \
-gst/law/Makefile \
-gst/level/Makefile \
-gst/median/Makefile \
-gst/mpeg1enc/Makefile \
-gst/mpeg1sys/Makefile \
-gst/mpeg2enc/Makefile \
-gst/mpeg2sub/Makefile \
-gst/mpegaudio/Makefile \
-gst/mpegaudioparse/Makefile \
-gst/mpegstream/Makefile \
-gst/mpegtypes/Makefile \
-gst/passthrough/Makefile \
-gst/playondemand/Makefile \
-gst/rtjpeg/Makefile \
-gst/silence/Makefile \
-gst/sine/Makefile \
-gst/smooth/Makefile \
-gst/smoothwave/Makefile \
-gst/spectrum/Makefile \
-gst/speed/Makefile \
-gst/stereo/Makefile \
-gst/stereomono/Makefile \
-gst/synaesthesia/Makefile \
-gst/udp/Makefile \
-gst/videoscale/Makefile \
-gst/volenv/Makefile \
-gst/volume/Makefile \
-gst/vumeter/Makefile \
-gst/wavparse/Makefile \
-gst/y4m/Makefile"
-
-dnl $PLUGIN_GST_MAKEFILES
 AC_OUTPUT(
 Makefile
 gst/Makefile
+gst/ac3parse/Makefile
+gst/adder/Makefile
+gst/audioscale/Makefile
+gst/auparse/Makefile
+gst/avi/Makefile
+gst/chart/Makefile
+gst/cutter/Makefile
+gst/deinterlace/Makefile
+gst/flx/Makefile
+gst/intfloat/Makefile
+gst/law/Makefile
+gst/level/Makefile
+gst/median/Makefile
+gst/mpeg1enc/Makefile
+gst/mpeg1sys/Makefile
+gst/mpeg2enc/Makefile
+gst/mpeg2sub/Makefile
+gst/mpegaudio/Makefile
+gst/mpegaudioparse/Makefile
+gst/mpegstream/Makefile
+gst/mpegtypes/Makefile
+gst/passthrough/Makefile
+gst/playondemand/Makefile
+gst/rtjpeg/Makefile
+gst/silence/Makefile
+gst/sine/Makefile
+gst/smooth/Makefile
+gst/smoothwave/Makefile
+gst/spectrum/Makefile
+gst/speed/Makefile
+gst/stereo/Makefile
+gst/stereomono/Makefile
+gst/synaesthesia/Makefile
+gst/udp/Makefile
+gst/videoscale/Makefile
+gst/volenv/Makefile
+gst/volume/Makefile
+gst/vumeter/Makefile
+gst/wavparse/Makefile
+gst/y4m/Makefile
 sys/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
@@ -1097,6 +1085,7 @@ ext/xmms/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
+gst-libs/gst/idct/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
 gst-plugins.spec

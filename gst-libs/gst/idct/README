@@ -1,0 +1,48 @@
+This archive contains a quick & dirty implementation of the IEEE Standard
+1180-1990 accuracy test for inverse DCT.  It is not guaranteed to be
+correct ... but if you find any bugs, please let me know (by email to
+tgl@cs.cmu.edu).
+
+The test harness consists of the C program ieeetest.c and shell script
+doieee.  For comparison purposes I have also supplied a copy of jrevdct.c,
+the inverse DCT routine from release 4 of the Independent JPEG Group's
+free JPEG software.  (jrevdct.c is slightly modified from the IJG release
+so that it will compile without the IJG include files.)  jrevdct.c passes
+the 1180 test --- or at least, this program thinks so.  jrevdct.out is
+the output from a test run.
+
+Note that numerical results may vary somewhat across machines.  This appears
+to be mostly due to differing results from the cosine function.
+
+
+INSTALLATION:
+  Check the Makefile, change CC and CFLAGS if needed.  Then say "make".
+If your C compiler is non-ANSI, you may need to change includes and/or
+function headers.
+
+  To test a different IDCT routine, link with that routine instead of
+jrevdct.o.  You will need to modify dct.h and/or ieeetest.c if your
+routine's calling convention is not in-place modification of an array
+of 64 "short"s.
+
+
+USAGE:
+  The standard test procedure is
+	doieee ieeetest >outputfile
+Expect it to take a while (almost 80 minutes on my old 68030 box).
+Each of the six passes will emit a row of 100 dots as it runs.
+
+You can grep the output for the word FAILS if you just want to know
+yea or nay.
+
+
+LEGAL MUMBO-JUMBO:
+  I hereby release the test harness to the public domain.
+			Thomas G. Lane, 22 Nov 1993
+
+IMPORTANT: jrevdct.c is NOT public domain, but is copyrighted free software
+(not the same thing at all).  It is subject to IJG's distribution terms, which
+primarily state that if you incorporate it into a program you must acknowledge
+IJG's contribution in your program documentation.  For more details and the
+complete IJG software, see the IJG FTP archive at ftp.uu.net, in directory
+/graphics/jpeg.
