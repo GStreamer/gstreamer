@@ -170,6 +170,69 @@ Name for in the element list: "mixer". Gstaudio provides wrapper
 functions for each of the class' virtual functions. Possibly also
 some macros for GST_MIXER_CHANNEL_HAS_FLAG () or _get_channel ().
 
+How to register these? Let's say that we use osssrc as an example.
+
+typedef struct _GstOssMixer {
+  GstMixer mixer;
+
+  GstElement *element;
+
+  [.. more? ..]
+} GstOssMixer;
+
+typedef struct _GstOssMixerClass {
+  GstMixerClass klass;
+} GstOssMixerClass;
+
+[..]
+
+static void
+gst_ossmixer_class_init (GstOssMixerClass *klass)
+{
+  GstMixerClass *mix_klass = (GstMixerClass *) klass;
+
+  [.. set virtual functions to their oss/mixer counterparts here ..]
+}
+
+[..]
+
+static void
+gst_osssrc_init (GstOssSrc *osssrc)
+{
+[..]
+  gst_element_register_interface (GST_ELEMENT (osssrc),
+				  "mixer",
+				  gst_osssrc_get_interface);
+[..]
+}
+
+static GstInterface *
+gst_osssrc_get_interface (GstElement  *element,
+			  const gchar *name)
+{
+  GstOssMixer *mixer;
+
+  g_assert (strcmp (name, "mixer") == 0);
+
+  mixer = g_object_new (GST_TYPE_OSS_MIXER, NULL);
+  mixer->element = element;
+[..]
+
+  return (GstInterface *) mixer;
+}
+
+And yes, that's quite a piece of code, but you didn't expect
+that we could make a mixer in five lines of code, did you?
+However, applications now *can*!
+
+There might be some refcounting issues here: get_interface ()
+should ref () the element, and we should set a mixer dispose
+handler to unref () it again. Then, too, we could add a pointer
+to the file descriptor in the osssrc/osssink, too, and we'd
+have full access to the device.
+However, that's implementation. Let's first worry about general
+design.
+
 4b) overlay
 -----------
 Overlay is used in both in- and output, too. Think of v4lsrc,
@@ -215,8 +278,10 @@ typedef struct _GstOverlayClass {
 				   GstOverlayNorm    *norm);
   const gchar * (* get_norm)      (GstOverlay        *overlay);
   void          (* set_xwindowid) (GstOverlay        *overlay,
-			           XWindowID          xid);
+			           XID                xid);
 } GstOverlayClass;
+
+That's all!
 
 4c) user input
 --------------
