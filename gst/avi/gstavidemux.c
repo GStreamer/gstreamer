@@ -660,6 +660,10 @@ gst_avidemux_process_chunk (GstAviDemux *avi_demux, guint64 filepos,
     return gst_avidemux_handle_event (avi_demux);
   }
 
+  /* we are running in an infinite loop, we need to _yield 
+   * from time to time */
+  gst_element_yield (GST_ELEMENT (avi_demux));
+
   return TRUE;
 }
 
