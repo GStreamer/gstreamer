@@ -8,7 +8,7 @@ endif
 SUBDIRS = manual fwg gst libs $(SUBDIRS_PLUGINS) devhelp
 DIST_SUBDIRS = manual fwg gst libs plugins xsl devhelp
 
-EXTRA_DIST = random slides manuals.mak
+EXTRA_DIST = slides manuals.mak
 
 dist-hook:
 	$(RM) -rf $(distdir)/random/CVS
