@@ -516,10 +516,11 @@ gst_qtdemux_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_PAUSED:
       qtdemux->bs = gst_bytestream_new (qtdemux->sinkpad);
       qtdemux->state = QTDEMUX_STATE_HEADER;
+      GST_DEBUG ("new bytestream");
+      break;
+    case GST_STATE_READY_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
@@ -531,7 +532,6 @@ gst_qtdemux_change_state (GstElement * element)
       qtdemux->last_ts = GST_CLOCK_TIME_NONE;
       qtdemux->need_discont = FALSE;
       qtdemux->need_flush = FALSE;
-      gst_bytestream_destroy (qtdemux->bs);
       if (qtdemux->tag_list) {
         gst_tag_list_free (qtdemux->tag_list);
         qtdemux->tag_list = NULL;
@@ -546,6 +546,7 @@ gst_qtdemux_change_state (GstElement * element)
       break;
     }
     case GST_STATE_READY_TO_NULL:
+      gst_bytestream_destroy (qtdemux->bs);
       break;
     default:
       break;
@@ -633,6 +634,7 @@ gst_qtdemux_loop_header (GstElement * element)
               break;
             }
           } while (1);
+          qtdemux->offset += length;
 
           qtdemux_parse_moov (qtdemux, GST_BUFFER_DATA (moov), length);
           if (1) {
@@ -654,11 +656,18 @@ gst_qtdemux_loop_header (GstElement * element)
       }
       ret = gst_bytestream_seek (qtdemux->bs, cur_offset + length,
           GST_SEEK_METHOD_SET);
-      if (!ret) {
-        g_warning ("seek failed");
+      GST_DEBUG ("seek returned %d", ret);
+      if (ret == FALSE) {
+        length = cur_offset + length;
+        cur_offset = qtdemux->offset;
+        length -= cur_offset;
+        if (gst_bytestream_flush (qtdemux->bs, length) == FALSE) {
+          if (!gst_qtdemux_handle_sink_event (qtdemux)) {
+            return;
+          }
+        }
       }
       qtdemux->offset = cur_offset + length;
-      GST_DEBUG ("seek returned %d", ret);
       break;
     }
     case QTDEMUX_STATE_SEEKING_EOS:
@@ -707,8 +716,8 @@ gst_qtdemux_loop_header (GstElement * element)
               GST_DATA (gst_event_new (GST_EVENT_EOS)));
         }
         ret = gst_bytestream_seek (qtdemux->bs, 0, GST_SEEK_METHOD_END);
-        if (!ret) {
-          g_warning ("seek failed");
+        if (ret == FALSE) {
+          gst_bytestream_flush (qtdemux->bs, 0xffffffff);
         }
         GST_DEBUG ("seek returned %d", ret);
 
@@ -728,16 +737,22 @@ gst_qtdemux_loop_header (GstElement * element)
 
       /* don't believe bytestream */
       //cur_offset = gst_bytestream_tell (qtdemux->bs);
+      cur_offset = qtdemux->offset;
 
       if (offset != cur_offset) {
         GST_DEBUG ("seeking to offset %d (currently at %d)", offset,
             cur_offset);
         ret = gst_bytestream_seek (qtdemux->bs, offset, GST_SEEK_METHOD_SET);
-        if (!ret) {
-          g_warning ("seek failed");
-        }
-        qtdemux->offset = offset;
         GST_DEBUG ("seek returned %d", ret);
+        if (ret == FALSE && offset > cur_offset) {
+          if (gst_bytestream_flush (qtdemux->bs, offset - cur_offset) == FALSE) {
+            if (!gst_qtdemux_handle_sink_event (qtdemux)) {
+              return;
+            }
+          }
+        } else if (ret == FALSE && offset < cur_offset)
+          GST_ERROR ("cannot flush backwards");
+        qtdemux->offset = offset;
         return;
       }
 
@@ -754,6 +769,7 @@ gst_qtdemux_loop_header (GstElement * element)
           break;
         }
       } while (TRUE);
+      qtdemux->offset += size;
 
       if (buf) {
         /* hum... FIXME changing framerate breaks horribly, better set
