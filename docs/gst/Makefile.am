@@ -83,6 +83,7 @@ IGNORE_HFILES= \
 	gstfilesink.h \
 	gstfilesrc.h \
 	gstidentity.h \
+	gstlibxmlregistry.h \
 	gstmd5sink.h \
 	gstmultifilesrc.h \
 	gstmultifdsink.h \

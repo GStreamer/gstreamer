@@ -1,3 +1,8 @@
+2005-03-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/gst/Makefile.am:
+	  Fix buildbot.
+
 2005-03-09  Jamey Hicks  <jamey.hicks@hp.com>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
