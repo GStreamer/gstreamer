@@ -157,6 +157,10 @@ dnl check architecture
 GST_ARCH()
 
 dnl check for gconftool-2
+
+dnl this macro defines an am conditional, so it needs to be run always
+AM_GCONF_SOURCE_2
+
 translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
 GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
   AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
@@ -164,7 +168,6 @@ GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
     AC_MSG_WARN(Not installing GConf schemas)
     HAVE_GCONFTOOL="no"
   else
-    AM_GCONF_SOURCE_2
     HAVE_GCONFTOOL="yes"
   fi
   AC_SUBST(HAVE_GCONFTOOL)
