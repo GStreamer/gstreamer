@@ -195,6 +195,11 @@ GType			gst_element_get_type		(void);
 void			gst_element_set_loop_function	(GstElement *element,
 							 GstElementLoopFunction loop);
 
+#define			gst_element_get_name(elem)	gst_object_get_name(GST_OBJECT(elem))
+#define			gst_element_set_name(element,name)	gst_object_set_name(GST_OBJECT(elem),name)
+#define			gst_element_get_parent(elem)	gst_object_get_parent(GST_OBJECT(elem))
+#define			gst_element_set_parent(element,parent)	gst_object_set_parent(GST_OBJECT(elem),parent)
+
 /* threadsafe versions of their g_object_* counterparts */
 void	    		gst_element_set			(GstElement *element, const gchar *first_property_name, ...);
 void        		gst_element_get			(GstElement *element, const gchar *first_property_name, ...);
@@ -210,12 +215,6 @@ void			gst_element_get_property	(GstElement *element, const gchar *property_name
 void			gst_element_enable_threadsafe_properties	(GstElement *element);
 void			gst_element_disable_threadsafe_properties	(GstElement *element);
 void			gst_element_set_pending_properties		(GstElement *element);
-
-void                    gst_element_set_name            (GstElement *element, const gchar *name);
-const gchar*            gst_element_get_name            (GstElement *element);
-
-void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
-GstObject*              gst_element_get_parent          (GstElement *element);
 
 /* clocking */
 gboolean		gst_element_requires_clock	(GstElement *element);
