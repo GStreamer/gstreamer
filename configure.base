@@ -1277,6 +1277,8 @@ plugins/gsm/Makefile
 plugins/1394/Makefile
 plugins/sdlsink/Makefile
 plugins/dv/Makefile
+plugins/synthesis/Makefile
+plugins/synthesis/sinesrc/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile
