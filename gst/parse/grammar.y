@@ -76,12 +76,10 @@ __gst_parse_chain_new ()
 void
 __gst_parse_chain_free (chain_t *data)
 {
-  if (data) {
-    /* g_print ("FREEING CHAIN   (%3u): %p\n", __chains - 1, data); */
-    g_free (data);
-    g_return_if_fail (__chains > 0);
-    __chains--;
-  }
+  /* g_print ("FREEING CHAIN   (%3u): %p\n", __chains - 1, data); */
+  g_free (data);
+  g_return_if_fail (__chains > 0);
+  __chains--;
 }
 
 #endif /* __GST_PARSE_TRACE */
@@ -177,20 +175,14 @@ typedef struct {
     g_slist_free (assign); \
     res = chain; \
   } else { \
-    walk = chain->elements; \
-    while (walk) { \
+    for (walk = chain->elements; walk; walk = walk->next ) \
       gst_bin_add (bin, GST_ELEMENT (walk->data)); \
-      walk = walk->next; \
-    } \
     g_slist_free (chain->elements); \
     chain->elements = g_slist_prepend (NULL, bin); \
     res = chain; \
     /* set the properties now */ \
-    walk = assign; \
-    while (walk) { \
+    for (walk = assign; walk; walk = walk->next) \
       gst_parse_element_set ((gchar *) walk->data, GST_ELEMENT (bin), graph); \
-      walk = g_slist_next (walk); \
-    } \
     g_slist_free (assign); \
   } \
 }G_STMT_END
@@ -360,9 +352,8 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
   if (gst_element_is_locked_state (element) == lock)
     return;
   /* check if we have an unlocked peer */
-  while (walk) {
+  for (; walk; walk = walk->next) {
     pad = (GstPad *) GST_PAD_REALIZE (walk->data);
-    walk = walk->next;
     if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) &&
         !gst_element_is_locked_state (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
       unlocked_peer = TRUE;
@@ -388,9 +379,8 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
   
   /* check if there are other pads to (un)lock */
   walk = (GList *) gst_element_get_pad_list (element);
-  while (walk) {
+  for  (; walk; walk = walk->next) {
     pad = (GstPad *) GST_PAD_REALIZE (walk->data);
-    walk = walk->next;
     if (GST_PAD_IS_SRC (pad) && GST_PAD_PEER (pad)) {
       GstElement *next = GST_ELEMENT (GST_OBJECT_PARENT (GST_PAD_PEER (pad)));
       if (gst_element_is_locked_state (next) != lock)
@@ -428,7 +418,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
 {
   GList *templs = gst_element_get_pad_template_list (src);
 	 
-  while (templs) {
+  for (; templs; templs = templs->next) {
     GstPadTemplate *templ = (GstPadTemplate *) templs->data;
     if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
     {
@@ -451,7 +441,6 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
 					  G_CALLBACK (gst_parse_found_pad), data);
       return TRUE;
     }
-    templs = g_list_next (templs);
   }
   return FALSE;
 }
@@ -674,7 +663,8 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						$1->last = $2->last;
 						$1->back = $2->back;
 						$1->elements = g_slist_concat ($1->elements, $2->elements);
-						gst_parse_chain_free ($2);
+						if ($2)
+						  gst_parse_chain_free ($2);
 						$$ = $1;
 					      }
 	|	chain linklist		      { GSList *walk;
@@ -686,18 +676,16 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						    ((link_t *) $2->data)->src = $1->last;
 						  }						  
 						}
-						walk = $2;
-						while (walk) {
+						for (walk = $2; walk; walk = walk->next) {
 						  link_t *link = (link_t *) walk->data;
-						  walk = walk->next;
-						  if (!link->sink_name && walk) {
+						  if (!link->sink_name && walk->next) {
 						    ERROR (GST_PARSE_ERROR_LINK, _("link without sink element"));
 						    gst_parse_free_link (link);
 						  } else if (!link->src_name && !link->src) {
 						    ERROR (GST_PARSE_ERROR_LINK, _("link without source element"));
 						    gst_parse_free_link (link);
 						  } else {
-						    if (walk) {
+						    if (walk->next) {
 						      ((graph_t *) graph)->links = g_slist_prepend (((graph_t *) graph)->links, link);
 						    } else {
 						      $1->back = link;
@@ -850,26 +838,23 @@ _gst_parse_launch (const gchar *str, GError **error)
     g_slist_free (((chain_t *) g.chain)->elements);
     if (GST_IS_BIN (ret))
       bin = GST_BIN (ret);
+    gst_parse_chain_free (g.chain);
   } else {  
     /* put all elements in our bin */
     bin = GST_BIN (gst_element_factory_make ("pipeline", NULL));
     g_assert (bin);
-    walk = g.chain->elements;
-    while (walk) {
+    
+    for (walk = g.chain->elements; walk; walk = walk->next)
       gst_bin_add (bin, GST_ELEMENT (walk->data));
-      walk = g_slist_next (walk);  
-    }
+    
     g_slist_free (g.chain->elements);
     ret = GST_ELEMENT (bin);
+    gst_parse_chain_free (g.chain);
   }
-  gst_parse_chain_free (g.chain);
   
   /* remove links */
-  walk = g.links;
-  while (walk) {
+  for (walk = g.links; walk; walk = walk->next) {
     link_t *l = (link_t *) walk->data;
-    GstElement *sink;
-    walk = g_slist_next (walk);
     if (!l->src) {
       if (l->src_name) {
         if (bin) {
@@ -898,7 +883,6 @@ _gst_parse_launch (const gchar *str, GError **error)
         continue;
       }
     }
-    sink = l->sink;
     gst_parse_perform_link (l, &g);
   }
   g_slist_free (g.links);
@@ -917,20 +901,12 @@ error1:
   g_free (dstr);
   
   if (g.chain) {
-    walk = g.chain->elements;
-    while (walk) {
-      gst_object_unref (GST_OBJECT (walk->data));
-      walk = walk->next;
-    }
+    g_slist_foreach (g.chain->elements, (GFunc)gst_object_unref, NULL);
     g_slist_free (g.chain->elements);
+    gst_parse_chain_free (g.chain);
   }
-  gst_parse_chain_free (g.chain);
-  
-  walk = g.links;
-  while (walk) {
-    gst_parse_free_link ((link_t *) walk->data);
-    walk = walk->next;
-  }
+
+  g_slist_foreach (g.links, (GFunc)gst_parse_free_link, NULL);
   g_slist_free (g.links);
   
   g_assert (*error);

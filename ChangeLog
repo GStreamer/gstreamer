@@ -6,6 +6,11 @@
 
 2004-04-19  Johan Dahlin  <johan@gnome.org>
 
+	* gst/parse/grammar.y (__gst_parse_chain_free): Don't do null
+	checking here, do it before calling the function.
+	Clean up, use for loops instead of while loops while iterating
+	over lists.
+
 	* gst/autoplug/gstspider.c (gst_spider_request_new_pad): Fix typo
 	in debug message.
 	(gst_spider_create_and_plug): Improve debug message.
