@@ -1125,7 +1125,7 @@ dnl # Set up some more defines #
 dnl ############################
 
 dnl Set location of configuration dir.
-dnl AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
+AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
 AC_SUBST(GST_CONFIG_DIR)
 
 dnl Set location of windows dll dir.
