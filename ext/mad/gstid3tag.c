@@ -502,6 +502,16 @@ gst_mad_id3_to_tag_list(const struct id3_tag *tag)
 
 	      gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_COUNT, total, NULL);
 	    }
+	  } else if (strcmp(tag_name,GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
+	    if (*check == '/') {
+	      guint total;
+
+	      check++;
+	      total = strtoul (check, &check, 10);
+	      if (*check != '\0') break;
+
+	      gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, GST_TAG_ALBUM_VOLUME_COUNT, total, NULL);
+	    }
 	  }
 
 	  if (*check != '\0') break;		
