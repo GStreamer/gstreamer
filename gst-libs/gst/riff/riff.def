@@ -1,6 +1,7 @@
 EXPORTS
     gst_plugin_desc
     gst_riff_read_get_type
+    gst_riff_read_element_data
     gst_riff_create_video_template_caps
     gst_riff_create_video_caps
     gst_riff_create_video_caps_with_data
@@ -18,7 +19,9 @@ EXPORTS
     gst_riff_read_ascii
     gst_riff_read_strh
     gst_riff_read_strf_iavs
+    gst_riff_read_strf_auds
     gst_riff_read_strf_auds_with_data
     gst_riff_read_strf_vids_with_data
     gst_riff_peek_tag
     gst_riff_peek_list
+    gst_riff_peek_head

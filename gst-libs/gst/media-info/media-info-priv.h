@@ -45,6 +45,20 @@ static gboolean _gmi_debug = FALSE;
 #define GMI_DEBUG(format, args...) \
   { if (_gmi_debug) { g_print ( format , ## args ); }}
 
+#else 
+
+static inline void
+GMI_DEBUG (const char *format, ...)
+{
+  va_list varargs;
+
+  if (_gmi_debug) {
+    va_start (varargs, format);
+    g_vprintf ( format, varargs);
+    va_end (varargs);
+  }
+}
+
 #endif
 
 
