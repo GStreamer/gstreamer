@@ -29,6 +29,8 @@ version_check "autoconf" "$AUTOCONF autoconf autoconf-2.54 autoconf-2.53 autocon
               "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
 version_check "automake" "$AUTOMAKE automake automake-1.7 automake17 automake-1.6" \
               "ftp://ftp.gnu.org/pub/gnu/automake/" 1 6 || DIE=1
+version_check "autopoint" "autopoint" \
+              "ftp://ftp.gnu.org/pub/gnu/gettext/" 0 12 1 || DIE=1
 version_check "libtoolize" "libtoolize libtoolize14" \
               "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
 version_check "pkg-config" "" \
@@ -53,6 +55,15 @@ fi
 
 toplevel_check $srcfile
 
+# autopoint: first remove patch if necessary, then run autopoint, then reapply
+if test -f po/Makefile.in.in;
+then
+  patch -p0 -R < common/gettext.patch
+fi
+tool_run "$autopoint"
+patch -p0 < common/gettext.patch
+
+# aclocal
 if test -f acinclude.m4; then rm acinclude.m4; fi
 tool_run "$aclocal" "-I common/m4 $ACLOCAL_FLAGS"
 

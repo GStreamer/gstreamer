@@ -40,6 +40,7 @@
 
 #include "gsttypefindelement.h"
 #include "gst/gst_private.h"
+#include "gst/gst-i18n-lib.h"
 
 #include <gst/gsttypefind.h>
 #include <gst/gstutils.h>

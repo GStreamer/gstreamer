@@ -32,22 +32,26 @@ AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
-dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
+AC_SUBST(ACLOCAL_AMFLAGS, "-I m4")
 
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
 
-dnl AC_PROC_INTLTOOL([0.26])
-dnl AM_GNU_GETTEXT([external])
-ALL_LINGUAS="de es no nl"
+dnl the gettext stuff needed
+AM_GNU_GETTEXT_VERSION(0.12)
+AM_GNU_GETTEXT([external])
+
 GETTEXT_PACKAGE=gstreamer-$GST_VERSION_MAJOR.$GST_VERSION_MINOR
 AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],"$GETTEXT_PACKAGE",[gettext package name])
-AM_GLIB_GNU_GETTEXT
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
+                   [gettext package name])
 
-AM_GLIB_DEFINE_LOCALEDIR(GST_LOCALEDIR)
+dnl define LOCALEDIR in config.h
+AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
+AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
+                   [gettext locale dir])
+
 
 dnl decide on error flags
 AS_COMPILER_FLAG(-Wall,GST_ERROR="$GST_ERROR -Wall",GST_ERROR="$GST_ERROR")

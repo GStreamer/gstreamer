@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 #include "gst_private.h"
+#include "gst-i18n-lib.h"
 
 #include "gst.h"
 #include "gstqueue.h"
@@ -399,8 +400,9 @@ init_pre (void)
   _gst_debug_init();
 
 #ifdef ENABLE_NLS
-  bindtextdomain (GETTEXT_PACKAGE, GST_LOCALEDIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
 #endif /* ENABLE_NLS */
 
 #ifndef GST_DISABLE_REGISTRY

@@ -1,27 +1,27 @@
 # GStreamer translated strings
-# Copyright (C) 2003 GStreamer core team
+# Copyright (C) 2003,2004 GStreamer core team
 # This file is distributed under the same license as the GStreamer package.
-# David Schleef <ds@schleef.org>, 2003.
+# Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.7 0.7.0.1\n"
+"Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2004-01-13 12:03+0100\n"
-"PO-Revision-Date: 2003-10-08 15:36-0700\n"
-"Last-Translator: David Schleef <ds@schleef.org>\n"
-"Language-Team: Gnome Translators <i18n@gnome.org>\n"
+"PO-Revision-Date: 2004-01-13 12:03+0100\n"
+"Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
+"Language-Team: Dutch <nl@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: gst/gst.c:117
 msgid "Print the GStreamer version"
-msgstr "druck die GStreamer Version"
+msgstr "Druk de GStreamer versie af"
 
 #: gst/gst.c:118
 msgid "Make all warnings fatal"
-msgstr "macht alle Achtunge toedlich"
+msgstr "Maak alle waarschuwingen fataal"
 
 #: gst/gst.c:120
 msgid ""
@@ -37,11 +37,11 @@ msgstr ""
 
 #: gst/gst.c:122
 msgid "disable color debugging output"
-msgstr "abschalt Farbe in Fehlersucheausgabe"
+msgstr ""
 
 #: gst/gst.c:123
 msgid "disable debugging"
-msgstr "abschalt die Fehlersuche"
+msgstr ""
 
 #: gst/gst.c:124
 msgid "print available debug categories and exit"
@@ -87,67 +87,67 @@ msgstr ""
 
 #: gst/gsttag.c:61
 msgid "title"
-msgstr ""
+msgstr "titel"
 
 #: gst/gsttag.c:62
 msgid "commonly used title"
-msgstr ""
+msgstr "vaak gebruikte titel"
 
 #: gst/gsttag.c:66
 msgid "artist"
-msgstr ""
+msgstr "artiest"
 
 #: gst/gsttag.c:67
 msgid "person(s) responsible for the recording"
-msgstr ""
+msgstr "perso(o)n(en) die de opname gemaakt hebben"
 
 #: gst/gsttag.c:71
 msgid "album"
-msgstr ""
+msgstr "album"
 
 #: gst/gsttag.c:72
 msgid "album containing this data"
-msgstr ""
+msgstr "album waarop dit stuk staat"
 
 #: gst/gsttag.c:76
 msgid "date"
-msgstr ""
+msgstr "datum"
 
 #: gst/gsttag.c:77
 msgid "date the data was created (in Julian calendar days)"
-msgstr ""
+msgstr "datum waarop het stuk gemaakt is (in Juliaanse kalenderdagen)"
 
 #: gst/gsttag.c:81
 msgid "genre"
-msgstr ""
+msgstr "genre"
 
 #: gst/gsttag.c:82
 msgid "genre this data belongs to"
-msgstr ""
+msgstr "genre van het stuk"
 
 #: gst/gsttag.c:86
 msgid "comment"
-msgstr ""
+msgstr "commentaar"
 
 #: gst/gsttag.c:87
 msgid "free text commenting the data"
-msgstr ""
+msgstr "vrij te kiezen commentaartekst die het stuk beschrijft"
 
 #: gst/gsttag.c:91
 msgid "track number"
-msgstr ""
+msgstr "nummer"
 
 #: gst/gsttag.c:92
 msgid "track number inside a collection"
-msgstr ""
+msgstr "nummer van het stuk op een verzameling"
 
 #: gst/gsttag.c:96
 msgid "track count"
-msgstr ""
+msgstr "aantal nummers"
 
 #: gst/gsttag.c:97
 msgid "count of tracks inside collection this track belongs to"
-msgstr ""
+msgstr "aantal nummers van de verzameling waarop dit stuk staat"
 
 #: gst/gsttag.c:101
 msgid "location"
@@ -276,6 +276,3 @@ msgstr ""
 #: gst/elements/gsttypefindelement.c:158
 msgid "maximum"
 msgstr ""
-
-#~ msgid "This is a test\n"
-#~ msgstr "moo\n"
