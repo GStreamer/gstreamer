@@ -1526,6 +1526,7 @@ examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
 examples/indexing/Makefile
+examples/gstplay/Makefile
 examples/Makefile
 testsuite/spider/Makefile
 testsuite/alsa/Makefile
