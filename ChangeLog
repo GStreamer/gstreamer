@@ -1,6 +1,12 @@
 2004-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/vorbisenc.c: (raw_caps_factory),
+	(gst_vorbisenc_setup), (gst_vorbisenc_set_property):
+	  respect minimum bitrate; same could be done for max bitrate
+
+2004-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/vorbisenc.c: (raw_caps_factory),
 	(gst_vorbisenc_setup):
 	  fix sample rate range
 

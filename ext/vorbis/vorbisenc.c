@@ -93,6 +93,7 @@ gst_vorbisenc_get_formats (GstPad * pad)
 #define BITRATE_DEFAULT 	-1
 #define MIN_BITRATE_DEFAULT 	-1
 #define QUALITY_DEFAULT 	0.3
+#define LOWEST_BITRATE 8000     /* lowest allowed for a 8 kHz stream */
 
 static void gst_vorbisenc_base_init (gpointer g_class);
 static void gst_vorbisenc_class_init (VorbisEncClass * klass);
@@ -961,6 +962,11 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id,
       gboolean old_value = vorbisenc->managed;
 
       vorbisenc->max_bitrate = g_value_get_int (value);
+      if (vorbisenc->max_bitrate >= 0
+          && vorbisenc->max_bitrate < LOWEST_BITRATE) {
+        g_warning ("Lowest allowed bitrate is %d", LOWEST_BITRATE);
+        vorbisenc->max_bitrate = LOWEST_BITRATE;
+      }
       if (vorbisenc->min_bitrate > 0 && vorbisenc->max_bitrate > 0)
         vorbisenc->managed = TRUE;
       else
@@ -972,12 +978,21 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id,
     }
     case ARG_BITRATE:
       vorbisenc->bitrate = g_value_get_int (value);
+      if (vorbisenc->bitrate >= 0 && vorbisenc->bitrate < LOWEST_BITRATE) {
+        g_warning ("Lowest allowed bitrate is %d", LOWEST_BITRATE);
+        vorbisenc->bitrate = LOWEST_BITRATE;
+      }
       break;
     case ARG_MIN_BITRATE:
     {
       gboolean old_value = vorbisenc->managed;
 
       vorbisenc->min_bitrate = g_value_get_int (value);
+      if (vorbisenc->min_bitrate >= 0
+          && vorbisenc->min_bitrate < LOWEST_BITRATE) {
+        g_warning ("Lowest allowed bitrate is %d", LOWEST_BITRATE);
+        vorbisenc->min_bitrate = LOWEST_BITRATE;
+      }
       if (vorbisenc->min_bitrate > 0 && vorbisenc->max_bitrate > 0)
         vorbisenc->managed = TRUE;
       else
