@@ -21,10 +21,6 @@
 
 #include <string.h>
 
-#ifdef __MMX__
-#include <mmx.h>
-#endif
-
 #define GST_TYPE_VIDEO_CROP \
   (gst_video_crop_get_type())
 #define GST_VIDEO_CROP(obj) \
