@@ -1,2 +1,2 @@
-libgstfloatcastincludedir = $(includedir)/gst/floatcast
+libgstfloatcastincludedir = $(includedir)/@PACKAGE@-@VERSION@/gst/floatcast
 libgstfloatcastinclude_HEADERS = floatcast.h

@@ -4,7 +4,7 @@ library_LTLIBRARIES = libgstriff.la
 
 libgstriff_la_SOURCES = riffparse.c riffencode.c riffutil.c riff.c
 
-libgstriffincludedir = $(includedir)/gst/riff
+libgstriffincludedir = $(includedir)/@PACKAGE@-@VERSION@/gst/riff
 libgstriffinclude_HEADERS = riff.h
 
 libgstriff_la_LIBADD =
