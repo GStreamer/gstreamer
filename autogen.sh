@@ -67,10 +67,10 @@ debug "automake: $automake"
 tool_run "$automake" "-a -c"
 
 echo
-echo "+ running autogen.sh in libs/ext/cothreads..."
+echo "+ running autogen.sh --noconfigure --nocheck $@ in libs/ext/cothreads..."
 pushd libs/ext/cothreads > /dev/null
 echo
-./autogen.sh --noconfigure --nocheck || {
+./autogen.sh --noconfigure --nocheck $@ || {
         echo "autogen in cothreads failed."
         exit 1
 }
