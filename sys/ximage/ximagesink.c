@@ -588,6 +588,11 @@ gst_ximagesink_sinkconnect (GstPad *pad, const GstCaps *caps)
     ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink,
                                              GST_VIDEOSINK_WIDTH (ximagesink),
                                              GST_VIDEOSINK_HEIGHT (ximagesink));
+  else
+    XResizeWindow (ximagesink->xcontext->disp,
+		   ximagesink->xwindow->win,
+		   GST_VIDEOSINK_WIDTH (ximagesink),
+		   GST_VIDEOSINK_HEIGHT (ximagesink));
   
   if ( (ximagesink->ximage) &&
        ( (GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||

@@ -1084,7 +1084,7 @@ GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
     dnl libmpeg2enc was first included in mjpegtools-1.6.2-rc3 (1.6.1.92)
     dnl since many distros include mjpegtools specifically without mplex
     dnl and mpeg2enc, we check for mpeg2enc on its own, too.
-    PKG_CHECK_MODULES(MPEG2ENC, mjpegtools >= 1.6.1.92, [
+    PKG_CHECK_MODULES(MPEG2ENC, mjpegtools >= 1.6.1.93, [
       dnl switch over to c++ to test things
       AC_LANG_CPLUSPLUS
       OLD_CPPFLAGS="$CPPFLAGS"
@@ -1123,7 +1123,61 @@ main (int   argc,
 
 dnl *** mplex ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPLEX, true)
-GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [HAVE_MPLEX=$HAVE_CXX])
+GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
+  HAVE_MPLEX="no"
+  dnl we require a c++ compiler for this one
+  if [ test x$HAVE_CXX = xyes ]; then
+    dnl libmplex was first included in mjpegtools-1.6.2-rc4 (1.6.1.93)
+    dnl since many distros include mjpegtools specifically without mplex
+    dnl and mpeg2enc, we check for mplex on its own, too.
+    PKG_CHECK_MODULES(MPLEX, mjpegtools >= 1.6.1.93, [
+      dnl switch over to c++ to test things
+      AC_LANG_CPLUSPLUS
+      OLD_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $MPLEX_CFLAGS"
+      AC_CHECK_HEADER(interact.hpp, [
+        MPLEX_LIBS="$MPLEX_LIBS -lmplex2 -lm"
+        OLD_LIBS="$LIBS"
+        LIBS="$LIBS $MPLEX_LIBS"
+        AC_MSG_CHECKING([for valid mplex objects])
+        AC_TRY_RUN([
+#include <interact.hpp>
+#include <outputstrm.hpp>
+#include <multiplexor.hpp>
+
+int
+main (int   argc,
+      char *argv[])
+{
+  class TestOutputStream : public OutputStream {
+  public:
+    TestOutputStream () : OutputStream () { }
+    void Write (uint8_t *a, unsigned int b) { }
+    void NextSegment () { }
+    off_t SegmentSize () { }
+    void Close () { }
+    int Open () { }
+  };
+  MultiplexJob *job = new MultiplexJob ();
+  vector<IBitStream *> inputs;
+  job->SetupInputStreams (inputs);
+  TestOutputStream *out = new TestOutputStream ();
+  Multiplexor mux (*job, *out);
+  return 0;
+}
+        ],[
+          HAVE_MPLEX="yes"
+          AC_SUBST(MPLEX_CFLAGS)
+          AC_SUBST(MPLEX_LIBS)
+          AC_MSG_RESULT(yes)
+        ], AC_MSG_RESULT(no))
+        LIBS="$OLD_LIBS"
+      ])
+      CPPFLAGS="$OLD_CPPFLAGS"
+      AC_LANG_C
+    ], HAVE_MPLEX="no")
+  fi
+])
 
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
@@ -1588,7 +1642,6 @@ gst-libs/gst/xoverlay/Makefile
 gst-libs/gst/xwindowlistener/Makefile
 gst-libs/ext/Makefile
 gst-libs/ext/ffmpeg/Makefile
-gst-libs/ext/mplex/Makefile
 examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
