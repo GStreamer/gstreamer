@@ -317,12 +317,12 @@ dnl Check for libglade with gnome support; no libglade for glib2.0
 HAVE_LIBGLADE_GNOME="no"
 if test x$USE_GLIB2 = xyes; then
   AC_MSG_WARN(libglade disabled for glib2.0)
-  PKG_CHECK_MODULES(LIBGLADE_GNOME, libglade-2.0 libgnomeui-2.0, HAVE_LIBGLADE_GNOME=yes, HAVE_LIBGLADE_GNOME=no)
-  if test x$HAVE_LIBGLADE_GNOME = xno; then
-    AC_MSG_WARN(Couldn't find libglade-2.0 - Can't build gstplay)
+dnl  PKG_CHECK_MODULES(LIBGLADE_GNOME, libglade-2.0 libgnomeui-2.0, HAVE_LIBGLADE_GNOME=yes, HAVE_LIBGLADE_GNOME=no)
+dnl  if test x$HAVE_LIBGLADE_GNOME = xno; then
+dnl    AC_MSG_WARN(Couldn't find libglade-2.0 - Can't build gstplay)
     LIBGLADE_GNOME_LIBS=
     LIBGLADE_GNOME_CFLAGS=
-  fi;
+dnl  fi;
 else
   AM_PATH_LIBGLADE(HAVE_LIBGLADE_GNOME="yes", HAVE_LIBGLADE_GNOME="no", gnome)
   if test x$HAVE_LIBGLADE_GNOME = xno; then
