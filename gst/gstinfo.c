@@ -508,11 +508,11 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   obj = object ? gst_debug_print_object (object) : g_strdup ("");
 
   g_get_current_time (&now);
-  g_printerr ("%s (%10ld:%06ld) %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
-      gst_debug_level_get_name (level),
-      now.tv_sec, now.tv_usec,
-      color, gst_debug_category_get_name (category), clear,
-      pidcolor, pid, clear,
+  g_printerr ("%s (%p - %" GST_TIME_FORMAT
+      ") %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
+      gst_debug_level_get_name (level), g_thread_self (),
+      GST_TIME_ARGS (GST_TIMEVAL_TO_TIME (now)), color,
+      gst_debug_category_get_name (category), clear, pidcolor, pid, clear,
       color, file, line, function, obj, clear, gst_debug_message_get (message));
 
   g_free (color);

@@ -1,3 +1,21 @@
+2004-07-08  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_chain):
+	  extra debugging
+	* gst/gstevent.h:
+	* gst/gstinfo.c: (gst_debug_log_default):
+	  print time nicely.  add thread pointer until someone figures out
+	  a completely portable way of getting at thread id's.
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_link_try),
+	(_invent_event), (gst_pad_pull), (gst_pad_event_default_dispatch),
+	(gst_pad_call_chain_function):
+	  extra debugging
+	* gst/schedulers/gstoptimalscheduler.c:
+	(get_group_schedule_function), (loop_group_schedule_function),
+	(gst_opt_scheduler_loop_wrapper), (gst_opt_scheduler_get_wrapper),
+	(pad_clear_queued), (gst_opt_scheduler_iterate):
+	  rename BUFPEN and friends to DATAPEN since that's what they are.
+
 2004-07-07  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_chain):

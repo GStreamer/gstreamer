@@ -182,6 +182,7 @@ gst_spider_identity_chain (GstPad * pad, GstBuffer * buf)
   ident = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
 
   if (GST_IS_EVENT (buf)) {
+    GST_DEBUG_OBJECT (ident, "spider identity received event %p", buf);
     /* start hack for current event stuff here */
     /* check for unlinked elements and send them the EOS event, too */
     if (GST_EVENT_TYPE (GST_EVENT (buf)) == GST_EVENT_EOS) {
@@ -193,15 +194,21 @@ gst_spider_identity_chain (GstPad * pad, GstBuffer * buf)
 
         list = g_list_next (list);
         if (conn->current != (GstElement *) conn->src) {
-          GST_DEBUG ("sending EOS to unconnected element %s from %s",
-              GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (ident));
-          gst_pad_push (conn->src->src,
-              GST_DATA (GST_BUFFER (gst_event_new (GST_EVENT_EOS))));
+          GstEvent *event;
+
+          event = gst_event_new (GST_EVENT_EOS);
+          GST_DEBUG_OBJECT (ident,
+              "sending EOS event %p to unconnected element %s from %s",
+              event, GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (ident));
+          gst_pad_push (conn->src->src, GST_DATA (event));
           gst_element_set_eos (GST_ELEMENT (conn->src));
         }
       }
     }
     /* end hack for current event stuff here */
+    GST_DEBUG_OBJECT (ident,
+        "calling default handler for event %p on pad %s:%s",
+        buf, GST_DEBUG_PAD_NAME (pad));
 
     gst_pad_event_default (pad, GST_EVENT (buf));
     return;

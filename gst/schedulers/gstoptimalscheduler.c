@@ -39,8 +39,8 @@ GST_DEBUG_CATEGORY_STATIC (debug_scheduler);
 #define GST_ELEMENT_SCHED_CONTEXT(elem)		((GstOptSchedulerCtx*) (GST_ELEMENT (elem)->sched_private))
 #define GST_ELEMENT_SCHED_GROUP(elem)		(GST_ELEMENT_SCHED_CONTEXT (elem)->group)
 /* need this first macro to not run into lvalue casts */
-#define GST_PAD_BUFPEN(pad)			(GST_REAL_PAD(pad)->sched_private)
-#define GST_PAD_BUFLIST(pad)            	((GList*) GST_PAD_BUFPEN(pad))
+#define GST_PAD_DATAPEN(pad)			(GST_REAL_PAD(pad)->sched_private)
+#define GST_PAD_DATALIST(pad)            	((GList*) GST_PAD_DATAPEN(pad))
 
 #define GST_ELEMENT_COTHREAD_STOPPING			GST_ELEMENT_SCHEDULER_PRIVATE1
 #define GST_ELEMENT_IS_COTHREAD_STOPPING(element)	GST_FLAG_IS_SET((element), GST_ELEMENT_COTHREAD_STOPPING)
@@ -651,7 +651,7 @@ merge_chains (GstOptSchedulerChain * chain1, GstOptSchedulerChain * chain2)
 }
 
 /* sorts the group list so that terminal sinks come first -- prevents pileup of
- * buffers in bufpens */
+ * datas in datapens */
 static void
 sort_chain (GstOptSchedulerChain * chain)
 {
@@ -1245,6 +1245,7 @@ get_group_schedule_function (int argc, char *argv[])
     data = gst_pad_call_get_function (pad);
     if (data) {
       if (GST_EVENT_IS_INTERRUPT (data)) {
+        GST_DEBUG ("unreffing interrupt event %p", data);
         gst_event_unref (GST_EVENT (data));
         break;
       }
@@ -1279,7 +1280,7 @@ loop_group_schedule_function (int argc, char *argv[])
   else
     group_error_handler (group);
 
-  GST_LOG ("loopfunc ended of element %s in group %p",
+  GST_LOG ("returned from loopfunc of element %s in group %p",
       GST_ELEMENT_NAME (entry), group);
 
   group->flags &= ~GST_OPT_SCHEDULER_GROUP_RUNNING;
@@ -1303,7 +1304,7 @@ unknown_group_schedule_function (int argc, char *argv[])
 
 /* this function is called when the first element of a chain-loop or a loop-loop
  * link performs a push to the loop element. We then schedule the
- * group with the loop-based element until the bufpen is empty */
+ * group with the loop-based element until the datapen is empty */
 static void
 gst_opt_scheduler_loop_wrapper (GstPad * sinkpad, GstData * data)
 {
@@ -1318,19 +1319,19 @@ gst_opt_scheduler_loop_wrapper (GstPad * sinkpad, GstData * data)
   GST_LOG ("chain handler for loop-based pad %" GST_PTR_FORMAT, sinkpad);
 
 #ifdef USE_COTHREADS
-  if (GST_PAD_BUFLIST (peer)) {
+  if (GST_PAD_DATALIST (peer)) {
     g_warning ("deadlock detected, disabling group %p", group);
     group_error_handler (group);
   } else {
-    GST_LOG ("queueing data %p on %s:%s's bufpen", data,
+    GST_LOG ("queueing data %p on %s:%s's datapen", data,
         GST_DEBUG_PAD_NAME (peer));
-    GST_PAD_BUFPEN (peer) = g_list_append (GST_PAD_BUFLIST (peer), data);
+    GST_PAD_DATAPEN (peer) = g_list_append (GST_PAD_DATALIST (peer), data);
     schedule_group (group);
   }
 #else
-  GST_LOG ("queueing data %p on %s:%s's bufpen", data,
+  GST_LOG ("queueing data %p on %s:%s's datapen", data,
       GST_DEBUG_PAD_NAME (peer));
-  GST_PAD_BUFPEN (peer) = g_list_append (GST_PAD_BUFLIST (peer), data);
+  GST_PAD_DATAPEN (peer) = g_list_append (GST_PAD_DATALIST (peer), data);
   if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
     GST_LOG ("adding group %p to runqueue", group);
     if (!g_list_find (osched->runqueue, group)) {
@@ -1340,13 +1341,13 @@ gst_opt_scheduler_loop_wrapper (GstPad * sinkpad, GstData * data)
   }
 #endif
 
-  GST_LOG ("%d buffers left on %s:%s's bufpen after chain handler",
-      g_list_length (GST_PAD_BUFLIST (peer)), GST_DEBUG_PAD_NAME (peer));
+  GST_LOG ("%d datas left on %s:%s's datapen after chain handler",
+      g_list_length (GST_PAD_DATALIST (peer)), GST_DEBUG_PAD_NAME (peer));
 }
 
 /* this function is called by a loop based element that performs a
- * pull on a sinkpad. We schedule the peer group until the bufpen
- * is filled with the buffer so that this function  can return */
+ * pull on a sinkpad. We schedule the peer group until the datapen
+ * is filled with the data so that this function can return */
 static GstData *
 gst_opt_scheduler_get_wrapper (GstPad * srcpad)
 {
@@ -1357,10 +1358,10 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
 
   GST_LOG ("get handler for %" GST_PTR_FORMAT, srcpad);
 
-  /* first try to grab a queued buffer */
-  if (GST_PAD_BUFLIST (srcpad)) {
-    data = GST_PAD_BUFLIST (srcpad)->data;
-    GST_PAD_BUFPEN (srcpad) = g_list_remove (GST_PAD_BUFLIST (srcpad), data);
+  /* first try to grab a queued data */
+  if (GST_PAD_DATALIST (srcpad)) {
+    data = GST_PAD_DATALIST (srcpad)->data;
+    GST_PAD_DATAPEN (srcpad) = g_list_remove (GST_PAD_DATALIST (srcpad), data);
 
     GST_LOG ("returning popped queued data %p", data);
 
@@ -1374,7 +1375,7 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
   disabled = FALSE;
 
   do {
-    GST_LOG ("scheduling upstream group %p to fill bufpen", group);
+    GST_LOG ("scheduling upstream group %p to fill datapen", group);
 #ifdef USE_COTHREADS
     schedule_group (group);
 #else
@@ -1406,18 +1407,18 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
       return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
     }
 #endif
-    /* if the scheduler interrupted, make sure we send an INTERRUPTED event to the
-     * loop based element */
+    /* if the scheduler interrupted, make sure we send an INTERRUPTED event
+     * to the loop based element */
     if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
       GST_INFO ("scheduler interrupted, return interrupt event");
       data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
     } else {
-      if (GST_PAD_BUFLIST (srcpad)) {
-        data = GST_PAD_BUFLIST (srcpad)->data;
-        GST_PAD_BUFPEN (srcpad) =
-            g_list_remove (GST_PAD_BUFLIST (srcpad), data);
+      if (GST_PAD_DATALIST (srcpad)) {
+        data = GST_PAD_DATALIST (srcpad)->data;
+        GST_PAD_DATAPEN (srcpad) =
+            g_list_remove (GST_PAD_DATALIST (srcpad), data);
       } else if (disabled) {
-        /* no buffer in queue and peer group was disabled */
+        /* no data in queue and peer group was disabled */
         data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
       }
     }
@@ -1425,7 +1426,7 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
   while (data == NULL);
 
   GST_LOG ("get handler, returning data %p, queue length %d",
-      data, g_list_length (GST_PAD_BUFLIST (srcpad)));
+      data, g_list_length (GST_PAD_DATALIST (srcpad)));
 
   return data;
 }
@@ -1433,13 +1434,13 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
 static void
 pad_clear_queued (GstPad * srcpad, gpointer user_data)
 {
-  GList *buflist = GST_PAD_BUFLIST (srcpad);
+  GList *datalist = GST_PAD_DATALIST (srcpad);
 
-  if (buflist) {
-    GST_LOG ("need to clear some buffers");
-    g_list_foreach (buflist, (GFunc) gst_data_unref, NULL);
-    g_list_free (buflist);
-    GST_PAD_BUFPEN (srcpad) = NULL;
+  if (datalist) {
+    GST_LOG ("need to clear some datas");
+    g_list_foreach (datalist, (GFunc) gst_data_unref, NULL);
+    g_list_free (datalist);
+    GST_PAD_DATAPEN (srcpad) = NULL;
   }
 }
 
@@ -2383,6 +2384,7 @@ gst_opt_scheduler_iterate (GstScheduler * sched)
         GST_LOG ("scheduling chain %p", chain);
         schedule_chain (chain);
         scheduled = TRUE;
+        GST_LOG ("scheduled chain %p", chain);
       } else {
         GST_LOG ("not scheduling disabled chain %p", chain);
       }

@@ -36,8 +36,8 @@
 GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
 #define DEBUG_DATA(obj,data,notice) G_STMT_START{\
   if (GST_IS_EVENT (data)) { \
-    GST_CAT_DEBUG_OBJECT (debug_dataflow, obj, "%s event %p (type %d)", notice, data, \
-	GST_EVENT_TYPE (data)); \
+    GST_CAT_DEBUG_OBJECT (debug_dataflow, obj, "%s event %p (type %d, refcount %d)", notice, data, \
+	GST_EVENT_TYPE (data), GST_DATA_REFCOUNT_VALUE (data)); \
   } else { \
     GST_CAT_LOG_OBJECT (debug_dataflow, obj, "%s buffer %p (size %u, refcount %d)", notice, data, \
 	GST_BUFFER_SIZE (data), GST_BUFFER_REFCOUNT_VALUE (data)); \
@@ -470,7 +470,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
   if (link) {
     if (link->temp_store) {
       GST_CAT_INFO (GST_CAT_PADS,
-          "deleting cached buffer from bufpen of pad %s:%s",
+          "deleting cached data %p from bufpen of pad %s:%s", link->temp_store,
           GST_DEBUG_PAD_NAME (realpad));
       gst_data_unref (link->temp_store);
       link->temp_store = NULL;
@@ -1392,6 +1392,7 @@ gst_pad_link_try (GstPadLink * link)
   if (oldlink) {
     GST_DEBUG ("copying stuff from oldlink");
     link->temp_store = oldlink->temp_store;
+    GST_DEBUG ("moving old data temp store %p", link->temp_store);
     link->engaged = oldlink->engaged;
     oldlink->temp_store = NULL;
     gst_pad_link_free (oldlink);
@@ -3123,14 +3124,14 @@ _invent_event (GstPad * pad, GstBuffer * buffer)
     event = gst_event_new_discontinuous (TRUE,
         GST_FORMAT_TIME, timestamp, event_type, offset, GST_FORMAT_UNDEFINED);
     GST_CAT_WARNING (GST_CAT_SCHEDULING,
-        "needed to invent a DISCONT (time %" G_GUINT64_FORMAT
-        ") for %s:%s => %s:%s", timestamp,
+        "needed to invent a DISCONT %p (time %" G_GUINT64_FORMAT
+        ") for %s:%s => %s:%s", event, timestamp,
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
   } else {
     event = gst_event_new_discontinuous (TRUE,
         event_type, offset, GST_FORMAT_UNDEFINED);
     GST_CAT_WARNING (GST_CAT_SCHEDULING,
-        "needed to invent a DISCONT (no time) for %s:%s => %s:%s",
+        "needed to invent a DISCONT %p (no time) for %s:%s => %s:%s", event,
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)), GST_DEBUG_PAD_NAME (pad));
   }
 
@@ -3238,6 +3239,7 @@ gst_pad_pull (GstPad * pad)
 
       if (link->temp_store) {
         g_assert (link->engaged);
+        GST_DEBUG ("moving temp_store %p to data", link->temp_store);
         data = link->temp_store;
         link->temp_store = NULL;
       } else {
@@ -3251,6 +3253,7 @@ gst_pad_pull (GstPad * pad)
         if (!link->engaged) {
           g_assert (link->temp_store == NULL);
           if (GST_IS_BUFFER (data)) {
+            GST_DEBUG ("moving data buffer %p back to temp_store", data);
             link->temp_store = data;
             link->engaged = TRUE;
             data = _invent_event (pad, GST_BUFFER (data));
@@ -3259,10 +3262,11 @@ gst_pad_pull (GstPad * pad)
               GST_EVENT_DISCONT_NEW_MEDIA (data)) {
             link->engaged = TRUE;
             GST_CAT_LOG (GST_CAT_SCHEDULING,
-                "link engaged by discont event for pad %s:%s",
+                "link engaged by discont event %p for pad %s:%s", data,
                 GST_DEBUG_PAD_NAME (pad));
           }
         }
+        GST_DEBUG ("calling gst_probe_dispatcher_dispatch on data %p", data);
         if (!gst_probe_dispatcher_dispatch (&peer->probedisp, &data))
           goto restart;
         DEBUG_DATA (pad, data, "gst_pad_pull returned");
@@ -3932,19 +3936,26 @@ gst_pad_event_default_dispatch (GstPad * pad, GstElement * element,
     /* for all of the internally-linked pads that are actually linked */
     if (GST_PAD_IS_LINKED (eventpad)) {
       if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
-        /* increase the refcount */
+        /* for each pad we send to, we should ref the event; it's up
+         * to downstream to unref again when handled. */
+        GST_LOG_OBJECT (pad, "Reffing and sending event %p to %s:%s", event,
+            GST_DEBUG_PAD_NAME (eventpad));
         gst_event_ref (event);
         gst_pad_push (eventpad, GST_DATA (event));
       } else {
         GstPad *peerpad = GST_PAD (GST_RPAD_PEER (eventpad));
 
-        /* we only send the event on one pad, multi-sinkpad elements 
+        /* we only send the event on one pad, multi-sinkpad elements
          * should implement a handler */
         g_list_free (orig);
+        GST_LOG_OBJECT (pad, "sending event %p to one sink pad %s:%s", event,
+            GST_DEBUG_PAD_NAME (eventpad));
         return gst_pad_send_event (peerpad, event);
       }
     }
   }
+  /* we handled the incoming event so we unref once */
+  GST_LOG_OBJECT (pad, "handled event %p, unreffing", event);
   gst_event_unref (event);
   g_list_free (orig);
   return (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
@@ -4340,6 +4351,7 @@ gst_pad_call_chain_function (GstPad * pad, GstData * data)
   if (!link->engaged) {
     g_assert (link->temp_store == NULL);
     if (GST_IS_BUFFER (data)) {
+      GST_DEBUG ("moving data buffer %p back to temp_store", data);
       link->temp_store = data;
       link->engaged = TRUE;
       CALL_CHAINFUNC (pad, _invent_event (pad, GST_BUFFER (data)));
@@ -4353,7 +4365,7 @@ gst_pad_call_chain_function (GstPad * pad, GstData * data)
         GST_EVENT_DISCONT_NEW_MEDIA (data)) {
       link->engaged = TRUE;
       GST_CAT_LOG (GST_CAT_SCHEDULING,
-          "link engaged by discont event for pad %s:%s",
+          "link engaged by discont event %p for pad %s:%s", data,
           GST_DEBUG_PAD_NAME (pad));
     }
   }
