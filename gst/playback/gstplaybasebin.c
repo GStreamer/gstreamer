@@ -1312,6 +1312,9 @@ gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
   play_base_bin = GST_PLAY_BASE_BIN (bin);
 
   if (play_base_bin->thread) {
+    GstScheduler *sched;
+    GstClock *clock;
+
     if (play_base_bin->threaded) {
       gchar *name;
       GstElement *thread;
@@ -1324,6 +1327,12 @@ gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
       element = thread;
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), element);
+
+    /* hack, the clock is not correctly distributed in the core */
+    sched = gst_element_get_scheduler (GST_ELEMENT (play_base_bin->thread));
+    clock = gst_scheduler_get_clock (sched);
+    gst_scheduler_set_clock (sched, clock);
+
   } else {
     g_warning ("adding elements is not allowed in NULL");
   }
