@@ -1,5 +1,12 @@
 2004-06-27  Wim Taymans  <wim@fluendo.com>
 
+	* ext/dv/gstdvdec.c: (gst_dvdec_push), (gst_dvdec_loop),
+	(gst_dvdec_change_state):
+	* ext/dv/gstdvdec.h:
+	Fix timestamp, duration and offset of the buffers.
+
+2004-06-27  Wim Taymans  <wim@fluendo.com>
+
 	* gst/tcp/gstmultifdsink.c: (gst_recover_policy_get_type),
 	(gst_multifdsink_class_init), (gst_multifdsink_add),
 	(gst_multifdsink_remove), (gst_multifdsink_clear),
