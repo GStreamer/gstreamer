@@ -1,7 +1,7 @@
 
 plugin_LTLIBRARIES = libgsttagediting.la
 
-libgsttagediting_la_SOURCES = gstvorbistag.c gsttagediting.c gstmp3tag.c
+libgsttagediting_la_SOURCES = gstvorbistag.c gsttagediting.c gstid3tag.c
 libgsttagediting_la_CFLAGS = $(GST_CFLAGS)
 libgsttagediting_la_LIBADD = $(GST_LIBS) 
 libgsttagediting_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

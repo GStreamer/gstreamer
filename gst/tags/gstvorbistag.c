@@ -79,7 +79,7 @@ GST_PAD_TEMPLATE_FACTORY (vorbis_tag_src_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "vorbis_tag_data_src",
-    "application/x-vorbis",
+    "audio/x-vorbis",
     NULL
   ),
   GST_CAPS_NEW (
@@ -95,7 +95,7 @@ GST_PAD_TEMPLATE_FACTORY (vorbis_tag_sink_template_factory,
   GST_PAD_ALWAYS,
   GST_CAPS_NEW (
     "vorbis_tag_data_sink",
-    "application/x-vorbis",
+    "audio/x-vorbis",
     NULL
   )
 )

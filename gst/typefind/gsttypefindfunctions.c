@@ -862,7 +862,7 @@ dv_type_find (GstTypeFind *tf, gpointer private)
 
 /*** application/x-vorbis *****************************************************/
 
-#define VORBIS_CAPS GST_CAPS_NEW ("vorbis_type_find", "application/x-vorbis", NULL)
+#define VORBIS_CAPS GST_CAPS_NEW ("vorbis_type_find", "audio/x-vorbis", NULL)
 static void
 vorbis_type_find (GstTypeFind *tf, gpointer private)
 {
@@ -1081,7 +1081,7 @@ plugin_init (GstPlugin *plugin)
 	  zip_exts, "PK\003\004", 4, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-compress", GST_RANK_SECONDARY,
 	  compress_exts, "\037\235", 2, GST_TYPE_FIND_LIKELY);
-  TYPE_FIND_REGISTER (plugin, "application/x-vorbis", GST_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "audio/x-vorbis", GST_RANK_PRIMARY,
 	  vorbis_type_find, NULL, VORBIS_CAPS, NULL);
   
   return TRUE;
