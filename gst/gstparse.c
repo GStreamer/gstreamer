@@ -236,32 +236,10 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       pos[0] = '\0';
       argval = pos+1;
       
-      // parse dparams values
-      if (strstr(arg, "@") == arg){
-      	GstDParamManager *dpman;
-      	GstDParam *dparam;
-      	GType dparam_type;
-      	      	
-      	argname++;
-        GST_DEBUG(0,"attempting to set dynamic param '%s' to '%s' on element '%s'\n",
-              argname,argval,GST_ELEMENT_NAME(previous));
-        
-        dpman = GST_ELEMENT_DPARAM_MANAGER(previous);
-        dparam_type = gst_dpman_get_dparam_type(dpman, argname);
-        if (dparam_type > 0){
-          gst_dpman_set_mode(dpman, "synchronous");
-          dparam = gst_dparam_new(dparam_type);
-          gst_dpman_attach_dparam (dpman, argname, dparam);
-          gst_dparam_set_value_from_string(GST_DPARAM_GET_POINT(dparam, 0LL)[0], argval);
-          GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
-        }
-
-      } else {
-        GST_DEBUG(0,"attempting to set argument '%s' to '%s' on element '%s'\n",
-              argname,argval,GST_ELEMENT_NAME(previous));
-        gst_util_set_object_arg (G_OBJECT(previous), argname, argval);
-        g_free(argname);
-     }
+      GST_DEBUG(0,"attempting to set argument '%s' to '%s' on element '%s'\n",
+            argname,argval,GST_ELEMENT_NAME(previous));
+      gst_util_set_object_arg (G_OBJECT(previous), argname, argval);
+      g_free(argname);
 
     // element or argument, or beginning of bin or thread
     } else if (arg[0] == '[') {
