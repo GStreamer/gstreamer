@@ -550,6 +550,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     rmdemux->n_audio_streams++;
   } else {
     g_print ("not adding stream of type %d\n", stream->subtype);
+    return;
   }
 
   GST_PAD_ELEMENT_PRIVATE (stream->pad) = stream;
@@ -739,7 +740,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
       stream->rate = RMDEMUX_GUINT16_GET (data + offset + 16);
       break;
     case GST_RMDEMUX_STREAM_AUDIO:
-      /* .ra4/.ra5 => audio/x-pn-realvideo, version=4,5 */
+      /* .ra4/.ra5 => audio/x-pn-realaudio, version=4,5 */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
 
       stream->rate = RMDEMUX_GUINT32_GET (data + offset + 48);
