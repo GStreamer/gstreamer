@@ -170,14 +170,17 @@ dnl Check for libghttp
 dnl FIXME: need to check for header
 AC_CHECK_LIB(ghttp, ghttp_request_new,
   [GHTTP_LIBS="-lghttp"
+   GST_HTTPSRC_GET_TYPE="gst_httpsrc_get_type"
    HAVE_LIBGHTTP=yes
   ],
   [AC_MSG_WARN(Cannot find libghttp: can't build gsthttpsrc)
    GHTTP_LIBS=
+   GST_HTTPSRC_GET_TYPE=
    HAVE_LIBGHTTP=no
   ],
   $LIBS)
 AC_SUBST(GHTTP_LIBS)
+AC_SUBST(GST_HTTPSRC_GET_TYPE)
 
 
 dnl Check for libgnome
