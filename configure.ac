@@ -459,7 +459,6 @@ dnl #########################
 
 dnl libs/ext/Makefile
 dnl nothing there yet !
-dnl testsuite/indexers/Makefile
 AC_OUTPUT(
 Makefile
 include/Makefile
@@ -493,6 +492,7 @@ testsuite/cleanup/Makefile
 testsuite/clock/Makefile
 testsuite/dynparams/Makefile
 testsuite/elements/Makefile
+testsuite/indexers/Makefile
 testsuite/plugin/Makefile
 testsuite/refcounting/Makefile
 testsuite/threads/Makefile

@@ -280,6 +280,53 @@ gst_thread_new (const gchar *name)
 
 /* these two macros are used for debug/info from the state_change function */
 
+/* FIXME: with some rearranging of output or otherwise we could probably
+ * get rid of this g_strdup_printf we're using here, so go ahead if you're
+ * concerned about this slowing down */
+#ifdef G_HAVE_ISO_VARARGS
+
+#define THR_INFO(...) \
+  { \
+  gchar *val = g_strdup_printf(__VA_ARGS__); \
+  GST_INFO_ELEMENT(GST_CAT_THREAD, thread, \
+    "sync(" GST_DEBUG_THREAD_FORMAT "): %s", \
+    GST_DEBUG_THREAD_ARGS(thread->pid), val); \
+  g_free(val); \
+  }
+  
+#define THR_DEBUG(...) \
+  { \
+  gchar *val = g_strdup_printf(__VA_ARGS__); \
+  GST_INFO_ELEMENT(GST_CAT_THREAD, thread, \
+    "sync(" GST_DEBUG_THREAD_FORMAT "): %s", \
+    GST_DEBUG_THREAD_ARGS(thread->pid), val); \
+  g_free(val); \
+  }
+
+/* these two macros are used for debug/info from the gst_thread_main_loop
+ * function
+ */
+
+#define THR_INFO_MAIN(...) \
+  { \
+  gchar *val = g_strdup_printf(__VA_ARGS__); \
+  GST_INFO_ELEMENT(GST_CAT_THREAD, thread, \
+    "sync-main(" GST_DEBUG_THREAD_FORMAT "): %s", \
+    GST_DEBUG_THREAD_ARGS(thread->pid), val); \
+  g_free(val); \
+  }
+
+#define THR_DEBUG_MAIN(...) \
+  { \
+  gchar *val = g_strdup_printf(__VA_ARGS__); \
+  GST_INFO_ELEMENT(GST_CAT_THREAD, thread, \
+    "sync-main(" GST_DEBUG_THREAD_FORMAT "): %s", \
+    GST_DEBUG_THREAD_ARGS(thread->pid), val); \
+  g_free(val); \
+  }
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define THR_INFO(format,args...) \
   GST_INFO_ELEMENT(GST_CAT_THREAD, thread, "sync(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->pid) , ## args )
@@ -299,6 +346,8 @@ gst_thread_new (const gchar *name)
 #define THR_DEBUG_MAIN(format,args...) \
   GST_DEBUG_ELEMENT(GST_CAT_THREAD, thread, "sync-main(" GST_DEBUG_THREAD_FORMAT "): " format , \
   GST_DEBUG_THREAD_ARGS(thread->ppid) , ## args )
+
+#endif
 
 static GstElementStateReturn
 gst_thread_update_state (GstThread *thread)

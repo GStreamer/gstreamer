@@ -227,7 +227,7 @@ G_STMT_START {						\
     tmp = (swap)->value;				\
     tmp2 = val;						\
     (swap)->value = (gpointer)*tmp2;			\
-    (*res) = (gpointer)*tmp2 = (gint*)tmp;		\
+    (*res) = (gpointer) (*tmp2 = (gint*)tmp);		\
     g_mutex_unlock ((swap)->lock);			\
   }							\
 } G_STMT_END

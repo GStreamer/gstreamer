@@ -28,12 +28,26 @@
 
 /* #define BS_DEBUG */
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#ifdef BS_DEBUG
+# define bs_print(...)	GST_DEBUG (GST_CAT_BUFFER, __VA_ARGS__)
+# define bs_status(bs)			gst_bytestream_print_status(bs)
+#else
+# define bs_print(...)
+# define bs_status(bs)
+#endif
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #ifdef BS_DEBUG
 # define bs_print(format,args...)	GST_DEBUG (GST_CAT_BUFFER,  format, ## args)
 # define bs_status(bs)			gst_bytestream_print_status(bs)
 #else
 # define bs_print(format,args...)
 # define bs_status(bs)
+#endif
+
 #endif
 
 guint8 *gst_bytestream_assemble (GstByteStream * bs, guint32 len);

@@ -33,8 +33,12 @@
 #include "gstlog.h"
 #include "gsttrace.h"
 
-static __inline__ void
-read_tsc (guint64 * dst)
+static 
+#ifdef __inline__
+__inline__
+#endif
+void
+read_tsc (gint64 * dst)
 {
 #ifdef HAVE_RDTSC
   guint64 tsc;
@@ -47,7 +51,7 @@ read_tsc (guint64 * dst)
 }
 
 void
-gst_trace_read_tsc (guint64 * dst)
+gst_trace_read_tsc (gint64 * dst)
 {
   read_tsc (dst);
 }

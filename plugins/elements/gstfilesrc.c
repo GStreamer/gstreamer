@@ -82,8 +82,17 @@ GstElementDetails gst_filesrc_details = {
 #define DEFAULT_BLOCKSIZE 	4*1024
 #define DEFAULT_MMAPSIZE 	4*1024*1024
 
+#ifdef G_HAVE_ISO_VARARGS
+
+/* #define fs_print(...) g_print(__VA_ARGS__)  */
+#define fs_print(...)
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 /* #define fs_print(format,args...) g_print(format, ## args)  */
 #define fs_print(format,args...)
+
+#endif
 
 /* FileSrc signals and args */
 enum {

@@ -64,7 +64,7 @@ void 		gst_trace_set_default		(GstTrace *trace);
 void 		_gst_trace_add_entry		(GstTrace *trace, guint32 seq, 
 						 guint32 data, gchar *msg);
 
-void 		gst_trace_read_tsc		(guint64 *dst);
+void 		gst_trace_read_tsc		(gint64 *dst);
 
 #define TRACE_ENABLE
 
