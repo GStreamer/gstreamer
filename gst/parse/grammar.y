@@ -90,7 +90,8 @@ graph:          /* empty */          { $$ = g_new0 (graph_t, 1); *((graph_t**) p
                                      }
         |       graph connection     { $$ = $1;
                                        $$->connections = g_list_append ($$->connections, $2);
-                                       $2->src_index = $$->current->index;
+				       if ($$->current)
+                                         $2->src_index = $$->current->index;
                                        if (!$2->sink_name)
                                            $$->connections_pending = g_list_append ($$->connections_pending, $2);
                                      }
