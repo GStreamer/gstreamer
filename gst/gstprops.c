@@ -685,7 +685,7 @@ G_STMT_START { 									\
   entry->propstype = va_arg (var_args, GstPropsType); 				\
   if (entry->propstype == GST_PROPS_LIST_TYPE) {				\
     GList *_list = NULL;							\
-    GstPropsEntry *_cur;				      			\
+    GstPropsEntry *_cur = NULL; /* initialize so gcc doesn't complain */	\
     GstPropsType _cur_type;							\
     GstPropsType _type = va_arg (var_args, GstPropsType);			\
     _cur_type = _type;				  				\
@@ -704,7 +704,7 @@ G_STMT_START { 									\
       }										\
       _cur_type = va_arg (var_args, GstPropsType);				\
     }										\
-    if (g_list_next (_list)) {							\
+    if (_list && g_list_next (_list)) {							\
       entry->data.list_data.entries = _list;				  	\
     } else {									\
       entry->propstype = _cur->propstype;					\
