@@ -1,3 +1,13 @@
+2005-01-27  Edward Hervey  <bilboed@bilboed.com>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mad/gstmad.c: (gst_mad_src_event):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_event):
+	  Allow seeks on audio pad, make mad forward those (#164826).
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_chain):
+	  Set duration (#165335).
+
 2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_init),

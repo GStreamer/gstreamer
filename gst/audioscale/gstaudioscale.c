@@ -549,6 +549,7 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstBuffer *tempbuf, *tempbuf2;
+  GstClockTime outduration;
 
   Audioscale *audioscale;
   guchar *data;
@@ -610,6 +611,7 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
+  outduration = GST_BUFFER_DURATION (buf);
 
   GST_DEBUG ("gst_audioscale_chain: got buffer of %ld bytes in '%s'\n",
       size, gst_element_get_name (GST_ELEMENT (audioscale)));
@@ -647,6 +649,7 @@ gst_audioscale_chain (GstPad * pad, GstData * _data)
     gst_buffer_unref (tempbuf);
     tempbuf = audioscale->outbuf;
   }
+  GST_BUFFER_DURATION (tempbuf) = outduration;
   gst_pad_push (audioscale->srcpad, GST_DATA (tempbuf));
 
 }
