@@ -253,12 +253,12 @@ vorbis_dec_event (GstVorbisDec *dec, GstEvent *event)
     case GST_EVENT_DISCONTINUOUS:
       if (gst_event_discont_get_value (event, GST_FORMAT_DEFAULT, &value)) {
 	dec->granulepos = value;
-	dec->packetno = 3;
 	GST_DEBUG_OBJECT (dec, "setting granuleposition to %"G_GUINT64_FORMAT" after discont\n", value);
       } else {
 	GST_WARNING_OBJECT (dec, 
 	    "discont event didn't include offset, we might set it wrong now");
       }
+      dec->packetno = 3;
       break;
     default:
       break;

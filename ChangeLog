@@ -1,3 +1,16 @@
+2004-01-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* configure.ac:
+	  use AC_C_INLINE
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/theora/Makefile.am:
+	* ext/theora/theoradec.c: 
+	  add theora video decoder. Does just do simple decoding for now and
+	  has been tested against Theora cvs only.
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_event):
+	  always reset packetno on DISCONT
+
 2004-01-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead):
