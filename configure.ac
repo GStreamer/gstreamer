@@ -1152,6 +1152,7 @@ sys/xvideo/Makefile
 ext/Makefile
 ext/a52/Makefile
 ext/aalib/Makefile
+ext/alsa/Makefile
 ext/audiofile/Makefile
 ext/esd/Makefile
 ext/lame/Makefile
