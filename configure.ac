@@ -7,6 +7,10 @@ dnl this goes before AS_LIBTOOL to appease autoconf
 dnl *NOTE*: dnl this line before release, so release does static too
 AM_DISABLE_STATIC
 
+if test x$program_suffix = xNONE ; then
+  program_suffix=-$GST_VERSION_MAJOR.$GST_VERSION_MINOR
+fi
+
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 
