@@ -34,3 +34,65 @@ Axioms under which we work:
 - it would be very nice if, on update of either the Tag file or the patch set,
   make would know exactly what to do with it.
 
+Some notes on how ffmpeg wrapping inside GStreamer currently works:
+* gstffmpeg{dec,enc,demux,mux}.c are wrappers for specific element types from
+    their ffmpeg counterpart. If you want to wrap a new type of element in
+    ffmpeg (e.g. the URLProtocol things), then you'd need to write a new
+    wrapper file.
+
+* gstffmpegcolorspace.c is a wrapper for one specific function in ffmpeg:
+    colorspace conversion. This works different from the previously mentioned
+    ones, and we'll come to that in the next item. If you want to wrap one
+    specific function, then that, too, belongs in a new wrapper file.
+
+* the important difference between all those is that the colorspace element
+    contains one element, so there is a 1<->1 mapping. This makes for a fairly
+    basic element implementation. gstffmpegcolorspace.c, therefore, doesn't
+    differ much from other colorspace elements. The ffmpeg element types,
+    however, define a whole *list* of elements (in GStreamer, each decoder etc.
+    needs to be its own element). We use a set of tricks for that to keep
+    coding simple: codec mapping and dynamic type creation.
+
+* ffmpeg uses CODEC_ID_* enumerations for their codecs. GStreamer uses caps,
+    which consists of a mimetype and a defined set of properties. In ffmpeg,
+    these properties live in a AVCodecContext struct, which contains anything
+    that could configure any codec (which makes it rather messy, but ohwell).
+    To convert from one to the other, we use codec mapping, which is done in
+    gstffmpegcodecmap.[ch]. This is the most important file in the whole
+    ffmpeg wrapping process! It contains functions to go from a codec type
+    (video or audio - used as the output format for decoding or the input
+    format for encoding), a codec id (to identify each format) or a format id
+    (a string identifying a file format - usually the file format extension)
+    to a GstCaps, and the other way around.
+
+* to define multiple elements in one source file (which all behave similarly),
+    we dynamically create types for each plugin and let all of them operate on
+    the same struct (GstFFMpegDec, GstFFMpegEnc, ...). The functions in
+    gstffmpeg{dec,enc,demux,mux}.c called gst_ffmpeg*_register() do this.
+    The magic is as follows: for each codec or format, ffmpeg has a single
+    AVCodec or AV{Input,Output}Format, which are packed together in a list of
+    supported codecs/formats. We simply walk through the list, for each of
+    those, we check whether gstffmpegcodecmap.c knows about this single one.
+    If it does, we get the GstCaps for each pad template that belongs to it,
+    and register a type for all of those together. We also leave this inside
+    a caching struct, that will later be used by the base_init() function to
+    fill in information about this specific codec in the class struct of this
+    element (pad templates and codec/format information). Since the actual
+    codec information is the only thing that really makes each codec/format
+    different (they all behave the same through the ffmpeg API), we don't
+    really need to do anything else that is codec-specific, so all other
+    functions are rather simple.
+
+* one particular thing that needs mention is how gstffmpeg{mux,demux}.c and
+    gstffmpegprotocol.c interoperate. ffmpeg uses URLProtocols for data input
+    and output. Now, of course, we want to use the *GStreamer* way of doing
+    input and output (filesrc, ...) rather than the ffmpeg way. Therefore, we
+    wrap up a GstPad as a URLProtocol and register this with ffmpeg. This is
+    what gstffmpegprotocol.c does. The URL is called gstreamer://%p, where %p
+    is the address of a GstPad. gstffmpeg{mux,demux}.c then open a file called
+    gstreamer://%p, with %p being their source/sink pad, respectively. This
+    way, we use GStreamer for data input/output through the ffmpeg API. It's
+    rather ugly, but it has worked quite well so far.
+
+* there's lots of things that still need doing. See the TODO file for more
+    information.

@@ -43,9 +43,9 @@ struct _GstProtocolInfo {
 };
 
 static int 
-gst_open (URLContext *h,
-	  const char *filename,
-	  int         flags)
+gst_ffmpegdata_open (URLContext *h,
+		     const char *filename,
+		     int         flags)
 {
   GstProtocolInfo *info;
   GstPad *pad;
@@ -80,6 +80,7 @@ gst_open (URLContext *h,
   }
 
   info->eos = FALSE;
+  info->pad = pad;
 
   h->priv_data = (void *) info;
 
@@ -87,12 +88,12 @@ gst_open (URLContext *h,
 }
 
 static int 
-gst_read (URLContext    *h,
-	  unsigned char *buf,
-	  int            size)
+gst_ffmpegdata_read (URLContext    *h,
+		     unsigned char *buf,
+		     int            size)
 {
   GstByteStream *bs;
-  guint32 total;
+  guint32 total, request;
   guint8 *data;
   GstProtocolInfo *info;
 
@@ -102,33 +103,47 @@ gst_read (URLContext    *h,
 
   bs = info->bs;
 
-  if (info->eos) 
+  if (info->eos)
     return 0;
 
-  total = gst_bytestream_peek_bytes (bs, &data, size);
+  do {
+    /* prevent EOS */
+    if (gst_bytestream_tell (bs) + size > gst_bytestream_length (bs))
+      request = gst_bytestream_length (bs) - gst_bytestream_tell (bs);
+    else
+      request = size;
 
-  if (total < size) {
-    GstEvent *event;
-    guint32 remaining;
+    if (request)
+      total = gst_bytestream_peek_bytes (bs, &data, request);
+    else
+      total = 0;
 
-    gst_bytestream_get_status (bs, &remaining, &event);
+    if (total < request) {
+      GstEvent *event;
+      guint32 remaining;
 
-    if (!event) {
-      g_warning ("gstffmpegprotocol: no bytestream event");
-      return total;
+      gst_bytestream_get_status (bs, &remaining, &event);
+
+      if (!event) {
+        g_warning ("gstffmpegprotocol: no bytestream event");
+        return total;
+      }
+
+      switch (GST_EVENT_TYPE (event)) {
+        case GST_EVENT_DISCONTINUOUS:
+          gst_bytestream_flush_fast (bs, remaining);
+          gst_event_unref (event);
+          break;
+        case GST_EVENT_EOS:
+          info->eos = TRUE;
+          gst_event_unref (event);
+          break;
+        default:
+          gst_pad_event_default (info->pad, event);
+          break;
+      }
     }
-
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-        gst_bytestream_flush_fast (bs, remaining);
-      case GST_EVENT_EOS:
-	info->eos = TRUE;
-	break;
-      default:
-        break;
-    }
-    gst_event_unref (event);
-  }
+  } while (!info->eos && total != request);
   
   memcpy (buf, data, total);
   gst_bytestream_flush (bs, total);
@@ -137,9 +152,9 @@ gst_read (URLContext    *h,
 }
 
 static int
-gst_write (URLContext    *h,
-	   unsigned char *buf,
-	   int            size)
+gst_ffmpegdata_write (URLContext    *h,
+		      unsigned char *buf,
+		      int            size)
 {
   GstProtocolInfo *info;
   GstBuffer *outbuf;
@@ -159,9 +174,9 @@ gst_write (URLContext    *h,
 }
 
 static offset_t
-gst_seek (URLContext *h,
-	  offset_t    pos,
-	  int         whence)
+gst_ffmpegdata_seek (URLContext *h,
+		     offset_t    pos,
+		     int         whence)
 {
   GstSeekType seek_type = 0;
   GstProtocolInfo *info;
@@ -188,10 +203,12 @@ gst_seek (URLContext *h,
       gst_bytestream_seek (info->bs, pos, seek_type);
       break;
 
-    case URL_WRONLY: {
-      GstEvent *event = gst_event_new_seek (seek_type, pos);
-      gst_pad_push (info->pad, GST_DATA (event));
-    }
+    case URL_WRONLY:
+      gst_pad_push (info->pad, GST_DATA (gst_event_new_seek (seek_type, pos)));
+      break;
+
+    default:
+      g_assert (0);
       break;
   }
 
@@ -199,7 +216,7 @@ gst_seek (URLContext *h,
 }
 
 static int
-gst_close (URLContext *h)
+gst_ffmpegdata_close (URLContext *h)
 {
   GstProtocolInfo *info;
 
@@ -227,10 +244,10 @@ gst_close (URLContext *h)
 
 URLProtocol gstreamer_protocol = {
   .name      = "gstreamer",
-  .url_open  = gst_open,
-  .url_read  = gst_read,
-  .url_write = gst_write,
-  .url_seek  = gst_seek,
-  .url_close = gst_close,
+  .url_open  = gst_ffmpegdata_open,
+  .url_read  = gst_ffmpegdata_read,
+  .url_write = gst_ffmpegdata_write,
+  .url_seek  = gst_ffmpegdata_seek,
+  .url_close = gst_ffmpegdata_close,
 };
 

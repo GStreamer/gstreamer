@@ -1,4 +1,64 @@
-=== gst-ffmpeg ===
+2004-02-29  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* HACKING:
+	  Add some basic documentation on how our wrapping works.
+	* TODO:
+	  Add a list of things that could be worked on or that need doing.
+	* configure.ac:
+	  Update snapshot.
+	* ext/ffmpeg/Makefile.am:
+	  Changne .la links. See below (autotools patch).
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	  Enable demuxers. See below (gstffmpegdemux.c).
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps):
+	  Realmedia caused a crash - fix that.
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_averror),
+	(gst_ffmpegdemux_base_init), (gst_ffmpegdemux_init),
+	(gst_ffmpegdemux_close), (gst_ffmpegdemux_dispose),
+	(gst_ffmpegdemux_stream_from_pad),
+	(gst_ffmpegdemux_src_event_mask), (gst_ffmpegdemux_src_event),
+	(gst_ffmpegdemux_src_format_list),
+	(gst_ffmpegdemux_src_query_list), (gst_ffmpegdemux_src_query),
+	(gst_ffmpegdemux_src_convert), (gst_ffmpegdemux_add),
+	(gst_ffmpegdemux_open), (gst_ffmpegdemux_loop),
+	(gst_ffmpegdemux_change_state), (gst_ffmpegdemux_register):
+	  Right. OK, so I fixed up the demuxing and have it basically-working,
+	  and the best way to get some more people to test it is to actually
+	  enable it. I'm not sure if we want this for 0.8.0, but we can at
+	  least give it a try. I've tested avi, matroska and mpeg, all appear
+	  to work. The cool thing is that this gives us instant support for
+	  several exotic formats that we'd never care about ourselves. Again,
+	  this needs more testing for it to still be enabled in 0.8.0, but I
+	  want to give it a try...
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_base_init),
+	(gst_ffmpegmux_init), (gst_ffmpegmux_request_new_pad),
+	(gst_ffmpegmux_connect), (gst_ffmpegmux_loop),
+	(gst_ffmpegmux_register):
+	  Add some fixups that I use locally. Make it work in the case of
+	  MPEG encoding, but the muxer is still not in shape to be enabled.
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open),
+	(gst_ffmpegdata_read), (gst_ffmpegdata_write),
+	(gst_ffmpegdata_seek), (gst_ffmpegdata_close):
+	  Some small fixups that crept into it while it was disabled for the
+	  last few years. Basically works.
+	* gst-libs/ext/ffmpeg/Makefile.am:
+	  Instead of having our local-autotoolized version, I patch the ffmpeg
+	  source to be fully autotoolized. That means a simple SUBDIRS here
+	  is now enough.
+	* gst-libs/ext/ffmpeg/Tag:
+	  Version update.
+	* gst-libs/ext/ffmpeg/patch/autotools.diff:
+	  Autotoolize ffmpeg. Needs to be sent to ffmpeg-devel@...
+	* gst-libs/ext/ffmpeg/patch/disableinstalllibs.diff:
+	  Don't install their libs.
+	* gst-libs/ext/ffmpeg/patch/disablemmx.diff:
+	  Don't use MMX. It cannot ocmpile using PIC.
+	* gst-libs/ext/ffmpeg/patch/disabletools.diff:
+	  Don't compile/install their tools, we don't use them.
+	* gst-libs/ext/ffmpeg/patch/functions.diff:
+	  Prevent symbol conflicts.
+	* gst-libs/ext/ffmpeg/patch/matroska.diff:
+	  Add a matroska demuxer. Needs to be sent to ffmpeg-devel@...
 
 2004-02-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 

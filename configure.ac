@@ -83,7 +83,7 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
   # prerelease and release should get it disted
   if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
     AC_MSG_NOTICE(slurping FFmpeg CVS source)
-    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2003-10-26 10:00 GMT,
+    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2004-02-29 20:00 GMT,
                     HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
   else
     AC_MSG_NOTICE(FFmpeg CVS code should be included already)
@@ -100,7 +100,7 @@ GST_ARCH()
 dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
-if test "x$HAVE_FFMPEG" = xyes; then
+if test "x$HAVE_FFMPEG" = "xyes"; then
   AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg/ffmpeg)
 fi 
 

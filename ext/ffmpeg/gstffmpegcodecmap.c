@@ -890,7 +890,7 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
 	"systemstream", G_TYPE_BOOLEAN, TRUE,
         NULL);
   } else if (!strcmp (format_name, "rm")) {
-    caps = gst_caps_new_simple ("ffmpeg_rm", "audio/x-pn-realvideo",
+    caps = gst_caps_new_simple ("application/x-pn-realmedia",
 	"systemstream", G_TYPE_BOOLEAN, TRUE,
         NULL);
   } else if (!strcmp (format_name, "asf")) {
@@ -919,7 +919,12 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name)
     caps = gst_caps_new_simple ("video/x-4xm",
 	NULL);
   } else {
-    /* unknown! */
+    gchar *name;
+
+    GST_WARNING ("Could not create stream format caps for %s", format_name);
+    name = g_strdup_printf ("application/x-gst_ff-%s", format_name);
+    caps = gst_caps_new_simple (name, NULL);
+    g_free (name);
   }
 
   return caps;

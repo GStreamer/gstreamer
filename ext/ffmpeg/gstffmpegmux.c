@@ -60,9 +60,6 @@ struct _GstFFMpegMuxClass {
   GstElementClass	 parent_class;
 
   AVOutputFormat 	*in_plugin;
-  GstPadTemplate	*srctempl;
-  GstPadTemplate	*videosinktempl;
-  GstPadTemplate	*audiosinktempl;
 };
 
 #define GST_TYPE_FFMPEGMUX \
@@ -139,7 +136,7 @@ gst_ffmpegmux_base_init (GstFFMpegMuxClass *klass)
   g_free (details.description);
 
   /* pad templates */
-  srctempl = gst_pad_template_new ("sink", GST_PAD_SRC,
+  srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
 				   GST_PAD_ALWAYS,
 				   params->srccaps);
   audiosinktempl = gst_pad_template_new ("audio_%d",
@@ -156,9 +153,6 @@ gst_ffmpegmux_base_init (GstFFMpegMuxClass *klass)
   gst_element_class_add_pad_template (element_class, audiosinktempl);
 
   klass->in_plugin = params->in_plugin;
-  klass->srctempl = srctempl;
-  klass->videosinktempl = videosinktempl;
-  klass->audiosinktempl = audiosinktempl;
 }
 
 static void
@@ -180,21 +174,22 @@ gst_ffmpegmux_class_init (GstFFMpegMuxClass *klass)
 static void
 gst_ffmpegmux_init(GstFFMpegMux *ffmpegmux)
 {
-  GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*)(G_OBJECT_GET_CLASS (ffmpegmux));
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (ffmpegmux);
+  GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*) klass;
+  GstPadTemplate *templ = gst_element_class_get_pad_template (klass, "src");
 
-  ffmpegmux->srcpad = gst_pad_new_from_template (oclass->srctempl,
-						 "src");
-  gst_element_add_pad (GST_ELEMENT (ffmpegmux),
-		       ffmpegmux->srcpad);
+  ffmpegmux->srcpad = gst_pad_new_from_template (templ, "src");
   gst_element_set_loop_function (GST_ELEMENT (ffmpegmux),
 				 gst_ffmpegmux_loop);
+  gst_element_add_pad (GST_ELEMENT (ffmpegmux),
+		       ffmpegmux->srcpad);
 
   ffmpegmux->context = g_new0 (AVFormatContext, 1);
-  memset (ffmpegmux->context, 0, sizeof (AVFormatContext));
   ffmpegmux->context->oformat = oclass->in_plugin;
   ffmpegmux->context->nb_streams = 0;
-  sprintf (ffmpegmux->context->filename, "gstreamer://%p",
-	   ffmpegmux->srcpad);
+  snprintf (ffmpegmux->context->filename,
+	    sizeof (ffmpegmux->context->filename),
+	    "gstreamer://%p", ffmpegmux->srcpad);
   ffmpegmux->opened = FALSE;
 
   ffmpegmux->videopads = 0;
@@ -220,26 +215,30 @@ gst_ffmpegmux_request_new_pad (GstElement *element,
 			       const gchar *name)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) element;
-  GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*)(G_OBJECT_GET_CLASS (ffmpegmux));
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*) klass;
   gchar *padname;
   GstPad *pad;
   AVStream *st;
   enum CodecType type;
-  gint padnum;
+  gint padnum, bitrate = 0, framesize = 0;
 
   g_return_val_if_fail (templ != NULL, NULL);
   g_return_val_if_fail (templ->direction == GST_PAD_SINK, NULL);
   g_return_val_if_fail (ffmpegmux->opened == FALSE, NULL);
 
   /* figure out a name that *we* like */
-  if (templ == oclass->videosinktempl) {
-    padname = g_strdup_printf ("video_%02d",
+  if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
+    padname = g_strdup_printf ("video_%d",
 			       ffmpegmux->videopads++);
     type = CODEC_TYPE_VIDEO;
-  } else if (templ == oclass->audiosinktempl) {
-    padname = g_strdup_printf ("audio_%02d",
+    bitrate = 64 * 1024;
+    framesize = 1152;
+  } else if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
+    padname = g_strdup_printf ("audio_%d",
 			       ffmpegmux->audiopads++);
     type = CODEC_TYPE_AUDIO;
+    bitrate = 285 * 1024;
   } else {
     g_warning("ffmux: unknown pad template!");
     return NULL;
@@ -247,25 +246,22 @@ gst_ffmpegmux_request_new_pad (GstElement *element,
 
   /* create pad */
   pad = gst_pad_new_from_template (templ, padname);
-  padnum = ffmpegmux->context->nb_streams++;
+  padnum = ffmpegmux->context->nb_streams;
   ffmpegmux->sinkpads[padnum] = pad;
   gst_pad_set_link_function (pad, gst_ffmpegmux_connect);
   gst_element_add_pad (element, pad);
 
   /* AVStream needs to be created */
-  st = g_malloc (sizeof (AVStream));
-  memset(st, 0, sizeof (AVStream));
-  avcodec_get_context_defaults (&st->codec);
+  st = av_new_stream (ffmpegmux->context, padnum);
   st->codec.codec_type = type;
   st->codec.codec_id = CODEC_ID_NONE; /* this is a check afterwards */
-  st->index = padnum;
   st->stream_copy = 1; /* we're not the actual encoder */
-  /* we fill in other codec-related info during capsnego */
-  ffmpegmux->context->streams[padnum] = st;
+  st->codec.bit_rate = bitrate;
+  st->codec.frame_size = framesize;
+  /* we fill in codec during capsnego */
 
   /* we love debug output (c) (tm) (r) */
-  GST_DEBUG (
-	     "Created %s pad for ffmux_%s element",
+  GST_DEBUG ("Created %s pad for ffmux_%s element",
 	     padname, oclass->in_plugin->name);
   g_free (padname);
 
@@ -280,8 +276,8 @@ gst_ffmpegmux_connect (GstPad  *pad,
   gint i;
   AVStream *st;
 
-  g_return_val_if_fail (ffmpegmux->opened == FALSE,
-			GST_PAD_LINK_REFUSED);
+  /*g_return_val_if_fail (ffmpegmux->opened == FALSE,
+			GST_PAD_LINK_REFUSED);*/
 
   for (i = 0; i < ffmpegmux->context->nb_streams; i++) {
     if (pad == ffmpegmux->sinkpads[i]) {
@@ -309,42 +305,7 @@ static void
 gst_ffmpegmux_loop (GstElement *element)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) element;
-  GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass*)(G_OBJECT_GET_CLASS (ffmpegmux));
   gint i, bufnum;
-  GstBuffer *buf;
-
-  /* we do need all streams to have started capsnego,
-   * or things will go horribly wrong */
-  for (i = 0; i < ffmpegmux->context->nb_streams; i++) {
-    AVStream *st = ffmpegmux->context->streams[i];
-
-    /* check whether the pad has successfully completed capsnego */ 
-    if (st->codec.codec_id == CODEC_ID_NONE) {
-      GST_DEBUG (
-		 "ffmux loop function called without capsnego on pad %d",
-		 i);
-      return;
-    }
-  }
-
-  /* open "file" (gstreamer protocol to next element) */
-  if (!ffmpegmux->opened) {
-    if (url_fopen (&ffmpegmux->context->pb,
-		   ffmpegmux->context->filename,
-		   URL_WRONLY) < 0) {
-      GST_ELEMENT_ERROR (element, LIBRARY, TOO_LAZY, (NULL),
-			 ("Failed to open stream context in ffmux"));
-      return;
-    }
-
-    /* we're now opened */
-    ffmpegmux->opened = TRUE;
-
-    /* now open the mux format */
-    oclass->in_plugin->write_header (ffmpegmux->context);
-  }
-
-  /* FIXME: do we support more events? */
 
   /* start by filling an internal queue of buffers */
   for (i = 0; i < ffmpegmux->context->nb_streams; i++) {
@@ -353,22 +314,67 @@ gst_ffmpegmux_loop (GstElement *element)
     /* check for "pull'ability" */
     while (pad != NULL &&
            GST_PAD_IS_USABLE (pad) &&
-           /*GST_PAD_IS_ACTIVE (pad) &&*/
-           GST_PAD_IS_LINKED (pad) &&
            ffmpegmux->eos[i] == FALSE &&
            ffmpegmux->bufferqueue[i] == NULL) {
+      GstData *data;
+
       /* we can pull a buffer! */
-      buf = GST_BUFFER (gst_pad_pull (pad));
-      if (GST_IS_EVENT (buf)) {
-        if (GST_EVENT_TYPE (GST_EVENT (buf)) == GST_EVENT_EOS) {
-          /* flag EOS on this stream */
-          ffmpegmux->eos[i] = TRUE;
-          gst_data_unref (GST_DATA (buf));
+      data = gst_pad_pull (pad);
+      if (GST_IS_EVENT (data)) {
+	GstEvent *event = GST_EVENT (data);
+
+	switch (GST_EVENT_TYPE (event)) {
+          case GST_EVENT_EOS:
+            /* flag EOS on this stream */
+            ffmpegmux->eos[i] = TRUE;
+            gst_event_unref (event);
+	    break;
+	  default:
+	    gst_pad_event_default (pad, event);
+	    break;
         }
       } else {
-        ffmpegmux->bufferqueue[i] = buf;
+        ffmpegmux->bufferqueue[i] = GST_BUFFER (data);
       }
     }
+  }
+
+  /* open "file" (gstreamer protocol to next element) */
+  if (!ffmpegmux->opened) {
+    /* we do need all streams to have started capsnego,
+     * or things will go horribly wrong */
+    for (i = 0; i < ffmpegmux->context->nb_streams; i++) {
+      AVStream *st = ffmpegmux->context->streams[i];
+
+      /* check whether the pad has successfully completed capsnego */ 
+      if (st->codec.codec_id == CODEC_ID_NONE) {
+        GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
+			   ("no caps set on stream %d (%s)", i,
+			    (st->codec.codec_type == CODEC_TYPE_VIDEO) ?
+			     "video" : "audio"));
+        return;
+      }
+    }
+
+    if (url_fopen (&ffmpegmux->context->pb,
+		   ffmpegmux->context->filename,
+		   URL_WRONLY) < 0) {
+      GST_ELEMENT_ERROR (element, LIBRARY, TOO_LAZY, (NULL),
+			 ("Failed to open stream context in ffmux"));
+      return;
+    }
+
+    if (av_set_parameters (ffmpegmux->context, NULL)) {
+      GST_ELEMENT_ERROR (element, LIBRARY, INIT, (NULL),
+			 ("Failed to initialize muxer"));
+      return;
+    }
+
+    /* we're now opened */
+    ffmpegmux->opened = TRUE;
+
+    /* now open the mux format */
+    av_write_header (ffmpegmux->context);
   }
 
   /* take the one with earliest timestamp,
@@ -383,6 +389,7 @@ gst_ffmpegmux_loop (GstElement *element)
     /* if we have no buffer yet, just use the first one */
     if (bufnum == -1) {
       bufnum = i;
+      continue;
     }
 
     /* if we do have one, only use this one if it's older */
@@ -395,17 +402,24 @@ gst_ffmpegmux_loop (GstElement *element)
   /* now handle the buffer, or signal EOS if we have
    * no buffers left */
   if (bufnum >= 0) {
+    GstBuffer *buf;
+
     /* push out current buffer */
     buf = ffmpegmux->bufferqueue[bufnum];
     ffmpegmux->bufferqueue[bufnum] = NULL;
-    oclass->in_plugin->write_packet (ffmpegmux->context,
-				     bufnum,
-				     GST_BUFFER_DATA (buf),
-				     GST_BUFFER_SIZE (buf), 0);
+
+    ffmpegmux->context->streams[bufnum]->codec.frame_number++;
+
+    /* set time */
+    ffmpegmux->context->streams[bufnum]->pts.val = (GST_BUFFER_TIMESTAMP (buf) * 90) / 1000000;
+    av_write_frame (ffmpegmux->context, bufnum,
+		    GST_BUFFER_DATA (buf),
+		    GST_BUFFER_SIZE (buf));
+    //ffmpegmux->context->streams[bufnum]->codec.real_pict_num++;
     gst_buffer_unref (buf);
   } else {
     /* close down */
-    oclass->in_plugin->write_trailer (ffmpegmux->context);
+    av_write_trailer (ffmpegmux->context);
     url_fclose (&ffmpegmux->context->pb);
     ffmpegmux->opened = FALSE;
     gst_element_set_eos (element);
@@ -470,8 +484,8 @@ gst_ffmpegmux_register (GstPlugin *plugin)
     /* This is a bit ugly, but we just take all formats
      * for the pad template. We'll get an exact match
      * when we open the stream */
-    audiosinkcaps = NULL;
-    videosinkcaps = NULL;
+    audiosinkcaps = gst_caps_new_empty ();
+    videosinkcaps = gst_caps_new_empty ();
     for (in_codec = first_avcodec; in_codec != NULL;
 	 in_codec = in_codec->next) {
       GstCaps *temp = gst_ffmpeg_codecid_to_caps (in_codec->id, NULL);
