@@ -28,7 +28,7 @@ SUBDIRS =
 EXTRA_DIST = \
 	$(PATCHES) \
 	Tag \
-	ffmpeg/CVS
+	ffmpeg/CVS \
 	ffmpeg/CREDITS \
 	ffmpeg/INSTALL \
 	ffmpeg/README \
