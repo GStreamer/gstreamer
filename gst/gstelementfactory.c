@@ -360,6 +360,22 @@ gst_element_factory_can_sink_caps (GstElementFactory *factory,
   return FALSE;
 }
 
+/**
+ * gst_element_factory_set_rank  :
+ * @factory: factory to rank
+ * @rank: rank value - higher number means more priority rank
+ *
+ * Specifies a rank for the element so that 
+ * autoplugging uses the most appropriate elements.
+ *
+ */
+void
+gst_element_factory_set_rank (GstElementFactory *factory, guint16 rank)
+{
+  g_return_if_fail(factory != NULL);
+  factory->rank = rank;
+}
+
 static void
 gst_element_factory_unload_thyself (GstPluginFeature *feature)
 {

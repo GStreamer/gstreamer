@@ -304,6 +304,11 @@ struct _GstElementDetails {
 #define GST_IS_ELEMENT_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENT_FACTORY))
 #define GST_IS_ELEMENT_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT_FACTORY))
 
+#define GST_ELEMENT_RANK_PRIMARY    256
+#define GST_ELEMENT_RANK_SECONDARY  128
+#define GST_ELEMENT_RANK_MARGINAL   64
+#define GST_ELEMENT_RANK_NONE       0
+
 struct _GstElementFactory {
   GstPluginFeature feature;
 
@@ -315,6 +320,8 @@ struct _GstElementFactory {
 
   GList *padtemplates;
   guint16 numpadtemplates;
+
+  guint16 rank;			/* used by autoplug to prioritise elements to try */
 };
 
 struct _GstElementFactoryClass {
@@ -339,6 +346,8 @@ GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);
 /* FIXME this name is wrong, probably so is the one above it */
 GstElement*		gst_element_factory_make		(const gchar *factoryname, const gchar *name);
+
+void			gst_element_factory_set_rank		(GstElementFactory *factory, guint16 rank);
 
 G_END_DECLS
 
