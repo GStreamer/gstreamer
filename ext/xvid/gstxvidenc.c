@@ -147,23 +147,8 @@ gst_xvidenc_class_init (GstXvidEncClass *klass)
 {
   GstElementClass *gstelement_class;
   GObjectClass *gobject_class;
-  XVID_INIT_PARAM xinit;
-  gint ret;
 
-  /* set up xvid initially (function pointers, CPU flags) */
-  memset(&xinit, 0, sizeof(XVID_INIT_PARAM));
-  xinit.cpu_flags = 0;
-  if ((ret = xvid_init(NULL, 0, &xinit, NULL)) != XVID_ERR_OK) {
-    g_warning("Failed to initialize XviD: %s (%d)",
-	      gst_xvid_error(ret), ret);
-    return;
-  }
-  
-  if (xinit.api_version != API_VERSION) {
-    g_warning("Xvid API version mismatch! %d.%d (that's us) != %d.%d (lib)",
-              (API_VERSION >> 8) & 0xff, API_VERSION & 0xff,
-              (xinit.api_version >> 8) & 0xff, xinit.api_version & 0xff);
-  }
+  gst_xvid_init();
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;

@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <xvid.h>
+#include "gstxvid.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,9 +66,6 @@ GType gst_xviddec_get_type(void);
 
 gboolean gst_xviddec_plugin_init (GModule   *module,
                                   GstPlugin *plugin);
-
-/* in gstxvid.c */
-extern gchar * gst_xvid_error (int errorcode);
 
 #ifdef __cplusplus
 }
