@@ -1020,9 +1020,40 @@ dnl * KDE *
 translit(dnm, m, l) AM_CONDITIONAL(USE_KIO, true)
 GST_CHECK_FEATURE(KIO, [kio], kio, [
   AC_PATH_PROG(KDE_CONFIG, kde-config, no)
+
   if test x$KDE_CONFIG != xno; then
     KDE_PREFIX=`$KDE_CONFIG --prefix`
-    KIO_CFLAGS="-I$KDE_PREFIX/include -I$qt_include_dir"
+  fi
+
+  kde_include_dirs="/usr/lib/kde/include /usr/local/kde/include /usr/local/include /usr/kde/include /usr/include/kde /usr/include /opt/kde3/include /opt/kde/include"
+  kde_lib_dirs="/usr/lib/kde/lib /usr/local/kde/lib /usr/kde/lib /usr/lib/kde /usr/lib/kde3 /usr/lib /usr/X11R6/lib /usr/local/lib /opt/kde3/lib /opt/kde/lib /usr/X11R6/kde/lib"
+
+  if test -n "$KDE_PREFIX"; then
+    kde_include_dirs="$KDE_PREFIX/include $KDE_PREFIX/include/kde $KDE_PREFIX $kde_include_dirs"
+    kde_lib_dirs="$KDE_PREFIX/lib $KDE_PREFIX $kde_lib_dirs"
+  fi
+  if test -n "$KDEDIR"; then
+    kde_include_dirs="$KDEDIR/include $KDEDIR/include/kde $KDEDIR $kde_include_dirs"
+    kde_lib_dirs="$KDEDIR/lib $KDEDIR $kde_lib_dirs"
+  fi
+
+  for dir in $kde_include_dirs; do
+    if test -r "$dir/kglobal.h"; then
+      kde_include_dir=$dir
+      break
+    fi
+  done
+
+  for dir in $kde_lib_dirs; do
+    try="ls -1 $dir/libkio.*"
+    if test -n "`$try 2> /dev/null`"; then
+      kde_lib_dir=$dir
+      break
+    fi
+  done
+
+  if test -n $kde_include_dir && test -n $kde_lib_dir; then
+    KIO_CFLAGS="-I$kde_include_dir -I$qt_include_dir"
     KIO_LIBS="-L$KDE_PREFIX/lib -L$qt_lib_dir -lkio -lqt-mt"
     AC_LANG_PUSH(C++)
     save_LIBS="$LIBS"
@@ -1039,6 +1070,8 @@ KIO::get ("bla")
     AC_LANG_POP(C++)
     AC_SUBST(KIO_CFLAGS)
     AC_SUBST(KIO_LIBS)
+  else
+    HAVE_KIO="false"
   fi
 ])
 
