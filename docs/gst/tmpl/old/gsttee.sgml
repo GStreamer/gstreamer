@@ -1,22 +1,16 @@
 <!-- ##### SECTION Title ##### -->
-GstFdSrc
+GstTee
 
 <!-- ##### SECTION Short_Description ##### -->
-Read buffers from a file descriptor. (fdsrc)
+1-to-N pipe fitting
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Read buffers from a file descriptor.
+A tee can be used to split out the filter graph.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstFdSrc ##### -->
-<para>
-
-</para>
-
 

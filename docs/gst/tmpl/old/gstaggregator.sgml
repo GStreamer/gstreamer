@@ -15,18 +15,3 @@ methods to request buffers from its pads.
 
 </para>
 
-<!-- ##### ENUM GstAggregatorSchedType ##### -->
-<para>
-
-</para>
-
-@AGGREGATOR_LOOP: 
-@AGGREGATOR_LOOP_SELECT: 
-@AGGREGATOR_CHAIN: 
-
-<!-- ##### STRUCT GstAggregator ##### -->
-<para>
-
-</para>
-
-

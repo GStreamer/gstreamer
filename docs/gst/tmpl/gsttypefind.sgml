@@ -9,16 +9,124 @@ GstTypeFindElement
 
 </para>
 
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### STRUCT GstTypeFindElement ##### -->
+<!-- ##### STRUCT GstTypeFind ##### -->
 <para>
 
 </para>
+
+@peek: 
+@suggest: 
+@data: 
+@get_length: 
+
+<!-- ##### USER_FUNCTION GstTypeFindFunction ##### -->
+<para>
+
+</para>
+
+@find: 
+@data: 
+
+
+<!-- ##### ENUM GstTypeFindProbability ##### -->
+<para>
+
+</para>
+
+@GST_TYPE_FIND_MINIMUM: 
+@GST_TYPE_FIND_POSSIBLE: 
+@GST_TYPE_FIND_LIKELY: 
+@GST_TYPE_FIND_NEARLY_CERTAIN: 
+@GST_TYPE_FIND_MAXIMUM: 
+
+<!-- ##### STRUCT GstTypeFindFactory ##### -->
+<para>
+Object that stores information about a typefind function
+</para>
+
+
+<!-- ##### FUNCTION gst_type_find_peek ##### -->
+<para>
+
+</para>
+
+@find: 
+@offset: 
+@size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_suggest ##### -->
+<para>
+
+</para>
+
+@find: 
+@probability: 
+@caps: 
+
+
+<!-- ##### FUNCTION gst_type_find_get_length ##### -->
+<para>
+
+</para>
+
+@find: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_register ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@name: 
+@rank: 
+@func: 
+@extensions: 
+@possible_caps: 
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_factory_get_list ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_factory_get_extensions ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_factory_get_caps ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_type_find_factory_call_function ##### -->
+<para>
+
+</para>
+
+@factory: 
+@find: 
 
 

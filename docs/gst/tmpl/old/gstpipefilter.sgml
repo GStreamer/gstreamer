@@ -1,22 +1,17 @@
 <!-- ##### SECTION Title ##### -->
-GstIdentity
+GstPipefilter
 
 <!-- ##### SECTION Short_Description ##### -->
-Pass data without modification. (identity)
+A wrapper around every stdin/stdout capable program
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Pass data without modification.
+A GstPipefilter pipes data to an external program and creates
+buffers from its output.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstIdentity ##### -->
-<para>
-
-</para>
-
 

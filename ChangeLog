@@ -1,5 +1,113 @@
 2004-04-28  David Schleef  <ds@schleef.org>
 
+	Disable parsing of a lot of files that aren't part of the
+	exported API.  Move corresponding template files to old/,
+	waiting for removal when they don't contain anything
+	interesting.
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/cothreads.sgml:
+	* docs/gst/tmpl/cothreads_compat.sgml:
+	* docs/gst/tmpl/gettext.sgml:
+	* docs/gst/tmpl/gobject2gtk.sgml:
+	* docs/gst/tmpl/grammar.tab.sgml:
+	* docs/gst/tmpl/gst-i18n-app.sgml:
+	* docs/gst/tmpl/gst-i18n-lib.sgml:
+	* docs/gst/tmpl/gst_private.sgml:
+	* docs/gst/tmpl/gstaggregator.sgml:
+	* docs/gst/tmpl/gstarch.sgml:
+	* docs/gst/tmpl/gstatomic_impl.sgml:
+	* docs/gst/tmpl/gstbufferstore.sgml:
+	* docs/gst/tmpl/gstdata_private.sgml:
+	* docs/gst/tmpl/gstdisksink.sgml:
+	* docs/gst/tmpl/gstdisksrc.sgml:
+	* docs/gst/tmpl/gstelementfactory.sgml:
+	* docs/gst/tmpl/gstextratypes.sgml:
+	* docs/gst/tmpl/gstfakesink.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* docs/gst/tmpl/gstfdsink.sgml:
+	* docs/gst/tmpl/gstfdsrc.sgml:
+	* docs/gst/tmpl/gstfilesink.sgml:
+	* docs/gst/tmpl/gstfilesrc.sgml:
+	* docs/gst/tmpl/gsthttpsrc.sgml:
+	* docs/gst/tmpl/gstidentity.sgml:
+	* docs/gst/tmpl/gstindexfactory.sgml:
+	* docs/gst/tmpl/gstmarshal.sgml:
+	* docs/gst/tmpl/gstmd5sink.sgml:
+	* docs/gst/tmpl/gstmultidisksrc.sgml:
+	* docs/gst/tmpl/gstmultifilesrc.sgml:
+	* docs/gst/tmpl/gstpadtemplate.sgml:
+	* docs/gst/tmpl/gstpipefilter.sgml:
+	* docs/gst/tmpl/gstschedulerfactory.sgml:
+	* docs/gst/tmpl/gstsearchfuncs.sgml:
+	* docs/gst/tmpl/gstshaper.sgml:
+	* docs/gst/tmpl/gstspider.sgml:
+	* docs/gst/tmpl/gstspideridentity.sgml:
+	* docs/gst/tmpl/gststatistics.sgml:
+	* docs/gst/tmpl/gsttee.sgml:
+	* docs/gst/tmpl/gsttimecache.sgml:
+	* docs/gst/tmpl/gsttypefind.sgml:
+	* docs/gst/tmpl/gsttypefindfactory.sgml:
+	* docs/gst/tmpl/gstxmlregistry.sgml:
+	* docs/gst/tmpl/gthread-cothreads.sgml:
+	* docs/gst/tmpl/old/cothreads.sgml:
+	* docs/gst/tmpl/old/cothreads_compat.sgml:
+	* docs/gst/tmpl/old/gettext.sgml:
+	* docs/gst/tmpl/old/gobject2gtk.sgml:
+	* docs/gst/tmpl/old/grammar.tab.sgml:
+	* docs/gst/tmpl/old/gst-i18n-app.sgml:
+	* docs/gst/tmpl/old/gst-i18n-lib.sgml:
+	* docs/gst/tmpl/old/gst_private.sgml:
+	* docs/gst/tmpl/old/gstaggregator.sgml:
+	* docs/gst/tmpl/old/gstarch.sgml:
+	* docs/gst/tmpl/old/gstatomic_impl.sgml:
+	* docs/gst/tmpl/old/gstbufferstore.sgml:
+	* docs/gst/tmpl/old/gstdata_private.sgml:
+	* docs/gst/tmpl/old/gstdisksink.sgml:
+	* docs/gst/tmpl/old/gstdisksrc.sgml:
+	* docs/gst/tmpl/old/gstelementfactory.sgml:
+	* docs/gst/tmpl/old/gstextratypes.sgml:
+	* docs/gst/tmpl/old/gstfakesink.sgml:
+	* docs/gst/tmpl/old/gstfakesrc.sgml:
+	* docs/gst/tmpl/old/gstfdsink.sgml:
+	* docs/gst/tmpl/old/gstfdsrc.sgml:
+	* docs/gst/tmpl/old/gstfilesink.sgml:
+	* docs/gst/tmpl/old/gstfilesrc.sgml:
+	* docs/gst/tmpl/old/gsthttpsrc.sgml:
+	* docs/gst/tmpl/old/gstidentity.sgml:
+	* docs/gst/tmpl/old/gstindexfactory.sgml:
+	* docs/gst/tmpl/old/gstmarshal.sgml:
+	* docs/gst/tmpl/old/gstmd5sink.sgml:
+	* docs/gst/tmpl/old/gstmultidisksrc.sgml:
+	* docs/gst/tmpl/old/gstmultifilesrc.sgml:
+	* docs/gst/tmpl/old/gstpadtemplate.sgml:
+	* docs/gst/tmpl/old/gstpipefilter.sgml:
+	* docs/gst/tmpl/old/gstschedulerfactory.sgml:
+	* docs/gst/tmpl/old/gstsearchfuncs.sgml:
+	* docs/gst/tmpl/old/gstshaper.sgml:
+	* docs/gst/tmpl/old/gstspider.sgml:
+	* docs/gst/tmpl/old/gstspideridentity.sgml:
+	* docs/gst/tmpl/old/gststatistics.sgml:
+	* docs/gst/tmpl/old/gsttee.sgml:
+	* docs/gst/tmpl/old/gsttimecache.sgml:
+	* docs/gst/tmpl/old/gsttypefindfactory.sgml:
+	* docs/gst/tmpl/old/gstxmlregistry.sgml:
+	* docs/gst/tmpl/old/gthread-cothreads.sgml:
+	* docs/gst/tmpl/old/types.sgml:
+	* docs/gst/tmpl/types.sgml:
+
+	Rename gsttypefind.[ch] back to gsttypefindelement.[ch], since
+	gtkdoc-scan doesn't like files with the same name in different
+	directories.
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	* gst/elements/gsttypefind.c: 
+	* gst/elements/gsttypefind.h:
+	* gst/elements/gsttypefindelement.c:
+	* gst/elements/gsttypefindelement.h:
+
+2004-04-28  David Schleef  <ds@schleef.org>
+
 	A bunch of portability fixes, derived from Steve Lhomme's MSVC
 	patch (bug #141317):
 	* gst/gst-i18n-lib.h: Allow disabling gettext.

@@ -1,0 +1,16 @@
+<!-- ##### SECTION Title ##### -->
+GstFakeSrc
+
+<!-- ##### SECTION Short_Description ##### -->
+Generate empty buffers. (fakesrc)
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+

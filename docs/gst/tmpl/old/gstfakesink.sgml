@@ -1,11 +1,13 @@
 <!-- ##### SECTION Title ##### -->
-GstFileSink
+GstFakeSink
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Sources a buffer without doing anything with it. (fakesink)
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+Take a buffer and gst_buffer_unref() it. This element does nothing
+with the buffer. (fakesink)
 
 </para>
 
@@ -13,18 +15,4 @@ GstFileSink
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstFileSink ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ENUM GstFileSinkFlags ##### -->
-<para>
-
-</para>
-
-@GST_FILESINK_OPEN: 
-@GST_FILESINK_FLAG_LAST: 
 

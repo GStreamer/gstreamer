@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GstShaper
+GstSpider
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -13,18 +13,4 @@ GstShaper
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstShaper ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ENUM GstShaperPolicyType ##### -->
-<para>
-
-</para>
-
-@SHAPER_POLICY_TIMESTAMPS: 
-@SHAPER_POLICY_BUFFERSIZE: 
 

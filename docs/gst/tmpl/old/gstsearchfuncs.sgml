@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GstMultiFileSrc
+gstsearchfuncs
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -13,18 +13,4 @@ GstMultiFileSrc
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstMultiFileSrc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ENUM GstMultiFileSrcFlags ##### -->
-<para>
-
-</para>
-
-@GST_MULTIFILESRC_OPEN: 
-@GST_MULTIFILESRC_FLAG_LAST: 
 

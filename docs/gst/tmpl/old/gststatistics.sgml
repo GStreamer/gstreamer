@@ -1,22 +1,17 @@
 <!-- ##### SECTION Title ##### -->
-GstTee
+GstStatistics
 
 <!-- ##### SECTION Short_Description ##### -->
-1-to-N pipe fitting
+Provide statistics about data that passes this plugin
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-A tee can be used to split out the filter graph.
+The plugin doesn't alter the data but provides statistics about
+the data stream, such as buffers/bytes/events etc.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstTee ##### -->
-<para>
-
-</para>
-
 

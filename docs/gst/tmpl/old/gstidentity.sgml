@@ -1,0 +1,16 @@
+<!-- ##### SECTION Title ##### -->
+GstIdentity
+
+<!-- ##### SECTION Short_Description ##### -->
+Pass data without modification. (identity)
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Pass data without modification.
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+

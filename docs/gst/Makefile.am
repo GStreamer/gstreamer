@@ -73,22 +73,26 @@ IGNORE_HFILES= \
 	types.h \
 	grammar.tab.h \
 	gstmarshal.h \
-	elements/gstaggregator.h \
-	elements/gstbufferstore.h \
-	elements/gstfakesink.h \
-	elements/gstfakesrc.h \
-	elements/gstfdsink.h \
-	elements/gstfdsrc.h \
-	elements/gstfilesink.h \
-	elements/gstfilesrc.h \
-	elements/gstidentity.h \
-	elements/gstmd5sink.h \
-	elements/gstmultifilesrc.h \
-	elements/gstpipefilter.h \
-	elements/gstshaper.h \
-	elements/gststatistics.h \
-	elements/gsttee.h \
-	elements/gsttypefind.h
+	gstaggregator.h \
+	gstbufferstore.h \
+	gstfakesink.h \
+	gstfakesrc.h \
+	gstfdsink.h \
+	gstfdsrc.h \
+	gstfilesink.h \
+	gstfilesrc.h \
+	gstidentity.h \
+	gstmd5sink.h \
+	gstmultifilesrc.h \
+	gstpipefilter.h \
+	gstshaper.h \
+	gststatistics.h \
+	gsttee.h \
+	gsttypefindelement.h \
+	gstspider.h \
+	gstspideridentity.h \
+	gstsearchfuncs.h \
+	gstxmlregistry.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

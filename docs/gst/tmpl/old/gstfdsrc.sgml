@@ -1,22 +1,16 @@
 <!-- ##### SECTION Title ##### -->
-GstFdSink
+GstFdSrc
 
 <!-- ##### SECTION Short_Description ##### -->
-Write data to a file descriptor. (fdsink)
+Read buffers from a file descriptor. (fdsrc)
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Write data to a file descriptor.
+Read buffers from a file descriptor.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstFdSink ##### -->
-<para>
-
-</para>
-
 

@@ -15,17 +15,3 @@ and subbuffers.
 
 </para>
 
-<!-- ##### STRUCT GstFileSrc ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### ENUM GstFileSrcFlags ##### -->
-<para>
-
-</para>
-
-@GST_FILESRC_OPEN: 
-@GST_FILESRC_FLAG_LAST: 
-

@@ -40,7 +40,7 @@ libgstelements_la_SOURCES =	\
 	gstshaper.c		\
 	gststatistics.c		\
 	gsttee.c		\
-	gsttypefind.c
+	gsttypefindelement.c
 
 libgstelements_la_CFLAGS = $(GST_CFLAGS)
 libgstelements_la_LIBADD =
@@ -62,7 +62,7 @@ noinst_HEADERS =		\
 	gstshaper.h		\
 	gststatistics.h		\
 	gsttee.h		\
-	gsttypefind.h
+	gsttypefindelement.h
 
 install-data-local: as-libtool-install-data-local
 

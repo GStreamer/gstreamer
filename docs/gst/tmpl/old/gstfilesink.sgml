@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GstMD5Sink
+GstFileSink
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -13,10 +13,4 @@ GstMD5Sink
 <para>
 
 </para>
-
-<!-- ##### STRUCT GstMD5Sink ##### -->
-<para>
-
-</para>
-
 
