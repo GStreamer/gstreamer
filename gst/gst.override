@@ -189,8 +189,8 @@ _wrap_gst_tag_list_subscript(PyGObject *self, PyObject *py_key)
 		PyErr_SetString(PyExc_TypeError, "lists are currently unspported");
 	}
 		
-	if (v == NULL)
-		Py_INCREF(Py_None);
+	if (v != NULL)
+		Py_INCREF(v);
 	return v;
 }
 
@@ -242,8 +242,8 @@ _wrap_gst_tag_list_get(PyGObject *self, PyObject *args)
 	}
 
 	if (val == NULL)
-	    Py_INCREF(Py_None);
-	
+		val = failobj;
+	Py_INCREF(val);
 	return val;
 }
 %%
