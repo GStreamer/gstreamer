@@ -1,3 +1,10 @@
+2004-01-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_connect):
+	  Link with right caps (else, it segfaults).
+	* ext/mplex/gstmplexjob.cc:
+	  Fix for slight API change in 1.6.1.93 release of mjpegtools.
+
 2004-01-15  David Schleef  <ds@schleef.org>
 
 	* gst-libs/gst/audio/Makefile.am:
