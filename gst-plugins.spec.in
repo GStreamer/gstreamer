@@ -33,7 +33,7 @@ plugins.
 %prep
 %setup
 %build
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man  
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man --enable-DEBUG 
 
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
@@ -638,7 +638,7 @@ Video CD parsing and playback
 %files -n gstreamer-vcd
 %defattr(-, root, root)
 %{prefix}/lib/gst/libvcd*
-%{prefix}/lib/gst/ibgstcdxa*
+%{prefix}/lib/gst/libgstcdxa*
 
 %package -n gstreamer-ladspa
 Summary: Gstreamer wrapper for LADSPA plugins
@@ -764,7 +764,7 @@ Mgpegtools based encoding and decoding plugin
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstjpegmmx*
 
-%post -n gstreamer-gstreamer-jpegmmx
+%post -n gstreamer-jpegmmx
 %{prefix}/bin/gst-register --gst-mask=0
 
 %package -n gstreamer-plugin-libs
