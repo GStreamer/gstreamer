@@ -371,6 +371,7 @@ gst_element_wait_state_change
 gst_element_state_get_name
 gst_element_get_factory
 gst_element_get_managing_bin
+gst_element_no_more_pads
 <TITLE>GstElementFactory</TITLE>
 gst_element_factory_get_type
 gst_element_register
