@@ -34,6 +34,7 @@ enum {
 	HAVE_VIS_XID,
 	HAVE_VIDEO_SIZE,
 	LAST_SIGNAL,
+	PIPELINE_ERROR,
 };
 
 /* this struct is used to decouple signals coming out of threaded pipelines */
@@ -59,6 +60,10 @@ struct _GstPlaySignal
 			GstElement* element;
 			GParamSpec* param;
 		} info;
+		struct {
+			GstElement* element;
+			gchar* error;
+		} error;
 	} signal_data;
 };
 
@@ -338,6 +343,14 @@ gst_play_idle_signal (GstPlay *play)
 	case INFORMATION:
 		g_signal_emit (G_OBJECT (play), gst_play_signals[INFORMATION], 0, 
 		               signal->signal_data.info.element, signal->signal_data.info.param);
+		gst_object_unref (GST_OBJECT(signal->signal_data.info.element));
+		break;
+	case PIPELINE_ERROR:
+		if (gst_element_get_state(play->pipeline) == GST_STATE_PLAYING)
+			gst_element_set_state(play->pipeline, GST_STATE_READY);
+		g_signal_emit (G_OBJECT (play), gst_play_signals[PIPELINE_ERROR], 0, 
+		               signal->signal_data.error.element, signal->signal_data.error.error);
+		gst_object_unref (GST_OBJECT(signal->signal_data.error.element));
 		break;
 	default:
 		break;
@@ -428,14 +441,23 @@ callback_bin_post_iterate (	GstBin *bin,
 }
 
 static void
-callback_pipeline_error (	GObject *object,
-							GstObject *orig,
+callback_pipeline_error (	GstElement *object,
+							GstElement *orig,
 							gchar *error,
 							GstPlay* play)
 { 
-	g_print ("Pipeline error: %s\n", error);
-	if (gst_element_get_state(play->pipeline) == GST_STATE_PLAYING)
-		gst_element_set_state(play->pipeline, GST_STATE_READY);
+	GstPlaySignal *signal;
+	
+	signal = g_new0(GstPlaySignal, 1);
+	signal->signal_id = PIPELINE_ERROR;
+	signal->signal_data.error.element = orig;
+	signal->signal_data.error.error = error;
+	
+	gst_object_ref (GST_OBJECT(orig));
+	
+	g_async_queue_push(play->signal_queue, signal);
+	
+	play->idle_add_func ((GSourceFunc) gst_play_idle_signal, play);
 } 
 
 static void
@@ -450,6 +472,8 @@ callback_pipeline_deep_notify (	GstElement *element,
 	signal->signal_id = INFORMATION;
 	signal->signal_data.info.element = orig;
 	signal->signal_data.info.param = param;
+
+	gst_object_ref (GST_OBJECT(orig));
 	
 	g_async_queue_push(play->signal_queue, signal);
 	
@@ -572,6 +596,16 @@ gst_play_class_init (GstPlayClass *klass)
 			      G_TYPE_FROM_CLASS (klass), 
 			      G_SIGNAL_RUN_FIRST,
 			      G_STRUCT_OFFSET (GstPlayClass, information), 
+			      NULL, NULL,
+			      gst_marshal_VOID__OBJECT_PARAM, 
+			      G_TYPE_NONE, 2, 
+			      G_TYPE_OBJECT, G_TYPE_PARAM);
+	
+	gst_play_signals [PIPELINE_ERROR] = 
+		g_signal_new ("pipeline_error", 
+			      G_TYPE_FROM_CLASS (klass), 
+			      G_SIGNAL_RUN_FIRST,
+			      G_STRUCT_OFFSET (GstPlayClass, pipeline_error), 
 			      NULL, NULL,
 			      gst_marshal_VOID__OBJECT_PARAM, 
 			      G_TYPE_NONE, 2, 
