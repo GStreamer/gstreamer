@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-27 14:17+0200\n"
+"POT-Creation-Date: 2004-10-06 18:20+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -15,12 +15,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kon \"%s\" niet openen om te schrijven."
 
-#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:373
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fout bij sluiten bestand \"%s\"."
@@ -34,30 +34,35 @@ msgstr "Kon \"%s\" niet openen om te lezen."
 msgid "Could not open CD device for reading."
 msgstr "Kon het CD-apparaat niet openen om te lezen."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
+#: ext/gnomevfs/gstgnomevfssrc.c:1156
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Kon het VFS-bestand \"%s\" niet openen om te lezen."
 
-#: ext/gnomevfs/gstgnomevfssink.c:344
+#: ext/gnomevfs/gstgnomevfssrc.c:1164
+#, fuzzy
+msgid "No filename given."
+msgstr "Geen bestandsnaam opgegeven"
+
+#: ext/gnomevfs/gstgnomevfssink.c:428
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Kon het VFS-bestand \"%s\" niet openen om te schrijven: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:351
+#: ext/gnomevfs/gstgnomevfssink.c:435
 msgid "No filename given"
 msgstr "Geen bestandsnaam opgegeven"
 
-#: ext/gnomevfs/gstgnomevfssink.c:377
+#: ext/gnomevfs/gstgnomevfssink.c:463
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
 
-#: ext/sndfile/gstsf.c:582
+#: ext/sndfile/gstsf.c:579
 msgid "No filename specified."
 msgstr "Geen bestandsnaam opgegeven."
 
-#: ext/sndfile/gstsf.c:835
+#: ext/sndfile/gstsf.c:832
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kon niet schrijven naar bestand \"%s\"."
@@ -85,32 +90,32 @@ msgstr ""
 "Er kon geen bruikbaar kleurruimte-element worden gevonden.\n"
 "Installeer er alstublieft een en start opnieuw dit programma."
 
-#: sys/dxr3/dxr3audiosink.c:298
+#: sys/dxr3/dxr3audiosink.c:297
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Kon geluidsapparaat \"%s\" niet openen om te schrijven."
 
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
+#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Kon instelapparaat \"%s\" niet openen om te schrijven."
 
-#: sys/dxr3/dxr3audiosink.c:343
+#: sys/dxr3/dxr3audiosink.c:342
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Kon geluidsapparaat \"%s\" niet configureren."
 
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
+#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Kon geluidsapparaat \"%s\" niet instellen op %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:422
+#: sys/dxr3/dxr3audiosink.c:421
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Kon geluidsapparaat \"%s\" niet sluiten."
 
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
+#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Kon instelapparaat \"%s\" niet sluiten."

@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Plugins 0.8.4 "Alias"
+GStreamer: Release notes for GStreamer Plugins 0.8.5 "Take You On"
         
 
 The GStreamer team is happy to announce a new release
@@ -28,25 +28,34 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * New translation in this release: Albanian
-      * Translations: af az cs en_GB hu nl sq sr sv uk
+      * New translation in this release: Oriya
+      * Translations: af az cs en_GB hu nl or sq sr sv uk
       * licensing corrections
-      * fixes for compiling with G_DISABLE_ASSERT
+      * new element: mngdec
       * pixel aspect ratio conversion fixes
-      * tcpserversink fixes and additions
-      * multifdsink can use poll now as well
-      * interleave fixes
-      * audioscale fixes
-      * videotestsrc fixes
-      * v4lsrc fixes
-      * theoradec, theoraenc fixes
-      * lame fixes
+      * 64 bit fixes
+      * NEW_MEDIA fixes
+      * ogm support added
+      * matroska fixes
+      * playbin fixes
+      * alsamixer fixes
+      * gnomevfssrc fixes
+      * ogg fixes
+      * multifdsink fixes
+      * multifilesink fixes
+      * qtdemux fixes
+      * avidemux fixes
+      * asfdemux fixes
+      * wavenc fixes
       * flac fixes
-      * ximagesink, xvimagesink fixes
-      * sunaudio fixes
+      * fli/flx fixes
+      * mpeg fixes
+      * speex now actually works
 
 Bugs fixed in this release
     
+      * 121809 : [Solaris] Not able to record
+      * 130682 : [alsasink] fails to negotiate with audio decoders
       * 135407 : [xviddec] shows green frames when decoding packed bitstre...
       * 140432 : Osssink and alsasink broken on nforce2 (intel8x0) soundcard
       * 140897 : Incorrect segment duration in files created with matroska...
@@ -61,6 +70,17 @@ Bugs fixed in this release
       * 151236 : [v4l] compile failure
       * 151410 : Memory leaks in multifdsink
       * 151462 : theora plugin Makefile broken
+      * 151877 : [PATCH] Fix bad casts in ximagesink.c
+      * 151879 : [PATCH] fix bad pointer casts in xvimagesink.c
+      * 151881 : [PATCH] Fix format strings for amd64 in seek.c
+      * 151882 : [PATCH] Fix format string warnings in spider_seek.c
+      * 151883 : [PATCH] fix cdplayer.c warnings on amd64
+      * 151884 : [PATCH] Fix format string warnings in cdparanoia.c
+      * 151886 : [PATCH] Fix format string warnings in vorbisfile.c
+      * 151887 : [PATCH] Fix format string warnings in player.c
+      * 152102 : wavenc leaks events
+      * 152341 : patch for ivorbis compile failure
+      * 154301 : typefind and rmdemux don't use the same mime type for rea...
 
 Download
 
@@ -98,15 +118,23 @@ Contributors to this release
       * Arwed v. Merkatz
       * Balamurali Viswanathan
       * Benjamin Otte
+      * Brian Cameron
+      * Christian Schaller
+      * Christophe Fergeau
       * David Schleef
-      * Gernot Ziegler
+      * Francis Labonte
+      * Gora Mohanty
       * Iain Holmes
       * Jan Schmidt
       * Johan Dahlin
-      * Laurent Dhima
+      * Julien Moutte
+      * Martin Eikermann
+      * Nathan Robertson
+      * Phil Blundell
       * Ronald Bultje
+      * Scott Wheeler
       * Sebastien Cote
+      * Stephane Loeuillet
       * Thomas Vander Stichele
       * Wim Taymans
       * Zaheer Abbas Merali
- 
