@@ -103,7 +103,7 @@ static GstElementClass *parent_class = NULL;
 static guint gst_osssink_signals[LAST_SIGNAL] = { 0 };
 
 GType
-gst_osssink_get_type (void) 
+gst_osssink_get_type (void)
 {
   static GType osssink_type = 0;
 
@@ -120,6 +120,7 @@ gst_osssink_get_type (void)
       (GInstanceInitFunc)gst_osssink_init,
     };
     osssink_type = g_type_register_static (GST_TYPE_OSSELEMENT, "GstOssSink", &osssink_info, 0);
+    //GST_DEBUG_CATEGORY_INIT (oss_debug, "oss", 0, "OSS element");
   }
 
   return osssink_type;
@@ -202,6 +203,7 @@ gst_osssink_init (GstOssSink *osssink)
 
   gst_pad_set_chain_function (osssink->sinkpad, gst_osssink_chain);
 
+  GST_DEBUG ("initializing osssink");
   osssink->bufsize = 4096;
   osssink->chunk_size = 4096;
   osssink->mute = FALSE;
@@ -349,7 +351,7 @@ gst_osssink_chain (GstPad *pad, GstData *_data)
 
   if (!GST_OSSELEMENT (osssink)->bps) {
     gst_buffer_unref (buf);
-    gst_element_error (GST_ELEMENT (osssink), "capsnego was never performed, unknown data type");
+    gst_element_error (osssink, CORE, NEGOTIATION, NULL, ("format wasn't negotiated before chain function"));
     return;
   }
 

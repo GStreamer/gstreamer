@@ -267,7 +267,7 @@ gst_esdmon_get (GstPad *pad)
           "channels",   G_TYPE_INT,	esdmon->channels
         )) <= 0)
     {
-      gst_element_error (GST_ELEMENT (esdmon), "could not set caps");
+      gst_element_error (esdmon, CORE, NEGOTIATION, NULL, NULL);
       return NULL;
     }
   }

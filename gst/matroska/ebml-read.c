@@ -167,9 +167,9 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
     } else {
       guint64 pos = gst_bytestream_tell (ebml->bs);
       gst_event_unref (event);
-      gst_element_error (GST_ELEMENT (ebml),
-			 "Read error at position %llu (0x%llx)",
-			 pos, pos);
+      gst_element_error (ebml, RESOURCE, READ, NULL,
+			 ("Read error at position %llu (0x%llx)",
+			 pos, pos));
     }
     return -1;
   }
@@ -180,17 +180,16 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
   }
   if (read > 4) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid EBML ID size tag (0x%x) at position %llu (0x%llx)",
-		       data[0], pos, pos);
+    gst_element_error (ebml, STREAM, DEMUX, NULL,
+		       ("Invalid EBML ID size tag (0x%x) at position %llu (0x%llx)",
+		       data[0], pos, pos));
     return -1;
   }
 
   if (gst_bytestream_peek_bytes (ebml->bs, &data, read) != read) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Read error at position %llu (0x%llx)",
-		       pos, pos);
+    gst_element_error (ebml, RESOURCE, READ, NULL,
+		       ("Read error at position %llu (0x%llx)", pos, pos));
     return -1;
   }
   while (n < read)
@@ -217,12 +216,11 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
   guint8 *data;
   gint len_mask = 0x80, read = 1, n = 1, num_ffs = 0;
   guint64 total;
-                                                                                
+
   if (gst_bytestream_peek_bytes (ebml->bs, &data, 1) != 1) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Read error at position %llu (0x%llx)",
-		       pos, pos);
+    gst_element_error (ebml, RESOURCE, READ, NULL,
+		       ("Read error at position %llu (0x%llx)", pos, pos));
     return -1;
   }
   total = data[0];
@@ -232,9 +230,9 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
   }
   if (read > 8) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid EBML length size tag (0x%x) at position %llu (0x%llx)",
-		       data[0], pos, pos);
+    gst_element_error (ebml, STREAM, DEMUX, NULL,
+		       ("Invalid EBML length size tag (0x%x) at position %llu (0x%llx)",
+		       data[0], pos, pos));
     return -1;
   }
 
@@ -242,9 +240,8 @@ gst_ebml_read_element_length (GstEbmlRead *ebml,
     num_ffs++;
   if (gst_bytestream_peek_bytes (ebml->bs, &data, read) != read) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Read error at position %llu (0x%llx)",
-		       pos, pos);
+    gst_element_error (ebml, RESOURCE, READ, NULL,
+		       ("Read error at position %llu (0x%llx)", pos, pos));
     return -1;
   }
   while (n < read) {
@@ -275,9 +272,8 @@ gst_ebml_read_element_data (GstEbmlRead *ebml,
 
   if (gst_bytestream_peek (ebml->bs, &buf, length) != length) {
     guint64 pos = gst_bytestream_tell (ebml->bs);
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Read error at position %llu (0x%llx)",
-		       pos, pos);
+    gst_element_error (ebml, RESOURCE, READ, NULL,
+		       ("Read error at position %llu (0x%llx)", pos, pos));
     if (buf)
       gst_buffer_unref (buf);
     return NULL;
@@ -331,9 +327,8 @@ gst_ebml_read_seek (GstEbmlRead *ebml,
 
   /* now seek */
   if (!gst_bytestream_seek (ebml->bs, offset, GST_SEEK_METHOD_SET)) {
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Seek to position %llu (0x%llx) failed",
-		       offset, offset);
+    gst_element_error (ebml, RESOURCE, SEEK, NULL,
+		       ("Seek to position %llu (0x%llx) failed", offset, offset));
     return NULL;
   }
 
@@ -345,8 +340,8 @@ gst_ebml_read_seek (GstEbmlRead *ebml,
   /* get the discont event and return */
   gst_bytestream_get_status (ebml->bs, &remaining, &event);
   if (!event || GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
-    gst_element_error (GST_ELEMENT (ebml),
-		       "No discontinuity event after seek");
+    gst_element_error (ebml, CORE, SEEK, NULL,
+		       ("No discontinuity event after seek"));
     if (event)
       gst_event_unref (event);
     return NULL;
@@ -436,9 +431,9 @@ gst_ebml_read_uint (GstEbmlRead *ebml,
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid integer element size %d at position %llu (0x%llu)",
-		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf));
+    gst_element_error (ebml, STREAM, DEMUX, NULL,
+		       ("Invalid integer element size %d at position %llu (0x%llu)",
+		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -472,9 +467,9 @@ gst_ebml_read_sint (GstEbmlRead *ebml,
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid integer element size %d at position %llu (0x%llx)",
-		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf));
+    gst_element_error (ebml, STREAM, DEMUX, NULL,
+		       ("Invalid integer element size %d at position %llu (0x%llx)",
+		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -517,16 +512,16 @@ gst_ebml_read_float (GstEbmlRead *ebml,
   size = GST_BUFFER_SIZE (buf);
 
   if (size != 4 && size != 8 && size != 10) {
-    gst_element_error (GST_ELEMENT (ebml),
-		       "Invalid float element size %d at position %llu (0x%llx)",
-		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf));
+    gst_element_error (ebml, STREAM, DEMUX, NULL,
+		       ("Invalid float element size %d at position %llu (0x%llx)",
+		       size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
     gst_buffer_unref (buf);
     return FALSE;
   }
 
   if (size == 10) {
-    gst_element_error (GST_ELEMENT (ebml),
-		       "FIXME! 10-byte floats unimplemented");
+    gst_element_error (ebml, CORE, NOT_IMPLEMENTED, NULL,
+		       ("FIXME! 10-byte floats unimplemented"));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -686,7 +681,7 @@ gst_ebml_read_header (GstEbmlRead *ebml,
   if (!(id = gst_ebml_peek_id (ebml, &level_up)))
     return FALSE;
   if (level_up != 0 || id != GST_EBML_ID_HEADER) {
-    gst_element_error (GST_ELEMENT (ebml), "Not a EBML file");
+    gst_element_error (ebml, STREAM, WRONG_TYPE, NULL, NULL);
     return FALSE;
   }
   if (!gst_ebml_read_master (ebml, &id))

@@ -549,8 +549,8 @@ gst_flacenc_chain (GstPad *pad, GstData *_data)
   }
 
   if (!flacenc->negotiated) {
-    gst_element_error (GST_ELEMENT (flacenc),
-		    "format not negotiated");
+    gst_element_error (flacenc, CORE, NEGOTIATION, NULL,
+		       ("format wasn't negotiated before chain function"));
     return;
   }
 
@@ -575,8 +575,8 @@ gst_flacenc_chain (GstPad *pad, GstData *_data)
     gst_flacenc_set_metadata (flacenc);
     state = FLAC__seekable_stream_encoder_init (flacenc->encoder);
     if (state != FLAC__STREAM_ENCODER_OK) {
-      gst_element_error (GST_ELEMENT (flacenc),
-		         "could not initialize encoder (wrong parameters?)");
+      gst_element_error (flacenc, LIBRARY, INIT, NULL,
+		         ("could not initialize encoder (wrong parameters?)"));
       return;
     }
   }
@@ -610,8 +610,7 @@ gst_flacenc_chain (GstPad *pad, GstData *_data)
   flacenc->data = NULL;
 
   if (!res) {
-    gst_element_error (GST_ELEMENT (flacenc),
-		         "encoding error");
+    gst_element_error (flacenc, STREAM, ENCODE, NULL, NULL);
   }
 }
 

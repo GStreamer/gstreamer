@@ -817,7 +817,7 @@ gst_v4l2src_get (GstPad *pad)
 
   if (v4l2src->use_fixed_fps &&
       (fps = gst_v4l2src_get_fps(v4l2src)) == 0) {
-    gst_element_error (GST_ELEMENT (v4l2src), "Could not get frame rate for element."); 
+    gst_element_error (v4l2src, RESOURCE, SETTINGS, NULL, ("could not get frame rate for element"));
     return NULL;
   }
 

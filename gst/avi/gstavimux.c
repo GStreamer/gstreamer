@@ -29,6 +29,7 @@
 #include "config.h"
 #endif
 
+#include "gst-libs/gst/gst-i18n-plugin.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -984,7 +985,8 @@ gst_avimux_stop_file (GstAviMux *avimux)
       if (avimux->audio_time) {
         avimux->auds_hdr.rate = (GST_SECOND * avimux->audio_size) / avimux->audio_time;
       } else {
-        gst_element_error (GST_ELEMENT (avimux), "Audio stream available, but no audio data transferred (or data with invalid timestamps). Resulting AVI will be corrupt");
+        gst_element_error (avimux, STREAM, MUX,
+                           (_("No or invalid input audio, AVI stream will be corrupt")), NULL);
         avimux->auds_hdr.rate = 0;
       }
       avimux->auds.av_bps = avimux->auds_hdr.rate * avimux->auds_hdr.scale;

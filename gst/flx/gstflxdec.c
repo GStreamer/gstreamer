@@ -463,7 +463,7 @@ gst_flxdec_loop (GstElement *element)
     if (flxh->type != FLX_MAGICHDR_FLI &&
       flxh->type != FLX_MAGICHDR_FLC &&
       flxh->type != FLX_MAGICHDR_FLX) {
-      gst_element_error (element, "not a flx file (type %d)\n", flxh->type);
+      gst_element_error (element, STREAM, WRONG_TYPE, NULL, ("not a flx file (type %d)\n", flxh->type));
       return;
     }
   

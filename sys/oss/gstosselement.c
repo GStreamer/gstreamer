@@ -24,6 +24,7 @@
 #include "config.h"
 #endif
 
+#include "gst-libs/gst/gst-i18n-plugin.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -679,37 +680,32 @@ gst_osselement_open_audio (GstOssElement *oss)
   if (oss->fd < 0) {
     switch (errno) {
       case EBUSY:
-	gst_element_error (GST_ELEMENT (oss),
-			   "osselement: Unable to open %s (in use ?)",
-			   oss->device);
-	break;
-      case EISDIR:
-	gst_element_error (GST_ELEMENT (oss),
-			   "osselement: Device %s is a directory",
-			   oss->device);
+	gst_element_error (oss, RESOURCE, BUSY,
+                           (_("OSS device %s is already in use by another program."), oss->device), NULL);
 	break;
       case EACCES:
       case ETXTBSY:
-	gst_element_error (GST_ELEMENT (oss),
-			   "osselement: Cannot access %s, check permissions",
-			   oss->device);
+        if (mode == GST_OSSELEMENT_WRITE)
+	  gst_element_error (oss, RESOURCE, OPEN_WRITE,
+			     (_("Could not access device %s, check it's permissions"), oss->device), GST_ERROR_SYSTEM);
+        else
+	  gst_element_error (oss, RESOURCE, OPEN_READ,
+			     (_("Could not access device %s, check it's permissions"), oss->device), GST_ERROR_SYSTEM);
 	break;
       case ENXIO:
       case ENODEV:
       case ENOENT:
-	gst_element_error (GST_ELEMENT (oss),
-			   "osselement: Cannot access %s, does it exist ?",
-			   oss->device);
+	gst_element_error (oss, RESOURCE, NOT_FOUND,
+			   (_("Device %s does not exist"), oss->device), GST_ERROR_SYSTEM);
 	break;
-      case EROFS:
-	gst_element_error (GST_ELEMENT (oss),
-			   "osselement: Cannot access %s, read-only filesystem ?",
-			   oss->device);
       default:
 	/* FIXME: strerror is not threadsafe */
-	gst_element_error (GST_ELEMENT (oss),
-			   "osselement: Cannot open %s, generic error: %s",
-			   oss->device, strerror (errno));
+        if (mode == GST_OSSELEMENT_WRITE)
+	  gst_element_error (oss, RESOURCE, OPEN_WRITE,
+			     (_("Could not open device \"%s\" for writing"), oss->device), GST_ERROR_SYSTEM);
+        else
+	  gst_element_error (oss, RESOURCE, OPEN_READ,
+			     (_("Could not open device \"%s\" for reading"), oss->device), GST_ERROR_SYSTEM);
 	break;
     }
     return FALSE;

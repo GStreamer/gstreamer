@@ -285,14 +285,13 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstData *_data)
     if (filter->pixbuf_loader != NULL) {
       GstBuffer *outbuf;
       GdkPixbuf *pixbuf;
+      GError *error;
 
-      gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL);
-#if 0
-      if (gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL)) {
-        gst_element_error (GST_ELEMENT(filter), "error");
+      if (gdk_pixbuf_loader_close (filter->pixbuf_loader, &error)) {
+        gst_element_error (filter, LIBRARY, SHUTDOWN, NULL, (error->message));
+        g_error_free (error);
         return;
       }
-#endif
 
       pixbuf = gdk_pixbuf_loader_get_pixbuf (filter->pixbuf_loader);
 

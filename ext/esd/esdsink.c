@@ -265,7 +265,8 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
   if (!esdsink->negotiated) {
-    gst_element_error (GST_ELEMENT (esdsink), "not negotiated");
+    gst_element_error (esdsink, CORE, NEGOTIATION, NULL,
+                       ("element wasn't negotiated before chain function"));
     goto done;
   }
 

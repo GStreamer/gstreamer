@@ -588,7 +588,7 @@ gst_wavenc_chain (GstPad *pad,
 
   if (!wavenc->setup) {
     gst_buffer_unref (buf);
-    gst_element_error (GST_ELEMENT (wavenc), "encoder not initialised (input is not audio?)");
+    gst_element_error (wavenc, CORE, NEGOTIATION, NULL, ("encoder not initialised (input is not audio?)"));
     return;
   }
 

@@ -270,7 +270,9 @@ gst_goom_chain (GstPad *pad, GstData *_data)
   }
 
   if (goom->channels == 0) {
-    gst_element_error (GST_ELEMENT (goom), "sink format not negotiated");
+    gst_element_error (goom, CORE, NEGOTIATION, NULL,
+                       ("format wasn't negotiated before chain function"));
+
     goto done;
   }
 

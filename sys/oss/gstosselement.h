@@ -46,6 +46,11 @@ G_BEGIN_DECLS
 typedef struct _GstOssElement GstOssElement;
 typedef struct _GstOssElementClass GstOssElementClass;
 
+/* debugging category */
+GST_DEBUG_CATEGORY_EXTERN (oss_debug);
+//#define GST_CAT_DEFAULT oss_debug
+
+
 typedef enum {
   GST_OSSELEMENT_READ,
   GST_OSSELEMENT_WRITE,

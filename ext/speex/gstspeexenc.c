@@ -210,7 +210,7 @@ gst_speexenc_chain (GstPad *pad, GstData *_data)
             "channels", G_TYPE_INT, 1,
             NULL)))
     {
-      gst_element_error (GST_ELEMENT (speexenc), "could not negotiate");
+      gst_element_error (speexenc, CORE, NEGOTIATION, NULL, NULL);
       return;
     }
   }

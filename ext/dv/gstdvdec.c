@@ -783,7 +783,7 @@ gst_dvdec_loop (GstElement *element)
           dvdec->bpp = 2;
 	}
     } else {
-      gst_element_error (element, "could not negotiate");
+      gst_element_error (element, CORE, NEGOTIATION, NULL, NULL);
       return;
     }
   }
