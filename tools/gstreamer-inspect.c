@@ -111,7 +111,7 @@ int main(int argc,char *argv[]) {
   printf("\n");
 
   printf("Pad Templates:\n");
-  if (factory->numpadtemplates) {
+  if (g_list_length (factory->padtemplates) > 0) {
     pads = factory->padtemplates;
     while (pads) {
       padtemplate = (GstPadTemplate*)(pads->data);
@@ -201,12 +201,12 @@ int main(int argc,char *argv[]) {
         printf("      Has getregionfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->getregionfunc));
       if (pad->qosfunc)
         printf("      Has qosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->qosfunc));
-      if (pad->eosfunc) {
-        if (pad->eosfunc == gst_pad_eos_func)
-          printf("      Has default eosfunc() gst_pad_eos_func()\n");
-        else
-          printf("      Has eosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->eosfunc));
-      }
+      //if (pad->eosfunc) {
+        //if (pad->eosfunc == gst_pad_eos_func)
+        //  printf("      Has default eosfunc() gst_pad_eos_func()\n");
+        //else
+        //  printf("      Has eosfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(pad->eosfunc));
+      //}
 
       if (pad->padtemplate)
         printf("    Pad Template: '%s'\n",pad->padtemplate->name_template);

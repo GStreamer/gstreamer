@@ -607,7 +607,7 @@ plugins/cdparanoia/Makefile
 plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
 gstplay/Makefile
-components/bonobo-gstmediaplay/Makefile
+dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile
 test/xml/Makefile
 test/bindings/Makefile
