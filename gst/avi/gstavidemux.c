@@ -1244,7 +1244,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
     entry.size = GUINT32_FROM_LE (_entry->size);
     target = &index_entries[i];
 
-    if (entry.id == GST_RIFF_rec || entry.id == 0 || entry.size == 0)
+    if (entry.id == GST_RIFF_rec || entry.id == 0)
       continue;
 
     stream_nr = CHUNKID_TO_STREAMNR (entry.id);
@@ -1296,8 +1296,11 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
     stream->total_bytes += target->size;
     stream->total_frames++;
 
-    GST_DEBUG ("Adding index entry of size %u at offset %"
-        G_GUINT64_FORMAT, target->size, target->offset);
+    GST_DEBUG ("Adding index entry %d (%d) for stream %d of size %u "
+        "at offset %" G_GUINT64_FORMAT " and time %" GST_TIME_FORMAT,
+        target->index_nr, stream->total_frames - 1,
+        target->stream_nr, target->size, target->offset,
+        GST_TIME_ARGS (target->ts));
     list = g_list_prepend (list, target);
   }
 
@@ -1623,16 +1626,24 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
 
   /* init frames */
   for (i = 0; i < avi->num_streams; i++) {
+    GstFormat fmt = GST_FORMAT_TIME;
+
     stream = &avi->stream[i];
     if (stream->strh->type == GST_RIFF_FCC_vids) {
-      if (stream->strh->rate != 0)
-        stream->delay = stream->strh->init_frames * GST_SECOND *
-            stream->strh->scale / stream->strh->rate;
+      if (!gst_pad_convert (stream->pad,
+              GST_FORMAT_DEFAULT, stream->strh->init_frames,
+              &fmt, &stream->delay)) {
+        stream->delay = 0;
+      }
     } else {
-      if (stream->total_frames * stream->bitrate != 0)
-        stream->delay = GST_SECOND * stream->strh->init_frames *
-            stream->strh->length / (stream->total_frames * stream->bitrate);
+      if (!gst_pad_convert (stream->pad,
+              GST_FORMAT_DEFAULT, stream->strh->init_frames,
+              &fmt, &stream->delay)) {
+        stream->delay = 0;
+      }
     }
+    GST_LOG ("Adding init_time=%" GST_TIME_FORMAT " to stream %d",
+        GST_TIME_ARGS (stream->delay), i);
   }
   for (one = list; one != NULL; one = one->next) {
     entry = one->data;
