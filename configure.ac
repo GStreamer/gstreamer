@@ -572,6 +572,14 @@ GST_CHECK_FEATURE(SMOOTHWAVE, [smoothwave plugin], smoothwave, [
   if test $HAVE_GTK = "yes"; then HAVE_SMOOTHWAVE=yes; fi;
 ])
 
+
+dnl *** snapshot ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
+GST_CHECK_FEATURE(LIBPNG, [snapshot plugin], snapshot, [
+  GST_CHECK_LIBHEADER(LIBPNG, png, png_read_info, -lz, png.h, LIBPNG_LIBS="-lpng -lz")
+  AC_SUBST(LIBPNG_LIBS)
+])
+
 dnl *** tarkin ***
 dnl for now the sources are included in the plugin
 dnl and should be moved to ext-libs/ perhaps
@@ -833,6 +841,7 @@ ext/sdl/Makefile
 ext/shout/Makefile
 ext/sidplay/Makefile
 ext/smoothwave/Makefile
+ext/snapshot/Makefile
 ext/vorbis/Makefile
 ext/tarkin/Makefile
 ext/xmms/Makefile
