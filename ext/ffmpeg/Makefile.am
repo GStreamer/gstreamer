@@ -7,7 +7,8 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c 		\
 			  gstffmpegdemux.c 	\
 			  gstffmpegenc.c 	\
 			  gstffmpegmux.c 	\
-			  gstffmpegprotocol.c
+			  gstffmpegprotocol.c	\
+			  gstffmpegcolorspace.c
 
 libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) \
 	-I $(top_srcdir)/gst-libs/ext/ffmpeg/ffmpeg/libavcodec \
