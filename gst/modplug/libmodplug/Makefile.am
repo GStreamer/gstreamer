@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES = libmodplug.la
 
-libmodplug_la_CXXFLAGS = -fno-exceptions -Wall -ffast-math -D_REENTRANT
+libmodplug_la_CXXFLAGS = $(GST_FNOEXCEPTIONS_CFLAGS) $(GST_CFLAGS) $(GST_FFASTMATH_CFLAGS) -D_REENTRANT
 libmodplug_la_LDFLAGS = -module -avoid-version
 libmodplug_la_SOURCES = tables.cpp         \
                         sndmix.cpp         \

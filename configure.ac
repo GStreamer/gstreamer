@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 0, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
+AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 7, 0, 1, GST_CVS="no", CVS="yes")
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
@@ -39,6 +39,21 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
+
+dnl decide on error flags
+AS_COMPILER_FLAG(-Wall,GST_ERROR="$GST_ERROR -Wall",GST_ERROR="$GST_ERROR")
+if test "x$GST_CVS"="xyes"; then
+  AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
+
+  # Only set these optimization flags if gcc is being used.
+  #
+  GST_FUNROLL_CFLAGS="$GST_FUNROLL_CFLAGS -funroll-all-loops"
+  GST_FINLINE_CFLAGS="$GST_FINLINE_CFLAGS -finline-functions"
+  GST_FFASTMATH_CFLAGS="$GST_FFASTMATH_CFLAGS -ffast-math"
+  GST_FSCHEDULE_CFLAGS="$GST_FSCHEDULE_CFLAGS -fschedule-insns2"
+  GST_FNOEXCEPTIONS_CFLAGS="$GST_FNOEXCEPTIONS_CFLAGS -fno-exceptions"
+fi
+
 dnl determine c++ compiler
 AC_PROG_CXX
 dnl determine if c++ is available on this system
@@ -1056,9 +1071,16 @@ AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 
 dnl prefer internal headers to already installed ones
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs $GST_CFLAGS $GST_ERROR"
+GST_OPT_CFLAGS="$GST_FINLINE_CFLAGS $GST_FFASTMATH_CFLAGS"
 
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_FUNROLL_CFLAGS)
+AC_SUBST(GST_FINLINE_CFLAGS)
+AC_SUBST(GST_FFASTMATH_CFLAGS)
+AC_SUBST(GST_FSCHEDULE_CFLAGS)
+AC_SUBST(GST_FNOEXCEPTIONS_CFLAGS)
+AC_SUBST(GST_OPT_CFLAGS)
 
 dnl ###########################
 dnl # Configure external libs #
