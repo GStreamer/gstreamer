@@ -797,7 +797,6 @@ print_signal_info (GstElement * element)
       g_free (indent);
     }
 
-    g_free (query);
     if (found_signals) {
       g_slist_foreach (found_signals, (GFunc) g_free, NULL);
       g_slist_free (found_signals);

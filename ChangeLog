@@ -1,3 +1,10 @@
+2004-06-11  Steve Lhomme  <steve.lhomme@free.fr>
+
+	reviewed by Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* tools/gst-inspect.c: (print_signal_info):
+	  don't free random data twice. (fixes #144185)
+
 2004-06-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstqueue.c:
