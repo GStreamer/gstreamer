@@ -1,3 +1,23 @@
+gstreamer (0.4.0-1) unstable; urgency=low
+
+  * New upstream
+  * Update library package: libgstreamer0.3.4 -> libgstreamer0.4.0
+  * Add automake Python support to find python binary to run devhelp doc
+    helper script.  This touches -every- Makefile.in and since the package
+    diff will already be large just use automake 1.6 instead of 1.5 as used
+    upstream.  Sorry.
+  * Update config.{guess,sub}
+  * Temporarily comment out figures from manual so it builds
+  * Apply CVS patch for s/&percnt;/%/ in XML docs
+  * Added devhelp support
+  * Added gst-feedback to gstreamer-tools
+  * Break stuff: blindly reanme gstreamer-lib-core{-dev} to
+    gstreamer-core-libs{-dev}.  Hard to chose naming as these are half-plugins
+    and half-linkable libs.  Picking a scheme that also works with
+    gstreamer-plugins-* packages.  Still looking for a better solution...
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue, 16 Jul 2002 02:20:40 -0400
+
 gstreamer (0.3.4-1) unstable; urgency=low
 
   * New upstream

@@ -1,4 +1,5 @@
 usr/bin/gst-complete
+usr/bin/gst-feedback
 usr/bin/gst-inspect
 usr/bin/gst-launch
 usr/bin/gst-xmllaunch

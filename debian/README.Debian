@@ -12,7 +12,7 @@ GStreamer core is split into the following packages:
    gstreamer-doc           documentation
    gstreamer-tools         useful tools
    gstreamer-core          core plugins
-   gstreamer-lib-core      core lib plugins
-   gstreamer-lib-core-dev  development files for core lib plugins
+   gstreamer-core-libs     core lib plugins
+   gstreamer-core-libs-dev development files for core lib plugins
 
 David I. Lehn <dlehn@vt.edu>  Fri, 19 Jan 2001 19:13:06 -0500

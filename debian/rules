@@ -1,15 +1,7 @@
 #!/usr/bin/make -f
-# Sample debian/rules that uses debhelper. 
-# GNU copyright 1997 by Joey Hess.
-#
 
-# Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
-
-# This is the debhelper compatability version to use.
 export DH_COMPAT=3
-
-# This has to be exported to make some magic below work.
 export DH_OPTIONS
 
 export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -38,18 +30,12 @@ configure-stamp:
 		--with-html-dir=\$${prefix}/share/doc/gstreamer-doc \
 		--sysconfdir=/etc \
 		--with-configdir=/etc/gstreamer \
-		--enable-glib2 \
 		--disable-plugin-builddir \
 		--disable-tests \
 		--disable-examples \
 		--enable-docs-build \
-		--disable-plugin-docs \
 		--enable-DEBUG \
 		--enable-debug
-
-		# FIXME reenable when build is less painful
-		#--enable-docs-build \
-		#--disable-plugin-docs \
 
 	touch configure-stamp
 
@@ -57,9 +43,6 @@ build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
 
-	# Add here commands to compile the package.
-	# FIXME missing upstream, diff doesn't include these 0 byte files:
-	touch docs/fwg/base.css docs/manual/base.css
 	$(MAKE)
 
 	touch build-stamp
@@ -74,12 +57,6 @@ clean:
 	-$(MAKE) distclean
 
 	dh_clean
-
-	# FIXME some extra clean up
-	rm -rf debian/gstreamer
-	find . -name \*.stamp | xargs rm || true
-	find . -name Makefile | grep -v omega | xargs rm || true
-
 
 install: DH_OPTIONS=
 install: build
@@ -101,12 +78,16 @@ install: build
 	-cp -r docs/fwg/gst-plugin-writers-guide \
 	   docs/manual/gstreamer-manual \
 	   debian/gstreamer/usr/share/doc/gstreamer-doc
+
+	# devhelp files not installed by default
+	mkdir -p debian/gstreamer/usr/share/devhelp/specs
+	-cp docs/devhelp/*.devhelp debian/gstreamer/usr/share/devhelp/specs
+
 	# -doc lintian overrides
 	mkdir -p debian/gstreamer-doc/usr/share/lintian/overrides/
 	cp -a debian/gstreamer-doc.lintian debian/gstreamer-doc/usr/share/lintian/overrides/gstreamer-doc
 
 	dh_movefiles --sourcedir=debian/gstreamer
-
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.
@@ -115,28 +96,16 @@ binary-indep: build install
 # Need this version of debhelper for DH_OPTIONS to work.
 	dh_testdir
 	dh_testroot
-#	dh_installdebconf
 	dh_installdocs -A debian/README.Debian
 	dh_installexamples
 	dh_installmenu
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installinit
-#	dh_installcron
 	dh_installman
-#	dh_installinfo
-#	dh_undocumented
 	dh_installchangelogs
 	dh_strip
-#	dh_link
+	dh_link
 	dh_compress
 	dh_fixperms
-# You may want to make some executables suid here.
-#	dh_suidregister
-#	dh_makeshlibs
 	dh_installdeb
-#	dh_perl
-#	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
@@ -148,28 +117,17 @@ binary-arch: build install
 # Need this version of debhelper for DH_OPTIONS to work.
 	dh_testdir
 	dh_testroot
-#	dh_installdebconf
 	dh_installdocs -A debian/README.Debian
 	dh_installexamples
 	dh_installmenu
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installinit
-#	dh_installcron
 	dh_installman
-#	dh_installinfo
-#	dh_undocumented
 	dh_installchangelogs
 	dh_strip
-#	dh_link
 	dh_compress
 	dh_fixperms
-# You may want to make some executables suid here.
-#	dh_suidregister
 	dh_makeshlibs
 	dh_installdeb
-#	dh_perl
-	dh_shlibdeps -l`pwd`/debian/libgstreamer0.3.4/usr/lib
+	dh_shlibdeps -l`pwd`/debian/libgstreamer0.4.0/usr/lib
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
