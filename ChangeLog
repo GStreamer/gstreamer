@@ -4,6 +4,7 @@
 	Remove kioslave plugin. Markey is brewing a new working one
 	* ext/Makefile.am: Remove kioslave plugin
 	* ext/kio: remove
+	* gst-plugins.spec.in: remove kio plugin from spec
 
 2004-09-27  Wim Taymans  <wim@fluendo.com>
 

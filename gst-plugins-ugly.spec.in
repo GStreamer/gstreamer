@@ -258,7 +258,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximagesink.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
-@USE_KIO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstkio.so
 @USE_SNDFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 @USE_MUSICBRAINZ_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttrm.so
 
@@ -663,6 +662,9 @@ GStreamer support libraries header files.
 
 
 %changelog
+* Thu Sep 28 2004 Christian Schalle <uraeus at gnome dot org>
+- Remove kio plugin (as it was broken)
+
 * Wed Sep 21 2004 Christian Schaller <uraeus at gnome dot org>
 - Reorganize SPEC to fit better with fedora.us and freshrpms.net packages
 - Make sure gstinterfaces.so is in the package
