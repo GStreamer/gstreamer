@@ -49,6 +49,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
+typedef struct _GstBuffer GstBuffer;
+typedef struct _GstBufferPool GstBufferPool;
+
 /*
 #define GST_BUFFER(buf)		 	(((GstData*)(buf))->type == GST_BUFFER ? (GstBuffer *)(buf) : NULL)
 */
@@ -78,30 +81,42 @@ extern "C" {
 #define GST_BUFFER_TRYLOCK(buf)	(g_mutex_trylock(GST_BUFFER(buf)->lock))
 #define GST_BUFFER_UNLOCK(buf)	(g_mutex_unlock(GST_BUFFER(buf)->lock))
 
-
 enum {
   GST_BUFFER_ORIGINAL = GST_DATA_FLAG_LAST,
   GST_BUFFER_FLAG_LAST,
 };
 
-typedef struct _GstBuffer GstBuffer;
+/* bufferpools */
+#define GST_BUFFER_POOL(pool) ((GstBufferPool *)(pool))
 
-#include <gst/gstbufferpool.h>
+typedef GstBuffer *	(*GstBufferPoolBufferNewFunction)	(GstBufferPool *pool, guint size);
+typedef GstBuffer * 	(*GstBufferPoolBufferCopyFunction)	(GstBufferPool *pool, const GstBuffer *buffer, guint offset, guint size);
+
 
 struct _GstBuffer {
   GstData 		data_type;
 
   /* pointer to data and its size */
   gpointer 		data;
-  guint32 		size;
-
-  /* subbuffer support, who's my parent? */
-  GstBuffer 		*parent;
+  guint 		size;
 
   /* this is a pointer to the buffer pool (if any) */
   GstBufferPool *	pool;
   gpointer 		pool_private;
 };
+
+struct _GstBufferPool {
+  /* easiest way to get refcounting */
+  GstData 				data;
+
+  GstBufferPoolBufferNewFunction 	buffer_new;
+  GstBufferPoolBufferCopyFunction	buffer_copy;
+  GstDataFreeFunction			buffer_dispose;
+  GstDataFreeFunction			buffer_free;
+
+  gpointer				user_data;
+};
+
 
 /* initialization */
 void		_gst_buffer_initialize		(void);
@@ -118,20 +133,34 @@ void		gst_buffer_dispose 		(GstData *data);
 GstBuffer*	gst_buffer_new			(GstBufferPool *pool, guint size);
 
 /* creating a subbuffer */
-GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint32 offset, guint32 size);
+GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint offset, guint size);
 
 /* copy buffer */
-GstBuffer*	gst_buffer_copy			(const GstBuffer *buffer);
-
-/* parentage */
-void		gst_buffer_set_parent		(GstBuffer *buffer, GstBuffer *parent, guint offset, guint size);
-void		gst_buffer_unparent		(GstBuffer *buffer);
+#define		gst_buffer_copy(buffer)		gst_buffer_copy_part_from_pool (buffer->pool, buffer, 0, buffer->size);
+GstBuffer*	gst_buffer_copy_part_from_pool	(GstBufferPool *pool, const GstBuffer *buffer, guint offset, guint size);
 
 /* merge, span, or append two buffers, intelligently */
 GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 GstBuffer*	gst_buffer_append		(GstBuffer *buffer, GstBuffer *append);
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
+
+
+/* creating a new buffer pool from scratch */
+GstBufferPool *		gst_buffer_pool_new			(void);
+
+/* setting create and destroy functions */
+void 		gst_buffer_pool_set_buffer_new_function	        (GstBufferPool *pool, 
+                                                                 GstBufferPoolBufferNewFunction create);
+void 		gst_buffer_pool_set_buffer_copy_function	(GstBufferPool *pool, 
+                                                                 GstBufferPoolBufferCopyFunction copy); 
+void 		gst_buffer_pool_set_buffer_dispose_function	(GstBufferPool *pool, 
+                                                                 GstDataFreeFunction dispose); 
+void 		gst_buffer_pool_set_buffer_free_function	(GstBufferPool *pool, 
+                                                                 GstDataFreeFunction free); 
+void 		gst_buffer_pool_set_user_data			(GstBufferPool *pool, 
+                                                                 gpointer user_data);
+gpointer	gst_buffer_pool_get_user_data			(GstBufferPool *pool);
 
 
 #ifdef __cplusplus

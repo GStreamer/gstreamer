@@ -298,7 +298,6 @@ init_post (void)
   _gst_plugin_initialize ();
   _gst_event_initialize ();
   _gst_buffer_initialize ();
-  _gst_buffer_pool_initialize ();
 
   /* if we need to preload plugins */
   if (preload_plugins) {

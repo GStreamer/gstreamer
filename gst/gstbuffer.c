@@ -28,6 +28,24 @@
 #include "gstobject.h"
 
 static GMemChunk *_buffer_chunk = NULL;
+static GstBufferPool *_default_pool = NULL;
+static GstBufferPool *_sub_buffer_pool = NULL;
+
+static GstBuffer * 	gst_buffer_pool_default_buffer_new	(GstBufferPool *pool, 
+								 guint size);
+static GstBuffer * 	gst_buffer_pool_default_buffer_copy	(GstBufferPool *from_pool,
+								 const GstBuffer *buffer, 
+								 guint offset, 
+								 guint size);
+static void 		gst_buffer_pool_default_buffer_dispose	(GstData *buffer);
+
+static GstBuffer * 	gst_buffer_pool_sub_buffer_new		(GstBufferPool *pool, 
+								 guint size);
+static GstBuffer * 	gst_buffer_pool_sub_buffer_copy		(GstBufferPool *from_pool,
+								 const GstBuffer *buffer, 
+								 guint offset, 
+								 guint size);
+static void 		gst_buffer_pool_sub_buffer_dispose	(GstData *buffer);
 
 void
 _gst_buffer_initialize (void)
@@ -35,7 +53,15 @@ _gst_buffer_initialize (void)
   gint buffersize = sizeof (GstBuffer);
   if (_buffer_chunk == NULL)
   {
+    /* create the default buffer chunk */
     _buffer_chunk = g_mem_chunk_new ("GstBufferChunk", buffersize, buffersize * 128, G_ALLOC_AND_FREE);
+    /* create the default pool that uses g_malloc/free */
+    _default_pool = gst_buffer_pool_new ();
+    /* create the pool for subbuffers */
+    _sub_buffer_pool = gst_buffer_pool_new ();
+    gst_buffer_pool_set_buffer_new_function (_sub_buffer_pool, gst_buffer_pool_sub_buffer_new);
+    gst_buffer_pool_set_buffer_copy_function (_sub_buffer_pool, gst_buffer_pool_sub_buffer_copy);
+    gst_buffer_pool_set_buffer_dispose_function (_sub_buffer_pool, gst_buffer_pool_sub_buffer_dispose);
     GST_INFO (GST_CAT_BUFFER, "Buffers are initialized now");
   }
 }
@@ -87,7 +113,6 @@ gst_buffer_init	(GstBuffer *buffer, GstBufferPool *pool)
   
   buffer->data = NULL;
   buffer->size = 0;
-  buffer->parent = NULL;
   buffer->pool = pool;
   buffer->pool_private = NULL;
 }
@@ -102,9 +127,6 @@ gst_buffer_init	(GstBuffer *buffer, GstBufferPool *pool)
 void
 gst_buffer_dispose (GstData *buffer)
 {
-  /* unreference the parent if there is one */
-  gst_buffer_unparent (GST_BUFFER (buffer));
-
   gst_data_unref (GST_DATA (GST_BUFFER (buffer)->pool));
   gst_data_dispose (buffer);
 }
@@ -123,70 +145,11 @@ gst_buffer_new (GstBufferPool *pool, guint size)
 {
   if (pool == NULL)
   {
-    GstBufferPool *def = gst_buffer_pool_default ();
+    GstBufferPool *def = _default_pool;
     return def->buffer_new (def, size);
   } else {
     return pool->buffer_new (pool, size);
   }
-}
-/**
- * gst_buffer_set_parent:
- * @buffer: buffer to set the parent for
- * @parent: parent to set
- *
- * Sets the buffers parent to the given one.
- */
-void
-gst_buffer_set_parent (GstBuffer *buffer, GstBuffer *parent, guint offset, guint size)
-{
-  /* make sure we get valid data */
-  g_return_if_fail (buffer != NULL);
-  g_return_if_fail (parent != NULL);
-  g_return_if_fail (buffer != parent);
-  /* make sure we can get the data from the parent */
-  g_return_if_fail (parent->size >= offset + size);
-  /* do not reset the parent */
-  if (buffer->parent == parent)
-    return;
-  /* if we have a parent, remove it */  
-  if (buffer->parent != NULL)
-    gst_buffer_unparent (buffer);
-  /* make sure buffer contains no data */
-  g_return_if_fail (buffer->data == NULL);
-  g_return_if_fail (buffer->size == 0);
-  
-  gst_data_ref (GST_DATA (parent));
-  buffer->data = parent->data + offset;
-  buffer->size = size;
-  /* make sure we're child from a root buffer */
-  while (parent->parent)
-  {
-    parent = parent->parent;
-  }
-  buffer->parent = parent;
-  /* make sure nobody overwrites data in two buffers */
-  GST_DATA_FLAG_SET(buffer, GST_DATA_READONLY);
-  if (GST_DATA_IS_WRITABLE (parent))
-    GST_DATA_FLAG_SET(parent, GST_DATA_READONLY);
-}
-/**
- * gst_buffer_unset_parent:
- * @buffer: buffer to unset the parent for
- *
- * Unsets the buffers parent and clears the data.
- * If the buffer has no parent, it simply returns.
- */
-void
-gst_buffer_unparent (GstBuffer *buffer)
-{
-  g_return_if_fail (buffer != NULL);
-  if (buffer->parent == NULL)
-    return;
-  
-  gst_data_unref (GST_DATA (buffer->parent));
-  buffer->parent = NULL;
-  buffer->data = NULL;
-  buffer->size = 0;
 }
 /**
  * gst_buffer_create_sub:
@@ -202,14 +165,32 @@ GstBuffer*
 gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size) 
 {
   GstBuffer *buffer;
-
+  gpointer buffer_data;
+  
   g_return_val_if_fail (parent != NULL, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(parent) > 0, NULL);
   g_return_val_if_fail (size > 0, NULL);
-
-  buffer = gst_buffer_new (parent->pool, 0);
-
-  gst_buffer_set_parent (buffer, parent, offset, size);
+  g_return_val_if_fail (parent->size >= offset + size, NULL);
+  /* remember the data for the new buffer */
+  buffer_data = parent->data + offset;
+  /* make sure we're child not child from a child buffer */
+  while (parent->pool == _sub_buffer_pool)
+  {
+    parent = GST_BUFFER (parent->pool_private);
+  }
+  /* ref the real parent */
+  gst_data_ref (GST_DATA (parent));
+  /* make sure nobody overwrites data in the parent */
+  if (GST_DATA_IS_WRITABLE (parent))
+    GST_DATA_FLAG_SET(parent, GST_DATA_READONLY);
+  /* create the new buffer */
+  buffer = gst_buffer_new (_sub_buffer_pool, 0);
+  /* make sure nobody overwrites data in the new buffer */
+  GST_DATA_FLAG_SET(buffer, GST_DATA_READONLY);
+  /* set the right values in the child */
+  buffer->pool_private = parent;
+  buffer->data = buffer_data;
+  buffer->size = size;
 
   return buffer;
 }
@@ -226,8 +207,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
  * Returns: new buffer
  */
 GstBuffer*
-gst_buffer_append (GstBuffer *buffer, 
-		   GstBuffer *append) 
+gst_buffer_append (GstBuffer *buffer, GstBuffer *append) 
 {
   GstBuffer *newbuf;
 
@@ -245,19 +225,29 @@ gst_buffer_append (GstBuffer *buffer,
   return newbuf;
 }
 /**
- * gst_buffer_copy:
+ * gst_buffer_copy_part_from_pool:
+ * @pool: the GstBufferPool to create the buffer from or NULL to use the default
  * @buffer: the orignal GstBuffer to make a copy of
+ * @offset: the offset into the buffer
+ * @offset: the offset into the buffer
  *
- * Make a full copy of the give buffer, data and all.
+ * Make a full copy of the given buffer with the given part of the data. Use the
+ * given bufferpool to create the buffer.
  *
  * Returns: new buffer
  */
 GstBuffer *
-gst_buffer_copy (const GstBuffer *buffer)
+gst_buffer_copy_part_from_pool (GstBufferPool *pool, const GstBuffer *buffer, guint offset, guint size)
 {
-  g_return_val_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0, NULL);
-
-  return buffer->pool->buffer_copy (buffer);
+  GstBufferPool *use_pool;
+  
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (GST_BUFFER_REFCOUNT (buffer) > 0, NULL);
+  g_return_val_if_fail (buffer->size >= offset + size, NULL);
+  
+  use_pool = pool ? pool : _default_pool;
+  return use_pool->buffer_copy (use_pool, buffer, offset, size);
 }
 /**
  * gst_buffer_is_span_fast:
@@ -274,8 +264,10 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf1) > 0, FALSE);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf2) > 0, FALSE);
 
-  return (buf1->parent && buf2->parent && 
-	  (buf1->parent == buf2->parent) &&
+  /* it's only fast if we have subbuffers of the same parent */
+  return ((buf1->pool == _sub_buffer_pool) &&
+	  (buf2->pool == _sub_buffer_pool) &&
+	  (buf1->pool_private == buf2->pool_private) &&
           ((buf1->data + buf1->size) == buf2->data));
 }
 /**
@@ -304,14 +296,16 @@ gst_buffer_span (GstBuffer *buf1, guint offset, GstBuffer *buf2, guint len)
 
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf1) > 0, NULL);
   g_return_val_if_fail (GST_BUFFER_REFCOUNT(buf2) > 0, NULL);
+  g_return_val_if_fail (len > 0, NULL);
 
   /* if the two buffers have the same parent and are adjacent */
   if (gst_buffer_is_span_fast(buf1,buf2)) {
+    GstBuffer *parent = GST_BUFFER (buf1->pool_private);
     /* we simply create a subbuffer of the common parent */
-    newbuf = gst_buffer_create_sub (buf1->parent, buf1->data - buf1->parent->data + offset, len);
+    newbuf = gst_buffer_create_sub (parent, buf1->data - parent->data + offset, len);
   }
   else {
-    /* g_print ("slow path taken in buffer_span\n"); */
+    GST_DEBUG (GST_CAT_BUFFER,"slow path taken while spanning buffers %p and %p", buffer, append);
     /* otherwise we simply have to brute-force copy the buffers */
     newbuf = gst_buffer_new (buf1->pool, len);
 
@@ -356,4 +350,204 @@ gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
   }
 
   return result;
+}
+/**
+ * gst_buffer_pool_new:
+ *
+ * Create a new buffer pool.
+ *
+ * Returns: new buffer pool
+ */
+GstBufferPool*
+gst_buffer_pool_new (void)
+{
+  GstBufferPool *pool;
+
+  pool = g_new0 (GstBufferPool, 1);
+  GST_DEBUG (GST_CAT_BUFFER,"allocating new buffer pool %p\n", pool);
+  
+  /* init data struct */
+  gst_data_init (GST_DATA (pool));
+  GST_DATA_TYPE (pool) = GST_DATA_BUFFERPOOL;
+  
+  /* set functions */
+  pool->buffer_new = gst_buffer_pool_default_buffer_new;
+  pool->buffer_copy = gst_buffer_pool_default_buffer_copy;
+  pool->buffer_dispose = gst_buffer_pool_default_buffer_dispose;
+  pool->buffer_free = (GstDataFreeFunction) gst_buffer_free;
+  
+  return pool;
+}
+/**
+ * gst_buffer_pool_set_buffer_new_function:
+ * @pool: the pool to set the buffer create function for
+ * @create: the create function
+ *
+ * Sets the function that will be called when a buffer is created 
+ * from this pool.
+ */
+void 
+gst_buffer_pool_set_buffer_new_function (GstBufferPool *pool, 
+                                         GstBufferPoolBufferNewFunction create)
+{
+  g_return_if_fail (pool != NULL);
+  g_return_if_fail (create != NULL);
+  
+  pool->buffer_new = create;
+}
+/**
+ * gst_buffer_pool_set_buffer_dispose_function:
+ * @pool: the pool to set the buffer dispose function for
+ * @free: the dispose function
+ *
+ * Sets the function that will be called when a buffer should be disposed.
+ */
+void 
+gst_buffer_pool_set_buffer_dispose_function (GstBufferPool *pool, 
+                                             GstDataFreeFunction dispose)
+{
+  g_return_if_fail (pool != NULL);
+  g_return_if_fail (dispose != NULL);
+
+  pool->buffer_dispose = dispose;
+}
+/**
+ * gst_buffer_pool_set_buffer_free_function:
+ * @pool: the pool to set the buffer free function for
+ * @free: the free function
+ *
+ * Sets the function that will be called when a buffer should be freed.
+ */
+void 
+gst_buffer_pool_set_buffer_free_function (GstBufferPool *pool, 
+                                          GstDataFreeFunction free)
+{
+  g_return_if_fail (pool != NULL);
+  g_return_if_fail (free != NULL);
+
+  pool->buffer_free = free;
+}
+/**
+ * gst_buffer_pool_set_buffer_copy_function:
+ * @pool: the pool to set the buffer copy function for
+ * @copy: the copy function
+ *
+ * Sets the function that will be called when a buffer is copied.
+ * Your function does not need to check the given parameters, they will
+ * be checked before calling your function.
+ */
+void 
+gst_buffer_pool_set_buffer_copy_function (GstBufferPool *pool, GstBufferPoolBufferCopyFunction copy)
+{
+  g_return_if_fail (pool != NULL);
+  g_return_if_fail (copy != NULL);
+  
+  pool->buffer_copy = copy;
+}
+/**
+ * gst_buffer_pool_set_user_data:
+ * @pool: the pool to set the user data for
+ * @user_data: any user data to be passed to the create/destroy buffer functions
+ * and the destroy hook
+ *
+ * You can put your private data here.
+ */
+void 
+gst_buffer_pool_set_user_data (GstBufferPool *pool, gpointer user_data)
+{
+  g_return_if_fail (pool != NULL);
+
+  pool->user_data = user_data;
+}
+
+/**
+ * gst_buffer_pool_get_user_data:
+ * @pool: the pool to get the user data from
+ *
+ * gets user data
+ *
+ * Returns: The user data of this bufferpool
+ */
+gpointer
+gst_buffer_pool_get_user_data (GstBufferPool *pool)
+{
+  g_return_val_if_fail (pool != NULL, NULL);
+
+  return pool->user_data;
+}
+
+static GstBuffer* 
+gst_buffer_pool_default_buffer_new (GstBufferPool *pool, guint size)
+{
+  GstBuffer *buffer;
+  
+  g_return_val_if_fail((buffer = gst_buffer_alloc()), NULL);
+  
+  GST_INFO (GST_CAT_BUFFER,"creating new buffer %p from pool %p", buffer, pool);
+
+  gst_buffer_init (buffer, pool);
+
+  GST_BUFFER_DATA(buffer) = size > 0 ? g_malloc (size) : NULL;
+  GST_BUFFER_SIZE(buffer) = GST_BUFFER_DATA(buffer) ? size : 0;
+  
+  return buffer;
+}
+static GstBuffer *
+gst_buffer_pool_default_buffer_copy (GstBufferPool *from_pool, const GstBuffer *buffer, guint offset, guint size)
+{
+  GstBuffer *newbuf;
+  
+  /* allocate a new buffer with the right size */
+  newbuf = gst_buffer_new (from_pool, size);
+  /* copy all relevant data stuff */
+  gst_data_copy (GST_DATA (newbuf), GST_DATA (buffer));
+  /* copy the data straight across */
+  memcpy (newbuf->data, buffer->data + offset, size);
+
+  return newbuf;
+}
+static void
+gst_buffer_pool_default_buffer_dispose(GstData *buffer)
+{
+  GstBuffer *buf = GST_BUFFER (buffer);
+  
+  gst_buffer_dispose (buffer);
+  g_free (buf->data);
+  buf->data = NULL;
+  buf->size = 0;
+}
+static GstBuffer *
+gst_buffer_pool_sub_buffer_new (GstBufferPool *pool, guint size)
+{
+  GstBuffer *buffer;
+  
+  g_return_val_if_fail((buffer = gst_buffer_alloc()), NULL);
+  
+  GST_DEBUG (GST_CAT_BUFFER, "creating new subbuffer %p", buffer, pool);
+  
+  gst_buffer_init (buffer, pool);
+
+  GST_BUFFER_DATA(buffer) = NULL;
+  GST_BUFFER_SIZE(buffer) = 0;
+  
+  return buffer;
+}
+static GstBuffer *
+gst_buffer_pool_sub_buffer_copy	(GstBufferPool *from_pool, const GstBuffer *buffer, guint offset, guint size)
+{
+  GstBuffer *parent = GST_BUFFER (buffer->pool_private);
+  guint new_offset = buffer->data - parent->data;
+  GstBufferPool *use_pool = from_pool == _sub_buffer_pool ? NULL : from_pool;
+  return parent->pool->buffer_copy (use_pool, parent, new_offset, size);
+}
+static void
+gst_buffer_pool_sub_buffer_dispose (GstData *buffer)
+{
+  GstBuffer *buf = GST_BUFFER (buffer);
+  
+  buf->data = NULL;
+  buf->size = 0;
+  gst_data_unref (GST_DATA (buf->pool_private));
+  buf->pool_private = NULL; 
+  gst_buffer_dispose (buffer);
 }

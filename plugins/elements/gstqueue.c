@@ -328,7 +328,7 @@ restart:
   if (queue->upstream_event)
   {
     GstPad *peer = GST_PAD_PEER (pad);
-    g_print ("handling event\n");
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "handling event %p\n", queue->upstream_event);
     g_mutex_lock (queue->upstream_mutex);
     
     if (peer)
@@ -340,7 +340,7 @@ restart:
     queue->upstream_event = NULL;
     g_cond_signal (queue->upstream_cond);
     g_mutex_unlock (queue->upstream_mutex);
-    g_print ("done handling event\n");
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "done handling event %p\n", queue->upstream_event);
   }
   
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding buffer %p of size %d\n", buf, GST_BUFFER_SIZE(buf));
@@ -429,12 +429,10 @@ restart:
 
     /* FIXME: we're poking in AsyncQueue internals here */
     GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_full, level:%d/%d\n", g_async_queue_length (queue->queue), queue->size);
-    g_print ("waiting for not null\n");
     g_mutex_lock (queue->upstream_mutex);
     if (queue->upstream_event == NULL)
       g_cond_wait (queue->not_full, queue->upstream_mutex);
     g_mutex_unlock (queue->upstream_mutex);
-    g_print ("not null\n");
     GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "got not_full signal\n");
     goto restart;
   }
@@ -522,14 +520,13 @@ restart:
       }
     }
 
-    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_empty, level:%d/%d\n", g_async_queue_length_unlocked (queue->queue), queue->size);
     g_get_current_time (&timeval);
     g_time_val_add (&timeval, queue->max_wait);
-    g_print ("waiting for data\n");
+    GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_empty, level:%d/%d\n", g_async_queue_length_unlocked (queue->queue), queue->size);
     data = g_async_queue_timed_pop_unlocked (queue->queue, &timeval);
-    g_print ("%s\n", data == NULL ? "timer goes off while waiting for data\n" : "data available\n");
     if (data == NULL)
     {
+      GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "woken up by timer\n");
       g_async_queue_unlock (queue->queue);
       gst_element_yield (GST_ELEMENT (data));
       goto restart;
@@ -679,10 +676,10 @@ gst_queue_upstream_event (GstPad *pad, GstData *event)
   gst_data_ref (event);
   queue->upstream_event = event;
   g_cond_signal (queue->not_full);
-  g_print ("waiting for handling of upstream event\n");
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for handling of upstream event %p\n", queue->upstream_event);
   while (queue->upstream_event != NULL)
     g_cond_wait (queue->upstream_cond, queue->upstream_mutex);
-  g_print ("upstream event handled\n");
+  GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "upstream event handled\n");
   ret = queue->upstream_return;
   queue->upstream_return = NULL;
   g_mutex_unlock (queue->upstream_mutex);

@@ -113,7 +113,12 @@ static gpointer 	gst_filesrc_srcpad_event 		(GstPad *pad, GstData *event);
 /* state change */
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 /* bufferpool */
-static GstBuffer *	gst_filesrc_buffer_new			(GstBufferPool *pool, guint size);
+static GstBuffer *	gst_filesrc_buffer_new			(GstBufferPool *pool, 
+								 guint size);
+static GstBuffer *	gst_filesrc_buffer_copy 		(GstBufferPool *pool, 
+								 const GstBuffer *buffer, 
+								 guint offset, 
+								 guint size);
 static void		gst_filesrc_buffer_dispose		(GstData *buffer);
 
 
@@ -206,6 +211,7 @@ gst_filesrc_init (GstFileSrc *src)
 
   src->pool = gst_buffer_pool_new ();
   gst_buffer_pool_set_buffer_new_function (src->pool, gst_filesrc_buffer_new);
+  gst_buffer_pool_set_buffer_copy_function (src->pool, gst_filesrc_buffer_copy);
   gst_buffer_pool_set_buffer_dispose_function (src->pool, gst_filesrc_buffer_dispose);
   gst_buffer_pool_set_user_data (src->pool, src);
   
@@ -731,6 +737,11 @@ gst_filesrc_buffer_new (GstBufferPool *pool, guint size)
   gst_buffer_init (buffer, pool);
   
   return buffer;
+}
+static GstBuffer *
+gst_filesrc_buffer_copy (GstBufferPool *pool, const GstBuffer *buffer, guint offset, guint size)
+{
+  return gst_buffer_copy_part_from_pool (NULL, buffer, offset, size);
 }
 static void
 gst_filesrc_buffer_dispose (GstData *buffer)

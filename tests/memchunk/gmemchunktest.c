@@ -3,7 +3,6 @@
 #define MAX_THREADS  100
 
 static GMemChunk *_chunks;
-static GMutex *_lock;
 
 static gint num_allocs;
 static gint num_threads;
@@ -11,20 +10,13 @@ static gint num_threads;
 static gpointer 
 alloc_chunk (void)
 {
-  gpointer ret;
-  g_mutex_lock (_lock); 
-  ret = g_mem_chunk_alloc (_chunks);
-  g_mutex_unlock (_lock); 
-
-  return ret;
+  return g_mem_chunk_alloc (_chunks);
 }
 
 static void 
 free_chunk (gpointer chunk)
 {
-  g_mutex_lock (_lock); 
   g_mem_chunk_free (_chunks, chunk);
-  g_mutex_unlock (_lock); 
 }
 
 
@@ -61,7 +53,6 @@ main (gint argc, gchar *argv[])
   num_allocs = atoi (argv[2]);
 
   _chunks = g_mem_chunk_new ("test", 32, 32 * 16, G_ALLOC_AND_FREE);
-  _lock = g_mutex_new ();
 
   for(t=0; t < num_threads; t++) {
     rc = pthread_create (&threads[t], NULL, run_test, (void *)t);

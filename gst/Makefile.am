@@ -56,7 +56,6 @@ libgstreamer_la_SOURCES =		\
 	$(GST_AUTOPLUG_SRC)	\
 	gstbin.c		\
 	gstbuffer.c		\
-	gstbufferpool.c		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
@@ -116,7 +115,6 @@ libgstreamerinclude_HEADERS =		\
 	gstautoplug.h		\
 	gstbin.h		\
 	gstbuffer.h		\
-	gstbufferpool.h		\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcpu.h		\
