@@ -31,6 +31,7 @@ GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
 #define GST_CAT_DEFAULT qtdemux_debug
 
 #define QTDEMUX_GUINT32_GET(a)	(GST_READ_UINT32_BE(a))
+#define QTDEMUX_GUINT24_GET(a)	(GST_READ_UINT32_BE(a) >> 8)
 #define QTDEMUX_GUINT16_GET(a)	(GST_READ_UINT16_BE(a))
 #define QTDEMUX_GUINT8_GET(a) (*(guint8 *)(a))
 #define QTDEMUX_FP32_GET(a)	((GST_READ_UINT32_BE(a))/65536.0)
@@ -157,6 +158,8 @@ static void qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer,
 static QtNodeType *qtdemux_type_get (guint32 fourcc);
 static void qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
 static void qtdemux_parse_tree (GstQTDemux * qtdemux);
+static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, GNode * esds);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     const guint8 * stsd_data);
 static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc,
@@ -754,6 +757,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   gst_pad_set_formats_function (stream->pad, gst_qtdemux_get_src_formats);
   gst_pad_set_convert_function (stream->pad, gst_qtdemux_src_convert);
 
+  g_print ("setting caps %s\n", gst_caps_to_string (stream->caps));
   gst_pad_set_explicit_caps (stream->pad, stream->caps);
 
   GST_DEBUG ("adding pad %p to qtdemux %p", stream->pad, qtdemux);
@@ -805,7 +809,9 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 #define FOURCC_cmvd	GST_MAKE_FOURCC('c','m','v','d')
 #define FOURCC_hint	GST_MAKE_FOURCC('h','i','n','t')
 #define FOURCC_mp4a	GST_MAKE_FOURCC('m','p','4','a')
+#define FOURCC_mp4v	GST_MAKE_FOURCC('m','p','4','v')
 #define FOURCC_wave	GST_MAKE_FOURCC('w','a','v','e')
+#define FOURCC_appl	GST_MAKE_FOURCC('a','p','p','l')
 #define FOURCC_esds	GST_MAKE_FOURCC('e','s','d','s')
 
 
@@ -886,7 +892,9 @@ QtNodeType qt_node_types[] = {
       qtdemux_dump_cmvd},
   {FOURCC_hint, "hint", 0, qtdemux_dump_unknown},
   {FOURCC_mp4a, "mp4a", 0, qtdemux_dump_unknown},
+  {FOURCC_mp4v, "mp4v", 0, qtdemux_dump_unknown},
   {FOURCC_wave, "wave", QT_CONTAINER},
+  {FOURCC_appl, "appl", QT_CONTAINER},
   {0, "unknown", 0},
 };
 static int n_qt_node_types = sizeof (qt_node_types) / sizeof (qt_node_types[0]);
@@ -1032,6 +1040,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       void *buf;
       guint32 len;
 
+      gst_util_dump_mem (buffer, length);
       GST_DEBUG_OBJECT (qtdemux,
           "parsing stsd (sample table, sample description) atom");
       buf = buffer + 16;
@@ -1068,6 +1077,46 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
             GST_LOG ("buffer overrun");
           }
           len = QTDEMUX_GUINT32_GET (buf);
+
+          child = g_node_new (buf);
+          g_node_append (node, child);
+          qtdemux_parse (qtdemux, child, buf, len);
+
+          buf += len;
+        }
+      }
+    } else if (fourcc == FOURCC_mp4v) {
+      void *buf;
+      guint32 len;
+      guint32 version;
+      int tlen;
+
+      g_print ("parsing in mp4v\n");
+      version = QTDEMUX_GUINT32_GET (buffer + 16);
+      g_print ("version %08x\n", version);
+      if (1 || version == 0x00000000) {
+
+        buf = buffer + 0x32;
+        end = buffer + length;
+
+        tlen = QTDEMUX_GUINT8_GET (buf);
+        g_print ("tlen = %d\n", tlen);
+        buf++;
+        g_print ("string = %.*s\n", tlen, (char *) buf);
+        buf += tlen;
+        buf += 23;
+
+        gst_util_dump_mem (buf, end - buf);
+        while (buf < end) {
+          GNode *child;
+
+          if (buf + 8 >= end) {
+            /* FIXME: get annoyed */
+            GST_LOG ("buffer overrun");
+          }
+          len = QTDEMUX_GUINT32_GET (buf);
+          if (len == 0)
+            break;
 
           child = g_node_new (buf);
           g_node_append (node, child);
@@ -1603,6 +1652,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *co64;
   GNode *stts;
   GNode *mp4a;
+  GNode *mp4v;
   GNode *wave;
   GNode *esds;
   int n_samples;
@@ -1667,6 +1717,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     fourcc = QTDEMUX_FOURCC_GET (stsd->data + offset + 4);
     stream->caps = qtdemux_video_caps (qtdemux, fourcc, stsd->data);
+
+    mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4v);
+    esds = NULL;
+    if (mp4v)
+      esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
+    if (esds) {
+      gst_qtdemux_handle_esds (qtdemux, stream, esds);
+    }
+
     GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + offset + 4)),
         stream->caps);
@@ -1741,6 +1800,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     if (wave)
       esds = qtdemux_tree_get_child_by_type (wave, FOURCC_esds);
     if (esds) {
+      gst_qtdemux_handle_esds (qtdemux, stream, esds);
+#if 0
       GstBuffer *buffer;
       int len = QTDEMUX_GUINT32_GET (esds->data);
 
@@ -1749,6 +1810,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
       gst_caps_set_simple (stream->caps, "codec_data",
           GST_TYPE_BUFFER, buffer, NULL);
+#endif
     }
     GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)),
@@ -1938,6 +2000,89 @@ done2:
   gst_qtdemux_add_stream (qtdemux, stream);
 }
 
+/* taken from ffmpeg */
+static unsigned int
+get_size (guint8 * ptr, guint8 ** end)
+{
+  int count = 4;
+  int len = 0;
+
+  while (count--) {
+    int c = *ptr;
+
+    ptr++;
+    len = (len << 7) | (c & 0x7f);
+    if (!(c & 0x80))
+      break;
+  }
+  if (end)
+    *end = ptr;
+  return len;
+}
+
+static void
+gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GNode * esds)
+{
+  int len = QTDEMUX_GUINT32_GET (esds->data);
+  guint8 *ptr = esds->data;
+  guint8 *end = ptr + len;
+  int tag;
+  guint8 *data_ptr = NULL;
+  int data_len = 0;
+
+  gst_util_dump_mem (ptr, len);
+  ptr += 8;
+  g_print ("version/flags = %08x\n", QTDEMUX_GUINT32_GET (ptr));
+  ptr += 4;
+  while (ptr < end) {
+    tag = QTDEMUX_GUINT8_GET (ptr);
+    g_print ("tag = %02x\n", tag);
+    ptr++;
+    len = get_size (ptr, &ptr);
+    g_print ("len = %d\n", len);
+
+    switch (tag) {
+      case 0x03:
+        g_print ("ID %04x\n", QTDEMUX_GUINT16_GET (ptr));
+        g_print ("priority %04x\n", QTDEMUX_GUINT8_GET (ptr + 2));
+        ptr += 3;
+        break;
+      case 0x04:
+        g_print ("object_type_id %02x\n", QTDEMUX_GUINT8_GET (ptr));
+        g_print ("stream_type %02x\n", QTDEMUX_GUINT8_GET (ptr + 1));
+        g_print ("buffer_size_db %02x\n", QTDEMUX_GUINT24_GET (ptr + 2));
+        g_print ("max bitrate %d\n", QTDEMUX_GUINT32_GET (ptr + 5));
+        g_print ("avg bitrate %d\n", QTDEMUX_GUINT32_GET (ptr + 9));
+        ptr += 13;
+        break;
+      case 0x05:
+        g_print ("data:\n");
+        gst_util_dump_mem (ptr, len);
+        data_ptr = ptr;
+        data_len = len;
+        ptr += len;
+        break;
+      case 0x06:
+        g_print ("data %02x\n", QTDEMUX_GUINT8_GET (ptr));
+        ptr += 1;
+        break;
+      default:
+        g_print ("parse error\n");
+    }
+  }
+
+  if (data_ptr) {
+    GstBuffer *buffer;
+
+    buffer = gst_buffer_new_and_alloc (data_len);
+    memcpy (GST_BUFFER_DATA (buffer), data_ptr, data_len);
+    gst_util_dump_mem (GST_BUFFER_DATA (buffer), data_len);
+
+    gst_caps_set_simple (stream->caps, "codec_data", GST_TYPE_BUFFER,
+        buffer, NULL);
+  }
+}
 
 static GstCaps *
 qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
