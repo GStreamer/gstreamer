@@ -410,19 +410,19 @@ gst_siddec_loop (GstElement *element)
   }
   if (siddec->state == SID_STATE_LOAD_TUNE) {
     if (!siddec->tune->load (siddec->tune_buffer, siddec->tune_len)) {
-      gst_element_error (siddec, LIBRARY, TOO_LAZY, NULL, NULL);
+      gst_element_error (siddec, LIBRARY, TOO_LAZY, (NULL), (NULL));
       return;
     }
     
     //update_metadata (siddec);
 
     if (!siddec_negotiate (siddec)) {
-      gst_element_error (siddec, CORE, NEGOTIATION, NULL, NULL);
+      gst_element_error (siddec, CORE, NEGOTIATION, (NULL), (NULL));
       return;
     }
 
     if (!sidEmuInitializeSong (*siddec->engine, *siddec->tune, siddec->tune_number)) {
-      gst_element_error (siddec, LIBRARY, TOO_LAZY, NULL, NULL);
+      gst_element_error (siddec, LIBRARY, TOO_LAZY, (NULL), (NULL));
       return;
     }
 
