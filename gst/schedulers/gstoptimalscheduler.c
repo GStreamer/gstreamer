@@ -378,6 +378,7 @@ create_chain (GstOptScheduler *osched)
   chain = g_new0 (GstOptSchedulerChain, 1);
   chain->sched = osched;
   chain->refcount = 1;
+  chain->flags = GST_OPT_SCHEDULER_CHAIN_DISABLED;
 
   gst_object_ref (GST_OBJECT (osched));
   osched->chains = g_slist_prepend (osched->chains, chain);
@@ -597,6 +598,7 @@ create_group (GstOptSchedulerChain *chain, GstElement *element)
   group = g_new0 (GstOptSchedulerGroup, 1);
   GST_INFO (GST_CAT_SCHEDULING, "new group %p", group);
   group->refcount = 1;
+  group->flags = GST_OPT_SCHEDULER_GROUP_DISABLED;
 
   add_to_group (group, element);
   add_to_chain (chain, group);
@@ -1355,6 +1357,7 @@ gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
 
   ctx = g_new0 (GstOptSchedulerCtx, 1);
   GST_ELEMENT_SCHED_CONTEXT (element) = ctx;
+  ctx->flags = GST_OPT_SCHEDULER_CTX_DISABLED;
 
   /* loop based elements *always* end up in their own group. It can eventually
    * be merged with another group when a link is made */
