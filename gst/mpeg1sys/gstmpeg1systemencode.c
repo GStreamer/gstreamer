@@ -60,7 +60,7 @@ GST_PADTEMPLATE_FACTORY (src_factory,
   )
 )
 GST_PADTEMPLATE_FACTORY (video_sink_factory,
-  "video_%02d",
+  "video_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
@@ -72,7 +72,7 @@ GST_PADTEMPLATE_FACTORY (video_sink_factory,
 )
 
 GST_PADTEMPLATE_FACTORY (audio_sink_factory,
-  "audio_%02d",
+  "audio_%d",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   GST_CAPS_NEW (
