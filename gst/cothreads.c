@@ -176,6 +176,8 @@ cothread_create (cothread_context *ctx)
   cothread_state *cothread;
   void *sp;
   unsigned long stack_top;
+  void *mmaped = 0;
+
   gint slot = 0;
 
   g_return_val_if_fail (ctx != NULL, NULL);
@@ -203,20 +205,42 @@ cothread_create (cothread_context *ctx)
    *       could use casts to uintptr_t from inttypes.h
    *       if only all platforms had inttypes.h
    */
-  /* stack_top is the address of th first byte past our stack segment. */
+  /* stack_top is the address of the first byte past our stack segment. */
   /* FIXME: an assumption is made that the stack segment is STACK_SIZE
    * aligned. */
   stack_top = ((gulong) sp | (STACK_SIZE - 1)) + 1;
-  GST_DEBUG(GST_CAT_COTHREADS, "stack top is %lu", stack_top);
+  GST_DEBUG (GST_CAT_COTHREADS, "stack top is %lu", stack_top);
 
   /* cothread stack space of the thread is mapped in reverse, with cothread 0
    * stack space at the top */
   cothread = (cothread_state *) (stack_top - (slot + 1) * COTHREAD_STACKSIZE);
-  GST_DEBUG(GST_CAT_COTHREADS, "cothread pointer is %p", cothread);
 
-  cothread->magic_number = COTHREAD_MAGIC_NUMBER;
+  GST_DEBUG (GST_CAT_COTHREADS,
+             "mmap   cothread slot stack from %p to 0x%lx (size 0x%lx)",
+            cothread, (unsigned long) cothread + COTHREAD_STACKSIZE,
+            (long) COTHREAD_STACKSIZE);
+
+  GST_DEBUG (GST_CAT_COTHREADS, "going into mmap");
+  /* the mmap is used to reserve part of the stack
+   * ie. we state explicitly that we are going to use it */
+  /* FIXME: maybe we should map slightly less than COTHREAD_STACKSIZE,
+   * so that stack overruns possibly could segfault ? */
+  mmaped = mmap ((void *) cothread, COTHREAD_STACKSIZE,
+                 PROT_READ | PROT_WRITE | PROT_EXEC,
+                 MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  GST_DEBUG (GST_CAT_COTHREADS, "coming out of mmap");
+  if (mmaped == MAP_FAILED) {
+    perror ("mmap'ing cothread stack space");
+    return NULL;
+  }
+  if (mmaped != cothread) {
+    g_warning ("could not mmap requested memory for cothread");
+    return NULL;
+  }
+
   GST_DEBUG (GST_CAT_COTHREADS, "create  cothread %d with magic number 0x%x",
              slot, cothread->magic_number);
+  cothread->magic_number = COTHREAD_MAGIC_NUMBER;
   cothread->ctx = ctx;
   cothread->cothreadnum = slot;
   cothread->flags = 0;
