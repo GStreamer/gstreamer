@@ -2133,25 +2133,38 @@ end:
   return compatible;
 }
 
+static gint
+_props_entry_flexibility (GstPropsEntry *entry)
+{
+  gint rank;
+  switch (entry->propstype) {
+  default:
+    rank = 0;
+    break;
+  case GST_PROPS_INT_RANGE_TYPE:
+    rank = 1;
+    break;
+  case GST_PROPS_FLOAT_RANGE_TYPE:
+    rank = 2;
+    break;
+  case GST_PROPS_LIST_TYPE:
+    rank = 3;
+    break;
+  }
+  return rank;
+}
+
 static GstPropsEntry*
 gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
 {
   GstPropsEntry *result = NULL;
 
-  /* try to move the ranges and lists first */
-  switch (entry2->propstype) {
-    case GST_PROPS_INT_RANGE_TYPE:
-    case GST_PROPS_FLOAT_RANGE_TYPE:
-    case GST_PROPS_LIST_TYPE:
-    {
+  /* Swap more flexible types into entry1 */
+  if (_props_entry_flexibility (entry1) < _props_entry_flexibility (entry2)) {
       GstPropsEntry *temp;
-
       temp = entry1;
       entry1 = entry2;
       entry2 = temp;
-    }
-    default:
-      break;
   }
 
   switch (entry1->propstype) {
@@ -2348,6 +2361,15 @@ gst_props_entry_intersect (GstPropsEntry *entry1, GstPropsEntry *entry2)
     default:
       break;
   }
+
+  /* make caps debugging extremely verbose
+
+  GST_CAT_DEBUG (GST_CAT_CAPS, "intersecting %s: %s x %s => %s",
+		 g_quark_to_string (entry1->propid),
+		 gst_props_entry_to_string (entry1),
+		 gst_props_entry_to_string (entry2),
+		 result? gst_props_entry_to_string (result) : "fail");
+  */
 
   return result;
 }
