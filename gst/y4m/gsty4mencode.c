@@ -41,7 +41,7 @@ enum {
   ARG_0
 };
 
-GST_PADTEMPLATE_FACTORY (lavencode_src_factory,
+GST_PAD_TEMPLATE_FACTORY (lavencode_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -52,7 +52,7 @@ GST_PADTEMPLATE_FACTORY (lavencode_src_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (lavencode_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (lavencode_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -135,13 +135,13 @@ static void
 gst_lavencode_init (GstLavEncode *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(
-		  GST_PADTEMPLATE_GET (lavencode_sink_factory), "sink");
+		  GST_PAD_TEMPLATE_GET (lavencode_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_lavencode_chain);
   gst_pad_set_connect_function (filter->sinkpad, gst_lavencode_sinkconnect);
 
   filter->srcpad = gst_pad_new_from_template(
-		  GST_PADTEMPLATE_GET (lavencode_src_factory), "src");
+		  GST_PAD_TEMPLATE_GET (lavencode_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->init = TRUE;
@@ -240,14 +240,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
 
-  factory = gst_elementfactory_new("lavencode",GST_TYPE_LAVENCODE,
+  factory = gst_element_factory_new("lavencode",GST_TYPE_LAVENCODE,
                                    &lavencode_details);
   g_return_val_if_fail(factory != NULL, FALSE);
   
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (lavencode_src_factory));
-  gst_elementfactory_add_padtemplate (factory, 
-		  GST_PADTEMPLATE_GET (lavencode_sink_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (lavencode_src_factory));
+  gst_element_factory_add_pad_template (factory, 
+		  GST_PAD_TEMPLATE_GET (lavencode_sink_factory));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
