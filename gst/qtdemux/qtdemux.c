@@ -259,7 +259,7 @@ static gboolean gst_qtdemux_handle_sink_event (GstQTDemux *qtdemux)
   type = event ? GST_EVENT_TYPE(event) : GST_EVENT_UNKNOWN;
   GST_DEBUG(0,"qtdemux: event %p %d", event, type);
 
-  switch(GST_EVENT_TYPE(event)){
+  switch(type){
     case GST_EVENT_EOS:
       gst_bytestream_flush(qtdemux->bs, remaining);
       gst_pad_event_default(qtdemux->sinkpad, event);
@@ -555,8 +555,10 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
         GST_PAD_TEMPLATE_GET (src_video_templ), g_strdup_printf ("video_%02d",
 	  qtdemux->n_video_streams));
     if(stream->caps){
-      gst_caps_set(stream->caps,"width",GST_PROPS_INT(stream->width));
-      gst_caps_set(stream->caps,"height",GST_PROPS_INT(stream->height));
+      stream->caps->properties = gst_props_intersect(
+	  stream->caps->properties,
+	  gst_props_new("width",GST_PROPS_INT(stream->width),
+              "height",GST_PROPS_INT(stream->height), NULL));
     }
     qtdemux->n_video_streams++;
   }else{
@@ -564,12 +566,12 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
         GST_PAD_TEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d",
 	  qtdemux->n_audio_streams));
     if(stream->caps){
-      if(gst_caps_has_property(stream->caps,"rate")){
-        gst_caps_set(stream->caps,"rate",GST_PROPS_INT((int)stream->rate));
-      }
-      if(gst_caps_has_property(stream->caps,"channels")){
-        gst_caps_set(stream->caps,"channels",GST_PROPS_INT(stream->n_channels));
-      }
+      g_print("props were %s\n",gst_props_to_string(stream->caps->properties));
+      stream->caps->properties = gst_props_intersect(
+	  stream->caps->properties,
+	  gst_props_new("rate",GST_PROPS_INT((int)stream->rate),
+              "channels",GST_PROPS_INT(stream->n_channels), NULL));
+      g_print("props now %s\n",gst_props_to_string(stream->caps->properties));
     }
     qtdemux->n_audio_streams++;
   }
@@ -1545,6 +1547,7 @@ static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc)
     case GST_MAKE_FOURCC('c','v','i','d'):
       /* Cinepak */
     case GST_MAKE_FOURCC('r','l','e',' '):
+      /* Run-length encoding */
     case GST_MAKE_FOURCC('s','m','c',' '):
     case GST_MAKE_FOURCC('k','p','c','d'):
     default:
@@ -1648,7 +1651,18 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
       /* MPEG layer 3, CBR only (pre QT4.1) */
     case GST_MAKE_FOURCC('.','m','p','3'):
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */
-      return GST_CAPS_NEW("msxx_caps","audio/x-mp3",NULL);
+      return GST_CAPS_NEW("_mp3_caps","audio/x-mp3",NULL);
+    case GST_MAKE_FOURCC('M','A','C','3'):
+      /* MACE 3:1 */
+      return GST_CAPS_NEW("MAC3_caps","audio/x-mace",
+	  "maceversion",GST_PROPS_INT(3), NULL);
+    case GST_MAKE_FOURCC('M','A','C','6'):
+      /* MACE 6:1 */
+      return GST_CAPS_NEW("MAC3_caps","audio/x-mace",
+	  "maceversion",GST_PROPS_INT(6));
+    case GST_MAKE_FOURCC('O','g','g','V'):
+      /* Ogg Vorbis */
+      return GST_CAPS_NEW("OggV_caps","application/x-ogg", NULL);
     case GST_MAKE_FOURCC('d','v','c','a'):
       /* DV audio */
     case GST_MAKE_FOURCC('q','t','v','r'):
@@ -1657,14 +1671,12 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
       /* QDesign music version 2 (no constant) */
     case GST_MAKE_FOURCC('Q','D','M','C'):
       /* QDesign music */
-    case GST_MAKE_FOURCC('M','A','C','3'):
-      /* MACE 3:1 */
-    case GST_MAKE_FOURCC('M','A','C','6'):
-      /* MACE 6:1 */
     case GST_MAKE_FOURCC('i','m','a','4'):
       /* IMA 4:1 */
     case GST_MAKE_FOURCC('Q','c','l','p'):
       /* QUALCOMM PureVoice */
+    case GST_MAKE_FOURCC('a','g','s','m'):
+      /* ? */
     default:
       g_print("Don't know how to convert fourcc '" GST_FOURCC_FORMAT
 	  "' to caps\n", GST_FOURCC_ARGS(fourcc));
