@@ -660,18 +660,21 @@ gboolean
 gst_bin_iterate (GstBin *bin)
 {
   GstBinClass *oclass;
-  gboolean eos = TRUE;
+  gboolean running = TRUE;
 
   GST_DEBUG_ENTER("(\"%s\")",GST_ELEMENT_NAME (bin));
 
   oclass = GST_BIN_CLASS (G_OBJECT_GET_CLASS(bin));
 
   if (oclass->iterate)
-    eos = (oclass->iterate) (bin);
+    running = (oclass->iterate) (bin);
 
   GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
 
-  return eos;
+//  if (!running)
+ //   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+
+  return running;
 }
 
 /* out internal element fired EOS, we decrement the number of pending EOS childs */
