@@ -23,6 +23,7 @@ libxaudio	(for xa mp3 decoder)
 libvorbis	(for vorbisenc, vorbisdec)
 libcdparanoia	(for cdparanoia ripper)
 liblame		(for lame mp3 encoder)
+libshout	(for the shoutcast plugin)
 
 for AVI playback you might want to get the windows libraries from
 http://divx.euro.ru/ and put the .dll files in /usr/lib/win32/
