@@ -91,8 +91,10 @@ static void			gst_autoplugger_get_property		(GObject *object, guint prop_id, GVa
 /*static GstElementStateReturn	gst_autoplugger_change_state	(GstElement *element);*/
 
 
+/*
 static void	gst_autoplugger_external_sink_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_src_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
+*/
 static void	gst_autoplugger_external_sink_caps_nego_failed	(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_src_caps_nego_failed	(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger);
 /* defined but not used
@@ -259,6 +261,7 @@ gst_autoplugger_external_src_linked(GstPad *pad, GstPad *peerpad, GstAutoplugger
 }*/
 
 
+/*
 static void
 gst_autoplugger_external_sink_caps_changed(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger)
 {
@@ -272,6 +275,7 @@ gst_autoplugger_external_src_caps_changed(GstPad *pad, GstCaps *caps, GstAutoplu
   GST_INFO(GST_CAT_AUTOPLUG, "have cache:src caps of %s\n",gst_caps_get_mime(caps));
   autoplugger->srccaps = caps;
 }
+*/
 
 
 static gboolean
