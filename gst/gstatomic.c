@@ -17,30 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_ATOMIC_H__
-#define __GST_ATOMIC_H__
+#define GST_IMPLEMENT_INLINES 1
+#define __GST_ATOMIC_C__
 
-#include <glib.h>
+#include "gstatomic.h"
+#include "gstatomic_impl.h"
 
-G_BEGIN_DECLS
-
-typedef struct _GstAtomicInt GstAtomicInt;
-
-struct _GstAtomicInt {
-  volatile gint  counter;
-  GMutex	*lock;		/* for C fallback */
-};
-
-
-void      	gst_atomic_int_init     	(GstAtomicInt *aint, gint val);
-void      	gst_atomic_int_destroy  	(GstAtomicInt *aint);
-void      	gst_atomic_int_set      	(GstAtomicInt *aint, gint val);
-gint      	gst_atomic_int_read     	(GstAtomicInt *aint);
-void 		gst_atomic_int_add 		(GstAtomicInt *aint, gint val);
-void 		gst_atomic_int_inc 		(GstAtomicInt *aint);
-gboolean 	gst_atomic_int_dec_and_test 	(GstAtomicInt *aint);
-
-
-G_END_DECLS
-
-#endif /*  __GST_ATOMIC_H__ */

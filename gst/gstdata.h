@@ -57,8 +57,7 @@ typedef enum
 
 /* refcount */
 #define GST_DATA_REFCOUNT(data)			((GST_DATA(data))->refcount)
-#define GST_DATA_REFCOUNT_VALUE(data)		(GST_ATOMIC_INT_VALUE((&GST_DATA_REFCOUNT (data))))
-#define GST_DATA_REFCOUNT_READ(data,value)	(GST_ATOMIC_INT_READ(&(GST_DATA_REFCOUNT (data)),value)
+#define GST_DATA_REFCOUNT_VALUE(data)		(gst_atomic_int_read (&(GST_DATA(data))->refcount))
 
 /* copy/free functions */
 #define GST_DATA_COPY_FUNC(data) 		(GST_DATA(data)->copy)

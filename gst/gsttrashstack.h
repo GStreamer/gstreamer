@@ -20,11 +20,8 @@
 #ifndef __GST_TRASH_STACK_H__
 #define __GST_TRASH_STACK_H__
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
 #include <glib.h>
+#include "gstmacros.h"
 
 G_BEGIN_DECLS
 
@@ -41,34 +38,34 @@ struct _GstTrashStack {
   GMutex                *lock;			/* lock for C fallback */
 };
 
-G_INLINE_FUNC GstTrashStack* 	gst_trash_stack_new 	(void);
-G_INLINE_FUNC void 		gst_trash_stack_init 	(GstTrashStack *stack);
-G_INLINE_FUNC void 		gst_trash_stack_destroy (GstTrashStack *stack);
-G_INLINE_FUNC void 		gst_trash_stack_free 	(GstTrashStack *stack);
+GST_INLINE_FUNC GstTrashStack* 	gst_trash_stack_new 	(void);
+GST_INLINE_FUNC void 		gst_trash_stack_init 	(GstTrashStack *stack);
+GST_INLINE_FUNC void 		gst_trash_stack_destroy (GstTrashStack *stack);
+GST_INLINE_FUNC void 		gst_trash_stack_free 	(GstTrashStack *stack);
 
-G_INLINE_FUNC void 		gst_trash_stack_push 	(GstTrashStack *stack, gpointer mem);
-G_INLINE_FUNC gpointer 		gst_trash_stack_pop 	(GstTrashStack *stack);
+GST_INLINE_FUNC void 		gst_trash_stack_push 	(GstTrashStack *stack, gpointer mem);
+GST_INLINE_FUNC gpointer 	gst_trash_stack_pop 	(GstTrashStack *stack);
 
-#if defined (G_CAN_INLINE) || defined (__GST_TRASH_STACK_C__)
+#if defined (GST_CAN_INLINE) || defined (__GST_TRASH_STACK_C__)
 
 #if defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2 
 
 /*
  * intel ia32 optimized lockfree implementations
  */
-G_INLINE_FUNC void
+GST_INLINE_FUNC void
 gst_trash_stack_init (GstTrashStack *stack)
 {
   stack->head = NULL;
   stack->count = 0;
 }
 
-G_INLINE_FUNC void
+GST_INLINE_FUNC void
 gst_trash_stack_destroy (GstTrashStack *stack)
 {
 }
 
-G_INLINE_FUNC void
+GST_INLINE_FUNC void
 gst_trash_stack_push (GstTrashStack *stack, gpointer mem)
 {
  __asm__ __volatile__ (
@@ -83,7 +80,7 @@ gst_trash_stack_push (GstTrashStack *stack, gpointer mem)
   );
 }
 
-G_INLINE_FUNC gpointer
+GST_INLINE_FUNC gpointer
 gst_trash_stack_pop (GstTrashStack *stack)
 {
   GstTrashStackElement *head;
@@ -120,20 +117,20 @@ gst_trash_stack_pop (GstTrashStack *stack)
 /*
  * generic implementation
  */
-G_INLINE_FUNC void
+GST_INLINE_FUNC void
 gst_trash_stack_init (GstTrashStack *stack)
 {
   stack->head = NULL;
   stack->lock = g_mutex_new();
 }
 
-G_INLINE_FUNC void
+GST_INLINE_FUNC void
 gst_trash_stack_destroy (GstTrashStack *stack)
 {
   g_mutex_free (stack->lock);
 }
 
-G_INLINE_FUNC void
+GST_INLINE_FUNC void
 gst_trash_stack_push (GstTrashStack *stack, gpointer mem)
 {
   GstTrashStackElement *elem = (GstTrashStackElement *) mem;
@@ -144,7 +141,7 @@ gst_trash_stack_push (GstTrashStack *stack, gpointer mem)
   g_mutex_unlock (stack->lock);
 }
 
-G_INLINE_FUNC gpointer
+GST_INLINE_FUNC gpointer
 gst_trash_stack_pop (GstTrashStack *stack)
 {
   GstTrashStackElement *head;
@@ -163,7 +160,7 @@ gst_trash_stack_pop (GstTrashStack *stack)
 /*
  * common functions
  */
-G_INLINE_FUNC GstTrashStack*
+GST_INLINE_FUNC GstTrashStack*
 gst_trash_stack_new (void)
 {
   GstTrashStack *stack;
@@ -174,7 +171,7 @@ gst_trash_stack_new (void)
   return stack;
 }
 
-G_INLINE_FUNC void
+GST_INLINE_FUNC void
 gst_trash_stack_free (GstTrashStack *stack)
 {
   gst_trash_stack_destroy (stack);

@@ -24,6 +24,7 @@
 #define GST_DEBUG_FORCE_DISABLE
 #include "gst_private.h"
 
+#include "gstatomic_impl.h"
 #include "gstdata_private.h"
 #include "gstbuffer.h"
 #include "gstmemchunk.h"

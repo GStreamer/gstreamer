@@ -52,6 +52,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstenumtypes.c		\
 	gstobject.c		\
 	$(GST_AUTOPLUG_SRC)	\
+	gstatomic.c		\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferpool-default.c	\
@@ -153,6 +154,7 @@ libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers) $(built_headers)
 
 noinst_HEADERS = 		\
 	gst_private.h		\
+	gstatomic_impl.h	\
 	gstdata_private.h	\
 	gstarch.h		\
 	cothreads.h		

@@ -21,9 +21,11 @@
  */
 
 /* this file makes too much noise for most debugging sessions */
+
 #define GST_DEBUG_FORCE_DISABLE
 #include "gst_private.h"
 
+#include "gstatomic_impl.h"
 #include "gstdata.h"
 #include "gstdata_private.h"
 #include "gstlog.h"
@@ -115,7 +117,7 @@ gst_data_needs_copy_on_write (GstData *data)
 
   g_return_val_if_fail (data != NULL, FALSE);
 
-  GST_ATOMIC_INT_READ (&data->refcount, &refcount);
+  refcount = gst_atomic_int_read (&data->refcount);
 
   if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return FALSE;
@@ -143,7 +145,7 @@ gst_data_copy_on_write (GstData *data)
 
   g_return_val_if_fail (data != NULL, NULL);
 
-  GST_ATOMIC_INT_READ (&data->refcount, &refcount);
+  refcount = gst_atomic_int_read (&data->refcount);
 
   if (refcount == 1 && !GST_DATA_FLAG_IS_SET (data, GST_DATA_READONLY))
     return GST_DATA (data);
@@ -188,7 +190,7 @@ gst_data_ref (GstData *data)
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE(data) > 0, NULL);
 
-  GST_ATOMIC_INT_INC (&data->refcount);
+  gst_atomic_int_inc (&data->refcount);
 
   return data;
 }
@@ -209,7 +211,7 @@ gst_data_ref_by_count (GstData *data, gint count)
   g_return_val_if_fail (count >= 0, NULL);
   g_return_val_if_fail (GST_DATA_REFCOUNT_VALUE(data) > 0, NULL);
 
-  GST_ATOMIC_INT_ADD (&data->refcount, count);
+  gst_atomic_int_add (&data->refcount, count);
 
   return data;
 }
@@ -236,7 +238,7 @@ gst_data_unref (GstData *data)
             data, GST_DATA_REFCOUNT_VALUE (data));
   g_return_if_fail (GST_DATA_REFCOUNT_VALUE (data) > 0);
 
-  GST_ATOMIC_INT_DEC_AND_TEST (&data->refcount, &zero);
+  zero = gst_atomic_int_dec_and_test (&data->refcount);
 
   /* if we ended up with the refcount at zero, free the data */
   if (zero) {
