@@ -159,7 +159,7 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
   gchar *data;
   glong size;
   GstCaps *tempcaps;
-  gint law, depth, ieee;
+  gint law = 0, depth, ieee = 0;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -215,10 +215,6 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
       return;
     }
 
-    g_print
-        ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld\n",
-        auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
-        auparse->channels);
     GST_DEBUG
         ("offset %ld, size %ld, encoding %ld, frequency %ld, channels %ld",
         auparse->offset, auparse->size, auparse->encoding, auparse->frequency,
@@ -240,19 +236,15 @@ Samples :
         break;
 
       case 2:                  /* 8-bit linear PCM */
-        law = 0;
         depth = 8;
         break;
       case 3:                  /* 16-bit linear PCM */
-        law = 0;
         depth = 16;
         break;
       case 4:                  /* 24-bit linear PCM */
-        law = 0;
         depth = 24;
         break;
       case 5:                  /* 32-bit linear PCM */
-        law = 0;
         depth = 32;
         break;
 
