@@ -1042,13 +1042,13 @@ gst_asf_demux_handle_data (GstASFDemux * asf_demux)
   flags = packet_properties_object.flags;
   property = packet_properties_object.property;
 
+  packet_length = _read_var_length (asf_demux, (flags >> 5) & 0x03, &rsize);
+  if (packet_length == 0)
+    packet_length = asf_demux->packet_size;
   packet_info.multiple = flags & 0x01;
   sequence = _read_var_length (asf_demux, (flags >> 1) & 0x03, &rsize);
   packet_info.padsize =
       _read_var_length (asf_demux, (flags >> 3) & 0x03, &rsize);
-  packet_length = _read_var_length (asf_demux, (flags >> 5) & 0x03, &rsize);
-  if (packet_length == 0)
-    packet_length = asf_demux->packet_size;
 
   GST_DEBUG ("Multiple = %u, Sequence = %u, Padsize = %u, Packet length = %u",
       packet_info.multiple, sequence, packet_info.padsize, packet_length);
