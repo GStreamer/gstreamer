@@ -113,8 +113,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 %files
 %defattr(-, root, root)
-%doc AUTHORS COPYING README TODO \
-     COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING 
+%doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING 
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
 %{_bindir}/gst-inspect
@@ -148,8 +147,9 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/*
 ## we specify the API docs as regular files since %docs doesn't fail when
-## files aren't found anymore for RPM >= 4
-## we list all of the files we really need to trap incomplete doc builds
+#  files aren't found anymore for RPM >= 4
+#  we list all of the files we really need to trap incomplete doc builds
+#  then we catch the rest with *, you can safely ignore the errors from this
 ## gstreamer API
 %{_datadir}/gtk-doc/html/gstreamer/autopluggers.html
 %{_datadir}/gtk-doc/html/gstreamer/book1.html
