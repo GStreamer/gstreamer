@@ -65,7 +65,12 @@ else
   make 2>&1 | tee make.log
 fi
 
-%makeinstall
+%install
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
+make install prefix=$RPM_BUILD_ROOT%{prefix} \
+        sysconfdir=$RPM_BUILD_ROOT%{sysconfdir}
+unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -862,7 +867,29 @@ Plugin for playback of wav, au and mod audio files as well as mp3 type
 %post -n gstreamer-audio-formats
 %{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
+%package -n gstreamer-GConf
+Summary: GStreamer GConf schemas
+Group: Libraries/Multimedia
+Requires: gstreamer-plugins >= %{version}
+Requires: GConf2
+BuildRequires: GConf2-devel
+
+%description -n gstreamer-GConf
+Installation of GStreamer GConf schemas.
+These set usable defaults used by all GStreamer-enabled Gnome applications.
+
+%files -n gstreamer-GConf
+%defattr(-, root, root)
+%{_sysconfdir}/gconf/schemas/gstreamer.schemas
+
+%post -n gstreamer-GConf
+export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
+
 %changelog
+* Mon May 06 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- added gstreamer-GConf package
+
 * Wed Mar 13 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - added more BuildRequires and Requires
 - rearranged some plugins
