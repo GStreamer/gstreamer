@@ -25,7 +25,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gstac3parse.h>
+#include "gstac3parse.h"
 
 /* struct and table stolen from ac3dec by Aaron Holtzman */
 struct frmsize_s

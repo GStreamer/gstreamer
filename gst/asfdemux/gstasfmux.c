@@ -749,7 +749,7 @@ gst_asfmux_put_le64 (GstBuffer * packet, guint64 data)
 static void
 gst_asfmux_put_time (GstBuffer * packet, guint64 time)
 {
-  gst_asfmux_put_le64 (packet, time + 116444736000000000LLU);
+  gst_asfmux_put_le64 (packet, time + G_GINT64_CONSTANT (116444736000000000));
 }
 
 static void
