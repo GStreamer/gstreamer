@@ -34,7 +34,6 @@ static void gst_alsa_interface_init (GstImplementsInterfaceClass * klass);
 
 static void gst_alsa_mixer_class_init (gpointer g_class, gpointer class_data);
 static void gst_alsa_mixer_init (GstAlsaMixer * mixer);
-static void gst_alsa_mixer_dispose (GObject * object);
 static void gst_alsa_mixer_interface_init (GstMixerClass * klass);
 static gboolean gst_alsa_mixer_supported (GstImplementsInterface * iface,
     GType iface_type);
@@ -117,8 +116,6 @@ gst_alsa_mixer_class_init (gpointer g_class, gpointer class_data)
   if (parent_class == NULL)
     parent_class = g_type_class_ref (GST_TYPE_ALSA);
 
-  object_class->dispose = gst_alsa_mixer_dispose;
-
   element_class->change_state = gst_alsa_mixer_change_state;
 
   gst_element_class_set_details (element_class, &gst_alsa_mixer_details);
@@ -127,7 +124,13 @@ gst_alsa_mixer_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_alsa_mixer_init (GstAlsaMixer * mixer)
 {
-  gint err;
+  mixer->mixer_handle = NULL;
+}
+
+static gboolean
+gst_alsa_mixer_open (GstAlsaMixer * mixer)
+{
+  gint err, device;
   GstAlsa *alsa = GST_ALSA (mixer);
 
   mixer->mixer_handle = (snd_mixer_t *) - 1;
@@ -137,7 +140,7 @@ gst_alsa_mixer_init (GstAlsaMixer * mixer)
   if (err < 0 || mixer->mixer_handle == NULL) {
     GST_ERROR_OBJECT (GST_OBJECT (mixer), "Cannot open mixer device.");
     mixer->mixer_handle = (snd_mixer_t *) - 1;
-    return;
+    return FALSE;
   }
 
   if ((err = snd_mixer_attach (mixer->mixer_handle, alsa->device)) < 0) {
@@ -156,25 +159,37 @@ gst_alsa_mixer_init (GstAlsaMixer * mixer)
     goto error;
   }
 
-  return;
+  /* I don't know how to get a device name from a mixer handle. So on
+   * to the ugly hacks here, then... */
+  if (sscanf (alsa->device, "hw:%d", &device) == 1) {
+    gchar *name;
+
+    if (!snd_card_get_name (device, &name))
+      alsa->cardname = name;
+  }
+
+  return TRUE;
 
 error:
   snd_mixer_close (mixer->mixer_handle);
   mixer->mixer_handle = (snd_mixer_t *) - 1;
+  return FALSE;
 }
 
 static void
-gst_alsa_mixer_dispose (GObject * object)
+gst_alsa_mixer_close (GstAlsaMixer * mixer)
 {
-  GstAlsaMixer *mixer = GST_ALSA_MIXER (object);
+  GstAlsa *alsa = GST_ALSA (mixer);
 
   if (((gint) mixer->mixer_handle) == -1)
     return;
 
+  if (alsa->cardname) {
+    g_free (alsa->cardname);
+    alsa->cardname = NULL;
+  }
   snd_mixer_close (mixer->mixer_handle);
   mixer->mixer_handle = (snd_mixer_t *) - 1;
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -278,13 +293,16 @@ gst_alsa_mixer_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
+      if (!gst_alsa_mixer_open (this))
+	return GST_STATE_FAILURE;
       gst_alsa_mixer_build_list (this);
       break;
     case GST_STATE_READY_TO_NULL:
       gst_alsa_mixer_free_list (this);
+      gst_alsa_mixer_close (this);
       break;
     default:
-      g_assert_not_reached ();
+      break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)

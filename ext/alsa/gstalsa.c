@@ -273,11 +273,7 @@ gst_alsa_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_string (value, this->device);
       break;
     case ARG_DEVICE_NAME:
-      if (GST_STATE (this) != GST_STATE_NULL) {
-	g_value_set_string (value, snd_pcm_info_get_name (this->info));
-      } else {
-	g_value_set_string (value, NULL);
-      }
+      g_value_set_string (value, this->cardname);
       break;
     case ARG_PERIODCOUNT:
       g_value_set_int (value, this->period_count);
@@ -1108,8 +1104,15 @@ gst_alsa_set_eos (GstAlsa * this)
 static gboolean
 gst_alsa_open_audio (GstAlsa * this)
 {
+  snd_pcm_info_t *info;
+
   g_assert (this != NULL);
   g_assert (this->handle == NULL);
+
+  /* If we have no pads, then we're apparently a mixer object,
+   * and that doesn't need a handle to the actual audio device. */
+  if (!gst_element_get_pad_list (GST_ELEMENT (this)))
+    return TRUE;
 
   GST_INFO ("Opening alsa device \"%s\"...\n", this->device);
 
@@ -1127,8 +1130,10 @@ gst_alsa_open_audio (GstAlsa * this)
     return FALSE;
   }
 
-  snd_pcm_info_malloc (&this->info);
-  snd_pcm_info (this->handle, this->info);
+  snd_pcm_info_malloc (&info);
+  snd_pcm_info (this->handle, info);
+  this->cardname = g_strdup (snd_pcm_info_get_name (info));
+  snd_pcm_info_free (info);
 
   GST_FLAG_SET (this, GST_ALSA_OPEN);
   return TRUE;
@@ -1375,14 +1380,20 @@ gst_alsa_stop_audio (GstAlsa * this)
 static gboolean
 gst_alsa_close_audio (GstAlsa * this)
 {
+  /* if there's no pads, we never open. So we don't close either. */
+  if (!gst_element_get_pad_list (GST_ELEMENT (this)))
+    return TRUE;
+
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
-  snd_pcm_info_free (this->info);
   ERROR_CHECK (snd_pcm_close (this->handle), "Error closing device: %s");
 
   this->handle = NULL;
-  this->info = NULL;
+  if (this->cardname) {
+    g_free (this->cardname);
+    this->cardname = NULL;
+  }
   GST_FLAG_UNSET (this, GST_ALSA_OPEN);
 
   return TRUE;
@@ -1399,6 +1410,7 @@ gst_alsa_get_formats (GstPad * pad)
     GST_FORMAT_BYTES,
     0
   };
+
   return formats;
 }
 
@@ -1483,6 +1495,7 @@ gst_alsa_get_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     0,
   };
+
   return query_types;
 }
 
