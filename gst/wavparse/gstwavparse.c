@@ -424,6 +424,8 @@ gst_wavparse_parse_adtl (GstWavParse *wavparse,
       return;
     }
   }
+
+  g_object_notify (G_OBJECT (wavparse), "metadata");
 }
 
 static void
@@ -525,7 +527,7 @@ gst_wavparse_parse_info (GstWavParse *wavparse,
       break;
       
     default:
-			g_print ("Unknown: %4.4s\n", (char *) &chunk.id);
+      g_print ("Unknown: %4.4s\n", (char *) &chunk.id);
       type = NULL;
       break;
     }
@@ -555,6 +557,8 @@ gst_wavparse_parse_cues (GstWavParse *wavparse,
   GstPropsEntry *entry;
 
   while (len > 0) {
+    int required;
+    
     got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, sizeof (struct _gst_riff_cue));
     temp_cue = (struct _gst_riff_cue *) tempdata;
 
@@ -572,9 +576,10 @@ gst_wavparse_parse_cues (GstWavParse *wavparse,
 
     /* -4 because cue.size contains the cuepoints size
        and we've already flushed that out of the system */
-    got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, cue.size - 4);
-    gst_bytestream_flush (bs, ((cue.size - 4) + 1) & ~1);
-    if (got_bytes != cue.size - 4) {
+    required = cue.size - 4;
+    got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, required);
+    gst_bytestream_flush (bs, ((required) + 1) & ~1);
+    if (got_bytes != required) {
       return;
     }
 
@@ -615,7 +620,7 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse)
   format = (GstWavParseFormat *) fmtdata;
 
   if (got_bytes == sizeof (GstWavParseFormat)) {
-		gst_bytestream_flush (bs, got_bytes);
+    gst_bytestream_flush (bs, got_bytes);
     wavparse->bps = GUINT16_FROM_LE (format->wBlockAlign);
     wavparse->rate = GUINT32_FROM_LE (format->dwSamplesPerSec);
     wavparse->channels = GUINT16_FROM_LE (format->wChannels);
@@ -741,7 +746,7 @@ gst_wavparse_loop (GstElement *element)
     wavparse->seek_pending = FALSE;
   }
 	
-	if (wavparse->state == GST_WAVPARSE_DATA) {
+  if (wavparse->state == GST_WAVPARSE_DATA) {
     GstBuffer *buf;
     int desired;
     
@@ -753,24 +758,24 @@ gst_wavparse_loop (GstElement *element)
 #define MAX_BUFFER_SIZE 1024
 
     if (wavparse->dataleft > 0) {
-	    desired = MIN (wavparse->dataleft, MAX_BUFFER_SIZE);
-	    got_bytes = gst_bytestream_peek (bs, &buf, desired);
+      desired = MIN (wavparse->dataleft, MAX_BUFFER_SIZE);
+      got_bytes = gst_bytestream_peek (bs, &buf, desired);
 
-			if (got_bytes == 0) {
-				return;
-			}
+      if (got_bytes == 0) {
+	return;
+      }
 
-			wavparse->dataleft -= got_bytes;
-			wavparse->byteoffset += got_bytes;
+      wavparse->dataleft -= got_bytes;
+      wavparse->byteoffset += got_bytes;
 
-			gst_bytestream_flush (bs, got_bytes);
+      gst_bytestream_flush (bs, got_bytes);
 			
-			gst_pad_push (wavparse->srcpad, GST_DATA (buf));
-			return;
+      gst_pad_push (wavparse->srcpad, GST_DATA (buf));
+      return;
     } else {
-			wavparse->state = GST_WAVPARSE_OTHER;
-		}
-	}
+      wavparse->state = GST_WAVPARSE_OTHER;
+    }
+  }
 
   do {
     gst_riff_riff *temp_chunk;
@@ -799,23 +804,27 @@ gst_wavparse_loop (GstElement *element)
     case GST_RIFF_TAG_LIST:
       /* Read complete list chunk */
       while (TRUE) {
-				got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_list));
-				temp_chunk = (gst_riff_riff *) tempdata;
-				if (got_bytes < sizeof (gst_riff_list)) {
-					if (!gst_wavparse_handle_sink_event (wavparse)) {
-						return;
-					}
-				} else {
-					break;
-				}
+	got_bytes = gst_bytestream_peek_bytes (bs, &tempdata, sizeof (gst_riff_list));
+	temp_chunk = (gst_riff_riff *) tempdata;
+	if (got_bytes < sizeof (gst_riff_list)) {
+	  if (!gst_wavparse_handle_sink_event (wavparse)) {
+	    return;
+	  }
+	} else {
+	  break;
+	}
       }
 			
       chunk.type = GUINT32_FROM_LE (temp_chunk->type);
       skipsize = sizeof (gst_riff_list);
       break;
 
+    case GST_RIFF_TAG_cue:
+      skipsize = 0;
+      break;
+      
     default:
-			skipsize = sizeof (gst_riff_chunk);
+      skipsize = sizeof (gst_riff_chunk);
       break;
     }
     gst_bytestream_flush (bs, skipsize);
@@ -861,19 +870,19 @@ gst_wavparse_loop (GstElement *element)
       GST_DEBUG ("list type: %4.4s", (char *) &chunk.type);
       switch (chunk.type) {
       case GST_RIFF_LIST_INFO:
-				gst_wavparse_parse_info (wavparse, chunk.size - 4);
-				flush = 0;
+	gst_wavparse_parse_info (wavparse, chunk.size - 4);
+	flush = 0;
 
-				break;
+	break;
 				
       case GST_RIFF_LIST_adtl:
-				gst_wavparse_parse_adtl (wavparse, chunk.size - 4);
-				flush = 0;
-				break;
+	gst_wavparse_parse_adtl (wavparse, chunk.size - 4);
+	flush = 0;
+	break;
 
       default:
-				flush = 0;
-				break;
+	flush = 0;
+	break;
       }
       
       flush = 0;
