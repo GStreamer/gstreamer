@@ -166,9 +166,10 @@ gst_videoflip_src_template_factory(void)
   static GstPadTemplate *templ = NULL;
 
   if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("src","video/raw",
+    GstCaps *caps = GST_CAPS_NEW("src","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
     caps = gst_caps_intersect(caps, gst_videoflip_get_capslist ());
 
@@ -183,9 +184,10 @@ gst_videoflip_sink_template_factory(void)
   static GstPadTemplate *templ = NULL;
 
   if(!templ){
-    GstCaps *caps = GST_CAPS_NEW("sink","video/raw",
+    GstCaps *caps = GST_CAPS_NEW("sink","video/x-raw-yuv",
 		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT));
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
     caps = gst_caps_intersect(caps, gst_videoflip_get_capslist ());
 
