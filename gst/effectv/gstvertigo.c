@@ -131,7 +131,7 @@ gst_vertigotv_class_init (GstVertigoTVClass * klass)
   gst_vertigotv_signals[RESET_SIGNAL] =
     g_signal_new ("reset_parms",
                   G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST,
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
                   G_STRUCT_OFFSET (GstVertigoTVClass, reset),
                   NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
