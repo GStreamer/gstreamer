@@ -97,11 +97,8 @@ gst_qtdemux_details =
 {
   "QuickTime Demuxer",
   "Codec/Demuxer",
-  "LGPL",
   "Demultiplex a QuickTime file into audio and video streams",
-  VERSION,
-  "David Schleef <ds@schleef.org>",
-  "(C) 2003",
+  "David Schleef <ds@schleef.org>"
 };
 
 enum {
@@ -127,6 +124,7 @@ static GstPadTemplate *videosrctempl, *audiosrctempl;
 static GstElementClass *parent_class = NULL;
 
 static void gst_qtdemux_class_init (GstQTDemuxClass *klass);
+static void gst_qtdemux_base_init (GstQTDemuxClass *klass);
 static void gst_qtdemux_init (GstQTDemux *quicktime_demux);
 static GstElementStateReturn gst_qtdemux_change_state(GstElement *element);
 static void gst_qtdemux_loop_header (GstElement *element);
@@ -146,7 +144,8 @@ static GType gst_qtdemux_get_type (void)
 
   if (!qtdemux_type) {
     static const GTypeInfo qtdemux_info = {
-      sizeof(GstQTDemuxClass), NULL, NULL,
+      sizeof(GstQTDemuxClass),
+      (GBaseInitFunc)gst_qtdemux_base_init, NULL,
       (GClassInitFunc)gst_qtdemux_class_init,
       NULL, NULL, sizeof(GstQTDemux), 0,
       (GInstanceInitFunc)gst_qtdemux_init,
@@ -154,6 +153,17 @@ static GType gst_qtdemux_get_type (void)
     qtdemux_type = g_type_register_static (GST_TYPE_ELEMENT, "GstQTDemux", &qtdemux_info, 0);
   }
   return qtdemux_type;
+}
+
+static void gst_qtdemux_base_init (GstQTDemuxClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_templ));
+  gst_element_class_add_pad_template (element_class, videosrctempl);
+  gst_element_class_add_pad_template (element_class, audiosrctempl);
+  gst_element_class_set_details (element_class, &gst_qtdemux_details);
 }
 
 static void gst_qtdemux_class_init (GstQTDemuxClass *klass) 
@@ -178,9 +188,8 @@ gst_qtdemux_init (GstQTDemux *qtdemux)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
   GstCaps *audiocaps = NULL, *videocaps = NULL, *temp;
   const guint32 audio_fcc[] = {
     /* FILLME */
@@ -193,11 +202,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
-
-  factory = gst_element_factory_new ("qtdemux", GST_TYPE_QTDEMUX,
-                                     &gst_qtdemux_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
   for (i = 0; audio_fcc[i] != 0; i++) {
     temp = qtdemux_audio_caps (NULL, audio_fcc[i]);
@@ -217,21 +221,22 @@ plugin_init (GModule *module, GstPlugin *plugin)
 					GST_PAD_SOMETIMES,
 					videocaps, NULL);
 
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
-  gst_element_factory_add_pad_template (factory, videosrctempl);
-  gst_element_factory_add_pad_template (factory, audiosrctempl);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "qtdemux",
+			       GST_RANK_NONE, GST_TYPE_QTDEMUX);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "qtdemux",
-  plugin_init
-};
+  "Quicktime stream demuxer",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
 
 static gboolean gst_qtdemux_handle_sink_event (GstQTDemux *qtdemux)
 {
