@@ -73,14 +73,34 @@ extern GType _gst_buffer_type;
 #define GST_BUFFER_OFFSET_END_IS_VALID(buffer)	(GST_BUFFER_OFFSET_END (buffer) != GST_BUFFER_OFFSET_NONE)
 #define GST_BUFFER_MAXSIZE_IS_VALID(buffer)	(GST_BUFFER_MAXSIZE (buffer) != GST_BUFFER_MAXSIZE_NONE)
 
+/**
+ * GstBufferFlag:
+ * @GST_BUFFER_READONLY: the buffer is read-only.
+ * @GST_BUFFER_SUBBUFFER: the buffer is a subbuffer, the parent buffer can be
+ * found with the GST_BUFFER_POOL_PRIVATE() macro.
+ * @GST_BUFFER_ORIGINAL: buffer is not a copy of another buffer.
+ * @GST_BUFFER_DONTFREE: do not try to free the data when this buffer is
+ * unreferenced.
+ * @GST_BUFFER_KEY_UNIT: the buffer holds a key unit, a unit that can be
+ * decoded independently of other buffers.
+ * This flag has been deprecated, see #GST_BUFFER_DELTA_UNIT.
+ * @GST_BUFFER_DONTKEEP:
+ * @GST_BUFFER_IN_CAPS: the buffer has been added as a field in a #GstCaps.
+ * @GST_BUFFER_DELTA_UNIT: this unit cannot be decoded independently.
+ * Since 0.8.5
+ * @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
+ *
+ * A set of buffer flags used to describe properties of a #GstBuffer.
+ */
 typedef enum {
   GST_BUFFER_READONLY   = GST_DATA_READONLY,
   GST_BUFFER_SUBBUFFER  = GST_DATA_FLAG_LAST,
   GST_BUFFER_ORIGINAL,
   GST_BUFFER_DONTFREE,
-  GST_BUFFER_KEY_UNIT,		/* sync point in the stream */
+  GST_BUFFER_KEY_UNIT,		/* deprecated, use reverse DELTA_UNIT */
   GST_BUFFER_DONTKEEP,
   GST_BUFFER_IN_CAPS,
+  GST_BUFFER_DELTA_UNIT,	/* this unit depends on a previous unit */
   GST_BUFFER_FLAG_LAST	= GST_DATA_FLAG_LAST + 8
 } GstBufferFlag;
 

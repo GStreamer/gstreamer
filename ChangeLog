@@ -1,3 +1,14 @@
+2004-08-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/gst/tmpl/gstschedulerfactory.sgml:
+	  reorder docs a little, make GstBuffer's more sensible.
+	* gst/gstbuffer.h:
+	  API: added GST_BUFFER_FLAG_DELTA_UNIT
+	* gst/gstscheduler.c:
+	  comment API addition
+
 2004-08-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_get_mmap):
@@ -32,6 +43,7 @@
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstscheduler.c: (gst_scheduler_register):
 	* gst/gstscheduler.h:
+	  API:
 	  add gst_scheduler_register shortcut similar to gst_element_register
 	* gst/schedulers/entryscheduler.c: (plugin_init):
 	* gst/schedulers/gstbasicscheduler.c: (plugin_init):
@@ -68,7 +80,7 @@
 	* win32/gst-register.vcproj:
 	* win32/gstspider.vcproj:
 	  update the include and lib dirs to fit standard libraries as
-      described in the Win32 manual
+	  described in the Win32 manual
 
 2004-08-09  Steve Lhomme  <steve.lhomme@free.fr>
 
@@ -412,7 +424,7 @@
 	* win32/config.h:
 	* win32/README.txt:
 	* docs/manual/win32.xml:
-	Fixed the plugin and GSTreamer location
+	Fixed the plugin and GStreamer location
 
 2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
@@ -512,7 +524,9 @@
 	* testsuite/states/.cvsignore:
 	* testsuite/threads/.cvsignore:
 	  keep this up to date, since I seem to be the only one who cares
-	  about not missing files on commits
+	  about not missing files on commits (editor's note: no you don't,
+	  but feel free to change them at the time you add stuff instead
+	  of later on)
 
 2004-07-21  Benjamin Otte  <otte@gnome.org>
 

@@ -44,6 +44,18 @@ Use gst_scheduler_factory_destroy() to remove the factory from the global list.
 
 
 
+<!-- ##### FUNCTION gst_scheduler_register ##### -->
+<para>
+
+</para>
+
+@plugin: 
+@name: 
+@longdesc: 
+@type: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_scheduler_factory_new ##### -->
 <para>
 

@@ -802,7 +802,9 @@ gst_scheduler_factory_init (GstSchedulerFactory * factory)
  *
  * Registers a scheduler with GStreamer.
  *
- * Returns: TRUE, if the registering succeeded, FALSE on error
+ * Returns: TRUE, if the registering succeeded, FALSE on error.
+ *
+ * Since: 0.8.5
  **/
 gboolean
 gst_scheduler_register (GstPlugin * plugin, const gchar * name,
