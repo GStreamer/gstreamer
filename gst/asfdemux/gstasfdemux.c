@@ -23,6 +23,7 @@
 #endif
 #include <gst/riff/riff-ids.h>
 #include "gstasfdemux.h"
+#include "gstasfmux.h" /* for the type registering */
 #include "asfheaders.h"
 
 /* elementfactory information */
@@ -1627,7 +1628,8 @@ plugin_init (GstPlugin *plugin)
     return FALSE;
 
   /* create an elementfactory for the asf_demux element */
-  if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY, GST_TYPE_ASF_DEMUX))
+  if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY, GST_TYPE_ASF_DEMUX) ||
+      !gst_element_register (plugin, "asfmux", GST_RANK_NONE, GST_TYPE_ASFMUX))
     return FALSE;
 
   return TRUE;
@@ -1636,8 +1638,8 @@ plugin_init (GstPlugin *plugin)
 GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "asfdemux",
-  "Demuxes ASF streams",
+  "asf",
+  "Demuxes and muxes audio and video in Microsofts ASF format",
   plugin_init,
   VERSION,
   "LGPL",

@@ -1,14 +1,9 @@
 
-plugin_LTLIBRARIES = libgstasfdemux.la libgstasfmux.la
+plugin_LTLIBRARIES = libgstasf.la
 
-libgstasfdemux_la_SOURCES = gstasfdemux.c
-libgstasfdemux_la_CFLAGS = $(GST_CFLAGS)
-libgstasfdemux_la_LIBADD =
-libgstasfdemux_la_LDFLAGS = $(GST_LIBS)
-
-libgstasfmux_la_SOURCES = gstasfmux.c
-libgstasfmux_la_CFLAGS = $(GST_CFLAGS)
-libgstasfmux_la_LIBADD =
-libgstasfmux_la_LDFLAGS = $(GST_LIBS)
+libgstasf_la_SOURCES = gstasfmux.c gstasfdemux.c
+libgstasf_la_CFLAGS = $(GST_CFLAGS)
+libgstasf_la_LIBADD =
+libgstasf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstasfdemux.h asfheaders.h gstasfmux.h

@@ -1382,22 +1382,3 @@ gst_asfmux_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
-static gboolean
-plugin_init (GstPlugin *plugin)
-{
-  if (!gst_element_register (plugin, "asfmux", GST_RANK_NONE, GST_TYPE_ASFMUX))
-    return FALSE;
-  
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "asfmux",
-  "Muxes audio and video into an ASF stream",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
