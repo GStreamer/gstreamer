@@ -611,6 +611,24 @@ mpeg1_sys_type_find (GstTypeFind *tf, gpointer unused)
   }
 }
 
+/*** video/mpeg video stream **************************************************/
+
+#define MPEG_VIDEO_CAPS                                                 \
+    GST_CAPS_NEW ("mpeg_type_find", "video/mpeg",			\
+	          "systemstream", GST_PROPS_BOOLEAN (FALSE))
+static void
+mpeg_video_type_find (GstTypeFind *tf, gpointer unused)
+{
+  static const guint8 sequence_header[] = { 0x00, 0x00, 0x01, 0xb3 };
+  guint8 *data = NULL;
+
+  data = gst_type_find_peek (tf, 0, 8);
+
+  if (data && memcmp(data, sequence_header, 4)==0){
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MPEG_VIDEO_CAPS);
+  }
+}
+
 /*** video/quicktime***********************************************************/
 
 #define QT_CAPS gst_caps_new ("qt_typefind", "video/quicktime", NULL)
@@ -1093,6 +1111,7 @@ plugin_init (GstPlugin *plugin)
 			       "s3m", "stm", "stx", "ult", "xm",  NULL};
   static gchar * mp3_exts[] = {"mp3", "mp2", "mp1", "mpga", NULL};
   static gchar * mpeg_sys_exts[] = {"mpe", "mpeg", "mpg", NULL};
+  static gchar * mpeg_video_exts[] = {"mpv", "mpeg", "mpg", NULL};
   static gchar * ogg_exts[] = {"ogg", NULL};
   static gchar * qt_exts[] = {"mov", NULL};
   static gchar * rm_exts[] = {"ra", "ram", "rm", NULL};
@@ -1142,6 +1161,8 @@ plugin_init (GstPlugin *plugin)
 	  mpeg2_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS (2), NULL);
   TYPE_FIND_REGISTER (plugin, "application/ogg", GST_RANK_PRIMARY,
 	  ogg_type_find, ogg_exts, OGG_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_SECONDARY,
+	  mpeg_video_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
 	  qt_type_find, qt_exts, QT_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/vnd.rn-realmedia", GST_RANK_SECONDARY,
