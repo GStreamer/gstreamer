@@ -397,7 +397,7 @@ speex_dec_chain (GstPad * pad, GstData * data)
       return;
     }
 
-    dec->mode = speex_mode_list[dec->header->mode];
+    dec->mode = (SpeexMode *) speex_mode_list[dec->header->mode];
 
     /* initialize the decoder */
     dec->state = speex_decoder_init (dec->mode);

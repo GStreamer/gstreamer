@@ -648,13 +648,13 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
 
   switch (speexenc->mode) {
     case GST_SPEEXENC_MODE_UWB:
-      speexenc->speex_mode = &speex_uwb_mode;
+      speexenc->speex_mode = (SpeexMode *) & speex_uwb_mode;
       break;
     case GST_SPEEXENC_MODE_WB:
-      speexenc->speex_mode = &speex_wb_mode;
+      speexenc->speex_mode = (SpeexMode *) & speex_wb_mode;
       break;
     case GST_SPEEXENC_MODE_NB:
-      speexenc->speex_mode = &speex_nb_mode;
+      speexenc->speex_mode = (SpeexMode *) & speex_nb_mode;
       break;
     case GST_SPEEXENC_MODE_AUTO:
     default:
@@ -663,7 +663,7 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
 
   if (speexenc->rate > 25000) {
     if (speexenc->mode == GST_SPEEXENC_MODE_AUTO) {
-      speexenc->speex_mode = &speex_uwb_mode;
+      speexenc->speex_mode = (SpeexMode *) & speex_uwb_mode;
     } else {
       if (speexenc->speex_mode != &speex_uwb_mode) {
         speexenc->last_message =
@@ -674,7 +674,7 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
     }
   } else if (speexenc->rate > 12500) {
     if (speexenc->mode == GST_SPEEXENC_MODE_AUTO) {
-      speexenc->speex_mode = &speex_wb_mode;
+      speexenc->speex_mode = (SpeexMode *) & speex_wb_mode;
     } else {
       if (speexenc->speex_mode != &speex_wb_mode) {
         speexenc->last_message =
@@ -685,7 +685,7 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
     }
   } else {
     if (speexenc->mode == GST_SPEEXENC_MODE_AUTO) {
-      speexenc->speex_mode = &speex_nb_mode;
+      speexenc->speex_mode = (SpeexMode *) & speex_nb_mode;
     } else {
       if (speexenc->speex_mode != &speex_nb_mode) {
         speexenc->last_message =
