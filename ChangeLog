@@ -1,3 +1,9 @@
+2004-04-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+                                                                                
+	* po/LINGUAS:
+	* po/uk.po:
+          Added Ukrainian translation (Maxim V. Dziumanenko)
+                                                                                
 2004-04-18  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init), (gst_gsmdec_getcaps),
