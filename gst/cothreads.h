@@ -31,7 +31,7 @@ struct _cothread_state {
   int *sp;
   int *top_sp;
   int *pc;
-  sigjmp_buf jmp;
+  jmp_buf jmp;
 };
 
 struct _cothread_context {

@@ -42,7 +42,7 @@ noinst_HEADERS =		\
 	gsttypefind.h		\
 	gstsinesrc.h
 
-CFLAGS += -O2 -Wall 
+CFLAGS += -g -O2 -Wall 
 
 libgstelements_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) $(GHTTP_LIBS)
 libgstelements_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)

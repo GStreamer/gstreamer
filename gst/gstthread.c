@@ -178,7 +178,7 @@ GstElement *gst_thread_new(guchar *name) {
 
 static GstElementStateReturn gst_thread_change_state(GstElement *element) {
   GstThread *thread;
-  gboolean stateset = TRUE;
+  gboolean stateset = GST_STATE_SUCCESS;
   gint pending;
 
   g_return_val_if_fail(GST_IS_THREAD(element), FALSE);
@@ -218,7 +218,7 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
         gst_info("gstthread: NOT starting thread \"%s\"\n",
                 gst_element_get_name(GST_ELEMENT(element)));
       }
-      return GST_STATE_SUCCESS;
+      return GST_STATE_ASYNC;
       break;
     case GST_STATE_PLAYING:
       if (!stateset) return FALSE;
@@ -253,7 +253,9 @@ static GstElementStateReturn gst_thread_change_state(GstElement *element) {
  * The main loop of the thread. The thread will iterate
  * while the state is GST_THREAD_STATE_SPINNING
  */
-static void *gst_thread_main_loop(void *arg) {
+static void *
+gst_thread_main_loop (void *arg) 
+{
   GstThread *thread = GST_THREAD(arg);
 
   gst_info("gstthread: thread \"%s\" is running with PID %d\n",

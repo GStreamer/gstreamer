@@ -206,7 +206,12 @@ static GstElementStateReturn gst_bin_change_state(GstElement *element) {
           _gst_print_statename(GST_STATE_PENDING(element)));
 
   if (GST_STATE_PENDING(element) == GST_STATE_READY) {
-    gst_bin_create_plan(bin);
+    GstObject *parent;
+
+    parent = gst_object_get_parent(GST_OBJECT(element));
+
+    if (!parent || !GST_IS_BIN(parent))
+      gst_bin_create_plan(bin);
   }
 //  g_return_val_if_fail(bin->numchildren != 0, GST_STATE_FAILURE);
 
@@ -491,6 +496,7 @@ static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
 	    buf = gst_pad_pull(pad);
             DEBUG("** gst_bin_loopfunc_wrapper(): calling chain function of %s:%s\n", name, gst_pad_get_name(pad));
             (pad->chainfunc)(pad,buf);
+            DEBUG("** gst_bin_loopfunc_wrapper(): calling chain function of %s:%s done\n", name, gst_pad_get_name(pad));
           }
           pads = g_list_next(pads);
         }
@@ -589,6 +595,10 @@ static void gst_bin_create_plan_func(GstBin *bin) {
         cothread_setfunc(element->threadstate,gst_bin_loopfunc_wrapper,
                          0,(char **)element);
       }
+      if (GST_IS_BIN(element)) {
+        gst_bin_create_plan( GST_BIN (element));	
+      }
+      
       if (GST_IS_SRC(element)) {
         g_print("gstbin: adding '%s' as entry point\n",gst_element_get_name(element));
         bin->entries = g_list_prepend(bin->entries,element);
@@ -655,6 +665,9 @@ static void gst_bin_create_plan_func(GstBin *bin) {
     while (elements) {
       element = GST_ELEMENT(elements->data);
       g_print("gstbin: found element \"%s\"\n", gst_element_get_name(element));
+      if (GST_IS_BIN(element)) {
+        gst_bin_create_plan( GST_BIN (element));	
+      }
       if (GST_IS_SRC(element)) {
         g_print("gstbin: adding '%s' as entry point\n",gst_element_get_name(element));
         bin->entries = g_list_prepend(bin->entries,element);

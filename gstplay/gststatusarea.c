@@ -167,6 +167,7 @@ gst_status_area_expose(GtkWidget *widget,
 		       widget->allocation.width-width-20, 15, status_area->playtime);
     }
   }
+
   return FALSE;
 }
 

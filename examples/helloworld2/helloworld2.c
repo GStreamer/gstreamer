@@ -1,19 +1,17 @@
 #include <gst/gst.h>
 
-static gboolean playing;
-
 /* eos will be called when the src element has an end of stream */
 void eos(GstSrc *src) 
 {
   g_print("have eos, quitting\n");
 
-  playing = FALSE;
+  gst_main_quit();
 }
 
 int main(int argc,char *argv[]) 
 {
   GstElement *disksrc, *audiosink;
-  GstElement *pipeline;
+  GstElement *pipeline, *thread;
 
   if (argc != 2) {
     g_print("usage: %s <filename>\n", argv[0]);
@@ -22,9 +20,14 @@ int main(int argc,char *argv[])
 
   gst_init(&argc,&argv);
 
+  thread = gst_thread_new("main_thread");
+  g_assert(thread != NULL);
+
   /* create a new bin to hold the elements */
   pipeline = gst_pipeline_new("pipeline");
   g_assert(pipeline != NULL);
+
+  gst_bin_add(GST_BIN(thread), pipeline);
 
   /* create a disk reader */
   disksrc = gst_elementfactory_make("disksrc", "disk_source");
@@ -47,20 +50,16 @@ int main(int argc,char *argv[])
   }
 
   /* make it ready */
-  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_READY);
+  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_READY);
   /* start playing */
-  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
+  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_PLAYING);
 
-  playing = TRUE;
-
-  while (playing) {
-    gst_bin_iterate(GST_BIN(pipeline));
-  }
+  gst_main();
 
   /* stop the bin */
-  gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
+  gst_element_set_state(GST_ELEMENT(thread), GST_STATE_NULL);
 
-  gst_pipeline_destroy(pipeline);
+  gst_pipeline_destroy(thread);
 
   exit(0);
 }

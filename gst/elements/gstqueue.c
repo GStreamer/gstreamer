@@ -167,8 +167,8 @@ static void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   /* we have to lock the queue since we span threads */
   
   DEBUG("queue: try have queue lock\n");
-  DEBUG("queue: %s adding buffer %p %ld\n", name, buf, pthread_self());
   GST_LOCK(queue);
+  DEBUG("queue: %s adding buffer %p %ld\n", name, buf, pthread_self());
   DEBUG("queue: have queue lock\n");
 
   if (GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
@@ -202,11 +202,11 @@ static void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   GST_UNLOCK(queue);
 
   if (tosignal) {
-    STATUS("%s: >\n");
     g_mutex_lock(queue->emptylock);
+    STATUS("%s: >\n");
     g_cond_signal(queue->emptycond);
-    g_mutex_unlock(queue->emptylock);
     STATUS("%s: >>\n");
+    g_mutex_unlock(queue->emptylock);
   }
 }
 
@@ -220,19 +220,19 @@ static void gst_queue_push(GstConnection *connection) {
   name = gst_element_get_name(GST_ELEMENT(queue));
 
   /* have to lock for thread-safety */
-  DEBUG("queue: try have queue lock\n");
+  DEBUG("queue: %s try have queue lock\n", name);
   GST_LOCK(queue);
   DEBUG("queue: %s push %d %ld %p\n", name, queue->level_buffers, pthread_self(), queue->emptycond);
-  DEBUG("queue: have queue lock\n");
+  DEBUG("queue: %s have queue lock\n", name);
 
   while (!queue->level_buffers) {
-    STATUS("%s: U released lock\n");
+    STATUS("queue: %s U released lock\n");
     GST_UNLOCK(queue);
     g_mutex_lock(queue->emptylock);
     g_cond_wait(queue->emptycond,queue->emptylock);
     g_mutex_unlock(queue->emptylock);
     GST_LOCK(queue);
-    STATUS("%s: U- getting lock\n");
+    STATUS("queue: %s U- getting lock\n");
   }
 
   front = queue->queue;

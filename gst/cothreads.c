@@ -19,8 +19,8 @@ cothread_state *cothread_create(cothread_context *ctx) {
   cothread_state *s;
 
   DEBUG("cothread: pthread_self() %ld\n",pthread_self());
-  if (0) {
-  //if (pthread_self() == 0) {
+  //if (0) {
+  if (pthread_self() == 0) {
     s = (cothread_state *)malloc(sizeof(int) * COTHREAD_STACKSIZE);
     DEBUG("cothread: new stack at %p\n",s);
   } else {
@@ -139,7 +139,7 @@ void cothread_switch(cothread_state *thread) {
 
   /* save the current stack pointer, frame pointer, and pc */
   GET_SP(current->sp);
-  enter = sigsetjmp(current->jmp, 1);
+  enter = setjmp(current->jmp);
   if (enter != 0) {
     DEBUG("cothread: enter thread #%d %d %p<->%p (%d)\n",current->threadnum, enter, 
 		    current->sp, current->top_sp, current->top_sp-current->sp);
@@ -155,7 +155,7 @@ void cothread_switch(cothread_state *thread) {
     DEBUG("cothread: in thread \n");
     SET_SP(thread->sp);
     // switch to it
-    siglongjmp(thread->jmp,1);
+    longjmp(thread->jmp,1);
   } else {
     SETUP_STACK(thread->sp);
     SET_SP(thread->sp);
