@@ -556,14 +556,18 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 
 	switch (GST_EVENT_TYPE (event)) {
 	case GST_EVENT_SEEK:
-		switch (GST_EVENT_SEEK_TYPE (event)) {
-		case GST_SEEK_BYTEOFFSET_SET:
+        {
+		if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
+			return FALSE;
+		}
+		switch (GST_EVENT_SEEK_METHOD (event)) {
+		case GST_SEEK_METHOD_SET:
 			src->curoffset = (guint64) GST_EVENT_SEEK_OFFSET (event);
 			break;
-		case GST_SEEK_BYTEOFFSET_CUR:
+		case GST_SEEK_METHOD_CUR:
 			src->curoffset += GST_EVENT_SEEK_OFFSET (event);
 			break;
-		case GST_SEEK_BYTEOFFSET_END:
+		case GST_SEEK_METHOD_END:
 			src->curoffset = src->size - ABS (GST_EVENT_SEEK_OFFSET (event));
 			break;
 		default:
@@ -572,10 +576,10 @@ gst_gnomevfssrc_srcpad_event (GstPad *pad, GstEvent *event)
 		}
 		g_object_notify (G_OBJECT (src), "offset");
 		src->seek_happened = TRUE;
-		src->need_flush = GST_EVENT_SEEK_FLUSH(event);
-		gst_event_free (event);
+		src->need_flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
 		/* push a discontinuous event? */
 		break;
+	}
 	case GST_EVENT_FLUSH:
 		src->need_flush = TRUE;
 		break;

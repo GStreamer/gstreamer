@@ -241,7 +241,7 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
     if (jitter > 500000 || jitter < -500000)
       GST_DEBUG (0, "jitter: %lld", jitter);
 
-    gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf));
+    gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf), NULL);
   }
   
   /* check size */

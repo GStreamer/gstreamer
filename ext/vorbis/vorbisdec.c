@@ -218,8 +218,11 @@ gst_vorbisdec_loop (GstElement * element)
 
     /* submit a 4k block to libvorbis' Ogg layer */
     buf = gst_vorbisdec_pull (vorbisdec, &oy);
-    if (!buf)
+    if (!buf) {
+      eos = 1;
+      GST_DEBUG (0, "vorbisdec: pulled NULL");
       break;
+    }
 
     bytes = GST_BUFFER_SIZE (buf);
     buffer = ogg_sync_buffer (&oy, bytes);
@@ -446,8 +449,10 @@ gst_vorbisdec_loop (GstElement * element)
 	      }
 	    }
 	  }
-	  if (ogg_page_eos (&og))
+	  if (ogg_page_eos (&og)) {
 	    eos = 1;
+	    GST_DEBUG (0, "vorbisdec: page_eos");
+	  }
 	}
       }
       if (!eos) {
@@ -462,17 +467,18 @@ gst_vorbisdec_loop (GstElement * element)
 
 	  ogg_sync_wrote (&oy, bytes);
 	  if (bytes == 0) {
-	    gst_pad_push (vorbisdec->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
-	    gst_element_set_eos (GST_ELEMENT (vorbisdec));
 	    eos = 1;
+	    GST_DEBUG (0, "vorbisdec: wrote 0 bytes");
 	  }
 	}
 	else {
           eos = 1;
+	  GST_DEBUG (0, "vorbisdec: pulled NULL");
 	}
       }
     }
 
+    GST_DEBUG (0, "vorbisdec: eos flag set");
     /* clean up this logical bitstream; before exit we see if we're
        followed by another [chained] */
 
@@ -486,6 +492,10 @@ gst_vorbisdec_loop (GstElement * element)
     vorbis_info_clear (&vorbisdec->vi);	/* must be called last */
   }
 end:
+  GST_DEBUG (0, "vorbisdec: in end");
+
+  gst_pad_push (vorbisdec->srcpad, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));
+  gst_element_set_eos (GST_ELEMENT (vorbisdec));
 
   /* OK, clean up the framer */
   ogg_sync_clear (&oy);
