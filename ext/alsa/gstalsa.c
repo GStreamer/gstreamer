@@ -326,11 +326,23 @@ gst_alsa_class_probe_devices (GstAlsaClass * klass, gboolean check)
     gint num, res;
     gchar *dev;
     snd_pcm_t *pcm;
+    snd_pcm_stream_t mode = 0;
+    const GList *templates;
+
+    /* we assume one pad template at max [zero=mixer] */
+    templates =
+        gst_element_class_get_pad_template_list (GST_ELEMENT_CLASS (klass));
+    if (templates) {
+      if (GST_PAD_TEMPLATE_DIRECTION (templates->data) == GST_PAD_SRC)
+        mode = SND_PCM_STREAM_CAPTURE;
+      else
+        mode = SND_PCM_STREAM_PLAYBACK;
+    }
 
     for (num = 0; num < MAX_DEVICES; num++) {
       dev = g_strdup_printf ("hw:%d", num);
 
-      if (!(res = snd_pcm_open (&pcm, dev, 0, SND_PCM_NONBLOCK)) ||
+      if (!(res = snd_pcm_open (&pcm, dev, mode, SND_PCM_NONBLOCK)) ||
           res == -EBUSY) {
         klass->devices = g_list_append (klass->devices, dev);
 
