@@ -42,15 +42,15 @@ GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE (
   GST_STATIC_CAPS ("audio/x-raw-int, "
       "endianness = (int) BYTE_ORDER, "
       "signed = (bool) TRUE, "
-      "width = { (int) 16, (int) 24, (int) 32 }, "
-      "depth = { (int) 16, (int) 24, (int) 32 }, "
+      "width = (int) { 16, 24, 32 }, "
+      "depth = (int) { 16, 24, 32 }, "
       "rate = (int) [ 8000, 96000 ], "
-      "channels = (int) [ 1, 6 ];"
+      "channels = (int) [ 1, 6 ]; "
     "audio/x-raw-float, "
       "endianness = (int) BYTE_ORDER, "
-      "depth = { (int) 32, (int) 64 }, "
+      "depth = (int) { 32, 64 }, "
       "rate = (int) [ 8000, 96000 ], "
-      "channels = (int) [ 1, 6 ];"
+      "channels = (int) [ 1, 6 ]"
   )
 );
 
