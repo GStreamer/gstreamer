@@ -332,6 +332,20 @@
           <!-- ############ type ############# -->
 
           <row>
+            <entry>audio/x-cinepak</entry>
+            <entry>Audio as provided in a Cinepak (Quicktime) stream.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
             <entry>audio/x-dv</entry>
             <entry>Audio as provided in a Digital Video stream.</entry>
             <entry></entry>
