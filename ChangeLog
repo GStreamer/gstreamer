@@ -1,5 +1,9 @@
 2005-01-05  David Schleef  <ds@schleef.org>
 
+	* gst/gstvalue.c: Fix doc build problem.
+
+2005-01-05  David Schleef  <ds@schleef.org>
+
 	* gst/gstvalue.c: Add some documentation
 
 2005-01-05  Stefan Kost  <ensonic@users.sf.net>

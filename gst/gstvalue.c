@@ -2270,16 +2270,12 @@ gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
  */
 /**
  * GstValueTable:
- *
- * type - GType that the functions operate on.
- *
- * compare - A function that compares two values of this type.
- *
- * serialize - A function that transforms a value of this type to a
+ * @type: GType that the functions operate on.
+ * @compare: A function that compares two values of this type.
+ * @serialize: A function that transforms a value of this type to a
  * string.  Strings created by this function must be unique and should
  * be human readable.
- *
- * deserialize - A function that transforms a string to a value of
+ * @deserialize: A function that transforms a string to a value of
  * this type.  This function must transform strings created by the
  * serialize function back to the original value.  This function may
  * optionally transform other strings into values.
