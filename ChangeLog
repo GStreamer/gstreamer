@@ -1,3 +1,36 @@
+2004-07-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_get_type),
+	(gst_decode_bin_class_init), (gst_decode_bin_factory_filter),
+	(compare_ranks), (print_feature), (gst_decode_bin_init),
+	(gst_decode_bin_dispose), (find_compatibles), (close_pad_link),
+	(try_to_link_1), (new_pad), (close_link), (type_found),
+	(gst_decode_bin_set_property), (gst_decode_bin_get_property),
+	(gst_decode_bin_change_state), (plugin_init):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_type),
+	(gst_play_base_bin_class_init), (gst_play_base_bin_init),
+	(gst_play_base_bin_dispose), (queue_overrun),
+	(gen_preroll_element), (remove_prerolls), (no_more_pads),
+	(new_stream), (setup_source), (gst_play_base_bin_set_property),
+	(gst_play_base_bin_get_property), (play_base_eos),
+	(gst_play_base_bin_change_state), (gst_play_base_bin_add_element),
+	(gst_play_base_bin_remove_element),
+	(gst_play_base_bin_mute_stream), (gst_play_base_bin_link_stream),
+	(gst_play_base_bin_unlink_stream),
+	(gst_play_base_bin_get_streaminfo):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_type),
+	(gst_play_bin_class_init), (gst_play_bin_init),
+	(gst_play_bin_dispose), (gst_play_bin_set_property),
+	(gst_play_bin_get_property), (gen_video_element),
+	(gen_audio_element), (remove_sinks), (setup_sinks),
+	(gst_play_bin_change_state), (gst_play_bin_get_event_masks),
+	(gst_play_bin_send_event), (gst_play_bin_get_formats),
+	(gst_play_bin_convert), (gst_play_bin_get_query_types),
+	(gst_play_bin_query), (plugin_init):
+	* gst/playback/test4.c: (main):
+	More fixes on reusing of the element.
+
 2004-07-11  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mad/gstmad.c: (normal_seek):
@@ -12,6 +45,39 @@
 	doesn't intersect our caps with the template any more. Do it
 	ourselves.
 	(interleave_buffered_loop): Use g_newa instead of malloc/free.
+
+2004-07-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_get_type),
+	(gst_decode_bin_class_init), (gst_decode_bin_factory_filter),
+	(compare_ranks), (print_feature), (gst_decode_bin_init),
+	(gst_decode_bin_dispose), (find_compatibles), (close_pad_link),
+	(try_to_link_1), (new_pad), (close_link), (type_found),
+	(gst_decode_bin_set_property), (gst_decode_bin_get_property),
+	(gst_decode_bin_change_state), (plugin_init):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_type),
+	(gst_play_base_bin_class_init), (gst_play_base_bin_init),
+	(gst_play_base_bin_dispose), (queue_overrun),
+	(gen_preroll_element), (remove_prerolls), (no_more_pads),
+	(new_stream), (setup_source), (gst_play_base_bin_set_property),
+	(gst_play_base_bin_get_property), (play_base_eos),
+	(gst_play_base_bin_change_state), (gst_play_base_bin_add_element),
+	(gst_play_base_bin_remove_element),
+	(gst_play_base_bin_mute_stream), (gst_play_base_bin_link_stream),
+	(gst_play_base_bin_unlink_stream),
+	(gst_play_base_bin_get_streaminfo):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_type),
+	(gst_play_bin_class_init), (gst_play_bin_init),
+	(gst_play_bin_dispose), (gst_play_bin_set_property),
+	(gst_play_bin_get_property), (gen_video_element),
+	(gen_audio_element), (remove_sinks), (setup_sinks),
+	(gst_play_bin_change_state), (gst_play_bin_get_event_masks),
+	(gst_play_bin_send_event), (gst_play_bin_get_formats),
+	(gst_play_bin_convert), (gst_play_bin_get_query_types),
+	(gst_play_bin_query), (plugin_init):
+	* gst/playback/test4.c: (main):
+	Work on object reuse and seeking.
 
 2004-07-09  Wim Taymans  <wim@fluendo.com>
 
