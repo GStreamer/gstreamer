@@ -176,31 +176,60 @@ gst_ossprobe_get_properties (GstPropertyProbe *probe)
   return list;
 }
 
+/* OSS (without devfs) allows at max. 16 devices */
+#define MAX_OSS_DEVICES 16
+
 static void
 gst_osselement_probe (gchar  *device_base,
 		      gint    device_num,
-		      gchar **put)
+		      gchar **name,
+		      dev_t  *devno)
 {
-  gchar *device;
+  gchar *device = NULL;
   struct stat s;
 
-  /* only if yet unfilled */
-  if (*put != NULL)
-    return;
+  if ((name == NULL) || (devno == NULL)) {
+    goto end;
+  }
 
-  if (device_num == 0)
+  *name = NULL;
+  *devno = 0;
+
+  if (device_num == -1)
     device = g_strdup (device_base);
-  else
+  else if ((device_num >= -1) && (device_num <= MAX_OSS_DEVICES)) {
     device = g_strdup_printf ("%s%d", device_base, device_num);
+  } else {
+    goto end;
+  }
 
   if (lstat (device, &s) || !S_ISCHR (s.st_mode))
     goto end;
 
-  *put = device;
-  return;
+  *name = device;
+  *devno = s.st_rdev;
+  return; 
 
 end:
   g_free (device);
+}
+
+static GList* 
+device_combination_append (GList *device_combinations,
+			   GstOssDeviceCombination *combi)
+{
+  GList *it;
+
+  for (it = device_combinations; it != NULL; it = it->next) {
+    GstOssDeviceCombination *cur;
+
+    cur = (GstOssDeviceCombination*)it->data;
+    if (cur->dev == combi->dev) {
+      return device_combinations;
+    }
+  }
+
+  return g_list_append (device_combinations, combi);
 }
 
 static gboolean
@@ -227,10 +256,13 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
   }
 
   if (!init && !check) {
-    gchar *dsp_base[] = { "/dev/dsp", "/dev/sound/dsp", NULL };
-    gchar *mixer_base[] = { "/dev/mixer", "/dev/sound/mixer", NULL };
-    GstOssDeviceCombination devices[16];
+#define MIXER 0
+#define DSP   1
+    gchar *dev_base[][2] = { {"/dev/mixer", "/dev/dsp"}, 
+			     {"/dev/sound/mixer", "/dev/sound/dsp"},
+			     {NULL, NULL}};
     gint n;
+    gint base;
 
     while (device_combinations) {
       GList *item = device_combinations;
@@ -244,55 +276,45 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
     }
 
     /* probe for all /dev entries */
-    memset (devices, 0, sizeof (devices));
-
-    /* OSS (without devfs) allows at max. 16 devices */
-    for (n = 0; n < 16; n++) {
-      gint base;
-
-      for (base = 0; dsp_base[base] != NULL; base++)
-        gst_osselement_probe (dsp_base[base], n, &devices[n].dsp);
-
-      for (base = 0; mixer_base[base] != NULL; base++)
-        gst_osselement_probe (mixer_base[base], n, &devices[n].mixer);
-    }
-
-    /* does the device exist (can we open them)? */
-    for (n = 0; n < 16; n++) {
+    for (base = 0; dev_base[base][DSP] != NULL; base++) {
       gint fd;
 
-      if (!devices[n].dsp)
-        continue;
+      for (n = -1; n < MAX_OSS_DEVICES; n++) {
+	gchar *dsp = NULL;
+	gchar *mixer = NULL;
+	dev_t dsp_dev;
+	dev_t mixer_dev;
 
-      /* we just check the dsp. we assume the mixer always works.
-       * we don't need a mixer anyway (says OSS)... If we are a
-       * mixer element, we use the mixer anyway. */
-      if ((fd = open (mixer ? devices[n].mixer :
-                         devices[n].dsp, openmode)) > 0 || errno == EBUSY) {
-        GstOssDeviceCombination *combi;
-
-        if (fd > 0)
-          close (fd);
-
-        /* yay! \o/ */
-        combi = g_new0 (GstOssDeviceCombination, 1);
-        combi->dsp   = devices[n].dsp;
-        combi->mixer = devices[n].mixer;
-        devices[n].dsp = devices[n].mixer = NULL;
-
-        device_combinations = g_list_append (device_combinations, combi);
+        gst_osselement_probe (dev_base[base][DSP], n, &dsp, &dsp_dev);
+	if (dsp == NULL) {
+	  continue;
+	}
+	gst_osselement_probe (dev_base[base][MIXER], n, &mixer, &mixer_dev);
+	/* does the device exist (can we open them)? */
+	
+	/* we just check the dsp. we assume the mixer always works.
+	 * we don't need a mixer anyway (says OSS)... If we are a
+	 * mixer element, we use the mixer anyway. */
+	if ((fd = open (mixer ? mixer :
+			dsp, openmode)) > 0 || errno == EBUSY) {
+	  GstOssDeviceCombination *combi;
+	  
+	  if (fd > 0)
+	    close (fd);
+	  
+	  /* yay! \o/ */
+	  combi = g_new0 (GstOssDeviceCombination, 1);
+	  combi->dsp   = dsp;
+	  combi->mixer = mixer;
+	  device_combinations = device_combination_append (device_combinations,
+							   combi);
+	} else {
+	  g_free (dsp);
+	  g_free (mixer);
+	}
       }
     }
-
-    /* free */
-    for (n = 0; n < 16; n++) {
-      if (devices[n].dsp)
-        g_free (devices[n].dsp);
-
-      if (devices[n].mixer)
-        g_free (devices[n].mixer);
-    }
-
+      
     init = TRUE;
   }
 

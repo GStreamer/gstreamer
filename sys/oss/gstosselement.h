@@ -54,6 +54,7 @@ typedef enum {
 
 typedef struct _GstOssDeviceCombination {
   gchar *dsp, *mixer;
+  dev_t dev;
 } GstOssDeviceCombination;
 
 struct _GstOssElement
