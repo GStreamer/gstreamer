@@ -180,7 +180,7 @@ GST_BOILERPLATE_FULL (GstFakeSrc, gst_fakesrc, GstElement, GST_TYPE_ELEMENT,
 static GstPad *gst_fakesrc_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * unused);
 static void gst_fakesrc_update_functions (GstFakeSrc * src);
-static gboolean gst_fakesrc_activate (GstPad * pad, gboolean active);
+static gboolean gst_fakesrc_activate (GstPad * pad, GstActivateMode mode);
 static void gst_fakesrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_fakesrc_get_property (GObject * object, guint prop_id,
@@ -907,36 +907,41 @@ gst_fakesrc_loop (GstPad * pad)
 #endif
 
 static gboolean
-gst_fakesrc_activate (GstPad * pad, gboolean active)
+gst_fakesrc_activate (GstPad * pad, GstActivateMode mode)
 {
   gboolean result = FALSE;
   GstFakeSrc *fakesrc;
 
   fakesrc = GST_FAKESRC (GST_OBJECT_PARENT (pad));
 
-  if (active) {
-    /* if we have a scheduler we can start the task */
-    if (GST_ELEMENT_SCHEDULER (fakesrc)) {
+  switch (mode) {
+    case GST_ACTIVATE_PUSH:
+      /* if we have a scheduler we can start the task */
+      if (GST_ELEMENT_SCHEDULER (fakesrc)) {
+        GST_STREAM_LOCK (pad);
+        fakesrc->task =
+            gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (fakesrc),
+            (GstTaskFunction) gst_fakesrc_loop, pad);
+
+        gst_task_start (fakesrc->task);
+        GST_STREAM_UNLOCK (pad);
+        result = TRUE;
+      }
+      break;
+    case GST_ACTIVATE_PULL:
+      break;
+    case GST_ACTIVATE_NONE:
+      /* step 1, unblock clock sync (if any) */
+
+      /* step 2, make sure streaming finishes */
       GST_STREAM_LOCK (pad);
-      fakesrc->task =
-          gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (fakesrc),
-          (GstTaskFunction) gst_fakesrc_loop, pad);
-
-      gst_task_start (fakesrc->task);
+      /* step 3, stop the task */
+      gst_task_stop (fakesrc->task);
+      gst_object_unref (GST_OBJECT (fakesrc->task));
       GST_STREAM_UNLOCK (pad);
+
       result = TRUE;
-    }
-  } else {
-    /* step 1, unblock clock sync (if any) */
-
-    /* step 2, make sure streaming finishes */
-    GST_STREAM_LOCK (pad);
-    /* step 3, stop the task */
-    gst_task_stop (fakesrc->task);
-    gst_object_unref (GST_OBJECT (fakesrc->task));
-    GST_STREAM_UNLOCK (pad);
-
-    result = TRUE;
+      break;
   }
   return result;
 }

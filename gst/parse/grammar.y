@@ -302,6 +302,8 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
   if (gst_element_is_locked_state (element) == lock)
     return;
 
+  return;
+
   /* check if we have an unlocked peer */
   pads = gst_element_iterate_pads (element);
   while (!done) {

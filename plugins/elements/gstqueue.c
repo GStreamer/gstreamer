@@ -140,7 +140,7 @@ static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
 static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
 static void gst_queue_locked_flush (GstQueue * queue);
 
-static gboolean gst_queue_src_activate (GstPad * pad, gboolean active);
+static gboolean gst_queue_src_activate (GstPad * pad, GstActivateMode mode);
 static GstElementStateReturn gst_queue_change_state (GstElement * element);
 
 
@@ -378,17 +378,15 @@ static GstCaps *
 gst_queue_getcaps (GstPad * pad)
 {
   GstQueue *queue;
-  GstPad *otherpad, *otherpeer;
+  GstPad *otherpad;
+  GstCaps *result;
 
   queue = GST_QUEUE (gst_object_get_parent (GST_OBJECT (pad)));
 
   otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
-  otherpeer = gst_pad_get_peer (otherpad);
-  if (otherpeer == NULL) {
-    return gst_pad_get_caps (otherpad);
-  } else {
-    return gst_pad_get_caps (otherpeer);
-  }
+  result = gst_pad_peer_get_caps (otherpad);
+
+  return result;
 }
 
 static GstPadLinkReturn
@@ -414,16 +412,22 @@ gst_queue_bufferalloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps)
 {
   GstQueue *queue;
   GstPad *otherpeer;
+  GstBuffer *result = NULL;
 
-  queue = GST_QUEUE (gst_object_get_parent (GST_OBJECT (pad)));
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   otherpeer = gst_pad_get_peer (queue->srcpad);
   if (otherpeer == NULL || GST_RPAD_BUFFERALLOCFUNC (otherpeer) == NULL) {
     /* let the default aloc function do the work */
-    return NULL;
+    result = NULL;
   } else {
-    return GST_RPAD_BUFFERALLOCFUNC (otherpeer) (otherpeer, offset, size, caps);
+    result =
+        GST_RPAD_BUFFERALLOCFUNC (otherpeer) (otherpeer, offset, size, caps);
   }
+  if (otherpeer)
+    gst_object_unref (GST_OBJECT (otherpeer));
+
+  return result;
 }
 
 
@@ -688,12 +692,16 @@ restart:
     if (GST_BUFFER_DURATION (data) != GST_CLOCK_TIME_NONE)
       queue->cur_level.time -= GST_BUFFER_DURATION (data);
 
+    GST_QUEUE_MUTEX_UNLOCK;
     gst_pad_push (pad, GST_BUFFER (data));
+    GST_QUEUE_MUTEX_LOCK;
   } else {
     if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
       result = FALSE;
     }
+    GST_QUEUE_MUTEX_UNLOCK;
     gst_pad_push_event (queue->srcpad, GST_EVENT (data));
+    GST_QUEUE_MUTEX_LOCK;
     if (result == TRUE)
       goto restart;
   }
@@ -744,7 +752,7 @@ static gboolean
 gst_queue_handle_src_query (GstPad * pad,
     GstQueryType type, GstFormat * fmt, gint64 * value)
 {
-  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
+  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   if (!GST_PAD_PEER (queue->sinkpad))
     return FALSE;
@@ -770,14 +778,14 @@ gst_queue_handle_src_query (GstPad * pad,
 }
 
 static gboolean
-gst_queue_src_activate (GstPad * pad, gboolean active)
+gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
 {
   gboolean result = FALSE;
   GstQueue *queue;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  if (active) {
+  if (mode == GST_ACTIVATE_PUSH) {
     /* if we have a scheduler we can start the task */
     if (GST_ELEMENT_SCHEDULER (queue)) {
       GST_STREAM_LOCK (pad);

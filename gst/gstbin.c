@@ -856,10 +856,12 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
   GST_LOCK (bin);
   for (children = bin->children; children; children = g_list_next (children)) {
     GstElement *child = GST_ELEMENT_CAST (children->data);
+    gboolean eq;
 
     GST_LOCK (child);
-    if (!strcmp (GST_ELEMENT_NAME (child), name)) {
-      GST_UNLOCK (child);
+    eq = strcmp (GST_ELEMENT_NAME (child), name) == 0;
+    GST_UNLOCK (child);
+    if (eq) {
       result = child;
       break;
     }

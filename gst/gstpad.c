@@ -163,6 +163,7 @@ static void gst_real_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_real_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static GstCaps *gst_real_pad_get_caps_unlocked (GstRealPad * realpad);
 
 GType _gst_real_pad_type = 0;
 
@@ -428,16 +429,18 @@ gst_pad_get_direction (GstPad * pad)
  * MT safe.
  */
 gboolean
-gst_pad_set_active (GstPad * pad, gboolean active)
+gst_pad_set_active (GstPad * pad, GstActivateMode mode)
 {
   GstRealPad *realpad;
   gboolean old;
-  gboolean result = FALSE;
   GstPadActivateFunction activatefunc;
+  gboolean active;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+
+  active = (mode != GST_ACTIVATE_NONE);
 
   old = GST_PAD_IS_ACTIVE (realpad);
 
@@ -455,17 +458,19 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 
   activatefunc = realpad->activatefunc;
   if (activatefunc) {
+    gboolean result;
+
     /* unlock so element can sync */
     GST_UNLOCK (realpad);
-    result = activatefunc (GST_PAD_CAST (realpad), active);
+    result = activatefunc (GST_PAD_CAST (realpad), mode);
     /* and lock again */
     GST_LOCK (realpad);
-  } else {
-    result = TRUE;
+    if (result == FALSE)
+      goto activate_error;
   }
 
   /* when going to active alow data passing now */
-  if (active && result == TRUE) {
+  if (active) {
     GST_CAT_DEBUG (GST_CAT_PADS, "activating pad %s:%s",
         GST_DEBUG_PAD_NAME (realpad));
     GST_FLAG_SET (realpad, GST_PAD_ACTIVE);
@@ -474,10 +479,19 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 exit:
   GST_UNLOCK (realpad);
 
-  return result;
+  return TRUE;
 
+  /* errors */
 lost_ghostpad:
   {
+    return FALSE;
+  }
+activate_error:
+  {
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "activate function returned FALSE for pad %s:%s",
+        GST_DEBUG_PAD_NAME (realpad));
+    GST_UNLOCK (realpad);
     return FALSE;
   }
 }
@@ -1045,6 +1059,14 @@ gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (getcaps));
 }
 
+/**
+ * gst_pad_set_acceptcaps_function:
+ * @pad: a real #GstPad.
+ * @acceptcaps: the #GstPadAcceptCapsFunction to set.
+ *
+ * Sets the given acceptcaps function for the pad.  The acceptcaps function
+ * will be called to check if the pad can accept the given caps.
+ */
 void
 gst_pad_set_acceptcaps_function (GstPad * pad,
     GstPadAcceptCapsFunction acceptcaps)
@@ -1056,6 +1078,15 @@ gst_pad_set_acceptcaps_function (GstPad * pad,
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (acceptcaps));
 }
 
+/**
+ * gst_pad_set_fixatecaps_function:
+ * @pad: a real #GstPad.
+ * @fixatecaps: the #GstPadFixateCapsFunction to set.
+ *
+ * Sets the given fixatecaps function for the pad.  The fixatecaps function
+ * will be called whenever the default values for a GstCaps needs to be
+ * filled in.
+ */
 void
 gst_pad_set_fixatecaps_function (GstPad * pad,
     GstPadFixateCapsFunction fixatecaps)
@@ -1067,6 +1098,17 @@ gst_pad_set_fixatecaps_function (GstPad * pad,
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (fixatecaps));
 }
 
+/**
+ * gst_pad_set_setcaps_function:
+ * @pad: a real #GstPad.
+ * @setcaps: the #GstPadSetCapsFunction to set.
+ *
+ * Sets the given setcaps function for the pad.  The setcaps function
+ * will be called whenever a buffer with a new media type is pushed or
+ * pulled from the pad. The pad/element needs to update it's internal
+ * structures to process the new media type. If this new type is not
+ * acceptable, the setcaps function should return FALSE.
+ */
 void
 gst_pad_set_setcaps_function (GstPad * pad, GstPadSetCapsFunction setcaps)
 {
@@ -1265,7 +1307,33 @@ gst_pad_link_prepare_filtered (GstPad * srcpad, GstPad * sinkpad,
   *outrealsrc = realsrc;
   *outrealsink = realsink;
 
-  /* FIXME check pad caps for non-empty intersection */
+  /* check pad caps for non-empty intersection */
+  {
+    GstCaps *srccaps;
+    GstCaps *sinkcaps;
+
+    srccaps = gst_real_pad_get_caps_unlocked (realsrc);
+    sinkcaps = gst_real_pad_get_caps_unlocked (realsink);
+    GST_CAT_DEBUG (GST_CAT_CAPS, "got caps %p and %p", srccaps, sinkcaps);
+
+    if (srccaps && sinkcaps) {
+      GstCaps *caps;
+
+      caps = gst_caps_intersect (srccaps, sinkcaps);
+      GST_CAT_DEBUG (GST_CAT_CAPS,
+          "intersection caps %p %" GST_PTR_FORMAT, caps, caps);
+
+      if (filtercaps) {
+        GstCaps *tmp;
+
+        tmp = gst_caps_intersect (caps, filtercaps);
+        gst_caps_unref (caps);
+        caps = tmp;
+      }
+      if (!caps || gst_caps_is_empty (caps))
+        goto no_format;
+    }
+  }
 
   /* FIXME check pad scheduling for non-empty intersection */
 
@@ -1325,6 +1393,13 @@ sink_was_linked:
     GST_UNLOCK (realsink);
     GST_UNLOCK (realsrc);
     return GST_PAD_LINK_WAS_LINKED;
+  }
+no_format:
+  {
+    GST_CAT_INFO (GST_CAT_PADS, "caps are incompatible");
+    GST_UNLOCK (realsink);
+    GST_UNLOCK (realsrc);
+    return GST_PAD_LINK_NOFORMAT;
   }
 }
 
@@ -1636,43 +1711,21 @@ not_linked_together:
   }
 }
 
-/**
- * gst_pad_get_caps:
- * @pad: a  #GstPad to get the capabilities of.
- *
- * Gets the capabilities of this pad.
- *
- * Returns: the #GstCaps of this pad. This function returns a new caps, so use 
- * gst_caps_unref to get rid of it.
- */
-GstCaps *
-gst_pad_get_caps (GstPad * pad)
+static GstCaps *
+gst_real_pad_get_caps_unlocked (GstRealPad * realpad)
 {
-  GstRealPad *realpad;
   GstCaps *result = NULL, *filter;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  realpad = GST_PAD_REALIZE (pad);
 
   GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
       GST_DEBUG_PAD_NAME (realpad), realpad);
 
-  if (GST_RPAD_IS_IN_GETCAPS (realpad)) {
-    GST_CAT_DEBUG (GST_CAT_CAPS,
-        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (realpad));
-    g_warning ("pad %s:%s recursively called getcaps!",
-        GST_DEBUG_PAD_NAME (realpad));
-    return NULL;
-  }
-
-
   if (GST_RPAD_GETCAPSFUNC (realpad)) {
-
     GST_CAT_DEBUG (GST_CAT_CAPS, "dispatching to pad getcaps function");
 
     GST_FLAG_SET (realpad, GST_PAD_IN_GETCAPS);
+    GST_UNLOCK (realpad);
     result = GST_RPAD_GETCAPSFUNC (realpad) (GST_PAD (realpad));
+    GST_LOCK (realpad);
     GST_FLAG_UNSET (realpad, GST_PAD_IN_GETCAPS);
 
     if (result == NULL) {
@@ -1687,7 +1740,7 @@ gst_pad_get_caps (GstPad * pad)
         if (!gst_caps_is_subset (result, templ_caps)) {
           GstCaps *temp;
 
-          GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, pad,
+          GST_CAT_ERROR_OBJECT (GST_CAT_CAPS, realpad,
               "pad returned caps %" GST_PTR_FORMAT
               " which are not a real subset of its template caps %"
               GST_PTR_FORMAT, result, templ_caps);
@@ -1711,12 +1764,21 @@ gst_pad_get_caps (GstPad * pad)
         "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
         result);
 
-    result = gst_caps_copy (result);
+    result = gst_caps_ref (result);
     goto done;
   }
-  GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
+  if (GST_RPAD_CAPS (realpad)) {
+    result = GST_RPAD_CAPS (realpad);
 
-  result = gst_caps_new_any ();
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "using pad caps %p %" GST_PTR_FORMAT, result, result);
+
+    result = gst_caps_ref (result);
+    goto done;
+  }
+
+  GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
+  result = gst_caps_new_empty ();
 
 done:
   filter = GST_RPAD_APPFILTER (realpad);
@@ -1729,8 +1791,199 @@ done:
         "caps after intersection with app filter %p %" GST_PTR_FORMAT, result,
         result);
   }
+  return result;
+}
+
+/**
+ * gst_pad_get_caps:
+ * @pad: a  #GstPad to get the capabilities of.
+ *
+ * Gets the capabilities of this pad.
+ *
+ * Returns: the #GstCaps of this pad. This function returns a new caps, so use 
+ * gst_caps_unref to get rid of it.
+ */
+GstCaps *
+gst_pad_get_caps (GstPad * pad)
+{
+  GstRealPad *realpad;
+  GstCaps *result = NULL;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  /* now we need to deal with the real/ghost stuff */
+  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+
+  GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
+      GST_DEBUG_PAD_NAME (realpad), realpad);
+
+  if (G_UNLIKELY (GST_RPAD_IS_IN_GETCAPS (realpad)))
+    goto was_dispatching;
+
+  result = gst_real_pad_get_caps_unlocked (realpad);
+  GST_UNLOCK (realpad);
 
   return result;
+
+lost_ghostpad:
+  {
+    return NULL;
+  }
+was_dispatching:
+  {
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (realpad));
+    g_warning ("pad %s:%s recursively called getcaps!",
+        GST_DEBUG_PAD_NAME (realpad));
+    GST_UNLOCK (realpad);
+    return NULL;
+  }
+}
+
+/**
+ * gst_pad_peer_get_caps:
+ * @pad: a  #GstPad to get the peer capabilities of.
+ *
+ * Gets the capabilities of the peer connected to this pad.
+ *
+ * Returns: the #GstCaps of the peer pad. This function returns a new caps, so use 
+ * gst_caps_unref to get rid of it.
+ */
+GstCaps *
+gst_pad_peer_get_caps (GstPad * pad)
+{
+  GstRealPad *realpad, *peerpad;
+  GstCaps *result = NULL;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  /* now we need to deal with the real/ghost stuff */
+  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+
+  GST_CAT_DEBUG (GST_CAT_CAPS, "get peer caps of %s:%s (%p)",
+      GST_DEBUG_PAD_NAME (realpad), realpad);
+
+  peerpad = GST_RPAD_PEER (realpad);
+  if (G_UNLIKELY (peerpad == NULL))
+    goto no_peer;
+
+  if (G_UNLIKELY (GST_RPAD_IS_IN_GETCAPS (peerpad)))
+    goto was_dispatching;
+
+  result = gst_pad_get_caps (GST_PAD_CAST (peerpad));
+  GST_UNLOCK (realpad);
+
+  return result;
+
+lost_ghostpad:
+  {
+    return NULL;
+  }
+no_peer:
+  {
+    GST_UNLOCK (realpad);
+    return gst_caps_new_any ();
+  }
+was_dispatching:
+  {
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (realpad));
+    g_warning ("pad %s:%s recursively called getcaps!",
+        GST_DEBUG_PAD_NAME (realpad));
+    GST_UNLOCK (realpad);
+    return NULL;
+  }
+}
+
+/**
+ * gst_pad_fixate_caps:
+ * @pad: a  #GstPad to fixate
+ *
+ * Fixate a caps on the given pad.
+ *
+ * Returns: a fixated #GstCaps.
+ */
+GstCaps *
+gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
+{
+  /* FIXME, implement me, call the fixate function for the pad */
+  return caps;
+}
+
+/**
+ * gst_pad_accept_caps:
+ * @pad: a  #GstPad to check
+ *
+ * Check if the given pad accepts the caps.
+ *
+ * Returns: TRUE if the pad can accept the caps.
+ */
+gboolean
+gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
+{
+  GstRealPad *realpad;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  /* now we need to deal with the real/ghost stuff */
+  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+
+  GST_CAT_DEBUG (GST_CAT_CAPS, "pad accept caps of %s:%s (%p)",
+      GST_DEBUG_PAD_NAME (realpad), realpad);
+
+  /* FIXME, call accept function */
+  result = FALSE;
+  GST_UNLOCK (realpad);
+
+  return result;
+
+lost_ghostpad:
+  {
+    return FALSE;
+  }
+}
+
+/**
+ * gst_pad_peer_accept_caps:
+ * @pad: a  #GstPad to check
+ *
+ * Check if the given pad accepts the caps.
+ *
+ * Returns: TRUE if the pad can accept the caps.
+ */
+gboolean
+gst_pad_peer_accept_caps (GstPad * pad, GstCaps * caps)
+{
+  GstRealPad *realpad, *peerpad;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  /* now we need to deal with the real/ghost stuff */
+  GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
+
+  GST_CAT_DEBUG (GST_CAT_CAPS, "peer accept caps of %s:%s (%p)",
+      GST_DEBUG_PAD_NAME (realpad), realpad);
+
+  peerpad = GST_RPAD_PEER (realpad);
+  if (G_UNLIKELY (peerpad == NULL))
+    goto no_peer;
+
+  result = gst_pad_accept_caps (GST_PAD_CAST (peerpad), caps);
+  GST_UNLOCK (realpad);
+
+  return result;
+
+lost_ghostpad:
+  {
+    return FALSE;
+  }
+no_peer:
+  {
+    GST_UNLOCK (realpad);
+    return TRUE;
+  }
 }
 
 /**

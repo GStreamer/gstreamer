@@ -485,7 +485,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   GST_STATE_LOCK (element);
   /* activate pad when we are playing */
   if (GST_STATE (element) == GST_STATE_PLAYING)
-    gst_pad_set_active (pad, TRUE);
+    /* FIXME, figure out mode */
+    gst_pad_set_active (pad, GST_ACTIVATE_PUSH);
   GST_STATE_UNLOCK (element);
 
   /* emit the NEW_PAD signal */
@@ -1817,9 +1818,51 @@ restart:
     GST_UNLOCK (element);
 
     if (GST_IS_REAL_PAD (pad)) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-          "%sactivating pad %s", (active ? "" : "(de)"), GST_OBJECT_NAME (pad));
-      result &= gst_pad_set_active (pad, active);
+      GstRealPad *peer;
+      gboolean pad_loop;
+      gboolean delay = FALSE;
+
+      GST_LOCK (pad);
+      pad_loop = GST_RPAD_LOOPFUNC (pad) != NULL;
+      peer = GST_RPAD_PEER (pad);
+      if (peer)
+        gst_object_ref (GST_OBJECT (peer));
+      GST_UNLOCK (pad);
+
+      if (peer) {
+        gboolean peer_loop;
+
+        peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
+
+        if (GST_PAD_IS_SINK (pad) && pad_loop) {
+          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+              "delaying pad %s", GST_OBJECT_NAME (pad));
+          delay = TRUE;
+        } else if (GST_PAD_IS_SRC (pad) && peer_loop) {
+          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+              "%sactivating pad %s", (active ? "" : "(de)"),
+              GST_OBJECT_NAME (pad));
+          result &= gst_pad_set_active (pad,
+              (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE));
+
+          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+              "activating delayed pad %s", GST_OBJECT_NAME (peer));
+          result &= gst_pad_set_active (GST_PAD (peer),
+              (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE));
+
+          delay = TRUE;
+        }
+        gst_object_unref (GST_OBJECT (peer));
+      }
+
+      if (!delay) {
+        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+            "%sactivating pad %s", (active ? "" : "(de)"),
+            GST_OBJECT_NAME (pad));
+
+        result &= gst_pad_set_active (pad,
+            (active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE));
+      }
     }
     gst_object_unref (GST_OBJECT (pad));
 

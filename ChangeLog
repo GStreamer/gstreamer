@@ -1,3 +1,40 @@
+2004-12-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_loop),
+	(gst_fakesrc_activate):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),
+	(gst_filesrc_get), (gst_filesrc_activate):
+	* gst/gstbin.c: (gst_bin_set_index), (gst_bin_set_clock),
+	(gst_bin_set_bus), (gst_bin_set_scheduler), (gst_bin_add_func),
+	(gst_bin_iterate_elements), (gst_bin_change_state),
+	(gst_bin_get_by_name), (gst_bin_get_by_name_recurse_up):
+	* gst/gstelement.c: (gst_element_add_pad),
+	(gst_element_pads_activate):
+	* gst/gstpad.c: (gst_pad_set_active), (gst_pad_set_blocked_async),
+	(gst_pad_set_acceptcaps_function),
+	(gst_pad_set_fixatecaps_function), (gst_pad_unlink),
+	(gst_pad_link_prepare_filtered), (gst_pad_link_filtered),
+	(gst_pad_relink_filtered), (gst_real_pad_get_caps_unlocked),
+	(gst_pad_get_caps), (gst_pad_peer_get_caps), (gst_pad_fixate_caps),
+	(gst_pad_accept_caps), (gst_pad_peer_accept_caps),
+	(gst_pad_set_caps), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_realize), (gst_pad_alloc_buffer),
+	(gst_pad_push), (gst_pad_push_event):
+	* gst/gstpad.h:
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_getcaps),
+	(gst_queue_bufferalloc), (gst_queue_loop),
+	(gst_queue_handle_src_query), (gst_queue_src_activate):
+	* gst/gstutils.c: (gst_element_finish_preroll),
+	(gst_element_get_compatible_pad_filtered),
+	(gst_element_link_pads_filtered), (gst_element_unlink):
+	* gst/parse/grammar.y:
+	Fix scheduler distribution.
+	Implement some caps functions and convenience functions.
+	Fix deadlock.
+	Implement scheduling selection.
+	Check pad compatibility when connecting pads.
+
+
 2004-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

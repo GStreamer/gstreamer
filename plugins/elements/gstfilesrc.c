@@ -177,7 +177,7 @@ static gboolean gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event);
 static gboolean gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
 
-static gboolean gst_filesrc_activate (GstPad * pad, gboolean active);
+static gboolean gst_filesrc_activate (GstPad * pad, GstActivateMode mode);
 static GstElementStateReturn gst_filesrc_change_state (GstElement * element);
 
 static void gst_filesrc_uri_handler_init (gpointer g_iface,
@@ -756,8 +756,10 @@ gst_filesrc_get (GstPad * pad, GstBuffer ** buffer)
 #else
   data = gst_filesrc_get_read (src);
 #endif
-  if (data == NULL)
+  if (data == NULL) {
+    GST_DEBUG_OBJECT (src, "could not get data");
     return GST_FLOW_ERROR;
+  }
 
   if (GST_IS_EVENT (data)) {
     gst_pad_push_event (pad, GST_EVENT (data));
@@ -902,37 +904,47 @@ gst_filesrc_loop (GstElement * element)
 
 
 static gboolean
-gst_filesrc_activate (GstPad * pad, gboolean active)
+gst_filesrc_activate (GstPad * pad, GstActivateMode mode)
 {
   gboolean result = FALSE;
   GstFileSrc *filesrc;
 
   filesrc = GST_FILESRC (GST_OBJECT_PARENT (pad));
 
-  if (active) {
-    /* try to start the task */
-    GST_STREAM_LOCK (pad);
-    filesrc->task = gst_element_create_task (GST_ELEMENT (filesrc),
-        (GstTaskFunction) gst_filesrc_loop, filesrc);
+  switch (mode) {
+    case GST_ACTIVATE_PUSH:
+      /* try to start the task */
+      GST_STREAM_LOCK (pad);
+      filesrc->task = gst_element_create_task (GST_ELEMENT (filesrc),
+          (GstTaskFunction) gst_filesrc_loop, filesrc);
 
-    if (filesrc->task) {
-      gst_task_start (filesrc->task);
+      if (filesrc->task) {
+        gst_task_start (filesrc->task);
+        result = TRUE;
+      } else {
+        result = FALSE;
+      }
+      GST_STREAM_UNLOCK (pad);
+      break;
+    case GST_ACTIVATE_PULL:
       result = TRUE;
-    } else {
-      result = FALSE;
-    }
-    GST_STREAM_UNLOCK (pad);
-  } else {
-    /* step 1, unblock clock sync (if any) */
+      filesrc->task = NULL;
+      break;
+    case GST_ACTIVATE_NONE:
+      /* step 1, unblock clock sync (if any) */
 
-    /* step 2, make sure streaming finishes */
-    GST_STREAM_LOCK (pad);
-    /* step 3, stop the task */
-    gst_task_stop (filesrc->task);
-    gst_object_unref (GST_OBJECT (filesrc->task));
-    GST_STREAM_UNLOCK (pad);
+      /* step 2, make sure streaming finishes */
+      GST_STREAM_LOCK (pad);
+      /* step 3, stop the task */
+      if (filesrc->task) {
+        gst_task_stop (filesrc->task);
+        gst_object_unref (GST_OBJECT (filesrc->task));
+        filesrc->task = NULL;
+      }
+      GST_STREAM_UNLOCK (pad);
 
-    result = TRUE;
+      result = TRUE;
+      break;
   }
   return result;
 }

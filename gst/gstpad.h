@@ -129,7 +129,7 @@ typedef enum {
 
  
 /* pad states */
-typedef gboolean		(*GstPadActivateFunction) 	(GstPad *pad, gboolean active);
+typedef gboolean		(*GstPadActivateFunction) 	(GstPad *pad, GstActivateMode mode);
 
 /* data passing */
 typedef gboolean		(*GstPadLoopFunction) 		(GstPad *pad);
@@ -444,7 +444,7 @@ GstElement*		gst_pad_get_real_parent			(GstPad *pad);
 
 GstPadDirection		gst_pad_get_direction			(GstPad *pad);
 
-gboolean		gst_pad_set_active			(GstPad *pad, gboolean active);
+gboolean		gst_pad_set_active			(GstPad *pad, GstActivateMode mode);
 gboolean		gst_pad_is_active			(GstPad *pad);
 gboolean		gst_pad_set_blocked			(GstPad *pad, gboolean blocked);
 gboolean		gst_pad_set_blocked_async		(GstPad *pad, gboolean blocked,
@@ -501,6 +501,9 @@ GstCaps * 		gst_pad_get_caps 			(GstPad * pad);
 GstCaps*  		gst_pad_fixate_caps 			(GstPad * pad, GstCaps *caps);
 gboolean  		gst_pad_accept_caps 			(GstPad * pad, GstCaps *caps);
 gboolean  		gst_pad_set_caps 			(GstPad * pad, GstCaps *caps);
+
+GstCaps * 		gst_pad_peer_get_caps 			(GstPad * pad);
+gboolean  		gst_pad_peer_accept_caps 		(GstPad * pad, GstCaps *caps);
 
 /* capsnego for connected pads */
 GstCaps * 		gst_pad_get_allowed_caps 		(GstPad * srcpad);

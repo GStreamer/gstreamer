@@ -403,18 +403,16 @@ gst_element_finish_preroll (GstElement * element, GMutex * streamlock)
     GST_CAT_DEBUG (GST_CAT_STATES,
         "element %s wants to finish preroll", GST_ELEMENT_NAME (element));
 
-
     /* FIXME, release streaming lock? */
     if (streamlock)
       g_mutex_unlock (streamlock);
 
     /* here we wait for the next state change */
-    do {
+    while (GST_STATE (element) == GST_STATE_PAUSED) {
       GST_CAT_DEBUG (GST_CAT_STATES, "waiting for next state change");
 
       GST_STATE_WAIT (element);
     }
-    while (GST_STATE (element) == GST_STATE_PAUSED);
 
     if (streamlock)
       g_mutex_lock (streamlock);
@@ -681,7 +679,7 @@ gst_element_get_compatible_pad_filtered (GstElement * element, GstPad * pad,
 
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
-  templcaps = GST_PAD_CAPS (pad);
+  templcaps = gst_pad_get_caps (pad);
   if (filtercaps != NULL) {
     GstCaps *temp;
 
@@ -920,6 +918,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
         if (srcpads) {
           gst_object_unref (GST_OBJECT (srcpad));
           srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
+          gst_object_ref (GST_OBJECT (srcpad));
         }
       }
     } while (srcpads);
@@ -933,6 +932,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
     return FALSE;
   } else {
     gst_object_unref (GST_OBJECT (srcpad));
+    srcpad = NULL;
   }
   if (destpad) {
     /* loop through the existing pads in the destination */
@@ -961,6 +961,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
         if (destpads) {
           gst_object_unref (GST_OBJECT (destpad));
           destpad = (GstPad *) GST_PAD_REALIZE (destpads->data);
+          gst_object_ref (GST_OBJECT (destpad));
         }
       }
     } while (destpads);
@@ -976,6 +977,8 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
     gst_object_unref (GST_OBJECT (destpad));
     if (srcpad)
       gst_object_unref (GST_OBJECT (srcpad));
+    srcpad = NULL;
+    destpad = NULL;
   }
 
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
