@@ -53,7 +53,7 @@ gst_play_typefind (GstBin *bin, GstElement *element)
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *audiosink, *videosink;
+  GstElement *disksrc, *osssink, *videosink;
   GstElement *bin;
   GtkWidget *appwindow;
   GstCaps *srccaps;
@@ -88,8 +88,8 @@ int main(int argc,char *argv[])
   }
   
   /* and an audio sink */
-  audiosink = gst_elementfactory_make("audiosink", "play_audio");
-  g_assert(audiosink != NULL);
+  osssink = gst_elementfactory_make("osssink", "play_audio");
+  g_assert(osssink != NULL);
 
   /* and an video sink */
   videosink = gst_elementfactory_make("videosink", "play_video");
@@ -102,7 +102,7 @@ int main(int argc,char *argv[])
   new_element = gst_autoplug_to_renderers (autoplug,
            srccaps,
            videosink,
-           audiosink,
+           osssink,
            NULL);
 
   if (!new_element) {

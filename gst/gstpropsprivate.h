@@ -43,6 +43,9 @@ struct _GstPropsEntry {
       GList *entries;
     } list_data;
     struct {
+      gchar *string;
+    } string_data;
+    struct {
       gint min;
       gint max;
     } int_range_data;

@@ -21,10 +21,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/soundcard.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -135,9 +131,10 @@ static void gst_sinesrc_init(GstSineSrc *src) {
   src->volume = 1.0;
   gst_sinesrc_update_vol_scale(src);
 
-  src->format = AFMT_S16_LE;
+  src->format = 16;
   src->samplerate = 44100;
   src->freq = 100.0;
+  src->newcaps = FALSE;
   
   src->table_pos = 0.0;
   src->table_size = 1024;
@@ -148,7 +145,6 @@ static void gst_sinesrc_init(GstSineSrc *src) {
   
   src->seq = 0;
 
-  src->sentmeta = FALSE;
 }
 
 static GstBuffer *
@@ -197,11 +193,8 @@ gst_sinesrc_get(GstPad *pad)
                  )* src->vol_scale;
   }
 
-  if (!src->sentmeta) {
-    MetaAudioRaw *newmeta = g_new(MetaAudioRaw,1);
-    memcpy(newmeta,&src->meta,sizeof(MetaAudioRaw));
-    gst_buffer_add_meta(buf,GST_META(newmeta));
-    src->sentmeta = TRUE;
+  if (src->newcaps) {
+    src->newcaps = FALSE;
   }
 
   //g_print(">");
@@ -316,7 +309,7 @@ static void gst_sinesrc_populate_sinetable(GstSineSrc *src)
     table[i] = (gfloat)sin(i * pi2scaled);
   }
   
-	g_free(src->table_data);
+  g_free(src->table_data);
   src->table_data = table;
 }
 
@@ -331,8 +324,5 @@ static inline void gst_sinesrc_update_vol_scale(GstSineSrc *src)
 }
 
 void gst_sinesrc_sync_parms(GstSineSrc *src) {
-  src->meta.format = src->format;
-  src->meta.channels = 1;
-  src->meta.frequency = src->samplerate;
-  src->sentmeta = FALSE;
+  src->newcaps = TRUE;
 }

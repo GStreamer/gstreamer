@@ -26,7 +26,7 @@ int main(int argc,char *argv[]) {
 
   bin = gst_bin_new("bin");
 
-  srcfactory = gst_elementfactory_find("audiosrc");
+  srcfactory = gst_elementfactory_find("osssrc");
   spectrumfactory = gst_elementfactory_find("gstspectrum");
 
   src = gst_elementfactory_create(srcfactory,"src");

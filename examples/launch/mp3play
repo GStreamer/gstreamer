@@ -1,4 +1,4 @@
 #! /bin/sh
 for loc in "$@"; do
-../../tools/gstreamer-launch disksrc \""location=$loc"\" ! mp3parse ! mpg123 ! audiosink
+../../tools/gstreamer-launch disksrc \""location=$loc"\" ! mp3parse ! mpg123 ! osssink
 done

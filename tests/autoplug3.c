@@ -11,7 +11,7 @@ main (int argc, char *argv[])
   gst_init(&argc,&argv);
 
   sink1 = gst_elementfactory_make ("videosink", "videosink");
-  sink2 = gst_elementfactory_make ("audiosink", "audiosink");
+  sink2 = gst_elementfactory_make ("osssink", "osssink");
 
   autoplug = gst_autoplugfactory_make ("staticrender");
   autoplug2 = gst_autoplugfactory_make ("static");
@@ -81,7 +81,7 @@ main (int argc, char *argv[])
   }
 
   sink1 = gst_elementfactory_make ("videosink", "videosink");
-  sink2 = gst_elementfactory_make ("audiosink", "audiosink");
+  sink2 = gst_elementfactory_make ("osssink", "osssink");
   
   element = gst_autoplug_to_renderers (autoplug,
 		  g_list_append (NULL, gst_caps_new_with_props(

@@ -125,7 +125,7 @@ gst_play_init (GstPlay *play)
   priv->bin = gst_bin_new ("main_bin");
   g_assert (priv->bin != NULL);
 
-  priv->audio_element = gst_elementfactory_make ("audiosink", "play_audio");
+  priv->audio_element = gst_elementfactory_make ("osssink", "play_audio");
   g_return_if_fail (priv->audio_element != NULL);
   gtk_signal_connect (GTK_OBJECT (priv->audio_element), "handoff",
 		  GTK_SIGNAL_FUNC (gst_play_audio_handoff), play);

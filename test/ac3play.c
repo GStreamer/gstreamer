@@ -30,7 +30,7 @@ int main(int argc,char *argv[]) {
   g_return_if_fail(parse != NULL);
   decode = gst_elementfactory_make("ac3dec","decode");
   g_return_if_fail(decode != NULL);
-  play = gst_elementfactory_make("audiosink","play");
+  play = gst_elementfactory_make("osssink","play");
   g_return_if_fail(play != NULL);
 
   // construct the decode thread

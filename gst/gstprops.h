@@ -47,6 +47,7 @@ typedef enum {
    GST_PROPS_INT_RANGE_ID_NUM,
    GST_PROPS_FOURCC_ID_NUM,
    GST_PROPS_BOOL_ID_NUM,
+   GST_PROPS_STRING_ID_NUM,
    GST_PROPS_LAST_ID_NUM = GST_PROPS_END_ID_NUM + 16,
 } GstPropsId;
 
@@ -56,6 +57,7 @@ typedef enum {
 #define GST_PROPS_INT_RANGE_ID 	GINT_TO_POINTER(GST_PROPS_INT_RANGE_ID_NUM)
 #define GST_PROPS_FOURCC_ID 	GINT_TO_POINTER(GST_PROPS_FOURCC_ID_NUM)
 #define GST_PROPS_BOOL_ID 	GINT_TO_POINTER(GST_PROPS_BOOL_ID_NUM)
+#define GST_PROPS_STRING_ID 	GINT_TO_POINTER(GST_PROPS_STRING_ID_NUM)
 #define GST_PROPS_LAST_ID 	GINT_TO_POINTER(GST_PROPS_LAST_ID_NUM)
 
 #define GST_PROPS_LIST(a...) 		GST_PROPS_LIST_ID,##a,NULL
@@ -64,10 +66,12 @@ typedef enum {
 #define GST_PROPS_FOURCC(a,b,c,d) 	GST_PROPS_FOURCC_ID,(GINT_TO_POINTER((a)|(b)<<8|(c)<<16|(d)<<24))
 #define GST_PROPS_FOURCC_INT(a) 	GST_PROPS_FOURCC_ID,(GINT_TO_POINTER(a))
 #define GST_PROPS_BOOLEAN(a) 		GST_PROPS_BOOL_ID,(GINT_TO_POINTER(a))
+#define GST_PROPS_STRING(a) 		GST_PROPS_STRING_ID,(a)
 
 
 struct _GstProps {
   gint refcount;
+  GMutex *lock;
 
   GList *properties;		/* real properties for this property */
 };
@@ -96,6 +100,7 @@ GstProps*	gst_props_set			(GstProps *props, const gchar *name, GstPropsFactoryEn
 gint 		gst_props_get_int		(GstProps *props, const gchar *name);
 gulong		gst_props_get_fourcc_int	(GstProps *props, const gchar *name);
 gboolean	gst_props_get_boolean		(GstProps *props, const gchar *name);
+const gchar*	gst_props_get_string		(GstProps *props, const gchar *name);
 
 xmlNodePtr 	gst_props_save_thyself 		(GstProps *props, xmlNodePtr parent);
 GstProps* 	gst_props_load_thyself 		(xmlNodePtr parent);

@@ -766,6 +766,7 @@ plugins/mpeg1/system_encode/Makefile
 plugins/mpeg1/mpeg1encoder/Makefile
 plugins/mpeg1video/Makefile
 plugins/mpeg1video/parse/Makefile
+plugins/oss/Makefile
 plugins/rtp/Makefile
 plugins/rtp/rtpsend/Makefile
 plugins/filters/Makefile

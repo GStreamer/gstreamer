@@ -57,7 +57,7 @@ int main(int argc,char *argv[]) {
   /* then the play thread and sink */
   playthread = gst_thread_new("playthread");
 
-  sinkfactory = gst_elementfactory_find("audiosink");
+  sinkfactory = gst_elementfactory_find("osssink");
   sink = gst_elementfactory_create(sinkfactory,"sink");
   gst_bin_add(GST_BIN(playthread),GST_ELEMENT(sink));
   gst_element_add_ghost_pad(GST_ELEMENT(playthread),

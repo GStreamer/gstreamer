@@ -48,7 +48,7 @@ int main(int argc,char *argv[]) {
   }
 
 
-  sink = gst_audiosink_new("audiosink");
+  sink = gst_osssink_new("osssink");
 
   gtk_signal_connect(GTK_OBJECT(src),"eof",
                      GTK_SIGNAL_FUNC(eof),NULL);

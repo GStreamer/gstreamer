@@ -25,6 +25,9 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
     case GST_PROPS_BOOL_ID_NUM:
       printf("Boolean: %s\n",prop->data.bool_data ? "TRUE" : "FALSE");
       break;
+    case GST_PROPS_STRING_ID_NUM:
+      printf("String: %s\n",prop->data.string_data.string);
+      break;
     case GST_PROPS_FOURCC_ID_NUM:
       printf("FourCC: %c%c%c%c\n",
              prop->data.fourcc_data & 0xff,prop->data.fourcc_data>>8 & 0xff,

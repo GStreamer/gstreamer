@@ -34,7 +34,7 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(parse_audio != NULL);
     decode = gst_elementfactory_make("ac3dec","decode_audio");
     g_return_if_fail(decode != NULL);
-    play = gst_elementfactory_make("audiosink","play_audio");
+    play = gst_elementfactory_make("osssink","play_audio");
     g_return_if_fail(play != NULL);
 
     // create the thread and pack stuff into it
@@ -78,7 +78,7 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
     g_return_if_fail(parse_audio != NULL);
     decode = gst_elementfactory_make("mpg123","decode_audio");
     g_return_if_fail(decode != NULL);
-    play = gst_elementfactory_make("audiosink","play_audio");
+    play = gst_elementfactory_make("osssink","play_audio");
     g_return_if_fail(play != NULL);
 
     // create the thread and pack stuff into it

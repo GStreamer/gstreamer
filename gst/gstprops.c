@@ -41,6 +41,7 @@ static guint _arg_len[] = {
   2,  // GST_PROPS_INT_RANGE_ID_NUM,
   1,  // GST_PROPS_FOURCC_ID_NUM,
   1,  // GST_PROPS_BOOL_ID_NUM,
+  1,  // GST_PROPS_STRING_ID_NUM,
 };
 
 void 
@@ -89,6 +90,10 @@ gst_props_create_entry (GstPropsFactory factory, gint *skipped)
     case GST_PROPS_BOOL_ID_NUM:
       entry->propstype = GST_PROPS_BOOL_ID_NUM;
       entry->data.bool_data = GPOINTER_TO_INT (factory[i++]);
+      break;
+    case GST_PROPS_STRING_ID_NUM:
+      entry->propstype = GST_PROPS_STRING_ID_NUM;
+      entry->data.string_data.string = g_strdup (factory[i++]);
       break;
     default:
       g_warning ("gstprops: unknown props id found\n");
@@ -355,6 +360,11 @@ gst_props_set (GstProps *props, const gchar *name, GstPropsFactoryEntry entry, .
         value = va_arg (var_args, GstPropsFactoryEntry);
         thisentry->data.bool_data = GPOINTER_TO_INT (value);
         break;
+      case GST_PROPS_STRING_ID_NUM:
+        thisentry->propstype = GST_PROPS_STRING_ID_NUM;
+        value = va_arg (var_args, GstPropsFactoryEntry);
+        thisentry->data.string_data.string = g_strdup (value);
+        break;
       default:
         g_print("gstprops: type not allowed\n");
 	break;
@@ -588,6 +598,36 @@ gst_props_get_boolean (GstProps *props, const gchar *name)
 }
 
 /**
+ * gst_props_get_string:
+ * @props: the props to get the fourcc value from
+ * @name: the name of the props entry to get.
+ *
+ * Get the named entry as a string value.
+ *
+ * Returns: the string value of the named entry, NULL if not found.
+ */
+const gchar*
+gst_props_get_string (GstProps *props, const gchar *name)
+{
+  GList *lentry;
+  GQuark quark;
+  
+  quark = g_quark_from_string (name);
+
+  lentry = g_list_find_custom (props->properties, GINT_TO_POINTER (quark), props_find_func);
+
+  if (lentry) {
+    GstPropsEntry *thisentry;
+
+    thisentry = (GstPropsEntry *)lentry->data;
+
+    return thisentry->data.string_data.string;
+  }
+  
+  return NULL;
+}
+
+/**
  * gst_props_merge:
  * @props: the property to merge into
  * @tomerge: the property to merge 
@@ -703,6 +743,16 @@ gst_props_entry_check_compatibility (GstPropsEntry *entry1, GstPropsEntry *entry
 	// t   <--->   t
         case GST_PROPS_BOOL_ID_NUM:
           return (entry2->data.bool_data == entry1->data.bool_data);
+        case GST_PROPS_LIST_ID_NUM:
+	  return gst_props_entry_check_list_compatibility (entry1, entry2);
+        default:
+          return FALSE;
+      }
+    case GST_PROPS_STRING_ID_NUM:
+      switch (entry2->propstype) {
+	// t   <--->   t
+        case GST_PROPS_STRING_ID_NUM:
+          return (!strcmp (entry2->data.string_data.string, entry1->data.string_data.string));
         case GST_PROPS_LIST_ID_NUM:
 	  return gst_props_entry_check_list_compatibility (entry1, entry2);
         default:
@@ -824,6 +874,11 @@ gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
       xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
       xmlNewProp (subtree, "value", (entry->data.bool_data ?  "true" : "false"));
       break;
+    case GST_PROPS_STRING_ID_NUM: 
+      subtree = xmlNewChild (parent, NULL, "string", NULL);
+      xmlNewProp (subtree, "name", g_quark_to_string (entry->propid));
+      xmlNewProp (subtree, "value", entry->data.string_data.string);
+      break;
     default:
       break;
   }
@@ -917,6 +972,13 @@ gst_props_load_thyself_func (xmlNodePtr field)
     prop = xmlGetProp (field, "hexvalue");
     sscanf (prop, "%08x", &entry->data.fourcc_data);
     g_free (prop);
+  }
+  else if (!strcmp(field->name, "string")) {
+    entry->propstype = GST_PROPS_STRING_ID_NUM;
+    prop = xmlGetProp(field, "name");
+    entry->propid = g_quark_from_string (prop);
+    g_free (prop);
+    entry->data.string_data.string = xmlGetProp (field, "value");
   }
   else {
     g_mutex_lock (_gst_props_entries_chunk_lock);

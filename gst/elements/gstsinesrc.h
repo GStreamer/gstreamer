@@ -27,8 +27,6 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/meta/audioraw.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,8 +77,8 @@ struct _GstSineSrc {
   gint buffer_size;
   gulong seq;
 
-  MetaAudioRaw meta;
-  gboolean sentmeta;
+  gboolean newcaps;
+
 };
 
 struct _GstSineSrcClass {

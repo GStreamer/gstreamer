@@ -83,6 +83,7 @@ gst_caps_new (const gchar *name, const gchar *mime)
   caps->properties = NULL;
   caps->next = NULL;
   caps->refcount = 1;
+  caps->lock = g_mutex_new ();
 
   return caps;
 }
@@ -169,13 +170,18 @@ gst_caps_register_count (GstCapsFactory *factory, guint *counter)
 void
 gst_caps_destroy (GstCaps *caps)
 {
+  GstCaps *next;
+
   g_return_if_fail (caps != NULL);
 
-  if (caps->next) 
-    gst_caps_unref (caps->next);
-
+  GST_CAPS_LOCK (caps);
+  next = caps->next;
   g_free (caps->name);
   g_free (caps);
+  GST_CAPS_UNLOCK (caps);
+
+  if (next) 
+    gst_caps_unref (next);
 }
 
 /**
@@ -188,14 +194,21 @@ gst_caps_destroy (GstCaps *caps)
 void
 gst_caps_unref (GstCaps *caps)
 {
+  gboolean zero;
+  GstCaps *next;
+
   g_return_if_fail (caps != NULL);
 
+  GST_CAPS_LOCK (caps);
   caps->refcount--;
+  zero = (caps->refcount == 0);
+  next = caps->next;
+  GST_CAPS_UNLOCK (caps);
 
-  if (caps->next)
-    gst_caps_unref (caps->next);
+  if (next)
+    gst_caps_unref (next);
 
-  if (caps->refcount == 0)
+  if (zero)
     gst_caps_destroy (caps);
 }
 
@@ -210,7 +223,9 @@ gst_caps_ref (GstCaps *caps)
 {
   g_return_if_fail (caps != NULL);
 
+  GST_CAPS_LOCK (caps);
   caps->refcount++;
+  GST_CAPS_UNLOCK (caps);
 }
 
 /**
@@ -228,10 +243,12 @@ gst_caps_copy (GstCaps *caps)
 
   g_return_val_if_fail (caps != NULL, NULL);
 
+  GST_CAPS_LOCK (caps);
   new = gst_caps_new_with_props (
 		  caps->name,
 		  (gst_type_find_by_id (caps->id))->mime,
 		  gst_props_copy (caps->properties));
+  GST_CAPS_UNLOCK (caps);
 
   return new;
 }
@@ -248,11 +265,16 @@ gst_caps_copy (GstCaps *caps)
 GstCaps*
 gst_caps_copy_on_write (GstCaps *caps)
 {
-  GstCaps *new = caps;;
+  GstCaps *new = caps;
+  gboolean needcopy;
 
   g_return_val_if_fail (caps != NULL, NULL);
 
-  if (caps->refcount > 1) {
+  GST_CAPS_LOCK (caps);
+  needcopy = (caps->refcount > 1);
+  GST_CAPS_UNLOCK (caps);
+
+  if (needcopy) {
     new = gst_caps_copy (caps);
     gst_caps_unref (caps);
   }
@@ -602,6 +624,7 @@ gst_caps_load_thyself (xmlNodePtr parent)
       g_mutex_unlock (_gst_caps_chunk_lock);
 
       caps->refcount = 1;
+      caps->lock = g_mutex_new ();
 	
       while (subfield) {
         if (!strcmp (subfield->name, "name")) {

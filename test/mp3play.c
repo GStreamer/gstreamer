@@ -24,7 +24,7 @@ int main(int argc,char *argv[]) {
   g_return_if_fail(parsefactory != NULL);
   decodefactory = gst_elementfactory_find("mpg123");
   g_return_if_fail(decodefactory != NULL);
-  playfactory = gst_elementfactory_find("audiosink");
+  playfactory = gst_elementfactory_find("osssink");
   g_return_if_fail(playfactory != NULL);
 
   src = gst_elementfactory_create(srcfactory,"src");

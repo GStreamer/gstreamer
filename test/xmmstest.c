@@ -12,7 +12,7 @@ main (int argc,char *argv[])
 {
   GstElement *bin;
   GstElement *effect;
-  GstElement *audiosink;
+  GstElement *osssink;
 
   gst_init(&argc,&argv);
 
@@ -37,17 +37,17 @@ main (int argc,char *argv[])
   //gtk_object_set (GTK_OBJECT (src), "configure", TRUE, NULL);
   //gtk_object_set (GTK_OBJECT (src), "show_file_info", TRUE, NULL);
 
-  audiosink = gst_elementfactory_make("audiosink", "audiosink");
-  g_return_val_if_fail(audiosink != NULL, -1);
+  osssink = gst_elementfactory_make("osssink", "osssink");
+  g_return_val_if_fail(osssink != NULL, -1);
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(effect));
-  gst_bin_add(GST_BIN(bin),GST_ELEMENT(audiosink));
+  gst_bin_add(GST_BIN(bin),GST_ELEMENT(osssink));
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(effect,"sink"));
   gst_pad_connect(gst_element_get_pad(effect,"src"),
-                  gst_element_get_pad(audiosink,"sink"));
+                  gst_element_get_pad(osssink,"sink"));
 
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
 

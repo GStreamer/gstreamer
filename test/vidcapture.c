@@ -7,8 +7,8 @@
 int main(int argc,char *argv[]) {
   int fd;
   GstPipeline *pipeline;
-  GstElement *audiosrc, *videosrc, *fdsink, *encoder, *compress, *video_queue, *video_thread;
-  GstElementFactory *audiosrcfactory, *fdsinkfactory, *encoderfactory, *compressfactory;
+  GstElement *osssrc, *videosrc, *fdsink, *encoder, *compress, *video_queue, *video_thread;
+  GstElementFactory *osssrcfactory, *fdsinkfactory, *encoderfactory, *compressfactory;
   GstElementFactory *videosrcfactory;
   GList *padlist;
 
@@ -20,8 +20,8 @@ int main(int argc,char *argv[]) {
 
   pipeline = gst_pipeline_new("pipeline");
 
-  audiosrcfactory = gst_elementfactory_find("audiosrc");
-  audiosrc = gst_elementfactory_create(audiosrcfactory,"audiosrc");
+  osssrcfactory = gst_elementfactory_find("osssrc");
+  osssrc = gst_elementfactory_create(osssrcfactory,"osssrc");
 
   videosrcfactory = gst_elementfactory_find("v4lsrc");
   videosrc = gst_elementfactory_create(videosrcfactory,"videosrc");

@@ -43,11 +43,19 @@ typedef GstCapsFactoryEntry * GstCapsFactory;
 typedef GstCapsFactoryEntry GstCapsFactory[];
 #endif
 
+#define GST_CAPS(caps) \
+  ((GstCaps *)(caps))
+
+#define GST_CAPS_LOCK(caps)    (g_mutex_lock(GST_CAPS(caps)->lock))
+#define GST_CAPS_TRYLOCK(caps) (g_mutex_trylock(GST_CAPS(caps)->lock))
+#define GST_CAPS_UNLOCK(caps)  (g_mutex_unlock(GST_CAPS(caps)->lock))
+
 struct _GstCaps {
   gchar *name;			/* the name of this caps */
   guint16 id;			/* type id (major type) */
 
-  guint refcount;
+  guint refcount;		
+  GMutex *lock;			/* global lock for this capability */
 
   GstProps *properties;		/* properties for this capability */
 

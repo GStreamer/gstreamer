@@ -3,7 +3,7 @@
 
 int main(int argc,char *argv[]) 
 {
-  GstElement *disksrc, *audiosink, *parse, *decode, *queue;
+  GstElement *disksrc, *osssink, *parse, *decode, *queue;
   GstElement *bin;
   GstElement *thread;
 
@@ -33,8 +33,8 @@ int main(int argc,char *argv[])
   queue = gst_elementfactory_make("queue", "queue");
 
   /* and an audio sink */
-  audiosink = gst_elementfactory_make("audiosink", "play_audio");
-  g_assert(audiosink != NULL);
+  osssink = gst_elementfactory_make("osssink", "play_audio");
+  g_assert(osssink != NULL);
 
   gst_bin_use_cothreads (GST_BIN (bin), TRUE);
 
@@ -44,7 +44,7 @@ int main(int argc,char *argv[])
   gst_bin_add(GST_BIN(bin), decode);
   gst_bin_add(GST_BIN(bin), queue);
 
-  gst_bin_add(GST_BIN(thread), audiosink);
+  gst_bin_add(GST_BIN(thread), osssink);
 
   gst_bin_add(GST_BIN(bin), thread);
   
@@ -55,7 +55,7 @@ int main(int argc,char *argv[])
   gst_pad_connect(gst_element_get_pad(decode,"src"),
                   gst_element_get_pad(queue,"sink"));
   gst_pad_connect(gst_element_get_pad(queue,"src"),
-                  gst_element_get_pad(audiosink,"sink"));
+                  gst_element_get_pad(osssink,"sink"));
 
   /* start playing */
   gst_element_set_state(GST_ELEMENT(bin), GST_STATE_PLAYING);
