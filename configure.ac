@@ -1185,7 +1185,7 @@ GST_CHECK_FEATURE(MIKMOD, [mikmod plug-in], mikmod, [
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.3.1,
+  PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0,
       HAVE_MPEG2DEC="yes", HAVE_MPEG2DEC="no")
   AC_SUBST(MPEG2DEC_CFLAGS)
   AC_SUBST(MPEG2DEC_LIBS)

@@ -1,3 +1,8 @@
+2004-04-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* configure.ac:
+	  require mpeg2dec >= 0.4.0
+
 2004-04-17  Benjamin Otte  <otte@gnome.org>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
