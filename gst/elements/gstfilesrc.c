@@ -402,7 +402,7 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
     return NULL;
   }
   else if (mmapregion == MAP_FAILED) {
-    gst_element_error (GST_ELEMENT (src), "mmap (0x%x, %d, 0x%llx) : %s",
+    GST_DEBUG ("mmap (0x%x, %d, 0x%llx) : %s",
  	     size, src->fd, offset, strerror (errno));
     return NULL;
   }
@@ -486,49 +486,19 @@ gst_filesrc_search_region_match (gpointer a, gpointer b)
 }
 
 /**
- * gst_filesrc_get:
+ * gst_filesrc_get_mmap:
  * @pad: #GstPad to push a buffer from
  *
  * Push a new buffer from the filesrc at the current offset.
  */
 static GstBuffer *
-gst_filesrc_get (GstPad *pad)
+gst_filesrc_get_mmap (GstFileSrc *src)
 {
-  GstFileSrc *src;
   GstBuffer *buf = NULL, *map;
   size_t readsize, mapsize;
   off_t readend,mapstart,mapend;
   GstFileSrcRegion region;
   int i;
-
-  g_return_val_if_fail (pad != NULL, NULL);
-  src = GST_FILESRC (gst_pad_get_parent (pad));
-  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
-
-  /* check for seek */
-  if (src->seek_happened) {
-    GstEvent *event;
-
-    src->seek_happened = FALSE;
-    GST_DEBUG ("filesrc sending discont");
-    event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
-    src->need_flush = FALSE;
-    return GST_BUFFER (event);
-  }
-  /* check for flush */
-  if (src->need_flush) {
-    src->need_flush = FALSE;
-    GST_DEBUG ("filesrc sending flush");
-    return GST_BUFFER (gst_event_new_flush ());
-  }
-
-  /* check for EOF */
-  if (src->curoffset == src->filelen) {
-    GST_DEBUG ("filesrc eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
-               src->curoffset, src->filelen);
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
-  }
 
   /* calculate end pointers so we don't have to do so repeatedly later */
   readsize = src->block_size;
@@ -649,6 +619,78 @@ gst_filesrc_get (GstPad *pad)
   return buf;
 }
 
+static GstBuffer *
+gst_filesrc_get_read (GstFileSrc *src)
+{
+  GstBuffer *buf = NULL;
+  size_t readsize;
+  int ret;
+
+  readsize = src->block_size;
+  if (src->curoffset + readsize > src->filelen) {
+    readsize = src->filelen - src->curoffset;
+  }
+
+  buf = gst_buffer_new_and_alloc (readsize);
+  g_return_val_if_fail (buf != NULL, NULL);
+
+  ret = read (src->fd, GST_BUFFER_DATA (buf), readsize);
+  if (ret < 0){
+    gst_element_error (GST_ELEMENT (src), "reading file (%s)",
+        strerror (errno), NULL);
+    return NULL;
+  }
+  if (ret < readsize) {
+    gst_element_error (GST_ELEMENT (src), "unexpected end of file", NULL);
+    return NULL;
+  }
+
+  src->curoffset += readsize;
+
+  return buf;
+}
+
+static GstBuffer *
+gst_filesrc_get (GstPad *pad)
+{
+  GstFileSrc *src;
+
+  g_return_val_if_fail (pad != NULL, NULL);
+  src = GST_FILESRC (gst_pad_get_parent (pad));
+  g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
+
+  /* check for seek */
+  if (src->seek_happened) {
+    GstEvent *event;
+
+    src->seek_happened = FALSE;
+    GST_DEBUG ("filesrc sending discont");
+    event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, src->curoffset, NULL);
+    src->need_flush = FALSE;
+    return GST_BUFFER (event);
+  }
+  /* check for flush */
+  if (src->need_flush) {
+    src->need_flush = FALSE;
+    GST_DEBUG ("filesrc sending flush");
+    return GST_BUFFER (gst_event_new_flush ());
+  }
+
+  /* check for EOF */
+  if (src->curoffset == src->filelen) {
+    GST_DEBUG ("filesrc eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
+               src->curoffset, src->filelen);
+    gst_element_set_eos (GST_ELEMENT (src));
+    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+  }
+
+  if (src->using_mmap){
+    return gst_filesrc_get_mmap (src);
+  }else{
+    return gst_filesrc_get_read (src);
+  }
+}
+
 /* open the file and mmap it, necessary to go to READY state */
 static gboolean 
 gst_filesrc_open_file (GstFileSrc *src)
@@ -677,13 +719,15 @@ gst_filesrc_open_file (GstFileSrc *src)
     }
 		
     /* find the file length */
-    src->filelen = lseek (src->fd, 0, SEEK_END);
-    lseek (src->fd, 0, SEEK_SET);
+    src->filelen = stat_results.st_size;
 
     /* allocate the first mmap'd region */
     src->mapbuf = gst_filesrc_map_region (src, 0, src->mapsize);
-    if (src->mapbuf == NULL)
-      return FALSE;
+    if (src->mapbuf == NULL) {
+      src->using_mmap = FALSE;
+    }else{
+      src->using_mmap = TRUE;
+    }
 
     src->curoffset = 0;
 
