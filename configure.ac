@@ -958,6 +958,7 @@ AC_OUTPUT(
 Makefile
 gstreamer-libs.pc
 gstreamer-libs-uninstalled.pc
+gst-plugins.spec
 gst/Makefile
 gst/ac3parse/Makefile
 gst/adder/Makefile
@@ -1006,7 +1007,6 @@ sys/v4l/Makefile
 sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
-examples/capsfilter/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
@@ -1046,7 +1046,7 @@ gst-libs/gst/audio/Makefile
 gst-libs/gst/idct/Makefile
 gst-libs/gst/resample/Makefile
 gst-libs/gst/riff/Makefile
-gst-plugins.spec
+examples/capsfilter/Makefile
 )
 
 echo -e "configure: *** Plugins that will be built : $GST_PLUGINS_YES"
