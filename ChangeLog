@@ -1,3 +1,10 @@
+2005-02-17  Luca Ognibene  <luogni at tin dot it>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_init_send):
+	  Don't pass uninitialised values to setsockopt(). (fixes #167704)
+
 2005-02-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gstplaybin.c: (add_sink):

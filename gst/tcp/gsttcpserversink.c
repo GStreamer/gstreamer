@@ -286,16 +286,18 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
       this->server_sock.fd);
 
   /* make address reusable */
-  if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_REUSEADDR, &ret,
-          sizeof (int)) < 0) {
+  ret = 1;
+  if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_REUSEADDR,
+          (void *) &ret, sizeof (ret)) < 0) {
     gst_tcp_socket_close (&this->server_sock.fd);
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
     return FALSE;
   }
   /* keep connection alive; avoids SIGPIPE during write */
-  if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_KEEPALIVE, &ret,
-          sizeof (int)) < 0) {
+  ret = 1;
+  if (setsockopt (this->server_sock.fd, SOL_SOCKET, SO_KEEPALIVE,
+          (void *) &ret, sizeof (ret)) < 0) {
     gst_tcp_socket_close (&this->server_sock.fd);
     GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL),
         ("Could not setsockopt: %s", g_strerror (errno)));
