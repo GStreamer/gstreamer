@@ -1,5 +1,12 @@
 2004-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/videorate/gstvideorate.c: (gst_videorate_chain):
+	  notify drops and duplicates
+	* gst/videoscale/videoscale.c: (videoscale_get_structure):
+	  no good reason to limit ourselves to 100x100
+
+2004-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_class_init), (gst_v4lsrc_init),
 	(gst_v4lsrc_open), (gst_v4lsrc_src_link), (gst_v4lsrc_getcaps),
 	(gst_v4lsrc_get), (gst_v4lsrc_set_property),

@@ -348,12 +348,15 @@ gst_videorate_chain (GstPad * pad, GstData * data)
     while (diff1 <= diff2);
 
     /* if we outputed the first buffer more then once, we have dups */
-    if (count > 1)
+    if (count > 1) {
       videorate->dup += count - 1;
+      g_object_notify (G_OBJECT (videorate), "duplicate");
+    }
     /* if we didn't output the first buffer, we have a drop */
-    else if (count == 0)
+    else if (count == 0) {
       videorate->drop++;
-
+      g_object_notify (G_OBJECT (videorate), "drop");
+    }
 //    g_print ("swap: diff1 %lld, diff2 %lld, in %d, out %d, drop %d, dup %d\n", diff1, diff2, 
 //                  videorate->in, videorate->out, videorate->drop, videorate->dup);
 
