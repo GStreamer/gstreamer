@@ -59,7 +59,7 @@ GstStructure *gst_structure_new_valist(const gchar *name,
 GstStructure *gst_structure_copy(GstStructure *structure);
 void gst_structure_free(GstStructure *structure);
 
-const gchar *gst_structure_get_name(GstStructure *structure);
+G_CONST_RETURN gchar *gst_structure_get_name(GstStructure *structure);
 void gst_structure_set_name(GstStructure *structure, const gchar *name);
 void gst_structure_set_field_copy (GstStructure *structure,
     const GstStructureField *field);
@@ -73,7 +73,8 @@ void gst_structure_set_value(GstStructure *structure, const gchar *field,
 void gst_structure_set(GstStructure *structure, const gchar *field, ...);
 void gst_structure_set_valist(GstStructure *structure, const gchar *field,
     va_list varargs);
-const GValue *gst_structure_get_value(const GstStructure *structure, const gchar *field);
+G_CONST_RETURN GValue *gst_structure_get_value(const GstStructure *structure,
+    const gchar *field);
 GstStructureField *gst_structure_get_field(const GstStructure *structure,
         const gchar *fieldname);
 GstStructureField *gst_structure_id_get_field(const GstStructure *structure,
@@ -100,11 +101,11 @@ gboolean gst_structure_get_fourcc(const GstStructure *structure, const gchar *fi
     guint32 *value);
 gboolean gst_structure_get_double(const GstStructure *structure, const gchar *field,
     gdouble *value);
-const gchar *gst_structure_get_string(const GstStructure *structure,
+G_CONST_RETURN gchar *gst_structure_get_string(const GstStructure *structure,
     const gchar *field);
 
 gchar * gst_structure_to_string(const GstStructure *structure);
-GstStructure * gst_structure_from_string (const gchar *string);
+GstStructure * gst_structure_from_string (const gchar *string, gchar **end);
 
 
 G_END_DECLS

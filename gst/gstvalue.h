@@ -21,6 +21,7 @@
 #define __GST_VALUE_H__
 
 #include <gst/gstconfig.h>
+#include <gst/gstcaps2.h>
 
 G_BEGIN_DECLS
 
@@ -41,16 +42,16 @@ typedef int (* GstValueIntersectFunc) (GValue *dest, const GValue *value1,
         ((gchar) (((fourcc)>>16)&0xff)), \
         ((gchar) (((fourcc)>>24)&0xff))
 
+#define GST_VALUE_HOLDS_FOURCC(x)       (G_VALUE_HOLDS(x, gst_type_fourcc))
+#define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_type_int_range))
+#define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
+#define GST_VALUE_HOLDS_LIST(x)         (G_VALUE_HOLDS(x, gst_type_list))
+#define GST_VALUE_HOLDS_CAPS(x)         TRUE /* FIXME */
+
 #define GST_TYPE_FOURCC gst_type_fourcc
 #define GST_TYPE_INT_RANGE gst_type_int_range
 #define GST_TYPE_DOUBLE_RANGE gst_type_double_range
-#define GST_VALUE_TYPE_LIST gst_value_type_list
-
-#define GST_VALUE_HOLDS_FOURCC(x) (G_VALUE_TYPE(x) == gst_type_fourcc)
-#define GST_VALUE_HOLDS_INT_RANGE(x) (G_VALUE_TYPE(x) == gst_type_int_range)
-#define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_TYPE(x) == gst_type_double_range)
-#define GST_VALUE_HOLDS_LIST(x) (G_VALUE_TYPE(x) == GST_VALUE_TYPE_LIST)
-#define GST_VALUE_HOLDS_CAPS(x) TRUE /* FIXME */
+#define GST_TYPE_LIST gst_type_list
 
 #define GST_VALUE_LESS_THAN (-1)
 #define GST_VALUE_EQUAL 0
@@ -60,7 +61,7 @@ typedef int (* GstValueIntersectFunc) (GValue *dest, const GValue *value1,
 extern GType gst_type_fourcc;
 extern GType gst_type_int_range;
 extern GType gst_type_double_range;
-extern GType gst_value_type_list;
+extern GType gst_type_list;
 
 void gst_value_set_fourcc (GValue *value, guint32 fourcc);
 guint32 gst_value_get_fourcc (const GValue *value);
@@ -72,6 +73,9 @@ int gst_value_get_int_range_max (const GValue *value);
 void gst_value_set_double_range (GValue *value, double start, double end);
 double gst_value_get_double_range_min (const GValue *value);
 double gst_value_get_double_range_max (const GValue *value);
+
+const GstCaps2 *gst_value_get_caps (const GValue *value);
+void gst_value_set_caps (GValue *calue, const GstCaps2 *caps);
 
 void gst_value_list_prepend_value (GValue *value, const GValue *prepend_value);
 void gst_value_list_append_value (GValue *value, const GValue *prepend_value);

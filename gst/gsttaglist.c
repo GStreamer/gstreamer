@@ -245,7 +245,7 @@ gst_tag_register (gchar *name, GType type, gchar *nick, gchar *blurb,
   g_return_if_fail (name != NULL);
   g_return_if_fail (nick != NULL);
   g_return_if_fail (blurb != NULL);
-  g_return_if_fail (type != 0 && type != GST_VALUE_TYPE_LIST);
+  g_return_if_fail (type != 0 && type != GST_TYPE_LIST);
   
   key = g_quark_from_string (name);
   info = gst_tag_lookup (key);
@@ -547,7 +547,7 @@ gst_tag_list_get_tag_size (const GstTagList *list, const gchar *tag)
   value = gst_structure_get_value ((GstStructure *) list, tag);
   if (value == NULL)
     return 0;
-  if (G_VALUE_TYPE (value) != GST_VALUE_TYPE_LIST)
+  if (G_VALUE_TYPE (value) != GST_TYPE_LIST)
     return 1;
 
   return gst_value_list_get_size (value);
@@ -761,7 +761,7 @@ gst_tag_list_copy_value (GValue *dest, const GstTagList *list, const gchar *tag)
   src = gst_structure_get_value ((GstStructure *) list, tag);
   if (!src) return FALSE;
   
-  if (G_VALUE_TYPE (src) == GST_VALUE_TYPE_LIST) {    
+  if (G_VALUE_TYPE (src) == GST_TYPE_LIST) {    
     GstTagInfo *info = gst_tag_lookup (g_quark_from_string (tag));
     /* must be there or lists aren't allowed */
     g_assert (info->merge_func);
