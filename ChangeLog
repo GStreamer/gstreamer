@@ -1,3 +1,9 @@
+2005-03-20  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstbuffer.h:
+	  deprecate gst_buffer_set_data macro because a) it's a macro and b)
+	  glib-style set functions don't take ownership of supplied values
+
 2005-03-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/elements/gstfdsrc.c: (_do_init), (gst_fdsrc_class_init),

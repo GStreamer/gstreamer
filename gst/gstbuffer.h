@@ -138,11 +138,13 @@ GType		gst_buffer_get_type		(void);
 GstBuffer*	gst_buffer_new			(void);
 GstBuffer*	gst_buffer_new_and_alloc	(guint size);
 
+#ifndef GST_DISABLE_DEPRECATED
 #define		gst_buffer_set_data(buf, data, size)	\
 G_STMT_START {						\
   GST_BUFFER_DATA (buf) = data;				\
   GST_BUFFER_SIZE (buf) = size;				\
 } G_STMT_END
+#endif
 
 /* refcounting */
 #define		gst_buffer_ref(buf)		GST_BUFFER (gst_data_ref (GST_DATA (buf)))
