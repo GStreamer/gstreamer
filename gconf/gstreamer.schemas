@@ -1,8 +1,8 @@
 <gconfschemafile>
    <schemalist>
       <schema>
-        <key>/schemas/apps/gstreamer/default/audiosink</key>
-        <applyto>/apps/gstreamer/default/audiosink</applyto>
+        <key>/schemas/system/gstreamer/default/audiosink</key>
+        <applyto>/system/gstreamer/default/audiosink</applyto>
         <owner>gstreamer</owner>
         <type>string</type>
         <default>osssink</default>
@@ -12,8 +12,8 @@
         </locale>
       </schema>
       <schema>
-        <key>/schemas/apps/gstreamer/default/videosink</key>
-        <applyto>/apps/gstreamer/default/videosink</applyto>
+        <key>/schemas/system/gstreamer/default/videosink</key>
+        <applyto>/system/gstreamer/default/videosink</applyto>
         <owner>gstreamer</owner>
         <type>string</type>
         <default>videosink</default>
