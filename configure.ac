@@ -417,6 +417,7 @@ testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/caps/Makefile
 testsuite/cleanup/Makefile
+testsuite/clock/Makefile
 testsuite/elements/Makefile
 testsuite/plugin/Makefile
 testsuite/dynparams/Makefile
