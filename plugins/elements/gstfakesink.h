@@ -44,6 +44,16 @@ GstElementDetails gst_fakesink_details;
 #define GST_IS_FAKESINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESINK))
 
+typedef enum {
+  FAKESINK_STATE_ERROR_NONE = 0,
+  FAKESINK_STATE_ERROR_NULL_READY,
+  FAKESINK_STATE_ERROR_READY_PAUSED,
+  FAKESINK_STATE_ERROR_PAUSED_PLAYING,
+  FAKESINK_STATE_ERROR_PLAYING_PAUSED,
+  FAKESINK_STATE_ERROR_PAUSED_READY,
+  FAKESINK_STATE_ERROR_READY_NULL,
+} GstFakeSinkStateError;
+
 typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;
 
@@ -54,6 +64,7 @@ struct _GstFakeSink {
   gboolean 	 dump;
   gboolean 	 sync;
   GstClock 	*clock;
+  GstFakeSinkStateError state_error;
 
   gchar 	*last_message;
 };
