@@ -18,12 +18,11 @@
  */
 
 
+//#define DEBUG_ENABLED
+#include <gst/gst.h>
 #include <gstriff.h>
 
 #define GST_RIFF_ENCODER_BUF_SIZE    1024
-
-//#define debug(format,args...) g_print(format,##args)
-#define debug(format,args...)
 
 #define ADD_CHUNK(riffenc, chunkid, chunksize) \
 { \
@@ -31,7 +30,7 @@
   chunk = (gst_riff_chunk *)(riffenc->dataleft + riffenc->nextlikely);\
   chunk->id = chunkid; \
   chunk->size = chunksize; \
-  riffenc->nextlikely += sizeof(gst_riff_chunk); \
+  riffenc->nextlikely += sizeof(gst_riff_chunk) + (chunksize&1); \
 }
 
 #define ADD_LIST(riffenc, listsize, listtype) \
@@ -49,7 +48,7 @@ GstRiff *gst_riff_encoder_new(guint32 type) {
   GstRiff *riff;
   gst_riff_list *list;
 
-  debug("gst_riff_encoder: making %4.4s encoder\n", (char *)&type);
+  DEBUG("gst_riff_encoder: making %4.4s encoder\n", (char *)&type);
   riff = (GstRiff *)g_malloc(sizeof(GstRiff));
   g_return_val_if_fail(riff != NULL, NULL);
 
@@ -77,7 +76,7 @@ gint gst_riff_encoder_avih(GstRiff *riff, gst_riff_avih *head, gulong size) {
 
   g_return_val_if_fail(riff->state == GST_RIFF_STATE_INITIAL, GST_RIFF_EINVAL);
 
-  debug("gst_riff_encoder: add avih\n");
+  DEBUG("gst_riff_encoder: add avih\n");
 
   ADD_LIST(riff, 0xB8, GST_RIFF_LIST_hdrl);
 
@@ -97,7 +96,7 @@ gint gst_riff_encoder_strh(GstRiff *riff, guint32 fcc_type, gst_riff_strh *head,
   g_return_val_if_fail(riff->state == GST_RIFF_STATE_HASAVIH ||
 		       riff->state == GST_RIFF_STATE_HASSTRF, GST_RIFF_EINVAL);
 
-  debug("gst_riff_encoder: add strh type %08x (%4.4s)\n", fcc_type, (char *)&fcc_type);
+  DEBUG("gst_riff_encoder: add strh type %08x (%4.4s)\n", fcc_type, (char *)&fcc_type);
 
   ADD_LIST(riff, 108, GST_RIFF_LIST_strl);
 
@@ -118,7 +117,7 @@ gint gst_riff_encoder_strf(GstRiff *riff, void *format, gulong size) {
 
   g_return_val_if_fail(riff->state == GST_RIFF_STATE_HASSTRH, GST_RIFF_EINVAL);
 
-  debug("gst_riff_encoder: add strf\n");
+  DEBUG("gst_riff_encoder: add strf\n");
 
   ADD_CHUNK(riff, GST_RIFF_TAG_strf, size);
 
@@ -141,14 +140,14 @@ gint gst_riff_encoder_chunk(GstRiff *riff, guint32 chunk_type, void *chunkdata, 
     riff->state = GST_RIFF_STATE_MOVI;
   }
 
-  debug("gst_riff_encoder: add chunk type %08x (%4.4s)\n", chunk_type, (char *)&chunk_type);
+  DEBUG("gst_riff_encoder: add chunk type %08x (%4.4s)\n", chunk_type, (char *)&chunk_type);
   
   ADD_CHUNK(riff, chunk_type, size);
 
   if (chunkdata != NULL) {
     chunk = (gst_riff_chunk *)(riff->dataleft + riff->nextlikely);
     memcpy(chunk, chunkdata, size);
-    riff->nextlikely += size;
+    riff->nextlikely += size + (size&1);
   }
 
   return GST_RIFF_OK;

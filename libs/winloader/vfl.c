@@ -31,6 +31,21 @@ HIC	VFWAPI ICLocate(long fccType, long fccHandler, LPBITMAPINFOHEADER lpbiIn, LP
 
 #define OpenDriverA DrvOpen
 extern HDRVR VFWAPI DrvOpen(long);
+#define STORE_ALL \
+    __asm__ ( \
+    "push %%ebx\n\t" \
+    "push %%ecx\n\t" \
+    "push %%edx\n\t" \
+    "push %%esi\n\t" \
+    "push %%edi\n\t"::)
+
+#define REST_ALL \
+    __asm__ ( \
+    "pop %%edi\n\t" \
+    "pop %%esi\n\t" \
+    "pop %%edx\n\t" \
+    "pop %%ecx\n\t" \
+    "pop %%ebx\n\t"::)
 
 
 typedef struct {
@@ -249,7 +264,7 @@ ICCompress(
 long VFWAPIV 
 ICDecompress(HIC hic,long dwFlags,LPBITMAPINFOHEADER lpbiFormat,void* lpData,LPBITMAPINFOHEADER  lpbi,void* lpBits) {
 	ICDECOMPRESS	icd;
-
+	int result;
 	icd.dwFlags	= dwFlags;
 	icd.lpbiInput	= lpbiFormat;
 	icd.lpInput	= lpData;
@@ -257,7 +272,10 @@ ICDecompress(HIC hic,long dwFlags,LPBITMAPINFOHEADER lpbiFormat,void* lpData,LPB
 	icd.lpbiOutput	= lpbi;
 	icd.lpOutput	= lpBits;
 	icd.ckid	= 0;
-	return ICSendMessage(hic,ICM_DECOMPRESS,(long)&icd,sizeof(icd));
+	STORE_ALL;
+	result=ICSendMessage(hic,ICM_DECOMPRESS,(long)&icd,sizeof(icd));
+	REST_ALL;
+	return result;
 }
 
 /***********************************************************************
@@ -267,7 +285,7 @@ LRESULT VFWAPI
 ICSendMessage(HIC hic,unsigned int msg,long lParam1,long lParam2) {
 	LRESULT		ret;
 	WINE_HIC	*whic = (WINE_HIC*)hic;
-
+	char qw[200];
 #define XX(x) case x: TRACE("(0x%08lx,"#x",0x%08lx,0x%08lx)\n",(long)hic,lParam1,lParam2);break;
 /*
 	switch (msg) {
@@ -317,25 +335,12 @@ ICSendMessage(HIC hic,unsigned int msg,long lParam1,long lParam2) {
 */
 //	if (whic->driverproc) {
 //		FIXME("(0x%08lx,0x%08lx,0x%08lx,0x%08lx), calling %p\n",(long)hic,(long)msg,lParam1,lParam2,whic->driverproc);
-#define STORE_ALL \
-    __asm__ ( \
-    "push %%ebx\n\t" \
-    "push %%ecx\n\t" \
-    "push %%edx\n\t" \
-    "push %%esi\n\t" \
-    "push %%edi\n\t"::)
-
-#define REST_ALL \
-    __asm__ ( \
-    "pop %%edi\n\t" \
-    "pop %%esi\n\t" \
-    "pop %%edx\n\t" \
-    "pop %%ecx\n\t" \
-    "pop %%ebx\n\t"::)
 //	printf("private=%x\n", whic->private);
+    __asm__ __volatile__ ("fsave (%0)\n\t": :"r"(&qw));    
     STORE_ALL;	
-	ret = whic->driverproc(whic->private,1,msg,lParam1,lParam2);
+    	ret = whic->driverproc(whic->private,1,msg,lParam1,lParam2);
     REST_ALL;	
+    __asm__ __volatile__ ("frstor (%0)\n\t": :"r"(&qw));    
 //	} else
 
 //		ret = SendDriverMessage(whic->hdrv,msg,lParam1,lParam2);

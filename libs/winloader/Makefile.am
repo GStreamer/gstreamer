@@ -2,7 +2,7 @@ filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libwinloader.la
 
-libwinloader_la_SOURCES = driver.c elfdll.c ext.c externals.c module.c pe_image.c pe_resource.c registry.c resource.c stubs.s vfl.c
+libwinloader_la_SOURCES = driver.c elfdll.c ext.c externals.c module.c pe_image.c pe_resource.c registry.c resource.c stubs.s vfl.c afl.c
 
 libwinloaderincludedir = $(includedir)/gst/libs/winloader.h
 libwinloaderinclude_HEADERS = 

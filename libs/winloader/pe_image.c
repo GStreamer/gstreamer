@@ -289,7 +289,7 @@ DWORD fixup_imports( WINE_MODREF *wm )
 		break;
 
 //#warning FIXME: here we should fill imports
-        printf("Loading imports for %s\n", name);
+        TRACE("Loading imports for %s.dll\n", name);
     
 	if (pe_imp->u.OriginalFirstThunk != 0) { 
 	    TRACE("Microsoft style imports used\n");
@@ -388,7 +388,7 @@ static void do_relocations( unsigned int load_addr, IMAGE_BASE_RELOCATION *r )
 		{
 			int offset = r->TypeOffset[i] & 0xFFF;
 			int type = r->TypeOffset[i] >> 12;
-			TRACE_(fixup)("patching %x type %x\n", offset, type);
+//			TRACE_(fixup)("patching %x type %x\n", offset, type);
 			switch(type)
 			{
 			case IMAGE_REL_BASED_ABSOLUTE: break;
@@ -797,19 +797,11 @@ WINE_MODREF *PE_CreateModule( HMODULE hModule,
     wm->binfmt.pe.pe_resource = pe_resource;
     wm->binfmt.pe.tlsindex = -1;
 
-    wm->filename = strdup( filename );
+    wm->filename = malloc(strlen(filename)+1);
+    strcpy(wm->filename, filename );
     wm->modname = strrchr( wm->filename, '\\' );
     if (!wm->modname) wm->modname = wm->filename;
     else wm->modname++;
-
-//    result = GetShortPathNameA( wm->filename, NULL, 0 );
-//    wm->short_filename = (char *)HeapAlloc( GetProcessHeap(), 0, result+1 );
-//    GetShortPathNameA( wm->filename, wm->short_filename, result+1 );
-//    wm->short_modname = strrchr( wm->short_filename, '\\' );
-//    if (!wm->short_modname) wm->short_modname = wm->short_filename;
-//    else wm->short_modname++;
-//    return NULL;  
-//    }
 
     if ( pe_export )
         dump_exports( hModule );
@@ -836,22 +828,15 @@ WINE_MODREF *PE_CreateModule( HMODULE hModule,
  */
 WINE_MODREF *PE_LoadLibraryExA (LPCSTR name, DWORD flags)
 {
-//        struct load_dll_request *req = get_req_buffer();
 	HMODULE		hModule32;
 	WINE_MODREF	*wm;
 	char        	filename[256];
-//	HANDLE		hFile;
 	int hFile;
 	WORD		version = 0;
 
 	
-//	if ( SearchPathA( NULL, name, ".DLL", 
-//	                  sizeof(filename), filename, NULL ) == 0 ) return NULL;
 	strncpy(filename, name, sizeof(filename));      
-//	hFile = CreateFileA( filename, GENERIC_READ, FILE_SHARE_READ,
-//                             NULL, OPEN_EXISTING, 0, -1 );
 	hFile=open(filename, O_RDONLY);
-//	if ( hFile == INVALID_HANDLE_VALUE ) return NULL;
 	if(hFile==-1)
 	    return NULL;
 	
@@ -863,34 +848,12 @@ WINE_MODREF *PE_LoadLibraryExA (LPCSTR name, DWORD flags)
 		return NULL;
 	}
 
-	// Create 16-bit dummy module 
-/*
-	if ((hModule16 = MODULE_CreateDummyModule( filename, hModule32 )) < 32)
-	{
-                CloseHandle( hFile );
-		SetLastError( (DWORD)hModule16 );	// This should give the correct error 
-		return NULL;
-	}
-*/
-	
 	if ( !(wm = PE_CreateModule( hModule32, filename, flags, FALSE )) )
 	{
 		ERR( "can't load %s\n", filename );
-	//	FreeLibrary16( hModule16 );
 		SetLastError( ERROR_OUTOFMEMORY );
 		return NULL;
 	}
-    /*
-	if (wm->binfmt.pe.pe_export)
-		SNOOP_RegisterDLL(wm->module,wm->modname,wm->binfmt.pe.pe_export->NumberOfFunctions);
-		
-        req->handle     = hFile;
-        req->base       = (void *)hModule32;
-        req->dbg_offset = 0;
-        req->dbg_size   = 0;
-        req->name       = &wm->modname;
-        server_call_noerr( REQ_LOAD_DLL );
-	*/
 	close(hFile);
 	return wm;
 }
@@ -944,13 +907,6 @@ WIN_BOOL PE_InitDLL( WINE_MODREF *wm, DWORD type, LPVOID lpReserved )
     return retv;
 }
 
-/************************************************************************
- *	PE_InitTls			(internal)
- *
- * If included, initialises the thread local storages of modules.
- * Pointers in those structs are not RVAs but real pointers which have been
- * relocated by do_relocations() already.
- */
 static LPVOID
 _fixup_address(PIMAGE_OPTIONAL_HEADER opt,int delta,LPVOID addr) {
 	if (	((DWORD)addr>opt->ImageBase) &&

@@ -200,9 +200,9 @@ void getbits_back_int(gst_getbits_t *gb,unsigned long bits) {
     }
   }
   gb->dword = bswap_32(*((unsigned long *)(gb->ptr)));
-  fprintf(stderr,"orignal new loaded word is %08x\n",gb->dword);
+  fprintf(stderr,"orignal new loaded word is %08lx\n",gb->dword);
   gb->dword <<= (32 - gb->bits);
-  fprintf(stderr,"shifted (by %lu) word is %08x\n",gb->bits,gb->dword);
+  fprintf(stderr,"shifted (by %lu) word is %08lx\n",gb->bits,gb->dword);
 }
 
 void getbits_byteback_int(gst_getbits_t *gb,unsigned long bytes) {

@@ -71,6 +71,7 @@
 #define GST_RIFF_FCC_auds MAKE_FOUR_CC('a','u','d','s')
 #define GST_RIFF_FCC_pads MAKE_FOUR_CC('p','a','d','s')
 #define GST_RIFF_FCC_txts MAKE_FOUR_CC('t','x','t','s')
+#define GST_RIFF_FCC_vidc MAKE_FOUR_CC('v','i','d','c')
 /* fcc handlers */
 #define GST_RIFF_FCCH_RLE  MAKE_FOUR_CC('R','L','E',' ')
 #define GST_RIFF_FCCH_msvc MAKE_FOUR_CC('m','s','v','c')
@@ -184,6 +185,8 @@
 #define GST_RIFF_vyuy MAKE_FOUR_CC( 'v', 'y', 'u', 'y')
 #define GST_RIFF_VYUY MAKE_FOUR_CC( 'V', 'Y', 'U', 'Y')
 
+#define GST_RIFF_DIV3 MAKE_FOUR_CC( 'D', 'I', 'V', '3')
+
 #define GST_RIFF_rpza MAKE_FOUR_CC( 'r', 'p', 'z', 'a')
 /* And this here's the mistakes that need to be supported */
 #define GST_RIFF_azpr MAKE_FOUR_CC( 'a', 'z', 'p', 'r')  /* recognize Apple's rpza mangled? */
@@ -273,10 +276,14 @@ struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_YAMAHA_ADPCM   (0x0020)
 #define GST_RIFF_WAVE_FORMAT_DSP_TRUESPEECH (0x0022)
 #define GST_RIFF_WAVE_FORMAT_GSM610         (0x0031)
-#define GST_RIFF_WAVE_FORMAT_MPEG           (0x0055)
+#define GST_RIFF_WAVE_FORMAT_MSN            (0x0032)
+#define GST_RIFF_WAVE_FORMAT_MPEGL12        (0x0050)
+#define GST_RIFF_WAVE_FORMAT_MPEGL3         (0x0055)
 #define GST_RIFF_IBM_FORMAT_MULAW           (0x0101)
 #define GST_RIFF_IBM_FORMAT_ALAW            (0x0102)
 #define GST_RIFF_IBM_FORMAT_ADPCM           (0x0103)
+#define GST_RIFF_WAVE_FORMAT_DIVX           (0x0160)
+#define GST_RIFF_WAVE_FORMAT_divx           (0x0161)
   guint16 channels;
   guint32 rate;
   guint32 av_bps;
@@ -360,6 +367,7 @@ gint gst_riff_encoder_chunk(GstRiff *riff, guint32 chunk_type, void *chunk, gulo
 
 GstBuffer *gst_riff_encoder_get_buffer(GstRiff *riff);
 GstBuffer *gst_riff_encoder_get_and_reset_buffer(GstRiff *riff);
+
 /* from gstriffutil.c */
 gulong gst_riff_fourcc_to_id(gchar *fourcc);
 gchar *gst_riff_id_to_fourcc(gulong id);

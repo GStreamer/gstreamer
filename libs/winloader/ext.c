@@ -11,8 +11,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-
+#include <stdarg.h>
 #include <wine/windef.h>
+//#include <wine/winbase.h>
 int dbg_header_err( const char *dbg_channel, const char *func )
 {
     return 0; 
@@ -35,6 +36,12 @@ int dbg_vprintf( const char *format, ... )
 }
 int __vprintf( const char *format, ... )
 {
+#ifdef DETAILED_OUT
+    va_list va;
+    va_start(va, format);
+    vprintf(format, va);
+    va_end(va);
+#endif
     return 0; 
 }
     
@@ -56,17 +63,7 @@ int HeapFree(int heap, int flags, void* mem)
     free(mem);
     return 1;
 }     	
-/*
-void EnterCriticalSection(void* q)
-{
-    return;
-}
 
-void LeaveCriticalSection(void* q)
-{
-    return;
-}   
-*/
 static int last_error;
 
 int GetLastError()
@@ -155,7 +152,10 @@ int IsBadReadPtr(void* data, int size)
 }   
 char* HEAP_strdupA(const char* string)
 {
-    return strdup(string);
+//    return strdup(string);
+    char* answ=malloc(strlen(string)+1);
+    strcpy(answ, string);
+    return answ;
 }
 short* HEAP_strdupAtoW(void* heap, void* hz, const char* string)
 {
@@ -337,8 +337,7 @@ DWORD flProtect, DWORD dwMaxHigh, DWORD dwMaxLow, const char* name)
 	lseek(hFile, 0, SEEK_SET);
     }
     else len=dwMaxLow;
-//    len=min(len, dwMaxLow);
-#warning fixme - should analyze flProtect
+
     if(flProtect & PAGE_READONLY)
 	mmap_access |=PROT_READ;
     else
@@ -363,7 +362,10 @@ DWORD flProtect, DWORD dwMaxHigh, DWORD dwMaxLow, const char* name)
 	fm->next=NULL;    
 	fm->handle=answer;
 	if(name)
-	    fm->name=strdup(name);
+	{
+	    fm->name=malloc(strlen(name)+1);
+	    strcpy(fm->name, name);
+	}    
 	else
 	    fm->name=NULL;
 	fm->mapping_size=len;
@@ -397,16 +399,61 @@ int UnmapViewOfFile(HANDLE handle)
     }
     return 0;	
 }    
-static int va_size=0;
+//static int va_size=0;
+struct virt_alloc_s;
+typedef struct virt_alloc_s
+{
+    int mapping_size;
+    char* address;
+    struct virt_alloc_s* next;
+    struct virt_alloc_s* prev;
+    int state;
+}virt_alloc;
+static virt_alloc* vm=0;
+#define MEM_COMMIT              0x00001000
+#define MEM_RESERVE             0x00002000
+
 void* VirtualAlloc(void* address, DWORD size, DWORD type,  DWORD protection)
 {
     void* answer;
     int fd=open("/dev/zero", O_RDWR);
     size=(size+0xffff)&(~0xffff);
 //    printf("VirtualAlloc(0x%08X, %d)\n", address
+    if(address!=0)
+    {
+    //check whether we can allow to allocate this 
+        virt_alloc* str=vm;
+        while(str)
+        {
+	    if((unsigned)address>=(unsigned)str->address+str->mapping_size)
+	    {
+		str=str->prev;
+		continue;
+	    }	
+	    if((unsigned)address+size<(unsigned)str->address)
+	    {
+		str=str->prev;
+		continue;
+	    }
+	    if(str->state==0)
+	    {
+#warning FIXME
+		if(((unsigned)address+size<(unsigned)str->address+str->mapping_size) && (type & MEM_COMMIT))
+		{
+		    close(fd);
+		    return address; //returning previously reserved memory
+		}
+		return NULL;    
+	    }
+	    close(fd);
+	    return NULL;
+	}
+	answer=mmap(address, size, PROT_READ | PROT_WRITE | PROT_EXEC, 
+	    MAP_FIXED | MAP_PRIVATE, fd, 0);
+    }	    
+    else
     answer=mmap(address, size, PROT_READ | PROT_WRITE | PROT_EXEC, 
-//     ((address!=NULL) ? MAP_FIXED : MAP_SHARED), fd, 0);
-	MAP_PRIVATE, fd, 0);
+	 MAP_PRIVATE, fd, 0);
 //    answer=FILE_dommap(-1, address, 0, size, 0, 0,
 //	PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE);
      close(fd);
@@ -418,31 +465,60 @@ void* VirtualAlloc(void* address, DWORD size, DWORD type,  DWORD protection)
     }
     else
     {
-	if(va_size!=0)
-	    printf("Multiple VirtualAlloc!\n");	    
+	virt_alloc *new_vm=malloc(sizeof(virt_alloc));
+	new_vm->mapping_size=size;
+	new_vm->address=answer;
+        new_vm->prev=vm;
+	if(type & MEM_RESERVE)
+	    new_vm->state=0;
+	else
+	    new_vm->state=1;
+	if(vm)
+	    vm->next=new_vm;
+    	vm=new_vm;
+	vm->next=0;
+//	if(va_size!=0)
+//	    printf("Multiple VirtualAlloc!\n");	    
 //	printf("answer=0x%08x\n", answer);
-	va_size=size;
         return answer;
     }	
 }    	
 int VirtualFree(void*  address, int t1, int t2)//not sure
 {
-    int answer=munmap(address, va_size);
-    va_size=0;
-    return answer;
+    virt_alloc* str=vm;
+    int answer;
+    while(str)
+    {
+    if(address!=str->address)
+    {
+	str=str->prev;
+	continue;
+    }	
+    answer=munmap(str->address, str->mapping_size);
+    if(str->next)str->next->prev=str->prev;
+    if(str->prev)str->prev->next=str->next;
+    if(vm==str)vm=0;
+    free(str);
+    return 0;
+    }
+    return -1;
 }
 
 int WideCharToMultiByte(unsigned int codepage, long flags, const short* src,
      int srclen,char* dest, int destlen, const char* defch, int* used_defch)
 {
-#warning FIXME
     int i;
-//    printf("WCh2MB: Src string ");
-//    for(i=0; i<=srclen; i++)printf(" %04X", src[i]);
     if(src==0)
 	return 0;
     if(dest==0)
-	return 0;
+  {
+    for(i=0; i<srclen; i++)
+    {
+	src++;
+	if(*src==0)
+	    return i+1;
+    }	    
+    }	
     if(used_defch)
 	*used_defch=0;	
     for(i=0; i<min(srclen, destlen); i++)

@@ -5,12 +5,42 @@
  */
 
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
+
+#include <sys/mman.h>
+#include <sys/types.h>
+
+#ifdef __linux__
+#include <asm/unistd.h>
+#include <asm/ldt.h>
+#else
+#define LDT_ENTRIES     8192
+#define LDT_ENTRY_SIZE  8
+
+struct modify_ldt_ldt_s {
+        unsigned int  entry_number;
+        unsigned long base_addr;
+        unsigned int  limit;
+        unsigned int  seg_32bit:1;
+        unsigned int  contents:2;
+        unsigned int  read_exec_only:1;
+        unsigned int  limit_in_pages:1;
+        unsigned int  seg_not_present:1;
+        unsigned int  useable:1;
+};
+
+#define MODIFY_LDT_CONTENTS_DATA        0
+#define MODIFY_LDT_CONTENTS_STACK       1
+#define MODIFY_LDT_CONTENTS_CODE        2
+#define __NR_modify_ldt         123
+#endif
+
+
 #include <wine/windef.h>
 #include <wine/winerror.h>
 #include <wine/heap.h>
@@ -29,6 +59,132 @@ typedef struct modref_list_t
 modref_list;
 
 
+/***********************************************************************
+ *           LDT_EntryToBytes
+ *
+ * Convert an ldt_entry structure to the raw bytes of the descriptor.
+ */
+static void LDT_EntryToBytes( unsigned long *buffer, const struct modify_ldt_ldt_s *content )
+{
+    *buffer++ = ((content->base_addr & 0x0000ffff) << 16) |
+                 (content->limit & 0x0ffff);
+    *buffer = (content->base_addr & 0xff000000) |
+              ((content->base_addr & 0x00ff0000)>>16) |
+              (content->limit & 0xf0000) |
+              (content->contents << 10) |
+              ((content->read_exec_only == 0) << 9) |
+              ((content->seg_32bit != 0) << 22) |
+              ((content->limit_in_pages != 0) << 23) |
+              0xf000;
+}
+
+
+//
+// funcs:
+//
+// 0 read LDT
+// 1 write old mode
+// 0x11 write
+//
+static int modify_ldt( int func, struct modify_ldt_ldt_s *ptr,
+                                  unsigned long count )
+{
+    int res;
+#ifdef __PIC__
+    __asm__ __volatile__( "pushl %%ebx\n\t"
+                          "movl %2,%%ebx\n\t"
+                          "int $0x80\n\t"
+                          "popl %%ebx"
+                          : "=a" (res)
+                          : "0" (__NR_modify_ldt),
+                            "r" (func),
+                            "c" (ptr),
+                            "d" (sizeof(struct modify_ldt_ldt_s)*count) );
+#else
+    __asm__ __volatile__("int $0x80"
+                         : "=a" (res)
+                         : "0" (__NR_modify_ldt),
+                           "b" (func),
+                           "c" (ptr),
+                           "d" (sizeof(struct modify_ldt_ldt_s)*count) );
+#endif  /* __PIC__ */
+    if (res >= 0) return res;
+    errno = -res;
+    return -1;
+}
+static int fs_installed=0;
+static char* fs_seg=0;
+static int install_fs()
+{
+    struct modify_ldt_ldt_s array;
+    int fd;
+    int ret;
+    void* prev_struct;
+    
+    if(fs_installed)
+	return 0;
+
+    fd=open("/dev/zero", O_RDWR);
+    fs_seg=mmap((void*)0xbf000000, 0x30000, PROT_READ | PROT_WRITE, MAP_PRIVATE,
+	fd, 0);
+    if(fs_seg==0)
+    {
+	printf("ERROR: Couldn't allocate memory for fs segment\n");
+	return -1;
+    }	
+    array.base_addr=((int)fs_seg+0xffff) & 0xffff0000;
+    array.entry_number=0x1;
+    array.limit=array.base_addr+getpagesize()-1;
+    array.seg_32bit=1;
+    array.read_exec_only=0;
+    array.seg_not_present=0;
+    array.contents=MODIFY_LDT_CONTENTS_DATA;
+    array.limit_in_pages=0;
+#ifdef linux
+    ret=modify_ldt(0x1, &array, 1);
+    if(ret<0)
+    {
+	perror("install_fs");
+	MESSAGE("Couldn't install fs segment, expect segfault\n");
+    }	
+#endif /*linux*/
+
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+    {
+        long d[2];
+
+        LDT_EntryToBytes( d, &array );
+        ret = i386_set_ldt(0x1, (union descriptor *)d, 1);
+        if (ret < 0)
+        {
+            perror("install_fs");
+            MESSAGE("Did you reconfigure the kernel with \"options USER_LDT\"?\n");
+        }
+    }
+#endif  /* __NetBSD__ || __FreeBSD__ || __OpenBSD__ */
+    __asm__
+    (
+    "movl $0xf,%eax\n\t"
+    "pushw %ax\n\t"
+    "movw %ax, %fs\n\t"
+    );
+    prev_struct=malloc(8);
+    *(void**)array.base_addr=prev_struct;
+    printf("prev_struct: 0x%X\n", prev_struct);
+    close(fd);
+    
+    fs_installed=1;
+    return 0;
+};    	
+static int uninstall_fs()
+{
+    if(fs_seg==0)
+	return -1;
+    munmap(fs_seg, 0x30000);
+    return 0;
+}
+
+
 //WINE_MODREF *local_wm=NULL;
 modref_list* local_wm=NULL;
 
@@ -40,6 +196,7 @@ WINE_MODREF *MODULE_FindModule(LPCSTR m)
 	return NULL;
     while(strcmp(m, list->wm->filename))
     {
+	printf("%s: %x\n", list->wm->filename, list->wm->module);
 	list=list->prev;
 	if(list==NULL)
 	    return NULL;
@@ -59,6 +216,7 @@ void MODULE_RemoveFromList(WINE_MODREF *mod)
     {
 	free(list);
 	local_wm=NULL;
+	uninstall_fs();
 	return;
     }
     for(;list;list=list->prev)
@@ -241,330 +399,6 @@ void MODULE_DllProcessDetach( WINE_MODREF* wm, WIN_BOOL bForceDetach, LPVOID lpR
     MODULE_InitDll( wm, DLL_PROCESS_DETACH, lpReserved );
 }
 
-/*************************************************************************
- *		MODULE_DllThreadAttach
- * 
- * Send DLL thread attach notifications. These are sent in the
- * reverse sequence of process detach notification.
- *
- */
- /*
-void MODULE_DllThreadAttach( LPVOID lpReserved )
-{
-    WINE_MODREF *wm;
-
-    MODULE_InitDll( wm, DLL_THREAD_ATTACH, lpReserved );
-}*/
-
-/*************************************************************************
- *		MODULE_DllThreadDetach
- * 
- * Send DLL thread detach notifications. These are sent in the
- * same sequence as process detach notification.
- *
- */
- /*
-void MODULE_DllThreadDetach( LPVOID lpReserved )
-{
-    WINE_MODREF *wm;
-    MODULE_InitDll( wm, DLL_THREAD_DETACH, lpReserved );
-}
-*/
-
-/***********************************************************************
- *           MODULE_CreateDummyModule
- *
- * Create a dummy NE module for Win32 or Winelib.
- */
-HMODULE MODULE_CreateDummyModule( LPCSTR filename, HMODULE module32 )
-{
-    printf("MODULE_CreateDummyModule:: Not implemented\n");
-    return 0;
-}
-/*    
-HMODULE MODULE_CreateDummyModule( LPCSTR filename, HMODULE module32 )
-{
-    HMODULE hModule;
-    NE_MODULE *pModule;
-    SEGTABLEENTRY *pSegment;
-    char *pStr,*s;
-    unsigned int len;
-    const char* basename;
-    OFSTRUCT *ofs;
-    int of_size, size;
-
-    // Extract base filename 
-    basename = strrchr(filename, '\\');
-    if (!basename) basename = filename;
-    else basename++;
-    len = strlen(basename);
-    if ((s = strchr(basename, '.'))) len = s - basename;
-
-    // Allocate module 
-    of_size = sizeof(OFSTRUCT) - sizeof(ofs->szPathName)
-                    + strlen(filename) + 1;
-    size = sizeof(NE_MODULE) +
-                // loaded file info 
-                 of_size +
-                // segment table: DS,CS 
-                 2 * sizeof(SEGTABLEENTRY) +
-                 // name table 
-                 len + 2 +
-                 // several empty tables 
-                 8;
-
-    hModule = GlobalAlloc16( GMEM_MOVEABLE | GMEM_ZEROINIT, size );
-    if (!hModule) return (HMODULE)11;  // invalid exe 
-
-    FarSetOwner16( hModule, hModule );
-    pModule = (NE_MODULE *)GlobalLock16( hModule );
-
-    // Set all used entries 
-    pModule->magic            = IMAGE_OS2_SIGNATURE;
-    pModule->count            = 1;
-    pModule->next             = 0;
-    pModule->flags            = 0;
-    pModule->dgroup           = 0;
-    pModule->ss               = 1;
-    pModule->cs               = 2;
-    pModule->heap_size        = 0;
-    pModule->stack_size       = 0;
-    pModule->seg_count        = 2;
-    pModule->modref_count     = 0;
-    pModule->nrname_size      = 0;
-    pModule->fileinfo         = sizeof(NE_MODULE);
-    pModule->os_flags         = NE_OSFLAGS_WINDOWS;
-    pModule->self             = hModule;
-    pModule->module32         = module32;
-
-    // Set version and flags 
-    if (module32)
-    {
-        pModule->expected_version =
-            ((PE_HEADER(module32)->OptionalHeader.MajorSubsystemVersion & 0xff) << 8 ) |
-             (PE_HEADER(module32)->OptionalHeader.MinorSubsystemVersion & 0xff);
-        pModule->flags |= NE_FFLAGS_WIN32;
-        if (PE_HEADER(module32)->FileHeader.Characteristics & IMAGE_FILE_DLL)
-            pModule->flags |= NE_FFLAGS_LIBMODULE | NE_FFLAGS_SINGLEDATA;
-    }
-
-    // Set loaded file information 
-    ofs = (OFSTRUCT *)(pModule + 1);
-    memset( ofs, 0, of_size );
-    ofs->cBytes = of_size < 256 ? of_size : 255;   // FIXME 
-    strcpy( ofs->szPathName, filename );
-
-    pSegment = (SEGTABLEENTRY*)((char*)(pModule + 1) + of_size);
-    pModule->seg_table = (int)pSegment - (int)pModule;
-    // Data segment
-    pSegment->size    = 0;
-    pSegment->flags   = NE_SEGFLAGS_DATA;
-    pSegment->minsize = 0x1000;
-    pSegment++;
-    // Code segment
-    pSegment->flags   = 0;
-    pSegment++;
-
-    // Module name 
-    pStr = (char *)pSegment;
-    pModule->name_table = (int)pStr - (int)pModule;
-    assert(len<256);
-    *pStr = len;
-    lstrcpynA( pStr+1, basename, len+1 );
-    pStr += len+2;
-
-    // All tables zero terminated 
-    pModule->res_table = pModule->import_table = pModule->entry_table =
-		(int)pStr - (int)pModule;
-
-    NE_RegisterModule( pModule );
-    return hModule;
-}
-
-*/
-
-/***********************************************************************
- *           MODULE_GetBinaryType
- *
- * The GetBinaryType function determines whether a file is executable
- * or not and if it is it returns what type of executable it is.
- * The type of executable is a property that determines in which
- * subsystem an executable file runs under.
- *
- * Binary types returned:
- * SCS_32BIT_BINARY: A Win32 based application
- * SCS_DOS_BINARY: An MS-Dos based application
- * SCS_WOW_BINARY: A Win16 based application
- * SCS_PIF_BINARY: A PIF file that executes an MS-Dos based app
- * SCS_POSIX_BINARY: A POSIX based application ( Not implemented )
- * SCS_OS216_BINARY: A 16bit OS/2 based application
- *
- * Returns TRUE if the file is an executable in which case
- * the value pointed by lpBinaryType is set.
- * Returns FALSE if the file is not an executable or if the function fails.
- *
- * To do so it opens the file and reads in the header information
- * if the extended header information is not present it will
- * assume that the file is a DOS executable.
- * If the extended header information is present it will
- * determine if the file is a 16 or 32 bit Windows executable
- * by check the flags in the header.
- *
- * Note that .COM and .PIF files are only recognized by their
- * file name extension; but Windows does it the same way ...
- */
- /*
-static WIN_BOOL MODULE_GetBinaryType( HANDLE hfile, LPCSTR filename,
-                                  LPDWORD lpBinaryType )
-{
-    IMAGE_DOS_HEADER mz_header;
-    char magic[4], *ptr;
-    DWORD len;
-
-    // Seek to the start of the file and read the DOS header information.
-    if (    SetFilePointer( hfile, 0, NULL, SEEK_SET ) != -1  
-         && ReadFile( hfile, &mz_header, sizeof(mz_header), &len, NULL )
-         && len == sizeof(mz_header) )
-    {
-        // Now that we have the header check the e_magic field
-         // to see if this is a dos image.
-         //
-        if ( mz_header.e_magic == IMAGE_DOS_SIGNATURE )
-        {
-            WIN_BOOL lfanewValid = FALSE;
-            // We do have a DOS image so we will now try to seek into
-            // the file by the amount indicated by the field
-            // "Offset to extended header" and read in the
-            // "magic" field information at that location.
-            // This will tell us if there is more header information
-            // to read or not.
-            //
-            // But before we do we will make sure that header
-             // structure encompasses the "Offset to extended header"
-             // field.
-             //
-            if ( (mz_header.e_cparhdr<<4) >= sizeof(IMAGE_DOS_HEADER) )
-                if ( ( mz_header.e_crlc == 0 ) ||
-                     ( mz_header.e_lfarlc >= sizeof(IMAGE_DOS_HEADER) ) )
-                    if (    mz_header.e_lfanew >= sizeof(IMAGE_DOS_HEADER)
-                         && SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET ) != -1  
-                         && ReadFile( hfile, magic, sizeof(magic), &len, NULL )
-                         && len == sizeof(magic) )
-                        lfanewValid = TRUE;
-
-            if ( !lfanewValid )
-            {
-                // If we cannot read this "extended header" we will
-                 // assume that we have a simple DOS executable.
-                 //
-                *lpBinaryType = SCS_DOS_BINARY;
-                return TRUE;
-            }
-            else
-            {
-                // Reading the magic field succeeded so
-                // we will try to determine what type it is.
-                 //
-                if ( *(DWORD*)magic      == IMAGE_NT_SIGNATURE )
-                {
-                    // This is an NT signature.
-                     //
-                    *lpBinaryType = SCS_32BIT_BINARY;
-                    return TRUE;
-                }
-                else if ( *(WORD*)magic == IMAGE_OS2_SIGNATURE )
-                {
-                    // The IMAGE_OS2_SIGNATURE indicates that the
-                    // "extended header is a Windows executable (NE)
-                    // header."  This can mean either a 16-bit OS/2
-                    // or a 16-bit Windows or even a DOS program 
-                    // (running under a DOS extender).  To decide
-                    // which, we'll have to read the NE header.
-                    ///
-
-                     IMAGE_OS2_HEADER ne;
-                     if (    SetFilePointer( hfile, mz_header.e_lfanew, NULL, SEEK_SET ) != -1  
-                          && ReadFile( hfile, &ne, sizeof(ne), &len, NULL )
-                          && len == sizeof(ne) )
-                     {
-                         switch ( ne.ne_exetyp )
-                         {
-                         case 2:  *lpBinaryType = SCS_WOW_BINARY;   return TRUE;
-                         case 5:  *lpBinaryType = SCS_DOS_BINARY;   return TRUE;
-                         default: *lpBinaryType = SCS_OS216_BINARY; return TRUE;
-                         }
-                     }
-                     // Couldn't read header, so abort. 
-                     return FALSE;
-                }
-                else
-                {
-                    // Unknown extended header, but this file is nonetheless
-		     //  DOS-executable.
-                     //
-                    *lpBinaryType = SCS_DOS_BINARY;
-	            return TRUE;
-                }
-            }
-        }
-    }
-
-    // If we get here, we don't even have a correct MZ header.
-    // Try to check the file extension for known types ...
-     //
-    ptr = strrchr( filename, '.' );
-    if ( ptr && !strchr( ptr, '\\' ) && !strchr( ptr, '/' ) )
-    {
-        if ( !lstrcmpiA( ptr, ".COM" ) )
-        {
-            *lpBinaryType = SCS_DOS_BINARY;
-            return TRUE;
-        }
-
-        if ( !lstrcmpiA( ptr, ".PIF" ) )
-        {
-            *lpBinaryType = SCS_PIF_BINARY;
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-*/
-/***********************************************************************
- *             GetBinaryTypeA                     [KERNEL32.280]
- */
-/*
-WIN_BOOL WINAPI GetBinaryTypeA( LPCSTR lpApplicationName, LPDWORD lpBinaryType )
-{
-    WIN_BOOL ret = FALSE;
-    HANDLE hfile;
-
-    TRACE_(win32)("%s\n", lpApplicationName );
-
-    // Sanity check.
-    
-    if ( lpApplicationName == NULL || lpBinaryType == NULL )
-        return FALSE;
-
-    // Open the file indicated by lpApplicationName for reading.
-     
-    hfile = CreateFileA( lpApplicationName, GENERIC_READ, 0,
-                         NULL, OPEN_EXISTING, 0, -1 );
-    if ( hfile == INVALID_HANDLE_VALUE )
-        return FALSE;
-
-    // Check binary type
-     
-    ret = MODULE_GetBinaryType( hfile, lpApplicationName, lpBinaryType );
-
-    // Close the file.
-     
-    CloseHandle( hfile );
-
-    return ret;
-}
-*/
 
 /***********************************************************************
  *           LoadLibraryExA   (KERNEL32)
@@ -578,7 +412,9 @@ HMODULE WINAPI LoadLibraryExA(LPCSTR libname, HANDLE hfile, DWORD flags)
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return 0;
 	}
-
+	if(fs_installed==0)
+	    install_fs();
+	    
 
 	wm = MODULE_LoadLibraryExA( libname, hfile, flags );
 	if ( wm )
@@ -619,11 +455,13 @@ WINE_MODREF *MODULE_LoadLibraryExA( LPCSTR libname, HFILE hfile, DWORD flags )
         SetLastError( ERROR_FILE_NOT_FOUND );
 	TRACE("Trying native dll '%s'\n", libname);
 	pwm = PE_LoadLibraryExA(libname, flags);
+#ifdef HAVE_LIBDL
 	if(!pwm)
 	{
     	    TRACE("Trying ELF dll '%s'\n", libname);
-	    pwm=ELFDLL_LoadLibraryExA(libname, flags);
+	    pwm=(WINE_MODREF*)ELFDLL_LoadLibraryExA(libname, flags);
 	}	
+#endif	
 //		printf("0x%08x\n", pwm);
 //		break;
 	if(pwm)
@@ -761,10 +599,12 @@ FARPROC MODULE_GetProcAddress(
      	retproc = PE_FindExportedFunction( wm, function, snoop );
 	if (!retproc) SetLastError(ERROR_PROC_NOT_FOUND);
 	return retproc;
+#ifdef HAVE_LIBDL	
     case MODULE32_ELF:
-	retproc = dlsym( wm->module, function);
+	retproc = (FARPROC) dlsym( wm->module, function);
 	if (!retproc) SetLastError(ERROR_PROC_NOT_FOUND);
 	return retproc;
+#endif
     default:
     	ERR("wine_modref type %d not handled.\n",wm->type);
     	SetLastError(ERROR_INVALID_HANDLE);

@@ -63,7 +63,7 @@ void gst_putbits(gst_putbits_t *pb, int val, int n)
   int i;
   unsigned int mask;
 
-  //printf("putbits: %d %d %ld\n", val, n, pb->outcnt);
+  //printf("putbits: %d %d %ld %ld\n", val, n, pb->outcnt, pb->newlen);
   mask = 1 << (n-1); /* selects first (leftmost) bit */
 
   for (i=0; i<n; i++)

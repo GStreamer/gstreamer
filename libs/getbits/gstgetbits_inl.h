@@ -277,7 +277,7 @@ extern unsigned long gst_getbits_nBitMask[];
 }
 
 
-#define gst_flushbits(gb, num)                                          \
+#define gst_flushbitsn(gb, num)                                         \
 {                                                                       \
   (gb)->bits += num;                                      		\
                                                                       	\

@@ -3,6 +3,9 @@
  *
  * Copyright 1999 Bertho A. Stultiens
  */
+#include <config.h>
+
+#ifdef HAVE_LIBDL
 
 #include <string.h>
 #include <ctype.h>
@@ -42,7 +45,7 @@ extern DWORD fixup_imports(WINE_MODREF *wm);
 extern void dump_exports(HMODULE hModule);
 /*---------------- END HACKS ---------------*/
 
-char *extra_ld_library_path = NULL;	/* The extra search-path set in wine.conf */
+char *extra_ld_library_path = "/usr/lib/win32";
 
 struct elfdll_image
 {
@@ -201,7 +204,8 @@ static WINE_MODREF *ELFDLL_CreateModref(HMODULE hModule, LPCSTR path)
 //		wm->binfmt.pe.pe_resource = (PIMAGE_RESOURCE_DIRECTORY)RVA(hModule, dir->VirtualAddress);
 
 
-	wm->filename = strdup( path );
+	wm->filename = malloc(strlen(path)+1);
+	strcpy(wm->filename, path);
 	wm->modname = strrchr( wm->filename, '\\' );
 	if (!wm->modname) wm->modname = wm->filename;
 	else wm->modname++;
@@ -275,7 +279,7 @@ WINE_MODREF *ELFDLL_LoadLibraryExA(LPCSTR path, DWORD flags)
 	}
 
 */
-	wm = ELFDLL_CreateModref(dlhandle, path);
+	wm = ELFDLL_CreateModref((int)dlhandle, path);
 	if(!wm)
 	{
 		ERR("Could not create WINE_MODREF for %s\n", path);
@@ -297,4 +301,4 @@ void ELFDLL_UnloadLibrary(WINE_MODREF *wm)
 {
 }
 
-
+#endif /*HAVE_LIBDL*/
