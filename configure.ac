@@ -697,6 +697,7 @@ testsuite/schedulers/Makefile
 testsuite/states/Makefile
 testsuite/tags/Makefile
 testsuite/threads/Makefile
+testsuite/trigger/Makefile
 examples/Makefile
 examples/cutter/Makefile
 examples/helloworld/Makefile

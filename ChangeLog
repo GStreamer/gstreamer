@@ -1,3 +1,10 @@
+2005-03-29  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* testsuite/trigger/Makefile.am:
+	* testsuite/trigger/trigger.c: A little example program to show
+	how trigger-based elements can work.
+
 2005-03-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/Makefile.am:
