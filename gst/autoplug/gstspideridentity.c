@@ -560,7 +560,7 @@ gst_spider_identity_handle_src_event (GstPad *pad, GstEvent *event)
 	return TRUE;
       }
     default:
-      gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, event);
       break;
   }
 
