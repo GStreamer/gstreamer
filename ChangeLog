@@ -1,3 +1,7 @@
+2005-01-22  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Add --disable-valgrind. (partial fix for #164890)
+
 2005-01-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:

@@ -429,7 +429,14 @@ esac],
 [USE_DEBUG=yes]) dnl Default value
 
 dnl valgrind inclusion
-USE_VALGRIND="$USE_DEBUG"
+AC_ARG_ENABLE(valgrind,
+AC_HELP_STRING([--disable-valgrind],[disable run-time valgrind detection]),
+[case "${enableval}" in
+  yes) USE_VALGRIND="$USE_DEBUG" ;;
+  no)  USE_VALGRIND=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-valgrind) ;;
+esac],
+[USE_VALGRIND="$USE_DEBUG"]) dnl Default value
 VALGRIND_REQ="2.1"
 if test "x$USE_VALGRIND" = xyes; then
 
