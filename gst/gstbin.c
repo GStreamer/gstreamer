@@ -765,9 +765,9 @@ gst_bin_create_plan_func (GstBin *bin)
 
   gst_bin_schedule(bin);
 
-  g_print ("gstbin \"%s\", eos providers:%d\n",
-		  GST_ELEMENT_NAME (bin),
-		  bin->num_eos_providers);
+//  g_print ("gstbin \"%s\", eos providers:%d\n",
+//		  GST_ELEMENT_NAME (bin),
+//		  bin->num_eos_providers);
 
   GST_DEBUG_LEAVE("(\"%s\")",GST_ELEMENT_NAME (bin));
 }
