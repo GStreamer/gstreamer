@@ -362,6 +362,11 @@ gst_a52dec_handle_event (GstA52Dec *a52dec)
 
   gst_bytestream_get_status (a52dec->bs, &remaining, &event);
 
+  if (!event) {
+    g_warning ("a52dec: no bytestream event");
+    return;
+  }
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
       gst_bytestream_flush_fast (a52dec->bs, remaining);
