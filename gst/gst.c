@@ -190,18 +190,58 @@ gst_init_with_popt_table (int *argc, char **argv[],
   gint nextopt, i, j, nstrip;
   gchar **temp;
   const struct poptOption *options;
-  /* this is probably hacky, no? */
-  const struct poptOption options_with[] = {
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) popt_options, 		 0, "Application options:", NULL},
-    POPT_TABLEEND
+  struct poptOption options_with[] = {
+     POPT_TABLEEND,
+     POPT_TABLEEND,
+     POPT_TABLEEND,
+     POPT_TABLEEND
   };
-  const struct poptOption options_without[] = {
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (struct poptOption *) gst_init_get_popt_table(), 0, "GStreamer options:", NULL},
-    POPT_TABLEEND
+  struct poptOption options_without[] = {
+     POPT_TABLEEND,
+     POPT_TABLEEND,
+     POPT_TABLEEND
   };
+
+  /* This used to be done by struct initialization, but most
+   * compilers don't like calling functions in a struct
+   * initialization.  (It's a GCC extension.)  FIXME: This should
+   * be reworked to look better. */
+  options_with[0].longName   = NULL;
+  options_with[0].shortName  = NUL;
+  options_with[0].argInfo    = POPT_ARG_INCLUDE_TABLE;
+  options_with[0].arg        = poptHelpOptions;
+  options_with[0].val        = 0;
+  options_with[0].descrip    = "Help options:";
+  options_with[0].argDescrip = NULL;
+  options_with[1].longName   = NULL;
+  options_with[1].shortName  = NUL;
+  options_with[1].argInfo    = POPT_ARG_INCLUDE_TABLE;
+  options_with[1].arg        = (struct poptOption *) gst_init_get_popt_table();
+  options_with[1].val        = 0;
+  options_with[1].descrip    = "GStreamer options:";
+  options_with[1].argDescrip = NULL;
+  options_with[2].longName   = NULL;
+  options_with[2].shortName  = NUL;
+  options_with[2].argInfo    = POPT_ARG_INCLUDE_TABLE;
+  options_with[2].arg        = (struct poptOption *) popt_options;
+  options_with[2].val        = 0;
+  options_with[2].descrip    = "Application options:";
+  options_with[2].argDescrip = NULL;
+
+  options_without[0].longName   = NULL;
+  options_without[0].shortName  = NUL;
+  options_without[0].argInfo    = POPT_ARG_INCLUDE_TABLE;
+  options_without[0].arg        = poptHelpOptions;
+  options_without[0].val        = 0;
+  options_without[0].descrip    = "Help options:";
+  options_without[0].argDescrip = NULL;
+  options_without[1].longName   = NULL;
+  options_without[1].shortName  = NUL;
+  options_without[1].argInfo    = POPT_ARG_INCLUDE_TABLE;
+  options_without[1].arg        = (struct poptOption *) gst_init_get_popt_table();
+  options_without[1].val        = 0;
+  options_without[1].descrip    = "GStreamer options:";
+  options_without[1].argDescrip = NULL;
 
   if (gst_initialized)
   {
