@@ -409,7 +409,7 @@ gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static GstBuffer *
-gst_ogg_mux_next_buffer (GstOggPad * pad)
+gst_ogg_mux_next_buffer (GstOggPad * pad, gboolean * interrupt)
 {
   GstData *data = NULL;
 
@@ -429,6 +429,9 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
         case GST_EVENT_EOS:
           pad->eos = TRUE;
           gst_event_unref (event);
+          return NULL;
+        case GST_EVENT_INTERRUPT:
+          *interrupt = TRUE;
           return NULL;
         case GST_EVENT_DISCONTINUOUS:
         {
@@ -560,7 +563,7 @@ gst_ogg_mux_compare_pads (GstOggMux * ogg_mux, GstOggPad * old, GstOggPad * new)
 /* make sure a buffer is queued on all pads, returns a pointer to an oggpad
  * that holds the best buffer or NULL when no pad was usable */
 static GstOggPad *
-gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
+gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * interrupt)
 {
   GstOggPad *bestpad = NULL;
   GSList *walk;
@@ -577,7 +580,9 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
     /* try to get a new buffer for this pad if needed and possible */
     if (pad->buffer == NULL && GST_PAD_IS_USABLE (pad->pad)) {
-      pad->buffer = gst_ogg_mux_next_buffer (pad);
+      pad->buffer = gst_ogg_mux_next_buffer (pad, interrupt);
+      if (*interrupt)
+        return NULL;
       /* no next buffer, try another pad */
       if (pad->buffer == NULL)
         continue;
@@ -850,11 +855,13 @@ gst_ogg_mux_loop (GstElement * element)
   GstOggMux *ogg_mux;
   GstOggPad *best;
   gboolean delta_unit;
+  gboolean interrupt = FALSE;
 
   ogg_mux = GST_OGG_MUX (element);
 
-  best = gst_ogg_mux_queue_pads (ogg_mux);
-
+  best = gst_ogg_mux_queue_pads (ogg_mux, &interrupt);
+  if (interrupt)
+    return;
 
   /* we're pulling a pad and there is a better one, see if we need
    * to flush the current page */
@@ -916,7 +923,9 @@ gst_ogg_mux_loop (GstElement * element)
     buf = pad->buffer;
     if (buf == NULL) {
       /* no buffer, get one, and store in the pad so we free it later on */
-      buf = pad->buffer = gst_ogg_mux_next_buffer (pad);
+      buf = pad->buffer = gst_ogg_mux_next_buffer (pad, &interrupt);
+      if (interrupt)
+        return;
       /* data exhausted on this pad (EOS) */
       if (buf == NULL) {
         /* stop pulling from the pad */
@@ -939,7 +948,9 @@ gst_ogg_mux_loop (GstElement * element)
     packet.packetno = pad->packetno++;
 
     /* read ahead one more buffer to find EOS */
-    tmpbuf = gst_ogg_mux_next_buffer (pad);
+    tmpbuf = gst_ogg_mux_next_buffer (pad, &interrupt);
+    if (interrupt)
+      return;
     /* data exhausted on this pad */
     if (tmpbuf == NULL) {
       /* stop pulling from the pad */
