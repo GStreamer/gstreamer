@@ -412,7 +412,9 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
 dnl *** avifile ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
 GST_CHECK_FEATURE(AVIFILE, [avifile], winenc windec, [
-  AS_AVIFILE(0.7.0)
+  if test "x$HAVE_CXX" = "xyes"; then
+    AS_AVIFILE(0.7.0)
+  fi
 ])
 
 dnl *** CDParanoia ***
