@@ -179,11 +179,11 @@ esac],
 AC_ARG_ENABLE(plugin-srcdir,
 [  --enable-plugin-srcdir       allow tests/demos to use non-installed plugins ],
 [case "${enableval}" in
-  yes) plugins_use_srcdir=yes ;;
-  no)  plugins_use_srcdir=no ;;
+  yes) PLUGINS_USE_SRCDIR=yes ;;
+  no)  PLUGINS_USE_SRCDIR=no ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-srcdir) ;;
 esac], 
-[plugins_use_srcdir=yes]) dnl Default value
+[PLUGINS_USE_SRCDIR=yes]) dnl Default value
 
 AC_ARG_ENABLE(debug,
 [  --enable-debug               spews lots of useless info at runtime],
