@@ -57,6 +57,17 @@ library itself becomes around 10% smaller.
 </para>
 
 <para>
+The default category that is used when no other category is defined as the
+default. If you want to define a default category, do it like this:
+<informalexample>
+<programlisting>
+&hash;define GST_CAT_DEFAULT category_to_be_default
+</programlisting>
+</informalexample>
+</para>
+
+
+<para>
 Please note that there are naming conventions for the names of debugging 
 categories. These are explained at GST_DEBUG_CATEGORY_INIT().
 </para>
@@ -481,18 +492,6 @@ output with the function name of the message.
 
 @colorinfo: 
 @Returns: 
-
-
-<!-- ##### VARIABLE GST_CAT_DEFAULT ##### -->
-<para>
-The default category that is used when no other category is defined as the
-default. If you want to define a default category, do it like this:
-<informalexample>
-<programlisting>
-&hash;define GST_CAT_DEFAULT category_to_be_default
-</programlisting>
-</informalexample>
-</para>
 
 
 <!-- ##### MACRO GST_CAT_LEVEL_LOG ##### -->
