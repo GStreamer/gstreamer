@@ -346,7 +346,9 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
   const mpeg2_picture_t *picture;
 
   if (mpeg2dec->format == MPEG2DEC_FORMAT_I422) {
-    outbuf = gst_buffer_new_and_alloc (size * 2);
+    outbuf =
+        gst_pad_alloc_buffer (mpeg2dec->srcpad, GST_BUFFER_OFFSET_NONE,
+        size * 2);
 
     out = GST_BUFFER_DATA (outbuf);
 
@@ -355,7 +357,9 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
     buf[2] = buf[1] + size / 2;
 
   } else {
-    outbuf = gst_buffer_new_and_alloc ((size * 3) / 2);
+    outbuf =
+        gst_pad_alloc_buffer (mpeg2dec->srcpad, GST_BUFFER_OFFSET_NONE,
+        (size * 3) / 2);
 
     out = GST_BUFFER_DATA (outbuf);
 
