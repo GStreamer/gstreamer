@@ -187,13 +187,6 @@ GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
 ])
 AC_SUBST(USE_GLIB2)
 
-dnl FIXME: check for gtk2 and gnome2 - these conditionals are currently
-dnl always false.
-AM_CONDITIONAL(USE_GTK2, test "x$USE_GTK2" = "xyes")
-AC_SUBST(USE_GTK2)
-AM_CONDITIONAL(USE_GNOME2, test "x$USE_GNOME2" = "xyes")
-AC_SUBST(USE_GNOME2)
-
 if test x$USE_GLIB2 = xno; then
   dnl Check for glib and gtk
   AM_PATH_GLIB(1.2.0,,
@@ -201,11 +194,24 @@ if test x$USE_GLIB2 = xno; then
               glib gmodule gthread)
   AM_PATH_GTK(1.2.0,,
               AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
+  HAVE_GTK=yes
 
   CORE_LIBS="$CORE_LIBS $GLIB_LIBS $GTK_LIBS"
   CORE_CFLAGS="$CORE_CFLAGS $GLIB_CFLAGS $GTK_CFLAGS"
+else
+  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
+
+  GTK_FLAGS=$GTK2_CFLAGS
+  GTK_LIBS=$GTK2_LIBS
+
+  dnl FIXME: check for  gnome2 - this conditional is currently
+  dnl always false.
+  AM_CONDITIONAL(USE_GNOME2, test "x$USE_GNOME2" = "xyes")
+  AC_SUBST(USE_GNOME2)
 fi
 
+AC_SUBST(GTK_LIBS)
+AC_SUBST(GTK_CFLAGS)
 
 dnl Check for libxml
 AC_PATH_PROG(XML_CONFIG, xml-config, no)
@@ -899,6 +905,10 @@ else
   FOMIT_FRAME_POINTER="-fomit-frame-pointer"
 fi
 
+dnl
+dnl AC_SUBST(FOMIT_FRAME_POINTER)
+dnl
+
 if test "x$HAVE_LIBXV" = xyes; then
   AC_DEFINE(HAVE_LIBXV)
 fi
@@ -991,6 +1001,7 @@ AM_CONDITIONAL(HAVE_NASM,           test "x$HAVE_NASM" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGLADE_GNOME, test "x$HAVE_LIBGLADE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXV,          test "x$HAVE_LIBXV" = "xyes")
+AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
