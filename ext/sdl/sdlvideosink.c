@@ -1,5 +1,5 @@
 /* GStreamer SDL plugin
- * Copyright (C) 2001 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -312,8 +312,6 @@ gst_sdlvideosink_sinkconnect (GstPad  *pad,
   }
 
   /* if we got here - it's not good */
-  gst_element_error(GST_ELEMENT(sdlvideosink),
-    "Failed to find acceptable caps");
   return GST_PAD_CONNECT_REFUSED;
 }
 
