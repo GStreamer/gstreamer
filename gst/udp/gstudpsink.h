@@ -76,6 +76,8 @@ struct _GstUDPSink {
   Gst_UDP_Control control;
   gchar *host;
     
+  guint mtu;
+    
   GstClock *clock;
 };
 

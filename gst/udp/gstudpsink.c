@@ -46,7 +46,8 @@ enum {
   ARG_0,
   ARG_HOST,
   ARG_PORT,
-  ARG_CONTROL
+  ARG_CONTROL,
+  ARG_MTU
   /* FILL ME */
 };
 
@@ -127,6 +128,9 @@ gst_udpsink_class_init (GstUDPSink *klass)
   g_object_class_install_property (gobject_class, ARG_CONTROL,
     g_param_spec_enum ("control", "control", "The type of control",
                        GST_TYPE_UDPSINK_CONTROL, CONTROL_UDP, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MTU, 
+		  g_param_spec_int ("mtu", "mtu", "mtu", G_MININT, G_MAXINT, 
+			  0, G_PARAM_READWRITE)); /* CHECKME */
 
   gobject_class->set_property = gst_udpsink_set_property;
   gobject_class->get_property = gst_udpsink_get_property;
@@ -245,6 +249,7 @@ gst_udpsink_init (GstUDPSink *udpsink)
   udpsink->host = g_strdup (UDP_DEFAULT_HOST);
   udpsink->port = UDP_DEFAULT_PORT;
   udpsink->control = CONTROL_UDP;
+  udpsink->mtu = 1024;
   
   udpsink->clock = NULL;
 }
@@ -253,7 +258,7 @@ static void
 gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstUDPSink *udpsink;
-  int tolen;
+  guint tolen, i;
   GstClockTimeDiff *jitter = NULL;
 
   g_return_if_fail (pad != NULL);
@@ -266,14 +271,25 @@ gst_udpsink_chain (GstPad *pad, GstBuffer *buf)
     GST_DEBUG (0, "udpsink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP (buf));
     gst_element_clock_wait (GST_ELEMENT (udpsink), udpsink->clock, GST_BUFFER_TIMESTAMP (buf), jitter);
   }
-
+  
   tolen = sizeof(udpsink->theiraddr);
-
-  if (sendto (udpsink->sock, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 0, 
-			  (struct sockaddr *) &udpsink->theiraddr, tolen) == -1)
-  {
-    perror("sending");
-  } 
+  
+  for (i = 0; i < GST_BUFFER_SIZE (buf); i += udpsink->mtu) {
+    if (GST_BUFFER_SIZE (buf) - i > udpsink->mtu) {
+  	if (sendto (udpsink->sock, GST_BUFFER_DATA (buf) + i, 
+	    udpsink->mtu, 0, (struct sockaddr *) &udpsink->theiraddr, 
+	    tolen) == -1) {
+    		perror("sending");
+  	} 
+    }
+    else {
+  	if (sendto (udpsink->sock, GST_BUFFER_DATA (buf) + i, 
+	    GST_BUFFER_SIZE (buf) -i, 0, 
+	    (struct sockaddr *) &udpsink->theiraddr, tolen) == -1) {
+    		perror("sending");
+  	} 
+    }
+  }
 
   gst_buffer_unref(buf);
 }
@@ -301,6 +317,9 @@ gst_udpsink_set_property (GObject *object, guint prop_id, const GValue *value, G
     case ARG_CONTROL:
         udpsink->control = g_value_get_enum (value);
       break;
+    case ARG_MTU:
+      udpsink->mtu = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -324,6 +343,9 @@ gst_udpsink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       break;
     case ARG_CONTROL:
       g_value_set_enum (value, udpsink->control);
+      break;
+    case ARG_MTU:
+      g_value_set_int (value, udpsink->mtu);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
