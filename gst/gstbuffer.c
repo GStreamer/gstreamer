@@ -27,6 +27,8 @@
 #include "gstbuffer.h"
 
 
+GType _gst_buffer_type;
+
 static GMemChunk *_gst_buffer_chunk;
 static GMutex *_gst_buffer_chunk_lock;
 
@@ -34,6 +36,17 @@ void
 _gst_buffer_initialize (void) 
 {
   int buffersize = sizeof(GstBuffer);
+  static const GTypeInfo buffer_info = {
+    0, // sizeof(class),
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0, // sizeof(object),
+    0,
+    NULL,
+  };
 
   // round up to the nearest 32 bytes for cache-line and other efficiencies
   buffersize = (((buffersize-1) / 32) + 1) * 32;
@@ -42,6 +55,8 @@ _gst_buffer_initialize (void)
     buffersize * 32, G_ALLOC_AND_FREE);
 
   _gst_buffer_chunk_lock = g_mutex_new ();
+
+  _gst_buffer_type = g_type_register_static (G_TYPE_INT, "GstBuffer", &buffer_info, 0);
 }
 
 /**
@@ -60,6 +75,8 @@ gst_buffer_new(void)
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
+
+  GST_DATA_TYPE(buffer) = _gst_buffer_type;
 
   buffer->lock = g_mutex_new ();
 #ifdef HAVE_ATOMIC_H

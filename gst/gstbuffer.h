@@ -24,6 +24,7 @@
 #ifndef __GST_BUFFER_H__
 #define __GST_BUFFER_H__
 
+#include <gst/gstdata.h>
 #include <gst/gstobject.h>
 
 #ifdef HAVE_CONFIG_H
@@ -39,9 +40,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
+extern GType _gst_buffer_type;
 
-#define GST_BUFFER(buf) \
-  ((GstBuffer *)(buf))
+#define GST_TYPE_BUFFER		(_gst_buffer_type)
+#define GST_BUFFER(buf) 	((GstBuffer *)(buf))
+#define GST_IS_BUFFER(buf)	(GST_DATA_TYPE(buf) == GST_TYPE_BUFFER)
 
 #define GST_BUFFER_FLAGS(buf) \
   (GST_BUFFER(buf)->flags)
@@ -93,6 +96,8 @@ typedef void	(*GstBufferCopyFunc)	(GstBuffer *srcbuf,GstBuffer *dstbuf);
 #include <gst/gstbufferpool.h>
 
 struct _GstBuffer {
+  GstData data_type;
+
   /* locking */
   GMutex *lock;
 

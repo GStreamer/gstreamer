@@ -206,9 +206,9 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
 /**
  * gst_fakesink_chain:
  * @pad: the pad this faksink is connected to
- * @buf: the buffer that has to be absorbed
+ * @buffer: the buffer or event that has to be absorbed
  *
- * take the buffer from the pad and unref it without doing
+ * Take the buffer or event from the pad and unref it without doing
  * anything with it.
  */
 static void 
@@ -221,12 +221,16 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
+
+  if (GST_IS_EVENT(buf)) {
+    g_print("fakesink: have event!\n");
+  }
+
   if (!fakesink->silent)
     g_print("fakesink: chain   ******* (%s:%s)< (%d bytes, %lld) \n",
-		    GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
-  
-  g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0,
-                   buf);
+		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+
+  g_signal_emit (G_OBJECT (fakesink), gst_fakesink_signals[SIGNAL_HANDOFF], 0, buf);
 
   gst_buffer_unref (buf);
 }
@@ -248,4 +252,5 @@ gst_fakesink_event (GstPad *pad, GstEventType event, guint64 timestamp, guint32 
   if (event == GST_EVENT_EOS) {
     GST_DEBUG(GST_CAT_EVENT, "have EOS\n");
   }
+  return FALSE;
 }

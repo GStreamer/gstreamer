@@ -41,8 +41,9 @@ typedef enum {
 
 extern GType _gst_event_type;
 
+#define GST_TYPE_EVENT		(_gst_event_type)
 #define GST_EVENT(event)	((GstEvent*)(event))
-#define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == _gst_event_type)
+#define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == GST_TYPE_EVENT)
 
 #define GST_EVENT_TYPE(event)	(GST_EVENT(event)->type)
 

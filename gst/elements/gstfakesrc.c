@@ -334,8 +334,8 @@ gst_fakesrc_get(GstPad *pad)
   g_return_val_if_fail (GST_IS_FAKESRC (src), NULL);
 
   if (src->num_buffers == 0) {
-    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-    return NULL;
+    g_print("fakesrc: sending EOS\n");
+    return GST_BUFFER(gst_event_empty_new (GST_EVENT_EOS));
   }
   else {
     if (src->num_buffers > 0)
@@ -344,8 +344,8 @@ gst_fakesrc_get(GstPad *pad)
 
   if (src->eos) {
     GST_INFO (0, "fakesrc is setting eos on pad");
-    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-    return NULL;
+    g_print("fakesrc: sending EOS\n");
+    return GST_BUFFER(gst_event_empty_new (GST_EVENT_EOS));
   }
 
   buf = gst_buffer_new();
@@ -397,8 +397,7 @@ gst_fakesrc_loop(GstElement *element)
 
       if (src->eos) {
         GST_INFO (0, "fakesrc is setting eos on pad");
-        gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-        return;
+        gst_pad_push(pad, GST_BUFFER(gst_event_empty_new (GST_EVENT_EOS)));
       }
 
       buf = gst_buffer_new();

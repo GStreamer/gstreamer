@@ -52,6 +52,7 @@
 #include <gst/gstdparam.h>
 #include <gst/gstdparammanager.h>
 #include <gst/gsttimecache.h>
+#include <gst/gstevent.h>
 
 #include <gst/gstparse.h>
 #include <gst/gstextratypes.h>
