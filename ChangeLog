@@ -1,3 +1,19 @@
+2004-03-07  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbin.c (gst_bin_remove): Debugging fixes.
+
+	* gst/schedulers/gstoptimalscheduler.c (destroy_group): Assert
+	there are no links to other groups when a group is destroyed.
+	(gst_opt_scheduler_pad_unlink): If the unlink means an element is
+	removed from a group, make sure the link count to elements linked
+	to other pads is appropriately decremented. This really fixes
+	#135672.
+
+	The 1.60->1.61 patch has been reapplied in light of this fix.
+
+	* gst/gstelement.c (gst_element_dispose): Really protect against
+	multiple invocations this time.
+
 2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:
@@ -272,6 +288,7 @@
 	* docs/manual/debugging.xml:
         fix manual for new debugging system
 
+>>>>>>> 1.292
 2004-02-25  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (gst_pad_link_prepare): Re-add

@@ -2947,14 +2947,17 @@ gst_element_dispose (GObject *object)
   element->numpads = 0;
   if (element->state_mutex)
     g_mutex_free (element->state_mutex);
+  element->state_mutex = NULL;
   if (element->state_cond)
     g_cond_free (element->state_cond);
+  element->state_cond = NULL;
 
   if (element->prop_value_queue)
     g_async_queue_unref (element->prop_value_queue);
   element->prop_value_queue = NULL;
   if (element->property_mutex)
     g_mutex_free (element->property_mutex);
+  element->property_mutex = NULL;
 
   gst_object_replace ((GstObject **)&element->sched, NULL);
   gst_object_replace ((GstObject **)&element->clock, NULL);

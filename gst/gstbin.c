@@ -564,7 +564,8 @@ gst_bin_remove (GstBin *bin, GstElement *element)
 {
   GstBinClass *bclass;
 
-  GST_CAT_DEBUG (GST_CAT_PARENTAGE, "[%s]: trying to remove child %s", GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (element));
+  GST_CAT_DEBUG (GST_CAT_PARENTAGE, "[%s]: trying to remove child %s",
+                 GST_ELEMENT_NAME (bin), GST_ELEMENT_NAME (element));
 
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (GST_IS_ELEMENT (element));
