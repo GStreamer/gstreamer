@@ -387,7 +387,7 @@ mp3_type_find (GstTypeFind *tf, gpointer unused)
       size = GST_MP3_TYPEFIND_SYNC_SIZE;
     }
     if (*data == 0xFF) {
-      guint8* head_data;
+      guint8* head_data = NULL;
       guint layer, bitrate, samplerate, channels;
       guint found = 0; /* number of valid headers found */
       guint64 offset = skipped;
@@ -581,7 +581,7 @@ mpeg1_sys_type_find (GstTypeFind *tf, gpointer unused)
     if (IS_MPEG_HEADER (data)) {
       /* found packet start code */
       guint found = 0;
-      guint packet_size;
+      guint packet_size = 0;
       guint64 offset = skipped;
       
       while (found < GST_MPEG_TYPEFIND_TRY_HEADERS) {
