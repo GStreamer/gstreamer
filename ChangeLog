@@ -1,3 +1,9 @@
+2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gsttag.c: (_gst_tag_initialize):
+	* gst/gsttag.h:
+	  Add application tag (for encoding/muxing app).
+
 2004-01-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* autogen.sh:

@@ -240,6 +240,7 @@ GstTagList *	gst_event_tag_get_list		(GstEvent *		tag_event);
 #define GST_TAG_CONTACT			"contact"
 #define GST_TAG_LICENSE			"license"
 #define GST_TAG_PERFORMER		"performer"
+#define GST_TAG_APPLICATION             "application"
 #define GST_TAG_DURATION		"duration"
 #define GST_TAG_CODEC			"codec"
 #define GST_TAG_BITRATE			"bitrate"
