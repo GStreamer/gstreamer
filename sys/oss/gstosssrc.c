@@ -374,12 +374,27 @@ gst_osssrc_get (GstPad * pad)
   GST_BUFFER_SIZE (buf) = readbytes;
   GST_BUFFER_OFFSET (buf) = src->curoffset;
 
-  /* FIXME: we are falsely assuming that we are the master clock here */
-  GST_BUFFER_TIMESTAMP (buf) =
-      src->curoffset * GST_SECOND / GST_OSSELEMENT (src)->bps;
   GST_BUFFER_DURATION (buf) =
       (GST_SECOND * GST_BUFFER_SIZE (buf)) / (GST_OSSELEMENT (src)->bps *
       GST_OSSELEMENT (src)->rate);
+
+  /* if we have a clock */
+  if (src->clock) {
+    if (src->clock == src->provided_clock) {
+      /* if it's our own clock, we can be very accurate */
+      GST_BUFFER_TIMESTAMP (buf) =
+          src->curoffset * GST_SECOND / GST_OSSELEMENT (src)->bps;
+    } else {
+      /* somebody elses clock, timestamp with that clock, no discontinuity in
+       * the stream since the OFFSET is updated correctly. Elements can stretch
+       * to match timestamps */
+      GST_BUFFER_TIMESTAMP (buf) =
+          gst_element_get_time (GST_ELEMENT (src)) - GST_BUFFER_DURATION (buf);
+    }
+  } else {
+    /* no clock, no timestamp */
+    GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+  }
 
   src->curoffset += readbytes;
 
