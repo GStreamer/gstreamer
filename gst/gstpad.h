@@ -488,9 +488,9 @@ gboolean 		gst_pad_dispatcher 			(GstPad *pad, GstPadDispatcherFunction dispatch
 								 gpointer data);
 
 #define			gst_pad_add_probe(pad, probe) \
-			(gst_probe_dispatcher_add_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
+			(gst_probe_dispatcher_add_probe (&(GST_REAL_PAD (pad)->probedisp), probe))
 #define			gst_pad_remove_probe(pad, probe) \
-			(gst_probe_dispatcher_remove_probe (&(GST_REAL_PAD (pad)-probedisp), probe))
+			(gst_probe_dispatcher_remove_probe (&(GST_REAL_PAD (pad)->probedisp), probe))
 
 #ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);
