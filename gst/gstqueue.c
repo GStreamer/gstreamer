@@ -529,7 +529,9 @@ gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
   g_mutex_lock (queue->qlock);
 
   if (gst_element_get_state (GST_ELEMENT (queue)) == GST_STATE_PLAYING) {
+    g_mutex_unlock (queue->qlock);
     g_warning ("queue event in playing state");
+    return FALSE;
   }
 
   switch (GST_EVENT_TYPE (event)) {
