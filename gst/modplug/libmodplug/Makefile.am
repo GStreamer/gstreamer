@@ -1,4 +1,5 @@
-lib_LTLIBRARIES = libmodplug.la
+noinst_LTLIBRARIES = libmodplug.la
+
 libmodplug_la_CXXFLAGS = -fno-exceptions -Wall -ffast-math -D_REENTRANT
 libmodplug_la_LDFLAGS = -module -avoid-version
 libmodplug_la_SOURCES = tables.cpp         \
@@ -34,7 +35,6 @@ libmodplug_la_SOURCES = tables.cpp         \
                         load_psm.cpp       \
                         modplug.cpp
 
-include_HEADERS = modplug.h
-noinst_HEADERS = it_defs.h stdafx.h sndfile.h
+noinst_HEADERS = it_defs.h stdafx.h sndfile.h modplug.h
 
 EXTRA_DIST = changes.txt
