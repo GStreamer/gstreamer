@@ -1,5 +1,8 @@
 schemadir = @GCONF_SCHEMA_FILE_DIR@
-schema_DATA = gstreamer.schemas
+schema_DATA = gstreamer-@GST_MAJORMINOR@.schemas
+
+gstreamer-@GST_MAJORMINOR@.schemas: gstreamer.schemas
+	cp $< $@
 
 install-data-local:
 	@GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) $(GCONFTOOL) \
@@ -10,4 +13,5 @@ install-data-local:
 		echo "*****************************************************";) 
 	@true
 
-EXTRA_DIST = gstreamer.schemas
+CLEANFILES = $(schema_DATA)
+EXTRA_DIST = $(schema_DATA)

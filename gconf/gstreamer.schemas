@@ -1,8 +1,8 @@
 <gconfschemafile>
   <schemalist>
     <schema>
-      <key>/schemas/system/gstreamer/default/audiosink</key>
-      <applyto>/system/gstreamer/default/audiosink</applyto>
+      <key>/schemas/system/gstreamer-0.7/default/audiosink</key>
+      <applyto>/system/gstreamer-0.7/default/audiosink</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>osssink</default>
@@ -12,8 +12,8 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer/default/videosink</key>
-      <applyto>/system/gstreamer/default/videosink</applyto>
+      <key>/schemas/system/gstreamer-0.7/default/videosink</key>
+      <applyto>/system/gstreamer-0.7/default/videosink</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>xvideosink</default>
@@ -23,8 +23,8 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer/default/audiosrc</key>
-      <applyto>/system/gstreamer/default/audiosrc</applyto>
+      <key>/schemas/system/gstreamer-0.7/default/audiosrc</key>
+      <applyto>/system/gstreamer-0.7/default/audiosrc</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>osssrc</default>
@@ -34,8 +34,8 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer/default/videosrc</key>
-      <applyto>/system/gstreamer/default/videosrc</applyto>
+      <key>/schemas/system/gstreamer-0.7/default/videosrc</key>
+      <applyto>/system/gstreamer-0.7/default/videosrc</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>v4lsrc</default>
@@ -45,8 +45,8 @@
       </locale>
     </schema>
     <schema>
-      <key>/schemas/system/gstreamer/default/visualization</key>
-      <applyto>/system/gstreamer/default/visualization</applyto>
+      <key>/schemas/system/gstreamer-0.7/default/visualization</key>
+      <applyto>/system/gstreamer-0.7/default/visualization</applyto>
       <owner>gstreamer</owner>
       <type>string</type>
       <default>goom</default>
