@@ -315,7 +315,7 @@ gst_dvdec_loop (GstElement *element)
     trylist = gst_caps_normalize (trylist);
 
     while (trylist) {
-      GstCaps *to_try = gst_caps_copy_first (trylist);
+      GstCaps *to_try = gst_caps_copy_1 (trylist);
 
       /* try each format */
       if (gst_pad_try_set_caps (dvdec->videosrcpad, to_try)) {
