@@ -1,4 +1,4 @@
-noinst_PROGRAMS = create
+noinst_PROGRAMS = create caps
 
 LDADD = $(GST_OBJ_LIBS)
 AM_CFLAGS = $(GST_OBJ_CFLAGS)

@@ -197,10 +197,10 @@ main (gint argc, gchar * argv[])
   g_assert (num_allocs > 0);
 
   _gmemchunk =
-      g_mem_chunk_new ("test", CHUNK_SIZE, CHUNK_SIZE * 16, G_ALLOC_AND_FREE);
+      g_mem_chunk_new ("test", CHUNK_SIZE, CHUNK_SIZE * 16, G_ALLOC_ONLY);
   _gmemchunklock = g_mutex_new ();
   _gstmemchunk =
-      gst_mem_chunk_new ("test", CHUNK_SIZE, CHUNK_SIZE * 16, G_ALLOC_AND_FREE);
+      gst_mem_chunk_new ("test", CHUNK_SIZE, CHUNK_SIZE * 16, G_ALLOC_ONLY);
 
   g_print ("%d alloc+frees X %d threads\n", num_allocs, num_threads);
   time = run_test (gmemchunk_alloc, gmemchunk_free);

@@ -124,7 +124,6 @@ gst_trash_stack_pop (GstTrashStack *stack)
 }
 
 #else
-#warning "using fallback trashstack implementation, performance may suffer"
 
 /*
  * generic implementation
