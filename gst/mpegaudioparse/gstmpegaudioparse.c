@@ -402,6 +402,26 @@ gst_mp3parse_chain (GstPad *pad, GstData *_data)
         GST_DEBUG ("mp3parse: partial buffer needed %ld < %d ",(size-offset), bpf);
 	break;
       } else {
+        guint bitrate, layer, rate, channels;
+
+        if (!mp3_type_frame_length_from_header (header, &layer,
+						&channels,
+						&bitrate, &rate)) {
+	  g_error("Header failed internal error");
+        }
+        if (channels != mp3parse->channels ||
+            rate     != mp3parse->rate     ||
+            layer    != mp3parse->layer    ||
+            bitrate  != mp3parse->bit_rate) {
+          GstCaps *caps = mp3_caps_create (layer, channels, bitrate, rate);
+
+          gst_pad_set_explicit_caps(mp3parse->srcpad, caps);
+
+          mp3parse->channels = channels;
+          mp3parse->layer    = layer;
+          mp3parse->rate     = rate;
+          mp3parse->bit_rate = bitrate;
+        }
 
         outbuf = gst_buffer_create_sub(mp3parse->partialbuf,offset,bpf);
 
@@ -458,20 +478,6 @@ bpf_from_header (GstMPEGAudioParse *parse, unsigned long header)
 						    &channels,
 						    &bitrate, &rate))) {
     return 0;
-  }
-
-  if (channels != parse->channels ||
-      rate     != parse->rate     ||
-      layer    != parse->layer    ||
-      bitrate  != parse->bit_rate) {
-    GstCaps *caps = mp3_caps_create (layer, channels, bitrate, rate);
-
-    gst_pad_set_explicit_caps(parse->srcpad, caps);
-
-    parse->channels = channels;
-    parse->layer    = layer;
-    parse->rate     = rate;
-    parse->bit_rate = bitrate;
   }
 
   return length;
