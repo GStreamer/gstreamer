@@ -1,4 +1,3 @@
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstac3parse.la
 
