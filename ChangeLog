@@ -1,3 +1,9 @@
+2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/rtp/rtp-packet.c:
+	  Add sys/types.h include, since OS X doesn't define in_addr_t
+	  in netinet/in.h, like it does on Linux (see #129600).
+
 2004-01-03  Thomas Canty <tommydal@optushome.com.au>
 
 	reviewed by: Ronald Bultje  <rbultje@ronald.bitfreak.net>
