@@ -467,7 +467,6 @@ gst_ximagesink_xcontext_get (GstXImageSink *ximagesink)
       "height",     GST_PROPS_INT_RANGE (0, G_MAXINT),
       "framerate",  GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
  
-  g_print ("%s\n", gst_caps_to_string (xcontext->caps));
   g_mutex_unlock (ximagesink->x_lock);
   
   /* We make this caps non floating. This way we keep it during our whole life */
@@ -532,7 +531,6 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
   
   str = gst_caps_to_string(ximagesink->xcontext->caps);
-  g_print ("%s\n", str);
   GST_DEBUG ("sinkconnect %s with %s", gst_caps_to_string(caps),
              str);
   g_free (str);
