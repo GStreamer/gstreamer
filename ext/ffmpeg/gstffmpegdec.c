@@ -41,7 +41,7 @@ struct _GstFFMpegDec {
   GstPad *sinkpad;
 
   AVCodecContext *context;
-  AVPicture *picture;
+  AVFrame *picture;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -208,7 +208,7 @@ gst_ffmpegdec_init(GstFFMpegDec *ffmpegdec)
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->srcpad);
 
-  ffmpegdec->picture = g_malloc0 (sizeof (AVPicture));
+  ffmpegdec->picture = g_malloc0 (sizeof (AVFrame));
 }
 
 static void

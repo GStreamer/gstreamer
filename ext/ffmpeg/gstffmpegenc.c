@@ -383,7 +383,7 @@ gst_ffmpegenc_chain_video (GstPad *pad, GstBuffer *inbuf)
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *)(gst_pad_get_parent (pad));
   gpointer data;
   gint size, frame_size;
-  AVPicture picture, rpicture, *toencode;
+  AVFrame picture, rpicture, *toencode;
   gboolean free_data = FALSE, free_res = FALSE;
 
   data = GST_BUFFER_DATA (inbuf);
@@ -411,7 +411,7 @@ gst_ffmpegenc_chain_video (GstPad *pad, GstBuffer *inbuf)
   }
   */
 
-  avpicture_fill (&picture, data, PIX_FMT_YUV420P, ffmpegenc->in_width, ffmpegenc->in_height);
+  avpicture_fill ((AVPicture*)&picture, data, PIX_FMT_YUV420P, ffmpegenc->in_width, ffmpegenc->in_height);
   toencode = &picture;
 
   if (ffmpegenc->need_resample) {
@@ -419,12 +419,12 @@ gst_ffmpegenc_chain_video (GstPad *pad, GstBuffer *inbuf)
     guint8 *rdata;
 
     rdata = g_malloc ((rframe_size * 3)/2);
-    avpicture_fill (&rpicture, rdata, PIX_FMT_YUV420P, ffmpegenc->context->width, ffmpegenc->context->height);
+    avpicture_fill ((AVPicture*)&rpicture, rdata, PIX_FMT_YUV420P, ffmpegenc->context->width, ffmpegenc->context->height);
 
     free_res = TRUE;
     toencode = &rpicture;
     
-    img_resample (ffmpegenc->resample, &rpicture, &picture);
+    img_resample (ffmpegenc->resample, (AVPicture*)&rpicture, (AVPicture*)&picture);
   }
 
   outbuf = gst_buffer_new ();

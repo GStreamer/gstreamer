@@ -37,7 +37,7 @@ struct _GstFFMpegMux {
   GstPad *sinkpad;
 
   AVCodecContext *context;
-  AVPicture *picture;
+  AVFrame *picture;
 };
 
 typedef struct _GstFFMpegMuxClass GstFFMpegMuxClass;
@@ -213,7 +213,7 @@ gst_ffmpegmux_init(GstFFMpegMux *ffmpegmux)
   gst_element_add_pad (GST_ELEMENT (ffmpegmux), ffmpegmux->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ffmpegmux), ffmpegmux->srcpad);
 
-  ffmpegmux->picture = g_malloc0 (sizeof (AVPicture));
+  ffmpegmux->picture = g_malloc0 (sizeof (AVFrame));
 }
 
 static void
