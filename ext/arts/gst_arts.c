@@ -32,12 +32,9 @@
 static GstElementDetails gst_arts_details = {
   "aRts plugin",
   "Filter/Audio",
-  "LGPL",
   "aRts wrapper filter",
-  VERSION,
   "Erik Walthinsen <omega@temple-baptist.com,\n"
   "Stefan Westerfeld <stefan@space.twc.de>",
-  "(C) 2000",
 };
 
 
@@ -77,6 +74,7 @@ enum {
   ARG_LAST,
 };
 
+static void			gst_arts_base_init		(gpointer g_class);
 static void			gst_arts_class_init		(GstARTSClass *klass);
 static void			gst_arts_init			(GstARTS *arts);
 
@@ -93,7 +91,8 @@ gst_arts_get_type (void)
 
   if (!gst_arts_type) {
     static const GTypeInfo gst_arts_info = {
-      sizeof(GstARTSClass),      NULL,
+      sizeof(GstARTSClass),      
+      gst_arts_base_init,
       NULL,
       (GClassInitFunc)gst_arts_class_init,
       NULL,
@@ -106,6 +105,18 @@ gst_arts_get_type (void)
   }
   return gst_arts_type;
 } 
+
+static void
+gst_arts_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (sink_temp));
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (src_temp));
+  gst_element_class_set_details (element_class, &gst_arts_details);
+}
 
 static void
 gst_arts_class_init (GstARTSClass *klass)
@@ -144,24 +155,23 @@ gst_arts_loop	(GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *gstarts;
-
-  gstarts = gst_element_factory_new("gstarts",GST_TYPE_ARTS,&gst_arts_details);
-  g_return_val_if_fail(gstarts != NULL, FALSE);
-
-  gst_element_factory_add_pad_template(gstarts, GST_PAD_TEMPLATE_GET(sink_temp));
-  gst_element_factory_add_pad_template(gstarts, GST_PAD_TEMPLATE_GET(src_temp));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (gstarts));
+  if (!gst_element_register (plugin, "gstarts", GST_RANK_NONE, GST_TYPE_ARTS))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gst_arts",
-  plugin_init
-};
+  "arTs filter wrapper",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
