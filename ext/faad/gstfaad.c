@@ -146,8 +146,33 @@ gst_faad_init (GstFaad * faad)
 static GstPadLinkReturn
 gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
-  /* oh, we really don't care what's in here. We'll
-   * get AAC audio (MPEG-2/4) anyway, so why bother? */
+  GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
+  GstStructure *str = gst_caps_get_structure (caps, 0);
+  const GValue *value;
+  GstBuffer *buf;
+
+  if ((value = gst_structure_get_value (str, "codec_data"))) {
+    GstPadLinkReturn ret;
+    gulong samplerate;
+    guchar channels;
+
+    buf = g_value_get_boxed (value);
+    if (faacDecInit2 (faad->handle, GST_BUFFER_DATA (buf),
+            GST_BUFFER_SIZE (buf), &samplerate, &channels) < 0)
+      return GST_PAD_LINK_REFUSED;
+
+    faad->samplerate = samplerate;
+    faad->channels = channels;
+
+    ret = gst_pad_renegotiate (faad->srcpad);
+    if (ret == GST_PAD_LINK_DELAYED)
+      ret = GST_PAD_LINK_OK;
+
+    return ret;
+  }
+
+  /* if there's no decoderspecificdata, it's all fine. We cannot know
+   * much more at this point... */
   return GST_PAD_LINK_OK;
 }
 
@@ -229,7 +254,7 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
 {
   GstStructure *structure;
   const gchar *mimetype;
-  gint fmt = 0;
+  gint fmt = -1;
   gint depth, rate, channels;
   GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
 
@@ -282,7 +307,7 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
     }
   }
 
-  if (fmt) {
+  if (fmt != -1) {
     faacDecConfiguration *conf;
 
     conf = faacDecGetCurrentConfiguration (faad->handle);

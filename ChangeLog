@@ -1,3 +1,21 @@
+2004-04-28  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/dts/Makefile.am:
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_get_type),
+	(gst_dtsdec_base_init), (gst_dtsdec_class_init), (gst_dtsdec_init),
+	(gst_dtsdec_channels), (gst_dtsdec_renegotiate),
+	(gst_dtsdec_handle_event), (gst_dtsdec_update_streaminfo),
+	(gst_dtsdec_loop), (gst_dtsdec_change_state),
+	(gst_dtsdec_set_property), (gst_dtsdec_get_property),
+	(plugin_init):
+	* ext/dts/gstdtsdec.h:
+	  New DTS decoder.
+	* ext/faad/gstfaad.c: (gst_faad_sinkconnect),
+	(gst_faad_srcconnect):
+	  Add ESDS atom handling (.m4a).
+
 2004-04-27  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/divx/gstdivxdec.c: (plugin_init):
