@@ -505,7 +505,7 @@ static GstBuffer*
 gst_audio_convert_get_buffer (GstBuffer *buf, guint size)
 {
   GstBuffer *ret;
-  if (buf->maxsize >= size && !gst_buffer_is_readonly (buf)) {
+  if (buf->maxsize >= size && gst_buffer_is_writeable (buf)) {
     gst_buffer_ref (buf);
     buf->size = size;
     return buf;
