@@ -645,6 +645,7 @@ return 0;
 #include <linux/videodev2.h>
     ],[
 struct v4l2_buffer buf;
+buf.index = 0;
 return 0;
     ], [ AC_MSG_RESULT(yes) ], [ MISSING_DECL=1 && AC_MSG_RESULT(no) ])
     if [ test x$MISSING_DECL = x1 ]; then
