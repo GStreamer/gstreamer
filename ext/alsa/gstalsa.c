@@ -1131,6 +1131,9 @@ gst_alsa_start (GstAlsa *this)
     case SND_PCM_STATE_XRUN:
       gst_alsa_xrun_recovery (this);
       return gst_alsa_start (this);
+    case SND_PCM_STATE_SETUP:
+      ERROR_CHECK (snd_pcm_prepare (this->handle), "error preparing: %s");
+    case SND_PCM_STATE_SUSPENDED:
     case SND_PCM_STATE_PREPARED:
       ERROR_CHECK (snd_pcm_start(this->handle), "error starting playback: %s");
       break;
@@ -1139,6 +1142,11 @@ gst_alsa_start (GstAlsa *this)
       break;
     case SND_PCM_STATE_RUNNING:
       break;
+    case SND_PCM_STATE_DRAINING:
+    case SND_PCM_STATE_OPEN:
+      /* this probably happens when someone replugged a pipeline and we're in a
+         really weird state because our cothread wasn't busted */
+      return FALSE;
     default:
       /* it's a bug when we get here */
       g_assert_not_reached ();
@@ -1147,7 +1155,6 @@ gst_alsa_start (GstAlsa *this)
   avail = (gint) gst_alsa_update_avail (this);
   if (avail < 0)
     return FALSE;
-  //this->transmitted = this->period_count * this->period_size - avail;
   gst_alsa_clock_start (this->clock);
   return TRUE;
 }
