@@ -247,19 +247,20 @@ gst_element_dispatch_properties_changed (GObject     *object,
 
 /** 
  * gst_element_default_deep_notify:
- * @object: the object that signalled the notify
- * @orig: the object that intiated the notify
- * @psepc: the paramspec of the property
- * @excluded_props: user specified properties to exclude
+ * @object: the #GObject that signalled the notify.
+ * @orig: a #GstObject that initiated the notify.
+ * @pspec: a #GParamSpec of the property.
+ * @excluded_props: a set of user-specified properties to exclude.
  *
- * A default deep_notify signal callback that can be added to an
+ * Adds a default deep_notify signal callback to an
  * element. The user data should contain a pointer to an array of
  * strings that should be excluded from the notify.
  * The default handler will print the new value of the property 
  * using g_print.
  */
 void
-gst_element_default_deep_notify (GObject *object, GstObject *orig, GParamSpec *pspec, gchar **excluded_props)
+gst_element_default_deep_notify (GObject *object, GstObject *orig, 
+                                 GParamSpec *pspec, gchar **excluded_props)
 {
   GValue value = { 0, }; /* the important thing is that value.type = 0 */
   gchar *str = 0;
@@ -271,7 +272,7 @@ gst_element_default_deep_notify (GObject *object, GstObject *orig, GParamSpec *p
         return;
       excluded_props++;
     }
-    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
     g_object_get_property (G_OBJECT (orig), pspec->name, &value);
 
     if (G_IS_PARAM_SPEC_ENUM (pspec)) {
@@ -279,29 +280,31 @@ gst_element_default_deep_notify (GObject *object, GstObject *orig, GParamSpec *p
       enum_value = g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
       g_value_get_enum (&value));
 
-      str = g_strdup_printf ("%s (%d)", enum_value->value_nick, enum_value->value);
+      str = g_strdup_printf ("%s (%d)", enum_value->value_nick, 
+	                                enum_value->value);
     }
     else {
       str = g_strdup_value_contents (&value);
     }
     g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
     g_free (str);
-    g_value_unset(&value);
+    g_value_unset (&value);
   } else {
-    g_warning ("Parameter %s not readable in %s.", pspec->name, GST_OBJECT_NAME (orig));
+    g_warning ("Parameter %s not readable in %s.", 
+	       pspec->name, GST_OBJECT_NAME (orig));
   }
 }
 
 /** 
  * gst_element_default_error:
- * @object: the object that signalled the error
- * @orig: the object that intiated the error
- * @error: the error message
+ * @object: a #GObject that signalled the error.
+ * @orig: the #GstObject that initiated the error.
+ * @error: the error message.
  *
- * A default error signal callback that can be added to an
+ * Adds a default error signal callback to an
  * element. The user data passed to the g_signal_connect is
  * ignored.
- * The default handler will smply print the error string 
+ * The default handler will simply print the error string 
  * using g_print.
  */
 void
@@ -351,9 +354,9 @@ gst_element_threadsafe_properties_post_run (GstElement *element)
 
 /**
  * gst_element_enable_threadsafe_properties:
- * @element: a #GstElement to enable the threadsafe properties on
+ * @element: a #GstElement to enable threadsafe properties on.
  *
- * Install an async queue, a mutex and pre and post run functions on
+ * Installs an asynchronous queue, a mutex and pre- and post-run functions on
  * this element so that properties on the element can be set in a 
  * threadsafe way.
  */
@@ -373,9 +376,9 @@ gst_element_enable_threadsafe_properties (GstElement *element)
 
 /**
  * gst_element_disable_threadsafe_properties:
- * @element: a #GstElement to disable the threadsafe properties on
+ * @element: a #GstElement to disable threadsafe properties on.
  *
- * Remove the threadsafe properties post and pre run locks from
+ * Removes the threadsafe properties, post- and pre-run locks from
  * this element.
  */
 void
@@ -391,9 +394,9 @@ gst_element_disable_threadsafe_properties (GstElement *element)
 
 /**
  * gst_element_set_pending_properties:
- * @element: a #GstElement to set the pending properties on
+ * @element: a #GstElement to set the pending properties on.
  *
- * Set all pending properties on the threadsafe properties enabled
+ * Sets all pending properties on the threadsafe properties enabled
  * element.
  */
 void
@@ -411,12 +414,13 @@ gst_element_set_pending_properties (GstElement *element)
 
 /**
  * gst_element_set:
- * @element: a #GstElement to set properties on
- * @first_property_name: The first property to set
- * @...: more properties to set
+ * @element: a #GstElement to set properties on.
+ * @first_property_name: the first property to set.
+ * @...: value of the first property, and more properties to set, ending
+ *       with NULL.
  *
- * Set properties on an element. If the element uses threadsafe properties,
- * they will be queued and set to the object when it is scheduled again.
+ * Sets properties on an element. If the element uses threadsafe properties,
+ * they will be queued and set on the object when it is scheduled again.
  */
 void
 gst_element_set (GstElement *element, const gchar *first_property_name, ...)
@@ -432,11 +436,12 @@ gst_element_set (GstElement *element, const gchar *first_property_name, ...)
 
 /**
  * gst_element_get:
- * @element: a #GstElement to get properties of
- * @first_property_name: The first property to get
- * @...: more properties to get
+ * @element: a #GstElement to get properties of.
+ * @first_property_name: the first property to get.
+ * @...: pointer to a variable to store the first property in, as well as 
+ * more properties to get, ending with NULL.
  *
- * Get properties from an element. If the element uses threadsafe properties,
+ * Gets properties from an element. If the element uses threadsafe properties,
  * the element will be locked before getting the given properties.
  */
 void
@@ -453,11 +458,11 @@ gst_element_get (GstElement *element, const gchar *first_property_name, ...)
 
 /**
  * gst_element_set_valist:
- * @element: a #GstElement to set properties on
- * @first_property_name: The first property to set
- * @var_args: a var_args list of other properties to get
+ * @element: a #GstElement to set properties on.
+ * @first_property_name: the first property to set.
+ * @var_args: the var_args list of other properties to get.
  *
- * Set properties on an element. If the element uses threadsafe properties,
+ * Sets properties on an element. If the element uses threadsafe properties,
  * the property change will be put on the async queue.
  */
 void
@@ -529,11 +534,11 @@ gst_element_set_valist (GstElement *element, const gchar *first_property_name, v
 
 /**
  * gst_element_get_valist:
- * @element: a #GstElement to get properties of
- * @first_property_name: The first property to get
- * @var_args: a var_args list of other properties to get
+ * @element: a #GstElement to get properties of.
+ * @first_property_name: the first property to get.
+ * @var_args: the var_args list of other properties to get.
  *
- * Get properties from an element. If the element uses threadsafe properties,
+ * Gets properties from an element. If the element uses threadsafe properties,
  * the element will be locked before getting the given properties.
  */
 void
@@ -603,11 +608,11 @@ gst_element_get_valist (GstElement *element, const gchar *first_property_name, v
 
 /**
  * gst_element_set_property:
- * @element: a #GstElement to set properties on
- * @property_name: The first property to get
- * @value: GValue that hold the value to set
+ * @element: a #GstElement to set properties on.
+ * @property_name: the first property to get.
+ * @value: the #GValue that holds the value to set.
  *
- * Set a property on an element. If the element uses threadsafe properties,
+ * Sets a property on an element. If the element uses threadsafe properties,
  * the property will be put on the async queue.
  */
 void
@@ -644,11 +649,11 @@ gst_element_set_property (GstElement *element, const gchar *property_name, const
   
 /**
  * gst_element_get_property:
- * @element: a #GstElement to get properties of
- * @property_name: The first property to get
- * @value: Target GValue to hold the property value
+ * @element: a #GstElement to get properties of.
+ * @property_name: the first property to get.
+ * @value: the #GValue to store the property value in.
  *
- * Get a property from an element. If the element uses threadsafe properties,
+ * Gets a property from an element. If the element uses threadsafe properties,
  * the element will be locked before getting the given property.
  */
 void
@@ -728,10 +733,10 @@ gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar
 
 /**
  * gst_element_release_request_pad:
- * @element: a #GstElement to release the request pad of
- * @pad: The pad to release
+ * @element: a #GstElement to release the request pad of.
+ * @pad: the #GstPad to release.
  *
- * Make the element free the previously requested pad as obtained
+ * Makes the element free the previously requested pad as obtained
  * with gst_element_get_request_pad().
  */
 void
@@ -750,8 +755,8 @@ gst_element_release_request_pad (GstElement *element, GstPad *pad)
 
 /**
  * gst_element_set_name:
- * @element: a #GstElement to set name of
- * @name: new name of element
+ * @element: a #GstElement to set the name of.
+ * @name: the new name of the element.
  *
  * Sets the name of the element, getting rid of the old name if there was
  * one.
@@ -767,11 +772,11 @@ gst_element_set_name (GstElement *element, const gchar *name)
 
 /**
  * gst_element_get_name:
- * @element: a #GstElement to get name of
+ * @element: a #GstElement to get the name of.
  *
  * Gets the name of the element.
  *
- * Returns: name of the element
+ * Returns: the name of the element.
  */
 const gchar*
 gst_element_get_name (GstElement *element)
@@ -784,8 +789,8 @@ gst_element_get_name (GstElement *element)
 
 /**
  * gst_element_set_parent:
- * @element: a #GstElement to set parent of
- * @parent: new parent of the object
+ * @element: a #GstElement to set parent of.
+ * @parent: the new #GstObject parent of the object.
  *
  * Sets the parent of the element.
  */
@@ -804,11 +809,11 @@ gst_element_set_parent (GstElement *element, GstObject *parent)
 
 /**
  * gst_element_get_parent:
- * @element: a #GstElement to get the parent of
+ * @element: a #GstElement to get the parent of.
  *
  * Gets the parent of the element.
  *
- * Returns: the #GstElement parent of the element
+ * Returns: the #GstObject parent of the element.
  */
 GstObject*
 gst_element_get_parent (GstElement *element)
@@ -821,8 +826,8 @@ gst_element_get_parent (GstElement *element)
 
 /**
  * gst_element_set_clock:
- * @element: a #GstElement to set the clock for
- * @clock: the #GstClock to set for the element
+ * @element: a #GstElement to set the clock for.
+ * @clock: the #GstClock to set for the element.
  *
  * Sets the clock for the element.
  */
@@ -840,7 +845,7 @@ gst_element_set_clock (GstElement *element, GstClock *clock)
 
 /**
  * gst_element_get_clock:
- * @element: a #GstElement to get the clock of
+ * @element: a #GstElement to get the clock of.
  *
  * Gets the clock of the element.
  *
@@ -860,14 +865,14 @@ gst_element_get_clock (GstElement *element)
 
 /**
  * gst_element_clock_wait:
- * @element: a #GstElement
- * @clock: the #GstClock to use
- * @time: the #GstClockTime to wait for on the clock
- * @jitter: The difference between requested time and actual time
+ * @element: a #GstElement.
+ * @clock: the #GstClock to use.
+ * @time: the #GstClockTime to wait for on the clock.
+ * @jitter: the difference between requested time and actual time.
  *
  * Waits for a specific time on the clock.
  *
- * Returns: the #GstClockReturn result of the wait operation
+ * Returns: the #GstClockReturn result of the wait operation.
  */
 GstClockReturn
 gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time, GstClockTimeDiff *jitter)
@@ -889,7 +894,7 @@ gst_element_clock_wait (GstElement *element, GstClock *clock, GstClockTime time,
 
 /**
  * gst_element_release_locks:
- * @element: an element 
+ * @element: a #GstElement to release all locks on.
  *
  * Instruct the element to release all the locks it is holding, such as
  * blocking reads, waiting for the clock, ...
@@ -909,8 +914,8 @@ gst_element_release_locks (GstElement *element)
 
 /**
  * gst_element_add_pad:
- * @element: element to add pad to
- * @pad: pad to add
+ * @element: a #GstElement to add the pad to.
+ * @pad: the #GstPad to add to the element.
  *
  * Add a pad (connection point) to the element, setting the parent of the
  * pad to the element (and thus adding a reference).
@@ -948,10 +953,10 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
 
 /**
  * gst_element_remove_pad:
- * @element: element to remove pad from
- * @pad: pad to remove
+ * @element: a #GstElement to remove pad from.
+ * @pad: the #GstPad to remove from the element.
  *
- * Remove a pad (connection point) from the element, 
+ * Remove a pad (connection point) from the element.
  */
 void
 gst_element_remove_pad (GstElement *element, GstPad *pad)
@@ -985,14 +990,14 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
 
 /**
  * gst_element_add_ghost_pad:
- * @element: element to add ghost pad to
- * @pad: pad from which the new ghost pad will be created
- * @name: name of the new ghost pad
+ * @element: a #GstElement to add the ghost pad to.
+ * @pad: the #GstPad from which the new ghost pad will be created.
+ * @name: the name of the new ghost pad.
  *
- * Create a ghost pad from the given pad, and add it to the list of pads
+ * Creates a ghost pad from the given pad, and adds it to the list of pads
  * for this element.
  * 
- * Returns: the added ghost pad or NULL, if no ghost pad was created.
+ * Returns: the added ghost #GstPad, or NULL, if no ghost pad was created.
  */
 GstPad *
 gst_element_add_ghost_pad (GstElement *element, GstPad *pad, const gchar *name)
@@ -1030,10 +1035,10 @@ gst_element_add_ghost_pad (GstElement *element, GstPad *pad, const gchar *name)
 
 /**
  * gst_element_remove_ghost_pad:
- * @element: element to remove the ghost pad from
- * @pad: ghost pad to remove
+ * @element: a #GstElement to remove the ghost pad from.
+ * @pad: ghost #GstPad to remove.
  *
- * removes a ghost pad from an element
+ * Removes a ghost pad from an element.
  */
 void
 gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
@@ -1055,12 +1060,12 @@ gst_element_remove_ghost_pad (GstElement *element, GstPad *pad)
 
 /**
  * gst_element_get_pad:
- * @element: element to find pad of
- * @name: name of pad to retrieve
+ * @element: a #GstElement to find pad of.
+ * @name: the name of the pad to retrieve.
  *
- * Retrieve a pad from the element by name.
+ * Retrieves a pad from the element by name.
  *
- * Returns: requested pad if found, otherwise NULL.
+ * Returns: requested #GstPad if found, otherwise NULL.
  */
 GstPad*
 gst_element_get_pad (GstElement *element, const gchar *name)
@@ -1081,13 +1086,13 @@ gst_element_get_pad (GstElement *element, const gchar *name)
 
 /**
  * gst_element_get_static_pad:
- * @element: element to find pad of
- * @name: name of pad to retrieve
+ * @element: a #GstElement to find a static pad of.
+ * @name: the name of the static #GstPad to retrieve.
  *
- * Retrieve a pad from the element by name. This version only retrieves
+ * Retrieves a pad from the element by name. This version only retrieves
  * already-existing (i.e. 'static') pads.
  *
- * Returns: requested pad if found, otherwise NULL.
+ * Returns: the requested #GstPad if found, otherwise NULL.
  */
 GstPad *
 gst_element_get_static_pad (GstElement *element, const gchar *name)
@@ -1116,13 +1121,13 @@ gst_element_get_static_pad (GstElement *element, const gchar *name)
 
 /**
  * gst_element_get_request_pad:
- * @element: element to find pad of
- * @name: name of pad to retrieve
+ * @element: a #GstElement to find a request pad of.
+ * @name: the name of the request #GstPad to retrieve.
  *
- * Retrieve a pad from the element by name. This version only retrieves
+ * Retrieves a pad from the element by name. This version only retrieves
  * request pads.
  *
- * Returns: requested pad if found, otherwise NULL.
+ * Returns: requested #GstPad if found, otherwise NULL.
  */
 GstPad*
 gst_element_get_request_pad (GstElement *element, const gchar *name)
@@ -1187,11 +1192,11 @@ gst_element_get_request_pad (GstElement *element, const gchar *name)
 
 /**
  * gst_element_get_pad_list:
- * @element: element to get pads of
+ * @element: a #GstElement to get pads of.
  *
- * Retrieve a list of the pads associated with the element.
+ * Retrieves a list of the pads associated with the element.
  *
- * Returns: GList of pads
+ * Returns: the #GList of pads.
  */
 GList*
 gst_element_get_pad_list (GstElement *element)
@@ -1205,15 +1210,17 @@ gst_element_get_pad_list (GstElement *element)
 
 /**
  * gst_element_class_add_pad_template:
- * @klass: element class to add padtemplate to
- * @templ: padtemplate to add
+ * @klass: the #GstElementClass to add the pad template to.
+ * @templ: a #GstPadTemplate to add to the element class.
  *
- * Add a padtemplate to an element class. This is useful if you have derived a custom
- * bin and wish to provide an on-request pad at runtime. Plugin writers should use
+ * Adds a padtemplate to an element class. 
+ * This is useful if you have derived a custom bin and wish to provide 
+ * an on-request pad at runtime. Plug-in writers should use
  * gst_element_factory_add_pad_template instead.
  */
 void
-gst_element_class_add_pad_template (GstElementClass *klass, GstPadTemplate *templ)
+gst_element_class_add_pad_template (GstElementClass *klass, 
+                                    GstPadTemplate *templ)
 {
   g_return_if_fail (klass != NULL);
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
@@ -1226,11 +1233,11 @@ gst_element_class_add_pad_template (GstElementClass *klass, GstPadTemplate *temp
 
 /**
  * gst_element_get_pad_template_list:
- * @element: element to get padtemplates of
+ * @element: a #GstElement to get pad templates of.
  *
- * Retrieve a list of the padtemplates associated with the element.
+ * Retrieves a list of the pad templates associated with the element.
  *
- * Returns: GList of padtemplates
+ * Returns: the #GList of padtemplates.
  */
 GList*
 gst_element_get_pad_template_list (GstElement *element)
@@ -1243,13 +1250,14 @@ gst_element_get_pad_template_list (GstElement *element)
 
 /**
  * gst_element_get_pad_template:
- * @element: element to get padtemplate of
- * @name: the name of the padtemplate to get.
+ * @element: a #GstElement to get the pad template of.
+ * @name: the name of the #GstPadTemplate to get.
  *
- * Retrieve a padtemplate from this element with the
+ * Retrieves a padtemplate from this element with the
  * given name.
  *
- * Returns: the padtemplate with the given name. No unreferencing is necessary.
+ * Returns: the #GstPadTemplate with the given name, or NULL if none was found. 
+ * No unreferencing is necessary.
  */
 GstPadTemplate*
 gst_element_get_pad_template (GstElement *element, const gchar *name)
@@ -1276,21 +1284,24 @@ gst_element_get_pad_template (GstElement *element, const gchar *name)
 
 /**
  * gst_element_get_compatible_pad_template:
- * @element: element to get padtemplate of
- * @compattempl: a template to find a compatible template for
+ * @element: a #GstElement to get a compatible pad template for.
+ * @compattempl: the #GstPadTemplate to find a compatible template for.
  *
- * Generate a padtemplate for this element compatible with the given
- * template, ie able to link to it.
+ * Generates a pad template for this element compatible with the given
+ * template (meaning it is able to connect with it).
  *
- * Returns: the padtemplate. No unreferencing is necessary.
+ * Returns: the #GstPadTemplate of the element that is compatible with
+ * the given GstPadTemplate, or NULL if none was found. No unreferencing 
+ * is necessary.
  */
 GstPadTemplate*
-gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl)
+gst_element_get_compatible_pad_template (GstElement *element, 
+                                         GstPadTemplate *compattempl)
 {
   GstPadTemplate *newtempl = NULL;
   GList *padlist;
 
-  GST_DEBUG(GST_CAT_ELEMENT_PADS,"gst_element_get_compatible_pad_template()");
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "gst_element_get_compatible_pad_template()");
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -1300,29 +1311,29 @@ gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *co
 
   while (padlist) {
     GstPadTemplate *padtempl = (GstPadTemplate*) padlist->data;
-    gboolean compat = FALSE;
+    gboolean comp = FALSE;
 
     /* Ignore name
      * Ignore presence
      * Check direction (must be opposite)
      * Check caps
      */
-    GST_DEBUG(GST_CAT_CAPS,"checking direction and caps");
+    GST_DEBUG (GST_CAT_CAPS, "checking direction and caps");
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
-      GST_DEBUG(GST_CAT_CAPS,"compatible direction: found src pad template");
-      compat = gst_caps_check_compatibility(GST_PAD_TEMPLATE_CAPS (padtempl),
-					    GST_PAD_TEMPLATE_CAPS (compattempl));
-      GST_DEBUG(GST_CAT_CAPS,"caps are %scompatible", (compat?"":"not "));
+      GST_DEBUG (GST_CAT_CAPS, "compatible direction: found src pad template");
+      comp = gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (padtempl),
+				           GST_PAD_TEMPLATE_CAPS (compattempl));
+      GST_DEBUG(GST_CAT_CAPS, "caps are %scompatible", (comp ? "" : "not "));
     } else if (padtempl->direction == GST_PAD_SINK &&
 	       compattempl->direction == GST_PAD_SRC) {
-      GST_DEBUG(GST_CAT_CAPS,"compatible direction: found sink pad template");
-      compat = gst_caps_check_compatibility(GST_PAD_TEMPLATE_CAPS (compattempl),
-					    GST_PAD_TEMPLATE_CAPS (padtempl));
-      GST_DEBUG(GST_CAT_CAPS,"caps are %scompatible", (compat?"":"not "));
+      GST_DEBUG (GST_CAT_CAPS, "compatible direction: found sink pad template");
+      comp = gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (compattempl),
+					   GST_PAD_TEMPLATE_CAPS (padtempl));
+      GST_DEBUG (GST_CAT_CAPS, "caps are %scompatible", (comp ? "" : "not "));
     }
 
-    if (compat) {
+    if (comp) {
       newtempl = padtempl;
       break;
     }
@@ -1335,15 +1346,15 @@ gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *co
 
 /**
  * gst_element_request_compatible_pad:
- * @element: element to request a new pad from
- * @templ: a pad template to which the new pad should be able to connect
+ * @element: a #GstElement to request a new pad from.
+ * @templ: the #GstPadTemplate to which the new pad should be able to connect.
  *
- * Request a new pad from the element. The template will
+ * Requests a new pad from the element. The template will
  * be used to decide what type of pad to create. This function
  * is typically used for elements with a padtemplate with presence
  * GST_PAD_REQUEST.
  *
- * Returns: the new pad that was created.
+ * Returns: the new #GstPad that was created, or NULL if none could be created.
  */
 GstPad*
 gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
@@ -1365,18 +1376,19 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
 
 /**
  * gst_element_get_compatible_pad_filtered:
- * @element: the element in which the pad should be found
- * @pad: the pad to find a compatible one for
- * @filtercaps: the caps to use as a filter
+ * @element: a #GstElement in which the pad should be found.
+ * @pad: the #GstPad to find a compatible one for.
+ * @filtercaps: the #GstCaps to use as a filter.
  *
  * Looks for an unconnected pad to which the given pad can connect to.
  * It is not guaranteed that connecting the pads will work, though
  * it should work in most cases.
  *
- * Returns: the pad to which a connection can be made
+ * Returns: the #GstPad to which a connection can be made.
  */
 GstPad*			
-gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, GstCaps *filtercaps)
+gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
+                                         GstCaps *filtercaps)
 {
   GList *pads;
   GstPadTemplate *templ;
@@ -1434,14 +1446,15 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, GstCa
 
 /**
  * gst_element_get_compatible_pad:
- * @element: the element in which the pad should be found
- * @pad: the pad to find a compatible one for
+ * @element: a #GstElement in which the pad should be found.
+ * @pad: the #GstPad to find a compatible one for.
  *
  * Looks for an unconnected pad to which the given pad can connect to.
  * It is not guaranteed that connecting the pads will work, though
  * it should work in most cases.
  *
- * Returns: the pad to which a connection can be made
+ * Returns: the #GstPad to which a connection can be made, or NULL if none
+ * could be found.
  */
 GstPad*			
 gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
@@ -1451,22 +1464,22 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
 
 /**
  * gst_element_connect_filtered:
- * @src: the element containing source pad
- * @dest: the element containing destination pad
- * @filtercaps: the caps to use as filter
+ * @src: a #GstElement containing the source pad.
+ * @dest: the #GstElement containing the destination pad.
+ * @filtercaps: the #GstCaps to use as a filter.
  *
- * Connect the source to the destination element using the filtercaps.
+ * Connects the source to the destination element using the filtercaps.
  * The connection must be from source to destination, the other
  * direction will not be tried.
  * The functions looks for existing pads that aren't connected yet. 
- + It will use request pads if possible. But both pads will not be requested.
+ * It will use request pads if possible. But both pads will not be requested.
  * If multiple connections are possible, only one is established.
  *
  * Returns: TRUE if the elements could be connected.
  */
 gboolean
 gst_element_connect_filtered (GstElement *src, GstElement *dest, 
-			               GstCaps *filtercaps)
+			      GstCaps *filtercaps)
 {
   GList *srcpads, *destpads, *srctempls, *desttempls, *l;
   GstPad *srcpad, *destpad;
@@ -1478,7 +1491,8 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
   g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT(dest), FALSE);
 
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "attempting to connect element %s to element %s", GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying to connect element %s to element %s",
+             GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
    
   /* loop through the existing pads in the source */
   srcpads = gst_element_get_pad_list (src);
@@ -1489,9 +1503,11 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
       srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
       if ((GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
           (GST_PAD_PEER (srcpad) == NULL)) {
-        destpad = gst_element_get_compatible_pad_filtered (dest, srcpad, filtercaps);
+        destpad = gst_element_get_compatible_pad_filtered (dest, srcpad, 
+	                                                   filtercaps);
         if (destpad && gst_pad_connect_filtered (srcpad, destpad, filtercaps)) {
-          GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s", GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+          GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s", 
+	             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
           return TRUE;
         }
       }
@@ -1503,9 +1519,11 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
       destpad = (GstPad *) GST_PAD_REALIZE (destpads->data);
       if ((GST_RPAD_DIRECTION (destpad) == GST_PAD_SINK) &&
           (GST_PAD_PEER (destpad) == NULL)) {
-        srcpad = gst_element_get_compatible_pad_filtered (src, destpad, filtercaps);
+        srcpad = gst_element_get_compatible_pad_filtered (src, destpad, 
+	                                                  filtercaps);
         if (srcpad && gst_pad_connect_filtered (srcpad, destpad, filtercaps)) {
-          GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s", GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+          GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s", 
+	             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
           return TRUE;
         }
       }
@@ -1513,7 +1531,8 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
     }
   }
 
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "we might have request pads on both sides, checking...");
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, 
+             "we might have request pads on both sides, checking...");
   srctempls = gst_element_get_pad_template_list (src);
   desttempls = gst_element_get_pad_template_list (dest);
   
@@ -1523,14 +1542,19 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
       if (srctempl->presence == GST_PAD_REQUEST) {
         for (l=desttempls; l; l=l->next) {
           desttempl = (GstPadTemplate*) desttempls->data;
-          if (desttempl->presence == GST_PAD_REQUEST && desttempl->direction != srctempl->direction) {
+          if (desttempl->presence == GST_PAD_REQUEST && 
+	      desttempl->direction != srctempl->direction) {
             if (gst_caps_check_compatibility (gst_pad_template_get_caps (srctempl),
                                               gst_pad_template_get_caps (desttempl))) {
-              srcpad = gst_element_get_request_pad (src, srctempl->name_template);
-              destpad = gst_element_get_request_pad (dest, desttempl->name_template);
+              srcpad = gst_element_get_request_pad (src, 
+		                                    srctempl->name_template);
+              destpad = gst_element_get_request_pad (dest, 
+		                                     desttempl->name_template);
               if (gst_pad_connect_filtered (srcpad, destpad, filtercaps)) {
-                GST_DEBUG (GST_CAT_ELEMENT_PADS, "connected pad %s:%s to pad %s:%s",
-                           GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
+                GST_DEBUG (GST_CAT_ELEMENT_PADS, 
+		           "connected pad %s:%s to pad %s:%s",
+                           GST_DEBUG_PAD_NAME (srcpad), 
+			   GST_DEBUG_PAD_NAME (destpad));
                 return TRUE;
               }
               /* FIXME: we have extraneous request pads lying around */
@@ -1542,15 +1566,16 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
     }
   }
   
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "no connection possible from %s to %s", GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "no connection possible from %s to %s", 
+             GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
   return FALSE;  
 }
 
 /**
  * gst_element_connect_many:
- * @element_1: the first element in the connection chain
- * @element_2: the second element in the connection chain
- * @...: NULL-terminated list of elements to connect in order
+ * @element_1: the first #GstElement in the connection chain.
+ * @element_2: the second #GstElement in the connection chain.
+ * @...: the NULL-terminated list of elements to connect in order.
  * 
  * Chain together a series of elements. Uses #gst_element_connect.
  *
@@ -1562,7 +1587,8 @@ gst_element_connect_many (GstElement *element_1, GstElement *element_2, ...)
   va_list args;
 
   g_return_val_if_fail (element_1 != NULL && element_2 != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_ELEMENT (element_1) && GST_IS_ELEMENT (element_2), FALSE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element_1) && 
+                        GST_IS_ELEMENT (element_2), FALSE);
 
   va_start (args, element_2);
 
@@ -1581,10 +1607,10 @@ gst_element_connect_many (GstElement *element_1, GstElement *element_2, ...)
 
 /**
  * gst_element_connect:
- * @src: element containing source pad
- * @dest: element containing destination pad
+ * @src: a #GstElement containing the source pad.
+ * @dest: the #GstElement containing the destination pad.
  *
- * Connect the source to the destination element.
+ * Connects the source to the destination element.
  * The connection must be from source to destination, the other
  * direction will not be tried.
  * The functions looks for existing pads and request pads that aren't
@@ -1601,13 +1627,13 @@ gst_element_connect (GstElement *src, GstElement *dest)
 
 /**
  * gst_element_connect_pads_filtered:
- * @src: element containing source pad
- * @srcpadname: name of pad in source element
- * @dest: element containing destination pad
- * @destpadname: name of pad in destination element
- * @filtercaps: the caps to use as a filter
+ * @src: a #GstElement containing the source pad.
+ * @srcpadname: the name of the #GstPad in source element.
+ * @dest: the #GstElement containing the destination pad.
+ * @destpadname: the name of the #GstPad in destination element.
+ * @filtercaps: the #GstCaps to use as a filter.
  *
- * Connect the two named pads of the source and destination elements.
+ * Connects the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
  * child of the parent of the other element.  If they have different
  * parents, the connection fails.
@@ -1646,12 +1672,12 @@ gst_element_connect_pads_filtered (GstElement *src, const gchar *srcpadname,
 
 /**
  * gst_element_connect_pads:
- * @src: element containing source pad
- * @srcpadname: name of pad in source element
- * @dest: element containing destination pad
- * @destpadname: name of pad in destination element
+ * @src: a #GstElement containing the source pad.
+ * @srcpadname: the name of the #GstPad in the source element.
+ * @dest: the #GstElement containing the destination pad.
+ * @destpadname: the name of the #GstPad in destination element.
  *
- * Connect the two named pads of the source and destination elements.
+ * Connects the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
  * child of the parent of the other element.  If they have different
  * parents, the connection fails.
@@ -1667,12 +1693,12 @@ gst_element_connect_pads (GstElement *src, const gchar *srcpadname,
 
 /**
  * gst_element_disconnect_pads:
- * @src: element containing source pad
- * @srcpadname: name of pad in source element
- * @dest: element containing destination pad
- * @destpadname: name of pad in destination element
+ * @src: a #GstElement containing the source pad.
+ * @srcpadname: the name of the #GstPad in source element.
+ * @dest: a #GstElement containing the destination pad.
+ * @destpadname: the name of the #GstPad in destination element.
  *
- * Disconnect the two named pads of the source and destination elements.
+ * Disconnects the two named pads of the source and destination elements.
  */
 void
 gst_element_disconnect_pads (GstElement *src, const gchar *srcpadname,
@@ -1705,11 +1731,11 @@ gst_element_disconnect_pads (GstElement *src, const gchar *srcpadname,
 
 /**
  * gst_element_disconnect_many:
- * @element_1: the first element in the connection chain
- * @element_2: the second element in the connection chain
- * @...: NULL-terminated list of elements to disconnect in order
+ * @element_1: the first #GstElement in the connection chain.
+ * @element_2: the second #GstElement in the connection chain.
+ * @...: the NULL-terminated list of elements to disconnect in order.
  * 
- * Disconnect a series of elements. Uses #gst_element_disconnect.
+ * Disconnects a series of elements. Uses #gst_element_disconnect.
  */
 void
 gst_element_disconnect_many (GstElement *element_1, GstElement *element_2, ...)
@@ -1733,10 +1759,11 @@ gst_element_disconnect_many (GstElement *element_1, GstElement *element_2, ...)
 
 /**
  * gst_element_disconnect:
- * @src: source element
- * @dest: sink element
+ * @src: the source #GstElement to disconnect.
+ * @dest: the sink #GstElement to disconnect.
  *
- * Disconnect all pads connecting the two elements in the direction src -> dest.
+ * Disconnects all source pads of the source element with all sink pads
+ * of the sink element to which they are connected.
  */
 void
 gst_element_disconnect (GstElement *src, GstElement *dest)
@@ -1744,11 +1771,11 @@ gst_element_disconnect (GstElement *src, GstElement *dest)
   GList *srcpads;
   GstPad *pad;
 
-  g_return_if_fail (GST_IS_ELEMENT(src));
-  g_return_if_fail (GST_IS_ELEMENT(dest));
+  g_return_if_fail (GST_IS_ELEMENT (src));
+  g_return_if_fail (GST_IS_ELEMENT (dest));
 
-  GST_DEBUG (GST_CAT_ELEMENT_PADS, "disconnecting \"%s\" and \"%s\"", GST_ELEMENT_NAME (src),
-		  GST_ELEMENT_NAME (dest));
+  GST_DEBUG (GST_CAT_ELEMENT_PADS, "disconnecting \"%s\" and \"%s\"", 
+             GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
 
   srcpads = gst_element_get_pad_list (src);
 
@@ -1758,7 +1785,8 @@ gst_element_disconnect (GstElement *src, GstElement *dest)
     if (GST_IS_REAL_PAD (pad) && GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
       GstPad *peerpad = GST_PAD_PEER (pad);
 
-      if (peerpad && (GST_OBJECT_PARENT (GST_PAD_PEER (peerpad)) == (GstObject*) src)) {
+      if (peerpad && 
+	  (GST_OBJECT_PARENT (GST_PAD_PEER (peerpad)) == (GstObject*) src)) {
         gst_pad_disconnect (pad, peerpad);
       }
     }
@@ -1768,15 +1796,18 @@ gst_element_disconnect (GstElement *src, GstElement *dest)
 }
 
 static void
-gst_element_error_func (GstElement* element, GstElement *source, gchar *errormsg)
+gst_element_error_func (GstElement* element, GstElement *source, 
+                        gchar *errormsg)
 {
   /* tell the parent */
   if (GST_OBJECT_PARENT (element)) {
-    GST_DEBUG (GST_CAT_EVENT, "forwarding error \"%s\" from %s to %s", errormsg, 
-	       GST_ELEMENT_NAME (element), GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
+    GST_DEBUG (GST_CAT_EVENT, "forwarding error \"%s\" from %s to %s", 
+	       errormsg, GST_ELEMENT_NAME (element), 
+	       GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
 
     gst_object_ref (GST_OBJECT (element));
-    g_signal_emit (G_OBJECT (GST_OBJECT_PARENT (element)), gst_element_signals[ERROR], 0, source, errormsg);
+    g_signal_emit (G_OBJECT (GST_OBJECT_PARENT (element)), 
+	           gst_element_signals[ERROR], 0, source, errormsg);
     gst_object_unref (GST_OBJECT (element));
   }
 }
@@ -1803,12 +1834,12 @@ gst_element_send_event_default (GstElement *element, GstEvent *event)
 
 /**
  * gst_element_send_event:
- * @element: The element to send the event to.
- * @event: The event to send to the object.
+ * @element: a #GstElement to send the event to.
+ * @event: the #GstEvent to send to the element.
  *
  * Sends an event to an element. If the element doesn't 
  * implement an event handler, the event will be forwarded
- * to a random sinkpad.
+ * to a random sink pad.
  * 
  * Returns: TRUE if the event was handled.
  */
@@ -1847,12 +1878,12 @@ gst_element_query_default (GstElement *element, GstPadQueryType type,
 
 /**
  * gst_element_query:
- * @element: The element to perform the query on.
- * @type: The query type
- * @format: a pointer to hold the format of the result
- * @value: a pointer to the value of the result
+ * @element: a #GstElement to perform the query on.
+ * @type: the #GstPadQueryType.
+ * @format: the #GstFormat pointer to hold the format of the result.
+ * @value: the pointer to the value of the result.
  *
- * Perform a query on the given element. If the format is set
+ * Performs a query on the given element. If the format is set
  * to GST_FORMAT_DEFAULT and this function returns TRUE, the 
  * format pointer will hold the default format.
  * For element that don't implement a query handler, this function
@@ -1876,12 +1907,13 @@ gst_element_query (GstElement *element, GstPadQueryType type,
 
 /**
  * gst_element_error:
- * @element: Element with the error
- * @error: A printf-like string describing the error
- * @...: optional arguments for the string 
+ * @element: a #GstElement with the error.
+ * @error: the printf-style string describing the error.
+ * @...: the optional arguments for the string.
  *
- * This function is used internally by elements to signal an error
- * condition.  It results in the "error" signal.
+ * signals an error condition on an element.
+ * This function is used internally by elements.
+ * It results in the "error" signal.
  */
 void
 gst_element_error (GstElement *element, const gchar *error, ...)
@@ -1915,11 +1947,11 @@ gst_element_error (GstElement *element, const gchar *error, ...)
 
 /**
  * gst_element_get_state:
- * @element: a #GstElement to get state of
+ * @element: a #GstElement to get the state of.
  *
  * Gets the state of the element. 
  *
- * Returns: The #GstElementState of the element
+ * Returns: the #GstElementState of the element.
  */
 GstElementState
 gst_element_get_state (GstElement *element)
@@ -1931,7 +1963,7 @@ gst_element_get_state (GstElement *element)
 
 /**
  * gst_element_wait_state_change:
- * @element: a #GstElement to wait for
+ * @element: a #GstElement to wait for a state change on.
  *
  * Waits and blocks until the element changed its state.
  */
@@ -1945,14 +1977,14 @@ gst_element_wait_state_change (GstElement *element)
 
 /**
  * gst_element_set_state:
- * @element: a #GstElement to change state of
- * @state: the element's new #GstElementState
+ * @element: a #GstElement to change state of.
+ * @state: the element's new #GstElementState.
  *
  * Sets the state of the element. This function will try to set the
  * requested state by going through all the intermediary states and calling
  * the class's state change function for each.
  *
- * Returns: whether or not the state was successfully set 
+ * Returns: TRUE if the state was successfully set.
  * (using #GstElementStateReturn).
  */
 gint
@@ -1998,20 +2030,23 @@ gst_element_set_state (GstElement *element, GstElementState state)
 
     switch (return_val) {
       case GST_STATE_FAILURE:
-        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "have failed change_state return");
+        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
+	                   "have failed change_state return");
         goto exit;
       case GST_STATE_ASYNC:
-        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "element will change state async");
+        GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
+	                   "element will change state async");
         goto exit;
       case GST_STATE_SUCCESS:
         /* Last thing we do is verify that a successful state change really
          * did change the state... */
         if (GST_STATE (element) != curpending) {
           GST_DEBUG_ELEMENT (GST_CAT_STATES, element, 
-			  "element claimed state-change success, but state didn't change %s, %s <-> %s",
-                     	  gst_element_state_get_name (GST_STATE (element)),
-                     	  gst_element_state_get_name (GST_STATE_PENDING (element)),
-                     	  gst_element_state_get_name (curpending));
+			     "element claimed state-change success,"
+			     "but state didn't change %s, %s <-> %s",
+                     	     gst_element_state_get_name (GST_STATE (element)),
+                     	     gst_element_state_get_name (GST_STATE_PENDING (element)),
+                     	     gst_element_state_get_name (curpending));
           return GST_STATE_FAILURE;
 	}
         break;
@@ -2070,14 +2105,18 @@ gst_element_negotiate_pads (GstElement *element)
 
       /* only try to negotiate if the peer element is in PAUSED or higher too */
       if (otherstate >= GST_STATE_READY) {
-        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "perform negotiate for %s:%s and %s:%s",
-		      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, 
+	                   "perform negotiate for %s:%s and %s:%s",
+		           GST_DEBUG_PAD_NAME (srcpad), 
+			   GST_DEBUG_PAD_NAME (sinkpad));
         if (!gst_pad_perform_negotiate (GST_PAD (srcpad), GST_PAD (sinkpad)))
 	  return FALSE;
       }
       else {
-        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, "not negotiatiating %s:%s and %s:%s, not in READY yet",
-		      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+        GST_DEBUG_ELEMENT (GST_CAT_CAPS, element, 
+	                   "not negotiating %s:%s and %s:%s, not in READY yet",
+		           GST_DEBUG_PAD_NAME (srcpad), 
+			   GST_DEBUG_PAD_NAME (sinkpad));
       }
     }
   }
@@ -2115,15 +2154,19 @@ gst_element_change_state (GstElement *element)
   old_pending = GST_STATE_PENDING (element);
   old_transition = GST_STATE_TRANSITION (element);
 
-  if (old_pending == GST_STATE_VOID_PENDING || old_state == GST_STATE_PENDING (element)) {
-    GST_INFO (GST_CAT_STATES, "no state change needed for element %s (VOID_PENDING)", GST_ELEMENT_NAME (element));
+  if (old_pending == GST_STATE_VOID_PENDING || 
+      old_state == GST_STATE_PENDING (element)) {
+    GST_INFO (GST_CAT_STATES, 
+	      "no state change needed for element %s (VOID_PENDING)", 
+	      GST_ELEMENT_NAME (element));
     return GST_STATE_SUCCESS;
   }
   
-  GST_INFO (GST_CAT_STATES, "%s default handler sets state from %s to %s %d", GST_ELEMENT_NAME (element),
-                     gst_element_state_get_name (old_state),
-                     gst_element_state_get_name (old_pending),
-		     GST_STATE_TRANSITION (element));
+  GST_INFO (GST_CAT_STATES, "%s default handler sets state from %s to %s %d", 
+            GST_ELEMENT_NAME (element),
+            gst_element_state_get_name (old_state),
+            gst_element_state_get_name (old_pending),
+	    GST_STATE_TRANSITION (element));
 
   /* we set the state change early for the negotiation functions */
   GST_STATE (element) = old_pending;
@@ -2145,23 +2188,25 @@ gst_element_change_state (GstElement *element)
 
   /* tell the scheduler if we have one */
   if (element->sched) {
-    if (gst_scheduler_state_transition (element->sched, element, old_transition) 
-		    != GST_STATE_SUCCESS) {
+    if (gst_scheduler_state_transition (element->sched, element, 
+	                                old_transition) != GST_STATE_SUCCESS) {
       goto failure;
     }
   }
 
   parent = GST_ELEMENT_PARENT (element);
 
-  GST_DEBUG_ELEMENT (GST_CAT_STATES, element, "signaling state change from %s to %s",
+  GST_DEBUG_ELEMENT (GST_CAT_STATES, element,
+                     "signaling state change from %s to %s",
                      gst_element_state_get_name (old_state),
                      gst_element_state_get_name (GST_STATE (element)));
   g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
-		  0, old_state, GST_STATE (element));
+		 0, old_state, GST_STATE (element));
 
   /* tell our parent about the state change */
   if (parent && GST_IS_BIN (parent)) {
-    gst_bin_child_state_change (GST_BIN (parent), old_state, GST_STATE (element), element);
+    gst_bin_child_state_change (GST_BIN (parent), old_state, 
+	                        GST_STATE (element), element);
   }
 
   /* signal the state change in case somebody is waiting for us */
@@ -2181,11 +2226,11 @@ failure:
 
 /**
  * gst_element_get_factory:
- * @element: element to request the factory
+ * @element: a #GstElement to request the element factory of.
  *
- * Retrieves the factory that was used to create this element
+ * Retrieves the factory that was used to create this element.
  *
- * Returns: the factory used for creating this element
+ * Returns: the #GstElementFactory used for creating this element.
  */
 GstElementFactory*
 gst_element_get_factory (GstElement *element)
@@ -2219,7 +2264,7 @@ gst_element_dispose (GObject *object)
 
       if (GST_PAD_PEER (pad)) {
         GST_DEBUG (GST_CAT_REFCOUNTING, "disconnecting pad '%s'",
-			GST_OBJECT_NAME (GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
+	           GST_OBJECT_NAME (GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
         gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
       }
       gst_element_remove_pad (element, pad);
@@ -2249,12 +2294,12 @@ gst_element_dispose (GObject *object)
 #ifndef GST_DISABLE_LOADSAVE
 /**
  * gst_element_save_thyself:
- * @element: GstElement to save
- * @parent: the xml parent node
+ * @element: a #GstElement to save.
+ * @parent: the xml parent node.
  *
- * Saves the element as part of the given XML structure
+ * Saves the element as part of the given XML structure.
  *
- * Returns: the new xml node
+ * Returns: the new #xmlNodePtr.
  */
 static xmlNodePtr
 gst_element_save_thyself (GstObject *object,
@@ -2303,9 +2348,11 @@ gst_element_save_thyself (GstObject *object,
       if (G_IS_PARAM_SPEC_STRING (spec))
         xmlNewChild (param, NULL, "value", g_value_dup_string (&value));
       else if (G_IS_PARAM_SPEC_ENUM (spec))
-        xmlNewChild (param, NULL, "value", g_strdup_printf ("%d", g_value_get_enum (&value)));
+        xmlNewChild (param, NULL, "value", 
+	             g_strdup_printf ("%d", g_value_get_enum (&value)));
       else if (G_IS_PARAM_SPEC_INT64 (spec))
-        xmlNewChild (param, NULL, "value", g_strdup_printf ("%lld", g_value_get_int64 (&value)));
+        xmlNewChild (param, NULL, "value", 
+	             g_strdup_printf ("%lld", g_value_get_int64 (&value)));
       else
         xmlNewChild (param, NULL, "value", g_strdup_value_contents (&value));
       
@@ -2355,7 +2402,7 @@ gst_element_restore_thyself (GstObject *object, xmlNodePtr self)
         child = child->next;
       }
       /* FIXME: can this just be g_object_set ? */
-      gst_util_set_object_arg ((GObject *)G_OBJECT (element), name, value);
+      gst_util_set_object_arg (G_OBJECT (element), name, value);
     }
     children = children->next;
   }
@@ -2376,9 +2423,9 @@ gst_element_restore_thyself (GstObject *object, xmlNodePtr self)
 
 /**
  * gst_element_yield:
- * @element: Element to yield
+ * @element: a #GstElement to yield.
  *
- * Request a yield operation for the child. The scheduler will typically
+ * Requests a yield operation for the element. The scheduler will typically
  * give control to another element.
  */
 void
@@ -2391,12 +2438,12 @@ gst_element_yield (GstElement *element)
 
 /**
  * gst_element_interrupt:
- * @element: Element to interrupt
+ * @element: a #GstElement to interrupt.
  *
- * Request the scheduler of this element to interrupt the execution of
+ * Requests the scheduler of this element to interrupt the execution of
  * this element and scheduler another one.
  *
- * Returns: a boolean indicating that the child should exit its chain/loop/get
+ * Returns: TRUE if the element should exit its chain/loop/get
  * function ASAP, depending on the scheduler implementation.
  */
 gboolean
@@ -2411,8 +2458,8 @@ gst_element_interrupt (GstElement *element)
 
 /**
  * gst_element_set_scheduler:
- * @element: Element to set manager of.
- * @sched: @GstScheduler to set.
+ * @element: a #GstElement to set the scheduler of.
+ * @sched: the #GstScheduler to set.
  *
  * Sets the scheduler of the element.  For internal use only, unless you're
  * writing a new bin subclass.
@@ -2430,11 +2477,11 @@ gst_element_set_scheduler (GstElement *element,
 
 /**
  * gst_element_get_scheduler:
- * @element: Element to get manager of.
+ * @element: a #GstElement to get the scheduler of.
  *
  * Returns the scheduler of the element.
  *
- * Returns: Element's scheduler
+ * Returns: the element's #GstScheduler.
  */
 GstScheduler*
 gst_element_get_scheduler (GstElement *element)
@@ -2446,8 +2493,8 @@ gst_element_get_scheduler (GstElement *element)
 
 /**
  * gst_element_set_loop_function:
- * @element: Element to set loop function of.
- * @loop: Pointer to loop function.
+ * @element: a #GstElement to set the loop function of.
+ * @loop: Pointer to #GstElementLoopFunction.
  *
  * This sets the loop function for the element.  The function pointed to
  * can deviate from the GstElementLoopFunction definition in type of
@@ -2472,7 +2519,7 @@ gst_element_set_loop_function (GstElement *element,
 
 /**
  * gst_element_set_eos:
- * @element: element to set to the EOS state
+ * @element: a #GstElement to set to the EOS state.
  *
  * Perform the actions needed to bring the element in the EOS state.
  */
@@ -2481,7 +2528,8 @@ gst_element_set_eos (GstElement *element)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  GST_DEBUG (GST_CAT_EVENT, "setting EOS on element %s", GST_OBJECT_NAME (element));
+  GST_DEBUG (GST_CAT_EVENT, "setting EOS on element %s", 
+             GST_OBJECT_NAME (element));
 
   gst_element_set_state (element, GST_STATE_PAUSED);
 
@@ -2491,11 +2539,11 @@ gst_element_set_eos (GstElement *element)
 
 /**
  * gst_element_state_get_name:
- * @state: a #GstElementState to get the name of
+ * @state: a #GstElementState to get the name of.
  *
  * Gets a string representing the given state.
  *
- * Returns: a string with the statename.
+ * Returns: a string with the name of the state.
  */
 const gchar*
 gst_element_state_get_name (GstElementState state) 
@@ -2507,7 +2555,8 @@ gst_element_state_get_name (GstElementState state)
     case GST_STATE_READY: return "\033[01;31mREADY\033[00m";break;
     case GST_STATE_PLAYING: return "\033[01;32mPLAYING\033[00m";break;
     case GST_STATE_PAUSED: return "\033[01;33mPAUSED\033[00m";break;
-    default: return g_strdup_printf ("\033[01;37;41mUNKNOWN!\033[00m(%d)", state);
+    default: 
+      return g_strdup_printf ("\033[01;37;41mUNKNOWN!\033[00m(%d)", state);
 #else
     case GST_STATE_VOID_PENDING: return "NONE_PENDING";break;
     case GST_STATE_NULL: return "NULL";break;
@@ -2521,8 +2570,8 @@ gst_element_state_get_name (GstElementState state)
 }
 
 static void
-gst_element_populate_std_props (GObjectClass * klass,
-				const gchar *prop_name, guint arg_id, GParamFlags flags)
+gst_element_populate_std_props (GObjectClass * klass, const gchar *prop_name, 
+                                guint arg_id, GParamFlags flags)
 {
   GQuark prop_id = g_quark_from_string (prop_name);
   GParamSpec *pspec;
@@ -2569,7 +2618,9 @@ gst_element_populate_std_props (GObjectClass * klass,
 
   }
   else if (prop_id == dump_id) {
-    pspec = g_param_spec_boolean ("dump", "Dump", "Dump bytes to stdout", FALSE, flags);
+    pspec = g_param_spec_boolean ("dump", "Dump", 
+	                          "Dump bytes to stdout", 
+				  FALSE, flags);
 
   }
   else if (prop_id == filesize_id) {
@@ -2619,17 +2670,19 @@ gst_element_populate_std_props (GObjectClass * klass,
 
 /**
  * gst_element_class_install_std_props:
- * @klass: the class to add the properties to
- * @first_name: the first in a NULL terminated
- * 'name', 'id', 'flags' triplet list.
- * @...: the triplet list
+ * @klass: the #GstElementClass to add the properties to.
+ * @first_name: the name of the first property.
+ * in a NULL terminated
+ * @...: the id and flags of the first property, followed by
+ * further 'name', 'id', 'flags' triplets and terminated by NULL.
  * 
- * Add a list of standardized properties with types to the @klass.
+ * Adds a list of standardized properties with types to the @klass.
  * the id is for the property switch in your get_prop method, and
  * the flags determine readability / writeability.
  **/
 void
-gst_element_class_install_std_props (GstElementClass * klass, const gchar *first_name, ...)
+gst_element_class_install_std_props (GstElementClass * klass, 
+                                     const gchar *first_name, ...)
 {
   const char *name;
 
@@ -2655,11 +2708,11 @@ gst_element_class_install_std_props (GstElementClass * klass, const gchar *first
 
 /**
  * gst_element_get_managing_bin:
- * @element: a #GstElement
+ * @element: a #GstElement to get the managing bin of.
  * 
  * Gets the managing bin (a pipeline or a thread, for example) of an element.
  *
- * Returns: the #GstBin, or NULL on failure
+ * Returns: the #GstBin, or NULL on failure.
  **/
 GstBin*
 gst_element_get_managing_bin (GstElement *element)
