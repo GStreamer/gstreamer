@@ -37,6 +37,7 @@ TODO :
     - with 0.3.3 as an example, tag is BRANCH-RELEASE-0_3_3
       cvs tag BRANCH-RELEASE-0_3_3-ROOT
       cvs tag -b BRANCH-RELEASE-0_3_3
+    - update your local copy to the branch:
       cvs update -r BRANCH-RELEASE-0_3_3
   - Set the nano to 2 (in configure.ac, AS_VERSION)
   - Do all updates/patches/changes for the release tarball in this branch
@@ -44,6 +45,8 @@ TODO :
   - create a new $(version).xml file in www/src/htdocs/releases/$(module)
     and add that to cvs
   - Start updating the release notes on the www cvs tree
+    - create the base xml file in www/htdocs/releases/$/module)/$(version).xml
+    - add the generated targets (text and html) for this to the Makefile.am
     - grepping ChangeLog for contributors:
  grep "<.*>" ChangeLog | perl -i -p -e 's@\d*-\d*-\d*\s*(.*)\s*<.*$@$1@' | sort | uniq
   - depending on how the API has changed update the libtool versioning
@@ -78,12 +81,12 @@ with the same name.
 TODO :
   - give the latest prerelease another good testing
   - proofread the release notes
-  - make a text copy of the release notes to be included in the tarball :
-    lynx -dump http://gstreamer.net/releases/$(module)/$(version) > NEWS
-    or
-    links -dump "http://gstreamer.net/releases/$(module)/$(version)" > NEWS
-    (FIXME: still need to remove the menu from this manually, maybe make
-    some xslt instead to do this ?)
+  - run bugzilla with the correct module and milestone and include
+    the output in the release notes
+    bin/bugzilla gstreamer 0.7.5 >> src/htdocs/releases/gstreamer/0.7.5.xml
+    then edit it
+  - copy  www/htdocs/releases/$(module)/$(version) to RELEASE
+  - copy the list of changes and add them to NEWS
 
   - update web site docs
     - release-specific docs should go in CVS
@@ -92,7 +95,7 @@ TODO :
   - tag tree
     for example for 0.6.3 :
            cvs tag RELEASE-0_6_3
-  - roll the tarball, build rpms
+  - run "make release", build rpms
   - run "make upload" from gstreamer/docs to get the new docs online
   - change www/src/htdocs/entities.gst with the new version numbers
   - add a news item to the news.xml
@@ -117,15 +120,25 @@ TODO :
     GStreamer rocks.
   - Later on, if necessary, merge back latest release branch to current dev
     branch (if patches to source were made)
-    * change to a HEAD branch, make sure it's updated
-    * cvs diff -R -r RELEASE-0_3_4-30SECONDFRENCHMAN
-      gives a list of differences between head and release tag,
-      stuff with > is how it's in HEAD, < is in the rel branch
 
-    * cvs update -j BRANCH-RELEASE-0_3_4
-      merges the difference made in that branch to the current source
-      this is what you want to use when merging back the branch
-      resolve conflicts and commit
+    TWO WAYS:
+    A)
+       * get a diff between the branch root and the final release:
+         cvs diff -r BRANCH-RELEASE-0_7_5-ROOT -r RELEASE-0_7_5 > patch
+       * fix up this patch (remove RELEASE)
+       * and apply it to the HEAD branch
+       * update nano version to 1 in configure.ac
+                                                                                
+    B)
+       * change to a HEAD branch, make sure it's updated
+       * cvs diff -R -r RELEASE-0_3_4-30SECONDFRENCHMAN
+         gives a list of differences between head and release tag,
+         stuff with > is how it's in HEAD, < is in the rel branch
+
+       * cvs update -j BRANCH-RELEASE-0_3_4
+         merges the difference made in that branch to the current source
+         this is what you want to use when merging back the branch
+         resolve conflicts and commit
 
 Some various random comments that might or might not make sense :
 
