@@ -2,7 +2,7 @@ plugindir = $(libdir)/gst
 
 plugin_LTLIBRARIES = libgstelements.la
 
-libgstelements_la_DEPENDENCIES = ../libgst.la
+libgstelements_la_DEPENDENCIES = ../libgstreamer.la
 libgstelements_la_SOURCES =	\
 	gstelements.c		\
 	gstfakesrc.c		\

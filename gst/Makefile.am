@@ -1,5 +1,5 @@
 
-lib_LTLIBRARIES = libgst.la
+lib_LTLIBRARIES = libgstreamer.la
 noinst_LTLIBRARIES = libcothreads.la
 
 if HAVE_CPU_I386
@@ -42,14 +42,14 @@ else
 GST_TRACE_SRC = gsttrace.c
 endif
 
-EXTRA_libgst_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
+EXTRA_libgstreamer_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gsttypefind.c gstparse.c gstautoplug.c gsttrace.c
 
 # cheap trick to build . first...
 SUBDIRS = . types elements $(GST_AUTOPLUG_DIRS) schedulers
 DIST_SUBDIRS = types elements autoplug schedulers
 
 libcothreads_la_SOURCES = cothreads.c
-libgst_la_SOURCES =		\
+libgstreamer_la_SOURCES =		\
 	gst.c			\
 	gstmarshal.c		\
 	gstobject.c		\
@@ -105,8 +105,8 @@ dist-hook:
 distclean-local:
 	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
 
-libgstincludedir = $(includedir)/gst
-libgstinclude_HEADERS =		\
+libgstreamerincludedir = $(includedir)/gstreamer
+libgstreamerinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
 	gstconfig.h		\
@@ -149,16 +149,16 @@ noinst_HEADERS = 	\
 	gstarch.h	\
 	gstpropsprivate.h
 
-libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
+libgstreamer_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	$(LIBGST_CFLAGS) \
 	-D_GNU_SOURCE \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
 	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\"
 
 # the compiler shoots cothreads.c in the head at -O6
-libcothreads_la_CFLAGS = $(libgst_la_CFLAGS) -O2
+libcothreads_la_CFLAGS = $(libgstreamer_la_CFLAGS) -O2
 
-libgst_la_LIBADD = $(LIBGST_LIBS) libcothreads.la
-libgst_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@
+libgstreamer_la_LIBADD = $(LIBGST_LIBS) libcothreads.la
+libgstreamer_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@
 
 EXTRA_DIST = ROADMAP

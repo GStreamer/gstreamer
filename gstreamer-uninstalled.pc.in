@@ -7,6 +7,6 @@ Name: GStreamer Uninstalled
 Description: Streaming-media framework, Not Installed
 Version: @VERSION@
 Requires: @GST_PKG_DEPS@@LIBXML_PKG@
-Libs: ${pcfiledir}/gst/libgst.la -L${pcfiledir}/libs/gst/control/
+Libs: ${pcfiledir}/gst/libgstreamer.la -L${pcfiledir}/libs/gst/control/
 Cflags: -I${pcfiledir} -I${pcfiledir}/libs -I${pc_top_builddir}/${pcfiledir}/@srcdir@ -I${pc_top_builddir}/${pcfiledir}/@srcdir@/libs @GST_PKG_CFLAGS@
 

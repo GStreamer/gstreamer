@@ -21,7 +21,7 @@ bonobo_gstmediaplay_CFLAGS = -Wall -O2		\
 
 bonobo_gstmediaplay_LDADD =		\
 	$(top_srcdir)/gstplay/libgstmediaplay.la \
-	$(top_srcdir)/gst/libgst.la
+	$(top_srcdir)/gst/libgstreamer.la
 
 bonobo_gstmediaplay_LDFLAGS =		\
 	$(shell gnome-config --libs gnome gnomeui bonobo bonobox)  $(shell libglade-config --libs gnome) \

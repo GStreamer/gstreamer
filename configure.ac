@@ -376,7 +376,7 @@ AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
 dnl Vars for everyone else
-GST_INT_LIBS="\$(top_builddir)/gst/libgst.la"
+GST_INT_LIBS="\$(top_builddir)/gst/libgstreamer.la"
 GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include -I\$(top_srcdir) -Wall"
 
 AC_SUBST(GST_CFLAGS, "$GST_EXT_CFLAGS $GST_INT_CFLAGS")

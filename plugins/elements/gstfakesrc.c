@@ -267,6 +267,7 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->loop_based = FALSE;
   gst_fakesrc_update_functions (fakesrc);
 
+  fakesrc->output = FAKESRC_FIRST_LAST_LOOP;
   fakesrc->num_buffers = -1;
   fakesrc->rt_num_buffers = -1;
   fakesrc->buffer_count = 0;
@@ -390,6 +391,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       gst_fakesrc_update_functions (src);
       break;
     case ARG_OUTPUT:
+      g_warning ("not yet implemented");
       break;
     case ARG_DATA:
       src->data = g_value_get_enum (value);
