@@ -35,7 +35,6 @@ static GstElementDetails gst_v4lmjpegsink_details = {
 /* v4lmjpegsink signals and args */
 enum {
   SIGNAL_FRAME_DISPLAYED,
-  SIGNAL_HAVE_SIZE,
   LAST_SIGNAL
 };
 
@@ -174,12 +173,6 @@ gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass *klass)
     g_signal_new ("frame_displayed", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstV4lMjpegSinkClass, frame_displayed), NULL, NULL,
                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-  gst_v4lmjpegsink_signals[SIGNAL_HAVE_SIZE] =
-    g_signal_new ("have_size", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-                   G_STRUCT_OFFSET (GstV4lMjpegSinkClass, have_size), NULL, NULL,
-                   gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
-		   G_TYPE_UINT, G_TYPE_UINT);
-
 
   gstelement_class->change_state = gst_v4lmjpegsink_change_state;
   gstelement_class->set_clock    = gst_v4lmjpegsink_set_clock;
@@ -254,9 +247,6 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
       continue;
     if (!gst_v4lmjpegsink_playback_init(v4lmjpegsink))
       continue;
-
-    g_signal_emit (G_OBJECT (v4lmjpegsink), gst_v4lmjpegsink_signals[SIGNAL_HAVE_SIZE], 0,
-      v4lmjpegsink->width, v4lmjpegsink->height);
 
     return GST_PAD_LINK_OK;
   }

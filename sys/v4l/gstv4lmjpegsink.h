@@ -87,7 +87,6 @@ struct _GstV4lMjpegSinkClass {
 
   /* signals */
   void (*frame_displayed) (GstElement *element);
-  void (*have_size) 	  (GstElement *element, guint width, guint height);
 };
 
 GType gst_v4lmjpegsink_get_type(void);
