@@ -1,5 +1,31 @@
 2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/gnomevfs/Makefile.am:
+	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_get_type),
+	(gst_gnomevfssink_dispose), (gst_gnomevfssink_init),
+	(gst_gnomevfssink_uri_get_type),
+	(gst_gnomevfssink_uri_get_protocols),
+	(gst_gnomevfssink_uri_get_uri), (gst_gnomevfssink_uri_set_uri),
+	(gst_gnomevfssink_uri_handler_init),
+	(gst_gnomevfssink_set_property), (gst_gnomevfssink_get_property),
+	(gst_gnomevfssink_open_file), (gst_gnomevfssink_close_file):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_get_type),
+	(gst_gnomevfssrc_init), (gst_gnomevfssrc_dispose),
+	(gst_gnomevfssrc_uri_get_type),
+	(gst_gnomevfssrc_uri_get_protocols), (gst_gnomevfssrc_uri_get_uri),
+	(gst_gnomevfssrc_uri_set_uri), (gst_gnomevfssrc_uri_handler_init),
+	(gst_gnomevfssrc_set_property), (gst_gnomevfssrc_get_property),
+	(gst_gnomevfssrc_open_file), (gst_gnomevfssrc_close_file):
+	* ext/gnomevfs/gstgnomevfsuri.c: (gst_gnomevfs_get_supported_uris):
+	* ext/gnomevfs/gstgnomevfsuri.h:
+	  Add URI support to Gnome-VFS plugins. Tries to load a fixed list
+	  of fake URIs to see which this version of Gnome-VFS likes, and
+	  uses that for the Gst-URI interface. Makes playbin support http://
+	  streams. Also fix up some stupid behaviour in gnomevfssrc.
+
+2004-09-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_update),
 	(gst_alsa_mixer_get_volume), (gst_alsa_mixer_set_volume),
 	(gst_alsa_mixer_set_mute), (gst_alsa_mixer_set_record),
