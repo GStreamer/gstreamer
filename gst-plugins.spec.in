@@ -4,7 +4,7 @@ Docdir: %{prefix}/doc
 Prefix: %prefix
 
 Summary: 	GStreamer Streaming-media framework plugins
-Name: 		gst-plugins
+Name: 		gstreamer-plugins
 Version: 	@VERSION@
 Release: 	@GST_PLUGINS_RELEASE@
 
@@ -65,10 +65,7 @@ else
   make 2>&1 | tee make.log
 fi
 
-%install
-[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
-
-make prefix=$RPM_BUILD_ROOT%{prefix} install
+%makeinstall
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -78,7 +75,8 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_A52DEC_TRUE@Summary: GStreamer VOB decoder plugin
 @USE_A52DEC_TRUE@Group: Libraries/Multimedia
 @USE_A52DEC_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_A52DEC_TRUE@Requires: a52dec >= 0.7.0
+@USE_A52DEC_TRUE@Requires: a52dec >= 0.7.3
+@USE_A52DEC_TRUE@Requires: a52dec-devel >= 0.7.3
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%description -n gstreamer-a52dec
 @USE_A52DEC_TRUE@Plugin for decoding of VOB files
@@ -629,20 +627,20 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_V4L_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
 ### XVIDEO ###
-@USE_XVIDEO_TRUE@%package -n gstreamer-xvideosink
-@USE_XVIDEO_TRUE@Summary: Gstreamer XFree output plugin
-@USE_XVIDEO_TRUE@Group: Libraries/Multimedia
-@USE_XVIDEO_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_XVIDEO_TRUE@Requires: Hermes => 1.3.0
-@USE_XVIDEO_TRUE@%description -n gstreamer-xvideosink
-@USE_XVIDEO_TRUE@Xfree86 video sink
-@USE_XVIDEO_TRUE@
-@USE_XVIDEO_TRUE@%files -n gstreamer-xvideosink
-@USE_XVIDEO_TRUE@%defattr(-, root, root)
-@USE_XVIDEO_TRUE@%{prefix}/lib/gst/libgstxvideosink*
-@USE_XVIDEO_TRUE@
-@USE_XVIDEO_TRUE@%post -n gstreamer-xvideosink
-@USE_XVIDEO_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+# @USE_XVIDEO_TRUE@%package -n gstreamer-xvideosink
+# @USE_XVIDEO_TRUE@Summary: Gstreamer XFree output plugin
+# @USE_XVIDEO_TRUE@Group: Libraries/Multimedia
+# @USE_XVIDEO_TRUE@Requires: gstreamer-plugins >= %{version}
+# @USE_XVIDEO_TRUE@Requires: Hermes => 1.3.0
+# @USE_XVIDEO_TRUE@%description -n gstreamer-xvideosink
+# @USE_XVIDEO_TRUE@Xfree86 video sink
+# @USE_XVIDEO_TRUE@
+# @USE_XVIDEO_TRUE@%files -n gstreamer-xvideosink
+# @USE_XVIDEO_TRUE@%defattr(-, root, root)
+# @USE_XVIDEO_TRUE@%{prefix}/lib/gst/libgstxvideosink*
+# @USE_XVIDEO_TRUE@
+# @USE_XVIDEO_TRUE@%post -n gstreamer-xvideosink
+# @USE_XVIDEO_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
 
 @USE_XVIDEO_TRUE@%package -n gstreamer-videosink
 @USE_XVIDEO_TRUE@Summary: GStreamer Video Sink
