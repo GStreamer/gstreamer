@@ -1,3 +1,30 @@
+2004-03-04  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* debian/README.Debian:
+	* debian/changelog:
+	* debian/control:
+	* debian/control.in:
+	* debian/copyright:
+	* debian/gstreamer-core-libs-dev.files:
+	* debian/gstreamer-core-libs.files:
+	* debian/gstreamer-core.files:
+	* debian/gstreamer-core.postinst:
+	* debian/gstreamer-core.postrm:
+	* debian/gstreamer-doc.files:
+	* debian/gstreamer-doc.links:
+	* debian/gstreamer-doc.lintian:
+	* debian/gstreamer-runtime.files:
+	* debian/gstreamer-runtime.manpages:
+	* debian/gstreamer-runtime.postinst:
+	* debian/gstreamer-runtime.postrm:
+	* debian/gstreamer-tools.files:
+	* debian/gstreamer-tools.manpages:
+	* debian/libgstreamer-dev.files:
+	* debian/libgstreamer0.4.1.files:
+	* debian/libgstreamerVERSION.files:
+	* debian/rules:
+	Debian package info not maintained here.
+
 2004-03-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_class_init):
