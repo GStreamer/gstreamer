@@ -1,2 +1,39 @@
 This is a sandbox module to test if our build setup for external libraries
 (for example FFmpeg) is sane.
+
+What we are trying to achieve:
+
+satisfy:
+  patching of CVS checkout using our patch files placed in our CVS
+
+  passing of
+    make
+    make distcheck
+    non-srcdir build (ie, mkdir build; cd build; ../configure; make)
+
+How it works:
+
+* configure checks whether or not it should update ffmpeg from CVS by looking
+  at the nano version number
+  - if it's 1, we're in cvs mode, and it should check it out
+  - if it's not 1, we're in prerel or rel mode, and the code should already
+    be on disk
+    FIXME: we could change this to really check out the source code if some
+    required files aren't there just in case someone checks out from CVS
+    but CVS is not at nano 1
+
+* patching of the checked-out copy happens at
+
+Axioms under which we work:
+- the dist tarball needs to include either
+  - the pristine ffmpeg checkout + our patches + a patch mechanism on make
+  or
+  - the ffmpeg checkout with patches already applied
+
+- configure/make is not allowed to touch files that already live in the source
+  tree; if they need to then they need to be copied first and cleaned
+  afterward
+
+- it would be very nice if, on update of either the Tag file or the patch set,
+  make would know exactly what to do with it.
+

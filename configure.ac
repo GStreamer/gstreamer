@@ -13,6 +13,8 @@ AM_MAINTAINER_MODE
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
 AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 7, 2, 1, GST_CVS="no", GST_CVS="yes")
+dnl we cheat here so we don't have to change the actual configure code bit
+GST_PLUGINS_VERSION_NANO=$GST_FFMPEG_VERSION_NANO
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
