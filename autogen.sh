@@ -182,8 +182,7 @@ autoconf || {
 	echo "autoconf failed"
 	#exit 1
 }
-# thomas : wingo told me to add --force-missing to get depcomp in make distcheck
-automake --add-missing --force-missing|| {
+automake --add-missing || {
 	echo
 	echo "automake failed"
 	#exit 1
