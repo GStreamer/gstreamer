@@ -1145,8 +1145,9 @@ theora_type_find (GstTypeFind * tf, gpointer private)
     if (memcmp (&data[1], "theora", 6) != 0)
       return;
     /* FIXME: make this more reliable when specs are out */
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, THEORA_CAPS);
   }
-  gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, THEORA_CAPS);
 }
 
 /*** audio/x-speex ***********************************************************/
