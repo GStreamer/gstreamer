@@ -1,3 +1,13 @@
+2005-02-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/dirac/gstdiracdec.cc:
+	(gst_diracdec_chain):
+	  Since dirac 0.5.0 the framerate in dirac is expressed as a
+	  rational number. Fix build and up requirement to 0.5.0, and
+	  also pass parameters to gst_diracdec_link in the right order
+	  (fixes #167959).
+
 2005-02-21  Maciej Katafiasz  <mathrick@freedesktop.org>
 
 	* ext/faad/gstfaad.c: (gst_faad_sinkconnect), (gst_faad_chain):
