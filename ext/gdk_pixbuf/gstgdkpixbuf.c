@@ -32,11 +32,8 @@
 static GstElementDetails plugin_details = {
   "GdkPixbuf image decoder",
   "Codec/Image",
-  "LGPL",
   "Decodes images in a video stream using GdkPixbuf",
-  VERSION,
   "David A. Schleef <ds@schleef.org>",
-  "(C) 2002, 2003"
 };
 
 /* Filter signals and args */
@@ -96,6 +93,7 @@ GST_PAD_TEMPLATE_FACTORY (gst_gdk_pixbuf_src_factory,
   )
 );
 
+static void     gst_gdk_pixbuf_base_init (gpointer g_class);
 static void	gst_gdk_pixbuf_class_init	(GstGdkPixbufClass *klass);
 static void	gst_gdk_pixbuf_init	(GstGdkPixbuf *filter);
 
@@ -215,7 +213,7 @@ gst_gdk_pixbuf_get_type (void)
     static const GTypeInfo plugin_info =
     {
       sizeof (GstGdkPixbufClass),
-      NULL,
+      gst_gdk_pixbuf_base_init,
       NULL,
       (GClassInitFunc) gst_gdk_pixbuf_class_init,
       NULL,
@@ -229,6 +227,16 @@ gst_gdk_pixbuf_get_type (void)
 	                                  &plugin_info, 0);
   }
   return plugin_type;
+}
+
+static void
+gst_gdk_pixbuf_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_gdk_pixbuf_src_factory ());
+  gst_element_class_add_pad_template (element_class, gst_gdk_pixbuf_sink_factory ());
+  gst_element_class_set_details (element_class, &plugin_details);
 }
 
 /* initialize the plugin's class */
@@ -395,6 +403,7 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
         gst_caps_new ("gdk_pixbuf_type_find", mlist[0], NULL));
   }
 
+  gdk_pixbuf_loader_close (pixbuf_loader, &error);
   g_object_unref (G_OBJECT (pixbuf_loader));
 }
 
@@ -404,23 +413,13 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
  * register the features
  */
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
+  if (!gst_element_register (plugin, "gdkpixbufdec", GST_RANK_NONE, GST_TYPE_GDK_PIXBUF))
+    return FALSE;
 
-  factory = gst_element_factory_new ("gdkpixbufdec", GST_TYPE_GDK_PIXBUF,
-                                     &plugin_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-                                        gst_gdk_pixbuf_src_factory ());
-  gst_element_factory_add_pad_template (factory,
-                                        gst_gdk_pixbuf_sink_factory ());
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  gst_type_find_factory_register (plugin, "image/*", GST_ELEMENT_RANK_MARGINAL,
-      gst_gdk_pixbuf_type_find, NULL, GST_CAPS_ANY, NULL);
+  gst_type_find_register (plugin, "image/*", GST_RANK_MARGINAL,
+			  gst_gdk_pixbuf_type_find, NULL, GST_CAPS_ANY, NULL);
 
   /* plugin initialisation succeeded */
   return TRUE;
@@ -428,9 +427,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
 /* this is the structure that gst-register looks for
  * so keep the name plugin_desc, or you cannot get your plug-in registered */
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "gdkpixbuf",
-  plugin_init
-};
+  "GDK Pixbuf decoder",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
