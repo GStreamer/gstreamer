@@ -1,3 +1,8 @@
+2004-02-04  David Schleef  <ds@schleef.org>
+
+	* gst/gstelement.c: (gst_element_clear_pad_caps): Make sure we have
+	a GstRealPad before accessing its structure members.
+
 2004-02-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstclock.c: (gst_clock_init), (gst_clock_set_speed),

@@ -2757,7 +2757,9 @@ gst_element_clear_pad_caps (GstElement *element)
     GstPad *pad = GST_PAD (pads->data);
 
     gst_pad_unnegotiate (pad);
-    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
+    if (GST_IS_REAL_PAD (pad)){
+      gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
+    }
 
     pads = g_list_next (pads);
   }
