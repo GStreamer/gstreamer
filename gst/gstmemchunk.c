@@ -24,7 +24,6 @@
 
 #include <string.h>             /* memset */
 
-#include "gstutils.h"
 #include "gstmemchunk.h"
 #include "gsttrashstack.h"
 #ifdef HAVE_VALGRIND

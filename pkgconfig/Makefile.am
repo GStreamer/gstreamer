@@ -1,10 +1,12 @@
 ### all of the standard pc files we need to generate
 pcfiles = 							\
 	gstreamer-@GST_MAJORMINOR@.pc				\
+	gstreamer-base-@GST_MAJORMINOR@.pc			\
 	gstreamer-control-@GST_MAJORMINOR@.pc
 
 pcfiles_uninstalled =						\
 	gstreamer-@GST_MAJORMINOR@-uninstalled.pc		\
+	gstreamer-base-@GST_MAJORMINOR@-uninstalled.pc		\
 	gstreamer-control-@GST_MAJORMINOR@-uninstalled.pc
 
 all-local: $(pcfiles) $(pcfiles_uninstalled)
@@ -21,6 +23,8 @@ pkgconfig_DATA = $(pcfiles)
 EXTRA_DIST =							\
 	gstreamer.pc.in						\
 	gstreamer-uninstalled.pc.in				\
+	gstreamer-base.pc.in					\
+	gstreamer-base-uninstalled.pc.in			\
 	gstreamer-control.pc.in					\
 	gstreamer-control-uninstalled.pc.in
 

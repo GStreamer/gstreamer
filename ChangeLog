@@ -1,3 +1,11 @@
+2005-04-06  Andy Wingo  <wingo@pobox.com>
+
+	* pkgconfig/gstreamer-base.pc.in:
+	* pkgconfig/gstreamer-base-uninstalled.pc.in: New files.
+
+	* pkgconfig/Makefile.am:
+	* configure.ac (AC_OUTPUT): Add gstreamer-base pkgconfig files.
+
 2005-04-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/Makefile.am:

@@ -260,15 +260,6 @@ Indicates how accurate the event was performed.
 @event: The event to query
 
 
-<!-- ##### MACRO GST_EVENT_DISCONT_NEW_MEDIA ##### -->
-<para>
-Flag that indicates the discont event was because of a new media
-type.
-</para>
-
-@event: The event to operate on
-
-
 <!-- ##### MACRO GST_EVENT_DISCONT_OFFSET ##### -->
 <para>
 The offset of the discont event. A discont event can hold up to 8 different
@@ -400,10 +391,12 @@ Copy the event using the event specific copy function
 
 </para>
 
-@new_media: 
+@rate: 
 @format1: 
 @Varargs: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@new_media: 
 
 
 <!-- ##### FUNCTION gst_event_new_discontinuous_valist ##### -->
@@ -411,10 +404,12 @@ Copy the event using the event specific copy function
 
 </para>
 
-@new_media: 
+@rate: 
 @format1: 
 @var_args: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@new_media: 
 
 
 <!-- ##### FUNCTION gst_event_discont_get_value ##### -->
@@ -424,8 +419,11 @@ Copy the event using the event specific copy function
 
 @event: 
 @format: 
-@value: 
+@start_value: 
+@end_value: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@value: 
 
 
 <!-- ##### MACRO gst_event_new_filler ##### -->

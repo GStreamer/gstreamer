@@ -731,6 +731,8 @@ pkgconfig/Makefile
 stamp.h
 pkgconfig/gstreamer.pc
 pkgconfig/gstreamer-uninstalled.pc
+pkgconfig/gstreamer-base.pc
+pkgconfig/gstreamer-base-uninstalled.pc
 pkgconfig/gstreamer-control.pc
 pkgconfig/gstreamer-control-uninstalled.pc
 gstreamer.spec,
