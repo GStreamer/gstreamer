@@ -916,6 +916,10 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   xcontext->widthmm = DisplayWidthMM (xcontext->disp, xcontext->screen_num);
   xcontext->heightmm = DisplayHeightMM (xcontext->disp, xcontext->screen_num);
 
+  GST_DEBUG_OBJECT (xvimagesink, "X reports %dx%d pixels and %d mm x %d mm",
+      xcontext->width, xcontext->height, xcontext->widthmm, xcontext->heightmm);
+
+
   gst_xvimagesink_calculate_pixel_aspect_ratio (xcontext);
   /* We get supported pixmap formats at supported depth */
   px_formats = XListPixmapFormats (xcontext->disp, &nb_formats);
