@@ -1,3 +1,11 @@
+2004-02-04  David Schleef  <ds@schleef.org>
+
+	Make sure set_explicit_caps() is called before adding pad.
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop):
+	* gst/id3/gstid3types.c: (gst_id3types_loop):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream):
+
 2004-02-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
