@@ -69,8 +69,6 @@ struct _GstFileSrc {
   gboolean is_regular;                  /* whether it's (symlink to)
                                            a regular file */
 
-  GstTask *task;
-
   GstBuffer *mapbuf;
   size_t mapsize;
 

@@ -1,3 +1,12 @@
+2005-01-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),
+	(gst_filesrc_open_file), (gst_filesrc_loop),
+	(gst_filesrc_activate), (filesrc_find_peek),
+	(gst_filesrc_type_find):
+	* gst/elements/gstfilesrc.h:
+	Fix filesrc push based scheduling.
+
 2005-01-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_getrange),

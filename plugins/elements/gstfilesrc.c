@@ -899,22 +899,22 @@ gst_filesrc_close_file (GstFileSrc * src)
 }
 
 static void
-gst_filesrc_loop (GstElement * element)
+gst_filesrc_loop (GstPad * pad)
 {
   GstFileSrc *filesrc;
   gboolean result;
   GstBuffer *buffer;
 
-  filesrc = GST_FILESRC (element);
+  filesrc = GST_FILESRC (GST_PAD_PARENT (pad));
 
-  result = gst_filesrc_get (filesrc->srcpad, &buffer);
+  result = gst_filesrc_get (pad, &buffer);
   if (result != GST_FLOW_OK) {
-    gst_task_stop (filesrc->task);
+    gst_task_pause (GST_RPAD_TASK (pad));
     return;
   }
-  result = gst_pad_push (filesrc->srcpad, buffer);
+  result = gst_pad_push (pad, buffer);
   if (result != GST_FLOW_OK) {
-    gst_task_stop (filesrc->task);
+    gst_task_pause (GST_RPAD_TASK (pad));
   }
 }
 
@@ -943,7 +943,6 @@ gst_filesrc_activate (GstPad * pad, GstActivateMode mode)
       break;
     case GST_ACTIVATE_PULL:
       result = TRUE;
-      filesrc->task = NULL;
       break;
     case GST_ACTIVATE_NONE:
       /* step 1, unblock clock sync (if any) */
@@ -951,11 +950,7 @@ gst_filesrc_activate (GstPad * pad, GstActivateMode mode)
       /* step 2, make sure streaming finishes */
       GST_STREAM_LOCK (pad);
       /* step 3, stop the task */
-      if (filesrc->task) {
-        gst_task_stop (filesrc->task);
-        gst_object_unref (GST_OBJECT (filesrc->task));
-        filesrc->task = NULL;
-      }
+      gst_task_stop (GST_RPAD_TASK (pad));
       GST_STREAM_UNLOCK (pad);
 
       result = TRUE;
@@ -1201,6 +1196,7 @@ gst_filesrc_type_find (GstFileSrc * src)
   find.src = src;
   find.best_probability = 0;
   find.caps = NULL;
+  find.buffer = NULL;
   gst_find.data = &find;
   gst_find.peek = filesrc_find_peek;
   gst_find.suggest = filesrc_find_suggest;
