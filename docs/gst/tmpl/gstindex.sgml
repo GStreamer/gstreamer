@@ -342,6 +342,19 @@ Check if the index can be written to
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_index_add_associationv ##### -->
+<para>
+
+</para>
+
+@index: 
+@id: 
+@flags: 
+@n: 
+@list: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_index_add_object ##### -->
 <para>
 

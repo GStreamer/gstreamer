@@ -1,3 +1,10 @@
+2005-03-12  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstindex.sgml:
+	* gst/gstindex.c:
+	  Fix documentation.
+
 2005-03-11  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstindex.c: (gst_index_factory_new):

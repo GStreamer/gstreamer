@@ -623,8 +623,7 @@ gst_index_add_entry (GstIndex * index, GstIndexEntry * entry)
  * @id: the id of the index writer
  * @flags: optinal flags for this entry
  * @n: number of associations
- * @list: list of associations
- * @...: other format/value pairs or 0 to end the list
+ * @list: list of format/value associations pais
  *
  * Associate given format/value pairs with each other.
  *
