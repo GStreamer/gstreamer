@@ -2,7 +2,7 @@
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
-package=gstreamer-plugins
+package=gst-plugins
 srcfile=gst/law/alaw.c
 
 # a quick cvs co if necessary to alleviate the pain - may remove this
@@ -33,15 +33,14 @@ version_check "pkg-config" "http://www.freedesktop.org/software/pkgconfig" 0 8 0
 
 autoconf_2.52d_check || DIE=1
 
-CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
+CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
 # if no arguments specified then this will be printed
-
 if test -z "$*"; then
-        echo "+ Checking for autogen.sh options"
-        echo "  This autogen script will automatically run ./configure as:"
-        echo "  ./configure $CONFIGURE_DEF_OPT"
-        echo "  To pass any additional options, please specify them on the $0"
-        echo "  command line."
+  echo "+ checking for autogen.sh options"
+  echo "  This autogen script will automatically run ./configure as:"
+  echo "  ./configure $CONFIGURE_DEF_OPT"
+  echo "  To pass any additional options, please specify them on the $0"
+  echo "  command line."
 fi
 
 toplevel_check $srcfile
@@ -75,9 +74,9 @@ if test -f disable; then
 fi
 
 test -n "$NOCONFIGURE" && {
-    echo "+ skipping configure stage for package $package, as requested."
-    echo "+ autogen.sh done."
-    exit 0
+  echo "+ skipping configure stage for package $package, as requested."
+  echo "+ autogen.sh done."
+  exit 0
 }
 
 echo "+ running configure ... "
