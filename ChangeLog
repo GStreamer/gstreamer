@@ -1,5 +1,14 @@
 2005-02-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/ximage/ximagesink.c: (gst_ximagesink_change_state):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_clear),
+	(gst_xvimagesink_change_state):
+	  Clear window on PAUSED->READY instead of READY->PAUSED. Stop
+	  Xv video (and thereby regenerate Xv colourkey) in clear() so
+	  that PLAY -> READY -> PLAY works (fixes #162504).
+
+2005-02-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_getcaps):
 	  Switch to list instead of range, since MJPEG-devices really just
 	  support decimations, not any size.
