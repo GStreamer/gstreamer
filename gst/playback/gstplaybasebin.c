@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include "gstplaybasebin.h"
+#include "gststreamselector.h"
 #include "gstplay-marshal.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
@@ -39,7 +40,10 @@ enum
   ARG_NSTREAMS,
   ARG_QUEUE_SIZE,
   ARG_STREAMINFO,
-  ARG_SOURCE
+  ARG_SOURCE,
+  ARG_VIDEO,
+  ARG_AUDIO,
+  ARG_TEXT
 };
 
 /* signals */
@@ -75,6 +79,12 @@ static void gst_play_base_bin_error (GstElement * element,
     GstElement * source, GError * error, gchar * debug, gpointer data);
 static void gst_play_base_bin_found_tag (GstElement * element,
     GstElement * source, const GstTagList * taglist, gpointer data);
+
+static void set_active_source (GstPlayBaseBin * play_base_bin,
+    GstStreamType type, gint source_num);
+static gboolean probe_triggered (GstProbe * probe, GstData ** data,
+    gpointer user_data);
+static void setup_substreams (GstPlayBaseBin * play_base_bin);
 
 static GstElementClass *element_class;
 static GstElementClass *parent_class;
@@ -139,6 +149,19 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   g_object_class_install_property (gobject_klass, ARG_SOURCE,
       g_param_spec_object ("source", "Source", "Source element",
           GST_TYPE_ELEMENT, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_klass, ARG_VIDEO,
+      g_param_spec_int ("current-video", "Current video",
+          "Currently playing video stream (-1 = none)",
+          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_AUDIO,
+      g_param_spec_int ("current-audio", "Current audio",
+          "Currently playing audio stream (-1 = none)",
+          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_TEXT,
+      g_param_spec_int ("current-text", "Current text",
+          "Currently playing text stream (-1 = none)",
+          -1, G_MAXINT, -1, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
       "playbasebin");
@@ -263,17 +286,21 @@ static void
 group_destroy (GstPlayBaseGroup * group)
 {
   GstPlayBaseBin *play_base_bin = group->bin;
-  GList *prerolls, *infos;
+  GList *infos;
+  gint n;
 
   GST_LOG ("removing group %p", group);
 
   /* remove the preroll queues */
-  for (prerolls = group->preroll_elems; prerolls;
-      prerolls = g_list_next (prerolls)) {
-    GstElement *element = GST_ELEMENT (prerolls->data);
+  for (n = 0; n < NUM_TYPES; n++) {
+    GstElement *element = group->type[n].preroll;
     GstPad *pad;
     guint sig_id;
     GstElement *fakesrc;
+    const GList *item;
+
+    if (!element)
+      continue;
 
     /* have to unlink the unlink handler first because else we
      * are going to link an element in the finalize handler */
@@ -288,10 +315,20 @@ group_destroy (GstPlayBaseGroup * group)
     }
 
     /* remove any fakesrc elements for this preroll element */
-    fakesrc = (GstElement *) g_object_get_data (G_OBJECT (element), "fakesrc");
-    if (fakesrc != NULL) {
-      GST_LOG ("removing fakesrc");
-      gst_bin_remove (GST_BIN (play_base_bin->thread), fakesrc);
+    for (item = gst_element_get_pad_list (group->type[n].selector);
+        item != NULL; item = item->next) {
+      GstPad *pad = item->data;
+
+      if (GST_PAD_DIRECTION (pad) != GST_PAD_SINK)
+        continue;
+
+      fakesrc = (GstElement *) g_object_get_data (G_OBJECT (pad), "fakesrc");
+      if (fakesrc != NULL) {
+        GST_LOG ("removing fakesrc from %s:%s",
+            gst_pad_get_name (pad),
+            GST_ELEMENT_NAME (gst_pad_get_parent (pad)));
+        gst_bin_remove (GST_BIN (play_base_bin->thread), fakesrc);
+      }
     }
 
     /* if the group is currently being played, we have to remove the element 
@@ -299,12 +336,15 @@ group_destroy (GstPlayBaseGroup * group)
     if (get_active_group (play_base_bin) == group) {
       GST_LOG ("removing preroll element %s", gst_element_get_name (element));
       gst_bin_remove (GST_BIN (play_base_bin->thread), element);
+      gst_bin_remove (GST_BIN (play_base_bin->thread), group->type[n].selector);
     } else {
       /* else we can just unref it */
       gst_object_unref (GST_OBJECT (element));
+      gst_object_unref (GST_OBJECT (group->type[n].selector));
     }
+
+    group->type[n].preroll = NULL;
   }
-  g_list_free (group->preroll_elems);
 
   /* free the streaminfo too */
   for (infos = group->streaminfo; infos; infos = g_list_next (infos)) {
@@ -323,7 +363,6 @@ static void
 group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
 {
   GstPlayBaseGroup *group = play_base_bin->building_group;
-  GList *prerolls;
 
   /* if an element signalled a no-more-pads after we stopped due
    * to preroll, the group is NULL. This is not an error */
@@ -334,6 +373,8 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
       GST_DEBUG ("Group loading failed, bailing out");
     }
   } else {
+    gint n;
+
     GST_DEBUG ("group %p done", group);
 
     play_base_bin->queued_groups = g_list_append (play_base_bin->queued_groups,
@@ -343,10 +384,12 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
 
     /* remove signals. We don't want anymore signals from the preroll
      * elements at this stage. */
-    for (prerolls = group->preroll_elems; prerolls;
-        prerolls = g_list_next (prerolls)) {
-      GstElement *element = GST_ELEMENT (prerolls->data);
+    for (n = 0; n < NUM_TYPES; n++) {
+      GstElement *element = group->type[n].preroll;
       guint sig_id;
+
+      if (!element)
+        continue;
 
       sig_id =
           GPOINTER_TO_INT (g_object_get_data (G_OBJECT (element), "signal_id"));
@@ -367,15 +410,13 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
 static gboolean
 group_is_muted (GstPlayBaseGroup * group)
 {
-  GList *infos;
+  gint n;
 
-  for (infos = group->streaminfo; infos; infos = g_list_next (infos)) {
-    GstStreamInfo *info = GST_STREAM_INFO (infos->data);
-
-    /* if we find a non muded group we can return FALSE */
-    if (!info->mute)
+  for (n = 0; n < NUM_TYPES; n++) {
+    if (group->type[n].preroll && !group->type[n].done)
       return FALSE;
   }
+
   return TRUE;
 }
 
@@ -394,26 +435,62 @@ queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
  * of the queues to fill. The assumption is that all the dynamic
  * streams will be detected by that time. 
  */
-static GstElement *
-gen_preroll_element (GstPlayBaseBin * play_base_bin, GstPad * pad)
+static void
+gen_preroll_element (GstPlayBaseBin * play_base_bin,
+    GstPlayBaseGroup * group, GstStreamType type, GstPad * pad,
+    GstStreamInfo * info)
 {
-  GstElement *element;
+  GstElement *selector, *preroll;
   gchar *name;
+  const gchar *prename;
   guint sig;
+  GstPad *preroll_pad;
+  GstProbe *probe;
 
-  name = g_strdup_printf ("preroll_%s", gst_pad_get_name (pad));
-  element = gst_element_factory_make ("queue", name);
-  g_object_set (G_OBJECT (element),
+  if (type == GST_STREAM_TYPE_VIDEO)
+    prename = "video";
+  else if (type == GST_STREAM_TYPE_TEXT)
+    prename = "text";
+  else if (type == GST_STREAM_TYPE_AUDIO)
+    prename = "audio";
+  else
+    g_return_if_reached ();
+
+  /* create stream selector */
+  name = g_strdup_printf ("selector_%s_%s", prename, gst_pad_get_name (pad));
+  selector = g_object_new (GST_TYPE_STREAM_SELECTOR, NULL);
+  gst_object_set_name (GST_OBJECT (selector), name);
+  g_free (name);
+
+  /* create preroll queue */
+  name = g_strdup_printf ("preroll_%s_%s", prename, gst_pad_get_name (pad));
+  preroll = gst_element_factory_make ("queue", name);
+  g_object_set (G_OBJECT (preroll),
       "max-size-buffers", 0, "max-size-bytes", 10 * 1024 * 1024,
       "max-size-time", play_base_bin->queue_size, NULL);
-  sig = g_signal_connect (G_OBJECT (element), "overrun",
+  sig = g_signal_connect (G_OBJECT (preroll), "overrun",
       G_CALLBACK (queue_overrun), play_base_bin);
   /* keep a ref to the signal id so that we can disconnect the signal callback
    * when we are done with the preroll */
-  g_object_set_data (G_OBJECT (element), "signal_id", GINT_TO_POINTER (sig));
+  g_object_set_data (G_OBJECT (preroll), "signal_id", GINT_TO_POINTER (sig));
   g_free (name);
 
-  return element;
+  /* listen for EOS */
+  preroll_pad = gst_element_get_pad (preroll, "src");
+  probe = gst_probe_new (FALSE, probe_triggered, info);
+  /* have to REALIZE the pad as we cannot attach a padprobe to a ghostpad */
+  gst_pad_add_probe (preroll_pad, probe);
+
+  /* add to group list */
+  gst_element_link (selector, preroll);
+  group->type[type - 1].selector = selector;
+  group->type[type - 1].preroll = preroll;
+  gst_bin_add (GST_BIN (play_base_bin->thread), selector);
+  gst_element_set_state (selector, GST_STATE_PLAYING);
+  gst_bin_add (GST_BIN (play_base_bin->thread), preroll);
+  gst_element_set_state (preroll, GST_STATE_PAUSED);
+
+  play_base_bin->threaded = TRUE;
 }
 
 static void
@@ -456,19 +533,8 @@ add_stream (GstPlayBaseGroup * group, GstStreamInfo * info)
   g_object_set_data (G_OBJECT (info), "group", group);
 
   group->streaminfo = g_list_append (group->streaminfo, info);
-  switch (info->type) {
-    case GST_STREAM_TYPE_AUDIO:
-      group->naudiopads++;
-      break;
-    case GST_STREAM_TYPE_VIDEO:
-      group->nvideopads++;
-      break;
-    case GST_STREAM_TYPE_TEXT:
-      group->ntextpads++;
-      break;
-    default:
-      group->nunknownpads++;
-      break;
+  if (info->type > 0 && info->type <= NUM_TYPES) {
+    group->type[info->type - 1].npads++;
   }
 }
 
@@ -484,7 +550,7 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   GstPlayBaseGroup *group = get_building_group (play_base_bin);
 
   capsstr = gst_caps_to_string (caps);
-  g_warning ("don't know how to handle %s", capsstr);
+  g_message /*warning */ ("don't know how to handle %s", capsstr);
 
   /* add the stream to the list */
   info = gst_stream_info_new (GST_OBJECT (pad), GST_STREAM_TYPE_UNKNOWN,
@@ -540,15 +606,21 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
     GstEvent *event = GST_EVENT (*data);
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+      gint num_groups = 0;
       gboolean have_left;
 
       GST_DEBUG ("probe got EOS in group %p", group);
 
       /* mute this stream */
-      g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
+      //g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
+      if (info->type > 0 && info->type <= NUM_TYPES)
+        group->type[info->type - 1].done = TRUE;
 
       /* see if we have some more groups left to play */
-      have_left = (g_list_length (play_base_bin->queued_groups) > 1);
+      num_groups = g_list_length (play_base_bin->queued_groups);
+      if (play_base_bin->building_group)
+        num_groups++;
+      have_left = (num_groups > 1);
 
       /* see if the complete group is muted */
       if (!group_is_muted (group)) {
@@ -561,14 +633,15 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
       }
 
       if (have_left) {
+        GST_DEBUG ("changing state for group change");
         gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
         /* ok, get rid of the current group then */
         group_destroy (group);
         /* removing the current group brings the next group
          * active */
         play_base_bin->queued_groups =
-            g_list_delete_link (play_base_bin->queued_groups,
-            play_base_bin->queued_groups);
+            g_list_remove (play_base_bin->queued_groups, group);
+        setup_substreams (play_base_bin);
         GST_DEBUG ("switching to next group %p",
             play_base_bin->queued_groups->data);
         /* and signal the new group */
@@ -578,9 +651,12 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
 
         GST_DEBUG ("Syncing state from %d", GST_STATE (play_base_bin->thread));
         gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
+        GST_DEBUG ("done");
 
         /* get rid of the EOS event */
         return FALSE;
+      } else {
+        GST_LOG ("Last group done, EOS");
       }
     } else if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
       GstTagList *taglist;
@@ -616,7 +692,7 @@ static void
 preroll_unlinked (GstPad * pad, GstPad * peerpad,
     GstPlayBaseBin * play_base_bin)
 {
-  GstElement *fakesrc, *queue;
+  GstElement *fakesrc;
   guint sig_id;
 
   /* make a fakesrc that will just emit one EOS */
@@ -629,8 +705,7 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
   gst_bin_add (GST_BIN (play_base_bin->thread), fakesrc);
 
   /* keep track of these patch elements */
-  queue = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (pad)));
-  g_object_set_data (G_OBJECT (queue), "fakesrc", fakesrc);
+  g_object_set_data (G_OBJECT (pad), "fakesrc", fakesrc);
 
   /* now unlink the unlinked signal so that it is not called again when
    * we destroy the queue */
@@ -641,6 +716,30 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
   }
 }
 
+/* Mute stream on first data - for header-is-in-stream-stuff
+ * (vorbis, ogmtext). */
+static gboolean
+mute_stream (GstProbe * probe, GstData ** d, gpointer data)
+{
+  GstStreamInfo *info = GST_STREAM_INFO (data);
+
+  if (GST_IS_BUFFER (*d)) {
+    g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
+    gst_pad_remove_probe ((GstPad *) GST_PAD_REALIZE (info->object), probe);
+    gst_probe_destroy (probe);
+  }
+
+  /* no data */
+  return FALSE;
+}
+
+/* Eat data. */
+static gboolean
+silence_stream (GstProbe * probe, GstData ** d, gpointer data)
+{
+  /* no data */
+  return FALSE;
+}
 
 /* signal fired when decodebin has found a new raw pad. We create
  * a preroll element if needed and the appropriate streaminfo.
@@ -652,13 +751,12 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   GstStructure *structure;
   const gchar *mimetype;
   GstCaps *caps;
-  GstElement *new_element = NULL;
   GstStreamInfo *info;
   GstStreamType type;
-  GstPad *srcpad;
-  gboolean need_preroll;
+  GstPad *sinkpad;
   GstPlayBaseGroup *group;
   GstProbe *probe;
+  guint sig;
 
   GST_DEBUG ("play base: new decoded pad %d", last);
 
@@ -679,69 +777,46 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   group->nstreams++;
 
-  need_preroll = FALSE;
-
   if (g_str_has_prefix (mimetype, "audio/")) {
     type = GST_STREAM_TYPE_AUDIO;
-    /* first audio pad gets a preroll element */
-    if (group->naudiopads == 0) {
-      need_preroll = TRUE;
-    }
   } else if (g_str_has_prefix (mimetype, "video/")) {
     type = GST_STREAM_TYPE_VIDEO;
-    /* first video pad gets a preroll element */
-    if (group->nvideopads == 0) {
-      need_preroll = TRUE;
-    }
   } else if (g_str_has_prefix (mimetype, "text/")) {
     type = GST_STREAM_TYPE_TEXT;
-    /* first text pad gets a preroll element */
-    if (group->ntextpads == 0) {
-      need_preroll = TRUE;
-    }
   } else {
     type = GST_STREAM_TYPE_UNKNOWN;
   }
 
-  if (last || !need_preroll) {
-    GST_DEBUG ("play base: pad does not need preroll");
-    srcpad = pad;
-  } else {
-    guint sig;
-    GstPad *sinkpad;
-
-    GST_DEBUG ("play base: pad needs preroll");
-
-    new_element = gen_preroll_element (play_base_bin, pad);
-    srcpad = gst_element_get_pad (new_element, "src");
-    gst_bin_add (GST_BIN (play_base_bin->thread), new_element);
-    play_base_bin->threaded = TRUE;
-
-    group->preroll_elems = g_list_prepend (group->preroll_elems, new_element);
-
-    gst_element_set_state (new_element, GST_STATE_READY);
-
-    sinkpad = gst_element_get_pad (new_element, "sink");
-    gst_pad_link (pad, sinkpad);
-    /* make sure we catch unlink signals */
-    sig = g_signal_connect (G_OBJECT (sinkpad), "unlinked",
-        G_CALLBACK (preroll_unlinked), play_base_bin);
-    /* keep a ref to the signal id so that we can disconnect the signal callback */
-    g_object_set_data (G_OBJECT (sinkpad), "unlinked_id",
-        GINT_TO_POINTER (sig));
-
-    gst_element_set_state (new_element, GST_STATE_PAUSED);
+  info = gst_stream_info_new (GST_OBJECT (pad), type, NULL, caps);
+  if (type > 0 && type <= NUM_TYPES) {
+    /* first pad of each type gets a selector + preroll queue */
+    if (group->type[type - 1].npads == 0) {
+      GST_DEBUG ("play base: pad needs new preroll");
+      gen_preroll_element (play_base_bin, group, type, pad, info);
+    }
   }
+
+  /* add to stream selector */
+  sinkpad = gst_element_get_pad (group->type[type - 1].selector, "sink%d");
+  /* make sure we catch unlink signals */
+  sig = g_signal_connect (G_OBJECT (sinkpad), "unlinked",
+      G_CALLBACK (preroll_unlinked), play_base_bin);
+  /* keep a ref to the signal id so that we can disconnect the signal callback */
+  g_object_set_data (G_OBJECT (sinkpad), "unlinked_id", GINT_TO_POINTER (sig));
+  gst_pad_link (pad, sinkpad);
+
   /* add the stream to the list */
-  info = gst_stream_info_new (GST_OBJECT (srcpad), type, NULL, caps);
   gst_caps_free (caps);
   info->origin = GST_OBJECT (pad);
-  add_stream (group, info);
 
-  /* install a probe so that we know when this group has ended */
-  probe = gst_probe_new (FALSE, probe_triggered, info);
-  /* have to REALIZE the pad as we cannot attach a padprobe to a ghostpad */
-  gst_pad_add_probe (GST_PAD_REALIZE (srcpad), probe);
+  /* select 1st for now - we'll select a preferred one after preroll */
+  if (type == GST_STREAM_TYPE_UNKNOWN || group->type[type - 1].npads > 0) {
+    probe = gst_probe_new (FALSE, silence_stream, info);
+    gst_pad_add_probe (GST_PAD_REALIZE (pad), probe);
+    g_object_set_data (G_OBJECT (pad), "eat_probe", probe);
+  }
+
+  add_stream (group, info);
 
   /* signal the no more pads after adding the stream */
   if (last)
@@ -942,6 +1017,48 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GList ** subbins)
   return bin;
 }
 
+/* Setup the substreams (to be called right after group_commit ()) */
+static void
+setup_substreams (GstPlayBaseBin * play_base_bin)
+{
+  GstPlayBaseGroup *group = get_active_group (play_base_bin);
+  GstProbe *probe;
+  gint n;
+  const GList *item;
+
+  /* Remove the eat probes */
+  for (item = group->streaminfo; item; item = item->next) {
+    GstStreamInfo *info = item->data;
+
+    probe = g_object_get_data (G_OBJECT (info->object), "eat_probe");
+    if (probe) {
+      gst_pad_remove_probe (GST_PAD_REALIZE (info->object), probe);
+      gst_probe_destroy (probe);
+    }
+
+    /* now remove unknown pads */
+    if (info->type == GST_STREAM_TYPE_UNKNOWN) {
+      GstProbe *probe;
+
+      probe = gst_probe_new (FALSE, mute_stream, info);
+      gst_pad_add_probe (GST_PAD_REALIZE (info->object), probe);
+    }
+  }
+
+  /* now check if the requested current streams exist */
+  for (n = 0; n < NUM_TYPES; n++) {
+    if (play_base_bin->current[n] >= group->type[n].npads) {
+      play_base_bin->current[n] = group->type[n].npads > 0 ? 0 : -1;
+    }
+  }
+
+  /* now acticate the right sources. Don't forget that during preroll,
+   * we set the first source to forwarding and ignored the rest. */
+  for (n = 0; n < NUM_TYPES; n++) {
+    set_active_source (play_base_bin, n + 1, play_base_bin->current[n]);
+  }
+}
+
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
  */
@@ -1133,12 +1250,123 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
     play_base_bin->need_rebuild = FALSE;
   }
 
-  /* make subs iterate from now on */
-  for (item = play_base_bin->subtitles; item; item = item->next) {
-    gst_bin_add (GST_BIN (play_base_bin->thread), item->data);
+  if (get_active_group (play_base_bin) != NULL) {
+    /* make subs iterate from now on */
+    for (item = play_base_bin->subtitles; item; item = item->next) {
+      gst_bin_add (GST_BIN (play_base_bin->thread), item->data);
+    }
+    setup_substreams (play_base_bin);
   }
 
   return TRUE;
+}
+
+/*
+ * Multi-stream management. -1 = none.
+ */
+static gint
+get_active_source (GstPlayBaseBin * play_base_bin, GstStreamType type)
+{
+  GstPlayBaseGroup *group;
+  GList *s;
+  gint num = 0;
+
+  group = get_active_group (play_base_bin);
+  if (!group)
+    return -1;
+
+  for (s = group->streaminfo; s; s = s->next) {
+    GstStreamInfo *info = s->data;
+
+    if (info->type == type) {
+      if (!info->mute) {
+        return num;
+      } else {
+        num++;
+      }
+    }
+  }
+
+  return -1;
+}
+
+/* Kill pad reactivation on state change. */
+
+static void muted_group_change_state (GstElement * element,
+    gint old_state, gint new_state, gpointer data);
+
+static void
+mute_group_type (GstPlayBaseGroup * group, GstStreamType type, gboolean mute)
+{
+  gboolean active = !mute;
+
+  gst_pad_set_active (gst_element_get_pad (group->type[type - 1].preroll,
+          "src"), active);
+  gst_pad_set_active (gst_element_get_pad (group->type[type - 1].preroll,
+          "sink"), active);
+  gst_pad_set_active (gst_element_get_pad (group->type[type - 1].selector,
+          "src"), active);
+
+  if (mute) {
+    g_signal_connect (group->type[type - 1].preroll, "state-change",
+        G_CALLBACK (muted_group_change_state), group);
+  } else {
+    g_signal_handlers_disconnect_by_func (group->type[type - 1].preroll,
+        G_CALLBACK (muted_group_change_state), group);
+  }
+}
+
+static void
+muted_group_change_state (GstElement * element,
+    gint old_state, gint new_state, gpointer data)
+{
+  GstPlayBaseGroup *group = data;
+
+  if (new_state == GST_STATE_PLAYING) {
+    gint n;
+
+    for (n = 0; n < NUM_TYPES; n++) {
+      if (group->type[n].selector == element) {
+        mute_group_type (group, n + 1, TRUE);
+      }
+    }
+  }
+}
+
+static void
+set_active_source (GstPlayBaseBin * play_base_bin,
+    GstStreamType type, gint source_num)
+{
+  GstPlayBaseGroup *group;
+  GList *s;
+  gint num = 0;
+  gboolean have_active = FALSE;
+
+  GST_LOG ("Changing active source of type %d to %d", type, source_num);
+  play_base_bin->current[type - 1] = source_num;
+
+  group = get_active_group (play_base_bin);
+  if (!group || !group->type[type - 1].preroll)
+    return;
+
+  for (s = group->streaminfo; s; s = s->next) {
+    GstStreamInfo *info = s->data;
+
+    if (info->type == type) {
+      if (num == source_num) {
+        g_object_set (s->data, "mute", FALSE, NULL);
+        have_active = TRUE;
+      } else {
+        GstProbe *probe;
+
+        probe = gst_probe_new (FALSE, mute_stream, info);
+        gst_pad_add_probe (GST_PAD_REALIZE (info->object), probe);
+      }
+      num++;
+    }
+  }
+
+  mute_group_type (group, type, !have_active);
 }
 
 static void
@@ -1174,6 +1402,18 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
     }
     case ARG_QUEUE_SIZE:
       play_base_bin->queue_size = g_value_get_uint64 (value);
+      break;
+    case ARG_VIDEO:
+      set_active_source (play_base_bin,
+          GST_STREAM_TYPE_VIDEO, g_value_get_int (value));
+      break;
+    case ARG_AUDIO:
+      set_active_source (play_base_bin,
+          GST_STREAM_TYPE_AUDIO, g_value_get_int (value));
+      break;
+    case ARG_TEXT:
+      set_active_source (play_base_bin,
+          GST_STREAM_TYPE_TEXT, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1222,6 +1462,18 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
       } else
         g_value_set_object (value, play_base_bin->source);
       break;
+    case ARG_VIDEO:
+      g_value_set_int (value, get_active_source (play_base_bin,
+              GST_STREAM_TYPE_VIDEO));
+      break;
+    case ARG_AUDIO:
+      g_value_set_int (value, get_active_source (play_base_bin,
+              GST_STREAM_TYPE_AUDIO));
+      break;
+    case ARG_TEXT:
+      g_value_set_int (value, get_active_source (play_base_bin,
+              GST_STREAM_TYPE_TEXT));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1232,6 +1484,8 @@ static void
 play_base_eos (GstBin * bin, GstPlayBaseBin * play_base_bin)
 {
   no_more_pads (GST_ELEMENT (bin), play_base_bin);
+
+  GST_LOG ("forwarding EOS");
 
   gst_element_set_eos (GST_ELEMENT (play_base_bin));
 }
@@ -1349,6 +1603,7 @@ gst_play_base_bin_change_state (GstElement * element)
         GST_DEBUG ("emit signal");
         g_signal_emit (play_base_bin,
             gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
+        GST_DEBUG ("done");
       } else {
         /* clean up leftover groups */
         remove_groups (play_base_bin);

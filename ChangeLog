@@ -1,3 +1,31 @@
+2005-01-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(group_destroy), (group_commit), (group_is_muted),
+	(gen_preroll_element), (add_stream), (unknown_type),
+	(probe_triggered), (preroll_unlinked), (mute_stream),
+	(silence_stream), (new_decoded_pad), (setup_substreams),
+	(setup_source), (get_active_source), (mute_group_type),
+	(muted_group_change_state), (set_active_source),
+	(gst_play_base_bin_set_property), (gst_play_base_bin_get_property),
+	(play_base_eos), (gst_play_base_bin_change_state):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (add_sink), (setup_sinks):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_class_init),
+	(gst_stream_info_dispose), (stream_info_mute_pad),
+	(stream_info_change_state), (gst_stream_info_set_mute):
+	* gst/playback/gststreamselector.c: (gst_stream_selector_get_type),
+	(gst_stream_selector_base_init), (gst_stream_selector_class_init),
+	(gst_stream_selector_init), (gst_stream_selector_dispose),
+	(gst_stream_selector_get_linked_pad),
+	(gst_stream_selector_get_caps), (gst_stream_selector_link),
+	(gst_stream_selector_get_linked_pads),
+	(gst_stream_selector_request_new_pad), (gst_stream_selector_chain):
+	* gst/playback/gststreamselector.h:
+	  Adding stream selection support plus required properties for
+	  applications to use this. Fully fixes #100931.
+
 2005-01-08  Benjamin Otte  <otte@gnome.org>
 
 	* gst/games/gstpuzzle.c: (nav_event_handler):

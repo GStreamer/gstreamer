@@ -25,6 +25,9 @@
 #include <gst/gst.h>
 #include "gststreaminfo.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_streaminfo_debug);
+#define GST_CAT_DEFAULT gst_streaminfo_debug
+
 /* props */
 enum
 {
@@ -69,6 +72,9 @@ gst_stream_type_get_type (void)
 static void gst_stream_info_class_init (GstStreamInfoClass * klass);
 static void gst_stream_info_init (GstStreamInfo * stream_info);
 static void gst_stream_info_dispose (GObject * object);
+
+static void stream_info_change_state (GstElement * element,
+    gint old_state, gint new_state, gpointer data);
 
 static void gst_stream_info_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -140,6 +146,9 @@ gst_stream_info_class_init (GstStreamInfoClass * klass)
       gst_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_stream_info_dispose);
+
+  GST_DEBUG_CATEGORY_INIT (gst_streaminfo_debug, "streaminfo", 0,
+      "Playbin Stream Info");
 }
 
 
@@ -181,8 +190,16 @@ gst_stream_info_dispose (GObject * object)
 
   stream_info = GST_STREAM_INFO (object);
 
-  gst_object_unref (stream_info->object);
-  stream_info->object = NULL;
+  if (stream_info->object) {
+    if (GST_PAD_REALIZE (stream_info->object)) {
+      g_signal_handlers_disconnect_by_func (gst_pad_get_parent ((GstPad *)
+              GST_PAD_REALIZE (stream_info->object)),
+          G_CALLBACK (stream_info_change_state), stream_info);
+    }
+
+    gst_object_unref (stream_info->object);
+    stream_info->object = NULL;
+  }
   stream_info->origin = NULL;
   stream_info->type = GST_STREAM_TYPE_UNKNOWN;
   g_free (stream_info->decoder);
@@ -207,6 +224,8 @@ stream_info_mute_pad (GstStreamInfo * stream_info, GstPad * pad, gboolean mute)
   GST_DEBUG_OBJECT (stream_info, "%s %s:%s", debug_str,
       GST_DEBUG_PAD_NAME (pad));
   gst_pad_set_active (pad, activate);
+  if (gst_pad_get_parent (pad)->numsrcpads > 1)
+    return;
 
   for (int_links = gst_pad_get_internal_links (pad);
       int_links; int_links = g_list_next (int_links)) {
@@ -231,6 +250,20 @@ stream_info_mute_pad (GstStreamInfo * stream_info, GstPad * pad, gboolean mute)
   }
 }
 
+static void
+stream_info_change_state (GstElement * element,
+    gint old_state, gint new_state, gpointer data)
+{
+  GstStreamInfo *stream_info = data;
+
+  if (new_state == GST_STATE_PLAYING) {
+    /* state change will annoy us */
+    g_return_if_fail (stream_info->mute == TRUE);
+    GST_DEBUG_OBJECT (stream_info, "Re-muting pads after state-change");
+    stream_info_mute_pad (stream_info, GST_PAD (stream_info->object), TRUE);
+  }
+}
+
 gboolean
 gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
 {
@@ -243,7 +276,18 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
 
   if (mute != stream_info->mute) {
     stream_info->mute = mute;
-    stream_info_mute_pad (stream_info, GST_PAD (stream_info->object), mute);
+    stream_info_mute_pad (stream_info,
+        (GstPad *) GST_PAD_REALIZE (stream_info->object), mute);
+
+    if (mute) {
+      g_signal_connect (gst_pad_get_parent ((GstPad *)
+              GST_PAD_REALIZE (stream_info->object)), "state-change",
+          G_CALLBACK (stream_info_change_state), stream_info);
+    } else {
+      g_signal_handlers_disconnect_by_func (gst_pad_get_parent ((GstPad *)
+              GST_PAD_REALIZE (stream_info->object)),
+          G_CALLBACK (stream_info_change_state), stream_info);
+    }
   }
   return TRUE;
 }

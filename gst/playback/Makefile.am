@@ -12,7 +12,9 @@ plugin_LTLIBRARIES = libgstplaybin.la libgstdecodebin.la
 libgstplaybin_la_SOURCES = \
 	gstplaybin.c \
 	gstplaybasebin.c \
-	gststreaminfo.c
+	gststreaminfo.c \
+	gststreamselector.c
+
 nodist_libgstplaybin_la_SOURCES = $(built_sources)
 libgstplaybin_la_CFLAGS = $(GST_CFLAGS)
 libgstplaybin_la_LIBADD =
@@ -24,7 +26,10 @@ libgstdecodebin_la_CFLAGS = $(GST_CFLAGS)
 libgstdecodebin_la_LIBADD =
 libgstdecodebin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstplaybasebin.h gststreaminfo.h
+noinst_HEADERS = \
+	gstplaybasebin.h \
+	gststreaminfo.h \
+	gststreamselector.h
 
 noinst_PROGRAMS = test decodetest test2 test3 test4
 

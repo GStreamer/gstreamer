@@ -671,74 +671,72 @@ remove_sinks (GstPlayBin * play_bin)
  * this should eventually be handled with a tuner interface so that
  * one can switch the streams.
  */
+static gboolean
+add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
+{
+  GstPad *sinkpad;
+  gboolean res;
+
+  /* we found a sink for this stream, now try to install it */
+  gst_bin_add (GST_BIN (play_bin), sink);
+  GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)\n",
+      GST_STATE (sink), GST_STATE (play_bin),
+      GST_STATE (gst_pad_get_parent (srcpad)));
+  sinkpad = gst_element_get_pad (sink, "sink");
+
+  /* try to link the pad of the sink to the stream */
+  res = gst_pad_link (srcpad, sinkpad);
+  if (!res) {
+    gchar *capsstr;
+
+    /* could not link this stream */
+    capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
+    g_warning ("could not link %s", capsstr);
+    g_free (capsstr);
+    GST_LOG ("removing sink %p", sink);
+    gst_bin_remove (GST_BIN (play_bin), sink);
+  } else {
+    /* we got the sink succesfully linked, now keep the sink
+     * in out internal list */
+    play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
+  }
+
+  return res;
+}
+
 static void
 setup_sinks (GstPlayBaseBin * play_base_bin)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (play_base_bin);
-  GList *streaminfo;
-  GList *s;
-  gint num_audio = 0;
-  gint num_video = 0;
-  gint num_text = 0;
+  GstPlayBaseGroup *group;
+  GList *streaminfo = NULL, *s;
   gboolean need_vis = FALSE;
   gboolean need_text = FALSE;
   GstPad *textsrcpad = NULL, *textsinkpad = NULL;
+  GstElement *sink;
 
-  /* FIXME: do this nicer, like taking a look at the installed
-   * bins and figuring out if we can simply reconnect them, remove
-   * or add them. */
-  if (GST_STATE (play_base_bin) == GST_STATE_PLAYING) {
+  /* get rid of existing sinks */
+  if (play_bin->sinks) {
     remove_sinks (play_bin);
   }
   GST_DEBUG ("setupsinks");
-  /* get info about the stream */
-  g_object_get (G_OBJECT (play_bin), "stream-info", &streaminfo, NULL);
 
-  /* first examine the streams we have */
-  for (s = streaminfo; s; s = g_list_next (s)) {
-    GObject *obj = G_OBJECT (s->data);
-    gint type;
-    GstPad *srcpad;
-
-    g_object_get (obj, "type", &type, NULL);
-    /* we don't care about streams with their own sink */
-    if (type == 4)
-      continue;
-
-    /* else we need to get the pad */
-    g_object_get (obj, "object", &srcpad, NULL);
-
-    /* hmm.. pad is allready linked */
-    if (gst_pad_is_linked (srcpad))
-      continue;
-
-    if (type == 1) {
-      num_audio++;
-    } else if (type == 2) {
-      num_video++;
-    } else if (type == 3) {
-      num_text++;
-    }
-  }
-  /* no video, use vis */
-  if (num_video == 0 && num_audio > 0 && play_bin->visualisation) {
-    need_vis = TRUE;
-  } else if (num_video > 0 && num_text > 0) {
+  /* find out what to do */
+  group = play_base_bin->queued_groups->data;
+  if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads > 0 &&
+      group->type[GST_STREAM_TYPE_TEXT - 1].npads > 0) {
     need_text = TRUE;
+  } else if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads == 0 &&
+      group->type[GST_STREAM_TYPE_AUDIO - 1].npads > 0 &&
+      play_bin->visualisation != NULL) {
+    need_vis = TRUE;
   }
-
-  num_audio = 0;
-  num_video = 0;
-  num_text = 0;
 
   /* now actually connect everything */
+  g_object_get (G_OBJECT (play_base_bin), "stream-info", &streaminfo, NULL);
   for (s = streaminfo; s; s = g_list_next (s)) {
     GObject *obj = G_OBJECT (s->data);
     gint type;
-    GstPad *srcpad, *sinkpad;
-    GstElement *sink = NULL;
-    gboolean res;
-    gboolean mute = FALSE;
     GstObject *object;
 
     g_object_get (obj, "type", &type, NULL);
@@ -747,91 +745,41 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
     /* use the sink elements as seek entry point */
     if (type == 4) {
       play_bin->seekables = g_list_prepend (play_bin->seekables, object);
-      continue;
-    }
-
-    srcpad = GST_PAD (object);
-
-    /* pas is allready linked, go to the next pad */
-    if (gst_pad_is_linked (srcpad))
-      continue;
-
-    if (type == 1) {
-      if (num_audio > 0) {
-        g_warning ("two audio streams found, playing first one");
-        mute = TRUE;
-      } else {
-        if (need_vis) {
-          sink = gen_vis_element (play_bin);
-        } else {
-          sink = gen_audio_element (play_bin);
-        }
-        num_audio++;
-      }
-    } else if (type == 2) {
-      if (num_video > 0) {
-        g_warning ("two video streams found, playing first one");
-        mute = TRUE;
-      } else {
-        if (need_text) {
-          sink = gen_text_element (play_bin);
-          textsinkpad = gst_element_get_pad (sink, "text_sink");
-        } else {
-          sink = gen_video_element (play_bin);
-        }
-        num_video++;
-      }
-    } else if (type == 3) {
-      if (num_text > 0) {
-        g_warning ("two subtitle streams found, playing first one");
-        mute = TRUE;
-      } else {
-        textsrcpad = srcpad;
-        num_text++;
-      }
-    } else if (type == 4) {
-      /* we can ignore these streams here */
-    } else {
-      g_warning ("unknown stream found");
-      mute = TRUE;
-    }
-
-    /* we found a sink for this stream, now try to install it */
-    if (sink != NULL) {
-      gst_bin_add (GST_BIN (play_bin), sink);
-      GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)\n",
-          GST_STATE (sink), GST_STATE (play_bin),
-          GST_STATE (gst_pad_get_parent (srcpad)));
-      sinkpad = gst_element_get_pad (sink, "sink");
-
-      /* try to link the pad of the sink to the stream */
-      res = gst_pad_link (srcpad, sinkpad);
-      if (!res) {
-        gchar *capsstr;
-
-        /* could not link this stream */
-        capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
-        g_warning ("could not link %s", capsstr);
-        g_free (capsstr);
-        GST_LOG ("removing sink %p", sink);
-        gst_bin_remove (GST_BIN (play_bin), sink);
-        mute = TRUE;
-      } else {
-        /* we got the sink succesfully linked, now keep the sink
-         * in out internal list */
-        play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
-      }
-    }
-    if (mute) {
-      /* no sink found/needed for this stream. We mute the stream
-       * so that it does not take any resources */
-      g_object_set (G_OBJECT (obj), "mute", TRUE, NULL);
     }
   }
 
-  /* if subtitles, link */
-  if (textsrcpad && num_video > 0) {
-    gst_pad_link (textsrcpad, textsinkpad);
+  /* link audio */
+  if (group->type[GST_STREAM_TYPE_AUDIO - 1].npads > 0) {
+    if (need_vis) {
+      sink = gen_vis_element (play_bin);
+    } else {
+      sink = gen_audio_element (play_bin);
+    }
+    //gst_element_link (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll, sink);
+    add_sink (play_bin, sink,
+        gst_element_get_pad (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll,
+            "src"));
+  }
+
+  /* link video */
+  if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads > 0) {
+    if (need_text) {
+      sink = gen_text_element (play_bin);
+
+      textsinkpad = gst_element_get_pad (sink, "text_sink");
+      textsrcpad =
+          gst_element_get_pad (group->type[GST_STREAM_TYPE_TEXT - 1].preroll,
+          "src");
+      if (textsinkpad && textsrcpad) {
+        gst_pad_link (textsrcpad, textsinkpad);
+      }
+    } else {
+      sink = gen_video_element (play_bin);
+    }
+    //gst_element_link (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll, sink);
+    add_sink (play_bin, sink,
+        gst_element_get_pad (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll,
+            "src"));
   }
 }
 

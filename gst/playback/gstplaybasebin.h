@@ -52,12 +52,13 @@ typedef struct
   gint		 nstreams;
   GList		*streaminfo;
 
-  gint		 naudiopads;
-  gint		 nvideopads;
-  gint		 ntextpads;
-  gint		 nunknownpads;
-
-  GList		*preroll_elems;
+  struct {
+    gint	 npads;
+    GstElement	*preroll;
+    GstElement	*selector;
+    gboolean	 done;
+#define NUM_TYPES 3
+  } type[NUM_TYPES]; /* AUDIO, VIDEO, TEXT */
 } GstPlayBaseGroup;
 
 struct _GstPlayBaseBin {
@@ -66,6 +67,8 @@ struct _GstPlayBaseBin {
   /* properties */
   gboolean	 threaded;
   guint64	 queue_size;
+
+  gint		 current[NUM_TYPES];
 
   /* internal thread */
   GstElement	*thread;
