@@ -1,3 +1,12 @@
+2004-01-02  David Schleef  <ds@schleef.org>
+
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_pad_factory),
+	(gst_alsa_src_base_init): Remove bogus "src" request pad.
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_base_init),
+	(gst_mpeg_parse_class_init): Move pad template registration
+	to class_init, since the derived class (mpegdemux) doesn't
+	want them.
+
 2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/ximage/Makefile.am:
