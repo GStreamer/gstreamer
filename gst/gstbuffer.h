@@ -28,7 +28,7 @@
 // Define this to add file:line info to each GstBuffer showing
 // the location in the source code where the buffer was created.
 // 
-// #define GST_BUFFER_WHERE
+#define GST_BUFFER_WHERE
 //
 // Then in gdb, you can `call gst_buffer_print_live()' to get a list
 // of allocated GstBuffers and also the file:line where they were
@@ -153,8 +153,8 @@ struct _GstBuffer {
 
 #ifdef GST_BUFFER_WHERE
 
-# define GST_WHERE const gchar *where_file, gint where_line
-# define GST_WHERE_ GST_WHERE,
+# define GST_WHERE_ARGS const gchar *where_file, gint where_line
+# define GST_WHERE_ARGS_ GST_WHERE_ARGS,
 # define GST_WHERE_VARS  where_file, where_line
 # define GST_WHERE_VARS_ where_file, where_line,
 
@@ -173,8 +173,8 @@ struct _GstBuffer {
 
 #else /* GST_BUFFER_WHERE */
 
-# define GST_WHERE
-# define GST_WHERE_
+# define GST_WHERE_ARGS
+# define GST_WHERE_ARGS_
 # define GST_WHERE_VARS
 # define GST_WHERE_VARS_
 
@@ -196,11 +196,11 @@ struct _GstBuffer {
 /* initialisation */
 void 		_gst_buffer_initialize		(void);
 /* creating a new buffer from scratch */
-GstBuffer*	gst_buffer_new_loc		(GST_WHERE);
+GstBuffer*	gst_buffer_new_loc		(GST_WHERE_ARGS);
 GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint32 offset, guint32 size);
 
 /* creating a subbuffer */
-GstBuffer*	gst_buffer_create_sub_loc	(GST_WHERE_
+GstBuffer*	gst_buffer_create_sub_loc	(GST_WHERE_ARGS_
 						 GstBuffer *parent, guint32 offset, guint32 size);
 
 /* refcounting */
@@ -211,15 +211,15 @@ void 		gst_buffer_unref		(GstBuffer *buffer);
 void 		gst_buffer_destroy		(GstBuffer *buffer);
 
 /* copy buffer */
-GstBuffer*	gst_buffer_copy_loc		(GST_WHERE_
+GstBuffer*	gst_buffer_copy_loc		(GST_WHERE_ARGS_
 						 GstBuffer *buffer);
 
 /* merge, span, or append two buffers, intelligently */
-GstBuffer*	gst_buffer_merge_loc		(GST_WHERE_
+GstBuffer*	gst_buffer_merge_loc		(GST_WHERE_ARGS_
 						 GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*	gst_buffer_span_loc		(GST_WHERE_
+GstBuffer*	gst_buffer_span_loc		(GST_WHERE_ARGS_
 						 GstBuffer *buf1,guint32 offset,GstBuffer *buf2,guint32 len);
-GstBuffer*	gst_buffer_append_loc		(GST_WHERE_
+GstBuffer*	gst_buffer_append_loc		(GST_WHERE_ARGS_
 						 GstBuffer *buf, GstBuffer *buf2);
 
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);

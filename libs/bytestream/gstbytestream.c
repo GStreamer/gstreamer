@@ -167,7 +167,7 @@ gst_bytestream_fill_bytes (GstByteStream * bs, guint32 len)
 
 
 GstBuffer *
-gst_bytestream_peek (GstByteStream * bs, guint32 len)
+gst_bytestream_peek_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
 {
   GstBuffer *headbuf, *retbuf = NULL;
 
@@ -192,14 +192,14 @@ gst_bytestream_peek (GstByteStream * bs, guint32 len)
   if (len <= bs->headbufavail) {
     bs_print ("peek: there are enough bytes in headbuf (need %d, have %d)\n", len, bs->headbufavail);
     // create a sub-buffer of the headbuf
-    retbuf = gst_buffer_create_sub (headbuf, GST_BUFFER_SIZE (headbuf) - bs->headbufavail, len);
+    retbuf = gst_buffer_create_sub_loc (GST_WHERE_VARS_ headbuf, GST_BUFFER_SIZE (headbuf) - bs->headbufavail, len);
 
     // otherwise we need to figure out how to assemble one
   }
   else {
     bs_print ("peek: current buffer is not big enough for len %d\n", len);
 
-    retbuf = gst_buffer_new ();
+    retbuf = gst_buffer_new_loc (GST_WHERE_VARS);
     GST_BUFFER_SIZE (retbuf) = len;
     GST_BUFFER_DATA (retbuf) = gst_bytestream_assemble (bs, len);
     if (GST_BUFFER_OFFSET (headbuf) != -1)
@@ -343,9 +343,9 @@ gst_bytestream_flush (GstByteStream * bs, guint32 len)
 }
 
 GstBuffer *
-gst_bytestream_read (GstByteStream * bs, guint32 len)
+gst_bytestream_read_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
 {
-  GstBuffer *buf = gst_bytestream_peek (bs, len);
+  GstBuffer *buf = gst_bytestream_peek_loc (GST_WHERE_VARS_ bs, len);
   gst_bytestream_flush (bs, len);
   return buf;
 }
