@@ -59,7 +59,6 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_LOOP_BASED		FALSE
 #define DEFAULT_SLEEP_TIME		0
 #define DEFAULT_DUPLICATE		1
 #define DEFAULT_ERROR_AFTER		-1
@@ -73,11 +72,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_HAS_GETRANGE,
-  PROP_HAS_CHAIN,
-  PROP_HAS_SINK_LOOP,
-  PROP_HAS_SRC_LOOP,
-  PROP_LOOP_BASED,
   PROP_SLEEP_TIME,
   PROP_DUPLICATE,
   PROP_ERROR_AFTER,
@@ -91,14 +85,11 @@ enum
 };
 
 
-typedef GstFlowReturn (*IdentityPushFunc) (GstIdentity *, GstBuffer *);
-
-
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_identity_debug, "identity", 0, "identity element");
 
-GST_BOILERPLATE_FULL (GstIdentity, gst_identity, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
+GST_BOILERPLATE_FULL (GstIdentity, gst_identity, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, _do_init);
 
 static void gst_identity_finalize (GObject * object);
 static void gst_identity_set_property (GObject * object, guint prop_id,
@@ -107,17 +98,9 @@ static void gst_identity_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstElementStateReturn gst_identity_change_state (GstElement * element);
 
-static gboolean gst_identity_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_identity_getrange (GstPad * pad, guint64 offset,
-    guint length, GstBuffer ** buffer);
-static GstFlowReturn gst_identity_chain (GstPad * pad, GstBuffer * buffer);
-static void gst_identity_src_loop (GstPad * pad);
-static void gst_identity_sink_loop (GstPad * pad);
-static GstFlowReturn gst_identity_handle_buffer (GstIdentity * identity,
-    GstBuffer * buf);
-static void gst_identity_set_clock (GstElement * element, GstClock * clock);
-static GstCaps *gst_identity_proxy_getcaps (GstPad * pad);
-
+static gboolean gst_identity_event (GstBaseTransform * trans, GstEvent * event);
+static GstFlowReturn gst_identity_transform (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer ** outbuf);
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
@@ -140,9 +123,6 @@ gst_identity_finalize (GObject * object)
 
   identity = GST_IDENTITY (object);
 
-  g_mutex_free (identity->pen_lock);
-  g_cond_free (identity->pen_cond);
-
   g_free (identity->last_message);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -153,29 +133,15 @@ gst_identity_class_init (GstIdentityClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseTransformClass *gstbasetrans_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
+  gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_GETRANGE,
-      g_param_spec_boolean ("has-getrange", "Has getrange",
-          "If the src pad will implement a getrange function",
-          TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_CHAIN,
-      g_param_spec_boolean ("has-chain", "Has chain",
-          "If the sink pad will implement a chain function",
-          TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_SRC_LOOP,
-      g_param_spec_boolean ("has-src-loop", "Has src loop",
-          "If the src pad will implement a loop function",
-          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_SINK_LOOP,
-      g_param_spec_boolean ("has-sink-loop", "Has sink loop",
-          "If the sink pad will implement a loop function",
-          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SLEEP_TIME,
       g_param_spec_uint ("sleep-time", "Sleep time",
           "Microseconds to sleep between processing", 0, G_MAXUINT,
@@ -220,33 +186,16 @@ gst_identity_class_init (GstIdentityClass * klass)
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
 
-  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_identity_set_clock);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_identity_change_state);
 
+  gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_identity_event);
+  gstbasetrans_class->transform = GST_DEBUG_FUNCPTR (gst_identity_transform);
 }
 
 static void
 gst_identity_init (GstIdentity * identity)
 {
-  identity->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
-      "sink");
-  gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
-  gst_pad_set_getcaps_function (identity->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_identity_proxy_getcaps));
-  gst_pad_set_event_function (identity->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_identity_event));
-
-  identity->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
-      "src");
-  gst_pad_set_getcaps_function (identity->srcpad,
-      GST_DEBUG_FUNCPTR (gst_identity_proxy_getcaps));
-  gst_pad_set_getrange_function (identity->srcpad,
-      GST_DEBUG_FUNCPTR (gst_identity_getrange));
-  gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
-
   identity->sleep_time = DEFAULT_SLEEP_TIME;
   identity->duplicate = DEFAULT_DUPLICATE;
   identity->error_after = DEFAULT_ERROR_AFTER;
@@ -257,279 +206,78 @@ gst_identity_init (GstIdentity * identity)
   identity->check_perfect = DEFAULT_CHECK_PERFECT;
   identity->dump = DEFAULT_DUMP;
   identity->last_message = NULL;
-  identity->srccaps = NULL;
-
-  identity->pen_data = NULL;
-  identity->pen_lock = g_mutex_new ();
-  identity->pen_cond = g_cond_new ();
-  identity->pen_flushing = FALSE;
-}
-
-static void
-gst_identity_set_clock (GstElement * element, GstClock * clock)
-{
-  GstIdentity *identity = GST_IDENTITY (element);
-
-  gst_object_replace ((GstObject **) & identity->clock, (GstObject *) clock);
-}
-
-static GstCaps *
-gst_identity_proxy_getcaps (GstPad * pad)
-{
-  GstPad *otherpad;
-  GstIdentity *identity = GST_IDENTITY (GST_OBJECT_PARENT (pad));
-
-  otherpad = pad == identity->srcpad ? identity->sinkpad : identity->srcpad;
-
-  return gst_pad_peer_get_caps (otherpad);
 }
 
 static gboolean
-identity_queue_push (GstIdentity * identity, GstData * data)
-{
-  gboolean ret;
-
-  g_mutex_lock (identity->pen_lock);
-  while (identity->pen_data && !identity->pen_flushing)
-    g_cond_wait (identity->pen_cond, identity->pen_lock);
-  if (identity->pen_flushing) {
-    gst_data_unref (identity->pen_data);
-    identity->pen_data = NULL;
-    gst_data_unref (data);
-    ret = FALSE;
-  } else {
-    identity->pen_data = data;
-    ret = TRUE;
-  }
-  g_cond_signal (identity->pen_cond);
-  g_mutex_unlock (identity->pen_lock);
-
-  return ret;
-}
-
-static GstData *
-identity_queue_pop (GstIdentity * identity)
-{
-  GstData *ret;
-
-  g_mutex_lock (identity->pen_lock);
-  while (!(ret = identity->pen_data) && !identity->pen_flushing)
-    g_cond_wait (identity->pen_cond, identity->pen_lock);
-  g_cond_signal (identity->pen_cond);
-  g_mutex_unlock (identity->pen_lock);
-
-  return ret;
-}
-
-static void
-identity_queue_flush (GstIdentity * identity)
-{
-  g_mutex_lock (identity->pen_lock);
-  identity->pen_flushing = TRUE;
-  g_cond_signal (identity->pen_cond);
-  g_mutex_unlock (identity->pen_lock);
-}
-
-static gboolean
-gst_identity_event (GstPad * pad, GstEvent * event)
+gst_identity_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstIdentity *identity;
-  gboolean ret;
 
-  identity = GST_IDENTITY (GST_PAD_PARENT (pad));
-
-  GST_STREAM_LOCK (pad);
+  identity = GST_IDENTITY (trans);
 
   if (!identity->silent) {
     g_free (identity->last_message);
 
     identity->last_message =
         g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
-        GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
+        GST_DEBUG_PAD_NAME (trans->sinkpad), GST_EVENT_TYPE (event), event);
 
     g_object_notify (G_OBJECT (identity), "last_message");
   }
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      /* forward event */
-      gst_pad_event_default (pad, event);
-      if (GST_EVENT_FLUSH_DONE (event)) {
-        if (identity->sink_mode == GST_ACTIVATE_PULL) {
-          /* already have the sink stream lock */
-          gst_task_start (GST_RPAD_TASK (identity->sinkpad));
-        }
-        if (identity->src_mode == GST_ACTIVATE_PUSH) {
-          GST_STREAM_LOCK (identity->srcpad);
-          gst_task_start (GST_RPAD_TASK (identity->srcpad));
-          GST_STREAM_UNLOCK (identity->srcpad);
-        }
-      } else {
-        /* unblock both functions */
-        identity_queue_flush (identity);
-
-      }
-      ret = TRUE;
-      goto done;
-    case GST_EVENT_EOS:
-      if (identity->sink_mode == GST_ACTIVATE_PULL) {
-        /* already have the sink stream lock */
-        gst_task_pause (GST_RPAD_TASK (identity->sinkpad));
-      }
-      break;
-    default:
-      break;
-  }
-
-  if (identity->decoupled) {
-    ret = identity_queue_push (identity, (GstData *) event);
-  } else {
-    ret = gst_pad_push_event (identity->srcpad, event);
-  }
-
-done:
-  GST_STREAM_UNLOCK (pad);
-  return ret;
-}
-
-static GstFlowReturn
-gst_identity_getrange (GstPad * pad, guint64 offset,
-    guint length, GstBuffer ** buffer)
-{
-  GstIdentity *identity;
-  GstFlowReturn ret;
-
-  identity = GST_IDENTITY (GST_PAD_PARENT (pad));
-
-  GST_STREAM_LOCK (pad);
-
-  ret = gst_pad_pull_range (identity->sinkpad, offset, length, buffer);
-
-  GST_STREAM_UNLOCK (pad);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_identity_chain (GstPad * pad, GstBuffer * buffer)
-{
-  GstIdentity *identity;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  identity = GST_IDENTITY (GST_PAD_PARENT (pad));
-
-  GST_STREAM_LOCK (pad);
-
-  ret = gst_identity_handle_buffer (identity, buffer);
-
-  GST_STREAM_UNLOCK (pad);
-
-  return ret;
-}
-
-#define DEFAULT_PULL_SIZE 1024
-
-static void
-gst_identity_sink_loop (GstPad * pad)
-{
-  GstIdentity *identity;
-  GstBuffer *buffer;
-  GstFlowReturn ret;
-
-  identity = GST_IDENTITY (GST_PAD_PARENT (pad));
-
-  GST_STREAM_LOCK (pad);
-
-  ret = gst_pad_pull_range (pad, identity->offset, DEFAULT_PULL_SIZE, &buffer);
-  if (ret != GST_FLOW_OK)
-    goto sink_loop_pause;
-
-  ret = gst_identity_handle_buffer (identity, buffer);
-  if (ret != GST_FLOW_OK)
-    goto sink_loop_pause;
-
-  GST_STREAM_UNLOCK (pad);
-  return;
-
-sink_loop_pause:
-  gst_task_pause (GST_RPAD_TASK (identity->sinkpad));
-  GST_STREAM_UNLOCK (pad);
-  return;
+  return TRUE;
 }
 
 static void
-gst_identity_src_loop (GstPad * pad)
+gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
 {
-  GstIdentity *identity;
-  GstData *data;
-  GstFlowReturn ret;
+  GstClockTime timestamp;
 
-  identity = GST_IDENTITY (GST_PAD_PARENT (pad));
-
-  GST_STREAM_LOCK (pad);
-
-  data = identity_queue_pop (identity);
-  if (!data)                    /* we're getting flushed */
-    goto src_loop_pause;
-
-  if (GST_IS_EVENT (data)) {
-    if (GST_EVENT_TYPE (data) == GST_EVENT_EOS)
-      gst_task_pause (GST_RPAD_TASK (identity->srcpad));
-    gst_pad_push_event (identity->srcpad, GST_EVENT (data));
-  } else {
-    ret = gst_pad_push (identity->srcpad, (GstBuffer *) data);
-    if (ret != GST_FLOW_OK)
-      goto src_loop_pause;
-  }
-
-  GST_STREAM_UNLOCK (pad);
-  return;
-
-src_loop_pause:
-  gst_task_pause (GST_RPAD_TASK (identity->srcpad));
-  GST_STREAM_UNLOCK (pad);
-  return;
-}
-
-static GstFlowReturn
-gst_identity_handle_buffer (GstIdentity * identity, GstBuffer * buf)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  guint i;
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   /* see if we need to do perfect stream checking */
   /* invalid timestamp drops us out of check.  FIXME: maybe warn ? */
-  if (identity->check_perfect &&
-      GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
+  if (timestamp != GST_CLOCK_TIME_NONE) {
     /* check if we had a previous buffer to compare to */
     if (identity->prev_timestamp != GST_CLOCK_TIME_NONE) {
-      if (identity->prev_timestamp + identity->prev_duration !=
-          GST_BUFFER_TIMESTAMP (buf)) {
+      guint64 offset;
+
+      if (identity->prev_timestamp + identity->prev_duration != timestamp) {
         GST_WARNING_OBJECT (identity,
             "Buffer not time-contiguous with previous one: " "prev ts %"
             GST_TIME_FORMAT ", prev dur %" GST_TIME_FORMAT ", new ts %"
             GST_TIME_FORMAT, GST_TIME_ARGS (identity->prev_timestamp),
-            GST_TIME_ARGS (identity->prev_duration),
-            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+            GST_TIME_ARGS (identity->prev_duration), GST_TIME_ARGS (timestamp));
       }
-      if (identity->prev_offset_end != GST_BUFFER_OFFSET (buf)) {
+
+      offset = GST_BUFFER_OFFSET (buf);
+      if (identity->prev_offset_end != offset) {
         GST_WARNING_OBJECT (identity,
             "Buffer not data-contiguous with previous one: "
             "prev offset_end %" G_GINT64_FORMAT ", new offset %"
-            G_GINT64_FORMAT, identity->prev_offset_end,
-            GST_BUFFER_OFFSET (buf));
+            G_GINT64_FORMAT, identity->prev_offset_end, offset);
       }
     }
     /* update prev values */
-    identity->prev_timestamp = GST_BUFFER_TIMESTAMP (buf);
+    identity->prev_timestamp = timestamp;
     identity->prev_duration = GST_BUFFER_DURATION (buf);
     identity->prev_offset_end = GST_BUFFER_OFFSET_END (buf);
   }
+}
+
+static GstFlowReturn
+gst_identity_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer ** outbuf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstIdentity *identity = GST_IDENTITY (trans);
+  guint i;
+
+  if (identity->check_perfect)
+    gst_identity_check_perfect (identity, inbuf);
 
   if (identity->error_after >= 0) {
     identity->error_after--;
     if (identity->error_after == 0) {
-      gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (identity, CORE, FAILED,
           (_("Failed after iterations as requested.")), (NULL));
       return GST_FLOW_ERROR;
@@ -543,18 +291,18 @@ gst_identity_handle_buffer (GstIdentity * identity, GstBuffer * buf)
           g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, timestamp: %"
           GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
           G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
-          GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf),
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-          GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
+          GST_DEBUG_PAD_NAME (trans->sinkpad), GST_BUFFER_SIZE (inbuf),
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
+          GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf),
+          GST_BUFFER_FLAGS (inbuf), inbuf);
       g_object_notify (G_OBJECT (identity), "last-message");
-      gst_buffer_unref (buf);
       return GST_FLOW_OK;
     }
   }
 
   if (identity->dump) {
-    gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    gst_util_dump_mem (GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
   }
 
   for (i = identity->duplicate; i; i--) {
@@ -566,74 +314,46 @@ gst_identity_handle_buffer (GstIdentity * identity, GstBuffer * buf)
           g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, timestamp: %"
           GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
           G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
-          GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf),
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-          GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
+          GST_DEBUG_PAD_NAME (trans->sinkpad), GST_BUFFER_SIZE (inbuf),
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
+          GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf),
+          GST_BUFFER_FLAGS (inbuf), inbuf);
       g_object_notify (G_OBJECT (identity), "last-message");
     }
 
-    time = GST_BUFFER_TIMESTAMP (buf);
+    time = GST_BUFFER_TIMESTAMP (inbuf);
 
     if (identity->datarate > 0) {
       time = identity->offset * GST_SECOND / identity->datarate;
 
-      GST_BUFFER_TIMESTAMP (buf) = time;
-      GST_BUFFER_DURATION (buf) =
-          GST_BUFFER_SIZE (buf) * GST_SECOND / identity->datarate;
+      GST_BUFFER_TIMESTAMP (inbuf) = time;
+      GST_BUFFER_DURATION (inbuf) =
+          GST_BUFFER_SIZE (inbuf) * GST_SECOND / identity->datarate;
     }
 
     g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
-        buf);
+        inbuf);
 
     if (i > 1)
-      gst_buffer_ref (buf);
+      gst_buffer_ref (inbuf);
 
     if (identity->sync) {
-      if (identity->clock) {
+      if (GST_ELEMENT (identity)->clock) {
         /* gst_element_wait (GST_ELEMENT (identity), time); */
       }
     }
 
-    identity->offset += GST_BUFFER_SIZE (buf);
-    if (identity->decoupled) {
-      if (!identity_queue_push (identity, (GstData *) buf))
-        return GST_FLOW_UNEXPECTED;
-    } else {
-      ret = gst_pad_push (identity->srcpad, buf);
-      if (ret != GST_FLOW_OK)
-        return ret;
-    }
+    identity->offset += GST_BUFFER_SIZE (inbuf);
 
     if (identity->sleep_time)
       g_usleep (identity->sleep_time);
+
+    gst_buffer_ref (inbuf);
+    *outbuf = inbuf;
   }
 
   return ret;
-}
-
-static void
-gst_identity_set_dataflow_funcs (GstIdentity * identity)
-{
-  if (identity->has_getrange)
-    gst_pad_set_getrange_function (identity->srcpad, gst_identity_getrange);
-  else
-    gst_pad_set_getrange_function (identity->srcpad, NULL);
-
-  if (identity->has_chain)
-    gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
-  else
-    gst_pad_set_chain_function (identity->sinkpad, NULL);
-
-  if (identity->has_src_loop)
-    gst_pad_set_loop_function (identity->srcpad, gst_identity_src_loop);
-  else
-    gst_pad_set_loop_function (identity->srcpad, NULL);
-
-  if (identity->has_sink_loop)
-    gst_pad_set_loop_function (identity->sinkpad, gst_identity_sink_loop);
-  else
-    gst_pad_set_loop_function (identity->sinkpad, NULL);
 }
 
 static void
@@ -645,22 +365,6 @@ gst_identity_set_property (GObject * object, guint prop_id,
   identity = GST_IDENTITY (object);
 
   switch (prop_id) {
-    case PROP_HAS_GETRANGE:
-      identity->has_getrange = g_value_get_boolean (value);
-      gst_identity_set_dataflow_funcs (identity);
-      break;
-    case PROP_HAS_CHAIN:
-      identity->has_chain = g_value_get_boolean (value);
-      gst_identity_set_dataflow_funcs (identity);
-      break;
-    case PROP_HAS_SRC_LOOP:
-      identity->has_src_loop = g_value_get_boolean (value);
-      gst_identity_set_dataflow_funcs (identity);
-      break;
-    case PROP_HAS_SINK_LOOP:
-      identity->has_sink_loop = g_value_get_boolean (value);
-      gst_identity_set_dataflow_funcs (identity);
-      break;
     case PROP_SLEEP_TIME:
       identity->sleep_time = g_value_get_uint (value);
       break;
@@ -703,18 +407,6 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
   identity = GST_IDENTITY (object);
 
   switch (prop_id) {
-    case PROP_HAS_GETRANGE:
-      g_value_set_boolean (value, identity->has_getrange);
-      break;
-    case PROP_HAS_CHAIN:
-      g_value_set_boolean (value, identity->has_chain);
-      break;
-    case PROP_HAS_SRC_LOOP:
-      g_value_set_boolean (value, identity->has_src_loop);
-      break;
-    case PROP_HAS_SINK_LOOP:
-      g_value_set_boolean (value, identity->has_sink_loop);
-      break;
     case PROP_SLEEP_TIME:
       g_value_set_uint (value, identity->sleep_time);
       break;
@@ -755,12 +447,15 @@ static GstElementStateReturn
 gst_identity_change_state (GstElement * element)
 {
   GstIdentity *identity;
+  GstElementState transition;
+  GstElementStateReturn result;
 
   g_return_val_if_fail (GST_IS_IDENTITY (element), GST_STATE_FAILURE);
 
   identity = GST_IDENTITY (element);
+  transition = GST_STATE_TRANSITION (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
       break;
     case GST_STATE_READY_TO_PAUSED:
@@ -770,6 +465,14 @@ gst_identity_change_state (GstElement * element)
       identity->prev_offset_end = -1;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      break;
+    default:
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  switch (transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_PAUSED_TO_READY:
@@ -782,8 +485,5 @@ gst_identity_change_state (GstElement * element)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
+  return result;
 }

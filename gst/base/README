@@ -14,3 +14,14 @@ GstBaseSink
 
   FIXME: not much point making it operate in pull mode as a generic
   base class I guess... 
+
+GstBaseTransform
+
+  Base class for simple tranform filters
+
+  - one sinkpad and one srcpad
+  - formats the same on sink and source pad.
+  - handles state changes
+  - does flushing
+  - push mode
+  - pull mode if transform can operate on arbitrary data

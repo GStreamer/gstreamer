@@ -26,6 +26,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 
@@ -45,24 +46,8 @@ typedef struct _GstIdentity GstIdentity;
 typedef struct _GstIdentityClass GstIdentityClass;
 
 struct _GstIdentity {
-  GstElement 	 element;
+  GstBaseTransform 	 element;
 
-  GstPad 	*sinkpad;
-  GstPad 	*srcpad;
-
-  GstData	*pen_data;
-  GMutex	*pen_lock;
-  GCond		*pen_cond;
-  gboolean	 pen_flushing;
-
-  gboolean 	 has_chain;
-  gboolean 	 has_getrange;
-  gboolean 	 has_src_loop;
-  gboolean 	 has_sink_loop;
-  GstActivateMode sink_mode;
-  GstActivateMode src_mode;
-  gboolean       decoupled;
-  
   guint 	 duplicate;
   gint 	 	 error_after;
   gfloat 	 drop_probability;
@@ -75,15 +60,12 @@ struct _GstIdentity {
   GstClockTime   prev_timestamp;
   GstClockTime   prev_duration;
   guint64        prev_offset_end;
-  GstClock	*clock;
   gchar 	*last_message;
-  GstCaps	*srccaps;
-
-  guint64	 offset;
+  guint64        offset;
 };
 
 struct _GstIdentityClass {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 
   /* signals */
   void (*handoff) (GstElement *element, GstBuffer *buf);

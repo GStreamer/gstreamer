@@ -26,11 +26,6 @@
 #include "gstbasesink.h"
 #include <gst/gstmarshal.h>
 
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-
 GST_DEBUG_CATEGORY_STATIC (gst_basesink_debug);
 #define GST_CAT_DEFAULT gst_basesink_debug
 
@@ -61,11 +56,35 @@ enum
   PROP_PREROLL_QUEUE_LEN
 };
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_basesink_debug, "basesink", 0, "basesink element");
+static GstElementClass *parent_class = NULL;
 
-GST_BOILERPLATE_FULL (GstBaseSink, gst_basesink, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
+static void gst_basesink_base_init (gpointer g_class);
+static void gst_basesink_class_init (GstBaseSinkClass * klass);
+static void gst_basesink_init (GstBaseSink * trans, gpointer g_class);
+
+GType
+gst_basesink_get_type (void)
+{
+  static GType basesink_type = 0;
+
+  if (!basesink_type) {
+    static const GTypeInfo basesink_info = {
+      sizeof (GstBaseSinkClass),
+      (GBaseInitFunc) gst_basesink_base_init,
+      NULL,
+      (GClassInitFunc) gst_basesink_class_init,
+      NULL,
+      NULL,
+      sizeof (GstBaseSink),
+      0,
+      (GInstanceInitFunc) gst_basesink_init,
+    };
+
+    basesink_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstBaseSink", &basesink_info, G_TYPE_FLAG_ABSTRACT);
+  }
+  return basesink_type;
+}
 
 static void gst_basesink_set_clock (GstElement * element, GstClock * clock);
 
@@ -74,7 +93,6 @@ static void gst_basesink_set_property (GObject * object, guint prop_id,
 static void gst_basesink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStaticPadTemplate *gst_base_sink_get_template (GstBaseSink * sink);
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink);
 static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
 static GstBuffer *gst_base_sink_buffer_alloc (GstBaseSink * sink,
@@ -93,32 +111,11 @@ static gboolean gst_basesink_event (GstPad * pad, GstEvent * event);
 static inline void gst_basesink_handle_buffer (GstBaseSink * basesink,
     GstBuffer * buf);
 
-static GstStaticPadTemplate *
-gst_basesink_get_template (GstBaseSink * bsink)
-{
-  GstStaticPadTemplate *template = NULL;
-  GstBaseSinkClass *bclass;
-
-  bclass = GST_BASESINK_GET_CLASS (bsink);
-
-  if (bclass->get_template)
-    template = bclass->get_template (bsink);
-
-  if (template == NULL) {
-    template = &sinktemplate;
-  }
-  return template;
-}
-
 static void
 gst_basesink_base_init (gpointer g_class)
 {
-  //GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  /*
-     gst_element_class_add_pad_template (gstelement_class,
-     gst_static_pad_template_get (&sinktemplate));
-   */
+  GST_DEBUG_CATEGORY_INIT (gst_basesink_debug, "basesink", 0,
+      "basesink element");
 }
 
 static void
@@ -129,6 +126,8 @@ gst_basesink_class_init (GstBaseSinkClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_basesink_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_basesink_get_property);
@@ -153,7 +152,6 @@ gst_basesink_class_init (GstBaseSinkClass * klass)
 
   klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
-  klass->get_template = GST_DEBUG_FUNCPTR (gst_base_sink_get_template);
   klass->buffer_alloc = GST_DEBUG_FUNCPTR (gst_base_sink_buffer_alloc);
   klass->get_times = GST_DEBUG_FUNCPTR (gst_basesink_get_times);
 }
@@ -171,13 +169,15 @@ gst_basesink_pad_getcaps (GstPad * pad)
     caps = bclass->get_caps (bsink);
 
   if (caps == NULL) {
-    GstStaticPadTemplate *stemplate;
-    GstPadTemplate *template;
+    GstPadTemplate *pad_template;
 
-    stemplate = gst_basesink_get_template (bsink);
-    template = gst_static_pad_template_get (stemplate);
-    caps = gst_caps_copy (gst_pad_template_get_caps (template));
+    pad_template =
+        gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "sink");
+    if (pad_template != NULL) {
+      caps = gst_caps_ref (gst_pad_template_get_caps (pad_template));
+    }
   }
+
   return caps;
 }
 
@@ -213,15 +213,16 @@ gst_basesink_pad_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 }
 
 static void
-gst_basesink_init (GstBaseSink * basesink)
+gst_basesink_init (GstBaseSink * basesink, gpointer g_class)
 {
-  GstStaticPadTemplate *template;
+  GstPadTemplate *pad_template;
 
-  template = gst_basesink_get_template (basesink);
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
+  g_return_if_fail (pad_template != NULL);
 
-  basesink->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (template),
-      "sink");
+  basesink->sinkpad = gst_pad_new_from_template (pad_template, "sink");
+
   gst_pad_set_getcaps_function (basesink->sinkpad,
       GST_DEBUG_FUNCPTR (gst_basesink_pad_getcaps));
   gst_pad_set_setcaps_function (basesink->sinkpad,
@@ -326,12 +327,6 @@ gst_basesink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
   GST_UNLOCK (sink);
-}
-
-static GstStaticPadTemplate *
-gst_base_sink_get_template (GstBaseSink * sink)
-{
-  return &sinktemplate;
 }
 
 static GstCaps *
@@ -735,6 +730,7 @@ gst_basesink_activate (GstPad * pad, GstActivateMode mode)
     case GST_ACTIVATE_PULL:
       /* if we have a scheduler we can start the task */
       g_return_val_if_fail (basesink->has_loop, FALSE);
+      gst_pad_peer_set_active (pad, mode);
       if (GST_ELEMENT_SCHEDULER (basesink)) {
         GST_STREAM_LOCK (pad);
         GST_RPAD_TASK (pad) =
@@ -791,7 +787,7 @@ gst_basesink_change_state (GstElement * element)
       break;
     case GST_STATE_READY_TO_PAUSED:
       /* need to complete preroll before this state change completes, there
-       * is no data flow in READY so we cqn safely assume we need to preroll. */
+       * is no data flow in READY so we can safely assume we need to preroll. */
       basesink->offset = 0;
       GST_PREROLL_LOCK (basesink->sinkpad);
       basesink->preroll_queue = g_queue_new ();

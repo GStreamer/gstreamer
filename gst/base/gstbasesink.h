@@ -66,8 +66,6 @@ struct _GstBaseSink {
 struct _GstBaseSinkClass {
   GstElementClass parent_class;
 
-  GstStaticPadTemplate* (*get_template) (GstBaseSink *sink);
-
   GstCaps*      (*get_caps)     (GstBaseSink *sink);
   gboolean      (*set_caps)     (GstBaseSink *sink, GstCaps *caps);
 

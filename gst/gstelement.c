@@ -1983,7 +1983,7 @@ restart:
     if (GST_IS_REAL_PAD (pad)) {
       GstRealPad *peer;
       gboolean pad_loop, pad_get;
-      gboolean delay = FALSE;
+      gboolean done = FALSE;
 
       /* see if the pad has a loop function and grab
        * the peer */
@@ -2003,38 +2003,24 @@ restart:
         /* see if the peer has a loop function */
         peer_loop = GST_RPAD_LOOPFUNC (peer) != NULL;
 
-        /* sinkpads with a loop function are delayed since they
-         * need the srcpad to be active first */
-        if (GST_PAD_IS_SINK (pad) && pad_loop && peer_get) {
+        /* If the pad is a sink with loop and the peer has a get function,
+         * we can activate the sinkpad */
+        if ((GST_PAD_IS_SINK (pad) && pad_loop && peer_get) ||
+            (GST_PAD_IS_SRC (pad) && peer_loop && pad_get)) {
           GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "delaying pad %s", GST_OBJECT_NAME (pad));
-          delay = TRUE;
-        } else if (GST_PAD_IS_SRC (pad) && peer_loop && pad_get) {
-          /* If the pad is a source and the peer has a loop function,
-           * we can activate the srcpad and then the loopbased sinkpad */
-          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "%sactivating pad %s", (active ? "" : "(de)"),
+              "%sactivating pad %s pull mode", (active ? "" : "(de)"),
               GST_OBJECT_NAME (pad));
           result &= gst_pad_set_active (pad,
               (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE));
-
-          GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-              "%sactivating delayed pad %s", (active ? "" : "(de)"),
-              GST_OBJECT_NAME (peer));
-          result &= gst_pad_set_active (GST_PAD (peer),
-              (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE));
-
-          /* set flag here since we don't want the code below to activate
-           * the pad again */
-          delay = TRUE;
+          done = TRUE;
         }
         gst_object_unref (GST_OBJECT (peer));
       }
 
-      /* all other conditions are just push based pads */
-      if (!delay) {
+      if (!done) {
+        /* all other conditions are just push based pads */
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-            "%sactivating pad %s", (active ? "" : "(de)"),
+            "%sactivating pad %s push mode", (active ? "" : "(de)"),
             GST_OBJECT_NAME (pad));
 
         result &= gst_pad_set_active (pad,

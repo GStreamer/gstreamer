@@ -437,9 +437,15 @@ lost_ghostpad:
 /**
  * gst_pad_set_active:
  * @pad: the #GstPad to activate or deactivate.
- * @active: TRUE to activate the pad.
+ * @mode: the mode of the pad.
  *
- * Activates or deactivates the given pad.
+ * Activates or deactivates the given pad in the given mode.
+ *
+ * For a source pad: PULL mode will call the getrange function,
+ * PUSH mode will require the element to call _push() on the pad.
+ *
+ * For a sink pad: PULL mode will require the element to call
+ * the _pull_range() function, PUSH mode will call the chain function.
  *
  * Returns: TRUE if the operation was successfull.
  *
@@ -457,13 +463,12 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
 
   GST_PAD_REALIZE_AND_LOCK (pad, realpad, lost_ghostpad);
 
-  active = (mode != GST_ACTIVATE_NONE);
-
+  active = GST_PAD_MODE_ACTIVATE (mode);
   old = GST_PAD_IS_ACTIVE (realpad);
 
   /* if nothing changed, we can just exit */
   if (G_UNLIKELY (old == active))
-    goto exit;
+    goto was_ok;
 
   /* make sure data is disallowed when going inactive */
   if (!active) {
@@ -475,14 +480,16 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
   }
 
   if (active) {
-    if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+    if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SRC) {
       if (mode == GST_ACTIVATE_PULL) {
         if (!realpad->getrangefunc)
           goto wrong_mode;
       } else {
-        /* we can push if driven by a chain or loop on the sink pad */
+        /* we can push if driven by a chain or loop on the sink pad.
+         * peer pad is assumed to be active now. */
       }
-    } else {                    /* sink pads */
+    } else {
+      /* sink pads */
       if (mode == GST_ACTIVATE_PULL) {
         /* the src can drive us with getrange */
       } else {
@@ -509,18 +516,23 @@ gst_pad_set_active (GstPad * pad, GstActivateMode mode)
       goto activate_error;
   }
 
-  /* when going to active alow data passing now */
+  /* when going to active allow data passing now */
   if (active) {
-    GST_CAT_DEBUG (GST_CAT_PADS, "activating pad %s:%s",
-        GST_DEBUG_PAD_NAME (realpad));
+    GST_CAT_DEBUG (GST_CAT_PADS, "activating pad %s:%s in mode %d",
+        GST_DEBUG_PAD_NAME (realpad), mode);
     GST_FLAG_SET (realpad, GST_PAD_ACTIVE);
   }
-
-exit:
   GST_UNLOCK (realpad);
 
   return TRUE;
 
+was_ok:
+  {
+    GST_CAT_DEBUG (GST_CAT_PADS,
+        "pad %s:%s was active", GST_DEBUG_PAD_NAME (realpad));
+    GST_UNLOCK (realpad);
+    return TRUE;
+  }
   /* errors */
 lost_ghostpad:
   {
@@ -540,6 +552,42 @@ activate_error:
         "activate function returned FALSE for pad %s:%s",
         GST_DEBUG_PAD_NAME (realpad));
     GST_UNLOCK (realpad);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_pad_peer_set_active:
+ * @pad: the #GstPad to activate or deactivate the peer of.
+ * @mode: the mode of the pad.
+ *
+ * Activates or deactivates the given peer of a pad. Elements
+ * that will perform a _pull_range() on their sinkpads need
+ * to call this function when the sinkpad is activated or when
+ * an internally linked source pad is activated in pull mode.
+ *
+ * Returns: TRUE if the operation was successfull.
+ *
+ * MT safe.
+ */
+gboolean
+gst_pad_peer_set_active (GstPad * pad, GstActivateMode mode)
+{
+  GstPad *peer;
+  gboolean result = FALSE;
+
+  peer = gst_pad_get_peer (pad);
+  if (!peer)
+    goto no_peer;
+
+  result = gst_pad_set_active (peer, mode);
+  gst_object_unref (GST_OBJECT_CAST (peer));
+
+  return result;
+
+  /* errors */
+no_peer:
+  {
     return FALSE;
   }
 }
@@ -2909,6 +2957,74 @@ no_function:
   }
 }
 
+
+/**
+ * gst_pad_check_pull_range:
+ * @pad: a sink #GstRealPad.
+ *
+ * Checks if a #gst_pad_pull_range() can be performed on the peer
+ * source pad. This function is used by plugins that want to check
+ * if they can use random access on the peer source pad. 
+ *
+ * The peer sourcepad can implement a custom #GstPadCheckGetRangeFunction
+ * if it needs to perform some logic to determine if pull_range is
+ * possible.
+ *
+ * Returns: a gboolean with the result.
+ *
+ * MT safe.
+ */
+gboolean
+gst_pad_check_pull_range (GstPad * pad)
+{
+  GstRealPad *peer;
+  gboolean ret;
+  GstPadCheckGetRangeFunction checkgetrangefunc;
+
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK,
+      GST_FLOW_ERROR);
+
+  GST_LOCK (pad);
+
+  if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
+    goto not_connected;
+
+  gst_object_ref (GST_OBJECT_CAST (peer));
+  GST_UNLOCK (pad);
+
+  /* see note in above function */
+  if (G_UNLIKELY ((checkgetrangefunc = peer->checkgetrangefunc) == NULL))
+    goto no_function;
+
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+      "calling checkgetrangefunc %s of peer pad %s:%s",
+      GST_DEBUG_FUNCPTR_NAME (checkgetrangefunc), GST_DEBUG_PAD_NAME (peer));
+
+  ret = checkgetrangefunc (GST_PAD_CAST (peer));
+
+  gst_object_unref (GST_OBJECT_CAST (peer));
+
+  return ret;
+
+  /* ERROR recovery here */
+not_connected:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "checkinh pull range, but it was not linked");
+    GST_UNLOCK (pad);
+    return FALSE;
+  }
+no_function:
+  {
+    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
+        ("pad %s:%s checked pull_range but the peer pad %s:%s has no checkgetrangefunction",
+            GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
+    gst_object_unref (GST_OBJECT (peer));
+    return FALSE;
+  }
+}
+
 /**
  * gst_pad_pull_range:
  * @pad: a sink #GstPad.
@@ -2943,6 +3059,12 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY ((peer = GST_RPAD_PEER (pad)) == NULL))
     goto not_connected;
 
+  if (G_UNLIKELY (!GST_RPAD_IS_ACTIVE (peer)))
+    goto not_active;
+
+  if (G_UNLIKELY (GST_RPAD_IS_FLUSHING (peer)))
+    goto flushing;
+
   gst_object_ref (GST_OBJECT_CAST (peer));
   GST_UNLOCK (pad);
 
@@ -2951,8 +3073,10 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
     goto no_function;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "calling getrangefunc %s of peer pad %s:%s",
-      GST_DEBUG_FUNCPTR_NAME (getrangefunc), GST_DEBUG_PAD_NAME (peer));
+      "calling getrangefunc %s of peer pad %s:%s, offset %"
+      G_GUINT64_FORMAT ", size %u",
+      GST_DEBUG_FUNCPTR_NAME (getrangefunc), GST_DEBUG_PAD_NAME (peer),
+      offset, size);
 
   ret = getrangefunc (GST_PAD_CAST (peer), offset, size, buffer);
 
@@ -2967,6 +3091,20 @@ not_connected:
         "pulling range, but it was not linked");
     GST_UNLOCK (pad);
     return GST_FLOW_NOT_CONNECTED;
+  }
+not_active:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pulling range, but it was inactive");
+    GST_UNLOCK (pad);
+    return GST_FLOW_WRONG_STATE;
+  }
+flushing:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pulling range, but pad was flushing");
+    GST_UNLOCK (pad);
+    return GST_FLOW_UNEXPECTED;
   }
 no_function:
   {
@@ -3163,9 +3301,9 @@ gst_pad_template_new (const gchar * name_template,
  * Gets the capabilities of the pad template.
  *
  * Returns: the #GstCaps of the pad template. If you need to keep a reference to
- * the caps, make a copy (see gst_caps_copy ()).
+ * the caps, take a ref (see gst_caps_ref ()).
  */
-const GstCaps *
+GstCaps *
 gst_pad_template_get_caps (GstPadTemplate * templ)
 {
   g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
@@ -3354,6 +3492,8 @@ gst_ghost_pad_new (const gchar * name, GstPad * pad)
  * The caller must free this list after use.
  *
  * Returns: a newly allocated #GList of pads.
+ *
+ * Not MT safe.
  */
 GList *
 gst_pad_get_internal_links_default (GstPad * pad)
@@ -3394,6 +3534,8 @@ gst_pad_get_internal_links_default (GstPad * pad)
  * The caller must free this list after use.
  *
  * Returns: a newly allocated #GList of pads.
+ *
+ * Not MT safe.
  */
 GList *
 gst_pad_get_internal_links (GstPad * pad)
