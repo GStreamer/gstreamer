@@ -1121,15 +1121,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   /* this filter needs the riff parser */
 #if 0
-  if (!gst_library_load ("gstriff")) {
-    gst_info ("avimux: could not load support library: 'gstriff'\n");
+  if (!gst_library_load ("gstriff"))
     return FALSE;
-  }
 #endif
 
   /* create an elementfactory for the avimux element */
   factory = gst_element_factory_new ("avimux", GST_TYPE_AVIMUX,
-                                    &gst_avimux_details);
+                                     &gst_avimux_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));

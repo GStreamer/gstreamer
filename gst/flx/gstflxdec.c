@@ -678,10 +678,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstTypeFactory *type;
 
   /* this filter needs the bytestream package */
-  if (!gst_library_load("gstbytestream")) {
-    gst_info("flxdec:: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
 
   factory = gst_element_factory_new("flxdec", GST_TYPE_FLXDEC, &flxdec_details);
   g_return_val_if_fail(factory != NULL, FALSE);

@@ -1462,18 +1462,14 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstTypeFactory *type;
 
   /* this filter needs the riff parser */
-  if (!gst_library_load ("gstbytestream")) {
-    gst_info("avidemux: could not load support library: 'gstbytestream'\n");
+  if (!gst_library_load ("gstbytestream"))
     return FALSE;
-  }
-  if (!gst_library_load ("gstriff")) {
-    gst_info("avidemux: could not load support library: 'gstriff'\n");
+  if (!gst_library_load ("gstriff"))
     return FALSE;
-  }
 
   /* create an elementfactory for the avi_demux element */
-  factory = gst_element_factory_new ("avidemux",GST_TYPE_AVI_DEMUX,
-                                    &gst_avi_demux_details);
+  factory = gst_element_factory_new ("avidemux", GST_TYPE_AVI_DEMUX,
+                                     &gst_avi_demux_details);
   g_return_val_if_fail (factory != NULL, FALSE);
   gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
