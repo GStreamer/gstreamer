@@ -334,8 +334,7 @@ gst_ffmpegdecall_chain (GstPad *pad, GstBuffer *inbuf)
 		  &have_picture, data, size);
 
     if (len < 0) {
-      gst_element_error(GST_ELEMENT(ffmpegdec),
-                        "ffmpegdec: failed to decode frame");
+      g_warning ("ffmpegdec: failed to decode frame");
       break;
     }
 
