@@ -181,7 +181,8 @@ gst_identity_class_init (GstIdentityClass * klass)
   gst_identity_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
-      gst_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_BUFFER);
+      gst_marshal_VOID__BOXED, G_TYPE_NONE, 1,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);

@@ -106,6 +106,8 @@ static void gst_type_find_element_get_property (GObject * object,
 static const GstEventMask *gst_type_find_element_src_event_mask (GstPad * pad);
 static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstEvent * event);
+static gboolean gst_type_find_handle_src_query (GstPad * pad,
+    GstQueryType type, GstFormat * fmt, gint64 * value);
 static void push_buffer_store (GstTypeFindElement * typefind);
 
 static void gst_type_find_element_chain (GstPad * sinkpad, GstData * data);
@@ -189,6 +191,8 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
   gst_pad_set_event_function (typefind->src, gst_type_find_element_src_event);
   gst_pad_set_event_mask_function (typefind->src,
       gst_type_find_element_src_event_mask);
+  gst_pad_set_query_function (typefind->src,
+      GST_DEBUG_FUNCPTR (gst_type_find_handle_src_query));
   gst_pad_use_explicit_caps (typefind->src);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->src);
 
@@ -261,6 +265,34 @@ gst_type_find_element_get_property (GObject * object, guint prop_id,
       break;
   }
 }
+
+static gboolean
+gst_type_find_handle_src_query (GstPad * pad,
+    GstQueryType type, GstFormat * fmt, gint64 * value)
+{
+  GstTypeFindElement *typefind =
+      GST_TYPE_FIND_ELEMENT (gst_pad_get_parent (pad));
+  gboolean res;
+
+  res = gst_pad_query (GST_PAD_PEER (typefind->sink), type, fmt, value);
+  if (!res)
+    return FALSE;
+
+  if (type == GST_QUERY_POSITION && typefind->store != NULL) {
+    /* FIXME: this code assumes that there's no discont in the queue */
+    switch (*fmt) {
+      case GST_FORMAT_BYTES:
+        *value -= gst_buffer_store_get_size (typefind->store, 0);
+        break;
+      default:
+        /* FIXME */
+        break;
+    }
+  }
+
+  return TRUE;
+}
+
 static const GstEventMask *
 gst_type_find_element_src_event_mask (GstPad * pad)
 {

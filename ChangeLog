@@ -1,3 +1,13 @@
+2004-11-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gstfakesink.c: (gst_fakesink_class_init):
+	* gst/elements/gstidentity.c: (gst_identity_class_init):
+	  Use G_SIGNAL_TYPE_STATIC_SCOPE, patch by Christophe Fergeau
+	  <teuf@gnome.org> (#157263).
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init),
+	(gst_type_find_handle_src_query):
+	  Subtract size of internally stored data from position queries.
+
 2004-11-07  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/schedulers/fairscheduler.c:
