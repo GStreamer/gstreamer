@@ -145,13 +145,13 @@ gst_bytestream_get_next_buf (GstByteStream *bs)
   bs_print ("get_next_buf: pulling buffer");
   nextbuf = gst_pad_pull (bs->pad);
 
+  if (!nextbuf)
+    return FALSE;
+
   if (GST_IS_EVENT (nextbuf)) {
     bs->event = GST_EVENT (nextbuf);
     return FALSE;
   }
-
-  if (!nextbuf)
-    return FALSE;
 
   ts = GST_BUFFER_TIMESTAMP (nextbuf);
   if (ts != GST_CLOCK_TIME_NONE)
@@ -416,7 +416,7 @@ gst_bytestream_flush_fast (GstByteStream *bs, guint32 len)
   while (len > 0) {
     headbuf = GST_BUFFER (bs->buflist->data);
 
-    bs_print ("flush: analyzing buffer that's %d bytes long, offset %d", GST_BUFFER_SIZE (headbuf),
+    bs_print ("flush: analyzing buffer that's %d bytes long, offset %llu", GST_BUFFER_SIZE (headbuf),
 	      GST_BUFFER_OFFSET (headbuf));
 
     /* if there's enough to complete the flush */
@@ -625,7 +625,7 @@ gst_bytestream_print_status (GstByteStream * bs)
     buf = GST_BUFFER (walk->data);
     walk = g_slist_next (walk);
 
-    bs_print ("STATUS: buffer starts at %d and is %d bytes long", GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
+    bs_print ("STATUS: buffer starts at %llu and is %d bytes long", GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
   }
 }
 
