@@ -432,7 +432,7 @@ gst_ogm_parse_chain (GstPad * pad, GstData * dat)
 
           fcc = GST_MAKE_FOURCC (ogm->hdr.subtype[0],
               ogm->hdr.subtype[1], ogm->hdr.subtype[2], ogm->hdr.subtype[3]);
-          GST_LOG_OBJECT (ogm, "Type: %s, subtype: %" GST_FOURCC_FORMAT
+          GST_LOG_OBJECT (ogm, "Type: %s, subtype: " GST_FOURCC_FORMAT
               ", size: %dx%d, timeunit: %" G_GINT64_FORMAT
               " (fps: %lf), s/u: %" G_GINT64_FORMAT ", "
               "def.len: %d, bufsize: %d, bps: %d",

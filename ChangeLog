@@ -1,5 +1,10 @@
 2004-12-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
+	  We love wrong commas.
+
+2004-12-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_handle_src_query):
 	  Don't set DEFAULT, unsupported - makes length display incorrectly
