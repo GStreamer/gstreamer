@@ -28,7 +28,9 @@
 
 #include "v4l2_calls.h"
 #include "gstv4l2tuner.h"
+#ifdef HAVE_XVIDEO
 #include "gstv4l2xoverlay.h"
+#endif
 #include "gstv4l2colorbalance.h"
 
 #include <gst/propertyprobe/propertyprobe.h>
@@ -284,11 +286,13 @@ gst_v4l2element_get_type (void)
       NULL,
       NULL,
     };
+#ifdef HAVE_XVIDEO
     static const GInterfaceInfo v4l2_xoverlay_info = {
       (GInterfaceInitFunc) gst_v4l2_xoverlay_interface_init,
       NULL,
       NULL,
     };
+#endif
     static const GInterfaceInfo v4l2_colorbalance_info = {
       (GInterfaceInitFunc) gst_v4l2_color_balance_interface_init,
       NULL,
@@ -308,8 +312,10 @@ gst_v4l2element_get_type (void)
         GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
     g_type_add_interface_static (v4l2element_type,
         GST_TYPE_TUNER, &v4l2_tuner_info);
+#ifdef HAVE_XVIDEO
     g_type_add_interface_static (v4l2element_type,
         GST_TYPE_X_OVERLAY, &v4l2_xoverlay_info);
+#endif
     g_type_add_interface_static (v4l2element_type,
         GST_TYPE_COLOR_BALANCE, &v4l2_colorbalance_info);
     g_type_add_interface_static (v4l2element_type,
@@ -412,13 +418,10 @@ gst_v4l2element_init (GstV4l2Element * v4l2element)
   v4l2element->video_fd = -1;
   v4l2element->buffer = NULL;
   v4l2element->device = g_strdup ("/dev/video0");
-  v4l2element->display = g_strdup (g_getenv ("DISPLAY"));
 
   v4l2element->channels = NULL;
   v4l2element->norms = NULL;
   v4l2element->colors = NULL;
-
-  v4l2element->overlay = gst_v4l2_xoverlay_new (v4l2element);
 }
 
 
@@ -426,14 +429,6 @@ static void
 gst_v4l2element_dispose (GObject * object)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (object);
-
-  if (v4l2element->overlay) {
-    gst_v4l2_xoverlay_free (v4l2element);
-  }
-
-  if (v4l2element->display) {
-    g_free (v4l2element->display);
-  }
 
   g_free (v4l2element->device);
   v4l2element->device = NULL;
@@ -576,19 +571,21 @@ gst_v4l2element_change_state (GstElement * element)
    */
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      gst_v4l2_set_display (v4l2element);
-
       if (!gst_v4l2_open (v4l2element))
         return GST_STATE_FAILURE;
 
+#ifdef HAVE_XVIDEO
       gst_v4l2_xoverlay_open (v4l2element);
+#endif
 
       /* emit a signal! whoopie! */
       g_signal_emit (G_OBJECT (v4l2element),
           gst_v4l2element_signals[SIGNAL_OPEN], 0, v4l2element->device);
       break;
     case GST_STATE_READY_TO_NULL:
+#ifdef HAVE_XVIDEO
       gst_v4l2_xoverlay_close (v4l2element);
+#endif
 
       if (!gst_v4l2_close (v4l2element))
         return GST_STATE_FAILURE;

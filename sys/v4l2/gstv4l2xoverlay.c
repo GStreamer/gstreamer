@@ -23,13 +23,25 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include <gst/gst.h>
 #include <gst/xoverlay/xoverlay.h>
-#include <gst/xwindowlistener/xwindowlistener.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/Xv.h>
+#include <X11/extensions/Xvlib.h>
+#include <sys/stat.h>
 
 #include "gstv4l2xoverlay.h"
 #include "gstv4l2element.h"
 #include "v4l2_calls.h"
+
+struct _GstV4l2Xv
+{
+  Display *dpy;
+  gint port, idle_id;
+  GMutex *mutex;
+};
 
 static void gst_v4l2_xoverlay_set_xwindow_id (GstXOverlay * overlay,
     XID xwindow_id);
@@ -41,80 +53,152 @@ gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass)
   klass->set_xwindow_id = gst_v4l2_xoverlay_set_xwindow_id;
 }
 
-GstXWindowListener *
-gst_v4l2_xoverlay_new (GstV4l2Element * v4l2element)
-{
-  GstXWindowListener *xwin = gst_x_window_listener_new (NULL,
-      (MapWindowFunc) gst_v4l2_enable_overlay,
-      (SetWindowFunc) gst_v4l2_set_window,
-      (gpointer) v4l2element);
-
-  v4l2element->overlay = xwin;
-  v4l2element->xwindow_id = 0;
-
-  return xwin;
-}
-
-void
-gst_v4l2_xoverlay_free (GstV4l2Element * v4l2element)
-{
-  gst_v4l2_xoverlay_close (v4l2element);
-  g_object_unref (G_OBJECT (v4l2element->overlay));
-  v4l2element->overlay = NULL;
-}
-
 void
 gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
 {
-  GstXWindowListener *xwin = v4l2element->overlay;
+  struct stat s;
+  GstV4l2Xv *v4l2xv;
+  const gchar *name = g_getenv ("DISPLAY");
+  int ver, rel, req, ev, err, anum, i, id = 0, first_id = 0, min;
+  XvAdaptorInfo *ai;
+  Display *dpy;
 
-  if (xwin) {
-    xwin->display_name = g_strdup (v4l2element->display);
+  /* we need a display, obviously */
+  if (!name || !(dpy = XOpenDisplay (name))) {
+    GST_WARNING ("No $DISPLAY set or failed to open - no overlay");
+    return;
+  }
 
-    if (v4l2element->xwindow_id != 0 &&
-        xwin->display_name && xwin->display_name[0] == ':') {
-      gst_x_window_listener_set_xid (xwin, v4l2element->xwindow_id);
+  /* find port that belongs to this device */
+  if (XvQueryExtension (dpy, &ver, &rel, &req, &ev, &err) != Success) {
+    GST_WARNING ("Xv extension not supported - no overlay");
+    XCloseDisplay (dpy);
+    return;
+  }
+  if (XvQueryAdaptors (dpy, DefaultRootWindow (dpy), &anum, &ai) != Success) {
+    GST_WARNING ("Failed to query Xv adaptors");
+    XCloseDisplay (dpy);
+    return;
+  }
+  if (fstat (v4l2element->video_fd, &s) < 0) {
+    GST_ERROR ("Failed to stat() file descriptor: %s", g_strerror (errno));
+    XCloseDisplay (dpy);
+    return;
+  }
+  min = s.st_rdev & 0xff;
+  for (i = 0; i < anum; i++) {
+    if (!strcmp (ai[i].name, "video4linux")) {
+      if (first_id == 0)
+        first_id = ai[i].base_id;
+
+      /* hmm... */
+      if (first_id != 0 && ai[i].base_id == first_id + min)
+        id = ai[i].base_id;
     }
+  }
+  XvFreeAdaptorInfo (ai);
+
+  if (id == 0) {
+    GST_WARNING ("Did not find XvPortID for device - no overlay");
+    XCloseDisplay (dpy);
+    return;
+  }
+
+  v4l2xv = g_new0 (GstV4l2Xv, 1);
+  v4l2xv->dpy = dpy;
+  v4l2xv->port = id;
+  v4l2xv->mutex = g_mutex_new ();
+  v4l2xv->idle_id = 0;
+  v4l2element->xv = v4l2xv;
+
+  if (v4l2element->xwindow_id) {
+    gst_v4l2_xoverlay_set_xwindow_id (GST_X_OVERLAY (v4l2element),
+        v4l2element->xwindow_id);
   }
 }
 
 void
 gst_v4l2_xoverlay_close (GstV4l2Element * v4l2element)
 {
-  GstXWindowListener *xwin = v4l2element->overlay;
+  GstV4l2Xv *v4l2xv = v4l2element->xv;
 
-  if (xwin != NULL) {
-    if (v4l2element->xwindow_id != 0 &&
-        xwin->display_name && xwin->display_name[0] == ':') {
-      gst_x_window_listener_set_xid (xwin, 0);
-    }
+  if (!v4l2element->xv)
+    return;
 
-    g_free (xwin->display_name);
-    xwin->display_name = NULL;
+  if (v4l2element->xwindow_id) {
+    gst_v4l2_xoverlay_set_xwindow_id (GST_X_OVERLAY (v4l2element), 0);
   }
+
+  XCloseDisplay (v4l2xv->dpy);
+  g_mutex_free (v4l2xv->mutex);
+  if (v4l2xv->idle_id)
+    g_source_remove (v4l2xv->idle_id);
+  g_free (v4l2xv);
+  v4l2element->xv = NULL;
+}
+
+static gboolean
+idle_refresh (gpointer data)
+{
+  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (data);
+  GstV4l2Xv *v4l2xv = v4l2element->xv;
+  XWindowAttributes attr;
+
+  if (v4l2xv) {
+    g_mutex_lock (v4l2xv->mutex);
+
+    XGetWindowAttributes (v4l2xv->dpy, v4l2element->xwindow_id, &attr);
+    XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2element->xwindow_id,
+        DefaultGC (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)),
+        0, 0, attr.width, attr.height, 0, 0, attr.width, attr.height);
+
+    v4l2xv->idle_id = 0;
+    g_mutex_unlock (v4l2xv->mutex);
+  }
+
+  /* once */
+  return FALSE;
 }
 
 static void
 gst_v4l2_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (overlay);
-  GstXWindowListener *xwin = v4l2element->overlay;
+  GstV4l2Xv *v4l2xv = v4l2element->xv;
+  XWindowAttributes attr;
+  gboolean change = (v4l2element->xwindow_id != xwindow_id);
 
-  if (v4l2element->xwindow_id == xwindow_id) {
+  if (v4l2xv)
+    g_mutex_lock (v4l2xv->mutex);
+
+  if (change) {
+    if (v4l2element->xwindow_id) {
+      XvSelectPortNotify (v4l2xv->dpy, v4l2xv->port, 0);
+      XvSelectVideoNotify (v4l2xv->dpy, v4l2element->xwindow_id, 0);
+    }
+
+    v4l2element->xwindow_id = xwindow_id;
+  }
+
+  if (!v4l2xv || xwindow_id == 0) {
+    if (v4l2xv)
+      g_mutex_unlock (v4l2xv->mutex);
     return;
   }
 
-  if (gst_element_get_state (GST_ELEMENT (v4l2element)) != GST_STATE_NULL &&
-      v4l2element->xwindow_id != 0 &&
-      xwin != NULL && xwin->display_name && xwin->display_name[0] == ':') {
-    gst_x_window_listener_set_xid (xwin, 0);
+  if (change) {
+    /* draw */
+    XvSelectPortNotify (v4l2xv->dpy, v4l2xv->port, 1);
+    XvSelectVideoNotify (v4l2xv->dpy, v4l2element->xwindow_id, 1);
   }
 
-  v4l2element->xwindow_id = xwindow_id;
+  XGetWindowAttributes (v4l2xv->dpy, v4l2element->xwindow_id, &attr);
+  XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2element->xwindow_id,
+      DefaultGC (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)),
+      0, 0, attr.width, attr.height, 0, 0, attr.width, attr.height);
 
-  if (gst_element_get_state (GST_ELEMENT (v4l2element)) != GST_STATE_NULL &&
-      v4l2element->xwindow_id != 0 &&
-      xwin != NULL && xwin->display_name && xwin->display_name[0] == ':') {
-    gst_x_window_listener_set_xid (xwin, v4l2element->xwindow_id);
-  }
+  if (v4l2xv->idle_id)
+    g_source_remove (v4l2xv->idle_id);
+  v4l2xv->idle_id = g_idle_add (idle_refresh, v4l2element);
+  g_mutex_unlock (v4l2xv->mutex);
 }

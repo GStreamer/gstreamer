@@ -88,6 +88,7 @@ struct v4l2_buffer
 
 typedef	struct _GstV4l2Element		GstV4l2Element;
 typedef	struct _GstV4l2ElementClass	GstV4l2ElementClass;
+typedef struct _GstV4l2Xv		GstV4l2Xv;
 
 struct _GstV4l2Element {
 	GstElement element;
@@ -110,16 +111,13 @@ struct _GstV4l2Element {
 	GList *colors;
 
 	/* X-overlay */
-	GstXWindowListener *overlay;
+	GstV4l2Xv *xv;
 	XID xwindow_id;
 
 	/* properties */
 	gchar *norm;
 	gchar *channel;
 	gulong frequency;
-
-	/* caching values */
-	gchar *display;
 };
 
 struct _GstV4l2ElementClass {
