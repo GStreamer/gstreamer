@@ -79,7 +79,7 @@ struct _GstThreadClass {
 
 GtkType 	gst_thread_get_type	(void);
 
-GstElement*	gst_thread_new		(guchar *name);
+GstElement*	gst_thread_new		(const guchar *name);
 
 #ifdef __cplusplus
 }

@@ -200,7 +200,7 @@ gst_thread_get_arg (GtkObject *object,
  * Returns: The new thread
  */
 GstElement*
-gst_thread_new (guchar *name)
+gst_thread_new (const guchar *name)
 {
   return gst_elementfactory_make ("thread", name);
 }

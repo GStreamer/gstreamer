@@ -894,6 +894,9 @@ gst_element_real_destroy (GtkObject *object)
   }
 
   g_list_free (element->pads);
+  element->pads = NULL;
+  element->numsrcpads = 0;
+  element->numsinkpads = 0;
 
   if (GTK_OBJECT_CLASS (parent_class)->destroy)
     GTK_OBJECT_CLASS (parent_class)->destroy (object);

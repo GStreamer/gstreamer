@@ -500,16 +500,20 @@ gst_bin_real_destroy (GtkObject *object)
   GList *children;
   GstElement *child;
 
-  GST_DEBUG (0,"in gst_bin_real_destroy()\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING,"destroy()\n");
 
   children = bin->children;
   while (children) {
     child = GST_ELEMENT (children->data);
-    gst_element_destroy (child);
+    gst_object_unref (GST_OBJECT (child));
     children = g_list_next (children);
   }
 
   g_list_free (bin->children);
+  bin->children = NULL;
+  bin->numchildren = 0;
+
+  g_cond_free (bin->eoscond);
 
   if (GTK_OBJECT_CLASS (parent_class)->destroy)
     GTK_OBJECT_CLASS (parent_class)->destroy (object);

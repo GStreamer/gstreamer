@@ -161,7 +161,6 @@ gst_elementfactory_create (GstElementFactory *factory,
   // create an instance of the element
   element = GST_ELEMENT(gtk_type_new(factory->type));
   g_assert(element != NULL);
-  gst_object_ref(GST_OBJECT(element));
 
   // attempt to set the elemenfactory class pointer if necessary
   oclass = GST_ELEMENT_CLASS(GTK_OBJECT(element)->klass);
