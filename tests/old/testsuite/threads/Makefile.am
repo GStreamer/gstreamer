@@ -1,11 +1,13 @@
 include ../Rules
 
 tests_pass = thread1 thread2 thread3 thread4 thread5 threade threadf signal1 159852 threadg threadi-123775
-tests_fail = 159566 signal2 signal3
+tests_fail = 159566 signal3
 
 # threadh
 
-tests_ignore = queue threadb threadc threadd staticrec threadi-nfy1 threadi-nfy2
+# signal2 shows a genuine bug but is erratic in that it manages to survive
+# half of the time; so we ignore it
+tests_ignore = queue threadb threadc threadd staticrec threadi-nfy1 threadi-nfy2 signal2
 
 thread1_SOURCES = thread.c
 thread1_CFLAGS = -DTESTNUM=1 $(AM_CFLAGS)
