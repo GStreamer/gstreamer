@@ -49,6 +49,7 @@ typedef enum {
    GST_PROPS_VAR_TYPE,   /* after this marker start the variable properties */
 
    GST_PROPS_LIST_TYPE,
+   GST_PROPS_GLIST_TYPE,
    GST_PROPS_FLOAT_RANGE_TYPE,
    GST_PROPS_INT_RANGE_TYPE,
 
@@ -59,6 +60,7 @@ typedef enum {
 #define GST_STR_FOURCC(f)		(guint32)(((f)[0])|((f)[1]<<8)|((f)[2]<<16)|((f)[3]<<24))
 
 #define GST_PROPS_LIST(a...) 		GST_PROPS_LIST_TYPE,##a,NULL
+#define GST_PROPS_GLIST(a) 		GST_PROPS_GLIST_TYPE,(a)
 #define GST_PROPS_INT(a) 		GST_PROPS_INT_TYPE,(a)
 #define GST_PROPS_INT_RANGE(a,b) 	GST_PROPS_INT_RANGE_TYPE,(a),(b)
 #define GST_PROPS_FLOAT(a) 		GST_PROPS_FLOAT_TYPE,(a)

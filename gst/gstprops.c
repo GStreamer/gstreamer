@@ -187,7 +187,7 @@ props_find_func (gconstpointer a,
 /* This is implemented as a huge macro because we cannot pass
  * va_list variables by reference on some architectures.
  */
-#define GST_PROPS_ENTRY_FILL(entry, var_args) 					\
+#define GST_PROPS_ENTRY_FILL(entry, var_args)	 				\
 G_STMT_START { 									\
   entry->propstype = va_arg (var_args, GstPropsType); 				\
 										\
@@ -215,7 +215,8 @@ G_STMT_START { 									\
     case GST_PROPS_STRING_TYPE:							\
       entry->data.string_data.string = g_strdup (va_arg (var_args, gchar*));	\
       break;									\
-    case GST_PROPS_LIST_TYPE:							\
+    case GST_PROPS_GLIST_TYPE:							\
+      entry->propstype = GST_PROPS_LIST_TYPE;					\
       entry->data.list_data.entries = g_list_copy (va_arg (var_args, GList*));	\
       break;									\
     default:									\
@@ -511,7 +512,7 @@ gst_props_entry_newv (const gchar *name, va_list var_args)
   entry = gst_props_alloc_entry ();
   entry->propid = g_quark_from_string (name);
   GST_PROPS_ENTRY_FILL (entry, var_args);
-  
+
   return entry;
 }
 
