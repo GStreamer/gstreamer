@@ -240,7 +240,7 @@ gst_divxenc_init (GstDivxEnc *divxenc)
 static gboolean
 gst_divxenc_setup (GstDivxEnc *divxenc)
 {
-  void *handle;
+  void *handle = NULL;
   SETTINGS output;
   DivXBitmapInfoHeader input;
   gdouble fps;
@@ -306,7 +306,7 @@ static void
 gst_divxenc_unset (GstDivxEnc *divxenc)
 {
   if (divxenc->handle) {
-    encore(divxenc, ENC_OPT_RELEASE, NULL, NULL);
+    encore(divxenc->handle, ENC_OPT_RELEASE, NULL, NULL);
     divxenc->handle = NULL;
   }
 }
