@@ -89,6 +89,11 @@ static void gst_bin_init (GstBin * bin);
 static GstElementClass *parent_class = NULL;
 static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 
+/**
+ * gst_bin_get_type:
+ *
+ * Returns: the type of #GstBin
+ */
 GType
 gst_bin_get_type (void)
 {
@@ -409,9 +414,10 @@ gst_bin_unset_element_sched (GstElement * element, GstScheduler * sched)
  * gst_bin_add_many:
  * @bin: the bin to add the elements to
  * @element_1: the first element to add to the bin
- * @...: NULL-terminated list of elements to add to the bin
+ * @...: additional elements to add to the bin
  * 
- * Add a list of elements to a bin. Uses #gst_bin_add.
+ * Adds a NULL-terminated list of elements to a bin.  This function is
+ * equivalent to calling #gst_bin_add() for each member of the list.
  */
 void
 gst_bin_add_many (GstBin * bin, GstElement * element_1, ...)
@@ -481,8 +487,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
  * @bin: #GstBin to add element to
  * @element: #GstElement to add to bin
  *
- * Add the given element to the bin.  Set the elements parent, and thus
- * add a reference.
+ * Adds the given element to the bin.  Sets the element's parent, and thus
+ * adds a reference.
  */
 void
 gst_bin_add (GstBin * bin, GstElement * element)
@@ -558,10 +564,11 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
  * @bin: #GstBin to remove element from
  * @element: #GstElement to remove
  *
- * Remove the element from its associated bin, unparenting as well.
- * The element will also be unreferenced so there's no need to call
- * gst_object_unref on it.
- * If you want the element to still exist after removing, you need to call
+ * Remove the element from its associated bin, unparenting it as well.
+ * Unparenting the element means that the element will be dereferenced,
+ * so if the bin holds the only reference to the element, the element
+ * will be freed in the process of removing it from the bin.  If you
+ * want the element to still exist after removing, you need to call
  * #gst_object_ref before removing it from the bin.
  */
 void
@@ -591,7 +598,8 @@ gst_bin_remove (GstBin * bin, GstElement * element)
  * @element_1: the first element to remove from the bin
  * @...: NULL-terminated list of elements to remove from the bin
  * 
- * Remove a list of elements from a bin. Uses #gst_bin_remove.
+ * Remove a list of elements from a bin. This function is equivalent
+ * to calling #gst_bin_remove with each member of the list.
  */
 void
 gst_bin_remove_many (GstBin * bin, GstElement * element_1, ...)

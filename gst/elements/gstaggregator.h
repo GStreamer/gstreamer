@@ -69,8 +69,6 @@ struct _GstAggregatorClass {
 
 GType 	gst_aggregator_get_type	(void);
 
-gboolean 	gst_aggregator_factory_init 	(GstElementFactory *factory);
-
 G_END_DECLS
 
 #endif /* __GST_AGGREGATOR_H__ */

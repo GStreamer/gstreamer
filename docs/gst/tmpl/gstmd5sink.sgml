@@ -14,12 +14,3 @@ GstMD5Sink
 
 </para>
 
-<!-- ##### FUNCTION gst_md5sink_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-

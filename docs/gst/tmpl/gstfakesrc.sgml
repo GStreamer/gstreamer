@@ -56,12 +56,3 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 @FAKESRC_FILLTYPE_PATTERN: 
 @FAKESRC_FILLTYPE_PATTERN_CONT: 
 
-<!-- ##### FUNCTION gst_fakesrc_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-

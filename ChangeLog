@@ -1,3 +1,43 @@
+2004-03-25  David Schleef  <ds@schleef.org>
+
+	* docs/gst/gstreamer-sections.txt:  More doc hacking.
+	* docs/gst/tmpl/gstaggregator.sgml:
+	* docs/gst/tmpl/gstautoplugfactory.sgml:
+	* docs/gst/tmpl/gstbin.sgml:
+	* docs/gst/tmpl/gstbuffer.sgml:
+	* docs/gst/tmpl/gstbufferstore.sgml:
+	* docs/gst/tmpl/gstfakesink.sgml:
+	* docs/gst/tmpl/gstfakesrc.sgml:
+	* docs/gst/tmpl/gstmd5sink.sgml:
+	* docs/gst/tmpl/gstreamer-unused.sgml:
+	* docs/gst/tmpl/gstsearchfuncs.sgml:
+	* docs/gst/tmpl/gstshaper.sgml:
+	* docs/gst/tmpl/gstspider.sgml:
+	* docs/gst/tmpl/gsttee.sgml:
+	* docs/gst/tmpl/gstutils.sgml:
+	* docs/gst/tmpl/gstvalue.sgml:
+	* docs/gst/tmpl/gstxml.sgml:
+	* gst/Makefile.am:  Remove gstthreaddummy.c.  It never worked,
+	and we don't support it.
+	* gst/gst.c: (gst_init_get_popt_table), (init_pre), (init_post),
+	(gst_use_threads), (gst_has_threads): same
+	* gst/gstthreaddummy.c: same
+	* gst/autoplug/gstspider.c: Make gst_spider_details static.
+	* gst/autoplug/gstspider.h: same
+	* gst/elements/gstaggregator.h: Remove bogus function from header
+	* gst/elements/gstfakesink.h: same
+	* gst/elements/gstfakesrc.h: same
+	* gst/elements/gstmd5sink.h: same
+	* gst/elements/gstshaper.h: same
+	* gst/elements/gsttee.h: same
+	* gst/gstbin.c: doc fixes
+	* gst/gstbin.h: Remove unused definition.
+	* gst/gstbuffer.c: doc fixes
+	* gst/gstcaps.c: (gst_caps_is_always_compatible): doc fixes
+	* gst/gstfilter.c: doc fixes
+	* gst/gsttag.c: doc fixes
+	* gst/gstvalue.c: doc fixes
+
 2004-03-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced-types.xml:

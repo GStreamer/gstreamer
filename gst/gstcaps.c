@@ -332,6 +332,8 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
  * gst_caps_split_one:
  * @caps: 
  *
+ * This function is not implemented.
+ *
  * Returns:
  */
 GstCaps *
@@ -344,8 +346,10 @@ gst_caps_split_one (GstCaps * caps)
 }
 
 /**
- * gst_caps_split_one:
+ * gst_caps_get_size:
  * @caps: a #GstCaps
+ *
+ * Gets the number of structures contained in @caps.
  *
  * Returns: the number of structures that @caps contains
  */
@@ -467,6 +471,8 @@ gst_caps_set_simple_valist (GstCaps * caps, char *field, va_list varargs)
  * gst_caps_is_any:
  * @caps: the @GstCaps to test
  *
+ * Determines if @caps represents any media format.
+ *
  * Returns: TRUE if @caps represents any format.
  */
 gboolean
@@ -480,6 +486,8 @@ gst_caps_is_any (const GstCaps * caps)
 /**
  * gst_caps_is_empty:
  * @caps: the @GstCaps to test
+ *
+ * Determines if @caps represents no media formats.
  *
  * Returns: TRUE if @caps represents no formats.
  */
@@ -497,6 +505,11 @@ gst_caps_is_empty (const GstCaps * caps)
 /**
  * gst_caps_is_chained:
  * @caps: the @GstCaps to test
+ *
+ * Determines if @caps contains multiple #GstStructures.
+ *
+ * This function is deprecated, and should not be used in new code.
+ * Use #gst_caps_is_simple() instead.
  *
  * Returns: TRUE if @caps contains more than one structure
  */
@@ -641,9 +654,13 @@ gst_caps_cap_is_always_compatible (const GstStructure * struct1,
 }
 
 /**
- * gst_caps_is_always_compatible
+ * gst_caps_is_always_compatible:
  * @caps1: the #GstCaps to test
  * @caps2: the #GstCaps to test
+ *
+ * A given #GstCaps structure is always compatible with another if
+ * every media format that is in the first is also contained in the
+ * second.  That is, @caps1 is a subset of @caps2.
  *
  * Returns: TRUE if @caps1 is a subset of @caps2.
  */
@@ -654,13 +671,14 @@ gst_caps_is_always_compatible (const GstCaps * caps1, const GstCaps * caps2)
 
   g_return_val_if_fail (caps1 != NULL, FALSE);
   g_return_val_if_fail (caps2 != NULL, FALSE);
-  /* FIXME: is this right ? */
-  g_return_val_if_fail (!gst_caps_is_empty (caps1), FALSE);
-  g_return_val_if_fail (!gst_caps_is_empty (caps2), FALSE);
 
   if (gst_caps_is_any (caps2))
     return TRUE;
   if (gst_caps_is_any (caps1))
+    return FALSE;
+  if (gst_caps_is_empty (caps1))
+    return TRUE;
+  if (gst_caps_is_empty (caps2))
     return FALSE;
 
   for (i = 0; i < caps1->structs->len; i++) {
@@ -996,6 +1014,15 @@ gst_caps_simplify (const GstCaps * caps)
 }
 
 #ifndef GST_DISABLE_LOADSAVE
+/**
+ * gst_caps_save_thyself:
+ * @caps: a #GstCaps structure
+ * @parent: a XML parent node
+ *
+ * Serializes a #GstCaps to XML and adds it as a child node of @parent.
+ *
+ * Returns: a XML node pointer
+ */
 xmlNodePtr
 gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent)
 {
@@ -1003,6 +1030,14 @@ gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent)
   return 0;
 }
 
+/**
+ * gst_caps_load_thyself:
+ * @parent: a XML node
+ *
+ * Creates a #GstCaps from its XML serialization.
+ *
+ * Returns: a new #GstCaps structure
+ */
 GstCaps *
 gst_caps_load_thyself (xmlNodePtr parent)
 {
@@ -1171,6 +1206,17 @@ gst_caps_copy_conditional (const GstCaps * src)
 
 /* fixate utility functions */
 
+/**
+ * gst_caps_structure_fixate_field_nearest_int:
+ * @structure: a #GstStructure
+ * @field_name: a field in @structure
+ * @target: the target value of the fixation
+ *
+ * Fixates a #GstStructure by changing the given field to the nearest
+ * integer to @target that is a subset of the existing field.
+ *
+ * Returns: TRUE if the structure could be fixated
+ */
 gboolean
 gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
     const char *field_name, int target)
@@ -1223,6 +1269,17 @@ gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
   return FALSE;
 }
 
+/**
+ * gst_caps_structure_fixate_field_nearest_double:
+ * @structure: a #GstStructure
+ * @field_name: a field in @structure
+ * @target: the target value of the fixation
+ *
+ * Fixates a #GstStructure by changing the given field to the nearest
+ * double to @target that is a subset of the existing field.
+ *
+ * Returns: TRUE if the structure could be fixated
+ */
 gboolean
 gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
     const char *field_name, double target)

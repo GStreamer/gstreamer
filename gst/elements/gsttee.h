@@ -58,8 +58,6 @@ struct _GstTeeClass {
 
 GType 	gst_tee_get_type	(void);
 
-gboolean 	gst_tee_factory_init 	(GstElementFactory *factory);
-
 G_END_DECLS
 
 #endif /* __GST_TEE_H__ */

@@ -339,8 +339,8 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
  * @buf1: a first source #GstBuffer.
  * @buf2: the second source #GstBuffer.
  *
- * Determines whether a gst_buffer_span() is free (as in free beer), 
- * or requires a memcpy. 
+ * Determines whether a gst_buffer_span() can be done without copying
+ * the contents, that is, whether the data areas are contiguous.
  *
  * Returns: TRUE if the buffers are contiguous, 
  * FALSE if a copy would be required.

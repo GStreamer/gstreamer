@@ -48,8 +48,6 @@ static GstRegistry *_user_registry;
 static gboolean _gst_registry_fixed = FALSE;
 #endif
 
-static gboolean _gst_use_threads = TRUE;
-
 static gboolean _gst_enable_cpu_opt = TRUE;
 
 static gboolean gst_initialized = FALSE;
@@ -60,8 +58,6 @@ extern gint _gst_trace_on;
 
 /* set to TRUE when segfaults need to be left as is */
 gboolean _gst_disable_segtrap = FALSE;
-
-extern GThreadFunctions gst_thread_dummy_functions;
 
 
 static void load_plugin_func (gpointer data, gpointer user_data);
@@ -164,7 +160,7 @@ gst_init_get_popt_table (void)
     {"gst-plugin-load", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
           ARG_PLUGIN_LOAD,
           N_("Comma-separated list of plugins to preload in addition to the "
-              "list stored in env variable GST_PLUGIN_PATH"),
+              "list stored in envronment variable GST_PLUGIN_PATH"),
         N_("PLUGINS")},
     {"gst-disable-segtrap", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
           ARG_SEGTRAP_DISABLE,
@@ -232,6 +228,11 @@ gst_init_check (int *argc, char **argv[])
  * This function will terminate your program if it was unable to initialize
  * GStreamer for some reason.  If you want your program to fall back,
  * use gst_init_check() instead.
+ *
+ * WARNING: This function does not work in the same way as corresponding
+ * functions in other glib-style libraries, such as gtk_init().  In
+ * particular, unknown command line options cause this function to
+ * abort program execution.
  */
 void
 gst_init (int *argc, char **argv[])
@@ -449,12 +450,8 @@ init_pre (void)
 
   if (g_thread_supported ()) {
     /* somebody already initialized threading */
-    _gst_use_threads = TRUE;
   } else {
-    if (_gst_use_threads)
-      g_thread_init (NULL);
-    else
-      g_thread_init (&gst_thread_dummy_functions);
+    g_thread_init (NULL);
   }
   /* we need threading to be enabled right here */
   _gst_debug_init ();
@@ -566,8 +563,7 @@ init_post (void)
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
 
-  GST_INFO ("Initializing GStreamer Core Library version %s %s",
-      VERSION, _gst_use_threads ? "" : "(no threads)");
+  GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);
 
   _gst_format_initialize ();
   _gst_query_type_initialize ();
@@ -806,26 +802,18 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
  * gst_use_threads:
  * @use_threads: a #gboolean indicating whether threads should be used
  *
- * Instructs the core to turn on/off threading. When threading
- * is turned off, all thread operations such as mutexes and conditionals
- * are turned into NOPs. use this if you want absolute minimal overhead
- * and you don't use any threads in the pipeline.
- * <note><para>
- * This function may only be called before threads are initialized. This
- * usually happens when calling gst_init.
- * </para></note>
+ * This function is deprecated and should not be used in new code.
+ * GStreamer requires threads to be enabled at all times.
  */
 void
 gst_use_threads (gboolean use_threads)
 {
-  g_return_if_fail (!gst_initialized);
-  g_return_if_fail (g_thread_supported ());
-
-  _gst_use_threads = use_threads;
 }
 
 /**
  * gst_has_threads:
+ *
+ * This function is deprecated and should not be used in new code.
  *
  * Queries if GStreamer has threads enabled.
  *
@@ -834,7 +822,7 @@ gst_use_threads (gboolean use_threads)
 gboolean
 gst_has_threads (void)
 {
-  return _gst_use_threads;
+  return TRUE;
 }
 
 
@@ -844,6 +832,9 @@ static GSList *mainloops = NULL;
  * gst_main:
  *
  * Enters the main GStreamer processing loop.
+ *
+ * This function duplicates functionality in glib, and will be removed
+ * during the 0.9 development series.
  */
 void
 gst_main (void)
@@ -860,6 +851,9 @@ gst_main (void)
  * gst_main_quit:
  *
  * Exits the main GStreamer processing loop.
+ *
+ * This function duplicates functionality in glib, and will be removed
+ * during the 0.9 development series.
  */
 void
 gst_main_quit (void)

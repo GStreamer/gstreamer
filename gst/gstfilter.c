@@ -19,6 +19,20 @@
 
 #include <gst/gstfilter.h>
 
+/**
+ * gst_filter_run:
+ * @list: a linked list
+ * @func: the function to execute for each item
+ * @first: flag to stop execution after a successful item
+ * @user_data: user data
+ *
+ * Iterates over the elements in @list, calling @func with the
+ * list item data for each item.  If @func returns TRUE, @data is
+ * prepended to the list of results returned.  If @first is true,
+ * the search is halted after the first result is found.
+ *
+ * Returns: the list of results
+ */
 GList *
 gst_filter_run (const GList * list, GstFilterFunc func, gboolean first,
     gpointer user_data)

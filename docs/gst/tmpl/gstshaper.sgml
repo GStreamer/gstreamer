@@ -22,12 +22,3 @@ GstShaper
 @SHAPER_POLICY_TIMESTAMPS: 
 @SHAPER_POLICY_BUFFERSIZE: 
 
-<!-- ##### FUNCTION gst_shaper_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-

@@ -50,6 +50,11 @@
 #include "gstspideridentity.h"
 #include "gstsearchfuncs.h"
 
+static GstElementDetails gst_spider_details = GST_ELEMENT_DETAILS ("Spider",
+    "Generic",
+    "Automatically link sinks and sources",
+    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
+
 GST_DEBUG_CATEGORY (gst_spider_debug);
 #define GST_CAT_DEFAULT gst_spider_debug
 
@@ -728,11 +733,6 @@ gst_spider_plug_from_srcpad (GstSpiderConnection * conn, GstPad * srcpad)
 
   return result;
 }
-
-GstElementDetails gst_spider_details = GST_ELEMENT_DETAILS ("Spider",
-    "Generic",
-    "Automatically link sinks and sources",
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
 
 static gboolean
 plugin_init (GstPlugin * plugin)

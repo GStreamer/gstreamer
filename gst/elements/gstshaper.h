@@ -66,8 +66,6 @@ struct _GstShaperClass {
 };
 
 GType 		gst_shaper_get_type	(void);
-gboolean 	gst_shaper_factory_init (GstElementFactory *factory);
-
 
 G_END_DECLS
 

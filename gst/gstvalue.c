@@ -140,6 +140,10 @@ gst_value_lcopy_list (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_list_prepend_value:
+ * @value: a GstValueList to prepend a value to
+ * @prepend_value: the value to prepend
+ *
+ * Prepends @prepend_value to the GstValueList in @value.
  *
  */
 void
@@ -152,7 +156,10 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 
 /**
  * gst_value_list_append_value:
+ * @value: a GstValueList to append a value to
+ * @apppend_value: the value to append
  *
+ * Appends @append_value to the GstValueList in @value.
  */
 void
 gst_value_list_append_value (GValue * value, const GValue * append_value)
@@ -164,7 +171,11 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
 
 /**
  * gst_value_list_get_size:
+ * @value: a GstValueList
  *
+ * Gets the number of values contained in @value.
+ *
+ * Returns: the number of values
  */
 guint
 gst_value_list_get_size (const GValue * value)
@@ -176,7 +187,13 @@ gst_value_list_get_size (const GValue * value)
 
 /**
  * gst_value_list_get_value:
+ * @value: a GstValueList
+ * @index
  *
+ * Gets the value that is a member of the list contained in @value and
+ * has the index @index.
+ *
+ * Returns: the value at the given index
  */
 const GValue *
 gst_value_list_get_value (const GValue * value, guint index)
@@ -194,8 +211,8 @@ gst_value_list_get_value (const GValue * value, guint index)
  * @value1: first value to put into the union
  * @value2: second value to put into the union
  *
- * Concatenates copies of value1 and value2 into a list. dest will be 
- * initialized to the type GST_TYPE_LIST.
+ * Concatenates copies of value1 and value2 into a list.  The value
+ * @dest is initialized to the type GST_TYPE_LIST.
  */
 void
 gst_value_list_concat (GValue * dest, const GValue * value1,
@@ -362,7 +379,10 @@ gst_value_lcopy_fourcc (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_set_fourcc:
+ * @value: a GValue initialized to GST_TYPE_FOURCC
+ * @fourcc: the fourcc to set
  *
+ * Sets @value to @fourcc.
  */
 void
 gst_value_set_fourcc (GValue * value, guint32 fourcc)
@@ -374,7 +394,11 @@ gst_value_set_fourcc (GValue * value, guint32 fourcc)
 
 /**
  * gst_value_get_fourcc:
+ * @value: a GValue initialized to GST_TYPE_FOURCC
  *
+ * Gets the fourcc contained in @value.
+ *
+ * Returns: the fourcc contained in @value.
  */
 guint32
 gst_value_get_fourcc (const GValue * value)
@@ -495,7 +519,11 @@ gst_value_lcopy_int_range (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_set_int_range:
+ * @value: a GValue initialized to GST_TYPE_INT_RANGE
+ * @start: the start of the range
+ * @end: the end of the range
  *
+ * Sets @value to the range specified by @start and @end.
  */
 void
 gst_value_set_int_range (GValue * value, int start, int end)
@@ -508,7 +536,11 @@ gst_value_set_int_range (GValue * value, int start, int end)
 
 /**
  * gst_value_get_int_range_min:
+ * @value: a GValue initialized to GST_TYPE_INT_RANGE
  *
+ * Gets the minimum of the range specified by @value.
+ *
+ * Returns: the minumum of the range
  */
 int
 gst_value_get_int_range_min (const GValue * value)
@@ -520,7 +552,11 @@ gst_value_get_int_range_min (const GValue * value)
 
 /**
  * gst_value_get_int_range_max:
+ * @value: a GValue initialized to GST_TYPE_INT_RANGE
  *
+ * Gets the maximum of the range specified by @value.
+ *
+ * Returns: the maxumum of the range
  */
 int
 gst_value_get_int_range_max (const GValue * value)
@@ -610,7 +646,11 @@ gst_value_lcopy_double_range (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_set_double_range:
+ * @value: a GValue initialized to GST_TYPE_DOUBLE_RANGE
+ * @start: the start of the range
+ * @end: the end of the range
  *
+ * Sets @value to the range specified by @start and @end.
  */
 void
 gst_value_set_double_range (GValue * value, double start, double end)
@@ -623,7 +663,11 @@ gst_value_set_double_range (GValue * value, double start, double end)
 
 /**
  * gst_value_get_double_range_min:
+ * @value: a GValue initialized to GST_TYPE_DOUBLE_RANGE
  *
+ * Gets the minimum of the range specified by @value.
+ *
+ * Returns: the minumum of the range
  */
 double
 gst_value_get_double_range_min (const GValue * value)
@@ -635,7 +679,11 @@ gst_value_get_double_range_min (const GValue * value)
 
 /**
  * gst_value_get_double_range_max:
+ * @value: a GValue initialized to GST_TYPE_DOUBLE_RANGE
  *
+ * Gets the maximum of the range specified by @value.
+ *
+ * Returns: the maxumum of the range
  */
 double
 gst_value_get_double_range_max (const GValue * value)
@@ -690,7 +738,11 @@ gst_value_deserialize_double_range (GValue * dest, const char *s)
 
 /**
  * gst_value_set_caps:
+ * @value: a GValue initialized to GST_TYPE_CAPS
+ * @caps: the caps to set the value to
  *
+ * Sets the contents of @value to coorespond to @caps.  The actual
+ * #GstCaps structure is copied before it is used.
  */
 void
 gst_value_set_caps (GValue * value, const GstCaps * caps)
@@ -702,7 +754,11 @@ gst_value_set_caps (GValue * value, const GstCaps * caps)
 
 /**
  * gst_value_get_caps:
+ * @value: a GValue initialized to GST_TYPE_CAPS
  *
+ * Gets the contents of @value.
+ *
+ * Returns: the contents of @value
  */
 const GstCaps *
 gst_value_get_caps (const GValue * value)
@@ -1082,7 +1138,12 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
 
 /**
  * gst_value_can_compare:
+ * @value1: a value to compare
+ * @value2: another value to compare
  *
+ * Determines if @value1 and @value2 can be compared.
+ *
+ * Returns: TRUE if the values can be compared
  */
 gboolean
 gst_value_can_compare (const GValue * value1, const GValue * value2)
@@ -1103,7 +1164,16 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_compare:
+ * @value1: a value to compare
+ * @value2: another value to compare
  *
+ * Compares @value1 and @value2.  If @value1 and @value2 cannot be
+ * compared, the function returns GST_VALUE_UNORDERED.  Otherwise,
+ * if @value1 is greater than @value2, GST_VALUE_GREATER is returned.
+ * If @value1 is less than @value2, GST_VALUE_LESSER is returned.
+ * If the values are equal, GST_VALUE_EQUAL is returned.
+ *
+ * Returns: A GstValueCompareType value
  */
 int
 gst_value_compare (const GValue * value1, const GValue * value2)
@@ -1131,7 +1201,19 @@ gst_value_compare (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_can_union:
+ * @value1: a value to union
+ * @value2: another value to union
  *
+ * Determines if @value1 and @value2 can be non-trivially unioned.
+ * Any two values can be trivially unioned by adding both of them
+ * to a GstValueList.  However, certain types have the possibility
+ * to be unioned in a simpler way.  For example, an integer range
+ * and an integer can be unioned if the integer is a subset of the
+ * integer range.  If there is the possibility that two values can
+ * be unioned, this function returns TRUE.
+ *
+ * Returns: TRUE if there is a function allowing the two values to
+ * be unioned.
  */
 gboolean
 gst_value_can_union (const GValue * value1, const GValue * value2)
@@ -1151,7 +1233,13 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_union:
+ * @dest: the destination value
+ * @value1: a value to union
+ * @value2: another value to union
  *
+ * Creates a GValue cooresponding to the union of @value1 and @value2.
+ *
+ * Returns: TRUE if the values could be unioned
  */
 gboolean
 gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
@@ -1173,6 +1261,12 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_register_union_func:
+ * @type1: a type to union
+ * @type2: another type to union
+ * @func: a function that implments creating a union between the two types
+ *
+ * Registers a union function that can create a union between GValues
+ * of the type @type1 and @type2.
  *
  */
 void
@@ -1216,7 +1310,13 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_intersect:
+ * @dest: the destination value for intersection
+ * @value1: a value to intersect
+ * @value2: another value to intersect
  *
+ * Calculates the intersection of the two values.
+ *
+ * Returns: TRUE if the intersection is non-empty
  */
 gboolean
 gst_value_intersect (GValue * dest, const GValue * value1,

@@ -2,7 +2,7 @@
 GstValue
 
 <!-- ##### SECTION Short_Description ##### -->
-
+GValue implementations specific to GStreamer
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

@@ -113,7 +113,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gsttag.c		\
 	gsttaginterface.c	\
 	gstthread.c		\
-	gstthreaddummy.c	\
 	$(GST_TRACE_SRC)	\
 	gsttrashstack.c		\
 	gsttypefind.c		\

@@ -28,7 +28,6 @@
 
 G_BEGIN_DECLS
 	
-extern GstElementDetails gst_spider_details;
 GST_DEBUG_CATEGORY_EXTERN(gst_spider_debug);
 
 /*

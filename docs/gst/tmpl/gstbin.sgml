@@ -63,16 +63,6 @@ clock providers in the bin.
 @klass: 
 
 
-<!-- ##### USER_FUNCTION GstBinPrePostIterateFunction ##### -->
-<para>
-The signature of the callback for the post and pre iterate function as set with
-gst_bin_set_pre_iterate_function() and gst_bin_set_post_iterate_function().
-</para>
-
-@bin: The bin that performed the callback
-@user_data: user data
-
-
 <!-- ##### ENUM GstBinFlags ##### -->
 <para>
 Flags for a bin.
@@ -233,26 +223,6 @@ Flags for a bin.
 @oldstate: 
 @newstate: 
 @child: 
-
-
-<!-- ##### FUNCTION gst_bin_set_pre_iterate_function ##### -->
-<para>
-
-</para>
-
-@bin: 
-@func: 
-@user_data: 
-
-
-<!-- ##### FUNCTION gst_bin_set_post_iterate_function ##### -->
-<para>
-
-</para>
-
-@bin: 
-@func: 
-@user_data: 
 
 
 <!-- ##### SIGNAL GstBin::element-added ##### -->

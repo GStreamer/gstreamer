@@ -37,11 +37,6 @@ to create a buffer with preallocated
 data of a given size.
 </para>
 <para>
-GstBuffers can also be created from a #GstBufferPool with 
-gst_buffer_new_from_pool(). The bufferpool can be obtained from a
-peer element with gst_pad_get_bufferpool().
-</para>
-<para>
 gst_buffer_ref() is used to increase the refcount of a buffer. This must be
 done when you want to keep a handle to the buffer after pushing it to the
 next element.

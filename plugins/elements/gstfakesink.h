@@ -75,8 +75,6 @@ struct _GstFakeSinkClass {
 
 GType gst_fakesink_get_type(void);
 
-gboolean gst_fakesink_factory_init (GstElementFactory *factory);
-
 G_END_DECLS
 
 #endif /* __GST_FAKESINK_H__ */

@@ -14,12 +14,3 @@ A tee can be used to split out the filter graph.
 
 </para>
 
-<!-- ##### FUNCTION gst_tee_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-

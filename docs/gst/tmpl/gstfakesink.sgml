@@ -29,12 +29,3 @@ with the buffer. (fakesink)
 @FAKESINK_STATE_ERROR_PAUSED_READY: 
 @FAKESINK_STATE_ERROR_READY_NULL: 
 
-<!-- ##### FUNCTION gst_fakesink_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-

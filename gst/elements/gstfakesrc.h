@@ -115,8 +115,6 @@ struct _GstFakeSrcClass {
 
 GType gst_fakesrc_get_type(void);
 
-gboolean gst_fakesrc_factory_init (GstElementFactory *factory);
-
 G_END_DECLS
 
 #endif /* __GST_FAKESRC_H__ */

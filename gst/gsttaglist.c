@@ -373,6 +373,8 @@ gst_tag_get_description (const gchar * tag)
  * gst_tag_get_flag:
  * @tag: the tag
  *
+ * Gets the flag of @tag.
+ *
  * Returns the flag of this tag.
  */
 GstTagFlag
@@ -388,7 +390,7 @@ gst_tag_get_flag (const gchar * tag)
 }
 
 /**
- * gst_tag_list_is_fixed:
+ * gst_tag_is_fixed:
  * @tag: tag to check
  *
  * Checks if the given tag is fixed. A fixed tag can only contain one value.
@@ -827,7 +829,7 @@ gst_event_new_tag (GstTagList * list)
 }
 
 /**
- * get_event_tag_get_list:
+ * gst_event_tag_get_list:
  * @tag_event: a tagging #GstEvent
  *
  * Gets the taglist from a given tagging event.

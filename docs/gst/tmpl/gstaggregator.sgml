@@ -24,12 +24,3 @@ methods to request buffers from its pads.
 @AGGREGATOR_LOOP_SELECT: 
 @AGGREGATOR_CHAIN: 
 
-<!-- ##### FUNCTION gst_aggregator_factory_init ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-
