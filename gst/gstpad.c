@@ -565,12 +565,19 @@ gst_pad_disconnect (GstPad *srcpad,
   else if (GST_PAD_PARENT (realsink)->sched)
     gst_scheduler_pad_disconnect (GST_PAD_PARENT (realsink)->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
+  /* hold a reference, as they can go away in the signal handlers */
+  gst_object_ref (GST_OBJECT (realsrc));
+  gst_object_ref (GST_OBJECT (realsink));
+
   /* fire off a signal to each of the pads telling them that they've been disconnected */
   g_signal_emit (G_OBJECT (realsrc), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsink);
   g_signal_emit (G_OBJECT (realsink), gst_real_pad_signals[REAL_DISCONNECTED], 0, realsrc);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+
+  gst_object_unref (GST_OBJECT (realsrc));
+  gst_object_unref (GST_OBJECT (realsink));
 }
 
 /**

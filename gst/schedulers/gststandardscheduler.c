@@ -294,8 +294,7 @@ gst_standard_scheduler_chain_wrapper (int argc, char *argv[])
 	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s\n", name,
 		       GST_PAD_NAME (pad));
 	    GST_RPAD_CHAINFUNC (realpad) (pad, buf);
-	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s done\n", name,
-		       GST_PAD_NAME (pad));
+            GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of element %s done\n", name);
 	  }
 	}
 	else {
@@ -763,7 +762,6 @@ gst_standard_scheduler_chain_remove_element (GstSchedulerChain * chain, GstEleme
   /* if there are no more elements in the chain, destroy the chain */
   if (chain->num_elements == 0)
     gst_standard_scheduler_chain_destroy (chain);
-
 }
 
 static void
@@ -997,11 +995,10 @@ gst_standard_scheduler_remove_element (GstScheduler * sched, GstElement * elemen
     /* remove it from the list of elements */
     bsched->elements = g_list_remove (bsched->elements, element);
     bsched->num_elements--;
-
-    /* unset the scheduler pointer in the element */
-    GST_ELEMENT_SCHED (element) = NULL;
-    
   }
+
+  /* unset the scheduler pointer in the element */
+  GST_ELEMENT_SCHED (element) = NULL;
 }
 
 static GstElementStateReturn

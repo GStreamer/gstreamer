@@ -223,6 +223,7 @@ gboolean		gst_element_connect_filtered	(GstElement *src, const gchar *srcpadname
 							 GstCaps *filtercaps);
 void			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
 							 GstElement *dest, const gchar *destpadname);
+void			gst_element_disconnect_elements (GstElement *src, GstElement *dest);
 
 void			gst_element_set_eos		(GstElement *element);
 
