@@ -72,7 +72,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_templ,
 )
 
 GST_PAD_TEMPLATE_FACTORY (src_video_templ,
-  "video_[00-32]",
+  "video_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
@@ -115,7 +115,7 @@ GST_PAD_TEMPLATE_FACTORY (src_video_templ,
 )
 
 GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
-  "audio_[00-32]",
+  "audio_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
   GST_CAPS_NEW (
