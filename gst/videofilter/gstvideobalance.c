@@ -124,7 +124,8 @@ gst_videobalance_class_init (GstVideobalanceClass *klass)
   gstvideofilter_class->setup = gst_videobalance_setup;
 
   for(i=0;i<G_N_ELEMENTS(gst_videobalance_formats);i++){
-    gst_videofilter_class_add_format(parent_class, gst_videobalance_formats + i);
+    gst_videofilter_class_add_format(gstvideofilter_class,
+	gst_videobalance_formats + i);
   }
 }
 

@@ -112,7 +112,8 @@ gst_videotemplate_class_init (GstVideotemplateClass *klass)
   gstvideofilter_class->setup = gst_videotemplate_setup;
 
   for(i=0;i<G_N_ELEMENTS(gst_videotemplate_formats);i++){
-    gst_videofilter_class_add_format(parent_class, gst_videotemplate_formats + i);
+    gst_videofilter_class_add_format(gstvideofilter_class,
+	gst_videotemplate_formats + i);
   }
 }
 

@@ -146,7 +146,8 @@ gst_videoflip_class_init (GstVideoflipClass *klass)
   gstvideofilter_class->setup = gst_videoflip_setup;
 
   for(i=0;i<G_N_ELEMENTS(gst_videoflip_formats);i++){
-    gst_videofilter_class_add_format(parent_class, gst_videoflip_formats + i);
+    gst_videofilter_class_add_format(gstvideofilter_class,
+	gst_videoflip_formats + i);
   }
 }
 
