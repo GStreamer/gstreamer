@@ -18,15 +18,33 @@ $Id$
   * GST_TYPE_UI_HINT
     - add hints to generate 'good' looking interfaces to elements
     - API:
+      GList *get_group_list()
     - features
       - grouping of parameters
+        - each group has a label and references a list of dparams or properties
+    - question
+      - should this be aware of instruments (voice-groups)
+      - do we better use this to tell that a frequency is infact a note
 
 * new interfaces for audio applications
   * GST_TYPE_MUSIC_GENERATOR
-    - add hints so that application can find out which params to use to
-      play notes and/or to trigger sounds
+    - add hints so that application can use a element as an instrument
     - API:
       DParam *get_note_dparam();
-      DParam *get_trigger_dparam();
-    - questions
-      - can we use this to support multiple voices?
+      GList *get_trigger_dparams();
+      char *get_number_of_voices_property();
+      GList *get_global_param_names();
+      GList *get_voice_param_names();
+    - features
+      - find out which params to use to play notes/trigger sounds
+        - these params will not appear in a control-ui
+        - notes involve a key to frequency translation
+      - find out if the element has a number_of_voices property
+        - if yes, we can find out about the max by looking at the gparamspec
+        - setting the property, adds/removes voices
+        - if the element supports it, it needs to:
+          - register voice-dparams as e.g. note_XXX, where XXX is the voice-number
+          - run the voice-loop in the chain/loop function
+            each voice processes the same input, if at all
+            the outputs of all voices are mixed together
+
