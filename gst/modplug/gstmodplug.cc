@@ -306,13 +306,15 @@ gst_modplug_loop (GstElement *element)
       if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) 
          break;
     }
-		
-    if ( modplug->Buffer ) {	 
-      modplug->Buffer = gst_buffer_append( modplug->Buffer, buffer_in );
-      gst_buffer_unref( buffer_in );	 	  
-    }
     else
-      modplug->Buffer = buffer_in;
+    {
+      if ( modplug->Buffer ) {	 
+        modplug->Buffer = gst_buffer_append( modplug->Buffer, buffer_in );
+        gst_buffer_unref( buffer_in );	 	  
+      }
+      else
+        modplug->Buffer = buffer_in;
+    }
   }  
 
   if ( modplug->_16bit )
