@@ -8,6 +8,11 @@
 static int    launch_argc;
 static char **launch_argv;
 
+static guint64 iterations = 0;
+static guint64 sum = 0;
+static guint64 min = G_MAXINT;
+static guint64 max = 0;
+
 #ifndef USE_GLIB2
 GtkWidget *window;
 GtkWidget *gtk_socket;
@@ -62,12 +67,29 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
 gboolean
 idle_func (gpointer data)
 {
-  if (!gst_bin_iterate (GST_BIN (data))) {
+  gboolean busy;
+  struct timeval tfthen, tfnow;
+  guint64 diff;
+
+  gettimeofday (&tfthen, (struct timezone *)NULL);
+  busy = gst_bin_iterate (GST_BIN (data));
+  iterations++;
+  gettimeofday (&tfnow, (struct timezone *)NULL);
+
+  diff = ((guint64)tfnow.tv_sec*1000000LL+tfnow.tv_usec) - 
+         ((guint64)tfthen.tv_sec*1000000LL+tfthen.tv_usec); 
+
+  sum += diff; 
+  min = MIN (min, diff);
+  max = MAX (max, diff);
+
+  if (!busy) {
     gst_main_quit ();
-    g_print ("iteration ended\n");
-    return FALSE;
+    g_print ("execution ended after %llu iterations (sum %llu us, average %llu us, min %llu us, max %llu us)\n", 
+		    iterations, sum, sum/iterations, min, max);
   }
-  return TRUE;
+
+  return busy;
 }
 
 void 
