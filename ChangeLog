@@ -1,3 +1,9 @@
+=== release 0.8.4 ===
+
+2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: releasing 0.8.4, "Alias"
+
 2004-08-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/theora/Makefile.am:
@@ -328,7 +334,7 @@
 2004-08-12  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/lame/gstlame.c: (gst_lame_class_init), (gst_lame_init):
-	set default compression ratio paramter to 0.0 so bitrate parameter
+	set default compression ratio parameter to 0.0 so bitrate parameter
 	works :)
 
 2004-08-11  David Schleef  <ds@schleef.org>

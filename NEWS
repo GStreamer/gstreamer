@@ -1,4 +1,82 @@
-This is GStreamer Plugins 0.8.2
+This is GStreamer Plugins 0.8.4
+
+Changes since 0.8.3:
+
+      * New translation in this release: Albanian
+      * licensing corrections
+      * fixes for compiling with G_DISABLE_ASSERT
+      * pixel aspect ratio conversion fixes
+      * tcpserversink fixes and additions
+      * multifdsink can use poll now as well
+      * interleave fixes
+      * audioscale fixes
+      * videotestsrc fixes
+      * v4lsrc fixes
+      * theoradec, theoraenc fixes
+      * lame fixes
+      * flac fixes
+      * ximagesink, xvimagesink fixes
+      * sunaudio fixes
+
+Bugs fixed since 0.8.3:
+
+      * 135407 : [xviddec] shows green frames when decoding packed bitstre...
+      * 140432 : Osssink and alsasink broken on nforce2 (intel8x0) soundcard
+      * 140897 : Incorrect segment duration in files created with matroska...
+      * 140898 : No writing application specified in matroska files create...
+      * 141554 : vorbis in matroska files makes the vorbisdec plugin segfault
+      * 144091 : [Solaris] audio mixer element
+      * 144616 : Infinite loop in wavparse.
+      * 148711 : typefind function for TTA audio files
+      * 148950 : matroskademux doesn't set buffer duration
+      * 148951 : matroskademux misses the tta codec in its codec list
+      * 151232 : [lame] doesn't build with lame-3.90
+      * 151236 : [v4l] compile failure
+      * 151410 : Memory leaks in multifdsink
+      * 151462 : theora plugin Makefile broken
+
+Changes since 0.8.2:
+
+      * New translation in this release: Czech
+      * New translation in this release: Hungarian
+      * pixel aspect ratio conversion
+      * tcpserversink fixes and additions
+      * oggdemux fixes
+      * theoraenc and theoradec fixes
+      * ximagesink and xvimagesink fixes
+      * ladspa fixes
+      * videoscale and ffmpegcolorspace fixes for stride
+      * mpeg and dvd fixes
+      * win32 project file additions
+      * new elements: playbin and decodebin
+      * new element: multifdsink
+      * new element: pngdec
+      * new element: alpha
+      * new element: multifilesink
+
+Bugs fixed since 0.8.2:
+
+      * 141906 : hang on removing ximagesink from a pipeline
+      * 142432 : Wrong sink MIME type in shout2send
+      * 143222 : [oggdemux] Optimize tag reading
+      * 143548 : Please update libtool to fix build on arm
+      * 143703 : duration always 0 for some (gst produced) .ogg files
+      * 144624 : wavenc doesn't close file properly
+      * 144753 : libgstinterfaces should be split, or: 'volume' should not...
+      * 144815 : [alsasink] gst_element_set_time_delay() assertion failure...
+      * 144866 : [flac] seeking broken, duration not set on buffers [PATCH]
+      * 144941 : alsasink assertion failure on ctrl+z and fg
+      * 145031 : totem CVS won't compile because of gst-play ...
+      * 145088 : gnome-volume-control has unlocalized volume names.
+      * 145118 : Compile error (gcc 2.95, alsa)
+      * 145336 : pipeline broke-stonecold
+      * 147969 : LADSPA plugin should sanitize the info from the .so's to ...
+      * 148021 : Bug in lib-riff
+      * 148023 : [ximagesink] doesn't work with Xnest
+      * 148043 : audioconvert
+      * 148289 : mad plugin crashes on Sun
+      * 148505 : [level] for silence peak is reported wrongly
+      * 148986 : [lame] bug in negotiation
 
 Changes since 0.8.1:
 
