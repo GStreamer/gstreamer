@@ -412,8 +412,18 @@ GST_CHECK_FEATURE(AUDIOFILE, [audiofile], afsink afsrc, [
 dnl *** avifile ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AVIFILE, true)
 GST_CHECK_FEATURE(AVIFILE, [avifile], winenc windec, [
-  if test "x$HAVE_CXX" = "xyes"; then
-    AS_AVIFILE(0.7.0)
+  if test "x$HAVE_CXX" != "xyes"; then
+    AC_MSG_WARN(No C++ compiler found, not compiling avifile plug-ins)
+    HAVE_AVIFILE="no"
+  else
+    dnl check for libstdc++
+    AC_CHECK_LIB(stdc++, cout,
+      [AS_AVIFILE(0.7.0)],
+      [
+        AC_MSG_WARN(You need libstdc++ to compile with avifile)
+        HAVE_AVIFILE="no"
+      ]
+    )
   fi
 ])
 
