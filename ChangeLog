@@ -1,5 +1,11 @@
 2004-07-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/videoscale/videoscale.c: (gst_videoscale_planar411),
+	(gst_videoscale_scale_nearest_16bit):
+	  comment algorithm
+
+2004-07-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/videotestsrc/gstvideotestsrc.c:
 	(gst_videotestsrc_class_init), (gst_videotestsrc_src_link),
 	(gst_videotestsrc_init), (gst_videotestsrc_get),
