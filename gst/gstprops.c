@@ -193,11 +193,11 @@ G_STMT_START { 									\
 
 #define GST_PROPS_ENTRY_READ(entry, var_args, safe, result)			\
 G_STMT_START { 									\
-  GstPropsType propstype = va_arg (var_args, GstPropsType); 			\
 										\
   *result = TRUE;								\
 										\
   if (safe) {									\
+    GstPropsType propstype = va_arg (var_args, GstPropsType); 			\
     if (propstype != entry->propstype) {					\
       *result = FALSE;								\
     }										\
