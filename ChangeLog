@@ -1,3 +1,12 @@
+2003-12-27  Jeremy Simon   <jesimon@libertysurf.fr>
+
+	* gst/cutter/gstcutter.c:
+	* gst/videoscale/gstvideoscale.c:
+	* gst/volenv/gstvolenv.c:
+	* gst-libs/gst/audio/audio.c:
+	* gst-libs/gst/video/video.c:
+	  Fix warnings
+
 2003-12-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_open_audio):
