@@ -521,7 +521,6 @@ static int yyerror (const char *s);
 %type <e> element
 %type <p> padlist pads assignments
 
-
 %left '{' '}' '(' ')'
 %left ','
 %right '.'
@@ -580,7 +579,6 @@ reference:	REF 			      { MAKE_REF ($$, $1, NULL); }
 linkpart:	reference		      { $$ = $1; }
 	|	pads			      { MAKE_REF ($$, NULL, $1); }
 	|	/* NOP */		      { MAKE_REF ($$, NULL, NULL); }
-	|	linkpart error		      { $$ = $1; }
 	;
 	
 link:		linkpart '!' linkpart	      { $$ = $1;
@@ -594,7 +592,7 @@ linklist:	link			      { $$ = g_slist_prepend (NULL, $1); }
 	|	link linklist		      { $$ = g_slist_prepend ($2, $1); }
 	|	linklist error		      { $$ = $1; }
 	;	
-	
+
 chain:   	element			      { $$ = gst_parse_chain_new ();
 						$$->first = $$->last = $1;
 						$$->front = $$->back = NULL;
@@ -688,7 +686,10 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 	|	chain error		      { $$ = $1; }
 	;
 	
-graph:		chain			      { $$ = (graph_t *) graph;
+graph:		/* NOP */		      { ERROR (GST_PARSE_ERROR_EMPTY, "Empty pipeline not allowed");
+						$$ = (graph_t *) graph;
+					      }
+	|	chain			      { $$ = (graph_t *) graph;
 						if ($1->front) {
 						  if (!$1->front->src_name) {
 						    ERROR (GST_PARSE_ERROR_LINK, "link without source element");
