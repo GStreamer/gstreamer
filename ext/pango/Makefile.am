@@ -1,4 +1,3 @@
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 #PANGO_CFLAGS = -I/usr/include/pango-1.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/freetype2
 #PANGO_LDFLAGS = -Wl,--export-dynamic -lpangoft2-1.0 -lpango-1.0 -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0

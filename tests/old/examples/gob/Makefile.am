@@ -1,6 +1,4 @@
 
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
-
 plugin_LTLIBRARIES = libgstidentity2.la
 
 GOB_FILES_ID = gst-identity2.c gst-identity2.h gst-identity2-private.h
