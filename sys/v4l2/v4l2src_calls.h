@@ -33,6 +33,8 @@ gboolean	gst_v4l2src_capture_init	(GstV4l2Src *v4l2src);
 gboolean	gst_v4l2src_capture_start	(GstV4l2Src *v4l2src);
 gboolean	gst_v4l2src_grab_frame		(GstV4l2Src *v4l2src,
 						 gint       *num);
+guint8 *	gst_v4l2src_get_buffer		(GstV4l2Src *v4l2src,
+						 gint        num);
 gboolean	gst_v4l2src_requeue_frame	(GstV4l2Src *v4l2src,
 						 gint        num);
 gboolean	gst_v4l2src_capture_stop	(GstV4l2Src *v4l2src);
