@@ -184,7 +184,8 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
     clock->entries = g_list_prepend (clock->entries, entry);
     GST_UNLOCK (clock);
 
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on clock");
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on clock for time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (requested));
     do {
       res = cclass->wait (clock, entry);
     }
@@ -434,7 +435,7 @@ gst_clock_set_speed (GstClock * clock, gdouble speed)
 {
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0.0);
 
-  GST_WARNING_OBJECT (clock, "called deprecated function");
+  GST_CAT_WARNING_OBJECT (GST_CAT_CLOCK, clock, "called deprecated function");
   return 1.0;
 }
 
@@ -451,7 +452,7 @@ gst_clock_get_speed (GstClock * clock)
 {
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0.0);
 
-  GST_WARNING_OBJECT (clock, "called deprecated function");
+  GST_CAT_WARNING_OBJECT (GST_CAT_CLOCK, clock, "called deprecated function");
   return 1.0;
 }
 
@@ -517,7 +518,8 @@ gst_clock_set_active (GstClock * clock, gboolean active)
 {
   g_return_if_fail (GST_IS_CLOCK (clock));
 
-  GST_ERROR_OBJECT (clock, "called deprecated function that does nothing now.");
+  GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock,
+      "called deprecated function that does nothing now.");
 
   return;
 }
@@ -535,7 +537,7 @@ gst_clock_is_active (GstClock * clock)
 {
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
 
-  GST_WARNING_OBJECT (clock, "called deprecated function.");
+  GST_CAT_WARNING_OBJECT (GST_CAT_CLOCK, clock, "called deprecated function.");
 
   return TRUE;
 }
@@ -554,7 +556,7 @@ gst_clock_reset (GstClock * clock)
 
   g_return_if_fail (GST_IS_CLOCK (clock));
 
-  GST_ERROR_OBJECT (clock, "called deprecated function.");
+  GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock, "called deprecated function.");
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
@@ -665,12 +667,12 @@ gst_clock_get_event_time_delay (GstClock * clock, GstClockTime delay)
 
   if (ABS (GST_CLOCK_DIFF (clock->last_event, time + delay)) <
       clock->max_event_diff) {
-    GST_LOG_OBJECT (clock, "reporting last event time %" G_GUINT64_FORMAT,
-        clock->last_event);
+    GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, clock,
+        "reporting last event time %" G_GUINT64_FORMAT, clock->last_event);
   } else {
     clock->last_event = time + delay;
-    GST_LOG_OBJECT (clock, "reporting new event time %" G_GUINT64_FORMAT,
-        clock->last_event);
+    GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, clock,
+        "reporting new event time %" G_GUINT64_FORMAT, clock->last_event);
   }
 
   return clock->last_event;

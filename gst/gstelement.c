@@ -938,7 +938,7 @@ gst_element_wait (GstElement * element, GstClockTime timestamp)
       GST_TIME_ARGS (time));
   if (time >= timestamp) {
     GST_CAT_INFO_OBJECT (GST_CAT_CLOCK, element,
-        "called gst_element_wait (% " GST_TIME_FORMAT ") and was late (%"
+        "called gst_element_wait (%" GST_TIME_FORMAT ") and was late (%"
         GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
         GST_TIME_ARGS (gst_element_get_time (element)));
     return TRUE;

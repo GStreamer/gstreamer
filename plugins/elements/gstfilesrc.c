@@ -720,10 +720,9 @@ gst_filesrc_get (GstPad * pad)
       if (!gst_filesrc_check_filesize (src) || src->curoffset >= src->filelen) {
         GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
             src->curoffset, src->filelen);
+        gst_element_set_eos (GST_ELEMENT (src));
+        return GST_DATA (gst_event_new (GST_EVENT_EOS));
       }
-      gst_element_set_eos (GST_ELEMENT (src));
-      return GST_DATA (gst_event_new (GST_EVENT_EOS));
-
     }
   }
 #ifdef HAVE_MMAP

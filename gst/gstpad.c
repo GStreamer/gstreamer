@@ -2551,7 +2551,8 @@ gst_pad_set_explicit_caps (GstPad * pad, const GstCaps * caps)
   gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), gst_caps_copy (caps));
 
   if (!GST_PAD_IS_LINKED (pad)) {
-    GST_CAT_DEBUG (GST_CAT_PADS, "pad is not linked");
+    GST_CAT_DEBUG (GST_CAT_PADS, "pad %s:%s is not linked",
+        GST_DEBUG_PAD_NAME (pad));
     return TRUE;
   }
   link_ret = gst_pad_try_set_caps (pad, caps);
@@ -3357,6 +3358,10 @@ gst_pad_pull (GstPad * pad)
         /* refetch - we might have been relinked */
         link = GST_RPAD_LINK (pad);
         peer = GST_RPAD_PEER (pad);
+        if (!peer) {
+          /* Our peer disa-peer-ed ;) */
+          goto int_out;
+        }
       }
 
       if (data) {
@@ -3396,8 +3401,10 @@ gst_pad_pull (GstPad * pad)
               GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
     }
   }
+
+int_out:
   data = GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
-  DEBUG_DATA (pad, data, "gst_pad_pull returned created");
+  DEBUG_DATA (pad, data, "gst_pad_pull returning INTERRUPT");
   return data;
 }
 

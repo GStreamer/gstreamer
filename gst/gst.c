@@ -312,7 +312,6 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   poptContext context;
   gint nextopt;
   GstPoptOption *options;
-  const gchar *gst_debug_env = NULL;
 
   GstPoptOption options_with[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 0, "Help options:",
@@ -356,11 +355,6 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   }
   context = poptGetContext ("GStreamer", *argc, (const char **) *argv,
       options, 0);
-
-  /* check for GST_DEBUG environment variable */
-  gst_debug_env = g_getenv ("GST_DEBUG");
-  if (gst_debug_env)
-    parse_debug_list (gst_debug_env);
 
   /* Scan until we reach the end (-1), ignoring errors */
   while ((nextopt = poptGetNextOpt (context)) != -1) {
@@ -475,16 +469,19 @@ init_pre (void)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
 
-#ifndef GST_DISABLE_REGISTRY
   {
     const gchar *debug_list;
 
     debug_list = g_getenv ("GST_DEBUG");
     if (debug_list) {
       parse_debug_list (debug_list);
+
+      if (g_getenv ("GST_DEBUGNOCOLOR"))
+        gst_debug_set_colored (FALSE);
+
     }
   }
-#endif
+
   /* This is the earliest we can make stuff show up in the logs.
    * So give some useful info about GStreamer here */
   GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);

@@ -1,3 +1,43 @@
+2005-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/elements/gstfilesrc.c: (gst_filesrc_get):
+	  If we checked the file size and it got bigger, don't 
+	  EOS anyway.
+
+	* gst/gst.c: (gst_init_check_with_popt_table), (init_pre):
+	  Don't parse the GST_DEBUG env var list twice (once in the
+	  init_pre and then again in the init_check).
+	  Add GST_DEBUGNOCOLOR env variable.
+	  
+	* gst/gstclock.c: (gst_clock_id_wait), (gst_clock_set_speed),
+	(gst_clock_get_speed), (gst_clock_set_active),
+	(gst_clock_is_active), (gst_clock_reset),
+	(gst_clock_get_event_time_delay):
+	  Make all clock debug in the GST_CAT_CLOCK category.
+	  Add a little extra detail.
+
+	* gst/gstelement.c: (gst_element_wait):
+	  Remove extra ' ' in a debug format string.
+
+	* gst/gstpad.c: (gst_pad_set_explicit_caps), (gst_pad_pull):
+	  Better debug message when setting explicit caps on an unlinked pad.
+	  Return INTERRUPT event if the peer is unlinked when restarting
+	  during a pad_pull.
+
+2005-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstevent.sgml:
+	* gst/gstevent.c: (gst_event_new):
+	* gst/gstevent.h:
+	Add GST_EVENT_COMMON_FLAG_NEED_RESPONSE flag (TRUE by default)
+	to indicate whether a reply is expected to an upstream event.
+
+	* gst/gstqueue.c: (gst_queue_finalize),
+	(gst_queue_handle_pending_events), (gst_queue_handle_src_event):
+	If GST_EVENT_COMMON_FLAG_NEED_RESPONSE is not set, just queue the
+	event without blocking on a reply.
+
 2005-03-03  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstqueue.c: (gst_queue_chain):
