@@ -30,8 +30,7 @@ static void gst_dpsmooth_class_init (GstDParamSmoothClass *klass);
 static void gst_dpsmooth_init (GstDParamSmooth *dparam);
 static void gst_dpsmooth_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_dpsmooth_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-static gint64 gst_dpsmooth_time_since_last_update(GstDParam *dparam, gint64 timestamp);
-static void gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value);
+static void gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);
 
 enum {
 	ARG_0,
@@ -132,7 +131,6 @@ gst_dpsmooth_new (GType type)
 			dparam->do_update_func = gst_dparam_do_update_default;
 			break;
 	}
-	dpsmooth->last_update_timestamp = 0LL;
 	return dparam;
 }
 
@@ -199,35 +197,8 @@ gst_dpsmooth_get_property (GObject *object, guint prop_id, GValue *value, GParam
 	}
 }
 
-static gint64
-gst_dpsmooth_time_since_last_update(GstDParam *dparam, gint64 timestamp)
-{
-	gint64 time_diff, last_update_diff, num_update_periods;
-	GstDParamSmooth *dpsmooth = GST_DPSMOOTH(dparam);
-
-	last_update_diff = timestamp - dpsmooth->last_update_timestamp;
-	time_diff = MIN(dpsmooth->update_period, last_update_diff);
-
-	GST_DEBUG(GST_CAT_PARAMS, "last_update_diff:%lld",last_update_diff);
-	GST_DEBUG(GST_CAT_PARAMS, "time_diff:%lld",time_diff);
-		
-	dpsmooth->last_update_timestamp = GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam);  
-	if(GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) <= timestamp && dpsmooth->update_period > 0LL){
-		
-		GST_DEBUG(GST_CAT_PARAMS, "dpsmooth->update_period:%lld",dpsmooth->update_period);
-		num_update_periods = last_update_diff / dpsmooth->update_period;
-		
-		GST_DEBUG(GST_CAT_PARAMS, "num_update_periods:%lld",num_update_periods);
-		
-		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = dpsmooth->update_period * (num_update_periods + 1LL);
-	}
-	GST_DEBUG(GST_CAT_PARAMS, "last:%lld current:%lld next:%lld",
-	                           dpsmooth->last_update_timestamp, timestamp, GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam));
-	return time_diff;
-}
-
 static void
-gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value)
+gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info)
 {
 	gint64 time_diff;
 	gfloat time_ratio;
@@ -238,9 +209,21 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 
 	GST_DPARAM_LOCK(dparam);
 
-	time_diff = gst_dpsmooth_time_since_last_update(dparam, timestamp);
+	if (update_info == GST_DPARAM_UPDATE_FIRST){
+		/*this is the first update since the pipeline started.
+		* the value won't be smoothed, it will be updated immediately
+		*/
+		g_value_set_float(value, dparam->value_float); 
+		GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;  
+		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = timestamp;
+		
+		GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
+		GST_DPARAM_UNLOCK(dparam);
+		return;
+	}
 	
-
+	time_diff = timestamp - GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
+	
 	target = dparam->value_float;
 	current = g_value_get_float(value);
 
@@ -255,7 +238,6 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 		if (current == 0.0F){
 			/* this shouldn't happen, so forget about smoothing and just set the value */
 			final_val = target;
-			GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
 		}
 		else {
 			gfloat current_log;
@@ -265,27 +247,34 @@ gst_dpsmooth_do_update_float (GstDParam *dparam, gint64 timestamp, GValue *value
 			GST_DEBUG(GST_CAT_PARAMS, "current_log:%f",current_log);
 			GST_DEBUG(GST_CAT_PARAMS, "current_diff:%f",current_diff);
 	
-			if (current_diff > max_change)
+			if (current_diff > max_change){
 				final_val = (target < current) ? exp(current_log-max_change) : exp(current_log+max_change);
-			else
-				final_val = target;
-				GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
 			}
+			else {
+				final_val = target;
+			}
+		}
 	} 
 	else {
 		current_diff = ABS (current - target);
-		if (current_diff > max_change)
+		if (current_diff > max_change){
 			final_val = (target < current) ? current-max_change : current+max_change;
-		else
+		}
+		else {
 			final_val = target;									
-			GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
+		}
 	}
 
-	GST_DPARAM_READY_FOR_UPDATE(dparam) = (current_diff > max_change);
-	g_value_set_float(value, final_val);
+	GST_DPARAM_READY_FOR_UPDATE(dparam) = (final_val != target);
+	if (GST_DPARAM_READY_FOR_UPDATE(dparam)){
+		GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = timestamp + dpsmooth->update_period; 
+	}
+	GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;
 
+	g_value_set_float(value, final_val);
 		                           
  	GST_DEBUG(GST_CAT_PARAMS, "target:%f current:%f final:%f actual:%f", target, current, final_val, g_value_get_float(value));
 
 	GST_DPARAM_UNLOCK(dparam);
 }
+

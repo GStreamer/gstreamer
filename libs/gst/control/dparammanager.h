@@ -77,6 +77,7 @@ struct _GstDParamManager {
 	
 	gint64 timestamp;
 	guint rate;
+	GstDParamUpdateInfo update_info;
 };
 
 struct _GstDParamManagerClass {

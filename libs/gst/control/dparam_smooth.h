@@ -40,7 +40,6 @@ typedef struct _GstDParamSmooth GstDParamSmooth;
 struct _GstDParamSmooth {
 	GstDParam		dparam;
 
-	gint64 last_update_timestamp;
 	gint64 update_period;
 	gint64 slope_time;
 	gfloat slope_delta_float;

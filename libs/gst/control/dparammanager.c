@@ -628,6 +628,9 @@ gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, Gst
 	
 	if (new_state == GST_STATE_PLAYING){
 		GST_DEBUG(GST_CAT_PARAMS, "initialising params");
+
+		/* some dparams treat the first update after the pipeline starts differently */
+		dpman->update_info = GST_DPARAM_UPDATE_FIRST;
 			
 		/* force all params to be updated */
 		dwraps = GST_DPMAN_DPARAMS_LIST(dpman);
@@ -637,9 +640,7 @@ gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, Gst
 			
 			if (dparam){
 				GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
-				/*if (dparam->spec){
-					g_value_copy(dparam->spec->default_val, dpwrap->value);
-				}*/
+				GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = 0LL;
 			}
 			dwraps = g_slist_next(dwraps);
 		}
@@ -676,7 +677,10 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 	while (dwraps){
 		dpwrap = (GstDParamWrapper*)dwraps->data;
 		dparam = dpwrap->dparam;
-
+		
+		/*g_print("timestamp    %lld \n", timestamp);
+		if (dparam)
+			g_print("next update: %lld \n", GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam));*/
 		if (dparam && (GST_DPARAM_READY_FOR_UPDATE(dparam) && 
 		              (GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) <= timestamp))){
 		              	
@@ -684,7 +688,7 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 				
 				/* direct method - set the value directly in the struct of the element */
 				case GST_DPMAN_DIRECT:
-					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value);
+					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value, dpman->update_info);
 					GST_DEBUG(GST_CAT_PARAMS, "doing direct update");
 					switch (G_VALUE_TYPE(dpwrap->value)){
 						case G_TYPE_INT:
@@ -703,7 +707,7 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 
 				/* callback method - call the element's callback so it can do what it likes */
 				case GST_DPMAN_CALLBACK:
-					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value);
+					GST_DPARAM_DO_UPDATE(dparam, timestamp, dpwrap->value, dpman->update_info);
 					GST_DEBUG(GST_CAT_PARAMS, "doing callback update");
 					GST_DPMAN_DO_UPDATE(dpwrap);
 					break;
@@ -729,6 +733,12 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 		}
 		dwraps = g_slist_next(dwraps);
 	}
+
+	if (dpman->update_info == GST_DPARAM_UPDATE_FIRST){
+		/* it is not the first update anymore */
+		dpman->update_info = GST_DPARAM_UPDATE_NORMAL;
+	}
+
 	return frames;
 }
 

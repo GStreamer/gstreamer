@@ -99,6 +99,7 @@ gst_dparam_init (GstDParam *dparam)
 	g_return_if_fail (dparam != NULL);
 	GST_DPARAM_TYPE(dparam) = 0;
 	GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam)=0LL;
+	GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam)=0LL;
 	GST_DPARAM_READY_FOR_UPDATE(dparam)=FALSE;
 	dparam->lock = g_mutex_new ();
 }
@@ -150,18 +151,21 @@ gst_dparam_set_property (GObject *object, guint prop_id, const GValue *value, GP
 			GST_DEBUG(GST_CAT_PARAMS, "setting value from %f to %f", dparam->value_float, g_value_get_float (value));
 			dparam->value_float = g_value_get_float (value);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
+			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
 			break;
 			
 		case ARG_VALUE_INT:
 			GST_DEBUG(GST_CAT_PARAMS, "setting value from %d to %d", dparam->value_int, g_value_get_int (value));
 			dparam->value_int = g_value_get_int (value);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
+			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
 			break;
 			
 		case ARG_VALUE_INT64:
 			GST_DEBUG(GST_CAT_PARAMS, "setting value from %lld to %lld", dparam->value_int64, g_value_get_int64 (value));
 			dparam->value_int64 = g_value_get_int (value);
 			GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
+			GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam);
 			break;
 			
 		default:
@@ -171,7 +175,7 @@ gst_dparam_set_property (GObject *object, guint prop_id, const GValue *value, GP
 }
 
 void
-gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value)
+gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info)
 {
 	GST_DPARAM_LOCK(dparam);
 	
@@ -196,6 +200,8 @@ gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value
 	}
 
 	GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
+	GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam) = timestamp;
+	GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) = timestamp;
 
 	GST_DPARAM_UNLOCK(dparam);
 }

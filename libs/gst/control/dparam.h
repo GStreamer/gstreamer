@@ -51,13 +51,20 @@ extern "C" {
 
 #define GST_DPARAM_READY_FOR_UPDATE(dparam)	((dparam)->ready_for_update)
 #define GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam)	((dparam)->next_update_timestamp)
+#define GST_DPARAM_LAST_UPDATE_TIMESTAMP(dparam)	((dparam)->last_update_timestamp)
 
-#define GST_DPARAM_DO_UPDATE(dparam, timestamp, value) \
-	((dparam->do_update_func)(dparam, timestamp, value))
+#define GST_DPARAM_DO_UPDATE(dparam, timestamp, value, update_info) \
+	((dparam->do_update_func)(dparam, timestamp, value, update_info))
 
 typedef struct _GstDParamClass GstDParamClass;
 
-typedef void (*GstDParamDoUpdateFunction) (GstDParam *dparam, gint64 timestamp, GValue *value);
+
+typedef enum {
+  GST_DPARAM_UPDATE_FIRST,
+  GST_DPARAM_UPDATE_NORMAL,
+} GstDParamUpdateInfo;
+
+typedef void (*GstDParamDoUpdateFunction) (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);
 
 struct _GstDParam {
 	GstObject		object;
@@ -76,6 +83,7 @@ struct _GstDParam {
 	gboolean ready_for_update;
 
 	gint64 next_update_timestamp;
+	gint64 last_update_timestamp;
 	gchar *unit_name;
 	gboolean is_log;
 };
@@ -91,7 +99,7 @@ GType gst_dparam_get_type (void);
 GstDParam* gst_dparam_new (GType type);
 void gst_dparam_attach (GstDParam *dparam, GstDParamManager *manager, GParamSpec *param_spec, gchar *unit_name);
 void gst_dparam_detach (GstDParam *dparam);
-void gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value);
+void gst_dparam_do_update_default (GstDParam *dparam, gint64 timestamp, GValue *value, GstDParamUpdateInfo update_info);
 
 #ifdef __cplusplus
 }
