@@ -255,6 +255,10 @@ speed_loop (GstElement *element)
   speed = filter->speed;
   
   in = gst_pad_pull(filter->sinkpad);
+  if (GST_IS_EVENT (in)) {
+    gst_pad_event_default (filter->sinkpad, GST_EVENT (in));
+    return;
+  }
   
   while (GST_IS_EVENT (in)) {
     gst_pad_event_default (filter->srcpad, GST_EVENT (in));
