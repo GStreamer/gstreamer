@@ -459,6 +459,8 @@ gst_default_error_handler (gchar *file, gchar *function,
 
 /***** DEBUG system *****/
 GHashTable *__gst_function_pointers = NULL;
+// FIXME make this thread specific
+static GSList* stack_trace = NULL;
 
 gchar *_gst_debug_nameof_funcptr (void *ptr) __attribute__ ((no_instrument_function));
 
@@ -479,15 +481,52 @@ _gst_debug_nameof_funcptr (void *ptr)
 
 
 #ifdef GST_ENABLE_FUNC_INSTRUMENTATION
-
 void __cyg_profile_func_enter(void *this_fn,void *call_site) __attribute__ ((no_instrument_function));
-void __cyg_profile_func_enter(void *this_fn,void *call_site) {
-  GST_DEBUG(GST_CAT_CALL_TRACE, "entering function %s\n", _gst_debug_nameof_funcptr (this_fn));
+void __cyg_profile_func_enter(void *this_fn,void *call_site) 
+{
+  gchar *name = _gst_debug_nameof_funcptr (this_fn);
+  gchar *site = _gst_debug_nameof_funcptr (call_site);
+	
+  GST_DEBUG(GST_CAT_CALL_TRACE, "entering function %s from %s\n", name, site);
+  stack_trace = g_slist_prepend (stack_trace, g_strdup_printf ("%8p in %s from %p (%s)", this_fn, name, call_site, site));
+
+  g_free (name);
+  g_free (site);
 }
 
 void __cyg_profile_func_exit(void *this_fn,void *call_site) __attribute__ ((no_instrument_function));
-void __cyg_profile_func_exit(void *this_fn,void *call_site) {
-  GST_DEBUG(GST_CAT_CALL_TRACE, "leavinging function %s\n", _gst_debug_nameof_funcptr (this_fn));
+void __cyg_profile_func_exit(void *this_fn,void *call_site) 
+{
+  gchar *name = _gst_debug_nameof_funcptr (this_fn);
+
+  GST_DEBUG(GST_CAT_CALL_TRACE, "leaving function %s\n", name);
+  g_free (stack_trace->data);
+  stack_trace = g_slist_delete_link (stack_trace, stack_trace);
+
+  g_free (name);
+}
+
+void 
+gst_debug_print_stack_trace (void)
+{
+  GSList *walk = stack_trace;
+  gint count = 0;
+
+  if (walk)
+    walk = g_slist_next (walk);
+
+  while (walk) {
+    gchar *name = (gchar *) walk->data;
+
+    g_print ("#%-2d %s\n", count++, name);
+
+    walk = g_slist_next (walk);
+  }
+}
+#else
+void 
+gst_debug_print_stack_trace (void)
+{
 }
 
 #endif /* GST_ENABLE_FUNC_INTSTRUMENTATION */

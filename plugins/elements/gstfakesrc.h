@@ -47,6 +47,25 @@ typedef enum {
   FAKESRC_GET_ALWAYS_SUCEEDS,
 } GstFakeSrcOutputType;
 
+typedef enum {
+  FAKESRC_DATA_ALLOCATE = 1,
+  FAKESRC_DATA_SUBBUFFER,
+} GstFakeSrcDataType;
+
+typedef enum {
+  FAKESRC_SIZETYPE_NULL = 1,
+  FAKESRC_SIZETYPE_FIXED,
+  FAKESRC_SIZETYPE_RANDOM
+} GstFakeSrcSizeType;
+
+typedef enum {
+  FAKESRC_FILLTYPE_NOTHING = 1,
+  FAKESRC_FILLTYPE_NULL,
+  FAKESRC_FILLTYPE_RANDOM,
+  FAKESRC_FILLTYPE_PATTERN,
+  FAKESRC_FILLTYPE_PATTERN_CONT
+} GstFakeSrcFillType;
+
 #define GST_TYPE_FAKESRC \
   (gst_fakesrc_get_type())
 #define GST_FAKESRC(obj) \
@@ -64,16 +83,29 @@ typedef struct _GstFakeSrcClass GstFakeSrcClass;
 struct _GstFakeSrc {
   GstElement element;
 
-  gboolean loop_based;
-  gboolean eos;
-  gint numsrcpads;
-  GSList *srcpads;
+  gboolean 	loop_based;
+  gboolean 	eos;
+  gint 		numsrcpads;
+  GSList 	*srcpads;
+
   GstFakeSrcOutputType output;
-  gchar *pattern;
-  GList *patternlist;
-  gint num_buffers;
-  guint64 buffer_count;
-  gboolean silent;
+  GstFakeSrcDataType data;
+  GstFakeSrcSizeType sizetype;
+  GstFakeSrcFillType filltype;
+
+  guint 	sizemin;
+  guint 	sizemax;
+  GstBuffer 	*parent;
+  guint 	parentsize;
+  guint 	parentoffset;
+  guint8 	pattern_byte;
+  gchar 	*pattern;
+  GList 	*patternlist;
+  gint 		num_buffers;
+  guint64 	buffer_count;
+  gboolean 	silent;
+  gboolean 	dump;
+  gboolean 	need_flush;
 };
 
 struct _GstFakeSrcClass {

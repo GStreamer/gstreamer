@@ -55,7 +55,9 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(queue,"src"),
                   gst_element_get_pad(play,"sink"));
 
+#ifndef GST_DISABLE_LOADSAVE
   xmlSaveFile("ac3play.gst", gst_xml_write(GST_ELEMENT(pipeline)));
+#endif
 
   // set thread start state
   g_object_set(G_OBJECT(decodethread),"create_thread",TRUE,NULL);

@@ -1,0 +1,140 @@
+some random ramblings about the event system:
+
+Possible candidates for events
+------------------------------
+
+  - QoS
+  - EOS
+  - Seek
+  - caps nego??
+  - bufferpool get??
+  - ...
+
+Assumptions for events
+----------------------
+
+- They are tied to a pad.
+- get rid of gst_pad_set_*_function (except for the chain/get ones)
+- occur async to dataflow. (need locking?)
+- fixed set of events only for core features. (elements cannot abuse
+     events for doing dataflow)
+
+Questions
+---------
+
+limit the valid directions an event can travel in? ie. Can EOS only 
+travel downstream (left to right)? 
+
+eg. Seek travels upstream, but it makes sense to also make it travel 
+    downstream (the case of a disksink, where we overwrite the header)
+
+
+Setting an event function
+-------------------------
+
+void gst_pad_set_event_function (GstPad *pad, gint event_mask,
+				 GstEventFunction *function);
+
+
+event masks:
+
+typedef enum {
+  GST_EVENT_EOS 		= (1 << 0),
+  GST_EVENT_QOS			= (1 << 1),
+  GST_EVENT_SEEK		= (1 << 2),
+  GST_EVENT_CAPS		= (1 << 3),
+} GstEventType;
+
+Event structure
+---------------
+
+typedef struct {
+  GstEventType type;
+  GstEventMinorType minor;
+  guint64 timestamp;  /* also sequence number ?? */
+
+  union {
+    /* EOS stuff */
+    /* QoS stuff */
+    /* Seek stuff */
+    GstSeekType type; /* time, bytes, ... */
+    gint64 offset;
+    gint64 lenth;
+    /* Caps stuff */
+    GstCaps *caps;
+  } data;
+} GstEvent;
+
+
+typedef enum {
+  GST_EVENT_MINOR_NONE,
+  /* EOS stuff */
+
+  /* QoS stuff */
+  /* Seek stuff */
+  GST_EVENT_MINOR_OFFSET,
+  GST_EVENT_MINOR_TIME,
+
+  /* caps nego stuff */
+  GST_EVENT_MINOR_CAPS_TRY,
+  GST_EVENT_MINOR_CAPS_START,
+  GST_EVENT_MINOR_CAPS_FINAL,
+} GstEventMinorType;  
+
+
+Receiving events
+----------------
+
+a sample GstEventFunction, the event functions returns TRUE if the event is handled, 
+FALSE otherwise.
+
+gboolean
+gst_anelement_handle_event (GstPad *pad, GstEvent *event)
+{
+  if (event->type == GST_EVENT_EOS) {
+    /* do something */
+    return TRUE;
+  }
+  else if (event->type == GST_EVENT_CAPS) {
+    if (event->minor == GST_EVENT_CAPS_TRY) {
+      /* try using this caps structure */
+      return TRUE; /* return FALSE to proxy ???*/
+    }
+  }
+  return FALSE;
+}
+
+
+Default event handler for pads
+------------------------------
+
+gboolean
+gst_pad_handle_event (GstPad *pad, GstEvent *event)
+{
+  GstElement *element;
+  GList *pads;
+  GstPad *srcpad;
+  gboolean result = TRUE;
+  GstPadDirection dir = GST_PAD_DIRECTION (pad);
+
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_REAL_PAD(pad), FALSE);   // NOTE the restriction
+
+  element = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (pad)));
+
+  /* send out the events to all pad with opposite direction */
+  pads = gst_element_get_pad_list(element);
+  while (pads) {
+    otherpad = GST_PAD(pads->data);
+    pads = g_list_next(pads);
+
+    if (gst_pad_get_direction(otherpad) != dir) {
+      result &= gst_pad_send_event (GST_REAL_PAD(otherpad), event);
+    }
+  }
+
+  /* result is combined result of all handlers? */
+  return result;
+}
+
+  

@@ -61,7 +61,11 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
 gboolean
 idle_func (gpointer data)
 {
-  return gst_bin_iterate (GST_BIN (data));
+  if (!gst_bin_iterate (GST_BIN (data))) {
+    gtk_main_quit ();
+    return FALSE;
+  }
+  return TRUE;
 }
 
 void 
@@ -148,9 +152,11 @@ main(int argc, char *argv[])
 
   gst_parse_launch (cmdline, GST_BIN (pipeline));
 
+#ifndef GST_DISABLE_LOADSAVE
   if (save_pipeline) {
     xmlSaveFile (savefile, gst_xml_write (pipeline));
   }
+#endif
   if (run_pipeline) {
     arg_search(GST_BIN(pipeline),"xid",xid_handler,NULL);
 

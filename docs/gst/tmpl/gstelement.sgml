@@ -225,7 +225,7 @@ of the element, the GtkType value for it, as well as a pointer to the
 GstElementDetails struct for the element.
 </para>
 
-@name: 
+@feature: 
 @type: 
 @details: 
 @padtemplates: 
@@ -239,14 +239,6 @@ circumstances.
 </para>
 
 @element: The element in question.
-
-
-<!-- ##### FUNCTION gst_element_new ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 
 <!-- ##### MACRO gst_element_destroy ##### -->
@@ -503,14 +495,6 @@ circumstances.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_elementfactory_destroy ##### -->
-<para>
-
-</para>
-
-@elementfactory: 
-
-
 <!-- ##### FUNCTION gst_elementfactory_add_padtemplate ##### -->
 <para>
 
@@ -577,25 +561,6 @@ circumstances.
 
 @factoryname: 
 @name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_save_thyself ##### -->
-<para>
-
-</para>
-
-@factory: 
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_elementfactory_load_thyself ##### -->
-<para>
-
-</para>
-
-@parent: 
 @Returns: 
 
 

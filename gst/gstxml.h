@@ -23,16 +23,9 @@
 #ifndef __GST_XML_H__
 #define __GST_XML_H__
 
+#include <gst/gstconfig.h>
+
 #ifndef GST_DISABLE_LOADSAVE
-
-#include <parser.h>
-
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
 
 #include <gst/gstelement.h>
 

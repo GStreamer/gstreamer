@@ -30,6 +30,7 @@
 #include "gstbin.h"
 #include "gstscheduler.h"
 
+GType _gst_pad_type = 0;
 
 /***** Start with the base GstPad class *****/
 static void		gst_pad_class_init		(GstPadClass *klass);
@@ -42,10 +43,9 @@ static xmlNodePtr	gst_pad_save_thyself		(GstObject *object, xmlNodePtr parent);
 static GstObject *pad_parent_class = NULL;
 
 GType
-gst_pad_get_type(void) {
-  static GType pad_type = 0;
-
-  if (!pad_type) {
+gst_pad_get_type(void) 
+{
+  if (!_gst_pad_type) {
     static const GTypeInfo pad_info = {
       sizeof(GstPadClass),
       NULL,
@@ -58,9 +58,9 @@ gst_pad_get_type(void) {
       (GInstanceInitFunc)gst_pad_init,
       NULL
     };
-    pad_type = g_type_register_static(GST_TYPE_OBJECT, "GstPad", &pad_info, 0);
+    _gst_pad_type = g_type_register_static(GST_TYPE_OBJECT, "GstPad", &pad_info, 0);
   }
-  return pad_type;
+  return _gst_pad_type;
 }
 
 static void
@@ -107,15 +107,14 @@ static void	gst_real_pad_dispose		(GObject *object);
 
 static void	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
 
+GType _gst_real_pad_type = 0;
 
 static GstPad *real_pad_parent_class = NULL;
 static guint gst_real_pad_signals[REAL_LAST_SIGNAL] = { 0 };
 
 GType
 gst_real_pad_get_type(void) {
-  static GType pad_type = 0;
-
-  if (!pad_type) {
+  if (!_gst_real_pad_type) {
     static const GTypeInfo pad_info = {
       sizeof(GstRealPadClass),
       NULL,
@@ -128,9 +127,9 @@ gst_real_pad_get_type(void) {
       (GInstanceInitFunc)gst_real_pad_init,
       NULL
     };
-    pad_type = g_type_register_static(GST_TYPE_PAD, "GstRealPad", &pad_info, 0);
+    _gst_real_pad_type = g_type_register_static(GST_TYPE_PAD, "GstRealPad", &pad_info, 0);
   }
-  return pad_type;
+  return _gst_real_pad_type;
 }
 
 static void
@@ -1432,7 +1431,7 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 
   return self;
 }
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */
 
 #ifndef gst_pad_push
 /**
@@ -1881,6 +1880,7 @@ gst_pad_get_element_private (GstPad *pad)
 
 
 /***** ghost pads *****/
+GType _gst_ghost_pad_type = 0;
 
 static void     gst_ghost_pad_class_init         (GstGhostPadClass *klass);
 static void     gst_ghost_pad_init               (GstGhostPad *pad);
@@ -1890,9 +1890,7 @@ static GstPad *ghost_pad_parent_class = NULL;
 
 GType
 gst_ghost_pad_get_type(void) {
-  static GType pad_type = 0;
-
-  if (!pad_type) {
+  if (!_gst_ghost_pad_type) {
     static const GTypeInfo pad_info = {
       sizeof(GstGhostPadClass),
       NULL,
@@ -1905,9 +1903,9 @@ gst_ghost_pad_get_type(void) {
       (GInstanceInitFunc)gst_ghost_pad_init,
       NULL
     };
-    pad_type = g_type_register_static(GST_TYPE_PAD, "GstGhostPad", &pad_info, 0);
+    _gst_ghost_pad_type = g_type_register_static(GST_TYPE_PAD, "GstGhostPad", &pad_info, 0);
   }
-  return pad_type;
+  return _gst_ghost_pad_type;
 }
 
 static void
@@ -1985,14 +1983,36 @@ gst_pad_event (GstPad *pad, GstEventType event, gint64 timestamp, guint32 data)
   GST_DEBUG(GST_CAT_EVENT, "have event %d on pad %s:%s\n",(gint)event,GST_DEBUG_PAD_NAME(pad));
 
   peer = GST_RPAD_PEER(pad);
-  if (GST_RPAD_EVENTFUNC(peer))
-    handled = GST_RPAD_EVENTFUNC(peer) (peer, event, timestamp, data);
+  if (GST_RPAD_EVENTFUNC(peer)) {
+    //handled = GST_RPAD_EVENTFUNC(peer) (peer, event, timestamp, data);
+  }
   else {
     GST_DEBUG(GST_CAT_EVENT, "there's no event function for peer %s:%s\n",GST_DEBUG_PAD_NAME(peer));
   }
 
   if (!handled) {
     GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
-    gst_pad_event_default(peer,event, timestamp, data);
+    //gst_pad_event_default(peer,event, timestamp, data);
   }
 }
+
+gboolean
+gst_pad_send_event (GstPad *pad, GstEvent *event)
+{
+  gboolean handled = FALSE;
+
+  GST_DEBUG (GST_CAT_EVENT, "have event %d on pad %s:%s\n",
+		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
+
+  if (GST_RPAD_EVENTFUNC (pad))
+    handled = GST_RPAD_EVENTFUNC (pad) (pad, event);
+  else {
+    GST_DEBUG(GST_CAT_EVENT, "there's no event function for pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+  }
+
+  if (!handled) {
+    GST_DEBUG(GST_CAT_EVENT, "would proceed with default behavior here\n");
+    //gst_pad_event_default (pad, event);
+  }
+}
+

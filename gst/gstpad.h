@@ -24,14 +24,7 @@
 #ifndef __GST_PAD_H__
 #define __GST_PAD_H__
 
-#include <parser.h> // NOTE: This is xml-config's fault
-
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
+#include <gst/gstconfig.h>
 
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
@@ -44,24 +37,69 @@
 extern "C" {
 #endif /* __cplusplus */
 
+extern GType _gst_pad_type;
+extern GType _gst_real_pad_type;
+extern GType _gst_ghost_pad_type;
 
-#define GST_TYPE_PAD			(gst_pad_get_type ())
-#define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
-#define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
+//#define GST_TYPE_PARANOID
+
+/* 
+ * Pad base class
+ */
+#define GST_TYPE_PAD			(_gst_pad_type)
+
+#define GST_PAD_FAST(obj)		((GstPad*)(obj))
+#define GST_PAD_CLASS_FAST(klass)	((GstPadClass*)(klass))
 #define GST_IS_PAD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD))
+#define GST_IS_PAD_FAST(obj)		(G_OBJECT_TYPE(obj) == GST_TYPE_REAL_PAD || \
+					 G_OBJECT_TYPE(obj) == GST_TYPE_GHOST_PAD)
 #define GST_IS_PAD_CLASS(obj)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 
-#define GST_TYPE_REAL_PAD		(gst_real_pad_get_type ())
-#define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD, GstRealPad))
-#define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD, GstRealPadClass))
+#ifdef GST_TYPE_PARANOID
+# define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
+# define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
+#else
+# define GST_PAD			GST_PAD_FAST
+# define GST_PAD_CLASS			GST_PAD_CLASS_FAST
+#endif
+
+/* 
+ * Real Pads
+ */
+#define GST_TYPE_REAL_PAD		(_gst_real_pad_type)
+
+#define GST_REAL_PAD_FAST(obj)		((GstRealPad*)(obj))
+#define GST_REAL_PAD_CLASS_FAST(klass)	((GstRealPadClass*)(klass))
 #define GST_IS_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_REAL_PAD))
+#define GST_IS_REAL_PAD_FAST(obj)	(G_OBJECT_TYPE(obj) == GST_TYPE_REAL_PAD)
 #define GST_IS_REAL_PAD_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_REAL_PAD))
 
-#define GST_TYPE_GHOST_PAD		(gst_ghost_pad_get_type ())
-#define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
-#define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
+#ifdef GST_TYPE_PARANOID
+# define GST_REAL_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_REAL_PAD, GstRealPad))
+# define GST_REAL_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_REAL_PAD, GstRealPadClass))
+#else
+# define GST_REAL_PAD			GST_REAL_PAD_FAST
+# define GST_REAL_PAD_CLASS		GST_REAL_PAD_CLASS_FAST
+#endif
+
+/* 
+ * Ghost Pads
+ */
+#define GST_TYPE_GHOST_PAD		(_gst_ghost_pad_type)
+
+#define GST_GHOST_PAD_FAST(obj)		((GstGhostPad*)(obj))
+#define GST_GHOST_PAD_CLASS_FAST(klass)	((GstGhostPadClass*)(klass))
 #define GST_IS_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GHOST_PAD))
+#define GST_IS_GHOST_PAD_FAST(obj)	(G_OBJECT_TYPE(obj) == GST_TYPE_GHOST_PAD)
 #define GST_IS_GHOST_PAD_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GHOST_PAD))
+
+#ifdef GST_TYPE_PARANOID
+# define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
+# define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
+#else
+# define GST_GHOST_PAD			GST_GHOST_PAD_FAST
+# define GST_GHOST_PAD_CLASS		GST_GHOST_PAD_CLASS_FAST
+#endif
 
 
 //typedef struct _GstPad GstPad;
@@ -92,7 +130,7 @@ typedef enum {
  * buf is the buffer being passed */
 typedef void 		(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
 typedef GstBuffer*	(*GstPadGetFunction) 		(GstPad *pad);
-typedef gboolean	(*GstPadEventFunction)		(GstPad *pad, GstEventType event, gint64 timestamp, guint32 data);
+typedef gboolean	(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
 typedef GstBuffer*	(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
 typedef GstBuffer*	(*GstPadPullRegionFunction) 	(GstPad *pad, GstRegionType type, guint64 offset, guint64 len);
@@ -375,12 +413,15 @@ FALSE )
 }G_STMT_END
 #endif
 
+gboolean		gst_pad_send_event		(GstPad *pad, GstEvent *event);
 
 GstBuffer*		gst_pad_peek			(GstPad *pad);
 GstPad*			gst_pad_select			(GList *padlist);
 GstPad*			gst_pad_selectv			(GstPad *pad, ...);
 
+#ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_connect	(xmlNodePtr self, GstObject *parent);
+#endif
 
 
 /* ghostpads */
@@ -397,8 +438,10 @@ GstPadTemplate*		gst_padtemplate_new		(gchar *name_template,
 GstCaps*		gst_padtemplate_get_caps	(GstPadTemplate *templ);
 GstCaps*		gst_padtemplate_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);
 
+#ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
+#endif
 
 xmlNodePtr              gst_pad_ghost_save_thyself   (GstPad *pad,
 						      GstElement *bin,

@@ -64,6 +64,7 @@ struct _GstDiskSrc {
   gchar *filename;
   /* fd */
   gint fd;
+  GstBufferPool *bufferpool;
 
   /* mapping parameters */
   gulong size;				/* how long is the file? */

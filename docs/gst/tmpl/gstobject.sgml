@@ -141,14 +141,6 @@ Check if the object has been destroyed.
 @obj: The Object to check
 
 
-<!-- ##### FUNCTION gst_object_new ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_object_check_uniqueness ##### -->
 <para>
 

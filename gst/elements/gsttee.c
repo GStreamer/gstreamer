@@ -56,7 +56,7 @@ GST_PADTEMPLATE_FACTORY (tee_src_factory,
 static void 	gst_tee_class_init	(GstTeeClass *klass);
 static void 	gst_tee_init		(GstTee *tee);
 
-static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp);
+static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp, const gchar *unused);
 
 static void 	gst_tee_set_property 	(GObject *object, guint prop_id, 
 					 const GValue *value, GParamSpec *pspec);
@@ -127,7 +127,7 @@ gst_tee_init (GstTee *tee)
 }
 
 static GstPad*
-gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ) 
+gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused) 
 {
   gchar *name;
   GstPad *srcpad;

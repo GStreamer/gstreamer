@@ -27,7 +27,7 @@
 /* Object signals and args */
 enum {
   PARENT_SET,
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   OBJECT_SAVED,
 #endif
   LAST_SIGNAL
@@ -42,6 +42,8 @@ enum {
   SO_OBJECT_LOADED,
   SO_LAST_SIGNAL
 };
+
+GType _gst_object_type = 0;
 
 typedef struct _GstSignalObject GstSignalObject;
 typedef struct _GstSignalObjectClass GstSignalObjectClass;
@@ -64,9 +66,7 @@ static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 GType
 gst_object_get_type (void)
 {
-  static GType object_type = 0;
-
-  if (!object_type) {
+  if (!_gst_object_type) {
     static const GTypeInfo object_info = {
       sizeof (GstObjectClass),
       NULL,
@@ -79,9 +79,9 @@ gst_object_get_type (void)
       (GInstanceInitFunc) gst_object_init,
       NULL
     };
-    object_type = g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info, G_TYPE_FLAG_ABSTRACT);
+    _gst_object_type = g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info, G_TYPE_FLAG_ABSTRACT);
   }
-  return object_type;
+  return _gst_object_type;
 }
 
 static void
@@ -98,7 +98,7 @@ gst_object_class_init (GstObjectClass *klass)
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
                   g_cclosure_marshal_VOID__OBJECT,G_TYPE_NONE,1,
                   G_TYPE_OBJECT);
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_object_signals[OBJECT_SAVED] =
     g_signal_new("object_saved", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,
@@ -446,7 +446,7 @@ gst_object_check_uniqueness (GList *list, const gchar *name)
 }
 
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
 /**
  * gst_object_save_thyself:
  * @object: GstObject to save
@@ -496,7 +496,7 @@ gst_object_restore_thyself (GstObject *object, xmlNodePtr parent)
   if (oclass->restore_thyself)
     oclass->restore_thyself (object, parent);
 }
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE_REGISTRY */
 
 /**
  * gst_object_get_path_string:
@@ -577,9 +577,9 @@ struct _GstSignalObjectClass {
   GObjectClass        parent_class;
 
   /* signals */
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   void          (*object_loaded)           (GstSignalObject *object, GstObject *new, xmlNodePtr self);
-#endif /* GST_DISABLE_LOADSAVE */
+#endif /* GST_DISABLE_LOADSAVE_REGISTRY */
 };
 
 static GType
@@ -614,7 +614,7 @@ gst_signal_object_class_init (GstSignalObjectClass *klass)
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_signal_object_signals[SO_OBJECT_LOADED] =
     g_signal_new("object_loaded", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
@@ -648,7 +648,7 @@ gst_class_signal_connect (GstObjectClass *klass,
   return g_signal_connect (klass->signal_object, name, func, func_data);
 }
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
 /**
  * gst_class_signal_emit_by_name:
  * @object: the object that sends the signal
@@ -669,4 +669,4 @@ gst_class_signal_emit_by_name (GstObject *object,
   g_signal_emit_by_name (oclass->signal_object, name, object, self);
 }
 
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE_REGISTRY */

@@ -24,14 +24,7 @@
 #ifndef __GST_CAPS_H__
 #define __GST_CAPS_H__
 
-#include <parser.h> // NOTE: this is xml-config's fault
-
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
+#include <gst/gstconfig.h>
 
 #include <gst/gstprops.h>
 
@@ -118,7 +111,9 @@ GstCaps*	gst_caps_prepend			(GstCaps *caps, GstCaps *capstoadd);
 
 gboolean	gst_caps_check_compatibility		(GstCaps *fromcaps, GstCaps *tocaps);
 
+#ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr      gst_caps_save_thyself			(GstCaps *caps, xmlNodePtr parent);
 GstCaps*	gst_caps_load_thyself			(xmlNodePtr parent);
+#endif
 
 #endif /* __GST_CAPS_H__ */

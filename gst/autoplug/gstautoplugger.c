@@ -430,7 +430,7 @@ gst_autoplugger_cache_empty(GstElement *element, GstAutoplugger *autoplugger)
     // try to PLAY the whole thing
     gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
 
-  xmlSaveFile("autoplugger.gst", gst_xml_write(GST_ELEMENT_SCHED(autoplugger)->parent));
+//  xmlSaveFile("autoplugger.gst", gst_xml_write(GST_ELEMENT_SCHED(autoplugger)->parent));
 
   GST_INFO(GST_CAT_AUTOPLUG, "autoplugger_cache_empty finished");
 }

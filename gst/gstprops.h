@@ -24,16 +24,9 @@
 #ifndef __GST_PROPS_H__
 #define __GST_PROPS_H__
 
+#include <gst/gstconfig.h>
+
 #include <glib.h>
-#include <parser.h> // NOTE: this is xml-config's fault
-
-// Include compatability defines: if libxml hasn't already defined these,
-// we have an old version 1.x
-#ifndef xmlChildrenNode
-#define xmlChildrenNode childs
-#define xmlRootNode root
-#endif
-
 
 typedef struct _GstProps GstProps;
 
@@ -95,7 +88,9 @@ gulong		gst_props_get_fourcc_int	(GstProps *props, const gchar *name);
 gboolean	gst_props_get_boolean		(GstProps *props, const gchar *name);
 const gchar*	gst_props_get_string		(GstProps *props, const gchar *name);
 
+#ifndef GST_DISABLE_LOADSAVE
 xmlNodePtr 	gst_props_save_thyself 		(GstProps *props, xmlNodePtr parent);
 GstProps* 	gst_props_load_thyself 		(xmlNodePtr parent);
+#endif
 
 #endif /* __GST_PROPS_H__ */

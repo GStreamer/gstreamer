@@ -24,10 +24,7 @@
 #ifndef __GST_OBJECT_H__
 #define __GST_OBJECT_H__
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
+#include <gst/gstconfig.h>
 
 #ifdef USE_GLIB2
 #include <glib-object.h>	// note that this gets wrapped in __GST_OBJECT_H__ 
@@ -36,14 +33,12 @@
 #include <gst/gobject2gtk.h>
 #endif
 
-#include <gst/gsttrace.h>
-#include <parser.h>
-
-#include <gst/gsttypes.h>
-
 #ifdef HAVE_ATOMIC_H
 #include <asm/atomic.h>
 #endif
+
+#include <gst/gsttrace.h>
+#include <gst/gsttypes.h>
 
 // FIXME
 #include "gstlog.h"
@@ -52,17 +47,22 @@
 extern "C" {
 #endif /* __cplusplus */
 
+extern GType _gst_object_type;
 
-#define GST_TYPE_OBJECT \
-  (gst_object_get_type())
-#define GST_OBJECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OBJECT,GstObject))
-#define GST_OBJECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OBJECT,GstObjectClass))
-#define GST_IS_OBJECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OBJECT))
-#define GST_IS_OBJECT_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OBJECT))
+#define GST_TYPE_OBJECT                 (_gst_object_type)
+# define GST_IS_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OBJECT))
+# define GST_IS_OBJECT_CLASS(obj)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_OBJECT))
+
+#define GST_OBJECT_FAST(obj)            ((GstObject*)(obj))
+#define GST_OBJECT_CLASS_FAST(klass)    ((GstObjectClass*)(klass))
+
+#ifdef GST_TYPE_PARANOID
+# define GST_OBJECT(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_OBJECT, GstObject))
+# define GST_OBJECT_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_OBJECT, GstObjectClass))
+#else
+# define GST_OBJECT                     GST_OBJECT_FAST
+# define GST_OBJECT_CLASS               GST_OBJECT_CLASS_FAST
+#endif
 
 //typedef struct _GstObject GstObject;
 //typedef struct _GstObjectClass GstObjectClass;
@@ -76,40 +76,43 @@ typedef enum
 } GstObjectFlags;
 
 struct _GstObject {
-  GObject object;
+  GObject 	object;
 
-  gchar *name;
+  gchar 	*name;
   /* have to have a refcount for the object */
 #ifdef HAVE_ATOMIC_H
-  atomic_t refcount;
+  atomic_t 	refcount;
 #else
-  int refcount;
+  gint 		refcount;
 #endif
 
   /* locking for all sorts of things (like the refcount) */
-  GMutex *lock;
-
+  GMutex 	*lock;
   /* this objects parent */
-  GstObject *parent;
+  GstObject 	*parent;
 
-  guint32 flags;
+  guint32 	flags;
 };
 
 struct _GstObjectClass {
   GObjectClass	parent_class;
 
-  gchar			*path_string_separator;
-  GObject		*signal_object;
+  gchar		*path_string_separator;
+  GObject	*signal_object;
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
+#endif
 
   /* functions go here */
   void		(*destroy)		(GstObject *object);
 
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
+#endif
 };
 
 #define GST_FLAGS(obj)			(GST_OBJECT (obj)->flags)
@@ -144,11 +147,12 @@ void		gst_object_unparent		(GstObject *object);
 
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
 xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
-void		gst_object_restore_thyself		(GstObject *object, xmlNodePtr parent);
+void		gst_object_restore_thyself	(GstObject *object, xmlNodePtr parent);
 #else
 #pragma GCC poison gst_object_save_thyself
+#pragma GCC poison gst_object_restore_thyself
 #endif
 
 /* refcounting */
@@ -166,7 +170,7 @@ guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 gpointer	func,
 						 gpointer	func_data);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
 void		gst_class_signal_emit_by_name	(GstObject	*object,
 		                                 const gchar	*name,
 						 xmlNodePtr self);

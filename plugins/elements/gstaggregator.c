@@ -76,7 +76,8 @@ gst_aggregator_sched_get_type (void)
 static void 	gst_aggregator_class_init	(GstAggregatorClass *klass);
 static void 	gst_aggregator_init		(GstAggregator *aggregator);
 
-static GstPad* 	gst_aggregator_request_new_pad	(GstElement *element, GstPadTemplate *temp);
+static GstPad* 	gst_aggregator_request_new_pad	(GstElement *element, GstPadTemplate *temp, const
+                                                 gchar *unused);
 
 static void 	gst_aggregator_set_property 	(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
@@ -150,7 +151,7 @@ gst_aggregator_init (GstAggregator *aggregator)
 }
 
 static GstPad*
-gst_aggregator_request_new_pad (GstElement *element, GstPadTemplate *templ) 
+gst_aggregator_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *unused) 
 {
   gchar *name;
   GstPad *sinkpad;

@@ -124,16 +124,16 @@ gst_thread_class_init (GstThreadClass *klass)
   gobject_class->dispose =		gst_thread_dispose;
 
 #ifndef GST_DISABLE_LOADSAVE
-  gstobject_class->save_thyself =	gst_thread_save_thyself;
-  gstobject_class->restore_thyself =	gst_thread_restore_thyself;
+  gstobject_class->save_thyself =	GST_DEBUG_FUNCPTR (gst_thread_save_thyself);
+  gstobject_class->restore_thyself =	GST_DEBUG_FUNCPTR(gst_thread_restore_thyself);
 #endif
 
-  gstelement_class->change_state =	gst_thread_change_state;
+  gstelement_class->change_state =	GST_DEBUG_FUNCPTR (gst_thread_change_state);
 
 //  gstbin_class->schedule = gst_thread_schedule_dummy;
 
-  gobject_class->set_property = gst_thread_set_property;
-  gobject_class->get_property = gst_thread_get_property;
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_thread_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_thread_get_property);
 
 }
 

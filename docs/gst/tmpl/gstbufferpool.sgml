@@ -52,30 +52,10 @@ A bufferpool can be requested from a pad with the gst_pad_get_bufferpool() funct
 </para>
 
 @lock: 
-@new_user_data: 
-@destroy_user_data: 
-@destroy_buffer: 
-
-<!-- ##### USER_FUNCTION GstBufferPoolCreateFunction ##### -->
-<para>
-The function called when a buffer has to be created for this pool.
-</para>
-
-@pool: the pool from which to create the buffer
-@user_data: any user data
-@Returns: a new buffer from the pool
-
-
-<!-- ##### USER_FUNCTION GstBufferPoolDestroyFunction ##### -->
-<para>
-This function will be called when the given buffer has to be returned to
-the pool.
-</para>
-
-@pool: the pool to return the buffer to
-@buffer: the buffer to return
-@user_data: any user data
-
+@buffer_free: 
+@buffer_copy: 
+@destroy_hook: 
+@user_data: 
 
 <!-- ##### FUNCTION gst_buffer_pool_new ##### -->
 <para>
@@ -83,24 +63,6 @@ the pool.
 </para>
 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_buffer_pool_new_buffer ##### -->
-<para>
-
-</para>
-
-@pool: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_buffer_pool_destroy_buffer ##### -->
-<para>
-
-</para>
-
-@pool: 
-@buffer: 
 
 
 <!-- ##### FUNCTION gst_buffer_pool_ref ##### -->
@@ -130,26 +92,6 @@ the pool.
 @pool: 
 
 
-<!-- ##### FUNCTION gst_buffer_pool_set_create_function ##### -->
-<para>
-
-</para>
-
-@pool: 
-@create: 
-@user_data: 
-
-
-<!-- ##### FUNCTION gst_buffer_pool_set_destroy_function ##### -->
-<para>
-
-</para>
-
-@pool: 
-@destroy: 
-@user_data: 
-
-
 <!-- ##### FUNCTION gst_buffer_pool_destroy ##### -->
 <para>
 
@@ -163,9 +105,10 @@ the pool.
 
 </para>
 
-@oldpool: 
 @buffer_size: 
 @pool_size: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@oldpool: 
 
 

@@ -65,13 +65,14 @@ static xmlNodePtr		gst_element_save_thyself	(GstObject *object, xmlNodePtr paren
 GstElement* 			gst_element_restore_thyself 	(xmlNodePtr self, GstObject *parent);
 #endif
 
+GType _gst_element_type = 0;
+
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
 
-GType gst_element_get_type(void) {
-  static GType element_type = 0;
-
-  if (!element_type) {
+GType gst_element_get_type (void) 
+{
+  if (!_gst_element_type) {
     static const GTypeInfo element_info = {
       sizeof(GstElementClass),
       (GBaseInitFunc)gst_element_base_class_init,
@@ -84,9 +85,9 @@ GType gst_element_get_type(void) {
       (GInstanceInitFunc)gst_element_init,
       NULL
     };
-    element_type = g_type_register_static(GST_TYPE_OBJECT, "GstElement", &element_info, G_TYPE_FLAG_ABSTRACT);
+    _gst_element_type = g_type_register_static(GST_TYPE_OBJECT, "GstElement", &element_info, G_TYPE_FLAG_ABSTRACT);
   }
-  return element_type;
+  return _gst_element_type;
 }
 
 static void
@@ -602,14 +603,14 @@ gst_element_get_padtemplate_by_compatible (GstElement *element, GstPadTemplate *
 }
 
 static GstPad*
-gst_element_request_pad (GstElement *element, GstPadTemplate *templ)
+gst_element_request_pad (GstElement *element, GstPadTemplate *templ, const gchar* name)
 {
   GstPad *newpad = NULL;
   GstElementClass *oclass;
 
   oclass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS(element));
   if (oclass->request_new_pad)
-    newpad = (oclass->request_new_pad)(element, templ);
+    newpad = (oclass->request_new_pad)(element, templ, name);
 
   return newpad;
 }
@@ -638,7 +639,7 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
 
   templ_new = gst_element_get_padtemplate_by_compatible (element, templ);
   if (templ_new != NULL)
-      pad = gst_element_request_pad (element, templ_new);
+      pad = gst_element_request_pad (element, templ_new, NULL);
 
   return pad;
 }
@@ -658,19 +659,40 @@ gst_element_request_compatible_pad (GstElement *element, GstPadTemplate *templ)
 GstPad*
 gst_element_request_pad_by_name (GstElement *element, const gchar *name)
 {
-  GstPadTemplate *templ;
+  GstPadTemplate *templ = NULL;
   GstPad *pad;
+  const gchar *req_name = NULL;
+  gboolean templ_found = FALSE;
+  GList *list;
+  gint n;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  templ = gst_element_get_padtemplate_by_name (element, name);
+  if (strstr (name, "%d")) {
+      templ = gst_element_get_padtemplate_by_name (element, name);
+      req_name = NULL;
+  } else {
+      list = gst_element_get_padtemplate_list(element);
+      while (!templ_found && list) {
+          templ = (GstPadTemplate*) list->data;
+          if (strstr (templ->name_template, "%d")) {
+              if (sscanf(name, templ->name_template, &n)) {
+                  templ_found = TRUE;
+                  req_name = name;
+                  break;
+              }
+          }
+          list = list->next;
+      }
+  }
+  
   if (templ == NULL)
-    return NULL;
-
-  pad = gst_element_request_pad (element, templ);
-
+      return NULL;
+  
+  pad = gst_element_request_pad (element, templ, req_name);
+  
   return pad;
 }
 
@@ -772,6 +794,14 @@ gst_element_error (GstElement *element, const gchar *error)
 }
 
 
+GstElementState
+gst_element_get_state (GstElement *elem)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (elem), GST_STATE_VOID_PENDING);
+
+  return GST_STATE (elem);
+}
+
 /**
  * gst_element_set_state:
  * @element: element to change state of
@@ -836,7 +866,6 @@ gst_element_set_state (GstElement *element, GstElementState state)
     }
   }
 
-  /* this is redundant, really, it will always return SUCCESS */
   return return_val;
 }
 
@@ -1157,7 +1186,7 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 
   return element;
 }
-#endif // GST_DISABLE_LOADSAVE
+#endif /* GST_DISABLE_LOADSAVE */
 
 /**
  * gst_element_set_sched:

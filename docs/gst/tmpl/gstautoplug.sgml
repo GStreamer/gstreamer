@@ -116,7 +116,7 @@ The type of the autoplugger.
 
 </para>
 
-@name: 
+@feature: 
 @longdesc: 
 @type: 
 
@@ -204,25 +204,6 @@ The type of the autoplugger.
 </para>
 
 @name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_autoplugfactory_save_thyself ##### -->
-<para>
-
-</para>
-
-@factory: 
-@parent: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_autoplugfactory_load_thyself ##### -->
-<para>
-
-</para>
-
-@parent: 
 @Returns: 
 
 

@@ -341,6 +341,8 @@ _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 
 gchar *_gst_debug_nameof_funcptr (void *ptr);
 
+void gst_debug_print_stack_trace (void);
+
 
 
 #endif /* __GSTINFO_H__ */

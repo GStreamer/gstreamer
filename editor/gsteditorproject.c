@@ -120,6 +120,7 @@ gst_editor_project_new (void)
 GstEditorProject *
 gst_editor_project_new_from_file (const guchar *fname) 
 {
+#ifndef GST_DISABLE_LOADSAVE
   GstEditorProject *editorproject;
   GstXML *xml;
   GList *elements;
@@ -140,8 +141,10 @@ gst_editor_project_new_from_file (const guchar *fname)
     
     elements = g_list_next (elements);
   }
-  
   return editorproject;
+#else
+  return NULL;
+#endif
 }
 
 void
@@ -162,7 +165,9 @@ gst_editor_project_save_as (GstEditorProject *project, const guchar *fname)
   while (elements) {
     GstElement *element = (GstElement *) elements->data;
 
+#ifndef GST_DISABLE_LOADSAVE
     xmlSaveFile (fname, gst_xml_write (element));
+#endif
 
     elements = g_list_next (elements);
   }

@@ -63,11 +63,9 @@ to bring it into memory.
 @name: 
 @longname: 
 @filename: 
-@types: 
-@numtypes: 
-@elements: 
-@numelements: 
-@numautopluggers: 
+@features: 
+@numfeatures: 
+@module: 
 
 <!-- ##### USER_FUNCTION GstPluginInitFunc ##### -->
 <para>
@@ -198,33 +196,6 @@ loaded will use this variable to initialize the plugin.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_add_factory ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@factory: 
-
-
-<!-- ##### FUNCTION gst_plugin_add_type ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@factory: 
-
-
-<!-- ##### FUNCTION gst_plugin_add_autoplugger ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@factory: 
-
-
 <!-- ##### FUNCTION gst_plugin_find ##### -->
 <para>
 
@@ -239,59 +210,6 @@ loaded will use this variable to initialize the plugin.
 
 </para>
 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_get_factory_list ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_get_type_list ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_get_autoplug_list ##### -->
-<para>
-
-</para>
-
-@plugin: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_load_elementfactory ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_plugin_load_typefactory ##### -->
-<para>
-
-</para>
-
-@mime: 
-
-
-<!-- ##### FUNCTION gst_plugin_load_autoplugfactory ##### -->
-<para>
-
-</para>
-
-@name: 
 @Returns: 
 
 

@@ -128,7 +128,9 @@ int main(int argc,char *argv[]) {
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
 
+#ifndef GST_DISABLE_LOADSAVE
   xmlSaveFile("aviparse.xml",gst_xml_write(GST_ELEMENT(pipeline)));
+#endif
 
   g_print("about to enter loop\n");
 

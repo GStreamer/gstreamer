@@ -274,6 +274,13 @@ gst_buffer_pool_destroy (GstBufferPool *pool)
   g_free(pool);
 }
 
+//
+// This is so we don't get messed up by GST_BUFFER_WHERE.
+//
+static GstBuffer *
+_pool_gst_buffer_copy (GstBuffer *buffer)
+{ return gst_buffer_copy (buffer); }
+
 /**
  * gst_buffer_pool_get_default:
  * @buffer_size: the number of bytes this buffer will store
@@ -314,7 +321,7 @@ gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
   pool = gst_buffer_pool_new();
   gst_buffer_pool_set_buffer_new_function (pool, gst_buffer_pool_default_buffer_new);
   gst_buffer_pool_set_buffer_free_function (pool, gst_buffer_pool_default_buffer_free);
-  gst_buffer_pool_set_buffer_copy_function (pool, gst_buffer_copy);
+  gst_buffer_pool_set_buffer_copy_function (pool, _pool_gst_buffer_copy);
   gst_buffer_pool_set_destroy_hook (pool, gst_buffer_pool_default_destroy_hook);
   
   def = g_new0 (GstBufferPoolDefault, 1);

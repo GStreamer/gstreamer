@@ -191,10 +191,14 @@ automake --add-missing || {
 # now remove the cache, because it can be considered dangerous in this case
 rm -f config.cache
 
-# The new configure options for busy application developers (Hadess)
-#./configure --enable-maintainer-mode --enable-debug --enable-DEBUG "$@" || {
+CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG'
 
-./configure --enable-maintainer-mode --enable-plugin-builddir --enable-debug --enable-DEBUG "$@" || {
+echo
+echo "./configure default flags: $CONFIGURE_OPT"
+echo "using: $CONFIGURE_OPT $@"
+echo
+
+./configure $CONFIGURE_OPT "$@" || {
 	echo
 	echo "configure failed"
 	exit 1

@@ -21,6 +21,9 @@
  */
 
 
+#include <stdlib.h>
+#include <string.h>
+
 #include <gstfakesrc.h>
 
 
@@ -47,10 +50,17 @@ enum {
   ARG_NUM_SOURCES,
   ARG_LOOP_BASED,
   ARG_OUTPUT,
+  ARG_DATA,
+  ARG_SIZETYPE,
+  ARG_SIZEMIN,
+  ARG_SIZEMAX,
+  ARG_FILLTYPE,
   ARG_PATTERN,
   ARG_NUM_BUFFERS,
   ARG_EOS,
-  ARG_SILENT
+  ARG_SILENT,
+  ARG_DUMP,
+  ARG_PARENTSIZE
 };
 
 GST_PADTEMPLATE_FACTORY (fakesrc_src_factory,
@@ -82,12 +92,69 @@ gst_fakesrc_output_get_type (void)
   return fakesrc_output_type;
 }
 
+#define GST_TYPE_FAKESRC_DATA (gst_fakesrc_data_get_type())
+static GType
+gst_fakesrc_data_get_type (void) 
+{
+  static GType fakesrc_data_type = 0;
+  static GEnumValue fakesrc_data[] = {
+    { FAKESRC_DATA_ALLOCATE, 		"2", "Allocate data"},
+    { FAKESRC_DATA_SUBBUFFER, 		"3", "Subbuffer data"},
+    {0, NULL, NULL},
+  };
+  if (!fakesrc_data_type) {
+    fakesrc_data_type = g_enum_register_static ("GstFakeSrcData", fakesrc_data);
+  }
+  return fakesrc_data_type;
+}
+
+#define GST_TYPE_FAKESRC_SIZETYPE (gst_fakesrc_sizetype_get_type())
+static GType
+gst_fakesrc_sizetype_get_type (void) 
+{
+  static GType fakesrc_sizetype_type = 0;
+  static GEnumValue fakesrc_sizetype[] = {
+    { FAKESRC_SIZETYPE_NULL, 		"1", "Send empty buffers"},
+    { FAKESRC_SIZETYPE_FIXED, 		"2", "Fixed size buffers (sizemax sized)"},
+    { FAKESRC_SIZETYPE_RANDOM, 		"3", "Random sized buffers (sizemin <= size <= sizemax)"},
+    {0, NULL, NULL},
+  };
+  if (!fakesrc_sizetype_type) {
+    fakesrc_sizetype_type = g_enum_register_static ("GstFakeSrcSizeType", fakesrc_sizetype);
+  }
+  return fakesrc_sizetype_type;
+}
+
+#define GST_TYPE_FAKESRC_FILLTYPE (gst_fakesrc_filltype_get_type())
+static GType
+gst_fakesrc_filltype_get_type (void) 
+{
+  static GType fakesrc_filltype_type = 0;
+  static GEnumValue fakesrc_filltype[] = {
+    { FAKESRC_FILLTYPE_NOTHING, 	"1", "Leave data as malloced"},
+    { FAKESRC_FILLTYPE_NULL, 		"2", "Fill buffers with zeros"},
+    { FAKESRC_FILLTYPE_RANDOM, 		"3", "Fill buffers with random crap"},
+    { FAKESRC_FILLTYPE_PATTERN, 	"4", "Fill buffers with pattern 0x00 -> 0xff"},
+    { FAKESRC_FILLTYPE_PATTERN_CONT, 	"5", "Fill buffers with pattern 0x00 -> 0xff that spans buffers"},
+    {0, NULL, NULL},
+  };
+  if (!fakesrc_filltype_type) {
+    fakesrc_filltype_type = g_enum_register_static ("GstFakeSrcFillType", fakesrc_filltype);
+  }
+  return fakesrc_filltype_type;
+}
+
 static void		gst_fakesrc_class_init		(GstFakeSrcClass *klass);
 static void		gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
 static GstPad* 		gst_fakesrc_request_new_pad 	(GstElement *element, GstPadTemplate *templ);
-static void		gst_fakesrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void		gst_fakesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void 		gst_fakesrc_update_functions 	(GstFakeSrc *src);
+static void		gst_fakesrc_set_property	(GObject *object, guint prop_id, 
+							 const GValue *value, GParamSpec *pspec);
+static void		gst_fakesrc_get_property	(GObject *object, guint prop_id, 
+							 GValue *value, GParamSpec *pspec);
+
+static GstElementStateReturn gst_fakesrc_change_state 	(GstElement *element);
 
 static GstBuffer*	gst_fakesrc_get			(GstPad *pad);
 static void 		gst_fakesrc_loop		(GstElement *element);
@@ -137,6 +204,24 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT,
     g_param_spec_enum("output","output","output",
                       GST_TYPE_FAKESRC_OUTPUT,FAKESRC_FIRST_LAST_LOOP,G_PARAM_READWRITE)); // CHECKME!
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DATA,
+    g_param_spec_enum ("data", "data", "data",
+                       GST_TYPE_FAKESRC_DATA, FAKESRC_DATA_ALLOCATE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZETYPE,
+    g_param_spec_enum ("sizetype", "sizetype", "sizetype",
+                       GST_TYPE_FAKESRC_SIZETYPE, FAKESRC_SIZETYPE_NULL, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMIN,
+    g_param_spec_int ("sizemin","sizemin","sizemin",
+                      0, G_MAXINT, 0, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMAX,
+    g_param_spec_int ("sizemax","sizemax","sizemax",
+                      0, G_MAXINT, 4096, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PARENTSIZE,
+    g_param_spec_int ("parentsize","parentsize","parentsize",
+                      0, G_MAXINT, 4096 * 10, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILLTYPE,
+    g_param_spec_enum ("filltype", "filltype", "filltype",
+                       GST_TYPE_FAKESRC_FILLTYPE, FAKESRC_FILLTYPE_NULL, G_PARAM_READWRITE)); 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PATTERN,
     g_param_spec_string("pattern","pattern","pattern",
                         NULL, G_PARAM_READWRITE)); // CHECKME
@@ -149,6 +234,9 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SILENT,
     g_param_spec_boolean("silent","silent","silent",
                          FALSE, G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
+    g_param_spec_boolean ("dump","dump","dump",
+                          FALSE, G_PARAM_READWRITE)); 
 
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
@@ -159,7 +247,8 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fakesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fakesrc_get_property);
 
-  gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR (gst_fakesrc_request_new_pad);
+  gstelement_class->request_new_pad = 	GST_DEBUG_FUNCPTR (gst_fakesrc_request_new_pad);
+  gstelement_class->change_state = 	GST_DEBUG_FUNCPTR (gst_fakesrc_change_state);
 }
 
 static void 
@@ -176,17 +265,21 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->srcpads = g_slist_append (NULL, pad);
 
   fakesrc->loop_based = FALSE;
-
-  if (fakesrc->loop_based)
-    gst_element_set_loop_function (GST_ELEMENT (fakesrc), GST_DEBUG_FUNCPTR (gst_fakesrc_loop));
-  else
-    gst_pad_set_get_function (pad, GST_DEBUG_FUNCPTR (gst_fakesrc_get));
+  gst_fakesrc_update_functions (fakesrc);
 
   fakesrc->num_buffers = -1;
   fakesrc->buffer_count = 0;
   fakesrc->silent = FALSE;
-  // we're ready right away, since we don't have any args...
-//  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
+  fakesrc->dump = FALSE;
+  fakesrc->pattern_byte = 0x00;
+  fakesrc->need_flush = FALSE;
+  fakesrc->data = FAKESRC_DATA_ALLOCATE;
+  fakesrc->sizetype = FAKESRC_SIZETYPE_NULL;
+  fakesrc->filltype = FAKESRC_FILLTYPE_NOTHING;
+  fakesrc->sizemin = 0;
+  fakesrc->sizemax = 4096;
+  fakesrc->parent = NULL;
+  fakesrc->parentsize = 4096 * 10;
 }
 
 static GstPad*
@@ -216,6 +309,34 @@ gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
   return srcpad;
 }
 
+static gboolean
+gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
+{
+  GstFakeSrc *src;
+
+  src = GST_FAKESRC (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      g_print("fakesrc: have seek event\n");
+      src->buffer_count = GST_EVENT_SEEK_OFFSET (event);
+      if (!GST_EVENT_SEEK_FLUSH (event)) {
+        gst_event_free (event);
+        break;
+      }
+      // else we do a flush too
+    case GST_EVENT_FLUSH:
+      g_print("fakesrc: have flush event\n");
+      src->need_flush = TRUE;
+      break;
+    default:
+      g_print("fakesrc: have unhandled event\n");
+      break;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_fakesrc_update_functions (GstFakeSrc *src)
 {
@@ -238,8 +359,23 @@ gst_fakesrc_update_functions (GstFakeSrc *src)
     else {
       gst_pad_set_get_function (pad, GST_DEBUG_FUNCPTR (gst_fakesrc_get));
     }
+
+    gst_pad_set_event_function (pad, gst_fakesrc_event_handler);
     pads = g_slist_next (pads);
   }
+}
+
+static void
+gst_fakesrc_alloc_parent (GstFakeSrc *src)
+{
+  GstBuffer *buf;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = g_malloc (src->parentsize);
+  GST_BUFFER_SIZE (buf) = src->parentsize;
+
+  src->parent = buf;
+  src->parentoffset = 0;
 }
 
 static void
@@ -257,6 +393,37 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       break;
     case ARG_OUTPUT:
       break;
+    case ARG_DATA:
+      src->data = g_value_get_int (value);
+      switch (src->data) {
+	case FAKESRC_DATA_ALLOCATE:
+          if (src->parent) {
+            gst_buffer_unref (src->parent);
+            src->parent = NULL;
+	  }
+          break;
+	case FAKESRC_DATA_SUBBUFFER:
+	  if (!src->parent)
+	    gst_fakesrc_alloc_parent (src);
+	default:
+          break;
+      }
+      break;
+    case ARG_SIZETYPE:
+      src->sizetype = g_value_get_int (value);
+      break;
+    case ARG_SIZEMIN:
+      src->sizemin = g_value_get_int (value);
+      break;
+    case ARG_SIZEMAX:
+      src->sizemax = g_value_get_int (value);
+      break;
+    case ARG_PARENTSIZE:
+      src->parentsize = g_value_get_int (value);
+      break;
+    case ARG_FILLTYPE:
+      src->filltype = g_value_get_int (value);
+      break;
     case ARG_PATTERN:
       break;
     case ARG_NUM_BUFFERS:
@@ -268,6 +435,9 @@ GST_INFO (0, "will EOS on next buffer");
       break;
     case ARG_SILENT:
       src->silent = g_value_get_boolean (value);
+      break;
+    case ARG_DUMP:
+      src->dump = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -294,6 +464,24 @@ gst_fakesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     case ARG_OUTPUT:
       g_value_set_int (value, src->output);
       break;
+    case ARG_DATA:
+      g_value_set_int (value, src->data);
+      break;
+    case ARG_SIZETYPE:
+      g_value_set_int (value, src->sizetype);
+      break;
+    case ARG_SIZEMIN:
+      g_value_set_int (value, src->sizemin);
+      break;
+    case ARG_SIZEMAX:
+      g_value_set_int (value, src->sizemax);
+      break;
+    case ARG_PARENTSIZE:
+      g_value_set_int (value, src->parentsize);
+      break;
+    case ARG_FILLTYPE:
+      g_value_set_int (value, src->filltype);
+      break;
     case ARG_PATTERN:
       g_value_set_string (value, src->pattern);
       break;
@@ -306,21 +494,150 @@ gst_fakesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     case ARG_SILENT:
       g_value_set_boolean (value, src->silent);
       break;
+    case ARG_DUMP:
+      g_value_set_boolean (value, src->dump);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
+static void
+gst_fakesrc_prepare_buffer (GstFakeSrc *src, GstBuffer *buf)
+{
+  if (GST_BUFFER_SIZE (buf) == 0) 
+    return;
 
-/**
- * gst_fakesrc_get:
- * @src: the faksesrc to get
- * 
- * generate an empty buffer and return it
- *
- * Returns: a new empty buffer
- */
+  switch (src->filltype) {
+    case FAKESRC_FILLTYPE_NULL:
+      memset (GST_BUFFER_DATA (buf), 0, GST_BUFFER_SIZE (buf));
+      break;
+    case FAKESRC_FILLTYPE_RANDOM:
+    {
+      gint i;
+      guint8 *ptr = GST_BUFFER_DATA (buf);
+
+      for (i = GST_BUFFER_SIZE (buf); i; i--) {
+	*ptr++ = (gint8)((255.0)*rand()/(RAND_MAX));
+      }
+      break;
+    }
+    case FAKESRC_FILLTYPE_PATTERN:
+      src->pattern_byte = 0x00;
+    case FAKESRC_FILLTYPE_PATTERN_CONT:
+    {
+      gint i;
+      guint8 *ptr = GST_BUFFER_DATA (buf);
+
+      for (i = GST_BUFFER_SIZE (buf); i; i--) {
+	*ptr++ = src->pattern_byte++;
+      }
+      break;
+    }
+    case FAKESRC_FILLTYPE_NOTHING:
+    default:
+      break;
+  }
+}
+
+static GstBuffer*
+gst_fakesrc_alloc_buffer (GstFakeSrc *src, guint size)
+{
+  GstBuffer *buf;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_SIZE(buf) = size;
+
+  if (size != 0) { 
+    switch (src->filltype) {
+      case FAKESRC_FILLTYPE_NOTHING:
+        GST_BUFFER_DATA(buf) = g_malloc (size);
+        break;
+      case FAKESRC_FILLTYPE_NULL:
+        GST_BUFFER_DATA(buf) = g_malloc0 (size);
+        break;
+      case FAKESRC_FILLTYPE_RANDOM:
+      case FAKESRC_FILLTYPE_PATTERN:
+      case FAKESRC_FILLTYPE_PATTERN_CONT:
+      default:
+        GST_BUFFER_DATA(buf) = g_malloc (size);
+        gst_fakesrc_prepare_buffer (src, buf);
+        break;
+    }
+  }
+
+  return buf;
+}
+
+static guint
+gst_fakesrc_get_size (GstFakeSrc *src)
+{
+  guint size;
+
+  switch (src->sizetype) {
+    case FAKESRC_SIZETYPE_FIXED:
+      size = src->sizemax;
+      break;
+    case FAKESRC_SIZETYPE_RANDOM:
+      size = src->sizemin + (guint8)(((gfloat)src->sizemax)*rand()/(RAND_MAX + (gfloat)src->sizemin));
+      break;
+    case FAKESRC_SIZETYPE_NULL:
+    default:
+      size = 0; 
+      break;
+  }
+
+  return size;
+}
+
+static GstBuffer *
+gst_fakesrc_create_buffer (GstFakeSrc *src)
+{
+  GstBuffer *buf;
+  guint size;
+  gboolean dump = src->dump;
+
+  size = gst_fakesrc_get_size (src);
+  if (size == 0)
+    return gst_buffer_new();
+
+  switch (src->data) {
+    case FAKESRC_DATA_ALLOCATE:
+      buf = gst_fakesrc_alloc_buffer (src, size);
+      break;
+    case FAKESRC_DATA_SUBBUFFER:
+      // see if we have a parent to subbuffer
+      if (!src->parent) {
+	gst_fakesrc_alloc_parent (src);
+	g_assert (src->parent);
+      }
+      // see if it's large enough
+      if ((GST_BUFFER_SIZE (src->parent) - src->parentoffset) >= size) {
+	 buf = gst_buffer_create_sub (src->parent, src->parentoffset, size);
+	 src->parentoffset += size;
+      }
+      else {
+	// the parent is useless now
+	gst_buffer_unref (src->parent);
+	src->parent = NULL;
+	// try again (this will allocate a new parent)
+        return gst_fakesrc_create_buffer (src);
+      }
+      gst_fakesrc_prepare_buffer (src, buf);
+      break;
+    default:
+      g_warning ("fakesrc: dunno how to allocate buffers !");
+      buf = gst_buffer_new();
+      break;
+  }
+  if (dump) {
+    gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  }
+
+  return buf;
+}
+
 static GstBuffer *
 gst_fakesrc_get(GstPad *pad)
 {
@@ -333,9 +650,16 @@ gst_fakesrc_get(GstPad *pad)
 
   g_return_val_if_fail (GST_IS_FAKESRC (src), NULL);
 
+  if (src->need_flush) {
+    src->need_flush = FALSE;
+    g_print("fakesrc: sending FLUSH\n");
+    return GST_BUFFER(gst_event_new (GST_EVENT_FLUSH));
+  }
+
   if (src->num_buffers == 0) {
-    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-    return NULL;
+    g_print("fakesrc: sending EOS\n");
+    gst_element_set_state (GST_ELEMENT (src), GST_STATE_PAUSED);
+    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
   else {
     if (src->num_buffers > 0)
@@ -344,11 +668,11 @@ gst_fakesrc_get(GstPad *pad)
 
   if (src->eos) {
     GST_INFO (0, "fakesrc is setting eos on pad");
-    gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-    return NULL;
+    g_print("fakesrc: sending EOS\n");
+    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
   }
 
-  buf = gst_buffer_new();
+  buf = gst_fakesrc_create_buffer (src);
   GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
   if (!src->silent)
@@ -356,7 +680,7 @@ gst_fakesrc_get(GstPad *pad)
                GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
   g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
-                   buf);
+                   buf, pad);
 
   return buf;
 }
@@ -387,21 +711,20 @@ gst_fakesrc_loop(GstElement *element)
       GstBuffer *buf;
 
       if (src->num_buffers == 0) {
-        gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-        return;
+	src->eos = TRUE;
       }
       else {
-      if (src->num_buffers > 0)
-         src->num_buffers--;
+        if (src->num_buffers > 0)
+          src->num_buffers--;
       }
 
       if (src->eos) {
         GST_INFO (0, "fakesrc is setting eos on pad");
-        gst_pad_event (pad, GST_EVENT_EOS, 0LL, 0);
-        return;
+        gst_pad_push(pad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));
+	return;
       }
 
-      buf = gst_buffer_new();
+      buf = gst_fakesrc_create_buffer (src);
       GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
       if (!src->silent)
@@ -409,12 +732,37 @@ gst_fakesrc_loop(GstElement *element)
                GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
 
       g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
-                       buf);
+                       buf, pad);
       gst_pad_push (pad, buf);
 
       pads = g_slist_next (pads);
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+}
+
+static GstElementStateReturn
+gst_fakesrc_change_state (GstElement *element)
+{
+  GstFakeSrc *fakesrc;
+
+  g_return_val_if_fail (GST_IS_FAKESRC (element), GST_STATE_FAILURE);
+
+  fakesrc = GST_FAKESRC (element);
+
+  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
+    fakesrc->buffer_count = 0;
+    fakesrc->pattern_byte = 0x00;
+    fakesrc->need_flush = FALSE;
+    if (fakesrc->parent) {
+      gst_buffer_unref (fakesrc->parent);
+      fakesrc->parent = NULL;
+    }
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+  return GST_STATE_SUCCESS;
 }
 
 gboolean

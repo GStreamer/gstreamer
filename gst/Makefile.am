@@ -8,6 +8,8 @@ else
 GSTARCH_SRCS = 
 endif
 
+#GST_INSTRUMENT_FLAGS = -finstrument-functions -DGST_ENABLE_FUNC_INSTRUMENTATION
+
 if USE_GLIB2
 GST_OBJECT_MODEL_SRC = gstmarshal.c
 GST_OBJECT_MODEL_HDR = gstmarshal.h
@@ -67,6 +69,7 @@ libgst_la_SOURCES =		\
 	gstcpu.c		\
 	gstelement.c		\
 	gstelementfactory.c	\
+	gstevent.c		\
 	gstextratypes.c		\
 	gstinfo.c		\
 	gstpad.c		\
@@ -154,6 +157,7 @@ libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
+	gstconfig.h		\
 	$(GST_OBJECT_MODEL_HDR)	\
 	gstobject.h		\
 	gsttypes.h		\
@@ -164,6 +168,7 @@ libgstinclude_HEADERS =		\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcpu.h		\
+	gstdata.h		\
 	gstelement.h		\
 	gstevent.h		\
 	gstextratypes.h		\
@@ -203,6 +208,7 @@ CFLAGS = \
 	-Wnested-externs \
 	-Winline -Wno-unused
 
+CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" -Wall
 LIBS = $(LIBGST_LIBS)
 LDFLAGS = ""
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
