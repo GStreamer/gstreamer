@@ -64,6 +64,6 @@
       </para>
     </legalnotice>
 
-    <title>&GStreamer; Plugin Writer's Guide</title>
+    <title>&GStreamer; Plugin Writer's Guide (&GST_VERSION;)</title>
 
   </bookinfo>

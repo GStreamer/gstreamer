@@ -21,7 +21,7 @@
 
 <article class="faq" id="index">
   <articleinfo>
-    <title>GStreamer FAQ</title>
+    <title>GStreamer FAQ (&GST_VERSION;)</title>
     <abstract>
       <para>
         This is the FAQ for GStreamer, a multimedia framework.

@@ -98,7 +98,7 @@
       </para>
     </legalnotice>
 
-    <title><application>GStreamer</application> Application Development Manual</title>
+    <title><application>GStreamer</application> Application Development Manual (&GST_VERSION;)</title>
 
   </bookinfo>
       

@@ -1,5 +1,13 @@
 2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/faq/faq.xml:
+	* docs/manual/manual.xml:
+	* docs/pwg/pwg.xml:
+	* docs/pwg/titlepage.xml:
+          put version in documentation
+
+2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tools/Makefile.am: fix man page installation
 
 2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>

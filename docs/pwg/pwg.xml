@@ -3,6 +3,8 @@
                   "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
 <!ENTITY % image-entities SYSTEM "image.entities">
 %image-entities;
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
 
 <!ENTITY TITLEPAGE            SYSTEM "titlepage.xml">
 
@@ -41,7 +43,6 @@
 <!ENTITY APPENDIX_PYTHON      SYSTEM "appendix-python.xml">
 
 <!ENTITY GStreamer    "<application>GStreamer</application>">
-<!ENTITY GstVersion   "0.7.4">
 <!ENTITY GstAppDevMan "<emphasis>GStreamer Application Development Manual</emphasis>">
 <!ENTITY GstLibRef    "<emphasis>GStreamer Library Reference</emphasis>">
 ]>
@@ -65,7 +66,7 @@
       </para>
       <para>
         This guide is intended to help you understand the &GStreamer; framework
-        (version &GstVersion;) so you can develop new plugins to extend the
+        (version &GST_VERSION;) so you can develop new plugins to extend the
         existing functionality. The guide addresses most issues by following the
         development of an example plugin - an audio filter plugin -
         written in C. However, the later parts of the guide also present some
