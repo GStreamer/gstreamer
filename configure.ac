@@ -64,11 +64,6 @@ AM_PROG_LIBTOOL
 
 AC_HEADER_STDC([])
 
-dnl This is used for the -config script...
-builddir=`pwd`
-AC_SUBST(builddir)
-
-
 dnl ###########################################
 dnl # Super Duper options for plugin building #
 dnl ###########################################
@@ -1356,11 +1351,9 @@ docs/manual/Makefile
 docs/fwg/Makefile
 debian/Makefile
 stamp.h
-gstreamer-config
 gstreamer.pc
 gstreamer-uninstalled.pc
 gstreamer.spec,
-chmod +x gstreamer-config
 echo "$infomessages", infomessages="$infomessages"
 )
 

@@ -40,20 +40,16 @@ $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 DIST_SUBDIRS = include gst libs plugins tools test tests testsuite examples gstplay editor docs debian
 
 
-bin_SCRIPTS = gstreamer-config
-
 m4datadir = $(datadir)/aclocal
 m4data_DATA = gstreamer.m4
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer.pc
 
-man_MANS = gstreamer-config.1
-
-EXTRA_DIST = gstreamer.spec.in gstreamer-config.in gstreamer.m4 \
+EXTRA_DIST = gstreamer.spec.in gstreamer.m4 \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \
 	     configure.ac autogen.sh depcomp \
-	     LICENSE REQUIREMENTS ABOUT-NLS $(man_MANS) \
+	     LICENSE REQUIREMENTS ABOUT-NLS \
 	     idiottest.mak
 
 dist-hook:
