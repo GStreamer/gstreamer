@@ -466,6 +466,7 @@ gst_filesrc_get (GstPad *pad)
 
   /* check for EOF */
   if (src->curoffset == src->filelen) {
+    GST_DEBUG (0, "filesrc eos %lld %lld\n", src->curoffset, src->filelen);
     gst_element_set_eos (GST_ELEMENT (src));
     return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
   }
@@ -697,6 +698,8 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 {
   GstFileSrc *src = GST_FILESRC (GST_PAD_PARENT (pad));
 
+  GST_DEBUG(0, "event %d", GST_EVENT_TYPE (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
@@ -705,12 +708,15 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
       switch (GST_EVENT_SEEK_METHOD (event)) {
         case GST_SEEK_METHOD_SET:
           src->curoffset = (guint64) GST_EVENT_SEEK_OFFSET (event);
+          GST_DEBUG(0, "seek set pending to %lld", src->curoffset);
 	  break;
         case GST_SEEK_METHOD_CUR:
           src->curoffset += GST_EVENT_SEEK_OFFSET (event);
+          GST_DEBUG(0, "seek cur pending to %lld", src->curoffset);
 	  break;
         case GST_SEEK_METHOD_END:
           src->curoffset = src->filelen - ABS (GST_EVENT_SEEK_OFFSET (event));
+          GST_DEBUG(0, "seek end pending to %lld", src->curoffset);
 	  break;
 	default:
           return FALSE;

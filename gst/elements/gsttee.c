@@ -58,7 +58,6 @@ static void 	gst_tee_class_init	(GstTeeClass *klass);
 static void 	gst_tee_init		(GstTee *tee);
 
 static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp, const gchar *unused);
-static gboolean gst_tee_event_handler 	(GstPad *pad, GstEvent *event);
 
 static void 	gst_tee_set_property 	(GObject *object, guint prop_id, 
 					 const GValue *value, GParamSpec *pspec);
@@ -213,7 +212,6 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
-  gst_pad_set_event_function (srcpad, gst_tee_event_handler);
   GST_PAD_ELEMENT_PRIVATE (srcpad) = NULL;
 
   if (GST_PAD_CAPS (tee->sinkpad)) {
@@ -221,24 +219,6 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   }
 
   return srcpad;
-}
-
-static gboolean
-gst_tee_event_handler (GstPad *pad, GstEvent *event)
-{
-  GstTee *tee;
-	    
-  tee = GST_TEE (gst_pad_get_parent (pad));
-	      
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      GST_PAD_ELEMENT_PRIVATE (pad) = gst_event_new (GST_EVENT_TYPE (event));
-      break; 
-    default:
-      break;
-  }
-
-  return TRUE;
 }
 
 static void
@@ -305,7 +285,6 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   tee = GST_TEE (gst_pad_get_parent (pad));
-  /*gst_trace_add_entry (NULL, 0, buf, "tee buffer");*/
 
   gst_buffer_ref_by_count (buf, GST_ELEMENT (tee)->numsrcpads - 1);
   
@@ -317,16 +296,6 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
 
     if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC)
       continue;
-
-    if (GST_PAD_ELEMENT_PRIVATE (outpad)) {
-      GstEvent *event = GST_EVENT (GST_PAD_ELEMENT_PRIVATE (outpad));
-	
-      GST_PAD_ELEMENT_PRIVATE (outpad) = NULL;
-      if (GST_PAD_IS_CONNECTED (outpad))
-        gst_pad_push (outpad, GST_BUFFER (event));
-      else
-	gst_event_free (event);
-    }
 
     if (!tee->silent) {
       g_free (tee->last_message);
