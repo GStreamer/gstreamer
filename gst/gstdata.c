@@ -28,24 +28,56 @@
 #include "gstdata_private.h"
 #include "gstlog.h"
 
+/**
+ * gst_data_init:
+ * @data: a #GstData to initialize
+ * @type: the type of this data
+ * @flags: flags for this data
+ * @free: a free function 
+ * @copy: a copy function 
+ *
+ * Initialize the given data structure with the given parameters. The free and copy 
+ * function will be called when this data is freed or copied respectively.
+ */
 void
-_gst_data_init (GstData *data, GType type, guint16 flags, GstDataFreeFunction free, GstDataCopyFunction copy)
+gst_data_init (GstData *data, GType type, guint16 flags, GstDataFreeFunction free, GstDataCopyFunction copy)
 {
   _GST_DATA_INIT (data, type, flags, free, copy);
 }
 
+/**
+ * gst_data_copy_into:
+ * @data: a #GstData to copy
+ * @target: the target #GstData to copy into
+ *
+ * Copy the GstData into the specified target GstData structure.
+ * Thos method is mainly used by subclasses when they want to copy
+ * the relevant GstData info.
+ */
 void
-_gst_data_free (GstData *data)
+gst_data_copy_into (const GstData *data, GstData *target)
+{
+}
+
+/**
+ * gst_data_dispose:
+ * @data: a #GstData to dispose
+ *
+ * Free all the resources allocated in the gst_data_init() function, 
+ * mainly used by subclass implementors.
+ */
+void
+gst_data_dispose (GstData *data)
 {
   _GST_DATA_DISPOSE (data);
-  g_free (data);
 }
 
 /**
  * gst_data_copy:
  * @data: a #GstData to copy
  *
- * Copies the given #GstData
+ * Copies the given #GstData. This function will call the custom subclass
+ * copy function or return NULL if no function was provided by the subclass.
  *
  * Returns: a copy of the data or NULL if the data cannot be copied.
  */
@@ -88,7 +120,8 @@ gst_data_copy_on_write (const GstData *data)
  * gst_data_free:
  * @data: a #GstData to free
  *
- * Frees the given #GstData 
+ * Frees the given #GstData. This function will call the custom free function
+ * provided by the subclass. 
  */
 void
 gst_data_free (GstData *data) 

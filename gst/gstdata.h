@@ -75,15 +75,15 @@ struct _GstData {
  
   /* utility function pointers, can override default */
   GstDataFreeFunction 	 free;		/* free the data */
-  GstDataCopyFunction 	 copy;		/* free the data */
+  GstDataCopyFunction 	 copy;		/* copy the data */
 };
 
 /* function used by subclasses only */
-void			_gst_data_init			(GstData *data, GType type, guint16 flags,
+void			gst_data_init			(GstData *data, GType type, guint16 flags,
 							 GstDataFreeFunction free,
 							 GstDataCopyFunction copy);
-void			_gst_data_free			(GstData *data);
-GstData*		_gst_data_copy			(const GstData *data);
+void			gst_data_dispose		(GstData *data);
+void			gst_data_copy_into		(const GstData *data, GstData *target);
 
 /* basic operations on data */
 GstData*		gst_data_copy	 		(const GstData *data);

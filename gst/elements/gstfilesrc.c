@@ -340,7 +340,7 @@ gst_filesrc_free_parent_mmap (GstBuffer *buf)
 
   GST_BUFFER_DATA (buf) = NULL;
 
-  _gst_buffer_free (buf);
+  gst_buffer_default_free (buf);
 }
 
 static GstBuffer *

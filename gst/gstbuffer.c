@@ -94,17 +94,15 @@ _gst_buffer_sub_free (GstBuffer *buffer)
 }
 
 /**
- * _gst_buffer_free:
+ * gst_buffer_default_free:
  * @buffer: a #GstBuffer to free
  *
  * Free the momory associated with the buffer including the buffer data,
  * unless the GST_BUFFER_DONTFREE flags was set or the buffer data is NULL.
  * This function is used by bufferpools.
- *
- * Returns: new #GstBuffer
  */
 void
-_gst_buffer_free (GstBuffer *buffer)
+gst_buffer_default_free (GstBuffer *buffer)
 {
   /* free our data */
   if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) && GST_BUFFER_DATA (buffer)) 
@@ -121,7 +119,7 @@ _gst_buffer_free (GstBuffer *buffer)
 }
 
 /**
- * _gst_buffer_copy:
+ * gst_buffer_default_copy:
  * @buffer: a #GstBuffer to make a copy of
  *
  * Make a full newly allocated copy of the given buffer, data and all.
@@ -130,7 +128,7 @@ _gst_buffer_free (GstBuffer *buffer)
  * Returns: new #GstBuffer
  */
 GstBuffer*
-_gst_buffer_copy (GstBuffer *buffer)
+gst_buffer_default_copy (GstBuffer *buffer)
 {
   GstBuffer *copy;
 
@@ -172,8 +170,8 @@ gst_buffer_new (void)
   _GST_DATA_INIT (GST_DATA (new), 
 		  _gst_buffer_type,
 		  0,
-		  (GstDataFreeFunction) _gst_buffer_free,
-		  (GstDataCopyFunction) _gst_buffer_copy);
+		  (GstDataFreeFunction) gst_buffer_default_free,
+		  (GstDataCopyFunction) gst_buffer_default_copy);
 
   GST_BUFFER_BUFFERPOOL (new) = NULL;
   GST_BUFFER_POOL_PRIVATE (new) = NULL;
@@ -183,6 +181,7 @@ gst_buffer_new (void)
 
 /**
  * gst_buffer_new_and_alloc:
+ * @size: the size of the buffer and the memory to allocate
  *
  * Creates a newly allocated buffer with data of the given size.
  *
@@ -278,7 +277,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
 		  GST_DATA_FLAG_SHIFT (GST_BUFFER_SUBBUFFER) |
 		  GST_DATA_FLAG_SHIFT (GST_DATA_READONLY),
 		  (GstDataFreeFunction) _gst_buffer_sub_free,
-		  (GstDataCopyFunction) _gst_buffer_copy);
+		  (GstDataCopyFunction) gst_buffer_default_copy);
 
   GST_BUFFER_OFFSET (buffer) = parent_offset + offset;
   GST_BUFFER_TIMESTAMP (buffer) = -1;
@@ -302,7 +301,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
  * buffers.  The original source buffers will not be modified or
  * unref'd.
  *
- * Internally is nothing more than a specialized gst_buffer_span,
+ * Internally is nothing more than a specialized gst_buffer_span(),
  * so the same optimizations can occur.
  *
  * Returns: a new #GstBuffer that's the concatenation of the source buffers
@@ -322,7 +321,7 @@ gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
  * @buf1: first source buffer
  * @buf2: second source buffer
  *
- * Determines whether a gst_buffer_span is free (as in free beer), 
+ * Determines whether a gst_buffer_span() is free (as in free beer), 
  * or requires a memcpy. 
  *
  * Returns: TRUE if the buffers are contiguous, FALSE if a copy would be required.
@@ -354,7 +353,8 @@ gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
  *
  * If the two source buffers are children of the same larger buffer,
  * and are contiguous, the new buffer will be a child of the shared
- * parent, and thus no copying is necessary.
+ * parent, and thus no copying is necessary. you can use 
+ * gst_buffer_is_span_fast() to determine if a memcpy will be needed.
  *
  * Returns: a new #GstBuffer that spans the two source buffers
  */
@@ -368,7 +368,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   g_return_val_if_fail (len > 0, NULL);
 
   /* if the two buffers have the same parent and are adjacent */
-  if (gst_buffer_is_span_fast(buf1,buf2)) {
+  if (gst_buffer_is_span_fast (buf1, buf2)) {
     GstBuffer *parent = GST_BUFFER (buf1->pool_private);
     /* we simply create a subbuffer of the common parent */
     newbuf = gst_buffer_create_sub (parent, buf1->data - parent->data + offset, len);
@@ -386,6 +386,9 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     /* copy the second buffer's data across */
     memcpy (newbuf->data + (buf1->size - offset), buf2->data, len - (buf1->size - offset));
   }
+  /* if the offset is 0, the new buffer has the same timestamp as buf1 */
+  if (offset == 0)
+    GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf1);
 
   return newbuf;
 }
@@ -393,7 +396,8 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 static void
 _gst_buffer_pool_free (GstBufferPool *pool)
 {
-  _gst_data_free (GST_DATA (pool));
+  _GST_DATA_DISPOSE (GST_DATA (pool));
+  g_free (pool);
   _gst_buffer_pool_live--;
 }
 
@@ -498,6 +502,15 @@ gst_buffer_pool_get_user_data (GstBufferPool *pool)
   return pool->user_data;
 }
 
+/**
+ * gst_buffer_pool_get_default:
+ * @size: The size of the buffers to allocate from this pool
+ * @numbuffers: The number of buffer to preallocate in the pool
+ *
+ * Create a pool with buffers of the given size.
+ * 
+ * Returns: A new bufferpool to create buffers of the given size.
+ */
 /* FIXME */
 GstBufferPool*	
 gst_buffer_pool_get_default (guint size, guint numbuffers)

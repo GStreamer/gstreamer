@@ -44,9 +44,9 @@ _gst_event_initialize (void)
 }
 
 /**
- * gst_buffer_print_stats:
+ * gst_event_print_stats:
  *
- * Logs statistics about live buffers (using g_log).
+ * Logs statistics about live events (using g_log).
  */
 void
 gst_event_print_stats (void)
@@ -232,4 +232,27 @@ gst_event_new_size (GstFormat format, gint64 value)
 }
 
 
+/**
+ * gst_event_new_segment_seek:
+ * @type: The type of the seek event
+ * @start: The start offset of the seek
+ * @stop: The stop offset of the seek
+ *
+ * Allocate a new segment seek event with the given parameters. 
+ *
+ * Returns: A new segment seek event.
+ */
+GstEvent*       
+gst_event_new_segment_seek (GstSeekType type, gint64 start, gint64 stop)
+{
+  GstEvent *event;
+
+  event = gst_event_new (GST_EVENT_SEEK_SEGMENT);
+
+  GST_EVENT_SEEK_TYPE (event) = type;
+  GST_EVENT_SEEK_OFFSET (event) = start;
+  GST_EVENT_SEEK_ENDOFFSET (event) = stop;
+
+  return event;
+}
 
