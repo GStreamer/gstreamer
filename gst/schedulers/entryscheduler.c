@@ -584,6 +584,7 @@ schedule (GstEntryScheduler * sched, Entry * entry)
     GST_DEBUG_OBJECT (sched, "scheduling main after error");
     sched->error = TRUE;
     safe_cothread_switch (sched, do_cothread_get_main (sched->context));
+    return;
   }
 
   if (!schedule_me->thread) {
