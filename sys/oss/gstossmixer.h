@@ -28,11 +28,11 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstOssMixerChannel {
-  GstMixerChannel parent;
-  gint            lvol, rvol;
-  gint            channel_num;
-} GstOssMixerChannel;
+typedef struct _GstOssMixerTrack {
+  GstMixerTrack parent;
+  gint          lvol, rvol;
+  gint          track_num;
+} GstOssMixerTrack;
 
 void		gst_ossmixer_interface_init	(GstMixerClass *klass);
 void		gst_oss_interface_init		(GstInterfaceClass *klass);

@@ -37,60 +37,59 @@
 #define MASK_BIT_IS_SET(mask, bit) \
   (mask & (1 << bit))
 
-static gboolean		gst_ossmixer_supported	   (GstInterface     *iface,
-						    GType             iface_type);
+static gboolean		gst_ossmixer_supported	   (GstInterface   *iface,
+						    GType           iface_type);
 
-static const GList *	gst_ossmixer_list_channels (GstMixer         *ossmixer);
+static const GList *	gst_ossmixer_list_tracks   (GstMixer       *ossmixer);
 
-static void		gst_ossmixer_set_volume	   (GstMixer         *ossmixer,
-						    GstMixerChannel  *channel,
-						    gint             *volumes);
-static void		gst_ossmixer_get_volume	   (GstMixer         *ossmixer,
-						    GstMixerChannel  *channel,
-						    gint             *volumes);
+static void		gst_ossmixer_set_volume	   (GstMixer       *ossmixer,
+						    GstMixerTrack  *track,
+						    gint           *volumes);
+static void		gst_ossmixer_get_volume	   (GstMixer       *ossmixer,
+						    GstMixerTrack  *track,
+						    gint           *volumes);
 
-static void		gst_ossmixer_set_record	   (GstMixer         *ossmixer,
-						    GstMixerChannel  *channel,
-						    gboolean          record);
-static void		gst_ossmixer_set_mute	   (GstMixer         *ossmixer,
-						    GstMixerChannel  *channel,
-						    gboolean          mute);
+static void		gst_ossmixer_set_record	   (GstMixer       *ossmixer,
+						    GstMixerTrack  *track,
+						    gboolean        record);
+static void		gst_ossmixer_set_mute	   (GstMixer       *ossmixer,
+						    GstMixerTrack  *track,
+						    gboolean        mute);
 
 static const gchar *labels[SOUND_MIXER_NRDEVICES] = SOUND_DEVICE_LABELS;
 
-GstMixerChannel *
-gst_ossmixer_channel_new (GstOssElement *oss,
-			  gint channel_num,
-			  gint max_chans,
-			  gint flags)
+GstMixerTrack *
+gst_ossmixer_track_new (GstOssElement *oss,
+                        gint track_num,
+                        gint max_chans,
+                        gint flags)
 {
-  GstMixerChannel *channel = (GstMixerChannel *) g_new (GstOssMixerChannel, 1);
+  GstMixerTrack *track = (GstMixerTrack *) g_new (GstOssMixerTrack, 1);
   gint volumes[2];
 
-  channel->label = g_strdup (labels[channel_num]);
-  channel->num_channels = max_chans;
-  channel->flags = flags;
-  channel->min_volume = 0;
-  channel->max_volume = 100;
-  ((GstOssMixerChannel *) channel)->channel_num = channel_num;
+  track->label = g_strdup (labels[track_num]);
+  track->num_channels = max_chans;
+  track->flags = flags;
+  track->min_volume = 0;
+  track->max_volume = 100;
+  ((GstOssMixerTrack *) track)->track_num = track_num;
 
   /* volume */
-  gst_ossmixer_get_volume (GST_MIXER (oss),
-			   channel, volumes);
+  gst_ossmixer_get_volume (GST_MIXER (oss), track, volumes);
   if (max_chans == 1) {
     volumes[1] = 0;
   }
-  ((GstOssMixerChannel *) channel)->lvol = volumes[0];
-  ((GstOssMixerChannel *) channel)->rvol = volumes[1];
+  ((GstOssMixerTrack *) track)->lvol = volumes[0];
+  ((GstOssMixerTrack *) track)->rvol = volumes[1];
 
-  return channel;
+  return track;
 }
 
 void
-gst_ossmixer_channel_free (GstMixerChannel *channel)
+gst_ossmixer_track_free (GstMixerTrack *track)
 {
-  g_free (channel->label);
-  g_free (channel);
+  g_free (track->label);
+  g_free (track);
 }
 
 void
@@ -104,7 +103,7 @@ void
 gst_ossmixer_interface_init (GstMixerClass *klass)
 {
   /* default virtual functions */
-  klass->list_channels = gst_ossmixer_list_channels;
+  klass->list_tracks = gst_ossmixer_list_tracks;
   klass->set_volume = gst_ossmixer_set_volume;
   klass->get_volume = gst_ossmixer_get_volume;
   klass->set_mute = gst_ossmixer_set_mute;
@@ -121,136 +120,136 @@ gst_ossmixer_supported (GstInterface *iface,
 }
 
 static const GList *
-gst_ossmixer_list_channels (GstMixer *mixer)
+gst_ossmixer_list_tracks (GstMixer *mixer)
 {
   GstOssElement *oss = GST_OSSELEMENT (mixer);
 
   g_return_val_if_fail (oss->mixer_fd != -1, NULL);
 
-  return (const GList *) GST_OSSELEMENT (mixer)->channellist;
+  return (const GList *) GST_OSSELEMENT (mixer)->tracklist;
 }
 
 static void
-gst_ossmixer_get_volume (GstMixer        *mixer,
-			 GstMixerChannel *channel,
-			 gint            *volumes)
+gst_ossmixer_get_volume (GstMixer      *mixer,
+			 GstMixerTrack *track,
+			 gint          *volumes)
 {
   gint volume;
   GstOssElement *oss = GST_OSSELEMENT (mixer);
-  GstOssMixerChannel *osschannel = (GstOssMixerChannel *) channel;
+  GstOssMixerTrack *osstrack = (GstOssMixerTrack *) track;
 
   g_return_if_fail (oss->mixer_fd != -1);
 
-  if (channel->flags & GST_MIXER_CHANNEL_MUTE) {
-    volumes[0] = osschannel->lvol;
-    if (channel->num_channels == 2) {
-      volumes[1] = osschannel->rvol;
+  if (track->flags & GST_MIXER_TRACK_MUTE) {
+    volumes[0] = osstrack->lvol;
+    if (track->num_channels == 2) {
+      volumes[1] = osstrack->rvol;
     }
   } else {
     /* get */
-    if (ioctl(oss->mixer_fd, MIXER_READ (osschannel->channel_num), &volume) < 0) {
+    if (ioctl(oss->mixer_fd, MIXER_READ (osstrack->track_num), &volume) < 0) {
       g_warning("Error getting recording device (%d) volume (0x%x): %s\n",
-	        osschannel->channel_num, volume, strerror(errno));
+	        osstrack->track_num, volume, strerror(errno));
       volume = 0;
     }
 
-    osschannel->lvol = volumes[0] = (volume & 0xff);
-    if (channel->num_channels == 2) {
-      osschannel->rvol = volumes[1] = ((volume >> 8) & 0xff);
+    osstrack->lvol = volumes[0] = (volume & 0xff);
+    if (track->num_channels == 2) {
+      osstrack->rvol = volumes[1] = ((volume >> 8) & 0xff);
     }
   }
 }
 
 static void
-gst_ossmixer_set_volume (GstMixer        *mixer,
-			 GstMixerChannel *channel,
-			 gint            *volumes)
+gst_ossmixer_set_volume (GstMixer      *mixer,
+			 GstMixerTrack *track,
+			 gint          *volumes)
 {
   gint volume;
   GstOssElement *oss = GST_OSSELEMENT (mixer);
-  GstOssMixerChannel *osschannel = (GstOssMixerChannel *) channel;
+  GstOssMixerTrack *osstrack = (GstOssMixerTrack *) track;
 
   g_return_if_fail (oss->mixer_fd != -1);
 
   /* prepare the value for ioctl() */
-  if (!(channel->flags & GST_MIXER_CHANNEL_MUTE)) {
+  if (!(track->flags & GST_MIXER_TRACK_MUTE)) {
     volume = (volumes[0] & 0xff);
-    if (channel->num_channels == 2) {
+    if (track->num_channels == 2) {
       volume |= ((volumes[1] & 0xff) << 8);
     }
 
     /* set */
-    if (ioctl(oss->mixer_fd, MIXER_WRITE (osschannel->channel_num), &volume) < 0) {
+    if (ioctl(oss->mixer_fd, MIXER_WRITE (osstrack->track_num), &volume) < 0) {
       g_warning("Error setting recording device (%d) volume (0x%x): %s\n",
-	        osschannel->channel_num, volume, strerror(errno));
+	        osstrack->track_num, volume, strerror(errno));
       return;
     }
   }
 
-  osschannel->lvol = volumes[0];
-  if (channel->num_channels == 2) {
-    osschannel->rvol = volumes[1];
+  osstrack->lvol = volumes[0];
+  if (track->num_channels == 2) {
+    osstrack->rvol = volumes[1];
   }
 }
 
 static void
-gst_ossmixer_set_mute (GstMixer        *mixer,
-		       GstMixerChannel *channel,
-		       gboolean         mute)
+gst_ossmixer_set_mute (GstMixer      *mixer,
+		       GstMixerTrack *track,
+		       gboolean       mute)
 {
   int volume;
   GstOssElement *oss = GST_OSSELEMENT (mixer);
-  GstOssMixerChannel *osschannel = (GstOssMixerChannel *) channel;
+  GstOssMixerTrack *osstrack = (GstOssMixerTrack *) track;
 
   g_return_if_fail (oss->mixer_fd != -1);
 
   if (mute) {
     volume = 0;
   } else {
-    volume = (osschannel->lvol & 0xff);
-    if (MASK_BIT_IS_SET (oss->stereomask, osschannel->channel_num)) {
-      volume |= ((osschannel->rvol & 0xff) << 8);
+    volume = (osstrack->lvol & 0xff);
+    if (MASK_BIT_IS_SET (oss->stereomask, osstrack->track_num)) {
+      volume |= ((osstrack->rvol & 0xff) << 8);
     }
   }
 
-  if (ioctl(oss->mixer_fd, MIXER_WRITE(osschannel->channel_num), &volume) < 0) {
+  if (ioctl(oss->mixer_fd, MIXER_WRITE(osstrack->track_num), &volume) < 0) {
     g_warning("Error setting mixer recording device volume (0x%x): %s",
 	      volume, strerror(errno));
     return;
   }
 
   if (mute) {
-    channel->flags |= GST_MIXER_CHANNEL_MUTE;
+    track->flags |= GST_MIXER_TRACK_MUTE;
   } else {
-    channel->flags &= ~GST_MIXER_CHANNEL_MUTE;
+    track->flags &= ~GST_MIXER_TRACK_MUTE;
   }
 }
 
 static void
-gst_ossmixer_set_record (GstMixer        *mixer,
-			 GstMixerChannel *channel,
-			 gboolean         record)
+gst_ossmixer_set_record (GstMixer      *mixer,
+			 GstMixerTrack *track,
+			 gboolean       record)
 {
   GstOssElement *oss = GST_OSSELEMENT (mixer);
-  GstOssMixerChannel *osschannel = (GstOssMixerChannel *) channel;
+  GstOssMixerTrack *osstrack = (GstOssMixerTrack *) track;
 
   g_return_if_fail (oss->mixer_fd != -1);
 
   /* if we're exclusive, then we need to unset the current one(s) */
   if (oss->mixcaps & SOUND_CAP_EXCL_INPUT) {
-    GList *channel;
-    for (channel = oss->channellist; channel != NULL; channel = channel->next) {
-      GstMixerChannel *turn = (GstMixerChannel *) channel->data;
-      turn->flags &= ~GST_MIXER_CHANNEL_RECORD;
+    GList *track;
+    for (track = oss->tracklist; track != NULL; track = track->next) {
+      GstMixerTrack *turn = (GstMixerTrack *) track->data;
+      turn->flags &= ~GST_MIXER_TRACK_RECORD;
     }
     oss->recdevs = 0;
   }
 
   /* set new record bit, if needed */
   if (record) {
-    oss->recdevs |= (1 << osschannel->channel_num);
+    oss->recdevs |= (1 << osstrack->track_num);
   } else {
-    oss->recdevs &= ~(1 << osschannel->channel_num);
+    oss->recdevs &= ~(1 << osstrack->track_num);
   }
 
   /* set it to the device */
@@ -261,9 +260,9 @@ gst_ossmixer_set_record (GstMixer        *mixer,
   }
 
   if (record) {
-    channel->flags |= GST_MIXER_CHANNEL_RECORD;
+    track->flags |= GST_MIXER_TRACK_RECORD;
   } else {
-    channel->flags &= ~GST_MIXER_CHANNEL_RECORD;
+    track->flags &= ~GST_MIXER_TRACK_RECORD;
   }
 }
 
@@ -288,13 +287,13 @@ gst_ossmixer_build_list (GstOssElement *oss)
   ioctl (oss->mixer_fd, SOUND_MIXER_READ_DEVMASK, &devmask);
   ioctl (oss->mixer_fd, SOUND_MIXER_READ_CAPS, &oss->mixcaps);
 
-  /* build channel list */
+  /* build track list */
   for (i = 0; i < SOUND_MIXER_NRDEVICES; i++) {
     if (devmask & (1 << i)) {
-      GstMixerChannel *channel;
+      GstMixerTrack *track;
       gboolean input = FALSE, stereo = FALSE, record = FALSE;
 
-      /* channel exists, make up capabilities */
+      /* track exists, make up capabilities */
       if (MASK_BIT_IS_SET (oss->stereomask, i))
         stereo = TRUE;
       if (MASK_BIT_IS_SET (oss->recmask, i))
@@ -302,12 +301,12 @@ gst_ossmixer_build_list (GstOssElement *oss)
       if (MASK_BIT_IS_SET (oss->recdevs, i))
         record = TRUE;
 
-      /* add channel to list */
-      channel = gst_ossmixer_channel_new (oss, i, stereo ? 2 : 1,
-					  (record ? GST_MIXER_CHANNEL_RECORD : 0) |
-					  (input ? GST_MIXER_CHANNEL_INPUT :
-						   GST_MIXER_CHANNEL_OUTPUT));
-      oss->channellist = g_list_append (oss->channellist, channel);
+      /* add track to list */
+      track = gst_ossmixer_track_new (oss, i, stereo ? 2 : 1,
+                                        (record ? GST_MIXER_TRACK_RECORD : 0) |
+                                        (input ? GST_MIXER_TRACK_INPUT :
+                                                 GST_MIXER_TRACK_OUTPUT));
+      oss->tracklist = g_list_append (oss->tracklist, track);
     }
   }
 }
@@ -317,9 +316,9 @@ gst_ossmixer_free_list (GstOssElement *oss)
 {
   g_return_if_fail (oss->mixer_fd != -1);
 
-  g_list_foreach (oss->channellist, (GFunc) gst_ossmixer_channel_free, NULL);
-  g_list_free (oss->channellist);
-  oss->channellist = NULL;
+  g_list_foreach (oss->tracklist, (GFunc) gst_ossmixer_track_free, NULL);
+  g_list_free (oss->tracklist);
+  oss->tracklist = NULL;
 
   close (oss->mixer_fd);
   oss->mixer_fd = -1;

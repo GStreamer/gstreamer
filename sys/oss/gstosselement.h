@@ -76,7 +76,7 @@ struct _GstOssElement
   gint		 rate;
 
   /* mixer stuff */
-  GList		*channellist;
+  GList		*tracklist;
   guint32	 stereomask,
 		 recdevs,
 		 recmask,

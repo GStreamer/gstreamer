@@ -145,7 +145,7 @@ gst_osselement_init (GstOssElement *oss)
   oss->mixer_dev = g_strdup ("/dev/mixer");
   oss->fd = -1;
   oss->mixer_fd = -1;
-  oss->channellist = NULL;
+  oss->tracklist = NULL;
 
   gst_osselement_reset (oss);
 }
