@@ -1,0 +1,295 @@
+
+This short document gives some guidelines to plugin writers.
+
+
+chain-based plugins
+===================
+
+ - the plugin has a chain function on each sink pad (can be the same function)
+
+! 
+! chain (GstPad *pad, GstBuffer *buffer) 
+! {
+!   MyElement *elem = MY_ELEMENT (gst_pad_get_parent (pad));
+!   GstBuffer *new_buffer;
+! 
+!   ...
+!   (process the buffer)
+!   ...
+! 
+!   /* you can push as many buffers (0 or more) as you want */
+!   while (!done) {
+!     ...
+!     (process some more
+!     ...
+!     gst_pad_push (elem->some_sink_pad, new_buffer);
+!     ...
+!     /* if you're like going to send a large amount of buffers
+!      * it's a good idea to call _yield from time to time after
+!      * the buffer has been pushed */
+!     (optional gst_element_yield (GST_ELEMENT (elem)); )
+!   }
+! }
+! 
+
+ - chain based functions are usually easy and recommended.
+ - use gst_element_yield if you are going to push a lot of buffers.
+
+
+
+loop-based plugins
+==================
+
+ - one loop function for the element.
+ - required for bytestream based plugins.
+
+simple case
+-----------
+  
+ - one pull at the start
+
+ - if you do something like this, you really should consider using a 
+   chain function as it can be significantly optimised by the scheduler.
+
+!
+! loop (GstElement *element) 
+! {
+!   MyElement *elem = MY_ELEMENT (element);
+!   GstBuffer *buffer;
+!   GstBuffer *new_buffer;
+! 
+!   buffer = gst_pad_pull (elem->sinkpad);
+!  
+!   ...
+!   (do something)
+!   ...
+!
+!   /* you can push as many buffers (0 or more) as you want */
+!   while (!done) {
+!     ...
+!     (process some more
+!     ...
+!     gst_pad_push (elem->some_sink_pad, new_buffer);
+!     ...
+!     /* if you're like going to send a large amount of buffers
+!      * it's a good idea to call _yield from time to time after
+!      * the buffer has been pushed */
+!     (optional gst_element_yield (GST_ELEMENT (elem)); )
+!   }
+! }
+!
+
+DONT!!
+
+- infinite loop
+
+!
+! loop (element)
+! {
+!   while (TRUE) {
+!     ...
+!     _pull ()
+!     ...
+!
+!     ...
+!     _push ()
+!     ...
+!   }
+! }
+!
+
+* you can fix this by either:
+
+ - setting the GST_ELEMENT_INFINITE_LOOP flag on the element. this is
+   not recommended, if all plugins in the pipeline (or depending on the
+   pipeline, some plugins) have this flag, the pipeline will not run.
+ - calling break; from time to time to get out of the loop. (duh, then
+   it's not an infinite loop anymore). beware that the next time the loop
+   function is called, it will be started from the top.
+ - calling gst_element_yield() from time to time (see NOTES). 
+ - this is fine (albeit rather useless, use a chain function):
+  !
+  ! loop (element)
+  ! {
+  !   ...
+  !   _pull ()
+  !   ...
+  !
+  !   ...
+  !   _push ()
+  !   ...
+  ! }
+  !
+ - so is this (albeit rather useless, consider removing the while and the _yield):
+  !
+  ! loop (element)
+  ! {
+  !   while (TRUE) {
+  !     ...
+  !     _pull ()
+  !     ...
+  !
+  !     ...
+  !     _push ()
+  !     ...
+  !     gst_element_yield (element);
+  !   }
+  ! }
+  !
+
+
+DONT!!
+
+- allocate data, loop, free data
+
+!
+! loop (element)
+! {
+!   
+!   (my funky malloc)
+!
+!   while (TRUE) {
+!
+!     ...
+!     _pull ()
+!     ...
+!
+!     ...
+!     _push ()
+!     ...
+!
+!     _yield ()
+!   }
+!
+!   (my funky free)
+!
+! }
+!
+
+ - the free will NEVER happen!.
+
+* You can fix this by:
+
+ - allocating/freeing data in the state change function
+ - you could think the following code would work too:
+  !
+  ! (*WRONG* example follows)
+  !
+  ! loop (element)
+  ! {
+  !   
+  !   (my funky malloc)
+  !
+  !   while (TRUE) {
+  !
+  !     ...
+  !     _pull ()
+  !     if (EOS)
+  !       break;
+  !
+  !     ...
+  !     _push ()
+  !     ...
+  !
+  !     _yield ()
+  !   }
+  !
+  !   (my funky free)
+  !
+  ! }
+  !
+   but it'll only free the data if the pipeline was shut down with
+   and EOS so don't try it. Besides, on EOS, a state change will happen
+   anyway so free the data there.
+
+
+bytestream/multiple pull case
+-----------------------------
+
+ - same as the simple case, but you can't use a chain based function unless
+   you want to make things a little harder then they should be.
+
+
+complicated case
+----------------
+
+ - push and pull are completely mixed.
+ - the flow is usually something like this:
+
+!
+! loop (element)
+! {
+!   
+!   while (TRUE) {
+!
+!     while (something) {
+!       ...
+!       do some _pull ()
+!       ...
+!       do some _push ()
+!       ...
+!       while (something_else) {
+!         ...
+!         if (testing)
+!           do some _pull ()
+!         ...
+!         do some _push ()
+!       }
+!     }
+!
+!     while (something_useful) {
+!       ...
+!       _push ()
+!       ...
+!     }
+!   }
+! }
+!
+(example made complicated on purpose, but vorbisdec comes close)
+
+ - you cannot call break to avoid infinite loops and there are loops that 
+   take a significant amount of time to execute, possibly pushing/pulling
+   a lot of buffers.
+
+* You can fix this by:
+
+ - inserting gst_element_yield () in sane places, don't exagerate because
+   every yield can potentially never return so you need to keep track of
+   allocations (see the NOTES below).
+ 
+
+
+NOTES:
+======
+
+ - a call to _yield() can never return. if you have data allocated on the
+   stack before the yield, keep a pointer to it in the element struct 
+   and free it in the state change function.
+
+
+IMPLEMENATION DETAILS
+=====================
+
+The infinite loops are only problematic if the scheduler chooses to select
+the plugin as an entry point in the chain. _yield() will be a nop if this is
+not the case. The scheduler will not select plugins with the INFINITE_LOOP
+flag set as entries in a chain.
+
+A _yield in an entry will hand over control to the main thread context, allowing
+state changes and other actions to be performed. It will basically exit the 
+_iterate() function. spending a long time in a loop will degrade app responsiveness
+because _iterate will take a long time.
+
+Calling yield, pulling, pushing can potentially never return because a state change
+might have happened, killing off execution of the plugin. pulling/pushing buffers
+will cause no leaks in this case because the core will free pending buffers in a
+state change to READY. The plugin must free allocated data/buffers itself in the state
+change function if the yield didn't retrun. 
+
+
+
+
+
+
+
+
