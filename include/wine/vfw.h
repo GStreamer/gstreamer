@@ -215,12 +215,25 @@ long VFWAPIV ICCompress(
 
 
 #define ICCompressGetFormat(hic, lpbiInput, lpbiOutput) 		\
-	ICSendMessage(						\
+	ICSendMessage(							\
 	    hic,ICM_COMPRESS_GET_FORMAT,(long)(void*)(lpbiInput),	\
 	    (long)(void*)(lpbiOutput)					\
 	)
 
 #define ICCompressGetFormatSize(hic,lpbi) ICCompressGetFormat(hic,lpbi,NULL)
+
+#define ICGetDefaultKeyFrameRate(hic,lpint) 		\
+	ICSendMessage(					\
+	    hic, ICM_GETDEFAULTKEYFRAMERATE,		\
+	    (long)(void*)(lpint), 			\
+	    0	)		
+
+#define ICGetDefaultQuality(hic,lpint) 			\
+	ICSendMessage(					\
+	    hic, ICM_GETDEFAULTQUALITY,			\
+	    (long)(void*)(lpint), 			\
+	    0	)		
+	    	
 
 #define ICCompressBegin(hic, lpbiInput, lpbiOutput) 			\
     ICSendMessage(							\

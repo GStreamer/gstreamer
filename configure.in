@@ -3,8 +3,8 @@ AC_INIT(gst/gstobject.h)
 AM_CONFIG_HEADER(config.h)
 
 STREAMER_MAJOR_VERSION=0
-STREAMER_MINOR_VERSION=0
-STREAMER_MICRO_VERSION=9.2
+STREAMER_MINOR_VERSION=9
+STREAMER_MICRO_VERSION=2
 STREAMER_VERSION=$STREAMER_MAJOR_VERSION.$STREAMER_MINOR_VERSION.$STREAMER_MICRO_VERSION
 
 dnl libtool
@@ -51,7 +51,7 @@ AM_PATH_GLIB(1.2.0,,
             glib gmodule gthread)
 dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
 LIBS="$LIBS $GLIB_LIBS"
-CFLAGS="$CFLAGS $GLIB_CFLAGS"
+CFLAGS="$FLAGS $GLIB_CFLAGS"
 
 dnl Check for libxml
 AC_PATH_PROG(XML_CONFIG, xml-config, no)
@@ -306,7 +306,7 @@ AM_CONDITIONAL(HAVE_LIBMMX,     test "x$USE_LIBMMX" = "xyes")
 AM_CONDITIONAL(HAVE_ATOMIC_H,   test "x$USE_ATOMIC_H" = "xyes")
 AM_CONDITIONAL(HAVE_XAUDIO,     test "x$HAVE_XAUDIO" = "xyes")
 AM_CONDITIONAL(HAVE_CSSAUTH,    test "x$HAVE_CSSAUTH" = "xyes")
-AM_CONDITIONAL(HAVE_GTK_DOC,    test "x$HAVE_GTK_DOC" = "xyes")
+AM_CONDITIONAL(HAVE_GTK_DOC,    $HAVE_GTK_DOC)
 
 
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
@@ -345,6 +345,7 @@ plugins/Makefile
 plugins/au/Makefile
 plugins/wav/Makefile
 plugins/avi/Makefile
+plugins/avi/wincodec/Makefile
 plugins/jpeg/Makefile
 plugins/mp3decode/Makefile
 plugins/mp3decode/xa/Makefile
@@ -357,6 +358,7 @@ plugins/mpeg2/ac3parse/Makefile
 plugins/mpeg2/ac3dec/Makefile
 plugins/mpeg2/video/Makefile
 plugins/mpeg2/mpeg2enc/Makefile
+plugins/mpeg2/subtitles/Makefile
 plugins/mpeg1/Makefile
 plugins/mpeg1/mpeg_play/Makefile
 plugins/mpeg1/mpegaudio/Makefile

@@ -156,11 +156,11 @@ typedef unsigned char   BYTE;
 typedef long            LONG;
 typedef short           SHORT;
 typedef unsigned short  USHORT;
-#ifdef CHAR
-#warning CHAR defined as $(CHAR)
-#endif
 typedef char            CHAR;
 typedef unsigned char   UCHAR;
+
+typedef LONG SCODE;
+
 /* Some systems might have wchar_t, but we really need 16 bit characters */
 typedef unsigned short  WCHAR;
 typedef int             WIN_BOOL;

@@ -3,8 +3,10 @@
  *  AVIFMT - AVI file format definitions
  *
  ****************************************************************************/
+#ifndef AVIFMT 
+#define AVIFMT
 
-#ifndef NOAVIFMT
+#ifndef NOAVIFMT 
 
 #ifndef  __WINE_WINDEF_H
 #include <wine/windef.h>
@@ -218,6 +220,9 @@ typedef struct {
 #define AVIIF_NOTIME	    0x00000100L // this frame doesn't take any time
 #define AVIIF_COMPUSE       0x0FFF0000L // these bits are for compressor use
 
+#define FOURCC_RIFF     mmioFOURCC('R', 'I', 'F', 'F')
+#define FOURCC_LIST     mmioFOURCC('L', 'I', 'S', 'T')
+
 typedef struct
 {
     DWORD		ckid;
@@ -226,9 +231,12 @@ typedef struct
     DWORD		dwChunkLength;		// Length of chunk
 } AVIINDEXENTRY;
 
+#define AVISTREAMREAD_CONVENIENT	(-1L)
+
 /*
 ** Palette change chunk
 **
 ** Used in video streams.
 */
-#endif /* NOAVIFMT */
+#endif /* NOAVIFMT */
+#endif

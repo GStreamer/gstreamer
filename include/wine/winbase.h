@@ -1768,88 +1768,6 @@ INT       WINAPI lstrcmpiW(LPCWSTR,LPCWSTR);
 #define     ZeroMemory RtlZeroMemory
 #define     CopyMemory RtlCopyMemory
 
-/* a few optimizations for i386/gcc */
-
-#if defined(__i386__) && defined(__GNUC__)
-
-extern inline PVOID WINAPI InterlockedCompareExchange( PVOID *dest, PVOID xchg, PVOID compare );
-extern inline PVOID WINAPI InterlockedCompareExchange( PVOID *dest, PVOID xchg, PVOID compare )
-{
-    PVOID ret;
-    __asm__ __volatile__( "lock; cmpxchgl %2,(%1)"
-                          : "=a" (ret) : "r" (dest), "r" (xchg), "0" (compare) : "memory" );
-    return ret;
-}
-
-extern inline LONG WINAPI InterlockedExchange( PLONG dest, LONG val );
-extern inline LONG WINAPI InterlockedExchange( PLONG dest, LONG val )
-{
-    LONG ret;
-    __asm__ __volatile__( "lock; xchgl %0,(%1)"
-                          : "=r" (ret) :"r" (dest), "0" (val) : "memory" );
-    return ret;
-}
-
-extern inline LONG WINAPI InterlockedExchangeAdd( PLONG dest, LONG incr );
-extern inline LONG WINAPI InterlockedExchangeAdd( PLONG dest, LONG incr )
-{
-    LONG ret;
-    __asm__ __volatile__( "lock; xaddl %0,(%1)"
-                          : "=r" (ret) : "r" (dest), "0" (incr) : "memory" );
-    return ret;
-}
-
-extern inline LONG WINAPI InterlockedIncrement( PLONG dest );
-extern inline LONG WINAPI InterlockedIncrement( PLONG dest )
-{
-    return InterlockedExchangeAdd( dest, 1 ) + 1;
-}
-
-extern inline LONG WINAPI InterlockedDecrement( PLONG dest );
-extern inline LONG WINAPI InterlockedDecrement( PLONG dest )
-{
-    return InterlockedExchangeAdd( dest, -1 ) - 1;
-}
-
-extern inline DWORD WINAPI GetLastError(void);
-extern inline DWORD WINAPI GetLastError(void)
-{
-    DWORD ret;
-    __asm__ __volatile__( ".byte 0x64\n\tmovl 0x60,%0" : "=r" (ret) );
-    return ret;
-}
-
-extern inline DWORD WINAPI GetCurrentProcessId(void);
-extern inline DWORD WINAPI GetCurrentProcessId(void)
-{
-    DWORD ret;
-    __asm__ __volatile__( ".byte 0x64\n\tmovl 0x20,%0" : "=r" (ret) );
-    return ret;
-}
-
-extern inline DWORD WINAPI GetCurrentThreadId(void);
-extern inline DWORD WINAPI GetCurrentThreadId(void)
-{
-    DWORD ret;
-    __asm__ __volatile__( ".byte 0x64\n\tmovl 0x24,%0" : "=r" (ret) );
-    return ret;
-}
-
-extern inline void WINAPI SetLastError( DWORD err );
-extern inline void WINAPI SetLastError( DWORD err )
-{
-    __asm__ __volatile__( ".byte 0x64\n\tmovl %0,0x60" : : "r" (err) : "memory" );
-}
-
-extern inline HANDLE WINAPI GetProcessHeap(void);
-extern inline HANDLE WINAPI GetProcessHeap(void)
-{
-    HANDLE *pdb;
-    __asm__ __volatile__( ".byte 0x64\n\tmovl 0x30,%0" : "=r" (pdb) );
-    return pdb[0x18 / sizeof(HANDLE)];  /* get dword at offset 0x18 in pdb */
-}
-
-#else  /* __i386__ && __GNUC__ */
 DWORD       WINAPI GetCurrentProcessId(void);
 DWORD       WINAPI GetCurrentThreadId(void);
 DWORD       WINAPI GetLastError(void);
@@ -1860,7 +1778,6 @@ LONG        WINAPI InterlockedExchange(PLONG,LONG);
 LONG        WINAPI InterlockedExchangeAdd(PLONG,LONG);
 LONG        WINAPI InterlockedIncrement(PLONG);
 VOID        WINAPI SetLastError(DWORD);
-#endif  /* __i386__ && __GNUC__ */
 
 #ifdef __WINE__
 #define GetCurrentProcess() ((HANDLE)0xffffffff)
