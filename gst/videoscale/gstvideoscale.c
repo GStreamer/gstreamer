@@ -177,7 +177,6 @@ static GstCaps *
 gst_videoscale_getcaps (GstPad * pad)
 {
   GstVideoscale *videoscale;
-  GstCaps *othercaps;
   GstCaps *caps;
   GstPad *otherpad;
   int i;
@@ -186,12 +185,11 @@ gst_videoscale_getcaps (GstPad * pad)
 
   otherpad = (pad == videoscale->srcpad) ? videoscale->sinkpad :
       videoscale->srcpad;
-  othercaps = gst_pad_get_allowed_caps (otherpad);
+  caps = gst_pad_get_allowed_caps (otherpad);
 
   GST_DEBUG_OBJECT (pad, "othercaps of otherpad %s:%s are: %" GST_PTR_FORMAT,
-      GST_DEBUG_PAD_NAME (otherpad), othercaps);
+      GST_DEBUG_PAD_NAME (otherpad), caps);
 
-  caps = gst_caps_copy (othercaps);
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
 

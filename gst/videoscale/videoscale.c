@@ -164,8 +164,11 @@ videoscale_find_by_structure (GstStructure * structure)
   int i;
   gboolean ret;
   struct videoscale_format_struct *format;
+  char *str;
 
-  GST_DEBUG ("finding %s", gst_structure_to_string (structure));
+  str = gst_structure_to_string (structure);
+  GST_DEBUG ("finding %s", str);
+  g_free (str);
 
   g_return_val_if_fail (structure != NULL, NULL);
 
