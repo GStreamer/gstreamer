@@ -166,6 +166,26 @@ _gst_tag_initialize (void)
 		    _("maximum bitrate"),
 		    _("maximum bitrate in bits/s"),
 		    NULL);
+  gst_tag_register (GST_TAG_TRACK_GAIN,
+                    G_TYPE_DOUBLE,
+		    _("replaygain track gain"),
+		    _("track gain in db"),
+		    NULL);
+  gst_tag_register (GST_TAG_TRACK_PEAK,
+                    G_TYPE_DOUBLE,
+		    _("replaygain track peak"),
+		    _("peak of the track"),
+		    NULL);
+  gst_tag_register (GST_TAG_ALBUM_GAIN,
+                    G_TYPE_DOUBLE,
+		    _("replaygain album gain"),
+		    _("album gain in db"),
+		    NULL);
+  gst_tag_register (GST_TAG_ALBUM_PEAK,
+                    G_TYPE_DOUBLE,
+		    _("replaygain album peak"),
+		    _("peak of the album"),
+		    NULL);
 }
 /**
  * gst_tag_merge_use_first:
