@@ -1,3 +1,18 @@
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/config.h:
+	  update the version number
+    
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/GStreamer.vcproj:
+	  add gstinterface to the build
+    
+2004-07-26  Steve Lhomme  <steve.lhomme@free.fr>
+
+	* win32/gstreamer.def:
+	  add many definitions needed by plugins, GST_CAT_DEFAULT only available in the Debug build ?
+    
 2004-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.c: (gst_element_set_eos_recursive):

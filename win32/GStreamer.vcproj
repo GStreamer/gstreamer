@@ -56,7 +56,8 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				CommandLine="del gst.def
-copy /Y $(TargetPath) c:\gstreamer\bin"/>
+copy /Y $(TargetPath) c:\gstreamer\bin
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
@@ -130,7 +131,8 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 			<Tool
 				Name="VCPostBuildEventTool"
 				CommandLine="del gst.def
-copy /Y $(TargetPath) c:\gstreamer\bin"/>
+copy /Y $(TargetPath) c:\gstreamer\bin
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
@@ -228,6 +230,9 @@ type gstreamer.def &gt; gst.def
 			</File>
 			<File
 				RelativePath="..\gst\gstinfo.c">
+			</File>
+			<File
+				RelativePath="..\gst\gstinterface.c">
 			</File>
 			<File
 				RelativePath="..\gst\gstmarshal.c">
@@ -356,6 +361,9 @@ type gstreamer.def &gt; gst.def
 			</File>
 			<File
 				RelativePath="..\gst\gstinfo.h">
+			</File>
+			<File
+				RelativePath="..\gst\gstinterface.h">
 			</File>
 			<File
 				RelativePath="..\gst\gstlog.h">
