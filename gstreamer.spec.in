@@ -64,6 +64,7 @@ applications and plugins for GStreamer.
 %package tools
 Summary: 	tools for GStreamer streaming media framework.
 Group: 		Libraries/Multimedia
+Requires:	%{name}
 
 %description tools
 GStreamer is a streaming-media framework, based on graphs of filters which
