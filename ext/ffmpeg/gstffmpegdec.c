@@ -44,9 +44,14 @@ struct _GstFFMpegDec
   GstPad *srcpad;
   GstPad *sinkpad;
 
+  /* decoding */
   AVCodecContext *context;
   AVFrame *picture;
   gboolean opened;
+
+  /* parsing */
+  AVCodecParserContext *pctx;
+  GstBuffer *pcache;
 
   GValue *par;		/* pixel aspect ratio of incoming data */
 };
@@ -196,6 +201,9 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->context = avcodec_alloc_context ();
   ffmpegdec->picture = avcodec_alloc_frame ();
 
+  ffmpegdec->pctx = NULL;
+  ffmpegdec->pcache = NULL;
+
   ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
 }
@@ -238,6 +246,15 @@ gst_ffmpegdec_close (GstFFMpegDec *ffmpegdec)
     av_free (ffmpegdec->context->extradata);
     ffmpegdec->context->extradata = NULL;
   }
+
+  if (ffmpegdec->pctx) {
+    if (ffmpegdec->pcache) {
+      gst_buffer_unref (ffmpegdec->pcache);
+      ffmpegdec->pcache = NULL;
+    }
+    av_parser_close (ffmpegdec->pctx);
+    ffmpegdec->pctx = NULL;
+  }
 }
 
 static gboolean
@@ -253,6 +270,10 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
         oclass->in_plugin->name);
     return FALSE;
   }
+
+  /* open a parser if we can - exclude mpeg4 for now... */
+  if (oclass->in_plugin->id != CODEC_ID_MPEG4)
+    ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
 
   return TRUE;
 }
@@ -429,8 +450,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
-  guchar *data;
-  gint size, len = 0;
+  guint8 *bdata, *data;
+  gint bsize, size, len = 0;
   gint have_data;
   guint64 expected_ts = GST_BUFFER_TIMESTAMP (inbuf);
 
@@ -446,25 +467,55 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
    * (avcodec_flush_buffers ()))
    */
 
-  data = GST_BUFFER_DATA (inbuf);
-  size = GST_BUFFER_SIZE (inbuf);
+  /* parse cache joining */
+  if (ffmpegdec->pcache) {
+    inbuf = gst_buffer_join (ffmpegdec->pcache, inbuf);
+    ffmpegdec->pcache = NULL;
+    bdata = GST_BUFFER_DATA (inbuf);
+    bsize = GST_BUFFER_SIZE (inbuf);
+  }
+  /* workarounds, functions write to buffers:
+   *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
+   *  libavcodec/svq3.c:svq3_decode_slice_header too.
+   * ffmpeg devs know about it and will fix it (they said). */
+  else if (oclass->in_plugin->id == CODEC_ID_SVQ1 ||
+      oclass->in_plugin->id == CODEC_ID_SVQ3) {
+    inbuf = gst_buffer_copy_on_write (inbuf);
+    bdata = GST_BUFFER_DATA (inbuf);
+    bsize = GST_BUFFER_SIZE (inbuf);
+  } else {
+    bdata = GST_BUFFER_DATA (inbuf);
+    bsize = GST_BUFFER_SIZE (inbuf);
+  }
 
   do {
+    /* parse, if at all possible */
+    if (ffmpegdec->pctx) {
+      gint res;
+
+      res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
+          &data, &size, bdata, bsize,
+          expected_ts / (GST_SECOND / AV_TIME_BASE),
+          expected_ts / (GST_SECOND / AV_TIME_BASE));
+
+      if (res == 0)
+        break;
+      else if (size == 0) {
+        bsize = 0;
+        break;
+      } else {
+        bsize -= res;
+        bdata += res;
+      }
+    } else {
+      data = bdata;
+      size = bsize;
+    }
+
     ffmpegdec->context->frame_number++;
 
     switch (oclass->in_plugin->type) {
       case CODEC_TYPE_VIDEO:
-        /* workarounds, functions write to buffers:
-         *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
-         *  libavcodec/svq3.c:svq3_decode_slice_header too.
-         * ffmpeg devs know about it and will fix it (they said). */
-        if (oclass->in_plugin->id == CODEC_ID_SVQ1 ||
-            oclass->in_plugin->id == CODEC_ID_SVQ3) {
-          inbuf = gst_buffer_copy_on_write (inbuf);
-          data = GST_BUFFER_DATA (inbuf);
-          size = GST_BUFFER_SIZE (inbuf);
-        }
-
         len = avcodec_decode_video (ffmpegdec->context,
             ffmpegdec->picture, &have_data, data, size);
 
@@ -473,10 +524,10 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
            * errors inside. This drives me crazy, so we let it allocate
            * it's own buffers and copy to our own buffer afterwards... */
           AVPicture pic;
-          gint size = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
+          gint fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
               ffmpegdec->context->width, ffmpegdec->context->height);
 
-          outbuf = gst_buffer_new_and_alloc (size);
+          outbuf = gst_buffer_new_and_alloc (fsize);
 	  /* original ffmpeg code does not handle odd sizes correctly. This patched
 	   * up version does */
           gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
@@ -499,7 +550,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
             GST_BUFFER_DURATION (outbuf) = GST_SECOND *
                 ffmpegdec->context->frame_rate_base /
                 ffmpegdec->context->frame_rate;
-            expected_ts += GST_BUFFER_DURATION (outbuf);
           } else {
             GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
           }
@@ -556,10 +606,16 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
         gst_buffer_unref (outbuf);
     }
 
-    size -= len;
-    data += len;
-  } while (size > 0);
+    if (!ffmpegdec->pctx) {
+      bsize -= len;
+      bdata += len;
+    }
+  } while (bsize > 0);
 
+  if (ffmpegdec->pctx && bsize > 0) {
+    ffmpegdec->pcache = gst_buffer_create_sub (inbuf,
+        GST_BUFFER_SIZE (inbuf) - bsize, bsize);
+  }
   gst_buffer_unref (inbuf);
 }
 
