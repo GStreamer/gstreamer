@@ -226,10 +226,10 @@ gst_fast_scheduler_loopfunc_wrapper (int argc, char *argv[])
   GST_DEBUG_ENTER ("(%d,'%s')", argc, name);
 
   do {
-    GST_DEBUG (GST_CAT_DATAFLOW, "calling loopfunc %s for element %s\n",
+    GST_DEBUG (GST_CAT_DATAFLOW, "calling loopfunc %s for element %s",
 	       GST_DEBUG_FUNCPTR_NAME (element->loopfunc), name);
     (element->loopfunc) (element);
-    GST_DEBUG (GST_CAT_DATAFLOW, "element %s ended loop function\n", name);
+    GST_DEBUG (GST_CAT_DATAFLOW, "element %s ended loop function", name);
 
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
@@ -290,7 +290,7 @@ gst_fast_scheduler_cothreaded_element (GstBin * bin, GstElement *element)
   GList *pads;
   GstFastScheduler *sched;
   
-  GST_DEBUG (GST_CAT_SCHEDULING, "element is using COTHREADS\n");
+  GST_DEBUG (GST_CAT_SCHEDULING, "element is using COTHREADS");
 
   sched = (GstFastScheduler *) GST_ELEMENT_SCHED (bin);
   g_assert (GST_IS_FAST_SCHEDULER (sched));
@@ -303,13 +303,13 @@ gst_fast_scheduler_cothreaded_element (GstBin * bin, GstElement *element)
       gst_element_error (element, "could not create cothread for \"%s\"", 
 			  GST_ELEMENT_NAME (element), NULL);
       return FALSE;
-    GST_DEBUG (GST_CAT_SCHEDULING, "created cothread %p for '%s' with wrapper function &%s\n", 
+    GST_DEBUG (GST_CAT_SCHEDULING, "created cothread %p for '%s' with wrapper function &%s", 
 		   GST_ELEMENT_THREADSTATE (element),
 		   GST_ELEMENT_NAME (element), GST_DEBUG_FUNCPTR_NAME (wrapper_function));
     }
   } else {
     do_cothread_setfunc (GST_ELEMENT_THREADSTATE (element), sched->context, wrapper_function, 0, (char **) element);
-    GST_DEBUG (GST_CAT_SCHEDULING, "set wrapper function for '%s' to &%s\n",
+    GST_DEBUG (GST_CAT_SCHEDULING, "set wrapper function for '%s' to &%s",
 		 GST_ELEMENT_NAME (element), GST_DEBUG_FUNCPTR_NAME (wrapper_function));
   }
 
@@ -320,11 +320,11 @@ gst_fast_scheduler_cothreaded_element (GstBin * bin, GstElement *element)
     pads = g_list_next (pads);
 
     if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
-      GST_DEBUG (GST_CAT_SCHEDULING, "setting gethandler to getfunc_proxy for %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+      GST_DEBUG (GST_CAT_SCHEDULING, "setting gethandler to getfunc_proxy for %s:%s", GST_DEBUG_PAD_NAME (pad));
       GST_RPAD_GETHANDLER (pad) = gst_fast_scheduler_getfunc_proxy;
     }
     else {
-      GST_DEBUG (GST_CAT_SCHEDULING, "setting chainhandler to chainfunc_proxy for %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+      GST_DEBUG (GST_CAT_SCHEDULING, "setting chainhandler to chainfunc_proxy for %s:%s", GST_DEBUG_PAD_NAME (pad));
       GST_RPAD_CHAINHANDLER (pad) = gst_fast_scheduler_chainfunc_proxy;
     }
   }
@@ -332,12 +332,22 @@ gst_fast_scheduler_cothreaded_element (GstBin * bin, GstElement *element)
   return TRUE;
 }
 
+static void
+gst_fast_scheduler_event_proxy (GstPad *pad, GstBuffer *buf)
+{
+  if (GST_IS_EVENT (buf))
+    GST_RPAD_EVENTFUNC (pad) (pad, GST_EVENT (buf));
+  else
+    GST_RPAD_CHAINFUNC (pad) (pad, buf);
+}
+	
+
 static gboolean
 gst_fast_scheduler_chained_element (GstBin *bin, GstElement *element) {
   GList *pads;
   GstPad *pad;
 
-  GST_DEBUG (GST_CAT_SCHEDULING,"chain entered\n");
+  GST_DEBUG (GST_CAT_SCHEDULING,"chain entered");
 
   /* walk through all the pads */
   pads = gst_element_get_pad_list (element);
@@ -348,10 +358,13 @@ gst_fast_scheduler_chained_element (GstBin *bin, GstElement *element) {
       continue;
 
     if (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK) {
-      GST_DEBUG (GST_CAT_SCHEDULING,"copying chain function into chain handler for %s:%s\n",GST_DEBUG_PAD_NAME (pad));
-      GST_RPAD_CHAINHANDLER (pad) = GST_RPAD_CHAINFUNC (pad);
+      GST_DEBUG (GST_CAT_SCHEDULING,"copying chain function into chain handler for %s:%s",GST_DEBUG_PAD_NAME (pad));
+      if (!GST_FLAG_IS_SET (element, GST_ELEMENT_EVENT_AWARE)) 
+        GST_RPAD_CHAINHANDLER (pad) = gst_fast_scheduler_event_proxy;
+      else
+        GST_RPAD_CHAINHANDLER (pad) = GST_RPAD_CHAINFUNC (pad);
     } else {
-      GST_DEBUG (GST_CAT_SCHEDULING,"copying get function into get handler for %s:%s\n",GST_DEBUG_PAD_NAME (pad));
+      GST_DEBUG (GST_CAT_SCHEDULING,"copying get function into get handler for %s:%s",GST_DEBUG_PAD_NAME (pad));
       if (!GST_RPAD_GETFUNC (pad)) 
         GST_RPAD_GETHANDLER (pad) = gst_fast_scheduler_getfunc_proxy;
       else 
@@ -597,21 +610,21 @@ gst_fast_scheduler_chain_recursive_add (GstSchedulerChain * chain, GstElement * 
   /* add the element to the chain */
   gst_fast_scheduler_chain_add_element (chain, element);
 
-  GST_DEBUG (GST_CAT_SCHEDULING, "recursing on element \"%s\"\n", GST_ELEMENT_NAME (element));
+  GST_DEBUG (GST_CAT_SCHEDULING, "recursing on element \"%s\"", GST_ELEMENT_NAME (element));
   /* now go through all the pads and see which peers can be added */
   pads = element->pads;
   while (pads) {
     pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
 
-    GST_DEBUG (GST_CAT_SCHEDULING, "have pad %s:%s, checking for valid peer\n",
+    GST_DEBUG (GST_CAT_SCHEDULING, "have pad %s:%s, checking for valid peer",
 	       GST_DEBUG_PAD_NAME (pad));
     /* if the peer exists and could be in the same chain */
     if (GST_PAD_PEER (pad)) {
-      GST_DEBUG (GST_CAT_SCHEDULING, "has peer %s:%s\n", GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)));
+      GST_DEBUG (GST_CAT_SCHEDULING, "has peer %s:%s", GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)));
       peerelement = GST_PAD_PARENT (GST_PAD_PEER (pad));
       if (GST_ELEMENT_SCHED (GST_PAD_PARENT (pad)) == GST_ELEMENT_SCHED (peerelement)) {
-	GST_DEBUG (GST_CAT_SCHEDULING, "peer \"%s\" is valid for same chain\n",
+	GST_DEBUG (GST_CAT_SCHEDULING, "peer \"%s\" is valid for same chain",
 		   GST_ELEMENT_NAME (peerelement));
 	/* if it's not already in a chain, add it to this one */
 	if (gst_fast_scheduler_find_chain (chain->sched, peerelement) == NULL) {
@@ -632,7 +645,7 @@ gst_fast_scheduler_setup (GstScheduler *sched)
 
   /* first create thread context */
   if (fast->context == NULL) {
-    GST_DEBUG (GST_CAT_SCHEDULING, "initializing cothread context\n");
+    GST_DEBUG (GST_CAT_SCHEDULING, "initializing cothread context");
     fast->context = do_cothread_context_init ();
   }
 }
@@ -846,7 +859,7 @@ gst_fast_scheduler_pad_connect (GstScheduler * sched, GstPad *srcpad, GstPad *si
 
   GST_INFO (GST_CAT_SCHEDULING, "have pad connected callback on %s:%s to %s:%s",
 	    GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-  GST_DEBUG (GST_CAT_SCHEDULING, "srcpad sched is %p, sinkpad sched is %p\n",
+  GST_DEBUG (GST_CAT_SCHEDULING, "srcpad sched is %p, sinkpad sched is %p",
 	     GST_ELEMENT_SCHED (srcelement), GST_ELEMENT_SCHED (sinkelement));
 
   if (GST_ELEMENT_SCHED (srcelement) == GST_ELEMENT_SCHED (sinkelement)) {
@@ -927,7 +940,7 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
   chains = bsched->chains;
 
   if (chains == NULL) {
-    GST_DEBUG (GST_CAT_DATAFLOW, "no chains!\n");
+    GST_DEBUG (GST_CAT_DATAFLOW, "no chains!");
 
     state = GST_SCHEDULER_STATE_STOPPED;
 
@@ -954,27 +967,27 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
       /* we just pick the first cothreaded element */
       GstElement *entry = GST_ELEMENT (chain->cothreaded_elements->data);
 	  
-      GST_DEBUG (GST_CAT_DATAFLOW, "starting iteration via cothreads\n");
+      GST_DEBUG (GST_CAT_DATAFLOW, "starting iteration via cothreads");
 
       GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
 
-      GST_DEBUG (GST_CAT_DATAFLOW, "set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
+      GST_DEBUG (GST_CAT_DATAFLOW, "set COTHREAD_STOPPING flag on \"%s\"(@%p)",
 		   GST_ELEMENT_NAME (entry), entry);
 
       if (GST_ELEMENT_THREADSTATE (entry)) {
         do_cothread_switch (GST_ELEMENT_THREADSTATE (entry));
       }
       else {
-	GST_DEBUG (GST_CAT_DATAFLOW, "cothread switch not possible, element has no threadstate\n");
+	GST_DEBUG (GST_CAT_DATAFLOW, "cothread switch not possible, element has no threadstate");
 
-        GST_DEBUG (GST_CAT_DATAFLOW, "leaving (%s)\n", GST_ELEMENT_NAME (bin));
+        GST_DEBUG (GST_CAT_DATAFLOW, "leaving (%s)", GST_ELEMENT_NAME (bin));
 
 	state = GST_SCHEDULER_STATE_ERROR;
 
         goto exit;
       }
 
-      GST_DEBUG (GST_CAT_SCHEDULING, "loopfunc of element %s ended\n", GST_ELEMENT_NAME (entry));
+      GST_DEBUG (GST_CAT_SCHEDULING, "loopfunc of element %s ended", GST_ELEMENT_NAME (entry));
 
       scheduled++;
     }
@@ -983,7 +996,7 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
       if (entry) {
         GList *pads = gst_element_get_pad_list (entry);
 
-        GST_DEBUG (GST_CAT_DATAFLOW, "starting chained iteration\n");
+        GST_DEBUG (GST_CAT_DATAFLOW, "starting chained iteration");
 
         while (pads) {
           GstPad *pad = GST_PAD_CAST (pads->data);
@@ -1019,7 +1032,7 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
     }
   }
 
-  GST_DEBUG (GST_CAT_DATAFLOW, "leaving (%s)\n", GST_ELEMENT_NAME (bin));
+  GST_DEBUG (GST_CAT_DATAFLOW, "leaving (%s)", GST_ELEMENT_NAME (bin));
 
   if (scheduled == 0) {
     GST_INFO (GST_CAT_DATAFLOW, "nothing was scheduled, return STOPPED");
@@ -1031,7 +1044,7 @@ gst_fast_scheduler_iterate (GstScheduler * sched)
   }
 
 exit:
-  GST_DEBUG (GST_CAT_DATAFLOW, "leaving (%s) %d\n", GST_ELEMENT_NAME (bin), state);
+  GST_DEBUG (GST_CAT_DATAFLOW, "leaving (%s) %d", GST_ELEMENT_NAME (bin), state);
   
   return state;
 }
@@ -1046,7 +1059,7 @@ gst_fast_scheduler_show (GstScheduler * sched)
   GstFastScheduler *bsched = GST_FAST_SCHEDULER (sched);
 
   if (sched == NULL) {
-    g_print ("scheduler doesn't exist for this element\n");
+    g_print ("scheduler doesn't exist for this element");
     return;
   }
 
