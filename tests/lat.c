@@ -54,7 +54,7 @@ GstElement *identity_add(GstPipeline *pipeline, GstElement *first, int count) {
   return last;
 }
 
-GstElement *fakesrc() {
+GstElement *fakesrc(void) {
   GstElement *src;
 
   src = gst_element_factory_make("fakesrc","src");
@@ -67,7 +67,7 @@ GstElement *fakesrc() {
   return src;
 }
 
-GstElement *fakesink() {
+GstElement *fakesink(void) {
   GstElement *sink;
 
   sink = gst_element_factory_make("fakesink","fakesink");

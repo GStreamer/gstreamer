@@ -54,7 +54,7 @@ struct _GstUnitConvertClass {
 	/* signal callbacks */
 };
 
-GstUnitConvert* gst_unitconv_new ();
+GstUnitConvert* gst_unitconv_new (void);
 void _gst_unitconv_initialize (void);
 
 gboolean gst_unitconv_set_convert_units(GstUnitConvert *unitconv, gchar *from_unit_named, gchar *to_unit_named);

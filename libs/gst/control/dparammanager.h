@@ -136,7 +136,7 @@ struct _GstDParamAsyncToUpdate {
 
 #define GST_DPMAN_CALLBACK_UPDATE(dpwrap, value) ((dpwrap->update_func)(value, dpwrap->update_data))
 
-void _gst_dpman_initialize();
+void _gst_dpman_initialize(void);
 GType gst_dpman_get_type (void);
 GstDParamManager* gst_dpman_new (gchar *name, GstElement *parent);
 void gst_dpman_set_parent (GstDParamManager *dpman, GstElement *parent);
