@@ -108,6 +108,7 @@ struct _GstPlay
 	GstElement *video_sink_element;
 	GstElement *audio_sink;
 	GstElement *audio_sink_element;
+	GstElement *visualisation_sink_element;
 
 	GstDParamManager *vol_dpman;
 	GstDParam *vol_dparam;

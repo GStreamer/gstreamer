@@ -656,6 +656,7 @@ gst_play_seek_to_time (	GstPlay *play,
         guint8   prev_state;
 	gboolean audio_seek_worked = FALSE;
 	gboolean video_seek_worked = FALSE;
+	gboolean visualisation_seek_worked = FALSE;
 
 	g_return_if_fail (GST_IS_PLAY (play));
 	if (time_nanos < 0LL){
@@ -677,11 +678,18 @@ gst_play_seek_to_time (	GstPlay *play,
 	                              GST_SEEK_FLAG_FLUSH, play->seek_time);
 	if (play->audio_sink_element != NULL){
 		gst_event_ref (s_event);
-		audio_seek_worked = gst_element_send_event (play->audio_sink_element, s_event);
+		audio_seek_worked = gst_element_send_event (
+										play->audio_sink_element, s_event);
+	}
+	if (play->visualisation_sink_element != NULL){
+		gst_event_ref (s_event);
+		visualisation_seek_worked = gst_element_send_event (
+										play->visualisation_sink_element, s_event);
 	}
 	if (play->video_sink_element != NULL){
 		gst_event_ref (s_event);
-		video_seek_worked = gst_element_send_event (play->video_sink_element, s_event);
+		video_seek_worked = gst_element_send_event (
+										play->video_sink_element, s_event);
 	}
 	gst_event_unref (s_event);
 
