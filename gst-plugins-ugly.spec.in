@@ -1,4 +1,4 @@
-%define name    gstreamer-plugins  
+%define name    gst-plugins  
 %define ver     @VERSION@
 %define rel     @GST_VERSION_RELEASE@
 %define prefix  /usr
@@ -30,7 +30,7 @@ plugins.
 %doc AUTHORS COPYING README  
 
 %prep
-%setup -n %{name}-%{ver}
+%setup
 %build
 CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man  
 
