@@ -177,6 +177,9 @@ void gst_caps2_free (GstCaps2 *caps)
     gst_structure_free (structure);
   }
   g_ptr_array_free(caps->structs, TRUE);
+#ifdef USE_POISONING
+  memset (caps, 0xff, sizeof(GstCaps2));
+#endif
   g_free(caps);
 }
 
@@ -209,6 +212,9 @@ void gst_caps2_append (GstCaps2 *caps1, GstCaps2 *caps2)
     gst_caps2_append_cap (caps1, structure);
   }
   g_ptr_array_free(caps2->structs, TRUE);
+#ifdef USE_POISONING
+  memset (caps, 0xff, sizeof(GstCaps2));
+#endif
   g_free(caps2);
 }
 
