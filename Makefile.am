@@ -19,7 +19,7 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
-SUBDIRS = include gst libs tools m4 \
+SUBDIRS = include gst libs tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
