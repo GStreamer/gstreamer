@@ -1,3 +1,9 @@
+gstreamer (0.1.1.20010504-1) unstable; urgency=low
+
+  * Latest CVS code
+
+ -- David I. Lehn <dlehn@vt.edu>  Fri,  4 May 2001 21:48:45 -0400
+
 gstreamer (0.1.1.20010430-2) unstable; urgency=low
 
   * Added -colorspace package for Hermes dependent conversion
