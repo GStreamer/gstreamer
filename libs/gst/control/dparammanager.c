@@ -24,6 +24,10 @@
 #include <gst/gstinfo.h>
 
 static GHashTable *_element_registry;
+enum {
+  NEW_REQUIRED_DPARAM,
+  LAST_SIGNAL
+};
 
 static void gst_dpman_class_init (GstDParamManagerClass *klass);
 static void gst_dpman_init (GstDParamManager *dpman);
@@ -37,6 +41,7 @@ static guint gst_dpman_preprocess_noop(GstDParamManager *dpman, guint frames, gi
 static guint gst_dpman_process_noop(GstDParamManager *dpman, guint frame_count);
 
 static GObjectClass *parent_class;
+static guint gst_dpman_signals[LAST_SIGNAL] = { 0 };
 
 void 
 _gst_dpman_initialize()
@@ -87,6 +92,13 @@ gst_dpman_class_init (GstDParamManagerClass *klass)
 	                       gst_dpman_preprocess_noop, gst_dpman_process_noop, NULL, NULL);
 
 	_element_registry = g_hash_table_new(NULL,NULL);
+
+	gst_dpman_signals[NEW_REQUIRED_DPARAM] =
+		g_signal_new ("new_required_dparam", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+		              G_STRUCT_OFFSET (GstDParamManagerClass, new_required_dparam), NULL, NULL,
+		              gst_marshal_VOID__STRING, G_TYPE_NONE, 1,
+		              G_TYPE_STRING);
+		                              
 }
 
 static void
@@ -164,6 +176,8 @@ gst_dpman_add_required_dparam_callback (GstDParamManager *dpman,
 
 	dpwrap->update_func = update_func;
 	dpwrap->update_data = update_data;
+	
+	g_signal_emit (G_OBJECT (dpman), gst_dpman_signals[NEW_REQUIRED_DPARAM], 0, g_param_spec_get_name(param_spec));
 
 	return TRUE;	
 }
@@ -196,6 +210,8 @@ gst_dpman_add_required_dparam_direct (GstDParamManager *dpman,
 
 	dpwrap->update_data = update_data;
 
+	g_signal_emit (G_OBJECT (dpman), gst_dpman_signals[NEW_REQUIRED_DPARAM], 0, g_param_spec_get_name(param_spec));
+
 	return TRUE;	
 }
 
@@ -227,6 +243,8 @@ gst_dpman_add_required_dparam_array (GstDParamManager *dpman,
 	GST_DEBUG(GST_CAT_PARAMS,"adding required array dparam '%s'", g_param_spec_get_name(param_spec));
 
 	dpwrap->update_data = update_data;
+
+	g_signal_emit (G_OBJECT (dpman), gst_dpman_signals[NEW_REQUIRED_DPARAM], 0, g_param_spec_get_name(param_spec));
 
 	return TRUE;	
 }
@@ -359,7 +377,7 @@ gst_dpman_get_dparam_type (GstDParamManager *dpman, gchar *name)
 	return G_VALUE_TYPE(dpwrap->value);
 }
 
-/*GstDParamSpec**
+GParamSpec**
 gst_dpman_list_dparam_specs(GstDParamManager *dpman)
 {
 	GstDParamWrapper* dpwrap;
@@ -381,7 +399,6 @@ gst_dpman_list_dparam_specs(GstDParamManager *dpman)
 	}
 	return param_specs;
 }
-*/
 
 GParamSpec*
 gst_dpman_get_param_spec (GstDParamManager *dpman, gchar *dparam_name)
@@ -526,6 +543,34 @@ gst_dpman_set_rate_change_pad(GstDParamManager *dpman, GstPad *pad)
 
 	g_signal_connect(G_OBJECT(pad), "caps_changed", 
 	                 G_CALLBACK (gst_dpman_caps_changed), dpman);
+}
+
+/**
+ * gst_dpman_bypass_dparam:
+ * @dpman: GstDParamManager instance
+ * @dparam_name: the name of dparam
+ *
+ * If a dparam is attached to this dparam_name, it will be detached
+ * and a warning will be issued. This should be called in the _set_property
+ * function of an element if the value it changes is also changed by a dparam.
+ * 
+ */
+void
+gst_dpman_bypass_dparam(GstDParamManager *dpman, gchar *dparam_name)
+{
+	GstDParamWrapper* dpwrap;
+	
+	g_return_if_fail (dpman != NULL);
+	g_return_if_fail (GST_IS_DPMAN (dpman));
+	g_return_if_fail (dparam_name != NULL);
+		
+	dpwrap = gst_dpman_get_wrapper(dpman, dparam_name);
+	g_return_if_fail (dpwrap != NULL);
+	
+	if (dpwrap->dparam != NULL){
+		g_warning("Bypassing attached dparam '%s'. It will be detached", dparam_name);
+		gst_dpman_detach_dparam(dpman, dparam_name);
+	}
 }
 
 static GstDParamWrapper* 
