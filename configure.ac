@@ -39,6 +39,16 @@ AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
 
+dnl AC_PROC_INTLTOOL([0.26])
+dnl AM_GNU_GETTEXT([external])
+ALL_LINGUAS="de"
+GETTEXT_PACKAGE=gstreamer-$GST_VERSION_MAJOR.$GST_VERSION_MINOR
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],"$GETTEXT_PACKAGE",[gettext package name])
+AM_GLIB_GNU_GETTEXT
+
+AM_GLIB_DEFINE_LOCALEDIR(GST_LOCALEDIR)
+
 dnl decide on error flags
 AS_COMPILER_FLAG(-Wall,GST_ERROR="$GST_ERROR -Wall",GST_ERROR="$GST_ERROR")
 if test "x$GST_CVS" = "xyes"; then
@@ -548,6 +558,7 @@ libs/gst/bytestream/Makefile
 libs/gst/getbits/Makefile
 libs/gst/control/Makefile
 libs/ext/Makefile
+po/Makefile.in
 tests/Makefile
 tests/bufspeed/Makefile
 tests/memchunk/Makefile

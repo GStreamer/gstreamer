@@ -29,7 +29,7 @@ aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
 SUBDIRS = include gst libs tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS) \
-	pkgconfig
+	pkgconfig po
 
 # These are all the possible subdirs
 DIST_SUBDIRS = include libs gst \
