@@ -139,7 +139,7 @@ perform_check  (void)
 
 
       g_print ("%d%d%d -> %d%d%d ..", (i&4)>>2, (i&2)>>1, i&1, (j&4)>>2, (j&2)>>1, j&1);
-      /*result =  thomasvs: void value should be ignored */gst_pad_connect (srctest, sinktest);
+      result = gst_pad_try_connect (srctest, sinktest);
 
       g_print (".. %s\n", (result? "ok":"fail"));
       if (result) gst_pad_disconnect (srctest, sinktest);
