@@ -1813,7 +1813,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       name = "Windows Media Audio v7";
       break;
     case CODEC_ID_WMAV2:
-      name = "Windows Media Audion v8/9";
+      name = "Windows Media Audio v8/9";
       break;
     case CODEC_ID_MACE3:
       name = "MACE-3 audio";
