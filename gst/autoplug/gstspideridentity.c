@@ -430,7 +430,8 @@ spider_find_peek (gpointer data, gint64 offset, guint size)
     return NULL;
   }
 }
-void spider_find_suggest (gpointer data, guint probability, GstCaps *caps)
+static void
+spider_find_suggest (gpointer data, guint probability, GstCaps *caps)
 {
   SpiderTypeFind *find = (SpiderTypeFind *) data;
   G_GNUC_UNUSED gchar *caps_str;
@@ -459,6 +460,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
     data = gst_pad_pull (ident->sink);
   }
   
+  find.buffer = GST_BUFFER (data);
   /* maybe there are already valid caps now? */
   if ((find.caps = gst_pad_get_caps (ident->sink)) != NULL) {
     gst_caps_ref (find.caps); /* it's unrefed later below */
@@ -468,7 +470,6 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   /* now do the actual typefinding with the supplied buffer */
   type_list = gst_type_find_factory_get_list ();
     
-  find.buffer = GST_BUFFER (data);
   find.best_probability = 0;
   find.caps = NULL;
   gst_find.data = &find;

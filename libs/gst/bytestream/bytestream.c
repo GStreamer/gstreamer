@@ -78,8 +78,6 @@ gst_bytestream_new (GstPad * pad)
 {
   GstByteStream *bs = g_new (GstByteStream, 1);
 
-  GST_DEBUG_CATEGORY_INIT (debug_bs, "bytestream", 0, "bytestream library");
-
   bs->pad = pad;
   gst_bytestream_init (bs);
 
@@ -750,6 +748,8 @@ gst_bytestream_print_status (GstByteStream * bs)
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (debug_bs, "bytestream", 0, "bytestream library");
+
   gst_plugin_set_longname (plugin, "GstByteStream: a byte-oriented layer on top of buffer-passing");
   return TRUE;
 }

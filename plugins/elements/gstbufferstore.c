@@ -143,7 +143,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
     GST_LOG_OBJECT (store, "adding buffer %p with invalid offset and size %u",
 	    buffer, GST_BUFFER_SIZE (buffer));
     gst_data_ref (GST_DATA (buffer));
-    g_list_append (store->buffers, buffer);
+    store->buffers = g_list_append (store->buffers, buffer);
     return TRUE;
   } else {
     /* both list and buffer have valid offsets, we can really go wild */
@@ -326,6 +326,8 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
 		      current, offset, size);
       ret = current;
       gst_data_ref (GST_DATA (ret));
+      GST_LOG_OBJECT (store, "refcount %d",
+		      GST_DATA_REFCOUNT_VALUE(ret));
       break;
     } else if (cur_offset + GST_BUFFER_SIZE (current) > offset) {
       if (cur_offset + GST_BUFFER_SIZE (current) >= offset + size) {
