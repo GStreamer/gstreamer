@@ -687,10 +687,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 %post -n gstreamer-esd
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
-%post -n  gstreamer-mpeg1
-%{prefix}/bin/gstreamer-register --gst-mask=0
-
-%post -n  gstreamer-mpeg2
+%post -n  gstreamer-mpeg
 %{prefix}/bin/gstreamer-register --gst-mask=0
 
 %post -n  gstreamer-mp3
