@@ -516,6 +516,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new ("siddec",GST_TYPE_SIDDEC,
                                     &gst_siddec_details);
   g_return_val_if_fail (factory != NULL, FALSE);
+  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_templ));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));

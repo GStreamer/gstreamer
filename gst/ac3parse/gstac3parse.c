@@ -328,6 +328,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new("ac3parse",GST_TYPE_AC3PARSE,
                                    &ac3parse_details);
   g_return_val_if_fail(factory != NULL, FALSE);
+  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_SECONDARY);
 
   src_template = src_factory ();
   gst_element_factory_add_pad_template (factory, src_template);
