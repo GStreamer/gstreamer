@@ -734,7 +734,7 @@ group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gbo
 static gboolean 
 schedule_group (GstOptSchedulerGroup *group) 
 {
-  if (!group->entry)
+  if (!group->entry || group->schedulefunc == NULL)
     return FALSE;
 
 #ifdef USE_COTHREADS
@@ -1710,25 +1710,48 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 
     /* now check which one of the elements we can remove from the group */
     if (!still_link1) {
+      gboolean need_remove = TRUE;
+
       GST_INFO (GST_CAT_SCHEDULING, "element1 is separated from the group");
+
       /* see if the element was an entry point for the group */
       if (group->entry == element1) {
-	/* we're going to remove the element so we need to clear it as the
-	 * entry point */
-        group->entry = NULL;
+	if (group->type == GST_OPT_SCHEDULER_GROUP_LOOP) {
+          /* for entry points of a loop based group we need to be
+	   * carefull as we assert that the loop based element always
+	   * has a group */
+          need_remove = FALSE;
+	}
+	else {
+	  /* we're going to remove the element so we need to clear it as the
+	   * entry point */
+          group->entry = NULL;
+	}
       }
-      remove_from_group (group, element1);
+      if (need_remove)
+        remove_from_group (group, element1);
     }
     if (!still_link2) {
+      gboolean need_remove = TRUE;
+
       GST_INFO (GST_CAT_SCHEDULING, "element2 is separated from the group");
 
       /* see if the element was an entry point for the group */
       if (group->entry == element2) {
-	/* we're going to remove the element so we need to clear it as the
-	 * entry point */
-        group->entry = NULL;
+	if (group->type == GST_OPT_SCHEDULER_GROUP_LOOP) {
+          /* for entry points of a loop based group we need to be
+	   * carefull as we assert that the loop based element always
+	   * has a group */
+          need_remove = FALSE;
+	}
+	else {
+	  /* we're going to remove the element so we need to clear it as the
+	   * entry point */
+          group->entry = NULL;
+	}
       }
-      remove_from_group (group, element2);
+      if (need_remove)
+        remove_from_group (group, element2);
     }
   }
 }
