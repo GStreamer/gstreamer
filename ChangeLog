@@ -1,3 +1,13 @@
+2004-01-18  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_set_property),
+	(gst_ximagesink_get_property), (gst_ximagesink_class_init): Adding 
+	synchronous property for debugging.
+	* sys/ximage/ximagesink.h: Adding the synchronous boolean flag.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_set_property): Moving a pointer declaration to a
+	smaller block, fixing indent.
+
 2004-01-16  David Schleef  <ds@schleef.org>
 
 	* gst/videofilter/gstvideobalance.c: Fix regression; changing a
