@@ -100,8 +100,8 @@ static void	gst_example_init	(GstExample *example);
 
 static void	gst_example_chain	(GstPad *pad, GstBuffer *buf);
 
-static void	gst_example_set_arg	(GtkObject *object,GtkArg *arg,guint id);
-static void	gst_example_get_arg	(GtkObject *object,GtkArg *arg,guint id);
+static void	gst_example_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void	gst_example_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 /* These hold the constructed pad templates, which are created during
  * plugin load, and used during element instantiation.
@@ -123,29 +123,29 @@ static guint gst_example_signals[LAST_SIGNAL] = { 0 };
  * register the type, providing the name of the class, struct sizes,
  * and pointers to the various functions that define the class.
  */
-GtkType
+GType
 gst_example_get_type(void)
 {
-  static GtkType example_type = 0;
+  static GType example_type = 0;
 
   if (!example_type) {
-    static const GtkTypeInfo example_info = {
-      "GstExample",
+    static const GTypeInfo example_info = {
+      sizeof(GstExampleClass),      NULL,
+      NULL,
+      (GClassInitFunc)gst_example_class_init,
+      NULL,
+      NULL,
       sizeof(GstExample),
-      sizeof(GstExampleClass),
-      (GtkClassInitFunc)gst_example_class_init,
-      (GtkObjectInitFunc)gst_example_init,
-      (GtkArgSetFunc)NULL,	/* These last three are depracated */
-      (GtkArgGetFunc)NULL,
-      (GtkClassInitFunc)NULL,
+      0,
+      (GInstanceInitFunc)gst_example_init,
     };
-    example_type = gtk_type_unique(GST_TYPE_ELEMENT,&example_info);
+    example_type = g_type_register_static(GST_TYPE_ELEMENT, "GstExample", &example_info, 0);
   }
   return example_type;
 }
 
 /* In order to create an instance of an object, the class must be
- * initialized by this function.  GtkObject will take care of running
+ * initialized by this function.  GObject will take care of running
  * it, based on the pointer to the function provided above.
  */
 static void
@@ -154,41 +154,40 @@ gst_example_class_init (GstExampleClass *klass)
   /* Class pointers are needed to supply pointers to the private
    * implementations of parent class methods.
    */
-  GtkObjectClass *gtkobject_class;
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
   /* Since the example class contains the parent classes, you can simply
    * cast the pointer to get access to the parent classes.
    */
-  gtkobject_class = (GtkObjectClass*)klass;
+  gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
   /* The parent class is needed for class method overrides. */
-  parent_class = gtk_type_class(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   /* Here we add an argument to the object.  This argument is an integer,
    * and can be both read and written.
    */
-  gtk_object_add_arg_type("GstExample::active", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_ACTIVE);
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ACTIVE,
+    g_param_spec_int("active","active","active",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
 
   /* Here we add a signal to the object. This is avery useless signal
    * called asdf. The signal will also pass a pointer to the listeners
    * which happens to be the example element itself */
   gst_example_signals[ASDF] =
-    gtk_signal_new("asdf", GTK_RUN_LAST, gtkobject_class->type,
-                   GTK_SIGNAL_OFFSET (GstExampleClass, asdf),
-                   gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+    g_signal_newc("asdf", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                   G_STRUCT_OFFSET (GstExampleClass, asdf), NULL, NULL,
+                   g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                    GST_TYPE_EXAMPLE);
 
-  gtk_object_class_add_signals (gtkobject_class, gst_example_signals,
-                                LAST_SIGNAL);
 
   /* The last thing is to provide the functions that implement get and set
    * of arguments.
    */
-  gtkobject_class->set_arg = gst_example_set_arg;
-  gtkobject_class->get_arg = gst_example_get_arg;
+  gobject_class->set_property = gst_example_set_property;
+  gobject_class->get_property = gst_example_get_property;
 }
 
 /* This function is responsible for initializing a specific instance of
@@ -277,8 +276,8 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
     gst_pad_push(example->srcpad,outbuf);
 
     /* For fun we'll emit our useless signal here */
-    gtk_signal_emit (GTK_OBJECT (example), gst_example_signals[ASDF],
-                     example);
+    g_signal_emit(G_OBJECT (example), gst_example_signals[ASDF], 0,
+                  example);
 
   /* If we're not doing something, just send the original incoming buffer. */
   } else {
@@ -290,7 +289,7 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
  * enable the element to respond to various arguments.
  */
 static void
-gst_example_set_arg (GtkObject *object,GtkArg *arg,guint id)
+gst_example_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
   GstExample *example;
 
@@ -301,14 +300,14 @@ gst_example_set_arg (GtkObject *object,GtkArg *arg,guint id)
   example = GST_EXAMPLE(object);
 
   /* Check the argument id to see which argument we're setting. */
-  switch (id) {
+  switch (prop_id) {
     case ARG_ACTIVE:
       /* Here we simply copy the value of the argument to our private
        * storage.  More complex operations can be done, but beware that
        * they may occur at any time, possibly even while your chain function
        * is running, if you are using threads.
        */
-      example->active = GTK_VALUE_INT(*arg);
+      example->active = g_value_get_int (value);
       g_print("example: set active to %d\n",example->active);
       break;
     default:
@@ -318,7 +317,7 @@ gst_example_set_arg (GtkObject *object,GtkArg *arg,guint id)
 
 /* The set function is simply the inverse of the get fuction. */
 static void
-gst_example_get_arg (GtkObject *object,GtkArg *arg,guint id)
+gst_example_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
   GstExample *example;
 
@@ -326,12 +325,12 @@ gst_example_get_arg (GtkObject *object,GtkArg *arg,guint id)
   g_return_if_fail(GST_IS_EXAMPLE(object));
   example = GST_EXAMPLE(object);
 
-  switch (id) {
+  switch (prop_id) {
     case ARG_ACTIVE:
-      GTK_VALUE_INT(*arg) = example->active;
+      g_value_set_int (value, example->active);
       break;
     default:
-      arg->type = GTK_TYPE_INVALID;
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -345,7 +344,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* We need to create an ElementFactory for each element we provide.
-   * This consists of the name of the element, the GtkType identifier,
+   * This consists of the name of the element, the GType identifier,
    * and a pointer to the details structure at the top of the file.
    */
   factory = gst_elementfactory_new("example", GST_TYPE_EXAMPLE, &example_details);
