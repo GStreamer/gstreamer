@@ -91,13 +91,24 @@
   <part id="overview"><title>Overview</title>
     <partintro>
       <para>
-        <xref linkend="overview"/> gives you an overview of <application>GStreamer</application>
-        design goals. <xref linkend="basic-concepts"/> rapidly covers the basics of
-        <application>GStreamer</application> programming. In <xref linkend="build-app"/> we will move
-        on to the examples. Since <application>GStreamer</application> uses GLib 2.0, the reader is
-        assumed to understand the basics of the GObject object model. For a gentle introduction to
-        this system, you may wish to read the <emphasis>GTK+ Tutorial</emphasis> or Eric Harlow's
-        book <emphasis>Developing Linux Applications with GTK+ and GDK</emphasis>.
+        <xref linkend="overview"/> gives you an overview of
+        <application>GStreamer</application> design goals.
+
+        <xref linkend="basic-concepts"/> rapidly covers the basics of
+        <application>GStreamer</application> programming.
+
+        In <xref linkend="build-app"/> we will move on to the
+        examples. Since <application>GStreamer</application> uses <ulink
+        url="http://developer.gnome.org/arch/gtk/glib.html" type="http">GLib
+        2.0</ulink>, the reader is assumed to understand the basics of the
+        <ulink url="http://developer.gnome.org/doc/API/2.0/gobject/index.html"
+        type="http">GObject object model</ulink>.
+
+        For a gentle introduction to this system, you may wish to read the
+        <emphasis><ulink url="http://www.gtk.org/tutorial/" type="http">GTK+
+        Tutorial</ulink></emphasis> or Eric Harlow's book <emphasis>Developing
+        Linux Applications with GTK+ and GDK</emphasis>.
+
       </para>
     </partintro>
 
@@ -114,8 +125,9 @@
   <part id="basic-concepts"><title>Basic concepts</title>
     <partintro>
       <para> 
-        We will first describe the basics of the <application>GStreamer</application> programming by
-        introducing the different objects needed to create a media pipeline.
+        We will first describe the basics of
+        <application>GStreamer</application> programming by introducing the
+        different objects needed to create a media pipeline.
       </para>
       <para> 
         We will use a visual representation of these objects so that we can

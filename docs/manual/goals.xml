@@ -8,10 +8,10 @@
   <sect1 id="sec-goals-design">
     <title>The design goals</title>
     <para> 
-      We descibe what we try to achieve with GStreamer.
+      We describe what we try to achieve with GStreamer.
     </para>
     <sect2 id="sec-goals-clean">
-      <title>Clean and powerfull</title>
+      <title>Clean and powerful</title>
       <para>
         GStreamer wants to provide a clean interface to:
       </para>
@@ -19,7 +19,7 @@
         <listitem>
 	  <para>
 	    The application programmer who wants to build a media pipeline. 
-	    The programmer can use an extensive set of powerfull tools to create
+	    The programmer can use an extensive set of powerful tools to create
 	    media pipelines without writing a single line of code. Performing 
 	    complex media manipulations becomes very easy.
 	  </para>
@@ -69,8 +69,8 @@
 	have any header files installed for the plugins.
       </para>
       <para> 
-        Special care has been taking into making the plugin completely self 
-	contained. All relevant aspects of plugins can be queried at run-time.
+        Special care has been taken to make plugins completely self contained. 
+        All relevant aspects of plugins can be queried at run-time.
       </para> 
     </sect2>
 
@@ -115,7 +115,7 @@
         </listitem>
         <listitem>
 	  <para>
-	    Allowing HW acceleration by the use of specialized plugins.
+	    Allowing hardware acceleration by the use of specialized plugins.
 	  </para>
         </listitem>
         <listitem>
@@ -136,12 +136,12 @@
     <sect2 id="sec-goals-testbed">
       <title>Provide a framework for codec experimentation</title>
       <para>
-        GStreamer also wants to be an easy framework where codec developers 
-	can experiment with different algorithms, speeding up the development
-	of open and free multimedia codecs like tarking and vorbis.
+	GStreamer also wants to be an easy framework where codec
+	developers can experiment with different algorithms, speeding up
+	the development of open and free multimedia codecs like <ulink
+	url="http://www.xiph.org/ogg/index.html" type="http">tarkin and
+	vorbis</ulink>.
       </para>
-      <para> 
-      </para> 
     </sect2>
 
   </sect1>
