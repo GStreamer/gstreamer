@@ -53,8 +53,10 @@ static void		 	gst_osssink_set_clock		(GstElement *element, GstClock *clock);
 static GstClock* 		gst_osssink_get_clock 		(GstElement *element);
 static GstClockTime 		gst_osssink_get_time 		(GstClock *clock, gpointer data);
 
+static const GstFormat* 	gst_osssink_get_formats 	(GstPad *pad);
 static gboolean 		gst_osssink_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
 	            						 GstFormat *dest_format, gint64 *dest_value);
+static const GstPadQueryType* 	gst_osssink_get_query_types 	(GstPad *pad);
 static gboolean 		gst_osssink_query 		(GstElement *element, GstPadQueryType type, 
 								 GstFormat *format, gint64 *value);
 static gboolean 		gst_osssink_sink_query 		(GstPad *pad, GstPadQueryType type,
@@ -131,6 +133,29 @@ gst_osssink_channels_get_type(void) {
   return osssink_channels_type;
 }
 
+#define GST_TYPE_OSSSINK_FORMAT (gst_osssink_format_get_type())
+static GType 
+gst_osssink_format_get_type(void) {
+  static GType osssink_format_type = 0;
+  static GEnumValue osssink_format[] = {
+    {AFMT_MU_LAW,     G_STRINGIFY(AFMT_MU_LAW),    "mulaw"},
+    {AFMT_A_LAW,      G_STRINGIFY(AFMT_A_LAW),     "alaw"},
+    {AFMT_IMA_ADPCM,  G_STRINGIFY(AFMT_IMA_ADPCM), "IMA ADPCM"},
+    {AFMT_U8,         G_STRINGIFY(AFMT_U8),        "Unsigned 8 bits"},
+    {AFMT_S16_LE,     G_STRINGIFY(AFMT_S16_LE),    "Signed 16 bits little endian"},
+    {AFMT_S16_BE,     G_STRINGIFY(AFMT_S16_BE),    "Signed 16 bits big endian"},
+    {AFMT_S8,         G_STRINGIFY(AFMT_S8),        "Signed 8 bits"},
+    {AFMT_U16_LE,     G_STRINGIFY(AFMT_U16_LE),    "Unsigned 16 bits little endian"},
+    {AFMT_U16_BE,     G_STRINGIFY(AFMT_U16_BE),    "Unsigned 16 bits big endian"},
+    {AFMT_MPEG,       G_STRINGIFY(AFMT_MPEG),      "MPEG"},
+    {AFMT_AC3,        G_STRINGIFY(AFMT_AC3),       "AC3"},
+    {0, NULL, NULL},
+  };
+  if (!osssink_format_type) {
+    osssink_format_type = g_enum_register_static("GstAudiosinkFormat", osssink_format);
+  }
+  return osssink_format_type;
+}
 
 static GstElementClass *parent_class = NULL;
 static guint gst_osssink_signals[LAST_SIGNAL] = { 0 };
@@ -164,6 +189,10 @@ gst_osssink_get_bufferpool (GstPad *pad)
   GstOssSink *oss;
   
   oss = GST_OSSSINK (gst_pad_get_parent(pad));
+
+  /* 6 buffers per chunk by default */
+  if (!oss->sinkpool)
+    oss->sinkpool = gst_buffer_pool_get_default (oss->bufsize, 6);
 
   return oss->sinkpool;
 }
@@ -199,10 +228,9 @@ gst_osssink_class_init (GstOssSinkClass *klass)
     g_param_spec_boolean("sync","Sync","If syncing on timestamps should be enabled",
                          TRUE, G_PARAM_READWRITE)); 
 
-  /* it would be nice to show format in symbolic form, oh well */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
-    g_param_spec_int ("format","format","format",
-                      0, G_MAXINT, AFMT_S16_LE, G_PARAM_READWRITE)); 
+    g_param_spec_enum ("format","format","format",
+                      GST_TYPE_OSSSINK_FORMAT, AFMT_S16_LE, G_PARAM_READWRITE)); 
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
     g_param_spec_enum("channels","channels","channels",
@@ -240,6 +268,8 @@ gst_osssink_init (GstOssSink *osssink)
   gst_pad_set_bufferpool_function (osssink->sinkpad, gst_osssink_get_bufferpool);
   gst_pad_set_convert_function (osssink->sinkpad, gst_osssink_convert);
   gst_pad_set_query_function (osssink->sinkpad, gst_osssink_sink_query);
+  gst_pad_set_query_type_function (osssink->sinkpad, gst_osssink_get_query_types);
+  gst_pad_set_formats_function (osssink->sinkpad, gst_osssink_get_formats);
 
   gst_pad_set_chain_function (osssink->sinkpad, gst_osssink_chain);
 
@@ -258,8 +288,7 @@ gst_osssink_init (GstOssSink *osssink)
   osssink->bps = 0;
   osssink->resync = FALSE;
   osssink->sync = TRUE;
-  /* 6 buffers per chunk by default */
-  osssink->sinkpool = gst_buffer_pool_get_default (osssink->bufsize, 6);
+  osssink->sinkpool = NULL;
   osssink->provided_clock = GST_CLOCK (gst_oss_clock_new ("ossclock", gst_osssink_get_time, osssink));
   osssink->handled = 0;
 
@@ -573,6 +602,18 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
   gst_buffer_unref (buf);
 }
 
+static const GstFormat*
+gst_osssink_get_formats (GstPad *pad)
+{
+  static const GstFormat formats[] = {
+    GST_FORMAT_TIME,
+    GST_FORMAT_UNITS,
+    GST_FORMAT_BYTES,
+    0
+  };
+  return formats;
+}
+
 static gboolean
 gst_osssink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	             GstFormat *dest_format, gint64 *dest_value)
@@ -639,6 +680,17 @@ gst_osssink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
   }
 
   return res;
+}
+
+static const GstPadQueryType*
+gst_osssink_get_query_types (GstPad *pad)
+{
+  static const GstPadQueryType query_types[] = {
+    GST_PAD_QUERY_LATENCY,
+    GST_PAD_QUERY_POSITION,
+    0,
+  };
+  return query_types;
 }
 
 static gboolean
@@ -708,7 +760,7 @@ gst_osssink_set_property (GObject *object, guint prop_id, const GValue *value, G
       g_object_notify (G_OBJECT (osssink), "mute");
       break;
     case ARG_FORMAT:
-      osssink->format = g_value_get_int (value);
+      osssink->format = g_value_get_enum (value);
       gst_osssink_sync_parms (osssink);
       break;
     case ARG_CHANNELS:
@@ -755,7 +807,7 @@ gst_osssink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
       g_value_set_boolean (value, osssink->mute);
       break;
     case ARG_FORMAT:
-      g_value_set_int (value, osssink->format);
+      g_value_set_enum (value, osssink->format);
       break;
     case ARG_CHANNELS:
       g_value_set_enum (value, osssink->channels);
