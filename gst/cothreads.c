@@ -55,7 +55,7 @@ struct _cothread_context
 
 static pthread_key_t _cothread_key = -1;
 
-/* Disablig this define allows you to shut off a few checks in
+/* Disabling this define allows you to shut off a few checks in
  * cothread_switch.  This likely will speed things up fractionally */
 #define COTHREAD_PARANOID
 
@@ -265,9 +265,7 @@ cothread_destroy (cothread_state *thread)
     g_free (thread);
   }
   else {
-    /* this doesn't seem to work very well */
-    /* munmap ((void *) thread, COTHREAD_STACKSIZE); */
-    int res = 0;  
+    int res;
 
     GST_DEBUG (GST_CAT_COTHREADS, 
                "unmap cothread slot stack from %p to %p (size %ld)", 
@@ -275,7 +273,7 @@ cothread_destroy (cothread_state *thread)
 	       (long) COTHREAD_STACKSIZE);
     GST_DEBUG (GST_CAT_COTHREADS, "doing an munmap at %p of size %d\n",
 	       thread, COTHREAD_STACKSIZE);
-/*    res = munmap ((void *) thread, COTHREAD_STACKSIZE); */
+    res = munmap ((void *) thread, COTHREAD_STACKSIZE);
     if (res != 0)
     {
       switch (res)
@@ -502,6 +500,8 @@ cothread_stackquery (void **stack, glong* stacksize)
     *stacksize = 0;
     return FALSE;
   }
+  GST_DEBUG (GST_CAT_THREAD, "have  posix_memalign at %p of size %d\n",
+           (void *) *stack, STACK_SIZE);
   GST_DEBUG (GST_CAT_COTHREADS, 
              "Got new cothread stack from %p to %p (size %ld)\n",
              *stack, *stack + STACK_SIZE - 1, (long) STACK_SIZE);

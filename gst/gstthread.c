@@ -154,6 +154,8 @@ static void
 gst_thread_dispose (GObject *object)
 {
   GstThread *thread = GST_THREAD (object);
+  void *stack;
+  long stacksize;
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "dispose");
 
@@ -162,6 +164,12 @@ gst_thread_dispose (GObject *object)
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
+  GST_DEBUG (GST_CAT_THREAD, "Disposing of thread");
+  pthread_attr_getstack (&thread->attr, &stack,  (size_t *) &stacksize);
+  GST_DEBUG (GST_CAT_THREAD, "undng posix_memalign at %p of size %ld\n",
+            stack, stacksize);
+  free (stack);
+ 
   if (GST_ELEMENT_SCHED (thread)) {
     gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
   }
@@ -274,16 +282,27 @@ gst_thread_change_state (GstElement * element)
 
       g_mutex_lock (thread->lock);
 
-      pthread_attr_init (&thread->attr);
+      if (pthread_attr_init (&thread->attr) != 0)
+	g_warning ("pthread_attr_init returned an error !");
       if (gst_scheduler_get_prefered_stack (GST_ELEMENT_SCHED (element), &stack, &stacksize)) {
-        pthread_attr_setstack (&thread->attr, stack, stacksize);
+        if (pthread_attr_setstack (&thread->attr, stack, stacksize) != 0)
+	  g_warning ("pthread_attr_setstack failed !\n");
+	GST_DEBUG (GST_CAT_THREAD, 
+	           "pthread attr set stack at %p of size %ld", 
+		   stack, stacksize);
       }
+      else
+	g_warning ("_get_prefered_stack failed !\n");
+
       /* create the thread */
+      THR_DEBUG ("going to pthread_create...");
       if (pthread_create (&thread->thread_id, &thread->attr, gst_thread_main_loop, thread) != 0) {
+        THR_DEBUG ("pthread create failed");
 	g_mutex_unlock (thread->lock);
         THR_DEBUG ("could not create thread \"%s\"", GST_ELEMENT_NAME (element));
 	return GST_STATE_FAILURE;
       }
+      THR_DEBUG ("pthread created");
 
       /* wait for it to 'spin up' */
       THR_DEBUG ("waiting for child thread spinup");
@@ -402,10 +421,22 @@ gst_thread_change_state (GstElement * element)
       THR_DEBUG ("waiting for ack");
       g_cond_wait (thread->cond, thread->lock);
       THR_DEBUG ("got ack");
-      pthread_join (thread->thread_id, NULL);
+      if (pthread_join (thread->thread_id, NULL) != 0)
+        g_warning ("pthread_join has failed !\n");
+      if (pthread_attr_destroy (&thread->attr) != 0)
+	g_warning ("pthread_attr_destroy has failed !\n");
       thread->thread_id = -1;
       g_mutex_unlock (thread->lock);
 
+      /*
+       * FIXME: we moved this code to the scheduler dispose function
+      pthread_attr_getstack (&thread->attr, &stack,  (size_t *) &stacksize);
+      GST_DEBUG (GST_CAT_THREAD, "undng posix_memalign at %p of size %ld\n",
+	       stack, stacksize);
+	       stack, stacksize);
+      free (thread->stack);
+      thread->stack = 0;
+*/
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_STARTED);
       GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
@@ -440,9 +471,11 @@ gst_thread_change_state (GstElement * element)
 static void *
 gst_thread_main_loop (void *arg)
 {
-  GstThread *thread = GST_THREAD (arg);
+  GstThread *thread = NULL;
   gint stateset;
 
+  THR_DEBUG ("gst_thread_main_loop started");
+  thread = GST_THREAD (arg);
   g_mutex_lock (thread->lock);
 
   gst_scheduler_setup (GST_ELEMENT_SCHED (thread));
