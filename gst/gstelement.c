@@ -2579,7 +2579,7 @@ gst_element_interrupt (GstElement *element)
     return gst_scheduler_interrupt (GST_ELEMENT_SCHED (element), element);
   }
   else 
-    return FALSE;
+    return TRUE;
 }
 
 /**

@@ -116,7 +116,7 @@ static GstElementStateReturn
 			gst_basic_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
 static void 		gst_basic_scheduler_lock_element 	(GstScheduler *sched, GstElement *element);
 static void 		gst_basic_scheduler_unlock_element 	(GstScheduler *sched, GstElement *element);
-static void 		gst_basic_scheduler_yield 		(GstScheduler *sched, GstElement *element);
+static gboolean		gst_basic_scheduler_yield 		(GstScheduler *sched, GstElement *element);
 static gboolean		gst_basic_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
 static void 		gst_basic_scheduler_error	 	(GstScheduler *sched, GstElement *element);
 static void     	gst_basic_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
@@ -1118,7 +1118,7 @@ gst_basic_scheduler_unlock_element (GstScheduler * sched, GstElement * element)
     do_cothread_unlock (GST_ELEMENT_THREADSTATE (element));
 }
 
-static void
+static gboolean
 gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
 {
   if (GST_ELEMENT_IS_COTHREAD_STOPPING (element)) {
@@ -1127,6 +1127,7 @@ gst_basic_scheduler_yield (GstScheduler *sched, GstElement *element)
     
     /* no need to do a pre_run, the cothread is stopping */
   }
+  return FALSE;
 }
 
 static gboolean

@@ -464,19 +464,24 @@ gst_scheduler_error (GstScheduler *sched, GstElement *element)
  * @element: the element requesting a yield
  *
  * Tell the scheduler to schedule another element.
+ *
+ * Returns: TRUE if the element should save its state, FALSE
+ * if the scheduler can perform this action itself.
  */
-void
+gboolean
 gst_scheduler_yield (GstScheduler *sched, GstElement *element)
 {
   GstSchedulerClass *sclass;
 
-  g_return_if_fail (GST_IS_SCHEDULER (sched));
-  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_val_if_fail (GST_IS_SCHEDULER (sched), TRUE);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), TRUE);
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
   if (sclass->yield)
-    sclass->yield (sched, element);
+    return sclass->yield (sched, element);
+
+  return TRUE;
 }
 
 /**

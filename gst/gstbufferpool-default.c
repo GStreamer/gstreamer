@@ -151,8 +151,16 @@ _gst_buffer_pool_default_free (GstData *data)
   GstBufferPool *pool = (GstBufferPool*) data;
   GstBufferPoolDefault *def = (GstBufferPoolDefault*) pool->user_data;
   GstMemChunk *data_chunk = def->mem_chunk;
+  guint real_buffer_size;
   
-  GST_DEBUG (GST_CAT_BUFFER, "destroying default buffer pool %p", pool);
+  real_buffer_size = (((def->size-1) / 32) + 1) * 32;
+
+  GST_DEBUG (GST_CAT_BUFFER,"destroying default buffer pool %p bytes:%d size:%d",
+             pool, real_buffer_size, def->size);
+  
+  g_mutex_lock (_default_pool_lock);
+  g_hash_table_remove (_default_pools, GINT_TO_POINTER (real_buffer_size));
+  g_mutex_unlock (_default_pool_lock);
   
   /* this is broken right now, FIXME
      gst_mem_chunk_destroy (data_chunk); */

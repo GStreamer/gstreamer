@@ -89,7 +89,7 @@ struct _GstSchedulerClass {
   void			(*scheduling_change)	(GstScheduler *sched, GstElement *element);
   void 			(*lock_element)		(GstScheduler *sched, GstElement *element);
   void 			(*unlock_element)	(GstScheduler *sched, GstElement *element);
-  void 			(*yield)		(GstScheduler *sched, GstElement *element);
+  gboolean		(*yield)		(GstScheduler *sched, GstElement *element);
   gboolean		(*interrupt)		(GstScheduler *sched, GstElement *element);
   void 			(*error)		(GstScheduler *sched, GstElement *element);
   void 			(*pad_link)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
@@ -123,7 +123,7 @@ GstElementStateReturn	gst_scheduler_state_transition	(GstScheduler *sched, GstEl
 void			gst_scheduler_scheduling_change	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_lock_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_unlock_element	(GstScheduler *sched, GstElement *element);
-void			gst_scheduler_yield		(GstScheduler *sched, GstElement *element);
+gboolean		gst_scheduler_yield		(GstScheduler *sched, GstElement *element);
 gboolean		gst_scheduler_interrupt		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_error		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);

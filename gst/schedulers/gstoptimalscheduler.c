@@ -202,7 +202,7 @@ static GstElementStateReturn
 static void             gst_opt_scheduler_scheduling_change     (GstScheduler *sched, GstElement *element);
 static void 		gst_opt_scheduler_lock_element 		(GstScheduler *sched, GstElement *element);
 static void 		gst_opt_scheduler_unlock_element 	(GstScheduler *sched, GstElement *element);
-static void 		gst_opt_scheduler_yield 		(GstScheduler *sched, GstElement *element);
+static gboolean		gst_opt_scheduler_yield 		(GstScheduler *sched, GstElement *element);
 static gboolean		gst_opt_scheduler_interrupt 		(GstScheduler *sched, GstElement *element);
 static void 		gst_opt_scheduler_error	 		(GstScheduler *sched, GstElement *element);
 static void     	gst_opt_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
@@ -1214,7 +1214,7 @@ gst_opt_scheduler_unlock_element (GstScheduler *sched, GstElement *element)
   g_warning ("unlock element, implement me");
 }
 
-static void
+static gboolean
 gst_opt_scheduler_yield (GstScheduler *sched, GstElement *element)
 {
 #ifdef USE_COTHREADS
@@ -1224,6 +1224,12 @@ gst_opt_scheduler_yield (GstScheduler *sched, GstElement *element)
   get_group (element, &group);
   if (group && group->entry == element)
     do_cothread_switch (do_cothread_get_main (((GstOptScheduler*)sched)->context)); 
+
+  return FALSE;
+#else
+  g_warning ("element %s performs a yield, please fix the element", 
+		  GST_ELEMENT_NAME (element));
+  return TRUE;
 #endif
 }
 
