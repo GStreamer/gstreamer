@@ -25,12 +25,12 @@
 
 #include "gstsmoothwave.h"
 
-static GstElementDetails gst_smoothwave_details = {
+static GstElementDetails gst_smoothwave_details = GST_ELEMENT_DETAILS (
   "Smooth waveform",
   "Visualization",
   "Fading grayscale waveform display",
-  "Erik Walthinsen <omega@cse.ogi.edu>",
-};
+  "Erik Walthinsen <omega@cse.ogi.edu>"
+);
 
 
 /* SmoothWave signals and args */
