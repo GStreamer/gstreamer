@@ -1,3 +1,8 @@
+2004-04-16  Johan Dahlin  <johan@gnome.org>
+
+	* docs/gst/gstreamer-sections.txt: Add gst_pad_call_chain_function
+	and gst_pad_call_get_function.
+
 2004-04-15  David Schleef  <ds@schleef.org>
 
 	* common/m4/gst-arch.m4: Add GST_UNALIGNED_ACCESS() macro that

@@ -208,6 +208,8 @@ gst_pad_connect_filtered
 gst_pad_disconnect
 gst_pad_proxy_connect
 gst_pad_set_connect_function
+gst_pad_call_chain_function
+gst_pad_call_get_function
 GST_PAD_CONNECT_REFUSED
 GST_PAD_CONNECT_DELAYED
 GST_PAD_CONNECT_OK
