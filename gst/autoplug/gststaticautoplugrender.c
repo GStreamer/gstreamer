@@ -154,12 +154,21 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
         !GST_PAD_CONNECTED (pad) && !GST_PAD_CONNECTED(sinkpad))
     {
+      GstElementState state = GST_STATE (gst_element_get_parent (src));
+
+      if (state == GST_STATE_PLAYING)
+        gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PAUSED);
+	
       if ((connected = gst_pad_connect (pad, sinkpad))) {
+        if (state == GST_STATE_PLAYING)
+          gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PLAYING);
 	break;
       }
       else {
         GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
       }
+      if (state == GST_STATE_PLAYING)
+        gst_element_set_state (GST_ELEMENT (gst_element_get_parent (src)), GST_STATE_PLAYING);
     }
     sinkpads = g_list_next(sinkpads);
   }
