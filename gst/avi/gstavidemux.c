@@ -66,7 +66,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   GST_CAPS_NEW (
     "avidemux_sink",
      "video/avi",
-     NULL
+      "RIFF", GST_PROPS_STRING ("AVI")
   )
 )
 
@@ -204,7 +204,9 @@ avi_typefind (GstBuffer *buf,
   if (GUINT32_FROM_LE (((guint32 *)data)[2]) != GST_RIFF_RIFF_AVI)
     return NULL;
 
-  new = gst_caps_new ("avi_typefind","video/avi", NULL);
+  new = GST_CAPS_NEW ("avi_typefind",
+		      "video/avi", 
+		        "RIFF", GST_PROPS_STRING ("AVI"));
 
   return new;
 }

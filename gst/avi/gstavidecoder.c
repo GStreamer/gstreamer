@@ -67,7 +67,7 @@ GST_PADTEMPLATE_FACTORY (sink_templ,
   GST_CAPS_NEW (
     "avidecoder_sink",
      "video/avi",
-     NULL
+       "RIFF",  GST_PROPS_STRING ("AVI")
   )
 )
 
@@ -304,7 +304,9 @@ avi_typefind (GstBuffer *buf,
   if (strncmp (&data[0], "RIFF", 4)) return NULL;
   if (strncmp (&data[8], "AVI ", 4)) return NULL;
 
-  new = gst_caps_new ("avi_typefind","video/avi", NULL);
+  new = GST_CAPS_NEW ("avi_typefind",
+		      "video/avi", 
+		        "RIFF", GST_PROPS_STRING ("AVI"));
 
   return new;
 }
