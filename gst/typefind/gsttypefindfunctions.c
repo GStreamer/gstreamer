@@ -1209,6 +1209,38 @@ theora_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
+/*** application/x-ogm-video or audio*****************************************/
+
+static GstStaticCaps ogmvideo_caps =
+GST_STATIC_CAPS ("application/x-ogm-video");
+#define OGMVIDEO_CAPS (gst_static_caps_get(&ogmvideo_caps))
+static void
+ogmvideo_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 9);
+
+  if (data) {
+    if (memcmp (data, "\001video\000\000\000", 9) != 0)
+      return;
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OGMVIDEO_CAPS);
+  }
+}
+
+static GstStaticCaps ogmaudio_caps =
+GST_STATIC_CAPS ("application/x-ogm-audio");
+#define OGMAUDIO_CAPS (gst_static_caps_get(&ogmaudio_caps))
+static void
+ogmaudio_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 9);
+
+  if (data) {
+    if (memcmp (data, "\001audio\000\000\000", 9) != 0)
+      return;
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OGMAUDIO_CAPS);
+  }
+}
+
 /*** audio/x-speex ***********************************************************/
 
 static GstStaticCaps speex_caps = GST_STATIC_CAPS ("audio/x-speex");
@@ -1335,7 +1367,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
   static gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
   static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
-  static gchar *ogg_exts[] = { "ogg", NULL };
+  static gchar *ogg_exts[] = { "ogg", "ogm", NULL };
   static gchar *qt_exts[] = { "mov", NULL };
   static gchar *rm_exts[] = { "ra", "ram", "rm", NULL };
   static gchar *swf_exts[] = { "swf", "swfl", NULL };
@@ -1458,6 +1490,10 @@ plugin_init (GstPlugin * plugin)
       vorbis_type_find, NULL, VORBIS_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-theora", GST_RANK_PRIMARY,
       theora_type_find, NULL, THEORA_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-ogm-video", GST_RANK_PRIMARY,
+      ogmvideo_type_find, NULL, OGMVIDEO_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-ogm-audio", GST_RANK_PRIMARY,
+      ogmaudio_type_find, NULL, OGMAUDIO_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-speex", GST_RANK_PRIMARY,
       speex_type_find, NULL, SPEEX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,

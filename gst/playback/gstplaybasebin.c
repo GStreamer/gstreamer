@@ -254,8 +254,7 @@ unknown_type (GstElement * element, GstCaps * caps,
   gchar *capsstr = gst_caps_to_string (caps);
 
   g_warning ("don't know how to handle %s", capsstr);
-  GST_ELEMENT_ERROR (play_base_bin, STREAM, TYPE_NOT_FOUND,
-      ("Don't know how to handle %s", capsstr), (NULL));
+
   g_free (capsstr);
 }
 
