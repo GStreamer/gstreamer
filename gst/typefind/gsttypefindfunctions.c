@@ -327,10 +327,13 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
 
   while (skipped < GST_MP3_TYPEFIND_TRY_SYNC) {
     if (size <= 0) {
-      data = gst_type_find_peek (tf, skipped, GST_MP3_TYPEFIND_SYNC_SIZE);
+      size = GST_MP3_TYPEFIND_SYNC_SIZE * 2;
+      do {
+        size /= 2;
+        data = gst_type_find_peek (tf, skipped, size);
+      } while (size > 10 && !data);
       if (!data)
         break;
-      size = GST_MP3_TYPEFIND_SYNC_SIZE;
     }
     if (*data == 0xFF) {
       guint8 *head_data = NULL;

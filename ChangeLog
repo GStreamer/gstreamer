@@ -1,3 +1,12 @@
+2004-05-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/lame/gstlame.c: (gst_lame_chain):
+	  simplify
+	* ext/mad/gstmad.c: (gst_mad_handle_event):
+	  fix event leak
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find):
+	  be able to detect mp3 files < 4096 bytes
+
 2004-05-06  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
@@ -102,6 +111,7 @@
 	* ext/lame/gstlame.c:
 	correct defaults that lame_init puts out of range
 
+>>>>>>> 1.601
 2004-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/divx/gstdivxenc.c: (gst_divxenc_get_type),
