@@ -2,6 +2,7 @@
  * Copyright (C) 1999,2000,2001,2002 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000,2001,2002 Wim Taymans <wtay@chello.be>
  *                              2002 Steve Baker <steve@stevebaker.org>
+ *								2003 Julien Moutte <julien@moutte.net>
  *
  * playpipelines.c: Set up pipelines for playback
  *
@@ -22,13 +23,16 @@
  */
 
 static gboolean
-gst_play_default_set_data_src (GstPlay *play, GstElement *datasrc, GstElement* parent)
+gst_play_default_set_data_src (	GstPlay *play,
+								GstElement *datasrc,
+								GstElement* parent)
 {
 	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (datasrc), FALSE);
 	
 	if (GST_IS_ELEMENT(play->source)) {
-		/* we need to remove the existing data source before creating a new one */
+		/* we need to remove the existing data
+			source before creating a new one */
 		if (GST_IS_ELEMENT(play->autoplugger)){
 			gst_element_unlink (play->autoplugger, play->source);
 		}
@@ -51,7 +55,8 @@ gst_play_default_set_data_src (GstPlay *play, GstElement *datasrc, GstElement* p
  */
 
 static gboolean 
-gst_play_audio_setup (GstPlay *play, GError **error)
+gst_play_audio_setup (	GstPlay *play,
+						GError **error)
 {
 	
 	/* creating gst_bin */
@@ -105,7 +110,8 @@ gst_play_audio_setup (GstPlay *play, GError **error)
 }
 
 static gboolean
-gst_play_simple_set_data_src (GstPlay *play, GstElement *datasrc)
+gst_play_simple_set_data_src (	GstPlay *play,
+								GstElement *datasrc)
 {
 	return gst_play_default_set_data_src(play, datasrc, play->pipeline);
 }
@@ -116,7 +122,8 @@ gst_play_simple_set_data_src (GstPlay *play, GstElement *datasrc)
  */
  
 static gboolean 
-gst_play_audiot_setup (GstPlay *play, GError **error)
+gst_play_audiot_setup (	GstPlay *play,
+						GError **error)
 {
 	
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
@@ -173,7 +180,8 @@ gst_play_audiot_setup (GstPlay *play, GError **error)
 
 
 static gboolean
-gst_play_audiot_set_audio (GstPlay *play, GstElement *audio_sink)
+gst_play_audiot_set_audio (	GstPlay *play,
+							GstElement *audio_sink)
 {
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
@@ -200,14 +208,16 @@ gst_play_audiot_set_audio (GstPlay *play, GstElement *audio_sink)
 
 
 static gboolean
-gst_play_audiot_set_auto (GstPlay *play, GstElement *autoplugger)
+gst_play_audiot_set_auto (	GstPlay *play,
+							GstElement *autoplugger)
 {
 
 	g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 	g_return_val_if_fail (GST_IS_ELEMENT (autoplugger), FALSE);
 	
 	if (play->autoplugger) {
-		/* we need to remove the existing autoplugger before creating a new one */
+		/* we need to remove the existing autoplugger
+			before creating a new one */
 		gst_element_unlink (play->autoplugger, play->volume);
 		gst_element_unlink (play->autoplugger, play->source);
 		gst_bin_remove (GST_BIN (play->pipeline), play->autoplugger);
@@ -228,7 +238,8 @@ gst_play_audiot_set_auto (GstPlay *play, GstElement *autoplugger)
  */
 
 static gboolean 
-gst_play_audioht_setup (GstPlay *play, GError **error)
+gst_play_audioht_setup (	GstPlay *play,
+							GError **error)
 {
 	GstElement *audio_thread, *audio_queue;
 
@@ -313,7 +324,8 @@ gst_play_audioht_setup (GstPlay *play, GError **error)
 
 
 static gboolean
-gst_play_audioht_set_audio (GstPlay *play, GstElement *audio_sink)
+gst_play_audioht_set_audio (	GstPlay *play,
+								GstElement *audio_sink)
 {
 	GstElement *audio_thread;
 	
@@ -344,7 +356,8 @@ gst_play_audioht_set_audio (GstPlay *play, GstElement *audio_sink)
 
 
 static gboolean
-gst_play_audioht_set_auto (GstPlay *play, GstElement *autoplugger)
+gst_play_audioht_set_auto (	GstPlay *play,
+							GstElement *autoplugger)
 {
 	GstElement *audio_thread;
 	
@@ -354,7 +367,8 @@ gst_play_audioht_set_auto (GstPlay *play, GstElement *autoplugger)
 	audio_thread = g_hash_table_lookup(play->other_elements, "audio_thread");
 
 	if (play->autoplugger) {
-		/* we need to remove the existing autoplugger before creating a new one */
+		/* we need to remove the existing autoplugger
+			before creating a new one */
 		gst_element_unlink (play->autoplugger, audio_thread);
 		gst_element_unlink (play->autoplugger, play->source);
 		gst_bin_remove (GST_BIN (play->pipeline), play->autoplugger);
@@ -376,7 +390,8 @@ gst_play_audioht_set_auto (GstPlay *play, GstElement *autoplugger)
  */
 
 static gboolean 
-gst_play_video_setup (GstPlay *play, GError **error)
+gst_play_video_setup (	GstPlay *play,
+						GError **error)
 {
 	GstElement *audio_bin, *audio_queue;
 	GstElement *video_queue, *video_bin;
@@ -523,7 +538,8 @@ gst_play_video_setup (GstPlay *play, GError **error)
 }
 
 static gboolean
-gst_play_video_set_data_src (GstPlay *play, GstElement *datasrc)
+gst_play_video_set_data_src (	GstPlay *play,
+								GstElement *datasrc)
 {
 	GstElement *work_thread;
 	g_return_val_if_fail (GST_IS_PLAY(play), FALSE);
@@ -533,7 +549,8 @@ gst_play_video_set_data_src (GstPlay *play, GstElement *datasrc)
 }
 
 static gboolean
-gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger)
+gst_play_video_set_auto (	GstPlay *play,
+							GstElement *autoplugger)
 {
 
 	GstElement *audio_bin, *video_bin, *work_thread;
@@ -546,7 +563,8 @@ gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger)
 	work_thread = g_hash_table_lookup(play->other_elements, "work_thread");
 
 	if (play->autoplugger) {
-		/* we need to remove the existing autoplugger before creating a new one */
+		/* we need to remove the existing autoplugger
+			before creating a new one */
 		gst_element_unlink (play->autoplugger, audio_bin);
 		gst_element_unlink (play->autoplugger, play->source);
 		gst_element_unlink (play->autoplugger, video_bin);
@@ -567,7 +585,8 @@ gst_play_video_set_auto (GstPlay *play, GstElement *autoplugger)
 
 
 static gboolean
-gst_play_video_set_video (GstPlay *play, GstElement *video_sink)
+gst_play_video_set_video (	GstPlay *play,
+							GstElement *video_sink)
 {
 	GstElement *video_mate, *video_bin;
 	
@@ -588,18 +607,27 @@ gst_play_video_set_video (GstPlay *play, GstElement *video_sink)
 	play->video_sink_element = gst_play_get_sink_element (play, video_sink);
 
 	if (play->video_sink_element != NULL) {
-		g_signal_connect (G_OBJECT (play->video_sink_element), "have_xid",
-				  G_CALLBACK (callback_video_have_xid), play);
-		g_signal_connect (G_OBJECT (play->video_sink_element), "have_size",
-				  G_CALLBACK (callback_video_have_size), play);
-		g_object_set(G_OBJECT(play->video_sink_element), "need_new_window", TRUE, "toplevel", FALSE, NULL);
+		g_signal_connect (	G_OBJECT (play->video_sink_element),
+							"have_xid",
+				  			G_CALLBACK (callback_video_have_xid),
+							play);
+		g_signal_connect (	G_OBJECT (play->video_sink_element),
+							"have_size",
+				  			G_CALLBACK (callback_video_have_size),
+							play);
+		g_object_set(	G_OBJECT(play->video_sink_element),
+						"need_new_window",
+						TRUE,
+						"toplevel",
+						FALSE, NULL);
 	}
 	return TRUE;
 }
 
 
 static gboolean
-gst_play_video_set_audio (GstPlay *play, GstElement *audio_sink)
+gst_play_video_set_audio (	GstPlay *play,
+							GstElement *audio_sink)
 {
 	GstElement *audio_bin;
 	
