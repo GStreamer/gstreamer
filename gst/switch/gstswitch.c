@@ -54,6 +54,44 @@ static GstElementClass *parent_class = NULL;
 /*                                                               */
 /* ============================================================= */
 
+static void
+gst_switch_release_pad (GstElement *element, GstPad *pad)
+{
+  GList *sinkpads = NULL;
+  GstSwitch *gstswitch = NULL;
+  GstSwitchPad *switchpad = NULL;
+  
+  g_return_if_fail (GST_IS_SWITCH (element));
+  
+  gstswitch = GST_SWITCH (element);
+  
+  sinkpads = gstswitch->sinkpads;
+  
+  /* Walking through our pad list searching for the pad we want to release */
+  while (sinkpads) {
+    switchpad = sinkpads->data;
+    
+    if (switchpad && switchpad->sinkpad == pad)
+      break;
+    else 
+      switchpad = NULL;
+    
+    sinkpads = g_list_next (sinkpads);
+  }
+  
+  /* Releasing the found pad */
+  if (switchpad) {
+    if (!switchpad->forwarded && switchpad->data)
+      gst_data_unref (switchpad->data);
+    gst_element_remove_pad (element, pad);
+    gstswitch->sinkpads = g_list_remove (gstswitch->sinkpads, switchpad);
+    gstswitch->nb_sinkpads--;
+    if (gstswitch->active_sinkpad >= gstswitch->nb_sinkpads)
+      gstswitch->active_sinkpad = 0;
+    g_free (switchpad);
+  }
+}
+
 static GstPad*
 gst_switch_request_new_pad (GstElement *element,
                             GstPadTemplate *templ,
@@ -120,24 +158,28 @@ gst_switch_poll_sinkpads (GstSwitch *gstswitch)
   
   while (pads) {
     GstSwitchPad *switchpad = pads->data;
-    GstData *data = gst_pad_pull (switchpad->sinkpad);
-    if (GST_IS_EVENT (data) &&
-        (GST_EVENT_TYPE (GST_EVENT (data)) == GST_EVENT_EOS)) {
-      /* If that data was not forwarded we unref it */
-      if (!switchpad->forwarded && switchpad->data) {
+    GstData *data = NULL;
+    
+    /* If that data was not forwarded we unref it */
+    if (!switchpad->forwarded && switchpad->data) {
         gst_data_unref (switchpad->data);
         switchpad->data = NULL;
       }
-      gst_event_unref (GST_EVENT (data));
+
+    if (GST_PAD_IS_USABLE (switchpad->sinkpad)) {
+      data = gst_pad_pull (switchpad->sinkpad);
+
+      if (GST_IS_EVENT (data) &&
+          (GST_EVENT_TYPE (GST_EVENT (data)) == GST_EVENT_EOS)) {
+        gst_event_unref (GST_EVENT (data));
+      }
+      else  {
+        switchpad->data = data;
+        switchpad->forwarded = FALSE;
+      }
     }
-    else  {
-      /* If that data was not forwarded we unref it */
-      if (!switchpad->forwarded && switchpad->data) {
-        gst_data_unref (switchpad->data);
-        switchpad->data = NULL;
-      }
-      switchpad->data = data;
-      switchpad->forwarded = FALSE;
+    else {
+      g_message ("not pulling from pad %s", gst_pad_get_name (switchpad->sinkpad));
     }
     pads = g_list_next (pads);
   }
@@ -298,6 +340,7 @@ gst_switch_class_init (GstSwitchClass *klass)
   gobject_class->get_property = gst_switch_get_property;
   
   gstelement_class->request_new_pad = gst_switch_request_new_pad;
+  gstelement_class->release_pad = gst_switch_release_pad;
 }
 
 /* ============================================================= */
