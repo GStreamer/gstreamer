@@ -732,8 +732,8 @@ print_element_info (GstElementFactory *factory)
     guint nsignals;
     gint i, k;
     GSignalQuery *query;
+    GType type;
 
-    signals = g_signal_list_ids (G_OBJECT_TYPE (element), &nsignals);
     for (k = 0; k < 2; k++) {
       gint counted = 0;
 
@@ -742,37 +742,41 @@ print_element_info (GstElementFactory *factory)
       else
         g_print ("\nElement Actions:\n");
 
-      for (i = 0; i < nsignals; i++) {
-        gint n_params;
-        GType return_type;
-        const GType *param_types;
-        gint j;
+      for(type = G_OBJECT_TYPE(element); type; type = g_type_parent(type)){
+        signals = g_signal_list_ids (type, &nsignals);
 
-        query = g_new0 (GSignalQuery,1);
-        g_signal_query (signals[i], query);
+	for (i = 0; i < nsignals; i++) {
+	  gint n_params;
+	  GType return_type;
+	  const GType *param_types;
+	  gint j;
 
-        if ((k == 0 && !(query->signal_flags & G_SIGNAL_ACTION)) ||
-            (k == 1 &&  (query->signal_flags & G_SIGNAL_ACTION))) {
-          n_params = query->n_params;
-          return_type = query->return_type;
-          param_types = query->param_types;
+	  query = g_new0 (GSignalQuery,1);
+	  g_signal_query (signals[i], query);
 
-          g_print ("  \"%s\" :\t %s user_function (%s* object",
-                  query->signal_name, g_type_name (return_type),
-                  g_type_name (G_OBJECT_TYPE (element)));
+	  if ((k == 0 && !(query->signal_flags & G_SIGNAL_ACTION)) ||
+	      (k == 1 &&  (query->signal_flags & G_SIGNAL_ACTION))) {
+	    n_params = query->n_params;
+	    return_type = query->return_type;
+	    param_types = query->param_types;
 
-          for (j = 0; j < n_params; j++) {
-            g_print (",\n    \t\t\t\t%s arg%d", g_type_name(param_types[j]), j);
-          }
-          if (k == 0)
-            g_print (",\n    \t\t\t\tgpointer user_data);\n");
-          else
-            g_print (");\n");
+	    g_print ("  \"%s\" :\t %s user_function (%s* object",
+		    query->signal_name, g_type_name (return_type),
+		    g_type_name (type));
 
-          counted++;
-        }
+	    for (j = 0; j < n_params; j++) {
+	      g_print (",\n    \t\t\t\t%s arg%d", g_type_name(param_types[j]), j);
+	    }
+	    if (k == 0)
+	      g_print (",\n    \t\t\t\tgpointer user_data);\n");
+	    else
+	      g_print (");\n");
 
-        g_free (query);
+	    counted++;
+	  }
+
+	  g_free (query);
+	}
       }
       if (counted == 0) g_print ("  none\n");
     }
