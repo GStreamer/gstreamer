@@ -62,7 +62,7 @@ main (int argc, char *argv[])
   element = gst_autoplug_to_caps (autoplug,
 		  gst_caps_new(
 			  "testcaps7",
-			  "video/avi", NULL),
+			  "video/x-msvideo", NULL),
 		  gst_caps_new("testcaps8", "video/raw", NULL),
 		  gst_caps_new("testcaps9", "audio/raw", NULL),
 		  NULL);
