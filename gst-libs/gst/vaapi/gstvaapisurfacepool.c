@@ -164,3 +164,39 @@ error:
   gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (pool));
   return NULL;
 }
+
+/**
+ * gst_vaapi_surface_pool_new_with_chroma_type:
+ * @display: a #GstVaapiDisplay
+ * @chroma_type: a #GstVaapiChromatype
+ * @width: the desired width, in pixels
+ * @height: the desired height, in pixels
+ *
+ * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the specified
+ * chroam type and dimensions. The underlying format of the surfaces is
+ * implementation (driver) defined.
+ *
+ * Return value: the newly allocated #GstVaapiVideoPool
+ */
+GstVaapiVideoPool *
+gst_vaapi_surface_pool_new_with_chroma_type (GstVaapiDisplay * display,
+    GstVaapiChromaType chroma_type, guint width, guint height)
+{
+  GstVaapiVideoPool *pool;
+  GstVideoInfo vi;
+
+  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (chroma_type > 0, NULL);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
+
+  gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_ENCODED, width, height);
+
+  pool = gst_vaapi_surface_pool_new_full (display, &vi, 0);
+  if (!pool)
+    return NULL;
+
+  GST_VAAPI_SURFACE_POOL (pool)->chroma_type = chroma_type;
+
+  return pool;
+}

@@ -44,6 +44,10 @@ GstVaapiVideoPool *
 gst_vaapi_surface_pool_new_full (GstVaapiDisplay * display,
     const GstVideoInfo * vip, guint flags);
 
+GstVaapiVideoPool *
+gst_vaapi_surface_pool_new_with_chroma_type (GstVaapiDisplay * display,
+    GstVaapiChromaType chroma_type, guint width, guint height);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_SURFACE_POOL_H */
