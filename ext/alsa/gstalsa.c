@@ -1249,6 +1249,7 @@ gst_alsa_link (GstPad * pad, const GstCaps * caps)
   GstAlsa *this;
   GstAlsaFormat *format;
   GstPadLinkReturn ret;
+  gint old_rate = 0;
 
   g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
@@ -1313,8 +1314,12 @@ gst_alsa_link (GstPad * pad, const GstCaps * caps)
     /* sync the params */
     if (GST_FLAG_IS_SET (this, GST_ALSA_RUNNING))
       gst_alsa_stop_audio (this);
+    if (this->format)
+      old_rate = this->format->rate;
     g_free (this->format);
     this->format = format;
+    if (this->played && old_rate)
+      this->played = this->played * this->format->rate / old_rate;
     if (!gst_alsa_start_audio (this)) {
       GST_ELEMENT_ERROR (this, RESOURCE, SETTINGS, (NULL), (NULL));
       return GST_PAD_LINK_REFUSED;

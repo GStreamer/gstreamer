@@ -1668,6 +1668,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *tiff_exts[] = { "tif", "tiff", NULL };
   static gchar *matroska_exts[] = { "mkv", "mka", NULL };
   static gchar *dv_exts[] = { "dv", "dif", NULL };
+  static gchar *amr_exts[] = { "amr", NULL };
   static gchar *sid_exts[] = { "sid", NULL };
   static gchar *xcf_exts[] = { "xcf", NULL };
   static gchar *mng_exts[] = { "mng", NULL };
@@ -1778,6 +1779,10 @@ plugin_init (GstPlugin * plugin)
       matroska_type_find, matroska_exts, MATROSKA_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-dv", GST_RANK_SECONDARY, dv_type_find,
       dv_exts, DV_CAPS, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-amr-nb-sh", GST_RANK_PRIMARY,
+      amr_exts, "#!AMR", 5, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-amr-wb-sh", GST_RANK_PRIMARY,
+      amr_exts, "#!AMR-WB", 7, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-sid", GST_RANK_MARGINAL,
       sid_exts, "PSID", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "image/x-xcf", GST_RANK_SECONDARY,

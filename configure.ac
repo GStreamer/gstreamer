@@ -778,6 +778,16 @@ GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
   ])
 ])
 
+dnl *** AMR-NB ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
+GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
+  GST_CHECK_LIBHEADER(AMRNB, amrnb,
+		      Decoder_Interface_init, -lm,
+		      amrnb/interf_dec.h,
+		      AMRNB_LIBS="-lamrnb -lm"
+		      AC_SUBST(AMRNB_LIBS))
+])
+
 dnl *** arts ***
 dnl if mcopidl can't be found there's no use in compiling it
 AC_CHECK_PROG(MCOPIDL, mcopidl, yes, no)
@@ -2021,6 +2031,7 @@ ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
+ext/amrnb/Makefile
 ext/arts/Makefile
 ext/artsd/Makefile
 ext/audiofile/Makefile
