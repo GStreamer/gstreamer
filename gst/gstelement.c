@@ -3014,6 +3014,9 @@ gst_element_change_state (GstElement * element)
        * - a new state was added
        * - somehow the element was asked to jump across an intermediate state
        */
+      g_warning ("Unhandled state change from %s to %s",
+          gst_element_state_get_name (old_state),
+          gst_element_state_get_name (old_pending));
       break;
   }
 

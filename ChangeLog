@@ -1,3 +1,11 @@
+2004-09-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstelement.c: (gst_element_change_state):
+	  Well, actually, I was about to remove this insane assert when
+	  I noticed Wim already did that. A warning is nice so we can
+	  fix actual ugs (using --g-fatal-warnings and backtraces), so
+	  I added that instead.
+
 2004-09-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelement.c: (gst_element_threadsafe_properties_pre_run),
