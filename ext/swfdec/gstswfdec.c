@@ -25,15 +25,12 @@
 #include <string.h>
 
 /* elementfactory information */
-static GstElementDetails gst_swfdec_details = {
+static GstElementDetails gst_swfdec_details = GST_ELEMENT_DETAILS (
   "SWF video decoder",
   "Codec/Video/Decoder",
-  "LGPL",
   "Uses libswfdec to decode Flash video streams",
-  VERSION,
-  "David Schleef <ds@schleef.org>",
-  "(C) 2002",
-};
+  "David Schleef <ds@schleef.org>"
+);
 
 /* Swfdec signals and args */
 enum {
@@ -92,6 +89,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   )
 );
 
+static void	gst_swfdec_base_init		(gpointer g_class);
 static void	gst_swfdec_class_init		(GstSwfdecClass *klass);
 static void	gst_swfdec_init		(GstSwfdec *swfdec);
 
@@ -128,7 +126,7 @@ gst_swfdec_get_type (void)
   if (!swfdec_type) {
     static const GTypeInfo swfdec_info = {
       sizeof(GstSwfdecClass),      
-      NULL,
+      gst_swfdec_base_init,
       NULL,
       (GClassInitFunc)gst_swfdec_class_init,
       NULL,
@@ -142,6 +140,20 @@ gst_swfdec_get_type (void)
   return swfdec_type;
 }
 
+static void
+gst_swfdec_base_init(gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_swfdec_details);
+
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (video_template_factory));
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (audio_template_factory));
+  gst_element_class_add_pad_template (element_class,
+		  GST_PAD_TEMPLATE_GET (sink_template_factory));
+}
 static void
 gst_swfdec_class_init(GstSwfdecClass *klass)
 {
@@ -627,31 +639,20 @@ gst_swfdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the swfdec element */
-  factory = gst_element_factory_new("swfdec",GST_TYPE_SWFDEC,
-                                   &gst_swfdec_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  gst_element_factory_add_pad_template (factory,
-		  GST_PAD_TEMPLATE_GET (video_template_factory));
-  gst_element_factory_add_pad_template (factory,
-		  GST_PAD_TEMPLATE_GET (audio_template_factory));
-  gst_element_factory_add_pad_template (factory,
-		  GST_PAD_TEMPLATE_GET (sink_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "swfdec", GST_RANK_PRIMARY, GST_TYPE_SWFDEC);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "swfdec",
-  plugin_init
-};
+  "Uses libswfdec to decode Flash video streams",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
