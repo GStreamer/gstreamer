@@ -1,3 +1,13 @@
+2004-07-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_src_getcaps):
+	* ext/libpng/gstpngenc.c: (gst_pngenc_class_init),
+	(gst_pngenc_init), (gst_pngenc_chain), (gst_pngenc_get_property),
+	(gst_pngenc_set_property):
+	* ext/libpng/gstpngenc.h:
+	Added snapshot property to pngenc.
+	removed g_print from pngdec
+
 2004-07-27  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/ac3parse/ac3parse.vcproj
