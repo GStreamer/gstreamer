@@ -319,6 +319,21 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_GSM_TRUE@%post -n gstreamer-gsm
 @USE_GSM_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 
+@USE_MJPEGTOOLS_TRUE@%package -n gstreamer-jpegmmx
+@USE_MJPEGTOOLS_TRUE@Summary: Gstreamer mjpegtools
+@USE_MJPEGTOOLS_TRUE@Group: Libraries/Multimedia
+@USE_MJPEGTOOLS_TRUE@Requires: gstreamer >= %{ver}
+@USE_MJPEGTOOLS_TRUE@
+@USE_MJPEGTOOLS_TRUE@%description -n gstreamer-jpegmmx
+@USE_MJPEGTOOLS_TRUE@Mgpegtools based encoding and decoding plugin
+@USE_MJPEGTOOLS_TRUE@
+@USE_MJPEGTOOLS_TRUE@%files -n gstreamer-jpegmmx
+@USE_MJPEGTOOLS_TRUE@%defattr(-, root, root)
+@USE_MJPEGTOOLS_TRUE@%{prefix}/lib/gst/libgstjpegmmx*
+@USE_MJPEGTOOLS_TRUE@
+@USE_MJPEGTOOLS_TRUE@%post -n gstreamer-jpegmmx
+@USE_MJPEGTOOLS_TRUE@%{prefix}/bin/gst-register --gst-mask=0
+
 @USE_MPEG2DEC_TRUE@%package -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@Summary: GStreamer plugins for MPEG video playback and encoding
 @USE_MPEG2DEC_TRUE@Group: Libraries/Multimedia
@@ -751,21 +766,6 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 %{prefix}/lib/gst/libgstvu*
 
 %post -n gstreamer-visualisation
-%{prefix}/bin/gst-register --gst-mask=0
-
-%package -n gstreamer-jpegmmx
-Summary: Gstreamer mjpegtools
-Group: Libraries/Multimedia
-Requires: gstreamer >= %{ver}
-
-%description -n gstreamer-jpegmmx
-Mgpegtools based encoding and decoding plugin
-
-%files -n gstreamer-jpegmmx
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstjpegmmx*
-
-%post -n gstreamer-jpegmmx
 %{prefix}/bin/gst-register --gst-mask=0
 
 %package -n gstreamer-plugin-libs
