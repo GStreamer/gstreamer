@@ -1,3 +1,9 @@
+2004-05-16  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_comment):
+	  - process comments even if they don't end with \0\0
+            g_convert would ignore them if present and works well without them
+
 2004-05-16  Benjamin Otte  <otte@gnome.org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_caps), (gst_alsa_get_caps):
@@ -9,7 +15,7 @@
 	  don't write to memory we might not write to - g_convert does that
 	  for us anyway (fixes #142613)
 	(gst_asf_demux_audio_caps):
-	  conmment out gst_util_dump_mem
+	  comment out gst_util_dump_mem
 
 2004-05-16  Benjamin Otte  <otte@gnome.org>
 
