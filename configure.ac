@@ -478,6 +478,7 @@ dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink esdmon, [
   AM_PATH_ESD(0.2.12, HAVE_ESD=yes, HAVE_ESD=no)
+  AS_SCRUB_INCLUDE(ESD_CFLAGS)
 ])
 
 dnl **** festival ****
