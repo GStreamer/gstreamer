@@ -56,8 +56,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_PORT,
   ARG_HOST,
+  ARG_PORT,
   ARG_PROTOCOL
 };
 
@@ -125,16 +125,16 @@ gst_tcpserversrc_class_init (GstTCPServerSrc * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
+      g_param_spec_string ("host", "Host", "The hostname to listen",
+          TCP_DEFAULT_HOST, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "Port", "The port to listen to",
           0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_GDP,
+          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
-      g_param_spec_string ("host", "Host", "The hostname to listen",
-          TCP_DEFAULT_HOST, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_tcpserversrc_set_property;
   gobject_class->get_property = gst_tcpserversrc_get_property;
@@ -170,7 +170,7 @@ gst_tcpserversrc_init (GstTCPServerSrc * this)
   this->server_sock_fd = -1;
   this->client_sock_fd = -1;
   this->curoffset = 0;
-  this->protocol = GST_TCP_PROTOCOL_TYPE_GDP;
+  this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
 
   GST_FLAG_UNSET (this, GST_TCPSERVERSRC_OPEN);
 }
@@ -403,17 +403,17 @@ gst_tcpserversrc_set_property (GObject * object, guint prop_id,
   tcpserversrc = GST_TCPSERVERSRC (object);
 
   switch (prop_id) {
+    case ARG_HOST:
+      g_free (tcpserversrc->host);
+      tcpserversrc->host = g_strdup (g_value_get_string (value));
+      break;
     case ARG_PORT:
       tcpserversrc->server_port = g_value_get_int (value);
       break;
     case ARG_PROTOCOL:
       tcpserversrc->protocol = g_value_get_enum (value);
       break;
-    case ARG_HOST:
-      if (tcpserversrc->host)
-        g_free (tcpserversrc->host);
-      tcpserversrc->host = g_strdup (g_value_get_string (value));
-      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -430,15 +430,16 @@ gst_tcpserversrc_get_property (GObject * object, guint prop_id, GValue * value,
   tcpserversrc = GST_TCPSERVERSRC (object);
 
   switch (prop_id) {
+    case ARG_HOST:
+      g_value_set_string (value, tcpserversrc->host);
+      break;
     case ARG_PORT:
       g_value_set_int (value, tcpserversrc->server_port);
       break;
     case ARG_PROTOCOL:
       g_value_set_enum (value, tcpserversrc->protocol);
       break;
-    case ARG_HOST:
-      g_value_set_string (value, tcpserversrc->host);
-      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

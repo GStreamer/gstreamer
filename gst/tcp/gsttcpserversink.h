@@ -81,7 +81,10 @@ struct _GstTCPServerSink {
   size_t data_written; /* how much bytes have we written ? */
 
   fd_set clientfds; /* all the client file descriptors that are open */
-  fd_set caps_sent; /* all the client file descriptors that have had caps sent */
+  fd_set caps_sent; /* all the client file descriptors
+                     * that have had caps sent */
+  fd_set streamheader_sent; /* all the client file descriptors that have had
+                             * streamheader sent */
 
   GstTCPProtocolType protocol;
   guint mtu;
@@ -90,6 +93,10 @@ struct _GstTCPServerSink {
 
 struct _GstTCPServerSinkClass {
   GstElementClass parent_class;
+
+  /* signals */
+  void (*client_added) (GstElement *element, gchar *host, gint fd);
+  void (*client_removed) (GstElement *element, gchar *host, gint fd);
 };
 
 GType gst_tcpserversink_get_type (void);

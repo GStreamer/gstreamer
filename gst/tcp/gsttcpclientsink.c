@@ -131,7 +131,7 @@ gst_tcpclientsink_class_init (GstTCPClientSink * klass)
           0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_GDP,
+          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,
           G_PARAM_READWRITE));
   gobject_class->set_property = gst_tcpclientsink_set_property;
   gobject_class->get_property = gst_tcpclientsink_get_property;
@@ -166,7 +166,7 @@ gst_tcpclientsink_init (GstTCPClientSink * this)
   /* this->mtu = 1500; */
 
   this->sock_fd = -1;
-  this->protocol = GST_TCP_PROTOCOL_TYPE_GDP;
+  this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
   GST_FLAG_UNSET (this, GST_TCPCLIENTSINK_OPEN);
 
   this->clock = NULL;
@@ -254,12 +254,8 @@ gst_tcpclientsink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_HOST:
-      if (tcpclientsink->host != NULL)
-        g_free (tcpclientsink->host);
-      if (g_value_get_string (value) == NULL)
-        tcpclientsink->host = NULL;
-      else
-        tcpclientsink->host = g_strdup (g_value_get_string (value));
+      g_free (tcpclientsink->host);
+      tcpclientsink->host = g_strdup (g_value_get_string (value));
       break;
     case ARG_PORT:
       tcpclientsink->port = g_value_get_int (value);
@@ -267,7 +263,9 @@ gst_tcpclientsink_set_property (GObject * object, guint prop_id,
     case ARG_PROTOCOL:
       tcpclientsink->protocol = g_value_get_enum (value);
       break;
+
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -292,6 +290,7 @@ gst_tcpclientsink_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_PROTOCOL:
       g_value_set_enum (value, tcpclientsink->protocol);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

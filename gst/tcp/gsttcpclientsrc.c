@@ -61,8 +61,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_PORT,
   ARG_HOST,
+  ARG_PORT,
   ARG_PROTOCOL
 };
 
@@ -139,7 +139,7 @@ gst_tcpclientsrc_class_init (GstTCPClientSrc * klass)
           32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_GDP,
+          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,
           G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_tcpclientsrc_set_property;
@@ -174,7 +174,7 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this)
   this->host = g_strdup (TCP_DEFAULT_HOST);
   this->clock = NULL;
   this->sock_fd = -1;
-  this->protocol = GST_TCP_PROTOCOL_TYPE_GDP;
+  this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
   this->curoffset = 0;
 
   GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
@@ -345,17 +345,17 @@ gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
   tcpclientsrc = GST_TCPCLIENTSRC (object);
 
   switch (prop_id) {
-    case ARG_PORT:
-      tcpclientsrc->port = g_value_get_int (value);
-      break;
     case ARG_HOST:
-      /* FIXME: create a setter and handle changes correctly */
       g_free (tcpclientsrc->host);
       tcpclientsrc->host = g_strdup (g_value_get_string (value));
+      break;
+    case ARG_PORT:
+      tcpclientsrc->port = g_value_get_int (value);
       break;
     case ARG_PROTOCOL:
       tcpclientsrc->protocol = g_value_get_enum (value);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -372,11 +372,11 @@ gst_tcpclientsrc_get_property (GObject * object, guint prop_id, GValue * value,
   tcpclientsrc = GST_TCPCLIENTSRC (object);
 
   switch (prop_id) {
-    case ARG_PORT:
-      g_value_set_int (value, tcpclientsrc->port);
-      break;
     case ARG_HOST:
       g_value_set_string (value, tcpclientsrc->host);
+      break;
+    case ARG_PORT:
+      g_value_set_int (value, tcpclientsrc->port);
       break;
     case ARG_PROTOCOL:
       g_value_set_enum (value, tcpclientsrc->protocol);

@@ -2,13 +2,13 @@ plugin_LTLIBRARIES = libgsttcp.la
 
 # variables used for enum/marshal generation
 glib_enum_headers = gsttcp.h
-glib_enum_define = GST_TCP_PROTOCOL
-glib_enum_prefix = gst_tcp_protocol
+glib_enum_define = GST_TCP
+glib_enum_prefix = gst_tcp
 
 include $(top_srcdir)/common/glib-gen.mak
 
-built_sources = gsttcp-enumtypes.c
-built_headers = gsttcp-enumtypes.h
+built_sources = gsttcp-enumtypes.c gsttcp-marshal.c
+built_headers = gsttcp-enumtypes.h gsttcp-marshal.h
 
 BUILT_SOURCES = $(built_sources) $(built_headers)
 

@@ -30,6 +30,7 @@
 #endif
 
 #include "gsttcpserversink.h"
+#include "gsttcp-marshal.h"
 
 #define TCP_DEFAULT_HOST	"127.0.0.1"
 #define TCP_DEFAULT_PORT	4953
@@ -42,23 +43,23 @@ GST_ELEMENT_DETAILS ("TCP Server sink",
     "Send data as a server over the network via TCP",
     "Thomas Vander Stichele <thomas at apestaart dot org>");
 
+GST_DEBUG_CATEGORY (tcpserversink_debug);
+#define GST_CAT_DEFAULT (tcpserversink_debug)
+
 /* TCPServerSink signals and args */
 enum
 {
-  FRAME_ENCODED,
-  /* FILL ME */
+  SIGNAL_CLIENT_ADDED,
+  SIGNAL_CLIENT_REMOVED,
   LAST_SIGNAL
 };
-
-GST_DEBUG_CATEGORY (tcpserversink_debug);
-#define GST_CAT_DEFAULT (tcpserversink_debug)
 
 enum
 {
   ARG_0,
   ARG_HOST,
-  ARG_PORT
-      /* FILL ME */
+  ARG_PORT,
+  ARG_PROTOCOL
 };
 
 static void gst_tcpserversink_base_init (gpointer g_class);
@@ -80,7 +81,7 @@ static void gst_tcpserversink_get_property (GObject * object, guint prop_id,
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_tcpserversink_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_tcpserversink_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_tcpserversink_get_type (void)
@@ -134,6 +135,22 @@ gst_tcpserversink_class_init (GstTCPServerSink * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "The port to send the packets to",
           0, 32768, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_PROTOCOL,
+      g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
+          GST_TYPE_TCP_PROTOCOL_TYPE, GST_TCP_PROTOCOL_TYPE_NONE,
+          G_PARAM_READWRITE));
+
+  gst_tcpserversink_signals[SIGNAL_CLIENT_ADDED] =
+      g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstTCPServerSinkClass, client_added),
+      NULL, NULL, gst_tcp_marshal_VOID__STRING_UINT, G_TYPE_NONE, 2,
+      G_TYPE_STRING, G_TYPE_UINT);
+  gst_tcpserversink_signals[SIGNAL_CLIENT_REMOVED] =
+      g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstTCPServerSinkClass,
+          client_removed), NULL, NULL, gst_tcp_marshal_VOID__STRING_UINT,
+      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_UINT);
+
   gobject_class->set_property = gst_tcpserversink_set_property;
   gobject_class->get_property = gst_tcpserversink_get_property;
 
@@ -168,7 +185,7 @@ gst_tcpserversink_init (GstTCPServerSink * this)
   this->server_sock_fd = -1;
   GST_FLAG_UNSET (this, GST_TCPSERVERSINK_OPEN);
 
-  this->protocol = GST_TCP_PROTOCOL_TYPE_GDP;
+  this->protocol = GST_TCP_PROTOCOL_TYPE_NONE;
   this->clock = NULL;
 }
 
@@ -205,6 +222,9 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
   FD_SET (client_sock_fd, &(sink->clientfds));
   GST_DEBUG_OBJECT (sink, "added new client ip %s with fd %d",
       inet_ntoa (client_address.sin_addr), client_sock_fd);
+  g_signal_emit (G_OBJECT (sink),
+      gst_tcpserversink_signals[SIGNAL_CLIENT_ADDED], 0,
+      inet_ntoa (client_address.sin_addr), client_sock_fd);
 
   return TRUE;
 }
@@ -229,6 +249,9 @@ gst_tcpserversink_handle_client_read (GstTCPServerSink * sink, int fd)
     }
     FD_CLR (fd, &sink->clientfds);
     FD_CLR (fd, &sink->caps_sent);
+    /* FIXME: we need to keep track of IP info so we can signal it here */
+    g_signal_emit (G_OBJECT (sink),
+        gst_tcpserversink_signals[SIGNAL_CLIENT_REMOVED], 0, NULL, fd);
   } else {
     /* FIXME: we should probably just Read 'n' Drop */
     g_warning ("Don't know what to do with %d bytes to read", nread);
@@ -248,7 +271,7 @@ gst_tcpserversink_handle_client_write (GstTCPServerSink * sink, int fd,
       break;
 
     case GST_TCP_PROTOCOL_TYPE_GDP:
-      /* if we haven't send caps yet, send them first */
+      /* if we haven't sent caps yet, send them first */
       if (!FD_ISSET (fd, &(sink->caps_sent))) {
         const GstCaps *caps;
         gchar *string;
@@ -295,7 +318,8 @@ gst_tcpserversink_handle_client_write (GstTCPServerSink * sink, int fd,
 */
     /* FIXME: there should be a better way to report problems, since we
        want to continue for other clients and just drop this particular one */
-    g_warning ("Write failed: %d of %d written", wrote, GST_BUFFER_SIZE (buf));
+    GST_DEBUG_OBJECT (sink, "Write failed: %d of %d bytes written", wrote,
+        GST_BUFFER_SIZE (buf));
     /* write failed, so drop the client */
     GST_DEBUG_OBJECT (sink, "removing client on fd %d", fd);
     if (close (fd) != 0) {
@@ -304,6 +328,8 @@ gst_tcpserversink_handle_client_write (GstTCPServerSink * sink, int fd,
     }
     FD_CLR (fd, &sink->clientfds);
     FD_CLR (fd, &sink->caps_sent);
+    g_signal_emit (G_OBJECT (sink),
+        gst_tcpserversink_signals[SIGNAL_CLIENT_REMOVED], 0, NULL, fd);
     return FALSE;
   }
   return TRUE;
@@ -416,17 +442,18 @@ gst_tcpserversink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_HOST:
-      if (tcpserversink->host != NULL)
-        g_free (tcpserversink->host);
-      if (g_value_get_string (value) == NULL)
-        tcpserversink->host = NULL;
-      else
-        tcpserversink->host = g_strdup (g_value_get_string (value));
+      g_free (tcpserversink->host);
+      tcpserversink->host = g_strdup (g_value_get_string (value));
       break;
     case ARG_PORT:
       tcpserversink->server_port = g_value_get_int (value);
       break;
+    case ARG_PROTOCOL:
+      tcpserversink->protocol = g_value_get_enum (value);
+      break;
+
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -447,6 +474,10 @@ gst_tcpserversink_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_PORT:
       g_value_set_int (value, tcpserversink->server_port);
       break;
+    case ARG_PROTOCOL:
+      g_value_set_enum (value, tcpserversink->protocol);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
