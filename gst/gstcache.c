@@ -22,6 +22,7 @@
 
 #include "gstlog.h"
 #include "gst_private.h"
+#include "gstregistry.h"
 
 #include "gstcache.h"
 
@@ -37,7 +38,7 @@ enum {
 };
 
 static void		gst_cache_class_init	(GstCacheClass *klass);
-static void		gst_cache_init		(GstCache *tc);
+static void		gst_cache_init		(GstCache *cache);
 
 #define CLASS(cache)  GST_CACHE_CLASS (G_OBJECT_GET_CLASS (cache))
 
@@ -46,10 +47,10 @@ static guint gst_cache_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_cache_get_type(void) {
-  static GType tc_type = 0;
+  static GType cache_type = 0;
 
-  if (!tc_type) {
-    static const GTypeInfo tc_info = {
+  if (!cache_type) {
+    static const GTypeInfo cache_info = {
       sizeof(GstCacheClass),
       NULL,
       NULL,
@@ -61,9 +62,9 @@ gst_cache_get_type(void) {
       (GInstanceInitFunc)gst_cache_init,
       NULL
     };
-    tc_type = g_type_register_static(GST_TYPE_OBJECT, "GstCache", &tc_info, 0);
+    cache_type = g_type_register_static(GST_TYPE_OBJECT, "GstCache", &cache_info, 0);
   }
-  return tc_type;
+  return cache_type;
 }
 
 static void
@@ -87,27 +88,27 @@ gst_cache_class_init (GstCacheClass *klass)
 static GstCacheGroup *
 gst_cache_group_new(guint groupnum)
 {
-  GstCacheGroup *tcgroup = g_new(GstCacheGroup,1);
+  GstCacheGroup *cachegroup = g_new(GstCacheGroup,1);
 
-  tcgroup->groupnum = groupnum;
-  tcgroup->entries = NULL;
-  tcgroup->certainty = GST_CACHE_UNKNOWN;
-  tcgroup->peergroup = -1;
+  cachegroup->groupnum = groupnum;
+  cachegroup->entries = NULL;
+  cachegroup->certainty = GST_CACHE_UNKNOWN;
+  cachegroup->peergroup = -1;
 
   GST_DEBUG(0, "created new cache group %d",groupnum);
 
-  return tcgroup;
+  return cachegroup;
 }
 
 static void
-gst_cache_init (GstCache *tc)
+gst_cache_init (GstCache *cache)
 {
-  tc->curgroup = gst_cache_group_new(0);
-  tc->maxgroup = 0;
-  tc->groups = g_list_prepend(NULL, tc->curgroup);
+  cache->curgroup = gst_cache_group_new(0);
+  cache->maxgroup = 0;
+  cache->groups = g_list_prepend(NULL, cache->curgroup);
 
-  tc->writers = g_hash_table_new (NULL, NULL);
-  tc->last_id = 0;
+  cache->writers = g_hash_table_new (NULL, NULL);
+  cache->last_id = 0;
   
   GST_DEBUG(0, "created new cache");
 }
@@ -122,30 +123,30 @@ gst_cache_init (GstCache *tc)
 GstCache *
 gst_cache_new()
 {
-  GstCache *tc;
+  GstCache *cache;
 
-  tc = g_object_new (gst_cache_get_type (), NULL);
+  cache = g_object_new (gst_cache_get_type (), NULL);
 
-  return tc;
+  return cache;
 }
 
 /**
  * gst_cache_get_group:
- * @tc: the cache to get the current group from
+ * @cache: the cache to get the current group from
  *
  * Get the id of the current group.
  *
  * Returns: the id of the current group.
  */
 gint
-gst_cache_get_group(GstCache *tc)
+gst_cache_get_group(GstCache *cache)
 {
-  return tc->curgroup->groupnum;
+  return cache->curgroup->groupnum;
 }
 
 /**
  * gst_cache_new_group:
- * @tc: the cache to create the new group in
+ * @cache: the cache to create the new group in
  *
  * Create a new group for the given cache. It will be
  * set as the current group.
@@ -153,17 +154,17 @@ gst_cache_get_group(GstCache *tc)
  * Returns: the id of the newly created group.
  */
 gint
-gst_cache_new_group(GstCache *tc)
+gst_cache_new_group(GstCache *cache)
 {
-  tc->curgroup = gst_cache_group_new(++tc->maxgroup);
-  tc->groups = g_list_append(tc->groups,tc->curgroup);
-  GST_DEBUG(0, "created new group %d in cache",tc->maxgroup);
-  return tc->maxgroup;
+  cache->curgroup = gst_cache_group_new(++cache->maxgroup);
+  cache->groups = g_list_append(cache->groups,cache->curgroup);
+  GST_DEBUG(0, "created new group %d in cache",cache->maxgroup);
+  return cache->maxgroup;
 }
 
 /**
  * gst_cache_set_group:
- * @tc: the cache to set the new group in
+ * @cache: the cache to set the new group in
  * @groupnum: the groupnumber to set
  *
  * Set the current groupnumber to the given argument.
@@ -172,23 +173,23 @@ gst_cache_new_group(GstCache *tc)
  * did not exist.
  */
 gboolean
-gst_cache_set_group(GstCache *tc, gint groupnum)
+gst_cache_set_group(GstCache *cache, gint groupnum)
 {
   GList *list;
-  GstCacheGroup *tcgroup;
+  GstCacheGroup *cachegroup;
 
   /* first check for null change */
-  if (groupnum == tc->curgroup->groupnum)
+  if (groupnum == cache->curgroup->groupnum)
     return TRUE;
 
   /* else search for the proper group */
-  list = tc->groups;
+  list = cache->groups;
   while (list) {
-    tcgroup = (GstCacheGroup *)(list->data);
+    cachegroup = (GstCacheGroup *)(list->data);
     list = g_list_next(list);
-    if (tcgroup->groupnum == groupnum) {
-      tc->curgroup = tcgroup;
-      GST_DEBUG(0, "switched to cache group %d", tcgroup->groupnum);
+    if (cachegroup->groupnum == groupnum) {
+      cache->curgroup = cachegroup;
+      GST_DEBUG(0, "swicachehed to cache group %d", cachegroup->groupnum);
       return TRUE;
     }
   }
@@ -200,35 +201,54 @@ gst_cache_set_group(GstCache *tc, gint groupnum)
 
 /**
  * gst_cache_set_certainty:
- * @tc: the cache to set the certainty on
+ * @cache: the cache to set the certainty on
  * @certainty: the certainty to set
  *
  * Set the certainty of the given cache.
  */
 void
-gst_cache_set_certainty(GstCache *tc, GstCacheCertainty certainty)
+gst_cache_set_certainty(GstCache *cache, GstCacheCertainty certainty)
 {
-  tc->curgroup->certainty = certainty;
+  cache->curgroup->certainty = certainty;
 }
 
 /**
  * gst_cache_get_certainty:
- * @tc: the cache to get the certainty of
+ * @cache: the cache to get the certainty of
  *
  * Get the certainty of the given cache.
  *
  * Returns: the certainty of the cache.
  */
 GstCacheCertainty
-gst_cache_get_certainty(GstCache *tc)
+gst_cache_get_certainty(GstCache *cache)
 {
-  return tc->curgroup->certainty;
+  return cache->curgroup->certainty;
 }
 
+void
+gst_cache_set_filter (GstCache *cache, 
+		      GstCacheFilter filter, gpointer user_data)
+{
+  g_return_if_fail (GST_IS_CACHE (cache));
+
+  cache->filter = filter;
+  cache->filter_user_data = user_data;
+}
+
+void
+gst_cache_set_resolver (GstCache *cache, 
+		        GstCacheResolver resolver, gpointer user_data)
+{
+  g_return_if_fail (GST_IS_CACHE (cache));
+
+  cache->resolver = resolver;
+  cache->resolver_user_data = user_data;
+}
 
 /**
  * gst_cache_add_format:
- * @tc: the cache to add the entry to
+ * @cache: the cache to add the entry to
  * @id: the id of the cache writer
  * @format: the format to add to the cache
  *
@@ -239,12 +259,12 @@ gst_cache_get_certainty(GstCache *tc)
  * Returns: a pointer to the newly added entry in the cache.
  */
 GstCacheEntry*
-gst_cache_add_format (GstCache *tc, gint id, GstFormat format)
+gst_cache_add_format (GstCache *cache, gint id, GstFormat format)
 {
   GstCacheEntry *entry;
   const GstFormatDefinition* def;
 
-  g_return_val_if_fail (GST_IS_CACHE (tc), NULL);
+  g_return_val_if_fail (GST_IS_CACHE (cache), NULL);
   g_return_val_if_fail (format != 0, NULL);
   
   entry = g_new0 (GstCacheEntry, 1);
@@ -254,40 +274,46 @@ gst_cache_add_format (GstCache *tc, gint id, GstFormat format)
   def = gst_format_get_details (format);
   entry->data.format.key = def->nick;
   
-  g_signal_emit (G_OBJECT (tc), gst_cache_signals[ENTRY_ADDED], 0, entry);
+  if (CLASS (cache)->add_entry)
+    CLASS (cache)->add_entry (cache, entry);
+
+  g_signal_emit (G_OBJECT (cache), gst_cache_signals[ENTRY_ADDED], 0, entry);
 
   return entry;
 }
 
 /**
  * gst_cache_add_id:
- * @tc: the cache to add the entry to
+ * @cache: the cache to add the entry to
  * @id: the id of the cache writer
  * @description: the description of the cache writer
  *
  * Returns: a pointer to the newly added entry in the cache.
  */
 GstCacheEntry*
-gst_cache_add_id (GstCache *tc, gint id, gchar *description)
+gst_cache_add_id (GstCache *cache, gint id, gchar *description)
 {
   GstCacheEntry *entry;
 
-  g_return_val_if_fail (GST_IS_CACHE (tc), NULL);
+  g_return_val_if_fail (GST_IS_CACHE (cache), NULL);
   g_return_val_if_fail (description != NULL, NULL);
   
   entry = g_new0 (GstCacheEntry, 1);
   entry->type = GST_CACHE_ENTRY_ID;
   entry->id = id;
   entry->data.id.description = description;
+
+  if (CLASS (cache)->add_entry)
+    CLASS (cache)->add_entry (cache, entry);
   
-  g_signal_emit (G_OBJECT (tc), gst_cache_signals[ENTRY_ADDED], 0, entry);
+  g_signal_emit (G_OBJECT (cache), gst_cache_signals[ENTRY_ADDED], 0, entry);
 
   return entry;
 }
 
 /**
  * gst_cache_get_writer_id:
- * @tc: the cache to get a unique write id for
+ * @cache: the cache to get a unique write id for
  * @writer: the GstObject to allocate an id for
  * @id: a pointer to a gint to hold the id
  *
@@ -301,35 +327,35 @@ gst_cache_add_id (GstCache *tc, gint id, gchar *description)
  * Returns: TRUE if the writer would be mapped to an id.
  */
 gboolean 
-gst_cache_get_writer_id (GstCache *tc, GstObject *writer, gint *id)
+gst_cache_get_writer_id (GstCache *cache, GstObject *writer, gint *id)
 {
   gchar *writer_string = NULL;
   gboolean success = FALSE;
   GstCacheEntry *entry;
 
-  g_return_val_if_fail (GST_IS_CACHE (tc), FALSE);
+  g_return_val_if_fail (GST_IS_CACHE (cache), FALSE);
   g_return_val_if_fail (GST_IS_OBJECT (writer), FALSE);
   g_return_val_if_fail (id, FALSE);
 
   *id = -1;
 
-  entry = g_hash_table_lookup (tc->writers, writer);
+  entry = g_hash_table_lookup (cache->writers, writer);
   if (entry == NULL) { 
-    *id = tc->last_id;
+    *id = cache->last_id;
 
     writer_string = gst_object_get_path_string (writer);
     
-    gst_cache_add_id (tc, *id, writer_string);
-    tc->last_id++;
-    g_hash_table_insert (tc->writers, writer, entry);
+    gst_cache_add_id (cache, *id, writer_string);
+    cache->last_id++;
+    g_hash_table_insert (cache->writers, writer, entry);
   }
 
-  if (CLASS (tc)->resolve_writer) {
-    success = CLASS (tc)->resolve_writer (tc, writer, id, &writer_string);
+  if (CLASS (cache)->resolve_writer) {
+    success = CLASS (cache)->resolve_writer (cache, writer, id, &writer_string);
   }
 
-  if (tc->resolver) {
-    success = tc->resolver (tc, writer, id, &writer_string, tc->user_data);
+  if (cache->resolver) {
+    success = cache->resolver (cache, writer, id, &writer_string, cache->resolver_user_data);
   }
 
   return success;
@@ -337,7 +363,7 @@ gst_cache_get_writer_id (GstCache *tc, GstObject *writer, gint *id)
 
 /**
  * gst_cache_add_association:
- * @tc: the cache to add the entry to
+ * @cache: the cache to add the entry to
  * @id: the id of the cache writer
  * @format: the format of the value
  * @value: the value 
@@ -348,7 +374,7 @@ gst_cache_get_writer_id (GstCache *tc, GstObject *writer, gint *id)
  * Returns: a pointer to the newly added entry in the cache.
  */
 GstCacheEntry*
-gst_cache_add_association (GstCache *tc, gint id, GstAssocFlags flags, 
+gst_cache_add_association (GstCache *cache, gint id, GstAssocFlags flags, 
 		                GstFormat format, gint64 value, ...)
 {
   va_list args;
@@ -359,7 +385,7 @@ gst_cache_add_association (GstCache *tc, gint id, GstAssocFlags flags,
   GstFormat cur_format;
   gint64 dummy;
 
-  g_return_val_if_fail (GST_IS_CACHE (tc), NULL);
+  g_return_val_if_fail (GST_IS_CACHE (cache), NULL);
   g_return_val_if_fail (format != 0, NULL);
   
   va_start (args, value);
@@ -399,10 +425,177 @@ gst_cache_add_association (GstCache *tc, gint id, GstAssocFlags flags,
   }
   va_end (args);
 
-  if (CLASS (tc)->add_entry)
-    CLASS (tc)->add_entry (tc, entry);
+  if (CLASS (cache)->add_entry)
+    CLASS (cache)->add_entry (cache, entry);
 
-  g_signal_emit (G_OBJECT (tc), gst_cache_signals[ENTRY_ADDED], 0, entry);
+  g_signal_emit (G_OBJECT (cache), gst_cache_signals[ENTRY_ADDED], 0, entry);
 
   return entry;
 }
+
+static void 		gst_cache_factory_class_init 		(GstCacheFactoryClass *klass);
+static void 		gst_cache_factory_init 		(GstCacheFactory *factory);
+
+static GstPluginFeatureClass *factory_parent_class = NULL;
+/* static guint gst_cache_factory_signals[LAST_SIGNAL] = { 0 }; */
+
+GType 
+gst_cache_factory_get_type (void) 
+{
+  static GType cachefactory_type = 0;
+
+  if (!cachefactory_type) {
+    static const GTypeInfo cachefactory_info = {
+      sizeof (GstCacheFactoryClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_cache_factory_class_init,
+      NULL,
+      NULL,
+      sizeof(GstCacheFactory),
+      0,
+      (GInstanceInitFunc) gst_cache_factory_init,
+      NULL
+    };
+    cachefactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE, 
+	    				  "GstCacheFactory", &cachefactory_info, 0);
+  }
+  return cachefactory_type;
+}
+
+static void
+gst_cache_factory_class_init (GstCacheFactoryClass *klass)
+{
+  GObjectClass *gobject_class;
+  GstObjectClass *gstobject_class;
+  GstPluginFeatureClass *gstpluginfeature_class;
+
+  gobject_class = (GObjectClass*)klass;
+  gstobject_class = (GstObjectClass*)klass;
+  gstpluginfeature_class = (GstPluginFeatureClass*) klass;
+
+  factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
+}
+
+static void
+gst_cache_factory_init (GstCacheFactory *factory)
+{
+}
+
+/**
+ * gst_cache_factory_new:
+ * @name: name of cachefactory to create
+ * @longdesc: long description of cachefactory to create
+ * @type: the GType of the GstCache element of this factory
+ *
+ * Create a new cachefactory with the given parameters
+ *
+ * Returns: a new #GstCacheFactory.
+ */
+GstCacheFactory*
+gst_cache_factory_new (const gchar *name, const gchar *longdesc, GType type)
+{
+  GstCacheFactory *factory;
+
+  g_return_val_if_fail(name != NULL, NULL);
+  factory = gst_cache_factory_find (name);
+  if (!factory) {
+    factory = GST_CACHE_FACTORY (g_object_new (GST_TYPE_CACHE_FACTORY, NULL));
+  }
+
+  GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
+  if (factory->longdesc)
+    g_free (factory->longdesc);
+  factory->longdesc = g_strdup (longdesc);
+  factory->type = type;
+
+  return factory;
+}
+
+/**
+ * gst_cache_factory_destroy:
+ * @factory: factory to destroy
+ *
+ * Removes the cache from the global list.
+ */
+void
+gst_cache_factory_destroy (GstCacheFactory *factory)
+{
+  g_return_if_fail (factory != NULL);
+
+  /* we don't free the struct bacause someone might  have a handle to it.. */
+}
+
+/**
+ * gst_cache_factory_find:
+ * @name: name of cachefactory to find
+ *
+ * Search for an cachefactory of the given name.
+ *
+ * Returns: #GstCacheFactory if found, NULL otherwise
+ */
+GstCacheFactory*
+gst_cache_factory_find (const gchar *name)
+{
+  GstPluginFeature *feature;
+
+  g_return_val_if_fail (name != NULL, NULL);
+
+  GST_DEBUG (0,"gstcache: find \"%s\"", name);
+
+  feature = gst_registry_pool_find_feature (name, GST_TYPE_CACHE_FACTORY);
+  if (feature)
+    return GST_CACHE_FACTORY (feature);
+
+  return NULL;
+}
+
+/**
+ * gst_cache_factory_create:
+ * @factory: the factory used to create the instance
+ *
+ * Create a new #GstCache instance from the 
+ * given cachefactory.
+ *
+ * Returns: A new #GstCache instance.
+ */
+GstCache*
+gst_cache_factory_create (GstCacheFactory *factory)
+{
+  GstCache *new = NULL;
+
+  g_return_val_if_fail (factory != NULL, NULL);
+
+  if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
+    g_return_val_if_fail (factory->type != 0, NULL);
+
+    new = GST_CACHE (g_object_new(factory->type,NULL));
+  }
+
+  return new;
+}
+
+/**
+ * gst_cache_factory_make:
+ * @name: the name of the factory used to create the instance
+ *
+ * Create a new #GstCache instance from the 
+ * cachefactory with the given name.
+ *
+ * Returns: A new #GstCache instance.
+ */
+GstCache*
+gst_cache_factory_make (const gchar *name)
+{
+  GstCacheFactory *factory;
+
+  g_return_val_if_fail (name != NULL, NULL);
+
+  factory = gst_cache_factory_find (name);
+
+  if (factory == NULL)
+    return NULL;
+
+  return gst_cache_factory_create (factory);
+}
+
