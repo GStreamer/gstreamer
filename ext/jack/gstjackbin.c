@@ -18,13 +18,14 @@
 */
 
 #include <stdlib.h>
+#include <string.h>
 #include "gstjack.h"
 
 
 static GstBinClass *parent_class = NULL;
 
-static void gst_jack_bin_init(GstJack *this);
-static void gst_jack_bin_class_init(GstJackClass *klass);
+static void gst_jack_bin_init(GstJackBin *this);
+static void gst_jack_bin_class_init(GstJackBinClass *klass);
 
 static GstElementStateReturn gst_jack_bin_change_state(GstElement *element);
 
@@ -58,7 +59,7 @@ gst_jack_bin_get_type (void)
 }
 
 static void
-gst_jack_bin_class_init(GstJackClass *klass)
+gst_jack_bin_class_init(GstJackBinClass *klass)
 {
     GObjectClass *object_class;
     GstElementClass *element_class;
@@ -72,7 +73,7 @@ gst_jack_bin_class_init(GstJackClass *klass)
 }
 
 static void
-gst_jack_bin_init(GstJack *this)
+gst_jack_bin_init(GstJackBin *this)
 {
     GST_DEBUG (GST_CAT_THREAD, "initializing jack bin");
     
@@ -82,6 +83,8 @@ gst_jack_bin_init(GstJack *this)
     
     /* make a new scheduler and associate it with the bin */
     gst_scheduler_factory_make (NULL, GST_ELEMENT (this));
+
+    this->sched_setup = FALSE;
 }
 
 static GstElementStateReturn
@@ -158,10 +161,10 @@ gst_jack_bin_change_state (GstElement *element)
                 g_message ("jack: registering pad %s:%s", pad->name, pad->peer_name);
                 pad->port = jack_port_register (this->client, pad->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
                 g_message ("connecting gst jack port %s to jack port %s", jack_port_name (pad->port), pad->peer_name);
-                if (jack_connect (this->client, jack_port_name (pad->port), pad->peer_name)) {
+/*                if (jack_connect (this->client, jack_port_name (pad->port), pad->peer_name)) {
                     g_warning ("could not connect %s and %s", pad->peer_name, jack_port_name (pad->port));
                     return GST_STATE_FAILURE;
-                }
+                    } */
                 l = g_list_next (l);
             }
             g_message ("jack: setting OPEN flag");
@@ -207,6 +210,11 @@ process (nframes_t nframes, void *arg)
     
     g_message ("jack: process()");
 
+    if (!bin->sched_setup) {
+        gst_scheduler_setup (GST_ELEMENT_SCHED (bin));
+        bin->sched_setup = TRUE;
+    }
+    
     l = bin->src_pads;
     while (l) {
         pad = GST_JACK_PAD (l);
@@ -246,12 +254,6 @@ sample_rate (nframes_t nframes, void *arg)
     GstJackBin *bin = (GstJackBin*) arg;
     printf ("the sample rate is now %lu/sec\n", nframes);
     bin->rate = nframes;
-
-    if (!bin->sched_setup) {
-        gst_scheduler_setup (GST_ELEMENT_SCHED (bin));
-        bin->sched_setup = TRUE;
-    }
-    
     return 0;
 }
 
