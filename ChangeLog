@@ -1,3 +1,16 @@
+2005-02-02  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_class_init),
+	(gst_tcpclientsink_finalize):
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_class_init),
+	(gst_tcpclientsrc_finalize):
+	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_class_init),
+	(gst_tcpserversink_init), (gst_tcpserversink_finalize):
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_class_init),
+	(gst_tcpserversrc_init), (gst_tcpserversrc_finalize):
+	  Don't leak the hostname when shutting down.
+	  In tcpserversrc, take a copy of the default hostname.
+
 2005-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_iso_receive):
