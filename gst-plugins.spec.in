@@ -223,7 +223,7 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@Summary: GStreamer plugin for CD audio input using CDParanoia IV
 @USE_CDPARANOIA_TRUE@Group: Libraries/Multimedia
-@USE_CDPARANOIA_TRUE@Requires: cdparanoia >= alpha9.7
+@USE_CDPARANOIA_TRUE@Requires: cdparanoia-libs >= alpha9.7
 @USE_CDPARANOIA_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_CDPARANOIA_TRUE@BuildRequires: cdparanoia-devel >= alpha9.7
 @USE_CDPARANOIA_TRUE@
