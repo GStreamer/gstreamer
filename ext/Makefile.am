@@ -310,6 +310,12 @@ else
 SPEEX_DIR=
 endif
 
+if USE_XINE
+XINE_DIR=xine
+else
+XINE_DIR=
+endif
+
 SUBDIRS=\
 	$(A52DEC_DIR) \
 	$(AALIB_DIR) \
@@ -361,6 +367,7 @@ SUBDIRS=\
 	$(THEORA_DIR) \
 	$(IVORBIS_DIR) \
 	$(VORBIS_DIR) \
+	$(XINE_DIR) \
 	$(XVID_DIR)
 
 DIST_SUBDIRS=\
@@ -415,4 +422,5 @@ DIST_SUBDIRS=\
 	tarkin \
 	theora \
 	vorbis \
+	xine \
 	xvid

@@ -1320,6 +1320,14 @@ vorbis_synthesis_restart (v);
   CFLAGS="$ac_cflags_save"
 fi
 
+dnl *** xine ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_XINE, true)
+GST_CHECK_FEATURE(XINE, [xine wrapper], xine, [
+  PKG_CHECK_MODULES(XINE, libxine >= 1.0.0, HAVE_XINE=yes, HAVE_XINE=no)
+  AC_SUBST(XINE_CFLAGS)
+  AC_SUBST(XINE_LIBS)
+],disabled)
+
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
 GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
@@ -1664,6 +1672,7 @@ ext/swfdec/Makefile
 ext/tarkin/Makefile
 ext/theora/Makefile
 ext/vorbis/Makefile
+ext/xine/Makefile
 ext/xvid/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
