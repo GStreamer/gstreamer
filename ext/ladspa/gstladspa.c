@@ -21,6 +21,7 @@
 #include <string.h>
 #include <math.h>
 #include <gst/control/control.h>
+#include <gst/audio/audio.h>
 
 #include "gstladspa.h"
 #include <ladspa.h>     /* main ladspa sdk include file */
@@ -35,14 +36,10 @@ ladspa_sink_factory (gchar *name)
   name,
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "ladspa_sink",
     "audio/x-raw-float",
-    "width",		GST_PROPS_INT (32),
-    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-    "rate",		GST_PROPS_INT_RANGE (4000, 96000),
-    "buffer-frames",	GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "channels",		GST_PROPS_INT (1)
+    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
     )
   );
 }
@@ -55,14 +52,10 @@ ladspa_src_factory (gchar *name)
   name,
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
+  gst_caps_new (
     "ladspa_src",
     "audio/x-raw-float",
-    "width",		GST_PROPS_INT (32),
-    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-    "rate",		GST_PROPS_INT_RANGE (4000, 96000),
-    "buffer-frames",	GST_PROPS_INT_RANGE (1, G_MAXINT),
-    "channels",		GST_PROPS_INT (1)
+    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
     )
   );
 }
@@ -90,6 +83,13 @@ static GstElementClass *parent_class = NULL;
 
 static GstPlugin *ladspa_plugin;
 static GHashTable *ladspa_descriptors;
+
+enum {
+  ARG_0,
+  ARG_SAMPLERATE,
+  ARG_BUFFERSIZE,
+  ARG_LAST,
+};
 
 GST_DEBUG_CATEGORY_STATIC (ladspa_debug);
 #define DEBUG(...) \
@@ -477,25 +477,24 @@ gst_ladspa_force_src_caps(GstLADSPA *ladspa, GstPad *pad)
   if (!ladspa->buffer_frames) {
     ladspa->buffer_frames = 256; /* 5 ms at 44100 kHz (just a default...) */
     g_return_if_fail (ladspa->bufpool == NULL);
-    ladspa->bufpool = gst_buffer_pool_get_default (ladspa->buffer_frames * sizeof(gfloat),
-                                                   3);
+    ladspa->bufpool =
+      gst_buffer_pool_get_default (ladspa->buffer_frames * sizeof(gfloat), 3);
   }
 
   DEBUG_OBJ (ladspa, "forcing caps with rate=%d, buffer-frames=%d",
              ladspa->samplerate, ladspa->buffer_frames);
 
-  gst_pad_try_set_caps (pad, gst_caps_new (
+  gst_pad_try_set_caps (pad,
+    gst_caps_new (
     "ladspa_src_caps",
     "audio/x-raw-float",
     gst_props_new (
-      "width",		GST_PROPS_INT (32),
-      "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+      "width",          GST_PROPS_INT (32),
+      "endianness",     GST_PROPS_INT (G_BYTE_ORDER),
+      "rate",           GST_PROPS_INT (ladspa->samplerate),
       "buffer-frames",	GST_PROPS_INT (ladspa->buffer_frames),
-      "rate",		GST_PROPS_INT (ladspa->samplerate),
       "channels",	GST_PROPS_INT (1),
-      NULL
-    )
-  ));
+      NULL)));
 }
 
 static void
@@ -504,7 +503,7 @@ gst_ladspa_set_property (GObject *object, guint prop_id, const GValue *value, GP
   GstLADSPA *ladspa = (GstLADSPA*)object;
   GstLADSPAClass *oclass;
   ladspa_control_info *control_info;
-    
+
   oclass = (GstLADSPAClass*)(G_OBJECT_GET_CLASS (object));
 
   /* remember, properties have an offset of 1 */
@@ -512,7 +511,7 @@ gst_ladspa_set_property (GObject *object, guint prop_id, const GValue *value, GP
 
   /* verify it exists */
   g_return_if_fail (prop_id < oclass->numcontrols);
-  
+
   control_info = &(oclass->control_info[prop_id]);
   g_return_if_fail (control_info->name != NULL);
 

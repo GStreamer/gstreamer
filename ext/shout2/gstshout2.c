@@ -27,7 +27,7 @@
 /* elementfactory information */
 static GstElementDetails shout2send_details = {
   "An Icecast plugin",
-  "Sink/Network/Icecast2",
+  "Sink/Network",
   "LGPL",
   "Sends data to an icecast server",
   VERSION,

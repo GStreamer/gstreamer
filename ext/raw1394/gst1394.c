@@ -29,7 +29,7 @@
 /* elementfactory information */
 static GstElementDetails gst_dv1394src_details = {
   "Firewire (1394) DV Source",
-  "Source/1394/DV",
+  "Source/Video",
   "LGPL",
   "Source for DV video data from firewire port",
   VERSION,
