@@ -26,6 +26,7 @@
 #include "gsttageditingprivate.h"
 #include <string.h>
 
+
 GST_DEBUG_CATEGORY_STATIC (gst_vorbis_tag_debug);
 #define GST_CAT_DEFAULT gst_vorbis_tag_debug
 
@@ -249,8 +250,10 @@ gst_tag_to_vorbis_tag (const gchar *gst_tag)
   }
   return NULL;
 }
-static void
-gst_tag_add (GstTagList *list, const gchar *tag, const gchar *value)
+
+
+void
+gst_vorbis_tag_add (GstTagList *list, const gchar *tag, const gchar *value)
 {
   const gchar *gst_tag = gst_tag_from_vorbis_tag (tag);
   
@@ -365,7 +368,7 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer *buffer, const guint8 *i
       g_free (cur);
       continue;
     }
-    gst_tag_add (list, cur, value);
+    gst_vorbis_tag_add (list, cur, value);
     g_free (cur);
   }
   
@@ -496,7 +499,7 @@ gst_vorbis_tag_chain (GstPad *pad, GstData *data)
   if (tag->output == OUTPUT_UNKNOWN) {
     /* caps nego */
     do {
-      if (gst_pad_try_set_caps (tag->srcpad, GST_CAPS_NEW ("vorbis_tag_data_src", "application/x-vorbis", NULL)) >= 0) {
+      if (gst_pad_try_set_caps (tag->srcpad, GST_CAPS_NEW ("vorbis_tag_data_src", "audio/x-vorbis", NULL)) >= 0) {
 	tag->output = OUTPUT_DATA;
       } else if (gst_pad_try_set_caps (tag->srcpad, GST_CAPS_NEW ("vorbis_tag_tag_src", "application/x-gst-tags", NULL)) >= 0) {
 	tag->output = OUTPUT_TAGS;
