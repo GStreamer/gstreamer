@@ -480,7 +480,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
         ioctl (osssink->fd, SNDCTL_DSP_SYNC);
-	gst_oss_clock_set_active (osssink->clock, FALSE);
+	gst_oss_clock_set_active (osssink->provided_clock, FALSE);
 	gst_pad_event_default (pad, event);
         return;
       case GST_EVENT_NEW_MEDIA:
