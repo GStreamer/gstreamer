@@ -136,7 +136,7 @@ gst_v4l_set_window (GstElement        *element,
 
 
 /******************************************************
- * gst_v4l_set_overlay():
+ * gst_v4l_enable_overlay():
  *   enables/disables actual video overlay display
  * return value: TRUE on success, FALSE on error
  ******************************************************/
