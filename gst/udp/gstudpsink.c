@@ -382,8 +382,10 @@ gst_udpsink_init_send (GstUDPSink *sink)
   }
  
   /* we dont need to lookup for localhost */
-  else if (strcmp (sink->host, UDP_DEFAULT_HOST) == 0) {
-    sink->theiraddr.sin_addr = *((struct in_addr *) sink->host);
+  else if (strcmp (sink->host, UDP_DEFAULT_HOST) == 0 && 
+	   inet_aton ("127.0.0.1", &addr)) {
+       sink->theiraddr.sin_addr = 
+		*((struct in_addr *) g_memdup (&addr, sizeof (addr)));
   }
 
   /* if its a hostname */
