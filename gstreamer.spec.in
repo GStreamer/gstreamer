@@ -631,7 +631,7 @@ Library for transfering data with the RTP protocol
 
 %files -n gstreamer-rtp
 %defattr(-, root, root)
-%{prefix}/lib/gst/librtp*
+%{prefix}/lib/gst/libgstrtp*
 
 %changelog
 * Sat Dec 08 2001 Christian Schaller <Uraeus@linuxrising.org>
