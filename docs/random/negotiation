@@ -6,21 +6,25 @@ A "pad link" is a connection between two pads.  It can be in one of
 two states, "negotiated" or "not negotiated".  Pad links are created
 by gst_pad_link().
 
-
-
 A "pad link" is created when two pads are linked using gst_pad_link().
 When initially created, the link only specifies a src pad, a sink pad,
-and optionally a filter caps and a fixate function (both provided by
-the application).
-
+and optionally a filter caps provided by the application.
 
 In order to pass data through a link, the peer pads must decide on
-what data format to use.  This is called negotiation.  Pads can
-describe acceptable data formats either by pad template caps or a
-pad->getcaps function.
+what data format to use.  This is called negotiation.  Pads
+describe acceptable data formats by using a combination of  pad
+template caps and (optionally) a pad->getcaps function.
 
 
-Steps in negotiation:
+Negotiation can happen in one of two forms, directed or undirected.
+Directed negotiation happens when one element has decided (usually
+during negotiation on another pad) to ask for a specific format on
+a pad.  This happens when a pad calls gst_pad_try_set_caps().
+Undirected negotiation happens when the core decides to negotiate
+a link, either due to a state change or a specific application
+request.
+
+Steps in undirected negotiation (core view):
 
  - core checks that both pad's parent elements are in the READY or
    higher state.
@@ -32,21 +36,32 @@ Steps in negotiation:
  - If the intersection caps is not fixed, there are multiple possible
    formats that the link could use.  If this is the case, fixate
    functions are called until the caps are fixed.  The fixate functions
-   are called by priority -- application fixate function, src and sink
-   fixate functions, and the default core fixate function.
+   are called by priority -- src application fixate function, sink
+   application fixate function, src and sink fixate functions, and
+   the default core fixate function.  The application fixate functions
+   are implemented by the "fixate" signal on each pad.  The core
+   loops through the fixate functions until a fixed caps is decided
+   on.
 
- - Each pad can have a pad_link function, which is called with the
-   fixed caps.  The pad_link function has the option of accepting
-   or rejecting the caps.
+ - Each pad may have a pad_link function, which is called with the
+   fixed caps.  The pad_link function has the option of accepting,
+   rejecting, or delaying the negotiation.
 
  - If both pads accept the caps, the link is then negotiated.
 
-Steps in pad-initiated negotiation (gst_pad_try_set_caps):
+Steps in directed negotiation (gst_pad_try_set_caps):
 
- - both elements are assumed to be in a non-NULL state
+ - the originator is the pad that gst_pad_try_set_caps() is called
+   on.
 
- - the caps in try_set_caps() must be fixed, and are checked to be
-   compatible with the peer's caps.
+ - the elements owning both pads are assumed to be in a non-NULL state
+
+ - the caps argument of try_set_caps() must be fixed.
+ 
+ - gst_pad_get_caps() is called on the peer pad, and intersected with
+   the originating pad's pad template caps and the filter caps.  The
+   caps argument is checked to be a subset of the intersection.  (It's
+   important that this intersection uses the pad _template_ caps.)
 
  - Fixate functions don't need to be called, since the caps are
    already fixed.
@@ -55,25 +70,40 @@ Steps in pad-initiated negotiation (gst_pad_try_set_caps):
 
  - If the peer's pad_link function accepts the caps, the link is then
    negotiated.
+ 
+ - If the peer's pad_link function refuses the caps, and the link had
+   already been negotiated, the peer's pad_link function is called
+   with the caps of the old negotiation.
 
-Steps in renegotiation:
+ - Note: the originator's pad_link function is _not_ called.  The
+   originator must take appropriate alternative steps.
+
+
+Notes about renegotiation:
 
  - same as negotiation.  Note that get_caps() functions should always
    ignore the currently negotiated caps of a link.
 
  - if renegotiation fails, the previous negotiation is still in effect.
    If the renegotiation fails in the last pad_link step, the pad_link
-   functions are called with the previously negotiated caps.  (FIXME:
-   this is currently buggy.)
+   functions are called with the previously negotiated caps.
 
 
-Notes for sources:
+Notes for sources and sinks:
 
  - sources and sinks that talk to hardware may not be able to fully
    describe their available formats, and thus need to rely on pad_link
    functions to test a particular format.  FIXME: currently, the core
    completely fails negotiation if a pad_link function refuses a caps,
    instead of attempting with an alternate caps.
+
+   Example: Assume osssink advertises rate=(int)[8000,48000], but
+   the device cannot actually handle rate=44100 (unknown to osssink).
+   Assume that the pad_link function is called with rate=44100 --
+   ideally, the pad_link function should return GST_PAD_LINK_DELAYED,
+   and future calls to getcaps should return {[8000,44099],[44101,
+   48000]}.  I don't know how to make this easy and/or work well.
+
 
 Notes for decoders/demuxers:
 
@@ -91,8 +121,163 @@ Notes for converters:
    gst_pad_get_allowed_caps() for the opposite pad in the element,
    change one or more fields in the caps, and return the result.
 
+ - getcaps function:
+
+   - call gst_pad_get_allowed_caps() on the other pad in the element
+
+   - for each possible format ("A") in the allowed caps, determine all
+     the formats ("B") that your converter could convert the original
+     format (A) to.  The union of all these formats (all the B's) is
+     the caps that should be returned.  (This is how to do it
+     _theoretically_, but an optimal implementation will probably be 
+     quite different.)
+
+   - As an example, videoscale can convert any sized video to any other
+     sized video.  Its getcaps function iterates over each structure in
+     the caps, and replaces the width and height with the range
+     [1,MAXINT].
+ 
+ - pad_link function:
+  
+   - the "otherpad" is the opposite pad in the element.
+
+   - extract fields from the caps that are relevant for your converter
+     handling the format.  Store these in _local_ variables.  (E.g,
+     things like video size, sample rate, etc.)
+
+   - If it's possible to pass buffers through without modifying them
+     (passthrough), you should call gst_try_set_caps() with the caps
+     that was specified as the parameter to the pad_link function.  If
+     this is successful, save the local variables to the element
+     structure, perform whatever other setup is necessary for your
+     element, and return GST_PAD_LINK_OK.
+
+   - Otherwise, you're not not using passthrough, and may need to
+     change the caps on the otherpad to match the given format.
+
+   - If the otherpad is not negotiated (!gst_pad_is_negotiated()),
+     you shouldn't attempt to set a format on it.  It will eventually
+     be negotiated.  Save the local variables to the element structure,
+     perform whatever other setup is necessary, and return
+     GST_PAD_LINK_OK.
+
+   - At this point, the other pad is already negotiated, but won't
+     accept the passthrough format, so you should combine the existing
+     negotiated caps on the otherpad and the caps that was the pad link
+     argument.  This can either be done using existing information in the
+     element that was saved during a previous pad_link call, or you can
+     get the information from the negotiated caps
+     (gst_pad_get_negotiated_caps()).
+
+     As an example, consider the videoscale element.  Assume that
+     videoscale.src has already negotiated "video/x-raw-yuv,
+     format=(fourcc)I420, width=320, height=240", and that the sink
+     pad's link function is called with "video/x-raw-yuv,
+     format=(fourcc)YUY2, width=640, height=480".  Since it's the
+     videoscale element, we can have different width and height
+     fields on the pads, but the format must be the same.  So we'll
+     use the existing negotiated size (640x480), and the new format,
+     and call gst_pad_try_set_caps() with "video/x-raw-yuv,
+     format=(fourcc)I420, width=640, height=480".
+
+     This may seem overkill, but most of the time, you'll end up
+     calling try_set_caps() with the same caps that are currently
+     negotiated -- try_set_caps() just returns GST_PAD_LINK_OK in
+     this case.
+
+   - If gst_pad_try_set_caps() returns GST_PAD_LINK_OK, save the
+     local variables to the element structure.  In any case, return
+     the return value of gst_pad_try_set_caps().
+
+
 Notes for filters:
 
- - Filters can almost always use proxied getcaps and pad_link functions.
+ - Filters can almost always use gst_pad_proxy_getcaps() as the
+   getcaps function.  This just returns gst_pad_get_allowed_caps()
+   on the otherpad.
+ 
+ - You may be able to use gst_pad_proxy_pad_link() as the pad link
+   function, but only if you don't need to extract parameters from
+   the caps.
+
+
+Notes for encoders/muxers:
+
+ - Encoders and muxers should roughly work like converters.  Many
+   converters are symmetric; encoders and muxers obvious are not,
+   thus it may make the code clearer to have separate src and sink
+   getcaps and pad_link functions.
+
+ - Encoders and muxers should handle multiple negotiations until
+   the first buffer has been passed.  After this point, it's unlikely
+   that additional negotiations will happen in well-constructed
+   pipelines, but it may be wise to "lock" the caps after the
+   muxer has committed to a format.  (FIXME: it's still unclear to
+   me when the caps should get "unlocked".  Obviously at EOS or
+   PAUSED->READY transitions.  Any others?)
+
+ - Locking caps can be done by adding (near the top) of the getcaps
+   function:
+
+   if (my_element->lock_caps) {
+     return gst_pad_get_negotiated_caps (pad);
+   }
+
+
+Explicit caps:
+
+ - There's a hack in the core to make the code for decoder elements
+   a lot simpler.  This hack can be used only for src pads of elements
+   that get their srcpad capabilities directly from the data stream,
+   i.e., decoders, demuxers, and typefind.  This hack overrides the
+   pad's getcaps() and pad_link() function, so that they work correctly
+   in all decoder states.
+
+ - To enable this hack on a pad, call gst_pad_use_explicit_caps().
+
+ - To indicate that a decoder has found the format of the stream, call
+   gst_pad_set_explicit_caps(pad,caps) with the caps of the stream.
+   This caps must be fixed.
+
+ - To indicate that a decoder has lost the format of the stream, i.e.,
+   there's been a NEW_MEDIA event, call gst_pad_set_explicit_caps(pad,
+   NULL).
+
+ - If the explicit caps are set, the getcaps function will return that
+   caps, and the pad_link function will return GST_PAD_LINK_OK.  If
+   the explicit caps are not set, the getcaps function returns the pad
+   template caps, and the pad_link function returns GST_PAD_LINK_DELAYED.
+
+
+
+Other junk:
+
+ - negotiation can happen at any time
+
+ - negotiation can happen multiple times/often happens multiple times
+
+ - initial negotiation can lead to strange caps
+
+ - directed negotiation can happen in either direction (src to sink or
+   sink to src)
+
+ - Other considerations ignored, every pad should have a getcaps function.
+
+ - If a pad's getcaps function returns the same caps in every
+   circumstance, the getcaps function can be omitted.
+   
+ - If you use gst_pad_use_explicit_caps(), the getcaps function must
+   be ommitted.
+
+ - fixate functions are a method for applications to exert influence
+   on how a format is chosen from a caps.  It's also used as a hack to
+   allow elements to do the same.  Element fixate functions are _not_
+   intended to give good results for applications -- they're intended
+   to give non-disgusting results in gst-launch.  Don't attempt to
+   make them do more than they're capable of.
+
+ - Fixate functions should not be implemented on anything except source
+   and sink elements.
+
 
 
