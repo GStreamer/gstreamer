@@ -50,8 +50,6 @@ int dladdr(void *address, Dl_info *dl)
 
 extern gchar *_gst_progname;
 
-GStaticPrivate _gst_debug_cothread_index = G_STATIC_PRIVATE_INIT;
-
 
 /***** Categories and colorization *****/
 /* be careful with these, make them match the enum */
@@ -142,7 +140,7 @@ const gchar *_gst_category_colors[32] = {
   /* [GST_CAT_TYPES]		= */ "01;37;41",	/* !! */
   /* [GST_CAT_XML]		= */ "01;37;41",	/* !! */
   /* [GST_CAT_NEGOTIATION]	= */ "07;34",
-  /* [GST_CAT_REFCOUNTING]	= */ "00;34:42",
+  /* [GST_CAT_REFCOUNTING]	= */ "00;34;42",
   /* [GST_CAT_EVENT]		= */ "01;37;41",	/* !! */
   /* [GST_CAT_PARAMS]		= */ "00;30;43",	/* !! */
   				     "",
@@ -193,9 +191,9 @@ gst_default_debug_handler (gint category, gboolean incore,
 			   void *element, gchar *string)
 {
   gchar *empty = "";
-  gchar *elementname = empty,*location = empty;
-  int pid = getpid();
-  int cothread_id = (int) g_static_private_get(&_gst_debug_cothread_index);
+  gchar *elementname = empty,* location = empty;
+  int pid = getpid ();
+  int cothread_id = 0; /*FIXME*/
 #ifdef GST_DEBUG_COLOR
   int pid_color = pid%6 + 31;
   int cothread_color = (cothread_id < 0) ? 37 : (cothread_id%6 + 31);
@@ -203,28 +201,30 @@ gst_default_debug_handler (gint category, gboolean incore,
 
   if (debug_string == NULL) debug_string = "";
 /*  if (category != GST_CAT_GST_INIT) */
-    location = g_strdup_printf("%s:%d%s:",function,line,debug_string);
+    location = g_strdup_printf ("%s(%d): %s: %s:",
+		                file, line, function, debug_string);
   if (element && GST_IS_ELEMENT (element))
 #ifdef GST_DEBUG_COLOR
-    elementname = g_strdup_printf (" \033[04m[%s]\033[00m", GST_OBJECT_NAME (element));
+    elementname = g_strdup_printf (" \033[04m[%s]\033[00m",
+		                   GST_OBJECT_NAME (element));
 #else
     elementname = g_strdup_printf (" [%s]", GST_OBJECT_NAME (element));
 #endif
 
 #ifdef GST_DEBUG_COLOR
-  fprintf(stderr,"DEBUG(\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
-          "%s;%sm%s%s\033[00m %s\n",
-          pid_color,pid,cothread_color,cothread_id,incore?"00":"01",
-          _gst_category_colors[category],location,elementname,string);
+  fprintf (stderr, "DEBUG(\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
+           "%s;%sm%s%s\033[00m %s\n",
+           pid_color, pid, cothread_color, cothread_id, incore ? "00" : "01",
+          _gst_category_colors[category], location, elementname, string);
 #else
   fprintf(stderr,"DEBUG(%5d:%2d)%s%s %s\n",
-          pid,cothread_id,location,elementname,string);
+          pid, cothread_id, location, elementname, string);
 #endif /* GST_DEBUG_COLOR */
 
-  if (location != empty) g_free(location);
-  if (elementname != empty) g_free(elementname);
+  if (location != empty) g_free (location);
+  if (elementname != empty) g_free (elementname);
 
-  g_free(string);
+  g_free (string);
 }
 
 
@@ -275,14 +275,11 @@ gst_debug_disable_category (gint category) {
   _gst_debug_categories &= ~ (1 << category);
 }
 
-
-
-
 /***** INFO system *****/
 GstInfoHandler _gst_info_handler = gst_default_info_handler;
 guint32 _gst_info_categories = 0x00000001;
 
-
+/* FIXME:what does debug_string DO ??? */
 /**
  * gst_default_info_handler:
  * @category: category of the INFO message
@@ -296,6 +293,7 @@ guint32 _gst_info_categories = 0x00000001;
  *
  * Prints out the INFO mesage in a variant of the following form:
  *
+ *   FIXME: description should be fixed
  *   INFO:gst_function:542(args): [elementname] something neat happened
  */
 void
@@ -305,9 +303,9 @@ gst_default_info_handler (gint category, gboolean incore,
 			  void *element, gchar *string)
 {
   gchar *empty = "";
-  gchar *elementname = empty,*location = empty;
-  int pid = getpid();
-  int cothread_id = (int) g_static_private_get(&_gst_debug_cothread_index);
+  gchar *elementname = empty, *location = empty;
+  int pid = getpid ();
+  int cothread_id = 0; /*FIXME*/
 #ifdef GST_DEBUG_COLOR
   int pid_color = pid%6 + 31;
   int cothread_color = (cothread_id < 0) ? 37 : (cothread_id%6 + 31);
@@ -315,21 +313,23 @@ gst_default_info_handler (gint category, gboolean incore,
 
   if (debug_string == NULL) debug_string = "";
   if (category != GST_CAT_GST_INIT)
-    location = g_strdup_printf("%s:%d%s:",function,line,debug_string);
+    location = g_strdup_printf ("%s(%d): %s: %s:",
+		                file, line, function, debug_string);
   if (element && GST_IS_ELEMENT (element))
-    elementname = g_strdup_printf (" \033[04m[%s]\033[00m", GST_OBJECT_NAME (element));
+    elementname = g_strdup_printf (" \033[04m[%s]\033[00m",
+		                   GST_OBJECT_NAME (element));
 
 /*
 #ifdef GST_DEBUG_ENABLED
 */
   #ifdef GST_DEBUG_COLOR
-    fprintf(stderr,"\033[01mINFO\033[00m (\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
-            GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
-            pid_color,pid,cothread_color,cothread_id,
-            _gst_category_colors[category],location,elementname,string);
+    fprintf (stderr, "\033[01mINFO\033[00m (\033[00;%dm%5d\033[00m:\033[00;%dm%2d\033[00m)\033["
+             GST_DEBUG_CHAR_MODE ";%sm%s%s\033[00m %s\n",
+             pid_color, pid, cothread_color, cothread_id,
+             _gst_category_colors[category], location, elementname, string);
   #else
-    fprintf(stderr,"INFO (%5d:%2d)%s%s %s\n",
-            pid,cothread_id,location,elementname,string);
+    fprintf (stderr, "INFO (%5d:%2d)%s%s %s\n",
+            pid, cothread_id, location, elementname, string);
 #endif /* GST_DEBUG_COLOR */
 /*
 #else
@@ -344,10 +344,10 @@ gst_default_info_handler (gint category, gboolean incore,
 #endif
 */
 
-  if (location != empty) g_free(location);
-  if (elementname != empty) g_free(elementname);
+  if (location != empty) g_free (location);
+  if (elementname != empty) g_free (elementname);
 
-  g_free(string);
+  g_free (string);
 }
 
 /**
@@ -485,6 +485,7 @@ gst_default_error_handler (gchar *file, gchar *function,
 
 /***** DEBUG system *****/
 #ifdef GST_DEBUG_ENABLED
+#ifdef GST_DEBUG_ENABLED
 GHashTable *__gst_function_pointers = NULL;
 /* FIXME make this thread specific */
 /* static GSList *stack_trace = NULL; */
@@ -504,6 +505,7 @@ _gst_debug_nameof_funcptr (void *ptr)
     return g_strdup_printf("%p",ptr);
   }
   return NULL;
+#endif
 }
 #endif
 

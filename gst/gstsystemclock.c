@@ -128,19 +128,21 @@ gst_system_clock_get_resolution (GstClock *clock)
   return 1 * GST_USECOND;
 }
 
-static GstClockEntryStatus	
+static GstClockEntryStatus
 gst_system_clock_wait (GstClock *clock, GstClockEntry *entry)
 {
   GstClockEntryStatus res = GST_CLOCK_ENTRY_OK;
   GstClockTime current, target;
-	  
+
   current = gst_clock_get_time (clock);
   target = gst_system_clock_get_internal_time (clock) +
            GST_CLOCK_ENTRY_TIME (entry) - current;
-		   
-  GST_DEBUG (GST_CAT_CLOCK, "real_target %llu,  target %llu, now %llu",
-                      target, GST_CLOCK_ENTRY_TIME (entry), current);
-		       
+
+  GST_DEBUG (GST_CAT_CLOCK, "real_target %" G_GUINT64_FORMAT
+		            " target %" G_GUINT64_FORMAT
+			    " now %" G_GUINT64_FORMAT,
+                            target, GST_CLOCK_ENTRY_TIME (entry), current);
+
   if (((gint64)target) > 0) {
     GTimeVal tv;
 

@@ -106,6 +106,12 @@ AC_MSG_RESULT(no)
 AC_MSG_RESULT(no)
 ])
 
+dnl check for makecontext and define HAVE_MAKECONTEXT if we have it
+GST_CHECK_MAKECONTEXT()
+
+dnl Check for a way to display the function name in debug output
+GST_CHECK_FUNCTION()
+
 dnl Check for essential libraries first:
 dnl ====================================
 
