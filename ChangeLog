@@ -1,5 +1,17 @@
 2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_use_event):
+	  Don't bail on unknown events.
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_chain):
+	  Don't crash on events before negotiation.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_add_stream):
+	  Send tags on pads, too.
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_request_new_pad):
+	  Forward events on first pad if no input was selected yet.
+
+2005-01-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/playback/gstplaybasebin.c: (setup_substreams):
 	  Don't disable streamtype if the stream doesn't exist, since
 	  then playing a video after audio will disable both and nothing
