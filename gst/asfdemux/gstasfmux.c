@@ -286,9 +286,10 @@ static void
 gst_asfmux_init (GstAsfMux *asfmux) 
 {
   gint n;
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (asfmux);
 
   asfmux->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_factory), "src");
+		  gst_element_class_get_pad_template (klass, "src"), "src");
   gst_element_add_pad (GST_ELEMENT (asfmux), asfmux->srcpad);
 
   GST_FLAG_SET (GST_ELEMENT (asfmux), GST_ELEMENT_EVENT_AWARE);
@@ -595,6 +596,7 @@ gst_asfmux_request_new_pad (GstElement     *element,
   gchar *padname;
   GstPadLinkFunction linkfunc;
   GstAsfMuxStream *stream;
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
 
   g_return_val_if_fail (templ != NULL, NULL);
   g_return_val_if_fail (templ->direction == GST_PAD_SINK, NULL);
@@ -609,11 +611,11 @@ gst_asfmux_request_new_pad (GstElement     *element,
   stream->eos = FALSE;
   stream->seqnum = 0;
 
-  if (templ == GST_PAD_TEMPLATE_GET (audio_sink_factory)) {
+  if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     padname = g_strdup_printf ("audio_%02d", asfmux->num_audio++);
     stream->type = ASF_STREAM_AUDIO;
     linkfunc = gst_asfmux_audsinkconnect;
-  } else if (templ == GST_PAD_TEMPLATE_GET (video_sink_factory)) {
+  } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
     padname = g_strdup_printf ("video_%02d", asfmux->num_video++);
     stream->type = ASF_STREAM_VIDEO;
     linkfunc = gst_asfmux_vidsinkconnect;
@@ -642,6 +644,7 @@ gst_asfmux_request_new_pad (GstElement     *element,
 static gboolean
 gst_asfmux_can_seek (GstAsfMux *asfmux)
 {
+#if 0
   const GstEventMask *masks = gst_pad_get_event_masks (GST_PAD_PEER (asfmux->srcpad));
 
   /* this is for stream or file-storage */
@@ -654,6 +657,8 @@ gst_asfmux_can_seek (GstAsfMux *asfmux)
   }
 
   return FALSE;
+#endif
+  return TRUE;
 }
 
 static gboolean
