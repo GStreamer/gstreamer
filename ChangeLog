@@ -1,6 +1,7 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/gst-i18n-plugin.h:
+          add locale.h
           remove config.h inclusion
 
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
