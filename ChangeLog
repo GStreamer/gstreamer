@@ -1,5 +1,16 @@
 2004-08-09  David Schleef  <ds@schleef.org>
 
+	Patch from Gernot Ziegler <gz@lysator.liu.se> rewriting the
+	GL sink plugin.  (Bug #147302)
+
+	* configure.ac: Test for OpenGL
+	* sys/Makefile.am: Use test for OpenGL
+	* sys/glsink/Makefile.am:
+	* sys/glsink/glimagesink.c: rewrite
+	* sys/glsink/glimagesink.h: rewrite
+
+2004-08-09  David Schleef  <ds@schleef.org>
+
 	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_base_init):  Only allow
 	sane framerates.
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get): same
