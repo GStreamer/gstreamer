@@ -1,63 +1,133 @@
+### assemble a list of programs we want to build and install
 if GST_DISABLE_REGISTRY
 GST_REGISTRY_SRC = 
+GST_REGISTRY_SRC_V = 
 else
 GST_REGISTRY_SRC = gst-register
+GST_REGISTRY_SRC_V = gst-register-@GST_MAJORMINOR@
 endif
 
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
+GST_LOADSAVE_SRC_V = 
 else
-GST_LOADSAVE_SRC = gst-compprep gst-xmllaunch gst-complete
+GST_LOADSAVE_SRC = gst-complete gst-compprep gst-xmllaunch
+GST_LOADSAVE_SRC_V = \
+	gst-complete-@GST_MAJORMINOR@ \
+	gst-compprep-@GST_MAJORMINOR@ \
+	gst-xmllaunch-@GST_MAJORMINOR@
 endif
 
-bin_PROGRAMS = 	gst-launch 		\
-		$(GST_REGISTRY_SRC) 	\
-		gst-inspect 		\
-                gst-typefind            \
-		$(GST_LOADSAVE_SRC) 	\
-		gst-md5sum
+GST_OTHER_SRC = \
+	gst-feedback \
+	gst-inspect \
+	gst-launch \
+	gst-md5sum \
+	gst-typefind \
+	gst-xmlinspect
+GST_OTHER_SRC_V = \
+	gst-inspect-@GST_MAJORMINOR@ \
+	gst-launch-@GST_MAJORMINOR@ \
+	gst-md5sum-@GST_MAJORMINOR@ \
+	gst-typefind-@GST_MAJORMINOR@ \
+	gst-xmlinspect-@GST_MAJORMINOR@
 
-bin_SCRIPTS = gst-feedback
+### so all of the programs we want to build
+bin_PROGRAMS = \
+	$(GST_REGISTRY_SRC) $(GST_REGISTRY_SRC_V) \
+	$(GST_LOADSAVE_SRC) $(GST_LOADSAVE_SRC_V) \
+	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
+bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
-man_MANS = gst-launch.1 gst-md5sum.1 gst-register.1 gst-inspect.1 \
-	gst-complete.1 gst-compprep.1 gst-xmllaunch.1 \
-	gst-feedback.1 gst-typefind.1
-
-gst_launch_LDADD = $(GST_LIBS) #-lefence
-gst_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
-
-gst_md5sum_LDADD = $(GST_LIBS) #-lefence
-gst_md5sum_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
-
-gst_typefind_LDADD = $(GST_LIBS) #-lefence
-gst_typefind_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
-
+# make sure each versioned tool has the right source file
 if !GST_DISABLE_REGISTRY
-gst_register_LDADD = $(GST_LIBS)
-gst_register_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
+gst_register_@GST_MAJORMINOR@_SOURCES = gst-register.c
 endif
-
-gst_inspect_LDADD = $(GST_LIBS) ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
-gst_inspect_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
-
-gst_complete_LDADD = $(GST_LIBS)
-gst_complete_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
-
 if !GST_DISABLE_LOADSAVE
-gst_compprep_LDADD = $(GST_LIBS)
-gst_compprep_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
+gst_complete_@GST_MAJORMINOR@_SOURCES = gst-complete.c
+gst_compprep_@GST_MAJORMINOR@_SOURCES = gst-compprep.c
+gst_xmllaunch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
+endif
+gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
+gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
+gst_md5sum_@GST_MAJORMINOR@_SOURCES = gst-md5sum.c
+gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c
+gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
 
-gst_xmllaunch_SOURCES = gst-launch.c
-gst_xmllaunch_LDADD = $(GST_LIBS)
-gst_xmllaunch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" 
+# make sure each unversioned tool comes from gst-run.c
+if !GST_DISABLE_REGISTRY
+gst_register_SOURCES = gst-run.c
+endif
+if !GST_DISABLE_LOADSAVE
+gst_complete_SOURCES = gst-run.c
+gst_compprep_SOURCES = gst-run.c
+gst_xmllaunch_SOURCES = gst-run.c
+endif
+gst_feedback_SOURCES = gst-run.c
+gst_inspect_SOURCES = gst-run.c
+gst_launch_SOURCES = gst-run.c
+gst_md5sum_SOURCES = gst-run.c
+gst_typefind_SOURCES = gst-run.c
+gst_xmlinspect_SOURCES = gst-run.c
+
+# set correct compile and link flags for all, as well as for specific
+AM_CFLAGS = $(GST_CFLAGS)
+AM_LDFLAGS = $(GST_LIBS)
+
+gst_inspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
+
+gst_xmlinspect_@GST_MAJORMINOR@_LDADD = ../libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
+
+### man pages we want to install
+if GST_DISABLE_REGISTRY
+GST_REGISTRY_MAN = gst-register-@GST_MAJORMINOR@.1
+else
+GST_REGISTRY_MAN=
 endif
 
-EXTRA_DIST = $(man_MANS) gst-feedback
+if GST_DISABLE_LOADSAVE
+GST_LOADSAVE_MAN = \
+	gst-complete-@GST_MAJORMINOR@.1 \
+	gst-compprep-@GST_MAJORMINOR@.1 \
+	gst-xmllaunch-@GST_MAJORMINOR@.1
+else
+GST_LOADSAVE_MAN=
+endif
+
+GST_OTHER_MAN = \
+	gst-feedback-@GST_MAJORMINOR@.1 \
+	gst-inspect-@GST_MAJORMINOR@.1 \
+	gst-launch-@GST_MAJORMINOR@.1 \
+	gst-md5sum-@GST_MAJORMINOR@.1 \
+	gst-typefind-@GST_MAJORMINOR@.1
+#	gst-xmlinspect-@GST_MAJORMINOR@.1
+
+manpages = $(GST_REGISTRY_MAN) $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
+
+CLEANFILES = $(manpages)
+man_MANS = $(manpages)
+
+EXTRA_DIST = \
+	gst-complete.1.in \
+	gst-compprep.1.in \
+	gst-feedback.1.in \
+	gst-inspect.1.in \
+	gst-launch.1.in \
+	gst-md5sum.1.in \
+	gst-register.1.in \
+	gst-typefind.1.in \
+	gst-xmllaunch.1.in \
+	gst-feedback-@GST_MAJORMINOR@
+
+%-@GST_MAJORMINOR@.1: %.1.in
+	sed \
+		-e s,gst-complete,gst-complete-@GST_MAJORMINOR@,g \
+		-e s,gst-compprep,gst-compprep-@GST_MAJORMINOR@,g \
+		-e s,gst-feedback,gst-feedback-@GST_MAJORMINOR@,g \
+		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
+		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
+		-e s,gst-md5sum,gst-md5sum-@GST_MAJORMINOR@,g \
+		-e s,gst-register,gst-register-@GST_MAJORMINOR@,g \
+		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \
+		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
+		$< >$@

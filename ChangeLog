@@ -1,5 +1,32 @@
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tools/Makefile.am:
+	* tools/gst-complete.1:
+	* tools/gst-complete.1.in:
+	* tools/gst-compprep.1:
+	* tools/gst-compprep.1.in:
+	* tools/gst-feedback:
+	* tools/gst-feedback-0.6:
+	* tools/gst-feedback-0.6.1.in:
+	* tools/gst-feedback.1:
+	* tools/gst-feedback.1.in:
+	* tools/gst-inspect.1:
+	* tools/gst-inspect.1.in:
+	* tools/gst-launch.1:
+	* tools/gst-launch.1.in:
+	* tools/gst-md5sum.1:
+	* tools/gst-md5sum.1.in:
+	* tools/gst-register.1:
+	* tools/gst-register.1.in:
+	* tools/gst-typefind.1:
+	* tools/gst-typefind.1.in:
+	* tools/gst-xmllaunch.1:
+	* tools/gst-xmllaunch.1.in:
+	  add gst-run code to frontend for versioned tools
+	  generate man pages
+
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac: bump nano to 1 for cvs
 
 2003-05-31  Thomas Vander Stichele <thomas at apestaart dot org>
