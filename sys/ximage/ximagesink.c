@@ -320,7 +320,7 @@ gst_ximagesink_xwindow_destroy (GstXImageSink *ximagesink, GstXWindow *xwindow)
   g_free (xwindow);
 }
 
-static void
+/*static void
 gst_ximagesink_xwindow_resize (GstXImageSink *ximagesink, GstXWindow  *xwindow,
                                gint width, gint height)
 {
@@ -333,8 +333,107 @@ gst_ximagesink_xwindow_resize (GstXImageSink *ximagesink, GstXWindow  *xwindow,
   XResizeWindow (ximagesink->xcontext->disp, xwindow->win, width, height);
   
   g_mutex_unlock (ximagesink->x_lock);
-}
+} */
 
+static void
+gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
+{
+  XEvent e;
+  
+  g_return_if_fail (ximagesink != NULL);
+  g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  
+  /* We get all events on our window to throw them upstream */
+  //g_mutex_lock (ximagesink->x_lock);
+  while (XCheckWindowEvent (ximagesink->xcontext->disp,
+                            ximagesink->xwindow->win,
+                            ExposureMask | StructureNotifyMask |
+                            PointerMotionMask | KeyPressMask |
+                            KeyReleaseMask | ButtonPressMask |
+                            ButtonReleaseMask, &e))
+    {
+      GstEvent *event = NULL;
+      
+      /* We lock only for the X function call */
+      //g_mutex_unlock (ximagesink->x_lock);
+      
+      switch (e.type)
+        {
+          case ConfigureNotify:
+            /* Window got resized or moved. We do caps negotiation
+               again to get video scaler to fit that new size only if size
+               of the window changed. */
+            GST_DEBUG ("ximagesink window is at %d, %d with geometry : %d,%d",
+                       e.xconfigure.x, e.xconfigure.y,
+                       e.xconfigure.width, e.xconfigure.height);
+            if ( (ximagesink->xwindow->width != e.xconfigure.width) ||
+                 (ximagesink->xwindow->height != e.xconfigure.height) )
+              gst_pad_try_set_caps (ximagesink->sinkpad,
+                                    GST_CAPS_NEW ("ximagesink_videoscaling",
+                                                  "video/x-raw-rgb",
+                                                  "framerate", GST_PROPS_FLOAT (30),
+                                                  "width", GST_PROPS_INT (e.xconfigure.width),
+                                                  "height", GST_PROPS_INT (e.xconfigure.height)));
+            else
+              GST_DEBUG ("ximagesink window size has not changed. no renegotiation");
+            break;
+          case MotionNotify:
+            /* Mouse pointer moved over our window. We send upstream
+               events for interactivity/navigation */
+            GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
+                       e.xmotion.x, e.xmotion.y);
+            event = gst_event_new (GST_EVENT_NAVIGATION);
+            event->src = GST_OBJECT (ximagesink);
+            event->event_data.caps.caps = GST_CAPS_NEW (
+                                             "ximagesink_navigation",
+                                             "video/x-raw-rgb",
+                                             "pointer_x", GST_PROPS_INT (e.xmotion.x),
+                                             "pointer_y", GST_PROPS_INT (e.xmotion.y),
+                                             "state", GST_PROPS_INT (e.xmotion.state));
+            break;
+          case ButtonPress:
+          case ButtonRelease:
+            /* Mouse button pressed/released over our window. We send upstream
+               events for interactivity/navigation */
+            GST_DEBUG ("ximagesink button %d pressed over window at %d,%d",
+                       e.xbutton.button, e.xbutton.x, e.xbutton.x);
+            event = gst_event_new (GST_EVENT_NAVIGATION);
+            event->src = GST_OBJECT (ximagesink);
+            event->event_data.caps.caps = GST_CAPS_NEW (
+                                             "ximagesink_navigation",
+                                             "video/x-raw-rgb",
+                                             "pointer_x", GST_PROPS_INT (e.xbutton.x),
+                                             "pointer_y", GST_PROPS_INT (e.xbutton.y),
+                                             "button", GST_PROPS_INT (e.xbutton.button),
+                                             "state", GST_PROPS_INT (e.xbutton.state));
+            break;
+          case KeyPress:
+          case KeyRelease:
+            /* Key pressed/released over our window. We send upstream
+               events for interactivity/navigation */
+            GST_DEBUG ("ximagesink key %d pressed over window at %d,%d",
+                       e.xbutton.button, e.xbutton.x, e.xbutton.x);
+            event = gst_event_new (GST_EVENT_NAVIGATION);
+            event->src = GST_OBJECT (ximagesink);
+            event->event_data.caps.caps = GST_CAPS_NEW (
+                                             "ximagesink_navigation",
+                                             "video/x-raw-rgb",
+                                             "pointer_x", GST_PROPS_INT (e.xkey.x),
+                                             "pointer_y", GST_PROPS_INT (e.xkey.y),
+                                             "keycode", GST_PROPS_INT (e.xkey.keycode),
+                                             "state", GST_PROPS_INT (e.xkey.state));
+            break;
+          default:
+            GST_DEBUG ("ximagesink unhandled X event (%d)", e.type);
+        }
+        
+      /*if (event)
+        gst_pad_send_event (gst_pad_get_peer (pad), event);*/
+      
+      //g_mutex_lock (ximagesink->x_lock);
+    }
+  //g_mutex_unlock (ximagesink->x_lock);
+}
 /* This function get the X Display and global infos about it. Everything is
    stored in our object and will be cleaned when the object is disposed. Note
    here that caps for supported format are generated without any window or 
@@ -501,15 +600,28 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
                                                       ximagesink->width,
                                                       ximagesink->height);
   else
-    gst_ximagesink_xwindow_resize (ximagesink, ximagesink->xwindow,
-                                   ximagesink->width, ximagesink->height);
+    { /* We resize our window only if size has changed, preventing us from
+         infinite loops with XConfigure events.
+      if ( (ximagesink->width != ximagesink->xwindow->width) ||
+           (ximagesink->height != ximagesink->xwindow->height) )
+        gst_ximagesink_xwindow_resize (ximagesink, ximagesink->xwindow,
+                                       ximagesink->width, ximagesink->height);*/
+    }
   
-  if (ximagesink->ximage)
-    gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
+  if ( (ximagesink->ximage) &&
+       ( (ximagesink->width != ximagesink->ximage->width) ||
+         (ximagesink->height != ximagesink->ximage->height) ) )
+    { /* We renew our ximage only if size changed */
+      gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
   
-  ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
-                                                  ximagesink->width,
-                                                  ximagesink->height);
+      ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
+                                                      ximagesink->width,
+                                                      ximagesink->height);
+    }
+  else if (!ximagesink->ximage) /* If no ximage, creating one */
+    ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
+                                                    ximagesink->width,
+                                                    ximagesink->height);
   
   return GST_PAD_LINK_OK;
 }
@@ -552,7 +664,6 @@ gst_ximagesink_chain (GstPad *pad, GstData *_data)
   GstBuffer *buf = GST_BUFFER (_data);
   GstClockTime time = GST_BUFFER_TIMESTAMP (buf);
   GstXImageSink *ximagesink;
-  XEvent e;
   
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -560,22 +671,24 @@ gst_ximagesink_chain (GstPad *pad, GstData *_data)
 
   ximagesink = GST_XIMAGESINK (gst_pad_get_parent (pad));
     
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
-    gint64 offset;
+  if (GST_IS_EVENT (buf))
+    {
+      GstEvent *event = GST_EVENT (buf);
+      gint64 offset;
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-	offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-	g_print ("ximage discont %" G_GINT64_FORMAT "\n", offset);
-	break;
-      default:
-	gst_pad_event_default (pad, event);
-	return;
+      switch (GST_EVENT_TYPE (event))
+        {
+          case GST_EVENT_DISCONTINUOUS:
+	    offset = GST_EVENT_DISCONT_OFFSET (event, 0).value;
+	    GST_DEBUG ("ximage discont %" G_GINT64_FORMAT "\n", offset);
+	    break;
+          default:
+	    gst_pad_event_default (pad, event);
+	    return;
+        }
+      gst_event_unref (event);
+      return;
     }
-    gst_event_unref (event);
-    return;
-  }
   
   GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, time);
   
@@ -608,57 +721,7 @@ gst_ximagesink_chain (GstPad *pad, GstData *_data)
   
   gst_buffer_unref (buf);
     
-  /* We get all events on our window to throw them upstream */
-  g_mutex_lock (ximagesink->x_lock);
-  while (XCheckWindowEvent (ximagesink->xcontext->disp,
-                            ximagesink->xwindow->win,
-                            ExposureMask | StructureNotifyMask |
-                            PointerMotionMask | KeyPressMask |
-                            KeyReleaseMask | ButtonPressMask |
-                            ButtonReleaseMask, &e))
-    {
-      GstEvent *event = NULL;
-      
-      /* We lock only for the X function call */
-      g_mutex_unlock (ximagesink->x_lock);
-      
-      switch (e.type)
-        {
-          case ConfigureNotify:
-            /* Window got resized or moved. We do caps negotiation
-               again to get video scaler to fit that new size */
-            GST_DEBUG ("ximagesink window is at %d, %d with geometry : %d,%d",
-                       e.xconfigure.x, e.xconfigure.y,
-                       e.xconfigure.width, e.xconfigure.height);
-            gst_pad_try_set_caps (ximagesink->sinkpad, GST_CAPS_NEW (
-                                             "ximagesink_videoscaling",
-                                             "video/x-raw-rgb",
-                                             "width", GST_PROPS_INT (e.xconfigure.width),
-                                             "height", GST_PROPS_INT (e.xconfigure.height)));
-            break;
-          case MotionNotify:
-            /* Mouse pointer moved over our window. We send upstream
-               events for interactivity/navigation */
-            GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
-                       e.xmotion.x, e.xmotion.y);
-            event = gst_event_new (GST_EVENT_NAVIGATION);
-            event->src = GST_OBJECT (ximagesink);
-            event->event_data.caps.caps = GST_CAPS_NEW (
-                                             "ximagesink_navigation",
-                                             "video/x-raw-rgb",
-                                             "pointer_x", GST_PROPS_INT (e.xmotion.x),
-                                             "pointer_y", GST_PROPS_INT (e.xmotion.y));
-            break;
-          default:
-            GST_DEBUG ("ximagesink unhandled X event (%d)", e.type);
-        }
-        
-      if (event)
-        gst_pad_send_event (gst_pad_get_peer (pad), event);
-      
-      g_mutex_lock (ximagesink->x_lock);
-    }
-  g_mutex_unlock (ximagesink->x_lock);
+  gst_ximagesink_handle_xevents (ximagesink, pad);
 }
 
 static void
@@ -740,9 +803,7 @@ gst_ximagesink_buffer_free (GstBufferPool *pool,
   /* If our geometry changed we can't reuse that image. */
   if ( (ximage->width != ximagesink->width) ||
        (ximage->height != ximagesink->height) )
-    {
-      gst_ximagesink_ximage_destroy (ximagesink, ximage);
-    }
+    gst_ximagesink_ximage_destroy (ximagesink, ximage);
   else /* In that case we can reuse the image and add it to our image pool. */
     {
       g_mutex_lock (ximagesink->pool_lock);
@@ -779,8 +840,6 @@ gst_ximagesink_get_bufferpool (GstPad *pad)
   ximagesink = GST_XIMAGESINK (gst_pad_get_parent (pad));
 
   if (!ximagesink->bufferpool) {
-    GST_DEBUG ("ximagesink: creating bufferpool");
-
     ximagesink->bufferpool = gst_buffer_pool_new (
                 NULL,		/* free */
                 NULL,		/* copy */
