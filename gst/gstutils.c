@@ -1294,6 +1294,16 @@ gst_pad_can_link_filtered (GstPad * srcpad, GstPad * sinkpad,
         GST_DEBUG_PAD_NAME (realsink));
     return FALSE;
   }
+  if (!GST_PAD_IS_SRC (realsrc)) {
+    GST_CAT_INFO (GST_CAT_PADS, "Real src pad %s:%s is not source pad, failed",
+        GST_DEBUG_PAD_NAME (realsrc));
+    return FALSE;
+  }
+  if (!GST_PAD_IS_SINK (realsink)) {
+    GST_CAT_INFO (GST_CAT_PADS, "Real sink pad %s:%s is not sink pad, failed",
+        GST_DEBUG_PAD_NAME (realsink));
+    return FALSE;
+  }
   if (GST_PAD_PARENT (realsrc) == NULL) {
     GST_CAT_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
         GST_DEBUG_PAD_NAME (realsrc));

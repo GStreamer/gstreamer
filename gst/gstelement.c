@@ -1797,30 +1797,41 @@ exit:
 }
 
 /* is called with STATE_LOCK */
-/* FIXME make MT safe */
 static gboolean
 gst_element_pads_activate (GstElement * element, gboolean active)
 {
   GList *pads;
-  gboolean result = TRUE;
+  gboolean result;
+  guint32 cookie;
 
+  GST_LOCK (element);
+restart:
+  result = TRUE;
   pads = element->pads;
-  while (pads && result) {
+  cookie = element->pads_cookie;
+  for (; pads && result; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
 
-    pads = g_list_next (pads);
+    gst_object_ref (GST_OBJECT (pad));
+    GST_UNLOCK (element);
 
-    if (!GST_IS_REAL_PAD (pad))
-      continue;
+    if (GST_IS_REAL_PAD (pad)) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+          "%sactivating pad %s", (active ? "" : "(de)"), GST_OBJECT_NAME (pad));
+      result &= gst_pad_set_active (pad, active);
+    }
+    gst_object_unref (GST_OBJECT (pad));
 
-    result &= gst_pad_set_active (pad, active);
+    GST_LOCK (element);
+    if (cookie != element->pads_cookie)
+      goto restart;
   }
+  GST_UNLOCK (element);
 
   return result;
 }
 
 /* is called with STATE_LOCK */
-/* FIXME make MT safe */
 static GstElementStateReturn
 gst_element_change_state (GstElement * element)
 {
@@ -1857,10 +1868,12 @@ gst_element_change_state (GstElement * element)
       }
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
+      GST_LOCK (element);
       if (GST_ELEMENT_MANAGER (element)) {
         element->base_time =
             GST_ELEMENT (GST_ELEMENT_MANAGER (element))->base_time;
       }
+      GST_UNLOCK (element);
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
@@ -2264,16 +2277,16 @@ GstTask *
 gst_element_create_task (GstElement * element, GstTaskFunction func,
     gpointer data)
 {
-  GstPipeline *pipeline;
+  GstScheduler *sched;
   GstTask *result = NULL;
 
   GST_LOCK (element);
-  pipeline = GST_ELEMENT_MANAGER (element);
-  gst_object_ref (GST_OBJECT (pipeline));
+  sched = GST_ELEMENT_SCHEDULER (element);
+  gst_object_ref (GST_OBJECT (sched));
   GST_UNLOCK (element);
-  if (pipeline) {
-    result = gst_scheduler_create_task (pipeline->scheduler, func, data);
-    gst_object_unref (GST_OBJECT (pipeline));
+  if (sched) {
+    result = gst_scheduler_create_task (sched, func, data);
+    gst_object_unref (GST_OBJECT (sched));
   }
 
   return result;

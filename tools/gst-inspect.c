@@ -627,9 +627,9 @@ print_pad_info (GstElement * element)
     if (realpad->chainfunc)
       n_print ("      Has chainfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
-    if (realpad->getfunc)
-      n_print ("      Has getfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (realpad->getfunc));
+    if (realpad->getrangefunc)
+      n_print ("      Has getrangefunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (realpad->getrangefunc));
     if (realpad->formatsfunc != gst_pad_get_formats_default) {
       n_print ("      Supports seeking/conversion/query formats:\n");
       print_formats (gst_pad_get_formats (GST_PAD (realpad)));

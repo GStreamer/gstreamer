@@ -125,9 +125,9 @@ static void gst_queue_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_queue_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_queue_get (GstPad * pad, GstBuffer ** buffer);
 static GstBuffer *gst_queue_bufferalloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps);
+static gboolean gst_queue_loop (GstPad * pad);
 
 static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
 
@@ -312,7 +312,7 @@ gst_queue_init (GstQueue * queue)
   queue->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
-  gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
+  gst_pad_set_loop_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_loop));
   gst_pad_set_activate_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_src_activate));
   gst_pad_set_link_function (queue->srcpad,
@@ -433,8 +433,6 @@ gst_queue_locked_flush (GstQueue * queue)
   while (!g_queue_is_empty (queue->queue)) {
     GstData *data = g_queue_pop_head (queue->queue);
 
-    /* First loose the reference we added when putting that data in the queue */
-    gst_data_unref (data);
     /* Then loose another reference because we are supposed to destroy that
        data when flushing */
     gst_data_unref (data);
@@ -492,7 +490,6 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_event_ref (event);
   g_queue_push_tail (queue->queue, event);
   g_cond_signal (queue->item_add);
   GST_QUEUE_MUTEX_UNLOCK;
@@ -621,11 +618,6 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
-  /* put the buffer on the tail of the list. We keep a reference,
-   * so that the buffer is read-only while in here. There's a good
-   * reason to do so: we have a size and time counter, and any
-   * modification to the content could change any of the two. */
-  gst_buffer_ref (buffer);
   g_queue_push_tail (queue->queue, buffer);
 
   /* add buffer to the statistics */
@@ -648,14 +640,14 @@ out_unref:
   return GST_FLOW_OK;
 }
 
-static GstFlowReturn
-gst_queue_get (GstPad * pad, GstBuffer ** buffer)
+static gboolean
+gst_queue_loop (GstPad * pad)
 {
   GstQueue *queue;
   GstData *data;
-  GstFlowReturn result = GST_FLOW_OK;
+  gboolean result = TRUE;
 
-  queue = GST_QUEUE (gst_object_get_parent (GST_OBJECT (pad)));
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   /* have to lock for thread-safety */
   GST_QUEUE_MUTEX_LOCK;
@@ -696,23 +688,16 @@ restart:
     if (GST_BUFFER_DURATION (data) != GST_CLOCK_TIME_NONE)
       queue->cur_level.time -= GST_BUFFER_DURATION (data);
 
-    *buffer = GST_BUFFER (data);
+    gst_pad_push (pad, GST_BUFFER (data));
   } else {
     if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
-      result = GST_FLOW_WRONG_STATE;
+      result = FALSE;
     }
     gst_pad_push_event (queue->srcpad, GST_EVENT (data));
-    if (result == GST_FLOW_OK)
+    if (result == TRUE)
       goto restart;
-    else
-      goto done;
   }
 
-  /* Now that we're done, we can lose our own reference to
-   * the item, since we're no longer in danger. */
-  gst_data_unref (data);
-
-done:
   STATUS (queue, "after _get()");
 
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_del");
@@ -784,37 +769,6 @@ gst_queue_handle_src_query (GstPad * pad,
   return TRUE;
 }
 
-static void
-gst_queue_loop (GstElement * element)
-{
-  GstQueue *queue;
-  GstTask *task;
-  GstBuffer *buffer;
-  GstFlowReturn ret;
-
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_QUEUE (element));
-
-  queue = GST_QUEUE (element);
-  task = queue->task;
-
-  ret = gst_queue_get (queue->srcpad, &buffer);
-  if (ret != GST_FLOW_OK) {
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "stopping, get returned %d",
-        ret);
-    gst_task_stop (task);
-    return;
-  }
-  ret = gst_pad_push (queue->srcpad, buffer);
-  if (ret != GST_FLOW_OK) {
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "stopping, push returned %d",
-        ret);
-    gst_task_stop (task);
-    return;
-  }
-}
-
-
 static gboolean
 gst_queue_src_activate (GstPad * pad, gboolean active)
 {
@@ -825,18 +779,18 @@ gst_queue_src_activate (GstPad * pad, gboolean active)
 
   if (active) {
     /* if we have a scheduler we can start the task */
-    if (GST_ELEMENT_MANAGER (queue)) {
+    if (GST_ELEMENT_SCHEDULER (queue)) {
       GST_STREAM_LOCK (pad);
       queue->task =
-          gst_scheduler_create_task (GST_ELEMENT_MANAGER (queue)->scheduler,
-          (GstTaskFunction) gst_queue_loop, queue);
+          gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (queue),
+          (GstTaskFunction) gst_queue_loop, pad);
 
       gst_task_start (queue->task);
       GST_STREAM_UNLOCK (pad);
       result = TRUE;
     }
   } else {
-    /* step 1, unblock chain and get functions */
+    /* step 1, unblock chain and loop functions */
     queue->interrupt = TRUE;
     g_cond_signal (queue->item_add);
     g_cond_signal (queue->item_del);
@@ -865,8 +819,7 @@ gst_queue_change_state (GstElement * element)
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "starting state change");
 
   /* lock the queue so another thread (not in sync with this thread's state)
-   * can't call this queue's _get (or whatever)
-   */
+   * can't call this queue's _loop (or whatever) */
   GST_QUEUE_MUTEX_LOCK;
 
   switch (GST_STATE_TRANSITION (element)) {

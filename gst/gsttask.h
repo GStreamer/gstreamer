@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-typedef void           (*GstTaskFunction)          (void *data);
+typedef gboolean           (*GstTaskFunction)          (void *data);
 
 /* --- standard type macros --- */
 #define GST_TYPE_TASK                 	(gst_task_get_type ())

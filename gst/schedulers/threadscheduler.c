@@ -236,14 +236,18 @@ static void
 gst_thread_scheduler_func (GstThreadSchedulerTask * task,
     GstThreadScheduler * sched)
 {
+  gboolean res;
+
   gst_object_ref (GST_OBJECT (task));
   GST_DEBUG_OBJECT (sched, "Entering task %p, thread %p", task,
       g_thread_self ());
   g_mutex_lock (task->lock);
-  while (task->state == STATE_STARTED) {
+  while (G_LIKELY (task->state == STATE_STARTED)) {
     g_mutex_unlock (task->lock);
-    task->func (task->data);
+    res = task->func (task->data);
     g_mutex_lock (task->lock);
+    if (G_UNLIKELY (!res))
+      task->state = STATE_STOPPED;
   }
   g_mutex_unlock (task->lock);
   GST_DEBUG_OBJECT (sched, "Exit task %p, thread %p", task, g_thread_self ());

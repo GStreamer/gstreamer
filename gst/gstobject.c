@@ -314,6 +314,7 @@ gst_object_unref (GstObject * object)
     PATCH_REFCOUNT (object);
   }
 #else
+  /* FIXME, not MT safe because glib is not MT safe */
   g_object_unref (object);
 #endif
 

@@ -332,7 +332,7 @@ gst_fakesink_event (GstPad * pad, GstEvent * event)
     {
       gst_element_finish_preroll (GST_ELEMENT (fakesink),
           GST_STREAM_GET_LOCK (pad));
-      gst_pipeline_post_message (GST_ELEMENT_MANAGER (fakesink),
+      gst_element_post_message (GST_ELEMENT (fakesink),
           gst_message_new_eos (GST_OBJECT (fakesink)));
       break;
     }

@@ -471,7 +471,7 @@ main (int argc, char *argv[])
   }
 
   loop = g_main_loop_new (NULL, FALSE);
-  gst_bus_add_watch (GST_PIPELINE (pipeline)->bus,
+  gst_bus_add_watch (gst_element_get_bus (GST_ELEMENT (pipeline)),
       (GstBusHandler) message_received, pipeline);
 
 

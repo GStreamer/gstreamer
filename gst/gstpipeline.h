@@ -48,8 +48,6 @@ typedef enum {
 struct _GstPipeline {
   GstBin 	 bin;
 
-  GstBus	*bus;
-  GstScheduler  *scheduler;
   GstClock      *fixed_clock;	/* fixed clock if any */
 
   GList		*eosed;		/* list of elements that posted EOS */
@@ -68,12 +66,11 @@ GstElement*	gst_pipeline_new		(const gchar *name);
 
 GstScheduler*	gst_pipeline_get_scheduler	(GstPipeline *pipeline);
 GstBus*		gst_pipeline_get_bus		(GstPipeline *pipeline);
+
 void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock *clock);
 void            gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
 GstClock*       gst_pipeline_get_clock          (GstPipeline *pipeline);
 void            gst_pipeline_auto_clock         (GstPipeline *pipeline);
-
-gboolean	gst_pipeline_post_message	(GstPipeline *pipeline, GstMessage *message);
 
 G_END_DECLS
 

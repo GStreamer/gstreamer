@@ -189,8 +189,7 @@ static void gst_fakesrc_set_clock (GstElement * element, GstClock * clock);
 
 static GstElementStateReturn gst_fakesrc_change_state (GstElement * element);
 
-static GstFlowReturn gst_fakesrc_get (GstPad * pad, GstBuffer ** buffer);
-static void gst_fakesrc_loop (GstElement * element);
+static gboolean gst_fakesrc_loop (GstPad * pad);
 
 static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
 
@@ -471,13 +470,8 @@ gst_fakesrc_update_functions (GstFakeSrc * src)
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
 
-    if (src->loop_based) {
-      gst_pad_set_get_function (pad, NULL);
-    } else {
-      gst_pad_set_get_function (pad, GST_DEBUG_FUNCPTR (gst_fakesrc_get));
-    }
-
     gst_pad_set_activate_function (pad, gst_fakesrc_activate);
+    gst_pad_set_loop_function (pad, gst_fakesrc_loop);
     gst_pad_set_event_function (pad, gst_fakesrc_event_handler);
     gst_pad_set_event_mask_function (pad, gst_fakesrc_get_event_mask);
     gst_pad_set_query_function (pad, gst_fakesrc_query);
@@ -784,19 +778,15 @@ gst_fakesrc_create_buffer (GstFakeSrc * src)
   return buf;
 }
 
-static GstFlowReturn
-gst_fakesrc_get (GstPad * pad, GstBuffer ** buffer)
+static gboolean
+gst_fakesrc_loop (GstPad * pad)
 {
   GstFakeSrc *src;
   GstBuffer *buf;
   GstClockTime time;
-  GstFlowReturn result = GST_FLOW_OK;
-
-  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
+  gboolean result = TRUE;
 
   src = GST_FAKESRC (GST_OBJECT_PARENT (pad));
-
-  g_return_val_if_fail (GST_IS_FAKESRC (src), GST_FLOW_ERROR);
 
   GST_STREAM_LOCK (pad);
   if (src->need_flush) {
@@ -809,14 +799,14 @@ gst_fakesrc_get (GstPad * pad, GstBuffer ** buffer)
       gst_pad_push_event (pad, gst_event_new (GST_EVENT_SEGMENT_DONE));
     } else {
       gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-      result = GST_FLOW_UNEXPECTED;
+      result = FALSE;
       goto done;
     }
   }
 
   if (src->rt_num_buffers == 0) {
     gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-    result = GST_FLOW_UNEXPECTED;
+    result = FALSE;
     goto done;
   } else {
     if (src->rt_num_buffers > 0)
@@ -826,7 +816,7 @@ gst_fakesrc_get (GstPad * pad, GstBuffer ** buffer)
   if (src->eos) {
     GST_INFO ("fakesrc is setting eos on pad");
     gst_pad_push_event (pad, gst_event_new (GST_EVENT_EOS));
-    result = GST_FLOW_UNEXPECTED;
+    result = FALSE;
     goto done;
   }
 
@@ -866,7 +856,7 @@ gst_fakesrc_get (GstPad * pad, GstBuffer ** buffer)
 
   src->bytes_sent += GST_BUFFER_SIZE (buf);
 
-  *buffer = buf;
+  gst_pad_push (pad, buf);
 
 done:
   GST_STREAM_UNLOCK (pad);
@@ -874,26 +864,24 @@ done:
   return result;
 }
 
+#if 0
 /**
  * gst_fakesrc_loop:
  * @element: the faksesrc to loop
  * 
  * generate an empty buffer and push it to the next element.
  */
-static void
-gst_fakesrc_loop (GstElement * element)
+static gboolean
+gst_fakesrc_loop (GstPad * pad)
 {
   GstFakeSrc *src;
   const GList *pads;
   GstTask *task;
 
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_FAKESRC (element));
-
-  src = GST_FAKESRC (element);
+  src = GST_FAKESRC (GST_PAD_PARENT (pad));
   task = src->task;
 
-  pads = element->pads;
+  pads = GST_ELEMENT (src)->pads;
 
   while (pads) {
     GstPad *pad = GST_PAD (pads->data);
@@ -902,22 +890,21 @@ gst_fakesrc_loop (GstElement * element)
 
     ret = gst_fakesrc_get (pad, &buffer);
     if (ret != GST_FLOW_OK) {
-      gst_task_stop (task);
-      return;
+      return FALSE;
     }
     ret = gst_pad_push (pad, buffer);
     if (ret != GST_FLOW_OK) {
-      gst_task_stop (task);
-      return;
+      return FALSE;
     }
 
     if (src->eos) {
-      gst_task_stop (task);
-      return;
+      return FALSE;
     }
     pads = g_list_next (pads);
   }
+  return TRUE;
 }
+#endif
 
 static gboolean
 gst_fakesrc_activate (GstPad * pad, gboolean active)
@@ -929,11 +916,11 @@ gst_fakesrc_activate (GstPad * pad, gboolean active)
 
   if (active) {
     /* if we have a scheduler we can start the task */
-    if (GST_ELEMENT_MANAGER (fakesrc)) {
+    if (GST_ELEMENT_SCHEDULER (fakesrc)) {
       GST_STREAM_LOCK (pad);
       fakesrc->task =
-          gst_scheduler_create_task (GST_ELEMENT_MANAGER (fakesrc)->scheduler,
-          (GstTaskFunction) gst_fakesrc_loop, fakesrc);
+          gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (fakesrc),
+          (GstTaskFunction) gst_fakesrc_loop, pad);
 
       gst_task_start (fakesrc->task);
       GST_STREAM_UNLOCK (pad);

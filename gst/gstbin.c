@@ -61,6 +61,8 @@ static void gst_bin_set_index (GstElement * element, GstIndex * index);
 #endif
 static void gst_bin_set_clock (GstElement * element, GstClock * clock);
 static GstClock *gst_bin_get_clock (GstElement * element);
+static void gst_bin_set_bus (GstElement * element, GstBus * bus);
+static void gst_bin_set_scheduler (GstElement * element, GstScheduler * sched);
 
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
@@ -167,6 +169,8 @@ gst_bin_class_init (GstBinClass * klass)
 #endif
   gstelement_class->get_clock = GST_DEBUG_FUNCPTR (gst_bin_get_clock);
   gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_bin_set_clock);
+  gstelement_class->set_bus = GST_DEBUG_FUNCPTR (gst_bin_set_bus);
+  gstelement_class->set_scheduler = GST_DEBUG_FUNCPTR (gst_bin_set_scheduler);
 
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
@@ -252,10 +256,47 @@ gst_bin_get_clock (GstElement * element)
   return result;
 }
 
+static void
+gst_bin_set_bus (GstElement * element, GstBus * bus)
+{
+  GList *children;
+  GstBin *bin;
+
+  bin = GST_BIN (element);
+
+  parent_class->set_bus (element, bus);
+
+  GST_LOCK (bin);
+  for (children = bin->children; children; children = g_list_next (children)) {
+    GstElement *child = GST_ELEMENT (children->data);
+
+    gst_element_set_bus (child, bus);
+  }
+  GST_UNLOCK (bin);
+}
+
+static void
+gst_bin_set_scheduler (GstElement * element, GstScheduler * sched)
+{
+  GList *children;
+  GstBin *bin;
+
+  bin = GST_BIN (element);
+
+  parent_class->set_scheduler (element, sched);
+
+  GST_LOCK (bin);
+  for (children = bin->children; children; children = g_list_next (children)) {
+    GstElement *child = GST_ELEMENT (children->data);
+
+    gst_element_set_scheduler (child, sched);
+  }
+  GST_UNLOCK (bin);
+}
+
 static gboolean
 gst_bin_add_func (GstBin * bin, GstElement * element)
 {
-  GstPipeline *manager;
   gchar *elem_name;
 
   /* we obviously can't add ourself to ourself */
@@ -283,8 +324,9 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   bin->numchildren++;
   bin->children_cookie++;
 
-  manager = GST_ELEMENT (bin)->manager;
-  gst_element_set_manager (element, manager);
+  gst_element_set_manager (element, GST_ELEMENT (bin)->manager);
+  gst_element_set_bus (element, GST_ELEMENT (bin)->bus);
+  gst_element_set_scheduler (element, GST_ELEMENT (bin)->scheduler);
 
   GST_UNLOCK (bin);
 

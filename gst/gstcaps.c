@@ -872,10 +872,11 @@ gst_caps_structure_union (const GstStructure * struct1,
 GstCaps *
 gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 {
-  int i, j;
+  int i, j, k;
   GstStructure *struct1;
   GstStructure *struct2;
   GstCaps *dest;
+  GstStructure *istruct;
 
   g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
@@ -889,38 +890,42 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
     return gst_caps_copy (caps1);
 
   dest = gst_caps_new_empty ();
-  /* run zigzag on top line first
-   *  
-   * 1 2 4 ..
-   * 3 5 ..
-   * 6 ..
-   * ..
+
+  /* run zigzag on top line then right line, this preserves the caps order
+   * much better than a simple loop. 
+   * 
+   * This algorithm zigzags over the caps structures as demonstrated in
+   * the folowing matrix:
    *
+   *          caps1
+   *       +-------------
+   *       | 1  2  4  7
+   * caps2 | 3  5  8 10
+   *       | 6  9 11 12
+   *       
+   * First we iterate over the caps1 structures (top line) intersecting
+   * the structures diagonally down, then we iterate over the caps2
+   * structures. 
    */
-#if 0
-  for (i = 0; i < caps1->structs->len; i++) {
-    struct1 = gst_caps_get_structure (caps1, i);
-    for (j = 0; j < caps2->structs->len; j++) {
-    }
-  }
-#endif
-  /* run zigzag on right line
-   *  
-   * ..     1
-   * ..   2 4
-   * .. 3 5 6
-   */
+  for (i = 0; i < caps1->structs->len + caps2->structs->len - 1; i++) {
+    /* caps1 index goes from 0 to caps1->structs->len-1 */
+    j = MIN (i, caps1->structs->len - 1);
+    /* caps2 index stays 0 until i reaches caps1->structs->len, then it counts
+     * up from 1 to caps2->structs->len - 1 */
+    k = MAX (0, i - j);
 
-  /* FIXME use loop that preserves the order better */
-  for (i = 0; i < caps1->structs->len; i++) {
-    struct1 = gst_caps_get_structure (caps1, i);
-    for (j = 0; j < caps2->structs->len; j++) {
-      GstStructure *istruct;
+    /* now run the diagonal line, end condition is the left or bottom
+     * border */
+    while (k < caps2->structs->len && j >= 0) {
+      struct1 = gst_caps_get_structure (caps1, j);
+      struct2 = gst_caps_get_structure (caps2, k);
 
-      struct2 = gst_caps_get_structure (caps2, j);
       istruct = gst_caps_structure_intersect (struct1, struct2);
 
       gst_caps_append_structure (dest, istruct);
+      /* move down left */
+      k++;
+      j--;
     }
   }
 

@@ -171,6 +171,8 @@ static void gst_filesrc_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_filesrc_check_filesize (GstFileSrc * src);
 static GstFlowReturn gst_filesrc_get (GstPad * pad, GstBuffer ** buffer);
+static GstFlowReturn gst_filesrc_getrange (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buffer);
 static gboolean gst_filesrc_srcpad_event (GstPad * pad, GstEvent * event);
 static gboolean gst_filesrc_srcpad_query (GstPad * pad, GstQueryType type,
     GstFormat * format, gint64 * value);
@@ -248,7 +250,7 @@ gst_filesrc_init (GstFileSrc * src)
   src->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
       "src");
-  gst_pad_set_get_function (src->srcpad, gst_filesrc_get);
+  gst_pad_set_getrange_function (src->srcpad, gst_filesrc_getrange);
   gst_pad_set_activate_function (src->srcpad, gst_filesrc_activate);
   gst_pad_set_event_function (src->srcpad, gst_filesrc_srcpad_event);
   gst_pad_set_event_mask_function (src->srcpad, gst_filesrc_get_event_mask);
@@ -689,12 +691,26 @@ gst_filesrc_get_read (GstFileSrc * src)
 }
 
 static GstFlowReturn
+gst_filesrc_getrange (GstPad * pad, guint64 offset, guint length,
+    GstBuffer ** buffer)
+{
+  GstFileSrc *src;
+
+  src = GST_FILESRC (GST_PAD_PARENT (pad));
+
+  src->curoffset = offset;
+  src->block_size = length;
+
+  return gst_filesrc_get (pad, buffer);
+}
+
+static GstFlowReturn
 gst_filesrc_get (GstPad * pad, GstBuffer ** buffer)
 {
   GstFileSrc *src;
   GstData *data;
 
-  src = GST_FILESRC (gst_pad_get_parent (pad));
+  src = GST_FILESRC (GST_PAD_PARENT (pad));
 
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN),
       GST_FLOW_WRONG_STATE);
@@ -863,24 +879,25 @@ gst_filesrc_close_file (GstFileSrc * src)
   GST_FLAG_UNSET (src, GST_FILESRC_OPEN);
 }
 
-static void
+static gboolean
 gst_filesrc_loop (GstElement * element)
 {
   GstFileSrc *filesrc;
-  GstFlowReturn result;
+  gboolean result;
   GstBuffer *buffer;
 
   filesrc = GST_FILESRC (element);
 
   result = gst_filesrc_get (filesrc->srcpad, &buffer);
   if (result != GST_FLOW_OK) {
-    gst_task_stop (filesrc->task);
-    return;
+    return FALSE;
   }
   result = gst_pad_push (filesrc->srcpad, buffer);
   if (result != GST_FLOW_OK) {
-    gst_task_stop (filesrc->task);
+    return FALSE;
   }
+
+  return TRUE;
 }
 
 

@@ -1,3 +1,58 @@
+2004-12-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfakesink.c: (gst_fakesink_event):
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_update_functions),
+	(gst_fakesrc_loop), (gst_fakesrc_activate):
+	* gst/elements/gstfilesrc.c: (gst_filesrc_init),
+	(gst_filesrc_getrange), (gst_filesrc_get), (gst_filesrc_loop):
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_set_index),
+	(gst_bin_set_clock), (gst_bin_set_bus), (gst_bin_set_scheduler),
+	(gst_bin_add_func), (gst_bin_iterate_elements),
+	(gst_bin_change_state), (gst_bin_get_by_name_recurse_up):
+	* gst/gstcaps.c: (gst_caps_intersect):
+	* gst/gstelement.c: (gst_element_pads_activate),
+	(gst_element_change_state), (gst_element_create_task):
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_ref),
+	(gst_object_unref), (gst_object_sink), (gst_object_dispose),
+	(gst_object_dispatch_properties_changed), (gst_object_set_name),
+	(gst_object_set_parent), (gst_object_unparent),
+	(gst_object_check_uniqueness), (gst_object_get_path_string):
+	* gst/gstpad.c: (gst_real_pad_init), (gst_real_pad_get_property),
+	(gst_pad_set_active), (gst_pad_is_active),
+	(gst_pad_set_blocked_async), (gst_pad_set_loop_function),
+	(gst_pad_set_getrange_function), (gst_pad_set_acceptcaps_function),
+	(gst_pad_set_fixatecaps_function), (gst_pad_set_setcaps_function),
+	(gst_pad_unlink), (gst_pad_link_prepare_filtered),
+	(gst_pad_link_filtered), (gst_pad_relink_filtered),
+	(gst_pad_get_caps), (gst_pad_set_caps), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_realize),
+	(gst_pad_get_allowed_caps), (gst_pad_get_negotiated_caps),
+	(gst_pad_get_filter_caps), (gst_pad_alloc_buffer), (gst_pad_push),
+	(gst_pad_push_event):
+	* gst/gstpad.h:
+	* gst/gstpipeline.c: (gst_pipeline_init), (gst_pipeline_dispose),
+	(is_eos), (pipeline_bus_handler), (gst_pipeline_change_state),
+	(gst_pipeline_get_scheduler), (gst_pipeline_get_bus):
+	* gst/gstpipeline.h:
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_locked_flush),
+	(gst_queue_handle_sink_event), (gst_queue_chain), (gst_queue_loop),
+	(gst_queue_src_activate), (gst_queue_change_state):
+	* gst/gsttask.h:
+	* gst/gstutils.c: (gst_element_get_compatible_pad_filtered),
+	(gst_element_link_pads_filtered), (gst_element_unlink),
+	(gst_pad_can_link_filtered):
+	* gst/schedulers/threadscheduler.c: (gst_thread_scheduler_func):
+	* libs/gst/Makefile.am:
+	* tools/gst-inspect.c: (print_pad_info):
+	* tools/gst-launch.c: (main):
+	* tools/gst-xmlinspect.c: (print_element_info):
+	Correctly distribute clock/scheduler to elements
+	Caps intersection improvement.
+	MT fixes.
+	Work on scheduling simplifications, get rid of _pull and prepare
+	for scheduling setup.
+	More work on capsnego.
+
 2004-12-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstobject.c:

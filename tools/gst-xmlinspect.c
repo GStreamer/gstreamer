@@ -602,9 +602,9 @@ print_element_info (GstElementFactory * factory)
       if (realpad->chainfunc)
         PUT_STRING (4, "<chain-based function=\"%s\"/>",
             GST_DEBUG_FUNCPTR_NAME (realpad->chainfunc));
-      if (realpad->getfunc)
-        PUT_STRING (4, "<get-based function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (realpad->getfunc));
+      if (realpad->getrangefunc)
+        PUT_STRING (4, "<get-range-based function=\"%s\"/>",
+            GST_DEBUG_FUNCPTR_NAME (realpad->getrangefunc));
       if (realpad->formatsfunc != gst_pad_get_formats_default) {
         PUT_STRING (4, "<formats-function function=\"%s\">",
             GST_DEBUG_FUNCPTR_NAME (realpad->formatsfunc));

@@ -116,25 +116,28 @@ static void
 gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 {
   GstPipeline *pipeline = GST_PIPELINE (instance);
+  GstBus *bus;
+  GstScheduler *scheduler;
 
   /* get an instance of the default scheduler */
-  pipeline->scheduler =
-      gst_scheduler_factory_make (NULL, GST_ELEMENT (pipeline));
+  scheduler = gst_scheduler_factory_make (NULL, GST_ELEMENT (pipeline));
 
   /* FIXME need better error handling */
-  if (pipeline->scheduler == NULL) {
+  if (scheduler == NULL) {
     const gchar *name = gst_scheduler_factory_get_default_name ();
 
     g_error ("Critical error: could not get scheduler \"%s\"\n"
         "Are you sure you have a registry ?\n"
         "Run gst-register as root if you haven't done so yet.", name);
   }
-  pipeline->bus = g_object_new (gst_bus_get_type (), NULL);
-  gst_bus_set_sync_handler (pipeline->bus,
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  gst_bus_set_sync_handler (bus,
       (GstBusSyncHandler) pipeline_bus_handler, pipeline);
   pipeline->eosed = NULL;
   /* we are our own manager */
   GST_ELEMENT_MANAGER (pipeline) = pipeline;
+  gst_element_set_bus (GST_ELEMENT (pipeline), bus);
+  gst_element_set_scheduler (GST_ELEMENT (pipeline), scheduler);
 }
 
 static void
@@ -142,11 +145,7 @@ gst_pipeline_dispose (GObject * object)
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
-  g_assert (GST_IS_SCHEDULER (pipeline->scheduler));
-
-  gst_scheduler_reset (pipeline->scheduler);
-  gst_object_replace ((GstObject **) & pipeline->bus, NULL);
-  gst_object_replace ((GstObject **) & pipeline->scheduler, NULL);
+  gst_scheduler_reset (GST_ELEMENT_SCHEDULER (object));
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -273,7 +272,7 @@ gst_pipeline_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
-      gst_scheduler_setup (pipeline->scheduler);
+      gst_scheduler_setup (GST_ELEMENT_SCHEDULER (pipeline));
       break;
     case GST_STATE_READY_TO_PAUSED:
       gst_element_set_clock (element, gst_element_get_clock (element));
@@ -314,7 +313,7 @@ gst_pipeline_change_state (GstElement * element)
 GstScheduler *
 gst_pipeline_get_scheduler (GstPipeline * pipeline)
 {
-  return pipeline->scheduler;
+  return gst_element_get_scheduler (GST_ELEMENT (pipeline));
 }
 
 /**
@@ -328,7 +327,7 @@ gst_pipeline_get_scheduler (GstPipeline * pipeline)
 GstBus *
 gst_pipeline_get_bus (GstPipeline * pipeline)
 {
-  return pipeline->bus;
+  return gst_element_get_bus (GST_ELEMENT (pipeline));
 }
 
 static GstClock *
@@ -437,19 +436,4 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using automatic clock");
-}
-
-/**
- * gst_pipeline_post_message:
- * @pipeline: the pipeline
- * @message: the message
- *
- * Post a message on the message bus of this pipeline.
- *
- * Returns: TRUE if the message could be posted.
- */
-gboolean
-gst_pipeline_post_message (GstPipeline * pipeline, GstMessage * message)
-{
-  return gst_bus_post (pipeline->bus, message);
 }
