@@ -832,7 +832,9 @@ plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
 plugins/filters/ladspa/Makefile
 plugins/filters/stereo2mono/Makefile
+plugins/filters/passthrough/Makefile
 plugins/filters/colorspace/Makefile
+plugins/filters/volenv/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
 plugins/effects/Makefile
