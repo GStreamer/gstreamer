@@ -652,6 +652,13 @@ print_element_info (GstElementFactory *factory)
               ((GParamSpecFloat *) specs[x])->minimum,
               ((GParamSpecFloat *) specs[x])->maximum);
             break;
+          case G_TYPE_DOUBLE:
+            g_print ("Double. Default: %-8.8s %15.7g\n", "",
+              ((GParamSpecDouble *) specs[x])->default_value);
+            g_print ("%-23.23s Range: %15.7g - %15.7g", "",
+              ((GParamSpecDouble *) specs[x])->minimum,
+              ((GParamSpecDouble *) specs[x])->maximum);
+            break;
         default: g_print ("unknown %ld", G_PARAM_SPEC_VALUE_TYPE (specs[x]));
         }
         g_print ("\n");

@@ -94,7 +94,7 @@ gst_dparam_class_init (GstDParamClass *klass)
 		             "The value that should be changed if gfloat is the type",
                      -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_READWRITE));
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VALUE_DOUBLE,
-		g_param_spec_float("value_double","Double Value",
+		g_param_spec_double("value_double","Double Value",
 		             "The value that should be changed if gdouble is the type",
                      -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
 	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VALUE_INT,

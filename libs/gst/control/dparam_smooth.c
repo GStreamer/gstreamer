@@ -98,15 +98,15 @@ gst_dpsmooth_class_init (GstDParamSmoothClass *klass)
 		                   "The time period to define slope_delta by",
 		                   0LL, G_MAXINT64, 10000000LL, G_PARAM_READWRITE));
 		                   
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SLOPE_DELTA_FLOAT,
-		g_param_spec_float("slope_delta_float", 
-		                   "Slope Delta float", 
-		                   "The amount a float value can change for a given slope_time",
-		                   0.0F, G_MAXFLOAT, 0.2F, G_PARAM_READWRITE));
-	
 	g_object_class_install_property(G_OBJECT_CLASS(klass),
             ARG_SLOPE_DELTA_FLOAT,
-            g_param_spec_float("slope_delta_double", "Slope Delta double", 
+            g_param_spec_float("slope_delta_float", "Slope Delta float",
+              "The amount a float value can change for a given slope_time",
+              0.0F, G_MAXFLOAT, 0.2F, G_PARAM_READWRITE));
+	
+	g_object_class_install_property(G_OBJECT_CLASS(klass),
+            ARG_SLOPE_DELTA_DOUBLE,
+            g_param_spec_double("slope_delta_double", "Slope Delta double", 
               "The amount a double value can change for a given slope_time",
               0.0, G_MAXDOUBLE, 0.2, G_PARAM_READWRITE));
 	
@@ -140,7 +140,8 @@ gst_dpsmooth_new (GType type)
 	switch (type){
 		case G_TYPE_FLOAT: {
 			dparam->do_update_func = gst_dpsmooth_do_update_float;
-			g_signal_connect (G_OBJECT (dpsmooth), "value_changed", G_CALLBACK (gst_dpsmooth_value_changed_float), NULL);
+			g_signal_connect (G_OBJECT (dpsmooth), "value_changed",
+                            G_CALLBACK (gst_dpsmooth_value_changed_float), NULL);
 			break;
 		}
 		case G_TYPE_DOUBLE: {

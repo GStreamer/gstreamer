@@ -1,3 +1,11 @@
+2004-02-18  David Schleef  <ds@schleef.org>
+
+	* libs/gst/control/dparam.c: (gst_dparam_class_init):
+	* libs/gst/control/dparam_smooth.c: (gst_dpsmooth_class_init),
+	(gst_dpsmooth_new): Additional fixes to get double dparams working.
+	* tools/gst-inspect.c: (print_element_info): Support dumping of
+	double dparam information.
+
 2004-02-17  David Schleef  <ds@schleef.org>
 
 	* gst/elements/gstmultifilesrc.c: (gst_multifilesrc_class_init):
