@@ -113,7 +113,7 @@ gst_pipeline_init (GstPipeline *pipeline)
 GstElement*
 gst_pipeline_new (guchar *name) 
 {
-  return gst_elementfactory_make ("bin", name);
+  return gst_elementfactory_make ("pipeline", name);
 }
 
 static void 

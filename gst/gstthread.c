@@ -309,7 +309,7 @@ gst_thread_main_loop (void *arg)
   }
 
   GST_FLAG_UNSET (thread, GST_THREAD_STATE_REAPING);
-  pthread_join (thread->thread_id, 0);
+//  pthread_join (thread->thread_id, 0);
 
   gst_info("gstthread: thread \"%s\" is stopped\n",
 		  gst_element_get_name (GST_ELEMENT (thread)));

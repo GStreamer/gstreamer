@@ -55,15 +55,16 @@ cothread_create (cothread_context *ctx)
   //if (0) {
   if (pthread_self() == 0) {
     s = (cothread_state *)malloc(sizeof(int) * COTHREAD_STACKSIZE);
-    DEBUG("new stack at %p\n",s);
+    DEBUG("new stack (case 1) at %p\n",s);
   } else {
     char *sp = CURRENT_STACK_FRAME;
     unsigned long *stack_end = (unsigned long *)((unsigned long)sp &
       ~(STACK_SIZE - 1));
     s = (cothread_state *)(stack_end + ((ctx->nthreads - 1) *
                            COTHREAD_STACKSIZE));
+    DEBUG("new stack (case 2) at %p\n",s);
     if (mmap((char *)s,COTHREAD_STACKSIZE*(sizeof(int)),
-             PROT_READ|PROT_WRITE|PROT_EXEC,MAP_PRIVATE|MAP_ANONYMOUS,
+             PROT_READ|PROT_WRITE|PROT_EXEC,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS,
              -1,0) < 0) {
       perror("mmap'ing cothread stack space");
       return NULL;
@@ -136,7 +137,7 @@ cothread_init (void)
   ctx->threads[0]->sp = (int *)CURRENT_STACK_FRAME;
   ctx->threads[0]->pc = 0;
 
-  DEBUG("0th thread is at %p %p\n",ctx->threads[0], ctx->threads[0]->sp);
+  DEBUG("0th thread is at %p, sp %p\n",ctx->threads[0], ctx->threads[0]->sp);
 
   // we consider the initiating process to be cothread 0
   ctx->nthreads = 1;

@@ -8,7 +8,5 @@ libgsttypes_la_SOURCES =	\
 
 #noinst_HEADERS =
 
-CFLAGS += -O2 -Wall
-
 libgsttypes_la_LIBADD = $(GLIB_LIBS) $(GTK_LIBS) 
 libgsttypes_la_LDFLAGS = -version-info $(STREAMER_CURRENT):$(STREAMER_REVISION):$(STREAMER_AGE)
