@@ -165,7 +165,7 @@ gst_auparse_chain (GstPad * pad, GstData * _data)
   gchar *data;
   glong size;
   GstCaps *tempcaps;
-  gint law = 0, depth, ieee = 0;
+  gint law = 0, depth = 0, ieee = 0;
   gchar layout[7];
 
   layout[0] = 0;
