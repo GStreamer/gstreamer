@@ -501,7 +501,6 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
   }
 
   str = mpeg_demux->audio_stream[stream_nr];
-
   if (str == NULL) {
     if (type != GST_DVD_DEMUX_AUDIO_LPCM) {
       str = g_new0 (GstMPEGStream, 1);
@@ -509,11 +508,12 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
       lpcm_str = g_new0 (GstDVDLPCMStream, 1);
       str = (GstMPEGStream *) lpcm_str;
     }
-    str->type = GST_MPEG_DEMUX_AUDIO_UNKNOWN;
 
     name = g_strdup_printf ("audio_%02d", stream_nr);
     DEMUX_CLASS (dvd_demux)->init_stream (mpeg_demux, type, str, stream_nr,
         name, DEMUX_CLASS (dvd_demux)->audio_template);
+    /* update caps */
+    str->type = GST_MPEG_DEMUX_AUDIO_UNKNOWN;
     g_free (name);
 
     mpeg_demux->audio_stream[stream_nr] = str;
