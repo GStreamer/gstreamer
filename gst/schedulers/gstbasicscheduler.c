@@ -559,19 +559,42 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	continue;
       
       peerpad = GST_PAD_PEER (pad);
+      if (peerpad) {
+	GstElement *peerelement = GST_ELEMENT_CAST (GST_PAD_PARENT (peerpad));
+	gboolean different_sched = (peerelement->sched != GST_SCHEDULER (chain->sched));
+	gboolean peer_decoupled = GST_FLAG_IS_SET (peerelement, GST_ELEMENT_DECOUPLED);
+
+        GST_DEBUG (GST_CAT_SCHEDULING, "inspecting pad %s:%s", GST_DEBUG_PAD_NAME (peerpad));
+
+	/* we don't need to check this for decoupled elements */
+	if (!decoupled) {
+	  /* if the peer element is in another schedule, it's not decoupled and we are not decoupled
+	   * either, we have an error */
+	  if (different_sched && !peer_decoupled) 
+ 	  {
+            gst_element_error (element, "element \"%s\" is not decoupled but has pads in different schedulers",
+			  GST_ELEMENT_NAME (element), NULL);
+	    return FALSE;
+	  }
+	  /* ok, the peer is in a different scheduler and is decoupled, we need to set the
+	   * handlers so we can talk with it */
+	  else if (different_sched) {
+	    if (GST_RPAD_DIRECTION (peerpad) == GST_PAD_SINK) {
+	      GST_DEBUG (GST_CAT_SCHEDULING, "copying chain function into push proxy for peer %s:%s",
+		     GST_DEBUG_PAD_NAME (peerpad));
+	      GST_RPAD_CHAINHANDLER (peerpad) = GST_RPAD_CHAINFUNC (peerpad);
+	    }
+	    else {
+	      GST_DEBUG (GST_CAT_SCHEDULING, "copying get function into pull proxy for peer %s:%s",
+		     GST_DEBUG_PAD_NAME (peerpad));
+	      GST_RPAD_GETHANDLER (peerpad) = GST_RPAD_GETFUNC (peerpad);
+	    }
+	  }
+	}
+      }
 
       /* if the element is DECOUPLED or outside the manager, we have to chain */
-      if ((wrapper_function == NULL) ||
-	  (peerpad && (GST_ELEMENT_CAST (GST_PAD_PARENT (peerpad))->sched != GST_SCHEDULER (chain->sched)))) {
-
-	if (!decoupled && GST_RPAD_PEER (pad) && 
-	    !GST_FLAG_IS_SET (GST_PAD_PARENT (peerpad), GST_ELEMENT_DECOUPLED)) {
-          /* whoa non decoupled with different schedulers */
-          gst_element_error (element, "element \"%s\" is not decoupled but has pads in different schedulers",
-			  GST_ELEMENT_NAME (element), NULL);
-	  return FALSE;
-	}
-	
+      if (decoupled) {
 	/* set the chain proxies */
 	if (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK) {
 	  GST_DEBUG (GST_CAT_SCHEDULING, "copying chain function into push proxy for %s:%s",
@@ -583,11 +606,10 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 		     GST_DEBUG_PAD_NAME (pad));
 	  GST_RPAD_GETHANDLER (pad) = GST_RPAD_GETFUNC (pad);
 	}
-
       }
       /* otherwise we really are a cothread */
       else {
-	if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
+	if (GST_RPAD_DIRECTION (pad) == GST_PAD_SINK) {
 	  GST_DEBUG (GST_CAT_SCHEDULING, "setting cothreaded push proxy for sinkpad %s:%s",
 	     GST_DEBUG_PAD_NAME (pad));
 	  GST_RPAD_CHAINHANDLER (pad) = GST_DEBUG_FUNCPTR (gst_basic_scheduler_chainhandler_proxy);
