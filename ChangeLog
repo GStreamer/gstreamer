@@ -1,3 +1,11 @@
+2004-01-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_peek_head),
+	(gst_riff_read_seek):
+	* gst/matroska/ebml-read.c: (gst_ebml_read_element_id),
+	(gst_ebml_read_seek):
+	  Fix event handling.
+
 2004-01-30  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):

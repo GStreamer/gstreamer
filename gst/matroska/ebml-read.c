@@ -156,13 +156,13 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
   gint len_mask = 0x80, read = 1, n = 1;
   guint32 total;
 
-  if (gst_bytestream_peek_bytes (ebml->bs, &data, 1) != 1) {
+  while (gst_bytestream_peek_bytes (ebml->bs, &data, 1) != 1) {
     GstEvent *event = NULL;
     guint32 remaining;
 
     /* Here, we might encounter EOS */
     gst_bytestream_get_status (ebml->bs, &remaining, &event);
-    if (event && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    if (event) {
       gst_pad_event_default (ebml->sinkpad, event);
     } else {
       guint64 pos = gst_bytestream_tell (ebml->bs);
@@ -170,8 +170,8 @@ gst_ebml_read_element_id (GstEbmlRead *ebml,
       GST_ELEMENT_ERROR (ebml, RESOURCE, READ, NULL,
 			 ("Read error at position %llu (0x%llx)",
 			 pos, pos));
+      return -1;
     }
-    return -1;
   }
   total = data[0];
   while (read <= 4 && !(total & len_mask)) {
@@ -313,7 +313,7 @@ gst_ebml_read_seek (GstEbmlRead *ebml,
 		    guint64      offset)
 {
   guint32 remaining;
-  GstEvent *event;
+  GstEvent *event = NULL;
   guchar *data;
 
   /* first, flush remaining buffers */
@@ -332,19 +332,23 @@ gst_ebml_read_seek (GstEbmlRead *ebml,
     return NULL;
   }
 
-  /* and now, peek a new byte. This will fail because there's a
-   * pending event. Then, take the event and return it. */
-  if (gst_bytestream_peek_bytes (ebml->bs, &data, 1))
-    g_warning ("Unexpected data after seek");
+  while (!event) {
+    /* and now, peek a new byte. This will fail because there's a
+     * pending event. Then, take the event and return it. */
+    if (gst_bytestream_peek_bytes (ebml->bs, &data, 1)) {
+      GST_WARNING ("Unexpected data after seek - this means seek failed");
+      break;
+    }
 
-  /* get the discont event and return */
-  gst_bytestream_get_status (ebml->bs, &remaining, &event);
-  if (!event || GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
-    GST_ELEMENT_ERROR (ebml, CORE, SEEK, NULL,
-		       ("No discontinuity event after seek"));
-    if (event)
-      gst_event_unref (event);
-    return NULL;
+    /* get the discont event and return */
+    gst_bytestream_get_status (ebml->bs, &remaining, &event);
+    if (!event) {
+      GST_WARNING ("No discontinuity event after seek - seek failed");
+      break;
+    } else if (GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
+      gst_pad_event_default (ebml->sinkpad, event);
+      event = NULL;
+    }
   }
 
   return event;
