@@ -1,7 +1,7 @@
-if USE_A52
-A52_DIR=a52
+if USE_A52DEC
+A52DEC_DIR=a52dec
 else
-A52_DIR=
+A52DEC_DIR=
 endif
 
 if USE_AALIB
@@ -178,7 +178,7 @@ else
 XMMS_DIR=
 endif
 
-SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) \
+SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
         $(ARTS_DIR) $(ARTSC_DIR) $(AUDIOFILE_DIR) \
 	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DV_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
         $(FESTIVAL_DIR) $(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) $(HERMES_DIR) \
@@ -186,7 +186,7 @@ SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(OPENQUICKTIME_DIR) $(RTP_DIR) $(SDL_DIR) $(SHOUT_DIR) \
 	$(SMOOTHWAVE_DIR) $(VORBIS_DIR) $(XMMS_DIR)
 
-DIST_SUBDIRS=a52 aalib alsa arts artsd avifile audiofile cdparanoia \
+DIST_SUBDIRS=a52dec aalib alsa arts artsd avifile audiofile cdparanoia \
              dv dvdread esd \
 	     festival flac gnomevfs gsm hermes http jpeg lame mad mikmod mpeg2dec \
 	     openquicktime rtp sdl shout smoothwave vorbis xmms
