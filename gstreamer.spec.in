@@ -132,7 +132,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_libdir}/gst/libgstautoplugger*.so*
 %{_libdir}/gst/libgstbasicomega*.so*
 %{_libdir}/gst/libgstfastomega*.so*
-{_libdir}/gst/libgstoptomega*.so*
+%{_libdir}/gst/libgstoptomega*.so*
 %{_libdir}/gst/libgstbasicwingo*.so*
 %{_libdir}/gst/libgstfastwingo*.so*
 %{_libdir}/gst/libgstelements*.so*
