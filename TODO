@@ -97,6 +97,8 @@ midterm feature enhancement
                | (MEDIUM)
 	       |
     ?          | Make gst-inspect do inspection of plugins, schedulers, autopluggers, types.
+               | An idea would be to make -inspect output an XML representation of the objects
+	       | and use XSLT to transform this into text, HTML, docbook, ...
                | (MEDIUM to EASY)
 	       |
 
