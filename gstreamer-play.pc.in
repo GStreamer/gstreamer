@@ -5,7 +5,7 @@ includedir=@includedir@/@PACKAGE@-@VERSION@
 
 Name: GStreamer Play Library
 Description: Streaming-media framework, play libraries
-Requires: gstreamer >= @GSTREAMER_REQ@
+Requires: gstreamer >= @VERSION@
 Version: @VERSION@
 
 Libs: -L${libdir} -lgstplay -lgstcontrol
