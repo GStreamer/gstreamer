@@ -1,3 +1,8 @@
+2005-01-13  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_rates_probe):
+	  Fix for if items are already in list...
+
 2005-01-12  Benjamin Otte  <otte@gnome.org>
 
 	* gst/adder/gstadder.c: (gst_adder_loop):
