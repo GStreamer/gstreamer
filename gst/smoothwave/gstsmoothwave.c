@@ -162,14 +162,16 @@ gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
   smoothwave = GST_SMOOTHWAVE(GST_OBJECT_PARENT (pad));
 
   /* first deal with audio metadata */
-/*  if (buf->meta) { */
-/*    if (smoothwave->meta != NULL) { */
-/*      /* FIXME: need to unref the old metadata so it goes away */ */
-/*    } */
-/*    /* we just make a copy of the pointer */ */
-/*    smoothwave->meta = (MetaAudioRaw *)(buf->meta); */
-/*    /* FIXME: now we have to ref the metadata so it doesn't go away */ */
-/*  } */
+#if 0
+  if (buf->meta) {
+    if (smoothwave->meta != NULL) {
+      /* FIXME: need to unref the old metadata so it goes away */
+    }
+    /* we just make a copy of the pointer */
+    smoothwave->meta = (MetaAudioRaw *)(buf->meta);
+    /* FIXME: now we have to ref the metadata so it doesn't go away */
+  }
+#endif
 
 /*  g_return_if_fail(smoothwave->meta != NULL); */
 
@@ -192,10 +194,12 @@ gst_smoothwave_chain (GstPad *pad, GstBuffer *buf)
 
   ptr = (guint32 *)smoothwave->imagebuffer;
   for (i=0;i<(smoothwave->width*smoothwave->height)/4;i++) {
-    if (*ptr)
-      *(ptr++) -= ((*ptr & 0xf0f0f0f0ul) >> 4) + ((*ptr & 0xe0e0e0e0ul) >> 5);
-    else
+    if (*ptr){
+      *ptr -= ((*ptr & 0xf0f0f0f0ul) >> 4) + ((*ptr & 0xe0e0e0e0ul) >> 5);
       ptr++;
+    }else{
+      ptr++;
+    }
   }
 
 /*  GST_DEBUG ("drawing"); */
