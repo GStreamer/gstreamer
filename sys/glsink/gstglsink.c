@@ -17,6 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+<ds-work> your element belongs to a scheduler, which calls some functions from the same thread
+<ds-work> all the other functions could be called from any random thread
+<gernot> ds-work: which are the "some" function in that case ? 
+<gernot> It is quite costly to do glXGetCurrentContext for every function call.
+<ds-work> _chain, -get, _loop
+*/
+
 #include <config.h>
 #include <string.h>
 
@@ -140,6 +148,8 @@ extern GstImagePlugin* 		get_gl_rgbimage_plugin		(void);
 extern GstImagePlugin* 		get_gl_nvimage_plugin		(void);
 /* default output */
 extern void			gst_glxwindow_new 		(GstGLSink *sink);
+extern void			gst_glxwindow_hook_context 		(GstImageInfo *info);
+extern void			gst_glxwindow_unhook_context 		(GstImageInfo *info);
 
 
 static GstPadTemplate *sink_template;
@@ -257,9 +267,12 @@ gst_glsink_init (GstGLSink *sink)
   sink->conn = NULL;
   
   /* do initialization of default hook here */
-  gst_glxwindow_new (sink);
+  gst_glxwindow_new (sink); 
+  //printf("GLSink_init: Current context %p\n", glXGetCurrentContext());
+  gst_glxwindow_unhook_context(sink->hook);
 }
 
+/** frees the temporary connection that tests the window system capabilities */
 static void
 gst_glsink_release_conn (GstGLSink *sink)
 {
@@ -357,16 +370,21 @@ gst_glsink_get_bufferpool (GstPad *pad)
 static gboolean
 gst_glsink_set_caps (GstGLSink *sink, GstCaps *caps)
 {
-  //g_warning("in set caps!\n");
+  g_warning("in glsink set caps!\n");
+  printf("Getting GLstring, context is %p\n",  glXGetCurrentContext());
+    
   GList *list = ((GstGLSinkClass *) G_OBJECT_GET_CLASS (sink))->plugins;
   GstImageConnection *conn = NULL;
   while (list)    
   {
+  printf("AGetting GLstring, context is %p\n",  glXGetCurrentContext());
     GstImagePlugin *plugin = (GstImagePlugin *) list->data;
     if ((conn = plugin->set_caps (sink->hook, caps)) != NULL)
     {
-      gst_glsink_release_conn (sink);
+      //gst_glsink_release_conn (sink);
+  printf("BGetting GLstring, context is %p\n",  glXGetCurrentContext());
       sink->conn = conn;
+  printf("CGetting GLstring, context is %p\n",  glXGetCurrentContext());
       sink->plugin = plugin;
       sink->conn->open_conn (sink->conn, sink->hook);
       return TRUE;
@@ -382,9 +400,9 @@ Link the input video sink internally.
 static GstPadLinkReturn
 gst_glsink_sinkconnect (GstPad *pad, GstCaps *caps)
 {
-  fprintf(stderr, "in sinkconnect!\n");
+  g_warning("in glsink sinkconnect!\n");
   GstGLSink *sink;
-  guint32 fourcc, print_format;
+  guint32 fourcc, print_format, result;
 
   sink = GST_GLSINK (gst_pad_get_parent (pad));
 
@@ -392,11 +410,15 @@ gst_glsink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_LINK_DELAYED;
   
+  gst_glxwindow_hook_context(sink->hook);
   /* try to set the caps on the output */
-  if (gst_glsink_set_caps (sink, caps) == FALSE)
-  {
-    return GST_PAD_LINK_REFUSED;
-  }
+  result = gst_glsink_set_caps (sink, caps);
+  gst_glxwindow_unhook_context(sink->hook);
+
+  if (result == FALSE)
+    {
+      return GST_PAD_LINK_REFUSED;
+    }
   
   /* remember width & height */
   gst_caps_get_int (caps, "width", &sink->width);
@@ -418,18 +440,20 @@ gst_glsink_sinkconnect (GstPad *pad, GstCaps *caps)
 static GstCaps *
 gst_glsink_getcaps (GstPad *pad, GstCaps *caps)
 {
-  //g_warning("in get caps!\n");
+  g_warning("in glsink get caps!\n");
   /* what is the "caps" parameter good for? */
   GstGLSink *sink = GST_GLSINK (gst_pad_get_parent (pad));
   GstCaps *ret = NULL;
   GList *list = ((GstGLSinkClass *) G_OBJECT_GET_CLASS (sink))->plugins;
   
+  gst_glxwindow_hook_context(sink->hook);
   while (list)    
   {
     ret = gst_caps_append (ret, ((GstImagePlugin *) list->data)->get_caps (sink->hook));
     list = g_list_next (list);
   }
 
+  gst_glxwindow_unhook_context(sink->hook);
   return ret;
 }
 
@@ -446,9 +470,8 @@ gst_glsink_chain (GstPad *pad, GstData *_data)
   //g_warning("in glsink_chain!\n");
   GstBuffer *buf = GST_BUFFER (_data);
   GstGLSink *sink;
-  //GstClockTime time = GST_BUFFER_TIMESTAMP (buf);
+
   GstBuffer *buffer;
-  //static int frame_drops = 0;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -468,7 +491,10 @@ gst_glsink_chain (GstPad *pad, GstData *_data)
   GST_DEBUG ("glsink: clock wait: %llu %u", 
 		  GST_BUFFER_TIMESTAMP (buf), GST_BUFFER_SIZE (buf));
 
-#if 0 
+#if 0
+  GstClockTime time = GST_BUFFER_TIMESTAMP (buf);
+  static int frame_drops = 0;
+
   if (sink->clock && time != -1) {
     if (time < gst_clock_get_time(sink->clock))
       {
@@ -500,10 +526,55 @@ gst_glsink_chain (GstPad *pad, GstData *_data)
 
   if (!sink->muted)
   {
+    if (glXGetCurrentContext() == NULL)
+      {
+	printf("Rehooking window !\n");
+	gst_glxwindow_hook_context(sink->hook);
+
+#if 1
+	GST_DEBUG("Initializing OpenGL parameters\n");
+	/* initialize OpenGL drawing */
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	glClearDepth(1.0f);
+	glClearColor(0, 0, 0, 0);
+	
+	glEnable(GL_AUTO_NORMAL); // let OpenGL generate the Normals
+	
+	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+	glPolygonMode(GL_FRONT, GL_FILL);
+	glPolygonMode(GL_BACK, GL_FILL);
+	
+	glShadeModel(GL_SMOOTH);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);
+	
+	GstGLImageInfo *window = (GstGLImageInfo *)sink->hook;
+	int w=window->width, h = window->height;
+
+	glViewport(0, 0, (GLint) w, (GLint) h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	
+	GLfloat aspect = (GLfloat) w / (GLfloat) h;
+	glFrustum(-aspect, aspect, -1.0, 1.0, 5.0, 500.0);
+
+#endif
+	gst_glxwindow_unhook_context(sink->hook);
+	gst_glxwindow_hook_context(sink->hook);
+	glMatrixMode(GL_MODELVIEW);
+#if 0 
+	sink->hook->free_info(sink->hook);
+	printf("Reallocating window brutally !\n");
+	gst_glxwindow_new(sink);
+#endif
+      }
+    
     /* free last_image, if any */
     if (sink->last_image != NULL)
       gst_buffer_unref (sink->last_image);
     if (sink->bufferpool && GST_BUFFER_BUFFERPOOL (buf) == sink->bufferpool) {
+      
       // awful hack ! But I currently have no other solution without changing the API
       sink->hook->demo = sink->demo;
       sink->hook->dumpvideo = sink->dumpvideo;
@@ -522,6 +593,8 @@ gst_glsink_chain (GstPad *pad, GstData *_data)
       sink->last_image = buffer;
       gst_buffer_unref (buf);
     }
+
+    //gst_glxwindow_unhook_context(sink->hook);
   }
   
 }
@@ -687,12 +760,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new("glsink",GST_TYPE_GLSINK,
                                    &gst_glsink_details);
 
-  if (factory == NULL)
-    {
-      g_warning("DANGER; WILL !\n");
-    }
-
-      g_warning("INIT GST_LITTLE_ENDIAN %d!\n", G_LITTLE_ENDIAN);
   g_return_val_if_fail(factory != NULL, FALSE);
 
   /* this is needed later on in the _real_ init (during a gst-launch) */

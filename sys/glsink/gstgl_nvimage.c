@@ -103,7 +103,7 @@ gboolean
 gst_gl_nvimage_check_xvideo ()
 {
   //int ver, rel, req, ev, err;
-  
+  printf("Checking NVidia OpenGL extensions.\n");
   if (!GL_ARB_multitexture_Init()) return FALSE;
   if (!GL_EXT_paletted_texture_Init()) return FALSE;
   if (!GL_NV_register_combiners_Init()) return FALSE;
@@ -127,9 +127,13 @@ gst_gl_nvimage_get_caps (GstImageInfo *info)
   GstCaps *caps = NULL;
   GstGLImageInfo *xinfo = gst_gl_nvimage_info (info);
   
-  g_warning("nvimage get caps called !\n");
+  g_warning("nvimage get caps called, context %p !\n", glXGetCurrentContext());
   /* we don't handle these image information */
-  if (xinfo == NULL) return NULL;
+  if (xinfo == NULL) 
+    {
+      printf("Invalid XInfo struct !\n");
+      return NULL;
+    }
 
   if (gst_gl_nvimage_check_xvideo () == FALSE)
   {
@@ -138,7 +142,7 @@ gst_gl_nvimage_get_caps (GstImageInfo *info)
   }
 
   caps = gst_caps_append (caps, GST_CAPS_NEW (
-					      "xvimage_caps",
+					      "nvimage_caps",
 					      "video/x-raw-yuv",
 					      "format",  GST_PROPS_FOURCC (GST_MAKE_FOURCC ('Y', 'V', '1', '2')),
 					      "width",   GST_PROPS_INT_RANGE (0, 1024),
@@ -201,7 +205,7 @@ gst_gl_nvimage_get_image (GstImageInfo *info, GstImageConnection *conn)
   if (nvconn == NULL) return NULL;
 
   // I should also check the current GLX context ! 
-  // Ah, Don't have to, I am guarantueed to always be in the same thread
+  // Ah, Don't have to, I am guarantueed to be in the same thread as put_image
 
   image = g_new0(GstNvImage, 1);
 
@@ -242,16 +246,19 @@ gst_gl_nvimage_put_image (GstImageInfo *info, GstImageData *image)
   g_assert (xinfo != NULL);
   
   // both upload the video, and redraw the screen
+  //glClearColor(0,0.5, 0.3,1.0); // a test color
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glTranslatef(0.0, 0.0, -25.0);
-  glEnable(GL_TEXTURE_2D);
+  glTranslatef(0.0, 0.0, -5.0);
+  glDisable(GL_TEXTURE_2D);
 
   if (xinfo->info.demo)
     {
+      //g_print("Putting image, context is %p\n", glXGetCurrentContext());
 
+      glTranslatef(0.0, 0.0, -5.0); // make it avoid the clipping plane, zoom 2.0 instead
       glRotatef(180.0*sin(xinfo->rotX),1,0,0);
       glRotatef(180.0*cos(xinfo->rotY),0,1,0);
 
@@ -261,10 +268,10 @@ gst_gl_nvimage_put_image (GstImageInfo *info, GstImageData *image)
       glScalef(zoom,zoom,zoom); 
       //glScalef(0.1,0.1,0.1); 
 
-      if (xinfo->zoom > 1.0)
+      if (xinfo->zoom > 2.0)
 	xinfo->zoomdir = -0.01;
 
-      if (xinfo->zoom < 0.5)
+      if (xinfo->zoom < 1.0)
 	xinfo->zoomdir = 0.01;
 
       xinfo->zoom += xinfo->zoomdir;
@@ -289,28 +296,29 @@ gst_gl_nvimage_put_image (GstImageInfo *info, GstImageData *image)
   glBegin(GL_QUADS);
 
   float aspect = img_width/(float)img_height;
-  float hor = 4 * aspect;
+  float hor = aspect;
 
+  //g_print("Drawing vertices, context is %p\n", glXGetCurrentContext());
   glNormal3f(0, -1, 0);
   glMultiTexCoord2fARB(GL_TEXTURE0_ARB,0,0); 
   glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0); 
   glMultiTexCoord2fARB(GL_TEXTURE2_ARB,0,0); 
-  glVertex3f(-hor,4,0);
+  glVertex3f(-hor,1,0);
 
   glMultiTexCoord2fARB(GL_TEXTURE0_ARB,0,ymax); 
   glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,ymax); 
   glMultiTexCoord2fARB(GL_TEXTURE2_ARB,0,ymax); 
-  glVertex3f(-hor,-4,0);
+  glVertex3f(-hor,-1,0);
 
   glMultiTexCoord2fARB(GL_TEXTURE0_ARB,xmax,ymax); 
   glMultiTexCoord2fARB(GL_TEXTURE1_ARB,xmax,ymax); 
   glMultiTexCoord2fARB(GL_TEXTURE2_ARB,xmax,ymax); 
-  glVertex3f(hor,-4,0);
+  glVertex3f(hor,-1,0);
 
   glMultiTexCoord2fARB(GL_TEXTURE0_ARB,xmax,0); 
   glMultiTexCoord2fARB(GL_TEXTURE1_ARB,xmax,0); 
   glMultiTexCoord2fARB(GL_TEXTURE2_ARB,xmax,0); 
-  glVertex3f(hor,4,0);
+  glVertex3f(hor,1,0);
 
   glEnd();
 
@@ -339,7 +347,7 @@ gst_gl_nvimage_put_image (GstImageInfo *info, GstImageData *image)
       if (outfile != NULL)
 	{
 	  fprintf(outfile, "P6\n"); 
-	  fprintf(outfile,"# created by raw_zb\n"); 
+	  fprintf(outfile,"# created by glsink from GStreamer\n"); 
 	  fprintf(outfile,"%d %d\n",img_width,img_height); 
 	  fprintf(outfile,"255\n"); 
 	  fwrite(cap_image_data2, sizeof(char), img_width*img_height*3, outfile);
@@ -380,6 +388,7 @@ gst_gl_nvimage_open_conn (GstImageConnection *conn, GstImageInfo *info)
     Ywidth = TEX_XSIZE; Yheight = TEX_YSIZE;  UVwidth = TEX_XSIZE/2; UVheight = TEX_YSIZE/2;
     Initialize_Backend(Ywidth,Yheight,UVwidth,UVheight,GL_LINEAR);
   }
+  g_print("Done\n");
 }
 
 static void

@@ -201,7 +201,9 @@ int CheckForARBMultitextureSupport(void) {
     int i, pos=0;
     int maxpos=strlen(search)-1;
     char extensions[10000];
+    printf("Getting GLstring, context is %p\n",  glXGetCurrentContext());
     strcpy(extensions,(const char *)glGetString(GL_EXTENSIONS));
+    printf("Examinig GLstring\n");
     int len=strlen(extensions);
     for ( i=0; i<len; i++) {
         if ((i==0) || ((i>1) && extensions[i-1]==' ')) {

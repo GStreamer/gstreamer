@@ -325,9 +325,9 @@ void LoadYUVPlanes(GLuint Yhandle, GLuint Uhandle, GLuint Vhandle,
 void Initialize_Backend(unsigned int Ywidth, unsigned int Yheight, unsigned int UVwidth, unsigned int UVheight, GLenum filter) 
 {
   printf("Reinitializing register combiner backend with res %d x %d!\n", Ywidth, Yheight);
-  if (!GL_ARB_multitexture_Init()) exit(0);
-  if (!GL_EXT_paletted_texture_Init()) exit(0);
-  if (!GL_NV_register_combiners_Init()) exit(0);
+  //if (!GL_ARB_multitexture_Init()) exit(0);
+  //if (!GL_EXT_paletted_texture_Init()) exit(0);
+  //if (!GL_NV_register_combiners_Init()) exit(0);
   unsigned char Ypal[768];
   unsigned char Upal[768];
   unsigned char Vpal[768];
