@@ -1,5 +1,11 @@
 2004-08-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* Makefile.am:
+	* win32/MANIFEST:
+	  add win32 dir to the build.  Fixes #149981.
+
+2004-08-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  bump libtool versioning
 	* gst/gststructure.c:

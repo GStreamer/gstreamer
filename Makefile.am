@@ -29,14 +29,16 @@ ACLOCAL_AMFLAGS = -I common/m4
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
-SUBDIRS = include gst libs tools \
+SUBDIRS = \
+	include gst libs tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
 	pkgconfig po \
 	common \
 	$(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = include libs gst \
+DIST_SUBDIRS = \
+	include libs gst \
 	tools \
 	tests testsuite \
 	examples \
@@ -45,10 +47,16 @@ DIST_SUBDIRS = include libs gst \
 	common \
 	docs
 
-EXTRA_DIST = gstreamer.spec gstreamer.spec.in gst-element-check.m4 \
-	     configure.ac autogen.sh depcomp \
-	     REQUIREMENTS ABOUT-NLS DOCBUILDING DEVEL RELEASE \
-	     idiottest.mak
+win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
+
+debug:
+	echo $(win32)
+EXTRA_DIST = \
+	gstreamer.spec gstreamer.spec.in gst-element-check.m4 \
+	configure.ac autogen.sh depcomp \
+	REQUIREMENTS ABOUT-NLS DOCBUILDING DEVEL RELEASE \
+	$(win32) \
+	idiottest.mak
 
 CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
 
