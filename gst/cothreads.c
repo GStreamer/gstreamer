@@ -181,6 +181,13 @@ cothread_main(cothread_context *ctx)
   return ctx->threads[0];
 }
 
+void
+cothread_current_main(void)
+{
+  cothread_context *ctx = pthread_getspecific(_cothread_key);
+  return ctx->threads[0];
+}
+
 static void 
 cothread_stub (void) 
 {

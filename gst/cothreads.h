@@ -90,5 +90,6 @@ gboolean			cothread_trylock	(cothread_state *thread);
 void				cothread_unlock		(cothread_state *thread);
 
 cothread_state*			cothread_main		(cothread_context *ctx);
+void				cothread_current_main	(void);
 
 #endif /* __COTHREAD_H__ */
