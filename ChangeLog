@@ -1,5 +1,11 @@
 2004-07-02  David Schleef  <ds@schleef.org>
 
+	* ext/flac/gstflacdec.c: (gst_flacdec_class_init),
+	(gst_flacdec_write):  Actually, GST_PAD_CAPS() has nothing to
+	do with the logic.
+
+2004-07-02  David Schleef  <ds@schleef.org>
+
 	* ext/flac/gstflacdec.c: (gst_flacdec_write):  Set duration on
 	output buffers.  Fix logic mistake.  (bug #144866)
 
