@@ -43,10 +43,10 @@ struct _GstTypeFindInfo {
   GstPlugin *plugin;            /* the plugin with this typefind function */
 };
 
-static GstCaps* 	gst_type_typefind_dummy		(GstBuffer *buffer, gpointer priv);
+static GstCaps*		gst_type_typefind_dummy		(GstBuffer *buffer, gpointer priv);
 
-void 
-_gst_type_initialize (void) 
+void
+_gst_type_initialize (void)
 {
   _gst_types = NULL;
   _gst_maxtype = 1;		/* type 0 is undefined */
@@ -60,8 +60,8 @@ _gst_type_initialize (void)
  *
  * Returns: the new type id
  */
-guint16 
-gst_type_register (GstTypeFactory *factory) 
+guint16
+gst_type_register (GstTypeFactory *factory)
 {
   guint16 id;
   GstType *type;
@@ -70,14 +70,14 @@ gst_type_register (GstTypeFactory *factory)
 
 //  GST_INFO (GST_CAT_TYPES,"type register %s", factory->mime);
   id = gst_type_find_by_mime (factory->mime);
-  
+
   if (!id) {
     type = g_new0 (GstType, 1);
 
-    type->id = 		_gst_maxtype++;
-    type->mime = 	factory->mime;
-    type->exts = 	factory->exts;
-    _gst_types = 	g_list_prepend (_gst_types, type);
+    type->id =		_gst_maxtype++;
+    type->mime =	factory->mime;
+    type->exts =	factory->exts;
+    _gst_types =	g_list_prepend (_gst_types, type);
 
     id = type->id;
 
@@ -96,8 +96,8 @@ gst_type_register (GstTypeFactory *factory)
   return id;
 }
 
-static 
-guint16 gst_type_find_by_mime_func (const gchar *mime) 
+static
+guint16 gst_type_find_by_mime_func (const gchar *mime)
 {
   GList *walk;
   GstType *type;
@@ -142,8 +142,8 @@ guint16 gst_type_find_by_mime_func (const gchar *mime)
  *
  * Returns: the type id
  */
-guint16 
-gst_type_find_by_mime (const gchar *mime) 
+guint16
+gst_type_find_by_mime (const gchar *mime)
 {
   return gst_type_find_by_mime_func (mime);
 }
@@ -156,8 +156,8 @@ gst_type_find_by_mime (const gchar *mime)
  *
  * Returns: the type id
  */
-guint16 
-gst_type_find_by_ext (const gchar *ext) 
+guint16
+gst_type_find_by_ext (const gchar *ext)
 {
   //FIXME
   g_warning ("gsttype: find_by_ext not implemented");
@@ -173,7 +173,7 @@ gst_type_find_by_ext (const gchar *ext)
  * Returns: the type
  */
 GstType*
-gst_type_find_by_id (guint16 id) 
+gst_type_find_by_id (guint16 id)
 {
   GList *walk = _gst_types;
   GstType *type;
@@ -196,7 +196,7 @@ gst_type_find_by_id (guint16 id)
  * Returns: a list of GstTypes
  */
 GList*
-gst_type_get_list (void) 
+gst_type_get_list (void)
 {
   return _gst_types;
 }
@@ -210,8 +210,8 @@ gst_type_get_list (void)
  *
  * Returns: the new xmlNodePtr
  */
-xmlNodePtr 
-gst_typefactory_save_thyself (GstTypeFactory *factory, xmlNodePtr parent) 
+xmlNodePtr
+gst_typefactory_save_thyself (GstTypeFactory *factory, xmlNodePtr parent)
 {
   xmlNewChild (parent, NULL, "mime", factory->mime);
   if (factory->exts) {
@@ -220,11 +220,11 @@ gst_typefactory_save_thyself (GstTypeFactory *factory, xmlNodePtr parent)
   if (factory->typefindfunc) {
     xmlNewChild (parent, NULL, "typefind", NULL);
   }
-  
+
   return parent;
 }
 
-static GstCaps * 
+static GstCaps *
 gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
 {
   GstType *type = (GstType *)priv;
@@ -263,7 +263,7 @@ gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
  * Returns: the new typefactory
  */
 GstTypeFactory*
-gst_typefactory_load_thyself (xmlNodePtr parent) 
+gst_typefactory_load_thyself (xmlNodePtr parent)
 {
 
   GstTypeFactory *factory = g_new0 (GstTypeFactory, 1);

@@ -206,14 +206,20 @@ gst_play_audio_handoff (GstElement *element,
 }
 
 static void
-gst_play_object_introspect (GstElement *element,
+gst_play_object_introspect (GstObject *object,
 		            const gchar *property,
 			    GstElement **target)
 {
   gchar *info;
   GtkArgInfo *arg;
+  GstElement *element;
 
-  info = gtk_object_arg_get_info( GTK_OBJECT_TYPE(element), property, &arg);
+  if (!GST_IS_ELEMENT (object))
+    return;
+
+  element = GST_ELEMENT (object);
+
+  info = gtk_object_arg_get_info (GTK_OBJECT_TYPE (element), property, &arg);
 
   if (info) {
     g_free(info);
@@ -229,8 +235,8 @@ gst_play_object_introspect (GstElement *element,
  * this will change with glib 1.4
  * */
 static void
-gst_play_object_added (GstElement *pipeline,
-		       GstElement *element,
+gst_play_object_added (GstAutoplug* autoplug,
+		       GstObject *object,
 		       GstPlay *play)
 {
   GstPlayPrivate *priv;
@@ -239,23 +245,23 @@ gst_play_object_added (GstElement *pipeline,
 
   priv = (GstPlayPrivate *)play->priv;
 
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_NO_SEEK)) {
+  if (GST_FLAG_IS_SET (object, GST_ELEMENT_NO_SEEK)) {
     priv->can_seek = FALSE;
   }
 
-  if (GST_IS_BIN (element)) {
-    gtk_signal_connect (GTK_OBJECT (element), "object_added", gst_play_object_added, play);
+  if (GST_IS_BIN (object)) {
+    //gtk_signal_connect (GTK_OBJECT (object), "object_added", gst_play_object_added, play);
   }
   else {
     // first come first serve here...
     if (!priv->offset_element)
-      gst_play_object_introspect (element, "offset", &priv->offset_element);
+      gst_play_object_introspect (object, "offset", &priv->offset_element);
     if (!priv->bit_rate_element)
-      gst_play_object_introspect (element, "bit_rate", &priv->bit_rate_element);
+      gst_play_object_introspect (object, "bit_rate", &priv->bit_rate_element);
     if (!priv->media_time_element)
-      gst_play_object_introspect (element, "media_time", &priv->media_time_element);
+      gst_play_object_introspect (object, "media_time", &priv->media_time_element);
     if (!priv->current_time_element)
-      gst_play_object_introspect (element, "current_time", &priv->current_time_element);
+      gst_play_object_introspect (object, "current_time", &priv->current_time_element);
   }
 }
 
@@ -337,6 +343,7 @@ gst_play_set_uri (GstPlay *play,
   GstPlayPrivate *priv;
   GstCaps *src_caps;
   GstElement *new_element;
+  GstAutoplug *autoplug;
 
   g_return_val_if_fail (play != NULL, GST_PLAY_ERROR);
   g_return_val_if_fail (GST_IS_PLAY (play), GST_PLAY_ERROR);
@@ -351,6 +358,7 @@ gst_play_set_uri (GstPlay *play,
 
   priv->src = gst_elementfactory_make ("disksrc", "disk_src");
   //priv->src = gst_elementfactory_make ("dvdsrc", "disk_src");
+  priv->offset_element = priv->src;
 
   g_return_val_if_fail (priv->src != NULL, -1);
   gtk_object_set (GTK_OBJECT (priv->src), "location", uri, NULL);
@@ -363,8 +371,12 @@ gst_play_set_uri (GstPlay *play,
     return GST_PLAY_UNKNOWN_MEDIA;
   }
 
-  new_element = gst_autoplug_caps_list
-	  (gst_pad_get_caps_list (gst_element_get_pad (priv->src, "src")),
+  autoplug = gst_autoplugfactory_make ("static");
+
+  gtk_signal_connect (GTK_OBJECT (autoplug), "new_object", gst_play_object_added, play);
+
+  new_element = gst_autoplug_caps_list (autoplug,
+	   gst_pad_get_caps_list (gst_element_get_pad (priv->src, "src")),
 	   gst_pad_get_caps_list (gst_element_get_pad (priv->video_queue, "sink")),
 	   gst_pad_get_caps_list (gst_element_get_pad (priv->audio_queue, "sink")),
 	   NULL);

@@ -1,5 +1,5 @@
 # cheap trick to build . first...
-SUBDIRS = . types meta elements
+SUBDIRS = . types meta elements autoplug
 
 lib_LTLIBRARIES = libgst.la
 

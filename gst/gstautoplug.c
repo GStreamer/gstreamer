@@ -24,570 +24,248 @@
 #include "gst_private.h"
 
 #include "gstautoplug.h"
-#include "gstbin.h"
+#include "gstplugin.h"
+
+GList* _gst_autoplugfactories;
+
+enum {
+  NEW_OBJECT,
+  LAST_SIGNAL
+};
+
+enum {
+  ARG_0,
+  /* FILL ME */
+};
 
 static void     gst_autoplug_class_init (GstAutoplugClass *klass);
 static void     gst_autoplug_init       (GstAutoplug *autoplug);
 
-static GList*	gst_autoplug_func	(gpointer src, gpointer sink,
-					 GstAutoplugListFunction list_function,
-					 GstAutoplugCostFunction cost_function,
-					 gpointer data);
-
-struct _gst_autoplug_node
-{
-  gpointer iNode;
-  gpointer iPrev;
-  gint iDist;
-};
-
-typedef struct _gst_autoplug_node gst_autoplug_node;
-
 static GstObjectClass *parent_class = NULL;
+static guint gst_autoplug_signals[LAST_SIGNAL] = { 0 };
 
-GtkType gst_autoplug_get_type(void) {
+GtkType gst_autoplug_get_type(void)
+{
   static GtkType autoplug_type = 0;
 
   if (!autoplug_type) {
     static const GtkTypeInfo autoplug_info = {
       "GstAutoplug",
-      sizeof(GstElement),
-      sizeof(GstElementClass),
+      sizeof(GstAutoplug),
+      sizeof(GstAutoplugClass),
       (GtkClassInitFunc)gst_autoplug_class_init,
       (GtkObjectInitFunc)gst_autoplug_init,
       (GtkArgSetFunc)NULL,
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    autoplug_type = gtk_type_unique(GST_TYPE_AUTOPLUG,&autoplug_info);
+    autoplug_type = gtk_type_unique (GTK_TYPE_OBJECT, &autoplug_info);
   }
   return autoplug_type;
 }
 
 static void
-gst_autoplug_class_init(GstAutoplugClass *klass) {
-  parent_class = gtk_type_class(GST_TYPE_OBJECT);
-}
-
-static void gst_autoplug_init(GstAutoplug *autoplug) {
-}
-
-static gboolean
-gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
+gst_autoplug_class_init(GstAutoplugClass *klass)
 {
-  GList *srctemps, *desttemps;
+  GtkObjectClass *gtkobject_class;
 
-  srctemps = src->padtemplates;
+  gtkobject_class = (GtkObjectClass*) klass;
 
-  while (srctemps) {
-    GstPadTemplate *srctemp = (GstPadTemplate *)srctemps->data;
+  parent_class = gtk_type_class(GTK_TYPE_OBJECT);
 
-    desttemps = dest->padtemplates;
+  gst_autoplug_signals[NEW_OBJECT] =
+    gtk_signal_new ("new_object", GTK_RUN_LAST, gtkobject_class->type,
+                    GTK_SIGNAL_OFFSET (GstAutoplugClass, new_object),
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GST_TYPE_OBJECT);
 
-    while (desttemps) {
-      GstPadTemplate *desttemp = (GstPadTemplate *)desttemps->data;
-
-      if (srctemp->direction == GST_PAD_SRC &&
-          desttemp->direction == GST_PAD_SINK) {
-	if (gst_caps_list_check_compatibility (srctemp->caps, desttemp->caps)) {
-	  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,
-			  "factory \"%s\" can connect with factory \"%s\"", src->name, dest->name);
-          return TRUE;
-	}
-      }
-
-      desttemps = g_list_next (desttemps);
-    }
-    srctemps = g_list_next (srctemps);
-  }
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,
-		  "factory \"%s\" cannot connect with factory \"%s\"", src->name, dest->name);
-  return FALSE;
+  gtk_object_class_add_signals (gtkobject_class, gst_autoplug_signals, LAST_SIGNAL);
 }
 
-static gboolean
-gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
+static void gst_autoplug_init(GstAutoplug *autoplug)
 {
-  GList *sinkpads;
-  gboolean connected = FALSE;
-
-  GST_DEBUG (0,"gstpipeline: autoplug pad connect function for \"%s\" to \"%s\"\n",
-		  GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
-
-  sinkpads = gst_element_get_pad_list(sink);
-  while (sinkpads) {
-    GstPad *sinkpad = (GstPad *)sinkpads->data;
-
-    // if we have a match, connect the pads
-    if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
-        !GST_PAD_CONNECTED(sinkpad))
-    {
-      if (gst_caps_list_check_compatibility (gst_pad_get_caps_list(pad), gst_pad_get_caps_list(sinkpad))) {
-        gst_pad_connect(pad, sinkpad);
-        GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
-		       GST_ELEMENT_NAME(src));
-        GST_DEBUG (0,"pad \"%s\" in element %s\n", GST_PAD_NAME (sinkpad),
-		      GST_ELEMENT_NAME(sink));
-        connected = TRUE;
-        break;
-      }
-      else {
-	GST_DEBUG (0,"pads incompatible %s, %s\n", GST_PAD_NAME (pad), GST_PAD_NAME (sinkpad));
-      }
-    }
-    sinkpads = g_list_next(sinkpads);
-  }
-
-  if (!connected) {
-    GST_DEBUG (0,"gstpipeline: no path to sinks for type\n");
-  }
-  return connected;
 }
 
-static void
-gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
+void
+_gst_autoplug_initialize (void)
 {
-  GList *srcpads;
-  gboolean connected = FALSE;
-
-  srcpads = gst_element_get_pad_list(src);
-
-  while (srcpads && !connected) {
-    GstPad *srcpad = (GstPad *)srcpads->data;
-
-    if (gst_pad_get_direction(srcpad) == GST_PAD_SRC)
-      connected = gst_autoplug_pads_autoplug_func (src, srcpad, sink);
-
-    srcpads = g_list_next(srcpads);
-  }
-
-  if (!connected) {
-    GST_DEBUG (0,"gstpipeline: delaying pad connections for \"%s\" to \"%s\"\n",
-		    GST_ELEMENT_NAME(src), GST_ELEMENT_NAME(sink));
-    gtk_signal_connect(GTK_OBJECT(src),"new_pad",
-                 GTK_SIGNAL_FUNC(gst_autoplug_pads_autoplug_func), sink);
-  }
+  _gst_autoplugfactories = NULL;
 }
 
-static GList*
-gst_autoplug_elementfactory_get_list (gpointer data)
+void
+gst_autoplug_signal_new_object (GstAutoplug *autoplug, GstObject *object)
 {
-  return gst_elementfactory_get_list ();
+  gtk_signal_emit (GTK_OBJECT (autoplug), gst_autoplug_signals[NEW_OBJECT], object);
 }
 
-typedef struct {
-  GList *src;
-  GList *sink;
-} caps_struct;
 
-#define IS_CAPS(cap) (((cap) == caps->src) || (cap) == caps->sink)
-
-static guint
-gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
+GstElement*
+gst_autoplug_caps_list (GstAutoplug *autoplug, GList *srcpad, GList *sinkpad, ...)
 {
-  caps_struct *caps = (caps_struct *)data;
-  gboolean res;
+  GstAutoplugClass *oclass;
+  GstElement *element = NULL;
+  va_list args;
 
-  if (IS_CAPS (src) && IS_CAPS (dest)) {
-    res = gst_caps_list_check_compatibility ((GList *)src, (GList *)dest);
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res);
-  }
-  else if (IS_CAPS (src)) {
-    res = gst_elementfactory_can_sink_caps_list ((GstElementFactory *)dest, (GList *)src);
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to src caps %d %d", ((GstElementFactory *)dest)->name, ((GstCaps *)src)->id, res);
-  }
-  else if (IS_CAPS (dest)) {
-    res = gst_elementfactory_can_src_caps_list ((GstElementFactory *)src, (GList *)dest);
-    //GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory %s to sink caps %d %d", ((GstElementFactory *)src)->name, ((GstCaps *)dest)->id, res);
-  }
-  else {
-    res = gst_autoplug_can_match ((GstElementFactory *)src, (GstElementFactory *)dest);
-  }
+  va_start (args, sinkpad);
 
-  if (res)
-    return 1;
-  else
-    return GST_AUTOPLUG_MAX_COST;
+  oclass = GST_AUTOPLUG_CLASS (GTK_OBJECT (autoplug)->klass);
+  if (oclass->autoplug_caps_list)
+    element = (oclass->autoplug_caps_list) (autoplug, srcpad, sinkpad, args);
+
+  va_end (args);
+
+  return element;
+}
+
+
+/**
+ * gst_autoplugfactory_new:
+ * @name: name of autoplugfactory to create
+ * @longdesc: long description of autoplugfactory to create
+ * @type: the gtk type of the GstAutoplug element of this factory
+ *
+ * Create a new autoplugfactory with the given parameters
+ *
+ * Returns: a new #GstAutoplugFactory.
+ */
+GstAutoplugFactory*
+gst_autoplugfactory_new (const gchar *name, const gchar *longdesc, GtkType type)
+{
+  GstAutoplugFactory *factory;
+
+  g_return_val_if_fail(name != NULL, NULL);
+
+  factory = g_new0(GstAutoplugFactory, 1);
+
+  factory->name = g_strdup(name);
+  factory->longdesc = g_strdup (longdesc);
+  factory->type = type;
+
+  _gst_autoplugfactories = g_list_prepend (_gst_autoplugfactories, factory);
+
+  return factory;
 }
 
 /**
- * gst_autoplug_pads:
- * @srcpad: the source pad
- * @sinkpad: the sink pad
+ * gst_autoplugfactory_destroy:
+ * @autoplug: factory to destroy
  *
- * Perform autoplugging between the two given pads.
- *
- * Returns: a list of elementfactories that can connect
- * the two pads
+ * Removes the autoplug from the global list.
  */
-GstElement*
-gst_autoplug_caps_list (GList *srccaps, GList *sinkcaps, ...)
+void
+gst_autoplugfactory_destroy (GstAutoplugFactory *autoplug)
 {
-  caps_struct caps;
-  va_list args;
-  GList *capslist;
-  GstElement *result = NULL, *srcelement = NULL;
-  GList **factories;
-  GList *chains = NULL;
-  GList *endcaps = NULL;
-  guint numsinks = 0, i;
-  gboolean have_common = FALSE;
+  g_return_if_fail (autoplug != NULL);
 
-  va_start (args, sinkcaps);
-  capslist = sinkcaps;
+  _gst_autoplugfactories = g_list_remove (_gst_autoplugfactories, autoplug);
 
-  /*
-   * We first create a list of elements that are needed
-   * to convert the srcpad caps to the different sinkpad caps.
-   * and add the list of elementfactories to a list (chains).
-   */
-  caps.src  = srccaps;
+  // we don't free the struct bacause someone might  have a handle to it..
+}
 
-  while (capslist) {
-    GList *elements;
+/**
+ * gst_autoplug_find:
+ * @name: name of autoplugger to find
+ *
+ * Search for an autoplugger of the given name.
+ *
+ * Returns: #GstAutoplug if found, NULL otherwise
+ */
+GstAutoplugFactory*
+gst_autoplugfactory_find (const gchar *name)
+{
+  GList *walk;
+  GstAutoplugFactory *factory;
 
-    caps.sink = capslist;
+  g_return_val_if_fail(name != NULL, NULL);
 
-    GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"autoplugging two caps structures");
+  GST_DEBUG (0,"gstautoplug: find \"%s\"\n", name);
 
-    elements =  gst_autoplug_func (caps.src, caps.sink,
-				   gst_autoplug_elementfactory_get_list,
-				   gst_autoplug_caps_find_cost,
-				   &caps);
-
-    if (elements) {
-      chains = g_list_append (chains, elements);
-      endcaps = g_list_append (endcaps, capslist);
-      numsinks++;
-    }
-    else {
-    }
-
-    capslist = va_arg (args, GList *);
+  walk = _gst_autoplugfactories;
+  while (walk) {
+    factory = (GstAutoplugFactory *)(walk->data);
+    if (!strcmp (name, factory->name))
+      return factory;
+    walk = g_list_next (walk);
   }
-  va_end (args);
 
-  /*
-   * If no list could be found the pipeline cannot be autoplugged and
-   * we return a NULL element
-   */
-  if (numsinks == 0)
+  return NULL;
+}
+
+/**
+ * gst_autoplugfactory_get_list:
+ *
+ * Get the global list of elementfactories.
+ *
+ * Returns: GList of type #GstElementFactory
+ */
+GList*
+gst_autoplugfactory_get_list (void)
+{
+  return _gst_autoplugfactories;
+}
+
+GstAutoplug*
+gst_autoplugfactory_create (GstAutoplugFactory *factory)
+{
+  GstAutoplug *new = NULL;
+
+  g_return_val_if_fail (factory != NULL, NULL);
+
+  if (factory->type == 0){
+    factory = gst_plugin_load_autoplugfactory (factory->name);
+  }
+  g_return_val_if_fail (factory != NULL, NULL);
+  g_return_val_if_fail (factory->type != 0, NULL);
+
+  new = GST_AUTOPLUG (gtk_type_new (factory->type));
+
+  return new;
+}
+
+GstAutoplug*
+gst_autoplugfactory_make (const gchar *name)
+{
+  GstAutoplugFactory *factory;
+
+  g_return_val_if_fail (name != NULL, NULL);
+
+  factory = gst_autoplugfactory_find (name);
+
+  if (factory == NULL)
     return NULL;
 
-  /*
-   * We now have a list of lists. We will turn this into an array
-   * of lists, this will make it much more easy to manipulate it
-   * in the next steps.
-   */
-  factories = g_new0 (GList *, numsinks);
-
-  for (i = 0; chains; i++) {
-    GList *elements = (GList *) chains->data;
-
-    factories[i] = elements;
-
-    chains = g_list_next (chains);
-  }
-  //FIXME, free the list
-
-  result = gst_bin_new ("autoplug_bin");
-
-  /*
-   * We now hav a list of lists that is probably like:
-   *
-   *  !
-   *  A -> B -> C
-   *  !
-   *  A -> D -> E
-   *
-   * we now try to find the common elements (A) and add them to
-   * the bin. We remove them from both lists too.
-   */
-  while (factories[0]) {
-    GstElementFactory *factory;
-    GstElement *element;
-
-    // fase 3: add common elements
-    factory = (GstElementFactory *) (factories[0]->data);
-
-    // check to other paths for matching elements (factories)
-    for (i=1; i<numsinks; i++) {
-      if (factory != (GstElementFactory *) (factories[i]->data)) {
-	goto differ;
-      }
-    }
-
-    GST_DEBUG (0,"common factory \"%s\"\n", factory->name);
-
-    element = gst_elementfactory_create (factory, factory->name);
-    gst_bin_add (GST_BIN(result), element);
-
-    if (srcelement != NULL) {
-      gst_autoplug_pads_autoplug (srcelement, element);
-    }
-    // this is the first element, find a good ghostpad
-    else {
-      GList *pads;
-
-      pads = gst_element_get_pad_list (element);
-
-      while (pads) {
-	GstPad *pad = GST_PAD (pads->data);
-
-	if (gst_caps_list_check_compatibility (srccaps, gst_pad_get_caps_list (pad))) {
-          gst_element_add_ghost_pad (result, pad, "sink");
-	  break;
-	}
-
-	pads = g_list_next (pads);
-      }
-    }
-
-    srcelement = element;
-
-    // advance the pointer in all lists
-    for (i=0; i<numsinks; i++) {
-      factories[i] = g_list_next (factories[i]);
-    }
-
-    have_common = TRUE;
-  }
-
-differ:
-
-  // loop over all the sink elements
-  for (i = 0; i < numsinks; i++) {
-    GstElement *thesrcelement = srcelement;
-    GstElement *thebin = GST_ELEMENT(result);
-    gboolean use_thread;
-
-    use_thread = have_common;
-
-    while (factories[i]) {
-      // fase 4: add other elements...
-      GstElementFactory *factory;
-      GstElement *element;
-
-      factory = (GstElementFactory *)(factories[i]->data);
-
-      GST_DEBUG (0,"factory \"%s\"\n", factory->name);
-      element = gst_elementfactory_create(factory, factory->name);
-
-      // this element suggests the use of a thread, so we set one up...
-      if (GST_ELEMENT_IS_THREAD_SUGGESTED(element) || use_thread) {
-        GstElement *queue;
-        GList *sinkpads;
-        GstPad *srcpad, *sinkpad;
-
-	use_thread = FALSE;
-
-        GST_DEBUG (0,"sugest new thread for \"%s\" %08x\n", GST_ELEMENT_NAME (element), GST_FLAGS(element));
-
-	// create a new queue and add to the previous bin
-        queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
-        GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
-        gst_bin_add(GST_BIN(thebin), queue);
-
-	// this will be the new bin for all following elements
-        thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
-
-        srcpad = gst_element_get_pad(queue, "src");
-
-        sinkpads = gst_element_get_pad_list(element);
-        while (sinkpads) {
-          sinkpad = (GstPad *)sinkpads->data;
-
-	  // FIXME connect matching pads, not just the first one...
-          if (gst_pad_get_direction(sinkpad) == GST_PAD_SINK &&
-	      !GST_PAD_CONNECTED(sinkpad)) {
-            GList *caps = gst_pad_get_caps_list (sinkpad);
-
-	    // the queue has the type of the elements it connects
-	    gst_pad_set_caps_list (srcpad, caps);
-            gst_pad_set_caps_list (gst_element_get_pad(queue, "sink"), caps);
-	    break;
-	  }
-          sinkpads = g_list_next(sinkpads);
-        }
-        gst_autoplug_pads_autoplug(thesrcelement, queue);
-
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
-        gst_bin_add(GST_BIN(thebin), element);
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (thebin));
-        gst_bin_add(GST_BIN(result), thebin);
-        thesrcelement = queue;
-      }
-      // no thread needed, easy case
-      else {
-	GST_DEBUG (0,"adding element %s\n", GST_ELEMENT_NAME (element));
-        gst_bin_add(GST_BIN(thebin), element);
-      }
-      gst_autoplug_pads_autoplug(thesrcelement, element);
-
-      // this element is now the new source element
-      thesrcelement = element;
-
-      factories[i] = g_list_next(factories[i]);
-    }
-    /*
-     * we're at the last element in the chain,
-     * find a suitable pad to turn into a ghostpad
-     */
-    {
-      GList *endcap = (GList *)(endcaps->data);
-      GList *pads = gst_element_get_pad_list (thesrcelement);
-      endcaps = g_list_next (endcaps);
-
-      while (pads) {
-	GstPad *pad = GST_PAD (pads->data);
-	pads = g_list_next (pads);
-
-	if (gst_caps_list_check_compatibility (gst_pad_get_caps_list (pad), endcap)) {
-          gst_element_add_ghost_pad (result, pad, g_strdup_printf("src_%02d", i));
-	  break;
-	}
-      }
-    }
-  }
-
-  return result;
+  return gst_autoplugfactory_create (factory);;
 }
 
-static gint
-find_factory (gst_autoplug_node *rgnNodes, gpointer factory)
+xmlNodePtr
+gst_autoplugfactory_save_thyself (GstAutoplugFactory *factory, xmlNodePtr parent)
 {
-  gint i=0;
+  g_return_val_if_fail(factory != NULL, NULL);
 
-  while (rgnNodes[i].iNode) {
-    if (rgnNodes[i].iNode == factory) return i;
-    i++;
-  }
-  return 0;
+  xmlNewChild(parent,NULL,"name",factory->name);
+  xmlNewChild(parent,NULL,"longdesc", factory->longdesc);
+
+  return parent;
 }
 
-static GList*
-construct_path (gst_autoplug_node *rgnNodes, gpointer factory)
+GstAutoplugFactory*
+gst_autoplugfactory_load_thyself (xmlNodePtr parent)
 {
-  GstElementFactory *current;
-  GList *factories = NULL;
+  GstAutoplugFactory *factory = g_new0(GstAutoplugFactory, 1);
+  xmlNodePtr children = parent->xmlChildrenNode;
 
-  current = rgnNodes[find_factory(rgnNodes, factory)].iPrev;
-
-  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factories found in autoplugging (reversed order)");
-
-  while (current != NULL)
-  {
-    gpointer next = NULL;
-
-    next = rgnNodes[find_factory(rgnNodes, current)].iPrev;
-    if (next) {
-      factories = g_list_prepend (factories, current);
-      GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"factory: \"%s\"", current->name);
+  while (children) {
+    if (!strcmp(children->name, "name")) {
+      factory->name = xmlNodeGetContent(children);
     }
-    current = next;
-  }
-  return factories;
-}
-
-static GList*
-gst_autoplug_enqueue (GList *queue, gpointer iNode, gint iDist, gpointer iPrev)
-{
-  gst_autoplug_node *node = g_malloc (sizeof (gst_autoplug_node));
-
-  node->iNode = iNode;
-  node->iDist = iDist;
-  node->iPrev = iPrev;
-
-  queue = g_list_append (queue, node);
-
-  return queue;
-}
-
-static GList*
-gst_autoplug_dequeue (GList *queue, gpointer *iNode, gint *iDist, gpointer *iPrev)
-{
-  GList *head;
-  gst_autoplug_node *node;
-
-  head = g_list_first (queue);
-
-  if (head) {
-    node = (gst_autoplug_node *)head->data;
-    *iNode = node->iNode;
-    *iPrev = node->iPrev;
-    *iDist = node->iDist;
-    head = g_list_remove (queue, node);
+    if (!strcmp(children->name, "longdesc")) {
+      factory->longdesc = xmlNodeGetContent(children);
+    }
+    children = children->next;
   }
 
-  return head;
-}
+  _gst_autoplugfactories = g_list_prepend (_gst_autoplugfactories, factory);
 
-static GList*
-gst_autoplug_func (gpointer src, gpointer sink,
-		   GstAutoplugListFunction list_function,
-		   GstAutoplugCostFunction cost_function,
-		   gpointer data)
-{
-  gst_autoplug_node *rgnNodes;
-  GList *queue = NULL;
-  gpointer iNode, iPrev;
-  gint iDist, i, iCost;
-
-  GList *elements = g_list_copy (list_function(data));
-  GList *factories;
-  guint num_factories;
-
-  elements = g_list_append (elements, sink);
-  elements = g_list_append (elements, src);
-
-  factories = elements;
-
-  num_factories = g_list_length (factories);
-
-  rgnNodes = g_new0 (gst_autoplug_node, num_factories+1);
-
-  for (i=0; i< num_factories; i++) {
-    gpointer fact = factories->data;
-
-    rgnNodes[i].iNode = fact;
-    rgnNodes[i].iPrev = NULL;
-
-    if (fact == src) {
-      rgnNodes[i].iDist = 0;
-    }
-    else {
-      rgnNodes[i].iDist = GST_AUTOPLUG_MAX_COST;
-    }
-
-    factories = g_list_next (factories);
-  }
-  rgnNodes[num_factories].iNode = NULL;
-
-  queue = gst_autoplug_enqueue (queue, src, 0, NULL);
-
-  while (g_list_length (queue) > 0) {
-    GList *factories2 = elements;
-
-    queue = gst_autoplug_dequeue (queue, &iNode, &iDist, &iPrev);
-
-    for (i=0; i< num_factories; i++) {
-      gpointer current = factories2->data;
-
-      iCost = cost_function (iNode, current, data);
-      if (iCost != GST_AUTOPLUG_MAX_COST) {
-        if((GST_AUTOPLUG_MAX_COST == rgnNodes[i].iDist) ||
-           (rgnNodes[i].iDist > (iCost + iDist))) {
-          rgnNodes[i].iDist = iDist + iCost;
-          rgnNodes[i].iPrev = iNode;
-
-          queue = gst_autoplug_enqueue (queue, current, iDist + iCost, iNode);
-        }
-      }
-
-      factories2 = g_list_next (factories2);
-    }
-  }
-
-  return construct_path (rgnNodes, sink);
+  return factory;
 }
 

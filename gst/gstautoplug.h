@@ -31,7 +31,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #define GST_TYPE_AUTOPLUG \
-  (gst_object_get_type())
+  (gst_autoplug_get_type())
 #define GST_AUTOPLUG(obj) \
   (GTK_CHECK_CAST((obj),GST_TYPE_AUTOPLUG,GstAutoplug))
 #define GST_AUTOPLUG_CLASS(klass) \
@@ -44,11 +44,6 @@ extern "C" {
 typedef struct _GstAutoplug GstAutoplug;
 typedef struct _GstAutoplugClass GstAutoplugClass;
 
-#define GST_AUTOPLUG_MAX_COST 999999
-
-typedef guint   (*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointer data);
-typedef GList*  (*GstAutoplugListFunction) (gpointer data);
-
 struct _GstAutoplug {
   GtkObject object;
 };
@@ -57,19 +52,42 @@ struct _GstAutoplugClass {
   GtkObjectClass parent_class;
 
   /* signal callbacks */
-  void (*element_added)  (GstAutoplug *eutoplug, GstElement *element);
+  void (*new_object)  (GstAutoplug *autoplug, GstObject *object);
 
+  /* perform the autoplugging */
+  GstElement* (*autoplug_caps_list) (GstAutoplug *autoplug, GList *srcpad, GList *sinkpad, va_list args);
 };
 
+typedef struct _GstAutoplugFactory GstAutoplugFactory;
+
 struct _GstAutoplugFactory {
-  gchar *name;                  /* name of element */
+  gchar *name;                  /* name of autoplugger */
+  gchar *longdesc;              /* long description of the autoplugger (well, don't overdo it..) */
   GtkType type;                 /* unique GtkType of the autoplugger */
 };
 
-GtkType		gst_autoplug_get_type			(void);
+GtkType			gst_autoplug_get_type			(void);
 
-GstElement*	gst_autoplug_caps_list			(GList *srcpad, GList *sinkpad, ...);
+void			gst_autoplug_signal_new_object		(GstAutoplug *autoplug, GstObject *object);
 
+GstElement*		gst_autoplug_caps_list			(GstAutoplug *autoplug, GList *srcpad, GList *sinkpad, ...);
+
+
+/*
+ * creating autopluggers
+ *
+ */
+GstAutoplugFactory*	gst_autoplugfactory_new			(const gchar *name, const gchar *longdesc, GtkType type);
+void                    gst_autoplugfactory_destroy		(GstAutoplugFactory *factory);
+
+GstAutoplugFactory*	gst_autoplugfactory_find		(const gchar *name);
+GList*			gst_autoplugfactory_get_list		(void);
+
+GstAutoplug*		gst_autoplugfactory_create		(GstAutoplugFactory *factory);
+GstAutoplug*		gst_autoplugfactory_make		(const gchar *name);
+
+xmlNodePtr		gst_autoplugfactory_save_thyself	(GstAutoplugFactory *factory, xmlNodePtr parent);
+GstAutoplugFactory*	gst_autoplugfactory_load_thyself	(xmlNodePtr parent);
 
 #ifdef __cplusplus
 }

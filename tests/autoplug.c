@@ -1,10 +1,17 @@
 #include <gst/gst.h>
 
+static void
+new_object_added (GstAutoplug *autoplug, GstObject *object)
+{
+  g_print ("added new object \"%s\"\n", gst_object_get_name (object));
+}
+
 int
 main (int argc, char *argv[])
 {
   GstElement *element;
   GstElement *videosink, *audiosink;
+  GstAutoplug *autoplugger;
   GList *testcaps;
 
   gst_init(&argc,&argv);
@@ -22,9 +29,14 @@ main (int argc, char *argv[])
 							   "systemstream", GST_PROPS_BOOLEAN (TRUE),
 							   NULL)));
 
+  autoplugger = gst_autoplugfactory_make ("static");
 
-  element = gst_autoplug_caps_list (testcaps, gst_pad_get_caps_list (gst_element_get_pad (audiosink, "sink")),
-		  gst_pad_get_caps_list (gst_element_get_pad (videosink, "sink")), NULL);
+  gtk_signal_connect (GTK_OBJECT (autoplugger), "new_object", new_object_added, NULL);
+
+  element = gst_autoplug_caps_list (autoplugger, testcaps,
+		  gst_pad_get_caps_list (gst_element_get_pad (audiosink, "sink")),
+		  gst_pad_get_caps_list (gst_element_get_pad (videosink, "sink")),
+		  NULL);
   g_assert (element != NULL);
 
   xmlDocDump (stdout, gst_xml_write (element));

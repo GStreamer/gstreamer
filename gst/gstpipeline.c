@@ -24,10 +24,6 @@
 #include "gst_private.h"
 
 #include "gstpipeline.h"
-#include "gstthread.h"
-#include "gstutils.h"
-#include "gsttype.h"
-#include "gstautoplug.h"
 
 
 GstElementDetails gst_pipeline_details = {

@@ -80,6 +80,8 @@ _gst_plugin_initialize (void)
                                       PLUGINS_SRCDIR "/gst/elements");
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
                                       PLUGINS_SRCDIR "/gst/types");
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
+                                      PLUGINS_SRCDIR "/gst/autoplug");
 #else /* PLUGINS_USE_SRCDIR */
   /* add the main (installed) library path */
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
@@ -395,6 +397,8 @@ gst_plugin_new (const gchar *name)
   plugin->numelements = 0;
   plugin->types = NULL;
   plugin->numtypes = 0;
+  plugin->autopluggers = NULL;
+  plugin->numautopluggers = 0;
   plugin->loaded = TRUE;
 
   return plugin;
@@ -529,15 +533,7 @@ gst_plugin_find (const gchar *name)
   return NULL;
 }
 
-/**
- * gst_plugin_find_elementfactory:
- * @name: name of elementfactory to find
- *
- * Find a registered elementfactory by name.
- *
- * Returns: @GstElementFactory if found, NULL if not
- */
-GstElementFactory*
+static GstElementFactory*
 gst_plugin_find_elementfactory (const gchar *name)
 {
   GList *plugins, *factories;
@@ -599,6 +595,77 @@ gst_plugin_load_elementfactory (const gchar *name)
 	  g_free (filename);
 	}
 	factory = gst_plugin_find_elementfactory(name);
+        return factory;
+      }
+      factories = g_list_next(factories);
+    }
+    plugins = g_list_next(plugins);
+  }
+
+  return factory;
+}
+
+static GstAutoplugFactory*
+gst_plugin_find_autoplugfactory (const gchar *name)
+{
+  GList *plugins, *factories;
+  GstAutoplugFactory *factory;
+
+  g_return_val_if_fail(name != NULL, NULL);
+
+  plugins = _gst_plugins;
+  while (plugins) {
+    factories = ((GstPlugin *)(plugins->data))->autopluggers;
+    while (factories) {
+      factory = (GstAutoplugFactory*)(factories->data);
+      if (!strcmp(factory->name, name))
+        return (GstAutoplugFactory*)(factory);
+      factories = g_list_next(factories);
+    }
+    plugins = g_list_next(plugins);
+  }
+
+  return NULL;
+}
+/**
+ * gst_plugin_load_autoplugfactory:
+ * @name: name of autoplugfactory to load
+ *
+ * Load a registered autoplugfactory by name.
+ *
+ * Returns: @GstAutoplugFactory if loaded, NULL if not
+ */
+GstAutoplugFactory*
+gst_plugin_load_autoplugfactory (const gchar *name)
+{
+  GList *plugins, *factories;
+  GstAutoplugFactory *factory = NULL;
+  GstPlugin *plugin;
+
+  g_return_val_if_fail(name != NULL, NULL);
+
+  plugins = _gst_plugins;
+  while (plugins) {
+    plugin = (GstPlugin *)plugins->data;
+    factories = plugin->autopluggers;
+
+    while (factories) {
+      factory = (GstAutoplugFactory*)(factories->data);
+
+      if (!strcmp(factory->name,name)) {
+	if (!plugin->loaded) {
+          gchar *filename = g_strdup (plugin->filename);
+	  gchar *pluginname = g_strdup (plugin->name);
+
+          GST_INFO (GST_CAT_PLUGIN_LOADING,"loaded autoplugfactory %s from plugin %s",name,plugin->name);
+	  gst_plugin_remove(plugin);
+	  if (!gst_plugin_load_absolute(filename)) {
+	    GST_DEBUG (0,"gstplugin: error loading autoplug factory %s from plugin %s\n", name, pluginname);
+	  }
+	  g_free (pluginname);
+	  g_free (filename);
+	}
+	factory = gst_plugin_find_autoplugfactory(name);
         return factory;
       }
       factories = g_list_next(factories);
@@ -697,6 +764,24 @@ gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory)
 }
 
 /**
+ * gst_plugin_add_type:
+ * @plugin: plugin to add type to
+ * @factory: the typefactory to add
+ *
+ * Add a typefactory to the list of those provided by the plugin.
+ */
+void
+gst_plugin_add_autoplugger (GstPlugin *plugin, GstAutoplugFactory *factory)
+{
+  g_return_if_fail (plugin != NULL);
+  g_return_if_fail (factory != NULL);
+
+//  g_print("adding factory to plugin\n");
+  plugin->autopluggers = g_list_prepend (plugin->autopluggers, factory);
+  plugin->numautopluggers++;
+}
+
+/**
  * gst_plugin_get_list:
  *
  * get the currently loaded plugins
@@ -704,7 +789,7 @@ gst_plugin_add_type (GstPlugin *plugin, GstTypeFactory *factory)
  * Returns; a GList of GstPlugin elements
  */
 GList*
-gst_plugin_get_list(void)
+gst_plugin_get_list (void)
 {
   return _gst_plugins;
 }
@@ -721,34 +806,45 @@ xmlNodePtr
 gst_plugin_save_thyself (xmlNodePtr parent)
 {
   xmlNodePtr tree, subtree;
-  GList *plugins = NULL, *elements = NULL, *types = NULL;
+  GList *plugins = NULL, *elements = NULL, *types = NULL, *autopluggers = NULL;
 
-  plugins = gst_plugin_get_list();
+  plugins = gst_plugin_get_list ();
   while (plugins) {
     GstPlugin *plugin = (GstPlugin *)plugins->data;
-    tree = xmlNewChild(parent,NULL,"plugin",NULL);
-    xmlNewChild(tree,NULL,"name",plugin->name);
-    xmlNewChild(tree,NULL,"longname",plugin->longname);
-    xmlNewChild(tree,NULL,"filename",plugin->filename);
+
+    tree = xmlNewChild (parent, NULL, "plugin", NULL);
+    xmlNewChild (tree, NULL, "name", plugin->name);
+    xmlNewChild (tree, NULL, "longname", plugin->longname);
+    xmlNewChild (tree, NULL, "filename", plugin->filename);
+
     types = plugin->types;
     while (types) {
       GstTypeFactory *factory = (GstTypeFactory *)types->data;
-      subtree = xmlNewChild(tree,NULL,"typefactory",NULL);
+      subtree = xmlNewChild(tree, NULL, "typefactory", NULL);
 
-      gst_typefactory_save_thyself(factory, subtree);
+      gst_typefactory_save_thyself (factory, subtree);
 
-      types = g_list_next(types);
+      types = g_list_next (types);
     }
     elements = plugin->elements;
     while (elements) {
       GstElementFactory *factory = (GstElementFactory *)elements->data;
-      subtree = xmlNewChild(tree,NULL,"elementfactory",NULL);
+      subtree = xmlNewChild (tree, NULL, "elementfactory", NULL);
 
-      gst_elementfactory_save_thyself(factory, subtree);
+      gst_elementfactory_save_thyself (factory, subtree);
 
-      elements = g_list_next(elements);
+      elements = g_list_next (elements);
     }
-    plugins = g_list_next(plugins);
+    autopluggers = plugin->autopluggers;
+    while (autopluggers) {
+      GstAutoplugFactory *factory = (GstAutoplugFactory *)autopluggers->data;
+      subtree = xmlNewChild (tree, NULL, "autoplugfactory", NULL);
+
+      gst_autoplugfactory_save_thyself (factory, subtree);
+
+      autopluggers = g_list_next (autopluggers);
+    }
+    plugins = g_list_next (plugins);
   }
   return parent;
 }
@@ -764,43 +860,50 @@ gst_plugin_load_thyself (xmlNodePtr parent)
 {
   xmlNodePtr kinderen;
   gint elementcount = 0;
+  gint autoplugcount = 0;
   gint typecount = 0;
   gchar *pluginname;
 
   kinderen = parent->xmlChildrenNode; // Dutch invasion :-)
   while (kinderen) {
-    if (!strcmp(kinderen->name, "plugin")) {
+    if (!strcmp (kinderen->name, "plugin")) {
       xmlNodePtr field = kinderen->xmlChildrenNode;
       GstPlugin *plugin = g_new0 (GstPlugin, 1);
+
       plugin->elements = NULL;
       plugin->types = NULL;
       plugin->loaded = FALSE;
 
       while (field) {
-	if (!strcmp(field->name, "name")) {
-          pluginname = xmlNodeGetContent(field);
-	  if (gst_plugin_find(pluginname)) {
-            g_free(pluginname);
-            g_free(plugin);
+	if (!strcmp (field->name, "name")) {
+          pluginname = xmlNodeGetContent (field);
+	  if (gst_plugin_find (pluginname)) {
+            g_free (pluginname);
+            g_free (plugin);
 	    plugin = NULL;
             break;
 	  } else {
 	    plugin->name = pluginname;
 	  }
 	}
-	else if (!strcmp(field->name, "longname")) {
-	  plugin->longname = xmlNodeGetContent(field);
+	else if (!strcmp (field->name, "longname")) {
+	  plugin->longname = xmlNodeGetContent (field);
 	}
-	else if (!strcmp(field->name, "filename")) {
-	  plugin->filename = xmlNodeGetContent(field);
+	else if (!strcmp (field->name, "filename")) {
+	  plugin->filename = xmlNodeGetContent (field);
 	}
-	else if (!strcmp(field->name, "elementfactory")) {
-	  GstElementFactory *factory = gst_elementfactory_load_thyself(field);
+	else if (!strcmp (field->name, "elementfactory")) {
+	  GstElementFactory *factory = gst_elementfactory_load_thyself (field);
 	  gst_plugin_add_factory (plugin, factory);
 	  elementcount++;
 	}
-	else if (!strcmp(field->name, "typefactory")) {
-	  GstTypeFactory *factory = gst_typefactory_load_thyself(field);
+	else if (!strcmp (field->name, "autoplugfactory")) {
+	  GstAutoplugFactory *factory = gst_autoplugfactory_load_thyself (field);
+	  gst_plugin_add_autoplugger (plugin, factory);
+	  autoplugcount++;
+	}
+	else if (!strcmp (field->name, "typefactory")) {
+	  GstTypeFactory *factory = gst_typefactory_load_thyself (field);
 	  gst_plugin_add_type (plugin, factory);
 	  elementcount++;
 	  typecount++;
@@ -810,13 +913,14 @@ gst_plugin_load_thyself (xmlNodePtr parent)
       }
 
       if (plugin) {
-        _gst_plugins = g_list_prepend(_gst_plugins, plugin);
+        _gst_plugins = g_list_prepend (_gst_plugins, plugin);
       }
     }
 
     kinderen = kinderen->next;
   }
-  GST_INFO (GST_CAT_PLUGIN_LOADING,"added %d registered factories and %d types",elementcount,typecount);
+  GST_INFO (GST_CAT_PLUGIN_LOADING, "added %d registered factories, %d autopluggers and %d types",
+		  elementcount, autoplugcount, typecount);
 }
 
 
@@ -850,4 +954,20 @@ gst_plugin_get_type_list (GstPlugin *plugin)
   g_return_val_if_fail (plugin != NULL, NULL);
 
   return plugin->types;
+}
+
+/**
+ * gst_plugin_get_autoplug_list:
+ * @plugin: the plugin to get the autoplugfactories from
+ *
+ * get a list of all the autoplugfactories that this plugin provides
+ *
+ * Returns: a GList of factories
+ */
+GList*
+gst_plugin_get_autoplug_list (GstPlugin *plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->autopluggers;
 }

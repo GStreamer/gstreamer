@@ -656,6 +656,7 @@ gst/Makefile
 gst/types/Makefile
 gst/meta/Makefile
 gst/elements/Makefile
+gst/autoplug/Makefile
 libs/Makefile
 libs/riff/Makefile
 libs/colorspace/Makefile

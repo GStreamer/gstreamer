@@ -36,6 +36,7 @@
 
 #include <gst/gsttype.h>
 #include <gst/gstelement.h>
+#include <gst/gstautoplug.h>
 
 
 typedef struct _GstPlugin		GstPlugin;
@@ -50,6 +51,8 @@ struct _GstPlugin {
   gint numtypes;
   GList *elements;		/* list of elements provided */
   gint numelements;
+  GList *autopluggers;		/* list of autopluggers provided */
+  gint numautopluggers;
 
   gboolean loaded;              /* if the plugin is in memory */
 };
@@ -71,6 +74,7 @@ gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
 GList*			gst_plugin_get_type_list	(GstPlugin *plugin);
 GList*			gst_plugin_get_factory_list	(GstPlugin *plugin);
+GList*			gst_plugin_get_autoplug_list	(GstPlugin *plugin);
 
 void			gst_plugin_load_all		(void);
 gboolean		gst_plugin_load			(const gchar *name);
@@ -79,14 +83,14 @@ gboolean		gst_library_load		(const gchar *name);
 
 void			gst_plugin_add_factory		(GstPlugin *plugin, GstElementFactory *factory);
 void			gst_plugin_add_type		(GstPlugin *plugin, GstTypeFactory *factory);
+void			gst_plugin_add_autoplugger	(GstPlugin *plugin, GstAutoplugFactory *factory);
 
 GstPlugin*		gst_plugin_find			(const gchar *name);
 GList*			gst_plugin_get_list		(void);
 
-GstElementFactory*	gst_plugin_find_elementfactory	(const gchar *name);
-
 GstElementFactory*	gst_plugin_load_elementfactory	(const gchar *name);
 void			gst_plugin_load_typefactory	(const gchar *mime);
+GstAutoplugFactory*	gst_plugin_load_autoplugfactory	(const gchar *name);
 
 xmlNodePtr		gst_plugin_save_thyself		(xmlNodePtr parent);
 void			gst_plugin_load_thyself		(xmlNodePtr parent);
