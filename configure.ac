@@ -1164,6 +1164,15 @@ GST_CHECK_FEATURE(LIBRFB, [librfb Remote Framebuffer], rfbsrc, [
   AC_SUBST(LIBRFB_LIBS)
 ])
 
+dnl *** libvisual ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
+GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization plugins], libvisual, [
+  PKG_CHECK_MODULES(LIBVISUAL, libvisual, HAVE_LIBVISUAL="yes", HAVE_LIBVISUAL="no")
+  AC_SUBST(LIBVISUAL_CFLAGS)
+  AC_SUBST(LIBVISUAL_LIBS)
+])
+
+dnl *** mad ***
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
@@ -1809,6 +1818,7 @@ ext/libcaca/Makefile
 ext/libfame/Makefile
 ext/libpng/Makefile
 ext/librfb/Makefile
+ext/libvisual/Makefile
 ext/mad/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
