@@ -50,7 +50,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
         "framerate = (double) [ 1.0, 100.0 ], "
-        "width = (int) [ 0, MAX ], " "height = (int) [ 0, MAX ]")
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
 enum
@@ -655,8 +655,8 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
       "red_mask", G_TYPE_INT, xcontext->visual->red_mask,
       "green_mask", G_TYPE_INT, xcontext->visual->green_mask,
       "blue_mask", G_TYPE_INT, xcontext->visual->blue_mask,
-      "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
 
   g_mutex_unlock (ximagesink->x_lock);

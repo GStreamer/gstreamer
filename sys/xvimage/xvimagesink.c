@@ -51,11 +51,11 @@ static GstStaticPadTemplate gst_xvimagesink_sink_template_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
         "framerate = (double) [ 1.0, 100.0 ], "
-        "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ]; "
+        "width = (int) [ 1, MAX ], "
+        "height = (int) [ 1, MAX ]; "
         "video/x-raw-yuv, "
         "framerate = (double) [ 1.0, 100.0 ], "
-        "width = (int) [ 0, MAX ], " "height = (int) [ 0, MAX ]")
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
 enum
@@ -653,8 +653,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
             "blue_mask", G_TYPE_INT, formats[i].red_mask,
             "green_mask", G_TYPE_INT, formats[i].green_mask,
             "red_mask", G_TYPE_INT, formats[i].blue_mask,
-            "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+            "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
 
         /* For RGB caps we store them and the image 
@@ -677,8 +677,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
       case XvYUV:
         format_caps = gst_caps_new_simple ("video/x-raw-yuv",
             "format", GST_TYPE_FOURCC, formats[i].id,
-            "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+            "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL);
         break;
       default:
@@ -1041,6 +1041,8 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "pixel_height", &xvimagesink->pixel_height);
 
   /* Creating our window and our image */
+  g_assert (GST_VIDEOSINK_WIDTH (xvimagesink) > 0);
+  g_assert (GST_VIDEOSINK_HEIGHT (xvimagesink) > 0);
   if (!xvimagesink->xwindow)
     xvimagesink->xwindow = gst_xvimagesink_xwindow_new (xvimagesink,
         GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
