@@ -259,7 +259,8 @@ gst_wavenc_stop_file (GstWavEnc * wavenc)
   GstEvent *event;
   GstBuffer *outbuf;
 
-  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, 0);
+  event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES,
+      (guint64) 0, GST_FORMAT_UNDEFINED);
   gst_pad_push (wavenc->srcpad, GST_DATA (event));
 
   outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
