@@ -1,3 +1,11 @@
+2004-06-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/oggvorbisenc.c: (gst_oggvorbisenc_class_init),
+	(gst_oggvorbisenc_setup):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_class_init),
+	(gst_vorbisenc_setup):
+	  resolve ambiguities in code and description
+
 2004-06-24  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_start), (gst_alsa_xrun_recovery):
