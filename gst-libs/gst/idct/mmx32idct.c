@@ -59,7 +59,7 @@
 /*   the (3rd) step uses different shift&round constants (explained later.) */
 /* */
 /*   Also note that the intermediate transpose (2) would not be neccessary, */
-/*   if the subsequent operation were a iDCT-column transformation.  Since */
+/*   if the subsequent operation were an iDCT-column transformation.  Since */
 /*   we only have the iDCT-row transform, we transpose the intermediate */
 /*   matrix and use the iDCT-row transform a 2nd time. */
 /* */
