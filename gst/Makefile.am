@@ -9,9 +9,11 @@ GSTARCH_SRCS =
 endif
 
 if USE_GLIB2
-GST_OBJECT_MODEL_SRC = gstmarshal.c gstmarshal.h
+GST_OBJECT_MODEL_SRC = gstmarshal.c
+GST_OBJECT_MODEL_HDR = gstmarshal.h
 else
-GST_OBJECT_MODEL_SRC = gobject2gtk.c gobject2gtk.h
+GST_OBJECT_MODEL_SRC = gobject2gtk.c
+GST_OBJECT_MODEL_HDR = gobject2gtk.h
 endif
 
 if GST_DISABLE_LOADSAVE
@@ -151,6 +153,7 @@ libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
 	cothreads.h		\
 	gst.h			\
+	$(GST_OBJECT_MODEL_HDR)	\
 	gstobject.h		\
 	gsttypes.h		\
 	gstautoplug.h		\
