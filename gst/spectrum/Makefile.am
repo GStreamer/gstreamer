@@ -5,7 +5,7 @@ plugin_LTLIBRARIES = libgstspectrum.la
 libgstspectrum_la_SOURCES = gstspectrum.c fix_fft.c
 libgstspectrum_la_CFLAGS = $(GST_CFLAGS)
 libgstspectrum_la_LIBADD = $(GST_LIBS)
-libgstspectrum_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstspectrum_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstspectrum.h
 

@@ -5,7 +5,7 @@ plugin_LTLIBRARIES = libgstplayondemand.la
 libgstplayondemand_la_SOURCES = gstplayondemand.c
 libgstplayondemand_la_CFLAGS = $(GST_CFLAGS)
 libgstplayondemand_la_LIBADD = $(GST_LIBS)
-libgstplayondemand_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstplayondemand_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstplayondemand.h filter.func
 

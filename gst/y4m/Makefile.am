@@ -5,6 +5,6 @@ plugin_LTLIBRARIES = libgsty4mencode.la
 libgsty4mencode_la_SOURCES = gsty4mencode.c
 libgsty4mencode_la_CFLAGS = $(GST_CFLAGS)
 libgsty4mencode_la_LIBADD = $(GST_LIBS)
-libgsty4mencode_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgsty4mencode_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gsty4mencode.h

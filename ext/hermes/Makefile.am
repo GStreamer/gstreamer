@@ -17,6 +17,6 @@ endif
 libgstcolorspace_la_SOURCES = gstcolorspace.c yuv2yuv.c yuv2rgb.c rgb2yuv.c $(ARCHSRCS)
 libgstcolorspace_la_CFLAGS = $(GST_CFLAGS)
 libgstcolorspace_la_LIBADD = $(GST_LIBS) $(PLUGIN_EXTRA_LIBS)
-libgstcolorspace_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@
+libgstcolorspace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstcolorspace.h yuv2rgb.h
