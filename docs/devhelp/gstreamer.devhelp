@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <book title="GStreamer Library Reference Manual (Core)"
       name="gstreamer"
-      base="/usr/share/doc/gstreamer-devel-0.3.3.3/html/gstreamer"
+      base="/usr/share/doc/gstreamer-devel-0.3.4/html/gstreamer"
       link="book1.html">
 
 <chapters>
