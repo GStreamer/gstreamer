@@ -585,6 +585,11 @@ AC_MSG_CHECKING(mpeg2dec library)
 AC_CHECK_LIB(mpeg2, mpeg2_init, HAVE_MPEG2DEC=yes, HAVE_MPEG2DEC=no, )
 AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 
+dnl Check for a52dec
+AC_MSG_CHECKING(a52dec library)
+AC_CHECK_LIB(a52, a52_init, HAVE_A52DEC=yes, HAVE_A52DEC=no, )
+AC_CHECK_HEADER(a52dec/a52.h, :, HAVE_A52DEC=no)
+
 dnl Check for sidplay
 AC_PATH_LIBSIDPLAY
 
@@ -946,6 +951,10 @@ if test "x$HAVE_MPEG2DEC" = xyes; then
   AC_DEFINE(HAVE_MPEG2DEC)
 fi
 
+if test "x$HAVE_A52DEC" = xyes; then
+  AC_DEFINE(HAVE_A52DEC)
+fi
+
 if test "x$HAVE_FLACLIB" = xyes; then
   AC_DEFINE(HAVE_FLACLIB)
 fi
@@ -996,6 +1005,7 @@ AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
+AM_CONDITIONAL(HAVE_A52DEC,         test "x$HAVE_A52DEC" = "xyes")
 dnl thomas : the next line gives errors, this is how it is in CVS
 dnl AM_CONDITIONAL(HAVE_FLAC,      	    test "x$HAVE_FLAC" = "xyes")
 dnl thomas : the next line gives errors as well, I commented it
@@ -1134,6 +1144,7 @@ libs/putbits/Makefile
 libs/idct/Makefile
 libs/audio/Makefile
 plugins/Makefile
+plugins/a52dec/Makefile
 plugins/aasink/Makefile
 plugins/alsa/Makefile
 plugins/au/Makefile

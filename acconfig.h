@@ -39,6 +39,7 @@
 #undef HAVE_LIBSDL
 #undef HAVE_LIBHERMES
 #undef HAVE_NASM
+#undef HAVE_A52DEC
 #undef HAVE_MPEG2DEC
 //thomas: commented out  #undef HAVE_FLAC
 #undef HAVE_FLACLIB
