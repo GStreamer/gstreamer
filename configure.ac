@@ -68,6 +68,12 @@ AC_ISC_POSIX
 
 AC_HEADER_STDC([])
 
+dnl define correct errorlevel for debugging messages. We want to have GST_ERROR
+dnl messages printed when running cvs builds
+if test "x$GST_CVS" = "xyes"; then
+  AC_DEFINE(GST_LEVEL_DEFAULT, GST_LEVEL_ERROR, [Default errorlevel to use])
+fi
+
 dnl ############################################
 dnl # Super Duper options for plug-in building #
 dnl ############################################
