@@ -335,6 +335,7 @@ gst_alsa_sink_loop (GstElement * element)
   g_return_if_fail (sink != NULL);
 
 sink_restart:
+  g_print ("start: %p, %u\n", sink->data[0], sink->size[0]);
 
   avail = gst_alsa_update_avail (this);
   if (avail == -EPIPE)
@@ -441,7 +442,7 @@ sink_restart:
           sink->buf[i] = NULL;
           continue;
         } else if (sample_diff < 0) {
-          gint difference = gst_alsa_samples_to_bytes (this, -samplestamp);
+          gint difference = gst_alsa_samples_to_bytes (this, -sample_diff);
 
           GST_INFO_OBJECT (this,
               "Skipping %lu samples to resync: sample %lu expected, but got %ld",
@@ -475,6 +476,7 @@ sink_restart:
     }
 
     /* FIXME: lotsa stuff can have happened while fetching data. Do we need to check something? */
+    g_print ("transmit: %p, %u\n", sink->data[0], sink->size[0]);
 
     /* put this data into alsa */
     if ((copied = this->transmit (this, &avail)) < 0)
