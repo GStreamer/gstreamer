@@ -862,8 +862,8 @@ plugin_init (GModule *module, GstPlugin *plugin)
 	guint i;
   
   /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
+/*  if (!gst_library_load ("gstbytestream"))
+    return FALSE;*/
   
   factory = gst_element_factory_new ("modplug", GST_TYPE_MODPLUG, &modplug_details);
   g_return_val_if_fail (factory != NULL, FALSE);
