@@ -1,3 +1,11 @@
+2004-05-08 Iain <iain@prettypeople.org>
+
+	* gst/wavparse/gstwavparse.[ch]: Rewrote to use RiffRead instead.
+	* gst-libs/gst/riff/riff-read.c (gst_riff_read_peek_head): Unstatic it
+	(gst_riff_read_element_data): Ditto, and added a got_bytes argument to
+	return the length that was read.
+	(gst_riff_read_strf_auds): Allow fmt tags as well.
+
 2004-05-07  David Schleef  <ds@schleef.org>
 
 	* ext/faad/gstfaad.c: (gst_faad_sinkconnect): HACK to correct
