@@ -75,7 +75,7 @@ mp3_typefind(GstBuffer *buf, gpointer private)
     return NULL;
 
   caps = gst_caps_new ("mp3_typefind", "audio/mp3", NULL);
-//  gst_caps_set(caps,"layer",GST_PROPS_INT(4-((head>>17)&0x3)));
+  /* gst_caps_set(caps,"layer",GST_PROPS_INT(4-((head>>17)&0x3))); */
 
   return caps;
 }
@@ -93,7 +93,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
     i++;
   }
 
-//  gst_info("gsttypes: loaded %d mp3 types\n",i);
+  /* gst_info("gsttypes: loaded %d mp3 types\n",i); */
 
   return TRUE;
 }
