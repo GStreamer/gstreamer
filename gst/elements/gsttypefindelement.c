@@ -152,9 +152,7 @@ gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability
   GST_INFO_OBJECT (typefind, "found caps %s", caps_str);
   g_free (caps_str);
   typefind->caps = gst_caps_copy (caps);
-  if (gst_pad_try_set_caps (typefind->src, caps) < GST_PAD_LINK_OK) {
-    gst_element_error (GST_ELEMENT (typefind), "could not set caps on source pad");
-  }
+  gst_pad_set_explicit_caps (typefind->src, gst_caps_copy(caps));
 }
 static void
 gst_type_find_element_base_init (gpointer g_class)
@@ -216,6 +214,7 @@ gst_type_find_element_init (GTypeInstance *instance, gpointer g_class)
       gst_static_pad_template_get (&type_find_element_src_template), "src");
   gst_pad_set_event_function (typefind->src, gst_type_find_element_src_event);
   gst_pad_set_event_mask_function (typefind->src, gst_type_find_element_src_event_mask);
+  gst_pad_use_explicit_caps (typefind->src);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->src);
 
   typefind->caps = NULL;

@@ -1268,10 +1268,11 @@ GstPadLinkReturn
 gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
 {
   GstPadLink *link;
+  GstPadLink *oldlink;
   GstPadLinkReturn ret;
 
   g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (!GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING),
       GST_PAD_LINK_REFUSED);
 
@@ -1311,8 +1312,9 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
   }
 
-  if (GST_REAL_PAD(pad)->link->filtercaps) {
-    link->filtercaps = gst_caps_copy (GST_REAL_PAD(pad)->link->filtercaps);
+  oldlink = GST_REAL_PAD(pad)->link;
+  if (oldlink && oldlink->filtercaps) {
+    link->filtercaps = gst_caps_copy (oldlink->filtercaps);
   }
   if (link->srcpad == pad) {
     link->srccaps = gst_caps_copy(caps);

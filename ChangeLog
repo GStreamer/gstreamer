@@ -1,5 +1,13 @@
 2004-01-03  David Schleef  <ds@schleef.org>
 
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_have_type), (gst_type_find_element_init):
+	Use gst_pad_use_explicit_caps for src pad.
+	* gst/gstpad.c: (gst_pad_try_set_caps):  Check that link exists
+	before using it.
+
+2004-01-03  David Schleef  <ds@schleef.org>
+
 	* gst/gstelement.c: (gst_element_link_pads_filtered),
 	(gst_element_negotiate_pads): Fix to allow DELAYED to indicate
 	that linking was successful.
