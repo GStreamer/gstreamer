@@ -1464,6 +1464,7 @@ GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
             AC_SUBST(SPEEX_CFLAGS)
             AC_SUBST(SPEEX_LIBS)
         ],[
+            HAVE_SPEEX="no"
             AC_MSG_NOTICE(You need at least 1.0.4 to compile the speex plugin)
         ])
       ])
