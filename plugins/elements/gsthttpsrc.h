@@ -45,7 +45,7 @@ GstElementDetails gst_httpsrc_details;
 #define GST_IS_HTTPSRC(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_HTTPSRC))
 #define GST_IS_HTTPSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_HTTPSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_HTTPSRC))
 
 // NOTE: per-element flags start with 16 for now
 typedef enum {

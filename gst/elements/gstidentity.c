@@ -43,18 +43,20 @@ enum {
 };
 
 
-static void gst_identity_class_init(GstIdentityClass *klass);
-static void gst_identity_init(GstIdentity *identity);
-static void gst_identity_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_identity_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void gst_identity_class_init	(GstIdentityClass *klass);
+static void gst_identity_init		(GstIdentity *identity);
 
-void gst_identity_chain(GstPad *pad,GstBuffer *buf);
+static void gst_identity_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void gst_identity_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+
+static void gst_identity_chain		(GstPad *pad, GstBuffer *buf);
 
 static GstFilterClass *parent_class = NULL;
 //static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_identity_get_type(void) {
+gst_identity_get_type (void) 
+{
   static GtkType identity_type = 0;
 
   if (!identity_type) {
@@ -68,19 +70,21 @@ gst_identity_get_type(void) {
       (GtkArgGetFunc)gst_identity_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    identity_type = gtk_type_unique(GST_TYPE_FILTER,&identity_info);
+    identity_type = gtk_type_unique (GST_TYPE_FILTER, &identity_info);
   }
   return identity_type;
 }
 
-static void gst_identity_class_init(GstIdentityClass *klass) {
+static void 
+gst_identity_class_init (GstIdentityClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
   GstFilterClass *gstfilter_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstfilter_class = (GstFilterClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_FILTER);
+  parent_class = gtk_type_class (GST_TYPE_FILTER);
 
   //gtk_object_add_arg_type("GstIdentity::control", GTK_TYPE_INT,
    //                       GTK_ARG_READWRITE, ARG_CONTROL);
@@ -89,46 +93,49 @@ static void gst_identity_class_init(GstIdentityClass *klass) {
   //gtkobject_class->get_arg = gst_identity_get_arg;
 }
 
-static void gst_identity_init(GstIdentity *identity) {
-  identity->sinkpad = gst_pad_new("sink",GST_PAD_SINK);
-  gst_element_add_pad(GST_ELEMENT(identity),identity->sinkpad);
-  gst_pad_set_chain_function(identity->sinkpad,gst_identity_chain);
-  identity->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_element_add_pad(GST_ELEMENT(identity),identity->srcpad);
+static void 
+gst_identity_init (GstIdentity *identity) 
+{
+  identity->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_element_add_pad (GST_ELEMENT (identity), identity->sinkpad);
+  gst_pad_set_chain_function (identity->sinkpad, gst_identity_chain);
+  
+  identity->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (identity), identity->srcpad);
 
   identity->control = 0;
 }
 
-GstElement *gst_identity_new(gchar *name) {
-  GstElement *identity = GST_ELEMENT(gtk_type_new(GST_TYPE_IDENTITY));
-  gst_element_set_name(GST_ELEMENT(identity),name);
-  return identity;
-}
-
-void gst_identity_chain(GstPad *pad,GstBuffer *buf) {
+static void 
+gst_identity_chain (GstPad *pad, GstBuffer *buf) 
+{
   GstIdentity *identity;
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (buf != NULL);
 
-  identity = GST_IDENTITY(pad->parent);
+  identity = GST_IDENTITY (pad->parent);
 //  g_print("gst_identity_chain: got buffer in '%s'\n",
 //          gst_element_get_name(GST_ELEMENT(identity)));
   g_print("i");
-  gst_pad_push(identity->srcpad,buf);
+  
+  gst_pad_push (identity->srcpad, buf);
 }
 
-static void gst_identity_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_identity_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstIdentity *identity;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_IDENTITY(object));
-  identity = GST_IDENTITY(object);
+  g_return_if_fail (GST_IS_IDENTITY (object));
+  
+  identity = GST_IDENTITY (object);
 
   switch(id) {
     case ARG_CONTROL:
-      identity->control = GTK_VALUE_INT(*arg);
+      identity->control = GTK_VALUE_INT (*arg);
       break;
     default:
       break;
@@ -139,12 +146,13 @@ static void gst_identity_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   GstIdentity *identity;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_IDENTITY(object));
-  identity = GST_IDENTITY(object);
+  g_return_if_fail (GST_IS_IDENTITY (object));
+  
+  identity = GST_IDENTITY (object);
 
   switch (id) {
     case ARG_CONTROL:
-      GTK_VALUE_INT(*arg) = identity->control;
+      GTK_VALUE_INT (*arg) = identity->control;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

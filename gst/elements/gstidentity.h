@@ -43,7 +43,7 @@ GstElementDetails gst_identity_details;
 #define GST_IS_IDENTITY(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_IDENTITY))
 #define GST_IS_IDENTITY_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_IDENTITY)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_IDENTITY))
 
 typedef struct _GstIdentity GstIdentity;
 typedef struct _GstIdentityClass GstIdentityClass;

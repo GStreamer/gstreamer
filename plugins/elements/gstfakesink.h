@@ -43,7 +43,7 @@ GstElementDetails gst_fakesink_details;
 #define GST_IS_FAKESINK(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_FAKESINK))
 #define GST_IS_FAKESINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESINK))
 
 typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;

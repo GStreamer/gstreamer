@@ -43,18 +43,20 @@ enum {
 };
 
 
-static void gst_fdsink_class_init(GstFdSinkClass *klass);
-static void gst_fdsink_init(GstFdSink *fdsink);
-static void gst_fdsink_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_fdsink_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void gst_fdsink_class_init	(GstFdSinkClass *klass);
+static void gst_fdsink_init		(GstFdSink *fdsink);
 
-void gst_fdsink_chain(GstPad *pad,GstBuffer *buf);
+static void gst_fdsink_set_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void gst_fdsink_get_arg		(GtkObject *object, GtkArg *arg, guint id);
+
+static void gst_fdsink_chain		(GstPad *pad,GstBuffer *buf);
 
 static GstSinkClass *parent_class = NULL;
 //static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_fdsink_get_type(void) {
+gst_fdsink_get_type (void) 
+{
   static GtkType fdsink_type = 0;
 
   if (!fdsink_type) {
@@ -68,88 +70,90 @@ gst_fdsink_get_type(void) {
       (GtkArgGetFunc)gst_fdsink_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    fdsink_type = gtk_type_unique(GST_TYPE_SINK,&fdsink_info);
+    fdsink_type = gtk_type_unique (GST_TYPE_SINK, &fdsink_info);
   }
   return fdsink_type;
 }
 
 static void
-gst_fdsink_class_init(GstFdSinkClass *klass) {
+gst_fdsink_class_init (GstFdSinkClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
   GstSinkClass *gstsink_class;
 
   gtkobject_class = (GtkObjectClass*)klass;
   gstsink_class = (GstSinkClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_SINK);
+  parent_class = gtk_type_class (GST_TYPE_SINK);
 
-  gtk_object_add_arg_type("GstFdSink::fd", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_FD);
+  gtk_object_add_arg_type ("GstFdSink::fd", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_FD);
 
   gtkobject_class->set_arg = gst_fdsink_set_arg;
   gtkobject_class->get_arg = gst_fdsink_get_arg;
 }
 
-static void gst_fdsink_init(GstFdSink *fdsink) {
-  fdsink->sinkpad = gst_pad_new("sink",GST_PAD_SINK);
-  gst_element_add_pad(GST_ELEMENT(fdsink),fdsink->sinkpad);
-  gst_pad_set_chain_function(fdsink->sinkpad,gst_fdsink_chain);
+static void 
+gst_fdsink_init (GstFdSink *fdsink) 
+{
+  fdsink->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_element_add_pad (GST_ELEMENT (fdsink), fdsink->sinkpad);
+  gst_pad_set_chain_function (fdsink->sinkpad, gst_fdsink_chain);
 
   fdsink->fd = 1;
 }
 
-GstElement *gst_fdsink_new(gchar *name) {
-  GstElement *fdsink = GST_ELEMENT(gtk_type_new(GST_TYPE_FDSINK));
-  gst_element_set_name(GST_ELEMENT(fdsink),name);
-  return fdsink;
-}
-
-GstElement *gst_fdsink_new_with_fd(gchar *name,gint fd) {
-  GstElement *fdsink = gst_fdsink_new(name);
-  gtk_object_set(GTK_OBJECT(fdsink),"fd",fd,NULL);
-  return fdsink;
-}
-
-void gst_fdsink_chain(GstPad *pad,GstBuffer *buf) {
+static void 
+gst_fdsink_chain (GstPad *pad, GstBuffer *buf) 
+{
   GstFdSink *fdsink;
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (buf != NULL);
 
-  fdsink = GST_FDSINK(pad->parent);
-  g_return_if_fail(fdsink->fd >= 0);
-  if (GST_BUFFER_DATA(buf))
-    write(fdsink->fd,GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf));
-  gst_buffer_unref(buf);
+  fdsink = GST_FDSINK (pad->parent);
+  
+  g_return_if_fail (fdsink->fd >= 0);
+  
+  if (GST_BUFFER_DATA (buf))
+    write (fdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  
+  gst_buffer_unref (buf);
 }
 
-static void gst_fdsink_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_fdsink_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstFdSink *fdsink;
    
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_FDSINK(object));
-  fdsink = GST_FDSINK(object);
+  g_return_if_fail (GST_IS_FDSINK (object));
+  
+  fdsink = GST_FDSINK (object);
 
   switch(id) {
     case ARG_FD:
-      fdsink->fd = GTK_VALUE_INT(*arg);
+      fdsink->fd = GTK_VALUE_INT (*arg);
       break;
     default:
       break;
   }
 }
 
-static void gst_fdsink_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_fdsink_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstFdSink *fdsink;
    
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_FDSINK(object));
-  fdsink = GST_FDSINK(object);
+  g_return_if_fail (GST_IS_FDSINK (object));
+  
+  fdsink = GST_FDSINK (object);
 
   switch(id) {
     case ARG_FD:
-      GTK_VALUE_INT(*arg) = fdsink->fd;
+      GTK_VALUE_INT (*arg) = fdsink->fd;
       break;
     default:
       break;

@@ -43,7 +43,7 @@ GstElementDetails gst_fdsink_details;
 #define GST_IS_FDSINK(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_FDSINK))
 #define GST_IS_FDSINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSINK))
 
 typedef struct _GstFdSink GstFdSink;
 typedef struct _GstFdSinkClass GstFdSinkClass;

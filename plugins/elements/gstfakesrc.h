@@ -43,7 +43,7 @@ GstElementDetails gst_fakesrc_details;
 #define GST_IS_FAKESRC(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_FAKESRC))
 #define GST_IS_FAKESRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKESRC))
 
 typedef struct _GstFakeSrc GstFakeSrc;
 typedef struct _GstFakeSrcClass GstFakeSrcClass;

@@ -53,23 +53,25 @@ enum {
 };
 
 
-static void gst_audiosrc_class_init(GstAudioSrcClass *klass);
-static void gst_audiosrc_init(GstAudioSrc *audiosrc);
-static void gst_audiosrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_audiosrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
-static GstElementStateReturn gst_audiosrc_change_state(GstElement *element);
+static void 			gst_audiosrc_class_init		(GstAudioSrcClass *klass);
+static void 			gst_audiosrc_init		(GstAudioSrc *audiosrc);
 
-static void gst_audiosrc_close_audio(GstAudioSrc *src);
-static gboolean gst_audiosrc_open_audio(GstAudioSrc *src);
-void gst_audiosrc_sync_parms(GstAudioSrc *audiosrc);
+static void 			gst_audiosrc_set_arg		(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_audiosrc_get_arg		(GtkObject *object, GtkArg *arg, guint id);
+static GstElementStateReturn 	gst_audiosrc_change_state	(GstElement *element);
 
-void gst_audiosrc_push(GstSrc *src);
+static void 			gst_audiosrc_close_audio	(GstAudioSrc *src);
+static gboolean 		gst_audiosrc_open_audio		(GstAudioSrc *src);
+static void 			gst_audiosrc_sync_parms		(GstAudioSrc *audiosrc);
+
+static void 			gst_audiosrc_push		(GstSrc *src);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_audiosrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_audiosrc_get_type(void) {
+gst_audiosrc_get_type (void) 
+{
   static GtkType audiosrc_type = 0;
 
   if (!audiosrc_type) {
@@ -83,13 +85,14 @@ gst_audiosrc_get_type(void) {
       (GtkArgGetFunc)gst_audiosrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    audiosrc_type = gtk_type_unique(GST_TYPE_SRC,&audiosrc_info);
+    audiosrc_type = gtk_type_unique (GST_TYPE_SRC, &audiosrc_info);
   }
   return audiosrc_type;
 }
 
 static void
-gst_audiosrc_class_init(GstAudioSrcClass *klass) {
+gst_audiosrc_class_init (GstAudioSrcClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
   GstSrcClass *gstsrc_class;
@@ -98,18 +101,18 @@ gst_audiosrc_class_init(GstAudioSrcClass *klass) {
   gstelement_class = (GstElementClass*)klass;
   gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_SRC);
 
-  gtk_object_add_arg_type("GstAudioSrc::bytes_per_read", GTK_TYPE_ULONG,
-                          GTK_ARG_READWRITE, ARG_BYTESPERREAD);
-  gtk_object_add_arg_type("GstAudioSrc::curoffset", GTK_TYPE_ULONG,
-                          GTK_ARG_READABLE, ARG_CUROFFSET);
-  gtk_object_add_arg_type("GstAudioSrc::format", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_FORMAT);
-  gtk_object_add_arg_type("GstAudioSrc::channels", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_CHANNELS);
-  gtk_object_add_arg_type("GstAudioSrc::frequency", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_FREQUENCY);
+  gtk_object_add_arg_type ("GstAudioSrc::bytes_per_read", GTK_TYPE_ULONG,
+                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
+  gtk_object_add_arg_type ("GstAudioSrc::curoffset", GTK_TYPE_ULONG,
+                           GTK_ARG_READABLE, ARG_CUROFFSET);
+  gtk_object_add_arg_type ("GstAudioSrc::format", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_FORMAT);
+  gtk_object_add_arg_type ("GstAudioSrc::channels", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_CHANNELS);
+  gtk_object_add_arg_type ("GstAudioSrc::frequency", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_FREQUENCY);
 
   gtkobject_class->set_arg = gst_audiosrc_set_arg;
   gtkobject_class->get_arg = gst_audiosrc_get_arg;
@@ -119,9 +122,11 @@ gst_audiosrc_class_init(GstAudioSrcClass *klass) {
   gstsrc_class->push = gst_audiosrc_push;
 }
 
-static void gst_audiosrc_init(GstAudioSrc *audiosrc) {
-  audiosrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_element_add_pad(GST_ELEMENT(audiosrc),audiosrc->srcpad);
+static void 
+gst_audiosrc_init (GstAudioSrc *audiosrc) 
+{
+  audiosrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (audiosrc), audiosrc->srcpad);
 
   audiosrc->fd = -1;
 
@@ -136,87 +141,93 @@ static void gst_audiosrc_init(GstAudioSrc *audiosrc) {
   audiosrc->seq = 0;
 }
 
-GstElement *gst_audiosrc_new(gchar *name) {
-  GstElement *audiosrc = GST_ELEMENT(gtk_type_new(GST_TYPE_AUDIOSRC));
-  gst_element_set_name(GST_ELEMENT(audiosrc),name);
-  return audiosrc;
-}
-
-void gst_audiosrc_push(GstSrc *src) {
+static void 
+gst_audiosrc_push (GstSrc *src) 
+{
   GstAudioSrc *audiosrc;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail(src != NULL);
-  g_return_if_fail(GST_IS_AUDIOSRC(src));
-  audiosrc = GST_AUDIOSRC(src);
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_AUDIOSRC (src));
+  audiosrc = GST_AUDIOSRC (src);
 
 //  g_print("attempting to read something from soundcard\n");
 
-  buf = gst_buffer_new();
-  g_return_if_fail(buf);
-  GST_BUFFER_DATA(buf) = (gpointer)g_malloc(audiosrc->bytes_per_read);
-  readbytes = read(audiosrc->fd,GST_BUFFER_DATA(buf),
-                   audiosrc->bytes_per_read);
+  buf = gst_buffer_new ();
+  g_return_if_fail (buf);
+  
+  GST_BUFFER_DATA (buf) = (gpointer)g_malloc (audiosrc->bytes_per_read);
+  
+  readbytes = read (audiosrc->fd,GST_BUFFER_DATA (buf),
+                    audiosrc->bytes_per_read);
+  
   if (readbytes == 0) {
-    gst_src_signal_eos(GST_SRC(audiosrc));
+    gst_src_signal_eos (GST_SRC (audiosrc));
     return;
   }
 
-  GST_BUFFER_SIZE(buf) = readbytes;
-  GST_BUFFER_OFFSET(buf) = audiosrc->curoffset;
+  GST_BUFFER_SIZE (buf) = readbytes;
+  GST_BUFFER_OFFSET (buf) = audiosrc->curoffset;
+  
   audiosrc->curoffset += readbytes;
 
 //  gst_buffer_add_meta(buf,GST_META(newmeta));
 
-  gst_pad_push(audiosrc->srcpad,buf);
+  gst_pad_push (audiosrc->srcpad,buf);
 //  g_print("pushed buffer from soundcard of %d bytes\n",readbytes);
 }
 
-static void gst_audiosrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_audiosrc_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstAudioSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_AUDIOSRC(object));
-  src = GST_AUDIOSRC(object);
+  g_return_if_fail (GST_IS_AUDIOSRC (object));
+  
+  src = GST_AUDIOSRC (object);
 
   switch (id) {
     case ARG_BYTESPERREAD:
-      src->bytes_per_read = GTK_VALUE_INT(*arg);
+      src->bytes_per_read = GTK_VALUE_INT (*arg);
       break;
     case ARG_FORMAT:
-      src->format = GTK_VALUE_INT(*arg);
+      src->format = GTK_VALUE_INT (*arg);
       break;
     case ARG_CHANNELS:
-      src->channels = GTK_VALUE_INT(*arg);
+      src->channels = GTK_VALUE_INT (*arg);
       break;
     case ARG_FREQUENCY:
-      src->frequency = GTK_VALUE_INT(*arg);
+      src->frequency = GTK_VALUE_INT (*arg);
       break;
     default:
       break;
   }
 }
 
-static void gst_audiosrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_audiosrc_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstAudioSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_AUDIOSRC(object));
-  src = GST_AUDIOSRC(object);
+  g_return_if_fail (GST_IS_AUDIOSRC (object));
+  
+  src = GST_AUDIOSRC (object);
 
   switch (id) {
     case ARG_BYTESPERREAD:
-      GTK_VALUE_INT(*arg) = src->bytes_per_read;
+      GTK_VALUE_INT (*arg) = src->bytes_per_read;
       break;
     case ARG_FORMAT:
-      GTK_VALUE_INT(*arg) = src->format;
+      GTK_VALUE_INT (*arg) = src->format;
       break;
     case ARG_CHANNELS:
-      GTK_VALUE_INT(*arg) = src->channels;
+      GTK_VALUE_INT (*arg) = src->channels;
       break;
     case ARG_FREQUENCY:
-      GTK_VALUE_INT(*arg) = src->frequency;
+      GTK_VALUE_INT (*arg) = src->frequency;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -224,71 +235,81 @@ static void gst_audiosrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static GstElementStateReturn gst_audiosrc_change_state(GstElement *element) {
-  g_return_val_if_fail(GST_IS_AUDIOSRC(element), FALSE);
+static GstElementStateReturn 
+gst_audiosrc_change_state (GstElement *element) 
+{
+  g_return_val_if_fail (GST_IS_AUDIOSRC (element), FALSE);
 
   /* if going down into NULL state, close the file if it's open */
-  if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET(element,GST_AUDIOSRC_OPEN))
-      gst_audiosrc_close_audio(GST_AUDIOSRC(element));
+  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET (element, GST_AUDIOSRC_OPEN))
+      gst_audiosrc_close_audio (GST_AUDIOSRC (element));
   /* otherwise (READY or higher) we need to open the sound card */
   } else {
-    if (!GST_FLAG_IS_SET(element,GST_AUDIOSRC_OPEN)) { 
-      if (!gst_audiosrc_open_audio(GST_AUDIOSRC(element)))
+    if (!GST_FLAG_IS_SET (element, GST_AUDIOSRC_OPEN)) { 
+      if (!gst_audiosrc_open_audio (GST_AUDIOSRC (element)))
         return GST_STATE_FAILURE;
     }
   }
 
-  if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  
   return GST_STATE_SUCCESS;
 }
 
-static gboolean gst_audiosrc_open_audio(GstAudioSrc *src) {
-  g_return_val_if_fail(!GST_FLAG_IS_SET(src,GST_AUDIOSRC_OPEN), FALSE);
+static gboolean 
+gst_audiosrc_open_audio (GstAudioSrc *src) 
+{
+  g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_AUDIOSRC_OPEN), FALSE);
 
   /* first try to open the sound card */
-  src->fd = open("/dev/dsp",O_RDONLY);
+  src->fd = open("/dev/dsp", O_RDONLY);
 
   /* if we have it, set the default parameters and go have fun */ 
   if (src->fd > 0) {
     int arg = 0x7fff0006;
 
-    if (ioctl(src->fd, SNDCTL_DSP_SETFRAGMENT, &arg)) perror("uh");
+    if (ioctl (src->fd, SNDCTL_DSP_SETFRAGMENT, &arg)) perror("uh");
 
     /* set card state */
-    gst_audiosrc_sync_parms(src);
+    gst_audiosrc_sync_parms (src);
     DEBUG("opened audio\n");
-    GST_FLAG_SET(src,GST_AUDIOSRC_OPEN);
+    
+    GST_FLAG_SET (src, GST_AUDIOSRC_OPEN);
     return TRUE;
   }
 
   return FALSE;
 }
 
-static void gst_audiosrc_close_audio(GstAudioSrc *src) {
-  g_return_if_fail(GST_FLAG_IS_SET(src,GST_AUDIOSRC_OPEN));
+static void 
+gst_audiosrc_close_audio (GstAudioSrc *src) 
+{
+  g_return_if_fail (GST_FLAG_IS_SET (src, GST_AUDIOSRC_OPEN));
 
   close(src->fd);
   src->fd = -1;
 
-  GST_FLAG_UNSET(src,GST_AUDIOSRC_OPEN);
+  GST_FLAG_UNSET (src, GST_AUDIOSRC_OPEN);
 }
 
-void gst_audiosrc_sync_parms(GstAudioSrc *audiosrc) {
+static void 
+gst_audiosrc_sync_parms (GstAudioSrc *audiosrc) 
+{
   audio_buf_info ospace;
   
-  g_return_if_fail(audiosrc != NULL);
-  g_return_if_fail(GST_IS_AUDIOSRC(audiosrc));
-  g_return_if_fail(audiosrc->fd > 0);
+  g_return_if_fail (audiosrc != NULL);
+  g_return_if_fail (GST_IS_AUDIOSRC (audiosrc));
+  g_return_if_fail (audiosrc->fd > 0);
  
-  ioctl(audiosrc->fd,SNDCTL_DSP_RESET,0);
+  ioctl(audiosrc->fd, SNDCTL_DSP_RESET, 0);
  
-  ioctl(audiosrc->fd,SNDCTL_DSP_SETFMT,&audiosrc->format);
-  ioctl(audiosrc->fd,SNDCTL_DSP_CHANNELS,&audiosrc->channels);
-  ioctl(audiosrc->fd,SNDCTL_DSP_SPEED,&audiosrc->frequency);
+  ioctl(audiosrc->fd, SNDCTL_DSP_SETFMT, &audiosrc->format);
+  ioctl(audiosrc->fd, SNDCTL_DSP_CHANNELS, &audiosrc->channels);
+  ioctl(audiosrc->fd, SNDCTL_DSP_SPEED, &audiosrc->frequency);
   
-  ioctl(audiosrc->fd,SNDCTL_DSP_GETOSPACE,&ospace);
+  ioctl(audiosrc->fd, SNDCTL_DSP_GETOSPACE, &ospace);
  
   g_print("setting sound card to %dKHz %d bit %s (%d bytes buffer)\n",
           audiosrc->frequency,audiosrc->format,

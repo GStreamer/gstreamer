@@ -44,7 +44,7 @@ GstElementDetails gst_sinesrc_details;
 #define GST_IS_SINESRC(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_SINESRC))
 #define GST_IS_SINESRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SINESRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_SINESRC))
 
 typedef struct _GstSineSrc GstSineSrc;
 typedef struct _GstSineSrcClass GstSineSrcClass;

@@ -35,13 +35,6 @@ GstElementDetails gst_httpsrc_details = {
   "(C) 1999",
 };
 
-
-static void gst_httpsrc_push(GstSrc *src);
-static gboolean gst_httpsrc_open_url(GstHttpSrc *src);
-static void gst_httpsrc_close_url(GstHttpSrc *src);
-static GstElementStateReturn gst_httpsrc_change_state(GstElement *element);
-
-
 /* HttpSrc signals and args */
 enum {
   /* FILL ME */
@@ -56,17 +49,25 @@ enum {
 };
 
 
-static void gst_httpsrc_class_init(GstHttpSrcClass *klass);
-static void gst_httpsrc_init(GstHttpSrc *httpsrc);
-static void gst_httpsrc_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_httpsrc_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void 			gst_httpsrc_class_init	(GstHttpSrcClass *klass);
+static void 			gst_httpsrc_init	(GstHttpSrc *httpsrc);
 
+static void 			gst_httpsrc_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_httpsrc_get_arg	(GtkObject *object, GtkArg *arg, guint id);
+
+static void 			gst_httpsrc_push	(GstSrc *src);
+
+static gboolean 		gst_httpsrc_open_url	(GstHttpSrc *src);
+static void 			gst_httpsrc_close_url	(GstHttpSrc *src);
+
+static GstElementStateReturn 	gst_httpsrc_change_state(GstElement *element);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_httpsrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_httpsrc_get_type(void) {
+gst_httpsrc_get_type (void) 
+{
   static GtkType httpsrc_type = 0;
 
   if (!httpsrc_type) {
@@ -80,13 +81,14 @@ gst_httpsrc_get_type(void) {
       (GtkArgGetFunc)gst_httpsrc_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    httpsrc_type = gtk_type_unique(GST_TYPE_SRC,&httpsrc_info);
+    httpsrc_type = gtk_type_unique (GST_TYPE_SRC, &httpsrc_info);
   }
   return httpsrc_type;
 }
 
 static void
-gst_httpsrc_class_init(GstHttpSrcClass *klass) {
+gst_httpsrc_class_init (GstHttpSrcClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
   GstSrcClass *gstsrc_class;
@@ -95,13 +97,13 @@ gst_httpsrc_class_init(GstHttpSrcClass *klass) {
   gstelement_class = (GstElementClass*)klass;
   gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_SRC);
 
 
-  gtk_object_add_arg_type("GstHttpSrc::location", GTK_TYPE_STRING,
-                          GTK_ARG_READWRITE, ARG_LOCATION);
-  gtk_object_add_arg_type("GstHttpSrc::bytesperread", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_BYTESPERREAD);
+  gtk_object_add_arg_type ("GstHttpSrc::location", GTK_TYPE_STRING,
+                           GTK_ARG_READWRITE, ARG_LOCATION);
+  gtk_object_add_arg_type ("GstHttpSrc::bytesperread", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_BYTESPERREAD);
 
   gtkobject_class->set_arg = gst_httpsrc_set_arg;
   gtkobject_class->get_arg = gst_httpsrc_get_arg;
@@ -112,9 +114,11 @@ gst_httpsrc_class_init(GstHttpSrcClass *klass) {
   gstsrc_class->push_region = NULL;
 }
 
-static void gst_httpsrc_init(GstHttpSrc *httpsrc) {
-  httpsrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_element_add_pad(GST_ELEMENT(httpsrc),httpsrc->srcpad);
+static void 
+gst_httpsrc_init (GstHttpSrc *httpsrc) 
+{
+  httpsrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (httpsrc), httpsrc->srcpad);
 
   httpsrc->url = NULL;
   httpsrc->request = NULL;
@@ -123,115 +127,132 @@ static void gst_httpsrc_init(GstHttpSrc *httpsrc) {
   httpsrc->bytes_per_read = 4096;
 }
 
-static void gst_httpsrc_push(GstSrc *src) {
+static void 
+gst_httpsrc_push (GstSrc *src) 
+{
   GstHttpSrc *httpsrc;
   GstBuffer *buf;
   glong readbytes;
 
-  g_return_if_fail(src != NULL);
-  g_return_if_fail(GST_IS_HTTPSRC(src));
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_HTTPSRC (src));
 //  g_return_if_fail(GST_FLAG_IS_SET(src,GST_));
-  httpsrc = GST_HTTPSRC(src);
+  httpsrc = GST_HTTPSRC (src);
 
-  buf = gst_buffer_new();
-  GST_BUFFER_DATA(buf) = (gpointer)malloc(httpsrc->bytes_per_read);
-  readbytes = read(httpsrc->fd,GST_BUFFER_DATA(buf),httpsrc->bytes_per_read);
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = (gpointer)malloc (httpsrc->bytes_per_read);
+  
+  readbytes = read (httpsrc->fd, GST_BUFFER_DATA (buf), httpsrc->bytes_per_read);
+  
   if (readbytes == 0) {
-    gst_src_signal_eos(GST_SRC(httpsrc));
+    gst_src_signal_eos (GST_SRC (httpsrc));
     return;
   }
 
   if (readbytes < httpsrc->bytes_per_read) {
     // FIXME: set the buffer's EOF bit here
   }
-  GST_BUFFER_OFFSET(buf) = httpsrc->curoffset;
-  GST_BUFFER_SIZE(buf) = readbytes;
+  GST_BUFFER_OFFSET (buf) = httpsrc->curoffset;
+  GST_BUFFER_SIZE (buf) = readbytes;
+  
   httpsrc->curoffset += readbytes;
 
-  gst_pad_push(httpsrc->srcpad,buf);
+  gst_pad_push (httpsrc->srcpad, buf);
 }
 
-static gboolean gst_httpsrc_open_url(GstHttpSrc *httpsrc) {
+static gboolean 
+gst_httpsrc_open_url (GstHttpSrc *httpsrc) 
+{
   gint status;
 
-  g_return_val_if_fail(!GST_FLAG_IS_SET(httpsrc,GST_HTTPSRC_OPEN), FALSE);
-  g_return_val_if_fail(httpsrc->url != NULL, FALSE);
+  g_return_val_if_fail (!GST_FLAG_IS_SET (httpsrc, GST_HTTPSRC_OPEN), FALSE);
+  g_return_val_if_fail (httpsrc->url != NULL, FALSE);
 
-  httpsrc->request = ghttp_request_new();
-  ghttp_set_uri(httpsrc->request,httpsrc->url);
-  ghttp_set_sync(httpsrc->request,ghttp_async);
-  ghttp_set_header(httpsrc->request,"User-Agent","GstHttpSrc");
-  ghttp_prepare(httpsrc->request);
+  httpsrc->request = ghttp_request_new ();
+  
+  ghttp_set_uri (httpsrc->request, httpsrc->url);
+  ghttp_set_sync (httpsrc->request, ghttp_async);
+  ghttp_set_header (httpsrc->request, "User-Agent", "GstHttpSrc");
+  ghttp_prepare (httpsrc->request);
 
   /* process everything up to the actual data stream */
   /* FIXME: should be in preroll, but hey */
   status = 0;
-  while ((ghttp_get_status(httpsrc->request).proc != ghttp_proc_response)
+  while ((ghttp_get_status (httpsrc->request).proc != ghttp_proc_response)
          && (status >= 0)) {
-    status = ghttp_process(httpsrc->request);
+    status = ghttp_process (httpsrc->request);
   }
 
   /* get the fd so we can read data ourselves */
-  httpsrc->fd = ghttp_get_socket(httpsrc->request);
-  GST_FLAG_SET(httpsrc,GST_HTTPSRC_OPEN);
+  httpsrc->fd = ghttp_get_socket (httpsrc->request);
+  
+  GST_FLAG_SET (httpsrc, GST_HTTPSRC_OPEN);
+  
   return TRUE;
 }
 
 /* unmap and close the file */
-static void gst_httpsrc_close_url(GstHttpSrc *src) {  
-  g_return_if_fail(GST_FLAG_IS_SET(src,GST_HTTPSRC_OPEN));
-
-  g_return_if_fail(src->fd > 0);
+static void 
+gst_httpsrc_close_url (GstHttpSrc *src) 
+{  
+  g_return_if_fail (GST_FLAG_IS_SET (src, GST_HTTPSRC_OPEN));
+  g_return_if_fail (src->fd > 0);
  
   close(src->fd);
   src->fd = 0;
 
-  GST_FLAG_UNSET(src,GST_HTTPSRC_OPEN);
+  GST_FLAG_UNSET (src, GST_HTTPSRC_OPEN);
 }
 
-static void gst_httpsrc_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_httpsrc_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstHttpSrc *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_HTTPSRC(object));
-  src = GST_HTTPSRC(object);
+  g_return_if_fail (GST_IS_HTTPSRC (object));
+  
+  src = GST_HTTPSRC (object);
 
   switch(id) {
     case ARG_LOCATION:
       /* the element must not be playing in order to do this */
-      g_return_if_fail(GST_STATE(src) < GST_STATE_PLAYING);
+      g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
 
-      if (src->url) g_free(src->url);
+      if (src->url) g_free (src->url);
       /* clear the url if we get a NULL (is that possible?) */
-      if (GTK_VALUE_STRING(*arg) == NULL) {
-        gst_element_set_state(GST_ELEMENT(object),GST_STATE_NULL);
+      if (GTK_VALUE_STRING (*arg) == NULL) {
+        gst_element_set_state (GST_ELEMENT (object),GST_STATE_NULL);
         src->url = NULL;
       /* otherwise set the new url */
       } else {
-        src->url = g_strdup(GTK_VALUE_STRING(*arg));
+        src->url = g_strdup (GTK_VALUE_STRING (*arg));
       }
       break;
     case ARG_BYTESPERREAD:
-      src->bytes_per_read = GTK_VALUE_INT(*arg);
+      src->bytes_per_read = GTK_VALUE_INT (*arg);
       break;
     default:
       break;
   }
 }
 
-static void gst_httpsrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_httpsrc_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstHttpSrc *httpsrc;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_HTTPSRC(object));
-  httpsrc = GST_HTTPSRC(object);
+  g_return_if_fail (GST_IS_HTTPSRC (object));
+  
+  httpsrc = GST_HTTPSRC (object);
                           
   switch (id) {
     case ARG_LOCATION:
-      GTK_VALUE_STRING(*arg) = httpsrc->url;
+      GTK_VALUE_STRING (*arg) = httpsrc->url;
       break;
     case ARG_BYTESPERREAD:
-      GTK_VALUE_INT(*arg) = httpsrc->bytes_per_read;
+      GTK_VALUE_INT (*arg) = httpsrc->bytes_per_read;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -239,20 +260,23 @@ static void gst_httpsrc_get_arg(GtkObject *object,GtkArg *arg,guint id) {
   }
 }
 
-static GstElementStateReturn gst_httpsrc_change_state(GstElement *element) {
-  g_return_val_if_fail(GST_IS_HTTPSRC(element),GST_STATE_FAILURE);
+static GstElementStateReturn 
+gst_httpsrc_change_state (GstElement *element) 
+{
+  g_return_val_if_fail (GST_IS_HTTPSRC (element), GST_STATE_FAILURE);
 
-  if (GST_STATE_PENDING(element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET(element,GST_HTTPSRC_OPEN))
-      gst_httpsrc_close_url(GST_HTTPSRC(element));
+  if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
+    if (GST_FLAG_IS_SET (element, GST_HTTPSRC_OPEN))
+      gst_httpsrc_close_url (GST_HTTPSRC (element));
   } else {
-    if (!GST_FLAG_IS_SET(element,GST_HTTPSRC_OPEN)) {
-      if (!gst_httpsrc_open_url(GST_HTTPSRC(element)))
+    if (!GST_FLAG_IS_SET (element, GST_HTTPSRC_OPEN)) {
+      if (!gst_httpsrc_open_url (GST_HTTPSRC (element)))
         return GST_STATE_FAILURE;
     }
   }
  
-  if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  
   return GST_STATE_SUCCESS;
 }

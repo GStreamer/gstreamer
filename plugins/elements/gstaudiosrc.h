@@ -44,7 +44,7 @@ GstElementDetails gst_audiosrc_details;
 #define GST_IS_AUDIOSRC(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_AUDIOSRC))
 #define GST_IS_AUDIOSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOSRC))
 
 // NOTE: per-element flags start with 16 for now
 typedef enum {

@@ -43,16 +43,17 @@ enum {
 };
 
 
-static void gst_fakesrc_class_init(GstFakeSrcClass *klass);
-static void gst_fakesrc_init(GstFakeSrc *fakesrc);
+static void gst_fakesrc_class_init	(GstFakeSrcClass *klass);
+static void gst_fakesrc_init		(GstFakeSrc *fakesrc);
 
-void gst_fakesrc_push(GstSrc *src);
+static void gst_fakesrc_push		(GstSrc *src);
 
 static GstSrcClass *parent_class = NULL;
 //static guint gst_fakesrc_signals[LAST_SIGNAL] = { 0 };
 
 GtkType
-gst_fakesrc_get_type(void) {
+gst_fakesrc_get_type (void) 
+{
   static GtkType fakesrc_type = 0;
 
   if (!fakesrc_type) {
@@ -66,43 +67,32 @@ gst_fakesrc_get_type(void) {
       (GtkArgGetFunc)NULL,
       (GtkClassInitFunc)NULL,
     };
-    fakesrc_type = gtk_type_unique(GST_TYPE_SRC,&fakesrc_info);
+    fakesrc_type = gtk_type_unique (GST_TYPE_SRC, &fakesrc_info);
   }
   return fakesrc_type;
 }
 
 static void
-gst_fakesrc_class_init(GstFakeSrcClass *klass) {
+gst_fakesrc_class_init (GstFakeSrcClass *klass) 
+{
   GstSrcClass *gstsrc_class;
 
   gstsrc_class = (GstSrcClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_SRC);
+  parent_class = gtk_type_class (GST_TYPE_SRC);
 
   gstsrc_class->push = gst_fakesrc_push;
   gstsrc_class->push_region = NULL;
 }
 
-static void gst_fakesrc_init(GstFakeSrc *fakesrc) {
-  fakesrc->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_element_add_pad(GST_ELEMENT(fakesrc),fakesrc->srcpad);
+static void 
+gst_fakesrc_init (GstFakeSrc *fakesrc) 
+{
+  fakesrc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (fakesrc), fakesrc->srcpad);
 
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesrc),GST_STATE_READY);
-}
-
-/**
- * gst_fakesrc_new:
- * @name: then name of the fakse source
- * 
- * create a new fakesrc
- *
- * Returns: The new element.
- */
-GstElement *gst_fakesrc_new(gchar *name) {
-  GstElement *fakesrc = GST_ELEMENT(gtk_type_new(GST_TYPE_FAKESRC));
-  gst_element_set_name(GST_ELEMENT(fakesrc),name);
-  return fakesrc;
 }
 
 /**
@@ -111,17 +101,21 @@ GstElement *gst_fakesrc_new(gchar *name) {
  * 
  * generate an empty buffer and push it to the next element.
  */
-void gst_fakesrc_push(GstSrc *src) {
+static void 
+gst_fakesrc_push (GstSrc *src) 
+{
   GstFakeSrc *fakesrc;
   GstBuffer *buf;
 
-  g_return_if_fail(src != NULL);
-  g_return_if_fail(GST_IS_FAKESRC(src));
-  fakesrc = GST_FAKESRC(src);
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (GST_IS_FAKESRC (src));
+  
+  fakesrc = GST_FAKESRC (src);
 
 //  g_print("gst_fakesrc_push(): pushing fake buffer from '%s'\n",
 //          gst_element_get_name(GST_ELEMENT(fakesrc)));
   g_print(">");
-  buf = gst_buffer_new();
-  gst_pad_push(fakesrc->srcpad,buf);
+  buf = gst_buffer_new ();
+  
+  gst_pad_push (fakesrc->srcpad, buf);
 }

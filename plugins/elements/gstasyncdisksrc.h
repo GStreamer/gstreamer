@@ -33,7 +33,6 @@ extern "C" {
 
 GstElementDetails gst_asyncdisksrc_details;
 
-
 #define GST_TYPE_ASYNCDISKSRC \
   (gst_asyncdisksrc_get_type())
 #define GST_ASYNCDISKSRC(obj) \

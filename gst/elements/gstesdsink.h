@@ -38,7 +38,7 @@ extern "C" {
 #define GST_IS_ESDSINK(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_ESDSINK))
 #define GST_IS_ESDSINK_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDSINK)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDSINK))
 
 typedef struct _GstEsdSink GstEsdSink;
 typedef struct _GstEsdSinkClass GstEsdSinkClass;

@@ -52,17 +52,19 @@ enum {
 };
 
 
-static void gst_queue_class_init(GstQueueClass *klass);
-static void gst_queue_init(GstQueue *queue);
-static void gst_queue_set_arg(GtkObject *object,GtkArg *arg,guint id);
-static void gst_queue_get_arg(GtkObject *object,GtkArg *arg,guint id);
+static void 			gst_queue_class_init	(GstQueueClass *klass);
+static void 			gst_queue_init		(GstQueue *queue);
 
-static void gst_queue_push(GstConnection *connection);
-static void gst_queue_chain(GstPad *pad,GstBuffer *buf);
+static void 			gst_queue_set_arg	(GtkObject *object, GtkArg *arg, guint id);
+static void 			gst_queue_get_arg	(GtkObject *object, GtkArg *arg, guint id);
 
-static void gst_queue_flush(GstQueue *queue);
+static void 			gst_queue_push		(GstConnection *connection);
+static void 			gst_queue_chain		(GstPad *pad, GstBuffer *buf);
 
-static GstElementStateReturn gst_queue_change_state(GstElement *element);
+static void 			gst_queue_flush		(GstQueue *queue);
+
+static GstElementStateReturn 	gst_queue_change_state	(GstElement *element);
+
 
 static GstConnectionClass *parent_class = NULL;
 //static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
@@ -82,12 +84,14 @@ gst_queue_get_type(void) {
       (GtkArgGetFunc)gst_queue_get_arg,
       (GtkClassInitFunc)NULL,
     };
-    queue_type = gtk_type_unique(GST_TYPE_CONNECTION,&queue_info);
+    queue_type = gtk_type_unique (GST_TYPE_CONNECTION, &queue_info);
   }
   return queue_type;
 }
 
-static void gst_queue_class_init(GstQueueClass *klass) {
+static void 
+gst_queue_class_init (GstQueueClass *klass) 
+{
   GtkObjectClass *gtkobject_class;
   GstElementClass *gstelement_class;
   GstConnectionClass *gstconnection_class;
@@ -96,12 +100,12 @@ static void gst_queue_class_init(GstQueueClass *klass) {
   gstelement_class = (GstElementClass*)klass;
   gstconnection_class = (GstConnectionClass*)klass;
 
-  parent_class = gtk_type_class(GST_TYPE_CONNECTION);
+  parent_class = gtk_type_class (GST_TYPE_CONNECTION);
 
-  gtk_object_add_arg_type("GstQueue::level", GTK_TYPE_INT,
-                          GTK_ARG_READABLE, ARG_LEVEL);
-  gtk_object_add_arg_type("GstQueue::max_level", GTK_TYPE_INT,
-                          GTK_ARG_READWRITE, ARG_MAX_LEVEL);
+  gtk_object_add_arg_type ("GstQueue::level", GTK_TYPE_INT,
+                           GTK_ARG_READABLE, ARG_LEVEL);
+  gtk_object_add_arg_type ("GstQueue::max_level", GTK_TYPE_INT,
+                           GTK_ARG_READWRITE, ARG_MAX_LEVEL);
 
   gstconnection_class->push = gst_queue_push;
 
@@ -111,13 +115,15 @@ static void gst_queue_class_init(GstQueueClass *klass) {
   gstelement_class->change_state = gst_queue_change_state;
 }
 
-static void gst_queue_init(GstQueue *queue) {
-  queue->sinkpad = gst_pad_new("sink",GST_PAD_SINK);
-  gst_element_add_pad(GST_ELEMENT(queue),queue->sinkpad);
-  gst_pad_set_chain_function(queue->sinkpad,gst_queue_chain);
+static void 
+gst_queue_init (GstQueue *queue) 
+{
+  queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
+  gst_pad_set_chain_function (queue->sinkpad, gst_queue_chain);
 
-  queue->srcpad = gst_pad_new("src",GST_PAD_SRC);
-  gst_element_add_pad(GST_ELEMENT(queue),queue->srcpad);
+  queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
 
   queue->queue = NULL;
   queue->level_buffers = 0;
@@ -126,54 +132,55 @@ static void gst_queue_init(GstQueue *queue) {
   queue->size_buffers = 0;
   queue->size_bytes = 0;
 
-  queue->emptylock = g_mutex_new();
-  queue->emptycond = g_cond_new();
+  queue->emptylock = g_mutex_new ();
+  queue->emptycond = g_cond_new ();
 
-  queue->fulllock = g_mutex_new();
-  queue->fullcond = g_cond_new();
+  queue->fulllock = g_mutex_new ();
+  queue->fullcond = g_cond_new ();
 }
 
-GstElement *gst_queue_new(gchar *name) {
-  GstElement *queue = GST_ELEMENT(gtk_type_new(GST_TYPE_QUEUE));
-  gst_element_set_name(GST_ELEMENT(queue),name);
-  return queue;
-}
-
-static void gst_queue_cleanup_buffers(gpointer data, const gpointer user_data) 
+static void 
+gst_queue_cleanup_buffers (gpointer data, const gpointer user_data) 
 {
   DEBUG("queue: %s cleaning buffer %p\n", (gchar *)user_data, data);
   
   gst_buffer_unref (GST_BUFFER (data));
 }
 
-static void gst_queue_flush(GstQueue *queue) {
-  g_slist_foreach(queue->queue, gst_queue_cleanup_buffers, (char *)gst_element_get_name(GST_ELEMENT(queue))); 
-  g_slist_free(queue->queue);
+static void 
+gst_queue_flush (GstQueue *queue) 
+{
+  g_slist_foreach (queue->queue, gst_queue_cleanup_buffers, 
+		  (char *)gst_element_get_name (GST_ELEMENT (queue))); 
+  g_slist_free (queue->queue);
+  
   queue->queue = NULL;
   queue->level_buffers = 0;
 }
 
-static void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
+static void 
+gst_queue_chain (GstPad *pad, GstBuffer *buf) 
+{
   GstQueue *queue;
   gboolean tosignal = FALSE;
   const guchar *name;
 
-  g_return_if_fail(pad != NULL);
-  g_return_if_fail(GST_IS_PAD(pad));
-  g_return_if_fail(buf != NULL);
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (buf != NULL);
 
-  queue = GST_QUEUE(pad->parent);
-  name = gst_element_get_name(GST_ELEMENT(queue));
+  queue = GST_QUEUE (pad->parent);
+  name = gst_element_get_name (GST_ELEMENT (queue));
 
   /* we have to lock the queue since we span threads */
   
   DEBUG("queue: try have queue lock\n");
-  GST_LOCK(queue);
-  DEBUG("queue: %s adding buffer %p %ld\n", name, buf, pthread_self());
+  GST_LOCK (queue);
+  DEBUG("queue: %s adding buffer %p %ld\n", name, buf, pthread_self ());
   DEBUG("queue: have queue lock\n");
 
-  if (GST_BUFFER_FLAG_IS_SET(buf, GST_BUFFER_FLUSH)) {
-    gst_queue_flush(queue);
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLUSH)) {
+    gst_queue_flush (queue);
   }
 
   DEBUG("queue: %s: chain %d %p\n", name, queue->level_buffers, buf);
@@ -181,17 +188,17 @@ static void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
   while (queue->level_buffers >= queue->max_buffers) {
     DEBUG("queue: %s waiting %d\n", name, queue->level_buffers);
     STATUS("%s: O\n");
-    GST_UNLOCK(queue);
-    g_mutex_lock(queue->fulllock);
-    g_cond_wait(queue->fullcond,queue->fulllock);
-    g_mutex_unlock(queue->fulllock);
-    GST_LOCK(queue);
+    GST_UNLOCK (queue);
+    g_mutex_lock (queue->fulllock);
+    g_cond_wait (queue->fullcond, queue->fulllock);
+    g_mutex_unlock (queue->fulllock);
+    GST_LOCK (queue);
     STATUS("%s: O+\n");
     DEBUG("queue: %s waiting done %d\n", name, queue->level_buffers);
   }
 
   /* put the buffer on the tail of the list */
-  queue->queue = g_slist_append(queue->queue,buf);
+  queue->queue = g_slist_append (queue->queue, buf);
   STATUS("%s: +\n");
 
   /* if we were empty, but aren't any more, signal a condition */
@@ -200,116 +207,127 @@ static void gst_queue_chain(GstPad *pad,GstBuffer *buf) {
 
   /* we can unlock now */
   DEBUG("queue: %s chain %d end signal(%d,%p)\n", name, queue->level_buffers, tosignal, queue->emptycond);
-  GST_UNLOCK(queue);
+  GST_UNLOCK (queue);
 
   if (tosignal) {
-    g_mutex_lock(queue->emptylock);
+    g_mutex_lock (queue->emptylock);
     STATUS("%s: >\n");
-    g_cond_signal(queue->emptycond);
+    g_cond_signal (queue->emptycond);
     STATUS("%s: >>\n");
-    g_mutex_unlock(queue->emptylock);
+    g_mutex_unlock (queue->emptylock);
   }
 }
 
-static void gst_queue_push(GstConnection *connection) {
-  GstQueue *queue = GST_QUEUE(connection);
+static void 
+gst_queue_push (GstConnection *connection) 
+{
+  GstQueue *queue = GST_QUEUE (connection);
   GstBuffer *buf = NULL;
   GSList *front;
   gboolean tosignal = FALSE;
   const guchar *name;
   
-  name = gst_element_get_name(GST_ELEMENT(queue));
+  name = gst_element_get_name (GST_ELEMENT (queue));
 
   /* have to lock for thread-safety */
   DEBUG("queue: %s try have queue lock\n", name);
-  GST_LOCK(queue);
-  DEBUG("queue: %s push %d %ld %p\n", name, queue->level_buffers, pthread_self(), queue->emptycond);
+  GST_LOCK (queue);
+  DEBUG("queue: %s push %d %ld %p\n", name, queue->level_buffers, pthread_self (), queue->emptycond);
   DEBUG("queue: %s have queue lock\n", name);
 
   while (!queue->level_buffers) {
     STATUS("queue: %s U released lock\n");
-    GST_UNLOCK(queue);
-    g_mutex_lock(queue->emptylock);
-    g_cond_wait(queue->emptycond,queue->emptylock);
-    g_mutex_unlock(queue->emptylock);
-    GST_LOCK(queue);
+    GST_UNLOCK (queue);
+    g_mutex_lock (queue->emptylock);
+    g_cond_wait (queue->emptycond, queue->emptylock);
+    g_mutex_unlock (queue->emptylock);
+    GST_LOCK (queue);
     STATUS("queue: %s U- getting lock\n");
   }
 
   front = queue->queue;
   buf = (GstBuffer *)(front->data);
-  queue->queue = g_slist_remove_link(queue->queue,front);
-  g_slist_free(front);
+  queue->queue = g_slist_remove_link (queue->queue, front);
+  g_slist_free (front);
+  
   queue->level_buffers--;
   STATUS("%s: -\n");
   tosignal = queue->level_buffers < queue->max_buffers;
   GST_UNLOCK(queue);
 
   if (tosignal) {
-    g_mutex_lock(queue->fulllock);
+    g_mutex_lock (queue->fulllock);
     STATUS("%s: < \n");
-    g_cond_signal(queue->fullcond);
+    g_cond_signal (queue->fullcond);
     STATUS("%s: << \n");
-    g_mutex_unlock(queue->fulllock);
+    g_mutex_unlock (queue->fulllock);
   }
 
   DEBUG("queue: %s pushing %d %p \n", name, queue->level_buffers, buf);
-  gst_pad_push(queue->srcpad,buf);
+  gst_pad_push (queue->srcpad, buf);
   DEBUG("queue: %s pushing %d done \n", name, queue->level_buffers);
 
   /* unlock now */
 }
 
-static GstElementStateReturn gst_queue_change_state(GstElement *element) {
+static GstElementStateReturn 
+gst_queue_change_state (GstElement *element) 
+{
   GstQueue *queue;
-  g_return_val_if_fail(GST_IS_QUEUE(element),GST_STATE_FAILURE);
+  g_return_val_if_fail (GST_IS_QUEUE (element), GST_STATE_FAILURE);
 
-  queue = GST_QUEUE(element);
-  DEBUG("gstqueue: state pending %d\n", GST_STATE_PENDING(element));
+  queue = GST_QUEUE (element);
+  DEBUG("gstqueue: state pending %d\n", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, clear out buffers*/
-  if (GST_STATE_PENDING(element) == GST_STATE_READY) {
+  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
     /* otherwise (READY or higher) we need to open the file */
-    gst_queue_flush(queue);
+    gst_queue_flush (queue);
   }
 
   /* if we haven't failed already, give the parent class a chance to ;-) */
-  if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
 }
 
 
-static void gst_queue_set_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstQueue *queue;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_QUEUE(object));
-  queue = GST_QUEUE(object);
+  g_return_if_fail (GST_IS_QUEUE (object));
+  
+  queue = GST_QUEUE (object);
 
   switch(id) {
     case ARG_MAX_LEVEL:
-      queue->max_buffers = GTK_VALUE_INT(*arg);
+      queue->max_buffers = GTK_VALUE_INT (*arg);
       break;
     default:
       break;
   }
 }
 
-static void gst_queue_get_arg(GtkObject *object,GtkArg *arg,guint id) {
+static void 
+gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id) 
+{
   GstQueue *queue;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_QUEUE(object));
-  queue = GST_QUEUE(object);
+  g_return_if_fail (GST_IS_QUEUE (object));
+  
+  queue = GST_QUEUE (object);
 
   switch (id) {
     case ARG_LEVEL:
-      GTK_VALUE_INT(*arg) = queue->level_buffers;
+      GTK_VALUE_INT (*arg) = queue->level_buffers;
       break;
     case ARG_MAX_LEVEL:
-      GTK_VALUE_INT(*arg) = queue->max_buffers;
+      GTK_VALUE_INT (*arg) = queue->max_buffers;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

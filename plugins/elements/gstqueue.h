@@ -73,7 +73,7 @@ struct _GstQueueClass {
   GstConnectionClass parent_class;
 };
 
-GtkType gst_queue_get_type(void);
+GtkType gst_queue_get_type (void);
 
 #ifdef __cplusplus
 }

@@ -43,7 +43,7 @@ GstElementDetails gst_fdsrc_details;
 #define GST_IS_FDSRC(obj) \
   (GTK_CHECK_TYPE((obj),GST_TYPE_FDSRC))
 #define GST_IS_FDSRC_CLASS(obj) \
-  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSRC)))
+  (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSRC))
 
 
 typedef struct _GstFdSrc GstFdSrc;
