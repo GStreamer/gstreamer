@@ -1,5 +1,12 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* sys/v4l/v4l-overlay_calls.c: (gst_v4l_set_overlay):
+	* sys/v4l2/v4l2-overlay_calls.c: (gst_v4l2_set_display),
+	(gst_v4l2_set_window), (gst_v4l2_enable_overlay):
+        fix element_error
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* sys/v4l/v4l_calls.h:
 	* sys/v4l2/v4l2_calls.h:
           element_error fixes
