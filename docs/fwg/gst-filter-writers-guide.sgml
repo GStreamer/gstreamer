@@ -2,11 +2,8 @@
 <!ENTITY TITLEPAGE SYSTEM "titlepage.sgml">
 
 <!ENTITY INTRO SYSTEM "intro.sgml">
-<!ENTITY ELEMENTPADS SYSTEM "elementpads.sgml">
-<!ENTITY BUFFERS SYSTEM "buffers.sgml">
-<!ENTITY CHAINVSLOOP SYSTEM "chainvsloop.sgml">
-<!ENTITY SCHEDULING SYSTEM "scheduling.sgml">
-<!ENTITY TYPING SYSTEM "typing.sgml">
+
+<!ENTITY CONCEPTS SYSTEM "concepts.sgml">
 ]>
 
 <book id="index">
@@ -14,9 +11,13 @@
       
 <!-- ############# Overview - part ############### -->
 
-  <part id="overview"><title>Overview</title>
+  <part id="introduction"><title>Introduction</title>
     <partintro>
       <para>
+	<application>GStreamer</application> is a framework for creating
+	streaming media applications.  It is extremely powerful and versatile,
+	and this versatility stems in part from its modularity, and its ability
+	to incorporate new modules seamlessly into its framework.
 	This document describes how to extend the capabilities of
 	<application>GStreamer</application> by creating new plugins.
       </para>
@@ -40,34 +41,14 @@
   <part id="basic-concepts"><title>Basic concepts</title>
     <partintro>
       <para>
-	Filters are at the core of what GStreamer is.  Without filters, 
-	GStreamer is just a bunch of pipe fittings with nothing to 
-	connect.  A large number of filters (known as elements) ship with 
-	GStreamer, but they are only capable of so much.  If you wish to 
-	extend it beyond these standard capabilities, you must write 
-	filters.
-      </para>
 
-      <para>
-	A filter may be constructed in several different ways, but all must 
-	conform to the same basic rules.  A simple filter may be built
-	with the FilterFactory, where the only code that need be written 
-	is the actual filter code.  A more complex filter may need to be 
-	written out fully for complete access to the features and 
-	performance possible with GStreamer.  This guide will explain all 
-	the steps necessary for both methods.
+	This section introduces the basic concepts required to understand the
+	issues involved in extending <application>GStreamer</application>
+
       </para>
     </partintro>
 
-      &ELEMENTPADS;
-
-      &BUFFERS;
-
-      &CHAINVSLOOP;
-
-      &SCHEDULING;
-
-      &TYPING;
+      &CONCEPTS;
 
   </part>
 

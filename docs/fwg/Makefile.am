@@ -1,7 +1,10 @@
 manualname = gst-filter-writers-guide
 htmlname = index.html
 
-sgml_files = gst-filter-writers-guide.sgml
+sgml_files = gst-filter-writers-guide.sgml \
+	     titlepage.sgml \
+	     intro.sgml \
+	     concepts.sgml
 
 fig_files = 
 eps_files = 
