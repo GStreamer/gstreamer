@@ -18,6 +18,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstswfdec.h"
 #include <string.h>
 
@@ -568,7 +571,7 @@ gst_swfdec_change_state (GstElement *element)
 #if 0
       swfdec->pool = gst_pad_get_bufferpool (swfdec->videopad);
       if (swfdec->pool)
-        GST_INFO (GST_CAT_PLUGIN_INFO, "got pool %p", swfdec->pool);
+        GST_INFO ( "got pool %p", swfdec->pool);
 #endif
       break;
     case GST_STATE_PLAYING_TO_PAUSED:

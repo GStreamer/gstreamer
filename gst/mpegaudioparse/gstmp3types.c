@@ -41,7 +41,7 @@ mp3_type_find(GstBuffer *buf, gpointer private)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  GST_DEBUG (0,"mp3typefind: typefind");
+  GST_DEBUG ("mp3typefind: typefind");
 
   /* gracefully ripped from libid3 */
   if (size >= 3 &&
@@ -50,7 +50,7 @@ mp3_type_find(GstBuffer *buf, gpointer private)
     data += 128;
     size -= 128;
 
-    GST_DEBUG (0, "mp3typefind: detected ID3 Tag V1");
+    GST_DEBUG ("mp3typefind: detected ID3 Tag V1");
   } else if (size >= 10 &&
         (data[0] == 'I' && data[1] == 'D' && data[2] == '3') &&
         data[3] < 0xff && data[4] < 0xff &&
@@ -69,7 +69,7 @@ mp3_type_find(GstBuffer *buf, gpointer private)
     if (data[3] > 3 && (data[5] & 0x10))
       skip += 10;
 
-    GST_DEBUG (0, "mp3typefind: detected ID3 Tag V2 with %u bytes", skip);
+    GST_DEBUG ("mp3typefind: detected ID3 Tag V2 with %u bytes", skip);
     size -= skip;
     data += skip;      
   }
@@ -147,8 +147,8 @@ mp3_type_frame_length_from_header (guint32 header)
     length += ((layer == 3 && version == 0) ? 144000 : 72000) * bitrate / samplerate;
   }
 
-  GST_DEBUG (0, "Calculated mad frame length of %u bytes", length);
-  GST_DEBUG (0, "samplerate = %lu - bitrate = %lu - layer = %lu - version = %lu", samplerate, bitrate, layer, version);
+  GST_DEBUG ("Calculated mad frame length of %u bytes", length);
+  GST_DEBUG ("samplerate = %lu - bitrate = %lu - layer = %lu - version = %lu", samplerate, bitrate, layer, version);
   return length;
 
 }

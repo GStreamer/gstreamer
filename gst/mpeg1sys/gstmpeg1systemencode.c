@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -25,7 +28,7 @@
 #include "gstmpeg1systemencode.h"
 #include "main.h"
 
-/*#define GST_DEBUG(a, b...) g_print (##b) */
+/*#define GST_DEBUG (b...) g_print (##b) */
 
 /* elementfactory information */
 static GstElementDetails system_encode_details = {
@@ -217,7 +220,7 @@ gst_system_encode_pick_streams (GList *mta, GstMPEG1SystemEncode *system_encode)
 {
   guint64 lowest = ~1;
 
-  GST_DEBUG (0, "pick_streams: %" G_GINT64_FORMAT ", %" G_GINT64_FORMAT, system_encode->video_buffer->next_frame_time,
+  GST_DEBUG ("pick_streams: %" G_GINT64_FORMAT ", %" G_GINT64_FORMAT, system_encode->video_buffer->next_frame_time,
 		  			    system_encode->audio_buffer->next_frame_time);
 
   if (system_encode->which_streams & STREAMS_VIDEO) {
@@ -278,7 +281,7 @@ gst_system_encode_update_mta (GstMPEG1SystemEncode *system_encode, GList *mta, g
   GList *streams = g_list_first(mta);
   Mpeg1MuxBuffer *mb = (Mpeg1MuxBuffer *)streams->data;
 
-  GST_DEBUG (0,"system_encode::multiplex: update mta");
+  GST_DEBUG ("system_encode::multiplex: update mta");
 
   mpeg1mux_buffer_shrink(mb, size);
 
@@ -315,7 +318,7 @@ gst_system_setup_multiplex (GstMPEG1SystemEncode *system_encode)
             (double)(system_encode->packets_per_pack-1.))) / (double)(system_encode->packets_per_pack) );
   system_encode->data_rate = ceil(system_encode->dmux_rate/50.)*50;
 
-  GST_DEBUG (0,"system_encode::multiplex: data_rate %u, video_rate: %u, audio_rate: %u", system_encode->data_rate,
+  GST_DEBUG ("system_encode::multiplex: data_rate %u, video_rate: %u, audio_rate: %u", system_encode->data_rate,
 		  system_encode->video_rate, system_encode->audio_rate);
 
   system_encode->video_delay = (double)system_encode->video_delay_ms*(double)(CLOCKS/1000);
@@ -327,7 +330,7 @@ gst_system_setup_multiplex (GstMPEG1SystemEncode *system_encode)
   video_tc = MPEG1MUX_BUFFER_FIRST_TIMECODE(system_encode->video_buffer);
   audio_tc = MPEG1MUX_BUFFER_FIRST_TIMECODE(system_encode->audio_buffer);
 
-  GST_DEBUG (0,"system_encode::video tc %" G_GINT64_FORMAT ", audio tc %" G_GINT64_FORMAT ":", video_tc->DTS, audio_tc->DTS);
+  GST_DEBUG ("system_encode::video tc %" G_GINT64_FORMAT ", audio tc %" G_GINT64_FORMAT ":", video_tc->DTS, audio_tc->DTS);
 
   system_encode->delay = ((double)system_encode->sectors_delay +
           ceil((double)video_tc->length/(double)system_encode->min_packet_data)  +
@@ -341,7 +344,7 @@ gst_system_setup_multiplex (GstMPEG1SystemEncode *system_encode)
   system_encode->video_delay = 0;
   system_encode->delay = 0;
 
-  GST_DEBUG (0,"system_encode::multiplex: delay %g, mux_rate: %lu", system_encode->delay, system_encode->mux_rate);
+  GST_DEBUG ("system_encode::multiplex: delay %g, mux_rate: %lu", system_encode->delay, system_encode->mux_rate);
 }
 
 static void
@@ -361,7 +364,7 @@ gst_system_encode_multiplex(GstMPEG1SystemEncode *system_encode)
   g_mutex_lock(system_encode->lock);
 
   while (gst_system_encode_have_data(system_encode)) {
-    GST_DEBUG (0,"system_encode::multiplex: multiplexing");
+    GST_DEBUG ("system_encode::multiplex: multiplexing");
 
     if (!system_encode->have_setup) {
       gst_system_setup_multiplex(system_encode);
@@ -397,7 +400,7 @@ gst_system_encode_multiplex(GstMPEG1SystemEncode *system_encode)
 
     tc = MPEG1MUX_BUFFER_FIRST_TIMECODE(mb);
     if (mb->new_frame) {
-      GST_DEBUG (0,"system_encode::multiplex: new frame");
+      GST_DEBUG ("system_encode::multiplex: new frame");
       if (tc->frame_type == FRAME_TYPE_AUDIO || tc->frame_type == FRAME_TYPE_IFRAME || tc->frame_type == FRAME_TYPE_PFRAME) {
         timestamps = TIMESTAMPS_PTS;
       }
@@ -458,7 +461,7 @@ gst_system_encode_multiplex(GstMPEG1SystemEncode *system_encode)
     system_encode->bytes_output += GST_BUFFER_SIZE(outbuf);
     gst_pad_push(system_encode->srcpad,outbuf);
 
-    GST_DEBUG (0,"system_encode::multiplex: writing %02x", mb->stream_id);
+    GST_DEBUG ("system_encode::multiplex: writing %02x", mb->stream_id);
 
   }
   gst_info("system_encode::multiplex: data left in video buffer %lu\n", MPEG1MUX_BUFFER_SPACE(system_encode->video_buffer));
@@ -484,18 +487,18 @@ gst_system_encode_chain (GstPad *pad, GstBuffer *buf)
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG (0,"system_encode::chain: system_encode: have buffer of size %lu",size);
+  GST_DEBUG ("system_encode::chain: system_encode: have buffer of size %lu",size);
   padname = GST_OBJECT_NAME (pad);
 
   if (strncmp(padname, "audio_", 6) == 0) {
     channel = atoi(&padname[6]);
-    GST_DEBUG (0,"gst_system_encode_chain: got audio buffer in from audio channel %02d", channel);
+    GST_DEBUG ("gst_system_encode_chain: got audio buffer in from audio channel %02d", channel);
 
     mpeg1mux_buffer_queue(system_encode->audio_buffer, buf);
   }
   else if (strncmp(padname, "video_", 6) == 0) {
     channel = atoi(&padname[6]);
-    GST_DEBUG (0,"gst_system_encode_chain: got video buffer in from video channel %02d", channel);
+    GST_DEBUG ("gst_system_encode_chain: got video buffer in from video channel %02d", channel);
 
     mpeg1mux_buffer_queue(system_encode->video_buffer, buf);
 

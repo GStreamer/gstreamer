@@ -18,6 +18,9 @@
  */
 
 /*#define GST_DEBUG_ENABLED */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstmp1videoparse.h"
 
 /* Start codes. */
@@ -208,7 +211,7 @@ mp1videoparse_find_next_gop (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
 static void
 gst_mp1videoparse_flush (Mp1VideoParse *mp1videoparse)
 {
-  GST_DEBUG (0,"mp1videoparse: flushing");
+  GST_DEBUG ("mp1videoparse: flushing");
   if (mp1videoparse->partialbuf) {
     gst_buffer_unref(mp1videoparse->partialbuf);
     mp1videoparse->partialbuf= NULL;
@@ -276,17 +279,17 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
   data = GST_BUFFER_DATA(mp1videoparse->partialbuf);
   size = GST_BUFFER_SIZE(mp1videoparse->partialbuf);
 
-  GST_DEBUG (0,"mp1videoparse: received buffer of %ld bytes %" G_GINT64_FORMAT,size, GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG ("mp1videoparse: received buffer of %ld bytes %" G_GINT64_FORMAT,size, GST_BUFFER_TIMESTAMP(buf));
 
   head = GUINT32_FROM_BE(*((guint32 *)data));
 
-  GST_DEBUG (0,"mp1videoparse: head is %08x", (unsigned int)head);
+  GST_DEBUG ("mp1videoparse: head is %08x", (unsigned int)head);
 
   if (!mp1videoparse_valid_sync(head) || mp1videoparse->need_resync) {
     sync_pos = mp1videoparse_find_next_gop(mp1videoparse, mp1videoparse->partialbuf);
     if (sync_pos != -1) {
       mp1videoparse->need_resync = FALSE;
-      GST_DEBUG (0,"mp1videoparse: found new gop at %d", sync_pos);
+      GST_DEBUG ("mp1videoparse: found new gop at %d", sync_pos);
 
       if (sync_pos != 0) {
         temp = gst_buffer_create_sub(mp1videoparse->partialbuf, sync_pos, size-sync_pos);
@@ -299,7 +302,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
       }
     }
     else {
-      GST_DEBUG (0,"mp1videoparse: could not sync");
+      GST_DEBUG ("mp1videoparse: could not sync");
       gst_buffer_unref(mp1videoparse->partialbuf);
       mp1videoparse->partialbuf = NULL;
       return;
@@ -313,7 +316,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
   sync_state = 0;
   have_sync = FALSE;
 
-  GST_DEBUG (0,"mp1videoparse: searching sync");
+  GST_DEBUG ("mp1videoparse: searching sync");
 
   while (offset < size-1) {
     sync_byte = *(data + offset);
@@ -322,7 +325,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
       sync_state++;
     }
     else if ((sync_byte == 1) && (sync_state >=2)) {
-      GST_DEBUG (0,"mp1videoparse: code 0x000001%02x",data[offset+1]);
+      GST_DEBUG ("mp1videoparse: code 0x000001%02x",data[offset+1]);
       if (data[offset+1] == (PICTURE_START_CODE & 0xff)) {
 	mp1videoparse->picture_in_buffer++;
 	if (mp1videoparse->picture_in_buffer == 1) {
@@ -334,7 +337,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
           break;
 	}
 	else {
-          GST_DEBUG (0,"mp1videoparse: %d in buffer", mp1videoparse->picture_in_buffer);
+          GST_DEBUG ("mp1videoparse: %d in buffer", mp1videoparse->picture_in_buffer);
           g_assert_not_reached();
 	}
       }
@@ -348,7 +351,7 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
 
   if (have_sync) {
     offset -= 2;
-    GST_DEBUG (0,"mp1videoparse: synced at %ld code 0x000001%02x",offset,data[offset+3]);
+    GST_DEBUG ("mp1videoparse: synced at %ld code 0x000001%02x",offset,data[offset+3]);
 
     outbuf = gst_buffer_create_sub(mp1videoparse->partialbuf, 0, offset+4);
     g_assert(outbuf != NULL);
@@ -359,9 +362,9 @@ gst_mp1videoparse_real_chain (Mp1VideoParse *mp1videoparse, GstBuffer *buf, GstP
       mp1videoparse->in_flush = FALSE;
     }
 
-    GST_DEBUG (0,"mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT, GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
+    GST_DEBUG ("mp1videoparse: pushing  %d bytes %" G_GUINT64_FORMAT, GST_BUFFER_SIZE(outbuf), GST_BUFFER_TIMESTAMP(outbuf));
     gst_pad_push(outpad, outbuf);
-    GST_DEBUG (0,"mp1videoparse: pushing  done");
+    GST_DEBUG ("mp1videoparse: pushing  done");
     mp1videoparse->picture_in_buffer = 0;
 
     temp = gst_buffer_create_sub(mp1videoparse->partialbuf, offset, size-offset);
@@ -381,7 +384,7 @@ gst_mp1videoparse_change_state (GstElement *element)
   g_return_val_if_fail(GST_IS_MP1VIDEOPARSE(element),GST_STATE_FAILURE);
 
   mp1videoparse = GST_MP1VIDEOPARSE(element);
-  GST_DEBUG (0,"mp1videoparse: state pending %d", GST_STATE_PENDING(element));
+  GST_DEBUG ("mp1videoparse: state pending %d", GST_STATE_PENDING(element));
 
   * if going down into NULL state, clear out buffers *
   if (GST_STATE_PENDING(element) == GST_STATE_READY) {

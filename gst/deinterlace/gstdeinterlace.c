@@ -19,6 +19,9 @@
 /* based on the Area Based Deinterlacer (for RGB frames)        */
 /* (a VirtualDub filter) from Gunnar Thalin <guth@home.se>      */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <gst/gst.h>
 #include "gstdeinterlace.h"

@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <config.h>
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
@@ -176,14 +179,14 @@ mixmatrix_alloc_matrix (int x,int y)
 {
   gfloat **matrix;
   int i;
-  GST_DEBUG(0,"mixmatrix: allocating a %dx%d matrix of floats\n",x,y);
+  GST_DEBUG ("mixmatrix: allocating a %dx%d matrix of floats\n",x,y);
   matrix = g_new(gfloat *,x);
-  GST_DEBUG(0,"mixmatrix: %p: ",matrix);
+  GST_DEBUG ("mixmatrix: %p: ",matrix);
   for (i=0;i<x;i++) {
     matrix[i] = g_new(gfloat,y);
-    GST_DEBUG(0,"%p, ",matrix[i]);
+    GST_DEBUG ("%p, ",matrix[i]);
   }
-  GST_DEBUG(0,"\n");
+  GST_DEBUG ("\n");
   return matrix;
 }
 
@@ -237,7 +240,7 @@ mixmatrix_resize(GstMixMatrix *mix, int sinkpads, int srcpads)
   gfloat **newmatrix;
   int i;
 
-  GST_DEBUG(0,"mixmatrix: resizing matrix!!!!\n");
+  GST_DEBUG ("mixmatrix: resizing matrix!!!!\n");
 
   // check the sinkpads list
   if (sinkresize) {

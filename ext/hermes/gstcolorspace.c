@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 
 #include "gstcolorspace.h"
@@ -134,7 +137,7 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
   gst_caps_get_fourcc_int (from_caps, "format", &from_space);
   gst_caps_get_fourcc_int (to_caps,   "format", &to_space);
 
-  GST_INFO (GST_CAT_NEGOTIATION, "set up converter for %08x to %08x", from_space, to_space);
+  GST_INFO ( "set up converter for %08x to %08x", from_space, to_space);
 
   switch (from_space) {
     case GST_MAKE_FOURCC ('R','G','B',' '):
@@ -159,10 +162,10 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 	  space->source.indexed = 0;
 	  space->source.has_colorkey = 0;
 
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "source red mask   %08x", space->source.r);
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "source green mask %08x", space->source.g);
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "source blue mask  %08x", space->source.b);
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "source bpp        %08x", space->srcbpp);
+	  GST_INFO ( "source red mask   %08x", space->source.r);
+	  GST_INFO ( "source green mask %08x", space->source.g);
+	  GST_INFO ( "source blue mask  %08x", space->source.b);
+	  GST_INFO ( "source bpp        %08x", space->srcbpp);
 
 	  gst_caps_get_int (to_caps, "red_mask",   &space->dest.r);
 	  gst_caps_get_int (to_caps, "green_mask", &space->dest.g);
@@ -172,16 +175,16 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 	  space->dest.indexed = 0;
 	  space->dest.has_colorkey = 0;
 
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "dest red mask   %08x", space->dest.r);
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "dest green mask %08x", space->dest.g);
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "dest blue mask  %08x", space->dest.b);
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "dest bpp        %08x", space->destbpp);
+	  GST_INFO ( "dest red mask   %08x", space->dest.r);
+	  GST_INFO ( "dest green mask %08x", space->dest.g);
+	  GST_INFO ( "dest blue mask  %08x", space->dest.b);
+	  GST_INFO ( "dest bpp        %08x", space->destbpp);
 
 	  if (!Hermes_ConverterRequest (space->h_handle, &space->source, &space->dest)) {
 	    g_warning ("Hermes: could not get converter\n");
 	    return FALSE;
 	  }
-	  GST_INFO (GST_CAT_PLUGIN_INFO, "converter set up");
+	  GST_INFO ( "converter set up");
           space->type = GST_COLORSPACE_HERMES;
 	  return TRUE;
 	}
@@ -202,7 +205,7 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 	    return TRUE;
 	  }
         case GST_MAKE_FOURCC ('Y','U','Y','2'):
-          GST_INFO (GST_CAT_NEGOTIATION, "colorspace: RGB to YUV with bpp %d not implemented!!", from_bpp);
+          GST_INFO ( "colorspace: RGB to YUV with bpp %d not implemented!!", from_bpp);
 	  return FALSE;
       }
       break;
@@ -210,7 +213,7 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
     case GST_MAKE_FOURCC ('I','4','2','0'):
       switch (to_space) {
         case GST_MAKE_FOURCC ('R','G','B',' '):
-          GST_INFO (GST_CAT_NEGOTIATION, "colorspace: YUV to RGB");
+          GST_INFO ( "colorspace: YUV to RGB");
 
 	  gst_caps_get_int (to_caps, "bpp", &space->destbpp);
 	  space->converter = gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
@@ -238,14 +241,14 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
 	  space->destbpp = 16;
 	  return TRUE;
         case GST_MAKE_FOURCC ('R','G','B',' '):
-          GST_INFO (GST_CAT_NEGOTIATION, "colorspace: YUY2 to RGB not implemented!!");
+          GST_INFO ( "colorspace: YUY2 to RGB not implemented!!");
 	  return FALSE;
       }
       break;
     case GST_MAKE_FOURCC ('Y','V','1','2'):
       switch (to_space) {
         case GST_MAKE_FOURCC ('R','G','B',' '):
-          GST_INFO (GST_CAT_NEGOTIATION, "colorspace: YV12 to RGB");
+          GST_INFO ( "colorspace: YV12 to RGB");
 
 	  gst_caps_get_int (to_caps, "bpp", &space->destbpp);
 	  space->converter = gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
@@ -306,7 +309,7 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "width", &space->width);
   gst_caps_get_int (caps, "height", &space->height);
 
-  GST_INFO (GST_CAT_PROPERTIES, "size: %dx%d", space->width, space->height);
+  GST_INFO ( "size: %dx%d", space->width, space->height);
 
   gst_caps_replace_sink (&space->sinkcaps, caps);
 

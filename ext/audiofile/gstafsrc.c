@@ -21,6 +21,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include "gstafsrc.h"
@@ -326,12 +329,12 @@ gst_afsrc_open_file (GstAFSrc *src)
 	    break;
 	  case AF_SAMPFMT_FLOAT:
 	  case AF_SAMPFMT_DOUBLE:
-	    GST_DEBUG (GST_CAT_PLUGIN_INFO,
+	    GST_DEBUG (
 	    		   "ERROR: float data not supported yet !\n");
 	}
 	src->rate = (guint) afGetRate (src->file, AF_DEFAULT_TRACK);		
     src->width = sampleWidth;
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+    GST_DEBUG (
     		   "input file: %d channels, %d width, %d rate, signed %s\n",
 	  			src->channels, src->width, src->rate,
 	  			src->is_signed ? "yes" : "no");

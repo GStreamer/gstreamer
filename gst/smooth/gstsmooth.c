@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <gstsmooth.h>
 
@@ -234,7 +237,7 @@ gst_smooth_chain (GstPad *pad, GstBuffer *buf)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  GST_DEBUG (0,"smooth: have buffer of %d", GST_BUFFER_SIZE (buf));
+  GST_DEBUG ("smooth: have buffer of %d", GST_BUFFER_SIZE (buf));
 
   outbuf = gst_buffer_new();
   GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (buf));

@@ -18,6 +18,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "qtdemux.h"
 
 #include <string.h>
@@ -257,7 +260,7 @@ static gboolean gst_qtdemux_handle_sink_event (GstQTDemux *qtdemux)
   gst_bytestream_get_status(qtdemux->bs, &remaining, &event);
 
   type = event ? GST_EVENT_TYPE(event) : GST_EVENT_UNKNOWN;
-  GST_DEBUG(0,"qtdemux: event %p %d", event, type);
+  GST_DEBUG ("qtdemux: event %p %d", event, type);
 
   switch(type){
     case GST_EVENT_EOS:
@@ -268,7 +271,7 @@ static gboolean gst_qtdemux_handle_sink_event (GstQTDemux *qtdemux)
       g_warning("flush event");
       break;
     case GST_EVENT_DISCONTINUOUS:
-      GST_DEBUG(0,"discontinuous event\n");
+      GST_DEBUG ("discontinuous event\n");
       //gst_bytestream_flush_fast(qtdemux->bs, remaining);
       break;
     default:
@@ -324,7 +327,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
   //cur_offset = gst_bytestream_tell(qtdemux->bs);
   
   cur_offset = qtdemux->offset;
-  GST_DEBUG(0,"loop at position %d",cur_offset);
+  GST_DEBUG ("loop at position %d",cur_offset);
 
   switch(qtdemux->state){
   case QTDEMUX_STATE_HEADER:
@@ -341,9 +344,9 @@ static void gst_qtdemux_loop_header (GstElement *element)
     }while(1);
 
     length = GUINT32_FROM_BE(*(guint32 *)data);
-    GST_DEBUG(0,"length %08x",length);
+    GST_DEBUG ("length %08x",length);
     fourcc = GUINT32_FROM_LE(*(guint32 *)(data+4));
-    GST_DEBUG(0,"fourcc " GST_FOURCC_FORMAT, GST_FOURCC_ARGS(fourcc));
+    GST_DEBUG ("fourcc " GST_FOURCC_FORMAT, GST_FOURCC_ARGS(fourcc));
     if(length==0){
       length = gst_bytestream_length(qtdemux->bs) - cur_offset;
     }
@@ -351,9 +354,9 @@ static void gst_qtdemux_loop_header (GstElement *element)
       guint32 length1, length2;
   
       length1 = GUINT32_FROM_BE(*(guint32 *)(data+8));
-      GST_DEBUG(0,"length1 %08x",length1);
+      GST_DEBUG ("length1 %08x",length1);
       length2 = GUINT32_FROM_BE(*(guint32 *)(data+12));
-      GST_DEBUG(0,"length2 %08x",length2);
+      GST_DEBUG ("length2 %08x",length2);
   
       length=length2;
     }
@@ -370,7 +373,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
 	do{
           ret = gst_bytestream_read(qtdemux->bs, &moov, length);
           if(ret < length){
-            GST_DEBUG(0,"read failed (%d < %d)",ret,length);
+            GST_DEBUG ("read failed (%d < %d)",ret,length);
             if(!gst_qtdemux_handle_sink_event(qtdemux)){
 	      return;
 	    }
@@ -395,7 +398,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
     ret = gst_bytestream_seek(qtdemux->bs, cur_offset + length,
         GST_SEEK_METHOD_SET);
     qtdemux->offset = cur_offset + length;
-    GST_DEBUG(0,"seek returned %d\n",ret);
+    GST_DEBUG ("seek returned %d\n",ret);
     break;
   }
   case QTDEMUX_STATE_SEEKING_EOS:
@@ -444,7 +447,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
 	    GST_BUFFER(gst_event_new (GST_EVENT_EOS)));
       }
       ret = gst_bytestream_seek(qtdemux->bs, 0, GST_SEEK_METHOD_END);
-      GST_DEBUG(0,"seek returned %d",ret);
+      GST_DEBUG ("seek returned %d",ret);
 
       qtdemux->state = QTDEMUX_STATE_SEEKING_EOS;
       return;
@@ -455,23 +458,23 @@ static void gst_qtdemux_loop_header (GstElement *element)
     offset = stream->samples[stream->sample_index].offset;
     size = stream->samples[stream->sample_index].size;
 
-    GST_DEBUG(0,"pushing from stream %d, sample_index=%d offset=%d size=%d",
+    GST_DEBUG ("pushing from stream %d, sample_index=%d offset=%d size=%d",
 	index, stream->sample_index, offset, size);
 
     cur_offset = gst_bytestream_tell(qtdemux->bs);
     if(offset != cur_offset){
-      GST_DEBUG(0,"seeking to offset %d",offset);
+      GST_DEBUG ("seeking to offset %d",offset);
       ret = gst_bytestream_seek(qtdemux->bs, offset, GST_SEEK_METHOD_SET);
-      GST_DEBUG(0,"seek returned %d",ret);
+      GST_DEBUG ("seek returned %d",ret);
       return;
     }
 
-    GST_DEBUG(0,"reading %d bytes\n",size);
+    GST_DEBUG ("reading %d bytes\n",size);
     buf = NULL;
     do{
       ret = gst_bytestream_read(qtdemux->bs, &buf, size);
       if(ret < size){
-        GST_DEBUG(0,"read failed (%d < %d)",ret,size);
+        GST_DEBUG ("read failed (%d < %d)",ret,size);
         if(!gst_qtdemux_handle_sink_event(qtdemux)){
 	  return;
 	}
@@ -500,14 +503,14 @@ static GstCaps *gst_qtdemux_src_getcaps(GstPad *pad, GstCaps *caps)
   QtDemuxStream *stream;
   int i;
 
-  GST_DEBUG(0,"gst_qtdemux_src_getcaps");
+  GST_DEBUG ("gst_qtdemux_src_getcaps");
 
   qtdemux = GST_QTDEMUX(gst_pad_get_parent(pad));
 
   g_return_val_if_fail(GST_IS_QTDEMUX(qtdemux), NULL);
 
-  GST_DEBUG(0, "looking for pad %p in qtdemux %p", pad, qtdemux);
-  GST_DEBUG(0, "n_streams is %d", qtdemux->n_streams);
+  GST_DEBUG ("looking for pad %p in qtdemux %p", pad, qtdemux);
+  GST_DEBUG ("n_streams is %d", qtdemux->n_streams);
   for(i=0;i<qtdemux->n_streams;i++){
     stream = qtdemux->streams[i];
     if(stream->pad == pad){
@@ -515,7 +518,7 @@ static GstCaps *gst_qtdemux_src_getcaps(GstPad *pad, GstCaps *caps)
     }
   }
 
-  GST_DEBUG(0,"Couldn't find stream cooresponding to pad\n");
+  GST_DEBUG ("Couldn't find stream cooresponding to pad\n");
 
   return NULL;
 }
@@ -527,23 +530,23 @@ gst_qtdemux_src_link(GstPad *pad, GstCaps *caps)
   QtDemuxStream *stream;
   int i;
 
-  GST_DEBUG(0,"gst_qtdemux_src_link");
+  GST_DEBUG ("gst_qtdemux_src_link");
 
   qtdemux = GST_QTDEMUX(gst_pad_get_parent(pad));
 
-  GST_DEBUG(0, "looking for pad %p in qtdemux %p", pad, qtdemux);
+  GST_DEBUG ("looking for pad %p in qtdemux %p", pad, qtdemux);
   g_return_val_if_fail(GST_IS_QTDEMUX(qtdemux), GST_PAD_LINK_REFUSED);
 
-  GST_DEBUG(0, "n_streams is %d", qtdemux->n_streams);
+  GST_DEBUG ("n_streams is %d", qtdemux->n_streams);
   for(i=0;i<qtdemux->n_streams;i++){
     stream = qtdemux->streams[i];
-    GST_DEBUG(0, "pad[%d] is %p", i, stream->pad);
+    GST_DEBUG ("pad[%d] is %p", i, stream->pad);
     if(stream->pad == pad){
       return GST_PAD_LINK_OK;
     }
   }
 
-  GST_DEBUG(0,"Couldn't find stream cooresponding to pad\n");
+  GST_DEBUG ("Couldn't find stream cooresponding to pad\n");
 
   return GST_PAD_LINK_REFUSED;
 }
@@ -581,9 +584,9 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
 
   qtdemux->streams[qtdemux->n_streams] = stream;
   qtdemux->n_streams++;
-  GST_DEBUG(0, "n_streams is now %d", qtdemux->n_streams);
+  GST_DEBUG ("n_streams is now %d", qtdemux->n_streams);
 
-  GST_DEBUG(0, "adding pad %p to qtdemux %p", stream->pad, qtdemux);
+  GST_DEBUG ("adding pad %p to qtdemux %p", stream->pad, qtdemux);
   gst_element_add_pad(GST_ELEMENT (qtdemux), stream->pad);
 
   /* Note: we need to have everything set up before calling try_set_caps */

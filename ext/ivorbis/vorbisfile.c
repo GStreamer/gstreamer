@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <gst/gst.h>
 #include <tremor/ivorbiscodec.h>
@@ -231,7 +234,7 @@ gst_ivorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 
   Ivorbisfile *ivorbisfile = GST_IVORBISFILE (datasource);
 
-  GST_DEBUG (0, "read %d", read_size);
+  GST_DEBUG ("read %d", read_size);
 
   /* make sure we don't go to EOS */
   if (!ivorbisfile->may_eos && ivorbisfile->total_bytes && 
@@ -253,7 +256,7 @@ gst_ivorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 
       switch (GST_EVENT_TYPE (event)) {
 	case GST_EVENT_EOS:
-	  GST_DEBUG (0, "eos");
+	  GST_DEBUG ("eos");
           ivorbisfile->eos = TRUE;
           if (avail == 0) {
             gst_event_unref (event);
@@ -261,7 +264,7 @@ gst_ivorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 	  }
 	  break;
 	case GST_EVENT_DISCONTINUOUS:
-	  GST_DEBUG (0, "discont");
+	  GST_DEBUG ("discont");
 	  ivorbisfile->need_discont = TRUE;
 	default:
           break;
@@ -295,7 +298,7 @@ gst_ivorbisfile_seek (void *datasource, int64_t offset, int whence)
     return -1;
   }
   
-  GST_DEBUG (0, "seek %lld %d", offset, whence);
+  GST_DEBUG ("seek %lld %d", offset, whence);
 
   if (whence == SEEK_SET) {
     method = GST_SEEK_METHOD_SET;
@@ -326,7 +329,7 @@ gst_ivorbisfile_seek (void *datasource, int64_t offset, int whence)
 static int
 gst_ivorbisfile_close (void *datasource)
 {
-  GST_DEBUG (0, "close");
+  GST_DEBUG ("close");
   return 0;
 }
 
@@ -338,7 +341,7 @@ gst_ivorbisfile_tell (void *datasource)
 
   result = gst_bytestream_tell (ivorbisfile->bs);
 
-  GST_DEBUG (0, "tell %ld", result);
+  GST_DEBUG ("tell %ld", result);
 
   return result;
 }
@@ -489,7 +492,7 @@ gst_ivorbisfile_loop (GstElement *element)
     ivorbisfile->may_eos = FALSE;
     ivorbisfile->vf.seekable = gst_bytestream_seek (ivorbisfile->bs, 0, 
 		                                   GST_SEEK_METHOD_SET);
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, "ivorbisfile: seekable: %s\n",
+    GST_DEBUG ("ivorbisfile: seekable: %s\n",
 	       ivorbisfile->vf.seekable ? "yes" : "no");
 
     /* open our custom ivorbisfile data object with the callbacks we provide */
@@ -576,7 +579,7 @@ gst_ivorbisfile_loop (GstElement *element)
 		 &link);
 
   if (ret == 0) {
-    GST_DEBUG (0, "eos");
+    GST_DEBUG ("eos");
     /* send EOS event */
     /*ov_clear (&ivorbisfile->vf);*/
     ivorbisfile->restart = TRUE;
@@ -935,11 +938,11 @@ gst_ivorbisfile_src_event (GstPad *pad, GstEvent *event)
       vorbis_info *vi;
       GstFormat format;
   
-      GST_DEBUG (GST_CAT_EVENT, "ivorbisfile: handling seek event on pad %s:%s",
+      GST_DEBUG ("ivorbisfile: handling seek event on pad %s:%s",
 		 GST_DEBUG_PAD_NAME (pad));
       if (!ivorbisfile->vf.seekable) {
 	gst_event_unref (event);
-	GST_DEBUG (GST_CAT_EVENT, "vorbis stream is not seekable");
+	GST_DEBUG ("vorbis stream is not seekable");
         return FALSE;
       }
 
@@ -957,7 +960,7 @@ gst_ivorbisfile_src_event (GstPad *pad, GstEvent *event)
 	case GST_FORMAT_BYTES:
           vi = ov_info (&ivorbisfile->vf, -1);
 	  if (vi->channels == 0) {
-	    GST_DEBUG (GST_CAT_EVENT, "vorbis stream has 0 channels ?");
+	    GST_DEBUG ("vorbis stream has 0 channels ?");
 	    res = FALSE;
 	    goto done; 
 	  }
@@ -980,7 +983,7 @@ gst_ivorbisfile_src_event (GstPad *pad, GstEvent *event)
 	  }
 	  else
 	  {
-	    GST_DEBUG (GST_CAT_EVENT, "unhandled seek format");
+	    GST_DEBUG ("unhandled seek format");
 	    res = FALSE;
 	  }
 	  break;

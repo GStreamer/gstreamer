@@ -30,6 +30,9 @@
  * - this might be improved upon with bytestream
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include "gstfilter.h"
 #include <math.h>		/* M_PI */
@@ -189,7 +192,7 @@ gst_lpwsinc_sink_connect (GstPad * pad, GstCaps * caps)
     /* fill the kernel */
     g_print ("DEBUG: initing filter kernel\n");
     len = filter->wing_size;
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+    GST_DEBUG (
 	       "lpwsinc: initializing filter kernel of length %d", len * 2 + 1);
     filter->kernel = (double *) g_malloc (sizeof (double) * (2 * len + 1));
 

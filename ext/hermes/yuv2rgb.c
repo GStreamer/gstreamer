@@ -111,7 +111,7 @@ gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to)
   GstColorSpaceConverter *new;
   gint to_bpp;
   
-  GST_DEBUG (0,"gst_colorspace_yuv2rgb_get_converter");
+  GST_DEBUG ("gst_colorspace_yuv2rgb_get_converter");
 
   new = g_malloc (sizeof (GstColorSpaceConverter));
 
@@ -138,9 +138,9 @@ gst_colorspace_yuv2rgb_get_converter (GstCaps *from, GstCaps *to)
       gst_caps_get_int (to, "green_mask", &green_mask);
       gst_caps_get_int (to, "blue_mask",  &blue_mask);
 
-      GST_INFO (GST_CAT_PLUGIN_INFO, "red_mask    %08x", red_mask);
-      GST_INFO (GST_CAT_PLUGIN_INFO, "green_mask  %08x", green_mask);
-      GST_INFO (GST_CAT_PLUGIN_INFO, "blue_mask   %08x", blue_mask);
+      GST_INFO ( "red_mask    %08x", red_mask);
+      GST_INFO ( "green_mask  %08x", green_mask);
+      GST_INFO ( "blue_mask   %08x", blue_mask);
 
       new->insize 	   = new->width * new->height + new->width * new->height/2;
       new->color_tables    = gst_colorspace_init_yuv (to_bpp, red_mask, green_mask, blue_mask);
@@ -211,7 +211,7 @@ gst_colorspace_converter_destroy (GstColorSpaceConverter *conv)
 static void gst_colorspace_I420_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 
 {
   int size;
-  GST_DEBUG (0,"gst_colorspace_I420_to_rgb32");
+  GST_DEBUG ("gst_colorspace_I420_to_rgb32");
 
   size = space->width * space->height;
 
@@ -227,7 +227,7 @@ static void gst_colorspace_I420_to_rgb32(GstColorSpaceConverter *space, unsigned
 
 static void gst_colorspace_I420_to_rgb24(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GST_DEBUG (0,"gst_colorspace_I420_to_rgb24");
+  GST_DEBUG ("gst_colorspace_I420_to_rgb24");
 
   size = space->width * space->height;
 
@@ -243,7 +243,7 @@ static void gst_colorspace_I420_to_rgb24(GstColorSpaceConverter *space, unsigned
 
 static void gst_colorspace_I420_to_rgb16(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GST_DEBUG (0,"gst_colorspace_I420_to_rgb16");
+  GST_DEBUG ("gst_colorspace_I420_to_rgb16");
 
   size = space->width * space->height;
 
@@ -260,7 +260,7 @@ static void gst_colorspace_I420_to_rgb16(GstColorSpaceConverter *space, unsigned
 #ifdef HAVE_LIBMMX
 static void gst_colorspace_I420_to_bgr32_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GST_DEBUG (0,"gst_colorspace_I420_to_rgb32_mmx");
+  GST_DEBUG ("gst_colorspace_I420_to_rgb32_mmx");
 
   size = space->width * space->height;
 
@@ -275,7 +275,7 @@ static void gst_colorspace_I420_to_bgr32_mmx(GstColorSpaceConverter *space, unsi
 }
 static void gst_colorspace_I420_to_bgr16_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GST_DEBUG (0,"gst_colorspace_I420_to_bgr16_mmx ");
+  GST_DEBUG ("gst_colorspace_I420_to_bgr16_mmx ");
 
   size = space->width * space->height;
 
@@ -286,7 +286,7 @@ static void gst_colorspace_I420_to_bgr16_mmx(GstColorSpaceConverter *space, unsi
                         dest,
 			space->height,
 			space->width);
-  GST_DEBUG (0,"gst_colorspace_I420_to_bgr16_mmx done");
+  GST_DEBUG ("gst_colorspace_I420_to_bgr16_mmx done");
 
 }
 #endif
@@ -295,7 +295,7 @@ static void gst_colorspace_I420_to_bgr16_mmx(GstColorSpaceConverter *space, unsi
 static void gst_colorspace_YV12_to_rgb32(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) 
 {
   int size;
-  GST_DEBUG (0,"gst_colorspace_YV12_to_rgb32");
+  GST_DEBUG ("gst_colorspace_YV12_to_rgb32");
 
   size = space->width * space->height;
 
@@ -311,7 +311,7 @@ static void gst_colorspace_YV12_to_rgb32(GstColorSpaceConverter *space, unsigned
 
 static void gst_colorspace_YV12_to_rgb24(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GST_DEBUG (0,"gst_colorspace_YV12_to_rgb24");
+  GST_DEBUG ("gst_colorspace_YV12_to_rgb24");
 
   size = space->width * space->height;
 
@@ -327,7 +327,7 @@ static void gst_colorspace_YV12_to_rgb24(GstColorSpaceConverter *space, unsigned
 
 static void gst_colorspace_YV12_to_rgb16(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GST_DEBUG (0,"gst_colorspace_YV12_to_rgb16");
+  GST_DEBUG ("gst_colorspace_YV12_to_rgb16");
 
   size = space->width * space->height;
 
@@ -344,7 +344,7 @@ static void gst_colorspace_YV12_to_rgb16(GstColorSpaceConverter *space, unsigned
 #ifdef HAVE_LIBMMX
 static void gst_colorspace_YV12_to_bgr32_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GST_DEBUG (0,"gst_colorspace_YV12_to_rgb32_mmx");
+  GST_DEBUG ("gst_colorspace_YV12_to_rgb32_mmx");
 
   size = space->width * space->height;
 
@@ -359,7 +359,7 @@ static void gst_colorspace_YV12_to_bgr32_mmx(GstColorSpaceConverter *space, unsi
 }
 static void gst_colorspace_YV12_to_bgr16_mmx(GstColorSpaceConverter *space, unsigned char *src, unsigned char *dest) {
   int size;
-  GST_DEBUG (0,"gst_colorspace_YV12_to_bgr16_mmx ");
+  GST_DEBUG ("gst_colorspace_YV12_to_bgr16_mmx ");
 
   size = space->width * space->height;
 
@@ -370,7 +370,7 @@ static void gst_colorspace_YV12_to_bgr16_mmx(GstColorSpaceConverter *space, unsi
                         dest,
 			space->height,
 			space->width);
-  GST_DEBUG (0,"gst_colorspace_YV12_to_bgr16_mmx done");
+  GST_DEBUG ("gst_colorspace_YV12_to_bgr16_mmx done");
 
 }
 #endif

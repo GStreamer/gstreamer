@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include <lcs/lcs.h>
 
@@ -181,7 +184,7 @@ colorspace_find_lcs_format (GstCaps *caps)
     format = lcs_format_new_simple_rgb_packed (red_bits, green_bits, blue_bits, 0,
 		    red_shift, green_shift, blue_shift, 0, depth, G_BYTE_ORDER);
 
-    GST_DEBUG (GST_CAT_NEGOTIATION, "%lu %lu %lu %lu %lu %lu %u %s\n", red_bits, green_bits, blue_bits, 
+    GST_DEBUG ("%lu %lu %lu %lu %lu %lu %u %s\n", red_bits, green_bits, blue_bits, 
 		    red_shift, green_shift, blue_shift, depth, lcs_format_get_layout (format));
   }
   else {
@@ -210,11 +213,11 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
   from_format 	= colorspace_find_lcs_format (from_caps);
   to_format 	= colorspace_find_lcs_format (to_caps);
 	  
-  GST_DEBUG (GST_CAT_NEGOTIATION, "trying from %4.4s to %4.4s\n", (gchar*)&from_space, (gchar*)&to_space);
+  GST_DEBUG ("trying from %4.4s to %4.4s\n", (gchar*)&from_space, (gchar*)&to_space);
   space->converter = lcs_get_converter (from_format, to_format, LCS_FLAG_FAST);
 
   if (space->converter) {
-    GST_DEBUG (GST_CAT_NEGOTIATION, "converting from %4.4s to %4.4s\n", (gchar*)&from_space, (gchar*)&to_space);
+    GST_DEBUG ("converting from %4.4s to %4.4s\n", (gchar*)&from_space, (gchar*)&to_space);
     space->type = GST_COLORSPACE_LCS;
     return TRUE;
   }
@@ -258,7 +261,7 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "width", &space->width);
   gst_caps_get_int (caps, "height", &space->height);
 
-  GST_INFO (GST_CAT_PROPERTIES, "size: %dx%d", space->width, space->height);
+  GST_INFO ( "size: %dx%d", space->width, space->height);
 
   space->sinkcaps = caps;
 

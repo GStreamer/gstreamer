@@ -31,7 +31,7 @@
 #include "v4l2_calls.h"
 
 #define DEBUG(format, args...) \
-	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4l2element), \
 		"V4L2-overlay: " format, ##args)
 

@@ -80,7 +80,7 @@ gst_jack_bin_class_init(GstJackBinClass *klass)
 static void
 gst_jack_bin_init(GstJackBin *this)
 {
-    GST_DEBUG (GST_CAT_THREAD, "initializing jack bin");
+    GST_DEBUG ("initializing jack bin");
     
     /* jack bins are managing bins and iterate themselves */
     GST_FLAG_SET (this, GST_BIN_FLAG_MANAGER);

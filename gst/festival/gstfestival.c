@@ -60,6 +60,9 @@
 /*                                                                       */
 /*=======================================================================*/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -240,7 +243,7 @@ gst_festival_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
 
   festival = GST_FESTIVAL (gst_pad_get_parent (pad));
-  GST_DEBUG (0, "gst_festival_chain: got buffer in '%s'",
+  GST_DEBUG ("gst_festival_chain: got buffer in '%s'",
           gst_object_get_name (GST_OBJECT (festival)));
 
   fd = fdopen(dup(festival->info->server_fd),"wb");

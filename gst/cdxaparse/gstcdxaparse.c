@@ -19,6 +19,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 
 #include "gstcdxaparse.h"
@@ -163,7 +166,7 @@ cdxa_type_find (GstBuffer *buf,
   gchar *data = GST_BUFFER_DATA (buf);
   GstCaps *new;
 
-  GST_DEBUG (0,"cdxa_parse: typefind");
+  GST_DEBUG ("cdxa_parse: typefind");
 
   if (GUINT32_FROM_LE (((guint32 *)data)[0]) != GST_RIFF_TAG_RIFF)
     return NULL;

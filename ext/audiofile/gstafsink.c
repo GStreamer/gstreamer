@@ -21,6 +21,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include "gstafsink.h"
 
@@ -316,10 +319,10 @@ gst_afsink_open_file (GstAFSink *sink)
     gst_caps_get_boolean (caps, "signed",     &sink->is_signed);
     gst_caps_get_int	 (caps, "endianness", &sink->endianness_data);
   }
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "channels %d, width %d, rate %d, signed %s",
+  GST_DEBUG ("channels %d, width %d, rate %d, signed %s",
   	   		sink->channels, sink->width, sink->rate,
   	   		sink->is_signed ? "yes" : "no");
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "endianness: data %d, output %d", 
+  GST_DEBUG ("endianness: data %d, output %d", 
 	   sink->endianness_data, sink->endianness_output);
   /* setup the output file */
   if (sink->is_signed)
@@ -485,7 +488,7 @@ gst_afsink_handle_event (GstPad *pad, GstEvent *event)
   GstAFSink *afsink;
 
   afsink = GST_AFSINK (gst_pad_get_parent (pad));
-  GST_DEBUG (0, "DEBUG: afsink: got event");
+  GST_DEBUG ("DEBUG: afsink: got event");
   gst_afsink_close_file (afsink);
 
   return TRUE;

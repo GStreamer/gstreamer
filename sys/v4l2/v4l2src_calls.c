@@ -29,7 +29,7 @@
 #include <sys/time.h>
 
 #define DEBUG(format, args...) \
-	GST_DEBUG_ELEMENT(GST_CAT_PLUGIN_INFO, \
+	GST_DEBUG_OBJECT (\
 		GST_ELEMENT(v4l2src), \
 		"V4L2SRC: " format, ##args)
 
@@ -400,7 +400,7 @@ gst_v4l2src_grab_frame (GstV4l2Src *v4l2src,
 		while (v4l2src->frame_queue_state[v4l2src->queue_frame] !=
 				QUEUE_STATE_READY_FOR_QUEUE &&
 		       !v4l2src->quit) {
-			GST_DEBUG(GST_CAT_PLUGIN_INFO,
+			GST_DEBUG (
 				  "Waiting for frames to become available (%d < %d)",
 				  v4l2src->num_queued, MIN_BUFFERS_QUEUED);
 			g_cond_wait(v4l2src->cond_queue_state,

@@ -22,6 +22,9 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
 #include <string.h>
 #include "gstsf.h"
@@ -322,7 +325,7 @@ gst_sf_request_new_pad (GstElement *element, GstPadTemplate *templ,
   this->channels = g_list_append (this->channels, channel);
   this->channelcount++;
   
-  GST_DEBUG (0, "sf added pad %s\n", name);
+  GST_DEBUG ("sf added pad %s\n", name);
 
   g_free (name);
   return channel->pad;

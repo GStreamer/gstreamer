@@ -18,6 +18,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "massink.h"
 
 #define  BUFFER_SIZE           640
@@ -218,14 +221,14 @@ gst_massink_chain (GstPad *pad, GstBuffer *buf)
   if (massink->clock) {
     GstClockID id = gst_clock_new_single_shot_id (massink->clock, GST_BUFFER_TIMESTAMP (buf));
 
-    GST_DEBUG (0, "massink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP (buf));
+    GST_DEBUG ("massink: clock wait: %llu\n", GST_BUFFER_TIMESTAMP (buf));
     gst_element_clock_wait (GST_ELEMENT (massink), id, NULL);
     gst_clock_id_free (id);
   }
 
   if (GST_BUFFER_DATA (buf) != NULL) {
     if (!massink->mute) {
-      GST_DEBUG (0, "massink: data=%p size=%d", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+      GST_DEBUG ("massink: data=%p size=%d", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
       if (GST_BUFFER_SIZE (buf) > BUFFER_SIZE) {
   	gst_buffer_unref (buf);
 	return;
@@ -357,19 +360,19 @@ gst_massink_open_audio (GstMassink *massink)
   err = mas_init();
     
   if (err < 0) {
-     GST_DEBUG(err, "connection with local MAS server failed.");
+     GST_DEBUG ("connection with local MAS server failed.");
      exit (1);
   }    
     
-  GST_DEBUG (0, "Establishing audio output channel.");
+  GST_DEBUG ("Establishing audio output channel.");
   mas_make_data_channel ("Gstreamer", &massink->audio_channel, &massink->audio_source, &massink->audio_sink);
   mas_asm_get_port_by_name (0, "default_mix_sink", &massink->mix_sink);
 
-  GST_DEBUG (0, "Instantiating endian device.");
+  GST_DEBUG ("Instantiating endian device.");
   err = mas_asm_instantiate_device ("endian", 0, 0, &massink->endian);
     
   if (err < 0) {
-     GST_DEBUG(0, "Failed to instantiate endian converter device");
+     GST_DEBUG ("Failed to instantiate endian converter device");
      exit(1);
   }
   
@@ -379,7 +382,7 @@ gst_massink_open_audio (GstMassink *massink)
   sprintf (bps, "%u", massink->depth);
   sprintf (ratestring, "%u", massink->frequency);
 
-  GST_DEBUG (0, "Connecting net -> endian.");
+  GST_DEBUG ("Connecting net -> endian.");
   masc_make_dc (&dc, 6);
     
   /* wav weirdness: 8 bit data is unsigned, >8 data is signed. */
@@ -391,7 +394,7 @@ gst_massink_open_audio (GstMassink *massink)
   err = mas_asm_connect_source_sink (massink->audio_source, massink->endian_sink, dc);
   
   if ( err < 0 ) {
-     GST_DEBUG(err, "Failed to connect net audio output to endian");
+     GST_DEBUG ("Failed to connect net audio output to endian");
      return -1;
   }
     
@@ -404,17 +407,17 @@ gst_massink_open_audio (GstMassink *massink)
   massink->open_source = massink->endian_source;
     
   if (massink->depth != 16) {
-     GST_DEBUG (0, "Sample resolution is not 16 bit/sample, instantiating squant device.");
+     GST_DEBUG ("Sample resolution is not 16 bit/sample, instantiating squant device.");
      err = mas_asm_instantiate_device ("squant", 0, 0, &massink->squant);
      if (err < 0) {
-	 GST_DEBUG(err, "Failed to instantiate squant device");
+	 GST_DEBUG ("Failed to instantiate squant device");
          return -1;
      }
 	
      mas_asm_get_port_by_name (massink->squant, "squant_sink", &massink->squant_sink);
      mas_asm_get_port_by_name (massink->squant, "squant_source", &massink->squant_source);
 
-     GST_DEBUG (0, "Connecting endian -> squant.");
+     GST_DEBUG ("Connecting endian -> squant.");
 
      masc_make_dc (&dc, 6);
      masc_append_dc_key_value (dc,"format",(massink->depth==8) ? "ulinear":"linear");
@@ -425,7 +428,7 @@ gst_massink_open_audio (GstMassink *massink)
      err = mas_asm_connect_source_sink (massink->endian_source, massink->squant_sink, dc);
         
      if (err < 0) {
-        GST_DEBUG(err, "Failed to connect endian output to squant");
+        GST_DEBUG ("Failed to connect endian output to squant");
         return -1;
     }
 
@@ -436,18 +439,18 @@ gst_massink_open_audio (GstMassink *massink)
     
    /* Another 'if necessary' device, as above */
    if (massink->frequency != 44100) {
-     GST_DEBUG (0, "Sample rate is not 44100, instantiating srate device.");
+     GST_DEBUG ("Sample rate is not 44100, instantiating srate device.");
      err = mas_asm_instantiate_device ("srate", 0, 0, &massink->srate);
 	
      if (err < 0) {
-	GST_DEBUG (err, "Failed to instantiate srate device");
+	GST_DEBUG ("Failed to instantiate srate device");
         return -1;
      }
 	
      mas_asm_get_port_by_name (massink->srate, "sink", &massink->srate_sink);
      mas_asm_get_port_by_name (massink->srate, "source", &massink->srate_source);
 	
-     GST_DEBUG (0, "Connecting to srate.");
+     GST_DEBUG ("Connecting to srate.");
      masc_make_dc (&dc, 6);
      masc_append_dc_key_value (dc, "format", "linear");
      masc_append_dc_key_value (dc, "resolution", "16");
@@ -458,7 +461,7 @@ gst_massink_open_audio (GstMassink *massink)
      err = mas_asm_connect_source_sink (massink->open_source, massink->srate_sink, dc);
 	
      if ( err < 0 ) {
-	GST_DEBUG(err, "Failed to connect to srate");
+	GST_DEBUG ("Failed to connect to srate");
         return -1;
      }
 
@@ -466,7 +469,7 @@ gst_massink_open_audio (GstMassink *massink)
      massink->open_source = massink->srate_source;        
   }
 
-  GST_DEBUG(0, "Connecting to mix.");
+  GST_DEBUG ("Connecting to mix.");
   masc_make_dc(&dc, 6);
   masc_append_dc_key_value (dc, "format", "linear");
   masc_append_dc_key_value (dc, "resolution", "16");
@@ -477,7 +480,7 @@ gst_massink_open_audio (GstMassink *massink)
   err = mas_asm_connect_source_sink (massink->open_source, massink->mix_sink, dc);
     
   if ( err < 0 ) {
-    GST_DEBUG(err, "Failed to connect to mixer");
+    GST_DEBUG ("Failed to connect to mixer");
     return -1;
   }
   
@@ -519,7 +522,7 @@ gst_massink_close_audio (GstMassink *massink)
   
   GST_FLAG_UNSET (massink, GST_MASSINK_OPEN);
 
-  GST_DEBUG (0, "massink: closed sound channel");
+  GST_DEBUG ("massink: closed sound channel");
 }*/
 
 static GstElementStateReturn

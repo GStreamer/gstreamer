@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <fame.h>
 #include <string.h>
 
@@ -308,7 +311,7 @@ gst_fameenc_sinkconnect (GstPad *pad, GstCaps *caps)
     return GST_PAD_LINK_DELAYED;
 
   if (fameenc->initialized) {
-    GST_DEBUG(0, "error: fameenc encoder already initialized !");
+    GST_DEBUG ("error: fameenc encoder already initialized !");
     return GST_PAD_LINK_REFUSED;
   }
 
@@ -415,7 +418,7 @@ gst_fameenc_chain (GstPad *pad, GstBuffer *buf)
   data = (guchar *) GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  GST_DEBUG (0,"gst_fameenc_chain: got buffer of %ld bytes in '%s'", 
+  GST_DEBUG ("gst_fameenc_chain: got buffer of %ld bytes in '%s'", 
 	     size, GST_OBJECT_NAME (fameenc));
 
   /* the data contains the three planes side by side, with size w * h, w * h /4,
@@ -453,7 +456,7 @@ gst_fameenc_chain (GstPad *pad, GstBuffer *buf)
     memcpy (GST_BUFFER_DATA(outbuf), fameenc->buffer, length);
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
-    GST_DEBUG (0,"gst_fameenc_chain: pushing buffer of size %d",
+    GST_DEBUG ("gst_fameenc_chain: pushing buffer of size %d",
                GST_BUFFER_SIZE(outbuf));
 
     gst_pad_push (fameenc->srcpad, outbuf);
@@ -474,7 +477,7 @@ gst_fameenc_set_property (GObject *object, guint prop_id,
   fameenc = GST_FAMEENC (object);
 
   if (fameenc->initialized) {
-    GST_DEBUG(0, "error: fameenc encoder already initialized, cannot set properties !");
+    GST_DEBUG ("error: fameenc encoder already initialized, cannot set properties !");
     return;
   }
 

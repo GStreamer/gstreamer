@@ -19,6 +19,9 @@
 
 /* let's not forget to mention that all this was based on aasink ;-) */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <config.h>
 #include <signal.h>
 #include <string.h>
@@ -342,7 +345,7 @@ gst_sdlvideosink_create (GstSDLVideoSink *sdlvideosink, gboolean showlogo)
   else
     SDL_DisplayYUVOverlay(sdlvideosink->yuv_overlay, &(sdlvideosink->rect));
 
-  GST_DEBUG (0, "sdlvideosink: setting %08lx (" GST_FOURCC_FORMAT ")", sdlvideosink->format, GST_FOURCC_ARGS(sdlvideosink->format));
+  GST_DEBUG ("sdlvideosink: setting %08lx (" GST_FOURCC_FORMAT ")", sdlvideosink->format, GST_FOURCC_ARGS(sdlvideosink->format));
   
   /* TODO: is this the width of the input image stream or of the widget? */
   g_signal_emit (G_OBJECT (sdlvideosink), gst_sdlvideosink_signals[SIGNAL_HAVE_SIZE], 0,
@@ -440,7 +443,7 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
     return;
   }
 
-  GST_DEBUG (0,"videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
+  GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
   if (sdlvideosink->clock) {
     GstClockID id = gst_clock_new_single_shot_id (sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
 

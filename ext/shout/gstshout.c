@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstshout.h"
 
 /* elementfactory information */
@@ -393,7 +396,7 @@ gst_icecastsend_change_state (GstElement *element)
 
   icecastsend = GST_ICECASTSEND(element);
 
-  GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
+  GST_DEBUG ("state pending %d", GST_STATE_PENDING (element));
 
   /* if going down into NULL state, close the file if it's open */
   switch (GST_STATE_TRANSITION (element)) {

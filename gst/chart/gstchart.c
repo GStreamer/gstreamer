@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <config.h>
 #include <gst/gst.h>
 
@@ -240,7 +243,7 @@ gst_chart_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_int (caps, "rate", &chart->samplerate);
   chart->samples_between_frames = chart->samplerate / chart->framerate;
 
-  GST_DEBUG (0, "CHART: new sink caps: rate %d",
+  GST_DEBUG ("CHART: new sink caps: rate %d",
 	     chart->samplerate);
   /*gst_chart_sync_parms (chart); */
   /* */
@@ -255,7 +258,7 @@ draw_chart_16bpp(guchar * output, gint width, gint height,
     guint16 *colstart;
     gint16 * in;
 
-    GST_DEBUG (0, "CHART: drawing frame to %p, width = %d, height = %d, src_data = %p, src_size = %d",
+    GST_DEBUG ("CHART: drawing frame to %p, width = %d, height = %d, src_data = %p, src_size = %d",
 	       output, width, height, src_data, src_size);
     
     for (colstart = (guint16 *)output, in = (gint16 *)src_data, i = 0;
@@ -314,14 +317,14 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
   chart = GST_CHART(GST_OBJECT_PARENT (pad));
   g_return_if_fail (chart != NULL);
 
-  GST_DEBUG (0, "CHART: chainfunc called");
+  GST_DEBUG ("CHART: chainfunc called");
 
   samples_in = GST_BUFFER_SIZE (bufin) / sizeof(gint16);
   datain = (gint16 *) (GST_BUFFER_DATA (bufin));
-  GST_DEBUG (0, "input buffer has %d samples", samples_in);
+  GST_DEBUG ("input buffer has %d samples", samples_in);
   if (chart->next_time <= GST_BUFFER_TIMESTAMP (bufin)) {
     chart->next_time = GST_BUFFER_TIMESTAMP (bufin);
-    GST_DEBUG (0, "in:  %" G_GINT64_FORMAT, GST_BUFFER_TIMESTAMP (bufin));
+    GST_DEBUG ("in:  %" G_GINT64_FORMAT, GST_BUFFER_TIMESTAMP (bufin));
   }
 
   chart->samples_since_last_frame += samples_in;
@@ -336,7 +339,7 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
 	  dataout = g_malloc (sizeout);
 	  GST_BUFFER_SIZE(bufout) = sizeout;
 	  GST_BUFFER_DATA(bufout) = dataout;
-	  GST_DEBUG (0, "CHART: made new buffer: size %d, width %d, height %d",
+	  GST_DEBUG ("CHART: made new buffer: size %d, width %d, height %d",
 		     sizeout, chart->width, chart->height);
 
 	  /* take data and draw to new buffer */
@@ -350,7 +353,7 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
 
           /* Check if we need to renegotiate size. */
           if (chart->first_buffer) {
-	    GST_DEBUG (0, "making new pad");
+	    GST_DEBUG ("making new pad");
 	    if (gst_pad_try_set_caps (chart->srcpad,
 			    GST_CAPS_NEW (
 			      "chartsrc",
@@ -372,17 +375,17 @@ gst_chart_chain (GstPad *pad, GstBuffer *bufin)
 	    chart->first_buffer = FALSE;
           }
 
-	  GST_DEBUG (0, "CHART: outputting buffer");
+	  GST_DEBUG ("CHART: outputting buffer");
 	  /* output buffer */
 	  GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_READONLY);
 	  gst_pad_push (chart->srcpad, bufout);
       }
   } else {
-      GST_DEBUG (0, "CHART: skipping buffer");
+      GST_DEBUG ("CHART: skipping buffer");
       gst_buffer_unref(bufin);
   }
 
-  GST_DEBUG (0, "CHART: exiting chainfunc");
+  GST_DEBUG ("CHART: exiting chainfunc");
 }
 
 static void

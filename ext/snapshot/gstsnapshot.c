@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 #include <inttypes.h>
 
@@ -263,7 +266,7 @@ gst_snapshot_chain (GstPad *pad, GstBuffer *buf)
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
-  GST_DEBUG (0,"snapshot: have buffer of %d\n", GST_BUFFER_SIZE(buf));
+  GST_DEBUG ("snapshot: have buffer of %d\n", GST_BUFFER_SIZE(buf));
 
   outbuf = gst_buffer_new();
   GST_BUFFER_DATA(outbuf) = g_malloc(GST_BUFFER_SIZE(buf));
@@ -278,7 +281,7 @@ gst_snapshot_chain (GstPad *pad, GstBuffer *buf)
 
     if ( snapshot->format == GST_MAKE_FOURCC('Y','U','Y','2') )
     {
-      GST_DEBUG(0, "YUY2 => RGB\n");
+      GST_DEBUG ("YUY2 => RGB\n");
       buffer_i420 = g_malloc ((image_size * (snapshot->to_bpp/8)) );
       gst_colorspace_yuy2_to_i420( data, buffer_i420, snapshot->width, snapshot->height);
       data_to_convert = buffer_i420;
@@ -288,7 +291,7 @@ gst_snapshot_chain (GstPad *pad, GstBuffer *buf)
 
     gst_colorspace_convert (snapshot->converter, data_to_convert, data_converted); 
 
-    GST_INFO (0,"dumpfile : %s\n", snapshot->location );
+    GST_INFO ("dumpfile : %s\n", snapshot->location );
     fp = fopen( snapshot->location, "wb" );
     if ( fp == NULL )
       g_warning(" Can not open %s\n", snapshot->location );
