@@ -692,7 +692,7 @@ gst_colorspace_yuv_to_bgr32_mmx(tables, lum, cr, cb, out, rows, cols)
       for (x=cols4; x; x--) {
 
         // create Cr (result in mm1)
-        movd_m2r(*(mmx_t *)cr, mm1);      	//         0  0  0  0  v3 v2 v1 v0
+        movd_m2r(*(mmx_t *)cb, mm1);      	//         0  0  0  0  v3 v2 v1 v0
         pxor_r2r(mm7, mm7);      		//         00 00 00 00 00 00 00 00
         movd_m2r(*(mmx_t *)lum, mm2);           //          0  0  0  0 l3 l2 l1 l0
         punpcklbw_r2r(mm7, mm1); 		//         0  v3 0  v2 00 v1 00 v0
@@ -726,7 +726,7 @@ gst_colorspace_yuv_to_bgr32_mmx(tables, lum, cr, cb, out, rows, cols)
         punpcklbw_r2r(mm5, mm6);      		//  R3 R2 R1 R0 r3 r2 r1 r0
 
         // create Cb (result in mm1)
-        movd_m2r(*(mmx_t *)cb, mm1);      	//         0  0  0  0  u3 u2 u1 u0
+        movd_m2r(*(mmx_t *)cr, mm1);      	//         0  0  0  0  u3 u2 u1 u0
         punpcklbw_r2r(mm7, mm1); 		//         0  u3 0  u2 00 u1 00 u0
         punpckldq_r2r(mm1, mm1); 		//         00 u1 00 u0 00 u1 00 u0
         psubw_m2r(MMX_80w, mm1);   		// mm1-128:u1 u1 u0 u0 u1 u1 u0 u0 
