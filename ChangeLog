@@ -1,3 +1,8 @@
+2004-04-05  David Schleef  <ds@schleef.org>
+
+	* ext/kio/kiosrc.cpp:  Undefine KDE_DEPRECATED so we can use
+	a deprecated function (hack!)
+
 2004-04-05  Benjamin Otte  <otte@gnome.org>
 
 	* ext/esd/esdmon.c: (gst_esdmon_get):
