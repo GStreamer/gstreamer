@@ -89,6 +89,7 @@
 	* gst-libs/gst/video/video.vcproj
 	* gst-libs/gst/xoverlay/xoverlay.vcproj
 	  avoid problems with math.h, fix release dependancy
+	  rename GStreamer-0.8.lib to libgstreamer.lib
 
 2004-07-27  Julien MOUTTE  <julien@moutte.net>
 
