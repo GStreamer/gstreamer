@@ -1,7 +1,7 @@
-/* GStreamer mpeg2enc (mjpegtools) wrapper
+/* GStreamer mplex (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
- * gstmpeg2encpicturereader.hh: GStreamer/mpeg2enc input wrapper
+ * gstmplexjob.hh: gstreamer/mplex multiplex-job wrapper
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,31 +19,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_MPEG2ENCPICTUREREADER_H__
-#define __GST_MPEG2ENCPICTUREREADER_H__
+#ifndef __GST_MPLEXJOB_H__
+#define __GST_MPLEXJOB_H__
 
-#include <gst/gst.h>
+#include <glib-object.h>
+#include <interact.hpp>
 
-#include <picturereader.hh>
-#include "gstmpeg2encoptions.hh"
-
-class GstMpeg2EncPictureReader : public PictureReader {
+class GstMplexJob : public MultiplexJob {
 public:
-  GstMpeg2EncPictureReader (GstPad        *pad,
-			    const GstCaps *caps,
-			    EncoderParams *params);
-  ~GstMpeg2EncPictureReader ();
+  GstMplexJob (void);
 
-  /* get input picture parameters (width/height etc.) */
-  void StreamPictureParams (MPEG2EncInVidParams &strm);
+  /* gobject properties */
+  static void initProperties (GObjectClass *klass);
 
-protected:
-  /* read a frame */
-  bool LoadFrame ();
-
-private:
-  GstPad *pad;
-  GstCaps *caps;
+  /* set/get gobject properties */
+  void getProperty (guint         prop_id,
+		    GValue       *value);
+  void setProperty (guint         prop_id,
+		    const GValue *value);
 };
 
-#endif /* __GST_MPEG2ENCPICTUREREADER_H__ */
+#endif /* __GST_MPLEXJOB_H__ */

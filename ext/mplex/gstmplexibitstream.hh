@@ -1,7 +1,7 @@
-/* GStreamer mpeg2enc (mjpegtools) wrapper
+/* GStreamer mplex (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
- * gstmpeg2encpicturereader.hh: GStreamer/mpeg2enc input wrapper
+ * gstmplexibitstream.hh: gstreamer/mplex input bitstream wrapper
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,31 +19,32 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_MPEG2ENCPICTUREREADER_H__
-#define __GST_MPEG2ENCPICTUREREADER_H__
+#ifndef __GST_MPLEXIBITSTREAM_H__
+#define __GST_MPLEXIBITSTREAM_H__
 
 #include <gst/gst.h>
+#include <gst/bytestream/bytestream.h>
+#include <mjpeg_types.h>
+#include <bits.hpp>
 
-#include <picturereader.hh>
-#include "gstmpeg2encoptions.hh"
-
-class GstMpeg2EncPictureReader : public PictureReader {
+class GstMplexIBitStream : public IBitStream {
 public:
-  GstMpeg2EncPictureReader (GstPad        *pad,
-			    const GstCaps *caps,
-			    EncoderParams *params);
-  ~GstMpeg2EncPictureReader ();
-
-  /* get input picture parameters (width/height etc.) */
-  void StreamPictureParams (MPEG2EncInVidParams &strm);
+  GstMplexIBitStream (GstPad *pad, 
+		      guint   buf_size = BUFFER_SIZE);
+  ~GstMplexIBitStream (void);
 
 protected:
-  /* read a frame */
-  bool LoadFrame ();
+  /* read data */
+  size_t ReadStreamBytes (uint8_t *buf,
+			  size_t   number);
+
+  /* are we at EOS? */
+  bool EndOfStream (void);
 
 private:
   GstPad *pad;
-  GstCaps *caps;
+  GstByteStream *bs;
+  gboolean eos;
 };
 
-#endif /* __GST_MPEG2ENCPICTUREREADER_H__ */
+#endif /* __GST_MPLEXIBITSTREAM_H__ */

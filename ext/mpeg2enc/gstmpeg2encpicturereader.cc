@@ -32,7 +32,7 @@
  */
 
 GstMpeg2EncPictureReader::GstMpeg2EncPictureReader (GstPad        *in_pad,
-						    GstCaps       *in_caps,
+						    const GstCaps *in_caps,
 						    EncoderParams *params) :
   PictureReader (*params)
 {
@@ -91,9 +91,12 @@ GstMpeg2EncPictureReader::LoadFrame ()
   guint8 *frame;
 
   do {
-    if (!(data = gst_pad_pull (pad))) {
+    if ((data = (GstData *) gst_pad_get_element_private (pad))) {
+      gst_pad_set_element_private (pad, NULL);
+    } else if (!(data = gst_pad_pull (pad))) {
       return true;
-    } else if (GST_IS_EVENT (data)) {
+    }
+    if (GST_IS_EVENT (data)) {
       if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
         gst_pad_event_default (pad, GST_EVENT (data));
         return true;

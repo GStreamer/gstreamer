@@ -1,7 +1,7 @@
-/* GStreamer mpeg2enc (mjpegtools) wrapper
+/* GStreamer mplex (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
- * gstmpeg2encpicturereader.hh: GStreamer/mpeg2enc input wrapper
+ * gstmplexoutputstream.hh: gstreamer/mplex output stream wrapper
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,31 +19,36 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_MPEG2ENCPICTUREREADER_H__
-#define __GST_MPEG2ENCPICTUREREADER_H__
+#ifndef __GST_MPLEXOUTPUTSTREAM_H__
+#define __GST_MPLEXOUTPUTSTREAM_H__
 
 #include <gst/gst.h>
+#include <mjpeg_types.h>
+#include <outputstrm.hpp>
 
-#include <picturereader.hh>
-#include "gstmpeg2encoptions.hh"
-
-class GstMpeg2EncPictureReader : public PictureReader {
+class GstMplexOutputStream : public OutputStream {
 public:
-  GstMpeg2EncPictureReader (GstPad        *pad,
-			    const GstCaps *caps,
-			    EncoderParams *params);
-  ~GstMpeg2EncPictureReader ();
+  GstMplexOutputStream (GstElement *element,
+			GstPad     *pad);
 
-  /* get input picture parameters (width/height etc.) */
-  void StreamPictureParams (MPEG2EncInVidParams &strm);
+  /* open/close. Basically 'no-op's (close() sets EOS). */
+  int  Open  (void);
+  void Close (void);
 
-protected:
-  /* read a frame */
-  bool LoadFrame ();
+  /* get size of current segment */
+  off_t SegmentSize (void);
+
+  /* next segment */
+  void NextSegment (void);
+
+  /* write data */
+  void Write (guint8 *data,
+	      guint   len);
 
 private:
+  GstElement *element;
   GstPad *pad;
-  GstCaps *caps;
+  guint64 size;
 };
 
-#endif /* __GST_MPEG2ENCPICTUREREADER_H__ */
+#endif /* __GST_MPLEXOUTPUTSTREAM_H__ */

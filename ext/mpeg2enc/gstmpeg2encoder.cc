@@ -37,7 +37,7 @@
 
 GstMpeg2Encoder::GstMpeg2Encoder (GstMpeg2EncOptions *options,
 				  GstPad             *sinkpad,
-				  GstCaps            *caps,
+				  const GstCaps      *caps,
 				  GstPad             *srcpad) :
   MPEG2Encoder (*options)
 {

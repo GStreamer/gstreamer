@@ -31,7 +31,7 @@ class GstMpeg2Encoder : public MPEG2Encoder {
 public:
   GstMpeg2Encoder (GstMpeg2EncOptions *options,
 		   GstPad             *sinkpad,
-		   GstCaps            *caps,
+		   const GstCaps      *caps,
 		   GstPad             *srcpad);
 
   /* one image */

@@ -89,7 +89,7 @@ src_templ (void)
 				NULL);
     add_fps (caps);
 
-    templ = gst_pad_template_new ("sink", GST_PAD_SINK,
+    templ = gst_pad_template_new ("src", GST_PAD_SRC,
 				  GST_PAD_ALWAYS, caps);
   }
 
@@ -205,14 +205,15 @@ static void
 gst_mpeg2enc_init (GstMpeg2enc *enc)
 {
   GstElement *element = GST_ELEMENT (enc);
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
 
   enc->sinkpad = gst_pad_new_from_template (
-	gst_element_get_pad_template (element, "sink"), "sink");
+	gst_element_class_get_pad_template (klass, "sink"), "sink");
   gst_pad_set_link_function (enc->sinkpad, gst_mpeg2enc_sink_link);
   gst_element_add_pad (element, enc->sinkpad);
 
   enc->srcpad = gst_pad_new_from_template (
-	gst_element_get_pad_template (element, "src"), "src");
+	gst_element_class_get_pad_template (klass, "src"), "src");
   gst_pad_set_getcaps_function (enc->srcpad, gst_mpeg2enc_src_getcaps);
   gst_element_add_pad (element, enc->srcpad);
 
@@ -229,7 +230,12 @@ gst_mpeg2enc_loop (GstElement *element)
   GstMpeg2enc *enc = GST_MPEG2ENC (element);
 
   if (!enc->encoder) {
-    GstCaps *caps;
+    const GstCaps *caps;
+    GstData *data;
+
+    /* make sure we've had data */
+    data = gst_pad_pull (enc->sinkpad);
+    gst_pad_set_element_private (enc->sinkpad, data);
 
     if (!(caps = GST_PAD_CAPS (enc->sinkpad))) {
       gst_element_error (element,
@@ -281,8 +287,8 @@ gst_mpeg2enc_src_getcaps (GstPad *pad)
     return enc->encoder->getFormat ();
   }
 
-  return (GstCaps* ) gst_pad_template_get_caps (
-	gst_element_get_pad_template (gst_pad_get_parent (pad), "src"));
+  return gst_caps_copy (gst_pad_template_get_caps (
+	gst_element_get_pad_template (gst_pad_get_parent (pad), "src")));
 }
 
 static void
