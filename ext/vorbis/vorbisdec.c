@@ -246,7 +246,7 @@ vorbis_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
   }
 
   /* and convert to the final format */
-  if (!vorbis_dec_convert (pad, GST_FORMAT_DEFAULT, granulepos, format, value))
+  if (!gst_pad_convert (pad, GST_FORMAT_DEFAULT, granulepos, format, value))
     return FALSE;
 
   GST_LOG_OBJECT (dec,

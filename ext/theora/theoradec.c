@@ -243,10 +243,11 @@ theora_dec_src_convert (GstPad * pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          scale = 4 * (dec->info.width * dec->info.height) / 3;
+          scale = 3 * (dec->info.width * dec->info.height) / 2;
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * scale * dec->info.fps_numerator /
-              (dec->info.fps_denominator * GST_SECOND);
+          *dest_value =
+              scale * (((guint64) src_value * dec->info.fps_numerator) /
+              (dec->info.fps_denominator * GST_SECOND));
           break;
         default:
           res = FALSE;
@@ -339,10 +340,10 @@ theora_dec_src_query (GstPad * pad, GstQueryType query, GstFormat * format,
   /* and convert to the final format in two steps with time as the 
    * intermediate step */
   my_format = GST_FORMAT_TIME;
-  if (!theora_dec_sink_convert (dec->sinkpad, granulepos, GST_FORMAT_DEFAULT,
+  if (!theora_dec_sink_convert (dec->sinkpad, GST_FORMAT_DEFAULT, granulepos,
           &my_format, &time))
     return FALSE;
-  if (!theora_dec_src_convert (pad, my_format, time, format, value))
+  if (!gst_pad_convert (pad, my_format, time, format, value))
     return FALSE;
 
   GST_LOG_OBJECT (dec,
@@ -364,24 +365,31 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:{
       guint64 value;
 
-      /* convert to granulepos, this will fail as we cannot generate
-       * a granulepos, only convert an existing one to something else,
-       * which basically means that seeking doesn't work this way */
-      format = GST_FORMAT_DEFAULT;
-      res = theora_dec_sink_convert (pad, GST_EVENT_SEEK_FORMAT (event),
+      /* we have to ask our peer to seek to time here as we know
+       * nothing about how to generate a granulepos from the src
+       * formats or anything.
+       * 
+       * First bring the requested format to time 
+       */
+      format = GST_FORMAT_TIME;
+      res = gst_pad_convert (pad, GST_EVENT_SEEK_FORMAT (event),
           GST_EVENT_SEEK_OFFSET (event), &format, &value);
-      if (res) {
-        GstEvent *real_seek = gst_event_new_seek (
-            (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
-            GST_FORMAT_DEFAULT,
-            value);
+      if (!res)
+        goto error;
 
-        res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
-        if (res) {
-          /* sync to keyframe */
-          dec->need_keyframe = TRUE;
-        }
-      }
+      /* then seek with time on the peer */
+      GstEvent *real_seek = gst_event_new_seek (
+          (GST_EVENT_SEEK_TYPE (event) & ~GST_SEEK_FORMAT_MASK) |
+          format, value);
+
+      res = gst_pad_send_event (GST_PAD_PEER (dec->sinkpad), real_seek);
+      if (!res)
+        goto error;
+
+      /* all worked, make sure we sync to keyframe */
+      dec->need_keyframe = TRUE;
+
+    error:
       gst_event_unref (event);
       break;
     }
