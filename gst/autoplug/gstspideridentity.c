@@ -357,8 +357,14 @@ static void
 gst_spider_identity_start_typefinding (GstSpiderIdentity *ident)
 {
   GstElement* typefind;
+  gboolean restart = FALSE;
   
   GST_DEBUG (GST_CAT_AUTOPLUG, "element %s starts typefinding\n", GST_ELEMENT_NAME(ident));
+  if (GST_STATE (GST_ELEMENT_PARENT (ident)) == GST_STATE_PLAYING)
+  {
+    gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT (ident)), GST_STATE_PAUSED);
+    restart = TRUE;
+  }
   
   /* create and connect typefind object */
   typefind = gst_elementfactory_make ("typefind", g_strdup_printf("%s%s", "typefind", GST_ELEMENT_NAME(ident)));
@@ -368,6 +374,11 @@ gst_spider_identity_start_typefinding (GstSpiderIdentity *ident)
   gst_pad_connect (gst_element_get_compatible_pad ((GstElement *) ident, gst_element_get_pad (typefind, "sink")), gst_element_get_pad (typefind, "sink"));
   
   gst_element_set_loop_function (GST_ELEMENT (ident), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_sink_loop_typefinding));
+
+  if (restart)
+  {
+    gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT (ident)), GST_STATE_PLAYING);
+  }
 }
 /* waiting for a good suggestion on where to set the caps from typefinding
  * Caps must be cleared when pad is disconnected
