@@ -26,6 +26,8 @@ GSList *g_slist_delete_link (GSList *list, GSList *llink);
 #define G_CSET_a_2_z       "abcdefghijklmnopqrstuvwxyz"
 #define G_CSET_DIGITS      "0123456789"
 
+#define G_USEC_PER_SEC	   1000000
+
 gchar* g_strcanon (gchar *string, const gchar *valid_chars, 
                    gchar substitutor);
 
@@ -121,6 +123,7 @@ G_STMT_START{ \
 }G_STMT_END
 
 #define g_object_set(o,args...)		        gtk_object_set ((GtkObject *) (o), ## args)
+#define g_object_get(o,args...)
 
 
 /* type system */

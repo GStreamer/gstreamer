@@ -93,6 +93,7 @@ GType			gst_scheduler_get_type		(void);
 
 #define         	gst_scheduler_destroy(sched)	gst_object_destroy(GST_OBJECT(sched))
 
+
 void			gst_scheduler_setup		(GstScheduler *sched);
 void			gst_scheduler_reset		(GstScheduler *sched);
 void			gst_scheduler_add_element	(GstScheduler *sched, GstElement *element);
