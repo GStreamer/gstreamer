@@ -248,7 +248,7 @@ gst_object_unref (GstObject *object)
  *
  * Removes floating reference on an object.  Any newly created object has
  * a refcount of 1 and is FLOATING.  This function should be used when
- * creating a new object to symbolically 'take ownership of' the object.
+ * creating a new object to symbolically 'take ownership' of the object.
  * Use #gst_object_set_parent to have this done for you.
  */
 void
@@ -303,7 +303,7 @@ gst_object_dispose (GObject *object)
   parent_class->dispose (object);
 }
 
-/* finilize is called when the object has to free its resources */
+/* finalize is called when the object has to free its resources */
 static void
 gst_object_finalize (GObject *object)
 {
@@ -496,9 +496,10 @@ gst_object_get_name (GstObject *object)
  * @object: GstObject to set parent of
  * @parent: new parent of object
  *
- * Set the parent of the object.  The object's reference count is
- * incremented.
- * signals the parent-set signal
+ * Sets the parent of @object. The object's reference count will be incremented,
+ * and any floating reference will be removed (see gst_object_sink()).
+ *
+ * Causes the parent-set signal to be emitted.
  */
 void
 gst_object_set_parent (GstObject *object, GstObject *parent)
@@ -521,7 +522,7 @@ gst_object_set_parent (GstObject *object, GstObject *parent)
  * gst_object_get_parent:
  * @object: GstObject to get parent of
  *
- * Return the parent of the object.
+ * Returns the parent of @object.
  *
  * Returns: parent of the object
  */
@@ -538,7 +539,7 @@ gst_object_get_parent (GstObject *object)
  * gst_object_unparent:
  * @object: GstObject to unparent
  *
- * Clear the parent of the object, removing the associated reference.
+ * Clear the parent of @object, removing the associated reference.
  */
 void
 gst_object_unparent (GstObject *object)
@@ -561,11 +562,9 @@ gst_object_unparent (GstObject *object)
  * @list: a list of #GstObject to check through
  * @name: the name to search for
  *
- * This function checks through the list of objects to see if the name
- * given appears in the list as the name of an object.  It returns TRUE if
- * the name does not exist in the list.
+ * Checks to see if there is any object named @name in @list.
  *
- * Returns: TRUE if the name doesn't appear in the list, FALSE if it does.
+ * Returns: TRUE if the name does not appear in the list, FALSE if it does.
  */
 gboolean
 gst_object_check_uniqueness (GList *list, const gchar *name)
@@ -694,7 +693,7 @@ gst_object_get_property (GObject* object, guint prop_id,
  * @object: GstObject to get the path from
  *
  * Generates a string describing the path of the object in
- * the object hierarchy. Only useful (or used) for debugging
+ * the object hierarchy. Only useful (or used) for debugging.
  *
  * Returns: a string describing the path of the object
  */

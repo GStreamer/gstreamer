@@ -1,3 +1,106 @@
+2004-02-10  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (gst_pad_custom_new): Add a FIXME, this is a hacky
+	way to do inheritance.
+	(gst_pad_get_event_masks, gst_pad_get_event_masks_default) 
+	(gst_pad_get_query_types, gst_pad_get_query_types_default):
+	Routine docs.
+	(gst_pad_set_link_function, gst_pad_set_fixate_function) 
+	(gst_pad_set_getcaps_function): Doc from Dave's negotation random
+	doc.
+	(gst_pad_unlink, gst_pad_is_linked): Docs.
+	(gst_pad_renegotiate): A brief description of capsnego.
+	(gst_pad_try_set_caps): Document.
+	(gst_pad_try_set_caps_nonfixed): Document.
+	(gst_pad_can_link_filtered, gst_pad_link_filtered): Doc fixes.
+	(gst_pad_set_parent): Deprecated (although not out of the API).
+	(gst_pad_get_parent): Deprecated, although many plugins use this.
+	(gst_pad_add_ghost_pad, gst_pad_remove_ghost_pad): Doc that these
+	are private and will go away in 0.9.
+	(gst_pad_perform_negotiate): Doc.
+	(gst_pad_link_unnegotiate): I think this is meant to be static.
+	(gst_pad_get_negotiated_caps, gst_pad_get_pad_template_caps) 
+	(gst_pad_template_get_caps_by_name, gst_pad_check_compatibility) 
+	(gst_pad_get_peer): Doc updates.
+	(gst_pad_caps_change_notify): Doc.
+	(gst_pad_alloc_buffer, gst_pad_push, gst_static_pad_template_get) 
+	(gst_ghost_pad_new): Doc fixes.
+
+	* gst/gstobject.c (gst_object_get_parent, gst_object_unparent) 
+	(gst_object_check_uniqueness): 
+
+	* gst/gstelement.c (gst_element_add_pad) 
+	(gst_element_add_ghost_pad, gst_element_remove_pad) 
+	(gst_element_remove_ghost_pad, gst_element_get_pad) 
+	(gst_element_get_static_pad, gst_element_get_pad_list) 
+	(gst_element_class_get_pad_template_list) 
+	(gst_element_class_get_pad_template): Work on the docs.
+	(gst_element_get_pad_template_list): Uses the class method.
+	(gst_element_get_compatible_pad_template): Docs, and consolidate
+	some test conditions. 
+	(gst_element_get_pad_from_template): New static function.
+	(gst_element_request_compatible_pad): Docs, and work with
+	non-request compatible templates. 
+	(gst_element_get_compatible_pad_filtered): Docs and remove
+	redundant checks.
+	(gst_element_get_compatible_pad, gst_element_link_pads_filtered) 
+	(gst_element_link_filtered, gst_element_link_many) 
+	(gst_element_link, gst_element_link_pads) 
+	(gst_element_unlink_many): Docs.
+
+2004-02-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (_gst_real_pad_fixate_accumulator):
+	s/pointer/boxed/.
+
+	* gst/gstmarshal.list (VOID:BOXED, BOXED:BOXED): New marshallers.
+
+	* gst/gstpad.c (gst_real_pad_class_init): Use a BOXED:BOXED
+	marshaller for ::fixate, and VOID:BOXED for ::caps-nego-failed,
+	with the type=GST_TYPE_CAPS. This allows language bindings to know
+	what kind of data they're dealing with.
+
+	* gst/gstcaps.c (_gst_caps_value_init): GBoxed values initialize
+	to NULL when g_value_init is called. GstCaps, which rolls its own
+	type implementation, now does the same instead of allocating empty
+	caps.
+	(_gst_caps_initialize, _gst_caps_collect_value,
+	_gst_caps_lcopy_value): Provide collect_value and lcopy_value type
+	table methods. This allows G_VALUE_COLLECT to work.
+
+2004-02-05  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac:
+	* testsuite/Makefile.am (SUBDIRS): 
+	* testsuite/ghostpads/Makefile.am: 
+	* testsuite/ghostpads/ghostpads.c: A new test for ghost pads.
+
+	* gst/gstpad.c (gst_pad_add_ghost_pad, gst_pad_remove_ghost_pad):
+	These two routines are the only ones that set
+	GST_GPAD_REALPAD(gpad), the ghost pad list, and the ghost pad's
+	pad template. They should be made static, depending on ABI needs.
+	(gst_real_pad_dispose): Handle the case of ghost pads without a
+	parent. Assert after dealing with ghost pads that the ghost pad
+	list is empty.
+	(gst_ghost_pad_class_init): New property added, ::real-pad. Can be
+	set after creation.
+	(gst_ghost_pad_dispose): Set ::real-pad to NULL.
+	(gst_ghost_pad_set_property, gst_ghost_pad_get_property): New
+	functions. set_property will call add_ghost_pad/remove_ghost_pad
+	as appropriate.
+	(gst_ghost_pad_new): All the work is offloaded to g_object_new.
+
+	* gst/gstelement.c (gst_element_add_pad): Handle ghost pads as well.
+	(gst_element_add_ghost_pad): Remove code duplicated from _add_pad.
+	(gst_element_remove_pad): Handle ghost pads as well.
+	(gst_element_remove_ghost_pad): Deprecated (could be removed,
+	depending on API-stability needs).
+
+2004-02-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbin.[ch]: (gst_bin_get_by_interface): GTypes are scalars,
+	of course they're const
+
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tools/Makefile.am:
@@ -117,6 +220,7 @@
           revert patch that breaks applications, reapply after release
           to get this fixed properly
 
+>>>>>>> 1.222
 2004-02-05  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gsttag.c: (_gst_tag_initialize):
@@ -354,6 +458,7 @@
 	* gst/gstelement.c: (gst_element_default_error):
           suffix error messages with period
 
+>>>>>>> 1.206
 2004-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
@@ -458,6 +563,7 @@
 	* gst/gstvalue.h:
         sync .h with .c declarations
 
+>>>>>>> 1.182
 2004-01-30  Julien Moutte  <julien@moutte.net>
 
 	* libs/gst/bytestream/bytestream.c: Reverting my event handling patch.
@@ -832,6 +938,7 @@
 
 	  Time to get into the advanced topics. ;).
 
+>>>>>>> 1.174
 2004-01-27  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* docs/pwg/advanced_types.xml:
@@ -922,6 +1029,7 @@
 	* gst/gsttag.h:
           add GstTagFlag
 
+>>>>>>> 1.143
 2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer-sections.txt:

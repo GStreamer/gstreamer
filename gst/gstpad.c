@@ -294,7 +294,8 @@ gst_real_pad_get_property (GObject *object, guint prop_id,
   }
 }
 
-
+/* FIXME-0.9: Replace these custom functions with proper inheritance via _init
+   functions and object properties */
 /**
  * gst_pad_custom_new:
  * @type: the #Gtype of the pad.
@@ -573,8 +574,8 @@ gst_pad_set_event_mask_function (GstPad *pad,
  *
  * Gets the array of eventmasks from the given pad.
  *
- * Returns: an array with eventmasks, the list is ended 
- * with 0
+ * Returns: a zero-terminated array of #GstEventMask, or NULL if the pad does
+ * not have an event mask function.
  */
 const GstEventMask*
 gst_pad_get_event_masks (GstPad *pad)
@@ -608,8 +609,8 @@ gst_pad_get_event_masks_dispatcher (GstPad *pad, const GstEventMask **data)
  *
  * Invokes the default event masks dispatcher on the pad.
  *
- * Returns: an array with eventmasks, the list is ended 
- * with 0
+ * Returns: a zero-terminated array of #GstEventMask, or NULL if none of the
+ * internally-linked pads have an event mask function.
  */
 const GstEventMask* 
 gst_pad_get_event_masks_default (GstPad *pad)
@@ -687,7 +688,7 @@ gst_pad_set_query_type_function (GstPad *pad, GstPadQueryTypeFunction type_func)
  * Get an array of supported queries that can be performed
  * on this pad.
  *
- * Returns: an array of querytypes anded with 0.
+ * Returns: a zero-terminated array of #GstQueryType.
  */
 const GstQueryType*
 gst_pad_get_query_types (GstPad *pad)
@@ -722,7 +723,8 @@ gst_pad_get_query_types_dispatcher (GstPad *pad, const GstQueryType **data)
  * Invoke the default dispatcher for the query types on
  * the pad.
  *
- * Returns: an array of querytypes anded with 0.
+ * Returns: an zero-terminated array of #GstQueryType, or NULL if none of the
+ * internally-linked pads has a query types function.
  */
 const GstQueryType*
 gst_pad_get_query_types_default (GstPad *pad)
@@ -776,9 +778,28 @@ gst_pad_set_formats_function (GstPad *pad, GstPadFormatsFunction formats)
  * gst_pad_set_link_function:
  * @pad: a #GstPad to set the link function for.
  * @link: the #GstPadLinkFunction to set.
- *
- * Sets the given link function for the pad. It will be called
- * when the pad is linked or relinked with caps.
+ * 
+ * Sets the given link function for the pad. It will be called when the pad is
+ * linked or relinked with caps. The caps passed to the link function are
+ * guaranteed to be fixed. This means that you can assume that the caps is not
+ * ANY or EMPTY, and that there is exactly one structure in the caps, and that
+ * all the fields in the structure are fixed.
+ * 
+ * The return value GST_PAD_LINK_OK should be used when the caps are acceptable,
+ * and you've extracted all the necessary information from the caps and set the
+ * element's internal state appropriately.
+ * 
+ * The return value GST_PAD_LINK_REFUSED should be used when the caps are
+ * unacceptable for whatever reason.
+ * 
+ * The return value GST_PAD_LINK_DELAYED should be used when the element is in a
+ * state where it can't determine whether the caps are acceptable or not. This
+ * is often used if the element needs to open a device or process data before
+ * determining acceptable caps.
+ * 
+ * @link must not call gst_caps_try_set_caps() on the pad that was specified as
+ * a parameter, although it may (and often should) call gst_caps_try_set_caps()
+ * on other pads.
  */
 void
 gst_pad_set_link_function (GstPad *pad,
@@ -815,9 +836,17 @@ gst_pad_set_unlink_function (GstPad *pad,
 /**
  * gst_pad_set_fixate_function:
  * @pad: a #GstPad to set the fixate function for.
- * @getcaps: the #GstPadFixateFunction to set.
+ * @fixate: the #GstPadFixateFunction to set.
  *
- * Sets the given fixate function for the pad.
+ * Sets the given fixate function for the pad. Its job is to narrow down the
+ * possible caps for a connection. Fixate functions are called with a const
+ * caps, and should return a caps that is a strict subset of the given caps.
+ * That is, @fixate should create a caps that is "more fixed" than previously,
+ * but it does not have to return fixed caps. If @fixate can't provide more
+ * fixed caps, it should return %NULL.
+ * 
+ * Note that @fixate will only be called after the "fixate" signal is emitted,
+ * and only if the caps are still non-fixed.
  */
 void
 gst_pad_set_fixate_function (GstPad *pad, GstPadFixateFunction fixate)
@@ -834,8 +863,26 @@ gst_pad_set_fixate_function (GstPad *pad, GstPadFixateFunction fixate)
  * gst_pad_set_getcaps_function:
  * @pad: a #GstPad to set the getcaps function for.
  * @getcaps: the #GstPadGetCapsFunction to set.
+ * 
+ * Sets the given getcaps function for the pad. @getcaps should return the
+ * allowable caps for a pad in the context of the element's state, its link to
+ * other elements, and the devices or files it has opened. These caps must be a
+ * subset of the pad template caps. In the NULL state with no links, @getcaps
+ * should ideally return the same caps as the pad template. In rare
+ * circumstances, an object property can affect the caps returned by @getcaps,
+ * but this is discouraged.
  *
- * Sets the given getcaps function for the pad.
+ * You do not need to call this function if @pad's allowed caps are always the
+ * same as the pad template caps.
+ *
+ * For most filters, the caps returned by @getcaps is directly affected by the
+ * allowed caps on other pads. For demuxers and decoders, the caps returned by
+ * the srcpad's getcaps function is directly related to the stream data. Again,
+ * @getcaps should return the most specific caps it reasonably can, since this
+ * helps with autoplugging. However, the returned caps should not depend on the
+ * stream type currently negotiated for @pad.
+ *
+ * Note that the return value from @getcaps is owned by the caller.
  */
 void
 gst_pad_set_getcaps_function (GstPad *pad,
@@ -875,7 +922,8 @@ gst_pad_set_bufferalloc_function (GstPad *pad,
  * @srcpad: the source #GstPad to unlink.
  * @sinkpad: the sink #GstPad to unlink.
  *
- * Unlinks the source pad from the sink pad.
+ * Unlinks the source pad from the sink pad. Will emit the "unlinked" signal on
+ * both pads.
  */
 void
 gst_pad_unlink (GstPad *srcpad,
@@ -960,9 +1008,9 @@ gst_pad_unlink (GstPad *srcpad,
  * gst_pad_is_linked:
  * @pad: pad to check
  *
- * Checks if a given pad is linked to another pad or not.
+ * Checks if a @pad is linked to another pad or not.
  *
- * Returns: TRUE if the pad is linked.
+ * Returns: TRUE if the pad is linked, FALSE otherwise.
  */
 gboolean
 gst_pad_is_linked (GstPad *pad)
@@ -1282,6 +1330,29 @@ gst_pad_link_try (GstPadLink *link)
   return ret;
 }
 
+/**
+ * gst_pad_renegotiate:
+ * @pad: a #GstPad
+ *
+ * Initiate caps negotiation on @pad. @pad must be linked.
+ *
+ * If @pad's parent is not at least in #GST_STATE_READY, returns
+ * #GST_PAD_LINK_DELAYED.
+ *
+ * Otherwise caps are retrieved from both @pad and its peer by calling their
+ * getcaps functions. They are then intersected, returning #GST_PAD_LINK_FAIL if
+ * there is no intersection.
+ *
+ * The intersection is fixated if necessary, and then the link functions of @pad
+ * and its peer are called.
+ *
+ * Returns: The return value of @pad's link function (see
+ * gst_pad_set_link_function()), or #GST_PAD_LINK_OK if there is no link
+ * function.
+ *
+ * The macros GST_PAD_LINK_SUCCESSFUL() and GST_PAD_LINK_FAILED() should be used
+ * when you just need success/failure information.
+ */
 GstPadLinkReturn
 gst_pad_renegotiate (GstPad *pad)
 {
@@ -1312,6 +1383,22 @@ gst_pad_renegotiate (GstPad *pad)
   return gst_pad_link_try (link);
 }
 
+/**
+ * gst_pad_try_set_caps:
+ * @pad: a #GstPad
+ * @caps: #GstCaps to set on @pad
+ *
+ * Try to set the caps on @pad. @caps must be fixed. If @pad is unlinked,
+ * returns #GST_PAD_LINK_OK without doing anything. Otherwise, start caps
+ * negotiation on @pad.
+ *
+ * Returns: The return value of @pad's link function (see
+ * gst_pad_set_link_function()), or #GST_PAD_LINK_OK if there is no link
+ * function.
+ *
+ * The macros GST_PAD_LINK_SUCCESSFUL() and GST_PAD_LINK_FAILED() should be used
+ * when you just need success/failure information.
+ */
 GstPadLinkReturn
 gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
 {
@@ -1379,6 +1466,15 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
   return ret;
 }
 
+/**
+ * gst_pad_try_set_caps_nonfixed:
+ * @pad: a #GstPad
+ * @caps: #GstCaps to set on @pad
+ *
+ * Like gst_pad_try_set_caps(), but allows non-fixed caps.
+ *
+ * Returns: a #GstPadLinkReturn, like gst_pad_try_set_caps().
+ */
 GstPadLinkReturn
 gst_pad_try_set_caps_nonfixed (GstPad *pad, const GstCaps *caps)
 {
@@ -1447,7 +1543,7 @@ gst_pad_try_set_caps_nonfixed (GstPad *pad, const GstCaps *caps)
  * @filtercaps: the filter #GstCaps.
  *
  * Checks if the source pad and the sink pad can be linked when constrained
- * by the given filter caps.
+ * by the given filter caps. Both @srcpad and @sinkpad must be unlinked.
  *
  * Returns: TRUE if the pads can be linked, FALSE otherwise.
  */
@@ -1553,7 +1649,7 @@ gst_pad_can_link_filtered (GstPad *srcpad, GstPad *sinkpad,
  * @srcpad: the source #GstPad to link.
  * @sinkpad: the sink #GstPad to link.
  *
- * Checks if the source pad and the sink pad can be link.
+ * Checks if the source pad and the sink pad can be linked.
  *
  * Returns: TRUE if the pads can be linked, FALSE otherwise.
  */
@@ -1570,7 +1666,7 @@ gst_pad_can_link (GstPad *srcpad, GstPad *sinkpad)
  * @filtercaps: the filter #GstCaps.
  *
  * Links the source pad and the sink pad, constrained
- * by the given filter caps. This function sinks the caps.
+ * by the given filter caps.
  *
  * Returns: TRUE if the pads have been linked, FALSE otherwise.
  */
@@ -1708,7 +1804,8 @@ gst_pad_link (GstPad *srcpad, GstPad *sinkpad)
  * @pad: a #GstPad to set the parent of.
  * @parent: the new parent #GstElement.
  *
- * Sets the parent object of a pad.
+ * Sets the parent object of a pad. Deprecated, use gst_object_set_parent()
+ * instead.
  */
 void
 gst_pad_set_parent (GstPad *pad, GstElement *parent)
@@ -1727,7 +1824,8 @@ gst_pad_set_parent (GstPad *pad, GstElement *parent)
  * gst_pad_get_parent:
  * @pad: the #GstPad to get the parent of.
  *
- * Gets the parent object of this pad.
+ * Gets the parent object of this pad. Deprecated, use gst_object_get_parent()
+ * instead.
  *
  * Returns: the parent #GstElement.
  */
@@ -1827,7 +1925,8 @@ gst_pad_get_real_parent (GstPad *pad)
  * @pad: a #GstPad to attach the ghost pad to.
  * @ghostpad: the ghost #GstPad to to the pad.
  *
- * Adds a ghost pad to a pad.
+ * Adds a ghost pad to a pad. Private function, will be removed from the API in
+ * 0.9.
  */
 void
 gst_pad_add_ghost_pad (GstPad *pad,
@@ -1857,7 +1956,7 @@ gst_pad_add_ghost_pad (GstPad *pad,
  * @pad: a #GstPad to remove the ghost pad from.
  * @ghostpad: the ghost #GstPad to remove from the pad.
  *
- * Removes a ghost pad from a pad.
+ * Removes a ghost pad from a pad. Private, will be removed from the API in 0.9.
  */
 void
 gst_pad_remove_ghost_pad (GstPad *pad,
@@ -1954,7 +2053,8 @@ _gst_pad_default_fixate_func (GstPad *pad, const GstCaps *caps)
  * @srcpad: the source #GstPad.
  * @sinkpad: the sink #GstPad.
  *
- * Tries to negotiate the pads.
+ * Tries to negotiate the pads. See gst_pad_renegotiate() for a brief
+ * description of caps negotiation.
  *
  * Returns: TRUE if the pads were succesfully negotiated, FALSE otherwise.
  */
@@ -1964,7 +2064,7 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
   return GST_PAD_LINK_SUCCESSFUL (gst_pad_renegotiate (srcpad));
 }
 
-void
+static void
 gst_pad_link_unnegotiate (GstPadLink *link)
 {
   g_return_if_fail (link != NULL);
@@ -2361,10 +2461,9 @@ gst_pad_is_negotiated (GstPad *pad)
  * gst_pad_get_negotiated_caps:
  * @pad: a #GstPad to get the negotiated capabilites of
  *
- * Gets the currently negotiated caps of a pad or NULL if the pad isn't
- * negotiated.
+ * Gets the currently negotiated caps of a pad.
  *
- * Returns: the currently negotiated caps of a pad or NULL if the pad isn't
+ * Returns: the currently negotiated caps of a pad, or NULL if the pad isn't
  *	    negotiated.
  */
 G_CONST_RETURN GstCaps *
@@ -2449,7 +2548,7 @@ gst_pad_get_caps (GstPad *pad)
  * gst_pad_get_pad_template_caps:
  * @pad: a #GstPad to get the template capabilities from.
  *
- * Gets the template capabilities of this pad.
+ * Gets the capabilities for @pad's template.
  *
  * Returns: the #GstCaps of this pad template. If you intend to keep a reference
  * on the caps, make a copy (see gst_caps_copy ()).
@@ -2478,7 +2577,7 @@ gst_pad_get_pad_template_caps (GstPad *pad)
  * @templ: a #GstPadTemplate to get the capabilities of.
  * @name: the name of the capability to get.
  *
- * Gets the capability with the given name from this pad template.
+ * Gets the capability with the given name from @templ.
  *
  * Returns: the #GstCaps of this pad template, or NULL if not found. If you
  * intend to keep a reference on the caps, make a copy (see gst_caps_copy ()).
@@ -2506,8 +2605,8 @@ gst_pad_template_get_caps_by_name (GstPadTemplate *templ, const gchar *name)
  *
  * Checks if two pads have compatible capabilities.
  *
- * Returns: TRUE if they are compatible or if the capabilities
- * could not be checked.
+ * Returns: TRUE if they are compatible or if the capabilities could not be
+ * checked, FALSE if the capabilities are not compatible.
  */
 gboolean
 gst_pad_check_compatibility (GstPad *srcpad, GstPad *sinkpad)
@@ -2539,7 +2638,7 @@ gst_pad_check_compatibility (GstPad *srcpad, GstPad *sinkpad)
  * gst_pad_get_peer:
  * @pad: a #GstPad to get the peer of.
  *
- * Gets the peer pad of this pad.
+ * Gets the peer pad of @pad.
  *
  * Returns: the peer #GstPad.
  */
@@ -2596,11 +2695,16 @@ gst_pad_get_allowed_caps (GstPad *pad)
   }
 }
 
+/**
+ * gst_pad_caps_change_notify:
+ * @pad: a #GstPad
+ *
+ * Called to indicate that the return value of @pad's getcaps function may have
+ * changed, and that a renegotiation is suggested.
+ */
 void
 gst_pad_caps_change_notify (GstPad *pad)
 {
-  /* call this to indicate that the return value of getcaps may have
-   * changed, and a renegotiation is suggested */
 }
 
 /**
@@ -2653,8 +2757,8 @@ gst_pad_recover_caps_error (GstPad *pad, const GstCaps *allowed)
  * gst_pad_alloc_buffer:
  * @pad: a #GstPad to get the buffer from.
  *
- * Allocates a new, empty buffer optimized to push to pad #pad.  This
- * function only works if #pad is a src pad.
+ * Allocates a new, empty buffer optimized to push to pad @pad.  This
+ * function only works if @pad is a src pad.
  *
  * Returns: a new, empty #GstBuffer, or NULL if there is an error
  */
@@ -2848,7 +2952,8 @@ gst_pad_save_thyself (GstObject *object, xmlNodePtr parent)
   return parent;
 }
 
-/* FIXME: shouldn't pad and ghost be switched ?
+/* FIXME: shouldn't it be gst_pad_ghost_* ?
+ * dunno -- wingo 7 feb 2004
  */
 /**
  * gst_ghost_pad_save_thyself:
@@ -2881,7 +2986,7 @@ gst_ghost_pad_save_thyself (GstPad *pad, xmlNodePtr parent)
  * @pad: a #GstPad to push the buffer out of.
  * @data: the #GstData to push.
  *
- * Pushes a buffer or an event to the peer of the pad.
+ * Pushes a buffer or an event to the peer of @pad. @pad must be linked.
  */
 void 
 gst_pad_push (GstPad *pad, GstData *data) 
@@ -3185,7 +3290,7 @@ name_is_valid (const gchar *name, GstPadPresence presence)
  * gst_static_pad_template_get:
  * @pad_template: the static pad template
  *
- * Converts a GstStaticPadTemplate into a GstPadTemplate.
+ * Converts a #GstStaticPadTemplate into a #GstPadTemplate.
  *
  * Returns: a new #GstPadTemplate.
  */
@@ -3423,11 +3528,10 @@ gst_ghost_pad_get_property (GObject* object, guint prop_id,
  * @name: the name of the new ghost pad.
  * @pad: the #GstPad to create a ghost pad for.
  *
- * Creates a new ghost pad associated with the given pad, and names it with
- * the given name.  If name is NULL, a guaranteed unique name (across all
- * ghost pads) will be assigned.
+ * Creates a new ghost pad associated with @pad, and named @name. If @name is
+ * %NULL, a guaranteed unique name (across all ghost pads) will be assigned.
  *
- * Returns: a new ghost #GstPad, or NULL in case of an error.
+ * Returns: a new ghost #GstPad, or %NULL in case of an error.
  */
 GstPad*
 gst_ghost_pad_new (const gchar *name,
