@@ -118,35 +118,6 @@ vorbis_dec_get_formats (GstPad * pad)
   return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
 }
 
-static GstPadLinkReturn
-vorbis_dec_link (GstPad * pad, const GstCaps * caps)
-{
-  GstVorbisDec *dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
-
-  if (dec->packetno < 3)
-    return GST_PAD_LINK_DELAYED;
-
-  return GST_PAD_LINK_OK;
-}
-
-static GstCaps *
-vorbis_dec_getcaps (GstPad * pad)
-{
-  GstVorbisDec *dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
-
-  if (dec->packetno < 3)
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-
-  return gst_caps_new_simple ("audio/x-raw-float",
-      "rate", G_TYPE_INT, dec->vi.rate,
-      "channels", G_TYPE_INT, dec->vi.channels,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
-#ifdef GST_VORBIS_DEC_SEQUENTIAL
-      "layout", G_TYPE_STRING, "sequential",
-#endif
-      "buffer-frames", G_TYPE_INT, 0, NULL);
-}
-
 static void
 gst_vorbis_dec_init (GstVorbisDec * dec)
 {
@@ -160,8 +131,7 @@ gst_vorbis_dec_init (GstVorbisDec * dec)
   dec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&vorbis_dec_src_factory), "src");
-  gst_pad_set_link_function (dec->srcpad, vorbis_dec_link);
-  gst_pad_set_getcaps_function (dec->srcpad, vorbis_dec_getcaps);
+  gst_pad_use_explicit_caps (dec->srcpad);
   gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
   gst_pad_set_query_function (dec->srcpad, vorbis_dec_src_query);
   gst_pad_set_formats_function (dec->srcpad, vorbis_dec_get_formats);
@@ -395,11 +365,21 @@ vorbis_dec_chain (GstPad * pad, GstData * data)
             GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
       gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, 0, list);
     } else if (packet.packetno == 2) {
+      GstCaps *caps;
+
       /* done */
       vorbis_synthesis_init (&vd->vd, &vd->vi);
       vorbis_block_init (&vd->vd, &vd->vb);
-      if (gst_pad_is_linked (vd->srcpad))
-        gst_pad_renegotiate (vd->srcpad);
+      caps = gst_caps_new_simple ("audio/x-raw-float",
+          "rate", G_TYPE_INT, vd->vi.rate,
+          "channels", G_TYPE_INT, vd->vi.channels,
+          "endianness", G_TYPE_INT, G_BYTE_ORDER,
+          "width", G_TYPE_INT, 32, "buffer-frames", G_TYPE_INT, 0, NULL);
+      if (!gst_pad_set_explicit_caps (vd->srcpad, caps)) {
+        gst_caps_free (caps);
+        return;
+      }
+      gst_caps_free (caps);
     }
   } else {
     float **pcm;
