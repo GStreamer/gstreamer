@@ -1,3 +1,10 @@
+2004-07-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_class_init),
+	(gst_matroska_demux_add_stream):
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_class_init):
+	  add debug categories
+
 2004-07-16  Wim Taymans  <wim@fluendo.com>
 
 	* ext/libpng/Makefile.am:
