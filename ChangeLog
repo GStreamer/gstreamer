@@ -1,3 +1,17 @@
+2004-01-03  David Schleef  <ds@schleef.org>
+
+	* gst/gstelement.c: (gst_element_link_pads_filtered),
+	(gst_element_negotiate_pads): Fix to allow DELAYED to indicate
+	that linking was successful.
+	* gst/gstpad.c: (gst_pad_link_free),
+	(gst_pad_link_call_link_functions), (gst_pad_link_negotiate),
+	(gst_pad_link_try), (gst_pad_link_unnegotiate),
+	(gst_pad_unnegotiate), (gst_pad_set_explicit_caps): Pass
+	GstPadLinkReturn correctly between functions, and don't fail
+	when DELAYED is used (DELAYED is very important).  Better
+	cleanup on unlinking and unnegotiation.  Should fix some spider
+	bugs.
+
 2004-01-02  David Schleef  <ds@schleef.org>
 
 	* gst/gstelement.c: (gst_element_class_init),

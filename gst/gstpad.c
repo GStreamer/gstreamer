@@ -993,6 +993,11 @@ gst_pad_link_free (GstPadLink *link)
   if (link->sinkcaps) gst_caps_free (link->sinkcaps);
   if (link->filtercaps) gst_caps_free (link->filtercaps);
   if (link->caps) gst_caps_free (link->caps);
+  GST_RPAD_LINK (link->srcpad) = NULL;
+  GST_RPAD_LINK (link->sinkpad) = NULL;
+#ifdef USE_POISONING
+  memset(link,0xff, sizeof(*link));
+#endif
   g_free (link);
 }
 
@@ -1091,7 +1096,7 @@ gst_pad_link_fixate (GstPadLink *link)
   link->caps = caps;
 }
 
-static gboolean
+static GstPadLinkReturn
 gst_pad_link_call_link_functions (GstPadLink *link)
 {
   gboolean negotiating;
@@ -1119,7 +1124,7 @@ gst_pad_link_call_link_functions (GstPadLink *link)
     if (GST_PAD_LINK_FAILED (res)) {
       GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
 		GST_DEBUG_PAD_NAME (link->srcpad));
-      return FALSE;
+      return res;
     }
   }
 
@@ -1145,11 +1150,11 @@ gst_pad_link_call_link_functions (GstPadLink *link)
     if (GST_PAD_LINK_FAILED (res)) {
       GST_CAT_INFO (GST_CAT_CAPS, "pad %s:%s doesn't accept caps",
 		GST_DEBUG_PAD_NAME (link->sinkpad));
-      return FALSE;
+      return res;
     }
   }
 
-  return TRUE;
+  return GST_PAD_LINK_OK;
 }
 
 static GstPadLinkReturn
@@ -1170,11 +1175,7 @@ gst_pad_link_negotiate (GstPadLink *link)
   if (gst_caps_is_empty (link->caps))
     return GST_PAD_LINK_REFUSED;
 
-  if (!gst_pad_link_call_link_functions (link)) {
-    return GST_PAD_LINK_REFUSED;
-  }
-
-  return GST_PAD_LINK_OK;
+  return gst_pad_link_call_link_functions (link);
 }
 
 /**
@@ -1204,16 +1205,19 @@ gst_pad_link_try (GstPadLink *link)
   g_assert (oldlink == GST_RPAD_LINK (sinkpad));
   
   ret = gst_pad_link_negotiate (link); 
-  if (ret == GST_PAD_LINK_REFUSED) {
-    if (oldlink && oldlink->caps) {
-      oldlink->srcnotify = link->srcnotify;
-      oldlink->sinknotify = link->sinknotify;
-      if (!gst_pad_link_call_link_functions (oldlink)) {
-        g_warning ("pads don't accept old caps. We assume they did though");
-      }
+  if (GST_PAD_LINK_FAILED (ret) && oldlink && oldlink->caps) {
+    oldlink->srcnotify = link->srcnotify;
+    oldlink->sinknotify = link->sinknotify;
+    if (GST_PAD_LINK_FAILED (gst_pad_link_call_link_functions (oldlink))) {
+      g_warning ("pads don't accept old caps. We assume they did though");
     }
+  }
+  if (ret == GST_PAD_LINK_REFUSED) {
     gst_pad_link_free (link);
     return ret;
+  }
+  if (ret == GST_PAD_LINK_DELAYED) {
+    gst_caps_replace (&link->caps, NULL);
   }
 
   GST_RPAD_PEER (srcpad) = GST_REAL_PAD(link->sinkpad);
@@ -1222,8 +1226,10 @@ gst_pad_link_try (GstPadLink *link)
     gst_pad_link_free (oldlink);
   GST_RPAD_LINK (srcpad) = link;
   GST_RPAD_LINK (sinkpad) = link;
-  g_object_notify (G_OBJECT (srcpad), "caps");
-  g_object_notify (G_OBJECT (sinkpad), "caps");
+  if (ret == GST_PAD_LINK_OK) {
+    g_object_notify (G_OBJECT (srcpad), "caps");
+    g_object_notify (G_OBJECT (sinkpad), "caps");
+  }
   
   return ret;
 }
@@ -1849,6 +1855,8 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
 void
 gst_pad_link_unnegotiate (GstPadLink *link)
 {
+  g_return_if_fail (link != NULL);
+
   if (link->caps) {
     gst_caps_free (link->caps);
     link->caps = NULL;
@@ -1875,10 +1883,13 @@ gst_pad_link_unnegotiate (GstPadLink *link)
 void
 gst_pad_unnegotiate (GstPad *pad)
 {
+  GstPadLink *link;
+
   g_return_if_fail (GST_IS_PAD (pad));
 
-  if (GST_RPAD_LINK (pad))
-    gst_pad_link_unnegotiate (GST_RPAD_LINK (pad));
+  link = GST_RPAD_LINK (GST_PAD_REALIZE (pad));
+  if (link) 
+    gst_pad_link_unnegotiate (link);
 }
 
 /**
@@ -2132,7 +2143,13 @@ gst_pad_set_explicit_caps (GstPad *pad, GstCaps *caps)
 
   gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), caps);
 
-  if (caps == NULL || !GST_PAD_IS_LINKED (pad)) {
+  if (caps == NULL) {
+    GST_CAT_DEBUG (GST_CAT_PADS, "caps is NULL");
+    return TRUE;
+  }
+    
+  if (!GST_PAD_IS_LINKED (pad)) {
+    GST_CAT_DEBUG (GST_CAT_PADS, "pad is not linked");
     return TRUE;
   }
   link_ret = gst_pad_try_set_caps (pad, caps);

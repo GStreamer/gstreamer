@@ -1595,7 +1595,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
 
   if (srcpadname && destpadname) {
     /* two explicitly specified pads */
-    return gst_pad_link_filtered (srcpad, destpad, filtercaps);  
+    return gst_pad_link_filtered (srcpad, destpad, filtercaps);
   }
   if (srcpad) {
     /* loop through the allowed pads in the source, trying to find a
@@ -2500,7 +2500,7 @@ gst_element_negotiate_pads (GstElement *element)
 	                   "perform negotiate for %s:%s and %s:%s",
 		           GST_DEBUG_PAD_NAME (srcpad), 
 			   GST_DEBUG_PAD_NAME (sinkpad));
-        if (!gst_pad_renegotiate (pad))
+        if (gst_pad_renegotiate (pad) == GST_PAD_LINK_REFUSED)
 	  return FALSE;
       }
       else {
