@@ -31,6 +31,15 @@ sure what all is supported, it seems http works just fine though.
 .B  \-\-help
 Print help synopsis and available FLAGS
 .TP 8
+.B  \-\-silent
+Do not output status information
+.TP 8
+.B  \-\-exclude=TYPE, \-XTYPE
+Do not output status information of TYPE
+.TP 8
+.B  \-\-output=FILE, \-oFILE
+Save XML representation of pipeline to FILE and exit
+.TP 8
 .B  \-\-gst\-info\-mask=FLAGS
 \fIGStreamer\fP info flags to set (list with \-\-help)
 .TP 8
@@ -47,7 +56,6 @@ Enable printout of errors while loading \fIGStreamer\fP plugins
 .B  \-\-gst\-plugin\-path=PATH
 Add directories separated with ':' to the plugin search path
 .SH "SEE ALSO"
-.BR gst\-guilaunch (1),
 .BR gst\-launch (1),
 .BR gst\-register (1),
 .BR gst\-inspect (1),
