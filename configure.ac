@@ -119,6 +119,5 @@ AC_OUTPUT([
   examples/Makefile
   examples/gstreamer/Makefile
   docs/Makefile
-  docs/HEAD
   gst-python.spec
 ])
