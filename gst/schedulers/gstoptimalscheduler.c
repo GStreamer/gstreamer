@@ -218,6 +218,8 @@ static GstOptSchedulerGroup *remove_from_group (GstOptSchedulerGroup * group,
     GstElement * element);
 static void group_dec_links_for_element (GstOptSchedulerGroup * group,
     GstElement * element);
+static void group_inc_links_for_element (GstOptSchedulerGroup * group,
+    GstElement * element);
 static GstOptSchedulerGroup *merge_groups (GstOptSchedulerGroup * group1,
     GstOptSchedulerGroup * group2);
 static void setup_group_scheduler (GstOptScheduler * osched,
@@ -527,6 +529,8 @@ destroy_chain (GstOptSchedulerChain * chain)
 static GstOptSchedulerChain *
 add_to_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
 {
+  gboolean enabled;
+
   GST_LOG ("adding group %p to chain %p", group, chain);
 
   g_assert (group->chain == NULL);
@@ -534,13 +538,17 @@ add_to_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
   group = ref_group (group);
 
   group->chain = ref_chain (chain);
-
   chain->groups = g_slist_prepend (chain->groups, group);
-
   chain->num_groups++;
 
-  if (GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group)) {
-    chain_group_set_enabled (chain, group, TRUE);
+  enabled = GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group);
+
+  if (enabled) {
+    chain->num_enabled++;
+    if (chain->num_enabled == chain->num_groups) {
+      GST_LOG ("enabling chain %p after adding of enabled group", chain);
+      GST_OPT_SCHEDULER_CHAIN_ENABLE (chain);
+    }
   }
 
   /* queue a resort of the group list, which determines which group will be run
@@ -553,6 +561,8 @@ add_to_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
 static GstOptSchedulerChain *
 remove_from_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
 {
+  gboolean enabled;
+
   GST_LOG ("removing group %p from chain %p", group, chain);
 
   if (!chain)
@@ -561,6 +571,8 @@ remove_from_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
   g_assert (group);
   g_assert (group->chain == chain);
 
+  enabled = GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group);
+
   group->chain = NULL;
   chain->groups = g_slist_remove (chain->groups, group);
   chain->num_groups--;
@@ -568,6 +580,24 @@ remove_from_chain (GstOptSchedulerChain * chain, GstOptSchedulerGroup * group)
 
   if (chain->num_groups == 0)
     chain = unref_chain (chain);
+  else {
+    /* removing an enabled group from the chain decrements the 
+     * enabled counter */
+    if (enabled) {
+      chain->num_enabled--;
+      if (chain->num_enabled == 0) {
+        GST_LOG ("disabling chain %p after removal of the only enabled group",
+            chain);
+        GST_OPT_SCHEDULER_CHAIN_DISABLE (chain);
+      }
+    } else {
+      if (chain->num_enabled == chain->num_groups) {
+        GST_LOG ("enabling chain %p after removal of the only disabled group",
+            chain);
+        GST_OPT_SCHEDULER_CHAIN_ENABLE (chain);
+      }
+    }
+  }
 
   GST_OPT_SCHEDULER_CHAIN_SET_DIRTY (chain);
 
@@ -677,6 +707,8 @@ static void
 chain_group_set_enabled (GstOptSchedulerChain * chain,
     GstOptSchedulerGroup * group, gboolean enabled)
 {
+  gboolean oldstate;
+
   g_assert (group != NULL);
   g_assert (chain != NULL);
 
@@ -684,14 +716,21 @@ chain_group_set_enabled (GstOptSchedulerChain * chain,
       ("request to %d group %p in chain %p, have %d groups enabled out of %d",
       enabled, group, chain, chain->num_enabled, chain->num_groups);
 
+  oldstate = (GST_OPT_SCHEDULER_GROUP_IS_ENABLED (group) ? TRUE : FALSE);
+  if (oldstate == enabled) {
+    GST_LOG ("group %p in chain %p was in correct state", group, chain);
+    return;
+  }
+
   if (enabled)
     GST_OPT_SCHEDULER_GROUP_ENABLE (group);
   else
     GST_OPT_SCHEDULER_GROUP_DISABLE (group);
 
   if (enabled) {
-    if (chain->num_enabled < chain->num_groups)
-      chain->num_enabled++;
+    g_assert (chain->num_enabled < chain->num_groups);
+
+    chain->num_enabled++;
 
     GST_DEBUG ("enable group %p in chain %p, now %d groups enabled out of %d",
         group, chain, chain->num_enabled, chain->num_groups);
@@ -705,9 +744,9 @@ chain_group_set_enabled (GstOptSchedulerChain * chain,
       GST_OPT_SCHEDULER_CHAIN_ENABLE (chain);
     }
   } else {
-    if (chain->num_enabled > 0)
-      chain->num_enabled--;
+    g_assert (chain->num_enabled > 0);
 
+    chain->num_enabled--;
     GST_DEBUG ("disable group %p in chain %p, now %d groups enabled out of %d",
         group, chain, chain->num_enabled, chain->num_groups);
 
@@ -823,6 +862,10 @@ add_to_group (GstOptSchedulerGroup * group, GstElement * element)
 
   g_assert (GST_ELEMENT_SCHED_GROUP (element) == NULL);
 
+  /* first increment the links that this group has with other groups through
+   * this element */
+  group_inc_links_for_element (group, element);
+
   /* Ref the group... */
   GST_ELEMENT_SCHED_GROUP (element) = ref_group (group);
 
@@ -892,6 +935,9 @@ merge_groups (GstOptSchedulerGroup * group1, GstOptSchedulerGroup * group2)
 
   if (group1 == group2 || group2 == NULL)
     return group1;
+
+  /* make sure they end up in the same chain */
+  merge_chains (group1->chain, group2->chain);
 
   while (group2 && group2->elements) {
     GstElement *element = (GstElement *) group2->elements->data;
@@ -2092,8 +2138,8 @@ group_can_reach_group (GstOptSchedulerGroup * group,
 
 /*
  * Go through all the pads of the given element and decrement the links that
- * this group has with the group of the element.  This function is mainly used
- * to update the group connections before we remove element from the group.
+ * this group has with the group of the peer element.  This function is mainly used
+ * to update the group connections before we remove the element from the group.
  */
 static void
 group_dec_links_for_element (GstOptSchedulerGroup * group, GstElement * element)
@@ -2108,6 +2154,28 @@ group_dec_links_for_element (GstOptSchedulerGroup * group, GstElement * element)
       get_group (GST_PAD_PARENT (GST_PAD_PEER (pad)), &peer_group);
       if (peer_group && peer_group != group)
         group_dec_link (group, peer_group);
+    }
+  }
+}
+
+/*
+ * Go through all the pads of the given element and increment the links that
+ * this group has with the group of the peer element.  This function is mainly used
+ * to update the group connections before we add the element to the group.
+ */
+static void
+group_inc_links_for_element (GstOptSchedulerGroup * group, GstElement * element)
+{
+  GList *l;
+  GstPad *pad;
+  GstOptSchedulerGroup *peer_group;
+
+  for (l = GST_ELEMENT_PADS (element); l; l = l->next) {
+    pad = (GstPad *) l->data;
+    if (GST_IS_REAL_PAD (pad) && GST_PAD_PEER (pad)) {
+      get_group (GST_PAD_PARENT (GST_PAD_PEER (pad)), &peer_group);
+      if (peer_group && peer_group != group)
+        group_inc_link (group, peer_group);
     }
   }
 }
@@ -2292,6 +2360,8 @@ gst_opt_scheduler_iterate (GstScheduler * sched)
 
   osched->state = GST_OPT_SCHEDULER_STATE_RUNNING;
 
+  /* gst_opt_scheduler_show (sched); */
+
   GST_DEBUG_OBJECT (sched, "iterating");
 
   while (iterations) {
@@ -2309,6 +2379,8 @@ gst_opt_scheduler_iterate (GstScheduler * sched)
         GST_LOG ("scheduling chain %p", chain);
         schedule_chain (chain);
         scheduled = TRUE;
+      } else {
+        GST_LOG ("not scheduling disabled chain %p", chain);
       }
 
       /* don't schedule any more chains when in error */
@@ -2370,6 +2442,7 @@ gst_opt_scheduler_show (GstScheduler * sched)
     while (groups) {
       GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
       GSList *elements = group->elements;
+      GSList *group_links = group->group_links;
 
       groups = g_slist_next (groups);
 
@@ -2387,6 +2460,15 @@ gst_opt_scheduler_show (GstScheduler * sched)
         elements = g_slist_next (elements);
 
         g_print ("  +- element %s\n", GST_ELEMENT_NAME (element));
+      }
+      while (group_links) {
+        GstOptSchedulerGroupLink *link =
+            (GstOptSchedulerGroupLink *) group_links->data;
+
+        group_links = g_slist_next (group_links);
+
+        g_print ("group link %p between %p and %p, count %d\n",
+            link, link->src, link->sink, link->count);
       }
     }
   }

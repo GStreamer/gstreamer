@@ -1,3 +1,25 @@
+2004-05-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/schedulers/gstoptimalscheduler.c: (add_to_chain),
+	(remove_from_chain), (chain_group_set_enabled), (add_to_group),
+	(merge_groups), (setup_group_scheduler),
+	(group_inc_links_for_element), (gst_opt_scheduler_iterate),
+	(gst_opt_scheduler_show):
+	Fixes to maintain internal consistency of the scheduler data
+	structures. 
+	 - adding an enabled group to a chain should increment the
+	   number of enabled elements in that chain.
+         - removing an enabled group from a chain could disable the
+	   chain.
+	 - removing a disabled group from a chain could enable the
+	   chain.
+	 - add g_assert when internal inconsistency is detected.
+	 - adding an element to a group could increase the number of
+	   links this group has with other groups.
+	 - merging two groups also merges the chains.
+	 - also show group links in the _show method.
+	   
+
 2004-05-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstcaps.c: (gst_caps_structure_simplify):
