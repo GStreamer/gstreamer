@@ -4,7 +4,7 @@
   <title>Building a Test Application</title>
   <para>
     Often, you will want to test your newly written plugin in an as small
-    setting as possible. Ususally, <filename>gst-launch</filename> is a
+    setting as possible. Usually, <filename>gst-launch</filename> is a
     good first step at testing a plugin. However, you will often need more
     testing features than gst-launch can provide, such as seeking, events,
     interactivity and more. Writing your own small testing program is the

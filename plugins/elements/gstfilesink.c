@@ -343,12 +343,10 @@ gst_filesink_handle_event (GstPad * pad, GstEvent * event)
 
   filesink = GST_FILESINK (gst_pad_get_parent (pad));
 
-
   if (!(GST_FLAG_IS_SET (filesink, GST_FILESINK_OPEN))) {
     gst_event_unref (event);
     return FALSE;
   }
-
 
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 

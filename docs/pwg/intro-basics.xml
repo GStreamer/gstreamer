@@ -42,7 +42,7 @@
       One type of bin is responsible for scheduling the elements that they
       contain so that data flows smoothly. Another type of bin, called
       <emphasis>autoplugger</emphasis> elements, automatically add other
-      elements to the bin and link them together so that they act as a
+      elements to the bin and links them together so that they act as a
       filter between two arbitary stream types.
     </para>
     <para>

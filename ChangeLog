@@ -1,3 +1,22 @@
+2004-11-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/advanced-scheduling.xml:
+	* docs/pwg/advanced-tagging.xml:
+	* docs/pwg/advanced-types.xml:
+	* docs/pwg/building-boiler.xml:
+	* docs/pwg/building-chainfn.xml:
+	* docs/pwg/building-signals.xml:
+	* docs/pwg/building-state.xml:
+	* docs/pwg/building-testapp.xml:
+	* docs/pwg/intro-basics.xml:
+	* docs/pwg/other-manager.xml:
+	* docs/pwg/other-source.xml:
+	  Typo fixes.
+	* docs/pwg/other-manager.xml:
+	  Add some first content. No example code yet.
+	* gst/elements/gstfilesink.c: (gst_filesink_handle_event):
+	  Remove double newlines.
+
 2004-11-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/schedulers/gstoptimalscheduler.c: (add_to_group),

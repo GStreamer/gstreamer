@@ -4,6 +4,51 @@
 <chapter id="chapter-other-manager" xreflabel="Writing a Manager">
   <title>Writing a Manager</title>
   <para>
-    FIXME: write.
+    Managers are elements that add a function or unify the function of
+    another (series of) element(s). Managers are generally a
+    <classname>GstBin</classname> with one or more ghostpads. Inside them
+    is/are the actual element(s) that matters. There is several cases where
+    this is useful. For example:
   </para>
+  <itemizedlist>
+    <listitem>
+      <para>
+        To add support for private events with custom event handling to
+        another element.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        To add support for custom pad <function>_query ()</function>
+        or <function>_convert ()</function> handling to another element.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        To add custom data handling before or after another element's data
+        handler function (generally its <function>_chain ()</function>
+        function).
+      </para>
+    </listitem>
+  </itemizedlist>
+  <para>
+    This chapter will explain the setup of managers. As a specific example,
+    we will try to add EOS event support to source elements. This can be
+    used to finish capturing an audio stream to a file. Source elements
+    normally don't do any EOS handling at all, so a manager is perfect to
+    extend those element's functionalities.
+  </para>
+  <para>
+    Specifically, this element will contain two child elements: the actual
+    source element and a <quote>helper element</quote> that implement an
+    event handler on its source pad. This event handler will respond to
+    EOS events by storing them internally and returning the event (rather
+    than data) on the next call to the <function>_get ()</function>
+    function. After that, it will go into EOS and set the parent (and
+    thereby the contained source element) to EOS as well. Other events will
+    be forwarded to the source element, which will handle them as usual.
+  </para>
+  <programlisting>
+..
+  </programlisting>
 </chapter>

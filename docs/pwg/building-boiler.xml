@@ -33,7 +33,7 @@
     </para>
     <screen>
 <prompt>shell $ </prompt><userinput>cvs -d:pserver:anoncvs@cvs.freedesktop.org/cvs/gstreamer co login</userinput>
-Logging in to :pserver:anoncvs@cvs.freedesktop.org:2401/cvs/gstreamer
+Logging in to :pserver:anoncvs@cvs.freedesktop.org:/cvs/gstreamer
 CVS password: <keycap>[ENTER]</keycap>
 
 <prompt>shell $ </prompt><userinput>cvs -z3 -d:pserver:anoncvs@cvs.freedesktop.org:/cvs/gstreamer co gst-template</userinput>
@@ -207,7 +207,10 @@ static GstElementDetails example_details = {
     </programlisting>
     <para>
       The element details are registered with the plugin during
-      <function>_base_init ()</function>.
+      the <function>_base_init ()</function> function, which is part of
+      the GObject system. The <function>_base_init ()</function> function
+      should be set for this GObject in the function where you register
+      the type with Glib.
     </para>
     <programlisting>
 static void
@@ -270,15 +273,18 @@ GST_STATIC_PAD_TEMPLATE (
       <function>gst_pad_new_from_template ()</function>. The template can be
       retrieved from the element class using
       <function>gst_element_class_get_pad_template ()</function>. See below
-      for more details on this.
+      for more details on this. In order to create a new pad from this
+      template using <function>gst_pad_new_from_template ()</function>, you
+      will need to declare the pad template as a global variable. More on
+      this subject in <xref linkend="chapter-building-pads"/>.
     </para>
     <programlisting>
+static GstStaticPadTemplate sink_factory = [..],
+    src_factory = [..];
+
 static void
 gst_my_filter_base_init (GstMyFilterClass *klass)
 {
-  static GstStaticPadTemplate sink_factory =
-[..]
-  , src_factory =
 [..]
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 

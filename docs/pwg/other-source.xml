@@ -356,7 +356,7 @@ gst_my_source_init (GstMySource *src)
   src->sync = FALSE;
 }
 
-static void
+static GstData *
 gst_my_source_get (GstPad *pad)
 {
   GstMySource *src = GST_MY_SOURCE (gst_pad_get_parent (pad));
@@ -436,7 +436,7 @@ gst_my_source_buffer_free (GstBuffer *buf)
    * flag. */
 }
 
-static void
+static GstData *
 gst_my_source_get (GstPad *pad)
 {
   GstMySource *src = GST_MY_SOURCE (gst_pad_get_parent (pad));

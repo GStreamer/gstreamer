@@ -98,8 +98,8 @@
     Examples of elements that <emphasis>have</emphasis> to be loop-based are
     elements with multiple sink pads. Since the scheduler will push data into
     the pads as it comes (and this might not be synchronous), you will easily
-    get ascynronous data on both pads, which means that the data that arrives
-    on the first pad has a different display timestamp then the data arriving
+    get asynchronous data on both pads, which means that the data that arrives
+    on the first pad has a different display timestamp than the data arriving
     on the second pad at the same time. To get over these issues, you should
     write such elements in a loop-based form. Other elements that are
     <emphasis>easier</emphasis> to write in a loop-based form than in a
@@ -264,14 +264,34 @@ gst_my_filter_loopfunc (GstElement *element)
     <para>
       A second type of elements that wants to be loop-based, are the so-called
       bytestream-elements. Until now, we've only dealt with elements that
-      receive of pull full buffers of a random size from other elements. Often,
+      receive or pull full buffers of a random size from other elements. Often,
       however, it is wanted to have control over the stream at a byte-level,
       such as in stream parsers or demuxers. It is possible to manually pull
       buffers and merge them until a certain size; it is easier, however, to
       use bytestream, which wraps this behaviour.
     </para>
     <para>
-      Bytestream-using elements are ususally stream parsers or demuxers. For
+      To use bytestream, you need to load the bytestream when your plugin is
+      loaded; you should do this before registering the element, which you
+      learned previously in <xref linkend="section-boiler-plugininit"/>.
+      After that, all functions of the bytestream plugin are available in
+      your plugin as well.
+    </para>
+    <programlisting>
+#include &lt;gst/bytestream/bytestream.h&gt;
+
+static gboolean
+plugin_init (GstPlugin *plugin)
+{
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
+  /* and now, actually register the element */
+[..]
+}
+    </programlisting>
+    <para>
+      Bytestream-using elements are usually stream parsers or demuxers. For
       now, we will take a parser as an example. Demuxers require some more
       magic that will be dealt with later in this guide:
       <xref linkend="chapter-advanced-request"/>. The goal of this parser will be

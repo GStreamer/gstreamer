@@ -4,11 +4,13 @@
 <chapter id="chapter-building-signals">
   <title>Signals</title>
   <para>
-    Signals can be used to notify applications of events specific to this
-    object. Note, however, that the application needs to be aware of signals
-    and their meaning, so if you're looking for a generic way for application-
-    element interaction, signals are probably not what you're looking for. In
-    many cases, however, signals can be very useful. See the GObject
-    documentation for all internals about signals.
+    GObject signals can be used to notify applications of events specific
+    to this object. Note, however, that the application needs to be aware
+    of signals and their meaning, so if you're looking for a generic way
+    for application-element interaction, signals are probably not what
+    you're looking for. In many cases, however, signals can be very useful.
+    See the <ulink type="http"
+      url="http://www.le-hacker.org/papers/gobject/index.html">GObject
+    documentation</ulink> for all internals about signals.
   </para>
 </chapter>

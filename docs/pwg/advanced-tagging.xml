@@ -2,7 +2,7 @@
   <title>Tagging (Metadata and Streaminfo)</title>
   <para>
     Tags are pieces of information stored in a stream that are not the content
-    itself, butthey rather <emphasis>describe</emphasis> the content. Most
+    itself, but they rather <emphasis>describe</emphasis> the content. Most
     media container formats support tagging in one way or another. Ogg uses
     VorbisComment for this, MP3 uses ID3, AVI and WAV use RIFF's INFO list
     chunk, etc. GStreamer provides a general way for elements to read tags from
@@ -70,7 +70,7 @@
     </para>
     <para>
       The following example program will parse a file and parse the data as
-      metadata/tags rathen than as actual content-data. It will parse each
+      metadata/tags rather than as actual content-data. It will parse each
       line as <quote>name:value</quote>, where name is the type of metadata
       (title, author, ...) and value is the metadata value. The
       <function>_getline ()</function> is the same as the one given in

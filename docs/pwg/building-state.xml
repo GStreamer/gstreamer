@@ -56,7 +56,7 @@
 
   <sect1 id="section-statemanage-filters">
   <title>
-    Mangaging filter state
+    Managing filter state
   </title>
   <para>
     An element can be notified of state changes through a virtual function

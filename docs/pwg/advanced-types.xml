@@ -11,7 +11,7 @@
   </para>
   <para>
     In order for types to be useful, and for systems like autopluggers to
-    work, it is neccessary that all elements agree on the type definitions,
+    work, it is necessary that all elements agree on the type definitions,
     and which properties are required for each type. The &GStreamer; framework
     itself simply provides the ability to define types and parameters, but
     does not fix the meaning of types and parameters, and does not enforce
@@ -117,8 +117,8 @@ gst_my_typefind_function (GstTypeFind *tf,
   guint8 *data = gst_type_find_peek (tf, 0, 12);
 
   if (data &amp;&amp;
-      GUINT32_FROM_LE ((guint32 *) data)[0] == GST_MAKE_FOURCC ('R','I','F','F') &amp;&amp;
-      GUINT32_FROM_LE ((guint32 *) data)[2] == GST_MAKE_FOURCC ('A','V','I',' ')) {
+      GUINT32_FROM_LE (((guint32 *) data)[0]) == GST_MAKE_FOURCC ('R','I','F','F') &amp;&amp;
+      GUINT32_FROM_LE (((guint32 *) data)[2]) == GST_MAKE_FOURCC ('A','V','I',' ')) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
 			   gst_caps_new_simple ("video/x-msvideo", NULL));
   }
@@ -375,7 +375,7 @@ plugin_init (GstPlugin *plugin)
             <entry>layout</entry>
             <entry>string</entry>
             <entry>
-              <quote>quicktime</quote>, <quote>wav</quote>,
+              <quote>quicktime</quote>, <quote>dvi</quote>,
               <quote>microsoft</quote> or <quote>4xm</quote>.
             </entry>
             <entry>

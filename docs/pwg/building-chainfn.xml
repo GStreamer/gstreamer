@@ -6,7 +6,7 @@
   <para>
     The chain function is the function in which all data processing takes
     place. In the case of a simple filter, <function>_chain ()</function>
-    functions are mostly lineair functions - so for each incoming buffer,
+    functions are mostly linear functions - so for each incoming buffer,
     one buffer will go out, too. Below is a very simple implementation of
     a chain function:
   </para>
