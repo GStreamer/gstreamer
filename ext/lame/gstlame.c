@@ -320,7 +320,7 @@ gst_lame_class_init (GstLameClass *klass)
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
 
-  gstelement_class->change_state = gst_lame_change_state;
+  //gstelement_class->change_state = gst_lame_change_state;
 }
 
 static GstPadConnectReturn
@@ -340,8 +340,9 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
       gst_event_new_info ("channels", GST_PROPS_INT (lame->num_channels), NULL));
   gst_element_send_event (GST_ELEMENT (lame),
       gst_event_new_info ("rate", GST_PROPS_INT (lame->samplerate), NULL));
-
+  
   GST_DEBUG (0, "rate=%d, channels=%d\n", lame->samplerate, lame->num_channels);
+  g_print ("rate=%d, channels=%d\n", lame->samplerate, lame->num_channels);
 
   if (gst_lame_setup (lame)) {
     lame->initialized = TRUE;
@@ -710,8 +711,11 @@ gst_lame_setup (GstLame *lame)
 {
   GST_DEBUG_ENTER ("(\"%s\")", gst_element_get_name (GST_ELEMENT (lame)));
 
+  g_assert (!lame->initialized);
+
   /* copy the parameters over */
   lame_set_in_samplerate (lame->lgf, lame->samplerate);
+
   /* force mono encoding if we only have one channel */
   if (lame->num_channels == 1) 
     lame->mode = 3;
