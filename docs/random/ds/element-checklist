@@ -23,6 +23,16 @@ Make sure that each .c file includes config.h (conditionally on
 HAVE_CONFIG_H).  Make sure that each .h file does _not_ include
 config.h.
 
+4. src event handling
+
+Every element having multiple sink pads or having a specific need to handle
+src events in a different manner than the default event handler should do that 
+correctly. Correctly means that :
+
+- It should not leak the event if it is handled (gst_event_unref)
+- It should call return gst_pad_event_default (pad, event) for all non handled 
+localy events. Otherwise it breaks navigation, seeking, etc...
+- it should return a TRUE/FALSE boolean if the localy handled event was handled.
 
 
 
@@ -31,5 +41,3 @@ other ideas:
 
 - plugins should avoid using gst_caps_to_string() in debug statement.
   They should use %"GST_PTR_FORMAT" instead.  Check all usage for leaks.
-
-
