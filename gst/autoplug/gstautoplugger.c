@@ -62,6 +62,8 @@ struct _GstAutoplugger {
 
   GstAutoplug *autoplug;
   GstElement *autobin;
+
+  gboolean disable_nocaps;
 };
 
 struct _GstAutopluggerClass {
@@ -90,8 +92,8 @@ static void			gst_autoplugger_get_arg		(GtkObject *object, GtkArg *arg, guint id
 
 static void	gst_autoplugger_external_sink_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_src_caps_changed	(GstPad *pad, GstCaps *caps, GstAutoplugger *autoplugger);
-static void	gst_autoplugger_external_sink_caps_nego_failed	(GstPad *pad, GstAutoplugger *autoplugger);
-static void	gst_autoplugger_external_src_caps_nego_failed	(GstPad *pad, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_external_sink_caps_nego_failed	(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger);
+static void	gst_autoplugger_external_src_caps_nego_failed	(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_sink_connected		(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger);
 static void	gst_autoplugger_external_src_connected		(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger);
 
@@ -266,7 +268,7 @@ gst_autoplugger_external_src_caps_changed(GstPad *pad, GstCaps *caps, GstAutoplu
 }
 
 
-static void
+static gboolean
 gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps *srccaps,GstCaps *sinkcaps)
 {
   GstPad *sinkpad;
@@ -283,30 +285,39 @@ gst_autoplugger_autoplug(GstAutoplugger *autoplugger,GstPad *srcpad,GstCaps *src
 
   if (!autoplugger->autoplug) {
     autoplugger->autoplug = gst_autoplugfactory_make("static");
+    g_return_val_if_fail(autoplugger->autoplug != NULL, FALSE);
   }
   GST_DEBUG(GST_CAT_AUTOPLUG, "building autoplugged bin between caps\n");
   autoplugger->autobin = gst_autoplug_to_caps(autoplugger->autoplug,
     srccaps,sinkcaps,NULL);
-  g_return_if_fail(autoplugger->autobin != NULL);
+  g_return_val_if_fail(autoplugger->autobin != NULL, FALSE);
   gst_bin_add(GST_BIN(autoplugger),autoplugger->autobin);
 
+gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
+
   // FIXME this is a hack
-  GST_DEBUG(GST_CAT_AUTOPLUG, "copying failed caps to srcpad %s:%s to ensure renego\n",GST_DEBUG_PAD_NAME(autoplugger->cache_srcpad));
-  gst_pad_set_caps(srcpad,srccaps);
+//  GST_DEBUG(GST_CAT_AUTOPLUG, "copying failed caps to srcpad %s:%s to ensure renego\n",GST_DEBUG_PAD_NAME(autoplugger->cache_srcpad));
+//  gst_pad_set_caps(srcpad,srccaps);
+
+  if (GST_PAD_CAPS(srcpad) == NULL) GST_DEBUG(GST_CAT_AUTOPLUG,"no caps on cache:src!\n");
 
   // attach the autoplugged bin
   GST_DEBUG(GST_CAT_AUTOPLUG, "attaching the autoplugged bin between the two pads\n");
   gst_pad_connect(srcpad,gst_element_get_pad(autoplugger->autobin,"sink"));
+gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
   gst_pad_connect(gst_element_get_pad(autoplugger->autobin,"src_00"),sinkpad);
+gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 
   // FIXME try to force the renego
-  GST_DEBUG(GST_CAT_AUTOPLUG, "trying to force everyone to nego\n");
-  gst_pad_renegotiate(gst_element_get_pad(autoplugger->autobin,"sink"));
-  gst_pad_renegotiate(sinkpad);
+//  GST_DEBUG(GST_CAT_AUTOPLUG, "trying to force everyone to nego\n");
+//  gst_pad_renegotiate(gst_element_get_pad(autoplugger->autobin,"sink"));
+//  gst_pad_renegotiate(sinkpad);
+
+  return TRUE;
 }
 
 static void
-gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, GstAutoplugger *autoplugger)
+gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger)
 {
   GstPad *srcpad_peer;
   GstPadTemplate *srcpad_peer_template;
@@ -333,16 +344,22 @@ gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, GstAutoplugger *auto
   sinkpad_peer_caps = GST_PAD_CAPS(sinkpad_peer);
   g_return_if_fail(sinkpad_peer_caps != NULL);
 
-  gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,sinkpad_peer_caps,srcpad_peer_caps);
+  if (gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,sinkpad_peer_caps,srcpad_peer_caps))
+    *result = TRUE;
+
+  // force renego
+  gst_pad_renegotiate(GST_PAD(GST_PAD_PEER(autoplugger->cache_sinkpad)));
 
   autoplugger->paused--;
   if (autoplugger->paused == 0)
     // try to PLAY the whole thing
     gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+
+  GST_INFO(GST_CAT_AUTOPLUG, "done dealing with caps nego failure on sinkpad %s:%s",GST_DEBUG_PAD_NAME(pad));
 }
 
 static void
-gst_autoplugger_external_src_caps_nego_failed(GstPad *pad, GstAutoplugger *autoplugger)
+gst_autoplugger_external_src_caps_nego_failed(GstPad *pad, gboolean *result, GstAutoplugger *autoplugger)
 {
   GstCaps *srcpad_caps;
   GstPad *srcpad_peer;
@@ -365,12 +382,17 @@ gst_autoplugger_external_src_caps_nego_failed(GstPad *pad, GstAutoplugger *autop
   srcpad_peer_caps = GST_PADTEMPLATE_CAPS(srcpad_peer_template);
   g_return_if_fail(srcpad_peer_caps != NULL);
 
-  gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,srcpad_caps,srcpad_peer_caps);
+  if (gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,srcpad_caps,srcpad_peer_caps))
+    *result = TRUE;
 
   autoplugger->paused--;
   if (autoplugger->paused == 0)
     // try to PLAY the whole thing
     gst_element_set_state(GST_ELEMENT_SCHED(autoplugger)->parent,GST_STATE_PLAYING);
+
+  autoplugger->disable_nocaps = TRUE;
+
+  GST_INFO(GST_CAT_AUTOPLUG, "done dealing with caps nego failure on srcpad %s:%s",GST_DEBUG_PAD_NAME(pad));
 }
 
 
@@ -451,8 +473,8 @@ gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 */
 
   // FIXME set the caps on the new connection
-  GST_DEBUG(GST_CAT_AUTOPLUG,"forcing caps on the typefound pad\n");
-  gst_pad_set_caps(autoplugger->cache_srcpad,caps);
+//  GST_DEBUG(GST_CAT_AUTOPLUG,"forcing caps on the typefound pad\n");
+//  gst_pad_set_caps(autoplugger->cache_srcpad,caps);
 
   // reattach the original outside srcpad
   GST_DEBUG(GST_CAT_AUTOPLUG,"re-attaching downstream peer to autoplugcache\n");
@@ -485,6 +507,11 @@ gst_autoplugger_cache_first_buffer(GstElement *element,GstBuffer *buf,GstAutoplu
   // if there are no established caps, worry
   if (!autoplugger->sinkcaps) {
     GST_INFO(GST_CAT_AUTOPLUG, "have no caps for the buffer, Danger Will Robinson!");
+
+if (autoplugger->disable_nocaps) {
+  GST_DEBUG(GST_CAT_AUTOPLUG, "not dealing with lack of caps this time\n");
+  return;
+}
 
 gst_schedule_show(GST_ELEMENT_SCHED(autoplugger));
 

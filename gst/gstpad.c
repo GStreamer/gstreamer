@@ -150,7 +150,8 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gst_real_pad_signals[REAL_CAPS_NEGO_FAILED] =
     gtk_signal_new ("caps_nego_failed", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstRealPadClass, caps_nego_failed),
-                    gtk_marshal_NONE__NONE, GTK_TYPE_NONE, 0);
+                    gtk_marshal_NONE__POINTER, GTK_TYPE_NONE, 1,
+                    GTK_TYPE_POINTER);
   gst_real_pad_signals[REAL_CONNECTED] =
     gtk_signal_new ("connected", GTK_RUN_LAST, gtkobject_class->type,
                     GTK_SIGNAL_OFFSET (GstRealPadClass, connected),
@@ -1273,8 +1274,21 @@ gst_pad_renegotiate (GstPad *pad)
   
   result = gst_pad_renegotiate_func (GST_PAD (currentpad), &data1, GST_PAD (otherpad), &data2, &newcaps);
 
+  if (!result) {
+    GST_DEBUG (GST_CAT_NEGOTIATION, "firing caps_nego_failed signal on %s:%s and %s:%s to give it a chance to succeed\n",
+               GST_DEBUG_PAD_NAME(currentpad),GST_DEBUG_PAD_NAME(otherpad));
+    gtk_signal_emit (GTK_OBJECT(currentpad), 
+                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED],&result);
+    gtk_signal_emit (GTK_OBJECT(otherpad), 
+                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED],&result);
+    if (result)
+      GST_DEBUG (GST_CAT_NEGOTIATION, "caps_nego_failed handler claims success at renego, believing\n");
+  }
+
   if (result) {
     GST_DEBUG (GST_CAT_NEGOTIATION, "pads aggreed on caps :)\n");
+
+  newcaps = GST_PAD_CAPS (pad);
 
     /* here we have some sort of aggreement of the caps */
     GST_PAD_CAPS (currentpad) = gst_caps_ref (newcaps);
@@ -1291,13 +1305,6 @@ gst_pad_renegotiate (GstPad *pad)
                      gst_real_pad_signals[REAL_CAPS_CHANGED],GST_PAD_CAPS(currentpad));
     gtk_signal_emit (GTK_OBJECT(otherpad), 
                      gst_real_pad_signals[REAL_CAPS_CHANGED],GST_PAD_CAPS(otherpad));
-  } else {
-    GST_DEBUG (GST_CAT_NEGOTIATION, "firing caps_nego_failed signal on %s:%s and %s:%s\n",
-               GST_DEBUG_PAD_NAME(currentpad),GST_DEBUG_PAD_NAME(otherpad));
-    gtk_signal_emit (GTK_OBJECT(currentpad), 
-                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED]);
-    gtk_signal_emit (GTK_OBJECT(otherpad), 
-                     gst_real_pad_signals[REAL_CAPS_NEGO_FAILED]);
   }
 
   return result;
