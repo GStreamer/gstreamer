@@ -1,3 +1,20 @@
+2004-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_pad_get_type),
+	(gst_videomixer_pad_class_init), (gst_videomixer_pad_get_property),
+	(gst_videomixer_pad_set_property),
+	(gst_videomixer_pad_sinkconnect), (gst_videomixer_pad_init),
+	(gst_video_mixer_background_get_type), (gst_videomixer_get_type),
+	(gst_videomixer_class_init), (gst_videomixer_init),
+	(gst_videomixer_request_new_pad), (gst_videomixer_blend_ayuv_i420),
+	(pad_zorder_compare), (gst_videomixer_sort_pads),
+	(gst_videomixer_fill_checker), (gst_videomixer_fill_color),
+	(gst_videomixer_fill_queues), (gst_videomixer_blend_buffers),
+	(gst_videomixer_update_queues), (gst_videomixer_loop),
+	(plugin_init):
+	Avoid divide by zero, choose masterpad as the pad with the highest
+	framerate.
+
 2004-06-27  Julien Moutte  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xwindow_decorate),
