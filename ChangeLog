@@ -1,5 +1,8 @@
 2004-11-15  Johan Dahlin  <johan@gnome.org>
 
+	* gst/gst.override (_wrap_gst_tag_setter_get_list): Override, to
+	avoid compiler warning.
+
 	* gst/gstmodule.c (init_gst): Reset LC_NUMERIC, since it might
 	change in gst_init_check. Fixes 100% CPU usage in flumotion
 	when using a non C locale.
