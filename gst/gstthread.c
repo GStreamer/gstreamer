@@ -378,7 +378,7 @@ gst_thread_main_loop (void *arg)
 static void
 gst_thread_signal_thread (GstThread *thread, guint syncflag, gboolean set)
 {
-  GST_DEBUG (0,"sync: signaling thread setting %u to %d\n",synflag,set);
+  GST_DEBUG (0,"sync: signaling thread setting %u to %d\n",syncflag,set);
   g_mutex_lock (thread->lock);
   if (set)
     GST_FLAG_SET(thread,syncflag);
