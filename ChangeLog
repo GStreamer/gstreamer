@@ -1,5 +1,11 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/ext/ffmpeg/m4/vorbis.m4:
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+          adding vorbis.m4
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/ext/ffmpeg/m4/ogg.m4:
 	* gst-libs/ext/ffmpeg/patches/autotools.patch:
 	* gst-libs/ext/ffmpeg/patches/no-imlib.patch:
