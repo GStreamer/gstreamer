@@ -17,7 +17,7 @@ element_create (char *name, char *element)
 {
   GstElement *el = NULL;
 
-  el = (GstElement *) element_create (element, name);
+  el = (GstElement *) gst_elementfactory_make (element, name);
   if (el == NULL)
   {
     fprintf (stderr, "Could not create element %s (%s) !\n", name, element);
@@ -64,6 +64,6 @@ main (int argc, char *argv[])
   gst_bin_iterate (GST_BIN (pipeline));
 
   g_print ("Done !\n");
-  return 1;
+  return 0;
 }
 
