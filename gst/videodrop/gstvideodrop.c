@@ -24,15 +24,12 @@
 #include <gstvideodrop.h>
 
 /* elementfactory information */
-static GstElementDetails videodrop_details = {
+static GstElementDetails videodrop_details = GST_ELEMENT_DETAILS (
   "Video frame dropper",
   "Filter/Video",
-  "LGPL",
   "Re-FPS'es video",
-  VERSION,
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2003",
-};
+  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
+);
 
 /* GstVideodrop signals and args */
 enum {
@@ -85,6 +82,7 @@ GST_PAD_TEMPLATE_FACTORY(sink_template,
   )
 )
 
+static void	gst_videodrop_base_init		(gpointer g_class);
 static void	gst_videodrop_class_init	(GstVideodropClass *klass);
 static void	gst_videodrop_init		(GstVideodrop *videodrop);
 static void	gst_videodrop_chain		(GstPad *pad, GstData *_data);
@@ -100,7 +98,7 @@ gst_videodrop_get_type (void)
   if (!videodrop_type) {
     static const GTypeInfo videodrop_info = {
       sizeof (GstVideodropClass),
-      NULL,
+      gst_videodrop_base_init,
       NULL,
       (GClassInitFunc) gst_videodrop_class_init,
       NULL,
@@ -119,9 +117,21 @@ gst_videodrop_get_type (void)
 }
 
 static void
+gst_videodrop_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &videodrop_details);
+
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_add_pad_template (element_class,
+	GST_PAD_TEMPLATE_GET (src_template));
+}
+static void
 gst_videodrop_class_init (GstVideodropClass *klass)
 {
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 #define gst_caps_get_float_range(caps, name, min, max) \
@@ -229,28 +239,20 @@ gst_videodrop_chain (GstPad *pad, GstData *_data)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the videodrop element */
-  factory = gst_element_factory_new ("videodrop", GST_TYPE_VIDEODROP,
-                                     &videodrop_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (sink_template));
-  gst_element_factory_add_pad_template (factory,
-	GST_PAD_TEMPLATE_GET (src_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "videodrop", GST_RANK_NONE, GST_TYPE_VIDEODROP);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "videodrop",
-  plugin_init
-};
+  "Re-FPS'es video",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
