@@ -11,9 +11,6 @@ if test ! -d common;
 then 
   echo "+ getting common/ from cvs"
   cvs co common 
-else
-  echo "+ updating common/ from cvs"
-  cd common; cvs update -dP; cd ..
 fi
 
 # source helper functions
