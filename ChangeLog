@@ -1,3 +1,9 @@
+2004-06-05  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	* ext/kio/Makefile.am:
+	  check for qt's moc preprocessor explicitly and use it
+
 2004-06-03  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst/tcp/gsttcp.c: (gst_tcp_socket_write):
