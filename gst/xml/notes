@@ -1,0 +1,6 @@
+The naming hiearchy you'll see bits of but never the whole thing is
+basically container:container:container:element.pad, which reflects
+parentage.  When naming connections between elements, those are the what
+will be used, possibly along with .. as container to indicate 'up one'.  I
+don't think this will ever by used, since ghost pads are supposed to make
+all connections between elements with the same parent.

@@ -1,0 +1,33 @@
+GstTypes exist to try to make sure data eveyrone is talking about the
+right kind of data.  They aid quite a bit in autoplugging, in fact make it
+possible.  Each well-formed type includes a function (typefind) that will
+take one or more buffers and determine whether or not it is indeed a
+stream of that type, and possible a metadata to go with it.  It may
+provide related metadata structure IDs (and must if it provides metadata
+from the typefind function).
+
+Because multiple elements and plugins are very likely to be using the same
+types, the process of creating/finding types is designed to be done with a
+single function call.  All operations on GstTypes occur via their guint16
+ID numbers, with the GstType structure "private" to the GST library.  A
+plugin wishing to use a give type would contain a static struct of type
+GstTypeFactory, which lists the MIME type, possible extensions (which may
+overlap the mime-types file), a typefind function, and any other cruft I
+decide to add.
+
+A plugin init function would take this typefactory and hand it to the
+gst_type_new() (FIXME: badly named) function, which would first search for
+that same MIME type in the current list.  If it found one, it would
+compare the two to see if the new one is "better".  Better is defined as
+having more extentions (to be merged) or a typefind function verses none.
+
+The point of returning an existing MIME type is a result of the goal of
+unifying types enough to guarantee that, for instance, all MP3 decoders
+will work interchangably.  If MP3 decoder A says "MIME type 'audio/mpeg'
+with extensions 'mpeg3'" and decoder B says "MIME type 'audio/mpeg' with
+extensions 'mp3'", we don't want to have two types defined, possibly with
+two typefind functions. If we did, it's not obvious which of the two would
+be tried first (luck) and if both would really identify streams as mp3
+correctly in all cases.  And whichever wins, we're stuck using the
+associated decoder to play that stream.  We lose the choice between any
+valid mp3 decoder, and thus the whole point of the type system.

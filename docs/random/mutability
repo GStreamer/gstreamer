@@ -1,0 +1,30 @@
+Mutability is the property of an object that defines whether or not you
+are allowed to modify it.  In the context of GST, that means that if you
+want to mutilate a buffer, say to do an audio effect, you may have to do
+this on a copy of the buffer, if someone else has a reference on it.
+
+The simplest sequence of events in a decoder pipeline is as follows:
+
+1) create buffer
+2) allocate and fill data region, attach to buffer
+3) pass to next element
+4) decode the data into new buffer, free original buffer
+5) pass to next element
+6) buffer gets copied to output device (sound, video, whatever)
+
+Both of these buffers are created from malloc()'d memory, are referenced
+by one and only one element at a time, and are never modified in place.
+They have no special flags, and when ref==0, they're simply free()'d.
+
+An optimization in the case of the sound card or video double buffering,
+where the output buffer actually comes from the output device.  In that
+case the element will be aware of such things.
+
+A more complex example is where the data is teed after being decoded, sent
+to an effects or visualization object.
+
+1) create buffer, fill from source
+2) hand to decoder
+3) create new buffer, decode into it, free old buffer
+4) hand to tee
+5) ref++, hand off to 

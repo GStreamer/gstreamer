@@ -1,0 +1,9 @@
+Intro to GStreamer
+
+GStreamer is a media-streaming architecture that I've been developing at
+home for about 4 months now. It's designed to overcome some of the
+problems I've seen in both the OGI Pipeline and in reading through
+DirectShow docs.  After an overview of the existing OGI Pipeline, I'll
+cover GStreamer's existing and planned architecture, and list what remains
+to be done.  GStreamer is mostly frozen right now, as it is to be released
+as 0.1.0 on Oct 31.  Major thaw will occur in a few weeks.

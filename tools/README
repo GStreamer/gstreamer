@@ -1,0 +1,16 @@
+launch
+======
+
+This is a tool that will construct pipelines based on a command-line
+syntax.  The syntax is rather complex to enable all the features I want it
+to have, but should be easy to use for most people.  Multi-pathed and
+feedback pipelines are the most complex.
+
+A simple commandline looks like:
+
+./launch disksrc demo.mp3 | mp3parse | mpg123 | audiosink-oss
+
+A more complex pipeline looks like:
+
+./launch disksrc redpill.vob | css-descramble | private_stream_1.0| \
+(ac3parse | ac3dec | audioink-oss) video_0| (mpeg2dec | videosink)

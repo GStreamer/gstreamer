@@ -1,0 +1,21 @@
+#bin_PROGRAMS = basic m types a r plugin w s args mpg123 mcut push qtest
+bin_PROGRAMS = qtest spectrum record wave mp3 teardown buffer mp3parse \
+		mpeg2parse mp3play ac3parse ac3play dvdcat fake cobin
+
+SUBDIRS = xml cothreads
+
+spectrum_CFLAGS = $(shell gnome-config --cflags gnomeui)
+spectrum_LDFLAGS = $(shell gnome-config --libs gnomeui)
+wave_CFLAGS = $(shell gnome-config --cflags gnomeui)
+wave_LDFLAGS = $(shell gnome-config --libs gnomeui)
+
+buffer_SOURCES = buffer.c mem.c
+teardown_SOURCES = teardown.c mem.c
+ac3play_SOURCES = ac3play.c mem.c
+
+LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
+
+INCLUDES = $(GLIB_CFLAGS) $(GTK_CFLAGS) -I$(top_srcdir) \
+           $(shell gnome-config --cflags gnomeui)
+
+EXTRA_DIST = README
