@@ -69,8 +69,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "format = (fourcc) I420, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) { 23.976024, 24.0, 25.0, 29.970030, 30.0, "
-        "  50.0, 59.940060, 60.0 }")
+        "framerate = (double) { 23.976023976, 24.0, 25.0, 29.97002997, 30.0, "
+        "  50.0, 59.94005994, 60.0 }")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -81,8 +81,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "systemstream = (boolean) FALSE, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) { 23.976024, 24.0, 25.0, 29.970030, 30.0, "
-        "  50.0, 59.940060, 60.0 }")
+        "framerate = (double) { 23.976023976, 24.0, 25.0, 29.97002997, 30.0, "
+        "  50.0, 59.94005994, 60.0 }")
     );
 
 #define MAX_FRAME_RATES  9
