@@ -347,6 +347,51 @@ gst_lame_class_init (GstLameClass * klass)
 }
 
 static GstPadLinkReturn
+gst_lame_src_link (GstPad * pad, const GstCaps * caps)
+{
+  GstLame *lame;
+  gint out_samplerate;
+  GstStructure *structure;
+  GstCaps *othercaps, *channelcaps;
+  GstPadLinkReturn result;
+
+  lame = GST_LAME (gst_pad_get_parent (pad));
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_get_int (structure, "rate", &out_samplerate) ||
+      !gst_structure_get_int (structure, "channels", &lame->num_channels))
+    g_return_val_if_reached (GST_PAD_LINK_REFUSED);
+
+  if (lame_set_out_samplerate (lame->lgf, out_samplerate) != 0)
+    return GST_PAD_LINK_REFUSED;
+
+  /* we don't do channel conversion */
+  channelcaps = gst_caps_new_simple ("audio/x-raw-int", "chnnels", G_TYPE_INT,
+      lame->num_channels, NULL);
+  othercaps = gst_caps_intersect (gst_pad_get_pad_template_caps (lame->sinkpad),
+      channelcaps);
+  gst_caps_free (channelcaps);
+
+  result = gst_pad_try_set_caps_nonfixed (lame->sinkpad, othercaps);
+
+  if (GST_PAD_LINK_FAILED (result))
+    return result;
+
+  caps = gst_pad_get_negotiated_caps (lame->sinkpad);
+  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (structure, "rate", &lame->samplerate))
+    g_return_val_if_reached (GST_PAD_LINK_REFUSED);
+
+  if (!gst_lame_setup (lame)) {
+    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
+        ("could not initialize encoder (wrong parameters?)"));
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  return result;
+}
+
+static GstPadLinkReturn
 gst_lame_sink_link (GstPad * pad, const GstCaps * caps)
 {
   GstLame *lame;
@@ -394,6 +439,7 @@ gst_lame_init (GstLame * lame)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_lame_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
+  gst_pad_set_link_function (lame->srcpad, gst_lame_src_link);
 
   GST_FLAG_SET (lame, GST_ELEMENT_EVENT_AWARE);
 
