@@ -373,6 +373,7 @@ static void
 group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
 {
   GstPlayBaseGroup *group = play_base_bin->building_group;
+  gboolean had_active_group = (get_active_group (play_base_bin) != NULL);
 
   /* if an element signalled a no-more-pads after we stopped due
    * to preroll, the group is NULL. This is not an error */
@@ -414,6 +415,14 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal)
   g_cond_signal (play_base_bin->group_cond);
   GST_DEBUG ("signaled group done");
   g_mutex_unlock (play_base_bin->group_lock);
+
+  if (!had_active_group && GST_STATE (play_base_bin) > GST_STATE_READY) {
+    setup_substreams (play_base_bin);
+    GST_DEBUG ("Emitting signal");
+    g_signal_emit (play_base_bin,
+        gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
+    GST_DEBUG ("done");
+  }
 }
 
 /* check if there are streams in the group that are not muted */
@@ -504,7 +513,12 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     gst_bin_add (GST_BIN (play_base_bin->thread), preroll);
     gst_element_set_state (selector, GST_STATE_PLAYING);
   }
-  gst_element_set_state (preroll, GST_STATE_PAUSED);
+  if (GST_STATE (play_base_bin) == GST_STATE_PLAYING &&
+      !get_active_group (play_base_bin)) {
+    gst_element_set_state (preroll, GST_STATE_PLAYING);
+  } else {
+    gst_element_set_state (preroll, GST_STATE_PAUSED);
+  }
 
   play_base_bin->threaded = TRUE;
 }
@@ -648,15 +662,6 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
       }
 
       if (have_left) {
-        g_mutex_lock (play_base_bin->group_lock);
-        while (g_list_length (play_base_bin->queued_groups) < 2 &&
-            GST_STATE (play_base_bin->thread) == GST_STATE_PLAYING) {
-          GST_DEBUG ("Waiting for new groups");
-          g_cond_wait (play_base_bin->group_cond, play_base_bin->group_lock);
-          GST_DEBUG ("done");
-        }
-        g_mutex_unlock (play_base_bin->group_lock);
-
         /* error? */
         if (GST_STATE (play_base_bin->thread) != GST_STATE_PLAYING)
           return TRUE;
@@ -671,14 +676,16 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
          * active */
         play_base_bin->queued_groups =
             g_list_remove (play_base_bin->queued_groups, group);
-        setup_substreams (play_base_bin);
-        GST_DEBUG ("switching to next group %p",
-            play_base_bin->queued_groups->data);
-        /* and signal the new group */
-        GST_DEBUG ("emit signal");
-        g_signal_emit (play_base_bin,
-            gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
-
+        if (play_base_bin->queued_groups) {
+          setup_substreams (play_base_bin);
+          GST_DEBUG ("switching to next group %p",
+              play_base_bin->queued_groups->data);
+          /* and signal the new group */
+          GST_DEBUG ("emit signal");
+          g_signal_emit (play_base_bin,
+              gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
+        }
+        /* else, it'll be handled in commit_group */
         GST_DEBUG ("Syncing state from %d", GST_STATE (play_base_bin->thread));
         gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
         GST_DEBUG ("done");
@@ -988,7 +995,8 @@ setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
  */
 
 static GstElement *
-gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
+gen_source_element (GstPlayBaseBin * play_base_bin,
+    GstElement ** subbin, gboolean * _is_stream)
 {
   GstElement *source, *queue, *bin;
   GstProbe *probe;
@@ -1011,7 +1019,7 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
     return NULL;
 
   /* lame - FIXME, maybe we can use seek_types/mask here? */
-  is_stream = !strncmp (play_base_bin->uri, "http://", 7) ||
+  *_is_stream = is_stream = !strncmp (play_base_bin->uri, "http://", 7) ||
       !strncmp (play_base_bin->uri, "mms://", 6);
   if (!is_stream)
     return source;
@@ -1089,12 +1097,14 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
  * all the streams or until a preroll queue has been filled.
  */
 static gboolean
-setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
+setup_source (GstPlayBaseBin * play_base_bin,
+    gboolean * _stream, GError ** error)
 {
   GstElement *old_src;
   GstElement *old_dec;
   GstPad *srcpad = NULL;
   GstElement *subbin;
+  gboolean stream;
 
   if (!play_base_bin->need_rebuild)
     return TRUE;
@@ -1105,7 +1115,8 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
   old_src = play_base_bin->source;
 
   /* create and configure an element that can handle the uri */
-  play_base_bin->source = gen_source_element (play_base_bin, &subbin);
+  play_base_bin->source = gen_source_element (play_base_bin, &subbin, &stream);
+  *_stream = stream;
 
   if (!play_base_bin->source) {
     /* whoops, could not create the source element */
@@ -1243,33 +1254,39 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
         "removed-decoded-pad", G_CALLBACK (removed_decoded_pad), play_base_bin);
     sig3 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
         G_CALLBACK (no_more_pads), play_base_bin);
-    sig4 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "unknown-type",
-        G_CALLBACK (unknown_type), play_base_bin);
-    sig5 = g_signal_connect (G_OBJECT (play_base_bin->thread), "error",
-        G_CALLBACK (thread_error), error);
 
-    /* either when the queues are filled or when the decoder element has no more
-     * dynamic streams, the cond is unlocked. We can remove the signal handlers then
-     */
-    g_mutex_lock (play_base_bin->group_lock);
-    if (gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING) ==
-        GST_STATE_SUCCESS) {
-      GST_DEBUG ("waiting for first group...");
-      sig6 = g_signal_connect (G_OBJECT (play_base_bin->thread),
-          "state-change", G_CALLBACK (state_change), play_base_bin);
-      g_cond_wait (play_base_bin->group_cond, play_base_bin->group_lock);
-      GST_DEBUG ("group done !");
+    if (!stream) {
+      sig4 = g_signal_connect (G_OBJECT (play_base_bin->decoder),
+          "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
+      sig5 = g_signal_connect (G_OBJECT (play_base_bin->thread), "error",
+          G_CALLBACK (thread_error), error);
+
+      /* either when the queues are filled or when the decoder element
+       * has no more dynamic streams, the cond is unlocked. We can remove
+       * the signal handlers then
+       */
+      g_mutex_lock (play_base_bin->group_lock);
+      if (gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING) ==
+          GST_STATE_SUCCESS) {
+        GST_DEBUG ("waiting for first group...");
+        sig6 = g_signal_connect (G_OBJECT (play_base_bin->thread),
+            "state-change", G_CALLBACK (state_change), play_base_bin);
+        g_cond_wait (play_base_bin->group_cond, play_base_bin->group_lock);
+        GST_DEBUG ("group done !");
+      } else {
+        GST_DEBUG ("state change failed, media cannot be loaded");
+        sig6 = 0;
+      }
+      g_mutex_unlock (play_base_bin->group_lock);
+
+      if (sig6 != 0)
+        g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig6);
+
+      g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig5);
+      g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig4);
     } else {
-      GST_DEBUG ("state change failed, media cannot be loaded");
-      sig6 = 0;
+      GST_DEBUG ("Source is a stream, delaying stream initialization");
     }
-    g_mutex_unlock (play_base_bin->group_lock);
-
-    if (sig6 != 0)
-      g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig6);
-
-    g_signal_handler_disconnect (G_OBJECT (play_base_bin->thread), sig5);
-    g_signal_handler_disconnect (G_OBJECT (play_base_bin->decoder), sig4);
 
     play_base_bin->need_rebuild = FALSE;
   }
@@ -1279,7 +1296,9 @@ setup_source (GstPlayBaseBin * play_base_bin, GError ** error)
       /* make subs iterate from now on */
       gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->subtitle);
     }
-    setup_substreams (play_base_bin);
+    if (!stream) {
+      setup_substreams (play_base_bin);
+    }
   }
 
   return TRUE;
@@ -1564,8 +1583,9 @@ gst_play_base_bin_change_state (GstElement * element)
     case GST_STATE_READY_TO_PAUSED:
     {
       GError *error = NULL;
+      gboolean stream;
 
-      if (!setup_source (play_base_bin, &error) || error != NULL) {
+      if (!setup_source (play_base_bin, &stream, &error) || error != NULL) {
         if (!error) {
           /* opening failed but no error - hellup */
           GST_ELEMENT_ERROR (GST_ELEMENT (play_base_bin), STREAM,
@@ -1578,6 +1598,8 @@ gst_play_base_bin_change_state (GstElement * element)
           g_error_free (error);
         }
         ret = GST_STATE_FAILURE;
+      } else if (stream) {
+        ret = gst_element_set_state (play_base_bin->thread, GST_STATE_PAUSED);
       } else {
         const GList *item;
         gboolean stream_found = FALSE, no_media = FALSE;
@@ -1640,10 +1662,12 @@ gst_play_base_bin_change_state (GstElement * element)
             G_CALLBACK (gst_play_base_bin_error), play_base_bin);
         g_signal_connect (G_OBJECT (play_base_bin->thread), "eos",
             G_CALLBACK (play_base_eos), play_base_bin);
-        GST_DEBUG ("emit signal");
-        g_signal_emit (play_base_bin,
-            gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
-        GST_DEBUG ("done");
+        if (!stream) {
+          GST_DEBUG ("emit signal");
+          g_signal_emit (play_base_bin,
+              gst_play_base_bin_signals[SETUP_OUTPUT_PADS_SIGNAL], 0);
+          GST_DEBUG ("done");
+        }
       } else {
         /* clean up leftover groups */
         remove_groups (play_base_bin);
@@ -1708,6 +1732,9 @@ gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
       element = thread;
     }
     gst_bin_add (GST_BIN (play_base_bin->thread), element);
+    if (GST_STATE (play_base_bin) > GST_STATE_READY) {
+      gst_element_set_state (element, GST_STATE (play_base_bin));
+    }
 
     /* hack, the clock is not correctly distributed in the core */
     sched = gst_element_get_scheduler (GST_ELEMENT (play_base_bin->thread));

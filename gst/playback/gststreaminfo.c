@@ -216,42 +216,6 @@ gst_stream_info_dispose (GObject * object)
 }
 
 static void
-stream_info_mute_pad (GstStreamInfo * stream_info, GstPad * pad, gboolean mute)
-{
-  GList *int_links;
-  gboolean activate = !mute;
-  gchar *debug_str = (activate ? "activate" : "inactivate");
-
-  GST_DEBUG_OBJECT (stream_info, "%s %s:%s", debug_str,
-      GST_DEBUG_PAD_NAME (pad));
-  gst_pad_set_active (pad, activate);
-  if (gst_pad_get_parent (pad)->numsrcpads > 1)
-    return;
-
-  for (int_links = gst_pad_get_internal_links (pad);
-      int_links; int_links = g_list_next (int_links)) {
-    GstPad *pad = GST_PAD (int_links->data);
-    GstPad *peer = gst_pad_get_peer (pad);
-    GstElement *peer_elem = peer ? gst_pad_get_parent (peer) : NULL;
-
-    GST_DEBUG_OBJECT (stream_info, "%s internal pad %s:%s",
-        debug_str, GST_DEBUG_PAD_NAME (pad));
-
-    gst_pad_set_active (pad, activate);
-
-    if (peer_elem && peer_elem->numsrcpads == 1) {
-      GST_DEBUG_OBJECT (stream_info, "recursing element %s on pad %s:%s",
-          gst_element_get_name (peer_elem), GST_DEBUG_PAD_NAME (peer));
-      stream_info_mute_pad (stream_info, peer, mute);
-    } else if (peer) {
-      GST_DEBUG_OBJECT (stream_info, "%s final pad %s:%s",
-          debug_str, GST_DEBUG_PAD_NAME (peer));
-      gst_pad_set_active (peer, activate);
-    }
-  }
-}
-
-static void
 stream_info_change_state (GstElement * element,
     gint old_state, gint new_state, gpointer data)
 {
@@ -261,7 +225,7 @@ stream_info_change_state (GstElement * element,
     /* state change will annoy us */
     g_return_if_fail (stream_info->mute == TRUE);
     GST_DEBUG_OBJECT (stream_info, "Re-muting pads after state-change");
-    stream_info_mute_pad (stream_info, GST_PAD (stream_info->object), TRUE);
+    gst_pad_set_active_recursive (GST_PAD (stream_info->object), FALSE);
   }
 }
 
@@ -277,8 +241,8 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
 
   if (mute != stream_info->mute) {
     stream_info->mute = mute;
-    stream_info_mute_pad (stream_info,
-        (GstPad *) GST_PAD_REALIZE (stream_info->object), mute);
+    gst_pad_set_active_recursive ((GstPad *)
+        GST_PAD_REALIZE (stream_info->object), !mute);
 
     if (mute) {
       g_signal_connect (gst_pad_get_parent ((GstPad *)

@@ -1,3 +1,14 @@
+2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybasebin.c: (group_commit),
+	(gen_preroll_element), (probe_triggered), (gen_source_element),
+	(setup_source), (gst_play_base_bin_change_state),
+	(gst_play_base_bin_add_element):
+	  Don't block for streams.
+	* gst/playback/gststreaminfo.c: (stream_info_change_state),
+	(gst_stream_info_set_mute):
+	  Use gst_pad_set_active_recursive.
+
 2005-01-25  Andy Wingo  <wingo@pobox.com>
 
 	* sys/v4l/gstv4lelement.c (gst_v4l_iface_supported): Fix compile
