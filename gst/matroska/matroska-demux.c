@@ -2029,8 +2029,8 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
 
         demux->pos = GST_BUFFER_TIMESTAMP (sub);
       }
-      gst_matroska_demux_sync_streams (demux);
       demux->src[stream]->pos = demux->pos;
+      gst_matroska_demux_sync_streams (demux);
 
       /* FIXME: do all laces have the same lenght? */
       if (duration) {
