@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-gstparse
+GstParse
 
 <!-- ##### SECTION Short_Description ##### -->
 get a pipeline from a text pipeline description
