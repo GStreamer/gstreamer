@@ -1126,7 +1126,7 @@ mpg123_parse_xing_header (struct mad_header *header,
 
 /* internal function to check if the header has changed and thus the
  * caps need to be reset.  Only call during normal mode, not resyncing */
-static void
+static gboolean
 gst_mad_check_caps_reset (GstMad * mad)
 {
   guint nchannels;
@@ -1157,8 +1157,10 @@ gst_mad_check_caps_reset (GstMad * mad)
         mad->pending_channels = nchannels;
         mad->pending_rate = rate;
       }
+      /* Now, we already have a valid caps set and will continue to use
+       * that for a while longer, so we cans afely return TRUE here. */
       if (++mad->times_pending < 3)
-        return;
+        return TRUE;
     }
   }
   gst_mad_update_info (mad);
@@ -1182,9 +1184,15 @@ gst_mad_check_caps_reset (GstMad * mad)
       mad->caps_set = TRUE;     /* set back to FALSE on discont */
       mad->channels = nchannels;
       mad->rate = rate;
+    } else {
+      GST_ELEMENT_ERROR (mad, CORE, NEGOTIATION, (NULL),
+          ("Failed to negotiate %d Hz, %d channels", rate, nchannels));
+      return FALSE;
     }
     gst_caps_free (caps);
   }
+
+  return TRUE;
 }
 
 static void
@@ -1370,7 +1378,6 @@ gst_mad_chain (GstPad * pad, GstData * _data)
           GST_DEBUG ("synced to data: 0x%0x 0x%0x", *mad->stream.ptr.byte,
               *(mad->stream.ptr.byte + 1));
 
-
           mad_stream_sync (&mad->stream);
           /* recoverable errors pass */
         }
@@ -1403,8 +1410,10 @@ gst_mad_chain (GstPad * pad, GstData * _data)
       }
 
       /* if we're not resyncing/in error, check if caps need to be set again */
-      if (!mad->in_error)
-        gst_mad_check_caps_reset (mad);
+      if (!mad->in_error) {
+        if (!gst_mad_check_caps_reset (mad))
+          goto end;
+      }
       nsamples = MAD_NSBSAMPLES (&mad->frame.header) *
           (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);
 
