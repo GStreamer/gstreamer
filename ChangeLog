@@ -1,3 +1,9 @@
+2004-08-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gsttcp.c:
+	* gst/tcp/gsttcpplugin.c:
+	  improve debuggging, remove assert
+
 2004-08-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_unit_type_get_type),

@@ -36,6 +36,9 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/dataprotocol/dataprotocol.h>
 
+GST_DEBUG_CATEGORY_EXTERN (tcp_debug);
+#define GST_CAT_DEFAULT tcp_debug
+
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
@@ -51,9 +54,11 @@ gst_tcp_host_to_ip (GstElement * element, const gchar * host)
   gchar *ip;
   struct in_addr addr;
 
+  GST_DEBUG_OBJECT (element, "resolving host %s", host);
   /* first check if it already is an IP address */
   if (inet_aton (host, &addr)) {
-    return g_strdup (host);
+    ip = g_strdup (host);
+    goto beach;
   }
 
   /* FIXME: could do a localhost check here */
@@ -76,6 +81,8 @@ gst_tcp_host_to_ip (GstElement * element, const gchar * host)
   /* There could be more than one IP address, but we just return the first */
   ip = g_strdup (inet_ntoa (*(struct in_addr *) *addrs));
 
+beach:
+  GST_DEBUG_OBJECT (element, "resolved to IP %s", ip);
   return ip;
 }
 
@@ -98,14 +105,17 @@ gst_tcp_socket_write (int socket, const void *buf, size_t count)
   }
 
   if (bytes_written < 0)
-    GST_DEBUG ("error while writing");
+    GST_WARNING ("error while writing");
   else
-    GST_DEBUG ("wrote %d bytes succesfully", bytes_written);
+    GST_LOG ("wrote %d bytes succesfully", bytes_written);
   return bytes_written;
 }
 
 /* read number of bytes from a socket into a given buffer incrementally.
- * Returns number of bytes read.
+ * Returns number of bytes read with same semantics as read(2):
+ * < 0: error, see errno
+ * = 0: EOF
+ * > 0: bytes read
  */
 gint
 gst_tcp_socket_read (int socket, void *buf, size_t count)
@@ -126,7 +136,7 @@ gst_tcp_socket_read (int socket, void *buf, size_t count)
   if (bytes_read < 0)
     GST_WARNING ("error while reading: %s", g_strerror (errno));
   else
-    GST_DEBUG ("read %d bytes succesfully", bytes_read);
+    GST_LOG ("read %d bytes succesfully", bytes_read);
   return bytes_read;
 }
 
@@ -146,8 +156,7 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
   header = g_malloc (header_length);
   readsize = header_length;
 
-  GST_DEBUG_OBJECT (this, "Reading %d bytes for buffer packet header",
-      readsize);
+  GST_LOG_OBJECT (this, "Reading %d bytes for buffer packet header", readsize);
   ret = gst_tcp_socket_read (socket, header, readsize);
   /* if we read 0 bytes, and we're blocking, we hit eos */
   if (ret == 0) {
@@ -172,12 +181,12 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
     g_free (header);
     return NULL;
   }
-  GST_DEBUG_OBJECT (this, "validated buffer packet header");
+  GST_LOG_OBJECT (this, "validated buffer packet header");
 
   buffer = gst_dp_buffer_from_header (header_length, header);
   g_free (header);
 
-  GST_DEBUG_OBJECT (this, "created new buffer %p from packet header", buffer);
+  GST_LOG_OBJECT (this, "created new buffer %p from packet header", buffer);
   return GST_DATA (buffer);
 }
 
@@ -204,7 +213,15 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return NULL;
   }
-  g_assert (ret == readsize);
+  if (ret == 0) {
+    GST_WARNING_OBJECT (this, "read returned EOF");
+    return NULL;
+  }
+  if (ret != readsize) {
+    GST_WARNING_OBJECT (this, "Tried to read %d bytes but only read %d bytes",
+        readsize, ret);
+    return NULL;
+  }
 
   if (!gst_dp_validate_header (header_length, header)) {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
@@ -243,7 +260,7 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
 
   caps = gst_dp_caps_from_packet (header_length, header, payload);
   string = gst_caps_to_string (caps);
-  GST_DEBUG_OBJECT (this, "retrieved GDP caps from packet payload: %s", string);
+  GST_LOG_OBJECT (this, "retrieved GDP caps from packet payload: %s", string);
   g_free (string);
 
   g_free (header);

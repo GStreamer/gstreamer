@@ -29,6 +29,8 @@
 #include "gsttcpserversink.h"
 #include "gstmultifdsink.h"
 
+GST_DEBUG_CATEGORY (tcp_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -57,6 +59,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "multifdsink", GST_RANK_NONE,
           GST_TYPE_MULTIFDSINK))
     return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (tcp_debug, "tcp", 0, "TCP calls");
 
   return TRUE;
 }
