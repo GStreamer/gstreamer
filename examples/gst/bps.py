@@ -48,13 +48,13 @@ class BPS(object):
             gst.main_quit()
 
     def fakesrc(self, buffers):
-        src = gst.Element('fakesrc','src')
+        src = gst.element_factory_make('fakesrc','src')
         src.set_property('silent', 1)
         src.set_property('num_buffers', buffers)
         return src
 
     def fakesink(self):
-        sink = gst.Element('fakesink','sink')
+        sink = gst.element_factory_make('fakesink','sink')
         sink.set_property('silent', 1)
         return sink
 
@@ -126,6 +126,10 @@ def main(args):
     bps = BPS()
     
     buffers = int(args[1])
+    if buffers < 0:
+	print 'buffers must be higher than 0'
+	return
+
     methods = args[2:]
     if not methods:
         methods = ('gtk', 'c', 'py', 'all')

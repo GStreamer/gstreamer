@@ -25,39 +25,25 @@ import sys
 
 import gst
 
-def handoff(sender, *args):
+def handoff_cb(sender, *args):
    print sender.get_name(), args
 
 def main(args):
    # create a new bin to hold the elements
    #gst_debug_set_categories(-1)
-   bin = gst.Pipeline('pipeline')
-
-   src = gst.Element('fakesrc', 'src')
-   src.connect('handoff', handoff)
-   src.set_property('silent', 1)
-   src.set_property('num_buffers', 10)
-
-   sink = gst.Element('fakesink', 'sink')
-   sink.connect('handoff', handoff)
-   src.set_property('silent', 1)
-
-   #  add objects to the main pipeline
-   for e in (src, sink):
-      bin.add(e)
-
-   # link the elements
-   res = src.link(sink)
-   assert res
-
-   # start playing
+   bin = gst.parse_launch('fakesrc name=source silent=1 num-buffers=10 ! ' +
+                          'fakesink name=sink silent=1')
+   source = bin.get_by_name('source')
+   source.connect('handoff', handoff_cb)
+   sink = bin.get_by_name('source')
+   sink.connect('handoff', handoff_cb)
+   
    res = bin.set_state(gst.STATE_PLAYING);
    assert res
 
    while bin.iterate():
       pass
 
-   # stop the bin
    res = bin.set_state(gst.STATE_NULL)
    assert res
 

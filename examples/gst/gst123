@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+# -*- Mode: python -*-
+
+import getopt
+import sys
+
+import gst
+
+"""Usage: gst123 [<options>] <input file> ...
+ 
+  -h, --help           this help
+  -V, --version        display gst123 version
+  -d, --device=d       uses 'd' as an output device
+                       Possible devices are ('*'=live, '@'=file):
+                         null* wav@ raw@ au@ arts* esd* oss*
+  -f, --file=filename  Set the output filename for a previously
+                       specified file device (with -d).
+  -k n, --skip n       Skip the first 'n' seconds
+  -b n, --buffer n     use an input buffer of 'n' kilobytes
+  -v, --verbose        display progress and other status information
+  -q, --quiet          don't display anything (no title)
+  -z, --shuffle        shuffle play"""
+
+def found_tags_cb(element, source, tags):
+    for tag in tags.keys():
+        if tag in ['title', 'artist', 'genre', 'album']:
+            ntag = tag[0].upper() + tag[1:] + ':'
+            print '%-8s %s' % (ntag, tags[tag])
+        
+def error_cb(bin, element, error, debug):
+    print error
+    raise SystemExit
+
+def pad_notify_caps_cb(pad, arg):
+    caps = pad.get_negotiated_caps()
+    
+    if not caps:
+        return
+    
+    for structure in caps:
+        print 'Bitstream is %(channels)d channel(s), %(rate)dHz' % structure
+
+def playfile(filename):
+    bin = gst.Thread('player')
+    bin.connect('eos', lambda bin: gst.main_quit())
+    bin.connect('error', error_cb)
+    
+    source = gst.element_factory_make('filesrc', 'src')
+    source.set_property('location', filename)
+
+    spider = gst.element_factory_make('spider', 'spider')
+    spider.connect('found-tag', found_tags_cb)
+    
+    sink = gst.element_factory_make('osssink', 'sink')
+    #sink.set_property('release-device', 1)
+    pad = sink.get_pad('sink')
+    pad.connect('notify::caps', pad_notify_caps_cb)
+    
+    bin.add_many(source, spider, sink)
+    if not gst.element_link_many(source, spider, sink):
+        print "ERROR: could not link"
+        sys.exit(1)
+
+    print 'Playing:', filename
+    if not bin.set_state(gst.STATE_PLAYING):
+        print "ERROR: could not set bin to playing"
+        sys.exit(1)
+
+    while 1:
+        try:
+            if not gst.main():
+                break
+        except KeyboardInterrupt:
+            if not bin.set_state(gst.STATE_PAUSED):
+                print "ERROR: could not set bin to paused"
+                sys.exit(1)
+            sys.stdout.write("Paused.  Press Enter to go back to playing.")
+            sys.stdout.flush()
+            try:
+                sys.stdin.readline()
+                if not bin.set_state(gst.STATE_PLAYING):
+                    print "ERROR: could not set bin to playing"
+                    sys.exit(1)
+                print "Playing."
+            except KeyboardInterrupt:
+                print
+                break
+
+    bin.set_state(gst.STATE_NULL)
+    
+def main(args):
+    if len(args) > 2:
+        print 'usage: gst123 files...'
+        return 2
+    
+    args2, opt = getopt.getopt(args[1:], 'b:d:f:hk:vVqz',
+                              ['help', 'version', 'device=',
+                               'file=', 'skip=', 'buffer=',
+                               'verbose', 'quiet', 'shuffle'])
+    for arg in args[1:]:
+        try:
+            playfile(arg)
+        except KeyboardInterrupt:
+            raise SystemExit
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
+
+
+for i in range(10, 20, 1):
+    pass

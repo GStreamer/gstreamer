@@ -30,26 +30,23 @@ def filter(input, output):
    "A GStreamer copy pipeline which can add arbitrary filters"
 
    # create a new bin to hold the elements
-   bin = gst.Pipeline('pipeline')
-
-   filesrc = gst.Element('filesrc', 'source');
+   bin = gst.parse_launch('filesrc name=source ! ' +
+                          'statistics silent=false buffer-update-freq=1 ' +
+                          'update_on_eos=true ! ' +
+                          'filesink name=sink')
+   filesrc = bin.get_by_name('source')
    filesrc.set_property('location', input)
 
-   stats = gst.Element('statistics', 'stats');
-   stats.set_property('silent', False)
-   stats.set_property('buffer_update_freq', True)
-   stats.set_property('update_on_eos', True)
-   
-   filesink = gst.Element('filesink', 'sink')
+   filesink = bin.get_by_name('sink')
    filesink.set_property('location', output)
-
-   bin.add_many(filesrc, stats, filesink)
-   gst.element_link_many(filesrc, stats, filesink)
 
    # start playing
    bin.set_state(gst.STATE_PLAYING);
 
-   while bin.iterate():
+   try:
+      while bin.iterate():
+         pass
+   except KeyboardInterrupt:
       pass
 
    # stop the bin

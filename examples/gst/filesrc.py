@@ -49,7 +49,6 @@ class FileSource(gst.Element):
 gobject.type_register(FileSource)
 
 def main(args):
-
     print 'This example is not finished yet.'
     return
 
@@ -64,7 +63,7 @@ def main(args):
     assert filesrc
     filesrc.set_property('location', args[1])
    
-    filesink = gst.Element('filesink', 'sink')
+    filesink = gst.element_factory_make('filesink', 'sink')
     filesink.set_property('location', args[2])
 
     bin.add_many(filesrc, filesink)

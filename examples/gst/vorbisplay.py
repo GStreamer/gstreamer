@@ -22,7 +22,7 @@
 #
 
 import sys
-from gst import *
+import gst
 
 def gst_props_debug_entry(entry, level=0):
     name = entry.get_name()
@@ -97,52 +97,35 @@ def decoder_notified(sender, pspec):
     else:
         print 'notify:', sender, pspec
                                      
-def main():
+def main(args):
     "Basic example to play an Ogg Vorbis stream through OSS"
 
-    if len(sys.argv) != 2:
-        print 'usage: %s <Ogg Vorbis file>' % (sys.argv[0])
+    if len(args) != 2:
+        print 'usage: %s <Ogg Vorbis file>' % args
         return -1
-
-    # create a new bin to hold the elements
-    bin = Pipeline('pipeline')
-
-    # create a disk reader
-    filesrc = Element ('filesrc', 'disk_source')
-    filesrc.set_property('location', sys.argv[1])
-
-    # now get the demuxer
-    demuxer = Element ('oggdemux', 'demuxer')
+    
+    bin = gst.parse_launch('filesrc name=source ! ' + 
+                           'oggdemux name=demuxer ! ' + 
+                           'vorbisdec name=decoder ! ' + 
+                           'audioconvert ! osssink') 
+    filesrc = bin.get_by_name('source')
+    filesrc.set_property('location', args[1])
+    demuxer = bin.get_by_name('demuxer')
     demuxer.connect('notify', decoder_notified)
-
-    # now get the decoder
-    decoder = Element ('vorbisdec', 'decoder')
+    decoder = bin.get_by_name('decoder')
     decoder.connect('notify', decoder_notified)
 
-    # and an audio sink
-    osssink = Element ('osssink', 'play_audio')
-
-    #  add objects to the main pipeline
-    for e in (filesrc, demuxer, decoder, osssink):
-        bin.add(e)
-
-    # link the elements
-    previous = None
-    for e in (filesrc, demuxer, decoder, osssink):
-        if previous:
-            previous.link(e)
-        previous = e
-
     # start playing
-    bin.set_state(STATE_PLAYING);
+    bin.set_state(gst.STATE_PLAYING);
 
-    while bin.iterate(): pass
+    try:
+        while bin.iterate(): 
+	    pass
+    except KeyboardInterrupt:
+        pass
 
     # stop the bin
-    bin.set_state(STATE_NULL)
-
-    return 0
+    bin.set_state(gst.STATE_NULL)
 
 if __name__ == '__main__':
-    ret = main()
-    sys.exit(ret)
+    sys.exit(main(sys.argv))
