@@ -1,3 +1,12 @@
+2004-04-20  David Schleef  <ds@schleef.org>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event),
+	(qtdemux_parse), (qtdemux_type_get), (qtdemux_dump_mvhd),
+	(qtdemux_dump_tkhd), (qtdemux_dump_stsd), (qtdemux_dump_unknown),
+	(qtdemux_parse_trak), (qtdemux_video_caps), (qtdemux_audio_caps):
+	A number of new features and hacks to extract the esds atom and
+	put it into the caps.  (bug #137724)
+
 2004-04-19  David Schleef  <ds@schleef.org>
 
 	* gconf/Makefile.am: Fix for non-GNU make
