@@ -1,3 +1,13 @@
+2004-07-15  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.h: 
+	  Don't GST_ERROR_OBJECT smpty strings - Solaris doesn't like NULL
+	  strings.
+	* gst/gstelement.c (gst_element_class_init):
+	  GError's are boxed, not objects
+	* gst/gstmarshal.list:
+	  update list for the fixed error signal
+
 2004-07-14  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gsttag.c: Add a tag merge func for pointers. The header was
