@@ -64,7 +64,7 @@ sub visualise(@)
 read_config ();
 
 %pipes = ( 
-  "goom", "stereo2mono ! goom",
+  "goom", "goom",
   "chart", "stereo2mono ! chart",
   "synaesthesia", "synaesthesia",
   "monoscope", "stereo2mono ! monoscope"
