@@ -1732,12 +1732,10 @@ gst_matroska_ebmlnum_sint (guint8 * data, guint size, gint64 * num)
     return -1;
 
   /* make signed */
-  if (unum == G_MAXUINT64 && res > 1)
+  if (unum == G_MAXUINT64)
     *num = G_MAXINT64;
-  else if (unum != 0)
-    *num = unum - ((1 << ((7 * res) - 1)) - 1);
   else
-    *num = 0;
+    *num = unum - ((1 << ((7 * res) - 1)) - 1);
 
   return res;
 }
