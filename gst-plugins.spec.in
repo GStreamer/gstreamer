@@ -324,7 +324,6 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/propertyprobe/propertyprobe.h
 %{_includedir}/gstreamer-%{majorminor}/gst/play/gstplay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff*
-%{_includedir}/gstreamer-%{majorminor}/gst/tags/gsttagediting.h
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-interfaces-%{majorminor}.pc
@@ -863,6 +862,8 @@ Plug-in for playing ASF movies under GStreamer.
 
 
 %changelog
+* Wed Dec 17 2003 Christian Schaller <Uraeus@gnome.org>
+- remove gsttagediting.h as it is gone
 * Sun Nov 23 2003 Christian Schaller <Uraeus@gnome.org>
 - Update spec file for latest changes
 - add faad plugin
