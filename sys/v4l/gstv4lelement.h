@@ -43,6 +43,10 @@ extern "C" {
 typedef struct _GstV4lElement GstV4lElement;
 typedef struct _GstV4lElementClass GstV4lElementClass;
 
+typedef struct _GstV4lRect {
+  gint x, y, w, h;
+} GstV4lRect;
+
 struct _GstV4lElement {
   GstElement element;
 
@@ -61,6 +65,9 @@ struct _GstV4lElement {
   /* some more info about the current input's capabilities */
   struct video_channel vchan;
 
+  /* and last but not least, the current video window */
+  struct video_window vwin;
+
   /* caching values */
   gint channel;
   gint norm;
@@ -72,6 +79,7 @@ struct _GstV4lElement {
   gint hue;
   gint contrast;
   gint saturation;
+  gchar *display;
 };
 
 struct _GstV4lElementClass {

@@ -35,6 +35,9 @@ extern "C" {
 #define GST_V4L_IS_ACTIVE(v4lelement) \
   (v4lelement->buffer != NULL)
 
+#define GST_V4L_IS_OVERLAY(v4lelement) \
+  (v4lelement->vcap.type & VID_TYPE_OVERLAY)
+
 /* checks whether the current v4lelement has already been open()'ed or not */
 #define GST_V4L_CHECK_OPEN(v4lelement) \
   if (v4lelement->video_fd <= 0)               \
@@ -51,6 +54,15 @@ extern "C" {
     gst_element_error(GST_ELEMENT(v4lelement), \
       "Device is open");                       \
     return FALSE;                              \
+  }
+
+/* checks whether the current v4lelement does video overlay */
+#define GST_V4L_CHECK_OVERLAY(v4lelement) \
+  if (!(v4lelement->vcap.type & VID_TYPE_OVERLAY)) \
+  {                                                \
+    gst_element_error(GST_ELEMENT(v4lelement),     \
+      "Device doesn';t do overlay");               \
+    return FALSE;                                  \
   }
 
 /* checks whether we're in capture mode or not */
@@ -98,8 +110,8 @@ gboolean gst_v4l_close          (GstV4lElement *v4lelement);
 
 /* norm control (norm = VIDEO_MODE_{PAL|NTSC|SECAM|AUTO}) */
 gint     gst_v4l_get_num_chans  (GstV4lElement *v4lelement);
-gboolean gst_v4l_get_chan_norm  (GstV4lElement *v4lelement, gint *channel,          gint *norm);
-gboolean gst_v4l_set_chan_norm  (GstV4lElement *v4lelement, gint  channel,          gint  norm);
+gboolean gst_v4l_get_chan_norm  (GstV4lElement *v4lelement, gint *channel,            gint *norm);
+gboolean gst_v4l_set_chan_norm  (GstV4lElement *v4lelement, gint  channel,            gint  norm);
 GList   *gst_v4l_get_chan_names (GstV4lElement *v4lelement);
 
 /* frequency control */
@@ -108,13 +120,19 @@ gboolean gst_v4l_get_frequency  (GstV4lElement *v4lelement, gulong *frequency);
 gboolean gst_v4l_set_frequency  (GstV4lElement *v4lelement, gulong  frequency);
 
 /* picture control */
-gboolean gst_v4l_get_picture    (GstV4lElement *v4lelement, GstV4lPictureType type, gint *value);
-gboolean gst_v4l_set_picture    (GstV4lElement *v4lelement, GstV4lPictureType type, gint  value);
+gboolean gst_v4l_get_picture    (GstV4lElement *v4lelement, GstV4lPictureType type,   gint *value);
+gboolean gst_v4l_set_picture    (GstV4lElement *v4lelement, GstV4lPictureType type,   gint  value);
 
 /* audio control */
 gboolean gst_v4l_has_audio      (GstV4lElement *v4lelement);
-gboolean gst_v4l_get_audio      (GstV4lElement *v4lelement, GstV4lAudioType type,   gint *value);
-gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement, GstV4lAudioType type,   gint  value);
+gboolean gst_v4l_get_audio      (GstV4lElement *v4lelement, GstV4lAudioType type,     gint *value);
+gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement, GstV4lAudioType type,     gint  value);
+
+/* overlay */
+gboolean gst_v4l_set_overlay    (GstV4lElement *v4lelement, gchar *display);
+gboolean gst_v4l_set_window     (GstV4lElement *v4lelement, gint x, gint y,           gint w, gint h);
+gboolean gst_v4l_set_clips      (GstV4lElement *v4lelement, struct video_clip *clips, gint num_clips);
+gboolean gst_v4l_enable_overlay (GstV4lElement *v4lelement, gboolean enable);
 
 
 #ifdef __cplusplus

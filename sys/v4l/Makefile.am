@@ -3,7 +3,7 @@ plugindir = $(libdir)/gst
 plugin_LTLIBRARIES = libv4lelement.la libv4lsrc.la \
 	libv4lmjpegsrc.la libv4lmjpegsink.la
 
-libv4lelement_la_SOURCES = gstv4lelement.c v4l_calls.c
+libv4lelement_la_SOURCES = gstv4lelement.c v4l_calls.c v4l-overlay_calls.c
 libv4lelement_la_CFLAGS = $(GST_CFLAGS)
 libv4lelement_la_LIBADD = $(GST_LIBS)
 libv4lelement_la_LDFLAGS = @GST_PLUGIN_LDFLAGS@

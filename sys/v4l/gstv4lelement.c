@@ -57,7 +57,11 @@ enum {
   ARG_DEVICE_IS_MJPEG_CAPTURE,
   ARG_DEVICE_IS_MJPEG_PLAYBACK,
   ARG_DEVICE_IS_MPEG_CAPTURE,
-  ARG_DEVICE_IS_MPEG_PLAYBACK
+  ARG_DEVICE_IS_MPEG_PLAYBACK,
+  ARG_DISPLAY,
+  ARG_VIDEOWINDOW,
+  ARG_CLIPPING,
+  ARG_DO_OVERLAY,
 };
 
 
@@ -190,6 +194,19 @@ gst_v4lelement_class_init (GstV4lElementClass *klass)
     g_param_spec_boolean("can_playback_mpeg","can_playback_mpeg","can_playback_mpeg",
     0,G_PARAM_READABLE));
 
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DISPLAY,
+    g_param_spec_string("display","display","display",
+    NULL, G_PARAM_WRITABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DO_OVERLAY,
+    g_param_spec_boolean("do_overlay","do_overlay","do_overlay",
+    0,G_PARAM_WRITABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VIDEOWINDOW,
+    g_param_spec_pointer("videowindow","videowindow","videowindow",
+    G_PARAM_WRITABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CLIPPING,
+    g_param_spec_pointer("videowindowclip","videowindowclip","videowindowclip",
+    G_PARAM_WRITABLE));
+
   gobject_class->set_property = gst_v4lelement_set_property;
   gobject_class->get_property = gst_v4lelement_get_property;
 
@@ -204,6 +221,7 @@ gst_v4lelement_init (GstV4lElement *v4lelement)
   v4lelement->video_fd = -1;
   v4lelement->buffer = NULL;
   v4lelement->videodev = NULL;
+  v4lelement->display = NULL;
 
   v4lelement->norm = -1;
   v4lelement->channel = -1; /* the first channel */
@@ -324,11 +342,43 @@ gst_v4lelement_set_property (GObject      *object,
       }
       break;
     case ARG_DEVICE:
-      if (GST_V4L_IS_OPEN(v4lelement))
-        break; /* only set when *not* open */
       if (v4lelement->videodev)
         g_free(v4lelement->videodev);
       v4lelement->videodev = g_strdup(g_value_get_string(value));
+      break;
+    case ARG_DO_OVERLAY:
+      if (GST_V4L_IS_OPEN(v4lelement))
+        gst_v4l_enable_overlay(v4lelement, g_value_get_boolean(value));
+      break;
+    case ARG_DISPLAY:
+      if (v4lelement->display) g_free(v4lelement->display);
+      v4lelement->display = g_strdup(g_value_get_string(value));
+      break;
+    case ARG_VIDEOWINDOW:
+      if (GST_V4L_IS_OPEN(v4lelement))
+        gst_v4l_set_window(v4lelement,
+          ((GstV4lRect*)g_value_get_pointer(value))->x,
+          ((GstV4lRect*)g_value_get_pointer(value))->y,
+          ((GstV4lRect*)g_value_get_pointer(value))->w,
+          ((GstV4lRect*)g_value_get_pointer(value))->h);
+      break;
+    case ARG_CLIPPING:
+      if (GST_V4L_IS_OPEN(v4lelement))
+      {
+        gint i;
+        struct video_clip *clips;
+        GList *list = (GList*)g_value_get_pointer(value);
+        clips = g_malloc(sizeof(struct video_clip) * g_list_length(list));
+        for (i=0;i<g_list_length(list);i++)
+        {
+          clips[i].x = ((GstV4lRect*)g_list_nth_data(list, i))->x;
+          clips[i].y = ((GstV4lRect*)g_list_nth_data(list, i))->y;
+          clips[i].width = ((GstV4lRect*)g_list_nth_data(list, i))->w;
+          clips[i].height = ((GstV4lRect*)g_list_nth_data(list, i))->h;
+        }
+        gst_v4l_set_clips(v4lelement, clips, g_list_length(list));
+        g_free(clips);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -493,6 +543,9 @@ gst_v4lelement_change_state (GstElement *element)
     case GST_STATE_NULL_TO_READY:
     {
       int n, temp;
+
+      if (v4lelement->display)
+        gst_v4l_set_overlay(v4lelement, v4lelement->display);
 
       if (!gst_v4l_open(v4lelement))
         return GST_STATE_FAILURE;

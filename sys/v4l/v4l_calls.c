@@ -100,6 +100,20 @@ gst_v4l_open (GstV4lElement *v4lelement)
     return FALSE;
   }
 
+  /* and get the video window */
+  if (GST_V4L_IS_OVERLAY(v4lelement))
+  {
+    if (ioctl(v4lelement->video_fd, VIDIOCGWIN, &(v4lelement->vwin)) < 0)
+    {
+      close(v4lelement->video_fd);
+      v4lelement->video_fd = -1;
+      gst_element_error(GST_ELEMENT(v4lelement),
+        "Failed to get video window properties of \'%s\': %s",
+        v4lelement->videodev, sys_errlist[errno]);
+      return FALSE;
+    }
+  }
+
   gst_info("Opened device \'%s\' (\'%s\') successfully\n",
     v4lelement->vcap.name, v4lelement->videodev);
 
