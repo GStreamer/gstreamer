@@ -723,15 +723,17 @@ gboolean
 gst_scheduler_iterate (GstScheduler *sched)
 {
   GstSchedulerClass *sclass;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GST_IS_SCHEDULER (sched), FALSE);
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
 
-  if (sclass->iterate)
-    return sclass->iterate (sched);
+  if (sclass->iterate) {
+    res = sclass->iterate (sched);
+  }
 
-  return FALSE;
+  return res;
 }
 
 
