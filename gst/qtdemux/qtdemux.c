@@ -506,7 +506,6 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
     stream->pad = gst_pad_new_from_template (
         GST_PAD_TEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d",
 	  qtdemux->n_audio_streams));
-#if 0
     if(stream->caps){
       if(gst_caps_has_property(stream->caps,"rate")){
 	/* FIXME */
@@ -517,7 +516,7 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
         gst_caps_set(stream->caps,"channels",GST_PROPS_INT(2));
       }
     }
-#endif
+
     g_print("setting caps to %s\n",gst_caps_to_string(stream->caps));
     qtdemux->n_audio_streams++;
   }
@@ -1318,8 +1317,6 @@ done2:
 static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc)
 {
   switch(fourcc){
-    case GST_MAKE_FOURCC('3','I','V','1'):
-      return GST_CAPS_NEW("3IV1_caps","video/x-quicktime-3IV1",NULL);
     case GST_MAKE_FOURCC('j','p','e','g'):
       /* JPEG */
       return GST_CAPS_NEW("jpeg_caps","video/jpeg",NULL);
@@ -1363,6 +1360,7 @@ static GstCaps *qtdemux_video_caps(GstQTDemux *qtdemux, guint32 fourcc)
     case GST_MAKE_FOURCC('r','l','e',' '):
     case GST_MAKE_FOURCC('s','m','c',' '):
     case GST_MAKE_FOURCC('k','p','c','d'):
+    case GST_MAKE_FOURCC('3','I','V','1'):
     default:
       g_print("Don't know how to convert fourcc '" GST_FOURCC_FORMAT
 	  "' to caps\n", GST_FOURCC_ARGS(fourcc));
@@ -1393,7 +1391,9 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "width",GST_PROPS_INT(16),
 	  "depth",GST_PROPS_INT(16),
 	  "endianness",GST_PROPS_INT(G_BIG_ENDIAN),
-	  "signed",GST_PROPS_BOOLEAN(TRUE));
+	  "signed",GST_PROPS_BOOLEAN(TRUE),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('s','o','w','t'):
       /* FIXME */
       return GST_CAPS_NEW("sowt_caps","audio/raw",
@@ -1402,15 +1402,21 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "width",GST_PROPS_INT(16),
 	  "depth",GST_PROPS_INT(16),
 	  "endianness",GST_PROPS_INT(G_LITTLE_ENDIAN),
-	  "signed",GST_PROPS_BOOLEAN(TRUE));
+	  "signed",GST_PROPS_BOOLEAN(TRUE),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('f','l','6','4'):
       return GST_CAPS_NEW("fl64_caps","audio/raw",
 	  "format",GST_PROPS_STRING("float"),
-	  "layout",GST_PROPS_STRING("gdouble"));
+	  "layout",GST_PROPS_STRING("gdouble"),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('f','l','3','2'):
       return GST_CAPS_NEW("fl32_caps","audio/raw",
 	  "format",GST_PROPS_STRING("float"),
-	  "layout",GST_PROPS_STRING("gfloat"));
+	  "layout",GST_PROPS_STRING("gfloat"),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('i','n','2','4'):
       /* FIXME */
       return GST_CAPS_NEW("in24_caps","audio/raw",
@@ -1419,7 +1425,9 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "width",GST_PROPS_INT(24),
 	  "depth",GST_PROPS_INT(32),
 	  "endianness",GST_PROPS_INT(G_BIG_ENDIAN),
-	  "signed",GST_PROPS_BOOLEAN(TRUE));
+	  "signed",GST_PROPS_BOOLEAN(TRUE),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('i','n','3','2'):
       /* FIXME */
       return GST_CAPS_NEW("in32_caps","audio/raw",
@@ -1427,17 +1435,23 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "law", GST_PROPS_INT(0),
 	  "width",GST_PROPS_INT(24),
 	  "depth",GST_PROPS_INT(32),
-	  "endianness",GST_PROPS_INT(G_BIG_ENDIAN));
+	  "endianness",GST_PROPS_INT(G_BIG_ENDIAN),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('u','l','a','w'):
       /* FIXME */
       return GST_CAPS_NEW("ulaw_caps","audio/raw",
 	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(2));
+	  "law", GST_PROPS_INT(2),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('a','l','a','w'):
       /* FIXME */
       return GST_CAPS_NEW("alaw_caps","audio/raw",
 	  "format",GST_PROPS_STRING("int"),
-	  "law", GST_PROPS_INT(1));
+	  "law", GST_PROPS_INT(1),
+	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
+	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case 0x6d730002:
       /* Microsoft ADPCM-ACM code 2 */
       return GST_CAPS_NEW("msxx_caps","audio/adpcm",NULL);
