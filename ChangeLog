@@ -1,5 +1,11 @@
 2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* sys/v4l/v4l_calls.h:
+	* sys/v4l2/v4l2_calls.h:
+          element_error fixes
+
+2004-01-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/gst-i18n-plugin.h:
           add locale.h
           remove config.h inclusion
