@@ -69,14 +69,12 @@ struct _GstMultipartMux
 
   /* offset in stream */
   guint64 offset;
-};
 
-typedef enum
-{
-  GST_MULTIPART_FLAG_BOS = GST_ELEMENT_FLAG_LAST,
-  GST_MULTIPART_FLAG_EOS
-}
-GstMultipartFlag;
+  /* boundary string */
+  gchar *boundary;
+
+  gboolean negotiated;
+};
 
 struct _GstMultipartMuxClass
 {
@@ -97,9 +95,11 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_BOUNDARY	"ThisRandomString"
 enum
 {
   ARG_0,
+  ARG_BOUNDARY,
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -189,6 +189,11 @@ gst_multipart_mux_class_init (GstMultipartMuxClass * klass)
 
   gstelement_class->get_property = gst_multipart_mux_get_property;
   gstelement_class->set_property = gst_multipart_mux_set_property;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BOUNDARY,
+      g_param_spec_string ("boundary", "Boundary", "Boundary string",
+          DEFAULT_BOUNDARY, G_PARAM_READWRITE));
+
 }
 
 static const GstEventMask *
@@ -215,10 +220,11 @@ gst_multipart_mux_init (GstMultipartMux * multipart_mux)
   gst_element_add_pad (GST_ELEMENT (multipart_mux), multipart_mux->srcpad);
 
   GST_FLAG_SET (GST_ELEMENT (multipart_mux), GST_ELEMENT_EVENT_AWARE);
-  GST_FLAG_SET (GST_ELEMENT (multipart_mux), GST_MULTIPART_FLAG_BOS);
 
   multipart_mux->sinkpads = NULL;
   multipart_mux->pulling = NULL;
+  multipart_mux->boundary = g_strdup (DEFAULT_BOUNDARY);
+  multipart_mux->negotiated = FALSE;
 
   gst_element_set_loop_function (GST_ELEMENT (multipart_mux),
       gst_multipart_mux_loop);
@@ -480,12 +486,9 @@ gst_multipart_mux_loop (GstElement * element)
     }
   }
 
-  /* we are pulling from a pad, continue to do so until a page
-   * has been filled and pushed */
   if (mux->pulling != NULL) {
-    GstBuffer *buf, *tmpbuf;
     GstMultipartPad *pad = mux->pulling;
-    GstBuffer *newbuf;
+    GstBuffer *newbuf, *buf;
     gchar *header;
     gint headerlen;
 
@@ -502,16 +505,23 @@ gst_multipart_mux_loop (GstElement * element)
       }
     }
 
-    /* read ahead one more buffer to find EOS */
-    tmpbuf = gst_multipart_mux_next_buffer (pad);
-    /* data exhausted on this pad */
-    if (tmpbuf == NULL) {
-      /* stop pulling from the pad */
-      mux->pulling = NULL;
+    /* FIXME, negotiated is not set to FALSE properly after
+     * reconnect */
+    if (!mux->negotiated) {
+      GstCaps *newcaps;
+
+      newcaps = gst_caps_new_simple ("multipart/x-mixed-replace",
+          "boundary=", G_TYPE_STRING, mux->boundary, NULL);
+
+      if (GST_PAD_LINK_FAILED (gst_pad_try_set_caps (mux->srcpad, newcaps))) {
+        GST_ELEMENT_ERROR (mux, CORE, NEGOTIATION, (NULL), (NULL));
+        return;
+      }
+      mux->negotiated = TRUE;
     }
 
-    header = g_strdup_printf ("\n--ThisRandomString\nContent-type: %s\n\n",
-        pad->mimetype);
+    header = g_strdup_printf ("\n--%s\nContent-type: %s\n\n",
+        mux->boundary, pad->mimetype);
     headerlen = strlen (header);
     newbuf =
         gst_pad_alloc_buffer (mux->srcpad, GST_BUFFER_OFFSET_NONE, headerlen);
@@ -521,8 +531,7 @@ gst_multipart_mux_loop (GstElement * element)
     gst_pad_push (mux->srcpad, GST_DATA (newbuf));
     gst_pad_push (mux->srcpad, GST_DATA (buf));
 
-    /* store new readahead buffer */
-    pad->buffer = tmpbuf;
+    pad->buffer = NULL;
 
     /* we're done pulling on this pad, make sure to choose a new 
      * pad for pulling in the next iteration */
@@ -534,7 +543,14 @@ static void
 gst_multipart_mux_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
+  GstMultipartMux *mux;
+
+  mux = GST_MULTIPART_MUX (object);
+
   switch (prop_id) {
+    case ARG_BOUNDARY:
+      g_value_set_string (value, mux->boundary);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -545,7 +561,15 @@ static void
 gst_multipart_mux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
+  GstMultipartMux *mux;
+
+  mux = GST_MULTIPART_MUX (object);
+
   switch (prop_id) {
+    case ARG_BOUNDARY:
+      g_free (mux->boundary);
+      mux->boundary = g_strdup (g_value_get_string (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -568,6 +592,7 @@ gst_multipart_mux_change_state (GstElement * element)
       multipart_mux->next_ts = 0;
       multipart_mux->offset = 0;
       multipart_mux->pulling = NULL;
+      multipart_mux->negotiated = FALSE;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_PLAYING_TO_PAUSED:

@@ -1,3 +1,12 @@
+2004-06-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_class_init),
+	(gst_multipart_mux_init), (gst_multipart_mux_loop),
+	(gst_multipart_mux_get_property), (gst_multipart_mux_set_property),
+	(gst_multipart_mux_change_state):
+	Added configurable boundary specifier, added the value as a
+	caps field as well.
+
 2004-06-01  Christophe Fergeau  <teuf@gnome.org>
 
 	* ext/flac/gstflactag.c: strip ending framing bit from vorbiscomment
