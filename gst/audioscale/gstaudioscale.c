@@ -348,6 +348,13 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail(factory != NULL, FALSE);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
+  /* load support library */
+  if (!gst_library_load ("gstresample"))
+  {
+    gst_info ("audioscale: could not load support library: 'gstresample'\n");
+    return FALSE;
+  }
+
   return TRUE;
 }
 
