@@ -1,3 +1,10 @@
+2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/playback/gstplaybin.c: (remove_sinks), (setup_sinks):
+	  Unlink manually since sometimes bin disposal (and therefore
+	  pad unlinking) is delayed, which will cause a new media file
+	  to not be able to start playing instantly.
+
 2004-11-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/playback/gststreaminfo.c: (stream_info_mute_pad):
