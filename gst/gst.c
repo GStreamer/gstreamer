@@ -70,7 +70,9 @@ debug_log_handler (const gchar *log_domain,
 		   gpointer user_data)
 {
   g_log_default_handler (log_domain, log_level, message, user_data);
-  g_on_error_query (NULL);
+  /* FIXME: do we still need this ? fatal errors these days are all
+   * other than core errors */
+  /* g_on_error_query (NULL); */
 }
 
 enum {

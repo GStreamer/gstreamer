@@ -108,9 +108,11 @@ gst_pipeline_init (GstPipeline *pipeline)
 
   /* FIXME need better error handling */
   if (scheduler == NULL) {
-    g_error ("Critical error: could not get a scheduler - \
-	      are you sure you have a registry ? Run gst-register as root \
-	      if you haven't done so yet.");
+    const gchar *name = gst_scheduler_factory_get_default_name ();
+
+    g_error ("Critical error: could not get scheduler \"%s\"\n"
+	     "Are you sure you have a registry ?\n"
+	     "Run gst-register as root if you haven't done so yet.", name);
   }
 }
 
