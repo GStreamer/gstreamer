@@ -1,0 +1,48 @@
+.TH GStreamer 1 "March 2001"
+.SH NAME
+gst\-xmlinspect - print info about a GStreamer plugin or element
+.SH SYNOPSIS
+.B  gst\-xmlinspect [OPTION...] [PLUGIN|ELEMENT]
+.SH DESCRIPTION
+.PP
+\fIgst\-xmlinspect\fP is a tool that prints out information on
+available \fIGStreamer\fP plugins, information about a particular
+plugin, or information about a particular element.  When executed
+with no PLUGIN or ELEMENT argument, \fIgst\-xmlinspect\fP will print
+a list of all plugins and elements.  When executed with a PLUGIN
+or ELEMENT argument, \fIgst\-xmlinspect\fP will print information
+about that plug-in or element as an XML document.
+.
+.SH OPTIONS
+.l
+\fIgst\-xmlinspect\fP accepts the following arguments and options:
+.TP 8
+.B  PLUGIN
+Name of a plugin
+.TP 8
+.B  ELEMENT
+Name of an element
+.TP 8
+.B  \-\-help
+Print help synopsis and available FLAGS
+.TP 8
+.B  \-\-gst\-info\-mask=FLAGS
+\fIGStreamer\fP info flags to set (list with \-\-help)
+.TP 8
+.B  \-\-gst\-debug\-mask=FLAGS
+\fIGStreamer\fP debugging flags to set (list with \-\-help)
+.TP 8
+.B  \-\-gst\-mask=FLAGS
+\fIGStreamer\fP info and debugging flags to set (list with \-\-help)
+.TP 8
+.B  \-\-gst\-plugin\-spew
+\fIGStreamer\fP info flags to set
+Enable printout of errors while loading \fIGStreamer\fP plugins
+.TP 8
+.B  \-\-gst\-plugin\-path=PATH
+Add directories separated with ':' to the plugin search path
+.SH SEE ALSO
+.BR gst\-register (1),
+.BR gst\-launch (1)
+.SH AUTHOR
+The GStreamer team at http://gstreamer.net/

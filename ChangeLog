@@ -1,5 +1,10 @@
 2004-07-04  David Schleef  <ds@schleef.org>
 
+	* tools/Makefile.am:
+	* tools/gst-xmlinspect.1.in:  Add man page. (bug #140219)
+
+2004-07-04  David Schleef  <ds@schleef.org>
+
 	* common/m4/gst-doc.m4: Check for docbook2html 0.6.10 (bug #139909)
 
 2004-07-04  Thomas Vander Stichele  <thomas at apestaart dot org>

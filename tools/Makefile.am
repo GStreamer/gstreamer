@@ -123,8 +123,8 @@ GST_OTHER_MAN = \
 	gst-inspect-@GST_MAJORMINOR@.1 \
 	gst-launch-@GST_MAJORMINOR@.1 \
 	gst-md5sum-@GST_MAJORMINOR@.1 \
-	gst-typefind-@GST_MAJORMINOR@.1
-#	gst-xmlinspect-@GST_MAJORMINOR@.1
+	gst-typefind-@GST_MAJORMINOR@.1 \
+	gst-xmlinspect-@GST_MAJORMINOR@.1
 
 manpages = $(GST_REGISTRY_MAN) $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
 
@@ -144,6 +144,7 @@ EXTRA_DIST = \
 	gst-md5sum.1.in \
 	gst-register.1.in \
 	gst-typefind.1.in \
+	gst-xmlinspect.1.in \
 	gst-xmllaunch.1.in \
 	gst-feedback-m.m
 
@@ -157,6 +158,7 @@ EXTRA_DIST = \
 		-e s,gst-md5sum,gst-md5sum-@GST_MAJORMINOR@,g \
 		-e s,gst-register,gst-register-@GST_MAJORMINOR@,g \
 		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \
+		-e s,gst-xmlinspect,gst-xmlinspect-@GST_MAJORMINOR@,g \
 		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
 		$< >$@
 
