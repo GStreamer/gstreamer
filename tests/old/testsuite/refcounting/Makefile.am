@@ -11,6 +11,8 @@ TESTS = $(testprogs)
 
 check_PROGRAMS = $(testprogs)
 
+noinst_HEADERS = mem.h
+
 # we have nothing but apps here, we can do this safely
 LIBS += $(GST_LIBS)
 CFLAGS += $(GST_CFLAGS)
