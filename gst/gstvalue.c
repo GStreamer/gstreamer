@@ -205,6 +205,53 @@ gst_value_union_lists (GValue *dest, const GValue *value1, const GValue *value2)
   return TRUE;
 }
 
+/**
+ * gst_value_list_concat:
+ * @dest: an uninitialized #GValue to take the result
+ * @value1: first value to put into the union
+ * @value2: second value to put into the union
+ *
+ * Concatenates copies of value1 and value2 into a list. dest will be 
+ * initialized to the type GST_TYPE_LIST.
+ */
+void
+gst_value_list_concat (GValue *dest, const GValue *value1, const GValue *value2)
+{
+  guint i, value1_length, value2_length;
+  GArray *array;
+
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (G_VALUE_TYPE (dest) == 0);
+  g_return_if_fail (G_IS_VALUE (value1));
+  g_return_if_fail (G_IS_VALUE (value2));
+  
+  value1_length = (GST_VALUE_HOLDS_LIST (value1) ? gst_value_list_get_size (value1) : 1);
+  value2_length = (GST_VALUE_HOLDS_LIST (value2) ? gst_value_list_get_size (value2) : 1);
+  g_value_init (dest, GST_TYPE_LIST);
+  array = (GArray *) dest->data[0].v_pointer;
+  g_array_set_size (array, value1_length + value2_length);
+  
+  if (GST_VALUE_HOLDS_LIST (value1)) {
+    for (i = 0; i < value1_length; i++) {
+      g_value_init (&g_array_index(array, GValue, i), G_VALUE_TYPE (gst_value_list_get_value (value1, i)));
+      g_value_copy (gst_value_list_get_value (value1, i), &g_array_index(array, GValue, i));
+    }
+  } else {
+    g_value_init (&g_array_index(array, GValue, 0), G_VALUE_TYPE (value1));
+    g_value_copy (value1, &g_array_index(array, GValue, 0));
+  }
+  
+  if (GST_VALUE_HOLDS_LIST (value2)) {
+    for (i = 0; i < value2_length; i++) {
+      g_value_init (&g_array_index(array, GValue, i + value1_length), G_VALUE_TYPE (gst_value_list_get_value (value2, i)));
+      g_value_copy (gst_value_list_get_value (value2, i), &g_array_index(array, GValue, i + value1_length));
+    }
+  } else {
+    g_value_init (&g_array_index(array, GValue, value1_length), G_VALUE_TYPE (value2));
+    g_value_copy (value2, &g_array_index(array, GValue, value1_length));
+  }
+}
+
 /* fourcc */
 
 static void 

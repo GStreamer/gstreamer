@@ -32,6 +32,7 @@
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
 #include <gst/gstindex.h>
+#include <gst/gsttag.h>
 
 G_BEGIN_DECLS
 
@@ -137,7 +138,6 @@ typedef enum {
 } GstElementFlags;
 
 #define GST_ELEMENT_IS_THREAD_SUGGESTED(obj)	(GST_FLAG_IS_SET(obj,GST_ELEMENT_THREAD_SUGGESTED))
-#define GST_ELEMENT_IS_EOS(obj)			(GST_FLAG_IS_SET(obj,GST_ELEMENT_EOS))
 #define GST_ELEMENT_IS_EVENT_AWARE(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_EVENT_AWARE))
 #define GST_ELEMENT_IS_DECOUPLED(obj)		(GST_FLAG_IS_SET(obj,GST_ELEMENT_DECOUPLED))
 
@@ -206,6 +206,7 @@ struct _GstElementClass {
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*error)		(GstElement *element, GstElement *source, gchar *error);
   void (*eos)		(GstElement *element);
+  void (*found_tag)	(GstElement *element, GstElement *source, GstTagList *tag_list);
 
   /* local pointers for get/set */
   void (*set_property) 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -254,7 +255,6 @@ void			gst_element_class_set_details		(GstElementClass *klass,
 void 			gst_element_default_error		(GObject *object, GstObject *orig, gchar *error);
 
 GType			gst_element_get_type		(void);
-
 void			gst_element_set_loop_function	(GstElement *element,
 							 GstElementLoopFunction loop);
 
@@ -315,6 +315,8 @@ GstPad*			gst_element_get_compatible_pad	(GstElement *element, GstPad *pad);
 GstPad*			gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad, 
 							 const GstCaps2 *filtercaps);
 
+GstPadTemplate*		gst_element_class_get_pad_template	(GstElementClass *element_class, const gchar *name);
+GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
 GstPadTemplate*		gst_element_get_pad_template		(GstElement *element, const gchar *name);
 GList*			gst_element_get_pad_template_list	(GstElement *element);
 GstPadTemplate*		gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
@@ -347,6 +349,10 @@ const GstFormat*	gst_element_get_formats		(GstElement *element);
 gboolean		gst_element_convert		(GstElement *element, 
 		 					 GstFormat  src_format,  gint64  src_value,
 							 GstFormat *dest_format, gint64 *dest_value);
+
+void			gst_element_found_tags		(GstElement *element, GstTagList *tag_list);
+void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstClockTime timestamp, 
+							 GstTagList *list);
 
 void			gst_element_set_eos		(GstElement *element);
 
@@ -392,6 +398,12 @@ struct _GstElementFactory {
   GList *		padtemplates;
   guint			numpadtemplates;
 
+  /* URI interface stuff */
+  guint			uri_type;
+  gchar **		uri_protocols;
+  
+  GList *		interfaces;		/* interfaces this element implements */
+
   GST_OBJECT_PADDING
 };
 
@@ -417,6 +429,8 @@ G_CONST_RETURN gchar *	gst_element_factory_get_version      	(GstElementFactory 
 G_CONST_RETURN gchar *	gst_element_factory_get_author		(GstElementFactory *factory);
 guint			gst_element_factory_get_num_padtemplates (GstElementFactory *factory);
 G_CONST_RETURN GList *	gst_element_factory_get_padtemplates	(GstElementFactory *factory);
+guint			gst_element_factory_get_uri_type	(GstElementFactory *factory);		
+gchar **		gst_element_factory_get_uri_protocols	(GstElementFactory *factory);		
 
 GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);
@@ -429,6 +443,8 @@ gboolean		gst_element_factory_can_sink_caps	(GstElementFactory *factory,
 
 void			__gst_element_factory_add_pad_template	(GstElementFactory *elementfactory,
 								 GstPadTemplate *templ);
+void			__gst_element_factory_add_interface	(GstElementFactory *elementfactory,
+								 const gchar *interfacename);
 
 
 G_END_DECLS

@@ -12,6 +12,7 @@ gstreamer-unused.txt
 gstreamer-undocumented.txt
 gstreamer-decl-list.txt
 gstreamer-decl.txt
+gstreamer-presed-scan.c
 gstreamer-scan.c
 gstreamer-scan
 gstreamer.args

@@ -679,6 +679,26 @@ gst_xml_registry_parse_plugin (GMarkupParseContext *context, const gchar *tag, c
   return TRUE;
 }
 
+static void
+add_to_char_array (gchar ***array, gchar *value)
+{
+  gchar **new;
+  gchar **old = *array;
+  gint i = 0;
+    
+  /* expensive, but cycles are cheap... */
+  if (old)
+    while (old[i]) i++;
+  new = g_new0 (gchar *, i + 2);
+  new[i] = value;
+  while (i > 0) {
+    i--;
+    new[i] = old[i];
+  }
+  g_free (old);
+  *array = new;
+}
+
 static gboolean
 gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
                                         gsize text_len, GstXMLRegistry *registry, GError **error)
@@ -686,8 +706,9 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
   GstElementFactory *factory = GST_ELEMENT_FACTORY (registry->current_feature);
 
   if (!strcmp (tag, "name")) {
-    g_free (registry->current_feature->name);
-    registry->current_feature->name = g_strndup (text, text_len);
+    gchar *name = g_strndup (text, text_len);
+    gst_plugin_feature_set_name (registry->current_feature, name);
+    g_free (name);
   }
   else if (!strcmp (tag, "longname")) {
     g_free (factory->details.longname);
@@ -708,12 +729,26 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
   else if (!strcmp(tag, "rank")) {
     gint rank;
     gchar *ret;
-     rank = strtol (text, &ret, 0);
+    
+    rank = strtol (text, &ret, 0);
     if (ret == text + text_len) {
      gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
     }
+  } else if (!strcmp (tag, "uri_type")) {
+    if (strncasecmp (text, "sink", 4) == 0) {
+      factory->uri_type = GST_URI_SINK;
+    } else if (strncasecmp (text, "source", 5) == 0) {
+      factory->uri_type = GST_URI_SRC;
+    }
+  } else if (!strcmp (tag, "uri_protocol")) {
+    add_to_char_array (&factory->uri_protocols, g_strndup (text, text_len));
   }
-  
+  else if (!strcmp(tag, "interface")) {
+    gchar *tmp = g_strndup (text, text_len);
+    __gst_element_factory_add_interface (factory, tmp);
+    g_free (tmp);
+  }
+
   return TRUE;
 }
 
@@ -739,21 +774,7 @@ gst_xml_registry_parse_type_find_factory (GMarkupParseContext *context, const gc
     factory->caps = g_strndup (text, text_len);
   }*/
   else if (!strcmp(tag, "extension")) {
-    gchar **new;
-    gchar **old = factory->extensions;
-    gint i = 0;
-    
-    /* expensive, but cycles are cheap... */
-    if (old)
-      while (old[i]) i++;
-    new = g_new0 (gchar *, i + 2);
-    new[i] = g_strndup (text, text_len);
-    while (i > 0) {
-      i--;
-      new[i] = old[i];
-    }
-    g_free (old);
-    factory->extensions = new;
+    add_to_char_array (&factory->extensions, g_strndup (text, text_len));
   }
 
   return TRUE;
@@ -802,30 +823,6 @@ gst_xml_registry_parse_index_factory (GMarkupParseContext *context, const gchar 
   }
   else if (!strcmp (tag, "longdesc")) {
     factory->longdesc = g_strndup (text, text_len);
-  }
-  return TRUE;
-}
-
-static gboolean
-gst_xml_registry_parse_uri_handler (GMarkupParseContext *context, const gchar *tag, const gchar *text,
-                                    gsize text_len, GstXMLRegistry *registry, GError **error)
-{
-  GstURIHandler *handler = GST_URI_HANDLER (registry->current_feature);
-
-  if (!strcmp (tag, "name")) {
-    registry->current_feature->name = g_strndup (text, text_len);
-  }
-  else if (!strcmp (tag, "uri")) {
-    handler->uri = g_strndup (text, text_len);
-  }
-  else if (!strcmp (tag, "longdesc")) {
-    handler->longdesc = g_strndup (text, text_len);
-  }
-  else if (!strcmp (tag, "element")) {
-    handler->element = g_strndup (text, text_len);
-  }
-  else if (!strcmp (tag, "property")) {
-    handler->property = g_strndup (text, text_len);
   }
   return TRUE;
 }
@@ -947,9 +944,6 @@ gst_xml_registry_start_element (GMarkupParseContext *context,
 #endif
 	  else if (GST_IS_INDEX_FACTORY (feature)) {
 	    xmlregistry->parser = gst_xml_registry_parse_index_factory;
-	  }
-	  else if (GST_IS_URI_HANDLER (feature)) {
-	    xmlregistry->parser = gst_xml_registry_parse_uri_handler;
 	  }
 	  else {
             g_warning ("unkown feature type");
@@ -1490,23 +1484,41 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
     
   if (GST_IS_ELEMENT_FACTORY (feature)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
-    GList *templates;
+    GList *walk;
 
     PUT_ESCAPED ("longname", factory->details.longname);
     PUT_ESCAPED ("class", factory->details.klass);
     PUT_ESCAPED ("description", factory->details.description);
     PUT_ESCAPED ("author", factory->details.author);
     
-    templates = factory->padtemplates;
+    walk = factory->padtemplates;
 
-    while (templates) {
-      GstPadTemplate *template = GST_PAD_TEMPLATE (templates->data);
+    while (walk) {
+      GstPadTemplate *template = GST_PAD_TEMPLATE (walk->data);
 
       CLASS (xmlregistry)->save_func (xmlregistry, "<padtemplate>\n");
       gst_xml_registry_save_pad_template (xmlregistry, template);
       CLASS (xmlregistry)->save_func (xmlregistry, "</padtemplate>\n");
       
-      templates = g_list_next (templates);
+      walk = g_list_next (walk);
+    }
+
+    walk = factory->interfaces;
+    while (walk) {
+      PUT_ESCAPED ("interface", (gchar *) walk->data);
+      walk = g_list_next (walk);
+    }
+
+    if (GST_URI_TYPE_IS_VALID (factory->uri_type)) {
+      gchar **protocol;
+      
+      PUT_ESCAPED ("uri_type", factory->uri_type == GST_URI_SINK ? "sink" : "source");
+      g_assert (factory->uri_protocols);
+      protocol = factory->uri_protocols;
+      while (*protocol) {
+	PUT_ESCAPED ("uri_protocol", *protocol);
+	protocol++;
+      }
     }
   }
   else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
@@ -1535,17 +1547,8 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
   else if (GST_IS_INDEX_FACTORY (feature)) {
     PUT_ESCAPED ("longdesc", GST_INDEX_FACTORY (feature)->longdesc);
   }
-  else if (GST_IS_URI_HANDLER (feature)) {
-    GstURIHandler *handler = GST_URI_HANDLER (feature);
-
-    PUT_ESCAPED ("uri", handler->uri);
-    PUT_ESCAPED ("longdesc", handler->longdesc);
-    PUT_ESCAPED ("element", handler->element);
-    PUT_ESCAPED ("property", handler->property);
-  }
   return TRUE;
 }
-
 
 static gboolean
 gst_xml_registry_save_plugin (GstXMLRegistry *xmlregistry, GstPlugin *plugin)

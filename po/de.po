@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.7 0.7.0.1\n"
 "Report-Msgid-Bugs-To: \"http://bugzilla.gnome.org\"\n"
-"POT-Creation-Date: 2003-10-08 15:36-0700\n"
+"POT-Creation-Date: 2003-11-22 17:49+0100\n"
 "PO-Revision-Date: 2003-10-08 15:36-0700\n"
 "Last-Translator: David Schleef <ds@schleef.org>\n"
 "Language-Team: Gnome Translators <i18n@gnome.org>\n"
@@ -15,74 +15,71 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:113
+#: gst/gst.c:112
 msgid "Print the GStreamer version"
 msgstr "druck die GStreamer Version"
 
-#: gst/gst.c:114
+#: gst/gst.c:113
 msgid "Make all warnings fatal"
 msgstr "macht alle Achtunge toedlich"
 
-#: gst/gst.c:116
+#: gst/gst.c:115
 msgid ""
 "default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 
-#: gst/gst.c:117
+#: gst/gst.c:116
 msgid ""
 "colon-seperated list of category_name=level pairs to set specific levels for "
 "the individual categories.\n"
 "Example:GST_AUTOPLUG=5:GST_ELEMENT_*=3"
 msgstr ""
 
-#: gst/gst.c:118
+#: gst/gst.c:117
 msgid "disable color debugging output"
 msgstr "abschalt Farbe in Fehlersucheausgabe"
 
-#: gst/gst.c:119
+#: gst/gst.c:118
 msgid "disable debugging"
 msgstr "abschalt die Fehlersuche"
 
-#: gst/gst.c:120
+#: gst/gst.c:119
 msgid "print available debug categories and exit"
 msgstr ""
 
-#: gst/gst.c:122
+#: gst/gst.c:121
 msgid "Disable accelerated CPU instructions"
 msgstr ""
 
-#: gst/gst.c:123
+#: gst/gst.c:122
 msgid "enable verbose plugin loading diagnostics"
 msgstr ""
 
-#: gst/gst.c:124
+#: gst/gst.c:123
 msgid "'"
 msgstr ""
 
-#: gst/gst.c:124
+#: gst/gst.c:123
 msgid "'--separated path list for loading plugins"
 msgstr ""
 
-#: gst/gst.c:125
+#: gst/gst.c:124
 msgid ""
 "comma-separated list of plugins to preload in addition to the list stored in "
 "env variable GST_PLUGIN_PATH"
 msgstr ""
 
-#: gst/gst.c:126
+#: gst/gst.c:125
 msgid "scheduler to use ('"
 msgstr ""
 
-#: gst/gst.c:126
+#: gst/gst.c:125
 msgid "' is the default)"
 msgstr ""
 
-#: gst/gst.c:127
+#: gst/gst.c:126
 msgid "registry to use"
 msgstr ""
 
 #~ msgid "This is a test\n"
 #~ msgstr "moo\n"
-
-
-

@@ -282,11 +282,11 @@ clean: mostlyclean
 
 distclean: clean
 	rm -f Makefile Makefile.in POTFILES *.mo
+	rm -f stamp-po $(GMOFILES)
 
 maintainer-clean: distclean
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
-	rm -f stamp-po $(GMOFILES)
 
 dist distdir:
 	$(MAKE) update-po

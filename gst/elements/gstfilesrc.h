@@ -58,6 +58,7 @@ struct _GstFileSrc {
   guint pagesize;			/* system page size*/
  
   gchar *filename;			/* filename */
+  gchar *uri;				/* caching the URI */
   gint fd;				/* open file descriptor*/
   off_t filelen;			/* what's the file length?*/
 

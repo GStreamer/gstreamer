@@ -880,14 +880,6 @@ Queries if the Element is decoupled.
 @obj: a #GstElement to query
 
 
-<!-- ##### MACRO GST_ELEMENT_IS_EOS ##### -->
-<para>
-Query wether this element is in the End Of Stream state.
-</para>
-
-@obj: a #GstElement to query
-
-
 <!-- ##### MACRO GST_ELEMENT_IS_EVENT_AWARE ##### -->
 <para>
 Query wether this element can handle events.
@@ -987,6 +979,15 @@ Is triggered whenever an error occured.
 
 @gstelement: the object which received the signal.
 @arg1: the error message
+@arg2: 
+
+<!-- ##### SIGNAL GstElement::found-tag ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
 @arg2: 
 
 <!-- ##### SIGNAL GstElement::new-pad ##### -->

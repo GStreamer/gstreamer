@@ -63,6 +63,7 @@ extern GType _gst_buffer_pool_type;
 #define GST_BUFFER_DURATION(buf)		(GST_BUFFER(buf)->duration)
 #define GST_BUFFER_FORMAT(buf)			(GST_BUFFER(buf)->format)
 #define GST_BUFFER_OFFSET(buf)			(GST_BUFFER(buf)->offset)
+#define GST_BUFFER_OFFSET_END(buf)		(GST_BUFFER(buf)->offset_end)
 #define GST_BUFFER_BUFFERPOOL(buf)		(GST_BUFFER(buf)->pool)
 #define GST_BUFFER_POOL_PRIVATE(buf)		(GST_BUFFER(buf)->pool_private)
 
@@ -72,6 +73,7 @@ extern GType _gst_buffer_pool_type;
 #define GST_BUFFER_DURATION_IS_VALID(buffer)	(GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)))
 #define GST_BUFFER_TIMESTAMP_IS_VALID(buffer)	(GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
 #define GST_BUFFER_OFFSET_IS_VALID(buffer)	(GST_BUFFER_OFFSET (buffer) != GST_BUFFER_OFFSET_NONE)
+#define GST_BUFFER_OFFSET_END_IS_VALID(buffer)	(GST_BUFFER_OFFSET_END (buffer) != GST_BUFFER_OFFSET_NONE)
 #define GST_BUFFER_MAXSIZE_IS_VALID(buffer)	(GST_BUFFER_MAXSIZE (buffer) != GST_BUFFER_MAXSIZE_NONE)
 
 typedef enum {
@@ -101,8 +103,11 @@ struct _GstBuffer {
    * for video frames, this could be the number of frames,
    * for audio data, this could be the number of audio samples,
    * for file data or compressed data, this could be the number of bytes
+   * offset_end is the last offset contained in the buffer. The format specifies
+   * the meaning of both of them exactly.
    */
   guint64		 offset;
+  guint64		 offset_end;
 
   /* this is a pointer to the buffer pool (if any) */
   GstBufferPool		*pool;

@@ -139,6 +139,7 @@ gst_object_class_init (GstObjectClass *klass)
                   g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   G_TYPE_OBJECT);
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
+  /* FIXME This should be the GType of xmlNodePtr instead of G_TYPE_POINTER */
   gst_object_signals[OBJECT_SAVED] =
     g_signal_new ("object_saved", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL, NULL,

@@ -29,6 +29,8 @@
 #include "gstmemchunk.h"
 #include "gstevent.h"
 #include "gstlog.h"
+#include "gsttag.h"
+
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */
 #include "gsttrace.h"
@@ -70,6 +72,12 @@ _gst_event_copy (GstEvent *event)
   memcpy (copy, event, sizeof (GstEvent));
   
   /* FIXME copy/ref additional fields */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      copy->event_data.structure.structure = gst_structure_copy (event->event_data.structure.structure);
+    default:
+      break;
+  }
 
   return copy;
 }
@@ -83,6 +91,8 @@ _gst_event_free (GstEvent* event)
     gst_object_unref (GST_EVENT_SRC (event));
   }
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      gst_tag_list_free (event->event_data.structure.structure);
     default:
       break;
   }

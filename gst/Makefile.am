@@ -69,7 +69,7 @@ endif
 
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = gstcpuid_i386.s gstmarshal.list gstxml.c gstparse.c gsttrace.c
 
-SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . elements schedulers $(GST_INDEX_DIRS) 
+SUBDIRS = $(GST_PARSE_DIRS) $(GST_REGISTRY_DIRS) . autoplug elements schedulers $(GST_INDEX_DIRS) 
 DIST_SUBDIRS = autoplug elements parse registries schedulers indexers
 
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
@@ -104,6 +104,8 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstscheduler.c		\
 	gststructure.c		\
 	gstsystemclock.c	\
+	gsttag.c		\
+	gsttaginterface.c	\
 	gstthread.c		\
 	gstthreaddummy.c	\
 	$(GST_TRACE_SRC)	\
@@ -121,11 +123,12 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 
 
 BUILT_SOURCES = gstversion.h gstconfig.h gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC) 
+CLEANFILES = gstmarshal.h gstmarshal.c gstenumtypes.h $(GST_ENUMTYPES_SRC)
+DISTCLEANFILES = gstversion.h gstconfig.h
 
 libgstreamer_@GST_MAJORMINOR@_la_CFLAGS = -D_GNU_SOURCE \
 	$(GST_CFLAGS) \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
-	-DGST_CACHE_DIR=\""$(GST_CACHE_DIR)"\" \
 	-DGST_MAJORMINOR=\""$(GST_MAJORMINOR)"\" 
 libgstreamer_@GST_MAJORMINOR@_la_LIBADD = $(LIBGST_LIBS) $(GST_PARSE_LIBADD) $(GST_REGISTRY_LIBADD)
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@ 
@@ -165,6 +168,8 @@ gst_headers =			\
 	gstscheduler.h		\
 	gststructure.h		\
 	gstsystemclock.h	\
+	gsttag.h		\
+	gsttaginterface.h	\
 	gstthread.h		\
 	gsttrace.h		\
 	gsttrashstack.h		\
@@ -226,13 +231,5 @@ gstenumtypes.c: $(gst_headers)
 	--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
 	--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (\"@EnumName@\", values);\n  }\n  return etype;\n}\n" \
 	$^ > gstenumtypes.c
-
-# Don't want the generated marshal files in the dist
-dist-hook:
-	rm -f $(distdir)/gstmarshal.c $(distdir)/gstmarshal.h
-
-# Clean generated files
-distclean-local:
-	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
 
 EXTRA_DIST = ROADMAP

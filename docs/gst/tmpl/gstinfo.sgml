@@ -233,21 +233,6 @@ default. If you want to define a default category, do it like this:
 @Varargs: 
 
 
-<!-- ##### FUNCTION gst_debug_logv ##### -->
-<para>
-
-</para>
-
-@category: 
-@level: 
-@file: 
-@function: 
-@line: 
-@object: 
-@format: 
-@args: 
-
-
 <!-- ##### FUNCTION gst_debug_log_default ##### -->
 <para>
 

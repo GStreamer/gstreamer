@@ -258,11 +258,11 @@ void gst_debug_log (GstDebugCategory *category, GstDebugLevel level,
   va_list var_args;
   
   va_start (var_args, format);
-  gst_debug_logv (category, level, file, function, line, object, format, var_args);
+  gst_debug_log_valist (category, level, file, function, line, object, format, var_args);
   va_end (var_args);
 }
 /**
- * gst_debug_logv:
+ * gst_debug_log_valist:
  * @category: category to log
  * @level: level of the message is in
  * @file: the file that emitted the message, usually the __FILE__ identifier
@@ -274,9 +274,9 @@ void gst_debug_log (GstDebugCategory *category, GstDebugLevel level,
  * 
  * Logs the given message using the currently registered debugging handlers.
  */
-void gst_debug_logv (GstDebugCategory *category, GstDebugLevel level,
-		     const gchar *file, const gchar *function, gint line,
-		     GObject *object, gchar *format, va_list args)
+void gst_debug_log_valist (GstDebugCategory *category, GstDebugLevel level,
+			   const gchar *file, const gchar *function, gint line,
+			   GObject *object, gchar *format, va_list args)
 {
   gchar *message;
   LogFuncEntry *entry;

@@ -440,7 +440,7 @@ spider_find_suggest (gpointer data, guint probability, const GstCaps2 *caps)
   GST_INFO ("suggest %u, %s", probability, caps_str);
   g_free (caps_str);
   if (probability > find->best_probability) {
-    gst_caps2_replace (&find->caps, caps);
+    gst_caps2_replace (&find->caps, gst_caps2_copy (caps));
     find->best_probability = probability;
   }
 }

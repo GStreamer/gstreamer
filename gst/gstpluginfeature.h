@@ -44,10 +44,10 @@ typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
 struct _GstPluginFeature {
   GObject 	 object;
 
+  /*< private >*/
   gchar 	*name;
-  gint   	 rank;
+  guint   	 rank;
 
-  /* --- private --- */
   gpointer 	 manager;
 
   GST_OBJECT_PADDING
@@ -79,8 +79,10 @@ void		gst_plugin_feature_unload_thyself 	(GstPluginFeature *feature);
 gboolean	gst_plugin_feature_type_name_filter	(GstPluginFeature *feature,
 							 GstTypeNameData *data);
 
-void		gst_plugin_feature_set_rank		(GstPluginFeature *feature, guint16 rank);
+void		gst_plugin_feature_set_rank		(GstPluginFeature *feature, guint rank);
 void		gst_plugin_feature_set_name		(GstPluginFeature *feature, const gchar *name);
+guint		gst_plugin_feature_get_rank		(GstPluginFeature *feature);
+G_CONST_RETURN gchar *gst_plugin_feature_get_name	(GstPluginFeature *feature);
 
 G_END_DECLS
 

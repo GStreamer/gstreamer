@@ -86,10 +86,13 @@ gst_caps_to_string (GstCaps *caps)
       g_value_set_boxed  (&value, caps->properties);
       props = g_strdup_value_contents (&value);
 
-      g_value_unset (&value);
-      g_string_append (result, ", ");
-      g_string_append (result, props);
-      g_free (props);
+      /* this happens with empty (but existing) caps->properties */
+      if (props[0] != '\0') {
+        g_value_unset (&value);
+        g_string_append (result, ", ");
+        g_string_append (result, props);
+        g_free (props);
+      }
     }
 
     caps = caps->next;

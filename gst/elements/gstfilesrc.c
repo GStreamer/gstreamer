@@ -128,12 +128,15 @@ static void		gst_filesrc_set_property	(GObject *object, guint prop_id,
 static void		gst_filesrc_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
 
+static gboolean		gst_filesrc_check_filesize	(GstFileSrc *src); 
 static GstData *	gst_filesrc_get			(GstPad *pad);
 static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
 static gboolean 	gst_filesrc_srcpad_query 	(GstPad *pad, GstQueryType type,
 		         				 GstFormat *format, gint64 *value);
 
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
+
+static void		gst_filesrc_uri_handler_init	(gpointer g_iface, gpointer iface_data);
 
 
 static GstElementClass *parent_class = NULL;
@@ -156,8 +159,15 @@ gst_filesrc_get_type(void)
       0,
       (GInstanceInitFunc)gst_filesrc_init,
     };
+    static const GInterfaceInfo urihandler_info = {
+      gst_filesrc_uri_handler_init,
+      NULL,
+      NULL
+    };
     filesrc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFileSrc", &filesrc_info, 0);
-
+    
+    g_type_add_interface_static (filesrc_type, GST_TYPE_URI_HANDLER, &urihandler_info);
+    
     GST_DEBUG_CATEGORY_INIT (gst_filesrc_debug, "filesrc", 0, "filesrc element");
   }
   return filesrc_type;
@@ -262,8 +272,32 @@ gst_filesrc_dispose (GObject *object)
   g_mutex_free (src->map_regions_lock);
   if (src->filename)
     g_free (src->filename);
+  if (src->uri)
+    g_free (src->uri);
 }
 
+static gboolean
+gst_filesrc_set_location (GstFileSrc *src, const gchar *location)
+{
+  /* the element must be stopped in order to do this */
+  if (GST_STATE (src) == GST_STATE_PLAYING)
+    return FALSE;
+
+  if (src->filename) g_free (src->filename);
+  if (src->uri) g_free (src->uri);
+  /* clear the filename if we get a NULL (is that possible?) */
+  if (location == NULL) {
+    src->filename = NULL;
+    src->uri = NULL;
+  } else {
+    src->filename = g_strdup (location);
+    src->uri = gst_uri_construct ("file", src->filename);
+  }
+  g_object_notify (G_OBJECT (src), "location");
+  gst_uri_handler_new_uri (GST_URI_HANDLER (src), src->uri);
+
+  return TRUE;
+}
 
 static void
 gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -277,19 +311,7 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
 
   switch (prop_id) {
     case ARG_LOCATION:
-      /* the element must be stopped in order to do this */
-      g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
-
-      if (src->filename) g_free (src->filename);
-      /* clear the filename if we get a NULL (is that possible?) */
-      if (g_value_get_string (value) == NULL) {
-        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-        src->filename = NULL;
-      /* otherwise set the new filename */
-      } else {
-        src->filename = g_strdup (g_value_get_string (value));
-      }
-      g_object_notify (G_OBJECT (src), "location");
+      gst_filesrc_set_location (src, g_value_get_string (value));
       break;
     case ARG_BLOCKSIZE:
       src->block_size = g_value_get_ulong (value);
@@ -506,8 +528,10 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
   /* check to see if we're going to overflow the end of the file */
   if (readend > src->filelen) {
-    readsize = src->filelen - src->curoffset;
-    readend = src->curoffset + readsize;
+    if (!gst_filesrc_check_filesize (src) || readend > src->filelen) {
+      readsize = src->filelen - src->curoffset;
+      readend = src->curoffset + readsize;
+    }
   }
 
   GST_LOG ("attempting to read %08lx, %08lx, %08lx, %08lx", 
@@ -599,7 +623,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
 
         /* subbuffer it */
         buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - nextmap, readsize);
-        GST_BUFFER_OFFSET (buf) = mapstart + src->curoffset - nextmap;
+        GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET (src->mapbuf) + src->curoffset - nextmap;
       }
     }
   }
@@ -613,6 +637,7 @@ gst_filesrc_get_mmap (GstFileSrc *src)
   }
 
   /* we're done, return the buffer */
+  g_assert (src->curoffset == GST_BUFFER_OFFSET (buf));
   src->curoffset += GST_BUFFER_SIZE(buf);
   return buf;
 }
@@ -626,7 +651,9 @@ gst_filesrc_get_read (GstFileSrc *src)
 
   readsize = src->block_size;
   if (src->curoffset + readsize > src->filelen) {
-    readsize = src->filelen - src->curoffset;
+    if (!gst_filesrc_check_filesize (src) || src->curoffset + readsize > src->filelen) {
+      readsize = src->filelen - src->curoffset;
+    }
   }
 
   buf = gst_buffer_new_and_alloc (readsize);
@@ -675,11 +702,14 @@ gst_filesrc_get (GstPad *pad)
   }
 
   /* check for EOF */
+  g_assert (src->curoffset <= src->filelen);
   if (src->curoffset == src->filelen) {
-    GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
-               src->curoffset, src->filelen);
-    gst_element_set_eos (GST_ELEMENT (src));
-    return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    if (!gst_filesrc_check_filesize (src) || src->curoffset >= src->filelen) {
+      GST_DEBUG_OBJECT (src, "eos %" G_GINT64_FORMAT" %" G_GINT64_FORMAT,
+		src->curoffset, src->filelen);
+      gst_element_set_eos (GST_ELEMENT (src));
+      return GST_DATA (gst_event_new (GST_EVENT_EOS));
+    }
   }
 
   if (src->using_mmap){
@@ -689,6 +719,22 @@ gst_filesrc_get (GstPad *pad)
   }
 }
 
+/* TRUE if the filesize of the file was updated */
+static gboolean
+gst_filesrc_check_filesize (GstFileSrc *src)
+{
+  struct stat stat_results;
+  
+  g_return_val_if_fail (GST_FLAG_IS_SET (src ,GST_FILESRC_OPEN), FALSE);
+
+  fstat(src->fd, &stat_results);
+  GST_DEBUG_OBJECT (src, "checked filesize on %s (was %"G_GUINT64_FORMAT", is %"G_GUINT64_FORMAT")", 
+	  src->filename, src->filelen, (guint64) stat_results.st_size);
+  if (src->filelen == (guint64) stat_results.st_size)
+    return FALSE;
+  src->filelen = stat_results.st_size;
+  return TRUE;
+}
 /* open the file and mmap it, necessary to go to READY state */
 static gboolean 
 gst_filesrc_open_file (GstFileSrc *src)
@@ -799,6 +845,7 @@ gst_filesrc_srcpad_query (GstPad *pad, GstQueryType type,
       if (*format != GST_FORMAT_BYTES) {
 	return FALSE;
       }
+      gst_filesrc_check_filesize (src);
       *value = src->filelen;
       break;
     case GST_QUERY_POSITION:
@@ -842,20 +889,25 @@ gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
 
       switch (GST_EVENT_SEEK_METHOD (event)) {
         case GST_SEEK_METHOD_SET:
-          if (offset > src->filelen) 
-	    goto error;
+          if (offset > src->filelen && (!gst_filesrc_check_filesize (src) || offset > src->filelen)) {
+	      goto error;
+	  }
           src->curoffset = offset;
           GST_DEBUG_OBJECT (src, "seek set pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
         case GST_SEEK_METHOD_CUR:
           if (offset + src->curoffset > src->filelen) 
-	    goto error;
+	    if (!gst_filesrc_check_filesize (src) || offset + src->curoffset > src->filelen)
+	      goto error;
           src->curoffset += offset;
           GST_DEBUG_OBJECT (src, "seek cur pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
         case GST_SEEK_METHOD_END:
-          if (ABS (offset) > src->filelen) 
+          if (ABS (offset) > src->filelen) {
+	    if (!gst_filesrc_check_filesize (src) || ABS (offset) > src->filelen)
+	      goto error;
 	    goto error;
+	  }
           src->curoffset = src->filelen - ABS (offset);
           GST_DEBUG_OBJECT (src, "seek end pending to %" G_GINT64_FORMAT, src->curoffset);
 	  break;
@@ -888,3 +940,55 @@ error:
   gst_event_unref (event);
   return FALSE;
 }
+
+/*** GSTURIHANDLER INTERFACE *************************************************/
+
+static guint
+gst_filesrc_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+static gchar **
+gst_filesrc_uri_get_protocols(void)
+{
+  static gchar *protocols[] = {"file", NULL};
+  return protocols;
+}
+static const gchar *
+gst_filesrc_uri_get_uri (GstURIHandler *handler)
+{
+  GstFileSrc *src = GST_FILESRC (handler);
+  
+  return src->uri;
+}
+static gboolean
+gst_filesrc_uri_set_uri (GstURIHandler *handler, const gchar *uri)
+{
+  gchar *protocol, *location;
+  gboolean ret;
+  GstFileSrc *src = GST_FILESRC (handler);
+
+  protocol = gst_uri_get_protocol (uri);
+  if (strcmp (protocol, "file") != 0) {
+    g_free (protocol);
+    return FALSE;
+  }
+  g_free (protocol);
+  location = gst_uri_get_location (uri);
+  ret = gst_filesrc_set_location (src, location);
+  g_free (location);
+
+  return ret;
+}
+
+static void
+gst_filesrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_filesrc_uri_get_type;
+  iface->get_protocols = gst_filesrc_uri_get_protocols;
+  iface->get_uri = gst_filesrc_uri_get_uri;
+  iface->set_uri = gst_filesrc_uri_set_uri;
+}
+

@@ -1,8 +1,10 @@
 include ../Rules
 
 tests_pass = cleanup1 cleanup2 cleanup4 cleanup5
-tests_fail = 
-#tests_that_work_sometimes = cleanup3
+tests_fail =
+
+# cleanup3 fails depending on the machine
+tests_ignore = cleanup3
 
 # we have nothing but apps here, we can do this safely
 cleanup1_LDADD = $(GST_LIBS)

@@ -223,6 +223,7 @@ gst_queue_init (GTypeInstance *instance, gpointer g_class)
   gst_pad_set_bufferpool_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_get_bufferpool));
   gst_pad_set_link_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_link));
   gst_pad_set_getcaps_function (queue->sinkpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
+  gst_pad_set_active (queue->sinkpad, TRUE);
 
   queue->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_get));
@@ -230,6 +231,7 @@ gst_queue_init (GTypeInstance *instance, gpointer g_class)
   gst_pad_set_link_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_link));
   gst_pad_set_getcaps_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_event_function (queue->srcpad, GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
+  gst_pad_set_active (queue->srcpad, TRUE);
 
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->queue = NULL;
@@ -695,6 +697,10 @@ gst_queue_change_state (GstElement *element)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  /* this is an ugly hack to make sure our pads are always active. Reason for this is that
+   * pad activation for the queue element depends on 2 schedulers (ugh) */
+  gst_pad_set_active (queue->sinkpad, TRUE);
+  gst_pad_set_active (queue->srcpad, TRUE);
 
 error:
   g_mutex_unlock (queue->qlock);

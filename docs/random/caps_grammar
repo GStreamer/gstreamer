@@ -1,5 +1,14 @@
 
+Canonical caps/structure strings (those created by gst_caps_to_string()
+and gst_structure_to_string()) do not have AUTO_VALUE.
 
+Goals:
+ - UTF-8 clean
+ - SIMPLE_STRINGs should cover most simple cases that don't interfere
+   with other parts of the gst_caps or gst_parse grammar
+ - forward-parsed grammar
+ - quoted strings handle backslash escaping as well as XML-style (&ack;)
+   escaping
 
 CAPS = STRUCTURE [ ';' STRUCTURE ]*
 
@@ -27,12 +36,12 @@ STRING = ["][^"]["]
        | ['][^'][']
        | SIMPLE_STRING
 
-SIMPLE_STRING = [A-Za-z][A-Za-z0-9]*
+SIMPLE_STRING = [A-Za-z0-9_+-:./]+
 
 TYPE = "int" | "i" | "float" | "f" | "double" | "d" | "fourcc" | "4"
      | "boolean" | "bool" | "b"
      | GTYPE
-       
+
 
 Canonical Examples:
 

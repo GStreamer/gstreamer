@@ -173,17 +173,17 @@ gst_real_pad_class_init (GstRealPadClass *klass)
     g_signal_new ("caps_nego_failed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, caps_nego_failed), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
+                  GST_TYPE_CAPS2);
   gst_real_pad_signals[REAL_LINKED] =
     g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, linked), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
+                  GST_TYPE_PAD);
   gst_real_pad_signals[REAL_UNLINKED] =
     g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRealPadClass, unlinked), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
+                  GST_TYPE_PAD);
 
 /*  gtk_object_add_arg_type ("GstRealPad::active", G_TYPE_BOOLEAN, */
 /*                           GTK_ARG_READWRITE, REAL_ARG_ACTIVE); */
@@ -865,11 +865,11 @@ gst_pad_unlink (GstPad *srcpad,
   g_return_if_fail ((GST_RPAD_DIRECTION (realsrc) == GST_PAD_SRC) &&
                     (GST_RPAD_DIRECTION (realsink) == GST_PAD_SINK));
 
-  if (GST_RPAD_UNLINKFUNC (srcpad)) {
-    GST_RPAD_UNLINKFUNC (srcpad) (srcpad);
+  if (GST_RPAD_UNLINKFUNC (realsrc)) {
+    GST_RPAD_UNLINKFUNC (realsrc) (GST_PAD_CAST (realsrc));
   }
-  if (GST_RPAD_UNLINKFUNC (sinkpad)) {
-    GST_RPAD_UNLINKFUNC (sinkpad) (sinkpad);
+  if (GST_RPAD_UNLINKFUNC (realsink)) {
+    GST_RPAD_UNLINKFUNC (realsink) (GST_PAD_CAST (realsink));
   }
 
   /* get the schedulers before we unlink */

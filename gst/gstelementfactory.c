@@ -26,6 +26,7 @@
 #include "gstelement.h"
 #include "gstregistrypool.h"
 #include "gstinfo.h"
+#include "gsturi.h"
 
 GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 #define GST_CAT_DEFAULT element_factory_debug
@@ -84,6 +85,11 @@ gst_element_factory_init (GstElementFactory *factory)
 {
   factory->padtemplates = NULL;
   factory->numpadtemplates = 0;
+
+  factory->uri_type = GST_URI_UNKNOWN;
+  factory->uri_protocols = NULL;
+
+  factory->interfaces = NULL;
 }
 /**
  * gst_element_factory_find:
@@ -148,6 +154,15 @@ gst_element_factory_cleanup (GstElementFactory *factory)
   g_list_free (factory->padtemplates);
   factory->padtemplates = NULL;
   factory->numpadtemplates = 0;
+  factory->uri_type = GST_URI_UNKNOWN;
+  if (factory->uri_protocols) {
+    g_strfreev (factory->uri_protocols);
+    factory->uri_protocols = NULL;
+  }
+  
+  g_list_foreach (factory->interfaces, (GFunc) g_free, NULL);
+  g_list_free (factory->interfaces);
+  factory->interfaces = NULL;
 }
 /**
  * gst_element_register:
@@ -165,6 +180,8 @@ gboolean
 gst_element_register (GstPlugin *plugin, const gchar *name, guint rank, GType type)
 {
   GstElementFactory *factory;
+  GType *interfaces;
+  guint n_interfaces, i;
   GstElementClass *klass;
 
   g_return_val_if_fail (name != NULL, FALSE);
@@ -190,11 +207,34 @@ gst_element_register (GstPlugin *plugin, const gchar *name, guint rank, GType ty
   g_list_foreach (factory->padtemplates, (GFunc) g_object_ref, NULL);
   factory->numpadtemplates = klass->numpadtemplates;
 
-  gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
+  /* special stuff for URI handling */
+  if (g_type_is_a (type, GST_TYPE_URI_HANDLER)) {
+    GstURIHandlerInterface *iface = (GstURIHandlerInterface *) 
+	    g_type_interface_peek (klass, GST_TYPE_URI_HANDLER);
+    if (!iface || !iface->get_type || !iface->get_protocols)
+      goto error;
+    factory->uri_type = iface->get_type ();
+    if (!GST_URI_TYPE_IS_VALID (factory->uri_type))
+      goto error;
+    factory->uri_protocols = g_strdupv (iface->get_protocols ());
+    if (!factory->uri_protocols)
+      goto error;
+  }
 
+  interfaces = g_type_interfaces (type, &n_interfaces);
+  for (i = 0; i < n_interfaces; i++) {
+    __gst_element_factory_add_interface (factory, g_type_name (interfaces[i]));
+  }
+  g_free (interfaces);
+  
+  gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   return TRUE;
+
+error:
+  gst_element_factory_cleanup (factory);
+  return FALSE;
 }
 /**
  * gst_element_factory_create:
@@ -373,34 +413,83 @@ gst_element_factory_get_author (GstElementFactory *factory)
   return factory->details.author;
 }
 /**
- * gst_element_factory_get_num_padtemplates:
+ * gst_element_factory_get_num_pad_templates:
  * @factory: a #GstElementFactory
  * 
- * Gets the number of padtemplates in this factory.
+ * Gets the number of pad_templates in this factory.
  *
- * Returns: the number of padtemplates
+ * Returns: the number of pad_templates
  */
 guint
-gst_element_factory_get_num_padtemplates (GstElementFactory *factory)
+gst_element_factory_get_num_pad_templates (GstElementFactory *factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), 0);
 
   return factory->numpadtemplates;
 }
 /**
- * gst_element_factory_get_padtemplates:
+ * __gst_element_factory_add_interface:
+ * @elementfactory: The elementfactory to add the interface to
+ * @interfacename: Name of the interface
+ *
+ * Adds the given interfacename to the list of implemented interfaces of the
+ * element.
+ */
+void
+__gst_element_factory_add_interface (GstElementFactory *elementfactory, const gchar *interfacename)
+{
+  g_return_if_fail (GST_IS_ELEMENT_FACTORY (elementfactory));
+  g_return_if_fail (interfacename != NULL);
+  g_return_if_fail (interfacename[0] != '\0'); /* no empty string */
+  
+  elementfactory->interfaces = g_list_prepend (elementfactory->interfaces, g_strdup (interfacename));
+}
+/**
+ * gst_element_factory_get_pad_templates:
  * @factory: a #GstElementFactory
  * 
- * Gets the #Glist of padtemplates for this factory.
+ * Gets the #GList of padtemplates for this factory.
  *
  * Returns: the padtemplates
  */
 G_CONST_RETURN GList *
-gst_element_factory_get_padtemplates (GstElementFactory *factory)
+gst_element_factory_get_pad_templates (GstElementFactory *factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
 
   return factory->padtemplates;
+}
+/**
+ * gst_element_factory_get_uri_type:
+ * @factory: a #GstElementFactory
+ * 
+ * Gets the type of URIs the element supports or GST_URI_UNKNOWN if none.
+ *
+ * Returns: type of URIs this element supports
+ */
+guint
+gst_element_factory_get_uri_type (GstElementFactory *factory)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), GST_URI_UNKNOWN);
+
+  return factory->uri_type;
+}
+/**
+ * gst_element_factory_get_uri_protocols:
+ * @factory: a #GstElementFactory
+ * 
+ * Gets a NULL-terminated array of protocols this element supports or NULL, if
+ * no protocols are supported. You may not change the contents of the returned
+ * array as it is still ownt by the element factory. Use g_strdupv() if you want to.
+ *
+ * Returns: the supported protocols or NULL
+ */
+gchar **
+gst_element_factory_get_uri_protocols (GstElementFactory *factory)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
+
+  return factory->uri_protocols;
 }
 /**
  * gst_element_factory_can_src_caps :

@@ -5,3 +5,4 @@ Makefile.in
 *.la
 .deps
 .libs
+version.entities

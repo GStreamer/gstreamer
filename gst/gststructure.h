@@ -73,7 +73,8 @@ void gst_structure_set_value(GstStructure *structure, const gchar *field,
 void gst_structure_set(GstStructure *structure, const gchar *field, ...);
 void gst_structure_set_valist(GstStructure *structure, const gchar *field,
     va_list varargs);
-G_CONST_RETURN GValue *gst_structure_get_value(const GstStructure *structure, const gchar *field);
+G_CONST_RETURN GValue *gst_structure_get_value(const GstStructure *structure,
+    const gchar *field);
 GstStructureField *gst_structure_get_field(const GstStructure *structure,
         const gchar *fieldname);
 GstStructureField *gst_structure_id_get_field(const GstStructure *structure,

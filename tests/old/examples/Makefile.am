@@ -4,12 +4,35 @@ else
 GST_LOADSAVE_DIRS = xml typefind
 endif
 
-SUBDIRS = $(GST_LOADSAVE_DIRS) \
-          helloworld \
-          queue queue2 queue3 queue4 \
-          launch thread plugins mixer cutter pingpong manual
+SUBDIRS = 				\
+	helloworld			\
+	queue				\
+	queue2				\
+	queue3				\
+	queue4				\
+	launch				\
+	thread				\
+	plugins				\
+	mixer				\
+	cutter				\
+	pingpong			\
+	manual				\
+	retag				\
+	$(GST_LOADSAVE_DIRS)
 
-DIST_SUBDIRS = helloworld helloworld2 \
-          queue queue2 queue3 queue4 \
-          launch thread xml plugins typefind mixer cutter pingpong manual
+DIST_SUBDIRS = helloworld		\
+	queue				\
+	queue2				\
+	queue3				\
+	queue4				\
+	launch				\
+	thread				\
+	plugins				\
+	mixer				\
+	cutter				\
+	pingpong			\
+	manual				\
+	xml				\
+	typefind			\
+	retag
 

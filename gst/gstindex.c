@@ -89,6 +89,20 @@ gst_index_resolver_get_type (void)
 }
 
 GType
+gst_index_entry_get_type (void)
+{
+  static GType index_entry_type = 0;
+
+  if (!index_entry_type) {
+    index_entry_type = g_boxed_type_register_static ("GstIndexEntry",
+        (GBoxedCopyFunc) gst_index_entry_copy,
+        (GBoxedFreeFunc) gst_index_entry_free);
+  }
+  return index_entry_type;
+}
+
+
+GType
 gst_index_get_type (void) {
   static GType index_type = 0;
 
@@ -379,6 +393,18 @@ gst_index_set_resolver (GstIndex *index,
   index->resolver = resolver;
   index->resolver_user_data = user_data;
   index->method = GST_INDEX_RESOLVER_CUSTOM;
+}
+
+/**
+ * gst_index_entry_copy:
+ * @entry: the entry to copy
+ *
+ * Copies an entry and returns the result.
+ */
+GstIndexEntry *
+gst_index_entry_copy (GstIndexEntry *entry)
+{
+  return g_memdup(entry, sizeof(*entry));
 }
 
 /**

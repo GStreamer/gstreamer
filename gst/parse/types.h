@@ -66,4 +66,23 @@ void	__gst_parse_chain_free (chain_t *data);
 #  define gst_parse_chain_free g_free
 #endif /* __GST_PARSE_TRACE */
 
+static inline void
+gst_parse_unescape (gchar *str)
+{
+  gchar *walk;
+  
+  g_return_if_fail (str != NULL);
+  
+  walk = str;
+  
+  while (*walk) {
+    if (*walk == '\\')
+      walk++;
+    *str = *walk;
+    str++;
+    walk++;
+  }
+  *str = '\0';
+}
+
 #endif /* __GST_PARSE_TYPES_H__ */
