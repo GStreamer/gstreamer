@@ -1,3 +1,12 @@
+2004-01-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/xvid/gstxvid.c: (gst_xvid_structure_to_csp),
+	(gst_xvid_csp_to_caps):
+	* ext/xvid/gstxviddec.c: (gst_xviddec_src_getcaps):
+	* ext/xvid/gstxvidenc.c:
+	ifdef out ARGB type when it isn't available 
+	in xvidcore 1.0.0beta2
+
 2004-01-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_loop):
