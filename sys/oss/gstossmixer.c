@@ -362,6 +362,11 @@ gst_ossmixer_set_record (GstMixer      *mixer,
   g_return_if_fail (oss->mixer_fd != -1);
   g_return_if_fail (gst_ossmixer_contains_track (oss, osstrack));
 
+  /* if there's nothing to do... */
+  if ((record && GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD)) ||
+      (!record && !GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD)))
+    return;
+
   /* if we're exclusive, then we need to unset the current one(s) */
   if (oss->mixcaps & SOUND_CAP_EXCL_INPUT) {
     GList *track;
