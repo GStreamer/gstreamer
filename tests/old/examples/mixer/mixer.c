@@ -4,10 +4,10 @@
  * demonstrates the adder plugin and the volume envelope plugin 
  * work in progress but do try it out 
  * 
- * Latest change : 	16/04/2001
- * 					multiple input channels allowed
- * 					volume envelope adapted 
- * Version :		0.3
+ * Latest change : 	28/04/2001
+ * 					trying to adapt to incsched
+ * 					
+ * Version :		0.4
  */
 
 #include <stdlib.h>
@@ -82,8 +82,9 @@ gst_play_typefind (GstBin *bin, GstElement *element)
 
 int main(int argc,char *argv[]) 
 {
-  int i;
+  int i, j;
   int num_channels;
+  gboolean done;
   
   char buffer[20];
   
@@ -108,38 +109,41 @@ int main(int argc,char *argv[])
   /* set up output channel and main bin */
   
   /* create adder */
-  adder = gst_elementfactory_make("adder", "adderel");
+  adder = gst_elementfactory_make ("adder", "adderel");
 
   /* create an audio sink */
-  audiosink = gst_elementfactory_make("esdsink", "play_audio");
+  audiosink = gst_elementfactory_make ("esdsink", "play_audio");
 
   /* create main bin */
-  main_bin = gst_bin_new("bin");
+  main_bin = gst_pipeline_new("bin");
 
   /* connect adder and output to bin */
-
-  gst_bin_add(GST_BIN(main_bin), adder);
-  gst_bin_add(GST_BIN(main_bin), audiosink);
+  GST_INFO (0, "main: adding adder to bin");
+  gst_bin_add (GST_BIN(main_bin), adder);
+  GST_INFO (0, "main: adding audiosink to bin");
+  gst_bin_add (GST_BIN(main_bin), audiosink);
 
   /* connect adder and audiosink */
 
   gst_pad_connect(gst_element_get_pad(adder,"src"),
                   gst_element_get_pad(audiosink,"sink"));
   
-  /* create input channels, add to bin and connect */
-
+  /* start looping */
   input_channels = NULL;
   
   for (i = 1; i < argc; ++i)
   {
     printf ("Opening channel %d from file %s...\n", i, argv[i]);
     channel_in = create_input_channel (i, argv[i]);
-    input_channels = g_list_append (input_channels, channel_in);  
-    gst_bin_add(GST_BIN(main_bin), channel_in->pipe);
+    input_channels = g_list_append (input_channels, channel_in);
+
+    gst_element_set_state (main_bin, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN(main_bin), channel_in->pipe);
 
     /* request pads and connect to adder */
+    GST_INFO (0, "requesting pad\n");
     pad = gst_element_request_pad_by_name (adder, "sink%d");
-    g_print ("\tGot new adder sink pad %s\n", gst_pad_get_name (pad));
+    printf ("\tGot new adder sink pad %s\n", gst_pad_get_name (pad));
     sprintf (buffer, "channel%d", i);
     gst_pad_connect (gst_element_get_pad (channel_in->pipe, buffer), pad);
 
@@ -180,22 +184,17 @@ int main(int argc,char *argv[])
     env_register_cp (channel_in->volenv,  num_channels * 10.0      , 1.0 / num_channels); /* to end level */
   }
 
-  /* sleep a few seconds doesn't seem to help anyway */
-
-  printf ("Sleeping a few seconds ...\n");
-  sleep (2);
-  printf ("Waking up ...\n");
-
-  
   /* start playing */
   gst_element_set_state(main_bin, GST_STATE_PLAYING);
 
   playing = TRUE;
 
-  while (playing) {
+  j = 0;
+  while (playing && j < 1000) 
+  {
     gst_bin_iterate(GST_BIN(main_bin));
+    ++j;
   }
-
   /* stop the bin */
   gst_element_set_state(main_bin, GST_STATE_NULL);
 
@@ -229,10 +228,8 @@ create_input_channel (int id, char* location)
   GstCaps *srccaps;
   GstElement *new_element;  
 
-#ifdef DEBUG
-  printf ("DEBUG : c_i_p : creating channel with id %d for file %s\n",
+  GST_DEBUG (0, "c_i_p : creating channel with id %d for file %s\n",
   		  id, location);
-#endif
   
   /* allocate channel */
 
@@ -245,23 +242,20 @@ create_input_channel (int id, char* location)
 
   /* create channel */
 
-#ifdef DEBUG
-  printf ("DEBUG : c_i_p : creating pipeline\n");
-#endif
+  GST_DEBUG (0, "c_i_p : creating pipeline\n");
 
   channel->pipe = gst_bin_new ("pipeline");
   g_assert(channel->pipe != NULL);    
     
   /* create elements */
 
-#ifdef DEBUG
-  printf ("DEBUG : c_i_p : creating disksrc\n");
-#endif
+  GST_DEBUG(0, "c_i_p : creating disksrc\n");
 
   sprintf (buffer, "disksrc%d", id);
   channel->disksrc = gst_elementfactory_make ("disksrc", buffer);
   g_assert(channel->disksrc != NULL);    
-  
+
+  GST_DEBUG(0, "c_i_p : setting location\n");
   gtk_object_set(GTK_OBJECT(channel->disksrc),"location", location, NULL);
 
   /* add disksrc to the bin before autoplug */
