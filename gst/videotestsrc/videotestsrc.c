@@ -586,6 +586,31 @@ gst_videotestsrc_snow (GstVideotestsrc * v, unsigned char *dest, int w, int h)
   }
 }
 
+void
+gst_videotestsrc_black (GstVideotestsrc * v, unsigned char *dest, int w, int h)
+{
+  int i;
+  paintinfo pi;
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+  struct vts_color_struct color;
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  color = vts_colors[COLOR_BLACK];
+
+  for (i = 0; i < w; i++) {
+    p->paint_hline (p, i, 0, w);
+  }
+}
+
 static void
 paint_setup_I420 (paintinfo * p, char *dest)
 {

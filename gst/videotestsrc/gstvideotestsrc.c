@@ -161,7 +161,7 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
   gst_caps_get_int (caps, "height", &videotestsrc->height);
 
   videotestsrc->make_image = gst_videotestsrc_smpte;
-  videotestsrc->make_image = gst_videotestsrc_snow;
+  videotestsrc->make_image = gst_videotestsrc_black;
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
   GST_DEBUG (0, "size %d x %d", videotestsrc->width, videotestsrc->height);

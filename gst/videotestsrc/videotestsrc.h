@@ -57,6 +57,7 @@ struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps);
 GstCaps *paint_get_caps(struct fourcc_list_struct *format);
 void gst_videotestsrc_smpte (GstVideotestsrc * v, unsigned char *dest, int w, int h);
 void gst_videotestsrc_snow (GstVideotestsrc * v, unsigned char *dest, int w, int h);
+void gst_videotestsrc_black (GstVideotestsrc * v, unsigned char *dest, int w, int h);
 
 extern struct fourcc_list_struct fourcc_list[];
 extern int n_fourccs;
