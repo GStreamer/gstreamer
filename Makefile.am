@@ -23,6 +23,7 @@ EXTRA_DIST = \
 	examples/gst/lat.py \
 	examples/gst/rot13.py \
 	examples/gst/vorbisplay.py \
+	examples/gst/wavenc.py \
 	examples/gstplay/player.py
 
 snap:
