@@ -4,10 +4,6 @@
 # use the extension to determine the gst-launch pipeline
 # make use of default output sinks
 
-### packages
-
-use File::Basename;
-
 my (%pipes, %cfg);
 
 sub extension
