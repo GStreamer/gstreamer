@@ -156,6 +156,7 @@ enum {
 
 enum {
 	ARG_0,
+	ARG_HANDLE,
 	ARG_LOCATION,
 	ARG_BYTESPERREAD,
 	ARG_IRADIO_MODE,
@@ -245,6 +246,13 @@ static void gst_gnomevfssrc_class_init(GstGnomeVFSSrcClass *klass)
                NULL);
 
 	gobject_class->dispose         = gst_gnomevfssrc_dispose;
+
+	g_object_class_install_property (gobject_class,
+					 ARG_HANDLE,
+					 g_param_spec_pointer ("handle",
+							       "GnomeVFSHandle",
+							       "Handle for GnomeVFS",
+							       G_PARAM_READWRITE));
 
 	/* icecast stuff */
 	g_object_class_install_property (gobject_class,
@@ -412,6 +420,9 @@ static void gst_gnomevfssrc_set_property(GObject *object, guint prop_id, const G
 			gst_gnomevfssrc_open_file(src);
 		}
 		break;
+	case ARG_HANDLE:
+		src->handle = g_value_get_pointer (value);
+		break;
 	case ARG_BYTESPERREAD:
 		src->bytes_per_read = g_value_get_int (value);
 		break;
@@ -439,6 +450,9 @@ static void gst_gnomevfssrc_get_property(GObject *object, guint prop_id, GValue 
 		break;
 	case ARG_BYTESPERREAD:
 		g_value_set_int (value, src->bytes_per_read);
+		break;
+	case ARG_HANDLE:
+		g_value_set_pointer (value, src->handle);
 		break;
 	case ARG_IRADIO_MODE:
 		g_value_set_boolean (value, src->iradio_mode);
@@ -510,16 +524,8 @@ static int audiocast_init(GstGnomeVFSSrc *src)
 	if (!src->iradio_mode)
 		return TRUE;
 	GST_DEBUG ("audiocast: registering listener");
-	if (audiocast_register_listener(&src->audiocast_port, &src->audiocast_fd) < 0)
-	{
-		char *escaped;
-
-		escaped = gnome_vfs_unescape_string_for_display (src->filename);
-		gst_element_error(GST_ELEMENT(src),
-				  "opening vfs file \"%s\" (%s)",
-				  escaped,
-				  "unable to register UDP port");
-		g_free (escaped);
+	if (audiocast_register_listener(&src->audiocast_port, &src->audiocast_fd) < 0) {
+		gst_element_error(GST_ELEMENT(src), "unable to register UDP port");
 		close(src->audiocast_fd);
 		return FALSE;
 	}
@@ -535,13 +541,8 @@ static int audiocast_init(GstGnomeVFSSrc *src)
 	GST_DEBUG ("audiocast: creating audiocast thread");
 	src->audiocast_thread = g_thread_create((GThreadFunc) audiocast_thread_run, src, TRUE, &error);
 	if (error != NULL) {
-		char *escaped;
-		escaped = gnome_vfs_unescape_string_for_display (src->filename);
 		gst_element_error(GST_ELEMENT(src),
-				  "opening vfs file \"%s\" (unable to create thread: %s)",
-				  escaped,
-				  error->message);
-		g_free (escaped);
+				  "unable to create thread: %s", error->message);
 		close(src->audiocast_fd);
 		return FALSE;
 	}
@@ -1043,12 +1044,14 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 	g_return_val_if_fail(!GST_FLAG_IS_SET(src, GST_GNOMEVFSSRC_OPEN),
 			     FALSE);
 
-	/* create the uri */
-	src->uri = gnome_vfs_uri_new(src->filename);
-	if (!src->uri) {
-		gst_element_error(GST_ELEMENT(src), "creating uri \"%s\" (%s)",
-				  src->filename, strerror (errno));
-		return FALSE;
+	if (src->filename) {
+		/* create the uri */
+		src->uri = gnome_vfs_uri_new(src->filename);
+		if (!src->uri) {
+			gst_element_error(GST_ELEMENT(src), "creating uri \"%s\" (%s)",
+					  src->filename, strerror (errno));
+			return FALSE;
+		}
 	}
 
 	if (!audiocast_init(src))
@@ -1056,10 +1059,12 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 			
 	gst_gnomevfssrc_push_callbacks (src);
 	
-	result = gnome_vfs_open_uri(&(src->handle), src->uri,
-				    GNOME_VFS_OPEN_READ);
-	if (result != GNOME_VFS_OK)
-	{
+	if (src->filename)
+		result = gnome_vfs_open_uri(&(src->handle), src->uri,
+					    GNOME_VFS_OPEN_READ);
+	else
+		result = GNOME_VFS_OK;
+	if (result != GNOME_VFS_OK) {
 		char *escaped;
 		
 		gst_gnomevfssrc_pop_callbacks (src);
@@ -1113,10 +1118,12 @@ static void gst_gnomevfssrc_close_file(GstGnomeVFSSrc *src)
 
 	gst_gnomevfssrc_pop_callbacks (src);
 	audiocast_thread_kill(src);
-
-	gnome_vfs_close(src->handle);
-
-	gnome_vfs_uri_unref(src->uri);
+	
+	if (src->filename) {
+		gnome_vfs_close(src->handle);
+	  
+		gnome_vfs_uri_unref(src->uri);
+	}
 	src->size = 0;
 	src->curoffset = 0;
 	src->new_seek = FALSE;
