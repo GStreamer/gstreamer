@@ -1,3 +1,9 @@
+2005-01-16  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstprobe.c: (gst_probe_dispatcher_dispatch):
+	  Another workaround for memory access while destroyed in callback.
+	  Please, someone with refcount knowledge, have a look at this.
+
 2005-01-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/faq/faq.xml:

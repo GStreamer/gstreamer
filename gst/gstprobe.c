@@ -251,7 +251,8 @@ gst_probe_dispatcher_dispatch (GstProbeDispatcher * disp, GstData ** data)
 
     res &= gst_probe_perform (probe, data);
     /* it might have disappeared in the callback */
-    if (g_slist_find (disp->probes, probe) && probe->single_shot) {
+    if (disp->active &&
+        g_slist_find (disp->probes, probe) && probe->single_shot) {
       disp->probes = g_slist_remove (disp->probes, probe);
 
       gst_probe_destroy (probe);
