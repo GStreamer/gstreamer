@@ -80,10 +80,10 @@ _gst_plugin_initialize (void)
                                       PLUGINS_SRCDIR "/gst/elements");
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
                                       PLUGINS_SRCDIR "/gst/types");
-#else /* PLUGINS_USE_SRCDIR */
+#endif /* PLUGINS_USE_SRCDIR */
+
   /* add the main (installed) library path */
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
-#endif /* PLUGINS_USE_SRCDIR */
 
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
 
