@@ -28,7 +28,7 @@
     </para>
     <para>
       If the autoplugger supports the RENDERER API, use gst_autoplug_to_renderers() call to
-      create a bin that connectes the src caps to the specified render elements. You can
+      create a bin that connects the src caps to the specified render elements. You can
       then add the bin to a pipeline and run it.
 
       <programlisting>
