@@ -153,3 +153,189 @@ _gst_trace_add_entry (GstTrace * trace, guint32 seq, guint32 data, gchar * msg)
 
   gst_trace_flush (trace);
 }
+
+
+/* global flags */
+static GstAllocTraceFlags _gst_trace_flags = 0;
+/* list of registered tracers */
+static GList *_gst_alloc_tracers = NULL;
+
+/**
+ * gst_alloc_trace_available:
+ *
+ * Check if alloc tracing was commiled into the core
+ *
+ * Returns: TRUE if the core was compiled with alloc
+ * tracing enabled.
+ */
+gboolean
+gst_alloc_trace_available (void)
+{
+#ifdef GST_WITH_ALLOC_TRACE
+  return TRUE;
+#else
+  return FALSE;
+#endif
+}
+
+/**
+ * _gst_alloc_trace_register:
+ * @name: the name of the new alloc trace object.
+ *
+ * Register an get a handle to a GstAllocTrace object that
+ * can be used to trace memory allocations.
+ *
+ * Returns: A handle to a GstAllocTrace.
+ */
+GstAllocTrace*
+_gst_alloc_trace_register (const gchar *name)
+{
+  GstAllocTrace *trace;
+
+  g_return_val_if_fail (name, NULL);
+
+  trace = g_new0 (GstAllocTrace, 1);
+  trace->name = g_strdup (name);
+  trace->live = 0;
+  trace->mem_live = NULL;
+  trace->flags = _gst_trace_flags;
+
+  _gst_alloc_tracers = g_list_prepend (_gst_alloc_tracers, trace);
+
+  return trace;
+}
+
+/**
+ * gst_alloc_trace_list:
+ *
+ * Get a list of all registered alloc trace objects.
+ *
+ * Returns: a GList of GstAllocTrace objects.
+ */
+const GList*
+gst_alloc_trace_list (void)
+{
+  return _gst_alloc_tracers;
+}
+
+/**
+ * gst_alloc_trace_print_all:
+ *
+ * Print the status of all registered alloc trace objectes.
+ */
+void
+gst_alloc_trace_print_all (void)
+{
+  GList *walk = _gst_alloc_tracers;
+
+  while (walk) {
+    GstAllocTrace *trace = (GstAllocTrace *) walk->data;
+
+    gst_alloc_trace_print (trace);
+
+    walk = g_list_next (walk);
+  }
+}
+
+/**
+ * gst_alloc_trace_set_flags_all:
+ * @flags: the options to enable
+ *
+ * Enable the specified options on all registered alloc trace
+ * objects.
+ */
+void
+gst_alloc_trace_set_flags_all (GstAllocTraceFlags flags)
+{
+  GList *walk = _gst_alloc_tracers;
+
+  while (walk) {
+    GstAllocTrace *trace = (GstAllocTrace *) walk->data;
+
+    gst_alloc_trace_set_flags (trace, flags);
+
+    walk = g_list_next (walk);
+  }
+  _gst_trace_flags = flags;
+}
+
+/**
+ * gst_alloc_trace_get:
+ * @name: the name of the alloc trace object
+ *
+ * Get the named alloc trace object.
+ *
+ * Returns: a GstAllocTrace with the given name or NULL when
+ * no alloc tracer was registered with that name.
+ */
+GstAllocTrace*
+gst_alloc_trace_get (const gchar *name)
+{
+  GList *walk = _gst_alloc_tracers;
+
+  g_return_val_if_fail (name, NULL);
+
+  while (walk) {
+    GstAllocTrace *trace = (GstAllocTrace *) walk->data;
+
+    if (!strcmp (trace->name, name))
+      return trace;
+
+    walk = g_list_next (walk);
+  }
+  return NULL;
+}
+
+/**
+ * gst_alloc_trace_print:
+ * @trace: the GstAllocTrace to print
+ *
+ * Print the status of the given GstAllocTrace.
+ */
+void
+gst_alloc_trace_print (const GstAllocTrace *trace)
+{
+  GSList *mem_live;
+
+  g_return_if_fail (trace != NULL);
+
+  g_print ("%s: flags %d", trace->name, trace->flags);
+
+  if (trace->flags & GST_ALLOC_TRACE_LIVE) {
+    g_print (", live %d", trace->live);
+  }
+  if (trace->flags & GST_ALLOC_TRACE_MEM_LIVE) {
+    mem_live = trace->mem_live;
+
+    if (!mem_live) {
+      g_print (", no live memory");
+    }
+    else {
+      g_print (", dumping live memory: ");
+
+      while (mem_live) {
+        g_print ("%p ", mem_live->data);
+        mem_live = g_slist_next (mem_live);
+      }
+      g_print ("\ntotal %d", g_slist_length (trace->mem_live));
+    }
+  }
+  g_print ("\n");
+}
+
+/**
+ * gst_alloc_trace_set_flags:
+ * @trace: the GstAllocTrace 
+ * @flags: flags to set 
+ *
+ * Enable the given features on the given GstAllocTrace object.
+ */
+void
+gst_alloc_trace_set_flags (GstAllocTrace *trace, GstAllocTraceFlags flags)
+{
+  g_return_if_fail (trace != NULL);
+
+  trace->flags = flags;
+}
+
+
