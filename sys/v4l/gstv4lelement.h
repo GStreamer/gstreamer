@@ -81,6 +81,12 @@ struct _GstV4lElement {
 
 struct _GstV4lElementClass {
   GstElementClass parent_class;
+
+  /* signals */
+  void (*open)  (GstElement  *element,
+                 const gchar *device);
+  void (*close) (GstElement  *element,
+                 const gchar *device);
 };
 
 GType gst_v4lelement_get_type(void);

@@ -33,6 +33,8 @@ static GstElementDetails gst_v4lelement_details = {
 /* V4lElement signals and args */
 enum {
   /* FILL ME */
+  SIGNAL_OPEN,
+  SIGNAL_CLOSE,
   LAST_SIGNAL
 };
 
@@ -82,7 +84,7 @@ static gboolean              plugin_init                 (GModule            *mo
 
 
 static GstElementClass *parent_class = NULL;
-/*static guint gst_v4lelement_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_v4lelement_signals[LAST_SIGNAL] = { 0 };
 
 
 GType
@@ -204,6 +206,18 @@ gst_v4lelement_class_init (GstV4lElementClass *klass)
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VIDEOWINDOW,
     g_param_spec_pointer("videowindow","videowindow","videowindow",
     G_PARAM_WRITABLE));
+
+  /* signals */
+  gst_v4lelement_signals[SIGNAL_OPEN] =
+    g_signal_new("open", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(GstV4lElementClass, open),
+                 NULL, NULL, g_cclosure_marshal_VOID__STRING,
+                 G_TYPE_NONE, 1, G_TYPE_STRING);
+  gst_v4lelement_signals[SIGNAL_CLOSE] =
+    g_signal_new("close", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+                 G_STRUCT_OFFSET(GstV4lElementClass, close),
+                 NULL, NULL, g_cclosure_marshal_VOID__STRING,
+                 G_TYPE_NONE, 1, G_TYPE_STRING);
 
   gobject_class->set_property = gst_v4lelement_set_property;
   gobject_class->get_property = gst_v4lelement_get_property;
@@ -532,6 +546,10 @@ gst_v4lelement_change_state (GstElement *element)
       if (!gst_v4l_open(v4lelement))
         return GST_STATE_FAILURE;
 
+      g_signal_emit(G_OBJECT(v4lelement),
+                    gst_v4lelement_signals[SIGNAL_OPEN], 0,
+                    v4lelement->videodev);
+
       /* now, sync options */
       if (v4lelement->norm >= VIDEO_MODE_PAL &&
           v4lelement->norm < VIDEO_MODE_AUTO &&
@@ -581,6 +599,10 @@ gst_v4lelement_change_state (GstElement *element)
     case GST_STATE_READY_TO_NULL:
       if (!gst_v4l_close(v4lelement))
         return GST_STATE_FAILURE;
+
+      g_signal_emit(G_OBJECT(v4lelement),
+                    gst_v4lelement_signals[SIGNAL_CLOSE], 0,
+                    v4lelement->videodev);
       break;
   }
 

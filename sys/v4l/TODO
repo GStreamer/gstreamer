@@ -1,14 +1,14 @@
 TODO list (short term):
 =======================
 * fix clocking issues by using gst clock for v4lsrc and by using it
-    as a correction for v4lmjpegsrc/v4l2src
+    as a correction for v4lmjpegsrc/v4l2src (pause brokenness etc.)
 * v4lsrc/v4lmjpegsrc/v4l2src: fix interlacing (not handled at all...)
 
 TODO list (long term):
 ======================
 * v4lmpegsrc (*hint* MPEG card needed *hint*)
 * v4l2sink
-* BSD-videosrc (meteorsrc?)
+* BSD-videosrc (bktr)
 * color correction (brightness, hue, etc.)
 * gamma correction
 
@@ -17,6 +17,8 @@ Useful Documentation:
 MJPEG/V4L API : ./videodev_mjpeg.h
 Linux/V4L API : /usr/include/linux/videodev.h or
                 http://roadrunner.swansea.uk.linux.org/v4l.shtml
-Linux/V4L2 API: http://www.thedirks.org/v4l2/
+Linux/V4L2 API: /usr/include/linux/videodev2.h or
+                http://www.thedirks.org/v4l2/
+                (kernel patches: http://bytesex.org/patches/)
 BSD/Meteor API: /usr/include/machine/ioctl_meteor.h
 mjpegtools    : http://www.sourceforge.net/projects/mjpeg
