@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
@@ -71,13 +71,14 @@ tool_run "$automake" "-a -c"
 
 echo
 echo "+ running autogen.sh --noconfigure $@ in libs/ext/cothreads..."
-pushd libs/ext/cothreads > /dev/null
+OLDDIR=`pwd` 
+cd libs/ext/cothreads
 echo
 ./autogen.sh --noconfigure $@ || {
         echo "autogen in cothreads failed."
         exit 1
 }
-popd > /dev/null
+cd "$OLDDIR"
 echo
 
 test -n "$NOCONFIGURE" && {
