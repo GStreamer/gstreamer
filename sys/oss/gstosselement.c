@@ -440,7 +440,7 @@ gst_osselement_reset (GstOssElement * oss)
   oss->depth = 16;
   oss->channels = 2;
   oss->rate = 44100;
-  oss->fragment = 6;
+  oss->fragment = 0;
   oss->bps = 0;
 
 /* AFMT_*_BE not available on all OSS includes (e.g. FBSD) */
@@ -585,21 +585,29 @@ gst_osselement_sync_parms (GstOssElement * oss)
   gint target_format;
   gint target_channels;
   gint target_rate;
-  gint fragscale, frag_ln;
+
+  /* gint fragscale, frag_ln; */
 
   if (oss->fd == -1)
     return FALSE;
 
-  if (oss->fragment >> 16)
+  if ((oss->fragment & 0xFFFF) == 0) {
+    frag = 0;
+  } else if (oss->fragment >> 16) {
     frag = oss->fragment;
-  else
+  } else {
     frag = 0x7FFF0000 | oss->fragment;
+  }
 
   GST_INFO
       ("osselement: setting sound card to %dHz %d format %s (%08x fragment)",
       oss->rate, oss->format, (oss->channels == 2) ? "stereo" : "mono", frag);
+  g_print
+      ("osselement: setting sound card to %dHz %d format %s (%08x fragment)\n",
+      oss->rate, oss->format, (oss->channels == 2) ? "stereo" : "mono", frag);
 
-  ioctl (oss->fd, SNDCTL_DSP_SETFRAGMENT, &frag);
+  if (frag)
+    ioctl (oss->fd, SNDCTL_DSP_SETFRAGMENT, &frag);
   ioctl (oss->fd, SNDCTL_DSP_RESET, 0);
 
   target_format = oss->format;
@@ -618,6 +626,9 @@ gst_osselement_sync_parms (GstOssElement * oss)
     ioctl (oss->fd, SNDCTL_DSP_GETISPACE, &space);
   }
 
+#if 0
+  /* FIXME: make the current fragment info available somehow
+   * the current way overrides preset values and that sucks */
   /* calculate new fragment using a poor man's logarithm function */
   fragscale = 1;
   frag_ln = 0;
@@ -626,6 +637,7 @@ gst_osselement_sync_parms (GstOssElement * oss)
     frag_ln++;
   }
   oss->fragment = space.fragstotal << 16 | frag_ln;
+#endif
 
   GST_INFO ("osselement: set sound card to %dHz, %d format, %s "
       "(%d bytes buffer, %08x fragment)",
