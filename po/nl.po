@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2004-01-13 15:14+0100\n"
+"POT-Creation-Date: 2004-01-14 12:48+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -116,6 +116,26 @@ msgstr "Register om te gebruiken"
 #: gst/gst.c:133
 msgid "REGISTRY"
 msgstr "REGISTER"
+
+#: gst/gsterror.c:43
+msgid "Resource not found."
+msgstr "Bron niet gevonden."
+
+#: gst/gsterror.c:44
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error.  "
+"Please kick them."
+msgstr ""
+"GStreamer ontwikkelaars waren te lui om een foutcode te geven aan deze fout. "
+"Gelieve hen te schoppen."
+
+#: gst/gsterror.c:56
+msgid "Failed to change state"
+msgstr ""
+
+#: gst/gsterror.c:68
+msgid "Could not determine type of stream"
+msgstr ""
 
 #: gst/gsttag.c:61
 msgid "title"
@@ -294,43 +314,82 @@ msgstr "maximum bitsnelheid in bits per seconde"
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gsttypefindelement.c:152
+#: gst/elements/gstfilesink.c:237 gst/elements/gstfilesrc.c:729
+msgid "No filename specified"
+msgstr "Geen bestandsnaam gegeven"
+
+#: gst/elements/gstfilesink.c:244
+#, c-format
+msgid "Could not open file \"%s\" for writing"
+msgstr "Kon bestand \"%s\" niet openen om te schrijven"
+
+#: gst/elements/gstfilesink.c:264
+#, c-format
+msgid "Error closing file \"%s\""
+msgstr "Fout bij het sluiten van bestand \"%s\""
+
+#: gst/elements/gstfilesink.c:331 gst/elements/gstfilesink.c:363
+#: gst/elements/gstfilesink.c:415
+#, c-format
+msgid "Error while writing to file \"%s\""
+msgstr "Fout bij het schrijven naar bestand \"%s\""
+
+#: gst/elements/gstfilesrc.c:737 gst/elements/gstfilesrc.c:752
+#, c-format
+msgid "File \"%s\" does not exist"
+msgstr "Bestand \"%s\" bestaat niet"
+
+#: gst/elements/gstfilesrc.c:755 gst/elements/gstmultidisksrc.c:244
+#, c-format
+msgid "Could not open file \"%s\" for reading"
+msgstr "Kon bestand \"%s\" niet openen om te lezen lezen"
+
+#: gst/elements/gstfilesrc.c:766
+#, c-format
+msgid "File \"%s\" isn't a regular file"
+msgstr "Bestand \"%s\" is geen gewoon bestand"
+
+#: gst/elements/gstidentity.c:170
+msgid "Failed after iterations as requested"
+msgstr ""
+
+#: gst/elements/gsttypefindelement.c:153
 msgid "caps"
 msgstr "mogelijkheden"
 
-#: gst/elements/gsttypefindelement.c:152
+#: gst/elements/gsttypefindelement.c:153
 msgid "detected capabilities in stream"
 msgstr "gedetecteerde mogelijkheden in stroom"
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:156
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:159
 msgid "maximum"
 msgstr "maximum"
 
-#: gst/parse/grammar.y:164
+#: gst/parse/grammar.y:169
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "lege ton \"%s\", niet toegelaten"
 
-#: gst/parse/grammar.y:169
+#: gst/parse/grammar.y:174
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "geen ton \"%s\", overgeslagen"
 
-#: gst/parse/grammar.y:313
+#: gst/parse/grammar.y:318
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "geen eigenschap \"%s\" in element \"%s\""
 
-#: gst/parse/grammar.y:322
+#: gst/parse/grammar.y:327
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
 
-#: gst/parse/grammar.y:327
+#: gst/parse/grammar.y:332
 #, c-format
 msgid ""
 "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
@@ -338,51 +397,51 @@ msgstr ""
 "kon \"%s\" niet omzetten zodat het in eigenschap \"%s\" in element \"%s\" "
 "past"
 
-#: gst/parse/grammar.y:506
+#: gst/parse/grammar.y:511
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kon %s niet verbinden met %s"
 
-#: gst/parse/grammar.y:551
+#: gst/parse/grammar.y:556
 #, c-format
 msgid "no element \"%s\""
 msgstr "geen element \"%s\""
 
-#: gst/parse/grammar.y:602
+#: gst/parse/grammar.y:607
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kon mogelijkheden \"%s\" niet verwerken"
 
-#: gst/parse/grammar.y:624 gst/parse/grammar.y:678 gst/parse/grammar.y:694
-#: gst/parse/grammar.y:752
+#: gst/parse/grammar.y:629 gst/parse/grammar.y:683 gst/parse/grammar.y:699
+#: gst/parse/grammar.y:757
 msgid "link without source element"
 msgstr "verbinding zonder bronelement"
 
-#: gst/parse/grammar.y:630 gst/parse/grammar.y:675 gst/parse/grammar.y:761
+#: gst/parse/grammar.y:635 gst/parse/grammar.y:680 gst/parse/grammar.y:766
 msgid "link without sink element"
 msgstr "verbinding zonder doelelement"
 
-#: gst/parse/grammar.y:712
+#: gst/parse/grammar.y:717
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "geen bronelement voor URI \"%s\""
 
-#: gst/parse/grammar.y:722
+#: gst/parse/grammar.y:727
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "geen element om URI \"%s\" mee te verbinden"
 
-#: gst/parse/grammar.y:730
+#: gst/parse/grammar.y:735
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "geen doelelement voor URI \"%s\""
 
-#: gst/parse/grammar.y:734
+#: gst/parse/grammar.y:739
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kon doelelement niet verbinden voor URI \"%s\""
 
-#: gst/parse/grammar.y:746
+#: gst/parse/grammar.y:751
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
 
@@ -432,6 +491,7 @@ msgstr ""
 "moment."
 
 #: tools/gst-launch.c:109
+#, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "FOUT: versta argument %d op commandoregel niet: %s.\n"
 
@@ -445,68 +505,82 @@ msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
 
-#: tools/gst-launch.c:331
+#: tools/gst-launch.c:263
+#, c-format
+msgid "ERROR: from element %s: %s.\n"
+msgstr "FOUT: van element %s: %s.\n"
+
+#: tools/gst-launch.c:265
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Extra debug-informatie:\n"
+"%s\n"
+
+#: tools/gst-launch.c:340
 msgid "Output tags (also known as metadata)"
 msgstr "Druk tags (ofte metadata) af"
 
-#: tools/gst-launch.c:333
+#: tools/gst-launch.c:342
 msgid "Output status information and property notifications"
 msgstr "Druk statusinformatie en eigenschapsnotificatie af"
 
-#: tools/gst-launch.c:335
+#: tools/gst-launch.c:344
 msgid "Do not output status information of TYPE"
 msgstr "Druk statusinformatie van type TYPE niet af"
 
-#: tools/gst-launch.c:335
+#: tools/gst-launch.c:344
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-#: tools/gst-launch.c:338
+#: tools/gst-launch.c:347
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Bewaar xml-representatie van pijplijn in BESTAND en stop"
 
-#: tools/gst-launch.c:338
+#: tools/gst-launch.c:347
 msgid "FILE"
 msgstr "BESTAND"
 
-#: tools/gst-launch.c:341
+#: tools/gst-launch.c:350
 msgid "Do not install a fault handler"
 msgstr "Installeer geen foutafhandelaar"
 
-#: tools/gst-launch.c:343
+#: tools/gst-launch.c:352
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Druk allocatiespoor af indien aangezet tijdens compileren"
 
-#: tools/gst-launch.c:345
+#: tools/gst-launch.c:354
 msgid "Number of times to iterate pipeline"
 msgstr "Aantal keren om de pijplijn te herhalen"
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:419
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden: %s.\n"
 
-#: tools/gst-launch.c:414
+#: tools/gst-launch.c:423
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden.\n"
 
-#: tools/gst-launch.c:418
+#: tools/gst-launch.c:427
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSCHUWING: foutieve pijplijn: %s\n"
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:428
 msgid "         Trying to run anyway.\n"
 msgstr "              Probeer toch uit te voeren.\n"
 
-#: tools/gst-launch.c:443
+#: tools/gst-launch.c:453
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: het 'pijplijn' element werd niet gevonden.\n"
 
-#: tools/gst-launch.c:450
+#: tools/gst-launch.c:460
 msgid "RUNNING pipeline ...\n"
 msgstr "BEZIG met pijplijn ...\n"
 
-#: tools/gst-launch.c:452
+#: tools/gst-launch.c:462
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet spelen.\n"

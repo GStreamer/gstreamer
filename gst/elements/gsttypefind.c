@@ -44,6 +44,7 @@
 
 #include <gst/gsttypefind.h>
 #include <gst/gstutils.h>
+#include <gst/gsterror.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_type_find_element_debug);
 #define GST_CAT_DEFAULT gst_type_find_element_debug
@@ -556,7 +557,8 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
       if (typefind->caps) {
 	stop_typefinding (typefind);
       } else if (typefind->possibilities == NULL) {
-	gst_element_error (GST_ELEMENT (typefind), "media type could not be detected");
+	gst_element_error (typefind, STREAM, TYPE_NOT_FOUND,
+                             NULL, NULL);
       } else {
 	/* set up typefind element for next iteration */
 	typefind->possibilities = g_list_sort (typefind->possibilities, compare_type_find_entry);

@@ -29,6 +29,7 @@
 #include "gstscheduler.h"
 #include "gstevent.h"
 #include "gstinfo.h"
+#include "gsterror.h"
 #include "gstvalue.h"
 
 #define GST_CAT_DEFAULT GST_CAT_PADS
@@ -1226,7 +1227,7 @@ gst_pad_link_negotiate (GstPadLink *link)
 
 /**
  * gst_pad_link_try:
- * @link link to try
+ * @link: link to try
  *
  * Tries to (re)link the pads with the given link. The function takes ownership
  * of the supplied link. If the function returns FALSE and an old link existed,
@@ -2173,7 +2174,7 @@ gst_pad_proxy_fixate (GstPad *pad, const GstCaps *caps)
  * unset.
  *
  * This function calls gst_pad_try_set_caps() on the pad.  If that
- * call fails, gst_element_error() is called to indicate a negotiation
+ * call fails, GST_ELEMENT_ERROR() is called to indicate a negotiation
  * failure.
  * 
  * Returns: TRUE if the caps were set correctly, otherwise FALSE
@@ -2202,7 +2203,9 @@ gst_pad_set_explicit_caps (GstPad *pad, const GstCaps *caps)
   }
   link_ret = gst_pad_try_set_caps (pad, caps);
   if (link_ret == GST_PAD_LINK_REFUSED) {
-    gst_element_error (gst_pad_get_parent (pad), "negotiation failed");
+    gst_element_error (gst_pad_get_parent (pad), CORE, PAD,
+                       NULL,
+                       ("failed to negotiate (try_set_caps returned REFUSED)"));
     return FALSE;
   }
 
@@ -2578,8 +2581,9 @@ gst_pad_recover_caps_error (GstPad *pad, const GstCaps *allowed)
 
   /* report error */
   parent = gst_pad_get_parent (pad);
-  gst_element_error (parent, "negotiation failed on pad %s:%s",
-		  GST_DEBUG_PAD_NAME (pad));
+  gst_element_error (parent, CORE, PAD,
+                     NULL,
+                     ("negotiation failed on pad %s:%s", GST_DEBUG_PAD_NAME (pad)));
 #endif
   return FALSE;
 }
@@ -2877,23 +2881,21 @@ gst_pad_pull (GstPad *pad)
   
   GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, "pulling");
 
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, 
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
           	        GST_DATA (gst_event_new (GST_EVENT_INTERRUPT)));
 
   peer = GST_RPAD_PEER (pad);
 
   if (!peer) {
-    gst_element_error (GST_PAD_PARENT (pad), 
-		       "pull on pad %s:%s but it was unlinked", 
-		       GST_ELEMENT_NAME (GST_PAD_PARENT (pad)), 
-		       GST_PAD_NAME (pad), NULL);
+    gst_element_error (GST_PAD_PARENT (pad), CORE, PAD, NULL,
+		       ("pull on pad %s:%s but it was unlinked", GST_DEBUG_PAD_NAME (pad)));
   }
   else {
 restart:
     if (peer->gethandler) {
       GstData *data;
 
-      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad, 
+      GST_CAT_LOG_OBJECT (GST_CAT_DATAFLOW, pad,
 		          "calling gethandler %s of peer pad %s:%s",
                		  GST_DEBUG_FUNCPTR_NAME (peer->gethandler), 
 			  GST_DEBUG_PAD_NAME (peer));
@@ -2907,15 +2909,12 @@ restart:
       }
 
       /* no null buffers allowed */
-      gst_element_error (GST_PAD_PARENT (pad), 
-	                 "NULL buffer during pull on %s:%s", 
-			 GST_DEBUG_PAD_NAME (pad));
-	  
+      gst_element_error (GST_PAD_PARENT (pad), CORE, PAD, NULL,
+		       ("NULL buffer during pull on %s:%s", GST_DEBUG_PAD_NAME (pad)));
     } else {
-      gst_element_error (GST_PAD_PARENT (pad), 
-		         "internal error: pull on pad %s:%s "
-			 "but the peer pad %s:%s has no gethandler", 
-		         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer));
+      gst_element_error (GST_PAD_PARENT (pad), CORE, PAD, NULL,
+		       ("pull on pad %s:%s but the peer pad %s:%s has no gethandler",
+		         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (peer)));
     }
   }
   return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));

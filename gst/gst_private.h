@@ -60,6 +60,7 @@ extern GstDebugCategory *GST_CAT_THREAD;
 extern GstDebugCategory *GST_CAT_XML;
 extern GstDebugCategory *GST_CAT_NEGOTIATION;
 extern GstDebugCategory *GST_CAT_REFCOUNTING;
+extern GstDebugCategory *GST_CAT_ERROR_SYSTEM;
 extern GstDebugCategory *GST_CAT_EVENT;
 extern GstDebugCategory *GST_CAT_PARAMS;
 extern GstDebugCategory *GST_CAT_CALL_TRACE;

@@ -27,10 +27,12 @@
 
 #include "gstelement.h"
 #include "gstbin.h"
+#include "gsterror.h"
 #include "gstscheduler.h"
 #include "gstevent.h"
 #include "gstutils.h"
 #include "gstinfo.h"
+#include "gst-i18n-lib.h"
 
 /* Element signals and args */
 enum {
@@ -66,7 +68,7 @@ static void			gst_element_real_get_property	(GObject *object, guint prop_id, GVa
 static void 			gst_element_dispose 		(GObject *object);
 
 static GstElementStateReturn	gst_element_change_state	(GstElement *element);
-static void			gst_element_error_func		(GstElement* element, GstElement *source, gchar *errormsg);
+static void			gst_element_error_func		(GstElement* element, GstElement *source, GError *error, gchar *debug);
 static void			gst_element_found_tag_func	(GstElement* element, GstElement *source, GstTagList *tag_list);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -129,9 +131,9 @@ gst_element_class_init (GstElementClass *klass)
   gst_element_signals[ERROR] =
     g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
-                  gst_marshal_VOID__OBJECT_STRING, G_TYPE_NONE, 2,
-                  GST_TYPE_ELEMENT, G_TYPE_STRING);
-  gst_element_signals[EOS] =
+                  gst_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3,
+                  GST_TYPE_ELEMENT, G_TYPE_POINTER, G_TYPE_STRING);
+   gst_element_signals[EOS] =
     g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, eos), NULL, NULL,
                   gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
@@ -152,7 +154,7 @@ gst_element_class_init (GstElementClass *klass)
 #endif
 
   klass->change_state 			= GST_DEBUG_FUNCPTR (gst_element_change_state);
-  klass->error	 			= GST_DEBUG_FUNCPTR (gst_element_error_func);
+  klass->error				= GST_DEBUG_FUNCPTR (gst_element_error_func);
   klass->found_tag	 		= GST_DEBUG_FUNCPTR (gst_element_found_tag_func);
   klass->numpadtemplates 		= 0;
 
@@ -221,21 +223,25 @@ gst_element_real_get_property (GObject *object, guint prop_id, GValue *value, GP
  * gst_element_default_error:
  * @object: a #GObject that signalled the error.
  * @orig: the #GstObject that initiated the error.
- * @error: the error message.
+ * @error: the GError.
+ * @debug: an additional debug information string, or NULL.
  *
- * Adds a default error signal callback to an
- * element. The user data passed to the g_signal_connect is
- * ignored.
- * The default handler will simply print the error string 
- * using g_print.
+ * A default error signal callback to attach to an element.
+ * The user data passed to the g_signal_connect is ignored.
+ *
+ * The default handler will simply print the error string using g_print.
  */
 void
-gst_element_default_error (GObject *object, GstObject *orig, gchar *error)
-{ 
-  gchar *name = gst_object_get_path_string (orig);
-  g_print ("ERROR: %s: %s\n", name, error);
+gst_element_default_error (GObject *object, GstObject *source, GError *error, gchar *debug)
+{
+  gchar *name = gst_object_get_path_string (source);
+
+  g_print (_("ERROR: from element %s: %s.\n"), name, error->message);
+  if (debug)
+    g_print (_("Additional debug info:\n%s\n"), debug);
+
   g_free (name);
-} 
+}
 
 typedef struct {
   const GParamSpec *pspec;
@@ -2056,19 +2062,22 @@ gst_element_unlink (GstElement *src, GstElement *dest)
 }
 
 static void
-gst_element_error_func (GstElement* element, GstElement *source, 
-                        gchar *errormsg)
+gst_element_error_func (GstElement* element, GstElement *source,
+                        GError *error, gchar *debug)
 {
   /* tell the parent */
   if (GST_OBJECT_PARENT (element)) {
-    GST_CAT_DEBUG (GST_CAT_EVENT, "forwarding error \"%s\" from %s to %s", 
-	       errormsg, GST_ELEMENT_NAME (element), 
-	       GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
+    GST_CAT_DEBUG (GST_CAT_ERROR_SYSTEM, "forwarding error \"%s\" from %s to %s",
+	           error->message, GST_ELEMENT_NAME (element),
+	           GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
 
     gst_object_ref (GST_OBJECT (element));
-    g_signal_emit (G_OBJECT (GST_OBJECT_PARENT (element)), 
-	           gst_element_signals[ERROR], 0, source, errormsg);
+    g_signal_emit (G_OBJECT (GST_OBJECT_PARENT (element)),
+	           gst_element_signals[ERROR], 0, source, error, debug);
     gst_object_unref (GST_OBJECT (element));
+    GST_CAT_DEBUG (GST_CAT_ERROR_SYSTEM, "forwarded error \"%s\" from %s to %s", 
+	       error->message, GST_ELEMENT_NAME (element), 
+	       GST_OBJECT_NAME (GST_OBJECT_PARENT (element)));
   }
 }
 
@@ -2341,55 +2350,85 @@ gst_element_convert (GstElement *element,
 }
 
 /**
- * gst_element_error:
+ * gst_element_error_extended:
  * @element: a #GstElement with the error.
- * @error: the printf-style string describing the error.
- * @...: the optional arguments for the string.
+ * @domain: the GStreamer error domain this error belongs to.
+ * @code: the error code belonging to the domain
+ * @message: an allocated message to be used as a replacement for the default
+ *           message connected to code, or NULL
+ * debug: an allocated debug message to be used as a replacement for the
+ *        default debugging information, or NULL
  *
  * signals an error condition on an element.
  * This function is used internally by elements.
- * It results in the "error" signal.
+ * It results in the "error_2" signal.
  */
 void
-gst_element_error (GstElement *element, const gchar *error, ...)
+gst_element_error_extended
+(GstElement *element, GQuark domain, gint code, gchar *message, gchar *debug,
+ const gchar *file, const gchar *function, gint line)
 {
-  va_list var_args;
-  gchar *string;
-  
+  GError *error = NULL;
+  gchar *sent_message;
+  gchar *sent_debug;
+
   /* checks */
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (error != NULL);
+
+  /* check if we send the given message or the default error message */
+  if ((message == NULL) || (message[0] == 0))
+  {
+    /* we got this message from g_strdup_printf (NULL); */
+    g_free (message);
+    sent_message = gst_error_get_message (domain, code);
+  }
+  else
+    sent_message = message;
 
   /* create error message */
-  va_start (var_args, error);
-  string = g_strdup_vprintf (error, var_args);
-  va_end (var_args);
-  GST_CAT_INFO (GST_CAT_EVENT, "ERROR in %s: %s", GST_ELEMENT_NAME (element), string);
+  GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signaling error in %s: %s",
+                GST_ELEMENT_NAME (element),
+                sent_message);
+  error = g_error_new (domain, code, sent_message);
 
   /* if the element was already in error, stop now */
   if (GST_FLAG_IS_SET (element, GST_ELEMENT_ERROR)) {
-    GST_CAT_INFO (GST_CAT_EVENT, "recursive ERROR detected in %s", GST_ELEMENT_NAME (element));
-    g_free (string);
+    GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "recursive ERROR detected in %s",
+                  GST_ELEMENT_NAME (element));
+    g_free (sent_message);
+    if (debug) g_free (debug);
     return;
   }
-    
+
   GST_FLAG_SET (element, GST_ELEMENT_ERROR);
 
   /* emit the signal, make sure the element stays available */
   gst_object_ref (GST_OBJECT (element));
-  g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element, string);
-  
+  if (debug)
+    sent_debug = g_strdup_printf ("%s(%d):%s:\n%s",
+                                  file, line, function,
+                                  debug ? debug : "");
+  else
+    sent_debug = NULL;
+  g_free (debug);
+  g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element,
+                 error, sent_debug);
+  GST_CAT_INFO (GST_CAT_ERROR_SYSTEM, "signalled error in %s: %s",
+                GST_ELEMENT_NAME (element),
+                sent_message);
+
  /* tell the scheduler */
   if (element->sched) {
-    gst_scheduler_error (element->sched, element); 
-  } 
+    gst_scheduler_error (element->sched, element);
+  }
 
-  if (GST_STATE (element) == GST_STATE_PLAYING) { 
+  if (GST_STATE (element) == GST_STATE_PLAYING) {
     GstElementStateReturn ret;
-    
+
     ret = gst_element_set_state (element, GST_STATE_PAUSED);
     if (ret != GST_STATE_SUCCESS) {
-      g_warning ("could not PAUSE element \"%s\" after error, help!", GST_ELEMENT_NAME (element));
+      g_warning ("could not PAUSE element \"%s\" after error, help!",
+                 GST_ELEMENT_NAME (element));
     }
   }
 
@@ -2397,7 +2436,9 @@ gst_element_error (GstElement *element, const gchar *error, ...)
 
   /* cleanup */
   gst_object_unref (GST_OBJECT (element));
-  g_free (string);
+  g_free (sent_message);
+  g_free (sent_debug);
+  g_error_free (error);
 }
 
 /**

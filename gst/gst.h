@@ -37,6 +37,7 @@
 #include <gst/gstclock.h>
 #include <gst/gstcpu.h>
 #include <gst/gstelement.h>
+#include <gst/gsterror.h>
 #include <gst/gstevent.h>
 #include <gst/gstindex.h>
 #include <gst/gstinfo.h>

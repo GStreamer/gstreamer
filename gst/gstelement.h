@@ -139,6 +139,13 @@ typedef enum {
 #define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
+#define gst_element_error(el, domain, code, message, debug) \
+  gst_element_error_extended (GST_ELEMENT(el), \
+  GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code, \
+  g_strdup_printf message, \
+  g_strdup_printf debug, \
+  __FILE__, GST_FUNCTION, __LINE__)
+
 typedef struct _GstElementFactory GstElementFactory;
 typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
@@ -195,7 +202,7 @@ struct _GstElementClass {
   void (*state_change)	(GstElement *element, GstElementState old, GstElementState state);
   void (*new_pad)	(GstElement *element, GstPad *pad);
   void (*pad_removed)	(GstElement *element, GstPad *pad);
-  void (*error)		(GstElement *element, GstElement *source, gchar *error);
+  void (*error)		(GstElement *element, GstElement *source, GError *error, gchar *debug);
   void (*eos)		(GstElement *element);
   void (*found_tag)	(GstElement *element, GstElement *source, GstTagList *tag_list);
 
@@ -244,7 +251,7 @@ void			gst_element_class_set_details		(GstElementClass *klass,
 
 #define 		gst_element_default_deep_notify 	gst_object_default_deep_notify
 
-void 			gst_element_default_error		(GObject *object, GstObject *orig, gchar *error);
+void 			gst_element_default_error		(GObject *object, GstObject *orig, GError *error, gchar *debug);
 
 GType			gst_element_get_type		(void);
 void			gst_element_set_loop_function	(GstElement *element,
@@ -358,7 +365,7 @@ void			gst_element_found_tags_for_pad	(GstElement *element, GstPad *pad, GstCloc
 
 void			gst_element_set_eos		(GstElement *element);
 
-void 			gst_element_error 		(GstElement *element, const gchar *error, ...);
+void			gst_element_error_extended	(GstElement *element, GQuark domain, gint code, gchar *message, gchar *debug, const gchar *file, const gchar *function, gint line);
 
 gboolean		gst_element_is_locked_state	(GstElement *element);
 void			gst_element_set_locked_state	(GstElement *element, gboolean locked_state);

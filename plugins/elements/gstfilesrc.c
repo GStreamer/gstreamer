@@ -35,6 +35,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "../gst-i18n-lib.h"
+
 
 /**********************************************************************
  * GStreamer Default File Source
@@ -297,7 +299,7 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
         src->mapsize = g_value_get_ulong (value);
         g_object_notify (G_OBJECT (src), "mmapsize");
       } else {
-        GST_INFO_OBJECT (src, "invalid mapsize, must a multiple of pagesize, which is %d", 
+        GST_INFO_OBJECT (src, "invalid mapsize, must be a multiple of pagesize, which is %d", 
 	          src->pagesize);
       }
       break;
@@ -391,7 +393,9 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   mmapregion = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
 
   if (mmapregion == NULL) {
-    gst_element_error (GST_ELEMENT (src), "couldn't map file");
+    gst_element_error (src, RESOURCE, TOO_LAZY,
+	               NULL,
+                       ("mmap call failed"));
     return NULL;
   }
   else if (mmapregion == MAP_FAILED) {
@@ -636,12 +640,15 @@ gst_filesrc_get_read (GstFileSrc *src)
 
   ret = read (src->fd, GST_BUFFER_DATA (buf), readsize);
   if (ret < 0){
-    gst_element_error (GST_ELEMENT (src), "reading file (%s)",
-        strerror (errno), NULL);
+    gst_element_error (src, RESOURCE, READ,
+	               NULL,
+                       ("system error: %s", strerror (errno)));
     return NULL;
   }
   if (ret < readsize) {
-    gst_element_error (GST_ELEMENT (src), "unexpected end of file", NULL);
+    gst_element_error (src, RESOURCE, READ,
+	               NULL,
+                       ("unexpected end of file"));
     return NULL;
   }
 
@@ -711,18 +718,47 @@ gst_filesrc_check_filesize (GstFileSrc *src)
   return TRUE;
 }
 /* open the file and mmap it, necessary to go to READY state */
-static gboolean 
+static gboolean
 gst_filesrc_open_file (GstFileSrc *src)
 {
   g_return_val_if_fail (!GST_FLAG_IS_SET (src ,GST_FILESRC_OPEN), FALSE);
+
+  if (src->filename == NULL)
+  {
+    gst_element_error (src, RESOURCE, NOT_FOUND,
+	                 (_("No filename specified")),
+                         NULL);
+    return FALSE;
+  }
+
+  if (src->filename == NULL)
+  {
+    gst_element_error (src, RESOURCE, NOT_FOUND,
+	                 (_("No file specified for reading")),
+                         NULL);
+    return FALSE;
+  }
+
 
   GST_INFO_OBJECT (src, "opening file %s",src->filename);
 
   /* open the file */
   src->fd = open (src->filename, O_RDONLY);
-  if (src->fd < 0) {
-    gst_element_error (GST_ELEMENT (src), "opening file \"%s\" (%s)", 
-    		       src->filename, strerror (errno), NULL);
+  if (src->fd < 0)
+  {
+    if (errno == ENOENT)
+    gst_element_error (src, RESOURCE, NOT_FOUND,
+	               NULL,
+                       NULL);
+/* thomas
+    gst_element_error (src, RESOURCE, NOT_FOUND,
+	               (_("File \"%s\" does not exist"), src->filename),
+                       NULL);
+*/
+    else
+      gst_element_error (src, RESOURCE, OPEN_READ,
+	                 (_("Could not open file \"%s\" for reading"), src->filename),
+                         GST_ERROR_SYSTEM);
     return FALSE;
   } else {
     /* check if it is a regular file, otherwise bail out */
@@ -731,8 +767,9 @@ gst_filesrc_open_file (GstFileSrc *src)
     fstat(src->fd, &stat_results);
 
     if (!S_ISREG(stat_results.st_mode)) {
-      gst_element_error (GST_ELEMENT (src), "opening file \"%s\" failed. it isn't a regular file", 
-      					src->filename, NULL);
+      gst_element_error (src, RESOURCE, OPEN_READ,
+	                   (_("File \"%s\" isn't a regular file"), src->filename),
+                           NULL);
       close(src->fd);
       return FALSE;
     }

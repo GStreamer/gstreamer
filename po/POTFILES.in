@@ -1,7 +1,14 @@
 # Files from the GStreamer distribution which have already been
 # marked to allow runtime translations of messages
 gst/gst.c
+gst/gsterror.c
 gst/gsttag.c
+gst/elements/gstfakesink.c
+gst/elements/gstfilesink.c
+gst/elements/gstfilesrc.c
+gst/elements/gstidentity.c
+gst/elements/gstmultidisksrc.c
+gst/elements/gstpipefilter.c
 gst/elements/gsttypefindelement.c
 gst/parse/grammar.y
 tools/gst-launch.c

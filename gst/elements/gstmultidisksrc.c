@@ -26,10 +26,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <errno.h>
+#include <string.h>
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+
+#include "../gst-i18n-lib.h"
 
 #include "gstmultidisksrc.h"
 
@@ -236,9 +240,11 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
   src->fd = open ((const char *) src->currentfilename, O_RDONLY);
 
   if (src->fd < 0) {
-    perror ("open");
-    gst_element_error (GST_ELEMENT (src), g_strconcat("opening file \"", src->currentfilename, "\"", NULL));
+      gst_element_error (src, RESOURCE, OPEN_READ,
+                         (_("Could not open file \"%s\" for reading"), src->currentfilename),
+                         ("system error: %s", strerror (errno)));
     return FALSE;
+
   } else {
     /* find the file length */
     src->size = lseek (src->fd, 0, SEEK_END);
@@ -249,7 +255,9 @@ gboolean gst_multidisksrc_open_file (GstMultiDiskSrc *src, GstPad *srcpad)
     /* collapse state if that failed */
     if (src->map == NULL) {
       close (src->fd);
-      gst_element_error (GST_ELEMENT (src),"mmapping file");
+      gst_element_error (src, RESOURCE, TOO_LAZY,
+                         NULL,
+                         ("mmap call failed"));
       return FALSE;
     }
     GST_FLAG_SET (src, GST_MULTIDISKSRC_OPEN);

@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-01-13 17:56+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2004-01-14 12:48+0100\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -27,8 +27,8 @@ msgstr "Rendre tout les avertissements bloquants"
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
-"Niveau de deboguage par defaut de 1 (que les erreurs) a 5 (tout) ou 0 "
-"pour n'avoir aucun affichage"
+"Niveau de deboguage par defaut de 1 (que les erreurs) a 5 (tout) ou 0 pour "
+"n'avoir aucun affichage"
 
 #: gst/gst.c:121
 msgid "LEVEL"
@@ -40,8 +40,8 @@ msgid ""
 "the individual categories.\n"
 "Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"Liste séparée par des virgules de paires nom_catégorie:niveau definissant des "
-"niveaux spécifiques pour chaque catégorie.\n"
+"Liste séparée par des virgules de paires nom_catégorie:niveau definissant "
+"des niveaux spécifiques pour chaque catégorie.\n"
 "Exemple: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:122
@@ -85,8 +85,8 @@ msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "env variable GST_PLUGIN_PATH"
 msgstr ""
-"Liste séparée par des virgules de plugins a precharger en plus de la "
-"liste contenue dans la variable d'environnement GST_PLUGIN_PATH"
+"Liste séparée par des virgules de plugins a precharger en plus de la liste "
+"contenue dans la variable d'environnement GST_PLUGIN_PATH"
 
 #: gst/gst.c:130
 msgid "PLUGINS"
@@ -117,6 +117,24 @@ msgstr "Registre a utiliser"
 #: gst/gst.c:133
 msgid "REGISTRY"
 msgstr "REGISTRE"
+
+#: gst/gsterror.c:43
+msgid "Resource not found."
+msgstr ""
+
+#: gst/gsterror.c:44
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error.  "
+"Please kick them."
+msgstr ""
+
+#: gst/gsterror.c:56
+msgid "Failed to change state"
+msgstr "Echoué a changer d'état"
+
+#: gst/gsterror.c:68
+msgid "Could not determine type of stream"
+msgstr "Echoué a déterminer le type du flux"
 
 #: gst/gsttag.c:61
 msgid "title"
@@ -294,19 +312,58 @@ msgstr "bitrate maximum en bits par seconde"
 msgid ", "
 msgstr ", "
 
-#: gst/elements/gsttypefindelement.c:152
+#: gst/elements/gstfilesink.c:237 gst/elements/gstfilesrc.c:729
+msgid "No filename specified"
+msgstr ""
+
+#: gst/elements/gstfilesink.c:244
+#, c-format
+msgid "Could not open file \"%s\" for writing"
+msgstr ""
+
+#: gst/elements/gstfilesink.c:264
+#, c-format
+msgid "Error closing file \"%s\""
+msgstr ""
+
+#: gst/elements/gstfilesink.c:331 gst/elements/gstfilesink.c:363
+#: gst/elements/gstfilesink.c:415
+#, c-format
+msgid "Error while writing to file \"%s\""
+msgstr ""
+
+#: gst/elements/gstfilesrc.c:737 gst/elements/gstfilesrc.c:752
+#, c-format
+msgid "File \"%s\" does not exist"
+msgstr ""
+
+#: gst/elements/gstfilesrc.c:755 gst/elements/gstmultidisksrc.c:244
+#, c-format
+msgid "Could not open file \"%s\" for reading"
+msgstr ""
+
+#: gst/elements/gstfilesrc.c:766
+#, c-format
+msgid "File \"%s\" isn't a regular file"
+msgstr ""
+
+#: gst/elements/gstidentity.c:170
+msgid "Failed after iterations as requested"
+msgstr ""
+
+#: gst/elements/gsttypefindelement.c:153
 msgid "caps"
 msgstr "capacités"
 
-#: gst/elements/gsttypefindelement.c:152
+#: gst/elements/gsttypefindelement.c:153
 msgid "detected capabilities in stream"
 msgstr "capacités detectées dans le flux"
 
-#: gst/elements/gsttypefindelement.c:155
+#: gst/elements/gsttypefindelement.c:156
 msgid "minimum"
 msgstr "minimum"
 
-#: gst/elements/gsttypefindelement.c:158
+#: gst/elements/gsttypefindelement.c:159
 msgid "maximum"
 msgstr "maximum"
 
@@ -427,7 +484,6 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERREUR: pas d'element tube de plus haut niveau dans le fichier '%s'.\n"
 
 #: tools/gst-launch.c:99
-#, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr ""
 "AVERTISSEMENT: actuellement seul un element tube de plus haut niveau est "
@@ -436,8 +492,9 @@ msgstr ""
 #: tools/gst-launch.c:109
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "ERREUR: impossible d'interpreter l'argument de la ligne de"
-" commande numero %d: %s.\n"
+msgstr ""
+"ERREUR: impossible d'interpreter l'argument de la ligne de commande numero %"
+"d: %s.\n"
 
 #: tools/gst-launch.c:119
 #, c-format
@@ -449,74 +506,83 @@ msgstr "AVERTISSEMENT: l'element nommé '%s' est introuvable.\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG DECOUVERT   : decouvert par l'element \"%s\".\n"
 
-#: tools/gst-launch.c:331
+#: tools/gst-launch.c:263
+#, fuzzy, c-format
+msgid "ERROR: from element %s: %s.\n"
+msgstr ""
+"ERREUR: impossible d'interpreter l'argument de la ligne de commande numero %"
+"d: %s.\n"
+
+#: tools/gst-launch.c:265
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+
+#: tools/gst-launch.c:340
 msgid "Output tags (also known as metadata)"
 msgstr "tags de sortie (aussi connus sous le nom de metadata)"
 
-#: tools/gst-launch.c:333
+#: tools/gst-launch.c:342
 msgid "Output status information and property notifications"
 msgstr ""
 "Afficher des informations sur le status et les notifications de proprietés"
 
-#: tools/gst-launch.c:335
+#: tools/gst-launch.c:344
 msgid "Do not output status information of TYPE"
 msgstr "Ne pas afficher d'informations sur les status de TYPE"
 
-#: tools/gst-launch.c:335
+#: tools/gst-launch.c:344
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-#: tools/gst-launch.c:338
+#: tools/gst-launch.c:347
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Sauvegarder la representation xml du tube dans FICHIER et quitter"
 
-#: tools/gst-launch.c:338
+#: tools/gst-launch.c:347
 msgid "FILE"
 msgstr "FICHIER"
 
-#: tools/gst-launch.c:341
+#: tools/gst-launch.c:350
 msgid "Do not install a fault handler"
 msgstr "Ne pas installer un gestionaire de dysfonctionement"
 
-#: tools/gst-launch.c:343
+#: tools/gst-launch.c:352
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Imprimer les traces d'allocations (si activées lors de la compilation)"
 
-#: tools/gst-launch.c:345
+#: tools/gst-launch.c:354
 msgid "Number of times to iterate pipeline"
 msgstr "Nombres d'iterations du tube a accomplir"
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:419
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERREUR: le tube n'a pas pu etre construit: %s.\n"
 
-#: tools/gst-launch.c:414
-#, c-format
+#: tools/gst-launch.c:423
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERREUR: le tube n'a pas pu etre construit.\n"
 
-#: tools/gst-launch.c:418
+#: tools/gst-launch.c:427
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVERTISSEMENT: tube erroné: %s\n"
 
-#: tools/gst-launch.c:419
-#, c-format
+#: tools/gst-launch.c:428
 msgid "         Trying to run anyway.\n"
 msgstr "         Tentative d'execution malgrè tout.\n"
 
-#: tools/gst-launch.c:443
-#, c-format
+#: tools/gst-launch.c:453
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERREUR: l'element 'tube' est introuvable.\n"
 
-#: tools/gst-launch.c:450
-#, c-format
+#: tools/gst-launch.c:460
 msgid "RUNNING pipeline ...\n"
 msgstr "EXECUTION du tube en cours ...\n"
 
-#: tools/gst-launch.c:452
-#, c-format
+#: tools/gst-launch.c:462
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERREUR: le tube refuse de s'executer.\n"

@@ -27,6 +27,7 @@
 #  include "config.h"
 #endif
 
+#include "../gst-i18n-lib.h"
 #include "gstidentity.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_identity_debug);
@@ -165,7 +166,9 @@ gst_identity_chain (GstPad *pad, GstData *_data)
     identity->error_after--;
     if (identity->error_after == 0) {
       gst_buffer_unref (buf);
-      gst_element_error (GST_ELEMENT (identity), "errored after iterations as requested");
+      gst_element_error (identity, CORE, FAILED,
+                           (_("Failed after iterations as requested")),
+                           NULL);
       return;
     }
   }

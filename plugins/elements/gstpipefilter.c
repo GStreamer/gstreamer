@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstpipefilter.c: 
+ * gstpipefilter.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -33,6 +34,7 @@
 #  include "config.h"
 #endif
 
+#include "../gst-i18n-lib.h"
 #include "gstpipefilter.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_pipefilter_debug);
@@ -167,8 +169,8 @@ gst_pipefilter_get (GstPad *pad)
   readbytes = read(pipefilter->fdout[0], GST_BUFFER_DATA(newbuf), pipefilter->bytes_per_read);
   GST_DEBUG ("read %ld bytes", readbytes);
   if (readbytes < 0) {
-    perror("read");
-    gst_element_error(GST_ELEMENT(pipefilter),"reading");
+    gst_element_error (pipefilter, RESOURCE, READ,
+                       NULL, ("system error: %s", strerror (errno)));
     return NULL;
   }
   /* if we didn't get as many bytes as we asked for, we're at EOF */
@@ -211,8 +213,8 @@ gst_pipefilter_chain (GstPad *pad,GstData *_data)
   writebytes = write(pipefilter->fdin[1],data,size);
   GST_DEBUG ("written %ld bytes", writebytes);
   if (writebytes < 0) {
-    perror("write");
-    gst_element_error(GST_ELEMENT(pipefilter),"writing");
+    gst_element_error (pipefilter, RESOURCE, WRITE,
+                       NULL, ("system error: %s", strerror (errno)));
     return;
   }
   gst_buffer_unref(buf);
@@ -267,8 +269,8 @@ gst_pipefilter_open_file (GstPipefilter *src)
 
   if((src->childpid = fork()) == -1)
   {
-    perror("fork");
-    gst_element_error(GST_ELEMENT(src),"forking");
+    gst_element_error (src, RESOURCE, TOO_LAZY,
+                       NULL, ("system error: %s", strerror (errno)));
     return FALSE;
   }
 
@@ -280,9 +282,9 @@ gst_pipefilter_open_file (GstPipefilter *src)
     dup2(src->fdin[0], STDIN_FILENO);  /* set the childs input stream */
     dup2(src->fdout[1], STDOUT_FILENO);  /* set the childs output stream */
     execvp(src->command[0], &src->command[0]);
-    /* will only reach if error */
-    perror("exec");
-    gst_element_error(GST_ELEMENT(src),"starting child process");
+    /* will only be reached if execvp has an error */
+    gst_element_error (src, RESOURCE, TOO_LAZY,
+                       NULL, ("system error: %s", strerror (errno)));
     return FALSE;
     
   }

@@ -460,8 +460,8 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstData * data)
   }
 
   if (loop_count == 0) {
-    gst_element_error (parent, 
-		    "(internal error) basic: maximum number of switches exceeded");
+    gst_element_error (parent, CORE, SCHEDULER, NULL,
+		    ("(internal error) basic: maximum number of switches exceeded"));
     return;
   }
 
@@ -528,7 +528,7 @@ gst_basic_scheduler_gethandler_proxy (GstPad * pad)
       GST_CAT_DEBUG (debug_dataflow, "new pad in mid-switch!");
       pad = (GstPad *) GST_RPAD_PEER (peer);
       if (!pad) {
-	gst_element_error (parent, "pad unlinked");
+	gst_element_error (parent, CORE, PAD, NULL, ("pad unlinked"));
       }
       parent = GST_PAD_PARENT (pad);
       peer = GST_RPAD_PEER (pad);
@@ -659,10 +659,9 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	   * either, we have an error */
 	  if (different_sched && !peer_decoupled) 
  	  {
-            gst_element_error (element, 
-		               "element \"%s\" is not decoupled but has pads "
-			       "in different schedulers",
-			       GST_ELEMENT_NAME (element), NULL);
+            gst_element_error (element, CORE, SCHEDULER, NULL,
+		               ("element \"%s\" is not decoupled but has pads in different schedulers",
+			       GST_ELEMENT_NAME (element)));
 	    return FALSE;
 	  }
 	  /* ok, the peer is in a different scheduler and is decoupled, 
@@ -728,8 +727,8 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 	                    chain->sched->context, 
 			    wrapper_function, 0, (char **) element);
 	if (GST_ELEMENT_THREADSTATE (element) == NULL) {
-          gst_element_error (element, "could not create cothread for \"%s\"", 
-			  GST_ELEMENT_NAME (element), NULL);
+          gst_element_error (element, RESOURCE, TOO_LAZY, NULL, ("could not create cothread for \"%s\"", 
+			  GST_ELEMENT_NAME (element)));
 	  return FALSE;
 	}
 	GST_DEBUG ("created cothread %p for '%s'", 
