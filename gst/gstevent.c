@@ -48,7 +48,7 @@ _gst_event_initialize (void)
 {
   /* register the type */
   _gst_event_type = g_boxed_type_register_static ("GstEvent",
-                                               (GBoxedCopyFunc) gst_data_ref,
+                                               (GBoxedCopyFunc) gst_data_copy,
                                                (GBoxedFreeFunc) gst_data_unref);
 
 #ifndef GST_DISABLE_TRACE

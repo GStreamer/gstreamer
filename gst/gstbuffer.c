@@ -43,7 +43,7 @@ void
 _gst_buffer_initialize (void)
 {
   _gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
-		       (GBoxedCopyFunc) gst_data_ref,
+		       (GBoxedCopyFunc) gst_data_copy,
 		       (GBoxedFreeFunc) gst_data_unref);
 
 #ifndef GST_DISABLE_TRACE

@@ -34,7 +34,7 @@ gst_data_get_type (void)
   
   if (!type)
     type = g_boxed_type_register_static ("GstData",
-					 (GBoxedCopyFunc) gst_data_ref,
+					 (GBoxedCopyFunc) gst_data_copy,
 					 (GBoxedFreeFunc) gst_data_unref);
     return type;
 }

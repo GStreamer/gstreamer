@@ -1,3 +1,11 @@
+2004-03-01  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstbuffer.c (_gst_buffer_initialize): 
+	* gst/gstdata.c (gst_data_get_type): 
+	* gst/gstevent.c (_gst_event_initialize): Use gst_data_copy,
+	instead of ref, since some applications that uses GBoxed
+	routines depends on a function that actually returns a copy.
+
 2004-02-27  Benjamin Otte  <otte@gnome.org>
 
 	* gst/gstbuffer.h:
