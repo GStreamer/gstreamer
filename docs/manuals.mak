@@ -19,14 +19,14 @@ endif
 if HAVE_DB2HTML
 	db2html $(manualname).sgml
 else
-	echo "Can't build $@: don't have db2html tool"
+	@echo "Can't build $@: don't have db2html tool"
 endif
 
 $(manualname).pdf: $(manualname).ps
 if HAVE_PS2PDF
 	@if [ -r $< ] ; then ps2pdf $< $@ ; fi
 else
-	echo "Can't build $@: don't have ps2pdf tool"
+	@echo "Can't build $@: don't have ps2pdf tool"
 endif
 
 if HAVE_FIG2DEV_EPS
@@ -37,7 +37,7 @@ endif
 if HAVE_DB2PS
 	@if [ -r $< ] ; then db2ps $(manualname).sgml ; fi
 else
-	echo "Can't build $@: don't have db2ps tool"
+	@echo "Can't build $@: don't have db2ps tool"
 endif
 
 images :

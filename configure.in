@@ -664,6 +664,7 @@ examples/queue4/Makefile
 examples/thread/Makefile
 examples/launch/Makefile
 examples/xml/Makefile
+examples/plugins/Makefile
 editor/Makefile
 editor/pixmaps/Makefile
 tools/Makefile

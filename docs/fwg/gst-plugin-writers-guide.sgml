@@ -5,7 +5,7 @@
 
 <!ENTITY CONCEPTS SYSTEM "concepts.sgml">
 
-<!ENTITY FIRSTPLUGIN SYSTEM ".sgml">
+<!ENTITY FIRSTPLUGIN SYSTEM "firstplugin.sgml">
 
 <!ENTITY TESTAPP SYSTEM ".sgml">
 
@@ -76,24 +76,18 @@
 	We are now have the neccessary concepts to build our first plugin.
 	We are going to build an element which has a single input pad and
 	a single output pad, and simply passes anything it reads on
-	the input pad through and out on the output pad.  In a later
-	section we will convert this plugin into something less useless.
+	the input pad through and out on the output pad.  We will also
+	see where we could add code to convert this plugin into something
+	more useful.
+      </para>
+      <para>
+        The example code used in this section can be found in
+	<filename>examples/plugins/</filename>
       </para>
     </partintro>
 
       &FIRSTPLUGIN;
 
-	Constructing the boilerplate
-		Doing it the easy way with FilterFactory
-		  (NOTE: FilterFactory doesn't exist yet)
-		Doing it the hard way with G[tk]Object
-	An identity filter
-		Building an object with pads
-		Attaching functions
-		The chain function
-	The plugin_init function
-		Registering the types
-		Registering the filter
   </part>
 
 <!-- ############ part ############# -->

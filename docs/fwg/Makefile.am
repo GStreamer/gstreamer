@@ -4,7 +4,8 @@ htmlname = index.html
 sgml_files = gst-plugin-writers-guide.sgml \
 	     titlepage.sgml \
 	     intro.sgml \
-	     concepts.sgml
+	     concepts.sgml \
+	     firstplugin.sgml
 
 fig_files = 
 eps_files = 
