@@ -2190,6 +2190,11 @@ gst_element_negotiate_pads (GstElement *element)
       if (!parent) 
 	continue;
 
+      /* skips pads that were already negotiating */
+      if (GST_FLAG_IS_SET (sinkpad, GST_PAD_NEGOTIATING) ||
+          GST_FLAG_IS_SET (srcpad, GST_PAD_NEGOTIATING))
+	continue;
+
       otherstate = GST_STATE (parent);
 
       /* swap pads if needed */

@@ -147,8 +147,6 @@ gst_pipefilter_handle_event (GstPad *pad, GstEvent *event)
   if (close (pipefilter->fdout[0]) < 0)
     perror("close");
 
-  GST_FLAG_SET (pad, GST_PAD_EOS);
-
   return TRUE;
 }
 

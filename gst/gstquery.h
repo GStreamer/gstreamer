@@ -24,7 +24,7 @@
 #ifndef __GST_QUERY_H__
 #define __GST_QUERY_H__
 
-#include <gst/gstconfig.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 
@@ -38,6 +38,18 @@ typedef enum {
   GST_QUERY_SEGMENT_END,
   GST_QUERY_RATE
 } GstQueryType;
+
+/* rate is relative to 1000000LL  */
+#define GST_QUERY_TYPE_RATE_DEN          1000000LL
+
+typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
+
+struct _GstQueryTypeDefinition
+{
+  GstQueryType   value;
+  gchar     	*nick;
+  gchar     	*description;
+};
 
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_QUERY_TYPE_FUNCTION(type, functionname, ...)  	\
@@ -62,6 +74,21 @@ functionname (type object)                          	\
   return types;                                         \
 }
 #endif
+
+void            	_gst_query_type_initialize     (void);
+
+/* register a new query */
+GstQueryType    	gst_query_type_register        (const gchar *nick, 
+		                                     	const gchar *description);
+GstQueryType    	gst_query_type_get_by_nick     (const gchar *nick);
+
+/* check if a query is in an array of querys */
+gboolean        	gst_query_types_contains       (const GstQueryType *types, GstQueryType type);
+
+/* query for query details */
+const GstQueryTypeDefinition*      
+                	gst_query_type_get_details     (GstQueryType type);
+const GList*    	gst_query_type_get_definitions (void);
 
 G_END_DECLS
 

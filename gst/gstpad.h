@@ -160,7 +160,7 @@ typedef enum {
 
 typedef enum {
   GST_PAD_DISABLED		= GST_OBJECT_FLAG_LAST,
-  GST_PAD_EOS,
+  GST_PAD_NEGOTIATING,
 
   GST_PAD_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 4
 } GstPadFlags;

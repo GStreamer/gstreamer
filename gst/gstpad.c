@@ -215,6 +215,7 @@ gst_real_pad_init (GstRealPad *pad)
   pad->querytypefunc 	= gst_pad_get_query_types_default;
 
   GST_FLAG_SET (pad, GST_PAD_DISABLED);
+  GST_FLAG_UNSET (pad, GST_PAD_NEGOTIATING);
   
   gst_probe_dispatcher_init (&pad->probedisp);
 }
@@ -988,26 +989,22 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     GST_INFO (GST_CAT_PADS, "*actually* connecting %s:%s and %s:%s",
               GST_DEBUG_PAD_NAME (realsrc), GST_DEBUG_PAD_NAME (realsink));
   }
-  if (GST_RPAD_PEER (realsrc) != NULL)
-  {
+  if (GST_RPAD_PEER (realsrc) != NULL) {
     GST_INFO (GST_CAT_PADS, "Real source pad %s:%s has a peer, failed",
 	      GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
-  if (GST_RPAD_PEER (realsink) != NULL)
-  {
+  if (GST_RPAD_PEER (realsink) != NULL) {
     GST_INFO (GST_CAT_PADS, "Real sink pad %s:%s has a peer, failed",
 	      GST_DEBUG_PAD_NAME (realsink));
     return FALSE;
   }
-  if (GST_PAD_PARENT (realsrc) == NULL)
-  {
+  if (GST_PAD_PARENT (realsrc) == NULL) {
     GST_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
 	      GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
-  if (GST_PAD_PARENT (realsink) == NULL)
-  {
+  if (GST_PAD_PARENT (realsink) == NULL) {
     GST_INFO (GST_CAT_PADS, "Real src pad %s:%s has no parent, failed",
 	      GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
@@ -1028,15 +1025,12 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
     realsrc = realsink;
     realsink = temppad;
   }
-  if (GST_PAD_PARENT (realsink) == NULL)
-  if (GST_RPAD_DIRECTION (realsrc) != GST_PAD_SRC)
-  {
+  if (GST_RPAD_DIRECTION (realsrc) != GST_PAD_SRC) {
     GST_INFO (GST_CAT_PADS, "Real src pad %s:%s is not a source pad, failed",
 	      GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }    
-  if (GST_RPAD_DIRECTION (realsink) != GST_PAD_SINK)
-  {
+  if (GST_RPAD_DIRECTION (realsink) != GST_PAD_SINK) {
     GST_INFO (GST_CAT_PADS, "Real sink pad %s:%s is not a sink pad, failed",
 	      GST_DEBUG_PAD_NAME (realsink));
     return FALSE;
@@ -1283,7 +1277,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 
   g_return_val_if_fail (pad != NULL, GST_PAD_CONNECT_REFUSED);
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_CONNECT_REFUSED);
-  
+
   /* if this pad has a parent and the parent is not READY, delay the
    * negotiation */
   if (parent && GST_STATE (parent) < GST_STATE_READY)
@@ -1330,12 +1324,23 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
   if (notify && GST_RPAD_CONNECTFUNC (pad)) {
     GstPadConnectReturn res;
     gchar *debug_string;
+    gboolean negotiating;
 
     GST_INFO (GST_CAT_CAPS, "calling connect function on pad %s:%s",
             GST_DEBUG_PAD_NAME (pad));
 
+    negotiating = GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING);
+
+    /* set the NEGOTIATING flag if not already done */
+    if (!negotiating)
+      GST_FLAG_SET (pad, GST_PAD_NEGOTIATING);
+    
     /* call the connect function */
     res = GST_RPAD_CONNECTFUNC (pad) (GST_PAD (pad), caps);
+
+    /* unset again after negotiating only if we set it  */
+    if (!negotiating)
+      GST_FLAG_UNSET (pad, GST_PAD_NEGOTIATING);
 
     switch (res) {
       case GST_PAD_CONNECT_REFUSED:
