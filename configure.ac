@@ -1234,6 +1234,7 @@ plugins/mp3encode/lame/Makefile
 plugins/mikmod/Makefile
 plugins/mpeg2/Makefile
 plugins/mpeg2/parse/Makefile
+plugins/mpeg2/ac3parse/Makefile
 plugins/mpeg2/mpeg2enc/Makefile
 plugins/mpeg2/mpeg2dec/Makefile
 plugins/mpeg2/subtitles/Makefile
