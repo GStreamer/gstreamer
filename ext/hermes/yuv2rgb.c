@@ -24,10 +24,10 @@
 
 #include "yuv2rgb.h"
 
-/*#undef HAVE_LIBMMX */
+/* #define HAVE_LIBMMX */
 
-#ifdef HAVE_LIBMMX
-#include "mmx.h"
+#ifdef HAVE_LIBMMX 
+#include <mmx.h>
 #endif
 
 #define CB_BASE 1
@@ -187,8 +187,8 @@ static void gst_colorspace_yuv420P_to_rgb32(GstColorSpaceConverter *space, unsig
 
   gst_colorspace_yuv_to_rgb32(space->color_tables,
 			src,                                  	/* Y component */
-			src+size+(size>>2),		   	/* cb component */
                         src+size,     				/* cr component */
+			src+size+(size>>2),		   	/* cb component */
                         dest,
 			space->height,
 			space->width);
@@ -203,8 +203,8 @@ static void gst_colorspace_yuv420P_to_rgb24(GstColorSpaceConverter *space, unsig
 
   gst_colorspace_yuv_to_rgb24(space->color_tables,
 			src,                                  	/* Y component */
-			src+size+(size>>2),		   	/* cb component */
                         src+size,     				/* cr component */
+			src+size+(size>>2),		   	/* cb component */
                         dest,
 			space->height,
 			space->width);
@@ -219,8 +219,8 @@ static void gst_colorspace_yuv420P_to_rgb16(GstColorSpaceConverter *space, unsig
 
   gst_colorspace_yuv_to_rgb16(space->color_tables,
 			src,                                  	/* Y component */
-			src+size+(size>>2),		   	/* cb component */
                         src+size,     				/* cr component */
+			src+size+(size>>2),		   	/* cb component */
                         dest,
 			space->height,
 			space->width);

@@ -22,7 +22,8 @@
 
 #include <gst/gst.h>
 
-void gst_colorspace_yuy2_to_i420( guchar *src, guchar *dest, guint width, guint height);
+void gst_colorspace_yuy2_to_i420 (guchar *src, guchar *dest, guint width, guint height);
+void gst_colorspace_i420_to_yv12 (guchar *src, guchar *dest, guint width, guint height);
 
 #endif
 

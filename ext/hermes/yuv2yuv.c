@@ -53,3 +53,26 @@ void gst_colorspace_yuy2_to_i420(unsigned char *src, unsigned char *dest, guint 
     }
   }
 }
+
+void gst_colorspace_i420_to_yv12(unsigned char *src, unsigned char *dest, guint width, guint height) 
+{
+  int size, i;
+  guint8 *destcr, *destcb;
+  
+  size = width * height;
+
+  memcpy (dest, src, size);
+
+  src += size;
+  destcr = dest + size;
+  size >>=2;
+  destcb = destcr + size;
+
+  i=size;
+  while (i--) 
+    *destcb++ = *src++;
+  i=size;
+  while (i--) 
+    *destcr++ = *src++;
+}
+

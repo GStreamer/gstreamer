@@ -59,6 +59,7 @@ typedef enum {
   GST_COLORSPACE_YUY2_I420,
   GST_COLORSPACE_RGB32_I420,
   GST_COLORSPACE_RGB32_YV12,
+  GST_COLORSPACE_420_SWAP,
 } GstColorSpaceConverterType;
 
 struct _GstColorspace {

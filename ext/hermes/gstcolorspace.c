@@ -21,6 +21,7 @@
 
 #include "gstcolorspace.h"
 #include "yuv2rgb.h"
+#include "yuv2yuv.h"
 
 
 static GstElementDetails colorspace_details = {
@@ -54,6 +55,7 @@ GST_PAD_TEMPLATE_FACTORY (colorspace_src_template_factory,
     "video/raw",
       "format",		GST_PROPS_LIST (
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
 	                ),
@@ -71,6 +73,7 @@ GST_PAD_TEMPLATE_FACTORY (colorspace_sink_template_factory,
     "video/raw",
       "format",		GST_PROPS_LIST (
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
 	                  GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
 	                ),
@@ -98,8 +101,6 @@ static GstElementStateReturn
 			gst_colorspace_change_state 		(GstElement *element);
 
 /* FIXME */
-extern void 	gst_colorspace_yuy2_to_i420	(unsigned char *src, unsigned char *dest, 
-						 guint width, guint height);
 extern void 	gst_colorspace_rgb32_to_i420	(unsigned char *src, unsigned char *dest, 
 						 guint width, guint height);
 extern void 	gst_colorspace_rgb32_to_yv12	(unsigned char *src, unsigned char *dest, 
@@ -218,6 +219,10 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
           space->type = GST_COLORSPACE_NONE;
 	  space->destbpp = 12;
 	  return TRUE;
+        case GST_MAKE_FOURCC ('Y','V','1','2'):
+          space->type = GST_COLORSPACE_420_SWAP;
+	  space->destbpp = 12;
+	  return TRUE;
 
       }
       break;
@@ -230,6 +235,17 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
         case GST_MAKE_FOURCC ('Y','U','Y','2'):
           space->type = GST_COLORSPACE_NONE;
 	  space->destbpp = 16;
+	  return TRUE;
+        case GST_MAKE_FOURCC ('R','G','B',' '):
+          GST_INFO (GST_CAT_NEGOTIATION, "colorspace: YUY2 to RGB not implemented!!");
+	  return FALSE;
+      }
+      break;
+    case GST_MAKE_FOURCC ('Y','V','1','2'):
+      switch (to_space) {
+        case GST_MAKE_FOURCC ('I','4','2','0'):
+          space->type = GST_COLORSPACE_420_SWAP;
+	  space->destbpp = 12;
 	  return TRUE;
       }
       break;
@@ -279,7 +295,7 @@ gst_colorspace_sinkconnect (GstPad *pad, GstCaps *caps)
 
   peer = gst_pad_get_peer (pad);
   if (peer) {
-    if (!gst_colorspace_srcconnect_func (pad, gst_pad_get_allowed_caps (space->srcpad), FALSE)) {
+    if (gst_colorspace_srcconnect_func (pad, gst_pad_get_allowed_caps (space->srcpad), FALSE) < 1) {
       space->sinkcaps = NULL;
       return GST_PAD_CONNECT_REFUSED;
     }
@@ -347,7 +363,6 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     peercaps = peercaps->next;
   }
   
-  gst_element_error (GST_ELEMENT (space), "could not agree on caps with peer pads");
   /* we disable ourself here */
   space->disabled = TRUE;
 
@@ -471,6 +486,12 @@ gst_colorspace_chain (GstPad *pad,GstBuffer *buf)
 #endif
     else if (space->type == GST_COLORSPACE_YUY2_I420) {
       gst_colorspace_yuy2_to_i420 (GST_BUFFER_DATA (buf),
+		                   GST_BUFFER_DATA (outbuf),
+				   space->width,
+				   space->height);
+    }
+    else if (space->type == GST_COLORSPACE_420_SWAP) {
+      gst_colorspace_i420_to_yv12 (GST_BUFFER_DATA (buf),
 		                   GST_BUFFER_DATA (outbuf),
 				   space->width,
 				   space->height);
