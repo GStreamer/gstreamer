@@ -259,6 +259,12 @@ init_post (void)
   gst_autoplugfactory_get_type ();
 #endif
   
+  /* check for ENV variables */
+  {
+    const gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
+    split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func);
+  }
+   
   _gst_cpu_initialize ();
   _gst_props_initialize ();
   _gst_caps_initialize ();
@@ -292,12 +298,6 @@ init_post (void)
 #endif /* GST_DISABLE_TRACE */
   if (_gst_progname == NULL) {
     _gst_progname = g_strdup("gstprog");
-  }
-
-  /* check for ENV variables */
-  {
-    const gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
-    split_and_iterate (plugin_path, G_SEARCHPATH_SEPARATOR_S, add_path_func);
   }
 
   /* FIXME: this is never true... */
