@@ -76,10 +76,10 @@ foreach $filename (<FIND>) {
 	check_signals();
 
 	# less important stuff
+	check_license();
 
 if (0) {
 	check_copyright();
-	check_license();
 
     check_gnuc_const();
 	check_begin_decls();
