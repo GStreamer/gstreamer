@@ -38,7 +38,7 @@ bin_SCRIPTS = gstreamer-config
 m4datadir = $(datadir)/aclocal
 m4data_DATA = gstreamer.m4
 
-pkgconfigdir = $(datadir)/pkgconfig
+pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer.pc
 
 man_MANS = gstreamer-config.1
