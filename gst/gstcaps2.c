@@ -333,7 +333,8 @@ gboolean gst_caps2_is_fixed (const GstCaps2 *caps)
     field = GST_STRUCTURE_FIELD(structure, i);
     type = G_VALUE_TYPE(&field->value);
 
-    if(type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE) {
+    if(type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE ||
+        type == GST_TYPE_LIST || !(G_TYPE_IS_FUNDAMENTAL(type))) {
       return FALSE;
     }
   }
