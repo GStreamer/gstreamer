@@ -11,12 +11,20 @@ AC_DEFUN(AM_PATH_ESD,
 [dnl 
 dnl Get the cflags and libraries from the esd-config script
 dnl
-AC_ARG_WITH(esd-prefix,[  --with-esd-prefix=PFX   Prefix where ESD is installed (optional)],
-            esd_prefix="$withval", esd_prefix="")
-AC_ARG_WITH(esd-exec-prefix,[  --with-esd-exec-prefix=PFX Exec prefix where ESD is installed (optional)],
-            esd_exec_prefix="$withval", esd_exec_prefix="")
-AC_ARG_ENABLE(esdtest, [  --disable-esdtest       Do not try to compile and run a test ESD program],
-		    , enable_esdtest=yes)
+AC_ARG_WITH(esd-prefix,
+  AC_HELP_STRING([--with-esd-prefix=PFX],
+                 [prefix where ESD is installed (optional)]),
+  esd_prefix="$withval", esd_prefix="")
+
+AC_ARG_WITH(esd-exec-prefix,
+  AC_HELP_STRING([--with-esd-exec-prefix=PFX],
+                 [exec prefix where ESD is installed (optional)]),
+  esd_exec_prefix="$withval", esd_exec_prefix="")
+
+AC_ARG_ENABLE(esdtest,
+  AC_HELP_STRING([--disable-esdtest],
+                 [do not try to compile and run a test ESD program]),
+  , enable_esdtest=yes)
 
   if test x$esd_exec_prefix != x ; then
      esd_args="$esd_args --exec-prefix=$esd_exec_prefix"

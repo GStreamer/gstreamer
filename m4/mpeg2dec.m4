@@ -1,4 +1,3 @@
-dnl
 dnl MPEG2DEC_CHECK-LIBHEADER(FEATURE-NAME, LIB-NAME, LIB-FUNCTION, HEADER-NAME,
 dnl                          ACTION-IF-FOUND, ACTION-IF-NOT-FOUND,
 dnl                          EXTRA-LDFLAGS, EXTRA-CPPFLAGS)
@@ -52,8 +51,9 @@ dnl
 AC_DEFUN(AC_CHECK_MPEG2DEC, 
 [dnl
 AC_ARG_WITH(mpeg2dec-prefix,
-    [  --with-mpeg2dec-prefix=PFX   Prefix where mpeg2dec is installed (optional)],
-    mpeg2dec_config_prefix="$withval", mpeg2dec_config_prefix="")
+  AC_HELP_STRING([--with-mpeg2dec-prefix=PFX],
+                 [prefix where mpeg2dec is installed (optional)]),
+  mpeg2dec_config_prefix="$withval", mpeg2dec_config_prefix="")
 
 if test x$mpeg2dec_config_prefix = x ; then
     MPEG2DEC_CHECK_LIBHEADER(MPEG2DEC, mpeg2, mpeg2_init, mpeg2dec/mpeg2.h,
