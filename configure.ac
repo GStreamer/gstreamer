@@ -243,7 +243,7 @@ dnl        non-PIC libXv, if not then don not use Xv.
 dnl FIXME: perhaps warn user if they have a shared libXv since
 dnl        this is an error until XFree86 starts shipping one
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
-GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink, [
+GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink videosink, [
   dnl check for PIC static lib
   GST_CHECK_LIBHEADER(XVIDEO, Xv_pic, XvQueryExtension, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS, X11/extensions/Xvlib.h, XVIDEO_LIBS="-lXv_pic -lXext")
   if test x$HAVE_XVIDEO = xno; then
@@ -760,6 +760,7 @@ sys/v4l/Makefile
 sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
+sys/videosink/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
