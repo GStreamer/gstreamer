@@ -1,3 +1,6 @@
+OUTDATED, EARLY IDEA
+--------------------
+
 When two pads are connected, a negotiation phase is going to have to
 happen.  Ideally, the caps of the two pads will both be fully-specified,
 and match.  That's the ideal case, but may rarely happen in practice.

@@ -1,3 +1,6 @@
+OUTDATED
+--------
+
 GstElementFactory:
 
 Base class for all elementfactories.  Is a single-instance (per program)

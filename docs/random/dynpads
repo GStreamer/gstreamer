@@ -10,14 +10,14 @@ and properties of a pad can be obtained from the elementfactory using
 the padtemplates. 
 
 Dynamic pad usually have the presence indicator set to 
-GST_PAD_FACTORY_SOMETIMES. This indicated that the pad might become
+GST_PAD_SOMETIMES. This indicated that the pad might become
 available at runtime. When the pad is actually created in the 
 element, the element will signal the new_pad signal. This signal can
 then be used to attach a desired (compatible) element to the 
 pad.
 
 For certain elements, like a tee and a muxer, we need another pad 
-presence flag: GST_PAD_FACTORY_REQUEST. With this flag, the 
+presence flag: GST_PAD_REQUEST. With this flag, the 
 elementfactory will announce that some of the pads are available on
 request. For the tee element, for example, one might obtain a new output
 pad by looking up a suitable padtemplate (temp) and performing:

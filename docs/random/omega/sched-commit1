@@ -1,3 +1,6 @@
+STATUS: pushregion/pullregion is gone
+-------------------------------------
+
 Changed the way things are scheduled, especially sources.  A Src used to
 have a push() function, and optionally a pushregion() to deal with async
 reads, etc.  That whole thing has gone away, in favor of providing a

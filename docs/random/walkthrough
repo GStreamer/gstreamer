@@ -1,3 +1,6 @@
+OUTDATED
+--------
+
 You might start by creating a source element and put it into a pipeline.
 At this point both element's state would be GST_STATE_NEW, since they
 don't have enough state to actually run yet.  At this point you can set

@@ -1,3 +1,7 @@
+METADATA ON BUFFERS IS OUTDATED
+-------------------------------
+
+
 Buffer mutability properties are the most important part of gst, and
 similarly are the most complex.
 

@@ -1,3 +1,7 @@
+OUTDATED, methods have different names now
+------------------------------------------
+
+
 Here's a pipeline that does audio/video MPEG streams with a queue on
 either side of each decompressor, for a total of 5 threads (read/split,
 decode audio, decode video, play audio, play video):

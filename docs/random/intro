@@ -1,6 +1,5 @@
 GNOME Streamer is a pipeline-based media streaming framework.  It is built
-on top of the Gtk+ object model, and while it currently sits on top of
-gtk, it can be divorced from it at any point in the future.
+on top of the gobject object model.
 
 A pipeline consists of at one or more each of sources, sinks, and filters.
 These elements may be combined inside container elements, which may have

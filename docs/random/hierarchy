@@ -1,3 +1,7 @@
+OUTDATED
+--------
+
+
 Face it, the plugins/ directory hierarchy is crap. We want to propose a
 better layout for it now. Some things to consider:
 

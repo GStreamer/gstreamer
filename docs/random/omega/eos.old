@@ -1,3 +1,7 @@
+OUTDATED
+--------
+
+
 What I propose for EOS condition is th following:  As is stands, EOS is a
 flag in a buffer.  However, it's also a signal from an element, which is
 odd. What I propose is that EOS become a pad thing.  Here's how it would

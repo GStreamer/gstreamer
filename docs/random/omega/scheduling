@@ -1,3 +1,6 @@
+STATUS: pull on srcpads is outdated, they use _get
+--------------------------------------------------
+
 0) definitions:
 
 All pads without further specifiers are assumed to belong to the element

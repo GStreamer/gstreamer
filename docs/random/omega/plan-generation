@@ -1,3 +1,6 @@
+OUTDATED
+--------
+
 Plan generation happens at transition from NULL to READY (and PLAYING to READY right now, need to fix
 that).  By way of some logic in gst_bin_change_state(), gst_bin_create_plan() is only called for the
 outer Bin, usually a Pipeline.  This keeps things from getting nasty later on.

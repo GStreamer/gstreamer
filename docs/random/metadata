@@ -1,3 +1,6 @@
+OUTDATED
+--------
+
 The point of the metadata is to provide some context for each buffer.  In
 the case of audio data, for instance, it would provide the samplerate, bit
 depth, and channel count.

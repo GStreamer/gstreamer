@@ -1,3 +1,6 @@
+STATUS: GstData is not implemented as a class for speed reasons.
+----------------------------------------------------------------
+
 NB: This document does not represent the current state of CVS but my current plans on how to implement this.
 
 Basics
