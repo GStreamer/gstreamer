@@ -338,7 +338,6 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec *mpeg2dec)
     mpeg2dec->format = MPEG2DEC_FORMAT_YV12;
   }
 
-  gst_caps_free (caps);
   return TRUE;
 }
 
