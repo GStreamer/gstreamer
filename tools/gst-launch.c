@@ -183,6 +183,7 @@ main(int argc, char *argv[])
   /* options */
   gboolean silent = FALSE;
   gboolean no_fault = FALSE;
+  gboolean trace = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   struct poptOption options[] = {
@@ -192,8 +193,10 @@ main(int argc, char *argv[])
      "do not output status information of TYPE", "TYPE1,TYPE2,..."},
     {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &savefile, 0,
      "save xml representation of pipeline to FILE and exit", "FILE"},
-    {"no_fault", 'f',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &no_fault,   0,
+    {"no_fault", 'f', POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &no_fault,   0,
      "Do not install a fault handler", NULL},
+    {"trace",   't',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &trace,   0,
+     "print alloc trace if enabled at compile time", NULL},
     POPT_TABLEEND
   };
 
@@ -204,11 +207,16 @@ main(int argc, char *argv[])
 
   free (malloc (8)); /* -lefence */
 
+  gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
+  
   gst_init_with_popt_table (&argc, &argv, options);
 
   if (!no_fault)
     fault_setup();
   
+  if (trace)
+    gst_alloc_trace_print_all ();
+
   /* make a null-terminated version of argv */
   argvn = g_new0 (char*, argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
@@ -241,8 +249,6 @@ main(int argc, char *argv[])
 #endif
   
   if (!savefile) {
-    gst_buffer_print_stats();
-    gst_event_print_stats();
 
     fprintf(stderr,"RUNNING pipeline\n");
     if (gst_element_set_state (pipeline, GST_STATE_PLAYING) == GST_STATE_FAILURE) {
@@ -266,10 +272,11 @@ main(int argc, char *argv[])
   }
 
 end:
-  gst_buffer_print_stats();
-  gst_event_print_stats();
 
   gst_object_unref (GST_OBJECT (pipeline));
+
+  if (trace)
+    gst_alloc_trace_print_all ();
 
   return res;
 }
