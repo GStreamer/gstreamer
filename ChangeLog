@@ -1,3 +1,8 @@
+2004-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+          fix error errors.
+
 2004-01-20  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/divx/gstdivxdec.c: (gst_divxdec_setup), (gst_divxdec_chain):
