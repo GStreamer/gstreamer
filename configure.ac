@@ -285,7 +285,35 @@ GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
 dnl *** CDROM Audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDROM, true)
 GST_CHECK_FEATURE(CDROM, [CDROM Audio], cdrom, [
- AC_CHECK_HEADER(linux/cdrom.h, HAVE_CDROM="yes", HAVE_CDROM="no")
+  AC_CHECK_HEADERS(linux/cdrom.h) dnl linux
+  AC_CHECK_HEADERS(sys/cdio.h) dnl almost everything else
+dnl  AC_CHECK_HEADERS(dmedia/cdaudio.h) dnl irix
+
+  if test "${ac_cv_header_linux_cdrom_h}" = "yes" || test "${ac_cv_header_sys_cdio_h}" = "yes" || test "${ac_cv_header_dmedia_cdaudio_h}" = "yes"; then
+	case "$host" in 
+		*-sun-* | *-*-linux*)
+			AC_DEFINE(HAVE_CDROM_SOLARIS,, [Define if cdrom access is in Solaris style])
+		;;
+		*-*-freebsd*)
+			AC_DEFINE(HAVE_CDROM_BSD,, [Define if cdrom access is in BSD style])
+		;;
+		*-*-netbsd* | *-*-openbsd*)
+			AC_DEFINE(HAVE_CDROM_BSD,, [Define if cdrom access is in BSD style])
+			AC_DEFINE(HAVE_CDROM_BSD_NETBSD,, [Define if cdrom access uses NetBSD variant])
+		;;
+		*-*darwin*)
+			AC_DEFINE(HAVE_CDROM_BSD,, [Define if cdrom access is in BSD style])
+			AC_DEFINE(HAVE_CDROM_BSD_DARWIN,, [Define if cdrom access uses Darwin variant])
+		;;
+dnl		*-irix-*)
+dnl			AC_DEFINE(HAVE_CDROM_IRIX,, [Define if cdrom access is in Irix DMedia style])
+dnl		;;
+    esac
+
+	HAVE_CDROM="yes"
+  else
+	HAVE_CDROM="no"
+  fi
 ])
 
 dnl *** XVideo ***

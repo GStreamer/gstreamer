@@ -45,7 +45,10 @@ struct _CDPlayer {
 	/* properties */
 	gchar *device;
 	gint num_tracks;
-	guint start_track;
+	gint start_track;
+	gint end_track;
+	gint current_track;
+	guint32 cddb_discid;
 
 	/* private */
 	struct cd cd;
@@ -56,6 +59,7 @@ struct _CDPlayerClass {
 	GstBinClass parent_class;
 
 	/* signal callbacks */
+	void (*track_change) (GstElement *element,guint track);
 };
 
 GType cdplayer_get_type(void);

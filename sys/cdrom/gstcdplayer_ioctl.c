@@ -29,137 +29,97 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 
+
+/* private functions */
+static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track);
+static gint cddb_sum(gint n);
+
+
+
+#ifdef HAVE_LINUX_CDROM_H
 #include <linux/cdrom.h>
+#elif define HAVE_SYS_CDIO_H
+#include <sys/cdio.h>
+/*
+irix cdaudio works quite a bit differently than ioctl(), so its not ready
+#elif define HAVE_DMEDIA_CDAUDIO_H
+#include <dmedia/cdaudio.h>
+*/
+#endif
 
+/* these headers define low level functions:
+	gboolean cd_init(struct cd *cd,const gchar *device);
+	gboolean cd_start(struct cd *cd,gint start_track,gint end_track);
+	gboolean cd_pause(struct cd *cd);
+	gboolean cd_resume(struct cd *cd);
+	gboolean cd_stop(struct cd *cd);
+	CDStatus cd_status(struct cd *cd);
+	gint cd_current_track(struct cd *cd);
+	gboolean cd_close(struct cd *cd);
+*/	
+#ifdef HAVE_CDROM_SOLARIS
+#include "gstcdplayer_ioctl_solaris.h"
+#elif defined HAVE_CDROM_BSD
+#include "gstcdplayer_ioctl_bsd.h"
+/*
+#elif define HAVE_CDROM_IRIX
+#include "gstcdplayer_ioctl_irix.h"
+*/
+#endif
 
-gboolean cd_init(struct cd *cd,const gchar *device)
+static void cd_fix_track_range(struct cd *cd,gint *start_track,gint *end_track)
 {
-	struct cdrom_tochdr toc_header;
-	struct cdrom_tocentry toc_entry;
+	if (*start_track <= 0) {
+		*start_track = 1;
+	}
+
+	if (*start_track > cd->num_tracks) {
+		*start_track = cd->num_tracks;
+	}
+
+	if (*end_track < *start_track && *end_track != LEADOUT) {
+		*end_track = *start_track;
+	}
+
+	if (*end_track > cd->num_tracks || *end_track + 1 > cd->num_tracks) {
+		*end_track = LEADOUT;
+	}
+
+	return;
+}
+
+
+/* this cddb info is from 
+   http://www.freedb.org/modules.php?name=Sections&sop=viewarticle&artid=6
+
+   this will probably be of interest to anyone wishing to actually use the discid
+   http://www.freedb.org/modules.php?name=Sections&sop=viewarticle&artid=28
+*/
+static gint cddb_sum(gint n)
+{
+	gint ret = 0;
+
+	while (n > 0) {
+		ret += n % 10;
+		n /= 10;
+	}
+
+	return ret;
+}
+
+guint32 cd_cddb_discid(struct cd *cd)
+{
 	guint i;
+	guint n = 0;
+	guint t;
 
-	cd->fd = open(device,O_RDONLY | O_NONBLOCK);
-
-	if (cd->fd == -1) {
-		return FALSE;
+	for (i = 1; i <= cd->num_tracks; i++) {
+		n += cddb_sum(cd->tracks[i].minute * 60 + cd->tracks[i].second);
 	}
 
-	/* get the toc header information */
-	if (ioctl(cd->fd,CDROMREADTOCHDR,&toc_header) != 0) {
-		return FALSE;
-	}
+	t = (cd->tracks[LEADOUT].minute * 60 + cd->tracks[LEADOUT].second) - (cd->tracks[1].minute * 60 + cd->tracks[1].second);
 
-	/* read each entry in the toc header */
-	for (i = 1; i < toc_header.cdth_trk1; i++) {
-		toc_entry.cdte_format = CDROM_MSF;
-		toc_entry.cdte_track = i;
-
-		if (ioctl(cd->fd,CDROMREADTOCENTRY,&toc_entry) != 0) {
-			return FALSE;
-		}
-
-		cd->tracks[i].minute = toc_entry.cdte_addr.msf.minute;
-		cd->tracks[i].second = toc_entry.cdte_addr.msf.second;
-		cd->tracks[i].frame = toc_entry.cdte_addr.msf.frame;
-		cd->tracks[i].data_track = (toc_entry.cdte_ctrl == CDROM_DATA_TRACK);
-	}
-
-	/* read the leadout */
-	toc_entry.cdte_track = CDROM_LEADOUT;
-	toc_entry.cdte_format = CDROM_MSF;
-	if (ioctl(cd->fd,CDROMREADTOCENTRY,&toc_entry) != 0) {
-		return FALSE;
-	}
-	cd->tracks[LEADOUT].minute = toc_entry.cdte_addr.msf.minute;
-	cd->tracks[LEADOUT].second = toc_entry.cdte_addr.msf.second;
-	cd->tracks[LEADOUT].frame = toc_entry.cdte_addr.msf.frame;
-
-	cd->num_tracks = toc_header.cdth_trk1;
-
-	return TRUE;
+	return ((n % 0xff) << 24 | t << 8 | (cd->num_tracks));
 }
 
-gboolean cd_start(struct cd *cd,guint start_track)
-{
-	struct cdrom_msf msf;
-
-	if (cd->fd == -1) {
-		return FALSE;
-	}
-
-	if (start_track <= 0) {
-		start_track = 1;
-	}
-
-	if (start_track > cd->num_tracks) {
-		start_track = cd->num_tracks;
-	}
-
-	msf.cdmsf_min0 = cd->tracks[start_track].minute;
-	msf.cdmsf_sec0 = cd->tracks[start_track].second;
-	msf.cdmsf_frame0 = cd->tracks[start_track].frame;
-
-	msf.cdmsf_min1 = cd->tracks[LEADOUT].minute;
-	msf.cdmsf_sec1 = cd->tracks[LEADOUT].second;
-	msf.cdmsf_frame1 = cd->tracks[LEADOUT].frame;
-
-	if (ioctl(cd->fd,CDROMPLAYMSF,&msf) != 0) {
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-gboolean cd_pause(struct cd *cd)
-{
-	if (cd->fd == -1) {
-		return FALSE;
-	}
-
-	if (ioctl(cd->fd,CDROMPAUSE,NULL) != 0) {
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-gboolean cd_resume(struct cd *cd)
-{
-	if (cd->fd == -1) {
-		return FALSE;
-	}
-
-	if (ioctl(cd->fd,CDROMRESUME,NULL) != 0) {
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-gboolean cd_stop(struct cd *cd)
-{
-	if (cd->fd == -1) {
-		return FALSE;
-	}
-
-	if (ioctl(cd->fd,CDROMSTOP,NULL) != 0) {
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-
-gboolean cd_close(struct cd *cd)
-{
-	if (cd->fd == -1) {
-		return TRUE;
-	}
-
-	if (close(cd->fd) != 0) {
-		return FALSE;
-	}
-
-	return TRUE;
-}
 
