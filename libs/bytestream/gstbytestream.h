@@ -20,7 +20,7 @@
 #ifndef __GST_BYTESTREAM_H__
 #define __GST_BYTESTREAM_H__
 
-#include <gst/gstpad.h>
+#include <gst/gst.h>
 
 #ifdef __cplusplus
 extern "C" {
