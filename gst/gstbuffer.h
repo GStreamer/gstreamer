@@ -93,7 +93,7 @@ struct _GstBuffer {
 
 /* bufferpools */
 
-typedef GstBuffer*	(*GstBufferPoolBufferNewFunction)	(GstBufferPool *pool, gint64 offset, 
+typedef GstBuffer*	(*GstBufferPoolBufferNewFunction)	(GstBufferPool *pool, guint64 offset, 
 								 guint size, gpointer user_data);
 typedef GstBuffer* 	(*GstBufferPoolBufferCopyFunction)	(GstBufferPool *pool, 
 								 const GstBuffer *buffer, 
@@ -120,7 +120,7 @@ GstBuffer*	gst_buffer_new_and_alloc	(guint size);
 
 /* creating a new buffer from a pool */
 GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, 
-						 gint64 offset, guint size);
+						 guint64 offset, guint size);
 
 #define		gst_buffer_set_data(buf, data, size) 	\
 G_STMT_START { 					     	\

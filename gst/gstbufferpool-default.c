@@ -29,7 +29,7 @@
  * gstbuffer.c */
 
 static GstBuffer*	_gst_buffer_pool_default_buffer_new	(GstBufferPool *pool,
-                                                                 gint64 offset, guint size,
+                                                                 guint64 offset, guint size,
                                                                  gpointer user_data);
 static void		_gst_buffer_pool_default_buffer_free	(GstBufferPool *pool,
                                                                  GstBuffer *buffer,
@@ -113,7 +113,7 @@ gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
 }
 
 static GstBuffer* 
-_gst_buffer_pool_default_buffer_new (GstBufferPool *pool, gint64 offset,
+_gst_buffer_pool_default_buffer_new (GstBufferPool *pool, guint64 offset,
                                      guint size, gpointer user_data)
 {
   GstBuffer *buffer;

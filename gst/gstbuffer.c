@@ -220,7 +220,7 @@ gst_buffer_new_and_alloc (guint size)
  */
 GstBuffer*
 gst_buffer_new_from_pool (GstBufferPool *pool, 
-		          gint64 offset, guint size)
+		          guint64 offset, guint size)
 {
   GstBuffer *buffer;
   
