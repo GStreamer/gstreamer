@@ -47,6 +47,8 @@ API:
 
  - fix plugin code to load plugins with RTLD_LOCAL
 
+ - don't install gstmarshal.h
+
 caps:
 
   (Company:)
