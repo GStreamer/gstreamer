@@ -37,6 +37,7 @@ typedef enum {
   GST_EVENT_FLUSH,
   GST_EVENT_EMPTY,
   GST_EVENT_SEEK,
+  GST_EVENT_DISCONTINUOUS
 } GstEventType;
 
 extern GType _gst_event_type;
