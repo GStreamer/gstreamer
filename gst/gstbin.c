@@ -979,6 +979,8 @@ gst_bin_iterate (GstBin *bin)
 
   oclass = GST_BIN_GET_CLASS (bin);
 
+  gst_object_ref (GST_OBJECT (bin));
+
   if (bin->pre_iterate_func)
     (bin->pre_iterate_func) (bin, bin->pre_iterate_data);
 
@@ -1000,6 +1002,7 @@ gst_bin_iterate (GstBin *bin)
       running = TRUE;
     }
   }
+  gst_object_unref (GST_OBJECT (bin));
 
   return running;
 }
