@@ -336,7 +336,10 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
     play_base_bin->preroll_elems =
         g_list_prepend (play_base_bin->preroll_elems, new_element);
 
+    gst_element_set_state (new_element, GST_STATE_READY);
+
     gst_pad_link (pad, gst_element_get_pad (new_element, "sink"));
+
     gst_element_set_state (new_element, GST_STATE_PAUSED);
   }
 

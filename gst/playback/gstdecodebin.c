@@ -380,6 +380,14 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     return;
   }
 
+  /* the caps is any, this means the pad can be anything and
+   * we don't know yet */
+  if (gst_caps_is_any (caps)) {
+    return;
+  }
+
+  GST_LOG_OBJECT (element, "trying to close %" GST_PTR_FORMAT, caps);
+
   /* FIXME, iterate over more structures? */
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
@@ -402,6 +410,8 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     /* see if any more pending dynamic connections exist */
     dynamic = gst_decode_bin_is_dynamic (decode_bin);
 
+    GST_LOG_OBJECT (element, "closed pad %s", padname);
+
     /* our own signal with an extra flag that this is the only pad */
     g_signal_emit (G_OBJECT (decode_bin),
         gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, ghost, !dynamic);
@@ -410,18 +420,22 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     return;
   }
 
-  /* then continue plugging, first find all compatible elements */
-  to_try = find_compatibles (decode_bin, caps);
-  if (to_try == NULL) {
-    /* no compatible elements, fire the unknown_type signal, we cannot go
-     * on */
-    g_signal_emit (G_OBJECT (decode_bin),
-        gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, caps);
-    return;
+  if (gst_caps_get_size (caps) == 1) {
+    /* then continue plugging, first find all compatible elements */
+    to_try = find_compatibles (decode_bin, caps);
+    if (to_try == NULL) {
+      /* no compatible elements, fire the unknown_type signal, we cannot go
+       * on */
+      g_signal_emit (G_OBJECT (decode_bin),
+          gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, caps);
+      return;
+    }
+    try_to_link_1 (decode_bin, pad, to_try);
+  } else {
+    GST_LOG_OBJECT (element, "multiple possibilities, delaying");
+    g_warning ("multiple possibilities, delaying");
   }
 
-  /* now try to link the elements in the to_try list to the pad */
-  try_to_link_1 (decode_bin, pad, to_try);
 }
 
 /* given a list of element factories, try to link one of the factories
@@ -452,6 +466,9 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     /* now add the element to the bin first */
     GST_DEBUG_OBJECT (decode_bin, "adding %s", gst_element_get_name (element));
     gst_bin_add (GST_BIN (decode_bin), element);
+
+    gst_element_set_state (element, GST_STATE_READY);
+
     /* keep out own list of elements */
     decode_bin->elements = g_list_prepend (decode_bin->elements, element);
 
@@ -654,7 +671,7 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
     gst_element_no_more_pads (GST_ELEMENT (decode_bin));
   } else {
     /* more dynamic elements exist that could create new pads */
-    GST_DEBUG_OBJECT (decode_bin, "we more dynamic elements");
+    GST_DEBUG_OBJECT (decode_bin, "we have more dynamic elements");
   }
 }
 

@@ -1,3 +1,18 @@
+2004-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(find_compatibles), (close_pad_link), (try_to_link_1),
+	(no_more_pads), (close_link), (type_found):
+	* gst/playback/gstplaybasebin.c: (new_decoded_pad):
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element):
+	Set state on newly added element to READY so that negotiation
+	can happen ASAP.
+	Addes some more debug info.
+	Do not try to plug pads with multiple caps structures or ANY
+	because it is too dangerous since we do not do dynamic 
+	replugging.
+
 2004-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	written by: Gora Mohanty <gora_mohanty@yahoo.co.in>
