@@ -397,8 +397,8 @@ gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_LOCATION:
       /* the element must be stopped or paused in order to do this */
-      g_return_if_fail ((GST_STATE (src) < GST_STATE_PLAYING)
-          || (GST_STATE (src) == GST_STATE_PAUSED));
+      if (GST_STATE (src) == GST_STATE_PLAYING)
+        break;
 
       g_free (src->filename);
 
