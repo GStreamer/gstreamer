@@ -8,19 +8,7 @@
 
 use File::Basename;
 
-### defaults
-my $VIDEOSINK = "xvideosink";
-my $AUDIOSINK = "osssink";
-my $GST_CVS_PATH = "~/gst/cvs";
 
-my %pipes = ( 
-  "mp3", "mad ! $AUDIOSINK",
-  "ogg", "vorbisdec ! $AUDIOSINK",
-  "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $VIDEOSINK } audio_00! { queue ! mad ! $AUDIOSINK }",
-  "avi", "avidemux video_00! { queue ! windec ! $VIDEOSINK }",
-  "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $VIDEOSINK }",
-
-);
 
 sub extension
 {
@@ -30,15 +18,66 @@ sub extension
   return $ext;
 }
 
+sub read_config
+{
+  my $config_file = "~/.gst";
+  if (-e $config_file)
+  {
+    open CONFIG, $config_file;
+    while (<CONFIG>)
+    {
+      chomp;
+      s/#.*//;
+      s/\s+$//;
+      next unless length;
+      my ($var, $value) = split (/\s*=\s*/, $_, 2);
+      $cfg{$var} = $value;
+    }
+    if (!($cfg{AUDIOSINK}))
+    {
+      print "Please add an AUDIOSINK to $config_file !\n";
+    }
+    if (!($cfg{VIDEOSINK}))
+    {
+      print "Please add a VIDEOSINK to $config_file !\n";
+    }
+  }
+  else
+  {
+    print "No configuration file $config_file found.  You might want to create one.\n";
+    $cfg{AUDIOSINK} = "osssink";
+    $cfg{VIDEOSINK} = "xvideosink";
+    $cfg{CVS_PATH} = "~/gst/cvs";
+  }
+
+  # check for gst-launch in cvs dir
+  $GST_LAUNCH=$cfg{CVS_PATH}."/gstreamer/tools/gst-launch";
+  if (! -x $GST_LAUNCH)
+  {
+    # let's hope it's installed ...
+    $GST_LAUNCH="gst-launch";
+  }
+}
+
 ### main
 
+read_config ();
+
+my %pipes = ( 
+  "mp3", "mad ! $cfg{AUDIOSINK}",
+  "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
+  "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
+  "avi", "avidemux video_00! { queue ! windec ! $cfg{VIDEOSINK} }",
+  "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
+
+);
 my $file = shift @ARGV or die "Please give a file name !";
 
 my $ext = extension ($file);
 
 if ($pipe = $pipes{$ext})
 {
-  $command = "$GST_CVS_PATH/gstreamer/tools/gst-launch filesrc location=\"$file\" ! $pipe";
+  $command = "$GST_LAUNCH filesrc location=\"$file\" ! $pipe";
   print "Running $command\n";
   system ($command);
 }
