@@ -33,7 +33,13 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
-SUBDIRS = include gst libs plugins tools $(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
+if BUILD_PLUGINS
+SUBDIRS_PLUGINS = plugins
+else
+SUBDIRS_PLUGINS =
+endif
+
+SUBDIRS = include gst libs $(SUBDIRS_PLUGINS) tools $(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) \
 $(SUBDIRS_LGG) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs

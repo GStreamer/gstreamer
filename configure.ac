@@ -593,15 +593,6 @@ GST_CHECK_FEATURE(LIBGHTTP, [libghttp plugins], gsthttpsrc, [
   AC_SUBST(GST_HTTPSRC_GET_TYPE)
 ])
 
-
-dnl thomas : adding an arts check taken from xine with it's own .m4
-dnl FIXME: put this higher up
-dnl AM_PATH_ARTS(, HAVE_ARTS=yes, HAVE_ARTS=no)
-
-dnl also define ARTS_MCOPFLAGS
-dnl ARTS_MCOPFLAGS="$ARTS_CFLAGS"
-dnl AC_SUBST(ARTS_MCOPFLAGS)   
-
 dnl Check for libglade with gnome support; no libglade for glib2.0
 HAVE_LIBGLADE_GNOME="no"
 if test x$USE_GLIB2 = xyes; then
@@ -689,6 +680,15 @@ AC_CHECK_HEADER(linux/videodev.h,
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
+
+AC_ARG_ENABLE(plugins, AC_HELP_STRING([--enable-plugins],[enable plugin building]),
+[case "${enableval}" in
+  yes) BUILD_PLUGINS=yes ;;
+  no)  BUILD_PLUGINS=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --disable-plugins) ;;
+esac], 
+[BUILD_PLUGINS=yes])
+AM_CONDITIONAL(BUILD_PLUGINS, test $BUILD_PLUGINS = "yes")              
 
 AC_ARG_ENABLE(libmmx,
 [  --enable-libmmx              use libmmx, if available],
