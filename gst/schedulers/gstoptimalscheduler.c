@@ -494,14 +494,13 @@ destroy_group_scheduler (GstOptSchedulerGroup *group)
 #ifdef USE_COTHREADS
   if (group->cothread) {
     do_cothread_destroy (group->cothread);
+    group->cothread = NULL;
   }
-  else 
+#else
+  group->schedulefunc = NULL;
+  group->argc = 0;
+  group->argv = NULL;
 #endif
-  {
-    group->schedulefunc = NULL;
-    group->argc = 0;
-    group->argv = NULL;
-  }
 
   group->flags &= ~GST_OPT_SCHEDULER_GROUP_SCHEDULABLE;
 }
@@ -625,6 +624,8 @@ schedule_group (GstOptSchedulerGroup *group)
 #ifdef USE_COTHREADS
   if (group->cothread)
     do_cothread_switch (group->cothread);
+  else
+    g_warning ("(internal error): trying to schedule group without cothread");
   return TRUE;
 #else
   group->schedulefunc (group->argc, group->argv);
@@ -663,7 +664,11 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 static void 
 schedule_chain (GstOptSchedulerChain *chain) 
 {
-  GSList *groups = chain->groups;
+  GSList *groups;
+  GstOptScheduler *osched;
+
+  osched = chain->sched;
+  groups = chain->groups;
 
   while (groups) {
     GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
@@ -671,9 +676,6 @@ schedule_chain (GstOptSchedulerChain *chain)
     groups = g_slist_next (groups);
 
     if (!GST_OPT_SCHEDULER_GROUP_IS_DISABLED (group)) {
-      GstOptScheduler *osched;
-
-      osched = chain->sched;
 
       GST_INFO (GST_CAT_SCHEDULING, "scheduling group %p in chain %p", 
  	        group, chain);
@@ -1201,7 +1203,7 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
 	if (GST_ELEMENT_SCHED_CONTEXT (element1) &&
 	    GST_ELEMENT_SCHED_GROUP (element1) != NULL) 
 	{
-          g_warning ("internal error: cannot schedule get to loop with get in group");
+          g_error ("internal error: cannot schedule get to loop with get in group");
 	  return;
 	}
       }
@@ -1212,12 +1214,11 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
       if (GST_RPAD_GETFUNC (srcpad) && GST_RPAD_CHAINFUNC (sinkpad)) {
         type = GST_OPT_GET_TO_CHAIN;
 	/* the get based source could already be part of a loop 
-	 * based group in another pad,
-	 * we assert on that for now */
+	 * based group in another pad, we assert on that for now */
 	if (GST_ELEMENT_SCHED_CONTEXT (element1) &&
 	    GST_ELEMENT_SCHED_GROUP (element1) != NULL) 
 	{
-          g_warning ("internal error: cannot schedule get to loop with get in group");
+          g_error ("internal error: cannot schedule get to loop with get in group");
 	  return;
 	}
       }
@@ -1313,11 +1314,15 @@ gst_opt_scheduler_pad_connect (GstScheduler *sched, GstPad *srcpad, GstPad *sink
       break;
     }
     case GST_OPT_INVALID:
-      g_warning ("(internal error) invalid element connection, what are you doing?");
+      g_error ("(internal error) invalid element connection, what are you doing?");
       break;
   }
 }
 
+/* 
+ * checks if an element is still connected to some other element in the group. 
+ * no checking is done on the brokenpad arg 
+ * */
 static gboolean
 element_has_connection_with_group (GstElement *element, GstOptSchedulerGroup *group, GstPad *brokenpad)
 {
@@ -1376,38 +1381,55 @@ gst_opt_scheduler_pad_disconnect (GstScheduler *sched, GstPad *srcpad, GstPad *s
   /* easy part, groups are different */
   if (group1 != group2) {
     GST_INFO (GST_CAT_SCHEDULING, "elements are in different groups");
+
+    /* FIXME, need to eventually break the chain */
+    g_warning ("pad disconnect for different groups, implement me");
   }
   /* hard part, groups are equal */
   else {
     gboolean still_connect1, still_connect2;
+    GstOptSchedulerGroup *group;
+    
+    /* since group1 == group2, it doesn't matter which group we take */
+    group = group1;
 
-    GST_INFO (GST_CAT_SCHEDULING, "elements are in the same group %p", group1);
+    GST_INFO (GST_CAT_SCHEDULING, "elements are in the same group %p", group);
 
-    still_connect1 = element_has_connection_with_group (element1, group1, srcpad);
-    still_connect2 = element_has_connection_with_group (element2, group1, sinkpad);
+    /* check if the element is still connected to some other element in the group,
+     * we pass the pad that is broken up as an arg because a connection on that pad
+     * is not valid anymore */
+    still_connect1 = element_has_connection_with_group (element1, group, srcpad);
+    still_connect2 = element_has_connection_with_group (element2, group, sinkpad);
 
     /* if there is still a connection, we don't need to break this group */
     if (still_connect1 && still_connect2) {
       GST_INFO (GST_CAT_SCHEDULING, "elements still have connections with other elements in the group");
+
+      /* FIXME, need to check for breaking up the group */
       return;
     }
 
+    /* now check which one of the elements we can remove from the group */
     if (!still_connect1) {
       GST_INFO (GST_CAT_SCHEDULING, "element1 is separated from the group");
       /* see if the element was an entry point for the group */
-      if (group1->entry == element1) {
-        group1->entry = NULL;
+      if (group->entry == element1) {
+	/* we're going to remove the element so we need to clear it as the
+	 * entry point */
+        group->entry = NULL;
       }
-      remove_from_group (group1, element1);
+      remove_from_group (group, element1);
     }
     if (!still_connect2) {
       GST_INFO (GST_CAT_SCHEDULING, "element2 is separated from the group");
 
       /* see if the element was an entry point for the group */
-      if (group1->entry == element2) {
-        group1->entry = NULL;
+      if (group->entry == element2) {
+	/* we're going to remove the element so we need to clear it as the
+	 * entry point */
+        group->entry = NULL;
       }
-      remove_from_group (group1, element2);
+      remove_from_group (group, element2);
     }
   }
 }
