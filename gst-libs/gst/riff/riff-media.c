@@ -37,31 +37,31 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, codec_fcc, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Raw, uncompressed I420");
+        *codec_name = g_strdup ("Uncompressed planar YUV 4:2:0");
       break;
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, codec_fcc, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Raw, uncompressed YUV 4:2:2");
+        *codec_name = g_strdup ("Uncompressed packed YUV 4:2:2");
       break;
 
     case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'): /* YUY2 MJPEG */
-      caps = gst_caps_new_simple ("video/x-jpeg", NULL);
+      caps = gst_caps_new_simple ("image/jpeg", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Motion JPEG");
       break;
     case GST_MAKE_FOURCC ('J', 'P', 'E', 'G'): /* generic (mostly RGB) MJPEG */
-      caps = gst_caps_new_simple ("video/x-jpeg", NULL);
+      caps = gst_caps_new_simple ("image/jpeg", NULL);
       if (codec_name)
         *codec_name = g_strdup ("JPEG Still Image");
       break;
 
     case GST_MAKE_FOURCC ('P', 'I', 'X', 'L'): /* Miro/Pinnacle fourccs */
     case GST_MAKE_FOURCC ('V', 'I', 'X', 'L'): /* Miro/Pinnacle fourccs */
-      caps = gst_caps_new_simple ("video/x-jpeg", NULL);
+      caps = gst_caps_new_simple ("image/jpeg", NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Miro/Pinnacle Video XL");
+        *codec_name = g_strdup ("Miro/Pinnacle Motion JPEG Video");
       break;
 
     case GST_MAKE_FOURCC ('H', 'F', 'Y', 'U'):
@@ -116,21 +116,22 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
+    case GST_MAKE_FOURCC ('D', 'I', 'V', '4'):
+    case GST_MAKE_FOURCC ('D', 'I', 'V', '5'):
+    case GST_MAKE_FOURCC ('D', 'I', 'V', '6'):
       caps = gst_caps_new_simple ("video/x-divx",
           "divxversion", G_TYPE_INT, 3, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("DivX MPEG-4 Version 3");
-      break;
-    case GST_MAKE_FOURCC ('D', 'I', 'V', '4'):
-      caps = gst_caps_new_simple ("video/x-divx",
-          "divxversion", G_TYPE_INT, 4, NULL);
-      if (codec_name)
-        *codec_name = g_strdup ("DivX MPEG-4 Version 4");
+        *codec_name = g_strdup ("DivX MS-MPEG-4 Version 3");
       break;
     case GST_MAKE_FOURCC ('d', 'i', 'v', 'x'):
     case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
+      caps = gst_caps_new_simple ("video/x-divx",
+          "divxversion", G_TYPE_INT, 3, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("DivX MPEG-4 Version 4");
+      break;
     case GST_MAKE_FOURCC ('D', 'X', '5', '0'):
-    case GST_MAKE_FOURCC ('D', 'I', 'V', '5'):
       caps = gst_caps_new_simple ("video/x-divx",
           "divxversion", G_TYPE_INT, 5, NULL);
       if (codec_name)
@@ -214,7 +215,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   }
 
   if (strh != NULL) {
-    gfloat fps = 1. * strh->rate / strh->scale;
+    gdouble fps = 1. * strh->rate / strh->scale;
 
     gst_caps_set_simple (caps, "framerate", G_TYPE_DOUBLE, fps, NULL);
   } else {
