@@ -2,8 +2,8 @@ Source: gstreamer
 Section: x11
 Priority: optional
 Maintainer: David I. Lehn <dlehn@vt.edu>
-Build-Depends: debhelper (>= 3.0.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0beta3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b)
-Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4.0), jade (>= 1.2.1), transfig (>= 3.2.3.c)
+Build-Depends: debhelper (>= 3.0.0), libxml-dev (>= 1.8.10), zlib1g-dev (>= 1:1.1.3), libghttp-dev (>= 1.0.6), libglib1.2-dev (>= 1.2.8), libgtk1.2-dev (>= 1.2.8), libglade0-dev (>= 0.14), libglade-gnome0-dev (>= 0.14), libesd0-dev (>= 0.2.22), libcdparanoia0-dev (>= 3a9.7), libvorbis-dev (>= 1.0beta3), libgnome-dev (>= 1.2.11), libasound1-dev (>= 0.5.10), libghttp-dev (>= 1.0.9), libjpeg62-dev (>= 6b), aalib1-dev (>= 1.4p4), libmad0-dev (>= 0.13.0b), hermes1-dev (>= 1.3.1), libarts-dev (>= 2.1.2)
+Build-Depends-Indep: debhelper (>= 3.0.0), gtk-doc-tools (>= 0.4), jade (>= 1.2.1), transfig (>= 3.2.3.c)
 Standards-Version: 3.5.2.0
 
 Package: libgst0
@@ -91,24 +91,45 @@ Suggests: gstreamer-common
 Description: GStreamer editor
  GStreamer editor
 
+Package: gstreamer-aa
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: AA-lib plugin for GStreamer
+ AA-lib plugin for GStreamer
+
 Package: gstreamer-alsa
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: ALSA plugin for GStreamer
  ALSA plugin for GStreamer
+
+Package: gstreamer-arts
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: aRts plugin for GStreamer
+ aRts plugin for GStreamer
 
 Package: gstreamer-cdparanoia
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: cdparanoia plugin for GStreamer
  cdparanoia plugin for GStreamer
+
+Package: gstreamer-colorspace
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: colorspace conversion plugin for GStreamer
+ colorspace conversion plugin for GStreamer
 
 Package: gstreamer-common
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: Collection of GStreamer plugins
  Collection of GStreamer plugins
  .
@@ -117,41 +138,48 @@ Description: Collection of GStreamer plugins
 Package: gstreamer-elements
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: Core elements plugin for GStreamer
  Core elements plugin for GStreamer
 
 Package: gstreamer-esd
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: Enlightened Sound Daemon plugin for GStreamer
  Enlightened Sound Daemon plugin for GStreamer
 
 Package: gstreamer-lame
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: LAME plugin for GStreamer
  LAME plugin for GStreamer
+
+Package: gstreamer-mad
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
+Description: MAD MPEG audio decoder plugin for GStreamer
+ MAD MPEG audio decoder plugin for GStreamer
 
 Package: gstreamer-mpeg2dec
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: mpeg2dec plugin for GStreamer
  mpeg2dec plugin for GStreamer
 
 Package: gstreamer-mpg123
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: mpg123 plugin for GStreamer
  mpg123 plugin for GStreamer
 
 Package: gstreamer-vorbis
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, gstreamer-runtime
+Depends: ${shlibs:Depends}, gstreamer-runtime (= ${Source-Version})
 Description: Vorbis plugin for GStreamer
  Vorbis plugin for GStreamer

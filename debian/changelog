@@ -1,3 +1,18 @@
+gstreamer (0.1.1.20010430-2) unstable; urgency=low
+
+  * Added -colorspace package for Hermes dependent conversion
+  * Added -arts package for aRts sink
+
+ -- David I. Lehn <dlehn@vt.edu>  Tue,  1 May 2001 19:46:08 -0400
+
+gstreamer (0.1.1.20010430-1) unstable; urgency=low
+
+  * Latest CVS code
+  * Added -aa package for aasink output
+  * Added -mad package for mad mp3 decoder
+
+ -- David I. Lehn <dlehn@vt.edu>  Mon, 30 Apr 2001 18:25:52 -0400
+
 gstreamer (0.1.1.20010320-1) unstable; urgency=low
 
   * Latest CVS code

@@ -16,7 +16,7 @@ export DH_OPTIONS
 # Link special names to a template file.
 # still need "*.files" to be done by hand
 
-PLUGINS=alsa cdparanoia common elements esd lame mpeg2dec mpg123 vorbis
+PLUGINS=aa alsa arts cdparanoia colorspace common elements esd lame mad mpeg2dec mpg123 vorbis
 
 setup-links:
 	for i in $(PLUGINS); do \
