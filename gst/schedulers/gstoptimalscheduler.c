@@ -1341,7 +1341,7 @@ gst_opt_scheduler_loop_wrapper (GstPad * sinkpad, GstData * data)
 #endif
 
   GST_LOG ("%d buffers left on %s:%s's bufpen after chain handler",
-      g_list_length (GST_PAD_BUFLIST (peer)));
+      g_list_length (GST_PAD_BUFLIST (peer)), GST_DEBUG_PAD_NAME (srcpad));
 }
 
 /* this function is called by a loop based element that performs a
