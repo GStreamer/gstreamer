@@ -414,16 +414,6 @@ instead.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_get_pad_template_by_name ##### -->
-<para>
-
-</para>
-
-@element: 
-@name: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
 <para>
 

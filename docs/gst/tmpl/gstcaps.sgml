@@ -223,15 +223,6 @@ Check if the GstCaps has fixed properties, ie. it has no ranges or lists.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_copy_1 ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_caps_copy_on_write ##### -->
 <para>
 

@@ -81,12 +81,6 @@ Indicates when this pad will become available.
 @GST_PAD_REQUEST: th pad is only available on request with 
 gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 
-<!-- ##### STRUCT GstPadTemplate ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_PAD_TEMPLATE_CAPS ##### -->
 <para>
 Get a handle to the padtemplate #GstCaps
