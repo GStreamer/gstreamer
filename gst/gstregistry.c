@@ -735,7 +735,7 @@ gst_registry_write_get ()
 GstRegistryRead *
 gst_registry_read_get ()
 {
-  GstRegistryRead *gst_reg = g_malloc (sizeof (GstRegistryRead));
+  GstRegistryRead *gst_reg = g_new0 (GstRegistryRead, 1);
   
   /* if a registry is specified on command line, use that one */
   if (gst_registry_option)
@@ -757,6 +757,7 @@ gst_registry_read_get ()
     {
       /* it does not exist, so don't read from it */
       g_free (gst_reg->local_reg);
+      gst_reg->local_reg = NULL;
     }
     gst_reg->global_reg = g_strdup (GLOBAL_REGISTRY_FILE);
   }

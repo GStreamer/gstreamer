@@ -81,7 +81,6 @@ enum {
 #define NUL '\0'
 #endif
 
-/* FIXME: put in the extended mask help */
 static const struct poptOption options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, &init_popt_callback, 0, NULL, NULL},
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP, NULL, ARG_FATAL_WARNINGS, "Make all warnings fatal", NULL},
@@ -184,8 +183,7 @@ gst_init_with_popt_table (int *argc, char **argv[], const struct poptOption *pop
   /* let's do this once there are 1.6.3 popt debs out
      *argc = poptStrippedArgv (context, *argc, *argv); */
   
-  /* until then we'll do a very basic arg permutation
-     this will break gst-launch -o */
+  /* until then we'll do a very basic arg permutation */
   temp = *argv + 1;
   i = 1;
   nstrip = 0;
@@ -279,7 +277,7 @@ init_pre (void)
 
 #ifdef PLUGINS_USE_BUILDDIR
   /* location libgstelements.so */
-  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/libs");
+  gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/libs/gst");
   gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/elements");
   gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/types");
   gst_registry_add_path (_global_registry, PLUGINS_BUILDDIR "/gst/autoplug");

@@ -182,17 +182,109 @@ gst_xml_registry_new (const gchar *name, const gchar *location)
 #define dirmode \
   (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
 
+static time_t
+get_time(const char * path)
+{
+  struct stat statbuf;
+  if (stat(path, &statbuf)) return 0;
+  if (statbuf.st_mtime > statbuf.st_ctime) return statbuf.st_mtime;
+  return statbuf.st_ctime;
+}
+
+static gboolean
+plugin_times_older_than_recurse(gchar *path, time_t regtime)
+{
+  DIR *dir;
+  struct dirent *dirent;
+  gchar *pluginname;
+
+  time_t pathtime = get_time(path);
+
+  if (pathtime > regtime) {
+    GST_INFO (GST_CAT_PLUGIN_LOADING,
+                     "time for %s was %ld; more recent than registry time of %ld\n",
+                     path, (long)pathtime, (long)regtime);
+    return FALSE;
+  }
+
+  dir = opendir(path);
+  if (dir) {
+    while ((dirent = readdir(dir))) {
+      /* don't want to recurse in place or backwards */
+      if (strcmp(dirent->d_name,".") && strcmp(dirent->d_name,"..")) {
+        pluginname = g_strjoin("/",path,dirent->d_name,NULL);
+        if (!plugin_times_older_than_recurse(pluginname , regtime)) {
+          g_free (pluginname);
+          closedir(dir);
+          return FALSE;
+        }
+        g_free (pluginname);
+      }
+    }
+    closedir(dir);
+  }
+  return TRUE;
+}
+
+static gboolean
+plugin_times_older_than(GList *paths, time_t regtime)
+{
+  /* return true iff regtime is more recent than the times of all the files
+   * in the plugin dirs.
+   */
+
+  while (paths) {
+    GST_DEBUG (GST_CAT_PLUGIN_LOADING,
+                      "comparing plugin times from %s with %ld\n",
+                      (gchar *)paths->data, (long) regtime);
+    if(!plugin_times_older_than_recurse(paths->data, regtime))
+      return FALSE;
+    paths = g_list_next(paths);
+  }
+  return TRUE;
+}
+
 static gboolean
 gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
 {
-  if (mode == GST_XML_REGISTRY_READ)
+  gint ret, i;
+  gchar *str, *plugin_paths, **plugin_pathv;
+  GList *l, *paths = GST_REGISTRY (registry)->paths;
+
+  if (mode == GST_XML_REGISTRY_READ) {
+    if (!plugin_times_older_than (paths, get_time (registry->location))) {
+      plugin_pathv = g_new0 (gchar*, g_list_length (paths));
+      for (l=paths, i=0; l->next; i++, l=l->next)
+        plugin_pathv[i] = (gchar*) l->data;
+      plugin_paths = g_strjoinv (":", plugin_pathv);
+      g_free (plugin_pathv);
+      
+      str = g_strdup_printf ("gst-register --gst-registry=%s --gst-plugin-path=%s",
+                             registry->location, plugin_paths);
+      GST_INFO (GST_CAT_GST_INIT, "Registry out of date, running gst-register");
+      GST_DEBUG (GST_CAT_PLUGIN_LOADING, "gst-register command line: %s", str);
+
+      g_free (plugin_paths);
+      ret = system (str);
+      if (ret != 0) {
+        GST_INFO (GST_CAT_GST_INIT, "Running gst-register for registry %s failed", registry->location);
+        return FALSE;
+      }
+
+      if (!plugin_times_older_than (paths, get_time (registry->location))) {
+        GST_INFO (GST_CAT_GST_INIT, "Registry still out of date, something is wrong...");
+        return FALSE;
+      }
+    }
+    
     registry->regfile = fopen (registry->location, "r");
+  }
   else if (mode == GST_XML_REGISTRY_WRITE)
   {
     /* check the dir */
     struct stat filestat;
     char *dirname = g_strndup(registry->location,
-			strrchr(registry->location, '/') - registry->location);
+                              strrchr(registry->location, '/') - registry->location);
     if (stat(dirname, &filestat) == -1 && errno == ENOENT)
       if (mkdir(dirname, dirmode) != 0)
         return FALSE;
