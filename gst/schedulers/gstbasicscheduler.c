@@ -169,6 +169,8 @@ gst_basic_scheduler_class_init (GstBasicSchedulerClass * klass)
   gstscheduler_class->pad_disconnect 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_disconnect);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_select);
   gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_iterate);
+
+  gstscheduler_class->show 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_show);
 }
 
 static void
@@ -335,7 +337,7 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
       }
     }
   } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
-exit:
+
   GST_FLAG_UNSET (element, GST_ELEMENT_COTHREAD_STOPPING);
 
   GST_DEBUG_LEAVE ("");
@@ -485,7 +487,6 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
   elements = chain->elements;
   while (elements) {
     gboolean decoupled;
-    gint same_sched = 0;
 
     element = GST_ELEMENT_CAST (elements->data);
     elements = g_list_next (elements);
@@ -832,6 +833,7 @@ gst_basic_scheduler_chain_elements (GstBasicScheduler * sched, GstElement * elem
     /* FIXME chain changed here */
 /*    gst_basic_scheduler_cothreaded_chain(chain->sched->parent,chain); */
   }
+
 }
 
 
@@ -913,7 +915,6 @@ static void
 gst_basic_scheduler_reset (GstScheduler *sched)
 {
   cothread_context *ctx;
-  GstBin *bin = GST_BIN (GST_SCHEDULER_PARENT (sched));
   GList *elements = GST_BASIC_SCHEDULER_CAST (sched)->elements;
 
   while (elements) {
@@ -943,9 +944,11 @@ gst_basic_scheduler_add_element (GstScheduler * sched, GstElement * element)
 
   GST_INFO (GST_CAT_SCHEDULING, "adding element \"%s\" to scheduler", GST_ELEMENT_NAME (element));
 
-  /* if the element already has a different scheduler, remove the element from it */
-  if (GST_ELEMENT_SCHED (element))
-    GST_ERROR(GST_CAT_SCHEDULING, "grave error");
+  /* if the element already has a scheduler something went wrong */
+  if (GST_ELEMENT_SCHED (element)) {
+    GST_ERROR (element, "grave error");
+    return;
+  }
   
   /* set the sched pointer in the element itself */
   GST_ELEMENT_SCHED (element) = sched;
@@ -1010,6 +1013,7 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
 
     /* unset the scheduler pointer in the element */
     GST_ELEMENT_SCHED (element) = NULL;
+    
   }
 }
 
@@ -1134,7 +1138,6 @@ gst_basic_scheduler_pad_connect (GstScheduler * sched, GstPad *srcpad, GstPad *s
 static void
 gst_basic_scheduler_pad_disconnect (GstScheduler * sched, GstPad * srcpad, GstPad * sinkpad)
 {
-  GstSchedulerChain *chain;
   GstElement *element1, *element2;
   GstSchedulerChain *chain1, *chain2;
   GstBasicScheduler *bsched = GST_BASIC_SCHEDULER (sched);

@@ -26,8 +26,8 @@
 
 #define GST_AUTOPLUG_MAX_COST 999999
 
-typedef guint   (*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointer data);
-typedef GList*  (*GstAutoplugListFunction) (gpointer data);
+typedef guint   	(*GstAutoplugCostFunction) (gpointer src, gpointer dest, gpointer data);
+typedef const GList*  	(*GstAutoplugListFunction) (gpointer data);
 
 
 static void     	gst_static_autoplug_class_init	(GstStaticAutoplugClass *klass);
@@ -156,7 +156,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
 
     /* if we have a match, connect the pads */
     if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
-        !GST_PAD_CONNECTED(sinkpad))
+        !GST_PAD_IS_CONNECTED(sinkpad))
     {
       if (gst_caps_check_compatibility (gst_pad_get_caps(pad), gst_pad_get_caps(sinkpad))) {
         gst_pad_connect(pad, sinkpad);
@@ -233,7 +233,7 @@ gst_autoplug_pads_autoplug (GstElement *src, GstElement *sink)
   }
 }
 
-static GList*
+static const GList*
 gst_autoplug_elementfactory_get_list (gpointer data)
 {
   return gst_elementfactory_get_list ();
@@ -575,7 +575,7 @@ gst_autoplug_func (gpointer src, gpointer sink,
   gpointer iNode, iPrev;
   gint iDist, i, iCost;
 
-  GList *elements = g_list_copy (list_function(data));
+  GList *elements = g_list_copy ((GList *)list_function(data));
   GList *factories;
   guint num_factories;
 

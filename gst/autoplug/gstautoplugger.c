@@ -201,7 +201,7 @@ gst_autoplugger_init (GstAutoplugger *autoplugger)
 }
 
 
-static void
+G_GNUC_UNUSED static void
 gst_autoplugger_external_sink_connected(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger)
 {
   GstPadTemplate *peertemplate;
@@ -226,7 +226,7 @@ gst_autoplugger_external_sink_connected(GstPad *pad, GstPad *peerpad, GstAutoplu
   }
 }
 
-static void
+G_GNUC_UNUSED static void
 gst_autoplugger_external_src_connected(GstPad *pad, GstPad *peerpad, GstAutoplugger *autoplugger)
 {
   GstPadTemplate *peertemplate;
@@ -348,9 +348,6 @@ gst_autoplugger_external_sink_caps_nego_failed(GstPad *pad, gboolean *result, Gs
 
   if (gst_autoplugger_autoplug(autoplugger,autoplugger->cache_srcpad,sinkpad_peer_caps,srcpad_peer_caps))
     *result = TRUE;
-
-  /* force renego */
-  gst_pad_renegotiate(GST_PAD(GST_PAD_PEER(autoplugger->cache_sinkpad)));
 
   autoplugger->paused--;
   if (autoplugger->paused == 0)
