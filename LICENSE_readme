@@ -28,7 +28,7 @@ mad              libmad           (http://www.mars.org/home/rob/proj/mpeg/)
 mpeg2dec         libmpeg2         (http://libmpeg2.sourceforge.net/)
 mpeg2enc         libmpeg2enc      (http://mjpeg.sourceforge.net/)
 mplex            libmplex         (http://mjpeg.sourceforge.net/)
-siddec           libsidplay       (http://www.geocities.com/SiliconValley/Lakes/5147/sidplay/,
+siddec           libsidplay 1.36  (http://www.geocities.com/SiliconValley/Lakes/5147/sidplay/,
                                    http://sourceforge.net/projects/sidplay2/)
 trm              libmusicbrainz   (http://www.musicbrainz.org/)
 xine             libxine          (http://xinehq.de/)
@@ -57,9 +57,9 @@ cacasink         libcaca          (http://sam.zoy.org/projects/libcaca/)
 colorspacelcs    libcolorspace    
 dvdec            libdv            (http://libdv.sourceforge.net/)
 esdmon,esdsink   libesd           (ftp.gnome.org/pub/GNOME/stable/sources/esound/)
+faac             libfaac          (http://www.audiocoding.com/modules/mydownloads/)
 fameenc          libfame          (http://fame.sourceforge.net/)
 ffmpeg           ffmpeg           (http://ffmpeg.sourceforge.net/)
-flac             libFLAC          (http://flac.sourceforge.net/)
 gdkpixbuf        GTK+             (http://www.gtk.org/)
 gnomevfs         gnome-vfs        (ftp.gnome.org//pub/GNOME/stable/sources/gnome-vfs/)
 gst_arts         aRts             (http://arts-project.org/)
@@ -79,7 +79,7 @@ sdlvideosink     libsdl           (http://www.libsdl.org/)
 shout2send       libshout2        (http://www.icecast.org)
 smoothwave      
 swfdec                            (http://swfdec.sourceforge.net/)
-tarkin
+tarkin                            (http://svn.xiph.org/trunk/tarkin/)
 textoverlay      pango            (http://www.pango.org/)
 
 Plugins which use a BSD covered library are as follows:
@@ -88,6 +88,7 @@ ogg              libogg/libvorbis (http://www.xiph.org/ogg/vorbis/)
 vorbis           libogg/libvorbis (http://www.xiph.org/ogg/vorbis/)
 gsttheora        libtheora        (http://www.theora.org/)
 speex                             (http://www.speex.org/)
+flac             libFLAC          (http://flac.sourceforge.net/)
 
 Plugins based on libraries with other free licenses:
 
@@ -121,11 +122,16 @@ mikmod           libmikmod        (http://mikmod.raphnet.net/)
 Seems a newer release of mikmod is LGPL, though it's listed as GPL by
 GStreamer.
 
-faac             libfaac          (http://www.audiocoding.com/download.php)
 faad             libfaad          (http://www.audiocoding.com/)
-Faad/faac seems to be under a commercial license.  Plus licensing seems
-to be different if using FAAD or FAAD2 as the underlying library.  Not
-sure how this should be described here or handled in gst-inspect.
+faad's license depends on its major version :
+  - for FAAD1 : it is LGPL
+  - for FAAD2 : it is GPL
+look at these pages for more information on licenses :
+http://www.audiocoding.com/modules/wiki/?page=FAAD2
+http://www.audiocoding.com/modules/wiki/?page=FAAC
+
+by default, GStreamer faad plugin would compile against FAAD2 if available.
+it falls back to FAAD1 if not.
 
 dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
 The sourceforge website claims it uses GPL, LGPL, and the Mozilla Public
@@ -135,4 +141,3 @@ inherited.
 effectv          effectv          (http://effectv.sourceforge.net/)
 The sourceforge website claims it uses GPL, though it is currently
 listed as an LGPL library in GStreamer.
-
