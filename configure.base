@@ -1205,7 +1205,7 @@ test/bindings/Makefile
 tests/Makefile
 tests/sched/Makefile
 tests/eos/Makefile
-tests/muxer/Makefile
+tests/muxing/Makefile
 testsuite/Makefile
 testsuite/capsnego/Makefile
 testsuite/refcounting/Makefile
