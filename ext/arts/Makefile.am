@@ -1,3 +1,6 @@
+## we wrap this Makefile.am in a USE_ so that we won't run mcopidl
+## during make distcheck when it isn't on the system
+if USE_ARTS
 plugindir = $(libdir)/gst
 
 plugin_LTLIBRARIES = libgstarts.la
@@ -23,3 +26,4 @@ dist-hook:
 libgstarts_la_CFLAGS = $(GST_CFLAGS)
 libgstarts_la_CXXFLAGS = $(ARTS_CXXFLAGS) $(GST_CFLAGS)
 libgstarts_la_LIBADD = $(ARTS_LIBS)
+endif
