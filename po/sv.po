@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.14 2004/10/06 17:02:14 thomasvs Exp $
+# $Id: sv.po,v 1.15 2004/11/25 18:55:57 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-06 18:20+0200\n"
+"POT-Creation-Date: 2004-11-12 19:06+0100\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -16,54 +16,110 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:345 ext/sndfile/gstsf.c:618
+#: ext/alsa/gstalsamixertrack.c:83
+msgid "Master"
+msgstr "Övergripande"
+
+#: ext/alsa/gstalsamixertrack.c:84 sys/oss/gstossmixer.c:100
+msgid "Bass"
+msgstr "Bass"
+
+#: ext/alsa/gstalsamixertrack.c:85 sys/oss/gstossmixer.c:102
+msgid "Treble"
+msgstr "Diskant"
+
+#: ext/alsa/gstalsamixertrack.c:86 sys/oss/gstossmixer.c:106
+msgid "PCM"
+msgstr "PCM"
+
+#: ext/alsa/gstalsamixertrack.c:87 sys/oss/gstossmixer.c:104
+msgid "Synth"
+msgstr "Synt"
+
+#: ext/alsa/gstalsamixertrack.c:88 sys/oss/gstossmixer.c:110
+msgid "Line-in"
+msgstr "Linje-in"
+
+#: ext/alsa/gstalsamixertrack.c:89 sys/oss/gstossmixer.c:114
+msgid "CD"
+msgstr "Cd"
+
+#: ext/alsa/gstalsamixertrack.c:90 sys/oss/gstossmixer.c:112
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: ext/alsa/gstalsamixertrack.c:91
+#, fuzzy
+msgid "PC Speaker"
+msgstr "Högtalare"
+
+#: ext/alsa/gstalsamixertrack.c:92
+#, fuzzy
+msgid "Playback"
+msgstr "Spela"
+
+#: ext/alsa/gstalsamixertrack.c:93
+#, fuzzy
+msgid "Capture"
+msgstr "Satir"
+
+#: ext/audiofile/gstafsink.c:344 ext/sndfile/gstsf.c:624
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: ext/audiofile/gstafsink.c:367 ext/audiofile/gstafsrc.c:373
+#: ext/audiofile/gstafsink.c:366 ext/audiofile/gstafsrc.c:371
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: ext/audiofile/gstafsrc.c:320
+#: ext/audiofile/gstafsrc.c:318
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+#: ext/cdparanoia/gstcdparanoia.c:273
+#, fuzzy
+msgid "discid"
+msgstr "Ingen skiva"
+
+#: ext/cdparanoia/gstcdparanoia.c:273
+msgid "CDDA discid for metadata retrieval"
+msgstr ""
+
+#: ext/cdparanoia/gstcdparanoia.c:677 ext/cdparanoia/gstcdparanoia.c:693
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1156
+#: ext/gnomevfs/gstgnomevfssrc.c:1157
 #, c-format
 msgid "Could not open vfs file \"%s\" for reading."
 msgstr "Kunde inte öppna vfs-filen \"%s\" för läsning."
 
-#: ext/gnomevfs/gstgnomevfssrc.c:1164
+#: ext/gnomevfs/gstgnomevfssrc.c:1165
 #, fuzzy
 msgid "No filename given."
 msgstr "Inget filnamn angivet"
 
-#: ext/gnomevfs/gstgnomevfssink.c:428
+#: ext/gnomevfs/gstgnomevfssink.c:432
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Kunde inte öppna vfs-filen \"%s\" för skrivning: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:435
+#: ext/gnomevfs/gstgnomevfssink.c:439
 msgid "No filename given"
 msgstr "Inget filnamn angivet"
 
-#: ext/gnomevfs/gstgnomevfssink.c:463
+#: ext/gnomevfs/gstgnomevfssink.c:467
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
 
-#: ext/sndfile/gstsf.c:579
+#: ext/sndfile/gstsf.c:585
 msgid "No filename specified."
 msgstr "Inget filnamn angivet."
 
-#: ext/sndfile/gstsf.c:832
+#: ext/sndfile/gstsf.c:838
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunde inte skriva till filen \"%s\"."
@@ -91,32 +147,32 @@ msgstr ""
 "Inget användbart namnrymdselement kunde hittas.\n"
 "Installera ett och starta om."
 
-#: sys/dxr3/dxr3audiosink.c:297
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Kunde inte öppna ljudenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:283
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Kunde inte öppna styrenheten \"%s\" för skrivning."
 
-#: sys/dxr3/dxr3audiosink.c:342
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Kunde inte konfigurera ljudenheten \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Kan inte ställa in ljudenheten \"%s\" till %d Hz."
 
-#: sys/dxr3/dxr3audiosink.c:421
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Kunde inte stänga ljudenheten \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:308
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Kunde inte stänga styrenheten \"%s\"."
@@ -131,7 +187,7 @@ msgstr "Kunde inte öppna videoenheten \"%s\" för skrivning."
 msgid "Could not close video device \"%s\"."
 msgstr "Kunde inte stänga vidoeenheten \"%s\"."
 
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:124
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kunde inte skriva till enheten \"%s\"."
@@ -169,37 +225,9 @@ msgstr "Din OSS-enhet kunde inte undersökas korrekt"
 msgid "Volume"
 msgstr "Volym"
 
-#: sys/oss/gstossmixer.c:100
-msgid "Bass"
-msgstr "Bass"
-
-#: sys/oss/gstossmixer.c:102
-msgid "Treble"
-msgstr "Diskant"
-
-#: sys/oss/gstossmixer.c:104
-msgid "Synth"
-msgstr "Synt"
-
-#: sys/oss/gstossmixer.c:106
-msgid "PCM"
-msgstr "PCM"
-
 #: sys/oss/gstossmixer.c:108
 msgid "Speaker"
 msgstr "Högtalare"
-
-#: sys/oss/gstossmixer.c:110
-msgid "Line-in"
-msgstr "Linje-in"
-
-#: sys/oss/gstossmixer.c:112
-msgid "Microphone"
-msgstr "Mikrofon"
-
-#: sys/oss/gstossmixer.c:114
-msgid "CD"
-msgstr "Cd"
 
 #: sys/oss/gstossmixer.c:116
 msgid "Mixer"
@@ -269,7 +297,7 @@ msgstr "Monitor"
 msgid "No device specified."
 msgstr "Ingen enheten angiven."
 
-#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:400
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
@@ -282,17 +310,17 @@ msgstr "Enheten är inte öppen."
 msgid "Device is open."
 msgstr "Enheten är öppen."
 
-#: sys/v4l2/v4l2_calls.c:411
+#: sys/v4l2/v4l2_calls.c:414
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Enheten \"%s\" är ingen fångstenhet."
 
-#: sys/v4l2/v4l2src_calls.c:255
+#: sys/v4l2/v4l2src_calls.c:256
 #, c-format
 msgid "Could not get buffers from device \"%s\"."
 msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:264
+#: sys/v4l2/v4l2src_calls.c:265
 #, c-format
 msgid "Could not get enough buffers from device \"%s\"."
 msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
@@ -730,9 +758,6 @@ msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"
 #~ msgid "Porn Groove"
 #~ msgstr "Porn Groove"
 
-#~ msgid "Satire"
-#~ msgstr "Satir"
-
 #~ msgid "Slow Jam"
 #~ msgstr "Slow Jam"
 
@@ -916,9 +941,6 @@ msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"
 #~ msgid "Line for displaying the name of the album"
 #~ msgstr "Rad för visning av namnet på albumet"
 
-#~ msgid "Play"
-#~ msgstr "Spela"
-
 #~ msgid "Pause"
 #~ msgstr "Paus"
 
@@ -945,9 +967,6 @@ msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"
 
 #~ msgid "Disc error"
 #~ msgstr "Skivfel"
-
-#~ msgid "No disc"
-#~ msgstr "Ingen skiva"
 
 #~ msgid "Data CD"
 #~ msgstr "Data-cd"
@@ -1673,9 +1692,6 @@ msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"
 
 #~ msgid "Surround Input"
 #~ msgstr "Surroundingång"
-
-#~ msgid "Master"
-#~ msgstr "Övergripande"
 
 #~ msgid "Master Mono"
 #~ msgstr "Övergripande mono"

@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Plugins 0.8.5 "Take You On"
+GStreamer: Release notes for GStreamer Plugins 0.8.6 "IOU Love"
         
 
 The GStreamer team is happy to announce a new release
@@ -28,59 +28,77 @@ Features of this release
     
       * Parallel installability with 0.6.x series
       * Internationalization
-      * New translation in this release: Oriya
-      * Translations: af az cs en_GB hu nl or sq sr sv uk
-      * licensing corrections
-      * new element: mngdec
-      * pixel aspect ratio conversion fixes
-      * 64 bit fixes
-      * NEW_MEDIA fixes
-      * ogm support added
-      * matroska fixes
+      * New translation in this release: Norwegian Bokmaal
+      * New translation in this release: Luca Ferretti
+      * Translations: af az cs en_GB hu nb nl or sq sr sv uk
+      * new element: polypsink
+      * new element: musepack decoder
+      * alsa fixes
       * playbin fixes
-      * alsamixer fixes
-      * gnomevfssrc fixes
-      * ogg fixes
-      * multifdsink fixes
-      * multifilesink fixes
-      * qtdemux fixes
-      * avidemux fixes
-      * asfdemux fixes
-      * wavenc fixes
-      * flac fixes
-      * fli/flx fixes
-      * mpeg fixes
-      * speex now actually works
+      * visualisation fixes
+      * support for cd://, cdda:// and dv:// uri
+      * v4lsrc fixes
+      * id3demux fixes
+      * avc-based Firewire camera support
+      * speex fixes
+      * tcp fixes
+      * multifdsink improvements
+      * ffmpegcolorspace fixes
+      * chained ogg support
 
 Bugs fixed in this release
     
-      * 121809 : [Solaris] Not able to record
-      * 130682 : [alsasink] fails to negotiate with audio decoders
-      * 135407 : [xviddec] shows green frames when decoding packed bitstre...
-      * 140432 : Osssink and alsasink broken on nforce2 (intel8x0) soundcard
-      * 140897 : Incorrect segment duration in files created with matroska...
-      * 140898 : No writing application specified in matroska files create...
-      * 141554 : vorbis in matroska files makes the vorbisdec plugin segfault
-      * 144091 : [Solaris] audio mixer element
-      * 144616 : Infinite loop in wavparse.
-      * 148711 : typefind function for TTA audio files
-      * 148950 : matroskademux doesn't set buffer duration
-      * 148951 : matroskademux misses the tta codec in its codec list
-      * 151232 : [lame] doesn't build with lame-3.90
-      * 151236 : [v4l] compile failure
-      * 151410 : Memory leaks in multifdsink
-      * 151462 : theora plugin Makefile broken
-      * 151877 : [PATCH] Fix bad casts in ximagesink.c
-      * 151879 : [PATCH] fix bad pointer casts in xvimagesink.c
-      * 151881 : [PATCH] Fix format strings for amd64 in seek.c
-      * 151882 : [PATCH] Fix format string warnings in spider_seek.c
-      * 151883 : [PATCH] fix cdplayer.c warnings on amd64
-      * 151884 : [PATCH] Fix format string warnings in cdparanoia.c
-      * 151886 : [PATCH] Fix format string warnings in vorbisfile.c
-      * 151887 : [PATCH] Fix format string warnings in player.c
-      * 152102 : wavenc leaks events
-      * 152341 : patch for ivorbis compile failure
-      * 154301 : typefind and rmdemux don't use the same mime type for rea...
+      * 140994 : [mplex] configure failure
+      * 143961 : MusePack codec support
+      * 144389 : alsasink dies after some time playing
+      * 144436 : opt / oggmux problem (endless interrupt event loop)
+      * 150061 : gstreamer error in rhythmbox: vorbisdec(27925) vorbisdec....
+      * 150576 : pad v4l2src0:src returned caps that are not a real subset...
+      * 151059 : [sdlvideosink] doesn't implement overlay properly
+      * 151064 : asfdemux crash
+      * 151122 : playing a m4a-file using " spider " doesn't work
+      * 152750 : audioconvert crash
+      * 154781 : [playbin/totem] avi file with just divx video (no audio) ...
+      * 154784 : [playbin/totem] playing avi with 320x240 raw yuv video an...
+      * 154788 : Xv video in another window
+      * 154807 : auparse doesn't error out on invalid files
+      * 154834 : [dvdreadsrc] immediate EOS when specifying a title > 0
+      * 154903 : cdparanoia plugin doesn't handle URIs
+      * 154967 : [wavenc] missing cast and terminator in gst_event_new_dis...
+      * 155008 : LoTr movie segfaulting with gstreamer+totem
+      * 155223 : memleak in wavparse
+      * 155814 : gst_bin_iterate() gets stuck on some images
+      * 155864 : [oggdemux] regression with files without proper EOS flag
+      * 156372 : gst-plugins fails to build on AMD64
+      * 156387 : [oggdemux] seeking is off by up to 30 secs (regression)
+      * 156477 : Ogg Vorbis file fails to play. Works with ogg123
+      * 156488 : Introducing device for alsasink in gconf makes totem crash
+      * 156565 : gst_bin_remove crashes deep down
+      * 156910 : Rhythmbox crash at the end of this song
+      * 157032 : Patch for dispose/finalize functions in gst-plugins
+      * 157281 : crash with totem-gst
+      * 157543 : [rtpgsmparse] missing NULL terminator to gst_caps_new_sim...
+      * 157548 : [vorbisenc] premature and/or missing terminator to gst_ca...
+      * 157632 : C99 style variable initialization(multifilesrc_test.c)
+      * 157964 : smoothwave display warnings when launching gst-register
+      * 157986 : [vorbisdec] fix warning when querying while draining
+      * 158006 : alsasink/rhythmbox don't like each other anymore
+      * 158125 : gstreamer apps have serious issues with 0.8.5.2 plugins & ...
+      * 158221 : Build fix for gstreamer-plugins 0.8.5.3
+      * 158365 : Fix for playbin hangs
+      * 158375 : fix segfault in mp3 typefinding
+      * 158462 : [dvdreadsrc] invalid reads / is_nav_pack assertion failure
+      * 158832 : pngenc drops GstBuffer extra info (timestamp, length...)
+      * 158976 : [oggdemux] seeking broken again [regression]
+      * 159186 : [PATCH] videorate doesn't handle all colorspaces
+      * 159187 : [PATCH] v4l probes too much and should cache
+
+API changed in this release
+     
+
+- API additions:
+    
+* A new v4lsrc property, autoprobe-fps, has been added.
 
 Download
 
@@ -116,25 +134,26 @@ as provided by gstreamer-gconf-0.8.pc, to access the default settings.
 Contributors to this release
     
       * Arwed v. Merkatz
-      * Balamurali Viswanathan
       * Benjamin Otte
-      * Brian Cameron
-      * Christian Schaller
       * Christophe Fergeau
       * David Schleef
-      * Francis Labonte
-      * Gora Mohanty
       * Iain Holmes
+      * James Henstridge
+      * James Morrison
       * Jan Schmidt
       * Johan Dahlin
       * Julien Moutte
-      * Martin Eikermann
-      * Nathan Robertson
-      * Phil Blundell
+      * Kjartan Maraas
+      * Koop Mast
+      * Luca Ferretti
+      * Martin Pitt
+      * Milosz Derezynski
       * Ronald Bultje
-      * Scott Wheeler
       * Sebastien Cote
-      * Stephane Loeuillet
+      * Stefan Kost
+      * Takao Fujiwara
       * Thomas Vander Stichele
+      * Tim-Philipp Müller
       * Wim Taymans
       * Zaheer Abbas Merali
+ 
