@@ -33,6 +33,7 @@ have_type_handler (GstElement *typefind, guint probability, GstCaps *caps, gpoin
 int
 main (int argc, char *argv[])
 {
+  guint i = 1;
   GstElement *pipeline;
   GstElement *source, *typefind;
 
@@ -42,32 +43,38 @@ main (int argc, char *argv[])
 
   if (argc < 2) { 
     g_print ("Please give a filename to typefind\n\n");
-    exit (1);
-  }
-  pipeline = gst_pipeline_new (NULL);
-  source = gst_element_factory_make ("filesrc", "source");
-  g_assert (GST_IS_ELEMENT (source));
-  g_object_set (source, "location", argv[1], NULL);
-  typefind = gst_element_factory_make ("typefind", "typefind");
-  g_assert (GST_IS_ELEMENT (typefind));
-  gst_bin_add_many (GST_BIN (pipeline), source, typefind, NULL);
-  gst_element_link (source, typefind);
-  g_signal_connect (G_OBJECT (typefind), "have-type", 
-		    G_CALLBACK (have_type_handler), g_strdup (argv[1]));
-
-  /* set to play */
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-
-  while (!FOUND){
-    gst_bin_iterate (GST_BIN (pipeline));
-    iterations++;
-    if(iterations >= max_iterations){
-      break;
-    }
-  }
-  if (!FOUND) {
-    g_print ("%s - No type found\n", argv[1]);
     return 1;
+  }
+  while (i < argc) {
+    FOUND = FALSE;
+    iterations = 0;
+    pipeline = gst_pipeline_new (NULL);
+    source = gst_element_factory_make ("filesrc", "source");
+    g_assert (GST_IS_ELEMENT (source));
+    g_object_set (source, "location", argv[i], NULL);
+    typefind = gst_element_factory_make ("typefind", "typefind");
+    g_assert (GST_IS_ELEMENT (typefind));
+    gst_bin_add_many (GST_BIN (pipeline), source, typefind, NULL);
+    gst_element_link (source, typefind);
+    g_signal_connect (G_OBJECT (typefind), "have-type", 
+		      G_CALLBACK (have_type_handler), argv[i]);
+
+    /* set to play */
+    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+
+    while (!FOUND){
+      if (!gst_bin_iterate (GST_BIN (pipeline)))
+	break;
+      iterations++;
+      if(iterations >= max_iterations){
+	break;
+      }
+    }
+    if (!FOUND) {
+      g_print ("%s - No type found\n", argv[i]);
+    }
+    i++;
+    /* g_object_unref (pipeline); */
   }
   return 0;
 }
