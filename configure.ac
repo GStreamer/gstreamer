@@ -242,6 +242,8 @@ case "$host" in
     ;;
 esac
 
+GST_UNALIGNED_ACCESS()
+
 dnl Check for essential libraries first:
 dnl ====================================
 

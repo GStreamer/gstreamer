@@ -1,3 +1,9 @@
+2004-04-15  David Schleef  <ds@schleef.org>
+
+	* common/m4/gst-arch.m4: Add GST_UNALIGNED_ACCESS() macro that
+	checks if we can access unaligned memory.
+	* configure.ac: Use it.
+
 2004-04-16  Benjamin Otte  <otte@gnome.org>
 
 	* gst/elements/gstfilesrc.c: (gst_filesrc_init), (gst_filesrc_get),
