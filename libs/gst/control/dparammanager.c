@@ -603,11 +603,14 @@ gst_dpman_state_change (GstElement *element, gint old_state, gint new_state, Gst
 static void
 gst_dpman_caps_changed (GstPad *pad, GstCaps *caps, GstDParamManager *dpman)
 {
+	gint rate;
+
 	g_return_if_fail (caps != NULL);
 	g_return_if_fail (dpman != NULL);
 	g_return_if_fail (GST_IS_DPMAN (dpman));
 	
-	GST_DPMAN_RATE(dpman) = gst_caps_get_int (caps, "rate");
+	gst_caps_get_int (caps, "rate", &rate);
+	GST_DPMAN_RATE(dpman) = rate;
 	
 	GST_DEBUG(GST_CAT_PARAMS, "got caps change %d", GST_DPMAN_RATE(dpman));
 }
