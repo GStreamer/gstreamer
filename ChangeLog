@@ -1,3 +1,20 @@
+2004-07-16  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xerror),
+	(gst_ximagesink_check_xshm_calls), (gst_ximagesink_ximage_new),
+	(gst_ximagesink_ximage_destroy), (gst_ximagesink_sink_link),
+	(gst_ximagesink_chain), (gst_ximagesink_buffer_free),
+	(gst_ximagesink_buffer_alloc):
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls),
+	(gst_xvimagesink_xvimage_new), (gst_xvimagesink_xvimage_destroy),
+	(gst_xvimagesink_chain), (gst_xvimagesink_buffer_free),
+	(gst_xvimagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.h: Getting the 2 video sinks synchronized
+	again. Using internal data pointer of the x(v)image to store image's
+	data to be coherent with the buffer alloc mechanism. Investigated the
+	image destruction code to be sure that everything gets freed correctly.
+
 2004-07-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_get_type),

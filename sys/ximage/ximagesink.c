@@ -74,7 +74,7 @@ enum
 };
 
 static GstVideoSinkClass *parent_class = NULL;
-static gboolean error_catched = FALSE;
+static gboolean error_caught = FALSE;
 
 /* ============================================================= */
 /*                                                               */
@@ -91,7 +91,7 @@ gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
 
   XGetErrorText (display, xevent->error_code, error_msg, 1024);
   GST_DEBUG ("ximagesink failed to use XShm calls. error: %s", error_msg);
-  error_catched = TRUE;
+  error_caught = TRUE;
   return 0;
 }
 
@@ -100,15 +100,20 @@ gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
 static gboolean
 gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
 {
+#ifndef HAVE_XSHM
+  return FALSE;
+#else
   GstXImage *ximage = NULL;
   int (*handler) (Display *, XErrorEvent *);
+  gboolean result = FALSE;
 
   g_return_val_if_fail (xcontext != NULL, FALSE);
 
-#ifdef HAVE_XSHM
   ximage = g_new0 (GstXImage, 1);
+  g_return_val_if_fail (ximage != NULL, FALSE);
 
   /* Setting an error handler to catch failure */
+  error_caught = FALSE;
   handler = XSetErrorHandler (gst_ximagesink_handle_xerror);
 
   ximage->size = (xcontext->bpp / 8);
@@ -116,6 +121,8 @@ gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
   /* Trying to create a 1x1 picture */
   ximage->ximage = XShmCreateImage (xcontext->disp, xcontext->visual,
       xcontext->depth, ZPixmap, NULL, &ximage->SHMInfo, 1, 1);
+  if (!ximage->ximage)
+    goto out;
 
   ximage->SHMInfo.shmid = shmget (IPC_PRIVATE, ximage->size, IPC_CREAT | 0777);
   ximage->SHMInfo.shmaddr = shmat (ximage->SHMInfo.shmid, 0, 0);
@@ -124,32 +131,28 @@ gst_ximagesink_check_xshm_calls (GstXContext * xcontext)
 
   XShmAttach (xcontext->disp, &ximage->SHMInfo);
 
-  error_catched = FALSE;
-
   XSync (xcontext->disp, 0);
 
-  XSetErrorHandler (handler);
-
-  if (error_catched) {          /* Failed, detaching shared memory, destroying image and telling we can't
-                                   use XShm */
-    error_catched = FALSE;
-    XDestroyImage (ximage->ximage);
+  if (error_caught) {
+    /* Failed, detaching shared memory, destroying image and telling we can't
+       use XShm */
+    error_caught = FALSE;
     shmdt (ximage->SHMInfo.shmaddr);
     shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
-    g_free (ximage);
-    XSync (xcontext->disp, FALSE);
-    return FALSE;
   } else {
     XShmDetach (xcontext->disp, &ximage->SHMInfo);
-    XDestroyImage (ximage->ximage);
     shmdt (ximage->SHMInfo.shmaddr);
     shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
-    g_free (ximage);
-    XSync (xcontext->disp, FALSE);
+    result = TRUE;
   }
+out:
+  XSetErrorHandler (handler);
+  if (ximage->ximage)
+    XFree (ximage->ximage);
+  g_free (ximage);
+  XSync (xcontext->disp, FALSE);
+  return result;
 #endif /* HAVE_XSHM */
-
-  return TRUE;
 }
 
 /* This function handles GstXImage creation depending on XShm availability */
@@ -164,7 +167,6 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
 
   ximage->width = width;
   ximage->height = height;
-  ximage->data = NULL;
   ximage->ximagesink = ximagesink;
 
   g_mutex_lock (ximagesink->x_lock);
@@ -196,25 +198,24 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, gint width, gint height)
   } else
 #endif /* HAVE_XSHM */
   {
-    ximage->data = g_malloc (ximage->size);
-
     ximage->ximage = XCreateImage (ximagesink->xcontext->disp,
         ximagesink->xcontext->visual,
         ximagesink->xcontext->depth,
-        ZPixmap, 0, ximage->data,
+        ZPixmap, 0, NULL,
         ximage->width, ximage->height,
         ximagesink->xcontext->bpp,
         ximage->width * (ximagesink->xcontext->bpp / 8));
+
+    ximage->ximage->data = g_malloc (ximage->size);
 
     XSync (ximagesink->xcontext->disp, FALSE);
   }
 
   if (!ximage->ximage) {
-    if (ximage->data)
-      g_free (ximage->data);
-
+    if (ximage->ximage->data) {
+      g_free (ximage->ximage->data);
+    }
     g_free (ximage);
-
     ximage = NULL;
   }
 
@@ -252,8 +253,9 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink, GstXImage * ximage)
   } else
 #endif /* HAVE_XSHM */
   {
-    if (ximage->ximage)
+    if (ximage->ximage) {
       XDestroyImage (ximage->ximage);
+    }
   }
 
   XSync (ximagesink->xcontext->disp, FALSE);
@@ -823,23 +825,30 @@ gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "pixel_height", &ximagesink->pixel_height);
 
   /* Creating our window and our image */
-  if (!ximagesink->xwindow)
+  if (!ximagesink->xwindow) {
     ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink,
         GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
-  else {
-    if (ximagesink->xwindow->internal)
+  } else {
+    if (ximagesink->xwindow->internal) {
       gst_ximagesink_xwindow_resize (ximagesink, ximagesink->xwindow,
           GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+    }
   }
 
-  if ((ximagesink->ximage) && ((GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width) || (GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->ximage->height))) { /* We renew our ximage only if size changed */
+  if ((ximagesink->ximage)
+      && ((GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width)
+          || (GST_VIDEOSINK_HEIGHT (ximagesink) !=
+              ximagesink->ximage->height))) {
+    /* We renew our ximage only if size changed */
     gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
 
     ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
         GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
-  } else if (!ximagesink->ximage)       /* If no ximage, creating one */
+  } else if (!ximagesink->ximage) {
+    /* If no ximage, creating one */
     ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
         GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+  }
 
   gst_x_overlay_got_desired_size (GST_X_OVERLAY (ximagesink),
       GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
@@ -935,15 +944,16 @@ gst_ximagesink_chain (GstPad * pad, GstData * data)
      put the ximage which is in the PRIVATE pointer */
   if (GST_BUFFER_FREE_DATA_FUNC (buf) == gst_ximagesink_buffer_free) {
     gst_ximagesink_ximage_put (ximagesink, GST_BUFFER_PRIVATE (buf));
-  } else {                      /* Else we have to copy the data into our private image, */
+  } else {
+    /* Else we have to copy the data into our private image, */
     /* if we have one... */
     if (ximagesink->ximage) {
       memcpy (ximagesink->ximage->ximage->data,
           GST_BUFFER_DATA (buf),
           MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
       gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
-    } else {                    /* No image available. Something went wrong during capsnego ! */
-
+    } else {
+      /* No image available. Something went wrong during capsnego ! */
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
           ("no format defined before chain function"));
@@ -978,8 +988,8 @@ gst_ximagesink_buffer_free (GstBuffer * buffer)
   if ((ximage->width != GST_VIDEOSINK_WIDTH (ximagesink)) ||
       (ximage->height != GST_VIDEOSINK_HEIGHT (ximagesink)))
     gst_ximagesink_ximage_destroy (ximagesink, ximage);
-  else {                        /* In that case we can reuse the image and add it to our image pool. */
-
+  else {
+    /* In that case we can reuse the image and add it to our image pool. */
     g_mutex_lock (ximagesink->pool_lock);
     ximagesink->image_pool = g_slist_prepend (ximagesink->image_pool, ximage);
     g_mutex_unlock (ximagesink->pool_lock);
@@ -1008,11 +1018,13 @@ gst_ximagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
       ximagesink->image_pool = g_slist_delete_link (ximagesink->image_pool,
           ximagesink->image_pool);
 
-      if ((ximage->width != GST_VIDEOSINK_WIDTH (ximagesink)) || (ximage->height != GST_VIDEOSINK_HEIGHT (ximagesink))) {       /* This image is unusable. Destroying... */
+      if ((ximage->width != GST_VIDEOSINK_WIDTH (ximagesink)) ||
+          (ximage->height != GST_VIDEOSINK_HEIGHT (ximagesink))) {
+        /* This image is unusable. Destroying... */
         gst_ximagesink_ximage_destroy (ximagesink, ximage);
         ximage = NULL;
-      } else {                  /* We found a suitable image */
-
+      } else {
+        /* We found a suitable image */
         break;
       }
     }
@@ -1020,7 +1032,8 @@ gst_ximagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
 
   g_mutex_unlock (ximagesink->pool_lock);
 
-  if (!ximage) {                /* We found no suitable image in the pool. Creating... */
+  if (!ximage) {
+    /* We found no suitable image in the pool. Creating... */
     ximage = gst_ximagesink_ximage_new (ximagesink,
         GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
   }

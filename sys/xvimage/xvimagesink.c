@@ -119,6 +119,7 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   g_return_val_if_fail (xcontext != NULL, FALSE);
 
   xvimage = g_new0 (GstXvImage, 1);
+  g_return_val_if_fail (xvimage != NULL, FALSE);
 
   /* Setting an error handler to catch failure */
   error_caught = FALSE;
@@ -148,7 +149,6 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
     error_caught = FALSE;
     shmdt (xvimage->SHMInfo.shmaddr);
     shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
-    XSync (xcontext->disp, FALSE);
   } else {
     XShmDetach (xcontext->disp, &xvimage->SHMInfo);
     shmdt (xvimage->SHMInfo.shmaddr);
@@ -178,7 +178,6 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
 
   xvimage->width = width;
   xvimage->height = height;
-  xvimage->data = NULL;
   xvimage->xvimagesink = xvimagesink;
 
   g_mutex_lock (xvimagesink->x_lock);
@@ -210,22 +209,23 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
   } else
 #endif /* HAVE_XSHM */
   {
+    /* We use image's internal data pointer */
     xvimage->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xcontext->im_format,
-        xvimage->data, xvimage->width, xvimage->height);
+        NULL, xvimage->width, xvimage->height);
 
+    /* Allocating memory for image's data */
     xvimage->xvimage->data = g_malloc (xvimage->xvimage->data_size);
 
     XSync (xvimagesink->xcontext->disp, FALSE);
   }
 
   if (!xvimage->xvimage) {
-    if (xvimage->data)
-      g_free (xvimage->data);
-
+    if (xvimage->xvimage->data) {
+      g_free (xvimage->xvimage->data);
+    }
     g_free (xvimage);
-
     xvimage = NULL;
   }
 
@@ -265,7 +265,11 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink * xvimagesink,
 #endif /* HAVE_XSHM */
   {
     if (xvimage->xvimage) {
-      g_free (xvimage->xvimage->data);
+      /* Freeing image data */
+      if (xvimage->xvimage->data) {
+        g_free (xvimage->xvimage->data);
+      }
+      /* Freeing image itself */
       XFree (xvimage->xvimage);
     }
   }
@@ -1235,15 +1239,16 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
      put the ximage which is in the PRIVATE pointer */
   if (GST_BUFFER_FREE_DATA_FUNC (buf) == gst_xvimagesink_buffer_free) {
     gst_xvimagesink_xvimage_put (xvimagesink, GST_BUFFER_PRIVATE (buf));
-  } else {                      /* Else we have to copy the data into our private image, */
+  } else {
+    /* Else we have to copy the data into our private image, */
     /* if we have one... */
     if (xvimagesink->xvimage) {
       memcpy (xvimagesink->xvimage->xvimage->data,
           GST_BUFFER_DATA (buf),
           MIN (GST_BUFFER_SIZE (buf), xvimagesink->xvimage->size));
       gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->xvimage);
-    } else {                    /* No image available. Something went wrong during capsnego ! */
-
+    } else {
+      /* No image available. Something went wrong during capsnego ! */
       gst_buffer_unref (buf);
       GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
           ("no format defined before chain function"));
@@ -1278,8 +1283,8 @@ gst_xvimagesink_buffer_free (GstBuffer * buffer)
   if ((xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
       (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink)))
     gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
-  else {                        /* In that case we can reuse the image and add it to our image pool. */
-
+  else {
+    /* In that case we can reuse the image and add it to our image pool. */
     g_mutex_lock (xvimagesink->pool_lock);
     xvimagesink->image_pool = g_slist_prepend (xvimagesink->image_pool,
         xvimage);
@@ -1309,11 +1314,13 @@ gst_xvimagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
       xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
           xvimagesink->image_pool);
 
-      if ((xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) || (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink))) {   /* This image is unusable. Destroying... */
+      if ((xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
+          (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink))) {
+        /* This image is unusable. Destroying... */
         gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
         xvimage = NULL;
-      } else {                  /* We found a suitable image */
-
+      } else {
+        /* We found a suitable image */
         break;
       }
     }
@@ -1321,7 +1328,8 @@ gst_xvimagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
 
   g_mutex_unlock (xvimagesink->pool_lock);
 
-  if (!xvimage) {               /* We found no suitable image in the pool. Creating... */
+  if (!xvimage) {
+    /* We found no suitable image in the pool. Creating... */
     xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
         GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
   }

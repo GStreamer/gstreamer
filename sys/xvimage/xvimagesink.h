@@ -115,7 +115,6 @@ struct _GstXvImage {
   XShmSegmentInfo SHMInfo;
 #endif /* HAVE_XSHM */
   
-  char *data;
   gint width, height, size;
 };
 
