@@ -324,9 +324,12 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
 
   /* due to oddities in the cothreads code, when this function returns it will
    * switch to the main cothread. thus, we need to unlock the current element. */
-  if (SCHED (element)->current->post_run_func)
-    SCHED (element)->current->post_run_func (SCHED (element)->current);
-  SCHED (element)->current = NULL;
+  if (SCHED (element)) {
+    if (SCHED (element)->current && SCHED (element)->current->post_run_func) {
+      SCHED (element)->current->post_run_func (SCHED (element)->current);
+    }
+    SCHED (element)->current = NULL;
+  }
 
   GST_DEBUG_LEAVE ("(%d,'%s')", argc, name);
   gst_object_unref (GST_OBJECT (element));
