@@ -896,7 +896,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 			GstEvent *event;
 
 			gst_buffer_unref (buf);
-			GST_DEBUG (0,"new seek %lld", src->curoffset);
+			GST_DEBUG (0,"new seek %" G_GINT64_FORMAT, src->curoffset);
 			src->new_seek = FALSE;
 
 			GST_DEBUG (GST_CAT_EVENT, "gnomevfssrc sending discont");
@@ -943,7 +943,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 			GstEvent *event;
 
 			gst_buffer_unref (buf);
-			GST_DEBUG (0,"new seek %lld", src->curoffset);
+			GST_DEBUG (0,"new seek %" G_GINT64_FORMAT, src->curoffset);
 			src->new_seek = FALSE;
 
 			GST_DEBUG (GST_CAT_EVENT, "gnomevfssrc sending discont");
@@ -956,7 +956,7 @@ static GstBuffer *gst_gnomevfssrc_get(GstPad *pad)
 		result = gnome_vfs_read(src->handle, GST_BUFFER_DATA(buf),
 				   src->bytes_per_read, &readbytes);
 
-		GST_DEBUG(0, "read: %s, readbytes: %Lu",
+		GST_DEBUG(0, "read: %s, readbytes: %" G_GINT64_FORMAT,
 				gnome_vfs_result_to_string(result), readbytes);
 		/* deal with EOS */
 		if (readbytes == 0)
@@ -1069,7 +1069,7 @@ static gboolean gst_gnomevfssrc_open_file(GstGnomeVFSSrc *src)
 		else
 			src->size = 0;
 
-		GST_DEBUG(0, "size %lld", src->size);
+		GST_DEBUG(0, "size %" G_GINT64_FORMAT, src->size);
 
 		audiocast_do_notifications(src);
 	

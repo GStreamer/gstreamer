@@ -587,7 +587,7 @@ gst_play_get_length_callback (GstPlay *play)
 		g_mutex_unlock(play->video_bin_mutex);
 	}
 	if (query_worked){
-		g_print("got length %lld\n", value);
+		g_print("got length %" G_GINT64_FORMAT "\n", value);
 		g_signal_emit (G_OBJECT (play), gst_play_signals [STREAM_LENGTH], 0, value);
 		play->length_nanos = value;
 		return FALSE;

@@ -318,10 +318,10 @@ gst_gnomevfssink_chain (GstPad *pad, GstBuffer *buf)
   if (GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN))
   {
     result = gnome_vfs_write(sink->handle, GST_BUFFER_DATA(buf), GST_BUFFER_SIZE (buf), &bytes_written);
-    GST_DEBUG (0, "write: %s, written_bytes: %Lu", gnome_vfs_result_to_string(result), bytes_written);
+    GST_DEBUG (0, "write: %s, written_bytes: %" G_GUINT64_FORMAT, gnome_vfs_result_to_string(result), bytes_written);
     if (bytes_written < GST_BUFFER_SIZE (buf))
     {
-      printf ("gnomevfssink : Warning : %d bytes should be written, only %Lu bytes written\n",
+      printf ("gnomevfssink : Warning : %d bytes should be written, only %" G_GUINT64_FORMAT " bytes written\n",
       		  GST_BUFFER_SIZE (buf), bytes_written);
     }
   }

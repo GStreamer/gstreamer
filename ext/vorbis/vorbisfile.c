@@ -231,7 +231,7 @@ gst_vorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 
   VorbisFile *vorbisfile = GST_VORBISFILE (datasource);
 
-  GST_DEBUG (0, "read %d", read_size);
+  GST_DEBUG (0, "read %" G_GINT64_FORMAT, read_size);
 
   /* make sure we don't go to EOS */
   if (!vorbisfile->may_eos && vorbisfile->total_bytes && 
@@ -290,7 +290,7 @@ gst_vorbisfile_seek (void *datasource, int64_t offset, int whence)
     return -1;
   }
   
-  GST_DEBUG (0, "seek %lld %d", offset, whence);
+  GST_DEBUG (0, "seek %" G_GINT64_FORMAT " %d", offset, whence);
 
   if (whence == SEEK_SET) {
     method = GST_SEEK_METHOD_SET;

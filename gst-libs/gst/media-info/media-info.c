@@ -531,7 +531,7 @@ gst_media_info_get_stream (GstMediaInfo *info, GstMediaInfoStream *stream)
       {
         case GST_FORMAT_TIME:
           stream->length_time = value;
-          g_print ("  total %s: %lld\n", definition->nick, value);
+          g_print ("  total %s: %" G_GINT64_FORMAT "\n", definition->nick, value);
 	  break;
 	default:
 	  /* separation is necessary because track_format doesn't resolve to
@@ -539,7 +539,7 @@ gst_media_info_get_stream (GstMediaInfo *info, GstMediaInfoStream *stream)
 	  if (format == track_format)
 	  {
 	    stream->length_tracks = value;
-            g_print ("  total %s: %lld\n", definition->nick, value);
+            g_print ("  total %s: %" G_GINT64_FORMAT "\n", definition->nick, value);
 	  }
 	  else
 	    g_print ("warning: unhandled format %s\n", definition->nick);
@@ -639,7 +639,8 @@ gst_media_info_find_streaminfo (GstMediaInfo *info)
       {
 	GstPropsEntry *length;
         /* substract to get the length */
-	GMI_DEBUG("DEBUG: start %lld, end %lld\n", value_start, value_end);
+	GMI_DEBUG("DEBUG: start %" G_GINT64_FORMAT ", end %"
+		  G_GINT64_FORMAT "\n", value_start, value_end);
 	value_end -= value_start;
 	g_print ("DEBUG: length: %d\n", (int) value_end);
 	length = gst_props_entry_new ("length", GST_PROPS_INT ((int) value_end));

@@ -265,12 +265,12 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
   if (v4lmjpegsink->clock) {
     GstClockID id;
 
-    GST_DEBUG (0,"videosink: clock wait: %llu", GST_BUFFER_TIMESTAMP(buf));
+    GST_DEBUG (0,"videosink: clock wait: %" G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP(buf));
 
     jitter = 0; /* FIXME: jitter = gst_clock_current_diff(v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP (buf)); */
 
     if (jitter > 500000 || jitter < -500000)
-      GST_DEBUG (0, "jitter: %lld", jitter);
+      GST_DEBUG (0, "jitter: %" G_GINT64_FORMAT, jitter);
 
     id = gst_clock_new_single_shot_id (v4lmjpegsink->clock, GST_BUFFER_TIMESTAMP(buf));
     gst_element_clock_wait(GST_ELEMENT(v4lmjpegsink), id, NULL);

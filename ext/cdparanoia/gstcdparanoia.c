@@ -842,7 +842,7 @@ cdparanoia_event (GstPad *pad, GstEvent *event)
 																	src->first_sector, src->last_sector);
 				
         if (paranoia_seek (src->p, seg_start_sector, SEEK_SET) > -1) {
-					GST_DEBUG (0, "seeked to %lld", seg_start_sector);
+					GST_DEBUG (0, "seeked to %" G_GINT64_FORMAT, seg_start_sector);
 					
 					src->segment_start_sector = seg_start_sector;;
 					src->cur_sector = src->segment_start_sector;
