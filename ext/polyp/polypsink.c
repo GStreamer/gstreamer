@@ -17,6 +17,9 @@
 
 #include "polypsink.h"
 
+GST_DEBUG_CATEGORY_EXTERN (polyp_debug);
+#define GST_CAT_DEFAULT polyp_debug
+
 enum
 {
   ARG_0,
@@ -44,9 +47,9 @@ gst_polypsink_base_init (gpointer g_class)
           "signed = (boolean) TRUE, "
           "width = (int) 16, "
           "depth = (int) 16, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 16 ];"
-          "audio/x-raw-float, "
+          "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 16 ]"
+#if 0
+          ";audio/x-raw-float, "
           "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
           "width = (int) 32, "
           "rate = (int) [ 1, MAX ], "
@@ -55,7 +58,9 @@ gst_polypsink_base_init (gpointer g_class)
           "signed = (boolean) FALSE, "
           "width = (int) 8, "
           "depth = (int) 8, "
-          "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 16 ]")
+          "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 16 ]"
+#endif
+      )
       );
 
   static const GstElementDetails details = {
@@ -334,7 +339,11 @@ create_context (GstPolypSink * polypsink)
 
   pa_context_set_state_callback (polypsink->context, context_state_callback,
       polypsink);
-  pa_context_connect (polypsink->context, NULL, 1, NULL);
+  if (polypsink->server && polypsink->server[0]) {
+    pa_context_connect (polypsink->context, polypsink->server, 1, NULL);
+  } else {
+    pa_context_connect (polypsink->context, NULL, 1, NULL);
+  }
 }
 
 static void
@@ -492,6 +501,7 @@ gst_polypsink_link (GstPad * pad, const GstCaps * caps)
   const char *n;
   char t[256];
   GstElementState state;
+  int n_channels;
 
   polypsink = GST_POLYPSINK (gst_pad_get_parent (pad));
 
@@ -519,24 +529,29 @@ gst_polypsink_link (GstPad * pad, const GstCaps * caps)
   else if (depth == 32 && endianness == 4321
       && !strcmp (n, "audio/x-raw-float"))
     polypsink->sample_spec.format = PA_SAMPLE_FLOAT32LE;
-  else
+  else {
+    GST_DEBUG ("unrecognized format, refusing link");
     return GST_PAD_LINK_REFUSED;
+  }
+
+  GST_DEBUG ("using format %d", polypsink->sample_spec.format);
 
   polypsink->sample_spec.rate = 44100;
   polypsink->sample_spec.channels = 2;
 
   pa_sample_spec_snprint (t, sizeof (t), &polypsink->sample_spec);
 
-  gst_structure_get_int (structure, "channels",
-      (int *) &polypsink->sample_spec.channels);
+  gst_structure_get_int (structure, "channels", &n_channels);
+  polypsink->sample_spec.channels = n_channels;
   gst_structure_get_int (structure, "rate", &polypsink->sample_spec.rate);
 
   pa_sample_spec_snprint (t, sizeof (t), &polypsink->sample_spec);
+  GST_DEBUG ("using format %s", t);
 
-  if (!pa_sample_spec_valid (&polypsink->sample_spec))
+  if (!pa_sample_spec_valid (&polypsink->sample_spec)) {
+    GST_DEBUG ("invalid format, refusing link");
     return GST_PAD_LINK_REFUSED;
-
-
+  }
 
   polypsink->negotiated = 1;
 
