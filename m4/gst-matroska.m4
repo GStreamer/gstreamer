@@ -17,7 +17,7 @@ AC_ARG_ENABLE(ebmltest, [  --disable-ebmltest            Do not try to compile a
     if test "x$ebml_include" != "x"; then
       EBML_CFLAGS="-I$ebml_include"
     else
-      EBML_CFLAGS="-I$ebml_prefix/include"
+      EBML_CFLAGS="-I$ebml_prefix/include/ebml"
     fi
     if test "x$ebml_lib" != "x"; then
       EBML_LIBS="-L$ebml_lib"
@@ -29,7 +29,7 @@ AC_ARG_ENABLE(ebmltest, [  --disable-ebmltest            Do not try to compile a
     if test "x$ebml_include" != "x"; then
       EBML_CFLAGS="-I$ebml_include"
     else
-      EBML_CFLAGS="-I$prefix/include"
+      EBML_CFLAGS="-I$prefix/include/ebml"
     fi
     if test "x$ebml_lib" != "x"; then
       EBML_LIBS="-L$ebml_lib"
@@ -139,7 +139,7 @@ AC_ARG_ENABLE(matroskatest, [  --disable-matroskatest        Do not try to compi
     if test "x$matroska_include" != "x"; then
       MATROSKA_CFLAGS="-I$matroska_include"
     else
-      MATROSKA_CFLAGS="-I$matroska_prefix/include"
+      MATROSKA_CFLAGS="-I$matroska_prefix/include/matroska"
     fi
     if test "x$matroska_lib" != "x"; then
       MATROSKA_LIBS="-L$matroska_lib"
@@ -151,7 +151,7 @@ AC_ARG_ENABLE(matroskatest, [  --disable-matroskatest        Do not try to compi
     if test "x$matroska_include" != "x"; then
       MATROSKA_CFLAGS="-I$matroska_include"
     else
-      MATROSKA_CFLAGS="-I$prefix/include"
+      MATROSKA_CFLAGS="-I$prefix/include/matroska"
     fi
     if test "x$matroska_lib" != "x"; then
       MATROSKA_LIBS="-L$matroska_lib"
