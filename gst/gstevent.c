@@ -34,13 +34,13 @@ _gst_event_initialize (void)
 {
   gint eventsize = sizeof(GstEvent);
   static const GTypeInfo event_info = {
-    0, //sizeof(GstElementClass),
+    0,
     NULL,
     NULL,
     NULL,
     NULL,
     NULL,
-    0, //sizeof(GstElement),
+    0, 
     0,
     NULL,
   };
@@ -68,6 +68,7 @@ gst_event_empty_new (GstEventType type)
   GST_INFO (GST_CAT_EVENT, "creating new event %p", event);
 
   GST_DATA_TYPE (event) = _gst_event_type;
+  GST_EVENT_TYPE (event) = type;
 
   return event;
 }
