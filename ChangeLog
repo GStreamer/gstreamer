@@ -1,3 +1,14 @@
+2004-07-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
+	(gst_multifdsink_add), (gst_multifdsink_get_stats),
+	(gst_multifdsink_client_remove),
+	(gst_multifdsink_handle_client_write):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcp-marshal.list:
+	Added get_stats method that returns a GValueArray of
+	stats values.
+
 2004-07-19  Benjamin Otte  <otte@gnome.org>
 
 	* ext/ladspa/gstladspa.c: (gst_ladspa_base_init):
