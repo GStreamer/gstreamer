@@ -197,8 +197,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
                                                                                 
-%doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
-%doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
+# %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
+# %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
                                                                                 
 %changelog
 * Thu Feb 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
