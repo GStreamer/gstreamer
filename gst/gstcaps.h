@@ -112,8 +112,8 @@ void		gst_caps_set_type_id			(GstCaps *caps, guint16 type_id);
 GstCaps*	gst_caps_set_props			(GstCaps *caps, GstProps *props);
 GstProps*	gst_caps_get_props			(GstCaps *caps);
 
-#define		gst_caps_set(caps, name, args...)	gst_props_set ((caps)->properties, name, args)
-#define		gst_caps_get(caps, name, args...)	gst_props_get ((caps)->properties, name, args)
+#define		gst_caps_set(caps, name, args...)	gst_props_set ((caps)->properties, name, ##args)
+#define		gst_caps_get(caps, name, args...)	gst_props_get ((caps)->properties, name, ##args)
 
 #define		gst_caps_get_int(caps,name,res)		gst_props_entry_get_int(gst_props_get_entry((caps)->properties,name),res)
 #define		gst_caps_get_float(caps,name,res)	gst_props_entry_get_float(gst_props_get_entry((caps)->properties,name),res)
