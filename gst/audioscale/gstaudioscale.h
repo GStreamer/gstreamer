@@ -59,6 +59,7 @@ struct _Audioscale {
   GstPad *sinkpad,*srcpad;
 
   /* audio state */
+  gboolean passthru;
   gint format;
   gint channels;
   gint frequency;

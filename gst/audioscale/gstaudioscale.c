@@ -48,7 +48,6 @@ enum {
 
 enum {
   ARG_0,
-  ARG_FREQUENCY,
   ARG_FILTERLEN,
   ARG_METHOD,
   /* FILL ME */
@@ -134,9 +133,6 @@ gst_audioscale_class_init (AudioscaleClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-        g_param_spec_int ("frequency","frequency","frequency",
-                          0,G_MAXINT,44100,G_PARAM_READWRITE|G_PARAM_CONSTRUCT));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERLEN,
 	g_param_spec_int ("filter_length", "filter_length", "filter_length",
                           0, G_MAXINT, 16, G_PARAM_READWRITE|G_PARAM_CONSTRUCT));
@@ -151,31 +147,119 @@ gst_audioscale_class_init (AudioscaleClass *klass)
 
 }
 
+static GstCaps *
+gst_audioscale_getcaps (GstPad *pad, GstCaps *caps)
+{
+  Audioscale *audioscale;
+  GstCaps *peercaps;
+
+  audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
+
+  if (pad == audioscale->srcpad){
+    peercaps = gst_pad_get_allowed_caps (audioscale->sinkpad);
+  }else{
+    peercaps = gst_pad_get_allowed_caps (audioscale->srcpad);
+  }
+
+  if(peercaps == GST_CAPS_NONE){
+    return GST_CAPS_NONE;
+  }
+
+  caps = gst_caps_copy (peercaps);
+#if 1
+  /* we do this hack, because the audioscale lib doesn't handle
+   * rate conversions larger than a factor of 2 */
+  if(gst_caps_has_property_typed(caps, "rate", GST_PROPS_INT_RANGE_TYPE)){
+    int rate_min, rate_max;
+
+    gst_props_entry_get_int_range (gst_props_get_entry(caps->properties, "rate"),
+	&rate_min, &rate_max);
+    gst_caps_set (caps, "rate", GST_PROPS_INT_RANGE((rate_min+1)/2,
+	  rate_max*2));
+  }else{
+    int rate;
+
+    gst_caps_get_int (caps, "rate", &rate);
+    gst_caps_set (caps, "rate", GST_PROPS_INT_RANGE((rate+1)/2,rate*2));
+  }
+#else
+  gst_caps_set (caps, "rate", GST_PROPS_INT_RANGE(4000,96000));
+#endif
+
+  return caps;
+}
+
 static GstPadLinkReturn
-gst_audioscale_sinkconnect (GstPad * pad, GstCaps * caps)
+gst_audioscale_sink_link (GstPad * pad, GstCaps * caps)
 {
   Audioscale *audioscale;
   resample_t *r;
-  GstCaps *newcaps;
+  GstCaps *caps1;
+  GstCaps *caps2;
+  GstCaps *peercaps;
   gint rate;
+  int ret;
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
   r = audioscale->resample;
+
+  if (!GST_CAPS_IS_FIXED (caps)){
+    return GST_PAD_LINK_DELAYED;
+  }
+
+  ret = gst_pad_try_set_caps (audioscale->srcpad, caps);
+
+  if(ret == GST_PAD_LINK_OK || ret == GST_PAD_LINK_DONE){
+    audioscale->passthru = TRUE;
+    return ret;
+  }
+
+  audioscale->passthru = FALSE;
 
   gst_caps_get_int (caps, "rate",     &rate);
   gst_caps_get_int (caps, "channels", &r->channels);
 
   r->i_rate = rate;
-  
   resample_reinit(r);
-  
-  newcaps = gst_caps_copy (caps);
-  gst_caps_set (newcaps, "rate", GST_PROPS_INT_TYPE, audioscale->targetfrequency, NULL);
 
-  if (GST_CAPS_IS_FIXED (caps))
-    return gst_pad_try_set_caps (audioscale->srcpad, newcaps);
-  else
-    return GST_PAD_LINK_DELAYED;
+  peercaps = gst_pad_get_allowed_caps (audioscale->srcpad);
+
+  caps1 = gst_caps_copy (caps);
+#if 1
+  /* we do this hack, because the audioscale lib doesn't handle
+   * rate conversions larger than a factor of 2 */
+  if(gst_caps_has_property_typed(caps1, "rate", GST_PROPS_INT_RANGE_TYPE)){
+    int rate_min, rate_max;
+
+    gst_props_entry_get_int_range (gst_props_get_entry(caps1->properties, "rate"),
+	&rate_min, &rate_max);
+    gst_caps_set (caps1, "rate", GST_PROPS_INT_RANGE((rate_min+1)/2,
+	  rate_max*2));
+  }else{
+    gst_caps_get_int (caps1, "rate", &rate);
+    gst_caps_set (caps1, "rate", GST_PROPS_INT_RANGE((rate+1)/2,rate*2));
+  }
+#else
+  gst_caps_set (caps1, "rate", GST_PROPS_INT_RANGE(4000,96000));
+#endif
+  caps2 = gst_caps_intersect(caps1, peercaps);
+  gst_caps_unref(caps1);
+
+  if(caps2 == GST_CAPS_NONE){
+    return GST_PAD_LINK_REFUSED;
+  }
+
+  if (GST_CAPS_IS_FIXED (caps2)) {
+    ret = gst_pad_try_set_caps (audioscale->srcpad, caps2);
+    gst_caps_get_int (caps, "rate",     &rate);
+    r->o_rate = rate;
+    audioscale->targetfrequency = rate;
+    resample_reinit(r);
+    return ret;
+  }
+  
+  gst_caps_unref (caps2);
+  return GST_PAD_LINK_DELAYED;
 }
 
 static void *
@@ -201,12 +285,14 @@ gst_audioscale_init (Audioscale *audioscale)
 	GST_PAD_TEMPLATE_GET (sink_factory), "sink");
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->sinkpad);
   gst_pad_set_chain_function(audioscale->sinkpad,gst_audioscale_chain);
-  gst_pad_set_link_function (audioscale->sinkpad, gst_audioscale_sinkconnect);
+  gst_pad_set_link_function (audioscale->sinkpad, gst_audioscale_sink_link);
+  gst_pad_set_getcaps_function (audioscale->sinkpad, gst_audioscale_getcaps);
 
   audioscale->srcpad = gst_pad_new_from_template (
 	GST_PAD_TEMPLATE_GET (src_factory), "src");
 
   gst_element_add_pad(GST_ELEMENT(audioscale),audioscale->srcpad);
+  gst_pad_set_getcaps_function (audioscale->srcpad, gst_audioscale_getcaps);
 
   r = g_new0(resample_t,1);
   audioscale->resample = r;
@@ -238,6 +324,11 @@ gst_audioscale_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail(buf != NULL);
 
   audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
+  if (audioscale->passthru){
+    gst_pad_push (audioscale->srcpad, buf);
+    return;
+  }
+
   data = GST_BUFFER_DATA(buf);
   size = GST_BUFFER_SIZE(buf);
 
@@ -266,10 +357,6 @@ gst_audioscale_set_property (GObject * object, guint prop_id,
   r = src->resample;
 
   switch (prop_id) {
-    case ARG_FREQUENCY:
-      src->targetfrequency = g_value_get_int (value);
-      r->o_rate = src->targetfrequency;
-      break;
     case ARG_FILTERLEN:
       r->filter_length = g_value_get_int (value);
       GST_DEBUG_OBJECT (GST_ELEMENT(src), "new filter length %d\n", r->filter_length);
@@ -295,9 +382,6 @@ gst_audioscale_get_property (GObject *object, guint prop_id, GValue *value, GPar
   r = src->resample;
 
   switch (prop_id) {
-    case ARG_FREQUENCY:
-      g_value_set_int (value, src->targetfrequency);
-      break;
     case ARG_FILTERLEN:
       g_value_set_int (value, r->filter_length);
       break;
