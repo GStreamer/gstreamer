@@ -34,11 +34,8 @@
 static GstElementDetails system_encode_details = {
   "MPEG1 Multiplexer",
   "Codec/Muxer",
-  "GPL",
   "Multiplexes MPEG-1 Streams",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2000",
+  "Wim Taymans <wim.taymans@chello.be>"
 };
 
 /* GstMPEG1SystemEncode signals and args */
@@ -87,6 +84,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
 )
 
 static void	gst_system_encode_class_init		(GstMPEG1SystemEncodeClass *klass);
+static void	gst_system_encode_base_init		(GstMPEG1SystemEncodeClass *klass);
 static void	gst_system_encode_init			(GstMPEG1SystemEncode *system_encode);
 
 static GstPad* 	gst_system_encode_request_new_pad 	(GstElement *element, GstPadTemplate *templ,
@@ -109,7 +107,7 @@ gst_mpeg1_system_encode_get_type (void)
   if (!system_encode_type) {
     static const GTypeInfo system_encode_info = {
       sizeof(GstMPEG1SystemEncodeClass),      
-      NULL,
+      (GBaseInitFunc)gst_system_encode_base_init,
       NULL,
       (GClassInitFunc)gst_system_encode_class_init,
       NULL,
@@ -122,6 +120,20 @@ gst_mpeg1_system_encode_get_type (void)
     system_encode_type = g_type_register_static(GST_TYPE_ELEMENT, "GstMPEG1SystemEncode", &system_encode_info, 0);
   }
   return system_encode_type;
+}
+
+static void
+gst_system_encode_base_init (GstMPEG1SystemEncodeClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (audio_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (video_sink_factory));
+  gst_element_class_set_details (element_class, &system_encode_details);
 }
 
 static void
@@ -545,31 +557,25 @@ gst_system_encode_get_property (GObject *object, guint prop_id, GValue *value, G
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   /* this filter needs the getbits functions */
   if (!gst_library_load ("gstgetbits"))
     return FALSE;
 
-  /* create an elementfactory for the system_encode element */
-  factory = gst_element_factory_new ("system_encode", GST_TYPE_SYSTEM_ENCODE,
-                                     &system_encode_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (audio_sink_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (video_sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "system_encode",
+			       GST_RANK_NONE, GST_TYPE_SYSTEM_ENCODE);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "system_encode",
-  plugin_init
-};
+  "MPEG-1 system stream encoder",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
