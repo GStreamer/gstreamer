@@ -36,19 +36,9 @@ AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
 
-dnl decide on error flags
-AS_COMPILER(COMPILER)
-if test "x$COMPILER" = "xforte"; then
-  GST_ERROR=
-else
-  if test "x$GST_CVS"="xyes"; then
-    GST_ERROR="-Wall -Werror"
-  else
-    GST_ERROR="-Wall"
-  fi
-fi
-dnl fix these error flags first, then reintroduce them
-GST_ERROR=
+AS_COMPILER_FLAG(-Wall,GST_ERROR="$GST_ERROR -Wall",)
+AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",)
+
 
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
@@ -365,17 +355,6 @@ fi
 if test "x$USE_DEBUG" = xyes; then
    GST_INT_CFLAGS="$GST_INT_CFLAGS -g"
 fi
-
-if test "x$USE_PROFILING" = xyes; then
-dnl  CFLAGS="$CFLAGS -pg -fprofile-arcs"
-  FOMIT_FRAME_POINTER=""
-else
-  FOMIT_FRAME_POINTER="-fomit-frame-pointer"
-fi
-
-dnl
-dnl AC_SUBST(FOMIT_FRAME_POINTER)
-dnl
 
 dnl #############################
 dnl # Set automake conditionals #
