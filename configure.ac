@@ -422,8 +422,9 @@ dnl **** festival ****
 dnl FIXME until thomas can be bothered to download the 20 MB festival sources
 dnl this will not go in
 translit(dnm, m, l) AM_CONDITIONAL(USE_FESTIVAL, true)
-GST_CHECK_FEATURE(FESTIVAL, [festival plugins], festivalsink, [
-  HAVE_FESTIVAL=no
+GST_CHECK_FEATURE(FESTIVAL, [festival plugins], festivalsrc, [
+  GST_CHECK_LIBHEADER(FESTIVAL, festival, festival_tidy_up, -lFestival, festival/festival.h, FESTIVAL_LIBS="-lFestival")
+  AC_SUBST(FESTIVAL_LIBS)
 ])
 
 dnl *** FLAC ***
