@@ -208,7 +208,7 @@ gst_real_pad_init (GstRealPad *pad)
   pad->eventfunc 	= gst_pad_event_default;
   pad->convertfunc 	= gst_pad_convert_default;
   pad->queryfunc 	= gst_pad_query_default;
-  pad->intconnfunc 	= gst_pad_get_internal_links_default;
+  pad->intlinkfunc 	= gst_pad_get_internal_links_default;
 
   pad->eventmaskfunc 	= gst_pad_get_event_masks_default;
   pad->formatsfunc 	= gst_pad_get_formats_default;
@@ -697,20 +697,20 @@ gst_pad_get_query_types_default (GstPad *pad)
 /**
  * gst_pad_set_internal_link_function:
  * @pad: a #GstPad to set the internal link function for.
- * @intconn: the #GstPadIntConnFunction to set.
+ * @intlink: the #GstPadIntLinkFunction to set.
  *
  * Sets the given internal link function for the pad.
  */
 void
 gst_pad_set_internal_link_function (GstPad *pad, 
-                                          GstPadIntConnFunction intconn)
+                                          GstPadIntLinkFunction intlink)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
-  GST_RPAD_INTCONNFUNC (pad) = intconn;
+  GST_RPAD_INTLINKFUNC (pad) = intlink;
   GST_DEBUG (GST_CAT_PADS, "internal link for %s:%s  set to %s",
-             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intconn));
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intlink));
 }
 
 /**
@@ -734,14 +734,14 @@ gst_pad_set_formats_function (GstPad *pad, GstPadFormatsFunction formats)
 /**
  * gst_pad_set_link_function:
  * @pad: a #GstPad to set the link function for.
- * @link: the #GstPadConnectFunction to set.
+ * @link: the #GstPadLinkFunction to set.
  *
  * Sets the given link function for the pad. It will be called
  * when the pad is linked or relinked with caps.
  */
 void
 gst_pad_set_link_function (GstPad *pad,
-		              GstPadConnectFunction link)
+		              GstPadLinkFunction link)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
@@ -1079,7 +1079,7 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
  * @srcpad: the source #GstPad to link.
  * @sinkpad: the sink #GstPad to link.
  *
- * Connects the source pad to the sink pad.
+ * Links the source pad to the sink pad.
  *
  * Returns: TRUE if the pad could be linked, FALSE otherwise.
  */
@@ -1268,7 +1268,7 @@ gst_pad_get_ghost_pad_list (GstPad *pad)
  * 2. deals with the result code of the link function
  * 3. sets fixed caps on the pad.
  */
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 {
   GstCaps *oldcaps, *allowed = NULL;
@@ -1322,7 +1322,7 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
 
   /* we need to notify the link function */
   if (notify && GST_RPAD_LINKFUNC (pad)) {
-    GstPadConnectReturn res;
+    GstPadLinkReturn res;
     gchar *debug_string;
     gboolean negotiating;
 
@@ -1405,14 +1405,14 @@ gst_pad_try_set_caps_func (GstRealPad *pad, GstCaps *caps, gboolean notify)
  *
  * Tries to set the caps on the given pad.
  *
- * Returns: A GstPadConnectReturn value indicating whether the caps
+ * Returns: A #GstPadLinkReturn value indicating whether the caps
  * 		could be set.
  */
-GstPadConnectReturn
+GstPadLinkReturn
 gst_pad_try_set_caps (GstPad *pad, GstCaps *caps)
 {
   GstRealPad *peer, *realpad;
-  GstPadConnectReturn set_retval;
+  GstPadLinkReturn set_retval;
 
   realpad = GST_PAD_REALIZE (pad);
   peer = GST_RPAD_PEER (realpad);
@@ -1602,7 +1602,7 @@ gst_pad_perform_negotiate (GstPad *srcpad, GstPad *sinkpad)
 
   /* no negotiation is performed if the pads have filtercaps */
   if (intersection) {
-    GstPadConnectReturn res;
+    GstPadLinkReturn res;
 
     res = gst_pad_try_set_caps_func (realsrc, intersection, TRUE);
     if (res == GST_PAD_LINK_REFUSED) 
@@ -1693,7 +1693,7 @@ gst_pad_relink_filtered (GstPad *srcpad, GstPad *sinkpad,
  *
  * Returns: TRUE if the peer pad accepted the caps, FALSE otherwise.
  */
-GstPadConnectReturn
+GstPadLinkReturn
 gst_pad_proxy_link (GstPad *pad, GstCaps *caps)
 {
   GstRealPad *peer, *realpad;
@@ -2632,8 +2632,8 @@ gst_pad_get_internal_links (GstPad *pad)
 
   rpad = GST_PAD_REALIZE (pad);
 
-  if (GST_RPAD_INTCONNFUNC (rpad))
-    res = GST_RPAD_INTCONNFUNC (rpad) (GST_PAD_CAST (rpad));
+  if (GST_RPAD_INTLINKFUNC (rpad))
+    res = GST_RPAD_INTLINKFUNC (rpad) (GST_PAD_CAST (rpad));
 
   return res;
 }

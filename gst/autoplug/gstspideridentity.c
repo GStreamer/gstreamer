@@ -29,7 +29,7 @@ GstElementDetails gst_spider_identity_details = {
   "SpiderIdentity",
   "Generic",
   "LGPL",
-  "Connection between spider and outside elements",
+  "Link between spider and outside elements",
   VERSION,
   "Benjamin Otte <in7y118@public.uni-hamburg.de>",
   "(C) 2002",
@@ -71,7 +71,7 @@ static void			gst_spider_identity_init		(GstSpiderIdentity *spider_identity);
 /* functions set in pads, elements and stuff */
 static void			gst_spider_identity_chain		(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn	gst_spider_identity_change_state	(GstElement *element);
-static GstPadConnectReturn	gst_spider_identity_link		(GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn		gst_spider_identity_link		(GstPad *pad, GstCaps *caps);
 static GstCaps *		gst_spider_identity_getcaps		(GstPad *pad, GstCaps *caps);
 /* loop functions */
 static void			gst_spider_identity_dumb_loop		(GstSpiderIdentity *ident);
@@ -221,7 +221,7 @@ gst_spider_identity_new_sink (gchar *name)
 }
 
 /* shamelessly stolen from gstqueue.c to get proxy links */
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_spider_identity_link (GstPad *pad, GstCaps *caps)
 {
   GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));

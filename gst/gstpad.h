@@ -116,7 +116,7 @@ typedef enum {
   GST_PAD_LINK_DELAYED =  0,
   GST_PAD_LINK_OK      =  1,
   GST_PAD_LINK_DONE    =  2
-} GstPadConnectReturn;
+} GstPadLinkReturn;
 
 /* convenience functions */
 #ifdef G_HAVE_ISO_VARARGS
@@ -141,12 +141,12 @@ typedef gboolean		(*GstPadConvertFunction)	(GstPad *pad,
 								 GstFormat *dest_format, gint64 *dest_value);
 typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstQueryType type,
 		 						 GstFormat *format, gint64  *value);
-typedef GList*			(*GstPadIntConnFunction)	(GstPad *pad);
+typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
 typedef const GstFormat*	(*GstPadFormatsFunction)	(GstPad *pad);
 typedef const GstEventMask*	(*GstPadEventMaskFunction)	(GstPad *pad);
 typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 
-typedef GstPadConnectReturn	(*GstPadConnectFunction) 	(GstPad *pad, GstCaps *caps);
+typedef GstPadLinkReturn	(*GstPadLinkFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstCaps*		(*GstPadGetCapsFunction) 	(GstPad *pad, GstCaps *caps);
 typedef GstBufferPool*		(*GstPadBufferPoolFunction) 	(GstPad *pad);
 
@@ -188,7 +188,7 @@ struct _GstRealPad {
   
   GstPadDirection 		 direction;
 
-  GstPadConnectFunction 	 linkfunc;
+  GstPadLinkFunction 		 linkfunc;
   GstRealPad 			*peer;
 
   gpointer 			 sched_private;
@@ -209,7 +209,7 @@ struct _GstRealPad {
   GstPadQueryFunction		 queryfunc;
   GstPadFormatsFunction		 formatsfunc;
   GstPadQueryTypeFunction	 querytypefunc;
-  GstPadIntConnFunction		 intconnfunc;
+  GstPadIntLinkFunction		 intlinkfunc;
 
   GstPadBufferPoolFunction 	 bufferpoolfunc;
 
@@ -257,7 +257,7 @@ struct _GstGhostPadClass {
 #define GST_RPAD_EVENTHANDLER(pad)	(((GstRealPad *)(pad))->eventhandler)
 #define GST_RPAD_CONVERTFUNC(pad)	(((GstRealPad *)(pad))->convertfunc)
 #define GST_RPAD_QUERYFUNC(pad)		(((GstRealPad *)(pad))->queryfunc)
-#define GST_RPAD_INTCONNFUNC(pad)	(((GstRealPad *)(pad))->intconnfunc)
+#define GST_RPAD_INTLINKFUNC(pad)	(((GstRealPad *)(pad))->intlinkfunc)
 #define GST_RPAD_FORMATSFUNC(pad)	(((GstRealPad *)(pad))->formatsfunc)
 #define GST_RPAD_QUERYTYPEFUNC(pad)	(((GstRealPad *)(pad))->querytypefunc)
 #define GST_RPAD_EVENTMASKFUNC(pad)	(((GstRealPad *)(pad))->eventmaskfunc)
@@ -419,7 +419,7 @@ const GstEventMask*	gst_pad_get_event_masks			(GstPad *pad);
 const GstEventMask*	gst_pad_get_event_masks_default		(GstPad *pad);
 
 /* pad links */
-void			gst_pad_set_link_function		(GstPad *pad, GstPadConnectFunction link);
+void			gst_pad_set_link_function		(GstPad *pad, GstPadLinkFunction link);
 gboolean                gst_pad_can_link            		(GstPad *srcpad, GstPad *sinkpad);
 gboolean                gst_pad_can_link_filtered   		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 
@@ -432,11 +432,11 @@ GstPad*			gst_pad_get_peer			(GstPad *pad);
 /* capsnego functions */
 GstCaps*		gst_pad_get_caps			(GstPad *pad);
 GstCaps*		gst_pad_get_pad_template_caps		(GstPad *pad);
-GstPadConnectReturn	gst_pad_try_set_caps			(GstPad *pad, GstCaps *caps);
+GstPadLinkReturn	gst_pad_try_set_caps			(GstPad *pad, GstCaps *caps);
 gboolean		gst_pad_check_compatibility		(GstPad *srcpad, GstPad *sinkpad);
 
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
-GstPadConnectReturn     gst_pad_proxy_link          		(GstPad *pad, GstCaps *caps);
+GstPadLinkReturn	gst_pad_proxy_link          		(GstPad *pad, GstCaps *caps);
 gboolean		gst_pad_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
 gboolean		gst_pad_perform_negotiate		(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_try_relink_filtered		(GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps);
@@ -475,7 +475,7 @@ gboolean		gst_pad_query				(GstPad *pad, GstQueryType type,
 gboolean 		gst_pad_query_default 			(GstPad *pad, GstQueryType type,
 		                      				 GstFormat *format, gint64 *value);
 
-void			gst_pad_set_internal_link_function(GstPad *pad, GstPadIntConnFunction intconn);
+void			gst_pad_set_internal_link_function(GstPad *pad, GstPadIntLinkFunction intlink);
 GList*			gst_pad_get_internal_links	(GstPad *pad);
 GList*	 		gst_pad_get_internal_links_default (GstPad *pad);
 	

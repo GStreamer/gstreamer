@@ -85,10 +85,10 @@ static GstSpiderConnection *	gst_spider_link_get		(GstSpiderIdentity *src);
 
 /* autoplugging functions */
 static GstElement *             gst_spider_find_element_to_plug      	(GstElement *src, GstElementFactory *fac, GstPadDirection dir);
-static GstPadConnectReturn	gst_spider_plug				(GstSpiderConnection *conn);
-static GstPadConnectReturn	gst_spider_plug_from_srcpad		(GstSpiderConnection *conn, GstPad *srcpad);
-/*static GstPadConnectReturn      gst_spider_plug_peers			(GstSpider *spider, GstPad *srcpad, GstPad *sinkpad); */
-static GstPadConnectReturn	gst_spider_create_and_plug		(GstSpiderConnection *conn, GList *plugpath);
+static GstPadLinkReturn		gst_spider_plug				(GstSpiderConnection *conn);
+static GstPadLinkReturn		gst_spider_plug_from_srcpad		(GstSpiderConnection *conn, GstPad *srcpad);
+/*static GstPadLinkReturn      gst_spider_plug_peers			(GstSpider *spider, GstPad *srcpad, GstPad *sinkpad); */
+static GstPadLinkReturn		gst_spider_create_and_plug		(GstSpiderConnection *conn, GList *plugpath);
 
 /* random functions */
 static gchar *			gst_spider_unused_elementname		(GstBin *bin, const gchar *startwith);
@@ -489,7 +489,7 @@ gst_spider_identity_unplug (GstSpiderIdentity *ident)
 }
 /* links src to sink using the elementfactories in plugpath
  * plugpath will be removed afterwards */
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
 {
   GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (conn->src);
@@ -590,7 +590,7 @@ gst_spider_find_element_to_plug (GstElement *src, GstElementFactory *fac, GstPad
   return NULL;
 }
 /* try to establish the link */
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_spider_plug	(GstSpiderConnection *conn)
 {
   GstSpider *spider = (GstSpider *) GST_OBJECT_PARENT (conn->src);
@@ -602,7 +602,7 @@ gst_spider_plug	(GstSpiderConnection *conn)
   return GST_PAD_LINK_REFUSED;
 }
 /* try to establish the link using this pad */
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_spider_plug_from_srcpad (GstSpiderConnection *conn, GstPad *srcpad)
 {
   GstElement *element;

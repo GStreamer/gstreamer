@@ -119,12 +119,12 @@ gst_tee_class_init (GstTeeClass *klass)
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_tee_request_new_pad);
 }
 
-static GstPadConnectReturn 
+static GstPadLinkReturn 
 gst_tee_sinklink (GstPad *pad, GstCaps *caps) 
 {
   GstTee *tee;
   const GList *pads;
-  GstPadConnectReturn set_retval;
+  GstPadLinkReturn set_retval;
   
   tee = GST_TEE (gst_pad_get_parent (pad));
 

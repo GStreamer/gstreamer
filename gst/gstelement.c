@@ -1406,7 +1406,7 @@ gst_element_get_compatible_pad (GstElement *element, GstPad *pad)
  * @dest: the #GstElement containing the destination pad.
  * @filtercaps: the #GstCaps to use as a filter.
  *
- * Connects the source to the destination element using the filtercaps.
+ * Links the source to the destination element using the filtercaps.
  * The link must be from source to destination, the other
  * direction will not be tried.
  * The functions looks for existing pads that aren't linked yet.
@@ -1554,7 +1554,7 @@ gst_element_link_many (GstElement *element_1, GstElement *element_2, ...)
  * @src: a #GstElement containing the source pad.
  * @dest: the #GstElement containing the destination pad.
  *
- * Connects the source to the destination element.
+ * Links the source to the destination element.
  * The link must be from source to destination, the other
  * direction will not be tried.
  * The functions looks for existing pads and request pads that aren't
@@ -1577,7 +1577,7 @@ gst_element_link (GstElement *src, GstElement *dest)
  * @destpadname: the name of the #GstPad in destination element.
  * @filtercaps: the #GstCaps to use as a filter.
  *
- * Connects the two named pads of the source and destination elements.
+ * Links the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
  * child of the parent of the other element.  If they have different
  * parents, the link fails.
@@ -1621,7 +1621,7 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
  * @dest: the #GstElement containing the destination pad.
  * @destpadname: the name of the #GstPad in destination element.
  *
- * Connects the two named pads of the source and destination elements.
+ * Links the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
  * child of the parent of the other element.  If they have different
  * parents, the link fails.

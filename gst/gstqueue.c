@@ -173,7 +173,7 @@ gst_queue_class_init (GstQueueClass *klass)
   gstelement_class->release_locks = GST_DEBUG_FUNCPTR(gst_queue_release_locks);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_queue_link (GstPad *pad, GstCaps *caps)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));

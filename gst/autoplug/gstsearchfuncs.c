@@ -52,18 +52,18 @@ gst_autoplug_caps_intersect (GstCaps *src, GstCaps *sink)
 {
   GstCaps *caps;
 
-  /* if there are no caps, we can connect */
+  /* if there are no caps, we can link */
   if ((src == NULL) && (sink == NULL))
     return TRUE;
 
   /* get an intersection */
   caps = gst_caps_intersect (src, sink);
   
-  /* if the caps can't connect, there is no intersection */
+  /* if the caps can't link, there is no intersection */
   if (caps == NULL)
     return FALSE;
   
-  /* hurrah, we can connect, now remove the intersection */
+  /* hurrah, we can link, now remove the intersection */
   gst_caps_unref (caps);
   return TRUE;
 }

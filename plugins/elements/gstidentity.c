@@ -154,7 +154,7 @@ gst_identity_getcaps (GstPad *pad, GstCaps *caps)
   return gst_pad_get_allowed_caps (otherpad);
 }
 
-static GstPadConnectReturn
+static GstPadLinkReturn
 gst_identity_link (GstPad *pad, GstCaps *caps)
 {
   GstIdentity *identity;

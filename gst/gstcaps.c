@@ -615,9 +615,9 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 /**
  * gst_caps_is_always_compatible:
  * @fromcaps: a #GstCaps capability to check compatibility of.
- * @tocaps: the #GstCaps capabilty to check compatibility with.
+ * @tocaps: the #GstCaps capability to check compatibility with.
  *
- * Checks if a connection is always possible from fromcaps to tocaps, for all
+ * Checks if a link is always possible from fromcaps to tocaps, for all
  * possible capabilities.
  *
  * Returns: TRUE if compatible under all circumstances, FALSE otherwise.
@@ -627,7 +627,7 @@ gst_caps_is_always_compatible (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps == NULL) {
     if (tocaps == NULL) {
-      /* if both are NULL, they can always connect.  Think filesrc ! filesink */
+      /* if both are NULL, they can always link.  Think filesrc ! filesink */
       GST_DEBUG (GST_CAT_CAPS, "both caps NULL, compatible");
       return TRUE;
     }

@@ -1094,7 +1094,7 @@ typedef enum {
   GST_OPT_CHAIN_TO_CHAIN,
   GST_OPT_CHAIN_TO_LOOP,
   GST_OPT_LOOP_TO_LOOP,
-} ConnectionType;
+} LinkType;
 
 /*
  * Entry points for this scheduler.
@@ -1263,7 +1263,7 @@ static void
 gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
-  ConnectionType type = GST_OPT_INVALID;
+  LinkType type = GST_OPT_INVALID;
   GstElement *element1, *element2;
 
   GST_INFO (GST_CAT_SCHEDULING, "pad link between \"%s:%s\" and \"%s:%s\"", 
