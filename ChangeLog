@@ -1,3 +1,12 @@
+2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/schedulers/gstoptimalscheduler.c:
+	(gst_opt_scheduler_schedule_run_queue), (schedule_chain),
+	(gst_opt_scheduler_get_wrapper):
+	  When we're recursing into a chain run, only run the directly
+	  related group, not all queued ones. This will fix a possible
+	  deadlock in chains with more than two groups.
+
 2004-12-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* autogen.sh:

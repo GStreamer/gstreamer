@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstscheduler.c: Default scheduling code for most cases
+ * gstoptimalscheduler.c: Default scheduling code for most cases
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -280,7 +280,8 @@ static GstData *gst_opt_scheduler_get_wrapper (GstPad * srcpad);
  * instead of relying on cothreads to do the switch for us.
  */
 #ifndef USE_COTHREADS
-static void gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched);
+static void gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched,
+    GstOptSchedulerGroup * only_group);
 #endif
 
 
@@ -1167,7 +1168,8 @@ schedule_group (GstOptSchedulerGroup * group)
 
 #ifndef USE_COTHREADS
 static void
-gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched)
+gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched,
+    GstOptSchedulerGroup * only_group)
 {
   GST_LOG_OBJECT (osched, "running queue: %d groups, recursed %d times",
       g_list_length (osched->runqueue),
@@ -1183,11 +1185,14 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched)
 
   osched->recursion++;
 
-  while (osched->runqueue) {
+  do {
     GstOptSchedulerGroup *group;
     gboolean res;
 
-    group = (GstOptSchedulerGroup *) osched->runqueue->data;
+    if (only_group)
+      group = only_group;
+    else
+      group = (GstOptSchedulerGroup *) osched->runqueue->data;
 
     /* runqueue holds refcount to group */
     osched->runqueue = g_list_remove (osched->runqueue, group);
@@ -1208,7 +1213,7 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler * osched)
       GST_LOG_OBJECT (osched, "done scheduling group %p", group);
     }
     unref_group (group);
-  }
+  } while (osched->runqueue && !only_group);
 
   GST_LOG_OBJECT (osched, "run queue length after scheduling %d",
       g_list_length (osched->runqueue));
@@ -1248,7 +1253,7 @@ schedule_chain (GstOptSchedulerChain * chain)
         ref_group (group);
         osched->runqueue = g_list_append (osched->runqueue, group);
       }
-      gst_opt_scheduler_schedule_run_queue (osched);
+      gst_opt_scheduler_schedule_run_queue (osched, NULL);
 #endif
 
       GST_LOG ("done scheduling group %p in chain %p", group, chain);
@@ -1441,7 +1446,7 @@ gst_opt_scheduler_get_wrapper (GstPad * srcpad)
       }
 
       GST_LOG ("recursing into scheduler group %p", group);
-      gst_opt_scheduler_schedule_run_queue (osched);
+      gst_opt_scheduler_schedule_run_queue (osched, group);
       GST_LOG ("return from recurse group %p", group);
 
       /* if the other group was disabled we might have to break out of the loop */
