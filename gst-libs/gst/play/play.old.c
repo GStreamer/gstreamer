@@ -322,6 +322,14 @@ gst_play_new (GstPlayPipeType pipe_type, GError **error)
 			play->set_video_sink = gst_play_videots_set_video;
 			play->set_audio_sink = gst_play_videots_set_audio;
 			break;
+		case GST_PLAY_PIPE_AUDIO:
+			/* we can reuse the threaded set functions */
+			play->setup_pipeline = gst_play_audio_setup;
+			play->teardown_pipeline = NULL;
+			play->set_autoplugger = gst_play_audiot_set_auto;
+			play->set_video_sink = NULL;
+			play->set_audio_sink = gst_play_audiot_set_audio;
+			break;
 		case GST_PLAY_PIPE_AUDIO_THREADED:
 			play->setup_pipeline = gst_play_audiot_setup;
 			play->teardown_pipeline = NULL;
