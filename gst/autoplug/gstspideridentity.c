@@ -224,6 +224,7 @@ gst_spider_identity_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_unref (buf);
   }
 }
+
 GstSpiderIdentity *
 gst_spider_identity_new_src (gchar * name)
 {
@@ -478,7 +479,7 @@ typedef struct
   GstCaps *caps;
 }
 SpiderTypeFind;
-guint8 *
+static guint8 *
 spider_find_peek (gpointer data, gint64 offset, guint size)
 {
   SpiderTypeFind *find = (SpiderTypeFind *) data;

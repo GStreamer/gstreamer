@@ -1,3 +1,9 @@
+2005-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
+	* gst/autoplug/gstspideridentity.c:
+	Cosmetic fix - spider_find_peek should be static
+	* gst/parse/parse.l:
+	Applying fix for #164261
+
 2005-01-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
