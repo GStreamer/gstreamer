@@ -1,3 +1,31 @@
+2004-11-28  Julien MOUTTE  <julien@moutte.net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/directfb/Makefile.am:
+	* ext/directfb/directfbvideosink.c: (gst_directfbvideosink_create),
+	(gst_directfbvideosink_get_pixel_format),
+	(gst_directfbvideosink_get_format_from_fourcc),
+	(gst_directfbvideosink_fixate), (gst_directfbvideosink_getcaps),
+	(gst_directfbvideosink_sink_link),
+	(gst_directfbvideosink_change_state),
+	(gst_directfbvideosink_chain), (gst_directfbvideosink_buffer_free),
+	(gst_directfbvideosink_buffer_alloc),
+	(gst_directfbvideosink_interface_supported),
+	(gst_directfbvideosink_interface_init),
+	(gst_directfbvideosink_navigation_send_event),
+	(gst_directfbvideosink_navigation_init),
+	(gst_directfbvideosink_set_property),
+	(gst_directfbvideosink_get_property),
+	(gst_directfbvideosink_finalize), (gst_directfbvideosink_init),
+	(gst_directfbvideosink_base_init),
+	(gst_directfbvideosink_class_init),
+	(gst_directfbvideosink_get_type), (plugin_init):
+	* ext/directfb/directfbvideosink.h: Adding a first version of
+	directfbvideosink.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_init): Initializing some
+	more.
+
 2004-11-28  Benjamin Otte  <otte@gnome.org>
 
 	* gst/audioconvert/gstchannelmix.c: (gst_audio_convert_mix):

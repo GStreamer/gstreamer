@@ -1939,6 +1939,8 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->cb_changed = FALSE;
 
   xvimagesink->framerate = 0;
+  xvimagesink->video_width = 0;
+  xvimagesink->video_height = 0;
 
   xvimagesink->x_lock = g_mutex_new ();
 
