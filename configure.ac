@@ -23,9 +23,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 AS_LIBTOOL(GST, 7, 0, 1)
-echo libtool
 AM_PROG_LIBTOOL
-echo libtool done
 
 AC_CONFIG_SRCDIR([gst/gst.c])
 AM_CONFIG_HEADER(config.h)
@@ -37,7 +35,6 @@ AM_PROG_CC_STDC
 AM_PROG_AS
 AS="${CC}"
 
-echo gettext
 dnl the gettext stuff needed
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
@@ -522,13 +519,10 @@ AC_MSG_NOTICE(Using $GST_ORIGIN as package origin)
 AC_DEFINE_UNQUOTED(GST_ORIGIN, "$GST_ORIGIN", [package origin])
 
 dnl Set location of plugin directory
-if test "x${prefix}" = "xNONE"; then
-  PLUGINS_DIR=${ac_default_prefix}/lib/gstreamer-$GST_MAJORMINOR
-else
-  PLUGINS_DIR=${prefix}/lib/gstreamer-$GST_MAJORMINOR
-fi
+AS_AC_EXPAND(PLUGINS_DIR, ${libdir}/gstreamer-$GST_MAJORMINOR)
 AC_DEFINE_UNQUOTED(PLUGINS_DIR, "$PLUGINS_DIR", [Define the plugin directory])
 AC_SUBST(PLUGINS_DIR)
+AC_MSG_NOTICE([Using $PLUGINS_DIR as the plugin install location])
 
 dnl Set location of uninstalled plugin directory
 PLUGINS_BUILDDIR=`pwd`

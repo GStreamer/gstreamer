@@ -1,3 +1,8 @@
+2004-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: use ${libdir} for PLUGINS_DIR since on 64bit
+          it contains lib64; use AS_AC_EXPAND to handle it properly
+
 2004-03-05  David Schleef  <ds@schleef.org>
 
 	* gst/gstcpuid_i386.s:  Remove unused code
