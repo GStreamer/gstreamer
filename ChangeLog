@@ -1,3 +1,7 @@
+2004-07-30  David Schleef  <ds@schleef.org>
+
+	* gst/gstatomic_impl.h: Enable atomic code for x86_64
+
 2004-07-29  David Schleef  <ds@schleef.org>
 
 	* libs/gst/dataprotocol/dataprotocol-test.c: (conversion_test):

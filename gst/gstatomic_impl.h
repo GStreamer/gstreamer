@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 #if defined (GST_CAN_INLINE) || defined (__GST_ATOMIC_C__)
   
 /***** Intel x86 *****/
-#if defined (HAVE_CPU_I386) && defined(__GNUC__)
+#if (defined (HAVE_CPU_I386) || defined (HAVE_CPU_X86_64)) && defined(__GNUC__)
 
 #ifdef GST_CONFIG_NO_SMP
 #define SMP_LOCK ""
