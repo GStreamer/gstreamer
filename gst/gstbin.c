@@ -37,7 +37,7 @@ GstElementDetails gst_bin_details = {
 };
 
 
-static void			gst_bin_real_destroy		(GObject *object);
+static void			gst_bin_dispose		(GObject *object);
 
 static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
 static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
@@ -122,9 +122,7 @@ gst_bin_class_init (GstBinClass *klass)
 #endif
 
   gstelement_class->change_state =	gst_bin_change_state;
-
-// FIXME
-//  gobject_class->destroy =		gst_bin_real_destroy;
+  gobject_class->dispose =		gst_bin_dispose;
 }
 
 static void
@@ -476,13 +474,13 @@ gst_bin_set_state_type (GstBin *bin,
 }
 
 static void
-gst_bin_real_destroy (GObject *object)
+gst_bin_dispose (GObject *object)
 {
   GstBin *bin = GST_BIN (object);
   GList *children, *orig;
   GstElement *child;
 
-  GST_DEBUG (GST_CAT_REFCOUNTING,"destroy()\n");
+  GST_DEBUG (GST_CAT_REFCOUNTING,"dispose\n");
 
   if (bin->children) {
     orig = children = g_list_copy (bin->children);
@@ -501,9 +499,7 @@ gst_bin_real_destroy (GObject *object)
 
   g_cond_free (bin->eoscond);
 
-// FIXME!!!
-//  if (G_OBJECT_CLASS (parent_class)->destroy)
-//    G_OBJECT_CLASS (parent_class)->destroy (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /**

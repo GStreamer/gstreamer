@@ -226,8 +226,8 @@ gst_elementfactory_create (GstElementFactory *factory,
   g_return_val_if_fail(factory != NULL, NULL);
   g_return_val_if_fail(name != NULL, NULL);
 
-  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"creating element from factory \"%s\" with name \"%s\"\n", 
-             GST_OBJECT_NAME (factory), name);
+  GST_DEBUG (GST_CAT_ELEMENTFACTORY,"creating element from factory \"%s\" with name \"%s\" and type %d\n", 
+             GST_OBJECT_NAME (factory), name, factory->type);
 
   gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory));
 

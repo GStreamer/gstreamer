@@ -55,8 +55,7 @@ static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 static void		gst_object_class_init		(GstObjectClass *klass);
 static void		gst_object_init			(GstObject *object);
 
-static void 		gst_object_real_destroy 	(GObject *object);
-static void 		gst_object_shutdown 		(GObject *object);
+static void 		gst_object_dispose 		(GObject *object);
 static void 		gst_object_finalize 		(GObject *object);
 
 static GObjectClass *parent_class = NULL;
@@ -111,8 +110,7 @@ gst_object_class_init (GstObjectClass *klass)
 // FIXME!!!
 //  klass->signal_object = g_object_new(gst_signal_object_get_type (,NULL));
 
-//  gobject_class->shutdown = gst_object_shutdown;
-//  gobject_class->destroy = gst_object_real_destroy;
+  gobject_class->dispose = gst_object_dispose;
   gobject_class->finalize = gst_object_finalize;
 }
 
@@ -143,6 +141,7 @@ gst_object_ref (GstObject *object)
              G_OBJECT(object)->ref_count,G_OBJECT(object)->ref_count+1);
 
   g_object_ref (G_OBJECT (object));
+  GST_DEBUG (GST_CAT_REFCOUNTING, "count now %d\n", G_OBJECT(object)->ref_count);
 
   return object;
 }
@@ -164,6 +163,7 @@ gst_object_unref (GstObject *object)
              G_OBJECT(object)->ref_count,G_OBJECT(object)->ref_count-1);
 
   g_object_unref (G_OBJECT (object));
+  GST_DEBUG (GST_CAT_REFCOUNTING, "count now %d\n", G_OBJECT(object)->ref_count);
 }
 #define gst_object_unref gst_object_unref
 
@@ -202,29 +202,19 @@ gst_object_destroy (GstObject *object)
      * invocations.
      */
     gst_object_ref (object);
-//    G_OBJECT_GET_CLASS (object)->shutdown (G_OBJECT (object));
+    G_OBJECT_GET_CLASS (object)->dispose (G_OBJECT (object));
     gst_object_unref (object);
   }
 }
 
 static void
-gst_object_shutdown (GObject *object)
+gst_object_dispose (GObject *object)
 {
-  GST_DEBUG (GST_CAT_REFCOUNTING, "shutdown '%s'\n",GST_OBJECT_NAME(object));
+  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose '%s'\n",GST_OBJECT_NAME(object));
   GST_FLAG_SET (GST_OBJECT (object), GST_DESTROYED);
-//  parent_class->shutdown (object);
-}
+  GST_OBJECT_PARENT (object) = NULL;
 
-/* finilize is called when the object has to free its resources */
-static void
-gst_object_real_destroy (GObject *g_object)
-{
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy '%s'\n",GST_OBJECT_NAME(g_object));
-
-  GST_OBJECT_PARENT (g_object) = NULL;
-
-// FIXME!!
-//  parent_class->destroy (g_object);
+  parent_class->dispose (object);
 }
 
 /* finilize is called when the object has to free its resources */
@@ -343,6 +333,8 @@ gst_object_unparent (GstObject *object)
   if (object->parent == NULL)
     return;
 
+  GST_DEBUG (GST_CAT_REFCOUNTING, "unparent '%s'\n",GST_OBJECT_NAME(object));
+  
   object->parent = NULL;
   gst_object_unref (object);
 }

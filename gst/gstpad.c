@@ -103,7 +103,7 @@ static void	gst_real_pad_init		(GstRealPad *pad);
 static void	gst_real_pad_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void	gst_real_pad_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void	gst_real_pad_destroy		(GObject *object);
+static void	gst_real_pad_dispose		(GObject *object);
 
 static void	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
 
@@ -144,8 +144,7 @@ gst_real_pad_class_init (GstRealPadClass *klass)
 
   real_pad_parent_class = g_type_class_ref(GST_TYPE_PAD);
 
-// FIXME!
-//  gobject_class->destroy  = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
+  gobject_class->dispose  = GST_DEBUG_FUNCPTR(gst_real_pad_dispose);
   gobject_class->set_property  = GST_DEBUG_FUNCPTR(gst_real_pad_set_property);
   gobject_class->get_property  = GST_DEBUG_FUNCPTR(gst_real_pad_get_property);
 
@@ -1023,21 +1022,27 @@ gst_pad_get_bufferpool (GstPad *pad)
 }
 
 static void
-gst_real_pad_destroy (GObject *object)
+gst_real_pad_dispose (GObject *object)
 {
   GstPad *pad = GST_PAD (object);
+  
+  GST_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s\n", GST_DEBUG_PAD_NAME(pad));
 
-  GST_DEBUG (GST_CAT_REFCOUNTING, "destroy %s:%s\n", GST_DEBUG_PAD_NAME(pad));
-
-  if (GST_PAD (pad)->padtemplate)
+  if (GST_PAD (pad)->padtemplate){
+    GST_DEBUG (GST_CAT_REFCOUNTING, "unreffing padtemplate'%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_PAD (pad)->padtemplate)));
     gst_object_unref (GST_OBJECT (GST_PAD (pad)->padtemplate));
-
-  if (GST_PAD_PEER (pad))
+  }
+  
+  if (GST_PAD_PEER (pad)){
+    GST_DEBUG (GST_CAT_REFCOUNTING, "disconnecting pad '%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
     gst_pad_disconnect (pad, GST_PAD (GST_PAD_PEER (pad)));
-
-  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad)))
+  }
+  
+  if (GST_IS_ELEMENT (GST_OBJECT_PARENT (pad))){
+    GST_DEBUG (GST_CAT_REFCOUNTING, "removing pad from element '%s'\n",GST_OBJECT_NAME(GST_OBJECT (GST_ELEMENT (GST_OBJECT_PARENT (pad)))));
     gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (pad)), pad);
-
+  }
+  
   // FIXME we should destroy the ghostpads, because they are nothing without the real pad
   if (GST_REAL_PAD (pad)->ghostpads) {
     GList *orig, *ghostpads;
@@ -1047,18 +1052,17 @@ gst_real_pad_destroy (GObject *object)
     while (ghostpads) {
       GstPad *ghostpad = GST_PAD (ghostpads->data);
 
-      if (GST_IS_ELEMENT (GST_OBJECT_PARENT (ghostpad)))
+      if (GST_IS_ELEMENT (GST_OBJECT_PARENT (ghostpad))){
+        GST_DEBUG (GST_CAT_REFCOUNTING, "removing ghost pad from element '%s'\n", GST_OBJECT_NAME(GST_OBJECT_PARENT (ghostpad)));
         gst_element_remove_pad (GST_ELEMENT (GST_OBJECT_PARENT (ghostpad)), ghostpad);
-
+      }
       ghostpads = g_list_next (ghostpads);
     }
     g_list_free (orig);
     g_list_free (GST_REAL_PAD(pad)->ghostpads);
   }
-
-// FIXME !!
-//  if (G_OBJECT_CLASS (real_pad_parent_class)->destroy)
-//    G_OBJECT_CLASS (real_pad_parent_class)->destroy (object);
+  
+  G_OBJECT_CLASS (real_pad_parent_class)->dispose (object);
 }
 
 
