@@ -37,6 +37,7 @@ TODO :
     - with 0.3.3 as an example, tag is BRANCH-RELEASE-0_3_3
       cvs tag BRANCH-RELEASE-0_3_3-ROOT
       cvs tag -b BRANCH-RELEASE-0_3_3
+    - update your local copy to the branch:
       cvs update -r BRANCH-RELEASE-0_3_3
   - Set the nano to 2 (in configure.ac, AS_VERSION)
   - Do all updates/patches/changes for the release tarball in this branch
