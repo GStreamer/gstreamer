@@ -850,7 +850,8 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   g_print ("setting caps %s\n", gst_caps_to_string (stream->caps));
   gst_pad_set_explicit_caps (stream->pad, stream->caps);
 
-  GST_DEBUG ("adding pad %p to qtdemux %p", stream->pad, qtdemux);
+  GST_DEBUG ("adding pad %s %p to qtdemux %p",
+      gst_pad_get_name (stream->pad), stream->pad, qtdemux);
   gst_element_add_pad (GST_ELEMENT (qtdemux), stream->pad);
 }
 
@@ -2117,9 +2118,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         samples[j].chunk = j;
         samples[j].offset = chunk_offset;
-        samples[j].size =
-            samples_per_chunk * stream->bytes_per_frame /
-            stream->samples_per_packet / stream->compression;
+        if (stream->samples_per_packet * stream->compression != 0)
+          samples[j].size =
+              samples_per_chunk * stream->bytes_per_frame /
+              stream->samples_per_packet / stream->compression;
+        else
+          samples[j].size = 0;
         samples[j].duration =
             samples_per_chunk * GST_SECOND / (stream->rate / 2);
         samples[j].timestamp = timestamp;
