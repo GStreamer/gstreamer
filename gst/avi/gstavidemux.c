@@ -149,6 +149,11 @@ GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
   ),
   GST_CAPS_NEW (
     "avidemux_src_audio",
+    "audio/a52",
+      NULL
+  ),
+  GST_CAPS_NEW (
+    "avidemux_src_audio",
     "application/x-ogg",
     NULL
   )
@@ -559,6 +564,14 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
       newcaps = gst_caps_new ("avidemux_audio_src",
                               "application/x-ogg",
                               NULL);
+      break;
+    case GST_RIFF_WAVE_FORMAT_A52: 
+      newcaps = gst_caps_new ("avidemux_audio_src",
+                              "audio/a52",
+                              NULL);
+      break;
+    default:
+      g_warning ("avidemux: unkown audio format %d", GUINT16_FROM_LE(strf->format));
       break;
   }
 
