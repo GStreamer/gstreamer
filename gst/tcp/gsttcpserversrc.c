@@ -183,7 +183,7 @@ gst_tcpserversrc_gdp_read_caps (GstTCPServerSrc * this)
   size_t readsize;
   guint8 *header = NULL;
   guint8 *payload = NULL;
-  size_t ret;
+  ssize_t ret;
   GstCaps *caps;
   gchar *string;
 
@@ -244,7 +244,7 @@ gst_tcpserversrc_gdp_read_header (GstTCPServerSrc * this)
   size_t header_length = GST_DP_HEADER_LENGTH;
   size_t readsize;
   guint8 *header = NULL;
-  size_t ret;
+  ssize_t ret;
   GstBuffer *buffer;
 
   header = g_malloc (header_length);

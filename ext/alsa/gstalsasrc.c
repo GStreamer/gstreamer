@@ -419,7 +419,7 @@ gst_alsa_src_get_time (GstAlsa * this)
 {
   snd_pcm_sframes_t delay;
 
-  if (snd_pcm_delay (this->handle, &delay) == 0) {
+  if (snd_pcm_delay (this->handle, &delay) == 0 && this->format) {
     return GST_SECOND * (this->transmitted + delay) / this->format->rate;
   } else {
     return 0;

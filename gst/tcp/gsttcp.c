@@ -84,7 +84,7 @@ gst_tcp_socket_write (int socket, const void *buf, size_t count)
   size_t bytes_written = 0;
 
   while (bytes_written < count) {
-    size_t wrote = write (socket, buf + bytes_written,
+    ssize_t wrote = write (socket, buf + bytes_written,
         count - bytes_written);
 
     if (wrote <= 0) {
@@ -109,7 +109,7 @@ gst_tcp_socket_read (int socket, void *buf, size_t count)
   size_t bytes_read = 0;
 
   while (bytes_read < count) {
-    size_t ret = read (socket, buf + bytes_read,
+    ssize_t ret = read (socket, buf + bytes_read,
         count - bytes_read);
 
     if (ret <= 0) {
@@ -135,7 +135,7 @@ gst_tcp_gdp_read_header (GstElement * this, int socket)
   size_t header_length = GST_DP_HEADER_LENGTH;
   size_t readsize;
   guint8 *header = NULL;
-  size_t ret;
+  ssize_t ret;
   GstBuffer *buffer;
 
   header = g_malloc (header_length);
@@ -183,7 +183,7 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket)
   size_t readsize;
   guint8 *header = NULL;
   guint8 *payload = NULL;
-  size_t ret;
+  ssize_t ret;
   GstCaps *caps;
   gchar *string;
 
