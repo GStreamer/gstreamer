@@ -782,9 +782,8 @@ gst_fair_scheduler_reset (GstScheduler * sched)
 
   g_timer_stop (fsched->iter_timer);
   {
-    gulong msecs;
-
 #ifndef GST_DISABLE_GST_DEBUG
+    gulong msecs;
     double elapsed = g_timer_elapsed (fsched->iter_timer, &msecs);
 #endif
 
