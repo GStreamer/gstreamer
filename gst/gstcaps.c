@@ -716,6 +716,17 @@ gst_caps_is_always_compatible (const GstCaps * caps1, const GstCaps * caps2)
   return FALSE;
 }
 
+/**
+ * gst_caps_is_subset:
+ * @subset: a #GstCaps
+ * @superset: a potentially greater #GstCaps
+ *
+ * Checks if all caps represented by @subset are also represented by @superset
+ * <note>This function does not work reliably if optional properties for caps
+ * are included on one caps and omitted on the other.</note>
+ *
+ * Returns: TRUE if @subset is a subset of @superset
+ */
 gboolean
 gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
 {
@@ -736,6 +747,17 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
   return ret;
 }
 
+/**
+ * gst_caps_is_equal:
+ * @caps1: a #GstCaps
+ * @caps2: another #GstCaps
+ *
+ * Checks if the given caps represent the same set of caps.
+ * <note>This function does not work reliably if optional properties for caps
+ * are included on one caps and omitted on the other.</note>
+ *
+ * Returns: TRUE if both caps are equal
+ */
 gboolean
 gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
 {
@@ -957,6 +979,17 @@ gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
   return ret;
 }
 
+/**
+ * gst_caps_subtract:
+ * @minuend: #GstCaps to substract from
+ * @subtrahend: #GstCaps to substract
+ *
+ * Subtracts the @subtrahend from the @minuend.
+ * <note>This function does not work reliably if optional properties for caps
+ * are included on one caps and omitted on the other.</note>
+ *
+ * Returns: the resulting caps
+ */
 GstCaps *
 gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
 {
