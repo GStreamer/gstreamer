@@ -1,3 +1,9 @@
+2004-03-03  Benjamin Otte  <otte@gnome.org>
+
+	* gst/schedulers/gstoptimalscheduler.c:
+	  revert last commit by Andy Wingo. It causes segfaults on unreffing
+	  in Rhythmbox. (see bug #135672)
+
 2004-03-02  Christophe Fergeau  <teuf@gnome.org>
 
 	* po/fr.po: fix typo
