@@ -48,7 +48,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_DRC
+  ARG_DRC,
+  ARG_STREAMINFO
 };
 
 /*
@@ -138,6 +139,9 @@ gst_a52dec_class_init (GstA52DecClass * klass)
     g_param_spec_boolean ("drc", "Dynamic Range Compression",
                           "Use Dynamic Range Compression", FALSE,
                           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
+    g_param_spec_boxed ("streaminfo", "Streaminfo", "Streaminfo",
+                        GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->set_property = gst_a52dec_set_property;
   gobject_class->get_property = gst_a52dec_get_property;
@@ -157,6 +161,7 @@ gst_a52dec_init (GstA52Dec * a52dec)
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
   a52dec->dynamic_range_compression = FALSE;
+  a52dec->streaminfo = NULL;
 }
 
 /* BEGIN modified a52dec conversion code */
@@ -294,7 +299,7 @@ gst_a52dec_channels (int flags)
       break;
     default:
       /* error */
-      fprintf (stderr, "a52dec invalid flags?");
+      g_warning ("a52dec invalid flags %d", flags);
       return 0;
   }
   return chans;
@@ -380,6 +385,25 @@ gst_a52dec_handle_event (GstA52Dec *a52dec)
 }
 
 static void
+gst_a52dec_update_streaminfo (GstA52Dec *a52dec)
+{
+  GstProps *props;
+  GstPropsEntry *entry;
+	      
+  props = gst_props_empty_new ();
+	      
+  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT (a52dec->bit_rate));
+  gst_props_add_entry (props, (GstPropsEntry *) entry);
+
+  gst_caps_unref (a52dec->streaminfo);
+
+  a52dec->streaminfo = gst_caps_new ("a52dec_streaminfo",
+	                             "application/x-gst-streaminfo",
+				     props);
+  g_object_notify (G_OBJECT (a52dec), "streaminfo");
+}
+
+static void
 gst_a52dec_loop (GstElement *element)
 {
   GstA52Dec *a52dec;
@@ -421,8 +445,10 @@ gst_a52dec_loop (GstElement *element)
 
   a52dec->stream_channels = flags & A52_CHANNEL_MASK;
 
-  /* FIXME: perhaps this change should be announced? */
-  a52dec->bit_rate = bit_rate;
+  if (bit_rate != a52dec->bit_rate) {
+    a52dec->bit_rate = bit_rate;
+    gst_a52dec_update_streaminfo (a52dec);
+  }
 
   /* read the header + rest of frame */
   got_bytes = gst_bytestream_read (a52dec->bs, &buf, length);
@@ -438,7 +464,7 @@ gst_a52dec_loop (GstElement *element)
   a52dec->level = 1;
 
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
-    fprintf (stderr, "a52dec a52_frame error\n");
+    g_warning ("a52dec: a52_frame error\n");
     goto end;
   }
 
@@ -450,7 +476,7 @@ gst_a52dec_loop (GstElement *element)
   }
 
   if (need_reneg == TRUE) {
-    fprintf (stderr, "a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d\n",
+    GST_DEBUG (0, "a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d\n",
         a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
     gst_a52dec_reneg (a52dec->srcpad,
         gst_a52dec_channels (a52dec->using_channels), a52dec->sample_rate);
@@ -472,7 +498,6 @@ gst_a52dec_loop (GstElement *element)
   }
 
 end:
-  /* FIXME, this is a possible leak */
   gst_buffer_unref (buf);
 }
 
@@ -507,6 +532,7 @@ gst_a52dec_change_state (GstElement * element)
       a52dec->samples = NULL;
       a52_free (a52dec->state);
       a52dec->state = NULL;
+      gst_caps_unref (a52dec->streaminfo);
       break;
     case GST_STATE_READY_TO_NULL:
       break;
@@ -551,6 +577,9 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value, GParam
   switch (prop_id) {
     case ARG_DRC:
       g_value_set_boolean (value, src->dynamic_range_compression);
+      break;
+    case ARG_STREAMINFO:
+      g_value_set_boxed (value, src->streaminfo);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -25,16 +25,14 @@
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_A52DEC \
   (gst_a52dec_get_type())
 #define GST_A52DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_A52DEC,GstA52Dec))
 #define GST_A52DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_A52DEC,GstA52Dec))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_A52DEC,GstA52DecClass))
 #define GST_IS_A52DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_A52DEC))
 #define GST_IS_A52DEC_CLASS(obj) \
@@ -44,29 +42,32 @@ typedef struct _GstA52Dec GstA52Dec;
 typedef struct _GstA52DecClass GstA52DecClass;
 
 struct _GstA52Dec {
-  GstElement element;
+  GstElement 	 element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
-  int bit_rate;
-  int sample_rate;
-  int stream_channels;
-  int request_channels;
-  int using_channels;
-  sample_t level;
-  sample_t bias;
-  gboolean dynamic_range_compression;
-  sample_t *samples;
-  a52_state_t *state;
+  GstPad 	*sinkpad,
+  		*srcpad;
+  int 		 bit_rate;
+  int 		 sample_rate;
+  int 		 stream_channels;
+  int 		 request_channels;
+  int 		 using_channels;
+
+  sample_t 	 level;
+  sample_t 	 bias;
+  gboolean 	 dynamic_range_compression;
+  sample_t 	*samples;
+  a52_state_t 	*state;
+
   GstByteStream *bs;
+
+  GstCaps	*streaminfo;
 };
 
 struct _GstA52DecClass {
   GstElementClass parent_class;
 };
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_A52DEC_H__ */
