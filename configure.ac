@@ -432,6 +432,7 @@ tests/bufspeed/Makefile
 tests/memchunk/Makefile
 tests/muxing/Makefile
 tests/sched/Makefile
+tests/threadstate/Makefile
 testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/caps/Makefile
