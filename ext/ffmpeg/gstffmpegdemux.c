@@ -596,7 +596,6 @@ gst_ffmpegdemux_loop (GstElement * element)
           GST_EVENT_TYPE (GST_EVENT (data)) != GST_EVENT_EOS) {
         gst_data_unref (data);
         data = NULL;
-        continue;
       }
     } while (!data);
 
@@ -683,6 +682,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     gchar *type_name, *typefind_name;
     gchar *p, *name = NULL;
     GstCaps *sinkcaps, *audiosrccaps, *videosrccaps;
+    gint rank = GST_RANK_MARGINAL;
 
     /* no emulators */
     if (!strncmp (in_plugin->long_name, "raw ", 4) ||
@@ -692,6 +692,18 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mpegvideo") ||
         !strcmp (in_plugin->name, "mjpeg"))
       goto next;
+
+    if (!strcmp (in_plugin->name, "mov,mp4,m4a,3gp") ||
+        !strcmp (in_plugin->name, "avi") ||
+        !strcmp (in_plugin->name, "asf") ||
+        !strcmp (in_plugin->name, "mpegvideo") ||
+        !strcmp (in_plugin->name, "mp3") ||
+        !strcmp (in_plugin->name, "matroska") ||
+        !strcmp (in_plugin->name, "mpeg") ||
+        !strcmp (in_plugin->name, "wav") ||
+        !strcmp (in_plugin->name, "au") ||
+        !strcmp (in_plugin->name, "rm"))
+      rank = GST_RANK_NONE;
 
     p = name = g_strdup (in_plugin->name);
     while (*p) {
@@ -763,9 +775,10 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     else
       extensions = NULL;
 
-    if (!gst_element_register (plugin, type_name, GST_RANK_MARGINAL, type) ||
-        !gst_type_find_register (plugin, typefind_name, GST_RANK_MARGINAL,
-            gst_ffmpegdemux_type_find, extensions, sinkcaps, params)) {
+    if (!gst_element_register (plugin, type_name, rank, type) ||
+        (rank != GST_RANK_NONE &&
+         !gst_type_find_register (plugin, typefind_name, rank,
+             gst_ffmpegdemux_type_find, extensions, sinkcaps, params))) {
       g_warning ("Register of type ffdemux_%s failed", name);
       g_free (type_name);
       g_free (typefind_name);

@@ -1151,8 +1151,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
         if ((value = gst_structure_get_value (str, "codec_data"))) {
           buf = g_value_get_boxed (value);
-          if (GST_BUFFER_SIZE (buf) != 0)
-          {            
+          if (GST_BUFFER_SIZE (buf) != 0) {
             context->extradata = av_mallocz (GST_BUFFER_SIZE (buf));
             memcpy (context->extradata, GST_BUFFER_DATA (buf),
 	   	    GST_BUFFER_SIZE (buf));

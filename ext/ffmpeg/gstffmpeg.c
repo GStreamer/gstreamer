@@ -47,8 +47,6 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  avcodec_init ();
-  avcodec_register_all ();
   av_register_all ();
 
   gst_ffmpegenc_register (plugin);

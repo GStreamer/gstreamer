@@ -1,3 +1,14 @@
+2004-06-06  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	  Remove redundant calls which are called internally already.
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
+	  Indenting...
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop),
+	(gst_ffmpegdemux_register):
+	  Remove typefind functions and rank for demuxers for any demuxer
+	  that we already have in GStreamer.
+
 2004-05-18  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
