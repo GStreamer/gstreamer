@@ -490,7 +490,7 @@ create_ui (_filter_ui_t *fui, _filter_data_t *fd)
   widget = gtk_label_new ("Output Pipe");
   gtk_container_add (GTK_CONTAINER (vbox), widget);
   fui->output = gtk_entry_new ();
-  gtk_entry_set_text (GTK_ENTRY (fui->output), "osssink"); /* fixme: gconf default ? */
+  gtk_entry_set_text (GTK_ENTRY (fui->output), "osssink fragment=1572872"); /* fixme: gconf default ? */
   gtk_container_add (GTK_CONTAINER (vbox), fui->output);
   gtk_container_add (GTK_CONTAINER (fui->selection), vbox);
   g_signal_connect (G_OBJECT (fui->output), "activate", 
