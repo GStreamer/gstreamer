@@ -1,3 +1,13 @@
+2004-01-04  David Schleef  <ds@schleef.org>
+
+	Fix the fixate functions to handle new prototype:
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_src_fixate):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_src_fixate):
+	* sys/oss/gstosssink.c: (gst_osssink_sink_fixate):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_fixate):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_fixate):
+
 2004-01-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* sys/ximage/ximagesink.h:
