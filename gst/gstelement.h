@@ -164,12 +164,8 @@ struct _GstElementClass {
   void (*eos)			(GstElement *element);
 
   /* local pointers for get/set */
-  void (*set_arg) (GtkObject *object,
-                   GtkArg    *arg,
-                   guint      arg_id);
-  void (*get_arg) (GtkObject *object,
-                   GtkArg    *arg,
-                   guint      arg_id);      
+  void (*set_arg) (GtkObject *object,GtkArg *arg,guint id);
+  void (*get_arg) (GtkObject *object,GtkArg *arg,guint id);
 
   /* change the element state */
   GstElementStateReturn (*change_state)		(GstElement *element);
