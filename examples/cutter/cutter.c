@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 #include <unistd.h>
+#include <time.h>
 
 #define DEBUG
 
@@ -41,7 +42,16 @@ void cut_start (GstElement *element)
   gst_element_set_state (main_bin, GST_STATE_PAUSED);
   g_print ("DEBUG: cut_start: main_bin paused\n");
 
-  sprintf (buffer, "/tmp/test%d.wav", id);
+  {
+    long seconds;
+    struct tm *ct;
+    time (&seconds);
+    ct = localtime (&seconds);
+//    sprintf (buffer, "/news/incoming/audio/cutter.%06d.wav", id);
+    sprintf (buffer, "/news/incoming/audio/cutter.%04d%02d%02d.%02d%02d%02d.wav", 
+	ct->tm_year + 1900, ct->tm_mon, ct->tm_mday,
+	ct->tm_hour, ct->tm_min, ct->tm_sec);
+  }
   g_print ("DEBUG: cut_start: setting new location to %s\n", buffer);
   gtk_object_set (GTK_OBJECT (disksink), "location", buffer, NULL);
   gtk_object_set (GTK_OBJECT (disksink), "type", 4, NULL);
@@ -107,8 +117,8 @@ int main (int argc, char *argv[])
   cutter = gst_elementfactory_make ("cutter", "cutter");
 
   gtk_object_set (GTK_OBJECT (cutter), 
-	"threshold_dB", -60.0, 
-	"runlength", 2.0,
+	"threshold_dB", -40.0, 
+	"runlength", 0.5,
 	NULL);
 
   /* create an audio src */
@@ -117,7 +127,7 @@ int main (int argc, char *argv[])
   /* set params */
 
   gtk_object_set (GTK_OBJECT (audiosrc), "frequency", 44100, 
-                                         "channels", 2,
+                                         "channels", 1,
   					 "format", 16, NULL);
 
   encoder = gst_elementfactory_make ("passthrough", "encoder");
@@ -172,9 +182,9 @@ int main (int argc, char *argv[])
 */
   while (playing) 
   {
-      g_print ("> ");
+//      g_print ("> ");
       gst_bin_iterate (GST_BIN (main_bin));
-      g_print (" <");
+//      g_print (" <");
       if (cut_start_signalled)
       {
         g_print ("\nDEBUG: main: cut_start_signalled true !\n");
