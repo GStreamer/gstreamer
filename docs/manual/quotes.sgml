@@ -20,19 +20,19 @@
 	that means probably building an agreggating, cache-massaging
 	queue to shove N buffers across all at once, forcing cache
 	transfer.
-	</>
+	</para>
 	<para>
 	<emphasis>wtay:</emphasis>
         never done that before...
-	</>
+	</para>
 	<para>
 	<emphasis>Omega:</emphasis>
 	nope, but it's easy to do in gstreamer &lt;g&gt;
-        </>
+        </para>
         <para>
 	<emphasis>wtay:</emphasis>
 	sure, I need to rewrite cp with gstreamer too, someday :-)
-        </>
+        </para>
       </listitem>
     </varlistentry>
     <varlistentry>
@@ -42,6 +42,36 @@
         <emphasis>wtay:</emphasis>
 	GStreamer; always at least one developer is awake...
 	</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>28 Dec 2000</term>
+      <listitem>
+        <para>
+        <emphasis>MPAA:</emphasis>
+        We will sue you now, you have violated oru IP rights!
+        </para>
+        <para>
+        <emphasis>wtay:</emphasis>
+        hehehe
+        </para>
+        <para>
+        <emphasis>MPAA:</emphasis>
+        How dare you laugh at us? We have lawyers! We have Congressmen!  We have <emphasis>LARS</emphasis>!
+        </para>
+        <para>
+        <emphasis>wtay:</emphasis>
+        I'm so sorry your honor
+        </para>
+        <para>
+        <emphasis>MPAA:</emphasis>
+        Hrumph.
+        </para>
+        <para>
+        *
+        <emphasis>wtay</emphasis>
+        bows before thy
+        </para>
       </listitem>
     </varlistentry>
   </variablelist>
