@@ -16,9 +16,9 @@
 #define YYPARSE_PARAM graph
 
 #ifdef __GST_PARSE_TRACE
-static uint __strings;
-static uint __links;
-static uint __chains;
+static guint __strings;
+static guint __links;
+static guint __chains;
 gchar *
 __gst_parse_strdup (gchar *org)
 {
