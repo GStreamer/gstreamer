@@ -19,6 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <math.h>
+
 #include "gst_private.h"
 
 #include "gstdparam.h"
@@ -316,22 +318,36 @@ gst_dparam_do_update_smooth (GstDParam *dparam, gint64 timestamp)
 	
 	switch (G_VALUE_TYPE(GST_DPARAM_VALUE(dparam))){
 		case G_TYPE_FLOAT: {
-			gfloat target = g_value_get_float(dparam->point[0]);
-			gfloat current = g_value_get_float(GST_DPARAM_VALUE(dparam));
-			gfloat max_change = time_ratio * g_value_get_float(dparam->point[1]);
+			gfloat current, target, max_change, current_diff, final_val;
 			
+			target = g_value_get_float(dparam->point[0]);
+			current = g_value_get_float(GST_DPARAM_VALUE(dparam));
+			max_change = time_ratio * g_value_get_float(dparam->point[1]);
+
 			GST_DEBUG(GST_CAT_PARAMS, "target:%f current:%f max_change:%f \n", 
-			          target, current, max_change);
-
-			if (ABS (current - target) < max_change){
-				GST_DPARAM_READY_FOR_UPDATE(dparam) = FALSE;
-				current = target;
-			}
+			                           target, current, max_change);
+			                           
+			if (dparam->spec->is_log){
+				gfloat current_log;
+				current_log = log(current);
+				current_diff = ABS(current_log - log(target));
+				if (current_diff > max_change)
+					final_val = (target < current) ? exp(current_log-max_change) : exp(current_log+max_change);
+				else
+					final_val = target;
+			} 
 			else {
-				current += (target < current) ? -max_change : max_change;				
+				current_diff = ABS (current - target);
+				if (current_diff > max_change)
+					final_val = (target < current) ? current-max_change : current+max_change;
+				else
+					final_val = target;									
 			}
-			g_value_set_float(GST_DPARAM_VALUE(dparam), current);
 
+			GST_DPARAM_READY_FOR_UPDATE(dparam) = (current_diff > max_change);
+			g_value_set_float(GST_DPARAM_VALUE(dparam), final_val);
+			
+			break;
 		}
 		default:
 			break;
