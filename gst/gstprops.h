@@ -63,10 +63,10 @@ typedef enum {
 
 #define GST_FOURCC_FORMAT "%c%c%c%c"
 #define GST_FOURCC_ARGS(fourcc) \
-	((GUINT32_FROM_LE(fourcc)>>24)&0xff), \
-	((GUINT32_FROM_LE(fourcc)>>16)&0xff), \
-	((GUINT32_FROM_LE(fourcc)>>8)&0xff), \
-	(GUINT32_FROM_LE(fourcc)&0xff)
+	((gchar) ((fourcc)     &0xff)), \
+	((gchar) (((fourcc)>>8 )&0xff)), \
+	((gchar) (((fourcc)>>16)&0xff)), \
+	((gchar) (((fourcc)>>24)&0xff))
 
 #ifdef G_HAVE_ISO_VARARGS
 #  define GST_PROPS_LIST(...)	    GST_PROPS_LIST_TYPE,__VA_ARGS__,NULL
