@@ -339,7 +339,7 @@ gst_osssink_get_time (GstClock * clock, gpointer data)
 {
   GstOssSink *osssink = GST_OSSSINK (data);
   gint delay;
-  GstClockTimeDiff res;
+  GstClockTime res;
 
   if (!GST_OSSELEMENT (osssink)->bps)
     return 0;
