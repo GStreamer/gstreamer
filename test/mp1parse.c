@@ -1,6 +1,7 @@
 #include <gst/gst.h>
 
 extern gboolean _gst_plugin_spew;
+GstPipeline *pipeline;
 
 void eof(GstSrc *src) {
   g_print("have eof, quitting\n");
@@ -13,21 +14,51 @@ void mp1parse_info_chain(GstPad *pad,GstBuffer *buf) {
 }
 
 void new_pad_created(GstElement *parse, GstPad *pad) {
-  GstPad *infopad;
+  GstElementFactory *parsefactory, *decodefactory, *playfactory;
+  GstElement *parse_audio, *decode, *play;
+  GstPipeline *audio_pipeline;
+
   g_print("a new pad %s was created\n", gst_pad_get_name(pad));
 
   // connect to audio pad
   if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
-    infopad = gst_pad_new("sink",GST_PAD_SINK);
-    gst_pad_set_chain_function(infopad,mp1parse_info_chain);
+
+	 parsefactory = gst_elementfactory_find("mp3parse");
+	 g_return_if_fail(parsefactory != NULL);
+	 decodefactory = gst_elementfactory_find("mpg123");
+	 g_return_if_fail(decodefactory != NULL);
+	 playfactory = gst_elementfactory_find("audiosink");
+	 g_return_if_fail(playfactory != NULL);
+
+	 parse_audio = gst_elementfactory_create(parsefactory,"parse");
+	 g_return_if_fail(parse_audio != NULL);
+	 decode = gst_elementfactory_create(decodefactory,"decode");
+	 g_return_if_fail(decode != NULL);
+	 play = gst_elementfactory_create(playfactory,"play");
+	 g_return_if_fail(play != NULL);
+
+    audio_pipeline = gst_pipeline_new("audio_pipeline");
+    g_return_if_fail(audio_pipeline != NULL);
+
+	 gst_bin_add(GST_BIN(audio_pipeline),GST_ELEMENT(parse_audio));
+	 gst_bin_add(GST_BIN(audio_pipeline),GST_ELEMENT(decode));
+	 gst_bin_add(GST_BIN(audio_pipeline),GST_ELEMENT(play));
+	 gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_pipeline));
 
     gst_pad_connect(gst_element_get_pad(parse,gst_pad_get_name(pad)),
-                  infopad);
+	                  gst_element_get_pad(parse_audio,"sink"));
+	 gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
+	                  gst_element_get_pad(decode,"sink"));
+	 gst_pad_connect(gst_element_get_pad(decode,"src"),
+	                  gst_element_get_pad(play,"sink"));
+
+	 g_print("setting to RUNNING state\n");
+	 gst_element_set_state(GST_ELEMENT(audio_pipeline),GST_STATE_RUNNING);
+
   }
 }
 
 int main(int argc,char *argv[]) {
-  GstPipeline *pipeline;
   GstElementFactory *srcfactory, *parsefactory;
   GstElement *src, *parse;
 
