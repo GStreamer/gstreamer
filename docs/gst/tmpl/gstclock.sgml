@@ -159,7 +159,7 @@ The function prototype of the callback.
 @time: The time it was triggered
 @id: The id that expired
 @user_data: user data passed in the async_wait call
-@Returns: 
+@Returns: %TRUE or %FALSE (currently unused)
 
 
 <!-- ##### ENUM GstClockEntryStatus ##### -->

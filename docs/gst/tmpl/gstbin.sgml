@@ -91,13 +91,13 @@ FALSE.
 
 <!-- ##### ENUM GstBinFlags ##### -->
 <para>
-Flags for a bin.
+
 </para>
 
-@GST_BIN_FLAG_MANAGER: This bin has a scheduler and can be used as a toplevel bin.
-@GST_BIN_SELF_SCHEDULABLE: This bin iterates itself, so no calls to gst_bin_iterate() should be made.
-@GST_BIN_FLAG_PREFER_COTHREADS: This bin preferes to have its elements scheduled with cothreads
-@GST_BIN_FLAG_FIXED_CLOCK: This bin uses a fixed clock, possibly the one set with gst_bin_use_clock().
+@GST_BIN_FLAG_MANAGER: 
+@GST_BIN_SELF_SCHEDULABLE: 
+@GST_BIN_FLAG_PREFER_COTHREADS: 
+@GST_BIN_FLAG_FIXED_CLOCK: 
 @GST_BIN_FLAG_LAST: 
 
 <!-- ##### FUNCTION gst_bin_new ##### -->

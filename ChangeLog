@@ -1,3 +1,17 @@
+2005-01-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+    install style.css along with docs
+	* docs/gst/tmpl/gstbin.sgml:
+	* docs/gst/tmpl/gstclock.sgml:
+	* docs/gst/tmpl/gstdata.sgml:
+	* docs/gst/tmpl/gstelement.sgml:
+	* gst/gstbin.h:
+	* gst/gstelement.c: (gst_element_class_init):
+	* gst/gstelement.h:
+    fixing incomplete docs
+
 2005-01-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesink.c: (gst_filesink_handle_event):

@@ -140,6 +140,18 @@ typedef enum {
 #define GST_ELEMENT_CLOCK(obj)			(((GstElement*)(obj))->clock)
 #define GST_ELEMENT_PADS(obj)			((obj)->pads)
 
+/**
+ * GST_ELEMENT_ERROR:
+ * @el: the element that throws the error
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstError)
+ * @code: error code defined for that domain (see #GstError)
+ * @message: the message to display (format string and args enclosed in round brackets)
+ * @debug: debugging information for the message (format string and args enclosed in round brackets)
+ *
+ * Utility function that elements can use in case they encountered a fatal
+ * data processing error. The pipeline will throw an error signal and the
+ * application will be requested to stop further media processing.
+ */
 #define GST_ELEMENT_ERROR(el, domain, code, message, debug) G_STMT_START { \
   gchar *__msg = _gst_element_error_printf message; \
   gchar *__dbg = _gst_element_error_printf debug; \

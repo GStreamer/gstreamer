@@ -37,18 +37,21 @@ GST_EXPORT GType _gst_bin_type;
 #define GST_BIN(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_BIN, GstBin))
 #define GST_BIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BIN, GstBinClass))
 
+/**
+ * GstBinFlags:
+ * @GST_BIN_FLAG_MANAGER: This bin has a scheduler and can be used as a toplevel bin.
+ * @GST_BIN_SELF_SCHEDULABLE: This bin iterates itself, so no calls to gst_bin_iterate() should be made.
+ * @GST_BIN_FLAG_PREFER_COTHREADS: This bin preferes to have its elements scheduled with cothreads
+ * @GST_BIN_FLAG_FIXED_CLOCK: This bin uses a fixed clock, possibly the one set with gst_bin_use_clock().
+ * @GST_BIN_FLAG_LAST: id of last for chaining flsg definitions
+ * 
+ * Flags for a #GstBin .
+ */
 typedef enum {
-  /* this bin is a manager of child elements, i.e. a pipeline or thread */
   GST_BIN_FLAG_MANAGER		= GST_ELEMENT_FLAG_LAST,
-
-  /* this bin iterates itself */
   GST_BIN_SELF_SCHEDULABLE,
-
-  /* we prefer to have cothreads when its an option, over chain-based */
   GST_BIN_FLAG_PREFER_COTHREADS,
-
   GST_BIN_FLAG_FIXED_CLOCK,
-
   /* padding */
   GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5
 } GstBinFlags;
