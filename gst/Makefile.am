@@ -26,12 +26,36 @@ else
 GST_LOADSAVE_SRC = gstxml.c
 endif
 
+if GST_DISABLE_TYPEFIND
+GST_TYPEFIND_SRC = 
+else
+GST_TYPEFIND_SRC = gsttypefind.c
+endif
+
+if GST_DISABLE_PARSE
+GST_PARSE_SRC = 
+else
+GST_PARSE_SRC = gstparse.c
+endif
+
+if GST_DISABLE_AUTOPLUG
+GST_AUTOPLUG_SRC = 
+else
+GST_AUTOPLUG_SRC = gstautoplug.c
+endif
+
+if GST_DISABLE_TRACE
+GST_TRACE_SRC = 
+else
+GST_TRACE_SRC = gsttrace.c
+endif
+
 libgst_la_SOURCES =		\
 	cothreads.c		\
 	gst.c			\
 	$(GST_OBJECT_MODEL_SRC)	\
 	gstobject.c		\
-	gstautoplug.c		\
+	$(GST_AUTOPLUG_SRC)	\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferpool.c		\
@@ -50,11 +74,11 @@ libgst_la_SOURCES =		\
 	gstqueue.c		\
 	gstscheduler.c		\
 	gstthread.c		\
-	gsttrace.c		\
+	$(GST_TRACE_SRC)	\
 	gsttype.c		\
-	gsttypefind.c		\
+	$(GST_TYPEFIND_SRC)	\
 	gstutils.c		\
-	gstparse.c		\
+	$(GST_PARSE_SRC)	\
 	$(GSTARCH_SRCS)		\
 	$(GST_LOADSAVE_SRC)
 
