@@ -125,9 +125,8 @@ gst_ffmpegcolorspace_caps_remove_format_info (GstCaps * caps)
     gst_structure_remove_field (structure, "blue_mask");
   }
 
-  rgbcaps = gst_caps_simplify (caps);
-  gst_caps_free (caps);
-  caps = gst_caps_copy (rgbcaps);
+  gst_caps_do_simplify (caps);
+  rgbcaps = gst_caps_copy (caps);
 
   for (i = 0; i < gst_caps_get_size (rgbcaps); i++) {
     structure = gst_caps_get_structure (rgbcaps, i);
