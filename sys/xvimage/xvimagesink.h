@@ -122,6 +122,7 @@ struct _GstXvImageSink {
   GstXvImage *xvimage;
   
   gint width, height;
+  gfloat framerate;
   GMutex *x_lock;
   
   /* Unused */

@@ -92,15 +92,17 @@ gst_xvimagesink_navigation_send_event (GstNavigation *navigation, GstStructure *
 
   event = gst_event_new (GST_EVENT_NAVIGATION);
   event->event_data.structure.structure = structure;
-  if(gst_structure_get_double(structure, "pointer_x", &x)){
+  
+  /* Converting pointer coordinates to the non scaled geometry */
+  if (gst_structure_get_double (structure, "pointer_x", &x)) {
     x *= xvimagesink->width;
     x /= attr.width;
-    gst_structure_set(structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
   }
-  if(gst_structure_get_double(structure, "pointer_y", &y)){
+  if (gst_structure_get_double (structure, "pointer_y", &y)) {
     y *= xvimagesink->height;
     y /= attr.height;
-    gst_structure_set(structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
   }
 
   gst_pad_send_event (gst_pad_get_peer (xvimagesink->sinkpad), event);
@@ -136,7 +138,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
   
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm)
-    { /* FIXME FORMAT !!! */
+    {
       xvimage->xvimage = XvShmCreateImage (xvimagesink->xcontext->disp,
                                            xvimagesink->xcontext->xv_port_id,
                                            xvimagesink->xcontext->im_format,
@@ -154,7 +156,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
       XShmAttach (xvimagesink->xcontext->disp, &xvimage->SHMInfo);
     }
   else
-    { /* FIXME FORMAT !!! */
+    {
       xvimage->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
                                         xvimagesink->xcontext->xv_port_id,
                                         xvimagesink->xcontext->im_format,
@@ -164,7 +166,6 @@ gst_xvimagesink_xvimage_new (GstXvImageSink *xvimagesink,
       xvimage->data = g_malloc (xvimage->xvimage->data_size);
     }
 #else
-  /* FIXME FORMAT !!! */
   xvimage->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
                                     xvimagesink->xcontext->xv_port_id,
                                     xvimagesink->xcontext->im_format,
@@ -246,7 +247,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
   
   g_mutex_lock (xvimagesink->x_lock);
   
-  /* We center the image in the window */
+  /* We scale to the window's geometry */
   XGetWindowAttributes (xvimagesink->xcontext->disp,
                         xvimagesink->xwindow->win, &attr); 
 
@@ -390,7 +391,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
             GST_DEBUG ("xvimagesink pointer moved over window at %d,%d",
                        e.xmotion.x, e.xmotion.y);
             gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
-                e.xmotion.x, e.xmotion.y);
+                                             e.xmotion.x, e.xmotion.y);
             break;
           case ButtonPress:
           case ButtonRelease:
@@ -399,7 +400,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
             GST_DEBUG ("xvimagesink button %d pressed over window at %d,%d",
                        e.xbutton.button, e.xbutton.x, e.xbutton.y);
             gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
-                e.xbutton.x, e.xbutton.y);
+                                             e.xbutton.x, e.xbutton.y);
             break;
           case KeyPress:
           case KeyRelease:
@@ -407,10 +408,10 @@ gst_xvimagesink_handle_xevents (GstXvImageSink *xvimagesink, GstPad *pad)
                events for interactivity/navigation */
             GST_DEBUG ("xvimagesink key %d pressed over window at %d,%d",
                        e.xkey.keycode, e.xkey.x, e.xkey.y);
-            keysym = XKeycodeToKeysym(xvimagesink->xcontext->disp,
-                e.xkey.keycode, 0);
+            keysym = XKeycodeToKeysym (xvimagesink->xcontext->disp,
+                                       e.xkey.keycode, 0);
             gst_navigation_send_key_event (GST_NAVIGATION (xvimagesink),
-                XKeysymToString (keysym));
+                                           XKeysymToString (keysym));
             break;
           default:
             GST_DEBUG ("xvimagesink unhandled X event (%d)", e.type);
@@ -591,7 +592,6 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
     }
 #endif /* HAVE_XSHM */
   
-  /* What the hell is that ? */
   if (xcontext->endianness == G_LITTLE_ENDIAN && xcontext->depth == 24)
     {
       xcontext->endianness = G_BIG_ENDIAN;
@@ -684,6 +684,8 @@ gst_xvimagesink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!gst_caps_get_int (caps, "width", &xvimagesink->width))
     return GST_PAD_LINK_REFUSED;
   if (!gst_caps_get_int (caps, "height", &xvimagesink->height))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_caps_get_float (caps, "framerate", &xvimagesink->framerate))
     return GST_PAD_LINK_REFUSED;
   
   if (gst_caps_has_fixed_property (caps, "format"))
@@ -1021,6 +1023,8 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
   xvimagesink->clock = NULL;
   
   xvimagesink->width = xvimagesink->height = 0;
+  
+  xvimagesink->framerate = 0;
   
   xvimagesink->x_lock = g_mutex_new ();
   
