@@ -81,6 +81,7 @@ static gchar *s;
 #define PIPELINE8  "fakesrc num-buffers=4 ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink"
 #define PIPELINE9  "fakesrc num-buffers=4 ! test. fakesink name=test"
 #define PIPELINE10 "( fakesrc num-buffers=\"4\" ! ) identity ! fakesink"
+#define PIPELINE11 "fakesink name = sink identity name=id ( fakesrc num-buffers=\"4\" ! id. ) id. ! sink."
 
 
 gint 
@@ -190,5 +191,13 @@ main (gint argc, gchar *argv[])
   TEST_RUN;
   TEST_OK;
   
+  /**
+   * checks:
+   * - failed in grammar.y cvs version 1.18
+   */
+  TEST_START (PIPELINE11);
+  TEST_RUN;
+  TEST_OK;
+
   return 0;
 }
