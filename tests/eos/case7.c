@@ -14,9 +14,9 @@ eos_signal (GstElement *element)
   gst_element_set_state (GST_ELEMENT (element), GST_STATE_NULL);
 
   g_print ("quiting main loop\n");
-  gdk_threads_enter ();
-  gtk_main_quit();
-  gdk_threads_leave ();
+  //gdk_threads_enter ();
+  //g_main_quit();
+  //gdk_threads_leave ();
   g_print ("quited main loop\n");
 }
 
@@ -35,7 +35,7 @@ main(int argc,char *argv[])
   g_return_val_if_fail(bin != NULL, 1);
 
   src = gst_elementfactory_make ("fakesrc", "src");
-  gtk_object_set (GTK_OBJECT (src), "num_buffers", 1, NULL);
+  g_object_set (G_OBJECT (src), "num_buffers", 1, NULL);
   g_return_val_if_fail (src != NULL, 2);
 
   identity = gst_elementfactory_make ("identity", "identity");
@@ -52,15 +52,15 @@ main(int argc,char *argv[])
   gst_element_connect(src, "src", identity, "sink");
   gst_element_connect(identity, "src", sink, "sink");
 
-  gtk_signal_connect (GTK_OBJECT (src), "eos", eos_signal_element, NULL);
-  gtk_signal_connect (GTK_OBJECT (bin), "eos", eos_signal_element, NULL);
-  gtk_signal_connect (GTK_OBJECT (thread), "eos", eos_signal, NULL);
+  g_signal_connectc (G_OBJECT (src), "eos", eos_signal_element, NULL, FALSE);
+  g_signal_connectc (G_OBJECT (bin), "eos", eos_signal_element, NULL, FALSE);
+  g_signal_connectc (G_OBJECT (thread), "eos", eos_signal, NULL, FALSE);
 
   gst_element_set_state (GST_ELEMENT (thread), GST_STATE_PLAYING);
 
-  gdk_threads_enter ();
-  gtk_main();
-  gdk_threads_leave ();
+  //gdk_threads_enter ();
+  //g_main();
+  //gdk_threads_leave ();
 
   g_print ("quiting\n");
 

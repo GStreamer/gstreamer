@@ -21,11 +21,11 @@ int main(int argc,char *argv[]) {
 
   paranoia = gst_elementfactory_make("cdparanoia","paranoia");
   g_return_val_if_fail(paranoia != NULL,3);
-  gtk_object_set(GTK_OBJECT(paranoia),"paranoia_mode",0,NULL);
-//  gtk_object_set(GTK_OBJECT(paranoia),"start_sector",0,"end_sector",75,NULL);
+  g_object_set(G_OBJECT(paranoia),"paranoia_mode",0,NULL);
+//  g_object_set(G_OBJECT(paranoia),"start_sector",0,"end_sector",75,NULL);
 
   queue = gst_elementfactory_make("queue","queue");
-  gtk_object_set(GTK_OBJECT(queue),"max_level",750,NULL);
+  g_object_set(G_OBJECT(queue),"max_level",750,NULL);
   g_return_val_if_fail(queue != NULL,4);
 
   osssink = gst_elementfactory_make("fakesink","osssink");
@@ -40,8 +40,8 @@ int main(int argc,char *argv[]) {
   gst_element_connect(paranoia,"src",queue,"sink");
   gst_element_connect(queue,"src",audio_thread,"sink");
 
-  gtk_signal_connect(GTK_OBJECT(gst_element_get_pad(paranoia,"src")),"eos",
-    GTK_SIGNAL_FUNC(paranoia_eos),NULL);
+  g_signal_connectc(G_OBJECT(gst_element_get_pad(paranoia,"src")),"eos",
+    G_CALLBACK(paranoia_eos),NULL,FALSE);
 
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
   if (GST_STATE(paranoia) != GST_STATE_PLAYING) fprintf(stderr,"error: state not set\n");

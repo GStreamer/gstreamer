@@ -13,7 +13,7 @@ int main(int argc,char *argv[]) {
   src = gst_elementfactory_make("fakesrc","src");
   identity = gst_elementfactory_make("identity","identity");
   g_return_val_if_fail(identity != NULL,2);
-  gtk_object_set(GTK_OBJECT(identity),"loop_based",TRUE,NULL);
+  g_object_set(G_OBJECT(identity),"loop_based",TRUE,NULL);
   sink = gst_elementfactory_make("fakesink","sink");
   g_return_val_if_fail(sink != NULL,3);
 

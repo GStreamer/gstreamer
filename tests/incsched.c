@@ -127,7 +127,7 @@ int main(int argc,char *argv[]) {
 
 //return;
   g_print("\n\nSetting EOS on fakesrc and iterating again:\n");
-  gtk_object_set(GTK_OBJECT(src),"eos",TRUE,NULL);
+  g_object_set(G_OBJECT(src),"eos",TRUE,NULL);
   gst_bin_iterate(thread);
 
   g_print("\n\nIterating:\n");

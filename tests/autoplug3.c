@@ -38,7 +38,7 @@ main (int argc, char *argv[])
 
   gst_element_connect (disksrc, "src", element, "sink");
 
-  gtk_object_set (GTK_OBJECT (disksrc), "location", argv[1], NULL);
+  g_object_set (G_OBJECT (disksrc), "location", argv[1], NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
