@@ -1,3 +1,20 @@
+2004-03-31  David Schleef  <ds@schleef.org>
+
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_expand_value),
+	(gst_audioscale_getcaps): Fix getcaps to expand and union lists.
+	(bug #138225)
+	* gst/debug/Makefile.am:
+	* gst/debug/breakmydata.c: (gst_break_my_data_plugin_init):
+	* gst/debug/gstdebug.c: (plugin_init):  Merge elements into one
+	plugin.
+	* gst/debug/negotiation.c: (gst_gst_negotiation_get_type),
+	(gst_negotiation_base_init), (gst_negotiation_class_init),
+	(gst_negotiation_init), (gst_negotiation_getcaps),
+	(gst_negotiation_pad_link), (gst_negotiation_chain),
+	(gst_negotiation_set_property), (gst_negotiation_get_property),
+	(gst_negotiation_plugin_init):  New element to talk about random
+	negotiation things happening in a pipeline.
+
 2004-03-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/adder/gstadder.c: (gst_adder_get_type), (gst_adder_loop):
