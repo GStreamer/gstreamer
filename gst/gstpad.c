@@ -24,6 +24,7 @@
 #include "gst_private.h"
 
 #include "gstpad.h"
+#include "gstutils.h"
 #include "gstelement.h"
 #include "gsttype.h"
 #include "gstbin.h"
@@ -554,15 +555,35 @@ gst_pad_disconnect (GstPad *srcpad,
  * @sinkpad: the sink pad to connect
  *
  * Connects the source pad to the sink pad.
+ *
+ * You shouldn't use this API in a real application because the
+ * failure mode dumps detailed diagnostics to stderr.  A professional
+ * application should always use gst_pad_try_connect and check
+ * the return code.
+ *
+ * This API will probably be moved out of the main gstreamer library.
  */
 void
 gst_pad_connect (GstPad *srcpad,
 		 GstPad *sinkpad)
 {
   if (!gst_pad_try_connect (srcpad, sinkpad))
-    g_critical ("couldn't connect %s:%s and %s:%s",
-		GST_DEBUG_PAD_NAME (srcpad),
-		GST_DEBUG_PAD_NAME (sinkpad));
+    {
+      GString *buf;
+
+      buf = g_string_new (NULL);
+      g_string_printf (buf, "\nCouldn't connect %s:%s and %s:%s -- details:\n",
+		       GST_DEBUG_PAD_NAME (srcpad),
+		       GST_DEBUG_PAD_NAME (sinkpad));
+      gst_print_pad_caps (buf, 2, srcpad);
+      gst_print_pad_caps (buf, 2, sinkpad);
+
+      g_critical (buf->str,
+		  GST_DEBUG_PAD_NAME (srcpad),
+		  GST_DEBUG_PAD_NAME (sinkpad));
+
+      g_string_free (buf, TRUE);
+    }
 }
 
 /**
