@@ -1,3 +1,14 @@
+2004-06-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videorate/Makefile.am:
+	* gst/videorate/gstvideorate.c: (gst_videorate_get_type),
+	(gst_videorate_base_init), (gst_videorate_class_init),
+	(gst_videorate_getcaps), (gst_videorate_link),
+	(gst_videorate_init), (gst_videorate_chain),
+	(gst_videorate_set_property), (gst_videorate_get_property),
+	(gst_videorate_change_state), (plugin_init):
+	Added a video timestamp corrector.
+
 2004-06-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
 
 	fixed a potential leak with previous commit
