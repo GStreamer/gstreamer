@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-#include <gst/gstbytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 #include "gstsiddec.h"
 
@@ -34,17 +34,6 @@ static GstElementDetails gst_siddec_details = {
   "Wim Taymans <wim.taymans@chello.be> ",
   "(C) 2001",
 };
-
-static GstCaps* sid_typefind (GstByteStream *bs, gpointer priv);
-
-/* typefactory for 'sid' */
-static GstTypeDefinition siddefinition = {
-  "siddec_audio/sid",
-  "audio/x-sid",
-  ".sid",
-  sid_typefind,
-};
-
 
 /* Sidec signals and args */
 enum {
@@ -183,26 +172,6 @@ gst_siddec_get_type (void)
   }
 
   return siddec_type;
-}
-
-static GstCaps*
-sid_typefind (GstByteStream *bs, gpointer priv)
-{
-  guchar *data;
-  GstBuffer *buffer;
-  GstCaps *newcaps;
-
-  GST_DEBUG ("sid_demux: typefind");
-
-  gst_bytestream_peek (bs, &buffer, 4);
-  data = GST_BUFFER_DATA (buffer);
-
-  if (strncmp ((const char *)data, "PSID", 4))
-    return NULL;
-
-  newcaps = gst_caps_new ("sid_typefind","audio/x-sid", NULL);
-
-  return newcaps;
 }
 
 static void
@@ -660,7 +629,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory *type;
 
   /* create an elementfactory for the avi_demux element */
   factory = gst_element_factory_new ("siddec",GST_TYPE_SIDDEC,
@@ -670,9 +638,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_templ));
   gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_templ));
-
-  type = gst_type_factory_new (&siddefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
