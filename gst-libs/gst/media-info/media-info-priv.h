@@ -103,7 +103,11 @@ void		gmi_stream_free			(GstMediaInfoStream *stream);
 GstMediaInfoTrack *
 		gmi_track_new			(void);
 
-void		gmi_reset			(GstMediaInfo *info);
+void		gmip_reset			(GstMediaInfoPriv *priv);
+void		gmip_init			(GstMediaInfoPriv *priv, GError **error);
+
+void		gmi_clear_decoder		(GstMediaInfo *info);
+
 gboolean	gmi_seek_to_track		(GstMediaInfo *info,
 		                                 long track);
 
