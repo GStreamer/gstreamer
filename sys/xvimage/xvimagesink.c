@@ -194,7 +194,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
   gboolean succeeded = FALSE;
 
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
-  GST_DEBUG_OBJECT (xvimagesink, "creating %dx%d", width, height);
+  GST_LOG_OBJECT (xvimagesink, "creating %dx%d", width, height);
 
   xvimage = g_new0 (GstXvImage, 1);
 
@@ -219,7 +219,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
 
     /* we have to use the returned data_size for our shm size */
     xvimage->size = xvimage->xvimage->data_size;
-    GST_DEBUG_OBJECT (xvimagesink, "XShm image size is %d", xvimage->size);
+    GST_LOG_OBJECT (xvimagesink, "XShm image size is %d", xvimage->size);
 
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);
@@ -606,7 +606,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink, GstPad * pad)
     GST_DEBUG ("xvimagesink pointer moved over window at %d,%d",
         pointer_x, pointer_y);
     gst_navigation_send_mouse_event (GST_NAVIGATION (xvimagesink),
-        "mouse-move", 0, pointer_x, pointer_y);
+        "mouse-move", 0, e.xbutton.x, e.xbutton.y);
   }
 
   /* We get all events on our window to throw them upstream */
@@ -1510,7 +1510,7 @@ gst_xvimagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
 
   if (!xvimage) {
     /* We found no suitable image in the pool. Creating... */
-    GST_DEBUG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
+    GST_LOG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
     xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
         xvimagesink->video_width, xvimagesink->video_height);
   }
@@ -1558,12 +1558,12 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
 
   /* Converting pointer coordinates to the non scaled geometry */
   if (gst_structure_get_double (structure, "pointer_x", &x)) {
-    x *= GST_VIDEOSINK_WIDTH (xvimagesink);
+    x *= xvimagesink->video_width;
     x /= xvimagesink->xwindow->width;
     gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
   }
   if (gst_structure_get_double (structure, "pointer_y", &y)) {
-    y *= GST_VIDEOSINK_HEIGHT (xvimagesink);
+    y *= xvimagesink->video_height;
     y /= xvimagesink->xwindow->height;
     gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
   }

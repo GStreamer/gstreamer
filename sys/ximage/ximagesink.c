@@ -1260,11 +1260,11 @@ gst_ximagesink_navigation_send_event (GstNavigation * navigation,
   y_offset = ximagesink->xwindow->height - GST_VIDEOSINK_HEIGHT (ximagesink);
 
   if (gst_structure_get_double (structure, "pointer_x", &x)) {
-    x += x_offset;
+    x -= x_offset / 2;
     gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
   }
   if (gst_structure_get_double (structure, "pointer_y", &y)) {
-    y += y_offset;
+    y -= y_offset / 2;
     gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
   }
 
