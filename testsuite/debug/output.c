@@ -65,10 +65,10 @@ main (gint argc, gchar * argv[])
       "default category for this test");
   GST_DEBUG_CATEGORY_INIT (cat2, "GST_Check_2", 0,
       "second category for this test");
-  g_assert (gst_debug_remove_log_function (gst_debug_log_default) !=
-      GST_DISABLE_GST_DEBUG);
-  g_assert (gst_debug_add_log_function (check_message,
-          NULL) != GST_DISABLE_GST_DEBUG);
+#ifndef GST_DISABLE_GST_DEBUG
+  g_assert (gst_debug_remove_log_function (gst_debug_log_default) == 1);
+#endif
+  gst_debug_add_log_function (check_message, NULL);
 
   count = 0;
   GST_ERROR ("This is an error.");
@@ -119,8 +119,9 @@ main (gint argc, gchar * argv[])
       "This is a log message with category and object.");
   count = -1;
 
-  g_assert (gst_debug_remove_log_function (check_message) ==
-      (GST_DISABLE_GST_DEBUG ? 0 : 1));
+#ifndef GST_DISABLE_GST_DEBUG
+  g_assert (gst_debug_remove_log_function (check_message) == 1);
+#endif
 
   return 0;
 }

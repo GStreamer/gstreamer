@@ -42,13 +42,13 @@ main (gint argc, gchar * argv[])
   after = gst_debug_get_all_categories ();
 
   g_print ("removing default log function\n");
-  g_assert (gst_debug_remove_log_function (gst_debug_log_default) ==
-      (GST_DISABLE_GST_DEBUG ? 0 : 1));
+#ifdef GST_DISABLE_GST_DEBUG
+  g_assert (gst_debug_remove_log_function (gst_debug_log_default) == 0);
+#else
+  g_assert (gst_debug_remove_log_function (gst_debug_log_default) == 1);
   g_print
       ("checking, if the two new categories are put into the category list correctly...\n");
-  g_assert (g_slist_length (after) - g_slist_length (before) ==
-      (GST_DISABLE_GST_DEBUG ? 0 : 2));
-#ifndef GST_DISABLE_GST_DEBUG
+  g_assert (g_slist_length (after) - g_slist_length (before) == 2);
   /* check the _get stuff */
   g_print
       ("checking, if the gst_debug_category_get_* stuff works with the categories...\n");

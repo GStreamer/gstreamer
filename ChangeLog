@@ -1,5 +1,12 @@
 2004-04-05  Benjamin Otte  <otte@gnome.org>
 
+	* testsuite/debug/category.c: (main):
+	* testsuite/debug/commandline.c: (main):
+	* testsuite/debug/output.c: (main):
+	  fix tests to work again with debugging enabled
+
+2004-04-05  Benjamin Otte  <otte@gnome.org>
+
 	* gst/schedulers/gstbasicscheduler.c:
 	(gst_basic_scheduler_pad_link):
 	  fix to work with recent scheduling changes

@@ -26,6 +26,7 @@
 GST_DEBUG_CATEGORY (cat);
 GST_DEBUG_CATEGORY_STATIC (cat_static);
 
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *lines[] = {
   "--gst-debug-disable",
   "--gst-debug-no-color",
@@ -34,7 +35,6 @@ static const gchar *lines[] = {
   "--gst-debug-level=4 --gst-debug=cat_*:5"
 };
 
-#ifndef GST_DISABLE_GST_DEBUG
 static void
 debug_not_reached (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line, GObject * object,
@@ -49,21 +49,24 @@ main (gint argc, gchar * argv[])
 {
   if (argc == 1) {
     /* this is the main run that calls the others */
-    gint i, runs, exit;
-    gchar *command;
 
     unsetenv ("GST_DEBUG");
     gst_init (&argc, &argv);
-    runs = G_N_ELEMENTS (lines);
 #ifndef GST_DISABLE_GST_DEBUG
-    for (i = 0; i < runs; i++) {
-      command = g_strdup_printf ("%s %s %d", argv[0], lines[i], i);
-      g_print ("running \"%s\"\n", command);
-      g_assert (g_spawn_command_line_sync (command, NULL, NULL, &exit,
-              NULL) == TRUE);
-      g_assert (exit == 0);
-      g_print ("\"%s\" worked as expected.\n", command);
-      g_free (command);
+    {
+      gint i, runs, exit;
+      gchar *command;
+
+      runs = G_N_ELEMENTS (lines);
+      for (i = 0; i < runs; i++) {
+        command = g_strdup_printf ("%s %s %d", argv[0], lines[i], i);
+        g_print ("running \"%s\"\n", command);
+        g_assert (g_spawn_command_line_sync (command, NULL, NULL, &exit,
+                NULL) == TRUE);
+        g_assert (exit == 0);
+        g_print ("\"%s\" worked as expected.\n", command);
+        g_free (command);
+      }
     }
 #endif
 
