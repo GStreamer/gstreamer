@@ -1,6 +1,6 @@
-filterdir = $(libdir)/gst
+plugindir = $(libdir)/gst
 
-filter_LTLIBRARIES = libgstvideoscale.la
+plugin_LTLIBRARIES = libgstvideoscale.la
 
 if HAVE_CPU_I386
 ARCHSRCS = \
@@ -15,6 +15,6 @@ libgstvideoscale_la_SOURCES = \
 			videoscale.c \
 			$(ARCHSRCS)
 libgstvideoscale_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math $(GST_CFLAGS)
+libgstvideoscale_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = gstvideoscale.h videoscale_x86.h
-

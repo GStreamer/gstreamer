@@ -4,6 +4,7 @@ plugin_LTLIBRARIES = libgstsinesrc.la
 
 libgstsinesrc_la_SOURCES = gstsinesrc.c
 libgstsinesrc_la_CFLAGS = $(GST_CFLAGS)
+libgstsinesrc_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = gstsinesrc.h
 
