@@ -1,3 +1,11 @@
+2005-02-21  Maciej Katafiasz  <mathrick@freedesktop.org>
+
+	* ext/faad/gstfaad.c: (gst_faad_sinkconnect), (gst_faad_chain):
+	* ext/faad/gstfaad.h:
+	TEH LONGEST DEBUGGING SESSION EVAR is over. Fix interaction with 
+	certain invalid muxed streams, where some packets will contain 
+	junk after decoder data. Fixes 
+
 2005-02-21  Jan Schmidt <thaytan@mad.scientist.com>
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain):
           Make sure we only write to writable buffers
