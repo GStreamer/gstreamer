@@ -628,54 +628,6 @@ gst_caps_is_equal_fixed (const GstCaps * caps1, const GstCaps * caps2)
       struct2);
 }
 
-static gboolean
-gst_structure_field_has_compatible (GQuark field_id,
-    GValue * val2, gpointer data)
-{
-  GValue dest = { 0 };
-  GstStructure *struct1 = (GstStructure *) data;
-  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
-
-  if (val1 == NULL)
-    return FALSE;
-  if (gst_value_intersect (&dest, val1, val2)) {
-    g_value_unset (&dest);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static gboolean
-gst_cap_is_always_compatible (const GstStructure * struct1,
-    const GstStructure * struct2)
-{
-  if (struct1->name != struct2->name) {
-    return FALSE;
-  }
-
-  /* the reversed order is important */
-  return gst_structure_foreach ((GstStructure *) struct2,
-      gst_structure_field_has_compatible, (gpointer) struct1);
-}
-
-static gboolean
-gst_caps_cap_is_always_compatible (const GstStructure * struct1,
-    const GstCaps * caps2)
-{
-  int i;
-
-  for (i = 0; i < caps2->structs->len; i++) {
-    GstStructure *struct2 = gst_caps_get_structure (caps2, i);
-
-    if (gst_cap_is_always_compatible (struct1, struct2)) {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
 /**
  * gst_caps_is_always_compatible:
  * @caps1: the #GstCaps to test
@@ -690,30 +642,10 @@ gst_caps_cap_is_always_compatible (const GstStructure * struct1,
 gboolean
 gst_caps_is_always_compatible (const GstCaps * caps1, const GstCaps * caps2)
 {
-  int i;
-
   g_return_val_if_fail (caps1 != NULL, FALSE);
   g_return_val_if_fail (caps2 != NULL, FALSE);
 
-  if (gst_caps_is_any (caps2))
-    return TRUE;
-  if (gst_caps_is_any (caps1))
-    return FALSE;
-  if (gst_caps_is_empty (caps1))
-    return TRUE;
-  if (gst_caps_is_empty (caps2))
-    return FALSE;
-
-  for (i = 0; i < caps1->structs->len; i++) {
-    GstStructure *struct1 = gst_caps_get_structure (caps1, i);
-
-    if (gst_caps_cap_is_always_compatible (struct1, caps2) == FALSE) {
-      return FALSE;
-    }
-
-  }
-
-  return FALSE;
+  return gst_caps_is_subset (caps1, caps2);
 }
 
 /**
