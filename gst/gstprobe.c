@@ -76,7 +76,7 @@ gst_probe_destroy (GstProbe *probe)
  * Returns: the result of the probe callback function.
  */
 gboolean
-gst_probe_perform (GstProbe *probe, GstData *data)
+gst_probe_perform (GstProbe *probe, GstData **data)
 {
   gboolean res = TRUE;
 
@@ -197,7 +197,7 @@ gst_probe_dispatcher_remove_probe (GstProbeDispatcher *disp, GstProbe *probe)
  * Returns: TRUE if all callbacks returned TRUE.
  */
 gboolean	
-gst_probe_dispatcher_dispatch (GstProbeDispatcher *disp, GstData *data)
+gst_probe_dispatcher_dispatch (GstProbeDispatcher *disp, GstData **data)
 {
   GSList *walk;
   gboolean res = TRUE;

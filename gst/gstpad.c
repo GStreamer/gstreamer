@@ -2207,7 +2207,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
 
-  if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), GST_DATA (buf)))
+  if (!gst_probe_dispatcher_dispatch (&(GST_REAL_PAD (pad)->probedisp), (GstData **) &buf))
     return;
 
   peer = GST_RPAD_PEER (pad);
@@ -2229,7 +2229,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
 	           "calling chainhandler &%s of peer pad %s:%s",
                    GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), 
 		   GST_DEBUG_PAD_NAME (GST_PAD (peer)));
-        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, GST_DATA (buf)))
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, (GstData **) &buf))
           return;
 
         (peer->chainhandler) (GST_PAD_CAST (peer), buf);
@@ -2289,7 +2289,7 @@ restart:
       buf = (peer->gethandler) (GST_PAD_CAST (peer));
 
       if (buf) {
-        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, GST_DATA (buf)))
+        if (!gst_probe_dispatcher_dispatch (&peer->probedisp, (GstData **) &buf))
           goto restart;
 
         if (!GST_IS_EVENT (buf) && !active) {
