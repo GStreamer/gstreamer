@@ -145,7 +145,7 @@ gst_vorbisenc_init (VorbisEnc * vorbisenc)
 static void
 gst_vorbisenc_setup (VorbisEnc * vorbisenc)
 {
-  static const gchar *comment = "Track encodec with GStreamer";
+  static const gchar *comment = "Track encoded with GStreamer";
   /********** Encode setup ************/
 
   /* choose an encoding mode */
