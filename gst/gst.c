@@ -34,8 +34,6 @@
 #include "gstqueue.h"
 #include "gsttypefind.h"
 
-//#define NO_X
-
 #define MAX_PATH_SPLIT	16
 
 gchar *_gst_progname;
@@ -59,16 +57,22 @@ void
 gst_init (int *argc, char **argv[]) 
 {
   GstTrace *gst_trace;
+  gchar *display;
 
   GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library");
 
   if (!g_thread_supported ()) g_thread_init (NULL);
 
-#ifdef NO_X
-  gtk_type_init ();
-#else
-  gtk_init (argc,argv);
-#endif
+  /* Only initialise gtk fully if we have an X display.
+   * FIXME: this fails if the display is specified differently, eg, by
+   * a command line parameter. This is okay though, since this is only
+   * a quick hack and should be replaced when we move to gobject.*/
+  display = g_getenv("DISPLAY");
+  if (display == NULL) {
+    gtk_type_init ();
+  } else {
+    gtk_init (argc,argv);
+  }
 
   if (!gst_init_check (argc,argv)) {
     exit (0);
@@ -216,7 +220,6 @@ gst_init_check (int     *argc,
   /* check for ENV variables */
   {
     gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
-
     gst_add_paths_func (plugin_path);
   }
 
