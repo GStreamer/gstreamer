@@ -1,3 +1,10 @@
+2004-07-25  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* ext/mad/gstmad.c:
+	  fix mad plugin crashing on Sun (fixes #148289)
+
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 	* gst/avi/avi.def:
 	* gst/avi/avi.vcproj:
