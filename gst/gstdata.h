@@ -50,7 +50,7 @@ typedef enum
   GST_DATA_READONLY 	= 1,
 
   /* insert more */
-  GST_DATA_FLAG_LAST 	= 8,
+  GST_DATA_FLAG_LAST 	= 8
 } GstDataFlags;
 
 #define GST_DATA_IS_READONLY(data)		(GST_DATA_FLAG_IS_SET((data), GST_DATA_READONLY))
