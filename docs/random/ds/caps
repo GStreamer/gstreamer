@@ -1,0 +1,81 @@
+
+
+Problem #1:
+
+  How does the core allow the application to choose appropriate
+  caps in the following cases:
+
+    videotestsrc ! xvimagesink
+
+    videotestsrc ! identity ! xvimagesink
+
+    videotestsrc ! videoscale ! xvimagesink
+ 
+  Goals:
+  
+  - Give the application a clear overview of the formats available
+    and the elements involved.
+
+  - Provide reasonable defaults in as many cases as possible.
+
+  - Allow specialized elements to suggest reasonable defaults.
+
+
+
+Problem #2:
+
+  How does the API express to an autoplugger what an element does?
+
+  Currently, "colorspace" and "videoscale" have approximately the
+  same pad template caps.  Until the autoplugger plugs and looks,
+  it has no way to determine that colorspace changes format, and
+  videoscale changes size.
+
+
+
+Problem #3:
+
+  How do we properly handle codec metadata?
+
+  Solution #3a:
+
+    Stream initialization event.  This event would be held by all
+    src pads, and pushed to sink pads upon connection, and would
+    flow downstream.
+
+  Solution #3b:
+    
+    Put a buffer in the caps.
+
+
+Problem #4:
+
+  (Related to #1) How does one specify that a converter should limit
+  it's conversion?  I.e., audioconvert to not change number of channels,
+  or audioscale upsample by 20%.  Basically, this means caps based on
+  other caps.
+
+  Solution #4a:
+
+    One can put a converter element into a special bin:
+
+      specialbin.( specialidentity ! converter ! specialidentity )
+
+    Specialbin can then interfere with caps negotiation all it wants.
+
+
+Problem #5:
+
+  (Related to #3)  How do we specify stream format information that
+  is non-critical and optional, such as pixel aspect ratio on raw
+  video?
+
+Problem #6:
+
+  How do we specify the difference between nominal values and actual
+  values, such as video frame rate?  The actual frame rate may not
+  correspond to the nominal frame rate in the caps, and often a guess
+  is listed.
+
+
+

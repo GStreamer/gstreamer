@@ -1,0 +1,50 @@
+
+Element Categories:
+-------------------
+
+
+Decoder:
+
+
+Encoder:
+
+
+Converter:
+ A converter has one or more source pads and one or more sink pads.
+ Converter pads may have different caps templates.  Converters are
+ expected 
+
+
+Filter:
+ A filter has one source and one sink pad.  These pads have the same
+ caps and (thus) the same caps template.
+
+ Filters generally do not handle events.
+
+ Filters may have interfaces.
+
+ Filters are generally not autoplugged unless they have interfaces.
+
+
+Source:
+ A source has one source pad and no sink pads.
+
+ Sources usually handle events.
+
+ Sources may have interfaces.
+
+ Sources are not autoplugged.
+
+Sink:
+ A sink has one sink pad and no source pads.
+
+ Sources usually handle events.
+
+ Sources may have interfaces.
+
+ Sinks are not autoplugged.
+
+
+
+Converter/Colorspace
+

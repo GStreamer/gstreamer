@@ -1,0 +1,30 @@
+
+
+Buffers should have readlocks and writelocks to enforce
+GST_BUFFER_DONTKEEP and relax the restriction that buffers with
+multiple refcounts are read-only.
+
+
+
+Example:
+
+  videotestsrc ! ximagesink
+
+  videotestsrc requests a buffer from its src pad
+
+  ximagesink creates a buffer (refcount:1 readlock:0 writelock:0)
+
+  videotestsrc writelocks it (refcount:1 readlock:0 writelock:1)
+
+  videotestsrc writes to the buffer
+
+  videotestsrc un-writelocks it (refcount:1 readlock:0 writelock:0)
+
+  ximagesink readlocks it (refcount:1 readlock:1 writelock:0)
+
+  ximagesink writes it to the screen
+
+  ximagesink un-readlocks it (refcount:1 readlock:0 writelock:0)
+
+
+  
