@@ -278,7 +278,7 @@ gst_v4lmjpegsink_set_property (GObject      *object,
       v4lmjpegsink->y_offset = g_value_get_int(value);
       break;
     default:
-      parent_class->set_property(object, prop_id, value, pspec);
+      /*parent_class->set_property(object, prop_id, value, pspec);*/
       break;
   }
 }
@@ -309,7 +309,7 @@ gst_v4lmjpegsink_get_property (GObject    *object,
       g_value_set_int (value, v4lmjpegsink->bufsize);
       break;
     default:
-      parent_class->get_property(object, prop_id, value, pspec);
+      /*parent_class->get_property(object, prop_id, value, pspec);*/
       break;
   }
 }
@@ -323,39 +323,43 @@ gst_v4lmjpegsink_change_state (GstElement *element)
   g_return_val_if_fail (GST_IS_V4LMJPEGSINK (element), GST_STATE_FAILURE);
   v4lmjpegsink = GST_V4LMJPEGSINK(element);
 
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
   /* set up change state */
-  switch (GST_STATE_PENDING(element)) {
-    case GST_STATE_READY:
-      if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsink))) {
-        /* stop playback, unmap all buffers */
-        if (!gst_v4lmjpegsink_playback_deinit(v4lmjpegsink))
+  switch (GST_STATE_TRANSITION(element)) {
+    case GST_STATE_NULL_TO_READY:
+      if (GST_V4LELEMENT(v4lmjpegsink)->norm >= VIDEO_MODE_PAL &&
+          GST_V4LELEMENT(v4lmjpegsink)->norm < VIDEO_MODE_AUTO &&
+          GST_V4LELEMENT(v4lmjpegsink)->channel < 0)
+        if (!gst_v4l_set_chan_norm(GST_V4LELEMENT(v4lmjpegsink),
+             0, GST_V4LELEMENT(v4lmjpegsink)->norm))
           return GST_STATE_FAILURE;
-      }
       break;
-    case GST_STATE_PAUSED:
-      if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsink))) {
-        /* set buffer info */
-        if (!gst_v4lmjpegsink_set_buffer(v4lmjpegsink,
-          v4lmjpegsink->numbufs, v4lmjpegsink->bufsize))
-          return GST_STATE_FAILURE;
-        if (!gst_v4lmjpegsink_playback_init(v4lmjpegsink))
-          return GST_STATE_FAILURE;
-      }
-      else {
-        /* de-queue all queued buffers */
-        if (!gst_v4lmjpegsink_playback_stop(v4lmjpegsink))
-          return GST_STATE_FAILURE;
-      }
+    case GST_STATE_READY_TO_PAUSED:
+      /* set buffer info */
+      if (!gst_v4lmjpegsink_set_buffer(v4lmjpegsink,
+           v4lmjpegsink->numbufs, v4lmjpegsink->bufsize))
+        return GST_STATE_FAILURE;
+      if (!gst_v4lmjpegsink_playback_init(v4lmjpegsink))
+        return GST_STATE_FAILURE;
       break;
-    case GST_STATE_PLAYING:
+    case GST_STATE_PAUSED_TO_PLAYING:
       /* start */
       if (!gst_v4lmjpegsink_playback_start(v4lmjpegsink))
         return GST_STATE_FAILURE;
       break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      /* de-queue all queued buffers */
+      if (!gst_v4lmjpegsink_playback_stop(v4lmjpegsink))
+        return GST_STATE_FAILURE;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      /* stop playback, unmap all buffers */
+      if (!gst_v4lmjpegsink_playback_deinit(v4lmjpegsink))
+        return GST_STATE_FAILURE;
+      break;
   }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
 }

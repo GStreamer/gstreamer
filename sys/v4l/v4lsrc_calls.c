@@ -141,8 +141,9 @@ retry:
   }
 
 end:
-  gst_element_info(GST_ELEMENT(v4lsrc),
-    "Software sync thread got signalled to exit");
+#ifdef DEBUG
+  fprintf(stderr, "Software sync thread got signalled to exit");
+#endif
   pthread_exit(NULL);
 }
 

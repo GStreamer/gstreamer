@@ -125,31 +125,42 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_V4LELEMENT);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_X_OFFSET,
-    g_param_spec_int("x_offset","x_offset","x_offset",G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+    g_param_spec_int("x_offset","x_offset","x_offset",
+    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_Y_OFFSET,
-    g_param_spec_int("y_offset","y_offset","y_offset",G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+    g_param_spec_int("y_offset","y_offset","y_offset",
+    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_F_WIDTH,
-    g_param_spec_int("frame_width","frame_width","frame_width",G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+    g_param_spec_int("frame_width","frame_width","frame_width",
+    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_F_HEIGHT,
-    g_param_spec_int("frame_height","frame_height","frame_height",G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+    g_param_spec_int("frame_height","frame_height","frame_height",
+    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_H_DECIMATION,
-    g_param_spec_int("h_decimation","h_decimation","h_decimation",G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+    g_param_spec_int("h_decimation","h_decimation","h_decimation",
+    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_V_DECIMATION,
-    g_param_spec_int("v_decimation","v_decimation","v_decimation",G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+    g_param_spec_int("v_decimation","v_decimation","v_decimation",
+    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
-    g_param_spec_int("width","width","width",G_MININT,G_MAXINT,0,G_PARAM_READABLE));
+    g_param_spec_int("width","width","width",
+    G_MININT,G_MAXINT,0,G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
-    g_param_spec_int("height","height","height",G_MININT,G_MAXINT,0,G_PARAM_READABLE));
+    g_param_spec_int("height","height","height",
+    G_MININT,G_MAXINT,0,G_PARAM_READABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_QUALITY,
-    g_param_spec_int("quality","quality","quality",G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
+    g_param_spec_int("quality","quality","quality",
+    G_MININT,G_MAXINT,0,G_PARAM_WRITABLE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUMBUFS,
-    g_param_spec_int("num_buffers","num_buffers","num_buffers",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("num_buffers","num_buffers","num_buffers",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFSIZE,
-    g_param_spec_int("buffer_size","buffer_size","buffer_size",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("buffer_size","buffer_size","buffer_size",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_v4lmjpegsrc_set_property;
   gobject_class->get_property = gst_v4lmjpegsrc_get_property;
@@ -311,7 +322,7 @@ gst_v4lmjpegsrc_set_property (GObject      *object,
       v4lmjpegsrc->bufsize = g_value_get_int(value);
       break;
     default:
-      parent_class->set_property(object, prop_id, value, pspec);
+      /*parent_class->set_property(object, prop_id, value, pspec);*/
       break;
   }
 }
@@ -342,7 +353,7 @@ gst_v4lmjpegsrc_get_property (GObject    *object,
       g_value_set_int(value, v4lmjpegsrc->breq.size);
       break;
     default:
-      parent_class->get_property(object, prop_id, value, pspec);
+      /*parent_class->get_property(object, prop_id, value, pspec);*/
       break;
   }
 }
@@ -357,56 +368,74 @@ gst_v4lmjpegsrc_change_state (GstElement *element)
   
   v4lmjpegsrc = GST_V4LMJPEGSRC(element);
 
-  switch (GST_STATE_PENDING(element)) {
-    case GST_STATE_READY:
-      if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc))) {
-        /* stop capturing, unmap all buffers */
-        if (!gst_v4lmjpegsrc_capture_deinit(v4lmjpegsrc))
-          return GST_STATE_FAILURE;
-      }
-      break;
-    case GST_STATE_PAUSED:
-      if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc))) {
-        /* set buffer info */
-        if (!gst_v4lmjpegsrc_set_buffer(v4lmjpegsrc, v4lmjpegsrc->numbufs, v4lmjpegsrc->bufsize))
-          return GST_STATE_FAILURE;
-        /* set capture parameters and mmap the buffers */
-        if (!v4lmjpegsrc->frame_width && !v4lmjpegsrc->frame_height &&
-            v4lmjpegsrc->x_offset < 0 && v4lmjpegsrc->y_offset < 0 &&
-            v4lmjpegsrc->horizontal_decimation == v4lmjpegsrc->vertical_decimation)
-        {
-          if (!gst_v4lmjpegsrc_set_capture(v4lmjpegsrc,
-              v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->quality))
-            return GST_STATE_FAILURE;
-        }
+  if (GST_ELEMENT_CLASS(parent_class)->change_state)
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+
+  switch (GST_STATE_TRANSITION(element)) {
+    case GST_STATE_NULL_TO_READY:
+      /* do autodetection if no input/norm is selected yet */
+      if (GST_V4LELEMENT(v4lmjpegsrc)->norm < VIDEO_MODE_PAL ||
+          GST_V4LELEMENT(v4lmjpegsrc)->norm == VIDEO_MODE_AUTO ||
+          GST_V4LELEMENT(v4lmjpegsrc)->channel < 0 ||
+          GST_V4LELEMENT(v4lmjpegsrc)->channel == V4L_MJPEG_INPUT_AUTO)
+      {
+        gint norm, input;
+
+        if (GST_V4LELEMENT(v4lmjpegsrc)->norm < 0)
+          norm = VIDEO_MODE_AUTO;
         else
-        {
-          if (!gst_v4lmjpegsrc_set_capture_m(v4lmjpegsrc,
-              v4lmjpegsrc->x_offset, v4lmjpegsrc->y_offset,
-              v4lmjpegsrc->frame_width, v4lmjpegsrc->frame_height,
-              v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->vertical_decimation,
-              v4lmjpegsrc->quality))
-            return GST_STATE_FAILURE;
-        }
-        v4lmjpegsrc->init = TRUE;
-        if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
-          return GST_STATE_FAILURE;
-      }
-      else {
-        /* de-queue all queued buffers */
-        if (!gst_v4lmjpegsrc_capture_stop(v4lmjpegsrc))
+          norm = GST_V4LELEMENT(v4lmjpegsrc)->norm;
+
+        if (GST_V4LELEMENT(v4lmjpegsrc)->channel < 0)
+          input = V4L_MJPEG_INPUT_AUTO;
+        else
+          input = GST_V4LELEMENT(v4lmjpegsrc)->channel;
+
+        if (!gst_v4lmjpegsrc_set_input_norm(v4lmjpegsrc, input, norm))
           return GST_STATE_FAILURE;
       }
       break;
-    case GST_STATE_PLAYING:
+    case GST_STATE_READY_TO_PAUSED:
+      /* set buffer info */
+      if (!gst_v4lmjpegsrc_set_buffer(v4lmjpegsrc, v4lmjpegsrc->numbufs, v4lmjpegsrc->bufsize))
+        return GST_STATE_FAILURE;
+      /* set capture parameters and mmap the buffers */
+      if (!v4lmjpegsrc->frame_width && !v4lmjpegsrc->frame_height &&
+           v4lmjpegsrc->x_offset < 0 && v4lmjpegsrc->y_offset < 0 &&
+           v4lmjpegsrc->horizontal_decimation == v4lmjpegsrc->vertical_decimation)
+      {
+        if (!gst_v4lmjpegsrc_set_capture(v4lmjpegsrc,
+            v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->quality))
+          return GST_STATE_FAILURE;
+      }
+      else
+      {
+        if (!gst_v4lmjpegsrc_set_capture_m(v4lmjpegsrc,
+             v4lmjpegsrc->x_offset, v4lmjpegsrc->y_offset,
+             v4lmjpegsrc->frame_width, v4lmjpegsrc->frame_height,
+             v4lmjpegsrc->horizontal_decimation, v4lmjpegsrc->vertical_decimation,
+             v4lmjpegsrc->quality))
+          return GST_STATE_FAILURE;
+      }
+      v4lmjpegsrc->init = TRUE;
+      if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
+        return GST_STATE_FAILURE;
+    case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
       if (!gst_v4lmjpegsrc_capture_start(v4lmjpegsrc))
         return GST_STATE_FAILURE;
       break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      /* de-queue all queued buffers */
+      if (!gst_v4lmjpegsrc_capture_stop(v4lmjpegsrc))
+        return GST_STATE_FAILURE;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      /* stop capturing, unmap all buffers */
+      if (!gst_v4lmjpegsrc_capture_deinit(v4lmjpegsrc))
+        return GST_STATE_FAILURE;
+      break;
   }
-
-  if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
 
   return GST_STATE_SUCCESS;
 }

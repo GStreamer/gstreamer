@@ -69,7 +69,7 @@ gst_v4lmjpegsink_sync_thread (void *arg)
     pthread_mutex_unlock(&(v4lmjpegsink->mutex_queued_frames));
 
     if (ioctl(GST_V4LELEMENT(v4lmjpegsink)->video_fd, MJPIOC_SYNC,
-      &(v4lmjpegsink->bsync)) < 0)
+        &(v4lmjpegsink->bsync)) < 0)
     {
       gst_element_error(GST_ELEMENT(v4lmjpegsink),
         "Failed to sync on frame %d: %s",
@@ -432,7 +432,7 @@ gst_v4lmjpegsink_playback_start (GstV4lMjpegSink *v4lmjpegsink)
 
   /* create sync() thread */
   if (pthread_create(&(v4lmjpegsink->thread_queued_frames), NULL,
-    gst_v4lmjpegsink_sync_thread, (void *) v4lmjpegsink))
+      gst_v4lmjpegsink_sync_thread, (void *) v4lmjpegsink))
   {
     gst_element_error(GST_ELEMENT(v4lmjpegsink),
       "Failed to create sync thread: %s",

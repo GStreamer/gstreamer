@@ -144,6 +144,18 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
         break;
       }
     }
+
+    /* check */
+    if (input == V4L_MJPEG_INPUT_AUTO || norm == VIDEO_MODE_AUTO)
+    {
+      gst_element_error(GST_ELEMENT(v4lmjpegsrc),
+        "Unable to auto-detect an input");
+      return FALSE;
+    }
+
+    /* save */
+    GST_V4LELEMENT(v4lmjpegsrc)->channel = input;
+    GST_V4LELEMENT(v4lmjpegsrc)->norm = norm;
   }
   else if (norm == VIDEO_MODE_AUTO && input)
   {
@@ -163,6 +175,7 @@ gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
       gst_element_info(GST_ELEMENT(v4lmjpegsrc),
         "Norm %s detected on input %s",
         norm_name[bstat.norm], input_name[input]);
+      GST_V4LELEMENT(v4lmjpegsrc)->norm = norm;
     }
     else
     {
@@ -430,7 +443,8 @@ gst_v4lmjpegsrc_capture_init (GstV4lMjpegSrc *v4lmjpegsrc)
     v4lmjpegsrc->breq.count, v4lmjpegsrc->breq.size/1024);
 
   /* Map the buffers */
-  GST_V4LELEMENT(v4lmjpegsrc)->buffer = mmap(0, v4lmjpegsrc->breq.count * v4lmjpegsrc->breq.size, 
+  GST_V4LELEMENT(v4lmjpegsrc)->buffer = mmap(0,
+    v4lmjpegsrc->breq.count * v4lmjpegsrc->breq.size, 
     PROT_READ, MAP_SHARED, GST_V4LELEMENT(v4lmjpegsrc)->video_fd, 0);
   if (GST_V4LELEMENT(v4lmjpegsrc)->buffer == MAP_FAILED)
   {

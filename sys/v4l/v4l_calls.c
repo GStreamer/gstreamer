@@ -208,12 +208,14 @@ gst_v4l_set_chan_norm (GstV4lElement *v4lelement,
   GST_V4L_CHECK_OPEN(v4lelement);
   GST_V4L_CHECK_NOT_ACTIVE(v4lelement);
 
-//  if (ioctl(v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0)
-//  {
-//    gst_error("V4lElement - Error getting the channel/norm settings: %s",
-//      sys_errlist[errno]);
-//    return FALSE;
-//  }
+#if 0
+  if (ioctl(v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0)
+  {
+    gst_error("V4lElement - Error getting the channel/norm settings: %s",
+      sys_errlist[errno]);
+    return FALSE;
+  }
+#endif
 
   vchan.channel = channel;
   vchan.norm = norm;

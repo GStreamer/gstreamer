@@ -119,11 +119,14 @@ gst_v4lsrc_class_init (GstV4lSrcClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_V4LELEMENT);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_WIDTH,
-    g_param_spec_int("width","width","width",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("width","width","width",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HEIGHT,
-    g_param_spec_int("height","height","height",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("height","height","height",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PALETTE,
-    g_param_spec_int("palette","palette","palette",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("palette","palette","palette",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_v4lsrc_set_property;
   gobject_class->get_property = gst_v4lsrc_get_property;
@@ -401,7 +404,7 @@ gst_v4lsrc_set_property (GObject      *object,
       break;
 
     default:
-      parent_class->set_property(object, prop_id, value, pspec);
+      /*parent_class->set_property(object, prop_id, value, pspec);*/
       break;
   }
 }
@@ -432,7 +435,7 @@ gst_v4lsrc_get_property (GObject    *object,
       break;
 
     default:
-      parent_class->get_property(object, prop_id, value, pspec);
+      /*parent_class->get_property(object, prop_id, value, pspec);*/
       break;
   }
 }
@@ -447,38 +450,42 @@ gst_v4lsrc_change_state (GstElement *element)
   
   v4lsrc = GST_V4LSRC(element);
 
-  switch (GST_STATE_PENDING(element)) {
-    case GST_STATE_READY:
-      if (GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc))) {
-        /* stop capturing, unmap all buffers */
-        if (!gst_v4lsrc_capture_deinit(v4lsrc))
+  if (GST_ELEMENT_CLASS(parent_class)->change_state)
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
+
+  switch (GST_STATE_TRANSITION(element)) {
+    case GST_STATE_NULL_TO_READY:
+      if (GST_V4LELEMENT(v4lsrc)->norm >= VIDEO_MODE_PAL &&
+          GST_V4LELEMENT(v4lsrc)->norm < VIDEO_MODE_AUTO &&
+          GST_V4LELEMENT(v4lsrc)->channel < 0)
+        if (!gst_v4l_set_chan_norm(GST_V4LELEMENT(v4lsrc),
+             0, GST_V4LELEMENT(v4lsrc)->norm))
           return GST_STATE_FAILURE;
-      }
       break;
-    case GST_STATE_PAUSED:
-      if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc))) {
-        /* set capture parameters and mmap the buffers */
-        if (!gst_v4lsrc_set_capture(v4lsrc, v4lsrc->width, v4lsrc->height, v4lsrc->palette))
-          return GST_STATE_FAILURE;
-        v4lsrc->init = TRUE;
-        if (!gst_v4lsrc_capture_init(v4lsrc))
-          return GST_STATE_FAILURE;
-      }
-      else {
-        /* de-queue all queued buffers */
-        if (!gst_v4lsrc_capture_stop(v4lsrc))
-          return GST_STATE_FAILURE;
-      }
+    case GST_STATE_READY_TO_PAUSED:
+      /* set capture parameters and mmap the buffers */
+      if (!gst_v4lsrc_set_capture(v4lsrc, v4lsrc->width, v4lsrc->height, v4lsrc->palette))
+        return GST_STATE_FAILURE;
+      v4lsrc->init = TRUE;
+      if (!gst_v4lsrc_capture_init(v4lsrc))
+        return GST_STATE_FAILURE;
       break;
-    case GST_STATE_PLAYING:
+    case GST_STATE_PAUSED_TO_PLAYING:
       /* queue all buffer, start streaming capture */
       if (!gst_v4lsrc_capture_start(v4lsrc))
         return GST_STATE_FAILURE;
       break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      /* de-queue all queued buffers */
+      if (!gst_v4lsrc_capture_stop(v4lsrc))
+        return GST_STATE_FAILURE;
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      /* stop capturing, unmap all buffers */
+      if (!gst_v4lsrc_capture_deinit(v4lsrc))
+        return GST_STATE_FAILURE;
+      break;
   }
-
-  if (GST_ELEMENT_CLASS(parent_class)->change_state)
-    return GST_ELEMENT_CLASS(parent_class)->change_state(element);
 
   return GST_STATE_SUCCESS;
 }

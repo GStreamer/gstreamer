@@ -50,7 +50,14 @@ enum {
   ARG_BRIGHTNESS,
   ARG_CONTRAST,
   ARG_SATURATION,
-  ARG_DEVICE
+  ARG_DEVICE,
+  ARG_DEVICE_NAME,
+  ARG_DEVICE_IS_CAPTURE,
+  ARG_DEVICE_IS_OVERLAY,
+  ARG_DEVICE_IS_MJPEG_CAPTURE,
+  ARG_DEVICE_IS_MJPEG_PLAYBACK,
+  ARG_DEVICE_IS_MPEG_CAPTURE,
+  ARG_DEVICE_IS_MPEG_PLAYBACK
 };
 
 
@@ -110,35 +117,73 @@ gst_v4lelement_class_init (GstV4lElementClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNEL,
-    g_param_spec_int("channel","channel","channel",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("channel","channel","channel",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NORM,
-    g_param_spec_int("norm","norm","norm",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("norm","norm","norm",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HAS_TUNER,
-    g_param_spec_boolean("has_tuner","has_tuner","has_tuner",0,G_PARAM_READABLE));
+    g_param_spec_boolean("has_tuner","has_tuner","has_tuner",
+    0,G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQUENCY,
-    g_param_spec_ulong("frequency","frequency","frequency",0,G_MAXULONG,0,G_PARAM_READWRITE));
+    g_param_spec_ulong("frequency","frequency","frequency",
+    0,G_MAXULONG,0,G_PARAM_READWRITE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HAS_AUDIO,
-    g_param_spec_boolean("has_audio","has_audio","has_audio",0,G_PARAM_READABLE));
+    g_param_spec_boolean("has_audio","has_audio","has_audio",
+    0,G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MUTE,
-    g_param_spec_boolean("mute","mute","mute",0,G_PARAM_READWRITE));
+    g_param_spec_boolean("mute","mute","mute",
+    0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
-    g_param_spec_int("volume","volume","volume",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("volume","volume","volume",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MODE,
-    g_param_spec_int("mode","mode","mode",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("mode","mode","mode",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_HUE,
-    g_param_spec_int("hue","hue","hue",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("hue","hue","hue",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BRIGHTNESS,
-    g_param_spec_int("brightness","brightness","brightness",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("brightness","brightness","brightness",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CONTRAST,
-    g_param_spec_int("contrast","contrast","contrast",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("contrast","contrast","contrast",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SATURATION,
-    g_param_spec_int("saturation","saturation","saturation",G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+    g_param_spec_int("saturation","saturation","saturation",
+    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
-    g_param_spec_string("device","device","device", NULL, G_PARAM_READWRITE));
+    g_param_spec_string("device","device","device",
+    NULL, G_PARAM_READWRITE));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_NAME,
+    g_param_spec_string("device_name","device_name","device_name",
+    NULL, G_PARAM_READWRITE));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_IS_CAPTURE,
+    g_param_spec_boolean("can_capture","can_capture","can_capture",
+    0,G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_IS_OVERLAY,
+    g_param_spec_boolean("has_overlay","has_overlay","has_overlay",
+    0,G_PARAM_READABLE));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_IS_MJPEG_CAPTURE,
+    g_param_spec_boolean("can_capture_mjpeg","can_capture_mjpeg","can_capture_mjpeg",
+    0,G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_IS_MJPEG_PLAYBACK,
+    g_param_spec_boolean("can_playback_mjpeg","can_playback_mjpeg","can_playback_mjpeg",
+    0,G_PARAM_READABLE));
+
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_IS_MPEG_CAPTURE,
+    g_param_spec_boolean("can_capture_mpeg","can_capture_mpeg","can_capture_mpeg",
+    0,G_PARAM_READABLE));
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_IS_MPEG_PLAYBACK,
+    g_param_spec_boolean("can_playback_mpeg","can_playback_mpeg","can_playback_mpeg",
+    0,G_PARAM_READABLE));
 
   gobject_class->set_property = gst_v4lelement_set_property;
   gobject_class->get_property = gst_v4lelement_get_property;
@@ -156,11 +201,11 @@ gst_v4lelement_init (GstV4lElement *v4lelement)
   v4lelement->videodev = NULL;
 
   v4lelement->norm = -1;
-  v4lelement->channel = 0; /* the first channel */
+  v4lelement->channel = -1; /* the first channel */
 
   v4lelement->frequency = 0;
 
-  v4lelement->mute = -1;
+  v4lelement->mute = FALSE;
   v4lelement->volume = -1;
   v4lelement->mode = -1;
 
@@ -189,7 +234,9 @@ gst_v4lelement_set_property (GObject      *object,
       v4lelement->channel = g_value_get_int(value);
       if (GST_V4L_IS_OPEN(v4lelement) && !GST_V4L_IS_ACTIVE(v4lelement))
       {
-        if (v4lelement->norm >= 0)
+        if (v4lelement->norm >= VIDEO_MODE_PAL &&
+            v4lelement->norm < VIDEO_MODE_AUTO &&
+            v4lelement->channel >= 0)
           if (!gst_v4l_set_chan_norm(v4lelement, v4lelement->channel, v4lelement->norm))
             return;
       }
@@ -198,25 +245,29 @@ gst_v4lelement_set_property (GObject      *object,
       v4lelement->norm = g_value_get_int(value);
       if (GST_V4L_IS_OPEN(v4lelement) && !GST_V4L_IS_ACTIVE(v4lelement))
       {
-        if (v4lelement->norm >= 0)
+        if (v4lelement->norm >= VIDEO_MODE_PAL &&
+            v4lelement->norm < VIDEO_MODE_AUTO &&
+            v4lelement->channel >= 0)
           if (!gst_v4l_set_chan_norm(v4lelement, v4lelement->channel, v4lelement->norm))
             return;
       }
       break;
     case ARG_FREQUENCY:
       v4lelement->frequency = g_value_get_ulong(value);
-      if (GST_V4L_IS_ACTIVE(v4lelement) && !GST_V4L_IS_ACTIVE(v4lelement))
+      if (GST_V4L_IS_OPEN(v4lelement) && !GST_V4L_IS_ACTIVE(v4lelement))
       {
-        if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency))
-          return;
+        if (gst_v4l_has_tuner(v4lelement))
+          if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency))
+            return;
       }
       break;
     case ARG_MUTE:
-      v4lelement->mute = g_value_get_boolean(value)?1:0;
+      v4lelement->mute = g_value_get_boolean(value);
       if (GST_V4L_IS_OPEN(v4lelement))
       {
-        if (!gst_v4l_set_audio(v4lelement, V4L_AUDIO_MUTE, v4lelement->mute))
-          return;
+        if (gst_v4l_has_audio(v4lelement))
+          if (!gst_v4l_set_audio(v4lelement, V4L_AUDIO_MUTE, v4lelement->mute))
+            return;
       }
       break;
     case ARG_MODE:
@@ -315,7 +366,8 @@ gst_v4lelement_get_property (GObject    *object,
       break;
     case ARG_FREQUENCY:
       if (GST_V4L_IS_OPEN(v4lelement))
-        gst_v4l_get_frequency(v4lelement, &temp_ul);
+        if (gst_v4l_has_tuner(v4lelement))
+          gst_v4l_get_frequency(v4lelement, &temp_ul);
       g_value_set_ulong(value, temp_ul);
       break;
     case ARG_HAS_AUDIO:
@@ -326,9 +378,9 @@ gst_v4lelement_get_property (GObject    *object,
       break;
     case ARG_MUTE:
       if (GST_V4L_IS_OPEN(v4lelement))
-        if (gst_v4l_has_tuner(v4lelement))
+        if (gst_v4l_has_audio(v4lelement))
           gst_v4l_get_audio(v4lelement, V4L_AUDIO_MUTE, &temp_i);
-      g_value_set_int(value, temp_i?TRUE:FALSE);
+      g_value_set_boolean(value, temp_i?TRUE:FALSE);
       break;
     case ARG_MODE:
       if (GST_V4L_IS_OPEN(v4lelement))
@@ -363,7 +415,43 @@ gst_v4lelement_get_property (GObject    *object,
       g_value_set_int(value, temp_i);
       break;
     case ARG_DEVICE:
-      g_value_set_string(value, v4lelement->videodev?v4lelement->videodev:"/dev/video");
+      g_value_set_string(value, g_strdup(v4lelement->videodev?v4lelement->videodev:"/dev/video"));
+      break;
+    case ARG_DEVICE_NAME:
+      if (GST_V4L_IS_OPEN(v4lelement))
+        g_value_set_string(value, g_strdup(v4lelement->vcap.name));
+      else
+        g_value_set_string(value, g_strdup("None"));
+      break;
+    case ARG_DEVICE_IS_CAPTURE:
+      g_value_set_boolean(value, FALSE);
+      if (GST_V4L_IS_OPEN(v4lelement))
+        g_value_set_boolean(value, v4lelement->vcap.type & VID_TYPE_CAPTURE);
+      break;
+    case ARG_DEVICE_IS_OVERLAY:
+      g_value_set_boolean(value, FALSE);
+      if (GST_V4L_IS_OPEN(v4lelement))
+        g_value_set_boolean(value, v4lelement->vcap.type & VID_TYPE_OVERLAY);
+      break;
+    case ARG_DEVICE_IS_MJPEG_CAPTURE:
+      g_value_set_boolean(value, FALSE);
+      if (GST_V4L_IS_OPEN(v4lelement))
+        g_value_set_boolean(value, v4lelement->vcap.type & VID_TYPE_MJPEG_ENCODER);
+      break;
+    case ARG_DEVICE_IS_MJPEG_PLAYBACK:
+      g_value_set_boolean(value, FALSE);
+      if (GST_V4L_IS_OPEN(v4lelement))
+        g_value_set_boolean(value, v4lelement->vcap.type & VID_TYPE_MJPEG_DECODER);
+      break;
+    case ARG_DEVICE_IS_MPEG_CAPTURE:
+      g_value_set_boolean(value, FALSE);
+      if (GST_V4L_IS_OPEN(v4lelement))
+        g_value_set_boolean(value, v4lelement->vcap.type & VID_TYPE_MPEG_ENCODER);
+      break;
+    case ARG_DEVICE_IS_MPEG_PLAYBACK:
+      g_value_set_boolean(value, FALSE);
+      if (GST_V4L_IS_OPEN(v4lelement))
+        g_value_set_boolean(value, v4lelement->vcap.type & VID_TYPE_MPEG_DECODER);
       break;
     default:
       //G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -384,66 +472,62 @@ gst_v4lelement_change_state (GstElement *element)
   /* if going down into NULL state, close the device if it's open
    * if going to READY, open the device (and set some options)
    */
-  switch (GST_STATE_PENDING(element))
+  switch (GST_STATE_TRANSITION(element))
   {
-    case GST_STATE_NULL:
-      if (GST_V4L_IS_OPEN(v4lelement))
-        if (!gst_v4l_close(v4lelement))
-          return GST_STATE_FAILURE;
-      break;
-    case GST_STATE_READY:
-      if (!GST_V4L_IS_OPEN(v4lelement))
+    case GST_STATE_NULL_TO_READY:
+    {
+      int n, temp;
+
+      if (!gst_v4l_open(v4lelement))
+        return GST_STATE_FAILURE;
+
+      /* now, sync options */
+      if (v4lelement->norm >= VIDEO_MODE_PAL &&
+          v4lelement->norm < VIDEO_MODE_AUTO &&
+          v4lelement->channel >= 0)
       {
-        int n, temp;
-
-        if (!gst_v4l_open(v4lelement))
+        if (!gst_v4l_set_chan_norm(v4lelement, v4lelement->channel, v4lelement->norm))
           return GST_STATE_FAILURE;
-
-        /* now, sync options */
-        if (v4lelement->norm >= VIDEO_MODE_PAL &&
-           v4lelement->norm < VIDEO_MODE_AUTO &&
-           v4lelement->channel >= 0)
+      }
+      if (v4lelement->frequency > 0 && gst_v4l_has_tuner(v4lelement))
+      {
+        if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency))
+          return GST_STATE_FAILURE;
+      }
+      for (n=V4L_AUDIO_VOLUME;n<=V4L_AUDIO_MODE;n++)
+      {
+        switch (n)
         {
-          if (!gst_v4l_set_chan_norm(v4lelement, v4lelement->channel, v4lelement->norm))
+          case V4L_AUDIO_MUTE:   temp = v4lelement->mute;   break;
+          case V4L_AUDIO_VOLUME: temp = v4lelement->volume; break;
+          case V4L_AUDIO_MODE:   temp = v4lelement->mode;   break;
+        }
+        if (temp >= 0 && gst_v4l_has_audio(v4lelement))
+        {
+          if (!gst_v4l_set_audio(v4lelement, n, temp))
             return GST_STATE_FAILURE;
-        }
-        if (v4lelement->frequency > 0 && gst_v4l_has_tuner(v4lelement))
-        {
-          if (!gst_v4l_set_frequency(v4lelement, v4lelement->frequency))
-            return GST_STATE_FAILURE;
-        }
-        for (n=V4L_AUDIO_VOLUME;n<=V4L_AUDIO_MODE;n++)
-        {
-          switch (n)
-          {
-            case V4L_AUDIO_MUTE:   temp = v4lelement->mute;   break;
-            case V4L_AUDIO_VOLUME: temp = v4lelement->volume; break;
-            case V4L_AUDIO_MODE:   temp = v4lelement->mode;   break;
-          }
-          if (temp >= 0 && gst_v4l_has_audio(v4lelement))
-          {
-            if (!gst_v4l_set_audio(v4lelement, n, temp))
-              return GST_STATE_FAILURE;
-          }
-        }
-        for (n=V4L_PICTURE_HUE;n<=V4L_PICTURE_SATURATION;n++)
-        {
-          switch (n)
-          {
-            case V4L_PICTURE_HUE:        temp = v4lelement->hue;        break;
-            case V4L_PICTURE_BRIGHTNESS: temp = v4lelement->brightness; break;
-            case V4L_PICTURE_SATURATION: temp = v4lelement->saturation; break;
-            case V4L_PICTURE_CONTRAST:   temp = v4lelement->contrast;   break;
-          }
-          if (temp >= 0)
-          {
-            if (!gst_v4l_set_picture(v4lelement, n, temp))
-              return GST_STATE_FAILURE;
-          }
         }
       }
+      for (n=V4L_PICTURE_HUE;n<=V4L_PICTURE_SATURATION;n++)
+      {
+        switch (n)
+        {
+          case V4L_PICTURE_HUE:        temp = v4lelement->hue;        break;
+          case V4L_PICTURE_BRIGHTNESS: temp = v4lelement->brightness; break;
+          case V4L_PICTURE_SATURATION: temp = v4lelement->saturation; break;
+          case V4L_PICTURE_CONTRAST:   temp = v4lelement->contrast;   break;
+        }
+        if (temp >= 0)
+        {
+          if (!gst_v4l_set_picture(v4lelement, n, temp))
+            return GST_STATE_FAILURE;
+        }
+      }
+    }
       break;
-    default:
+    case GST_STATE_READY_TO_NULL:
+      if (!gst_v4l_close(v4lelement))
+        return GST_STATE_FAILURE;
       break;
   }
 
