@@ -119,7 +119,6 @@ static GstCaps *gst_videofilter_format_get_caps(GstVideofilterFormat *format)
 
   if(format->bpp){
     caps = GST_CAPS_NEW ("videofilter", "video/x-raw-rgb",
-		"format", GST_PROPS_FOURCC (fourcc),
 		"depth", GST_PROPS_INT(format->bpp),
 		"bpp", GST_PROPS_INT(format->depth),
 		"endianness", GST_PROPS_INT(format->endianness),
@@ -158,6 +157,34 @@ GstCaps * gst_videofilter_class_get_capslist(GstVideofilterClass *klass)
   return capslist;
 }
 
+static GstCaps* gst_videofilter_caps_add_variable_part (GstCaps *caps)
+{
+  GstCaps *yuv, *rgb;
+
+  if (caps == NULL)
+    return NULL;
+
+  yuv = GST_CAPS_NEW("videofilter_size","video/x-raw-yuv",
+		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+  rgb = GST_CAPS_NEW("videofilter_size","video/x-raw-rgb",
+		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+  yuv = gst_caps_intersect (yuv, caps); 
+  rgb = gst_caps_intersect (rgb, caps); 
+  if (yuv) {
+    gst_caps_append (yuv, rgb);
+  } else {
+    g_assert (rgb);
+    yuv = rgb;
+  }
+  gst_caps_unref (caps);
+
+  return yuv;
+}
+
 static GstCaps *
 gst_videofilter_sink_getcaps (GstPad *pad, GstCaps *caps)
 {
@@ -165,7 +192,6 @@ gst_videofilter_sink_getcaps (GstPad *pad, GstCaps *caps)
   GstVideofilterClass *klass;
   GstCaps *capslist = NULL;
   GstCaps *peercaps;
-  GstCaps *sizecaps;
   int i;
 
   GST_DEBUG("gst_videofilter_sink_getcaps");
@@ -196,15 +222,9 @@ gst_videofilter_sink_getcaps (GstPad *pad, GstCaps *caps)
   }
   gst_caps_unref (peercaps);
 
-  sizecaps = GST_CAPS_NEW("videofilter_size","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+  capslist = gst_videofilter_caps_add_variable_part (capslist);
 
-  caps = gst_caps_intersect(capslist, sizecaps);
-  gst_caps_unref (sizecaps);
-
-  return caps;
+  return capslist;
 }
 
 static GstPadLinkReturn
@@ -449,6 +469,7 @@ void gst_videofilter_set_output_size(GstVideofilter *videofilter,
   srccaps = gst_caps_copy(gst_pad_get_caps(videofilter->srcpad));
 
   if(!GST_CAPS_IS_FIXED(srccaps)){
+    gst_caps_unref (srccaps);
     return;
   }
 
@@ -530,20 +551,14 @@ void gst_videofilter_class_add_pad_templates (GstVideofilterClass *videofilter_c
   GstCaps *caps;
   GstElementClass *element_class = GST_ELEMENT_CLASS (videofilter_class);
 
-  caps = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+  caps = gst_videofilter_class_get_capslist (videofilter_class);
+  caps = gst_videofilter_caps_add_variable_part (caps);
+  
+  gst_element_class_add_pad_template (element_class,
+      GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, gst_caps_copy (caps)));
 
   gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, 
-        gst_caps_intersect(caps,
-          gst_videofilter_class_get_capslist (videofilter_class))));
-
-  gst_element_class_add_pad_template (element_class,
-      GST_PAD_TEMPLATE_NEW("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-        gst_caps_intersect(caps,
-          gst_videofilter_class_get_capslist (videofilter_class))));
+      GST_PAD_TEMPLATE_NEW("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
 }
 
 static gboolean
