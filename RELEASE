@@ -1,1 +1,125 @@
-This is a CVS version of GStreamer.
+
+                     GStreamer "Panic Room" 0.5.2 released
+
+   The  GStreamer  team is happy to announce our final prerelease for the
+   stable 0.6 series of the GStreamer streaming-media framework.
+
+   From  now  on,  GStreamer  will  follow a versioning scheme similar to
+   kernel  and  GTK+/GLib  releases.  Odd  minor  numbers  (like for this
+   release)  will be development releases. While GStreamer itself is very
+   much  under development, during stable releases we will guarantee API-
+   and  ABI-stability.  The point of this development release cycle is to
+   support Gnome 2.1.x development.
+
+   GStreamer     major-minor     series     versions    will    now    be
+   parallel-installable.  Please  update  your  applications to check for
+   gstreamer-0.5,   gstreamer-libs-0.5   and   gstreamer-play-0.5   using
+   pkg-config.
+
+   We are starting to have a really nice collection of applications under
+   development using GStreamer. If you are looking for something specific
+   check out our [1]applications status page.
+
+Updates and Enhancements
+
+  Thread issues and GStreamer
+
+   Many  of  GStreamers features relies heavily on threads. Unfortunately
+   everything  is  not rosy in the Linux worlds of threads. If you have a
+   glibc version installed compiled with i686 optimizations (which uses a
+   different  codepath  than standard i386 glibc), there is a good chance
+   you   will   experience   thread-related  crashes  in  gstreamer-based
+   applications. There are a few workarounds to this available.
+     * You can use an i386- or i586-optimized glibc package instead.
+     * You  can  also  try running the gstreamer-based applications using
+       the command-line option --gst-scheduler=opt, which invokes a newly
+       created  scheduler  that  does  not use threads. This scheduler is
+       very  new  however  so you might encounter other issues when using
+       it.
+       People  using the Red Hat beta Phoebe are recommended to update to
+       glibc  from  Rawhide. This solves all thread issues, thanks to the
+       new NTPL thread library that is included there.
+       General
+
+     * Solaris Forte fixes, GStreamer now compiles with Forte
+     * FreeBSD build fixes
+     * Many minor build issues fixed
+     * libgstplay updated to use filesrc
+
+  Core
+
+     * Many refcounting issues resolved
+     * A few Valgrind detected memleaks killed
+
+  Plug-ins
+
+     * Fix to OSS plugin to handle blocking correctly [2]Bug 102025.
+     * Wavparse plugin fixed to handle MPEG audio
+     * Swfdec plugin updated, now has sound
+     * Updated ffmpeg plugin to handle xvid movies
+     * modplug updated to work better with gst-player
+     * alsasink 100% cpu bug fixed
+     * pngenc cleaned up
+
+GStreamer Homepage
+
+   More  details on these features can be found on the project's website,
+   [3]http://gstreamer.net/.
+
+Support and Bugs
+
+   We  use  [4]Gnome's Bugzilla for bug reports and feature requests. The
+   "product  name"  is  GStreamer  (capital  G).  Please do the following
+   before writing a bug report :
+gst-feedback &> feedback 2>&1
+
+   and  attach  the  file  "feedback" to your bug report, so that we have
+   some information useful in the debugging process.
+
+Developers
+
+   GStreamer  is  [5]hosted on SourceForge. All code is in CVS and can be
+   checked  out  from  there.  Interested developers of the core library,
+   plug-ins,  and  applications  should  subscribe to the gstreamer-devel
+   list.  If  there  is  sufficient interest we will create more lists as
+   necessary.
+
+   We  are  still  looking for people with access to Solaris, HP-UX, Irix
+   and  True64  that  would  be  willing  to  try  building  and  testing
+   GStreamer. Patches fixing such problems are also more than welcome.
+
+Contributors to this release
+
+  Patches to the core of Gstreamer
+
+     * Wim Taymans <wim.taymans(AT)chello.be>
+     * Thomas Vander Stichele <thomas(AT)apestaart.org>
+     * David I. Lehn <dlehn(AT)vt.edu>
+     * David Schleef <ds(AT)schleef.org>
+     * Leif Morgan Johnson <lmjohns3(AT)eos.ncsu.edu>
+     * Brian Cameron <brian.cameron(AT)sun.com>
+
+  Plugins and Sample Applications
+
+     * Cameron Hutchison <camh+gst(AT)xdna.net>
+     * Ronald Bultje <rbultje(AT)ronald.bitfreak.net>
+     * Steve Baker <stevebaker_org(AT)yahoo.co.uk>
+     * Iain Holmes <iain(AT)prettypeople.org>
+     * Jérémy Simon <jsimon13(AT)yahoo.fr>
+     * Jan Schmidt <thaytan(AT)mad.scientist.com>
+     * Daniel Fischer <dan(AT)f3c.com>
+     * Martin Schlemmer <azarah(AT)gentoo.org>
+     * Andrew Turner &li;zombie(AT)4free.co.nz>
+
+  Misc
+
+     * Christian Fredrik Kalager Schaller <Uraeus(AT)gnome.org>
+     * Alp Toker <alp(AT)atoker.com>
+
+References
+
+   1. http://www.gstreamer.net/status/?category=2
+   2. http://bugzilla.gnome.org/show_bug.cgi?id=102025
+   3. http://gstreamer.net/
+   4. http://bugzilla.gnome.org/
+   5. http://gstreamer.sf.net/
