@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_TUNER_NORM \
   (gst_tuner_norm_get_type ())
 #define GST_TUNER_NORM(obj) \
@@ -36,22 +35,22 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TUNER_NORM))
 #define GST_IS_TUNER_NORM_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TUNER_NORM))
-
-typedef struct _GstTunerNorm {
+    typedef struct _GstTunerNorm
+{
   GObject parent;
 
-  gchar  *label;
-  gfloat  fps;
+  gchar *label;
+  gfloat fps;
 } GstTunerNorm;
 
-typedef struct _GstTunerNormClass {
+typedef struct _GstTunerNormClass
+{
   GObjectClass parent;
 
   gpointer _gst_reserved[GST_PADDING];
 } GstTunerNormClass;
 
-GType		gst_tuner_norm_get_type		(void);
+GType gst_tuner_norm_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_TUNER_NORM_H__ */

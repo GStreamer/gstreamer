@@ -25,17 +25,15 @@
 #include <gst/gst.h>
 
 
-G_BEGIN_DECLS
-
-typedef struct _GstAudiofilter GstAudiofilter;
+G_BEGIN_DECLS typedef struct _GstAudiofilter GstAudiofilter;
 typedef struct _GstAudiofilterClass GstAudiofilterClass;
 
-typedef void (*GstAudiofilterFilterFunc)(GstAudiofilter *filter,
-    GstBuffer *outbuf, GstBuffer *inbuf);
-typedef void (*GstAudiofilterInplaceFilterFunc)(GstAudiofilter *filter,
-    GstBuffer *buffer);
+typedef void (*GstAudiofilterFilterFunc) (GstAudiofilter * filter,
+    GstBuffer * outbuf, GstBuffer * inbuf);
+typedef void (*GstAudiofilterInplaceFilterFunc) (GstAudiofilter * filter,
+    GstBuffer * buffer);
 
-typedef void (*GstAudiofilterSetupFunc) (GstAudiofilter *filter);
+typedef void (*GstAudiofilterSetupFunc) (GstAudiofilter * filter);
 
 
 #define GST_TYPE_AUDIOFILTER \
@@ -49,10 +47,11 @@ typedef void (*GstAudiofilterSetupFunc) (GstAudiofilter *filter);
 #define GST_IS_AUDIOFILTER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOFILTER))
 
-struct _GstAudiofilter {
+struct _GstAudiofilter
+{
   GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   /* audio state */
   gboolean inited;
@@ -68,7 +67,8 @@ struct _GstAudiofilter {
   int bytes_per_sample;
 };
 
-struct _GstAudiofilterClass {
+struct _GstAudiofilterClass
+{
   GstElementClass parent_class;
 
   GstCaps *caps;
@@ -77,11 +77,10 @@ struct _GstAudiofilterClass {
   GstAudiofilterFilterFunc filter;
 };
 
-GType gst_audiofilter_get_type(void);
+GType gst_audiofilter_get_type (void);
 
-void gst_audiofilter_class_add_pad_templates (GstAudiofilterClass *audiofilterclass, const GstCaps *caps);
+void gst_audiofilter_class_add_pad_templates (GstAudiofilterClass *
+    audiofilterclass, const GstCaps * caps);
 
 G_END_DECLS
-
 #endif /* __GST_AUDIOFILTER_H__ */
-

@@ -1,3 +1,7 @@
+2004-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* *.c, *.h: run gst-indent
+
 2004-03-14  Benjamin Otte  <otte@gnome.org>
 
 	* gst/modplug/gstmodplug.cc:

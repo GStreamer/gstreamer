@@ -4,34 +4,37 @@
 
 static gboolean ready = FALSE;
 
-struct probe_context {
+struct probe_context
+{
   GstElement *pipeline;
   GstElement *element;
-  GstPad     *pad;
-  GstFormat   ls_format;
+  GstPad *pad;
+  GstFormat ls_format;
 
-  gint        total_ls;
+  gint total_ls;
 
-  GstCaps   *metadata;
-  GstCaps   *streaminfo;
-  GstCaps   *caps;
+  GstCaps *metadata;
+  GstCaps *streaminfo;
+  GstCaps *caps;
 };
 
 static void
-print_caps (GstCaps *caps)
+print_caps (GstCaps * caps)
 {
   char *s;
+
   s = gst_caps_to_string (caps);
-  g_print("  %s\n", s);
+  g_print ("  %s\n", s);
   g_free (s);
 }
 
 static void
-print_format (GstCaps *caps)
+print_format (GstCaps * caps)
 {
   char *s;
+
   s = gst_caps_to_string (caps);
-  g_print("  format: %s\n", s);
+  g_print ("  format: %s\n", s);
   g_free (s);
 }
 
@@ -61,35 +64,31 @@ print_lbs_info (struct probe_context *context, gint stream)
     definition = gst_format_get_details (format);
 
     /* get start and end position of this stream */
-    res = gst_pad_convert  (context->pad,
-		            context->ls_format, stream,
-		            &format, &value_start);
+    res = gst_pad_convert (context->pad,
+	context->ls_format, stream, &format, &value_start);
     res &= gst_pad_convert (context->pad,
-		            context->ls_format, stream + 1,
-		            &format, &value_end);
+	context->ls_format, stream + 1, &format, &value_end);
 
     if (res) {
       /* substract to get the length */
       value_end -= value_start;
 
       if (format == GST_FORMAT_TIME) {
-	value_end /= (GST_SECOND/100);
-        g_print ("    %s: %lld:%02lld.%02lld\n", definition->nick,
-			value_end/6000, (value_end/100)%60, (value_end%100));
+	value_end /= (GST_SECOND / 100);
+	g_print ("    %s: %lld:%02lld.%02lld\n", definition->nick,
+	    value_end / 6000, (value_end / 100) % 60, (value_end % 100));
+      } else {
+	g_print ("    %s: %lld\n", definition->nick, value_end);
       }
-      else {
-        g_print ("    %s: %lld\n", definition->nick, value_end);
-      }
-    }
-    else
+    } else
       g_print ("    could not get logical stream %s\n", definition->nick);
 
   }
 }
 
 static void
-deep_notify (GObject *object, GstObject *origin,
-	     GParamSpec *pspec, gpointer data)
+deep_notify (GObject * object, GstObject * origin,
+    GParamSpec * pspec, gpointer data)
 {
   struct probe_context *context = (struct probe_context *) data;
   GValue value = { 0, };
@@ -99,8 +98,7 @@ deep_notify (GObject *object, GstObject *origin,
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
     context->metadata = g_value_peek_pointer (&value);
-  }
-  else if (!strcmp (pspec->name, "streaminfo")) {
+  } else if (!strcmp (pspec->name, "streaminfo")) {
 
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (origin), pspec->name, &value);
@@ -127,9 +125,7 @@ collect_logical_stream_properties (struct probe_context *context, gint stream)
 
   /* seek to stream */
   event = gst_event_new_seek (context->ls_format |
-		              GST_SEEK_METHOD_SET |
-		              GST_SEEK_FLAG_FLUSH,
-			      stream);
+      GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, stream);
   res = gst_pad_send_event (context->pad, event);
   if (!res) {
     g_warning ("seek to logical track failed");
@@ -141,7 +137,8 @@ collect_logical_stream_properties (struct probe_context *context, gint stream)
   ready = FALSE;
   while (gst_bin_iterate (GST_BIN (context->pipeline)) && !ready) {
     count++;
-    if (count > 10) break;
+    if (count > 10)
+      break;
   }
 
   print_caps (context->metadata);
@@ -177,21 +174,19 @@ collect_stream_properties (struct probe_context *context)
     format = *formats;
     formats++;
 
-    res = gst_pad_query (context->pad, GST_QUERY_TOTAL,
-		         &format, &value);
+    res = gst_pad_query (context->pad, GST_QUERY_TOTAL, &format, &value);
 
     definition = gst_format_get_details (format);
 
     if (res) {
       if (format == GST_FORMAT_TIME) {
-	value /= (GST_SECOND/100);
-        g_print ("  total %s: %lld:%02lld.%02lld\n", definition->nick,
-			value/6000, (value/100)%60, (value%100));
-      }
-      else {
-        if (format == context->ls_format)
-          context->total_ls = value;
-        g_print ("  total %s: %lld\n", definition->nick, value);
+	value /= (GST_SECOND / 100);
+	g_print ("  total %s: %lld:%02lld.%02lld\n", definition->nick,
+	    value / 6000, (value / 100) % 60, (value % 100));
+      } else {
+	if (format == context->ls_format)
+	  context->total_ls = value;
+	g_print ("  total %s: %lld\n", definition->nick, value);
       }
     }
   }
@@ -248,7 +243,7 @@ main (int argc, char **argv)
   context->ls_format = logical_stream_format;
 
   g_signal_connect (G_OBJECT (pipeline), "deep_notify",
-		  G_CALLBACK (deep_notify), context);
+      G_CALLBACK (deep_notify), context);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

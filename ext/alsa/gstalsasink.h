@@ -25,35 +25,34 @@
 #include "gstalsa.h"
 
 G_BEGIN_DECLS
-
 #define GST_ALSA_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_ALSA_SINK, GstAlsaSink))
 #define GST_ALSA_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_ALSA_SINK, GstAlsaSinkClass))
 #define GST_IS_ALSA_SINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_ALSA_SINK))
 #define GST_IS_ALSA_SINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_ALSA_SINK))
 #define GST_TYPE_ALSA_SINK            (gst_alsa_sink_get_type())
-
 typedef struct _GstAlsaSink GstAlsaSink;
 typedef struct _GstAlsaSinkClass GstAlsaSinkClass;
 
-struct _GstAlsaSink {
-  GstAlsa    parent;
+struct _GstAlsaSink
+{
+  GstAlsa parent;
 
   /* array of the data on the channels */
-  guint8    *data[GST_ALSA_MAX_TRACKS];      /* pointer into buffer */
-  guint      size[GST_ALSA_MAX_TRACKS];      /* sink: bytes left in buffer */
-  GstBuffer *buf[GST_ALSA_MAX_TRACKS];       /* current buffer */
-  guint      behaviour[GST_ALSA_MAX_TRACKS]; /* 0 = data points into buffer (so unref when size == 0),
-                                                  1 = data should be freed, use buffer after that */
+  guint8 *data[GST_ALSA_MAX_TRACKS];	/* pointer into buffer */
+  guint size[GST_ALSA_MAX_TRACKS];	/* sink: bytes left in buffer */
+  GstBuffer *buf[GST_ALSA_MAX_TRACKS];	/* current buffer */
+  guint behaviour[GST_ALSA_MAX_TRACKS];	/* 0 = data points into buffer (so unref when size == 0),
+					   1 = data should be freed, use buffer after that */
 };
 
-struct _GstAlsaSinkClass {
+struct _GstAlsaSinkClass
+{
   GstAlsaClass parent_class;
 };
 
 GType gst_alsa_sink_get_type (void);
 
-gboolean gst_alsa_sink_factory_init (GstPlugin *plugin);
+gboolean gst_alsa_sink_factory_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_ALSA_SINK_H__ */

@@ -25,7 +25,7 @@
 
 #include <gst/navigation/navigation.h>
 
-static void gst_navigation_class_init (GstNavigationInterface *iface);
+static void gst_navigation_class_init (GstNavigationInterface * iface);
 
 GType
 gst_navigation_get_type (void)
@@ -46,22 +46,21 @@ gst_navigation_get_type (void)
     };
 
     gst_navigation_type = g_type_register_static (G_TYPE_INTERFACE,
-					     "GstNavigation",
-					     &gst_navigation_info, 0);
+	"GstNavigation", &gst_navigation_info, 0);
   }
 
   return gst_navigation_type;
 }
 
 static void
-gst_navigation_class_init (GstNavigationInterface *iface)
+gst_navigation_class_init (GstNavigationInterface * iface)
 {
   /* default virtual functions */
   iface->send_event = NULL;
 }
 
 void
-gst_navigation_send_event (GstNavigation *navigation, GstStructure *structure)
+gst_navigation_send_event (GstNavigation * navigation, GstStructure * structure)
 {
   GstNavigationInterface *iface = GST_NAVIGATION_GET_IFACE (navigation);
 
@@ -71,25 +70,20 @@ gst_navigation_send_event (GstNavigation *navigation, GstStructure *structure)
 }
 
 void
-gst_navigation_send_key_event (GstNavigation *navigation, const char *event, 
-	const char *key)
+gst_navigation_send_key_event (GstNavigation * navigation, const char *event,
+    const char *key)
 {
-  gst_navigation_send_event (navigation, gst_structure_new (
-        "application/x-gst-navigation",
-	"event", G_TYPE_STRING, event,
-	"key", G_TYPE_STRING, key, NULL));
+  gst_navigation_send_event (navigation,
+      gst_structure_new ("application/x-gst-navigation", "event", G_TYPE_STRING,
+	  event, "key", G_TYPE_STRING, key, NULL));
 }
 
 void
-gst_navigation_send_mouse_event (GstNavigation *navigation, const char *event, 
-	int button, double x, double y)
+gst_navigation_send_mouse_event (GstNavigation * navigation, const char *event,
+    int button, double x, double y)
 {
-  gst_navigation_send_event (navigation, gst_structure_new (
-	"application/x-gst-navigation",
-	"event", G_TYPE_STRING, event,
-	"button", G_TYPE_INT, button,
-	"pointer_x", G_TYPE_DOUBLE, x,
-	"pointer_y", G_TYPE_DOUBLE, y, NULL));
+  gst_navigation_send_event (navigation,
+      gst_structure_new ("application/x-gst-navigation", "event", G_TYPE_STRING,
+	  event, "button", G_TYPE_INT, button, "pointer_x", G_TYPE_DOUBLE, x,
+	  "pointer_y", G_TYPE_DOUBLE, y, NULL));
 }
-
-

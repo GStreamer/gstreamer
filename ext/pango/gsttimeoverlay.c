@@ -45,25 +45,30 @@
 
 
 /* GstTimeoverlay signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   /* FILL ME */
 };
 
-static void	gst_timeoverlay_base_init	(gpointer g_class);
-static void	gst_timeoverlay_class_init	(gpointer g_class, gpointer class_data);
-static void	gst_timeoverlay_init		(GTypeInstance *instance, gpointer g_class);
+static void gst_timeoverlay_base_init (gpointer g_class);
+static void gst_timeoverlay_class_init (gpointer g_class, gpointer class_data);
+static void gst_timeoverlay_init (GTypeInstance * instance, gpointer g_class);
 
-static void	gst_timeoverlay_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_timeoverlay_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_timeoverlay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_timeoverlay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void gst_timeoverlay_planar411(GstVideofilter *videofilter, void *dest, void *src);
-static void gst_timeoverlay_setup(GstVideofilter *videofilter);
+static void gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest,
+    void *src);
+static void gst_timeoverlay_setup (GstVideofilter * videofilter);
 
 GType
 gst_timeoverlay_get_type (void)
@@ -72,44 +77,43 @@ gst_timeoverlay_get_type (void)
 
   if (!timeoverlay_type) {
     static const GTypeInfo timeoverlay_info = {
-      sizeof(GstTimeoverlayClass),
+      sizeof (GstTimeoverlayClass),
       gst_timeoverlay_base_init,
       NULL,
       gst_timeoverlay_class_init,
       NULL,
       NULL,
-      sizeof(GstTimeoverlay),
+      sizeof (GstTimeoverlay),
       0,
       gst_timeoverlay_init,
     };
-    timeoverlay_type = g_type_register_static(GST_TYPE_VIDEOFILTER,
-        "GstTimeoverlay", &timeoverlay_info, 0);
+    timeoverlay_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+	"GstTimeoverlay", &timeoverlay_info, 0);
   }
   return timeoverlay_type;
 }
 
 static GstVideofilterFormat gst_timeoverlay_formats[] = {
-  { "I420", 12, gst_timeoverlay_planar411, },
+  {"I420", 12, gst_timeoverlay_planar411,},
 };
 
-  
+
 static void
 gst_timeoverlay_base_init (gpointer g_class)
 {
-  static GstElementDetails timeoverlay_details = GST_ELEMENT_DETAILS (
-    "Time Overlay",
-    "Filter/Editor/Video",
-    "Overlays the time on a video stream",
-    "David Schleef <ds@schleef.org>"
-  );
+  static GstElementDetails timeoverlay_details =
+      GST_ELEMENT_DETAILS ("Time Overlay",
+      "Filter/Editor/Video",
+      "Overlays the time on a video stream",
+      "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
   int i;
-  
+
   gst_element_class_set_details (element_class, &timeoverlay_details);
 
-  for(i=0;i<G_N_ELEMENTS(gst_timeoverlay_formats);i++){
-    gst_videofilter_class_add_format(videofilter_class,
+  for (i = 0; i < G_N_ELEMENTS (gst_timeoverlay_formats); i++) {
+    gst_videofilter_class_add_format (videofilter_class,
 	gst_timeoverlay_formats + i);
   }
 
@@ -126,10 +130,10 @@ gst_timeoverlay_class_init (gpointer g_class, gpointer class_data)
   videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
 #if 0
-  g_object_class_install_property(gobject_class, ARG_METHOD,
-      g_param_spec_enum("method","method","method",
-      GST_TYPE_TIMEOVERLAY_METHOD, GST_TIMEOVERLAY_METHOD_1,
-      G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_METHOD,
+      g_param_spec_enum ("method", "method", "method",
+	  GST_TYPE_TIMEOVERLAY_METHOD, GST_TIMEOVERLAY_METHOD_1,
+	  G_PARAM_READWRITE));
 #endif
 
   gobject_class->set_property = gst_timeoverlay_set_property;
@@ -139,28 +143,29 @@ gst_timeoverlay_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_timeoverlay_init (GTypeInstance *instance, gpointer g_class)
+gst_timeoverlay_init (GTypeInstance * instance, gpointer g_class)
 {
   GstTimeoverlay *timeoverlay = GST_TIMEOVERLAY (instance);
   GstVideofilter *videofilter;
 
-  GST_DEBUG("gst_timeoverlay_init");
+  GST_DEBUG ("gst_timeoverlay_init");
 
-  videofilter = GST_VIDEOFILTER(timeoverlay);
+  videofilter = GST_VIDEOFILTER (timeoverlay);
 
   /* do stuff */
 }
 
 static void
-gst_timeoverlay_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_timeoverlay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstTimeoverlay *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_TIMEOVERLAY(object));
-  src = GST_TIMEOVERLAY(object);
+  g_return_if_fail (GST_IS_TIMEOVERLAY (object));
+  src = GST_TIMEOVERLAY (object);
 
-  GST_DEBUG("gst_timeoverlay_set_property");
+  GST_DEBUG ("gst_timeoverlay_set_property");
   switch (prop_id) {
 #if 0
     case ARG_METHOD:
@@ -173,13 +178,14 @@ gst_timeoverlay_set_property (GObject *object, guint prop_id, const GValue *valu
 }
 
 static void
-gst_timeoverlay_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_timeoverlay_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstTimeoverlay *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_TIMEOVERLAY(object));
-  src = GST_TIMEOVERLAY(object);
+  g_return_if_fail (GST_IS_TIMEOVERLAY (object));
+  src = GST_TIMEOVERLAY (object);
 
   switch (prop_id) {
 #if 0
@@ -193,35 +199,29 @@ gst_timeoverlay_get_property (GObject *object, guint prop_id, GValue *value, GPa
   }
 }
 
-static gboolean plugin_init (GstPlugin *plugin)
+static gboolean
+plugin_init (GstPlugin * plugin)
 {
-  if(!gst_library_load("gstvideofilter"))
+  if (!gst_library_load ("gstvideofilter"))
     return FALSE;
 
   return gst_element_register (plugin, "timeoverlay", GST_RANK_NONE,
       GST_TYPE_TIMEOVERLAY);
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "timeoverlay",
-  "Time overlay",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "timeoverlay",
+    "Time overlay", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
 
-static void gst_timeoverlay_setup(GstVideofilter *videofilter)
+     static void gst_timeoverlay_setup (GstVideofilter * videofilter)
 {
   GstTimeoverlay *timeoverlay;
   PangoFontDescription *font_description;
   PangoContext *context;
 
-  g_return_if_fail(GST_IS_TIMEOVERLAY(videofilter));
-  timeoverlay = GST_TIMEOVERLAY(videofilter);
+  g_return_if_fail (GST_IS_TIMEOVERLAY (videofilter));
+  timeoverlay = GST_TIMEOVERLAY (videofilter);
 
   /* if any setup needs to be done, do it here */
 
@@ -246,7 +246,8 @@ static void gst_timeoverlay_setup(GstVideofilter *videofilter)
 
 }
 
-static char *gst_timeoverlay_print_smpte_time(guint64 time)
+static char *
+gst_timeoverlay_print_smpte_time (guint64 time)
 {
   int hours;
   int minutes;
@@ -254,21 +255,21 @@ static char *gst_timeoverlay_print_smpte_time(guint64 time)
   int ms;
   double x;
 
-  x = rint((time + 500000)*1e-6);
+  x = rint ((time + 500000) * 1e-6);
 
-  hours = floor(x/(60*60*1000));
-  x -= hours*60*60*1000;
-  minutes = floor(x/(60*1000));
-  x -= minutes*60*1000;
-  seconds = floor(x/(1000));
-  x -= seconds*1000;
-  ms = rint(x);
+  hours = floor (x / (60 * 60 * 1000));
+  x -= hours * 60 * 60 * 1000;
+  minutes = floor (x / (60 * 1000));
+  x -= minutes * 60 * 1000;
+  seconds = floor (x / (1000));
+  x -= seconds * 1000;
+  ms = rint (x);
 
-  return g_strdup_printf("%02d:%02d:%02d.%03d",hours,minutes,seconds,ms);
+  return g_strdup_printf ("%02d:%02d:%02d.%03d", hours, minutes, seconds, ms);
 }
 
-static void gst_timeoverlay_planar411(GstVideofilter *videofilter,
-    void *dest, void *src)
+static void
+gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
 {
   GstTimeoverlay *timeoverlay;
   int width;
@@ -280,19 +281,21 @@ static void gst_timeoverlay_planar411(GstVideofilter *videofilter,
   char *string;
   int i;
 
-  g_return_if_fail(GST_IS_TIMEOVERLAY(videofilter));
-  timeoverlay = GST_TIMEOVERLAY(videofilter);
+  g_return_if_fail (GST_IS_TIMEOVERLAY (videofilter));
+  timeoverlay = GST_TIMEOVERLAY (videofilter);
 
-  width = gst_videofilter_get_input_width(videofilter);
-  height = gst_videofilter_get_input_height(videofilter);
+  width = gst_videofilter_get_input_width (videofilter);
+  height = gst_videofilter_get_input_height (videofilter);
 
-  width = gst_videofilter_get_input_width(videofilter);
-  height = gst_videofilter_get_input_height(videofilter);
+  width = gst_videofilter_get_input_width (videofilter);
+  height = gst_videofilter_get_input_height (videofilter);
 
   layout = pango_layout_new (timeoverlay->context);
-  string = gst_timeoverlay_print_smpte_time(GST_BUFFER_TIMESTAMP(videofilter->in_buf));
-  pango_layout_set_text (layout, string, strlen(string));
-  g_free(string);
+  string =
+      gst_timeoverlay_print_smpte_time (GST_BUFFER_TIMESTAMP (videofilter->
+	  in_buf));
+  pango_layout_set_text (layout, string, strlen (string));
+  g_free (string);
 
   pango_layout_set_alignment (layout, PANGO_ALIGN_LEFT);
   pango_layout_set_width (layout, -1);
@@ -303,15 +306,15 @@ static void gst_timeoverlay_planar411(GstVideofilter *videofilter,
 
   //hheight = 20;
 
-  memcpy(dest, src, videofilter->from_buf_size);
+  memcpy (dest, src, videofilter->from_buf_size);
 
-  for(i=0;i<b_height;i++){
-    memset(dest + i*width, 0, b_width);
+  for (i = 0; i < b_height; i++) {
+    memset (dest + i * width, 0, b_width);
   }
-  for(i=0;i<b_height/2;i++){
-    memset(dest + width*height + i*(width/2), 128, b_width/2);
-    memset(dest + width*height + (width/2)*(height/2) + i*(width/2), 128,
-       b_width/2);
+  for (i = 0; i < b_height / 2; i++) {
+    memset (dest + width * height + i * (width / 2), 128, b_width / 2);
+    memset (dest + width * height + (width / 2) * (height / 2) +
+	i * (width / 2), 128, b_width / 2);
   }
   bitmap.rows = b_height;
   bitmap.width = b_width;
@@ -322,4 +325,3 @@ static void gst_timeoverlay_planar411(GstVideofilter *videofilter,
 
   pango_ft2_render_layout (&bitmap, layout, 0, 0);
 }
-

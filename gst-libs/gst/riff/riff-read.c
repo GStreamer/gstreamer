@@ -28,28 +28,28 @@
 #include "riff-ids.h"
 #include "riff-read.h"
 
-enum {
+enum
+{
   ARG_0,
   ARG_METADATA
-  /* FILL ME */
+      /* FILL ME */
 };
 
-static void     gst_riff_read_class_init   (GstRiffReadClass *klass);
-static void     gst_riff_read_init         (GstRiffRead *riff);
+static void gst_riff_read_class_init (GstRiffReadClass * klass);
+static void gst_riff_read_init (GstRiffRead * riff);
 
-static GstElementStateReturn
-		gst_riff_read_change_state (GstElement  *element);
+static GstElementStateReturn gst_riff_read_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
 GType
-gst_riff_read_get_type (void) 
+gst_riff_read_get_type (void)
 {
   static GType gst_riff_read_type = 0;
 
   if (!gst_riff_read_type) {
     static const GTypeInfo gst_riff_read_info = {
-      sizeof (GstRiffReadClass),      
+      sizeof (GstRiffReadClass),
       NULL,
       NULL,
       (GClassInitFunc) gst_riff_read_class_init,
@@ -62,24 +62,24 @@ gst_riff_read_get_type (void)
 
     gst_riff_read_type =
 	g_type_register_static (GST_TYPE_ELEMENT, "GstRiffRead",
-				&gst_riff_read_info, 0);
+	&gst_riff_read_info, 0);
   }
 
   return gst_riff_read_type;
 }
 
 static void
-gst_riff_read_class_init (GstRiffReadClass *klass) 
+gst_riff_read_class_init (GstRiffReadClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-  
+
   gstelement_class->change_state = gst_riff_read_change_state;
 }
 
 static void
-gst_riff_read_init (GstRiffRead *riff)
+gst_riff_read_init (GstRiffRead * riff)
 {
   riff->sinkpad = NULL;
   riff->bs = NULL;
@@ -87,23 +87,23 @@ gst_riff_read_init (GstRiffRead *riff)
 }
 
 static GstElementStateReturn
-gst_riff_read_change_state (GstElement *element)
+gst_riff_read_change_state (GstElement * element)
 {
   GstRiffRead *riff = GST_RIFF_READ (element);
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
       if (!riff->sinkpad)
-        return GST_STATE_FAILURE;
+	return GST_STATE_FAILURE;
       riff->bs = gst_bytestream_new (riff->sinkpad);
       break;
     case GST_STATE_PAUSED_TO_READY:
       gst_bytestream_destroy (riff->bs);
       while (riff->level) {
-        GstRiffLevel *level = riff->level->data;
+	GstRiffLevel *level = riff->level->data;
 
-        riff->level = g_list_remove (riff->level, level);
-        g_free (level);
+	riff->level = g_list_remove (riff->level, level);
+	g_free (level);
       }
       break;
     default:
@@ -124,7 +124,7 @@ gst_riff_read_change_state (GstElement *element)
  */
 
 static guint
-gst_riff_read_element_level_up (GstRiffRead *riff)
+gst_riff_read_element_level_up (GstRiffRead * riff)
 {
   guint num = 0;
   guint64 pos = gst_bytestream_tell (riff->bs);
@@ -150,10 +150,8 @@ gst_riff_read_element_level_up (GstRiffRead *riff)
  */
 
 static gboolean
-gst_riff_peek_head (GstRiffRead *riff,
-		    guint32     *tag,
-		    guint32     *length,
-		    guint       *level_up)
+gst_riff_peek_head (GstRiffRead * riff,
+    guint32 * tag, guint32 * length, guint * level_up)
 {
   guint8 *data;
 
@@ -167,7 +165,7 @@ gst_riff_peek_head (GstRiffRead *riff,
     if (GST_IS_EVENT (event)) {
       gst_pad_event_default (riff->sinkpad, event);
       if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
-        return FALSE;
+	return FALSE;
     } else {
       GST_ELEMENT_ERROR (riff, RESOURCE, READ, (NULL), (NULL));
       return FALSE;
@@ -192,8 +190,7 @@ gst_riff_peek_head (GstRiffRead *riff,
  */
 
 static GstBuffer *
-gst_riff_read_element_data (GstRiffRead *riff,
-			    guint        length)
+gst_riff_read_element_data (GstRiffRead * riff, guint length)
 {
   GstBuffer *buf = NULL;
 
@@ -218,8 +215,7 @@ gst_riff_read_element_data (GstRiffRead *riff,
  */
 
 GstEvent *
-gst_riff_read_seek (GstRiffRead *riff,
-		    guint64      offset)
+gst_riff_read_seek (GstRiffRead * riff, guint64 offset)
 {
   guint64 length = gst_bytestream_length (riff->bs);
   guint32 remaining;
@@ -261,7 +257,7 @@ gst_riff_read_seek (GstRiffRead *riff,
     } else if (GST_EVENT_TYPE (event) != GST_EVENT_DISCONTINUOUS) {
       gst_pad_event_default (riff->sinkpad, event);
       if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
-        return NULL;
+	return NULL;
       event = NULL;
     }
   }
@@ -274,8 +270,7 @@ gst_riff_read_seek (GstRiffRead *riff,
  */
 
 guint32
-gst_riff_peek_tag (GstRiffRead *riff,
-		   guint       *level_up)
+gst_riff_peek_tag (GstRiffRead * riff, guint * level_up)
 {
   guint32 tag;
 
@@ -290,7 +285,7 @@ gst_riff_peek_tag (GstRiffRead *riff,
  */
 
 guint32
-gst_riff_peek_list (GstRiffRead *riff)
+gst_riff_peek_list (GstRiffRead * riff)
 {
   guint32 lst;
   guint8 *data;
@@ -315,7 +310,7 @@ gst_riff_peek_list (GstRiffRead *riff)
  */
 
 gboolean
-gst_riff_read_skip (GstRiffRead *riff)
+gst_riff_read_skip (GstRiffRead * riff)
 {
   guint32 tag, length;
   GstEvent *event;
@@ -346,7 +341,7 @@ gst_riff_read_skip (GstRiffRead *riff)
 
   /* no */
   if (!(event = gst_riff_read_seek (riff,
-			gst_bytestream_tell (riff->bs) + length)))
+	      gst_bytestream_tell (riff->bs) + length)))
     return FALSE;
 
   gst_event_unref (event);
@@ -359,9 +354,7 @@ gst_riff_read_skip (GstRiffRead *riff)
  */
 
 gboolean
-gst_riff_read_data (GstRiffRead *riff,
-		    guint32     *tag,
-		    GstBuffer  **buf)
+gst_riff_read_data (GstRiffRead * riff, guint32 * tag, GstBuffer ** buf)
 {
   guint32 length;
 
@@ -377,9 +370,7 @@ gst_riff_read_data (GstRiffRead *riff,
  */
 
 gboolean
-gst_riff_read_ascii (GstRiffRead *riff,
-		     guint32     *tag,
-		     gchar      **str)
+gst_riff_read_ascii (GstRiffRead * riff, guint32 * tag, gchar ** str)
 {
   GstBuffer *buf;
 
@@ -400,8 +391,7 @@ gst_riff_read_ascii (GstRiffRead *riff,
  */
 
 gboolean
-gst_riff_read_strh (GstRiffRead    *riff,
-		    gst_riff_strh **header)
+gst_riff_read_strh (GstRiffRead * riff, gst_riff_strh ** header)
 {
   guint32 tag;
   GstBuffer *buf;
@@ -417,28 +407,27 @@ gst_riff_read_strh (GstRiffRead    *riff,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strh)) {
     g_warning ("Too small strh (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strh));
+	GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strh));
     gst_buffer_unref (buf);
     return FALSE;
   }
 
-  strh = g_memdup (GST_BUFFER_DATA (buf),
-		   GST_BUFFER_SIZE (buf));
+  strh = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   gst_buffer_unref (buf);
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-  strh->type        = GUINT32_FROM_LE (strh->type);
+  strh->type = GUINT32_FROM_LE (strh->type);
   strh->fcc_handler = GUINT32_FROM_LE (strh->fcc_handler);
-  strh->flags       = GUINT32_FROM_LE (strh->flags);
-  strh->priority    = GUINT32_FROM_LE (strh->priority);
+  strh->flags = GUINT32_FROM_LE (strh->flags);
+  strh->priority = GUINT32_FROM_LE (strh->priority);
   strh->init_frames = GUINT32_FROM_LE (strh->init_frames);
-  strh->scale       = GUINT32_FROM_LE (strh->scale);
-  strh->rate        = GUINT32_FROM_LE (strh->rate);
-  strh->start       = GUINT32_FROM_LE (strh->start);
-  strh->length      = GUINT32_FROM_LE (strh->length);
-  strh->bufsize     = GUINT32_FROM_LE (strh->bufsize);
-  strh->quality     = GUINT32_FROM_LE (strh->quality);
-  strh->samplesize  = GUINT32_FROM_LE (strh->samplesize);
+  strh->scale = GUINT32_FROM_LE (strh->scale);
+  strh->rate = GUINT32_FROM_LE (strh->rate);
+  strh->start = GUINT32_FROM_LE (strh->start);
+  strh->length = GUINT32_FROM_LE (strh->length);
+  strh->bufsize = GUINT32_FROM_LE (strh->bufsize);
+  strh->quality = GUINT32_FROM_LE (strh->quality);
+  strh->samplesize = GUINT32_FROM_LE (strh->samplesize);
 #endif
 
   /* avoid divisions by zero */
@@ -449,20 +438,19 @@ gst_riff_read_strh (GstRiffRead    *riff,
 
   /* debug */
   GST_INFO ("strh tag found");
-  GST_INFO (" type        " GST_FOURCC_FORMAT,
-	    GST_FOURCC_ARGS (strh->type));
+  GST_INFO (" type        " GST_FOURCC_FORMAT, GST_FOURCC_ARGS (strh->type));
   GST_INFO (" fcc_handler " GST_FOURCC_FORMAT,
-	    GST_FOURCC_ARGS (strh->fcc_handler));
+      GST_FOURCC_ARGS (strh->fcc_handler));
   GST_INFO (" flags       0x%08x", strh->flags);
-  GST_INFO (" priority    %d",     strh->priority);
-  GST_INFO (" init_frames %d",     strh->init_frames);
-  GST_INFO (" scale       %d",     strh->scale);
-  GST_INFO (" rate        %d",     strh->rate);
-  GST_INFO (" start       %d",     strh->start);
-  GST_INFO (" length      %d",     strh->length);
-  GST_INFO (" bufsize     %d",     strh->bufsize);
-  GST_INFO (" quality     %d",     strh->quality);
-  GST_INFO (" samplesize  %d",     strh->samplesize);
+  GST_INFO (" priority    %d", strh->priority);
+  GST_INFO (" init_frames %d", strh->init_frames);
+  GST_INFO (" scale       %d", strh->scale);
+  GST_INFO (" rate        %d", strh->rate);
+  GST_INFO (" start       %d", strh->start);
+  GST_INFO (" length      %d", strh->length);
+  GST_INFO (" bufsize     %d", strh->bufsize);
+  GST_INFO (" quality     %d", strh->quality);
+  GST_INFO (" samplesize  %d", strh->samplesize);
 
   *header = strh;
 
@@ -470,8 +458,7 @@ gst_riff_read_strh (GstRiffRead    *riff,
 }
 
 gboolean
-gst_riff_read_strf_vids (GstRiffRead         *riff,
-			 gst_riff_strf_vids **header)
+gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
 {
   guint32 tag;
   GstBuffer *buf;
@@ -487,32 +474,31 @@ gst_riff_read_strf_vids (GstRiffRead         *riff,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_vids)) {
     g_warning ("Too small strf_vids (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_vids));
+	GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_vids));
     gst_buffer_unref (buf);
     return FALSE;
   }
 
-  strf = g_memdup (GST_BUFFER_DATA (buf),
-		   GST_BUFFER_SIZE (buf));
+  strf = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-  strf->size        = GUINT32_FROM_LE (strf->size);
-  strf->width       = GUINT32_FROM_LE (strf->width);
-  strf->height      = GUINT32_FROM_LE (strf->height);
-  strf->planes      = GUINT16_FROM_LE (strf->planes);
-  strf->bit_cnt     = GUINT16_FROM_LE (strf->bit_cnt);
+  strf->size = GUINT32_FROM_LE (strf->size);
+  strf->width = GUINT32_FROM_LE (strf->width);
+  strf->height = GUINT32_FROM_LE (strf->height);
+  strf->planes = GUINT16_FROM_LE (strf->planes);
+  strf->bit_cnt = GUINT16_FROM_LE (strf->bit_cnt);
   strf->compression = GUINT32_FROM_LE (strf->compression);
-  strf->image_size  = GUINT32_FROM_LE (strf->image_size);
+  strf->image_size = GUINT32_FROM_LE (strf->image_size);
   strf->xpels_meter = GUINT32_FROM_LE (strf->xpels_meter);
   strf->ypels_meter = GUINT32_FROM_LE (strf->ypels_meter);
-  strf->num_colors  = GUINT32_FROM_LE (strf->num_colors);
-  strf->imp_colors  = GUINT32_FROM_LE (strf->imp_colors);
+  strf->num_colors = GUINT32_FROM_LE (strf->num_colors);
+  strf->imp_colors = GUINT32_FROM_LE (strf->imp_colors);
 #endif
 
   /* size checking */
   if (strf->size > GST_BUFFER_SIZE (buf)) {
     g_warning ("strf_vids header gave %d bytes data, only %d available",
-	       strf->size, GST_BUFFER_SIZE (buf));
+	strf->size, GST_BUFFER_SIZE (buf));
     strf->size = GST_BUFFER_SIZE (buf);
   }
 
@@ -524,7 +510,7 @@ gst_riff_read_strf_vids (GstRiffRead         *riff,
   GST_INFO (" planes      %d", strf->planes);
   GST_INFO (" bit_cnt     %d", strf->bit_cnt);
   GST_INFO (" compression " GST_FOURCC_FORMAT,
-	    GST_FOURCC_ARGS (strf->compression));
+      GST_FOURCC_ARGS (strf->compression));
   GST_INFO (" image_size  %d", strf->image_size);
   GST_INFO (" xpels_meter %d", strf->xpels_meter);
   GST_INFO (" ypels_meter %d", strf->ypels_meter);
@@ -539,8 +525,7 @@ gst_riff_read_strf_vids (GstRiffRead         *riff,
 }
 
 gboolean
-gst_riff_read_strf_auds (GstRiffRead         *riff,
-			 gst_riff_strf_auds **header)
+gst_riff_read_strf_auds (GstRiffRead * riff, gst_riff_strf_auds ** header)
 {
   guint32 tag;
   GstBuffer *buf;
@@ -556,21 +541,20 @@ gst_riff_read_strf_auds (GstRiffRead         *riff,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_auds)) {
     g_warning ("Too small strf_auds (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_auds));
+	GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_auds));
     gst_buffer_unref (buf);
     return FALSE;
   }
 
-  strf = g_memdup (GST_BUFFER_DATA (buf),
-		   GST_BUFFER_SIZE (buf));
+  strf = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-  strf->format     = GUINT16_FROM_LE (strf->format);
-  strf->channels   = GUINT16_FROM_LE (strf->channels);
-  strf->rate       = GUINT32_FROM_LE (strf->rate);
-  strf->av_bps     = GUINT32_FROM_LE (strf->av_bps);
+  strf->format = GUINT16_FROM_LE (strf->format);
+  strf->channels = GUINT16_FROM_LE (strf->channels);
+  strf->rate = GUINT32_FROM_LE (strf->rate);
+  strf->av_bps = GUINT32_FROM_LE (strf->av_bps);
   strf->blockalign = GUINT16_FROM_LE (strf->blockalign);
-  strf->size       = GUINT16_FROM_LE (strf->size);
+  strf->size = GUINT16_FROM_LE (strf->size);
 #endif
 
   /* debug */
@@ -580,7 +564,7 @@ gst_riff_read_strf_auds (GstRiffRead         *riff,
   GST_INFO (" rate        %d", strf->rate);
   GST_INFO (" av_bps      %d", strf->av_bps);
   GST_INFO (" blockalign  %d", strf->blockalign);
-  GST_INFO (" size        %d", strf->size); /* wordsize, not extrasize! */
+  GST_INFO (" size        %d", strf->size);	/* wordsize, not extrasize! */
 
   gst_buffer_unref (buf);
 
@@ -590,8 +574,7 @@ gst_riff_read_strf_auds (GstRiffRead         *riff,
 }
 
 gboolean
-gst_riff_read_strf_iavs (GstRiffRead         *riff,
-			 gst_riff_strf_iavs **header)
+gst_riff_read_strf_iavs (GstRiffRead * riff, gst_riff_strf_iavs ** header)
 {
   guint32 tag;
   GstBuffer *buf;
@@ -607,22 +590,21 @@ gst_riff_read_strf_iavs (GstRiffRead         *riff,
   }
   if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_iavs)) {
     g_warning ("Too small strf_iavs (%d available, %d needed)",
-	       GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_iavs));
+	GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_iavs));
     gst_buffer_unref (buf);
     return FALSE;
   }
 
-  strf = g_memdup (GST_BUFFER_DATA (buf),
-		   GST_BUFFER_SIZE (buf));
+  strf = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   gst_buffer_unref (buf);
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-  strf->DVAAuxSrc   = GUINT32_FROM_LE (strf->DVAAuxSrc);
-  strf->DVAAuxCtl   = GUINT32_FROM_LE (strf->DVAAuxCtl);
-  strf->DVAAuxSrc1  = GUINT32_FROM_LE (strf->DVAAuxSrc1);
-  strf->DVAAuxCtl1  = GUINT32_FROM_LE (strf->DVAAuxCtl1);
-  strf->DVVAuxSrc   = GUINT32_FROM_LE (strf->DVVAuxSrc);
-  strf->DVVAuxCtl   = GUINT32_FROM_LE (strf->DVVAuxCtl);
+  strf->DVAAuxSrc = GUINT32_FROM_LE (strf->DVAAuxSrc);
+  strf->DVAAuxCtl = GUINT32_FROM_LE (strf->DVAAuxCtl);
+  strf->DVAAuxSrc1 = GUINT32_FROM_LE (strf->DVAAuxSrc1);
+  strf->DVAAuxCtl1 = GUINT32_FROM_LE (strf->DVAAuxCtl1);
+  strf->DVVAuxSrc = GUINT32_FROM_LE (strf->DVVAuxSrc);
+  strf->DVVAuxCtl = GUINT32_FROM_LE (strf->DVVAuxCtl);
   strf->DVReserved1 = GUINT32_FROM_LE (strf->DVReserved1);
   strf->DVReserved2 = GUINT32_FROM_LE (strf->DVReserved2);
 #endif
@@ -648,8 +630,7 @@ gst_riff_read_strf_iavs (GstRiffRead         *riff,
  */
 
 gboolean
-gst_riff_read_list (GstRiffRead *riff,
-		    guint32     *tag)
+gst_riff_read_list (GstRiffRead * riff, guint32 * tag)
 {
   guint32 length, lst;
   GstRiffLevel *level;
@@ -667,7 +648,7 @@ gst_riff_read_list (GstRiffRead *riff,
     return FALSE;
   }
   gst_bytestream_flush_fast (riff->bs, 4);
-  *tag = GUINT32_FROM_LE (* (guint32 *) data);
+  *tag = GUINT32_FROM_LE (*(guint32 *) data);
 
   /* remember level */
   level = g_new (GstRiffLevel, 1);
@@ -683,7 +664,7 @@ gst_riff_read_list (GstRiffRead *riff,
  */
 
 gboolean
-gst_riff_read_info (GstRiffRead *riff)
+gst_riff_read_info (GstRiffRead * riff)
 {
   guint32 tag;
   guint64 end;
@@ -713,100 +694,102 @@ gst_riff_read_info (GstRiffRead *riff)
     /* find out the type of metadata */
     switch (tag) {
       case GST_RIFF_INFO_IARL:
-        type = GST_TAG_LOCATION;
-        break;
+	type = GST_TAG_LOCATION;
+	break;
       case GST_RIFF_INFO_IART:
-        type = GST_TAG_ARTIST;
-        break;
+	type = GST_TAG_ARTIST;
+	break;
       case GST_RIFF_INFO_ICMS:
-        type = NULL; /*"Commissioner";*/
-        break;
+	type = NULL;		/*"Commissioner"; */
+	break;
       case GST_RIFF_INFO_ICMT:
-        type = GST_TAG_COMMENT;
-        break;
+	type = GST_TAG_COMMENT;
+	break;
       case GST_RIFF_INFO_ICOP:
-        type = GST_TAG_COPYRIGHT;
-        break;
+	type = GST_TAG_COPYRIGHT;
+	break;
       case GST_RIFF_INFO_ICRD:
-        type = GST_TAG_DATE;
-        break;
+	type = GST_TAG_DATE;
+	break;
       case GST_RIFF_INFO_ICRP:
-        type = NULL; /*"Cropped";*/
-        break;
+	type = NULL;		/*"Cropped"; */
+	break;
       case GST_RIFF_INFO_IDIM:
-        type = NULL; /*"Dimensions";*/
-        break;
+	type = NULL;		/*"Dimensions"; */
+	break;
       case GST_RIFF_INFO_IDPI:
-        type = NULL; /*"Dots per Inch";*/
-        break;
+	type = NULL;		/*"Dots per Inch"; */
+	break;
       case GST_RIFF_INFO_IENG:
-        type = NULL; /*"Engineer";*/
-        break;
+	type = NULL;		/*"Engineer"; */
+	break;
       case GST_RIFF_INFO_IGNR:
-        type = GST_TAG_GENRE;
-        break;
+	type = GST_TAG_GENRE;
+	break;
       case GST_RIFF_INFO_IKEY:
-        type = NULL; /*"Keywords";*/;
-        break;
+	type = NULL; /*"Keywords"; */ ;
+	break;
       case GST_RIFF_INFO_ILGT:
-        type = NULL; /*"Lightness";*/
-        break;
+	type = NULL;		/*"Lightness"; */
+	break;
       case GST_RIFF_INFO_IMED:
-        type = NULL; /*"Medium";*/
-        break;
+	type = NULL;		/*"Medium"; */
+	break;
       case GST_RIFF_INFO_INAM:
-        type = GST_TAG_TITLE;
-        break;
+	type = GST_TAG_TITLE;
+	break;
       case GST_RIFF_INFO_IPLT:
-        type = NULL; /*"Palette";*/
-        break;
+	type = NULL;		/*"Palette"; */
+	break;
       case GST_RIFF_INFO_IPRD:
-        type = NULL; /*"Product";*/
-        break;
+	type = NULL;		/*"Product"; */
+	break;
       case GST_RIFF_INFO_ISBJ:
-        type = NULL; /*"Subject";*/
-        break;
+	type = NULL;		/*"Subject"; */
+	break;
       case GST_RIFF_INFO_ISFT:
-        type = GST_TAG_ENCODER;
-        break;
+	type = GST_TAG_ENCODER;
+	break;
       case GST_RIFF_INFO_ISHP:
-        type = NULL; /*"Sharpness";*/
-        break;
+	type = NULL;		/*"Sharpness"; */
+	break;
       case GST_RIFF_INFO_ISRC:
-        type = GST_TAG_ISRC;
-        break;
+	type = GST_TAG_ISRC;
+	break;
       case GST_RIFF_INFO_ISRF:
-        type = NULL; /*"Source Form";*/
-        break;
+	type = NULL;		/*"Source Form"; */
+	break;
       case GST_RIFF_INFO_ITCH:
-        type = NULL; /*"Technician";*/
-        break;
+	type = NULL;		/*"Technician"; */
+	break;
       default:
-        type = NULL;
-        GST_WARNING ("Unknown INFO (metadata) tag entry " GST_FOURCC_FORMAT,
-		     GST_FOURCC_ARGS (tag));
-        break;
+	type = NULL;
+	GST_WARNING ("Unknown INFO (metadata) tag entry " GST_FOURCC_FORMAT,
+	    GST_FOURCC_ARGS (tag));
+	break;
     }
 
     if (type) {
       name = NULL;
       if (!gst_riff_read_ascii (riff, &tag, &name)) {
-        return FALSE;
+	return FALSE;
       }
 
       if (name && name[0] != '\0') {
-        GValue src = { 0 }, dest = { 0 };
-        GType dest_type = gst_tag_get_type (type);
+	GValue src = { 0 }
+	, dest = {
+	0};
+	GType dest_type = gst_tag_get_type (type);
 
-        have_tags = TRUE;
-        g_value_init (&src, G_TYPE_STRING);
-        g_value_set_string (&src, name);
-        g_value_init (&dest, dest_type);
-        g_value_transform (&src, &dest);
-        g_value_unset (&src);
-        gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
-				 type, &dest, NULL);
-        g_value_unset (&dest);
+	have_tags = TRUE;
+	g_value_init (&src, G_TYPE_STRING);
+	g_value_set_string (&src, name);
+	g_value_init (&dest, dest_type);
+	g_value_transform (&src, &dest);
+	g_value_unset (&src);
+	gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
+	    type, &dest, NULL);
+	g_value_unset (&dest);
       }
       g_free (name);
     } else {
@@ -821,10 +804,10 @@ gst_riff_read_info (GstRiffRead *riff)
 
     /* let the world know about this wonderful thing */
     for (padlist = gst_element_get_pad_list (element);
-	 padlist != NULL; padlist = padlist->next) {
-      if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE(padlist->data)) {
-        gst_event_ref (event);
-        gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
+	padlist != NULL; padlist = padlist->next) {
+      if (GST_PAD_IS_SRC (padlist->data) && GST_PAD_IS_USABLE (padlist->data)) {
+	gst_event_ref (event);
+	gst_pad_push (GST_PAD (padlist->data), GST_DATA (event));
       }
     }
     gst_event_unref (event);
@@ -839,8 +822,7 @@ gst_riff_read_info (GstRiffRead *riff)
  */
 
 gboolean
-gst_riff_read_header (GstRiffRead *riff,
-		      guint32     *doctype)
+gst_riff_read_header (GstRiffRead * riff, guint32 * doctype)
 {
   GstRiffLevel *level;
   guint32 tag, length;
@@ -861,7 +843,7 @@ gst_riff_read_header (GstRiffRead *riff,
     return FALSE;
   }
   gst_bytestream_flush_fast (riff->bs, 4);
-  *doctype = GUINT32_FROM_LE (* (guint32 *) data);
+  *doctype = GUINT32_FROM_LE (*(guint32 *) data);
 
   /* remember level */
   level = g_new (GstRiffLevel, 1);

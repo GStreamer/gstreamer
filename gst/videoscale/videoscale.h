@@ -23,24 +23,26 @@
 
 #include "gstvideoscale.h"
 
-struct videoscale_format_struct {
-	unsigned int fourcc;
-	int bpp;
-	void (*scale)(GstVideoscale *,unsigned char *dest, unsigned char *src);
-	int depth;
-	unsigned int endianness;
-	unsigned int red_mask;
-	unsigned int green_mask;
-	unsigned int blue_mask;
+struct videoscale_format_struct
+{
+  unsigned int fourcc;
+  int bpp;
+  void (*scale) (GstVideoscale *, unsigned char *dest, unsigned char *src);
+  int depth;
+  unsigned int endianness;
+  unsigned int red_mask;
+  unsigned int green_mask;
+  unsigned int blue_mask;
 };
 
 extern struct videoscale_format_struct videoscale_formats[];
 extern int videoscale_n_formats;
 
-GstStructure *videoscale_get_structure(struct videoscale_format_struct *format);
+GstStructure *videoscale_get_structure (struct videoscale_format_struct
+    *format);
 
-struct videoscale_format_struct *videoscale_find_by_structure (GstStructure *structure);
+struct videoscale_format_struct *videoscale_find_by_structure (GstStructure *
+    structure);
 
 
 #endif
-

@@ -26,11 +26,12 @@
 
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 /* debugging */
-GST_DEBUG_CATEGORY_EXTERN (videoscale_debug);
+  GST_DEBUG_CATEGORY_EXTERN (videoscale_debug);
 #define GST_CAT_DEFAULT videoscale_debug
 
 #define GST_TYPE_VIDEOSCALE \
@@ -44,55 +45,58 @@ GST_DEBUG_CATEGORY_EXTERN (videoscale_debug);
 #define GST_IS_VIDEOSCALE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOSCALE))
 
-typedef enum {
-  GST_VIDEOSCALE_POINT_SAMPLE,
-  GST_VIDEOSCALE_NEAREST,
-  GST_VIDEOSCALE_BILINEAR,
-  GST_VIDEOSCALE_BICUBIC
-} GstVideoScaleMethod;
+  typedef enum
+  {
+    GST_VIDEOSCALE_POINT_SAMPLE,
+    GST_VIDEOSCALE_NEAREST,
+    GST_VIDEOSCALE_BILINEAR,
+    GST_VIDEOSCALE_BICUBIC
+  } GstVideoScaleMethod;
 
-typedef struct _GstVideoscale GstVideoscale;
-typedef struct _GstVideoscaleClass GstVideoscaleClass;
+  typedef struct _GstVideoscale GstVideoscale;
+  typedef struct _GstVideoscaleClass GstVideoscaleClass;
 
-struct _GstVideoscale {
-  GstElement element;
+  struct _GstVideoscale
+  {
+    GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+    GstPad *sinkpad, *srcpad;
 
-  /* video state */
-  gboolean inited;
-  struct videoscale_format_struct *format;
-  gint to_width;
-  gint to_height;
-  gint from_width;
-  gint from_height;
-  gboolean passthru;
-  float framerate;
+    /* video state */
+    gboolean inited;
+    struct videoscale_format_struct *format;
+    gint to_width;
+    gint to_height;
+    gint from_width;
+    gint from_height;
+    gboolean passthru;
+    float framerate;
 
-  GstVideoScaleMethod method;
-  
-  /* private */
-  gint from_buf_size;
-  gint to_buf_size;
+    GstVideoScaleMethod method;
+
+    /* private */
+    gint from_buf_size;
+    gint to_buf_size;
 #if 0
-  guchar *temp;
-  guchar (*filter) (guchar *src, gdouble x, gdouble y, gint sw, gint sh);
-  guchar copy_row[8192];
+    guchar *temp;
+      guchar (*filter) (guchar * src, gdouble x, gdouble y, gint sw, gint sh);
+    guchar copy_row[8192];
 #endif
-};
+  };
 
-struct _GstVideoscaleClass {
-  GstElementClass parent_class;
-};
+  struct _GstVideoscaleClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_videoscale_get_type(void);
+  GType gst_videoscale_get_type (void);
 
-void gst_videoscale_setup(GstVideoscale *);
+  void gst_videoscale_setup (GstVideoscale *);
 #define gst_videoscale_scale(scale, src, dest) (scale)->scale_cc((scale), (src), (dest))
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_VIDEOSCALE_H__ */
+#endif				/* __GST_VIDEOSCALE_H__ */

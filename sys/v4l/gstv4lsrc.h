@@ -23,7 +23,6 @@
 #include <gstv4lelement.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_V4LSRC \
   (gst_v4lsrc_get_type())
 #define GST_V4LSRC(obj) \
@@ -34,18 +33,19 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4LSRC))
 #define GST_IS_V4LSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LSRC))
-
 typedef struct _GstV4lSrc GstV4lSrc;
 typedef struct _GstV4lSrcClass GstV4lSrcClass;
 
-enum {
+enum
+{
   QUEUE_STATE_ERROR = -1,
   QUEUE_STATE_READY_FOR_QUEUE,
   QUEUE_STATE_QUEUED,
   QUEUE_STATE_SYNCED,
 };
 
-struct _GstV4lSrc {
+struct _GstV4lSrc
+{
   GstV4lElement v4lelement;
 
   /* pads */
@@ -90,17 +90,17 @@ struct _GstV4lSrc {
   gboolean use_fixed_fps;
 };
 
-struct _GstV4lSrcClass {
+struct _GstV4lSrcClass
+{
   GstV4lElementClass parent_class;
 
-  void (*frame_capture) (GObject *object);
-  void (*frame_drop)    (GObject *object);
-  void (*frame_insert)  (GObject *object);
+  void (*frame_capture) (GObject * object);
+  void (*frame_drop) (GObject * object);
+  void (*frame_insert) (GObject * object);
 };
 
-GType gst_v4lsrc_get_type(void);
+GType gst_v4lsrc_get_type (void);
 
 
 G_END_DECLS
-
 #endif /* __GST_V4LSRC_H__ */

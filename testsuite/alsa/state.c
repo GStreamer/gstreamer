@@ -26,8 +26,10 @@ static void
 set_state (GstElementState state)
 {
   GstElementState old_state = gst_element_get_state (pipeline);
-  
-  g_print ("Setting state from %s to %s...", gst_element_state_get_name (old_state), gst_element_state_get_name (state));
+
+  g_print ("Setting state from %s to %s...",
+      gst_element_state_get_name (old_state),
+      gst_element_state_get_name (state));
 
   if (!gst_element_set_state (pipeline, state)) {
     g_print (" ERROR\n");
@@ -36,10 +38,11 @@ set_state (GstElementState state)
 
   if (state == GST_STATE_PLAYING) {
     gint i;
+
     g_print (" DONE - iterating a bit...");
     for (i = 0; i < 400; i++) {
       if (!gst_bin_iterate (GST_BIN (pipeline))) {
-        g_print (" ERROR in iteration %d\n", i);
+	g_print (" ERROR in iteration %d\n", i);
 	exit (-2);
       }
     }
@@ -50,17 +53,17 @@ set_state (GstElementState state)
 static void
 create_pipeline (void)
 {
-  GstElement *src; 
+  GstElement *src;
   SineSrc *sinesrc;
   GstElement *alsasink;
-  
+
   pipeline = gst_pipeline_new ("pipeline");
   src = sinesrc_new ();
   alsasink = gst_element_factory_make ("alsasink", "alsasink");
-  
+
   gst_bin_add_many (GST_BIN (pipeline), src, alsasink, NULL);
   gst_element_link (src, alsasink);
-  
+
   /* prepare our sinesrc */
   sinesrc = (SineSrc *) src;
   sinesrc->newcaps = TRUE;
@@ -70,18 +73,18 @@ create_pipeline (void)
   sinesrc->depth = 16;
   sinesrc->width = 16;
 }
-gint 
-main (gint argc, gchar *argv[]) 
+
+gint
+main (gint argc, gchar * argv[])
 {
   gst_init (&argc, &argv);
 
   g_print ("\n"
-           "This test will check if state changes work on the alsasink.\n"
-           "You will hear some short sine tones on your default ALSA soundcard,\n"
-           "but they are not important in this test.\n"
-           "\n");
+      "This test will check if state changes work on the alsasink.\n"
+      "You will hear some short sine tones on your default ALSA soundcard,\n"
+      "but they are not important in this test.\n" "\n");
   create_pipeline ();
-  
+
   /* simulate some state changes here */
   set_state (GST_STATE_READY);
   set_state (GST_STATE_NULL);
@@ -96,10 +99,10 @@ main (gint argc, gchar *argv[])
   set_state (GST_STATE_PLAYING);
   set_state (GST_STATE_NULL);
   set_state (GST_STATE_PLAYING);
-  
+
   g_print ("The alsa plugin mastered another test.\n");
 
-  gst_object_unref (GST_OBJECT (pipeline));  
+  gst_object_unref (GST_OBJECT (pipeline));
 
   return 0;
 }

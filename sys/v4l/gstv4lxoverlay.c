@@ -31,24 +31,23 @@
 #include "gstv4lelement.h"
 #include "v4l_calls.h"
 
-static void	gst_v4l_xoverlay_set_xwindow_id	(GstXOverlay *overlay,
-						 XID          xwindow_id);
+static void gst_v4l_xoverlay_set_xwindow_id (GstXOverlay * overlay,
+    XID xwindow_id);
 
 void
-gst_v4l_xoverlay_interface_init (GstXOverlayClass *klass)
+gst_v4l_xoverlay_interface_init (GstXOverlayClass * klass)
 {
   /* default virtual functions */
   klass->set_xwindow_id = gst_v4l_xoverlay_set_xwindow_id;
 }
 
 GstXWindowListener *
-gst_v4l_xoverlay_new (GstV4lElement  *v4lelement)
+gst_v4l_xoverlay_new (GstV4lElement * v4lelement)
 {
-  GstXWindowListener *xwin =
-	gst_x_window_listener_new (NULL,
-				   (MapWindowFunc) gst_v4l_enable_overlay,
-				   (SetWindowFunc) gst_v4l_set_window,
-				   (gpointer) v4lelement);
+  GstXWindowListener *xwin = gst_x_window_listener_new (NULL,
+      (MapWindowFunc) gst_v4l_enable_overlay,
+      (SetWindowFunc) gst_v4l_set_window,
+      (gpointer) v4lelement);
 
   v4lelement->overlay = xwin;
   v4lelement->xwindow_id = 0;
@@ -57,7 +56,7 @@ gst_v4l_xoverlay_new (GstV4lElement  *v4lelement)
 }
 
 void
-gst_v4l_xoverlay_free (GstV4lElement  *v4lelement)
+gst_v4l_xoverlay_free (GstV4lElement * v4lelement)
 {
   gst_v4l_xoverlay_close (v4lelement);
   g_object_unref (G_OBJECT (v4lelement->overlay));
@@ -65,7 +64,7 @@ gst_v4l_xoverlay_free (GstV4lElement  *v4lelement)
 }
 
 void
-gst_v4l_xoverlay_open (GstV4lElement  *v4lelement)
+gst_v4l_xoverlay_open (GstV4lElement * v4lelement)
 {
   GstXWindowListener *xwin = v4lelement->overlay;
 
@@ -73,22 +72,20 @@ gst_v4l_xoverlay_open (GstV4lElement  *v4lelement)
     xwin->display_name = g_strdup (v4lelement->display);
 
     if (v4lelement->xwindow_id != 0 &&
-        xwin->display_name &&
-        xwin->display_name[0] == ':') {
+	xwin->display_name && xwin->display_name[0] == ':') {
       gst_x_window_listener_set_xid (xwin, v4lelement->xwindow_id);
     }
   }
 }
 
 void
-gst_v4l_xoverlay_close (GstV4lElement  *v4lelement)
+gst_v4l_xoverlay_close (GstV4lElement * v4lelement)
 {
   GstXWindowListener *xwin = v4lelement->overlay;
 
   if (xwin != NULL) {
     if (v4lelement->xwindow_id != 0 &&
-        xwin->display_name &&
-        xwin->display_name[0] == ':') {
+	xwin->display_name && xwin->display_name[0] == ':') {
       gst_x_window_listener_set_xid (xwin, 0);
     }
 
@@ -98,8 +95,7 @@ gst_v4l_xoverlay_close (GstV4lElement  *v4lelement)
 }
 
 static void
-gst_v4l_xoverlay_set_xwindow_id (GstXOverlay *overlay,
-				 XID          xwindow_id)
+gst_v4l_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 {
   GstV4lElement *v4lelement = GST_V4LELEMENT (overlay);
   GstXWindowListener *xwin = v4lelement->overlay;
@@ -110,8 +106,7 @@ gst_v4l_xoverlay_set_xwindow_id (GstXOverlay *overlay,
 
   if (gst_element_get_state (GST_ELEMENT (v4lelement)) != GST_STATE_NULL &&
       v4lelement->xwindow_id != 0 &&
-      xwin && xwin->display_name &&
-      xwin->display_name[0] == ':') {
+      xwin && xwin->display_name && xwin->display_name[0] == ':') {
     gst_x_window_listener_set_xid (xwin, 0);
   }
 
@@ -119,8 +114,7 @@ gst_v4l_xoverlay_set_xwindow_id (GstXOverlay *overlay,
 
   if (gst_element_get_state (GST_ELEMENT (v4lelement)) != GST_STATE_NULL &&
       v4lelement->xwindow_id != 0 &&
-      xwin && xwin->display_name &&
-      xwin->display_name[0] == ':') {
+      xwin && xwin->display_name && xwin->display_name[0] == ':') {
     gst_x_window_listener_set_xid (xwin, v4lelement->xwindow_id);
   }
 }

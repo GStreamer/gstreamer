@@ -83,7 +83,8 @@ paint_rect_random (unsigned char *dest, int stride, int x, int y, int w, int h)
 
 #if 0
 static void
-paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char color)
+paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h,
+    unsigned char color)
 {
   unsigned char *d = dest + stride * y + x;
   int i;
@@ -97,7 +98,8 @@ paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h, unsigne
 
 #if 0
 static void
-paint_rect_s2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char col)
+paint_rect_s2 (unsigned char *dest, int stride, int x, int y, int w, int h,
+    unsigned char col)
 {
   unsigned char *d = dest + stride * y + x * 2;
   unsigned char *dp;
@@ -116,7 +118,8 @@ paint_rect_s2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsi
 
 #if 0
 static void
-paint_rect2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char *col)
+paint_rect2 (unsigned char *dest, int stride, int x, int y, int w, int h,
+    unsigned char *col)
 {
   unsigned char *d = dest + stride * y + x * 2;
   unsigned char *dp;
@@ -135,7 +138,8 @@ paint_rect2 (unsigned char *dest, int stride, int x, int y, int w, int h, unsign
 
 #if 0
 static void
-paint_rect3 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char *col)
+paint_rect3 (unsigned char *dest, int stride, int x, int y, int w, int h,
+    unsigned char *col)
 {
   unsigned char *d = dest + stride * y + x * 3;
   unsigned char *dp;
@@ -155,7 +159,8 @@ paint_rect3 (unsigned char *dest, int stride, int x, int y, int w, int h, unsign
 
 #if 0
 static void
-paint_rect4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char *col)
+paint_rect4 (unsigned char *dest, int stride, int x, int y, int w, int h,
+    unsigned char *col)
 {
   unsigned char *d = dest + stride * y + x * 4;
   unsigned char *dp;
@@ -176,7 +181,8 @@ paint_rect4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsign
 
 #if 0
 static void
-paint_rect_s4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsigned char col)
+paint_rect_s4 (unsigned char *dest, int stride, int x, int y, int w, int h,
+    unsigned char col)
 {
   unsigned char *d = dest + stride * y + x * 4;
   unsigned char *dp;
@@ -193,60 +199,63 @@ paint_rect_s4 (unsigned char *dest, int stride, int x, int y, int w, int h, unsi
 }
 #endif
 
-enum {
-	COLOR_WHITE = 0,
-	COLOR_YELLOW,
-	COLOR_CYAN,
-	COLOR_GREEN,
-	COLOR_MAGENTA,
-	COLOR_RED,
-	COLOR_BLUE,
-	COLOR_BLACK,
-	COLOR_NEG_I,
-	COLOR_POS_Q,
-	COLOR_SUPER_BLACK,
-	COLOR_DARK_GREY,
+enum
+{
+  COLOR_WHITE = 0,
+  COLOR_YELLOW,
+  COLOR_CYAN,
+  COLOR_GREEN,
+  COLOR_MAGENTA,
+  COLOR_RED,
+  COLOR_BLUE,
+  COLOR_BLACK,
+  COLOR_NEG_I,
+  COLOR_POS_Q,
+  COLOR_SUPER_BLACK,
+  COLOR_DARK_GREY,
 };
 
 static struct vts_color_struct vts_colors[] = {
-	/* 100% white */
-	{ 255, 128, 128, 255, 255, 255 },
-	/* yellow */
-	{ 226,   0, 155, 255, 255,   0 },
-	/* cyan */
-	{ 179, 170,   0,   0, 255, 255 },
-	/* green */
-	{ 150,  46,  21,   0, 255,   0 },
-	/* magenta */
-	{ 105, 212, 235, 255,   0, 255 },
-	/* red */
-	{  76,  85, 255, 255,   0,   0 },
-	/* blue */
-	{  29, 255, 107,   0,   0, 255 },
-	/* black */
-	{  16, 128, 128,   0,   0,   0 },
-	/* -I */
-	{  16, 198,  21,   0,   0, 128 },
-	/* +Q */
-	{  16, 235, 198,   0, 128, 255 },
-	/* superblack */
-	{   0, 128, 128,   0,   0,   0 },
-	/* 5% grey */
-	{  32, 128, 128,  32,  32,  32 },
+  /* 100% white */
+  {255, 128, 128, 255, 255, 255},
+  /* yellow */
+  {226, 0, 155, 255, 255, 0},
+  /* cyan */
+  {179, 170, 0, 0, 255, 255},
+  /* green */
+  {150, 46, 21, 0, 255, 0},
+  /* magenta */
+  {105, 212, 235, 255, 0, 255},
+  /* red */
+  {76, 85, 255, 255, 0, 0},
+  /* blue */
+  {29, 255, 107, 0, 0, 255},
+  /* black */
+  {16, 128, 128, 0, 0, 0},
+  /* -I */
+  {16, 198, 21, 0, 0, 128},
+  /* +Q */
+  {16, 235, 198, 0, 128, 255},
+  /* superblack */
+  {0, 128, 128, 0, 0, 0},
+  /* 5% grey */
+  {32, 128, 128, 32, 32, 32},
 };
 
 
 #if 0
 
 /*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q, superblack, dark grey */
-static int y_colors[] = { 255, 226, 179, 150, 105,  76,  29,  16,  16,  16,   0, 32 };
-static int u_colors[] = { 128, 0,   170, 46,  212,  85, 255, 128, 198, 235, 128, 128 };
-static int v_colors[] = { 128, 155, 0,   21,  235, 255, 107, 128,  21, 198, 128, 128 };
+static int y_colors[] = { 255, 226, 179, 150, 105, 76, 29, 16, 16, 16, 0, 32 };
+static int u_colors[] =
+    { 128, 0, 170, 46, 212, 85, 255, 128, 198, 235, 128, 128 };
+static int v_colors[] =
+    { 128, 155, 0, 21, 235, 255, 107, 128, 21, 198, 128, 128 };
 
 /*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q  superblack, dark grey */
-static int r_colors[] = { 255, 255,   0,   0, 255, 255,   0,   0,   0,   0,   0, 32 };
-static int g_colors[] = { 255, 255, 255, 255,   0,   0,   0,   0,   0, 128,   0, 32 };
-static int b_colors[] = { 255,   0, 255,   0, 255,   0, 255,   0, 128, 255,   0, 32 };
+static int r_colors[] = { 255, 255, 0, 0, 255, 255, 0, 0, 0, 0, 0, 32 };
+static int g_colors[] = { 255, 255, 255, 255, 0, 0, 0, 0, 0, 128, 0, 32 };
+static int b_colors[] = { 255, 0, 255, 0, 255, 0, 255, 0, 128, 255, 0, 32 };
 #endif
 
 
@@ -257,6 +266,7 @@ static void paint_setup_UYVY (paintinfo * p, char *dest);
 static void paint_setup_YVYU (paintinfo * p, char *dest);
 static void paint_setup_IYU2 (paintinfo * p, char *dest);
 static void paint_setup_Y800 (paintinfo * p, char *dest);
+
 #if 0
 static void paint_setup_IMC1 (paintinfo * p, char *dest);
 static void paint_setup_IMC2 (paintinfo * p, char *dest);
@@ -278,6 +288,7 @@ static void paint_hline_I420 (paintinfo * p, int x, int y, int w);
 static void paint_hline_YUY2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_IYU2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y800 (paintinfo * p, int x, int y, int w);
+
 #if 0
 static void paint_hline_IMC1 (paintinfo * p, int x, int y, int w);
 #endif
@@ -292,7 +303,7 @@ struct fourcc_list_struct fourcc_list[] = {
   {"YUY2", "YUY2", 16, paint_setup_YUY2, paint_hline_YUY2},
   {"UYVY", "UYVY", 16, paint_setup_UYVY, paint_hline_YUY2},
   {"Y422", "Y422", 16, paint_setup_UYVY, paint_hline_YUY2},
-  {"UYNV", "UYNV", 16, paint_setup_UYVY, paint_hline_YUY2}, /* FIXME: UYNV? */
+  {"UYNV", "UYNV", 16, paint_setup_UYVY, paint_hline_YUY2},	/* FIXME: UYNV? */
   {"YVYU", "YVYU", 16, paint_setup_YVYU, paint_hline_YUY2},
 
   /* interlaced */
@@ -312,7 +323,7 @@ struct fourcc_list_struct fourcc_list[] = {
   /*{ "Y42P", "Y42P", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
   /*{ "CLJR", "CLJR", 8, paint_setup_YVYU, paint_hline_YUY2 }, */
   /*{ "IYU1", "IYU1", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
-  { "IYU2", "IYU2", 24, paint_setup_IYU2, paint_hline_IYU2 },
+  {"IYU2", "IYU2", 24, paint_setup_IYU2, paint_hline_IYU2},
 
 /* planar */
   /* YVU9 */
@@ -343,48 +354,50 @@ struct fourcc_list_struct fourcc_list[] = {
   {"Y800", "Y800", 8, paint_setup_Y800, paint_hline_Y800},
 
   {"RGB ", "xRGB8888", 32, paint_setup_xRGB8888, paint_hline_str4, 1, 24,
-  		0x00ff0000, 0x0000ff00, 0x000000ff },
+      0x00ff0000, 0x0000ff00, 0x000000ff},
   {"RGB ", "xBGR8888", 32, paint_setup_xBGR8888, paint_hline_str4, 1, 24,
-		0x000000ff, 0x0000ff00, 0x00ff0000 },
+      0x000000ff, 0x0000ff00, 0x00ff0000},
   {"RGB ", "RGBx8888", 32, paint_setup_RGBx8888, paint_hline_str4, 1, 24,
-  		0xff000000, 0x00ff0000, 0x0000ff00 },
+      0xff000000, 0x00ff0000, 0x0000ff00},
   {"RGB ", "BGRx8888", 32, paint_setup_BGRx8888, paint_hline_str4, 1, 24,
-		0x0000ff00, 0x00ff0000, 0xff000000 },
+      0x0000ff00, 0x00ff0000, 0xff000000},
   {"RGB ", "RGB888", 24, paint_setup_RGB888, paint_hline_str3, 1, 24,
-  		0x00ff0000, 0x0000ff00, 0x000000ff },
+      0x00ff0000, 0x0000ff00, 0x000000ff},
   {"RGB ", "BGR888", 24, paint_setup_BGR888, paint_hline_str3, 1, 24,
-  		0x000000ff, 0x0000ff00, 0x00ff0000 },
+      0x000000ff, 0x0000ff00, 0x00ff0000},
   {"RGB ", "RGB565", 16, paint_setup_RGB565, paint_hline_RGB565, 1, 16,
-  		0x0000f800, 0x000007e0, 0x0000001f },
+      0x0000f800, 0x000007e0, 0x0000001f},
   {"RGB ", "xRGB1555", 16, paint_setup_xRGB1555, paint_hline_xRGB1555, 1, 15,
-  		0x00007c00, 0x000003e0, 0x0000001f },
+      0x00007c00, 0x000003e0, 0x0000001f},
 };
 int n_fourccs = sizeof (fourcc_list) / sizeof (fourcc_list[0]);
 
-struct fourcc_list_struct *paintinfo_find_by_structure(const GstStructure *structure)
+struct fourcc_list_struct *
+paintinfo_find_by_structure (const GstStructure * structure)
 {
   int i;
-  const char *media_type = gst_structure_get_name(structure);
+  const char *media_type = gst_structure_get_name (structure);
   int ret;
 
   g_return_val_if_fail (structure, NULL);
 
-  if(strcmp(media_type, "video/x-raw-yuv")==0){
+  if (strcmp (media_type, "video/x-raw-yuv") == 0) {
     char *s;
     int fourcc;
     guint32 format;
 
     ret = gst_structure_get_fourcc (structure, "format", &format);
-    if (!ret) return NULL;
+    if (!ret)
+      return NULL;
     for (i = 0; i < n_fourccs; i++) {
       s = fourcc_list[i].fourcc;
       //g_print("testing " GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s);
       fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
-      if(fourcc == format){
-        return fourcc_list + i;
+      if (fourcc == format) {
+	return fourcc_list + i;
       }
     }
-  }else if(strcmp(media_type, "video/x-raw-rgb")==0){
+  } else if (strcmp (media_type, "video/x-raw-rgb") == 0) {
     int red_mask;
     int green_mask;
     int blue_mask;
@@ -398,12 +411,11 @@ struct fourcc_list_struct *paintinfo_find_by_structure(const GstStructure *struc
     ret &= gst_structure_get_int (structure, "bpp", &bpp);
 
     for (i = 0; i < n_fourccs; i++) {
-      if (strcmp(fourcc_list[i].fourcc, "RGB ") == 0 &&
+      if (strcmp (fourcc_list[i].fourcc, "RGB ") == 0 &&
 	  fourcc_list[i].red_mask == red_mask &&
 	  fourcc_list[i].green_mask == green_mask &&
 	  fourcc_list[i].blue_mask == blue_mask &&
-	  fourcc_list[i].depth == depth &&
-	  fourcc_list[i].bitspp == bpp){
+	  fourcc_list[i].depth == depth && fourcc_list[i].bitspp == bpp) {
 	return fourcc_list + i;
 
       }
@@ -411,12 +423,13 @@ struct fourcc_list_struct *paintinfo_find_by_structure(const GstStructure *struc
     return NULL;
   }
 
-  g_critical("format not found for media type %s", media_type);
+  g_critical ("format not found for media type %s", media_type);
 
   return NULL;
 }
 
-struct fourcc_list_struct * paintrect_find_fourcc (int find_fourcc)
+struct fourcc_list_struct *
+paintrect_find_fourcc (int find_fourcc)
 {
   int i;
 
@@ -428,8 +441,8 @@ struct fourcc_list_struct * paintrect_find_fourcc (int find_fourcc)
     fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
     if (find_fourcc == fourcc) {
       /* If YUV format, it's good */
-      if(!fourcc_list[i].ext_caps){
-        return fourcc_list + i;
+      if (!fourcc_list[i].ext_caps) {
+	return fourcc_list + i;
       }
 
       return fourcc_list + i;
@@ -438,12 +451,13 @@ struct fourcc_list_struct * paintrect_find_fourcc (int find_fourcc)
   return NULL;
 }
 
-struct fourcc_list_struct * paintrect_find_name (const char *name)
+struct fourcc_list_struct *
+paintrect_find_name (const char *name)
 {
   int i;
 
   for (i = 0; i < n_fourccs; i++) {
-    if(strcmp(name,fourcc_list[i].name)==0){
+    if (strcmp (name, fourcc_list[i].name) == 0) {
       return fourcc_list + i;
     }
   }
@@ -451,20 +465,23 @@ struct fourcc_list_struct * paintrect_find_name (const char *name)
 }
 
 
-GstStructure *paint_get_structure(struct fourcc_list_struct *format)
+GstStructure *
+paint_get_structure (struct fourcc_list_struct * format)
 {
   unsigned int fourcc;
 
-  g_return_val_if_fail(format, NULL);
+  g_return_val_if_fail (format, NULL);
 
-  fourcc = GST_MAKE_FOURCC (format->fourcc[0], format->fourcc[1], format->fourcc[2], format->fourcc[3]);
+  fourcc =
+      GST_MAKE_FOURCC (format->fourcc[0], format->fourcc[1], format->fourcc[2],
+      format->fourcc[3]);
 
-  if(format->ext_caps){
+  if (format->ext_caps) {
     int endianness;
 
-    if(format->bitspp==16){
+    if (format->bitspp == 16) {
       endianness = G_BYTE_ORDER;
-    }else{
+    } else {
       endianness = G_BIG_ENDIAN;
     }
     return gst_structure_new ("video/x-raw-rgb",
@@ -473,12 +490,10 @@ GstStructure *paint_get_structure(struct fourcc_list_struct *format)
 	"depth", G_TYPE_INT, format->depth,
 	"red_mask", G_TYPE_INT, format->red_mask,
 	"green_mask", G_TYPE_INT, format->green_mask,
-	"blue_mask", G_TYPE_INT, format->blue_mask,
-        NULL);
-  }else{
+	"blue_mask", G_TYPE_INT, format->blue_mask, NULL);
+  } else {
     return gst_structure_new ("video/x-raw-yuv",
-	"format", GST_TYPE_FOURCC, fourcc,
-        NULL);
+	"format", GST_TYPE_FOURCC, fourcc, NULL);
   }
 }
 
@@ -497,7 +512,7 @@ gst_videotestsrc_get_size (GstVideotestsrc * v, int w, int h)
 
   fourcc->paint_setup (p, NULL);
 
-  return (unsigned long)p->endptr;
+  return (unsigned long) p->endptr;
 }
 
 void
@@ -571,8 +586,8 @@ gst_videotestsrc_smpte (GstVideotestsrc * v, unsigned char *dest, int w, int h)
 
   /* superblack, black, dark grey */
   for (i = 0; i < 3; i++) {
-    int x1 = w/2 + i * w / 12;
-    int x2 = w/2 + (i + 1) * w / 12;
+    int x1 = w / 2 + i * w / 12;
+    int x2 = w / 2 + (i + 1) * w / 12;
     int k;
 
     if (i == 0) {
@@ -589,7 +604,7 @@ gst_videotestsrc_smpte (GstVideotestsrc * v, unsigned char *dest, int w, int h)
   }
 
   {
-    int x1 = w*3 / 4;
+    int x1 = w * 3 / 4;
     struct vts_color_struct color;
 
     color = vts_colors[COLOR_BLACK];
@@ -599,9 +614,9 @@ gst_videotestsrc_smpte (GstVideotestsrc * v, unsigned char *dest, int w, int h)
       for (j = y2; j < h; j++) {
 	/* FIXME not strictly correct */
 	color.Y = random_char ();
-        color.R = color.Y;
-        color.G = color.Y;
-        color.B = color.Y;
+	color.R = color.Y;
+	color.G = color.Y;
+	color.B = color.Y;
 	p->paint_hline (p, i, j, 1);
       }
     }
@@ -675,11 +690,11 @@ static void
 paint_setup_I420 (paintinfo * p, char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4(p->width);
-  p->up = p->yp + p->ystride * ROUND_UP_2(p->height);
-  p->ustride = ROUND_UP_8(p->width)/2;
+  p->ystride = ROUND_UP_4 (p->width);
+  p->up = p->yp + p->ystride * ROUND_UP_2 (p->height);
+  p->ustride = ROUND_UP_8 (p->width) / 2;
   p->vp = p->up + p->ustride * ROUND_UP_2 (p->height) / 2;
-  p->vstride = ROUND_UP_8(p->ystride)/2;
+  p->vstride = ROUND_UP_8 (p->ystride) / 2;
   p->endptr = p->vp + p->vstride * ROUND_UP_2 (p->height) / 2;
 }
 
@@ -700,12 +715,12 @@ static void
 paint_setup_YV12 (paintinfo * p, char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4(p->width);
-  p->vp = p->yp + p->ystride * ROUND_UP_2(p->height);
-  p->vstride = ROUND_UP_8(p->ystride)/2;
-  p->up = p->vp + p->vstride * ROUND_UP_2(p->height) / 2;
-  p->ustride = ROUND_UP_8(p->ystride)/2;
-  p->endptr = p->up + p->ustride * ROUND_UP_2(p->height) / 2;
+  p->ystride = ROUND_UP_4 (p->width);
+  p->vp = p->yp + p->ystride * ROUND_UP_2 (p->height);
+  p->vstride = ROUND_UP_8 (p->ystride) / 2;
+  p->up = p->vp + p->vstride * ROUND_UP_2 (p->height) / 2;
+  p->ustride = ROUND_UP_8 (p->ystride) / 2;
+  p->endptr = p->up + p->ustride * ROUND_UP_2 (p->height) / 2;
 }
 
 static void
@@ -714,7 +729,7 @@ paint_setup_YUY2 (paintinfo * p, char *dest)
   p->yp = dest;
   p->up = dest + 1;
   p->vp = dest + 3;
-  p->ystride = ROUND_UP_2(p->width) * 2;
+  p->ystride = ROUND_UP_2 (p->width) * 2;
   p->endptr = dest + p->ystride * p->height;
 }
 
@@ -724,7 +739,7 @@ paint_setup_UYVY (paintinfo * p, char *dest)
   p->yp = dest + 1;
   p->up = dest;
   p->vp = dest + 2;
-  p->ystride = ROUND_UP_2(p->width) * 2;
+  p->ystride = ROUND_UP_2 (p->width) * 2;
   p->endptr = dest + p->ystride * p->height;
 }
 
@@ -734,15 +749,17 @@ paint_setup_YVYU (paintinfo * p, char *dest)
   p->yp = dest;
   p->up = dest + 3;
   p->vp = dest + 1;
-  p->ystride = ROUND_UP_2(p->width * 2);
+  p->ystride = ROUND_UP_2 (p->width * 2);
   p->endptr = dest + p->ystride * p->height;
 }
 
 #ifndef HAVE_LIBOIL
-void splat_u8 (guint8 *dest, int dstr, guint8 val, int n)
+void
+splat_u8 (guint8 * dest, int dstr, guint8 val, int n)
 {
   int i;
-  for(i=0;i<n;i++){
+
+  for (i = 0; i < n; i++) {
     *dest = val;
     dest += dstr;
   }
@@ -769,7 +786,7 @@ paint_setup_IYU2 (paintinfo * p, char *dest)
   p->yp = dest + 1;
   p->up = dest + 0;
   p->vp = dest + 2;
-  p->ystride = ROUND_UP_4(p->width * 3);
+  p->ystride = ROUND_UP_4 (p->width * 3);
   p->endptr = dest + p->ystride * p->height;
 }
 
@@ -851,28 +868,30 @@ paint_hline_IMC1 (paintinfo * p, int x, int y, int w)
 static void
 paint_setup_YVU9 (paintinfo * p, char *dest)
 {
-  int h = ROUND_UP_4(p->height);
+  int h = ROUND_UP_4 (p->height);
+
   p->yp = dest;
-  p->ystride = ROUND_UP_4(p->width);
-  p->vp = p->yp + p->ystride * ROUND_UP_4(p->height);
-  p->vstride = ROUND_UP_4(p->ystride/4);
-  p->up = p->vp + p->vstride * ROUND_UP_4(h/4);
-  p->ustride = ROUND_UP_4(p->ystride/4);
-  p->endptr = p->up + p->ustride * ROUND_UP_4(h/4);
+  p->ystride = ROUND_UP_4 (p->width);
+  p->vp = p->yp + p->ystride * ROUND_UP_4 (p->height);
+  p->vstride = ROUND_UP_4 (p->ystride / 4);
+  p->up = p->vp + p->vstride * ROUND_UP_4 (h / 4);
+  p->ustride = ROUND_UP_4 (p->ystride / 4);
+  p->endptr = p->up + p->ustride * ROUND_UP_4 (h / 4);
 }
 
 static void
 paint_setup_YUV9 (paintinfo * p, char *dest)
 {
   /* untested */
-  int h = ROUND_UP_4(p->height);
+  int h = ROUND_UP_4 (p->height);
+
   p->yp = dest;
-  p->ystride = ROUND_UP_4(p->width);
+  p->ystride = ROUND_UP_4 (p->width);
   p->up = p->yp + p->ystride * h;
-  p->ustride = ROUND_UP_4(p->ystride/4);
-  p->vp = p->up + p->ustride * ROUND_UP_4(h/4);
-  p->vstride = ROUND_UP_4(p->ystride/4);
-  p->endptr = p->vp + p->vstride * ROUND_UP_4(h/4);
+  p->ustride = ROUND_UP_4 (p->ystride / 4);
+  p->vp = p->up + p->ustride * ROUND_UP_4 (h / 4);
+  p->vstride = ROUND_UP_4 (p->ystride / 4);
+  p->endptr = p->vp + p->vstride * ROUND_UP_4 (h / 4);
 }
 
 static void
@@ -894,7 +913,7 @@ paint_setup_xRGB8888 (paintinfo * p, char *dest)
   p->yp = dest + 1;
   p->up = dest + 2;
   p->vp = dest + 3;
-  p->ystride = p->width*4;
+  p->ystride = p->width * 4;
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -904,7 +923,7 @@ paint_setup_xBGR8888 (paintinfo * p, char *dest)
   p->yp = dest + 3;
   p->up = dest + 2;
   p->vp = dest + 1;
-  p->ystride = p->width*4;
+  p->ystride = p->width * 4;
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -914,7 +933,7 @@ paint_setup_RGBx8888 (paintinfo * p, char *dest)
   p->yp = dest + 0;
   p->up = dest + 1;
   p->vp = dest + 2;
-  p->ystride = p->width*4;
+  p->ystride = p->width * 4;
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -924,7 +943,7 @@ paint_setup_BGRx8888 (paintinfo * p, char *dest)
   p->yp = dest + 2;
   p->up = dest + 1;
   p->vp = dest + 0;
-  p->ystride = p->width*4;
+  p->ystride = p->width * 4;
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -934,7 +953,7 @@ paint_setup_RGB888 (paintinfo * p, char *dest)
   p->yp = dest + 0;
   p->up = dest + 1;
   p->vp = dest + 2;
-  p->ystride = ROUND_UP_4(p->width*3);
+  p->ystride = ROUND_UP_4 (p->width * 3);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -944,7 +963,7 @@ paint_setup_BGR888 (paintinfo * p, char *dest)
   p->yp = dest + 2;
   p->up = dest + 1;
   p->vp = dest + 0;
-  p->ystride = ROUND_UP_4(p->width*3);
+  p->ystride = ROUND_UP_4 (p->width * 3);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -972,7 +991,7 @@ static void
 paint_setup_RGB565 (paintinfo * p, char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4(p->width*2);
+  p->ystride = ROUND_UP_4 (p->width * 2);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -980,10 +999,10 @@ static void
 paint_hline_RGB565 (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
-  unsigned int a,b;
+  unsigned int a, b;
 
-  a = (p->color->R&0xf8) | (p->color->G>>5);
-  b = ((p->color->G<<3)&0xe0) | (p->color->B>>3);
+  a = (p->color->R & 0xf8) | (p->color->G >> 5);
+  b = ((p->color->G << 3) & 0xe0) | (p->color->B >> 3);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   splat_u8 (p->yp + offset + x * 2 + 0, 2, b, w);
@@ -998,7 +1017,7 @@ static void
 paint_setup_xRGB1555 (paintinfo * p, char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4(p->width*2);
+  p->ystride = ROUND_UP_4 (p->width * 2);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -1006,10 +1025,10 @@ static void
 paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
-  unsigned int a,b;
+  unsigned int a, b;
 
-  a = ((p->color->R>>1)&0x7c) | (p->color->G>>6);
-  b = ((p->color->G<<2)&0xe0) | (p->color->B>>3);
+  a = ((p->color->R >> 1) & 0x7c) | (p->color->G >> 6);
+  b = ((p->color->G << 2) & 0xe0) | (p->color->B >> 3);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   splat_u8 (p->yp + offset + x * 2 + 0, 2, b, w);
@@ -1019,4 +1038,3 @@ paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w)
   splat_u8 (p->yp + offset + x * 2 + 1, 2, b, w);
 #endif
 }
-

@@ -27,8 +27,9 @@
 #include <vorbis/codec.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 #define GST_TYPE_VORBIS_DEC \
@@ -42,32 +43,34 @@ extern "C" {
 #define GST_IS_VORBIS_DEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VORBIS_DEC))
 
-typedef struct _GstVorbisDec GstVorbisDec;
-typedef struct _GstVorbisDecClass GstVorbisDecClass;
+  typedef struct _GstVorbisDec GstVorbisDec;
+  typedef struct _GstVorbisDecClass GstVorbisDecClass;
 
-struct _GstVorbisDec {
-  GstElement		element;
+  struct _GstVorbisDec
+  {
+    GstElement element;
 
-  GstPad *		sinkpad;
-  GstPad *		srcpad;
+    GstPad *sinkpad;
+    GstPad *srcpad;
 
-  vorbis_dsp_state	vd;
-  vorbis_info		vi;
-  vorbis_comment	vc;
-  vorbis_block		vb;
-  guint			packetno;
-  guint64     		granulepos;
-};
+    vorbis_dsp_state vd;
+    vorbis_info vi;
+    vorbis_comment vc;
+    vorbis_block vb;
+    guint packetno;
+    guint64 granulepos;
+  };
 
-struct _GstVorbisDecClass {
-  GstElementClass parent_class;
-};
+  struct _GstVorbisDecClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_vorbis_dec_get_type(void);
+  GType gst_vorbis_dec_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_VORBIS_DEC_H__ */
+#endif				/* __GST_VORBIS_DEC_H__ */

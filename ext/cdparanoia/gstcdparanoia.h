@@ -26,20 +26,21 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 #define size16 gint16
 #define size32 gint32
 
 #ifdef CDPARANOIA_HEADERS_IN_DIR
-  #include <cdda/cdda_interface.h>
-  #include <cdda/cdda_paranoia.h>
+#include <cdda/cdda_interface.h>
+#include <cdda/cdda_paranoia.h>
 #else
-  #include <cdda_interface.h>
-  #include <cdda_paranoia.h>
+#include <cdda_interface.h>
+#include <cdda_paranoia.h>
 #endif
-  
+
 
 
 /*#define CDPARANOIA_BASEOFFSET 0xf1d2 */
@@ -57,69 +58,72 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDPARANOIA))
 
 /* NOTE: per-element flags start with 16 for now */
-typedef enum {
-  CDPARANOIA_OPEN		= GST_ELEMENT_FLAG_LAST,
+  typedef enum
+  {
+    CDPARANOIA_OPEN = GST_ELEMENT_FLAG_LAST,
 
-  CDPARANOIA_FLAG_LAST		= GST_ELEMENT_FLAG_LAST+2,
-} CDParanoiaFlags;
+    CDPARANOIA_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+  } CDParanoiaFlags;
 
-typedef struct _CDParanoia CDParanoia;
-typedef struct _CDParanoiaClass CDParanoiaClass;
+  typedef struct _CDParanoia CDParanoia;
+  typedef struct _CDParanoiaClass CDParanoiaClass;
 
-struct _CDParanoia {
-  GstElement element;
-  /* pads */
-  GstPad *srcpad;
+  struct _CDParanoia
+  {
+    GstElement element;
+    /* pads */
+    GstPad *srcpad;
 
-  /* Index */
-  GstIndex *index;
-  int index_id;
-  
-  gchar *device;
-  gchar *generic_device;
-  gint default_sectors;
-  gint search_overlap;
-  gint endian;
-  gint read_speed;
-  gint toc_offset;
-  gboolean toc_bias;
-  gint never_skip;
-  gboolean abort_on_skip;
-  gint paranoia_mode;
+    /* Index */
+    GstIndex *index;
+    int index_id;
 
-  cdrom_drive *d;
-  cdrom_paranoia *p;
+    gchar *device;
+    gchar *generic_device;
+    gint default_sectors;
+    gint search_overlap;
+    gint endian;
+    gint read_speed;
+    gint toc_offset;
+    gboolean toc_bias;
+    gint never_skip;
+    gboolean abort_on_skip;
+    gint paranoia_mode;
 
-  gint cur_sector;
-  gint segment_start_sector;
-  gint segment_end_sector;
+    cdrom_drive *d;
+    cdrom_paranoia *p;
 
-  gint first_sector;
-  gint last_sector;
+    gint cur_sector;
+    gint segment_start_sector;
+    gint segment_end_sector;
 
-  /* hacks by Gordon Irving */
-  gchar discid[20];
-  gint64 offsets[MAXTRK];
-  gint64 total_seconds;
+    gint first_sector;
+    gint last_sector;
 
-  gint seq;
-  gboolean discont_pending;
-};
+    /* hacks by Gordon Irving */
+    gchar discid[20];
+    gint64 offsets[MAXTRK];
+    gint64 total_seconds;
 
-struct _CDParanoiaClass {
-  GstElementClass parent_class;
+    gint seq;
+    gboolean discont_pending;
+  };
 
-  /* signal callbacks */
-  void (*smilie_change)		(CDParanoia *cdparanoia, gchar *smilie);
-  void (*transport_error)	(CDParanoia *cdparanoia, gint offset);
-  void (*uncorrected_error)	(CDParanoia *cdparanoia, gint offset);
-};
+  struct _CDParanoiaClass
+  {
+    GstElementClass parent_class;
 
-GType cdparanoia_get_type(void);
+    /* signal callbacks */
+    void (*smilie_change) (CDParanoia * cdparanoia, gchar * smilie);
+    void (*transport_error) (CDParanoia * cdparanoia, gint offset);
+    void (*uncorrected_error) (CDParanoia * cdparanoia, gint offset);
+  };
+
+  GType cdparanoia_get_type (void);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __CDPARANOIA_H__ */
+#endif				/* __CDPARANOIA_H__ */

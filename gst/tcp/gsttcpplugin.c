@@ -25,9 +25,10 @@
 #include "gsttcpsink.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "tcpsink", GST_RANK_NONE, GST_TYPE_TCPSINK))
+  if (!gst_element_register (plugin, "tcpsink", GST_RANK_NONE,
+	  GST_TYPE_TCPSINK))
     return FALSE;
 
   if (!gst_element_register (plugin, "tcpsrc", GST_RANK_NONE, GST_TYPE_TCPSRC))
@@ -36,14 +37,8 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "tcp",
-  "transfer data over the network via TCP",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "tcp",
+    "transfer data over the network via TCP",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

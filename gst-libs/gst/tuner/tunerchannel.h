@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_TUNER_CHANNEL \
   (gst_tuner_channel_get_type ())
 #define GST_TUNER_CHANNEL(obj) \
@@ -38,42 +37,39 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TUNER_CHANNEL))
 #define GST_IS_TUNER_CHANNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TUNER_CHANNEL))
-
-typedef enum {
-  GST_TUNER_CHANNEL_INPUT     = (1<<0),
-  GST_TUNER_CHANNEL_OUTPUT    = (1<<1),
-  GST_TUNER_CHANNEL_FREQUENCY = (1<<2),
-  GST_TUNER_CHANNEL_AUDIO     = (1<<3),
+    typedef enum
+{
+  GST_TUNER_CHANNEL_INPUT = (1 << 0),
+  GST_TUNER_CHANNEL_OUTPUT = (1 << 1),
+  GST_TUNER_CHANNEL_FREQUENCY = (1 << 2),
+  GST_TUNER_CHANNEL_AUDIO = (1 << 3),
 } GstTunerChannelFlags;
 
 #define GST_TUNER_CHANNEL_HAS_FLAG(channel, flag) \
   ((channel)->flags & flag)
 
-typedef struct _GstTunerChannel {
-  GObject              parent;
+typedef struct _GstTunerChannel
+{
+  GObject parent;
 
-  gchar               *label;
+  gchar *label;
   GstTunerChannelFlags flags;
-  gulong               min_frequency,
-		       max_frequency;
-  gint                 min_signal,
-		       max_signal;
+  gulong min_frequency, max_frequency;
+  gint min_signal, max_signal;
 } GstTunerChannel;
 
-typedef struct _GstTunerChannelClass {
+typedef struct _GstTunerChannelClass
+{
   GObjectClass parent;
 
   /* signals */
-  void (*frequency_changed) (GstTunerChannel *channel,
-			     gulong           frequency);
-  void (*signal_changed)    (GstTunerChannel *channel,
-			     gint             signal);
+  void (*frequency_changed) (GstTunerChannel * channel, gulong frequency);
+  void (*signal_changed) (GstTunerChannel * channel, gint signal);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstTunerChannelClass;
 
-GType		gst_tuner_channel_get_type	(void);
+GType gst_tuner_channel_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_TUNER_CHANNEL_H__ */

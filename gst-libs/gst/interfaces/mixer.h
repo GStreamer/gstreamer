@@ -27,7 +27,6 @@
 #include <gst/mixer/mixer-enumtypes.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_MIXER \
   (gst_mixer_get_type ())
 #define GST_MIXER(obj) \
@@ -40,9 +39,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MIXER))
 #define GST_MIXER_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_MIXER, GstMixerClass))
-
 #define GST_MIXER_TYPE(klass) (klass->mixer_type)
-
 typedef struct _GstMixer GstMixer;
 
 typedef enum
@@ -51,70 +48,52 @@ typedef enum
   GST_MIXER_SOFTWARE
 } GstMixerType;
 
-typedef struct _GstMixerClass {
+typedef struct _GstMixerClass
+{
   GTypeInterface klass;
 
   GstMixerType mixer_type;
-  
+
   /* virtual functions */
-  const GList *  (* list_tracks)   (GstMixer      *mixer);
+  const GList *(*list_tracks) (GstMixer * mixer);
 
-  void           (* set_volume)    (GstMixer      *mixer,
-				    GstMixerTrack *track,
-				    gint          *volumes);
-  void           (* get_volume)    (GstMixer      *mixer,
-				    GstMixerTrack *track,
-				    gint          *volumes);
+  void (*set_volume) (GstMixer * mixer, GstMixerTrack * track, gint * volumes);
+  void (*get_volume) (GstMixer * mixer, GstMixerTrack * track, gint * volumes);
 
-  void           (* set_mute)      (GstMixer      *mixer,
-				    GstMixerTrack *track,
-				    gboolean       mute);
-  void           (* set_record)    (GstMixer      *mixer,
-				    GstMixerTrack *track,
-				    gboolean       record);
+  void (*set_mute) (GstMixer * mixer, GstMixerTrack * track, gboolean mute);
+  void (*set_record) (GstMixer * mixer, GstMixerTrack * track, gboolean record);
 
   /* signals */
-  void (* mute_toggled)   (GstMixer      *mixer,
-			   GstMixerTrack *channel,
-			   gboolean       mute);
-  void (* record_toggled) (GstMixer      *mixer,
-			   GstMixerTrack *channel,
-			   gboolean       record);
-  void (* volume_changed) (GstMixer      *mixer,
-			   GstMixerTrack *channel,
-			   gint          *volumes);
+  void (*mute_toggled) (GstMixer * mixer,
+      GstMixerTrack * channel, gboolean mute);
+  void (*record_toggled) (GstMixer * mixer,
+      GstMixerTrack * channel, gboolean record);
+  void (*volume_changed) (GstMixer * mixer,
+      GstMixerTrack * channel, gint * volumes);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstMixerClass;
 
-GType		gst_mixer_get_type	(void);
+GType gst_mixer_get_type (void);
 
 /* virtual class function wrappers */
-const GList *	gst_mixer_list_tracks	 (GstMixer      *mixer);
-void		gst_mixer_set_volume	 (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gint          *volumes);
-void		gst_mixer_get_volume	 (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gint          *volumes);
-void		gst_mixer_set_mute	 (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gboolean       mute);
-void		gst_mixer_set_record	 (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gboolean       record);
+const GList *gst_mixer_list_tracks (GstMixer * mixer);
+void gst_mixer_set_volume (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes);
+void gst_mixer_get_volume (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes);
+void gst_mixer_set_mute (GstMixer * mixer,
+    GstMixerTrack * track, gboolean mute);
+void gst_mixer_set_record (GstMixer * mixer,
+    GstMixerTrack * track, gboolean record);
 
 /* trigger signals */
-void		gst_mixer_mute_toggled   (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gboolean       mute);
-void		gst_mixer_record_toggled (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gboolean       record);
-void		gst_mixer_volume_changed (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gint          *volumes);
+void gst_mixer_mute_toggled (GstMixer * mixer,
+    GstMixerTrack * track, gboolean mute);
+void gst_mixer_record_toggled (GstMixer * mixer,
+    GstMixerTrack * track, gboolean record);
+void gst_mixer_volume_changed (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes);
 
 G_END_DECLS
-
 #endif /* __GST_MIXER_H__ */

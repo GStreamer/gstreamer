@@ -27,12 +27,13 @@
 
 #include "propertyprobe.h"
 
-enum {
+enum
+{
   SIGNAL_PROBE_NEEDED,
   LAST_SIGNAL
 };
 
-static void gst_property_probe_iface_init (GstPropertyProbeInterface *iface);
+static void gst_property_probe_iface_init (GstPropertyProbeInterface * iface);
 
 static guint gst_property_probe_signals[LAST_SIGNAL] = { 0 };
 
@@ -56,30 +57,29 @@ gst_property_probe_get_type (void)
 
     gst_property_probe_type =
 	g_type_register_static (G_TYPE_INTERFACE,
-				"GstPropertyProbe",
-				&gst_property_probe_info, 0);
+	"GstPropertyProbe", &gst_property_probe_info, 0);
   }
 
   return gst_property_probe_type;
 }
 
 static void
-gst_property_probe_iface_init (GstPropertyProbeInterface *iface)
+gst_property_probe_iface_init (GstPropertyProbeInterface * iface)
 {
   static gboolean initialized = FALSE;
 
   if (!initialized) {
     gst_property_probe_signals[SIGNAL_PROBE_NEEDED] =
-      g_signal_new ("probe-needed", G_TYPE_FROM_CLASS (iface), G_SIGNAL_RUN_LAST,
-		    G_STRUCT_OFFSET (GstPropertyProbeInterface, probe_needed),
-		    NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-		    G_TYPE_NONE, 1, G_TYPE_POINTER);
+	g_signal_new ("probe-needed", G_TYPE_FROM_CLASS (iface),
+	G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstPropertyProbeInterface,
+	    probe_needed), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+	G_TYPE_NONE, 1, G_TYPE_POINTER);
     initialized = TRUE;
   }
 
   /* default virtual functions */
   iface->get_properties = NULL;
-  iface->get_values     = NULL;
+  iface->get_values = NULL;
 }
 
 /**
@@ -93,23 +93,22 @@ gst_property_probe_iface_init (GstPropertyProbeInterface *iface)
  */
 
 const GList *
-gst_property_probe_get_properties (GstPropertyProbe *probe)
+gst_property_probe_get_properties (GstPropertyProbe * probe)
 {
   GstPropertyProbeInterface *iface;
 
   g_return_val_if_fail (probe != NULL, NULL);
-                                                                                
+
   iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
-                                                                                
+
   if (iface->get_properties)
     return iface->get_properties (probe);
-                                                                                
+
   return NULL;
 }
 
 const GParamSpec *
-gst_property_probe_get_property (GstPropertyProbe *probe,
-				 const gchar      *name)
+gst_property_probe_get_property (GstPropertyProbe * probe, const gchar * name)
 {
   const GList *pspecs = gst_property_probe_get_properties (probe);
 
@@ -129,8 +128,8 @@ gst_property_probe_get_property (GstPropertyProbe *probe,
 }
 
 void
-gst_property_probe_probe_property (GstPropertyProbe *probe,
-				   const GParamSpec *pspec)
+gst_property_probe_probe_property (GstPropertyProbe * probe,
+    const GParamSpec * pspec)
 {
   GstPropertyProbeInterface *iface;
 
@@ -156,8 +155,8 @@ gst_property_probe_probe_property (GstPropertyProbe *probe,
  */
 
 void
-gst_property_probe_probe_property_name (GstPropertyProbe *probe,
-					const gchar      *name)
+gst_property_probe_probe_property_name (GstPropertyProbe * probe,
+    const gchar * name)
 {
   const GParamSpec *pspec;
 
@@ -188,8 +187,8 @@ gst_property_probe_probe_property_name (GstPropertyProbe *probe,
  */
 
 gboolean
-gst_property_probe_needs_probe (GstPropertyProbe *probe,
-				const GParamSpec *pspec)
+gst_property_probe_needs_probe (GstPropertyProbe * probe,
+    const GParamSpec * pspec)
 {
   GstPropertyProbeInterface *iface;
 
@@ -215,8 +214,8 @@ gst_property_probe_needs_probe (GstPropertyProbe *probe,
  */
 
 gboolean
-gst_property_probe_needs_probe_name (GstPropertyProbe *probe,
-				     const gchar      *name)
+gst_property_probe_needs_probe_name (GstPropertyProbe * probe,
+    const gchar * name)
 {
   const GParamSpec *pspec;
 
@@ -242,10 +241,10 @@ gst_property_probe_needs_probe_name (GstPropertyProbe *probe,
  *
  * Returns: A list of valid values for the given property.
  */
-                                                                               
+
 GValueArray *
-gst_property_probe_get_values (GstPropertyProbe *probe,
-			       const GParamSpec *pspec)
+gst_property_probe_get_values (GstPropertyProbe * probe,
+    const GParamSpec * pspec)
 {
   GstPropertyProbeInterface *iface;
 
@@ -271,8 +270,8 @@ gst_property_probe_get_values (GstPropertyProbe *probe,
  */
 
 GValueArray *
-gst_property_probe_get_values_name (GstPropertyProbe *probe,
-				    const gchar      *name)
+gst_property_probe_get_values_name (GstPropertyProbe * probe,
+    const gchar * name)
 {
   const GParamSpec *pspec;
 
@@ -301,8 +300,8 @@ gst_property_probe_get_values_name (GstPropertyProbe *probe,
  */
 
 GValueArray *
-gst_property_probe_probe_and_get_values (GstPropertyProbe *probe,
-					 const GParamSpec *pspec)
+gst_property_probe_probe_and_get_values (GstPropertyProbe * probe,
+    const GParamSpec * pspec)
 {
   GstPropertyProbeInterface *iface;
 
@@ -328,8 +327,8 @@ gst_property_probe_probe_and_get_values (GstPropertyProbe *probe,
  */
 
 GValueArray *
-gst_property_probe_probe_and_get_values_name (GstPropertyProbe *probe,
-					      const gchar      *name)
+gst_property_probe_probe_and_get_values_name (GstPropertyProbe * probe,
+    const gchar * name)
 {
   const GParamSpec *pspec;
 

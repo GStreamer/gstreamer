@@ -3,7 +3,7 @@
 #include <string.h>
 
 static void
-get_position_info (GstElement *cdparanoia)
+get_position_info (GstElement * cdparanoia)
 {
   GstFormat track_format;
   const GstFormat *formats;
@@ -24,14 +24,13 @@ get_position_info (GstElement *cdparanoia)
     definition = gst_format_get_details (*formats);
 
     format = *formats;
-    res = gst_pad_query (pad, GST_QUERY_POSITION,
-		         &format, &position);
+    res = gst_pad_query (pad, GST_QUERY_POSITION, &format, &position);
 
     if (format == GST_FORMAT_TIME) {
       position /= GST_SECOND;
-      g_print ("%s: %lld:%02lld", definition->nick, position/60, position%60);
-    }
-    else {
+      g_print ("%s: %lld:%02lld", definition->nick, position / 60,
+	  position % 60);
+    } else {
       g_print ("%s: %lld", definition->nick, position);
     }
 
@@ -44,7 +43,7 @@ get_position_info (GstElement *cdparanoia)
 }
 
 static void
-get_track_info (GstElement *cdparanoia)
+get_track_info (GstElement * cdparanoia)
 {
   GstFormat track_format;
   gint64 total_tracks = 0, total_time = 0;
@@ -52,7 +51,7 @@ get_track_info (GstElement *cdparanoia)
   const GstFormat *formats;
   gint i;
   gint64 time_count = 0;
-  
+
   track_format = gst_format_get_by_nick ("track");
   g_assert (track_format != 0);
 
@@ -66,26 +65,24 @@ get_track_info (GstElement *cdparanoia)
     gint64 total;
     GstFormat format;
     gboolean res;
-    
+
     definition = gst_format_get_details (*formats);
 
     format = *formats;
-    res = gst_pad_query (pad, GST_QUERY_TOTAL,
-		         &format, &total);
+    res = gst_pad_query (pad, GST_QUERY_TOTAL, &format, &total);
     if (res) {
       if (format == GST_FORMAT_TIME) {
 	total /= GST_SECOND;
-        g_print ("%s total: %lld:%02lld\n", definition->nick, total/60, total%60);
-      }
-      else
-        g_print ("%s total: %lld\n", definition->nick, total);
+	g_print ("%s total: %lld:%02lld\n", definition->nick, total / 60,
+	    total % 60);
+      } else
+	g_print ("%s total: %lld\n", definition->nick, total);
 
       if (format == track_format)
 	total_tracks = total;
       else if (format == GST_FORMAT_TIME)
 	total_time = total;
-    }
-    else
+    } else
       g_print ("failed to get %s total\n", definition->nick);
 
     formats++;
@@ -102,11 +99,9 @@ get_track_info (GstElement *cdparanoia)
       GstFormat format;
 
       format = GST_FORMAT_TIME;
-      res = gst_pad_convert (pad, track_format, i,
-		             &format, &time);
+      res = gst_pad_convert (pad, track_format, i, &format, &time);
       time /= GST_SECOND;
-    }
-    else {
+    } else {
       time = total_time;
       res = TRUE;
     }
@@ -117,14 +112,12 @@ get_track_info (GstElement *cdparanoia)
       if (i > 0) {
 	gint64 length = time - time_count;
 
-        g_print ("track %d: %lld:%02lld -> %lld:%02lld, length: %lld:%02lld\n",
-		 i-1,
-		 time_count / 60, time_count % 60,
-		 time / 60, time % 60,
-		 length / 60, length % 60);
+	g_print ("track %d: %lld:%02lld -> %lld:%02lld, length: %lld:%02lld\n",
+	    i - 1,
+	    time_count / 60, time_count % 60,
+	    time / 60, time % 60, length / 60, length % 60);
       }
-    }
-    else {
+    } else {
       g_print ("could not get time for track %d\n", i);
     }
 
@@ -161,7 +154,7 @@ main (int argc, char **argv)
   gst_element_link_pads (cdparanoia, "src", osssink, "sink");
 
   g_signal_connect (G_OBJECT (pipeline), "deep_notify",
-		  G_CALLBACK (gst_element_default_deep_notify), NULL);
+      G_CALLBACK (gst_element_default_deep_notify), NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
@@ -177,9 +170,7 @@ main (int argc, char **argv)
   g_print ("playing from track 3\n");
   /* seek to track3 */
   event = gst_event_new_seek (track_format |
-		              GST_SEEK_METHOD_SET |
-			      GST_SEEK_FLAG_FLUSH,
-			      3);
+      GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH, 3);
 
   res = gst_pad_send_event (pad, event);
   if (!res)
@@ -198,9 +189,8 @@ main (int argc, char **argv)
   g_print ("\nplaying from second 25 to second 29\n");
   /* seek to some seconds */
   event = gst_event_new_segment_seek (GST_FORMAT_TIME |
-		                      GST_SEEK_METHOD_SET |
-			              GST_SEEK_FLAG_FLUSH,
-			              25 * GST_SECOND, 29 * GST_SECOND);
+      GST_SEEK_METHOD_SET |
+      GST_SEEK_FLAG_FLUSH, 25 * GST_SECOND, 29 * GST_SECOND);
   res = gst_pad_send_event (pad, event);
   if (!res)
     g_warning ("seek failed");

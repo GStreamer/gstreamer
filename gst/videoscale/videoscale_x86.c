@@ -26,10 +26,10 @@
 #include "gstvideoscale.h"
 
 /* scalers */
-void gst_videoscale_generate_rowbytes_x86	(unsigned char *copy_row, int src_w, int dst_w, int bpp);
-void gst_videoscale_scale_nearest_x86		(GstVideoscale *scale,
-							 unsigned char *src, unsigned char *dest,
-							 int sw, int sh, int dw, int dh);
+void gst_videoscale_generate_rowbytes_x86 (unsigned char *copy_row, int src_w,
+    int dst_w, int bpp);
+void gst_videoscale_scale_nearest_x86 (GstVideoscale * scale,
+    unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh);
 
 #define PREFIX16        0x66
 #define STORE_BYTE      0xAA
@@ -39,7 +39,8 @@ void gst_videoscale_scale_nearest_x86		(GstVideoscale *scale,
 #define RETURN          0xC3
 
 void
-gst_videoscale_generate_rowbytes_x86 (unsigned char *copy_row, int src_w, int dst_w, int bpp)
+gst_videoscale_generate_rowbytes_x86 (unsigned char *copy_row, int src_w,
+    int dst_w, int bpp)
 {
   int i;
   int pos, inc;
@@ -64,21 +65,21 @@ gst_videoscale_generate_rowbytes_x86 (unsigned char *copy_row, int src_w, int ds
   pos = 0x10000;
   inc = (src_w << 16) / dst_w;
   eip = copy_row;
-  for ( i=0; i<dst_w; ++i ) {
-    while ( pos >= 0x10000L ) {
-      if ( bpp == 2 ) {
-        *eip++ = PREFIX16;
+  for (i = 0; i < dst_w; ++i) {
+    while (pos >= 0x10000L) {
+      if (bpp == 2) {
+	*eip++ = PREFIX16;
       }
       *eip++ = load;
       pos -= 0x10000L;
     }
-    if ( bpp == 2 ) {
+    if (bpp == 2) {
       *eip++ = PREFIX16;
     }
     *eip++ = store;
     pos += inc;
   }
   *eip++ = RETURN;
-  GST_DEBUG ("scaler start/end %p %p %p", copy_row, eip, (void*)(eip-copy_row));
+  GST_DEBUG ("scaler start/end %p %p %p", copy_row, eip,
+      (void *) (eip - copy_row));
 }
-

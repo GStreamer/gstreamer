@@ -29,20 +29,21 @@
 GST_DEBUG_CATEGORY (videoscale_debug);
 
 /* elementfactory information */
-static GstElementDetails videoscale_details = GST_ELEMENT_DETAILS (
-  "Video scaler",
-  "Filter/Effect/Video",
-  "Resizes video",
-  "Wim Taymans <wim.taymans@chello.be>"
-);
+static GstElementDetails videoscale_details =
+GST_ELEMENT_DETAILS ("Video scaler",
+    "Filter/Effect/Video",
+    "Resizes video",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 /* GstVideoscale signals and args */
-enum {
+enum
+{
   /* FILL ME */
   LAST_SIGNAL
 };
 
-enum {
+enum
+{
   ARG_0,
   ARG_METHOD,
   /* FILL ME */
@@ -54,26 +55,27 @@ gst_videoscale_method_get_type (void)
 {
   static GType videoscale_method_type = 0;
   static GEnumValue videoscale_methods[] = {
-    { GST_VIDEOSCALE_POINT_SAMPLE, "0", "Point Sample" },
-    { GST_VIDEOSCALE_NEAREST,      "1", "Nearest" },
-    { GST_VIDEOSCALE_BILINEAR,     "2", "Bilinear" },
-    { GST_VIDEOSCALE_BICUBIC,      "3", "Bicubic" },
-    { 0, NULL, NULL },
+    {GST_VIDEOSCALE_POINT_SAMPLE, "0", "Point Sample"},
+    {GST_VIDEOSCALE_NEAREST, "1", "Nearest"},
+    {GST_VIDEOSCALE_BILINEAR, "2", "Bilinear"},
+    {GST_VIDEOSCALE_BICUBIC, "3", "Bicubic"},
+    {0, NULL, NULL},
   };
   if (!videoscale_method_type) {
-    videoscale_method_type = g_enum_register_static ("GstVideoscaleMethod", videoscale_methods);
+    videoscale_method_type =
+	g_enum_register_static ("GstVideoscaleMethod", videoscale_methods);
   }
   return videoscale_method_type;
 }
 
 static GstCaps *
-gst_videoscale_get_capslist(void)
+gst_videoscale_get_capslist (void)
 {
   GstCaps *caps;
   int i;
 
-  caps = gst_caps_new_empty();
-  for(i=0;i<videoscale_n_formats;i++){
+  caps = gst_caps_new_empty ();
+  for (i = 0; i < videoscale_n_formats; i++) {
     gst_caps_append_structure (caps,
 	videoscale_get_structure (videoscale_formats + i));
   }
@@ -82,31 +84,35 @@ gst_videoscale_get_capslist(void)
 }
 
 static GstPadTemplate *
-gst_videoscale_src_template_factory(void)
+gst_videoscale_src_template_factory (void)
 {
   return gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-      gst_videoscale_get_capslist());
+      gst_videoscale_get_capslist ());
 }
 
 static GstPadTemplate *
-gst_videoscale_sink_template_factory(void)
+gst_videoscale_sink_template_factory (void)
 {
   return gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_videoscale_get_capslist());
+      gst_videoscale_get_capslist ());
 }
 
-static void	gst_videoscale_base_init	(gpointer g_class);
-static void	gst_videoscale_class_init	(GstVideoscaleClass *klass);
-static void	gst_videoscale_init		(GstVideoscale *videoscale);
-static gboolean gst_videoscale_handle_src_event (GstPad *pad, GstEvent *event);
+static void gst_videoscale_base_init (gpointer g_class);
+static void gst_videoscale_class_init (GstVideoscaleClass * klass);
+static void gst_videoscale_init (GstVideoscale * videoscale);
+static gboolean gst_videoscale_handle_src_event (GstPad * pad,
+    GstEvent * event);
 
-static void	gst_videoscale_set_property		(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void	gst_videoscale_get_property		(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_videoscale_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_videoscale_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-static void	gst_videoscale_chain		(GstPad *pad, GstData *_data);
-static GstCaps * gst_videoscale_get_capslist(void);
+static void gst_videoscale_chain (GstPad * pad, GstData * _data);
+static GstCaps *gst_videoscale_get_capslist (void);
 
 static GstElementClass *parent_class = NULL;
+
 /*static guint gst_videoscale_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
@@ -116,17 +122,19 @@ gst_videoscale_get_type (void)
 
   if (!videoscale_type) {
     static const GTypeInfo videoscale_info = {
-      sizeof(GstVideoscaleClass),
+      sizeof (GstVideoscaleClass),
       gst_videoscale_base_init,
       NULL,
-      (GClassInitFunc)gst_videoscale_class_init,
+      (GClassInitFunc) gst_videoscale_class_init,
       NULL,
       NULL,
-      sizeof(GstVideoscale),
+      sizeof (GstVideoscale),
       0,
-      (GInstanceInitFunc)gst_videoscale_init,
+      (GInstanceInitFunc) gst_videoscale_init,
     };
-    videoscale_type = g_type_register_static(GST_TYPE_ELEMENT, "GstVideoscale", &videoscale_info, 0);
+    videoscale_type =
+	g_type_register_static (GST_TYPE_ELEMENT, "GstVideoscale",
+	&videoscale_info, 0);
   }
   return videoscale_type;
 }
@@ -138,23 +146,23 @@ gst_videoscale_base_init (gpointer g_class)
 
   gst_element_class_set_details (element_class, &videoscale_details);
 
-  gst_element_class_add_pad_template (element_class, gst_videoscale_sink_template_factory());
-  gst_element_class_add_pad_template (element_class, gst_videoscale_src_template_factory());
+  gst_element_class_add_pad_template (element_class,
+      gst_videoscale_sink_template_factory ());
+  gst_element_class_add_pad_template (element_class,
+      gst_videoscale_src_template_factory ());
 }
 static void
-gst_videoscale_class_init (GstVideoscaleClass *klass)
+gst_videoscale_class_init (GstVideoscaleClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*)klass;
-  gstelement_class = (GstElementClass*)klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_METHOD,
-    g_param_spec_enum("method","method","method",
-                      GST_TYPE_VIDEOSCALE_METHOD,0,G_PARAM_READWRITE)); /* CHECKME! */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD, g_param_spec_enum ("method", "method", "method", GST_TYPE_VIDEOSCALE_METHOD, 0, G_PARAM_READWRITE));	/* CHECKME! */
 
-  parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_videoscale_set_property;
   gobject_class->get_property = gst_videoscale_get_property;
@@ -162,7 +170,7 @@ gst_videoscale_class_init (GstVideoscaleClass *klass)
 }
 
 static GstCaps *
-gst_videoscale_getcaps (GstPad *pad)
+gst_videoscale_getcaps (GstPad * pad)
 {
   GstVideoscale *videoscale;
   GstCaps *othercaps;
@@ -172,21 +180,20 @@ gst_videoscale_getcaps (GstPad *pad)
 
   GST_DEBUG ("gst_videoscale_getcaps");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
-  
+
   otherpad = (pad == videoscale->srcpad) ? videoscale->sinkpad :
-    videoscale->srcpad;
+      videoscale->srcpad;
   othercaps = gst_pad_get_allowed_caps (otherpad);
 
   GST_DEBUG ("othercaps are: %" GST_PTR_FORMAT, othercaps);
 
   caps = gst_caps_copy (othercaps);
-  for(i=0;i<gst_caps_get_size(caps);i++) {
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set (structure,
 	"width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-	"height", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-	NULL);
+	"height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
   }
 
   GST_DEBUG ("returning caps: %" GST_PTR_FORMAT, caps);
@@ -196,7 +203,7 @@ gst_videoscale_getcaps (GstPad *pad)
 
 
 static GstPadLinkReturn
-gst_videoscale_link (GstPad *pad, const GstCaps *caps)
+gst_videoscale_link (GstPad * pad, const GstCaps * caps)
 {
   GstVideoscale *videoscale;
   GstPadLinkReturn ret;
@@ -209,7 +216,7 @@ gst_videoscale_link (GstPad *pad, const GstCaps *caps)
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
 
   otherpad = (pad == videoscale->srcpad) ? videoscale->sinkpad :
-    videoscale->srcpad;
+      videoscale->srcpad;
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "width", &width);
@@ -217,7 +224,8 @@ gst_videoscale_link (GstPad *pad, const GstCaps *caps)
 
   format = videoscale_find_by_structure (structure);
 
-  if(!ret || format==NULL) return GST_PAD_LINK_REFUSED;
+  if (!ret || format == NULL)
+    return GST_PAD_LINK_REFUSED;
 
   ret = gst_pad_try_set_caps (otherpad, caps);
   if (ret == GST_PAD_LINK_OK) {
@@ -239,14 +247,12 @@ gst_videoscale_link (GstPad *pad, const GstCaps *caps)
 
     if (pad == videoscale->srcpad) {
       gst_caps_set_simple (newcaps,
-          "width", G_TYPE_INT, videoscale->from_width,
-          "height", G_TYPE_INT, videoscale->from_height,
-          NULL);
+	  "width", G_TYPE_INT, videoscale->from_width,
+	  "height", G_TYPE_INT, videoscale->from_height, NULL);
     } else {
       gst_caps_set_simple (newcaps,
-          "width", G_TYPE_INT, videoscale->to_width,
-          "height", G_TYPE_INT, videoscale->to_height,
-          NULL);
+	  "width", G_TYPE_INT, videoscale->to_width,
+	  "height", G_TYPE_INT, videoscale->to_height, NULL);
     }
     ret = gst_pad_try_set_caps (otherpad, newcaps);
     if (GST_PAD_LINK_FAILED (ret)) {
@@ -273,24 +279,24 @@ gst_videoscale_link (GstPad *pad, const GstCaps *caps)
 }
 
 static void
-gst_videoscale_init (GstVideoscale *videoscale)
+gst_videoscale_init (GstVideoscale * videoscale)
 {
   GST_DEBUG_OBJECT (videoscale, "_init");
-  videoscale->sinkpad = gst_pad_new_from_template (
-		  gst_videoscale_sink_template_factory(),
-		  "sink");
-  gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->sinkpad);
-  gst_pad_set_chain_function(videoscale->sinkpad,gst_videoscale_chain);
-  gst_pad_set_link_function(videoscale->sinkpad,gst_videoscale_link);
-  gst_pad_set_getcaps_function(videoscale->sinkpad,gst_videoscale_getcaps);
+  videoscale->sinkpad =
+      gst_pad_new_from_template (gst_videoscale_sink_template_factory (),
+      "sink");
+  gst_element_add_pad (GST_ELEMENT (videoscale), videoscale->sinkpad);
+  gst_pad_set_chain_function (videoscale->sinkpad, gst_videoscale_chain);
+  gst_pad_set_link_function (videoscale->sinkpad, gst_videoscale_link);
+  gst_pad_set_getcaps_function (videoscale->sinkpad, gst_videoscale_getcaps);
 
-  videoscale->srcpad = gst_pad_new_from_template (
-		  gst_videoscale_src_template_factory(),
-		  "src");
-  gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->srcpad);
-  gst_pad_set_event_function (videoscale->srcpad, gst_videoscale_handle_src_event);
-  gst_pad_set_link_function(videoscale->srcpad,gst_videoscale_link);
-  gst_pad_set_getcaps_function(videoscale->srcpad,gst_videoscale_getcaps);
+  videoscale->srcpad =
+      gst_pad_new_from_template (gst_videoscale_src_template_factory (), "src");
+  gst_element_add_pad (GST_ELEMENT (videoscale), videoscale->srcpad);
+  gst_pad_set_event_function (videoscale->srcpad,
+      gst_videoscale_handle_src_event);
+  gst_pad_set_link_function (videoscale->srcpad, gst_videoscale_link);
+  gst_pad_set_getcaps_function (videoscale->srcpad, gst_videoscale_getcaps);
 
   videoscale->inited = FALSE;
 
@@ -300,7 +306,7 @@ gst_videoscale_init (GstVideoscale *videoscale)
 }
 
 static gboolean
-gst_videoscale_handle_src_event (GstPad *pad, GstEvent *event)
+gst_videoscale_handle_src_event (GstPad * pad, GstEvent * event)
 {
   GstVideoscale *videoscale;
   double a;
@@ -313,14 +319,14 @@ gst_videoscale_handle_src_event (GstPad *pad, GstEvent *event)
     case GST_EVENT_NAVIGATION:
       structure = gst_structure_copy (event->event_data.structure.structure);
       if (gst_structure_get_double (event->event_data.structure.structure,
-          "pointer_x", &a)) {
-        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-            a*videoscale->from_width/videoscale->to_width, NULL);
+	      "pointer_x", &a)) {
+	gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+	    a * videoscale->from_width / videoscale->to_width, NULL);
       }
       if (gst_structure_get_double (event->event_data.structure.structure,
-          "pointer_y", &a)) {
-        gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-            a*videoscale->from_height/videoscale->to_height, NULL);
+	      "pointer_y", &a)) {
+	gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+	    a * videoscale->from_height / videoscale->to_height, NULL);
       }
       gst_event_unref (event);
       new_event = gst_event_new (GST_EVENT_NAVIGATION);
@@ -334,7 +340,7 @@ gst_videoscale_handle_src_event (GstPad *pad, GstEvent *event)
 }
 
 static void
-gst_videoscale_chain (GstPad *pad, GstData *_data)
+gst_videoscale_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstVideoscale *videoscale;
@@ -350,54 +356,55 @@ gst_videoscale_chain (GstPad *pad, GstData *_data)
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
   g_return_if_fail (videoscale->inited);
 
-  data = GST_BUFFER_DATA(buf);
-  size = GST_BUFFER_SIZE(buf);
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
 
-  if(videoscale->passthru){
-  GST_LOG_OBJECT (videoscale, "passing through buffer of %ld bytes in '%s'",
-                  size, GST_OBJECT_NAME (videoscale));
+  if (videoscale->passthru) {
+    GST_LOG_OBJECT (videoscale, "passing through buffer of %ld bytes in '%s'",
+	size, GST_OBJECT_NAME (videoscale));
     gst_pad_push (videoscale->srcpad, GST_DATA (buf));
     return;
   }
 
-  GST_LOG_OBJECT (videoscale, "got buffer of %ld bytes in '%s'",size,
-	          GST_OBJECT_NAME (videoscale));
-  GST_LOG_OBJECT (videoscale, "size=%ld from=%dx%d to=%dx%d fromsize=%ld (should be %d) tosize=%d",
-	size,
-	videoscale->from_width, videoscale->from_height,
-	videoscale->to_width, videoscale->to_height,
-  	size, videoscale->from_buf_size,
-  	videoscale->to_buf_size);
+  GST_LOG_OBJECT (videoscale, "got buffer of %ld bytes in '%s'", size,
+      GST_OBJECT_NAME (videoscale));
+  GST_LOG_OBJECT (videoscale,
+      "size=%ld from=%dx%d to=%dx%d fromsize=%ld (should be %d) tosize=%d",
+      size, videoscale->from_width, videoscale->from_height,
+      videoscale->to_width, videoscale->to_height, size,
+      videoscale->from_buf_size, videoscale->to_buf_size);
 
   g_return_if_fail (size == videoscale->from_buf_size);
 
   outbuf = gst_pad_alloc_buffer (videoscale->srcpad,
-                                 GST_BUFFER_OFFSET_NONE, videoscale->to_buf_size);
-  
-  GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
+      GST_BUFFER_OFFSET_NONE, videoscale->to_buf_size);
 
-  g_return_if_fail(videoscale->format);
-  GST_DEBUG_OBJECT (videoscale, "format " GST_FOURCC_FORMAT,GST_FOURCC_ARGS(videoscale->format->fourcc));
-  g_return_if_fail(videoscale->format->scale);
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
-  videoscale->format->scale(videoscale, GST_BUFFER_DATA(outbuf), data);
+  g_return_if_fail (videoscale->format);
+  GST_DEBUG_OBJECT (videoscale, "format " GST_FOURCC_FORMAT,
+      GST_FOURCC_ARGS (videoscale->format->fourcc));
+  g_return_if_fail (videoscale->format->scale);
 
-  GST_DEBUG_OBJECT (videoscale, "pushing buffer of %d bytes in '%s'",GST_BUFFER_SIZE(outbuf),
-	              GST_OBJECT_NAME (videoscale));
+  videoscale->format->scale (videoscale, GST_BUFFER_DATA (outbuf), data);
 
-  gst_pad_push(videoscale->srcpad, GST_DATA (outbuf));
+  GST_DEBUG_OBJECT (videoscale, "pushing buffer of %d bytes in '%s'",
+      GST_BUFFER_SIZE (outbuf), GST_OBJECT_NAME (videoscale));
 
-  gst_buffer_unref(buf);
+  gst_pad_push (videoscale->srcpad, GST_DATA (outbuf));
+
+  gst_buffer_unref (buf);
 }
 
 static void
-gst_videoscale_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_videoscale_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstVideoscale *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_VIDEOSCALE(object));
-  src = GST_VIDEOSCALE(object);
+  g_return_if_fail (GST_IS_VIDEOSCALE (object));
+  src = GST_VIDEOSCALE (object);
 
   GST_DEBUG_OBJECT (src, "gst_videoscale_set_property");
   switch (prop_id) {
@@ -410,13 +417,14 @@ gst_videoscale_set_property (GObject *object, guint prop_id, const GValue *value
 }
 
 static void
-gst_videoscale_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+gst_videoscale_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
 {
   GstVideoscale *src;
 
   /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail(GST_IS_VIDEOSCALE(object));
-  src = GST_VIDEOSCALE(object);
+  g_return_if_fail (GST_IS_VIDEOSCALE (object));
+  src = GST_VIDEOSCALE (object);
 
   switch (prop_id) {
     case ARG_METHOD:
@@ -430,24 +438,19 @@ gst_videoscale_get_property (GObject *object, guint prop_id, GValue *value, GPar
 
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "videoscale", GST_RANK_NONE, GST_TYPE_VIDEOSCALE))
+  if (!gst_element_register (plugin, "videoscale", GST_RANK_NONE,
+	  GST_TYPE_VIDEOSCALE))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (videoscale_debug, "videoscale", 0, "videoscale element");
+  GST_DEBUG_CATEGORY_INIT (videoscale_debug, "videoscale", 0,
+      "videoscale element");
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "videoscale",
-  "Resizes video",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "videoscale",
+    "Resizes video", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

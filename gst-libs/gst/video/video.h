@@ -98,31 +98,31 @@
 
 #define GST_VIDEO_CAPS_RGBx \
     __GST_VIDEO_CAPS_MAKE_32 (1, 2, 3)
-  
+
 #define GST_VIDEO_CAPS_xRGB \
     __GST_VIDEO_CAPS_MAKE_32 (2, 3, 4)
-  
+
 #define GST_VIDEO_CAPS_BGRx \
     __GST_VIDEO_CAPS_MAKE_32 (3, 2, 1)
-  
+
 #define GST_VIDEO_CAPS_xBGR \
     __GST_VIDEO_CAPS_MAKE_32 (4, 3, 2)
 
 /* note: the macro name uses the order on BE systems */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-  #define GST_VIDEO_CAPS_xRGB_HOST_ENDIAN \
+#define GST_VIDEO_CAPS_xRGB_HOST_ENDIAN \
       GST_VIDEO_CAPS_xRGB
-  #define GST_VIDEO_CAPS_BGRx_HOST_ENDIAN \
+#define GST_VIDEO_CAPS_BGRx_HOST_ENDIAN \
       GST_VIDEO_CAPS_BGRx
 #else
-  #define GST_VIDEO_CAPS_xRGB_HOST_ENDIAN \
+#define GST_VIDEO_CAPS_xRGB_HOST_ENDIAN \
       GST_VIDEO_CAPS_BGRx
-  #define GST_VIDEO_CAPS_BGRx_HOST_ENDIAN \
+#define GST_VIDEO_CAPS_BGRx_HOST_ENDIAN \
       GST_VIDEO_CAPS_xRGB
 #endif
-      
+
 /* 15/16 bit */
-  
+
 #define GST_VIDEO_CAPS_RGB_16						\
 	    "video/x-raw-rgb, "						\
             "bpp = (int) 16, "						\
@@ -155,9 +155,7 @@
 	"framerate = " GST_VIDEO_FPS_RANGE
 
 /* functions */
-gdouble  gst_video_frame_rate (GstPad *pad);
-gboolean gst_video_get_size   (GstPad *pad,
-                               gint   *width,
-                               gint   *height);
+gdouble gst_video_frame_rate (GstPad * pad);
+gboolean gst_video_get_size (GstPad * pad, gint * width, gint * height);
 
 #endif /* __GST_VIDEO_H__ */

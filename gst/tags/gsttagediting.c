@@ -26,26 +26,19 @@
 #include "gsttageditingprivate.h"
 #include <gst/gst.h>
 
-static gboolean 
-plugin_init(GstPlugin *plugin)
+static gboolean
+plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "vorbistag", 
-	       GST_RANK_PRIMARY, gst_vorbis_tag_get_type())) {
+  if (!gst_element_register (plugin, "vorbistag",
+	  GST_RANK_PRIMARY, gst_vorbis_tag_get_type ())) {
     return FALSE;
   }
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "gsttags",
-  "elements for manipulating data from ogg streams",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
-
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gsttags",
+    "elements for manipulating data from ogg streams",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

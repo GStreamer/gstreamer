@@ -31,7 +31,7 @@
 #include "gstv4lmjpegsink.h"
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   /* actually, we can survive without it, but I'll create
    * that handling later on. */
@@ -39,13 +39,13 @@ plugin_init (GstPlugin *plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "v4lelement",
-			     GST_RANK_NONE, GST_TYPE_V4LELEMENT) ||
+	  GST_RANK_NONE, GST_TYPE_V4LELEMENT) ||
       !gst_element_register (plugin, "v4lsrc",
-			     GST_RANK_NONE, GST_TYPE_V4LSRC) ||
+	  GST_RANK_NONE, GST_TYPE_V4LSRC) ||
       !gst_element_register (plugin, "v4lmjpegsrc",
-			     GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC) ||
+	  GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC) ||
       !gst_element_register (plugin, "v4lmjpegsink",
-			     GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
+	  GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
     return FALSE;
 
 #ifdef ENABLE_NLS
@@ -56,14 +56,8 @@ plugin_init (GstPlugin *plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "video4linux",
-  "elements for Video 4 Linux",
-  plugin_init,
-  VERSION,
-  GST_LICENSE,
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "video4linux",
+    "elements for Video 4 Linux",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

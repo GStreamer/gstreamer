@@ -178,18 +178,19 @@ static const gchar *genres[] = {
 };
 
 static GstTagEntryMatch tag_matches[] = {
-  { GST_TAG_TITLE,		 "TIT2"	},
-  { GST_TAG_ALBUM,		 "TALB"	},
-  { GST_TAG_TRACK_NUMBER,	 "TRCK"	},
-  { GST_TAG_ARTIST,		 "TPE1"	},
-  { GST_TAG_COPYRIGHT,		 "TCOP" },
-  { GST_TAG_GENRE,		 "TCON" },
-  { GST_TAG_DATE,		 "TDRC" },
-  { GST_TAG_COMMENT,		 "COMM"	},
-  { GST_TAG_ALBUM_VOLUME_NUMBER, "TPOS" },
-  { GST_TAG_DURATION,            "TLEN" },
-  { NULL,			 NULL	}
+  {GST_TAG_TITLE, "TIT2"},
+  {GST_TAG_ALBUM, "TALB"},
+  {GST_TAG_TRACK_NUMBER, "TRCK"},
+  {GST_TAG_ARTIST, "TPE1"},
+  {GST_TAG_COPYRIGHT, "TCOP"},
+  {GST_TAG_GENRE, "TCON"},
+  {GST_TAG_DATE, "TDRC"},
+  {GST_TAG_COMMENT, "COMM"},
+  {GST_TAG_ALBUM_VOLUME_NUMBER, "TPOS"},
+  {GST_TAG_DURATION, "TLEN"},
+  {NULL, NULL}
 };
+
 /**
 * gst_tag_from_id3_tag:
 * @id3_tag: ID3v2 tag to convert to GStreamer tag
@@ -199,7 +200,7 @@ static GstTagEntryMatch tag_matches[] = {
 * Returns: The corresponding GStreamer tag or NULL if none exists.
 */
 G_CONST_RETURN gchar *
-gst_tag_from_id3_tag (const gchar *id3_tag)
+gst_tag_from_id3_tag (const gchar * id3_tag)
 {
   int i = 0;
 
@@ -213,6 +214,7 @@ gst_tag_from_id3_tag (const gchar *id3_tag)
   }
   return tag_matches[i].gstreamer_tag;
 }
+
 /**
 * gst_tag_to_id3_tag:
 * @gst_tag: GStreamer tag to convert to vorbiscomment tag
@@ -222,7 +224,7 @@ gst_tag_from_id3_tag (const gchar *id3_tag)
 * Returns: The corresponding ID3v2 tag or NULL if none exists.
 */
 G_CONST_RETURN gchar *
-gst_tag_to_id3_tag (const gchar *gst_tag)
+gst_tag_to_id3_tag (const gchar * gst_tag)
 {
   int i = 0;
 
@@ -232,16 +234,17 @@ gst_tag_to_id3_tag (const gchar *gst_tag)
     if (strcmp (gst_tag, tag_matches[i].gstreamer_tag) == 0) {
       return tag_matches[i].original_tag;
     }
-  i++;
+    i++;
   }
-return NULL;
+  return NULL;
 }
 static void
-gst_tag_extract (GstTagList *list, const gchar *tag, const gchar *start, const guint size)
+gst_tag_extract (GstTagList * list, const gchar * tag, const gchar * start,
+    const guint size)
 {
   gsize bytes_read;
   gchar *conv;
-  
+
   /* FIXME: better charset detection? */
   if (g_utf8_validate (start, size, NULL)) {
     conv = g_strchomp (g_strndup (start, size));
@@ -249,7 +252,9 @@ gst_tag_extract (GstTagList *list, const gchar *tag, const gchar *start, const g
     conv = g_locale_to_utf8 (start, size, &bytes_read, NULL, NULL);
     if (bytes_read != size) {
       g_free (conv);
-      conv = g_convert (start, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL, NULL);
+      conv =
+	  g_convert (start, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL,
+	  NULL);
       if (bytes_read != size) {
 	g_free (conv);
 	return;
@@ -262,6 +267,7 @@ gst_tag_extract (GstTagList *list, const gchar *tag, const gchar *start, const g
   }
   g_free (conv);
 }
+
 /**
 * gst_tag_list_new_from_id3v1:
 * @data: 128 bytes of data containing the ID3v1 tag
@@ -272,15 +278,16 @@ gst_tag_extract (GstTagList *list, const gchar *tag, const gchar *start, const g
 * Returns: A new tag list or NULL if the data was not an ID3v1 tag.
 */
 GstTagList *
-gst_tag_list_new_from_id3v1 (const guint8 *data)
+gst_tag_list_new_from_id3v1 (const guint8 * data)
 {
   guint year;
   gchar *ystr;
   GstTagList *list;
 
   g_return_val_if_fail (data != NULL, NULL);
-  
-  if (data[0] != 'T' || data[1] != 'A' || data[2] != 'G') return NULL;
+
+  if (data[0] != 'T' || data[1] != 'A' || data[2] != 'G')
+    return NULL;
   list = gst_tag_list_new ();
   gst_tag_extract (list, GST_TAG_TITLE, &data[3], 30);
   gst_tag_extract (list, GST_TAG_ARTIST, &data[33], 30);
@@ -290,22 +297,26 @@ gst_tag_list_new_from_id3v1 (const guint8 *data)
   g_free (ystr);
   if (year > 0) {
     GDate *date = g_date_new_dmy (1, 1, year);
+
     year = g_date_get_julian (date);
     g_date_free (date);
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, year, NULL);
   }
   if (data[125] == 0) {
     gst_tag_extract (list, GST_TAG_COMMENT, &data[97], 28);
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER, (guint) data[126], NULL);
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER,
+	(guint) data[126], NULL);
   } else {
     gst_tag_extract (list, GST_TAG_COMMENT, &data[97], 30);
   }
   if (data[127] < gst_tag_id3_genre_count ()) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE, gst_tag_id3_genre_get (data[127]), NULL);
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,
+	gst_tag_id3_genre_get (data[127]), NULL);
   }
 
   return list;
 }
+
 /**
  * gst_tag_id3_genre_count:
  *
@@ -319,6 +330,7 @@ gst_tag_id3_genre_count (void)
 {
   return G_N_ELEMENTS (genres);
 }
+
 /**
  * gst_tag_id3_genre_get:
  * @id: ID of genre to query
@@ -330,7 +342,7 @@ gst_tag_id3_genre_count (void)
 G_CONST_RETURN gchar *
 gst_tag_id3_genre_get (const guint id)
 {
-  if (id >= G_N_ELEMENTS (genres)) return NULL;
+  if (id >= G_N_ELEMENTS (genres))
+    return NULL;
   return genres[id];
 }
-

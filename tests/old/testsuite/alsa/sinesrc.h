@@ -25,9 +25,10 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-  
+extern "C"
+{
+#endif				/* __cplusplus */
+
 
 #define TYPE_SINESRC \
   (sinesrc_get_type())
@@ -40,50 +41,53 @@ extern "C" {
 #define IS_SINESRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),TYPE_SINESRC))
 
-typedef struct _SineSrc SineSrc;
-typedef struct _SineSrcClass SineSrcClass;
+  typedef struct _SineSrc SineSrc;
+  typedef struct _SineSrcClass SineSrcClass;
 
-typedef void (*PreGetFunc) (SineSrc *src);
+  typedef void (*PreGetFunc) (SineSrc * src);
 
-typedef enum {
-  SINE_SRC_INT,
-  SINE_SRC_FLOAT
-} SineSrcAudio;
+  typedef enum
+  {
+    SINE_SRC_INT,
+    SINE_SRC_FLOAT
+  } SineSrcAudio;
 
-struct _SineSrc {
-  GstElement element;
+  struct _SineSrc
+  {
+    GstElement element;
 
-  /* pads */
-  GstPad *src;
+    /* pads */
+    GstPad *src;
 
-  /* audio parameters */
-  SineSrcAudio type;
-  gint width; /* int + float */
-  gint depth; /* int */
-  gboolean sign; /* int */
-  gint endianness; /* int */
-  
-  gint rate;
-  gint channels; /* interleaved */
-  
-  gboolean newcaps;
-  
-  /* freaky stuff for testing */
-  PreGetFunc pre_get_func;
-};
+    /* audio parameters */
+    SineSrcAudio type;
+    gint width;			/* int + float */
+    gint depth;			/* int */
+    gboolean sign;		/* int */
+    gint endianness;		/* int */
 
-struct _SineSrcClass {
-  GstElementClass parent_class;
-};
+    gint rate;
+    gint channels;		/* interleaved */
 
-GType           sinesrc_get_type                (void);
-GstElement *    sinesrc_new                     (void);
+    gboolean newcaps;
 
-void            sinesrc_set_pre_get_func        (SineSrc *src, PreGetFunc func);
+    /* freaky stuff for testing */
+    PreGetFunc pre_get_func;
+  };
+
+  struct _SineSrcClass
+  {
+    GstElementClass parent_class;
+  };
+
+  GType sinesrc_get_type (void);
+  GstElement *sinesrc_new (void);
+
+  void sinesrc_set_pre_get_func (SineSrc * src, PreGetFunc func);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_SINESRC_H__ */
+#endif				/* __GST_SINESRC_H__ */

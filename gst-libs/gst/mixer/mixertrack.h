@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_MIXER_TRACK \
   (gst_mixer_track_get_type ())
 #define GST_MIXER_TRACK(obj) \
@@ -38,7 +37,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MIXER_TRACK))
 #define GST_IS_MIXER_TRACK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MIXER_TRACK))
-
 /*
  * Naming:
  *
@@ -54,45 +52,41 @@ G_BEGIN_DECLS
  * mixer, which means that setting this track will change
  * the hearable volume on any output.
  */
-
-typedef enum {
-  GST_MIXER_TRACK_INPUT  = (1<<0),
-  GST_MIXER_TRACK_OUTPUT = (1<<1),
-  GST_MIXER_TRACK_MUTE   = (1<<2),
-  GST_MIXER_TRACK_RECORD = (1<<3),
-  GST_MIXER_TRACK_MASTER = (1<<4),
-  GST_MIXER_TRACK_SOFTWARE = (1<<5)
+    typedef enum
+{
+  GST_MIXER_TRACK_INPUT = (1 << 0),
+  GST_MIXER_TRACK_OUTPUT = (1 << 1),
+  GST_MIXER_TRACK_MUTE = (1 << 2),
+  GST_MIXER_TRACK_RECORD = (1 << 3),
+  GST_MIXER_TRACK_MASTER = (1 << 4),
+  GST_MIXER_TRACK_SOFTWARE = (1 << 5)
 } GstMixerTrackFlags;
 
 #define GST_MIXER_TRACK_HAS_FLAG(channel, flag) \
   ((channel)->flags & flag)
 
-typedef struct _GstMixerTrack {
-  GObject            parent;
+typedef struct _GstMixerTrack
+{
+  GObject parent;
 
-  gchar             *label;
+  gchar *label;
   GstMixerTrackFlags flags;
-  gint               num_channels,
-	             min_volume,
-	             max_volume;
+  gint num_channels, min_volume, max_volume;
 } GstMixerTrack;
 
-typedef struct _GstMixerTrackClass {
+typedef struct _GstMixerTrackClass
+{
   GObjectClass parent;
 
   /* signals */
-  void (* mute_toggled)   (GstMixerTrack *channel,
-			   gboolean       mute);
-  void (* record_toggled) (GstMixerTrack *channel,
-			   gboolean       record);
-  void (* volume_changed) (GstMixerTrack *channel,
-			   gint          *volumes);
+  void (*mute_toggled) (GstMixerTrack * channel, gboolean mute);
+  void (*record_toggled) (GstMixerTrack * channel, gboolean record);
+  void (*volume_changed) (GstMixerTrack * channel, gint * volumes);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstMixerTrackClass;
 
-GType		gst_mixer_track_get_type	(void);
+GType gst_mixer_track_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_MIXER_TRACK_H__ */

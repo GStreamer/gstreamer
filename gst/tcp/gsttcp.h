@@ -35,6 +35,6 @@ extern "C"
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __GST_TCP_H__ */
+#endif				/* __GST_TCP_H__ */

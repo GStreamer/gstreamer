@@ -27,7 +27,6 @@
 #include <gst/colorbalance/colorbalance-enumtypes.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_COLOR_BALANCE \
   (gst_color_balance_get_type ())
 #define GST_COLOR_BALANCE(obj) \
@@ -42,55 +41,48 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_COLOR_BALANCE))
 #define GST_COLOR_BALANCE_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_COLOR_BALANCE, GstColorBalanceClass))
-  
 #define GST_COLOR_BALANCE_TYPE(klass) (klass->balance_type)
-
 typedef struct _GstColorBalance GstColorBalance;
-  
+
 typedef enum
 {
   GST_COLOR_BALANCE_HARDWARE,
   GST_COLOR_BALANCE_SOFTWARE
 } GstColorBalanceType;
 
-typedef struct _GstColorBalanceClass {
+typedef struct _GstColorBalanceClass
+{
   GTypeInterface klass;
 
   GstColorBalanceType balance_type;
-  
-  /* virtual functions */
-  const GList * (* list_channels) (GstColorBalance        *balance);
 
-  void          (* set_value)     (GstColorBalance        *balance,
-				   GstColorBalanceChannel *channel,
-				   gint                    value);
-  gint          (* get_value)     (GstColorBalance        *balance,
-				   GstColorBalanceChannel *channel);
+  /* virtual functions */
+  const GList *(*list_channels) (GstColorBalance * balance);
+
+  void (*set_value) (GstColorBalance * balance,
+      GstColorBalanceChannel * channel, gint value);
+    gint (*get_value) (GstColorBalance * balance,
+      GstColorBalanceChannel * channel);
 
   /* signals */
-  void (* value_changed) (GstColorBalance        *balance,
-			  GstColorBalanceChannel *channel,
-			  gint                    value);
+  void (*value_changed) (GstColorBalance * balance,
+      GstColorBalanceChannel * channel, gint value);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstColorBalanceClass;
 
-GType	gst_color_balance_get_type	(void);
+GType gst_color_balance_get_type (void);
 
 /* virtual class function wrappers */
-const GList *
-	gst_color_balance_list_channels	(GstColorBalance        *balance);
-void	gst_color_balance_set_value	(GstColorBalance        *balance,
-					 GstColorBalanceChannel *channel,
-					 gint                    value);
-gint	gst_color_balance_get_value	(GstColorBalance        *balance,
-					 GstColorBalanceChannel *channel);
+const GList *gst_color_balance_list_channels (GstColorBalance * balance);
+void gst_color_balance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value);
+gint gst_color_balance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel);
 
 /* trigger signal */
-void	gst_color_balance_value_changed (GstColorBalance        *balance,
-					 GstColorBalanceChannel *channel,
-					 gint                    value);
+void gst_color_balance_value_changed (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value);
 
 G_END_DECLS
-
 #endif /* __GST_COLOR_BALANCE_H__ */

@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef __GST_XIMAGESINK_H__
 #define __GST_XIMAGESINK_H__
 
@@ -38,7 +38,6 @@
 #include <math.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_XIMAGESINK \
   (gst_ximagesink_get_type())
 #define GST_XIMAGESINK(obj) \
@@ -49,7 +48,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_XIMAGESINK))
 #define GST_IS_XIMAGESINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XIMAGESINK))
-
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 typedef struct _GstXImage GstXImage;
@@ -58,29 +56,31 @@ typedef struct _GstXImageSink GstXImageSink;
 typedef struct _GstXImageSinkClass GstXImageSinkClass;
 
 /* Global X Context stuff */
-struct _GstXContext {
+struct _GstXContext
+{
   Display *disp;
-  
+
   Screen *screen;
   gint screen_num;
-  
+
   Visual *visual;
-  
+
   Window root;
-  
+
   gulong white, black;
-  
+
   gint depth;
   gint bpp;
   gint endianness;
-  
+
   gboolean use_xshm;
-  
+
   GstCaps *caps;
 };
 
 /* XWindow stuff */
-struct _GstXWindow {
+struct _GstXWindow
+{
   Window win;
   gint width, height;
   gboolean internal;
@@ -88,52 +88,54 @@ struct _GstXWindow {
 };
 
 /* XImage stuff */
-struct _GstXImage {
+struct _GstXImage
+{
   /* Reference to the ximagesink we belong to */
   GstXImageSink *ximagesink;
-  
+
   XImage *ximage;
-  
+
 #ifdef HAVE_XSHM
   XShmSegmentInfo SHMInfo;
-#endif /* HAVE_XSHM */
-  
+#endif				/* HAVE_XSHM */
+
   char *data;
   gint width, height, size;
 };
 
-struct _GstXImageSink {
+struct _GstXImageSink
+{
   /* Our element stuff */
   GstVideoSink videosink;
 
   char *display_name;
-  
+
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXImage *ximage;
   GstXImage *cur_image;
-  
+
   gdouble framerate;
   GMutex *x_lock;
-  
+
   /* Unused */
   gint pixel_width, pixel_height;
- 
+
   GstClockTime time;
-  
+
   GMutex *pool_lock;
   GSList *image_pool;
-  
+
   gboolean synchronous;
   gboolean sw_scaling_failed;
 };
 
-struct _GstXImageSinkClass {
+struct _GstXImageSinkClass
+{
   GstVideoSinkClass parent_class;
 };
 
-GType gst_ximagesink_get_type(void);
+GType gst_ximagesink_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_XIMAGESINK_H__ */

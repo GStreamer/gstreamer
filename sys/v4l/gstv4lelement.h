@@ -41,7 +41,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_V4LELEMENT \
   (gst_v4lelement_get_type())
 #define GST_V4LELEMENT(obj) \
@@ -54,11 +53,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LELEMENT))
 #define GST_V4LELEMENT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4LELEMENT, GstV4lElementClass))
-
 typedef struct _GstV4lElement GstV4lElement;
 typedef struct _GstV4lElementClass GstV4lElementClass;
 
-struct _GstV4lElement {
+struct _GstV4lElement
+{
   GstElement element;
 
   /* the video device */
@@ -89,30 +88,26 @@ struct _GstV4lElement {
   gchar *display;
 };
 
-struct _GstV4lElementClass {
+struct _GstV4lElementClass
+{
   GstElementClass parent_class;
 
   /* probed devices */
   GList *devices;
 
   /* signals */
-  void     (*open)           (GstElement  *element,
-                              const gchar *device);
-  void     (*close)          (GstElement  *element,
-                              const gchar *device);
+  void (*open) (GstElement * element, const gchar * device);
+  void (*close) (GstElement * element, const gchar * device);
 
   /* actions */
-  gboolean (*get_attribute)   (GstElement  *element,
-                               const gchar *attr_name,
-                               int         *value);
-  gboolean (*set_attribute)   (GstElement  *element,
-                               const gchar *attr_name,
-                               const int    value);
+    gboolean (*get_attribute) (GstElement * element,
+      const gchar * attr_name, int *value);
+    gboolean (*set_attribute) (GstElement * element,
+      const gchar * attr_name, const int value);
 };
 
-GType gst_v4lelement_get_type(void);
+GType gst_v4lelement_get_type (void);
 
 
 G_END_DECLS
-
 #endif /* __GST_V4LELEMENT_H__ */

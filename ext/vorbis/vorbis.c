@@ -27,7 +27,7 @@
 GST_DEBUG_CATEGORY (vorbisdec_debug);
 
 static gboolean
-plugin_init (GstPlugin *plugin)
+plugin_init (GstPlugin * plugin)
 {
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
@@ -35,23 +35,21 @@ plugin_init (GstPlugin *plugin)
   if (!gst_library_load ("gsttags"))
     return FALSE;
 
-  if (!gst_element_register (plugin, "vorbisenc", GST_RANK_NONE, GST_TYPE_VORBISENC))
+  if (!gst_element_register (plugin, "vorbisenc", GST_RANK_NONE,
+	  GST_TYPE_VORBISENC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "vorbisdec", GST_RANK_PRIMARY, gst_vorbis_dec_get_type ()))
+  if (!gst_element_register (plugin, "vorbisdec", GST_RANK_PRIMARY,
+	  gst_vorbis_dec_get_type ()))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "vorbisdec", 0, "vorbis decoding element");
+  GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "vorbisdec", 0,
+      "vorbis decoding element");
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "vorbis",
-  "Vorbis plugin library",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "vorbis",
+    "Vorbis plugin library",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

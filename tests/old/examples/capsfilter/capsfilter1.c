@@ -6,7 +6,7 @@
  * connection would use the I420 format (assuming Xv is enabled) */
 
 static void
-new_pad_func (GstElement *element, GstPad *newpad, gpointer data)
+new_pad_func (GstElement * element, GstPad * newpad, gpointer data)
 {
   GstElement *pipeline = (GstElement *) data;
   GstElement *queue = gst_bin_get_by_name (GST_BIN (pipeline), "queue");
@@ -19,7 +19,7 @@ new_pad_func (GstElement *element, GstPad *newpad, gpointer data)
 }
 
 gint
-main (gint argc, gchar *argv[])
+main (gint argc, gchar * argv[])
 {
   GstElement *pipeline;
   GstElement *filesrc;
@@ -44,7 +44,8 @@ main (gint argc, gchar *argv[])
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
   demux = gst_element_factory_make ("mpegdemux", "demux");
   g_return_val_if_fail (demux, -1);
-  g_signal_connect (G_OBJECT (demux), "new_pad", G_CALLBACK (new_pad_func), pipeline);
+  g_signal_connect (G_OBJECT (demux), "new_pad", G_CALLBACK (new_pad_func),
+      pipeline);
 
   thread = gst_thread_new ("thread");
   queue = gst_element_factory_make ("queue", "queue");
@@ -58,7 +59,7 @@ main (gint argc, gchar *argv[])
 
   gst_bin_add (GST_BIN (pipeline), filesrc);
   gst_bin_add (GST_BIN (pipeline), demux);
-  
+
   gst_bin_add (GST_BIN (thread), queue);
   gst_bin_add (GST_BIN (thread), mpeg2dec);
   gst_bin_add (GST_BIN (thread), colorspace);
@@ -70,11 +71,9 @@ main (gint argc, gchar *argv[])
   gst_element_link (mpeg2dec, "src", colorspace, "sink");
   /* force RGB data passing between colorspace and xvideosink */
   res = gst_element_link_filtered (colorspace, "src", xvideosink, "sink",
-		        GST_CAPS_NEW (
-			  "filtercaps",
-			  "video/raw",
-			    "format",  GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
-			));
+      GST_CAPS_NEW ("filtercaps",
+	  "video/raw", "format", GST_PROPS_FOURCC (GST_STR_FOURCC ("RGB "))
+      ));
   if (!res) {
     g_print ("could not connect colorspace and xvideosink\n");
     return -1;
@@ -83,7 +82,7 @@ main (gint argc, gchar *argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   while (gst_bin_iterate (GST_BIN (pipeline)));
-  
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   return 0;

@@ -23,9 +23,9 @@
 
 #include "gstalsamixertrack.h"
 
-static void	gst_alsa_mixer_track_init	(GstAlsaMixerTrack *	alsa_track);
-static void	gst_alsa_mixer_track_class_init	(gpointer		g_class,
-						 gpointer		class_data);
+static void gst_alsa_mixer_track_init (GstAlsaMixerTrack * alsa_track);
+static void gst_alsa_mixer_track_class_init (gpointer g_class,
+    gpointer class_data);
 
 static GstMixerTrackClass *parent_class = NULL;
 
@@ -47,7 +47,9 @@ gst_alsa_mixer_track_get_type (void)
       (GInstanceInitFunc) gst_alsa_mixer_track_init,
     };
 
-    track_type = g_type_register_static (GST_TYPE_MIXER_TRACK, "GstAlsaMixerTrack", &track_info, 0);
+    track_type =
+	g_type_register_static (GST_TYPE_MIXER_TRACK, "GstAlsaMixerTrack",
+	&track_info, 0);
   }
 
   return track_type;
@@ -61,14 +63,13 @@ gst_alsa_mixer_track_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_alsa_mixer_track_init (GstAlsaMixerTrack *alsa_track)
-{ }
+gst_alsa_mixer_track_init (GstAlsaMixerTrack * alsa_track)
+{
+}
 
 GstMixerTrack *
-gst_alsa_mixer_track_new (snd_mixer_elem_t *element,
-                          gint track_num,
-                          gint channels,
-                          gint flags)
+gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
+    gint track_num, gint channels, gint flags)
 {
   gint i;
   long min, max;
@@ -77,28 +78,29 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t *element,
   GstAlsaMixerTrack *alsa_track = (GstAlsaMixerTrack *) track;
 
   /* set basic information */
-  track->label = g_strdup_printf("%s", snd_mixer_selem_get_name(element));
+  track->label = g_strdup_printf ("%s", snd_mixer_selem_get_name (element));
   track->num_channels = channels;
   track->flags = flags;
   alsa_track->element = element;
   alsa_track->track_num = track_num;
 
   /* set volume information */
-  snd_mixer_selem_get_playback_volume_range(element, &min, &max);
+  snd_mixer_selem_get_playback_volume_range (element, &min, &max);
   track->min_volume = (gint) min;
   track->max_volume = (gint) max;
 
-  snd_mixer_selem_get_capture_volume_range(element, &min, &max);
+  snd_mixer_selem_get_capture_volume_range (element, &min, &max);
   alsa_track->min_rec_volume = (gint) min;
   alsa_track->max_rec_volume = (gint) max;
 
   for (i = 0; i < channels; i++) {
     long tmp;
-    if (snd_mixer_selem_has_playback_channel(element, i)) {
-      snd_mixer_selem_get_playback_volume(element, i, &tmp);
+
+    if (snd_mixer_selem_has_playback_channel (element, i)) {
+      snd_mixer_selem_get_playback_volume (element, i, &tmp);
       alsa_track->volumes[i] = (gint) tmp;
-    } else if (snd_mixer_selem_has_capture_channel(element, i)) {
-      snd_mixer_selem_get_capture_volume(element, i, &tmp);
+    } else if (snd_mixer_selem_has_capture_channel (element, i)) {
+      snd_mixer_selem_get_capture_volume (element, i, &tmp);
       alsa_track->volumes[i] = (gint) tmp;
     }
   }

@@ -27,16 +27,13 @@
 
 #include "gstv4lelement.h"
 
-G_BEGIN_DECLS
+G_BEGIN_DECLS void gst_v4l_xoverlay_interface_init (GstXOverlayClass * klass);
 
-void	gst_v4l_xoverlay_interface_init	(GstXOverlayClass *klass);
-
-GstXWindowListener *
-	gst_v4l_xoverlay_new		(GstV4lElement  *v4lelement);
-void	gst_v4l_xoverlay_free		(GstV4lElement  *v4lelement);
+GstXWindowListener *gst_v4l_xoverlay_new (GstV4lElement * v4lelement);
+void gst_v4l_xoverlay_free (GstV4lElement * v4lelement);
 
 /* signal handlers */
-void	gst_v4l_xoverlay_open		(GstV4lElement  *v4lelement);
-void	gst_v4l_xoverlay_close		(GstV4lElement  *v4lelement);
+void gst_v4l_xoverlay_open (GstV4lElement * v4lelement);
+void gst_v4l_xoverlay_close (GstV4lElement * v4lelement);
 
 #endif /* __GST_V4L_X_OVERLAY_H__ */

@@ -27,10 +27,11 @@
 #include <gst/bytestream/bytestream.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
-extern GstElementDetails gst_adder_details;
+  extern GstElementDetails gst_adder_details;
 
 #define GST_TYPE_ADDER \
   (gst_adder_get_type())
@@ -43,57 +44,61 @@ extern GstElementDetails gst_adder_details;
 #define GST_IS_ADDER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ADDER))
 
-typedef struct _GstAdder             GstAdder;
-typedef struct _GstAdderClass        GstAdderClass;
-typedef struct _GstAdderInputChannel GstAdderInputChannel;
-typedef enum   _GstAdderFormat       GstAdderFormat;
+  typedef struct _GstAdder GstAdder;
+  typedef struct _GstAdderClass GstAdderClass;
+  typedef struct _GstAdderInputChannel GstAdderInputChannel;
+  typedef enum _GstAdderFormat GstAdderFormat;
 
-enum _GstAdderFormat {
-  GST_ADDER_FORMAT_UNSET,
-  GST_ADDER_FORMAT_INT,
-  GST_ADDER_FORMAT_FLOAT
-};
+  enum _GstAdderFormat
+  {
+    GST_ADDER_FORMAT_UNSET,
+    GST_ADDER_FORMAT_INT,
+    GST_ADDER_FORMAT_FLOAT
+  };
 
-struct _GstAdderInputChannel {
-  GstPad        *sinkpad;
-  GstByteStream *bytestream;
-};
+  struct _GstAdderInputChannel
+  {
+    GstPad *sinkpad;
+    GstByteStream *bytestream;
+  };
 
-struct _GstAdder {
-  GstElement      element;
+  struct _GstAdder
+  {
+    GstElement element;
 
-  GstPad         *srcpad;
+    GstPad *srcpad;
 
-  /* keep track of the sinkpads */
-  guint           numsinkpads;
-  GSList         *input_channels;
+    /* keep track of the sinkpads */
+    guint numsinkpads;
+    GSList *input_channels;
 
-  /* the next are valid for both int and float */
-  GstAdderFormat  format;
-  guint           rate;
-  guint           channels;
-  guint           width;
-  guint           endianness;
+    /* the next are valid for both int and float */
+    GstAdderFormat format;
+    guint rate;
+    guint channels;
+    guint width;
+    guint endianness;
 
-  /* the next are valid only for format == GST_ADDER_FORMAT_INT */
-  guint           depth;
-  gboolean        is_signed;
+    /* the next are valid only for format == GST_ADDER_FORMAT_INT */
+    guint depth;
+    gboolean is_signed;
 
-  /* counters to keep track of timestamps */
-  gint64     	  timestamp;
-  gint64     	  offset;
-};
+    /* counters to keep track of timestamps */
+    gint64 timestamp;
+    gint64 offset;
+  };
 
-struct _GstAdderClass {
-  GstElementClass parent_class;
-};
+  struct _GstAdderClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType    gst_adder_get_type (void);
-gboolean gst_adder_factory_init (GstElementFactory *factory);
+  GType gst_adder_get_type (void);
+  gboolean gst_adder_factory_init (GstElementFactory * factory);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 
-#endif /* __GST_ADDER_H__ */
+#endif				/* __GST_ADDER_H__ */

@@ -23,13 +23,11 @@
 
 #include <gst/tag/tag.h>
 
-G_BEGIN_DECLS
-  
-
-typedef struct _GstTagEntryMatch GstTagEntryMatch;
-struct _GstTagEntryMatch {
-  gchar *	gstreamer_tag;
-  gchar *	original_tag;
+G_BEGIN_DECLS typedef struct _GstTagEntryMatch GstTagEntryMatch;
+struct _GstTagEntryMatch
+{
+  gchar *gstreamer_tag;
+  gchar *original_tag;
 };
 
 
@@ -37,5 +35,4 @@ GType gst_vorbis_tag_get_type (void);
 
 
 G_END_DECLS
-
 #endif /* __GST_TAG_EDIT_PRIVATE_H__ */

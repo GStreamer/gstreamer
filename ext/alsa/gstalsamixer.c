@@ -24,45 +24,39 @@
 #include "gstalsamixer.h"
 
 /* elementfactory information */
-static GstElementDetails gst_alsa_mixer_details = GST_ELEMENT_DETAILS (
-  "Alsa Mixer",
-  "Generic/Audio",
-  "Control sound input and output levels with ALSA",
-  "Leif Johnson <leif@ambient.2y.net>"
-);
+static GstElementDetails gst_alsa_mixer_details =
+GST_ELEMENT_DETAILS ("Alsa Mixer",
+    "Generic/Audio",
+    "Control sound input and output levels with ALSA",
+    "Leif Johnson <leif@ambient.2y.net>");
 
-static void			gst_alsa_interface_init		(GstImplementsInterfaceClass *klass);
+static void gst_alsa_interface_init (GstImplementsInterfaceClass * klass);
 
-static void			gst_alsa_mixer_class_init	(gpointer       g_class,
-                                                                 gpointer       class_data);
-static void			gst_alsa_mixer_init		(GstAlsaMixer *	mixer);
-static void			gst_alsa_mixer_dispose		(GObject *	object);
-static void			gst_alsa_mixer_interface_init	(GstMixerClass*	klass);
-static gboolean			gst_alsa_mixer_supported	(GstImplementsInterface *	iface,
-								 GType		iface_type);
+static void gst_alsa_mixer_class_init (gpointer g_class, gpointer class_data);
+static void gst_alsa_mixer_init (GstAlsaMixer * mixer);
+static void gst_alsa_mixer_dispose (GObject * object);
+static void gst_alsa_mixer_interface_init (GstMixerClass * klass);
+static gboolean gst_alsa_mixer_supported (GstImplementsInterface * iface,
+    GType iface_type);
 
 /* GStreamer stuff */
-static GstElementStateReturn	gst_alsa_mixer_change_state	(GstElement *	element);
+static GstElementStateReturn gst_alsa_mixer_change_state (GstElement * element);
 
-static void			gst_alsa_mixer_build_list	(GstAlsaMixer *	mixer);
-static void			gst_alsa_mixer_free_list	(GstAlsaMixer *	mixer);
+static void gst_alsa_mixer_build_list (GstAlsaMixer * mixer);
+static void gst_alsa_mixer_free_list (GstAlsaMixer * mixer);
 
 /* interface implementation */
-static const GList *		gst_alsa_mixer_list_tracks	(GstMixer *	mixer);
+static const GList *gst_alsa_mixer_list_tracks (GstMixer * mixer);
 
-static void			gst_alsa_mixer_set_volume	(GstMixer *	mixer,
-								 GstMixerTrack*	track,
-								 gint *		volumes);
-static void			gst_alsa_mixer_get_volume	(GstMixer *	mixer,
-								 GstMixerTrack*	track,
-								 gint *		volumes);
+static void gst_alsa_mixer_set_volume (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes);
+static void gst_alsa_mixer_get_volume (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes);
 
-static void			gst_alsa_mixer_set_record	(GstMixer *	mixer,
-								 GstMixerTrack*	track,
-								 gboolean	record);
-static void			gst_alsa_mixer_set_mute		(GstMixer *	mixer,
-								 GstMixerTrack*	track,
-								 gboolean	mute);
+static void gst_alsa_mixer_set_record (GstMixer * mixer,
+    GstMixerTrack * track, gboolean record);
+static void gst_alsa_mixer_set_mute (GstMixer * mixer,
+    GstMixerTrack * track, gboolean mute);
 
 /*** GOBJECT STUFF ************************************************************/
 
@@ -96,10 +90,14 @@ gst_alsa_mixer_get_type (void)
       NULL,
     };
 
-    alsa_mixer_type = g_type_register_static (GST_TYPE_ALSA, "GstAlsaMixer", &alsa_mixer_info, 0);
+    alsa_mixer_type =
+	g_type_register_static (GST_TYPE_ALSA, "GstAlsaMixer", &alsa_mixer_info,
+	0);
 
-    g_type_add_interface_static (alsa_mixer_type, GST_TYPE_IMPLEMENTS_INTERFACE, &alsa_iface_info);
-    g_type_add_interface_static (alsa_mixer_type, GST_TYPE_MIXER, &alsa_mixer_iface_info);
+    g_type_add_interface_static (alsa_mixer_type, GST_TYPE_IMPLEMENTS_INTERFACE,
+	&alsa_iface_info);
+    g_type_add_interface_static (alsa_mixer_type, GST_TYPE_MIXER,
+	&alsa_mixer_iface_info);
   }
 
   return alsa_mixer_type;
@@ -112,7 +110,7 @@ gst_alsa_mixer_class_init (gpointer g_class, gpointer class_data)
   GstElementClass *element_class;
   GstAlsaClass *klass;
 
-  klass = (GstAlsaClass *)g_class;
+  klass = (GstAlsaClass *) g_class;
   object_class = (GObjectClass *) g_class;
   element_class = (GstElementClass *) g_class;
 
@@ -132,38 +130,37 @@ gst_alsa_mixer_init (GstAlsaMixer * mixer)
   gint err;
   GstAlsa *alsa = GST_ALSA (mixer);
 
-  mixer->mixer_handle = (snd_mixer_t *) -1;
+  mixer->mixer_handle = (snd_mixer_t *) - 1;
 
   /* open and initialize the mixer device */
-  err = snd_mixer_open(&mixer->mixer_handle, 0);
+  err = snd_mixer_open (&mixer->mixer_handle, 0);
   if (err < 0 || mixer->mixer_handle == NULL) {
     GST_ERROR_OBJECT (GST_OBJECT (mixer), "Cannot open mixer device.");
-    mixer->mixer_handle = (snd_mixer_t *) -1;
+    mixer->mixer_handle = (snd_mixer_t *) - 1;
     return;
   }
 
-  if ((err = snd_mixer_attach(mixer->mixer_handle, alsa->device)) < 0) {
+  if ((err = snd_mixer_attach (mixer->mixer_handle, alsa->device)) < 0) {
     GST_ERROR_OBJECT (GST_OBJECT (mixer),
-                      "Cannot attach mixer to sound device `%s'.",
-                      alsa->device);
+	"Cannot attach mixer to sound device `%s'.", alsa->device);
     goto error;
   }
 
-  if ((err = snd_mixer_selem_register(mixer->mixer_handle, NULL, NULL)) < 0) {
+  if ((err = snd_mixer_selem_register (mixer->mixer_handle, NULL, NULL)) < 0) {
     GST_ERROR_OBJECT (GST_OBJECT (mixer), "Cannot register mixer elements.");
     goto error;
   }
 
-  if ((err = snd_mixer_load(mixer->mixer_handle)) < 0) {
+  if ((err = snd_mixer_load (mixer->mixer_handle)) < 0) {
     GST_ERROR_OBJECT (GST_OBJECT (mixer), "Cannot load mixer settings.");
     goto error;
   }
 
   return;
 
- error:
+error:
   snd_mixer_close (mixer->mixer_handle);
-  mixer->mixer_handle = (snd_mixer_t *) -1;
+  mixer->mixer_handle = (snd_mixer_t *) - 1;
 }
 
 static void
@@ -171,25 +168,26 @@ gst_alsa_mixer_dispose (GObject * object)
 {
   GstAlsaMixer *mixer = GST_ALSA_MIXER (object);
 
-  if (((gint) mixer->mixer_handle) == -1) return;
+  if (((gint) mixer->mixer_handle) == -1)
+    return;
 
   snd_mixer_close (mixer->mixer_handle);
-  mixer->mixer_handle = (snd_mixer_t *) -1;
+  mixer->mixer_handle = (snd_mixer_t *) - 1;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
-gst_alsa_interface_init (GstImplementsInterfaceClass *klass)
+gst_alsa_interface_init (GstImplementsInterfaceClass * klass)
 {
   klass->supported = gst_alsa_mixer_supported;
 }
 
 static void
-gst_alsa_mixer_interface_init (GstMixerClass *klass)
+gst_alsa_mixer_interface_init (GstMixerClass * klass)
 {
   GST_MIXER_TYPE (klass) = GST_MIXER_HARDWARE;
-  
+
   /* set up the interface hooks */
   klass->list_tracks = gst_alsa_mixer_list_tracks;
   klass->set_volume = gst_alsa_mixer_set_volume;
@@ -199,7 +197,7 @@ gst_alsa_mixer_interface_init (GstMixerClass *klass)
 }
 
 gboolean
-gst_alsa_mixer_supported (GstImplementsInterface *iface, GType iface_type)
+gst_alsa_mixer_supported (GstImplementsInterface * iface, GType iface_type)
 {
   g_assert (iface_type == GST_TYPE_MIXER);
 
@@ -207,7 +205,7 @@ gst_alsa_mixer_supported (GstImplementsInterface *iface, GType iface_type)
 }
 
 static void
-gst_alsa_mixer_build_list (GstAlsaMixer *mixer)
+gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
 {
   gint i, count;
   snd_mixer_elem_t *element;
@@ -215,26 +213,27 @@ gst_alsa_mixer_build_list (GstAlsaMixer *mixer)
 
   g_return_if_fail (((gint) mixer->mixer_handle) != -1);
 
-  count = snd_mixer_get_count(mixer->mixer_handle);
-  element = snd_mixer_first_elem(mixer->mixer_handle);
+  count = snd_mixer_get_count (mixer->mixer_handle);
+  element = snd_mixer_first_elem (mixer->mixer_handle);
 
   /* build track list */
 
   for (i = 0; i < count; i++) {
     gint channels = 0;
 
-    if (! snd_mixer_selem_is_active(element)) continue;
+    if (!snd_mixer_selem_is_active (element))
+      continue;
 
     /* find out if this element can be an input */
 
-    if (snd_mixer_selem_has_capture_channel(element, 0) ||
-        snd_mixer_selem_has_capture_switch(element) ||
-        snd_mixer_selem_is_capture_mono(element)) {
-      while (snd_mixer_selem_has_capture_channel(element, channels))
-        channels++;
+    if (snd_mixer_selem_has_capture_channel (element, 0) ||
+	snd_mixer_selem_has_capture_switch (element) ||
+	snd_mixer_selem_is_capture_mono (element)) {
+      while (snd_mixer_selem_has_capture_channel (element, channels))
+	channels++;
 
       track = gst_alsa_mixer_track_new
-        (element, i, channels, GST_MIXER_TRACK_INPUT);
+	  (element, i, channels, GST_MIXER_TRACK_INPUT);
       mixer->tracklist = g_list_append (mixer->tracklist, track);
     }
 
@@ -242,23 +241,23 @@ gst_alsa_mixer_build_list (GstAlsaMixer *mixer)
 
     channels = 0;
 
-    if (snd_mixer_selem_has_playback_channel(element, 0) ||
-        snd_mixer_selem_has_playback_switch(element) ||
-        snd_mixer_selem_is_playback_mono(element)) {
-      while (snd_mixer_selem_has_playback_channel(element, channels))
-        channels++;
+    if (snd_mixer_selem_has_playback_channel (element, 0) ||
+	snd_mixer_selem_has_playback_switch (element) ||
+	snd_mixer_selem_is_playback_mono (element)) {
+      while (snd_mixer_selem_has_playback_channel (element, channels))
+	channels++;
 
       track = gst_alsa_mixer_track_new
-        (element, i, channels, GST_MIXER_TRACK_OUTPUT);
+	  (element, i, channels, GST_MIXER_TRACK_OUTPUT);
       mixer->tracklist = g_list_append (mixer->tracklist, track);
     }
 
-    element = snd_mixer_elem_next(element);
+    element = snd_mixer_elem_next (element);
   }
 }
 
 static void
-gst_alsa_mixer_free_list (GstAlsaMixer *mixer)
+gst_alsa_mixer_free_list (GstAlsaMixer * mixer)
 {
   g_return_if_fail (((gint) mixer->mixer_handle) != -1);
 
@@ -270,7 +269,7 @@ gst_alsa_mixer_free_list (GstAlsaMixer *mixer)
 /*** GSTREAMER FUNCTIONS ******************************************************/
 
 static GstElementStateReturn
-gst_alsa_mixer_change_state (GstElement *element)
+gst_alsa_mixer_change_state (GstElement * element)
 {
   GstAlsaMixer *this;
 
@@ -278,12 +277,14 @@ gst_alsa_mixer_change_state (GstElement *element)
   this = GST_ALSA_MIXER (element);
 
   switch (GST_STATE_TRANSITION (element)) {
-  case GST_STATE_NULL_TO_READY:
-    gst_alsa_mixer_build_list (this); break;
-  case GST_STATE_READY_TO_NULL:
-    gst_alsa_mixer_free_list (this); break;
-  default:
-    g_assert_not_reached();
+    case GST_STATE_NULL_TO_READY:
+      gst_alsa_mixer_build_list (this);
+      break;
+    case GST_STATE_READY_TO_NULL:
+      gst_alsa_mixer_free_list (this);
+      break;
+    default:
+      g_assert_not_reached ();
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
@@ -295,7 +296,7 @@ gst_alsa_mixer_change_state (GstElement *element)
 /*** INTERFACE IMPLEMENTATION *************************************************/
 
 static const GList *
-gst_alsa_mixer_list_tracks (GstMixer *mixer)
+gst_alsa_mixer_list_tracks (GstMixer * mixer)
 {
   GstAlsaMixer *alsa_mixer = GST_ALSA_MIXER (mixer);
 
@@ -305,9 +306,8 @@ gst_alsa_mixer_list_tracks (GstMixer *mixer)
 }
 
 static void
-gst_alsa_mixer_get_volume (GstMixer *mixer,
-                           GstMixerTrack *track,
-                           gint *volumes)
+gst_alsa_mixer_get_volume (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes)
 {
   gint i;
   GstAlsaMixer *alsa_mixer = GST_ALSA_MIXER (mixer);
@@ -321,21 +321,21 @@ gst_alsa_mixer_get_volume (GstMixer *mixer,
   } else {
     for (i = 0; i < track->num_channels; i++) {
       long tmp;
-      if (snd_mixer_selem_has_playback_channel(alsa_track->element, i)) {
-        snd_mixer_selem_get_playback_volume(alsa_track->element, i, &tmp);
-        volumes[i] = (gint) tmp;
-      } else if (snd_mixer_selem_has_capture_channel(alsa_track->element, i)) {
-        snd_mixer_selem_get_capture_volume(alsa_track->element, i, &tmp);
-        volumes[i] = (gint) tmp;
+
+      if (snd_mixer_selem_has_playback_channel (alsa_track->element, i)) {
+	snd_mixer_selem_get_playback_volume (alsa_track->element, i, &tmp);
+	volumes[i] = (gint) tmp;
+      } else if (snd_mixer_selem_has_capture_channel (alsa_track->element, i)) {
+	snd_mixer_selem_get_capture_volume (alsa_track->element, i, &tmp);
+	volumes[i] = (gint) tmp;
       }
     }
   }
 }
 
 static void
-gst_alsa_mixer_set_volume (GstMixer *mixer,
-                           GstMixerTrack *track,
-                           gint *volumes)
+gst_alsa_mixer_set_volume (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes)
 {
   gint i;
   GstAlsaMixer *alsa_mixer = GST_ALSA_MIXER (mixer);
@@ -344,12 +344,14 @@ gst_alsa_mixer_set_volume (GstMixer *mixer,
   g_return_if_fail (((gint) alsa_mixer->mixer_handle) != -1);
 
   /* only set the volume with ALSA lib if the track isn't muted. */
-  if (! (track->flags & GST_MIXER_TRACK_MUTE)) {
+  if (!(track->flags & GST_MIXER_TRACK_MUTE)) {
     for (i = 0; i < track->num_channels; i++) {
-      if (snd_mixer_selem_has_playback_channel(alsa_track->element, i))
-        snd_mixer_selem_set_playback_volume(alsa_track->element, i, (long) volumes[i]);
-      else if (snd_mixer_selem_has_capture_channel(alsa_track->element, i))
-        snd_mixer_selem_set_capture_volume(alsa_track->element, i, (long) volumes[i]);
+      if (snd_mixer_selem_has_playback_channel (alsa_track->element, i))
+	snd_mixer_selem_set_playback_volume (alsa_track->element, i,
+	    (long) volumes[i]);
+      else if (snd_mixer_selem_has_capture_channel (alsa_track->element, i))
+	snd_mixer_selem_set_capture_volume (alsa_track->element, i,
+	    (long) volumes[i]);
     }
   }
 
@@ -358,9 +360,7 @@ gst_alsa_mixer_set_volume (GstMixer *mixer,
 }
 
 static void
-gst_alsa_mixer_set_mute (GstMixer *mixer,
-                         GstMixerTrack *track,
-                         gboolean mute)
+gst_alsa_mixer_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
 {
   gint i;
   GstAlsaMixer *alsa_mixer = GST_ALSA_MIXER (mixer);
@@ -372,29 +372,28 @@ gst_alsa_mixer_set_mute (GstMixer *mixer,
     track->flags |= GST_MIXER_TRACK_MUTE;
 
     for (i = 0; i < track->num_channels; i++) {
-      if (snd_mixer_selem_has_capture_channel(alsa_track->element, i))
-        snd_mixer_selem_set_capture_volume(alsa_track->element, i, 0);
-      else if (snd_mixer_selem_has_playback_channel(alsa_track->element, i))
-        snd_mixer_selem_set_playback_volume(alsa_track->element, i, 0);
+      if (snd_mixer_selem_has_capture_channel (alsa_track->element, i))
+	snd_mixer_selem_set_capture_volume (alsa_track->element, i, 0);
+      else if (snd_mixer_selem_has_playback_channel (alsa_track->element, i))
+	snd_mixer_selem_set_playback_volume (alsa_track->element, i, 0);
     }
   } else {
     track->flags &= ~GST_MIXER_TRACK_MUTE;
 
     for (i = 0; i < track->num_channels; i++) {
-      if (snd_mixer_selem_has_capture_channel(alsa_track->element, i))
-        snd_mixer_selem_set_capture_volume(alsa_track->element, i,
-                                           alsa_track->volumes[i]);
-      else if (snd_mixer_selem_has_playback_channel(alsa_track->element, i))
-        snd_mixer_selem_set_playback_volume(alsa_track->element, i,
-                                            alsa_track->volumes[i]);
+      if (snd_mixer_selem_has_capture_channel (alsa_track->element, i))
+	snd_mixer_selem_set_capture_volume (alsa_track->element, i,
+	    alsa_track->volumes[i]);
+      else if (snd_mixer_selem_has_playback_channel (alsa_track->element, i))
+	snd_mixer_selem_set_playback_volume (alsa_track->element, i,
+	    alsa_track->volumes[i]);
     }
   }
 }
 
 static void
-gst_alsa_mixer_set_record (GstMixer *mixer,
-                           GstMixerTrack *track,
-                           gboolean record)
+gst_alsa_mixer_set_record (GstMixer * mixer,
+    GstMixerTrack * track, gboolean record)
 {
   GstAlsaMixer *alsa_mixer = GST_ALSA_MIXER (mixer);
 

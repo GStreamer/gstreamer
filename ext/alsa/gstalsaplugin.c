@@ -34,24 +34,21 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
 
-  if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE, GST_TYPE_ALSA_MIXER))
+  if (!gst_element_register (plugin, "alsamixer", GST_RANK_NONE,
+	  GST_TYPE_ALSA_MIXER))
     return FALSE;
-  if (!gst_element_register (plugin, "alsasrc", GST_RANK_NONE, GST_TYPE_ALSA_SRC))
+  if (!gst_element_register (plugin, "alsasrc", GST_RANK_NONE,
+	  GST_TYPE_ALSA_SRC))
     return FALSE;
-  if (!gst_element_register (plugin, "alsasink", GST_RANK_NONE, GST_TYPE_ALSA_SINK))
+  if (!gst_element_register (plugin, "alsasink", GST_RANK_NONE,
+	  GST_TYPE_ALSA_SINK))
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "alsa",
-  "ALSA plugin library",
-  plugin_init,
-  VERSION,
-  "LGPL",
-  GST_PACKAGE,
-  GST_ORIGIN
-)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "alsa",
+    "ALSA plugin library",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

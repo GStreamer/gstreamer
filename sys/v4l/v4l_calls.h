@@ -24,8 +24,9 @@
 #include "gst/gst-i18n-plugin.h"
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif				/* __cplusplus */
 
 
 /* simple check whether the device is open */
@@ -85,75 +86,62 @@ extern "C" {
   }
 
 
-typedef enum {
-  V4L_PICTURE_HUE = 0,
-  V4L_PICTURE_BRIGHTNESS,
-  V4L_PICTURE_CONTRAST,
-  V4L_PICTURE_SATURATION,
-} GstV4lPictureType;
+  typedef enum
+  {
+    V4L_PICTURE_HUE = 0,
+    V4L_PICTURE_BRIGHTNESS,
+    V4L_PICTURE_CONTRAST,
+    V4L_PICTURE_SATURATION,
+  } GstV4lPictureType;
 
-typedef enum {
-  V4L_AUDIO_VOLUME = 0,
-  V4L_AUDIO_MUTE,
-  V4L_AUDIO_MODE, /* stereo, mono, ... (see videodev.h) */
-} GstV4lAudioType;
+  typedef enum
+  {
+    V4L_AUDIO_VOLUME = 0,
+    V4L_AUDIO_MUTE,
+    V4L_AUDIO_MODE,		/* stereo, mono, ... (see videodev.h) */
+  } GstV4lAudioType;
 
 
 /* open/close the device */
-gboolean gst_v4l_open           (GstV4lElement *v4lelement);
-gboolean gst_v4l_close          (GstV4lElement *v4lelement);
+  gboolean gst_v4l_open (GstV4lElement * v4lelement);
+  gboolean gst_v4l_close (GstV4lElement * v4lelement);
 
 /* norm control (norm = VIDEO_MODE_{PAL|NTSC|SECAM|AUTO}) */
-gboolean gst_v4l_get_chan_norm  (GstV4lElement *v4lelement,
-				 gint          *channel,
-				 gint          *norm);
-gboolean gst_v4l_set_chan_norm  (GstV4lElement *v4lelement,
-				 gint           channel,
-				 gint           norm);
-GList   *gst_v4l_get_chan_names (GstV4lElement *v4lelement);
+  gboolean gst_v4l_get_chan_norm (GstV4lElement * v4lelement,
+      gint * channel, gint * norm);
+  gboolean gst_v4l_set_chan_norm (GstV4lElement * v4lelement,
+      gint channel, gint norm);
+  GList *gst_v4l_get_chan_names (GstV4lElement * v4lelement);
 
 /* frequency control */
-gboolean gst_v4l_get_signal     (GstV4lElement *v4lelement,
-				 gint           tunernum,
-				 guint         *signal);
-gboolean gst_v4l_get_frequency  (GstV4lElement *v4lelement,
-				 gint           tunernum,
-				 gulong        *frequency);
-gboolean gst_v4l_set_frequency  (GstV4lElement *v4lelement,
-				 gint           tunernum,
-				 gulong         frequency);
+  gboolean gst_v4l_get_signal (GstV4lElement * v4lelement,
+      gint tunernum, guint * signal);
+  gboolean gst_v4l_get_frequency (GstV4lElement * v4lelement,
+      gint tunernum, gulong * frequency);
+  gboolean gst_v4l_set_frequency (GstV4lElement * v4lelement,
+      gint tunernum, gulong frequency);
 
 /* picture control */
-gboolean gst_v4l_get_picture    (GstV4lElement *v4lelement,
-				 GstV4lPictureType type,
-				 gint          *value);
-gboolean gst_v4l_set_picture    (GstV4lElement *v4lelement,	
-				 GstV4lPictureType type,
-				 gint           value);
+  gboolean gst_v4l_get_picture (GstV4lElement * v4lelement,
+      GstV4lPictureType type, gint * value);
+  gboolean gst_v4l_set_picture (GstV4lElement * v4lelement,
+      GstV4lPictureType type, gint value);
 
 /* audio control */
-gboolean gst_v4l_get_audio      (GstV4lElement *v4lelement,
-				 gint           audionum,
-				 GstV4lAudioType type,
-				 gint          *value);
-gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement,
-				 gint           audionum,
-				 GstV4lAudioType type,
-				 gint           value);
+  gboolean gst_v4l_get_audio (GstV4lElement * v4lelement,
+      gint audionum, GstV4lAudioType type, gint * value);
+  gboolean gst_v4l_set_audio (GstV4lElement * v4lelement,
+      gint audionum, GstV4lAudioType type, gint value);
 
 /* overlay */
-gboolean gst_v4l_set_overlay    (GstV4lElement *v4lelement);
-gboolean gst_v4l_set_window     (GstElement    *element,
-				 gint x,        gint y,
-				 gint w,        gint h,
-				 struct video_clip *clips,
-				 gint           num_clips);
-gboolean gst_v4l_enable_overlay (GstV4lElement *v4lelement,
-				 gboolean       enable);
+  gboolean gst_v4l_set_overlay (GstV4lElement * v4lelement);
+  gboolean gst_v4l_set_window (GstElement * element,
+      gint x, gint y, gint w, gint h, struct video_clip *clips, gint num_clips);
+  gboolean gst_v4l_enable_overlay (GstV4lElement * v4lelement, gboolean enable);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
-#endif /* __V4L_CALLS_H__ */
+#endif				/* __V4L_CALLS_H__ */
