@@ -28,7 +28,7 @@
 /* elementfactory information */
 static GstElementDetails gst_tcpsink_details = GST_ELEMENT_DETAILS (
   "TCP packet sender",
-  "LGPL",
+  "Sink/Network",
   "Send data over the network via TCP",
   "Zeeshan Ali <zak147@yahoo.com>"
 );
