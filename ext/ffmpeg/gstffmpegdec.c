@@ -660,7 +660,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   }
 
   if (have_data) {
-    GST_DEBUG_OBJECT (ffmpegdec, "Decoded data, now pushing");
+    GST_DEBUG_OBJECT (ffmpegdec, "Decoded data, now pushing (%"
+        GST_TIME_FORMAT ")", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
 
     if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
       gst_buffer_unref (outbuf);
@@ -881,7 +882,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     /* no quasi-codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
         (in_plugin->id >= CODEC_ID_PCM_S16LE &&
-            in_plugin->id <= CODEC_ID_PCM_ALAW)) {
+            in_plugin->id <= CODEC_ID_PCM_U8)) {
       goto next;
     }
 
@@ -896,7 +897,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
     /* first make sure we've got a supported type */
     sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
-    srccaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
+    srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
     if (!sinkcaps || !srccaps) {
       if (sinkcaps) gst_caps_free (sinkcaps);
       if (srccaps) gst_caps_free (srccaps);

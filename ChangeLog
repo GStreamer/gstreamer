@@ -1,3 +1,16 @@
+2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid):
+	  Add AMR mimetypes (since those are recognized in ffmpeg).
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
+	  Register law codecs too, add time debug. Use ANY for template caps
+	  since we don't necessarily have available decoders for recognized
+	  formats.
+
 2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpeg.c: (plugin_init):

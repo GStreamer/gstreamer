@@ -745,26 +745,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     /* This is a bit ugly, but we just take all formats
      * for the pad template. We'll get an exact match
      * when we open the stream */
-    audiosrccaps = gst_caps_new_empty ();
-    videosrccaps = gst_caps_new_empty ();
-    for (in_codec = first_avcodec; in_codec != NULL; in_codec = in_codec->next) {
-      GstCaps *temp = gst_ffmpeg_codecid_to_caps (in_codec->id, NULL, TRUE);
-
-      if (!temp) {
-        continue;
-      }
-      switch (in_codec->type) {
-        case CODEC_TYPE_VIDEO:
-          gst_caps_append (videosrccaps, temp);
-          break;
-        case CODEC_TYPE_AUDIO:
-          gst_caps_append (audiosrccaps, temp);
-          break;
-        default:
-          gst_caps_free (temp);
-          break;
-      }
-    }
+    audiosrccaps = gst_caps_new_any ();
+    videosrccaps = gst_caps_new_any ();
 
     /* construct the type */
     type_name = g_strdup_printf ("ffdemux_%s", name);

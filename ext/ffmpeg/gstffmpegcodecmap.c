@@ -631,10 +631,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_AMR_NB:
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-amr-nb", NULL);
+      break;
+
     case CODEC_ID_AMR_WB:
-      /* what's this? ffmpeg uses external libs here that we don't include
-       * so there's no point in defining those. Still, I want to know what
-       * it actually is... */
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-amr-wb", NULL);
       break;
 
     case CODEC_ID_RA_144:
@@ -1710,6 +1711,12 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           break;
       }
     }
+  } else if (!strcmp (mimetype, "audio/x-amrnb")) {
+    audio = TRUE;
+    id = CODEC_ID_AMR_NB;
+  } else if (!strcmp (mimetype, "audio/x-amrwb")) {
+    id = CODEC_ID_AMR_WB;
+    audio = TRUE;
   } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15) ||
       !strncmp (mimetype, "video/x-gst_ff-", 15)) {
     gchar ext[16];
