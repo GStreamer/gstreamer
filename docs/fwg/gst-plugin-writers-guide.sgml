@@ -288,15 +288,13 @@
 	    mu law, 2 for A law.
 	  </para><para>
 	    <emphasis>endianness</emphasis>
-	    - The order of bytes in a sample.  This is an integer for
-	    which there are two valid values: 0 for little-endian (ie, bytes
-	    are least significant first), 1 for big-endian (ie, most
-	    significant byte first).
+	    - The order of bytes in a sample.  This is a boolean:
+	    0 means little-endian (ie, bytes are least significant first),
+	    1 means big-endian (ie, most significant byte first).
 	  </para><para>
 	    <emphasis>signed</emphasis>
-	    - Whether the samples are signed or not.  This is an integer
-	    for which there are two valid values: 0 for unsigned, 1 for
-	    signed.
+	    - Whether the samples are signed or not.  This is a boolean:
+	    0 means unsigned, 1 means signed.
 	  </para><para>
 	    <emphasis>width</emphasis>
 	    - The number of bits per sample.  This is extremely likely to be
@@ -327,6 +325,84 @@
         <listitem>
 	  <para>
 	    <emphasis>audio/mp3</emphasis>
+	    - Audio data compressed using the mp3 encoding scheme.
+	  </para><para>
+	    <emphasis>framed</emphasis>
+	    - This is a boolean.  If true (1), each buffer contains exactly
+	    one frame.  If false (0), frames and buffers do not (necessarily)
+	    match up.  If the data is not framed, the values of some of the
+	    properties will not be available, but others will be assumed to
+	    be constant throughout the file, or may be found in other ways.
+	  </para><para>
+	    <emphasis>layer</emphasis>
+	    - The compression scheme layer used to compress the data.
+	    This is an integer, and can currently have the value 1, 2
+	    or 3.
+	  </para><para>
+	    <emphasis>bitrate</emphasis>
+	    - The bitrate, in kilobits per second.
+	    For VBR (variable bitrate) mp3 data, this is the average bitrate.
+	  </para><para>
+	    <emphasis>channels</emphasis>
+	    - The number of channels of audio data present.  This could
+	    theoretically be any integer greater than 0, but in practice will
+	    be either 1 or 2.
+	  </para><para>
+	    <emphasis>joint-stereo</emphasis>
+	    - Boolean.  If true, channels must not be zero.  If true, this
+	    implies that stereo data is stored as a combined signal and
+	    the difference between the signals, rather than as two entirely
+	    separate signals.
+	  </para><para>
+	    There are many other properties relevant for
+	    <emphasis>audio/mp3</emphasis> data: these may be added to this
+	    specification at a later date.
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>audio/x-ogg</emphasis>
+	    - Audio data compressed using the Ogg Vorbis encoding scheme.
+	    There are currently no parameters defined for this type.  FIXME.
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>video/raw</emphasis>
+	    - Raw video data.
+	  </para><para>
+	    <emphasis>fourcc</emphasis>
+	  </para><para>
+	    <emphasis>width</emphasis>
+	    - The number of pixels wide that each video frame is.
+	  </para><para>
+	    <emphasis>height</emphasis>
+	    - The number of pixels high that each video frame is.
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>video/mpeg</emphasis>
+	    - Video data compressed using an mpeg encoding scheme.
+	  </para><para>
+	    <emphasis>mpegversion</emphasis>
+	  </para><para>
+	    <emphasis>systemstream</emphasis>
+	  </para>
+        </listitem>
+      </itemizedlist>
+      <itemizedlist>
+        <listitem>
+	  <para>
+	    <emphasis>video/avi</emphasis>
+	    - Video data compressed using the AVI encoding scheme.
+	    There are currently no parameters defined for this type.  FIXME.
 	  </para>
         </listitem>
       </itemizedlist>
