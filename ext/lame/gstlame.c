@@ -804,7 +804,8 @@ gst_lame_setup (GstLame *lame)
   }
   else {
     lame->initialized = TRUE;
-    GST_INFO (GST_CAT_PLUGIN_INFO, "lame encoder initialized");
+    /* FIXME: it would be nice to print out the mode here */
+    GST_INFO (GST_CAT_PLUGIN_INFO, "lame encoder initialized (%d kbit/s, %d Hz, %d channels)", lame->bitrate, lame->samplerate, lame->num_channels);
   }
 
   GST_DEBUG_LEAVE ("");
