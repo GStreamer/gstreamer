@@ -35,6 +35,7 @@
 #include "gsttypefind.h"
 
 
+#define MAX_PATH_SPLIT	16
 
 gchar *_gst_progname;
 
@@ -89,6 +90,31 @@ gst_init (int *argc, char **argv[])
   }
 }
 
+static void
+gst_add_paths_func (gchar *pathlist) 
+{
+  gchar **paths;
+  gint j = 0;
+  gchar *lastpath = g_strdup (pathlist);
+
+  while (lastpath) {
+    paths = g_strsplit (lastpath, G_SEARCHPATH_SEPARATOR_S, MAX_PATH_SPLIT);
+    g_free (lastpath);
+    lastpath = NULL;
+
+    while (paths[j]) {
+      GST_INFO (GST_CAT_GST_INIT, "Adding plugin path: \"%s\"", paths[j]);
+      gst_plugin_add_path (paths[j]);
+      if (++j == MAX_PATH_SPLIT) {
+        lastpath = g_strdup (paths[j]);
+        g_strfreev (paths); 
+        j=0;
+        break;
+      }
+    }
+  }
+}
+
 /* returns FALSE if the program can be aborted */
 static gboolean
 gst_init_check (int     *argc,
@@ -135,7 +161,7 @@ gst_init_check (int     *argc,
         (*argv)[i] = NULL;
       }
       else if (!strncmp ("--gst-plugin-path=", (*argv)[i], 17)) {
-        gst_plugin_add_path ((*argv)[i]+18);
+	gst_add_paths_func ((*argv)[i]+18);
 
         (*argv)[i] = NULL;
       }
@@ -158,16 +184,25 @@ gst_init_check (int     *argc,
     }
   }
 
+
+  /* check for ENV variables */
+  {
+    gchar *plugin_path = g_getenv("GST_PLUGIN_PATH");
+
+    gst_add_paths_func (plugin_path);
+  }
+
   if (showhelp) {
     guint i;
 
-    g_print ("usage %s [OPTION...]\n", (*argv)[0]);
+    g_print ("usage %s [OPTION...]\n", _gst_progname);
 
     g_print ("\nGStreamer options\n");
     g_print ("  --gst-info-mask=FLAGS               GST info flags to set (current %08x)\n", gst_info_get_categories());
     g_print ("  --gst-debug-mask=FLAGS              GST debugging flags to set\n");
     g_print ("  --gst-plugin-spew                   Enable printout of errors while loading GST plugins\n");
-    g_print ("  --gst-plugin-path=PATH              Add a directory to the plugin search path\n");
+    g_print ("  --gst-plugin-path=PATH              Add directories separated with '%s' to the plugin search path\n",
+		    G_SEARCHPATH_SEPARATOR_S);
 
     g_print ("\n  Mask (to be OR'ed)   info/debug         FLAGS   \n");
     g_print ("--------------------------------------------------------\n");
