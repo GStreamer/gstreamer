@@ -714,7 +714,6 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
   /* Generate the channels list */
   for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++)
     {
-      GstColorBalanceChannel *channel;
       XvAttribute *matching_attr = NULL;
 
       if (xv_attr != NULL) 
@@ -725,6 +724,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
         }
       
       if (matching_attr) {
+        GstColorBalanceChannel *channel;
         channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
         channel->label = g_strdup (channels[i]);
         channel->min_value = matching_attr ? matching_attr->min_value : -1000;
@@ -1452,7 +1452,7 @@ gst_xvimagesink_set_property (GObject *object, guint prop_id,
         xvimagesink->synchronous = g_value_get_boolean (value);
         if (xvimagesink->xcontext) {
           XSynchronize (xvimagesink->xcontext->disp,
-              xvimagesink->synchronous);
+                        xvimagesink->synchronous);
         }
         break;
       default:

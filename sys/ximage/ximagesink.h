@@ -122,6 +122,8 @@ struct _GstXImageSink {
   
   GMutex *pool_lock;
   GSList *image_pool;
+  
+  gboolean synchronous;
 };
 
 struct _GstXImageSinkClass {

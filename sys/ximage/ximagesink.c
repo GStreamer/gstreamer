@@ -53,7 +53,8 @@ GST_STATIC_PAD_TEMPLATE (
 
 enum {
   ARG_0,
-  ARG_DISPLAY
+  ARG_DISPLAY,
+  ARG_SYNCHRONOUS
   /* FILL ME */
 };
 
@@ -1078,6 +1079,13 @@ gst_ximagesink_set_property (GObject *object, guint prop_id,
       case ARG_DISPLAY:
         ximagesink->display_name = g_strdup (g_value_get_string (value));
         break;
+      case ARG_SYNCHRONOUS:
+        ximagesink->synchronous = g_value_get_boolean (value);
+        if (ximagesink->xcontext) {
+          XSynchronize (ximagesink->xcontext->disp,
+                        ximagesink->synchronous);
+        }
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -1098,6 +1106,9 @@ gst_ximagesink_get_property (GObject *object, guint prop_id,
     {
       case ARG_DISPLAY:
         g_value_set_string (value, g_strdup (ximagesink->display_name));
+        break;
+      case ARG_SYNCHRONOUS:
+        g_value_set_boolean (value, ximagesink->synchronous);
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1206,6 +1217,10 @@ gst_ximagesink_class_init (GstXImageSinkClass *klass)
   g_object_class_install_property (gobject_class, ARG_DISPLAY,
     g_param_spec_string ("display", "Display", "X Display name",
                          NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_SYNCHRONOUS,
+    g_param_spec_boolean ("synchronous", "Synchronous", "When enabled, runs "
+      "the X display in synchronous mode. (used only for debugging)", FALSE,
+      G_PARAM_READWRITE));
   
   gobject_class->dispose = gst_ximagesink_dispose;
   gobject_class->set_property = gst_ximagesink_set_property;
