@@ -18,7 +18,7 @@
  */
 
 #ifndef RGB_OUT
-#define RGB_OUT(d, r, g, b) RGBA_OUT(d, r, g, b, 0xff)
+#define RGB_OUT(d, r, g, b) RGBA_OUT(d, r, g, b, 0xffU)
 #endif
 
 static void glue(yuv420p_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
