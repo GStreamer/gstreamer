@@ -206,7 +206,7 @@ gst_cutter_init (GstCutter *filter)
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_cutter_chain);
   gst_pad_set_link_function (filter->sinkpad, gst_cutter_link);
-  filter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   /*gst_pad_set_link_function (filter->srcpad, gst_cutter_link);*/
 }
