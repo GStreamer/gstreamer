@@ -944,8 +944,7 @@ gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames)
             pad->offset += MIN(frames, this->period_frames - pad->offset);
             
             if (pad->offset >= this->period_frames) {
-                if (pad->offset > this->period_frames)
-                    G_BREAKPOINT();
+		g_assert(pad->offset <= this->period_frames);
                 
                 buf = gst_buffer_new();
                 GST_BUFFER_DATA(buf)    = pad->buf;
