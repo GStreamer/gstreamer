@@ -26,7 +26,7 @@ libgstarts_la_LIBADD = $(ARTS_LIBS)
 
 EXTRA_DIST = gst_artsio.idl
 else
-EXTRA_DIST = gst_arts.c gst_artsio.cc gst_artsio_impl.cc
+EXTRA_DIST = gst_arts.c gst_artsio.idl gst_artsio_impl.cc
 endif
 
 noinst_HEADERS = gst_arts.h gst_artsio_impl.h
