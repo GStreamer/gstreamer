@@ -1,3 +1,8 @@
+2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* docs/manual/motivation.xml:
+	Bonobo is no longer "emerging" and added sentence regarding tcp plugins
+
 2004-07-15  Zaheer Abbas Merali  <zaheerabbas at merali.org>
 
 	* docs/manual/motivation.xml: Fix spelling

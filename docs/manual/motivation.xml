@@ -82,7 +82,7 @@
         same encoder algorithms found in a non-distributed encoder.
       </para> 
       <para> 
-        No provisions have been made for emerging technologies such as
+        No provisions have been made for technologies such as
         the <ulink url="http://developer.gnome.org/arch/component/bonobo.html"
           type="http">GNOME object embedding using Bonobo</ulink>.
       </para> 
@@ -90,7 +90,9 @@
         The GStreamer core does not use network transparent technologies at the
 	lowest level as it only adds overhead for the local case. 
 	That said, it shouldn't be hard to create a wrapper around the
-	core components. 
+	core components.  There are tcp plugins now that implement a GStreamer
+	Data Protocol that allows pipelines to be slit over TCP.  These are 
+	located in the gst-plugins module directory gst/tcp.
       </para> 
     </sect2>
 
