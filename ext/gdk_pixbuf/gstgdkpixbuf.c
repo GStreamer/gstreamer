@@ -128,6 +128,40 @@ gst_gdk_pixbuf_sink_link (GstPad *pad, GstCaps *caps)
   return GST_PAD_LINK_DELAYED;
 }
 
+#if GDK_PIXBUF_MAJOR == 2 && GDK_PIXBUF_MINOR < 2
+/* gdk-pixbuf prior to 2.2 didn't have gdk_pixbuf_get_formats().
+ * These are just the formats that gdk-pixbuf is known to support.
+ * But maybe not -- it may have been compiled without an external
+ * library. */
+static GstCaps *gst_gdk_pixbuf_get_capslist(void)
+{
+  GstCaps *capslist;
+
+  capslist = gst_caps_chain(
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/png", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/jpeg", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/gif", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-icon", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "application/x-navi-animation", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-cmu-raster", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-sun-raster", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-pixmap", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/tiff", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-portable-anymap", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-portable-bitmap", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-portable-graymap", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-portable-pixmap", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/bmp", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-bmp", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-MS-bmp", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/vnd.wap.wbmp", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-bitmap", NULL),
+    GST_CAPS_NEW("gdk_pixbuf_sink", "image/x-tga", NULL),
+    NULL);
+
+  return capslist;
+}
+#else
 static GstCaps *gst_gdk_pixbuf_get_capslist(void)
 {
   GSList *slist;
@@ -157,6 +191,7 @@ static GstCaps *gst_gdk_pixbuf_get_capslist(void)
 
   return capslist;
 }
+#endif
 
 static GstCaps *gst_gdk_pixbuf_sink_getcaps(GstPad *pad, GstCaps *caps)
 {
