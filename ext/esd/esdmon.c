@@ -245,20 +245,22 @@ gst_esdmon_get (GstPad * pad)
     return NULL;
   }
   if (!GST_PAD_CAPS (pad)) {
-    gint sign = (esdmon->depth == 8 ? FALSE : TRUE);
+    GstCaps *caps = gst_caps_new_simple ("audio/x-raw-int",
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "signed", G_TYPE_BOOLEAN, esdmon->depth == 8 ? FALSE : TRUE,
+        "width", G_TYPE_INT, esdmon->depth,
+        "depth", G_TYPE_INT, esdmon->depth,
+        "rate", G_TYPE_INT, esdmon->frequency,
+        "channels", G_TYPE_INT, esdmon->channels,
+        NULL);
 
     /* set caps on src pad */
-    if (gst_pad_set_explicit_caps (esdmon->srcpad,
-            gst_caps_new_simple ("audio/x-raw-int",
-                "endianness", G_TYPE_INT, G_BYTE_ORDER,
-                "signed", G_TYPE_BOOLEAN, sign,
-                "width", G_TYPE_INT, esdmon->depth,
-                "depth", G_TYPE_INT, esdmon->depth,
-                "rate", G_TYPE_INT, esdmon->frequency,
-                "channels", G_TYPE_INT, esdmon->channels)) <= 0) {
+    if (gst_pad_set_explicit_caps (esdmon->srcpad, caps) <= 0) {
       GST_ELEMENT_ERROR (esdmon, CORE, NEGOTIATION, (NULL), (NULL));
+      gst_caps_free (caps);
       return NULL;
     }
+    gst_caps_free (caps);
   }
 
   GST_BUFFER_SIZE (buf) = readbytes;
