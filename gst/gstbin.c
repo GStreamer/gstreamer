@@ -409,9 +409,6 @@ gst_bin_add_func (GstBin *bin, GstElement *element)
   /* the element must not already have a parent */
   g_return_if_fail (GST_ELEMENT_PARENT (element) == NULL);
 
-  /* must be not be in PLAYING state in order to modify bin */
-  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
-
   /* then check to see if the element's name is already taken in the bin */
   if (gst_object_check_uniqueness (bin->children, 
 	                           GST_ELEMENT_NAME (element)) == FALSE)
@@ -540,9 +537,6 @@ gst_bin_remove (GstBin *bin, GstElement *element)
   g_return_if_fail (GST_IS_BIN (bin));
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail (bin->children != NULL);
-
-  /* must not be in PLAYING state in order to modify bin */
-  g_return_if_fail (GST_STATE (bin) != GST_STATE_PLAYING);
 
   bclass = GST_BIN_GET_CLASS (bin);
 
