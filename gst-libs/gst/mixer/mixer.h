@@ -23,6 +23,7 @@
 #define __GST_MIXER_H__
 
 #include <gst/gst.h>
+#include <gst/mixer/mixeroptions.h>
 #include <gst/mixer/mixertrack.h>
 #include <gst/mixer/mixer-enumtypes.h>
 
@@ -84,7 +85,18 @@ typedef struct _GstMixerClass {
 			   GstMixerTrack *channel,
 			   gint          *volumes);
 
-  gpointer _gst_reserved[GST_PADDING];
+  /* use padding */
+  void		(* set_option)     (GstMixer      *mixer,
+				    GstMixerOptions *opts,
+				    gchar         *value);
+  const gchar *	(* get_option)     (GstMixer      *mixer,
+				    GstMixerOptions *opts);
+
+  void (* option_changed) (GstMixer      *mixer,
+			   GstMixerOptions *opts,
+			   gchar         *option);
+
+  gpointer _gst_reserved[GST_PADDING-3];
 } GstMixerClass;
 
 GType		gst_mixer_get_type	(void);
@@ -103,6 +115,11 @@ void		gst_mixer_set_mute	 (GstMixer      *mixer,
 void		gst_mixer_set_record	 (GstMixer      *mixer,
 					  GstMixerTrack *track,
 					  gboolean       record);
+void		gst_mixer_set_option	 (GstMixer      *mixer,
+					  GstMixerOptions *opts,
+					  gchar         *value);
+const gchar *	gst_mixer_get_option	 (GstMixer      *mixer,
+					  GstMixerOptions *opts);
 
 /* trigger signals */
 void		gst_mixer_mute_toggled   (GstMixer      *mixer,
@@ -114,6 +131,9 @@ void		gst_mixer_record_toggled (GstMixer      *mixer,
 void		gst_mixer_volume_changed (GstMixer      *mixer,
 					  GstMixerTrack *track,
 					  gint          *volumes);
+void		gst_mixer_option_changed (GstMixer      *mixer,
+					  GstMixerOptions *opts,
+					  gchar         *value);
 
 G_END_DECLS
 
