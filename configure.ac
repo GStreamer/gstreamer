@@ -177,6 +177,7 @@ AC_ARG_WITH(pkg-config-path,
    AC_HELP_STRING([--with-pkg-config-path],[colon-separated list of pkg-config(1) dirs]),
    [export PKG_CONFIG_PATH=${withval}])
 
+GST_DOC()
 dnl check architecture
 GST_ARCH()
 
@@ -2087,6 +2088,9 @@ pkgconfig/gstreamer-plugins-uninstalled.pc
 po/Makefile.in
 common/Makefile
 common/m4/Makefile
+docs/Makefile
+docs/libs/Makefile
+docs/version.entities
 m4/Makefile
 )
 AC_OUTPUT
