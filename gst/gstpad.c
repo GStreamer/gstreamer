@@ -1408,8 +1408,10 @@ gst_pad_try_set_caps (GstPad *pad, const GstCaps *caps)
 
   g_return_val_if_fail (pad != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_REAL_PAD (pad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (!GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING),
-      GST_PAD_LINK_REFUSED);
+  
+  /* If the pad is negotiating we refuse this try */
+  if (GST_FLAG_IS_SET (pad, GST_PAD_NEGOTIATING))
+    return GST_PAD_LINK_REFUSED;
 
   /* setting non-fixed caps on a pad is not allowed */
   if (!gst_caps_is_fixed (caps)) {
