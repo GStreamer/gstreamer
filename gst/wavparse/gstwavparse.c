@@ -76,7 +76,7 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
     "audio/raw",
       "format",            GST_PROPS_STRING ("int"),
        "law",              GST_PROPS_INT (0),
-       "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
+       "endianness",       GST_PROPS_INT (G_LITTLE_ENDIAN),
        "signed",           GST_PROPS_LIST (
 				GST_PROPS_BOOLEAN (FALSE),
 				GST_PROPS_BOOLEAN (TRUE)
@@ -96,6 +96,17 @@ GST_PAD_TEMPLATE_FACTORY (src_template_factory,
     "wavparse_mp3",
     "audio/x-mp3",
     NULL
+  ),
+  GST_CAPS_NEW (
+    "parsewav_law",
+    "audio/raw",
+      "format",            GST_PROPS_STRING ("int"),
+      "law",               GST_PROPS_INT_RANGE (1, 2),
+      "endianness",        GST_PROPS_INT (G_LITTLE_ENDIAN),
+      "width",             GST_PROPS_INT (8),
+      "depth",             GST_PROPS_INT (8),
+      "rate",              GST_PROPS_INT_RANGE (8000, 48000),
+      "channels",          GST_PROPS_INT_RANGE (1, 2)
   )
 )
 
@@ -198,6 +209,7 @@ wav_type_find (GstBuffer *buf, gpointer private)
 {
   gchar *data = GST_BUFFER_DATA (buf);
 
+  if (GST_BUFFER_SIZE (buf) < 12) return NULL;
   if (strncmp (&data[0], "RIFF", 4)) return NULL;
   if (strncmp (&data[8], "WAVE", 4)) return NULL;
 
@@ -341,13 +353,31 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
       /* FIXME: handle all of the other formats as well */
       switch (wavparse->format)
       {
+        case GST_RIFF_WAVE_FORMAT_ALAW:
+        case GST_RIFF_WAVE_FORMAT_MULAW:
+	  if (!(wavparse->width == 8)) {
+	    gst_element_error (GST_ELEMENT (wavparse), "wavparse: invalid wave file");
+	    return;
+	  }
+          caps = GST_CAPS_NEW (
+			"parsewav_src",
+			"audio/raw",
+			"format",	GST_PROPS_STRING ("int"),
+			  "law",	GST_PROPS_INT (wavparse->format == GST_RIFF_WAVE_FORMAT_ALAW ? 2 : 1),
+			  "endianness",	GST_PROPS_INT (G_LITTLE_ENDIAN),
+			  "width",	GST_PROPS_INT (8),
+			  "depth",	GST_PROPS_INT (8),
+			  "rate",	GST_PROPS_INT (wavparse->rate),
+			  "channels",	GST_PROPS_INT (wavparse->channels)
+		);
+	  break;
         case GST_RIFF_WAVE_FORMAT_PCM:
           caps = GST_CAPS_NEW (
 			"parsewav_src",
 			"audio/raw",
 			"format",	GST_PROPS_STRING ("int"),
-			  "law",	GST_PROPS_INT (0),		/*FIXME */
-			  "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
+			  "law",	GST_PROPS_INT (0),
+			  "endianness",	GST_PROPS_INT (G_LITTLE_ENDIAN),
 			  "signed",     GST_PROPS_BOOLEAN ((wavparse->width > 8) ? TRUE : FALSE),
 			  "width",	GST_PROPS_INT (wavparse->width),
 			  "depth",	GST_PROPS_INT (wavparse->width),
@@ -364,7 +394,8 @@ gst_wavparse_chain (GstPad *pad, GstBuffer *buf)
 		);
 	  break;
 	default:
-	  g_warning ("wavparse: format %d not handled", wavparse->format);
+          gst_element_error (GST_ELEMENT (wavparse), "wavparse: format %d not handled", wavparse->format);
+          return;
       }
 
       if (gst_pad_try_set_caps (wavparse->srcpad, caps) <= 0) {
