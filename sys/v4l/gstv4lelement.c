@@ -309,7 +309,7 @@ gst_v4lelement_set_property (GObject      *object,
       v4lelement->mode = g_value_get_int(value);
       if (GST_V4L_IS_OPEN(v4lelement))
       {
-        if (!gst_v4l_set_audio(v4lelement, V4L_AUDIO_MODE, v4lelement->mute))
+        if (!gst_v4l_set_audio(v4lelement, V4L_AUDIO_MODE, v4lelement->mode))
           return;
       }
       break;
