@@ -84,17 +84,17 @@ enum
      {
        static GType audioscale_method_type = 0;
        static GEnumValue audioscale_methods[] =
-       {
-         {
-         GST_RESAMPLE_NEAREST, "0", "Nearest"}
-         ,
-         {
-         GST_RESAMPLE_BILINEAR, "1", "Bilinear"}
-         , {
-         GST_RESAMPLE_SINC, "2", "Sinc"}
-         , {
-         0, NULL, NULL}
-       ,};
+{
+  {
+  GST_RESAMPLE_NEAREST, "0", "Nearest"}
+  ,
+  {
+  GST_RESAMPLE_BILINEAR, "1", "Bilinear"}
+  , {
+  GST_RESAMPLE_SINC, "2", "Sinc"}
+  , {
+  0, NULL, NULL}
+,};
 
        if (!audioscale_method_type) {
          audioscale_method_type = g_enum_register_static ("GstAudioscaleMethod",
@@ -127,8 +127,7 @@ GType audioscale_get_type (void)
 
   if (!audioscale_type)
   {
-    static const GTypeInfo audioscale_info =
-    {
+    static const GTypeInfo audioscale_info = {
     sizeof (AudioscaleClass),
           gst_audioscale_base_init,
           NULL,
@@ -188,8 +187,7 @@ static void gst_audioscale_expand_value (GValue * dest, const GValue * src)
   int rate_min, rate_max;
 
   if (G_VALUE_TYPE (src) == G_TYPE_INT ||
-      G_VALUE_TYPE (src) == GST_TYPE_INT_RANGE)
-  {
+      G_VALUE_TYPE (src) == GST_TYPE_INT_RANGE) {
     if (G_VALUE_TYPE (src) == G_TYPE_INT) {
       rate_min = g_value_get_int (src);
       rate_max = rate_min;
@@ -213,8 +211,7 @@ static void gst_audioscale_expand_value (GValue * dest, const GValue * src)
     g_value_init (dest, GST_TYPE_LIST);
     for (i = 0; i < gst_value_list_get_size (src); i++) {
       const GValue *s = gst_value_list_get_value (src, i);
-      GValue d =
-      {
+      GValue d = {
       0};
       int j;
 
@@ -222,8 +219,7 @@ static void gst_audioscale_expand_value (GValue * dest, const GValue * src)
 
       for (j = 0; j < gst_value_list_get_size (dest); j++) {
         const GValue *s2 = gst_value_list_get_value (dest, j);
-        GValue d2 =
-        {
+        GValue d2 = {
         0};
 
         gst_value_union (&d2, &d, s2);
@@ -242,8 +238,7 @@ static void gst_audioscale_expand_value (GValue * dest, const GValue * src)
 
     if (gst_value_list_get_size (dest) == 1) {
       const GValue *s = gst_value_list_get_value (dest, 0);
-      GValue d =
-      {
+      GValue d = {
       0};
 
       gst_value_init_and_copy (&d, s);
@@ -268,8 +263,7 @@ static void gst_audioscale_expand_caps (GstCaps * caps)
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
     const GValue *value;
-    GValue dest =
-    {
+    GValue dest = {
     0};
 
     value = gst_structure_get_value (structure, "rate");
@@ -312,8 +306,7 @@ static GstCaps *gst_audioscale_fixate (GstPad * pad, const GstCaps * caps)
 
     audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
     r = &(audioscale->gst_resample_template);
-  if (pad == audioscale->srcpad)
-  {
+  if (pad == audioscale->srcpad) {
     otherpad = audioscale->sinkpad;
     rate = r->i_rate;
   } else
@@ -351,8 +344,7 @@ static GstPadLinkReturn gst_audioscale_link (GstPad * pad, const GstCaps * caps)
     audioscale = GST_AUDIOSCALE (gst_pad_get_parent (pad));
     r = &(audioscale->gst_resample_template);
 
-  if (pad == audioscale->srcpad)
-  {
+  if (pad == audioscale->srcpad) {
     otherpad = audioscale->sinkpad;
     rate = &r->o_rate;
     otherrate = &r->i_rate;
@@ -372,6 +364,7 @@ static GstPadLinkReturn gst_audioscale_link (GstPad * pad, const GstCaps * caps)
   copy = gst_caps_copy (caps);
   gst_audioscale_expand_caps (copy);
   link_ret = gst_pad_try_set_caps_nonfixed (otherpad, copy);
+  gst_caps_free (copy);
   if (GST_PAD_LINK_FAILED (link_ret))
     return link_ret;
 

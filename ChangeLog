@@ -1,3 +1,19 @@
+2004-10-26 Iain <iaingnome@gmail.com>
+
+	* ext/ogg/gstoggdemux.c (gst_ogg_pad_new): Free the tag list.
+	* gst/audioscale/gstaudioscale.c (gst_audioscale_link): Free the copy
+	of the caps.
+	* gst/interleave/interleave.c (interleave_class_init): Hook up release
+	pad.
+	(interleave_release_pad): Remove the pad.
+	* gst/level/gstlevel.c: Allow the level to take 1 or 2 channels.
+	* sys/sunaudio/gstsunaudio.c (gst_sunaudio_setparams): Pay attention to
+	the set device.
+	* sys/xvimage/xvimagesink.c (gst_xvimagesink_get_xv_support): Free the
+	attrs
+	(gst_xvimagesink_xcontext_clear): Free the xcontext.
+	(gst_xvimagesink_finalize): Free the par.
+
 2004-10-26  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/avi/gstavimux.c: (gst_avimux_audsinkconnect),

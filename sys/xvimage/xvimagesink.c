@@ -736,7 +736,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   /* Set XV_AUTOPAINT_COLORKEY */
   {
     int count;
-    const XvAttribute *const attr = XvQueryPortAttributes (xcontext->disp,
+    XvAttribute *const attr = XvQueryPortAttributes (xcontext->disp,
         xcontext->xv_port_id, &count);
     static const char autopaint[] = "XV_AUTOPAINT_COLORKEY";
 
@@ -747,6 +747,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, 1);
         break;
       }
+
+    XFree (attr);
   }
 
   /* We get all image formats supported by our port */
@@ -1090,6 +1092,7 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
 
   g_mutex_unlock (xvimagesink->x_lock);
 
+  g_free (xvimagesink->xcontext);
   xvimagesink->xcontext = NULL;
 }
 
@@ -1887,6 +1890,7 @@ gst_xvimagesink_finalize (GObject * object)
     xvimagesink->display_name = NULL;
   }
 
+  g_free (xvimagesink->par);
   g_mutex_free (xvimagesink->x_lock);
   g_mutex_free (xvimagesink->pool_lock);
 
