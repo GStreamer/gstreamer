@@ -68,7 +68,6 @@ struct _GstSineSrc {
   gint table_lookup_next;
     
   /* audio parameters */
-  gint width;
   gint samplerate;
 
   gint samples_per_buffer;
@@ -77,8 +76,6 @@ struct _GstSineSrc {
   guint64 timestamp;
   guint64 offset;
   GstBufferPool *bufpool;
-
-  gboolean newcaps;
 
   gdouble accumulator;
 };
