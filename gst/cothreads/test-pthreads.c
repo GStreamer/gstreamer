@@ -1,24 +1,5 @@
-#define __USE_GNU /* non-posix functions */
-#include <pthread.h>
-#undef __USE_GNU
 #include <stdio.h>
-#include "linuxthreads-internals.h"
-
-// the thread_self algorithm:
-/*
-  char * sp = CURRENT_STACK_FRAME;
-  int self = (int) pthread_self();
-  
-  if (self % PTHREAD_THREADS_MAX < 2)
-  * we only support the main thread, not the manager. *
-    return &__pthread_initial_thread;
-  
-#ifdef _STACK_GROWS_DOWN
-  return (pthread_descr)(((unsigned long)sp | (STACK_SIZE-1))+1) - 1;
-#else
-  return (pthread_descr)((unsigned long)sp &~ (STACK_SIZE-1));
-#endif
-*/
+#include "linuxthreads.h"
 
 /* this function is only really necessary to get the main thread's
  * pthread_descr, as the other threads store the pthread_descr (actually the

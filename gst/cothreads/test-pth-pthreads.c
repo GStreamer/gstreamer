@@ -2,8 +2,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include "linuxthreads-internals.h"
+#include "linuxthreads.h"
 
 pth_mctx_t main_context;
 int threadnum = 0;
