@@ -1,5 +1,21 @@
 2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
 
+	* gst/gstinfo.h:
+	Marc was right, we need to export literraly GST_CAT_DEFAULT
+
+2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+
+	* win32/config.h:
+	NLS crashes in gettext, disabled until this is solved
+
+2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+
+	* win32/gst-inspect.vcproj:
+	* win32/gst-launch.vcproj:
+	Should use NLS when available
+
+2004-07-24  Steve Lhomme  <steve.lhomme at free dot fr>
+
 	* gst/registries/gstxmlregistry.c:
 	removing the file doesn't seem to be a good idea on Linux
 

@@ -276,7 +276,7 @@ GSList *
 gchar *	gst_debug_construct_term_color	(guint colorinfo);
 
 
-extern GstDebugCategory *	GST_CAT_DEFAULT;
+GST_EXPORT GstDebugCategory *	GST_CAT_DEFAULT;
 /* this symbol may not be used */
 extern gboolean			__gst_debug_enabled;
 
