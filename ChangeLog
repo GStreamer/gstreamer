@@ -1,3 +1,14 @@
+2004-10-04 Iain <iaingnome@gmail.com>
+
+	* ext/speex/gstspeexdec.h: Revert the includes changes.
+		
+	* ext/speex/gstspeexenc.[ch]: Revert the includes changes.
+
+2004-09-30 Iain <iaingnome@gmail.com>
+
+	* sys/sunaudio/gstsunaudio.c (gst_sunaudiosink_open): Use the device
+	found during init or set as a property instead of hardcoding /dev/audio
+
 2004-10-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_class_init),
@@ -197,6 +208,7 @@
 	  correct sink template even if it is not the one defined in this
 	  file.
 
+>>>>>>> 1.1112
 2004-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_packet),
