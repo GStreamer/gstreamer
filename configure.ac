@@ -1074,7 +1074,7 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_KIO, true)
 GST_CHECK_FEATURE(KIO, [kio], kio, [
   AC_PATH_PROG(KDE_MOC, moc, no)
   if test x$KDE_MOC = xno; then
-    HAVE_KIO="false"
+    HAVE_KIO="no"
   else
     AC_PATH_PROG(KDE_CONFIG, kde-config, no)
 
@@ -1128,7 +1128,7 @@ GST_CHECK_FEATURE(KIO, [kio], kio, [
       AC_SUBST(KIO_CFLAGS)
       AC_SUBST(KIO_LIBS)
     else
-      HAVE_KIO="false"
+      HAVE_KIO="no"
     fi
   fi
 ])
