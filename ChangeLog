@@ -1,3 +1,8 @@
+2994-01-16  Christian Schaller <Uraeus@gnome.org>
+
+	* Update spec for new colorspace plugin and libcaca plugin
+	* Fix compilation of libcaca plugin (clock -> id)
+
 2004-01-16  Julien MOUTTE <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_update_colorbalance),
