@@ -112,6 +112,8 @@ do_cothread_context_destroy (cothread_context *context)
   }
   g_mutex_unlock (context->mutex);
   g_mutex_free (context->mutex);
+  g_cond_free (context->main->cond);
+  g_free (context->main);
   
   g_free (context);
 }

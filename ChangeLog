@@ -1,3 +1,11 @@
+2004-04-30  Sebastien Cote  <sc5@hermes.usherb.ca>
+
+	reviewed by Benjamin Otte  <otte@gnome.org>
+
+	* gst/schedulers/gthread-cothreads.h:
+	  free allocated data for main cothread, too when destroying context
+	  (fixes #141417)
+
 2004-04-29  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* docs/manual/goals.xml : remove duplicated paragraph at end 
