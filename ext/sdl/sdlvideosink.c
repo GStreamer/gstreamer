@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 #include "sdlvideosink.h"
 
@@ -153,6 +154,16 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass *klass)
 
 
 static void
+gst_sdlvideosink_set_clock (GstElement *element, GstClock *clock)
+{
+  GstSDLVideoSink *sdlvideosink;
+
+  sdlvideosink = GST_SDLVIDEOSINK (element);
+  
+  sdlvideosink->clock = clock;
+}
+
+static void
 gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
 {
   sdlvideosink->sinkpad = gst_pad_new_from_template (sink_template, "sink");
@@ -160,9 +171,6 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
 
   gst_pad_set_chain_function (sdlvideosink->sinkpad, gst_sdlvideosink_chain);
   gst_pad_set_connect_function (sdlvideosink->sinkpad, gst_sdlvideosink_sinkconnect);
-
-  sdlvideosink->clock = gst_clock_get_system();
-  gst_clock_register(sdlvideosink->clock, GST_OBJECT(sdlvideosink));
 
   sdlvideosink->window_width = -1;
   sdlvideosink->window_height = -1;
@@ -176,6 +184,9 @@ gst_sdlvideosink_init (GstSDLVideoSink *sdlvideosink)
   sdlvideosink->window_id = -1; /* means "don't use" */
 
   sdlvideosink->capslist = capslist;
+
+  sdlvideosink->clock = NULL;
+  GST_ELEMENT (sdlvideosink)->setclockfunc    = gst_sdlvideosink_set_clock;
 
   GST_FLAG_SET(sdlvideosink, GST_ELEMENT_THREAD_SUGGESTED);
 }
@@ -320,7 +331,6 @@ static void
 gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
 {
   GstSDLVideoSink *sdlvideosink;
-  GstClockTimeDiff jitter;
   SDL_Event event;
 
   g_return_if_fail (pad != NULL);
@@ -344,15 +354,9 @@ gst_sdlvideosink_chain (GstPad *pad, GstBuffer *buf)
     }
   }
 
-  jitter = gst_clock_current_diff(sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
-
-  if (jitter > 500000 || jitter < -500000)
-  {
-    GST_DEBUG (0, "jitter: %lld\n", jitter);
-    gst_clock_set (sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
-  }
-  else {
-    gst_clock_wait(sdlvideosink->clock, GST_BUFFER_TIMESTAMP(buf), GST_OBJECT(sdlvideosink));
+  if (sdlvideosink->clock) {
+    gst_element_clock_wait (GST_ELEMENT (sdlvideosink),
+		  sdlvideosink->clock, GST_BUFFER_TIMESTAMP (buf));
   }
 
   /* Lock SDL/yuv-overlay */
@@ -482,7 +486,7 @@ gst_sdlvideosink_change_state (GstElement *element)
       else
       {
         char SDL_hack[32];
-        sprintf(SDL_hack, "%ld", sdlvideosink->window_id);
+        sprintf(SDL_hack, "%d", sdlvideosink->window_id);
         setenv("SDL_WINDOWID", SDL_hack, 1);
       }
       if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0 )
