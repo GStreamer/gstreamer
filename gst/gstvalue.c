@@ -1266,7 +1266,7 @@ gst_string_wrap (const char *s)
       *e++ = *t++;
     } else if (*t < 0x20 || *t >= 0x7f) {
       *e++ = '\\';
-      *e++ = '0' + ((*t) >> 6);
+      *e++ = '0' + ((*(guchar *) t) >> 6);
       *e++ = '0' + (((*t) >> 3) & 0x7);
       *e++ = '0' + ((*t++) & 0x7);
     } else {
@@ -1281,6 +1281,48 @@ gst_string_wrap (const char *s)
 }
 
 static char *
+gst_string_unwrap (const gchar * s)
+{
+  /* FIXME: do better memory management? */
+  gchar *ret = g_strdup (s);
+  gchar *read = ret, *write = ret;
+
+  if (*read++ != '"') {
+    g_free (ret);
+    return NULL;
+  }
+  while (*read) {
+    if (GST_ASCII_IS_STRING (*read)) {
+      *write++ = *read++;
+    } else if (*read == '"') {
+      break;
+    } else if (*read == '\\') {
+      read++;
+      if (*read >= '0' && *read <= '7') {
+        if (read[1] < '0' || read[1] > '7' || read[2] < '0' || read[2] > '7') {
+          g_free (ret);
+          return NULL;
+        }
+        *write++ = ((read[0] - '0') << 6) +
+            ((read[1] - '0') << 3) + (read[2] - '0');
+        read += 3;
+      } else {
+        *write++ = *read++;
+      }
+    } else {
+      g_free (ret);
+      return NULL;
+    }
+  }
+  if (*read != '"' || read[1] != '\0') {
+    g_free (ret);
+    return NULL;
+  }
+  *write++ = '\0';
+  return ret;
+}
+
+static char *
 gst_value_serialize_string (const GValue * value)
 {
   return gst_string_wrap (value->data[0].v_pointer);
@@ -1289,7 +1331,16 @@ gst_value_serialize_string (const GValue * value)
 static gboolean
 gst_value_deserialize_string (GValue * dest, const char *s)
 {
-  g_value_set_string (dest, s);
+  if (*s != '"') {
+    g_value_set_string (dest, s);
+    return TRUE;
+  } else {
+    gchar *str = gst_string_unwrap (s);
+
+    if (!str)
+      return FALSE;
+    g_value_take_string (dest, str);
+  }
 
   return TRUE;
 }

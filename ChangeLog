@@ -1,3 +1,15 @@
+2004-11-28  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.c: (gst_element_negotiate_pads):
+	  simplify
+	* gst/gstvalue.c: (gst_string_wrap), (gst_string_unwrap),
+	(gst_value_serialize_string), (gst_value_deserialize_string):
+	  add unwrapping of previously wrapped strings. Fix bug in wrapping
+	  while at it.
+	* testsuite/caps/value_serialize.c: (test1),
+	(test_string_serialization), (test_string_deserialization), (main):
+	  add tests for string (de)serialization
+
 2004-11-26  Wim Taymans  <wim@fluendo.com>
 
 	* testsuite/threads/159566.c: (object_deep_notify), (main):

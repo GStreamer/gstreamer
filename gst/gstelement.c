@@ -2835,63 +2835,23 @@ exit:
 static gboolean
 gst_element_negotiate_pads (GstElement * element)
 {
-  GList *pads = GST_ELEMENT_PADS (element);
+  GList *pads;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, element, "negotiating pads");
 
-  while (pads) {
+  for (pads = GST_ELEMENT_PADS (element); pads; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
-    GstRealPad *srcpad;
-
-    pads = g_list_next (pads);
 
     if (!GST_IS_REAL_PAD (pad))
       continue;
 
-    srcpad = GST_PAD_REALIZE (pad);
-
     /* if we have a link on this pad and it doesn't have caps
      * allready, try to negotiate */
-    if (GST_PAD_IS_LINKED (srcpad) && !GST_PAD_CAPS (srcpad)) {
-      GstRealPad *sinkpad;
-      GstElementState otherstate;
-      GstElement *parent;
-
-      sinkpad = GST_RPAD_PEER (GST_PAD_REALIZE (srcpad));
-
-      /* check the parent of the peer pad, if there is no parent do nothing */
-      parent = GST_PAD_PARENT (sinkpad);
-      if (!parent)
-        continue;
-
-      /* skips pads that were already negotiating */
-      if (GST_FLAG_IS_SET (sinkpad, GST_PAD_NEGOTIATING) ||
-          GST_FLAG_IS_SET (srcpad, GST_PAD_NEGOTIATING))
-        continue;
-
-      otherstate = GST_STATE (parent);
-
-      /* swap pads if needed */
-      if (!GST_PAD_IS_SRC (srcpad)) {
-        GstRealPad *temp;
-
-        temp = srcpad;
-        srcpad = sinkpad;
-        sinkpad = temp;
-      }
-
-      /* only try to negotiate if the peer element is in PAUSED or higher too */
-      if (otherstate >= GST_STATE_READY) {
-        GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, element,
-            "perform negotiate for %s:%s and %s:%s",
-            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-        if (gst_pad_renegotiate (pad) == GST_PAD_LINK_REFUSED)
-          return FALSE;
-      } else {
-        GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, element,
-            "not negotiating %s:%s and %s:%s, not in READY yet",
-            GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-      }
+    if (!gst_pad_is_negotiated (pad)) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, element,
+          "perform negotiate for %s:%s", GST_DEBUG_PAD_NAME (pad));
+      if (gst_pad_renegotiate (pad) == GST_PAD_LINK_REFUSED)
+        return FALSE;
     }
   }
 
