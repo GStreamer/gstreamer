@@ -1086,6 +1086,8 @@ docs/fwg/Makefile
 debian/Makefile
 stamp.h
 gstreamer-config
+gstreamer.pc
+gstreamer-uninstalled.pc
 gstreamer.spec,
 chmod +x gstreamer-config
 )
