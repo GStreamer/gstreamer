@@ -741,13 +741,32 @@ gst_pad_set_formats_function (GstPad *pad, GstPadFormatsFunction formats)
  */
 void
 gst_pad_set_link_function (GstPad *pad,
-		              GstPadLinkFunction link)
+	                   GstPadLinkFunction link)
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
 
   GST_RPAD_LINKFUNC (pad) = link;
   GST_DEBUG (GST_CAT_PADS, "linkfunc for %s:%s set to %s",
+             GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (link));
+}
+
+/**
+ * gst_pad_set_unlink_function:
+ * @pad: a #GstPad to set the unlink function for.
+ * @link: the #GstPadLinkFunction to set.
+ *
+ * Sets the given unlink function for the pad. It will be called
+ * when the pad is unlinked from its peer.
+ */
+void
+gst_pad_set_unlink_function (GstPad *pad, GstPadUnlinkFunction link)
+{
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+
+  GST_RPAD_UNLINKFUNC (pad) = link;
+  GST_DEBUG (GST_CAT_PADS, "unlinkfunc for %s:%s set to %s",
              GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (link));
 }
 
