@@ -62,6 +62,21 @@ gst_parse_newpad(GstElement *element,GstPad *pad,launch_delayed_pad *peer)
 }
 */
 
+typedef struct {
+  gchar *srcpadname;
+  GstPad *target;
+} dyn_connect;
+
+static void
+dynamic_connect (GstElement *element, GstPad *newpad, gpointer data)
+{
+  dyn_connect *connect = (dyn_connect *)data;
+
+  if (!strcmp (gst_pad_get_name (newpad), connect->srcpadname)) {
+    gst_pad_connect (newpad, connect->target);
+  }
+}
+
 static gchar *
 gst_parse_unique_name(gchar *type,gst_parse_priv *priv)
 {
@@ -148,11 +163,11 @@ gst_parse_launch_cmdline(int argc,char *argv[],GstBin *parent,gst_parse_priv *pr
       if (!srcpadname || !strchr(srcpadname,',')) {
         if (srcpadname != NULL) {
           srcpad = gst_element_get_pad(previous,srcpadname);
-          if (!srcpad)
+          if (!srcpad) {
             GST_DEBUG(0,"NO SUCH pad %s in element %s\n",srcpadname,GST_ELEMENT_NAME(previous));
+	  }
         }
-
-        if (srcpad == NULL) {
+	else if (srcpad == NULL) {
           // check through the list to find the first sink pad
           GST_DEBUG(0,"CHECKING through element %s for pad named %s\n",GST_ELEMENT_NAME(previous),srcpadname);
           pads = gst_element_get_pad_list(previous);
@@ -164,10 +179,9 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
             if (gst_pad_get_direction (srcpad) == GST_PAD_SRC) break;
             srcpad = NULL;
           }
+          if (!srcpad) GST_DEBUG(0,"error, can't find a src pad!!!\n");
+          else GST_DEBUG(0,"have src pad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
         }
-
-        if (!srcpad) GST_DEBUG(0,"error, can't find a src pad!!!\n");
-        else GST_DEBUG(0,"have src pad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
       }
 
     // argument with = in it
@@ -226,8 +240,9 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       gst_bin_add (GST_BIN (parent), element);
       elementcount++;
 
-      if (srcpad != NULL) {
-        DEBUG("need to connect to sinkpad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
+      if (srcpad != NULL || srcpadname != NULL) {
+        if (srcpad)
+          DEBUG("need to connect to srcpad %s:%s\n",GST_DEBUG_PAD_NAME(srcpad));
 
         sinkpad = NULL;
 
@@ -248,12 +263,26 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
         if (!sinkpad) DEBUG("error, can't find a sink pad!!!\n");
         else DEBUG("have sink pad %s:%s\n",GST_DEBUG_PAD_NAME(sinkpad));
 
-        GST_DEBUG(0,"CONNECTING %s:%s and %s:%s\n",GST_DEBUG_PAD_NAME(srcpad),GST_DEBUG_PAD_NAME(sinkpad));
-        gst_pad_connect(srcpad,sinkpad);
+        if (!srcpad) {
+	  dyn_connect *connect = g_malloc (sizeof (dyn_connect));
+
+	  connect->srcpadname = srcpadname;
+	  connect->target = sinkpad;
+
+          GST_DEBUG(0,"SETTING UP dynamic connection %s:%s and %s:%s\n",gst_element_get_name (previous),
+			  srcpadname,GST_DEBUG_PAD_NAME(sinkpad));
+
+	  gtk_signal_connect (GTK_OBJECT (previous), "new_pad", dynamic_connect, connect);
+        }
+        else {
+          GST_DEBUG(0,"CONNECTING %s:%s and %s:%s\n",GST_DEBUG_PAD_NAME(srcpad),GST_DEBUG_PAD_NAME(sinkpad));
+          gst_pad_connect(srcpad,sinkpad);
+        }
 
         sinkpad = NULL;
         srcpad = NULL;
       }
+      
 
       // if we're the first element, ghost all the sinkpads
       if (elementcount == 1) {
