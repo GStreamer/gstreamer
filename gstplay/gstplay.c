@@ -142,8 +142,6 @@ gst_play_init (GstPlay *play)
   gst_pipeline_add_sink (GST_PIPELINE (priv->pipeline), priv->audio_play);
   gst_pipeline_add_sink (GST_PIPELINE (priv->pipeline), priv->video_show);
 
-  //gst_bin_add (GST_BIN (priv->thread), priv->pipeline);
-
   play->state = GST_PLAY_STOPPED;
   play->flags = 0;
 
@@ -220,7 +218,7 @@ gst_play_object_added (GstElement *pipeline,
 
   priv = (GstPlayPrivate *)play->priv;
 
-  if (GST_FLAGS (element) & GST_ELEMENT_NO_SEEK) {
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_NO_SEEK)) {
     priv->can_seek = FALSE;
   }
 
@@ -259,8 +257,8 @@ gst_play_set_uri (GstPlay *play,
 
   priv->uri = g_strdup (uri);
 
-  priv->src = gst_elementfactory_make ("disksrc", "disk_src");
-  //priv->src = gst_elementfactory_make ("asyncdisksrc", "disk_src");
+  //priv->src = gst_elementfactory_make ("disksrc", "disk_src");
+  priv->src = gst_elementfactory_make ("asyncdisksrc", "disk_src");
   //priv->src = gst_elementfactory_make ("dvdsrc", "disk_src");
   g_return_val_if_fail (priv->src != NULL, -1);
   gtk_object_set (GTK_OBJECT (priv->src),"location",uri,NULL);
@@ -281,6 +279,7 @@ gst_play_set_uri (GstPlay *play,
     play->flags |= GST_PLAY_TYPE_AUDIO;
   }
 
+  // hmmmm hack? FIXME
   GST_FLAG_UNSET (priv->pipeline, GST_BIN_FLAG_MANAGER);
 
   gst_bin_add (GST_BIN (priv->thread), priv->pipeline);

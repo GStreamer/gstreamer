@@ -26,7 +26,9 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#include <gstasyncdisksrc.h>
+//#define GST_DEBUG_ENABLED
+
+#include "gstasyncdisksrc.h"
 
 
 GstElementDetails gst_asyncdisksrc_details = {
@@ -242,12 +244,15 @@ gst_asyncdisksrc_get (GstPad *pad)
   } else
     GST_BUFFER_SIZE (buf) = src->bytes_per_read;
 
-  src->curoffset += GST_BUFFER_SIZE (buf);
+  DEBUG ("map %p, offset %d, size %ld\n", src->map, src->curoffset, GST_BUFFER_SIZE (buf));
 
-  g_print ("offset %d\n", src->curoffset);
+  //gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+
+  src->curoffset += GST_BUFFER_SIZE (buf);
 
   if (src->new_seek) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLUSH);
+    DEBUG ("new seek\n");
     src->new_seek = FALSE;
   }
 
@@ -292,13 +297,13 @@ gst_asyncdisksrc_get_region (GstPad *pad, gulong offset, gulong size)
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
 
-  g_print ("offset %d\n", offset);
-
   if ((offset + size) > src->size) {
     GST_BUFFER_SIZE (buf) = src->size - offset;
     // FIXME: set the buffer's EOF bit here
   } else
     GST_BUFFER_SIZE (buf) = size;
+
+  DEBUG ("map %p, offset %d, size %ld\n", src->map, offset, GST_BUFFER_SIZE (buf));
 
   /* we're done, return the buffer off now */
   return buf;
@@ -330,7 +335,7 @@ gboolean gst_asyncdisksrc_open_file (GstAsyncDiskSrc *src)
       return FALSE;
     }
     GST_FLAG_SET (src, GST_ASYNCDISKSRC_OPEN);
-    src->new_seek = FALSE;
+    src->new_seek = TRUE;
   }
   return TRUE;
 }

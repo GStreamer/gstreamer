@@ -166,7 +166,8 @@ gst_buffer_append (GstBuffer *buffer,
 
   GST_BUFFER_LOCK (buffer);
   // the buffer is not used by anyone else
-  if (GST_BUFFER_REFCOUNT (buffer) == 1 && buffer->parent == NULL) {
+  if (GST_BUFFER_REFCOUNT (buffer) == 1 && buffer->parent == NULL 
+	  && !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE)) {
     // save the old size
     size = buffer->size;
     buffer->size += append->size;

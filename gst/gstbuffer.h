@@ -47,11 +47,11 @@ extern "C" {
 #define GST_BUFFER_FLAGS(buf) \
   (GST_BUFFER(buf)->flags)
 #define GST_BUFFER_FLAG_IS_SET(buf,flag) \
-  (GST_BUFFER_FLAGS(buf) & (flag))
+  (GST_BUFFER_FLAGS(buf) & (1<<(flag)))
 #define GST_BUFFER_FLAG_SET(buf,flag) \
-  G_STMT_START{ (GST_BUFFER_FLAGS(buf) |= (flag)); }G_STMT_END
+  G_STMT_START{ (GST_BUFFER_FLAGS(buf) |= (1<<(flag))); }G_STMT_END
 #define GST_BUFFER_FLAG_UNSET(buf,flag) \
-  G_STMT_START{ (GST_BUFFER_FLAGS(buf) &= ~(flag)); }G_STMT_END
+  G_STMT_START{ (GST_BUFFER_FLAGS(buf) &= ~(1<<(flag))); }G_STMT_END
 
 
 #define GST_BUFFER_TYPE(buf)		(GST_BUFFER(buf)->type)
