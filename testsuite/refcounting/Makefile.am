@@ -1,5 +1,3 @@
-SUBDIRS =
-
 testprogs = object element pad element_pad bin thread
 
 object_SOURCES = object.c mem.c
@@ -16,3 +14,4 @@ check_PROGRAMS = $(testprogs)
 # we have nothing but apps here, we can do this safely
 LIBS += $(GST_LIBS)
 CFLAGS += $(GST_CFLAGS)
+
