@@ -220,7 +220,7 @@ gst_flacdec_seek (const FLAC__SeekableStreamDecoder *decoder,
 
   flacdec = GST_FLACDEC (client_data);
 
-  GST_DEBUG (0, "seek %lld\n", position);
+  GST_DEBUG (0, "seek %lld", position);
   if (!gst_bytestream_seek (flacdec->bs, position, GST_SEEK_METHOD_SET)) {
     return FLAC__SEEKABLE_STREAM_DECODER_SEEK_STATUS_ERROR;
   }
@@ -239,7 +239,7 @@ gst_flacdec_tell (const FLAC__SeekableStreamDecoder *decoder,
   if (*position == -1)
     return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_ERROR;
 
-  GST_DEBUG (0, "tell %lld\n", *position);
+  GST_DEBUG (0, "tell %lld", *position);
 
   return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_OK;
 }
@@ -256,7 +256,7 @@ gst_flacdec_length (const FLAC__SeekableStreamDecoder *decoder,
   if (*length == -1)
     return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_ERROR;
 
-  GST_DEBUG (0, "length %lld\n", *length);
+  GST_DEBUG (0, "length %lld", *length);
 
   return FLAC__SEEKABLE_STREAM_DECODER_LENGTH_STATUS_OK;
 }
@@ -268,7 +268,7 @@ gst_flacdec_eof (const FLAC__SeekableStreamDecoder *decoder,
   FlacDec *flacdec;
 
   flacdec = GST_FLACDEC (client_data);
-  GST_DEBUG (0, "eof %d\n", flacdec->eos);
+  GST_DEBUG (0, "eof %d", flacdec->eos);
 
   return flacdec->eos;
 }
@@ -442,17 +442,17 @@ gst_flacdec_loop (GstElement *element)
   }
 
   if (flacdec->seek_pending) {
-    GST_DEBUG (GST_CAT_EVENT, "perform seek to sample %lld\n", 
+    GST_DEBUG (GST_CAT_EVENT, "perform seek to sample %lld", 
 		              flacdec->seek_value);
 
     if (FLAC__seekable_stream_decoder_seek_absolute (flacdec->decoder, 
 			                             flacdec->seek_value)) 
     {
       flacdec->total_samples = flacdec->seek_value;
-      GST_DEBUG (GST_CAT_EVENT, "seek done\n");
+      GST_DEBUG (GST_CAT_EVENT, "seek done");
     }
     else {
-      GST_DEBUG (GST_CAT_EVENT, "seek failed\n");
+      GST_DEBUG (GST_CAT_EVENT, "seek failed");
     }
     flacdec->seek_pending = FALSE;
   }
