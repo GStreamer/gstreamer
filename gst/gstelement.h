@@ -196,9 +196,9 @@ void			gst_element_set_loop_function	(GstElement *element,
 							 GstElementLoopFunction loop);
 
 #define			gst_element_get_name(elem)	gst_object_get_name(GST_OBJECT(elem))
-#define			gst_element_set_name(element,name)	gst_object_set_name(GST_OBJECT(elem),name)
+#define			gst_element_set_name(elem,name)	gst_object_set_name(GST_OBJECT(elem),name)
 #define			gst_element_get_parent(elem)	gst_object_get_parent(GST_OBJECT(elem))
-#define			gst_element_set_parent(element,parent)	gst_object_set_parent(GST_OBJECT(elem),parent)
+#define			gst_element_set_parent(elem,parent)	gst_object_set_parent(GST_OBJECT(elem),parent)
 
 /* threadsafe versions of their g_object_* counterparts */
 void	    		gst_element_set			(GstElement *element, const gchar *first_property_name, ...);
