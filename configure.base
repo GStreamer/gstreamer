@@ -1160,6 +1160,8 @@ plugins/filters/level/Makefile
 plugins/filters/lav/Makefile
 plugins/filters/cutter/Makefile
 plugins/filters/deinterlace/Makefile
+plugins/filters/volume/Makefile
+plugins/filters/speed/Makefile
 plugins/gnomevfs/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
