@@ -46,7 +46,7 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
-                              gst_element_get_pad(parse_audio,"sink"));
+                              gst_element_get_pad(parse_audio,"sink"),"sink");
     gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
                     gst_element_get_pad(decode,"sink"));
     gst_pad_connect(gst_element_get_pad(decode,"src"),
@@ -90,7 +90,7 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
-                              gst_element_get_pad(parse_audio,"sink"));
+                              gst_element_get_pad(parse_audio,"sink"),"sink");
     gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
                     gst_element_get_pad(decode,"sink"));
     gst_pad_connect(gst_element_get_pad(decode,"src"),
@@ -145,7 +145,7 @@ void mpeg2parse_newpad(GstElement *parser,GstPad *pad, GstElement *pipeline) {
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
-                              gst_element_get_pad(parse_video,"sink"));
+                              gst_element_get_pad(parse_video,"sink"),"sink");
     gst_pad_connect(gst_element_get_pad(parse_video,"src"),
                     gst_element_get_pad(decode_video,"sink"));
     gst_pad_connect(gst_element_get_pad(decode_video,"src"),

@@ -33,7 +33,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
-                              gst_element_get_pad(play,"sink"));
+                              gst_element_get_pad(play,"sink"),"sink");
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
@@ -101,7 +101,7 @@ int main(int argc,char *argv[]) {
 
   // set up pad connections
   gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
-                              gst_element_get_pad(show,"sink"));
+                              gst_element_get_pad(show,"sink"),"sink");
 
   // construct queue and connect everything in the main pipeline
   video_queue = gst_elementfactory_make("queue","video_queue");

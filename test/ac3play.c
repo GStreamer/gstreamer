@@ -47,13 +47,13 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(parse,"src"),
                   gst_element_get_pad(decode,"sink"));
   gst_element_add_ghost_pad(GST_ELEMENT(decodethread),
-                            gst_element_get_pad(decode,"src"));
+                            gst_element_get_pad(decode,"src"),"src");
 
   // construct the play thread
   g_print("constructing the play thread\n");
   gst_bin_add(GST_BIN(playthread),GST_ELEMENT(play));
   gst_element_add_ghost_pad(GST_ELEMENT(playthread),
-                            gst_element_get_pad(play,"sink"));
+                            gst_element_get_pad(play,"sink"),"sink");
 
   // construct the outer pipeline
   g_print("constructing the main pipeline\n");

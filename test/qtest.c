@@ -49,7 +49,7 @@ int main(int argc,char *argv[]) {
   decode = gst_elementfactory_create(decodefactory,"decode");
   gst_bin_add(GST_BIN(decodethread),GST_ELEMENT(decode));
   gst_element_add_ghost_pad(GST_ELEMENT(decodethread),
-                            gst_element_get_pad(decode,"src"));
+                            gst_element_get_pad(decode,"src"),"src");
 
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(decode,"sink"));
@@ -61,7 +61,7 @@ int main(int argc,char *argv[]) {
   sink = gst_elementfactory_create(sinkfactory,"sink");
   gst_bin_add(GST_BIN(playthread),GST_ELEMENT(sink));
   gst_element_add_ghost_pad(GST_ELEMENT(playthread),
-                            gst_element_get_pad(sink,"sink"));
+                            gst_element_get_pad(sink,"sink"),"sink");
 
   /* create the queue */
   queuefactory = gst_elementfactory_find("queue");

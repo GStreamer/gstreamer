@@ -54,7 +54,7 @@ int main(int argc,char *argv[]) {
   gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
   //                gst_element_get_pad(compress,"sink"));
   //gst_pad_connect(gst_element_get_pad(compress,"src"),
-                  gst_element_get_pad(encoder,"video_00"));
+                  gst_element_get_pad(encoder,"video_00"),"video_00");
   gst_pad_connect(gst_element_get_pad(encoder,"src"),
                   gst_element_get_pad(fdsink,"sink"));
 
