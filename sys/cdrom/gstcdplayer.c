@@ -57,6 +57,7 @@ static GstElementClass *parent_class;
 static GstElementDetails cdplayer_details = {
 	"CD Player",
 	"Generic/Bin",
+	"LGPL",
 	"Play CD audio through the CD Drive",
 	VERSION,
 	"Charles Schmidt <cbschmid@uiuc.edu>",

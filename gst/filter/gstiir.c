@@ -25,6 +25,7 @@
 GstElementDetails gst_iir_details = {
   "IIR",
   "Filter/Audio/Effect",
+  "LGPL",
   "IIR filter based on vorbis code",
   VERSION,
   "Monty <monty@xiph.org>, "\
