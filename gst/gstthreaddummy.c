@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <unistd.h>
 #include <sys/time.h>
 #include <glib.h>
 #include "gstlog.h"
