@@ -89,6 +89,9 @@ transform_func (const GValue *src_value,
         case GST_PROPS_INT_TYPE:
   	  g_string_append_printf (result, "%s=(int) %d", name, entry->data.int_data);
 	  break;
+        case GST_PROPS_FLOAT_TYPE:
+  	  g_string_append_printf (result, "%s=(float) %f", name, entry->data.float_data);
+	  break;
         case GST_PROPS_FOURCC_TYPE:
   	  g_string_append_printf (result, "%s=(fourcc) '%4.4s'", name, (gchar *)&entry->data.fourcc_data);
 	  break;
