@@ -467,7 +467,7 @@ _read (DVDReadSrcPrivate * priv, int angle, int new_seek, GstBuffer * buf)
     priv->cur_cell = priv->start_cell;
   }
 
-  if (priv->next_cell < priv->cur_pgc->nr_of_cells) {
+  if (priv->cur_cell < priv->cur_pgc->nr_of_cells) {
     if (priv->new_cell)
       priv->cur_cell = priv->next_cell;
 
