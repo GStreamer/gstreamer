@@ -98,10 +98,9 @@ GstVideofilterFormat *gst_videofilter_find_format_by_caps(GstVideofilter *filter
     GstCaps *caps);
 GstCaps *gst_videofilter_class_get_capslist(GstVideofilterClass *videofilterclass);
 
-void gst_videofilter_postinit(GstVideofilter *videofilter);
-
 void gst_videofilter_class_add_format(GstVideofilterClass *videofilterclass,
     GstVideofilterFormat *format);
+void gst_videofilter_class_add_pad_templates (GstVideofilterClass *videofilterclass);
 
 G_END_DECLS
 
