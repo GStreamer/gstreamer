@@ -51,56 +51,67 @@ enum {
 	ARG_USE_FIXED_FPS
 };
 
+GST_FORMATS_FUNCTION (GstPad *, gst_v4l2src_get_formats,
+		      GST_FORMAT_TIME, GST_FORMAT_DEFAULT);
+GST_QUERY_TYPE_FUNCTION (GstPad *, gst_v4l2src_get_query_types,
+			 GST_QUERY_POSITION);
 
 /* init functions */
-static void			gst_v4l2src_class_init		(GstV4l2SrcClass *klass);
-static void			gst_v4l2src_base_init		(GstV4l2SrcClass *klass);
-static void			gst_v4l2src_init		(GstV4l2Src      *v4l2src);
+static void	gst_v4l2src_class_init		(GstV4l2SrcClass *klass);
+static void	gst_v4l2src_base_init		(GstV4l2SrcClass *klass);
+static void	gst_v4l2src_init		(GstV4l2Src      *v4l2src);
 
 /* signal functions */
-static void			gst_v4l2src_open		(GstElement      *element,
-								 const gchar     *device);
-static void			gst_v4l2src_close		(GstElement      *element,
-								 const gchar     *device);
+static void	gst_v4l2src_open		(GstElement      *element,
+						 const gchar     *device);
+static void	gst_v4l2src_close		(GstElement      *element,
+						 const gchar     *device);
 
-/* pad/buffer functions */
-static gboolean			gst_v4l2src_srcconvert		(GstPad          *pad,
-								 GstFormat       src_format,
-								 gint64          src_value,
-								 GstFormat       *dest_format,
-								 gint64          *dest_value);
-static GstPadLinkReturn		gst_v4l2src_srcconnect		(GstPad          *pad,
-								 GstCaps         *caps);
-static GstCaps *		gst_v4l2src_getcaps		(GstPad          *pad,
-								 GstCaps         *caps);
-static GstData *		gst_v4l2src_get			(GstPad          *pad);
+/* pad/info functions */
+static gboolean	gst_v4l2src_src_convert		(GstPad          *pad,
+						 GstFormat       src_format,
+						 gint64          src_value,
+						 GstFormat       *dest_format,
+						 gint64          *dest_value);
+static gboolean gst_v4l2src_src_query		(GstPad          *pad,
+						 GstQueryType    type, 
+						 GstFormat       *format,
+						 gint64          *value);
+
+/* buffer functions */
+static GstPadLinkReturn
+		gst_v4l2src_srcconnect		(GstPad          *pad,
+						 GstCaps         *caps);
+static GstCaps *gst_v4l2src_getcaps		(GstPad          *pad,
+						 GstCaps         *caps);
+static GstData *gst_v4l2src_get			(GstPad          *pad);
 
 /* get/set params */
-static void			gst_v4l2src_set_property	(GObject         *object,
-								 guint           prop_id,
-								 const GValue    *value,
-								 GParamSpec      *pspec);
-static void			gst_v4l2src_get_property	(GObject         *object,
-								 guint           prop_id,
-								 GValue          *value,
-								 GParamSpec      *pspec);
+static void	gst_v4l2src_set_property	(GObject         *object,
+						 guint           prop_id,
+						 const GValue    *value,
+						 GParamSpec      *pspec);
+static void	gst_v4l2src_get_property	(GObject         *object,
+						 guint           prop_id,
+						 GValue          *value,
+						 GParamSpec      *pspec);
 
 /* state handling */
-static GstElementStateReturn	gst_v4l2src_change_state	(GstElement      *element);
+static GstElementStateReturn
+		gst_v4l2src_change_state	(GstElement      *element);
 
 /* set_clock function for A/V sync */
-static void			gst_v4l2src_set_clock		(GstElement     *element,
-								 GstClock       *clock);
-
+static void	gst_v4l2src_set_clock		(GstElement     *element,
+						 GstClock       *clock);
 
 /* bufferpool functions */
-static GstBuffer *		gst_v4l2src_buffer_new		(GstBufferPool   *pool,
-								 guint64         offset,
-								 guint           size,
-								 gpointer        user_data);
-static void			gst_v4l2src_buffer_free		(GstBufferPool   *pool,
-								 GstBuffer       *buf,
-								 gpointer        user_data);
+static GstBuffer *gst_v4l2src_buffer_new	(GstBufferPool   *pool,
+						 guint64         offset,
+						 guint           size,
+						 gpointer        user_data);
+static void	gst_v4l2src_buffer_free		(GstBufferPool   *pool,
+						 GstBuffer       *buf,
+						 gpointer        user_data);
 
 
 static GstPadTemplate *src_template;
@@ -220,8 +231,14 @@ gst_v4l2src_init (GstV4l2Src *v4l2src)
 
 	gst_pad_set_get_function(v4l2src->srcpad, gst_v4l2src_get);
 	gst_pad_set_link_function(v4l2src->srcpad, gst_v4l2src_srcconnect);
-	gst_pad_set_convert_function (v4l2src->srcpad, gst_v4l2src_srcconvert);
 	gst_pad_set_getcaps_function (v4l2src->srcpad, gst_v4l2src_getcaps);
+	gst_pad_set_convert_function (v4l2src->srcpad, gst_v4l2src_src_convert);
+	gst_pad_set_formats_function (v4l2src->srcpad,
+				      gst_v4l2src_get_formats);
+	gst_pad_set_query_function (v4l2src->srcpad,
+				    gst_v4l2src_src_query);
+	gst_pad_set_query_type_function (v4l2src->srcpad,
+					 gst_v4l2src_get_query_types);
 
 	v4l2src->bufferpool = gst_buffer_pool_new(NULL, NULL,
 					gst_v4l2src_buffer_new,
@@ -290,13 +307,12 @@ gst_v4l2src_get_fps (GstV4l2Src *v4l2src)
 	return 0.;
 }
 
-
 static gboolean
-gst_v4l2src_srcconvert (GstPad    *pad,
-                        GstFormat  src_format,
-                        gint64     src_value,
-                        GstFormat *dest_format,
-                        gint64    *dest_value)
+gst_v4l2src_src_convert (GstPad    *pad,
+                         GstFormat  src_format,
+                         gint64     src_value,
+                         GstFormat *dest_format,
+                         gint64    *dest_value)
 {
 	GstV4l2Src *v4l2src;
 	gdouble fps;
@@ -332,6 +348,41 @@ gst_v4l2src_srcconvert (GstPad    *pad,
 	}
 
 	return TRUE;
+}
+
+static gboolean
+gst_v4l2src_src_query (GstPad      *pad,
+                       GstQueryType type, 
+                       GstFormat   *format,
+                       gint64      *value)
+{
+  GstV4l2Src *v4l2src = GST_V4L2SRC (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+  gdouble fps;
+
+  if ((fps = gst_v4l2src_get_fps(v4l2src)) == 0)
+    return FALSE;
+
+  switch (type) {
+    case GST_QUERY_POSITION:
+      switch (*format) {
+        case GST_FORMAT_TIME:
+          *value = v4l2src->handled * GST_SECOND / fps;
+          break;
+        case GST_FORMAT_DEFAULT:
+          *value = v4l2src->handled;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
 }
 
 

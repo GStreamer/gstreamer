@@ -135,7 +135,8 @@ gst_mpeg2enc_base_init (GstMpeg2encClass *klass)
     "mpeg2enc video encoder",
     "Codec/Video/Encoder",
     "High-quality MPEG-1/2 video encoder",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>",
+    "Andrew Stevens <andrew.stevens@nexgo.de>\n"
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -209,11 +210,15 @@ gst_mpeg2enc_loop (GstElement *element)
   if (!enc->encoder) {
     GstCaps *caps;
 
+    if (!(caps = GST_PAD_CAPS (enc->sinkpad))) {
+      gst_element_error (element,
+			 "No format given by previous element");
+      return;
+    }
+
     /* create new encoder with these settings */
-    enc->encoder = new GstMpeg2Encoder (enc->options,
-					enc->sinkpad,
-					GST_PAD_CAPS (enc->sinkpad),
-					enc->srcpad);
+    enc->encoder = new GstMpeg2Encoder (enc->options, enc->sinkpad,
+					caps, enc->srcpad);
 
     /* and set caps on other side */
     caps = enc->encoder->getFormat ();

@@ -60,11 +60,12 @@ mp3_sink_factory (void)
   	"sink",
   	GST_PAD_SINK,
   	GST_PAD_ALWAYS,
-  	gst_caps_new (
+  	GST_CAPS_NEW (
   	  "mp3parse_sink",
     	  "audio/mpeg",
-	  NULL),
-	NULL);
+	    "mpegversion", GST_PROPS_INT (1)
+        )
+    );
 };
 
 /* GstMPEGAudioParse signals and args */

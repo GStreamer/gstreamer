@@ -1,3 +1,41 @@
+2003-12-21  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	  Improve mpeg2enc detection. This is for distributions that do
+	  ship mjpegtools, but without mpeg2enc. Also does object check
+	  for might there ever be ABI incompatibility.
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	  Add Andrew as second maintainer (he's helping me), and also add
+	  an error if no caps was set. This happens if I pull before capsnego
+	  and that's something I should solve sometime else.
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_blockgroup):
+	  Fix time parsing.
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_audio_pad_link),
+	(gst_matroska_mux_track_header):
+	  Add caps to templates.
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (mp3_sink_factory):
+	  Add mpegversion=1 to prevent confusion with MPEG/AAC.
+	* gst/mpegstream/gstmpegdemux.c:
+	  Remove layer since it causes warnings about unfixed caps.
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_get):
+	  Fix obvious typo (we error out if caps were set, we should of
+	  course error out if *no* caps were set).
+	* sys/oss/gstosselement.c: (gst_osselement_convert):
+	  Fix format conversion, we confused bits/bytes.
+	* sys/oss/gstosselement.h:
+	  Improve documentation for 'bps'.
+	* sys/v4l/TODO:
+	  Remove stuff about plugins that need removing - this was done
+	  ages ago.
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_init),
+	(gst_v4lmjpegsrc_src_convert), (gst_v4lmjpegsrc_src_query):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_init), (gst_v4lsrc_src_convert),
+	(gst_v4lsrc_src_query):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_init),
+	(gst_v4l2src_src_convert), (gst_v4l2src_src_query):
+	  Add get_query_types(), get_formats() and query() functions.
+
 2003-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ChangeLog: moved to gstreamer/docs/random/old/ChangeLog.gst-plugins
