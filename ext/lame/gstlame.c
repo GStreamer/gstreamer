@@ -45,7 +45,7 @@ static GstElementDetails gst_lame_details =
   "(C) 2000",
 };
 
-GST_PADTEMPLATE_FACTORY (gst_lame_sink_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_lame_sink_factory,
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -70,7 +70,7 @@ GST_PADTEMPLATE_FACTORY (gst_lame_sink_factory,
   )
 )
 
-GST_PADTEMPLATE_FACTORY (gst_lame_src_factory,
+GST_PAD_TEMPLATE_FACTORY (gst_lame_src_factory,
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -391,12 +391,12 @@ gst_lame_init (GstLame *lame)
 {
   GST_DEBUG_ENTER ("(\"%s\")", gst_element_get_name (GST_ELEMENT (lame)));
 
-  lame->sinkpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (gst_lame_sink_factory), "sink");
+  lame->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (gst_lame_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
   gst_pad_set_chain_function (lame->sinkpad, gst_lame_chain);
   gst_pad_set_connect_function (lame->sinkpad, gst_lame_sinkconnect);
 
-  lame->srcpad = gst_pad_new_from_template (GST_PADTEMPLATE_GET (gst_lame_src_factory), "src");
+  lame->srcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (gst_lame_src_factory), "src");
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
 
   GST_FLAG_SET (lame, GST_ELEMENT_EVENT_AWARE);
@@ -848,17 +848,17 @@ plugin_init (GModule *module, GstPlugin *plugin)
   GstElementFactory *factory;
 
   /* create an elementfactory for the gst_lame element */
-  factory = gst_elementfactory_new ("lame", GST_TYPE_LAME,
+  factory = gst_element_factory_new ("lame", GST_TYPE_LAME,
                                     &gst_lame_details);
   g_return_val_if_fail (factory != NULL, FALSE);
 
   /* register the source's padtemplate */
-  gst_elementfactory_add_padtemplate (factory, 
-  		GST_PADTEMPLATE_GET (gst_lame_src_factory));
+  gst_element_factory_add_pad_template (factory, 
+  		GST_PAD_TEMPLATE_GET (gst_lame_src_factory));
 
   /* register the sink's padtemplate */
-  gst_elementfactory_add_padtemplate (factory, 
-  		GST_PADTEMPLATE_GET (gst_lame_sink_factory));
+  gst_element_factory_add_pad_template (factory, 
+  		GST_PAD_TEMPLATE_GET (gst_lame_sink_factory));
 
   /* and add the gst_lame element factory to the plugin */
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
