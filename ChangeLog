@@ -1,3 +1,9 @@
+2003-12-22  David Schleef  <ds@schleef.org>
+
+	* gststructure.c, gstvalue.c, gstvalue.h: Add
+	  gst_value_init_and_copy() and use it, to avoid silly mistakes in
+	  using g_value_copy()
+
 2003-12-21  David Schleef  <ds@schleef.org>
 
 	* many, many files: Merge CAPS branch.  This includes:

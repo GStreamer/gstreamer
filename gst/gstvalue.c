@@ -71,8 +71,8 @@ gst_value_list_array_copy (const GArray *src)
   dest = g_array_sized_new (FALSE, TRUE, sizeof(GValue), src->len);
   g_array_set_size (dest, src->len);
   for (i = 0; i < src->len; i++) {
-    g_value_init (&g_array_index(dest, GValue, i), G_VALUE_TYPE (&g_array_index(src, GValue, i)));
-    g_value_copy (&g_array_index(src, GValue, i), &g_array_index(dest, GValue, i));
+    gst_value_init_and_copy (&g_array_index(dest, GValue, i),
+        &g_array_index(src, GValue, i));
   }
 
   return dest;
@@ -197,22 +197,21 @@ gst_value_list_concat (GValue *dest, const GValue *value1, const GValue *value2)
   
   if (GST_VALUE_HOLDS_LIST (value1)) {
     for (i = 0; i < value1_length; i++) {
-      g_value_init (&g_array_index(array, GValue, i), G_VALUE_TYPE (gst_value_list_get_value (value1, i)));
-      g_value_copy (gst_value_list_get_value (value1, i), &g_array_index(array, GValue, i));
+      gst_value_init_and_copy (&g_array_index(array, GValue, i),
+          gst_value_list_get_value (value1, i));
     }
   } else {
-    g_value_init (&g_array_index(array, GValue, 0), G_VALUE_TYPE (value1));
-    g_value_copy (value1, &g_array_index(array, GValue, 0));
+    gst_value_init_and_copy (&g_array_index(array, GValue, 0), value1);
   }
   
   if (GST_VALUE_HOLDS_LIST (value2)) {
     for (i = 0; i < value2_length; i++) {
-      g_value_init (&g_array_index(array, GValue, i + value1_length), G_VALUE_TYPE (gst_value_list_get_value (value2, i)));
-      g_value_copy (gst_value_list_get_value (value2, i), &g_array_index(array, GValue, i + value1_length));
+      gst_value_init_and_copy (&g_array_index(array, GValue, i + value1_length),
+          gst_value_list_get_value (value2, i));
     }
   } else {
-    g_value_init (&g_array_index(array, GValue, value1_length), G_VALUE_TYPE (value2));
-    g_value_copy (value2, &g_array_index(array, GValue, value1_length));
+    gst_value_init_and_copy (&g_array_index(array, GValue, value1_length),
+        value2);
   }
 }
 
@@ -703,8 +702,7 @@ gst_value_intersect_int_int_range (GValue *dest, const GValue *src1,
 
   if (src2->data[0].v_int <= src1->data[0].v_int &&
       src2->data[1].v_int >= src1->data[0].v_int){
-    g_value_init(dest, G_TYPE_INT);
-    g_value_copy(src1, dest);
+    gst_value_init_and_copy (dest, src1);
     return TRUE;
   }
 
@@ -747,8 +745,7 @@ gst_value_intersect_double_double_range (GValue *dest, const GValue *src1,
 
   if (src2->data[0].v_double <= src1->data[0].v_double &&
       src2->data[1].v_double >= src1->data[0].v_double){
-    g_value_init(dest, G_TYPE_DOUBLE);
-    g_value_copy(src1, dest);
+    gst_value_init_and_copy (dest, src1);
     return TRUE;
   }
 
@@ -798,16 +795,14 @@ gst_value_intersect_list (GValue *dest, const GValue *value1, const GValue *valu
     if (gst_value_intersect (&intersection, cur, value2)) {
       /* append value */
       if (!ret) {
-	g_value_init (dest, G_VALUE_TYPE(&intersection));
-	g_value_copy (dest, &intersection);
+	gst_value_init_and_copy (dest, &intersection);
 	ret = TRUE;
       } else if (GST_VALUE_HOLDS_LIST (dest)) {
 	gst_value_list_append_value (dest, &intersection);
       } else {
 	GValue temp = {0, };
 
-	g_value_init (&temp, G_VALUE_TYPE(dest));
-	g_value_copy (dest, &temp);
+	gst_value_init_and_copy (&temp, dest);
 	g_value_unset (dest);
 	gst_value_list_concat (dest, &temp, &intersection);
       }
@@ -868,12 +863,18 @@ gst_value_intersect (GValue *dest, const GValue *value1, const GValue *value2)
   }
 
   if(gst_value_compare(value1, value2) == GST_VALUE_EQUAL){
-    g_value_init(dest, G_VALUE_TYPE(value1));
-    g_value_copy(value1, dest);
+    gst_value_init_and_copy (dest, value1);
     ret = TRUE;
   }
 
   return ret;
+}
+
+void
+gst_value_init_and_copy (GValue *dest, const GValue *src)
+{
+  g_value_init (dest, G_VALUE_TYPE(src));
+  g_value_copy (src, dest);
 }
 
 void

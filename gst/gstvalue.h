@@ -85,6 +85,7 @@ void gst_value_list_concat (GValue *dest, const GValue *value1, const GValue *va
 
 void _gst_value_initialize (void);
 
+void gst_value_init_and_copy (GValue *dest, const GValue *src);
 int gst_value_compare (const GValue *src1, const GValue *src2);
 gboolean gst_value_intersect (GValue *dest, const GValue *src1, const GValue *src2);
 gboolean gst_value_union (GValue *dest, const GValue *src1, const GValue *src2);

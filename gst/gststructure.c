@@ -221,9 +221,7 @@ GstStructure *gst_structure_copy(GstStructure *structure)
     field = GST_STRUCTURE_FIELD(structure, i);
 
     new_field.name = field->name;
-    g_value_init(&new_field.value, G_VALUE_TYPE(&field->value));
-    g_value_copy(&field->value, &new_field.value);
-
+    gst_value_init_and_copy (&new_field.value, &field->value);
     g_array_append_val(new_structure->fields, new_field);
   }
 
@@ -308,8 +306,7 @@ void gst_structure_id_set_value(GstStructure *structure, GQuark fieldname,
   g_return_if_fail(G_IS_VALUE(value));
 
   field.name = fieldname;
-  g_value_init(&field.value, G_VALUE_TYPE (value));
-  g_value_copy(value, &field.value);
+  gst_value_init_and_copy (&field.value, value);
 
   gst_structure_set_field(structure, &field);
 }
