@@ -32,6 +32,21 @@ CVS</link></para></listitem>
 We provide tarballs of our releases on our 
 <ulink url="http://sourceforge.net/project/showfiles.php?group_id=1936">
 Sourceforge files page.</ulink>
+         </para>
+         <para>
+We also put source tarballs on our own site, at
+<ulink url="http://gstreamer.net/releases/current/src">
+http://gstreamer.net/releases/current/src
+</ulink>
+        </para>
+        <para>
+When compiling from source, make sure you specify PKG_CONFIG_PATH correctly
+when building against GStreamer.  For example, if you configured GStreamer
+with the default prefix (which is /usr/local), then you need to
+<programlisting>
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+</programlisting>
+before building gst-plugins.
         </para>
       </answer>
     </qandaentry>
