@@ -558,7 +558,9 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* DolbyNet (Dolby AC3, low bitrate) */
       case GST_RM_AUD_DNET:
-        stream->caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+        stream->caps =
+            gst_caps_new_simple ("audio/x-ac3", "rate", G_TYPE_INT,
+            (int) stream->rate, NULL);
         break;
 
         /* MPEG-4 based */
@@ -759,11 +761,18 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
   offset += re_skip_pascal_string (data + offset);
   stream2_type_string = re_get_pascal_string (data + offset);
   offset += re_skip_pascal_string (data + offset);
-  /* It could either be "Video Stream" or "The Video Stream",
-     same thing for Audio */
-  if (strstr (stream1_type_string, "Video Stream")) {
+
+  /* stream1_type_string for audio and video stream is a "put_whatever_you_want" field :
+     observed values :
+     - "[The ]Video/Audio Stream" (File produced by an official Real encoder)
+     - "RealVideoPremierePlugIn-VIDEO/AUDIO" (File produced by Abobe Premiere)
+
+     so, we should not rely on it to know which stream type it is
+   */
+
+  if (strcmp (stream2_type_string, "video/x-pn-realvideo") == 0) {
     stream_type = GST_RMDEMUX_STREAM_VIDEO;
-  } else if (strstr (stream1_type_string, "Audio Stream")) {
+  } else if (strcmp (stream2_type_string, "audio/x-pn-realaudio") == 0) {
     stream_type = GST_RMDEMUX_STREAM_AUDIO;
   } else if (strcmp (stream1_type_string, "") == 0 &&
       strcmp (stream2_type_string, "logical-fileinfo") == 0) {
@@ -1033,9 +1042,10 @@ gst_rmdemux_dump_data (GstRMDemux * rmdemux, void *data, int length)
 static void
 gst_rmdemux_parse_cont (GstRMDemux * rmdemux, void *data, int length)
 {
-//  int offset = 0;
+  int offset = 0;
 
-//  offset += re_dump_pascal_string ( data + offset + 3 );
+  GST_DEBUG ("File Content : (CONT)");
+  offset += re_dump_pascal_string (data + offset + 3);
 }
 
 static void
