@@ -54,7 +54,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   /*gst_ffmpegdemux_register (plugin);*/
   /*gst_ffmpegmux_register (plugin);*/
 
-  register_protocol (&gstreamer_protocol);
+  /*register_protocol (&gstreamer_protocol);*/
 
   /* Now we can return the pointer to the newly created Plugin object. */
   return TRUE;
