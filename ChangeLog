@@ -1,3 +1,8 @@
+2004-02-07  David Schleef  <ds@schleef.org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_handle_event): Don't
+	push events to pads that haven't been created (#133508)
+
 2004-02-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_src_convert),

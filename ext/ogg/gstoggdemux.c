@@ -423,9 +423,10 @@ gst_ogg_demux_handle_event (GstPad *pad, GstEvent *event)
 	  GstOggChain *chain = &g_array_index (ogg->chains, GstOggChain, i);
 	  for (walk = chain->pads; walk; walk = g_slist_next (walk)) {
 	    GstOggPad *pad = (GstOggPad *) walk->data;
-	    gst_event_ref (event);
-	    if (GST_PAD_IS_USABLE (pad->pad))
+	    if (pad->pad && GST_PAD_IS_USABLE (pad->pad)) {
+              gst_data_ref (GST_DATA (event));
 	      gst_pad_push (pad->pad, GST_DATA (event));
+            }
 	  }
 	}
 	gst_element_set_eos (GST_ELEMENT (ogg));
