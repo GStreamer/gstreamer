@@ -19,6 +19,7 @@ GST_LOADSAVE_SRC_V = \
 endif
 
 GST_OTHER_SRC = \
+	gst-feedback \
 	gst-inspect \
 	gst-launch \
 	gst-md5sum \
@@ -31,12 +32,12 @@ GST_OTHER_SRC_V = \
 	gst-typefind-@GST_MAJORMINOR@ \
 	gst-xmlinspect-@GST_MAJORMINOR@
 
-
 ### so all of the programs we want to build
 bin_PROGRAMS = \
 	$(GST_REGISTRY_SRC) $(GST_REGISTRY_SRC_V) \
 	$(GST_LOADSAVE_SRC) $(GST_LOADSAVE_SRC_V) \
 	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
+bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
 # make sure each versioned tool has the right source file
 if !GST_DISABLE_REGISTRY
@@ -62,6 +63,7 @@ gst_complete_SOURCES = gst-run.c
 gst_compprep_SOURCES = gst-run.c
 gst_xmllaunch_SOURCES = gst-run.c
 endif
+gst_feedback_SOURCES = gst-run.c
 gst_inspect_SOURCES = gst-run.c
 gst_launch_SOURCES = gst-run.c
 gst_md5sum_SOURCES = gst-run.c
@@ -93,6 +95,7 @@ GST_LOADSAVE_MAN=
 endif
 
 GST_OTHER_MAN = \
+	gst-feedback-@GST_MAJORMINOR@.1 \
 	gst-inspect-@GST_MAJORMINOR@.1 \
 	gst-launch-@GST_MAJORMINOR@.1 \
 	gst-md5sum-@GST_MAJORMINOR@.1 \
@@ -114,9 +117,7 @@ EXTRA_DIST = \
 	gst-register.1.in \
 	gst-typefind.1.in \
 	gst-xmllaunch.1.in \
-	gst-feedback
-
-bin_SCRIPTS = gst-feedback
+	gst-feedback-@GST_MAJORMINOR@
 
 %-@GST_MAJORMINOR@.1: %.1.in
 	sed \
@@ -127,5 +128,6 @@ bin_SCRIPTS = gst-feedback
 		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
 		-e s,gst-md5sum,gst-md5sum-@GST_MAJORMINOR@,g \
 		-e s,gst-register,gst-register-@GST_MAJORMINOR@,g \
+		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \
 		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
 		$< >$@

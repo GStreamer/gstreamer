@@ -1,3 +1,10 @@
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tools/Makefile.am:
+	* tools/gst-feedback:
+	* tools/gst-feedback-0.7:
+          make gst-feedback versioned too for consistency
+
 2004-02-11  David Schleef  <ds@schleef.org>
 
 	* gst/gstpad.c: (gst_pad_link_intersect), (gst_pad_link_fixate),
