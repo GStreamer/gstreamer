@@ -69,7 +69,8 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/mpeg, " "systemstream = (boolean) TRUE")
+    GST_STATIC_CAPS ("video/mpeg, " "systemstream = (boolean) TRUE, "
+        "mpegversion = (int) 1")
     );
 
 static void gst_cdxa_parse_base_init (gpointer g_class);
@@ -316,7 +317,7 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gstbytestream"))
     return FALSE;
 
-  if (!gst_element_register (plugin, "cdxaparse", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "cdxaparse", GST_RANK_SECONDARY,
           GST_TYPE_CDXA_PARSE))
     return FALSE;
 
