@@ -27,8 +27,8 @@ the pipeline, use gst_object_unref() to free its resources.
 </para>
 
 @fixed_clock: 
-@start_time: 
 @stream_time: 
+@delay: 
 @eosed: 
 
 <!-- ##### FUNCTION gst_pipeline_new ##### -->

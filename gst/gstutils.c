@@ -1606,10 +1606,8 @@ gst_element_class_install_std_props (GstElementClass * klass,
  *
  * Create a new buffer that is the concatenation of the two source
  * buffers.  The original source buffers will not be modified or
- * unref'd.
- *
- * WARNING: Incorrect use of this function can lead to memory leaks.
- * It is recommended to use gst_buffer_join() instead of this function.
+ * unref'd.  Make sure you unref the source buffers if they are not used
+ * anymore afterwards.
  *
  * If the buffers point to contiguous areas of memory, the buffer
  * is created without copying the data.

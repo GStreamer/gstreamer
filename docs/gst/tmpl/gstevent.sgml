@@ -48,8 +48,6 @@ The different major types of events.
 @GST_EVENT_DISCONTINUOUS: a discontinuous event to indicate the stream has a discontinuity.
 @GST_EVENT_QOS: a quality of service event
 @GST_EVENT_SEEK: a seek event.
-@GST_EVENT_SEEK_SEGMENT: a segment seek with start and stop position
-@GST_EVENT_SEGMENT_DONE: the event that will be emited when the segment seek has ended
 @GST_EVENT_SIZE: a size suggestion for a peer element
 @GST_EVENT_RATE: adjust the output rate of an element
 @GST_EVENT_NAVIGATION: 
