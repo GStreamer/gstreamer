@@ -306,6 +306,20 @@ gst_osssrc_get (GstPad *pad)
   
   buf = gst_buffer_new_and_alloc (src->buffersize);
   
+  if (!GST_PAD_CAPS (pad)) {
+    /* nothing was negotiated, we can decide on a format */
+    if (!gst_osssrc_negotiate (pad)) {
+      gst_buffer_unref (buf);
+      gst_element_error (GST_ELEMENT (src), "could not negotiate format");
+      return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+    }
+  }
+  if (src->common.bps == 0) {
+    gst_buffer_unref (buf);
+    gst_element_error (GST_ELEMENT (src), "no format negotiated");
+    return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
+  }
+
   readbytes = read (src->common.fd,GST_BUFFER_DATA (buf),
                     src->buffersize);
   if (readbytes < 0) {
@@ -318,20 +332,6 @@ gst_osssrc_get (GstPad *pad)
   if (readbytes == 0) {
     gst_buffer_unref (buf);
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
-  }
-
-  if (!GST_PAD_CAPS (pad)) {
-    /* nothing was negotiated, we can decide on a format */
-    if (!gst_osssrc_negotiate (pad)) {
-      gst_buffer_unref (buf);
-      gst_element_error (GST_ELEMENT (src), "could not negotiate format");
-      return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
-    }
-  }
-  if (src->common.bps == 0) {
-    gst_buffer_unref (buf);
-    gst_element_error (GST_ELEMENT (src), "no format negotiated");
     return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
