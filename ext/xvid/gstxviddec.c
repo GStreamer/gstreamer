@@ -32,11 +32,8 @@
 GstElementDetails gst_xviddec_details = {
   "Xvid decoder",
   "Codec/Video/Decoder",
-  "GPL",
   "Xvid decoder based on xviddecore",
-  VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2003",
 };
 
 GST_PAD_TEMPLATE_FACTORY(sink_template,
@@ -91,7 +88,7 @@ enum {
   /* FILL ME */
 };
 
-
+static void             gst_xviddec_base_init    (gpointer g_class);
 static void             gst_xviddec_class_init   (GstXvidDecClass *klass);
 static void             gst_xviddec_init         (GstXvidDec      *xviddec);
 static void             gst_xviddec_dispose      (GObject         *object);
@@ -114,7 +111,7 @@ gst_xviddec_get_type(void)
   {
     static const GTypeInfo xviddec_info = {
       sizeof(GstXvidDecClass),
-      NULL,
+      gst_xviddec_base_init,
       NULL,
       (GClassInitFunc) gst_xviddec_class_init,
       NULL,
@@ -130,6 +127,16 @@ gst_xviddec_get_type(void)
   return xviddec_type;
 }
 
+static void
+gst_xviddec_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template));
+
+  gst_element_class_set_details (element_class, &gst_xviddec_details);
+}
 
 static void
 gst_xviddec_class_init (GstXvidDecClass *klass)
@@ -381,25 +388,10 @@ gst_xviddec_connect (GstPad  *pad,
 
 
 gboolean
-gst_xviddec_plugin_init (GModule   *module,
-                         GstPlugin *plugin)
+gst_xviddec_plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the v4lmjpegsrcparse element */
-  factory = gst_element_factory_new("xviddec", GST_TYPE_XVIDDEC,
-                                    &gst_xviddec_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  /* add pad templates */
-  gst_element_factory_add_pad_template(factory,
-    GST_PAD_TEMPLATE_GET(sink_template));
-  gst_element_factory_add_pad_template(factory,
-    GST_PAD_TEMPLATE_GET(src_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  gst_element_factory_set_rank(factory, GST_ELEMENT_RANK_PRIMARY);
+  if (!gst_element_register (plugin, "xviddec", GST_RANK_PRIMARY, GST_TYPE_XVIDDEC))
+    return FALSE;
 
   return TRUE;
 }

@@ -85,16 +85,20 @@ gst_xvid_error (int errorcode)
 }
 
 static gboolean
-plugin_init (GModule   *module,
-             GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  return (gst_xviddec_plugin_init(module, plugin) &&
-          gst_xvidenc_plugin_init(module, plugin));
+  return (gst_xviddec_plugin_init(plugin) &&
+          gst_xvidenc_plugin_init(plugin));
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "xvid",
-  plugin_init
-};
+  "XVid plugin library",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)

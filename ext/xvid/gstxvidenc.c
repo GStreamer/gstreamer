@@ -33,11 +33,8 @@
 GstElementDetails gst_xvidenc_details = {
   "Xvid encoder",
   "Codec/Video/Encoder",
-  "GPL",
   "Xvid encoder based on xvidencore",
-  VERSION,
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2003",
 };
 
 GST_PAD_TEMPLATE_FACTORY(sink_template,
@@ -94,7 +91,7 @@ enum {
   ARG_BUFSIZE
 };
 
-
+static void             gst_xvidenc_base_init    (gpointer g_class);
 static void             gst_xvidenc_class_init   (GstXvidEncClass *klass);
 static void             gst_xvidenc_init         (GstXvidEnc      *xvidenc);
 static void             gst_xvidenc_chain        (GstPad          *pad,
@@ -125,7 +122,7 @@ gst_xvidenc_get_type(void)
   {
     static const GTypeInfo xvidenc_info = {
       sizeof(GstXvidEncClass),
-      NULL,
+      gst_xvidenc_base_init,
       NULL,
       (GClassInitFunc) gst_xvidenc_class_init,
       NULL,
@@ -141,6 +138,15 @@ gst_xvidenc_get_type(void)
   return xvidenc_type;
 }
 
+static void
+gst_xvidenc_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template));
+  gst_element_class_set_details (element_class, &gst_xvidenc_details);
+}
 
 static void
 gst_xvidenc_class_init (GstXvidEncClass *klass)
@@ -479,26 +485,13 @@ gst_xvidenc_get_property (GObject    *object,
 
 
 gboolean
-gst_xvidenc_plugin_init (GModule   *module,
-                         GstPlugin *plugin)
+gst_xvidenc_plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
   if (!gst_library_load("gstvideo"))
     return FALSE;
 
-  /* create an elementfactory for the v4lmjpegsrcparse element */
-  factory = gst_element_factory_new("xvidenc", GST_TYPE_XVIDENC,
-                                    &gst_xvidenc_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  /* add pad templates */
-  gst_element_factory_add_pad_template(factory,
-    GST_PAD_TEMPLATE_GET(sink_template));
-  gst_element_factory_add_pad_template(factory,
-    GST_PAD_TEMPLATE_GET(src_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
+  if (!gst_element_register (plugin, "xvidenc", GST_RANK_NONE, GST_TYPE_XVIDENC))
+    return FALSE;
+  
   return TRUE;
 }
