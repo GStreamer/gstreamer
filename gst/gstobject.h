@@ -68,7 +68,7 @@ typedef enum
   GST_DESTROYED   = 0,
   GST_FLOATING,
 
-  GST_OBJECT_FLAG_LAST   = 4,
+  GST_OBJECT_FLAG_LAST   = 4
 } GstObjectFlags;
 
 struct _GstObject {

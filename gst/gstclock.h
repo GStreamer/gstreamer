@@ -70,7 +70,7 @@ typedef enum
   GST_CLOCK_STOPPED 	= 0,
   GST_CLOCK_TIMEOUT 	= 1,
   GST_CLOCK_EARLY 	= 2,
-  GST_CLOCK_ERROR 	= 3,
+  GST_CLOCK_ERROR 	= 3
 } GstClockReturn;
 
 struct _GstClock {

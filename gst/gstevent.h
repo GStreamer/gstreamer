@@ -41,7 +41,7 @@ typedef enum {
   GST_EVENT_QOS,
   GST_EVENT_SEEK,
   GST_EVENT_FILLER,
-  GST_EVENT_SIZE,
+  GST_EVENT_SIZE
 } GstEventType;
 
 extern GType _gst_event_type;
@@ -69,12 +69,12 @@ typedef enum {
 
   GST_SEEK_FLAG_FLUSH		= (1 << (GST_SEEK_FLAGS_SHIFT + 0)),
   GST_SEEK_FLAG_ACCURATE	= (1 << (GST_SEEK_FLAGS_SHIFT + 1)),
-  GST_SEEK_FLAG_KEY_UNIT	= (1 << (GST_SEEK_FLAGS_SHIFT + 2)),
+  GST_SEEK_FLAG_KEY_UNIT	= (1 << (GST_SEEK_FLAGS_SHIFT + 2))
 } GstSeekType;
 
 typedef enum {
   GST_SEEK_CERTAIN,
-  GST_SEEK_FUZZY,
+  GST_SEEK_FUZZY
 } GstSeekAccuracy;
 
 typedef struct

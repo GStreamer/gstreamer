@@ -115,14 +115,14 @@ typedef enum {
   GST_PAD_CONNECT_REFUSED = -1,
   GST_PAD_CONNECT_DELAYED =  0,
   GST_PAD_CONNECT_OK      =  1,
-  GST_PAD_CONNECT_DONE    =  2,
+  GST_PAD_CONNECT_DONE    =  2
 } GstPadConnectReturn;
 
 typedef enum {
   GST_PAD_QUERY_TOTAL,
   GST_PAD_QUERY_POSITION,
   GST_PAD_QUERY_LATENCY,
-  GST_PAD_QUERY_JITTER,
+  GST_PAD_QUERY_JITTER
 } GstPadQueryType;
  
 /* this defines the functions used to chain buffers
@@ -147,14 +147,14 @@ typedef gboolean 		(*GstPadDispatcherFunc) 	(GstPad *pad, gpointer data);
 typedef enum {
   GST_PAD_UNKNOWN,
   GST_PAD_SRC,
-  GST_PAD_SINK,
+  GST_PAD_SINK
 } GstPadDirection;
 
 typedef enum {
   GST_PAD_DISABLED		= GST_OBJECT_FLAG_LAST,
   GST_PAD_EOS,
 
-  GST_PAD_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 4,
+  GST_PAD_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 4
 } GstPadFlags;
 
 struct _GstPad {
@@ -281,7 +281,7 @@ struct _GstGhostPadClass {
 typedef enum {
   GST_PAD_ALWAYS,
   GST_PAD_SOMETIMES,
-  GST_PAD_REQUEST,
+  GST_PAD_REQUEST
 } GstPadPresence;
 
 #define GST_PAD_TEMPLATE_NAME_TEMPLATE(templ)	(((GstPadTemplate *)(templ))->name_template)

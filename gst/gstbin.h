@@ -63,7 +63,7 @@ typedef enum {
   GST_BIN_FLAG_FIXED_CLOCK,
 
   /* padding */
-  GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5,
+  GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5
 } GstBinFlags;
 
 /*typedef struct _GstBin GstBin; */

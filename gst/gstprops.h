@@ -54,7 +54,7 @@ typedef enum {
    GST_PROPS_FLOAT_RANGE_TYPE,
    GST_PROPS_INT_RANGE_TYPE,
 
-   GST_PROPS_LAST_TYPE = GST_PROPS_END_TYPE + 16,
+   GST_PROPS_LAST_TYPE = GST_PROPS_END_TYPE + 16
 } GstPropsType;
 
 #define GST_MAKE_FOURCC(a,b,c,d) 	(guint32)((a)|(b)<<8|(c)<<16|(d)<<24)

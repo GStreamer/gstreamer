@@ -43,7 +43,7 @@ typedef enum {
   GST_THREAD_STATE_REAPING,
 
   /* padding */
-  GST_THREAD_FLAG_LAST 		= GST_BIN_FLAG_LAST + 4,
+  GST_THREAD_FLAG_LAST 		= GST_BIN_FLAG_LAST + 4
 } GstThreadState;
 
 
