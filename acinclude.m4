@@ -2,7 +2,7 @@ dnl Configure Paths for Alsa
 dnl Some modifications by Richard Boulton <richard-alsa@tartarus.org>
 dnl Christopher Lansdown <lansdoct@cs.alfred.edu>
 dnl Jaroslav Kysela <perex@suse.cz>
-dnl Last modification: 07/12/2000
+dnl Last modification: 07/01/2001
 dnl AM_PATH_ALSA([MINIMUM-VERSION [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for libasound, and define ALSA_CFLAGS and ALSA_LIBS as appropriate.
 dnl enables arguments --with-alsa-prefix=
@@ -128,6 +128,8 @@ if test "x$alsa_found" = "xno" ; then
    CFLAGS="$alsa_save_CFLAGS"
    LDFLAGS="$alsa_save_LDFLAGS"
    LIBS="$alsa_save_LIBS"
+   ALSA_CFLAGS=""
+   ALSA_LIBS=""
 fi
 
 dnl That should be it.  Now just export out symbols:
