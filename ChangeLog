@@ -1,3 +1,9 @@
+2004-02-10  Julien MOUTTE <julien@moutte.net>
+
+	* gst/gstevent.c: (_gst_event_free): Sometimes a tag event arrives but
+	the structure does not contain a valid tag list. Adding a safety check
+	to remove a noisy warning in that case.
+
 2004-02-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.c: fix name to be in line with others
