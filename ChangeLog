@@ -2,6 +2,8 @@
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_parse_blockgroup),
 	send vorbis headers at the beginning of a stream, fixes bug #141554.
+	* gst/typefind/gsttypefindfunctions.c: (tta_type_find), (plugin_init),
+	enable typefinding for TTA audio files, fixes bug #148711.
 
 2004-08-24  Sebastien Cote  <sc5@hermes.usherb.ca>
  
