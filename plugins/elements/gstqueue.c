@@ -194,11 +194,14 @@ gst_queue_getcaps (GstPad *pad, GstCaps *caps)
   GstPad *otherpad;
 
   if (pad == queue->srcpad) 
-    otherpad = queue->sinkpad;
+    otherpad = GST_PAD_PEER (queue->sinkpad);
   else
-    otherpad = queue->srcpad;
+    otherpad = GST_PAD_PEER (queue->srcpad);
+  
+  if (otherpad)
+    return gst_pad_get_caps (otherpad);
 
-  return gst_pad_get_allowed_caps (otherpad);
+  return NULL;
 }
 
 static void
