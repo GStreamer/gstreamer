@@ -165,10 +165,10 @@ gst_artsdsink_class_init (GstArtsdsinkClass *klass)
                          TRUE,G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEPTH,
     g_param_spec_enum("depth","depth","depth",
-                      GST_TYPE_ARTSDSINK_DEPTHS,0,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_ARTSDSINK_DEPTHS,16,G_PARAM_READWRITE)); // CHECKME!
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CHANNELS,
     g_param_spec_enum("channels","channels","channels",
-                      GST_TYPE_ARTSDSINK_CHANNELS,0,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_ARTSDSINK_CHANNELS,2,G_PARAM_READWRITE)); // CHECKME!
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_RATE,
     g_param_spec_int("frequency","frequency","frequency",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
