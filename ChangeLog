@@ -1,5 +1,9 @@
 2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* autogen.sh: check out common with right tag if CVS/Tag exists
+
+2004-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/ghostpads/ghostpads.c: (main):
           fix testsuite from segfaulting
 

@@ -7,7 +7,11 @@ srcfile=gst/gst.c
 
 # a quick cvs co to ease the transition
 if test ! -d common; then
-  echo "+ getting common from cvs"; cvs co common
+  if test -f CVS/Tag; then
+    # get everything from CVS/Tag from second character on
+    TAG="-r `tail -c +2 CVS/Tag`"
+  fi
+  echo "+ getting common from cvs"; cvs co $TAG common
 fi
 
 # source helper functions
