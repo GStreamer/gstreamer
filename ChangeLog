@@ -1,12 +1,15 @@
 2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  don't check for libxml when load/save and registry disabled (#105844)
+	* gstreamer.spec.in:
+          sync with fedora candidate spec
+
+2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/fr.po:
 	* po/nl.po:
           replace multidisksrc with multifilesrc
-
-2004-02-11  Christian Schaller <Uraeus@gnome.org>
-
-	* Adding versioned gst-feedback files to spec
 
 2004-02-11  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
@@ -43,11 +46,6 @@
 	(gst_multifilesrc_close_file), (gst_multifilesrc_change_state):
 	* gst/elements/gstmultifilesrc.h:
           rename multidisksrc to multifilesrc (part of #122200)
-
-2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-	* configure.ac:
-	  don't check for libxml when load/save and registry disabled (#105844)
 
 2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 

@@ -1,4 +1,4 @@
-Name: 		gstreamer
+Name: 		gstreamer@GST_VERSION_MAJOR@@GST_VERSION_MINOR@
 Version: 	@VERSION@
 Release: 	@GST_VERSION_RELEASE@
 Summary: 	GStreamer streaming media framework runtime.
@@ -7,7 +7,7 @@ Group: 		Libraries/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.net/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
-Source: 	http://gstreamer.net/releases/%{version}/src/%{name}-%{version}.tar.gz
+Source: 	http://gstreamer.net/src/gstreamer/gstreamer-%{version}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
 %define		majorminor	@GST_MAJORMINOR@
@@ -17,24 +17,31 @@ BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 Requires: 	glib2 >= %_glib2
 Requires: 	libxml2 >= %_libxml2
 Requires:	popt > 1.6
-Prereq:		%{name}-tools >= %{version}
+
+Provides:	gstreamer =%{version}-%{release}
+
 BuildRequires: 	glib2-devel >= %_glib2
 BuildRequires: 	libxml2-devel >= %_libxml2
 BuildRequires: 	bison
 BuildRequires: 	flex
-BuildRequires: 	gtk-doc >= 1.0
+BuildRequires: 	gtk-doc >= 1.1
 BuildRequires: 	gcc
 BuildRequires: 	zlib-devel
 BuildRequires:  popt > 1.6
 Prereq:		/sbin/ldconfig
 
 ### documentation requirements
-BuildRequires:  openjade
 BuildRequires:  python2
+BuildRequires:  openjade
+BuildRequires:  jadetex
+BuildRequires:  libxslt
 BuildRequires:  docbook-style-dsssl
+BuildRequires:  docbook-style-xsl
 BuildRequires:  docbook-utils
 BuildRequires:	transfig
 BuildRequires:  xfig
+BuildRequires:  netpbm-progs
+BuildRequires:  ghostscript
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -51,6 +58,7 @@ Group: 		Development/Libraries
 Requires: 	%{name} = %{version}-%{release}
 Requires: 	glib2-devel >= %_glib2
 Requires: 	libxml2-devel >= %_libxml2
+Provides:	gstreamer-devel = %{version}-%{release}
 
 %description devel
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -63,28 +71,11 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
-%package tools
+%package -n gstreamer-tools
 Summary: 	tools for GStreamer streaming media framework.
 Group: 		Libraries/Multimedia
-Requires: 	%{name}-common >= %{version}-%{release}
 
-%description tools
-GStreamer is a streaming-media framework, based on graphs of filters which
-operate on media data. Applications using this library can do anything
-from real-time sound processing to playing videos, and just about anything
-else media-related.  Its plugin-based architecture means that new data
-types or processing capabilities can be added simply by installing new   
-plugins.
-
-This package contains the basic command-line tools used for GStreamer, like
-gst-register and gst-launch.  It is split off to allow parallel-installability
-in the future.
-
-%package common
-Summary: 	common tools and files for GStreamer streaming media framework.
-Group: 		Libraries/Multimedia
-
-%description common
+%description -n gstreamer-tools
 GStreamer is a streaming-media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
 from real-time sound processing to playing videos, and just about anything
@@ -94,54 +85,38 @@ plugins.
 
 This package contains wrapper scripts for the command-line tools that work
 with different major/minor versions of GStreamer.
-
+                                                                                
 %prep
-%setup
+%setup -n gstreamer-%{version}
 
 %build
-CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
-CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
-FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
-%{?__libtoolize:[ -f configure.in ] && %{__libtoolize} --copy --force} ; \
-./configure \
-  --prefix=%{_prefix} \
-  --exec-prefix=%{_exec_prefix} \
-  --bindir=%{_bindir} \
-  --sbindir=%{_sbindir} \
-  --sysconfdir=%{_sysconfdir} \
-  --datadir=%{_datadir} \
-  --includedir=%{_includedir} \
-  --libdir=%{_libdir} \
-  --libexecdir=%{_libexecdir} \
-  --localstatedir=%{_localstatedir} \
-  --sharedstatedir=%{_sharedstatedir} \
-  --mandir=%{_mandir} \
-  --infodir=%{_infodir} \
+%{?__libtoolize:[ -f configure.in ] && %{__libtoolize} --copy --force}
+%configure \
   --enable-debug \
   --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
   --disable-tests --disable-examples
-#  --enable-docs-build --with-html-dir=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
-
-if [ "$SMP" != "" ]; then
-  (make "MAKE=make -k -j $SMP"; exit 0)
-else
-  make
-fi
+                                                                                
+make %{?_smp_mflags}
 
 %install  
-[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 
-%makeinstall
-# Clean out files that should not be part of the rpm. 
-# This is the recommended way of dealing with it for RH8
+# build documentation to a different location so it doesn't end up in
+# a gstreamer-devel-(version) dir and doesn't get deleted by %doc scripts
+%makeinstall docdir=$RPM_BUILD_ROOT%{_datadir}/gstreamer-%{majorminor}/doc
+                                                                                
+%find_lang gstreamer-%{majorminor}
+# Clean out files that should not be part of the rpm.
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
-rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}-%{majorminor}/*.la
-rm -f $RPM_BUILD_ROOT%{_libdir}/%{name}-%{majorminor}/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-
+# Create empty cache directory
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{major}
+                                                                                
 %clean
-[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 
 %post
 /sbin/ldconfig
@@ -150,13 +125,12 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %postun
 /sbin/ldconfig
 
-%files
+%files -f gstreamer-%{majorminor}.lang
 %defattr(-, root, root, -)
 %doc AUTHORS COPYING README TODO COPYING.LIB ABOUT-NLS REQUIREMENTS DOCBUILDING
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstcontrol-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
-%dir %{_localstatedir}/cache/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstbasicomega*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptscheduler.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstoptomega*.so*
@@ -167,10 +141,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/gstreamer-%{majorminor}/libgstspider*.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so*
 %{_libdir}/gstreamer-%{majorminor}/libgstbytestream.so
-%{_datadir}/locale/*
-
-%files tools
-%defattr(-, root, root, -)
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-complete-%{majorminor}
 %{_bindir}/gst-compprep-%{majorminor}
@@ -180,58 +150,52 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_bindir}/gst-register-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
-%{_bindir}/gst-feedback-%{majorminor}
+%{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
+%{_mandir}/man1/gst-complete-%{majorminor}.*
+%{_mandir}/man1/gst-compprep-%{majorminor}.*
 %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %{_mandir}/man1/gst-launch-%{majorminor}.*
 %{_mandir}/man1/gst-md5sum-%{majorminor}.*
+%{_mandir}/man1/gst-register-%{majorminor}.*
 %{_mandir}/man1/gst-typefind-%{majorminor}.*
-%{_mandir}/man1/gst-feedback-%{majorminor}.*
+%dir %{_localstatedir}/cache/gstreamer-%{majorminor}
 
-%files common
+%files -n gstreamer-tools
 %defattr(-, root, root, -)
-%{_bindir}/gst-xmlinspect
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
+%{_bindir}/gst-feedback
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
 %{_bindir}/gst-md5sum
 %{_bindir}/gst-register
-%{_bindir}/gst-xmllaunch
 %{_bindir}/gst-typefind
+%{_bindir}/gst-xmlinspect
+%{_bindir}/gst-xmllaunch
 
 %files devel
 %defattr(-, root, root, -)
-%dir %{_includedir}/%{name}-%{majorminor}
-%dir %{_includedir}/%{name}-%{majorminor}/gst
-%{_includedir}/%{name}-%{majorminor}/gst/*.h
-%dir %{_includedir}/%{name}-%{majorminor}/gst/control
-%{_includedir}/%{name}-%{majorminor}/gst/control/*.h
-%dir %{_includedir}/%{name}-%{majorminor}/gst/getbits
-%{_includedir}/%{name}-%{majorminor}/gst/getbits/getbits.h
-%{_includedir}/%{name}-%{majorminor}/gst/bytestream/bytestream.h
-# %{_libdir}/libgstreamer.a
+%dir %{_includedir}/gstreamer-%{majorminor}
+%dir %{_includedir}/gstreamer-%{majorminor}/gst
+%{_includedir}/gstreamer-%{majorminor}/gst/*.h
+%dir %{_includedir}/gstreamer-%{majorminor}/gst/control
+%{_includedir}/gstreamer-%{majorminor}/gst/control/*.h
+%dir %{_includedir}/gstreamer-%{majorminor}/gst/getbits
+%{_includedir}/gstreamer-%{majorminor}/gst/getbits/getbits.h
+%{_includedir}/gstreamer-%{majorminor}/gst/bytestream/bytestream.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstcontrol-%{majorminor}.so
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-control-%{majorminor}.pc
-## we specify the API docs as regular files since %docs doesn't fail when
-#  files aren't found anymore for RPM >= 4
-#  we list all of the files we really need to trap incomplete doc builds
-#  then we catch the rest with *, you can safely ignore the errors from this
-## gstreamer API
-# %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/%{name}-%{majorminor}.devhelp
-# %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/element-types.html
-# %{_datadir}/gtk-doc/html/%{name}-%{majorminor}/gstreamer.html
-%{_datadir}/gtk-doc/html/%{name}-%{majorminor}/*
-## gstreamer-libs API
-# %dir %{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}
-%{_datadir}/gtk-doc/html/%{name}-libs-%{majorminor}/*
-## this catches all of the rest of the docs we might have forgotten
-# %{_datadir}/gtk-doc/html/*
-
-
+                                                                                
+%{_datadir}/gtk-doc/html/gstreamer-%{majorminor}/*
+%{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}/*
+                                                                                
 %changelog
+* Thu Feb 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- sync with 0.7.4 fedora spec
+
 * Thu Feb 05 2004 Thomas Vander Stichele <thomas at apestaart dot org>
 - bump gtk-doc required version to 1.0 for the new options used
 

@@ -208,12 +208,17 @@ GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
   
 dnl === libxml 2 ===
-dnl Minimum required version of libxml2
-LIBXML2_REQ="2.4.9"
-AC_SUBST(LIBXML2_REQ)
+if test "x$GST_DISABLE_LOADSAVE" = "xtrue" && test "x$GST_DISABLE_REGISTRY" = "xtrue"
+then
+  dnl Minimum required version of libxml2
+  LIBXML2_REQ="2.4.9"
+  AC_SUBST(LIBXML2_REQ)
 
-dnl check for libxml2
-GST_LIBXML2_CHECK()
+  dnl check for libxml2
+  GST_LIBXML2_CHECK()
+else
+  AC_MSG_NOTICE([Registry and load/save are disabled, not checking for libxml2])
+fi
 
 dnl popt checks
 dnl FIXME: This test passes on popt 1.6.2, maybe earlier, but popt 1.6.2
