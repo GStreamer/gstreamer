@@ -33,7 +33,7 @@
 #ifndef MPEG2_RELEASE
 typedef picture_t mpeg2_picture_t;
 typedef gint mpeg2_state_t;
-#define STATE_BUFFER -1
+#define STATE_BUFFER 0
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
@@ -433,7 +433,7 @@ gst_mpeg2dec_flush_decoder (GstMpeg2dec *mpeg2dec)
 	}
       }
     } 
-    while (state != STATE_BUFFER);
+    while (state != STATE_BUFFER && state != -1);
   }
 }
 
@@ -659,6 +659,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       }
       /* need more data */
       case STATE_BUFFER:
+      case -1:
 	done = TRUE;
 	break;
       /* error */
