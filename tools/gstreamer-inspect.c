@@ -127,6 +127,8 @@ gint print_element_info(GstElementFactory *factory) {
         printf("    Exists: Always\n");
       else if (padtemplate->presence == GST_PAD_SOMETIMES)
         printf("    Exists: Sometimes\n");
+      else if (padtemplate->presence == GST_PAD_REQUEST)
+        printf("    Exists: Request\n");
       else
         printf("    Exists: UNKNOWN!!!\n");
 
