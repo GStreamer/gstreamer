@@ -1,4 +1,4 @@
-examples = seek spider_seek cdplayer cdparanoia vorbisfile
+examples = seek spider_seek cdplayer cdparanoia vorbisfile playbin chained
 
 noinst_PROGRAMS = $(examples)
 
