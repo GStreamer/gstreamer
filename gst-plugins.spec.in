@@ -44,6 +44,8 @@ BuildRequires:	gstreamer-tools >= 0.7.4
 @USE_SDL_TRUE@#SDL-devel should require XFree86-devel because it links to it
 @USE_SDL_TRUE@#only it doesn't seem to do that currently
 @USE_SDL_TRUE@BuildRequires: 	XFree86-devel
+@USE_SMOOTHWAVE_TRUE@Requires:	gtk2
+@USE_SMOOTHWAVE_TRUE@BuildRequires:	gtk2-devel
 @USE_VORBIS_TRUE@Requires:      libogg >= 1.0
 @USE_VORBIS_TRUE@Requires:      libvorbis >= 1.0
 @USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0
@@ -51,6 +53,8 @@ BuildRequires:	gstreamer-tools >= 0.7.4
 @USE_LIBPNG_TRUE@Requires:      libpng >= 1.2.0
 @USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
 @USE_OSS_TRUE@BuildRequires: glibc-devel
+@USE_PANGO_TRUE@Requires:        pango
+@USE_PANGO_TRUE@BuildRequires:   pango-devel
 @USE_RAW1394_TRUE@Requires:      libraw1394
 @USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
 @USE_XVIDEO_TRUE@Requires: 	XFree86-libs
@@ -156,12 +160,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstxwindowlistener.so
 
 # non-core plugins without external dependencies
+%{_libdir}/gstreamer-%{majorminor}/libgstac3parse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
 %{_libdir}/gstreamer-%{majorminor}/libgstalaw.so
+%{_libdir}/gstreamer-%{majorminor}/libgstasf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgstauparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstavi.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcdplayer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcdxaparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstchart.so
@@ -193,7 +200,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpassthrough.so
 %{_libdir}/gstreamer-%{majorminor}/libgstplayondemand.so
+%ifarch %{ix86}
 %{_libdir}/gstreamer-%{majorminor}/libgstqcam.so
+%endif
 %{_libdir}/gstreamer-%{majorminor}/libgstresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtjpeg.so
@@ -202,7 +211,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsilence.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsinesrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmooth.so
-%{_libdir}/gstreamer-%{majorminor}/libgstsmoothwave.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspectrum.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
@@ -211,8 +219,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsynaesthesia.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttagedit.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
-%{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
-%{_libdir}/gstreamer-%{majorminor}/libgsttimeoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttypefindfunctions.so
 %{_libdir}/gstreamer-%{majorminor}/libgstudp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvbidec.so
@@ -224,8 +230,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideotestsrc.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvolume.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvolenv.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvolume.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
@@ -238,6 +244,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
 @USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
+@USE_SMOOTHWAVE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsmooth.so
 @USE_JPEG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjpeg.so
 @USE_MIKMOD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmikmod.so
 @USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdlvideosink.so
@@ -250,8 +257,9 @@ rm -rf $RPM_BUILD_ROOT
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvideosink.so
 # Snapshot plugin uses libpng
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsnapshot.so
+@USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
+@USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimeoverlay.so
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
-@USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximagesink.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
@@ -314,46 +322,6 @@ GStreamer support libraries header files.
 # Here are packages not in the base plugins package but not dependant
 # on an external lib
 
-### ASF ###
-%package -n gstreamer-asf
-Summary:        GStreamer plug-in for asf video format.
-Group:          Libraries/Multimedia
-Requires:       gstreamer-plugins = %{version}
-%description -n gstreamer-asf
-Plug-in for playing ASF movies under GStreamer.
-                                                                                
-%files -n gstreamer-asf
-%defattr(-, root, root)
-%{_libdir}/gstreamer-%{majorminor}/libgstasf*
-                                                                                
-%post -n gstreamer-asf
-%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
-                                                                                
-%postun -n gstreamer-asf
-%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
-
-### AVI ###
-%package -n gstreamer-avi
-Summary:       GStreamer plug-in for AVI movie playback.
-Group:         Libraries/Multimedia
-Requires:      gstreamer-plugins = %{version}
-
-%description -n gstreamer-avi
-Plug-ins for playback of AVI format media files.
- 
-%files -n gstreamer-avi
-%defattr(-, root, root)
-%{_libdir}/gstreamer-%{majorminor}/libgstavi.so
-
-%post -n gstreamer-avi
-%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
-# %{_bindir}/gst-compprep > /dev/null 2> /dev/null
-
-%postun -n gstreamer-avi
-%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
-### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
-
-
 # Here are all the packages depending on external libs #
 
 ### A52DEC ###
@@ -370,7 +338,6 @@ Plug-ins for playback of AVI format media files.
 @USE_A52DEC_TRUE@%files -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%defattr(-, root, root)
 @USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsta52dec.so
-%{_libdir}/gstreamer-%{majorminor}/libgstac3parse.so
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%post -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
@@ -885,6 +852,28 @@ Plug-ins for playback of AVI format media files.
 @USE_V4L2_TRUE@%postun -n gstreamer-v4l2
 @USE_V4L2_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
 @USE_V4L2_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+### XVID ###
+@USE_XVID_TRUE@%package -n gstreamer-xvid
+@USE_XVID_TRUE@Summary:       GStreamer XVID plug-in.
+@USE_XVID_TRUE@Group:         Libraries/Multimedia
+@USE_XVID_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_XVID_TRUE@BuildRequires: glibc-devel
+@USE_XVID_TRUE@
+@USE_XVID_TRUE@%description -n gstreamer-xvid
+@USE_XVID_TRUE@Plug-in for decoding XVID files.
+@USE_XVID_TRUE@
+@USE_XVID_TRUE@%files -n gstreamer-xvid
+@USE_XVID_TRUE@%defattr(-, root, root)
+@USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
+@USE_XVID_TRUE@
+@USE_XVID_TRUE@%post -n gstreamer-xvid
+@USE_XVID_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_XVID_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_XVID_TRUE@
+@USE_XVID_TRUE@%postun -n gstreamer-xvid
+@USE_XVID_TRUE@%{_bindir}/gst-register-%{majorminor} > /dev/null 2> /dev/null
+@USE_XVID_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
 
 %changelog
