@@ -1,0 +1,9 @@
+<!-- ############ chapter ############# -->
+
+<chapter id="cha-building-args" xreflabel="Adding Arguments">
+  <title>Adding Arguments</title>
+  <para>
+    Define arguments in enum.
+  </para>
+</chapter>
+

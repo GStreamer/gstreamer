@@ -1,0 +1,295 @@
+<!-- ############ chapter ############# -->
+
+<chapter id="cha-building-boiler" xreflabel="Constructing the Boilerplate">
+  <title>Constructing the Boilerplate</title>
+  <para>
+    In this chapter you will learn how to construct the bare minimum code for a
+    new plugin. Starting from ground zero, you will see how to get the
+    &GStreamer; template source. Then you will learn how to use a few simple
+    command line tools to copy and modify a template plugin and thus create your
+    new plugin. By the end of all this, you will have a functional audio filter
+    plugin that you can compile and test.
+  </para>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-boiler-source" xreflabel="Getting the Gstreamer Plugin Templates">
+    <title>Getting the Gstreamer Plugin Templates</title>
+    <para>
+      There are currently two ways to develop a new plugin for &GStreamer;: You
+      can write the entire plugin by hand, or you can copy an existing plugin
+      template and write the plugin code you need. The second method is by far
+      the simpler of the two, so the first method will not even be described
+      here.
+    </para>
+    <para>
+      The first step is to check out a copy of the
+      <filename>gst-template</filename> CVS module to get an important tool and
+      the source code template for the basic &GStreamer; plugin. To check out
+      the <filename>gst-template</filename> module, type the following two
+      commands on a command line:
+    </para>
+    <screen>
+<prompt>shell $ </prompt><userinput>cvs -d:pserver:anonymous@cvs.gstreamer.sourceforge.net:/cvsroot/gstreamer login</userinput>
+Logging in to :pserver:anonymous@cvs.gstreamer.sourceforge.net:2401/cvsroot/gstreamer
+CVS password:
+<prompt>shell $ </prompt><userinput>cvs -z3 -d:pserver:anonymous@cvs.gstreamer.sourceforge.net:/cvsroot/gstreamer co gst-template</userinput>
+U gst-template/README
+U gst-template/gst-app/AUTHORS
+U gst-template/gst-app/ChangeLog
+U gst-template/gst-app/Makefile.am
+U gst-template/gst-app/NEWS
+U gst-template/gst-app/README
+U gst-template/gst-app/autogen.sh
+U gst-template/gst-app/configure.ac
+U gst-template/gst-app/src/Makefile.am
+...
+    </screen>
+    <para>
+      After the first command, you will have to press <keycap>ENTER</keycap> to
+      log in to the CVS server. You might have to log in twice. The second
+      command will check out a series of files and directories into <filename
+      class="directory">./gst-template</filename>. The template you will be
+      using is in <filename
+      class="directory">./gst-template/gst-plugin/</filename> directory. You
+      should look over the files in that directory to get a general idea of the
+      structure of a source tree for a plugin.
+    </para>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-boiler-filterstamp" xreflabel="Using Filterstamp">
+    <title>Using Filterstamp</title>
+    <para>
+      The first thing to do when making a new element is to specify some basic
+      details about it: what its name is, who wrote it, what version number it
+      is, etc. We also need to define an object to represent the element and to
+      store the data the element needs. These details are collectively known as
+      the <emphasis>boilerplate</emphasis>.
+    </para>
+    <para>
+      The standard way of defining the boilerplate is simply to write some code,
+      and fill in some structures. As mentioned in the previous section, the
+      easiest way to do this is to copy a template and add functionality
+      according to your needs. To help you do so, there is a script called
+      <command>pluginstamp.sh</command> in the <filename
+      class="directory">tools/</filename> directory of the
+      <filename>gst-template</filename> source tree that does exactly this.
+    </para>
+    <para>
+      To use <command>pluginstamp.sh</command>, first open up a terminal window.
+      Change to the <filename class="directory">gst-template</filename>
+      directory, and then run the <command>pluginstamp.sh</command> command. The
+      arguments to the <command>pluginstamp.sh</command> are:
+    </para>
+    <orderedlist>
+      <listitem>
+        <para>the name of the plugin, and</para>
+      </listitem>
+      <listitem>
+        <para>
+          the directory that should hold a new subdirectory for the source tree
+          of the plugin.
+        </para>
+      </listitem>
+    </orderedlist>
+    <para>
+      Note that capitalization is important for the name of the plugin. Under
+      some operating systems, capitalization is also important when specifying
+      directory names. For example, the
+      following commands create the ExampleFilter plugin based on the plugin
+      template and put the output files in a new directory called <filename
+      class="directory">~/src/examplefilter/</filename>:
+    </para>
+    <screen>
+<prompt>shell $ </prompt><userinput>cd gst-template</userinput>
+<prompt>shell $ </prompt><userinput>tools/pluginstamp.sh ExampleFilter ~/src</userinput>
+    </screen>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 name="sect1-boiler-examine" xreflabel="Examining the Basic Code">
+    <title>Examining the Basic Code</title>
+    <para>
+      First we will examine the code you would be likely to place in a header
+      file (although since the interface to the code is entirely defined by the
+      pluging system, and doesn't depend on reading a header file, this is not
+      crucial.)
+
+      The code here can be found in
+      <filename>examples/pwg/examplefilter/boiler/gstexamplefilter.h</filename>.
+    </para>
+
+    <example name="ex-boiler-examine-h" xreflabel="Example Plugin Header File">
+      <title>Example Plugin Header File</title>
+      <programlisting>
+  /* Definition of structure storing data for this element. */
+  typedef struct _GstExample GstExample;
+
+  struct _GstExample {
+    GstElement element;
+
+    GstPad *sinkpad,*srcpad;
+
+    gint8 active;
+  };
+
+  /* Standard definition defining a class for this element. */
+  typedef struct _GstExampleClass GstExampleClass;
+  struct _GstExampleClass {
+    GstElementClass parent_class;
+  };
+
+  /* Standard macros for defining types for this element.  */
+  #define GST_TYPE_EXAMPLE \
+    (gst_example_get_type())
+  #define GST_EXAMPLE(obj) \
+    (GTK_CHECK_CAST((obj),GST_TYPE_EXAMPLE,GstExample))
+  #define GST_EXAMPLE_CLASS(klass) \
+    (GTK_CHECK_CLASS_CAST((klass),GST_TYPE_EXAMPLE,GstExample))
+  #define GST_IS_EXAMPLE(obj) \
+    (GTK_CHECK_TYPE((obj),GST_TYPE_EXAMPLE))
+  #define GST_IS_EXAMPLE_CLASS(obj) \
+    (GTK_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
+
+  /* Standard function returning type information. */
+  GtkType gst_example_get_type(void);
+      </programlisting>
+    </example>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-boiler-filterfactory" xreflabel="Creating a Filter With FilterFactory">
+    <title>Creating a Filter With FilterFactory (Future)</title>
+    <para>
+      A plan for the future is to create a FilterFactory, to make the process of
+      making a new filter a simple process of specifying a few details, and
+      writing a small amount of code to perform the actual data processing.
+      Ideally, a FilterFactory would perform the tasks of boilerplate creation,
+      code functionality implementation, and filter registration.
+    </para>
+    <para>
+      Unfortunately, this has not yet been implemented. Even when someone
+      eventually does write a FilterFactory, this element will not be able to
+      cover all the possibilities available for filter writing. Thus, some
+      plugins will always need to be manually coded and registered.
+    </para>
+    <para>
+      Here is a rough outline of what is planned: You run the FilterFactory and
+      give the factory a list of appropriate function pointers and data
+      structures to define a filter. With a reasonable measure of preprocessor
+      magic, you just need to provide a name for the filter and definitions of
+      the functions and data structures desired. Then you call a macro from
+      within plugin_init() that registers the new filter. All the fluff that
+      goes into the definition of a filter is thus be hidden from view.
+    </para>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-boiler-details">
+    <title>GstElementDetails</title>
+    <para>
+      The GstElementDetails structure gives a heirarchical type for the element,
+      a human-readable description of the element, as well as author and version
+      data. The entries are:
+    </para>
+    <itemizedlist>
+      <listitem><para>
+        A long, english, name for the element.
+      </para></listitem><listitem><para>
+        The type of the element, as a heirarchy. The heirarchy is defined by
+        specifying the top level category, followed by a "/", followed by the
+        next level category, etc. The type should be defined according to the
+        guidelines elsewhere in this document. (FIXME: write the guidelines, and
+        give a better reference to them)
+      </para></listitem><listitem><para>
+        A brief description of the purpose of the element.
+      </para></listitem><listitem><para>
+        The version number of the element. For elements in the main GStreamer
+        source code, this will often simply be VERSION, which is a macro defined
+        to be the version number of the current GStreamer version. The only
+        requirement, however, is that the version number should increase
+        monotonically.
+      </para>
+      <para>
+        Version numbers should be stored in major.minor.patch form: ie, 3
+        (decimal) numbers, separated by periods (.).
+      </para></listitem><listitem><para>
+        The name of the author of the element, optionally followed by a contact
+        email address in angle brackets.
+      </para></listitem><listitem><para>
+        The copyright details for the element.
+      </para></listitem>
+    </itemizedlist>
+    <para>
+      For example:
+    </para>
+    <programlisting>
+  static GstElementDetails example_details = {
+      "An example plugin",
+      "Example/FirstExample",
+      "Shows the basic structure of a plugin",
+      VERSION,
+      "your name &lt;your.name@your.isp&gt;",
+      "(C) 2001",
+  };
+    </programlisting>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-boiler-constructors">
+    <title>Constructor Functions</title>
+    <para>
+      Each element has two functions which are used for construction of an
+      element. These are the _class_init() function, which is used to initialise
+      the class (specifying what signals and arguments the class has and setting
+      up global state), and the _init() function, which is used to initialise a
+      specific instance of the class.
+    </para>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-boiler-plugininit">
+    <title>The plugin_init function</title>
+    <para>
+      Once we have written code defining all the parts of the plugin, we need to
+      write the plugin_init() function. This is a special function, which is
+      called as soon as the plugin is loaded, and must return a pointer to a newly
+      allocated GstPlugin structure. This structure contains the details of all
+      the facilities provided by the plugin, and is the mechanism by which the
+      definitions are made available to the rest of the &GStreamer; system. Helper
+      functions are provided to help fill the structure: for future compatability
+      it is recommended that these functions are used, as documented below, rather
+      than attempting to access the structure directly.
+    </para>
+    <para>
+      Note that the information returned by the plugin_init() function will be
+      cached in a central registry. For this reason, it is important that the same
+      information is always returned by the function: for example, it must not
+      make element factories available based on runtime conditions. If an element
+      can only work in certain conditions (for example, if the soundcard is not
+      being used by some other process) this must be reflected by the element
+      being unable to enter the READY state if unavailable, rather than the plugin
+      attempting to deny existence of the plugin.
+    </para>
+  </sect1>
+</chapter>
+
+
+
+
+
+
+
+
+
+
+
+
+

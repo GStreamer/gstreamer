@@ -1,0 +1,27 @@
+<chapter id="cha-loopbased-sched">
+  <title>How scheduling works</title>
+  <para>
+    aka pushing and pulling
+  </para>
+</chapter>
+
+<chapter id="cha-loopbased-loopfn">
+  <title>How a loopfunc works</title>
+  <para>
+    aka pulling and pushing
+  </para>
+</chapter>
+
+<chapter id="cha-loopbased-secnd">
+  <title>Adding a second output</title>
+  <para>
+    Identity is now a tee
+  </para>
+</chapter>
+
+<chapter id="cha-loopbased-modappl">
+  <title>Modifying the test application</title>
+  <para>
+  </para>
+</chapter>
+

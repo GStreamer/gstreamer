@@ -1,0 +1,156 @@
+<?xml version='1.0'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                  "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % magic-entities SYSTEM "magic">
+%magic-entities;
+
+<!ENTITY TITLEPAGE            SYSTEM "titlepage.xml">
+
+<!ENTITY INTRO_PREFACE        SYSTEM "intro_preface.xml">
+<!ENTITY INTRO_BASICS         SYSTEM "intro_basics.xml">
+
+<!ENTITY BUILDING_BOILER      SYSTEM "building_boiler.xml">
+<!ENTITY BUILDING_PADS        SYSTEM "building_pads.xml">
+<!ENTITY BUILDING_CHAINFN     SYSTEM "building_chainfn.xml">
+<!ENTITY BUILDING_STATE       SYSTEM "building_state.xml">
+<!ENTITY BUILDING_PROPS       SYSTEM "building_props.xml">
+<!ENTITY BUILDING_SIGNALS     SYSTEM "building_signals.xml">
+<!ENTITY BUILDING_TESTAPP     SYSTEM "building_testapp.xml">
+
+<!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced_scheduling.xml">
+<!ENTITY ADVANCED_TYPES       SYSTEM "advanced_types.xml">
+<!ENTITY ADVANCED_REQUEST     SYSTEM "advanced_request.xml">
+<!ENTITY ADVANCED_CLOCK       SYSTEM "advanced_clock.xml">
+<!ENTITY ADVANCED_DPARAMS     SYSTEM "advanced_dparams.xml">
+<!ENTITY ADVANCED_MIDI        SYSTEM "advanced_midi.xml">
+
+<!ENTITY OTHER_SOURCE         SYSTEM "other_source.xml">
+<!ENTITY OTHER_SINK           SYSTEM "other_sink.xml">
+<!ENTITY OTHER_AUTOPLUGGER    SYSTEM "other_autoplugger.xml">
+
+<!ENTITY APPENDIX_CHECKLIST   SYSTEM "appendix_checklist.xml">
+<!ENTITY APPENDIX_PYTHON      SYSTEM "appendix_python.xml">
+
+<!ENTITY GStreamer    "<application>GStreamer</application>">
+<!ENTITY GstVersion   "0.4.1">
+<!ENTITY GstAppDevMan "<emphasis>GStreamer Application Development Manual</emphasis>">
+<!ENTITY GstLibRef    "<emphasis>GStreamer Library Reference</emphasis>">
+]>
+
+<book id="book-gst-plugin-writers-guide">
+  &TITLEPAGE;
+
+  <!-- ############# part ############### -->
+
+  <part id="part-introduction" xreflabel="Introduction">
+    <title>Introduction</title>
+    <partintro>
+      <para>
+        &GStreamer; is an exremely powerful and versatile framework for creating
+        streaming media applications. Many of the virtues of the &GStreamer;
+        framework come from its modularity: &GStreamer; can seamlessly
+        incorporate new plugin modules. But because modularity and power often
+        come at a cost of greater complexity (consider, for example, <ulink
+        type="http" url="http://www.omg.org/">CORBA</ulink>), writing new
+        plugins is not always easy.
+      </para>
+      <para>
+        This guide is intended to help you understand the &GStreamer; framework
+        so you can develop new plugins to extend &GStreamer;'s functionality.
+        This guide introduces most of the basic plugin writing issues in version
+        &GstVersion; of &GStreamer;. This guide presents most issues in the
+        context of an example audio filter plugin written in C. However, the
+        guide also addresses some issues involved in writing other types of
+        plugins, and the end of the guide also describes some of the Python
+        bindings for &GStreamer;.
+      </para>
+    </partintro>
+
+    &INTRO_PREFACE;
+    &INTRO_BASICS;
+  </part>
+
+  <!-- ############ part ############# -->
+
+  <part id="part-building" xreflabel="Building a Filter">
+    <title>Building a Filter</title>
+    <partintro>
+      <para>
+        You now have the neccessary concepts to build your first plugin. In this
+        part of the guide, you will learn how to apply these concepts to write a
+        simple audio filter plugin. The previous parts of the guide have
+        contained no explicit example code, perhaps making things a bit abstract
+        and difficult to understand. In contrast, this section will present both
+        applications and code by following the development of an example audio
+        filter plugin called <quote>ExampleFilter</quote>.
+      </para>
+      <para>
+        The example filter will begin with a single input pad and a single
+        output pad. The filter will, at first, simply pass data through without
+        modification. But by the end of this part of the guide, you will learn
+        to add some more interesting functionality, including properties and
+        signal handlers. And after reading the next part of the guide, <xref
+        linkend="part-advanced"/>, you will be able to add even more
+        functionality to your plugins.
+      </para>
+      <para>
+        The example code used in this part of the guide can be found in
+        <filename class="directory">examples/pwg/examplefilter/</filename> in
+        your &GStreamer; directory.
+      </para>
+    </partintro>
+
+    &BUILDING_BOILER;
+    &BUILDING_PADS;
+    &BUILDING_CHAINFN;
+    &BUILDING_STATE;
+    &BUILDING_PROPS;
+    &BUILDING_SIGNALS;
+    &BUILDING_TESTAPP;
+  </part>
+
+  <!-- ############ part ############# -->
+
+  <part id="part-advanced" xreflabel="Advanced Filter Concepts">
+    <title>Advanced Filter Concepts</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+    &ADVANCED_SCHEDULING;
+    &ADVANCED_TYPES;
+    &ADVANCED_REQUEST;
+    &ADVANCED_CLOCK;
+    &ADVANCED_DPARAMS;
+    &ADVANCED_MIDI;
+  </part>
+
+  <!-- ############ part ############# -->
+
+  <part id="part-other" xreflabel="Other Element Types">
+    <title>Other Element Types</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+    &OTHER_SOURCE;
+    &OTHER_SINK;
+    &OTHER_AUTOPLUGGER;
+  </part>
+
+  <!-- ############ part ############# -->
+
+  <part id="part-appendix" xreflabel="Appendices">
+    <title>Appendices</title>
+    <partintro>
+      <para>
+      </para>
+    </partintro>
+
+      &APPENDIX_CHECKLIST;
+      &APPENDIX_PYTHON;
+  </part>
+
+</book>

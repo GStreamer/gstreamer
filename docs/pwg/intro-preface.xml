@@ -1,0 +1,192 @@
+
+<!-- ############ chapter ############# -->
+
+<chapter id="cha-intro-preface" xreflabel="Preface">
+  <title>Preface</title>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-preface-who" xreflabel="Who Should Read This Guide?">
+    <title>Who Should Read This Guide?</title>
+    <para>
+      This guide explains how to write new modules for &GStreamer;. The guide is
+      relevant to several groups of people:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Anyone who wants to add support for new ways of processing data in
+          &GStreamer;. For example, a person in this group might want to create
+          a new data format converter, a new visualization tool, or a new
+          decoder or encoder.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Anyone who wants to add support for new input and output devices. For
+          example, people in this group might want to add the ability to write
+          to a new video output system or read data from a digital camera or
+          special microphone.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Anyone who wants to extend &GStreamer; in any way. You need to have an
+          understanding of how the plugin system works before you can understand
+          the constraints that the plugin system places on the rest of the code.
+          Also, you might be surprised after reading this at how much can be
+          done with plugins.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      This guide is not relevant to you if you only want to use the existing
+      functionality of &GStreamer;, or if you just want to use an application
+      that uses &GStreamer;. If you are only interested in using existing
+      plugins to write a new application &mdash; and there are quite a lot of
+      plugins already &mdash; you might want to check the &GstAppDevMan;. If you
+      are just trying to get help with a &GStreamer; application, then you
+      should check with the user manual for that particular application.
+    </para>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-preface-reading" xreflabel="Preliminary Reading">
+    <title>Preliminary Reading</title>
+    <para>
+      This guide assumes that you are somewhat familiar with the basic workings
+      of &GStreamer;. For a gentle introduction to programming concepts in
+      &GStreamer;, you may wish to read the &GstAppDevMan; first. Also check out
+      the documentation available on the <ulink type="http"
+      url="http://gstreamer.net/docs/">&GStreamer; web site</ulink>,
+      particularly the documents available in the <ulink type="http"
+      url="http://gstreamer.net/wiki/">&GStreamer; wiki</ulink>.
+    </para>
+    <para>
+      Since &GStreamer; adheres to the GObject programming model, this guide
+      also assumes that you understand the basics of <ulink type="http"
+      url="http://developer.gnome.org/doc/API/2.0/gobject/index.html">GObject</ulink>
+      programming. There are several good introductions to the GObject library,
+      including the <emphasis><ulink type="http"
+      url="http://www.gtk.org/tutorial/">GTK+ Tutorial</ulink></emphasis>.
+    </para>
+  </sect1>
+
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="sect1-preface-structure" xreflabel="Structure of This Guide">
+    <title>Structure of This Guide</title>
+    <para>
+      To help you navigate through this guide, it is divided into several large
+      parts. Each part addresses a particular broad topic concerning &GStreamer;
+      plugin development. The parts of this guide are laid out in the following
+      order:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          <guilabel><xref linkend="part-building"/></guilabel> &mdash;
+          Introduction to the structure of a plugin. This part covers all the
+          different steps you have to perform to build a basic audio filter
+          plugin. The discussion begins by giving examples of generating the
+          basic structures with <xref linkend="cha-building-boiler"/>. Then you
+          will learn how to write the code to get a basic filter plugin working.
+          Several chapters cover these concepts, including <xref
+          linkend="cha-building-types"/>, <xref linkend="cha-building-pads"/>,
+          <xref linkend="cha-building-chainfn"/>, and <xref
+          linkend="cha-building-state"/>.
+        </para>
+        <para>
+          After you have finished these chapters, you will have a working
+          plugin, but your new plugin might not have all the functionality you
+          need. To provide some standard functionality, you will learn how to
+          add features to a filter in the chapters on <xref
+          linkend="cha-building-props"/> and <xref
+          linkend="cha-building-signals"/>. Finally, you will learn to test your
+          new plugin in <xref linkend="cha-building-testapp"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <guilabel><xref linkend="part-advanced"/></guilabel> &mdash;
+          Information on advanced features of &GStreamer; plugin development.
+          After learning about the basic steps, you should be able to create a
+          functional audio or video filter plugin with some nice features.
+          However, &GStreamer; offers more for plugin writers. This part of the
+          guide includes chapters on <xref linkend="cha-advanced-scheduling"/>,
+          <xref linkend="cha-advanced-request"/>, <xref
+          linkend="cha-advanced-clock"/>, <xref
+          linkend="cha-advanced-dparams"/>, and <xref
+          linkend="cha-advanced-midi"/>. Since these features are more advanced,
+          the chapters can basically be read in any order, as you need the
+          features for your custom plugins.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <guilabel><xref linkend="part-other"/></guilabel> &mdash; Explanation
+          of writing source and sink plugins. Although the concepts introduced
+          in the two previous parts of this guide apply to filter plugins, many
+          of the concepts apply equally to source and sink plugins. This part
+          will take a look at creating source and sink type plugins for
+          &GStreamer; in the chapters on <xref linkend="cha-other-source"/> and
+          <xref linkend="cha-other-sink"/>. The chapter on <xref
+          linkend="cha-other-autoplugger"/> describes writing autoplugger
+          plugins.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <guilabel><xref linkend="part-appendix"/></guilabel> &mdash; The
+          appendices contain some information that stubbornly refused to fit
+          cleanly in other sections of this guide, like the <xref
+          linkend="cha-appendix-checklist"/> and <xref
+          linkend="cha-appendix-python"/>. FIXME: organize better.
+        </para>
+      </listitem>
+    </itemizedlist>
+
+    <para>
+      The remainder of this introductory part presents a short overview of the
+      basic concepts involved in &GStreamer; plugin development. People familiar
+      with the &GstAppDevMan; can use this short overview to refresh their
+      memory. Topics covered include <xref linkend="sect1-basics-elements"/>,
+      <xref linkend="sect1-basics-pads"/>, <xref
+      linkend="sect1-basics-buffers"/>, <xref linkend="sect1-basics-types"/>,
+      and <xref linkend="sect1-basics-events"/>.
+    </para>
+
+    <para>
+      As you can see, there a lot to learn, so let's get started!
+    </para>
+
+    <itemizedlist>
+      <listitem>
+        <para>
+          Creating compound and complex elements by extending from a GstBin.
+          This will allow you to create plugins that have other plugins embedded
+          in them.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Adding new mime-types to the registry along with typedetect functions.
+          This will allow your plugin to operate on a completely new media type.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Creating custom schedulers when the default schedulers are
+          insufficient.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Creating custom autopluggers when the default ones are insufficient
+          for your needs.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </sect1>
+</chapter>

@@ -1,0 +1,13 @@
+Makefile
+Makefile.in
+*.bak
+.deps
+images
+gst-plugin-writers-guide
+gst-plugin-writers-guide.pdf
+gst-plugin-writers-guide.ps
+gst-plugin-writers-guide.dvi
+gst-plugin-writers-guide.tex
+gst-plugin-writers-guide.log
+gst-plugin-writers-guide.aux
+gst-plugin-writers-guide.junk
