@@ -20,7 +20,7 @@
 #ifndef __GST_PLAY_H__
 #define __GST_PLAY_H__
 
-#include <gst/gstpipeline.h>
+#include <gst/gst.h>
 
 #define GST_TYPE_PLAY            (gst_play_get_type())
 #define GST_PLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLAY, GstPlay))
