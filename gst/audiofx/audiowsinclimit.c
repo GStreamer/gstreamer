@@ -38,6 +38,7 @@
 GstElementDetails gst_lpwsinc_details = {
   "LPWSinc",
   "Filter/Audio/Effect",
+  "LGPL",
   "Low-pass Windowed sinc filter",
   VERSION,
   "Thomas <thomas@apestaart.org>",
