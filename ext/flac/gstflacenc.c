@@ -67,7 +67,7 @@ enum
 static void gst_flacenc_base_init (gpointer g_class);
 static void gst_flacenc_init (FlacEnc * flacenc);
 static void gst_flacenc_class_init (FlacEncClass * klass);
-static void gst_flacenc_dispose (GObject * object);
+static void gst_flacenc_finalize (GObject * object);
 
 static GstPadLinkReturn
 gst_flacenc_sinkconnect (GstPad * pad, const GstCaps * caps);
@@ -233,7 +233,7 @@ gst_flacenc_class_init (FlacEncClass * klass)
   /* we have no properties atm so this is a bit silly */
   gobject_class->set_property = gst_flacenc_set_property;
   gobject_class->get_property = gst_flacenc_get_property;
-  gobject_class->dispose = gst_flacenc_dispose;
+  gobject_class->finalize = gst_flacenc_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_enum ("quality",
@@ -337,13 +337,13 @@ gst_flacenc_init (FlacEnc * flacenc)
 }
 
 static void
-gst_flacenc_dispose (GObject * object)
+gst_flacenc_finalize (GObject * object)
 {
   FlacEnc *flacenc = GST_FLACENC (object);
 
   FLAC__seekable_stream_encoder_delete (flacenc->encoder);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstPadLinkReturn

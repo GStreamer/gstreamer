@@ -56,7 +56,7 @@ enum
 static void gst_flacdec_base_init (gpointer g_class);
 static void gst_flacdec_class_init (FlacDecClass * klass);
 static void gst_flacdec_init (FlacDec * flacdec);
-static void gst_flacdec_dispose (GObject * object);
+static void gst_flacdec_finalize (GObject * object);
 
 static void gst_flacdec_loop (GstElement * element);
 static GstElementStateReturn gst_flacdec_change_state (GstElement * element);
@@ -169,7 +169,7 @@ gst_flacdec_class_init (FlacDecClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->dispose = gst_flacdec_dispose;
+  gobject_class->finalize = gst_flacdec_finalize;
 
   gstelement_class->change_state = gst_flacdec_change_state;
 }
@@ -231,7 +231,7 @@ gst_flacdec_init (FlacDec * flacdec)
 }
 
 static void
-gst_flacdec_dispose (GObject * object)
+gst_flacdec_finalize (GObject * object)
 {
   FlacDec *flacdec;
 
@@ -241,7 +241,7 @@ gst_flacdec_dispose (GObject * object)
     FLAC__seekable_stream_decoder_delete (flacdec->decoder);
   flacdec->decoder = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 

@@ -153,20 +153,31 @@ gst_videobalance_dispose (GObject * object)
 
   balance = GST_VIDEOBALANCE (object);
 
-  for (i = 0; i < 256; i++) {
-    g_free (balance->tableu[i]);
-    g_free (balance->tablev[i]);
+  if (balance->tableu) {
+    for (i = 0; i < 256; i++)
+      g_free (balance->tableu[i]);
+    g_free (balance->tableu);
+    balance->tableu = NULL;
   }
-  g_free (balance->tabley);
-  g_free (balance->tableu);
-  g_free (balance->tablev);
+
+  if (balance->tablev) {
+    for (i = 0; i < 256; i++)
+      g_free (balance->tablev[i]);
+    g_free (balance->tablev);
+    balance->tablev = NULL;
+  }
+
+  if (balance->tabley) {
+    g_free (balance->tabley);
+    balance->tabley = NULL;
+  }
 
   channels = balance->channels;
-
   while (channels) {
     GstColorBalanceChannel *channel = channels->data;
 
     g_object_unref (channel);
+    channels->data = NULL;
     channels = g_list_next (channels);
   }
 

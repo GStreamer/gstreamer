@@ -222,7 +222,10 @@ gst_osssrc_dispose (GObject * object)
 {
   GstOssSrc *osssrc = (GstOssSrc *) object;
 
-  gst_object_unparent (GST_OBJECT (osssrc->provided_clock));
+  if (osssrc->provided_clock != NULL) {
+    gst_object_unparent (GST_OBJECT (osssrc->provided_clock));
+    osssrc->provided_clock = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

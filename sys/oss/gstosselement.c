@@ -72,7 +72,7 @@ static void gst_osselement_class_init (GstOssElementClass * klass);
 
 static void gst_ossprobe_interface_init (GstPropertyProbeInterface * iface);
 static void gst_osselement_init (GstOssElement * oss);
-static void gst_osselement_dispose (GObject * object);
+static void gst_osselement_finalize (GObject * object);
 
 static void gst_osselement_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -164,7 +164,7 @@ gst_osselement_class_init (GstOssElementClass * klass)
 
   gobject_class->set_property = gst_osselement_set_property;
   gobject_class->get_property = gst_osselement_get_property;
-  gobject_class->dispose = gst_osselement_dispose;
+  gobject_class->finalize = gst_osselement_finalize;
 
   gstelement_class->change_state = gst_osselement_change_state;
 }
@@ -434,14 +434,14 @@ gst_osselement_init (GstOssElement * oss)
 }
 
 static void
-gst_osselement_dispose (GObject * object)
+gst_osselement_finalize (GObject * object)
 {
   GstOssElement *oss = (GstOssElement *) object;
 
   g_free (oss->device);
   g_free (oss->mixer_dev);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 void
