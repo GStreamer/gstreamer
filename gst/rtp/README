@@ -17,7 +17,7 @@ TODO
 Relevant RFCs
 -------------
 
-1889 RTP: A Transport Protocol for Real-Time Applications.
+3550 RTP: A Transport Protocol for Real-Time Applications. ( 1889 Obsolete )
 
 2198 RTP Payload for Redundant Audio Data.
 3119 A More Loss-Tolerant RTP Payload Format for MP3 Audio.
@@ -33,14 +33,21 @@ Relevant RFCs
 2435 RTP Payload Format for JPEG-compressed Video.
 3016 RTP Payload Format for MPEG-4 Audio/Visual Streams.
 3047 RTP Payload Format for ITU-T Recommendation G.722.1.
-
+3189 RTP Payload Format for DV (IEC 61834) Video.
+3190 RTP Payload Format for 12-bit DAT Audio and 20- and 24-bit Linear Sampled Audio.
+3389 Real-time Transport Protocol (RTP) Payload for Comfort Noise (CN)
 2733 An RTP Payload Format for Generic Forward Error Correction.
 2833 RTP Payload for DTMF Digits, Telephony Tones and Telephony
      Signals.
 2862 RTP Payload Format for Real-Time Pointers.
-1890 RTP Profile for Audio and Video Conferences with Minimal Control.
-2508 Compressing IP/UDP/RTP Headers for Low-Speed Serial Links.
+3351 RTP Profile for Audio and Video Conferences with Minimal Control. ( 1890 Obsolete )
+3555 MIME Type Registration of RTP Payload Formats.
 
+2508 Compressing IP/UDP/RTP Headers for Low-Speed Serial Links.
+1305 Network Time Protocol (Version 3) Specification, Implementation and Analysis.
+3339 Date and Time on the Internet: Timestamps.
+2246 The TLS Protocol Version 1.0
+3546 Transport Layer Security (TLS) Extensions. ( Updates 2246 )
 
 do we care?
 -----------
