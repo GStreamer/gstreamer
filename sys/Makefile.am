@@ -40,7 +40,7 @@ else
 V4L_DIR=
 endif
 
-if USE_V4L2
+if USE_GST_V4L2
 V4L2_DIR=v4l2
 else
 V4L2_DIR=
