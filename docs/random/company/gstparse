@@ -1,0 +1,166 @@
+GstParse
+========
+
+This document describes how GstParse works. GstParse is the infrastructure used
+to describe pipelines \(or parts thereof) as a string. This powerful yet easy 
+language is for example by the gst-launch command-line utility or in the GConf 
+keys that are used by various applications, such as Rhythmbox or Gst-Player. 
+\(You can find these keys in /system/gstreamer/default in GConf)
+
+The following examples will show commands for gst-launch. Please note that some
+characters need to be escaped when the pipeline is written in the shell as 
+gst-launch command.
+
+If you want to debug the GstParse part of an application, you can start it with
+the --gst-mask=0x10000 command line option.
+
+
+Basics
+======
+
+Elements
+--------
+The most basic thing you specify in a pipeline are elements. You add an element
+by the name of its type, so "filesrc" will add a file source and "identity" will
+add an identity element.
+Gstparse will put all these elements into a toplevel pipeline element.
+  example:#> gst-launch filesrc identity
+This adds a filesrc and an identity element to a pipeline. Of course this 
+pipeline will not run, because the elements are not yet connected.
+
+Properties
+----------
+You can set element properties by specifying them directly after the element in
+the form name=value \(you need to escape here) or name="value" \(you only need to
+escape the " sign.
+  example:#> gst-launch filesrc name=source location="music.mp3"
+This adds a filesrc element with the name "source" pointing to the location
+music.mp3 to your pipeline. \(This pipeline doesn't work either.)
+It's a good idea to set the name property on important elements, because if they
+are referenced \(see below), they will be referenced by name and the name of an
+element is unspecified if it wasn't set before.
+Please note that not all properties can be set yet. You might get a warning like
+  property "myproperty" in element myelement cannot be set
+In that case, please file a feature request. We can't guess all properties in
+advance.
+
+Bins
+----
+If you want to add bins to your pipeline, you can do so by specifying 
+  <bintype> . ( <properties> <elements> )
+in your pipeline. This adds a bin to your pipeline and puts all elements that
+are specified between the brackets inside this bin. You can specify properties
+of the bin directly after the opening bracket.
+There are to special bins: if you don't specify a bintype and no dot either, the
+type of the bin defaults to "bin". And you can use curly brackets { } to get a 
+bin of type "thread".
+  example:#> gst-launch \( { fakesrc pipeline . \( fakesink \) } \)
+This will put a fakesrc element inside a thread inside a bin and a fakesink into
+a pipeline element inside the thread inside the bin.
+Please note that this pipeline would not work, even if the elements were 
+connected properly, because the pipeline only specifies one top level element, 
+the element is not put inside a pipeline but returned directly. So if you don't
+want your elements be put into a pipeline, just add a bin of whatever type you 
+wish around the pipeline.
+
+Links
+-----
+What would a pipeline be without the ability to link the elements?
+Well it's very easy. Just put the link sign, an exclamation mark, between two 
+elements and they will be linked.
+  example:#> gst-launch fakesrc ! fakesink
+This will put the two elements into a pipeline and connect the fakesrc to the
+fakesink. This is the first pipeline that should run - and run it will until you
+terminate it.
+You can't however control which pads are linked, you can reference the pad\(s)
+you want to connect by name with a dot before the name.
+  example:#> gst-launch fakesrc .src ! fakesink
+  example:#> gst-launch fakesrc ! .sink fakesink
+  example:#> gst-launch fakesrc .src ! .sink fakesink
+These examples will all do the exact same thing as the example before. You have
+however referenced the pads you wanted to connect in different ways.
+Another way to reference is to reference the element you want to connect, too.
+In this case you have to add the element name before the dot. You can even not
+reference the pad and only the element name, to connect any pad.
+  example:#> gst-launch fakesrc name=src fakesink name=sink src.src ! sink.sink
+  example:#> gst-launch fakesrc name=src ! sink.sink fakesink name=sink
+  example:#> gst-launch fakesrc name=src src. ! fakesink name=sink
+  example:#> gst-launch fakesrc name=src fakesink name=sink src. ! sink.
+These examples all do the same as the other ones. Please note that we specified
+the element name property to be sure to reference the right element.
+In these examples you may have noticed, that an omitted element name on a link
+automatically means the element directly in front of / after the link is used 
+to create the link to save you some typing work and that not specifying a pad
+name will automatically create 1 connection between the two elements. If more
+than one connection was possible you might end up surprised.
+You may even specify pad lists to connect elements. They are seperated by
+commas.
+  example:#> gst-launch fakesrc ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink
+  example:#> gst-launch fakesrc ! tee name=tee  aggregator name=aggregator ! fakesink   tee.src0,src1 ! aggregator.sink0, sink1
+  example:#> gst-launch fakesrc ! tee name=tee .src0 ! .sink0 aggregator name=aggregator ! fakesink   tee.src1 ! aggregator.sink1
+These will all do the same. They will connect the tee twice to the aggregator.
+
+
+Examples
+========
+
+Audio playback
+--------------
+The most common audio pipeline for playing back an mp3 file is this:
+  example:#> gst-launch filesrc location=/path/to/file.mp3 ! mad ! osssink
+
+You can however improve on this by adding visualization:
+  example:#> gst-launch filesrc location=/path/to/file.mp3 ! mad ! tee name=tee ! osssink tee.src%d ! goom ! colorspace ! xvideosink
+Note that the reference of the tee element has a pad named "src%d". This is as
+used by printf and is a useful way to specify request pads where you don't know
+how this pad is named. Yes, the pad name could have been omitted anyway.
+
+If you have jerky playback you might want to use this pipeline threaded so audio
+and video have less chance of problems and you have a little buffer:
+  example:#> gst-launch filesrc location=/path/to/file.mp3 ! mad ! tee name=tee ! { queue ! osssink } tee name=tee { ! queue ! osssink } { tee. ! queue ! goom ! colorspace ! xvideosink }
+Remember to put queues at thread boundaries or it will not work.
+
+Video playback
+--------------
+The basic pipeline to playback a standard mpeg video would be this:
+  example:#> gst-launch filesrc location=/path/to/file.mpeg ! mpegdemux name=demux ! mad ! osssink demux. ! mpeg2dec ! xvideosink
+
+Or using threads for better playback:
+  example:#> gst-launch filesrc location=/path/to/file.mpeg ! mpegdemux name=demux ! { queue ! mad ! osssink } demux. ! { queue ! mpeg2dec ! xvideosink }
+
+For a DivX avi, this might work:
+  example:#> gst-launch filesrc location=/path/to/file.avi ! avidemux name=demux ! { queue ! mad ! osssink } { demux. ! ffdec_msmpeg4 ! xvideosink }
+
+
+If these don't work the video might need different treatment. You should skip to
+the autoplugger part.
+Please be aware of the fact that the mpegdemux element uses pads that are not
+always available. GstParse will wait for them to become available and disable
+the elements that need to be connected by disabling their state until the link
+can be established.
+
+Autoplugging
+------------
+You can also use the spider element for autoplugging. This will take care of
+selecting the right elements for you. Just use this pipeline for all your needs:
+  example:#> gst-launch filesrc location=/path/to/anything ! spider name=spider ! { queue ! osssink } { spider. ! queue ! xvideosink }
+
+To throw you out
+----------------
+Finally the current experimental pipeline that powers the gst-player specified 
+as a simple (ahem...) command line:
+  example:#> gst-launch pipeline. \( { filesrc location=/path/to/anything ! spider name=spider ! { queue ! volume ! \( tee name=tee ! { queue ! \( goom \) ! colorspace ! \( xvideosink \) } tee. ! { queue ! \( osssink \) } \) } spider. ! { queue ! colorspace \( xvideosink \) } } \)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
