@@ -1,5 +1,10 @@
 2004-05-08  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstpad.c: (gst_pad_proxy_fixate):
+	  really reduce the set of caps
+
+2004-05-08  Benjamin Otte  <otte@gnome.org>
+
 	* tests/Makefile.am:
 	* tests/spidey_bench.c: (handoff), (main):
 	  add benchmark to test how long spider needs to create a pipeline

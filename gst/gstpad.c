@@ -2408,7 +2408,7 @@ gst_pad_proxy_fixate (GstPad * pad, const GstCaps * caps)
     if (otherpad != pad) {
       othercaps = gst_pad_get_negotiated_caps (otherpad);
 
-      if (othercaps) {
+      if (othercaps && !gst_caps_is_subset (caps, othercaps)) {
         GstCaps *icaps;
 
         icaps = gst_caps_intersect (othercaps, caps);
