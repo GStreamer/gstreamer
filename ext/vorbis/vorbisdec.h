@@ -64,7 +64,6 @@ struct _VorbisDec {
   vorbis_block     vb; /* local working space for packet->PCM decode */
 
   gboolean eos;
-  guint state;
   int16_t convsize;
 };
 
