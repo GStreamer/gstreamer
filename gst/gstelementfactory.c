@@ -214,20 +214,20 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   factory = gst_element_factory_find (name);
 
   if (!factory) {
-    klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
     factory =
         GST_ELEMENT_FACTORY (g_object_new (GST_TYPE_ELEMENT_FACTORY, NULL));
     gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
     GST_LOG_OBJECT (factory, "Created new elementfactory for type %s",
         g_type_name (type));
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   } else {
     g_return_val_if_fail (factory->type == 0, FALSE);
-    klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
     gst_element_factory_cleanup (factory);
     GST_LOG_OBJECT (factory, "Reuse existing elementfactory for type %s",
         g_type_name (type));
   }
 
+  klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
   factory->type = type;
   __gst_element_details_copy (&factory->details, &klass->details);
   factory->padtemplates = g_list_copy (klass->padtemplates);
@@ -257,7 +257,6 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   g_free (interfaces);
 
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
 
   return TRUE;
 

@@ -140,3 +140,7 @@ object hierarchy:
   - make this explicit by having a list of keywords instead of a fixed string
     with slashes
   - fix the editor/el browser to display this nicely
+
+- optimization:
+  - delay parsing caps from the registry until after startup (until they're 
+    first requested or maybe an idle handler for the main loop)

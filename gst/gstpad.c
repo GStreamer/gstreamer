@@ -2463,6 +2463,7 @@ gst_pad_set_explicit_caps (GstPad * pad, const GstCaps * caps)
   GstPadLinkReturn link_ret;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
   GST_CAT_DEBUG (GST_CAT_PADS,
       "setting explicit caps on %s:%s to %" GST_PTR_FORMAT,
@@ -3652,6 +3653,10 @@ gst_pad_template_new (const gchar * name_template,
 
   g_return_val_if_fail (name_template != NULL, NULL);
   g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (direction == GST_PAD_SRC
+      || direction == GST_PAD_SINK, NULL);
+  g_return_val_if_fail (presence == GST_PAD_ALWAYS
+      || presence == GST_PAD_SOMETIMES || presence == GST_PAD_REQUEST, NULL);
 
   if (!name_is_valid (name_template, presence))
     return NULL;
@@ -3672,7 +3677,6 @@ gst_pad_template_new (const gchar * name_template,
   GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name_template);
   GST_PAD_TEMPLATE_DIRECTION (new) = direction;
   GST_PAD_TEMPLATE_PRESENCE (new) = presence;
-  gst_caps_do_simplify (caps);
   GST_PAD_TEMPLATE_CAPS (new) = caps;
 
   return new;

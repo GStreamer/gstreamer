@@ -1,3 +1,17 @@
+2004-07-29  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstpad.c: (gst_pad_set_explicit_caps):
+	  check that caps are fixed
+	* gst/gstpad.c: (gst_pad_template_new):
+	  don't try to simplify caps, costs too much time on gst_init
+	* gst/gstplugin.c: (gst_plugin_add_feature):
+	  G_ERROR if features are added twice
+	* gst/gsttypefind.c: (gst_type_find_register):
+	* gst/gstelementfactory.c: (gst_element_register):
+	  don't add features twice
+	* docs/random/ds/0.9-suggested-changes:
+	  add note about possible gst_init optimization
+
 2004-07-28  David Schleef  <ds@schleef.org>
 
 	* testsuite/elements/Makefile.am:
