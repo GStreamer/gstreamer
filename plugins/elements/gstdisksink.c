@@ -97,8 +97,8 @@ gst_disksink_class_init (GstDiskSinkClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
-    g_param_spec_enum("location","location","location",
-                      GST_TYPE_FILENAME,0,G_PARAM_READWRITE)); // CHECKME!
+    g_param_spec_string("location","location","location",
+                        NULL,G_PARAM_READWRITE)); // CHECKME!
 
   gst_disksink_signals[SIGNAL_HANDOFF] =
     g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,

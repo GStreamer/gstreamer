@@ -63,6 +63,7 @@ static void 	gst_tee_init		(GstTee *tee);
 
 static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp);
 
+static void 	gst_tee_set_property 	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 	gst_tee_get_property 	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void  	gst_tee_chain 		(GstPad *pad, GstBuffer *buf);
@@ -106,6 +107,7 @@ gst_tee_class_init (GstTeeClass *klass)
     g_param_spec_int("num_pads","num_pads","num_pads",
                      G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
 
+  gobject_class->set_property = gst_tee_set_property;
   gobject_class->get_property = gst_tee_get_property;
 
   gstelement_class->request_new_pad = gst_tee_request_new_pad;
@@ -147,6 +149,25 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ)
   tee->numsrcpads++;
   
   return srcpad;
+}
+
+static void
+gst_tee_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+  GstTee *tee;
+
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_TEE (object));
+
+  tee = GST_TEE (object);
+
+  switch (prop_id) {
+//    case ARG_NUM_PADS:
+//      g_value_set_int (value, tee->numsrcpads);
+//      break;
+    default:
+      break;
+  }
 }
 
 static void

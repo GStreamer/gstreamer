@@ -129,9 +129,9 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
-    g_param_spec_double("volume","volume","volume",
-                        G_MINDOUBLE,G_MAXDOUBLE,0,G_PARAM_READWRITE)); // CHECKME
+//  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
+//    g_param_spec_double("volume","volume","volume",
+//                        G_MINDOUBLE,G_MAXDOUBLE,0.0,G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
     g_param_spec_int("format","format","format",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
@@ -141,9 +141,9 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TABLESIZE,
     g_param_spec_int("tablesize","tablesize","tablesize",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQ,
-    g_param_spec_double("freq","freq","freq",
-                        G_MINDOUBLE,G_MAXDOUBLE,0,G_PARAM_READWRITE)); // CHECKME
+//  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQ,
+//    g_param_spec_double("freq","freq","freq",
+//                        G_MINDOUBLE,G_MAXDOUBLE,0.0,G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_SIZE,
     g_param_spec_int("buffersize","buffersize","buffersize",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME

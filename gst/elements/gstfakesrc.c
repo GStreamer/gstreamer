@@ -123,7 +123,7 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                          TRUE,G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT,
     g_param_spec_enum("output","output","output",
-                      GST_TYPE_FAKESRC_OUTPUT,0,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_FAKESRC_OUTPUT,FAKESRC_FIRST_LAST_LOOP,G_PARAM_READWRITE)); // CHECKME!
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PATTERN,
     g_param_spec_string("pattern","pattern","pattern",
                         NULL, G_PARAM_READWRITE)); // CHECKME
@@ -137,14 +137,14 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
     g_param_spec_boolean("silent","silent","silent",
                          TRUE,G_PARAM_READWRITE)); // CHECKME
 
-  gobject_class->set_property = gst_fakesrc_set_property;
-  gobject_class->get_property = gst_fakesrc_get_property;
-
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
     g_signal_newc ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
+
+  gobject_class->set_property = gst_fakesrc_set_property;
+  gobject_class->get_property = gst_fakesrc_get_property;
 }
 
 static void 

@@ -39,6 +39,7 @@ noinst_HEADERS =		\
 	gstsinesrc.h
 
 CFLAGS += -O2 -Wall
+LDFLAGS += -lm
 
 libgstelements_la_LIBADD = $(GHTTP_LIBS)
 libgstelements_la_LDFLAGS = -version-info $(GST_LIBVERSION)

@@ -139,6 +139,11 @@ gst_real_pad_class_init (GstRealPadClass *klass)
 
   real_pad_parent_class = g_type_class_ref(GST_TYPE_PAD);
 
+// FIXME!
+//  gobject_class->destroy  = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
+  gobject_class->set_property  = GST_DEBUG_FUNCPTR(gst_real_pad_set_property);
+  gobject_class->get_property  = GST_DEBUG_FUNCPTR(gst_real_pad_get_property);
+
   gst_real_pad_signals[REAL_SET_ACTIVE] =
     g_signal_newc ("set_active", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstRealPadClass, set_active), NULL, NULL,
@@ -170,11 +175,6 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS(klass), REAL_ARG_ACTIVE,
     g_param_spec_boolean("active","Active","Whether the pad is active.",
                          TRUE,G_PARAM_READWRITE));
-
-// FIXME!
-//  gobject_class->destroy  = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
-  gobject_class->set_property  = GST_DEBUG_FUNCPTR(gst_real_pad_set_property);
-  gobject_class->get_property  = GST_DEBUG_FUNCPTR(gst_real_pad_get_property);
 
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR(gst_pad_save_thyself);
   gstobject_class->path_string_separator = ".";
