@@ -329,6 +329,11 @@ main() { atomic_t t; atomic_set(&t,0); atomic_inc(&t); atomic_add(1,&t);return 0
   ])
 fi
 
+dnl ==========================================================================
+dnl ============================= gst plugins ================================
+dnl ==========================================================================
+GST_PLUGIN_LDFLAGS='-module -avoid-version'
+AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
