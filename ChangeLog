@@ -1,3 +1,10 @@
+2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch from: Benjamin Otte
+
+	* ext/lame/gstlame.c: (gst_lame_src_link), (gst_lame_init):
+	  add link function to lame.  Fixes #148986.
+
 2004-08-02  Johan Dahlin  <johan@gnome.org>
 
 	* gst/multipart/multipartmux.c (gst_multipart_mux_next_buffer):
