@@ -22,6 +22,8 @@ typedef struct _gst_getbits_t gst_getbits_t;
 struct _gst_getbits_t {
   unsigned char *ptr;		
   unsigned long *longptr;
+  unsigned char *endptr;
+  unsigned long length;
   long bits;	
   unsigned long dword;
   unsigned long temp;

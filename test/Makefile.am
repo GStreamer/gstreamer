@@ -1,7 +1,7 @@
 #noinst_PROGRAMS = basic m types a r plugin w s args mpg123 mcut push qtest
 noinst_PROGRAMS = qtest spectrum record wave mp3 teardown buffer mp3parse \
 		  mpeg2parse mp1parse mp3play ac3parse ac3play dvdcat fake cobin videotest \
-			aviparse vidcapture
+			aviparse vidcapture avi2mpg
 
 SUBDIRS = xml cothreads bindings
 

@@ -55,6 +55,7 @@
 #include <glib.h>
 
 //#define GETBITS_DEBUG_ENABLED
+//#define GETBITS_OVERRUN_ENABLED
 
 #ifdef GETBITS_DEBUG_ENABLED
 #define debug2(format,args...) g_print(format,##args)
@@ -62,6 +63,14 @@
 #else
 #define debug(format,args...)
 #define debug2(format,args...)
+#endif
+
+#ifdef GETBITS_OVERRUN_ENABLED
+#define checklength2(src, dst) (((unsigned char*)src)<(dst)?0:printf("overrun !! %p>=%p %ld %s %d\n", (src), (dst), (gb)->bits, __PRETTY_FUNCTION__, __LINE__))
+#define checklength(src, dst) (((unsigned char*)src)<(dst)?0:printf("overrun !! %p>=%p %ld %s %d\n", (src), (dst), (gb)->bits, __PRETTY_FUNCTION__, __LINE__)),
+#else
+#define checklength(src, dst)
+#define checklength2(src, dst)
 #endif
 
 #ifdef WORDS_BIGENDIAN
@@ -86,9 +95,11 @@ extern unsigned long gst_getbits_nBitMask[];
 
 #define gst_getbits_init(gb)
 
-#define gst_getbits_newbuf(gb, buffer)					\
+#define gst_getbits_newbuf(gb, buffer, len)				\
 {									\
   (gb)->longptr = (unsigned long *)(buffer);				\
+  (gb)->endptr = (unsigned char *)buffer+len;				\
+  (gb)->length = len;							\
   (gb)->bits = 0;							\
   (gb)->dword = swab32(*(gb)->longptr);					\
 }
@@ -101,6 +112,10 @@ extern unsigned long gst_getbits_nBitMask[];
 
 #define gst_getbits_bufferpos(gb)  ((gb)->longptr)
 
+#define gst_getbits_bytesleft(gb) ((gb)->endptr - (unsigned char*)(gb)->longptr)	
+
+#define gst_getbits_bitsleft(gb) (((gb)->endptr - (unsigned char*)(gb)->longptr)*8  - (gb)->bits)
+
 #define gst_getbits1(gb)                                                \
 (                                                                       \
   ((gb)->temp = (((gb)->dword & 0x80000000) != 0)),                   	\
@@ -110,6 +125,7 @@ extern unsigned long gst_getbits_nBitMask[];
   ((gb)->bits & 0x20 ? (                                   		\
     (gb)->bits = 0,                                             	\
     (gb)->longptr++,                                                 	\
+    checklength((gb)->longptr, (gb)->endptr)				\
     ((gb)->dword = swab32(*(gb)->longptr))                    	    	\
   )									\
   :0),                                                                  \
@@ -124,6 +140,7 @@ extern unsigned long gst_getbits_nBitMask[];
   ((gb)->bits & 0x20 ? (						\
     (gb)->bits -= 32,                                         		\
     (gb)->longptr++,                                                 	\
+    checklength((gb)->longptr, (gb)->endptr)				\
     ((gb)->bits ? (                                        		\
       ((gb)->dword |=                                              	\
 	 (swab32(*(gb)->longptr) >> (2 - (gb)->bits)))           		\
@@ -149,6 +166,7 @@ extern unsigned long gst_getbits_nBitMask[];
   ((gb)->bits & 0x20 ? (						\
     (gb)->bits -= 32,                                         		\
     (gb)->longptr++,                                                 	\
+    checklength((gb)->longptr, (gb)->endptr)				\
     ((gb)->bits ? (                                        		\
         ((gb)->dword |= (swab32(*(gb)->longptr) >>             		\
         ((num) - (gb)->bits)))                                 		\
@@ -254,6 +272,7 @@ extern unsigned long gst_getbits_nBitMask[];
 #define gst_flushbits32(gb)                                            	\
 {                                                                       \
   (gb)->longptr++;                                                      \
+  checklength2((gb)->longptr, (gb)->endptr);				\
   (gb)->dword = swab32(*(gb)->longptr)  << (gb)->bits;			\
 }
 
@@ -265,6 +284,7 @@ extern unsigned long gst_getbits_nBitMask[];
   if ((gb)->bits & 0x20) {                                		\
     (gb)->bits -= 32;                                     		\
     (gb)->longptr++;                                             	\
+    checklength2((gb)->longptr, (gb)->endptr);				\
     (gb)->dword = swab32(*(gb)->longptr)  << (gb)->bits;		\
   }                                                                   	\
   else {                                                              	\

@@ -1,9 +1,14 @@
-
-#include <gnome.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <glib.h>
 #include <gst/gst.h>
+
 
 extern gboolean _gst_plugin_spew;
 gboolean idle_func(gpointer data);
+int fd;
+char *outfile;
 
 void eof(GstSrc *src) {
   g_print("have eos, quitting\n");
@@ -11,9 +16,11 @@ void eof(GstSrc *src) {
 }
 
 void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
-  GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *show;
+  GstElement *parse_audio, *parse_video, *decode, *decode_video, *play, *encode;
   GstElement *audio_queue, *video_queue;
   GstElement *audio_thread, *video_thread;
+  GstElement *fdsink;
+  GstElementFactory *fdsinkfactory;
 
   GtkWidget *appwindow;
 
@@ -22,34 +29,21 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   // connect to audio pad
   //if (0) {
   if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
-    gst_plugin_load("mp3parse");
-    gst_plugin_load("mpg123");
     // construct internal pipeline elements
-    parse_audio = gst_elementfactory_make("mp3parse","parse_audio");
-    g_return_if_fail(parse_audio != NULL);
-    decode = gst_elementfactory_make("mpg123","decode_audio");
-    g_return_if_fail(decode != NULL);
     play = gst_elementfactory_make("audiosink","play_audio");
     g_return_if_fail(play != NULL);
 
     // create the thread and pack stuff into it
     audio_thread = gst_thread_new("audio_thread");
     g_return_if_fail(audio_thread != NULL);
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(parse_audio));
-    gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(decode));
     gst_bin_add(GST_BIN(audio_thread),GST_ELEMENT(play));
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(audio_thread),
-                              gst_element_get_pad(parse_audio,"sink"));
-    gst_pad_connect(gst_element_get_pad(parse_audio,"src"),
-                    gst_element_get_pad(decode,"sink"));
-    gst_pad_connect(gst_element_get_pad(decode,"src"),
-                    gst_element_get_pad(play,"sink"));
+                              gst_element_get_pad(play,"sink"));
 
     // construct queue and connect everything in the main pipelie
     audio_queue = gst_elementfactory_make("queue","audio_queue");
-    gtk_object_set(GTK_OBJECT(audio_queue),"max_level",30,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_thread));
     gst_pad_connect(pad,
@@ -66,43 +60,33 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
   //} else if (0) {
 
-    gst_plugin_load("mp1videoparse");
-    //gst_plugin_load("mpeg_play");
-    gst_plugin_load("mpeg2play");
-    gst_plugin_load("videosink");
+    gst_plugin_load("mpeg2enc");
     // construct internal pipeline elements
-    parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
-    g_return_if_fail(parse_video != NULL);
-    //decode_video = gst_elementfactory_make("mpeg_play","decode_video");
-    decode_video = gst_elementfactory_make("mpeg2play","decode_video");
-    g_return_if_fail(decode_video != NULL);
-    show = gst_elementfactory_make("videosink","show");
-    g_return_if_fail(show != NULL);
+    encode = gst_elementfactory_make("mpeg2enc","encode");
+    g_return_if_fail(encode != NULL);
     //gtk_object_set(GTK_OBJECT(show),"width",640, "height", 480,NULL);
-
-    appwindow = gnome_app_new("MPEG1 player","MPEG1 player");
-    gnome_app_set_contents(GNOME_APP(appwindow),
-      	        gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
-		gtk_widget_show_all(appwindow);
+    fd = open(outfile,O_CREAT|O_RDWR|O_TRUNC);
+    
+    fdsinkfactory = gst_elementfactory_find("fdsink");
+    g_return_if_fail(fdsinkfactory != NULL);
+    fdsink = gst_elementfactory_create(fdsinkfactory,"fdsink");
+    g_return_if_fail(fdsink != NULL);
+    gtk_object_set(GTK_OBJECT(fdsink),"fd",fd,NULL);
 
     // create the thread and pack stuff into it
     video_thread = gst_thread_new("video_thread");
     g_return_if_fail(video_thread != NULL);
-    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
-    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
-    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(show));
+    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(encode));
+    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(fdsink));
+    gst_pad_connect(gst_element_get_pad(encode,"src"),
+                    gst_element_get_pad(fdsink,"sink"));
 
     // set up pad connections
     gst_element_add_ghost_pad(GST_ELEMENT(video_thread),
-                              gst_element_get_pad(parse_video,"sink"));
-    gst_pad_connect(gst_element_get_pad(parse_video,"src"),
-                    gst_element_get_pad(decode_video,"sink"));
-    gst_pad_connect(gst_element_get_pad(decode_video,"src"),
-                    gst_element_get_pad(show,"sink"));
+                              gst_element_get_pad(encode,"sink"));
 
     // construct queue and connect everything in the main pipeline
     video_queue = gst_elementfactory_make("queue","video_queue");
-    gtk_object_set(GTK_OBJECT(video_queue),"max_level",30,NULL);
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_queue));
     gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_thread));
     gst_pad_connect(pad,
@@ -128,19 +112,20 @@ int main(int argc,char *argv[]) {
 
   //_gst_plugin_spew = TRUE;
   gst_init(&argc,&argv);
-	gnome_init("MPEG1 Video player","0.0.1",argc,argv);
-  gst_plugin_load("mpeg1parse");
+  gst_plugin_load("parseavi");
 
   pipeline = gst_pipeline_new("pipeline");
   g_return_if_fail(pipeline != NULL);
 
-  //src = gst_elementfactory_make("asyncdisksrc","src");
   src = gst_elementfactory_make("disksrc","src");
   g_return_if_fail(src != NULL);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   g_print("should be using file '%s'\n",argv[1]);
 
-  parse = gst_elementfactory_make("mpeg1parse","parse");
+  g_print("should be using output file '%s'\n",argv[2]);
+  outfile = argv[2];
+  
+  parse = gst_elementfactory_make("parseavi","parse");
   g_return_if_fail(parse != NULL);
 
   gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
@@ -158,7 +143,7 @@ int main(int argc,char *argv[]) {
   g_print("setting to RUNNING state\n");
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_RUNNING);
 
-  xmlSaveFile("mp1parse.xml",gst_xml_write(GST_ELEMENT(pipeline)));
+  xmlSaveFile("aviparse.xml",gst_xml_write(GST_ELEMENT(pipeline)));
 
   g_print("about to enter loop\n");
 
