@@ -57,6 +57,7 @@ struct _GstMad
   guint64 bytes_consumed;       /* since the base_byte_offset */
   guint64 total_samples;        /* the number of samples since the sync point */
 
+  gboolean in_error;            /* set when mad's in an error state */
   gboolean restart;
   guint64 segment_start;
 
@@ -626,6 +627,8 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
       GST_EVENT_SEEK_FORMAT (event),
       GST_EVENT_SEEK_OFFSET (event));
 
+  GST_DEBUG ("index seek");
+
   if (!entry)
     return FALSE;
 
@@ -670,6 +673,8 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   const GstFormat *peer_formats;
   gboolean res;
 
+  GST_DEBUG ("normal seek");
+
   format = GST_FORMAT_TIME;
 
   /* first bring the src_format to TIME */
@@ -680,6 +685,7 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
     return FALSE;
   }
 
+  GST_DEBUG ("seek to time " GST_TIME_FORMAT, GST_TIME_ARGS (src_offset));
   /* shave off the flush flag, we'll need it later */
   flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
 
@@ -729,6 +735,7 @@ gst_mad_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK_SEGMENT:
+      GST_DEBUG ("forwarding seek event to sink pad");
       gst_event_ref (event);
       if (gst_pad_send_event (GST_PAD_PEER (mad->sinkpad), event)) {
         /* seek worked, we're done, loop will exit */
@@ -878,6 +885,7 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
   GstEvent *event = GST_EVENT (buffer);
   GstMad *mad = GST_MAD (gst_pad_get_parent (pad));
 
+  GST_DEBUG ("handling event");
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_DISCONTINUOUS:
     {
@@ -1101,6 +1109,45 @@ mpg123_parse_xing_header (struct mad_header *header,
 
 /* End of Xine code */
 
+/* internal function to check if the header has changed and thus the
+ * caps need to be reset.  Only call during normal mode, not resyncing */
+static void
+gst_mad_check_caps_reset (GstMad * mad)
+{
+  guint nchannels;
+  guint rate;
+
+  nchannels = MAD_NCHANNELS (&mad->frame.header);
+
+#if MAD_VERSION_MINOR <= 12
+  rate = mad->header.sfreq;
+#else
+  rate = mad->frame.header.samplerate;
+#endif
+
+  gst_mad_update_info (mad);
+
+  if (mad->channels != nchannels || mad->rate != rate) {
+    GstCaps *caps;
+
+    if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE)
+      rate >>= 1;
+
+    /* we set the caps even when the pad is not connected so they
+     * can be gotten for streaminfo */
+    caps = gst_caps_new_simple ("audio/x-raw-int",
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "signed", G_TYPE_BOOLEAN, TRUE,
+        "width", G_TYPE_INT, 16,
+        "depth", G_TYPE_INT, 16,
+        "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
+
+    gst_pad_set_explicit_caps (mad->srcpad, caps);
+    gst_caps_free (caps);
+    mad->channels = nchannels;
+    mad->rate = rate;
+  }
+}
 
 static void
 gst_mad_chain (GstPad * pad, GstData * _data)
@@ -1173,25 +1220,32 @@ gst_mad_chain (GstPad * pad, GstData * _data)
     /* while we have data we can consume it */
     while (mad->tempsize >= 0) {
       gint consumed;
-      guint nchannels;
       guint nsamples;
-      gint rate;
       guint64 time_offset;
       guint64 time_duration;
 
+      mad->in_error = FALSE;
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
 
       if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
         /* not enough data, need to wait for next buffer? */
         if (mad->stream.error == MAD_ERROR_BUFLEN) {
+          GST_LOG ("not enough data in tempbuffer (%d), breaking to get more",
+              mad->tempsize);
           break;
         }
+        /* we are in an error state */
+        mad->in_error = TRUE;
+        GST_DEBUG ("mad_frame_decode had an error: %s",
+            mad_stream_errorstr (&mad->stream));
         if (!MAD_RECOVERABLE (mad->stream.error)) {
           GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL), (NULL));
           return;
         } else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
           /* lost sync, force a resync */
           signed long tagsize;
+
+          GST_INFO ("recoverable lost sync error");
 
           tagsize = id3_tag_query (mad->stream.this_frame,
               mad->stream.bufend - mad->stream.this_frame);
@@ -1262,38 +1316,12 @@ gst_mad_chain (GstPad * pad, GstData * _data)
         mad->check_for_xing = FALSE;
         goto next;
       }
-      nchannels = MAD_NCHANNELS (&mad->frame.header);
+
+      /* if we're not resyncing/in error, check if caps need to be set again */
+      if (!mad->in_error)
+        gst_mad_check_caps_reset (mad);
       nsamples = MAD_NSBSAMPLES (&mad->frame.header) *
           (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);
-
-#if MAD_VERSION_MINOR <= 12
-      rate = mad->header.sfreq;
-#else
-      rate = mad->frame.header.samplerate;
-#endif
-
-      gst_mad_update_info (mad);
-
-      if (mad->channels != nchannels || mad->rate != rate) {
-        GstCaps *caps;
-
-        if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE)
-          rate >>= 1;
-
-        /* we set the caps even when the pad is not connected so they
-         * can be gotten for streaminfo */
-        caps = gst_caps_new_simple ("audio/x-raw-int",
-            "endianness", G_TYPE_INT, G_BYTE_ORDER,
-            "signed", G_TYPE_BOOLEAN, TRUE,
-            "width", G_TYPE_INT, 16,
-            "depth", G_TYPE_INT, 16,
-            "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
-
-        gst_pad_set_explicit_caps (mad->srcpad, caps);
-        gst_caps_free (caps);
-        mad->channels = nchannels;
-        mad->rate = rate;
-      }
 
       if (mad->frame.header.samplerate == 0) {
         g_warning
@@ -1336,7 +1364,7 @@ gst_mad_chain (GstPad * pad, GstData * _data)
         left_ch = mad->synth.pcm.samples[0];
         right_ch = mad->synth.pcm.samples[1];
 
-        outbuffer = gst_buffer_new_and_alloc (nsamples * nchannels * 2);
+        outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 2);
         outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
 
         GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
@@ -1344,7 +1372,7 @@ gst_mad_chain (GstPad * pad, GstData * _data)
         GST_BUFFER_OFFSET (outbuffer) = mad->total_samples;
 
         /* output sample(s) in 16-bit signed native-endian PCM */
-        if (nchannels == 1) {
+        if (mad->channels == 1) {
           gint count = nsamples;
 
           while (count--) {
@@ -1380,11 +1408,13 @@ gst_mad_chain (GstPad * pad, GstData * _data)
     next:
       /* figure out how many bytes mad consumed */
       consumed = mad->stream.next_frame - mad_input_buffer;
+      GST_LOG ("mad consumed %d bytes", consumed);
       /* move out pointer to where mad want the next data */
       mad_input_buffer += consumed;
       mad->tempsize -= consumed;
       mad->bytes_consumed += consumed;
     }
+    /* we only get here from breaks, tempsize never actually drops below 0 */
     memmove (mad->tempbuffer, mad_input_buffer, mad->tempsize);
   }
 
