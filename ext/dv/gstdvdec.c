@@ -187,13 +187,18 @@ gst_dvdec_quality_get_type (void)
 static void		gst_dvdec_class_init		(GstDVDecClass *klass);
 static void		gst_dvdec_init			(GstDVDec *dvdec);
 
+static const GstPadQueryType* 
+			gst_dvdec_get_src_query_types 	(GstPad *pad);
 static gboolean 	gst_dvdec_src_query 		(GstPad *pad, GstPadQueryType type,
                     					 GstFormat *format, gint64 *value);
+static const GstFormat* gst_dvdec_get_formats 		(GstPad *pad);
 static gboolean 	gst_dvdec_sink_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
                         				 GstFormat *dest_format, gint64 *dest_value);
 static gboolean 	gst_dvdec_src_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
                       					 GstFormat *dest_format, gint64 *dest_value);
 
+static const GstEventMask*
+			gst_dvdec_get_event_masks 	(GstPad *pad);
 static gboolean 	gst_dvdec_handle_src_event 	(GstPad *pad, GstEvent *event);
 
 static void		gst_dvdec_loop			(GstElement *element);
@@ -295,19 +300,26 @@ gst_dvdec_init(GstDVDec *dvdec)
   dvdec->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_temp), "sink");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
   gst_pad_set_query_function (dvdec->sinkpad, NULL);
-  gst_pad_set_convert_function (dvdec->sinkpad, gst_dvdec_sink_convert);
+  gst_pad_set_convert_function (dvdec->sinkpad, GST_DEBUG_FUNCPTR (gst_dvdec_sink_convert));
+  gst_pad_set_formats_function (dvdec->sinkpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
 
   dvdec->videosrcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (video_src_temp), "video");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->videosrcpad);
-  gst_pad_set_query_function (dvdec->videosrcpad, gst_dvdec_src_query);
-  gst_pad_set_event_function (dvdec->videosrcpad, gst_dvdec_handle_src_event);
-  gst_pad_set_convert_function (dvdec->videosrcpad, gst_dvdec_src_convert);
+  gst_pad_set_query_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_query));
+  gst_pad_set_query_type_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_src_query_types));
+  gst_pad_set_event_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_handle_src_event));
+  gst_pad_set_event_mask_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_event_masks));
+  gst_pad_set_convert_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_convert));
+  gst_pad_set_formats_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
 
   dvdec->audiosrcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET(audio_src_temp), "audio");
   gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->audiosrcpad);
-  gst_pad_set_query_function (dvdec->audiosrcpad, gst_dvdec_src_query);
-  gst_pad_set_event_function (dvdec->audiosrcpad, gst_dvdec_handle_src_event);
-  gst_pad_set_convert_function (dvdec->audiosrcpad, gst_dvdec_src_convert);
+  gst_pad_set_query_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_query));
+  gst_pad_set_query_type_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_src_query_types));
+  gst_pad_set_event_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_handle_src_event));
+  gst_pad_set_event_mask_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_event_masks));
+  gst_pad_set_convert_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_convert));
+  gst_pad_set_formats_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
 
   gst_element_set_loop_function (GST_ELEMENT (dvdec), gst_dvdec_loop);
 
@@ -325,6 +337,24 @@ gst_dvdec_init(GstDVDec *dvdec)
     dvdec->audio_buffers[i] = (gint16 *)g_malloc (DV_AUDIO_MAX_SAMPLES * sizeof (gint16));
   }
 }
+
+static const GstFormat*
+gst_dvdec_get_formats (GstPad *pad)
+{
+  static const GstFormat src_formats[] = {
+    GST_FORMAT_BYTES,
+    GST_FORMAT_UNITS,
+    GST_FORMAT_TIME,
+    0
+  };
+  static const GstFormat sink_formats[] = {
+    GST_FORMAT_BYTES,
+    GST_FORMAT_TIME,
+    0
+  };
+	     
+  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
+} 
 
 static gboolean
 gst_dvdec_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
@@ -425,6 +455,17 @@ gst_dvdec_sink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
+static const GstPadQueryType*
+gst_dvdec_get_src_query_types (GstPad *pad)
+{   
+  static const GstPadQueryType src_query_types[] = {
+    GST_PAD_QUERY_TOTAL,
+    GST_PAD_QUERY_POSITION,
+    0
+  };
+  return src_query_types;
+}
+
 static gboolean
 gst_dvdec_src_query (GstPad *pad, GstPadQueryType type,
                      GstFormat *format, gint64 *value)
@@ -474,6 +515,24 @@ gst_dvdec_src_query (GstPad *pad, GstPadQueryType type,
       break;
   }
   return res;
+} 
+
+static const GstEventMask*
+gst_dvdec_get_event_masks (GstPad *pad)
+{ 
+  static const GstEventMask src_event_masks[] = {
+    { GST_EVENT_SEEK, GST_SEEK_METHOD_SET |
+                      GST_SEEK_FLAG_FLUSH },
+    { 0, }
+  };
+  static const GstEventMask sink_event_masks[] = {
+    { GST_EVENT_EOS, 0 },
+    { GST_EVENT_DISCONTINUOUS, 0 },
+    { GST_EVENT_FLUSH, 0 },
+    { 0, }
+  };
+
+  return (GST_PAD_IS_SRC (pad) ? src_event_masks : sink_event_masks);
 } 
 
 static gboolean
