@@ -359,10 +359,9 @@ restart:
               GST_ELEMENT_NAME(GST_ELEMENT(queue)),
               GST_EVENT_TYPE(GST_EVENT(buf)));
           GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end");
-        gst_buffer_unref(buf);
         /* now we have to clean up and exit right away */
         g_mutex_unlock (queue->qlock);
-        return;
+        goto out_unref;
       }
       /* otherwise we have to push a buffer off the other end */
       else {
@@ -395,12 +394,12 @@ restart:
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!");
         g_mutex_unlock (queue->qlock);
 	if (gst_scheduler_interrupt (gst_pad_get_scheduler (queue->sinkpad), GST_ELEMENT (queue)))
-          return;
+          goto out_unref;
 	/* if we got here bacause we were unlocked after a flush, we don't need
 	 * to add the buffer to the queue again */
 	if (queue->flush) {
           GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "not adding pending buffer after flush");
-	  return;
+	  goto out_unref;
 	}
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "adding pending buffer after interrupt");
 	goto restart;
@@ -409,9 +408,10 @@ restart:
 	/* this means the other end is shut down */
 	/* try to signal to resolve the error */
 	if (!queue->may_deadlock) {
-          gst_data_unref (GST_DATA (buf));
           g_mutex_unlock (queue->qlock);
+          gst_data_unref (GST_DATA (buf));
           gst_element_error (GST_ELEMENT (queue), "deadlock found, source pad elements are shut down");
+	  /* we don't want to goto out_unref here, since we want to clean up before calling gst_element_error */
 	  return;
 	}
 	else {
@@ -455,6 +455,11 @@ restart:
     GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "signalling not_empty");
     g_cond_signal (queue->not_empty);
   }
+  return;
+
+out_unref:
+  gst_data_unref (GST_DATA (buf));
+  return;
 }
 
 static GstBuffer *
