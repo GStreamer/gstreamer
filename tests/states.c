@@ -39,8 +39,8 @@ int main(int argc,char *argv[]) {
   gst_pad_connect(gst_element_get_pad(src,"src"),
                   gst_element_get_pad(sink,"sink"));
 
-  gst_bin_create_plan(bin);
-  gst_element_set_state(bin,GST_STATE_PLAYING);
+  gst_bin_create_plan (GST_BIN (bin));
+  gst_element_set_state (bin, GST_STATE_PLAYING);
 
-  gst_bin_iterate(bin);
+  gst_bin_iterate (GST_BIN (bin));
 }

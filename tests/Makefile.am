@@ -1,4 +1,4 @@
-noinst_PROGRAMS = init loadall simplefake states
+noinst_PROGRAMS = init loadall simplefake states caps
 
 LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
 
