@@ -27,6 +27,7 @@ version_check ()
   MINOR=$4
   MICRO=$5
 
+
   debug "major $MAJOR minor $MINOR micro $MICRO"
   VERSION=$MAJOR
   if test ! -z $MINOR; then VERSION=$VERSION.$MINOR; else MINOR=0; fi
@@ -53,25 +54,23 @@ version_check ()
 
   debug "found major $pkg_major minor $pkg_minor micro $pkg_micro"
 
-  #if test -z "$pkg_micro"; then
-  #  pkg_micro=0
-  #fi
-
   #start checking the version
-  debug echo "version check"
-  if [ $pkg_major -le $MAJOR ]; then
-    if [ $pkg_major -lt $MAJOR ]; then
+  debug "version check"
+
+  if [ "$pkg_major" \< "$MAJOR -o "$pkg_major" = $MAJOR" ]; then
+    debug "$pkg_major <= $MAJOR"
+    if [ "$pkg_major" \< "$MAJOR" ]; then
       WRONG=1
-    elif [ $pkg_minor -le $MINOR ]; then
-      if [ $pkg_minor -lt $MINOR ]; then
+    elif [ "$pkg_minor" \< "$MINOR -o $pkg_minor = $MINOR" ]; then
+      if [ "$pkg_minor" \< "$MINOR" ]; then
         WRONG=1
-      elif [ $pkg_micro -lt $MICRO ]; then
+      elif [ "$pkg_micro" \< "$MICRO" ]; then
 	WRONG=1
       fi
     fi
   fi
 
-  if test "$WRONG" = 1; then
+  if test ! -z $WRONG; then
     echo
     echo "You must have $PACKAGE $VERSION or greater to compile $package."
     echo "Get the latest version from $URL"
