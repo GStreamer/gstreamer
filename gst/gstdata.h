@@ -53,8 +53,6 @@ typedef enum
   GST_DATA_FLAG_LAST 	= 8
 } GstDataFlags;
 
-#define GST_DATA_IS_READONLY(data)		(GST_DATA_FLAG_IS_SET((data), GST_DATA_READONLY))
-
 /* refcount */
 #define GST_DATA_REFCOUNT(data)			((GST_DATA(data))->refcount)
 #define GST_DATA_REFCOUNT_VALUE(data)		(gst_atomic_int_read (&(GST_DATA(data))->refcount))

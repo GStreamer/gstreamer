@@ -282,8 +282,7 @@ gst_buffer_create_sub (GstBuffer *parent, guint offset, guint size)
   /* ref the real parent */
   gst_data_ref (GST_DATA (parent));
   /* make sure nobody overwrites data in the parent */
-  if (!GST_DATA_IS_READONLY (parent))
-    GST_DATA_FLAG_SET(parent, GST_DATA_READONLY);
+  GST_DATA_FLAG_SET (parent, GST_DATA_READONLY);
 
   /* create the new buffer */
   buffer = gst_mem_chunk_alloc0 (chunk);
@@ -562,4 +561,3 @@ gst_buffer_pool_get_user_data (GstBufferPool *pool)
 
   return pool->user_data;
 }
-
