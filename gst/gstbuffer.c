@@ -33,8 +33,8 @@ static GMemChunk *_gst_buffer_chunk;
 static GMutex *_gst_buffer_chunk_lock;
 
 #ifdef GST_BUFFER_WHERE
-static GList *_debug_live = 0;
-# define GST_BUFFERS_COUNT (g_list_length(_debug_live))
+static GSList *_debug_live = 0;
+# define GST_BUFFERS_COUNT (g_slist_length(_debug_live))
 #else
 # define GST_BUFFERS_COUNT 1
 #endif
@@ -81,7 +81,7 @@ gst_buffer_new_loc (GST_WHERE_ARGS)
   g_mutex_lock (_gst_buffer_chunk_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
 #ifdef GST_BUFFER_WHERE
-  _debug_live = g_list_prepend (_debug_live, buffer);
+  _debug_live = g_slist_prepend (_debug_live, buffer);
 #endif
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
@@ -166,7 +166,7 @@ gst_buffer_create_sub_loc (GST_WHERE_ARGS_
   g_mutex_lock (_gst_buffer_chunk_lock);
   buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
 #ifdef GST_BUFFER_WHERE
-  _debug_live = g_list_prepend (_debug_live, buffer);
+  _debug_live = g_slist_prepend (_debug_live, buffer);
 #endif
   g_mutex_unlock (_gst_buffer_chunk_lock);
   GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
@@ -311,8 +311,8 @@ gst_buffer_destroy (GstBuffer *buffer)
   g_mutex_lock (_gst_buffer_chunk_lock);
   g_mem_chunk_free (_gst_buffer_chunk,buffer);
 #ifdef GST_BUFFER_WHERE
-  _debug_live = g_list_delete_link (_debug_live,
-				    g_list_find (_debug_live, buffer));
+  _debug_live = g_slist_delete_link (_debug_live,
+				     g_slist_find (_debug_live, buffer));
 #endif
   g_mutex_unlock (_gst_buffer_chunk_lock);
 }
@@ -331,22 +331,26 @@ _compare_buffer (GstBuffer *b1, GstBuffer *b2)
 
 void gst_buffer_print_live ()
 {
-  GList *sorted;
-  GList *elem;
+  GSList *sorted;
+  GSList *elem;
 
-  sorted = g_list_sort (_debug_live, (GCompareFunc) _compare_buffer);
-  // g_slist_sort is broken 20010922
+  g_mutex_lock (_gst_buffer_chunk_lock);
+
+  sorted = g_slist_sort (_debug_live, (GCompareFunc) _compare_buffer);
 
   for (elem = sorted; elem; elem = elem->next) {
     GstBuffer *buf = elem->data;
     g_print ("%sbuffer %p created %s:%d data=%p size=0x%x\n",
 	     buf->parent? "sub":"   ",
-	     buf, buf->file, buf->line, buf->data, buf->size);
+	     buf, (!buf->file || buf->file == ~0)? "?" : buf->file,
+	     buf->line, buf->data, buf->size);
   }
 
-  g_print ("(%d buffers)\n", g_list_length (sorted));
+  g_print ("(%d buffers)\n", g_slist_length (sorted));
 
-  g_list_free (sorted);
+  g_slist_free (sorted);
+
+  g_mutex_unlock (_gst_buffer_chunk_lock);
 }
 #endif
 
