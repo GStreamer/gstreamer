@@ -1068,10 +1068,9 @@ gst_basic_scheduler_remove_element (GstScheduler * sched, GstElement * element)
     /* remove it from the list of elements */
     bsched->elements = g_list_remove (bsched->elements, element);
     bsched->num_elements--;
-
-    /* unset the scheduler pointer in the element */
-    GST_ELEMENT_SCHED (element) = NULL;
   }
+  /* unset the scheduler pointer in the element */
+  GST_ELEMENT_SCHED (element) = NULL;
 }
 
 static GstElementStateReturn
