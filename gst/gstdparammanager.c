@@ -112,7 +112,7 @@ gst_dpman_new (gchar *name, GstElement *parent)
 	
 	g_return_val_if_fail (name != NULL, NULL);
 
-	dpman = gtk_type_new (gst_dpman_get_type ());
+	dpman = g_object_new (gst_dpman_get_type (), NULL);
 	gst_object_set_name (GST_OBJECT (dpman), name);
 	gst_dpman_set_parent(dpman, parent);
 
