@@ -1,3 +1,11 @@
+2004-03-20  Tim-Phillip Mller <t.i.m@zen.co.uk>
+
+	reviewed by: Benjamin Otte  <otte@gnome.org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
+	  terminate gst_event_new_discontinuous correctly (fixes parts of
+	  #137711)
+
 2004-03-19  David Schleef  <ds@schleef.org>
 
 	* gst-libs/gst/Makefile.am:  Enable xoverlay unconditionally,
