@@ -255,7 +255,7 @@ gst_bytestream_fill_bytes (GstByteStream *bs, guint32 len)
  *
  * Peeks len bytes into the bytestream, the result is returned as
  * a #GstBuffer. Unref the buffer after usage.
- * This function can return less bytes than requested. In that casa,
+ * This function can return less bytes than requested. In that case,
  * an event might have happened which you can retrieve with
  * gst_bytestream_get_status().
  *
@@ -328,7 +328,7 @@ gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
  * a pointer to a guint8*. The data pointed to be data should not
  * be freed and will become invalid after performing the next bytestream
  * operation.
- * This function can return less bytes than requested. In that casa,
+ * This function can return less bytes than requested. In that case,
  * an event might have happened which you can retrieve with
  * gst_bytestream_get_status().
  *
@@ -633,7 +633,7 @@ gst_bytestream_length (GstByteStream *bs)
  *
  * Read len bytes from the bytestream, the result is returned as
  * a #GstBuffer. Unref the buffer after usage.
- * This function can return less bytes than requested. In that casa,
+ * This function can return less bytes than requested. In that case,
  * an event might have happened which you can retrieve with
  * gst_bytestream_get_status().
  *
