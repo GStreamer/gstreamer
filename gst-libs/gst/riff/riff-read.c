@@ -260,7 +260,7 @@ gst_riff_peek_head (GstRiffRead * riff,
  */
 
 GstBuffer *
-gst_riff_read_element_data (GstRiffRead * riff, guint length, guint * got_bytes)
+gst_riff_peek_element_data (GstRiffRead * riff, guint length, guint * got_bytes)
 {
   GstBuffer *buf = NULL;
   guint32 got;
@@ -272,14 +272,28 @@ gst_riff_read_element_data (GstRiffRead * riff, guint length, guint * got_bytes)
       return NULL;
   }
 
+  if (got_bytes)
+    *got_bytes = got;
+
+  return buf;
+}
+
+GstBuffer *
+gst_riff_read_element_data (GstRiffRead * riff, guint length, guint * got_bytes)
+{
+  GstBuffer *buf;
+
+  if (!(buf = gst_riff_peek_element_data (riff, length, got_bytes)))
+    return NULL;
+
   /* we need 16-bit alignment */
   if (length & 1)
     length++;
 
-  gst_bytestream_flush (riff->bs, length);
-
-  if (got_bytes)
-    *got_bytes = got;
+  if (!gst_bytestream_flush (riff->bs, length)) {
+    gst_buffer_unref (buf);
+    return NULL;
+  }
 
   return buf;
 }

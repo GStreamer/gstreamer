@@ -129,6 +129,8 @@ gst_cdxaparse_init (GstCDXAParse * cdxaparse)
   cdxaparse->state = GST_CDXAPARSE_START;
   cdxaparse->seek_pending = FALSE;
   cdxaparse->seek_offset = 0;
+
+  GST_FLAG_SET (cdxaparse, GST_ELEMENT_EVENT_AWARE);
 }
 
 static gboolean
@@ -149,7 +151,7 @@ gst_cdxaparse_stream_init (GstCDXAParse * cdxa)
 }
 
 /* Read 'fmt ' header */
-static gboolean
+static gboolean G_GNUC_UNUSED
 gst_cdxaparse_fmt (GstCDXAParse * cdxa)
 {
   GstRiffRead *riff = GST_RIFF_READ (cdxa);
@@ -165,7 +167,7 @@ gst_cdxaparse_fmt (GstCDXAParse * cdxa)
   return TRUE;
 }
 
-static gboolean
+static gboolean G_GNUC_UNUSED
 gst_cdxaparse_other (GstCDXAParse * cdxa)
 {
   GstRiffRead *riff = GST_RIFF_READ (cdxa);
@@ -203,7 +205,7 @@ gst_cdxaparse_loop (GstElement * element)
   if (cdxa->state == GST_CDXAPARSE_DATA) {
     if (cdxa->dataleft > 0) {
       gint sync;
-      guint32 got_bytes, desired;
+      guint got_bytes, desired;
       GstBuffer *buf = NULL;
       GstBuffer *outbuf = NULL;
 
@@ -211,11 +213,10 @@ gst_cdxaparse_loop (GstElement * element)
       desired = cdxa->dataleft;
       if (desired > 1024)
         desired = 1024;
-      if (gst_bytestream_peek (riff->bs, &buf, desired) != desired) {
-        GST_ELEMENT_ERROR (element, RESOURCE, READ, (NULL), (NULL));
+      if (!(buf = gst_riff_peek_element_data (riff, desired, &got_bytes)))
         return;
-      }
       sync = gst_cdxastrip_sync (buf);
+      gst_buffer_unref (buf);
       if (sync == -1) {
         gst_bytestream_flush_fast (riff->bs, desired);
         cdxa->dataleft -= desired;
@@ -237,6 +238,7 @@ gst_cdxaparse_loop (GstElement * element)
 
       /* Skip CDXA headers, only keep data */
       outbuf = gst_cdxastrip_strip (buf);
+      GST_DEBUG ("Pushing one buffer");
       gst_pad_push (cdxa->srcpad, GST_DATA (outbuf));
 
       if (got_bytes < cdxa->dataleft)
@@ -253,15 +255,21 @@ gst_cdxaparse_loop (GstElement * element)
     case GST_CDXAPARSE_START:
       if (!gst_cdxaparse_stream_init (cdxa))
         return;
+      cdxa->state = GST_CDXAPARSE_DATA;
+      cdxa->dataleft = cdxa->datasize =
+          (guint64) gst_bytestream_length (riff->bs);
+      cdxa->datastart = gst_bytestream_tell (riff->bs);
+      break;
+#if 0
       cdxa->state = GST_CDXAPARSE_FMT;
       /* fall-through */
 
     case GST_CDXAPARSE_FMT:
-      if (!gst_cdxaparse_fmt (cdxa))
+      if (0 && !gst_cdxaparse_fmt (cdxa))
         return;
       cdxa->state = GST_CDXAPARSE_OTHER;
       /* fall-through */
-
+#endif
     case GST_CDXAPARSE_OTHER:
       if (!gst_cdxaparse_other (cdxa))
         return;
