@@ -172,6 +172,12 @@ else
 LIBFAME_DIR=
 endif
 
+if USE_LIBMNG
+LIBMNG_DIR=libmng
+else
+LIBMNG_DIR=
+endif
+
 if USE_LIBPNG
 LIBPNG_DIR=libpng
 else
@@ -377,6 +383,7 @@ SUBDIRS=\
 	$(LIBCACA_DIR) \
 	$(LIBDV_DIR) \
 	$(LIBFAME_DIR) \
+	$(LIBMNG_DIR) \
 	$(LIBPNG_DIR) \
 	$(LIBRFB_DIR) \
 	$(LIBVISUAL_DIR) \
@@ -435,6 +442,7 @@ DIST_SUBDIRS=\
 	lcs \
 	libcaca \
 	libfame \
+	libmng \
 	libpng \
 	librfb \
 	libvisual \
