@@ -285,6 +285,37 @@ gst_registry_remove_plugin (GstRegistry *registry, GstPlugin *plugin)
   registry->plugins = g_list_remove (registry->plugins, plugin);
 }
 
+static GstPluginFeature*
+gst_plugin_list_find_feature (GList *plugins, const gchar *name, GType type)
+{
+  GstPluginFeature *feature = NULL;
+
+  while (plugins) {
+    GstPlugin *plugin = (GstPlugin *) (plugins->data);
+
+    feature = gst_plugin_find_feature (plugin, name, type);
+    if (feature)
+      return feature;
+    
+    plugins = g_list_next (plugins);
+  }
+  return feature;
+}
+
+static GstPlugin*
+gst_plugin_list_find_plugin (GList *plugins, const gchar *name)
+{
+  while (plugins) {
+    GstPlugin *plugin = (GstPlugin *) (plugins->data);
+
+    if (plugin->name && !strcmp (plugin->name, name))
+      return plugin;
+    
+    plugins = g_list_next (plugins);
+  }
+  return NULL;
+}
+
 /**
  * gst_registry_find_plugin:
  * @registry: the registry to search
@@ -297,41 +328,10 @@ gst_registry_remove_plugin (GstRegistry *registry, GstPlugin *plugin)
 GstPlugin*
 gst_registry_find_plugin (GstRegistry *registry, const gchar *name)
 {
-  GList *walk;
-
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
   g_return_val_if_fail (name != NULL, NULL);
   
-  walk = registry->plugins;
-
-  while (walk) {
-    GstPlugin *plugin = (GstPlugin *) (walk->data);
-
-    if (plugin->name && !strcmp (plugin->name, name))
-      return plugin;
-    
-    walk = g_list_next (walk);
-  }
-  return NULL;
-}
-
-static GstPluginFeature*
-gst_plugin_list_find_feature (GList *plugins, const gchar *name, GType type)
-{
-  GstPluginFeature *feature = NULL;
-
-  g_return_val_if_fail (name != NULL, NULL);
-  
-  while (plugins) {
-    GstPlugin *plugin = (GstPlugin *) (plugins->data);
-
-    feature = gst_plugin_find_feature (plugin, name, type);
-    if (feature)
-      return feature;
-    
-    plugins = g_list_next (plugins);
-  }
-  return feature;
+  return gst_plugin_list_find_plugin (registry->plugins, name);
 }
 
 /**
@@ -572,7 +572,13 @@ GstPlugin*
 gst_registry_pool_find_plugin (const gchar *name)
 {
   GstPlugin *result = NULL;
-  GList *walk = _gst_registry_pool;
+  GList *walk;
+  
+  result =  gst_plugin_list_find_plugin (_gst_registry_pool_plugins, name);
+  if (result)
+    return result;
+
+  walk = _gst_registry_pool;
 
   while (walk) {
     GstRegistry *registry = GST_REGISTRY (walk->data);

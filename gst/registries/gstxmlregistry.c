@@ -1271,8 +1271,7 @@ gst_xml_registry_rebuild_recurse (GstXMLRegistry *registry, const gchar *directo
 
       if ((temp = strstr (directory, ".so")) &&
           (!strcmp (temp, ".so"))) {
-	GstPlugin *plugin = g_new0 (GstPlugin, 1);
-	plugin->filename = g_strdup (directory);
+	GstPlugin *plugin = gst_plugin_new (directory);
 
         loaded = gst_plugin_load_plugin (plugin);
 	if (!loaded) {

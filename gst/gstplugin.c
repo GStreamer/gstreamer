@@ -102,6 +102,16 @@ gst_plugin_register_func (GstPluginDesc *desc, GstPlugin *plugin, GModule *modul
        plugin->filename);
     return NULL;
   }
+  GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" initialised", plugin->filename);
+
+  return plugin;
+}
+
+GstPlugin*
+gst_plugin_new (const gchar *filename)
+{
+  GstPlugin *plugin = g_new0 (GstPlugin, 1);
+  plugin->filename = g_strdup (filename);
 
   return plugin;
 }
