@@ -22,6 +22,7 @@
  */
 
 #include "gstadder.h"
+#include <string.h> 		/* strcmp */
 
 #define GST_ADDER_BUFFER_SIZE 4096
 #define GST_ADDER_NUM_BUFFERS 8

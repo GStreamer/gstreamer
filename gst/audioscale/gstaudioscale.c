@@ -81,7 +81,7 @@ src_template (void)
   }
   return template;
 }
-
+/* defined but not used
 #define GST_TYPE_AUDIOSCALE_METHOD (gst_audioscale_method_get_type())
 static GType
 gst_audioscale_method_get_type (void)
@@ -99,7 +99,7 @@ gst_audioscale_method_get_type (void)
   }
   return audioscale_method_type;
 }
-
+*/
 static void	gst_audioscale_class_init	(AudioscaleClass *klass);
 static void	gst_audioscale_init		(Audioscale *audioscale);
 
