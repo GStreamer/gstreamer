@@ -12,17 +12,13 @@
  **/
 
 gboolean FOUND = FALSE;
+int iterations;
+int max_iterations = 100;
 
 void
 gst_caps_print (GstCaps *caps)
 {
-  while (caps) {
-    g_print ("%s (%s)\n", caps->name, gst_caps_get_mime (caps));
-    if (caps->properties) {
-	    g_print ("has properties\n");
-    }
-    caps = caps->next;
-  }
+  g_print ("%s\n", gst_caps_to_string (caps));
 }
 
 void
@@ -61,7 +57,13 @@ main (int argc, char *argv[])
   /* set to play */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (GST_BIN (pipeline)) && !FOUND) ;
+  while (!FOUND){
+    gst_bin_iterate (GST_BIN (pipeline));
+    iterations++;
+    if(iterations >= max_iterations){
+      break;
+    }
+  }
   if (!FOUND) {
     g_print ("No type found\n");
     return 1;
