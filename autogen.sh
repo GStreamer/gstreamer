@@ -38,7 +38,7 @@ fi
 
 toplevel_check $srcfile
 
-tool_run "aclocal" "-I common/m4 $ACLOCAL_FLAGS"
+tool_run "aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
 
 # FIXME : why does libtoolize keep complaining about aclocal ?
 

@@ -5,7 +5,6 @@ AC_CANONICAL_TARGET([])
 dnl when going to/from release please set the nano (fourth number) right !
 AS_VERSION(gst-plugins, GST_PLUGINS, 0, 3, 2, 1)
 
-
 dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
 AM_CONFIG_HEADER(config.h)
