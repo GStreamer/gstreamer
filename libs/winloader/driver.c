@@ -6,6 +6,8 @@
 #include <wine/vfw.h>
 #include <registry.h>
 
+#include "config.h"
+
 #define STORE_ALL \
     __asm__ ( \
     "push %%ebx\n\t" \
@@ -23,7 +25,7 @@
     "pop %%ebx\n\t"::)
 
 
-#define WIN32_PATH "/usr/lib/win32"
+#define WIN32_PATH GST_WIN32_LIBDIR
 
 typedef struct {
     UINT             uDriverSignature;
