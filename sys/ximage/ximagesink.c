@@ -691,7 +691,7 @@ gst_ximagesink_getcaps (GstPad *pad)
 }
 
 static GstPadLinkReturn
-gst_ximagesink_sinkconnect (GstPad *pad, const GstCaps *caps)
+gst_ximagesink_sink_link (GstPad *pad, const GstCaps *caps)
 {
   GstXImageSink *ximagesink;
   char *caps_str1, *caps_str2;
@@ -844,7 +844,7 @@ gst_ximagesink_chain (GstPad *pad, GstData *data)
     ximagesink->time = GST_BUFFER_TIMESTAMP (buf);
   }
   GST_DEBUG ("videosink: clock wait: %" G_GUINT64_FORMAT, ximagesink->time);
-  
+
   if (GST_VIDEOSINK_CLOCK (ximagesink)) {
     gst_element_wait (GST_ELEMENT (ximagesink), ximagesink->time);
   }
@@ -1251,7 +1251,7 @@ gst_ximagesink_init (GstXImageSink *ximagesink)
   gst_pad_set_chain_function (GST_VIDEOSINK_PAD (ximagesink),
                               gst_ximagesink_chain);
   gst_pad_set_link_function (GST_VIDEOSINK_PAD (ximagesink),
-                             gst_ximagesink_sinkconnect);
+                             gst_ximagesink_sink_link);
   gst_pad_set_getcaps_function (GST_VIDEOSINK_PAD (ximagesink),
                                 gst_ximagesink_getcaps);
   gst_pad_set_fixate_function (GST_VIDEOSINK_PAD (ximagesink),
