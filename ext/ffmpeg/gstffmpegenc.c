@@ -252,7 +252,6 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
   ffmpegenc->context = avcodec_alloc_context ();
   ffmpegenc->picture = avcodec_alloc_frame ();
   ffmpegenc->opened = FALSE;
-  ffmpegenc->cache = NULL;
 
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_video);
@@ -382,9 +381,6 @@ gst_ffmpegenc_link (GstPad * pad, const GstCaps * caps)
   ffmpegenc->context->qmax = 15;
   ffmpegenc->context->max_qdiff = 3;
 
-  /* no edges */
-  ffmpegenc->context->flags |= CODEC_FLAG_EMU_EDGE;
-
   /* fetch pix_fmt and so on */
   gst_ffmpeg_caps_with_codectype (oclass->in_plugin->type,
       caps, ffmpegenc->context);
@@ -459,14 +455,14 @@ static void
 gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (gst_pad_get_parent (pad));
-  GstBuffer *inbuf = GST_BUFFER (_data), *old_cache = ffmpegenc->cache;
+  GstBuffer *inbuf = GST_BUFFER (_data), *outbuf;
   GstFFMpegEncClass *oclass =
       (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
   gint ret_size = 0;
 
   /* FIXME: events (discont (flush!) and eos (close down) etc.) */
 
-  ffmpegenc->cache = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
+  outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
 
   gst_ffmpeg_avpicture_fill ((AVPicture *) ffmpegenc->picture,
       GST_BUFFER_DATA (inbuf),
@@ -475,25 +471,22 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
 
   ffmpegenc->picture->pts = GST_BUFFER_TIMESTAMP (inbuf) / 1000;
 
-  gst_buffer_ref (ffmpegenc->cache);
   ret_size = avcodec_encode_video (ffmpegenc->context,
-      GST_BUFFER_DATA (ffmpegenc->cache),
-      GST_BUFFER_MAXSIZE (ffmpegenc->cache), ffmpegenc->picture);
-  if (old_cache)
-    gst_buffer_unref (old_cache);
+      GST_BUFFER_DATA (outbuf),
+      GST_BUFFER_MAXSIZE (outbuf), ffmpegenc->picture);
 
   if (ret_size < 0) {
     GST_ELEMENT_ERROR (ffmpegenc, LIBRARY, ENCODE, (NULL),
         ("ffenc_%s: failed to encode buffer", oclass->in_plugin->name));
     gst_buffer_unref (inbuf);
-    gst_buffer_unref (ffmpegenc->cache);
+    gst_buffer_unref (outbuf);
     return;
   }
 
-  GST_BUFFER_SIZE (ffmpegenc->cache) = ret_size;
-  GST_BUFFER_TIMESTAMP (ffmpegenc->cache) = GST_BUFFER_TIMESTAMP (inbuf);
-  GST_BUFFER_DURATION (ffmpegenc->cache) = GST_BUFFER_DURATION (inbuf);
-  gst_pad_push (ffmpegenc->srcpad, GST_DATA (ffmpegenc->cache));
+  GST_BUFFER_SIZE (outbuf) = ret_size;
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
+  gst_pad_push (ffmpegenc->srcpad, GST_DATA (outbuf));
 
   gst_buffer_unref (inbuf);
 }
