@@ -136,6 +136,7 @@ sinesrc_force_caps (SineSrc *src) {
       );
       break;
     default:
+      caps = NULL;
       g_assert_not_reached();
   }
   gst_props_add_entry (gst_caps_get_props (caps), 
@@ -292,7 +293,7 @@ sinesrc_get (GstPad *pad)
   if (src->newcaps) {
     sinesrc_force_caps(src);
   }
-  return buf;
+  return GST_DATA(buf);
 }
 
 GstElement *
