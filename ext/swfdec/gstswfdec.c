@@ -345,8 +345,6 @@ gst_swfdec_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
         default:
           res = FALSE;
@@ -354,8 +352,6 @@ gst_swfdec_convert_sink (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
         default:
           res = FALSE;
@@ -381,8 +377,6 @@ gst_swfdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
         default:
           res = FALSE;
@@ -390,23 +384,19 @@ gst_swfdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
       break;
     case GST_FORMAT_TIME:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_BYTES;
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * 6 * (swfdec->width * swfdec->height >> 2) *  
 		  video_rates[swfdec->decoder->frame_rate_code] / GST_SECOND;
 	  break;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value * video_rates[swfdec->decoder->frame_rate_code] / GST_SECOND;
 	  break;
         default:
           res = FALSE;
       }
       break;
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
 	  if (video_rates[swfdec->decoder->frame_rate_code] != 0.0) {
 	    *dest_value = src_value * GST_SECOND /
@@ -418,7 +408,7 @@ gst_swfdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * 6 * (swfdec->width * swfdec->height >> 2);
 	  break;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value;
 	  break;
         default:
@@ -445,9 +435,6 @@ gst_swfdec_src_query (GstPad *pad, GstQueryType type,
     case GST_QUERY_TOTAL:
     {
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fallthrough */
         case GST_FORMAT_TIME:
 	{
 	  int n_frames;
@@ -470,9 +457,6 @@ gst_swfdec_src_query (GstPad *pad, GstQueryType type,
     case GST_QUERY_POSITION:
     {
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fallthrough */
         default:
           res = FALSE;
           break;

@@ -523,7 +523,7 @@ gst_ivorbisfile_loop (GstElement *element)
 	}
 	break;
       }
-      case GST_FORMAT_UNITS:
+      case GST_FORMAT_DEFAULT:
 	if (ivorbisfile->seek_accurate) {
           if (ov_pcm_seek (&ivorbisfile->vf, ivorbisfile->seek_value) == 0) {
             ivorbisfile->need_discont = TRUE;
@@ -606,7 +606,7 @@ gst_ivorbisfile_loop (GstElement *element)
         samples = (gint64) (ov_pcm_tell (&ivorbisfile->vf));
 
         discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, 
-		    			     GST_FORMAT_UNITS, samples, NULL); 
+		    			     GST_FORMAT_DEFAULT, samples, NULL); 
 
         gst_pad_push (ivorbisfile->srcpad, GST_BUFFER (discont));
       }
@@ -634,7 +634,7 @@ gst_ivorbisfile_get_formats (GstPad *pad)
   static GstFormat src_formats[] = {
     GST_FORMAT_TIME,
     GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,
+    GST_FORMAT_DEFAULT,
     0,
     0
   };
@@ -664,16 +664,13 @@ gst_ivorbisfile_src_convert (GstPad *pad,
   
   ivorbisfile = GST_IVORBISFILE (gst_pad_get_parent (pad));
 
-  if (*dest_format == GST_FORMAT_DEFAULT)
-    *dest_format = GST_FORMAT_TIME;
-
   vi = ov_info (&ivorbisfile->vf, -1);
   bytes_per_sample = vi->channels * 2;
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           *dest_value = src_value / (vi->channels * 2);
           break;
         case GST_FORMAT_TIME:
@@ -688,7 +685,7 @@ gst_ivorbisfile_src_convert (GstPad *pad,
         default:
           res = FALSE;
       }
-    case GST_FORMAT_UNITS:
+    case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * bytes_per_sample;
@@ -706,7 +703,7 @@ gst_ivorbisfile_src_convert (GstPad *pad,
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
 	  scale = bytes_per_sample;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
 	  *dest_value = src_value * scale * vi->rate / GST_SECOND;
           break;
         default:
@@ -724,7 +721,7 @@ gst_ivorbisfile_src_convert (GstPad *pad,
           case GST_FORMAT_BYTES:
             res = FALSE;
             break;
-          case GST_FORMAT_UNITS:
+          case GST_FORMAT_DEFAULT:
 	    if (src_value > ivorbisfile->vf.links) {
 	      src_value = ivorbisfile->vf.links;
 	    }
@@ -771,9 +768,6 @@ gst_ivorbisfile_sink_convert (GstPad *pad,
   Ivorbisfile *ivorbisfile; 
   
   ivorbisfile = GST_IVORBISFILE (gst_pad_get_parent (pad));
-
-  if (*dest_format == GST_FORMAT_DEFAULT)
-    *dest_format = GST_FORMAT_TIME;
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -843,7 +837,7 @@ gst_ivorbisfile_src_query (GstPad *pad, GstQueryType type,
     case GST_QUERY_TOTAL:
     {
       switch (*format) {
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           if (ivorbisfile->vf.seekable)
 	    *value = ov_pcm_total (&ivorbisfile->vf, -1);
 	  else
@@ -855,9 +849,6 @@ gst_ivorbisfile_src_query (GstPad *pad, GstQueryType type,
 	  else
 	    return FALSE;
 	  break;
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fall through */
         case GST_FORMAT_TIME:
           if (ivorbisfile->vf.seekable)
 	    *value = (gint64) (ov_time_total (&ivorbisfile->vf, -1) * GST_SECOND);
@@ -879,9 +870,6 @@ gst_ivorbisfile_src_query (GstPad *pad, GstQueryType type,
     }
     case GST_QUERY_POSITION:
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-          *format = GST_FORMAT_TIME;
-          /* fall through */
         case GST_FORMAT_TIME:
           if (ivorbisfile->vf.seekable)
 	    *value = (gint64) (ov_time_tell (&ivorbisfile->vf) * GST_SECOND);
@@ -895,7 +883,7 @@ gst_ivorbisfile_src_query (GstPad *pad, GstQueryType type,
 	  else
             *value = ivorbisfile->total_bytes;
 	  break;
-        case GST_FORMAT_UNITS:
+        case GST_FORMAT_DEFAULT:
           if (ivorbisfile->vf.seekable)
 	    *value = ov_pcm_tell (&ivorbisfile->vf);
 	  else
@@ -975,7 +963,7 @@ gst_ivorbisfile_src_event (GstPad *pad, GstEvent *event)
 	  }
           offset /= vi->channels * 2;
 	  /* fallthrough */
-	case GST_FORMAT_UNITS:
+	case GST_FORMAT_DEFAULT:
 	  ivorbisfile->seek_pending = TRUE;
 	  ivorbisfile->seek_value = offset;
 	  ivorbisfile->seek_format = format;

@@ -402,7 +402,7 @@ gst_modplug_get_formats (GstPad *pad)
 {
   static const GstFormat src_formats[] = {
 /*    GST_FORMAT_BYTES,
-    GST_FORMAT_UNITS,*/
+    GST_FORMAT_DEFAULT,*/
     GST_FORMAT_TIME,
     (GstFormat)0
   };
@@ -441,8 +441,6 @@ gst_modplug_src_query (GstPad *pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_TOTAL:
       switch (*format) {
-        case GST_FORMAT_DEFAULT:
-            *format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
             *value=(gint64)modplug->mSoundFile->GetSongTime() * GST_SECOND;
             break;
@@ -453,8 +451,6 @@ gst_modplug_src_query (GstPad *pad, GstQueryType type,
       break;
     case GST_QUERY_POSITION:
       switch (*format) {
-         case GST_FORMAT_DEFAULT:
-           *format = GST_FORMAT_TIME;
          default:
            tmp = ((float)( modplug->mSoundFile->GetSongTime() * modplug->mSoundFile->GetCurrentPos() ) / (float)modplug->mSoundFile->GetMaxPosition() );
            *value=(gint64)(tmp * GST_SECOND);
