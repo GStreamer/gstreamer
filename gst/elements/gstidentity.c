@@ -114,7 +114,7 @@ gst_identity_class_init (GstIdentityClass *klass)
                         0.0, 1.0, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
     g_param_spec_boolean ("silent", "silent", "silent",
-                          TRUE,G_PARAM_READWRITE)); 
+                          FALSE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
     g_param_spec_string ("last-message", "last-message", "last-message",
                          NULL, G_PARAM_READABLE)); 
@@ -232,13 +232,13 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   }
 
   for (i = identity->duplicate; i; i--) {
-    if (!identity->silent)
-      if (identity->last_message != NULL) {
-	g_free (identity->last_message);
-      }
+    if (!identity->silent) {
+      g_free (identity->last_message);
       identity->last_message = g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %llu)",
 	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
-    g_object_notify (G_OBJECT (identity), "last-message");
+      g_object_notify (G_OBJECT (identity), "last-message");
+    }
+
     g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
 	                       buf);
 
