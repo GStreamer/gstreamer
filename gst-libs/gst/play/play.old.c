@@ -57,7 +57,7 @@ struct _GstPlaySignal
 			GstElementState new_state;
 		} state;
 		struct {
-			GstElement* element;
+			GstObject* object;
 			GParamSpec* param;
 		} info;
 		struct {
@@ -343,8 +343,8 @@ gst_play_idle_signal (GstPlay *play)
 		break;
 	case INFORMATION:
 		g_signal_emit (G_OBJECT (play), gst_play_signals[INFORMATION], 0, 
-		               signal->signal_data.info.element, signal->signal_data.info.param);
-		gst_object_unref (GST_OBJECT(signal->signal_data.info.element));
+		               signal->signal_data.info.object, signal->signal_data.info.param);
+		gst_object_unref (signal->signal_data.info.object);
 		break;
 	case PIPELINE_ERROR:
 		if (gst_element_get_state(play->pipeline) == GST_STATE_PLAYING)
@@ -462,8 +462,8 @@ callback_pipeline_error (	GstElement *object,
 } 
 
 static void
-callback_pipeline_deep_notify (	GstElement *element,
-								GstElement *orig,
+callback_pipeline_deep_notify (	GstObject *element,
+								GstObject *orig,
 								GParamSpec *param,
 								GstPlay* play)
 {
@@ -471,10 +471,10 @@ callback_pipeline_deep_notify (	GstElement *element,
 	
 	signal = g_new0(GstPlaySignal, 1);
 	signal->signal_id = INFORMATION;
-	signal->signal_data.info.element = orig;
+	signal->signal_data.info.object = orig;
 	signal->signal_data.info.param = param;
 
-	gst_object_ref (GST_OBJECT(orig));
+	gst_object_ref (orig);
 	
 	g_async_queue_push(play->signal_queue, signal);
 	
