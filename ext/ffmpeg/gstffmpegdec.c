@@ -56,7 +56,8 @@ struct _GstFFMpegDec
     struct {
       gint channels, samplerate;
     } audio;
-  } format; 
+  } format;
+  guint64 next_ts;
 
   /* parsing */
   AVCodecParserContext *pctx;
@@ -223,6 +224,8 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
 
   ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
+
+  GST_FLAG_SET (ffmpegdec, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -349,6 +352,7 @@ gst_ffmpegdec_open (GstFFMpegDec *ffmpegdec)
     default:
       break;
   }
+  ffmpegdec->next_ts = 0;
 
   return TRUE;
 }
@@ -538,7 +542,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
 
 static gint
 gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
-    guint8 * data, guint size, gint * got_data, guint64 * expected_ts)
+    guint8 * data, guint size, gint * got_data, guint64 * in_ts)
 {
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
@@ -578,15 +582,20 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             ffmpegdec->context->width, 
             ffmpegdec->context->height);
 
-        /* note that ffmpeg sometimes gets the FPS wrong */
-        if (GST_CLOCK_TIME_IS_VALID (*expected_ts) &&
+        /* note that ffmpeg sometimes gets the FPS wrong.
+         * For B-frame containing movies, we get all pictures delayed
+         * except for the I frames, so we synchronize only on I frames
+         * and keep an internal counter based on FPS for the others. */
+        if (ffmpegdec->picture->pict_type == FF_I_TYPE &&
+            GST_CLOCK_TIME_IS_VALID (*in_ts) &&
             ffmpegdec->context->frame_rate > 0) {
-          GST_BUFFER_TIMESTAMP (outbuf) = *expected_ts;
-          GST_BUFFER_DURATION (outbuf) = GST_SECOND *
-              ffmpegdec->context->frame_rate_base /
-              ffmpegdec->context->frame_rate;
-          *expected_ts += GST_BUFFER_DURATION (outbuf);
+          ffmpegdec->next_ts = *in_ts;
         }
+        GST_BUFFER_TIMESTAMP (outbuf) = ffmpegdec->next_ts;
+        GST_BUFFER_DURATION (outbuf) = GST_SECOND *
+            ffmpegdec->context->frame_rate_base /
+            ffmpegdec->context->frame_rate;
+        ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
       } else {
         gst_buffer_unref (outbuf);
       }
@@ -600,13 +609,15 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
       if (len >= 0 && have_data > 0) {
         GST_BUFFER_SIZE (outbuf) = have_data;
-        if (GST_CLOCK_TIME_IS_VALID (*expected_ts)) {
-          GST_BUFFER_TIMESTAMP (outbuf) = *expected_ts;
-          GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
-              (2 * ffmpegdec->context->channels *
-              ffmpegdec->context->sample_rate);
-          *expected_ts += GST_BUFFER_DURATION (outbuf);
+        if (GST_CLOCK_TIME_IS_VALID (*in_ts)) {
+          ffmpegdec->next_ts = *in_ts;
         }
+        GST_BUFFER_TIMESTAMP (outbuf) = ffmpegdec->next_ts;
+        GST_BUFFER_DURATION (outbuf) = (have_data * GST_SECOND) /
+            (2 * ffmpegdec->context->channels *
+            ffmpegdec->context->sample_rate);
+        ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
+        *in_ts += GST_BUFFER_DURATION (outbuf);
       } else {
         gst_buffer_unref (outbuf);
       }
@@ -647,15 +658,64 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 }
 
 static void
+gst_ffmpegdec_handle_event (GstFFMpegDec * ffmpegdec, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH:
+      avcodec_flush_buffers (ffmpegdec->context);
+      goto forward;
+    case GST_EVENT_DISCONTINUOUS: {
+      gint64 value;
+
+      if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
+        ffmpegdec->next_ts = value;
+        GST_DEBUG_OBJECT (ffmpegdec, "Discont to time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (value));
+      } else if (ffmpegdec->context->bit_rate &&
+          gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
+        gboolean new_media;
+
+        ffmpegdec->next_ts = value * GST_SECOND / ffmpegdec->context->bit_rate;
+        GST_DEBUG_OBJECT (ffmpegdec,
+            "Discont to byte %lld, time %" GST_TIME_FORMAT,
+            value, GST_TIME_ARGS (ffmpegdec->next_ts));
+        new_media = GST_EVENT_DISCONT_NEW_MEDIA (event);
+        gst_event_unref (event);
+        event = gst_event_new_discontinuous (new_media,
+            GST_FORMAT_TIME, ffmpegdec->next_ts, GST_FORMAT_UNDEFINED);
+      } else {
+        GST_WARNING_OBJECT (ffmpegdec,
+            "Received discont with no useful value...");
+      }
+      avcodec_flush_buffers (ffmpegdec->context);
+      /* fall-through */
+    }
+    default:
+    forward:
+      gst_pad_event_default (ffmpegdec->sinkpad, event);
+      return;
+  }
+}
+
+static void
 gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 {
-  GstBuffer *inbuf = GST_BUFFER (_data);
+  GstBuffer *inbuf;
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
   guint8 *bdata, *data;
   gint bsize, size, len, have_data;
-  guint64 expected_ts = GST_BUFFER_TIMESTAMP (inbuf);
+  guint64 in_ts;
+
+  /* event handling */
+  if (GST_IS_EVENT (_data)) {
+    gst_ffmpegdec_handle_event (ffmpegdec, GST_EVENT (_data));
+    return;
+  }
+
+  inbuf = GST_BUFFER (_data);
+  in_ts = GST_BUFFER_TIMESTAMP (inbuf);
 
   if (!ffmpegdec->opened) {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
@@ -664,12 +724,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     return;
   }
 
-  GST_DEBUG ("Received new data of size %d", GST_BUFFER_SIZE (inbuf));
-
-  /* FIXME: implement event awareness (especially EOS
-   * (av_close_codec ()) and FLUSH/DISCONT
-   * (avcodec_flush_buffers ()))
-   */
+  GST_DEBUG ("Received new data of size %d, time %" GST_TIME_FORMAT,
+      GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
 
   /* parse cache joining */
   if (ffmpegdec->pcache) {
@@ -702,8 +758,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
 
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
           &data, &size, bdata, bsize,
-          expected_ts / (GST_SECOND / AV_TIME_BASE),
-          expected_ts / (GST_SECOND / AV_TIME_BASE));
+          in_ts / (GST_SECOND / AV_TIME_BASE),
+          in_ts / (GST_SECOND / AV_TIME_BASE));
 
       if (res == 0 || size == 0)
         break;
@@ -717,7 +773,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
     }
 
     if ((len = gst_ffmpegdec_frame (ffmpegdec, data, size,
-             &have_data, &expected_ts)) < 0)
+             &have_data, &in_ts)) < 0)
       break;
 
     if (!ffmpegdec->pctx) {
