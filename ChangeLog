@@ -1,3 +1,8 @@
+2003-12-24  Colin Walters  <walters@verbum.org>
+
+	* sys/oss/gstosssink.c (gst_osssink_sink_fixate): Return NULL if
+	we can't fixate the caps anymore.
+
 2003-12-23  David Schleef  <ds@schleef.org>
 
 	* gst/volume/gstvolume.c: (volume_init): Proxy getcaps.
