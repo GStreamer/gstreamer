@@ -5,11 +5,9 @@ GCONF_DIR =
 endif
 
 if USE_X
-X_DIR = xwindowlistener xoverlay
-X_INTERFACE_LIBS = xoverlay/libgstxoverlay.la
+X_DIR = xwindowlistener
 else
 X_DIR =
-X_INTERFACE_LIBS =
 endif
 
 SUBDIRS = \
@@ -28,6 +26,7 @@ SUBDIRS = \
 	tag \
 	tuner \
 	video \
+	xoverlay \
 	$(X_DIR)
 
 DIST_SUBDIRS = \
@@ -60,7 +59,7 @@ libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = \
 	navigation/libgstnavigation.la \
 	propertyprobe/libgstpropertyprobe.la \
 	tuner/libgsttuner.la \
-        $(X_INTERFACE_LIBS) \
+	xoverlay/libgstxoverlay.la \
 	$(GST_LIBS)
 
 libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = @GST_PLUGINS_LT_LDFLAGS@ -version-info @GST_PLUGINS_LIBVERSION@
