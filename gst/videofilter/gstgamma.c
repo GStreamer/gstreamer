@@ -31,7 +31,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gstvideofilter.h>
+#include "gstvideofilter.h"
 #include <string.h>
 #include <math.h>
 

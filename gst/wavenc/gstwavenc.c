@@ -24,8 +24,8 @@
 #endif
 
 #include <string.h>
-#include <gstwavenc.h>
-#include <riff.h>
+#include "gstwavenc.h"
+#include "riff.h"
 
 static void gst_wavenc_base_init (gpointer g_class);
 static void gst_wavenc_class_init (GstWavEncClass * klass);

@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <gstmedian.h>
+#include "gstmedian.h"
 #include <gst/video/video.h>
 
 /* elementfactory information */

@@ -24,7 +24,7 @@
 #endif
 #include <string.h>
 
-#include <gstwavparse.h>
+#include "gstwavparse.h"
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-media.h"
 

@@ -28,7 +28,7 @@
 #endif
 
 /*#define DEBUG_ENABLED */
-#include <gstvideoflip.h>
+#include "gstvideoflip.h"
 #include <string.h>
 
 /* GstVideoflip signals and args */

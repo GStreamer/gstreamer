@@ -28,7 +28,7 @@
 #endif
 
 /*#define DEBUG_ENABLED */
-#include <gstvideobalance.h>
+#include "gstvideobalance.h"
 #ifdef HAVE_LIBOIL
 #include <liboil/liboil.h>
 #endif
