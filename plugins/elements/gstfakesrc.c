@@ -34,6 +34,8 @@
 #define DEFAULT_SIZEMIN		0
 #define DEFAULT_SIZEMAX		4096
 #define DEFAULT_PARENTSIZE	4096*10
+#define DEFAULT_DATARATE	0
+#define DEFAULT_SYNC		FALSE
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -69,6 +71,8 @@ enum
   ARG_SIZEMIN,
   ARG_SIZEMAX,
   ARG_FILLTYPE,
+  ARG_DATARATE,
+  ARG_SYNC,
   ARG_PATTERN,
   ARG_NUM_BUFFERS,
   ARG_EOS,
@@ -180,6 +184,7 @@ static void gst_fakesrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_fakesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_fakesrc_set_clock (GstElement * element, GstClock * clock);
 
 static GstElementStateReturn gst_fakesrc_change_state (GstElement * element);
 
@@ -240,13 +245,20 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
       g_param_spec_enum ("filltype", "filltype",
           "How to fill the buffer, if at all", GST_TYPE_FAKESRC_FILLTYPE,
           FAKESRC_FILLTYPE_NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DATARATE,
+      g_param_spec_int ("datarate", "Datarate",
+          "Timestamps buffers with number of bytes per second (0 = none)", 0,
+          G_MAXINT, DEFAULT_DATARATE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+      g_param_spec_boolean ("sync", "Sync", "Sync to the clock to the datarate",
+          DEFAULT_SYNC, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PATTERN,
       g_param_spec_string ("pattern", "pattern", "pattern", NULL,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
-          "Number of buffers to output before sending EOS", -1, G_MAXINT,
-          0, G_PARAM_READWRITE));
+          "Number of buffers to output before sending EOS", -1, G_MAXINT, 0,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EOS,
       g_param_spec_boolean ("eos", "eos", "Send out the EOS event?", TRUE,
           G_PARAM_READWRITE));
@@ -275,6 +287,7 @@ gst_fakesrc_class_init (GstFakeSrcClass * klass)
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_fakesrc_request_new_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_fakesrc_change_state);
+  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_fakesrc_set_clock);
 }
 
 static void
@@ -310,7 +323,20 @@ gst_fakesrc_init (GstFakeSrc * fakesrc)
   fakesrc->parent = NULL;
   fakesrc->parentsize = DEFAULT_PARENTSIZE;
   fakesrc->last_message = NULL;
+  fakesrc->datarate = DEFAULT_DATARATE;
+  fakesrc->sync = DEFAULT_SYNC;
 }
+
+static void
+gst_fakesrc_set_clock (GstElement * element, GstClock * clock)
+{
+  GstFakeSrc *src;
+
+  src = GST_FAKESRC (element);
+
+  src->clock = clock;
+}
+
 
 static GstPad *
 gst_fakesrc_request_new_pad (GstElement * element, GstPadTemplate * templ,
@@ -525,6 +551,12 @@ gst_fakesrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_FILLTYPE:
       src->filltype = g_value_get_enum (value);
       break;
+    case ARG_DATARATE:
+      src->datarate = g_value_get_int (value);
+      break;
+    case ARG_SYNC:
+      src->sync = g_value_get_boolean (value);
+      break;
     case ARG_PATTERN:
       break;
     case ARG_NUM_BUFFERS:
@@ -587,6 +619,12 @@ gst_fakesrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_FILLTYPE:
       g_value_set_enum (value, src->filltype);
+      break;
+    case ARG_DATARATE:
+      g_value_set_int (value, src->datarate);
+      break;
+    case ARG_SYNC:
+      g_value_set_boolean (value, src->sync);
       break;
     case ARG_PATTERN:
       g_value_set_string (value, src->pattern);
@@ -792,7 +830,20 @@ gst_fakesrc_get (GstPad * pad)
   }
 
   buf = gst_fakesrc_create_buffer (src);
-  GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
+  GST_BUFFER_OFFSET (buf) = src->buffer_count++;
+
+  GstClockTime time = GST_CLOCK_TIME_NONE;
+
+  if (src->datarate > 0) {
+    time = (src->bytes_sent * GST_SECOND) / src->datarate;
+    if (src->sync) {
+      gst_element_wait (GST_ELEMENT (src), time);
+    }
+
+    GST_BUFFER_DURATION (buf) =
+        GST_BUFFER_SIZE (buf) * GST_SECOND / src->datarate;
+  }
+  GST_BUFFER_TIMESTAMP (buf) = time;
 
   if (!src->silent) {
     g_free (src->last_message);
@@ -811,6 +862,8 @@ gst_fakesrc_get (GstPad * pad)
         buf, pad);
     GST_LOG_OBJECT (src, "post handoff emit");
   }
+
+  src->bytes_sent += GST_BUFFER_SIZE (buf);
 
   return GST_DATA (buf);
 }
@@ -866,6 +919,7 @@ gst_fakesrc_change_state (GstElement * element)
       fakesrc->pattern_byte = 0x00;
       fakesrc->need_flush = FALSE;
       fakesrc->eos = FALSE;
+      fakesrc->bytes_sent = 0;
       fakesrc->rt_num_buffers = fakesrc->num_buffers;
       break;
     case GST_STATE_PAUSED_TO_PLAYING:

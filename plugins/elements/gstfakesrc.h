@@ -92,6 +92,9 @@ struct _GstFakeSrc {
   guint8 	 pattern_byte;
   gchar 	*pattern;
   GList 	*patternlist;
+  gint		 datarate;
+  gboolean	 sync;
+  GstClock	*clock;
   gint64	 segment_start;
   gint64	 segment_end;
   gboolean	 segment_loop;
@@ -102,6 +105,8 @@ struct _GstFakeSrc {
   gboolean 	 signal_handoffs;
   gboolean 	 dump;
   gboolean 	 need_flush;
+
+  guint64        bytes_sent;
 
   gchar		*last_message;
 };

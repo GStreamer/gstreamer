@@ -54,6 +54,7 @@ struct _GstIdentity {
   guint 	 duplicate;
   gint 	 	 error_after;
   gfloat 	 drop_probability;
+  gint		 datarate;
   guint 	 sleep_time;
   gboolean 	 silent;
   gboolean 	 dump;
@@ -65,6 +66,8 @@ struct _GstIdentity {
   GstClock	*clock;
   gchar 	*last_message;
   GstCaps	*srccaps;
+
+  guint64	 bytes_handled;
 };
 
 struct _GstIdentityClass {

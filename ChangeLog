@@ -1,3 +1,17 @@
+2004-09-03  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfakesrc.c: (gst_fakesrc_class_init),
+	(gst_fakesrc_init), (gst_fakesrc_set_clock),
+	(gst_fakesrc_set_property), (gst_fakesrc_get_property),
+	(gst_fakesrc_get), (gst_fakesrc_change_state):
+	* gst/elements/gstfakesrc.h:
+	* gst/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_init), (gst_identity_chain),
+	(gst_identity_set_property), (gst_identity_get_property),
+	(gst_identity_change_state):
+	* gst/elements/gstidentity.h:
+	Added datarate properties to limit the datarate.
+
 2004-08-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/autoplug/gstspider.c: (plugin_init):
