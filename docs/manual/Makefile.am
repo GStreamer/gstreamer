@@ -112,7 +112,7 @@ pdfdist: pdfdocs
 
 psdocs: $(PSFILES)
 psdist: psdocs
-	@for a $(PSFILES) ; do \
+	@for a in $(PSFILES) ; do \
 	if [ -r $$a ] ; then \
 	    echo "Adding $$a to distribution" ; \
 	    cp -a $$a $(distdir)/ ; \

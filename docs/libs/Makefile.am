@@ -36,12 +36,14 @@ tmpl/$(DOC_MODULE)-unused.sgml: $(DOC_MODULE)-decl.txt $(DOC_MODULE)-sections.tx
 sgml/$(DOC_MODULE)-doc.bottom: tmpl/$(DOC_MODULE)-unused.sgml
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
 
+all-local: html
+
 clean-local:
 	$(RM) -rf *~ *.bak *.signals *-unused.txt *.args tmpl html sgml tmpl/*.bak $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt 
 
 install-data-local: html
-	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
-	(installfiles=`echo $(srcdir)/html/*.html`; \
+	@$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
+	@(installfiles=`echo $(srcdir)/html/*.html`; \
 	if test "$$installfiles" = '$(srcdir)/html/*.html'; \
 	then echo '-- Nothing to install' ; \
 	else \
@@ -55,13 +57,12 @@ install-data-local: html
 	  gtkdoc-fixxref --module=$(DOC_MODULE) --html-dir=$(HTML_DIR)|| true; \
 	fi)
 
+uninstall-local: html
+	@echo '-- Uninstalling '$(DESTDIR)$(TARGET_DIR) ; \
+	$(RM) -rf $(DESTDIR)$(TARGET_DIR)
+
 dist-hook: html
 	mkdir $(distdir)/html
-	mkdir $(distdir)/sgml
-	mkdir $(distdir)/tmpl
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
-	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
-	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
-	-cp $(srcdir)/sgml/*.bottom $(srcdir)/sgml/*.top $(distdir)/sgml
 
 .PHONY : html

@@ -2,6 +2,7 @@ Makefile
 Makefile.in
 *.bak
 .deps
+images
 gstreamer-manual
 gstreamer-manual.pdf
 gstreamer-manual.ps
