@@ -162,6 +162,8 @@ with some more specialized elements.</para>
     &gstreamer-tree-index;
   </chapter>
 
+  <!-- this seems to be broken with current gtk-doc and the xml toolchain
   <index id="index"/>
+  -->
 
 </book>

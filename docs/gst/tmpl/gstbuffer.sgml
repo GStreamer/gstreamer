@@ -17,7 +17,9 @@ Buffers are usually created with gst_buffer_new(). After a buffer has been
 created one will typically allocate memory for it and set the size of the 
 buffer data.  The following example creates a buffer that can hold a given
 video frame with a given width, height and bits per plane.
-<programlisting>
+<example>
+<title>Creating a buffer for a video frame</title>
+  <programlisting>
   GstBuffer *buffer;
   gint size, width, height, bpp;
 
@@ -29,7 +31,8 @@ video frame with a given width, height and bits per plane.
   GST_BUFFER_SIZE (buffer) = size;
   GST_BUFFER_DATA (buffer) = g_alloc (size);
   ...
-</programlisting>
+  </programlisting>
+</example>
 </para>
 <para>
 Alternatively, use gst_buffer_new_and_alloc() 

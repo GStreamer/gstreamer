@@ -162,10 +162,10 @@ The different types of seek events. When constructing a seek event a format,
 a seek method and optional flags are OR-ed together. The seek event is then
 inserted into the graph with #gst_pad_send_event() or #gst_element_send_event().
 
- <informalexample>
-  Following example illustrates how to insert a seek event (1 second in the stream)
-  in a pipeline.
- 
+Following example illustrates how to insert a seek event (1 second in the stream)
+in a pipeline.
+<example>
+<title>Insertion of a seek event into a pipeline</title>
   <programlisting>
   gboolean res;
   GstEvent *event;
@@ -181,7 +181,7 @@ inserted into the graph with #gst_pad_send_event() or #gst_element_send_event().
     g_warning ("seek failed");
   }
   </programlisting>
- </informalexample>
+</example>
 </para>
 
 @GST_SEEK_METHOD_CUR: Seek to an relative position

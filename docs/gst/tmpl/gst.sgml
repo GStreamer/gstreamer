@@ -28,6 +28,8 @@ The <application>GStreamer</application> library should be initialized with gst_
 it can be used. You should pass a pointer to the main argc and argv variables so that GStreamer can 
 process its own command line options, as shown in the following example.
 
+<example>
+<title>Initializing the gstreamer libarary</title>
   <programlisting>
   int 
   main (int argc, char *argv[])
@@ -37,6 +39,7 @@ process its own command line options, as shown in the following example.
     ...
   }
   </programlisting>
+</example>
 </para>
 <para>
 It's allowed to pass two NULL pointers to gst_init() in case you don't want to pass the command
@@ -46,6 +49,8 @@ line args to GStreamer.
 <para>
 You can also use a popt table to initialize your own parameters as shown in the next code 
 fragment:
+<example>
+<title>Initializing own parameters when initializing gstreamer</title>
   <programlisting>
   static gboolean stats = FALSE;
   ...
@@ -65,6 +70,7 @@ fragment:
     ...
   }
   </programlisting>
+</example>
 </para>
 <para>
   Use gst_version() to query the library version at runtime or use the GST_VERSION_* macros
