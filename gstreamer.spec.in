@@ -66,6 +66,7 @@ applications and plugins for GStreamer.
 %package tools
 Summary: 	tools for GStreamer streaming media framework.
 Group: 		Libraries/Multimedia
+Requires: 	%{name}-common >= %{version}-%{release}
 
 %description tools
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -78,6 +79,21 @@ plugins.
 This package contains the basic command-line tools used for GStreamer, like
 gst-register and gst-launch.  It is split off to allow parallel-installability
 in the future.
+
+%package common
+Summary: 	common tools and files for GStreamer streaming media framework.
+Group: 		Libraries/Multimedia
+
+%description common
+GStreamer is a streaming-media framework, based on graphs of filters which
+operate on media data. Applications using this library can do anything
+from real-time sound processing to playing videos, and just about anything
+else media-related.  Its plugin-based architecture means that new data
+types or processing capabilities can be added simply by installing new   
+plugins.
+
+This package contains wrapper scripts for the command-line tools that work
+with different major/minor versions of GStreamer.
 
 %prep
 %setup
@@ -174,6 +190,19 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_mandir}/man1/gst-md5sum-%{majorminor}.*
 %{_mandir}/man1/gst-register-%{majorminor}.*
 
+%files common
+%defattr(-, root, root, -)
+%{_bindir}/gst-xmlinspect
+%{_bindir}/gst-complete
+%{_bindir}/gst-compprep
+%{_bindir}/gst-inspect
+%{_bindir}/gst-launch
+%{_bindir}/gst-md5sum
+%{_bindir}/gst-register
+%{_bindir}/gst-feedback
+%{_bindir}/gst-xmllaunch
+%{_bindir}/gst-typefind
+
 %files devel
 %defattr(-, root, root, -)
 %dir %{_includedir}/%{name}-%{majorminor}
@@ -207,6 +236,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %changelog
+* Wed Feb 04 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- add -common package containing frontend wrapper binaries
+
 * Mon Dec 01 2003 Thomas Vander Stichele <thomas at apestaart dot org>
 - changed documentation buildrequires
 
