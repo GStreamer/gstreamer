@@ -337,8 +337,7 @@ gst_afparse_plugin_init (GModule *module, GstPlugin *plugin)
   /* load audio support library */
   if (!gst_library_load ("gstaudio"))
     return FALSE;
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
+
   return TRUE;
 }
 

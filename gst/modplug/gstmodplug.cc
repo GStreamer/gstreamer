@@ -130,31 +130,39 @@ static GstElementStateReturn
 static GstElementClass *parent_class = NULL;
 
 static GstCaps* 
-modplug_type_find (GstBuffer *buf, gpointer priv) 
-{  
-  if (GST_BUFFER_SIZE (buf) < 75)
-    return NULL;
+modplug_type_find (GstByteStream *bs, gpointer priv) 
+{
+  GstBuffer *buf = NULL;
+  GstCaps *newc = NULL;
 
-  if (MOD_CheckType (buf)     ||
-      Mod_669_CheckType (buf) ||
-      Amf_CheckType (buf)     ||
-      Dsm_CheckType (buf)     ||
-      Fam_CheckType (buf)     ||
-      Gdm_CheckType (buf)     ||
-      Imf_CheckType (buf)     ||
-      It_CheckType (buf)      ||
-      M15_CheckType (buf)     ||
-      /*Med_CheckType (buf)     || <- FIXME */
-      Mtm_CheckType (buf)     ||
-      Okt_CheckType (buf)     ||
-      S3m_CheckType (buf)     ||
-      Xm_CheckType (buf)) {
-    return gst_caps_new ("modplug_type_find",
-			 "audio/x-mod",
-			   NULL);
+  if (gst_bytestream_peek (bs, &buf, 75) == 75) {
+    if (MOD_CheckType (buf)     ||
+        Mod_669_CheckType (buf) ||
+        Amf_CheckType (buf)     ||
+        Dsm_CheckType (buf)     ||
+        Fam_CheckType (buf)     ||
+        Gdm_CheckType (buf)     ||
+        Imf_CheckType (buf)     ||
+        It_CheckType (buf)      ||
+        M15_CheckType (buf)     ||
+#if 0
+        Med_CheckType (buf)     || /* FIXME */
+#endif
+        Mtm_CheckType (buf)     ||
+        Okt_CheckType (buf)     ||
+        S3m_CheckType (buf)     ||
+        Xm_CheckType (buf)) {
+      newc = GST_CAPS_NEW ("modplug_type_find",
+			   "audio/x-mod",
+			     NULL);
+    }
   }
-  
-  return NULL;
+
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
+  return newc;
 }
 
 static GstTypeDefinition modplug_definitions[] = {

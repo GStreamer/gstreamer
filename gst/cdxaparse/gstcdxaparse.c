@@ -50,7 +50,7 @@ static GstElementDetails gst_cdxa_parse_details = {
   "(C) 2002",
 };
 
-static GstCaps* cdxa_type_find (GstBuffer *buf, gpointer private);
+static GstCaps* cdxa_type_find (GstByteStream *bs, gpointer private);
 
 /* typefactory for 'cdxa' */
 static GstTypeDefinition cdxadefinition = {
@@ -159,25 +159,28 @@ gst_cdxa_parse_init (GstCDXAParse *cdxa_parse)
 }
 
 static GstCaps*
-cdxa_type_find (GstBuffer *buf,
-              gpointer private)
+cdxa_type_find (GstByteStream *bs,
+		gpointer       private)
 {
-  gchar *data = GST_BUFFER_DATA (buf);
-  GstCaps *new;
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
 
   GST_DEBUG ("cdxa_parse: typefind");
 
-  if (GST_BUFFER_SIZE (buf) < 12)
-    return NULL;
+  if (gst_bytestream_peek (bs, &buf, 12) == 12) {
+    guint32 head1 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[0]),
+	    head2 = GUINT32_FROM_LE (((guint32 *) GST_BUFFER_DATA (buf))[2]);
 
-  if (GUINT32_FROM_LE (((guint32 *)data)[0]) != GST_RIFF_TAG_RIFF)
-    return NULL;
-  if (GUINT32_FROM_LE (((guint32 *)data)[2]) != GST_RIFF_RIFF_CDXA)
-    return NULL;
+    if (head1 == GST_RIFF_TAG_RIFF && head2 == GST_RIFF_RIFF_CDXA) {
+      new = GST_CAPS_NEW ("cdxa_type_find",
+			  "video/x-cdxa", 
+			    NULL);
+    }
+  }
 
-  new = GST_CAPS_NEW ("cdxa_type_find",
-		      "video/x-cdxa", 
-		        NULL);
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
 
   return new;
 }
@@ -341,10 +344,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstTypeFactory *type;
-
-  /* this filter needs the riff parser */
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   /* create an elementfactory for the cdxa_parse element */
   factory = gst_element_factory_new ("cdxaparse", GST_TYPE_CDXA_PARSE,

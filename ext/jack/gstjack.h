@@ -22,7 +22,7 @@
 
 #include <jack/jack.h>
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/gstbytestream.h>
 
 //#define JACK_DEBUG(str, a...) g_message (str, ##a)
 #define JACK_DEBUG(str, a...)

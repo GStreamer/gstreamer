@@ -26,7 +26,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/gstbytestream.h>
 
 #include "ladspa.h"
 

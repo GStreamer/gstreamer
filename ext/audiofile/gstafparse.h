@@ -27,7 +27,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/gstbytestream.h>
 #include <audiofile.h>			/* what else are we to do */
 #include <af_vfs.h>
 

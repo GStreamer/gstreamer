@@ -21,7 +21,7 @@
 #include <gst/gst.h>
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/gstbytestream.h>
 
 extern GType ivorbisfile_get_type(void);
 
@@ -131,10 +131,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (file, gst_vorbisdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (file));
-
-  /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   type = gst_type_factory_new (&vorbisdefinition);
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));

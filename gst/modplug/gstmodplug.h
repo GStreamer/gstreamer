@@ -28,7 +28,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/gstbytestream.h>
 	
 #include "modplug_types.h"	
 

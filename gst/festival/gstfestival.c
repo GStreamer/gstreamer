@@ -80,7 +80,7 @@
 static void		gst_festival_class_init		(GstFestivalClass *klass);
 static void		gst_festival_init		(GstFestival *festival);
 
-static GstCaps*		text_type_find			(GstBuffer *buf, gpointer private);
+static GstCaps*		text_type_find			(GstByteStream *bs, gpointer private);
 
 static void		gst_festival_chain		(GstPad *pad, GstBuffer *buf);
 static GstElementStateReturn 
@@ -198,21 +198,35 @@ gst_festival_init (GstFestival *festival)
 }
 
 static GstCaps*
-text_type_find (GstBuffer *buf, gpointer private)
+text_type_find (GstByteStream *bs, gpointer private)
 {
-  gchar *data = GST_BUFFER_DATA (buf);
-  gint i;
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
 
-  /* 20 is arbitrary.  4 is definitely too small. */
-  if (GST_BUFFER_SIZE (buf) < 20)
-    return NULL;
+#define TEXT_SIZE 32
 
-  for (i=0; i<GST_BUFFER_SIZE (buf); i++) {
-    if (!isprint(data[i]) && data[i]!='\n')
-      return NULL;
+  /* read arbitrary number and see if it's textual */
+  if (gst_bytestream_peek (bs, &buf, TEXT_SIZE) == TEXT_SIZE) {
+    gchar *data = GST_BUFFER_DATA (buf);
+    gint i;
+
+    for (i = 0; i < TEXT_SIZE; i++) {
+      if (!isprint (data[i]) && data[i] != '\n') {
+        break;
+      }
+    }
+
+    /* well, we found something that looks like text... */
+    new = gst_caps_new ("text_type_find",
+			"text/plain",
+			  NULL);
   }
 
-  return gst_caps_new ("text_type_find", "text/plain", NULL);
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
+  return new;
 }
 
 

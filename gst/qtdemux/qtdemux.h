@@ -22,7 +22,7 @@
 #define __GST_QTDEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/gstbytestream.h>
 
 #ifdef __cplusplus
 extern "C" {

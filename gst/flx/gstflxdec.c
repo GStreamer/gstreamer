@@ -28,7 +28,7 @@
 
 #define JIFFIE  (GST_SECOND/70)
 
-static GstCaps* flxdec_type_find(GstBuffer *buf, gpointer private);
+static GstCaps* flxdec_type_find (GstByteStream *bs, gpointer private);
 
 /* flx element information */
 static GstElementDetails flxdec_details = {
@@ -113,27 +113,33 @@ static void 	flx_decode_delta_flc	(GstFlxDec *, guchar *, guchar *);
 static GstElementClass *parent_class = NULL;
 
 static GstCaps* 
-flxdec_type_find (GstBuffer *buf, gpointer private)
+flxdec_type_find (GstByteStream *bs, gpointer private)
 {
-  guchar *data = GST_BUFFER_DATA(buf);
-  GstCaps *new;
+  GstBuffer *buf = NULL;
+  GstCaps *new = NULL;
 
-  if (GST_BUFFER_SIZE(buf) < 134){
-    return NULL;
-  }
+  if (gst_bytestream_peek (bs, &buf, 134) == 134) {
+    guint8 *data = GST_BUFFER_DATA (buf);
 
-  /* check magic */
-  if ((data[4] == 0x11 || data[4] == 0x12
-       || data[4] == 0x30 || data[4] == 0x44) && data[5] == 0xaf) {
+    /* check magic */
+    if ((data[4] == 0x11 || data[4] == 0x12 ||
+         data[4] == 0x30 || data[4] == 0x44) &&
+        data[5] == 0xaf) {
       /* check the frame type of the first frame */
       if ((data[132] == 0x00 || data[132] == 0xfa) && data[133] == 0xf1) {
         GST_DEBUG ("GstFlxDec: found supported flx format");
-        new = gst_caps_new("flxdec_type_find","video/x-fli", NULL);
-        return new;
+        new = gst_caps_new ("flxdec_type_find",
+			    "video/x-fli",
+			      NULL);
       }
+    }
   }
-  
-  return NULL; 
+
+  if (buf != NULL) {
+    gst_buffer_unref (buf);
+  }
+
+  return new;
 }
 
 
@@ -683,10 +689,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
   GstTypeFactory *type;
-
-  /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
 
   factory = gst_element_factory_new("flxdec", GST_TYPE_FLXDEC, &flxdec_details);
   g_return_val_if_fail(factory != NULL, FALSE);
