@@ -36,7 +36,7 @@ configure-stamp:
 		--infodir=\$${prefix}/share/info \
 		--with-configdir=/etc/gstreamer \
 		--disable-plugin-srcdir \
-		--enable-docs-build
+		--disable-docs-build
 
 	touch configure-stamp
 
