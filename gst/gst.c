@@ -39,8 +39,6 @@
 #define MAX_PATH_SPLIT	16
 #define GST_PLUGIN_SEPARATOR ","
 
-gchar *_gst_progname;
-
 #ifndef GST_DISABLE_REGISTRY
 gboolean _gst_registry_auto_load = TRUE;
 static GstRegistry *_global_registry;
@@ -636,9 +634,6 @@ init_post (void)
     gst_trace_set_default (gst_trace);
   }
 #endif /* GST_DISABLE_TRACE */
-  if (_gst_progname == NULL) {
-    _gst_progname = g_strdup ("gstprog");
-  }
 
   return TRUE;
 }

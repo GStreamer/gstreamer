@@ -33,30 +33,38 @@
 #include <string.h>
 #include <locale.h>
 
+static gboolean
+print_field (GQuark field, GValue * value, gpointer pfx)
+{
+  gchar *str = gst_value_serialize (value);
+
+  g_print ("%s  %15s: %s\n", (gchar *) pfx, g_quark_to_string (field), str);
+  g_free (str);
+  return TRUE;
+}
+
 static void
 print_caps (const GstCaps * caps, const gchar * pfx)
 {
-  char *s, *tmp;
-  char **v;
+  guint i;
 
-  s = gst_caps_to_string (caps);
+  g_return_if_fail (caps != NULL);
 
-  tmp = g_strdup_printf ("\n  %s", pfx);
-  v = g_strsplit (s, ", ", -1);
-  g_free (s);
-  s = g_strjoinv (tmp, v);
-  g_strfreev (v);
-  g_free (tmp);
+  if (gst_caps_is_any (caps)) {
+    g_print ("%sANY\n", pfx);
+    return;
+  }
+  if (gst_caps_is_empty (caps)) {
+    g_print ("%sEMPTY\n", pfx);
+    return;
+  }
 
-  tmp = g_strdup_printf ("\n%s", pfx);
-  v = g_strsplit (s, "; ", -1);
-  g_free (s);
-  s = g_strjoinv (tmp, v);
-  g_free (tmp);
-  g_strfreev (v);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *structure = gst_caps_get_structure (caps, i);
 
-  g_print ("%s%s\n", pfx, s);
-  g_free (s);
+    g_print ("%s%s\n", pfx, gst_structure_get_name (structure));
+    gst_structure_foreach (structure, print_field, (gpointer) pfx);
+  }
 }
 
 static void

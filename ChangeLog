@@ -1,3 +1,11 @@
+2004-04-29  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gst.c: (init_post):
+	* gst/gstinfo.c:
+	  remove useless _gst_progname stuff
+	* tools/gst-inspect.c: (print_field), (print_caps):
+	  improve caps output
+
 2004-04-28  David Schleef  <ds@schleef.org>
 
 	Disable parsing of a lot of files that aren't part of the

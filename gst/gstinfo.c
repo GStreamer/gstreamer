@@ -81,8 +81,6 @@ dladdr (void *address, Dl_info * dl)
 #endif /* __sgi__ */
 #endif
 
-extern gchar *_gst_progname;
-
 static void gst_debug_reset_threshold (gpointer category, gpointer unused);
 static void gst_debug_reset_all_thresholds (void);
 
