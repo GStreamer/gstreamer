@@ -37,6 +37,11 @@ Pass data without modification.
 
 </para>
 
+<!-- ##### ARG GstIdentity:error-after ##### -->
+<para>
+
+</para>
+
 <!-- ##### ARG GstIdentity:silent ##### -->
 <para>
 

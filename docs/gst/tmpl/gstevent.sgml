@@ -38,6 +38,8 @@ The different major types of events.
 @GST_EVENT_EMPTY: an empty event.
 @GST_EVENT_SEEK: a seek event.
 @GST_EVENT_DISCONTINUOUS: a discontinuous event to indicate the stream has a discontinuity.
+@GST_EVENT_INFO: 
+@GST_EVENT_ERROR: 
 
 <!-- ##### MACRO GST_EVENT_TYPE ##### -->
 <para>
@@ -96,6 +98,7 @@ The event data structure.
 @data: The parent data type.
 @type: The event type.
 @timestamp: The event timestamp.
+@src: 
 
 <!-- ##### FUNCTION gst_event_new ##### -->
 <para>

@@ -41,3 +41,8 @@ Specify the maximum number of buffers in the queue before the queue
 blocks.
 </para>
 
+<!-- ##### ARG GstQueue:may-deadlock ##### -->
+<para>
+
+</para>
+

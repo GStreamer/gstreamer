@@ -696,13 +696,13 @@ Destroy the pad.
 @pad: 
 @caps: 
 @direction: 
-@threadstate: 
+@sched: 
+@sched_private: 
 @peer: 
 @bufpen: 
 @regiontype: 
 @offset: 
 @len: 
-@sched: 
 @chainfunc: 
 @chainhandler: 
 @getfunc: 

@@ -1,4 +1,31 @@
 GtkObject
+  GtkWidget
+    GtkRange
+      GtkScrollbar
+        GtkVScrollbar
+        GtkHScrollbar
+      GtkScale
+        GtkHScale
+        GtkVScale
+    GtkContainer
+      GtkBin
+        GtkScrolledWindow
+        GtkButton
+          GtkToggleButton
+            GtkCheckButton
+              GtkRadioButton
+      GtkPaned
+        GtkVPaned
+        GtkHPaned
+      GtkBox
+        GtkHBox
+          GtkCombo
+      GtkCList
+    GtkEditable
+      GtkEntry
+        GtkSpinButton
+  GtkData
+    GtkAdjustment
   GObject
     GstObject
       GstXml
@@ -11,7 +38,6 @@ GtkObject
         GstFakeSrc
         GstFakeSink
         GstFileSrc
-        GstHttpSrc
         GstFdSrc
         GstFdSink
         GstPipefilter

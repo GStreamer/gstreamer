@@ -14,13 +14,36 @@ This is a base class for custom schedulers.
 
 </para>
 
-<!-- ##### MACRO GST_SCHED_PARENT ##### -->
+<!-- ##### MACRO GST_SCHEDULER_PARENT ##### -->
 <para>
-Get the parent #GstElement of this scheduler.
+Get the parent object of this scheduler.
+</para>
+
+@sched: the scheduler to get the parent of.
+
+
+<!-- ##### MACRO GST_SCHEDULER_STATE ##### -->
+<para>
+Get the state of the scheduler.
+</para>
+
+@sched: the scheduler to get the state of.
+
+
+<!-- ##### FUNCTION gst_scheduler_setup ##### -->
+<para>
 
 </para>
 
-@sched: the scheduler to query.
+@sched: 
+
+
+<!-- ##### FUNCTION gst_scheduler_reset ##### -->
+<para>
+
+</para>
+
+@sched: 
 
 
 <!-- ##### FUNCTION gst_scheduler_add_element ##### -->
@@ -41,7 +64,18 @@ Get the parent #GstElement of this scheduler.
 @element: 
 
 
-<!-- ##### FUNCTION gst_scheduler_enable_element ##### -->
+<!-- ##### FUNCTION gst_scheduler_state_transition ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+@transition: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_lock_element ##### -->
 <para>
 
 </para>
@@ -50,7 +84,35 @@ Get the parent #GstElement of this scheduler.
 @element: 
 
 
-<!-- ##### FUNCTION gst_scheduler_disable_element ##### -->
+<!-- ##### FUNCTION gst_scheduler_unlock_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_scheduler_yield ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+
+<!-- ##### FUNCTION gst_scheduler_interrupt ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_scheduler_error ##### -->
 <para>
 
 </para>
@@ -104,23 +166,5 @@ Get the parent #GstElement of this scheduler.
 </para>
 
 @sched: 
-
-
-<!-- ##### FUNCTION gst_scheduler_lock_element ##### -->
-<para>
-
-</para>
-
-@sched: 
-@element: 
-
-
-<!-- ##### FUNCTION gst_scheduler_unlock_element ##### -->
-<para>
-
-</para>
-
-@sched: 
-@element: 
 
 

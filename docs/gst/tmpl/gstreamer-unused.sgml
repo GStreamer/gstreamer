@@ -137,6 +137,27 @@ Generic connection between elements.
 GstConnection
 
 
+<!-- ##### SECTION ./tmpl/gstdisksrc.sgml:Long_Description ##### -->
+<para>
+Asynchonously read buffers from a file. 
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstdisksrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gstdisksrc.sgml:Short_Description ##### -->
+Asynchronous read from a file (disksrc)
+
+
+<!-- ##### SECTION ./tmpl/gstdisksrc.sgml:Title ##### -->
+GstDiskSrc
+
+
 <!-- ##### SECTION ./tmpl/gstesdsink.sgml:Long_Description ##### -->
 <para>
 
@@ -198,6 +219,26 @@ GstFilter
 
 <!-- ##### SECTION ./tmpl/gstgetbits.sgml:Title ##### -->
 GstGetbits
+
+
+<!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:Long_Description ##### -->
+<para>
+Reads data from a URL.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:Short_Description ##### -->
+Reads data from a URL. (httpsrc)
+
+
+<!-- ##### SECTION ./tmpl/gsthttpsrc.sgml:Title ##### -->
+GstHttpSrc
 
 
 <!-- ##### SECTION ./tmpl/gstmeta.sgml:Long_Description ##### -->
@@ -769,6 +810,13 @@ to the current function, i.e. "('element')"
 </para>
 
 @klass: 
+
+<!-- ##### MACRO GST_ELEMENT_IS_COTHREAD_STOPPING ##### -->
+<para>
+Queries whether the cothread holding this element needs to be stopped.
+</para>
+
+@obj: The element to query
 
 <!-- ##### MACRO GST_ELEMENT_IS_MULTI_IN ##### -->
 <para>
@@ -1533,6 +1581,14 @@ Fast macro to unlock a given element.
 
 @sched: The scheduler.
 @element: The element to unlock.
+
+<!-- ##### MACRO GST_SCHED_PARENT ##### -->
+<para>
+Get the parent #GstElement of this scheduler.
+
+</para>
+
+@sched: the scheduler to query.
 
 <!-- ##### MACRO GST_SHOW_INFO ##### -->
 <para>
@@ -2486,6 +2542,30 @@ The filename to write to.
 </para>
 
 
+<!-- ##### ARG GstDiskSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+</para>
+
+
+<!-- ##### ARG GstDiskSrc:filesize ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GstDiskSrc:location ##### -->
+<para>
+Specify the location of the file to read.
+</para>
+
+
+<!-- ##### ARG GstDiskSrc:offset ##### -->
+<para>
+Get/set the current offset in the file.
+</para>
+
+
 <!-- ##### ARG GstDiskSrc:size ##### -->
 <para>
 Get the size of the file.
@@ -2497,6 +2577,23 @@ Get the size of the file.
 
 </para>
 
+
+<!-- ##### ENUM GstDiskSrcFlags ##### -->
+<para>
+<informaltable pgwide=1 frame="none" role="enum">
+<tgroup cols="2"><colspec colwidth="2*"><colspec colwidth="8*">
+<tbody>
+<row>
+<entry>GST_DISKSRC_OPEN</entry>
+<entry>the disksrc is open for reading</entry>
+</row>
+
+</tbody></tgroup></informaltable>
+
+</para>
+
+@GST_DISKSRC_OPEN: 
+@GST_DISKSRC_FLAG_LAST: 
 
 <!-- ##### SIGNAL GstElement::ghost-pad-removed ##### -->
 <para>
@@ -2616,6 +2713,19 @@ GstElementDetails struct for the element.
 <!-- ##### STRUCT GstHttpSrc ##### -->
 <para>
 
+</para>
+
+
+<!-- ##### ARG GstHttpSrc:bytesperread ##### -->
+<para>
+Specify how many bytes to read at a time.
+
+</para>
+
+
+<!-- ##### ARG GstHttpSrc:location ##### -->
+<para>
+Specify the location of the file. The location must be a fully qualified URL.
 </para>
 
 
@@ -3077,6 +3187,19 @@ Is trigered whenever the state of an element changes
 must be defined to activate the tracing functionality.
 </para>
 
+
+<!-- ##### FUNCTION cothread_getcurrent ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION cothread_init ##### -->
+<para>
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION g2g_object_class_find_property ##### -->
 <para>
@@ -4229,6 +4352,13 @@ must be defined to activate the tracing functionality.
 @parent: 
 @Returns: 
 
+<!-- ##### FUNCTION gst_element_signal_eos ##### -->
+<para>
+
+</para>
+
+@element: 
+
 <!-- ##### FUNCTION gst_elementfactory_add_sink ##### -->
 <para>
 
@@ -4995,6 +5125,22 @@ Call the EOS function of the pad
 </para>
 
 @sched: 
+
+<!-- ##### FUNCTION gst_scheduler_disable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
+
+<!-- ##### FUNCTION gst_scheduler_enable_element ##### -->
+<para>
+
+</para>
+
+@sched: 
+@element: 
 
 <!-- ##### FUNCTION gst_schedulerfactory_get_type ##### -->
 <para>

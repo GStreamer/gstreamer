@@ -14,7 +14,12 @@ GstFileSrc
 
 </para>
 
-<!-- ##### ARG GstFileSrc:location ##### -->
+<!-- ##### ARG GstFileSrc:fd ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GstFileSrc:offset ##### -->
 <para>
 
 </para>
@@ -24,17 +29,12 @@ GstFileSrc
 
 </para>
 
-<!-- ##### ARG GstFileSrc:fd ##### -->
+<!-- ##### ARG GstFileSrc:location ##### -->
 <para>
 
 </para>
 
 <!-- ##### ARG GstFileSrc:blocksize ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstFileSrc:offset ##### -->
 <para>
 
 </para>

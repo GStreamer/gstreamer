@@ -135,10 +135,10 @@ This enum defines the standard flags that an element may have.
 @GST_ELEMENT_DECOUPLED: 
 @GST_ELEMENT_THREAD_SUGGESTED: 
 @GST_ELEMENT_NO_SEEK: 
-@GST_ELEMENT_NO_ENTRY: 
+@GST_ELEMENT_INFINITE_LOOP: 
+@GST_ELEMENT_SCHEDULER_PRIVATE1: 
+@GST_ELEMENT_SCHEDULER_PRIVATE2: 
 @GST_ELEMENT_NEW_LOOPFUNC: 
-@GST_ELEMENT_COTHREAD_STOPPING: 
-@GST_ELEMENT_USE_COTHREAD: 
 @GST_ELEMENT_EVENT_AWARE: 
 @GST_ELEMENT_FLAG_LAST: 
 
@@ -150,9 +150,9 @@ Queries whether the Element should be placed in a thread.
 @obj: The element to query
 
 
-<!-- ##### MACRO GST_ELEMENT_IS_COTHREAD_STOPPING ##### -->
+<!-- ##### MACRO GST_ELEMENT_IS_DECOUPLED ##### -->
 <para>
-Queries whether the cothread holding this element needs to be stopped.
+Queries if the Element is decoupled.
 </para>
 
 @obj: The element to query
@@ -475,6 +475,7 @@ instead.
 
 @element: 
 @error: 
+@Varargs: 
 
 
 <!-- ##### FUNCTION gst_element_get_factory ##### -->
@@ -486,7 +487,7 @@ instead.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_signal_eos ##### -->
+<!-- ##### FUNCTION gst_element_set_eos ##### -->
 <para>
 
 </para>
@@ -537,6 +538,14 @@ Is trigered whenever an error occured
 
 @gstelement: the object which received the signal.
 @arg1: the error message
+
+<!-- ##### SIGNAL GstElement::event ##### -->
+<para>
+
+</para>
+
+@gstelement: the object which received the signal.
+@arg1: 
 
 <!-- ##### SIGNAL GstElement::eos ##### -->
 <para>

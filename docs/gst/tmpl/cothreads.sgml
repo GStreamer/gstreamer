@@ -69,11 +69,27 @@ Indicates the cothread is started.
 
 
 
-<!-- ##### FUNCTION cothread_init ##### -->
+<!-- ##### MACRO COTHREAD_DESTROYED ##### -->
 <para>
+Indicates the cothread is destroyed.
+</para>
+
+
+
+<!-- ##### FUNCTION cothread_context_init ##### -->
+<para>
+
 </para>
 
 @Returns: 
+
+
+<!-- ##### FUNCTION cothread_context_free ##### -->
+<para>
+
+</para>
+
+@ctx: 
 
 
 <!-- ##### FUNCTION cothread_create ##### -->
@@ -83,6 +99,14 @@ Indicates the cothread is started.
 
 @ctx: 
 @Returns: 
+
+
+<!-- ##### FUNCTION cothread_free ##### -->
+<para>
+
+</para>
+
+@thread: 
 
 
 <!-- ##### FUNCTION cothread_setfunc ##### -->
@@ -96,7 +120,7 @@ Indicates the cothread is started.
 @argv: 
 
 
-<!-- ##### FUNCTION cothread_switch ##### -->
+<!-- ##### FUNCTION cothread_stop ##### -->
 <para>
 
 </para>
@@ -104,21 +128,12 @@ Indicates the cothread is started.
 @thread: 
 
 
-<!-- ##### FUNCTION cothread_getcurrent ##### -->
+<!-- ##### FUNCTION cothread_switch ##### -->
 <para>
 
 </para>
 
-@Returns: 
-
-
-<!-- ##### FUNCTION cothread_main ##### -->
-<para>
-
-</para>
-
-@ctx: 
-@Returns: 
+@thread: 
 
 
 <!-- ##### FUNCTION cothread_set_data ##### -->
@@ -141,22 +156,6 @@ Indicates the cothread is started.
 @Returns: 
 
 
-<!-- ##### FUNCTION cothread_unlock ##### -->
-<para>
-
-</para>
-
-@thread: 
-
-
-<!-- ##### FUNCTION cothread_current_main ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
 <!-- ##### FUNCTION cothread_lock ##### -->
 <para>
 
@@ -171,6 +170,39 @@ Indicates the cothread is started.
 </para>
 
 @thread: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cothread_unlock ##### -->
+<para>
+
+</para>
+
+@thread: 
+
+
+<!-- ##### FUNCTION cothread_main ##### -->
+<para>
+
+</para>
+
+@ctx: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cothread_current_main ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION cothread_current ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 

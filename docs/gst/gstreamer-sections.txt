@@ -212,18 +212,22 @@ cothread_state
 cothread_context
 cothread_func
 COTHREAD_STARTED
-cothread_init
+COTHREAD_DESTROYED
+cothread_context_init
+cothread_context_free
 cothread_create
+cothread_free
 cothread_setfunc
+cothread_stop
 cothread_switch
-cothread_getcurrent
-cothread_main
 cothread_set_data
 cothread_get_data
-cothread_unlock
-cothread_current_main
 cothread_lock
 cothread_trylock
+cothread_unlock
+cothread_main
+cothread_current_main
+cothread_current
 <SUBSECTION Standard>
 </SECTION>
 
@@ -291,18 +295,23 @@ GST_DISABLE_LOADSAVE_REGISTRY
 <SECTION>
 <FILE>gstscheduler</FILE>
 <TITLE>GstScheduler</TITLE>
-GST_SCHED_PARENT
+GST_SCHEDULER_PARENT
+GST_SCHEDULER_STATE
+gst_scheduler_setup
+gst_scheduler_reset
 gst_scheduler_add_element
 gst_scheduler_remove_element
-gst_scheduler_enable_element
-gst_scheduler_disable_element
+gst_scheduler_state_transition
+gst_scheduler_lock_element
+gst_scheduler_unlock_element
+gst_scheduler_yield
+gst_scheduler_interrupt
+gst_scheduler_error
 gst_scheduler_pad_connect
 gst_scheduler_pad_disconnect
 gst_scheduler_pad_select
 gst_scheduler_iterate
 gst_scheduler_show
-gst_scheduler_lock_element
-gst_scheduler_unlock_element
 <SUBSECTION Standard>
 GstScheduler
 GstSchedulerClass
@@ -355,8 +364,8 @@ gst_bin_get_type
 GST_TYPE_BIN
 GST_BIN
 GST_BIN_CLASS
-GST_BIN_FAST
-GST_BIN_CLASS_FAST
+GST_BIN_CAST
+GST_BIN_CLASS_CAST
 GST_IS_BIN
 GST_IS_BIN_CLASS
 gst_bin_details
@@ -492,7 +501,7 @@ GST_STATE_PAUSED_TO_PLAYING
 GST_STATE_READY_TO_NULL
 GstElementFlags
 GST_ELEMENT_IS_THREAD_SUGGESTED
-GST_ELEMENT_IS_COTHREAD_STOPPING
+GST_ELEMENT_IS_DECOUPLED
 GST_ELEMENT_IS_EOS
 GST_ELEMENT_IS_EVENT_AWARE
 GST_ELEMENT_PARENT
@@ -529,15 +538,15 @@ gst_element_wait_state_change
 gst_element_statename
 gst_element_error
 gst_element_get_factory
-gst_element_signal_eos
+gst_element_set_eos
 gst_element_restore_thyself
 <SUBSECTION Standard>
 GstElementClass
 GST_TYPE_ELEMENT
 GST_ELEMENT
 GST_ELEMENT_CLASS
-GST_ELEMENT_FAST
-GST_ELEMENT_CLASS_FAST
+GST_ELEMENT_CAST
+GST_ELEMENT_CLASS_CAST
 GST_IS_ELEMENT
 GST_IS_ELEMENT_CLASS
 gst_element_get_type
@@ -666,8 +675,8 @@ GST_OBJECT
 GST_OBJECT_CLASS
 GST_IS_OBJECT
 GST_IS_OBJECT_CLASS
-GST_OBJECT_FAST
-GST_OBJECT_CLASS_FAST
+GST_OBJECT_CAST
+GST_OBJECT_CLASS_CAST
 </SECTION>
 
 <SECTION>
@@ -779,8 +788,8 @@ GstPadClass
 GST_TYPE_PAD
 GST_PAD
 GST_PAD_CLASS
-GST_PAD_FAST
-GST_PAD_CLASS_FAST
+GST_PAD_CAST
+GST_PAD_CLASS_CAST
 GST_IS_PAD
 GST_IS_PAD_CLASS
 GST_IS_PAD_FAST
@@ -790,8 +799,8 @@ GstRealPadClass
 GST_TYPE_REAL_PAD
 GST_REAL_PAD
 GST_REAL_PAD_CLASS
-GST_REAL_PAD_FAST
-GST_REAL_PAD_CLASS_FAST
+GST_REAL_PAD_CAST
+GST_REAL_PAD_CLASS_CAST
 GST_IS_REAL_PAD
 GST_IS_REAL_PAD_CLASS
 GST_IS_REAL_PAD_FAST
@@ -801,8 +810,8 @@ GstGhostPadClass
 GST_TYPE_GHOST_PAD
 GST_GHOST_PAD
 GST_GHOST_PAD_CLASS
-GST_GHOST_PAD_FAST
-GST_GHOST_PAD_CLASS_FAST
+GST_GHOST_PAD_CAST
+GST_GHOST_PAD_CLASS_CAST
 GST_IS_GHOST_PAD
 GST_IS_GHOST_PAD_CLASS
 GST_IS_GHOST_PAD_FAST
@@ -1250,21 +1259,6 @@ GST_FDSRC
 GST_FDSRC_CLASS
 GST_IS_FDSRC
 GST_IS_FDSRC_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>gsthttpsrc</FILE>
-<TITLE>GstHttpSrc</TITLE>
-<SUBSECTION Standard>
-GstHttpSrc
-GstHttpSrcFlags
-gst_httpsrc_get_type
-GstHttpSrcClass
-GST_TYPE_HTTPSRC
-GST_HTTPSRC
-GST_HTTPSRC_CLASS
-GST_IS_HTTPSRC
-GST_IS_HTTPSRC_CLASS
 </SECTION>
 
 <SECTION>
