@@ -150,4 +150,7 @@ gst_idct_destroy
 <FILE>gstcontrol</FILE>
 <INCLUDE>libs/control/control.h</INCLUDE>
 gst_control_init
+gst_dparam_attach
+gst_dparam_detach
+gst_dparam_do_update_default
 </SECTION>

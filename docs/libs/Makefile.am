@@ -56,6 +56,7 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*.c
 
 #SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
 #	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
+SCANOBJ_DEPS = $(top_builddir)/libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning.
 IGNORE_HFILES=
@@ -103,7 +104,7 @@ EXTRA_DIST = 				\
 	$(extra_files)			\
 	$(HTML_IMAGES)			\
 	$(DOC_MAIN_SGML_FILE)		\
-#	$(DOC_MODULE).types		\
+	$(DOC_MODULE).types		\
 	$(DOC_MODULE)-sections.txt
 
 DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
