@@ -243,54 +243,30 @@ CORE_LIBS="$CORE_LIBS $XML_LIBS"
 CORE_CFLAGS="$CORE_CFLAGS $XML_CFLAGS"
 
 
+dnl ==========================================================================
+dnl ========================= Macro definitions ==============================
+dnl ==========================================================================
 
-dnl Next, check for the optional libraries:
-dnl =======================================
+dnl These macros should be moved out to separate files (acinclude.m4?), but
+dnl can't currently be because of the SUBSTFOR magic.
 
-
-
-dnl ***** ESound *****
-GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
-  AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
-])
-
-dnl Check for artsc
-AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
-if test x$ARTSC_CONFIG = xno; then
-  AC_MSG_WARN(Couldn't find artsc-config)
-  ARTSC_LIBS=
-  ARTSC_CFLAGS=
-  HAVE_ARTSC=no
-else
-  ARTSC_LIBS=`artsc-config --libs`
-  ARTSC_CFLAGS=`artsc-config --cflags`
-  dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
-  dnl Assume only suitable flags result from artsc-config --cflags
-  artsc_save_CPPFLAGS=$CPPFLAGS
-  CPPFLAGS="$CPPFLAGS $ARTSC_CFLAGS"
-  AC_CHECK_HEADER(artsc.h, HAVE_ARTSC=yes, HAVE_ARTSC=no)
-  CPPFLAGS=$artsc_save_CPPFLAGS
-fi
-AC_SUBST(ARTSC_LIBS)
-AC_SUBST(ARTSC_CFLAGS)
-AC_ARG_ENABLE(artsd,
-[  --enable-artsd            enable the building of artsd plugins],
-[case "${enableval}" in
-	yes) : ;;
-	no) HAVE_ARTSC=no ;;
-	*) AC_MSG_ERROR(bad value ${enableval} for --enable-artsd) ;;
-	esac],
-[:])
-
-
-dnl Check for arts
-AC_MSG_CHECKING(arts library)
-
+dnl Perform a check for existence of ARTS
+dnl Richard Boulton <richard-alsa@tartarus.org>
+dnl Last modification: 26/06/2001
+dnl GST_CHECK_FEATURE(FEATURE-NAME, FEATURE-DESCRIPTION,
+dnl                   DEPENDENT-PLUGINS, TEST-FOR-FEATURE)
+dnl
+dnl This check was written for GStreamer: it should be renamed and checked
+dnl for portability if you decide to use it elsewhere.
+dnl
+AC_DEFUN(GST_CHECK_ARTS,
+[
 dnl Set the flags
 ARTS_LIBS="-L/usr/local/lib -L/usr/lib -lmcop -lartsflow -lartsflow_idl"
 ARTS_CFLAGS="-I/usr/local/include/arts -I/usr/include/kde/arts -I/usr/include/arts"
 ARTS_MCOPFLAGS=$ARTS_CFLAGS
 dnl There's no arts-config script, so we make a guess based on the artsc-config
+AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
 if test x$ARTSC_CONFIG = xyes; then
   ARTS_ARTSC_CFLAGS=`artsc-config --cflags | sed 's/artsc/arts/g'`
   ARTS_CFLAGS="$ARTS_CFLAGS $ARTS_ARTSC_CFLAGS"
@@ -299,6 +275,7 @@ fi
 AC_SUBST(ARTS_LIBS)
 AC_SUBST(ARTS_CFLAGS)
 AC_SUBST(ARTS_MCOPFLAGS)
+
 dnl Now check if it exists
 SUBSTFOR configure.ac:AC_LANG_PUSH(C++)
 SUBSTFOR configure.in:AC_LANG_SAVE
@@ -308,11 +285,9 @@ dnl FIXME: Can't get this test to pass, so commented it out.  Rely on header che
 dnl AC_CHECK_LIB(artsflow, convert_stereo_2float_i16le, :, HAVE_ARTS=no, $LIBS)
 
 dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
-dnl Assume only suitable flags result from artsc-config --cflags
-arts_save_CPPFLAGS=$CPPFLAGS
+dnl FIXME: ensure only suitable flags result from artsc-config --cflags
 CPPFLAGS="$CPPFLAGS $ARTS_CFLAGS"
 AC_CHECK_HEADER(artsflow.h, :, HAVE_ARTS=no)
-CPPFLAGS=$arts_save_CPPFLAGS
 
 SUBSTFOR configure.ac:AC_LANG_POP(C++)
 SUBSTFOR configure.in:AC_LANG_RESTORE
@@ -321,7 +296,27 @@ AC_CHECK_PROG(HAVE_MCOPIDL, mcopidl, yes, no)
 if test x$HAVE_MCOPIDL = xno; then
   HAVE_ARTS=no
 fi
+])
 
+dnl ==========================================================================
+dnl ========================= End macro definitions ==========================
+dnl ==========================================================================
+
+
+dnl Next, check for the optional libraries:
+dnl =======================================
+
+
+dnl ***** ESound *****
+GST_CHECK_FEATURE(LIBESD, [esound plugins], esdsrc esdsink, [
+  AM_PATH_ESD(0.2.12, HAVE_LIBESD=yes, HAVE_LIBESD=no)
+])
+
+dnl Check for artsc
+GST_CHECK_FEATURE(ARTSC, [artsd plugins], artsdsink, [GST_CHECK_ARTSC()])
+
+dnl Check for artsc
+GST_CHECK_FEATURE(ARTS, [arts plugins], arts, [GST_CHECK_ARTS()])
 
 dnl AM_PATH_XMMS(0.1.0, HAVE_LIBXMMS=yes, HAVE_LIBXMMS=no)
 
@@ -1078,7 +1073,6 @@ AM_CONDITIONAL(HAVE_FIG2DEV_EPS,    $HAVE_FIG2DEV_EPS)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
-AM_CONDITIONAL(HAVE_ARTSC,          test "x$HAVE_ARTSC" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBXMMS,        test "x$HAVE_LIBXMMS" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")

@@ -150,12 +150,27 @@ dnl Last modification: 25/06/2001
 dnl GST_CHECK_FEATURE(FEATURE-NAME, FEATURE-DESCRIPTION,
 dnl                   DEPENDENT-PLUGINS, TEST-FOR-FEATURE)
 dnl
+dnl This macro adds a command line argument to enable the user to enable
+dnl or disable a feature, and if the feature is enabled, performs a supplied
+dnl test to check if the feature is available.
+dnl
+dnl The test should define HAVE_<FEATURE-NAME> to "yes" or "no" depending
+dnl on whether the feature is available.
+dnl 
+dnl FEATURE-NAME        is the name of the feature, and should be in
+dnl                     purely upper case characters.
+dnl FEATURE-DESCRIPTION is used to describe the feature in help text for
+dnl                     the command line argument.
+dnl DEPENDENT-PLUGINS   lists any plugins which depend on this feature.
+dnl TEST-FOR-FEATURE    is a test which sets HAVE_<FEATURE-NAME> to "yes"
+dnl                     or "no" depending on whether the feature is
+dnl                     available.
 dnl
 AC_DEFUN(GST_CHECK_FEATURE,
 [
 lower=translit([$1], A-Z, a-z)
 AC_ARG_ENABLE(translit([$1], A-Z, a-z),
-  [  ]--enable-translit([$1], A-Z, a-z)             enable [$2]: [$3],
+  [  ]--disable-translit([$1], A-Z, a-z)             enable [$2]: [$3],
   [ case "${enableval}" in
       yes) USE_[$1]=yes ;;
       no) USE_[$1]=no ;;
@@ -190,5 +205,34 @@ if test x$USE_[$1] = xno; then
 fi
 dnl *** Define the conditional as appropriate
 AM_CONDITIONAL(USE_[$1], test x$USE_[$1] = xyes)
+])
+
+dnl Perform a check for existence of ARTSC
+dnl Richard Boulton <richard-alsa@tartarus.org>
+dnl Last modification: 26/06/2001
+dnl GST_CHECK_FEATURE(FEATURE-NAME, FEATURE-DESCRIPTION,
+dnl                   DEPENDENT-PLUGINS, TEST-FOR-FEATURE)
+dnl
+dnl This check was written for GStreamer: it should be renamed and checked
+dnl for portability if you decide to use it elsewhere.
+dnl
+AC_DEFUN(GST_CHECK_ARTSC,
+[
+  AC_PATH_PROG(ARTSC_CONFIG, artsc-config, no)
+  if test x$ARTSC_CONFIG = xno; then
+    AC_MSG_WARN([Couldn't find artsc-config])
+    HAVE_ARTSC=no
+    ARTSC_LIBS=
+    ARTSC_CFLAGS=
+  else
+    ARTSC_LIBS=`artsc-config --libs`
+    ARTSC_CFLAGS=`artsc-config --cflags`
+    dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
+    dnl FIXME: Ensure only suitable flags result from artsc-config --cflags
+    CPPFLAGS="$CPPFLAGS $ARTSC_CFLAGS"
+    AC_CHECK_HEADER(artsc.h, HAVE_ARTSC=yes, HAVE_ARTSC=no)
+  fi
+  AC_SUBST(ARTSC_LIBS)
+  AC_SUBST(ARTSC_CFLAGS)
 ])
 
