@@ -1,3 +1,12 @@
+2004-11-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstthread.c: (gst_thread_dispose), (gst_thread_change_state),
+	(gst_thread_child_state_change), (gst_thread_main_loop):
+	Ref the thread object in the GThread mainloop. Break out of the
+	thread mainloop if it holds the last ref. This properly exits
+	the threads when disposing the thread from its own context. It
+	also avoids possible deadlocks in the dispose function.
+
 2004-11-24  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/gstqueue.c (gst_queue_link_sink): Grab the lock only when

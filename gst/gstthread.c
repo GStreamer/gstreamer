@@ -220,32 +220,14 @@ gst_thread_dispose (GObject * object)
 
   GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "GstThread: dispose");
 
+  /* if we get here, the thread is really stopped as it has released
+   * the last refcount to the thread object, so we can safely free the
+   * mutex and cond vars */
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
   g_assert (GST_STATE (thread) == GST_STATE_NULL);
 
   GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "GstThread: dispose, freeing locks");
-
-  if (thread->thread_id != NULL) {
-    /* thread is still alive */
-    g_mutex_lock (thread->lock);
-    /* thread can be spinning or waiting */
-    GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
-    GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
-
-    if (!GST_FLAG_IS_SET (thread, GST_THREAD_STATE_WAITING)) {
-      GST_DEBUG_OBJECT (thread, "wait");
-      g_cond_wait (thread->cond, thread->lock);
-      GST_DEBUG_OBJECT (thread, "done");
-    }
-    /* now wait for the thread to destroy itself */
-    GST_DEBUG_OBJECT (thread, "signal");
-    g_cond_signal (thread->cond);
-    GST_DEBUG_OBJECT (thread, "wait");
-    g_cond_wait (thread->cond, thread->lock);
-    GST_DEBUG_OBJECT (thread, "done");
-    g_mutex_unlock (thread->lock);
-  }
 
   g_mutex_free (thread->lock);
   g_cond_free (thread->cond);
@@ -674,6 +656,7 @@ gst_thread_main_loop (void *arg)
   g_cond_signal (thread->cond);
   GST_LOG_OBJECT (element, "unlocking lock");
 
+  gst_object_ref (GST_OBJECT (thread));
   /* as long as we're not dying we can continue */
   while (!(GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING))) {
     /* in the playing state we need to do something special */
@@ -697,24 +680,35 @@ gst_thread_main_loop (void *arg)
             GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
           }
         }
+        /* if we hold the last refcount, the app unreffed the
+         * thread and we should stop ASAP */
+        if (G_OBJECT (thread)->ref_count == 1) {
+          GST_DEBUG_OBJECT (thread, "reaping as refcount is only 1");
+          GST_FLAG_SET (thread, GST_THREAD_STATE_REAPING);
+          GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+        }
       }
     }
-    /* sync section */
-    GST_LOG_OBJECT (thread, "entering sync");
-    GST_DEBUG_OBJECT (thread, "signal");
-    g_cond_signal (thread->cond);
-    GST_DEBUG_OBJECT (thread, "wait");
-    GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
-    GST_FLAG_SET (thread, GST_THREAD_STATE_WAITING);
-    g_cond_wait (thread->cond, thread->lock);
-    GST_FLAG_UNSET (thread, GST_THREAD_STATE_WAITING);
-    GST_LOG_OBJECT (thread, "wait done");
+    /* do not try to sync when we are REAPING */
+    if (!(GST_FLAG_IS_SET (thread, GST_THREAD_STATE_REAPING))) {
+      /* sync section */
+      GST_LOG_OBJECT (thread, "entering sync");
+      GST_DEBUG_OBJECT (thread, "signal");
+      g_cond_signal (thread->cond);
+      GST_DEBUG_OBJECT (thread, "wait");
+      GST_FLAG_UNSET (thread, GST_THREAD_STATE_SPINNING);
+      GST_FLAG_SET (thread, GST_THREAD_STATE_WAITING);
+      g_cond_wait (thread->cond, thread->lock);
+      GST_FLAG_UNSET (thread, GST_THREAD_STATE_WAITING);
+      GST_LOG_OBJECT (thread, "wait done");
+    }
   }
   GST_LOG_OBJECT (thread, "unlocking lock");
+  thread->thread_id = NULL;
   g_mutex_unlock (thread->lock);
 
-  /* we need to destroy the scheduler here because it has mapped it's
-   * stack into the threads stack space */
+  /* we need to destroy the scheduler here because it might have 
+   * mapped it's stack into the threads stack space */
   sched = GST_ELEMENT_SCHED (thread);
   if (sched)
     gst_scheduler_reset (sched);
@@ -724,6 +718,7 @@ gst_thread_main_loop (void *arg)
   /* signal - we are out */
   GST_LOG_OBJECT (thread, "Thread %p exits main loop", g_thread_self ());
   g_cond_signal (thread->cond);
+  gst_object_unref (GST_OBJECT (thread));
   /* don't assume the GstThread object exists anymore now */
 
   return NULL;
