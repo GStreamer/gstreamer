@@ -215,8 +215,7 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
 		                const struct poptOption *popt_options)
 {
   poptContext context;
-  gint nextopt, i, j, nstrip;
-  gchar **temp;
+  gint nextopt;
   const struct poptOption *options;
   const struct poptOption options_with[] = {
     {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 				 0, "Help options:", NULL},
@@ -272,21 +271,8 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   }
   poptFreeContext (context);
 
-  /* let's do this once there are 1.6.3 popt debs out
-     *argc = poptStrippedArgv (context, *argc, *argv); */
+  *argc = poptStrippedArgv (context, *argc, *argv);
   
-  /* until then we'll do a very basic arg permutation */
-  temp = *argv + 1;
-  i = 1;
-  nstrip = 0;
-  g_assert (*argc > 0);
-  while (i++ < *argc && *temp[0]=='-') {
-    for (j = 1; j < *argc - 1; j++)
-      (*argv)[j] = (*argv)[j+1];
-    (*argv)[*argc-1] = *temp;
-    nstrip++;
-  }
-  *argc -= nstrip;
   return TRUE;
 }
 

@@ -165,10 +165,12 @@ dnl check for libxml2
 GST_LIBXML2_CHECK()
 
 dnl popt checks
+dnl FIXME: This test passes on popt 1.6.2, maybe earlier, but popt 1.6.2
+dnl        causes segfaults on gst_init. Write a working test if possible.
 GST_CHECK_LIBHEADER(POPT, popt, poptStrippedArgv,, popt.h, POPT_LIBS="-lpopt",
-  AC_MSG_ERROR([popt 1.6.1 or newer is required to build gstreamer. You can
+  AC_MSG_ERROR([popt 1.6.3 or newer is required to build gstreamer. You can
                 download the latest version from 
-                ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.0.x/])
+                ftp://ftp.rpm.org/pub/rpm/dist/])
 )
 AC_MSG_NOTICE(Checking for POPT_TABLEEND)
 AC_COMPILE_IFELSE([
@@ -183,9 +185,9 @@ int main ()
 }
 ],, [
   dnl it failed
-  AC_MSG_ERROR([popt 1.6.1 or newer is required to build gstreamer. You can
+  AC_MSG_ERROR([popt 1.6.3 or newer is required to build gstreamer. You can
                 download the latest version from 
-                ftp://ftp.rpm.org/pub/rpm/dist/rpm-4.0.x/])
+                ftp://ftp.rpm.org/pub/rpm/dist/])
 ])
 
 dnl Check for atomic.h
