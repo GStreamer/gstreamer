@@ -33,7 +33,14 @@ plugins.
 %defattr(-, root, root)
 %doc AUTHORS COPYING README  
 %{_bindir}/gst-launch-ext
+%{_bindir}/gst-visualise
 %{_mandir}/man1/gst-launch-ext.*
+%{_mandir}/man1/gst-visualise.1.*
+%{_libdir}/gst/libgstaudioscale*
+%{_libdir}/gst/libgstaudio.*
+%{_libdir}/gst/libgstidct*
+%{_libdir}/gst/libgstriff*
+%{_libdir}/gst/libgstresample*
 
 %prep
 %setup -n gst-plugins-%{version}
@@ -93,17 +100,17 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_A52DEC_TRUE@Group: Libraries/Multimedia
 @USE_A52DEC_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_A52DEC_TRUE@Requires: a52dec >= 0.7.3
-@USE_A52DEC_TRUE@Requires: a52dec-devel >= 0.7.3
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%description -n gstreamer-a52dec
 @USE_A52DEC_TRUE@Plugin for decoding of VOB files
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%files -n gstreamer-a52dec
 @USE_A52DEC_TRUE@%defattr(-, root, root)
-@USE_A52DEC_TRUE@%{prefix}/lib/gst/libgsta52dec*
+@USE_A52DEC_TRUE@%{_libdir}/gst/libgsta52dec*
+@USE_A52DEC_TRUE@%{_libdir}/gst/libgstac3parse*
 @USE_A52DEC_TRUE@
 @USE_A52DEC_TRUE@%post -n gstreamer-a52dec
-@USE_A52DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_A52DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### AALIB ###
 @USE_AALIB_TRUE@%package -n gstreamer-aalib
@@ -118,10 +125,10 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%files -n gstreamer-aalib
 @USE_AALIB_TRUE@%defattr(-, root, root)
-@USE_AALIB_TRUE@%{prefix}/lib/gst/libgstaa*
+@USE_AALIB_TRUE@%{_libdir}/gst/libgstaasink*
 @USE_AALIB_TRUE@
 @USE_AALIB_TRUE@%post -n gstreamer-aalib
-@USE_AALIB_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_AALIB_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### ALSA ###
 @USE_ALSA_TRUE@%package -n gstreamer-alsa
@@ -130,16 +137,16 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_ALSA_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%description -n gstreamer-alsa
-@USE_ALSA_TRUE@Input and output plugin for the ALSA soundcard driver architecture.
+@USE_ALSA_TRUE@Input and output plugin for the ALSA soundcard driver architecture. This plugin depends on Alsa 0.9.x or higher.
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%files -n gstreamer-alsa
 @USE_ALSA_TRUE@%defattr(-, root, root)
-@USE_ALSA_TRUE@%{prefix}/lib/gst/libgstalsa*
+@USE_ALSA_TRUE@%{_libdir}/gst/libgstalsa*
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%post -n gstreamer-alsa
-@USE_ALSA_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
-### ARTS ###
+### ARTSD SOUND SERVER ###
 @USE_ARTS_TRUE@%package -n gstreamer-artsd
 @USE_ARTS_TRUE@Summary: GStreamer artsd output plugin
 @USE_ARTS_TRUE@Group: Libraries/Multimedia
@@ -150,10 +157,27 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%files -n gstreamer-artsd
 @USE_ARTS_TRUE@%defattr(-, root, root)
-@USE_ARTS_TRUE@%{prefix}/lib/gst/libartsd*
+@USE_ARTS_TRUE@%{_libdir}/gst/libgstartsd*
 @USE_ARTS_TRUE@
 @USE_ARTS_TRUE@%post -n gstreamer-artsd
-@USE_ARTS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_ARTS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
+
+
+### ARTS WRAPPER ###
+@USE_ARTSC_TRUE@%package -n gstreamer-arts
+@USE_ARTSC_TRUE@Summary: GStreamer arts wrapper plugin
+@USE_ARTSC_TRUE@Group: Libraries/Multimedia
+@USE_ARTSC_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_ARTSC_TRUE@
+@USE_ARTSC_TRUE@%description -n gstreamer-arts
+@USE_ARTSC_TRUE@Plugin for wrapping arts plugins
+@USE_ARTSC_TRUE@
+@USE_ARTSC_TRUE@%files -n gstreamer-arts
+@USE_ARTSC_TRUE@%defattr(-, root, root)
+@USE_ARTSC_TRUE@%{_libdir}/gst/libgstarts.*
+@USE_ARTSC_TRUE@
+@USE_ARTSC_TRUE@%post -n gstreamer-arts
+@USE_ARTSC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### AUDIOFILE ###
 @USE_AUDIOFILE_TRUE@%package -n gstreamer-audiofile
@@ -161,24 +185,22 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_AUDIOFILE_TRUE@Group: Libraries/Multimedia
 @USE_AUDIOFILE_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_AUDIOFILE_TRUE@Requires: audiofile >= 0.2.1
-@USE_AUDIOFILE_TRUE@Requires: gstreamer-plugin-libs = %{version}
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%description -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@Plugin for supporting reading and writing all files audiofile support
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%files -n gstreamer-audiofile
 @USE_AUDIOFILE_TRUE@%defattr(-, root, root)
-@USE_AUDIOFILE_TRUE@%{prefix}/lib/gst/libafs*
+@USE_AUDIOFILE_TRUE@%{_libdir}/gst/libgstafs*
 @USE_AUDIOFILE_TRUE@
 @USE_AUDIOFILE_TRUE@%post -n  gstreamer-audiofile
-@USE_AUDIOFILE_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### AVIFILE ###
 @USE_AVIFILE_TRUE@%package -n gstreamer-avi
 @USE_AVIFILE_TRUE@Summary: Gstreamer plugin for AVI format movie playback
 @USE_AVIFILE_TRUE@Group: Libraries/Multimedia
 @USE_AVIFILE_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_AVIFILE_TRUE@Requires: gstreamer-plugin-libs = %{version}
 @USE_AVIFILE_TRUE@Requires: avifile = 0.6.20011111DD
 @USE_AVIFILE_TRUE@Requires: gstreamer-colorspace >= %{version}
 @USE_AVIFILE_TRUE@
@@ -187,11 +209,12 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%files -n gstreamer-avi
 @USE_AVIFILE_TRUE@%defattr(-, root, root)
-@USE_AVIFILE_TRUE@%{prefix}/lib/gst/libgstavi*
-@USE_AVIFILE_TRUE@%{prefix}/lib/gst/libgstwincodec*
+@USE_AVIFILE_TRUE@%{_libdir}/gst/libgstavidemux*
+@USE_AVIFILE_TRUE@%{_libdir}/gst/libgstavimux*
+@USE_AVIFILE_TRUE@%{_libdir}/gst/libgstwincodec*
 @USE_AVIFILE_TRUE@
 @USE_AVIFILE_TRUE@%post -n gstreamer-avi
-@USE_AVIFILE_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### CDPARANOIA ###
 @USE_CDPARANOIA_TRUE@%package -n gstreamer-cdparanoia
@@ -206,10 +229,10 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%files -n gstreamer-cdparanoia
 @USE_CDPARANOIA_TRUE@%defattr(-, root, root)
-@USE_CDPARANOIA_TRUE@%{prefix}/lib/gst/libgstcdparanoia*
+@USE_CDPARANOIA_TRUE@%{_libdir}/gst/libgstcdparanoia*
 @USE_CDPARANOIA_TRUE@
 @USE_CDPARANOIA_TRUE@%post -n gstreamer-cdparanoia
-@USE_CDPARANOIA_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_CDPARANOIA_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### DVDREAD ###
 @USE_DVDREAD_TRUE@%package -n gstreamer-libdvd
@@ -224,10 +247,10 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%files -n gstreamer-libdvd
 @USE_DVDREAD_TRUE@%defattr(-, root, root)
-@USE_DVDREAD_TRUE@%{prefix}/lib/gst/libgstdvd*
+@USE_DVDREAD_TRUE@%{_libdir}/gst/libgstdvd*
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%post -n gstreamer-libdvd
-@USE_DVDREAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### ESD ###
 @USE_ESD_TRUE@%package -n gstreamer-esd
@@ -237,17 +260,18 @@ unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 @USE_ESD_TRUE@Requires: gstreamer-plugins >= %{version}
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%description -n gstreamer-esd
-@USE_ESD_TRUE@Output plugin for GStreamer for use with the esound package
+@USE_ESD_TRUE@Output and monitoring plugins for GStreamer for use with the esound package
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%files -n gstreamer-esd
 @USE_ESD_TRUE@%defattr(-, root, root)
-@USE_ESD_TRUE@%{prefix}/lib/gst/libesd*
+@USE_ESD_TRUE@%{_libdir}/gst/libgstesdmon*
+@USE_ESD_TRUE@%{_libdir}/gst/libgstesdsink*
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%post -n gstreamer-esd
-@USE_ESD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 @USE_ESD_TRUE@
 @USE_ESD_TRUE@%postun -n gstreamer-esd
-@USE_ESD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_ESD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 @USE_ESD_TRUE@/sbin/ldconfig
 
 ### FESTIVAL ###
@@ -261,10 +285,10 @@ Element for text-to-speech using the festival server.
 
 %files -n gstreamer-festival
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstfestival*
+%{_libdir}/gst/libgstfestival*
 
 %post -n gstreamer-festival
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### FLAC ###
 @USE_FLAC_TRUE@%package -n gstreamer-flac
@@ -278,10 +302,10 @@ Element for text-to-speech using the festival server.
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%files -n gstreamer-flac
 @USE_FLAC_TRUE@%defattr(-, root, root)
-@USE_FLAC_TRUE@%{prefix}/lib/gst/libgstflac*
+@USE_FLAC_TRUE@%{_libdir}/gst/libgstflac*
 @USE_FLAC_TRUE@
 @USE_FLAC_TRUE@%post -n gstreamer-flac
-@USE_FLAC_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_FLAC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### GNOME VFS ###
 @USE_GNOME_VFS_TRUE@%package -n gstreamer-gnomevfs
@@ -296,10 +320,10 @@ Element for text-to-speech using the festival server.
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%files -n gstreamer-gnomevfs
 @USE_GNOME_VFS_TRUE@%defattr(-, root, root)
-@USE_GNOME_VFS_TRUE@%{prefix}/lib/gst/libgstgnomevfs*
+@USE_GNOME_VFS_TRUE@%{_libdir}/gst/libgstgnomevfs*
 @USE_GNOME_VFS_TRUE@
 @USE_GNOME_VFS_TRUE@%post -n gstreamer-gnomevfs
-@USE_GNOME_VFS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_GNOME_VFS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### GSM ###
 @USE_GSM_TRUE@%package -n gstreamer-gsm
@@ -314,10 +338,10 @@ Element for text-to-speech using the festival server.
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%files -n gstreamer-gsm
 @USE_GSM_TRUE@%defattr(-, root, root)
-@USE_GSM_TRUE@%{prefix}/lib/gst/libgstgsm*
+@USE_GSM_TRUE@%{_libdir}/gst/libgstgsm*
 @USE_GSM_TRUE@
 @USE_GSM_TRUE@%post -n gstreamer-gsm
-@USE_GSM_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_GSM_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### HERMES ###
 @USE_HERMES_TRUE@%package -n gstreamer-colorspace
@@ -331,10 +355,10 @@ Element for text-to-speech using the festival server.
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%files -n gstreamer-colorspace
 @USE_HERMES_TRUE@%defattr(-, root, root)
-@USE_HERMES_TRUE@%{prefix}/lib/gst/libgstcolorspace*
+@USE_HERMES_TRUE@%{_libdir}/gst/libgstcolorspace*
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%post -n gstreamer-colorspace
-@USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_HERMES_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### JPEG ###
 @USE_JPEG_TRUE@%package -n gstreamer-jpeg
@@ -349,10 +373,10 @@ Element for text-to-speech using the festival server.
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%files -n gstreamer-jpeg
 @USE_JPEG_TRUE@%defattr(-, root, root)
-@USE_JPEG_TRUE@%{prefix}/lib/gst/libgstjpeg*
+@USE_JPEG_TRUE@%{_libdir}/gst/libgstjpeg*
 @USE_JPEG_TRUE@
 @USE_JPEG_TRUE@%post -n gstreamer-jpeg
-@USE_JPEG_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_JPEG_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### LAME ###
 @USE_LAME_TRUE@%package -n gstreamer-lame
@@ -366,17 +390,16 @@ Element for text-to-speech using the festival server.
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%files -n gstreamer-lame
 @USE_LAME_TRUE@%defattr(-, root, root)
-@USE_LAME_TRUE@%{prefix}/lib/gst/libgstlame*
+@USE_LAME_TRUE@%{_libdir}/gst/libgstlame*
 @USE_LAME_TRUE@
 @USE_LAME_TRUE@%post -n gstreamer-lame
-@USE_LAME_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_LAME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### MAD ###
 @USE_MAD_TRUE@%package -n gstreamer-mad  
 @USE_MAD_TRUE@Summary: Plugin using MAD for mp3 decoding
 @USE_MAD_TRUE@Group: Libraries/Multimedia
 @USE_MAD_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_MAD_TRUE@Requires: gstreamer-plugin-libs = %{version}
 @USE_MAD_TRUE@Requires: mad >= 0.13.0
 @USE_MAD_TRUE@BuildRequires: mad-devel >= 0.13.0
 @USE_MAD_TRUE@
@@ -385,13 +408,13 @@ Element for text-to-speech using the festival server.
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%files -n gstreamer-mad
 @USE_MAD_TRUE@%defattr(-, root, root)  
-@USE_MAD_TRUE@%{prefix}/lib/gst/libgstmad*
+@USE_MAD_TRUE@%{_libdir}/gst/libgstmad*
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%post -n gstreamer-mad
-@USE_MAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 @USE_MAD_TRUE@
 @USE_MAD_TRUE@%postun -n gstreamer-mad
-@USE_MAD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_MAD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 @USE_MAD_TRUE@/sbin/ldconfig
 
 ### MIKMOD ###
@@ -405,10 +428,10 @@ Element for text-to-speech using the festival server.
 @USE_MIKMOD_TRUE@
 @USE_MIKMOD_TRUE@%files -n gstreamer-mikmod
 @USE_MIKMOD_TRUE@%defattr(-, root, root)
-@USE_MIKMOD_TRUE@%{prefix}/lib/gst/libgstmikmod*
+@USE_MIKMOD_TRUE@%{_libdir}/gst/libgstmikmod*
 @USE_MIKMOD_TRUE@
 @USE_MIKMOD_TRUE@%post -n gstreamer-mikmod
-@USE_MIKMOD_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_MIKMOD_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### MJPEGTOOLS ###
 @USE_MJPEGTOOLS_TRUE@%package -n gstreamer-jpegmmx
@@ -423,55 +446,40 @@ Element for text-to-speech using the festival server.
 @USE_MJPEGTOOLS_TRUE@
 @USE_MJPEGTOOLS_TRUE@%files -n gstreamer-jpegmmx
 @USE_MJPEGTOOLS_TRUE@%defattr(-, root, root)
-@USE_MJPEGTOOLS_TRUE@%{prefix}/lib/gst/libgstjpegmmx*
+@USE_MJPEGTOOLS_TRUE@%{_libdir}/gst/libgstjpegmmx*
 @USE_MJPEGTOOLS_TRUE@
 @USE_MJPEGTOOLS_TRUE@%post -n gstreamer-jpegmmx
-@USE_MJPEGTOOLS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_MJPEGTOOLS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### MPEG2DEC ###
 @USE_MPEG2DEC_TRUE@%package -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@Summary: GStreamer plugins for MPEG video playback and encoding
 @USE_MPEG2DEC_TRUE@Group: Libraries/Multimedia
 @USE_MPEG2DEC_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_MPEG2DEC_TRUE@Requires: mpeg2dec => 0.2.0
-@USE_MPEG2DEC_TRUE@Requires: gstreamer-plugin-libs => %{version}
+@USE_MPEG2DEC_TRUE@Requires: mpeg2dec => 0.2.1
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg1
 @USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg2
+@USE_MPEG2DEC_TRUE@Obsoletes: gstreamer-mpeg2dec
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%description -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@Plugins for playing and encoding MPEG video
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%files -n gstreamer-mpeg
 @USE_MPEG2DEC_TRUE@%defattr(-, root, root)
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg1types*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg1encoder*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpegaudio*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp1*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpegstream*
-# @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2play*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2enc*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2subt*
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2types*
-# @USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmp2videoparse*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg1types*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg1encoder*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg1systemencode*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpegaudio.*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpegaudioparse*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmp1*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpegstream*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2enc*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2subt*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2types*
+@USE_MPEG2DEC_TRUE@%{_libdir}/gst/libgstmpeg2dec*
 @USE_MPEG2DEC_TRUE@
 @USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg
-@USE_MPEG2DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
-
-@USE_MPEG2DEC_TRUE@%package -n gstreamer-mpeg2dec
-@USE_MPEG2DEC_TRUE@Summary: GStreamer plugins for MPEG level 2 playback
-@USE_MPEG2DEC_TRUE@Group: Libraries/Multimedia
-@USE_MPEG2DEC_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_MPEG2DEC_TRUE@Requires: mpeg2dec >= 0.2.0
-@USE_MPEG2DEC_TRUE@
-@USE_MPEG2DEC_TRUE@%description -n gstreamer-mpeg2dec
-@USE_MPEG2DEC_TRUE@Plugins for playing MPEG level 2 encoded movies
-@USE_MPEG2DEC_TRUE@
-@USE_MPEG2DEC_TRUE@%files -n gstreamer-mpeg2dec
-@USE_MPEG2DEC_TRUE@%defattr(-, root, root)
-@USE_MPEG2DEC_TRUE@%{prefix}/lib/gst/libgstmpeg2dec*
-@USE_MPEG2DEC_TRUE@
-@USE_MPEG2DEC_TRUE@%post -n  gstreamer-mpeg2dec
-@USE_MPEG2DEC_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_MPEG2DEC_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### OPENQUICKTIME ###
 @USE_OPENQUICKTIME_TRUE@%package -n gstreamer-openquicktime
@@ -488,10 +496,10 @@ Element for text-to-speech using the festival server.
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%files -n gstreamer-openquicktime
 @USE_OPENQUICKTIME_TRUE@%defattr(-, root, root)
-@USE_OPENQUICKTIME_TRUE@%{prefix}/lib/gst/libgstopenquicktime*
+@USE_OPENQUICKTIME_TRUE@%{_libdir}/gst/libgstopenquicktime*
 @USE_OPENQUICKTIME_TRUE@
 @USE_OPENQUICKTIME_TRUE@%post -n gstreamer-openquicktime
-@USE_OPENQUICKTIME_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_OPENQUICKTIME_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### OSS ###
 @USE_OSS_TRUE@%package -n gstreamer-oss
@@ -506,13 +514,14 @@ Element for text-to-speech using the festival server.
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%files -n gstreamer-oss
 @USE_OSS_TRUE@%defattr(-, root, root)
-@USE_OSS_TRUE@%{prefix}/lib/gst/libgstoss*
+@USE_OSS_TRUE@%{_libdir}/gst/libgstossaudio*
+@USE_OSS_TRUE@%{_libdir}/gst/libgstosshelper*
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%post -n gstreamer-oss
-@USE_OSS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 @USE_OSS_TRUE@
 @USE_OSS_TRUE@%postun -n gstreamer-oss
-@USE_OSS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_OSS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 @USE_OSS_TRUE@/sbin/ldconfig
 
 ### RAW1394 ###
@@ -526,27 +535,27 @@ Element for text-to-speech using the festival server.
 @USE_RAW1394_TRUE@
 @USE_RAW1394_TRUE@%files -n gstreamer-dv
 @USE_RAW1394_TRUE@%defattr(-, root, root)
-@USE_RAW1394_TRUE@%{prefix}/lib/gst/gstdv*
+@USE_RAW1394_TRUE@%{_libdir}/gst/gstdv*
 @USE_RAW1394_TRUE@
 @USE_RAW1394_TRUE@%post -n gstreamer-dv
-@USE_RAW1394_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_RAW1394_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### RTP ###
 @USE_RTP_TRUE@%package -n gstreamer-rtp
 @USE_RTP_TRUE@Summary: GStreamer RTP plugin
 @USE_RTP_TRUE@Group: Libraries/Multimedia
 @USE_RTP_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_RTP_TRUE@Requires: librtp >= 0.99
+@USE_RTP_TRUE@Requires: librtp >= 0.1
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%description -n gstreamer-rtp
 @USE_RTP_TRUE@Library for transfering data with the RTP protocol
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%files -n gstreamer-rtp
 @USE_RTP_TRUE@%defattr(-, root, root)
-@USE_RTP_TRUE@%{prefix}/lib/gst/libgstrtp*
+@USE_RTP_TRUE@%{_libdir}/gst/libgstrtp*
 @USE_RTP_TRUE@
 @USE_RTP_TRUE@%post -n gstreamer-rtp
-@USE_RTP_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_RTP_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### SIDPLAY ###
 @USE_SIDPLAY_TRUE@%package -n gstreamer-sid
@@ -560,10 +569,10 @@ Element for text-to-speech using the festival server.
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%files -n gstreamer-sid
 @USE_SIDPLAY_TRUE@%defattr(-, root, root)
-@USE_SIDPLAY_TRUE@%{prefix}/lib/gst/libgstsid*
+@USE_SIDPLAY_TRUE@%{_libdir}/gst/libgstsid*
 @USE_SIDPLAY_TRUE@
 @USE_SIDPLAY_TRUE@%post -n gstreamer-sid
-@USE_SIDPLAY_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_SIDPLAY_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### SDL ###
 @USE_SDL_TRUE@%package -n gstreamer-sdl
@@ -579,17 +588,16 @@ Element for text-to-speech using the festival server.
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%files -n gstreamer-sdl
 @USE_SDL_TRUE@%defattr(-, root, root)
-@USE_SDL_TRUE@%{prefix}/lib/gst/libsdl*
+@USE_SDL_TRUE@%{_libdir}/gst/libgstsdl*
 @USE_SDL_TRUE@
 @USE_SDL_TRUE@%post -n gstreamer-sdl
-@USE_SDL_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_SDL_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### SHOUT ###
 @USE_SHOUT_TRUE@%package -n gstreamer-icecast
 @USE_SHOUT_TRUE@Summary: GStreamer Icecast broadcasting plugin
 @USE_SHOUT_TRUE@Group: Libraries/Multimedia
 @USE_SHOUT_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_SHOUT_TRUE@Requires: gstreamer-plugin-libs = %{version}
 @USE_SHOUT_TRUE@Requires: libshout >= 1.0.5
 @USE_SHOUT_TRUE@BuildRequires: libshout-devel >= 1.0.5
 @USE_SHOUT_TRUE@%description -n gstreamer-icecast
@@ -597,10 +605,10 @@ Element for text-to-speech using the festival server.
 @USE_SHOUT_TRUE@
 @USE_SHOUT_TRUE@%files -n gstreamer-icecast
 @USE_SHOUT_TRUE@%defattr(-, root, root)
-@USE_SHOUT_TRUE@%{prefix}/lib/gst/libgstshout*
+@USE_SHOUT_TRUE@%{_libdir}/gst/libgstshout*
 @USE_SHOUT_TRUE@
 @USE_SHOUT_TRUE@%post -n gstreamer-icecast
-@USE_SHOUT_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_SHOUT_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### VORBIS ###
 @USE_VORBIS_TRUE@%package -n gstreamer-vorbis
@@ -617,13 +625,13 @@ Element for text-to-speech using the festival server.
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%files -n gstreamer-vorbis  
 @USE_VORBIS_TRUE@%defattr(-, root, root)
-@USE_VORBIS_TRUE@%{prefix}/lib/gst/libgstvorbis*
+@USE_VORBIS_TRUE@%{_libdir}/gst/libgstvorbis*
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%post -n gstreamer-vorbis
-@USE_VORBIS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 @USE_VORBIS_TRUE@
 @USE_VORBIS_TRUE@%postun -n gstreamer-vorbis
-@USE_VORBIS_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_VORBIS_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 @USE_VORBIS_TRUE@/sbin/ldconfig
 
 ### VIDEO 4 LINUX ###
@@ -637,10 +645,10 @@ Element for text-to-speech using the festival server.
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%files -n gstreamer-v4l
 @USE_V4L_TRUE@%defattr(-, root, root)
-@USE_V4L_TRUE@%{prefix}/lib/gst/libgstv4l*
+@USE_V4L_TRUE@%{_libdir}/gst/libgstv4l*
 @USE_V4L_TRUE@
 @USE_V4L_TRUE@%post -n gstreamer-v4l
-@USE_V4L_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_V4L_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 ### XVIDEO ###
 # @USE_XVIDEO_TRUE@%package -n gstreamer-xvideosink
@@ -653,26 +661,80 @@ Element for text-to-speech using the festival server.
 # @USE_XVIDEO_TRUE@
 # @USE_XVIDEO_TRUE@%files -n gstreamer-xvideosink
 # @USE_XVIDEO_TRUE@%defattr(-, root, root)
-# @USE_XVIDEO_TRUE@%{prefix}/lib/gst/libgstxvideosink*
+# @USE_XVIDEO_TRUE@%{_libdir}/gst/libgstxvideosink*
 # @USE_XVIDEO_TRUE@
 # @USE_XVIDEO_TRUE@%post -n gstreamer-xvideosink
-# @USE_XVIDEO_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+# @USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 @USE_XVIDEO_TRUE@%package -n gstreamer-videosink
 @USE_XVIDEO_TRUE@Summary: GStreamer Video Sink
 @USE_XVIDEO_TRUE@Group: Libraries/Multimedia
 @USE_XVIDEO_TRUE@Requires: gstreamer-plugins >= %{version}
-@USE_XVIDEO_TRUE@Requires: gstreamer-plugin-libs = %{version}
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%description -n gstreamer-videosink
 @USE_XVIDEO_TRUE@Plugin for X playback
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%files -n gstreamer-videosink
 @USE_XVIDEO_TRUE@%defattr(-, root, root)
-@USE_XVIDEO_TRUE@%{prefix}/lib/gst/libgstvideosink*
+@USE_XVIDEO_TRUE@%{_libdir}/gst/libgstvideosink*
 @USE_XVIDEO_TRUE@
 @USE_XVIDEO_TRUE@%post -n gstreamer-videosink
-@USE_XVIDEO_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+@USE_XVIDEO_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
+
+### JACK AUDIO CONNECTION KIT ###
+@USE_JACK_TRUE@%package -n gstreamer-jack
+@USE_JACK_TRUE@Summary: GStreamer plugin for the Jack Sound Server 
+@USE_JACK_TRUE@Group: Libraries/Multimedia
+@USE_JACK_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_JACK_TRUE@Requires: jack-audio-connection-kit => 0.28.0
+@USE_JACK_TRUE@
+@USE_JACK_TRUE@%description -n gstreamer-jack
+@USE_JACK_TRUE@Plugin  for the jack-audio-connection-kit
+@USE_JACK_TRUE@profesional sound server
+@USE_JACK_TRUE@
+@USE_JACK_TRUE@%files -n gstreamer-jack
+@USE_JACK_TRUE@%defattr(-, root, root)
+@USE_JACK_TRUE@%{_libdir}/gst/libgstjack*
+@USE_JACK_TRUE@
+@USE_JACK_TRUE@%post -n gstreamer-jack
+@USE_JACK_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
+
+### http source based on libghttp ###
+@USE_HTTP_TRUE@%package -n gstreamer-httpsrc
+@USE_HTTP_TRUE@Summary: GStreamer plugin for http protocol
+@USE_HTTP_TRUE@Group: Libraries/Multimedia
+@USE_HTTP_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_HTTP_TRUE@Requires: libghttp => 1.0.9
+@USE_HTTP_TRUE@
+@USE_HTTP_TRUE@%description -n gstreamer-httpsrc
+@USE_HTTP_TRUE@Plugin supporting the http protocol based 
+@USE_HTTP_TRUE@on the libghttp library
+@USE_HTTP_TRUE@
+@USE_HTTP_TRUE@%files -n gstreamer-httpsrc
+@USE_HTTP_TRUE@%defattr(-, root, root)
+@USE_HTTP_TRUE@%{_libdir}/gst/libgsthttpsrc*
+@USE_HTTP_TRUE@
+@USE_HTTP_TRUE@%post -n gstreamer-httpsrc
+@USE_HTTP_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
+
+### dxr3 DVD decoder card ###
+@USE_DXR3_TRUE@%package -n gstreamer-dxr3
+@USE_DXR3_TRUE@Summary: GStreamer plugin for DVD playback using dxr3 card
+@USE_DXR3_TRUE@Group: Libraries/Multimedia
+@USE_DXR3_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_DXR3_TRUE@Requires: em8300  => 0.12.0
+@USE_DXR3_TRUE@
+@USE_DXR3_TRUE@%description -n gstreamer-dxr3
+@USE_DXR3_TRUE@Plugin supporting DVD playback using cards
+@USE_DXR3_TRUE@with the dxr3 chipset like Hollywood Plus
+@USE_DXR3_TRUE@and Creative Labs DVD cards.
+@USE_DXR3_TRUE@
+@USE_DXR3_TRUE@%files -n gstreamer-dxr3
+@USE_DXR3_TRUE@%defattr(-, root, root)
+@USE_DXR3_TRUE@%{_libdir}/gst/libgstdxr3*
+@USE_DXR3_TRUE@
+@USE_DXR3_TRUE@%post -n gstreamer-dxr3
+@USE_DXR3_TRUE@%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-audio-effects
 Summary: GStreamer audio effects plugin
@@ -685,31 +747,34 @@ sine waves generation, silence generation plugin
 
 %files -n gstreamer-audio-effects
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstresample*
-%{prefix}/lib/gst/libgstsine*
-%{prefix}/lib/gst/libgstsilence*
-%{prefix}/lib/gst/libgststereo*
-%{prefix}/lib/gst/libgstvol*
-%{prefix}/lib/gst/libgstplayondemand*
-%{prefix}/lib/gst/libgstspeed*
+%{_libdir}/gst/libgstresample*
+%{_libdir}/gst/libgstsine*
+%{_libdir}/gst/libgstsilence*
+%{_libdir}/gst/libgststereo.*
+%{_libdir}/gst/libgststereo2mono*
+%{_libdir}/gst/libgstvol*
+%{_libdir}/gst/libgstplayondemand*
+%{_libdir}/gst/libgstspeed*
+%{_libdir}/gst/libgststereosplit*
 
 %post -n gstreamer-audio-effects
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
-%package -n gstreamer-lavencode
+%package -n gstreamer-yuv4mpeg
 Summary: GStreamer YUV to LAV converter
 Group: Libraries/Multimedia
 Requires: gstreamer-plugins >= %{version}
+Obsoletes: gstreamer-lavencode
 
-%description -n gstreamer-lavencode
+%description -n gstreamer-yuv4mpeg
 It takes YUV video frames and adds a header in front of it so it can be processed with the lavtools from mjpeg
 
-%files -n gstreamer-lavencode
+%files -n gstreamer-yuv4mpeg
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgsty4m*
+%{_libdir}/gst/libgsty4m*
 
-%post -n gstreamer-lavencode
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%post -n gstreamer-yuv4mpeg
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-qcam
 Summary: GStreamer QuickCam plugin
@@ -721,10 +786,10 @@ Plugin for accessing a Quickcam source
 
 %files -n gstreamer-qcam
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstqcam*
+%{_libdir}/gst/libgstqcam*
 
 %post -n gstreamer-qcam
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-vcd
 Summary: GStreamer Video CD plugin
@@ -736,8 +801,8 @@ Video CD parsing and playback
 
 %files -n gstreamer-vcd
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstvcd*
-%{prefix}/lib/gst/libgstcdxa*
+%{_libdir}/gst/libgstvcd*
+%{_libdir}/gst/libgstcdxa*
 
 %package -n gstreamer-ladspa
 Summary: Gstreamer wrapper for LADSPA plugins
@@ -746,13 +811,13 @@ Requires: gstreamer-plugins >= %{version}
 
 %files -n gstreamer-ladspa
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstladspa*
+%{_libdir}/gst/libgstladspa*
 
 %description -n gstreamer-ladspa
 Plugin which wraps LADSPA plugins for use by GStreamer applications.
 
 %post -n gstreamer-ladspa
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-udp
 Summary: GStreamer plugins for UDP tranport
@@ -764,26 +829,25 @@ Plugins for UDP transport
 
 %files -n gstreamer-udp
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstudp*
+%{_libdir}/gst/libgstudp*
 
 %post -n gstreamer-udp
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-flx
 Summary: GStreamer plugin for FLI/FLX animation format
 Group: Libraries/Multimedia
 Requires: gstreamer-plugins >= %{version}
-Requires: gstreamer-plugin-libs = %{version}
 Requires: gstreamer-colorspace >= %{version}
 %description -n gstreamer-flx
 Plugin for playing FLI/FLX animations under GStreamer
 
 %files -n gstreamer-flx
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstflx*
+%{_libdir}/gst/libgstflx*
 
 %post -n gstreamer-flx
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-deinterlace
 Summary: GStreamer Video deinterlacer
@@ -795,10 +859,10 @@ Video deinterlace plugin
 
 %files -n gstreamer-deinterlace
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstdeinterlace*
+%{_libdir}/gst/libgstdeinterlace*
 
 %post -n gstreamer-deinterlace
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-visualisation
 Summary: GStreamer visualisations plugins
@@ -806,34 +870,35 @@ Group: Libraries/Multimedia
 Requires: gstreamer-plugins >= %{version}
 
 %description -n gstreamer-visualisation
-Various plugins for visual effects to use with audio. Included are Smoothwave, Spectrum, Goom, Chart and vumeter
+Various plugins for visual effects to use with audio. Included are Smoothwave, Spectrum, Goom, Chart and vumeter. Also included are some plugins ported
+from the Effectv project.
 
 %files -n gstreamer-visualisation
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstsmooth*
-%{prefix}/lib/gst/libgstspectrum*
-%{prefix}/lib/gst/libgstvu*
-%{prefix}/lib/gst/libgstgoom*
-%{prefix}/lib/gst/libchart*
-%{prefix}/lib/gst/libgstmonoscope*
+%{_libdir}/gst/libgstsmooth*
+%{_libdir}/gst/libgstspectrum*
+%{_libdir}/gst/libgstvu*
+%{_libdir}/gst/libgstgoom*
+%{_libdir}/gst/libgstchart*
+%{_libdir}/gst/libgstmonoscope*
+%{_libdir}/gst/libgstsynaesthesia*
+%{_libdir}/gst/libgsteffectv*
 
 %post -n gstreamer-visualisation
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
-%package -n gstreamer-plugin-libs
-Summary: GStreamer support libraries
+%package -n gstreamer-plugins-devel
+Summary: GStreamer Plugin Library Headers 
 Group: Libraries/Multimedia
 Requires: gstreamer-plugins >= %{version}
 
-%description -n gstreamer-plugin-libs
+%description -n gstreamer-plugins-devel
 GStreamer support libraries
 
-%files -n gstreamer-plugin-libs
+%files -n gstreamer-plugins-devel
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstaudio*
-%{prefix}/lib/gst/libgstidct*
-%{prefix}/lib/gst/libgstriff*
-%{prefix}/lib/gst/libgstresample*
+%{_includedir}/gst/*/*
+%{_libdir}/gst/libgstidct*
 
 %package -n gstreamer-misc
 Summary: GStreamer plugins for various effects
@@ -846,24 +911,25 @@ and so on.
 
 %files -n gstreamer-misc
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstadder*
-%{prefix}/lib/gst/libgstalaw*
-%{prefix}/lib/gst/libgstintfloat*
-%{prefix}/lib/gst/libgstlevel*
-%{prefix}/lib/gst/libgstmedian*
-%{prefix}/lib/gst/libgstmono2stereo*
-%{prefix}/lib/gst/libgstmulaw*
-%{prefix}/lib/gst/libgstpassthrough*
-%{prefix}/lib/gst/libgstrtjpe*
+%{_libdir}/gst/libgstadder*
+%{_libdir}/gst/libgstalaw*
+%{_libdir}/gst/libgstintfloat*
+%{_libdir}/gst/libgstlevel*
+%{_libdir}/gst/libgstmedian*
+%{_libdir}/gst/libgstmono2stereo*
+%{_libdir}/gst/libgstmulaw*
+%{_libdir}/gst/libgstpassthrough*
+%{_libdir}/gst/libgstrtjpeg*
+%{_libdir}/gst/libgstfloatcast*
+%{_libdir}/gst/libgstcutter*
 
 %post -n gstreamer-misc
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
 %package -n gstreamer-audio-formats
 Summary: GStreamer audio format plugin
 Group: Libraries/Multimedia
 Requires: gstreamer-plugins >= %{version}
-Requires: gstreamer-plugin-libs = %{version}
 BuildRequires: gcc-c++
 
 %description -n gstreamer-audio-formats
@@ -871,34 +937,41 @@ Plugin for playback of wav, au and mod audio files as well as mp3 type
 
 %files -n gstreamer-audio-formats
 %defattr(-, root, root)
-%{prefix}/lib/gst/libgstwavparse*
-%{prefix}/lib/gst/libgstauparse*
-%{prefix}/lib/gst/libgstmp3types*
-%{prefix}/lib/gst/libgstmodplug*
+%{_libdir}/gst/libgstwavparse*
+%{_libdir}/gst/libgstauparse*
+%{_libdir}/gst/libgstmp3types*
+%{_libdir}/gst/libgstmodplug*
 
 %post -n gstreamer-audio-formats
-%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
+%{_bindir}/gst-register --gst-mask=0 2> /dev/null
 
-%package -n gstreamer-GConf
-Summary: GStreamer GConf schemas
-Group: Libraries/Multimedia
-Requires: gstreamer-plugins >= %{version}
-Requires: GConf2
-BuildRequires: GConf2-devel
+@USE_GCONF_TRUE@%package -n gstreamer-GConf
+@USE_GCONF_TRUE@Summary: GStreamer GConf schemas
+@USE_GCONF_TRUE@Group: Libraries/Multimedia
+@USE_GCONF_TRUE@Requires: gstreamer-plugins >= %{version}
+@USE_GCONF_TRUE@Requires: GConf2
+@USE_GCONF_TRUE@BuildRequires: GConf2-devel
 
-%description -n gstreamer-GConf
-Installation of GStreamer GConf schemas.
-These set usable defaults used by all GStreamer-enabled Gnome applications.
+@USE_GCONF_TRUE@%description -n gstreamer-GConf
+@USE_GCONF_TRUE@Installation of GStreamer GConf schemas.
+@USE_GCONF_TRUE@These set usable defaults used by all GStreamer-enabled Gnome applications.
 
-%files -n gstreamer-GConf
-%defattr(-, root, root)
-%{_sysconfdir}/gconf/schemas/gstreamer.schemas
+@USE_GCONF_TRUE@%files -n gstreamer-GConf
+@USE_GCONF_TRUE@%defattr(-, root, root)
+@USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer.schemas
 
-%post -n gstreamer-GConf
-export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
+@USE_GCONF_TRUE@%post -n gstreamer-GConf
+@USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+@USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Mon May 12 2002 Christian Fredrik Kalager Schaller <Uraeus@linuxrising.org>
+- Added jack, dxr3, http packages
+- Added visualisation plugins effecttv and synathesia
+- Created devel package
+- Removed gstreamer-plugins-libs package (moved it into gstreamer-plugins)
+- Replaced prefix/dirname with _macros
+
 * Mon May 06 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - added gstreamer-GConf package
 
