@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "gstlame.h"
 
 /* elementfactory information */
@@ -334,7 +337,7 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
   lame = GST_LAME (gst_pad_get_parent (pad));
 
   if (!GST_CAPS_IS_FIXED (caps)) {
-    GST_DEBUG (GST_CAT_CAPS, "caps on lame pad %s:%s not fixed, delayed",
+    GST_DEBUG ("caps on lame pad %s:%s not fixed, delayed",
 	       GST_DEBUG_PAD_NAME (pad));
     return GST_PAD_LINK_DELAYED;
   }
@@ -354,7 +357,7 @@ gst_lame_sinkconnect (GstPad *pad, GstCaps *caps)
 static void
 gst_lame_init (GstLame *lame)
 {
-  GST_DEBUG_ENTER ("(\"%s\")", gst_element_get_name (GST_ELEMENT (lame)));
+  GST_DEBUG_OBJECT (lame, "starting initialization");
 
   lame->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (gst_lame_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
@@ -366,7 +369,7 @@ gst_lame_init (GstLame *lame)
 
   GST_FLAG_SET (lame, GST_ELEMENT_EVENT_AWARE);
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "setting up lame encoder");
+  GST_DEBUG ("setting up lame encoder");
   lame->lgf = lame_init ();
 
   lame->samplerate = 44100;
@@ -405,7 +408,7 @@ gst_lame_init (GstLame *lame)
   lame->no_short_blocks = lame_get_no_short_blocks (lame->lgf);
   lame->emphasis = lame_get_emphasis (lame->lgf);
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "done initializing lame element");
+  GST_DEBUG_OBJECT (lame, "done initializing");
 }
 
 
@@ -634,7 +637,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
-  GST_DEBUG (GST_CAT_PLUGIN_INFO, "entered chain");
+  GST_DEBUG ("entered chain");
 
   if (GST_IS_EVENT (buf)) {
     switch (GST_EVENT_TYPE (buf)) {
@@ -679,7 +682,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 		    mp3_data, mp3_buffer_size);
     }
 
-    GST_DEBUG (GST_CAT_PLUGIN_INFO, 
+    GST_DEBUG (
 	       "encoded %d bytes of audio to %d bytes of mp3", 
 	       GST_BUFFER_SIZE (buf), mp3_size);
 
@@ -688,7 +691,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 
     if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
 	GST_BUFFER_DURATION (buf) != duration)
-      GST_DEBUG (GST_CAT_PLUGIN_INFO,
+      GST_DEBUG (
 		 "mad: incoming buffer had incorrect duration %lld, "
 		 "outgoing buffer will have correct duration %lld",
 		 GST_BUFFER_DURATION (buf), duration);
@@ -730,7 +733,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 static gboolean
 gst_lame_setup (GstLame *lame)
 {
-  GST_DEBUG_ENTER ("(\"%s\")", gst_element_get_name (GST_ELEMENT (lame)));
+  GST_DEBUG_OBJECT (lame, "starting setup");
 
   /* check if we're already initialized; if we are, we might want to check
    * if this initialization is compatible with the previous one */
@@ -783,12 +786,12 @@ gst_lame_setup (GstLame *lame)
   else {
     lame->initialized = TRUE;
     /* FIXME: it would be nice to print out the mode here */
-    GST_INFO (GST_CAT_PLUGIN_INFO, 
+    GST_INFO ( 
 	      "lame encoder initialized (%d kbit/s, %d Hz, %d channels)", 
 	      lame->bitrate, lame->samplerate, lame->num_channels);
   }
 
-  GST_DEBUG_LEAVE ("");
+  GST_DEBUG_OBJECT (lame, "done with setup");
 
   return lame->initialized;
 }
@@ -802,7 +805,7 @@ gst_lame_change_state (GstElement *element)
 
   lame = GST_LAME (element);
 
-  GST_DEBUG (0,"state pending %d", GST_STATE_PENDING (element));
+  GST_DEBUG ("state pending %d", GST_STATE_PENDING (element));
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_READY_TO_PAUSED:
