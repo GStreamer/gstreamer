@@ -15,7 +15,7 @@ endif
 libgstindexers_la_SOURCES = gstindexers.c gstmemindex.c $(GST_LOADSAVE_SRC)
 libgstindexers_la_CFLAGS = $(GST_CFLAGS)
 libgstindexers_la_LIBADD =
-libgstindexers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstindexers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
 
 install-data-local: as-libtool-install-data-local
 

@@ -1,5 +1,14 @@
 2004-04-20  David Schleef  <ds@schleef.org>
 
+	* gst/autoplug/Makefile.am:  Fix some little buglets in last checkin.
+	* gst/indexers/Makefile.am:
+	* gst/schedulers/Makefile.am:
+	* libs/gst/bytestream/Makefile.am:
+	* libs/gst/control/Makefile.am:
+	* libs/gst/getbits/Makefile.am:
+
+2004-04-20  David Schleef  <ds@schleef.org>
+
 	* common/as-libtool.mak: Fine-tune DLL building.
 	* configure.ac: Link plugins against libgstreamer.  Define plugindir
 	(like gst-plugins)

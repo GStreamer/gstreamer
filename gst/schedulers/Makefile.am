@@ -26,12 +26,6 @@ AS_LIBTOOL_LIBS = \
 	libgstoptscheduler \
 	libgstoptgthreadscheduler
 
-if AS_LIBTOOL_WIN32
-as_libtool_LDFLAGS = -no-undefined
-else
-as_libtool_LDFLAGS =
-endif
-
 if GST_DISABLE_OMEGA_COTHREADS
 else
 libgstbasicomegascheduler_la_SOURCES = gstbasicscheduler.c 
@@ -94,6 +88,8 @@ as-libtool-uninstall-local:
 	  -rm $(DESTDIR)$(libdir)/$$i.def ; \
 	done
 else
+
+as_libtool_LDFLAGS =
 
 as-libtool-install-data-local:
 as-libtool-uninstall-local:

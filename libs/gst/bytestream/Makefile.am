@@ -10,7 +10,7 @@ libgstbytestreaminclude_HEADERS = bytestream.h
 
 libgstbytestream_la_SOURCES = bytestream.c 
 libgstbytestream_la_CFLAGS = $(GST_CFLAGS)
-libgstbytestream_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstbytestream_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
 
 install-data-local: as-libtool-install-data-local
 
