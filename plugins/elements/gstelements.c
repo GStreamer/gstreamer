@@ -50,7 +50,6 @@ struct _elements_entry {
 static struct _elements_entry _elements[] = {
   { "fakesrc", 	    gst_fakesrc_get_type, 	&gst_fakesrc_details,		NULL },
   { "fakesink",     gst_fakesink_get_type, 	&gst_fakesink_details,		NULL },
-  { "asyncdisksrc", gst_disksrc_get_type, 	&gst_disksrc_details, 		NULL },
   { "audiosink",    gst_audiosink_get_type, 	&gst_audiosink_details,		gst_audiosink_factory_init },
   { "audiosrc",     gst_audiosrc_get_type, 	&gst_audiosrc_details,		NULL },
   { "disksrc", 	    gst_disksrc_get_type, 	&gst_disksrc_details,		NULL },
