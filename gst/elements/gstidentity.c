@@ -237,11 +237,11 @@ gst_identity_chain (GstPad * pad, GstData * _data)
       identity->last_message =
           g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, timestamp: %"
           GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
-          G_GINT64_FORMAT ", flags: %d) %p",
+          G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
           GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf),
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-          GST_BUFFER_FLAGS (buf), buf);
+          GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
       g_object_notify (G_OBJECT (identity), "last-message");
       gst_buffer_unref (buf);
       return;
@@ -257,11 +257,11 @@ gst_identity_chain (GstPad * pad, GstData * _data)
       identity->last_message =
           g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, timestamp: %"
           GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
-          G_GINT64_FORMAT ", flags: %d) %p",
+          G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
           GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf),
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-          GST_BUFFER_FLAGS (buf), buf);
+          GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
       g_object_notify (G_OBJECT (identity), "last-message");
     }
 

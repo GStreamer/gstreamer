@@ -1,5 +1,10 @@
 2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/elements/gstidentity.c: (gst_identity_chain):
+	  print offset_end
+
+2004-06-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/Makefile.am:
 	* docs/gst/gstreamer-docs.sgml:
 	  doc fixes
