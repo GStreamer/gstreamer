@@ -349,7 +349,6 @@ GST_PLUGINS_ALL="\
 	filter \
 	flx \
 	goom \
-	id3 \
 	interleave \
 	law \
 	level \
@@ -541,7 +540,7 @@ dnl        this is an error until XFree86 starts shipping one
 dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
-                  [xvimagesink xvideosink], [
+                  [xvimagesink], [
   if test x$HAVE_X = xyes; then
     AC_CHECK_LIB(Xv_pic, XvQueryExtension,
 		 HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
@@ -1562,7 +1561,6 @@ gst/festival/Makefile
 gst/filter/Makefile
 gst/flx/Makefile
 gst/goom/Makefile
-gst/id3/Makefile
 gst/interleave/Makefile
 gst/law/Makefile
 gst/level/Makefile
@@ -1621,7 +1619,6 @@ sys/v4l2/Makefile
 sys/vcd/Makefile
 sys/ximage/Makefile
 sys/xvimage/Makefile
-sys/xvideo/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
