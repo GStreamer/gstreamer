@@ -1,0 +1,48 @@
+<chapter id="cha-states-api">
+  <title>Element states</title>
+  <sect1 id="sec-states-api">
+    <title>Changing element state</title>
+    <para> 
+      The state of an element can be changed with the following code:
+    </para>
+    <programlisting>
+  GstElement *bin;
+
+  // create a bin, put elements in it and link them
+  ...
+  gst_element_set_state (bin, GST_STATE_PLAYING);
+  ...
+    </programlisting>
+
+    <para> 
+      You can set the following states on an element:
+    </para>
+    <informaltable pgwide="1" frame="none" role="enum">
+    <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry><literal>GST_STATE_NULL</literal></entry>
+        <entry>Reset the state of an element.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_READY</literal></entry>
+        <entry>will make the element ready to start processing data.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_PAUSED</literal></entry>
+        <entry>temporary stops the data flow.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_PLAYING</literal></entry>
+        <entry>means there really is data flowing through the graph.
+        </entry>
+      </row>
+    </tbody>
+    </tgroup>
+    </informaltable>
+
+  </sect1>
+</chapter>

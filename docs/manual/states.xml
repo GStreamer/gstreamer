@@ -40,17 +40,6 @@
       PLAYING.  When going from NULL to PLAYING, GStreamer will
       internally go throught the intermediate states.
     </para>
-    <para> 
-      The state of an element can be changed with the following code:
-    </para>
-    <programlisting>
-  GstElement *bin;
-
-  // create a bin, put elements in it and link them
-  ...
-  gst_element_set_state (bin, GST_STATE_PLAYING);
-  ...
-    </programlisting>
 
     <para> 
       You can set the following states on an element:

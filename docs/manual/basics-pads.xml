@@ -24,57 +24,6 @@
       </para></footnote>
   </para>
 
-  <sect1 id="sec-pads-get">
-    <title>Getting pads from an element</title>
-    <para> 
-      Once you have created an element, you can get one of its pads with:
-    </para>
-    <programlisting>
- GstPad *srcpad;
-    ...
- srcpad = gst_element_get_pad (element, "src");
-    ...
-    </programlisting>
-    <para> 
-      This function will get the pad named "src" from the given element. 
-    </para>
-    <para> 
-      Alternatively, you can request a GList of pads from the element. The
-      following code example will print the names of all the pads of an
-      element.
-    </para>
-    <programlisting>
- GList *pads;
-    ...
- pads = gst_element_get_pad_list (element);
- while (pads) {
-   GstPad *pad = GST_PAD (pads-&gt;data);
-
-   g_print ("pad name %s\n", gst_pad_get_name (pad));
-   
-   pads = g_list_next (pads);
- }
-    ...
-    </programlisting>
-    <sect2 id="sec-pads-functions">
-      <title>Useful pad functions</title>
-      <para> 
-        You can get the name of a pad with gst_pad_get_name () and set its name with
-	get_pad_set_name().
-      </para> 
-      <para> 
-        gst_pad_get_direction (GstPad *pad) can be used to query if the pad
-        is a sink or a source pad. Remember that a source pad is a pad that
-        can output data and a sink pad is one that accepts data.
-      </para> 
-      <para> 
-        You can get the parent of the pad, this is the element that this pad belongs to,
-	with get_pad_get_parent(GstPad *pad). This function will return a pointer to a
-	GstElement.
-      </para> 
-    </sect2>
-  </sect1>
-
   <sect1 id="sec-pads-type">
     <title>Types of pads</title>
  
@@ -97,51 +46,6 @@
 	will see that this is very important when you are going to create dynamic 
 	pipelines later on in this manual.
       </para> 
-      <para> 
-        You can attach a signal to an element to inform you when the element has created
-	a new pad from one of its padtemplates. The following piece of code is an example
-	of how to do this:
-      </para> 
-      <programlisting>
-static void
-pad_link_func (GstElement *parser, GstPad *pad, GstElement *pipeline)
-{
-  g_print("***** a new pad %s was created\n", gst_pad_get_name(pad));
-
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
-
-  if (strncmp (gst_pad_get_name (pad), "private_stream_1.0", 18) == 0) {
-    // set up an AC3 decoder pipeline
-    ...
-    // link pad to the AC3 decoder pipeline
-    ...
-  }
-  gst_element_set_state (GST_ELEMENT (audio_thread), GST_STATE_READY);
-}
-
-int 
-main(int argc, char *argv[]) 
-{
-  GstElement *pipeline;
-  GstElement *mpeg2parser;
-
-  // create pipeline and do something useful
-  ...
-  
-  mpeg2parser = gst_element_factory_make ("mpegdemux", "mpegdemux");
-  g_signal_connect (G_OBJECT (mpeg2parser), "new_pad", pad_link_func, pipeline);  
-  ...
-
-  // start the pipeline
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  ...
-}
-      </programlisting>
-      <note>
-        <para> 
-          A pipeline cannot be changed in the PLAYING state.
-        </para> 
-      </note>
     </sect2>
     <sect2 id="sec-pads-request">
       <title>Request pads</title>
@@ -155,45 +59,6 @@ main(int argc, char *argv[])
 	output pads. Whenever an element wants to get an output pad from the tee element, it 
 	has to request the pad.
       </para> 
-      <para> 
-        The following piece of code can be used to get a pad from the tee element. After
-	the pad has been requested, it can be used to link another element to it.
-      </para> 
-      <programlisting>
-    ...
-  GstPad *pad;
-    ...
-  element = gst_element_factory_make ("tee", "element");
-
-  pad = gst_element_get_request_pad (element, "src%d");
-  g_print ("new pad %s\n", gst_pad_get_name (pad));
-    ...
-      </programlisting>
-      <para> 
-        The gst_element_get_request_pad method can be used to get a pad
-	from the element based on the name_template of the padtemplate.
-      </para> 
-      <para> 
-        It is also possible to request a pad that is compatible with another
-        pad template. This is very useful if you want to link an element
-        to a multiplexer element and you need to request a pad that is
-        compatible. The gst_element_get_compatible_pad is used to request
-        a compatible pad, as is shown in the next example.
-      </para> 
-      <programlisting>
-    ...
-  GstPadTemplate *templ;
-  GstPad *pad;
-    ...
-  element = gst_element_factory_make ("tee", "element");
-  mad = gst_element_factory_make ("mad", "mad");
-
-  templ = gst_element_get_pad_template_by_name (mad, "sink");
-
-  pad = gst_element_get_compatible_pad (element, templ);
-  g_print ("new pad %s\n", gst_pad_get_name (pad));
-  ...
-      </programlisting>
     </sect2>
 
   </sect1>
@@ -212,7 +77,7 @@ main(int argc, char *argv[])
     </para>
 
     <sect2 id="sec-pads-caps">
-      <title>What are capabilities ?</title>
+      <title>Capabilities</title>
       <para> 
         Capabilities are attached to a pad in order to describe
         what type of media the pad can handle.
@@ -225,29 +90,16 @@ main(int argc, char *argv[])
         The basic entity is a capability, and is defined by a name, a MIME
         type and a set of properties.  A capability can be chained to
         another capability, which is why we commonly refer to a chain of
-        capability entities as "capabilities".<footnote>
+        capability entities as "capabilities".
+        <footnote>
           <para>
             It is important to understand that the term "capabilities" refers
             to a chain of one capability or more.  This will be clearer when
             you see the structure definition of a <classname>GstCaps</classname>
             element.
-          </para></footnote>
+          </para>
+        </footnote>
       </para>
-      <para>
-	Its structure is:
-      </para>
-      <programlisting>
-struct _GstCaps {
-  gchar *name;                  /* the name of this caps */
-  guint16 id;                   /* type id (major type) */
-
-  guint refcount; 		/* caps are refcounted */
-
-  GstProps *properties;         /* properties for this capability */
-
-  GstCaps *next;		/* caps can be chained together */
-};
-      </programlisting>
       <para> 
         Below is a dump of the capabilities of the element mad, as shown by 
 	<command>gst-inspect</command>.    
@@ -387,146 +239,5 @@ Pads:
         </listitem>
       </itemizedlist>
     </sect2>
-    <sect2 id="sec-pads-caps-get">
-      <title>Getting the capabilities of a pad</title>
-      <para> 
-        A pad can have a chain of capabilities attached to it. You can get the capabilities chain
-	with:
-      </para>
-    <programlisting>
- GstCaps *caps;
-    ...
- caps = gst_pad_get_caps (pad);
-
- g_print ("pad name %s\n", gst_pad_get_name (pad));
- 
- while (caps) {
-   g_print (" Capability name %s, MIME type %s\n", 
-   				gst_caps_get_name (cap), 
-                                gst_caps_get_mime (cap));
-   
-   caps = caps-&gt;next;
- }
-    ...
-    </programlisting>
-    </sect2>
-    <sect2 id="sec-pads-caps-create">
-      <title>Creating capability structures</title>
-      <para> 
-        While capabilities are mainly used inside a plugin to describe the
-        media type of the pads, the application programmer also has to have
-        basic understanding of capabilities in order to interface with the
-        plugins, specially when using the autopluggers.
-      </para>
-      <para> 
-        As we said, a capability has a name, a mime-type and some
-        properties. The signature of the function to create a new
-        <classname>GstCaps</classname> structure is:
-
-    <programlisting>
-GstCaps*    gst_caps_new (const gchar *name, const gchar *mime, GstProps *props);
-    </programlisting>
-      </para>
-      <para>
-        You can therefore create a new capability with no properties like this:
-    <programlisting>
-  GstCaps *newcaps;
-  
-  newcaps = gst_caps_new ("my_caps", "audio/wav", NULL);
-    </programlisting>
-      </para>
-      <para>
-        <classname>GstProps</classname> basically consist of a set of key-value pairs
-	and are created with a function with this signature:
-    <programlisting>
-GstProps*     gst_props_new   (const gchar *firstname, ...);
-    </programlisting>
-      </para>
-      <para>
-        The keys are given as strings and the values are given with a set of macros:
-        <itemizedlist>
-          <listitem>
-            <para>
-              GST_PROPS_INT(a): An integer value
-            </para>
-          </listitem>
-          <listitem>
-            <para>
-              GST_PROPS_FLOAT(a): A floating point value
-            </para>
-          </listitem>
-          <listitem>
-            <para>
-              GST_PROPS_FOURCC(a): A fourcc value
-            </para>
-          </listitem>
-          <listitem>
-            <para>
-              GST_PROPS_BOOLEAN(a): A boolean value
-            </para>
-          </listitem>
-          <listitem>
-            <para>
-              GST_PROPS_STRING(a): A string value
-            </para>
-          </listitem>
-        </itemizedlist>
-        The values can also be specified as ranges with:
-        <itemizedlist>
-          <listitem>
-            <para>
-              GST_PROPS_INT_RANGE(a,b): An integer range from a to b
-            </para>
-          </listitem>
-          <listitem>
-            <para>
-              GST_PROPS_FLOAT_RANGE(a,b): A float ragne from a to b
-            </para>
-          </listitem>
-        </itemizedlist>
-        All of the above values can be given with a list too, using:
-        <itemizedlist>
-          <listitem>
-            <para>
-              GST_PROPS_LIST(a,...): A list of property values.
-            </para>
-          </listitem>
-        </itemizedlist>
-      </para>
-      <para>
-        A more complex capability with properties is created like this:
-        <programlisting>
-  GstCaps *newcaps;
-  
-  newcaps = gst_caps_new ("my_caps", 
-                          "audio/wav", 
-  			  gst_props_new (
-			    "bitrate", GST_PROPS_INT_RANGE (11025,22050),
-			    "depth",   GST_PROPS_INT (16),
-			    "signed",  GST_PROPS_LIST (
-			     		 GST_PROPS_BOOLEAN (TRUE),
-			     		 GST_PROPS_BOOLEAN (FALSE)
-				       ),
-			    NULL
-			  );
-        </programlisting>
-	Optionally, the convenient shortcut macro can be used. The above complex
-	capability can be created with:
-        <programlisting>
-  GstCaps *newcaps;
-  
-  newcaps = GST_CAPS_NEW ("my_caps", 
-                          "audio/wav", 
-			    "bitrate", GST_PROPS_INT_RANGE (11025,22050),
-			    "depth",   GST_PROPS_INT (16),
-			    "signed",  GST_PROPS_LIST (
-			     		 GST_PROPS_BOOLEAN (TRUE),
-			     		 GST_PROPS_BOOLEAN (FALSE)
-				       )
-			  );
-        </programlisting>
-      </para>
-    </sect2>
-
   </sect1>
 </chapter>

@@ -1,0 +1,78 @@
+<chapter id="cha-initialisation">
+  <title>Initializing <application>GStreamer</application></title>
+  <para> 
+    When writing a <application>GStreamer</application> application, you can
+    simply include <filename class='headerfile'>gst/gst.h</filename> to get 
+    access to the library functions.
+  </para> 
+  <para> 
+    Before the <application>GStreamer</application> libraries can be used,
+    <function>gst_init</function> has to be called from the main application. 
+    This call will perform the necessary initialization of the library as
+    well as parse the GStreamer-specific command line options.
+  </para>
+  <para> 
+    A typical program would start like this:
+  </para>
+
+  <programlisting>
+#include &lt;gst/gst.h&gt;
+
+...
+
+int
+main (int argc, char *argv[])
+{
+  ...
+  gst_init (&amp;argc, &amp;argv);
+  ...
+}
+  </programlisting>
+  <para>
+    Use the <symbol>GST_VERSION_MAJOR</symbol>,
+    <symbol>GST_VERSION_MINOR</symbol> and <symbol>GST_VERSION_MICRO</symbol>
+    macros to get the <application>GStreamer</application> version you are
+    building against, or use the function <function>gst_version</function>
+    to get the version your application is linked against.
+<!--    FIXME: include an automatically generated list of these options. -->
+  </para>
+  <para>
+    It is also possible to call the <function>gst_init</function> function
+    with two <symbol>NULL</symbol> arguments, in which case no command line
+    options will parsed by <application>GStreamer</application>.
+  </para>
+  <sect1>
+    <title>The popt interface</title>
+    <para>
+      You can also use a popt table to initialize your own parameters as shown in the next code fragment:
+    </para>
+    <programlisting>
+int
+main(int argc, char *argv[])
+{
+  gboolean silent = FALSE;
+  gchar *savefile = NULL;
+  struct poptOption options[] = {
+    {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &amp;silent,   0,
+     "do not output status information", NULL},
+    {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &amp;savefile, 0,
+     "save xml representation of pipeline to FILE and exit", "FILE"},
+    POPT_TABLEEND
+  };
+
+  gst_init_with_popt_table (&amp;argc, &amp;argv, options);
+
+  ...
+    </programlisting>
+    <para>
+      As shown in this fragment, you can use a <ulink
+      url="http://developer.gnome.org/doc/guides/popt/"
+      type="http">popt</ulink> table to define your application-specific
+      command line options, and pass this table to the
+      function <function>gst_init_with_popt_table</function>. Your
+      application options will be parsed in addition to the standard
+      <application>GStreamer</application> options.
+    </para>
+  </sect1>
+
+</chapter>

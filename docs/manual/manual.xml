@@ -6,23 +6,37 @@
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
 
+<!-- Part 1: Overview -->
 <!ENTITY INTRO SYSTEM "intro.xml">
 <!ENTITY MOTIVATION SYSTEM "motivation.xml">
 <!ENTITY GOALS SYSTEM "goals.xml">
 
-<!ENTITY INIT SYSTEM "init.xml">
+<!-- Part 2: Basic Concepts -->
 <!ENTITY ELEMENTS SYSTEM "elements.xml">
 <!ENTITY PADS SYSTEM "pads.xml">
 <!ENTITY LINKS SYSTEM "links.xml">
 <!ENTITY BINS SYSTEM "bins.xml">
 <!ENTITY BUFFERS SYSTEM "buffers.xml">
 <!ENTITY STATES SYSTEM "states.xml">
+<!ENTITY PLUGINS SYSTEM "plugins.xml">
 
+<!-- Part 3: Basic API -->
+<!ENTITY INIT-API SYSTEM "init-api.xml">
+<!ENTITY ELEMENTS-API SYSTEM "elements-api.xml">
+<!ENTITY PADS-API SYSTEM "pads-api.xml">
+<!ENTITY LINKS-API SYSTEM "links-api.xml">
+<!ENTITY BINS-API SYSTEM "bins-api.xml">
+<!ENTITY BUFFERS-API SYSTEM "buffers-api.xml">
+<!ENTITY STATES-API SYSTEM "states-api.xml">
+<!ENTITY PLUGINS-API SYSTEM "plugins-api.xml">
+
+<!-- Part 4: Building An Application -->
 <!ENTITY HELLOWORLD SYSTEM "helloworld.xml">
 <!ENTITY FACTORIES SYSTEM "factories.xml">
 <!ENTITY AUTOPLUGGING SYSTEM "autoplugging.xml">
 <!ENTITY HELLOWORLD2 SYSTEM "helloworld2.xml">
 
+<!-- Part 5: Advanced Concepts -->
 <!ENTITY THREADS SYSTEM "threads.xml">
 <!ENTITY QUEUES SYSTEM "queues.xml">
 <!ENTITY COTHREADS SYSTEM "cothreads.xml">
@@ -34,7 +48,6 @@
 <!ENTITY DPARAMS SYSTEM "dparams-app.xml">
 
 <!ENTITY XML SYSTEM "xml.xml">
-<!ENTITY PLUGINS SYSTEM "plugins.xml">
 <!ENTITY DEBUGGING SYSTEM "debugging.xml">
 <!ENTITY PROGRAMS SYSTEM "programs.xml">
 <!ENTITY COMPONENTS SYSTEM "components.xml">
@@ -125,7 +138,7 @@
 
 <!-- ############ Basic concepts - part ############# -->
 
-  <part id="basic-concepts"><title>Basic concepts</title>
+  <part id="basic-concepts"><title>Basic Concepts</title>
     <partintro>
       <para> 
         We will first describe the basics of
@@ -137,9 +150,6 @@
 	visualize the more complex pipelines you will learn to build later on.
       </para>
     </partintro>
-
-<!-- ############ Basic concepts - chapter ############# -->
-      &INIT;
 
       &ELEMENTS;
 
@@ -154,8 +164,29 @@
       &BUFFERS;
 
       &STATES;
-
   </part>
+
+<!-- ############ Basic API - part ############# -->
+  <part id="basic-api"><title>Basic API</title>
+      &INIT-API;
+
+      &ELEMENTS-API;
+
+      &PADS-API;
+
+      &PLUGINS-API;
+
+      &LINKS-API;
+
+      &BINS-API;
+
+      &BUFFERS-API;
+
+      &STATES-API;
+
+ 
+  </part>
+
 <!-- ############ Building Apps - part ############# -->
 
   <part id="build-app"><title>Building an application</title>

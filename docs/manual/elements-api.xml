@@ -1,0 +1,141 @@
+<chapter id="cha-elements-api">
+  <title>Elements</title>
+  <sect1 id="sec-elements-create">
+    <title>Creating a GstElement</title>
+    <para> 
+      A <classname>GstElement</classname> object is created from
+      a factory.  To create an element, you have to get access to a
+      <classname>GstElementFactory</classname> object using a unique
+      factory name.
+    </para> 
+    <para> 
+      The following code example is used to get a factory that can be used 
+      to create the 'mad' element, an mp3 decoder.
+    </para> 
+    <programlisting>
+ GstElementFactory *factory;
+
+ factory = gst_element_factory_find ("mad");
+    </programlisting>
+    <para> 
+      Once you have the handle to the element factory, you can create a 
+      real element with the following code fragment:
+    </para> 
+    <programlisting>
+ GstElement *element;
+
+ element = gst_element_factory_create (factory, "decoder");
+    </programlisting>
+    <para>
+      <function>gst_element_factory_create</function> will use the element
+      factory to create an element with the given name. The name of the
+      element is something you can use later on to look up the element in
+      a bin, for example. You can pass <symbol>NULL</symbol> as the name
+      argument to get a unique, default name.
+    </para>
+    <para>
+      A simple shortcut exists for creating an element from a factory. The
+      following example creates an element named "decoder" from the element
+      factory named "mad". This convenience function is most widely used to
+      create an element.
+    </para>
+    <programlisting>
+ GstElement *element;
+
+ element = gst_element_factory_make ("mad", "decoder");
+    </programlisting>
+    <para> 
+      When you don't need the element anymore, you need to unref it, as shown in the following
+      example. 
+    </para> 
+    <programlisting>
+ GstElement *element;
+
+  ...
+ gst_element_unref (element);
+    </programlisting>
+  </sect1>
+  <sect1 id="sec-elements-properties">
+    <title>GstElement properties</title>
+    <para> 
+      A <classname>GstElement</classname> can have several properties
+      which are implemented using standard <classname>GObject</classname>
+      properties. The usual <classname>GObject</classname> methods to query,
+      set and get property values and <classname>GParamSpecs</classname>
+      are therefore supported.
+    </para> 
+    <para> 
+      Every <classname>GstElement</classname> inherits at least
+      one property of its parent <classname>GstObject</classname>:
+      the "name" property. This is the name you provide to the
+      functions <function>gst_element_factory_make</function> or
+      <function>gst_element_factory_create</function>. You can get and set 
+      this property using the functions 
+      <function>gst_object_set_name</function>
+      and <function>gst_object_get_name</function> or use the
+      <classname>GObject</classname> property mechanism as shown below.
+    </para> 
+    <programlisting>
+ GstElement *element;
+ GValue value = { 0, }; /* initialize the GValue for g_object_get() */
+
+ element = gst_element_factory_make ("mad", "decoder");
+ g_object_set (G_OBJECT (element), "name", "mydecoder", NULL);
+ ...
+
+ g_value_init (&amp;value, G_TYPE_STRING);
+ g_object_get_property (G_OBJECT (element), "name", &amp;value);
+ ...
+    </programlisting>
+    <para> 
+      Most plugins provide additional properties to provide more information
+      about their configuration or to configure the element. 
+      <command>gst-inspect</command> is a useful tool to query the properties
+      of a particular element, it will also use property introspection to give
+      a short explanation about the function of the property and about the
+      parameter types and ranges it supports.
+    </para> 
+    <para> 
+      For more information about <classname>GObject</classname>
+      properties we recommend you read the <ulink
+      url="http://developer.gnome.org/doc/API/2.0/gobject/index.html"
+      type="http">GObject manual</ulink> and an introduction to <ulink
+      url="http://le-hacker.org/papers/gobject/index.html" type="http">
+      The Glib Object system</ulink>.
+    </para> 
+  </sect1>
+  
+  <sect1 id="sec-elements-signals">
+    <title>GstElement signals</title>
+    <para> 
+      A <classname>GstElement</classname> also provides various 
+      <classname>GObject</classname> signals that can be used as a flexible
+      callback mechanism.
+    </para> 
+  </sect1>
+  
+  <sect1 id="sec-elements-factories">
+    <title>More about GstElementFactory</title>
+    <para> 
+      We talk some more about the GstElementFactory object.
+    </para> 
+    
+    <sect2 id="sec-elements-factories-details">
+      <title>Getting information about an element using the factory details</title>
+      <para> 
+      </para> 
+    </sect2>
+    
+    <sect2 id="sec-elements-factories-padtemplates">
+      <title>Finding out what pads an element can contain</title>
+      <para> 
+      </para> 
+    </sect2>
+    
+    <sect2 id="sec-elements-factories-query">
+      <title>Different ways of querying the factories</title>
+      <para> 
+      </para> 
+    </sect2>
+  </sect1>
+</chapter>
