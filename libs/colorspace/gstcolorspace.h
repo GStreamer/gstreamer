@@ -48,10 +48,10 @@ typedef enum {
 
 } GstColorSpaceType;
 
-typedef struct _GstColorSpace GstColorSpace;
-typedef void (*GstColorSpaceConverter) (GstColorSpace *space, unsigned char *src, unsigned char *dest);
+typedef struct _GstColorSpaceConverter GstColorSpaceConverter;
+typedef void (*GstColorSpaceConvertFunction) (GstColorSpaceConverter *space, guchar *src, guchar *dest);
 
-struct _GstColorSpace {
+struct _GstColorSpaceConverter {
   guint width;
   guint height;
   GstColorSpaceType srcspace;
@@ -61,7 +61,7 @@ struct _GstColorSpace {
   guint outsize;
   /* private */
   GstColorSpaceYUVTables *color_tables;
-  GstColorSpaceConverter convert;
+  GstColorSpaceConvertFunction convert;
 };
 
 
@@ -70,7 +70,9 @@ struct _GstColorSpace {
 #define GST_COLORSPACE_IS_YUV_TYPE(type) ((type)>=GST_COLORSPACE_YUV_FIRST && \
 		                          (type)<=GST_COLORSPACE_YUV_LAST)
 
-GstColorSpace *gst_colorspace_new(int width, int height, GstColorSpaceType srcspace, GstColorSpaceType destspace, GdkVisual *destvisual);
-void gst_colorspace_destroy(GstColorSpace *space);
+GstColorSpaceConverter *gst_colorspace_converter_new(gint width, gint height, GstColorSpaceType srcspace, 
+		GstColorSpaceType destspace, GdkVisual *destvisual);
+#define gst_colorspace_convert(converter, src, dest) (converter)->convert((converter), (src), (dest))
+void gst_colorspace_destroy(GstColorSpaceConverter *space);
 
 #endif /* __GST_COLORSPACE_H__ */

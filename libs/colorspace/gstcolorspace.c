@@ -23,19 +23,20 @@
 #include <gstcolorspace.h>
 
 
-extern GstColorSpaceConverter gst_colorspace_rgb2rgb_get_converter(GstColorSpace *space, GstColorSpaceType srcspace, 
+extern GstColorSpaceConvertFunction gst_colorspace_rgb2rgb_get_converter(GstColorSpaceConverter *space, GstColorSpaceType srcspace, 
 		                                                      GstColorSpaceType destspace);
-extern GstColorSpaceConverter gst_colorspace_yuv2rgb_get_converter(GstColorSpace *space, GstColorSpaceType srcspace, 
+extern GstColorSpaceConvertFunction gst_colorspace_yuv2rgb_get_converter(GstColorSpaceConverter *space, GstColorSpaceType srcspace, 
 		                                                      GstColorSpaceType destspace);
-extern GstColorSpaceConverter gst_colorspace_rgb2yuv_get_converter(GstColorSpace *space, GstColorSpaceType srcspace, 
+extern GstColorSpaceConvertFunction gst_colorspace_rgb2yuv_get_converter(GstColorSpaceConverter *space, GstColorSpaceType srcspace, 
 		                                                      GstColorSpaceType destspace);
-extern GstColorSpaceConverter gst_colorspace_yuv2yuv_get_converter(GstColorSpace *space, GstColorSpaceType srcspace, 
+extern GstColorSpaceConvertFunction gst_colorspace_yuv2yuv_get_converter(GstColorSpaceConverter *space, GstColorSpaceType srcspace, 
 		                                                      GstColorSpaceType destspace);
 
-GstColorSpace *gst_colorspace_new(int width, int height, GstColorSpaceType srcspace, GstColorSpaceType destspace, GdkVisual *destvisual) 
+GstColorSpaceConverter *gst_colorspace_converter_new(gint width, gint height, GstColorSpaceType srcspace, 
+		GstColorSpaceType destspace, GdkVisual *destvisual) 
 {
 
-  GstColorSpace *new = g_malloc(sizeof(GstColorSpace));
+  GstColorSpaceConverter *new = g_malloc(sizeof(GstColorSpaceConverter));
 
   new->width = width;
   new->height = height;
@@ -64,11 +65,13 @@ GstColorSpace *gst_colorspace_new(int width, int height, GstColorSpaceType srcsp
   }
   if (new->convert == NULL) {
     g_print("gst_colorspace: conversion not implemented\n");
+    g_free(new);
+    new = NULL;
   }
   return new;
 }
 
-void gst_colorspace_destroy(GstColorSpace *space) 
+void gst_colorspace_destroy(GstColorSpaceConverter *space) 
 {
   if (space->color_tables) g_free(space->color_tables);
   g_free(space);
