@@ -59,7 +59,7 @@ struct _GstValueTable {
 #define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_type_int_range))
 #define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
 #define GST_VALUE_HOLDS_LIST(x)         (G_VALUE_HOLDS(x, gst_type_list))
-#define GST_VALUE_HOLDS_CAPS(x)         TRUE /* FIXME */
+#define GST_VALUE_HOLDS_CAPS(x)		(G_VALUE_HOLDS(x, GST_TYPE_CAPS))
 
 #define GST_TYPE_FOURCC gst_type_fourcc
 #define GST_TYPE_INT_RANGE gst_type_int_range
@@ -102,7 +102,6 @@ double gst_value_get_double_range_min (const GValue *value);
 double gst_value_get_double_range_max (const GValue *value);
 
 /* caps */
-
 G_CONST_RETURN GstCaps *gst_value_get_caps (const GValue *value);
 void gst_value_set_caps (GValue *value, const GstCaps *caps);
 

@@ -1,3 +1,15 @@
+2004-02-20  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstevent.c: (_gst_event_copy), (_gst_event_free):
+	  copy navigation event correctly. Check freeing tag lists. 
+	* gst/gstthread.c: (gst_thread_change_state):
+	  don't abort() on state changing mess - it might happen because of
+	  bugs.
+	* gst/gstvalue.c: (gst_value_set_caps), (gst_value_get_caps):
+	  use boxed functions
+	* gst/gstvalue.h:
+	  fix GST_VALUE_HOLDS_CAPS
+
 2004-02-19  David Schleef  <ds@schleef.org>
 
 	* gst/gstinfo.h:  Copy G_STRFUNC implementation from glib-2.4

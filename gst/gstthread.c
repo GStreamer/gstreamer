@@ -476,9 +476,13 @@ gst_thread_change_state (GstElement *element)
       /* it should be dead now */
       break;
     default:
-      GST_ERROR_OBJECT (element, "UNHANDLED STATE CHANGE! %x", 
+      GST_ERROR_OBJECT (element, "unhandled state change! %x", 
                         GST_STATE_TRANSITION (element));
+      g_warning ("thread %s: UNHANDLED STATE CHANGE! %x", 
+                        GST_STR_NULL (GST_OBJECT_NAME (element)), GST_STATE_TRANSITION (element));
+      /* FIXME: not doable with current threading mess:
       g_assert_not_reached ();
+      */
       break;
   }
 

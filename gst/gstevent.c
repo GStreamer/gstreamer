@@ -74,6 +74,9 @@ _gst_event_copy (GstEvent *event)
   /* FIXME copy/ref additional fields */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
+      copy->event_data.structure.structure = gst_tag_list_copy ((GstTagList *) event->event_data.structure.structure);
+      break;
+    case GST_EVENT_NAVIGATION:
       copy->event_data.structure.structure = gst_structure_copy (event->event_data.structure.structure);
     default:
       break;
@@ -92,8 +95,12 @@ _gst_event_free (GstEvent* event)
   }
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
-      if (GST_IS_TAG_LIST (event->event_data.structure.structure))
+      if (GST_IS_TAG_LIST (event->event_data.structure.structure)) {
         gst_tag_list_free (event->event_data.structure.structure);
+      } else {
+	g_warning ("tag event %p didn't contain a valid tag list!", event);
+	GST_ERROR ("tag event %p didn't contain a valid tag list!", event);
+      }
       break;
     case GST_EVENT_NAVIGATION:
       gst_structure_free (event->event_data.structure.structure);

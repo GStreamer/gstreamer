@@ -682,9 +682,9 @@ gst_value_deserialize_double_range (GValue *dest, const char *s)
 void
 gst_value_set_caps (GValue *value, const GstCaps *caps)
 {
-  g_return_if_fail (GST_VALUE_HOLDS_CAPS (value));
+  g_return_if_fail (G_VALUE_TYPE (value) == GST_TYPE_CAPS);
 
-  value->data[0].v_pointer = gst_caps_copy (caps);
+  g_value_set_boxed (value, caps);
 }
 
 /**
@@ -694,9 +694,9 @@ gst_value_set_caps (GValue *value, const GstCaps *caps)
 const GstCaps *
 gst_value_get_caps (const GValue *value)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_CAPS (value), 0);
+  g_return_val_if_fail (G_VALUE_TYPE (value) == GST_TYPE_CAPS, NULL);
 
-  return value->data[0].v_pointer;
+  return (GstCaps *) g_value_get_boxed (value);
 }
 
 /*************************************/
