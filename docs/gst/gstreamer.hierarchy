@@ -1,7 +1,4 @@
 GtkObject
-  GtkWidget
-    GtkRange
-    GtkContainer
   GObject
     GstObject
       GstXml
