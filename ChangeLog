@@ -1,3 +1,9 @@
+2004-04-13  David Schleef  <ds@schleef.org>
+
+	* gst/gstcaps.c: (gst_caps_structure_fixate_field_nearest_int),
+	(gst_caps_structure_fixate_field_nearest_double):  Fix bug in
+	fixating lists.
+
 2004-04-12  David Schleef  <ds@schleef.org>
 
 	* gst/gstbuffer.c: (_gst_buffer_initialize), (gst_buffer_get_type),

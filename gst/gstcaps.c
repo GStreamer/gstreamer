@@ -1257,7 +1257,7 @@ gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
       if (G_VALUE_TYPE (list_value) == G_TYPE_INT) {
         int x = g_value_get_int (list_value);
 
-        if (best_index == -1 || (ABS (target - x) < ABS (best - x))) {
+        if (best_index == -1 || (ABS (target - x) < ABS (target - best))) {
           best_index = i;
           best = x;
         }
@@ -1320,7 +1320,7 @@ gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
       if (G_VALUE_TYPE (list_value) == G_TYPE_DOUBLE) {
         double x = g_value_get_double (list_value);
 
-        if (best_index == -1 || (ABS (target - x) < ABS (best - x))) {
+        if (best_index == -1 || (ABS (target - x) < ABS (target - best))) {
           best_index = i;
           best = x;
         }
