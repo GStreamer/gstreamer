@@ -1,3 +1,14 @@
+2004-02-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/gconf/gstreamer-gconf-uninstalled.pc.in:
+	* pkgconfig/gstreamer-interfaces-uninstalled.pc.in:
+	* pkgconfig/gstreamer-libs-uninstalled.pc.in:
+	* pkgconfig/gstreamer-play-uninstalled.pc.in:
+          reworked patch by David Lehn to fix libdir and includedir for
+          uninstalled libraries
+          removed play and gconf from gstreamer-libs since they have their
+          own pkgconfig files
+
 2004-02-04  David Schleef  <ds@schleef.org>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_parse_fmt): Fix a caps
