@@ -60,6 +60,7 @@ libgstreamer_la_SOURCES =		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
+	gstdata.c		\
 	gstelement.c		\
 	gstelementfactory.c	\
 	gstevent.c		\
@@ -162,3 +163,6 @@ libgstreamer_la_LIBADD = $(LIBGST_LIBS)
 libgstreamer_la_LDFLAGS = @GST_LT_LDFLAGS@ -version-info @GST_LIBVERSION@
 
 EXTRA_DIST = ROADMAP
+
+
+

@@ -108,8 +108,8 @@ static void		gst_filesrc_set_property	(GObject *object, guint prop_id,
 static void		gst_filesrc_get_property	(GObject *object, guint prop_id, 
 							 GValue *value, GParamSpec *pspec);
 
-static GstBuffer *	gst_filesrc_get			(GstPad *pad);
-static gboolean 	gst_filesrc_srcpad_event 	(GstPad *pad, GstEvent *event);
+static GstData *	gst_filesrc_get			(GstPad *pad);
+static gpointer 	gst_filesrc_srcpad_event 	(GstPad *pad, GstData *event);
 
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 
@@ -204,7 +204,7 @@ gst_filesrc_init (GstFileSrc *src)
   src->map_regions = g_tree_new(gst_filesrc_bufcmp);
   src->map_regions_lock = g_mutex_new();
 
-  src->seek_happened = FALSE;
+  src->need_instream = 0;
 }
 
 static void
@@ -396,12 +396,12 @@ gst_filesrc_map_small_region (GstFileSrc *src, off_t offset, size_t size)
     map = gst_filesrc_map_region(src, mapbase, mapsize);
     ret = gst_buffer_create_sub (map, offset - mapbase, size);
 
-    gst_buffer_unref (map);
+    gst_data_unref (GST_DATA (map));
 
     return ret;
   }
 
-  return gst_filesrc_map_region(src,offset,size);
+  return gst_filesrc_map_region(src, offset, size);
 }
 
 typedef struct {
@@ -429,7 +429,7 @@ gst_filesrc_search_region_match (gpointer a, gpointer b)
  *
  * Push a new buffer from the filesrc at the current offset.
  */
-static GstBuffer *
+static GstData *
 gst_filesrc_get (GstPad *pad)
 {
   GstFileSrc *src;
@@ -443,21 +443,37 @@ gst_filesrc_get (GstPad *pad)
   src = GST_FILESRC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
 
-  /* check for seek */
-  if (src->seek_happened) {
-    src->seek_happened = FALSE;
-    return GST_BUFFER (gst_event_new (GST_EVENT_DISCONTINUOUS));
+  /* check if instream event is necessary */
+  /* the order is important here */
+  if ((src->need_instream & GST_FILESRC_NEED_NEWMEDIA) == GST_FILESRC_NEED_NEWMEDIA) 
+  {
+    src->need_instream -= GST_FILESRC_NEED_NEWMEDIA;
+    return GST_DATA (gst_event_new_newmedia ());
+  }
+  if (src->need_instream & GST_FILESRC_NEED_DISCONTINUOUS) 
+  {
+    GstEventDiscontinuous *event = gst_event_new_discontinuous ();
+    GST_DATA (event)->offset[GST_OFFSET_BYTES] = src->curoffset;
+    src->need_instream -= GST_FILESRC_NEED_DISCONTINUOUS;
+    return GST_DATA (event);
+  }
+  if (src->need_instream & GST_FILESRC_NEED_LENGTH) 
+  {
+    src->need_instream -= GST_FILESRC_NEED_LENGTH;
+    return GST_DATA (gst_event_new_length (GST_OFFSET_BYTES, GST_ACCURACY_SURE, (guint64) src->filelen));
   }
   /* check for flush */
+  /* FIXME: we don't flush instream, that's just stupid
   if (src->need_flush) {
     src->need_flush = FALSE;
-    return GST_BUFFER (gst_event_new_flush ());
+    return GST_DATA (gst_event_new_flush ());
   }
+  */
 
   /* check for EOF */
   if (src->curoffset == src->filelen) {
     gst_element_set_eos (GST_ELEMENT (src));
-    return GST_BUFFER (gst_event_new (GST_EVENT_EOS));
+    return GST_DATA (gst_event_new (GST_EVENT_EOS));
   }
 
   /* calculate end pointers so we don't have to do so repeatedly later */
@@ -531,7 +547,7 @@ gst_filesrc_get (GstPad *pad)
         fs_print ("read buf %d+%d in new mapbuf at %d+%d, mapping and subbuffering\n",
                src->curoffset,readsize,nextmap,src->mapsize);
         /* first, we're done with the old mapbuf */
-        gst_buffer_unref(src->mapbuf);
+        gst_data_unref (GST_DATA (src->mapbuf));
         /* create a new one */
         src->mapbuf = gst_filesrc_map_region (src, nextmap, src->mapsize);
         /* subbuffer it */
@@ -550,7 +566,7 @@ gst_filesrc_get (GstPad *pad)
   /* we're done, return the buffer */
   src->curoffset += GST_BUFFER_SIZE(buf);
   g_object_notify (G_OBJECT (src), "offset");
-  return buf;
+  return GST_DATA (buf);
 }
 
 /* open the file and mmap it, necessary to go to READY state */
@@ -592,7 +608,10 @@ gst_filesrc_open_file (GstFileSrc *src)
     g_object_notify (G_OBJECT (src), "filesize");
     g_object_notify (G_OBJECT (src), "offset");
     g_object_thaw_notify (G_OBJECT (src));
-
+		
+    /* we need to start with a newmedia event after opening a file */
+    src->need_instream |= (GST_FILESRC_NEED_NEWMEDIA | GST_FILESRC_NEED_LENGTH);
+		
     GST_FLAG_SET (src, GST_FILESRC_OPEN);
   }
   return TRUE;
@@ -618,7 +637,7 @@ gst_filesrc_close_file (GstFileSrc *src)
   g_object_thaw_notify (G_OBJECT (src));
 
   if (src->mapbuf)
-    gst_buffer_unref (src->mapbuf);
+    gst_data_unref (GST_DATA (src->mapbuf));
 
   GST_FLAG_UNSET (src, GST_FILESRC_OPEN);
 }
@@ -643,6 +662,8 @@ gst_filesrc_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
     case GST_STATE_PAUSED_TO_READY:
       src->curoffset = 0;
+      src->need_instream |= GST_FILESRC_NEED_DISCONTINUOUS;
+      g_object_notify (G_OBJECT (src), "offset");
     default:
       break;
   }
@@ -653,40 +674,44 @@ gst_filesrc_change_state (GstElement *element)
   return GST_STATE_SUCCESS;
 }
 
-static gboolean
-gst_filesrc_srcpad_event (GstPad *pad, GstEvent *event)
+static gpointer
+gst_filesrc_srcpad_event (GstPad *pad, GstData *event)
 {
+  GstEventSeek *seek;
+  
   GstFileSrc *src = GST_FILESRC(GST_PAD_PARENT(pad));
-
-  switch (GST_EVENT_TYPE (event)) {
+  gpointer ret = NULL;
+  
+  switch (GST_DATA_TYPE (event)) 
+  {
     case GST_EVENT_SEEK:
-      switch (GST_EVENT_SEEK_TYPE (event)) {
-        case GST_SEEK_BYTEOFFSET_SET:
-          src->curoffset = (guint64) GST_EVENT_SEEK_OFFSET (event);
-	  break;
-        case GST_SEEK_BYTEOFFSET_CUR:
-          src->curoffset += GST_EVENT_SEEK_OFFSET (event);
-	  break;
-        case GST_SEEK_BYTEOFFSET_END:
-          src->curoffset = src->filelen - ABS (GST_EVENT_SEEK_OFFSET (event));
-	  break;
-	default:
-          return FALSE;
-	  break;
+      seek = GST_EVENT_SEEK (event);
+      if (seek->accuracy[GST_OFFSET_BYTES] > GST_ACCURACY_NONE)
+      {
+        switch (GST_EVENT_SEEK_TYPE (seek)) {
+          case GST_SEEK_SET:
+            src->curoffset = seek->offset[GST_OFFSET_BYTES];
+	    break;
+          case GST_SEEK_CUR:
+            src->curoffset += seek->offset[GST_OFFSET_BYTES];
+  	    break;
+          case GST_SEEK_END:
+            src->curoffset = src->filelen + seek->offset[GST_OFFSET_BYTES];
+	    break;
+	  default:
+	    g_assert_not_reached ();
+        }
+	src->need_flush |= seek->flush;
+        g_object_notify (G_OBJECT (src), "offset");  
+        src->need_instream |= GST_FILESRC_NEED_DISCONTINUOUS;
+        ret = (gpointer) 0x1;
       }
-      g_object_notify (G_OBJECT (src), "offset");  
-      src->seek_happened = TRUE;
-      src->need_flush = GST_EVENT_SEEK_FLUSH(event);
-      gst_event_free (event);
-      /* push a discontinuous event? */
       break;
-    case GST_EVENT_FLUSH:
-      src->need_flush = TRUE;
-      break;
+    case GST_DATA_UNKNOWN:
     default:
-      return FALSE;
       break;
   }
 
-  return TRUE;
+  gst_data_unref (event);
+  return ret;
 }

@@ -170,9 +170,9 @@ main(int argc, char *argv[])
   argvn = g_new0 (char *,argc);
   memcpy (argvn, argv+1, sizeof (char*) * (argc-1));
   if (strstr (argv[0], "gst-xmllaunch")) {
-    pipeline = xmllaunch_parse_cmdline (argvn);
+    pipeline = xmllaunch_parse_cmdline ((const gchar **) argvn);
   } else {
-    pipeline = (GstElement*) gst_parse_launchv (argvn);
+    pipeline = (GstElement*) gst_parse_launchv ((const gchar **) argvn);
   }
 
   if (!pipeline) {

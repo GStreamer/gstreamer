@@ -311,29 +311,30 @@ gst_fakesrc_request_new_pad (GstElement *element, GstPadTemplate *templ)
   return srcpad;
 }
 
-static gboolean
-gst_fakesrc_event_handler (GstPad *pad, GstEvent *event)
+static gpointer
+gst_fakesrc_event_handler (GstPad *pad, GstData *event)
 {
   GstFakeSrc *src;
-
+  gpointer ret = NULL;
   src = GST_FAKESRC (gst_pad_get_parent (pad));
 
-  switch (GST_EVENT_TYPE (event)) {
+  switch (GST_EVENT_BASE_TYPE (event)) {
     case GST_EVENT_SEEK:
+      /* FIXME: somebody should make sure this works right */
       src->buffer_count = GST_EVENT_SEEK_OFFSET (event);
-      if (!GST_EVENT_SEEK_FLUSH (event)) {
-        gst_event_free (event);
-        break;
-      }
-      /* else we do a flush too */
-    case GST_EVENT_FLUSH:
-      src->need_flush = TRUE;
-      break;
+      ret = (gpointer) 0x1;
     default:
       break;
   }
 
-  return TRUE;
+  if (GST_EVENT_IS_FLUSH (event))
+  {
+    src->need_flush = TRUE;
+    ret = (gpointer) 0x1;
+  }
+
+  gst_data_unref (event);
+  return ret;
 }
 
 static void
@@ -398,7 +399,7 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       switch (src->data) {
 	case FAKESRC_DATA_ALLOCATE:
           if (src->parent) {
-            gst_buffer_unref (src->parent);
+            gst_data_unref (GST_DATA (src->parent));
             src->parent = NULL;
 	  }
           break;
@@ -622,7 +623,7 @@ gst_fakesrc_create_buffer (GstFakeSrc *src)
       }
       else {
 	/* the parent is useless now */
-	gst_buffer_unref (src->parent);
+	gst_data_unref (GST_DATA (src->parent));
 	src->parent = NULL;
 	/* try again (this will allocate a new parent) */
         return gst_fakesrc_create_buffer (src);
@@ -679,8 +680,8 @@ gst_fakesrc_get(GstPad *pad)
     if (src->last_message)
       g_free (src->last_message);
 
-    src->last_message = g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %llu)",
-                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+    src->last_message = g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %lu)",
+                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), (gulong) GST_BUFFER_TIMESTAMP (buf));
 
     g_object_notify (G_OBJECT (src), "last_message");
   }
@@ -725,7 +726,7 @@ gst_fakesrc_loop(GstElement *element)
     }
 
     if (src->eos) {
-      gst_pad_push(pad, GST_BUFFER(gst_event_new (GST_EVENT_EOS)));
+      gst_pad_push(pad, GST_DATA (gst_event_new_eos ()));
       return;
     }
 
@@ -733,18 +734,17 @@ gst_fakesrc_loop(GstElement *element)
     GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
     if (!src->silent) {
-      if (src->last_message)
-        g_free (src->last_message);
+      g_free (src->last_message);
 
-      src->last_message = g_strdup_printf ("fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %llu)",
-                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      src->last_message = g_strdup_printf ("fakesrc:  loop    ******* (%s:%s)  > (%d bytes, %lu)",
+                      GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), (gulong) GST_BUFFER_TIMESTAMP (buf));
 
       g_object_notify (G_OBJECT (src), "last_message");
     }
 
     g_signal_emit (G_OBJECT (src), gst_fakesrc_signals[SIGNAL_HANDOFF], 0,
                        buf, pad);
-    gst_pad_push (pad, buf);
+    gst_pad_push (pad, GST_DATA (buf));
 
     pads = g_list_next (pads);
   }
@@ -768,7 +768,7 @@ gst_fakesrc_change_state (GstElement *element)
       fakesrc->eos = FALSE;
       fakesrc->rt_num_buffers = fakesrc->num_buffers;
       if (fakesrc->parent) {
-        gst_buffer_unref (fakesrc->parent);
+        gst_data_unref (GST_DATA (fakesrc->parent));
         fakesrc->parent = NULL;
       }
       break;

@@ -29,7 +29,6 @@
 #include "gstextratypes.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
-#include "gstevent.h"
 #include "gstutils.h"
 
 /* Element signals and args */
@@ -1182,21 +1181,6 @@ gst_element_info (GstElement *element, const gchar *info, ...)
 {
   g_warning ("The function gst_element_info is gone. Use g_object_notify instead.");
 }
-
-
-/**
- * gst_element_send_event:
- * @element: Element generating the event
- * @event: the event to send
- *
- * This function is deprecated and doesn't work anymore.
- */
-void
-gst_element_send_event (GstElement *element, GstEvent *event)
-{
-  g_warning ("The function gst_element_send_event is gone. Use g_object_notify instead.");
-}
-
 /**
  * gst_element_get_state:
  * @element: element to get state of

@@ -24,6 +24,9 @@
 #include "gst_private.h"
 
 #include "gstbuffer.h"
+/* debugging and error checking */
+#include "gstlog.h"
+#include "gstinfo.h"
 
 static GMutex *_default_pool_lock;
 static GHashTable *_default_pools;

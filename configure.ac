@@ -345,9 +345,7 @@ GST_LIBS="$GST_EXT_LIBS $XML_LIBS $GLIB_LIBS -lpopt"
 
 dnl Private vars for libgst only
 LIBGST_LIBS="$GST_LIBS"
-LIBGST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir) -Wall"
-AC_SUBST(LIBGST_LIBS)
-AC_SUBST(LIBGST_CFLAGS)
+LIBGST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)"
 
 dnl Vars for everyone else
 GST_INT_LIBS="\$(top_builddir)/gst/libgstreamer.la"
@@ -355,6 +353,12 @@ GST_INT_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir)/include"
 
 AC_SUBST(GST_CFLAGS, "$LIBGST_CFLAGS $GST_INT_CFLAGS")
 AC_SUBST(GST_LIBS, "$LIBGST_LIBS $GST_INT_LIBS")
+
+dnl FIXME: Error checking moved down here, because getbits
+dnl inherits glib bug #73308
+LIBGST_CFLAGS="$LIBGST_CFLAGS -Wall -Werror"
+AC_SUBST(LIBGST_LIBS)
+AC_SUBST(LIBGST_CFLAGS)
 
 AC_CONFIG_SUBDIRS(libs/ext/cothreads)
 

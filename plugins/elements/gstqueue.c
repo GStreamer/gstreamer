@@ -78,13 +78,13 @@ static void			gst_queue_set_property		(GObject *object, guint prop_id,
 static void			gst_queue_get_property		(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
 
-static void			gst_queue_chain			(GstPad *pad, GstBuffer *buf);
+static void			gst_queue_chain			(GstPad *pad, GstData *buf);
 static GstBuffer *		gst_queue_get			(GstPad *pad);
 static GstBufferPool* 		gst_queue_get_bufferpool 	(GstPad *pad);
 	
-static void			gst_queue_locked_flush			(GstQueue *queue);
-static void			gst_queue_flush			(GstQueue *queue);
-
+static void			gst_queue_locked_flush		(GstQueue *queue);
+/*static void			gst_queue_flush			(GstQueue *queue);
+*/
 static GstElementStateReturn	gst_queue_change_state		(GstElement *element);
 
   
@@ -254,12 +254,7 @@ gst_queue_cleanup_buffers (gpointer data, const gpointer user_data)
 {
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, user_data, "cleaning buffer %p\n", data);
 
-  if (GST_IS_BUFFER (data)) {
-    gst_buffer_unref (GST_BUFFER (data));
-  }
-  else {
-    gst_event_free (GST_EVENT (data));
-  }
+  gst_buffer_unref (GST_DATA (data));
 }
 
 static void
@@ -273,7 +268,7 @@ gst_queue_locked_flush (GstQueue *queue)
   queue->level_buffers = 0;
   queue->timeval = NULL;
 }
-
+/* warning: `gst_queue_flush' defined but not used
 static void
 gst_queue_flush (GstQueue *queue)
 {
@@ -281,10 +276,10 @@ gst_queue_flush (GstQueue *queue)
   gst_queue_locked_flush (queue);
   g_mutex_unlock (queue->qlock);
 }
-
+*/
 
 static void
-gst_queue_chain (GstPad *pad, GstBuffer *buf)
+gst_queue_chain (GstPad *pad, GstData *buf)
 {
   GstQueue *queue;
   gboolean reader;
@@ -302,7 +297,7 @@ restart:
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locked t:%ld\n", pthread_self ());
 
   if (GST_IS_EVENT (buf)) {
-    switch (GST_EVENT_TYPE (buf)) {
+    switch (GST_DATA_TYPE (buf)) {
       case GST_EVENT_FLUSH:
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "FLUSH event, flushing queue\n");
         gst_queue_locked_flush (queue);
@@ -312,7 +307,7 @@ restart:
 			   GST_ELEMENT_NAME (queue), queue->level_buffers);
 	break;
       default:
-	//gst_pad_event_default (pad, GST_EVENT (buf));
+	/* gst_pad_event_default (pad, GST_EVENT (buf));*/
 	break;
     }
   }
@@ -329,9 +324,9 @@ restart:
         if (GST_IS_EVENT (buf))
           fprintf(stderr, "Error: queue [%s] leaked an event, type:%d\n",
               GST_ELEMENT_NAME(GST_ELEMENT(queue)),
-              GST_EVENT_TYPE(GST_EVENT(buf)));
+              GST_DATA_TYPE(buf));
           GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on upstream end\n");
-        gst_buffer_unref(buf);
+        gst_data_unref(buf);
         /* now we have to clean up and exit right away */
         g_mutex_unlock (queue->qlock);
         return;
@@ -339,17 +334,17 @@ restart:
       /* otherwise we have to push a buffer off the other end */
       else {
         GList *front;
-        GstBuffer *leakbuf;
+        GstData *leakbuf;
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue is full, leaking buffer on downstream end\n");
         front = queue->queue;
-        leakbuf = (GstBuffer *)(front->data);
+        leakbuf = (GstData *)(front->data);
         if (GST_IS_EVENT (leakbuf))
           fprintf(stderr, "Error: queue [%s] leaked an event, type:%d\n",
               GST_ELEMENT_NAME(GST_ELEMENT(queue)),
-              GST_EVENT_TYPE(GST_EVENT(leakbuf)));
+              GST_DATA_TYPE(leakbuf));
         queue->level_buffers--;
         queue->level_bytes -= GST_BUFFER_SIZE(leakbuf);
-        gst_buffer_unref(leakbuf);
+        gst_data_unref (leakbuf);
         queue->queue = g_list_remove_link (queue->queue, front);
         g_list_free (front);
       }
@@ -371,8 +366,7 @@ restart:
 	/* this means the other end is shut down */
 	/* try to signal to resolve the error */
 	if (!queue->may_deadlock) {
-          if (GST_IS_BUFFER (buf)) gst_buffer_unref (buf);
-	  else gst_event_free (GST_EVENT (buf));
+          gst_data_unref (buf);
           g_mutex_unlock (queue->qlock);
           gst_element_error (GST_ELEMENT (queue), "deadlock found, source pad elements are shut down");
 	  return;
@@ -502,8 +496,7 @@ restart:
 
   /* FIXME where should this be? locked? */
   if (GST_IS_EVENT(buf)) {
-    GstEvent *event = GST_EVENT(buf);
-    switch (GST_EVENT_TYPE(event)) {
+    switch (GST_DATA_TYPE(buf)) {
       case GST_EVENT_EOS:
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue \"%s\" eos\n", GST_ELEMENT_NAME (queue));
         gst_element_set_eos (GST_ELEMENT (queue));

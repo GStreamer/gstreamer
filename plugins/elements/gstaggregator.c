@@ -85,7 +85,7 @@ static void 	gst_aggregator_set_property 	(GObject *object, guint prop_id,
 static void 	gst_aggregator_get_property 	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 
-static void  	gst_aggregator_chain 		(GstPad *pad, GstBuffer *buf);
+static void  	gst_aggregator_chain 		(GstPad *pad, GstData *buf);
 static void 	gst_aggregator_loop 		(GstElement *element);
 
 static GstElementClass *parent_class = NULL;
@@ -261,13 +261,13 @@ gst_aggregator_get_property (GObject *object, guint prop_id, GValue *value, GPar
 }
 
 static void 
-gst_aggregator_push (GstAggregator *aggregator, GstPad *pad, GstBuffer *buf, guchar *debug) 
+gst_aggregator_push (GstAggregator *aggregator, GstPad *pad, GstData *buf, guchar *debug) 
 {
   if (!aggregator->silent) {
     g_free (aggregator->last_message);
 
-    aggregator->last_message = g_strdup_printf ("%10.10s ******* (%s:%s)a (%d bytes, %llu)",
-            debug, GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+    aggregator->last_message = g_strdup_printf ("%10.10s ******* (%s:%s)a (%d bytes, %lu)",
+            debug, GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), (gulong) GST_BUFFER_TIMESTAMP (buf));
 
     g_object_notify (G_OBJECT (aggregator), "last_message");
   }
@@ -279,7 +279,7 @@ static void
 gst_aggregator_loop (GstElement *element) 
 {
   GstAggregator *aggregator;
-  GstBuffer *buf;
+  GstData *buf;
   guchar *debug;
 
   aggregator = GST_AGGREGATOR (element);
@@ -332,7 +332,7 @@ gst_aggregator_loop (GstElement *element)
  * Chain a buffer on a pad.
  */
 static void 
-gst_aggregator_chain (GstPad *pad, GstBuffer *buf) 
+gst_aggregator_chain (GstPad *pad, GstData *buf) 
 {
   GstAggregator *aggregator;
 

@@ -61,8 +61,8 @@ static void	gst_disksink_get_property	(GObject *object, guint prop_id,
 static gboolean gst_disksink_open_file 		(GstDiskSink *sink);
 static void 	gst_disksink_close_file 	(GstDiskSink *sink);
 
-static gboolean gst_disksink_handle_event       (GstPad *pad, GstEvent *event);
-static void	gst_disksink_chain		(GstPad *pad,GstBuffer *buf);
+static gpointer gst_disksink_handle_event       (GstPad *pad, GstData *event);
+static void	gst_disksink_chain		(GstPad *pad, GstData *buf);
 
 static GstElementStateReturn gst_disksink_change_state (GstElement *element);
 
@@ -258,24 +258,19 @@ gst_disksink_close_file (GstDiskSink *sink)
 }
 
 /* handle events (search) */
-static gboolean
-gst_disksink_handle_event (GstPad *pad, GstEvent *event)
+static gpointer
+gst_disksink_handle_event (GstPad *pad, GstData *event)
 {
-  GstEventType type;
+  GstDataType type;
   GstDiskSink *disksink;
 
   disksink = GST_DISKSINK (gst_pad_get_parent (pad));
 
-  type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
+  type = event ? GST_EVENT_BASE_TYPE (event) : GST_DATA_UNKNOWN;
 
   switch (type) {
+    /* FIXME: this is probably pointless, because seeking can't be done instream
     case GST_EVENT_SEEK:
-      /* we need to seek */
-      if (GST_EVENT_SEEK_FLUSH(event))
-        if (fflush(disksink->file))
-          gst_element_error(GST_ELEMENT(disksink),
-            "Error flushing the buffer cache of file \'%s\' to disk: %s",
-            gst_disksink_getcurrentfilename(disksink), sys_errlist[errno]);
       switch (GST_EVENT_SEEK_TYPE(event))
       {
         case GST_SEEK_BYTEOFFSET_SET:
@@ -292,24 +287,25 @@ gst_disksink_handle_event (GstPad *pad, GstEvent *event)
           break;
       }
       break;
-    case GST_EVENT_NEW_MEDIA:
+    */
+    case GST_EVENT_NEWMEDIA:
       /* we need to open a new file! */
       gst_disksink_close_file(disksink);
       disksink->filenum++;
       if (!gst_disksink_open_file(disksink)) return FALSE;
-      break;
-    case GST_EVENT_FLUSH:
-      if (fflush(disksink->file))
-        gst_element_error(GST_ELEMENT(disksink),
-          "Error flushing the buffer cache of file \'%s\' to disk: %s",
-          gst_disksink_getcurrentfilename(disksink), sys_errlist[errno]);
       break;
     default:
       gst_pad_event_default (pad, event);
       break;
   }
 
-  return TRUE;
+  if (GST_EVENT_IS_FLUSH(event))
+        if (fflush(disksink->file))
+          gst_element_error(GST_ELEMENT(disksink),
+            "Error flushing the buffer cache of file \'%s\' to disk: %s",
+            gst_disksink_getcurrentfilename(disksink), sys_errlist[errno]);
+      
+  return (gpointer) TRUE;
 }
 
 /**
@@ -320,23 +316,33 @@ gst_disksink_handle_event (GstPad *pad, GstEvent *event)
  * take the buffer from the pad and write to file if it's open
  */
 static void 
-gst_disksink_chain (GstPad *pad, GstBuffer *buf) 
+gst_disksink_chain (GstPad *pad, GstData *data) 
 {
   GstDiskSink *disksink;
+  GstBuffer *buf;
   gint bytes_written = 0;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (data != NULL);
 
   disksink = GST_DISKSINK (gst_pad_get_parent (pad));
-
-  if (GST_IS_EVENT(buf))
+  buf = GST_BUFFER (data);
+  
+  if (GST_IS_EVENT (data))
   {
-    gst_disksink_handle_event(pad, GST_EVENT(buf));
+    gst_disksink_handle_event(pad, data);
     return;
   }
 
+  /* FIXME:
+   * this won't work, because NEWMEDIA events can only be pushed instream
+   * it would probably be better to push an EMPTY event, though this should
+   * be tried earlier, because that event handles writing the footer asap
+   * 
+   * disabling until we know what we want
+   */
+  /*
   if (disksink->maxfilesize > 0)
   {
     if ((disksink->data_written + GST_BUFFER_SIZE(buf))/(1024*1024) > disksink->maxfilesize)
@@ -349,7 +355,7 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
       }
     }
   }
-
+  */
   if (GST_FLAG_IS_SET (disksink, GST_DISKSINK_OPEN))
   {
     bytes_written = fwrite (GST_BUFFER_DATA (buf), 1, GST_BUFFER_SIZE (buf), disksink->file);
@@ -361,7 +367,7 @@ gst_disksink_chain (GstPad *pad, GstBuffer *buf)
   }
   disksink->data_written += GST_BUFFER_SIZE(buf);
 
-  gst_buffer_unref (buf);
+  gst_data_unref (data);
 
   g_signal_emit (G_OBJECT (disksink), gst_disksink_signals[SIGNAL_HANDOFF], 0,
 	                      disksink);

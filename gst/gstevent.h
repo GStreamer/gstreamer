@@ -24,92 +24,138 @@
 #ifndef __GST_EVENT_H__
 #define __GST_EVENT_H__
 
-#include <gst/gsttypes.h>
-#include <gst/gstelement.h>
-#include <gst/gstobject.h>
-#include <gst/gstdata.h>
-#include <gst/gstcaps.h>
+#include "gstdata.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-typedef enum {
-  GST_EVENT_UNKNOWN,
-  /* horizontal events */
-  GST_EVENT_EOS,
-  GST_EVENT_FLUSH,
-  GST_EVENT_EMPTY,
-  GST_EVENT_SEEK,
-  GST_EVENT_DISCONTINUOUS,
-  GST_EVENT_NEW_MEDIA,
-  /* vertical events */
-  GST_EVENT_INFO,
-  GST_EVENT_ERROR,
-} GstEventType;
-
-extern GType _gst_event_type;
-
-#define GST_TYPE_EVENT		(_gst_event_type)
-#define GST_EVENT(event)	((GstEvent*)(event))
-#define GST_IS_EVENT(event)	(GST_DATA_TYPE(event) == GST_TYPE_EVENT)
-
-#define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
-#define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
-#define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
+#define GST_IS_EVENT(event)		(((GstData*)(event))->type > GST_EVENT_FIRST)
 
 /* seek events */
 typedef enum {
   GST_SEEK_ANY,
-  GST_SEEK_TIMEOFFSET_SET,
-  GST_SEEK_BYTEOFFSET_SET,
-  GST_SEEK_BYTEOFFSET_CUR,
-  GST_SEEK_BYTEOFFSET_END,
+  GST_SEEK_SET,
+  GST_SEEK_CUR,
+  GST_SEEK_END,
 } GstSeekType;
 
-#define GST_EVENT_SEEK_TYPE(event)	(GST_EVENT(event)->event_data.seek.type)
-#define GST_EVENT_SEEK_OFFSET(event)	(GST_EVENT(event)->event_data.seek.offset)
-#define GST_EVENT_SEEK_FLUSH(event)	(GST_EVENT(event)->event_data.seek.flush)
+typedef enum {
+  GST_ACCURACY_NONE,
+  GST_ACCURACY_WILD_GUESS,
+  GST_ACCURACY_GUESS,
+  GST_ACCURACY_SURE,
+} GstEventAccuracy;
 
-#define GST_EVENT_INFO_PROPS(event)	(GST_EVENT(event)->event_data.info.props)
+#define GST_EVENT_EOS(event)		((GstEventEOS *) (event))
+#define GST_EVENT_DISCONTINUOUS(event)	((GstEventDiscontinuous *) (event))
+#define GST_EVENT_NEWMEDIA(event)	((GstEventNewMedia *) (event))
+#define GST_EVENT_LENGTH(event)		((GstEventLength *) (event))
+#define GST_EVENT_SEEK(event)		((GstEventSeek *) (event))
+#define GST_EVENT_FLUSH(event)		((GstEventFlush *) (event))
+#define GST_EVENT_EMPTY(event)		((GstEventEmpty *) (event))
+#define GST_EVENT_LOCK(event)		((GstEventLock *) (event))
+#define GST_EVENT_UNLOCK(event)		((GstEventUnLock *) (event))
 
-struct _GstEvent {
-  GstData data;
+#define GST_EVENT_SEEK_TYPE(event)	(GST_EVENT_SEEK(event)->type)
 
-  GstEventType  type;
-  guint64	timestamp;
-  GstObject	*src;
+typedef struct _GstEventEOS GstEventEOS;
+typedef struct _GstEventDiscontinuous GstEventDiscontinuous;
+typedef struct _GstEventNewMedia GstEventNewMedia;
+typedef struct _GstEventLength GstEventLength;
 
-  union {
-    struct {
-      GstSeekType type;
-      gint64      offset;
-      gboolean	  flush;
-    } seek;
-    struct {
-      GstProps *props;
-    } info;
-    struct {
-      GstElementState old_state;
-      GstElementState new_state;
-    } state;
-  } event_data;
+typedef struct _GstEventLock GstEventLock;
+typedef struct _GstEventUnLock GstEventUnLock;
+typedef struct _GstEventSeek GstEventSeek;
+typedef struct _GstEventFlush GstEventFlush;
+typedef struct _GstEventEmpty GstEventEmpty;
+  
+typedef void (*GstLockFunction) (gpointer data);
+
+struct _GstEventEOS {
+  GstData	 data;
 };
 
+struct _GstEventDiscontinuous {
+  GstData	 data;
+};
+
+struct _GstEventNewMedia {
+  GstData	 data;
+};
+
+struct _GstEventSeek {
+  GstData	 	data;
+
+  GstSeekType	 	type;
+  GstOffsetType  	original;
+  GstEventAccuracy	accuracy[GST_OFFSET_TYPES];
+  gint64   	 	offset[GST_OFFSET_TYPES];
+  
+  gboolean		flush;
+};
+
+struct _GstEventFlush {
+  GstData	 	data;
+};
+
+struct _GstEventEmpty {
+  GstData	 	data;
+};
+
+struct _GstEventLock {
+  GstData		data;
+  
+  GstLockFunction	on_delete;
+  gpointer		func_data;
+};
+
+struct _GstEventUnLock {
+  GstData	 	data;
+};
+
+struct _GstEventLength {
+  GstData	 	data;
+
+  GstOffsetType 	original;
+  GstEventAccuracy	accuracy[GST_OFFSET_TYPES];
+  guint64   	 	length[GST_OFFSET_TYPES];
+};
+
+/* initialize the event system */
 void 		_gst_event_initialize 	(void);
-	
-GstEvent*	gst_event_new	        (GstEventType type);
-GstEvent*	gst_event_copy	        (GstEvent *event);
-void		gst_event_free 		(GstEvent *event);
 
-/* seek events */
-GstEvent*	gst_event_new_seek	(GstSeekType type, gint64 offset, gboolean flush);
+/* inheritance */
+void		gst_event_init		(GstData *data);
 
-/* flush events */
-#define		gst_event_new_flush()	gst_event_new(GST_EVENT_FLUSH)
+void		gst_event_seek_init	(GstEventSeek *event, GstSeekType type, GstOffsetType offset_type);
+void		gst_event_lock_init	(GstEventLock *event);
+void		gst_event_length_init	(GstEventLength *event);
 
-/* info events */
-GstEvent*	gst_event_new_info	(const gchar *firstname, ...);
+/* private */
+GstData*	gst_event_new	        (GstDataType type);
+/* creation */
+#define		gst_event_new_eos()	((GstEventEOS *) gst_event_new(GST_EVENT_EOS))
+#define		gst_event_new_discontinuous() ((GstEventDiscontinuous *) gst_event_new(GST_EVENT_DISCONTINUOUS))
+#define		gst_event_new_newmedia() ((GstEventNewMedia *) gst_event_new(GST_EVENT_NEWMEDIA))
+GstEventLength *gst_event_new_length	(GstOffsetType original, GstEventAccuracy accuracy, guint64 length);
+GstEventSeek *	gst_event_new_seek	(GstSeekType type, GstOffsetType offset_type, gint64 offset, gboolean flush);
+#define		gst_event_new_flush()	((GstEventFlush *) gst_event_new(GST_EVENT_FLUSH))
+#define		gst_event_new_empty()	((GstEventEmpty *) gst_event_new(GST_EVENT_EMPTY))
+GstEventLock *	gst_event_new_lock	(GstLockFunction func, gpointer data);
+#define		gst_event_new_unlock()	((GstEventUnLock *) gst_event_new(GST_EVENT_UNLOCK))
+
+/* copying */
+#define		gst_event_copy_eos(from, to)		gst_data_copy(GST_DATA(to), (const GstData *) from);
+#define		gst_event_copy_discontinuous(from, to)	gst_data_copy(GST_DATA(to), (const GstData *) from);
+#define		gst_event_copy_newmedia(from, to)	gst_data_copy(const GstData *) from, GST_DATA(to));
+void		gst_event_copy_length			(GstEventLength *to, const GstEventLength *from);
+void		gst_event_copy_seek			(GstEventSeek *to, const GstEventSeek *from);
+#define		gst_event_copy_flush(from, to)		gst_data_copy(GST_DATA(to), (const GstData *) from);
+#define		gst_event_copy_empty(from, to)		gst_data_copy(GST_DATA(to), (const GstData *) from);
+void		gst_event_copy_lock			(GstEventLock *to, const GstEventLock *from);
+#define		gst_event_copy_unlock(from, to)		gst_data_copy(GST_DATA(to), (const GstData *) from);
+
 
 #ifdef __cplusplus
 }

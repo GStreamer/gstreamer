@@ -50,6 +50,13 @@ typedef enum {
   GST_FILESRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
 } GstFileSrcFlags;
 
+enum {
+  GST_FILESRC_NEED_NOTHING	 = 0x0000,
+  GST_FILESRC_NEED_DISCONTINUOUS = 0x0001,
+  GST_FILESRC_NEED_NEWMEDIA	 = 0x0003,
+  GST_FILESRC_NEED_LENGTH	 = 0x0004,
+};
+
 typedef struct _GstFileSrc GstFileSrc;
 typedef struct _GstFileSrcClass GstFileSrcClass;
 
@@ -73,7 +80,7 @@ struct _GstFileSrc {
   GTree *map_regions;
   GMutex *map_regions_lock;
 
-  gboolean seek_happened;
+  gint need_instream;
   gboolean need_flush;
 };
 

@@ -110,7 +110,7 @@ static void	gst_real_pad_get_property	(GObject *object, guint prop_id, GValue *v
 
 static void	gst_real_pad_dispose		(GObject *object);
 
-static void	gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
+static void	gst_pad_push_func		(GstPad *pad, GstData *data);
 
 GType _gst_real_pad_type = 0;
 
@@ -218,6 +218,9 @@ gst_real_pad_init (GstRealPad *pad)
 
   pad->connectfunc = NULL;
   pad->getcapsfunc = NULL;
+  
+  pad->eventfunc = gst_pad_event_default;
+  pad->eventhandler = NULL;
 }
 
 static void
@@ -411,6 +414,7 @@ gst_pad_set_event_function (GstPad *pad,
 {
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (event != NULL);
 
   GST_RPAD_EVENTFUNC(pad) = event;
   GST_DEBUG (GST_CAT_PADS, "eventfunc for %s:%s  set to %s\n",
@@ -494,12 +498,12 @@ gst_pad_set_bufferpool_function (GstPad *pad,
 }
 
 static void
-gst_pad_push_func(GstPad *pad, GstBuffer *buf)
+gst_pad_push_func(GstPad *pad, GstData *data)
 {
   if (GST_RPAD_CHAINFUNC (GST_RPAD_PEER (pad)) != NULL) {
     GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function %s\n",
                GST_DEBUG_FUNCPTR_NAME (GST_RPAD_CHAINFUNC (GST_RPAD_PEER (pad))));
-    (GST_RPAD_CHAINFUNC (GST_RPAD_PEER (pad))) (pad, buf);
+    (GST_RPAD_CHAINFUNC (GST_RPAD_PEER (pad))) (pad, data);
   } else {
     GST_DEBUG (GST_CAT_DATAFLOW, "default pad_push handler in place, no chain function\n");
     g_warning ("(internal error) default pad_push in place for pad %s:%s but it has no chain function", 
@@ -1732,12 +1736,12 @@ gst_pad_ghost_save_thyself (GstPad *pad,
 /**
  * gst_pad_push:
  * @pad: the pad to push
- * @buf: the buffer to push
+ * @data: the data to push
  *
- * Push a buffer to the peer of the pad.
+ * Push some data to the peer of the pad.
  */
 void 
-gst_pad_push (GstPad *pad, GstBuffer *buf) 
+gst_pad_push (GstPad *pad, GstData *data) 
 {
   GstRealPad *peer = GST_RPAD_PEER (pad);
 
@@ -1750,10 +1754,10 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
   }
   else {
     if (peer->chainhandler) {
-      if (buf) {
+      if (data) {
         GST_DEBUG (GST_CAT_DATAFLOW, "calling chainhandler &%s of peer pad %s:%s\n",
             GST_DEBUG_FUNCPTR_NAME (peer->chainhandler), GST_DEBUG_PAD_NAME (GST_PAD (peer)));
-        (peer->chainhandler) (GST_PAD_CAST (peer), buf);
+        (peer->chainhandler) (GST_PAD_CAST (peer), data);
 	return;
       }
       else {
@@ -1766,11 +1770,8 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
     }
   }
   /* clean up the mess here */
-  if (buf != NULL) {
-    if (GST_IS_BUFFER (buf))
-      gst_buffer_unref (buf);
-    else
-      gst_event_free (GST_EVENT (buf));
+  if (data != NULL) {
+    gst_data_unref (data);
   }
 }
 #endif
@@ -1784,7 +1785,7 @@ gst_pad_push (GstPad *pad, GstBuffer *buf)
  *
  * Returns: a new buffer from the peer pad.
  */
-GstBuffer*
+GstData*
 gst_pad_pull (GstPad *pad) 
 {
   GstRealPad *peer = GST_RPAD_PEER(pad);
@@ -1801,7 +1802,7 @@ gst_pad_pull (GstPad *pad)
   }
   else {
     if (peer->gethandler) {
-      GstBuffer *buf;
+      GstData *buf;
 
       GST_DEBUG (GST_CAT_DATAFLOW, "calling gethandler %s of peer pad %s:%s\n",
         GST_DEBUG_FUNCPTR_NAME (peer->gethandler), GST_DEBUG_PAD_NAME (peer));
@@ -1852,7 +1853,7 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
     g_return_val_if_fail (peer != NULL, NULL);
 
     if (result) 
-      gst_buffer_unref (result);
+      gst_data_unref (GST_DATA (result));
 
     GST_DEBUG_ENTER("(%s:%s,%d,%lld,%lld)",GST_DEBUG_PAD_NAME(pad),type,offset,len);
 
@@ -1880,9 +1881,9 @@ gst_pad_pullregion (GstPad *pad, GstRegionType type, guint64 offset, guint64 len
  *
  * Peek for a buffer from the peer pad.
  *
- * Returns: a from the peer pad or NULL if the peer has no buffer.
+ * Returns: data from the peer pad or NULL if the peer has no data.
  */
-GstBuffer*
+GstData*
 gst_pad_peek (GstPad *pad)
 {
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK, NULL);
@@ -2288,56 +2289,64 @@ gst_ghost_pad_new (gchar *name,
 
   return GST_PAD (ghostpad);
 }
-
-static void 
-gst_pad_event_default_dispatch (GstPad *pad, GstElement *element, GstEvent *event)
+/**
+ * gst_pad_signal_event_received:
+ * @pad: the pad to signal event receival
+ * @event: the received event
+ *
+ * emit the "event_received" signal on the given pad.
+ */
+void
+gst_pad_signal_event_received (GstPad *pad, GstData *event)
 {
-  GList *pads = element->pads;
-
-  while (pads) {
-    GstPad *eventpad = GST_PAD (pads->data);
-    pads = g_list_next (pads);
-
-    /* for all pads in the opposite direction that are connected */
-    if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) && GST_PAD_IS_CONNECTED (eventpad)) {
-      if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
-        gst_pad_push (eventpad, GST_BUFFER (gst_event_copy (event)));
-      }
-      else {
-	GstPad *peerpad = GST_PAD_CAST (GST_RPAD_PEER (eventpad));
-
-        gst_pad_send_event (peerpad, gst_event_copy (event));
-      }
-    }
-  }
+  gst_object_ref (GST_OBJECT (pad));
+  g_signal_emit (G_OBJECT (pad), gst_real_pad_signals[REAL_EVENT_RECEIVED], 0, event);  
+  gst_object_unref (GST_OBJECT (pad));
 }
-
 /**
  * gst_pad_event_default:
  * @pad: the pad to operate on
  * @event: the event to handle
  *
  * Invoke the default event handler for the given pad.
+ * This function should only be called for upstream or downstream events.
+ *
+ * Returns: TRUE, if the event was successfully handled.
  */
-void 
-gst_pad_event_default (GstPad *pad, GstEvent *event)
+gpointer 
+gst_pad_event_default (GstPad *pad, GstData *event)
 {
-  GstElement *element = GST_PAD_PARENT (pad);
+  GstElement *element;
+  gpointer ret = NULL;
 
-  g_signal_emit (G_OBJECT (pad), gst_real_pad_signals[REAL_EVENT_RECEIVED], 0, event);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  element = GST_PAD_PARENT (pad);
  
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      gst_element_set_eos (element);
-      gst_pad_event_default_dispatch (pad, element, event);
-      /* we have to try to schedule another element because this one is disabled */
-      gst_element_yield (element);
-      break;
-    case GST_EVENT_FLUSH:
-    default:
-      gst_pad_event_default_dispatch (pad, element, event);
-      break;
+  /* send event */
+  GList *pads = element->pads;
+  while (pads) {
+    GstPad *eventpad = GST_PAD (pads->data);
+    pads = g_list_next (pads);
+
+    /* for all pads in the opposite direction that are connected */
+    if (GST_PAD_DIRECTION (eventpad) != GST_PAD_DIRECTION (pad) && GST_PAD_IS_CONNECTED (eventpad)) {
+      GstPad *peerpad = GST_PAD_CAST (GST_RPAD_PEER (eventpad));
+      /* ref the event, we don't wanna lose it */
+      gst_data_ref (GST_DATA (event));
+      /* invoke the event handler for the given event */
+      if ((ret = gst_pad_send_event (peerpad, event)) == NULL)
+      {
+	break;
+      }
+    }
   }
+  /* forget the reference */
+  gst_data_unref (event);
+  
+  return ret;
 }
 
 /**
@@ -2346,34 +2355,90 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
  * @event: the event to send to the pad.
  *
  * Send the event to the pad.
+ * This function must be called from the same thread that
+ * handles the pad. If you're not sure if that's the case,
+ * you better use gst_pad_insert_event instead.
  *
  * Returns: TRUE if the event was handled.
  */
-gboolean
-gst_pad_send_event (GstPad *pad, GstEvent *event)
+gpointer
+gst_pad_send_event (GstPad *pad, GstData *event)
 {
-  gboolean handled = FALSE;
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
 
-  g_return_val_if_fail (event, FALSE);
+  GST_DEBUG (GST_CAT_EVENT, "have event %p (type %d) on pad %s:%s\n",
+		  event, GST_DATA_TYPE (event), GST_DEBUG_PAD_NAME (pad));
 
-  if (GST_EVENT_SRC (event) == NULL)
-    GST_EVENT_SRC (event) = gst_object_ref (GST_OBJECT (pad));
+  gst_pad_signal_event_received (pad, event);
 
-  GST_DEBUG (GST_CAT_EVENT, "have event %d on pad %s:%s\n",
-		  GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
-
-  if (GST_RPAD_EVENTFUNC (pad))
-    handled = GST_RPAD_EVENTFUNC (pad) (pad, event);
-  else {
-    GST_DEBUG(GST_CAT_EVENT, "there's no event function for pad %s:%s\n", GST_DEBUG_PAD_NAME (pad));
-  }
-
-  if (!handled) {
-    GST_DEBUG(GST_CAT_EVENT, "proceeding with default event behavior here\n");
-    gst_pad_event_default (pad, event);
-    handled = TRUE;
-  }
-
-  return handled;
+  /* all pads have an event handler, so it's safe to call it */
+  return GST_RPAD_EVENTFUNC (pad) (pad, event);
 }
+/**
+ * gst_pad_insert_event
+ * @pad: the pad to send the event to
+ * @event: the event to insert at the pad.
+ *
+ * Insert the event at the pad.
+ * This function is threadsafe and most probably is the one you want
+ * to call from applications.
+ */
+void
+gst_pad_insert_event (GstPad *pad, GstData *event)
+{
+  GstScheduler *sched;
+  
+  g_return_if_fail (GST_IS_REAL_PAD (pad));
+  g_return_if_fail (pad != NULL);
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_IS_EVENT (event));
+  
+  GST_DEBUG (GST_CAT_EVENT, "inserted event %d on pad %s:%s\n",
+		  GST_DATA_TYPE (event), GST_DEBUG_PAD_NAME (pad));
+  
+  sched = GST_RPAD_SCHED(pad);
+  g_return_if_fail (sched != NULL);
+  
+  gst_scheduler_insert_event (sched, pad, event);
+}
+/**
+ * gst_pad_event_instream_default:
+ * @pad: src pad to handle the event
+ * @data: the #GstData to handle
+ * 
+ * Checks if the #GstData is an event and if that's the case it takes
+ * the default actions to handle the event.
+ *
+ * Returns: TRUE, if the data is an event.
+ */
+gboolean
+gst_pad_event_instream_default (GstPad *pad, GstData *data)
+{
+  GstElement *element;
+  
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+  
+  /* return FALSE if it's a buffer */
+  if (GST_IS_BUFFER (data))
+    return FALSE;
+  
+  element = GST_ELEMENT (GST_OBJECT_PARENT (pad));
+  switch (GST_DATA_TYPE (data))
+  {
+    case GST_EVENT_EOS:
+      gst_element_set_eos (element);
+      gst_element_yield (element);
+      break;
+    default:
+      break;
+  }
+  return TRUE;
+}
+
+
 

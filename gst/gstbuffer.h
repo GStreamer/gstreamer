@@ -36,6 +36,7 @@
  */
 
 #include <gst/gstdata.h>
+#include <gst/gstevent.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -45,16 +46,21 @@
 #include <asm/atomic.h>
 #endif
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-extern GType _gst_buffer_type;
-
-#define GST_TYPE_BUFFER		(_gst_buffer_type)
-#define GST_BUFFER(buf) 	((GstBuffer *)(buf))
-#define GST_IS_BUFFER(buf)	(GST_DATA_TYPE(buf) == GST_TYPE_BUFFER)
+/*
+#define GST_BUFFER(buf)		 	(((GstData*)(buf))->type == GST_BUFFER ? (GstBuffer *)(buf) : NULL)
+*/
+#define GST_BUFFER(buf)		 	((GstBuffer *)(buf))
+#define GST_IS_BUFFER(buf)		(((GstData*)(buf))->type == GST_BUFFER)
+  
+#ifdef HAVE_ATOMIC_H
+#  define GST_BUFFER_REFCOUNT(buf)	(atomic_read(&(GST_DATA(buf)->refcount)))
+#else
+#  define GST_BUFFER_REFCOUNT(buf)	(GST_DATA(buf)->refcount)
+#endif
 
 #define GST_BUFFER_FLAGS(buf)		 	(GST_BUFFER(buf)->flags)
 #define GST_BUFFER_FLAG_IS_SET(buf,flag) 	(GST_BUFFER_FLAGS(buf) & (1<<(flag)))
@@ -64,9 +70,9 @@ extern GType _gst_buffer_type;
 
 #define GST_BUFFER_DATA(buf)		(GST_BUFFER(buf)->data)
 #define GST_BUFFER_SIZE(buf)		(GST_BUFFER(buf)->size)
-#define GST_BUFFER_OFFSET(buf)		(GST_BUFFER(buf)->offset)
+#define GST_BUFFER_OFFSET(buf)		(GST_DATA(buf)->offset[GST_OFFSET_BYTES])
 #define GST_BUFFER_MAXSIZE(buf)		(GST_BUFFER(buf)->maxsize)
-#define GST_BUFFER_TIMESTAMP(buf)	(GST_BUFFER(buf)->timestamp)
+#define GST_BUFFER_TIMESTAMP(buf)	(GST_DATA(buf)->offset[GST_OFFSET_TIME])
 #define GST_BUFFER_MAXAGE(buf)		(GST_BUFFER(buf)->maxage)
 #define GST_BUFFER_BUFFERPOOL(buf)	(GST_BUFFER(buf)->pool)
 #define GST_BUFFER_PARENT(buf)		(GST_BUFFER(buf)->parent)
@@ -89,6 +95,7 @@ typedef enum {
 
 
 typedef struct _GstBuffer GstBuffer;
+typedef struct _GstBufferClass GstBufferClass;
 
 
 typedef void       (*GstBufferFreeFunc)	(GstBuffer *buf);
@@ -103,26 +110,14 @@ struct _GstBuffer {
   /* locking */
   GMutex 		*lock;
 
-  /* refcounting */
-#ifdef HAVE_ATOMIC_H
-  atomic_t 		refcount;
-#define GST_BUFFER_REFCOUNT(buf)	(atomic_read(&(GST_BUFFER((buf))->refcount)))
-#else
-  int 			refcount;
-#define GST_BUFFER_REFCOUNT(buf)	(GST_BUFFER(buf)->refcount)
-#endif
-
   /* flags */
   guint16 		flags;
 
-  /* pointer to data, its size, and offset in original source if known */
-  guchar 		*data;
+  /* pointer to data and its size */
+  gpointer 		data;
   guint32 		size;
-  guint32 		maxsize;
-  guint32 		offset;
 
-  /* timestamp */
-  gint64 		timestamp;
+  guint32 		maxsize;
   gint64 		maxage;
 
   /* subbuffer support, who's my parent? */
@@ -137,8 +132,13 @@ struct _GstBuffer {
   GstBufferCopyFunc 	copy;		/* copy the data from one buffer to another */
 };
 
-/* initialisation */
-void 		_gst_buffer_initialize		(void);
+/* initialization */
+void		_gst_buffer_initialize		(void);
+
+/* inheritance */
+void		gst_buffer_init			(GstBuffer *buffer);
+void		gst_buffer_dispose 		(GstData *data);
+
 /* creating a new buffer from scratch */
 GstBuffer*	gst_buffer_new			(void);
 GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint32 offset, guint32 size);
@@ -147,9 +147,9 @@ GstBuffer*	gst_buffer_new_from_pool 	(GstBufferPool *pool, guint32 offset, guint
 GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint32 offset, guint32 size);
 
 /* refcounting */
-void 		gst_buffer_ref			(GstBuffer *buffer);
-void 		gst_buffer_ref_by_count		(GstBuffer *buffer, gint count);
-void 		gst_buffer_unref		(GstBuffer *buffer);
+/* deprecated, use gst_data_(un)ref instead */
+#define		gst_buffer_ref(buffer)		gst_data_ref(buffer)
+#define		gst_buffer_unref(buffer)	gst_data_unref(buffer)
 
 /* destroying the buffer */
 void 		gst_buffer_destroy		(GstBuffer *buffer);
@@ -161,7 +161,6 @@ GstBuffer*	gst_buffer_copy			(GstBuffer *buffer);
 GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 GstBuffer*	gst_buffer_append		(GstBuffer *buffer, GstBuffer *append);
-
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 
 void		gst_buffer_print_stats		(void);

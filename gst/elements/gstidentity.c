@@ -60,7 +60,7 @@ static void gst_identity_init		(GstIdentity *identity);
 static void gst_identity_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_identity_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void gst_identity_chain		(GstPad *pad, GstBuffer *buf);
+static void gst_identity_chain		(GstPad *pad, GstData *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
@@ -177,7 +177,7 @@ gst_identity_init (GstIdentity *identity)
 }
 
 static void 
-gst_identity_chain (GstPad *pad, GstBuffer *buf) 
+gst_identity_chain (GstPad *pad, GstData *buf) 
 {
   GstIdentity *identity;
   guint i;
@@ -191,7 +191,7 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
   if (identity->error_after >= 0) {
     identity->error_after--;
     if (identity->error_after == 0) {
-      gst_buffer_unref (buf);
+      gst_data_unref (buf);
       gst_element_error (GST_ELEMENT (identity), "errored after iterations as requested");
       return;
     }
@@ -199,24 +199,24 @@ gst_identity_chain (GstPad *pad, GstBuffer *buf)
 
   if (identity->drop_probability > 0.0) {
     if ((gfloat)(1.0*rand()/(RAND_MAX)) < identity->drop_probability) {
-      identity->last_message = g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %llu)",
-	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      identity->last_message = g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, %lu)",
+	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), (gulong) GST_BUFFER_TIMESTAMP (buf));
       g_object_notify (G_OBJECT (identity), "last-message");
-      gst_buffer_unref (buf);
+      gst_data_unref (buf);
       return;
     }
   }
 
   for (i = identity->duplicate; i; i--) {
     if (!identity->silent)
-      identity->last_message = g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %llu)",
-	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      identity->last_message = g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, %lu)",
+	      GST_DEBUG_PAD_NAME (identity->sinkpad), GST_BUFFER_SIZE (buf), (gulong) GST_BUFFER_TIMESTAMP (buf));
     g_object_notify (G_OBJECT (identity), "last-message");
     g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
 	                       buf);
 
     if (i>1) 
-      gst_buffer_ref (buf);
+      gst_data_ref (buf);
 
     gst_pad_push (identity->srcpad, buf);
 
@@ -229,7 +229,7 @@ static void
 gst_identity_loop (GstElement *element) 
 {
   GstIdentity *identity;
-  GstBuffer *buf;
+  GstData *buf;
 
   g_return_if_fail (element != NULL);
   g_return_if_fail (GST_IS_IDENTITY (element));
@@ -238,7 +238,7 @@ gst_identity_loop (GstElement *element)
   
   buf = gst_pad_pull (identity->sinkpad);
   if (GST_IS_EVENT (buf)) {
-    gst_pad_event_default (identity->sinkpad, GST_EVENT (buf));
+    gst_pad_event_instream_default (identity->sinkpad, buf);
   }
 
   gst_identity_chain (identity->sinkpad, buf);

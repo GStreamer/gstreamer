@@ -58,14 +58,14 @@ static void 	gst_tee_class_init	(GstTeeClass *klass);
 static void 	gst_tee_init		(GstTee *tee);
 
 static GstPad* 	gst_tee_request_new_pad (GstElement *element, GstPadTemplate *temp, const gchar *unused);
-static gboolean gst_tee_event_handler 	(GstPad *pad, GstEvent *event);
+/* static gboolean gst_tee_event_handler 	(GstPad *pad, GstData *event);*/
 
 static void 	gst_tee_set_property 	(GObject *object, guint prop_id, 
 					 const GValue *value, GParamSpec *pspec);
 static void 	gst_tee_get_property 	(GObject *object, guint prop_id, 
 					 GValue *value, GParamSpec *pspec);
 
-static void  	gst_tee_chain 		(GstPad *pad, GstBuffer *buf);
+static void  	gst_tee_chain 		(GstPad *pad, GstData *buf);
 
 
 static GstElementClass *parent_class = NULL;
@@ -213,7 +213,7 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);
   gst_element_add_pad (GST_ELEMENT (tee), srcpad);
-  gst_pad_set_event_function (srcpad, gst_tee_event_handler);
+  /* gst_pad_set_event_function (srcpad, gst_tee_event_handler);*/
   GST_PAD_ELEMENT_PRIVATE (srcpad) = NULL;
 
   if (GST_PAD_CAPS (tee->sinkpad)) {
@@ -223,6 +223,9 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
   return srcpad;
 }
 
+/* FIXME: what's this?
+ * disabled for now */
+/*
 static gboolean
 gst_tee_event_handler (GstPad *pad, GstEvent *event)
 {
@@ -240,7 +243,7 @@ gst_tee_event_handler (GstPad *pad, GstEvent *event)
 
   return TRUE;
 }
-
+*/
 static void
 gst_tee_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
@@ -295,7 +298,7 @@ gst_tee_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
  * Chain a buffer on a pad.
  */
 static void 
-gst_tee_chain (GstPad *pad, GstBuffer *buf) 
+gst_tee_chain (GstPad *pad, GstData *buf) 
 {
   GstTee *tee;
   GList *pads;
@@ -307,7 +310,8 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
   tee = GST_TEE (gst_pad_get_parent (pad));
   /*gst_trace_add_entry (NULL, 0, buf, "tee buffer");*/
 
-  gst_buffer_ref_by_count (buf, GST_ELEMENT (tee)->numsrcpads - 1);
+  /* do the default event stuff */
+  gst_pad_event_instream_default (pad, buf);
   
   pads = gst_element_get_pad_list (GST_ELEMENT (tee));
 
@@ -318,28 +322,20 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
     if (GST_PAD_DIRECTION (outpad) != GST_PAD_SRC)
       continue;
 
-    if (GST_PAD_ELEMENT_PRIVATE (outpad)) {
-      GstEvent *event = GST_EVENT (GST_PAD_ELEMENT_PRIVATE (outpad));
-	
-      GST_PAD_ELEMENT_PRIVATE (outpad) = NULL;
-      if (GST_PAD_IS_CONNECTED (outpad))
-        gst_pad_push (outpad, GST_BUFFER (event));
-      else
-	gst_event_free (event);
-    }
-
     if (!tee->silent) {
       g_free (tee->last_message);
-      tee->last_message = g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %llu) %p",
-              GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+      tee->last_message = g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %lu) %p",
+              GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), (gulong) GST_BUFFER_TIMESTAMP (buf), buf);
       g_object_notify (G_OBJECT (tee), "last_message");
     }
 
     if (GST_PAD_IS_CONNECTED (outpad))
+      /* we want to keep the buffer */
+      gst_data_ref (buf);
       gst_pad_push (outpad, buf);
-    else
-      gst_buffer_unref (buf);
   }
+  /* no more pads to push the buffer, but we still hold the initial reference */
+  gst_data_unref (buf);
 }
 
 gboolean

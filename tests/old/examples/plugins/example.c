@@ -91,7 +91,7 @@ GST_PADTEMPLATE_FACTORY (src_factory,
 static void	gst_example_class_init		(GstExampleClass *klass);
 static void	gst_example_init		(GstExample *example);
 
-static void	gst_example_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_example_chain		(GstPad *pad, GstData *buf);
 
 static void	gst_example_set_property	(GObject *object, guint prop_id, 
 						 const GValue *value, GParamSpec *pspec);
@@ -219,7 +219,7 @@ gst_example_init(GstExample *example)
  * as the buffer provided by the peer element.
  */
 static void
-gst_example_chain (GstPad *pad, GstBuffer *buf)
+gst_example_chain (GstPad *pad, GstData *buf)
 {
   GstExample *example;
   GstBuffer *outbuf;
@@ -258,13 +258,13 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
 
     /* we don't need the incomming buffer anymore so we unref it. When we are
      * the last plugin with a handle to the buffer, its memory will be freed */
-    gst_buffer_unref (buf);
+    gst_data_unref (buf);
 
     /* When we're done with the buffer, we push it on to the next element
      * in the pipeline, through the element's source pad, which is stored
      * in the element's structure.
      */
-    gst_pad_push(example->srcpad,outbuf);
+    gst_pad_push(example->srcpad, GST_DATA (outbuf));
 
     /* For fun we'll emit our useless signal here */
     g_signal_emit(G_OBJECT (example), gst_example_signals[ASDF], 0,
@@ -272,7 +272,7 @@ gst_example_chain (GstPad *pad, GstBuffer *buf)
 
   /* If we're not doing something, just send the original incoming buffer. */
   } else {
-    gst_pad_push(example->srcpad,buf);
+    gst_pad_push(example->srcpad, buf);
   }
 }
 

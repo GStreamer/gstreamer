@@ -67,11 +67,11 @@ gst_bytestream_destroy (GstByteStream * bs)
   GSList *walk;
 
   if (bs->event)
-    gst_event_free (bs->event);
+    gst_data_unref (bs->event);
 
   walk = bs->buflist;
   while (walk) {
-    gst_buffer_unref (GST_BUFFER (walk->data));
+    gst_data_unref (GST_DATA (walk->data));
     walk = g_slist_next (walk);
   }
   g_slist_free (bs->buflist);
@@ -124,11 +124,11 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
   g_assert (!bs->event);
 
   bs_print ("get_next_buf: pulling buffer\n");
-  nextbuf = gst_pad_pull (bs->pad);
+  nextbuf = GST_BUFFER (gst_pad_pull (bs->pad));
 
   if (GST_IS_EVENT (nextbuf))
     {
-      bs->event = GST_EVENT (nextbuf);
+      bs->event = GST_DATA (nextbuf);
       return FALSE;
     }
 
@@ -158,8 +158,8 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
 	bs->headbufavail += GST_BUFFER_SIZE (nextbuf);
       }
 
-      gst_buffer_unref (lastbuf);
-      gst_buffer_unref (nextbuf);
+      gst_data_unref (GST_DATA (lastbuf));
+      gst_data_unref (GST_DATA (nextbuf));
 
       /* if we can't, we just append this buffer */
     }
@@ -381,7 +381,7 @@ gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
       /* record that we've trimmed this many bytes */
       len -= bs->headbufavail;
       /* unref it */
-      gst_buffer_unref (headbuf);
+      gst_data_unref (GST_DATA (headbuf));
 
       /* record the new headbufavail */
       if (bs->buflist) {
@@ -398,11 +398,11 @@ gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
 }
 
 gboolean
-gst_bytestream_seek (GstByteStream *bs, GstSeekType type, gint64 offset)
+gst_bytestream_seek (GstByteStream *bs, GstSeekType type, GstOffsetType offset_type, gint64 offset)
 {
   GstRealPad *peer = GST_RPAD_PEER (bs->pad);
 
-  if (gst_pad_send_event (GST_PAD (peer), gst_event_new_seek (type, offset, TRUE))) {
+  if (gst_pad_send_event (GST_PAD (peer), GST_DATA (gst_event_new_seek (type, offset, offset_type, TRUE)))) {
     gst_bytestream_flush_fast (bs, bs->listavail);
     return TRUE;
   }
@@ -445,7 +445,7 @@ gst_bytestream_read (GstByteStream * bs, guint32 len)
 void
 gst_bytestream_get_status (GstByteStream *bs,
 			   guint32 *avail_out,
-			   GstEvent **event_out)
+			   GstData **event_out)
 {
   if (avail_out)
     *avail_out = bs->listavail;

@@ -295,14 +295,13 @@ gst_standard_scheduler_chain_wrapper (int argc, char *argv[])
       realpad = GST_REAL_PAD_CAST (pad);
 
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK) {
-	GstBuffer *buf;
+	GstData *buf;
 
 	GST_DEBUG (GST_CAT_DATAFLOW, "pulling data from %s:%s\n", name, GST_PAD_NAME (pad));
 	buf = gst_pad_pull (pad);
 	if (buf) {
 	  if (GST_IS_EVENT (buf) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
-	    /*gst_pad_event_default (pad, GST_EVENT (buf)); */
-	    gst_pad_send_event (pad, GST_EVENT (buf));
+	    gst_pad_event_instream_default (pad, buf);
 	  }
 	  else {
 	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s\n", name,
@@ -330,7 +329,7 @@ gst_standard_scheduler_src_wrapper (int argc, char *argv[])
   GstElement *element = GST_ELEMENT_CAST (argv);
   GList *pads;
   GstRealPad *realpad;
-  GstBuffer *buf = NULL;
+  GstData *buf = NULL;
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
 
   GST_DEBUG_ENTER ("(%d,\"%s\")", argc, name);
@@ -352,9 +351,9 @@ gst_standard_scheduler_src_wrapper (int argc, char *argv[])
 /*          if (GST_RPAD_GETREGIONFUNC(realpad) == NULL)		   */	
 /*            fprintf(stderr,"error, no getregionfunc in \"%s\"\n", name); */
 /*          else							   */
-	  buf =
+	  buf = GST_DATA (
 	    (GST_RPAD_GETREGIONFUNC (realpad)) (GST_PAD_CAST (realpad), realpad->regiontype,
-						realpad->offset, realpad->len);
+						realpad->offset, realpad->len));
 	  realpad->regiontype = GST_REGION_VOID;
 	}
 	else {
@@ -379,7 +378,7 @@ gst_standard_scheduler_src_wrapper (int argc, char *argv[])
 }
 
 static void
-gst_standard_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
+gst_standard_scheduler_chainhandler_proxy (GstPad * pad, GstData * buf)
 {
   GstRealPad *peer = GST_RPAD_PEER (pad);
   gint loop_count = 100;
@@ -418,10 +417,10 @@ gst_standard_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
   GST_DEBUG (GST_CAT_DATAFLOW, "done switching\n");
 }
 
-static GstBuffer *
+static GstData *
 gst_standard_scheduler_gethandler_proxy (GstPad * pad)
 {
-  GstBuffer *buf;
+  GstData *buf;
   GstRealPad *peer = GST_RPAD_PEER (pad);
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
@@ -478,7 +477,7 @@ gst_standard_scheduler_pullregionfunc_proxy (GstPad * pad, GstRegionType type, g
   GST_DEBUG (GST_CAT_DATAFLOW, "done switching\n");
 
   /* now grab the buffer from the pen, clear the pen, and return the buffer */
-  buf = GST_RPAD_BUFPEN (pad);
+  buf = GST_BUFFER (GST_RPAD_BUFPEN (pad));
   GST_RPAD_BUFPEN (pad) = NULL;
   return buf;
 }

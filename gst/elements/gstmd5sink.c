@@ -58,7 +58,7 @@ static void			gst_md5sink_init		(GstMD5Sink *md5sink);
 static void			gst_md5sink_get_property	(GObject *object, guint prop_id, 
 								 GValue *value, GParamSpec *pspec);
 
-static void			gst_md5sink_chain		(GstPad *pad, GstBuffer *buf);
+static void			gst_md5sink_chain		(GstPad *pad, GstData *buf);
 static GstElementStateReturn	gst_md5sink_change_state	(GstElement *element);
 
 /* variables */
@@ -141,8 +141,6 @@ md5_read_ctx (GstMD5Sink *ctx, gpointer resbuf)
 void
 md5_process_bytes (const void *buffer, size_t len, GstMD5Sink *ctx)
 {
-  //const void aligned_buffer = buffer;
-
   /* When we already have some bits in our internal buffer concatenate
      both inputs first.  */
   if (ctx->buflen != 0)
@@ -467,22 +465,24 @@ gst_md5sink_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 }
 
 static void 
-gst_md5sink_chain (GstPad *pad, GstBuffer *buf) 
+gst_md5sink_chain (GstPad *pad, GstData *data) 
 {
   GstMD5Sink *md5sink;
-
+  GstBuffer *buf;
+  
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (data != NULL);
 
   md5sink = GST_MD5SINK (gst_pad_get_parent (pad));
-
-  if (GST_IS_BUFFER (buf))
+  buf = GST_BUFFER (data);
+  
+  if (GST_IS_BUFFER (data))
   {
     md5_process_bytes (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), md5sink);
   }
   
-  gst_buffer_unref (buf);
+  gst_data_unref (data);
 }
 
 GstElementDetails gst_md5sink_details = {

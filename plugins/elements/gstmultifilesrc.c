@@ -57,7 +57,7 @@ static void		gst_multidisksrc_init		(GstMultiDiskSrc *disksrc);
 static void		gst_multidisksrc_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void		gst_multidisksrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstBuffer *	gst_multidisksrc_get		(GstPad *pad);
+static GstData *	gst_multidisksrc_get		(GstPad *pad);
 /*static GstBuffer *	gst_multidisksrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);*/
 
 static GstElementStateReturn	gst_multidisksrc_change_state	(GstElement *element);
@@ -189,7 +189,7 @@ gst_multidisksrc_get_property (GObject *object, guint prop_id, GValue *value, GP
  *
  * Push a new buffer from the disksrc at the current offset.
  */
-static GstBuffer *
+static GstData *
 gst_multidisksrc_get (GstPad *pad)
 {
   GstMultiDiskSrc *src;
@@ -203,7 +203,7 @@ gst_multidisksrc_get (GstPad *pad)
     gst_multidisksrc_close_file(src);
 
   if (!src->listptr) {
-    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
+    return GST_DATA (gst_event_new_eos ());
   }
 
   list = src->listptr;
@@ -233,7 +233,7 @@ gst_multidisksrc_get (GstPad *pad)
   }
 
   /* we're done, return the buffer */
-  return buf;
+  return GST_DATA (buf);
 }
 
 /* open the file and mmap it, necessary to go to READY state */

@@ -13,7 +13,7 @@ unsigned long _gst_getbits_int_cb(gst_getbits_t *gb, unsigned long bits) {
   int result;
   int bitsleft;
 
-  //printf("gst_getbits%lu %ld %p %08x\n", bits, gb->bits, gb->ptr, gb->dword);
+  /* printf("gst_getbits%lu %ld %p %08x\n", bits, gb->bits, gb->ptr, gb->dword); */
 
   if (!bits) return 0;
 

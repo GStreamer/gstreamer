@@ -68,7 +68,7 @@ static void	gst_fakesink_set_property	(GObject *object, guint prop_id,
 static void	gst_fakesink_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 
-static void	gst_fakesink_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_fakesink_chain		(GstPad *pad, GstData *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_fakesink_signals[LAST_SIGNAL] = { 0 };
@@ -218,7 +218,7 @@ gst_fakesink_get_property (GObject *object, guint prop_id, GValue *value, GParam
 }
 
 static void 
-gst_fakesink_chain (GstPad *pad, GstBuffer *buf) 
+gst_fakesink_chain (GstPad *pad, GstData *buf) 
 {
   GstFakeSink *fakesink;
 
@@ -232,8 +232,8 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
     if (fakesink->last_message) 
       g_free (fakesink->last_message);
 
-    fakesink->last_message = g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, %lld) %p",
-		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+    fakesink->last_message = g_strdup_printf ("chain   ******* (%s:%s)< (%d bytes, %lu) %p",
+		GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), (gulong) GST_BUFFER_TIMESTAMP (buf), buf);
     
     g_object_notify (G_OBJECT (fakesink), "last_message");
   }
@@ -245,7 +245,7 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
     gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
 
-  gst_buffer_unref (buf);
+  gst_data_unref (buf);
 }
 
 gboolean

@@ -171,7 +171,6 @@ struct _GstElementClass {
   GstElementStateReturn (*change_state)		(GstElement *element);
   /* request a new pad */
   GstPad*		(*request_new_pad)	(GstElement *element, GstPadTemplate *templ, const gchar* name);
-  void			(*send_event)		(GstElement *element, GstEvent *event);
 };
 
 void			gst_element_class_add_padtemplate	(GstElementClass *klass, GstPadTemplate *templ);
@@ -227,9 +226,6 @@ void			gst_element_disconnect_elements (GstElement *src, GstElement *dest);
 gboolean		gst_element_connect_elements_many (GstElement *element_1, GstElement *element_2, ...);
 
 void			gst_element_set_eos		(GstElement *element);
-
-void			gst_element_send_event		(GstElement *element, GstEvent *event);
-
 
 GstElementState         gst_element_get_state           (GstElement *element);
 gint			gst_element_set_state		(GstElement *element, GstElementState state);

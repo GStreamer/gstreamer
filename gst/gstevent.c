@@ -21,42 +21,37 @@
  */
 
 
-#include "gst/gstinfo.h"
-#include "gst/gstevent.h"
+#include "gstevent.h"
+/* debugging and error checking */
+#include "gstlog.h"
+#include "gstinfo.h"
 
-GType _gst_event_type;
+static void		gst_event_free 		(GstData *data);
+static void		gst_event_lock_free	(GstData *data);
 
-static GMemChunk *_gst_event_chunk;
-static GMutex *_gst_event_chunk_lock;
+static GMemChunk *_gst_event_chunk = NULL;
 
 void
 _gst_event_initialize (void)
 {
-  gint eventsize = sizeof(GstEvent);
-  static const GTypeInfo event_info = {
-    0,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    0, 
-    0,
-    NULL,
-    NULL,
-  };
+  gint eventsize = sizeof(GstData);
+  eventsize = eventsize > sizeof(GstEventEOS) ? eventsize : sizeof(GstEventEOS);
+  eventsize = eventsize > sizeof(GstEventDiscontinuous) ? eventsize : sizeof(GstEventDiscontinuous);
+  eventsize = eventsize > sizeof(GstEventNewMedia) ? eventsize : sizeof(GstEventNewMedia);
+  eventsize = eventsize > sizeof(GstEventLength) ? eventsize : sizeof(GstEventLength);
+  eventsize = eventsize > sizeof(GstEventLock) ? eventsize : sizeof(GstEventLock);
+  eventsize = eventsize > sizeof(GstEventUnLock) ? eventsize : sizeof(GstEventUnLock);
+  eventsize = eventsize > sizeof(GstEventSeek) ? eventsize : sizeof(GstEventSeek);
+  eventsize = eventsize > sizeof(GstEventFlush) ? eventsize : sizeof(GstEventFlush);
+  eventsize = eventsize > sizeof(GstEventEmpty) ? eventsize : sizeof(GstEventEmpty);
 
-  /* round up to the nearest 32 bytes for cache-line and other efficiencies */
-  eventsize = (((eventsize-1) / 32) + 1) * 32;
-
-  _gst_event_chunk = g_mem_chunk_new ("GstEvent", eventsize,
-  				      eventsize * 32, G_ALLOC_AND_FREE);
-  _gst_event_chunk_lock = g_mutex_new ();
-
-  /* register the type */
-  _gst_event_type = g_type_register_static (G_TYPE_INT, "GstEvent", &event_info, 0);
+  if (_gst_event_chunk == NULL)
+  {
+    _gst_event_chunk = g_mem_chunk_new ("GstEvent", eventsize,
+					eventsize * 32, G_ALLOC_AND_FREE);
+    GST_INFO (GST_CAT_EVENT, "event system initialized.");
+  }
 }
-
 /**
  * gst_event_new:
  * @type: The type of the new event
@@ -65,77 +60,84 @@ _gst_event_initialize (void)
  *
  * Returns: A new event.
  */
-GstEvent*
-gst_event_new (GstEventType type)
+GstData*
+gst_event_new (GstDataType type)
 {
-  GstEvent *event;
+  GstData *event = NULL;
 
-  g_mutex_lock (_gst_event_chunk_lock);
-  event = g_mem_chunk_alloc (_gst_event_chunk);
-  g_mutex_unlock (_gst_event_chunk_lock);
-  GST_INFO (GST_CAT_EVENT, "creating new event %p", event);
-
-  GST_DATA_TYPE (event) = _gst_event_type;
-  GST_EVENT_TYPE (event) = type;
-  GST_EVENT_TIMESTAMP (event) = 0LL;
-  GST_EVENT_SRC (event) = NULL;
+  switch (type)
+  {
+    case GST_EVENT_EOS:
+    case GST_EVENT_DISCONTINUOUS:
+    case GST_EVENT_NEWMEDIA:
+    case GST_EVENT_FLUSH:
+    case GST_EVENT_EMPTY:
+    case GST_EVENT_UNLOCK:
+      event = g_mem_chunk_alloc (_gst_event_chunk);
+      g_return_val_if_fail (event != NULL, NULL);
+      gst_event_init (event);
+      event->type = type;
+      break;
+    default:
+      g_warning ("you called gst_event_new with a custom type (%ld) which is not allowed", (glong) type);
+      return NULL;
+  }
+  GST_DEBUG (GST_CAT_EVENT, "creating new event %p (type %d)", event, type);
 
   return event;
 }
-
 /**
- * gst_event_copy:
- * @event: The event to copy
- *
- * Copy the event
- *
- * Returns: A copy of the event.
- */
-GstEvent*
-gst_event_copy (GstEvent *event)
-{
-  GstEvent *copy;
-
-  g_mutex_lock (_gst_event_chunk_lock);
-  copy = g_mem_chunk_alloc (_gst_event_chunk);
-  g_mutex_unlock (_gst_event_chunk_lock);
-
-  memcpy (copy, event, sizeof (GstEvent));
-  
-  /* FIXME copy/ref additional fields */
-
-  return copy;
-}
-
-/**
- * gst_event_free:
- * @event: The event to free
- *
- * Free the given element.
+ * gst_event_init:
+ * @event: The event to be initialized
+ * 
+ * Initializes an event.
+ * This function should be called by the init routine of a subtype
+ * of "event".
  */
 void
-gst_event_free (GstEvent* event)
+gst_event_init	(GstData *data)
 {
-  GST_INFO (GST_CAT_EVENT, "freeing event %p", event);
-
-  g_mutex_lock (_gst_event_chunk_lock);
-  if (GST_EVENT_SRC (event)) {
-    gst_object_unref (GST_EVENT_SRC (event));
-  }
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_INFO:
-      gst_props_unref (GST_EVENT_INFO_PROPS (event));
-      break;
-    default:
-      break;
-  }
-  g_mem_chunk_free (_gst_event_chunk, event);
-  g_mutex_unlock (_gst_event_chunk_lock);
+  gst_data_init (data);
+  data->free = gst_event_free;
 }
-
+static void
+gst_event_free (GstData *data)
+{
+  GST_DEBUG (GST_CAT_EVENT, "freeing event %p", data);
+  g_mem_chunk_free (_gst_event_chunk, data);
+}
+/**
+ * gst_event_seek_init:
+ * @event: The event to be initialized
+ * @type: The type of the event
+ * @offset_type: The default offset_type
+ * 
+ * Initializes a seek event.
+ * This function should be called by the init routine of a subtype
+ * of "seek event".
+ */
+void
+gst_event_seek_init (GstEventSeek *event, GstSeekType type, GstOffsetType offset_type)
+{
+  guint i;
+  
+  gst_data_init ((GstData *) event);
+  GST_DATA_TYPE (event) = GST_EVENT_SEEK;
+  ((GstData *) event)->free = gst_event_free;
+  
+  GST_EVENT_SEEK_TYPE (event) = type;
+  event->original = offset_type;
+  for (i = 0; i < GST_OFFSET_TYPES; i++)
+  {
+    event->offset[i] = 0;
+    event->accuracy[i] = GST_ACCURACY_NONE;
+  }
+  event->flush = TRUE;
+}
 /**
  * gst_event_new_seek:
  * @type: The type of the seek event
+ * @offset_type: The type you seek
  * @offset: The offset of the seek
  * @flush: A boolean indicating a flush has to be performed as well
  *
@@ -143,42 +145,185 @@ gst_event_free (GstEvent* event)
  *
  * Returns: A new seek event.
  */
-GstEvent*       
-gst_event_new_seek (GstSeekType type, gint64 offset, gboolean flush)
+GstEventSeek*       
+gst_event_new_seek (GstSeekType type, GstOffsetType offset_type, gint64 offset, gboolean flush)
 {
-  GstEvent *event;
+  GstEventSeek *event;
 
-  event = gst_event_new (GST_EVENT_SEEK);
-  GST_EVENT_SEEK_TYPE (event) = type;
-  GST_EVENT_SEEK_OFFSET (event) = offset;
-  GST_EVENT_SEEK_FLUSH (event) = flush;
+  g_return_val_if_fail (offset_type < GST_OFFSET_TYPES, NULL);
+  /* using malloc for now */
+  event = g_mem_chunk_alloc (_gst_event_chunk);
+  g_return_val_if_fail (event != NULL, NULL);
+  gst_event_seek_init (event, type, offset_type);
+
+  event->accuracy[offset_type] = GST_ACCURACY_SURE;
+  event->offset[offset_type] = offset;
+
+  event->flush = flush;
 
   return event;
 }
-
 /**
- * gst_event_new_info:
- * @firstname: the first property name
- * @...: properties
- *
- * Allocate a new info event with the given props.
- *
- * Returns: A new info event.
+ * gst_event_copy_seek:
+ * @to: where the data should be copied
+ * @from: where the data should be taken
+ * 
+ * Copies all relevant data from one event to the other.
  */
-GstEvent*       
-gst_event_new_info (const gchar *firstname, ...)
+void
+gst_event_copy_seek (GstEventSeek *to, const GstEventSeek *from)
 {
-  GstEvent *event;
-  va_list var_args;
-      
-  event = gst_event_new (GST_EVENT_INFO);
-  va_start (var_args, firstname); 
+  guint i;
+  
+  gst_data_copy (GST_DATA (to), (const GstData *) from);
 
-  GST_EVENT_INFO_PROPS (event) = gst_props_newv (firstname, var_args);
-	  
-  va_end (var_args);
+  to->type = from->type;
+  to->original = from->original;
+  for (i = 0; i < GST_OFFSET_TYPES; i++)
+  {
+    to->accuracy[i] = from->accuracy[i];
+    to->offset[i] = from->offset[i];
+  }
+}
+/**
+ * gst_event_lock_init:
+ * @event: The event to be initialized
+ * 
+ * Initializes a lock event.
+ * This function should be called by the init routine of a subtype
+ * of "lock event".
+ */
+void
+gst_event_lock_init (GstEventLock *event)
+{
+  gst_data_init ((GstData *) event);
+  GST_DATA_TYPE (event) = GST_EVENT_LOCK;
+  ((GstData *) event)->free = gst_event_lock_free;
 
+  event->on_delete = NULL;
+  event->func_data = NULL;
+}
+static void
+gst_event_lock_free (GstData *data)
+{
+  GstEventLock *event = GST_EVENT_LOCK (data);
+  
+  if (event->on_delete)
+  {
+    event->on_delete (event->func_data);
+  }
+  GST_DEBUG (GST_CAT_EVENT, "freeing lock event %p", data);
+  g_mem_chunk_free (_gst_event_chunk, data);
+}
+/**
+ * gst_event_new_lock:
+ * @func: The function to be called upon event destruction
+ * @data: The data given to the function
+ *
+ * Allocate a new lock event with the given parameters.
+ *
+ * Returns: A new lock event.
+ */
+GstEventLock *
+gst_event_new_lock (GstLockFunction func, gpointer data)
+{
+  GstEventLock *event;
+
+  /* using malloc for now */
+  event = g_mem_chunk_alloc (_gst_event_chunk);
+  g_return_val_if_fail (event != NULL, NULL);
+  gst_event_lock_init (event);
+
+  event->on_delete = func;
+  event->func_data = data;
+  
   return event;
 }
+/**
+ * gst_event_copy_lock:
+ * @to: where the data should be copied
+ * @from: where the data should be taken
+ * 
+ * Copies all relevant data from one event to the other.
+ */
+void
+gst_event_copy_lock (GstEventLock *to, const GstEventLock *from)
+{
+  gst_data_copy (GST_DATA (to), (const GstData *) from);
 
+  to->on_delete = to->on_delete;
+  to->func_data = from->func_data;
+}
+/**
+ * gst_event_length_init:
+ * @event: The event to be initialized
+ * 
+ * Initializes a length event.
+ * This function should be called by the init routine of a subtype
+ * of "length event".
+ */
+void
+gst_event_length_init (GstEventLength *event)
+{
+  guint i;
+  
+  gst_data_init ((GstData *) event);
+  GST_DATA_TYPE (event) = GST_EVENT_LENGTH;
+  ((GstData *) event)->free = gst_event_free;
 
+  event->original = GST_OFFSET_TYPES;
+  for (i = 0; i < GST_OFFSET_TYPES; i++)
+  {
+    event->accuracy[i] = GST_ACCURACY_NONE;
+    event->length[i] = 0;
+  }
+}
+/**
+ * gst_event_new_length:
+ * @original: The original information
+ * @accuracy: how accurate this information is
+ * @length: The length
+ *
+ * Allocate a new length event with the given parameters. The accuracy parameter
+ * is used to indicate that the length might not be right. For example VBR mp3's can't
+ * deliver a completely accurate length when the song starts.
+ *
+ * Returns: A new length event.
+ */
+GstEventLength *
+gst_event_new_length (GstOffsetType original, GstEventAccuracy accuracy, guint64 length)
+{
+  GstEventLength *event;
+
+  /* using malloc for now */
+  event = g_mem_chunk_alloc (_gst_event_chunk);
+  g_return_val_if_fail (event != NULL, NULL);
+  gst_event_length_init (event);
+
+  event->original = original;
+  event->accuracy[original] = accuracy;
+  event->length[original] = length;
+  
+  return event;
+}
+/**
+ * gst_event_copy_length:
+ * @to: where the data should be copied
+ * @from: where the data should be taken
+ * 
+ * Copies all relevant data from one event to the other.
+ */
+void
+gst_event_copy_length (GstEventLength *to, const GstEventLength *from)
+{
+  guint i;
+  
+  gst_data_copy (GST_DATA (to), (const GstData *) from);
+
+  to->original = from->original;
+  for (i = 0; i < GST_OFFSET_TYPES; i++)
+  {
+    to->accuracy[i] = from->accuracy[i];
+    to->length[i] = from->length[i];
+  }
+}

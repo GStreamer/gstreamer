@@ -31,7 +31,7 @@ typedef struct _GstByteStream GstByteStream;
 struct _GstByteStream {
   GstPad *pad;
 
-  GstEvent *    event;
+  GstData *    event;
 
   GSList 	*buflist;
   guint32 	headbufavail;
@@ -47,12 +47,12 @@ void			gst_bytestream_destroy		(GstByteStream *bs);
 
 GstBuffer*		gst_bytestream_read		(GstByteStream *bs, guint32 len);
 guint64			gst_bytestream_tell		(GstByteStream *bs);
-gboolean		gst_bytestream_seek		(GstByteStream *bs, GstSeekType type, gint64 offset);
+gboolean		gst_bytestream_seek		(GstByteStream *bs, GstSeekType type, GstOffsetType offset_type, gint64 offset);
 GstBuffer*		gst_bytestream_peek		(GstByteStream *bs, guint32 len);
 guint8*			gst_bytestream_peek_bytes	(GstByteStream *bs, guint32 len);
 gboolean		gst_bytestream_flush		(GstByteStream *bs, guint32 len);
 void                    gst_bytestream_flush_fast       (GstByteStream *bs, guint32 len);
-void                    gst_bytestream_get_status	(GstByteStream *bs, guint32 *avail_out, GstEvent **event_out);
+void                    gst_bytestream_get_status	(GstByteStream *bs, guint32 *avail_out, GstData **event_out);
 
 void 			gst_bytestream_print_status	(GstByteStream *bs);
 

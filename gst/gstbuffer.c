@@ -25,56 +25,92 @@
 #include "gst_private.h"
 
 #include "gstbuffer.h"
+#include "gstobject.h"
 
+static void		gst_buffer_free			(GstData *data);
 
-GType _gst_buffer_type;
+static GMemChunk *buffer_chunk = NULL;
 
-static GMemChunk *_gst_buffer_chunk;
-static GMutex *_gst_buffer_chunk_lock;
-static gint _gst_buffer_live;
-
-void 
-_gst_buffer_initialize (void) 
+void
+_gst_buffer_initialize (void)
 {
-  int buffersize = sizeof(GstBuffer);
-  static const GTypeInfo buffer_info = {
-    0, /* sizeof(class), */
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    0, /* sizeof(object), */
-    0,
-    NULL,
-    NULL,
-  };
-
-  /* round up to the nearest 32 bytes for cache-line and other efficiencies */
-  buffersize = (((buffersize-1) / 32) + 1) * 32;
-
-  _gst_buffer_chunk = g_mem_chunk_new ("GstBuffer", buffersize,
-    buffersize * 32, G_ALLOC_AND_FREE);
-
-  _gst_buffer_chunk_lock = g_mutex_new ();
-
-  _gst_buffer_type = g_type_register_static (G_TYPE_INT, "GstBuffer", &buffer_info, 0);
-
-  _gst_buffer_live = 0;
+  gint buffersize = sizeof (GstBuffer);
+  if (buffer_chunk == NULL)
+  {
+    buffer_chunk = g_mem_chunk_new ("GstBufferChunk", buffersize, buffersize * 128, G_ALLOC_AND_FREE);
+    GST_INFO (GST_CAT_BUFFER, "Buffers are initialized now");
+  }
 }
 
 /**
- * gst_buffer_print_stats:
- *
- * Print statistics about live buffers.
+ * gst_buffer_init:
+ * @buffer: The buffer to be initialized
+ * 
+ * Initializes a buffer.
+ * This function should be called by the init routine of a subtype
+ * of a buffer.
  */
 void
-gst_buffer_print_stats (void)
+gst_buffer_init	(GstBuffer *buffer)
 {
-  g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO, 
-		  "%d live buffers", _gst_buffer_live);
-}
+  GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
 
+  gst_data_init (GST_DATA (buffer));
+  GST_DATA (buffer)->type = GST_BUFFER;
+  GST_DATA (buffer)->dispose = gst_buffer_dispose;
+  GST_DATA (buffer)->free = gst_buffer_free;
+  
+  buffer->flags = 0;
+  buffer->data = NULL;
+  buffer->size = 0;
+  buffer->maxsize = 0;
+  buffer->parent = NULL;
+  buffer->pool = NULL;
+  buffer->pool_private = NULL;
+  
+  buffer->free = NULL;
+  buffer->copy = NULL;
+}
+static void
+gst_buffer_free (GstData *data)
+{
+  g_mem_chunk_free (buffer_chunk, data);
+}
+/**
+ * gst_buffer_dispose:
+ * @buffer: The buffer to be disposed
+ * 
+ * Destroys a buffer.
+ * This function should be called by the dispose routine of a subtype
+ * of a buffer.
+ */
+void
+gst_buffer_dispose (GstData *data)
+{
+  GstBuffer *buffer = (GstBuffer *) data;
+
+  GST_INFO (GST_CAT_BUFFER, "freeing %sbuffer %p",
+	    (buffer->parent?"sub":""),
+	    buffer);
+  
+  /* free the data only if there is some, DONTFREE isn't set, and not sub */
+  if (GST_BUFFER_DATA (buffer) &&
+      !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) &&
+      (buffer->parent == NULL)) {
+    /* if there's a free function, use it */
+    if (buffer->free != NULL) {
+      (buffer->free)(buffer);
+    } else {
+      g_free (GST_BUFFER_DATA (buffer));
+    }
+  }
+
+  /* unreference the parent if there is one */
+  if (buffer->parent != NULL)
+    gst_data_unref (GST_DATA (buffer->parent));
+  
+  gst_data_dispose (data);
+}
 /**
  * gst_buffer_new:
  *
@@ -85,37 +121,12 @@ gst_buffer_print_stats (void)
 GstBuffer*
 gst_buffer_new (void)
 {
-  GstBuffer *buffer;
-
-  g_mutex_lock (_gst_buffer_chunk_lock);
-  buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-  _gst_buffer_live++;
-  g_mutex_unlock (_gst_buffer_chunk_lock);
-  GST_INFO (GST_CAT_BUFFER,"creating new buffer %p",buffer);
-
-  GST_DATA_TYPE(buffer) = _gst_buffer_type;
-
-  buffer->lock = g_mutex_new ();
-#ifdef HAVE_ATOMIC_H
-  atomic_set (&buffer->refcount, 1);
-#else
-  buffer->refcount = 1;
-#endif
-  buffer->flags = 0;
-  buffer->data = NULL;
-  buffer->size = 0;
-  buffer->maxsize = 0;
-  buffer->offset = -1;
-  buffer->timestamp = 0;
-  buffer->parent = NULL;
-  buffer->pool = NULL;
-  buffer->pool_private = NULL;
-  buffer->free = NULL;
-  buffer->copy = NULL;
-
-  return buffer;
+  GstBuffer *buf;
+  buf = g_mem_chunk_alloc (buffer_chunk);
+  gst_buffer_init (buf);
+  
+  return buf;
 }
-
 /**
  * gst_buffer_new_from_pool:
  * @pool: the buffer pool to use
@@ -167,21 +178,8 @@ gst_buffer_create_sub (GstBuffer *parent,
   g_return_val_if_fail (size > 0, NULL);
   g_return_val_if_fail ((offset+size) <= parent->size, NULL);
 
-  g_mutex_lock (_gst_buffer_chunk_lock);
-  buffer = g_mem_chunk_alloc (_gst_buffer_chunk);
-  _gst_buffer_live++;
-  g_mutex_unlock (_gst_buffer_chunk_lock);
-  GST_INFO (GST_CAT_BUFFER,"creating new subbuffer %p from parent %p (size %u, offset %u)", 
-		  buffer, parent, size, offset);
-
-  GST_DATA_TYPE(buffer) = _gst_buffer_type;
-  buffer->lock = g_mutex_new ();
-#ifdef HAVE_ATOMIC_H
-  atomic_set (&buffer->refcount, 1);
-#else
-  buffer->refcount = 1;
-#endif
-
+  buffer = gst_buffer_new ();
+  gst_data_copy (GST_DATA (buffer), GST_DATA (parent));
   /* copy flags and type from parent, for lack of better */
   buffer->flags = parent->flags;
 
@@ -191,13 +189,9 @@ gst_buffer_create_sub (GstBuffer *parent,
   buffer->maxsize = parent->size - offset;
 
   /* deal with bogus/unknown offsets */
-  if (parent->offset != (guint32)-1)
-    buffer->offset = parent->offset + offset;
-  else
-    buffer->offset = (guint32)-1;
+  GST_BUFFER_OFFSET (buffer) += GST_BUFFER_OFFSET (parent);
 
-  /* again, for lack of better, copy parent's timestamp */
-  buffer->timestamp = parent->timestamp;
+  /* again, for lack of better, copy parent's maxage */
   buffer->maxage = parent->maxage;
 
   /* if the parent buffer is a subbuffer itself, use its parent, a real buffer */
@@ -206,7 +200,7 @@ gst_buffer_create_sub (GstBuffer *parent,
 
   /* set parentage and reference the parent */
   buffer->parent = parent;
-  gst_buffer_ref (parent);
+  gst_data_ref (GST_DATA (parent));
 
   buffer->pool = NULL;
 
@@ -260,138 +254,11 @@ gst_buffer_append (GstBuffer *buffer,
     memcpy (newbuf->data+buffer->size, append->data, append->size);
     GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_UNLOCK (buffer);
-    gst_buffer_unref (buffer);
+    gst_data_unref (GST_DATA (buffer));
     buffer = newbuf;
   }
   return buffer;
 }
-
-/**
- * gst_buffer_destroy:
- * @buffer: the GstBuffer to destroy
- *
- * destroy the buffer
- */
-void 
-gst_buffer_destroy (GstBuffer *buffer) 
-{
-
-  g_return_if_fail (buffer != NULL);
-  
-  GST_INFO (GST_CAT_BUFFER, "freeing %sbuffer %p",
-	    (buffer->parent?"sub":""),
-	    buffer);
-  
-  /* free the data only if there is some, DONTFREE isn't set, and not sub */
-  if (GST_BUFFER_DATA (buffer) &&
-      !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_DONTFREE) &&
-      (buffer->parent == NULL)) {
-    /* if there's a free function, use it */
-    if (buffer->free != NULL) {
-      (buffer->free)(buffer);
-    } else {
-      g_free (GST_BUFFER_DATA (buffer));
-    }
-  }
-
-  /* unreference the parent if there is one */
-  if (buffer->parent != NULL)
-    gst_buffer_unref (buffer->parent);
-
-  g_mutex_free (buffer->lock);
-  /* g_print("freed mutex\n"); */
-
-#ifdef GST_DEBUG_ENABLED
-  /* make it hard to reuse by mistake */
-  memset (buffer, 0, sizeof (GstBuffer));
-#endif
-
-  /* remove it entirely from memory */
-  g_mutex_lock (_gst_buffer_chunk_lock);
-  g_mem_chunk_free (_gst_buffer_chunk,buffer);
-  _gst_buffer_live--;
-  g_mutex_unlock (_gst_buffer_chunk_lock);
-}
-
-/**
- * gst_buffer_ref:
- * @buffer: the GstBuffer to reference
- *
- * Increment the refcount of this buffer.
- */
-void 
-gst_buffer_ref (GstBuffer *buffer) 
-{
-  g_return_if_fail (buffer != NULL);
-
-  GST_INFO (GST_CAT_BUFFER, "ref buffer %p, current count is %d", buffer,GST_BUFFER_REFCOUNT(buffer));
-  g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
-
-#ifdef HAVE_ATOMIC_H
-  atomic_inc (&(buffer->refcount));
-#else
-  GST_BUFFER_LOCK (buffer);
-  buffer->refcount++;
-  GST_BUFFER_UNLOCK (buffer);
-#endif
-}
-
-/**
- * gst_buffer_ref_by_count:
- * @buffer: the GstBuffer to reference
- * @count: a number
- *
- * Increment the refcount of this buffer by the given number.
- */
-void
-gst_buffer_ref_by_count (GstBuffer *buffer, gint count)
-{
-  g_return_if_fail (buffer != NULL);
-  g_return_if_fail (count >= 0);
-
-#ifdef HAVE_ATOMIC_H
-  g_return_if_fail (atomic_read (&(buffer->refcount)) > 0);
-  atomic_add (count, &(buffer->refcount));
-#else
-  g_return_if_fail (buffer->refcount > 0);
-  GST_BUFFER_LOCK (buffer);
-  buffer->refcount += count;
-  GST_BUFFER_UNLOCK (buffer);
-#endif
-}
-
-/**
- * gst_buffer_unref:
- * @buffer: the GstBuffer to unref
- *
- * Decrement the refcount of this buffer. If the refcount is
- * zero, the buffer will be destroyed.
- */
-void 
-gst_buffer_unref (GstBuffer *buffer) 
-{
-  gint zero;
-
-  g_return_if_fail (buffer != NULL);
-
-  GST_INFO (GST_CAT_BUFFER, "unref buffer %p, current count is %d", buffer,GST_BUFFER_REFCOUNT(buffer));
-  g_return_if_fail (GST_BUFFER_REFCOUNT(buffer) > 0);
-
-#ifdef HAVE_ATOMIC_H
-  zero = atomic_dec_and_test (&(buffer->refcount));
-#else
-  GST_BUFFER_LOCK (buffer);
-  buffer->refcount--;
-  zero = (buffer->refcount == 0);
-  GST_BUFFER_UNLOCK (buffer);
-#endif
-
-  /* if we ended up with the refcount at zero, destroy the buffer */
-  if (zero) {
-    gst_buffer_destroy (buffer);
-  }
-}
-
 /**
  * gst_buffer_copy:
  * @buffer: the orignal GstBuffer to make a copy of
@@ -423,8 +290,7 @@ gst_buffer_copy (GstBuffer *buffer)
     /* the new maxsize is the same as the size, since we just malloc'd it */
     newbuf->maxsize = newbuf->size;
   }
-  newbuf->offset = buffer->offset;
-  newbuf->timestamp = buffer->timestamp;
+  gst_data_copy (GST_DATA (newbuf), GST_DATA (buffer));
   newbuf->maxage = buffer->maxage;
 
   /* since we just created a new buffer, so we have no ties to old stuff */
@@ -500,6 +366,8 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     /* otherwise we simply have to brute-force copy the buffers */
     newbuf = gst_buffer_new ();
 
+    /* copy relevant stuff from data struct of buffer1 */
+    gst_data_copy (GST_DATA (newbuf), GST_DATA (buf1));
     /* put in new size */
     newbuf->size = len;
     /* allocate space for the copy */
@@ -509,9 +377,6 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     /* copy the second buffer's data across */
     memcpy(newbuf->data + (buf1->size - offset), buf2->data, len - (buf1->size - offset));
 
-    if (newbuf->offset != (guint32)-1)
-      newbuf->offset = buf1->offset + offset;
-    newbuf->timestamp = buf1->timestamp;
     if (buf2->maxage > buf1->maxage) newbuf->maxage = buf2->maxage;
     else newbuf->maxage = buf1->maxage;
 
@@ -546,3 +411,17 @@ gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
 
   return result;
 }
+/**
+ * gst_buffer_print_stats:
+ *
+ * Print statistics about live buffers.
+ */
+void
+gst_buffer_print_stats (void)
+{
+  /*g_log (g_log_domain_gstreamer, G_LOG_LEVEL_INFO, 
+		  "%d live buffers", _gst_buffer_live);
+  */
+}
+
+

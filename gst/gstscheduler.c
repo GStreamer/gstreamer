@@ -334,6 +334,24 @@ gst_scheduler_iterate (GstScheduler *sched)
   return FALSE;
 }
 
+/**
+ * gst_scheduler_insert_event:
+ * @sched: the scheduler
+ * @pad: the pad where the event should be inserted
+ * @event: the event to insert
+ *
+ * Inserts an event in the scheduler to be processed as soon as possible.
+ */
+void
+gst_scheduler_insert_event (GstScheduler *sched, GstPad *pad, GstData *event)
+{
+  /* more checks? */
+  g_return_if_fail (GST_IS_SCHEDULER (sched));
+
+  if (CLASS (sched)->insert_event)
+    CLASS (sched)->insert_event (sched, pad, event);
+}
+
 
 /**
  * gst_scheduler_show:

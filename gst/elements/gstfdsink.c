@@ -54,7 +54,7 @@ static void 	gst_fdsink_set_property	(GObject *object, guint prop_id,
 static void 	gst_fdsink_get_property	(GObject *object, guint prop_id, 
 					 GValue *value, GParamSpec *pspec);
 
-static void 	gst_fdsink_chain	(GstPad *pad,GstBuffer *buf);
+static void 	gst_fdsink_chain	(GstPad *pad, GstData *buf);
 
 static GstElementClass *parent_class = NULL;
 /*static guint gst_fdsink_signals[LAST_SIGNAL] = { 0 };*/
@@ -109,15 +109,17 @@ gst_fdsink_init (GstFdSink *fdsink)
 }
 
 static void 
-gst_fdsink_chain (GstPad *pad, GstBuffer *buf) 
+gst_fdsink_chain (GstPad *pad, GstData *data) 
 {
   GstFdSink *fdsink;
-
+  GstBuffer *buf;
+  
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (data != NULL);
 
   fdsink = GST_FDSINK (gst_pad_get_parent (pad));
+  buf = GST_BUFFER (data);
   
   g_return_if_fail (fdsink->fd >= 0);
   
@@ -126,7 +128,7 @@ gst_fdsink_chain (GstPad *pad, GstBuffer *buf)
     write (fdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
   
-  gst_buffer_unref (buf);
+  gst_data_unref (data);
 }
 
 static void 

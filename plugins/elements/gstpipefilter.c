@@ -62,9 +62,9 @@ static void 			gst_pipefilter_init		(GstPipefilter *pipefilter);
 static void 			gst_pipefilter_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void 			gst_pipefilter_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static GstBuffer*		gst_pipefilter_get		(GstPad *pad);
-static void 			gst_pipefilter_chain		(GstPad *pad, GstBuffer *buf);
-static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, GstEvent *event);
+static GstData *		gst_pipefilter_get		(GstPad *pad);
+static void 			gst_pipefilter_chain		(GstPad *pad, GstData *buf);
+static gboolean 		gst_pipefilter_handle_event 	(GstPad *pad, GstData *event);
 
 static GstElementStateReturn 	gst_pipefilter_change_state	(GstElement *element);
 
@@ -134,7 +134,7 @@ gst_pipefilter_init (GstPipefilter *pipefilter)
 }
 
 static gboolean
-gst_pipefilter_handle_event (GstPad *pad, GstEvent *event)
+gst_pipefilter_handle_event (GstPad *pad, GstData *event)
 {
   GstPipefilter *pipefilter;
 
@@ -151,7 +151,7 @@ gst_pipefilter_handle_event (GstPad *pad, GstEvent *event)
   return TRUE;
 }
 
-static GstBuffer* 
+static GstData * 
 gst_pipefilter_get (GstPad *pad)
 {
   GstPipefilter *pipefilter;
@@ -180,7 +180,7 @@ gst_pipefilter_get (GstPad *pad)
   }
   /* if we didn't get as many bytes as we asked for, we're at EOF */
   if (readbytes == 0) {
-    return GST_BUFFER(gst_event_new (GST_EVENT_EOS));
+    return GST_DATA (gst_event_new_eos ());
 
   }
 
@@ -188,11 +188,11 @@ gst_pipefilter_get (GstPad *pad)
   GST_BUFFER_SIZE(newbuf) = readbytes;
   pipefilter->curoffset += readbytes;
 
-  return newbuf;
+  return GST_DATA (newbuf);
 }
 
 static void
-gst_pipefilter_chain (GstPad *pad,GstBuffer *buf)
+gst_pipefilter_chain (GstPad *pad, GstData *buf)
 {
   GstPipefilter *pipefilter;
   glong writebytes;
@@ -216,7 +216,7 @@ gst_pipefilter_chain (GstPad *pad,GstBuffer *buf)
     gst_element_error(GST_ELEMENT(pipefilter),"writing");
     return;
   }
-  gst_buffer_unref(buf);
+  gst_data_unref (buf);
 }
 
 static void

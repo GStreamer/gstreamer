@@ -75,6 +75,11 @@ typedef enum {
   GST_BASIC_SCHEDULER_CHANGE	= GST_OBJECT_FLAG_LAST,
 } GstBasicSchedulerFlags;
 
+typedef struct {
+  GstPad *pad;
+  GstData *event;
+} GstBasicSchedulerEvent;
+
 struct _GstBasicScheduler {
   GstScheduler parent;
 
@@ -83,6 +88,9 @@ struct _GstBasicScheduler {
 
   GList *chains;
   gint num_chains;
+  
+  GMutex *event_lock;
+  GList *event_queue;
 
   GstBasicSchedulerState state;
 };
@@ -114,6 +122,10 @@ static void     	gst_basic_scheduler_pad_disconnect 	(GstScheduler *sched, GstPa
 static GstPad*  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
 static GstSchedulerState
 			gst_basic_scheduler_iterate    		(GstScheduler *sched);
+static void		gst_basic_scheduler_insert_event	(GstScheduler *sched, GstPad *pad, GstData *event);
+static void		gst_basic_scheduler_handle_events	(GstBasicScheduler *sched);
+#define			gst_basic_scheduler_events(sched)	G_STMT_START{ if ((sched) && (GST_BASIC_SCHEDULER (sched)->event_queue)) \
+					    gst_basic_scheduler_handle_events(GST_BASIC_SCHEDULER (sched)); }G_STMT_END
 
 static void     	gst_basic_scheduler_show  		(GstScheduler *sched);
 
@@ -170,6 +182,7 @@ gst_basic_scheduler_class_init (GstBasicSchedulerClass * klass)
   gstscheduler_class->pad_disconnect 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_disconnect);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_select);
   gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_iterate);
+  gstscheduler_class->insert_event	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_insert_event);
 
   gstscheduler_class->show 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_show);
 }
@@ -181,11 +194,27 @@ gst_basic_scheduler_init (GstBasicScheduler *scheduler)
   scheduler->num_elements = 0;
   scheduler->chains = NULL;
   scheduler->num_chains = 0;
+  scheduler->event_lock = g_mutex_new();
+  scheduler->event_queue = NULL;
 }
 
 static void
 gst_basic_scheduler_dispose (GObject *object)
 {
+  GstBasicScheduler *sched = GST_BASIC_SCHEDULER (object);
+  GList *list;
+  
+  g_mutex_free (sched->event_lock);
+  list = sched->event_queue;
+  while (list)
+  {
+    GstBasicSchedulerEvent *ev = (GstBasicSchedulerEvent *) list->data;
+    gst_data_unref (GST_DATA (ev->event));
+    g_free (ev);
+    list = g_list_next (list);
+  }
+  g_list_free (sched->event_queue);
+  
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -225,6 +254,7 @@ gst_basic_scheduler_loopfunc_wrapper (int argc, char *argv[])
   GST_DEBUG_ENTER ("(%d,'%s')", argc, name);
 
   do {
+    gst_basic_scheduler_events(GST_ELEMENT_SCHED (element));
     GST_DEBUG (GST_CAT_DATAFLOW, "calling loopfunc %s for element %s\n",
 	       GST_DEBUG_FUNCPTR_NAME (element->loopfunc), name);
     (element->loopfunc) (element);
@@ -261,14 +291,27 @@ gst_basic_scheduler_chain_wrapper (int argc, char *argv[])
       realpad = GST_REAL_PAD_CAST (pad);
 
       if (GST_RPAD_DIRECTION (realpad) == GST_PAD_SINK) {
-	GstBuffer *buf;
+	GstData *buf;
 
+	gst_basic_scheduler_events(GST_ELEMENT_SCHED (element));
 	GST_DEBUG (GST_CAT_DATAFLOW, "pulling data from %s:%s\n", name, GST_PAD_NAME (pad));
 	buf = gst_pad_pull (pad);
 	if (buf) {
 	  if (GST_IS_EVENT (buf) && !GST_ELEMENT_IS_EVENT_AWARE (element)) {
-	    /*gst_pad_event_default (pad, GST_EVENT (buf)); */
-	    gst_pad_send_event (pad, GST_EVENT (buf));
+	    GList *pads = element->pads;
+	    GST_DEBUG (GST_CAT_DATAFLOW, "handling event (type %d) for %s, because it can't handle them\n", GST_DATA_TYPE(buf), name);
+	    gst_pad_event_instream_default (pad, buf);
+	    /* now push it to all source pads of the event */
+	    while (pads) {
+	      GstPad *eventpad = GST_PAD (pads->data);
+	      pads = g_list_next (pads);
+	      /* for all pads in the opposite direction that are connected */
+	      if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC && GST_PAD_IS_CONNECTED (eventpad)) {
+		gst_data_ref (buf);
+		gst_pad_push (eventpad, buf);
+	      }
+	    }
+	    gst_data_unref (buf);
 	  }
 	  else {
 	    GST_DEBUG (GST_CAT_DATAFLOW, "calling chain function of %s:%s\n", name,
@@ -296,7 +339,7 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
   GstElement *element = GST_ELEMENT_CAST (argv);
   GList *pads;
   GstRealPad *realpad;
-  GstBuffer *buf = NULL;
+  GstData *buf = NULL;
   G_GNUC_UNUSED const gchar *name = GST_ELEMENT_NAME (element);
 
   GST_DEBUG_ENTER ("(%d,\"%s\")", argc, name);
@@ -318,9 +361,9 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
 /*          if (GST_RPAD_GETREGIONFUNC(realpad) == NULL)		   */	
 /*            fprintf(stderr,"error, no getregionfunc in \"%s\"\n", name); */
 /*          else							   */
-	  buf =
+	  buf = GST_DATA (
 	    (GST_RPAD_GETREGIONFUNC (realpad)) (GST_PAD_CAST (realpad), realpad->regiontype,
-						realpad->offset, realpad->len);
+						realpad->offset, realpad->len));
 	  realpad->regiontype = GST_REGION_VOID;
 	}
 	else {
@@ -345,7 +388,7 @@ gst_basic_scheduler_src_wrapper (int argc, char *argv[])
 }
 
 static void
-gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
+gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstData * buf)
 {
   GstRealPad *peer = GST_RPAD_PEER (pad);
   gint loop_count = 100;
@@ -385,7 +428,7 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
 }
 
 static void
-gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
+gst_basic_scheduler_select_proxy (GstPad * pad, GstData * buf)
 {
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
 
@@ -404,10 +447,10 @@ gst_basic_scheduler_select_proxy (GstPad * pad, GstBuffer * buf)
 }
 
 
-static GstBuffer *
+static GstData *
 gst_basic_scheduler_gethandler_proxy (GstPad * pad)
 {
-  GstBuffer *buf;
+  GstData *buf;
   GstRealPad *peer = GST_RPAD_PEER (pad);
 
   GST_DEBUG_ENTER ("(%s:%s)", GST_DEBUG_PAD_NAME (pad));
@@ -464,7 +507,7 @@ gst_basic_scheduler_pullregionfunc_proxy (GstPad * pad, GstRegionType type, guin
   GST_DEBUG (GST_CAT_DATAFLOW, "done switching\n");
 
   /* now grab the buffer from the pen, clear the pen, and return the buffer */
-  buf = GST_RPAD_BUFPEN (pad);
+  buf = GST_BUFFER (GST_RPAD_BUFPEN (pad));
   GST_RPAD_BUFPEN (pad) = NULL;
   return buf;
 }
@@ -1337,6 +1380,34 @@ gst_basic_scheduler_iterate (GstScheduler * sched)
   }
 }
 
+static void
+gst_basic_scheduler_handle_events (GstBasicScheduler *sched)
+{
+  GstBasicSchedulerEvent *ev;
+  
+  while (sched->event_queue)
+  {
+    GST_DEBUG (GST_CAT_DATAFLOW, "handling asynchronous event");
+    g_mutex_lock (sched->event_lock);
+    ev = sched->event_queue->data;
+    sched->event_queue = g_list_delete_link (sched->event_queue, sched->event_queue);
+    g_mutex_unlock (sched->event_lock);
+    gst_pad_send_event (ev->pad, ev->event);
+    g_free (ev);
+  }
+}
+
+static void
+gst_basic_scheduler_insert_event (GstScheduler *scheduler, GstPad *pad, GstData *event)
+{
+  GstBasicScheduler *sched = GST_BASIC_SCHEDULER (scheduler);
+  GstBasicSchedulerEvent *ev = g_new (GstBasicSchedulerEvent, 1);
+  ev->pad = pad;
+  ev->event = event;
+  g_mutex_lock (sched->event_lock);
+  sched->event_queue = g_list_prepend (sched->event_queue, ev);
+  g_mutex_unlock (sched->event_lock);
+}
 
 static void
 gst_basic_scheduler_show (GstScheduler * sched)

@@ -60,7 +60,7 @@ static void gst_statistics_init		(GstStatistics *statistics);
 static void gst_statistics_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_statistics_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
-static void gst_statistics_chain		(GstPad *pad, GstBuffer *buf);
+static void gst_statistics_chain		(GstPad *pad, GstData *buf);
 static void gst_statistics_reset		(GstStatistics *statistics);
 static void gst_statistics_print		(GstStatistics *statistics);
 
@@ -247,7 +247,7 @@ gst_statistics_print (GstStatistics *statistics)
 }
 
 static void 
-gst_statistics_chain (GstPad *pad, GstBuffer *buf) 
+gst_statistics_chain (GstPad *pad, GstData *buf) 
 {
   GstStatistics *statistics;
   gboolean update = FALSE;
@@ -259,9 +259,8 @@ gst_statistics_chain (GstPad *pad, GstBuffer *buf)
   statistics = GST_STATISTICS (gst_pad_get_parent (pad));
 
   if (GST_IS_EVENT(buf)) {
-    GstEvent *event = GST_EVENT (buf);
     statistics->stats.events += 1;
-    if (GST_EVENT_TYPE(event) == GST_EVENT_EOS) {
+    if (GST_DATA_TYPE(buf) == GST_EVENT_EOS) {
       gst_element_set_eos (GST_ELEMENT (statistics));
       if (statistics->update_on_eos) {
         update = TRUE;

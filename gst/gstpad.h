@@ -127,9 +127,9 @@ typedef enum {
 /* this defines the functions used to chain buffers
  * pad is the sink pad (so the same chain function can be used for N pads)
  * buf is the buffer being passed */
-typedef void 			(*GstPadChainFunction) 		(GstPad *pad,GstBuffer *buf);
-typedef GstBuffer*		(*GstPadGetFunction) 		(GstPad *pad);
-typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
+typedef void 			(*GstPadChainFunction) 		(GstPad *pad, GstData *data);
+typedef GstData*		(*GstPadGetFunction) 		(GstPad *pad);
+typedef gpointer		(*GstPadEventFunction)		(GstPad *pad, GstData *event);
 
 typedef GstBuffer*		(*GstPadGetRegionFunction) 	(GstPad *pad, GstRegionType type, 
 								 guint64 offset, guint64 len);
@@ -177,7 +177,7 @@ struct _GstRealPad {
 
   GstRealPad 			*peer;
 
-  GstBuffer 			*bufpen;
+  GstData 			*bufpen;
   GstRegionType 		regiontype;
   guint64 			offset;
   guint64 			len;
@@ -209,7 +209,7 @@ struct _GstRealPadClass {
   void (*caps_nego_failed)	(GstPad *pad);
   void (*connected)		(GstPad *pad, GstPad *peer);
   void (*disconnected)		(GstPad *pad, GstPad *peer);
-  void (*event_received)	(GstPad *pad, GstEvent *event);
+  void (*event_received)	(GstPad *pad, GstData *event);
 
   void (*eos)			(GstPad *pad);
 };
@@ -400,7 +400,7 @@ GstCaps*	     	gst_pad_get_allowed_caps       		(GstPad *pad);
 gboolean	     	gst_pad_recalc_allowed_caps    		(GstPad *pad);
 
 #if 1
-void			gst_pad_push				(GstPad *pad, GstBuffer *buf);
+void			gst_pad_push				(GstPad *pad, GstData *data);
 #else
 #define gst_pad_push(pad,buf) G_STMT_START{ \
   if (((GstRealPad *)(pad))->peer->chainhandler) \
@@ -408,8 +408,8 @@ void			gst_pad_push				(GstPad *pad, GstBuffer *buf);
 }G_STMT_END
 #endif
 #if 1
-GstBuffer*		gst_pad_pull				(GstPad *pad);
-GstBuffer*		gst_pad_pullregion			(GstPad *pad, GstRegionType type, 
+GstData *		gst_pad_pull				(GstPad *pad);
+GstBuffer *		gst_pad_pullregion			(GstPad *pad, GstRegionType type, 
 								 guint64 offset, guint64 len);
 #else
 #define gst_pad_pull(pad) \
@@ -422,12 +422,14 @@ NULL )
 NULL )
 #endif
 
-gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
-void 			gst_pad_event_default			(GstPad *pad, GstEvent *event);
+gpointer		gst_pad_send_event			(GstPad *pad, GstData *event);
+void			gst_pad_insert_event 			(GstPad *pad, GstData *event);
+gpointer		gst_pad_event_default			(GstPad *pad, GstData *event);
+gboolean		gst_pad_event_instream_default		(GstPad *pad, GstData *data);
+void			gst_pad_signal_event_received		(GstPad *pad, GstData *event);
 
 
-
-GstBuffer*		gst_pad_peek				(GstPad *pad);
+GstData*		gst_pad_peek				(GstPad *pad);
 GstPad*			gst_pad_select				(GList *padlist);
 GstPad*			gst_pad_selectv				(GstPad *pad, ...);
 

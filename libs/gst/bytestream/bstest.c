@@ -185,17 +185,17 @@ gst_identity_loop (GstElement *element)
 
 /* THIS IS THE BUFFER BASED ONE
   do {
-//    g_print("\n");
+    g_print("\n");
 
     for (i=0;i<identity->count;i++) {
-//      g_print("bstest: getting a buffer of %d bytes\n",identity->byte_size);
+      g_print("bstest: getting a buffer of %d bytes\n",identity->byte_size);
       buf = gst_bytestream_read(identity->bs,identity->byte_size);
       if (!buf) g_print("BUFFER IS BOGUS\n");
-//      g_print("pushing the buffer, %d bytes at %d\n",GST_BUFFER_SIZE(buf),GST_BUFFER_OFFSET(buf));
+      g_print("pushing the buffer, %d bytes at %d\n",GST_BUFFER_SIZE(buf),GST_BUFFER_OFFSET(buf));
       gst_pad_push(identity->srcpad,buf);
-//      g_print("\n");
+      g_print("\n");
       gst_bytestream_print_status(identity->bs);
-//      g_print("\n\n");
+      g_print("\n\n");
     }
 
     exit(1);
@@ -206,17 +206,17 @@ gst_identity_loop (GstElement *element)
   do {
     for (i=0;i<identity->count;i++) {
       buf = gst_buffer_new();
-      // note that this is dangerous, as it does *NOT* refcount the data, it can go away!!!
+      /* note that this is dangerous, as it does *NOT* refcount the data, it can go away!!! */
       GST_BUFFER_DATA(buf) = gst_bytestream_peek_bytes(identity->bs,identity->byte_size);
       GST_BUFFER_SIZE(buf) = identity->byte_size;
       GST_BUFFER_FLAG_SET(buf,GST_BUFFER_DONTFREE);
-      gst_pad_push(identity->srcpad,buf);
+      gst_pad_push(identity->srcpad, GST_DATA(buf));
       gst_bytestream_flush(identity->bs,identity->byte_size);
     }
 
     exit(1);
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING(element));
-/**/
+  } while (0); /* FIXME: where do we get this value from? (!GST_ELEMENT_IS_COTHREAD_STOPPING (element)); */
+/* */
 }
 
 static void 

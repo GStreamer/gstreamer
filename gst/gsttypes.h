@@ -13,7 +13,6 @@ typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
 typedef struct _GstScheduler GstScheduler;
 typedef struct _GstSchedulerClass GstSchedulerClass;
-typedef struct _GstEvent GstEvent;
 
 typedef enum {
   GST_STATE_VOID_PENDING        = 0,

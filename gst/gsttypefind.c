@@ -60,7 +60,7 @@ static void	gst_typefind_set_property	(GObject *object, guint prop_id,
 static void	gst_typefind_get_property	(GObject *object, guint prop_id, 
 						 GValue *value, GParamSpec *pspec);
 
-static void	gst_typefind_chain		(GstPad *pad, GstBuffer *buf);
+static void	gst_typefind_chain		(GstPad *pad, GstData *buf);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_typefind_signals[LAST_SIGNAL] = { 0 };
@@ -154,7 +154,7 @@ gst_typefind_get_property (GObject *object, guint prop_id, GValue *value, GParam
 }
 
 static void
-gst_typefind_chain (GstPad *pad, GstBuffer *buf)
+gst_typefind_chain (GstPad *pad, GstData *buf)
 {
   GstTypeFind *typefind;
   GList *type_list;
@@ -182,7 +182,7 @@ gst_typefind_chain (GstPad *pad, GstBuffer *buf)
       GstCaps *caps;
 
       GST_DEBUG (0,"try type :%d \"%s\"\n", type->id, type->mime);
-      if (typefindfunc && (caps = typefindfunc (buf, factory))) {
+      if (typefindfunc && (caps = typefindfunc (GST_BUFFER(buf), factory))) {
         GST_DEBUG (0,"found type :%d \"%s\" \"%s\"\n", caps->id, type->mime, 
 			gst_caps_get_name (caps));
 	typefind->caps = caps;

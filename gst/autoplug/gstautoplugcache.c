@@ -185,7 +185,7 @@ static void
 gst_autoplugcache_loop (GstElement *element)
 {
   GstAutoplugCache *cache;
-  GstBuffer *buf = NULL;
+  GstData *buf = NULL;
 
   cache = GST_AUTOPLUGCACHE (element);
 
@@ -207,12 +207,12 @@ gst_autoplugcache_loop (GstElement *element)
     /* get a buffer */
     buf = gst_pad_pull (cache->sinkpad);
     if (GST_IS_EVENT (buf)) {
-      gst_pad_event_default (cache->sinkpad, GST_EVENT (buf));
+      gst_pad_event_default (cache->sinkpad, buf);
       return;
     }
 
     /* add it to the cache, though cache == NULL */
-    gst_buffer_ref (buf);
+    gst_data_ref (buf);
     cache->cache = g_list_prepend (cache->cache, buf);
     cache->buffer_count++;
 
@@ -236,20 +236,20 @@ gst_autoplugcache_loop (GstElement *element)
       if (GST_STATE(cache) != oldstate) {
         gst_object_ref (GST_OBJECT (cache));
         GST_DEBUG(GST_CAT_AUTOPLUG, "state changed during signal, aborting\n");
-        gst_element_yield (cache);
+        gst_element_yield (GST_ELEMENT (cache));
       }
       gst_object_unref (GST_OBJECT (cache));
     }
 
     /* get a buffer */
     buf = gst_pad_pull (cache->sinkpad);
-    if (GST_IS_EVENT (buf)) {
-      gst_pad_event_default (cache->sinkpad, GST_EVENT (buf));
+    if (buf) {
+      gst_pad_event_default (cache->sinkpad, buf);
       return;
     }
 
     /* add it to the front of the cache */
-    gst_buffer_ref (buf);
+    gst_data_ref (buf);
     cache->cache = g_list_prepend (cache->cache, buf);
     cache->buffer_count++;
 
@@ -271,7 +271,7 @@ gst_autoplugcache_loop (GstElement *element)
     }
 
     /* push that buffer */
-    gst_pad_push (cache->srcpad, GST_BUFFER(cache->current_playout->data));
+    gst_pad_push (cache->srcpad, GST_DATA (cache->current_playout->data));
   }
 }
 
