@@ -30,7 +30,7 @@ Chained (current implementation):
                          ! gst_pad_push    
 			 !---------------->! 
 			                   !
-					   ! gst_pad_chain (pad1->peer) 
+					   ! pad1->chainfunc (pad1->peer) 
                                            !------------------------------->!
 					   !                                !
 					   :                                :
@@ -190,6 +190,59 @@ again in the next iteration.
        :
 
       
+(alternative implementation): 
+
+
+      bin               cothread1         src               pad1           pad2       cothread2      plugin
+       !                 (src)                          (= pad1->peer)                (plugin)
+ gst_bin_iterate
+       !
+       ! (first entry)
+       !
+       ! cothread_switch
+       !---------------->! gst_pad_pull 
+                         !------------------------------------------------>!
+                                                   ?                       !
+		                           !<------------------------------!
+                                           !  
+                                           ! (create buffer)
+			                   !
+                                           ! gst_pad_push    
+                                           !------------------------------>!
+			                                                   ! (bufpen filled)
+			                        (return buffer)            !
+                         !<------------------------------------------------!
+                         !
+		         ! pad_chain
+			 !--------------------------------------! cothread switch
+			                                        |---------------------->!
+					                                                ! gst_pad_pull (pad2)
+											!
+									    !<----------!
+									    !
+									    ! (get buffer from bufpen)
+									    !
+									    !---------->!
+											! pad2->chainfunc
+											!------------->!
+					   			                                       !
+					                                                               :
+												       
+												       :
+											!<-------------!
+											! gst_pad_pull (pad2)
+									    !<----------!
+                                                                            ! 
+									    ! (bufpen empty)
+			                                       !<-----------!
+                                                               !   cothread switch
+                         !<------------------------------------!   
+       !<----------------!                                     
+       !
+  iteration ends
+       !
+       :
+
 -----------------------------------------------------------------------------------------------
 1b) Simple push-function based with multiple output
 
