@@ -57,41 +57,33 @@ enum {
  * can have.  They can be quite complex, but for this example plugin
  * they are rather simple.
  */
-static GstPadTemplate*
-sink_factory (void)
-{
-  return 
-    gst_padtemplate_new (
-  	"sink",			/* The name of the pad */
-  	GST_PAD_SINK,		/* Direction of the pad */
-  	GST_PAD_ALWAYS,	/* The pad exists for every instance */
-	gst_caps_new (
-  	  "example_sink",				/* The name of the caps */
-     	  "unknown/unknown",				/* The overall MIME/type */
-	  gst_props_new (
-     	    "foo",	GST_PROPS_INT (1),		/* An integer property */
-     	    "bar",	GST_PROPS_BOOLEAN (TRUE),	/* A boolean */
-     	    "baz",	GST_PROPS_LIST (		/* A list of values for */
-			  GST_PROPS_INT (1),
-			  GST_PROPS_INT (3)
-			),
-	    NULL)));
-}
+GST_PADTEMPLATE_FACTORY (sink_factory,
+  "sink",			/* The name of the pad */
+  GST_PAD_SINK,		/* Direction of the pad */
+  GST_PAD_ALWAYS,	/* The pad exists for every instance */
+  GST_CAPS_NEW (
+    "example_sink",				/* The name of the caps */
+    "unknown/unknown",				/* The overall MIME/type */
+      "foo",	GST_PROPS_INT (1),		/* An integer property */
+      "bar",	GST_PROPS_BOOLEAN (TRUE),	/* A boolean */
+      "baz",	GST_PROPS_LIST (		/* A list of values for */
+		  GST_PROPS_INT (1),
+		  GST_PROPS_INT (3)
+		)
+  )
+);
 
 /* This factory is much simpler, and defines the source pad. */
-static GstPadTemplate*
-src_factory (void)
-{
-  return
-    gst_padtemplate_new (
-  	"src",
-  	GST_PAD_SRC,
-  	GST_PAD_ALWAYS,
-	gst_caps_new (
-  	  "example_src",
-    	  "unknown/unknown",
-	  NULL));
-}
+GST_PADTEMPLATE_FACTORY (src_factory,
+  "src",
+  GST_PAD_SRC,
+  GST_PAD_ALWAYS,
+  GST_CAPS_NEW (
+    "example_src",
+    "unknown/unknown",
+    NULL
+  )
+);
 
 
 /* A number of functon prototypes are given so we can refer to them later. */
