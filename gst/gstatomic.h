@@ -163,6 +163,42 @@ G_STMT_START {							\
                           :  "ecx", "ebx");			\
 } G_STMT_END
 
+#elif defined (__powerpc__) && defined (__GNUC__) && __GNUC__ >= 2 
+
+#define _GST_ATOMIC_SWAP_INIT(swap,val)		\
+G_STMT_START {						\
+  (swap)->value = (gpointer)(val);			\
+  (swap)->cnt = 0;					\
+} G_STMT_END
+
+#define _GST_ATOMIC_SWAP(swap, val)				\
+G_STMT_START {							\
+  __asm__ __volatile__ ("1:"					\
+                        "	lwarx	%0, 0, %2	\n"	\
+                        "	stwcx.  %3, 0, %2 	\n"	\
+                        "	bne-	1b		\n"	\
+                          : "=&r",				\
+			    "=m" (*swap)			\
+                          : "r" (swap),  			\
+			    "r" (val), 				\
+			    "m" (*swap)				\
+			  : "cc", "memory");			\
+} G_STMT_END
+
+#define _GST_ATOMIC_SWAP_GET(swap, val, res)			\
+G_STMT_START {							\
+  __asm__ __volatile__ ("1:"					\
+                        "	lwarx	%0, 0, %2	\n"	\
+                        "	stwcx.  %3, 0, %2 	\n"	\
+                        "	bne-	1b		\n"	\
+                          : "=&r" (*(res)),			\
+			    "=m" (*swap)			\
+                          : "r" (swap),  			\
+			    "r" (val), 				\
+			    "m" (*swap)				\
+			  : "cc", "memory");			\
+} G_STMT_END
+
 #else
 
 #define _GST_ATOMIC_SWAP_INIT(swap,val)			\
