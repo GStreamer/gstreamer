@@ -13,7 +13,8 @@ noinst_HEADERS = dp-private.h
 libgstdataprotocol_la_SOURCES = \
     dataprotocol.c
 
-libgstdataprotocol_la_CFLAGS = $(GST_OBJ_CFLAGS) -I$(top_srcdir)/libs
+# remove GST_ENABLE_NEW when dataprotocol has been declared API-stable
+libgstdataprotocol_la_CFLAGS = $(GST_OBJ_CFLAGS) -I$(top_srcdir)/libs -DGST_ENABLE_NEW
 libgstdataprotocol_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(as_libtool_LDFLAGS)
 libgstdataprotocol_la_LIBADD = $(GST_OBJ_LIBS)
 

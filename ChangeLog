@@ -1,3 +1,11 @@
+2004-05-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* libs/gst/dataprotocol/Makefile.am:
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_caps):
+	* libs/gst/dataprotocol/dataprotocol.h:
+          wrap header in GST_ENABLE_NEW.  make code use it
+
 2004-05-23  Johan Dahlin  <johan@gnome.org>
 
 	* tools/gst-inspect.c (main): Cleanup most parts of it, don't be

@@ -24,7 +24,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-AS_LIBTOOL(GST, 1, 0, 0)
+AS_LIBTOOL(GST, 2, 0, 1)
 AM_PROG_LIBTOOL
 
 AC_CONFIG_SRCDIR([gst/gst.c])
