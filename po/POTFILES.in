@@ -1,3 +1,4 @@
+ext/alsa/gstalsamixertrack.c
 ext/audiofile/gstafsink.c
 ext/audiofile/gstafsrc.c
 ext/cdparanoia/gstcdparanoia.c
