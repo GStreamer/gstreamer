@@ -23,7 +23,10 @@
 
 
 #include <gst/gst.h>
-#include <speex.h>
+#include <speex/speex.h>
+#include <speex/speex_callbacks.h>
+#include <speex/speex_header.h>
+#include <speex/speex_stereo.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,7 +34,7 @@ extern "C" {
 
 
 #define GST_TYPE_SPEEXDEC \
-  (gst_speexdec_get_type())
+  (gst_speex_dec_get_type())
 #define GST_SPEEXDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPEEXDEC,GstSpeexDec))
 #define GST_SPEEXDEC_CLASS(klass) \
@@ -44,18 +47,35 @@ extern "C" {
 typedef struct _GstSpeexDec GstSpeexDec;
 typedef struct _GstSpeexDecClass GstSpeexDecClass;
 
+#define DEC_MAX_FRAME_SIZE 2000
+
 struct _GstSpeexDec {
   GstElement element;
 
   /* pads */
   GstPad *sinkpad,*srcpad;
+
+  void 		*state;
+  SpeexStereoState stereo;
+  SpeexMode 	*mode;
+  SpeexHeader 	*header;
+  SpeexCallback  callback;
+  SpeexBits      bits;
+     
+  gfloat         output[DEC_MAX_FRAME_SIZE];
+
+  gboolean 	 enh;
+  
+  gint		 frame_size;
+  guint64	 samples_out;
+  guint64	 packetno;
 };
 
 struct _GstSpeexDecClass {
   GstElementClass parent_class;
 };
 
-GType gst_speexdec_get_type(void);
+GType gst_speex_dec_get_type(void);
 
 
 #ifdef __cplusplus
