@@ -64,6 +64,7 @@ libgstreamer_la_SOURCES =		\
 	gstelementfactory.c	\
 	gstevent.c		\
 	gstextratypes.c		\
+	gstformat.c		\
 	gstinfo.c		\
 	gstmemchunk.c		\
 	gstpad.c		\

@@ -351,6 +351,7 @@ init_post (void)
   GST_INFO (GST_CAT_GST_INIT, "Initializing GStreamer Core Library version %s %s",
             GST_VERSION, _gst_use_threads?"":"(no threads)");
   
+  _gst_format_initialize ();
   gst_object_get_type ();
   gst_pad_get_type ();
   gst_real_pad_get_type ();

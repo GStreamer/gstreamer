@@ -2,7 +2,8 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
  *
- * gstformat.h: Header for GstFormat types of offset
+ * gstformat.h: Header for GstFormat types used in queries and
+ *              seeking.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,14 +30,14 @@
 G_BEGIN_DECLS
 
 typedef enum {
-  GST_FORMAT_NONE   	= 0,
-  GST_FORMAT_DEFAULT   	= 1,
-  GST_FORMAT_BYTES   	= 2,
-  GST_FORMAT_TIME 	= 3,
-  GST_FORMAT_BUFFERS	= 4,
-  GST_FORMAT_PERCENT	= 5,
+  GST_FORMAT_UNDEFINED 	=  0,
+  GST_FORMAT_DEFAULT   	=  1,
+  GST_FORMAT_BYTES   	=  2,
+  GST_FORMAT_TIME 	=  3,
+  GST_FORMAT_BUFFERS	=  4,
+  GST_FORMAT_PERCENT	=  5,
   /* samples for audio, frames/fields for video */
-  GST_FORMAT_UNITS 	= 6,
+  GST_FORMAT_UNITS 	=  6,
 } GstFormat;
 
 #define GST_FORMATS_FUNCTION(functionname, a...)     \
@@ -49,6 +50,16 @@ functionname (GstPad *pad)                           \
   };                                                 \
   return formats;                                    \
 }
+
+void		_gst_format_initialize		(void);
+
+/* register a new format */
+GstFormat	gst_format_register		(const gchar *nick, const gchar *description);
+
+GstFormat	gst_format_get_by_nick		(const gchar *nick);
+
+/* query for format details */
+gboolean	gst_format_get_details		(GstFormat format, const gchar **nick, const gchar **description);
 
 
 G_END_DECLS
