@@ -88,6 +88,7 @@ struct _GstBinClass {
   /* signals */
   void		(*object_added)		(GstObject *object, GstObject *child);
   void		(*object_removed)	(GstObject *object, GstObject *child);
+  void		(*iterate_started)	(GstObject *object);
 
   /* change the state of elements of the given type */
   gboolean	(*change_state_type)	(GstBin *bin,

@@ -59,6 +59,7 @@ static void 			gst_bin_restore_thyself 	(GstObject * object, xmlNodePtr self);
 enum
 {
   OBJECT_ADDED,
+  ITERATE_STARTED,
   LAST_SIGNAL
 };
 
@@ -113,6 +114,10 @@ gst_bin_class_init (GstBinClass * klass)
     g_signal_new ("object_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
 		  G_STRUCT_OFFSET (GstBinClass, object_added), NULL, NULL,
 		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
+  gst_bin_signals[ITERATE_STARTED] =
+    g_signal_new ("iterate_started", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
+		  G_STRUCT_OFFSET (GstBinClass, iterate_started), NULL, NULL,
+		  gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
 
@@ -844,6 +849,8 @@ gst_bin_iterate (GstBin * bin)
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
 
   oclass = GST_BIN_CLASS (G_OBJECT_GET_CLASS (bin));
+
+  g_signal_emit (G_OBJECT (bin), gst_bin_signals[ITERATE_STARTED], 0);
 
   if (oclass->iterate)
     running = (oclass->iterate) (bin);
