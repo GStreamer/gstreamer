@@ -10,13 +10,19 @@ else
 EXT_DIR=
 endif
 
+if BUILD_EXAMPLES
+EXAMPLES_DIR=examples
+else
+EXAMPLES_DIR=
+endif
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-libs.pc gstreamer-play.pc
 
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check.m4
 
-SUBDIRS=gst-libs gst sys $(EXT_DIR) examples tools $(GCONF_DIR) testsuite
+SUBDIRS=gst-libs gst sys $(EXT_DIR) $(EXAMPLES_DIR) tools $(GCONF_DIR) testsuite
 
 DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf testsuite
 
