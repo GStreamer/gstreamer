@@ -1,5 +1,11 @@
 2004-02-13  David Schleef  <ds@schleef.org>
 
+	* gst/sine/demo-dparams.c: (dynparm_log_value_changed),
+	(dynparm_value_changed), (main): Convert from float to double.
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_init): same.
+
+2004-02-13  David Schleef  <ds@schleef.org>
+
 	* gst/silence/gstsilence.c: (gst_silence_class_init),
 	(gst_silence_set_clock), (gst_silence_get),
 	(gst_silence_set_property), (gst_silence_get_property):
