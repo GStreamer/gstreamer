@@ -1,8 +1,10 @@
 2004-09-09  Arwed v. Merkatz  <v.merkatz@gmx.net>
 	* gst/matroska/matroska-mux.h:
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_reset),
-	(gst_matroska_mux_finish), (gst_matroska_mux_write_data):
+	(gst_matroska_mux_start), (gst_matroska_mux_finish),
+	(gst_matroska_mux_write_data):
 	  Write multiple blocks/frames per cluster.
+		Write meta-seek information (seek heads).
 
 2004-09-09  Scott Wheeler <wheeler@kde.org>
 
