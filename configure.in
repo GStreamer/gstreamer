@@ -695,6 +695,7 @@ libs/winloader/Makefile
 libs/idct/Makefile
 plugins/Makefile
 plugins/au/Makefile
+plugins/alsa/Makefile
 plugins/wav/Makefile
 plugins/avi/Makefile
 plugins/avi/wincodec/Makefile
