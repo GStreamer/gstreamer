@@ -453,7 +453,7 @@ msgstr "personne(s) qui interprète(nt)"
 
 #: gst/gsttag.c:176
 msgid "duration"
-msgstr "durèe"
+msgstr "durée"
 
 #: gst/gsttag.c:177
 msgid "length in GStreamer time units (nanoseconds)"

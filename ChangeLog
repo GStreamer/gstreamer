@@ -1,5 +1,9 @@
 2004-03-02  Christophe Fergeau  <teuf@gnome.org>
 
+	* po/fr.po: fix typo
+
+2004-03-02  Christophe Fergeau  <teuf@gnome.org>
+
 	* tools/gst-inspect.c: (main): 
 	* tools/gst-launch.c: (main): add calls to bind_textdomain_codeset
 
