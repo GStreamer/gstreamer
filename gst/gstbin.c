@@ -705,7 +705,7 @@ gst_bin_child_state_change_func (GstBin * bin, GstElementState oldstate,
   bin->child_states[new_idx]++;
 
   for (i = GST_NUM_STATES - 1; i >= 0; i--) {
-    if (bin->child_states[i] != 0 || i == 0) {
+    if (bin->child_states[i] != 0) {
       gint state = (1 << i);
 
       /* We only change state on the parent if the state is not locked.

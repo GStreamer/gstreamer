@@ -1272,6 +1272,7 @@ gst_queue_get_type
 <FILE>gstrealpad</FILE>
 <TITLE>GstRealPad</TITLE>
 GstRealPad
+GstRealPadFlags
 GST_IS_REAL_PAD_FAST
 GST_RPAD_DIRECTION
 GST_RPAD_CAPS
@@ -1303,7 +1304,9 @@ GST_IS_REAL_PAD
 GST_REAL_PAD_CLASS
 GST_IS_REAL_PAD_CLASS
 GST_TYPE_REAL_PAD
+GST_TYPE_REAL_PAD_FLAGS
 <SUBSECTION Private>
+gst_real_pad_flags_get_type
 gst_real_pad_get_type
 </SECTION>
 

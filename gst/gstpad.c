@@ -3242,6 +3242,8 @@ gst_pad_push (GstPad * pad, GstData * data)
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
+  g_return_if_fail (!GST_FLAG_IS_SET (GST_PAD_REALIZE (pad),
+          GST_RPAD_IN_GETFUNC));
   g_return_if_fail (data != NULL);
 
   DEBUG_DATA (pad, data, "gst_pad_push");
@@ -3317,6 +3319,9 @@ gst_pad_pull (GstPad * pad)
   GstData *data;
 
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
+      GST_DATA (gst_event_new (GST_EVENT_INTERRUPT)));
+  g_return_val_if_fail (!GST_FLAG_IS_SET (GST_PAD_REALIZE (pad),
+          GST_RPAD_IN_CHAINFUNC),
       GST_DATA (gst_event_new (GST_EVENT_INTERRUPT)));
 
   peer = GST_RPAD_PEER (pad);
@@ -4428,7 +4433,9 @@ gst_pad_get_formats (GstPad * pad)
       !GST_FLAG_IS_SET (gst_pad_get_parent (pad), GST_ELEMENT_EVENT_AWARE)) { \
     gst_pad_send_event (pad, GST_EVENT (__temp)); \
   } else { \
+    GST_FLAG_SET (pad, GST_RPAD_IN_CHAINFUNC); \
     GST_RPAD_CHAINFUNC (pad) (pad, __temp); \
+    GST_FLAG_UNSET (pad, GST_RPAD_IN_CHAINFUNC); \
   } \
 }G_STMT_END
 /**
@@ -4495,7 +4502,9 @@ gst_pad_call_get_function (GstPad * pad)
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
   g_return_val_if_fail (GST_RPAD_GETFUNC (pad) != NULL, NULL);
 
+  GST_FLAG_SET (pad, GST_RPAD_IN_GETFUNC);
   data = GST_RPAD_GETFUNC (pad) (pad);
+  GST_FLAG_UNSET (pad, GST_RPAD_IN_GETFUNC);
   DEBUG_DATA (pad, data, "getfunction returned");
   return data;
 }

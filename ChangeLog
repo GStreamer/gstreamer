@@ -1,5 +1,16 @@
 2005-01-31  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/gstbin.c: (gst_bin_child_state_change_func):
+	  Remove a piece of code that could never be reached.
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpad.c: (gst_pad_push), (gst_pad_pull),
+	(gst_pad_call_get_function):
+	* gst/gstpad.h:
+	* testsuite/pad/Makefile.am:
+	  Fix #150546, enable tests.
+
+2005-01-31  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/advanced-types.xml:
 	  Fix description for buffer-frames=0.
 	* docs/gst/tmpl/gstbin.sgml:

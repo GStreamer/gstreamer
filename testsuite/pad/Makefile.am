@@ -1,5 +1,5 @@
 include ../Rules
 
 tests_pass = link
-tests_fail =
-tests_ignore = chainnopull getnopush
+tests_fail = chainnopull getnopush
+tests_ignore =

@@ -161,6 +161,12 @@ struct _GstPadClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+typedef enum {
+  GST_RPAD_IN_GETFUNC = GST_PAD_FLAG_LAST,
+  GST_RPAD_IN_CHAINFUNC,
+  GST_RPAD_FLAG_LAST = GST_PAD_FLAG_LAST + 4
+} GstRealPadFlags;
+
 struct _GstRealPad {
   GstPad			 pad;
 
