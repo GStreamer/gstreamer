@@ -613,7 +613,7 @@ AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 
 dnl Check for a52dec
 AC_MSG_CHECKING(a52dec library)
-AC_CHECK_LIB(a52, a52_init, HAVE_A52DEC=yes, HAVE_A52DEC=no, )
+AC_CHECK_LIB(a52, a52_init, HAVE_A52DEC=yes, HAVE_A52DEC=no, -lm)
 AC_CHECK_HEADER(a52dec/a52.h, :, HAVE_A52DEC=no)
 
 dnl Check for sidplay
