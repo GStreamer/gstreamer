@@ -1,3 +1,13 @@
+2004-02-24  Arwed v. Merkatz  <v.merkatz@gmx.net>
+
+	reviewed by: David Schleef  <ds@schleef.org>
+
+	* gst/videofilter/gstgamma.c: (gst_gamma_class_init),
+	(gst_gamma_init), (gst_gamma_set_property),
+	(gst_gamma_get_property), (gst_gamma_calculate_tables),
+	(gst_gamma_rgb24), (gst_gamma_rgb32):  Adds gamma correction
+	for RGB, with separate r g and b correction factors.
+
 2004-02-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_chain):
