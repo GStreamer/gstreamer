@@ -16,17 +16,17 @@ int iterations;
 int max_iterations = 100;
 
 void
-gst_caps_print (GstCaps *caps)
+gst_caps_print (const char *filename, GstCaps *caps)
 {
   gchar *caps_str = gst_caps_to_string (caps);
-  g_print ("%s\n", caps_str);
+  g_print ("%s - %s\n", filename, caps_str);
   g_free (caps_str);
 }
 
 void
-have_type_handler (GstElement *typefind, guint probability, GstCaps *caps, gpointer unused)
+have_type_handler (GstElement *typefind, guint probability, GstCaps *caps, gpointer filename)
 {
-  gst_caps_print (caps);
+  gst_caps_print (filename, caps);
   FOUND = TRUE;
 }
 
@@ -53,7 +53,7 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (pipeline), source, typefind, NULL);
   gst_element_link (source, typefind);
   g_signal_connect (G_OBJECT (typefind), "have-type", 
-		    G_CALLBACK (have_type_handler), NULL);
+		    G_CALLBACK (have_type_handler), g_strdup (argv[1]));
 
   /* set to play */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
@@ -66,7 +66,7 @@ main (int argc, char *argv[])
     }
   }
   if (!FOUND) {
-    g_print ("No type found\n");
+    g_print ("%s - No type found\n", argv[1]);
     return 1;
   }
   return 0;
