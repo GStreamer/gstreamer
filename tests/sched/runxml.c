@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <gst/gst.h>
 
 static guint outcount, incount;
@@ -19,7 +21,7 @@ buffer_handoff_src (GstElement *src, GstElement *bin)
 }
 
 /* eos will be called when the src element has an end of stream */
-void eos(GstSrc *src, gpointer data)
+void eos(GstElement *element, gpointer data)
 {
   g_print("have eos, quitting\n");
 }
@@ -72,7 +74,7 @@ int main(int argc,char *argv[])
     incount = 0;
     outcount = 0;
 
-    gst_element_set_state(bin, GST_STATE_READY);
+//    gst_element_set_state(bin, GST_STATE_READY);
     gst_element_set_state(bin, GST_STATE_PLAYING);
 
     if (GST_IS_THREAD (bin)) {
