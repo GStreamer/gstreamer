@@ -1,3 +1,13 @@
+2004-10-05  Wim Taymans  <wim@fluendo.com>
+
+	* ext/libmng/gstmngdec.c: (gst_mngdec_loop), (mngdec_error),
+	(mngdec_openstream), (mngdec_closestream),
+	(mngdec_handle_sink_event), (mngdec_readdata),
+	(mngdec_gettickcount), (mngdec_settimer), (mngdec_processheader),
+	(mngdec_getcanvasline), (mngdec_refresh),
+	(gst_mngdec_change_state):
+	Set the framerate correctly.
+
 2004-10-04  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_massage_index):
