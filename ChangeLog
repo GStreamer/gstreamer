@@ -1,3 +1,10 @@
+2004-04-17  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.c: (gst_element_dispose):
+	  simplify
+	* gst/gstpad.c: (gst_pad_call_chain_function):
+	  don't create loads of events due to bad macro usage
+
 2004-04-16  David Schleef  <ds@schleef.org>
 
 	* gst/gstcaps.c: (gst_caps_is_fixed_foreach):

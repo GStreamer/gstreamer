@@ -2974,33 +2974,14 @@ static void
 gst_element_dispose (GObject * object)
 {
   GstElement *element = GST_ELEMENT (object);
-  GList *pads;
-  GstPad *pad;
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
   gst_element_set_state (element, GST_STATE_NULL);
 
   /* first we break all our links with the ouside */
-  if (element->pads) {
-    GList *orig;
-
-    orig = pads = g_list_copy (element->pads);
-    while (pads) {
-      pad = GST_PAD (pads->data);
-
-      if (GST_PAD_PEER (pad)) {
-        GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "unlinking pad '%s'",
-            GST_OBJECT_NAME (GST_OBJECT (GST_PAD (GST_PAD_PEER (pad)))));
-        gst_pad_unlink (pad, GST_PAD (GST_PAD_PEER (pad)));
-      }
-      gst_element_remove_pad (element, pad);
-
-      pads = g_list_next (pads);
-    }
-    g_list_free (orig);
-    g_list_free (element->pads);
-    element->pads = NULL;
+  while (element->pads) {
+    gst_element_remove_pad (element, GST_PAD (element->pads->data));
   }
 
   element->numsrcpads = 0;

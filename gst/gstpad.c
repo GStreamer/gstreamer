@@ -4212,11 +4212,12 @@ gst_pad_get_formats (GstPad * pad)
 }
 
 #define CALL_CHAINFUNC(pad, data) G_STMT_START {\
-  if (GST_IS_EVENT (data) && \
+  GstData *__temp = (data); \
+  if (GST_IS_EVENT (__temp) && \
       !GST_FLAG_IS_SET (gst_pad_get_parent (pad), GST_ELEMENT_EVENT_AWARE)) { \
-    gst_pad_send_event (pad, GST_EVENT (data)); \
+    gst_pad_send_event (pad, GST_EVENT (__temp)); \
   } else { \
-    GST_RPAD_CHAINFUNC (pad) (pad, data); \
+    GST_RPAD_CHAINFUNC (pad) (pad, __temp); \
   } \
 }G_STMT_END
 /**
