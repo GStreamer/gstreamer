@@ -1,5 +1,16 @@
 2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/volume/gstvolume.c: (gst_volume_set_volume),
+	(gst_volume_get_volume), (volume_class_init), (volume_init),
+	(volume_chain_int16), (volume_update_volume):
+	* gst/volume/gstvolume.h:
+          make code more readable by removing magic numbers
+          make mixer interface export 0-100 range
+          make it internally map to 0.0-1.0 range so users don't distort
+          output by putting the sliders at full volume
+
+2004-02-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/play/play.c: (gst_play_tick_callback),
 	(gst_play_state_change), (gst_play_seek_to_time):
         block the tick callback for 0.5 secs after doing a seek
