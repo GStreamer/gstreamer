@@ -808,6 +808,13 @@ return 0;
   fi
 ])
 
+dnl *** DTS ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
+GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
+  GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h, DTS_LIBS="-ldts_pic -lm")
+  AC_SUBST(DTS_LIBS)
+])
+
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
 GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
@@ -1778,6 +1785,7 @@ ext/artsd/Makefile
 ext/audiofile/Makefile
 ext/cdparanoia/Makefile
 ext/divx/Makefile
+ext/dts/Makefile
 ext/dv/Makefile
 ext/dvdread/Makefile
 ext/dvdnav/Makefile

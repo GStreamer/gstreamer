@@ -46,6 +46,12 @@ else
 DIVX_DIR=
 endif
 
+if USE_DTS
+DTS_DIR=dvdread
+else
+DTS_DIR=
+endif
+
 if USE_DVDREAD
 DVDREAD_DIR=dvdread
 else
@@ -331,6 +337,7 @@ SUBDIRS=\
 	$(AUDIOFILE_DIR) \
 	$(CDPARANOIA_DIR) \
 	$(DIVX_DIR) \
+	$(DTS_DIR) \
 	$(DVDREAD_DIR) \
 	$(DVDNAV_DIR) \
 	$(ESD_DIR) \
@@ -386,6 +393,7 @@ DIST_SUBDIRS=\
 	audiofile \
 	cdparanoia \
 	divx \
+	dts \
 	dv \
 	dvdread \
 	dvdnav \
