@@ -37,7 +37,7 @@ extern "C" {
 #define GST_CUTTER(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CUTTER,GstCutter))
 #define GST_CUTTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstCutter))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CUTTER,GstCutter))
 #define GST_IS_CUTTER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CUTTER))
 #define GST_IS_CUTTER_CLASS(obj) \
