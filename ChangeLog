@@ -1,3 +1,15 @@
+2004-06-01  Owen Fraser-Green  <owen@discobabe.net>
+
+	* gst-libs/gst/mixer/mixertrack.h: Changed struct syntax
+	* gst-libs/gst/mixer/mixertrack.c:
+	(gst_mixer_track_get_property), (get_mixer_track_init),
+	(get_mixer_track_get_property): Added property accessors
+	* gst-libs/gst/mixer/mixeroptions.h: Changed struct syntax
+	* gst-libs/gst/mixer/mixeroptions.c:
+	(gst_mixer_options_get_values): Added	
+	* gst-libs/gst/mixer/mixer.h: Changed GstMixerClass syntax
+	* gst-libs/gst/mixer/mixer.c: Fixed comment
+
 2004-06-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_open_audio):

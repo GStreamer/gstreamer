@@ -256,7 +256,7 @@ gst_mixer_set_option (GstMixer * mixer, GstMixerOptions * opts, gchar * value)
 }
 
 /**
- * gst_mixer_g_option:
+ * gst_mixer_get_option:
  * @mixer: The #GstMixer (a #GstElement) that owns the optionlist.
  * @opts: The #GstMixerOptions that we operate on.
  *

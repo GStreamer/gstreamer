@@ -84,10 +84,29 @@ gst_mixer_options_class_init (GstMixerOptionsClass * klass)
 }
 
 static void
-gst_mixer_options_init (GstMixerOptions * channel)
+gst_mixer_options_init (GstMixerOptions * mixer_options)
 {
-  channel->values = NULL;
+  mixer_options->values = NULL;
 }
+
+/**
+ * gst_mixer_options_get_values:
+ * @mixer_optnios: The #GstMixerOptions item that owns the values.
+ *
+ * Get the values for the mixer option.
+ *
+ * Returns: A list of all the possible values for the mixer option.
+ */
+
+GList *
+gst_mixer_options_get_values (GstMixerOptions * mixer_options)
+{
+  if (!mixer_options->values)
+    return NULL;
+
+  return (GList *) mixer_options->values;
+}
+
 
 static void
 gst_mixer_options_dispose (GObject * object)
