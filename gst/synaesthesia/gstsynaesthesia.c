@@ -60,15 +60,12 @@ GType gst_synaesthesia_get_type(void);
 
 
 /* elementfactory information */
-static GstElementDetails gst_synaesthesia_details = {
+static GstElementDetails gst_synaesthesia_details = GST_ELEMENT_DETAILS (
   "Synaesthesia",
   "Visualization",
-  "GPL",
   "Creates video visualizations of audio input, using stereo and pitch information",
-  VERSION,
-  "Richard Boulton <richard@tartarus.org>",
-  "(C) 2002",
-};
+  "Richard Boulton <richard@tartarus.org>"
+);
 
 /* signals and args */
 enum {
@@ -121,6 +118,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_template,
 )
 
 
+static void		gst_synaesthesia_base_init	(gpointer g_class);
 static void		gst_synaesthesia_class_init	(GstSynaesthesiaClass *klass);
 static void		gst_synaesthesia_init		(GstSynaesthesia *synaesthesia);
 
@@ -147,7 +145,7 @@ gst_synaesthesia_get_type (void)
   if (!type) {
     static const GTypeInfo info = {
       sizeof (GstSynaesthesiaClass),      
-      NULL,      
+      gst_synaesthesia_base_init,      
       NULL,      
       (GClassInitFunc) gst_synaesthesia_class_init,
       NULL,
@@ -161,6 +159,16 @@ gst_synaesthesia_get_type (void)
   return type;
 }
 
+static void
+gst_synaesthesia_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_synaesthesia_details);
+
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template));
+}
 static void
 gst_synaesthesia_class_init(GstSynaesthesiaClass *klass)
 {
@@ -388,26 +396,20 @@ gst_synaesthesia_change_state (GstElement *element)
 
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the synaesthesia element */
-  factory = gst_element_factory_new("synaesthesia",GST_TYPE_SYNAESTHESIA,
-                                   &gst_synaesthesia_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
+  return gst_element_register (plugin, "synaesthesia", GST_RANK_MARGINAL, GST_TYPE_SYNAESTHESIA);
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "synaesthesia",
-  plugin_init
-};
+  "Creates video visualizations of audio input, using stereo and pitch information",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)
