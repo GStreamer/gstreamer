@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 
 Name: GStreamer GConf Library
-Description: Streaming media framework, GConf support library
+Description: Streaming-media framework, GConf support library
 Requires: gstreamer-@GST_MAJORMINOR@ gconf-2.0
 Version: @VERSION@
 
