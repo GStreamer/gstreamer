@@ -247,7 +247,7 @@ main (int argc, char *argv[])
       To compile the helloworld2 example, use: 
     </para>
     <programlisting>
-       gcc -Wall `pkg-config gstreamer --cflags --libs` helloworld2.c \
+       gcc -Wall `pkg-config gstreamer-0.7 --cflags --libs` helloworld2.c \
              -o helloworld2 
     </programlisting>
     <para>
