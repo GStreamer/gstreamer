@@ -336,7 +336,7 @@ g_print ("out: %s\n", gst_caps_to_string (vscaps));
     return GST_PAD_LINK_REFUSED;
 
   if (!gst_xviddec_setup(xviddec))
-    return GST_PAD_LINK_REFUSED;;
+    return GST_PAD_LINK_REFUSED;
 
   return GST_PAD_LINK_OK;
 }

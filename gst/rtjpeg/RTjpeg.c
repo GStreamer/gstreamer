@@ -2807,7 +2807,7 @@ void RTjpeg_init_mcompress(void)
   fprintf(stderr, "RTjpeg: Could not allocate memory\n");
   exit(-1);
  }
- bzero(RTjpeg_old, ((4*RTjpeg_width*RTjpeg_height)));
+ memset (RTjpeg_old, 0, ((4*RTjpeg_width*RTjpeg_height)));
 }
 
 #ifdef HAVE_LIBMMX

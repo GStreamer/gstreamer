@@ -1106,15 +1106,15 @@ gst_play_get_sink_element (GstPlay *play,
             case GST_PLAY_SINK_TYPE_AUDIO:
               if (has_audio_cap)
                 has_correct_type = TRUE;
-              break;;
+              break;
             case GST_PLAY_SINK_TYPE_VIDEO:
               if (has_video_cap)
                 has_correct_type = TRUE;
-              break;;
+              break;
             case GST_PLAY_SINK_TYPE_ANY:
               if ((has_video_cap) || (has_audio_cap))
                 has_correct_type = TRUE;
-              break;;
+              break;
             default:
               has_correct_type = FALSE;
           }
