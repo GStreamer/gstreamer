@@ -1,5 +1,14 @@
 2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	  Add MS video v1.
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_index),
+	(gst_avi_demux_stream_data):
+	  Add support for "rec-list" chunks.
+
+2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
 	  Fix another codecname mismatch.
 
