@@ -1208,6 +1208,14 @@ int main (int argc, char *argv[])
 AC_SUBST(LAME_CFLAGS)
 AC_SUBST(LAME_LIBS)
 
+dnl *** MAS (TODO) ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MAS, true)
+GST_CHECK_FEATURE(MAS, [mas], mas, [
+   GST_CHECK_CONFIGPROG(MAS, mas-config)
+   AC_SUBST(MAS_CFLAGS)
+   AC_SUBST(MAS_LIBS)
+])
+
 dnl *** libcaca ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
 GST_CHECK_FEATURE(LIBCACA, [libcaca], libcaca, [
@@ -1954,6 +1962,7 @@ ext/libpng/Makefile
 ext/librfb/Makefile
 ext/libvisual/Makefile
 ext/mad/Makefile
+ext/mas/Makefile
 ext/mikmod/Makefile
 ext/mpeg2dec/Makefile
 ext/mpeg2enc/Makefile
