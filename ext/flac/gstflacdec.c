@@ -52,10 +52,15 @@ static void 		gst_flacdec_init		(FlacDec *flacdec);
 static void 		gst_flacdec_loop		(GstElement *element);
 static GstElementStateReturn
 			gst_flacdec_change_state 	(GstElement *element);
+static const GstFormat* gst_flacdec_get_src_formats 	(GstPad *pad);
 static gboolean 	gst_flacdec_convert_src	 	(GstPad *pad, GstFormat src_format, gint64 src_value,
 		        				 GstFormat *dest_format, gint64 *dest_value);
+static const GstPadQueryType* 
+			gst_flacdec_get_src_query_types (GstPad *pad);
 static gboolean		gst_flacdec_src_query 		(GstPad *pad, GstPadQueryType type,
 	               					 GstFormat *format, gint64 *value);
+static const GstEventMask* 
+			gst_flacdec_get_src_event_masks (GstPad *pad);
 static gboolean 	gst_flacdec_src_event 		(GstPad *pad, GstEvent *event);
 
 static FLAC__SeekableStreamDecoderReadStatus 	
@@ -129,8 +134,11 @@ gst_flacdec_init (FlacDec *flacdec)
   gst_element_set_loop_function (GST_ELEMENT (flacdec), gst_flacdec_loop);
   flacdec->srcpad = gst_pad_new_from_template (dec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (flacdec), flacdec->srcpad);
-  gst_pad_set_query_function (flacdec->srcpad, gst_flacdec_src_query);
+  gst_pad_set_formats_function (flacdec->srcpad, gst_flacdec_get_src_formats);
   gst_pad_set_convert_function (flacdec->srcpad, gst_flacdec_convert_src);
+  gst_pad_set_query_type_function (flacdec->srcpad, gst_flacdec_get_src_query_types);
+  gst_pad_set_query_function (flacdec->srcpad, gst_flacdec_src_query);
+  gst_pad_set_event_mask_function (flacdec->srcpad, gst_flacdec_get_src_event_masks);
   gst_pad_set_event_function (flacdec->srcpad, gst_flacdec_src_event);
 
   flacdec->decoder = FLAC__seekable_stream_decoder_new ();
@@ -270,8 +278,8 @@ gst_flacdec_read (const FLAC__SeekableStreamDecoder *decoder, FLAC__byte buffer[
         case GST_EVENT_EOS:
           GST_DEBUG (0, "eos");
           flacdec->eos = TRUE; 
+	  gst_event_unref (event);
           if (avail == 0) {
-	    gst_event_unref (event);
             return 0;
           }
           break;
@@ -434,6 +442,12 @@ gst_flacdec_loop (GstElement *element)
   }
 }
 
+GST_FORMATS_FUNCTION (gst_flacdec_get_src_formats,
+  GST_FORMAT_UNITS,
+  GST_FORMAT_BYTES,
+  GST_FORMAT_TIME
+)
+
 static gboolean
 gst_flacdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
 		         GstFormat *dest_format, gint64 *dest_value)
@@ -503,6 +517,11 @@ gst_flacdec_convert_src (GstPad *pad, GstFormat src_format, gint64 src_value,
   return res;
 }
 
+GST_PAD_QUERY_TYPE_FUNCTION (gst_flacdec_get_src_query_types,
+  GST_PAD_QUERY_TOTAL,
+  GST_PAD_QUERY_POSITION
+)
+
 static gboolean
 gst_flacdec_src_query (GstPad *pad, GstPadQueryType type,
 	               GstFormat *format, gint64 *value)
@@ -534,6 +553,10 @@ gst_flacdec_src_query (GstPad *pad, GstPadQueryType type,
   return res;
 }
 	  
+GST_EVENT_MASK_FUNCTION (gst_flacdec_get_src_event_masks,
+    { GST_EVENT_SEEK, GST_SEEK_FLAG_ACCURATE }
+);
+
 static gboolean
 gst_flacdec_src_event (GstPad *pad, GstEvent *event)
 { 
