@@ -97,7 +97,7 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint64 location, gint size)
   g_return_val_if_fail (pool != NULL, NULL);
   g_return_val_if_fail (pool->new_buffer != NULL, NULL);
   
-  buffer = pool->new_buffer (pool, location, size, pool->new_buffer_user_data);
+  buffer = pool->new_buffer (pool, location, size, pool->user_data);
   buffer->pool = pool;
   
   return buffer;
@@ -231,7 +231,7 @@ void gst_buffer_destroy (GstBuffer *buffer)
   if (buffer->pool) {
     GST_INFO (GST_CAT_BUFFER,"calling %sbuffer %p\'s pool destroy function", (buffer->parent?"sub":""),buffer);
     buffer->pool->destroy_buffer(buffer->pool, buffer,
-                                 buffer->pool->destroy_buffer_user_data);
+                                 buffer->pool->user_data);
     return;
   }
   
