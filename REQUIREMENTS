@@ -7,11 +7,8 @@ report at http://sourceforge.net/bugs/?group_id=1936.
 
 Required libraries:
 ===================
-glib v1.2.0 or better
-gtk+ v1.2.0 or better
-libxml          (also called gnome-xml, available from http://xmlsoft.org/)
-libHermes	(for gstplay)
-			http://www.clanlib.org/hermes/
+the latest glib2, currently at v1.3.13
+libxml2         (also called gnome-xml, available from http://xmlsoft.org/)
 
 These libraries are all central parts of gnome, and are available from the
 ftp.gnome.org or its mirrors, amongst other places.
@@ -21,7 +18,8 @@ Optional libraries:
 gdk_pixbuf
 libgnomeui	(for gstplay, gsteditor, autoplug example, several tests)
 libglade	(for gstplay, gsteditor)
-
+libHermes	(for colorspace conversions; you need this for any video work)
+			http://www.clanlib.org/hermes/
 libghttp	(for httpsrc)
 			http://ftp.gnome.org/pub/GNOME/stable/sources/libghttp/
 libaudiofile    (for afsrc/afsink)
@@ -91,6 +89,7 @@ Optional tools:
 gtkdoc
 db2html
 fig2dev
+xsltproc
 
 Optional debian packages:
 =========================
