@@ -17,8 +17,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+//#define DEBUG_ENABLED
+
 #include <stdarg.h>
 #include <gst/gstcapsprivate.h>
+
+static gboolean 	gst_caps_entry_check_compatibility 	(GstCapsEntry *entry1, GstCapsEntry *entry2);
+	
 
 void 
 _gst_caps_initialize (void) 
@@ -44,6 +49,10 @@ gst_caps_create_entry (GstCapsFactory factory, gint *skipped)
       entry->capstype = GST_CAPS_INT_RANGE_ID_NUM;
       entry->data.int_range_data.min = GPOINTER_TO_INT (factory[i++]);
       entry->data.int_range_data.max = GPOINTER_TO_INT (factory[i++]);
+      break;
+    case GST_CAPS_FOURCC_ID:
+      entry->capstype = GST_CAPS_FOURCC_ID_NUM;
+      entry->data.fourcc_data = GPOINTER_TO_INT (factory[i++]);
       break;
     case GST_CAPS_LIST_ID:
       g_print("gstcaps: list not allowed in list\n");
@@ -134,6 +143,7 @@ gst_caps_register (GstCapsFactory factory)
         tag = factory[i];
 	while (tag) {
 	  list_entry = gst_caps_create_entry (&factory[i], &skipped);
+	  list_entry->propid = quark;
 	  i += skipped;
           tag = factory[i];
 	  entry->data.list_data.entries = g_list_prepend (entry->data.list_data.entries, list_entry);
@@ -170,8 +180,8 @@ gst_caps_dump_entry_func (GstCapsEntry *entry)
 		      entry->data.int_range_data.min,
 		      entry->data.int_range_data.max);
       break;
-    case GST_CAPS_INT32_ID_NUM: 
-      g_print("gstcaps:    int32 %d\n", entry->data.int_data);
+    case GST_CAPS_FOURCC_ID_NUM: 
+      g_print("gstcaps:    fourcc 0x%08x (%4.4s)\n", entry->data.fourcc_data, &entry->data.fourcc_data);
       break;
     case GST_CAPS_BOOL_ID_NUM: 
       g_print("gstcaps:    boolean %d\n", entry->data.bool_data);
@@ -230,11 +240,100 @@ gst_caps_dump (GstCaps *caps)
   g_print("gstcaps: }\n");
 }
 	
+/* entry2 is always a list, entry1 never is */
+static gboolean
+gst_caps_entry_check_list_compatibility (GstCapsEntry *entry1, GstCapsEntry *entry2)
+{
+  GList *entrylist = entry2->data.list_data.entries;
+  gboolean found = FALSE;
+
+  while (entrylist && !found) {
+    GstCapsEntry *entry = (GstCapsEntry *) entrylist->data;
+
+    found |= gst_caps_entry_check_compatibility (entry1, entry);
+
+    entrylist = g_list_next (entrylist);
+  }
+
+  return found;
+}
+
 static gboolean
 gst_caps_entry_check_compatibility (GstCapsEntry *entry1, GstCapsEntry *entry2)
 {
-  g_print ("compare: %s %s\n", g_quark_to_string (entry1->propid),
-	                       g_quark_to_string (entry2->propid));
+  DEBUG ("compare: %s %s\n", g_quark_to_string (entry1->propid),
+	                     g_quark_to_string (entry2->propid));
+  switch (entry1->capstype) {
+    case GST_CAPS_LIST_ID_NUM:
+    {
+      GList *entrylist = entry1->data.list_data.entries;
+      gboolean valid = TRUE;    // innocent until proven guilty
+
+      while (entrylist && valid) {
+	GstCapsEntry *entry = (GstCapsEntry *) entrylist->data;
+
+	valid &= gst_caps_entry_check_compatibility (entry, entry2);
+	
+	entrylist = g_list_next (entrylist);
+      }
+      
+      return valid;
+    }
+    case GST_CAPS_INT_RANGE_ID_NUM:
+      switch (entry2->capstype) {
+	// a - b   <--->   a - c
+        case GST_CAPS_INT_RANGE_ID_NUM:
+	  return (entry2->data.int_range_data.min <= entry1->data.int_range_data.min &&
+	          entry2->data.int_range_data.max >= entry1->data.int_range_data.max);
+        case GST_CAPS_LIST_ID_NUM:
+	  return gst_caps_entry_check_list_compatibility (entry1, entry2);
+        default:
+          return FALSE;
+      }
+      break;
+    case GST_CAPS_FOURCC_ID_NUM:
+      switch (entry2->capstype) {
+	// b   <--->   a
+        case GST_CAPS_FOURCC_ID_NUM:
+	  return (entry2->data.fourcc_data == entry1->data.fourcc_data);
+	// b   <--->   a,b,c
+        case GST_CAPS_LIST_ID_NUM:
+	  return gst_caps_entry_check_list_compatibility (entry1, entry2);
+        default:
+          return FALSE;
+      }
+      break;
+    case GST_CAPS_INT_ID_NUM:
+      switch (entry2->capstype) {
+	// b   <--->   a - d
+        case GST_CAPS_INT_RANGE_ID_NUM:
+	  return (entry2->data.int_range_data.min <= entry1->data.int_data &&
+	          entry2->data.int_range_data.max >= entry1->data.int_data);
+	// b   <--->   a
+        case GST_CAPS_INT_ID_NUM:
+	  return (entry2->data.int_data == entry1->data.int_data);
+	// b   <--->   a,b,c
+        case GST_CAPS_LIST_ID_NUM:
+	  return gst_caps_entry_check_list_compatibility (entry1, entry2);
+        default:
+          return FALSE;
+      }
+      break;
+    case GST_CAPS_BOOL_ID_NUM:
+      switch (entry2->capstype) {
+	// t   <--->   t
+        case GST_CAPS_BOOL_ID_NUM:
+          return (entry2->data.bool_data == entry1->data.bool_data);
+        case GST_CAPS_LIST_ID_NUM:
+	  return gst_caps_entry_check_list_compatibility (entry1, entry2);
+        default:
+          return FALSE;
+      }
+    default:
+      break;
+  }
+
+  return FALSE;
 }
 
 /**
@@ -253,6 +352,7 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   GSList *sinklist;
   gint missing = 0;
   gint more = 0;
+  gboolean compatible = TRUE;
 
   g_return_val_if_fail (fromcaps != NULL, FALSE);
   g_return_val_if_fail (tocaps != NULL, FALSE);
@@ -263,7 +363,7 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   sourcelist = fromcaps->properties;
   sinklist   = tocaps->properties;
 
-  while (sourcelist && sinklist) {
+  while (sourcelist && sinklist && compatible) {
     GstCapsEntry *entry1;
     GstCapsEntry *entry2;
 
@@ -271,21 +371,21 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
     entry2 = (GstCapsEntry *)sinklist->data;
 
     while (entry1->propid < entry2->propid) {
-      g_print ("source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
+      DEBUG ("source is more specific in \"%s\"\n", g_quark_to_string (entry1->propid));
       more++;
       sourcelist = g_slist_next (sourcelist);
       if (sourcelist) entry1 = (GstCapsEntry *)sourcelist->data;
       else goto end;
     }
     while (entry1->propid > entry2->propid) {
-      g_print ("source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
+      DEBUG ("source has missing property \"%s\"\n", g_quark_to_string (entry2->propid));
       missing++;
       sinklist = g_slist_next (sinklist);
       if (sinklist) entry2 = (GstCapsEntry *)sinklist->data;
       else goto end;
     }
 
-    gst_caps_entry_check_compatibility (entry1, entry2);
+    compatible &= gst_caps_entry_check_compatibility (entry1, entry2);
 
     sourcelist = g_slist_next (sourcelist);
     sinklist = g_slist_next (sinklist);
@@ -295,7 +395,7 @@ end:
   if (missing)
     return FALSE;
 
-  return TRUE;
+  return compatible;
 }
 
 /**
