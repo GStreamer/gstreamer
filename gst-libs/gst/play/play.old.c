@@ -154,8 +154,8 @@ gst_play_set_property (	GObject *object,
 {
 	GstPlay *play;
 	g_return_if_fail (object != NULL);
+	g_return_if_fail (GST_IS_PLAY (object));
 	play = GST_PLAY (object);
-	g_return_if_fail (GST_IS_PLAY (play));
 	
 	switch (prop_id) {
 	case ARG_LOCATION:
@@ -181,8 +181,8 @@ gst_play_get_property (	GObject *object,
 {
 	GstPlay *play;
 	g_return_if_fail (object != NULL);
+	g_return_if_fail (GST_IS_PLAY (object));
 	play = GST_PLAY (object);
-	g_return_if_fail (GST_IS_PLAY (play));
 
 	switch (prop_id) {
 	case ARG_LOCATION:
@@ -513,6 +513,8 @@ callback_pipeline_state_change (	GstElement *element,
 static void
 gst_play_dispose (GObject *object)
 {
+	g_return_if_fail (object != NULL);
+	g_return_if_fail (GST_IS_PLAY(object));
 	GstPlay *play = GST_PLAY (object);
 
 	/* Removing all sources */
