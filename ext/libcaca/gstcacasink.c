@@ -53,7 +53,7 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24));
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
 
 static void	gst_cacasink_base_init	(gpointer g_class);
 static void	gst_cacasink_class_init	(GstCACASinkClass *klass);

@@ -106,7 +106,7 @@ png_caps_factory (void)
 static GstCaps*
 raw_caps_factory (void)
 { 
-  return gst_caps_from_string (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24);
+  return gst_caps_from_string (GST_VIDEO_CAPS_RGB);
 }
 
 static void

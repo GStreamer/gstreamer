@@ -86,7 +86,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32)
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
 );
 
 static GstStaticPadTemplate sink_template =
@@ -104,8 +104,6 @@ static void	gst_monoscope_init		(GstMonoscope *monoscope);
 
 static void	gst_monoscope_chain		(GstPad *pad, GstData *_data);
 
-static GstPadLinkReturn 
-		gst_monoscope_sinkconnect 	(GstPad *pad, const GstCaps *caps);
 static GstPadLinkReturn
 		gst_monoscope_srcconnect 	(GstPad *pad, const GstCaps *caps);
 
@@ -169,7 +167,6 @@ gst_monoscope_init (GstMonoscope *monoscope)
   gst_element_add_pad (GST_ELEMENT (monoscope), monoscope->srcpad);
 
   gst_pad_set_chain_function (monoscope->sinkpad, gst_monoscope_chain);
-  gst_pad_set_link_function (monoscope->sinkpad, gst_monoscope_sinkconnect);
   gst_pad_set_link_function (monoscope->srcpad, gst_monoscope_srcconnect);
 
   monoscope->next_time = 0;
@@ -182,37 +179,8 @@ gst_monoscope_init (GstMonoscope *monoscope)
 }
 
 static GstPadLinkReturn
-gst_monoscope_sinkconnect (GstPad *pad, const GstCaps *caps)
-{
-  GstMonoscope *monoscope;
-  monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
-
-  return GST_PAD_LINK_OK;
-}
-
-static GstPadLinkReturn
-gst_monoscope_negotiate (GstMonoscope *monoscope)
-{
-  GstCaps *caps;
-
-  caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "bpp", 		G_TYPE_INT, 32, 
-      "depth", 	G_TYPE_INT, 32, 
-      "endianness", 	G_TYPE_INT, G_BIG_ENDIAN, 
-      "red_mask", 	G_TYPE_INT, R_MASK_32, 
-      "green_mask", 	G_TYPE_INT, G_MASK_32, 
-      "blue_mask", 	G_TYPE_INT, B_MASK_32, 
-      "width", 	G_TYPE_INT, monoscope->width, 
-      "height", 	G_TYPE_INT, monoscope->height,
-      "framerate",     G_TYPE_DOUBLE, monoscope->fps, NULL);
-
-  return gst_pad_try_set_caps (monoscope->srcpad, caps);
-}
-
-static GstPadLinkReturn
 gst_monoscope_srcconnect (GstPad *pad, const GstCaps *caps)
 {
-  GstPadLinkReturn ret;
   GstMonoscope *monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
   GstStructure *structure;
 
@@ -222,10 +190,7 @@ gst_monoscope_srcconnect (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int (structure, "height", &monoscope->height);
   gst_structure_get_double (structure, "framerate", &monoscope->fps);
 
-  if ((ret = gst_monoscope_negotiate (monoscope)) <= 0)
-    return ret;
-
-  return GST_PAD_LINK_DONE;
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -263,8 +228,8 @@ gst_monoscope_chain (GstPad *pad, GstData *_data)
     monoscope->visstate = monoscope_init (monoscope->width, monoscope->height);
     g_assert(monoscope->visstate != 0);
     GST_DEBUG ("making new pad");
-    if (!GST_PAD_CAPS (monoscope->srcpad)) {
-      if (gst_monoscope_negotiate (monoscope) <= 0) {
+    if (!gst_pad_is_negotiated (monoscope->srcpad)) {
+      if (gst_pad_renegotiate (monoscope->srcpad) <= 0) {
         gst_element_error (GST_ELEMENT (monoscope), "could not set caps");
         return;
       }

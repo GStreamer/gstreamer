@@ -1,3 +1,45 @@
+2004-01-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst-libs/gst/video/video.h:
+	  Fix caps template names to be understandable.
+	  Prefix everything with GST_VIDEO.
+	* ext/aalib/gstaasink.c:
+	* ext/divx/gstdivxdec.c:
+	* ext/divx/gstdivxenc.c:
+	* ext/gdk_pixbuf/gstgdkpixbuf.c:
+	* ext/hermes/gstcolorspace.c: (gst_colorspace_base_init):
+	* ext/jpeg/gstjpegdec.c: (raw_caps_factory):
+	* ext/jpeg/gstjpegenc.c: (raw_caps_factory):
+	* ext/libcaca/gstcacasink.c:
+	* ext/libpng/gstpngenc.c: (raw_caps_factory):
+	* ext/snapshot/gstsnapshot.c:
+	* ext/swfdec/gstswfdec.c:
+	* ext/xvid/gstxviddec.c:
+	* ext/xvid/gstxvidenc.c:
+	* gst/chart/gstchart.c:
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/effectv/gsteffectv.c:
+	* gst/flx/gstflxdec.c: (gst_flxdec_loop):
+	* gst/goom/gstgoom.c:
+	* gst/median/gstmedian.c:
+	* gst/monoscope/gstmonoscope.c: (gst_monoscope_init),
+	(gst_monoscope_srcconnect), (gst_monoscope_chain):
+	* gst/overlay/gstoverlay.c:
+	* gst/smooth/gstsmooth.c:
+	* gst/smpte/gstsmpte.c:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	* gst/videocrop/gstvideocrop.c:
+	* gst/videodrop/gstvideodrop.c:
+	* gst/y4m/gsty4mencode.c:
+	* sys/qcam/gstqcamsrc.c:
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_palette_to_caps):
+	  Make them work with new video.h file.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_chain),
+	(gst_ximagesink_buffer_free), (gst_ximagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain),
+	(gst_xvimagesink_buffer_free), (gst_xvimagesink_buffer_alloc):
+	  Make it work with new buffer allocation system.
+
 2004-01-11  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain): Fixing the 

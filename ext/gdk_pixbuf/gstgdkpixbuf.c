@@ -80,7 +80,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_24)
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
 );
 
 static void     gst_gdk_pixbuf_base_init (gpointer g_class);

@@ -93,7 +93,7 @@ jpeg_caps_factory (void)
 static GstCaps*
 raw_caps_factory (void)
 {
-  return gst_caps_from_string (GST_VIDEO_YUV_PAD_TEMPLATE_CAPS ("I420"));
+  return gst_caps_from_string (GST_VIDEO_CAPS_YUV ("I420"));
 }
 
 static void

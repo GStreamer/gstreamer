@@ -61,7 +61,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ( GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32 )
+  GST_STATIC_CAPS ( GST_VIDEO_CAPS_xRGB_HOST_ENDIAN )
 );
 
 
@@ -484,7 +484,7 @@ gst_flxdec_loop (GstElement *element)
       flxdec->frame_time = flxh->speed * GST_MSECOND;
     }
     
-    caps = gst_caps_from_string (GST_VIDEO_RGB_PAD_TEMPLATE_CAPS_32);
+    caps = gst_caps_from_string (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN);
     gst_caps_set_simple (caps,
 	"width", G_TYPE_INT, flxh->width, 
 	"height", G_TYPE_INT, flxh->height,
