@@ -515,7 +515,7 @@ AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(arts library)
 dnl AC_CHECK_LIB(artsflow, convert_stereo_ifloat_2float, HAVE_ARTS=yes, HAVE_ARTS=no, -lmcop -lartsflow_idl)
-AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
+dnl AC_CHECK_HEADER(arts/artsflow.h, HAVE_ARTS=yes, HAVE_ARTS=no)
 AC_LANG_RESTORE
 
 dnl Check for libraw1394
@@ -939,17 +939,17 @@ AC_SUBST(CORE_CFLAGS)
 dnl FIXME: having to AC_SUBST these is messy.  Not sure if CPPFLAGS and LDFLAGS
 dnl need it, either.
 
-dnl Private vars for libgst only
-LIBGST_LIBS="$LIBS"
-LIBGST_CFLAGS="$CFLAGS"
-AC_SUBST(LIBGST_LIBS)
-AC_SUBST(LIBGST_CFLAGS)
-
 dnl Vars for everyone else
 GST_LIBS="\$(top_builddir)/gst/libgst.la"
 GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
+
+dnl Private vars for libgst only
+LIBGST_LIBS="$LIBS"
+LIBGST_CFLAGS="$CFLAGS $GST_CFLAGS"
+AC_SUBST(LIBGST_LIBS)
+AC_SUBST(LIBGST_CFLAGS)
 
 dnl CFLAGS for everyone else
 CFLAGS="$CFLAGS $GST_CFLAGS"

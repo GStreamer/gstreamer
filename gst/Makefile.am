@@ -52,11 +52,12 @@ libgst_la_SOURCES =		\
 #LTCOMPILE2=$(LTCOMPILE) -O2
 #COMPILE2=$(COMPILE) -O2
 
-cothreads.lo: cothreads.c cothreads.h gst_private.h ../config.h gstinfo.c \
-gstarch.h gsti386.h
+# FIXME this only lists the x86 arch file, we really should merge them all
+cothreads.lo: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h \
+  $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h $(srcdir)/gsti386.h
 	$(LIBTOOL) --mode=compile $(COMPILE) -O2 -c $<
-cothreads.o: cothreads.c cothreads.h gst_private.h ../config.h gstinfo.c \
-gstarch.h gsti386.h
+cothreads.o: $(srcdir)/cothreads.c $(srcdir)/cothreads.h $(srcdir)/gst_private.h \
+  $(top_builddir)/config.h $(srcdir)/gstinfo.c $(srcdir)/gstarch.h $(srcdir)/gsti386.h
 	$(COMPILE) -O2 -c $<
 
 # NOTDEPEND.cothreads.lo: cothreads.c
