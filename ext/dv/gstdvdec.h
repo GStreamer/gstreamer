@@ -62,7 +62,9 @@ struct _GstDVDec {
   gint		 height;
   gint 		 length;
   guint64	 next_ts;
+  guint64	 end_position;
   gboolean	 need_discont;
+  gboolean	 loop;
 
   gint16 	*audio_buffers[4];
 };
