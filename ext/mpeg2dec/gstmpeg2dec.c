@@ -532,6 +532,9 @@ gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
         break;
       case STATE_SLICE:
 	slice = TRUE;
+#if MPEG2_RELEASE >= MPEG2_VERSION (0, 4, 0)
+      case STATE_INVALID_END:
+#endif
       case STATE_END:
       {
 	GstBuffer *outbuf = NULL;
@@ -563,7 +566,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstData *_data)
 	  if (picture->flags & PIC_FLAG_PTS) {
             GstClockTime time = MPEGTIME_TO_GSTTIME (picture->pts);
 #else
-          if (1) {
+          if (picture->flags & PIC_FLAG_TAGS) {
             GstClockTime time = MPEGTIME_TO_GSTTIME ((guint64) picture->tag2 << 32 | picture->tag);
 #endif
 
