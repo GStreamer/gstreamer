@@ -118,7 +118,7 @@ video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)
 audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 2 ], channels=(int)[ 1, 2 ], rate=(int)[ 8000, 96000 ]
 audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ]
 video/x-raw-rgb, framerate=(double)[ 1, 100 ], width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ]
-video/dv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ]
+video/x-dv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ]
 image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 1, 1.7976931348623157e+308 ]
 video/x-4xm, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ]
 video/x-png, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ]
