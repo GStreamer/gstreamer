@@ -40,37 +40,31 @@
 static GstElementDetails gst_jack_bin_details = {
     "Jack Bin",
     "Generic/Bin",
-    "GPL",
     "Jack processing bin",
-    VERSION,
     "Andy Wingo <wingo@pobox.com>",
-    "(C) 2002, 2003"
 };
 
 static GstElementDetails gst_jack_sink_details = {  
     "Jack Sink",
     "Sink/Audio",
-    "GPL",
     "Output to a Jack processing network",
-    VERSION,
     "Andy Wingo <wingo@pobox.com>",
-    "(C) 2002, 2003"
 };
 
 static GstElementDetails gst_jack_src_details = {  
     "Jack Src",
     "Source/Audio",
-    "GPL",
     "Input from a Jack processing network",
-    VERSION,
     "Andy Wingo <wingo@pobox.com>",
-    "(C) 2002, 2003",
 };
 
 
 static GHashTable *port_name_counts = NULL;
 static GstElementClass *parent_class = NULL;
 
+static void             gst_jack_base_init (gpointer g_class);
+static void             gst_jack_src_base_init (gpointer g_class);
+static void             gst_jack_sink_base_init (gpointer g_class);
 static void		gst_jack_init(GstJack *this);
 static void		gst_jack_class_init(GstJackClass *klass);
 static void		gst_jack_set_property (GObject *object, guint prop_id,
@@ -102,7 +96,7 @@ gst_jack_get_type (void)
   if (!jack_type) {
     static const GTypeInfo jack_info = {
       sizeof(GstJackClass),
-      NULL,
+      gst_jack_base_init,
       NULL,
       NULL,
       NULL,
@@ -119,45 +113,71 @@ gst_jack_get_type (void)
 GType
 gst_jack_sink_get_type (void) 
 {
-    static GType jack_type = 0;
-
-    if (!jack_type) {
-        static const GTypeInfo jack_info = {
-            sizeof(GstJackClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gst_jack_class_init,
-            NULL,
-            NULL,
-            sizeof(GstJack),
-            0,
-            (GInstanceInitFunc)gst_jack_init,
-        };
-        jack_type = g_type_register_static (GST_TYPE_JACK, "GstJackSink", &jack_info, 0);
-    }
-    return jack_type;
+  static GType jack_type = 0;
+  
+  if (!jack_type) {
+    static const GTypeInfo jack_info = {
+      sizeof(GstJackClass),
+      gst_jack_sink_base_init,
+      NULL,
+      (GClassInitFunc)gst_jack_class_init,
+      NULL,
+      NULL,
+      sizeof(GstJack),
+      0,
+      (GInstanceInitFunc)gst_jack_init,
+    };
+    jack_type = g_type_register_static (GST_TYPE_JACK, "GstJackSink", &jack_info, 0);
+  }
+  return jack_type;
 }
 
 GType
 gst_jack_src_get_type (void) 
 {
-    static GType jack_type = 0;
-    
-    if (!jack_type) {
-        static const GTypeInfo jack_info = {
-            sizeof(GstJackClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gst_jack_class_init,
-            NULL,
-            NULL,
-            sizeof(GstJack),
-            0,
-            (GInstanceInitFunc)gst_jack_init,
-        };
-        jack_type = g_type_register_static (GST_TYPE_JACK, "GstJackSrc", &jack_info, 0);
-    }
-    return jack_type;
+  static GType jack_type = 0;
+  
+  if (!jack_type) {
+    static const GTypeInfo jack_info = {
+      sizeof(GstJackClass),
+      gst_jack_src_base_init,
+      NULL,
+      (GClassInitFunc)gst_jack_class_init,
+      NULL,
+      NULL,
+      sizeof(GstJack),
+      0,
+      (GInstanceInitFunc)gst_jack_init,
+    };
+    jack_type = g_type_register_static (GST_TYPE_JACK, "GstJackSrc", &jack_info, 0);
+  }
+  return jack_type;
+}
+
+static void
+gst_jack_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_jack_bin_details);
+}
+
+static void
+gst_jack_src_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_jack_src_request_pad_factory ());
+  gst_element_class_set_details (element_class, &gst_jack_src_details);
+}
+
+static void
+gst_jack_sink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class, gst_jack_sink_request_pad_factory ());
+  gst_element_class_set_details (element_class, &gst_jack_sink_details);
 }
 
 static void
@@ -477,32 +497,28 @@ gst_jack_loop (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-    GstElementFactory *factory;
+  if (!gst_element_register (plugin, "jackbin", GST_RANK_NONE, GST_TYPE_JACK_BIN))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "jacksrc", GST_RANK_NONE, GST_TYPE_JACK_SRC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "jacksink", GST_RANK_NONE, GST_TYPE_JACK_SINK))
+    return FALSE;
     
-    factory = gst_element_factory_new ("jackbin", GST_TYPE_JACK_BIN, &gst_jack_bin_details);
-    g_return_val_if_fail (factory != NULL, FALSE);
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-    
-    factory = gst_element_factory_new ("jacksrc", GST_TYPE_JACK_SRC, &gst_jack_src_details);
-    g_return_val_if_fail (factory != NULL, FALSE);
-    gst_element_factory_add_pad_template (factory, gst_jack_src_request_pad_factory());
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-    
-    factory = gst_element_factory_new ("jacksink", GST_TYPE_JACK_SINK, &gst_jack_sink_details);
-    g_return_val_if_fail (factory != NULL, FALSE);
-    gst_element_factory_add_pad_template (factory, gst_jack_sink_request_pad_factory());
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-    
-    gst_plugin_set_longname (plugin, "JACK plugin library");
-    
-    return TRUE;
+  return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
-    GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "jack",
-    plugin_init
-};
+GST_PLUGIN_DEFINE (
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "jack",
+  "Jack Plugin Library",
+  plugin_init,
+  VERSION,
+  "GPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
