@@ -815,6 +815,13 @@ AC_ARG_ENABLE(examples,
 esac], 
 [BUILD_EXAMPLES=yes]) dnl Default value
 
+dnl seeking needs freetype, so check for it here
+AC_CHECK_FT2(2.0.9,HAVE_FT2=yes,HAVE_FT2=no)
+dnl make the HAVE_FT2 variable available to automake and Makefile.am
+AM_CONDITIONAL(HAVE_FT2, test "x$HAVE_FT2" = "xyes")
+AC_SUBST(FT2_CFLAGS)
+AC_SUBST(FT2_LIBS)
+
 dnl ################################################
 dnl # Set defines according to variables set above #
 dnl ################################################
