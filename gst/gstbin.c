@@ -59,7 +59,6 @@ static void 			gst_bin_restore_thyself 	(GstObject * object, xmlNodePtr self);
 enum
 {
   OBJECT_ADDED,
-  ITERATE_STARTED,
   LAST_SIGNAL
 };
 
@@ -114,10 +113,6 @@ gst_bin_class_init (GstBinClass * klass)
     g_signal_new ("object_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
 		  G_STRUCT_OFFSET (GstBinClass, object_added), NULL, NULL,
 		  gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
-  gst_bin_signals[ITERATE_STARTED] =
-    g_signal_new ("iterate_started", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
-		  G_STRUCT_OFFSET (GstBinClass, iterate_started), NULL, NULL,
-		  gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gobject_class->dispose 		= GST_DEBUG_FUNCPTR (gst_bin_dispose);
 
@@ -140,6 +135,11 @@ gst_bin_init (GstBin * bin)
 
   bin->numchildren = 0;
   bin->children = NULL;
+  
+  bin->pre_iterate_func = NULL;
+  bin->post_iterate_func = NULL;
+  bin->pre_iterate_private = NULL;
+  bin->post_iterate_private = NULL;
 
   bin->iterate_mutex = g_mutex_new ();
   bin->iterate_cond = g_cond_new ();
@@ -850,10 +850,14 @@ gst_bin_iterate (GstBin * bin)
 
   oclass = GST_BIN_CLASS (G_OBJECT_GET_CLASS (bin));
 
-  g_signal_emit (G_OBJECT (bin), gst_bin_signals[ITERATE_STARTED], 0);
+  if (bin->pre_iterate_func)
+    (bin->pre_iterate_func) (bin, bin->pre_iterate_private);
 
   if (oclass->iterate)
     running = (oclass->iterate) (bin);
+
+  if (bin->post_iterate_func)
+    (bin->post_iterate_func) (bin, bin->post_iterate_private);
 
   GST_DEBUG_LEAVE ("(\"%s\") %d", GST_ELEMENT_NAME (bin), running);
 
@@ -869,3 +873,38 @@ gst_bin_iterate (GstBin * bin)
 
   return running;
 }
+
+/**
+ * gst_bin_set_pre_iterate_function:
+ * @bin: #Gstbin to attach to
+ * @func: callback function to call
+ * @func_data: private data to put in the function call
+ *
+ * Attaches a callback which will be run before every iteration of the bin
+ *
+ */
+void
+gst_bin_set_pre_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data)
+{
+  g_return_if_fail (GST_IS_BIN (bin));
+  bin->pre_iterate_func = func;
+  bin->pre_iterate_private = func_data;
+}
+
+/**
+ * gst_bin_set_post_iterate_function:
+ * @bin: #Gstbin to attach to
+ * @func: callback function to call
+ * @func_data: private data to put in the function call
+ *
+ * Attaches a callback which will be run after every iteration of the bin
+ *
+ */
+void
+gst_bin_set_post_iterate_function (GstBin *bin, GstBinPrePostIterateFunction func, gpointer func_data)
+{
+  g_return_if_fail (GST_IS_BIN (bin));
+  bin->post_iterate_func = func;
+  bin->post_iterate_private = func_data;
+}
+
