@@ -26,12 +26,14 @@
 
 gboolean gst_break_my_data_plugin_init (GstPlugin * plugin);
 gboolean gst_negotiation_plugin_init (GstPlugin * plugin);
+gboolean gst_navseek_plugin_init (GstPlugin * plugin);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_break_my_data_plugin_init (plugin);
   gst_negotiation_plugin_init (plugin);
+  gst_navseek_plugin_init (plugin);
 
   return TRUE;
 }

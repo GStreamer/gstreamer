@@ -777,9 +777,18 @@ gst_dvdec_loop (GstElement * element)
 
   dvdec = GST_DVDEC (element);
 
+  /*
+   * Apparently dv_parse_header can read from the body of the frame
+   * too, so it needs more than header_size bytes. Wacky!
+   */
+  if (dvdec->found_header)
+    length = (dvdec->PAL ? PAL_BUFFER : NTSC_BUFFER);
+  else
+    length = NTSC_BUFFER;
+
   /* first read enough bytes to parse the header */
-  got_bytes = gst_bytestream_peek_bytes (dvdec->bs, &inframe, header_size);
-  if (got_bytes < header_size) {
+  got_bytes = gst_bytestream_peek_bytes (dvdec->bs, &inframe, length);
+  if (got_bytes < length) {
     gst_dvdec_handle_sink_event (dvdec);
     return;
   }
@@ -918,6 +927,11 @@ gst_dvdec_change_state (GstElement * element)
       dvdec->decoder =
           dv_decoder_new (0, dvdec->clamp_luma, dvdec->clamp_chroma);
       dvdec->decoder->quality = dvdec->quality;
+      /* 
+       * Enable this function call when libdv2 0.100 or higher is more
+       * common
+       */
+      /* dv_set_quality (dvdec->decoder, dvdec->quality); */
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       break;
