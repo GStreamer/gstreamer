@@ -342,7 +342,7 @@ gen_video_element (GstPlayBin * play_bin)
     gst_object_ref (GST_OBJECT (play_bin->video_sink));
     sink = play_bin->video_sink;
   } else {
-    sink = gst_element_factory_make ("ximagesink", "sink");
+    sink = gst_element_factory_make ("xvimagesink", "sink");
   }
   g_hash_table_insert (play_bin->cache, "video_sink", sink);
 
@@ -424,10 +424,84 @@ done:
   return element;
 }
 
+static GstElement *
+gen_vis_element (GstPlayBin * play_bin)
+{
+  GstElement *element;
+  GstElement *tee;
+  GstElement *asink;
+  GstElement *vsink;
+  GstElement *conv;
+  GstElement *vis;
+  GstElement *vqueue;
+  GstElement *vthread;
+
+  element = gst_bin_new ("visbin");
+  tee = gst_element_factory_make ("tee", "tee");
+
+  vqueue = gst_element_factory_make ("queue", "vqueue");
+  vthread = gst_element_factory_make ("thread", "vthread");
+
+  asink = gen_audio_element (play_bin);
+  vsink = gen_video_element (play_bin);
+
+  gst_bin_add (GST_BIN (element), asink);
+  gst_bin_add (GST_BIN (element), vqueue);
+  gst_bin_add (GST_BIN (vthread), vsink);
+  gst_bin_add (GST_BIN (element), vthread);
+  gst_bin_add (GST_BIN (element), tee);
+
+  conv = gst_element_factory_make ("audioconvert", "aconv");
+  if (play_bin->visualisation) {
+    gst_object_ref (GST_OBJECT (play_bin->visualisation));
+    vis = play_bin->visualisation;
+  } else {
+    vis = gst_element_factory_make ("goom", "vis");
+  }
+
+  gst_bin_add (GST_BIN (element), conv);
+  gst_bin_add (GST_BIN (element), vis);
+
+  gst_element_link_pads (conv, "src", vis, "sink");
+  gst_element_link_pads (vis, "src", vqueue, "sink");
+
+  gst_element_link_pads (vqueue, "src", vsink, "sink");
+
+  gst_pad_link (gst_element_get_request_pad (tee, "src%d"),
+      gst_element_get_pad (asink, "sink"));
+
+  gst_pad_link (gst_element_get_request_pad (tee, "src%d"),
+      gst_element_get_pad (conv, "sink"));
+
+  gst_element_add_ghost_pad (element,
+      gst_element_get_pad (tee, "sink"), "sink");
+
+  //gst_element_set_state (element, GST_STATE_READY);
+
+  return element;
+}
+
 static void
 remove_sinks (GstPlayBin * play_bin)
 {
   GList *sinks;
+  GstObject *parent;
+  GstElement *element;
+
+  element = g_hash_table_lookup (play_bin->cache, "abin");
+  if (element != NULL) {
+    parent = gst_element_get_parent (element);
+    if (parent != NULL) {
+      gst_bin_remove (GST_BIN (parent), element);
+    }
+  }
+  element = g_hash_table_lookup (play_bin->cache, "vbin");
+  if (element != NULL) {
+    parent = gst_element_get_parent (element);
+    if (parent != NULL) {
+      gst_bin_remove (GST_BIN (parent), element);
+    }
+  }
 
   for (sinks = play_bin->sinks; sinks; sinks = g_list_next (sinks)) {
     GstElement *element = GST_ELEMENT (sinks->data);
@@ -451,11 +525,38 @@ setup_sinks (GstPlayBin * play_bin)
 {
   GList *streaminfo;
   GList *s;
-  gboolean have_audio = FALSE;
-  gboolean have_video = FALSE;
+  gint num_audio = 0;
+  gint num_video = 0;
+  gboolean need_vis = FALSE;
 
   /* get info about the stream */
   g_object_get (G_OBJECT (play_bin), "stream-info", &streaminfo, NULL);
+
+  /* first examine the streams we have */
+  for (s = streaminfo; s; s = g_list_next (s)) {
+    GObject *obj = G_OBJECT (s->data);
+    gint type;
+    GstPad *srcpad;
+
+    g_object_get (obj, "type", &type, NULL);
+    g_object_get (obj, "pad", &srcpad, NULL);
+
+    if (gst_pad_is_linked (srcpad))
+      continue;
+
+    if (type == 1) {
+      num_audio++;
+    } else if (type == 2) {
+      num_video++;
+    }
+  }
+  /* no video, use vis */
+  if (num_video == 0 && num_audio > 0 && play_bin->visualisation) {
+    need_vis = TRUE;
+  }
+
+  num_audio = 0;
+  num_video = 0;
 
   for (s = streaminfo; s; s = g_list_next (s)) {
     GObject *obj = G_OBJECT (s->data);
@@ -472,20 +573,24 @@ setup_sinks (GstPlayBin * play_bin)
       continue;
 
     if (type == 1) {
-      if (have_audio) {
+      if (num_audio > 0) {
         g_warning ("two audio streams found, playing first one");
         mute = TRUE;
       } else {
-        sink = gen_audio_element (play_bin);
-        have_audio = TRUE;
+        if (need_vis) {
+          sink = gen_vis_element (play_bin);
+        } else {
+          sink = gen_audio_element (play_bin);
+        }
+        num_audio++;
       }
     } else if (type == 2) {
-      if (have_video) {
+      if (num_video > 0) {
         g_warning ("two video streams found, playing first one");
         mute = TRUE;
       } else {
         sink = gen_video_element (play_bin);
-        have_video = TRUE;
+        num_video++;
       }
     } else {
       g_warning ("unknown stream found");
