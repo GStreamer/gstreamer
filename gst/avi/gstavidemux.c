@@ -27,6 +27,9 @@
 #include "gstavidemux.h"
 #include "gstavimux.h"
 
+GST_DEBUG_CATEGORY_STATIC (avidemux_debug);
+#define GST_CAT_DEFAULT avidemux_debug
+
 /* AviDemux signals and args */
 enum {
   /* FILL ME */
@@ -1818,7 +1821,7 @@ gst_avi_demux_loop (GstElement *element)
 		   
           stream = &avi_demux->stream[stream_id];
 
-          GST_DEBUG ("gst_avi_demux_chain: tag found %08x size %08x stream_id %d",
+          GST_LOG_OBJECT (avi_demux, "gst_avi_demux_chain: tag found %08x size %08x stream_id %d",
 		    chunk.id, chunk.size, stream_id);
 
           format = GST_FORMAT_TIME;
@@ -1858,7 +1861,8 @@ gst_avi_demux_loop (GstElement *element)
                     /* FIXME, do some flush event here */
                     stream->need_flush = FALSE;
                   }
-	          GST_DEBUG ("send stream %d: %" G_GINT64_FORMAT " %d %" G_GINT64_FORMAT " %08x", 
+	          GST_LOG_OBJECT (avi_demux, "send stream %d: %" 
+			     G_GINT64_FORMAT " %d %" G_GINT64_FORMAT " %08x", 
 			     stream_id, next_ts, stream->current_frame - 1,
 			     stream->delay, chunk.size);
 
@@ -1967,6 +1971,8 @@ plugin_init (GstPlugin *plugin)
   if (!gst_library_load("gstvideo"))
     return FALSE;
 
+  GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux", 0, "Demuxer for AVI video");
+  
   if (!gst_element_register (plugin, "avidemux", GST_RANK_PRIMARY,
         GST_TYPE_AVI_DEMUX)) {
     return FALSE;
@@ -1988,7 +1994,7 @@ GST_PLUGIN_DEFINE (
   "AVI stream handling",
   plugin_init,
   VERSION,
-  "LGPL",
+  GST_LICENSE,
   GST_COPYRIGHT,
   GST_PACKAGE,
   GST_ORIGIN
