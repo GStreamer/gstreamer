@@ -1666,6 +1666,7 @@ gst_play_base_bin_change_state (GstElement * element)
       remove_groups (play_base_bin);
       break;
     case GST_STATE_READY_TO_NULL:
+      gst_element_set_state (play_base_bin->thread, GST_STATE_NULL);
       gst_object_unref (GST_OBJECT (play_base_bin->thread));
       play_base_bin->source = NULL;
       play_base_bin->decoder = NULL;
