@@ -535,7 +535,10 @@ gst_audio_convert_link (GstPad *pad, const GstCaps *caps)
     this->srccaps = ac_caps;
     this->sinkcaps = other_ac_caps;
   }
-
+  g_print ("negotiated sink to %" GST_PTR_FORMAT, this->sinkcaps);
+  
+  GST_DEBUG ("negotiated sink to %" GST_PTR_FORMAT, this->sinkcaps);
+  GST_DEBUG ("negotiated src to %" GST_PTR_FORMAT, this->srccaps);
   return GST_PAD_LINK_OK;
 }
 
@@ -547,7 +550,7 @@ gst_audio_convert_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
       this->convert_internal = NULL;
-      GST_DEBUG ("resetting chain function to the default");
+      GST_DEBUG_OBJECT (element, "resetting chain function to the default");
       gst_pad_set_chain_function (this->sink, gst_audio_convert_chain);
       break;
     default:
@@ -568,19 +571,19 @@ static GstBuffer*
 gst_audio_convert_get_buffer (GstBuffer *buf, guint size)
 {
   GstBuffer *ret;
-  GST_LOG ("new buffer of size %u requested. Current is: data: %p - size: %u - maxsize: %u\n", 
+  GST_LOG ("new buffer of size %u requested. Current is: data: %p - size: %u - maxsize: %u",
       size, buf->data, buf->size, buf->maxsize);
   if (buf->maxsize >= size && gst_buffer_is_writable (buf)) {
     gst_buffer_ref (buf);
     buf->size = size;
-    GST_LOG ("returning same buffer with adjusted values. data: %p - size: %u - maxsize: %u\n", 
+    GST_LOG ("returning same buffer with adjusted values. data: %p - size: %u - maxsize: %u",
 	buf->data, buf->size, buf->maxsize);
     return buf;
   } else {
     ret = gst_buffer_new_and_alloc (size);
     g_assert (ret);
     gst_buffer_stamp (ret, buf);
-    GST_LOG ("returning new buffer. data: %p - size: %u - maxsize: %u\n", 
+    GST_LOG ("returning new buffer. data: %p - size: %u - maxsize: %u",
 	ret->data, ret->size, ret->maxsize);
     return ret;
   }
