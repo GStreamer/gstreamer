@@ -43,6 +43,7 @@ enum {
 
 enum {
   ARG_0,
+  ARG_FRAME_RATE,
   /* FILL ME */
 };
 
@@ -142,6 +143,10 @@ gst_mpeg2dec_class_init(GstMpeg2decClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_RATE,
+    g_param_spec_float ("frame_rate","frame_rate","frame_rate",
+                        0.0, 1000.0, 0.0, G_PARAM_READABLE)); 
+  
   gobject_class->set_property 	= gst_mpeg2dec_set_property;
   gobject_class->get_property 	= gst_mpeg2dec_get_property;
   gobject_class->dispose 	= gst_mpeg2dec_dispose;
@@ -210,9 +215,8 @@ gst_mpeg2dec_vo_frame_draw (vo_frame_t * frame)
   if (mpeg2dec->frame_rate_code != mpeg2dec->decoder->frame_rate_code)
   {
     mpeg2dec->frame_rate_code = mpeg2dec->decoder->frame_rate_code;
-    gst_element_send_event (GST_ELEMENT (mpeg2dec),
-	gst_event_new_info ("frame_rate", 
-		  GST_PROPS_FLOAT (video_rates[mpeg2dec->frame_rate_code]), NULL));
+
+    g_object_notify (G_OBJECT (mpeg2dec), "frame_rate");
   }
 
   pts = mpeg2dec->next_time;
@@ -582,13 +586,16 @@ gst_mpeg2dec_set_property (GObject *object, guint prop_id, const GValue *value, 
 static void
 gst_mpeg2dec_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-  GstMpeg2dec *src;
+  GstMpeg2dec *mpeg2dec;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MPEG2DEC (object));
-  src = GST_MPEG2DEC (object);
+  mpeg2dec = GST_MPEG2DEC (object);
 
   switch (prop_id) {
+    case ARG_FRAME_RATE:
+      g_value_set_float (value, video_rates[mpeg2dec->frame_rate_code]);
+      break;
     default:
       break;
   }
