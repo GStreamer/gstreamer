@@ -177,7 +177,7 @@ gst_audio_is_buffer_framed (GstPad* pad, GstBuffer* buf)
 static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
-  gst_plugin_set_longname (plugin, "Convenience routines for audio plugins");
+  gst_plugin_set_longname (plugin, "Support services for audio plugins");
   return TRUE;
 }
 

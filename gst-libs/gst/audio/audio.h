@@ -20,6 +20,8 @@
 
 #include <gst/gst.h>
 
+#include <gst/audio/audioclock.h>
+
 /* For people that are looking at this source: the purpose of these defines is
  * to make GstCaps a bit easier, in that you don't have to know all of the
  * properties that need to be defined. you can just use these macros. currently
