@@ -27,4 +27,5 @@ ieeetest_LDFLAGS = $(GNOME_LIBS) $(GST_LIBS)
 
 noinst_HEADERS = dct.h
 
-CFLAGS += -O2 $(FOMIT_FRAME_POINTER) -finline-functions -ffast-math
+libgstidct_la_LIBADD = $(GST_LIBS)
+libgstidct_la_CFLAGS = $(GST_CFLAGS) -finline-functions -ffast-math

@@ -8,4 +8,8 @@ libgstbstest_la_SOURCES = gstbstest.c
 libgstbytestreamincludedir = $(includedir)/gst/libs/bytestream
 libgstbytestreaminclude_HEADERS = gstbytestream.h
 
-# CFLAGS += -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math
+libgstbytestream_la_LIBADD = $(GST_LIBS)
+libgstbytestream_la_CFLAGS = $(GST_CFLAGS)
+
+libgstbstest_la_LIBADD = $(GST_LIBS)
+libgstbstest_la_CFLAGS = $(GST_CFLAGS)

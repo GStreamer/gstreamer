@@ -9,4 +9,5 @@ libgstputbitsinclude_HEADERS = gstputbits.h
 
 noinst_HEADERS = gstputbits.h 
 
-CFLAGS += -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math
+libgstputbits_la_LIBADD = $(GST_LIBS)
+libgstputbits_la_CFLAGS = $(GST_CFLAGS) -funroll-all-loops -finline-functions -ffast-math
