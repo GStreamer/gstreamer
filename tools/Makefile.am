@@ -19,7 +19,7 @@ gstreamer_guilaunch_CFLAGS = \
 gstreamer_guilaunch_LDADD = \
 	$(LIBGLADE_GNOME_LIBS) $(LDADD)
 else
-GST_GUI_LAUNCH = 
+GST_GUI_LAUNCH =
 endif
 endif
 
@@ -31,7 +31,7 @@ bin_PROGRAMS = 	gstreamer-launch 	\
 		gstreamer-complete
 
 man_MANS = gstreamer-launch.1 gstreamer-register.1 gstreamer-inspect.1 \
-	gstreamer-complete.1 gstreamer-compprep.1
+	gstreamer-complete.1 gstreamer-compprep.1 gstreamer-guilaunch.1
 
 gstreamer_launch_LDADD = $(GST_LIBS)
 gstreamer_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
