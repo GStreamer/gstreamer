@@ -90,7 +90,7 @@ factoryname (void)                              \
   if (!caps) {                              	\
     caps = gst_caps_chain (__VA_ARGS__, NULL); 	\
   }                                             \
-  return caps;                              	\
+  return gst_caps_ref(caps);                   	\
 }
 #elif defined(G_HAVE_GNUC_VARARGS)
 #define GST_CAPS_NEW(name, type, a...)          \
@@ -109,7 +109,7 @@ factoryname (void)                              \
   if (!caps) {                              	\
     caps = gst_caps_chain (a, NULL);      	\
   }                                             \
-  return caps;                              	\
+  return gst_caps_ref(caps);                   	\
 }
 #endif
 

@@ -348,7 +348,7 @@ name (void)                                     \
       pres,                                     \
       __VA_ARGS__ );                            \
   }                                             \
-  return templ;                              	\
+  return (GstPadTemplate *)g_object_ref((GObject *)templ); \
 }
 #elif defined(G_HAVE_GNUC_VARARGS)
 /* CR1: the space after 'a' is necessary because of preprocessing in gcc */
@@ -372,7 +372,7 @@ name (void)                                     \
       pres,                                     \
       a );                                      \
   }                                             \
-  return templ;                              	\
+  return (GstPadTemplate *)g_object_ref((GObject *)templ); \
 }
 #endif
 
