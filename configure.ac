@@ -253,7 +253,7 @@ GST_PLUGINS_ALL="\
 	mpegaudio mpegaudioparse mpegstream mpegtypes \
         monoscope oneton overlay passthrough playondemand qtdemux \
 	realmedia rtp rtjpeg silence sine smooth smpte \
-	spectrum speed stereo synaesthesia udp vbidec \
+	spectrum speed stereo synaesthesia tcp udp vbidec \
 	videocrop videofilter videoflip videoscale videotestsrc \
 	volenv volume wavenc wavparse y4m"
 
@@ -1213,6 +1213,7 @@ gst/spectrum/Makefile
 gst/speed/Makefile
 gst/stereo/Makefile
 gst/synaesthesia/Makefile
+gst/tcp/Makefile
 gst/udp/Makefile
 gst/vbidec/Makefile
 gst/videocrop/Makefile
