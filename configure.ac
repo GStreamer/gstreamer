@@ -641,9 +641,14 @@ AC_CHECK_HEADER(libdv/dv.h, :, HAVE_LIBDV=no)
 CPPFLAGS="$libdvcheck_save_CPPFLAGS"
 
 dnl Check for aalib
-AC_MSG_CHECKING(aalib)
-AC_CHECK_LIB(aa, aa_init, HAVE_LIBAA=yes, HAVE_LIBAA=no, )
-AC_CHECK_HEADER(aalib.h, :, HAVE_LIBAA=no)
+AM_PATH_AALIB(HAVE_AALIB=yes,
+  AC_MSG_WARN(***** NOTE: These plugins won't be built: aasink)
+  HAVE_AALIB=no
+)
+
+dnl AC_MSG_CHECKING(aalib)
+dnl AC_CHECK_LIB(aa, aa_init, HAVE_AALIB=yes, HAVE_AALIB=no, )
+dnl AC_CHECK_HEADER(aalib.h, :, HAVE_AALIB=no)
 
 dnl Check for quicktime
 AC_MSG_CHECKING(openquicktime)
@@ -928,8 +933,8 @@ if test "x$HAVE_VORBIS" = xyes; then
   AC_DEFINE(HAVE_VORBIS)
 fi
 
-if test "x$HAVE_LIBAA" = "xyes"; then
-  AC_DEFINE(HAVE_LIBAA)
+if test "x$HAVE_AALIB" = "xyes"; then
+  AC_DEFINE(HAVE_AALIB)
 fi
 
 if test "x$HAVE_LIBJPEG" = xyes; then
@@ -1026,7 +1031,7 @@ AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
-AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
+AM_CONDITIONAL(HAVE_AALIB,          test "x$HAVE_AALIB" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
 AM_CONDITIONAL(HAVE_AVIFILE,        test "x$HAVE_AVIFILE" = "xyes")
 AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
