@@ -308,6 +308,7 @@ int main ()
                 download the latest version from 
                 ftp://ftp.rpm.org/pub/rpm/dist/])
 ])
+AC_SUBST(POPT_CFLAGS)
 AC_SUBST(POPT_LIBS)
 
 dnl Check for ucontext.h

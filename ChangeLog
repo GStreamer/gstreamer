@@ -1,3 +1,10 @@
+2005-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	  make sure popt is added to gtk-doc flags.  Fixes #147782.
+
 2005-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/faq/using.xml:
