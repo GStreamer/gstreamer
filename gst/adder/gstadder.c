@@ -479,6 +479,8 @@ gst_adder_loop (GstElement *element)
     GST_DEBUG (0, "pushing buf_out");
     gst_pad_push (adder->srcpad, buf_out);
 
+    /* give another element a chance to do something */
+    gst_element_yield (element);
   } while (TRUE);
 }
 
