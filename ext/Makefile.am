@@ -277,6 +277,6 @@ DIST_SUBDIRS=\
 	hermes ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
 	mad mikmod mpeg2dec pango raw1394 \
-	sdl snapshot shout shout2 sidplay \
+	sdl snapshot sndfile shout shout2 sidplay \
 	smoothwave swfdec tarkin vorbis \
 	xvid 

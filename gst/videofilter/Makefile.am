@@ -4,7 +4,7 @@ plugin_LTLIBRARIES = libgstvideofilter.la libgstvideoflip.la \
 	libgstvideobalance.la
 noinst_LTLIBRARIES = libgstvideoexample.la
 
-noinst_HEADERS = gstvideofilter.h gstvideoexample.h gstvideoflip.h
+noinst_HEADERS = gstvideofilter.h gstvideoexample.h gstvideoflip.h gstvideobalance.h
 
 EXTRA_DIST = gstvideotemplate.c gstvideotemplate.h make_filter
 EXTRA_CLEAN = gstvideoexample.c gstvideoexample.h
