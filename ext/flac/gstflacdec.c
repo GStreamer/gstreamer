@@ -23,6 +23,7 @@
 /*#define DEBUG_ENABLED */
 #include "gstflacdec.h"
 
+#include "flac_compat.h"
 
 extern GstPadTemplate *gst_flacdec_src_template, *gst_flacdec_sink_template;
 
@@ -155,7 +156,17 @@ gst_flacdec_init (FlacDec *flacdec)
   FLAC__seekable_stream_decoder_set_tell_callback (flacdec->decoder, gst_flacdec_tell);
   FLAC__seekable_stream_decoder_set_length_callback (flacdec->decoder, gst_flacdec_length);
   FLAC__seekable_stream_decoder_set_eof_callback (flacdec->decoder, gst_flacdec_eof);
+#if FLAC_VERSION >= 0x010003
   FLAC__seekable_stream_decoder_set_write_callback (flacdec->decoder, gst_flacdec_write);
+#else
+  FLAC__seekable_stream_decoder_set_write_callback (flacdec->decoder,
+	(FLAC__StreamDecoderWriteStatus (*)
+		(const FLAC__SeekableStreamDecoder *decoder, 
+		 const FLAC__Frame *frame,
+		 const FLAC__int32 *buffer[], 
+		 void *client_data))
+		(gst_flacdec_write));
+#endif
   FLAC__seekable_stream_decoder_set_metadata_callback (flacdec->decoder, gst_flacdec_metadata_callback);
   FLAC__seekable_stream_decoder_set_error_callback (flacdec->decoder, gst_flacdec_error_callback);
   FLAC__seekable_stream_decoder_set_client_data (flacdec->decoder, flacdec);

@@ -23,6 +23,8 @@
 
 #include <gstflacenc.h>
 
+#include "flac_compat.h"
+
 extern GstPadTemplate *gst_flacenc_src_template, *gst_flacenc_sink_template;
 
 /* elementfactory information */

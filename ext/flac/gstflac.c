@@ -21,6 +21,8 @@
 #include "gstflacenc.h"
 #include "gstflacdec.h"
 
+#include "flac_compat.h"
+
 extern GstElementDetails flacenc_details;
 extern GstElementDetails flacdec_details;
 
