@@ -10,9 +10,9 @@ int main(int argc,char *argv[]) {
   GstElement *element;
   GstPad *pad;
   GstPadTemplate *padtemplate;
-  GtkArg *args;
+  GParamSpec **property_specs;
   guint32 *flags;
-  gint num_args,i;
+  gint num_properties,i;
 
   gst_debug_set_categories(0);
   gst_info_set_categories(0);
@@ -64,16 +64,36 @@ int main(int argc,char *argv[]) {
       }
 
       // write out the args
-      args = gtk_object_query_args(GTK_OBJECT_TYPE(element), &flags, &num_args);
-      for (i=0;i<num_args;i++) {
-        argnode = xmlNewChild (factorynode, NULL, "argument", args[i].name);
-        if (args[i].type == GST_TYPE_FILENAME) {
+#ifdef USE_GLIB2
+      // FIXME accessing private data of GObjectClass !!!
+      num_properties = G_OBJECT_GET_CLASS (element)->n_property_specs;
+      property_specs = G_OBJECT_GET_CLASS (element)->property_specs;
+#else
+      property_specs = (GParamSpec **)gtk_object_query_args (GTK_OBJECT_TYPE (element), &flags, &num_properties);
+#endif
+      for (i=0;i<num_properties;i++) {
+#ifdef USE_GLIB2
+        GParamSpec *param = property_specs[i];
+#else
+        // gtk doesn't have a paramspec, so we create one here
+        GParamSpec rparm, *param = &rparm;
+	GtkArg *args = (GtkArg *)property_specs; // ugly typecast here 
+	
+	param->value_type = args[i].type;
+	param->name = args[i].name;
+#endif
+        argnode = xmlNewChild (factorynode, NULL, "argument", param->name);
+        if (param->value_type == GST_TYPE_FILENAME) {
           xmlNewChild (argnode, NULL, "filename", NULL);
-        } else if (GTK_FUNDAMENTAL_TYPE (args[i].type) == GTK_TYPE_ENUM) {
-          GtkEnumValue *values;
+        } else if (G_IS_PARAM_SPEC_ENUM (param) == G_TYPE_ENUM) {
+          GEnumValue *values;
           gint j;
 
-          values = gtk_type_enum_get_values (args[i].type);
+#ifdef USE_GLIB2
+          values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
+#else
+          values = gtk_type_enum_get_values (param->value_type);
+#endif
           for (j=0;values[j].value_name;j++) {
             gchar *value = g_strdup_printf("%d",values[j].value);
             optionnode = xmlNewChild (argnode, NULL, "option", value);
