@@ -1,5 +1,10 @@
 2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/flac/gstflacdec.c: (gst_flacdec_loop):
+	  Finish flac decoder on EOS. See #116178.
+
+2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_src_getcaps),
 	(gst_matroska_demux_add_stream):
 	* gst/matroska/matroska-ids.h:
