@@ -640,8 +640,10 @@ gst_wavparse_parse_fmt (GstWavParse *wavparse, guint size)
       return;
     }
 
-    if (caps)
-        gst_pad_set_explicit_caps (wavparse->srcpad, caps);
+    if (caps) {
+      gst_pad_set_explicit_caps (wavparse->srcpad, caps);
+      gst_caps_free (caps);
+    }
 
     GST_DEBUG ("frequency %d, channels %d",
 							 wavparse->rate, wavparse->channels);
