@@ -1,5 +1,6 @@
 /* GStreamer X-based Overlay
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2003 Julien Moutte <julien@moutte.net>
  *
  * x-overlay.h: X-based overlay interface design
  *
@@ -48,13 +49,23 @@ typedef struct _GstXOverlayClass {
   /* virtual functions */
   void (* set_xwindow_id) (GstXOverlay *overlay,
 			   XID          xwindow_id);
+  
+  /* signals */
+  void (*have_xwindow_id) (GstXOverlay *overlay,
+                           XID          xwindow_id);
+  void (*have_size) (GstXOverlay *overlay, gint width, gint height);
+  
 } GstXOverlayClass;
 
 GType	gst_x_overlay_get_type		(void);
 
 /* virtual class function wrappers */
-void	gst_x_overlay_set_xwindow_id	(GstXOverlay *overlay,
-					 XID          xwindow_id);
+void gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id);
+
+/* public methods to fire signals */
+void gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, XID xwindow_id);
+void gst_x_overlay_got_video_size (GstXOverlay *overlay,
+                                   gint width, gint height);
 
 G_END_DECLS
 
