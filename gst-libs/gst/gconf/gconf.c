@@ -27,7 +27,9 @@
 
 #include "gconf.h"
 
-#define GST_GCONF_DIR "/system/gstreamer"
+#ifndef GST_GCONF_DIR
+#error "GST_GCONF_DIR is not defined !"
+#endif
 
 static GConfClient *_gst_gconf_client = NULL; /* GConf connection */
 
