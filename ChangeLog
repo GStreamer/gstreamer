@@ -1,5 +1,10 @@
 2004-11-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/pwg/advanced-types.xml:
+	  Another typo.
+
+2004-11-06  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* docs/pwg/intro-preface.xml:
 	  Hm, ok, so the brackets weren't really useful...
 	* docs/pwg/other-ntoone.xml:

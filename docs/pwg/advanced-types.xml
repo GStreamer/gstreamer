@@ -117,8 +117,8 @@ gst_my_typefind_function (GstTypeFind *tf,
   guint8 *data = gst_type_find_peek (tf, 0, 12);
 
   if (data &amp;&amp;
-      GUINT32_FROM_LE (((guint32 *) data)[0]) == GST_MAKE_FOURCC ('R','I','F','F') &amp;&amp;
-      GUINT32_FROM_LE (((guint32 *) data)[2]) == GST_MAKE_FOURCC ('A','V','I',' ')) {
+      GUINT32_FROM_LE (&amp;((guint32 *) data)[0]) == GST_MAKE_FOURCC ('R','I','F','F') &amp;&amp;
+      GUINT32_FROM_LE (&amp;((guint32 *) data)[2]) == GST_MAKE_FOURCC ('A','V','I',' ')) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
 			   gst_caps_new_simple ("video/x-msvideo", NULL));
   }
