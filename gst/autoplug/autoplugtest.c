@@ -8,9 +8,8 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   gst_element_disconnect(cache,"src",typefind,"sink");
-//  gst_bin_remove(GST_BIN(autobin),typefind);
+  gst_bin_remove(GST_BIN(autobin),typefind);
 
-/*
   if (!strstr(gst_caps_get_mime(caps),"mp3")) {
     decoder = gst_elementfactory_make ("mad","decoder");
     sink = gst_elementfactory_make ("esdsink","sink");
@@ -20,7 +19,6 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
 
     gst_element_connect(cache,"src",decoder,"sink");
   }
-*/
 
 exit(0);
   fprintf(stderr,"done with have_type signal\n");

@@ -16,7 +16,5 @@ libgststaticautoplugrender_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 libgstautoplugcache_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
 noinst_PROGRAMS = autoplugtest
-
-LIBS += $(GST_LIBS)
-CFLAGS += $(GST_CFLAGS)
+autoplugtest_LDADD = $(GST_LIBS) 
 
