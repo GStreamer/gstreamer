@@ -117,6 +117,9 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
       g_param_spec_pointer ("stream-info", "Stream info", "List of streaminfo",
           G_PARAM_READABLE));
 
+  GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
+      "playbasebin");
+
   gst_play_base_bin_signals[MUTE_STREAM_SIGNAL] =
       g_signal_new ("mute-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBaseBinClass, mute_stream),
@@ -151,9 +154,13 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
 {
   play_base_bin->uri = NULL;
   play_base_bin->threaded = FALSE;
+  play_base_bin->need_rebuild = TRUE;
+  play_base_bin->source = NULL;
+  play_base_bin->decoder = NULL;
 
   play_base_bin->preroll_lock = g_mutex_new ();
   play_base_bin->preroll_cond = g_cond_new ();
+  play_base_bin->preroll_elems = NULL;
 
   GST_FLAG_SET (play_base_bin, GST_BIN_SELF_SCHEDULABLE);
 }
@@ -169,23 +176,6 @@ gst_play_base_bin_dispose (GObject * object)
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
   }
-}
-
-static void
-rebuild_pipeline (GstPlayBaseBin * play_base_bin)
-{
-  GstElementState oldstate;
-
-  if (play_base_bin->thread == NULL)
-    return;
-
-  oldstate = gst_element_get_state (play_base_bin->thread);
-
-  gst_element_set_state (play_base_bin->thread, GST_STATE_NULL);
-  /* remove old elements */
-
-  /* set to old state again */
-  gst_element_set_state (play_base_bin->thread, oldstate);
 }
 
 static void
@@ -211,6 +201,31 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin, GstPad * pad)
   g_free (name);
 
   return element;
+}
+
+static void
+remove_prerolls (GstPlayBaseBin * play_base_bin)
+{
+  GList *prerolls, *infos;
+
+  for (prerolls = play_base_bin->preroll_elems; prerolls;
+      prerolls = g_list_next (prerolls)) {
+    GstElement *element = GST_ELEMENT (prerolls->data);
+
+    GST_LOG ("removing preroll element %s", gst_element_get_name (element));
+    gst_bin_remove (GST_BIN (play_base_bin->thread), element);
+  }
+  g_list_free (play_base_bin->preroll_elems);
+  play_base_bin->preroll_elems = NULL;
+
+  for (infos = play_base_bin->streaminfo; infos; infos = g_list_next (infos)) {
+    GstStreamInfo *info = GST_STREAM_INFO (infos->data);
+
+    g_object_unref (info);
+  }
+  g_list_free (play_base_bin->streaminfo);
+  play_base_bin->streaminfo = NULL;
+  play_base_bin->nstreams = 0;
 }
 
 static void
@@ -257,6 +272,9 @@ new_stream (GstElement * element, GstPad * pad, gboolean last,
     gst_bin_add (GST_BIN (play_base_bin->thread), new_element);
     play_base_bin->threaded = TRUE;
 
+    play_base_bin->preroll_elems =
+        g_list_prepend (play_base_bin->preroll_elems, new_element);
+
     gst_pad_link (pad, gst_element_get_pad (new_element, "sink"));
     gst_element_sync_state_with_parent (new_element);
   }
@@ -269,46 +287,73 @@ new_stream (GstElement * element, GstPad * pad, gboolean last,
 static gboolean
 setup_source (GstPlayBaseBin * play_base_bin)
 {
-  if (play_base_bin->source) {
-    gst_bin_remove (GST_BIN (play_base_bin->thread), play_base_bin->source);
-    gst_object_unref (GST_OBJECT (play_base_bin->source));
-  }
+  GstElement *old_src;
+
+  if (!play_base_bin->need_rebuild)
+    return TRUE;
+
+  old_src = play_base_bin->source;
 
   play_base_bin->source =
       gst_element_make_from_uri (GST_URI_SRC, play_base_bin->uri, "source");
   if (!play_base_bin->source) {
     g_warning ("don't know how to read %s", play_base_bin->uri);
+    play_base_bin->source = old_src;
     return FALSE;
+  } else {
+    if (old_src) {
+      GST_LOG ("removing old src element %s", gst_element_get_name (old_src));
+      gst_bin_remove (GST_BIN (play_base_bin->thread), old_src);
+    }
+    gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->source);
   }
 
   {
-    GstElement *decoder;
     gboolean res;
+    gint sig1, sig2;
+    GstElement *old_dec;
 
-    gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->source);
+    old_dec = play_base_bin->decoder;
 
-    decoder = gst_element_factory_make ("decodebin", "decoder");
-    if (!decoder) {
+    play_base_bin->decoder = gst_element_factory_make ("decodebin", "decoder");
+    if (!play_base_bin->decoder) {
       g_warning ("can't find decoder element");
+      play_base_bin->decoder = old_dec;
       return FALSE;
+    } else {
+      if (old_dec) {
+        GST_LOG ("removing old decoder element %s",
+            gst_element_get_name (old_dec));
+        gst_bin_remove (GST_BIN (play_base_bin->thread), old_dec);
+      }
+      gst_bin_add (GST_BIN (play_base_bin->thread), play_base_bin->decoder);
     }
 
+    remove_prerolls (play_base_bin);
 
-    gst_bin_add (GST_BIN (play_base_bin->thread), decoder);
-    res = gst_element_link_pads (play_base_bin->source, "src", decoder, "sink");
+    res =
+        gst_element_link_pads (play_base_bin->source, "src",
+        play_base_bin->decoder, "sink");
     if (!res) {
       g_warning ("can't link source to typefind element");
       return FALSE;
     }
-    g_signal_connect (G_OBJECT (decoder), "new_stream",
+    sig1 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "new_stream",
         G_CALLBACK (new_stream), play_base_bin);
-    g_signal_connect (G_OBJECT (decoder), "no-more-pads",
+    sig2 = g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
         G_CALLBACK (no_more_pads), play_base_bin);
 
     g_mutex_lock (play_base_bin->preroll_lock);
     gst_element_set_state (play_base_bin->thread, GST_STATE_PLAYING);
     g_cond_wait (play_base_bin->preroll_cond, play_base_bin->preroll_lock);
     g_mutex_unlock (play_base_bin->preroll_lock);
+
+    g_signal_handlers_disconnect_matched (G_OBJECT (play_base_bin->decoder),
+        G_SIGNAL_MATCH_ID, sig1, 0, NULL, NULL, NULL);
+    g_signal_handlers_disconnect_matched (G_OBJECT (play_base_bin->decoder),
+        G_SIGNAL_MATCH_ID, sig2, 0, NULL, NULL, NULL);
+
+    play_base_bin->need_rebuild = FALSE;
   }
 
   return TRUE;
@@ -337,7 +382,7 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
         g_free (play_base_bin->uri);
         play_base_bin->uri = g_strdup (uri);
 
-        rebuild_pipeline (play_base_bin);
+        play_base_bin->need_rebuild = TRUE;
       }
       break;
     }
@@ -373,6 +418,13 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+static void
+play_base_eos (GstBin * bin, GstPlayBaseBin * play_base_bin)
+{
+  g_print ("eos\n");
+  gst_element_set_eos (GST_ELEMENT (play_base_bin));
+}
+
 static GstElementStateReturn
 gst_play_base_bin_change_state (GstElement * element)
 {
@@ -395,6 +447,9 @@ gst_play_base_bin_change_state (GstElement * element)
             GST_OBJECT (play_base_bin));
 
         gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
+
+        g_signal_connect (G_OBJECT (play_base_bin->thread), "eos",
+            G_CALLBACK (play_base_eos), play_base_bin);
       } else {
         g_warning ("could not get 'opt' scheduler");
         gst_object_unref (GST_OBJECT (play_base_bin->thread));
@@ -423,10 +478,9 @@ gst_play_base_bin_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_READY:
       ret = gst_element_set_state (play_base_bin->thread, GST_STATE_READY);
+      play_base_bin->need_rebuild = TRUE;
       break;
     case GST_STATE_READY_TO_NULL:
-      ret = gst_element_set_state (play_base_bin->thread, GST_STATE_NULL);
-
       gst_object_unref (GST_OBJECT (play_base_bin->thread));
       break;
     default:
@@ -468,7 +522,7 @@ gst_play_base_bin_add_element (GstBin * bin, GstElement * element)
     clock = gst_scheduler_get_clock (sched);
     gst_scheduler_set_clock (sched, clock);
 
-    gst_element_sync_state_with_parent (element);
+    //gst_element_sync_state_with_parent (element);
   } else {
     g_warning ("adding elements is not allowed in NULL");
   }
@@ -482,6 +536,21 @@ gst_play_base_bin_remove_element (GstBin * bin, GstElement * element)
   play_base_bin = GST_PLAY_BASE_BIN (bin);
 
   if (play_base_bin->thread) {
+    if (play_base_bin->threaded) {
+      gchar *name;
+      GstElement *thread;
+
+      name = g_strdup_printf ("thread_%s", gst_element_get_name (element));
+      thread = gst_bin_get_by_name (GST_BIN (play_base_bin->thread), name);
+      g_free (name);
+
+      if (!thread) {
+        g_warning ("cannot find element to remove");
+      } else {
+        element = thread;
+      }
+    }
+    GST_LOG ("removing element %s", gst_element_get_name (element));
     gst_bin_remove (GST_BIN (play_base_bin->thread), element);
   } else {
     g_warning ("removing elements is not allowed in NULL");

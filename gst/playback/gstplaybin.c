@@ -46,6 +46,8 @@ struct _GstPlayBin
   GstElement *video_sink;
   GstElement *visualisation;
 
+  GList *sinks;
+
   GList *seekables;
 };
 
@@ -181,6 +183,7 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->audio_sink = NULL;
   play_bin->visualisation = NULL;
   play_bin->seekables = NULL;
+  play_bin->sinks = NULL;
 
   GST_FLAG_SET (play_bin, GST_BIN_SELF_SCHEDULABLE);
 }
@@ -259,7 +262,7 @@ gen_video_element (GstPlayBin * play_bin)
     sink = gst_element_factory_make ("ximagesink", "sink");
   }
 
-  play_bin->seekables = g_list_prepend (play_bin->seekables, sink);
+  play_bin->seekables = g_list_append (play_bin->seekables, sink);
 
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), sink);
@@ -299,6 +302,23 @@ gen_audio_element (GstPlayBin * play_bin)
 }
 
 static void
+remove_sinks (GstPlayBin * play_bin)
+{
+  GList *sinks;
+
+  for (sinks = play_bin->sinks; sinks; sinks = g_list_next (sinks)) {
+    GstElement *element = GST_ELEMENT (sinks->data);
+
+    GST_LOG ("removing sink %p", element);
+    gst_bin_remove (GST_BIN (play_bin), element);
+  }
+  g_list_free (play_bin->sinks);
+  g_list_free (play_bin->seekables);
+  play_bin->sinks = NULL;
+  play_bin->seekables = NULL;
+}
+
+static void
 setup_sinks (GstPlayBin * play_bin)
 {
   GList *streaminfo;
@@ -316,6 +336,9 @@ setup_sinks (GstPlayBin * play_bin)
 
     g_object_get (obj, "type", &type, NULL);
     g_object_get (obj, "pad", &srcpad, NULL);
+
+    if (gst_pad_is_linked (srcpad))
+      continue;
 
     if (type == 1) {
       sink = gen_audio_element (play_bin);
@@ -335,6 +358,10 @@ setup_sinks (GstPlayBin * play_bin)
       capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
       g_warning ("could not link %s", capsstr);
       g_free (capsstr);
+      GST_LOG ("removing sink %p", sink);
+      gst_bin_remove (GST_BIN (play_bin), sink);
+    } else {
+      play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
     }
   }
 }
@@ -360,7 +387,10 @@ gst_play_bin_change_state (GstElement * element)
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_PAUSED_TO_READY:
+      remove_sinks (play_bin);
+      break;
     case GST_STATE_READY_TO_NULL:
       break;
     default:
@@ -392,9 +422,11 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
     GstElement *element = GST_ELEMENT (s->data);
     gboolean ok;
 
+    gst_event_ref (event);
     ok = gst_element_send_event (element, event);
     res |= ok;
   }
+  gst_event_unref (event);
   return res;
 }
 

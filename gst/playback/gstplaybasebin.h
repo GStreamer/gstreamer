@@ -42,11 +42,14 @@ struct _GstPlayBaseBin {
   gboolean	 threaded;
   GMutex	*preroll_lock;
   GCond		*preroll_cond;
+  GList		*preroll_elems;
 
   /* internal thread */
   GstElement	*thread;
   gchar 	*uri;
   GstElement	*source;
+  GstElement	*decoder;
+  gboolean	 need_rebuild;
 
   gint		 nstreams;
   GList		*streaminfo;

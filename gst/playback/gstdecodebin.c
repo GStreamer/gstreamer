@@ -60,6 +60,10 @@ struct _GstDecodeBin
 
   GList *factories;
   gint numpads;
+
+  GList *elements;
+
+  guint have_type_id;
 };
 
 struct _GstDecodeBinClass
@@ -176,7 +180,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_decode_bin_change_state);
 }
 
-
 static gboolean
 gst_decode_bin_factory_filter (GstPluginFeature * feature,
     GstDecodeBin * decode_bin)
@@ -208,7 +211,7 @@ compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 static void
 print_feature (GstPluginFeature * feature)
 {
-  g_print ("%s\n", gst_plugin_feature_get_name (feature));
+  GST_DEBUG ("%s\n", gst_plugin_feature_get_name (feature));
 }
 
 static void
@@ -231,11 +234,10 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   gst_element_add_ghost_pad (GST_ELEMENT (decode_bin),
       gst_element_get_pad (decode_bin->typefind, "sink"), "sink");
 
-  g_signal_connect (G_OBJECT (decode_bin->typefind), "have_type",
+  decode_bin->have_type_id =
+      g_signal_connect (G_OBJECT (decode_bin->typefind), "have_type",
       G_CALLBACK (type_found), decode_bin);
 
-  decode_bin->numpads = 0;
-  decode_bin->threaded = FALSE;
 }
 
 static void
@@ -244,6 +246,13 @@ gst_decode_bin_dispose (GObject * object)
   GstDecodeBin *decode_bin;
 
   decode_bin = GST_DECODE_BIN (object);
+
+  g_signal_handlers_disconnect_matched (G_OBJECT (decode_bin->typefind),
+      G_SIGNAL_MATCH_ID, decode_bin->have_type_id, 0, NULL, NULL, NULL);
+
+  gst_bin_remove (GST_BIN (decode_bin), decode_bin->typefind);
+
+  g_list_free (decode_bin->factories);
 
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -305,6 +314,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
 
     ghost = gst_element_get_pad (GST_ELEMENT (decode_bin), padname);
 
+    /* our own signal with an extra flag that this is the only pad */
     g_signal_emit (G_OBJECT (decode_bin),
         gst_decode_bin_signals[SIGNAL_NEW_STREAM], 0,
         ghost, !decode_bin->dynamic);
@@ -336,7 +346,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     GstElement *element;
     gboolean ret;
 
-    g_print ("trying to link %s\n",
+    GST_DEBUG ("trying to link %s\n",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
 
     element = gst_element_factory_create (factory, NULL);
@@ -344,6 +354,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       continue;
 
     gst_bin_add (GST_BIN (decode_bin), element);
+    decode_bin->elements = g_list_prepend (decode_bin->elements, element);
 
     ret = gst_pad_link (pad, gst_element_get_pad (element, "sink"));
     if (ret) {
@@ -486,13 +497,24 @@ gst_decode_bin_get_property (GObject * object, guint prop_id, GValue * value,
 static GstElementStateReturn
 gst_decode_bin_change_state (GstElement * element)
 {
-  GstElementStateReturn ret = GST_STATE_SUCCESS;
+  GstElementStateReturn ret;
   GstDecodeBin *decode_bin;
+  gint transition;
 
   decode_bin = GST_DECODE_BIN (element);
 
-  switch (GST_STATE_TRANSITION (element)) {
+  transition = GST_STATE_TRANSITION (element);
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  if (ret != GST_STATE_SUCCESS) {
+    return ret;
+  }
+
+  switch (transition) {
     case GST_STATE_NULL_TO_READY:
+      decode_bin->numpads = 0;
+      decode_bin->threaded = FALSE;
+      break;
     case GST_STATE_READY_TO_PAUSED:
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_PLAYING_TO_PAUSED:
@@ -501,10 +523,6 @@ gst_decode_bin_change_state (GstElement * element)
       break;
     default:
       break;
-  }
-
-  if (ret == GST_STATE_SUCCESS) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
   }
 
   return ret;

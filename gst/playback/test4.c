@@ -31,6 +31,11 @@ main (gint argc, gchar * argv[])
   player = gst_element_factory_make ("playbin", "player");
   g_assert (player);
 
+  if (argc < 2) {
+    g_print ("usage: %s <uri>\n", argv[0]);
+    exit (-1);
+  }
+
   g_object_set (G_OBJECT (player), "uri", argv[1], NULL);
 
   g_print ("play...\n");
