@@ -760,7 +760,10 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
                     GST_BUFFER_SIZE (tag->buffer)
                     : 0))
               GST_ELEMENT_ERROR (tag, CORE, EVENT, (NULL),
-                  ("Seek during ID3v2 tag reading"));
+                  ("Got seek to %" G_GUINT64_FORMAT " during ID3v2 tag reading"
+                      " (allowed was %" G_GUINT64_FORMAT ")", value,
+                      (guint64) (tag->buffer ? GST_BUFFER_OFFSET (tag->buffer)
+                          + GST_BUFFER_SIZE (tag->buffer) : 0)));
           }
           gst_data_unref (GST_DATA (event));
           break;
@@ -1159,6 +1162,16 @@ gst_id3_tag_chain (GstPad * pad, GstData * data)
           GstBuffer *sub = gst_buffer_create_sub (buffer, 0,
               buffer->size - 128);
 
+          gst_data_unref (GST_DATA (buffer));
+          buffer = sub;
+        }
+        if (tag->v2tag_size) {
+          GstBuffer *sub =
+              gst_buffer_create_sub (buffer, 0, GST_BUFFER_SIZE (buffer));
+          GST_BUFFER_OFFSET (sub) =
+              GST_BUFFER_OFFSET (buffer) - tag->v2tag_size;
+          GST_BUFFER_OFFSET_END (sub) =
+              GST_BUFFER_OFFSET_END (buffer) - tag->v2tag_size;
           gst_data_unref (GST_DATA (buffer));
           buffer = sub;
         }
