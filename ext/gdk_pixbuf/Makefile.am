@@ -19,6 +19,8 @@ install-data-hook:
 	fi
 else
 gst_loader_headers =
+install-data-hook:
+	true
 endif
 
 gst_loader_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS) -DGDK_PIXBUF_ENABLE_BACKEND
