@@ -595,7 +595,7 @@ gst_osssink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_TIME:
 	  *dest_value = src_value * GST_SECOND / osssink->bps;
           break;
-        case GST_FORMAT_SAMPLES:
+        case GST_FORMAT_UNIT:
 	  *dest_value = src_value / (osssink->channels * osssink->width);
           break;
         default:
@@ -609,14 +609,14 @@ gst_osssink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_BYTES:
 	  *dest_value = src_value * osssink->bps / GST_SECOND;
           break;
-        case GST_FORMAT_SAMPLES:
+        case GST_FORMAT_UNIT:
 	  *dest_value = osssink->frequency;
           break;
         default:
           res = FALSE;
       }
       break;
-    case GST_FORMAT_SAMPLES:
+    case GST_FORMAT_UNIT:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
           *dest_format = GST_FORMAT_TIME;

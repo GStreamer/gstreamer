@@ -755,15 +755,10 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstPadQueryType type,
 	  else
 	    res = FALSE;
 	  break;
-        case GST_FORMAT_SAMPLES:
+        case GST_FORMAT_UNIT:
           if (stream->strh.type == GST_RIFF_FCC_auds)
             *value = stream->strh.length * stream->strh.samplesize;
-	  else
-	    res = FALSE;
-	  break;
-	case GST_FORMAT_FRAMES:
-	case GST_FORMAT_FIELDS:
-          if (stream->strh.type == GST_RIFF_FCC_vids)
+	  else if (stream->strh.type == GST_RIFF_FCC_vids)
             *value = stream->strh.length;
 	  else
 	    res = FALSE;
@@ -787,15 +782,10 @@ gst_avi_demux_handle_src_query (GstPad *pad, GstPadQueryType type,
         case GST_FORMAT_BYTES:
           *value = stream->current_byte;
 	  break;
-        case GST_FORMAT_SAMPLES:
+        case GST_FORMAT_UNIT:
           if (stream->strh.type == GST_RIFF_FCC_auds)
             *value = stream->current_byte * stream->strh.samplesize;
-	  else
-	    res = FALSE;
-	  break;
-	case GST_FORMAT_FRAMES:
-	case GST_FORMAT_FIELDS:
-          if (stream->strh.type == GST_RIFF_FCC_vids)
+	  else if (stream->strh.type == GST_RIFF_FCC_vids)
             *value = stream->current_frame;
 	  else
 	    res = FALSE;
@@ -890,9 +880,7 @@ gst_avi_demux_handle_src_event (GstPad *pad, GstEvent *event)
     case GST_EVENT_SEEK:
       switch (GST_EVENT_SEEK_FORMAT (event)) {
 	case GST_FORMAT_BYTES:
-	case GST_FORMAT_SAMPLES:
-	case GST_FORMAT_FRAMES:
-	case GST_FORMAT_FIELDS:
+	case GST_FORMAT_UNIT:
 	  break;
 	case GST_FORMAT_TIME:
         {
