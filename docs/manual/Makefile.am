@@ -17,6 +17,7 @@ sgml_files = gstreamer-manual.sgml \
              goals.sgml \
              helloworld.sgml \
              helloworld2.sgml \
+             init.sgml \
              intro.sgml \
              motivation.sgml \
              plugins.sgml \
