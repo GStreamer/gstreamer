@@ -276,9 +276,7 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
     			  "parsed",       GST_PROPS_BOOLEAN (TRUE)
 			      )) < 0)
       {
-	gst_element_gerror(GST_ELEMENT (mpeg_parse), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("could no set source caps"));
+	gst_element_error (GST_ELEMENT (mpeg_parse), "could no set source caps");
 	return;
       }
     }
@@ -523,9 +521,7 @@ gst_mpeg_parse_loop (GstElement *element)
     			  "parsed",       GST_PROPS_BOOLEAN (TRUE)
 			      )) < 0)
       {
-	gst_element_gerror(GST_ELEMENT (mpeg_parse), GST_ERROR_UNKNOWN,
-	  g_strdup ("unconverted error, file a bug"),
-	  g_strdup_printf("could no set sink caps"));
+	gst_element_error (GST_ELEMENT (mpeg_parse), "could no set sink caps");
 	return;
       }
     }

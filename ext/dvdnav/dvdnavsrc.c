@@ -695,9 +695,8 @@ dvdnavsrc_user_op (DVDNavSrc *src, int op)
   }
   return;
 naverr:
-  gst_element_gerror(GST_ELEMENT(src), GST_ERROR_UNKNOWN,
-    g_strdup ("unconverted error, file a bug"),
-    g_strdup_printf("user op %d failure: %d", op, dvdnav_err_to_string(src->dvdnav)));
+  gst_element_error(GST_ELEMENT(src), "user op %d failure: %d",
+      op, dvdnav_err_to_string(src->dvdnav));
 
 }
 
@@ -869,19 +868,15 @@ dvdnavsrc_get (GstPad *pad)
     /* FIXME: mem leak on non BLOCK_OK events */
     buf = gst_buffer_new_from_pool (src->bufferpool, DVD_VIDEO_LB_LEN, 0);
     if (!buf) {
-      gst_element_gerror(GST_ELEMENT (src), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("Failed to create a new GstBuffer"));
+      gst_element_error (GST_ELEMENT (src), "Failed to create a new GstBuffer");
       return NULL;
     }
     data = GST_BUFFER_DATA(buf);
 
     if (dvdnav_get_next_block (src->dvdnav, data, &event, &len) !=
         DVDNAV_STATUS_OK) {
-      gst_element_gerror(GST_ELEMENT (src), GST_ERROR_UNKNOWN,
-        g_strdup ("unconverted error, file a bug"),
-        g_strdup_printf("dvdnav_get_next_block error: %s\n",
-			dvdnav_err_to_string(src->dvdnav)));
+      gst_element_error (GST_ELEMENT (src), "dvdnav_get_next_block error: %s\n",
+          dvdnav_err_to_string(src->dvdnav));
       return NULL;
     }
 
@@ -898,10 +893,8 @@ dvdnavsrc_get (GstPad *pad)
          * dvdnav_still_skip */
         dvdnavsrc_print_event (src, data, event, len);
         if (dvdnav_still_skip (src->dvdnav) != DVDNAV_STATUS_OK) {
-          gst_element_gerror(GST_ELEMENT (src), GST_ERROR_UNKNOWN,
-            g_strdup ("unconverted error, file a bug"),
-            g_strdup_printf("dvdnav_still_skip error: %s\n",
-			    dvdnav_err_to_string(src->dvdnav)));
+          gst_element_error (GST_ELEMENT (src), "dvdnav_still_skip error: %s\n",
+              dvdnav_err_to_string(src->dvdnav));
           /* FIXME: close the stream??? */
         }
         break;

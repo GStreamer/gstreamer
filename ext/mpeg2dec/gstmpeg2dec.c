@@ -516,9 +516,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 		      info->sequence->transfer_characteristics, info->sequence->matrix_coefficients);
 
 	if (!gst_mpeg2dec_negotiate_format (mpeg2dec)) {
-          gst_element_gerror(GST_ELEMENT (mpeg2dec), GST_ERROR_UNKNOWN,
-            g_strdup ("unconverted error, file a bug"),
-            g_strdup_printf("could not negotiate format"));
+          gst_element_error (GST_ELEMENT (mpeg2dec), "could not negotiate format");
 	  goto exit;
 	}
 

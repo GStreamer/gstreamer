@@ -1173,9 +1173,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	  break;
 	}
         if (!MAD_RECOVERABLE (mad->stream.error)) {
-          gst_element_gerror(GST_ELEMENT (mad), GST_ERROR_UNKNOWN,
-            g_strdup ("unconverted error, file a bug"),
-            g_strdup_printf("fatal error decoding stream"));
+          gst_element_error (GST_ELEMENT (mad), "fatal error decoding stream");
           return;
         }
 	else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
