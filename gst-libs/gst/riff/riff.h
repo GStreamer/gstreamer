@@ -68,6 +68,7 @@ typedef enum {
 #define GST_RIFF_LIST_movi MAKE_FOUR_CC('m','o','v','i')
 #define GST_RIFF_LIST_hdrl MAKE_FOUR_CC('h','d','r','l')
 #define GST_RIFF_LIST_strl MAKE_FOUR_CC('s','t','r','l')
+#define GST_RIFF_LIST_INFO MAKE_FOUR_CC('I','N','F','O')
 
 /* fcc types */
 #define GST_RIFF_FCC_vids MAKE_FOUR_CC('v','i','d','s')
@@ -80,6 +81,31 @@ typedef enum {
 #define GST_RIFF_FCCH_RLE  MAKE_FOUR_CC('R','L','E',' ')
 #define GST_RIFF_FCCH_msvc MAKE_FOUR_CC('m','s','v','c')
 #define GST_RIFF_FCCH_MSVC MAKE_FOUR_CC('M','S','V','C')
+
+/* INFO types - see http://www.saettler.com/RIFFMCI/riffmci.html */
+#define GST_RIFF_INFO_IARL MAKE_FOUR_CC('I','A','R','L') /* location */
+#define GST_RIFF_INFO_IART MAKE_FOUR_CC('I','A','R','T') /* artist */
+#define GST_RIFF_INFO_ICMS MAKE_FOUR_CC('I','C','M','S') /* commissioned */
+#define GST_RIFF_INFO_ICMT MAKE_FOUR_CC('I','C','M','T') /* comment */
+#define GST_RIFF_INFO_ICOP MAKE_FOUR_CC('I','C','O','P') /* copyright */
+#define GST_RIFF_INFO_ICRD MAKE_FOUR_CC('I','C','R','D') /* creation date */
+#define GST_RIFF_INFO_ICRP MAKE_FOUR_CC('I','C','R','P') /* cropped */
+#define GST_RIFF_INFO_IDIM MAKE_FOUR_CC('I','D','I','M') /* dimensions */
+#define GST_RIFF_INFO_IDPI MAKE_FOUR_CC('I','D','P','I') /* dots-per-inch */
+#define GST_RIFF_INFO_IENG MAKE_FOUR_CC('I','E','N','G') /* engineer(s) */
+#define GST_RIFF_INFO_IGNR MAKE_FOUR_CC('I','G','N','R') /* genre */
+#define GST_RIFF_INFO_IKEY MAKE_FOUR_CC('I','K','E','Y') /* keywords */
+#define GST_RIFF_INFO_ILGT MAKE_FOUR_CC('I','L','G','T') /* lightness */
+#define GST_RIFF_INFO_IMED MAKE_FOUR_CC('I','M','E','D') /* medium */
+#define GST_RIFF_INFO_INAM MAKE_FOUR_CC('I','N','A','M') /* name */
+#define GST_RIFF_INFO_IPLT MAKE_FOUR_CC('I','P','L','T') /* palette setting */
+#define GST_RIFF_INFO_IPRD MAKE_FOUR_CC('I','P','R','D') /* product */
+#define GST_RIFF_INFO_ISBJ MAKE_FOUR_CC('I','S','B','J') /* subject */
+#define GST_RIFF_INFO_ISFT MAKE_FOUR_CC('I','S','F','T') /* software */
+#define GST_RIFF_INFO_ISHP MAKE_FOUR_CC('I','S','H','P') /* sharpness */
+#define GST_RIFF_INFO_ISRC MAKE_FOUR_CC('I','S','R','C') /* source */
+#define GST_RIFF_INFO_ISRF MAKE_FOUR_CC('I','S','R','F') /* source form */
+#define GST_RIFF_INFO_ITCH MAKE_FOUR_CC('I','T','C','H') /* technician(s) */
 
 /*********Chunk Names***************/
 #define GST_RIFF_FF00 MAKE_FOUR_CC(0xFF,0xFF,0x00,0x00)
