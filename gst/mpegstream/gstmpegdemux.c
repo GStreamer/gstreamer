@@ -54,8 +54,8 @@ GST_STATIC_PAD_TEMPLATE (
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
   GST_STATIC_CAPS ("video/mpeg, "
-      "mpegversion = (int) [ 1, 2], "
-      "systemstream = (boolean) TRUE"
+    "mpegversion = (int) { 1, 2 }, "
+    "systemstream = (boolean) TRUE"
   )
 );
 
@@ -64,8 +64,9 @@ GST_STATIC_PAD_TEMPLATE (
   "audio_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_STATIC_CAPS ( "audio/mpeg, "
-      "mpegversion = (int) 1"
+  GST_STATIC_CAPS ("audio/mpeg, "
+    "mpegversion = (int) 1, "
+    "layer = (int) { 1, 2 }"
   )
 );
 
@@ -74,10 +75,9 @@ GST_STATIC_PAD_TEMPLATE (
   "video_%02d",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  GST_STATIC_CAPS (
-    "video/mpeg, "
-      "mpegversion = (int) { 1, 2 }, "
-      "systemstream = (boolean) FALSE"
+  GST_STATIC_CAPS ("video/mpeg, "
+    "mpegversion = (int) { 1, 2 }, "
+    "systemstream = (boolean) FALSE"
   )
 );
 
@@ -465,10 +465,14 @@ gst_mpeg_demux_parse_syshead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 	gst_pad_set_event_function (*outpad, gst_mpeg_demux_handle_src_event);
 	gst_pad_set_query_type_function (*outpad, gst_mpeg_parse_get_src_query_types);
 	gst_pad_set_query_function (*outpad, gst_mpeg_parse_handle_src_query);
-	gst_pad_use_explicit_caps (*outpad);
+	if (caps && gst_caps_is_fixed (caps))
+	  gst_pad_use_explicit_caps (*outpad);
         gst_element_add_pad (GST_ELEMENT (mpeg_demux), (*outpad));
 
-        gst_pad_set_explicit_caps (*outpad, caps);
+	if (caps && gst_caps_is_fixed (caps))
+          gst_pad_set_explicit_caps (*outpad, caps);
+	else if (caps)
+	  gst_caps_free (caps);
 
 	gst_pad_set_element_private (*outpad, *outstream);
 

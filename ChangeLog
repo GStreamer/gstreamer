@@ -1,5 +1,10 @@
 2004-01-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_syshead):
+	  Fix audio.
+
+2004-01-30  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
 	(mp3_type_frame_length_from_header):
 	  Fix header parsing - stolen from ffmpeg (thank you! :) ).
