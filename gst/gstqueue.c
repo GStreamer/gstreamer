@@ -581,11 +581,11 @@ gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
   if (gst_element_get_state (GST_ELEMENT (queue)) == GST_STATE_PLAYING) {
     /* push the event to the queue for upstream consumption */
     g_async_queue_push(queue->events, event);
-    g_mutex_unlock (queue->qlock);
     g_warning ("FIXME: sending event in a running queue");
     /* FIXME wait for delivery of the event here, then return the result
      * instead of FALSE */
-    return FALSE;
+    res = FALSE;
+    goto done;
   }
 
   event_type = GST_EVENT_TYPE (event);
@@ -606,10 +606,12 @@ gst_queue_handle_src_event (GstPad *pad, GstEvent *event)
     default:
       break;
   }
+
+done:
   g_mutex_unlock (queue->qlock);
 
   /* we have to claim success, but we don't really know */
-  return TRUE;
+  return res;
 }
 
 static gboolean
@@ -633,8 +635,6 @@ gst_queue_change_state (GstElement *element)
 {
   GstQueue *queue;
   GstElementStateReturn ret;
-  GstElementState new_state;
-  g_return_val_if_fail (GST_IS_QUEUE (element), GST_STATE_FAILURE);
 
   queue = GST_QUEUE (element);
 
@@ -645,25 +645,53 @@ gst_queue_change_state (GstElement *element)
    */
   g_mutex_lock (queue->qlock);
 
-  new_state = GST_STATE_PENDING (element);
+  switch (GST_STATE_TRANSITION (element)) {
+    case GST_STATE_NULL_TO_READY:
+      gst_queue_locked_flush (queue);
+      break;
+    case GST_STATE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_PLAYING:
+      if (!GST_PAD_IS_LINKED (queue->sinkpad)) {
+        GST_DEBUG_ELEMENT (GST_CAT_STATES, queue, "queue %s is not linked", GST_ELEMENT_NAME (queue));
+        /* FIXME can this be? */
+        if (queue->reader)
+          g_cond_signal (queue->not_empty);
 
-  if (new_state == GST_STATE_READY) {
-    gst_queue_locked_flush (queue);
-  }
-  else if (new_state == GST_STATE_PLAYING) {
-    if (!GST_PAD_IS_LINKED (queue->sinkpad)) {
-      GST_DEBUG_ELEMENT (GST_CAT_STATES, queue, "queue %s is not linked", GST_ELEMENT_NAME (queue));
-      /* FIXME can this be? */
-      if (queue->reader)
-        g_cond_signal (queue->not_empty);
-      g_mutex_unlock (queue->qlock);
+        ret = GST_STATE_FAILURE;
+        goto error;
+      }
+      else {
+        GstScheduler *src_sched, *sink_sched;
+	    
+        src_sched = gst_pad_get_scheduler (GST_PAD_CAST (queue->srcpad));
+        sink_sched = gst_pad_get_scheduler (GST_PAD_CAST (queue->sinkpad));
 
-      return GST_STATE_FAILURE;
-    }
-    queue->interrupt = FALSE;
+        if (src_sched == sink_sched) {
+          GST_DEBUG_ELEMENT (GST_CAT_STATES, queue, "queue %s does not connect different schedulers", 
+			GST_ELEMENT_NAME (queue));
+
+	  g_warning ("queue %s does connect different schedulers",
+			GST_ELEMENT_NAME (queue));
+
+	  ret = GST_STATE_FAILURE;
+	  goto error;
+        }
+      }
+      queue->interrupt = FALSE;
+      break;
+    case GST_STATE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_PAUSED_TO_READY:
+      gst_queue_locked_flush (queue);
+      break;
+    case GST_STATE_READY_TO_NULL:
+      break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+
+error:
   g_mutex_unlock (queue->qlock);
 
   GST_DEBUG_LEAVE("('%s')", GST_ELEMENT_NAME (element));
