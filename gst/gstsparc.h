@@ -24,11 +24,11 @@
 #define __GST_GSTSPARC_H__
 
 #define GST_ARCH_SET_SP(stackpointer) \
-    __asm__( "ta 3\n\t"
+    __asm__( "ta 3\n\t" \
              "mov %0, %%sp" : : "r"(stackpointer));
 
 #define GST_ARCH_CALL(target) \
-    __asm__( "call %0,0\n\t"
+    __asm__( "call %0,0\n\t" \
              "nop" : : "r"(target) );
 
 #define GST_ARCH_PRESETJMP() \
