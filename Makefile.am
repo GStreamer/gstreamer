@@ -20,7 +20,7 @@ gstreamer-libs-@GST_MAJORMINOR@.pc: gstreamer-libs.pc
 	cp gstreamer-libs.pc gstreamer-libs-@GST_MAJORMINOR@.pc
 gstreamer-play-@GST_MAJORMINOR@.pc: gstreamer-play.pc
 	cp gstreamer-play.pc gstreamer-play-@GST_MAJORMINOR@.pc
-gst_element_check-@GST_MAJORMINOR@.m4: gst-element-check.m4
+gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
 	cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
 
 pkgconfigdir = $(libdir)/pkgconfig
