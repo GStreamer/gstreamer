@@ -1,0 +1,12 @@
+MP3 Audio Parser
+================
+
+This element acts as a parser for mpeg audio data.  It's called 'mp3' but
+in reality will work for any MPEG-1, MPEG-2, or MPEG-2.5 elemental audio
+stream of any of Layers I, II, and III.  It will not (currently, ever?)
+handle MPEG-2 BC or NBC streams, as those have rather specialized needs
+best served be a different filter.
+
+It will take an mpeg audio stream in any form on its 'src' input, with any
+buffer size, and split it into buffers containing a single frame each.
+NOTE: ancillary data is not dealt with right now.

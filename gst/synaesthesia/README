@@ -1,0 +1,6 @@
+This is a nifty visualization based on synaesthesia-2.0 (see README-syna).
+I've librarified the program to a fair degree, but don't have all the
+output stuff working yet.  I'll be looking at ALSAPlayer's modifications
+to synaesthesia to see what they did to merge it into another
+architecture.  It shouldn't be too hard to get this working, I just
+haven't had a need yet.

@@ -1,0 +1,6 @@
+MPEG-2 System Stream Parser
+===========================
+
+This element will parse MPEG-2 Program Streams (and eventually Transport
+Streams, though likely as a second element) into its elemental streams.
+

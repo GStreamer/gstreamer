@@ -1,0 +1,40 @@
+Basic parsing method
+====================
+
+In an MPEG-2 Program Stream, every chunk of data starts with at least 23
+zeros and a one.  This is followed by a byte of ID.  At any given point I
+can search for the next 3-byte string equal to 1 to find the next chunk.
+I assume these start codes are aligned on byte boundaries.  I might be
+wrong, in which case this thing has to be rewritten at some point in the
+future.
+
+This means there are two basic modes of operation.  The first is the
+simple search for the next start code.  The second is a continuation mode,
+where data from the previous buffer is available to attempt to complete a
+chunk.  Hopefully the majority of time will be spent in the first mode, as
+that is where the most efficiency is, since there's no copying of partial
+chunks.
+
+The parsing is done as a state machine, as long as there's data left in
+the buffer, something is attempted.  What is attempted is based on the
+state of the parser (gee, so that's why they call it a state machine <g>).
+The stages are:
+
+1) looking for sync (have_sync == FALSE)
+   a) have some zeros (zeros > 0)
+2) getting ID (have_sync == TRUE, id == 0)
+3) decoding the chunk contents (have_sync == TRUE, id != 0)
+
+Mechanism for handling cross-buffer chunks of data
+==================================================
+
+The problem: if data were to come to the parser in 64-byte chunks, the
+pack head would be split across at least two buffers, possibly three.  Up
+front I will make the assumption that no one will be sending buffers of
+less size than the largest chunk (header, PES packet), such that no chunk
+will be split across more than two buffers.
+
+If we take the pack header as an example, when the stream starts out, we
+can assume that the it starts at the beginning of the buffer and doesn't
+exceed the bounds of it.  However, if we're mid-stream and starting
+another pack, it can be split across two buffers.  
