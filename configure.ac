@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 8, 0, 0, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 8, 0, 1, GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
