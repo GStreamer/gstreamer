@@ -30,13 +30,13 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	./autogen.sh \
-	--prefix=/usr \
-	--mandir=\$${prefix}/share/man \
-	--infodir=\$${prefix}/share/info \
-	--with-configdir=/etc/gstreamer \
-	--disable-plugin-srcdir \
-	--enable-docs-build
+	./configure \
+		--prefix=/usr \
+		--mandir=\$${prefix}/share/man \
+		--infodir=\$${prefix}/share/info \
+		--with-configdir=/etc/gstreamer \
+		--disable-plugin-srcdir \
+		--enable-docs-build
 
 	touch configure-stamp
 
