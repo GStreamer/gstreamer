@@ -308,9 +308,9 @@ cb_parse_clicked (GtkButton *button, gpointer *user_data)
                      gtk_entry_get_text (GTK_ENTRY (fd->ui->output)));
   /* gtkcombo.h says I can access the entry field directly */
   fd->filter_element = g_strdup (gtk_entry_get_text (GTK_ENTRY (filter->entry)));
-  g_print ("Input pipeline :\t%s (%d)\n", fd->input_pipe, strlen (fd->input_pipe));
-  g_print ("Filter element :\t%s (%d)\n", fd->filter_element, strlen (fd->filter_element));
-  g_print ("Output pipeline :\t%s (%d)\n", fd->output_pipe, strlen (fd->output_pipe));
+  g_print ("Input pipeline :\t%s (%d)\n", fd->input_pipe, (int)strlen (fd->input_pipe));
+  g_print ("Filter element :\t%s (%d)\n", fd->filter_element, (int)strlen (fd->filter_element));
+  g_print ("Output pipeline :\t%s (%d)\n", fd->output_pipe, (int)strlen (fd->output_pipe));
 
   /* try to create in and out bins */
   if (strlen (fd->input_pipe) == 0)
