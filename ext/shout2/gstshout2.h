@@ -64,6 +64,9 @@ struct _GstShout2send {
 typedef struct _GstShout2sendClass GstShout2sendClass;
 struct _GstShout2sendClass {
   GstElementClass parent_class;
+
+  /* signal callbacks */
+  void (*connection_problem) (GstElement *element,guint errno);
 };
 
 /* Standard macros for defining types for this element.  */

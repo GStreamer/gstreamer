@@ -38,6 +38,7 @@ unsigned int audio_format = 100;
 enum
 {
   /* FILL ME */
+  SIGNAL_CONNECTION_PROBLEM,
   LAST_SIGNAL
 };
 
@@ -82,7 +83,7 @@ static GstElementStateReturn gst_shout2send_change_state (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_shout2send_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_shout2send_signals[LAST_SIGNAL] = { 0, 0 };
 
 #define GST_TYPE_SHOUT_PROTOCOL (gst_shout2send_protocol_get_type())
 static GType
@@ -174,7 +175,12 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_URL, g_param_spec_string ("url", "url", "url", NULL, G_PARAM_READWRITE));        /* CHECKME */
 
 
-
+  /* signals */
+  gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM] =
+      g_signal_new ("connection-problem", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_CLEANUP, G_STRUCT_OFFSET (GstShout2sendClass,
+          connection_problem), NULL, NULL, g_cclosure_marshal_VOID__INT,
+      G_TYPE_NONE, 1, G_TYPE_INT);
   gobject_class->set_property = gst_shout2send_set_property;
   gobject_class->get_property = gst_shout2send_get_property;
 
@@ -222,7 +228,10 @@ gst_shout2send_chain (GstPad * pad, GstData * _data)
   ret = shout_send (shout2send->conn, GST_BUFFER_DATA (buf),
       GST_BUFFER_SIZE (buf));
   if (ret != SHOUTERR_SUCCESS) {
-    g_warning ("send error: %s...\n", shout_get_error (shout2send->conn));
+    GST_WARNING ("send error: %s...\n", shout_get_error (shout2send->conn));
+    g_signal_emit (G_OBJECT (shout2send),
+        gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
+        shout_get_errno (shout2send->conn));
   }
 
   shout_sync (shout2send->conn);

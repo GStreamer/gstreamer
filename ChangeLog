@@ -1,3 +1,16 @@
+2004-05-24  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
+
+	* ext/Makefile.am:
+	  add rules to build shout2send (was removed by accident
+	  when this module was no more marked experimental/broken)
+
+2004-05-24  Zaheer Abbas Merali <zaheerabbas@merali.org>
+
+	* ext/shout2/gstshout2.c:
+	* ext/shout2/gstshout2.h:
+	  adding a "connection problem" signal to shout2send
+	  (fixes #142954)
+
 2004-05-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/kio/kioreceiver.cpp:
