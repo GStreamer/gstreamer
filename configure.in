@@ -543,6 +543,10 @@ dnl Set location of configuration dir.
 AC_DEFINE_UNQUOTED(GST_CONFIG_DIR,"$GST_CONFIG_DIR")
 AC_SUBST(GST_CONFIG_DIR)
 
+dnl Set location of windows dll dir.
+AC_DEFINE_UNQUOTED(GST_WIN32_LIBDIR,"$GST_WIN32_LIBDIR")
+AC_SUBST(GST_WIN32_LIBDIR)
+
 dnl Set location of plugin directory
 if test "x${prefix}" = "xNONE"; then
   PLUGINS_DIR=${ac_default_prefix}/lib/gst

@@ -6,6 +6,8 @@
 #include <wine/vfw.h>
 #include <registry.h>
 
+#include <config.h>
+
 #define STORE_ALL \
     __asm__ ( \
     "push %%ebx\n\t" \
@@ -87,15 +89,15 @@ typedef struct
 //#define Win32Path "/usr/lib/win32/"
 #define Win32Path GST_WIN32_LIBDIR
 static codec_t avi_codecs[]={
- {0, Win32Path"divxc32.dll", 0},	//0
- {0, Win32Path"ir50_32.dll", 0},
- {0, Win32Path"ir41_32.dll", 0},
- {0, Win32Path"ir32_32.dll", 0},    
- {0, Win32Path"mpg4c32.dll", 0},
- {0, Win32Path"iccvid.dll", 0},		//5
- {0, Win32Path"libvideodll.so", 0},
- {0, Win32Path"divxa32.acm", 0},	//7
- {0, Win32Path"msadp32.acm", 0},
+ {0, Win32Path"/divxc32.dll", 0},	//0
+ {0, Win32Path"/ir50_32.dll", 0},
+ {0, Win32Path"/ir41_32.dll", 0},
+ {0, Win32Path"/ir32_32.dll", 0},    
+ {0, Win32Path"/mpg4c32.dll", 0},
+ {0, Win32Path"/iccvid.dll", 0},		//5
+ {0, Win32Path"/libvideodll.so", 0},
+ {0, Win32Path"/divxa32.acm", 0},	//7
+ {0, Win32Path"/msadp32.acm", 0},
 };
 
                                                                                                                     
