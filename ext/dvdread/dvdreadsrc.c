@@ -89,6 +89,7 @@ struct _DVDReadSrcPrivate {
 GstElementDetails dvdreadsrc_details = {
   "DVD Source",
   "Source/File/DVD",
+  "LGPL",
   "Access a DVD title/chapter/angle using libdvdread",
   VERSION,
   "Erik Walthinsen <omega@cse.ogi.edu>",
