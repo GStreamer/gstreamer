@@ -76,7 +76,6 @@ static void gst_snapshot_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_snapshot_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void snapshot_handler (GstElement * element);
 
 
 static GstElementClass *parent_class = NULL;
@@ -156,20 +155,12 @@ gst_snapshot_class_init (GstSnapshotClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSnapshotClass, snapshot),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  klass->snapshot = snapshot_handler;
+  klass->snapshot = NULL;
 
   gobject_class->set_property = gst_snapshot_set_property;
   gobject_class->get_property = gst_snapshot_get_property;
 }
 
-static void
-snapshot_handler (GstElement * element)
-{
-  GstSnapshot *snapshot;
-
-  snapshot = GST_SNAPSHOT (element);
-  snapshot->snapshot_asked = TRUE;
-}
 
 
 static gboolean
