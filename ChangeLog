@@ -1,5 +1,19 @@
 2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/theora/theoraenc.c: (theora_buffer_from_packet),
+	(theora_push_buffer), (theora_push_packet),
+	(theora_set_header_on_caps), (theora_enc_chain):
+	  mark buffers and put on streamheader, raw theora streaming
+	  now works too, whee
+
+2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gsttcp.c: (gst_tcp_gdp_read_header),
+	(gst_tcp_gdp_read_caps):
+          do a looping read for caps and GDP headers too
+
+2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get):
 	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_get):
           return EOS instead of NULL in _get
