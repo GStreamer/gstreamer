@@ -67,6 +67,7 @@ struct _GstTypeFind {
   /* optional */
   guint64		(* get_length)			(gpointer		data);
 
+  /* <private> */
   GST_STRUCT_PADDING
 };
 

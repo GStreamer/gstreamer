@@ -252,7 +252,7 @@ gst_type_find_factory_register (GstPlugin *plugin, const gchar *name, guint rank
 
 /*** typefind function interface **********************************************/
 
-/*
+/**
  * gst_type_find_peek:
  * @find: the find object the function was called with
  * @offset: the offset
@@ -274,7 +274,7 @@ gst_type_find_peek (GstTypeFind *find, gint64 offset, guint size)
 
   return find->peek (find->data, offset, size);
 }
-/*
+/**
  * gst_type_find_suggest:
  * @find: the find object the function was called with
  * @probability: the probability in percent that the suggestion is right

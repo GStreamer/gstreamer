@@ -448,9 +448,9 @@ static void
 gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
 {
   GstData *data;
-  GList *type_list = NULL;
   GstTypeFind gst_find;
   SpiderTypeFind find;
+  GList *walk, *type_list = NULL;
 
   g_return_if_fail (GST_IS_SPIDER_IDENTITY (ident));
 
@@ -468,21 +468,21 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   }
   
   /* now do the actual typefinding with the supplied buffer */
-  type_list = gst_type_find_factory_get_list ();
+  walk = type_list = gst_type_find_factory_get_list ();
     
   find.best_probability = 0;
   find.caps = NULL;
   gst_find.data = &find;
   gst_find.peek = spider_find_peek;
   gst_find.suggest = spider_find_suggest;
-  while (type_list) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (type_list->data);
+  while (walk) {
+    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
 
     GST_DEBUG ("trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
     gst_type_find_factory_call_function (factory, &gst_find);
     if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
       goto plug;
-    type_list = g_list_next (type_list);
+    walk = g_list_next (walk);
   }
   if (find.best_probability > 0)
     goto plug;
@@ -504,6 +504,8 @@ plug:
   g_assert (gst_pad_try_set_caps (ident->src, find.caps) > 0);
   gst_caps_debug (find.caps, "spider starting caps");
   gst_caps_unref (find.caps);
+  if (type_list)
+    g_list_free (type_list);
 
   gst_spider_identity_plug (ident);
 

@@ -472,6 +472,11 @@ compare_type_find_entry (gconstpointer a, gconstpointer b)
     return two->probability - one->probability;
   }
 }
+static gint
+compare_type_find_factory (gconstpointer fac1, gconstpointer fac2)
+{
+  return GST_PLUGIN_FEATURE (fac1)->rank - GST_PLUGIN_FEATURE (fac2)->rank;
+}
 static void
 gst_type_find_element_chain (GstPad *pad, GstData *data)
 {
@@ -495,10 +500,12 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
       gst_data_unref (data);
       if (typefind->possibilities == NULL) {
 	/* not yet started, get all typefinding functions into our "queue" */
-	const GList *all_factories = gst_type_find_factory_get_list ();
+	GList *all_factories = gst_type_find_factory_get_list ();
 	GST_INFO_OBJECT (typefind, "starting with %u typefinding functions", 
 	                 g_list_length ((GList *) all_factories));
 	
+	all_factories = g_list_sort (all_factories, compare_type_find_factory);
+	walk = all_factories;
 	while (all_factories) {
 	  entry = g_new0 (TypeFindEntry, 1);
 	  
@@ -508,6 +515,7 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	  typefind->possibilities = g_list_prepend (typefind->possibilities, entry);
 	  all_factories = g_list_next (all_factories);
 	}
+	g_list_free (all_factories);
       }
       /* call every typefind function once */
       walk = entries = typefind->possibilities;
