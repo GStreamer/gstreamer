@@ -4,7 +4,7 @@ else
 GCONF_DIR=
 endif
 
-if USE_XFREE
+if USE_X
 X_DIR=xwindowlistener
 else
 X_DIR=

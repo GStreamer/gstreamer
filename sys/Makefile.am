@@ -34,14 +34,17 @@ else
 VCD_DIR=
 endif
 
-# doesn't work 
-#if USE_XFREE
-#XVIDEO_DIR=xvideo
-#XIMAGE_DIR=ximage
-#else
-#XVIDEO_DIR=
-#XIMAGE_DIR=
-#endif
+if USE_X
+X_DIR=ximage xvideo
+else
+X_DIR=
+endif
+
+if USE_XVIDEO
+XV_DIR=xvimage
+else
+XV_DIR=
+endif
 
 if USE_CDROM
 CDROM_DIR=cdrom
@@ -50,6 +53,6 @@ CDROM_DIR=
 endif
 
 SUBDIRS=$(DXR3_DIR) $(OSS_DIR) $(QCAM_DIR) $(V4L_DIR) $(V4L2_DIR) \
-	$(VCD_DIR) $(CDROM_DIR)
+	$(VCD_DIR) $(CDROM_DIR) $(X_DIR) $(XV_DIR)
 
 DIST_SUBDIRS=dxr3 oss qcam v4l v4l2 vcd xvideo ximage glsink cdrom
