@@ -381,12 +381,17 @@ GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
                       cdda_open, -lm, 
                       cdda_interface.h, 
                       CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
-                      HEADER_DIR="no")
-  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
-                      cdda_open, -lm, 
-                      cdda/cdda_interface.h, 
-                      CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
-                      HEADER_DIR="yes")
+                      HEADER_DIR="no"
+                      FOUND_CDPARANOIA="yes")
+  if test "x$FOUND_CDPARANOIA" != "xyes";
+  then
+    GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
+                        cdda_open, -lm, 
+                        cdda/cdda_interface.h, 
+                        CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
+                        HEADER_DIR="yes"
+                        FOUND_CDPARANOIA="yes")
+  fi
   if test "x$HEADER_DIR" = "xyes";
   then
     AC_DEFINE_UNQUOTED(CDPARANOIA_HEADERS_IN_DIR, ,
@@ -400,8 +405,9 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl *** dv ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV, true)
-GST_CHECK_FEATURE(DV, [dv library], dv, [
-  AM_PATH_LIBDV(HAVE_DV=yes, HAVE_DV=no)
+GST_CHECK_FEATURE(DV, [libdv DV/video decoder], dvdec, [
+  PKG_CHECK_MODULES(DV, libdv, HAVE_DV="yes", HAVE_DV="no")
+  AC_SUBST(DV_CFLAGS)
   AC_SUBST(DV_LIBS)
 ])
 
@@ -532,14 +538,6 @@ GST_CHECK_FEATURE(LCS, Lcs, lcs, [
   PKG_CHECK_MODULES(LCS, lcs, HAVE_LCS="yes", HAVE_LCS="no")
   AC_SUBST(LCS_CFLAGS)
   AC_SUBST(LCS_LIBS)
-])
-
-dnl *** libdv ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
-GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
-  PKG_CHECK_MODULES(LIBDV, libdv, HAVE_LIBDV="yes", HAVE_LIBDV="no")
-  AC_SUBST(LIBDV_CFLAGS)
-  AC_SUBST(LIBDV_LIBS)
 ])
 
 dnl *** libfame ***
