@@ -727,7 +727,8 @@ gst_id3_tag_handle_event (GstPad * pad, GstEvent * event)
 
           if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
             value += tag->v1tag_size;
-            new = gst_event_new_discontinuous (GST_FORMAT_BYTES, value, 0);
+            new =
+                gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES, value, 0);
             gst_data_unref (GST_DATA (event));
             gst_pad_push (tag->srcpad, GST_DATA (new));
           } else {
