@@ -24,7 +24,6 @@
  *
  *      Simple DirectMedia Layer demo
  *      Realtime picture 'gooing'
- *      Released under GPL
  *      by sam lantinga slouken@devolution.com
  */
 
