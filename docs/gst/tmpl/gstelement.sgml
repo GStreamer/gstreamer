@@ -59,6 +59,7 @@ You can get and set a #GstClock on an element using gst_element_get_clock()
 and gst_element_set_clock().  You can wait for the clock to reach a given
 #GstClockTime using gst_element_clock_wait().
 </para>
+
 <!-- ##### SECTION See_Also ##### -->
 <para>
 #GstElementFactory, #GstPad
@@ -351,21 +352,21 @@ of an element he doesn't need anymore.
 @elem: 
 
 
-<!-- ##### FUNCTION gst_element_wait_state_change ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
-<!-- ##### FUNCTION gst_element_statename ##### -->
+<!-- ##### FUNCTION gst_element_state_get_name ##### -->
 <para>
 
 </para>
 
 @state: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gst_element_wait_state_change ##### -->
+<para>
+
+</para>
+
+@element: 
 
 
 <!-- ##### FUNCTION gst_element_error ##### -->

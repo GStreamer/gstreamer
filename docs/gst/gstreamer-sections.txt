@@ -345,8 +345,8 @@ gst_element_get_compatible_pad_filtered
 
 gst_element_set_state
 gst_element_get_state
+gst_element_state_get_name
 gst_element_wait_state_change
-gst_element_statename
 
 gst_element_error
 gst_element_set_eos
@@ -474,7 +474,7 @@ GstClockReturn
 GST_CLOCK_DIFF
 GST_TIMEVAL_TO_TIME
 GstClock
-gst_clock_activate
+gst_clock_set_active
 gst_clock_is_active
 gst_clock_async_supported
 gst_clock_wait_async
