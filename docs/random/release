@@ -82,23 +82,20 @@ TODO :
     lynx -dump http://gstreamer.net/releases/$(module)/$(version) > NEWS
     or
     links -dump "http://gstreamer.net/releases/$(module)/$(version)" > NEWS
+    (FIXME: still need to remove the menu from this manually, maybe make
+    some xslt instead to do this ?)
 
   - update web site docs
     - release-specific docs should go in CVS
     - change docs/current symlink
   - remove the nano version number in configure.ac, AS_VERSION
   - tag tree
-    - policy is at http://gstreamer.net/dev/cvs.php
-    - we stopped adding CODENAMES to cvs
-      --> all of this is not done anymore
-      - decide on a tag name : RELEASE-(VERSION)
-      - tag; for example for 0.6.3 :
+    for example for 0.6.3 :
            cvs tag RELEASE-0_6_3
-  - add tag 
   - roll the tarball, build rpms
-  - FIXME: update status table cvs status and then click on the release link
-           http://gstreamer.net/admin.php is the portal to all of this
-           where to get the password, what should we do here ?
+  - run "make upload" from gstreamer/docs to get the new docs online
+  - change www/src/htdocs/entities.gst with the new version numbers
+  - add a news item to the news.xml
 
 Post-Release Period
 -------------------

@@ -74,6 +74,18 @@ if test "x$GST_CVS" = "xyes"; then
   AC_DEFINE(GST_LEVEL_DEFAULT, GST_LEVEL_ERROR, [Default errorlevel to use])
 fi
 
+dnl subsystems - can influence other decisions so needs to be high up
+GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
+GST_CHECK_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
+GST_CHECK_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
+GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
+GST_CHECK_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
+GST_CHECK_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
+GST_CHECK_SUBSYSTEM_DISABLE(ENUMTYPES,[enum types])
+GST_CHECK_SUBSYSTEM_DISABLE(INDEX,[index])
+GST_CHECK_SUBSYSTEM_DISABLE(PLUGIN,[plugin])
+GST_CHECK_SUBSYSTEM_DISABLE(URI,[uri handlers])
+
 dnl ##############################
 dnl # Do automated configuration #
 dnl ##############################
@@ -168,7 +180,7 @@ if test x$HAVE_CPU_PPC = xyes ; then
 fi
 
 AC_ARG_ENABLE(gcov,
-  [--enable-gcov         compile with coverage profiling instrumentation (gcc only)],
+  AC_HELP_STRING([--enable-gcov],[compile with coverage profiling instrumentation (gcc only)]),
   enable_gcov=$enableval,enable_gcov=no)
 if test x$enable_gcov = xyes ; then
   AS_COMPILER_FLAG(["-fprofile-arcs"],
@@ -208,16 +220,16 @@ GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
   
 dnl === libxml 2 ===
-if test "x$GST_DISABLE_LOADSAVE" = "xtrue" && test "x$GST_DISABLE_REGISTRY" = "xtrue"
+if test "x$GST_DISABLE_LOADSAVE" = "xyes" && test "x$GST_DISABLE_REGISTRY" = "xyes"
 then
+  AC_MSG_NOTICE([Registry and load/save are disabled, not checking for libxml2])
+else
   dnl Minimum required version of libxml2
   LIBXML2_REQ="2.4.9"
   AC_SUBST(LIBXML2_REQ)
 
   dnl check for libxml2
   GST_LIBXML2_CHECK()
-else
-  AC_MSG_NOTICE([Registry and load/save are disabled, not checking for libxml2])
 fi
 
 dnl popt checks
@@ -400,28 +412,6 @@ AC_HELP_STRING([--disable-debug],[disable addition of -g debugging info]),
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
 esac],
 [USE_DEBUG=yes]) dnl Default value
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, true)
-GST_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
-
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_LOADSAVE, true)
-GST_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PARSE, true)
-GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_TRACE, true)
-GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_ALLOC_TRACE, true)
-GST_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
-
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_REGISTRY, true)
-GST_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_ENUMTYPES, true)
-GST_SUBSYSTEM_DISABLE(ENUMTYPES,[enum types])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_INDEX, true)
-GST_SUBSYSTEM_DISABLE(INDEX,[index])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_PLUGIN, true)
-GST_SUBSYSTEM_DISABLE(PLUGIN,[plugin])
-translit(dnm, m, l) AM_CONDITIONAL(GST_DISABLE_URI, true)
-GST_SUBSYSTEM_DISABLE(URI,[uri handlers])
 
 dnl ################################################
 dnl # Set defines according to variables set above #

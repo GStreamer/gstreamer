@@ -1,5 +1,15 @@
 2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+          fix gcov help output
+          move calls to and use new GST_CHECK_DISABLE_SUBSYSTEM
+	* docs/random/release:
+          some updated releasing notes
+	* gstreamer.spec.in:
+          more updates
+
+2004-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/faq/faq.xml:
 	* docs/manual/manual.xml:
 	* docs/pwg/pwg.xml:
