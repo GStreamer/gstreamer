@@ -276,10 +276,8 @@ gst_dpman_attach_dparam (GstDParamManager *dpman, gchar *dparam_name, GstDParam 
 	g_return_val_if_fail(dpwrap != NULL, FALSE);
 	g_return_val_if_fail(dpwrap->value != NULL, FALSE);
 
-	GST_DPARAM_VALUE(dparam) = dpwrap->value;
 	dpwrap->dparam = dparam;
-	gst_dparam_set_parent (dparam, GST_OBJECT(dpman));
-	GST_DPARAM_NAME(dparam)	= dparam_name;
+	gst_dparam_attach(dparam, GST_OBJECT(dpman), dparam_name, dpwrap->value);
 
 	return TRUE;
 }
@@ -551,8 +549,8 @@ gst_dpman_preprocess_synchronous(GstDParamManager *dpman, guint frames, gint64 t
 		dpwrap = (GstDParamWrapper*)dwraps->data;
 		dparam = dpwrap->dparam;
 
-		if (dparam && (GST_DPARAM_READY_FOR_UPDATE(dparam) || 
-		              (GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) < timestamp))){
+		if (dparam && (GST_DPARAM_READY_FOR_UPDATE(dparam) && 
+		              (GST_DPARAM_NEXT_UPDATE_TIMESTAMP(dparam) <= timestamp))){
 		              	
 		    // this will make dpwrap->value contain the latest value.
 		    // now we just need to get it to the element
