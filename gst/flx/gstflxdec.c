@@ -159,6 +159,7 @@ gst_flxdec_init (GstFlxDec * flxdec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&src_video_factory), "src");
   gst_element_add_pad (GST_ELEMENT (flxdec), flxdec->srcpad);
+  gst_pad_use_explicit_caps (flxdec->srcpad);
 
   flxdec->bs = NULL;
   flxdec->frame = NULL;
@@ -493,7 +494,10 @@ gst_flxdec_loop (GstElement * element)
     gst_caps_set_simple (caps,
         "width", G_TYPE_INT, flxh->width,
         "height", G_TYPE_INT, flxh->height,
-        "framerate", G_TYPE_DOUBLE, GST_SECOND / flxdec->frame_time, NULL);
+        "framerate", G_TYPE_DOUBLE, (gdouble) (GST_SECOND / flxdec->frame_time),
+        NULL);
+
+    gst_pad_set_explicit_caps (flxdec->srcpad, caps);
 
     if (flxh->depth <= 8)
       flxdec->converter =
