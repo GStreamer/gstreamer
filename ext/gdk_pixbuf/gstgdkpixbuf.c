@@ -431,12 +431,16 @@ gst_gdk_pixbuf_type_find (GstTypeFind *tf, gpointer ignore)
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
+  GstCaps *caps;
+  
   if (!gst_element_register (plugin, "gdkpixbufdec", GST_RANK_NONE, GST_TYPE_GDK_PIXBUF))
     return FALSE;
 
+  caps = GST_CAPS_ANY;
   gst_type_find_register (plugin, "image/*", GST_RANK_MARGINAL,
 			  gst_gdk_pixbuf_type_find, NULL,
-                          gst_caps_copy(GST_CAPS_ANY), NULL);
+                          caps, NULL);
+  gst_caps_free (caps);
 
   /* plugin initialisation succeeded */
   return TRUE;

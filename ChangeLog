@@ -1,3 +1,9 @@
+2004-02-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (plugin_init):
+	* gst/typefind/gsttypefindfunctions.c:
+	  fix memleaks shown by gst-typefind
+
 2004-02-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* common/glib-gen.mak:
