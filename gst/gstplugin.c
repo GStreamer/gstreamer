@@ -32,11 +32,9 @@
 #include "gstlog.h"
 #include "config.h"
 
-static GModule *main_module;
+static GModule *main_module = NULL;
+static GList *_gst_plugin_static = NULL;
 
-GList *_gst_plugin_static = NULL;
-
-static void 		gst_plugin_register_statics 	(GModule *module);
 static GstPlugin* 	gst_plugin_register_func 	(GstPluginDesc *desc, GstPlugin *plugin, 
 							 GModule *module);
 GQuark 
@@ -48,37 +46,46 @@ gst_plugin_error_quark (void)
   return quark;
 }
 
-void
-_gst_plugin_initialize (void)
-{
-  main_module =  g_module_open (NULL, G_MODULE_BIND_LAZY);
-  gst_plugin_register_statics (main_module);
-}
-
+/* this function can be called in the GCC constructor extension, before
+ * the _gst_plugin_initialize() was called. In that case, we store the 
+ * plugin description in a list to initialize it when we open the main
+ * module later on.
+ * When the main module is known, we can register the plugin right away.
+ * */
 void
 _gst_plugin_register_static (GstPluginDesc *desc)
 {
-  _gst_plugin_static = g_list_prepend (_gst_plugin_static, desc);
-}
-
-static void
-gst_plugin_register_statics (GModule *module)
-{
-  GList *walk = _gst_plugin_static;
-
-  while (walk) {
-    GstPluginDesc *desc = (GstPluginDesc *) walk->data;
+  if (main_module == NULL) {
+    _gst_plugin_static = g_list_prepend (_gst_plugin_static, desc);
+  }
+  else {
     GstPlugin *plugin;
 
     plugin = g_new0 (GstPlugin, 1);
     plugin->filename = NULL;
     plugin->module = NULL;
-    plugin = gst_plugin_register_func (desc, plugin, module);
+    plugin = gst_plugin_register_func (desc, plugin, main_module);
 
     if (plugin) {
-      plugin->module = module;
+      plugin->module = main_module;
       gst_registry_pool_add_plugin (plugin);
     }
+  }
+}
+
+void
+_gst_plugin_initialize (void)
+{
+  GList *walk;
+
+  main_module =  g_module_open (NULL, G_MODULE_BIND_LAZY);
+
+  /* now register all static plugins */
+  walk = _gst_plugin_static;
+  while (walk) {
+    GstPluginDesc *desc = (GstPluginDesc *) walk->data;
+
+    _gst_plugin_register_static (desc);
     
     walk = g_list_next (walk);
   }
