@@ -165,6 +165,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstefence.so
 %{_libdir}/gstreamer-%{majorminor}/libgsteffectv.so
+%{_libdir}/gstreamer-%{majorminor}/libgstpuzzle.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
 %{_libdir}/gstreamer-%{majorminor}/libgstffmpegcolorspace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
@@ -267,7 +268,7 @@ rm -rf $RPM_BUILD_ROOT
 
 # Docs
 %{_datadir}/locale
-%{_datadir}/gtk-doc/html
+# %{_datadir}/gtk-doc/html
 
 %post
 @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
