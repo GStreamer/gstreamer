@@ -32,12 +32,11 @@ static GHashTable *_format_to_nick = NULL;
 static gint  _n_values = 1; /* we start from 1 because 0 reserved for UNDEFINED */
 
 static GstFormatDefinition standard_definitions[] = {
-  { GST_FORMAT_DEFAULT, "default", "Default" },
+  { GST_FORMAT_DEFAULT, "default", "Default format for the media type" },
   { GST_FORMAT_BYTES,   "bytes",   "Bytes" },
   { GST_FORMAT_TIME, 	"time",    "Time" }, 
   { GST_FORMAT_BUFFERS, "buffers", "Buffers" },
   { GST_FORMAT_PERCENT, "percent", "Percent" },
-  { GST_FORMAT_UNITS,   "units",   "Units as defined by the media type" },
   { 0, NULL, NULL }
 };
 
