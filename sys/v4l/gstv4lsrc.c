@@ -601,6 +601,9 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
   gboolean was_capturing;
   struct video_window *vwin;
 
+  /* if your fourcc stays sexy then something is wrong */
+  fourcc = GST_MAKE_FOURCC ('S', 'E', 'X', 'Y');
+
   v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
   vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
   was_capturing = v4lsrc->is_capturing;
@@ -643,6 +646,7 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
           ("Could not set framerate of %f fps", fps));
     }
   }
+
   switch (fourcc) {
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       palette = VIDEO_PALETTE_YUV420P;
@@ -707,7 +711,8 @@ gst_v4lsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
   }
 
   if (palette == -1) {
-    GST_WARNING_OBJECT (v4lsrc, "palette is -1, refusing link");
+    GST_WARNING_OBJECT (v4lsrc, "palette for fourcc " GST_FOURCC_FORMAT
+        " is -1, refusing link", GST_FOURCC_ARGS (fourcc));
     return GST_PAD_LINK_REFUSED;
   }
 

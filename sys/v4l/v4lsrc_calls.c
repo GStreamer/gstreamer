@@ -65,7 +65,7 @@ static const char *palette_name[] = {
   "Raw",                        /* VIDEO_PALETTE_RAW */
   "YUV-4:2:2 (planar)",         /* VIDEO_PALETTE_YUV422P */
   "YUV-4:1:1 (planar)",         /* VIDEO_PALETTE_YUV411P */
-  "YUV-4:2:0 (planar)",         /* VIDEO_PALETTE_YUV420P */
+  "YUV-4:2:0 (planar)/I420",    /* VIDEO_PALETTE_YUV420P */
   "YUV-4:1:0 (planar)"          /* VIDEO_PALETTE_YUV410P */
 };
 #endif
