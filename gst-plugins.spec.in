@@ -32,7 +32,7 @@ plugins.
 %prep
 %setup
 %build
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man  --enable-glib2
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man  
 
 if [ "$SMP" != "" ]; then
   (make "MAKE=make -k -j $SMP"; exit 0)
