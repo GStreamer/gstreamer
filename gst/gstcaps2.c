@@ -110,12 +110,12 @@ GstCaps2 *gst_caps2_new_simple (const char *media_type, const char *fieldname,
   structure = gst_structure_new_valist (media_type, fieldname, var_args);
   va_end (var_args);
 
-  g_ptr_array_add (caps->structs, structure);
+  gst_caps2_append_cap (caps, structure);
   
   return caps;
 }
 
-GstCaps2 *gst_caps2_new_full (const GstStructure *struct1, ...)
+GstCaps2 *gst_caps2_new_full (GstStructure *struct1, ...)
 {
   GstCaps2 *caps;
   va_list var_args;
@@ -127,7 +127,7 @@ GstCaps2 *gst_caps2_new_full (const GstStructure *struct1, ...)
   return caps;
 }
 
-GstCaps2 *gst_caps2_new_full_valist (const GstStructure *structure,
+GstCaps2 *gst_caps2_new_full_valist (GstStructure *structure,
     va_list var_args)
 {
   GstCaps2 *caps;
@@ -137,8 +137,8 @@ GstCaps2 *gst_caps2_new_full_valist (const GstStructure *structure,
   caps->structs = g_ptr_array_new();
 
   while(structure){
-    g_ptr_array_add (caps->structs, (gpointer) structure);
-    structure = va_arg (var_args, void *);
+    gst_caps2_append_cap (caps, structure);
+    structure = va_arg (var_args, GstStructure *);
   }
 
   return caps;
@@ -159,7 +159,7 @@ GstCaps2 *gst_caps2_copy (const GstCaps2 *caps)
 
   for(i=0;i<caps->structs->len;i++){
     structure = gst_caps2_get_nth_cap (caps, i);
-    g_ptr_array_add (newcaps->structs, gst_structure_copy(structure));
+    gst_caps2_append_cap (newcaps, gst_structure_copy(structure));
   }
 
   return newcaps;
@@ -201,16 +201,20 @@ void gst_caps2_append (GstCaps2 *caps1, GstCaps2 *caps2)
   
   for(i=0;i<caps2->structs->len;i++){
     structure = gst_caps2_get_nth_cap (caps2, i);
-    g_ptr_array_add (caps1->structs, structure);
+    gst_caps2_append_cap (caps1, structure);
   }
   g_ptr_array_free(caps2->structs, TRUE);
   g_free(caps2);
 }
 
-void gst_caps2_append_cap (GstCaps2 *caps1, GstStructure *structure)
+void gst_caps2_append_cap (GstCaps2 *caps, GstStructure *structure)
 {
+  g_return_if_fail(caps != NULL);
+
+g_print("appending cap %p to caps %p\n", structure, caps);
+
   if (structure){
-    g_ptr_array_add (caps1->structs, structure);
+    g_ptr_array_add (caps->structs, structure);
   }
 }
 
@@ -223,6 +227,10 @@ GstCaps2 *gst_caps2_split_one (GstCaps2 *caps)
 
 GstStructure *gst_caps2_get_nth_cap (const GstCaps2 *caps, int index)
 {
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (index >= 0, NULL);
+  g_return_val_if_fail (index < caps->structs->len, NULL);
+
   return g_ptr_array_index(caps->structs, index);
 }
 
@@ -240,7 +248,7 @@ GstCaps2 *gst_caps2_copy_1 (const GstCaps2 *caps)
 
   if (caps->structs->len > 0){
     structure = gst_caps2_get_nth_cap (caps, 0);
-    g_ptr_array_add (newcaps->structs, gst_structure_copy(structure));
+    gst_caps2_append_cap (newcaps, gst_structure_copy(structure));
   }
 
   return newcaps;
@@ -249,11 +257,15 @@ GstCaps2 *gst_caps2_copy_1 (const GstCaps2 *caps)
 /* tests */
 gboolean gst_caps2_is_any (const GstCaps2 *caps)
 {
+  g_return_val_if_fail(caps != NULL, FALSE);
+
   return (caps->flags & GST_CAPS2_FLAGS_ANY);
 }
 
 gboolean gst_caps2_is_empty (const GstCaps2 *caps)
 {
+  g_return_val_if_fail(caps != NULL, FALSE);
+
   if (caps->flags & GST_CAPS2_FLAGS_ANY) return FALSE;
 
   return (caps->structs == NULL) || (caps->structs->len == 0);
@@ -261,6 +273,8 @@ gboolean gst_caps2_is_empty (const GstCaps2 *caps)
 
 gboolean gst_caps2_is_chained (const GstCaps2 *caps)
 {
+  g_return_val_if_fail(caps != NULL, FALSE);
+
   return (caps->structs->len > 1);
 }
 
@@ -270,6 +284,8 @@ gboolean gst_caps2_is_fixed (const GstCaps2 *caps)
   GstStructureField *field;
   GType type;
   int i;
+
+  g_return_val_if_fail(caps != NULL, FALSE);
 
   if (caps->structs->len != 1) return FALSE;
 
@@ -363,6 +379,9 @@ static GstStructure *gst_caps2_structure_intersect (const GstStructure *struct1,
   const GstStructureField *field2;
   int ret;
 
+  g_return_val_if_fail(struct1 != NULL, NULL);
+  g_return_val_if_fail(struct2 != NULL, NULL);
+
   if (struct1->name != struct2->name) return NULL;
 
   dest = gst_structure_id_empty_new (struct1->name);
@@ -450,10 +469,19 @@ GstCaps2 *gst_caps2_intersect (const GstCaps2 *caps1, const GstCaps2 *caps2)
   GstStructure *struct2;
   GstCaps2 *dest;
 
+  g_return_val_if_fail (caps1 != NULL, NULL);
+  g_return_val_if_fail (caps2 != NULL, NULL);
+
+  if (gst_caps2_is_empty (caps1) || gst_caps2_is_empty (caps2)){
+    return gst_caps2_new_empty ();
+  }
+  if (gst_caps2_is_any (caps1)) return gst_caps2_copy (caps2);
+  if (gst_caps2_is_any (caps2)) return gst_caps2_copy (caps1);
+
   dest = gst_caps2_new_empty();
   for(i=0;i<caps1->structs->len;i++){
     struct1 = gst_caps2_get_nth_cap (caps1, i);
-    for(j=0;j<caps1->structs->len;j++){
+    for(j=0;j<caps2->structs->len;j++){
       struct2 = gst_caps2_get_nth_cap (caps2, j);
 
       gst_caps2_append_cap(dest, gst_caps2_structure_intersect (
@@ -502,9 +530,12 @@ GstCaps2 *gst_caps2_load_thyself (xmlNodePtr parent)
 #endif
 
 /* utility */
-void gst_caps2_replace (GstCaps2 **caps, const GstCaps2 *newcaps)
+void gst_caps2_replace (GstCaps2 **caps, GstCaps2 *newcaps)
 {
+  /* FIXME */
 
+  if (*caps) gst_caps2_free(*caps);
+  *caps = newcaps;
 }
 
 gchar *gst_caps2_to_string (const GstCaps2 *caps)
@@ -551,17 +582,25 @@ static gboolean _gst_caps2_from_string_inplace (GstCaps2 *caps,
 
   structure = gst_structure_from_string(string, &s);
   if (structure == NULL) {
+g_print("caps returning NULL\n");
     return FALSE;
   }
   gst_caps2_append_cap (caps, structure);
 
   while (*s == ';') {
     s++;
+    while (g_ascii_isspace(*s))s++;
     structure = gst_structure_from_string(s, &s);
     if (structure == NULL) {
+g_print("caps returning NULL (2)\n");
       return FALSE;
     }
     gst_caps2_append_cap (caps, structure);
+    while (g_ascii_isspace(*s))s++;
+  }
+
+  if (*s != 0){
+    return FALSE;
   }
 
   return TRUE;
@@ -572,9 +611,12 @@ GstCaps2 *gst_caps2_from_string (const gchar *string)
   GstCaps2 *caps;
 
   caps = gst_caps2_new_empty();
-  _gst_caps2_from_string_inplace (caps, string);
-
-  return caps;
+  if (_gst_caps2_from_string_inplace (caps, string)) {
+    return caps;
+  } else {
+    gst_caps2_free (caps);
+    return NULL;
+  }
 }
 
 static void _gst_caps2_transform_to_string (const GValue *src_value,

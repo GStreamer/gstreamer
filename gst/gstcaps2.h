@@ -65,8 +65,8 @@ GType gst_caps2_get_type (void);
 GstCaps2 *gst_caps2_new_empty (void);
 GstCaps2 *gst_caps2_new_any (void);
 GstCaps2 *gst_caps2_new_simple (const char *media_type, const char *fieldname, ...);
-GstCaps2 *gst_caps2_new_full (const GstStructure *struct1, ...);
-GstCaps2 *gst_caps2_new_full_valist (const GstStructure *structure, va_list var_args);
+GstCaps2 *gst_caps2_new_full (GstStructure *struct1, ...);
+GstCaps2 *gst_caps2_new_full_valist (GstStructure *structure, va_list var_args);
 GstCaps2 *gst_caps2_copy (const GstCaps2 *caps);
 void gst_caps2_free (GstCaps2 *caps);
 G_CONST_RETURN GstCaps2 *gst_static_caps2_get (GstStaticCaps2 *caps);
@@ -97,7 +97,7 @@ GstCaps2 *gst_caps2_load_thyself (xmlNodePtr parent);
 #endif
 
 /* utility */
-void gst_caps2_replace (GstCaps2 **caps, const GstCaps2 *newcaps);
+void gst_caps2_replace (GstCaps2 **caps, GstCaps2 *newcaps);
 gchar *gst_caps2_to_string (const GstCaps2 *caps);
 GstCaps2 *gst_caps2_from_string (const gchar *string);
 void gst_caps2_debug (const GstCaps2 *caps, const gchar *string);
