@@ -145,7 +145,7 @@ gst_udpsink_sinkconnect (GstPad *pad, GstCaps *caps)
 
   if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0) {
     g_printerr ("udpsink: connect to %s port %d failed: %s\n",
-		udpsink->host, udpsink->port, sys_errlist[errno]);
+		udpsink->host, udpsink->port, g_strerror(errno));
     return GST_PAD_CONNECT_REFUSED;
   }
   f = fdopen (dup (fd), "wb");
