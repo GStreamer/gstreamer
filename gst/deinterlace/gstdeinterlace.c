@@ -145,15 +145,20 @@ gst_deinterlace_class_init (GstDeInterlaceClass *klass)
 }
 
 static GstPadLinkReturn
-gst_deinterlace_sinkconnect (GstPad *pad, const GstCaps *caps)
+gst_deinterlace_link (GstPad *pad, const GstCaps *caps)
 {
   GstDeInterlace *filter;
   GstStructure *structure;
+  GstPadLinkReturn ret;
 
   filter = GST_DEINTERLACE(gst_pad_get_parent (pad));
   
-  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_pad_try_set_caps (filter->srcpad, caps);
+  if (GST_PAD_LINK_FAILED (ret)) {
+    return ret;
+  }
 
+  structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &filter->width);
   gst_structure_get_int (structure, "height", &filter->height);
 
@@ -163,7 +168,8 @@ gst_deinterlace_sinkconnect (GstPad *pad, const GstCaps *caps)
     filter->picsize = filter->width*filter->height;
     filter->src = g_malloc(filter->picsize);
   }
-  return gst_pad_try_set_caps (filter->srcpad, caps);
+
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -172,11 +178,12 @@ gst_deinterlace_init (GstDeInterlace *filter)
   filter->sinkpad = gst_pad_new_from_template(
       gst_static_pad_template_get(&deinterlace_sink_factory),"sink");
   gst_pad_set_chain_function(filter->sinkpad,gst_deinterlace_chain);
-  gst_pad_set_link_function(filter->sinkpad,gst_deinterlace_sinkconnect);
+  gst_pad_set_link_function(filter->sinkpad,gst_deinterlace_link);
   gst_element_add_pad(GST_ELEMENT(filter),filter->sinkpad);
 
   filter->srcpad = gst_pad_new_from_template(
       gst_static_pad_template_get(&deinterlace_src_factory),"src");
+  gst_pad_set_link_function(filter->srcpad,gst_deinterlace_link);
   gst_element_add_pad(GST_ELEMENT(filter),filter->srcpad);
 
   filter->show_deinterlaced_area_only = FALSE;

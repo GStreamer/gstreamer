@@ -1,5 +1,15 @@
 2004-01-01  David Schleef  <ds@schleef.org>
 
+	Negotiation fixes:
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audiofilter_link),
+	(gst_audiofilter_init):
+	* gst/debug/efence.c: (gst_efence_init):
+	* gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_link),
+	(gst_deinterlace_init):
+	* gst/volume/gstvolume.c: (volume_connect):
+
+2004-01-01  David Schleef  <ds@schleef.org>
+
 	Convert elements to use gst_pad_use_explicit_caps() where
 	appropriate:
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_init), (gst_a52dec_reneg):
