@@ -454,12 +454,18 @@ gst_adder_loop (GstElement * element)
       GST_LOG ("done copying data");
     }
   }
-  if (adder->width == 0)
+  if (adder->width == 0) {
     GST_ELEMENT_ERROR (adder, CORE, NEGOTIATION, (NULL), ("width is 0"));
-  if (adder->channels == 0)
+    return;
+  }
+  if (adder->channels == 0) {
     GST_ELEMENT_ERROR (adder, CORE, NEGOTIATION, (NULL), ("channels is 0"));
-  if (adder->rate == 0)
+    return;
+  }
+  if (adder->rate == 0) {
     GST_ELEMENT_ERROR (adder, CORE, NEGOTIATION, (NULL), ("rate is 0"));
+    return;
+  }
 
   GST_BUFFER_TIMESTAMP (buf_out) = adder->timestamp;
   if (adder->format == GST_ADDER_FORMAT_FLOAT)
