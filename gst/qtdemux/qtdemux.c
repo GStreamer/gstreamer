@@ -378,7 +378,7 @@ static void gst_qtdemux_loop_header (GstElement *element)
 	}while(1);
 
         qtdemux_parse_moov(qtdemux, GST_BUFFER_DATA(moov), length);
-        if(0)qtdemux_node_dump(qtdemux, qtdemux->moov_node);
+        if(1)qtdemux_node_dump(qtdemux, qtdemux->moov_node);
         qtdemux_parse_tree(qtdemux);
         qtdemux->state = QTDEMUX_STATE_MOVIE;
         break;
