@@ -28,7 +28,7 @@
 <!ENTITY QUOTES SYSTEM "quotes.sgml">
 ]>
 
-<book id="GStreamer">
+<book id="index">
   <bookinfo>
     
     <authorgroup>
@@ -43,7 +43,7 @@
       </author>
     </authorgroup>
 
-    <legalnotice>
+    <legalnotice id="legalnotice">
       <para>
 	This material may be distributed only subject to the terms and
         conditions set forth in the Open Publication License, v1.0 or later (the

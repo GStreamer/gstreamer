@@ -1,5 +1,5 @@
 manualname = gstreamer-manual
-htmlname = gstreamer.html
+htmlname = index.html
 
 sgml_files = gstreamer-manual.sgml \
 	     advanced.sgml \
