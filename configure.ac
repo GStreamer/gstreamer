@@ -87,6 +87,11 @@ AC_HEADER_STDC([])
 AC_C_INLINE
 AX_CREATE_STDINT_H
 
+dnl Check for malloc.h
+AC_CHECK_HEADER(malloc.h,[
+  AC_DEFINE(HAVE_MALLOC_H, 1, [whether malloc.h available])
+])
+
 dnl Check for a way to display the function name in debug output
 GST_CHECK_FUNCTION()
 
@@ -348,6 +353,7 @@ GST_PLUGINS_ALL="\
 	deinterlace \
 	effectv \
 	festival \
+	ffmpegcolorspace \
 	filter \
 	flx \
 	goom \
@@ -1597,6 +1603,7 @@ gst/debug/Makefile
 gst/deinterlace/Makefile
 gst/effectv/Makefile
 gst/festival/Makefile
+gst/ffmpegcolorspace/Makefile
 gst/filter/Makefile
 gst/flx/Makefile
 gst/goom/Makefile

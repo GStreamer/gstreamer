@@ -1,5 +1,56 @@
 2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+          adding ffmpegcolorspace element
+	* gst/ffmpegcolorspace/Makefile.am:
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/common.h:
+	* gst/ffmpegcolorspace/dsputil.c: (dsputil_static_init):
+	* gst/ffmpegcolorspace/dsputil.h:
+	* gst/ffmpegcolorspace/gstffmpeg.c: (plugin_init):
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_pix_fmt_to_caps),
+	(gst_ffmpeg_caps_to_pix_fmt):
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.h:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcolorspace_caps_remove_format_info),
+	(gst_ffmpegcolorspace_getcaps), (gst_ffmpegcolorspace_pad_link),
+	(gst_ffmpegcolorspace_get_type), (gst_ffmpegcolorspace_base_init),
+	(gst_ffmpegcolorspace_class_init), (gst_ffmpegcolorspace_init),
+	(gst_ffmpegcolorspace_chain), (gst_ffmpegcolorspace_change_state),
+	(gst_ffmpegcolorspace_set_property),
+	(gst_ffmpegcolorspace_get_property),
+	(gst_ffmpegcolorspace_register):
+	* gst/ffmpegcolorspace/imgconvert.c:
+	(avcodec_get_chroma_sub_sample), (avcodec_get_pix_fmt_name),
+	(avcodec_get_pix_fmt), (avpicture_fill), (avpicture_layout),
+	(avpicture_get_size), (avcodec_get_pix_fmt_loss),
+	(avg_bits_per_pixel), (avcodec_find_best_pix_fmt1),
+	(avcodec_find_best_pix_fmt), (img_copy_plane), (img_copy),
+	(yuv422_to_yuv420p), (yuv422_to_yuv422p), (yuv422p_to_yuv422),
+	(C_JPEG_TO_CCIR), (img_convert_init), (img_apply_table),
+	(shrink41), (shrink21), (shrink12), (shrink22), (shrink44),
+	(grow21_line), (grow41_line), (grow21), (grow22), (grow41),
+	(grow44), (conv411), (gif_clut_index), (build_rgb_palette),
+	(bitcopy_n), (mono_to_gray), (monowhite_to_gray),
+	(monoblack_to_gray), (gray_to_mono), (gray_to_monowhite),
+	(gray_to_monoblack), (avpicture_alloc), (avpicture_free),
+	(is_yuv_planar), (img_convert), (get_alpha_info_pal8),
+	(img_get_alpha_info), (deinterlace_line),
+	(deinterlace_line_inplace), (deinterlace_bottom_field),
+	(deinterlace_bottom_field_inplace), (avpicture_deinterlace):
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	* gst/ffmpegcolorspace/mem.c: (av_malloc), (av_realloc), (av_free):
+	* gst/ffmpegcolorspace/mmx.h:
+	* gst/ffmpegcolorspace/utils.c: (avcodec_init):
+          adding ffmpegcolorspace element supplied by Ronald after cleaning
+          up and pulling in the right bits of upstream source. 
+          I'm sure a better C/compiler wizard could do some cleaning up (for
+          example use GLIB's malloc stuff), but as a first pass this
+          works very well
+
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/alsa/gstalsa.h:
 	  I assume Ronald forgot to commit the change to have cardname
           as a struct member.  Expect some public spanking at the next
