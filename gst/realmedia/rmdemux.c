@@ -777,7 +777,6 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
 
   stream->subtype = stream_type;
   switch (stream_type) {
-      int audio_fourcc_offset = 0;
 
     case GST_RMDEMUX_STREAM_VIDEO:
       /* RV10/RV20/RV30/RV40 => video/x-pn-realvideo, version=1,2,3,4 */
@@ -787,7 +786,9 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
       stream->height = RMDEMUX_GUINT16_GET (data + offset + 14);
       stream->rate = RMDEMUX_GUINT16_GET (data + offset + 16);
       break;
-    case GST_RMDEMUX_STREAM_AUDIO:
+    case GST_RMDEMUX_STREAM_AUDIO:{
+      int audio_fourcc_offset;
+
       /* .ra4/.ra5 */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 8);
 
@@ -801,13 +802,14 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, void *data, int length)
           audio_fourcc_offset = 66;
           break;
         default:
+          audio_fourcc_offset = 0;
           g_print ("Unknown audio stream format\n");
       }
 
       /*  14_4, 28_8, cook, dnet, sipr, raac, racp, ralf, atrc */
       stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + audio_fourcc_offset);
-
       break;
+    }
     case GST_RMDEMUX_STREAM_FILEINFO:
     {
       int element_nb;
