@@ -142,14 +142,14 @@ void		gst_object_restore_thyself	(GstObject *object, xmlNodePtr self);
 #pragma GCC poison gst_object_restore_thyself
 #endif
 
-/* refcounting */
+/* refcounting + life cycle */
 GstObject *	gst_object_ref			(GstObject *object);
 void 		gst_object_unref		(GstObject *object);
 void 		gst_object_sink			(GstObject *object);
-
-void 		gst_object_swap			(GstObject **oldobj, GstObject *newobj);
-/* destroying an object */
 void 		gst_object_destroy		(GstObject *object);
+
+/* replace object pointer */
+void 		gst_object_replace		(GstObject **oldobj, GstObject *newobj);
 
 /* printing out the 'path' of the object */
 gchar *		gst_object_get_path_string	(GstObject *object);

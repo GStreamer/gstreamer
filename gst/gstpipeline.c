@@ -123,7 +123,7 @@ gst_pipeline_dispose (GObject *object)
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
-  gst_object_swap ((GstObject **)&GST_ELEMENT_SCHED (pipeline), NULL);
+  gst_object_replace ((GstObject **)&GST_ELEMENT_SCHED (pipeline), NULL);
 }
 
 /**

@@ -96,8 +96,8 @@ gst_scheduler_dispose (GObject *object)
 		  sched->clock_receivers,
 		  sched->schedulers);
 
-  gst_object_swap ((GstObject **)&sched->current_clock, NULL);
-  gst_object_swap ((GstObject **)&sched->clock, NULL);
+  gst_object_replace ((GstObject **)&sched->current_clock, NULL);
+  gst_object_replace ((GstObject **)&sched->clock, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -310,7 +310,7 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
         GST_DEBUG (GST_CAT_CLOCK, "scheduler READY to PAUSED clock is %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
-        gst_object_swap ((GstObject **)&sched->current_clock, (GstObject *)clock);
+        gst_object_replace ((GstObject **)&sched->current_clock, (GstObject *)clock);
         break;
       }
       case GST_STATE_PAUSED_TO_PLAYING:
@@ -320,7 +320,7 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
         GST_DEBUG (GST_CAT_CLOCK, "scheduler PAUSED to PLAYING clock is %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
-        gst_object_swap ((GstObject **)&sched->current_clock, (GstObject *)clock);
+        gst_object_replace ((GstObject **)&sched->current_clock, (GstObject *)clock);
 
 	gst_scheduler_set_clock (sched, sched->current_clock);
         if (sched->current_clock) {
@@ -614,7 +614,7 @@ gst_scheduler_use_clock (GstScheduler *sched, GstClock *clock)
 
   GST_FLAG_SET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK);
 
-  gst_object_swap ((GstObject **)&sched->clock, (GstObject *)clock);
+  gst_object_replace ((GstObject **)&sched->clock, (GstObject *)clock);
 
   GST_DEBUG (GST_CAT_CLOCK, "scheduler using fixed clock %p (%s)", clock, 
 		(clock ? GST_OBJECT_NAME (clock) : "nil"));
@@ -640,7 +640,7 @@ gst_scheduler_set_clock (GstScheduler *sched, GstClock *clock)
   receivers = sched->clock_receivers;
   schedulers = sched->schedulers;
 
-  gst_object_swap ((GstObject **)&sched->current_clock, (GstObject *)clock);
+  gst_object_replace ((GstObject **)&sched->current_clock, (GstObject *)clock);
 
   while (receivers) {
     GstElement *element = GST_ELEMENT (receivers->data);
@@ -675,7 +675,7 @@ gst_scheduler_auto_clock (GstScheduler *sched)
 
   GST_FLAG_UNSET (sched, GST_SCHEDULER_FLAG_FIXED_CLOCK);
 
-  gst_object_swap ((GstObject **)&sched->clock, NULL);
+  gst_object_replace ((GstObject **)&sched->clock, NULL);
 
   GST_DEBUG (GST_CAT_CLOCK, "scheduler using automatic clock");
 }

@@ -209,7 +209,7 @@ gst_thread_dispose (GObject *object)
   g_cond_free (thread->cond_t);
   g_cond_free (thread->cond_m);
 
-  gst_object_swap ((GstObject **)&GST_ELEMENT_SCHED (thread), NULL);
+  gst_object_replace ((GstObject **)&GST_ELEMENT_SCHED (thread), NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

@@ -714,7 +714,7 @@ gst_element_set_clock (GstElement *element, GstClock *clock)
   if (oclass->set_clock)
     oclass->set_clock (element, clock);
 
-  gst_object_swap ((GstObject **)&element->clock, (GstObject *)clock);
+  gst_object_replace ((GstObject **)&element->clock, (GstObject *)clock);
 }
 
 /**
@@ -1362,7 +1362,7 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
     if (templcaps == NULL)
       return NULL;
   } else {
-    templcaps = gst_caps_copy (gst_pad_get_caps (pad));
+    templcaps = gst_pad_get_caps (pad);
   }
 
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad), GST_RPAD_DIRECTION (pad),
@@ -2238,9 +2238,8 @@ gst_element_clear_pad_caps (GstElement *element)
   while (pads) {
     GstRealPad *pad = GST_PAD_REALIZE (pads->data);
 
-    if (GST_PAD_CAPS (pad)) {
-      GST_PAD_CAPS (pad) = NULL;
-    }
+    gst_caps_replace (&GST_PAD_CAPS (pad), NULL);
+
     pads = g_list_next (pads);
   }
 }
@@ -2413,8 +2412,8 @@ gst_element_dispose (GObject *object)
   if (element->property_mutex)
     g_mutex_free (element->property_mutex);
 
-  gst_object_swap ((GstObject **)&element->sched, NULL);
-  gst_object_swap ((GstObject **)&element->clock, NULL);
+  gst_object_replace ((GstObject **)&element->sched, NULL);
+  gst_object_replace ((GstObject **)&element->clock, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -2603,7 +2602,7 @@ gst_element_set_scheduler (GstElement *element,
   
   GST_INFO_ELEMENT (GST_CAT_PARENTAGE, element, "setting scheduler to %p", sched);
 
-  gst_object_swap ((GstObject **)&GST_ELEMENT_SCHED (element), GST_OBJECT (sched));
+  gst_object_replace ((GstObject **)&GST_ELEMENT_SCHED (element), GST_OBJECT (sched));
 }
 
 /**
