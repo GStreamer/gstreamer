@@ -1,3 +1,8 @@
+2003-12-23  Colin Walters  <walters@verbum.org>
+
+	* gst/autoplug/gstspideridentity.c (gst_spider_identity_sink_loop_type_finding):
+	Use GST_PAD_LINK_SUCCESSFUL.
+
 2003-12-23  David Schleef  <ds@schleef.org>
 
 	* gst/elements/gstaggregator.c:

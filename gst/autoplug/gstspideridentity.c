@@ -519,7 +519,7 @@ end:
 plug:
   GST_INFO ("typefind function found caps"); 
   ident->caps = find.caps;
-  g_assert (gst_pad_try_set_caps (ident->src, find.caps) > 0);
+  g_assert (GST_PAD_LINK_SUCCESSFUL (gst_pad_try_set_caps (ident->src, find.caps)));
   {
     gchar *str = gst_caps_to_string (find.caps);
     GST_LOG_OBJECT (ident, "spider starting caps: %s", str);
