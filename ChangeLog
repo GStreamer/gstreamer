@@ -1,3 +1,8 @@
+2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_plugin_init):
+          lower rank of dvddemux so that it's not used for mpeg playback.
+
 2004-04-14  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* configure.ac:
