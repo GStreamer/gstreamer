@@ -1133,12 +1133,19 @@ gst_play_new (GError **error)
 {
   GstPlay *play = g_object_new (GST_TYPE_PLAY, NULL);
 
-  if ( (error) && (play->priv->error) )
+  if (play->priv->error)
   {
-    *error = play->priv->error;
-    play->priv->error = NULL;
+    if (error)
+    {
+      *error = play->priv->error;
+      play->priv->error = NULL;
+    }
+    else
+    {
+      g_warning ("Error creating GstPlay object.\n%s", play->priv->error->message);
+      g_error_free (play->priv->error);
+    }
   }
-  
   return play;
 }
 
