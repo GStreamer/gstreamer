@@ -1768,11 +1768,11 @@ gst_element_get_random_pad (GstElement *element, GstPadDirection dir)
 	       GST_DEBUG_PAD_NAME (pad));
 
     if (GST_PAD_DIRECTION (pad) == dir) {
-      if (GST_PAD_IS_USABLE (pad)) {
+      if (GST_PAD_IS_CONNECTED (pad)) {
 	return pad;
       }
       else {
-        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not usable",
+        GST_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not connected",
 	           GST_DEBUG_PAD_NAME (pad));
       }
     }
@@ -1793,7 +1793,7 @@ gst_element_get_random_pad (GstElement *element, GstPadDirection dir)
  * Get an array of event masks from the element.
  * If the element doesn't 
  * implement an event masks function, the query will be forwarded
- * to a random sink pad.
+ * to a random connected sink pad.
  * 
  * Returns: An array of #GstEventMask elements.
  */
