@@ -299,9 +299,6 @@ gst_video_sink_got_video_size (GstVideoSink *videosink, gint width, gint height)
   g_return_if_fail (videosink != NULL);
   g_return_if_fail (GST_IS_VIDEOSINK (videosink));
   
-  videosink->width = width;
-  videosink->height = height;
-  
   g_signal_emit (G_OBJECT (videosink), gst_videosink_signals[HAVE_SIZE],
                  0, width, height);
 }
