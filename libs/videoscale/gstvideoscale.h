@@ -22,31 +22,35 @@
 #define __GST_VIDEOSCALE_H__
 
 #include <gst/gst.h>
+#include <libs/colorspace/gstcolorspace.h>
 
 typedef enum {
+  GST_VIDEOSCALE_POINT_SAMPLE,
   GST_VIDEOSCALE_NEAREST,
   GST_VIDEOSCALE_BILINEAR,
   GST_VIDEOSCALE_BICUBIC
 } GstVideoScaleMethod;
 
 typedef struct _GstVideoScale GstVideoScale;
+typedef void (*GstVideoScaleScaler) (GstVideoScale *scale, guchar *src, guchar *dest);
 
 struct _GstVideoScale {
   guint source_width;
   guint source_height;
   guint dest_width;
   guint dest_height;
-  guint format;
+  GstColorSpaceType format;
   GstVideoScaleMethod method;
   /* private */
   guchar copy_row[8192];
   guchar *temp;
-  void (*scale) (GstVideoScale *scale, unsigned char *src, unsigned char *dest);
-  void (*scaler) (GstVideoScale *scale, unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh);
-  unsigned char (*filter) (unsigned char *src, double x, double y, int sw, int sh);
+  GstVideoScaleScaler scale;
+  void (*scaler) (GstVideoScale *scale, guchar *src, guchar *dest, gint sw, gint sh, gint dw, gint dh);
+  guchar (*filter) (guchar *src, gdouble x, gdouble y, gint sw, gint sh);
 };
 
-GstVideoScale *gst_videoscale_new(int sw, int sh, int dw, int dh, int format, GstVideoScaleMethod method);
+GstVideoScale *gst_videoscale_new(gint sw, gint sh, gint dw, gint dh, GstColorSpaceType format, GstVideoScaleMethod method);
+#define gst_videoscale_scale(scaler, src, dest) (scaler)->scale((scaler), (src), (dest))
 void gst_videoscale_destroy(GstVideoScale *scale);
 
 #endif /* __GST_VIDEOSCALE_H__ */

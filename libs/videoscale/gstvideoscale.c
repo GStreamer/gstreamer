@@ -24,7 +24,6 @@
 
 #include <gstvideoscale.h>
 #include <gst/meta/videoraw.h>
-#include <libs/colorspace/gstcolorspace.h>
 
 static void gst_videoscale_scale_yuv(GstVideoScale *scale, unsigned char *src, unsigned char *dest); 
 static void gst_videoscale_scale_rgb(GstVideoScale *scale, unsigned char *src, unsigned char *dest); 
@@ -33,15 +32,16 @@ static void gst_videoscale_scale_rgb(GstVideoScale *scale, unsigned char *src, u
 static void generate_rowbytes(unsigned char *copy_row, int src_w, int dst_w, int bpp);
 static void gst_videoscale_scale_nearest(GstVideoScale *scale, unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh); 
 static void gst_videoscale_scale_plane_slow(GstVideoScale *scale, unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh); 
+static void gst_videoscale_scale_point_sample(GstVideoScale *scale, unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh);
 
 /* filters */
 static unsigned char gst_videoscale_bilinear(unsigned char *src, double x, double y, int sw, int sh);
 static unsigned char gst_videoscale_bicubic(unsigned char *src, double x, double y, int sw, int sh);
 
-GstVideoScale *gst_videoscale_new(int sw, int sh, int dw, int dh, int format, GstVideoScaleMethod method) 
+GstVideoScale *gst_videoscale_new(gint sw, gint sh, gint dw, gint dh, GstColorSpaceType format, GstVideoScaleMethod method) 
 {
   GstVideoScale *new = g_malloc(sizeof(GstVideoScale));
-  int scale_bytes;
+  gint scale_bytes;
 
   new->source_width = sw;
   new->source_height = sh;
@@ -63,9 +63,17 @@ GstVideoScale *gst_videoscale_new(int sw, int sh, int dw, int dh, int format, Gs
       new->scale = gst_videoscale_scale_rgb;
       scale_bytes = 2;
       break;
+    default:
+      g_print("videoscale: unsupported video format %d\n", format);
+      g_free(new);
+      return NULL;
   }
 
   switch (method) {
+    case GST_VIDEOSCALE_POINT_SAMPLE:
+      new->scaler = gst_videoscale_scale_point_sample;
+      DEBUG("videoscale: scaling method POINT_SAMPLE\n");
+      break;
     case GST_VIDEOSCALE_NEAREST:
       generate_rowbytes(new->copy_row, sw, dw, scale_bytes);
       new->scaler = gst_videoscale_scale_nearest;
@@ -83,7 +91,8 @@ GstVideoScale *gst_videoscale_new(int sw, int sh, int dw, int dh, int format, Gs
       break;
     default:
       g_print("videoscale: unsupported scaling method %d\n", method);
-      break;
+      g_free(new);
+      return NULL;
   }
 
   return new;
@@ -115,7 +124,7 @@ static void gst_videoscale_scale_yuv(GstVideoScale *scale, unsigned char *src, u
   int dw = scale->dest_width;
   int dh = scale->dest_height;
   
-  DEBUG("videoscale: scaling YUV420 %dx%d to %dx%d\n", sw, sh, dw, dh);
+  DEBUG("videoscale: scaling YUV420P %dx%d to %dx%d\n", sw, sh, dw, dh);
 
   scale->scaler(scale, src, dest, sw, sh, dw, dh);
 
@@ -145,7 +154,7 @@ static unsigned char gst_videoscale_bilinear(unsigned char *src, double x, doubl
   double dest;
   int color;
 
-  DEBUG("videoscale: scaling bilinear %dx%d\n", sw, sh);
+  printf("videoscale: scaling bilinear %f %f %dx%d\n", x, y, sw, sh);
 
   dest=(1-a)*(1-b)*RC(j,k)+
        a*(1-b)*RC(j+1,k);
@@ -171,6 +180,8 @@ static unsigned char gst_videoscale_bicubic(unsigned char *src, double x, double
   int color;
   double t1, t2, t3, t4;
   double a1, a2, a3, a4;
+
+  DEBUG("videoscale: scaling bicubic %dx%d\n", sw, sh);
 
   a1 = -a*(1-a)*(1-a);
   a2 = (1-2*a*a+a*a*a);
@@ -274,6 +285,53 @@ static void generate_rowbytes(unsigned char *copy_row, int src_w, int dst_w, int
 }
 
 
+static void gst_videoscale_scale_point_sample(GstVideoScale *scale, unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh) 
+{
+  int ypos, yinc, y;
+  int xpos, xinc, x;
+  int sum, xcount, ycount, loop;
+  unsigned char *srcp, *srcp2;
+  
+  DEBUG("videoscale: scaling nearest %p %p %d\n", src, dest, dw);
+
+
+  ypos = 0x10000;
+  yinc = (sh<<16)/dh;
+  xinc = (sw<<16)/dw;
+
+  for (y = dh; y; y--) {
+
+    ycount = 1;
+    srcp = src;
+    while (ypos >0x10000) {
+      ycount++;
+      ypos-=0x10000;
+      src += sw;
+    }
+
+    xpos = 0x10000;
+    for ( x=dw; x; x-- ) {
+      xcount = 0;
+      sum=0;
+      while ( xpos >= 0x10000L ) {
+	loop = ycount;
+        srcp2 = srcp;
+        while (loop--) {
+          sum += *srcp2;
+          srcp2 += sw;
+	}
+	srcp++;
+        xcount++;
+        xpos -= 0x10000L;
+      }
+      *dest++ = sum/(xcount*ycount);
+      xpos += xinc;
+    }
+
+    ypos += yinc;
+  }
+}
+
 static void gst_videoscale_scale_nearest(GstVideoScale *scale, unsigned char *src, unsigned char *dest, int sw, int sh, int dw, int dh) 
 {
   int pos, inc, y;
@@ -303,7 +361,6 @@ static void gst_videoscale_scale_nearest(GstVideoScale *scale, unsigned char *sr
            : "memory" );
 	   
 
-    //g_print("videoscale: scaling nearest %d\n", y);
     dest+= dw;
 
     pos += inc;
