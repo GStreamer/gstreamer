@@ -29,23 +29,34 @@
 #include "gstv4lmjpegsink.h"
 
 static gboolean
-plugin_init (GModule   *module,
-	     GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  if (!gst_v4lelement_factory_init (plugin) ||
-      !gst_v4lsrc_factory_init (plugin) ||
-      !gst_v4lmjpegsrc_factory_init (plugin) ||
-      !gst_v4lmjpegsink_factory_init (plugin)) {
+  /* actually, we can survive without it, but I'll create
+   * that handling later on. */
+  if (!gst_library_load ("xwindowlistener"))
     return FALSE;
-  }
+
+  if (!gst_element_register (plugin, "v4lelement", GST_RANK_NONE, GST_TYPE_V4LELEMENT))
+    return FALSE;
+  if (!gst_element_register (plugin, "v4lsrc", GST_RANK_NONE, GST_TYPE_V4LSRC))
+    return FALSE;
+  if (!gst_element_register (plugin, "v4lmjpegsrc", GST_RANK_NONE, GST_TYPE_V4LMJPEGSRC))
+    return FALSE;
+  if (!gst_element_register (plugin, "v4lmjpegsink", GST_RANK_NONE, GST_TYPE_V4LMJPEGSINK))
+    return FALSE;
 
   return TRUE;
-
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "video4linux",
-  plugin_init
-};
+  "elements for Video 4 Linux",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

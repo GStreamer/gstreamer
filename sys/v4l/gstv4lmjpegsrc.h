@@ -24,9 +24,7 @@
 #include <sys/time.h>
 #include <videodev_mjpeg.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_V4LMJPEGSRC \
   (gst_v4lmjpegsrc_get_type())
@@ -112,10 +110,7 @@ struct _GstV4lMjpegSrcClass {
 
 GType gst_v4lmjpegsrc_get_type(void);
 
-gboolean gst_v4lmjpegsrc_factory_init (GstPlugin *plugin);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_V4LMJPEGSRC_H__ */

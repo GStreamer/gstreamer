@@ -31,11 +31,8 @@
 static GstElementDetails gst_v4lmjpegsink_details = {
   "Video (video4linux/MJPEG) sink",
   "Sink/Video",
-  "LGPL",
   "Writes MJPEG-encoded frames to a zoran MJPEG/video4linux device",
-  VERSION,
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2001",
+  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
 };
 
 /* v4lmjpegsink signals and args */
@@ -57,6 +54,7 @@ enum {
 
 
 /* init functions */
+static void		     gst_v4lmjpegsink_base_init   (gpointer g_class);
 static void                  gst_v4lmjpegsink_class_init   (GstV4lMjpegSinkClass *klass);
 static void                  gst_v4lmjpegsink_init         (GstV4lMjpegSink      *v4lmjpegsink);
 
@@ -100,7 +98,7 @@ gst_v4lmjpegsink_get_type (void)
   if (!v4lmjpegsink_type) {
     static const GTypeInfo v4lmjpegsink_info = {
       sizeof(GstV4lMjpegSinkClass),
-      NULL,
+      gst_v4lmjpegsink_base_init,
       NULL,
       (GClassInitFunc)gst_v4lmjpegsink_class_init,
       NULL,
@@ -114,7 +112,32 @@ gst_v4lmjpegsink_get_type (void)
   return v4lmjpegsink_type;
 }
 
+static void
+gst_v4lmjpegsink_base_init (gpointer g_class)
+{
+  GstCaps *caps;
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details (gstelement_class, &gst_v4lmjpegsink_details);
+
+  caps = gst_caps_new ("v4lmjpegsink_caps",
+                       "video/x-jpeg",
+                       gst_props_new (
+                          "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
+                          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
+                          NULL       )
+                      );
+  capslist = gst_caps_append(capslist, caps);
+
+  sink_template = gst_pad_template_new (
+		  "sink",
+                  GST_PAD_SINK,
+  		  GST_PAD_ALWAYS,
+		  capslist, NULL);
+
+  gst_element_class_add_pad_template (gstelement_class, sink_template);
+}
 static void
 gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass *klass)
 {
@@ -458,39 +481,4 @@ gst_v4lmjpegsink_change_state (GstElement *element)
     return parent_value;
 
   return GST_STATE_SUCCESS;
-}
-
-
-gboolean
-gst_v4lmjpegsink_factory_init (GstPlugin *plugin)
-{
-  GstElementFactory *factory;
-  GstCaps *caps;
-
-  /* create an elementfactory for the v4lmjpegsink element */
-  factory = gst_element_factory_new("v4lmjpegsink",GST_TYPE_V4LMJPEGSINK,
-                                   &gst_v4lmjpegsink_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  caps = gst_caps_new ("v4lmjpegsink_caps",
-                       "video/x-jpeg",
-                       gst_props_new (
-                          "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
-                          "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
-                          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-                          NULL       )
-                      );
-  capslist = gst_caps_append(capslist, caps);
-
-  sink_template = gst_pad_template_new (
-		  "sink",
-                  GST_PAD_SINK,
-  		  GST_PAD_ALWAYS,
-		  capslist, NULL);
-
-  gst_element_factory_add_pad_template (factory, sink_template);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
 }

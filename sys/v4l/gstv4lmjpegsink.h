@@ -25,9 +25,7 @@
 #include <videodev_mjpeg.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 
 #define GST_TYPE_V4LMJPEGSINK \
@@ -94,11 +92,7 @@ struct _GstV4lMjpegSinkClass {
 
 GType gst_v4lmjpegsink_get_type(void);
 
-gboolean gst_v4lmjpegsink_factory_init (GstPlugin *plugin);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SDLVIDEOSINK_H__ */

@@ -28,15 +28,12 @@
 #include "gstv4lcolorbalance.h"
 
 /* elementfactory information */
-static GstElementDetails gst_v4lelement_details = {
+static GstElementDetails gst_v4lelement_details = GST_ELEMENT_DETAILS (
   "Generic video4linux Element",
   "Generic/Video",
-  "LGPL",
   "Generic plugin for handling common video4linux calls",
-  VERSION,
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2001",
-};
+  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
+);
 
 /* V4lElement signals and args */
 enum {
@@ -54,6 +51,7 @@ enum {
 };
 
 
+static void gst_v4lelement_base_init	(gpointer g_class);
 static void gst_v4lelement_class_init   (GstV4lElementClass *klass);
 static void gst_v4lelement_init         (GstV4lElement *v4lelement);
 static void gst_v4lelement_dispose      (GObject       *object);
@@ -134,7 +132,7 @@ gst_v4lelement_get_type (void)
   if (!v4lelement_type) {
     static const GTypeInfo v4lelement_info = {
       sizeof(GstV4lElementClass),
-      NULL,
+      gst_v4lelement_base_init,
       NULL,
       (GClassInitFunc)gst_v4lelement_class_init,
       NULL,
@@ -187,6 +185,13 @@ gst_v4lelement_get_type (void)
 }
 
 
+static void 
+gst_v4lelement_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_v4lelement_details);
+}
 static void
 gst_v4lelement_class_init (GstV4lElementClass *klass)
 {
@@ -376,24 +381,4 @@ gst_v4lelement_change_state (GstElement *element)
     return GST_ELEMENT_CLASS(parent_class)->change_state(element);
 
   return GST_STATE_SUCCESS;
-}
-
-
-gboolean
-gst_v4lelement_factory_init (GstPlugin *plugin)
-{
-  GstElementFactory *factory;
-
-  /* actually, we can survive without it, but I'll create
-   * that handling later on. */
-  if (!gst_library_load ("xwindowlistener"))
-    return FALSE;
-
-  /* create an elementfactory for the v4lelement */
-  factory = gst_element_factory_new("v4lelement", GST_TYPE_V4LELEMENT,
-                                   &gst_v4lelement_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
 }

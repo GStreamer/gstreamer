@@ -30,15 +30,12 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails gst_v4lsrc_details = {
+static GstElementDetails gst_v4lsrc_details = GST_ELEMENT_DETAILS (
   "Video (video4linux/raw) Source",
   "Source/Video",
-  "LGPL",
   "Reads raw frames from a video4linux (BT8x8) device",
-  VERSION,
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  "(C) 2001",
-};
+  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
+);
 
 /* V4lSrc signals and args */
 enum {
@@ -59,6 +56,7 @@ enum {
 
 
 /* init functions */
+static void		     gst_v4lsrc_base_init    (gpointer g_class);
 static void                  gst_v4lsrc_class_init   (GstV4lSrcClass *klass);
 static void                  gst_v4lsrc_init         (GstV4lSrc      *v4lsrc);
 
@@ -114,7 +112,7 @@ gst_v4lsrc_get_type (void)
   if (!v4lsrc_type) {
     static const GTypeInfo v4lsrc_info = {
       sizeof(GstV4lSrcClass),
-      NULL,
+      gst_v4lsrc_base_init,
       NULL,
       (GClassInitFunc)gst_v4lsrc_class_init,
       NULL,
@@ -129,7 +127,21 @@ gst_v4lsrc_get_type (void)
   return v4lsrc_type;
 }
 
+static void
+gst_v4lsrc_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  
+  gst_element_class_set_details (gstelement_class, &gst_v4lsrc_details);
 
+  src_template = gst_pad_template_new (
+		  "src",
+                  GST_PAD_SRC,
+  		  GST_PAD_ALWAYS,
+		  NULL);
+
+  gst_element_class_add_pad_template (gstelement_class, src_template);
+}
 static void
 gst_v4lsrc_class_init (GstV4lSrcClass *klass)
 {
@@ -826,26 +838,3 @@ gst_v4lsrc_set_clock (GstElement *element,
   GST_V4LSRC(element)->clock = clock;
 }
 
-
-gboolean
-gst_v4lsrc_factory_init (GstPlugin *plugin)
-{
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the v4lsrc */
-  factory = gst_element_factory_new("v4lsrc",GST_TYPE_V4LSRC,
-                                   &gst_v4lsrc_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  src_template = gst_pad_template_new (
-		  "src",
-                  GST_PAD_SRC,
-  		  GST_PAD_ALWAYS,
-		  NULL);
-
-  gst_element_factory_add_pad_template (factory, src_template);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-
-  return TRUE;
-}
