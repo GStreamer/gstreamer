@@ -1,3 +1,10 @@
+2004-12-16  David Schleef  <ds@schleef.org>
+
+	* configure.ac: look for musepack headers as musepack/*.h
+	(fixes #159847)
+	* ext/musepack/gstmusepackdec.h: use <musepack/*.h>
+	* ext/musepack/gstmusepackreader.h: same
+
 2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-read.c:
