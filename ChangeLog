@@ -1,3 +1,11 @@
+2003-12-31  David Schleef  <ds@schleef.org>
+
+	* gst/gstcaps.c: (gst_caps_intersect),
+	(_gst_caps_normalize_foreach), (gst_caps_normalize):
+	  Implement gst_caps_normalize().
+	* testsuite/caps/normalisation.c: (main):
+	  Add an additional test
+
 2003-12-31  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstqueue.c: (gst_queue_init):

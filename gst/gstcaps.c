@@ -523,6 +523,7 @@ GstCaps *gst_caps_intersect (const GstCaps *caps1, const GstCaps *caps2)
   GstStructure *struct1;
   GstStructure *struct2;
   GstCaps *dest;
+  //GstCaps *caps;
 
   g_return_val_if_fail (caps1 != NULL, NULL);
   g_return_val_if_fail (caps2 != NULL, NULL);
@@ -546,9 +547,14 @@ GstCaps *gst_caps_intersect (const GstCaps *caps1, const GstCaps *caps2)
     }
   }
 
-  /* FIXME: need a simplify function */
+#if 0
+  caps = gst_caps_simplify (dest);
+  gst_caps_free (dest);
 
+  return caps;
+#else
   return dest;
+#endif
 }
 
 GstCaps *gst_caps_union (const GstCaps *caps1, const GstCaps *caps2)
@@ -566,11 +572,55 @@ GstCaps *gst_caps_union (const GstCaps *caps1, const GstCaps *caps2)
   return dest1;
 }
 
+typedef struct _NormalizeForeach {
+  GstCaps *caps;
+  GstStructure *structure;
+} NormalizeForeach;
+
+static gboolean
+_gst_caps_normalize_foreach (GQuark field_id, GValue *value, gpointer ptr)
+{
+  NormalizeForeach *nf = (NormalizeForeach *) ptr;
+  GValue val = { 0 };
+  int i;
+
+  if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    for (i=1; i<gst_value_list_get_size (value); i++) {
+      const GValue *v = gst_value_list_get_value (value, i);
+      GstStructure *structure = gst_structure_copy (nf->structure);
+
+      gst_structure_id_set_value (structure, field_id, v);
+      gst_caps_append_structure (nf->caps, structure);
+    }
+
+    gst_value_init_and_copy (&val, gst_value_list_get_value (value, 0));
+    gst_structure_id_set_value (nf->structure, field_id, &val);
+    g_value_unset (&val);
+
+    return FALSE;
+  }
+  return TRUE;
+}
+
 GstCaps *gst_caps_normalize (const GstCaps *caps)
 {
-  g_critical ("unimplemented");
+  NormalizeForeach nf;
+  GstCaps *newcaps;
+  int i;
 
-  return NULL;
+  g_return_val_if_fail(caps != NULL, NULL);
+
+  newcaps = gst_caps_copy (caps);
+  nf.caps = newcaps;
+
+  for(i=0;i<newcaps->structs->len;i++){
+    nf.structure = gst_caps_get_structure (newcaps, i);
+
+    while (!gst_structure_foreach (nf.structure, _gst_caps_normalize_foreach,
+          &nf));
+  }
+
+  return newcaps;
 }
 
 static gboolean

@@ -43,6 +43,15 @@ GstStaticCaps rawcaps3 = GST_STATIC_CAPS (
     "height=(int)[16,4096]"
 );
 
+GstStaticCaps rawcaps4 = GST_STATIC_CAPS (
+  "x, "
+    "y=(int){1,2}, "
+    "z=(int){3,4}; "
+  "a, "
+    "b=(int){5,6}, "
+    "c=(int){7,8}"
+);
+
 /* defined, not used
 GST_CAPS_FACTORY (rawcaps4,
   GST_CAPS_NEW (
@@ -73,36 +82,28 @@ GST_CAPS_FACTORY (rawcaps5,
 int 
 main (int argc, char *argv[]) 
 {
-  xmlDocPtr doc;
-  xmlNodePtr parent;
   GstCaps *caps;
 
   gst_init (&argc, &argv);
 
-  doc = xmlNewDoc ("1.0");
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
-
   caps = gst_caps_normalize (gst_static_caps_get (&sinkcaps));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps_save_thyself (caps, parent);
+  g_print ("\n%s\n", gst_caps_to_string (caps));
 
   caps = gst_caps_normalize (gst_static_caps_get (&mp1parsecaps));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps_save_thyself (caps, parent);
+  g_print ("\n%s\n", gst_caps_to_string (caps));
 
   caps = gst_caps_normalize (gst_static_caps_get (&rawcaps));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps_save_thyself (caps, parent);
+  g_print ("\n%s\n", gst_caps_to_string (caps));
 
   caps = gst_caps_normalize (gst_static_caps_get (&rawcaps2));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps_save_thyself (caps, parent);
+  g_print ("\n%s\n", gst_caps_to_string (caps));
 
   caps = gst_caps_normalize (gst_static_caps_get (&rawcaps3));
-  parent = xmlNewChild (doc->xmlRootNode, NULL, "Capabilities1", NULL);
-  gst_caps_save_thyself (caps, parent);
+  g_print ("\n%s\n", gst_caps_to_string (caps));
 
-  xmlDocDump(stdout, doc);
+  caps = gst_caps_normalize (gst_static_caps_get (&rawcaps4));
+  g_assert (gst_caps_get_size (caps) == 8);
+  g_print ("\n%s\n", gst_caps_to_string (caps));
 
   return 0;
 }
