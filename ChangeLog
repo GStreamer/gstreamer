@@ -1,3 +1,16 @@
+2004-02-11  David Schleef  <ds@schleef.org>
+
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_link),
+	(gst_gdk_pixbuf_chain): Fix logic bug causing spurious errors.
+	* ext/jpeg/gstjpegdec.c: (gst_jpegdec_base_init),
+	(gst_jpegdec_init), (gst_jpegdec_chain): Fix negotiation.
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_base_init),
+	(gst_jpegenc_class_init), (gst_jpegenc_init),
+	(gst_jpegenc_getcaps), (gst_jpegenc_link), (gst_jpegenc_resync),
+	(gst_jpegenc_chain), (gst_jpegenc_set_property),
+	(gst_jpegenc_get_property):  Fix negotiation.  Add some properties.
+	* ext/jpeg/gstjpegenc.h: Fix negotiation.
+
 2004-02-10  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mikmod/gstmikmod.c: (gst_mikmod_init),

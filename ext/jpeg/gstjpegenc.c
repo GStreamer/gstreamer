@@ -43,6 +43,8 @@ enum {
 
 enum {
   ARG_0,
+  ARG_QUALITY,
+  ARG_SMOOTHING,
   /* FILL ME */
 };
 
@@ -52,12 +54,14 @@ static void		gst_jpegenc_init	(GstJpegEnc *jpegenc);
 
 static void		gst_jpegenc_chain	(GstPad *pad, GstData *_data);
 static GstPadLinkReturn	gst_jpegenc_link	(GstPad *pad, const GstCaps *caps);
+static GstCaps * gst_jpegenc_getcaps (GstPad *pad);
 
 static void		gst_jpegenc_resync	(GstJpegEnc *jpegenc);
+static void gst_jpegenc_set_property (GObject * object, guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
 static guint gst_jpegenc_signals[LAST_SIGNAL] = { 0 };
-static GstPadTemplate *jpegenc_src_template, *jpegenc_sink_template;
 
 GType
 gst_jpegenc_get_type (void)
@@ -81,40 +85,35 @@ gst_jpegenc_get_type (void)
   return jpegenc_type;
 }
 
-static GstCaps*
-jpeg_caps_factory (void) 
-{
-  return gst_caps_new_simple ("video/x-jpeg",
-      "width",     GST_TYPE_INT_RANGE, 16, 4096,
-      "height",    GST_TYPE_INT_RANGE, 16, 4096,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
-      NULL);
-}
+static GstStaticPadTemplate gst_jpegenc_sink_pad_template =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV("I420"))
+);
 
-static GstCaps*
-raw_caps_factory (void)
-{
-  return gst_caps_from_string (GST_VIDEO_CAPS_YUV ("I420"));
-}
+static GstStaticPadTemplate gst_jpegenc_src_pad_template =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("image/jpeg, "
+      "width = (int) [ 16, 4096 ], "
+      "height = (int) [ 16, 4096 ], "
+      "framerate = (double) [ 1, MAX ]"
+    )
+);
 
 static void
 gst_jpegenc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *raw_caps, *jpeg_caps;
   
-  raw_caps = raw_caps_factory ();
-  jpeg_caps = jpeg_caps_factory ();
-
-  jpegenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-						GST_PAD_ALWAYS, 
-						raw_caps);
-  jpegenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-					       GST_PAD_ALWAYS, 
-					       jpeg_caps);
-
-  gst_element_class_add_pad_template (element_class, jpegenc_sink_template);
-  gst_element_class_add_pad_template (element_class, jpegenc_src_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_jpegenc_sink_pad_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_jpegenc_src_pad_template));
   gst_element_class_set_details (element_class, &gst_jpegenc_details);
 }
 
@@ -134,6 +133,18 @@ gst_jpegenc_class_init (GstJpegEnc *klass)
                    G_STRUCT_OFFSET (GstJpegEncClass, frame_encoded), NULL, NULL,
                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
+  g_object_class_install_property (gobject_class, ARG_QUALITY,
+      g_param_spec_int ("quality", "Quality", "Quality of encoding",
+        0, 100, 85, G_PARAM_READWRITE));
+#if 0
+  /* disabled, since it doesn't seem to work */
+  g_object_class_install_property (gobject_class, ARG_SMOOTHING,
+      g_param_spec_int ("smoothing", "Smoothing", "Smoothing factor",
+        0, 100, 0, G_PARAM_READWRITE));
+#endif
+
+  gobject_class->set_property = gst_jpegenc_set_property;
+  gobject_class->get_property = gst_jpegenc_get_property;
 }
 
 static void
@@ -158,11 +169,17 @@ static void
 gst_jpegenc_init (GstJpegEnc *jpegenc)
 {
   /* create the sink and src pads */
-  jpegenc->sinkpad = gst_pad_new("sink",GST_PAD_SINK);
-  gst_element_add_pad(GST_ELEMENT(jpegenc),jpegenc->sinkpad);
+  jpegenc->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_jpegenc_sink_pad_template), "sink");
   gst_pad_set_chain_function(jpegenc->sinkpad,gst_jpegenc_chain);
+  gst_pad_set_getcaps_function(jpegenc->sinkpad, gst_jpegenc_getcaps);
   gst_pad_set_link_function(jpegenc->sinkpad, gst_jpegenc_link);
-  jpegenc->srcpad = gst_pad_new("src",GST_PAD_SRC);
+  gst_element_add_pad(GST_ELEMENT(jpegenc),jpegenc->sinkpad);
+
+  jpegenc->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_jpegenc_src_pad_template), "src");
+  gst_pad_set_getcaps_function(jpegenc->sinkpad, gst_jpegenc_getcaps);
+  gst_pad_set_link_function(jpegenc->sinkpad, gst_jpegenc_link);
   gst_element_add_pad(GST_ELEMENT(jpegenc),jpegenc->srcpad);
 
   /* reset the initial video state */
@@ -187,6 +204,35 @@ gst_jpegenc_init (GstJpegEnc *jpegenc)
   jpegenc->jdest.term_destination = gst_jpegenc_term_destination;
   jpegenc->cinfo.dest = &jpegenc->jdest;
 
+  jpegenc->quality = 85;
+  jpegenc->smoothing = 0;
+}
+
+static GstCaps *
+gst_jpegenc_getcaps (GstPad *pad)
+{
+  GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
+  GstPad *otherpad;
+  GstCaps *caps;
+  const char *name;
+  int i;
+  GstStructure *structure;
+
+  otherpad = (pad == jpegenc->srcpad) ? jpegenc->sinkpad : jpegenc->srcpad;
+  caps = gst_pad_get_allowed_caps (otherpad);
+  if (pad == jpegenc->srcpad) {
+    name = "image/jpeg";
+  } else {
+    name = "video/x-raw-yuv";
+  }
+  for (i=0;i<gst_caps_get_size (caps); i++){
+    structure = gst_caps_get_structure (caps, i);
+
+    gst_structure_set_name (structure, name);
+    gst_structure_remove_field (structure, "format");
+  }
+
+  return caps;
 }
 
 static GstPadLinkReturn
@@ -194,19 +240,32 @@ gst_jpegenc_link (GstPad *pad, const GstCaps *caps)
 {
   GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
   GstStructure *structure;
+  GstPadLinkReturn ret;
+  GstCaps *othercaps;
+  GstPad *otherpad;
+
+  otherpad = (pad == jpegenc->srcpad) ? jpegenc->sinkpad : jpegenc->srcpad;
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_double (structure, "framerate", &jpegenc->fps);
   gst_structure_get_int (structure, "width",     &jpegenc->width);
   gst_structure_get_int (structure, "height",    &jpegenc->height);
   
-  caps = gst_caps_new_simple ("video/x-jpeg",
+  othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
+  gst_caps_set_simple (othercaps,
       "width",     G_TYPE_INT, jpegenc->width,
       "height",    G_TYPE_INT, jpegenc->height,
       "framerate", G_TYPE_DOUBLE, jpegenc->fps,
       NULL);
 
-  return gst_pad_try_set_caps (jpegenc->srcpad, caps);
+  ret = gst_pad_try_set_caps (jpegenc->srcpad, othercaps);
+  gst_caps_free(othercaps);
+
+  if (GST_PAD_LINK_SUCCESSFUL (ret)) {
+    gst_jpegenc_resync (jpegenc);
+  }
+
+  return ret;
 }
 
 static void
@@ -225,11 +284,11 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
 
   jpeg_set_defaults(&jpegenc->cinfo);
   jpegenc->cinfo.dct_method = JDCT_FASTEST;
-  /*jpegenc->cinfo.dct_method = JDCT_DEFAULT; */
-  /*jpegenc->cinfo.smoothing_factor = 10; */
-  jpeg_set_quality(&jpegenc->cinfo, 85, TRUE);
+  /*jpegenc->cinfo.dct_method = JDCT_DEFAULT;*/
+  /*jpegenc->cinfo.smoothing_factor = jpegenc->smoothing; */
+  jpeg_set_quality(&jpegenc->cinfo, jpegenc->quality, TRUE);
 
-  /*
+#if 0
   switch (jpegenc->format) {
     case GST_COLORSPACE_RGB24:
       size = 3;
@@ -238,6 +297,7 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
       jpegenc->cinfo.raw_data_in = FALSE;
       break;
     case GST_COLORSPACE_YUV420P:
+#endif
       size = 2;
       jpegenc->cinfo.raw_data_in = TRUE;
       jpegenc->cinfo.in_color_space = JCS_YCbCr;
@@ -256,6 +316,7 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
       }
 
       GST_DEBUG ("gst_jpegenc_resync: setting format done");
+#if 0
       break;
     default:
       printf("gst_jpegenc_resync: unsupported colorspace, using RGB\n");
@@ -263,11 +324,11 @@ gst_jpegenc_resync (GstJpegEnc *jpegenc)
       jpegenc->cinfo.in_color_space = JCS_RGB;
       break;
   }
-*/
+#endif
   jpegenc->bufsize = jpegenc->width*jpegenc->height*size;
-  jpegenc->row_stride = width * size;
 
   jpeg_suppress_tables(&jpegenc->cinfo, TRUE);
+  //jpeg_suppress_tables(&jpegenc->cinfo, FALSE);
 
   jpegenc->buffer = NULL;
   GST_DEBUG ("gst_jpegenc_resync: resync done");
@@ -315,6 +376,8 @@ gst_jpegenc_chain (GstPad *pad, GstData *_data)
   jpegenc->jdest.next_output_byte = outdata;
   jpegenc->jdest.free_in_buffer = outsize;
 
+  jpegenc->cinfo.smoothing_factor = jpegenc->smoothing;
+  jpeg_set_quality(&jpegenc->cinfo, jpegenc->quality, TRUE);
   jpeg_start_compress(&jpegenc->cinfo, TRUE);
 
   width2 = width>>1;
@@ -340,3 +403,47 @@ gst_jpegenc_chain (GstPad *pad, GstData *_data)
 
   gst_buffer_unref(buf);
 }
+
+static void
+gst_jpegenc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstJpegEnc *jpegenc;
+
+  g_return_if_fail (GST_IS_JPEGENC (object));
+  jpegenc = GST_JPEGENC (object);
+  
+  switch (prop_id) {
+    case ARG_QUALITY:
+      jpegenc->quality = g_value_get_int (value);
+      break;
+    case ARG_SMOOTHING:
+      jpegenc->smoothing = g_value_get_int (value);
+      break;
+    default:
+      break;
+  }
+} 
+
+static void
+gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstJpegEnc *jpegenc;
+
+  g_return_if_fail (GST_IS_JPEGENC (object));
+  jpegenc = GST_JPEGENC (object);
+
+  switch (prop_id) {
+    case ARG_QUALITY:
+      g_value_set_int (value, jpegenc->quality);
+      break;
+    case ARG_SMOOTHING:
+      g_value_set_int (value, jpegenc->smoothing);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+

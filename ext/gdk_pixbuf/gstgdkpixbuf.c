@@ -109,7 +109,7 @@ gst_gdk_pixbuf_sink_link (GstPad *pad, const GstCaps *caps)
   g_return_val_if_fail (GST_IS_GDK_PIXBUF (filter),
                         GST_PAD_LINK_REFUSED);
 
-  filter->framerate = 0.0;
+  filter->framerate = 1.0;
   gst_structure_get_double (gst_caps_get_structure (caps, 0), "framerate",
       &filter->framerate);
 
@@ -285,9 +285,9 @@ gst_gdk_pixbuf_chain (GstPad *pad, GstData *_data)
     if (filter->pixbuf_loader != NULL) {
       GstBuffer *outbuf;
       GdkPixbuf *pixbuf;
-      GError *error;
+      GError *error = NULL;
 
-      if (gdk_pixbuf_loader_close (filter->pixbuf_loader, &error)) {
+      if (!gdk_pixbuf_loader_close (filter->pixbuf_loader, &error)) {
         GST_ELEMENT_ERROR (filter, LIBRARY, SHUTDOWN, (NULL), (error->message));
         g_error_free (error);
         return;

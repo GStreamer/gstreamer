@@ -27,8 +27,6 @@
 #include "gstjpegdec.h"
 #include <gst/video/video.h>
 
-static GstPadTemplate *jpegdec_src_template, *jpegdec_sink_template;
-
 /* elementfactory information */
 GstElementDetails gst_jpegdec_details = {
   "JPEG image decoder",
@@ -80,39 +78,35 @@ gst_jpegdec_get_type(void) {
   return jpegdec_type;
 }
 
-static GstCaps*
-jpeg_caps_factory (void) 
-{
-  return gst_caps_new_simple ("image/jpeg",
-      "width",     GST_TYPE_INT_RANGE, 16, 4096,
-      "height",    GST_TYPE_INT_RANGE, 16, 4096,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
-      NULL);
-}
+static GstStaticPadTemplate gst_jpegdec_src_pad_template =
+GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV("I420"))
+);
 
-static GstCaps*
-raw_caps_factory (void)
-{
-  return gst_caps_from_string (GST_VIDEO_CAPS_YUV ("I420"));
-}
+static GstStaticPadTemplate gst_jpegdec_sink_pad_template =
+GST_STATIC_PAD_TEMPLATE (
+    "sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("image/jpeg, "
+      "width = (int) [ 16, 4096 ], " 
+      "height = (int) [ 16, 4096 ], "
+      "framerate = (double) [ 1, MAX ]"
+    )
+);
 
 static void
 gst_jpegdec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *raw_caps, *jpeg_caps;
   
-  raw_caps = raw_caps_factory ();
-  jpeg_caps = jpeg_caps_factory ();
-  
-  jpegdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
-						GST_PAD_ALWAYS, 
-						jpeg_caps);
-  jpegdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
-					       GST_PAD_ALWAYS, 
-					       raw_caps);
-  gst_element_class_add_pad_template (element_class, jpegdec_sink_template);
-  gst_element_class_add_pad_template (element_class, jpegdec_src_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_jpegdec_src_pad_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_jpegdec_sink_pad_template));
   gst_element_class_set_details (element_class, &gst_jpegdec_details);
 }
 
@@ -162,11 +156,15 @@ gst_jpegdec_init (GstJpegDec *jpegdec)
 {
   GST_DEBUG ("gst_jpegdec_init: initializing");
   /* create the sink and src pads */
-  jpegdec->sinkpad = gst_pad_new_from_template (jpegdec_sink_template, "sink");
+
+  jpegdec->sinkpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_jpegdec_sink_pad_template), "sink");
   gst_element_add_pad(GST_ELEMENT(jpegdec),jpegdec->sinkpad);
   gst_pad_set_chain_function(jpegdec->sinkpad,gst_jpegdec_chain);
   gst_pad_set_link_function(jpegdec->sinkpad, gst_jpegdec_link);
-  jpegdec->srcpad = gst_pad_new_from_template (jpegdec_src_template, "src");
+
+  jpegdec->srcpad = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_jpegdec_src_pad_template), "src");
   gst_pad_use_explicit_caps (jpegdec->srcpad);
   gst_element_add_pad(GST_ELEMENT(jpegdec),jpegdec->srcpad);
 
@@ -404,19 +402,22 @@ gst_jpegdec_chain (GstPad *pad, GstData *_data)
   outdata = GST_BUFFER_DATA(outbuf) = g_malloc(outsize);
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
-  if (jpegdec->height != height) {
+  if (jpegdec->height != height || jpegdec->line[0] == NULL) {
+    GstCaps *caps;
+
     jpegdec->line[0] = g_realloc(jpegdec->line[0], height*sizeof(char*));
     jpegdec->line[1] = g_realloc(jpegdec->line[1], height*sizeof(char*));
     jpegdec->line[2] = g_realloc(jpegdec->line[2], height*sizeof(char*));
     jpegdec->height = height;
 
-    gst_pad_set_explicit_caps (jpegdec->srcpad,
-        gst_caps_new_simple ("video/x-raw-yuv",
+    caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format",    GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I','4','2','0'),
           "width",     G_TYPE_INT, width,
           "height",    G_TYPE_INT, height,
           "framerate", G_TYPE_DOUBLE, jpegdec->fps,
-          NULL));
+          NULL);
+    gst_pad_set_explicit_caps (jpegdec->srcpad, caps);
+    gst_caps_free (caps);
   }
 
   /* mind the swap, jpeglib outputs blue chroma first */
