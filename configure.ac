@@ -681,13 +681,13 @@ dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
 
-AC_ARG_ENABLE(plugins, AC_HELP_STRING([--enable-plugins],[enable plugin building]),
+AC_ARG_ENABLE(plugins, AC_HELP_STRING([--disable-plugins],[enable plugin building]),
 [case "${enableval}" in
-  yes) BUILD_PLUGINS=yes ;;
-  no)  BUILD_PLUGINS=no ;;
+  yes) BUILD_PLUGINS=no ;;
+  no)  BUILD_PLUGINS=yes ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --disable-plugins) ;;
 esac], 
-[BUILD_PLUGINS=yes])
+[BUILD_PLUGINS=no])
 AM_CONDITIONAL(BUILD_PLUGINS, test $BUILD_PLUGINS = "yes")              
 
 AC_ARG_ENABLE(libmmx,
