@@ -141,7 +141,7 @@ G_STMT_START { 					     	\
 #define		gst_buffer_unref(buf)		gst_data_unref (GST_DATA (buf))
 /* copy buffer */
 #define		gst_buffer_copy(buf)		GST_BUFFER (gst_data_copy (GST_DATA (buf)))
-#define		gst_buffer_needs_copy_on_write(buf)	GST_BUFFER (gst_data_needs_copy_on_write (GST_DATA (buf)))
+#define		gst_buffer_is_readonly(buf)	GST_BUFFER (gst_data_is_readonly (GST_DATA (buf)))
 #define		gst_buffer_copy_on_write(buf)   GST_BUFFER (gst_data_copy_on_write (GST_DATA (buf)))
 #define		gst_buffer_free(buf)		gst_data_free (GST_DATA (buf))
 

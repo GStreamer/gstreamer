@@ -102,7 +102,7 @@ gst_data_copy (const GstData *data)
 }
 
 /**
- * gst_data_needs_copy_on_write:
+ * gst_data_is_readonly:
  * @data: a #GstData to copy
  *
  * Query if the gstdata needs to be copied before it can safely be modified.
@@ -111,7 +111,7 @@ gst_data_copy (const GstData *data)
  * be copied before it can be modified safely.
  */
 gboolean
-gst_data_needs_copy_on_write (GstData *data) 
+gst_data_is_readonly (GstData *data) 
 {
   gint refcount;
 

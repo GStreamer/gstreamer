@@ -86,7 +86,7 @@ void			gst_data_copy_into		(const GstData *data, GstData *target);
 
 /* basic operations on data */
 GstData*		gst_data_copy	 		(const GstData *data);
-gboolean 		gst_data_needs_copy_on_write 	(GstData *data);
+gboolean 		gst_data_is_readonly	 	(GstData *data);
 GstData* 		gst_data_copy_on_write 		(GstData *data);
 void 			gst_data_free	 		(GstData *data);
 
