@@ -258,7 +258,7 @@ gst_play_set_uri (GstPlay *play,
   priv->uri = g_strdup (uri);
 
   //priv->src = gst_elementfactory_make ("disksrc", "disk_src");
-  priv->src = gst_elementfactory_make ("asyncdisksrc", "disk_src");
+  priv->src = gst_elementfactory_make ("disksrc", "disk_src");
   //priv->src = gst_elementfactory_make ("dvdsrc", "disk_src");
   g_return_val_if_fail (priv->src != NULL, -1);
   gtk_object_set (GTK_OBJECT (priv->src),"location",uri,NULL);

@@ -34,7 +34,7 @@ int main(int argc,char *argv[]) {
   /* then the decode thread, source, and decoder */
   decodethread = gst_thread_new("decodethread");
 
-  srcfactory = gst_elementfactory_find("asyncdisksrc");
+  srcfactory = gst_elementfactory_find("disksrc");
   src = gst_elementfactory_create(srcfactory,"src");
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
   gst_bin_add(GST_BIN(decodethread),GST_ELEMENT(src));

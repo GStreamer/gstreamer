@@ -135,7 +135,7 @@ int main(int argc,char *argv[]) {
   pipeline = gst_pipeline_new("pipeline");
   g_return_val_if_fail(pipeline != NULL, -1);
 
-  //src = gst_elementfactory_make("asyncdisksrc","src");
+  //src = gst_elementfactory_make("disksrc","src");
   src = gst_elementfactory_make("disksrc","src");
   g_return_val_if_fail(src != NULL, -1);
   gtk_object_set(GTK_OBJECT(src),"location",argv[1],NULL);
