@@ -639,9 +639,12 @@ gst_object_dispatch_properties_changed (GObject     *object,
   while (gst_object)
   {
     /* need own category? */
-    GST_DEBUG (GST_CAT_EVENT, "deep notification from %s to %s", GST_OBJECT_NAME (object), GST_OBJECT_NAME (gst_object));
-    for (i = 0; i < n_pspecs; i++)
-      g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY], g_quark_from_string (pspecs[i]->name), (GstObject *) object, pspecs[i]);
+    for (i = 0; i < n_pspecs; i++) {
+      GST_DEBUG (GST_CAT_EVENT, "deep notification from %s to %s (%s)", GST_OBJECT_NAME (object), 
+		    GST_OBJECT_NAME (gst_object), pspecs[i]->name);
+      g_signal_emit (gst_object, gst_object_signals[DEEP_NOTIFY], g_quark_from_string (pspecs[i]->name), 
+		     (GstObject *) object, pspecs[i]);
+    }
 
     gst_object = GST_OBJECT_PARENT (gst_object);
   }
