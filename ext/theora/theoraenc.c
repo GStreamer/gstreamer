@@ -407,11 +407,7 @@ theora_enc_chain (GstPad * pad, GstData * data)
 
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
-    if (!gst_pad_set_explicit_caps (enc->srcpad, caps)) {
-      gst_caps_free (caps);
-      gst_data_unref (data);
-      return;
-    }
+    gst_pad_try_set_caps (enc->srcpad, caps);
 
     /* push out the header buffers */
     theora_push_buffer (enc, buf1);
