@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ extern "C" {
 #include <cdda_paranoia.h>
 
 
-//#define CDPARANOIA_BASEOFFSET 0xf1d2
+/*#define CDPARANOIA_BASEOFFSET 0xf1d2 */
 #define CDPARANOIA_BASEOFFSET 0x0
 
 #define GST_TYPE_CDPARANOIA \
@@ -50,7 +50,7 @@ extern "C" {
 #define GST_IS_CDPARANOIA_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDPARANOIA))
 
-// NOTE: per-element flags start with 16 for now
+/* NOTE: per-element flags start with 16 for now */
 typedef enum {
   CDPARANOIA_OPEN		= GST_ELEMENT_FLAG_LAST,
 

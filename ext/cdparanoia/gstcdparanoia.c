@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-//#define GST_DEBUG_ENABLED
+/* #define GST_DEBUG_ENABLED */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -177,58 +177,58 @@ cdparanoia_class_init (CDParanoiaClass *klass)
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOCATION,
     g_param_spec_string("location","location","location",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_GENERIC_DEVICE,
     g_param_spec_string("generic_device","generic_device","generic_device",
-                        NULL, G_PARAM_READWRITE)); // CHECKME
+                        NULL, G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_START_TRACK,
     g_param_spec_int("start_track","start_track","start_track",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_END_TRACK,
     g_param_spec_int("end_track","end_track","end_track",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LAST_TRACK,
     g_param_spec_int("last_track","last_track","last_track",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CUR_TRACK,
     g_param_spec_int("cur_track","cur_track","cur_track",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_START_SECTOR,
     g_param_spec_int("start_sector","start_sector","start_sector",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_END_SECTOR,
     g_param_spec_int("end_sector","end_sector","end_sector",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_CUR_SECTOR,
     g_param_spec_int("cur_sector","cur_sector","cur_sector",
-                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEFAULT_SECTORS,
     g_param_spec_int("default_sectors","default_sectors","default_sectors",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SEARCH_OVERLAP,
     g_param_spec_int("search_overlap","search_overlap","search_overlap",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ENDIAN,
     g_param_spec_int("endian","endian","endian",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_READ_SPEED,
     g_param_spec_int("read_speed","read_speed","read_speed",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TOC_OFFSET,
     g_param_spec_int("toc_offset","toc_offset","toc_offset",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TOC_BIAS,
     g_param_spec_boolean("toc_bias","toc_bias","toc_bias",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NEVER_SKIP,
     g_param_spec_boolean("never_skip","never_skip","never_skip",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_ABORT_ON_SKIP,
     g_param_spec_boolean("abort_on_skip","abort_on_skip","abort_on_skip",
-                         TRUE,G_PARAM_READWRITE)); // CHECKME
+                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PARANOIA_MODE,
     g_param_spec_enum("paranoia_mode","paranoia_mode","paranoia_mode",
-                      GST_TYPE_PARANOIA_MODE,0,G_PARAM_READWRITE)); // CHECKME!
+                      GST_TYPE_PARANOIA_MODE,0,G_PARAM_READWRITE)); /* CHECKME! */
 
   gobject_class->set_property = cdparanoia_set_property;
   gobject_class->get_property = cdparanoia_get_property;
@@ -281,7 +281,7 @@ cdparanoia_set_property (GObject *object, guint prop_id, const GValue *value, GP
   switch (prop_id) {
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
-//      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING));
+/*      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
       if (src->device) g_free (src->device);
       /* clear the filename if we get a NULL (is that possible?) */
@@ -293,7 +293,7 @@ cdparanoia_set_property (GObject *object, guint prop_id, const GValue *value, GP
       break;
     case ARG_GENERIC_DEVICE:
       /* the element must be stopped in order to do this */
-//      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING));
+/*      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
       if (src->generic_device) g_free (src->generic_device);
       /* reset the device if we get a NULL (is that possible?) */
@@ -433,19 +433,19 @@ cdparanoia_get (GstPad *pad)
   src = CDPARANOIA (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, CDPARANOIA_OPEN), NULL);
 
-  // create a new buffer
+  /* create a new buffer */
   buf = gst_buffer_new ();
   g_return_val_if_fail (buf, NULL);
 
-  // read a sector
-// NOTE: if you have a patched cdparanoia, set this to 1 to save cycles
+  /* read a sector */
+/* NOTE: if you have a patched cdparanoia, set this to 1 to save cycles */
 #if 0
   cdda_buf = paranoia_read (src->p, NULL);
 #else
   cdda_buf = paranoia_read (src->p, cdparanoia_callback);
 #endif
 
-  // update current sector and stop things if appropriate
+  /* update current sector and stop things if appropriate */
   src->cur_sector++;
 
   if (src->cur_sector == src->end_sector) {
@@ -457,8 +457,8 @@ cdparanoia_get (GstPad *pad)
   else {
     src->cur_track = cdda_sector_gettrack( src->d, src->cur_sector );
 
-    // have to copy the buffer for now since we don't own it...
-    // FIXME must ask monty about allowing ownership transfer
+    /* have to copy the buffer for now since we don't own it... */
+    /* FIXME must ask monty about allowing ownership transfer */
     GST_BUFFER_DATA (buf) = g_malloc(CD_FRAMESIZE_RAW);
     memcpy (GST_BUFFER_DATA (buf), cdda_buf, CD_FRAMESIZE_RAW);
     GST_BUFFER_SIZE (buf) = CD_FRAMESIZE_RAW;
@@ -479,7 +479,7 @@ cdparanoia_open (CDParanoia *src)
 
   GST_DEBUG_ENTER("(\"%s\",...)", gst_element_get_name (GST_ELEMENT (src)));
 
-  // find the device
+  /* find the device */
   if (src->generic_device != NULL) {
     src->d = cdda_identify_scsi (src->generic_device, src->device, FALSE, NULL);
   } else {
@@ -490,16 +490,16 @@ cdparanoia_open (CDParanoia *src)
     }
   }
 
-  // fail if the device couldn't be found
+  /* fail if the device couldn't be found */
   if (src->d == NULL) {
     GST_DEBUG (0,"couldn't open device\n");
     return FALSE;
   }
 
-  // set verbosity mode
+  /* set verbosity mode */
   cdda_verbose_set (src->d, CDDA_MESSAGE_FORGETIT, CDDA_MESSAGE_FORGETIT);
 
-  // set various other parameters
+  /* set various other parameters */
   if (src->default_sectors != -1) {
     if ((src->default_sectors < 0) || (src->default_sectors > 100)) {
       GST_DEBUG (0,"default sector read size must be 1 <= n <= 100\n");
@@ -520,7 +520,7 @@ cdparanoia_open (CDParanoia *src)
     }
   }
 
-  // open the disc
+  /* open the disc */
   if (cdda_open (src->d)) {
     GST_DEBUG (0,"couldn't open disc\n");
     cdda_close (src->d);
@@ -528,7 +528,7 @@ cdparanoia_open (CDParanoia *src)
     return FALSE;
   }
 
-  // set up some more stuff
+  /* set up some more stuff */
   if (src->toc_bias) {
     src->toc_offset -= cdda_track_firstsector (src->d, 1);
   }
@@ -540,25 +540,25 @@ cdparanoia_open (CDParanoia *src)
     cdda_speed_set (src->d, src->read_speed);
   }
 
-  // if the start_track is set, override the start_sector
+  /* if the start_track is set, override the start_sector */
   if (src->start_track != -1) {
     src->start_sector = cdda_track_firstsector (src->d, src->start_track);
-  // if neither start_track nor start_sector is set,
+  /* if neither start_track nor start_sector is set, */
   } else if (src->start_sector == -1) {
     src->start_sector = cdda_disc_firstsector (src->d);
   }
-  // if the end_track is set, override the end_sector
+  /* if the end_track is set, override the end_sector */
   if (src->end_track != -1) {
     src->end_sector = cdda_track_lastsector (src->d, src->end_track);
-  // if neither end_track nor end_sector is set,
+  /* if neither end_track nor end_sector is set, */
   } else if (src->end_sector == -1) {
     src->end_sector = cdda_disc_lastsector (src->d);
   }
 
-  // set last_track
+  /* set last_track */
   src->last_track = cdda_tracks (src->d);
 
-  // create the paranoia struct and set it up
+  /* create the paranoia struct and set it up */
   src->p = paranoia_init (src->d);
   if (src->p == NULL) {
     GST_DEBUG (0,"couldn't create paranoia struct\n");
@@ -592,11 +592,11 @@ cdparanoia_close (CDParanoia *src)
 {
   g_return_if_fail (GST_FLAG_IS_SET (src, CDPARANOIA_OPEN));
 
-  // kill the paranoia state
+  /* kill the paranoia state */
   paranoia_free (src->p);
   src->p = NULL;
 
-  // close the disc
+  /* close the disc */
   cdda_close (src->d);
   src->d = NULL;
 
