@@ -12,7 +12,9 @@ int main(int argc,char *argv[]) {
   pipeline = gst_pipeline_new("pipeline");
   thread = gst_thread_new("thread");
   src = gst_elementfactory_make("fakesrc","src");
+  gtk_object_set(GTK_OBJECT(src),"silent",TRUE,NULL);
   sink = gst_elementfactory_make("fakesink","sink");
+  gtk_object_set(GTK_OBJECT(sink),"silent",TRUE,NULL);
 
   fprintf(stderr,"ADDING src\n");
   gst_bin_add(thread,src);
@@ -30,6 +32,6 @@ int main(int argc,char *argv[]) {
     sleep(1);
     fprintf(stderr,"\nSWITCHING to PAUSED:\n");
     gst_element_set_state (thread, GST_STATE_PAUSED);
-    sleep(1);
+//    sleep(1);
   }
 }
