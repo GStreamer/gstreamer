@@ -391,7 +391,7 @@ struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
     int fourcc;
     guint32 format;
 
-    gst_caps_get(caps, "format", &format);
+    gst_caps_get(caps, "format", &format, NULL);
     for (i = 0; i < n_fourccs; i++) {
       s = fourcc_list[i].fourcc;
       //g_print("testing " GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s);
@@ -411,7 +411,8 @@ struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
 	"green_mask", &green_mask,
 	"blue_mask", &blue_mask,
 	"depth", &depth,
-	"bpp", &bpp);
+	"bpp", &bpp,
+	NULL);
     for (i = 0; i < n_fourccs; i++) {
       if (strcmp(fourcc_list[i].fourcc, "RGB ") == 0 &&
 	  fourcc_list[i].red_mask == red_mask &&
