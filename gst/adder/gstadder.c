@@ -20,6 +20,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/* Element-Checklist-Version: 5 */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -107,115 +108,15 @@ gst_adder_get_type (void) {
   return adder_type;
 }
 
-static gboolean
-gst_adder_parse_caps (GstAdder *adder, GstStructure *structure)
-{
-  const gchar *mimetype;
-  GstElement *el = GST_ELEMENT (adder);
-
-  mimetype = gst_structure_get_name (structure);
-
-  if (adder->format == GST_ADDER_FORMAT_UNSET) {
-    /* the caps haven't been set yet at all, so we need to go ahead and set all
-       the relevant values. */
-    if (strcmp (mimetype, "audio/x-raw-int") == 0) {
-      GST_DEBUG ("parse_caps sets adder to format int");
-      adder->format     = GST_ADDER_FORMAT_INT;
-      gst_structure_get_int     (structure, "width",      &adder->width);
-      gst_structure_get_int     (structure, "depth",      &adder->depth);
-      gst_structure_get_int     (structure, "endianness", &adder->endianness);
-      gst_structure_get_boolean (structure, "signed",     &adder->is_signed);
-      gst_structure_get_int     (structure, "channels",   &adder->channels);
-      gst_structure_get_int     (structure, "rate",	  &adder->rate);
-    } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
-      GST_DEBUG ("parse_caps sets adder to format float");
-      adder->format     = GST_ADDER_FORMAT_FLOAT;
-      gst_structure_get_int     (structure, "width",     &adder->width);
-      gst_structure_get_int     (structure, "channels",  &adder->channels);
-      gst_structure_get_int     (structure, "rate",      &adder->rate);
-    }
-  } else {
-    /* otherwise, a previously-linked pad has set all the values. we should barf
-       if some of the attempted new values don't match. */
-    if (strcmp (mimetype, "audio/x-raw-int") == 0) {
-      gint width, channels, rate;
-      gboolean is_signed;
-
-      gst_structure_get_int     (structure, "width",     &width);
-      gst_structure_get_int     (structure, "channels",  &channels);
-      gst_structure_get_boolean (structure, "signed",    &is_signed);
-      gst_structure_get_int     (structure, "rate",      &rate);
-
-      /* provide an error message if we can't link */
-      if (adder->format != GST_ADDER_FORMAT_INT) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL, ("can't link a non-int pad to an int adder"));
-        return FALSE;
-      }
-      if (adder->channels != channels) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL,
-                           ("can't link %d-channel pad with %d-channel adder",
-                           channels, adder->channels));
-       return FALSE;
-      }
-      if (adder->rate != rate) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL, ("can't link %d Hz pad with %d Hz adder",
-                           rate, adder->rate));
-       return FALSE;
-      }
-      if (adder->width != width) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL, ("can't link %d-bit pad with %d-bit adder",
-                           width, adder->width));
-       return FALSE;
-      }
-      if (adder->is_signed != is_signed) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL, ("can't link %ssigned pad with %ssigned adder",
-                           adder->is_signed ? "" : "un",
-                           is_signed ? "" : "un"));
-       return FALSE;
-      }
-    } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
-      gint channels, rate, width;
-
-      gst_structure_get_int (structure, "width",     &width);
-      gst_structure_get_int (structure, "channels",  &channels);
-      gst_structure_get_int (structure, "rate",      &rate);
-
-      if (adder->format != GST_ADDER_FORMAT_FLOAT) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL, ("can't link a non-float pad to a float adder"));
-        return FALSE;
-      }
-      if (adder->channels != channels) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL,
-                           ("can't link %d-channel pad with %d-channel adder",
-                           channels, adder->channels));
-        return FALSE;
-      }
-      if (adder->rate != rate) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL, ("can't link %d Hz pad with %d Hz adder",
-                           rate, adder->rate));
-        return FALSE;
-      }
-      if (adder->width != width) {
-        gst_element_error (el, CORE, NEGOTIATION, NULL, ("can't link %d bit float pad with %d bit adder",
-                           width, adder->width));
-        return FALSE;
-      }
-    }
-  }
-  return TRUE;
-}
-
 static GstPadLinkReturn
 gst_adder_link (GstPad *pad, const GstCaps *caps)
 {
   GstAdder *adder;
-  GstElement *element;
-  const GList *sinkpads;
-  GList *remove = NULL;
-  GSList *channels;
-  GstPad *p;
+  const char *media_type;
   const GList *pads;
+  GstStructure *structure;
   GstPadLinkReturn ret;
+  GstElement *element;
 
   g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (pad  != NULL, GST_PAD_LINK_REFUSED);
@@ -237,48 +138,39 @@ gst_adder_link (GstPad *pad, const GstCaps *caps)
   }
 
 
-  if (!gst_adder_parse_caps (adder, gst_caps_get_structure (caps, 0)))
-    return GST_PAD_LINK_REFUSED;
+  pads = gst_element_get_pad_list (GST_ELEMENT (adder));
+  while (pads) {
+    GstPad *otherpad = GST_PAD (pads->data);
 
-  if (pad == adder->srcpad || gst_pad_try_set_caps (adder->srcpad, caps) > 0) {
-    sinkpads = gst_element_get_pad_list ((GstElement *) adder);
-    while (sinkpads) {
-      p = (GstPad *) sinkpads->data;
-      if (p != pad && p != adder->srcpad) {
-	if (gst_pad_try_set_caps (p, caps) <= 0) {
-	  GST_DEBUG ("caps mismatch; unlinking and removing pad %s:%s "
-		     "(peer %s:%s)",
-		     GST_DEBUG_PAD_NAME (p),
-		     GST_DEBUG_PAD_NAME (GST_PAD_PEER (p)));
-	  gst_pad_unlink (GST_PAD (GST_PAD_PEER (p)), p);
-	  remove = g_list_prepend (remove, p);
-	}
+    if (otherpad != pad) {
+      ret = gst_pad_try_set_caps (otherpad, caps);
+      if (GST_PAD_LINK_FAILED (ret)) {
+        return ret;
       }
-      while (remove) {
-        gst_element_remove_pad (GST_ELEMENT (adder),
-                                GST_PAD (remove->data));
-      restart:
-        channels = adder->input_channels;
-        while (channels) {
-          GstAdderInputChannel *channel;
-	  channel = (GstAdderInputChannel*) channels->data;
-          if (channel->sinkpad == GST_PAD (remove->data)) {
-            gst_bytestream_destroy (channel->bytestream);
-            adder->input_channels =
-              g_slist_remove_link (adder->input_channels, channels);
-            adder->numsinkpads--;
-            goto restart;
-          }
-          channels = g_slist_next (channels);
-        }
-        remove = g_list_next (remove);
-      }
-      remove = g_list_next (remove);
     }
-    return GST_PAD_LINK_OK;
-  } else {
-    return GST_PAD_LINK_REFUSED;
+    pads = g_list_next (pads);
   }
+
+  structure = gst_caps_get_structure (caps, 0);
+  media_type = gst_structure_get_name (structure);
+  if (strcmp (media_type, "audio/x-raw-int") == 0) {
+    GST_DEBUG ("parse_caps sets adder to format int");
+    adder->format     = GST_ADDER_FORMAT_INT;
+    gst_structure_get_int     (structure, "width",      &adder->width);
+    gst_structure_get_int     (structure, "depth",      &adder->depth);
+    gst_structure_get_int     (structure, "endianness", &adder->endianness);
+    gst_structure_get_boolean (structure, "signed",     &adder->is_signed);
+    gst_structure_get_int     (structure, "channels",   &adder->channels);
+    gst_structure_get_int     (structure, "rate",	&adder->rate);
+  } else if (strcmp (media_type, "audio/x-raw-float") == 0) {
+    GST_DEBUG ("parse_caps sets adder to format float");
+    adder->format     = GST_ADDER_FORMAT_FLOAT;
+    gst_structure_get_int     (structure, "width",     &adder->width);
+    gst_structure_get_int     (structure, "channels",  &adder->channels);
+    gst_structure_get_int     (structure, "rate",      &adder->rate);
+  }
+  
+  return GST_PAD_LINK_OK;
 }
 
 static void
@@ -315,7 +207,7 @@ gst_adder_init (GstAdder *adder)
       gst_static_pad_template_get (&gst_adder_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
   gst_element_set_loop_function (GST_ELEMENT (adder), gst_adder_loop);
-  gst_pad_set_getcaps_function (adder->srcpad, gst_pad_proxy_getcaps);
+  gst_pad_set_getcaps_function(adder->srcpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function (adder->srcpad, gst_adder_link);
 
   adder->format = GST_ADDER_FORMAT_UNSET;
@@ -541,18 +433,6 @@ gst_adder_loop (GstElement *element)
 
       GST_DEBUG ("done copying data");
     }
-  }
-
-  if (adder->format == GST_ADDER_FORMAT_UNSET) {
-    GstCaps *caps = gst_caps_from_string (GST_AUDIO_INT_PAD_TEMPLATE_CAPS);
-
-    if (gst_pad_try_set_caps (adder->srcpad, caps) < 0) {
-      gst_element_error (adder, CORE, NEGOTIATION, NULL,
-                         ("Couldn't set the default caps, use link_filtered instead"));
-      return;
-    }
-
-    gst_adder_parse_caps (adder, gst_caps_get_structure(caps, 0));
   }
 
   GST_BUFFER_TIMESTAMP (buf_out) = adder->timestamp;
