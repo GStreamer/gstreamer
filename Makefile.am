@@ -13,9 +13,9 @@ endif
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-libs.pc
 
-SUBDIRS=gst-libs gst sys $(EXT_DIR) examples tools $(GCONF_DIR) ## testsuite
+SUBDIRS=gst-libs gst sys $(EXT_DIR) examples tools $(GCONF_DIR) testsuite
 
-DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf ## testsuite
+DIST_SUBDIRS=gst-libs gst sys ext examples tools gconf testsuite
 
 EXTRA_DIST=gst-plugins.spec depcomp \
            gstreamer-libs.pc.in gstreamer-libs-uninstalled.pc.in \
