@@ -25,6 +25,7 @@
 #include <string.h>
 #include "media-info.h"
 #include "media-info-priv.h"
+#include "media-info-marshal.h"
 
 static void	gst_media_info_class_init	(GstMediaInfoClass *klass);
 static void	gst_media_info_instance_init	(GstMediaInfo *info);
@@ -33,6 +34,8 @@ static void	gst_media_info_get_property     (GObject *object, guint prop_id,
 						 GValue *value,
 						 GParamSpec *pspec);
 
+
+static gboolean _media_info_inited = FALSE;
 
 /* FIXME: this is a lousy hack that needs to go */
 #define MAX_METADATA_ITERS 5
@@ -58,7 +61,7 @@ enum
 };
 
 /* GError quark stuff */
-static GQuark
+GQuark
 gst_media_info_error_quark (void)
 {
   static GQuark quark = 0;
@@ -66,52 +69,6 @@ gst_media_info_error_quark (void)
     quark = g_quark_from_static_string ("gst-media-info-error-quark");
   return quark;
 }
-
-/* General GError creation */
-static void
-gst_media_info_error_create (GError **error, const gchar *message)
-{
-  /* check if caller wanted an error reported */
-  if (error == NULL)
-    return;
-
-  *error = g_error_new (GST_MEDIA_INFO_ERROR, 0, message);
-  return;
-}
-
-/* GError creation when element is missing */
-static void
-gst_media_info_error_element (const gchar *element, GError **error)
-{
-  gchar *message;
-
-  message = g_strdup_printf ("The %s element could not be found. "
-                             "This element is essential for reading. "
-                             "Please install the right plug-in and verify "
-                             "that it works by running 'gst-inspect %s'",
-                             element, element);
-  gst_media_info_error_create (error, message);
-  g_free (message);
-  return;
-}
-
-/* used from the instance_init function to report errors */
-#define GST_MEDIA_INFO_MAKE_OR_ERROR(el, factory, name, error)  \
-G_STMT_START {                                                  \
-  el = gst_element_factory_make (factory, name);                \
-  if (!GST_IS_ELEMENT (el))                                     \
-  {                                                             \
-    gst_media_info_error_element (factory, error);              \
-    return;                                                     \
-  }                                                             \
-} G_STMT_END
-
-#define GST_MEDIA_INFO_ERROR_RETURN(error, message)             \
-G_STMT_START {                                                  \
-  gst_media_info_error_create (error, message);                 \
-    return FALSE;                                               \
-} G_STMT_END
-
 
 /*
  * GObject type stuff
@@ -130,10 +87,13 @@ GST_DEBUG_CATEGORY (gst_media_info_debug);
 void
 gst_media_info_init (void)
 {
+  if (_media_info_inited) return;
+
   /* register our debugging category */
   GST_DEBUG_CATEGORY_INIT (gst_media_info_debug, "GST_MEDIA_INFO", 0,
                            "GStreamer media-info library");
   GST_DEBUG ("Initialized media-info library");
+  _media_info_inited = TRUE;
 }
 
 GType
@@ -184,10 +144,10 @@ gst_media_info_class_init (GstMediaInfoClass *klass)
   gst_media_info_signals [MEDIA_INFO_SIGNAL] =
     g_signal_new ("media-info",
 		  G_TYPE_FROM_CLASS (klass),
-		  G_SIGNAL_RUN_FIRST,
+		  G_SIGNAL_RUN_LAST,
 		  G_STRUCT_OFFSET (GstMediaInfoClass, media_info_signal),
 		  NULL, NULL,
-		  gst_marshal_VOID__VOID,
+		  gst_media_info_marshal_VOID__VOID,
 		  G_TYPE_NONE, 0);
 }
 
@@ -199,30 +159,10 @@ gst_media_info_instance_init (GstMediaInfo *info)
   info->priv = g_new0 (GstMediaInfoPriv, 1);
   error = &info->priv->error;
 
-  info->priv->pipeline = gst_pipeline_new ("media-info");
+  if (!_media_info_inited) { gst_media_info_init (); }
 
-  /* create the typefind element and make sure it stays around by reffing */
-  GST_MEDIA_INFO_MAKE_OR_ERROR (info->priv->typefind, "typefind", "typefind", error);
-  gst_object_ref (GST_OBJECT (info->priv->typefind));
-
-  /* create the fakesink element and make sure it stays around by reffing */
-  GST_MEDIA_INFO_MAKE_OR_ERROR (info->priv->fakesink, "fakesink", "fakesink", error);
-  gst_object_ref (GST_OBJECT (info->priv->fakesink));
-
-  /* source element for media info reading */
-  info->priv->source = NULL;
-  info->priv->source_name = NULL;
-
-  info->priv->location = NULL;
-  info->priv->type = NULL;
-  info->priv->format = NULL;
-  info->priv->metadata = NULL;
-  info->priv->pipeline_desc = NULL;
-
-  /* clear result pointers */
-  info->priv->stream = NULL;
-
-  info->priv->error = NULL;
+  gmip_init (info->priv);
+  gmip_reset (info->priv);
 }
 
 /* get/set */
@@ -269,28 +209,9 @@ gst_media_info_new (GError **error)
  * public methods
  */
 gboolean
-gst_media_info_set_source (GstMediaInfo *info, const char *source)
+gst_media_info_set_source (GstMediaInfo *info, const char *source, GError **error)
 {
-  GstElement *src;
-  src = gst_element_factory_make (source, "new-source");
-  if  (!GST_IS_ELEMENT (src))
-    return FALSE;
-
-  if (info->priv->source)
-  {
-    /* this also unrefs the element */
-    gst_bin_remove (GST_BIN (info->priv->pipeline), info->priv->source);
-    if (info->priv->source_name)
-    {
-      g_free (info->priv->source_name);
-      info->priv->source_name = NULL;
-    }
-  }
-  g_object_set (G_OBJECT (src), "name", "source", NULL);
-  gst_bin_add (GST_BIN (info->priv->pipeline), src);
-  info->priv->source = src;
   info->priv->source_name = g_strdup (source);
-
   return TRUE;
 }
 
@@ -302,11 +223,11 @@ gst_media_info_set_source (GstMediaInfo *info, const char *source)
  */
 void
 gst_media_info_read_with_idler (GstMediaInfo *info, const char *location,
-		                guint16 flags)
+		                guint16 flags, GError **error)
 {
   GstMediaInfoPriv *priv = info->priv;
 
-  gmi_reset (info);		/* reset all structs */
+  gmip_reset (info->priv);		/* reset all structs */
   priv->location = g_strdup (location);
   priv->flags = flags;
 }
@@ -316,11 +237,13 @@ gst_media_info_read_with_idler (GstMediaInfo *info, const char *location,
  * returns: TRUE if it was able to idle, FALSE if there was an error
  */
 gboolean
-gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
+gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp, GError **error)
 {
   GstMediaInfoPriv *priv;
+
   /* if it's NULL then we're sure something went wrong higher up) */
   if (info == NULL) return FALSE;
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   priv = info->priv;
 
@@ -330,9 +253,17 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
   switch (priv->state)
   {
     case GST_MEDIA_INFO_STATE_NULL:
+      /* make sure we have a source */
+      if (!priv->source_name)
+      {
+        *error = g_error_new (GST_MEDIA_INFO_ERROR, 0,
+                              "No source set on media info.");
+        return FALSE;
+      }
+
       /* need to find type */
       GST_DEBUG ("idler: NULL, need to find type, priv %p", priv);
-      return gmip_find_type_pre (priv);
+      return gmip_find_type_pre (priv, error);
 
     case GST_MEDIA_INFO_STATE_TYPEFIND:
     {
@@ -469,9 +400,10 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
 	return TRUE;
       }
       priv->state = GST_MEDIA_INFO_STATE_DONE;
+      gmi_clear_decoder (info);
+      GST_DEBUG ("TOTALLY DONE, setting pointer *streamp to %p", *streamp);
       *streamp = priv->stream;
       priv->stream = NULL;
-      GST_DEBUG ("TOTALLY DONE, setting pointer *streamp to %p", *streamp);
       return TRUE;
     }
     case GST_MEDIA_INFO_STATE_DONE:
@@ -486,7 +418,7 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
  * read all possible info from the file pointed to by location
  * use flags to limit the type of information searched for */
 GstMediaInfoStream *
-gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
+gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags, GError **error)
 {
   GstMediaInfoPriv *priv = info->priv;
   GstMediaInfoStream *stream = NULL;
@@ -495,11 +427,11 @@ gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
   int i;
 
   GST_DEBUG ("DEBUG: gst_media_info_read: start");
-  gmi_reset (info);		/* reset all structs */
+  gmip_reset (info->priv);		/* reset all structs */
   priv->location = g_strdup (location);
   priv->flags = flags;
 
-  if (!gmip_find_type (priv)) return NULL;
+  if (!gmip_find_type (priv, error)) return NULL;
 
   mime = g_strdup (gst_structure_get_name (
 	    gst_caps_get_structure(priv->type, 0)));
