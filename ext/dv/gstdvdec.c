@@ -468,6 +468,7 @@ plugin_init (GModule *module, GstPlugin *plugin)
   factory = gst_element_factory_new("dvdec", GST_TYPE_DVDEC, &dvdec_details);
   g_return_val_if_fail(factory != NULL, FALSE);
 
+  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
   /* The pad templates can be easily generated from the factories above,
    * and then added to the list of padtemplates for the elementfactory.
    * Note that the generated padtemplates are stored in static global
