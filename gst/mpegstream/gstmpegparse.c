@@ -351,7 +351,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     scr = scr_adj;
   }
 
-  if (mpeg_parse->index) {
+  if (mpeg_parse->index && GST_INDEX_IS_WRITABLE (mpeg_parse->index)) {
     /* update index if any */
     gst_index_add_association (mpeg_parse->index, mpeg_parse->index_id, 
 		    	       GST_ACCOCIATION_FLAG_KEY_UNIT,
@@ -514,6 +514,7 @@ const GstFormat*
 gst_mpeg_parse_get_src_formats (GstPad *pad)
 {
   static const GstFormat formats[] = {
+    GST_FORMAT_BYTES,
     GST_FORMAT_TIME,
     0 
   };
@@ -603,10 +604,28 @@ gst_mpeg_parse_get_src_event_masks (GstPad *pad)
   return masks;
 }
 
+static gboolean
+seek_index (GstMPEGParse *parse, GstEvent *event, guint64 *offset)
+{
+  GstIndexEntry *entry;
+
+  entry = gst_index_get_assoc_entry (parse->index, parse->index_id,
+                                     GST_INDEX_LOOKUP_BEFORE,
+                                     GST_EVENT_SEEK_FORMAT (event),
+	                             GST_EVENT_SEEK_OFFSET (event));
+  if (!entry)
+    return FALSE;
+
+  if (gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, offset)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
 gboolean
 gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -614,28 +633,36 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
     {
       guint64 desired_offset;
 
-      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_TIME) {
-        gst_event_unref (event);
-        return FALSE;
+      switch (GST_EVENT_SEEK_FORMAT (event)) {
+	case GST_FORMAT_BYTES:
+          if (mpeg_parse->index) {
+	    if (!seek_index (mpeg_parse, event, &desired_offset)) {
+              goto done;
+	    }
+	  }
+	  else {
+            desired_offset = GST_EVENT_SEEK_OFFSET (event);
+	  }
+          break;
+	case GST_FORMAT_TIME:
+          desired_offset = mpeg_parse->mux_rate * 50 * GST_EVENT_SEEK_OFFSET (event) / (GST_SECOND);
+          break;
+        default:
+          goto done;
       }
-
-      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
-      }
-      desired_offset = mpeg_parse->mux_rate * 50 * GST_EVENT_SEEK_OFFSET (event) / (GST_SECOND);
 
       if (!gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
-        gst_event_unref (event);
-	return FALSE;
+        goto done;
       }
       mpeg_parse->discont_pending = TRUE;
       mpeg_parse->scr_pending = TRUE;
+      res = TRUE;
       break;
     }
     default:
-      res = FALSE;
       break;
   }
-
+done:
   gst_event_unref (event);
   return res;
 }
