@@ -701,7 +701,9 @@ gst_ladspa_loop (GstElement *element)
   }
 
   if (!ladspa->bufpool) {
-    gst_element_error (element, "Caps were never set, bailing...");
+    gst_element_gerror(element, "Caps were never set, GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf(bailing..."));
     return;
   }
 
@@ -791,7 +793,9 @@ gst_ladspa_chain (GstPad *pad, GstBuffer *buffer_in)
   g_return_if_fail (GST_IS_BUFFER (buffer_in));
   
   if (!ladspa->bufpool) {
-    gst_element_error ((GstElement*)ladspa, "Caps were never set, bailing...");
+    gst_element_gerror((GstElement*)ladspa, "Caps were never set, GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf(bailing..."));
     return;
   }
 

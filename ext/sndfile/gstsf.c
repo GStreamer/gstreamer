@@ -546,7 +546,9 @@ gst_sf_open_file (GstSF *this)
   this->time = 0;
 
   if (!this->filename) {
-    gst_element_error (GST_ELEMENT (this), "sndfile: 'location' was not set");
+    gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("sndfile: 'location' was not set"));
     return FALSE;
   }
     
@@ -572,8 +574,9 @@ gst_sf_open_file (GstSF *this)
               this->filename, info.samplerate, info.channels, info.format);
 
     if (!sf_format_check (&info)) {
-      gst_element_error (GST_ELEMENT (this),
-                         g_strdup_printf ("Input parameters (rate:%d, channels:%d, format:0x%x) invalid",
+      gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("Input parameters (rate:%d, channels:%d, format:0x%x) invalid",
                                           info.samplerate, info.channels, info.format));
       return FALSE;
     }
@@ -582,9 +585,10 @@ gst_sf_open_file (GstSF *this)
   this->file = sf_open (this->filename, mode, &info);
 
   if (!this->file) {
-    gst_element_error (GST_ELEMENT (this),
-                       g_strdup_printf ("could not open file \"%s\": %s",
-                                        this->filename, sf_strerror (NULL)));
+    gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf ("could not open file \"%s\": %s",
+                       this->filename, sf_strerror (NULL)));
     return FALSE;
   }
 
@@ -621,9 +625,10 @@ gst_sf_close_file (GstSF *this)
   INFO_OBJ (this, "Closing file %s", this->filename);
 
   if ((err = sf_close (this->file)))
-    gst_element_error (GST_ELEMENT (this),
-                       g_strdup_printf ("sndfile: could not close file \"%s\": %s",
-                                        this->filename, sf_error_number (err)));
+    gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf(g_strdup_printf ("sndfile: could not close file \"%s\": %s",
+                                        this->filename, sf_error_number (err))));
   else
     GST_FLAG_UNSET (this, GST_SF_OPEN);
 
@@ -642,7 +647,9 @@ gst_sf_loop (GstElement *element)
   this = (GstSF*)element;
   
   if (this->channels == NULL) {
-    gst_element_error (element, "You must connect at least one pad to sndfile elements.");
+    gst_element_gerror(element, GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("You must connect at least one pad to sndfile elements."));
     return;
   }
 
@@ -690,9 +697,10 @@ gst_sf_loop (GstElement *element)
           gst_caps_set (caps, "rate", GST_PROPS_INT (this->rate), NULL);
           gst_caps_set (caps, "buffer-frames", GST_PROPS_INT (this->buffer_frames), NULL);
           if (!gst_pad_try_set_caps (GST_SF_CHANNEL (l)->pad, caps)) {
-            gst_element_error (GST_ELEMENT (this),
-                               g_strdup_printf ("Opened file with sample rate %d, but could not set caps",
-                                                this->rate));
+            gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+              g_strdup ("unconverted error, file a bug"),
+              g_strdup_printf("Opened file with sample rate %d, but could not set caps",
+                              this->rate));
             gst_sf_close_file (this);
             return;
           }
@@ -747,7 +755,9 @@ gst_sf_loop (GstElement *element)
            which then would set this->buffer_frames to a new value */
         buffer_frames = this->buffer_frames;
         if (buffer_frames == 0) {
-          gst_element_error (element, "Caps were never set, bailing...");
+          gst_element_gerror(element, "Caps were never set, GST_ERROR_UNKNOWN,
+            g_strdup ("unconverted error, file a bug"),
+            g_strdup_printf(bailing..."));
           return;
         }
         buf = this->buffer;
@@ -772,7 +782,9 @@ gst_sf_loop (GstElement *element)
     if (num_to_write) {
       written = sf_writef_float (this->file, buf, num_to_write);
       if (written != num_to_write)
-        gst_element_error (element, "Error writing file: %s", sf_strerror (this->file));
+        gst_element_gerror(element, "Error writing file: %s", GST_ERROR_UNKNOWN,
+          g_strdup ("unconverted error, file a bug"),
+          g_strdup_printf(sf_strerror (this->file)));
     }
 
     this->time += num_to_write * (GST_SECOND / this->rate);

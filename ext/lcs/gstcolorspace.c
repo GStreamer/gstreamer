@@ -318,7 +318,9 @@ gst_colorspace_srcconnect_func (GstPad *pad, GstCaps *caps, gboolean newcaps)
     peercaps = peercaps->next;
   }
   
-  //gst_element_error (GST_ELEMENT (space), "could not agree on caps with peer pads");
+  //gst_element_gerror(GST_ELEMENT (space), GST_ERROR_UNKNOWN,
+    g_strdup ("unconverted error, file a bug"),
+    g_strdup_printf("could not agree on caps with peer pads"));
   /* we disable ourself here */
   space->disabled = TRUE;
 
