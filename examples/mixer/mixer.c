@@ -48,10 +48,13 @@ gst_play_typefind (GstBin *bin, GstElement *element)
 {
   gboolean found = FALSE;
   GstElement *typefind;
+  GstElement *pipeline;
   GstCaps *caps = NULL;
 
   GST_DEBUG (0,"GstPipeline: typefind for element \"%s\" %p\n",
              GST_ELEMENT_NAME(element), &found);
+
+  pipeline = gst_pipeline_new ("autoplug_pipeline");
  
   typefind = gst_elementfactory_make ("typefind", "typefind");
   g_return_val_if_fail (typefind != NULL, FALSE);
@@ -62,20 +65,23 @@ gst_play_typefind (GstBin *bin, GstElement *element)
   gst_pad_connect (gst_element_get_pad (element, "src"),
                    gst_element_get_pad (typefind, "sink"));
   gst_bin_add (bin, typefind);
+  gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (bin));
   
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
   
   // push a buffer... the have_type signal handler will set the found flag
-  gst_bin_iterate (bin);
+  gst_bin_iterate (GST_BIN (pipeline));
   
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   caps = gst_pad_get_caps (gst_element_get_pad (element, "src"));
 
   gst_pad_disconnect (gst_element_get_pad (element, "src"),
                       gst_element_get_pad (typefind, "sink"));
   gst_bin_remove (bin, typefind);
+  gst_bin_remove (GST_BIN (pipeline), GST_ELEMENT (bin));
   gst_object_unref (GST_OBJECT (typefind));
+  gst_object_unref (GST_OBJECT (pipeline));
                    
   return caps;
 }
@@ -137,7 +143,7 @@ int main(int argc,char *argv[])
     channel_in = create_input_channel (i, argv[i]);
     input_channels = g_list_append (input_channels, channel_in);
 
-    gst_element_set_state (main_bin, GST_STATE_PAUSED);
+    //gst_element_set_state (main_bin, GST_STATE_PAUSED);
     gst_bin_add (GST_BIN(main_bin), channel_in->pipe);
 
     /* request pads and connect to adder */
