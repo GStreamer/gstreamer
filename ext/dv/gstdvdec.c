@@ -93,12 +93,12 @@ GST_STATIC_PAD_TEMPLATE
     "format = (fourcc) YUY2, " 
     "width = (int) 720, "
     "height = (int) { " 
-    	G_STRINGIFY(NTSC_HEIGHT) ", "
-	G_STRINGIFY(PAL_HEIGHT)
+      G_STRINGIFY(NTSC_HEIGHT) ", "
+      G_STRINGIFY(PAL_HEIGHT)
     " }, "
     "framerate = (double) { "
-        G_STRINGIFY(PAL_FRAMERATE) ", "
-	G_STRINGIFY(NTSC_FRAMERATE) 
+      G_STRINGIFY(PAL_FRAMERATE) ", "
+      G_STRINGIFY(NTSC_FRAMERATE) 
     " }; "
 
     "video/x-raw-rgb, "
@@ -132,7 +132,7 @@ GST_STATIC_PAD_TEMPLATE
     " }, "
     "framerate = (double) { "
         G_STRINGIFY(PAL_FRAMERATE) ", "
-	G_STRINGIFY(NTSC_FRAMERATE) 
+        G_STRINGIFY(NTSC_FRAMERATE) 
     " }"
   )
 );
@@ -186,6 +186,10 @@ static gboolean 	gst_dvdec_sink_convert 		(GstPad *pad, GstFormat src_format, gi
 static gboolean 	gst_dvdec_src_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
                       					 GstFormat *dest_format, gint64 *dest_value);
 
+static GstPadLinkReturn gst_dvdec_video_link (GstPad          *pad,
+                                              const GstCaps   *caps);
+static GstCaps*   gst_dvdec_video_getcaps   (GstPad       *pad);
+       
 static const GstEventMask*
 			gst_dvdec_get_event_masks 	(GstPad *pad);
 static gboolean 	gst_dvdec_handle_src_event 	(GstPad *pad, GstEvent *event);
@@ -302,6 +306,7 @@ static void
 gst_dvdec_init(GstDVDec *dvdec)
 {
   gint i;
+  dvdec->found_header = FALSE;
 
   dvdec->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get (&sink_temp), "sink");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
@@ -310,22 +315,25 @@ gst_dvdec_init(GstDVDec *dvdec)
   gst_pad_set_formats_function (dvdec->sinkpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
 
   dvdec->videosrcpad = gst_pad_new_from_template (gst_static_pad_template_get (&video_src_temp), "video");
-  gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->videosrcpad);
   gst_pad_set_query_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_query));
   gst_pad_set_query_type_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_src_query_types));
   gst_pad_set_event_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_handle_src_event));
   gst_pad_set_event_mask_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_event_masks));
   gst_pad_set_convert_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_convert));
   gst_pad_set_formats_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
-
+  gst_pad_set_getcaps_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_video_getcaps));
+  gst_pad_set_link_function (dvdec->videosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_video_link));
+  gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->videosrcpad);
+  
   dvdec->audiosrcpad = gst_pad_new_from_template (gst_static_pad_template_get (&audio_src_temp), "audio");
-  gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->audiosrcpad);
   gst_pad_set_query_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_query));
   gst_pad_set_query_type_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_src_query_types));
   gst_pad_set_event_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_handle_src_event));
   gst_pad_set_event_mask_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_event_masks));
   gst_pad_set_convert_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_src_convert));
   gst_pad_set_formats_function (dvdec->audiosrcpad, GST_DEBUG_FUNCPTR (gst_dvdec_get_formats));
+  gst_pad_use_explicit_caps (dvdec->audiosrcpad);
+  gst_element_add_pad (GST_ELEMENT(dvdec), dvdec->audiosrcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (dvdec), gst_dvdec_loop);
 
@@ -335,11 +343,14 @@ gst_dvdec_init(GstDVDec *dvdec)
   dvdec->need_discont = FALSE;
   dvdec->framerate = 0;
   dvdec->height = 0;
+  dvdec->frequency = 0;
+  dvdec->channels = 0;
+  
   dvdec->clamp_luma = FALSE;
   dvdec->clamp_chroma = FALSE;
   dvdec->quality = DV_QUALITY_BEST;
   dvdec->loop = FALSE;
-
+  
   for (i = 0; i <4; i++) {
     dvdec->audio_buffers[i] = (gint16 *)g_malloc (DV_AUDIO_MAX_SAMPLES * sizeof (gint16));
   }
@@ -397,7 +408,7 @@ gst_dvdec_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	  /* fallthrough */
         case GST_FORMAT_DEFAULT:
 	  if (pad == dvdec->videosrcpad)
-	    *dest_value = src_value * dvdec->framerate * scale / (GST_SECOND*100);
+	    *dest_value = src_value * dvdec->framerate * scale / GST_SECOND;
 	  else if (pad == dvdec->audiosrcpad)
 	    *dest_value = src_value * dvdec->decoder->audio->frequency * scale / GST_SECOND;
 	  break;
@@ -432,7 +443,7 @@ gst_dvdec_sink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	  /* get frame number */
           frame = src_value / dvdec->length;
 
-          *dest_value = (frame * GST_SECOND * 100) / dvdec->framerate;
+          *dest_value = (frame * GST_SECOND) / dvdec->framerate;
           break;
 	}
         default:
@@ -445,7 +456,7 @@ gst_dvdec_sink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	{
           guint64 frame;
           /* calculate the frame */
-          frame = src_value * dvdec->framerate / (GST_SECOND*100);
+          frame = src_value * dvdec->framerate / GST_SECOND;
           /* calculate the offset */
           *dest_value = frame * dvdec->length;
           break;
@@ -548,9 +559,6 @@ gst_dvdec_handle_sink_event (GstDVDec *dvdec)
   type = event? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 		      
   switch (type) {
-    case GST_EVENT_EOS:
-      gst_pad_event_default (dvdec->sinkpad, event);
-      return TRUE;
     case GST_EVENT_FLUSH:
       break;
     case GST_EVENT_DISCONTINUOUS:
@@ -579,7 +587,7 @@ gst_dvdec_handle_sink_event (GstDVDec *dvdec)
       break;
     }
     default:
-      g_warning ("unhandled event %d\n", type);
+      return gst_pad_event_default (dvdec->sinkpad, event);
       break;
   }
   gst_event_unref (event);
@@ -657,6 +665,84 @@ gst_dvdec_handle_src_event (GstPad *pad, GstEvent *event)
   return res;
 }
 
+static GstCaps*   
+gst_dvdec_video_getcaps (GstPad *pad)
+{
+  GstDVDec *dvdec;
+  GstCaps *caps;
+  GstPadTemplate *src_pad_template;
+  
+  dvdec = GST_DVDEC (gst_pad_get_parent (pad));
+  src_pad_template = gst_static_pad_template_get (&video_src_temp);
+  caps = gst_caps_copy(gst_pad_template_get_caps (src_pad_template));
+  
+  if (dvdec->found_header)
+  {
+    int i;
+    
+    /* set the height */
+    for (i = 0; i < gst_caps_get_size (caps); i++)
+    {
+    	GstStructure *structure = gst_caps_get_structure (caps, i);
+    	gst_structure_set(structure, 
+    	        "height", G_TYPE_INT, dvdec->height,
+              "framerate", G_TYPE_DOUBLE, dvdec->framerate, NULL
+    	      );
+    }
+  }
+  
+  return caps;
+}
+
+static GstPadLinkReturn 
+gst_dvdec_video_link (GstPad *pad, const GstCaps *caps)
+{
+  GstDVDec *dvdec;
+  GstStructure *structure;
+  guint32 fourcc;
+  gint height;
+  gdouble framerate;
+  
+  dvdec = GST_DVDEC (gst_pad_get_parent (pad));
+
+  /* if we did not find a header yet, return delayed */
+  if (!dvdec->found_header)
+  {
+    return GST_PAD_LINK_DELAYED;
+  }
+ 
+  structure = gst_caps_get_structure (caps, 0);
+  
+  /* it worked, try to find what it was again */
+  if (!gst_structure_get_fourcc (structure, "format", &fourcc) ||
+      !gst_structure_get_int (structure, "height", &height) ||
+      !gst_structure_get_double (structure, "framerate", &framerate))
+    return GST_PAD_LINK_REFUSED;
+  
+  if ((height != dvdec->height) || (framerate != dvdec->framerate))
+    return GST_PAD_LINK_REFUSED;
+    
+  if (fourcc == GST_STR_FOURCC ("RGB ")) {
+    gint bpp;
+  
+    gst_structure_get_int (structure, "bpp", &bpp);
+    if (bpp == 24) {
+      dvdec->space = e_dv_color_rgb;
+      dvdec->bpp = 3;
+    }
+    else {
+      dvdec->space = e_dv_color_bgr0;
+      dvdec->bpp = 4;
+    }
+  }
+  else {
+    dvdec->space = e_dv_color_yuv;
+    dvdec->bpp = 2;
+  }
+  
+  return GST_PAD_LINK_OK;
+}
+
 static void
 gst_dvdec_push (GstDVDec *dvdec, GstBuffer *outbuf, GstPad *pad, GstClockTime ts)
 {   
@@ -690,7 +776,7 @@ gst_dvdec_loop (GstElement *element)
   guint32 length, got_bytes;
   GstFormat format;
   guint64 ts;
-  gfloat fps;
+  gdouble fps;
 
   dvdec = GST_DVDEC (element);
 
@@ -700,15 +786,33 @@ gst_dvdec_loop (GstElement *element)
     gst_dvdec_handle_sink_event (dvdec);
     return;
   }
-  dv_parse_header (dvdec->decoder, inframe);
-  /* after parsing the header we know the size of the data */
+  if (dv_parse_header (dvdec->decoder, inframe) < 0)
+  {
+    GST_ELEMENT_ERROR (dvdec, STREAM, DECODE, (NULL), (NULL));
+    return;
+  }
+  
+  /* after parsing the header we know the length of the data */
   dvdec->PAL = dv_system_50_fields (dvdec->decoder);
-
-  dvdec->framerate = (dvdec->PAL ? 2500 : 2997);
+  dvdec->found_header = TRUE;
+  
   fps = (dvdec->PAL ? PAL_FRAMERATE : NTSC_FRAMERATE);
-  dvdec->height = height = (dvdec->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
+  height = (dvdec->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
   length = (dvdec->PAL ? PAL_BUFFER : NTSC_BUFFER);
 
+  if ((dvdec->framerate != fps) ||
+      (dvdec->height != height))
+  {
+    dvdec->height = height;
+    dvdec->framerate = fps;
+    
+    if (GST_PAD_LINK_FAILED (gst_pad_renegotiate (dvdec->videosrcpad)))
+    {
+      GST_ELEMENT_ERROR (dvdec, CORE, NEGOTIATION, (NULL), (NULL));
+      return;
+    }
+  }
+  
   if (length != dvdec->length) {
     dvdec->length = length;
     gst_bytestream_size_hint (dvdec->bs, length);
@@ -721,77 +825,12 @@ gst_dvdec_loop (GstElement *element)
     return;
   }
 
-  /* if we did not negotiate yet, do it now */
-  if (!GST_PAD_CAPS (dvdec->videosrcpad)) {
-    GstCaps *caps = NULL;
-    GstCaps *negotiated_caps = NULL;
-    GstPadTemplate *src_pad_template;
-    int i;
-    
-    /* try to fix our height */
-    src_pad_template = gst_static_pad_template_get (&video_src_temp);
-    caps = gst_caps_copy(gst_pad_template_get_caps (src_pad_template));
-
-    for (i = 0; i < gst_caps_get_size (caps); i++)
-    {
-	GstStructure *structure = gst_caps_get_structure (caps, i);
-	gst_structure_set(structure, 
-	        "height", G_TYPE_INT, height,
-                "framerate", G_TYPE_INT, fps, NULL
-	      );
-    }
-
-    for (i=0; i < gst_caps_get_size(caps); i++) {
-      GstStructure *to_try_struct = gst_caps_get_structure (caps, i);
-      GstCaps *try_caps = 
-        gst_caps_new_full (gst_structure_copy(to_try_struct), NULL);
-
-      /* try each format */
-      if (gst_pad_try_set_caps (dvdec->videosrcpad, try_caps) > 0) {
-        negotiated_caps = try_caps;
-        break;
-      }
-
-      gst_caps_free(try_caps);
-    }
-
-    gst_caps_free (caps);
-
-    /* Check if we negotiated caps successfully */
-    if (negotiated_caps != NULL) {
-        GstStructure *structure = gst_caps_get_structure (negotiated_caps, 0);
-        guint32 fourcc;
-
-	/* it worked, try to find what it was again */
-	gst_structure_get_fourcc (structure, "format", &fourcc);
-
-	if (fourcc == GST_STR_FOURCC ("RGB ")) {
-          gint bpp;
-
-	  gst_structure_get_int (structure, "bpp", &bpp);
-	  if (bpp == 24) {
-            dvdec->space = e_dv_color_rgb;
-            dvdec->bpp = 3;
-	  }
-	  else {
-            dvdec->space = e_dv_color_bgr0;
-            dvdec->bpp = 4;
-	  }
-	}
-	else {
-          dvdec->space = e_dv_color_yuv;
-          dvdec->bpp = 2;
-	}
-    } else {
-      GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL), (NULL));
-      return;
-    }
-  }
-
   format = GST_FORMAT_TIME;
   gst_pad_query (dvdec->videosrcpad, GST_QUERY_POSITION, &format, &ts);
 
-  dvdec->next_ts += (GST_SECOND*100) / dvdec->framerate;
+  dvdec->next_ts += GST_SECOND / dvdec->framerate;
+
+  dv_parse_packs (dvdec->decoder, GST_BUFFER_DATA (buf));
 
   if (GST_PAD_IS_LINKED (dvdec->audiosrcpad)) {
     gint16 *a_ptr;
@@ -799,27 +838,37 @@ gst_dvdec_loop (GstElement *element)
 
     dv_decode_full_audio (dvdec->decoder, GST_BUFFER_DATA (buf), dvdec->audio_buffers);
 
-    /* if we did not negotiate yet, do it now */
-    if (!GST_PAD_CAPS (dvdec->audiosrcpad)) {
-      gst_pad_try_set_caps (dvdec->audiosrcpad,
-	gst_caps_new_simple (
-	  "audio/x-raw-int", 
-    	    "rate", G_TYPE_INT, dvdec->decoder->audio->frequency,
-	    "depth", G_TYPE_INT,  16,
-	    "width", G_TYPE_INT,  16,
-	    "signed", G_TYPE_BOOLEAN, TRUE,
-	    "channels", G_TYPE_INT, dvdec->decoder->audio->num_channels,
-	    "endianness", G_TYPE_INT, G_LITTLE_ENDIAN
-  	  ));
+    if ((dvdec->decoder->audio->frequency != dvdec->frequency) ||
+        (dvdec->decoder->audio->num_channels != dvdec->channels))
+    {
+      if (!gst_pad_set_explicit_caps (dvdec->audiosrcpad,
+                      gst_caps_new_simple (
+                        "audio/x-raw-int", 
+                        "rate", G_TYPE_INT, dvdec->decoder->audio->frequency,
+                        "depth", G_TYPE_INT,  16,
+                        "width", G_TYPE_INT,  16,
+                        "signed", G_TYPE_BOOLEAN, TRUE,
+                        "channels", G_TYPE_INT, dvdec->decoder->audio->num_channels,
+                        "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+                        NULL
+                      )))
+      {
+        gst_buffer_unref (buf);
+        GST_ELEMENT_ERROR (dvdec, CORE, NEGOTIATION, (NULL), (NULL));        
+        return;
+      }
+      
+      dvdec->frequency = dvdec->decoder->audio->frequency;
+      dvdec->channels = dvdec->decoder->audio->num_channels;
     }
-
+      
     outbuf = gst_buffer_new ();
     GST_BUFFER_SIZE (outbuf) = dvdec->decoder->audio->samples_this_frame * 
-	                       sizeof (gint16) * dvdec->decoder->audio->num_channels;
+                        sizeof (gint16) * dvdec->decoder->audio->num_channels;
     GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
-
+    
     a_ptr = (gint16 *) GST_BUFFER_DATA (outbuf);
-
+    
     for (i = 0; i < dvdec->decoder->audio->samples_this_frame; i++) {
       for (j = 0; j < dvdec->decoder->audio->num_channels; j++) {
         *(a_ptr++) = dvdec->audio_buffers[j][i];
@@ -888,6 +937,7 @@ gst_dvdec_change_state (GstElement *element)
     case GST_STATE_PAUSED_TO_READY:
       dv_decoder_free (dvdec->decoder);
       dvdec->decoder = NULL;
+      dvdec->found_header = FALSE;
       gst_bytestream_destroy (dvdec->bs);
       break;
     case GST_STATE_READY_TO_NULL:
