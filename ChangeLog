@@ -1,3 +1,11 @@
+2004-08-02  Iain <iain@prettypeople.org>
+
+	* gst/interleave/interleave.c (interleave_init),
+	(interleave_request_new_pad),
+	(interleave_pad_removed),
+	(interleave_buffered_loop): Use the real pad count, not the artificial
+	one.
+
 2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: bump nano back to development
