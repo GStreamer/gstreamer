@@ -21,6 +21,7 @@
  */
 
 //#define GST_DEBUG_ENABLED
+#include "config.h"
 #include "gst_private.h"
 
 #include "gstbin.h"
@@ -467,7 +468,7 @@ gst_bin_restore_thyself (GstElement *element,
 			 GHashTable *elements) 
 {
   GstBin *bin = GST_BIN (element);
-  xmlNodePtr field = parent->childs;
+  xmlNodePtr field = parent->xmlChildrenNode;
   xmlNodePtr childlist;
 
 //  g_print("gstbin: restore \"%s\"\n", gst_element_get_name (element));
@@ -475,7 +476,7 @@ gst_bin_restore_thyself (GstElement *element,
   while (field) {
     if (!strcmp (field->name, "children")) {
       GST_INFO_ELEMENT (GST_CAT_XML, element, "loading children");
-      childlist = field->childs;
+      childlist = field->xmlChildrenNode;
       while (childlist) {
         if (!strcmp (childlist->name, "element")) {
           GstElement *element = gst_element_load_thyself (childlist, elements);

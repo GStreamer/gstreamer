@@ -25,6 +25,15 @@
 
 //#include <gnome-xml/parser.h>
 #include <parser.h>
+
+// Include compatability defines: if libxml hasn't already defined these,
+// we have an old version 1.x
+#ifndef xmlChildrenNode
+#define xmlChildrenNode childs
+#define xmlRootNode root
+#endif
+
+
 #include <gst/gstelement.h>
 
 

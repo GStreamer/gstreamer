@@ -312,7 +312,8 @@ gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
   g_return_val_if_fail (tocaps != NULL, FALSE);
 	
   if (fromcaps->id != tocaps->id) {
-    GST_DEBUG (0,"gstcaps: mime types wrong\n");
+    GST_DEBUG (0,"gstcaps: mime types differ (%d to %d)\n",
+	       fromcaps->id, tocaps->id);
     return FALSE;
   }
 
@@ -400,7 +401,7 @@ GstCaps*
 gst_caps_load_thyself (xmlNodePtr parent)
 {
   GstCaps *caps = g_new0 (GstCaps, 1);
-  xmlNodePtr field = parent->childs;
+  xmlNodePtr field = parent->xmlChildrenNode;
   gchar *content;
 
   while (field) {

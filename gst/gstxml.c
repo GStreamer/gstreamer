@@ -77,9 +77,9 @@ gst_xml_write (GstElement *element)
   xmlDocPtr doc;
 
   doc = xmlNewDoc ("1.0");
-  doc->root = xmlNewDocNode (doc, NULL, "GST-Pipeline", NULL);
+  doc->xmlRootNode = xmlNewDocNode (doc, NULL, "GST-Pipeline", NULL);
 
-  gst_element_save_thyself (element, doc->root);
+  gst_element_save_thyself (element, doc->xmlRootNode);
 
   return doc;
 }
@@ -114,7 +114,7 @@ gst_xml_new (const guchar *fname, const guchar *root)
     g_print("gstxml: XML file \"%s\" could not be read\n", fname);
     return NULL;
   }
-  if (strcmp(doc->root->name, "GST-Pipeline")) {
+  if (strcmp(doc->xmlRootNode->name, "GST-Pipeline")) {
     g_print("gstxml: XML file \"%s\" is in wrong format\n", fname);
     return NULL;
   }
@@ -123,7 +123,7 @@ gst_xml_new (const guchar *fname, const guchar *root)
 
   xml->topelements = NULL;
 
-  field = doc->root->childs;
+  field = doc->xmlRootNode->xmlChildrenNode;
   
   while (field) {
     if (!strcmp(field->name, "element")) {

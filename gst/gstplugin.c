@@ -87,14 +87,14 @@ _gst_plugin_initialize (void)
 
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
 
-  if (!doc || strcmp (doc->root->name, "GST-PluginRegistry") ||
+  if (!doc || strcmp (doc->xmlRootNode->name, "GST-PluginRegistry") ||
       !plugin_times_older_than(get_time(GST_CONFIG_DIR"/reg.xml"))) {
     if (_gst_warn_old_registry)
 	g_warning ("gstplugin: registry needs rebuild\n");
     gst_plugin_load_all ();
     return;
   }
-  gst_plugin_load_thyself (doc->root);
+  gst_plugin_load_thyself (doc->xmlRootNode);
 
   xmlFreeDoc (doc);
 }
@@ -767,10 +767,10 @@ gst_plugin_load_thyself (xmlNodePtr parent)
   gint typecount = 0;
   gchar *pluginname;
   
-  kinderen = parent->childs; // Dutch invasion :-)
+  kinderen = parent->xmlChildrenNode; // Dutch invasion :-)
   while (kinderen) {
     if (!strcmp(kinderen->name, "plugin")) {
-      xmlNodePtr field = kinderen->childs;
+      xmlNodePtr field = kinderen->xmlChildrenNode;
       GstPlugin *plugin = g_new0 (GstPlugin, 1);
       plugin->elements = NULL;
       plugin->types = NULL;

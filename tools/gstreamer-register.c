@@ -207,8 +207,8 @@ int main(int argc,char *argv[])
     
     // Read the plugins
     doc = xmlNewDoc("1.0");
-    doc->root = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);
-    gst_plugin_save_thyself(doc->root);
+    doc->xmlRootNode = xmlNewDocNode(doc, NULL, "GST-PluginRegistry", NULL);
+    gst_plugin_save_thyself(doc->xmlRootNode);
 
     // Save the registry to a tmp file.
     save_registry(GLOBAL_REGISTRY_FILE_TMP, &doc);

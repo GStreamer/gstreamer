@@ -716,7 +716,7 @@ GstElement*
 gst_element_load_thyself (xmlNodePtr parent, 
 		          GHashTable *elements) 
 {
-  xmlNodePtr children = parent->childs;
+  xmlNodePtr children = parent->xmlChildrenNode;
   GstElement *element;
   GstElementClass *oclass;
   guchar *name = NULL;
@@ -744,11 +744,11 @@ gst_element_load_thyself (xmlNodePtr parent,
   g_hash_table_insert (elements, g_strdup (gst_element_get_name (element)), element);
 
   // we have the element now, set the arguments 
-  children = parent->childs;
+  children = parent->xmlChildrenNode;
 
   while (children) {
     if (!strcmp (children->name, "arg")) {
-      xmlNodePtr child = children->childs;
+      xmlNodePtr child = children->xmlChildrenNode;
 
       while (child) {
         if (!strcmp (child->name, "name")) {
@@ -835,7 +835,7 @@ gst_element_load_thyself (xmlNodePtr parent,
     children = children->next;
   }
   // we have the element now, set the pads
-  children = parent->childs;
+  children = parent->xmlChildrenNode;
 
   while (children) {
     if (!strcmp (children->name, "pad")) {

@@ -387,7 +387,7 @@ GstElementFactory *
 gst_elementfactory_load_thyself (xmlNodePtr parent) 
 {
   GstElementFactory *factory = g_new0(GstElementFactory, 1);
-  xmlNodePtr children = parent->childs;
+  xmlNodePtr children = parent->xmlChildrenNode;
   factory->details = g_new0(GstElementDetails, 1);
   factory->padtemplates = NULL;
 

@@ -446,12 +446,17 @@ gst_props_check_compatibility (GstProps *fromprops, GstProps *toprops)
       else goto end;
     }
 
-    compatible &= gst_props_entry_check_compatibility (entry1, entry2);
+    if (!gst_props_entry_check_compatibility (entry1, entry2)) {
+	compatible = FALSE;
+	GST_DEBUG (0, "%s and %s are not compatible\n",
+		   g_quark_to_string (entry1->propid),
+		   g_quark_to_string (entry2->propid));
+    }
 
     sourcelist = g_list_next (sourcelist);
     sinklist = g_list_next (sinklist);
   }
-  if (sinklist) {
+  if (sinklist && compatible) {
     GstPropsEntry *entry2;
     entry2 = (GstPropsEntry *)sinklist->data;
     missing++;
@@ -612,13 +617,13 @@ GstProps*
 gst_props_load_thyself (xmlNodePtr parent)
 {
   GstProps *props = g_new0 (GstProps, 1);
-  xmlNodePtr field = parent->childs;
+  xmlNodePtr field = parent->xmlChildrenNode;
   gchar *prop;
 
   while (field) {
     if (!strcmp (field->name, "list")) {
       GstPropsEntry *entry;
-      xmlNodePtr subfield = field->childs;
+      xmlNodePtr subfield = field->xmlChildrenNode;
 
       entry = g_new0 (GstPropsEntry, 1);
       entry->propstype = GST_PROPS_LIST_ID_NUM;

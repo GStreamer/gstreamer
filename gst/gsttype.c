@@ -267,7 +267,7 @@ gst_typefactory_load_thyself (xmlNodePtr parent)
 {
 
   GstTypeFactory *factory = g_new0 (GstTypeFactory, 1);
-  xmlNodePtr field = parent->childs;
+  xmlNodePtr field = parent->xmlChildrenNode;
   factory->typefindfunc = NULL;
 
   while (field) {
