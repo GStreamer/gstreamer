@@ -1,3 +1,9 @@
+2004-01-23  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	(mp3_type_frame_length_from_header): fix bug in length computation 
+	(mp3_type_find): improve debugging output
+
 2004-01-23  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup),
