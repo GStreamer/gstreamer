@@ -1,3 +1,15 @@
+2004-10-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_fill):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_get_buffer),
+	(gst_ffmpegdec_chain):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_chain_video):
+	  Sync with gst-plugins ffmpegcolorspace, align-by-4. Ready to
+	  re-sync gst-plugins ffmpegcolorspace with ours and deprecate
+	  this one.
+
 2004-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_pad_link):

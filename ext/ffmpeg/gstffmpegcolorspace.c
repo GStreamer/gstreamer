@@ -362,17 +362,20 @@ gst_ffmpegcsp_chain (GstPad * pad, GstData * data)
   if (space->from_pixfmt == space->to_pixfmt) {
     outbuf = inbuf;
   } else {
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
     guint size = avpicture_get_size (space->to_pixfmt,
-        space->width, space->height);
+        ROUND_UP_4 (space->width), ROUND_UP_4 (space->height));
 
     outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
 
     /* convert */
-    avpicture_fill ((AVPicture *) space->from_frame, GST_BUFFER_DATA (inbuf),
+    gst_ffmpeg_avpicture_fill ((AVPicture *) space->from_frame,
+        GST_BUFFER_DATA (inbuf),
         space->from_pixfmt, space->width, space->height);
     if (space->palette)
       space->from_frame->data[1] = (uint8_t *) space->palette;
-    avpicture_fill ((AVPicture *) space->to_frame, GST_BUFFER_DATA (outbuf),
+    gst_ffmpeg_avpicture_fill ((AVPicture *) space->to_frame,
+        GST_BUFFER_DATA (outbuf),
         space->to_pixfmt, space->width, space->height);
     img_convert ((AVPicture *) space->to_frame, space->to_pixfmt,
         (AVPicture *) space->from_frame, space->from_pixfmt,

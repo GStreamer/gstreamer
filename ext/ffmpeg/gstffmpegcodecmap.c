@@ -1953,3 +1953,283 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
 
   return name;
 }
+
+/*
+ * Fill in pointers to memory in a AVPicture, where
+ * everything is aligned by 4 (as required by X).
+ * This is mostly a copy from imgconvert.c with some
+ * small changes.
+ */
+
+#define FF_COLOR_RGB      0 /* RGB color space */
+#define FF_COLOR_GRAY     1 /* gray color space */
+#define FF_COLOR_YUV      2 /* YUV color space. 16 <= Y <= 235, 16 <= U, V <= 240 */
+#define FF_COLOR_YUV_JPEG 3 /* YUV color space. 0 <= Y <= 255, 0 <= U, V <= 255 */
+
+#define FF_PIXEL_PLANAR   0 /* each channel has one component in AVPicture */
+#define FF_PIXEL_PACKED   1 /* only one components containing all the channels */
+#define FF_PIXEL_PALETTE  2  /* one components containing indexes for a palette */
+
+typedef struct PixFmtInfo {
+    const char *name;
+    uint8_t nb_channels;     /* number of channels (including alpha) */
+    uint8_t color_type;      /* color type (see FF_COLOR_xxx constants) */
+    uint8_t pixel_type;      /* pixel storage type (see FF_PIXEL_xxx constants) */
+    uint8_t is_alpha : 1;    /* true if alpha can be specified */
+    uint8_t x_chroma_shift;  /* X chroma subsampling factor is 2 ^ shift */
+    uint8_t y_chroma_shift;  /* Y chroma subsampling factor is 2 ^ shift */
+    uint8_t depth;           /* bit depth of the color components */
+} PixFmtInfo;
+
+/* this table gives more information about formats */
+static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
+    /* YUV formats */
+    [PIX_FMT_YUV420P] = {
+        .name = "yuv420p",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_YUV,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+        .x_chroma_shift = 1, .y_chroma_shift = 1, 
+    },
+    [PIX_FMT_YUV422P] = {
+        .name = "yuv422p",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_YUV,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+        .x_chroma_shift = 1, .y_chroma_shift = 0, 
+    },
+    [PIX_FMT_YUV444P] = {
+        .name = "yuv444p",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_YUV,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+        .x_chroma_shift = 0, .y_chroma_shift = 0, 
+    },
+    [PIX_FMT_YUV422] = {
+        .name = "yuv422",
+        .nb_channels = 1,
+        .color_type = FF_COLOR_YUV,
+        .pixel_type = FF_PIXEL_PACKED,
+        .depth = 8,
+        .x_chroma_shift = 1, .y_chroma_shift = 0,
+    },
+    [PIX_FMT_YUV410P] = {
+        .name = "yuv410p",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_YUV,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+        .x_chroma_shift = 2, .y_chroma_shift = 2,
+    },
+    [PIX_FMT_YUV411P] = {
+        .name = "yuv411p",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_YUV,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+        .x_chroma_shift = 2, .y_chroma_shift = 0,
+    },
+
+    /* JPEG YUV */
+    [PIX_FMT_YUVJ420P] = {
+        .name = "yuvj420p",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_YUV_JPEG,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+        .x_chroma_shift = 1, .y_chroma_shift = 1, 
+    },
+    [PIX_FMT_YUVJ422P] = {
+        .name = "yuvj422p",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_YUV_JPEG,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+        .x_chroma_shift = 1, .y_chroma_shift = 0, 
+    },
+    [PIX_FMT_YUVJ444P] = {
+        .name = "yuvj444p",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_YUV_JPEG,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+        .x_chroma_shift = 0, .y_chroma_shift = 0, 
+    },
+
+    /* RGB formats */
+    [PIX_FMT_RGB24] = {
+        .name = "rgb24",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_RGB,
+        .pixel_type = FF_PIXEL_PACKED,
+        .depth = 8,
+        .x_chroma_shift = 0, .y_chroma_shift = 0,
+    },
+    [PIX_FMT_BGR24] = {
+        .name = "bgr24",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_RGB,
+        .pixel_type = FF_PIXEL_PACKED,
+        .depth = 8,
+        .x_chroma_shift = 0, .y_chroma_shift = 0,
+    },
+    [PIX_FMT_RGBA32] = {
+        .name = "rgba32",
+        .nb_channels = 4, .is_alpha = 1,
+        .color_type = FF_COLOR_RGB,
+        .pixel_type = FF_PIXEL_PACKED,
+        .depth = 8,
+        .x_chroma_shift = 0, .y_chroma_shift = 0,
+    },
+    [PIX_FMT_RGB565] = {
+        .name = "rgb565",
+        .nb_channels = 3,
+        .color_type = FF_COLOR_RGB,
+        .pixel_type = FF_PIXEL_PACKED,
+        .depth = 5,
+        .x_chroma_shift = 0, .y_chroma_shift = 0,
+    },
+    [PIX_FMT_RGB555] = {
+        .name = "rgb555",
+        .nb_channels = 4, .is_alpha = 1,
+        .color_type = FF_COLOR_RGB,
+        .pixel_type = FF_PIXEL_PACKED,
+        .depth = 5,
+        .x_chroma_shift = 0, .y_chroma_shift = 0,
+    },
+
+    /* gray / mono formats */
+    [PIX_FMT_GRAY8] = {
+        .name = "gray",
+        .nb_channels = 1,
+        .color_type = FF_COLOR_GRAY,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 8,
+    },
+    [PIX_FMT_MONOWHITE] = {
+        .name = "monow",
+        .nb_channels = 1,
+        .color_type = FF_COLOR_GRAY,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 1,
+    },
+    [PIX_FMT_MONOBLACK] = {
+        .name = "monob",
+        .nb_channels = 1,
+        .color_type = FF_COLOR_GRAY,
+        .pixel_type = FF_PIXEL_PLANAR,
+        .depth = 1,
+    },
+
+    /* paletted formats */
+    [PIX_FMT_PAL8] = {
+        .name = "pal8",
+        .nb_channels = 4, .is_alpha = 1,
+        .color_type = FF_COLOR_RGB,
+        .pixel_type = FF_PIXEL_PALETTE,
+        .depth = 8,
+    },
+};
+
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+
+int
+gst_ffmpeg_avpicture_fill (AVPicture * picture,
+    uint8_t * ptr, enum PixelFormat pix_fmt, int width, int height)
+{
+  int size, w2, h2, size2;
+  int stride, stride2;
+  PixFmtInfo *pinfo;
+
+  pinfo = &pix_fmt_info[pix_fmt];
+  stride = ROUND_UP_4 (width);
+  size = stride * height;
+  switch (pix_fmt) {
+    case PIX_FMT_YUV420P:
+    case PIX_FMT_YUV422P:
+    case PIX_FMT_YUV444P:
+    case PIX_FMT_YUV410P:
+    case PIX_FMT_YUV411P:
+    case PIX_FMT_YUVJ420P:
+    case PIX_FMT_YUVJ422P:
+    case PIX_FMT_YUVJ444P:
+      stride = ROUND_UP_4 (width);
+      size = stride * height;
+      w2 = (width + (1 << pinfo->x_chroma_shift) - 1) >> pinfo->x_chroma_shift;
+      stride2 = ROUND_UP_4 (w2);
+      h2 = (height + (1 << pinfo->y_chroma_shift) - 1) >> pinfo->y_chroma_shift;
+      size2 = stride2 * h2;
+      picture->data[0] = ptr;
+      picture->data[1] = picture->data[0] + size;
+      picture->data[2] = picture->data[1] + size2;
+      picture->linesize[0] = stride;
+      picture->linesize[1] = stride2;
+      picture->linesize[2] = stride2;
+      return size + 2 * size2;
+    case PIX_FMT_RGB24:
+    case PIX_FMT_BGR24:
+      stride = ROUND_UP_4 (width * 3);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_RGBA32:
+      stride = width * 4;
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_RGB555:
+    case PIX_FMT_RGB565:
+    case PIX_FMT_YUV422:
+      stride = ROUND_UP_4 (width * 2);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_GRAY8:
+      stride = ROUND_UP_4 (width);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_MONOWHITE:
+    case PIX_FMT_MONOBLACK:
+      stride = ROUND_UP_4 ((width + 7) >> 3);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_PAL8:
+      /* already forced to be with stride, so same result as other function */
+      stride = ROUND_UP_4 (width);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = ptr + size;    /* palette is stored here as 256 32 bit words */
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      picture->linesize[1] = 4;
+      return size + 256 * 4;
+    default:
+      picture->data[0] = NULL;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->data[3] = NULL;
+      return -1;
+  }
+
+  return 0;
+}

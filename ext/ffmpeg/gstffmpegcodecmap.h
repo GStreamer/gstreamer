@@ -96,6 +96,17 @@ G_CONST_RETURN gchar *
 gst_ffmpeg_get_codecid_longname (enum CodecID codec_id);
 
 /*
+ * Fill in pointers in an AVPicture, aligned by 4 (required by X).
+ */
+
+int
+gst_ffmpeg_avpicture_fill (AVPicture * picture,
+			   uint8_t *   ptr,
+			   enum PixelFormat pix_fmt,
+			   int         width,
+			   int         height);
+
+/*
  * FFMPEG debugging function; maybe move to a different file.
  */
 

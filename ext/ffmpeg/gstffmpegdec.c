@@ -317,7 +317,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
       bufsize = avpicture_get_size (context->pix_fmt,
           context->width, context->height);
       buf = gst_buffer_new_and_alloc (bufsize);
-      avpicture_fill ((AVPicture *) picture, GST_BUFFER_DATA (buf),
+      gst_ffmpeg_avpicture_fill ((AVPicture *) picture,
+          GST_BUFFER_DATA (buf),
           context->pix_fmt, context->width, context->height);
       break;
 
@@ -405,16 +406,17 @@ gst_ffmpegdec_chain (GstPad * pad, GstData * _data)
             ffmpegdec->picture, &have_data, data, size);
 
         if (len >= 0 && have_data) {
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
           /* libavcodec constantly crashes on stupid buffer allocation
            * errors inside. This drives me crazy, so we let it allocate
            * it's own buffers and copy to our own buffer afterwards... */
           AVPicture pic;
           gint size = avpicture_get_size (ffmpegdec->context->pix_fmt,
-              ffmpegdec->context->width,
-              ffmpegdec->context->height);
+              ROUND_UP_4 (ffmpegdec->context->width),
+              ROUND_UP_4 (ffmpegdec->context->height));
 
           outbuf = gst_buffer_new_and_alloc (size);
-          avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
+          gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
               ffmpegdec->context->pix_fmt,
               ffmpegdec->context->width, ffmpegdec->context->height);
           img_convert (&pic, ffmpegdec->context->pix_fmt,

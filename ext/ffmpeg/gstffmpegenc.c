@@ -421,7 +421,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstData * _data)
   /* FIXME: events (discont (flush!) and eos (close down) etc.) */
 
   outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
-  avpicture_fill ((AVPicture *) ffmpegenc->picture,
+  gst_ffmpeg_avpicture_fill ((AVPicture *) ffmpegenc->picture,
       GST_BUFFER_DATA (inbuf),
       ffmpegenc->context->pix_fmt,
       ffmpegenc->context->width, ffmpegenc->context->height);
