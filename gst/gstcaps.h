@@ -21,47 +21,24 @@
 #ifndef __GST_CAPS_H__
 #define __GST_CAPS_H__
 
-#include <gst/gst.h>
+#include <glib.h>
+#include <gst/gstprops.h>
 
 typedef struct _GstCaps GstCaps;
 typedef gpointer GstCapsFactoryEntry;
 typedef GstCapsFactoryEntry GstCapsFactory[];
 typedef GstCapsFactory *GstCapsListFactory[];
 
-typedef enum {
-   GST_CAPS_END_ID_NUM = 0,
-   GST_CAPS_LIST_ID_NUM,
-   GST_CAPS_INT_ID_NUM,
-   GST_CAPS_INT_RANGE_ID_NUM,
-   GST_CAPS_FOURCC_ID_NUM,
-   GST_CAPS_BOOL_ID_NUM,
-} GstCapsId;
-
-#define GST_CAPS_LIST_ID GINT_TO_POINTER(GST_CAPS_LIST_ID_NUM)
-#define GST_CAPS_INT_ID GINT_TO_POINTER(GST_CAPS_INT_ID_NUM)
-#define GST_CAPS_INT_RANGE_ID GINT_TO_POINTER(GST_CAPS_INT_RANGE_ID_NUM)
-#define GST_CAPS_FOURCC_ID GINT_TO_POINTER(GST_CAPS_FOURCC_ID_NUM)
-#define GST_CAPS_BOOL_ID GINT_TO_POINTER(GST_CAPS_BOOL_ID_NUM)
-
-#define GST_CAPS_LIST(a...) GST_CAPS_LIST_ID,##a,NULL
-#define GST_CAPS_INT(a) GST_CAPS_INT_ID,(GINT_TO_POINTER(a))
-#define GST_CAPS_INT_RANGE(a,b) GST_CAPS_INT_RANGE_ID,(GINT_TO_POINTER(a)),(GINT_TO_POINTER(b))
-#define GST_CAPS_FOURCC(a,b,c,d) GST_CAPS_FOURCC_ID,(GINT_TO_POINTER((a)|(b)<<8|(c)<<16|(d)<<24))
-#define GST_CAPS_FOURCC_INT(a) GST_CAPS_FOURCC_ID,(GINT_TO_POINTER(a))
-#define GST_CAPS_BOOLEAN(a) GST_CAPS_BOOL_ID,(GINT_TO_POINTER(a))
-
-
 struct _GstCaps {
   guint16 id;			/* type id (major type) */
 
-  GSList *properties;		/* properties for this capability */
+  GstProps *properties;		/* properties for this capability */
 };
 
 /* initialize the subsystem */
 void 		_gst_caps_initialize		(void);
 
 GstCaps*	gst_caps_register		(GstCapsFactory factory);
-GList*		gst_caps_register_va		(GstCapsFactory factory,...);
 
 void		gst_caps_dump			(GstCaps *caps);
 

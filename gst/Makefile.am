@@ -38,6 +38,7 @@ libgst_la_SOURCES =	\
 	gstconnection.c	\
 	gsttype.c	\
 	gstcaps.c	\
+	gstprops.c	\
 	gstplugin.c	\
 	gstutils.c	\
 	gsttrace.c	\
@@ -67,6 +68,7 @@ libgstinclude_HEADERS =	\
 	gstconnection.h	\
 	gsttype.h	\
 	gstcaps.h	\
+	gstprops.h	\
 	gstplugin.h	\
 	gstutils.h	\
 	gsttrace.h	\

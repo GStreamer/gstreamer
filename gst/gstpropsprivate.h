@@ -18,16 +18,16 @@
  */
 
 
-#ifndef __GST_CAPS_PRIV_H__
-#define __GST_CAPS_PRIV_H__
+#ifndef __GST_PROPS_PRIV_H__
+#define __GST_PROPS_PRIV_H__
 
-#include <gst/gstcaps.h>
+#include <gst/gstprops.h>
 
-typedef struct _GstCapsEntry GstCapsEntry;
+typedef struct _GstPropsEntry GstPropsEntry;
 
-struct _GstCapsEntry {
+struct _GstPropsEntry {
   GQuark    propid;
-  GstCapsId capstype;		
+  GstPropsId propstype;		
 
   union {
     /* flat values */
@@ -46,4 +46,4 @@ struct _GstCapsEntry {
   } data;
 };
 
-#endif /* __GST_CAPS_PRIV_H__ */
+#endif /* __GST_PROPS_PRIV_H__ */
