@@ -979,14 +979,51 @@ GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
   AC_SUBST(JPEG_LIBS)
 ])
 
-dnl *** KDE ***
+dnl *** KDE / Qt ***
+
+dnl * Qt *
+
+qt_dirs="$QTDIR /usr/lib/qt3 /usr/lib/qt /usr/share/qt3 /usr/local/qt"
+
+dnl Build include path search path from the list of Qt dirs
+
+qt_include_dirs=""
+for dir in $qt_dirs; do
+  qt_include_dirs="$qt_include_dirs $dir/include $dir"
+done
+
+qt_include_dirs="$qt_include_dirs /usr/include/qt /usr/include /usr/X11R6/include/X11/qt /usr/X11R6/include/qt /usr/include/qt3"
+
+for dir in $qt_include_dirs; do
+  if test -r "$dir/qglobal.h"; then
+    qt_include_dir=$dir
+    break
+  fi
+done
+
+for dir in $qt_dirs; do
+  qt_lib_dirs="$qt_lib_dirs $dir/lib $dir"
+done
+
+qt_lib_dirs="$qt_lib_dirs /usr/X11R6/lib /usr/lib"
+
+for dir in $qt_lib_dirs; do
+  try="ls -1 $dir/libqt-mt.*"
+  if test -n "`$try 2> /dev/null`"; then
+    qt_lib_dir=$dir
+    break
+  fi
+done
+
+dnl * KDE *
+
 translit(dnm, m, l) AM_CONDITIONAL(USE_KIO, true)
 GST_CHECK_FEATURE(KIO, [kio], kio, [
   AC_PATH_PROG(KDE_CONFIG, kde-config, no)
   if test x$KDE_CONFIG != xno; then
     KDE_PREFIX=`$KDE_CONFIG --prefix`
-    KIO_CFLAGS="-I$KDE_PREFIX/include/qt3 -I$KDE_PREFIX/include/kde"
-    KIO_LIBS="-L$KDE_PREFIX/lib -lkio -lqt-mt"
+    KIO_CFLAGS="-I$KDE_PREFIX/include -I$qt_include_dir"
+    KIO_LIBS="-L$KDE_PREFIX/lib -L$qt_lib_dir -lkio -lqt-mt"
     AC_LANG_PUSH(C++)
     save_LIBS="$LIBS"
     save_CPPFLAGS="$CPPFLAGS"
