@@ -64,7 +64,8 @@ enum {
   ARG_BRIGHTNESS,
   ARG_HUE,
   ARG_SATURATION,
-  ARG_DISPLAY
+  ARG_DISPLAY,
+  ARG_SYNCHRONOUS
   /* FILL ME */
 };
 
@@ -338,7 +339,7 @@ gst_xvimagesink_update_colorbalance (GstXvImageSink *xvimagesink)
           g_object_ref (channel);
           
           /* Our range conversion coef */
-          convert_coef = (channel->max_value - channel->min_value) / 2000;
+          convert_coef = (channel->max_value - channel->min_value) / 2000.0;
           
           if (g_ascii_strcasecmp (channel->label, "XV_HUE") == 0)
             {
@@ -723,13 +724,15 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
               matching_attr = xv_attr + j;
         }
       
-      channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
-      channel->label = g_strdup (channels[i]);
-      channel->min_value = matching_attr ? matching_attr->min_value : -1000;
-      channel->max_value = matching_attr ? matching_attr->max_value : 1000;
-      
-      xcontext->channels_list = g_list_append (xcontext->channels_list,
-                                               channel);
+      if (matching_attr) {
+        channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+        channel->label = g_strdup (channels[i]);
+        channel->min_value = matching_attr ? matching_attr->min_value : -1000;
+        channel->max_value = matching_attr ? matching_attr->max_value : 1000;
+        
+        xcontext->channels_list = g_list_append (xcontext->channels_list,
+                                                 channel);
+      }
     }
 
   if (xv_attr)
@@ -1445,6 +1448,13 @@ gst_xvimagesink_set_property (GObject *object, guint prop_id,
       case ARG_DISPLAY:
         xvimagesink->display_name = g_strdup (g_value_get_string (value));
         break;
+      case ARG_SYNCHRONOUS:
+        xvimagesink->synchronous = g_value_get_boolean (value);
+        if (xvimagesink->xcontext) {
+          XSynchronize (xvimagesink->xcontext->disp,
+              xvimagesink->synchronous);
+        }
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -1477,6 +1487,9 @@ gst_xvimagesink_get_property (GObject *object, guint prop_id,
         break;
       case ARG_DISPLAY:
         g_value_set_string (value, g_strdup (xvimagesink->display_name));
+        break;
+      case ARG_SYNCHRONOUS:
+        g_value_set_boolean (value, xvimagesink->synchronous);
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1600,6 +1613,10 @@ gst_xvimagesink_class_init (GstXvImageSinkClass *klass)
   g_object_class_install_property (gobject_class, ARG_DISPLAY,
     g_param_spec_string ("display", "Display", "X Display name",
                          NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_SYNCHRONOUS,
+    g_param_spec_boolean ("synchronous", "Synchronous", "When enabled, runs "
+      "the X display in synchronous mode. (used only for debugging)", FALSE,
+      G_PARAM_READWRITE));
   
   gobject_class->dispose = gst_xvimagesink_dispose;
   gobject_class->set_property = gst_xvimagesink_set_property;
