@@ -1,5 +1,9 @@
 2004-03-12  Johan Dahlin  <johan@gnome.org>
 
+	* Makefile.am (PLAYDIR): Disable for now
+
+	* configure.ac: Build against 0.8
+
 	* gstinterfaces/Makefile.am: clean up a little bit
 
 	* gstinterfaces/__init__.py (devloc): s/gstreamer/gst/

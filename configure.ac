@@ -25,7 +25,7 @@ dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.0.0)
 AC_SUBST(GLIB_REQ,  2.0.0)
 AC_SUBST(GTK_REQ,   2.0.0)
-AC_SUBST(GST_REQ,   0.7.5)
+AC_SUBST(GST_REQ,   0.7.6)
 
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
@@ -50,7 +50,7 @@ fi
 AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
 
 dnl check for GStreamer
-GST_MAJORMINOR=0.7
+GST_MAJORMINOR=0.8
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
                   HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
 

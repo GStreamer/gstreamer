@@ -5,7 +5,8 @@ SUBDIRS_DOCS =
 endif
 
 INTERFACESDIR = gstinterfaces
-PLAYDIR = gstplay
+#PLAYDIR = gstplay
+PLAYDIR =
 
 UNCONDDIRS = gst pkgconfig examples testsuite
 SUBDIRS = \
@@ -13,7 +14,7 @@ SUBDIRS = \
 	$(INTERFACESDIR) \
 	$(PLAYDIR) \
 	$(SUBDIRS_DOCS)
-DIST_SUBDIRS = $(UNCONDDIRS) docs gstinterfaces gstplay
+DIST_SUBDIRS = $(UNCONDDIRS) docs gstinterfaces $(PLAYDIR)
 
 EXTRA_DIST = \
 	gst-python.spec.in gst-python.spec README-docs
