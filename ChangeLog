@@ -1,5 +1,14 @@
 2004-10-06  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
+	* gst/wavparse/gstwavparse.c:
+	  add ATRAC3 to STATIC CAPS to fix a warning
+
+	* gst/matroska/ebml-read.c:
+	* gst-libs/gst/riff/riff-read.c:
+	  fix typos
+
+2004-10-06  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
 	* gst-libs/gst/riff/riff-media.c:
 	  generate caps for ATRAC3 audio streams
 
