@@ -19,4 +19,4 @@ libgstcolorspace_la_CFLAGS = $(GST_CFLAGS)
 libgstcolorspace_la_LIBADD = $(PLUGIN_EXTRA_LIBS)
 libgstcolorspace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gstcolorspace.h yuv2rgb.h
+noinst_HEADERS = gstcolorspace.h yuv2rgb.h yuv2yuv.h
