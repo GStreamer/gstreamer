@@ -212,7 +212,7 @@ text_type_find (GstByteStream *bs, gpointer private)
 
     for (i = 0; i < TEXT_SIZE; i++) {
       if (!isprint (data[i]) && data[i] != '\n') {
-        break;
+	goto out;
       }
     }
 
@@ -221,6 +221,7 @@ text_type_find (GstByteStream *bs, gpointer private)
 			"text/plain",
 			  NULL);
   }
+out:
 
   if (buf != NULL) {
     gst_buffer_unref (buf);
