@@ -525,7 +525,7 @@ static gboolean
 gst_wavparse_fmt (GstWavParse * wav)
 {
   GstRiffRead *riff = GST_RIFF_READ (wav);
-  gst_riff_strf_auds *header;
+  gst_riff_strf_auds *header = NULL;
   GstCaps *caps;
 
   if (!gst_riff_read_strf_auds (riff, &header)) {
@@ -552,6 +552,8 @@ gst_wavparse_fmt (GstWavParse * wav)
   gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
 
   GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
+
+  g_free (header);
 
   return TRUE;
 }
