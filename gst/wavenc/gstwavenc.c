@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
+/* -*- mOde: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /* GStreamer
  * Copyright (C) <2002> Iain Holmes <iain@prettypeople.org>
  *
@@ -33,14 +33,6 @@ static void gst_wavenc_init (GstWavEnc * wavenc);
 static void gst_wavenc_chain (GstPad * pad, GstData * _data);
 
 #define WAVE_FORMAT_PCM 0x0001
-
-#define WRITE_U32(buf, x) *(buf) = (unsigned char) (x&0xff);\
-*((buf)+1) = (unsigned char)((x>>8)&0xff);\
-*((buf)+2) = (unsigned char)((x>>16)&0xff);\
-*((buf)+3) = (unsigned char)((x>>24)&0xff);
-
-#define WRITE_U16(buf, x) *(buf) = (unsigned char) (x&0xff);\
-*((buf)+1) = (unsigned char)((x>>8)&0xff);
 
 struct riff_struct
 {
@@ -220,19 +212,20 @@ gst_wavenc_setup (GstWavEnc * wavenc)
   wave.data.len = size - 44;
 
   strncpy (wavenc->header, wave.riff.id, 4);
-  WRITE_U32 (wavenc->header + 4, wave.riff.len);
+  GST_WRITE_UINT32_LE (wavenc->header + 4, wave.riff.len);
   strncpy (wavenc->header + 8, wave.riff.wav_id, 4);
   strncpy (wavenc->header + 12, wave.format.id, 4);
-  WRITE_U32 (wavenc->header + 16, wave.format.len);
-  WRITE_U16 (wavenc->header + 20, wave.common.wFormatTag);
-  WRITE_U16 (wavenc->header + 22, wave.common.wChannels);
-  WRITE_U32 (wavenc->header + 24, wave.common.dwSamplesPerSec);
-  WRITE_U32 (wavenc->header + 28, wave.common.dwAvgBytesPerSec);
-  WRITE_U16 (wavenc->header + 32, wave.common.wBlockAlign);
-  WRITE_U16 (wavenc->header + 34, wave.common.wBitsPerSample);
+  GST_WRITE_UINT32_LE (wavenc->header + 16, wave.format.len);
+  GST_WRITE_UINT16_LE (wavenc->header + 20, wave.common.wFormatTag);
+  GST_WRITE_UINT16_LE (wavenc->header + 22, wave.common.wChannels);
+  GST_WRITE_UINT32_LE (wavenc->header + 24, wave.common.dwSamplesPerSec);
+  GST_WRITE_UINT32_LE (wavenc->header + 28, wave.common.dwAvgBytesPerSec);
+  GST_WRITE_UINT16_LE (wavenc->header + 32, wave.common.wBlockAlign);
+  GST_WRITE_UINT16_LE (wavenc->header + 34, wave.common.wBitsPerSample);
   strncpy (wavenc->header + 36, wave.data.id, 4);
-  WRITE_U32 (wavenc->header + 40, wave.data.len);
+  GST_WRITE_UINT32_LE (wavenc->header + 40, wave.data.len);
 
+  wavenc->length = 0;
   wavenc->setup = TRUE;
   return TRUE;
 }
@@ -267,11 +260,17 @@ gst_wavenc_stop_file (GstWavEnc * wavenc)
   GstBuffer *outbuf;
 
   event = gst_event_new_seek (GST_FORMAT_BYTES | GST_SEEK_METHOD_SET, 0);
-  gst_pad_send_event (GST_PAD_PEER (wavenc->srcpad), event);
+  gst_pad_push (wavenc->srcpad, GST_DATA (event));
 
   outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
-  WRITE_U32 (wavenc->header + 4, wavenc->length);
+  GST_WRITE_UINT32_LE (wavenc->header + 4,
+      wavenc->length + (WAV_HEADER_LEN - 8));
+  GST_WRITE_UINT32_LE (wavenc->header + 40, wavenc->length);
   memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
+  GST_BUFFER_OFFSET (outbuf) = 0;
+  GST_BUFFER_OFFSET_END (outbuf) = WAV_HEADER_LEN;
+  GST_BUFFER_TIMESTAMP (outbuf) = 0;
+  GST_BUFFER_DURATION (outbuf) = 0;
 
   gst_pad_push (wavenc->srcpad, GST_DATA (outbuf));
 }

@@ -1126,7 +1126,7 @@ gst_osselement_probe_caps (GstOssElement * oss)
 
   if (gst_caps_is_empty (caps)) {
     GST_ELEMENT_ERROR (oss, RESOURCE, SETTINGS,
-        (_("Your oss device could not be probed correctly")), (NULL));
+        (_("Your OSS device could not be probed correctly")), (NULL));
     return;
   }
   GST_DEBUG ("probed caps: %" GST_PTR_FORMAT, caps);
@@ -1217,6 +1217,14 @@ gst_osselement_rate_probe_check (GstOssProbe * probe)
     }
   }
   n_checks++;
+  if (probe->min == -1 || probe->max == -1) {
+    /* This is a workaround for drivers that return -EINVAL (or another
+     * error) for rates outside of [8000,48000].  If this fails, the
+     * driver is seriously buggy, and probably doesn't work with other
+     * media libraries/apps.  */
+    probe->min = gst_osselement_rate_check_rate (probe, 8000);
+    probe->max = gst_osselement_rate_check_rate (probe, 48000);
+  }
   if (probe->min == -1 || probe->max == -1) {
     GST_DEBUG ("unexpected check_rate error");
     return FALSE;
