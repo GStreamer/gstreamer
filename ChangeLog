@@ -1,5 +1,11 @@
 2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/typefind/gsttypefindfunctions.c: (mpeg1_parse_header),
+	(mpeg1_sys_type_find):
+	  Fix MPEG-1 stream typefinding.
+
+2004-01-23  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find):
 	  Fix typefinding for MPEG-1 system streams, similar to MPEG-2.
 
