@@ -1624,7 +1624,7 @@ plugin_init (GstPlugin *plugin)
     return FALSE;
 
   /* create an elementfactory for the asf_demux element */
-  if (!gst_element_register (plugin, "asfdemux", GST_RANK_NONE, GST_TYPE_ASF_DEMUX))
+  if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY, GST_TYPE_ASF_DEMUX))
     return FALSE;
 
   return TRUE;
