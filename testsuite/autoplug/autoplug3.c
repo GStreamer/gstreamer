@@ -20,7 +20,7 @@ main (int argc, char *argv[])
   element = gst_autoplug_to_renderers (autoplug, 
 		                       gst_caps_new (
 					 "mp3caps", 
-					 "audio/mp3",
+					 "audio/x-mp3",
 					 NULL
 				       ), 
 				       sink,

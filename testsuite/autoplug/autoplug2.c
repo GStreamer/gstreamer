@@ -21,9 +21,9 @@ main (int argc, char *argv[])
 
   autoplug = gst_autoplug_factory_make ("static");
   
-  g_print ("Autoplugging between audio/mp3 and audio/raw ...\n");
-  if ((element = autoplug_caps (autoplug, "audio/mp3", "audio/raw")) == NULL)
-    g_print ("Could not autoplug between audio/mp3 and audio/raw !\n");
+  g_print ("Autoplugging between audio/x-mp3 and audio/raw ...\n");
+  if ((element = autoplug_caps (autoplug, "audio/x-mp3", "audio/raw")) == NULL)
+    g_print ("Could not autoplug between audio/x-mp3 and audio/raw !\n");
   xmlSaveFile ("autoplug2_1.gst", gst_xml_write (element));
 
   g_print ("Autoplugging between video/mpeg and audio/raw ...\n");

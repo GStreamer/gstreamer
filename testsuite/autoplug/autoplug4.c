@@ -17,7 +17,7 @@ main (int argc, char *argv[])
   autoplug2 = gst_autoplug_factory_make ("static");
   
   element = gst_autoplug_to_renderers (autoplug, 
-		  gst_caps_new ("mp3caps", "audio/mp3", NULL), sink2, NULL);
+		  gst_caps_new ("mp3caps", "audio/x-mp3", NULL), sink2, NULL);
   xmlSaveFile ("autoplug3_1.gst", gst_xml_write (element));
 
   element = gst_autoplug_to_renderers (autoplug, 
