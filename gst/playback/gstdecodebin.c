@@ -55,6 +55,8 @@ struct _GstDecodeBin
 
   GstElement *typefind;
 
+  gboolean threaded;
+
   GList *factories;
   gint numpads;
 };
@@ -165,7 +167,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   g_object_class_install_property (gobject_klass, ARG_THREADED,
       g_param_spec_boolean ("threaded", "Threaded", "Use threads",
-          TRUE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
 
@@ -233,6 +235,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
       G_CALLBACK (type_found), decode_bin);
 
   decode_bin->numpads = 0;
+  decode_bin->threaded = FALSE;
 }
 
 static void
@@ -282,8 +285,8 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     GstDecodeBin * decode_bin)
 {
   GList *to_try;
-  const gchar *mimetype;
   GstStructure *structure;
+  const gchar *mimetype;
 
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
@@ -324,8 +327,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     GstElement *element;
     gboolean ret;
 
-    g_print ("trying to link %s\n",
-        gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+    //g_print ("trying to link %s\n", gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
 
     element = gst_element_factory_create (factory, NULL);
     if (element == NULL)
@@ -340,8 +342,10 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
 
       factory = gst_element_get_factory (element);
       klass = gst_element_factory_get_klass (factory);
-      if (strstr (klass, "Demux") != NULL) {
-        g_print ("thread after %s\n", gst_element_get_name (element));
+      if (decode_bin->threaded) {
+        if (strstr (klass, "Demux") != NULL) {
+          //g_print ("thread after %s\n", gst_element_get_name (element));
+        }
       }
 
       close_link (element, decode_bin);
@@ -413,7 +417,7 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
   gchar *capsstr;
 
   capsstr = gst_caps_to_string (caps);
-  g_print ("found type %s\n", capsstr);
+  //g_print ("found type %s\n", capsstr);
   g_free (capsstr);
 
   close_pad_link (typefind, gst_element_get_pad (typefind, "src"), caps,
@@ -432,6 +436,7 @@ gst_decode_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_THREADED:
+      decode_bin->threaded = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -451,6 +456,7 @@ gst_decode_bin_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case ARG_THREADED:
+      g_value_set_boolean (value, decode_bin->threaded);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

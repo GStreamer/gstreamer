@@ -42,15 +42,21 @@ struct _GstPlayBin
 
   GstElement *thread;
 
+  gboolean threaded;
+
   /* properties */
   gchar *uri;
   GstElement *source;
 
   GList *factories;
-  GstElement *output;
+  GstElement *audio_sink;
+  GstElement *video_sink;
+  GstElement *vis_plugin;
+
+  gboolean audio_added;
+  gboolean video_added;
 
   GList *outpads;
-  GList *user_elements;
 };
 
 struct _GstPlayBinClass
@@ -64,7 +70,9 @@ enum
   ARG_0,
   ARG_URI,
   ARG_THREADED,
-  ARG_OUTPUT,
+  ARG_AUDIO_SINK,
+  ARG_VIDEO_SINK,
+  ARG_VIS_PLUGIN,
 };
 
 /* signals */
@@ -97,11 +105,6 @@ static GstClock *gst_play_bin_get_clock (GstElement * element);
 static void gst_play_bin_add_element (GstBin * bin, GstElement * element);
 static void gst_play_bin_remove_element (GstBin * bin, GstElement * element);
 
-static GstElement *try_to_link_1 (GstPlayBin * play_bin, GstPad * pad,
-    GList * factories);
-static void close_link (GstElement * element, GstPlayBin * play_bin);
-static void close_pad_link (GstElement * element, GstPad * pad,
-    GstCaps * caps, GstPlayBin * play_bin);
 
 static GstElementClass *parent_class;
 
@@ -164,9 +167,17 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, ARG_THREADED,
       g_param_spec_boolean ("threaded", "Threaded", "Use threads",
           TRUE, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_klass, ARG_OUTPUT,
-      g_param_spec_object ("output", "Ouput",
-          "the output element to use (NULL = default a/v sink)",
+  g_object_class_install_property (gobject_klass, ARG_VIDEO_SINK,
+      g_param_spec_object ("video-sink", "Video Sink",
+          "the video output element to use (NULL = default sink)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_AUDIO_SINK,
+      g_param_spec_object ("audio-sink", "Audio Sink",
+          "the audio output element to use (NULL = default sink)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_VIS_PLUGIN,
+      g_param_spec_object ("vis-plugin", "Vis plugin",
+          "the visualization element to use (NULL = none)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_bin_dispose);
@@ -194,8 +205,12 @@ static void
 gst_play_bin_init (GstPlayBin * play_bin)
 {
   play_bin->uri = NULL;
-  play_bin->output = NULL;
-  play_bin->user_elements = NULL;
+  play_bin->video_sink = NULL;
+  play_bin->audio_sink = NULL;
+  play_bin->vis_plugin = NULL;
+  play_bin->audio_added = FALSE;
+  play_bin->video_added = FALSE;
+  play_bin->threaded = TRUE;
 
   GST_FLAG_SET (play_bin, GST_BIN_SELF_SCHEDULABLE);
 }
@@ -211,35 +226,6 @@ gst_play_bin_dispose (GObject * object)
   if (G_OBJECT_CLASS (parent_class)->dispose) {
     G_OBJECT_CLASS (parent_class)->dispose (object);
   }
-}
-
-static GstElement *
-gen_default_output (GstPlayBin * play_bin, GstBin * parent)
-{
-  GstElement *output;
-  GstElement *videoout;
-  GstElement *videoconv;
-  GstElement *audioout;
-
-  output = gst_bin_new ("default_out");
-  videoconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
-  videoout = gst_element_factory_make ("ximagesink", NULL);
-  audioout = gst_element_factory_make ("osssink", NULL);
-  gst_bin_add (GST_BIN (output), videoconv);
-  gst_bin_add (GST_BIN (output), videoout);
-  gst_bin_add (GST_BIN (output), audioout);
-
-  gst_bin_add (GST_BIN (parent), output);
-  gst_element_set_locked_state (output, TRUE);
-
-  gst_element_link_pads (videoconv, "src", videoout, "sink");
-
-  gst_element_add_ghost_pad (output,
-      gst_element_get_pad (videoconv, "sink"), "default_video_sink");
-  gst_element_add_ghost_pad (output,
-      gst_element_get_pad (audioout, "sink"), "default_audio_sink");
-
-  return output;
 }
 
 static void
@@ -259,195 +245,115 @@ rebuild_pipeline (GstPlayBin * play_bin)
   gst_element_set_state (play_bin->thread, oldstate);
 }
 
-
-static GList *
-collect_sink_pads (GstElement * element)
+static GstElement *
+get_audio_element (GstPlayBin * play_bin)
 {
-  GList *sinkpads = NULL;
-  const GList *pads;
+  GstElement *result;
+  GstElement *queue;
+  GstElement *conv;
+  GstElement *sink;
+  GstPad *sinkpad;
 
-  for (pads = gst_element_get_pad_list (element); pads;
-      pads = g_list_next (pads)) {
-    GstPad *pad = GST_PAD (pads->data);
+  conv = gst_element_factory_make ("audioconvert", "a_conv");
 
-    if (GST_PAD_DIRECTION (pad) != GST_PAD_SINK)
-      continue;
-
-    sinkpads = g_list_append (sinkpads, pad);
+  if (play_bin->threaded) {
+    result = gst_thread_new ("audio_thread");
+    queue = gst_element_factory_make ("queue", "a_queue");
+    gst_bin_add (GST_BIN (result), queue);
+    gst_bin_add (GST_BIN (result), conv);
+    gst_element_link_pads (queue, "src", conv, "sink");
+    sinkpad = gst_element_get_pad (queue, "sink");
+  } else {
+    result = gst_bin_new ("audio_bin");
+    gst_bin_add (GST_BIN (result), conv);
+    sinkpad = gst_element_get_pad (conv, "sink");
   }
 
-  return sinkpads;
-}
+  sink = gst_element_factory_make ("osssink", "a_sink");
+  gst_bin_add (GST_BIN (result), sink);
 
-static GList *
-find_compatibles (GstPlayBin * play_bin, const GstCaps * caps)
-{
-  GList *factories;
-  GList *to_try = NULL;
+  gst_element_link_pads (conv, "src", sink, "sink");
 
-  for (factories = play_bin->factories; factories;
-      factories = g_list_next (factories)) {
-    GstElementFactory *factory = GST_ELEMENT_FACTORY (factories->data);
-    const GList *templates;
-    GList *walk;
+  gst_element_add_ghost_pad (result, sinkpad, "sink");
 
-    templates = gst_element_factory_get_pad_templates (factory);
-    for (walk = (GList *) templates; walk; walk = g_list_next (walk)) {
-      GstPadTemplate *templ = GST_PAD_TEMPLATE (walk->data);
-
-      if (templ->direction == GST_PAD_SINK) {
-        GstCaps *intersect;
-
-        intersect =
-            gst_caps_intersect (caps, gst_pad_template_get_caps (templ));
-        if (!gst_caps_is_empty (intersect)) {
-          to_try = g_list_append (to_try, factory);
-        }
-      }
-    }
-  }
-  return to_try;
-}
-
-static void
-close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
-    GstPlayBin * play_bin)
-{
-  GList *to_try;
-
-  /* first try to close to one of the sinkpads */
-  for (to_try = play_bin->outpads; to_try; to_try = g_list_next (to_try)) {
-    GstPad *sinkpad = GST_PAD (to_try->data);
-    gboolean res;
-
-    if (gst_pad_is_linked (sinkpad))
-      continue;
-
-    res = gst_pad_can_link_filtered (pad, sinkpad, caps);
-    if (res) {
-      res = gst_pad_link_filtered (pad, sinkpad, caps);
-      g_print ("closed pad %s:%s to %s:%s\n",
-          GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (sinkpad));
-      return;
-    }
-  }
-
-  to_try = find_compatibles (play_bin, caps);
-  if (to_try == NULL) {
-    gchar *capsstr = gst_caps_to_string (caps);
-
-    g_warning ("don't know how to handle %s", capsstr);
-    g_free (capsstr);
-    return;
-  }
-
-  try_to_link_1 (play_bin, pad, to_try);
+  return result;
 }
 
 static GstElement *
-try_to_link_1 (GstPlayBin * play_bin, GstPad * pad, GList * factories)
+get_video_element (GstPlayBin * play_bin)
 {
-  GList *walk;
+  GstElement *result;
+  GstElement *queue;
+  GstElement *conv;
+  GstElement *sink;
+  GstPad *sinkpad;
 
-  for (walk = factories; walk; walk = g_list_next (walk)) {
-    GstElementFactory *factory = GST_ELEMENT_FACTORY (walk->data);
-    GstElement *element;
-    gboolean ret;
+  conv = gst_element_factory_make ("ffmpegcolorspace", "v_conv");
 
-    g_print ("trying to link %s\n",
-        gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
-
-    element = gst_element_factory_create (factory, NULL);
-    if (element == NULL)
-      continue;
-
-    gst_bin_add (GST_BIN (play_bin->thread), element);
-
-    ret = gst_pad_link (pad, gst_element_get_pad (element, "sink"));
-    if (ret) {
-      const gchar *klass;
-      GstElementFactory *factory;
-
-      factory = gst_element_get_factory (element);
-      klass = gst_element_factory_get_klass (factory);
-      if (strstr (klass, "Demux") != NULL) {
-        g_print ("thread after %s\n", gst_element_get_name (element));
-      }
-
-      close_link (element, play_bin);
-      gst_element_sync_state_with_parent (element);
-      return element;
-    } else {
-      gst_bin_remove (GST_BIN (play_bin->thread), element);
-    }
+  if (play_bin->threaded) {
+    result = gst_thread_new ("video_thread");
+    queue = gst_element_factory_make ("queue", "v_queue");
+    gst_bin_add (GST_BIN (result), queue);
+    gst_bin_add (GST_BIN (result), conv);
+    gst_element_link_pads (queue, "src", conv, "sink");
+    sinkpad = gst_element_get_pad (queue, "sink");
+  } else {
+    result = gst_bin_new ("video_bin");
+    gst_bin_add (GST_BIN (result), conv);
+    sinkpad = gst_element_get_pad (conv, "sink");
   }
-  return NULL;
+
+  sink = gst_element_factory_make ("ximagesink", "v_sink");
+  gst_bin_add (GST_BIN (result), sink);
+
+  gst_element_link_pads (conv, "src", sink, "sink");
+
+  gst_element_add_ghost_pad (result, sinkpad, "sink");
+
+  return result;
 }
 
 static void
 new_pad (GstElement * element, GstPad * pad, GstPlayBin * play_bin)
 {
-  close_pad_link (element, pad, gst_pad_get_caps (pad), play_bin);
-}
+  GstStructure *structure;
+  const gchar *mimetype;
+  GstCaps *caps;
+  GstClock *clock;
+  GstElement *new_element = NULL;
 
-static void
-close_link (GstElement * element, GstPlayBin * play_bin)
-{
-  GList *pads;
-  gboolean dynamic = FALSE;
+  caps = gst_pad_get_caps (pad);
 
-  for (pads = gst_element_get_pad_template_list (element); pads;
-      pads = g_list_next (pads)) {
-    GstPadTemplate *templ = GST_PAD_TEMPLATE (pads->data);
+  structure = gst_caps_get_structure (caps, 0);
+  mimetype = gst_structure_get_name (structure);
 
-    if (GST_PAD_TEMPLATE_DIRECTION (templ) != GST_PAD_SRC)
-      continue;
-
-    switch (GST_PAD_TEMPLATE_PRESENCE (templ)) {
-      case GST_PAD_ALWAYS:
-      {
-        GstPad *pad =
-            gst_element_get_pad (element,
-            GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
-        if (pad) {
-          close_pad_link (element, pad, gst_pad_get_caps (pad), play_bin);
-        }
-        break;
-      }
-      case GST_PAD_SOMETIMES:
-      {
-        GstPad *pad =
-            gst_element_get_pad (element,
-            GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
-        if (pad) {
-          close_pad_link (element, pad, gst_pad_get_caps (pad), play_bin);
-        } else {
-          dynamic = TRUE;
-        }
-        break;
-      }
-      case GST_PAD_REQUEST:
-        break;
+  if (g_str_has_prefix (mimetype, "audio/")) {
+    if (!play_bin->audio_added) {
+      new_element = get_audio_element (play_bin);
+      play_bin->audio_added = TRUE;
     }
+  } else if (g_str_has_prefix (mimetype, "video/")) {
+    if (!play_bin->video_added) {
+      new_element = get_video_element (play_bin);
+      play_bin->video_added = TRUE;
+    }
+  } else {
   }
-  if (dynamic) {
-    g_signal_connect (G_OBJECT (element), "new_pad",
-        G_CALLBACK (new_pad), play_bin);
+
+  if (new_element) {
+    GstScheduler *sched;
+
+    gst_bin_add (GST_BIN (play_bin->thread), new_element);
+
+    gst_pad_link (pad, gst_element_get_pad (new_element, "sink"));
+
+    sched = gst_element_get_scheduler (GST_ELEMENT (play_bin->thread));
+
+    gst_bin_auto_clock (GST_BIN (play_bin->thread));
+    clock = gst_bin_get_clock (GST_BIN (play_bin->thread));
+    gst_scheduler_set_clock (sched, clock);
+    gst_element_sync_state_with_parent (new_element);
   }
-}
-
-static void
-type_found (GstElement * typefind, guint probability, GstCaps * caps,
-    GstPlayBin * play_bin)
-{
-  gchar *capsstr;
-
-  capsstr = gst_caps_to_string (caps);
-  g_print ("found type %s\n", capsstr);
-  g_free (capsstr);
-
-  close_pad_link (typefind, gst_element_get_pad (typefind, "src"), caps,
-      play_bin);
 }
 
 static gboolean
@@ -457,11 +363,6 @@ setup_source (GstPlayBin * play_bin)
     gst_bin_remove (GST_BIN (play_bin->thread), play_bin->source);
     gst_object_unref (GST_OBJECT (play_bin->source));
   }
-  if (!play_bin->output) {
-    play_bin->output =
-        gen_default_output (play_bin, GST_BIN (play_bin->thread));
-  }
-  play_bin->outpads = collect_sink_pads (play_bin->output);
 
   play_bin->source =
       gst_element_make_from_uri (GST_URI_SRC, play_bin->uri, "source");
@@ -471,25 +372,25 @@ setup_source (GstPlayBin * play_bin)
   }
 
   {
-    GstElement *typefind;
+    GstElement *decoder;
     gboolean res;
 
     gst_bin_add (GST_BIN (play_bin->thread), play_bin->source);
 
-    typefind = gst_element_factory_make ("typefind", "typefind");
-    if (!typefind) {
-      g_warning ("can't find typefind element");
+    decoder = gst_element_factory_make ("decodebin", "decoder");
+    if (!decoder) {
+      g_warning ("can't find decoder element");
       return FALSE;
     }
 
-    gst_bin_add (GST_BIN (play_bin->thread), typefind);
-    res = gst_element_link_pads (play_bin->source, "src", typefind, "sink");
+    gst_bin_add (GST_BIN (play_bin->thread), decoder);
+    res = gst_element_link_pads (play_bin->source, "src", decoder, "sink");
     if (!res) {
       g_warning ("can't link source to typefind element");
       return FALSE;
     }
-    g_signal_connect (G_OBJECT (typefind), "have_type",
-        G_CALLBACK (type_found), play_bin);
+    g_signal_connect (G_OBJECT (decoder), "new_pad",
+        G_CALLBACK (new_pad), play_bin);
   }
 
   return TRUE;
@@ -522,7 +423,14 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case ARG_OUTPUT:
+    case ARG_THREADED:
+      play_bin->threaded = g_value_get_boolean (value);
+      break;
+    case ARG_VIDEO_SINK:
+      break;
+    case ARG_AUDIO_SINK:
+      break;
+    case ARG_VIS_PLUGIN:
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -544,44 +452,19 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_URI:
       g_value_set_string (value, play_bin->uri);
       break;
-    case ARG_OUTPUT:
+    case ARG_THREADED:
+      g_value_set_boolean (value, play_bin->threaded);
+      break;
+    case ARG_VIDEO_SINK:
+      break;
+    case ARG_AUDIO_SINK:
+      break;
+    case ARG_VIS_PLUGIN:
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static gboolean
-gst_play_bin_factory_filter (GstPluginFeature * feature, GstPlayBin * play_bin)
-{
-  guint rank;
-
-  if (!GST_IS_ELEMENT_FACTORY (feature))
-    return FALSE;
-
-  rank = gst_plugin_feature_get_rank (feature);
-  if (rank < GST_RANK_SECONDARY)
-    return FALSE;
-
-  return TRUE;
-}
-
-static gint
-compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
-{
-  return gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
-}
-
-static void
-gst_play_bin_collect_factories (GstPlayBin * play_bin)
-{
-  GList *factories;
-
-  factories = gst_registry_pool_feature_filter (
-      (GstPluginFeatureFilter) gst_play_bin_factory_filter, FALSE, play_bin);
-
-  play_bin->factories = g_list_sort (factories, (GCompareFunc) compare_ranks);
 }
 
 static GstElementStateReturn
@@ -613,7 +496,6 @@ gst_play_bin_change_state (GstElement * element)
 
         ret = GST_STATE_FAILURE;
       }
-      gst_play_bin_collect_factories (play_bin);
       break;
     }
     case GST_STATE_READY_TO_PAUSED:
@@ -623,8 +505,6 @@ gst_play_bin_change_state (GstElement * element)
             ("cannot handle uri \"%s\"", play_bin->uri));
         ret = GST_STATE_FAILURE;
       } else {
-        gst_element_set_locked_state (play_bin->output, FALSE);
-        gst_element_sync_state_with_parent (play_bin->output);
         ret = gst_element_set_state (play_bin->thread, GST_STATE_PAUSED);
       }
       break;
@@ -661,8 +541,6 @@ gst_play_bin_add_element (GstBin * bin, GstElement * element)
   GstPlayBin *play_bin;
 
   play_bin = GST_PLAY_BIN (bin);
-
-  play_bin->user_elements = g_list_prepend (play_bin->user_elements, element);
 }
 
 static void
@@ -671,8 +549,6 @@ gst_play_bin_remove_element (GstBin * bin, GstElement * element)
   GstPlayBin *play_bin;
 
   play_bin = GST_PLAY_BIN (bin);
-
-  play_bin->user_elements = g_list_remove (play_bin->user_elements, element);
 }
 
 static const GstEventMask *
