@@ -81,7 +81,7 @@ cothread_create (cothread_context *ctx)
   s->sp = ((int *)s + COTHREAD_STACKSIZE);
   s->top_sp = s->sp;
 
-  INFO(GST_INFO_COTHREADS,"created cothread #%d: %p at sp:%p\n", ctx->nthreads, s, s->sp);
+  INFO(GST_INFO_COTHREADS,"created cothread #%d: %p at sp:%p", ctx->nthreads, s, s->sp);
 
   ctx->threads[ctx->nthreads++] = s;
 
@@ -121,7 +121,7 @@ cothread_init (void)
 {
   cothread_context *ctx = (cothread_context *)malloc(sizeof(cothread_context));
 
-  INFO(GST_INFO_COTHREADS,"initializing cothreads\n");
+  INFO(GST_INFO_COTHREADS,"initializing cothreads");
 
   if (_cothread_key == -1) {
     if (pthread_key_create (&_cothread_key,NULL) != 0) {
@@ -143,7 +143,7 @@ cothread_init (void)
   ctx->threads[0]->sp = (int *)CURRENT_STACK_FRAME;
   ctx->threads[0]->pc = 0;
 
-  INFO(GST_INFO_COTHREADS,"0th thread is %p at sp:%p\n",ctx->threads[0], ctx->threads[0]->sp);
+  INFO(GST_INFO_COTHREADS,"0th thread is %p at sp:%p",ctx->threads[0], ctx->threads[0]->sp);
 
   // we consider the initiating process to be cothread 0
   ctx->nthreads = 1;
@@ -259,7 +259,7 @@ cothread_switch (cothread_state *thread)
 
   // find the number of the thread to switch to
   ctx->current = thread->threadnum;
-  INFO(GST_INFO_COTHREAD_SWITCH,"switching to thread #%d\n",ctx->current);
+  INFO(GST_INFO_COTHREAD_SWITCH,"switching to thread #%d",ctx->current);
 
   /* save the current stack pointer, frame pointer, and pc */
   GET_SP(current->sp);

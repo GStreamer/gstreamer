@@ -186,7 +186,8 @@ gst_plugin_remove (GstPlugin *plugin)
   }
   
   _gst_plugins = g_list_remove(_gst_plugins, plugin);
-  g_free (plugin);
+
+  // don't free the stuct because someone can have a handle to it
 }
 
 /**
@@ -444,10 +445,10 @@ gst_plugin_load_typefactory (gchar *mime)
 
   g_return_if_fail (mime != NULL);
 
-  plugins = _gst_plugins;
+  plugins = g_list_copy (_gst_plugins);
   while (plugins) {
     plugin = (GstPlugin *)plugins->data;
-    factories = plugin->types;
+    factories = g_list_copy (plugin->types);
     
     while (factories) {
       factory = (GstTypeFactory*)(factories->data);
@@ -469,8 +470,11 @@ gst_plugin_load_typefactory (gchar *mime)
       }
       factories = g_list_next(factories);
     }
+
+    g_list_free (factories);
     plugins = g_list_next(plugins);
   }
+  g_list_free (plugins);
 
   return;
 }
