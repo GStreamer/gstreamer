@@ -19,6 +19,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include "config.h"
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avformat.h>
 #else
