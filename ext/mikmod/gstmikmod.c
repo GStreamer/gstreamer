@@ -548,7 +548,7 @@ gst_mikmod_get_property (GObject *object, guint id, GValue *value, GParamSpec *p
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-  if (!gst_element_register (plugin, "mikmod", GST_RANK_NONE, GST_TYPE_MIKMOD))
+  if (!gst_element_register (plugin, "mikmod", GST_RANK_SECONDARY, GST_TYPE_MIKMOD))
     return FALSE;
 
   return TRUE;
