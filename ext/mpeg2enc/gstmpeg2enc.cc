@@ -239,7 +239,7 @@ gst_mpeg2enc_loop (GstElement *element)
     gst_pad_set_element_private (enc->sinkpad, data);
 
     if (!(caps = GST_PAD_CAPS (enc->sinkpad))) {
-      gst_element_error (element, CORE, NEGOTIATION, NULL,
+      gst_element_error (element, CORE, NEGOTIATION, (""),
 			 ("format wasn't negotiated before loop function"));
       return;
     }
@@ -251,7 +251,7 @@ gst_mpeg2enc_loop (GstElement *element)
     /* and set caps on other side */
     othercaps = enc->encoder->getFormat ();
     if (gst_pad_set_explicit_caps (enc->srcpad, othercaps) <= 0) {
-      gst_element_error (element, CORE, NEGOTIATION, NULL, NULL);
+      gst_element_error (element, CORE, NEGOTIATION, (""), (""));
       delete enc->encoder;
       enc->encoder = NULL;
       return;
