@@ -13,18 +13,16 @@ static gint quit_live(GtkWidget *window, GdkEventAny *e, gpointer data) {
 //  gtk_object_set(GTK_OBJECT(element),"volume",adj->value,NULL);
 //}
 
-static void dynparm_value_changed(GtkAdjustment *adj,GstDparam *dparam) {
-  GstDparamPoint *point;
-  GValue *value;
-  g_assert(dparam != NULL);
-  g_assert(GST_IS_DPARAM (dparam));
+static void dynparm_value_changed(GtkAdjustment *adj,GstDParam *dparam) {
+  GValue **point;
+  g_return_if_fail(dparam != NULL);
+  g_return_if_fail(GST_IS_DPARAM (dparam));
 
   point = GST_DPARAM_GET_POINT(dparam, 0LL);
   
   GST_DPARAM_LOCK(dparam);
-  value = point->values[0];
-  g_print("setting value from %f to %f\n", g_value_get_float(value), adj->value);  
-  g_value_set_float(value, adj->value);
+  g_print("setting value from %f to %f\n", g_value_get_float(point[0]), adj->value);  
+  g_value_set_float(point[0], adj->value);
   GST_DPARAM_READY_FOR_UPDATE(dparam) = TRUE;
   GST_DPARAM_UNLOCK(dparam);
 }
@@ -39,8 +37,8 @@ int main(int argc,char *argv[]) {
   GtkWidget *freq_slider;
 
   GstElement *thread, *sinesrc, *osssink;
-  GstDparamManager *dpman;
-  GstDparam *volume, *freq;
+  GstDParamManager *dpman;
+  GstDParam *volume, *freq;
 
   gtk_init(&argc,&argv);
   gst_init(&argc,&argv);
