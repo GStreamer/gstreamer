@@ -1074,6 +1074,7 @@ gst-libs/gst/video/Makefile
 examples/dynparams/Makefile
 examples/capsfilter/Makefile
 examples/seeking/Makefile
+examples/indexing/Makefile
 examples/Makefile
 testsuite/autoplug/Makefile
 testsuite/spider/Makefile
