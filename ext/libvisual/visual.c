@@ -282,7 +282,7 @@ gst_visual_srclink (GstPad * pad, const GstCaps * caps)
     return GST_PAD_LINK_REFUSED;
 
   if (visual->video)
-    visual_video_free (visual->video);
+    visual_object_unref (VISUAL_OBJECT (visual->video));
   visual->video = visual_video_new ();
   visual_actor_set_video (visual->actor, visual->video);
   visual_video_set_depth (visual->video,
@@ -352,7 +352,7 @@ gst_visual_change_state (GstElement * element)
         return GST_STATE_FAILURE;
 
       if (visual_actor_realize (visual->actor) != 0) {
-        visual_actor_free (visual->actor);
+        visual_object_unref (VISUAL_OBJECT (visual->actor));
         visual->actor = NULL;
         return GST_STATE_FAILURE;
       }
@@ -368,7 +368,7 @@ gst_visual_change_state (GstElement * element)
     case GST_STATE_PAUSED_TO_READY:
       break;
     case GST_STATE_READY_TO_NULL:
-      visual_actor_free (visual->actor);
+      visual_object_unref (VISUAL_OBJECT (visual->actor));
       visual->actor = NULL;
       break;
     default:
