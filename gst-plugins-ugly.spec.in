@@ -554,34 +554,26 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_RAW1394_TRUE@%post -n gstreamer-dv
 @USE_RAW1394_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 
-%package -n gstreamer-resample
-Summary: GStreamer resample plugin
+%package -n gstreamer-audioeffects
+Summary: GStreamer audioeffects plugin
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
-%description -n gstreamer-resample
-Library for resampling of sound
+%description -n gstreamer-audioeffects
+Plugin with various audio effects including resampling, 
+sine waves generation, silence generation plugin
 
-%files -n gstreamer-resample
+%files -n gstreamer-audioeffects
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstresample*
-
-%post -n gstreamer-resample
-%{prefix}/bin/gst-register --gst-mask=0
-
-%package -n gstreamer-sine
-Summary: GStreamer Sine effect plugin
-Group: Libraries/Multimedia
-Requires: gstreamer >= %{ver}
-
-%description -n gstreamer-sine
-Plugin for generating sine waves.
-
-%files -n gstreamer-sine
-%defattr(-, root, root)
 %{prefix}/lib/gst/libgstsine*
+%{prefix}/lib/gst/libgstsilence*
+%{prefix}/lib/gst/libgststereo*
+%{prefix}/lib/gst/libgstvol*
+%{prefix}/lib/gst/libgstplayondemand*
+%{prefix}/lib/gst/libgstspeed*
 
-%post -n gstreamer-sine
+%post -n gstreamer-audioeffects
 %{prefix}/bin/gst-register --gst-mask=0
 
 %package -n gstreamer-lavencode
@@ -599,21 +591,6 @@ It takes YUV video frames and adds a header in front of it so it can be processe
 %post -n gstreamer-lavencode
 %{prefix}/bin/gst-register --gst-mask=0
 
-%package -n gstreamer-silence
-Summary: GStreamer Silence plugin
-Group: Libraries/Multimedia
-Requires: gstreamer >= %{ver}
-
-%description -n gstreamer-silence
-Plugin for generation of silence
-
-%files -n gstreamer-silence
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstsilence*
-
-%post -n gstreamer-silence
-%{prefix}/bin/gst-register --gst-mask=0
-
 %package -n gstreamer-qcam
 Summary: GStreamer QuickCam plugin
 Group: Libraries/Multimedia
@@ -627,21 +604,6 @@ Plugin for accessing a Quickcam source
 %{prefix}/lib/gst/libgstqcam*
 
 %post -n gstreamer-qcam
-%{prefix}/bin/gst-register --gst-mask=0
-
-%package -n gstreamer-au
-Summary: GStreamer au audiofile plugin
-Group: Libraries/Multimedia
-Requires: gstreamer >= %{ver}
-
-%description -n gstreamer-au
-Plugin for playback of the SUN au audio format.
-
-%files -n gstreamer-au
-%defattr(-, root, root)
-%{prefix}/lib/gst/libgstparseau*
-
-%post -n gstreamer-au
 %{prefix}/bin/gst-register --gst-mask=0
 
 %package -n gstreamer-vcd
@@ -687,25 +649,6 @@ Plugins for UDP transport
 %post -n gstreamer-udp
 %{prefix}/bin/gst-register --gst-mask=0
 
-%package -n gstreamer-mp3
-Summary: GStreamer plugins for mp3 playback
-Group: Libraries/Multimedia
-Requires: gstreamer >= %{ver}
-
-%description -n gstreamer-mp3
-Plugins for decoding mp3 files. We do recommend you
-use Ogg Vorbis format instead however since it is both unencumbered by patents
-and better.
-
-%files -n gstreamer-mp3
-%defattr(-, root, root)
-# %{prefix}/lib/gst/libgstmpg123*
-# %{prefix}/lib/gst/libgstmp3parse*
-%{prefix}/lib/gst/libgstmp3types*
-
-%post -n  gstreamer-mp3
-%{prefix}/bin/gst-register --gst-mask=0
-
 %package -n gstreamer-flx
 Summary: Gstreamer plugin for FLI/FLX animation format
 Group: Libraries/Multimedia
@@ -736,29 +679,13 @@ Video deinterlace plugin
 %post -n gstreamer-deinterlace
 %{prefix}/bin/gst-register --gst-mask=0
 
-
-%package -n gstreamer-chart
-Summary: GStreamer plugin for converting audio into video
-Group: Libraries/Multimedia
-Requires: gstreamer >= %{ver}
-
-%description -n gstreamer-chart
-Plugin for converting audio into video
-
-%files -n gstreamer-chart
-%defattr(-, root, root)
-%{prefix}/lib/gst/libchart*
-
-%post -n gstreamer-chart
-%{prefix}/bin/gst-register --gst-mask=0
-
 %package -n gstreamer-visualisation
 Summary: Gstreamer visualisations plugins
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
 %description -n gstreamer-visualisation
-Various plugins for visual effects to use with audio. Included are Smoothwave, Spectrum and vumeter
+Various plugins for visual effects to use with audio. Included are Smoothwave, Spectrum, Goom, Chart and vumeter
 
 %files -n gstreamer-visualisation
 %defattr(-, root, root)
@@ -766,24 +693,10 @@ Various plugins for visual effects to use with audio. Included are Smoothwave, S
 %{prefix}/lib/gst/libgstspectrum*
 %{prefix}/lib/gst/libgstvu*
 %{prefix}/lib/gst/libgstgoom*
+%{prefix}/lib/gst/libchart*
 
 %post -n gstreamer-visualisation
 %{prefix}/bin/gst-register --gst-mask=0
-
-@USE_JPEG_MMX_TRUE@%package -n gstreamer-jpegmmx
-@USE_JPEG_MMX_TRUE@Summary: Gstreamer mjpegtools
-@USE_JPEG_MMX_TRUE@Group: Libraries/Multimedia
-@USE_JPEG_MMX_TRUE@Requires: gstreamer >= %{ver}
-
-@USE_JPEG_MMX_TRUE@%description -n gstreamer-jpegmmx
-@USE_JPEG_MMX_TRUE@Mgpegtools based encoding and decoding plugin
-
-@USE_JPEG_MMX_TRUE@%files -n gstreamer-jpegmmx
-@USE_JPEG_MMX_TRUE@%defattr(-, root, root)
-@USE_JPEG_MMX_TRUE@%{prefix}/lib/gst/libgstjpegmmx*
-
-@USE_JPEG_MMX_TRUE@%post -n gstreamer-jpegmmx
-@USE_JPEG_MMX_TRUE@%{prefix}/bin/gst-register --gst-mask=0
 
 %package -n gstreamer-plugin-libs
 Summary: GStreamer support libraries
@@ -800,13 +713,14 @@ GStreamer support libraries
 %{prefix}/lib/gst/libgstriff*
 %{prefix}/lib/gst/libgstresample*
 
-%package -n gstreamer-misc
+%package -n gstreamer-miscvideo
 Summary: GStreamer plugins for various effects
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
 
-%description -n gstreamer-misc
-Plugins for various effects
+%description -n gstreamer-miscvideo
+Plugins for various codecs, effects 
+and so on.
 
 %files -n gstreamer-misc
 %defattr(-, root, root)
@@ -820,26 +734,24 @@ Plugins for various effects
 %{prefix}/lib/gst/libgstmulaw*
 %{prefix}/lib/gst/libgstpassthrough*
 %{prefix}/lib/gst/libgstrtjpe*
-%{prefix}/lib/gst/libgststereo*
-%{prefix}/lib/gst/libgstvol*
-%{prefix}/lib/gst/libgstplayondemand*
-%{prefix}/lib/gst/libgstspeed*
 
 %post -n gstreamer-misc
 %{prefix}/bin/gst-register --gst-mask=0
 
-%package -n gstreamer-wav
-Summary: Gstreamer wav audio format plugin
+%package -n gstreamer-audioformats
+Summary: Gstreamer audio format plugin
 Group: Libraries/Multimedia
 Requires: gstreamer >= %{ver}
-%description -n gstreamer-wav
-Plugin for playback of wav audio files
+%description -n gstreamer-audioformats
+Plugin for playback of wav, au and mp3 audio files
 
-%files -n gstreamer-wav
+%files -n gstreamer-audioformats
 %defattr(-, root, root)
 %{prefix}/lib/gst/libgstwavparse*
+%{prefix}/lib/gst/libgstparseau*
+%{prefix}/lib/gst/libgstmp3types*
 
-%post -n gstreamer-wav
+%post -n gstreamer-audioformats
 %{prefix}/bin/gst-register --gst-mask=0
 
 @USE_SHOUT_TRUE@%package -n gstreamer-icecast
