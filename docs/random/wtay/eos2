@@ -1,0 +1,147 @@
+
+case 1) 
+
+(--------------------------------------------------)
+! bin                                              !
+! (--------)         (--------)         (--------) !
+! ! fakesrc!         !identity!         !fakesink! !
+! !       src ----- sink     src ---- sink       ! !
+! (--------)         (--------)         (--------) !
+(--------------------------------------------------)
+
+.scheduling.
+  
+  case1 has just one scheduled entity (chain) no problem here.
+
+.eos.
+
+  fakesrc detects the end of stream. It just returned the last buffer.
+  The next _pull will cause the srcpad to trigger gst_pad_set_eos ().
+  After that it will return a NULL buffer.
+
+  gst_pad_set_eos() will notify the parent about the plugins attempt to
+  signal eos. the parent adds the element to its possible EOS 
+  providers.
+  
+  gst_pad_set_eos() will by default propagate to identy and to fakesink.
+  none of these plugins override the default behaviour so gst_pad_set_eos
+  returns TRUE and fakesrc signals EOS with the value TRUE.
+
+  The parent looks in the list of EOS providers and finds the faksrc
+  element that is now signaling EOS. all EOS providers are now in EOS
+  and so the bin fires EOS.
+
+
+
+case 2) 
+                                                     (---------------)
+                                                     !thread         !
+ (--------)         (--------)         (--------)    !     (--------)!
+ ! fakesrc!         !identity!         !  queue !    !     !fakesink!!
+ !       src ----- sink     src ---- sink       src ---- sink       !!
+ (--------)         (--------)         (--------)    !     (--------)!
+                                                     (---------------)
+
+.scheduling.
+
+  case2 has two scheduled entities: fsr-i-q, q-fsk.
+  
+.eos.
+
+  fakesrc detects the end of stream. It just returned the last buffer.
+  The next _pull will cause the srcpad to trigger gst_pad_set_eos ().
+  After that it will return a NULL buffer.
+
+  gst_pad_set_eos() will notify the parent about the plugins attempt to
+  signal eos. the parent adds the element to its possible EOS 
+  providers.
+
+  gst_pad_eos() will by default propagate to identy and to queue.
+  queue overrides the eos handler and returns false on the eos
+  request. fakesrc signals EOS with a value of false and the parent
+  bin removes the EOS provider from its list.
+
+  after the queue has sent out the last buffer, its calls eos on its
+  src pad. queue is added to the top level bin as an eos provider and
+  the default eos handler signals EOS with a value of TRUE to the parent.
+
+  the parent sees that all the eos providers are in eos now and signals
+  EOS.
+
+
+case 3) 
+                                                     (---------------)
+                                                     !thread         !
+ (--------)         (--------)         (--------)    !     (--------)!
+ ! fakesrc!         !  tee   !         ! queue1 !    !     !fakesink!!
+ !       src ----- sink     src ---- sink       src ---- sink       !!
+ (--------)         !        !         (--------)    !     (--------)!
+                    !        !                       (---------------)
+                    !        !
+                    !        !                       (---------------)
+                    !        !                       !thread         !
+                    !        !         (--------)    !     (--------)!
+                    !        !         ! queue2 !    !     !fakesink!!
+                    !       src ---- sink       src ---- sink       !!
+                    !        !         (--------)    !     (--------)!
+                    (--------)                       (---------------)
+
+
+  fakesrc detects the end of stream. It just sent the last buffer
+  and sets the srcpad to EOS with gst_pad_eos ().
+
+  the eos handler returns false because both queues return false on the
+  eos request. the parent removes fakesrc as an EOS provider.
+
+  queue1 and queue2 were responisble for the EOS delay and so they get
+  added to the bin as possible EOS providers.
+
+  after the queues have sent out their last buffer, they calls eos on their
+  src pads.
+  the parent allready has the two queues in the EOS provider list so they dont
+  get added twice.
+  the two queues perform gst_pad_eos () on their pads when the queue is empty,
+  the parent removes the EOS providers from its list, when the list is empty,
+  the parent fires EOS.
+  
+  
+case 4) 
+
+                                                     (---------------)
+                                                     !thread         !
+ (--------)       (----------)         (--------)    !     (--------)!
+ ! fakesrc!       !mpeg1parse!         ! queue1 !    !     !fakesink!!
+ !       src -- sink        src ---- sink       src ---- sink       !!
+ (--------)       !          !         (--------)    !     (--------)!
+                  !          !                       (---------------)
+                  !          !
+                  !          !                       (---------------)
+                  !          !                       !thread         !
+                  !          !         (--------)    !     (--------)!
+                  !          !         ! queue2 !    !     !fakesink!!
+                  !         src ---- sink       src ---- sink       !!
+                  !          !         (--------)    !     (--------)!
+                  (----------)                       (---------------)
+
+
+  this case differs from case3 in that one of the queues can be empty
+  while the other isn't. we assume queue1 is empty while queue2 isn't yet.
+
+  fakesrc detects the end of stream. It just sent the last buffer
+  and sets the srcpad to EOS with gst_pad_eos ().
+
+  the eos handler returns false because queue2 returns false on the
+  eos request. the parent removes fakesrc as an EOS provider.
+
+  queue2 was responisble for the EOS delay and so it gets added to the bin 
+  as a possible EOS provider.
+
+  after the queue2 has sent its last buffer, it performs gst_pad_eos on its
+  src pad.
+  the parent allready has the queue2 in the list of EOS providers so it does not
+  get added twice.
+  queue2 finally fires the EOS signal and the parent removes the EOS provider 
+  from its list, when the list is empty, the parent fires EOS.
+
+  
+
