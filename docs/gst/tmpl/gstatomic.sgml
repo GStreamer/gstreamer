@@ -2,13 +2,16 @@
 GstAtomic
 
 <!-- ##### SECTION Short_Description ##### -->
-Macros that implement atomic operations
+Functions that implement atomic operations.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GstAtomic contains a set of macros that can be used to implement
-atomic algorithms that are thread safe and don't use heavyweight
-locking mechanisms.
+Functions that implement atomic operations on a #GstAtomicInt structure. 
+Atomic operations are thread safe and don't use heavyweight locking mechanisms.
+</para>
+<para>
+These functions will be inlined in the GStreamer core but are available to plugins
+as external methods.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -22,74 +25,68 @@ A structure that contains an integer that can be modified
 atomically.
 </para>
 
+@lock: 
 
-<!-- ##### MACRO GST_ATOMIC_INT_INIT ##### -->
+<!-- ##### FUNCTION gst_atomic_int_init ##### -->
 <para>
-Initialize an atomic int
+Initialize an allocated #GstAtomicInt with a value. Call this method
+only once as it will allocate a mutex in the C-fallback case.
 </para>
 
-@ref: a reference to a #GstAtomicInt
-@val: The initial value for the integer
+@aint: a #GstAtomicInt
+@val: a new value
 
 
-<!-- ##### MACRO GST_ATOMIC_INT_FREE ##### -->
+<!-- ##### FUNCTION gst_atomic_int_destroy ##### -->
 <para>
-Free the memory allocated by #GST_ATOMIC_INT_INIT
+Destroy a #GstAtomicInt. Call this method only once as it will
+free the mutex in the C-fallback case.
 </para>
 
-@ref: A reference to a #GstAtomicInt
+@aint: a #GstAtomicInt
 
 
-<!-- ##### MACRO GST_ATOMIC_INT_SET ##### -->
+<!-- ##### FUNCTION gst_atomic_int_set ##### -->
 <para>
-Set the value of a #GstAtomicInt atomically
+Atomically set the value on the #GstAtomicInt.
 </para>
 
-@ref: a reference to a #GstAtomicInt
-@val: The value for the integer
+@aint: a #GstAtomicInt
+@val: The new value
 
 
-<!-- ##### MACRO GST_ATOMIC_INT_VALUE ##### -->
+<!-- ##### FUNCTION gst_atomic_int_read ##### -->
 <para>
-Get the value of a #GstAtomicInt atomically
+Atomically read the contents of a #GstAtomicInt
 </para>
 
-@ref: a reference to a #GstAtomicInt
+@aint: a #GstAtomicInt
+@Returns: the value of the atomic int
 
 
-<!-- ##### MACRO GST_ATOMIC_INT_READ ##### -->
+<!-- ##### FUNCTION gst_atomic_int_add ##### -->
 <para>
-Get the value of a #GstAtomicInt atomically into a variable
+Atomically add the given value to the #GstAtomicInt.
 </para>
 
-@ref: a reference to a #GstAtomicInt
-@res: a pointer to a gint to hold the value
+@aint: a #GstAtomicInt
+@val: the value to add
 
 
-<!-- ##### MACRO GST_ATOMIC_INT_INC ##### -->
+<!-- ##### FUNCTION gst_atomic_int_inc ##### -->
 <para>
-Increment the value of a #GstAtomicInt atomically
+Atomically increment the #GstAtomicInt
 </para>
 
-@ref: a reference to a #GstAtomicInt
+@aint: a #GstAtomicInt
 
 
-<!-- ##### MACRO GST_ATOMIC_INT_DEC_AND_TEST ##### -->
+<!-- ##### FUNCTION gst_atomic_int_dec_and_test ##### -->
 <para>
-Decrement the value of a #GstAtomicInt atomically and test
-for zero.
+Atomically decrement the #GstAtomicInt and test if it is zero.
 </para>
 
-@ref: a reference to a #GstAtomicInt
-@zero: a gpointer to a gboolean to hold the value of the test
-
-
-<!-- ##### MACRO GST_ATOMIC_INT_ADD ##### -->
-<para>
-Atomically add a value to a #GstAtomicInt
-</para>
-
-@ref: a reference to a #GstAtomicInt
-@count: The value to add
+@aint: a #GstAtomicInt
+@Returns: TRUE if the atomic int is 0
 
 

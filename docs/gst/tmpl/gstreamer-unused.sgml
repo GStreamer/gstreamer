@@ -1443,6 +1443,68 @@ g_print messages.
 
 @klass: 
 
+<!-- ##### MACRO GST_ATOMIC_INT_ADD ##### -->
+<para>
+Atomically add a value to a #GstAtomicInt
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@count: The value to add
+
+<!-- ##### MACRO GST_ATOMIC_INT_DEC_AND_TEST ##### -->
+<para>
+Decrement the value of a #GstAtomicInt atomically and test
+for zero.
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@zero: a gpointer to a gboolean to hold the value of the test
+
+<!-- ##### MACRO GST_ATOMIC_INT_FREE ##### -->
+<para>
+Free the memory allocated by #GST_ATOMIC_INT_INIT
+</para>
+
+@ref: A reference to a #GstAtomicInt
+
+<!-- ##### MACRO GST_ATOMIC_INT_INC ##### -->
+<para>
+Increment the value of a #GstAtomicInt atomically
+</para>
+
+@ref: a reference to a #GstAtomicInt
+
+<!-- ##### MACRO GST_ATOMIC_INT_INIT ##### -->
+<para>
+Initialize an atomic int
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@val: The initial value for the integer
+
+<!-- ##### MACRO GST_ATOMIC_INT_READ ##### -->
+<para>
+Get the value of a #GstAtomicInt atomically into a variable
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@res: a pointer to a gint to hold the value
+
+<!-- ##### MACRO GST_ATOMIC_INT_SET ##### -->
+<para>
+Set the value of a #GstAtomicInt atomically
+</para>
+
+@ref: a reference to a #GstAtomicInt
+@val: The value for the integer
+
+<!-- ##### MACRO GST_ATOMIC_INT_VALUE ##### -->
+<para>
+Get the value of a #GstAtomicInt atomically
+</para>
+
+@ref: a reference to a #GstAtomicInt
+
 <!-- ##### MACRO GST_ATOMIC_LOCK ##### -->
 <para>
 
@@ -1734,6 +1796,14 @@ A flag indicating that MMX instructions are supported.
 A flag indicating that SSE instructions are supported.
 </para>
 
+
+<!-- ##### MACRO GST_DATA_REFCOUNT_READ ##### -->
+<para>
+Read the current refcount value into the specified value
+</para>
+
+@data: The GstData to get the refcount value of
+@value: A pointer to a gint to hold the refcount value
 
 <!-- ##### MACRO GST_DEBUG_CHAR_MODE ##### -->
 <para>

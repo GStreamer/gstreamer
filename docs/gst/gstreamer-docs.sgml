@@ -99,6 +99,8 @@ with some more specialized elements.</para>
     &GstElementFactory;
     &GstEvent;
     &GstFormat;
+    &GstIndex;
+    &GstIndexFactory;
     &GstInfo;
     &GstObject;
     &GstPad;
@@ -109,15 +111,13 @@ with some more specialized elements.</para>
     &GstPluginFeature;
     &GstProbe;
     &GstProps;
-    &GstQueue;
     &GstQuery;
+    &GstQueue;
     &GstRegistry;
     &GstScheduler;
     &GstSchedulerFactory;
     &GstSystemClock;
     &GstThread;
-    &GstIndex;
-    &GstIndexFactory;
     &GstType;
     &GstTypeFactory;
     &GstTypeFind;

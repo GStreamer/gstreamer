@@ -32,14 +32,13 @@ cothread_current
 <SECTION>
 <FILE>gstatomic</FILE>
 GstAtomicInt
-GST_ATOMIC_INT_INIT
-GST_ATOMIC_INT_FREE
-GST_ATOMIC_INT_SET
-GST_ATOMIC_INT_VALUE
-GST_ATOMIC_INT_READ
-GST_ATOMIC_INT_INC
-GST_ATOMIC_INT_DEC_AND_TEST
-GST_ATOMIC_INT_ADD
+gst_atomic_int_init
+gst_atomic_int_destroy
+gst_atomic_int_set
+gst_atomic_int_read
+gst_atomic_int_add
+gst_atomic_int_inc
+gst_atomic_int_dec_and_test
 <SUBSECTION Standard>
 </SECTION>
 
@@ -192,10 +191,13 @@ GstSchedulerFactoryClass
 <FILE>gstformat</FILE>
 <TITLE>GstFormat</TITLE>
 GstFormat
+GST_FORMAT_PERCENT_MAX
+GST_FORMAT_PERCENT_SCALE
 GstFormatDefinition
 GST_FORMATS_FUNCTION
 gst_format_register
 gst_format_get_by_nick
+gst_formats_contains
 gst_format_get_details
 gst_format_get_definitions
 <SUBSECTION Standard>
@@ -277,7 +279,6 @@ GstDataFlags
 GST_DATA_IS_READONLY
 GST_DATA_REFCOUNT
 GST_DATA_REFCOUNT_VALUE
-GST_DATA_REFCOUNT_READ
 GST_DATA_COPY_FUNC
 GST_DATA_FREE_FUNC
 gst_data_init
@@ -810,7 +811,14 @@ gst_object_flags_get_type
 <SECTION>
 <FILE>gstquery</FILE>
 GstQueryType
+GST_QUERY_TYPE_RATE_DEN
+GstQueryTypeDefinition
 GST_QUERY_TYPE_FUNCTION
+gst_query_type_register
+gst_query_type_get_by_nick
+gst_query_types_contains
+gst_query_type_get_details
+gst_query_type_get_definitions
 </SECTION>
 
 <SECTION>

@@ -382,7 +382,7 @@ Create a new flush event.
 A convenience macro to create event mask functions
 </para>
 
-@type: 
+@type: The type of the first argument of the function
 @functionname: the name of the function
 @...: event masks, the last element is marked with 0
 

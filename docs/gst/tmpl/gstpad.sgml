@@ -374,7 +374,7 @@ Flags for the pad.
 </para>
 
 @GST_PAD_DISABLED: the pad is disabled.
-@GST_PAD_EOS: the pad is in end of stream state.
+@GST_PAD_NEGOTIATING: 
 @GST_PAD_FLAG_LAST: subclasses can use this number to enumerate their flags.
 
 <!-- ##### FUNCTION gst_pad_new ##### -->

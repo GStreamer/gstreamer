@@ -12,7 +12,7 @@ in a pipeline.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstIndexFactory
 </para>
 
 <!-- ##### STRUCT GstIndexEntry ##### -->
@@ -108,9 +108,10 @@ An association in an entry.
 flags for an association entry
 </para>
 
-@GST_ACCOCIATION_FLAG_NONE: no flags
-@GST_ACCOCIATION_FLAG_KEY_UNIT: this entry marks a key unit.
-@GST_ACCOCIATION_FLAG_LAST: 
+@GST_ASSOCIATION_FLAG_NONE: no extra flags
+@GST_ASSOCIATION_FLAG_KEY_UNIT: the entry marks a key unit, a key unit is one
+                                that marks a place where one can randomly seek to.
+@GST_ASSOCIATION_FLAG_LAST: extra user defined flags should start here.
 
 <!-- ##### MACRO GST_INDEX_FORMAT_FORMAT ##### -->
 <para>

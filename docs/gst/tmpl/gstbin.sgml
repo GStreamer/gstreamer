@@ -34,7 +34,10 @@ After the bin has been set to the PLAYING state (with gst_element_set_state()),
 gst_bin_iterate() is used to process the elements in the bin.
 </para>
 <para>
-The "object_added" signal is fired whenever a new object is added to the bin.
+The "element_added" signal is fired whenever a new element is added to the bin.
+</para>
+<para>
+The "element_removed" signal is fired whenever an element is removed from the bin.
 </para>
 <para>
 gst_bin_destroy() is used to destroy the bin. 
@@ -225,7 +228,7 @@ Free the memory allocated by this bin
 </para>
 
 @gstbin: the object which received the signal.
-@arg1: 
+@arg1: the element that was added to the bin
 
 <!-- ##### SIGNAL GstBin::element-removed ##### -->
 <para>
@@ -233,5 +236,5 @@ Free the memory allocated by this bin
 </para>
 
 @gstbin: the object which received the signal.
-@arg1: 
+@arg1: the element that was removed from the bin
 

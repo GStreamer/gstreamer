@@ -12,7 +12,7 @@ formats can be used to perform seeking or conversions/query operations.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GstPad, #GstElement
 </para>
 
 <!-- ##### ENUM GstFormat ##### -->
@@ -28,6 +28,21 @@ Standard predefined formats
 @GST_FORMAT_PERCENT: percentage of stream
 @GST_FORMAT_UNITS: frames for video, samples for audio, other definitions as 
                    defined by the media type.
+
+<!-- ##### MACRO GST_FORMAT_PERCENT_MAX ##### -->
+<para>
+The PERCENT format is between 0 and this value
+</para>
+
+
+
+<!-- ##### MACRO GST_FORMAT_PERCENT_SCALE ##### -->
+<para>
+The value used to scale down the reported PERCENT format value to
+its real value.
+</para>
+
+
 
 <!-- ##### STRUCT GstFormatDefinition ##### -->
 <para>
@@ -65,6 +80,16 @@ of formats.
 </para>
 
 @nick: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_formats_contains ##### -->
+<para>
+
+</para>
+
+@formats: 
+@format: 
 @Returns: 
 
 

@@ -137,15 +137,6 @@ Get the current refcount value
 @data: The GstData to query
 
 
-<!-- ##### MACRO GST_DATA_REFCOUNT_READ ##### -->
-<para>
-Read the current refcount value into the specified value
-</para>
-
-@data: The GstData to get the refcount value of
-@value: A pointer to a gint to hold the refcount value
-
-
 <!-- ##### MACRO GST_DATA_COPY_FUNC ##### -->
 <para>
 Get access to the copy function of the data

@@ -124,25 +124,25 @@ gst_query_type_get_by_nick (const gchar *nick)
 }
 
 /**
- * gst_queries_contains:
- * @queries: The query array to search
- * @query: the query to find
+ * gst_query_types_contains:
+ * @types: The query array to search
+ * @type: the querytype to find
  *
  * See if the given query is inside the query array.
  *
  * Returns: TRUE if the query is found inside the array
  */
 gboolean
-gst_queries_contains (const GstQueryType *queries, GstQueryType query)
+gst_query_types_contains (const GstQueryType *types, GstQueryType type)
 {
-  if (!queries)
+  if (!types)
     return FALSE;
 
-  while (*queries) {
-    if (*queries == query)
+  while (*types) {
+    if (*types == type)
       return TRUE;
 
-    queries++;
+    types++;
   }
   return FALSE;
 }
@@ -150,16 +150,16 @@ gst_queries_contains (const GstQueryType *queries, GstQueryType query)
 
 /**
  * gst_query_type_get_details:
- * @query: The query to get details of
+ * @type: The query to get details of
  *
  * Get details about the given query.
  *
  * Returns: The #GstQueryTypeDefinition for @query or NULL on failure.
  */
 const GstQueryTypeDefinition*
-gst_query_type_get_details (GstQueryType query)
+gst_query_type_get_details (GstQueryType type)
 {
-  return g_hash_table_lookup (_query_type_to_nick, GINT_TO_POINTER (query));
+  return g_hash_table_lookup (_query_type_to_nick, GINT_TO_POINTER (type));
 }
 
 /**
