@@ -153,6 +153,10 @@ make_mpeg_decoder_pipeline (const gchar *path, GstIndex *index)
   audio_bin = gst_bin_new ("audio_bin");
   audio_decoder = gst_element_factory_make ("mad", "audio_decoder");
 
+  setup_dynamic_linking (pipeline, demux, "audio_00", 
+		         gst_element_get_pad (audio_decoder, "sink"),
+			 audio_bin, index);
+
   gst_bin_add (GST_BIN (audio_bin), audio_decoder);
 
   if (index) {
