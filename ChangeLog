@@ -5,6 +5,7 @@
 	  add check to make sure gst-compprep works
 	* testsuite/elements/gst-inspect-check.in:
 	  improve initialization output
+	* testsuite/Makefile.am:
 	* testsuite/gst-inspect-check:
 	  remove old file
 

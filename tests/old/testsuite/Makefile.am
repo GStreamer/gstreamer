@@ -26,5 +26,3 @@ tests_fail =
 # we makes them, we gots to clean them
 CLEANFILES += test-registry.xml
 
-EXTRA_DIST = gst-inspect-check
-
