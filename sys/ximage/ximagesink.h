@@ -20,7 +20,7 @@
 #ifndef __GST_XIMAGESINK_H__
 #define __GST_XIMAGESINK_H__
 
-#include <gst/gst.h>
+#include <gst/video/gstvideosink.h>
 
 /* FIXME : We should have a configure test for shm support */
 #define HAVE_XSHM
@@ -104,17 +104,12 @@ struct _GstXImage {
 
 struct _GstXImageSink {
   /* Our element stuff */
-  GstElement element;
+  GstVideoSink videosink;
   
-  GstPad *sinkpad;
-  
-  GstClock *clock;
-
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXImage *ximage;
   
-  gint width, height;
   gfloat framerate;
   GMutex *x_lock;
   
@@ -127,7 +122,7 @@ struct _GstXImageSink {
 };
 
 struct _GstXImageSinkClass {
-  GstElementClass parent_class;
+  GstVideoSinkClass parent_class;
 };
 
 GType gst_ximagesink_get_type(void);
