@@ -34,6 +34,7 @@ extern "C" {
 #define GST_BUFFER_POOL(pool) \
   ((GstBufferPool *)(pool))
 #define GST_BUFFER_POOL_LOCK(pool)	(g_mutex_lock(GST_BUFFER_POOL(pool)->lock))
+#define GST_BUFFER_POOL_UNLOCK(pool)	(g_mutex_unlock(GST_BUFFER_POOL(pool)->lock))
 
 typedef struct _GstBufferPool GstBufferPool;
 
