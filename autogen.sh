@@ -13,7 +13,7 @@ then
   cvs co common 
 else
   echo "+ updating common/ from cvs"
-  cd common; cvs -update -dP; cd ..
+  cd common; cvs update -dP; cd ..
 fi
 
 # source helper functions
