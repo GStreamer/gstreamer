@@ -587,7 +587,7 @@ gst_spider_find_element_to_plug (GstElement *src, GstElementFactory *fac, GstPad
   {
     GstPad *pad = (GstPad *) GST_PAD_REALIZE (padlist->data);
     /* is the pad on the right side and is it connected? */
-    if ((GST_PAD_DIRECTION (pad) == dir) && (pad = GST_PAD (GST_RPAD_PEER (pad))))
+    if ((GST_PAD_DIRECTION (pad) == dir) && (pad = (GstPad *) (GST_RPAD_PEER (pad))))
     {
       /* is the element the pad is connected to of the right type? */
       GstElement *element = GST_PAD_PARENT (pad);
