@@ -1,5 +1,8 @@
 2005-02-10  Andy Wingo  <wingo@pobox.com>
 
+	* docs/gst/tmpl: Commit whatever automagic updates gtkdoc is
+	doing.
+
 	* testsuite/bytestream: Removed, getrange replaces bytestream in
 	-THREADED.
 

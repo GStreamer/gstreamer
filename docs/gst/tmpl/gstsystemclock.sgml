@@ -21,9 +21,6 @@ system time.
 </para>
 
 @clock: 
-@mutex: 
-@cond: 
-@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_system_clock_obtain ##### -->
 <para>

@@ -28,16 +28,6 @@ clock so that the clock is always a good measure of the time in the pipeline.
 
 @flags: 
 
-<!-- ##### ARG GstClock:event-diff ##### -->
-<para>
-
-</para>
-
-<!-- ##### ARG GstClock:max-diff ##### -->
-<para>
-Maximum allowed diff for clock sync requests against the real time.
-</para>
-
 <!-- ##### ARG GstClock:stats ##### -->
 <para>
 Boolean property to activate stat generation on the clock.
@@ -143,6 +133,7 @@ All pending timeouts or periodic notifies are converted into
 an entry.
 </para>
 
+@refcount: 
 
 <!-- ##### USER_FUNCTION GstClockCallback ##### -->
 <para>
@@ -155,15 +146,6 @@ The function prototype of the callback.
 @user_data: user data passed in the async_wait call
 @Returns: 
 
-
-<!-- ##### ENUM GstClockEntryStatus ##### -->
-<para>
-The status of a clock timeout.
-</para>
-
-@GST_CLOCK_ENTRY_OK: timeout happened
-@GST_CLOCK_ENTRY_EARLY: request for timout that has been passed
-@GST_CLOCK_ENTRY_RESTART: need to restart the timeout request
 
 <!-- ##### ENUM GstClockEntryType ##### -->
 <para>
@@ -226,12 +208,13 @@ The status of the entry
 The return value of a clock operation.
 </para>
 
-@GST_CLOCK_UNSCHEDULED: 
-@GST_CLOCK_TIMEOUT: The operation timed out.
+@GST_CLOCK_OK: 
 @GST_CLOCK_EARLY: The operation was scheduled too late.
+@GST_CLOCK_UNSCHEDULED: 
+@GST_CLOCK_BUSY: 
+@GST_CLOCK_BADTIME: 
 @GST_CLOCK_ERROR: An error occured
 @GST_CLOCK_UNSUPPORTED: Operation is not supported
-@GST_CLOCK_OK: 
 
 <!-- ##### ENUM GstClockFlags ##### -->
 <para>
@@ -243,7 +226,6 @@ The capabilities of this clock
 @GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC: This clock can do sync periodic timeout requests
 @GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC: This clock can do async periodic timeout callbacks
 @GST_CLOCK_FLAG_CAN_SET_RESOLUTION: The resolution of this clock can be changed
-@GST_CLOCK_FLAG_CAN_SET_SPEED: The speed of this clock can be changed
 
 <!-- ##### MACRO GST_CLOCK_FLAGS ##### -->
 <para>
@@ -273,15 +255,6 @@ Get the clock flags
 
 
 <!-- ##### FUNCTION gst_clock_get_time ##### -->
-<para>
-
-</para>
-
-@clock: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_clock_get_next_id ##### -->
 <para>
 
 </para>
@@ -342,22 +315,6 @@ Get the clock flags
 
 
 <!-- ##### FUNCTION gst_clock_id_unschedule ##### -->
-<para>
-
-</para>
-
-@id: 
-
-
-<!-- ##### FUNCTION gst_clock_id_unlock ##### -->
-<para>
-
-</para>
-
-@id: 
-
-
-<!-- ##### FUNCTION gst_clock_id_free ##### -->
 <para>
 
 </para>

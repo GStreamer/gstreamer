@@ -60,29 +60,6 @@ Get the state of the scheduler.
 @sched: 
 
 
-<!-- ##### FUNCTION gst_scheduler_clock_wait ##### -->
-<para>
-
-</para>
-
-@sched: 
-@element: 
-@id: 
-@jitter: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@clock: 
-@time: 
-
-
-<!-- ##### FUNCTION gst_scheduler_show ##### -->
-<para>
-
-</para>
-
-@sched: 
-
-
 <!-- ##### MACRO GST_SCHEDULER_DEFAULT_NAME ##### -->
 <para>
 

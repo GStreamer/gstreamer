@@ -301,6 +301,16 @@ If the refcount is 1, this function just returns the original buffer.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_buffer_join ##### -->
+<para>
+
+</para>
+
+@buf1: 
+@buf2: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_buffer_merge ##### -->
 <para>
 

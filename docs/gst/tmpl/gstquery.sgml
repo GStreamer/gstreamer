@@ -95,11 +95,3 @@ Convenience function to define a function that returns an array of query types.
 @Param1: 
 
 
-<!-- ##### FUNCTION gst_query_type_get_definitions ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-

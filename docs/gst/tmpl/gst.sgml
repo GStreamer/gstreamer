@@ -140,33 +140,3 @@ pipeline</ulink> and Microsoft's DirectShow for some background.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_use_threads ##### -->
-<para>
-
-</para>
-
-@use_threads: 
-
-
-<!-- ##### FUNCTION gst_has_threads ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_main ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### FUNCTION gst_main_quit ##### -->
-<para>
-
-</para>
-
-
-
