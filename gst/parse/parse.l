@@ -21,11 +21,11 @@
 #define YY_DECL int _gst_parse_yylex (YYSTYPE *lvalp)
 %}
 
-_operators [(){}.:!,=]
+_operator [(){}.:!,;=]
 _identifier [[:alpha:]][[:alnum:]\-_%]*
 
 _char ("\\".)|([^[:space:]])
-_string {_char}+|("\""([^\"]|"\\\"")*"\"")
+_string {_char}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
 
 _comma [[:space:]]*","[[:space:]]*
 _assign [[:space:]]*"="[[:space:]]*
@@ -37,6 +37,12 @@ _assignment {_identifier}{_assign}{_string}
 _padref "."{_identifier}
 _ref {_identifier}"."{_identifier}?
 _binref {_identifier}[[:space:]]*"."[[:space:]]*"("
+
+/* links */
+_capschar ("\\".)|([^[:space:]!.,;()\]\[])
+_capsstring {_capschar}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
+_mimetype ({_capschar}+"/"{_capschar}+)|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
+_link ("!"[[:space:]]*{_mimetype}(","([^!]|{_capsstring})+)?[[:space:]]*"!")|("!")
 
 %x value
 %option noyywrap
@@ -83,7 +89,25 @@ _binref {_identifier}[[:space:]]*"."[[:space:]]*"("
     return IDENTIFIER;
 }
 
-{_operators} { PRINT ("OPERATOR: [%s]\n", yytext); return *yytext; }
+{_link} {
+    gchar *c = yytext;
+    PRINT ("LINK: %s\n", yytext);
+    c++;
+    if (*c) {
+      while (g_ascii_isspace (*c)) c++;
+      c = lvalp->s = gst_parse_strdup (c);
+      while (*c) c++;
+      g_assert (*--c == '!');
+      while (g_ascii_isspace (*--c));
+      *++c = '\0';
+    } else {
+      lvalp->s = NULL;
+    }
+    BEGIN (INITIAL);
+    return LINK;
+}
+
+{_operator} { PRINT ("OPERATOR: [%s]\n", yytext); return *yytext; }
 
 [[:space:]]+ { PRINT ("SPACE: [%s]\n", yytext); }
 

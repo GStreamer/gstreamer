@@ -464,9 +464,10 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   g_assert (GST_IS_ELEMENT (src));
   g_assert (GST_IS_ELEMENT (sink));
   
-  GST_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u", 
+  GST_INFO (GST_CAT_PIPELINE, "linking %s(%s):%u to %s(%s):%u with caps \"%s\"", 
             GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "---", g_slist_length (srcs),
-            GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "---", g_slist_length (sinks));
+            GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "---", g_slist_length (sinks),
+	    link->caps ? gst_caps_to_string (link->caps) : "-");
 
   if (!srcs || !sinks) {
     if (gst_element_link_pads_filtered (src, srcs ? (const gchar *) srcs->data : NULL,
@@ -535,6 +536,7 @@ static int yyerror (const char *s);
 %token <s> IDENTIFIER
 %left <s> REF PADREF BINREF
 %token <s> ASSIGNMENT
+%token <s> LINK
 
 %type <g> graph
 %type <c> chain bin
@@ -604,7 +606,13 @@ linkpart:	reference		      { $$ = $1; }
 	|	/* NOP */		      { MAKE_REF ($$, NULL, NULL); }
 	;
 	
-link:		linkpart '!' linkpart	      { $$ = $1;
+link:		linkpart LINK linkpart	      { $$ = $1;
+						if ($2) {
+						  $$->caps = gst_caps_from_string ($2);
+						  if (!$$->caps)
+						    ERROR (GST_PARSE_ERROR_LINK, "could not parse caps \"%s\"", $2);
+						  gst_parse_strfree ($2);
+						}
 						$$->sink_name = $3->src_name;
 						$$->sink_pads = $3->src_pads;
 						gst_parse_link_free ($3);
