@@ -23,7 +23,7 @@
 
 #include <gstflacenc.h>
 
-extern GstPadTemplate *enc_src_template, *enc_sink_template;
+extern GstPadTemplate *gst_flacenc_src_template, *gst_flacenc_sink_template;
 
 /* elementfactory information */
 GstElementDetails flacenc_details = {
@@ -124,12 +124,12 @@ gst_flacenc_sinkconnect (GstPad *pad, GstCaps *caps)
 static void
 gst_flacenc_init (FlacEnc *flacenc)
 {
-  flacenc->sinkpad = gst_pad_new_from_template (enc_sink_template, "sink");
+  flacenc->sinkpad = gst_pad_new_from_template (gst_flacenc_sink_template, "sink");
   gst_element_add_pad(GST_ELEMENT(flacenc),flacenc->sinkpad);
   gst_pad_set_chain_function(flacenc->sinkpad,gst_flacenc_chain);
   gst_pad_set_connect_function (flacenc->sinkpad, gst_flacenc_sinkconnect);
 
-  flacenc->srcpad = gst_pad_new_from_template (enc_src_template, "src");
+  flacenc->srcpad = gst_pad_new_from_template (gst_flacenc_src_template, "src");
   gst_element_add_pad(GST_ELEMENT(flacenc),flacenc->srcpad);
 
   flacenc->first = TRUE;

@@ -26,8 +26,8 @@ extern GstElementDetails flacdec_details;
 
 static GstCaps* 	flac_type_find 	(GstBuffer *buf, gpointer private);
 
-GstPadTemplate *dec_src_template, *dec_sink_template; 
-GstPadTemplate *enc_src_template, *enc_sink_template;
+GstPadTemplate *gst_flacdec_src_template, *gst_flacdec_sink_template; 
+GstPadTemplate *gst_flacenc_src_template, *gst_flacenc_sink_template;
 
 static GstCaps*
 flac_caps_factory (void)
@@ -101,16 +101,16 @@ plugin_init (GModule *module, GstPlugin *plugin)
   flac_caps = flac_caps_factory ();
 
   /* register sink pads */
-  enc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+  gst_flacenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      raw_caps, NULL);
-  gst_element_factory_add_pad_template (enc, enc_sink_template);
+  gst_element_factory_add_pad_template (enc, gst_flacenc_sink_template);
 
   /* register src pads */
-  enc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+  gst_flacenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     flac_caps, NULL);
-  gst_element_factory_add_pad_template (enc, enc_src_template);
+  gst_element_factory_add_pad_template (enc, gst_flacenc_src_template);
 
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (enc));
 
@@ -121,16 +121,16 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_set_rank (dec, GST_ELEMENT_RANK_PRIMARY);
  
   /* register sink pads */
-  dec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
+  gst_flacdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                              GST_PAD_ALWAYS, 
 					      flac_caps, NULL);
-  gst_element_factory_add_pad_template (dec, dec_sink_template);
+  gst_element_factory_add_pad_template (dec, gst_flacdec_sink_template);
 
   /* register src pads */
-  dec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
+  gst_flacdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                             GST_PAD_ALWAYS, 
 					     raw_caps, NULL);
-  gst_element_factory_add_pad_template (dec, dec_src_template);
+  gst_element_factory_add_pad_template (dec, gst_flacdec_src_template);
   
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (dec));
 

@@ -24,7 +24,7 @@
 #include "gstflacdec.h"
 
 
-extern GstPadTemplate *dec_src_template, *dec_sink_template;
+extern GstPadTemplate *gst_flacdec_src_template, *gst_flacdec_sink_template;
 
 /* elementfactory information */
 GstElementDetails flacdec_details = {
@@ -127,12 +127,12 @@ gst_flacdec_class_init (FlacDecClass *klass)
 static void 
 gst_flacdec_init (FlacDec *flacdec) 
 {
-  flacdec->sinkpad = gst_pad_new_from_template (dec_sink_template, "sink");
+  flacdec->sinkpad = gst_pad_new_from_template (gst_flacdec_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (flacdec), flacdec->sinkpad);
   gst_pad_set_convert_function (flacdec->sinkpad, NULL);
 
   gst_element_set_loop_function (GST_ELEMENT (flacdec), gst_flacdec_loop);
-  flacdec->srcpad = gst_pad_new_from_template (dec_src_template, "src");
+  flacdec->srcpad = gst_pad_new_from_template (gst_flacdec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (flacdec), flacdec->srcpad);
   gst_pad_set_formats_function (flacdec->srcpad, gst_flacdec_get_src_formats);
   gst_pad_set_convert_function (flacdec->srcpad, gst_flacdec_convert_src);
