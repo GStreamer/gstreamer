@@ -523,10 +523,18 @@ GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
 dnl *** FFMPEG ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FFMPEG, true)
 GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
-  AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, "2002-12-14 12:00 GMT",
-                  HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
-  AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1, 
-                     [defined if we use uninstalled ffmpeg])
+  # only slurp in the case where we are in CVS mode;
+  # prerelease and release should get it disted
+  if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
+    AC_MSG_NOTICE(slurping FFmpeg CVS source)
+    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, "2002-12-14 12:00 GMT",
+                    HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+    AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1, 
+                       [defined if we use uninstalled ffmpeg])
+  else
+    AC_MSG_NOTICE(FFmpeg CVS code should be included already)
+    HAVE_FFMPEG=yes
+  fi
 ])
 
 dnl *** Gnome VFS ***
@@ -960,6 +968,13 @@ AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 GST_CFLAGS="$GST_CFLAGS -I\$(top_srcdir)/gst-libs $GST_ERROR"
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
+
+dnl ###########################
+dnl # Configure external libs #
+dnl ###########################
+if test "x$HAVE_FFMPEG" = xyes; then
+  AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg/ffmpeg)
+fi 
 
 dnl #########################
 dnl # Make the output files #
