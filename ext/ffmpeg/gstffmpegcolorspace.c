@@ -23,12 +23,12 @@
 #include "config.h"
 #endif
 
+#include <gst/gst.h>
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <ffmpeg/avcodec.h>
 #endif
-#include <gst/gst.h>
 
 #include "gstffmpegcodecmap.h"
 

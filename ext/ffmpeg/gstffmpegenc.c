@@ -48,7 +48,6 @@ struct _GstFFMpegEnc {
   /* cache */
   gulong bitrate;
   gint me_method;
-  gboolean hq;
   gint gop_size;
   gulong buffer_size;
 };
@@ -89,7 +88,6 @@ enum {
   ARG_0,
   ARG_BIT_RATE,
   ARG_GOP_SIZE,
-  ARG_HQ,
   ARG_ME_METHOD,
   ARG_BUFSIZE
   /* FILL ME */
@@ -170,10 +168,6 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass *klass)
       g_param_spec_int ("gop_size","GOP Size",
 			"Number of frames within one GOP",
 			0, G_MAXINT, 15, G_PARAM_READWRITE)); 
-    g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_HQ,
-      g_param_spec_boolean ("hq","HQ",
-			    "Brute Force (slow) MB-type decision mode",
-			    FALSE, G_PARAM_READWRITE)); 
     g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_ME_METHOD,
       g_param_spec_enum ("me_method","ME Method",
 			 "Motion Estimation Method",
@@ -188,10 +182,6 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass *klass)
       g_param_spec_ulong ("bitrate","Bit Rate",
 			  "Target Audio Bitrate",
 			  0, G_MAXULONG, 128000, G_PARAM_READWRITE)); 
-    g_object_class_install_property(G_OBJECT_CLASS (klass), ARG_HQ,
-      g_param_spec_boolean ("hq","HQ",
-			    "Brute Force (slow) MB-type decision mode",
-			    FALSE, G_PARAM_READWRITE));
   }
 
   gobject_class->set_property = gst_ffmpegenc_set_property;
@@ -225,7 +215,6 @@ gst_ffmpegenc_init(GstFFMpegEnc *ffmpegenc)
     ffmpegenc->bitrate = 300000;
     ffmpegenc->buffer_size = 512 * 1024;
     ffmpegenc->gop_size = 15;
-    ffmpegenc->hq = FALSE;
   } else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
     ffmpegenc->bitrate = 128000;
   }
@@ -272,11 +261,6 @@ gst_ffmpegenc_connect (GstPad  *pad,
   ffmpegenc->context->bit_rate = ffmpegenc->bitrate;
   ffmpegenc->context->bit_rate_tolerance = ffmpegenc->bitrate;
   ffmpegenc->context->gop_size = ffmpegenc->gop_size;
-  if (ffmpegenc->hq) {
-    ffmpegenc->context->flags |= CODEC_FLAG_HQ;
-  } else {
-    ffmpegenc->context->flags &= ~CODEC_FLAG_HQ;
-  }
   ffmpegenc->context->me_method = ffmpegenc->me_method;
 
   /* general properties */
@@ -418,9 +402,6 @@ gst_ffmpegenc_set_property (GObject      *object,
     case ARG_GOP_SIZE:
       ffmpegenc->gop_size = g_value_get_int (value);
       break;
-    case ARG_HQ:
-      ffmpegenc->hq = g_value_get_boolean (value);
-      break;
     case ARG_ME_METHOD:
       ffmpegenc->me_method = g_value_get_enum (value);
       break;
@@ -451,9 +432,6 @@ gst_ffmpegenc_get_property (GObject    *object,
       break;
     case ARG_GOP_SIZE:
       g_value_set_int (value, ffmpegenc->gop_size);
-      break;
-    case ARG_HQ:
-      g_value_set_boolean (value, ffmpegenc->hq);
       break;
     case ARG_ME_METHOD:
       g_value_set_enum (value, ffmpegenc->me_method);

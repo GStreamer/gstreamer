@@ -20,13 +20,13 @@
  */
 
 #include "config.h"
+#include <gst/gst.h>
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <ffmpeg/avcodec.h>
 #endif
 #include <string.h>
-#include <gst/gst.h>
 
 #include "gstffmpegcodecmap.h"
 
@@ -758,9 +758,17 @@ gst_ffmpeg_caps_to_pixfmt (GstCaps        *caps,
       case GST_MAKE_FOURCC ('I','4','2','0'):
         context->pix_fmt = PIX_FMT_YUV420P;
         break;
-      case GST_MAKE_FOURCC ('Y','4','1','P'):
+      case GST_MAKE_FOURCC ('Y','4','1','B'):
         context->pix_fmt = PIX_FMT_YUV411P;
         break;
+      case GST_MAKE_FOURCC ('Y','U','V','9'):
+        context->pix_fmt = PIX_FMT_YUV410P;
+        break;
+#if 0
+      case FIXME:
+        context->pix_fmt = PIX_FMT_YUV444P;
+        break;
+#endif
       case GST_MAKE_FOURCC ('R','G','B',' '):
         if (gst_caps_has_property_typed (caps, "depth",
 					 GST_PROPS_INT_TYPE) &&

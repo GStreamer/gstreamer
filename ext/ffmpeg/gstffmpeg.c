@@ -22,6 +22,7 @@
  */
 
 #include "config.h"
+#include <gst/gst.h>
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #include <avformat.h>
@@ -29,8 +30,6 @@
 #include <ffmpeg/avcodec.h>
 #include <ffmpeg/avformat.h>
 #endif
-
-#include <gst/gst.h>
 
 extern gboolean gst_ffmpegdemux_register (GstPlugin *plugin);
 extern gboolean gst_ffmpegdec_register (GstPlugin *plugin);

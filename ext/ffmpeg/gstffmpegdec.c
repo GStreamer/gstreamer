@@ -96,11 +96,13 @@ static void	gst_ffmpegdec_chain		(GstPad    *pad,
 static GstElementStateReturn
 		gst_ffmpegdec_change_state	(GstElement *element);
 
+#if 0
 /* some sort of bufferpool handling, but different */
 static int	gst_ffmpegdec_get_buffer	(AVCodecContext *context,
 						 AVFrame        *picture);
 static void	gst_ffmpegdec_release_buffer	(AVCodecContext *context,
 						 AVFrame        *picture);
+#endif
 
 static GstElementClass *parent_class = NULL;
 
@@ -185,9 +187,11 @@ gst_ffmpegdec_connect (GstPad  *pad,
   /* set defaults */
   avcodec_get_context_defaults (ffmpegdec->context);
 
+#if 0
   /* set buffer functions */
   ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
   ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
+#endif
 
   /* get size and so */
   gst_ffmpeg_caps_to_codectype (oclass->in_plugin->type,
@@ -216,6 +220,7 @@ gst_ffmpegdec_connect (GstPad  *pad,
   return GST_PAD_LINK_OK;
 }
 
+#if 0
 static int
 gst_ffmpegdec_get_buffer (AVCodecContext *context,
 			  AVFrame        *picture)
@@ -268,6 +273,7 @@ gst_ffmpegdec_release_buffer (AVCodecContext *context,
     picture->linesize[i] = 0;
   }
 }
+#endif
 
 static void
 gst_ffmpegdec_chain (GstPad    *pad,
@@ -306,8 +312,24 @@ gst_ffmpegdec_chain (GstPad    *pad,
 				    &have_data,
 				    data, size);
         if (have_data) {
-          outbuf = GST_BUFFER (ffmpegdec->picture->base[0]);
-          GST_BUFFER_SIZE (outbuf) = GST_BUFFER_MAXSIZE (outbuf);
+          /* libavcodec constantly crashes on stupid buffer allocation
+           * errors inside. This drives me crazy, so we let it allocate
+           * it's own buffers and copy to our own buffer afterwards... */
+          AVPicture pic;
+          gint size = avpicture_get_size (ffmpegdec->context->pix_fmt,
+					  ffmpegdec->context->width,
+					  ffmpegdec->context->height);
+          outbuf = gst_buffer_new_and_alloc (size);
+          avpicture_fill (&pic, GST_BUFFER_DATA (outbuf),
+			  ffmpegdec->context->pix_fmt,
+			  ffmpegdec->context->width,
+			  ffmpegdec->context->height);
+          img_convert (&pic, ffmpegdec->context->pix_fmt,
+		       (AVPicture *) ffmpegdec->picture,
+		       ffmpegdec->context->pix_fmt,
+		       ffmpegdec->context->width,
+		       ffmpegdec->context->height);
+
           /* this isn't necessarily true, but it's better than nothing */
           GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
         }
