@@ -88,6 +88,7 @@ struct _GstObjectClass {
 
   /* signals */
   void		(*parent_set)		(GstObject *object, GstObject *parent);
+  void		(*parent_unset)		(GstObject *object, GstObject *parent);
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
 #endif

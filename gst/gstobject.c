@@ -28,6 +28,7 @@
 /* Object signals and args */
 enum {
   PARENT_SET,
+  PARENT_UNSET,
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   OBJECT_SAVED,
 #endif
@@ -116,6 +117,11 @@ gst_object_class_init (GstObjectClass *klass)
   gst_object_signals[PARENT_SET] =
     g_signal_new ("parent_set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
+                  g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+                  G_TYPE_OBJECT);
+  gst_object_signals[PARENT_UNSET] =
+    g_signal_new ("parent_unset", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL, NULL,
                   g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
                   G_TYPE_OBJECT);
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
@@ -390,6 +396,8 @@ gst_object_unparent (GstObject *object)
 
   GST_DEBUG (GST_CAT_REFCOUNTING, "unparent '%s'",GST_OBJECT_NAME(object));
   
+  g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0, object->parent);
+
   object->parent = NULL;
   gst_object_unref (object);
 }
