@@ -2,8 +2,6 @@
 
 # FIXME FIXME
 
-LIBADD += $(GNOME_LIBS) $(GST_LIBS)
-CFLAGS += $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
 
 bin_PROGRAMS = gstmediaplay 
 
@@ -36,6 +34,6 @@ noinst_HEADERS = \
 	gstplayprivate.h
 
 libgstmediaplay_la_LDFLAGS = -rdynamic
-
-gstmediaplay_CFLAGS = $(LIBGLADE_GNOME_CFLAGS)
+libgstmediaplay_la_CFLAGS = $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
+gstmediaplay_CFLAGS = $(LIBGLADE_GNOME_CFLAGS) $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
 gstmediaplay_LDADD = $(GST_LIBS) $(LIBGLADE_GNOME_LIBS) libgstmediaplay.la

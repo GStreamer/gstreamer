@@ -1,5 +1,5 @@
 noinst_PROGRAMS = helloworld2
 
-LIBS += $(GST_LIBS)
-CFLAGS += $(GST_CFLAGS)
+helloworld2_LDADD = $(GST_LIBS)
+helloworld2_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 

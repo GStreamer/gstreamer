@@ -46,6 +46,7 @@ _gst_buffer_initialize (void)
     0, // sizeof(object),
     0,
     NULL,
+    NULL,
   };
 
   // round up to the nearest 32 bytes for cache-line and other efficiencies
@@ -173,10 +174,10 @@ gst_buffer_create_sub (GstBuffer *parent,
   buffer->maxsize = parent->size - offset;
 
   // deal with bogus/unknown offsets
-  if (parent->offset != -1)
+  if (parent->offset != (guint32)-1)
     buffer->offset = parent->offset + offset;
   else
-    buffer->offset = -1;
+    buffer->offset = (guint32)-1;
 
   // again, for lack of better, copy parent's timestamp
   buffer->timestamp = parent->timestamp;
@@ -240,6 +241,7 @@ gst_buffer_append (GstBuffer *buffer,
     newbuf->data = g_malloc (newbuf->size);
     memcpy (newbuf->data, buffer->data, buffer->size);
     memcpy (newbuf->data+buffer->size, append->data, append->size);
+    GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_UNLOCK (buffer);
     gst_buffer_unref (buffer);
     buffer = newbuf;
@@ -489,7 +491,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     // copy the second buffer's data across
     memcpy(newbuf->data + (buf1->size - offset), buf2->data, len - (buf1->size - offset));
 
-    if (newbuf->offset != -1)
+    if (newbuf->offset != (guint32)-1)
       newbuf->offset = buf1->offset + offset;
     newbuf->timestamp = buf1->timestamp;
     if (buf2->maxage > buf1->maxage) newbuf->maxage = buf2->maxage;
@@ -518,6 +520,11 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
 GstBuffer *
 gst_buffer_merge (GstBuffer *buf1, GstBuffer *buf2)
 {
+  GstBuffer *result;
   // we're just a specific case of the more general gst_buffer_span()
-  return gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
+  result = gst_buffer_span (buf1, 0, buf2, buf1->size + buf2->size);
+
+  GST_BUFFER_TIMESTAMP (result) = GST_BUFFER_TIMESTAMP (buf1);
+
+  return result;
 }

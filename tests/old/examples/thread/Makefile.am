@@ -1,5 +1,5 @@
 noinst_PROGRAMS = thread
 
-LIBS += $(GST_LIBS)
-CFLAGS += $(GST_CFLAGS)
+thread_LDADD = $(GST_LIBS)
+thread_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 

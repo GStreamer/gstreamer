@@ -35,6 +35,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define GST_NUM_STATES 4
 
 typedef enum {
   GST_STATE_VOID_PENDING	= 0,
@@ -106,9 +107,6 @@ typedef enum {
   /* the element has to be scheduled as a cothread for any sanity */
   GST_ELEMENT_USE_COTHREAD,
 
-  /* if this element is in EOS */
-  GST_ELEMENT_EOS,
-
   /* if this element can handle events */
   GST_ELEMENT_EVENT_AWARE,
 
@@ -141,7 +139,7 @@ struct _GstElement {
   guint8 		current_state;
   guint8 		pending_state;
   GstElement 		*manager;
-  GstSchedule 		*sched;
+  GstScheduler 		*sched;
   GstElementLoopFunction loopfunc;
   cothread_state 	*threadstate;
 
@@ -163,12 +161,10 @@ struct _GstElementClass {
   gint 			numpadtemplates;
   
   /* signal callbacks */
-  void (*state_change)		(GstElement *element,GstElementState state);
-  void (*new_pad)		(GstElement *element,GstPad *pad);
-  void (*pad_removed)		(GstElement *element,GstPad *pad);
-  void (*new_ghost_pad) 	(GstElement *element,GstPad *pad);
-  void (*ghost_pad_removed)	(GstElement *element,GstPad *pad);
-  void (*error)			(GstElement *element,gchar *error);
+  void (*state_change)		(GstElement *element, GstElementState old, GstElementState state);
+  void (*new_pad)		(GstElement *element, GstPad *pad);
+  void (*pad_removed)		(GstElement *element, GstPad *pad);
+  void (*error)			(GstElement *element, gchar *error);
   void (*eos)			(GstElement *element);
 
   /* local pointers for get/set */
@@ -195,8 +191,8 @@ const gchar*            gst_element_get_name            (GstElement *element);
 void                    gst_element_set_parent          (GstElement *element, GstObject *parent);
 GstObject*              gst_element_get_parent          (GstElement *element);
 
-void			gst_element_set_sched		(GstElement *element, GstSchedule *sched);
-GstSchedule*		gst_element_get_sched		(GstElement *element);
+void			gst_element_set_sched		(GstElement *element, GstScheduler *sched);
+GstScheduler*		gst_element_get_sched		(GstElement *element);
 
 void			gst_element_add_pad		(GstElement *element, GstPad *pad);
 void			gst_element_remove_pad		(GstElement *element, GstPad *pad);
@@ -219,9 +215,11 @@ void			gst_element_signal_eos		(GstElement *element);
 
 
 GstElementState         gst_element_get_state           (GstElement *element);
-/* called by the app to set the state of the element */
 gint			gst_element_set_state		(GstElement *element, GstElementState state);
-const gchar *		gst_element_statename		(GstElementState state);
+
+void 			gst_element_wait_state_change 	(GstElement *element);
+	
+const gchar*		gst_element_statename		(GstElementState state);
 
 void			gst_element_error		(GstElement *element, const gchar *error);
 

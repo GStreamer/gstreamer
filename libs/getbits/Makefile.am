@@ -21,4 +21,4 @@ check_PROGRAMS = gbtest
 gbtest_SOURCES = gbtest.c
 gbtest_LDADD = libgstgetbits.la $(GST_LIBS)
 
-CFLAGS += -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math
+libgstgetbits_la_CFLAGS = -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math $(GLIB_CFLAGS) $(XML_CFLAGS)

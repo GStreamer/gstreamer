@@ -11,7 +11,7 @@ typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
 typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
-typedef struct _GstSchedule GstSchedule;
-typedef struct _GstScheduleClass GstScheduleClass;
+typedef struct _GstScheduler GstScheduler;
+typedef struct _GstSchedulerClass GstSchedulerClass;
 
 #endif

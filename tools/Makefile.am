@@ -28,6 +28,6 @@ man_MANS = gstreamer-launch.1 gstreamer-register.1 gstreamer-inspect.1 \
 	gstreamer-complete.1 gstreamer-compprep.1
 
 LDADD = $(GST_LIBS)
-CFLAGS = $(LIBGST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
+CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" $(GLIB_CFLAGS) $(XML_CFLAGS)
 
 EXTRA_DIST = $(man_MANS)

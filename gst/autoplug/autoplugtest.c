@@ -9,16 +9,16 @@ void cache_empty(GstElement *element, gpointer private) {
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   gst_element_disconnect(src,"src",cache,"sink");
-  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
   gst_element_disconnect(cache,"src",decoder,"sink");
-  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
   gst_bin_remove (GST_BIN(autobin), cache);
-  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
   gst_element_connect(src,"src",decoder,"sink");
-  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
 
   fprintf(stderr,"done with cache_empty\n");
 }
@@ -32,7 +32,7 @@ void have_type(GstElement *element, GstCaps *caps, GstCaps **private_caps) {
   gst_element_disconnect(cache,"src",typefind,"sink");
   gst_bin_remove(GST_BIN(autobin),typefind);
 
-  gst_schedule_show (GST_ELEMENT_SCHED(pipeline));
+  gst_scheduler_show (GST_ELEMENT_SCHED(pipeline));
 
   if (strstr(gst_caps_get_mime(caps),"mp3")) {
     decoder = gst_elementfactory_make ("mad","decoder");

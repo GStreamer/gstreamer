@@ -86,6 +86,8 @@ _gst_plugin_initialize (void)
                                       PLUGINS_BUILDDIR "/gst/types");
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
                                       PLUGINS_BUILDDIR "/gst/autoplug");
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
+                                      PLUGINS_BUILDDIR "/gst/schedulers");
 #endif /* PLUGINS_USE_BUILDDIR */
 
 #ifndef GST_DISABLE_REGISTRY

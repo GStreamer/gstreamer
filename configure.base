@@ -42,16 +42,14 @@ AC_SUBST(GST_REVISION)
 AC_SUBST(GST_AGE)
 AC_SUBST(GST_LIBVERSION)
 
-
 AM_MAINTAINER_MODE
 
 AC_PROG_CC
+AM_PROG_CC_STDC
+AM_PROG_AS
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_ISC_POSIX
-SUBSTFOR configure.ac:AC_HEADER_STDC([])
-SUBSTFOR configure.in:AC_STDC_HEADERS
-AC_ARG_PROGRAM
 
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
@@ -59,7 +57,8 @@ AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
-CFLAGS=""
+SUBSTFOR configure.ac:AC_HEADER_STDC([])
+SUBSTFOR configure.in:AC_STDC_HEADERS
 
 dnl This is used for the -config script...
 builddir=`pwd`
@@ -193,8 +192,7 @@ int main () { return !(sizeof(off_t) == 8); }
 ],
 [
 AC_MSG_RESULT(yes)
-CORE_CFLAGS="$CORE_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
-GST_DEFINE_CFLAGS="$GST_DEFINE_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+GST_CFLAGS="$GST_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
 ],
 [
 AC_MSG_RESULT(no)
@@ -210,14 +208,13 @@ dnl Check for glib2
 GST_CHECK_FEATURE(GLIB2, [use of glib-2.0 and GObject], , [
   PKG_CHECK_MODULES(GLIB2, glib-2.0 gobject-2.0 gthread-2.0 gmodule-2.0,
     HAVE_GLIB2=yes,HAVE_GLIB2=no)
-  AC_SUBST(GLIB2_LIBS)
-  AC_SUBST(GLIB2_CFLAGS)
+  GLIB_LIBS=$GLIB2_LIBS
+  GLIB_CFLAGS=$GLIB2_CFLAGS
+  AC_SUBST(GLIB_LIBS)
+  AC_SUBST(GLIB_CFLAGS)
 ], disabled, [
-  CORE_LIBS="$CORE_LIBS $GLIB2_LIBS"
-  CORE_CFLAGS="$CORE_CFLAGS $GLIB2_CFLAGS"
-
   AC_DEFINE(USE_GLIB2)
-  GST_DEFINE_CFLAGS="$GST_DEFINE_CFLAGS -DUSE_GLIB2"
+  GST_CFLAGS="$GST_CFLAGS -DUSE_GLIB2"
 ])
 AC_SUBST(USE_GLIB2)
 
@@ -232,8 +229,8 @@ if test x$USE_GLIB2 = xno; then
               AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
   HAVE_GTK=yes
 
-  CORE_LIBS="$CORE_LIBS $GLIB_LIBS $GTK_LIBS"
-  CORE_CFLAGS="$CORE_CFLAGS $GLIB_CFLAGS $GTK_CFLAGS"
+  GLIB_LIBS="$GLIB_LIBS $GTK_LIBS"
+  GLIB_CFLAGS="$GLIB_CFLAGS $GTK_CFLAGS"
 else
   GST_PKG_DEPS="glib-2.0 gobject-2.0 gmodule-2.0 gthread-2.0"
   
@@ -257,21 +254,13 @@ AC_PATH_PROG(XML_CONFIG, xml-config, no)
 if test x$XML_CONFIG = xno; then
   AC_MSG_ERROR(Couldn't find xml-config)
 fi
-xml_save_LIBS=$LIBS
-xml_save_CFLAGS=$CFLAGS
-XML_LIBS=`xml-config --libs`
-XML_CFLAGS=`xml-config --cflags`
-LIBS=$XML_LIBS
-CFLAGS=$XML_CFLAGS
-AC_CHECK_LIB(xml, xmlDocGetRootElement, ,
+XML_LIBS="`xml-config --libs`"
+XML_CFLAGS="`xml-config --cflags`"
+AC_CHECK_LIB(xml, xmlDocGetRootElement, :,
   [ AC_MSG_ERROR(Need version 1.8.1 or better of libxml) ],
   $XML_LIBS)
-LIBS=$xml_save_LIBS
-CFLAGS=$xml_save_CFLAGS
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
-CORE_LIBS="$CORE_LIBS $XML_LIBS"
-CORE_CFLAGS="$CORE_CFLAGS $XML_CFLAGS"
 
 
 dnl ==========================================================================
@@ -317,7 +306,6 @@ dnl AC_CHECK_LIB(artsflow, convert_stereo_2float_i16le, :, HAVE_ARTS=no, $LIBS)
 
 dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
 dnl FIXME: ensure only suitable flags result from artsc-config --cflags
-CPPFLAGS="$CPPFLAGS $ARTS_CFLAGS"
 AC_CHECK_HEADER(artsflow.h, :, HAVE_ARTS=no)
 
 SUBSTFOR configure.ac:AC_LANG_POP(C++)
@@ -420,17 +408,11 @@ else
   else
     LIBGLADE_GNOME_LIBS=`libglade-config --libs gnome`
     LIBGLADE_GNOME_CFLAGS=`libglade-config --cflags gnome`
-    libglade_save_CFLAGS="$CFLAGS"
-    libglade_save_LIBS="$LIBS"
-    CFLAGS="$CFLAGS $LIBGLADE_GNOME_CFLAGS $GTK_CFLAGS"
-    LIBS="$LIBS $LIBGLADE_GNOME_LIBS $GTK_LIBS"
     AC_TRY_LINK([#include <glade/glade.h>],[glade_gnome_init();],
   	        HAVE_LIBGLADE_GNOME="yes",
 	        AC_MSG_WARN(
       [Couldn't find gnome libraries for libglade - Can't build gstmediaplay and gsteditor])
 	     )
-    CFLAGS="$libglade_save_CFLAGS"
-    LIBS="$libglade_save_LIBS"
   fi
 fi
 AC_SUBST(LIBGLADE_GNOME_LIBS)
@@ -681,29 +663,7 @@ AC_CHECK_LIB(dvdread, DVDOpen, HAVE_LIBDVDREAD=yes, HAVE_LIBDVDREAD=no, )
 AC_CHECK_HEADER(dvdread/dvd_reader.h, :, HAVE_LIBDVDREAD=no)
 
 dnl Check for SDL library
-AC_MSG_CHECKING(SDL library)
-HAVE_LIBSDL=yes
-if sdl-config --libs > /dev/null 2>&1; then
-  SDL_VERSION=`sdl-config --version`
-  AC_MSG_RESULT([found (version $SDL_VERSION)])
-  SDL_LIBS="`sdl-config --libs`"
-  SDL_CFLAGS="`sdl-config --cflags`"
-  AC_CHECK_LIB(SDL, SDL_Init, :, HAVE_LIBSDL=no, $SDL_LIBS)
-  dnl AC_CHECK_HEADER uses CPPFLAGS, but not CFLAGS.
-  dnl Assume only suitable flags result from artsc-config --cflags
-  sdlcheck_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
-  AC_CHECK_HEADER(SDL.h, :, HAVE_LIBSDL=no)
-  CPPFLAGS="$sdlcheck_save_CPPFLAGS"
-  AC_CHECK_LIB(SDL, SDL_CreateYUVOverlay, :, HAVE_LIBSDL=no, $SDL_LIBS)
-else
-  AC_MSG_RESULT(not found)
-  HAVE_LIBSDL=no
-  SDL_LIBS=
-  SDL_CFLAGS=
-fi
-AC_SUBST(SDL_LIBS)
-AC_SUBST(SDL_CFLAGS)
+AM_PATH_SDL( , , HAVE_LIBSDL=no)
 
 if test "x$HAVE_LIBSDL" = "xno"; then
   AC_MSG_WARN(
@@ -904,7 +864,7 @@ GST_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 GST_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
 GST_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 
-GST_DEFINE_CFLAGS="$GST_DEFINE_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
+GST_CFLAGS="$GST_CFLAGS $GST_SUBSYSTEM_DISABLE_DEFINES"
 
 
 dnl ################################################
@@ -930,12 +890,12 @@ if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
   AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
 fi
 
-if test "x$USE_DEBUG" = xyes; then
-  CFLAGS="$CFLAGS -g"
-fi
+dnl if test "x$USE_DEBUG" = xyes; then
+dnl   CFLAGS="$CFLAGS -g"
+dnl fi
 
 if test "x$USE_PROFILING" = xyes; then
-  CFLAGS="$CFLAGS -pg -fprofile-arcs"
+dnl  CFLAGS="$CFLAGS -pg -fprofile-arcs"
   FOMIT_FRAME_POINTER=""
 else
   FOMIT_FRAME_POINTER="-fomit-frame-pointer"
@@ -1098,19 +1058,6 @@ PLUGINS_BUILDDIR=${builddir}
 AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR,"$PLUGINS_BUILDDIR")
 AC_SUBST(PLUGINS_BUILDDIR)
 
-dnl ##############################
-dnl # Set up the defaults cflags #
-dnl ##############################
-dnl CC="kgcc"
-if test "x$USE_PROFILING" = xyes; then
-  CFLAGS="$CORE_CFLAGS $CFLAGS -Wall"
-else
-  CFLAGS="$CORE_CFLAGS $CFLAGS -O6 -Wall"
-fi
-LIBS="$CORE_LIBS $LIBS"
-AC_SUBST(CORE_LIBS)
-AC_SUBST(CORE_CFLAGS)
-
 dnl Vars for everyone else
 GST_LIBS="\$(top_builddir)/gst/libgst.la"
 GST_CFLAGS="-I\$(top_srcdir) -I\$(top_srcdir)/include"
@@ -1118,30 +1065,11 @@ AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
 dnl Private vars for libgst only
-LIBGST_LIBS="$LIBS"
-LIBGST_CFLAGS="$CFLAGS $GST_CFLAGS"
+LIBGST_CFLAGS="$GST_CFLAGS"
 AC_SUBST(LIBGST_LIBS)
 AC_SUBST(LIBGST_CFLAGS)
 
-dnl CFLAGS for everyone else
-CFLAGS="$GST_CFLAGS $CFLAGS"
-LDFLAGS="$GST_LIBS $LDFLAGS"
-
-dnl Needed to make automake 1.4g happy.
-dnl FIXME: find as properly, rather than just using CC
-AS="\$(CC)"
-
-dnl Having to AC_SUBST these is messy, but doesn't seem to do any harm.
-dnl I'm not sure whether it's really necessary, but it removes some warnings
-dnl when automake 1.4g runs, and may be beneficial elsewhere.
-AC_SUBST(LIBS)
-AC_SUBST(CFLAGS)
-AC_SUBST(CPPFLAGS)
-AC_SUBST(LDFLAGS)
-AC_SUBST(AS)
-AC_SUBST(ASFLAGS)
-
-AC_SUBST(GST_DEFINE_CFLAGS)
+AC_SUBST(GST_CFLAGS)
 
 dnl #############################
 dnl # Configure the subpackages #
@@ -1173,6 +1101,9 @@ dnl #########################
 dnl # Make the output files #
 dnl #########################
 
+dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
+dnl components/bonobo-gstmediaplay/Makefile
+dnl someone should fix this test/misc/Makefile
 SUBSTFOR configure.ac:AC_OUTPUT(
 SUBSTFOR configure.ac:Makefile
 SUBSTFOR configure.in:AC_OUTPUT([Makefile
@@ -1182,6 +1113,7 @@ gst/gstversion.h
 gst/types/Makefile
 gst/elements/Makefile
 gst/autoplug/Makefile
+gst/schedulers/Makefile
 libs/Makefile
 libs/riff/Makefile
 libs/getbits/Makefile
@@ -1237,7 +1169,6 @@ plugins/oss/Makefile
 plugins/rtp/Makefile
 plugins/mulaw/Makefile
 plugins/alaw/Makefile
-dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 plugins/filters/Makefile
 plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
@@ -1255,6 +1186,7 @@ plugins/filters/cutter/Makefile
 plugins/filters/deinterlace/Makefile
 plugins/filters/volume/Makefile
 plugins/filters/speed/Makefile
+plugins/filters/playondemand/Makefile
 plugins/gnomevfs/Makefile
 plugins/icecast/Makefile
 plugins/icecast/icecastsend/Makefile
@@ -1294,11 +1226,9 @@ plugins/synthesis/Makefile
 plugins/synthesis/sinesrc/Makefile
 plugins/silence/Makefile
 gstplay/Makefile
-dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile
 test/xml/Makefile
 test/bindings/Makefile
-dnl someone should fix this test/misc/Makefile
 test/memchunk/Makefile
 test/events/Makefile
 tests/Makefile
@@ -1310,6 +1240,7 @@ testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
 testsuite/refcounting/Makefile
 testsuite/plugin/Makefile
+testsuite/threads/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile

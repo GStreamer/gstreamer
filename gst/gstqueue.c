@@ -265,6 +265,7 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
 
   reader = FALSE;
 
+restart:
   /* we have to lock the queue since we span threads */
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
   g_mutex_lock (queue->qlock);
@@ -277,6 +278,8 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
         gst_queue_locked_flush (queue);
 	break;
       case GST_EVENT_EOS:
+	GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "eos in on %s %d\n", 
+			   GST_ELEMENT_NAME (queue), queue->level_buffers);
 	break;
       default:
 	gst_pad_event_default (pad, GST_EVENT (buf));
@@ -327,19 +330,13 @@ gst_queue_chain (GstPad *pad, GstBuffer *buf)
     while (queue->level_buffers == queue->size_buffers) {
       // if there's a pending state change for this queue or its manager, switch
       // back to iterator so bottom half of state change executes
-      if (GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING ||
-//          GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING)
-GST_STATE_PENDING(GST_SCHED_PARENT(GST_ELEMENT_SCHED(GST_PAD_PARENT(GST_PAD_PEER(queue->sinkpad))))) != 
-GST_STATE_VOID_PENDING)
-      {
+      while (GST_STATE (queue) != GST_STATE_PLAYING) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
-        if (GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING)
-          GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING)\n");
-        if (GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING)
-          GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING\n");
         g_mutex_unlock (queue->qlock);
         cothread_switch(cothread_current_main());
+	goto restart;
       }
+      g_assert (GST_STATE (queue) == GST_STATE_PLAYING);
 
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_full, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
       if (queue->writer)
@@ -390,6 +387,7 @@ gst_queue_get (GstPad *pad)
 
   writer = FALSE;
 
+restart:
   /* have to lock for thread-safety */
   GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "locking t:%ld\n", pthread_self ());
   g_mutex_lock (queue->qlock);
@@ -399,19 +397,13 @@ gst_queue_get (GstPad *pad)
   while (queue->level_buffers == 0) {
     // if there's a pending state change for this queue or its manager, switch
     // back to iterator so bottom half of state change executes
-    if (GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING ||
-//        GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING)
-GST_STATE_PENDING(GST_SCHED_PARENT(GST_ELEMENT_SCHED(GST_PAD_PARENT(GST_PAD_PEER(queue->srcpad))))) != 
-GST_STATE_VOID_PENDING)
-    {
+    while (GST_STATE (queue) != GST_STATE_PLAYING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
-      if (GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING)
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "GST_STATE_PENDING(queue) != GST_STATE_VOID_PENDING)\n");
-      if (GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING)
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "GST_STATE_PENDING(GST_SCHEDULE(GST_ELEMENT(queue)->sched)->parent) != GST_STATE_VOID_PENDING\n");
       g_mutex_unlock (queue->qlock);
       cothread_switch(cothread_current_main());
+      goto restart;
     }
+    g_assert (GST_STATE (queue) == GST_STATE_PLAYING);
 
     GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "waiting for not_empty, level:%d/%d\n", queue->level_buffers, queue->size_buffers);
     if (queue->reader)
@@ -451,7 +443,7 @@ GST_STATE_VOID_PENDING)
     GstEvent *event = GST_EVENT(buf);
     switch (GST_EVENT_TYPE(event)) {
       case GST_EVENT_EOS:
-        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue eos\n");
+        GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "queue \"%s\" eos\n", GST_ELEMENT_NAME (queue));
         gst_element_set_state (GST_ELEMENT (queue), GST_STATE_PAUSED);
         break;
       default:
@@ -467,56 +459,41 @@ gst_queue_change_state (GstElement *element)
 {
   GstQueue *queue;
   GstElementStateReturn ret;
+  GstElementState new_state;
   g_return_val_if_fail (GST_IS_QUEUE (element), GST_STATE_FAILURE);
 
   queue = GST_QUEUE (element);
 
+  GST_DEBUG_ENTER("('%s')", GST_ELEMENT_NAME (element));
+
   // lock the queue so another thread (not in sync with this thread's state)
   // can't call this queue's _get (or whatever)
-  GST_LOCK (queue);
+  g_mutex_lock (queue->qlock);
 
-  /* if going down into NULL state, clear out buffers*/
-  if (GST_STATE_PENDING (element) == GST_STATE_READY) {
-    /* otherwise (READY or higher) we need to open the file */
-    gst_queue_flush (queue);
+  new_state = GST_STATE_PENDING (element);
+
+  if (new_state == GST_STATE_PAUSED) {
+    g_cond_signal (queue->not_full);
+    g_cond_signal (queue->not_empty);
+  }
+  else if (new_state == GST_STATE_READY) {
+    gst_queue_locked_flush (queue);
+  }
+  else if (new_state == GST_STATE_PLAYING) {
+    if (!GST_PAD_CONNECTED (queue->sinkpad)) {
+      // FIXME can this be?
+      if (queue->reader)
+        g_cond_signal (queue->not_empty);
+      g_mutex_unlock (queue->qlock);
+
+      return GST_STATE_FAILURE;
+    }
   }
 
-  // if we haven't failed already, give the parent class a chance to ;-)
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-  {
-    gboolean valid_handler = FALSE;
-    guint state_change_id = g_signal_lookup("state_change", G_OBJECT_TYPE(element));
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  g_mutex_unlock (queue->qlock);
 
-    // determine whether we need to block the parent (element) class'
-    // STATE_CHANGE signal so we can UNLOCK before returning.  we block
-    // it if we could find the state_change signal AND there's a signal
-    // handler attached to it.
-    //
-    // note: this assumes that change_state() *only* emits state_change signal.
-    // if element change_state() emits other signals, they need to be blocked
-    // as well.
-    if (state_change_id &&
-        g_signal_has_handler_pending(G_OBJECT(element), state_change_id, 0, FALSE))
-      valid_handler = TRUE;
-    if (valid_handler)
-      g_signal_handler_block(G_OBJECT(element), state_change_id);
-
-    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-    if (valid_handler)
-      g_signal_handler_unblock(G_OBJECT(element), state_change_id);
-
-    // UNLOCK, *then* emit signal (if there's one there)
-    GST_UNLOCK(queue);
-    if (valid_handler)
-      g_signal_emit(G_OBJECT (element), state_change_id, 0, GST_STATE(element));
-  }
-  else
-  {
-    ret = GST_STATE_SUCCESS;
-    GST_UNLOCK(queue);
-  }
-
+  GST_DEBUG_LEAVE("('%s')", GST_ELEMENT_NAME (element));
   return ret;
 }
 

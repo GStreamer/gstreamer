@@ -1,5 +1,5 @@
 noinst_PROGRAMS = typefind
 
-LIBS += $(GST_LIBS)
-CFLAGS += $(GST_CFLAGS)
+typefind_LDADD = $(GST_LIBS)
+typefind_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_CFLAGS)
 

@@ -562,8 +562,9 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
 
     g_string_append_c (buf, '\n');
 
-    if (G_VALUE_TYPE (&value))
+    if (G_VALUE_TYPE (&value)) {
       g_value_unset (&value);
+    }
   }
   g_free (property_specs);
 }

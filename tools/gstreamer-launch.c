@@ -65,6 +65,7 @@ idle_func (gpointer data)
 #ifndef USE_GLIB2
     gtk_main_quit ();
 #endif
+    g_print ("iteration ended\n");
     return FALSE;
   }
   return TRUE;

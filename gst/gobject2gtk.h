@@ -221,6 +221,14 @@ g_signal_connect(object,name,func,func_data) \
 gtk_signal_connect((GtkObject *)object,name,func,func_data)
 
 #define \
+g_signal_handlers_disconnect_by_func(object,func,func_data) \
+gtk_signal_disconnect_by_func((GtkObject *)object,func,func_data)
+
+#define \
+g_signal_connect_object(object,name,func,func_data) \
+gtk_signal_connect_object((GtkObject *)object,name,func,(GtkObject*)func_data)
+
+#define \
 g_signal_emit_by_name(object,name,data,self) \
 gtk_signal_emit_by_name ((GtkObject *)object,name,data,self)
 
@@ -251,8 +259,8 @@ GSList*		g_slist_delete_link	(GSList *list, GSList *link) __attribute__ ((no_ins
 typedef struct _GParamSpec GParamSpec;
 struct _GParamSpec {
   gchar *name;
-  gint value_type;
-  gint flags;
+  GType value_type;
+  GParamFlags flags;
 };
 
 #define g_value_init(value,t)			((value)->type = (t))
