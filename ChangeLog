@@ -1,5 +1,15 @@
 2004-08-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	Patch by: David Schleef
+
+	* configure.ac:
+	* sys/Makefile.am:
+	  rename our detection macro for V4L2.  Fixes #151236.
+
+2004-08-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: David Schleef
+
 	* configure.ac:
 	  check to define LAMEPRESET.  Fixes #151232.
 
