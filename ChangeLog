@@ -1,11 +1,16 @@
 2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
 
+	* gst/matroska/ebml-write.c:
+	  Fix some 64 bits constants to be glib friendly
+
+2004-07-24  Steve Lhomme  <steve.lhomme@free.fr>
+
 	* win32/gst.sln:
 	* gst-libs/gst/gst-libs.def:
 	* gst-libs/gst/gst-libs.vcproj:
 	* gst/matroska/matroska.def:
 	* gst/matroska/matroska.vcproj:
-    Add the preliminary canvas to build plugins on Win32
+	  Add the preliminary canvas to build plugins on Win32
 
 2004-07-23  Benjamin Otte  <otte@gnome.org>
 
