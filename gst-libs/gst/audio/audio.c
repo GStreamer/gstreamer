@@ -150,3 +150,17 @@ gst_audio_is_buffer_framed (GstPad* pad, GstBuffer* buf)
   else
     return FALSE;
 }
+
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  gst_plugin_set_longname (plugin, "Convenience routines for audio plugins");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstaudio",
+  plugin_init
+};

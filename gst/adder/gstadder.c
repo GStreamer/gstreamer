@@ -58,8 +58,8 @@ GST_PADTEMPLATE_FACTORY (gst_adder_src_template_factory,
         "law",              GST_PROPS_INT (0),
         "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
         "signed",           GST_PROPS_BOOLEAN (TRUE),
-        "width",            GST_PROPS_INT_RANGE (8, 16),
-        "depth",            GST_PROPS_INT_RANGE (8, 16),
+        "width",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_LIST (16)),
+        "depth",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_LIST (16)),
         "rate",             GST_PROPS_INT_RANGE (4000, 48000), /* FIXME */
         "channels",         GST_PROPS_INT_RANGE (1, 2)
   ),
@@ -86,8 +86,8 @@ GST_PADTEMPLATE_FACTORY (gst_adder_sink_template_factory,
         "law",              GST_PROPS_INT (0),
         "endianness",       GST_PROPS_INT (G_BYTE_ORDER),
         "signed",           GST_PROPS_BOOLEAN (TRUE),
-        "width",            GST_PROPS_INT_RANGE (8, 16),
-        "depth",            GST_PROPS_INT_RANGE (8, 16),
+        "width",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_LIST (16)),
+        "depth",            GST_PROPS_LIST (GST_PROPS_INT (8), GST_PROPS_LIST (16)),
         "rate",             GST_PROPS_INT_RANGE (4000, 48000), /* FIXME */
         "channels",         GST_PROPS_INT_RANGE (1, 2)
   ),

@@ -126,3 +126,16 @@ void gst_idct_destroy(GstIDCT *idct)
   g_free(idct);
 }
 
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  gst_plugin_set_longname (plugin, "Accelerated IDCT routines");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstidtc",
+  plugin_init
+};

@@ -24,6 +24,8 @@
 #include <stdlib.h>
 
 #include <resample.h>
+#include <gst/gstplugin.h>
+#include <gst/gstversion.h>
 
 inline double sinc(double x)
 {
@@ -528,3 +530,16 @@ static void resample_sinc_ft(resample_t * r)
 	}
 }
 
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  gst_plugin_set_longname (plugin, "Resampling routines for use in audio plugins");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstresample",
+  plugin_init
+};

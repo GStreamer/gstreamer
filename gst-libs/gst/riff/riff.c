@@ -224,3 +224,17 @@ gchar *gst_riff_id_to_fourcc(gulong id) {
 
   return fourcc;
 }
+
+static gboolean
+plugin_init (GModule *module, GstPlugin *plugin)
+{
+  gst_plugin_set_longname (plugin, "RIFF convenience routines");
+  return TRUE;
+}
+
+GstPluginDesc plugin_desc = {
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "gstriff",
+  plugin_init
+};
