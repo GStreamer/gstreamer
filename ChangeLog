@@ -1,3 +1,7 @@
+2004-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: back to dev
+
 2004-06-23  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_change_state), (gst_alsa_start),
@@ -10,7 +14,9 @@
 	(gst_alsa_src_loop):
 	Add clock to alsasrc. Take new capture timestamp when
 	restarting after an overrun. Split up some functions between
-	alsasrc ans alsasink.
+	alsasrc and alsasink.
+
+=== release 0.8.2 ===
 
 2004-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
