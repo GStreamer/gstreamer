@@ -542,13 +542,14 @@ gst_wavparse_fmt (GstWavParse * wav)
   wav->depth = header->size;
   wav->bps = header->av_bps;
 
+  gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
+
   caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL);
 
   if (caps) {
     gst_pad_set_explicit_caps (wav->srcpad, caps);
     gst_caps_free (caps);
   }
-  gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
 
   GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
 
