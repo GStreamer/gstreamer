@@ -2,6 +2,7 @@
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
 	  Fix typo in divxversion (3 instead of 4 for "DIVX" fourcc).
+	  Fixes #140058
 
 2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
