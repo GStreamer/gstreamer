@@ -1,5 +1,9 @@
 2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstinfo.h: adding Ronald's timestamp debugging defines
+
+2004-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/elements/Makefile.am:
           disable test until it stops breaking make distcheck
 
