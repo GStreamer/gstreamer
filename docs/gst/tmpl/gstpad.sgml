@@ -122,18 +122,11 @@ A function that will be called when chaining buffers.
 </para>
 
 @pad: the #GstPad that performed the chain.
-@data: 
+@buffer: 
+@Returns: 
 <!-- # Unused Parameters # -->
+@data: 
 @buf: the #GstBuffer that is chained.
-
-
-<!-- ##### USER_FUNCTION GstPadGetFunction ##### -->
-<para>
-A function that will be called when pulling a buffer.
-</para>
-
-@pad: the #GstPad to get a buffer from.
-@Returns: the #GstBuffer pulled.
 
 
 <!-- ##### USER_FUNCTION GstPadEventFunction ##### -->
@@ -215,8 +208,10 @@ Function signature to handle a new link on the pad.
 </para>
 
 @pad: the #GstPad that is linked.
-@caps: the peer's #GstCaps.
+@peer: 
 @Returns: the result of the link with the specified caps.
+<!-- # Unused Parameters # -->
+@caps: the peer's #GstCaps.
 
 
 <!-- ##### USER_FUNCTION GstPadUnlinkFunction ##### -->
@@ -240,16 +235,6 @@ be overridden.
 @caps: the peer's #GstCaps, can be used to filter the capabilities.
 
 
-<!-- ##### USER_FUNCTION GstPadFixateFunction ##### -->
-<para>
-
-</para>
-
-@pad: 
-@caps: 
-@Returns: 
-
-
 <!-- ##### USER_FUNCTION GstPadBufferAllocFunction ##### -->
 <para>
 
@@ -258,6 +243,7 @@ be overridden.
 @pad: 
 @offset: 
 @size: 
+@caps: 
 @Returns: 
 
 
@@ -286,9 +272,11 @@ The direction of a pad.
 
 </para>
 
-@GST_PAD_DISABLED: 
-@GST_PAD_NEGOTIATING: 
-@GST_PAD_DISPATCHING: 
+@GST_PAD_ACTIVE: 
+@GST_PAD_BLOCKED: 
+@GST_PAD_FLUSHING: 
+@GST_PAD_IN_GETCAPS: 
+@GST_PAD_IN_SETCAPS: 
 @GST_PAD_FLAG_LAST: 
 
 <!-- ##### ENUM GstPadLinkReturn ##### -->
@@ -296,12 +284,12 @@ The direction of a pad.
 The result of a pad link.
 </para>
 
+@GST_PAD_LINK_NOSCHED: 
+@GST_PAD_LINK_NOFORMAT: 
 @GST_PAD_LINK_REFUSED: the link was refused.
-@GST_PAD_LINK_DELAYED: the link was delayed, probably because the
-                       element needs more specific pad capabilitiess.
+@GST_PAD_LINK_WRONG_DIRECTION: 
+@GST_PAD_LINK_WAS_LINKED: 
 @GST_PAD_LINK_OK:      the link succeeded.
-@GST_PAD_LINK_DONE:    the link succeeded, 
-                       any more attempts are not needed.
 
 <!-- ##### ENUM GstPadPresence ##### -->
 <para>
@@ -411,14 +399,6 @@ Checks if the pad is active.
 @pad: 
 
 
-<!-- ##### MACRO GST_PAD_IS_DISPATCHING ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-
 <!-- ##### MACRO GST_PAD_IS_USABLE ##### -->
 <para>
 Checks if a pad is usable. A usable pad is both linked and active.
@@ -493,7 +473,7 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_set_name ##### -->
+<!-- ##### MACRO gst_pad_set_name ##### -->
 <para>
 
 </para>
@@ -502,7 +482,7 @@ Checks if the pad is a sink pad.
 @name: 
 
 
-<!-- ##### FUNCTION gst_pad_get_name ##### -->
+<!-- ##### MACRO gst_pad_get_name ##### -->
 <para>
 
 </para>
@@ -526,15 +506,9 @@ Checks if the pad is a sink pad.
 </para>
 
 @pad: 
-@active: 
-
-
-<!-- ##### FUNCTION gst_pad_set_active_recursive ##### -->
-<para>
-
-</para>
-
-@pad: 
+@mode: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @active: 
 
 
@@ -565,7 +539,7 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_set_parent ##### -->
+<!-- ##### MACRO gst_pad_set_parent ##### -->
 <para>
 
 </para>
@@ -574,7 +548,7 @@ Checks if the pad is a sink pad.
 @parent: 
 
 
-<!-- ##### FUNCTION gst_pad_get_parent ##### -->
+<!-- ##### MACRO gst_pad_get_parent ##### -->
 <para>
 
 </para>
@@ -584,42 +558,6 @@ Checks if the pad is a sink pad.
 
 
 <!-- ##### FUNCTION gst_pad_get_real_parent ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_get_scheduler ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_add_ghost_pad ##### -->
-<para>
-
-</para>
-
-@pad: 
-@ghostpad: 
-
-
-<!-- ##### FUNCTION gst_pad_remove_ghost_pad ##### -->
-<para>
-
-</para>
-
-@pad: 
-@ghostpad: 
-
-
-<!-- ##### FUNCTION gst_pad_get_ghost_pad_list ##### -->
 <para>
 
 </para>
@@ -656,6 +594,7 @@ Checks if the pad is a sink pad.
 @pad: 
 @offset: 
 @size: 
+@caps: 
 @Returns: 
 
 
@@ -666,15 +605,6 @@ Checks if the pad is a sink pad.
 
 @pad: 
 @chain: 
-
-
-<!-- ##### FUNCTION gst_pad_set_get_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@get: 
 
 
 <!-- ##### FUNCTION gst_pad_set_event_function ##### -->
@@ -780,6 +710,7 @@ Checks if the pad is a sink pad.
 
 @srcpad: 
 @sinkpad: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_is_linked ##### -->
@@ -809,15 +740,6 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_is_negotiated ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_get_caps ##### -->
 <para>
 
@@ -836,36 +758,6 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_try_set_caps ##### -->
-<para>
-
-</para>
-
-@pad: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_try_set_caps_nonfixed ##### -->
-<para>
-
-</para>
-
-@pad: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_check_compatibility ##### -->
-<para>
-
-</para>
-
-@srcpad: 
-@sinkpad: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_pad_set_getcaps_function ##### -->
 <para>
 
@@ -873,15 +765,6 @@ Checks if the pad is a sink pad.
 
 @pad: 
 @getcaps: 
-
-
-<!-- ##### FUNCTION gst_pad_set_fixate_function ##### -->
-<para>
-
-</para>
-
-@pad: 
-@fixate: 
 
 
 <!-- ##### FUNCTION gst_pad_proxy_getcaps ##### -->
@@ -893,93 +776,7 @@ Checks if the pad is a sink pad.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_pad_proxy_pad_link ##### -->
-<para>
-
-</para>
-
-@pad: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_proxy_fixate ##### -->
-<para>
-
-</para>
-
-@pad: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_proxy_link ##### -->
-<para>
-
-</para>
-
-@pad: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_set_explicit_caps ##### -->
-<para>
-
-</para>
-
-@pad: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_use_explicit_caps ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-
 <!-- ##### FUNCTION gst_pad_relink_filtered ##### -->
-<para>
-
-</para>
-
-@srcpad: 
-@sinkpad: 
-@filtercaps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_perform_negotiate ##### -->
-<para>
-
-</para>
-
-@srcpad: 
-@sinkpad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_renegotiate ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_unnegotiate ##### -->
-<para>
-
-</para>
-
-@pad: 
-
-
-<!-- ##### FUNCTION gst_pad_try_relink_filtered ##### -->
 <para>
 
 </para>
@@ -995,26 +792,10 @@ Checks if the pad is a sink pad.
 
 </para>
 
-@pad: 
+@srcpad: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_caps_change_notify ##### -->
-<para>
-
-</para>
-
+<!-- # Unused Parameters # -->
 @pad: 
-
-
-<!-- ##### FUNCTION gst_pad_recover_caps_error ##### -->
-<para>
-
-</para>
-
-@pad: 
-@allowed: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gst_pad_push ##### -->
@@ -1023,18 +804,11 @@ Checks if the pad is a sink pad.
 </para>
 
 @pad: 
-@data: 
-<!-- # Unused Parameters # -->
-@buf: 
-
-
-<!-- ##### FUNCTION gst_pad_pull ##### -->
-<para>
-
-</para>
-
-@pad: 
+@buffer: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@data: 
+@buf: 
 
 
 <!-- ##### FUNCTION gst_pad_send_event ##### -->
@@ -1054,72 +828,6 @@ Checks if the pad is a sink pad.
 
 @pad: 
 @event: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_select ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Varargs: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@padlist: 
-
-
-<!-- ##### FUNCTION gst_pad_selectv ##### -->
-<para>
-
-</para>
-
-@padlist: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@pad: 
-@Varargs: 
-
-
-<!-- ##### FUNCTION gst_pad_select_valist ##### -->
-<para>
-
-</para>
-
-@pad: 
-@varargs: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_collect ##### -->
-<para>
-
-</para>
-
-@selected: 
-@pad: 
-@Varargs: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_collectv ##### -->
-<para>
-
-</para>
-
-@selected: 
-@padlist: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_pad_collect_valist ##### -->
-<para>
-
-</para>
-
-@selected: 
-@pad: 
-@varargs: 
 @Returns: 
 
 

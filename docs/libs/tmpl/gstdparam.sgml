@@ -15,9 +15,6 @@ Subclasses of this do more advanced updates like smoothing parameter changes.
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstDParam ##### -->
 <para>
 

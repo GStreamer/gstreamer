@@ -5,10 +5,10 @@ TESTS_ENVIRONMENT=\
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 # make all tests depend on the versioned gst-register
-$(TESTS): $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@
+$(TESTS): $(top_builddir)/tools/gst-register
 
 # rebuild gst-register-@GST_MAJORMINOR@ if needed
-$(top_builddir)/tools/gst-register-@GST_MAJORMINOR@:
+$(top_builddir)/tools/gst-register:
 	cd $(top_builddir)/tools && make
 
 # override to _not_ install the test plugins
@@ -18,7 +18,7 @@ install-pluginLTLIBRARIES:
 # dumps have PIDs appended
 CLEANFILES = core.*
 
-TESTS = $(top_builddir)/tools/gst-register-@GST_MAJORMINOR@ \
+TESTS = $(top_builddir)/tools/gst-register \
 	gst/gstbin	     	\
         gst/gstbus          \
 	gst/gstcaps     	\

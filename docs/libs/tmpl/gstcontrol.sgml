@@ -73,9 +73,6 @@ This allows the manager to interupt processing to apply new control values.
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### FUNCTION gst_control_init ##### -->
 <para>
 

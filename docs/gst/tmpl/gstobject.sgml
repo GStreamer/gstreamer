@@ -72,6 +72,12 @@ object.
 
 </para>
 
+@refcount: 
+@lock: 
+@name: 
+@name_prefix: 
+@parent: 
+@flags: 
 
 <!-- ##### SIGNAL GstObject::deep-notify ##### -->
 <para>
@@ -119,8 +125,9 @@ The name of the object
 Flags for an object
 </para>
 
-@GST_DESTROYED: The object is flagged for destruction
-@GST_FLOATING: The object is created but has no parent yet to manage it
+@GST_OBJECT_DISPOSING: 
+@GST_OBJECT_DESTROYED: 
+@GST_OBJECT_FLOATING: 
 @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
 
 <!-- ##### MACRO GST_FLAGS ##### -->
@@ -174,22 +181,6 @@ Get the parent of this object
 @obj: Object to get the parent of.
 
 
-<!-- ##### MACRO GST_OBJECT_DESTROYED ##### -->
-<para>
-Check if the object has been destroyed.
-</para>
-
-@obj: The Object to check
-
-
-<!-- ##### MACRO GST_OBJECT_FLOATING ##### -->
-<para>
-Check if the object is floating.
-</para>
-
-@obj: The Object to check
-
-
 <!-- ##### MACRO GST_LOCK ##### -->
 <para>
 This macro will obtain a lock on the object, making serialization
@@ -231,6 +222,7 @@ Acquire a reference to the mutex of this object.
 
 @object: 
 @name: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_object_get_name ##### -->
@@ -249,6 +241,7 @@ Acquire a reference to the mutex of this object.
 
 @object: 
 @parent: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_object_get_parent ##### -->
@@ -323,6 +316,7 @@ Acquire a reference to the mutex of this object.
 </para>
 
 @object: the object
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_object_sink ##### -->

@@ -45,18 +45,11 @@ The different major types of events.
 @GST_EVENT_UNKNOWN: unknown event.
 @GST_EVENT_EOS: an end-of-stream event.
 @GST_EVENT_FLUSH: a flush event.
-@GST_EVENT_EMPTY: an empty event.
 @GST_EVENT_DISCONTINUOUS: a discontinuous event to indicate the stream has a discontinuity.
 @GST_EVENT_QOS: a quality of service event
 @GST_EVENT_SEEK: a seek event.
-@GST_EVENT_SEEK_SEGMENT: a segment seek with start and stop position
-@GST_EVENT_SEGMENT_DONE: the event that will be emited when the segment seek has ended
 @GST_EVENT_SIZE: a size suggestion for a peer element
 @GST_EVENT_RATE: adjust the output rate of an element
-@GST_EVENT_FILLER: a dummy event that should be ignored by plugins
-@GST_EVENT_TS_OFFSET: an event to set the time offset on buffers
-@GST_EVENT_INTERRUPT: mainly used by _get based elements when they were interrupted
-                      while waiting for a buffer.
 @GST_EVENT_NAVIGATION: 
 @GST_EVENT_TAG: 
 
@@ -442,29 +435,12 @@ Create a new dummy event that should be ignored
 
 
 
-<!-- ##### FUNCTION gst_event_new_filler_stamped ##### -->
-<para>
-
-</para>
-
-@time: 
-@duration: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_event_filler_get_duration ##### -->
-<para>
-
-</para>
-
-@event: 
-@Returns: 
-
-
-<!-- ##### MACRO gst_event_new_flush ##### -->
+<!-- ##### FUNCTION gst_event_new_flush ##### -->
 <para>
 Create a new flush event.
 </para>
 
+@done: 
+@Returns: 
 
 

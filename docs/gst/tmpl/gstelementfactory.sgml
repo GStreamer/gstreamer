@@ -184,23 +184,3 @@ so that the autopluggers can select a plugin more appropriatly
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_factory_can_src_caps ##### -->
-<para>
-
-</para>
-
-@factory: 
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_factory_can_sink_caps ##### -->
-<para>
-
-</para>
-
-@factory: 
-@caps: 
-@Returns: 
-
-

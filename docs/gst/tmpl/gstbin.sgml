@@ -60,6 +60,9 @@ clock providers in the bin.
 
 </para>
 
+@numchildren: 
+@children: 
+@children_cookie: 
 
 <!-- ##### SIGNAL GstBin::element-added ##### -->
 <para>
@@ -77,28 +80,11 @@ Will be emmited if an element was removed from this bin.
 @gstbin: the object which received the signal.
 @arg1: the element that was removed from the bin
 
-<!-- ##### SIGNAL GstBin::iterate ##### -->
-<para>
-This signal is emitted when a bin iterates, either automatically or
-due to a #gst_bin_iterate() call.  The return value is used to
-determine if the object method handler processed any data.
-In most normal cases, a user-provided signal handler should return
-FALSE.
-</para>
-
-@gstbin: the object which received the signal.
-@Returns: TRUE if the state of the bin was advanced.
-
 <!-- ##### ENUM GstBinFlags ##### -->
 <para>
 
 </para>
 
-@GST_BIN_FLAG_MANAGER: 
-@GST_BIN_SELF_SCHEDULABLE: 
-@GST_BIN_FLAG_PREFER_COTHREADS: 
-@GST_BIN_FLAG_FIXED_CLOCK: 
-@GST_BIN_STATE_LOCKED: 
 @GST_BIN_FLAG_LAST: 
 
 <!-- ##### FUNCTION gst_bin_new ##### -->
@@ -117,6 +103,7 @@ FALSE.
 
 @bin: 
 @element: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_bin_add_many ##### -->
@@ -136,6 +123,7 @@ FALSE.
 
 @bin: 
 @element: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_bin_remove_many ##### -->
@@ -168,15 +156,6 @@ FALSE.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_bin_get_list ##### -->
-<para>
-
-</para>
-
-@bin: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_bin_get_by_interface ##### -->
 <para>
 
@@ -185,70 +164,5 @@ FALSE.
 @bin: 
 @interface: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_bin_get_all_by_interface ##### -->
-<para>
-
-</para>
-
-@bin: 
-@interface: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_bin_iterate ##### -->
-<para>
-
-</para>
-
-@bin: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_bin_use_clock ##### -->
-<para>
-
-</para>
-
-@bin: 
-@clock: 
-
-
-<!-- ##### FUNCTION gst_bin_get_clock ##### -->
-<para>
-
-</para>
-
-@bin: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_bin_auto_clock ##### -->
-<para>
-
-</para>
-
-@bin: 
-
-
-<!-- ##### FUNCTION gst_bin_sync_children_state ##### -->
-<para>
-
-</para>
-
-@bin: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_bin_child_state_change ##### -->
-<para>
-
-</para>
-
-@bin: 
-@oldstate: 
-@newstate: 
-@child: 
 
 

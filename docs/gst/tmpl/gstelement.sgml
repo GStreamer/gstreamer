@@ -70,32 +70,24 @@ and gst_element_set_clock().  You can wait for the clock to reach a given
 
 </para>
 
-
-<!-- ##### SIGNAL GstElement::eos ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-
-<!-- ##### SIGNAL GstElement::error ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: 
-@arg2: 
-@arg3: 
-
-<!-- ##### SIGNAL GstElement::found-tag ##### -->
-<para>
-
-</para>
-
-@gstelement: the object which received the signal.
-@arg1: 
-@arg2: 
+@state_lock: 
+@state_cond: 
+@current_state: 
+@pending_state: 
+@state_error: 
+@manager: 
+@bus: 
+@scheduler: 
+@sched_private: 
+@clock: 
+@base_time: 
+@numpads: 
+@pads: 
+@numsrcpads: 
+@srcpads: 
+@numsinkpads: 
+@sinkpads: 
+@pads_cookie: 
 
 <!-- ##### SIGNAL GstElement::new-pad ##### -->
 <para>
@@ -234,42 +226,10 @@ A helper macro to create a mask function
 This enum defines the standard flags that an element may have.
 </para>
 
-@GST_ELEMENT_COMPLEX: 
-@GST_ELEMENT_DECOUPLED: 
-@GST_ELEMENT_THREAD_SUGGESTED: 
-@GST_ELEMENT_INFINITE_LOOP: 
-@GST_ELEMENT_NEW_LOOPFUNC: 
-@GST_ELEMENT_EVENT_AWARE: 
-@GST_ELEMENT_USE_THREADSAFE_PROPERTIES: 
 @GST_ELEMENT_SCHEDULER_PRIVATE1: 
 @GST_ELEMENT_SCHEDULER_PRIVATE2: 
 @GST_ELEMENT_LOCKED_STATE: 
-@GST_ELEMENT_IN_ERROR: 
 @GST_ELEMENT_FLAG_LAST: 
-
-<!-- ##### MACRO GST_ELEMENT_IS_THREAD_SUGGESTED ##### -->
-<para>
-Queries whether the Element should be placed in a thread.
-</para>
-
-@obj: a #GstElement to query
-
-
-<!-- ##### MACRO GST_ELEMENT_IS_EVENT_AWARE ##### -->
-<para>
-Query wether this element can handle events.
-</para>
-
-@obj: a #GstElement to query
-
-
-<!-- ##### MACRO GST_ELEMENT_IS_DECOUPLED ##### -->
-<para>
-Queries if the Element is decoupled.
-</para>
-
-@obj: a #GstElement to query
-
 
 <!-- ##### MACRO GST_ELEMENT_NAME ##### -->
 <para>
@@ -282,14 +242,6 @@ Gets the name of this element.  Used in the core.  Not ABI-compatible.
 <!-- ##### MACRO GST_ELEMENT_PARENT ##### -->
 <para>
 Get the parent object of this element.
-</para>
-
-@obj: a #GstElement to query
-
-
-<!-- ##### MACRO GST_ELEMENT_SCHED ##### -->
-<para>
-Get the scheduler of this element.
 </para>
 
 @obj: a #GstElement to query
@@ -319,36 +271,10 @@ Get the pads of this elements.
 @el: 
 @domain: 
 @code: 
-@message: 
+@text: 
 @debug: 
-
-
-<!-- ##### USER_FUNCTION GstElementLoopFunction ##### -->
-<para>
-This function type is used to specify a loop function for the element.  It
-is passed the element in question, and is expect to return only in error
-circumstances.
-</para>
-
-@element: The element in question.
-
-
-<!-- ##### USER_FUNCTION GstElementPreRunFunction ##### -->
-<para>
-The signature of the function to execute after this element
-is scheduled.
-</para>
-
-@element: The element
-
-
-<!-- ##### USER_FUNCTION GstElementPostRunFunction ##### -->
-<para>
-The signature of the function to execute before this element
-is scheduled.
-</para>
-
-@element: The element
+<!-- # Unused Parameters # -->
+@message: 
 
 
 <!-- ##### FUNCTION gst_element_class_add_pad_template ##### -->
@@ -377,34 +303,6 @@ is scheduled.
 
 @klass: 
 @details: 
-
-
-<!-- ##### MACRO gst_element_default_deep_notify ##### -->
-<para>
-The default deep notify handler that prints out the property change
-notifications to stdout.
-</para>
-
-
-
-<!-- ##### FUNCTION gst_element_default_error ##### -->
-<para>
-
-</para>
-
-@object: 
-@orig: 
-@error: 
-@debug: 
-
-
-<!-- ##### FUNCTION gst_element_set_loop_function ##### -->
-<para>
-
-</para>
-
-@element: 
-@loop: 
 
 
 <!-- ##### MACRO gst_element_get_name ##### -->
@@ -446,90 +344,6 @@ Sets the parent of an element.
 @parent:  the new #GstObject parent of the object.
 
 
-<!-- ##### FUNCTION gst_element_set ##### -->
-<para>
-
-</para>
-
-@element: 
-@first_property_name: 
-@Varargs: 
-
-
-<!-- ##### FUNCTION gst_element_get ##### -->
-<para>
-
-</para>
-
-@element: 
-@first_property_name: 
-@Varargs: 
-
-
-<!-- ##### FUNCTION gst_element_set_valist ##### -->
-<para>
-
-</para>
-
-@element: 
-@first_property_name: 
-@var_args: 
-
-
-<!-- ##### FUNCTION gst_element_get_valist ##### -->
-<para>
-
-</para>
-
-@element: 
-@first_property_name: 
-@var_args: 
-
-
-<!-- ##### FUNCTION gst_element_set_property ##### -->
-<para>
-
-</para>
-
-@element: 
-@property_name: 
-@value: 
-
-
-<!-- ##### FUNCTION gst_element_get_property ##### -->
-<para>
-
-</para>
-
-@element: 
-@property_name: 
-@value: 
-
-
-<!-- ##### FUNCTION gst_element_enable_threadsafe_properties ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
-<!-- ##### FUNCTION gst_element_disable_threadsafe_properties ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
-<!-- ##### FUNCTION gst_element_set_pending_properties ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
 <!-- ##### FUNCTION gst_element_requires_clock ##### -->
 <para>
 
@@ -566,67 +380,6 @@ Sets the parent of an element.
 @clock: 
 
 
-<!-- ##### FUNCTION gst_element_clock_wait ##### -->
-<para>
-
-</para>
-
-@element: 
-@id: 
-@jitter: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@clock: 
-@time: 
-
-
-<!-- ##### FUNCTION gst_element_get_time ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_wait ##### -->
-<para>
-
-</para>
-
-@element: 
-@timestamp: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_set_time ##### -->
-<para>
-
-</para>
-
-@element: 
-@time: 
-
-
-<!-- ##### FUNCTION gst_element_set_time_delay ##### -->
-<para>
-
-</para>
-
-@element: 
-@time: 
-@delay: 
-
-
-<!-- ##### FUNCTION gst_element_adjust_time ##### -->
-<para>
-
-</para>
-
-@element: 
-@diff: 
-
-
 <!-- ##### FUNCTION gst_element_is_indexable ##### -->
 <para>
 
@@ -646,32 +399,6 @@ Sets the parent of an element.
 
 
 <!-- ##### FUNCTION gst_element_get_index ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_release_locks ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_yield ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
-<!-- ##### FUNCTION gst_element_interrupt ##### -->
 <para>
 
 </para>
@@ -705,6 +432,7 @@ Sets the parent of an element.
 
 @element: 
 @pad: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_element_remove_pad ##### -->
@@ -714,6 +442,7 @@ Sets the parent of an element.
 
 @element: 
 @pad: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
@@ -725,18 +454,6 @@ Sets the parent of an element.
 @pad: 
 @name: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_element_remove_ghost_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-
-
-<!-- pad template manipulation -->
 
 
 <!-- ##### FUNCTION gst_element_get_pad ##### -->
@@ -778,15 +495,6 @@ Sets the parent of an element.
 @pad: 
 
 
-<!-- ##### FUNCTION gst_element_get_pad_list ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_element_get_compatible_pad ##### -->
 <para>
 
@@ -825,29 +533,6 @@ Sets the parent of an element.
 
 @element_class: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_pad_template ##### -->
-<para>
-
-</para>
-
-@element: 
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_pad_template_list ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-
-
-<!-- scheduling -->
 
 
 <!-- ##### FUNCTION gst_element_get_compatible_pad_template ##### -->
@@ -1023,49 +708,6 @@ Sets the parent of an element.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_element_found_tags ##### -->
-<para>
-
-</para>
-
-@element: 
-@tag_list: 
-
-
-<!-- ##### FUNCTION gst_element_found_tags_for_pad ##### -->
-<para>
-
-</para>
-
-@element: 
-@pad: 
-@timestamp: 
-@list: 
-
-
-<!-- ##### FUNCTION gst_element_set_eos ##### -->
-<para>
-
-</para>
-
-@element: 
-
-
-<!-- ##### FUNCTION gst_element_error_full ##### -->
-<para>
-
-</para>
-
-@element: 
-@domain: 
-@code: 
-@message: 
-@debug: 
-@file: 
-@function: 
-@line: 
-
-
 <!-- ##### FUNCTION gst_element_is_locked_state ##### -->
 <para>
 
@@ -1082,6 +724,7 @@ Sets the parent of an element.
 
 @element: 
 @locked_state: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_element_sync_state_with_parent ##### -->
@@ -1099,6 +742,9 @@ Sets the parent of an element.
 </para>
 
 @element: 
+@state: 
+@pending: 
+@timeout: 
 @Returns: 
 
 
@@ -1110,14 +756,6 @@ Sets the parent of an element.
 @element: 
 @state: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_element_wait_state_change ##### -->
-<para>
-
-</para>
-
-@element: 
 
 
 <!-- ##### FUNCTION gst_element_state_get_name ##### -->
@@ -1136,17 +774,6 @@ Sets the parent of an element.
 
 @element: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gst_element_get_managing_bin ##### -->
-<para>
-
-</para>
-
-@element: 
-@Returns: 
-
-<!-- clocking -->
 
 
 <!-- ##### FUNCTION gst_element_no_more_pads ##### -->

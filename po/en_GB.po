@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-08 10:47+0100\n"
+"POT-Creation-Date: 2005-03-23 16:24+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -107,12 +107,12 @@ msgstr "path list for loading plugins (separated by '%s')"
 msgid "Scheduler to use (default is '%s')"
 msgstr "Scheduler to use (default is '%s')"
 
-#: gst/gstelement.c:312
+#: gst/gstelement.c:243
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERROR: from element %s: %s\n"
 
-#: gst/gstelement.c:314
+#: gst/gstelement.c:245
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -582,26 +582,26 @@ msgstr "Error closing file \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Error while writing to file \"%s\"."
 
-#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:298
+#: gst/elements/gstfilesrc.c:800 gst/elements/gstmultifilesrc.c:295
 msgid "No file name specified for reading."
 msgstr "No file name specified for reading."
 
-#: gst/elements/gstfilesrc.c:781 gst/elements/gstmultifilesrc.c:306
+#: gst/elements/gstfilesrc.c:815 gst/elements/gstmultifilesrc.c:303
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Could not open file \"%s\" for reading."
 
-#: gst/elements/gstfilesrc.c:792
+#: gst/elements/gstfilesrc.c:826
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: gst/elements/gstfilesrc.c:798
+#: gst/elements/gstfilesrc.c:832
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" isn't a regular file."
 
-#: gst/elements/gstidentity.c:304
+#: gst/elements/gstidentity.c:534
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
 
@@ -621,190 +621,232 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: gst/parse/grammar.y:186
+#: gst/parse/grammar.y:187
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "specified empty bin \"%s\", not allowed"
 
-#: gst/parse/grammar.y:191
+#: gst/parse/grammar.y:192
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "no bin \"%s\", skipping"
 
-#: gst/parse/grammar.y:262
+#: gst/parse/grammar.y:263
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "no property \"%s\" in element \"%s\""
 
-#: gst/parse/grammar.y:275
+#: gst/parse/grammar.y:276
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "could not set property \"%s\" in element \"%s\" to \"%s\""
 
-#: gst/parse/grammar.y:460
+#: gst/parse/grammar.y:489
 #, c-format
 msgid "could not link %s to %s"
 msgstr "could not link %s to %s"
 
-#: gst/parse/grammar.y:505
+#: gst/parse/grammar.y:534
 #, c-format
 msgid "no element \"%s\""
 msgstr "no element \"%s\""
 
-#: gst/parse/grammar.y:556
+#: gst/parse/grammar.y:585
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "could not parse caps \"%s\""
 
-#: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
-#: gst/parse/grammar.y:700
+#: gst/parse/grammar.y:607 gst/parse/grammar.y:655 gst/parse/grammar.y:671
+#: gst/parse/grammar.y:729
 msgid "link without source element"
 msgstr "link without source element"
 
-#: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
+#: gst/parse/grammar.y:613 gst/parse/grammar.y:652 gst/parse/grammar.y:738
 msgid "link without sink element"
 msgstr "link without sink element"
 
-#: gst/parse/grammar.y:660
+#: gst/parse/grammar.y:689
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "no source element for URI \"%s\""
 
-#: gst/parse/grammar.y:670
+#: gst/parse/grammar.y:699
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "no element to link URI \"%s\" to"
 
-#: gst/parse/grammar.y:678
+#: gst/parse/grammar.y:707
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "no sink element for URI \"%s\""
 
-#: gst/parse/grammar.y:682
+#: gst/parse/grammar.y:711
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "could not link sink element for URI \"%s\""
 
-#: gst/parse/grammar.y:694
+#: gst/parse/grammar.y:723
 msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
 
-#: tools/gst-inspect.c:1130
+#: tools/gst-inspect.c:1098
 #, fuzzy
 msgid "Print all elements"
 msgstr "no element \"%s\""
 
-#: tools/gst-launch.c:114
-#, c-format
-msgid ""
-"Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
-"max %s ns).\n"
-msgstr ""
-
-#: tools/gst-launch.c:141
+#: tools/gst-launch.c:82
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 
-#: tools/gst-launch.c:149
+#: tools/gst-launch.c:90
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ERROR: parsing of xml file '%s' failed.\n"
 
-#: tools/gst-launch.c:155
+#: tools/gst-launch.c:96
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERROR: no toplevel pipeline element in file '%s'.\n"
 
-#: tools/gst-launch.c:162
+#: tools/gst-launch.c:103
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "WARNING: only one toplevel element is supported at this time."
 
-#: tools/gst-launch.c:173
+#: tools/gst-launch.c:114
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "ERROR: could not parse command line argument %d: %s.\n"
 
-#: tools/gst-launch.c:184
+#: tools/gst-launch.c:125
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WARNING: element named '%s' not found.\n"
 
-#: tools/gst-launch.c:327
+#: tools/gst-launch.c:370
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "FOUND TAG      : found by element \"%s\".\n"
 
-#: tools/gst-launch.c:412
+#: tools/gst-launch.c:397
+#, c-format
+msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
+msgstr ""
+
+#: tools/gst-launch.c:426
 msgid "Output tags (also known as metadata)"
 msgstr "Output tags (also known as metadata)"
 
-#: tools/gst-launch.c:414
+#: tools/gst-launch.c:428
 msgid "Output status information and property notifications"
 msgstr "Output status information and property notifications"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:430
 msgid "Do not output status information of TYPE"
 msgstr "Do not output status information of TYPE"
 
-#: tools/gst-launch.c:416
+#: tools/gst-launch.c:430
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:433
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Save xml representation of pipeline to FILE and exit"
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:433
 msgid "FILE"
 msgstr "FILE"
 
-#: tools/gst-launch.c:422
+#: tools/gst-launch.c:436
 msgid "Do not install a fault handler"
 msgstr "Do not install a fault handler"
 
-#: tools/gst-launch.c:424
+#: tools/gst-launch.c:438
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Print alloc trace (if enabled at compile time)"
 
-#: tools/gst-launch.c:426
+#: tools/gst-launch.c:440
 msgid "Number of times to iterate pipeline"
 msgstr "Number of times to iterate pipeline"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:510
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROR: pipeline could not be constructed: %s.\n"
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:514
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERROR: pipeline could not be constructed.\n"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:518
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WARNING: erroneous pipeline: %s\n"
 
-#: tools/gst-launch.c:505
+#: tools/gst-launch.c:519
 #, c-format
 msgid "         Trying to run anyway.\n"
 msgstr "         Trying to run anyway.\n"
 
-#: tools/gst-launch.c:532
+#: tools/gst-launch.c:542
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERROR: the 'pipeline' element wasn't found.\n"
 
-#: tools/gst-launch.c:539
+#: tools/gst-launch.c:549
+#, fuzzy, c-format
+msgid "PREROLL pipeline ...\n"
+msgstr "RUNNING pipeline ...\n"
+
+#: tools/gst-launch.c:551
+#, fuzzy, c-format
+msgid "ERROR: pipeline doesn't want to pause.\n"
+msgstr "ERROR: pipeline doesn't want to play.\n"
+
+#: tools/gst-launch.c:563
+#, fuzzy, c-format
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "ERROR: pipeline doesn't want to play.\n"
+
+#: tools/gst-launch.c:568
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
 
-#: tools/gst-launch.c:542
+#: tools/gst-launch.c:571
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: pipeline doesn't want to play.\n"
+
+#: tools/gst-launch.c:582
+msgid "Execution ended after %"
+msgstr "Execution ended after %"
+
+#: tools/gst-launch.c:582
+#, fuzzy
+msgid " ns.\n"
+msgstr " ns).\n"
+
+#: tools/gst-launch.c:584
+#, fuzzy, c-format
+msgid "PAUSE pipeline ...\n"
+msgstr "RUNNING pipeline ...\n"
+
+#: tools/gst-launch.c:587
+#, fuzzy, c-format
+msgid "READY pipeline ...\n"
+msgstr "RUNNING pipeline ...\n"
+
+#: tools/gst-launch.c:590
+#, fuzzy, c-format
+msgid "NULL pipeline ...\n"
+msgstr "RUNNING pipeline ...\n"
+
+#: tools/gst-launch.c:597
+#, fuzzy, c-format
+msgid "FREEING pipeline ...\n"
+msgstr "RUNNING pipeline ...\n"
 
 #: tools/gst-register.c:49
 #, c-format
@@ -842,9 +884,6 @@ msgstr "Error closing file \"%s\"."
 msgid "Loaded %d plugins with %d %s.\n"
 msgstr ""
 
-#~ msgid "Execution ended after %"
-#~ msgstr "Execution ended after %"
-
 #~ msgid " iterations (sum %"
 #~ msgstr " iterations (sum %"
 
@@ -856,9 +895,6 @@ msgstr ""
 
 #~ msgid " ns, max %"
 #~ msgstr " ns, max %"
-
-#~ msgid " ns).\n"
-#~ msgstr " ns).\n"
 
 #~ msgid ""
 #~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""

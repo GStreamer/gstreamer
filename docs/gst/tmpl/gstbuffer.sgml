@@ -95,11 +95,9 @@ The basic structure of a buffer.
 @maxsize: 
 @timestamp: 
 @duration: 
+@caps: 
 @offset: 
 @offset_end: 
-@free_data: 
-@buffer_private: 
-@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_buffer_new ##### -->
 <para>
@@ -127,9 +125,10 @@ The basic structure of a buffer.
 @GST_BUFFER_SUBBUFFER: 
 @GST_BUFFER_ORIGINAL: 
 @GST_BUFFER_DONTFREE: 
-@GST_BUFFER_KEY_UNIT: 
-@GST_BUFFER_DONTKEEP: 
+@GST_BUFFER_PREROLL: 
+@GST_BUFFER_DISCONT: 
 @GST_BUFFER_IN_CAPS: 
+@GST_BUFFER_GAP: 
 @GST_BUFFER_DELTA_UNIT: 
 @GST_BUFFER_FLAG_LAST: 
 
@@ -308,16 +307,6 @@ If the refcount is 1, this function just returns the original buffer.
 @parent: 
 @offset: 
 @size: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_buffer_join ##### -->
-<para>
-
-</para>
-
-@buf1: 
-@buf2: 
 @Returns: 
 
 

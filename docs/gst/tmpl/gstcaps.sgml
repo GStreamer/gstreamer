@@ -97,9 +97,9 @@ templates.
 </para>
 
 @type: 
+@refcount: 
 @flags: 
 @structs: 
-@_gst_reserved: 
 
 <!-- ##### STRUCT GstStaticCaps ##### -->
 <para>
@@ -108,7 +108,6 @@ templates.
 
 @caps: 
 @string: 
-@_gst_reserved: 
 
 <!-- ##### FUNCTION gst_caps_new_empty ##### -->
 <para>
@@ -166,14 +165,6 @@ templates.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_free ##### -->
-<para>
-
-</para>
-
-@caps: 
-
-
 <!-- ##### FUNCTION gst_static_caps_get ##### -->
 <para>
 
@@ -205,15 +196,6 @@ templates.
 @caps1: 
 
 
-<!-- ##### FUNCTION gst_caps_split_one ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_caps_get_size ##### -->
 <para>
 
@@ -230,15 +212,6 @@ templates.
 
 @caps: 
 @index: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_copy_1 ##### -->
-<para>
-
-</para>
-
-@caps: 
 @Returns: 
 
 
@@ -280,15 +253,6 @@ templates.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_caps_is_chained ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_caps_is_fixed ##### -->
 <para>
 
@@ -299,16 +263,6 @@ templates.
 
 
 <!-- ##### FUNCTION gst_caps_is_equal ##### -->
-<para>
-
-</para>
-
-@caps1: 
-@caps2: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_is_equal_fixed ##### -->
 <para>
 
 </para>
@@ -359,15 +313,6 @@ templates.
 
 
 <!-- ##### FUNCTION gst_caps_normalize ##### -->
-<para>
-
-</para>
-
-@caps: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_simplify ##### -->
 <para>
 
 </para>

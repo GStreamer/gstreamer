@@ -1,3 +1,10 @@
+2005-03-29  Andy Wingo  <wingo@pobox.com>
+
+	* check/Makefile.am: Depend on an unversioned gst-register, seems
+	to make autoconf happier.
+
+	* gst/base/Makefile.am: Make libgstbase a versioned lib.
+
 2005-03-28  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:

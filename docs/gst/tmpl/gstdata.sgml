@@ -65,9 +65,6 @@ The base structure
 @type: The type of this data.
 @refcount: A refcount
 @flags: The flags of this GstData
-@free: A pointer to a custom free function
-@copy: A pointer to a custom copy function
-@_gst_reserved: for future extensions
 
 <!-- ##### USER_FUNCTION GstDataFreeFunction ##### -->
 <para>
