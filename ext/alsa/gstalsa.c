@@ -696,7 +696,8 @@ gst_alsa_get_props (snd_pcm_format_t format)
   return NULL;
 }
 
-static inline void add_channels (GstProps *props, gint rate, gint channels) {
+static inline void
+add_channels (GstProps *props, gint rate, gint channels) {
   if (rate < 0) {
     gst_props_add_entry (props, gst_props_entry_new ("rate", GST_PROPS_INT_RANGE (8000, 192000)));
   } else {
@@ -784,6 +785,19 @@ gst_alsa_link (GstPad *pad, GstCaps *caps)
         if (this->pads[i].pad == pad)
 	  continue;
         if (gst_pad_try_set_caps (this->pads[i].pad, gst_caps_ref (caps)) == GST_PAD_LINK_REFUSED) {
+	  if (this->format) {
+	    GstCaps *old = gst_alsa_caps (this->format->format, this->format->rate, this->format->channels);
+	    for (--i; i >= 0; i--) {
+              if (gst_pad_try_set_caps (this->pads[i].pad, gst_caps_ref (old)) == GST_PAD_LINK_REFUSED) {
+	        gst_element_error (GST_ELEMENT (this), "error resetting caps to sane value");
+	        gst_caps_unref (old);
+                break;
+	      }
+	    }
+            gst_caps_unref (old);
+	  } else {
+	    /* FIXME: unset caps somehow */
+	  }
           g_free (format);
           return GST_PAD_LINK_REFUSED;
         }
@@ -1236,7 +1250,7 @@ gst_alsa_open_audio (GstAlsa *this)
   GST_INFO (GST_CAT_PLUGIN_INFO, "Opening alsa device \"%s\" for %s...\n", this->device,
             this->stream == SND_PCM_STREAM_PLAYBACK ? "playback" : "capture");
 
-  ERROR_CHECK (snd_output_stdio_attach (&this->out, stdout, 0),
+  ERROR_CHECK (snd_output_stdio_attach (&this->out, stderr, 0),
                "error opening log output: %s");
   /* blocking i/o */
   ERROR_CHECK (snd_pcm_open (&this->handle, this->device, this->stream, 0),
@@ -1258,9 +1272,6 @@ gst_alsa_set_hw_params (GstAlsa *this)
   snd_pcm_uframes_t size_min, size_max;
   unsigned int count_min, count_max;
   
-  /* whether to use default values when setting params */
-  gboolean def = (this->format == NULL); 
-
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
@@ -1272,6 +1283,9 @@ gst_alsa_set_hw_params (GstAlsa *this)
                "Broken configuration for this PCM: %s");
   ERROR_CHECK (snd_pcm_hw_params_set_periods_integer (this->handle, hw_params), 
                "cannot restrict period size to integral value: %s");
+
+  /* enable this for soundcard specific debugging */
+  /* snd_pcm_hw_params_dump (hw_params, this->out); */
   
   mask = alloca (snd_pcm_access_mask_sizeof ());
   snd_pcm_access_mask_none (mask);
@@ -1283,12 +1297,14 @@ gst_alsa_set_hw_params (GstAlsa *this)
   ERROR_CHECK (snd_pcm_hw_params_set_access_mask (this->handle, hw_params, mask),
                "The Gstreamer ALSA plugin does not support your hardware. Error: %s");
   
-  ERROR_CHECK (snd_pcm_hw_params_set_format (this->handle, hw_params, def ? SND_PCM_FORMAT_S16 : this->format->format),
-               "Sample format (%s) not available: %s", snd_pcm_format_name (def ? SND_PCM_FORMAT_S16 : this->format->format));
-  ERROR_CHECK (snd_pcm_hw_params_set_channels (this->handle, hw_params, def ? ((GstElement *) this)->numpads : this->format->channels),
-               "Channels count (%d) not available: %s", def ? ((GstElement *) this)->numpads : this->format->channels);
-  ERROR_CHECK (snd_pcm_hw_params_set_rate (this->handle, hw_params, def ? 44100 : this->format->rate, 0),
-                 "error setting rate (%d): %s", def ? 44100 : this->format->rate);
+  if (this->format) {
+    ERROR_CHECK (snd_pcm_hw_params_set_format (this->handle, hw_params, this->format->format),
+                 "Sample format (%s) not available: %s", snd_pcm_format_name (this->format->format));
+    ERROR_CHECK (snd_pcm_hw_params_set_channels (this->handle, hw_params, this->format->channels),
+                 "Channels count (%d) not available: %s", this->format->channels);
+    ERROR_CHECK (snd_pcm_hw_params_set_rate (this->handle, hw_params, this->format->rate, 0),
+                   "error setting rate (%d): %s", this->format->rate);
+  }
 
   if (snd_pcm_hw_params_get_period_size_min (hw_params, &size_min, 0) < 0) size_min = this->period_size;
   if (snd_pcm_hw_params_get_period_size_max (hw_params, &size_max, 0) < 0) size_max = this->period_size;
