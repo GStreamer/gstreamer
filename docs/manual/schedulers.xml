@@ -1,0 +1,42 @@
+<chapter id="chapter-scheduler">
+  <title>Understanding schedulers</title>
+  <para> 
+    The scheduler is responsible for managing the plugins at runtime. Its
+    main responsibilities are:
+    <itemizedlist>
+      <listitem>
+        <para>
+	  Preparing the plugins so they can be scheduled. 
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+	  Monitoring state changes and enabling/disabling the element in the
+	  chain.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+	  Choosing an element as the entry point for the pipeline.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+	  Selecting and distributing the global clock.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </para>
+  <para> 
+    The scheduler is a pluggable component; this means that alternative
+    schedulers can be written and plugged into GStreamer. The default scheduler
+    uses cothreads to schedule the plugins in a pipeline. Cothreads are fast
+    and lightweight user-space threads.
+  </para>
+  <para> 
+    There is usually no need to interact with the scheduler directly, however
+    in some cases it is feasible to set a specific clock or force a specific
+    plugin as the entry point in the pipeline.
+  </para>
+
+</chapter>

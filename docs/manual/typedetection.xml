@@ -1,0 +1,145 @@
+<chapter id="chapter-typedetection">
+  <title>Type Detection</title>
+  <para> 
+    Sometimes the capabilities of a pad are not specificied. The filesrc
+    element, for example, does not know what type of file it is reading. Before
+    you can attach an element to the pad of the filesrc, you need to determine
+    the media type in order to be able to choose a compatible element.
+  </para>
+  <para> 
+    To solve this problem, a plugin can provide the <application>GStreamer</application> 
+    core library with a type definition. The type definition
+    will contain the following information:
+    <itemizedlist>
+      <listitem>
+        <para>
+          The MIME type we are going to define.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          An optional string with a list of possible file extensions this 
+	  type usually is associated with. the list entries are separated with
+	  a space. eg, ".mp3 .mpa .mpg".
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+	  An optional typefind function. 
+        </para>
+      </listitem>
+    </itemizedlist>
+  </para>
+  <para> 
+    The typefind functions give a meaning to the MIME types that are used
+    in GStreamer.  The typefind function is a function with the following definition:
+  </para>
+  <programlisting>
+typedef GstCaps *(*GstTypeFindFunc) (GstBuffer *buf, gpointer priv);
+  </programlisting>
+  <para> 
+    This typefind function will inspect a GstBuffer with data and will output
+    a GstCaps structure describing the type. If the typefind function does not
+    understand the buffer contents, it will return NULL.
+  </para>
+  <para>
+    <application>GStreamer</application> has a typefind element in the set
+    of core elements
+    that can be used to determine the type of a given pad.
+  </para>
+  <para>
+    The next example will show how a typefind element can be inserted into a pipeline
+    to detect the media type of a file. It will output the capabilities of the pad into
+    an XML representation.
+  </para>
+  <programlisting>
+#include &lt;gst/gst.h&gt;
+
+void    type_found      (GstElement *typefind, GstCaps* caps);
+
+int 
+main(int argc, char *argv[]) 
+{
+  GstElement *bin, *filesrc, *typefind;
+
+  gst_init (&amp;argc, &amp;argv);
+
+  if (argc != 2) {
+    g_print ("usage: %s &lt;filename&gt;\n", argv[0]);
+    exit (-1);
+  }
+
+  /* create a new bin to hold the elements */
+  bin = gst_bin_new ("bin");
+  g_assert (bin != NULL);
+
+  /* create a disk reader */
+  filesrc = gst_element_factory_make ("filesrc", "disk_source");
+  g_assert (filesrc != NULL);
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
+
+  /* create the typefind element */
+  typefind = gst_element_factory_make ("typefind", "typefind");
+  g_assert (typefind != NULL);
+
+  /* add objects to the main pipeline */
+  gst_bin_add_many (GST_BIN (bin), filesrc, typefind, NULL);
+
+  g_signal_connect (G_OBJECT (typefind), "have_type", 
+		     G_CALLBACK (type_found), NULL);
+
+  gst_element_link (filesrc, typefind);
+
+  /* start playing */
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+
+  gst_bin_iterate (GST_BIN (bin));
+
+  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+
+  exit (0);
+}
+  </programlisting>
+  <para>
+    We create a very simple pipeline with only a filesrc and the typefind
+    element in it. The sinkpad of the typefind element has been linked
+    to the source pad of the filesrc.
+  </para>
+  <para>
+    We attached a signal 'have_type' to the typefind element which will be called 
+    when the type of the media stream as been detected.
+  </para>
+  <para>
+    The typefind function will loop over all the registered types and will
+    execute each of the typefind functions. As soon as a function returns
+    a GstCaps pointer, the type_found function will be called:
+  </para>
+
+  <programlisting>
+void
+type_found (GstElement *typefind, GstCaps* caps) 
+{
+  xmlDocPtr doc;
+  xmlNodePtr parent;
+  
+  doc = xmlNewDoc ("1.0");  
+  doc-&gt;root = xmlNewDocNode (doc, NULL, "Capabilities", NULL);
+
+  parent = xmlNewChild (doc-&gt;root, NULL, "Caps1", NULL);
+  gst_caps_save_thyself (caps, parent);
+
+  xmlDocDump (stdout, doc);
+}
+  </programlisting>
+  <para>
+    In the type_found function we can print or inspect the type that has been
+    detected using the GstCaps APIs. In this example, we just print out the
+    XML representation of the caps structure to stdout.
+  </para>
+  <para>
+    A more useful option would be to use the registry to look up an element
+    that can handle this particular caps structure, or we can also use the
+    autoplugger to link this caps structure to, for example, a videosink.
+  </para>
+
+</chapter>

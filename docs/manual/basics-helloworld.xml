@@ -1,0 +1,197 @@
+<chapter id="chapter-helloworld">
+  <title>Your first application</title>
+  <para>
+    This chapter will summarize everything you've learned in the previous
+    chapters. It describes all aspects of a simple &GStreamer; application,
+    including initializing libraries, creating elements, packing elements
+    together in a pipeline and playing this pipeline. By doing all this,
+    you will be able to build a simple Ogg/Vorbis audio player.
+  </para>
+
+  <sect1 id="section-helloworld">
+    <title>Hello world</title>
+    <para>
+      We're going to create a simple first application, a simple Ogg/Vorbis
+      command-line audio player. For this, we will use only standard
+      &GStreamer; components. The player will read a file specified on
+      the command-line. Let's get started!
+    </para>
+    <para>
+      We've learned, in <xref linkend="chapter-init"/>, that the first thing
+      to do in your application is to initialize &GStreamer; by calling
+      <function>gst_init ()</function>. Also, make sure that the application
+      includes <filename>gst/gst.h</filename> so all function names and
+      objects are properly defined. Use <function>#include
+      &lt;gst/gst.h&gt;</function> to do that.
+    </para>
+    <para>
+      Next, you'll want to create the different elements using
+      <function>gst_element_factory_make ()</function>. For an Ogg/Vorbis
+      audio player, we'll need a source element that reads files from a
+      disk. &GStreamer; includes this element under the name
+      <quote>filesrc</quote>. Next, we'll need something to parse the
+      file and decoder it into raw audio. &GStreamer; has two elements
+      for this: the first parses Ogg streams into elementary streams (video,
+      audio) and is called <quote>oggdemux</quote>. The second is a Vorbis
+      audio decoder, it's conveniently called <quote>vorbisdec</quote>.
+      Since <quote>oggdemux</quote> creates dynamic pads for each elementary
+      stream, you'll need to set a <quote>new-pad</quote> event handler
+      on the <quote>oggdemux</quote> element, like you've learned in
+      <xref linkend="section-pads-dynamic"/>, to link the Ogg parser and
+      the Vorbis decoder elements together. At last, we'll also need an
+      audio output element, we will use <quote>alsasink</quote>, which
+      outputs sound to an ALSA audio device.
+    </para>
+    <para>
+      The last thing left to do is to add all elements into a container
+      element, a <classname>GstPipeline</classname>, and iterate this
+      pipeline until we've played the whole song. We've previously
+      learned how to add elements to a container bin in <xref
+      linkend="chapter-bins"/>, and we've learned about element states
+      in <xref linkend="section-elements-states"/>. We will use the function
+      <function>gst_bin_sync_children_state ()</function> to synchronize
+      the state of a bin on all of its contained children.
+    </para>
+    <para>
+      Let's now add all the code together to get our very first audio
+      player:
+    </para>
+    <programlisting>
+#include &lt;gst/gst.h&gt;
+
+/*
+ * Global objects are usually a bad thing. For the purpose of this
+ * example, we will use them, however.
+ */
+
+GstElement *pipeline, *source, *parser, *decoder, *sink;
+
+static void
+new_pad (GstElement *element,
+	 GstPad     *pad,
+	 gpointer    data)
+{
+  /* We can now link this pad with the audio decoder and
+   * add both decoder and audio output to the pipeline. */
+  gst_pad_link (pad, gst_element_get_pad (decoder, "sink"));
+  gst_bin_add_many (GST_BIN (pipeline), decoder, sink, NULL);
+
+  /* This function synchronizes a bins state on all of its
+   * contained children. */
+  gst_bin_sync_children_state (GST_BIN (pipeline));
+}
+
+int
+main (int   argc,
+      char *argv[])
+{
+  /* initialize GStreamer */
+  gst_init (&amp;argc, &amp;argv);
+
+  /* check input arguments */
+  if (argc != 2) {
+    g_print ("Usage: %s &lt;Ogg/Vorbis filename&gt;\n", argv[0]);
+    return -1;
+  }
+
+  /* create elements */
+  pipeline = gst_pipeline_new ("audio-player");
+  source = gst_element_factory_make ("filesrc", "file-source");
+  parser = gst_element_factory_make ("oggdemux", "ogg-parser");
+  decoder = gst_element_factory_make ("vorbisdec", "vorbis-decoder");
+  sink = gst_element_factory_make ("alsasink", "alsa-output");
+
+  /* set filename property on the file source */
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
+
+  /* link together - note that we cannot link the parser and
+   * decoder yet, becuse the parser uses dynamic pads. For that,
+   * we set a new-pad signal handler. */
+  gst_element_link (source, parser);
+  gst_element_link (decoder, sink);
+  g_signal_connect (parser, "new-pad", G_CALLBACK (new_pad), NULL);
+
+  /* put all elements in a bin - or at least the ones we will use
+   * instantly. */
+  gst_bin_add_many (GST_BIN (pipeline), source, parser, NULL);
+
+  /* Now set to playing and iterate. We will set the decoder and
+   * audio output to ready so they initialize their memory already.
+   * This will decrease the amount of time spent on linking these
+   * elements when the Ogg parser emits the new-pad signal. */
+  gst_element_set_state (decoder, GST_STATE_READY);
+  gst_element_set_state (sink, GST_STATE_READY);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  /* and now iterate - the rest will be automatic from here on.
+   * When the file is finished, gst_bin_iterate () will return
+   * FALSE, thereby terminating this loop. */
+  while (gst_bin_iterate (GST_BIN (pipeline))) ;
+
+  /* clean up nicely */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (GST_OBJECT (pipeline));
+
+  return 0;
+}
+    </programlisting>
+    <!-- FIXME: this image needs updating -->
+    <para>
+      We now have created a complete pipeline.  We can visualise the
+      pipeline as follows:
+    </para>
+    <figure float="1" id="section-hello-img">
+      <title>The "hello world" pipeline</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/hello-world.&image;" format="&IMAGE;" />
+        </imageobject>
+      </mediaobject>  
+    </figure>
+  </sect1>
+
+  <sect1 id="section-helloworld-compilerun">
+    <title>Compiling and Running helloworld.c</title>
+    <para>
+      To compile the helloworld example, use: <command>gcc -Wall
+      $(pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR;)
+      helloworld.c -o helloworld</command>. &GStreamer; makes use of
+      <command>pkg-config</command> to get compiler and linker flags
+      needed to compile this application. If you're running a
+      non-standard installation, make sure the
+      <classname>PKG_CONFIG_PATH</classname> environment variable is
+      set to the correct location (<filename>$libdir/pkgconfig</filename>).
+      application against the uninstalled location.
+    </para>
+    <para>
+      You can run this example application with <command>./helloworld
+      file.ogg</command>. Substitute <filename>file.ogg</filename>
+      with your favourite Ogg/Vorbis file.
+    </para>
+  </sect1>
+
+  <sect1 id="section-hello-world-conclusion">
+    <title>Conclusion</title>
+    <para>
+      This concludes our first example. As you see, setting up a pipeline
+      is very low-level but powerful. You will see later in this manual how
+      you can create a more powerful media player with even less effort
+      using higher-level interfaces. We will discuss all that in <xref
+      linkend="part-highlevel"/>. We will first, however, go more in-depth
+      into more advanced &GStreamer; internals.
+    </para>
+    <para>
+      It should be clear from the example that we can very easily replace
+      the <quote>filesrc</quote> element with some other element that
+      reads data from a network, or some other data source element that
+      is better integrated with your desktop environment. Also, you can
+      use other decoders and parsers to support other media types. You
+      can use another audio sink if you're not running Linux, but Mac OS X,
+      Windows or FreeBSD, or you can instead use a filesink to write audio
+      files to disk instead of playing them back. By using an audio card
+      source, you can even do audio capture instead of playback. All this
+      shows the reusability of &GStreamer; elements, which is its greatest
+      advantage.
+    </para>
+  </sect1>
+</chapter>

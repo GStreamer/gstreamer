@@ -1,0 +1,117 @@
+<chapter id="chapter-intro">
+  <title>Introduction</title>
+  <para> 
+    This chapter gives you an overview of the technologies described in this
+    book.  
+  </para>
+
+  <sect1 id="section-intro-what">
+    <title>What is &GStreamer;?</title>
+    <para> 
+      &GStreamer; is a framework for creating streaming media applications.
+      The fundamental design comes from the video pipeline at Oregon Graduate
+      Institute, as well as some ideas from DirectShow.  
+    </para>
+ 
+    <para>
+      &GStreamer;'s development framework makes it possible to write any
+      type of streaming multimedia application. The &GStreamer; framework
+      is designed to make it easy to write applications that handle audio
+      or video or both. It isn't restricted to audio and video, and can
+      process any kind of data flow.
+      The pipeline design is made to have little overhead above what the
+      applied filters induce. This makes &GStreamer; a good framework for
+      designing even high-end audio applications which put high demands on
+      latency. 
+    </para> 
+
+    <para>
+      One of the the most obvious uses of &GStreamer; is using it to build
+      a media player. &GStreamer; already includes components for building a
+      media player that can support a very wide variety of formats, including
+      MP3, Ogg/Vorbis, MPEG-1/2, AVI, Quicktime, mod, and more. &GStreamer;,
+      however, is much more than just another media player. Its main advantages
+      are that the pluggable components can be mixed and matched into arbitrary
+      pipelines so that it's possible to write a full-fledged video or audio
+      editing application.
+    </para> 
+
+    <para>
+      The framework is based on plugins that will provide the various codec 
+      and other functionality. The plugins can be linked and arranged in
+      a pipeline. This pipeline defines the flow of the data. Pipelines can 
+      also be edited with a GUI editor and saved as XML so that pipeline
+      libraries can be made with a minimum of effort.
+    </para> 
+
+    <para>
+      The &GStreamer; core function is to provide a framework for plugins,
+      data flow and media type handling/negotiation. It also provides an
+      API to write applications using the various plugins.
+    </para> 
+  </sect1>
+
+  <sect1 id="section-intro-structure">
+    <title>Structure of this Manual</title>
+    <para>
+      This book is about &GStreamer; from a developer's point of view; it
+      describes how to write a &GStreamer; application using the &GStreamer;
+      libraries and tools. For an explanation about writing plugins, we
+      suggest the <ulink type="http"
+      url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html">Plugin
+      Writers Guide</ulink>.
+    </para> 
+
+    <para>
+      <xref linkend="part-overview"/> gives you an overview of &GStreamer;'s
+      motivation design goals.
+    </para>
+
+    <para>
+      <xref linkend="part-basics"/> rapidly covers the basics of &GStreamer;
+      application programming. At the end of that chapter, you should be
+      able to build your own audio player using &GStreamer;
+    </para>
+
+    <para>
+      In <xref linkend="part-advanced"/>, we will move on to complicated
+      subjects which make &GStreamer; stand out of its competitors. We
+      will discuss application-pipeline interaction using dynamic parameters
+      and interfaces, we will discuss threading and threaded pipelines,
+      scheduling and clocks (and synchronization). Most of those topics are
+      not just there to introduce you to their API, but primarily to give
+      a deeper insight in solving application programming problems with
+      &GStreamer; and understanding their concepts.
+    </para>
+
+    <para>
+      Next, in <xref linkend="part-highlevel"/>, we will go into higher-level
+      programming APIs for &GStreamer;. You don't exactly need to know all
+      the details from the previous parts to understand this, but you will
+      need to understand basic &GStreamer; concepts nevertheless. We will,
+      amongst others, discuss XML, playbin and autopluggers.
+    </para>
+
+    <para>
+      In <xref linkend="part-appendices"/>, you will find some random
+      information on integrating with GNOME, KDE, OS X or Windows, some
+      debugging help and general tips to improve and simplify &GStreamer;
+      programming.
+    </para>
+
+    <para>
+      In order to understand this manual, you will need to have a basic
+      understanding of the C language. Since &GStreamer; uses <ulink
+      url="http://developer.gnome.org/arch/gtk/glib.html" type="http">GLib
+      2.0</ulink>, the reader is assumed to understand the basics of the
+      <ulink url="http://developer.gnome.org/doc/API/2.0/gobject/index.html"
+      type="http">GObject object model</ulink>. It is recommended to have
+      skimmed through the introduction of the <ulink type="http"
+      url="http://www.le-hacker.org/papers/gobject/index.html">GObject
+      tutorial</ulink> before reading this. You may also want to have a look
+      at Eric Harlow's book <emphasis>Developing Linux Applications with
+      GTK+ and GDK</emphasis>.
+      </para>
+
+  </sect1>
+</chapter>

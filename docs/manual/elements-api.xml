@@ -1,0 +1,202 @@
+<chapter id="chapter-elements-api">
+  <title>Elements</title>
+  <sect1 id="section-elements-create">
+    <title>Creating a GstElement</title>
+    <para>
+The simplest way to create an element is to use
+<ulink type="http"
+       url="&URLAPI;GstElementFactory.html#gst-element-factory-make">
+<function>gst_element_factory_make</function>
+</ulink>.
+This function takes a factory name and an element name for the newly created
+element.
+ The name of the
+element is something you can use later on to look up the element in
+a bin, for example. You can pass <symbol>NULL</symbol> as the name
+argument to get a unique, default name.
+    </para>
+    <para>
+When you don't need the element anymore, you need to unref it using
+<ulink type="http"
+       url="&URLAPI;GstObject.html#gst-object-unref">
+<function>gst_object_unref</function></ulink>.
+This decreases the reference count for the element by 1.  An element has a
+refcount of 1 when it gets created.  An element gets destroyed completely
+when the refcount is decreased to 0.
+    </para>
+    <para>
+The following example &EXAFOOT; shows how to create an element named
+<emphasis>source</emphasis> from the element factory named
+<emphasis>fakesrc</emphasis>.  It checks if the creation succeeded.
+After checking, it unrefs the element.
+    </para>
+    <programlisting>
+<![CDATA[
+/* example-begin elementmake.c */
+
+#include <gst/gst.h>
+
+int
+main (int argc, char *argv[])
+{
+  GstElement *element;
+
+  gst_init (&argc, &argv);
+
+  element = gst_element_factory_make ("fakesrc", "source");
+
+  if (!element) {
+    g_error ("Could not create an element from 'fakesrc' factory.\n");
+  }
+
+  gst_object_unref (GST_OBJECT (element));
+
+  return 0;
+}
+
+/* example-end elementmake.c */
+]]>
+    </programlisting>
+    <para> 
+<function>gst_element_factory_make</function> is actually a shorthand
+for a combination of two functions.
+A
+<ulink type="http"
+       url="&URLAPI;GstElement.html"><classname>GstElement</classname></ulink>
+object is created from a factory.
+To create the element, you have to get access to a
+<ulink type="http" url="&URLAPI;GstElementFactory.html">
+<classname>GstElementFactory</classname></ulink>
+object using a unique factory name.
+This is done with
+<ulink type="http"
+       url="&URLAPI;GstElementFactory.html#gst-element-factory-find">
+<function>gst_element_factory_find</function></ulink>.
+    </para> 
+    <para> 
+The following code fragment is used to get a factory that can be used 
+to create the <emphasis>fakesrc</emphasis> element, a fake data source.
+    </para> 
+    <programlisting>
+ GstElementFactory *factory;
+
+ factory = gst_element_factory_find ("fakesrc");
+    </programlisting>
+    <para> 
+Once you have the handle to the element factory, you can create a 
+real element with the following code fragment:
+    </para> 
+    <programlisting>
+ GstElement *element;
+
+ element = gst_element_factory_create (factory, "source");
+    </programlisting>
+    <para>
+<ulink type="http"
+       url="&URLAPI;GstElementFactory.html#gst-element-factory-create">
+<function>gst_element_factory_create</function></ulink>
+will use the element factory to create an element with the given name.
+    </para>
+  </sect1>
+  <sect1 id="section-elements-properties">
+    <title>GstElement properties</title>
+    <para> 
+      A <ulink type="http" url="&URLAPI;GstElement.html">
+      <classname>GstElement</classname></ulink> can have several properties
+      which are implemented using standard <classname>GObject</classname>
+      properties. The usual <classname>GObject</classname> methods to query,
+      set and get property values and <classname>GParamSpecs</classname>
+      are therefore supported.
+    </para> 
+    <para> 
+      Every <ulink type="http" url="&URLAPI;GstElementFactory.html">
+      <classname>GstElement</classname></ulink> inherits at least
+      one property of its parent <classname>GstObject</classname>:
+      the "name" property. This is the name you provide to the
+      functions <function>gst_element_factory_make</function> or
+      <function>gst_element_factory_create</function>. You can get and set 
+      this property using the functions 
+      <function>gst_object_set_name</function>
+      and <function>gst_object_get_name</function> or use the
+      <classname>GObject</classname> property mechanism as shown below.
+    </para> 
+    <programlisting>
+<![CDATA[
+/* example-begin elementget.c */
+
+#include <gst/gst.h>
+
+int
+main (int argc, char *argv[])
+{
+  GstElement *element;
+  GValue value = { 0, }; /* initialize the GValue for g_object_get() */
+
+  gst_init (&argc, &argv);
+  element = gst_element_factory_make ("fakesrc", "source");
+  g_object_set (G_OBJECT (element), "name", "mysource", NULL);
+
+  g_value_init (&value, G_TYPE_STRING);
+  g_object_get_property (G_OBJECT (element), "name", &value);
+
+  g_print ("The name of the source is '%s'.\n", g_value_get_string (&value));
+
+  return 0;
+}
+
+/* example-end elementget.c */
+]]>
+    </programlisting>
+    <para> 
+      Most plugins provide additional properties to provide more information
+      about their configuration or to configure the element. 
+      <command>gst-inspect</command> is a useful tool to query the properties
+      of a particular element, it will also use property introspection to give
+      a short explanation about the function of the property and about the
+      parameter types and ranges it supports.
+    </para> 
+    <para> 
+      For more information about <classname>GObject</classname>
+      properties we recommend you read the <ulink
+      url="http://developer.gnome.org/doc/API/2.0/gobject/index.html"
+      type="http">GObject manual</ulink> and an introduction to <ulink
+      url="http://le-hacker.org/papers/gobject/index.html" type="http">
+      The Glib Object system</ulink>.
+    </para> 
+  </sect1>
+  
+  <sect1 id="section-elements-signals">
+    <title>GstElement signals</title>
+    <para> 
+      A <ulink type="http" url="&URLAPI;gstreamer/html/GstElementFactory.html">
+      <classname>GstElement</classname></ulink> also provides various 
+      <classname>GObject</classname> signals that can be used as a flexible
+      callback mechanism.
+    </para> 
+  </sect1>
+  
+  <sect1 id="section-elements-factories">
+    <title>More about GstElementFactory</title>
+    <para> 
+      We talk some more about the GstElementFactory object.
+    </para> 
+    
+    <sect2 id="section-elements-factories-details">
+      <title>Getting information about an element using the factory details</title>
+      <para> 
+      </para> 
+    </sect2>
+    
+    <sect2 id="section-elements-factories-padtemplates">
+      <title>Finding out what pads an element can contain</title>
+      <para> 
+      </para> 
+    </sect2>
+    
+    <sect2 id="section-elements-factories-query">
+      <title>Different ways of querying the factories</title>
+      <para> 
+      </para> 
+    </sect2>
+  </sect1>
+</chapter>

@@ -1,0 +1,141 @@
+<chapter id="chapter-states">
+  <title>Element states</title>
+  <para> 
+    Once you have created a pipeline packed with elements, nothing will happen
+    right away. This is where the different states come into play. 
+  </para>
+
+  <sect1 id="section-states">
+    <title>The different element states</title>
+    <para> 
+      An element can be in one of the following four states:
+      <itemizedlist>
+        <listitem>
+          <para>
+            NULL: this is the default state all elements are in when they are created
+	    and are doing nothing.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            READY: An element is ready to start doing something.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+  	    PAUSED: The element is paused for a period of time.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+	    PLAYING: The element is doing something.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+
+    <para> 
+      All elements start with the NULL state. The elements will go throught
+      the following state changes: NULL -&gt; READY -&gt; PAUSED -&gt;
+      PLAYING.  When going from NULL to PLAYING, GStreamer will
+      internally go throught the intermediate states.
+    </para>
+
+    <para> 
+      You can set the following states on an element:
+    </para>
+    <informaltable pgwide="1" frame="none" role="enum">
+    <tgroup cols="2">
+    <tbody>
+      <row>
+        <entry><literal>GST_STATE_NULL</literal></entry>
+        <entry>Reset the state of an element.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_READY</literal></entry>
+        <entry>will make the element ready to start processing data.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_PAUSED</literal></entry>
+        <entry>temporarily stops the data flow.
+        </entry>
+      </row>
+      <row>
+        <entry><literal>GST_STATE_PLAYING</literal></entry>
+        <entry>means there really is data flowing through the graph.
+        </entry>
+      </row>
+    </tbody>
+    </tgroup>
+    </informaltable>
+
+  </sect1>
+
+  <sect1 id="section-states-null">
+    <title>The NULL state</title>
+    <para> 
+      When you created the pipeline all of the elements will be in the NULL state. There is
+      nothing special about the NULL state.
+    </para> 
+    <note>
+      <para> 
+        Don't forget to reset the pipeline to the NULL state when you are not going to use it
+        anymore. This will allow the elements to free the resources they might use.
+      </para> 
+    </note>
+  </sect1>
+
+  <sect1 id="section-states-ready">
+    <title>The READY state</title>
+    <para> 
+      You will start the pipeline by first setting it to the READY state. This will allow the 
+      pipeline and all the elements contained in it to prepare themselves for the actions 
+      they are about to perform.
+    </para>
+    <para> 
+      The typical actions that an element will perform in the READY state might be to open a file or 
+      an audio device. Some more complex elements might have a non trivial action to perform in 
+      the READY state such as connecting to a media server using a CORBA connection.
+    </para>
+    <note>
+      <para> 
+        You can also go from the NULL to PLAYING state directly without
+        going through the READY state. This is a shortcut; the framework
+        will internally go through the READY and the PAUSED state for you.
+      </para> 
+    </note>
+  </sect1>
+
+  <sect1 id="section-states-paused">
+    <title>The PAUSED state</title>
+    <para> 
+      A pipeline that is playing can be set to the PAUSED state. This will temporarily stop all
+      data flowing through the pipeline.
+    </para>
+    <para> 
+      You can resume the data flow by setting the pipeline back to the PLAYING state.
+    </para>
+    <note>
+      <para> 
+        The PAUSED state is available for temporarily freezing the pipeline.
+        Elements will typically not free their resources in the PAUSED state.
+        Use the NULL state if you want to stop the data flow permanently.
+      </para> 
+    </note>
+    <para> 
+      The pipeline has to be in the PAUSED or NULL state if you want to insert or modify an element
+      in the pipeline. We will cover dynamic pipeline behaviour in <xref linkend="chapter-dynamic"/>.
+    </para>
+  </sect1>
+  <sect1 id="section-states-playing">
+    <title>The PLAYING state</title>
+    <para> 
+      A pipeline can be started by setting it to the PLAYING state. At
+      that time data will start to flow all the way through the pipeline.
+    </para>
+  </sect1>
+
+
+</chapter>

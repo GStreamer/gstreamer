@@ -1,0 +1,85 @@
+<chapter id="chapter-win32">
+<title>Windows support</title>
+  <sect1 id="section-win32-build">
+  <title>Building <application>GStreamer</application> under Win32</title>
+
+<para>There are different makefiles that can be used to build GStreamer with the usual Microsoft 
+compiling tools.</para>
+
+<para>The Makefile is meant to be used with the GNU make program and the free 
+version of the Microsoft compiler (<ulink url="http://msdn.microsoft.com/visualc/vctoolkit2003/">http://msdn.microsoft.com/visualc/vctoolkit2003/</ulink>). You also 
+have to modify your system environment variables to use it from the command-line. You will also 
+need a working Platform SDK for Windows that is available for free from Microsoft.</para>
+
+<para>The projects/makefiles will generate automatically some source files needed to compile 
+GStreamer. That requires that you have installed on your system some GNU tools and that they are 
+available in your system PATH.</para>
+
+<para>The GStreamer project depends on other libraries, namely :</para>
+<itemizedlist>
+<listitem><para>GLib</para></listitem>
+<listitem><para>popt</para></listitem>
+<listitem><para>libxml2</para></listitem>
+<listitem><para>libintl</para></listitem>
+<listitem><para>libiconv</para></listitem>
+</itemizedlist>
+
+<para>There is now an existing package that has all these dependencies built with MSVC7.1. It exists either as precompiled librairies
+and headers in both Release and Debug mode, or as the source package to build it yourself. You can
+find it on <ulink url="http://mukoli.free.fr/gstreamer/deps/">http://mukoli.free.fr/gstreamer/deps/</ulink>.</para>
+
+<note>
+<title>Notes</title>
+
+<para>GNU tools needed that you can find on <ulink url="http://gnuwin32.sourceforge.net/">http://gnuwin32.sourceforge.net/</ulink></para>
+<itemizedlist>
+<listitem><para>GNU flex      (tested with 2.5.4)</para></listitem>
+<listitem><para>GNU bison     (tested with 1.35)</para></listitem>
+</itemizedlist>
+
+<para>and <ulink url="http://www.mingw.org/">http://www.mingw.org/</ulink></para>
+<itemizedlist>
+<listitem><para>GNU make      (tested with 3.80)</para></listitem>
+</itemizedlist>
+
+<para>the generated files from the -auto makefiles will be available soon separately on the net 
+for convenience (people who don't want to install GNU tools).</para>
+</note>
+</sect1>
+
+  <sect1 id="section-win32-install">
+<title>Installation on the system</title>
+
+<para>By default, GSTreamer needs a registry. You have to generate it using "gst-register.exe". It will create
+the file in c:\gstreamer\registry.xml that will hold all the plugins you can use.</para>
+
+<para>You should install the GSTreamer core in c:\gstreamer\bin and the plugins in c:\gstreamer\plugins.  Both
+directories should be added to your system PATH. The library dependencies should be installed in c:\usr</para>
+
+<para>For example, my current setup is :</para>
+
+<itemizedlist>
+<listitem><para><filename>c:\gstreamer\registry.xml</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gst-inspect.exe</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gst-launch.exe</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gst-register.exe</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gstbytestream.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gstelements.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gstoptimalscheduler.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\gstspider.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\bin\libgtreamer-0.8.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\plugins\gst-libs.dll</filename></para></listitem>
+<listitem><para><filename>c:\gstreamer\plugins\gstmatroska.dll</filename></para></listitem>
+<listitem><para><filename>c:\usr\bin\iconv.dll</filename></para></listitem>
+<listitem><para><filename>c:\usr\bin\intl.dll</filename></para></listitem>
+<listitem><para><filename>c:\usr\bin\libglib-2.0-0.dll</filename></para></listitem>
+<listitem><para><filename>c:\usr\bin\libgmodule-2.0-0.dll</filename></para></listitem>
+<listitem><para><filename>c:\usr\bin\libgobject-2.0-0.dll</filename></para></listitem>
+<listitem><para><filename>c:\usr\bin\libgthread-2.0-0.dll</filename></para></listitem>
+<listitem><para><filename>c:\usr\bin\libxml2.dll</filename></para></listitem>
+<listitem><para><filename>c:\usr\bin\popt.dll</filename></para></listitem>
+</itemizedlist>
+
+</sect1>
+
+</chapter>
