@@ -1037,6 +1037,13 @@ GST_CHECK_FEATURE(LIBPNG, [libpng PNG encoder], pngenc, [
   AC_SUBST(LIBPNG_LIBS)
 ])
 
+dnl *** librfb ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBRFB, true)
+GST_CHECK_FEATURE(LIBRFB, [librfb Remote Framebuffer], rfbsrc, [
+  PKG_CHECK_MODULES(LIBRFB, librfb-0.1, HAVE_LIBRFB="yes", HAVE_LIBRFB="no")
+  AC_SUBST(LIBRFB_CFLAGS)
+  AC_SUBST(LIBRFB_LIBS)
+])
 
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
@@ -1609,6 +1616,7 @@ ext/ivorbis/Makefile
 ext/lcs/Makefile
 ext/libfame/Makefile
 ext/libpng/Makefile
+ext/librfb/Makefile
 ext/mad/Makefile
 ext/mas/Makefile
 ext/mikmod/Makefile
