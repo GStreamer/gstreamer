@@ -335,7 +335,8 @@ gst_fameenc_sinkconnect (GstPad *pad, GstCaps *caps)
   fame_init (fameenc->fc, &fameenc->fp, fameenc->buffer, fameenc->buffer_size);
 
   fameenc->initialized = TRUE;
-
+  fameenc->time_interval = 0;
+  
   return GST_PAD_CONNECT_OK;
 }
 
@@ -380,6 +381,9 @@ gst_fameenc_init (GstFameEnc *fameenc)
   /* allocate space for the buffer */
   fameenc->buffer_size = FAMEENC_BUFFER_SIZE; /* FIXME */
   fameenc->buffer = (unsigned char *) g_malloc (fameenc->buffer_size);
+  
+  fameenc->next_time = 0; 
+  fameenc->time_interval = 0;
 }
 
 static void
@@ -437,7 +441,14 @@ gst_fameenc_chain (GstPad *pad, GstBuffer *buf)
     if (length > FAMEENC_BUFFER_SIZE)
       g_warning ("FAMEENC_BUFFER_SIZE is defined too low, encoded slice has size %d !\n", length);
 
+    if (!fameenc->time_interval) {
+  	fameenc->time_interval = GST_SECOND / fameenc->fp.frame_rate_num;
+    }
+
+    fameenc->next_time += fameenc->time_interval;
+
     GST_BUFFER_SIZE (outbuf) = length;
+    GST_BUFFER_TIMESTAMP (outbuf) = fameenc->next_time;
     GST_BUFFER_DATA (outbuf) = g_malloc (length);
     memcpy (GST_BUFFER_DATA(outbuf), fameenc->buffer, length);
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
@@ -474,6 +485,7 @@ gst_fameenc_set_property (GObject *object, guint prop_id,
 
       fameenc->fp.frame_rate_num = frame_rates[index].num;
       fameenc->fp.frame_rate_den = frame_rates[index].den;
+      fameenc->time_interval = 0;
       break;
     }
     case ARG_BITRATE:
