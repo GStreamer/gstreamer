@@ -83,6 +83,10 @@ applications and plugins for GStreamer.
 
 
 %changelog
+* Tue Mar 5 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- move version defines of glib2 and libxml2 to configure.ac
+- add BuildRequires for these two libs
+
 * Sun Mar 3 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - put html docs in canonical place, avoiding %doc erasure
 - added devhelp support, current install of it is hackish
