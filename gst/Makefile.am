@@ -43,10 +43,28 @@ libgst_la_SOURCES =		\
 	$(GSTARCH_SRCS)
 
 # the compiler shoots cothreads.c in the head at -O6
+# FIXME: these manual rules break the dependency generation, so we have a
+# nasty hack here.  
+LTCOMPILE2=$(LTCOMPILE) -O2
+COMPILE2=$(COMPILE) -O2
 cothreads.lo: cothreads.c
-	$(LTCOMPILE) -O2 -c $<
+	@echo '$(LTCOMPILE2) -c $<'; \
+	$(LTCOMPILE2) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[      ]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 cothreads.o: cothreads.c
-	$(COMPILE) -O2 -c $<
+	@echo '$(COMPILE2) -c $<'; \
+	$(COMPILE2) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[      ]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 
 libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =		\
