@@ -22,6 +22,7 @@ gstmediaplay_SOURCES = \
 
 
 CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
+#CFLAGS += -pg -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 
 gstmediaplay_CFLAGS = $(shell gnome-config --cflags gnomeui) $(shell libglade-config --cflags gnome) \
 		 $(shell gstreamer-config --cflags ) 
