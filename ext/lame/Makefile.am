@@ -9,7 +9,7 @@ libgstlame_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstlame.h
 
-CFLAGS = $(GST_CFLAGS)
+AM_CFLAGS = $(GST_CFLAGS)
 LIBS = $(GST_LIBS) $(LAME_LIBS)
 
 ## testprogs = test-lame
