@@ -156,7 +156,8 @@ gst_caps_debug (GstCaps *caps, const gchar *label)
 {
   GST_DEBUG_ENTER ("caps debug: %s", label);
   while (caps) {
-    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s", caps, caps->name, gst_caps_get_mime (caps));
+    GST_DEBUG (GST_CAT_CAPS, "caps: %p %s %s (%sfixed)", caps, caps->name, gst_caps_get_mime (caps), 
+               caps->fixed ? "" : "NOT ");
 
     if (caps->properties) {
       gst_props_debug (caps->properties);
