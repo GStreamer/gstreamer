@@ -143,9 +143,12 @@ gst_esdsink_class_init (gpointer g_class, gpointer class_data)
   g_object_class_install_property(gobject_class, ARG_SYNC,
     g_param_spec_boolean("sync","sync","Synchronize output to clock",
                          FALSE,G_PARAM_READWRITE));
+#if 0
+  /* This option is disabled because it is dumb in GStreamer's architecture. */
   g_object_class_install_property(gobject_class, ARG_FALLBACK,
     g_param_spec_boolean("fallback","fallback","Fall back to using OSS if Esound daemon is not present",
                          FALSE,G_PARAM_READWRITE));
+#endif
 
   gobject_class->set_property = gst_esdsink_set_property;
   gobject_class->get_property = gst_esdsink_get_property;

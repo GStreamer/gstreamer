@@ -73,49 +73,27 @@ GST_STATIC_PAD_TEMPLATE (
   "wavparse_src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS_ANY
-);
-#if 0
   GST_STATIC_CAPS (
-    "wavparse_raw",
-    "audio/x-raw-int",
-       "endianness",       G_TYPE_INT (G_LITTLE_ENDIAN),
-       "signed",           GST_PROPS_LIST (
-				G_TYPE_BOOLEAN (FALSE),
-				G_TYPE_BOOLEAN (TRUE)
-			   ),
-       "width",            GST_PROPS_LIST (
-	                     G_TYPE_INT (8),
-	                     G_TYPE_INT (16)
-			   ),
-       "depth",            GST_PROPS_LIST (
-	                     G_TYPE_INT (8),
-	                     G_TYPE_INT (16)
-			   ),
-       "rate",             G_TYPE_INT_RANGE (8000, 48000),
-       "channels",         G_TYPE_INT_RANGE (1, 2)
-  ),
-  GST_STATIC_CAPS (
-    "wavparse_mpeg",
-    "audio/mpeg",
-      "mpegversion",       G_TYPE_INT, 1,
-      "rate",              G_TYPE_INT_RANGE (8000, 48000),
-      "channels",          G_TYPE_INT_RANGE (1, 2),
-      "layer",             G_TYPE_INT_RANGE (1, 3)
-  ),
-  GST_STATIC_CAPS (
-    "parsewav_law",
-    "audio/x-alaw",
-      "rate",              G_TYPE_INT_RANGE (8000, 48000),
-      "channels",          G_TYPE_INT_RANGE (1, 2)
-  ),
-  GST_STATIC_CAPS (
-    "parsewav_law",
-    "audio/x-mulaw",
-      "rate",              G_TYPE_INT_RANGE (8000, 48000),
-      "channels",          G_TYPE_INT_RANGE (1, 2)
+    "audio/x-raw-int, "
+      "endianness = (int) little_endian, "
+      "signed = (boolean) { true, false }, "
+      "width = (int) { 8, 16 }, "
+      "depth = (int) { 8, 16 }, "
+      "rate = (int) [ 8000, 48000 ], "
+      "channels = (int) [ 1, 2 ]; "
+    "audio/mpeg, "
+      "mpegversion = (int) 1, "
+      "layer = (int) [ 1, 3 ], "
+      "rate = (int) [ 8000, 48000 ], "
+      "channels = (int) [ 1, 2 ]; "
+    "audio/x-alaw, "
+      "rate = (int) [ 8000, 48000 ], "
+      "channels = (int) [ 1, 2 ]; "
+    "audio/x-mulaw, "
+      "rate = (int) [ 8000, 48000 ], "
+      "channels = (int) [ 1, 2 ]"
   )
-#endif
+);
 
 /* WavParse signals and args */
 enum {
