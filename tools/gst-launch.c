@@ -56,7 +56,17 @@ property_change_callback (GObject *object, GstObject *orig, GParamSpec *pspec, g
     }
     g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
     g_object_get_property (G_OBJECT (orig), pspec->name, &value);
-    str = g_strdup_value_contents (&value);
+
+    if (G_IS_PARAM_SPEC_ENUM (pspec)) {
+      GEnumValue *enum_value;
+      enum_value = g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)), 
+		      g_value_get_enum (&value));
+
+      str = g_strdup_printf ("%s (%d)", enum_value->value_nick, enum_value->value);
+    }
+    else {
+      str = g_strdup_value_contents (&value);
+    }
     g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
     g_free (str);
     g_value_unset(&value);

@@ -107,6 +107,94 @@ print_props (GstProps *properties, gchar *pfx)
   }
 }
 
+static void 
+print_formats (const GstFormat *formats) 
+{
+  GType format_type;
+  GEnumClass *klass;
+
+  format_type = gst_format_get_type();
+  klass = (GEnumClass *) g_type_class_ref (format_type);
+
+  while (formats && *formats) {
+    GEnumValue *value;
+    
+    value = g_enum_get_value (klass, *formats);
+    
+    printf ("\t\t(%d):\t%s (%s)\n", value->value, value->value_nick, value->value_name);
+    formats++;
+  }
+  g_type_class_unref (klass);
+}
+
+static void 
+print_event_masks (const GstEventMask *masks) 
+{
+  GType event_type;
+  GEnumClass *klass;
+  GType event_flags;
+  GFlagsClass *flags_class = NULL;
+
+  event_type = gst_event_type_get_type();
+  klass = (GEnumClass *) g_type_class_ref (event_type);
+
+  while (masks && masks->type) {
+    GEnumValue *value;
+    gint flags = 0, index = 0;
+
+    switch (masks->type) {
+      case GST_EVENT_SEEK:
+        flags = masks->flags;
+	event_flags = gst_seek_type_get_type ();
+  	flags_class = (GFlagsClass *) g_type_class_ref (event_flags);
+        break;
+      default:
+        break;
+    }
+    
+    value = g_enum_get_value (klass, masks->type);
+    printf ("\t\t%s ", value->value_nick);
+
+    while (flags) {
+      GFlagsValue *value;
+
+      if (flags & 1) {
+        value = g_flags_get_first_value (flags_class, 1 << index);
+
+	if (value)
+          printf ("| %s ", value->value_nick);
+	else
+          printf ("| ? ");
+      }
+      flags >>= 1;
+      index++;
+    }
+    printf ("\n");
+    
+    masks++;
+  }
+}
+
+static void 
+print_query_types (const GstPadQueryType *types) 
+{
+  GType query_type;
+  GEnumClass *klass;
+
+  query_type = gst_pad_query_type_get_type();
+  klass = (GEnumClass *) g_type_class_ref (query_type);
+
+  while (types && *types) {
+    GEnumValue *value;
+    
+    value = g_enum_get_value (klass, *types);
+    
+    printf ("\t\t(%d):\t%s (%s)\n", value->value, value->value_nick, value->value_name);
+    types++;
+  }
+}
+
+
 static void
 output_hierarchy (GType type, gint level, gint *maxlevel)
 {
@@ -440,6 +528,30 @@ print_element_info (GstElementFactory *factory)
         printf("      Has chainfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->chainfunc));
       if (realpad->getfunc)
         printf("      Has getfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->getfunc));
+      if (realpad->formatsfunc != gst_pad_get_formats_default) {
+        printf("      Supports seeking/conversion/query formats:\n");
+	print_formats(gst_pad_get_formats (GST_PAD (realpad)));
+      }
+      if (realpad->convertfunc != gst_pad_convert_default)
+        printf("      Has custom convertfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->convertfunc));
+      if (realpad->eventfunc != gst_pad_event_default)
+        printf("      Has custom eventfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->eventfunc));
+      if (realpad->eventmaskfunc != gst_pad_get_event_masks_default) {
+        printf("        Provides event masks:\n");
+	print_event_masks(gst_pad_get_event_masks (GST_PAD (realpad)));
+      }
+      if (realpad->queryfunc != gst_pad_query_default)
+        printf("      Has custom queryfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->queryfunc));
+      if (realpad->querytypefunc != gst_pad_get_query_types_default) {
+        printf("        Provides query types:\n");
+	print_query_types(gst_pad_get_query_types (GST_PAD (realpad)));
+      }
+
+      if (realpad->intconnfunc != gst_pad_get_internal_connections_default)
+        printf("      Has custom intconnfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->intconnfunc));
+
+      if (realpad->bufferpoolfunc)
+        printf("      Has bufferpoolfunc(): %s\n",GST_DEBUG_FUNCPTR_NAME(realpad->bufferpoolfunc));
 
       if (pad->padtemplate)
         printf("    Pad Template: '%s'\n",pad->padtemplate->name_template);
@@ -513,40 +625,52 @@ print_element_info (GstElementFactory *factory)
     }
   }
 
-  /* Signals Block */  
+  /* Signals/Actions Block */  
   {
     guint *signals;
     guint nsignals;
-    gint i;
+    gint i, k;
     GSignalQuery *query;
-
-    printf("\nElement Signals:\n");
     
     signals = g_signal_list_ids (G_OBJECT_TYPE (element), &nsignals);
+    for (k=0; k<2; k++) {
+      gint counted = 0;
 
-    for (i=0; i<nsignals; i++) {
-      gint n_params;
-      GType return_type;
-      const GType *param_types;
-      gint j;
+      if (k == 0)
+        printf("\nElement Signals:\n");
+      else
+        printf("\nElement Actions:\n");
+
+      for (i=0; i<nsignals; i++) {
+        gint n_params;
+        GType return_type;
+        const GType *param_types;
+        gint j;
       
-      query = g_new0(GSignalQuery,1);
-      g_signal_query (signals[i], query);
-      n_params = query->n_params;
-      return_type = query->return_type;
-      param_types = query->param_types;
+        query = g_new0(GSignalQuery,1);
+        g_signal_query (signals[i], query);
 
-      printf ("  \"%s\" :\t %s user_function (%s* object, \n", query->signal_name, g_type_name (return_type),
+	if ((k == 0 && !(query->signal_flags & G_SIGNAL_ACTION)) ||
+	    (k == 1 &&  (query->signal_flags & G_SIGNAL_ACTION))) {
+          n_params = query->n_params;
+          return_type = query->return_type;
+          param_types = query->param_types;
+
+          printf ("  \"%s\" :\t %s user_function (%s* object, \n", query->signal_name, g_type_name (return_type),
 		      g_type_name (G_OBJECT_TYPE (element)));
 
-      for (j=0; j<n_params; j++) {
-        printf ("    \t\t\t\t%s arg%d,\n", g_type_name (param_types[j]), j);
-      }
-      printf ("    \t\t\t\tgpointer user_data);\n");
+          for (j=0; j<n_params; j++) {
+            printf ("    \t\t\t\t%s arg%d,\n", g_type_name (param_types[j]), j);
+          }
+          printf ("    \t\t\t\tgpointer user_data);\n");
 
-      g_free (query);
+	  counted++;
+	}
+
+        g_free (query);
+      }
+      if (counted == 0) g_print ("  none\n");
     }
-    if (nsignals == 0) g_print ("  none\n");
   }
   
 
