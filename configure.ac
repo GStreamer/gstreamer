@@ -387,6 +387,7 @@ GST_PLUGINS_ALL="\
 	interleave \
 	law \
 	level \
+	librfb \
 	matroska \
 	median \
 	mixmatrix \
@@ -1969,6 +1970,7 @@ gst/goom/Makefile
 gst/interleave/Makefile
 gst/law/Makefile
 gst/level/Makefile
+gst/librfb/Makefile
 gst/matroska/Makefile
 gst/median/Makefile
 gst/mixmatrix/Makefile
@@ -2074,7 +2076,6 @@ ext/libcaca/Makefile
 ext/libfame/Makefile
 ext/libmng/Makefile
 ext/libpng/Makefile
-ext/librfb/Makefile
 ext/libvisual/Makefile
 ext/mad/Makefile
 dnl ext/mas/Makefile
