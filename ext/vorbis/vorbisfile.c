@@ -81,7 +81,7 @@ GstElementDetails vorbisfile_details =
 {
   "Ogg Vorbis decoder",
   "Codec/Audio/Decoder",
-  "GPL",
+  "LGPL",
   "Decodes OGG Vorbis audio using the vorbisfile API",
   VERSION,
   "Monty <monty@xiph.org>, " 
