@@ -56,6 +56,7 @@ struct _GstFakeSink {
 
   GSList *sinkpads;
   gint numsinkpads;
+  gboolean silent;
 };
 
 struct _GstFakeSinkClass {

@@ -44,6 +44,7 @@ enum {
 enum {
   ARG_0,
   ARG_NUM_SOURCES,
+  ARG_SILENT,
 };
 
 
@@ -90,6 +91,8 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
 
   gtk_object_add_arg_type ("GstFakeSink::num_sources", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_NUM_SOURCES);
+  gtk_object_add_arg_type ("GstFakeSink::silent", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_SILENT);
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
     gtk_signal_new ("handoff", GTK_RUN_LAST, gtkobject_class->type,
@@ -112,6 +115,7 @@ gst_fakesink_init (GstFakeSink *fakesink)
   gst_pad_set_chain_function (pad, gst_fakesink_chain);
   fakesink->sinkpads = g_slist_prepend (NULL, pad);
   fakesink->numsinkpads = 1;
+  fakesink->silent = FALSE;
 
   // we're ready right away, since we don't have any args...
 //  gst_element_set_state(GST_ELEMENT(fakesink),GST_STATE_READY);
@@ -138,6 +142,9 @@ gst_fakesink_set_arg (GtkObject *object, GtkArg *arg, guint id)
         sink->numsinkpads++;
       }
       break;
+    case ARG_SILENT:
+      sink->silent = GTK_VALUE_BOOL (*arg);
+      break;
     default:
       break;
   }
@@ -156,6 +163,9 @@ gst_fakesink_get_arg (GtkObject *object, GtkArg *arg, guint id)
   switch (id) {
     case ARG_NUM_SOURCES:
       GTK_VALUE_INT (*arg) = sink->numsinkpads;
+      break;
+    case ARG_SILENT:
+      GTK_VALUE_BOOL (*arg) = sink->silent;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;
@@ -181,7 +191,8 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   fakesink = GST_FAKESINK (gst_pad_get_parent (pad));
-  g_print("fakesink: ******* (%s:%s)< \n",GST_DEBUG_PAD_NAME(pad));
+  if (!fakesink->silent)
+    g_print("fakesink: ******* (%s:%s)< \n",GST_DEBUG_PAD_NAME(pad));
   
   gst_buffer_unref (buf);
 
