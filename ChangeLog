@@ -1,4 +1,11 @@
 2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
+	* gst/avi/avi.def:
+	* gst/avi/avi.vcproj:
+	* gst/matroska/matroska.def:
+	* gst/matroska/matroska.vcproj:
+	  remove unused .def files
+
+2004-07-25  Steve Lhomme  <steve.lhomme@free.fr>
 	* gst-libs/gst/audio/gstaudiofilter.c:
 	  Clean the local include
 
