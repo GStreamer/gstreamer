@@ -23,10 +23,6 @@
 
 #include "gstplay.h"
 
-#include <gst/xoverlay/xoverlay.h>
-#include <gst/navigation/navigation.h>
-#include <gst/mixer/mixer.h>
-
 enum
 {
   TIME_TICK,
@@ -49,7 +45,7 @@ static gboolean
 gst_play_pipeline_setup (GstPlay *play)
 {
   GstElement *work_thread, *video_thread;
-  GstElement *source, *autoplugger;
+  GstElement *source, *autoplugger, *video_switch;
   GstElement *video_queue, *video_colorspace, *video_scaler, *video_sink;
   GstElement *audio_thread, *audio_queue, *audio_volume, *audio_sink;
   GstElement *audio_tee, *vis_thread, *vis_queue, *vis_element;
@@ -58,8 +54,8 @@ gst_play_pipeline_setup (GstPlay *play)
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
   
-  work_thread = gst_thread_new ("work_thread");
-  if (!GST_IS_THREAD (work_thread))
+  work_thread = gst_element_factory_make ("thread", "work_thread");
+  if (!GST_IS_ELEMENT (work_thread))
     return FALSE;
   
   g_hash_table_insert (play->elements, "work_thread", work_thread);
@@ -83,8 +79,8 @@ gst_play_pipeline_setup (GstPlay *play)
   
   /* Creating our video output bin
      { queue ! colorspace ! videoscale ! fakesink } */
-  video_thread = gst_thread_new ("video_thread");
-  if (!GST_IS_THREAD (video_thread))
+  video_thread = gst_element_factory_make ("thread", "video_thread");
+  if (!GST_IS_ELEMENT (video_thread))
     return FALSE;
   
   g_hash_table_insert (play->elements, "video_thread", video_thread);
@@ -130,13 +126,23 @@ gst_play_pipeline_setup (GstPlay *play)
                              gst_element_get_pad (video_queue, "sink"),
 			     "sink");
   
-  /* Connecting video output to autoplugger */
-  gst_element_link (autoplugger, video_thread);
+  video_switch = gst_element_factory_make ("videoswitch",
+                                           "video_switch");
+  if (!GST_IS_ELEMENT (video_switch))
+    return FALSE;
+  
+  g_hash_table_insert (play->elements, "video_switch", video_switch);
+  
+  gst_bin_add (GST_BIN (work_thread), video_switch);
+  
+  /* Connecting autoplugger to video switch and video switch to video output */
+  gst_element_link (autoplugger, video_switch);
+  gst_element_link (video_switch, video_thread);
   
   /* Creating our audio output bin 
      { queue ! volume ! tee ! { queue ! goom } ! fakesink } */
-  audio_thread = gst_thread_new ("audio_thread");
-  if (!GST_IS_THREAD (audio_thread))
+  audio_thread = gst_element_factory_make ("thread", "audio_thread");
+  if (!GST_IS_ELEMENT (audio_thread))
     return FALSE;
   
   g_hash_table_insert (play->elements, "audio_thread", audio_thread);
@@ -177,8 +183,8 @@ gst_play_pipeline_setup (GstPlay *play)
   g_hash_table_insert (play->elements, "audio_sink", audio_sink);
   
   /* Visualization thread */
-  vis_thread = gst_thread_new ("vis_thread");
-  if (!GST_IS_THREAD (vis_thread))
+  vis_thread = gst_element_factory_make ("thread", "vis_thread");
+  if (!GST_IS_ELEMENT (vis_thread))
     return FALSE;
   
   g_hash_table_insert (play->elements, "vis_thread", vis_thread);
@@ -236,7 +242,12 @@ gst_play_tick_callback (GstPlay *play)
   GstClock *clock = NULL;
   
   g_return_val_if_fail (play != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  if (!GST_IS_PLAY (play))
+    {
+      play->tick_id = 0;
+      return FALSE;
+    }
   
   clock = gst_bin_get_clock (GST_BIN (play));
   play->time_nanos = gst_clock_get_time (clock);
@@ -244,7 +255,63 @@ gst_play_tick_callback (GstPlay *play)
   g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
                  0,play->time_nanos);
   
-  return (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING);
+  if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING)
+    return TRUE;
+  else
+    {
+      play->tick_id = 0;
+      return FALSE;
+    }
+}
+
+static gboolean
+gst_play_get_length_callback (GstPlay *play)
+{
+  GstElement *audio_sink_element, *video_sink_element;
+  GstFormat format = GST_FORMAT_TIME;
+  gint64 value;
+  gboolean q = FALSE;
+  
+  g_return_val_if_fail (play != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  /* We try to get length from all real sink elements */
+  audio_sink_element = g_hash_table_lookup (play->elements,
+                                            "audio_sink_element");
+  video_sink_element = g_hash_table_lookup (play->elements,
+                                            "video_sink_element");
+  if (!GST_IS_ELEMENT (audio_sink_element) &&
+      !GST_IS_ELEMENT (video_sink_element))
+    {
+      play->length_id = 0;
+      return FALSE;
+    }
+  
+  /* Audio first and then Video */
+  q = gst_element_query (audio_sink_element, GST_QUERY_TOTAL, &format, &value);
+  if (!q)
+    q = gst_element_query (video_sink_element, GST_QUERY_TOTAL, &format,
+                           &value);
+   
+  if (q)
+    {
+      play->length_nanos = value;
+      g_signal_emit (G_OBJECT (play), gst_play_signals[STREAM_LENGTH],
+                     0,play->length_nanos);
+      play->length_id = 0;
+      return FALSE;
+    }
+  
+  play->get_length_attempt++;
+  
+  /* We try 16 times */
+  if (play->get_length_attempt > 15)
+    {
+      play->length_id = 0;
+      return FALSE;
+    }
+  else
+    return TRUE;
 }
 
 static void
@@ -260,67 +327,30 @@ gst_play_state_change (GstElement *element, GstElementState old,
   
   if (state == GST_STATE_PLAYING)
     {
-      g_timeout_add (200, (GSourceFunc) gst_play_tick_callback, play);
+      if (play->tick_id)
+        {
+          g_source_remove (play->tick_id);
+          play->tick_id = 0;
+        }
+        
+      play->tick_id = g_timeout_add (200, (GSourceFunc) gst_play_tick_callback,
+                                     play);
+      
+      play->get_length_attempt = 0;
+      
+      if (play->length_id)
+        {
+          g_source_remove (play->length_id);
+          play->length_id = 0;
+        }
+        
+      play->length_id = g_timeout_add (200,
+                                     (GSourceFunc) gst_play_get_length_callback,
+                                     play);
     }
     
   if (GST_ELEMENT_CLASS (parent_class)->state_change)
     GST_ELEMENT_CLASS (parent_class)->state_change (element, old, state);
-}
-
-/* =========================================== */
-/*                                             */
-/*                 Interfaces                  */
-/*                                             */
-/* =========================================== */
-
-static gboolean
-gst_play_interface_supported (GstInterface *iface, GType type)
-{
-  g_assert (type == GST_TYPE_NAVIGATION ||
-            type == GST_TYPE_X_OVERLAY ||
-            type == GST_TYPE_MIXER);
-  return TRUE;
-}
-
-static void
-gst_play_interface_init (GstInterfaceClass *klass)
-{
-  klass->supported = gst_play_interface_supported;
-}
-
-static void
-gst_play_navigation_send_event (GstNavigation *navigation,
-                                GstStructure *structure)
-{
-  
-}
-
-static void
-gst_play_navigation_init (GstNavigationInterface *iface)
-{
-  iface->send_event = gst_play_navigation_send_event;
-}
-
-static void
-gst_play_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
-{
-  
-}
-
-static void
-gst_play_xoverlay_init (GstXOverlayClass *iface)
-{
-  iface->set_xwindow_id = gst_play_set_xwindow_id;
-}
-
-static void
-gst_play_mixer_init (GstMixerClass *klass)
-{
-  klass->list_tracks = NULL;
-  klass->set_volume = NULL;
-  klass->get_volume = NULL;
-  klass->set_mute = NULL;
-  klass->set_record = NULL;
 }
 
 /* =========================================== */
@@ -338,6 +368,18 @@ gst_play_dispose (GObject *object)
   g_return_if_fail (GST_IS_PLAY (object));
   
   play = GST_PLAY (object);
+  
+  if (play->length_id)
+    {
+      g_source_remove (play->length_id);
+      play->length_id = 0;
+    }
+    
+  if (play->tick_id)
+    {
+      g_source_remove (play->tick_id);
+      play->tick_id = 0;
+    }
     
   if (play->location)
     {
@@ -427,13 +469,13 @@ gst_play_set_location (GstPlay *play, const char *location)
     gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
   
   work_thread = g_hash_table_lookup (play->elements, "work_thread");
-  if (!GST_IS_THREAD (work_thread))
+  if (!GST_IS_ELEMENT (work_thread))
     return FALSE;
   video_thread = g_hash_table_lookup (play->elements, "video_thread");
-  if (!GST_IS_THREAD (video_thread))
+  if (!GST_IS_ELEMENT (video_thread))
     return FALSE;
   audio_thread = g_hash_table_lookup (play->elements, "audio_thread");
-  if (!GST_IS_THREAD (audio_thread))
+  if (!GST_IS_ELEMENT (audio_thread))
     return FALSE;
   source = g_hash_table_lookup (play->elements, "source");
   if (!GST_IS_ELEMENT (source))
@@ -498,8 +540,30 @@ gst_play_get_location (GstPlay *play)
 gboolean
 gst_play_seek_to_time (GstPlay * play, gint64 time_nanos)
 {
+  GstElement *audio_sink_element;
+  
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  if (time_nanos < 0LL)
+    time_nanos = 0LL;
+  
+  audio_sink_element = g_hash_table_lookup (play->elements,
+                                            "audio_sink_element");
+  if (GST_IS_ELEMENT (audio_sink_element))
+    {
+      gboolean s = FALSE;
+      GstClock *clock = gst_bin_get_clock (GST_BIN (play));
+      s = gst_element_seek (audio_sink_element, GST_FORMAT_TIME |
+                            GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH,
+                            time_nanos);
+      if (s)
+        {
+          play->time_nanos = gst_clock_get_time (clock);
+          g_signal_emit (G_OBJECT (play), gst_play_signals[TIME_TICK],
+                         0,play->time_nanos);
+        }
+    }
   
   return TRUE;
 }
@@ -527,7 +591,7 @@ gst_play_set_data_src (GstPlay *play, GstElement *data_src)
   
   /* Getting needed objects */
   work_thread = g_hash_table_lookup (play->elements, "work_thread");
-  if (!GST_IS_THREAD (work_thread))
+  if (!GST_IS_ELEMENT (work_thread))
     return FALSE;
   old_data_src = g_hash_table_lookup (play->elements, "source");
   if (!GST_IS_ELEMENT (old_data_src))
@@ -572,7 +636,7 @@ gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
   
   /* Getting needed objects */
   video_thread = g_hash_table_lookup (play->elements, "video_thread");
-  if (!GST_IS_THREAD (video_thread))
+  if (!GST_IS_ELEMENT (video_thread))
     return FALSE;
   old_video_sink = g_hash_table_lookup (play->elements, "video_sink");
   if (!GST_IS_ELEMENT (old_video_sink))
@@ -616,7 +680,7 @@ gst_play_set_video_sink (GstPlay *play, GstElement *video_sink)
 gboolean
 gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
 {
-  GstElement *old_audio_sink, *audio_thread;
+  GstElement *old_audio_sink, *audio_thread, *audio_sink_element;
   GstPad *audio_tee_pad1, *audio_sink_pad, *old_audio_sink_pad;
   
   g_return_val_if_fail (play != NULL, FALSE);
@@ -635,7 +699,7 @@ gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
   if (!GST_IS_PAD (old_audio_sink_pad))
     return FALSE;
   audio_thread = g_hash_table_lookup (play->elements, "audio_thread");
-  if (!GST_IS_THREAD (audio_thread))
+  if (!GST_IS_ELEMENT (audio_thread))
     return FALSE;
   audio_tee_pad1 = g_hash_table_lookup (play->elements, "audio_tee_pad1");
   if (!GST_IS_PAD (audio_tee_pad1))
@@ -654,6 +718,119 @@ gst_play_set_audio_sink (GstPlay *play, GstElement *audio_sink)
   g_hash_table_replace (play->elements, "audio_sink", audio_sink);
   g_hash_table_replace (play->elements, "audio_sink_pad", audio_sink_pad);
   
+  audio_sink_element = gst_play_get_sink_element (play, audio_sink,
+                                                  GST_PLAY_SINK_TYPE_AUDIO);
+  if (GST_IS_ELEMENT (audio_sink_element))
+    {
+      g_hash_table_replace (play->elements, "audio_sink_element",
+                            audio_sink_element);
+    }
+  
+  return TRUE;
+}
+
+/**
+ * gst_play_set_visualization:
+ * @play: a #GstPlay.
+ * @element: a #GstElement.
+ *
+ * Set @video_sink as the video sink element of @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
+gboolean
+gst_play_set_visualization (GstPlay *play, GstElement *vis_element)
+{
+  GstElement *old_vis_element, *vis_thread, *vis_queue, *video_switch;
+  gboolean was_playing = FALSE;
+  
+  g_return_val_if_fail (play != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  /* We bring back the pipeline to READY */
+  if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING)
+    {
+      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+      was_playing = TRUE;
+    }
+  
+  /* Getting needed objects */
+  vis_thread = g_hash_table_lookup (play->elements, "vis_thread");
+  if (!GST_IS_ELEMENT (vis_thread))
+    return FALSE;
+  old_vis_element = g_hash_table_lookup (play->elements, "vis_element");
+  if (!GST_IS_ELEMENT (old_vis_element))
+    return FALSE;
+  vis_queue = g_hash_table_lookup (play->elements, "vis_queue");
+  if (!GST_IS_ELEMENT (vis_queue))
+    return FALSE;
+  video_switch = g_hash_table_lookup (play->elements, "video_switch");
+  if (!GST_IS_ELEMENT (video_switch))
+    return FALSE;
+    
+  /* Unlinking, removing the old element then adding and linking the new one */
+  gst_element_unlink (vis_queue, old_vis_element);
+  gst_element_unlink (old_vis_element, video_switch);
+  gst_bin_remove (GST_BIN (vis_thread), old_vis_element);
+  gst_bin_add (GST_BIN (vis_thread), vis_element);
+  gst_element_link (vis_queue, vis_element);
+  gst_element_link (vis_element, video_switch);
+  
+  if (was_playing)
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
+  
+  return TRUE;
+}
+
+/**
+ * gst_play_connect_visualization:
+ * @play: a #GstPlay.
+ * @connect: a #gboolean indicating wether or not
+ * visualization should be connected.
+ *
+ * Connect or disconnect visualization bin in @play.
+ *
+ * Returns: TRUE if call succeeded.
+ */
+gboolean
+gst_play_connect_visualization (GstPlay * play, gboolean connect)
+{
+  GstPad *audio_tee_pad2, *vis_thread_pad;
+  gboolean connected = FALSE, was_playing = FALSE;
+  
+  g_return_val_if_fail (play != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
+  
+  vis_thread_pad = g_hash_table_lookup (play->elements, "vis_thread_pad");
+  if (!GST_IS_PAD (vis_thread_pad))
+    return FALSE;
+  audio_tee_pad2 = g_hash_table_lookup (play->elements, "audio_tee_pad2");
+  if (!GST_IS_PAD (audio_tee_pad2))
+    return FALSE;
+  
+  if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING)
+    {
+      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+      was_playing = TRUE;
+    }
+    
+  if (gst_pad_get_peer (vis_thread_pad) != NULL)
+    connected = TRUE;
+  else
+    connected = FALSE;
+
+  if ((connect) && (!connected))
+    {
+      gst_pad_link (audio_tee_pad2, vis_thread_pad);
+    }
+  else if ((!connect) && (connected))
+    {
+      gst_pad_unlink (audio_tee_pad2, vis_thread_pad);
+    }
+  
+  if (was_playing)
+    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
+    
   return TRUE;
 }
 
@@ -809,38 +986,9 @@ gst_play_get_type (void)
         (GInstanceInitFunc) gst_play_init,
 	NULL
       };
-      static const GInterfaceInfo iface_info = {
-        (GInterfaceInitFunc) gst_play_interface_init,
-        NULL,
-        NULL,
-      };
-      static const GInterfaceInfo navigation_info = {
-        (GInterfaceInitFunc) gst_play_navigation_init,
-        NULL,
-        NULL,
-      };
-      static const GInterfaceInfo overlay_info = {
-        (GInterfaceInitFunc) gst_play_xoverlay_init,
-        NULL,
-        NULL,
-      };
-      static const GInterfaceInfo mixer_info = {
-        (GInterfaceInitFunc) gst_play_mixer_init,
-        NULL,
-        NULL,
-      };
       
       play_type = g_type_register_static (GST_TYPE_PIPELINE, "GstPlay",
                                           &play_info, 0);
-      
-      g_type_add_interface_static (play_type, GST_TYPE_INTERFACE,
-                                   &iface_info);
-      g_type_add_interface_static (play_type, GST_TYPE_NAVIGATION,
-                                   &navigation_info);
-      g_type_add_interface_static (play_type, GST_TYPE_X_OVERLAY,
-                                   &overlay_info);
-      g_type_add_interface_static (play_type, GST_TYPE_MIXER,
-                                   &mixer_info);
     }
 
   return play_type;

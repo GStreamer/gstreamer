@@ -50,6 +50,11 @@ struct _GstPlay
   gint64 time_nanos;
   gint64 length_nanos;
   
+  gint get_length_attempt;
+  
+  guint tick_id;
+  guint length_id;
+  
   GST_OBJECT_PADDING
 };
 
@@ -66,9 +71,7 @@ struct _GstPlayClass
 
 GType                 gst_play_get_type              (void);
 GstPlay *             gst_play_new                   (void);
-GstElement *          gst_play_get_sink_element      (GstPlay *play,
-				                      GstElement *element,
-				                      GstPlaySinkType sink_type);
+
 gboolean              gst_play_set_data_src          (GstPlay *play,
                                                       GstElement *data_src);
 gboolean              gst_play_set_video_sink        (GstPlay *play,
@@ -87,5 +90,9 @@ char *                gst_play_get_location          (GstPlay *play);
 
 gboolean              gst_play_seek_to_time          (GstPlay *play,
                                                       gint64 time_nanos);
+                                                      
+GstElement *          gst_play_get_sink_element      (GstPlay *play,
+				                      GstElement *element,
+				                      GstPlaySinkType sink_type);
 
 #endif /* __GST_PLAY_H__ */
