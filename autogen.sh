@@ -63,7 +63,7 @@ toplevel_check $srcfile
 
 # autopoint
 #    older autopoint (< 0.12) has a tendency to complain about mkinstalldirs
-if test -e mkinstalldirs; then rm mkinstalldirs; fi
+if test -x mkinstalldirs; then rm mkinstalldirs; fi
 #    first remove patch if necessary, then run autopoint, then reapply
 if test -f po/Makefile.in.in;
 then
