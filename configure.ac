@@ -575,6 +575,14 @@ GST_CHECK_FEATURE(SMOOTHWAVE, [smoothwave plugin], smoothwave, [
   if test $HAVE_GTK = "yes"; then HAVE_SMOOTHWAVE=yes; fi;
 ])
 
+dnl *** tarkin ***
+dnl for now the sources are included in the plugin
+dnl and should be moved to ext-libs/ perhaps
+translit(dnm, m, l) AM_CONDITIONAL(USE_TARKIN, true)
+GST_CHECK_FEATURE(TARKIN, [tarkinenc tarkindec], tarkin, [
+  HAVE_TARKIN="yes"
+])
+
 dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
