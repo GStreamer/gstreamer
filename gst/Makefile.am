@@ -1,4 +1,3 @@
-
 lib_LTLIBRARIES = libgstreamer.la
 noinst_LTLIBRARIES = libcothreads.la
 
@@ -123,7 +122,7 @@ dist-hook:
 distclean-local:
 	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
 
-libgstreamerincludedir = $(includedir)/gst
+libgstreamerincludedir = $(includedir)/gstreamer-@VERSION@/gst
 libgstreamerinclude_HEADERS =		\
 	gst.h			\
 	gstconfig.h		\

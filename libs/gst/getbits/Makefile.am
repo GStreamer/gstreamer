@@ -8,7 +8,7 @@ else
 GSTARCH_SRCS = 
 endif
 
-libgstgetbitsincludedir = $(includedir)/gst/getbits
+libgstgetbitsincludedir = $(includedir)/gstreamer-@VERSION@/gst/getbits
 libgstgetbitsinclude_HEADERS = getbits.h
 
 libgstgetbits_la_SOURCES = getbits.c gstgetbits_inl.h gstgetbits_generic.c $(GSTARCH_SRCS)

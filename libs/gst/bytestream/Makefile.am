@@ -3,7 +3,7 @@ librarydir = $(libdir)/gst
 library_LTLIBRARIES = libgstbytestream.la
 noinst_LTLIBRARIES = libgstbstest.la
 
-libgstbytestreamincludedir = $(includedir)/gst/bytestream
+libgstbytestreamincludedir = $(includedir)/gstreamer-@VERSION@/gst/bytestream
 libgstbytestreaminclude_HEADERS = bytestream.h
 
 libgstbytestream_la_SOURCES = bytestream.c 

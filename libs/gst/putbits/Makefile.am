@@ -2,7 +2,7 @@ librarydir = $(libdir)/gst
 
 library_LTLIBRARIES = libgstputbits.la
 
-libgstputbitsincludedir = $(includedir)/gst/putbits
+libgstputbitsincludedir = $(includedir)/gstreamer-@VERSION@/gst/putbits
 libgstputbitsinclude_HEADERS = putbits.h
 
 libgstputbits_la_SOURCES = putbits.c 

@@ -145,7 +145,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 %files devel
 %defattr(-, root, root)
-%{_includedir}/gst
+%{_includedir}/%{name}-%{version}/gst
 %{_libdir}/libgstreamer.a
 %{_libdir}/libgstreamer.so
 %{_libdir}/pkgconfig/gstreamer*.pc
@@ -206,6 +206,9 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 
 
 %changelog
+* Sat Jun 22 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- moved header location
+
 * Mon Jun 17 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - added popt
 - removed .la

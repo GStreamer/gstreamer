@@ -2,7 +2,7 @@ librarydir = $(libdir)/gst
 
 library_LTLIBRARIES = libgstcontrol.la
 
-libgstcontrolincludedir = $(includedir)/gst/control
+libgstcontrolincludedir = $(includedir)/gstreamer-@VERSION@/gst/control
 libgstcontrolinclude_HEADERS = \
     control.h \
     dparammanager.h \
