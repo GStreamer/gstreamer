@@ -210,7 +210,6 @@ gst_auparse_chain (GstPad *pad, GstBuffer *buf)
 
     /* and of course, someone had to invent a little endian
      * version.  Used by DEC systems. */
-    /* 
     } else if (GUINT32_FROM_LE (*head) == 0x0064732E) {
       auparse->le = 1;
       head++;
