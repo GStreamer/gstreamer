@@ -30,7 +30,7 @@ from cp import filter
 class Rot13(Identity):
    def chain(self, pad, buf):
       # override Identity's chain
-      data = gst_buffer_get_data(buf)
+      data = buf.get_data()
       data2 = ''
       # waste cycles
       for c in data:
@@ -41,15 +41,15 @@ class Rot13(Identity):
                a = 'A'
             c = chr((((ord(c) - ord(a)) + 13) % 26) + ord(a))
          data2 = data2 + c
-      newbuf = gst_buffer_new()
-      gst_buffer_set_data(newbuf, data2)
+      newbuf = Buffer()
+      newbuf.set_data(data2)
       self.srcpad.push(newbuf)
 
 gobject.type_register(Rot13)
 
 def main():
    "A GStreamer Python subclassing example of a rot13 filter"
-   gst_debug_set_categories(0)
+   gst_debug_set_categories(0L)
 
    rot13 = Rot13()
    rot13.set_name('rot13')
