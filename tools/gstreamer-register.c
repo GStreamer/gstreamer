@@ -20,8 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <stdlib.h>
 #include <gst/gst.h>
+
+#include <stdlib.h>
+#include <stdio.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -88,7 +90,7 @@ static int make_dir(const char * dirname) {
     return !mkdir(dirname, mode);
 }
 
-void check_dir(const char * dirname) {
+static void check_dir(const char * dirname) {
     if (!is_dir(dirname)) {
 	if (!make_dir(dirname)) {
 	    g_print("Cannot create GStreamer registry directory `%s'",
@@ -96,6 +98,32 @@ void check_dir(const char * dirname) {
 	    error_perm();
 	}
     }
+}
+
+static void save_registry(const char *destfile) {
+#if 0
+    FILE *fp;
+
+    fp = fopen (destfile, "w");
+    if (!fp) {
+	g_print("Cannot open `%s' to save new registry to.", destfile);
+	error_perm();
+    }
+
+    // FIXME: no way to check success of xmlDocDump, which is why
+    // this piece of code is ifdefed out.
+    xmlDocDump(fp, doc);
+
+    if (!fclose(fp)) {
+	g_print("Cannot close `%s' having saved new registry.", destfile);
+	error_perm();
+    }
+#else
+    if (xmlSaveFile(destfile, doc) <= 0) {
+	g_print("Cannot save new registry to `%s'", destfile);
+	error_perm();
+    }
+#endif
 }
 
 int main(int argc,char *argv[]) 
@@ -119,11 +147,7 @@ int main(int argc,char *argv[])
     gst_plugin_save_thyself(doc->root);
 
     // Save the registry to a tmp file.
-    if (xmlSaveFile(GLOBAL_REGISTRY_FILE_TMP, doc) <= 0) {
-	g_print("Cannot save new registry `%s'",
-		GLOBAL_REGISTRY_FILE_TMP);
-	error_perm();
-    }
+    save_registry(GLOBAL_REGISTRY_FILE_TMP);
 
     // Make the tmp file live.
     move_file(GLOBAL_REGISTRY_FILE_TMP, GLOBAL_REGISTRY_FILE);
