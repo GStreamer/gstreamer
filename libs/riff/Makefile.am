@@ -7,4 +7,5 @@ libgstriff_la_SOURCES = gstriffparse.c gstriffencode.c gstriffutil.c
 libgstriffincludedir = $(includedir)/gst/libs/gstriff
 libgstriffinclude_HEADERS = gstriff.h
 
-CFLAGS += -O2 $(FOMIT_FRAME_POINTER) -funroll-all-loops -finline-functions -ffast-math
+libgstriff_la_LIBADD = $(GST_LIBS)
+libgstriff_la_CFLAGS = $(GST_CFLAGS) -funroll-all-loops -finline-functions -ffast-math

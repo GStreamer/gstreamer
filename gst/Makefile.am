@@ -202,21 +202,19 @@ noinst_HEADERS = 	\
 	gstarch.h	\
 	gstpropsprivate.h
 
-CFLAGS = \
+libgst_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	$(LIBGST_CFLAGS) \
 	-D_GNU_SOURCE \
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer \
 	-DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
-	\
 	-W -Wpointer-arith -Wbad-function-cast \
 	-Wcast-align -Wsign-compare \
 	-Wmissing-prototypes -Wmissing-declarations \
 	-Wnested-externs \
 	-Winline -Wno-unused
 
-CFLAGS = $(LIBGST_CFLAGS) -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" -Wall
-LIBS = $(LIBGST_LIBS)
-LDFLAGS = ""
+libgst_la_LIBADD = $(LIBGST_LIBS)
+
 libgst_la_LDFLAGS = -version-info $(GST_LIBVERSION)
 
 EXTRA_DIST = ROADMAP

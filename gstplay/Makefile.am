@@ -1,10 +1,3 @@
-## Process this file with automake to produce Makefile.in
-
-# FIXME FIXME
-
-LIBADD += $(GNOME_LIBS) $(GST_LIBS)
-CFLAGS += $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GST_CFLAGS) -DDATADIR=\""$(gladedir)/"\"
-
 bin_PROGRAMS = gstmediaplay 
 
 lib_LTLIBRARIES = libgstmediaplay.la
@@ -35,7 +28,10 @@ noinst_HEADERS = \
 	callbacks.h \
 	gstplayprivate.h
 
+libgstmediaplay_la_CFLAGS = $(GST_CFLAGS) $(GNOME_CFLAGS) \
+	-DDATADIR=\""$(gladedir)/"\"
+libgstmediaplay_la_LIBADD = $(GST_LIBS) $(GNOME_LIBS)
 libgstmediaplay_la_LDFLAGS = -rdynamic
 
-gstmediaplay_CFLAGS = $(LIBGLADE_GNOME_CFLAGS)
-gstmediaplay_LDADD = $(GST_LIBS) $(LIBGLADE_GNOME_LIBS) libgstmediaplay.la
+gstmediaplay_CFLAGS = $(GST_CFLAGS) $(LIBGLADE_GNOME_CFLAGS) $(GNOME_CFLAGS)
+gstmediaplay_LDADD = $(GST_LIBS) $(LIBGLADE_GNOME_LIBS) $(GNOME_LIBS) libgstmediaplay.la
