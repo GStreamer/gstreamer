@@ -83,7 +83,7 @@ gst_dp_dump_byte_array (guint8 * array, guint length)
 {
   int i;
   int n = 8;                    /* number of bytes per line */
-  gchar *line = g_malloc (3 * n);
+  gchar *line = g_malloc (3 * n + 1);
 
   GST_LOG ("dumping byte array of length %d", length);
   for (i = 0; i < length; ++i) {

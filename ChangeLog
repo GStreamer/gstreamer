@@ -1,3 +1,9 @@
+2005-02-18  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_dump_byte_array):
+	Allocate the 1 byte more memory that was forgotten!!!!!
+	fixes memory corruption on 64bit platforms
+
 2005-02-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/pwg/building-pads.xml:
