@@ -107,7 +107,7 @@ print_props (gpointer data, gpointer user_data)
   GstPropsEntry *entry = (GstPropsEntry *)data;
   GstElement *element = GST_ELEMENT (user_data);
 
-  g_print ("%s: %s :", gst_element_get_name (element), 
+  g_print ("%s: %s: ", gst_element_get_name (element), 
 		  g_quark_to_string (entry->propid));
   switch (entry->propstype) {
     case GST_PROPS_INT_ID:
