@@ -1,5 +1,12 @@
 2004-07-28  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_src_query),
+	(gst_ogg_demux_push):
+	Return query failure when we don't know the length of
+	an ogg stream insteda of returning TRUE with a bogus value.
+
+2004-07-28  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoradec.c: (theora_get_formats),
 	(theora_dec_src_convert), (theora_dec_sink_convert),
 	(theora_dec_src_query), (theora_dec_src_event), (theora_dec_event),
