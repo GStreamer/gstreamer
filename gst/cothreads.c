@@ -29,9 +29,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/mman.h>
-#ifdef HAVE_UCONTEXT_H
-#include <ucontext.h>
-#endif
 
 #include "gst_private.h"
 
@@ -39,6 +36,10 @@
 #include "gstarch.h"
 #include "gstlog.h"
 #include "gstutils.h"
+
+#ifdef HAVE_UCONTEXT_H
+#include <ucontext.h>
+#endif
 
 /* older glibc's have MAP_ANON instead of MAP_ANONYMOUS */
 #ifndef MAP_ANONYMOUS
