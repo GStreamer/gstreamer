@@ -481,7 +481,7 @@ gst_bytestream_flush_fast (GstByteStream *bs, guint32 len)
   while (len > 0) {
     headbuf = GST_BUFFER (bs->buflist->data);
 
-    GST_DEBUG ("flush: analyzing buffer that's %d bytes long, offset %llu", GST_BUFFER_SIZE (headbuf),
+    GST_DEBUG ("flush: analyzing buffer that's %d bytes long, offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (headbuf),
 	      GST_BUFFER_OFFSET (headbuf));
 
     /* if there's enough to complete the flush */
@@ -742,7 +742,7 @@ gst_bytestream_print_status (GstByteStream * bs)
     buf = GST_BUFFER (walk->data);
     walk = g_slist_next (walk);
 
-    GST_DEBUG ("STATUS: buffer starts at %llu and is %d bytes long", 
+    GST_DEBUG ("STATUS: buffer starts at %" G_GUINT64_FORMAT " and is %d bytes long", 
 	      GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
   }
 }
