@@ -69,18 +69,6 @@ Last reviewed on December 13th, 2002 (0.5.0.1)
 </para>
 
 
-<!-- ##### ENUM GstPadLinkReturn ##### -->
-<para>
-The result of a pad link.
-</para>
-
-@GST_PAD_LINK_REFUSED: the link was refused.
-@GST_PAD_LINK_DELAYED: the link was delayed, probably because the
-                       element needs more specific pad capabilitiess.
-@GST_PAD_LINK_OK:      the link succeeded.
-@GST_PAD_LINK_DONE:    the link succeeded, 
-                       any more attempts are not needed.
-
 <!-- ##### MACRO GST_PAD_LINK_FAILED ##### -->
 <para>
 Macro to test if the given #GstPadLinkReturn value indicates a
@@ -295,13 +283,35 @@ The direction of a pad.
 
 <!-- ##### ENUM GstPadFlags ##### -->
 <para>
-Flags for the pad.
+
 </para>
 
-@GST_PAD_DISABLED: the pad is disabled.
+@GST_PAD_DISABLED: 
 @GST_PAD_NEGOTIATING: 
 @GST_PAD_DISPATCHING: 
-@GST_PAD_FLAG_LAST: subclasses can use this number to enumerate their flags.
+@GST_PAD_FLAG_LAST: 
+
+<!-- ##### ENUM GstPadLinkReturn ##### -->
+<para>
+The result of a pad link.
+</para>
+
+@GST_PAD_LINK_REFUSED: the link was refused.
+@GST_PAD_LINK_DELAYED: the link was delayed, probably because the
+                       element needs more specific pad capabilitiess.
+@GST_PAD_LINK_OK:      the link succeeded.
+@GST_PAD_LINK_DONE:    the link succeeded, 
+                       any more attempts are not needed.
+
+<!-- ##### ENUM GstPadPresence ##### -->
+<para>
+Indicates when this pad will become available.
+</para>
+
+@GST_PAD_ALWAYS: the pad is always available
+@GST_PAD_SOMETIMES: the pad will become available depending on the media stream
+@GST_PAD_REQUEST: the pad is only available on request with 
+gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 
 <!-- ##### MACRO GST_PAD_NAME ##### -->
 <para>
@@ -440,16 +450,6 @@ Checks if the pad is a sink pad.
 
 @pad: a #GstPad to check.
 
-
-<!-- ##### ENUM GstPadPresence ##### -->
-<para>
-Indicates when this pad will become available.
-</para>
-
-@GST_PAD_ALWAYS: the pad is always available
-@GST_PAD_SOMETIMES: the pad will become available depending on the media stream
-@GST_PAD_REQUEST: th pad is only available on request with 
-gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
 
 <!-- ##### FUNCTION gst_pad_new ##### -->
 <para>

@@ -14,3 +14,372 @@ all gstreamer core related enumerations
 
 </para>
 
+<!-- ##### ENUM GstAllocTraceFlags ##### -->
+<para>
+Flags indicating which tracing feature to enable.
+</para>
+
+@GST_ALLOC_TRACE_LIVE: Trace number of non-freed memory
+@GST_ALLOC_TRACE_MEM_LIVE: trace pointers of unfreed memory
+
+<!-- ##### ENUM GstAssocFlags ##### -->
+<para>
+flags for an association entry
+</para>
+
+@GST_ASSOCIATION_FLAG_NONE: no extra flags
+@GST_ASSOCIATION_FLAG_KEY_UNIT: the entry marks a key unit, a key unit is one
+                                that marks a place where one can randomly seek to.
+@GST_ASSOCIATION_FLAG_DELTA_UNIT: 
+@GST_ASSOCIATION_FLAG_LAST: extra user defined flags should start here.
+
+<!-- ##### ENUM GstDebugColorFlags ##### -->
+<para>
+These are some terminal-oriented flags you can use when creating your debugging
+categories to make them stand out in debugging output.
+</para>
+
+@GST_DEBUG_FG_BLACK: Use black as foreground color.
+@GST_DEBUG_FG_RED: Use red as foreground color.
+@GST_DEBUG_FG_GREEN: Use green as foreground color.
+@GST_DEBUG_FG_YELLOW: Use yellow as foreground color.
+@GST_DEBUG_FG_BLUE: Use blue as foreground color.
+@GST_DEBUG_FG_MAGENTA: Use magenta as foreground color.
+@GST_DEBUG_FG_CYAN: Use cyan as foreground color.
+@GST_DEBUG_FG_WHITE: Use white as foreground color.
+@GST_DEBUG_BG_BLACK: Use black as background color.
+@GST_DEBUG_BG_RED: Use red as background color.
+@GST_DEBUG_BG_GREEN: Use green as background color.
+@GST_DEBUG_BG_YELLOW: Use yellow as background color.
+@GST_DEBUG_BG_BLUE: Use blue as background color.
+@GST_DEBUG_BG_MAGENTA: Use magenta as background color.
+@GST_DEBUG_BG_CYAN: Use cyan as background color.
+@GST_DEBUG_BG_WHITE: Use white as background color.
+@GST_DEBUG_BOLD: Make the output bold.
+@GST_DEBUG_UNDERLINE: Underline the output.
+
+<!-- ##### ENUM GstDebugLevel ##### -->
+<para>
+The level defines the importance of a debugging message. The more important a 
+message is, the greater the probability that the debugging system outputs it.
+</para>
+
+@GST_LEVEL_NONE: No debugging level specified or desired. Used to deactivate
+debugging output.
+@GST_LEVEL_ERROR: Error messages are to be used only when an error occured 
+that stops the application from keeping working correctly.
+An examples is gst_element_error, which outputs a message with this priority.
+It does not mean that the application is terminating as with g_errror.
+@GST_LEVEL_WARNING: Warning messages are to inform about abnormal behaviour
+that could lead to problems or weird behaviour later on. An example of this 
+would be clocking issues ("your computer is pretty slow") or broken input
+data ("Can't synchronize to stream.")
+@GST_LEVEL_INFO: Informational messages should be used to keep the developer
+updated about what is happening.
+Examples where this should be used are when a typefind function has 
+successfully determined the type of the stream or when an mp3 plugin detects
+the format to be used. ("This file has mono sound.")
+@GST_LEVEL_DEBUG: Debugging messages should be used when something common
+happens that is not the expected default behavior. 
+An example would be notifications about state changes or receiving/sending of
+events.
+@GST_LEVEL_LOG: Log messages are messages that are very common but might be 
+useful to know. As a rule of thumb a pipeline that is iterating as expected
+should never output anzthing else but LOG messages.
+Examples for this are referencing/dereferencing of objects or cothread switches.
+@GST_LEVEL_COUNT: The number of defined debugging levels.
+
+<!-- ##### ENUM GstElementState ##### -->
+<para>
+These contants describe the state a #GstElement is in and transition scheduled for the #GstElement (the pending state).
+</para>
+
+@GST_STATE_VOID_PENDING: no transition is schedules for this element
+@GST_STATE_NULL: this is the default state all elements are in, after they have been created and are doing nothing
+@GST_STATE_READY: the element is ready to start doing something
+@GST_STATE_PAUSED: the element is paused for a period of time
+@GST_STATE_PLAYING: the element is doing something
+
+<!-- ##### ENUM GstElementStateReturn ##### -->
+<para>
+One of these values is returned from a gst_element_set_state() call.
+As GST_STATE_FAILURE is equal to 0, one can use a boolean comparission
+against the GstElementStateReturn value.
+</para>
+
+@GST_STATE_FAILURE: the state of the element could not be changed
+@GST_STATE_SUCCESS: the state of the element has already be changed
+@GST_STATE_ASYNC: the state of the element will change in the near future
+
+<!-- ##### ENUM GstEventFlag ##### -->
+<para>
+Event flags are used when querying for supported events
+</para>
+
+@GST_EVENT_FLAG_NONE: no value
+@GST_RATE_FLAG_NEGATIVE: indicates negative rates are supported
+
+<!-- ##### ENUM GstEventType ##### -->
+<para>
+The different major types of events.
+</para>
+
+@GST_EVENT_UNKNOWN: unknown event.
+@GST_EVENT_EOS: an end-of-stream event.
+@GST_EVENT_FLUSH: a flush event.
+@GST_EVENT_EMPTY: an empty event.
+@GST_EVENT_DISCONTINUOUS: a discontinuous event to indicate the stream has a discontinuity.
+@GST_EVENT_QOS: a quality of service event
+@GST_EVENT_SEEK: a seek event.
+@GST_EVENT_SEEK_SEGMENT: a segment seek with start and stop position
+@GST_EVENT_SEGMENT_DONE: the event that will be emited when the segment seek has ended
+@GST_EVENT_SIZE: a size suggestion for a peer element
+@GST_EVENT_RATE: adjust the output rate of an element
+@GST_EVENT_FILLER: a dummy event that should be ignored by plugins
+@GST_EVENT_TS_OFFSET: an event to set the time offset on buffers
+@GST_EVENT_INTERRUPT: mainly used by _get based elements when they were interrupted
+                      while waiting for a buffer.
+@GST_EVENT_NAVIGATION: 
+@GST_EVENT_TAG: 
+
+<!-- ##### ENUM GstFormat ##### -->
+<para>
+Standard predefined formats
+</para>
+
+@GST_FORMAT_UNDEFINED: undefined format
+@GST_FORMAT_DEFAULT: the default format of the pad/element
+@GST_FORMAT_BYTES: bytes
+@GST_FORMAT_TIME: time in nanoseconds
+@GST_FORMAT_BUFFERS: buffers
+@GST_FORMAT_PERCENT: percentage of stream
+
+<!-- ##### ENUM GstIndexCertainty ##### -->
+<para>
+The certainty of a group in the index.
+</para>
+
+@GST_INDEX_UNKNOWN: accuracy is not known
+@GST_INDEX_CERTAIN: accuracy is perfect
+@GST_INDEX_FUZZY: accuracy is fuzzy
+
+<!-- ##### ENUM GstIndexEntryType ##### -->
+<para>
+The different types of entries in the index.
+</para>
+
+@GST_INDEX_ENTRY_ID: This entry is an id that maps an index id to its owner object
+@GST_INDEX_ENTRY_ASSOCIATION: This entry is an association between formats
+@GST_INDEX_ENTRY_OBJECT: An object
+@GST_INDEX_ENTRY_FORMAT: A format definition
+
+<!-- ##### ENUM GstIndexFlags ##### -->
+<para>
+Flags for this index
+</para>
+
+@GST_INDEX_WRITABLE: The index is writable
+@GST_INDEX_READABLE: The index is readable
+@GST_INDEX_FLAG_LAST: First flag that can be used by subclasses
+
+<!-- ##### ENUM GstIndexLookupMethod ##### -->
+<para>
+Specify the method to find an index entry in the index.
+</para>
+
+@GST_INDEX_LOOKUP_EXACT: There has to be an exact indexentry with the given format/value
+@GST_INDEX_LOOKUP_BEFORE: The exact entry or the one before it
+@GST_INDEX_LOOKUP_AFTER: The exact entry or the one after it
+
+<!-- ##### ENUM GstIndexResolverMethod ##### -->
+<para>
+The method used to resolve index writers
+</para>
+
+@GST_INDEX_RESOLVER_CUSTOM: Use a custom resolver
+@GST_INDEX_RESOLVER_GTYPE: Resolve based on the GType of the object
+@GST_INDEX_RESOLVER_PATH: Resolve on the path in graph
+
+<!-- ##### ENUM GstObjectFlags ##### -->
+<para>
+Flags for an object
+</para>
+
+@GST_DESTROYED: The object is flagged for destruction
+@GST_FLOATING: The object is created but has no parent yet to manage it
+@GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
+
+<!-- ##### ENUM GstPadDirection ##### -->
+<para>
+The direction of a pad.
+</para>
+
+@GST_PAD_UNKNOWN: direction is unknown.
+@GST_PAD_SRC: the pad is a source pad.
+@GST_PAD_SINK: the pad is a sink pad.
+
+<!-- ##### ENUM GstPadLinkReturn ##### -->
+<para>
+The result of a pad link.
+</para>
+
+@GST_PAD_LINK_REFUSED: the link was refused.
+@GST_PAD_LINK_DELAYED: the link was delayed, probably because the
+                       element needs more specific pad capabilitiess.
+@GST_PAD_LINK_OK:      the link succeeded.
+@GST_PAD_LINK_DONE:    the link succeeded, 
+                       any more attempts are not needed.
+
+<!-- ##### ENUM GstPadPresence ##### -->
+<para>
+Indicates when this pad will become available.
+</para>
+
+@GST_PAD_ALWAYS: the pad is always available
+@GST_PAD_SOMETIMES: the pad will become available depending on the media stream
+@GST_PAD_REQUEST: th pad is only available on request with 
+gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
+
+<!-- ##### ENUM GstPadTemplateFlags ##### -->
+<para>
+Flags for the padtemplate
+</para>
+
+@GST_PAD_TEMPLATE_FIXED: The padtemplate has no variable properties
+@GST_PAD_TEMPLATE_FLAG_LAST: first flag that can be used by subclasses.
+
+<!-- ##### ENUM GstPluginError ##### -->
+<para>
+The plugin loading errors
+</para>
+
+@GST_PLUGIN_ERROR_MODULE: The plugin could not be loaded
+@GST_PLUGIN_ERROR_DEPENDENCIES: The plugin has unresolved dependencies
+@GST_PLUGIN_ERROR_NAME_MISMATCH: 
+
+<!-- ##### ENUM GstQueryType ##### -->
+<para>
+Standard predefined Query types
+</para>
+
+@GST_QUERY_NONE: invalid query type
+@GST_QUERY_TOTAL: total length of stream
+@GST_QUERY_POSITION: current position in stream
+@GST_QUERY_LATENCY: latency of stream
+@GST_QUERY_JITTER: current jitter of stream
+@GST_QUERY_START: start of configured segment
+@GST_QUERY_SEGMENT_END: end of configured segment
+@GST_QUERY_RATE: current rate of the stream
+
+<!-- ##### ENUM GstRank ##### -->
+<para>
+Element priority ranks. Defines the order in which the autoplugger (or similar
+rank-picking mechanisms) will choose this element over an alternative one
+with the same function.
+The rank is a unsigned integer ranging from 0 (GST_RANK_NONE) to 256 (GST_RANK_PRIMARY).
+These constants serve as a rough guidiance for defining the rank of a #GstPlugin using
+gst_plugin_feature_set_rank().
+</para>
+
+@GST_RANK_NONE: will be chosen last or not at all
+@GST_RANK_MARGINAL: unlikly to be chosen
+@GST_RANK_SECONDARY: likely to be chosen
+@GST_RANK_PRIMARY: will be chosen first
+
+<!-- ##### ENUM GstRegistryFlags ##### -->
+<para>
+Flags for the registry
+</para>
+
+@GST_REGISTRY_READABLE: The registry can be read
+@GST_REGISTRY_WRITABLE: The registry can be written to
+@GST_REGISTRY_EXISTS: The registry exists
+@GST_REGISTRY_REMOTE: The registry is remote and might be slower
+@GST_REGISTRY_DELAYED_LOADING: The registry will be loaded on demand.
+
+<!-- ##### ENUM GstRegistryReturn ##### -->
+<para>
+The return value of registry operations
+</para>
+
+@GST_REGISTRY_OK: The registry reported no error.
+@GST_REGISTRY_LOAD_ERROR: There was a load error
+@GST_REGISTRY_SAVE_ERROR: There was an error saving the registry
+@GST_REGISTRY_PLUGIN_LOAD_ERROR: There was an error loading a plugin
+@GST_REGISTRY_PLUGIN_SIGNATURE_ERROR: There was an error saving a plugin
+
+<!-- ##### ENUM GstSchedulerFlags ##### -->
+<para>
+Flags for the scheduler
+</para>
+
+@GST_SCHEDULER_FLAG_FIXED_CLOCK: The scheduler has a fixed clock
+@GST_SCHEDULER_FLAG_NEW_API: 
+@GST_SCHEDULER_FLAG_LAST: subclasses can start numbering their flags starting
+                          from here.
+
+<!-- ##### ENUM GstSchedulerState ##### -->
+<para>
+The state of the scheduler
+</para>
+
+@GST_SCHEDULER_STATE_NONE: no state
+@GST_SCHEDULER_STATE_RUNNING: the scheduler is running
+@GST_SCHEDULER_STATE_STOPPED: the scheduler is stopped
+@GST_SCHEDULER_STATE_ERROR: the scheduler is in error
+
+<!-- ##### ENUM GstSeekAccuracy ##### -->
+<para>
+The seekaccuracy gives more information of how the seek was performed,
+if the seek was accurate or fuzzy.
+</para>
+
+@GST_SEEK_CERTAIN: The seek was exact
+@GST_SEEK_FUZZY: The seek was fuzzy, exact position can not be guaranteed
+
+<!-- ##### ENUM GstSeekType ##### -->
+<para>
+The different types of seek events. When constructing a seek event a format,
+a seek method and optional flags are OR-ed together. The seek event is then
+inserted into the graph with #gst_pad_send_event() or #gst_element_send_event().
+
+Following example illustrates how to insert a seek event (1 second in the stream)
+in a pipeline.
+<example>
+<title>Insertion of a seek event into a pipeline</title>
+  <programlisting>
+  gboolean res;
+  GstEvent *event;
+
+  event = gst_event_new_seek (
+            GST_FORMAT_TIME |		/* seek on time */
+	    GST_SEEK_METHOD_SET |	/* set the absolute position */
+	    GST_SEEK_FLAG_FLUSH,	/* flush any pending data */
+	    1 * GST_SECOND);		/* the seek offset (1 second) */
+
+  res = gst_element_send_event (GST_ELEMENT (osssink), event);
+  if (!res) {
+    g_warning ("seek failed");
+  }
+  </programlisting>
+</example>
+</para>
+
+@GST_SEEK_METHOD_CUR: Seek to an relative position
+@GST_SEEK_METHOD_SET: Seek to an absolute position
+@GST_SEEK_METHOD_END: Seek relative to the end of the stream
+@GST_SEEK_FLAG_FLUSH: Flush any pending data while seeking
+@GST_SEEK_FLAG_ACCURATE: Seek as accurately as possible
+@GST_SEEK_FLAG_KEY_UNIT: Seek to a nearby key unit
+@GST_SEEK_FLAG_SEGMENT_LOOP: Loop between start and stop in a segmented seek
+
+<!-- ##### ENUM GstThreadState ##### -->
+<para>
+Thread flags:
+</para>
+
+@GST_THREAD_STATE_SPINNING: The thread is runnning
+@GST_THREAD_STATE_REAPING: The thread is ending.
+@GST_THREAD_STATE_WAITING: 
+@GST_THREAD_FLAG_LAST: subclass use this to start their enumeration
+

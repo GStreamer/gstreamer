@@ -204,8 +204,8 @@ in a pipeline.
 
 <!-- ##### ENUM GstSeekAccuracy ##### -->
 <para>
-The seekaccuracy gives more information of how the seek was performed,
-if the seek was accurate or fuzzy.
+The accuracy about a seek operation gives more information of how the seek was
+performed, namly if the seek was accurate or fuzzy.
 </para>
 
 @GST_SEEK_CERTAIN: The seek was exact

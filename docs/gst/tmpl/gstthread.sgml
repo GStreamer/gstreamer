@@ -44,12 +44,12 @@ The thread priority
 
 <!-- ##### ENUM GstThreadState ##### -->
 <para>
-Thread flags:
+Flags about the current thread state
 </para>
 
 @GST_THREAD_STATE_SPINNING: The thread is runnning
-@GST_THREAD_STATE_REAPING: The thread is ending.
-@GST_THREAD_STATE_WAITING: 
+@GST_THREAD_STATE_REAPING: The thread is ending
+@GST_THREAD_STATE_WAITING:
 @GST_THREAD_FLAG_LAST: subclass use this to start their enumeration
 
 <!-- ##### FUNCTION gst_thread_new ##### -->

@@ -1,3 +1,15 @@
+2004-12-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/tmpl/gstenumtypes.sgml:
+	* docs/gst/tmpl/gsterror.sgml:
+	* docs/gst/tmpl/gstevent.sgml:
+	* docs/gst/tmpl/gstpad.sgml:
+	* docs/gst/tmpl/gstpadtemplate.sgml:
+	* docs/gst/tmpl/gstthread.sgml:
+      removed gstenumtypes section from docs and put all the enums into their sections
+
 2004-12-27  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* gst/gstplugin.c:

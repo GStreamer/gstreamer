@@ -159,7 +159,7 @@ Check if the properties of the padtemplate are fixed
 Flags for the padtemplate
 </para>
 
-@GST_PAD_TEMPLATE_FIXED: The padtemplate has no variable properties
+@GST_PAD_TEMPLATE_FIXED: the padtemplate has no variable properties
 @GST_PAD_TEMPLATE_FLAG_LAST: first flag that can be used by subclasses.
 
 <!-- ##### FUNCTION gst_pad_template_new ##### -->
