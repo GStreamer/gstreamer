@@ -13,7 +13,7 @@ autogen.sh to generate the build system files.
 GStreamer is cutting-edge stuff.  To be a CVS developer, you need 
 cutting-edge tools.
 
-ATM, most of use have at least these versions :
+ATM, most of us have at least these versions :
 
 * autoconf	2.52	(NOT 2.52d)
 * automake	1.5
