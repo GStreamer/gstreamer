@@ -1129,6 +1129,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
   GstStructure *structure;
   gchar *s;
 
+  g_return_val_if_fail (string, FALSE);
   if (strcmp ("ANY", string) == 0) {
     caps->flags = GST_CAPS_FLAGS_ANY;
     return TRUE;

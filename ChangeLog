@@ -1,5 +1,10 @@
 2004-03-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstcaps.c: (gst_caps_from_string_inplace):
+          make sure we don't get NULL strings
+
+2004-03-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstcaps.c:
 	* gst/gstelement.c:
 	* gst/gstelementfactory.c: (gst_element_factory_get_type):
