@@ -20,7 +20,8 @@ built_headers =	\
 	tuner-enumtypes.h
 
 libgsttunerinclude_HEADERS = \
-	$(tuner_headers)
+	$(tuner_headers) \
+	tuner-enumtypes.h
 
 # FIXME 0.9: don't install
 nodist_libgsttunerinclude_HEADERS = \
