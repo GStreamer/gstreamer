@@ -1,3 +1,12 @@
+2005-01-08  Benjamin Otte  <otte@gnome.org>
+
+	* gst/games/gstpuzzle.c: (nav_event_handler):
+	  - handle nav events differently: forward every event no matter if it
+	    was handled or not.
+	  - translate events
+	  You can now cheat by using navigationtest ! puzzle and moving the
+	  mouse close to the edge of a tile. ;)
+
 2005-01-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
