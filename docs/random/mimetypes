@@ -135,6 +135,9 @@ of the frame (in pixels).
   mimetype: video/x-ogg-tarkin
 14 - Ogg/Theora
   mimetype: video/x-ogg-theora
+15 - Huffyuv
+  mimetype: video/x-huffyuv
+  known fourccs: HFYU
 
 3c) Audio Codecs
 for convenience, the two-byte hexcodes (as are being used for identification
