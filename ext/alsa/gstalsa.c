@@ -1329,7 +1329,7 @@ gst_alsa_formats_match (GstAlsaFormat *one, GstAlsaFormat *two)
 static GstCaps *
 gst_alsa_get_caps_internal (snd_pcm_format_t format)
 {
-  gchar *name = snd_pcm_format_name (format);
+  const gchar *name = snd_pcm_format_name (format);
 
   if (format == SND_PCM_FORMAT_A_LAW) {
     return GST_CAPS_NEW (name, "audio/x-alaw",
@@ -1370,7 +1370,7 @@ gst_alsa_get_caps_internal (snd_pcm_format_t format)
         break;
       }
     }
-    return GST_CAPS_NEW (name, "audio/x-raw-int", props);
+    return gst_caps_new (name, "audio/x-raw-int", props);
   } else if (snd_pcm_format_float (format)) {
     /* no float with non-platform endianness */
     if (!snd_pcm_format_cpu_endian (format))
@@ -1433,7 +1433,7 @@ gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels)
 
       /* can be NULL, because not all alsa formats can be specified as caps */
       if (temp != NULL && temp->properties != NULL) {
-        add_channels (temp->props, rate, -1, channels, -1);
+        add_channels (temp->properties, rate, -1, channels, -1);
         ret_caps = gst_caps_append (ret_caps, temp);
       }
     }
@@ -1488,12 +1488,11 @@ gst_alsa_get_caps (GstPad *pad, GstCaps *caps)
   snd_pcm_hw_params_get_format_mask (hw_params, mask);
   for (i = 0; i <= SND_PCM_FORMAT_LAST; i++) {
     if (snd_pcm_format_mask_test (mask, i)) {
-      GstProps *props = gst_alsa_get_props (i);
+      GstCaps *caps = gst_alsa_get_caps_internal (i);
       /* we can never use a format we can't set caps for */
-      if (props != NULL) {
-        add_channels (props, min_rate, max_rate, min_channels, max_channels);
-        ret = gst_caps_append (ret, gst_caps_new (g_strdup (snd_pcm_format_name (i)),
-                               "audio/raw", props));
+      if (caps->properties != NULL) {
+        add_channels (caps->properties, min_rate, max_rate, min_channels, max_channels);
+        ret = gst_caps_append (ret, caps);
       }
     }
   }
