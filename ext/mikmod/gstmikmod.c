@@ -335,7 +335,7 @@ gst_mikmod_loop (GstElement *element)
     else		
     {
       if ( mikmod->Buffer ) {	 
-        mikmod->Buffer = gst_buffer_append( mikmod->Buffer, buffer_in );
+        mikmod->Buffer = gst_buffer_merge( mikmod->Buffer, buffer_in );
         gst_buffer_unref( buffer_in );	 	  
       }
       else
