@@ -120,8 +120,36 @@ gst_bytestream_get_next_buf (GstByteStream * bs)
   bs_print ("get_next_buf: pulling buffer\n");
   nextbuf = gst_pad_pull (bs->pad);
 
+  // g_assert (nextbuf);  ??
   if (!nextbuf)
     return FALSE;
+
+  if (GST_IS_EVENT (nextbuf)) {
+    GstEvent *ev = GST_EVENT (nextbuf);
+    gint ret=0;
+    gboolean result = FALSE;
+
+    switch (ev->type) {
+    case GST_EVENT_EOS:
+      // do something
+      ret = TRUE;
+      break;
+
+    case GST_EVENT_DISCONTINUOUS:
+      gst_bytestream_flush_fast (bs, bs->listavail);
+      ret = TRUE;
+      break;
+
+    default:
+      g_warning ("Ignoring unknown event %d", ev->type);
+      break;
+    }
+
+    gst_event_free (ev);
+
+    if (ret)
+      return result;
+  }
 
   bs_print ("get_next_buf: got buffer of %d bytes\n", GST_BUFFER_SIZE (nextbuf));
 
@@ -315,19 +343,32 @@ gst_bytestream_assemble (GstByteStream * bs, guint32 len)
 gboolean
 gst_bytestream_flush (GstByteStream * bs, guint32 len)
 {
-  GstBuffer *headbuf;
-
   bs_print ("flush: flushing %d bytes\n", len);
 
   // make sure we have enough
   bs_print ("flush: there are %d bytes in the list\n", bs->listavail);
   if (len > bs->listavail) {
     if (!gst_bytestream_fill_bytes (bs, len))
-      return FALSE;
+      {
+	gst_bytestream_flush_fast (bs, bs->listavail);
+	return FALSE;
+      }
     bs_print ("flush: there are now %d bytes in the list\n", bs->listavail);
   }
 
-  // repeat until we've flushed enough data
+  gst_bytestream_flush_fast (bs, len);
+
+  return TRUE;
+}
+
+void
+gst_bytestream_flush_fast (GstByteStream * bs, guint32 len)
+{
+  GstBuffer *headbuf;
+
+  g_return_if_fail (bs);
+  g_assert (len <= bs->listavail);
+
   while (len > 0) {
     headbuf = GST_BUFFER (bs->buflist->data);
 
@@ -367,15 +408,14 @@ gst_bytestream_flush (GstByteStream * bs, guint32 len)
 
     bs_print ("flush: bottom of while(), len is now %d\n", len);
   }
-
-  return TRUE;
 }
 
 GstBuffer *
 gst_bytestream_read_loc (GST_WHERE_ARGS_ GstByteStream * bs, guint32 len)
 {
   GstBuffer *buf = gst_bytestream_peek_loc (GST_WHERE_VARS_ bs, len);
-  gst_bytestream_flush (bs, len);
+  if (buf)
+    gst_bytestream_flush_fast (bs, len);
   return buf;
 }
 
