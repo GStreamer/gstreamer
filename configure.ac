@@ -841,7 +841,7 @@ esac],
 
 dnl default to building registry in the source tree if we are enabling plugin build dir
 if test "x$PLUGINS_USE_BUILDDIR"="xyes"; then
-  GST_CONFIG_DIR=$builddir
+  GST_CONFIG_DIR="\$(top_builddir)"
 else
   GST_CONFIG_DIR=/etc/gstreamer
 fi
