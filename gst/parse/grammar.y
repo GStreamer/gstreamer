@@ -11,6 +11,7 @@
 #include "../gstconfig.h"
 #include "../gstparse.h"
 #include "../gstinfo.h"
+#include "../gsterror.h"
 #include "../gsturi.h"
 #include "types.h"
 
@@ -370,9 +371,17 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
   }  
   
   if (!(lock && unlocked_peer)) {
+    GST_CAT_DEBUG (GST_CAT_PIPELINE, "setting locked state on element");
     gst_element_set_locked_state (element, lock);
     if (!lock)
-      gst_element_sync_state_with_parent (element);
+    {
+      /* try to sync state with parent */
+      GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying to sync state of element with parent");
+      /* FIXME: it would be nice if we can figure out why it failed
+         (e.g. caps nego) and give an error about that instead. */
+      if (!gst_element_sync_state_with_parent (element))
+        GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL), (NULL));
+    }
   } else {
     return;
   }

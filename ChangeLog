@@ -1,5 +1,15 @@
 2004-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstelement.c: (gst_element_error_full):
+          make elements try to recursively change state to PAUSED on all
+          parents after an error to suppress ensuing warnings
+	* gst/parse/grammar.y:
+          make it check if it was able to sync the state, and throw an error
+          if not, so stuff like
+          oggdemux ! vorbisdec ! osssink gets caught
+
+2004-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac: use ${libdir} for PLUGINS_DIR since on 64bit
           it contains lib64; use AS_AC_EXPAND to handle it properly
 
