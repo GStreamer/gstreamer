@@ -164,69 +164,70 @@ void
 dvdreadsrc_get_audio_stream_labels (ifo_handle_t * vts_file,
     GHashTable * languagelist)
 {
-  GList *audio_stream_label = g_list_alloc ();
+  GList *audio_stream_label = NULL;
 
   if (vts_file->vts_pgcit) {
     int i;
 
     /* 8 audio streams maximum */
     for (i = 0; i < 8; i++) {
-      GString *streamlabel;
-      guchar *language, *format, *channel_nb;
+      const gchar *format, *channel_nb, *language = NULL;
       guchar language_code[3] = "??";
+      gchar *streamlabel;
 
       if (vts_file->vts_pgcit->pgci_srp[0].pgc->audio_control[i] & 0x8000) {
         audio_attr_t *audio = &vts_file->vtsi_mat->vts_audio_attr[i];
-        guint16 language_id = 0;
 
         if (audio->lang_type == 1) {
-          language_id = audio->lang_code;
-          snprintf (language_code, 3, "%c%c", (language_id >> 8),
-              (language_id & 0xFF));
+          language_code[0] = (audio->lang_code >> 8);
+          language_code[1] = (audio->lang_code & 0xFF);
+          language = g_hash_table_lookup (languagelist, language_code);
         }
 
-        language = g_hash_table_lookup (languagelist, language_code);
         if (!language) {
-          language = g_strdup ("?");
+          language = "?";
         }
 
         switch (audio->audio_format) {
           case 0:
-            format = g_strdup (_("Dolby AC-3"));
+            format = _("Dolby AC-3");
             break;
           case 2:
           case 3:
-            format = g_strdup (_("MPEG layer I, II or III"));
+            format = _("MPEG layer I, II or III");
             break;
           case 4:
-            format = g_strdup (_("LCPM"));
+            format = _("LPCM");
             break;
           case 6:
-            format = g_strdup (_("Digital Theatre System"));
+            format = _("Digital Theatre System");
             break;
           default:
-            format = g_strdup ("?");
+            format = "?";
         }
 
         switch (audio->channels) {
           case 1:
-            channel_nb = g_strdup (_("Stereo"));
+            channel_nb = _("Stereo");
             break;
           case 5:
-            channel_nb = g_strdup (_("5.1"));
+            channel_nb = _("5.1");
             break;
           default:
-            channel_nb = g_strdup ("?");
+            channel_nb = "?";
         }
-        streamlabel = g_string_new ("");
-        g_string_printf (streamlabel, "%u : %s, %s %s", i + 1, language, format,
-            channel_nb);
+
+        streamlabel = g_strdup_printf ("%u : %s, %s %s", i + 1, language,
+            format, channel_nb);
         audio_stream_label = g_list_append (audio_stream_label, streamlabel);   /* "French, Dolby AC-3 Stereo" */
 
         printf ("%u : %s, %s %s\n", i + 1, language, format, channel_nb);
       }
     }
   }
+
+  g_list_foreach (audio_stream_label, (GFunc) g_free, NULL);
+  g_list_free (audio_stream_label);
 }
 
 void
