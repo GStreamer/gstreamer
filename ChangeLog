@@ -1,5 +1,7 @@
 2004-03-16  Johan Dahlin  <johan@gnome.org>
 
+	* configure.ac: Support build without gstplay and gstinterfaces
+
 	* gst/Makefile.am: Move the gstplay bindings over here
 
 	* Makefile.am, configure.ac: Remove examples/ and put them in

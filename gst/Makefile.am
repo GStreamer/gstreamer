@@ -32,14 +32,12 @@ defs_DATA += $(GST_DEFS)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES)
 
 # gst-play bindings
-
-# FIXEME: configure.ac
 PLAY_OVERRIDES = play.override
 PLAY_DEFS = play.defs
 
-#if BUILD_PLAY
+if BUILD_PLAY
 pygstexec_LTLIBRARIES += play.la
-#endif
+endif
 play_la_CFLAGS = $(GST_CFLAGS) $(GST_PLAY_CFLAGS) -fno-strict-aliasing
 play_la_LIBADD = $(GST_LIBS) $(GST_PLAY_LIBS)
 play_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initplay
@@ -51,14 +49,12 @@ defs_DATA += $(PLAY_DEFS)
 play.c: $(PLAY_DEFS) $(PLAY_OVERRIDES)
 
 # GStreamer interfaces bindings
-
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override
 INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
 
-# FIXEME: configure.ac
-#if BUILD_INTERFACES
+if BUILD_INTERFACES
 pygstexec_LTLIBRARIES += interfaces.la
-#endif
+endif
 interfaces_la_CFLAGS = $(GST_CFLAGS) $(GST_INTERFACES_CFLAGS) -fno-strict-aliasing
 interfaces_la_LIBADD = $(GST_LIBS) $(GST_INTERFACES_LIBS)
 interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface

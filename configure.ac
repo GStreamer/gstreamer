@@ -4,9 +4,9 @@ AC_PREREQ(2.57)
 AC_INIT
 AC_CANONICAL_TARGET
 
-m4_define(pygst_major_version, 2)
-m4_define(pygst_minor_version, 1)
-m4_define(pygst_micro_version, 0)
+m4_define(pygst_major_version, 0)
+m4_define(pygst_minor_version, 7)
+m4_define(pygst_micro_version, 90)
 m4_define(pygst_version, pygst_major_version.pygst_minor_version.pygst_micro_version)
 
 AM_INIT_AUTOMAKE(gst-python, pygst_version)
@@ -22,10 +22,10 @@ dnl Add parameters for aclocal
 ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
 dnl required versions of other packages
-AC_SUBST(PYGTK_REQ, 1.99.4)
+AC_SUBST(PYGTK_REQ, 1.99.4) 
 AC_SUBST(GLIB_REQ,  2.0.0)
 AC_SUBST(GTK_REQ,   2.0.0)
-AC_SUBST(GST_REQ,   0.7.6)
+AC_SUBST(GST_REQ,   0.8.0)
 
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
@@ -51,16 +51,9 @@ AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
 
 dnl check for GStreamer
 GST_MAJORMINOR=0.8
-PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
-                  HAVE_GSTREAMER=yes,HAVE_GSTREAMER=no)
+PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ)
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
-
-dnl Give error and exit if we don't have GStreamer
-if test "x$HAVE_GSTREAMER" = "xno"; then
-  AC_MSG_ERROR(you need GStreamer development packages installed !)
-fi
-AC_SUBST(GST_MAJORMINOR)
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
@@ -83,19 +76,17 @@ dnl AC_MSG_RESULT($PYGTK_CODEGEN)
 PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
 AC_SUBST(PYGTK_CODEGEN)
 
-#dnl check for glib
-#AM_PATH_GLIB_2_0(glib_required_version,,[AC_MSG_ERROR(maybe you want the gtk-gnome-1-2 branch?)],$extra_mods)
-#
-#dnl check to make sure we can find gtk
-#AM_PATH_GTK_2_0(gtk_required_version,,[AC_MSG_ERROR(maybe you want the gtk-gnome-1-2 branch?)],$extra_mods)
-
 AC_MSG_CHECKING(for GStreamer interfaces include dir)
-PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR)
+PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-interfaces-$GST_MAJORMINOR,
+                  HAVE_INTERFACES=yes,HAVE_INTERFACES=no)
+AM_CONDITIONAL(BUILD_INTERFACES, test "x$HAVE_INTERFACES" = "xyes")
 AC_SUBST(GST_INTERFACES_CFLAGS)
 AC_SUBST(GST_INTERFACES_INCLUDES)
 
 AC_MSG_CHECKING(for GStreamer play include dir)
-PKG_CHECK_MODULES(GST_PLAY, gstreamer-play-$GST_MAJORMINOR)
+PKG_CHECK_MODULES(GST_PLAY, gstreamer-play-$GST_MAJORMINOR, 
+       	          HAVE_PLAY=yes,HAVE_PLAY=no)
+AM_CONDITIONAL(BUILD_PLAY, test "x$HAVE_PLAY" = "xyes")
 AC_SUBST(GST_PLAY_CFLAGS)
 AC_SUBST(GST_PLAY_INCLUDES)
 
