@@ -8,4 +8,4 @@ libgststereo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gststereo.h
 
-EXTRA_DIST = README
+EXTRA_DIST =
