@@ -178,17 +178,19 @@ gst_alsa_clock_wait (GstClock * clock, GstClockEntry * entry)
 
   if (diff > clock->max_diff) {
     GST_INFO_OBJECT (this,
-        "GstAlsaClock: abnormal clock request diff: %" G_GINT64_FORMAT ") >"
-        "  %" G_GINT64_FORMAT, diff, clock->max_diff);
+        "GstAlsaClock: abnormal clock request diff: %" GST_TIME_FORMAT ") >"
+        "  %" GST_TIME_FORMAT, GST_TIME_ARGS (diff),
+        GST_TIME_ARGS (clock->max_diff));
     return GST_CLOCK_ENTRY_EARLY;
   }
 
   target = entry_time + diff;
 
-  GST_DEBUG_OBJECT (this, "real_target %" G_GUINT64_FORMAT
-      " target %" G_GUINT64_FORMAT
-      " now %" G_GUINT64_FORMAT,
-      target, GST_CLOCK_ENTRY_TIME (entry), entry_time);
+  GST_DEBUG_OBJECT (this, "real_target %" GST_TIME_FORMAT
+      " target %" GST_TIME_FORMAT
+      " now %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (target), GST_TIME_ARGS (GST_CLOCK_ENTRY_TIME (entry)),
+      GST_TIME_ARGS (entry_time));
 
   while (gst_alsa_clock_get_internal_time (clock) < target &&
       this->last_unlock < entry_time) {
