@@ -293,8 +293,10 @@ gst_avimux_get_event_masks (GstPad *pad)
 static void 
 gst_avimux_init (GstAviMux *avimux) 
 {
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (avimux);
+
   avimux->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (src_factory), "src");
+		  gst_element_class_get_pad_template (klass, "src"), "src");
   gst_element_add_pad (GST_ELEMENT (avimux), avimux->srcpad);
 
   GST_FLAG_SET (GST_ELEMENT(avimux), GST_ELEMENT_EVENT_AWARE);
@@ -587,6 +589,7 @@ gst_avimux_request_new_pad (GstElement     *element,
 {
   GstAviMux *avimux;
   GstPad *newpad;
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
 
   g_return_val_if_fail (templ != NULL, NULL);
 
@@ -599,13 +602,13 @@ gst_avimux_request_new_pad (GstElement     *element,
 
   avimux = GST_AVIMUX (element);
 
-  if (templ == GST_PAD_TEMPLATE_GET (audio_sink_factory)) {
+  if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     g_return_val_if_fail(avimux->audiosinkpad == NULL, NULL);
     newpad = gst_pad_new_from_template (templ, "audio_00");
     gst_pad_set_link_function (newpad, gst_avimux_audsinkconnect);
     avimux->audiosinkpad = newpad;
   }
-  else if (templ == GST_PAD_TEMPLATE_GET (video_sink_factory)) {
+  else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
     g_return_val_if_fail(avimux->videosinkpad == NULL, NULL);
     newpad = gst_pad_new_from_template (templ, "video_00");
     gst_pad_set_link_function (newpad, gst_avimux_vidsinkconnect);
