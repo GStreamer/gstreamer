@@ -14,13 +14,12 @@ if test x"$2" = x ; then
 	srcfile="gstaudiofiltertemplate.c"
 fi
 
-id=$(echo '$Id$' | sed \
-	-e 's/\$I[d]: \([^$]*\)\$/\1/g' \
-	)
+id=`echo '$Id$' | sed \
+	-e 's/\$I[d]: \([^$]*\)\$/\1/g'`
 echo $id
 
-TEMPLATE=$(echo $Template | tr a-z A-Z)
-template=$(echo $Template | tr A-Z a-z)
+TEMPLATE=`echo $Template | tr a-z A-Z`
+template=`echo $Template | tr A-Z a-z`
 
 # remember to break up the Id: in the line below
 sed \

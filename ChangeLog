@@ -1,3 +1,11 @@
+2004-03-09  David Schleef  <ds@schleef.org>
+
+	* ext/lcs/Makefile.am:  Fix so that the lcs colorspace plugin
+	doesn't conflict with the internal colorspace plugin.
+	* gst-libs/gst/audio/make_filter:  Use `` instead of $() to
+	satisfy the crappy-ass shell shipped by a certain vendor.
+	* gst/videofilter/make_filter: same (bug #135299)
+
 2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: bump nano to 1
