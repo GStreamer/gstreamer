@@ -23,7 +23,7 @@ SUBDIRS = include gst libs tools \
 	$(SUBDIRS_TESTS) $(SUBDIRS_EXAMPLES) $(SUBDIRS_DOCS)
 
 # These are all the possible subdirs
-DIST_SUBDIRS = common include libs gst tools tests testsuite examples docs
+DIST_SUBDIRS = include libs gst tools tests testsuite examples docs
 
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -33,10 +33,11 @@ EXTRA_DIST = gstreamer.spec.in \
 	     gstreamer.pc.in gstreamer-uninstalled.pc.in \
 	     configure.ac autogen.sh depcomp \
 	     LICENSE REQUIREMENTS ABOUT-NLS RELEASE DOCBUILDING \
-	     idiottest.mak
+	     idiottest.mak common
 
 dist-hook:
 	cp gstreamer.spec $(distdir)
+	rm -rf `find $(distdir)/common -name CVS`
 
 rpm: dist
 	rpm -ta $(distdir).tar.gz
