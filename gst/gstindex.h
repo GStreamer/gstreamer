@@ -189,7 +189,7 @@ struct _GstIndexClass {
   /* signals */
   void		(*entry_added)		(GstIndex *index, GstIndexEntry *entry);
 
-  gpointer _gst_reserved[GST_PADDING];;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType			gst_index_get_type		(void);
