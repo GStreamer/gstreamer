@@ -72,11 +72,11 @@ struct _GstMikModClass {
 typedef struct _GstMikMod GstMikMod;
 typedef struct _GstMikModClass GstMikModClass;
 
-MODULE *module;
-MREADER *reader;
-GstPad *srcpad;
-gint64 timestamp;
-int need_sync;
+extern MODULE *module;
+extern MREADER *reader;
+extern GstPad *srcpad;
+extern gint64 timestamp;
+extern int need_sync;
 
 GType gst_mikmod_get_type(void);
 

@@ -21,7 +21,6 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <sys/soundcard.h>
 
 /*#define DEBUG_ENABLED */
 #include "gstflacdec.h"
