@@ -31,6 +31,9 @@ GST_DEBUG_CATEGORY (vorbisdec_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_library_load ("gstbytestream"))
+    return FALSE;
+
   gst_ogg_demux_plugin_init (plugin);
   gst_ogg_mux_plugin_init (plugin);
 

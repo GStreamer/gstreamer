@@ -1,3 +1,13 @@
+2004-07-02  Benjamin Otte  <otte@gnome.org>
+
+	* ext/ogg/gstogg.c: (plugin_init):
+	  we require bytestream now
+	* ext/ogg/gstoggdemux.c: 
+	  huge diff to implement chain setup in a fast and generic way. This
+	  improves tag reading and startup of huge files (read: Theora videos)
+	  quite a bit. It probably contains bugs, too, so please test.
+	  Seeking is not improved to the fast method.
+
 2004-06-29  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_push):
