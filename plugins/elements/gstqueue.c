@@ -66,6 +66,7 @@ enum {
   ARG_LEVEL,
   ARG_MAX_LEVEL,
   ARG_MAY_DEADLOCK,
+  ARG_BLOCK_TIMEOUT,
 };
 
 
@@ -156,6 +157,11 @@ gst_queue_class_init (GstQueueClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAY_DEADLOCK,
     g_param_spec_boolean ("may_deadlock", "May Deadlock", "The queue may deadlock if it's full and not PLAYING",
                       TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCK_TIMEOUT,
+    g_param_spec_int ("block_timeout", "Timeout for Block", 
+                      "Microseconds until blocked queue times out and returns filler event. "
+                      "Value of -1 disables timeout",
+                      -1, G_MAXINT, -1, G_PARAM_READWRITE));
 
   gobject_class->dispose                = GST_DEBUG_FUNCPTR (gst_queue_dispose);
   gobject_class->set_property 		= GST_DEBUG_FUNCPTR (gst_queue_set_property);
@@ -223,6 +229,7 @@ gst_queue_init (GstQueue *queue)
   queue->size_bytes = 100 * 1024;	/* 100KB */
   queue->size_time = 1000000000LL;	/* 1sec */
   queue->may_deadlock = TRUE;
+  queue->block_timeout = -1;
 
   queue->qlock = g_mutex_new ();
   queue->reader = FALSE;
@@ -469,7 +476,19 @@ restart:
     if (queue->reader)
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "WARNING: multiple readers on queue!");
     queue->reader = TRUE;
-    g_cond_wait (queue->not_empty, queue->qlock);
+    
+    if (queue->block_timeout > -1){
+      GTimeVal timeout;
+      g_get_current_time(&timeout);
+      g_time_val_add(&timeout, queue->block_timeout);
+      if (!g_cond_timed_wait (queue->not_empty, queue->qlock, &timeout)){
+        g_mutex_unlock (queue->qlock);
+        return GST_BUFFER(gst_event_new_filler());
+      }
+    }
+    else {
+      g_cond_wait (queue->not_empty, queue->qlock);
+    }
     queue->reader = FALSE;
     GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "got not_empty signal");
   }
@@ -637,6 +656,9 @@ gst_queue_set_property (GObject *object, guint prop_id, const GValue *value, GPa
     case ARG_MAY_DEADLOCK:
       queue->may_deadlock = g_value_get_boolean (value);
       break;
+    case ARG_BLOCK_TIMEOUT:
+      queue->block_timeout = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -665,6 +687,9 @@ gst_queue_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
       break;
     case ARG_MAY_DEADLOCK:
       g_value_set_boolean (value, queue->may_deadlock);
+      break;
+    case ARG_BLOCK_TIMEOUT:
+      g_value_set_int (value, queue->block_timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
