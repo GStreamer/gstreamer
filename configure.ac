@@ -117,8 +117,8 @@ AC_SUBST(LIBXML_PKG)
 AC_SUBST(XML_LIBS)
 AC_SUBST(XML_CFLAGS)
 
-GST_CHECK_LIBHEADER(POPT, popt, poptAddItem,, popt.h, POPT_LIBS="-lpopt",
-  AC_MSG_ERROR([popt 1.6.3 or newer is required to build gstreamer. You can
+GST_CHECK_LIBHEADER(POPT, popt, poptStrippedArgv,, popt.h, POPT_LIBS="-lpopt",
+  AC_MSG_ERROR([popt 1.5 or newer is required to build gstreamer. You can
 download the latest version from ftp://people.redhat.com/sopwith/popt/]))
 
 dnl Check for atomic.h
