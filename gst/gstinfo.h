@@ -352,7 +352,7 @@ void gst_default_info_handler (gint category,gboolean incore,
                                gint line,const gchar *debug_string,
                                void *element,gchar *string);
 
-inline void * _gst_debug_register_funcptr (void *ptr, gchar *ptrname);
+void * _gst_debug_register_funcptr (void *ptr, gchar *ptrname);
 
 extern GstInfoHandler _gst_info_handler;
 extern guint32 _gst_info_categories;

@@ -564,7 +564,7 @@ gst_debug_print_stack_trace (void)
 
 #endif /* GST_ENABLE_FUNC_INTSTRUMENTATION */
 
-inline void *
+void *
 _gst_debug_register_funcptr (void *ptr, gchar *ptrname)
 {
   if (!__gst_function_pointers)
