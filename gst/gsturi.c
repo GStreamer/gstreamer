@@ -157,6 +157,18 @@ g_str_has_prefix_glib22 (gchar *haystack, gchar *needle)
   return FALSE;
 }
 
+gboolean
+gst_uri_handler_uri_filter (GstPluginFeature *feature, const gchar *uri)
+{
+  if (G_OBJECT_TYPE (feature) == GST_TYPE_URI_HANDLER) {
+    GstURIHandler *handler = GST_URI_HANDLER (feature);
+  
+    if (g_str_has_prefix_glib22 ((gchar *) uri, handler->uri)) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
 /**
  * gst_uri_handler_find_by_uri:
  * @uri: the uri to find a handler for
@@ -168,23 +180,18 @@ g_str_has_prefix_glib22 (gchar *haystack, gchar *needle)
 GstURIHandler*
 gst_uri_handler_find_by_uri (const gchar *uri)
 {
-  GList *walk, *orig;
+  GList *walk;
   GstURIHandler *result = NULL;
   
   g_return_val_if_fail (uri != NULL, NULL);
 
-  orig = walk = gst_registry_pool_feature_list (GST_TYPE_URI_HANDLER);
+  walk = gst_registry_pool_feature_filter (
+		  (GstPluginFeatureFilter) gst_uri_handler_uri_filter, TRUE, (gpointer) uri);
 
-  while (walk) {
-    GstURIHandler *handler = GST_URI_HANDLER (walk->data);
-
-    if (g_str_has_prefix_glib22 ((gchar *) uri, handler->uri)) {
-      result = handler;
-      break;
-    }
-    walk = g_list_next (walk);
+  if (walk) {
+    result = GST_URI_HANDLER (walk->data);
   }
-  g_list_free (orig);
+  g_list_free (walk);
 
   return result;
 }

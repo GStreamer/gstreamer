@@ -56,12 +56,23 @@ struct _GstPluginFeatureClass {
   void          (*unload_thyself)      (GstPluginFeature *feature);
 };
 
+typedef struct {
+  const gchar 	*name;
+  GType		 type;
+} GstTypeNameData;
+
+/* filter */
+typedef gboolean        (*GstPluginFeatureFilter)       (GstPluginFeature *feature,
+                                                         gpointer user_data);
 
 /* normal GObject stuff */
 GType		gst_plugin_feature_get_type		(void);
 
 gboolean	gst_plugin_feature_ensure_loaded 	(GstPluginFeature *feature);
 void		gst_plugin_feature_unload_thyself 	(GstPluginFeature *feature);
+
+gboolean	gst_plugin_feature_type_name_filter	(GstPluginFeature *feature,
+							 GstTypeNameData *data);
 
 G_END_DECLS
 

@@ -24,23 +24,14 @@
 #ifndef __GST_REGISTRY_POOL_H__
 #define __GST_REGISTRY_POOL_H__
 
-#include <gst/gstregistry.h>
-
 G_BEGIN_DECLS
 
-typedef enum
-{
-  GST_FEATURE_FILTER_OK,	/* include feature in list */
-  GST_FEATURE_FILTER_NOK,	/* does not include filter in list */
-  GST_FEATURE_FILTER_DONE,	/* includes filter in list and stop processing */
-} GstFeatureFilterResult;
-
-typedef GstFeatureFilterResult (*GstPluginFeatureFilter) 	(GstPluginFeature *feature, 
-		 						 gpointer user_data);
-
+#include <gst/gstplugin.h>
+#include <gst/gstregistry.h>
 
 /* the pool of registries */
 GList*			gst_registry_pool_list		(void);
+
 void			gst_registry_pool_add		(GstRegistry *registry, guint priority);
 void			gst_registry_pool_remove	(GstRegistry *registry);
 
@@ -48,12 +39,15 @@ void			gst_registry_pool_add_plugin	(GstPlugin *plugin);
 
 void			gst_registry_pool_load_all	(void);
 
+/* query the plugins/features */
+GList*			gst_registry_pool_plugin_filter (GstPluginFilter filter, 
+							 gboolean first, gpointer user_data);
+GList*			gst_registry_pool_feature_filter (GstPluginFeatureFilter filter, 
+							 gboolean first, gpointer user_data);
+
+/* some predefined filters */
 GList*			gst_registry_pool_plugin_list	(void);
 GList*			gst_registry_pool_feature_list	(GType type);
-GList*			gst_registry_pool_feature_filter (GstPluginFeatureFilter filter, gpointer user_data);
-
-GstFeatureFilterResult 	gst_registry_pool_feature_type_filter (GstPluginFeature *feature, GType type);
-
 
 GstPlugin*		gst_registry_pool_find_plugin	(const gchar *name);
 GstPluginFeature*	gst_registry_pool_find_feature	(const gchar *name, GType type);

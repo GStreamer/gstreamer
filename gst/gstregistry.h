@@ -125,6 +125,15 @@ void 			gst_registry_clear_paths	(GstRegistry *registry);
 gboolean		gst_registry_add_plugin		(GstRegistry *registry, GstPlugin *plugin);
 void			gst_registry_remove_plugin	(GstRegistry *registry, GstPlugin *plugin);
 
+GList*			gst_registry_plugin_filter	(GstRegistry *registry, 
+							 GstPluginFilter filter, 
+							 gboolean first, 
+							 gpointer user_data);
+GList*			gst_registry_feature_filter	(GstRegistry *registry, 
+							 GstPluginFeatureFilter filter, 
+							 gboolean first,
+							 gpointer user_data);
+
 GstPlugin*		gst_registry_find_plugin	(GstRegistry *registry, const gchar *name);
 GstPluginFeature*	gst_registry_find_feature	(GstRegistry *registry, const gchar *name, GType type);
 

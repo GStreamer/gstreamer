@@ -97,6 +97,10 @@ _gst_plugin_static_init__ ##init (void)			\
   GST_PLUGIN_DESC_DYNAMIC (major,minor,name,init)	\
   GST_PLUGIN_DESC_STATIC (major,minor,name,init)	
 
+/* function for filters */
+typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
+                                                         gpointer user_data);
+
 void			_gst_plugin_initialize		(void);
 void 			_gst_plugin_register_static 	(GstPluginDesc *desc);
 
@@ -108,6 +112,16 @@ const gchar*		gst_plugin_get_longname		(GstPlugin *plugin);
 void			gst_plugin_set_longname		(GstPlugin *plugin, const gchar *longname);
 const gchar*		gst_plugin_get_filename		(GstPlugin *plugin);
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
+
+GList*			gst_plugin_feature_filter	(GstPlugin *plugin, 
+							 GstPluginFeatureFilter filter,
+							 gboolean first,
+							 gpointer user_data);
+GList*			gst_plugin_list_feature_filter	(GList *list, 
+							 GstPluginFeatureFilter filter,
+							 gboolean first,
+							 gpointer user_data);
+gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);
 
 GList*			gst_plugin_get_feature_list	(GstPlugin *plugin);
 GstPluginFeature*	gst_plugin_find_feature		(GstPlugin *plugin, const gchar *name, GType type);

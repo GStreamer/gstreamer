@@ -32,6 +32,7 @@
 #include "gstregistry.h"
 #include "gstlog.h"
 #include "gstmarshal.h"
+#include "gstfilter.h"
 
 /* Element signals and args */
 enum {
@@ -215,19 +216,14 @@ gst_registry_unload (GstRegistry *registry)
 void
 gst_registry_add_path (GstRegistry *registry, const gchar *path)
 {
-  GList *l;
-
   g_return_if_fail (GST_IS_REGISTRY (registry));
   g_return_if_fail (path != NULL);
 
-  l = registry->paths;
-  while (l) {
-    if (strcmp (l->data, path) == 0)
-      return;
-
-    l = g_list_next (l);
+  if (g_list_find_custom (registry->paths, path, (GCompareFunc) strcmp)) {
+    g_warning ("path %s already added to registry", path);	  
+    return;
   }
-  
+
   registry->paths = g_list_append (registry->paths, g_strdup (path));
 }
 
@@ -248,12 +244,6 @@ gst_registry_get_path_list (GstRegistry *registry)
 }
 
 
-static void
-free_list_strings_func (gpointer data, gpointer user_data)
-{
-  g_free (data);
-}
-
 /**
  * gst_registry_clear_paths:
  * @registry: the registry to clear the paths of
@@ -265,7 +255,7 @@ gst_registry_clear_paths (GstRegistry *registry)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
 
-  g_list_foreach (registry->paths, free_list_strings_func, NULL);
+  g_list_foreach (registry->paths, (GFunc) g_free, NULL);
   g_list_free (registry->paths);
 
   registry->paths = NULL;
@@ -309,6 +299,28 @@ gst_registry_remove_plugin (GstRegistry *registry, GstPlugin *plugin)
   registry->plugins = g_list_remove (registry->plugins, plugin);
 }
 
+GList*
+gst_registry_plugin_filter (GstRegistry *registry, 
+		            GstPluginFilter filter, 
+			    gboolean first,
+			    gpointer user_data)
+{
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
+
+  return gst_filter_run (registry->plugins, (GstFilterFunc) filter, first, user_data);
+}
+
+GList*
+gst_registry_feature_filter (GstRegistry *registry,
+		             GstPluginFeatureFilter filter,
+			     gboolean first,
+			     gpointer user_data)
+{
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
+
+  return gst_plugin_list_feature_filter (registry->plugins, filter, first, user_data);
+}
+
 /**
  * gst_registry_find_plugin:
  * @registry: the registry to search
@@ -321,22 +333,22 @@ gst_registry_remove_plugin (GstRegistry *registry, GstPlugin *plugin)
 GstPlugin*
 gst_registry_find_plugin (GstRegistry *registry, const gchar *name)
 {
-  GList *plugins;
+  GList *walk;
+  GstPlugin *result = NULL;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  plugins = registry->plugins;
-  
-  while (plugins) {
-    GstPlugin *plugin = (GstPlugin *) (plugins->data);
+  walk = gst_registry_plugin_filter (registry, 
+		  		     (GstPluginFilter) gst_plugin_name_filter, 
+				     TRUE, 
+				     (gpointer) name);
+  if (walk) 
+    result = GST_PLUGIN (walk->data);
 
-    if (plugin->name && !strcmp (plugin->name, name))
-      return plugin;
-    
-    plugins = g_list_next (plugins);
-  }
-  return NULL;
+  g_list_free (walk);
+
+  return result;
 }
 
 /**
@@ -354,22 +366,25 @@ GstPluginFeature*
 gst_registry_find_feature (GstRegistry *registry, const gchar *name, GType type)
 {
   GstPluginFeature *feature = NULL;
-  GList *plugins;
+  GList *walk;
+  GstTypeNameData data;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  plugins = registry->plugins;
+  data.name = name;
+  data.type = type;
 
-  while (plugins) {
-    GstPlugin *plugin = (GstPlugin *) (plugins->data);
+  walk = gst_registry_feature_filter (registry, 
+		  	              (GstPluginFeatureFilter) gst_plugin_feature_type_name_filter,
+			              TRUE,
+			              &data);
 
-    feature = gst_plugin_find_feature (plugin, name, type);
-    if (feature)
-      return feature;
-    
-    plugins = g_list_next (plugins);
-  }
+  if (walk) 
+    feature = GST_PLUGIN_FEATURE (walk->data);
+
+  g_list_free (walk);
+
   return feature;
 }
 

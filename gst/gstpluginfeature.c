@@ -128,5 +128,11 @@ gst_plugin_feature_unload_thyself (GstPluginFeature *feature)
     oclass->unload_thyself (feature);
 }
 
-
+gboolean
+gst_plugin_feature_type_name_filter (GstPluginFeature *feature,
+		                     GstTypeNameData *data)
+{
+  return ((data->type == 0    || data->type == G_OBJECT_TYPE (feature)) &&
+          (data->name == NULL || !strcmp (data->name, GST_PLUGIN_FEATURE_NAME (feature))));
+}
 

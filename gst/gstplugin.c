@@ -31,6 +31,7 @@
 #include "gstregistrypool.h"
 #include "gstlog.h"
 #include "config.h"
+#include "gstfilter.h"
 
 static GModule *main_module = NULL;
 static GList *_gst_plugin_static = NULL;
@@ -76,19 +77,10 @@ _gst_plugin_register_static (GstPluginDesc *desc)
 void
 _gst_plugin_initialize (void)
 {
-  GList *walk;
-
   main_module =  g_module_open (NULL, G_MODULE_BIND_LAZY);
 
   /* now register all static plugins */
-  walk = _gst_plugin_static;
-  while (walk) {
-    GstPluginDesc *desc = (GstPluginDesc *) walk->data;
-
-    _gst_plugin_register_static (desc);
-    
-    walk = g_list_next (walk);
-  }
+  g_list_foreach (_gst_plugin_static, (GFunc) _gst_plugin_register_static, NULL);
 }
 
 static gboolean
@@ -283,8 +275,7 @@ gst_plugin_set_name (GstPlugin *plugin, const gchar *name)
 {
   g_return_if_fail (plugin != NULL);
 
-  if (plugin->name)
-    g_free (plugin->name);
+  g_free (plugin->name);
 
   plugin->name = g_strdup (name);
 }
@@ -301,8 +292,7 @@ gst_plugin_set_longname (GstPlugin *plugin, const gchar *longname)
 {
   g_return_if_fail(plugin != NULL);
 
-  if (plugin->longname)
-    g_free(plugin->longname);
+  g_free(plugin->longname);
 
   plugin->longname = g_strdup(longname);
 }
@@ -355,6 +345,64 @@ gst_plugin_is_loaded (GstPlugin *plugin)
   return (plugin->module != NULL);
 }
 
+GList*
+gst_plugin_feature_filter (GstPlugin *plugin,
+		           GstPluginFeatureFilter filter,
+			   gboolean first,
+			   gpointer user_data)
+{
+  return gst_filter_run (plugin->features, (GstFilterFunc) filter, first, user_data);
+}
+
+typedef struct
+{ 
+  GstPluginFeatureFilter filter;
+  gboolean               first;
+  gpointer               user_data;
+  GList                 *result;
+} FeatureFilterData;
+
+gboolean
+_feature_filter (GstPlugin *plugin, gpointer user_data)
+{
+  GList *result;
+  FeatureFilterData *data = (FeatureFilterData *) user_data;
+
+  result = gst_plugin_feature_filter (plugin, data->filter, data->first, data->user_data);
+  if (result) {
+    data->result = g_list_concat (data->result, result);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+GList*
+gst_plugin_list_feature_filter  (GList *list, 
+		                 GstPluginFeatureFilter filter,
+			         gboolean first,
+			         gpointer user_data)
+{
+  FeatureFilterData data;
+  GList *result;
+
+  data.filter = filter;
+  data.first = first;
+  data.user_data = user_data;
+  data.result = NULL;
+
+  result = gst_filter_run (list, (GstFilterFunc) _feature_filter, first, &data);
+  g_list_free (result);
+
+  return data.result;
+}
+
+
+gboolean
+gst_plugin_name_filter (GstPlugin *plugin, const gchar *name)
+{
+  return (plugin->name && !strcmp (plugin->name, name));
+}
+
 /**
  * gst_plugin_find_feature:
  * @plugin: plugin to get the feature from
@@ -368,20 +416,23 @@ gst_plugin_is_loaded (GstPlugin *plugin)
 GstPluginFeature*
 gst_plugin_find_feature (GstPlugin *plugin, const gchar *name, GType type)
 {
-  GList *features = plugin->features;
+  GList *walk;
+  GstPluginFeature *result = NULL;
+  GstTypeNameData data;
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  while (features) {
-    GstPluginFeature *feature = GST_PLUGIN_FEATURE (features->data);
+  data.type = type;
+  data.name = name;
+  
+  walk = gst_filter_run (plugin->features, 
+		         (GstFilterFunc) gst_plugin_feature_type_name_filter, TRUE,
+		         &data);
 
-    if (!strcmp(GST_PLUGIN_FEATURE_NAME (feature), name) && G_OBJECT_TYPE (feature) == type) {
-      return GST_PLUGIN_FEATURE (feature);
-    }
+  if (walk) 
+    result = GST_PLUGIN_FEATURE (walk->data);
 
-    features = g_list_next (features);
-  }
-  return NULL;
+  return result;
 }
 
 /**
@@ -418,14 +469,14 @@ gst_plugin_add_feature (GstPlugin *plugin, GstPluginFeature *feature)
  *
  * get a list of all the features that this plugin provides
  *
- * Returns: a GList of features
+ * Returns: a GList of features, use g_list_free to free the list.
  */
 GList*
 gst_plugin_get_feature_list (GstPlugin *plugin)
 {
   g_return_val_if_fail (plugin != NULL, NULL);
 
-  return plugin->features;
+  return g_list_copy (plugin->features);
 }
 
 /**
@@ -455,6 +506,7 @@ gst_plugin_load (const gchar *name)
 
   GST_DEBUG (GST_CAT_PLUGIN_LOADING, "Could not find %s in registry pool",
              name);
+
   return FALSE;
 }
 

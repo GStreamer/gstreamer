@@ -67,6 +67,9 @@ GstURIHandler*		gst_uri_handler_find_by_uri	(const gchar *uri);
 GstElement*		gst_uri_handler_create		(GstURIHandler *handler, const gchar *name);
 GstElement*		gst_uri_handler_make_by_uri	(const gchar *uri, const gchar *name);
 
+/* filters */
+gboolean	 	gst_uri_handler_uri_filter 	(GstPluginFeature *feature, const gchar *uri);
+
 G_END_DECLS
 
 #endif /* __GST_URI_H */
