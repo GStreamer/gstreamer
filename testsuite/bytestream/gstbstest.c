@@ -181,14 +181,28 @@ gst_bstest_getcaps (GstPad * pad)
   return gst_pad_get_allowed_caps (otherpad);
 }
 
+GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 static void
 gst_bstest_init (GstBsTest * bstest)
 {
-  bstest->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  bstest->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
+      "sink");
   gst_element_add_pad (GST_ELEMENT (bstest), bstest->sinkpad);
   gst_pad_set_getcaps_function (bstest->sinkpad, gst_bstest_getcaps);
 
-  bstest->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  bstest->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
   gst_element_add_pad (GST_ELEMENT (bstest), bstest->srcpad);
   gst_pad_set_getcaps_function (bstest->srcpad, gst_bstest_getcaps);
 

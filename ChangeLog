@@ -1,3 +1,12 @@
+2004-08-17  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* testsuite/bytestream/gstbstest.c: (gst_bstest_init):
+	* testsuite/dynparams/dparamstest.c: (gst_dptest_init):
+	* testsuite/refcounting/pad.c: (main):
+	* testsuite/refcounting/thread.c: (create_thread_ghostpads):
+	  s/gst_pad_new/&_from_template/
+	  prepare deprecation of gst_pad_new
+
 2004-08-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Luca Ognibene <skaboy81@virgilio.it>

@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include "mem.h"
 
+GstStaticPadTemplate templ = GST_STATIC_PAD_TEMPLATE ("default",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 int
 main (int argc, gchar * argv[])
 {
@@ -29,18 +34,24 @@ main (int argc, gchar * argv[])
   usage1 = vmsize ();
 
   g_print ("DEBUG: creating new pad with name padname\n");
-  pad = gst_pad_new ("padname", GST_PAD_SINK);
+  pad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+      "padname");
   g_print ("DEBUG: unreffing new pad with name padname\n");
   gst_object_unref (GST_OBJECT (pad));
   g_print ("create/unref new pad %ld\n", vmsize () - usage1);
 
   for (i = 0; i < iters; i++) {
-    pad = gst_pad_new ("padname", GST_PAD_SINK);
+    pad =
+        gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+        "padname");
     gst_object_unref (GST_OBJECT (pad));
   }
   g_print ("create/unref %d pads %ld\n", iters, vmsize () - usage1);
 
-  pad = gst_pad_new ("padname", GST_PAD_SINK);
+  pad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+      "padname");
   g_assert (GST_OBJECT_FLOATING (pad));
   gst_object_ref (GST_OBJECT (pad));
   gst_object_sink (GST_OBJECT (pad));
@@ -49,81 +60,67 @@ main (int argc, gchar * argv[])
   g_print ("create/ref/sink/unref new pad %ld\n", vmsize () - usage1);
 
   for (i = 0; i < iters; i++) {
-    pad = gst_pad_new ("padname", GST_PAD_SINK);
+    pad =
+        gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+        "padname");
     gst_object_ref (GST_OBJECT (pad));
     gst_object_sink (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
   }
   g_print ("create/ref/sink/unref %d pads %ld\n", iters, vmsize () - usage1);
 
-#if 0
-  pad = gst_pad_new ("padname", GST_PAD_SINK);
-  g_assert (!GST_OBJECT_DESTROYED (pad));
-  gst_object_unref (GST_OBJECT (pad));
-  g_assert (GST_OBJECT_DESTROYED (pad));
-  gst_object_unref (GST_OBJECT (pad));
-  g_print ("create/destroy/unref pad %ld\n", vmsize () - usage1);
-#endif
-
-#if 0
-  for (i = 0; i < iters; i++) {
-    pad = gst_pad_new ("padname", GST_PAD_SINK);
-    gst_object_unref (GST_OBJECT (pad));
-    gst_object_unref (GST_OBJECT (pad));
-  }
-  g_print ("create/destroy/unref %d pads %ld\n", iters, vmsize () - usage1);
-#endif
-
-  pad = gst_pad_new ("padname", GST_PAD_SINK);
+  pad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+      "padname");
   gst_object_ref (GST_OBJECT (pad));
   gst_object_unref (GST_OBJECT (pad));
   gst_object_unref (GST_OBJECT (pad));
   g_print ("create/ref/unref/unref pad %ld\n", vmsize () - usage1);
 
   for (i = 0; i < iters; i++) {
-    pad = gst_pad_new ("padname", GST_PAD_SINK);
+    pad =
+        gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+        "padname");
     gst_object_ref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
   }
   g_print ("create/ref/unref/unref %d pads %ld\n", iters, vmsize () - usage1);
 
-  pad = gst_pad_new ("padname", GST_PAD_SINK);
+  pad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+      "padname");
   gst_object_ref (GST_OBJECT (pad));
   gst_object_unref (GST_OBJECT (pad));
   gst_object_unref (GST_OBJECT (pad));
-#if 0
-  gst_object_unref (GST_OBJECT (pad));
-#endif
-  g_print ("create/ref/destroy/unref/unref pad %ld\n", vmsize () - usage1);
+  g_print ("create/ref/unref/unref pad %ld\n", vmsize () - usage1);
 
-#if 0
   for (i = 0; i < iters; i++) {
-    pad = gst_pad_new ("padname", GST_PAD_SINK);
+    pad =
+        gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+        "padname");
     gst_object_ref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
-    //gst_object_unref (GST_OBJECT (pad));
   }
-  g_print ("create/ref/destroy/unref/unref %d pads %ld\n", iters,
-      vmsize () - usage1);
-#endif
+  g_print ("create/ref/unref/unref %d pads %ld\n", iters, vmsize () - usage1);
 
-#if 0
   for (i = 0; i < iters; i++) {
-    pad = gst_pad_new ("padname", GST_PAD_SINK);
+    pad =
+        gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+        "padname");
     gst_object_ref (GST_OBJECT (pad));
     gst_pad_set_name (pad, "testing123");
     gst_object_unref (GST_OBJECT (pad));
     gst_pad_set_name (pad, "testing123");
     gst_object_unref (GST_OBJECT (pad));
-    gst_object_unref (GST_OBJECT (pad));
   }
-  g_print ("create/ref/destroy/unref/unref %d pads %ld with name\n", iters,
+  g_print ("create/ref/unref/unref %d pads %ld with name\n", iters,
       vmsize () - usage1);
-#endif
 
-  pad = gst_pad_new ("padname", GST_PAD_SINK);
+  pad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&templ),
+      "padname");
   for (i = 0; i < iters; i++) {
     gst_pad_set_name (pad, "testing");
   }

@@ -4,6 +4,16 @@
 #include <stdlib.h>
 #include "mem.h"
 
+GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 static GstElement *
 create_thread (void)
 {
@@ -30,11 +40,15 @@ create_thread_ghostpads (void)
   thread = gst_thread_new ("testthread");
   element1 = gst_element_new ();
   gst_element_set_name (element1, "test1");
-  gst_element_add_pad (element1, gst_pad_new ("src1", GST_PAD_SRC));
+  gst_element_add_pad (element1,
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+          "src1"));
   gst_bin_add (GST_BIN (thread), element1);
   element2 = gst_element_new ();
   gst_element_set_name (element2, "test2");
-  gst_element_add_pad (element2, gst_pad_new ("sink1", GST_PAD_SINK));
+  gst_element_add_pad (element1,
+      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
+          "sink1"));
   gst_bin_add (GST_BIN (thread), element2);
   gst_element_link (element1, "src1", element2, "sink1");
   gst_element_add_ghost_pad (thread, gst_element_get_pad (element2, "sink1"),

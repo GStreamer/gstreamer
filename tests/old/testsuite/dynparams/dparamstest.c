@@ -64,6 +64,16 @@ enum
   ARG_0,
 };
 
+GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 
 static void gst_dptest_base_init (gpointer g_class);
 static void gst_dptest_class_init (GstDpTestClass * klass);
@@ -134,11 +144,15 @@ static void
 gst_dptest_init (GstDpTest * dptest)
 {
 
-  dptest->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  dptest->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
+      "sink");
   gst_element_add_pad (GST_ELEMENT (dptest), dptest->sinkpad);
   gst_pad_set_chain_function (dptest->sinkpad, gst_dptest_chain);
 
-  dptest->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  dptest->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
+      "src");
   gst_element_add_pad (GST_ELEMENT (dptest), dptest->srcpad);
 
   dptest->dpman = gst_dpman_new ("dptest_dpman", GST_ELEMENT (dptest));
