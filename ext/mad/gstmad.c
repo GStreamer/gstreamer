@@ -60,7 +60,6 @@ struct _GstMad {
   struct mad_header header;
   gboolean	 new_header;
   gboolean	 can_seek;
-  gint		 channels;
   guint		 framecount;
   gint		 vbr_average; /* average bitrate */
   guint64	 vbr_rate; /* average * framecount */
@@ -70,8 +69,9 @@ struct _GstMad {
 
   GstCaps	*metadata;
 
-  /* caps */
-  gboolean	 caps_set;
+  /* negotiated format */
+  gint		 rate;
+  gint		 channels;
 };
 
 struct _GstMadClass {
@@ -763,9 +763,6 @@ G_STMT_START{							\
   if (header->bitrate != mad->header.bitrate || mad->new_header) {
     mad->header.bitrate = header->bitrate;
   }
-  if (mad->channels != MAD_NCHANNELS (header) || mad->new_header) {
-    mad->channels = MAD_NCHANNELS (header);
-  }
   mad->new_header = FALSE;
   
   g_object_thaw_notify (G_OBJECT (mad));
@@ -925,9 +922,6 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	gint n = GST_EVENT_DISCONT_OFFSET_LEN (event);
 	gint i;
 
-	if (!GST_PAD_IS_USABLE (mad->srcpad))
-          return;
-
 	for (i=0; i<n; i++) {
 	  if (gst_pad_handles_format (pad, GST_EVENT_DISCONT_OFFSET(event,i).format))
 	  {
@@ -950,8 +944,11 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	    mad->base_time = time;
 
             gst_event_unref (event);
-	    discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
-            gst_pad_push (mad->srcpad, GST_BUFFER (discont));
+
+	    if (GST_PAD_IS_USABLE (mad->srcpad)) {
+	      discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, time, NULL);
+              gst_pad_push (mad->srcpad, GST_BUFFER (discont));
+	    }
 	    break;
 	  }
 	}
@@ -1006,6 +1003,7 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       gint consumed;
       guint nchannels;
       guint nsamples;
+      gint rate;
 
       mad_stream_buffer (&mad->stream, mad_input_buffer, mad->tempsize);
 
@@ -1035,7 +1033,9 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 
 	    data = mad->stream.this_frame;
 	  
-	    mad_stream_skip(&mad->stream, tagsize);
+	    /* mad has moved the pointer to the next frame over the start of the
+	     * id3 tags, so we need to flush one byte less n the tagsize */
+	    mad_stream_skip(&mad->stream, tagsize-1);
 
 	    tag = id3_tag_parse (data, tagsize);
 	    if (tag) {
@@ -1045,6 +1045,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
 	    }
 	  }
 	}
+	mad_frame_mute (&mad->frame);
+	mad_synth_mute (&mad->synth);
 	mad_stream_sync (&mad->stream);
 	/* recoverable errors pass */
 	goto next;
@@ -1054,17 +1056,18 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
       nsamples  = MAD_NSBSAMPLES (&mad->frame.header) * 
          (mad->stream.options & MAD_OPTION_HALFSAMPLERATE ? 16 : 32);  
 
+#if MAD_VERSION_MINOR <= 12
+      rate = mad->header.sfreq;
+#else
+      rate = mad->frame.header.samplerate;
+#endif
+
       /* at this point we can accept seek events */
       mad->can_seek = TRUE;
 
       gst_mad_update_info (mad);
 
-      if (mad->caps_set == FALSE) {
-#if MAD_VERSION_MINOR <= 12
-	gint rate = mad->header.sfreq;
-#else
-	gint rate = mad->frame.header.samplerate;
-#endif
+      if (mad->channels != nchannels || mad->rate != rate) {
         if (mad->stream.options & MAD_OPTION_HALFSAMPLERATE) 
 	  rate >>=1;
 
@@ -1087,7 +1090,8 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
           gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
 	  return;
         }
-        mad->caps_set = TRUE;
+	mad->channels = nchannels;
+	mad->rate = rate;
       }
 
       if (GST_PAD_IS_CONNECTED (mad->srcpad)) {
@@ -1179,7 +1183,8 @@ gst_mad_change_state (GstElement *element)
       mad->tempsize = 0;
       mad->can_seek = FALSE;
       mad->total_samples = 0;
-      mad->caps_set = FALSE;
+      mad->rate = 0;
+      mad->channels = 0;
       mad->vbr_average = 0;
       mad->frame.header.samplerate = 0;
       if (mad->ignore_crc) options |= MAD_OPTION_IGNORECRC;
