@@ -648,6 +648,7 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
     }
     if (id3_field_addstring (field, (id3_ucs4_t *) put) != 0) {
       GST_WARNING ("could not add a string to id3 tag field");
+      g_free (put);
       return;
     }
   }
