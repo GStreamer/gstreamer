@@ -3,8 +3,7 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 plugin_LTLIBRARIES = \
 	libgstbasicomegascheduler.la \
 	libgstbasicwingoscheduler.la \
-	libgstfastomegascheduler.la \
-	libgstfastwingoscheduler.la \
+	libgstoptscheduler.la \
 	libgstoptomegascheduler.la \
 	libgstoptwingoscheduler.la
 
@@ -20,29 +19,20 @@ libgstbasicwingoscheduler_la_SOURCES = gstbasicscheduler.c
 libgstbasicwingoscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_WINGO
 libgstbasicwingoscheduler_la_CFLAGS += -I$(top_builddir)/libs/ext/cothreads
 libgstbasicwingoscheduler_la_CFLAGS += -I$(top_srcdir)/libs/ext/cothreads
-
 libgstbasicwingoscheduler_la_LIBADD = $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la
 libgstbasicwingoscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libgstfastomegascheduler_la_SOURCES = gstfastscheduler.c 
-libgstfastomegascheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_OMEGA
-libgstfastomegascheduler_la_LIBADD = ../libcothreads.la
-libgstfastomegascheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-
-libgstfastwingoscheduler_la_SOURCES = gstfastscheduler.c
-libgstfastwingoscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_WINGO
-libgstfastwingoscheduler_la_CFLAGS += -I$(top_builddir)/libs/ext/cothreads
-libgstfastwingoscheduler_la_CFLAGS += -I$(top_srcdir)/libs/ext/cothreads
-libgstfastwingoscheduler_la_LIBADD = $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la
-libgstfastwingoscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstoptscheduler_la_SOURCES = gstoptimalscheduler.c 
+libgstoptscheduler_la_CFLAGS = $(GST_CFLAGS) 
+libgstoptscheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstoptomegascheduler_la_SOURCES = gstoptimalscheduler.c 
-libgstoptomegascheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_OMEGA
+libgstoptomegascheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_OMEGA -DUSE_COTHREADS
 libgstoptomegascheduler_la_LIBADD = ../libcothreads.la
 libgstoptomegascheduler_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstoptwingoscheduler_la_SOURCES = gstoptimalscheduler.c 
-libgstoptwingoscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_WINGO
+libgstoptwingoscheduler_la_CFLAGS = $(GST_CFLAGS) -D_COTHREADS_WINGO -DUSE_COTHREADS
 libgstoptwingoscheduler_la_CFLAGS += -I$(top_builddir)/libs/ext/cothreads
 libgstoptwingoscheduler_la_CFLAGS += -I$(top_srcdir)/libs/ext/cothreads
 libgstoptwingoscheduler_la_LIBADD = $(top_builddir)/libs/ext/cothreads/cothreads/libcothreads-gthreads.la

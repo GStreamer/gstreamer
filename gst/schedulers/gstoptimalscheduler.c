@@ -23,8 +23,12 @@
 /*#define GST_DEBUG_ENABLED */
 #include <gst/gst.h>
 
-#include "cothreads_compat.h"
-
+#ifdef USE_COTHREADS
+# include "cothreads_compat.h"
+#else
+# define COTHREADS_NAME_CAPITAL ""
+# define COTHREADS_NAME 	""
+#endif
 
 #define GST_ELEMENT_SCHED_CONTEXT(elem)		((GstOptSchedulerCtx*) (GST_ELEMENT_CAST (elem)->sched_private))
 #define GST_ELEMENT_SCHED_GROUP(elem)		(GST_ELEMENT_SCHED_CONTEXT (elem)->group)
@@ -63,8 +67,9 @@ struct _GstOptScheduler {
 
   GstOptSchedulerState	 state;
 
+#ifdef USE_COTHREADS
   cothread_context 	*context;
-  gboolean		 use_cothreads;
+#endif
   gint 			 iterations;
 
   GSList 		*elements;
@@ -140,7 +145,9 @@ struct _GstOptSchedulerGroup {
   GSList			*providers;		/* other groups that provide data
 							   for this group */
 
+#ifdef USE_COTHREADS
   cothread 			*cothread;		/* the cothread of this group */
+#endif
   GroupScheduleFunction 	 schedulefunc;
   int				 argc;
   char			       **argv;
@@ -164,7 +171,6 @@ struct _GstOptSchedulerCtx {
 enum
 {
   ARG_0,
-  ARG_USE_COTHREADS,
   ARG_ITERATIONS,
 };
  
@@ -243,10 +249,7 @@ gst_opt_scheduler_class_init (GstOptSchedulerClass *klass)
   gobject_class->get_property   = GST_DEBUG_FUNCPTR (gst_opt_scheduler_get_property);
   gobject_class->dispose	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_dispose);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USE_COTHREADS,
-    g_param_spec_boolean ("use_cothreads", "Use cothreads", "Should this scheduler use cothreads",
-                          TRUE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USE_COTHREADS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ITERATIONS,
     g_param_spec_int ("iterations", "Iterations", "Number of groups to schedule in one iteration (-1 == until EOS/error)",
                       -1, G_MAXINT, 1, G_PARAM_READWRITE));
 
@@ -273,8 +276,6 @@ static void
 gst_opt_scheduler_init (GstOptScheduler *scheduler)
 {
   scheduler->elements = NULL;
-  scheduler->use_cothreads = FALSE;
-  //scheduler->use_cothreads = TRUE;
   scheduler->iterations = 1;
 }
 
@@ -328,6 +329,7 @@ delete_chain (GstOptSchedulerChain *chain)
   while (groups) {
     GstOptSchedulerGroup *group = (GstOptSchedulerGroup *) groups->data;
 
+    /* clear all group's chain pointers, so they can never reference us again */
     if (group->chain == chain)
       group->chain = NULL;
     
@@ -375,6 +377,7 @@ remove_from_chain (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
   if (!chain)
     return NULL;
 
+  g_assert (group);
   g_assert (group->chain == chain);
 
   chain->groups = g_slist_remove (chain->groups, group);
@@ -483,13 +486,18 @@ create_group (GstOptSchedulerChain *chain, GstElement *element)
 static void 
 destroy_group_scheduler (GstOptSchedulerGroup *group) 
 {
+  g_assert (group);
+
   if (group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)
     g_warning ("removing running element");
 
+#ifdef USE_COTHREADS
   if (group->cothread) {
     do_cothread_destroy (group->cothread);
   }
-  else {
+  else 
+#endif
+  {
     group->schedulefunc = NULL;
     group->argc = 0;
     group->argv = NULL;
@@ -505,6 +513,7 @@ delete_group (GstOptSchedulerGroup *group)
   
   GST_INFO (GST_CAT_SCHEDULING, "delete group %p", group);
 
+  g_assert (group != NULL);
   g_assert (group->chain == NULL);
 
   if (group->flags & GST_OPT_SCHEDULER_GROUP_SCHEDULABLE)
@@ -560,6 +569,9 @@ remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
 {
   GST_INFO (GST_CAT_SCHEDULING, "removing element \"%s\" from group %p", GST_ELEMENT_NAME (element), group);
 
+  g_assert (group != NULL);
+  g_assert (element != NULL);
+
   group->elements = g_slist_remove (group->elements, element);
   group->num_elements--;
 
@@ -578,6 +590,9 @@ remove_from_group (GstOptSchedulerGroup *group, GstElement *element)
 static void
 group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gboolean enabled)
 {
+  g_assert (group != NULL);
+  g_assert (element != NULL);
+
   if (enabled) {
     group->num_enabled++;
     GST_INFO (GST_CAT_SCHEDULING, "enable element %s in group %p, now %d elements enabled out of %d", 
@@ -607,18 +622,17 @@ group_element_set_enabled (GstOptSchedulerGroup *group, GstElement *element, gbo
 static gboolean 
 schedule_group (GstOptSchedulerGroup *group) 
 {
-  if (group->chain->sched->use_cothreads) {
-    if (group->cothread)
-      do_cothread_switch (group->cothread);
-    return TRUE;
-  }
-  else {
-    group->schedulefunc (group->argc, group->argv);
-    return TRUE;
-  }
-  return FALSE;
+#ifdef USE_COTHREADS
+  if (group->cothread)
+    do_cothread_switch (group->cothread);
+  return TRUE;
+#else
+  group->schedulefunc (group->argc, group->argv);
+  return TRUE;
+#endif
 }
 
+#ifndef USE_COTHREADS
 static void
 gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 {
@@ -643,6 +657,7 @@ gst_opt_scheduler_schedule_run_queue (GstOptScheduler *osched)
 
   osched->recursion--;
 }
+#endif
 
 /* a chain is scheduled by picking the first active group and scheduling it */
 static void 
@@ -663,14 +678,13 @@ schedule_chain (GstOptSchedulerChain *chain)
       GST_INFO (GST_CAT_SCHEDULING, "scheduling group %p in chain %p", 
  	        group, chain);
 
-      if (osched->use_cothreads) {
-	schedule_group (group);
-      }
-      else {
-        osched->recursion = 0;
-        osched->runqueue = g_list_append (osched->runqueue, group);
-        gst_opt_scheduler_schedule_run_queue (osched);
-      }
+#ifdef USE_COTHREADS
+      schedule_group (group);
+#else
+      osched->recursion = 0;
+      osched->runqueue = g_list_append (osched->runqueue, group);
+      gst_opt_scheduler_schedule_run_queue (osched);
+#endif
 
       GST_INFO (GST_CAT_SCHEDULING, "done scheduling group %p in chain %p", 
  	        group, chain);
@@ -768,23 +782,22 @@ gst_opt_scheduler_loop_wrapper (GstPad *sinkpad, GstBuffer *buffer)
   osched = group->chain->sched;
 
 
-  if (osched->use_cothreads) {
-    if (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad))) {
-      g_warning ("deadlock detected, disabling group %p", group);
-      chain_group_set_enabled (group->chain, group, FALSE);
-      group->chain->sched->state = GST_OPT_SCHEDULER_STATE_ERROR;
-    }
-    else {
-      GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), buffer);
-      schedule_group (group);
-    }
+#ifdef USE_COTHREADS
+  if (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad))) {
+    g_warning ("deadlock detected, disabling group %p", group);
+    chain_group_set_enabled (group->chain, group, FALSE);
+    group->chain->sched->state = GST_OPT_SCHEDULER_STATE_ERROR;
   }
   else {
     GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), buffer);
-    if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
-      osched->runqueue = g_list_append (osched->runqueue, group);
-    }
+    schedule_group (group);
   }
+#else
+  GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)) = g_list_append (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad)), buffer);
+  if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
+    osched->runqueue = g_list_append (osched->runqueue, group);
+  }
+#endif
   
   GST_INFO (GST_CAT_SCHEDULING, "after loop wrapper buflist %d", 
 	    g_list_length (GST_PAD_BUFLIST (GST_RPAD_PEER (sinkpad))));
@@ -810,10 +823,10 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
     group = GST_ELEMENT_SCHED_GROUP (GST_PAD_PARENT (srcpad));
     osched = group->chain->sched;
 
-    if (osched->use_cothreads) {
-      schedule_group (group);
-    }
-    else if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
+#ifdef USE_COTHREADS
+    schedule_group (group);
+#else
+    if (!(group->flags & GST_OPT_SCHEDULER_GROUP_RUNNING)) {
       osched->runqueue = g_list_append (osched->runqueue, group);
       gst_opt_scheduler_schedule_run_queue (osched);
     }
@@ -823,6 +836,7 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
       group->chain->sched->state = GST_OPT_SCHEDULER_STATE_ERROR;
       return NULL;
     }
+#endif
     
     if (GST_PAD_BUFLIST (srcpad)) {
       buffer = (GstBuffer *) GST_PAD_BUFLIST (srcpad)->data;
@@ -865,21 +879,20 @@ setup_group_scheduler (GstOptScheduler *osched, GstOptSchedulerGroup *group)
   else if (group->type == GST_OPT_SCHEDULER_GROUP_LOOP)
     wrapper = loop_group_schedule_function;
 	
-  if (osched->use_cothreads) {
-    if (!(group->flags & GST_OPT_SCHEDULER_GROUP_SCHEDULABLE)) {
-      do_cothread_create (group->cothread, osched->context,
+#ifdef USE_COTHREADS
+  if (!(group->flags & GST_OPT_SCHEDULER_GROUP_SCHEDULABLE)) {
+    do_cothread_create (group->cothread, osched->context,
  		      (cothread_func) wrapper, 0, (char **) group);
-    }
-    else {
-      do_cothread_setfunc (group->cothread, osched->context,
- 		      (cothread_func) wrapper, 0, (char **) group);
-    }
   }
   else {
-    group->schedulefunc = wrapper;
-    group->argc = 0;
-    group->argv = (char **) group;
+    do_cothread_setfunc (group->cothread, osched->context,
+ 		      (cothread_func) wrapper, 0, (char **) group);
   }
+#else
+  group->schedulefunc = wrapper;
+  group->argc = 0;
+  group->argv = (char **) group;
+#endif
   group->flags |= GST_OPT_SCHEDULER_GROUP_SCHEDULABLE;
 }
 
@@ -1033,24 +1046,28 @@ typedef enum {
 static void
 gst_opt_scheduler_setup (GstScheduler *sched)
 {   
+#ifdef USE_COTHREADS
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
 	      
   /* first create thread context */
-  if (osched->context == NULL && osched->use_cothreads) {
+  if (osched->context == NULL) {
     GST_DEBUG (GST_CAT_SCHEDULING, "initializing cothread context");
     osched->context = do_cothread_context_init ();
   }
+#endif
 } 
   
 static void 
 gst_opt_scheduler_reset (GstScheduler *sched)
 { 
+#ifdef USE_COTHREADS
   GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
 	      
-  if (osched->context && osched->use_cothreads) {
+  if (osched->context) {
     do_cothread_context_destroy (osched->context);
     osched->context = NULL; 
   }
+#endif
 }     
 static void
 gst_opt_scheduler_add_element (GstScheduler *sched, GstElement *element)
@@ -1512,9 +1529,6 @@ gst_opt_scheduler_get_property (GObject *object, guint prop_id,
   osched = GST_OPT_SCHEDULER_CAST (object);
 
   switch (prop_id) {
-    case ARG_USE_COTHREADS:
-      g_value_set_boolean (value, osched->use_cothreads);
-      break;
     case ARG_ITERATIONS:
       g_value_set_int (value, osched->iterations);
       break;
@@ -1535,9 +1549,6 @@ gst_opt_scheduler_set_property (GObject *object, guint prop_id,
   osched = GST_OPT_SCHEDULER_CAST (object);
 
   switch (prop_id) {
-    case ARG_USE_COTHREADS:
-      osched->use_cothreads = g_value_get_boolean (value);
-      break;
     case ARG_ITERATIONS:
       osched->iterations = g_value_get_int (value);
       break;
