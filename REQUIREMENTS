@@ -68,10 +68,11 @@ xmms		(for the xmms plugins wrapper)
 mpeg2dec/ac3dec	(for mpeg2 related plugins and dvd playback)
 			http://linuxvideo.org/mpeg2dec/
 			and http://linuxvideo.org/ac3dec/
-avifile		(for the avi windows decoder plugins
+avifile		(for the avi windows decoder plugins)
+                        http://avifile.sourceforge.net/
 			you might want to get the windows libraries 
 			from http://divx.euro.ru/ and put the .dll files 
-			in /usr/lib/win32/)
+			in /usr/lib/win32/
 flac		(for the FLAC lossless audio format)
 			http://flac.sourceforge.net
 
