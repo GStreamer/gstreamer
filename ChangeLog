@@ -1,3 +1,17 @@
+2004-06-23  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_change_state), (gst_alsa_start),
+	(gst_alsa_xrun_recovery):
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsasink.c: (gst_alsa_sink_check_event),
+	(gst_alsa_sink_loop), (gst_alsa_sink_get_time):
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_init),
+	(gst_alsa_src_get_time), (gst_alsa_src_update_avail),
+	(gst_alsa_src_loop):
+	Add clock to alsasrc. Take new capture timestamp when
+	restarting after an overrun. Split up some functions between
+	alsasrc ans alsasink.
+
 2004-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_init), (gst_alsa_dispose),
