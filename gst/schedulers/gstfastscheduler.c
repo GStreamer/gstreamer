@@ -308,7 +308,7 @@ gst_fast_scheduler_cothreaded_element (GstBin * bin, GstElement *element)
 		   GST_ELEMENT_NAME (element), GST_DEBUG_FUNCPTR_NAME (wrapper_function));
     }
   } else {
-    do_cothread_reset (GST_ELEMENT_THREADSTATE (element), sched->context, wrapper_function, 0, (char **) element);
+    do_cothread_setfunc (GST_ELEMENT_THREADSTATE (element), sched->context, wrapper_function, 0, (char **) element);
     GST_DEBUG (GST_CAT_SCHEDULING, "set wrapper function for '%s' to &%s\n",
 		 GST_ELEMENT_NAME (element), GST_DEBUG_FUNCPTR_NAME (wrapper_function));
   }

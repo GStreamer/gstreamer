@@ -637,8 +637,9 @@ gst_basic_scheduler_cothreaded_chain (GstBin * bin, GstSchedulerChain * chain)
 		   GST_ELEMENT_THREADSTATE (element),
 		   GST_ELEMENT_NAME (element));
       } else {
-	do_cothread_reset (GST_ELEMENT_THREADSTATE (element), chain->sched->context, 
-			   wrapper_function, 0, (char **) element);
+	/* set the cothread wrapper function */
+	do_cothread_setfunc (GST_ELEMENT_THREADSTATE (element), chain->sched->context, 
+			     wrapper_function, 0, (char **) element);
 	GST_DEBUG (GST_CAT_SCHEDULING, "set wrapper function for '%s' to &%s",
 		   GST_ELEMENT_NAME (element), GST_DEBUG_FUNCPTR_NAME (wrapper_function));
       }

@@ -50,7 +50,7 @@ typedef cothread_state cothread;
     }\
   }G_STMT_END
 
-#define do_cothread_reset(cothread, context, func, argc, argv) \
+#define do_cothread_setfunc(cothread, context, func, argc, argv) \
   cothread_setfunc ((cothread), (func), (argc), (argv))
   
 #define do_cothread_destroy(cothread)		cothread_free(cothread)
@@ -110,8 +110,8 @@ typedef cothread cothread_context;
     new_thread = cothread_create ((func), 0, (void**) (argv), (context));	\
   }G_STMT_END
   
-#define do_cothread_reset(cothread, context, func, argc, argv) \
-  cothread_reset ((cothread), (func), (argc), (void **) (argv), (context))
+#define do_cothread_setfunc(cothread, context, func, argc, argv) \
+  cothread_setfunc ((cothread), (func), (argc), (void **) (argv), (context))
 
 #define do_cothread_destroy(cothread)		cothread_destroy(cothread)
   
