@@ -72,6 +72,7 @@ enum
   ARG_WIDTH,
   ARG_HEIGHT,
   ARG_FOURCC,
+  ARG_RATE,
   /* FILL ME */
 };
 
@@ -145,6 +146,9 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FOURCC,
 				   g_param_spec_string ("fourcc", "fourcc", "fourcc",
 							NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RATE,
+	   g_param_spec_int ("rate", "Rate", "Frame rate",
+		0, 100, 30, G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -280,8 +284,9 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   videotestsrc->width = 640;
   videotestsrc->height = 480;
 
+  videotestsrc->rate = 30;
   videotestsrc->timestamp = 0;
-  videotestsrc->interval = GST_SECOND / 1;
+  videotestsrc->interval = GST_SECOND / videotestsrc->rate;
 
   videotestsrc->pool = NULL;
 }
@@ -351,6 +356,10 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
 	printf ("forcing FOURCC to 0x%08x\n", src->forced_format);
       }
       break;
+    case ARG_RATE:
+      src->rate = g_value_get_int (value);
+      src->interval = GST_SECOND/src->rate;
+      break;
     default:
       break;
   }
@@ -375,6 +384,9 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
     case ARG_FOURCC:
       /* FIXME */
       /* g_value_set_int (value, src->forced_format); */
+      break;
+    case ARG_RATE:
+      g_value_set_int (value, src->rate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
