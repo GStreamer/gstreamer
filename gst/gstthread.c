@@ -170,7 +170,6 @@ gst_thread_dispose (GObject *object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
   if (GST_ELEMENT_SCHED (thread)) {
-    gst_object_destroy (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
     gst_object_unref (GST_OBJECT (GST_ELEMENT_SCHED (thread)));
   }
 }
