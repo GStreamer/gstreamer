@@ -11,7 +11,7 @@ autoplug_have_size (GstElement *element, guint width, guint height,
 static void
 gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 {
-  GstElement *osssink, *videosink;
+  GstElement *osssink, *videosink, *videoelement, *colorspace;
   GtkWidget *appwindow;
   GstElement *new_element;
   GstAutoplug *autoplug;
@@ -36,10 +36,21 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
   osssink = gst_elementfactory_make("osssink", "play_audio");
   g_assert(osssink != NULL);
 
+  videosink = gst_bin_new ("videosink");
   /* and an video sink */
-  videosink = gst_elementfactory_make("xvideosink", "play_video");
+  videoelement = gst_elementfactory_make("xvideosink", "play_video");
   //videosink = gst_elementfactory_make("aasink", "play_video");
   g_assert(videosink != NULL);
+
+  colorspace = gst_elementfactory_make("colorspace", "colorspace");
+  g_assert(colorspace != NULL);
+
+  gst_element_connect (colorspace, "src", videoelement, "sink");
+  gst_bin_add (GST_BIN (videosink), colorspace);
+  gst_bin_add (GST_BIN (videosink), videoelement);
+
+  gst_element_add_ghost_pad (videosink, 
+		  gst_element_get_pad (colorspace, "sink"), "sink");
 
   autoplug = gst_autoplugfactory_make ("staticrender");
   g_assert (autoplug != NULL);
@@ -73,12 +84,12 @@ gst_play_have_type (GstElement *typefind, GstCaps *caps, GstElement *pipeline)
 
   gtk_widget_realize (socket);
   gtk_socket_steal (GTK_SOCKET (socket), 
-		    gst_util_get_int_arg (GTK_OBJECT (videosink), "xid"));
+		    gst_util_get_int_arg (GTK_OBJECT (videoelement), "xid"));
   gtk_widget_set_usize(socket,320,240);
 
   gtk_widget_show_all (appwindow);
 
-  gtk_signal_connect (GTK_OBJECT (videosink), "have_size",
+  gtk_signal_connect (GTK_OBJECT (videoelement), "have_size",
                       GTK_SIGNAL_FUNC (autoplug_have_size), socket);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
