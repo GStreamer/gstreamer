@@ -175,6 +175,7 @@ guint		gst_class_signal_connect	(GstObjectClass	*klass,
 void		gst_class_signal_emit_by_name	(GstObject	*object,
 		                                 const gchar	*name,
 						 xmlNodePtr self);
+#else
 #pragma GCC poison gst_class_signal_emit_by_name
 #endif
 
