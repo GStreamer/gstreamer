@@ -1418,6 +1418,7 @@ gst_scheduler_get_type
 <TITLE>GstSchedulerFactory</TITLE>
 GstSchedulerFactory
 GST_TYPE_SCHEDULER_FACTORY
+gst_scheduler_register
 gst_scheduler_factory_new
 gst_scheduler_factory_destroy
 gst_scheduler_factory_find

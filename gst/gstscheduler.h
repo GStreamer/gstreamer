@@ -181,6 +181,8 @@ struct _GstSchedulerFactoryClass {
 
 GType			gst_scheduler_factory_get_type		(void);
 
+gboolean		gst_scheduler_register			(GstPlugin *plugin, const gchar *name, 
+								 const gchar *longdesc, GType type);
 GstSchedulerFactory*	gst_scheduler_factory_new		(const gchar *name, const gchar *longdesc, GType type);
 void                    gst_scheduler_factory_destroy		(GstSchedulerFactory *factory);
 

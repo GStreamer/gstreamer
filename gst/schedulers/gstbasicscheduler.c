@@ -263,22 +263,16 @@ gst_basic_scheduler_dispose (GObject * object)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstSchedulerFactory *factory;
+  if (!gst_scheduler_register (plugin, "basic" COTHREADS_NAME,
+          "A basic scheduler using " COTHREADS_NAME " cothreads",
+          gst_basic_scheduler_get_type ()))
+    return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (debug_dataflow, "basic_dataflow", 0,
       "basic scheduler dataflow");
   GST_DEBUG_CATEGORY_INIT (debug_scheduler, "basic_scheduler", 0,
       "basic scheduler general information");
 
-  factory = gst_scheduler_factory_new ("basic" COTHREADS_NAME,
-      "A basic scheduler using " COTHREADS_NAME " cothreads",
-      gst_basic_scheduler_get_type ());
-
-  if (factory != NULL) {
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  } else {
-    g_warning ("could not register scheduler: " COTHREADS_NAME);
-  }
   return TRUE;
 }
 

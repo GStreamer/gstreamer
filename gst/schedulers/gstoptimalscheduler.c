@@ -447,25 +447,20 @@ gst_opt_scheduler_dispose (GObject * object)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstSchedulerFactory *factory;
+#ifdef USE_COTHREADS
+  if (!gst_scheduler_register (plugin, "opt" COTHREADS_NAME,
+          "An optimal scheduler using " COTHREADS_NAME " cothreads",
+          gst_opt_scheduler_get_type ()))
+#else
+  if (!gst_scheduler_register (plugin, "opt",
+          "An optimal scheduler using no cothreads",
+          gst_opt_scheduler_get_type ()))
+#endif
+    return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (debug_scheduler, "scheduler", 0,
       "optimal scheduler");
 
-#ifdef USE_COTHREADS
-  factory = gst_scheduler_factory_new ("opt" COTHREADS_NAME,
-      "An optimal scheduler using " COTHREADS_NAME " cothreads",
-      gst_opt_scheduler_get_type ());
-#else
-  factory = gst_scheduler_factory_new ("opt",
-      "An optimal scheduler using no cothreads", gst_opt_scheduler_get_type ());
-#endif
-
-  if (factory != NULL) {
-    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
-  } else {
-    g_warning ("could not register scheduler: optimal");
-  }
   return TRUE;
 }
 

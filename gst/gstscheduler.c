@@ -794,6 +794,43 @@ gst_scheduler_factory_init (GstSchedulerFactory * factory)
 
 
 /**
+ * gst_scheduler_register:
+ * @plugin: a #GstPlugin
+ * @name: name of the scheduler to register
+ * @longdesc: description of the scheduler
+ * @type: #GType of the scheduler to register
+ *
+ * Registers a scheduler with GStreamer.
+ *
+ * Returns: TRUE, if the registering succeeded, FALSE on error
+ **/
+gboolean
+gst_scheduler_register (GstPlugin * plugin, const gchar * name,
+    const gchar * longdesc, GType type)
+{
+  GstSchedulerFactory *factory;
+
+  g_return_val_if_fail (plugin != NULL, FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+  g_return_val_if_fail (longdesc != NULL, FALSE);
+  g_return_val_if_fail (g_type_is_a (type, GST_TYPE_SCHEDULER), FALSE);
+
+  factory = gst_scheduler_factory_find (name);
+  if (factory) {
+    g_return_val_if_fail (factory->type == 0, FALSE);
+    g_free (factory->longdesc);
+    factory->longdesc = g_strdup (longdesc);
+    factory->type = type;
+  } else {
+    factory = gst_scheduler_factory_new (name, longdesc, type);
+    g_return_val_if_fail (factory, FALSE);
+    gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_scheduler_factory_new:
  * @name: name of schedulerfactory to create
  * @longdesc: long description of schedulerfactory to create

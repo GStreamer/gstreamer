@@ -1160,18 +1160,14 @@ gst_entry_scheduler_show (GstScheduler * scheduler)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstSchedulerFactory *factory;
+  if (!gst_scheduler_register (plugin, "entry" COTHREADS_NAME,
+          "A entry scheduler using " COTHREADS_NAME " cothreads",
+          GST_TYPE_ENTRY_SCHEDULER))
+    return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (debug_scheduler, "entry" COTHREADS_NAME, 0,
       "entry " COTHREADS_NAME "scheduler");
 
-  factory = gst_scheduler_factory_new ("entry" COTHREADS_NAME,
-      "A entry scheduler using " COTHREADS_NAME " cothreads",
-      GST_TYPE_ENTRY_SCHEDULER);
-  if (factory == NULL)
-    return FALSE;
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
   return TRUE;
 }
 

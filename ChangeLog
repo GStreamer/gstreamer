@@ -1,3 +1,14 @@
+2004-08-11  Benjamin Otte  <otte@gnome.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstscheduler.c: (gst_scheduler_register):
+	* gst/gstscheduler.h:
+	  add gst_scheduler_register shortcut similar to gst_element_register
+	* gst/schedulers/entryscheduler.c: (plugin_init):
+	* gst/schedulers/gstbasicscheduler.c: (plugin_init):
+	* gst/schedulers/gstoptimalscheduler.c: (plugin_init):
+	  use it
+
 2004-08-10  Steve Lhomme  <steve.lhomme@free.fr>
 
 	* gst/gstvalue.h:
