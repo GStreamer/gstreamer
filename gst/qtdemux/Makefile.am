@@ -1,12 +1,11 @@
 plugindir = $(libdir)/gst
 
-plugin_LTLIBRARIES = libqtdemux.la
+plugin_LTLIBRARIES = libgstqtdemux.la
 
-libqtdemux_la_CFLAGS = ${GST_CFLAGS}
-libqtdemux_la_LIBADD = 
-libqtdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
-
-libqtdemux_la_SOURCES = qtdemux.c
+libgstqtdemux_la_CFLAGS = ${GST_CFLAGS}
+libgstqtdemux_la_LIBADD = 
+libgstqtdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
+libgstqtdemux_la_SOURCES = qtdemux.c
 
 noinst_HEADERS = qtdemux.h
 
