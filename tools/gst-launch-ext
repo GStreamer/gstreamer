@@ -13,7 +13,7 @@ use File::Basename;
 sub extension
 {
   my $path = shift;
-  my $ext = (fileparse ($path, '\..*'))[2];
+  my $ext = (fileparse ($path, '\..*?'))[2];
   $ext =~ s/^\.//;
   return $ext;
 }
@@ -58,9 +58,10 @@ read_config ();
 my %pipes = ( 
   "mp3", "mad ! $cfg{AUDIOSINK}",
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
-  "mpg", "mpegdemux audio_00! { queue ! mad ! $cfg{AUDIOSINK} } mpegdemux0.video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
+  "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
   "avi", "avidemux video_00! { queue ! windec ! $cfg{VIDEOSINK} }",
-  "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} }",
+  "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! a52dec ! $cfg{AUDIOSINK} }",
+  "wav", "wavparse ! $cfg{AUDIOSINK}",
 
 );
 my $file = shift @ARGV or die "Please give a file name !";
@@ -71,7 +72,7 @@ if ($pipe = $pipes{$ext})
 {
   $command = "gst-launch filesrc location=\"$file\" ! $pipe";
   print "Running $command\n";
-  system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools/gst-launch $command");
+  system ("PATH=\$PATH:".$cfg{CVS_PATH}."/gstreamer/tools $command");
 }
 else
 {
