@@ -1,3 +1,8 @@
+2004-08-27 Arwed v. Merkatz <v.merkatz@gmx.net>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_peed_id), (gst_ebml_read_element_id),
+	handle EOS correctly
+
 2004-08-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Zaheer Abbas Merali
