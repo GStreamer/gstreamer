@@ -413,61 +413,22 @@ gst_spider_identity_src_loop (GstSpiderIdentity *ident)
 static void
 gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
 {
-  GstBuffer *buf=NULL;
-  GstBuffer *typefindbuf = NULL;
-  gboolean getmorebuf = TRUE;
+  GstBuffer *buf = NULL;
   GList *type_list;
   GstCaps *caps;
+  GstByteStream *bs;
 
-  /* this should possibly be a property */
-  guint bufsizelimit = 4096;
-  
   g_return_if_fail (GST_IS_SPIDER_IDENTITY (ident));
 
-  while (getmorebuf){
-
-    /* check if our buffer is big enough to do a typefind */
-    if (typefindbuf && GST_BUFFER_SIZE(typefindbuf) >= bufsizelimit){
-      getmorebuf = FALSE;
-      break;
-    }
-    buf = gst_pad_pull (ident->sink);
-  
-    /* if it's an event... */
-    while (GST_IS_EVENT (buf)) {
-      switch (GST_EVENT_TYPE (GST_EVENT (buf))){
-      case GST_EVENT_EOS:
-        getmorebuf = FALSE;
-	/* FIXME Notify the srcs that EOS has happened */
-        gst_pad_event_default (ident->sink, GST_EVENT (buf));
-	break;
-      default:
-        gst_pad_event_default (ident->sink, GST_EVENT (buf));
-        buf = gst_pad_pull (ident->sink);
-        break;
-      }
-      /* handle DISCONT events, please */
-    }
-
-    typefindbuf = buf;
-    getmorebuf = FALSE;
-    /* FIXME merging doesn't work for some reason so 
-     * we'll just typefind with the first element
-    if (!typefindbuf){
-      typefindbuf = buf;
-      gst_buffer_ref(buf);
-    }
-    else {
-      GstBuffer *oldbuf = typefindbuf;
-      typefindbuf = gst_buffer_merge(typefindbuf, buf);
-      gst_buffer_unref(oldbuf);
-      gst_buffer_unref(buf);
-    }
-    */
-  }
-  
-  if (!typefindbuf){
+  /* get a bytestream object */
+  bs = gst_bytestream_new (ident->sink);
+  if (gst_bytestream_peek (bs, &buf, 1) != 1 || !buf) {
+    buf = NULL;
+    g_warning ("Failed to read fake buffer - serious idiocy going on here");
     goto end;
+  } else {
+    gst_buffer_unref (buf);
+    buf = NULL;
   }
 
   /* maybe there are already valid caps now? */
@@ -487,7 +448,7 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
       GstTypeFindFunc typefindfunc = (GstTypeFindFunc)factory->typefindfunc;
 
       GST_DEBUG ("trying typefind function %s", GST_PLUGIN_FEATURE_NAME (factory));
-      if (typefindfunc && (caps = typefindfunc (buf, factory))) {
+      if (typefindfunc && (caps = typefindfunc (bs, factory))) {
         GST_INFO ("typefind function %s found caps", GST_PLUGIN_FEATURE_NAME (factory));
         if (gst_pad_try_set_caps (ident->src, caps) <= 0) {
           g_warning ("typefind: found type but peer didn't accept it");
@@ -501,7 +462,6 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
     type_list = g_list_next (type_list);
   }
   gst_element_error(GST_ELEMENT(ident), "Could not find media type", NULL);
-  gst_buffer_unref(buf);
   buf = GST_BUFFER (gst_event_new (GST_EVENT_EOS));
 
 end:
@@ -512,15 +472,19 @@ end:
   
   /* push the buffer */
   gst_spider_identity_chain (ident->sink, buf);
+
+  /* bytestream no longer needed */
+  gst_bytestream_destroy (bs);
   
   return;
 
 plug:
-
   gst_caps_debug (caps, "spider starting caps");
   gst_caps_sink (caps);
 
-  gst_spider_identity_plug (ident);  
+  gst_spider_identity_plug (ident);
+
+  gst_bytestream_read (bs, &buf, bs->listavail);
 
   goto end;
 }

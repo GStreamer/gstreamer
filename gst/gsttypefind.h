@@ -27,6 +27,7 @@
 #ifndef GST_DISABLE_TYPE_FIND
 
 #include <gst/gstelement.h>
+#include <gst/gstbytestream.h>
 
 G_BEGIN_DECLS
 
@@ -46,11 +47,9 @@ struct _GstTypeFind {
   GstElement 	 element;
 
   GstPad 	*sinkpad;
+  GstByteStream *bs;
 
   GstCaps 	*caps;
-
-  gint 		 num_buffer;
-  gint 		 max_buffers;
 };
 
 struct _GstTypeFindClass {

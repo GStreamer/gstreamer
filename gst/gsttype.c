@@ -29,6 +29,7 @@
 
 #include "gst_private.h"
 
+#include "gstbytestream.h"
 #include "gsttype.h"
 #include "gstregistrypool.h"
 #include "gstobject.h"
@@ -42,9 +43,7 @@ static guint16 _gst_maxtype;
 static void 		gst_type_factory_class_init 	(GstTypeFactoryClass *klass);
 static void 		gst_type_factory_init 		(GstTypeFactory *factory);
 
-static GstCaps*		gst_type_type_find_dummy		(GstBuffer *buffer, gpointer priv);
-
-static void 		gst_type_factory_unload_thyself 	(GstPluginFeature *feature);
+static void 		gst_type_factory_unload_thyself	(GstPluginFeature *feature);
 
 static GstPluginFeatureClass *parent_class = NULL;
 /* static guint gst_type_factory_signals[LAST_SIGNAL] = { 0 }; */
@@ -315,8 +314,8 @@ gst_type_factory_unload_thyself (GstPluginFeature *feature)
     factory->typefindfunc = gst_type_type_find_dummy;
 }
 
-static GstCaps*
-gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
+GstCaps*
+gst_type_type_find_dummy (GstByteStream *bs, gpointer priv)
 {
   GstCaps *res = NULL;
   GstTypeFactory *factory = (GstTypeFactory *)priv;
@@ -329,7 +328,7 @@ gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
       g_warning ("could not load valid typefind function for %s\n", factory->mime);
     }
     else if (factory->typefindfunc) {
-      res = factory->typefindfunc (buffer, factory);
+      res = factory->typefindfunc (bs, priv);
     }
   }
 

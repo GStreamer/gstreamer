@@ -210,17 +210,6 @@ macros GST_IS_MIXER () and GST_MIXER () would then look like this:
 So the application would just tread it with the known macro, and
 everything would look extremely simple to the end user.
 
-Also some convenience function to set the element:
-
-void
-gst_interface_set_element (GstInterface *iface,
-			   GstElement   *element)
-{
-  g_return_if_fail (GST_IS_INTERFACE (iface));
-
-  iface->element = element;
-}
-
 4a) mixer
 ---------
 A mixer is a way of controlling volume and input/output channels.
@@ -317,7 +306,7 @@ typedef struct _GstOverlayClass {
 			     XID                xid);
 } GstOverlayClass;
 
-That's all!
+That's all! It would look similar for FB & co.
 
 4c) user input
 --------------
@@ -335,8 +324,9 @@ input-from-application APIs.
 
 5) Status of this document
 ==========================
-This is a proposal, nothing more. Nothing is implemented. Target
-release is 0.8.0 or any 0.7.x version.
+The interfaces are implemented, more (for metadata, framebuffer-
+overlay, video balancing (brightness), user input etc. are all
+pending.
 
 6) Copyright and blabla
 =======================

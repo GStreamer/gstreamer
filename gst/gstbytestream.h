@@ -20,7 +20,9 @@
 #ifndef __GST_BYTESTREAM_H__
 #define __GST_BYTESTREAM_H__
 
-#include <gst/gst.h>
+#include <glib.h>
+#include <gst/gstpad.h>
+#include <gst/gstevent.h>
 
 G_BEGIN_DECLS
 

@@ -16,13 +16,13 @@ GST_LOADSAVE_SRC = gstxml.c
 endif
 
 if GST_DISABLE_TYPEFIND
-GST_TYPEFIND_SRC = 
+GST_TYPEFIND_SRC =
 else
 GST_TYPEFIND_SRC = gsttypefind.c
 endif
 
 if GST_DISABLE_AUTOPLUG
-GST_AUTOPLUG_SRC = 
+GST_AUTOPLUG_SRC =
 GST_AUTOPLUG_DIRS =
 else
 GST_AUTOPLUG_SRC = gstautoplug.c
@@ -91,11 +91,12 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES =		\
 	gstmarshal.c		\
 	$(GST_ENUMTYPES_SRC)	\
 	gstobject.c		\
-	$(GST_AUTOPLUG_SRC)	\
 	gstatomic.c		\
+	$(GST_AUTOPLUG_SRC)	\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferpool-default.c	\
+	gstbytestream.c		\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
@@ -157,6 +158,7 @@ gst_headers =			\
 	gstbin.h		\
 	gstbuffer.h		\
 	gstbufferpool-default.h \
+	gstbytestream.h		\
 	gstcaps.h		\
 	gstclock.h		\
 	gstcompat.h		\

@@ -568,7 +568,6 @@ gst/types/Makefile
 gst/registries/Makefile
 libs/Makefile
 libs/gst/Makefile
-libs/gst/bytestream/Makefile
 libs/gst/getbits/Makefile
 libs/gst/control/Makefile
 libs/ext/Makefile

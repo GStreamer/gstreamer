@@ -24,14 +24,14 @@
 #ifndef __GST_TYPE_H__
 #define __GST_TYPE_H__
 
-#include <gst/gstbuffer.h>
 #include <gst/gstcaps.h>
 #include <gst/gstpluginfeature.h>
+#include <gst/gstbytestream.h>
 
 G_BEGIN_DECLS
 
 /* type of function used to check a stream for equality with type */
-typedef GstCaps*	(*GstTypeFindFunc) 	(GstBuffer *buf, gpointer priv);
+typedef GstCaps*	(*GstTypeFindFunc) 	(GstByteStream *bs, gpointer priv);
 
 typedef struct _GstType GstType;
 typedef struct _GstTypeDefinition GstTypeDefinition;
@@ -74,7 +74,7 @@ struct _GstTypeFactory {
 struct _GstTypeFactoryClass {
   GstPluginFeatureClass parent;
 
-  gpointer		 dummy[8];
+  gpointer		dummy[8];
 };
 
 
@@ -97,6 +97,9 @@ GstType*		gst_type_find_by_id		(guint16 id);
 
 /* get the list of registered types (returns list of GstType!) */
 const GList*		gst_type_get_list		(void);
+
+/* dummy typefind function */
+GstCaps*		gst_type_type_find_dummy	(GstByteStream *bs, gpointer priv);
 
 G_END_DECLS
 

@@ -711,29 +711,6 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
   return TRUE;
 }
 
-static GstCaps*
-gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
-{
-  GstTypeFactory *factory = (GstTypeFactory *)priv;
-
-  GST_CAT_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s", factory->mime);
-
-  if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
-    if (factory->typefindfunc) {
-      if (factory->typefindfunc == gst_type_type_find_dummy) {
-	GST_CAT_WARNING (GST_CAT_TYPES, "GstTypeFactory %s for mime %s exts %s does not install a valid typefindfunc",
-			 factory->feature.name, factory->mime, factory->exts);
-      } else {
-	GstCaps *res = factory->typefindfunc (buffer, factory);
-	if (res)
-	  return res;
-      }
-    }
-  }
-  return NULL;
-}
-
-
 static gboolean
 gst_xml_registry_parse_type_factory (GMarkupParseContext *context, const gchar *tag, const gchar *text,
                                      gsize text_len, GstXMLRegistry *registry, GError **error)

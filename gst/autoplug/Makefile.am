@@ -27,13 +27,15 @@ libgstautoplugger_la_CFLAGS = $(GST_CFLAGS)
 libgstautoplugger_la_LIBADD =
 libgstautoplugger_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-libgstspider_la_SOURCES = gstspider.c gstspideridentity.c gstsearchfuncs.c
+libgstspider_la_SOURCES = \
+	gstspider.c gstspideridentity.c \
+	gstsearchfuncs.c
 libgstspider_la_CFLAGS = $(GST_CFLAGS)
 libgstspider_la_LIBADD =
 libgstspider_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gststaticautoplug.h gststaticautoplugrender.h \
-	gstspider.h gstspideridentity.h gstsearchfuncs.h
+	gstspider.h gstspideridentity.h gstsearchfuncs.h 
 
 noinst_PROGRAMS = autoplugtest spidertest
 

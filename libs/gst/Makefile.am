@@ -1,3 +1,3 @@
-SUBDIRS = bytestream control getbits
+SUBDIRS = control getbits
 
-DIST_SUBDIRS = bytestream control getbits
+DIST_SUBDIRS = control getbits

@@ -250,11 +250,12 @@ gst_autoplug_factories_filters_with_sink_caps (GList *factories)
   GList *ret = NULL;
   GstElementFactory *factory;
   GList *templs;
-  
+
   while (factories)
   {
     factory = (GstElementFactory *) factories->data;
     templs = factory->padtemplates;
+
     if (GST_PLUGIN_FEATURE (factory)->rank > 0){
       gboolean have_src = FALSE;
       gboolean have_sink = FALSE;
@@ -341,6 +342,7 @@ gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
   
   GST_INFO ("attempting to autoplug via shortest path from %s to %s", 
 	    gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
+
   gst_caps_debug (srccaps, "source caps");
   gst_caps_debug (sinkcaps, "sink caps");
   /* wrap all factories as GstAutoplugNode 
