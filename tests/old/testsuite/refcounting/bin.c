@@ -37,7 +37,7 @@ create_bin_ghostpads (void)
   gst_element_add_pad (element2, gst_pad_new ("sink1", GST_PAD_SINK));
   gst_bin_add (GST_BIN (bin), element2);
   gst_element_connect (element1, "src1", element2, "sink1");
-  gst_element_add_ghost_pad (bin, gst_element_get_pad (element2, "sink1"), "sink1");
+  gst_element_add_ghost_pad (bin, gst_element_get_pad (element2, "sink1"), "ghost_sink");
 
   return bin;
 }
