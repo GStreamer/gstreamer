@@ -1,5 +1,9 @@
 2003-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+        * gst/gst.c: whitespace and doc style fixes
+
+2003-12-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstformat.h: remove trailing whitespace from enum for gtk-doc
 
 2003-12-24  Colin Walters  <walters@verbum.org>

@@ -88,7 +88,7 @@ debug_log_handler (const gchar *log_domain,
 enum {
   ARG_VERSION=1,
   ARG_FATAL_WARNINGS,
-#ifndef GST_DISABLE_GST_DEBUG 
+#ifndef GST_DISABLE_GST_DEBUG
   ARG_DEBUG_LEVEL,
   ARG_DEBUG,
   ARG_DEBUG_DISABLE,
@@ -115,7 +115,7 @@ static const struct poptOption gstreamer_options[] = {
   {NULL, NUL, POPT_ARG_CALLBACK|POPT_CBFLAG_PRE|POPT_CBFLAG_POST, (void *) &init_popt_callback, 0, NULL, NULL},
   {"gst-version",        NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_VERSION,        N_("Print the GStreamer version"), NULL},
   {"gst-fatal-warnings", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
-#ifndef GST_DISABLE_GST_DEBUG 
+#ifndef GST_DISABLE_GST_DEBUG
   {"gst-debug-level",    NUL, POPT_ARG_INT|POPT_ARGFLAG_STRIP,    NULL, ARG_DEBUG_LEVEL,  N_("default debug level from 1 (only error) to 5 (anything) or 0 for no output"), "LEVEL"},
   {"gst-debug",          NUL, POPT_ARG_STRING|POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,          N_("colon-seperated list of category_name=level pairs to set specific levels for the individual categories.\nExample:GST_AUTOPLUG=5:GST_ELEMENT_*=3"), "CATEGORIES"},
   {"gst-debug-no-color", NUL, POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   NULL, ARG_DEBUG_NO_COLOR, N_("disable color debugging output"), NULL},
@@ -137,7 +137,7 @@ static const struct poptOption gstreamer_options[] = {
  *
  * Returns a popt option table with GStreamer's argument specifications. The
  * table is set up to use popt's callback method, so whenever the parsing is
- * actually performed (via a poptGetContext()), the GStreamer libraries will
+ * actually performed (via poptGetContext), the GStreamer libraries will
  * be initialized.
  *
  * Returns: a pointer to the static GStreamer option table.
@@ -161,7 +161,7 @@ gst_init_get_popt_table (void)
  * for some reason.  If you want your program to fail fatally,
  * use gst_init() instead.
  *
- * Returns: TRUE if GStreamer coul be initialized
+ * Returns: %TRUE if GStreamer could be initialized.
  */
 gboolean
 gst_init_check (int *argc, char **argv[])
@@ -220,7 +220,7 @@ gst_init_with_popt_table (int *argc, char **argv[],
  * setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
  *
- * Returns: TRUE if GStreamer coul be initialized
+ * Returns: %TRUE if GStreamer could be initialized.
  */
 gboolean
 gst_init_check_with_popt_table (int *argc, char **argv[],
@@ -283,24 +283,24 @@ gst_init_check_with_popt_table (int *argc, char **argv[],
   }
 
   *argc = poptStrippedArgv (context, *argc, *argv);
-  
+
   poptFreeContext (context);
 
   return TRUE;
 }
 
 #ifndef GST_DISABLE_REGISTRY
-static void 
+static void
 add_path_func (gpointer data, gpointer user_data)
 {
   GstRegistry *registry = GST_REGISTRY (user_data);
-  
+
   GST_INFO ("Adding plugin path: \"%s\"", (gchar *) data);
   gst_registry_add_path (registry, (gchar *)data);
 }
 #endif
 
-static void 
+static void
 prepare_for_load_plugin_func (gpointer data, gpointer user_data)
 {
   preload_plugins = g_slist_prepend (preload_plugins, data);
@@ -334,7 +334,7 @@ parse_debug_list (const gchar *list)
   }
   g_strfreev (split);
 }
-static void 
+static void
 load_plugin_func (gpointer data, gpointer user_data)
 {
   GstPlugin *plugin;
@@ -356,7 +356,7 @@ load_plugin_func (gpointer data, gpointer user_data)
 }
 
 static void
-split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator, gpointer user_data) 
+split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator, gpointer user_data)
 {
   gchar **strings;
   gint j = 0;
@@ -371,7 +371,7 @@ split_and_iterate (const gchar *stringlist, gchar *separator, GFunc iterator, gp
       iterator (strings[j], user_data);
       if (++j == MAX_PATH_SPLIT) {
         lastlist = g_strdup (strings[j]);
-        g_strfreev (strings); 
+        g_strfreev (strings);
         j=0;
         break;
       }
@@ -406,7 +406,7 @@ init_pre (void)
 #ifndef GST_DISABLE_REGISTRY
   {
     const gchar *debug_list;
-  
+
     debug_list = g_getenv ("GST_DEBUG");
     if (debug_list) {
       parse_debug_list (debug_list);
@@ -464,8 +464,8 @@ gst_register_core_elements (GstPlugin *plugin)
 }
 
 static GstPluginDesc plugin_desc = {
-  GST_VERSION_MAJOR,           
-  GST_VERSION_MINOR,  
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
   "gst_core_elements",
   "core elements of the GStreamer library",
   gst_register_core_elements,
@@ -476,7 +476,7 @@ static GstPluginDesc plugin_desc = {
   GST_ORIGIN,
 
   GST_PADDING_INIT
-};                         
+};
 
 /*
  * this bit handles:
@@ -500,10 +500,10 @@ init_post (void)
 
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
-  
+
   GST_INFO ("Initializing GStreamer Core Library version %s %s",
             VERSION, _gst_use_threads ? "" : "(no threads)");
-  
+
   _gst_format_initialize ();
   _gst_query_type_initialize ();
   gst_object_get_type ();
@@ -529,7 +529,7 @@ init_post (void)
 
   /* register core plugins */
   _gst_plugin_register_static (&plugin_desc);
- 
+
   _gst_cpu_initialize (_gst_enable_cpu_opt);
   _gst_structure_initialize ();
   _gst_value_initialize ();
@@ -589,21 +589,21 @@ sort_by_category_name (gconstpointer a, gconstpointer b)
 		 gst_debug_category_get_name ((GstDebugCategory *) b));
 }
 static void
-gst_debug_help (void) 
+gst_debug_help (void)
 {
   GSList *list, *walk;
   GList *list2, *walk2;
-  
+
   if (!init_post ())
     exit (1);
-  
+
   walk2 = list2 = gst_registry_pool_plugin_list ();
   while (walk2) {
     GstPlugin *plugin = GST_PLUGIN (walk2->data);
     walk2 = g_list_next (walk2);
-    
+
     if (!gst_plugin_is_loaded (plugin)) {
-#ifndef GST_DISABLE_REGISTRY 
+#ifndef GST_DISABLE_REGISTRY
       if (GST_IS_REGISTRY (plugin->manager)) {
 	GST_CAT_LOG (GST_CAT_PLUGIN_LOADING, "loading plugin %s", plugin->desc.name);
 	if (gst_registry_load_plugin (GST_REGISTRY (plugin->manager), plugin) != GST_REGISTRY_OK)
@@ -613,43 +613,43 @@ gst_debug_help (void)
     }
   }
   g_list_free (list2);
-      
+
   list = gst_debug_get_all_categories ();
   walk = list = g_slist_sort (list, sort_by_category_name);
-  
+
   g_print ("\n");
   g_print ("name                  level    description\n");
   g_print ("---------------------+--------+--------------------------------\n");
 
   while (walk) {
     GstDebugCategory *cat = (GstDebugCategory *) walk->data;
-  
+
     if (gst_debug_is_colored ()) {
       gchar *color = gst_debug_construct_term_color (cat->color);
-      g_print ("%s%-20s\033[00m  %1d %s  %s%s\033[00m\n", 
+      g_print ("%s%-20s\033[00m  %1d %s  %s%s\033[00m\n",
                color,
-    	       gst_debug_category_get_name (cat),
+	       gst_debug_category_get_name (cat),
                gst_debug_category_get_threshold (cat),
-               gst_debug_level_get_name (gst_debug_category_get_threshold (cat)), 
-  	       color,
+               gst_debug_level_get_name (gst_debug_category_get_threshold (cat)),
+	       color,
                gst_debug_category_get_description (cat));
       g_free (color);
     } else {
-      g_print ("%-20s  %1d %s  %s\n", gst_debug_category_get_name (cat), 
+      g_print ("%-20s  %1d %s  %s\n", gst_debug_category_get_name (cat),
                gst_debug_category_get_threshold (cat),
-               gst_debug_level_get_name (gst_debug_category_get_threshold (cat)), 
-  	       gst_debug_category_get_description (cat));
+               gst_debug_level_get_name (gst_debug_category_get_threshold (cat)),
+	       gst_debug_category_get_description (cat));
     }
     walk = g_slist_next (walk);
-  }   
+  }
   g_slist_free (list);
   g_print ("\n");
 }
-#endif  
+#endif
 
 static void
 init_popt_callback (poptContext context, enum poptCallbackReason reason,
-                    const struct poptOption *option, const char *arg, void *data) 
+                    const struct poptOption *option, const char *arg, void *data)
 {
   GLogLevelFlags fatal_mask;
 
@@ -669,7 +669,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
       fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
       g_log_set_always_fatal (fatal_mask);
       break;
-#ifndef GST_DISABLE_GST_DEBUG 
+#ifndef GST_DISABLE_GST_DEBUG
     case ARG_DEBUG_LEVEL: {
       gint tmp = 0;
       tmp = strtol (arg, NULL, 0);
@@ -730,7 +730,7 @@ init_popt_callback (poptContext context, enum poptCallbackReason reason,
 
 /**
  * gst_use_threads:
- * @use_threads: flag indicating threads should be used
+ * @use_threads: a #gboolean indicating whether threads should be used
  *
  * Instructs the core to turn on/off threading. When threading
  * is turned off, all thread operations such as mutexes and conditionals
@@ -752,10 +752,10 @@ gst_use_threads (gboolean use_threads)
 
 /**
  * gst_has_threads:
- * 
- * Query if GStreamer has threads enabled.
  *
- * Returns: TRUE if threads are enabled.
+ * Queries if GStreamer has threads enabled.
+ *
+ * Returns: %TRUE if threads are enabled.
  */
 gboolean
 gst_has_threads (void)
@@ -769,10 +769,10 @@ static GSList *mainloops = NULL;
 /**
  * gst_main:
  *
- * Enter the main GStreamer processing loop 
+ * Enters the main GStreamer processing loop.
  */
-void 
-gst_main (void) 
+void
+gst_main (void)
 {
   GMainLoop *loop;
 
@@ -785,10 +785,10 @@ gst_main (void)
 /**
  * gst_main_quit:
  *
- * Exits the main GStreamer processing loop 
+ * Exits the main GStreamer processing loop.
  */
-void 
-gst_main_quit (void) 
+void
+gst_main_quit (void)
 {
   if (!mainloops)
     g_error ("Quit more loops than there are");
@@ -806,9 +806,9 @@ gst_main_quit (void)
  * @minor: pointer to a guint to store the minor version number
  * @micro: pointer to a guint to store the micro version number
  *
- * Gets the version number of the GStreamer library
+ * Gets the version number of the GStreamer library.
  */
-void 
+void
 gst_version (guint *major, guint *minor, guint *micro)
 {
   g_return_if_fail (major);
