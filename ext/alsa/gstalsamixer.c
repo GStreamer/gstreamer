@@ -211,6 +211,7 @@ gst_alsa_mixer_build_list (GstAlsaMixer *mixer)
 {
   gint i, count;
   snd_mixer_elem_t *element;
+  GstMixerTrack *track;
 
   g_return_if_fail (((gint) mixer->mixer_handle) != -1);
 
@@ -232,7 +233,7 @@ gst_alsa_mixer_build_list (GstAlsaMixer *mixer)
       while (snd_mixer_selem_has_capture_channel(element, channels))
         channels++;
 
-      GstMixerTrack *track = gst_alsa_mixer_track_new
+      track = gst_alsa_mixer_track_new
         (element, i, channels, GST_MIXER_TRACK_INPUT);
       mixer->tracklist = g_list_append (mixer->tracklist, track);
     }
@@ -247,7 +248,7 @@ gst_alsa_mixer_build_list (GstAlsaMixer *mixer)
       while (snd_mixer_selem_has_playback_channel(element, channels))
         channels++;
 
-      GstMixerTrack *track = gst_alsa_mixer_track_new
+      track = gst_alsa_mixer_track_new
         (element, i, channels, GST_MIXER_TRACK_OUTPUT);
       mixer->tracklist = g_list_append (mixer->tracklist, track);
     }
