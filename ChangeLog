@@ -1,3 +1,8 @@
+2004-05-24  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst-libs/gst/resample/private.h:
+	  don't use optimizations that are #if 0'ed
+
 2004-05-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query):
