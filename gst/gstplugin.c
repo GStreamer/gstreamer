@@ -67,7 +67,7 @@ static GstPlugin *	gst_plugin_register_func 	(GstPlugin *plugin,
 static GstPlugin *
 gst_plugin_copy (GstPlugin *plugin)
 {
-  return plugin;
+  return g_memdup(plugin, sizeof(*plugin));
 }
 
 GType
