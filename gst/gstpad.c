@@ -1212,7 +1212,7 @@ gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
 GstPadTemplate*
 gst_padtemplate_load_thyself (xmlNodePtr parent)
 {
-  xmlNodePtr field = parent->childs;
+  xmlNodePtr field = parent->xmlChildrenNode;
   GstPadTemplate *factory;
   gchar *name_template = NULL;
   GstPadDirection direction = GST_PAD_UNKNOWN;

@@ -38,7 +38,7 @@ int main(int argc,char *argv[]) {
   g_return_if_fail(videosinkfactory != NULL);
 
   src = gst_elementfactory_create(srcfactory,"src");
-  //gtk_object_set(GTK_OBJECT(src),"format",3,NULL);
+  gtk_object_set(GTK_OBJECT(src),"format",3,NULL);
   gtk_object_set(GTK_OBJECT(src),"width",320,"height",240,NULL);
 
   videosink = gst_elementfactory_create(videosinkfactory,"videosink");
@@ -95,6 +95,8 @@ int main(int argc,char *argv[]) {
   gtk_widget_show_all(appwindow2);
 
   gst_element_set_state(GST_ELEMENT(bin),GST_STATE_PLAYING);
+
+  gtk_object_set(GTK_OBJECT(src),"bright",32000,"contrast", 32000,NULL);
 
   //gtk_object_set(GTK_OBJECT(src),"tune",133250,NULL);
   g_idle_add(idle_func,bin);

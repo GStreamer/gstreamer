@@ -124,6 +124,8 @@ case "x${target_cpu}" in
              AC_DEFINE(HAVE_CPU_ALPHA) ;;
   xarm*)     HAVE_CPU_ARM=yes ;
              AC_DEFINE(HAVE_CPU_ARM) ;;
+  xsparc*)   HAVE_CPU_SPARC=yes ;
+             AC_DEFINE(HAVE_CPU_SPARC) ;;
 esac
 
 dnl Determine endianness
@@ -358,6 +360,11 @@ AC_MSG_CHECKING(Shout library)
 AC_CHECK_LIB(shout, shout_init_connection, HAVE_LIBSHOUT=yes, HAVE_LIBSHOUT=no, )
 AC_CHECK_HEADER(shout/shout.h, :, HAVE_LIBSHOUT=no)
 
+dnl Check for mpeg2dec
+AC_MSG_CHECKING(mpeg2dec library)
+AC_CHECK_LIB(mpeg2, mpeg2_init, HAVE_MPEG2DEC=yes, HAVE_MPEG2DEC=no, )
+AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
+
 
 dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
@@ -564,6 +571,7 @@ AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
 AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
+AM_CONDITIONAL(HAVE_CPU_SPARC,      test "x$HAVE_CPU_SPARC" = "xyes")
 AM_CONDITIONAL(HAVE_GDK_PIXBUF,     test "x$USE_GDK_PIXBUF" = "xyes")
 AM_CONDITIONAL(HAVE_LIBGHTTP,       test "x$USE_LIBGHTTP" = "xyes")
 AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
@@ -588,6 +596,7 @@ AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_LIBESD,         test "x$HAVE_LIBESD" = "xyes")
 AM_CONDITIONAL(HAVE_LIBASOUND,      test "x$HAVE_LIBASOUND" = "xyes")
+AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
 
 
 
@@ -738,6 +747,7 @@ plugins/capture/v4l/Makefile
 plugins/cdparanoia/Makefile
 plugins/esd/Makefile
 plugins/esd/esdsink/Makefile
+plugins/xmms/Makefile
 gstplay/Makefile
 dnl components/bonobo-gstmediaplay/Makefile
 test/Makefile

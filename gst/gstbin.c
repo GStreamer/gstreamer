@@ -818,14 +818,14 @@ gst_bin_iterate_func (GstBin *bin)
       while (entries) {
         entry = GST_ELEMENT (entries->data);
 
-	if (entry->threadstate)
+        if (entry->threadstate)
           break;
-	entries = g_list_next (entries);
+        entries = g_list_next (entries);
       }
       // if we couldn't find one, bail out
       if (entries == NULL)
         GST_ERROR(GST_ELEMENT(bin),"no cothreaded elements found!");
-	
+
       GST_FLAG_SET (entry, GST_ELEMENT_COTHREAD_STOPPING);
       GST_DEBUG (0,"set COTHREAD_STOPPING flag on \"%s\"(@%p)\n",
             GST_ELEMENT_NAME (entry),entry);

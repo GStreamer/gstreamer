@@ -6,6 +6,7 @@ main (int argc, char *argv[])
   GstElement *element;
   GstElement *sink1, *sink2;
   GstAutoplug *autoplug;
+  GstAutoplug *autoplug2;
 
   gst_init(&argc,&argv);
 
@@ -13,6 +14,7 @@ main (int argc, char *argv[])
   sink2 = gst_elementfactory_make ("audiosink", "audiosink");
 
   autoplug = gst_autoplugfactory_make ("staticrender");
+  autoplug2 = gst_autoplugfactory_make ("static");
   
   element = gst_autoplug_to_renderers (autoplug, 
 		  g_list_append (NULL, gst_caps_new ("mp3caps", "audio/mp3")), sink2, NULL);
@@ -24,7 +26,7 @@ main (int argc, char *argv[])
     xmlSaveFile ("autoplug3_2.gst", gst_xml_write (element));
   }
 
-  element = gst_autoplug_to_caps (autoplug,
+  element = gst_autoplug_to_caps (autoplug2,
 		  g_list_append (NULL, gst_caps_new_with_props(
 			  "testcaps3",
 			  "video/mpeg",
@@ -38,7 +40,7 @@ main (int argc, char *argv[])
     xmlSaveFile ("autoplug3_3.gst", gst_xml_write (element));
   }
 
-  element = gst_autoplug_to_caps (autoplug,
+  element = gst_autoplug_to_caps (autoplug2,
 		  g_list_append (NULL, gst_caps_new_with_props(
 			  "testcaps5",
 			  "video/mpeg",
@@ -52,7 +54,7 @@ main (int argc, char *argv[])
     xmlSaveFile ("autoplug3_4.gst", gst_xml_write (element));
   }
 
-  element = gst_autoplug_to_caps (autoplug,
+  element = gst_autoplug_to_caps (autoplug2,
 		  g_list_append (NULL, gst_caps_new(
 			  "testcaps7",
 			  "video/avi")),
@@ -63,7 +65,7 @@ main (int argc, char *argv[])
     xmlSaveFile ("autoplug3_5.gst", gst_xml_write (element));
   }
 
-  element = gst_autoplug_to_caps (autoplug,
+  element = gst_autoplug_to_caps (autoplug2,
 		  g_list_append (NULL, gst_caps_new_with_props(
 			  "testcaps10",
 			  "video/mpeg",

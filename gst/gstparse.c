@@ -30,6 +30,7 @@
 #include "gstparse.h"
 #include "gstpipeline.h"
 #include "gstthread.h"
+#include "gstutils.h"
 
 typedef struct _gst_parse_priv gst_parse_priv;
 struct _gst_parse_priv {
@@ -180,7 +181,8 @@ if (GST_IS_GHOST_PAD(srcpad)) GST_DEBUG(0,"it's a ghost pad\n");
       argval = pos+1;
       DEBUG("attempting to set argument '%s' to '%s' on element '%s'\n",
             argname,argval,GST_ELEMENT_NAME(previous));
-      gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
+      //gtk_object_set(GTK_OBJECT(previous),argname,argval,NULL);
+      gst_util_set_object_arg (GTK_OBJECT(previous), argname, argval);
       g_free(argname);
 
     // element or argument, or beginning of bin or thread
@@ -321,8 +323,9 @@ gst_parse_launch(const gchar *cmdline,GstBin *parent)
   gst_parse_priv priv;
   gchar **argvn;
   gint newargc;
-  gint len;
-  int i,j,k;
+  gint i;
+  const gchar *cp, *start, *end;
+  GSList *string_list = NULL, *slist;
 
   priv.bincount = 0;
   priv.threadcount = 0;
@@ -331,46 +334,64 @@ gst_parse_launch(const gchar *cmdline,GstBin *parent)
   priv.verbose = FALSE;
   priv.debug = FALSE;
 
-  // first walk through quickly and see how many more slots we need
-  len = strlen(cmdline);
-  newargc = 1;
-  for (i=0;i<len;i++) {
-    // if it's a space, it denotes a new arg
-    if (cmdline[i] == ' ') newargc++;
-    // if it's a brace and isn't followed by a space, give it an arg
-    if (strchr("([{}])",cmdline[i])) {
-      // not followed by space, gets one
-      if (cmdline[i+1] != ' ') newargc++;
+  end = cmdline + strlen(cmdline);
+  newargc = 0;
+
+  // Extract the arguments to a gslist in reverse order
+  for (cp = cmdline; cp < end; ) {
+    i = strcspn(cp, "([{}]) \"");
+
+    if (i > 0) {
+      // normal argument - copy and add to the list
+      string_list = g_slist_prepend(string_list, g_strndup(cp, i));
+      newargc++;
+      cp += i;
+    }
+
+    // skip spaces
+    while (cp < end && *cp == ' ')
+      cp++;
+
+    // handle quoted arguments
+    if (*cp == '"') {
+      start = ++cp;
+
+      // find matching quote
+      while (cp < end && *cp != '"')
+	cp++;
+
+      // make sure we got it
+      if (cp == end) {
+	g_warning("gst_parse_launch: Unbalanced quote in command line");
+	// FIXME: The list leaks here
+	return 0;
+      }
+
+      // copy the string sans quotes
+      string_list = g_slist_prepend(string_list, g_strndup(start, cp - start));
+      newargc++;
+      cp += 2; // skip the quote aswell
+    }
+
+    // brackets exist in a separate argument slot
+    if (*cp && strchr("([{}])", *cp)) {
+      string_list = g_slist_prepend(string_list, g_strndup(cp, 1));
+      newargc++;
+      cp++;
     }
   }
 
   // now allocate the new argv array
-  argvn = g_new0(char *,newargc+1);
-  GST_DEBUG(0,"supposed to have %d args\n",newargc);
+  argvn = g_new0(char *,newargc);
+  GST_DEBUG(0,"got %d args\n",newargc);
 
-  // now attempt to construct the new arg list
-  j = 0;k = 0;
-  for (i=0;i<len+1;i++) {
-    // if it's a delimiter
-    if (strchr("([{}]) ",cmdline[i]) || (cmdline[i] == '\0')) {
-      // extract the previous arg
-      if (i-k > 0) {
-        if (cmdline[k] == ' ') k++;
-        argvn[j] = g_new0(char,(i-k)+1);
-        memcpy(argvn[j],&cmdline[k],i-k);
+  // reverse the list and put the strings in the new array
+  i = newargc;
 
-        // catch misparses
-        if (strlen(argvn[j]) > 0) j++;
-      }
-      k = i;
+  for (slist = string_list; slist; slist = slist->next)
+    argvn[--i] = slist->data;
 
-      // if this is a bracket, construct a word
-      if ((cmdline[i] != ' ') && (cmdline[i] != '\0')) {
-        argvn[j++] = g_strdup_printf("%c",cmdline[i]);
-        k++;
-      }
-    }
-  }
+  g_slist_free(string_list);
 
   // print them out
   for (i=0;i<newargc;i++) {
@@ -380,5 +401,11 @@ gst_parse_launch(const gchar *cmdline,GstBin *parent)
   // set up the elementcounts hash
   priv.elementcounts = g_hash_table_new(g_str_hash,g_str_equal);
 
-  return gst_parse_launch_cmdline(newargc,argvn,parent,&priv);
+  // do it!
+  i = gst_parse_launch_cmdline(newargc,argvn,parent,&priv);
+
+//  GST_DEBUG(0, "Finished - freeing temporary argument array");
+//  g_strfreev(argvn);
+
+  return i;
 }

@@ -26,6 +26,7 @@
 #include "gstelement.h"
 #include "gstextratypes.h"
 #include "gstbin.h"
+#include "gstutils.h"
 
 
 /* Element signals and args */
@@ -974,78 +975,7 @@ gst_element_load_thyself (xmlNodePtr self, GstObject *parent)
 	}
         child = child->next;
       }
-      if (name && value) {
-        GtkType type = GTK_OBJECT_TYPE (element);
-	GtkArgInfo *info;
-	gchar *result;
-
-	result = gtk_object_arg_get_info (type, name, &info);
-
-	if (result) {
-          g_print("gstelement: %s\n", result);
-	}
-	else if (info->arg_flags & GTK_ARG_WRITABLE) {
-          switch (info->type) {
-            case GTK_TYPE_STRING:
-              gtk_object_set (GTK_OBJECT (element), name, value, NULL);
-	      break;
-            case GTK_TYPE_INT: {
-	      gint i;
-	      sscanf (value, "%d", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_LONG: {
-	      glong i;
-	      sscanf (value, "%ld", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_ULONG: {
-	      gulong i;
-	      sscanf (value, "%lu", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_BOOL: {
-	      gboolean i = FALSE;
-	      if (!strcmp ("true", value)) i = TRUE;
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_CHAR: {
-	      gchar i;
-	      sscanf (value, "%c", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_UCHAR: {
-	      guchar i;
-	      sscanf (value, "%c", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_FLOAT: {
-	      gfloat i;
-	      sscanf (value, "%f", &i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            case GTK_TYPE_DOUBLE: {
-	      gdouble i;
-	      sscanf (value, "%g", (float *)&i);
-              gtk_object_set (GTK_OBJECT (element), name, i, NULL);
-	      break;
-	    }
-            default:
-	      if (info->type == GST_TYPE_FILENAME) {
-                gtk_object_set (GTK_OBJECT (element), name, value, NULL);
-	      }
-	      break;
-	  }
-
-	}
-      }
+      gst_util_set_object_arg (GTK_OBJECT (element), name, value);
     }
     children = children->next;
   }
