@@ -31,7 +31,7 @@
 
 /* unify the structs 
  *
- * "cothread" and "cothread_context" need to vbe defined
+ * "cothread" and "cothread_context" need to be defined
  */
 typedef cothread_state cothread;
 
@@ -44,15 +44,15 @@ typedef cothread_state cothread;
 
 #define do_cothread_switch(to)			cothread_switch(to)
 
-#define do_cothread_create(new_thread, context, func, argc, argv)               \
-  G_STMT_START{                                                                 \
-    new_thread = cothread_create (context);                                     \
-    if (new_thread) {                                                           \
-      cothread_setfunc (new_thread, (func), (argc), (argv));                    \
-    }                                                                           \
+#define do_cothread_create(new_cothread, context, func, argc, argv)	\
+  G_STMT_START{                                                         \
+    new_cothread = cothread_create (context);                           \
+    if (new_cothread) {                                                 \
+      cothread_setfunc (new_cothread, (func), (argc), (argv));          \
+    }                                                                   \
   }G_STMT_END
 
-#define do_cothread_setfunc(cothread, context, func, argc, argv)                \
+#define do_cothread_setfunc(cothread, context, func, argc, argv)        \
   cothread_setfunc ((cothread), (func), (argc), (argv))
   
 #define do_cothread_destroy(cothread)		cothread_free(cothread)
@@ -88,40 +88,41 @@ typedef cothread cothread_context;
 /* define functions
  * the macros are prepended with "do_" 
  */
-#define do_cothreads_init(x) G_STMT_START{                                      \
-    if (!cothreads_initialized())                                               \
-      cothreads_init(0x0200000, 16);                                            \
+#define do_cothreads_init(x) G_STMT_START{	\
+    if (!cothreads_initialized())               \
+      cothreads_init(0x0200000, 16);            \
   }G_STMT_END
 
-#define do_cothreads_stackquery(stack,size)                                     \
+#define do_cothreads_stackquery(stack,size)     \
   cothreads_alloc_thread_stack (stack, size)
 
-#define do_cothread_switch(to)	G_STMT_START{                                   \
-  cothread *from = cothread_self ();                                            \
-  if (from == (to)) {                                                           \
-    GST_DEBUG (GST_CAT_COTHREAD_SWITCH,                                         \
-               "trying to switch to the same cothread (%p), not allowed",       \
-               (to));                                                           \
-    g_warning ("trying to switch to the same cothread, not allowed");           \
-  } else {                                                                      \
-    GST_INFO (GST_CAT_COTHREAD_SWITCH,                                          \
-              "switching from cothread %p to cothread %p", from, (to));         \
-    cothread_switch (from, (to));                                               \
-    GST_INFO (GST_CAT_COTHREAD_SWITCH, "we're in cothread %p now", from);       \
-  }                                                                             \
+#define do_cothread_switch(to)	G_STMT_START{   			  \
+  cothread *from = cothread_self ();            			  \
+  if (from == (to)) {                           			  \
+    GST_DEBUG (GST_CAT_COTHREAD_SWITCH,         			  \
+               "trying to switch to the same cothread (%p), not allowed", \
+               (to));                                                     \
+    g_warning ("trying to switch to the same cothread, not allowed");     \
+  } else {                                                                \
+    GST_INFO (GST_CAT_COTHREAD_SWITCH,                                    \
+              "switching from cothread %p to cothread %p", from, (to));   \
+    cothread_switch (from, (to));                                         \
+    GST_INFO (GST_CAT_COTHREAD_SWITCH, "we're in cothread %p now", from); \
+  }                                                                       \
 }G_STMT_END
 
-#define do_cothread_create(new_thread, context, func, argc, argv)               \
-  G_STMT_START{                                                                 \
-    new_thread = cothread_create ((func), 0, (void**) (argv), (context));       \
+#define do_cothread_create(new_cothread, context, func, argc, argv)         \
+  G_STMT_START{                                                             \
+    new_cothread = cothread_create ((func), 0, (void**) (argv), (context)); \
   }G_STMT_END
   
-#define do_cothread_setfunc(cothread, context, func, argc, argv)                \
+#define do_cothread_setfunc(cothread, context, func, argc, argv)            \
   cothread_setfunc ((cothread), (func), (argc), (void **) (argv), (context))
 
 #define do_cothread_destroy(cothread)		cothread_destroy(cothread)
   
-#define do_cothread_context_init()		(cothread_create (NULL, 0, NULL, NULL))
+#define do_cothread_context_init()		(cothread_create (NULL, 0,   \
+                                                                  NULL, NULL))
 #define do_cothread_context_destroy(context)	cothread_destroy (context)
   
 #define do_cothread_lock(cothread)		/* FIXME */
