@@ -1,3 +1,9 @@
+2004-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_get):
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_get):
+          return EOS instead of NULL in _get
+
 2004-06-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gsttcp.c: (gst_tcp_gdp_read_header),
