@@ -250,12 +250,13 @@ gst_buffer_new_from_pool (GstBufferPool *pool,
   
   g_return_val_if_fail (pool != NULL, NULL);
 
+  gst_data_ref (GST_DATA (pool));
+
   buffer = pool->buffer_new (pool, offset, size, pool->user_data);
   if (!buffer)
     return NULL;
 
   GST_BUFFER_BUFFERPOOL (buffer) = pool;
-  gst_data_ref (GST_DATA (pool));
 
   /* override the buffer refcount functions with those from the pool (if any) */
   if (pool->buffer_free)
