@@ -200,7 +200,10 @@ AC_SUBST(X_EXTRA_LIBS)
 AC_SUBST(X_LIBS)
 
 xvsave_LIBS=${LIBS}
-AC_CHECK_LIB(Xv, XvQueryExtension, HAVE_LIBXV=yes, HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
+AC_CHECK_LIB(Xv, XvQueryExtension, 
+HAVE_LIBXV=yes 
+AC_DEFINE(HAVE_LIBXV),
+HAVE_LIBXV=no, $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
 LIBS=${xvsave_LIBS}
 
 dnl Check for xaudio
@@ -236,8 +239,10 @@ fi
 
 dnl check for libvorbis
 AC_MSG_CHECKING(Vorbis library)
-AC_MSG_RESULT(... check not implemented !! FIXME)
-HAVE_VORBIS="no"
+AC_CHECK_LIB(vorbis, ogg_sync_init, 
+HAVE_VORBIS=yes 
+AC_DEFINE(HAVE_VORBIS),
+HAVE_VORBIS=no, )
 
 dnl check for gtkdoc
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)

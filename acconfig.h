@@ -8,6 +8,7 @@
 #undef HAVE_GDK_PIXBUF
 #undef HAVE_LIBGHTTP
 #undef HAVE_LIBMMX
+#undef HAVE_LIBXV
 #undef HAVE_XAUDIO
 #undef HAVE_CSSAUTH
 #undef HAVE_VORBIS

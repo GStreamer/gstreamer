@@ -441,7 +441,7 @@ static int gst_bin_loopfunc_wrapper(int argc,char *argv[]) {
     DEBUG("** gst_bin_loopfunc_wrapper(): element is chain-based, calling in infinite loop\n");
     if (GST_IS_SRC(element)) {
       //while (1) {
-      while (GST_STATE(element) != GST_STATE_NULL) {
+      while (GST_STATE(element) == GST_STATE_PLAYING) {
         DEBUG("** gst_bin_loopfunc_wrapper(): calling push function of source\n");
         gst_src_push(GST_SRC(element));
       }
