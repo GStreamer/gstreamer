@@ -1,3 +1,18 @@
+2004-03-09  Johan Dahlin  <johan@gnome.org>
+
+	Reviewed by: Thomas Vander Stichele
+
+	* gst/gstelement.c (gst_element_class_init): register second
+	parameter as GST_TYPE_G_ERROR instead of G_TYPE_POINTER, so
+	language bindings can (de)marshall correctly.
+
+	* gst/gsterror.h: Add GST_TYPE_G_ERROR and cleanup a little bit
+
+	* gst/gsterror.c (gst_g_error_get_type): New function
+
+	* gst/gstmarshal.list: Remove VOID:OBJECT,POINTER,STRING, replace
+	with VOID:OBJECT,OBJECT,STRING 
+
 2004-03-10  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/registries/gstxmlregistry.c: (gst_xml_registry_load):

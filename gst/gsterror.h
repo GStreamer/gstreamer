@@ -53,9 +53,6 @@ typedef enum {
 }
 GstCoreError;
 
-#define GST_CORE_ERROR gst_core_error_quark ()
-GQuark gst_core_error_quark (void);
-
 /* Library errors are for errors from the library being used by elements
    initializing, closing, ... */
 typedef enum {
@@ -68,10 +65,6 @@ typedef enum {
   GST_LIBRARY_ERROR_NUM_ERRORS
 }
 GstLibraryError;
-
-#define GST_LIBRARY_ERROR gst_library_error_quark ()
-GQuark gst_library_error_quark (void);
-
 
 /* Resource errors are for anything external used by an element:
    memory, files, network connections, process space, ...
@@ -94,9 +87,6 @@ typedef enum {
 }
 GstResourceError;
 
-#define GST_RESOURCE_ERROR gst_resource_error_quark ()
-GQuark gst_resource_error_quark (void);
-
 /* Stream errors are for anything related to the stream being processed:
    format errors, media type errors, ...
    They're typically used by decoders, demuxers, converters, ... */
@@ -116,12 +106,22 @@ typedef enum {
 }
 GstStreamError;
 
-#define GST_STREAM_ERROR gst_stream_error_quark ()
-GQuark gst_stream_error_quark (void);
+/* This should go away once we convinced glib people to register GError */
+#define GST_TYPE_G_ERROR    (gst_g_error_get_type ())
 
+#define GST_LIBRARY_ERROR   gst_library_error_quark ()
+#define GST_RESOURCE_ERROR  gst_resource_error_quark ()
+#define GST_CORE_ERROR      gst_core_error_quark ()
+#define GST_STREAM_ERROR    gst_stream_error_quark ()
 
-#define GST_ERROR_SYSTEM ("system error: %s", g_strerror (errno))
-gchar * gst_error_get_message (GQuark domain, gint code);
+#define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))
+
+GType   gst_g_error_get_type     (void);
+gchar * gst_error_get_message    (GQuark domain, gint code);
+GQuark  gst_stream_error_quark   (void);
+GQuark  gst_core_error_quark     (void);
+GQuark  gst_resource_error_quark (void);
+GQuark  gst_library_error_quark  (void);
 
 G_END_DECLS
 

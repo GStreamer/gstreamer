@@ -132,8 +132,8 @@ gst_element_class_init (GstElementClass *klass)
   gst_element_signals[ERROR] =
     g_signal_new ("error", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstElementClass, error), NULL, NULL,
-                  gst_marshal_VOID__OBJECT_POINTER_STRING, G_TYPE_NONE, 3,
-                  GST_TYPE_ELEMENT, G_TYPE_POINTER,
+                  gst_marshal_VOID__OBJECT_OBJECT_STRING, G_TYPE_NONE, 3,
+                  GST_TYPE_ELEMENT, GST_TYPE_G_ERROR,
                   G_TYPE_STRING);
    gst_element_signals[EOS] =
     g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
