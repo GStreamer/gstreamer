@@ -32,8 +32,17 @@ static gboolean _gmi_debug = TRUE;
 static gboolean _gmi_debug = FALSE;
 #endif
 
+#ifdef G_HAVE_ISO_VARARGS
+
+#define GMI_DEBUG(...) \
+  { if (_gmi_debug) { g_print ( __VA_ARGS__ ); }}
+
+#elif defined(G_HAVE_GNUC_VARARGS)
+
 #define GMI_DEBUG(format, args...) \
   { if (_gmi_debug) { g_print ( format , ## args ); }}
+
+#endif
 
 
 /* state machine enum; FIXME: can we move this to priv.c ? */
