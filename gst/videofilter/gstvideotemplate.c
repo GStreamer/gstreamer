@@ -19,8 +19,10 @@
  */
 
 /*
- * This file was (probably) generated from gstvideotemplate.c,
+ * This file was (probably) generated from
  * $Id$
+ * and
+ * MAKEFILTERVERSION
  */
 
 #ifdef HAVE_CONFIG_H

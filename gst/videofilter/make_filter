@@ -1,33 +1,32 @@
-#!/usr/bin/perl
-#
+#!/bin/sh
 
-if(scalar(@ARGV) < 1){
-	print "$0 Objectname\n";
-	print "  creates gstobjectname.{c,h} implementing GstObjectname,\n";
-	print "  subclassing GstVideofilter.\n";
-	exit(0);
-}
+Template=$1;
+srcfile=$2;
 
-$Template = $ARGV[0];
-($TEMPLATE = $Template) =~ tr/a-z/A-Z/;
-($template = $Template) =~ tr/A-Z/a-z/;
+if test x"$1" = x ; then
+	echo "$0 Objectname [srcfile]\n";
+	echo "  creates gstobjectname.{c,h} implementing GstObjectname,\n";
+	echo "  subclassing GstVideofilter.\n";
+	exit 1;
+fi
 
-open IN, "gstvideotemplate.c";
-open OUT, ">gst$template.c";
+if test x"$2" = x ; then
+	srcfile="gstvideotemplate.c"
+fi
 
-@lines = <IN>;
-map { 
-	s/gstvideotemplate\.c/SOURCEFILE/g;
-	s/Videotemplate/$Template/g;
-	s/videotemplate/$template/g;
-	s/VIDEOTEMPLATE/$TEMPLATE/g;
-	# remember to break up the Id: in the line below
-	s/\$I[d]: (.*)\$/$1/g;
-	s/SOURCEFILE/gstvideotemplate\.c/g;
-} @lines;
+id=$(echo '$Id$I[d]: \(.*\)\$/\1/g" )
 
-print OUT @lines;
+TEMPLATE=$(echo $Template | tr a-z A-Z)
+template=$(echo $Template | tr A-Z a-z)
 
-close IN;
-close OUT;
+# remember to break up the Id: in the line below
+sed \
+	-e "s/gstvideotemplate\.c/SOURCEFILE/g" \
+	-e "s/Videotemplate/$Template/g" \
+	-e "s/videotemplate/$template/g" \
+	-e "s/VIDEOTEMPLATE/$TEMPLATE/g" \
+	-e "s/\$I[d]: \(.*\)\$/\1/g" \
+	-e "s/SOURCEFILE/gstvideotemplate\.c/g" \
+	-e "s/MAKEFILTERVERSION/$id/g" \
+	$srcfile >gst$template.c
 
