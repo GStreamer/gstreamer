@@ -119,7 +119,7 @@ static void	gst_ffmpegenc_get_property	(GObject *object, guint prop_id, GValue *
 
 static GstElementClass *parent_class = NULL;
 
-//static guint gst_ffmpegenc_signals[LAST_SIGNAL] = { 0 };
+/*static guint gst_ffmpegenc_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
 gst_ffmpegenc_class_init (GstFFMpegEncClass *klass)
@@ -309,7 +309,7 @@ gst_ffmpegenc_chain_audio (GstPad *pad, GstBuffer *inbuf)
     data += frame_size;
   }
     
-  // save leftover
+  /* save leftover */
   if (size) {
      memcpy (ffmpegenc->buffer + ffmpegenc->buffer_pos, data, size);
      ffmpegenc->buffer_pos += size;
@@ -507,19 +507,19 @@ gst_ffmpegenc_register (GstPlugin *plugin)
     else {
       goto next;
     }
-    // construct the type
+    /* construct the type */
     type_name = g_strdup_printf("ffmpeg%s_%s", codec_type, in_plugin->name);
 
-    // if it's already registered, drop it
+    /* if it's already registered, drop it */
     if (g_type_from_name(type_name)) {
       g_free(type_name);
       goto next;
     }
 
-    // create the gtk type now
+    /* create the gtk type now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name , &typeinfo, 0);
 
-    // construct the element details struct
+    /* construct the element details struct */
     details = g_new0 (GstElementDetails,1);
     details->longname = g_strdup (in_plugin->name);
     details->klass = "Codec/FFMpeg";
@@ -532,7 +532,7 @@ gst_ffmpegenc_register (GstPlugin *plugin)
 		         GINT_TO_POINTER (type), 
 			 (gpointer) in_plugin);
 
-    // register the plugin with gstreamer
+    /* register the plugin with gstreamer */
     factory = gst_elementfactory_new(type_name,type,details);
     g_return_val_if_fail(factory != NULL, FALSE);
 
