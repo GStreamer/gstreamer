@@ -59,32 +59,11 @@ applications and plugins for GStreamer.
 %{_libdir}/libgst.so
 %{_libdir}/pkgconfig/*
 
-%package gnome-apps
-Summary: GNOME Applications for use with GStreamer
-Group: Applications/Multimedia
-Requires: %{name} = %{version}
-
-%description gnome-apps
-This package contains gstmediaplay and gsteditor. gstmediaplay is a GNOME
-frontend for GStreamer which gives you a mediaplayer supporting all the formats
-of GStreamer. gsteditor is development tool for graphically creating
-applications based on GStreamer.
-
-%files gnome-apps
-%defattr(-, root, root)
-%doc AUTHORS COPYING
-%{_bindir}/gsteditor
-# %{_bindir}/gstmediaplay
-%{_bindir}/gstreamer-guilaunch
-# %{_libdir}/libgstmediaplay.so.*
-%{_libdir}/libgsteditor.so.*
-%{_datadir}/gsteditor
-%{_datadir}/gstmediaplay
-%{_mandir}/man1/gsteditor.*
-%{_mandir}/man1/gstmediaplay.*
-%{_mandir}/man1/gstreamer-guilaunch.*
-
 %changelog
+* Thu Jan 03 2002 Thomas Vander Stichele <thomas@apestaart.org>
+- split off gstreamer-editor from core
+- removed gstreamer-gnome-apps
+
 * Sat Dec 29 2001 Rodney Dawes <dobey@free.fr>
 - Cleaned up the spec file for the gstreamer core/plug-ins split
 - Improve spec file
