@@ -679,6 +679,9 @@ gst_xml_registry_parse_element_factory (GMarkupParseContext *context, const gcha
   else if (!strcmp(tag, "description")) {
     factory->details->description = g_strndup (text, text_len);
   }
+  else if (!strcmp(tag, "license")) {
+    factory->details->license = g_strndup (text, text_len);
+  }
   else if (!strcmp(tag, "version")) {
     factory->details->version = g_strndup (text, text_len);
   }
@@ -1443,6 +1446,7 @@ gst_xml_registry_save_feature (GstXMLRegistry *xmlregistry, GstPluginFeature *fe
     PUT_ESCAPED ("longname", factory->details->longname);
     PUT_ESCAPED ("class", factory->details->klass);
     PUT_ESCAPED ("description", factory->details->description);
+    PUT_ESCAPED ("license", factory->details->license);
     PUT_ESCAPED ("version", factory->details->version);
     PUT_ESCAPED ("author", factory->details->author);
     PUT_ESCAPED ("copyright", factory->details->copyright);
