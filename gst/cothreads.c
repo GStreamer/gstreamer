@@ -58,7 +58,7 @@ struct _cothread_context
   int current;
   unsigned long stack_top;
   GHashTable *data;
-  int pid;
+  GThread *thread;
 };
 
 /* Disabling this define allows you to shut off a few checks in
@@ -85,7 +85,7 @@ cothread_get_current_context (void)
   g_assert(ctx);
 
 #ifdef COTHREAD_PARANOID
-  g_assert (ctx->pid == getpid());
+  g_assert (ctx->thread == g_thread_self());
 #endif
 
   return ctx;
@@ -122,7 +122,7 @@ cothread_context_init (void)
   ctx->ncothreads = 1;
   ctx->current = 0;
   ctx->data = g_hash_table_new (g_str_hash, g_str_equal);
-  ctx->pid = getpid();
+  ctx->thread = g_thread_self();
 
   GST_INFO (GST_CAT_COTHREADS, "initializing cothreads");
 
@@ -187,6 +187,7 @@ cothread_context_free (cothread_context *ctx)
   gint i;
 
   g_return_if_fail (ctx != NULL);
+  g_assert (ctx->thread == g_thread_self());
 
   GST_INFO (GST_CAT_COTHREADS, "free cothread context");
 
@@ -218,6 +219,7 @@ cothread_create (cothread_context *ctx)
   unsigned long page_size;
 
   g_return_val_if_fail (ctx != NULL, NULL);
+  g_assert (ctx->thread == g_thread_self());
 
   if (ctx->ncothreads == COTHREAD_MAXTHREADS) {
     /* this is pretty fatal */
@@ -334,6 +336,7 @@ cothread_destroy (cothread_state *cothread)
 
   cothreadnum = cothread->cothreadnum;
   ctx = cothread->ctx;
+  g_assert (ctx->thread == g_thread_self());
 
   GST_INFO (GST_CAT_COTHREADS, "destroy cothread %d %p %d", 
             cothreadnum, cothread, ctx->current);
@@ -643,7 +646,6 @@ void
 cothread_switch (cothread_state * thread)
 {
   cothread_context *ctx;
-  cothread_context *current_ctx;
   cothread_state *current;
   int enter;
 
@@ -654,8 +656,7 @@ cothread_switch (cothread_state * thread)
   ctx = thread->ctx;
 
   /* paranoia check to make sure we're in the right thread */
-  current_ctx = cothread_get_current_context();
-  g_assert (ctx == current_ctx);
+  g_assert (ctx->thread == g_thread_self());
 
 #ifdef COTHREAD_PARANOID
   if (ctx == NULL)
