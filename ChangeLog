@@ -1,3 +1,19 @@
+2004-06-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
+	(gst_qtdemux_handle_src_query), (gst_qtdemux_handle_src_event),
+	(gst_qtdemux_handle_sink_event), (gst_qtdemux_change_state),
+	(gst_qtdemux_loop_header), (qtdemux_dump_mvhd),
+	(qtdemux_parse_trak):
+	* gst/qtdemux/qtdemux.h:
+	  Bitch. Also known as seeking, querying & co.
+	* sys/oss/gstosssink.c: (gst_osssink_init), (gst_osssink_chain),
+	(gst_osssink_change_state):
+	* sys/oss/gstosssink.h:
+	  Resyncing is for weenies, this hack is no longer needed and was
+	  broken anyway (since it - unintendedly - always leaves resync to
+	  TRUE).
+
 2004-06-05  Andrew Turner <zxombie@hotpop.com>
 
 	* gst/tcp/gsttcp.c: portability (Solaris 10/FreeBSD)
