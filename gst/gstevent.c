@@ -131,7 +131,7 @@ gst_event_new (GstEventType type)
 
   event = g_new0(GstEvent, 1);
   _gst_event_live++;
-  GST_INFO (GST_CAT_EVENT, "creating new event %p", event);
+  GST_INFO (GST_CAT_EVENT, "creating new event %p %d", event, type);
 
   _GST_DATA_INIT (GST_DATA (event),
 		  _gst_event_type,
