@@ -641,21 +641,22 @@ Other known (and unused) 'text/unicode' metadata available :
  WM/Provider = AMG
  WM/ProviderRating = 8
  WM/ProviderStyle = Rock
+ WM/GenreID
 
 Other known (and unused) 'non-text' metadata available :
 
-WM/Track
-IsVBR
-WM/TrackNumber
+WM/Track (same as WM/TrackNumber but starts at 0)
 WM/EncodingTime
 WM/MCDI
+IsVBR
 
 */
 
-  const guchar *tags[4] =
-      { GST_TAG_GENRE, GST_TAG_ALBUM, GST_TAG_ARTIST, NULL };
-  const guchar *tags_label[4] =
-      { "WM/Genre", "WM/AlbumTitle", "WM/AlbumArtist", NULL };
+  const guchar *tags[5] =
+      { GST_TAG_GENRE, GST_TAG_ALBUM, GST_TAG_ARTIST, GST_TAG_TRACK_NUMBER,
+        NULL };
+  const guchar *tags_label[5] =
+      { "WM/Genre", "WM/AlbumTitle", "WM/AlbumArtist", "WM/TrackNumber", NULL };
 
   GstTagList *taglist;
   GValue tag_value = { 0 };
@@ -664,7 +665,6 @@ WM/MCDI
   GST_INFO ("Object is an extended content description.");
 
   taglist = gst_tag_list_new ();
-  g_value_init (&tag_value, G_TYPE_STRING);
 
   /* Content Descriptors Count */
   if (!_read_uint16 (asf_demux, &blockcount))
@@ -704,10 +704,10 @@ WM/MCDI
     value = g_memdup (tmpvalue, value_length);
     gst_bytestream_flush_fast (bs, value_length);
 
-    /* 0000 = Unicode String */
-    if (datatype == 0) {
+    /* 0000 = Unicode String   OR   0003 = DWORD */
+    if ((datatype == 0) || (datatype == 3)) {
       gsize in, out;
-      guchar tag = 255;
+      guchar tag;
       guint16 j = 0;
 
       /* convert to UTF-8 */
@@ -716,31 +716,40 @@ WM/MCDI
       name[out] = 0;
 
       while (tags_label[j] != NULL) {
-        if (!strncmp (name, tags_label[j], strlen (tags_label[j]))) {
+        if (!strcmp (name, tags_label[j])) {
           tag = j;
+          have_tags = TRUE;
+
+          /* 0000 = UTF-16 String */
+          if (datatype == 0) {
+            /* convert to UTF-8 */
+            value =
+                g_convert (value, value_length, "UTF-8", "UTF-16LE", &in, &out,
+                NULL);
+            value[out] = 0;
+
+            g_value_init (&tag_value, G_TYPE_STRING);
+            g_value_set_string (&tag_value, value);
+          }
+
+          /* 0003 = DWORD */
+          if (datatype == 3) {
+            g_value_init (&tag_value, G_TYPE_INT);
+            g_value_set_int (&tag_value, GUINT32_FROM_LE ((guint32) * value));
+          }
+
+          gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND, tags[tag],
+              &tag_value, NULL);
+
+          g_value_unset (&tag_value);
         };
         j++;
-      }
-
-      if (tag != 255) {
-        /* convert to UTF-8 */
-        value =
-            g_convert (value, value_length, "UTF-8", "UTF-16LE", &in, &out,
-            NULL);
-        value[out] = 0;
-
-        have_tags = TRUE;
-        g_value_set_string (&tag_value, value);
-        gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND, tags[tag],
-            &tag_value, NULL);
       }
     }
 
     g_free (name);
     g_free (value);
   }
-
-  g_value_unset (&tag_value);
 
   if (have_tags) {
     GstElement *element = GST_ELEMENT (asf_demux);
