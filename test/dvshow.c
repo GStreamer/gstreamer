@@ -66,6 +66,7 @@ main (int argc,char *argv[])
   draw = gst_util_get_int_arg (GTK_OBJECT (videosink), "xid"),
 
   gtk_socket = gtk_socket_new ();
+  gtk_widget_set_usize(gtk_socket,720,480);
   gtk_widget_show (gtk_socket);
 
   gnome_app_set_contents(GNOME_APP(appwindow), vbox1);
