@@ -26,13 +26,6 @@
 #include <gst/gst.h>
 #include "gstspideridentity.h"
 
-typedef enum {
-	GST_SPIDER_ANY = 0,
-	GST_SPIDER_ENCODE = 1,
-	GST_SPIDER_DECODE = 2,
-	GST_SPIDER_PLUGTYPES
-} GstSpiderPlugtype;
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -54,9 +47,9 @@ typedef struct _GstSpider GstSpider;
 typedef struct _GstSpiderClass GstSpiderClass;
 
 struct _GstSpider {
-  GstBin                parent;
+  GstBin        parent;
 	
-  GstSpiderPlugtype     plugtype; /* direction to plug */		
+  GList *     	factories; /* factories to use for plugging */		
 };
 	
 struct _GstSpiderClass {

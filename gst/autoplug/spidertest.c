@@ -1,6 +1,36 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 
+/* returns all factories which have a maximum of maxtemplates GstPadTemplates in direction dir
+ */
+GList *
+gst_factories_at_most_templates(GList *factories, GstPadDirection dir, guint maxtemplates)
+{
+  GList *ret = NULL;
+  
+  while (factories)
+  {
+    guint count = 0;
+    GList *templs = ((GstElementFactory *) factories->data)->padtemplates;
+
+    while (templs)
+    {
+      if (GST_PADTEMPLATE_DIRECTION (templs->data) == dir)
+      {
+        count++;
+      }
+      if (count > maxtemplates)
+        break;
+      templs = g_list_next (templs);
+    }
+    if (count <= maxtemplates)
+      ret = g_list_prepend (ret, factories->data);
+    
+    factories = g_list_next (factories);
+  }
+  return ret;
+}
+
 /* 1:1 copy of gstpropsprivate.h, needed for INFO events */
 
 #define GST_PROPS_ENTRY_IS_VARIABLE(a)  (((GstPropsEntry*)(a))->propstype > GST_PROPS_VAR_ID)
@@ -87,8 +117,9 @@ event_func (GstElement *element, GstEvent *event)
 int main(int argc,char *argv[]) 
 {
   GstElement *bin, *filesrc, *decoder, *osssink, *videosink;
+  GList *facs;
   
-  if (argc != 2) {
+  if (argc < 2) {
     g_print("usage: %s <file>\n", argv[0]);
     exit(-1);
   }
@@ -111,7 +142,9 @@ int main(int argc,char *argv[])
   }
   
   /* only use decoding plugins */
-  g_object_set(G_OBJECT(decoder),"plugtype", 2, NULL);
+  g_object_get (decoder, "factories", &facs, NULL);
+  facs = gst_factories_at_most_templates(facs, GST_PAD_SINK, 1);
+  g_object_set (decoder, "factories", facs, NULL);
 
   /* create video and audio sink */
   osssink = gst_elementfactory_make("osssink", "audio");

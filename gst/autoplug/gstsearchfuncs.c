@@ -24,18 +24,19 @@
 #include "gstsearchfuncs.h"
 
 /* function that really misses in GLib
+ * though the GLib version should take a function as argument...
  */
 void
 g_list_free_list_and_elements (GList *list)
 {
-	GList *walk = list;
-	
-	while (walk)
-	{
-		g_free (walk->data);
-		walk = g_list_next (walk);
-	}
-	g_list_free (list);
+  GList *walk = list;
+  
+  while (walk)
+  {
+    g_free (walk->data);
+    walk = g_list_next (walk);
+  }
+  g_list_free (list);
 }
 
 /**
@@ -50,20 +51,20 @@ g_list_free_list_and_elements (GList *list)
 GstPadTemplate *
 gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
 {
-	GList *templs;
-	
-	templs = fac->padtemplates;
-	
-	while (templs)
-	{
-		if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_caps_check_compatibility(src, GST_PADTEMPLATE_CAPS (templs->data)))
-		{
-			return GST_PADTEMPLATE (templs->data);
-		}
+  GList *templs;
+  
+  templs = fac->padtemplates;
+  
+  while (templs)
+  {
+    if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && gst_caps_check_compatibility(src, GST_PADTEMPLATE_CAPS (templs->data)))
+    {
+      return GST_PADTEMPLATE (templs->data);
+    }
     templs = g_list_next (templs);
-	}
-	
-	return NULL;	
+  }
+  
+  return NULL;  
 }
 /**
  * gst_autoplug_can_connect_sink:
@@ -77,20 +78,20 @@ gst_autoplug_can_connect_src (GstElementFactory *fac, GstCaps *src)
 GstPadTemplate *
 gst_autoplug_can_connect_sink (GstElementFactory *fac, GstCaps *sink)
 {
-	GList *templs;
-	
-	templs = fac->padtemplates;
-	
-	while (templs)
-	{
-		if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (templs->data), sink))
-		{
-			return GST_PADTEMPLATE (templs->data);
-		}
+  GList *templs;
+  
+  templs = fac->padtemplates;
+  
+  while (templs)
+  {
+    if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC) && gst_caps_check_compatibility(GST_PADTEMPLATE_CAPS (templs->data), sink))
+    {
+      return GST_PADTEMPLATE (templs->data);
+    }
     templs = g_list_next (templs);
-	}
-	
-	return NULL;	
+  }
+  
+  return NULL;  
 }
 GstPadTemplate *
 gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
@@ -113,9 +114,9 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
               gst_padtemplate_get_caps (desttemp))) {
             GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
                        "factory \"%s\" can connect with factory \"%s\"\n", 
-								       GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
+                       GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
             return desttemp;
-	       }
+         }
       }
 
       desttemps = g_list_next (desttemps);
@@ -123,8 +124,8 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
     srctemps = g_list_next (srctemps);
   }
   GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
-		         "factory \"%s\" cannot connect with factory \"%s\"\n", 
-	           GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
+             "factory \"%s\" cannot connect with factory \"%s\"\n", 
+             GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
   return NULL;
 }
 
@@ -132,18 +133,18 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 gboolean
 gst_autoplug_factory_has_direction (GstElementFactory *fac, GstPadDirection dir)
 {
-	GList *templs = fac->padtemplates;
-	
-	while (templs)
-	{
-		if (GST_PADTEMPLATE_DIRECTION (templs->data) == dir)
-		{
-			return TRUE;
-		}
-		templs = g_list_next (templs);
-	}
-	
-	return FALSE;
+  GList *templs = fac->padtemplates;
+  
+  while (templs)
+  {
+    if (GST_PADTEMPLATE_DIRECTION (templs->data) == dir)
+    {
+      return TRUE;
+    }
+    templs = g_list_next (templs);
+  }
+  
+  return FALSE;
 }
 
 /* Decisions are based on the padtemplates. 
@@ -152,42 +153,42 @@ gst_autoplug_factory_has_direction (GstElementFactory *fac, GstPadDirection dir)
 GList *
 gst_autoplug_factories_sinks (GList *factories)
 {
-	GList *ret = NULL;
-	
-	while (factories)
-	{
-		if (gst_autoplug_factory_has_sink (factories->data))
-			ret = g_list_prepend (ret, factories->data);
-		factories = g_list_next (factories);
+  GList *ret = NULL;
+  
+  while (factories)
+  {
+    if (gst_autoplug_factory_has_sink (factories->data))
+      ret = g_list_prepend (ret, factories->data);
+    factories = g_list_next (factories);
   }
-	return ret;	
+  return ret;  
 }
 GList *
 gst_autoplug_factories_srcs (GList *factories)
 {
-	GList *ret = NULL;
-	
-	while (factories)
-	{
-		if (gst_autoplug_factory_has_src (factories->data))
-			ret = g_list_prepend (ret, factories->data);
-		factories = g_list_next (factories);
+  GList *ret = NULL;
+  
+  while (factories)
+  {
+    if (gst_autoplug_factory_has_src (factories->data))
+      ret = g_list_prepend (ret, factories->data);
+    factories = g_list_next (factories);
   }
-	return ret;	
+  return ret;  
 }
-GList *	
+GList *  
 gst_autoplug_factories_filters (GList *factories)
 {
-	GList *ret = NULL;
-	
-	while (factories)
-	{
-		/* if you want it faster do src/sink check at once, don't call two functions */
-		if (gst_autoplug_factory_has_src (factories->data) && gst_autoplug_factory_has_sink (factories->data))
-			ret = g_list_prepend (ret, factories->data);
-		factories = g_list_next (factories);
+  GList *ret = NULL;
+  
+  while (factories)
+  {
+    /* if you want it faster do src/sink check at once, don't call two functions */
+    if (gst_autoplug_factory_has_src (factories->data) && gst_autoplug_factory_has_sink (factories->data))
+      ret = g_list_prepend (ret, factories->data);
+    factories = g_list_next (factories);
   }
-	return ret;	
+  return ret;  
 }
 
 
@@ -197,33 +198,33 @@ gst_autoplug_factories_filters (GList *factories)
 GList *
 gst_autoplug_factories_filters_with_sink_caps (GList *factories)
 {
-	GList *ret = NULL;
-	
-	while (factories)
-	{
-		GList *templs = ((GstElementFactory *) factories->data)->padtemplates;
-		gboolean have_src = FALSE;
-		gboolean have_sink = FALSE;
-		while (templs)
-		{
-			if (GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC)
-			{
-				have_src = TRUE;
-			}	
-			if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && (GST_PADTEMPLATE_CAPS (templs->data) != NULL))
-			{
-				have_sink = TRUE;
-			}
-			if (have_src && have_sink)
-			{
-				ret = g_list_prepend (ret, factories->data);
-				break;
-			}
-			templs = g_list_next (templs);
-		}
-		factories = g_list_next (factories);
-	}
-	return ret;
+  GList *ret = NULL;
+  
+  while (factories)
+  {
+    GList *templs = ((GstElementFactory *) factories->data)->padtemplates;
+    gboolean have_src = FALSE;
+    gboolean have_sink = FALSE;
+    while (templs)
+    {
+      if (GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SRC)
+      {
+        have_src = TRUE;
+      }  
+      if ((GST_PADTEMPLATE_DIRECTION (templs->data) == GST_PAD_SINK) && (GST_PADTEMPLATE_CAPS (templs->data) != NULL))
+      {
+        have_sink = TRUE;
+      }
+      if (have_src && have_sink)
+      {
+        ret = g_list_prepend (ret, factories->data);
+        break;
+      }
+      templs = g_list_next (templs);
+    }
+    factories = g_list_next (factories);
+  }
+  return ret;
 }
 
 
@@ -233,29 +234,29 @@ gst_autoplug_factories_filters_with_sink_caps (GList *factories)
 GList *
 gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, guint maxtemplates)
 {
-	GList *ret = NULL;
-	
-	while (factories)
-	{
-		guint count = 0;
-		GList *templs = ((GstElementFactory *) factories->data)->padtemplates;
+  GList *ret = NULL;
+  
+  while (factories)
+  {
+    guint count = 0;
+    GList *templs = ((GstElementFactory *) factories->data)->padtemplates;
 
-		while (templs)
-		{
-			if (GST_PADTEMPLATE_DIRECTION (templs->data) == dir)
-			{
-				count++;
-			}
-			if (count > maxtemplates)
-				break;
-			templs = g_list_next (templs);
-		}
-		if (count <= maxtemplates)
-		  ret = g_list_prepend (ret, factories->data);
-		
-		factories = g_list_next (factories);
-	}
-	return ret;
+    while (templs)
+    {
+      if (GST_PADTEMPLATE_DIRECTION (templs->data) == dir)
+      {
+        count++;
+      }
+      if (count > maxtemplates)
+        break;
+      templs = g_list_next (templs);
+    }
+    if (count <= maxtemplates)
+      ret = g_list_prepend (ret, factories->data);
+    
+    factories = g_list_next (factories);
+  }
+  return ret;
 }
 /*********************************************************************
  *
@@ -275,115 +276,107 @@ gst_autoplug_factories_at_most_templates(GList *factories, GstPadDirection dir, 
 GList *
 gst_autoplug_sp (GstCaps *srccaps, GstCaps *sinkcaps, GList *factories)
 {
-	GList *factory_nodes = NULL;
-	guint curcost = GST_AUTOPLUG_MAX_COST; /* below this cost, there is no path */
-	GstAutoplugNode *bestnode = NULL; /* best (unconnected) endpoint currently */
-	
-	GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, "attempting to autoplug via shortest path");
-  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "trying to plug %s to %s\n", gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
-  /* g_print ("trying to plug %s to %s\n", gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps)); */
-	/* wrap all factories as GstAutoplugNode 
-	 * initialize the cost */
-	while (factories)
-	{
-		GstAutoplugNode *node = g_new0 (GstAutoplugNode, 1);
-		node->prev = NULL;
-		node->fac = (GstElementFactory *) factories->data;
-		node->templ = gst_autoplug_can_connect_src (node->fac, srccaps);
-		node->cost = (node->templ ? gst_autoplug_get_cost (node->fac) : GST_AUTOPLUG_MAX_COST);
-		node->endpoint = gst_autoplug_can_connect_sink (node->fac, sinkcaps);
-		if ((node->endpoint != NULL) && (bestnode == NULL || (node->cost < bestnode->cost)))
-		{
-			bestnode = node;
-		}
-		factory_nodes = g_list_prepend (factory_nodes, node);
-		/* make curcost the minimum cost of any plugin */
-		curcost = node->cost < curcost ? node->cost : curcost;
-		factories = g_list_next (factories);
-	}
-	
-	/* check if we even have possible endpoints */
-	if (bestnode == NULL)
-	{
-		GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no factory found that could connect to sink caps\n");
-		g_list_free_list_and_elements (factory_nodes);
-		return NULL;
-	}
-	
-	/* iterate until we found the best path */
-	while (curcost < GST_AUTOPLUG_MAX_COST)
-	{
-		GList *nodes = factory_nodes;
-		guint nextcost = GST_AUTOPLUG_MAX_COST; /* next cost to check */
-		GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "iterating at current cost %d, bestnode %s at %d\n", curcost, GST_OBJECT_NAME (bestnode->fac), bestnode->cost);
-		/* check if we already have a valid best connection to the sink */
-		if (bestnode->cost <= curcost)
-		{
-			GList *ret;
-			GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a way to connect via %s\n", GST_OBJECT_NAME ((GstObject *) bestnode->fac));		
-			/* enter all factories into the return list */
-			ret = g_list_prepend (NULL, bestnode->fac);
-			bestnode = bestnode->prev;
-			while (bestnode != NULL)
-			{
-				ret = g_list_prepend (ret, bestnode->fac);
-				bestnode = bestnode->prev;
-			}
-			g_list_free_list_and_elements (factory_nodes);
-			return ret;
-		}
-		
-		/* iterate over all factories we have
-		 * if they have the current cost, calculate if this
-		 * factory supplies shorter paths to other elements
-		 */
-		while (nodes)
-		{
-			if (((GstAutoplugNode *) nodes->data)->cost == curcost)
-			{
-				/* now check all elements if we got a shorter path */
-				GList *sinknodes = factory_nodes;
-				GstAutoplugNode *srcnode = (GstAutoplugNode *) nodes->data;
-				while (sinknodes)
-				{
-					GstAutoplugNode *sinknode = (GstAutoplugNode *) sinknodes->data;
-					GstPadTemplate *templ;
-					if ((sinknode->cost > srcnode->cost + gst_autoplug_get_cost (sinknode->fac)) && (templ = gst_autoplug_can_match(srcnode->fac, sinknode->fac)))
-					{
-						/* we got a shorter path
-						 * now enter that path to that node */
-						sinknode->prev = srcnode;
-						sinknode->templ = templ;
-						sinknode->cost = srcnode->cost + gst_autoplug_get_cost (sinknode->fac);
-						/* make sure to set which cost to view next */
-						nextcost = (nextcost > sinknode->cost) ? sinknode->cost : nextcost;
-						/* did we get a new best node? */
-						if (sinknode->endpoint && (sinknode->cost < bestnode->cost))
-						{
-							bestnode = sinknode;
-						}			
-					}
-					sinknodes = g_list_next (sinknodes);
-				}
-				/* FIXME: for speed remove the item we just iterated with from the factory_nodes
-				 * but don't free it yet and don't forget to free it.
-				 */
-			}
-		  nodes = g_list_next (nodes);
-		}
-		curcost = nextcost;
-	}
-	
-	GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found no path from source caps to sink caps\n");		
-	g_list_free_list_and_elements (factory_nodes);
-	return NULL;	
+  GList *factory_nodes = NULL;
+  guint curcost = GST_AUTOPLUG_MAX_COST; /* below this cost, there is no path */
+  GstAutoplugNode *bestnode = NULL; /* best (unconnected) endpoint currently */
+  
+  GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT, "attempting to autoplug via shortest path from %s to %s\n", gst_caps_get_mime (srccaps), gst_caps_get_mime (sinkcaps));
+  /* wrap all factories as GstAutoplugNode 
+   * initialize the cost */
+  while (factories)
+  {
+    GstAutoplugNode *node = g_new0 (GstAutoplugNode, 1);
+    node->prev = NULL;
+    node->fac = (GstElementFactory *) factories->data;
+    node->templ = gst_autoplug_can_connect_src (node->fac, srccaps);
+    node->cost = (node->templ ? gst_autoplug_get_cost (node->fac) : GST_AUTOPLUG_MAX_COST);
+    node->endpoint = gst_autoplug_can_connect_sink (node->fac, sinkcaps);
+    if ((node->endpoint != NULL) && ((bestnode == NULL) || (node->cost < bestnode->cost)))
+    {
+      bestnode = node;
+    }
+    factory_nodes = g_list_prepend (factory_nodes, node);
+    /* make curcost the minimum cost of any plugin */
+    curcost = node->cost < curcost ? node->cost : curcost;
+    factories = g_list_next (factories);
+  }
+  
+  /* check if we even have possible endpoints */
+  if (bestnode == NULL)
+  {
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "no factory found that could connect to sink caps\n");
+    g_list_free_list_and_elements (factory_nodes);
+    return NULL;
+  }
+  
+  /* iterate until we found the best path */
+  while (curcost < GST_AUTOPLUG_MAX_COST)
+  {
+    GList *nodes = factory_nodes;
+    guint nextcost = GST_AUTOPLUG_MAX_COST; /* next cost to check */
+    GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "iterating at current cost %d, bestnode %s at %d\n", curcost, GST_OBJECT_NAME (bestnode->fac), bestnode->cost);
+    /* check if we already have a valid best connection to the sink */
+    if (bestnode->cost <= curcost)
+    {
+      GList *ret;
+      GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found a way to connect via %s\n", GST_OBJECT_NAME ((GstObject *) bestnode->fac));    
+      /* enter all factories into the return list */
+      ret = g_list_prepend (NULL, bestnode->fac);
+      bestnode = bestnode->prev;
+      while (bestnode != NULL)
+      {
+        ret = g_list_prepend (ret, bestnode->fac);
+        bestnode = bestnode->prev;
+      }
+      g_list_free_list_and_elements (factory_nodes);
+      return ret;
+    }
+    
+    /* iterate over all factories we have
+     * if they have the current cost, calculate if this
+     * factory supplies shorter paths to other elements
+     */
+    while (nodes)
+    {
+      if (((GstAutoplugNode *) nodes->data)->cost == curcost)
+      {
+        /* now check all elements if we got a shorter path */
+        GList *sinknodes = factory_nodes;
+        GstAutoplugNode *srcnode = (GstAutoplugNode *) nodes->data;
+        while (sinknodes)
+        {
+          GstAutoplugNode *sinknode = (GstAutoplugNode *) sinknodes->data;
+          GstPadTemplate *templ;
+          if ((sinknode->cost > srcnode->cost + gst_autoplug_get_cost (sinknode->fac)) && (templ = gst_autoplug_can_match(srcnode->fac, sinknode->fac)))
+          {
+            /* we got a shorter path
+             * now enter that path to that node */
+            sinknode->prev = srcnode;
+            sinknode->templ = templ;
+            sinknode->cost = srcnode->cost + gst_autoplug_get_cost (sinknode->fac);
+            /* make sure to set which cost to view next */
+            nextcost = (nextcost > sinknode->cost) ? sinknode->cost : nextcost;
+            /* did we get a new best node? */
+            if (sinknode->endpoint && (sinknode->cost < bestnode->cost))
+            {
+              bestnode = sinknode;
+            }      
+          }
+          sinknodes = g_list_next (sinknodes);
+        }
+        /* FIXME: for speed remove the item we just iterated with from the factory_nodes
+         * but don't free it yet and don't forget to free it.
+         */
+      }
+      nodes = g_list_next (nodes);
+    }
+    curcost = nextcost;
+  }
+  
+  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT, "found no path from source caps to sink caps\n");    
+  g_list_free_list_and_elements (factory_nodes);
+  return NULL;  
 }
-
-
-
-
-
-
 
 
 

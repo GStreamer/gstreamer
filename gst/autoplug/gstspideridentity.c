@@ -39,14 +39,14 @@ GstElementDetails gst_spider_identity_details = {
  * delete me when meging with spider.c
  */
 GST_PADTEMPLATE_FACTORY (spider_src_factory,
-  "src_%02d",
+  "src",
   GST_PAD_SRC,
   GST_PAD_REQUEST,
   NULL      /* no caps */
 );
 
 GST_PADTEMPLATE_FACTORY (spider_sink_factory,
-  "sink_%02d",
+  "sink",
   GST_PAD_SINK,
   GST_PAD_REQUEST,
   NULL      /* no caps */
@@ -140,18 +140,25 @@ gst_spider_identity_get_bufferpool (GstPad *pad)
 }
 
 static void 
-gst_spider_identity_init (GstSpiderIdentity *spider_identity) 
+gst_spider_identity_init (GstSpiderIdentity *ident) 
 {
-  /* pads */
-  spider_identity->sink = NULL;
-  spider_identity->src = NULL;
+  /* sink */
+  ident->sink = gst_pad_new_from_template (GST_PADTEMPLATE_GET (spider_sink_factory), "sink");
+  gst_element_add_pad (GST_ELEMENT (ident), ident->sink);
+  gst_pad_set_connect_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
+  gst_pad_set_getcaps_function (ident->sink, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
+  /* src */
+  ident->src = gst_pad_new_from_template (GST_PADTEMPLATE_GET (spider_src_factory), "src");
+  gst_element_add_pad (GST_ELEMENT (ident), ident->src);
+  gst_pad_set_connect_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_connect));
+  gst_pad_set_getcaps_function (ident->src, GST_DEBUG_FUNCPTR (gst_spider_identity_getcaps));
 
   /* variables */
-  spider_identity->plugged = FALSE;
+  ident->plugged = FALSE;
   
   /* caching */
-  spider_identity->cache_start = NULL;
-  spider_identity->cache_end = NULL;
+  ident->cache_start = NULL;
+  ident->cache_end = NULL;
   
 }
 
@@ -197,6 +204,9 @@ gst_spider_identity_new_sink (gchar *name)
   GstSpiderIdentity *ret = (GstSpiderIdentity *) g_object_new (gst_spider_identity_get_type (), NULL);
   
   GST_ELEMENT_NAME (ret) = name;
+
+  /* set the right functions */
+  gst_element_set_loop_function (GST_ELEMENT (ret), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_dumb_loop));
 
   return ret;
 }
@@ -300,7 +310,7 @@ gst_spider_identity_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_PLAYING:
       /* start typefinding or plugging */
-      if ((ident->sink != NULL) && (ident->src == NULL))
+      if ((GST_RPAD_PEER (ident->sink) != NULL) && (GST_RPAD_PEER (ident->src) == NULL))
       {
         if (gst_pad_get_caps ((GstPad *) GST_PAD_PEER (ident->sink)) == NULL)
         {
@@ -311,7 +321,7 @@ gst_spider_identity_change_state (GstElement *element)
         }
       }
       /* autoplug on src */
-      if ((ident->src != NULL) && (ident->sink == NULL))
+      if ((GST_RPAD_PEER (ident->src) != NULL) && (GST_RPAD_PEER (ident->sink) == NULL))
       {
         gst_spider_plug (ident);
       }
@@ -330,7 +340,7 @@ gst_spider_identity_start_typefinding (GstSpiderIdentity *ident)
 {
   GstElement* typefind;
   
-  GST_DEBUG (GST_CAT_AUTOPLUG, "element %s starts typefinding", GST_ELEMENT_NAME(ident));
+  GST_DEBUG (GST_CAT_AUTOPLUG, "element %s starts typefinding\n", GST_ELEMENT_NAME(ident));
   
   /* create and connect typefind object */
   typefind = gst_elementfactory_make ("typefind", g_strdup_printf("%s%s", "typefind", GST_ELEMENT_NAME(ident)));
@@ -362,7 +372,7 @@ callback_typefind_have_type (GstElement *typefind, GstCaps *caps, GstSpiderIdent
 {
   gboolean restart_spider = FALSE;
   
-  GST_INFO (GST_CAT_AUTOPLUG, "element %s has found caps", GST_ELEMENT_NAME(ident));
+  GST_INFO (GST_CAT_AUTOPLUG, "element %s has found caps\n", GST_ELEMENT_NAME(ident));
   /* checks */
   
   /* we have to ref the typefind, because if me remove it the scheduler segfaults 
