@@ -1,5 +1,10 @@
 2004-01-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/hermes/gsthermescolorspace.c:
+	  Fix another compile error. Same as below.
+
+2004-01-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/colorspace/gstcolorspace.c:
 	* gst/colorspace/yuv2yuv.c: (gst_colorspace_yuy2_to_i420),
 	(gst_colorspace_i420_to_yv12):
