@@ -67,6 +67,8 @@ typedef enum {
 
 
 struct _GstProps {
+  gint refcount;
+
   GList *properties;		/* real properties for this property */
 };
 
@@ -77,6 +79,13 @@ GstProps*	gst_props_register		(GstPropsFactory factory);
 GstProps*	gst_props_register_count	(GstPropsFactory factory, guint *counter);
 
 GstProps*	gst_props_new			(GstPropsFactoryEntry entry, ...);
+
+void            gst_props_unref                 (GstProps *props);
+void            gst_props_ref                   (GstProps *props);
+void            gst_props_destroy               (GstProps *props);
+
+GstProps*       gst_props_copy                  (GstProps *props);
+GstProps*       gst_props_copy_on_write         (GstProps *props);
 
 GstProps*	gst_props_merge			(GstProps *props, GstProps *tomerge);
 

@@ -159,17 +159,10 @@ gst_queue_handle_negotiate_src (GstPad *pad, GstCaps **caps, gint counter)
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  if (counter == 0) {
-     *caps = NULL;
-     return GST_PAD_NEGOTIATE_TRY;
-  }
-  if (*caps) {
-    if (counter == 1) {
-      return gst_pad_negotiate_proxy (queue->sinkpad, caps, counter);
-    }
-  }
+  return gst_pad_negotiate_proxy (pad, queue->sinkpad, caps, counter);
+  
 
-  return GST_PAD_NEGOTIATE_FAIL;
+  //return GST_PAD_NEGOTIATE_FAIL;
 }
 
 static GstPadNegotiateReturn
@@ -179,17 +172,19 @@ gst_queue_handle_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
+  /*
   if (counter == 0) {
      *caps = NULL;
      return GST_PAD_NEGOTIATE_TRY;
   }
   if (*caps) {
-    if (counter == 1) {
-      return gst_pad_negotiate_proxy (queue->srcpad, caps, counter);
-    }
+  */
+    return gst_pad_negotiate_proxy (pad, queue->srcpad, caps, counter);
+    /*
   }
 
   return GST_PAD_NEGOTIATE_FAIL;
+  */
 }
 
 static gboolean

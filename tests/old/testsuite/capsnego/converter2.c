@@ -104,7 +104,7 @@ converter_negotiate_sink (GstPad *pad, GstCaps **caps, gint counter)
 
     if (counter == 1) {
       converter_out = gst_caps_get_int (*caps, "rate");
-      return gst_pad_negotiate_proxy (srcconvpad, caps, counter);
+      return gst_pad_negotiate_proxy (pad, srcconvpad, caps, counter);
     }
     return GST_PAD_NEGOTIATE_AGREE;
   }

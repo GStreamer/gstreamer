@@ -26,6 +26,11 @@
 #include "gstprops.h"
 #include "gstpropsprivate.h"
 
+static GMemChunk *_gst_props_entries_chunk;
+static GMutex *_gst_props_entries_chunk_lock;
+
+static GMemChunk *_gst_props_chunk;
+static GMutex *_gst_props_chunk_lock;
 
 static gboolean 	gst_props_entry_check_compatibility 	(GstPropsEntry *entry1, GstPropsEntry *entry2);
 	
@@ -41,16 +46,27 @@ static guint _arg_len[] = {
 void 
 _gst_props_initialize (void) 
 {
+  _gst_props_entries_chunk = g_mem_chunk_new ("GstPropsEntries", 
+		  sizeof (GstPropsEntry), sizeof (GstPropsEntry) * 256, 
+		  G_ALLOC_AND_FREE);
+  _gst_props_entries_chunk_lock = g_mutex_new ();
+
+  _gst_props_chunk = g_mem_chunk_new ("GstProps", 
+		  sizeof (GstProps), sizeof (GstProps) * 256, 
+		  G_ALLOC_AND_FREE);
+  _gst_props_chunk_lock = g_mutex_new ();
 }
 
-static GstPropsEntry *
+static GstPropsEntry*
 gst_props_create_entry (GstPropsFactory factory, gint *skipped)
 {
   GstPropsFactoryEntry tag;
   GstPropsEntry *entry;
   guint i=0;
 
-  entry = g_new0 (GstPropsEntry, 1);
+  g_mutex_lock (_gst_props_entries_chunk_lock);
+  entry = g_mem_chunk_alloc (_gst_props_entries_chunk);
+  g_mutex_unlock (_gst_props_entries_chunk_lock);
 
   tag = factory[i++];
   switch (GPOINTER_TO_INT (tag)) {
@@ -68,15 +84,17 @@ gst_props_create_entry (GstPropsFactory factory, gint *skipped)
       entry->data.fourcc_data = GPOINTER_TO_INT (factory[i++]);
       break;
     case GST_PROPS_LIST_ID_NUM:
-      g_print("gstprops: list not allowed in list\n");
+      g_warning ("gstprops: list not allowed in list\n");
       break;
     case GST_PROPS_BOOL_ID_NUM:
       entry->propstype = GST_PROPS_BOOL_ID_NUM;
       entry->data.bool_data = GPOINTER_TO_INT (factory[i++]);
       break;
     default:
-      g_print("gstprops: unknown props id found\n");
-      g_free (entry);
+      g_warning ("gstprops: unknown props id found\n");
+      g_mutex_lock (_gst_props_entries_chunk_lock);
+      g_mem_chunk_free (_gst_props_entries_chunk, entry);
+      g_mutex_unlock (_gst_props_entries_chunk_lock);
       entry = NULL;
       break;
   }
@@ -146,10 +164,14 @@ gst_props_register_count (GstPropsFactory factory, guint *counter)
 
   if (!tag) goto end;
 
-  props = g_new0 (GstProps, 1);
+  g_mutex_lock (_gst_props_chunk_lock);
+  props = g_mem_chunk_alloc (_gst_props_chunk);
+  g_mutex_unlock (_gst_props_chunk_lock);
+
   g_return_val_if_fail (props != NULL, NULL);
 
   props->properties = NULL;
+  props->refcount = 1;
   
   while (tag) {
     GQuark quark;
@@ -168,7 +190,10 @@ gst_props_register_count (GstPropsFactory factory, guint *counter)
       {
         GstPropsEntry *list_entry;
 
-        entry = g_new0 (GstPropsEntry, 1);
+        g_mutex_lock (_gst_props_entries_chunk_lock);
+        entry = g_mem_chunk_alloc (_gst_props_entries_chunk);
+        g_mutex_unlock (_gst_props_entries_chunk_lock);
+
 	entry->propid = quark;
 	entry->propstype = GST_PROPS_LIST_ID_NUM;
 	entry->data.list_data.entries = NULL;
@@ -326,6 +351,99 @@ gst_props_set (GstProps *props, const gchar *name, GstPropsFactoryEntry entry, .
   }
   else {
     g_print("gstprops: no property '%s' to change\n", name);
+  }
+
+  return props;
+}
+
+void
+gst_props_unref (GstProps *props)
+{
+  g_return_if_fail (props != NULL);
+  
+  props->refcount--;
+
+  if (props->refcount == 0)
+    gst_props_destroy (props);
+}
+
+void
+gst_props_ref (GstProps *props)
+{
+  g_return_if_fail (props != NULL);
+  
+  props->refcount++;
+}
+
+void
+gst_props_destroy (GstProps *props)
+{
+  GList *entries;
+
+  g_return_if_fail (props != NULL);
+  
+  entries = props->properties;
+
+  while (entries) {
+    GstPropsEntry *entry = (GstPropsEntry *)entries->data;
+
+    // FIXME also free the lists
+    g_mutex_lock (_gst_props_entries_chunk_lock);
+    g_mem_chunk_free (_gst_props_entries_chunk, entry);
+    g_mutex_unlock (_gst_props_entries_chunk_lock);
+
+    entries = g_list_next (entries);
+  }
+
+  g_list_free (props->properties);
+}
+
+GstProps*
+gst_props_copy (GstProps *props)
+{
+  GstProps *new;
+  GList *properties;
+
+  g_return_val_if_fail (props != NULL, NULL);
+
+  g_mutex_lock (_gst_props_chunk_lock);
+  new = g_mem_chunk_alloc (_gst_props_chunk);
+  g_mutex_unlock (_gst_props_chunk_lock);
+
+  new->properties = NULL;
+
+  properties = props->properties;
+
+  while (properties) {
+    GstPropsEntry *entry = (GstPropsEntry *)properties->data;
+    GstPropsEntry *newentry;
+
+    g_mutex_lock (_gst_props_entries_chunk_lock);
+    newentry = g_mem_chunk_alloc (_gst_props_entries_chunk);
+    g_mutex_unlock (_gst_props_entries_chunk_lock);
+
+    // FIXME copy lists too
+    memcpy (newentry, entry, sizeof (GstPropsEntry));
+
+    new->properties = g_list_prepend (new->properties, newentry);
+    
+    properties = g_list_next (properties);
+  }
+  new->properties = g_list_reverse (new->properties);
+
+  return new;
+}
+
+GstProps*
+gst_props_copy_on_write (GstProps *props)
+{
+  GstProps *new = props;;
+
+  g_return_val_if_fail (props != NULL, NULL);
+
+  if (props->refcount > 1) {
+    new = gst_props_copy (props);
+    gst_props_unref (props);
   }
 
   return props;
@@ -681,7 +799,9 @@ gst_props_load_thyself_func (xmlNodePtr field)
   GstPropsEntry *entry;
   gchar *prop;
 
-  entry = g_new0 (GstPropsEntry, 1);
+  g_mutex_lock (_gst_props_entries_chunk_lock);
+  entry = g_mem_chunk_alloc (_gst_props_entries_chunk);
+  g_mutex_unlock (_gst_props_entries_chunk_lock);
 
   if (!strcmp(field->name, "int")) {
     entry->propstype = GST_PROPS_INT_ID_NUM;
@@ -724,7 +844,9 @@ gst_props_load_thyself_func (xmlNodePtr field)
     g_free (prop);
   }
   else {
-    g_free (entry);
+    g_mutex_lock (_gst_props_entries_chunk_lock);
+    g_mem_chunk_free (_gst_props_entries_chunk, entry);
+    g_mutex_unlock (_gst_props_entries_chunk_lock);
     entry = NULL;
   }
 
@@ -742,17 +864,28 @@ gst_props_load_thyself_func (xmlNodePtr field)
 GstProps*
 gst_props_load_thyself (xmlNodePtr parent)
 {
-  GstProps *props = g_new0 (GstProps, 1);
+  GstProps *props;
   xmlNodePtr field = parent->xmlChildrenNode;
   gchar *prop;
+
+  g_mutex_lock (_gst_props_chunk_lock);
+  props = g_mem_chunk_alloc (_gst_props_chunk);
+  g_mutex_unlock (_gst_props_chunk_lock);
+
+  props->properties = NULL;
+  props->refcount = 1;
 
   while (field) {
     if (!strcmp (field->name, "list")) {
       GstPropsEntry *entry;
       xmlNodePtr subfield = field->xmlChildrenNode;
 
-      entry = g_new0 (GstPropsEntry, 1);
+      g_mutex_lock (_gst_props_entries_chunk_lock);
+      entry = g_mem_chunk_alloc (_gst_props_entries_chunk);
+      g_mutex_unlock (_gst_props_entries_chunk_lock);
+
       entry->propstype = GST_PROPS_LIST_ID_NUM;
+      entry->data.list_data.entries = NULL;
       prop = xmlGetProp (field, "name");
       entry->propid = g_quark_from_string (prop);
       g_free (prop);

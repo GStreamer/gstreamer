@@ -1,6 +1,6 @@
 SUBDIRS =
 
-testprogs = capsnego converter converter2
+testprogs = capsnego converter converter2 enum
 
 TESTS = $(testprogs)
 

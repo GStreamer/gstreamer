@@ -227,7 +227,7 @@ gst_plugin_load_all(void)
 
   path = _gst_plugin_paths;
   while (path != NULL) {
-    GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugins from %s\n",(gchar *)path->data);
+    GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugins from %s",(gchar *)path->data);
     gst_plugin_load_recurse(path->data,NULL);
     path = g_list_next(path);
   }

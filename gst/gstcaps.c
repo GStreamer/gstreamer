@@ -28,10 +28,16 @@
 
 #include "gstpropsprivate.h"
 
+static GMemChunk *_gst_caps_chunk;
+static GMutex *_gst_caps_chunk_lock;
 
 void
 _gst_caps_initialize (void)
 {
+  _gst_caps_chunk = g_mem_chunk_new ("GstCaps",
+                  sizeof (GstCaps), sizeof (GstCaps) * 256,
+                  G_ALLOC_AND_FREE);
+  _gst_caps_chunk_lock = g_mutex_new ();
 }
 
 static guint16
@@ -68,11 +74,15 @@ gst_caps_new (const gchar *name, const gchar *mime)
 
   g_return_val_if_fail (mime != NULL, NULL);
 
-  caps = g_new0 (GstCaps, 1);
+  g_mutex_lock (_gst_caps_chunk_lock);
+  caps = g_mem_chunk_alloc (_gst_caps_chunk);
+  g_mutex_unlock (_gst_caps_chunk_lock);
+
   caps->name = g_strdup (name);
   caps->id = get_type_for_mime (mime);
   caps->properties = NULL;
   caps->next = NULL;
+  caps->refcount = 1;
 
   return caps;
 }
@@ -128,7 +138,6 @@ gst_caps_register_count (GstCapsFactory *factory, guint *counter)
 {
   GstCapsFactoryEntry tag;
   gint i = 0;
-  guint16 typeid;
   gchar *name;
   GstCaps *caps;
 
@@ -142,18 +151,108 @@ gst_caps_register_count (GstCapsFactory *factory, guint *counter)
   tag = (*factory)[i++];
   g_return_val_if_fail (tag != NULL, NULL);
 
-  typeid = get_type_for_mime ((gchar *)tag);
-
-  caps = g_new0 (GstCaps, 1);
-  g_return_val_if_fail (caps != NULL, NULL);
-
-  caps->name = g_strdup (name);
-  caps->id = typeid;
-  caps->properties = gst_props_register_count (&(*factory)[i], counter);
+  caps = gst_caps_new_with_props (name, (gchar *)tag,
+                   gst_props_register_count (&(*factory)[i], counter));
 
   *counter += 2;
 
   return caps;
+}
+
+/**
+ * gst_caps_destroy:
+ * @caps: the caps to destroy
+ *
+ * Frees the memory used by this caps structure and all
+ * the chained caps and properties.
+ */
+void
+gst_caps_destroy (GstCaps *caps)
+{
+  g_return_if_fail (caps != NULL);
+
+  if (caps->next) 
+    gst_caps_unref (caps->next);
+
+  g_free (caps->name);
+  g_free (caps);
+}
+
+/**
+ * gst_caps_unref:
+ * @caps: the caps to unref
+ *
+ * Decrease the refcount of this caps structure, 
+ * destroying it when the refcount is 0
+ */
+void
+gst_caps_unref (GstCaps *caps)
+{
+  g_return_if_fail (caps != NULL);
+
+  caps->refcount--;
+
+  if (caps->next)
+    gst_caps_unref (caps->next);
+
+  if (caps->refcount == 0)
+    gst_caps_destroy (caps);
+}
+
+/**
+ * gst_caps_ref:
+ * @caps: the caps to ref
+ *
+ * Increase the refcount of this caps structure
+ */
+void
+gst_caps_ref (GstCaps *caps)
+{
+  g_return_if_fail (caps != NULL);
+
+  caps->refcount++;
+}
+
+/**
+ * gst_caps_copy_on_write:
+ * @caps: the caps to copy
+ *
+ * Copies the caps if the refcount is greater than 1
+ */
+GstCaps*
+gst_caps_copy (GstCaps *caps)
+{
+  GstCaps *new = caps;;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  new = gst_caps_new_with_props (
+		  caps->name,
+		  (gst_type_find_by_id (caps->id))->mime,
+		  gst_props_copy (caps->properties));
+
+  return new;
+}
+
+/**
+ * gst_caps_copy_on_write:
+ * @caps: the caps to copy
+ *
+ * Copies the caps if the refcount is greater than 1
+ */
+GstCaps*
+gst_caps_copy_on_write (GstCaps *caps)
+{
+  GstCaps *new = caps;;
+
+  g_return_val_if_fail (caps != NULL, NULL);
+
+  if (caps->refcount > 1) {
+    new = gst_caps_copy (caps);
+    gst_caps_unref (caps);
+  }
+
+  return new;
 }
 
 /**
@@ -479,8 +578,14 @@ gst_caps_load_thyself (xmlNodePtr parent)
   while (field) {
     if (!strcmp (field->name, "capscomp")) {
       xmlNodePtr subfield = field->xmlChildrenNode;
-      GstCaps *caps = g_new0 (GstCaps, 1);
+      GstCaps *caps;
       gchar *content;
+
+      g_mutex_lock (_gst_caps_chunk_lock);
+      caps = g_mem_chunk_alloc0 (_gst_caps_chunk);
+      g_mutex_unlock (_gst_caps_chunk_lock);
+
+      caps->refcount = 1;
 	
       while (subfield) {
         if (!strcmp (subfield->name, "name")) {

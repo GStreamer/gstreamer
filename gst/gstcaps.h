@@ -45,8 +45,9 @@ typedef GstCapsFactoryEntry GstCapsFactory[];
 
 struct _GstCaps {
   gchar *name;			/* the name of this caps */
-
   guint16 id;			/* type id (major type) */
+
+  guint refcount;
 
   GstProps *properties;		/* properties for this capability */
 
@@ -60,6 +61,13 @@ GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime);
 GstCaps*	gst_caps_new_with_props			(const gchar *name, const gchar *mime, GstProps *props);
 GstCaps*	gst_caps_register			(GstCapsFactory *factory);
 GstCaps*	gst_caps_register_count			(GstCapsFactory *factory, guint *counter);
+
+void		gst_caps_unref				(GstCaps *caps);
+void		gst_caps_ref				(GstCaps *caps);
+void		gst_caps_destroy			(GstCaps *caps);
+
+GstCaps*	gst_caps_copy				(GstCaps *caps);
+GstCaps*	gst_caps_copy_on_write			(GstCaps *caps);
 
 const gchar*	gst_caps_get_name			(GstCaps *caps);
 void		gst_caps_set_name			(GstCaps *caps, const gchar *name);
