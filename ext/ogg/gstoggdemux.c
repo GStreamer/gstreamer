@@ -372,7 +372,7 @@ gst_ogg_pad_remove (GstOggDemux *ogg, GstOggPad *pad)
 static void
 gst_ogg_demux_push (GstOggDemux *ogg, ogg_page* page)
 {
-  GSList *walk;;
+  GSList *walk;
   GstOggPad *cur;
 
   /* find the stream */
@@ -423,6 +423,7 @@ gst_ogg_pad_push (GstOggDemux *ogg, GstOggPad *pad)
 {
   ogg_packet packet;
   int ret;
+  GstBuffer *buf;
 
   while (TRUE) {
     ret = ogg_stream_packetout (&pad->stream, &packet);
@@ -449,7 +450,7 @@ gst_ogg_pad_push (GstOggDemux *ogg, GstOggPad *pad)
 	  gst_element_add_pad (GST_ELEMENT (ogg), pad->pad);
 	}
 	/* optimization: use a bufferpool containing the ogg packet */
-	GstBuffer *buf = gst_buffer_new_and_alloc (packet.bytes);
+	buf = gst_buffer_new_and_alloc (packet.bytes);
 	memcpy (buf->data, packet.packet, packet.bytes);
 	GST_BUFFER_OFFSET (buf) = pad->offset;
 	pad->offset = GST_BUFFER_OFFSET_END (buf) = packet.granulepos;
