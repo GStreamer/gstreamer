@@ -109,6 +109,9 @@ gst_ladspa_base_init (GstLADSPAClass *klass)
 
   desc = g_hash_table_lookup(ladspa_descriptors,
 		GINT_TO_POINTER(G_TYPE_FROM_CLASS(klass)));
+  if (!desc)
+    desc = g_hash_table_lookup(ladspa_descriptors, GINT_TO_POINTER(0));
+  g_assert (desc);
 
   /* construct the element details struct */
   details = g_new0(GstElementDetails,1);
@@ -181,6 +184,9 @@ gst_ladspa_class_init (GstLADSPAClass *klass)
   /* look up and store the ladspa descriptor */
   desc = g_hash_table_lookup(ladspa_descriptors,
 		GINT_TO_POINTER(G_TYPE_FROM_CLASS(klass)));
+  if (!desc)
+    desc = g_hash_table_lookup(ladspa_descriptors, GINT_TO_POINTER(0));
+  g_assert (desc);
 
   klass->numcontrols = 0;
 
@@ -983,6 +989,12 @@ ladspa_describe_plugin(const char *pcFullFilename,
       g_free(type_name);
       continue;
     }
+
+    /* base-init temp alloc */
+    g_hash_table_insert(ladspa_descriptors,
+                        GINT_TO_POINTER(0),
+                        (gpointer)desc);
+
     /* create the type now */
     type = g_type_register_static(GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
     if (!gst_element_register (ladspa_plugin, type_name, GST_RANK_NONE, type))
@@ -993,6 +1005,8 @@ ladspa_describe_plugin(const char *pcFullFilename,
                         GINT_TO_POINTER(type),
                         (gpointer)desc);
   }
+
+  g_hash_table_remove (ladspa_descriptors, GINT_TO_POINTER (0));
 }
 
 static gboolean
