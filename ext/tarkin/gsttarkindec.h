@@ -27,9 +27,8 @@
 #include "tarkin.h"
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 #define GST_TYPE_TARKINDEC \
   (tarkindec_get_type())
@@ -42,44 +41,42 @@ extern "C"
 #define GST_IS_TARKINDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TARKINDEC))
 
-  typedef struct _TarkinDec TarkinDec;
-  typedef struct _TarkinDecClass TarkinDecClass;
+typedef struct _TarkinDec TarkinDec;
+typedef struct _TarkinDecClass TarkinDecClass;
 
-  struct _TarkinDec
-  {
-    GstElement element;
+struct _TarkinDec {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
-    ogg_sync_state oy;
-    ogg_stream_state os;
-    ogg_page og;
-    ogg_packet op;
+  ogg_sync_state 	 oy;
+  ogg_stream_state 	 os;
+  ogg_page 		 og;
+  ogg_packet 		 op;
 
-    TarkinStream *tarkin_stream;
-    TarkinComment tc;
-    TarkinInfo ti;
-    TarkinVideoLayerDesc layer[1];
+  TarkinStream 		*tarkin_stream;
+  TarkinComment 	 tc;
+  TarkinInfo 		 ti;
+  TarkinVideoLayerDesc 	 layer[1];
 
-    gint frame_num;
-    gint nheader;
+  gint 			 frame_num;
+  gint			 nheader;
+        
+  gboolean eos;
+  gint bitrate;
+  gboolean setup;
+};
 
-    gboolean eos;
-    gint bitrate;
-    gboolean setup;
-  };
+struct _TarkinDecClass {
+  GstElementClass parent_class;
+};
 
-  struct _TarkinDecClass
-  {
-    GstElementClass parent_class;
-  };
-
-  GType tarkindec_get_type (void);
+GType tarkindec_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __TARKINDEC_H__ */
+#endif /* __TARKINDEC_H__ */

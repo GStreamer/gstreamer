@@ -28,9 +28,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define VCD_BYTES_PER_SECTOR 2352
@@ -47,54 +46,51 @@ extern "C"
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VCDSRC))
 
 /* NOTE: per-element flags start with 16 for now */
-  typedef enum
-  {
-    VCDSRC_OPEN = GST_ELEMENT_FLAG_LAST,
+typedef enum {
+  VCDSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
 
-    VCDSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-  } VCDSrcFlags;
+  VCDSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+} VCDSrcFlags;
 
-  typedef struct _VCDSrc VCDSrc;
-  typedef struct _VCDSrcClass VCDSrcClass;
+typedef struct _VCDSrc VCDSrc;
+typedef struct _VCDSrcClass VCDSrcClass;
 
-  struct _VCDSrc
-  {
-    GstElement element;
-    /* pads */
-    GstPad *srcpad;
+struct _VCDSrc {
+  GstElement element;
+  /* pads */
+  GstPad *srcpad;
 
-    /* device */
-    gchar *device;
-    /* track number */
-    gint track;
-    /* fd */
-    gint fd;
+  /* device */
+  gchar *device;
+  /* track number */
+  gint track;
+  /* fd */
+  gint fd;
 
-    struct cdrom_tochdr tochdr;
-    gint numtracks;
-    struct cdrom_tocentry *tracks;
+  struct cdrom_tochdr tochdr;
+  gint numtracks;
+  struct cdrom_tocentry *tracks;
 
-    /* current time offset */
-    gulong trackoffset;
-    gulong frameoffset;
+  /* current time offset */
+  gulong trackoffset;
+  gulong frameoffset;
 
-    gulong curoffset;		/* current offset in file */
-    gulong bytes_per_read;	/* bytes per read */
+  gulong curoffset;			/* current offset in file */
+  gulong bytes_per_read;		/* bytes per read */
 
-    gulong seq;			/* buffer sequence number */
-    int max_errors;
-  };
+  gulong seq;				/* buffer sequence number */
+  int max_errors;
+};
 
-  struct _VCDSrcClass
-  {
-    GstElementClass parent_class;
-  };
+struct _VCDSrcClass {
+  GstElementClass parent_class;
+};
 
-  GType vcdsrc_get_type (void);
+GType vcdsrc_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __VCDSRC_H__ */
+#endif /* __VCDSRC_H__ */

@@ -23,24 +23,22 @@
 
 #include <glib.h>
 
-typedef enum
-{
-  GST_IDCT_DEFAULT,
-  GST_IDCT_INT,
-  GST_IDCT_FAST_INT,
-  GST_IDCT_FLOAT,
-  GST_IDCT_MMX,
+typedef enum {
+  GST_IDCT_DEFAULT,    
+  GST_IDCT_INT,	
+  GST_IDCT_FAST_INT, 
+  GST_IDCT_FLOAT,   
+  GST_IDCT_MMX,	
   GST_IDCT_MMX32,
   GST_IDCT_SSE,
 } GstIDCTMethod;
 
 typedef struct _GstIDCT GstIDCT;
-typedef void (*GstIDCTFunction) (gshort * block);
+typedef void (*GstIDCTFunction) (gshort *block);
 
 #define GST_IDCT_TRANSPOSE(idct) ((idct)->need_transpose)
 
-struct _GstIDCT
-{
+struct _GstIDCT {
   /* private */
   GstIDCTFunction convert;
   GstIDCTFunction convert_sparse;
@@ -48,10 +46,9 @@ struct _GstIDCT
 };
 
 
-GstIDCT *gst_idct_new (GstIDCTMethod method);
-
+GstIDCT *gst_idct_new(GstIDCTMethod method);
 #define gst_idct_convert(idct, blocks) (idct)->convert((blocks))
 #define gst_idct_convert_sparse(idct, blocks) (idct)->convert_sparse((blocks))
-void gst_idct_destroy (GstIDCT * idct);
+void gst_idct_destroy(GstIDCT *idct);
 
 #endif /* __GST_IDCT_H__ */

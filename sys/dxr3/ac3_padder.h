@@ -34,8 +34,7 @@
 
 
 /* An IEC958 padded AC3 frame. */
-typedef struct
-{
+typedef struct {
   /* IEC header. */
   guchar header[AC3P_IEC_HEADER_SIZE];
 
@@ -48,9 +47,9 @@ typedef struct
   guchar bsidmod;
   guchar acmod;
   /* End of AC3 header. */
-
-  unsigned char data[AC3P_IEC_FRAME_SIZE - AC3P_IEC_HEADER_SIZE
-      - AC3P_AC3_HEADER_SIZE];
+  
+  unsigned char data[AC3P_IEC_FRAME_SIZE - AC3P_IEC_HEADER_SIZE 
+                     - AC3P_AC3_HEADER_SIZE];
 } ac3p_iec958_burst_frame;
 
 
@@ -75,37 +74,39 @@ typedef struct
 
 
 /* The internal state for the padder. */
-typedef struct
-{
-  guint state;			/* State of the reading automaton. */
+typedef struct {
+  guint state;       /* State of the reading automaton. */
 
-  guchar *in_ptr;		/* Input pointer, marking the current
-				   postion in the input buffer. */
-  guint remaining;		/* The number of bytes remaining in the current
-				   reading buffer. */
+  guchar *in_ptr;    /* Input pointer, marking the current
+                        postion in the input buffer. */
+  guint remaining;   /* The number of bytes remaining in the current
+                        reading buffer. */
 
-  guchar *out_ptr;		/* Output pointer, marking the current
-				   position in the output frame. */
+  guchar *out_ptr;   /* Output pointer, marking the current
+                        position in the output frame. */
   guint bytes_to_copy;
-  /* Number of bytes that still must be copied
-     to the output frame *during this reading
-     stage*. */
+                     /* Number of bytes that still must be copied
+                        to the output frame *during this reading
+                        stage*. */
 
   guint ac3_frame_size;
-  /* The size in bytes of the pure AC3 portion
-     of the current frame. */
+                     /* The size in bytes of the pure AC3 portion
+                        of the current frame. */
 
   ac3p_iec958_burst_frame frame;
-  /* The current output frame. */
+                     /* The current output frame. */
 } ac3_padder;
 
 
 
-extern void ac3p_init (ac3_padder * padder);
+extern void
+ac3p_init(ac3_padder *padder);
 
-extern void ac3p_push_data (ac3_padder * padder, guchar * data, guint size);
+extern void
+ac3p_push_data(ac3_padder *padder, guchar *data, guint size);
 
-extern int ac3p_parse (ac3_padder * padder);
+extern int
+ac3p_parse(ac3_padder *padder);
 
 
 /**

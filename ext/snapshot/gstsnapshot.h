@@ -26,9 +26,8 @@
 #include <png.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_SNAPSHOT \
@@ -42,38 +41,36 @@ extern "C"
 #define GST_IS_SNAPSHOT_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SNAPSHOT))
 
-  typedef struct _GstSnapshot GstSnapshot;
-  typedef struct _GstSnapshotClass GstSnapshotClass;
+typedef struct _GstSnapshot GstSnapshot;
+typedef struct _GstSnapshotClass GstSnapshotClass;
 
-  struct _GstSnapshot
-  {
-    GstElement element;
+struct _GstSnapshot {
+  GstElement element;
 
-    guint32 format;
-    gint width;
-    gint height;
-    gint to_bpp;
-    glong frame;
-    glong cur_frame;
-    const gchar *location;
-    gboolean snapshot_asked;
+  guint32 format;
+  gint width;
+  gint height;
+  gint to_bpp;
+  glong frame;
+  glong cur_frame;
+  const gchar *location;
+  gboolean snapshot_asked;
 
-    png_structp png_struct_ptr;
-    png_infop png_info_ptr;
+  png_structp png_struct_ptr;
+  png_infop png_info_ptr;
 
-    GstPad *sinkpad, *srcpad;
-  };
+  GstPad *sinkpad,*srcpad;
+};
 
-  struct _GstSnapshotClass
-  {
-    GstElementClass parent_class;
+struct _GstSnapshotClass {
+  GstElementClass parent_class;
 
-    void (*snapshot) (GstElement * elem);
-  };
+  void (*snapshot)  (GstElement *elem);
+};
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_SNAPSHOT_H__ */
+#endif /* __GST_SNAPSHOT_H__ */

@@ -24,9 +24,8 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_NASSINK \
@@ -40,54 +39,51 @@ extern "C"
 #define GST_IS_NASSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NASSINK))
 
-  typedef enum
-  {
-    GST_NASSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-    GST_NASSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-  } GstNasSinkFlags;
+typedef enum {
+  GST_NASSINK_OPEN            = GST_ELEMENT_FLAG_LAST,
+  GST_NASSINK_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2
+} GstNasSinkFlags;
 
-  typedef struct _GstNassink GstNassink;
-  typedef struct _GstNassinkClass GstNassinkClass;
+typedef struct _GstNassink GstNassink;
+typedef struct _GstNassinkClass GstNassinkClass;
 
-  struct _GstNassink
-  {
-    GstElement element;
+struct _GstNassink {
+  GstElement element;
 
-    GstPad *sinkpad;
+  GstPad *sinkpad;
 
-    /* instance properties */
+  /* instance properties */
 
-    gboolean mute;
-    gint depth;
-    gint tracks;
-    gint rate;
-    gchar *host;
+  gboolean mute;
+  gint depth;
+  gint tracks;
+  gint rate;
+  gchar* host;
 
-    /* Server info */
+  /* Server info */
 
-    AuServer *audio;
-    AuFlowID flow;
-    AuDeviceID device;
+  AuServer *audio;
+  AuFlowID flow;
+  AuDeviceID device;
 
-    /* buffer */
+  /* buffer */
 
-    AuUint32 size;
-    AuUint32 pos;
+  AuUint32 size;
+  AuUint32 pos;
 
-    char *buf;
-  };
+  char *buf;
+};
 
-  struct _GstNassinkClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstNassinkClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_nassink_get_type (void);
+GType gst_nassink_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_NASSINK_H__ */
+#endif /* __GST_NASSINK_H__ */

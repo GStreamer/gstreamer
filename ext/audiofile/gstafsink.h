@@ -26,13 +26,12 @@
 
 
 #include <gst/gst.h>
-#include <audiofile.h>		/* what else are we to do */
+#include <audiofile.h>			/* what else are we to do */
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 /*GstElementDetails gst_afsink_details;*/
@@ -49,56 +48,53 @@ extern "C"
 #define GST_IS_AFSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AFSINK))
 
-  typedef struct _GstAFSink GstAFSink;
-  typedef struct _GstAFSinkClass GstAFSinkClass;
+typedef struct _GstAFSink GstAFSink;
+typedef struct _GstAFSinkClass GstAFSinkClass;
 
-  typedef enum
-  {
-    GST_AFSINK_OPEN = GST_ELEMENT_FLAG_LAST,
+typedef enum {
+  GST_AFSINK_OPEN       = GST_ELEMENT_FLAG_LAST,
 
-    GST_AFSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-  } GstAFSinkFlags;
+  GST_AFSINK_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
+} GstAFSinkFlags;
 
-  struct _GstAFSink
-  {
-    GstElement element;
-    GstPad *sinkpad;
+struct _GstAFSink {
+  GstElement element;
+  GstPad *sinkpad;
 
-    gchar *filename;
+  gchar *filename;
 /*  FILE *file; */
 
 /*  AFfilesetup outfilesetup; */
-    AFfilehandle file;
-    int format;
-    int channels;
-    int width;
-    unsigned int rate;
-    gboolean is_signed;
-    int type;			/* type of output, compare to audiofile.h 
-				 * RAW, AIFF, AIFFC, NEXTSND, WAVE
-				 */
-    /* FIXME : endianness is a little cryptic at this point */
-    int endianness_data;	/* 4321 or 1234 */
-    int endianness_wanted;	/* same thing, but what the output format wants */
-    int endianness_output;	/* what the output endianness will be */
-  };
+  AFfilehandle file;
+  int format;
+  int channels;
+  int width;
+  unsigned int rate;
+  gboolean is_signed;
+  int type;				/* type of output, compare to audiofile.h 
+  						 * RAW, AIFF, AIFFC, NEXTSND, WAVE
+  						 */ 
+  /* FIXME : endianness is a little cryptic at this point */
+  int endianness_data;		/* 4321 or 1234 */
+  int endianness_wanted; /* same thing, but what the output format wants */
+  int endianness_output; /* what the output endianness will be */
+};
 
-  struct _GstAFSinkClass
-  {
-    GstElementClass parent_class;
+struct _GstAFSinkClass {
+  GstElementClass parent_class;
 
-    /* signals */
-    void (*handoff) (GstElement * element, GstPad * pad);
-  };
+  /* signals */
+  void (*handoff) (GstElement *element,GstPad *pad);
+};
 
-  GType gst_afsink_get_type (void);
-  gboolean gst_afsink_plugin_init (GstPlugin * plugin);
+GType 		gst_afsink_get_type	(void);
+gboolean 	gst_afsink_plugin_init 	(GstPlugin *plugin);
 
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_AFSINK_H__ */
+#endif /* __GST_AFSINK_H__ */

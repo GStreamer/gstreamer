@@ -27,6 +27,8 @@
 
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_SF \
   (gst_sf_get_type())
 #define GST_SF(obj) \
@@ -37,6 +39,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SF))
 #define GST_IS_SF_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SF))
+
 #define GST_TYPE_SFSRC \
   (gst_sfsrc_get_type())
 #define GST_SFSRC(obj) \
@@ -47,6 +50,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SFSRC))
 #define GST_IS_SFSRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SFSRC))
+
 #define GST_TYPE_SFSINK \
   (gst_sfsink_get_type())
 #define GST_SFSINK(obj) \
@@ -57,17 +61,16 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SFSINK))
 #define GST_IS_SFSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SFSINK))
+
 typedef struct _GstSF GstSF;
 typedef struct _GstSFClass GstSFClass;
 
-typedef enum
-{
-  GST_SF_OPEN = GST_ELEMENT_FLAG_LAST,
-  GST_SF_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
+typedef enum {
+  GST_SF_OPEN		= GST_ELEMENT_FLAG_LAST,
+  GST_SF_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
 } GstSFlags;
 
-typedef struct
-{
+typedef struct {
   GstPad *pad;
   gint num;
   gboolean caps_set;
@@ -75,8 +78,7 @@ typedef struct
 
 #define GST_SF_CHANNEL(l) ((GstSFChannel*)l->data)
 
-struct _GstSF
-{
+struct _GstSF {
   GstElement element;
   GList *channels;
 
@@ -100,15 +102,16 @@ struct _GstSF
   guint64 time;
 };
 
-struct _GstSFClass
-{
+struct _GstSFClass {
   GstElementClass parent_class;
 };
 
-GType gst_sf_get_type (void);
-GType gst_sfsrc_get_type (void);
-GType gst_sfsink_get_type (void);
+GType	gst_sf_get_type		(void);
+GType	gst_sfsrc_get_type	(void);
+GType	gst_sfsink_get_type	(void);
 
 
 G_END_DECLS
+
+
 #endif /* __GST_SFSINK_H__ */

@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_PASSTHROUGH \
   (gst_passthrough_get_type())
 #define GST_PASSTHROUGH(obj) \
@@ -35,18 +36,17 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PASSTHROUGH))
 #define GST_IS_PASSTHROUGH_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PASSTHROUGH))
+
 typedef struct _GstPassthrough GstPassthrough;
 typedef struct _GstPassthroughClass GstPassthroughClass;
-typedef enum _GstPassthroughFormat GstPassthroughFormat;
+typedef enum   _GstPassthroughFormat GstPassthroughFormat;
 
-enum _GstPassthroughFormat
-{
+enum _GstPassthroughFormat {
   GST_PASSTHROUGH_FORMAT_INT,
   GST_PASSTHROUGH_FORMAT_FLOAT
 };
 
-struct _GstPassthrough
-{
+struct _GstPassthrough {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
@@ -66,12 +66,12 @@ struct _GstPassthrough
   gboolean is_signed;
 };
 
-struct _GstPassthroughClass
-{
+struct _GstPassthroughClass {
   GstElementClass parent_class;
 };
 
-GType gst_passthrough_get_type (void);
+GType gst_passthrough_get_type(void);
 
 G_END_DECLS
+
 #endif /* __GST_PASSTHROUGH_H__ */

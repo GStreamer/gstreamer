@@ -19,8 +19,7 @@
 #ifndef _V_IIR_H_
 #define _V_IIR_H_
 
-typedef struct
-{
+typedef struct {
   int stages;
   double *coeff_A;
   double *coeff_B;
@@ -30,9 +29,9 @@ typedef struct
   double gain;
 } IIR_state;
 
-void IIR_init (IIR_state * s, int stages, double gain, double *A, double *B);
-void IIR_clear (IIR_state * s);
-double IIR_filter (IIR_state * s, double in);
-double IIR_filter_ChebBand (IIR_state * s, double in);
+void IIR_init(IIR_state *s,int stages,double gain, double *A, double *B);
+void IIR_clear(IIR_state *s);
+double IIR_filter(IIR_state *s,double in);
+double IIR_filter_ChebBand(IIR_state *s,double in);
 
 #endif

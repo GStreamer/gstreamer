@@ -29,9 +29,8 @@
 #include "main.h"
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_SYSTEM_ENCODE \
@@ -45,68 +44,66 @@ extern "C"
 #define GST_IS_SYSTEM_ENCODE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SYSTEM_ENCODE))
 
-  typedef struct _GstMPEG1SystemEncode GstMPEG1SystemEncode;
-  typedef struct _GstMPEG1SystemEncodeClass GstMPEG1SystemEncodeClass;
+typedef struct _GstMPEG1SystemEncode GstMPEG1SystemEncode;
+typedef struct _GstMPEG1SystemEncodeClass GstMPEG1SystemEncodeClass;
 
-  struct _GstMPEG1SystemEncode
-  {
-    GstElement element;
+struct _GstMPEG1SystemEncode {
+  GstElement element;
 
-    GstPad *srcpad;
+  GstPad *srcpad;
 
-    gboolean have_setup;
+  gboolean have_setup;
 
-    GMutex *lock;
+  GMutex *lock;
 
-    guint num_audio_pads;
-    guint num_video_pads;
+  guint num_audio_pads;
+  guint num_video_pads;
 
-    Mpeg1MuxBuffer *audio_buffer;
-    Mpeg1MuxBuffer *video_buffer;
+  Mpeg1MuxBuffer *audio_buffer;
+  Mpeg1MuxBuffer *video_buffer;
 
-    Pack_struc *pack;
-    Sys_header_struc *sys_header;
-    Sector_struc *sector;
+  Pack_struc          *pack;
+  Sys_header_struc    *sys_header;
+  Sector_struc        *sector;
 
-    guint data_rate, video_rate, audio_rate;
-    gdouble delay, audio_delay, video_delay;
-    gdouble clock_cycles;
-    gulong sectors_delay, video_delay_ms, audio_delay_ms;
-    gulong startup_delay;
-    gulong audio_buffer_size;
-    gulong video_buffer_size;
-    gulong mux_rate, dmux_rate;
-    guint64 SCR;
-    gint which_streams;
+  guint data_rate, video_rate, audio_rate;
+  gdouble delay, audio_delay, video_delay;
+  gdouble clock_cycles;
+  gulong sectors_delay, video_delay_ms, audio_delay_ms;
+  gulong startup_delay;
+  gulong audio_buffer_size;
+  gulong video_buffer_size;
+  gulong mux_rate, dmux_rate;
+  guint64 SCR;
+  gint which_streams;
 
-    gint current_pack;
-    gulong min_packet_data;
-    gulong max_packet_data;
-    gint packets_per_pack;
-    gulong packet_size;
-    gulong bytes_output;
+  gint current_pack;
+  gulong min_packet_data;
+  gulong max_packet_data;
+  gint packets_per_pack;
+  gulong packet_size;
+  gulong bytes_output;
 
-    GList *mta;
+  GList *mta;
 
-    /* stream input pads */
-    GstPad *private_1_pad[8];	/* up to 8 ac3 audio tracks <grumble> */
-    GstPad *private_2_pad;
-    GstPad *video_pad[16];
-    GstPad *audio_pad[32];
-  };
+  /* stream input pads */
+  GstPad *private_1_pad[8];	/* up to 8 ac3 audio tracks <grumble> */
+  GstPad *private_2_pad;
+  GstPad *video_pad[16];
+  GstPad *audio_pad[32];
+};
 
-  struct _GstMPEG1SystemEncodeClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstMPEG1SystemEncodeClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_mpeg1_system_encode_get_type (void);
+GType gst_mpeg1_system_encode_get_type(void);
 
 /* multplex.c */
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __SYSTEM_ENCODE_H__ */
+#endif /* __SYSTEM_ENCODE_H__ */

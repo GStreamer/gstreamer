@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_COLOR_BALANCE_CHANNEL \
   (gst_color_balance_channel_get_type ())
 #define GST_COLOR_BALANCE_CHANNEL(obj) \
@@ -37,25 +38,27 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_COLOR_BALANCE_CHANNEL))
 #define GST_IS_COLOR_BALANCE_CHANNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_COLOR_BALANCE_CHANNEL))
-    typedef struct _GstColorBalanceChannel
-{
+
+typedef struct _GstColorBalanceChannel {
   GObject parent;
 
-  gchar *label;
-  gint min_value, max_value;
+  gchar  *label;
+  gint    min_value,
+	  max_value;
 } GstColorBalanceChannel;
 
-typedef struct _GstColorBalanceChannelClass
-{
+typedef struct _GstColorBalanceChannelClass {
   GObjectClass parent;
 
   /* signals */
-  void (*value_changed) (GstColorBalanceChannel * channel, gint value);
+  void (* value_changed) (GstColorBalanceChannel *channel,
+			  gint                    value);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstColorBalanceChannelClass;
 
-GType gst_color_balance_channel_get_type (void);
+GType	gst_color_balance_channel_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_COLOR_BALANCE_CHANNEL_H__ */

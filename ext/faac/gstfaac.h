@@ -24,6 +24,7 @@
 #include <faac.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_FAAC \
   (gst_faac_get_type ())
 #define GST_FAAC(obj) \
@@ -34,17 +35,25 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_FAAC))
 #define GST_IS_FAAC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FAAC))
-    typedef struct _GstFaac
-{
+
+typedef struct _GstFaac {
   GstElement element;
 
   /* pads */
   GstPad *srcpad, *sinkpad;
 
   /* stream properties */
-  gint samplerate, channels, format, bps, bitrate, profile, shortctl;
-  gboolean tns, midside;
-  gulong bytes, samples;
+  gint samplerate,
+       channels,
+       format,
+       bps,
+       bitrate,
+       profile,
+       shortctl;
+  gboolean tns,
+	   midside;
+  gulong bytes,
+	 samples;
 
   /* FAAC object */
   faacEncHandle handle;
@@ -54,12 +63,12 @@ G_BEGIN_DECLS
   guint64 cache_time, cache_duration;
 } GstFaac;
 
-typedef struct _GstFaacClass
-{
+typedef struct _GstFaacClass {
   GstElementClass parent_class;
 } GstFaacClass;
 
 GType gst_faac_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_FAAC_H__ */

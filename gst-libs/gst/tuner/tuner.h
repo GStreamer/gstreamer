@@ -28,6 +28,7 @@
 #include <gst/tuner/tuner-enumtypes.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_TUNER \
   (gst_tuner_get_type ())
 #define GST_TUNER(obj) \
@@ -40,65 +41,87 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TUNER))
 #define GST_TUNER_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_TUNER, GstTunerClass))
+
 typedef struct _GstTuner GstTuner;
 
-typedef struct _GstTunerClass
-{
+typedef struct _GstTunerClass {
   GTypeInterface klass;
 
   /* virtual functions */
-  const GList *(*list_channels) (GstTuner * tuner);
-  void (*set_channel) (GstTuner * tuner, GstTunerChannel * channel);
-  GstTunerChannel *(*get_channel) (GstTuner * tuner);
+  const GList * (* list_channels)   (GstTuner        *tuner);
+  void          (* set_channel)     (GstTuner        *tuner,
+				     GstTunerChannel *channel);
+  GstTunerChannel *
+		(* get_channel)     (GstTuner        *tuner);
 
-  const GList *(*list_norms) (GstTuner * tuner);
-  void (*set_norm) (GstTuner * tuner, GstTunerNorm * norm);
-  GstTunerNorm *(*get_norm) (GstTuner * tuner);
+  const GList * (* list_norms)      (GstTuner        *tuner);
+  void          (* set_norm)        (GstTuner        *tuner,
+				     GstTunerNorm    *norm);
+  GstTunerNorm *(* get_norm)        (GstTuner        *tuner);
 
-  void (*set_frequency) (GstTuner * tuner,
-      GstTunerChannel * channel, gulong frequency);
-    gulong (*get_frequency) (GstTuner * tuner, GstTunerChannel * channel);
-    gint (*signal_strength) (GstTuner * tuner, GstTunerChannel * channel);
+  void          (* set_frequency)   (GstTuner        *tuner,
+				     GstTunerChannel *channel,
+				     gulong           frequency);
+  gulong        (* get_frequency)   (GstTuner        *tuner,
+				     GstTunerChannel *channel);
+  gint		(* signal_strength) (GstTuner        *tuner,
+				     GstTunerChannel *channel);
 
   /* signals */
-  void (*channel_changed) (GstTuner * tuner, GstTunerChannel * channel);
-  void (*norm_changed) (GstTuner * tuner, GstTunerNorm * norm);
-  void (*frequency_changed) (GstTuner * tuner,
-      GstTunerChannel * channel, gulong frequency);
-  void (*signal_changed) (GstTuner * tuner,
-      GstTunerChannel * channel, gint signal);
+  void (*channel_changed)   (GstTuner        *tuner,
+			     GstTunerChannel *channel);
+  void (*norm_changed)      (GstTuner        *tuner,
+			     GstTunerNorm    *norm);
+  void (*frequency_changed) (GstTuner        *tuner,
+			     GstTunerChannel *channel,
+			     gulong           frequency);
+  void (*signal_changed)    (GstTuner        *tuner,
+			     GstTunerChannel *channel,
+			     gint             signal);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstTunerClass;
 
-GType gst_tuner_get_type (void);
+GType		gst_tuner_get_type		(void);
 
 /* virtual class function wrappers */
-const GList *gst_tuner_list_channels (GstTuner * tuner);
-void gst_tuner_set_channel (GstTuner * tuner, GstTunerChannel * channel);
-GstTunerChannel *gst_tuner_get_channel (GstTuner * tuner);
+const GList *	gst_tuner_list_channels		(GstTuner        *tuner);
+void		gst_tuner_set_channel		(GstTuner        *tuner,
+						 GstTunerChannel *channel);
+GstTunerChannel *
+		gst_tuner_get_channel		(GstTuner        *tuner);
 
-const GList *gst_tuner_list_norms (GstTuner * tuner);
-void gst_tuner_set_norm (GstTuner * tuner, GstTunerNorm * channel);
-GstTunerNorm *gst_tuner_get_norm (GstTuner * tuner);
+const GList *	gst_tuner_list_norms		(GstTuner        *tuner);
+void		gst_tuner_set_norm		(GstTuner        *tuner,
+						 GstTunerNorm    *channel);
+GstTunerNorm *	gst_tuner_get_norm		(GstTuner        *tuner);
 
-void gst_tuner_set_frequency (GstTuner * tuner,
-    GstTunerChannel * channel, gulong frequency);
-gulong gst_tuner_get_frequency (GstTuner * tuner, GstTunerChannel * channel);
-gint gst_tuner_signal_strength (GstTuner * tuner, GstTunerChannel * channel);
+void		gst_tuner_set_frequency		(GstTuner        *tuner,
+						 GstTunerChannel *channel,
+						 gulong           frequency);
+gulong		gst_tuner_get_frequency		(GstTuner        *tuner,
+						 GstTunerChannel *channel);
+gint		gst_tuner_signal_strength	(GstTuner        *tuner,
+						 GstTunerChannel *channel);
 
 /* helper functions */
-GstTunerNorm *gst_tuner_find_norm_by_name (GstTuner * tuner, gchar * norm);
-GstTunerChannel *gst_tuner_find_channel_by_name (GstTuner * tuner,
-    gchar * channel);
+GstTunerNorm *	gst_tuner_find_norm_by_name	(GstTuner	 *tuner,
+						 gchar		 *norm);
+GstTunerChannel *gst_tuner_find_channel_by_name (GstTuner	 *tuner,
+						 gchar		 *channel);
 
 /* trigger signals */
-void gst_tuner_channel_changed (GstTuner * tuner, GstTunerChannel * channel);
-void gst_tuner_norm_changed (GstTuner * tuner, GstTunerNorm * norm);
-void gst_tuner_frequency_changed (GstTuner * tuner,
-    GstTunerChannel * channel, gulong frequency);
-void gst_tuner_signal_changed (GstTuner * tuner,
-    GstTunerChannel * channel, gint signal);
+void		gst_tuner_channel_changed	(GstTuner        *tuner,
+						 GstTunerChannel *channel);
+void		gst_tuner_norm_changed		(GstTuner        *tuner,
+						 GstTunerNorm    *norm);
+void		gst_tuner_frequency_changed	(GstTuner        *tuner,
+						 GstTunerChannel *channel,
+						 gulong           frequency);
+void		gst_tuner_signal_changed	(GstTuner        *tuner,
+						 GstTunerChannel *channel,
+						 gint             signal);
 
 G_END_DECLS
+
 #endif /* __GST_TUNER_H__ */

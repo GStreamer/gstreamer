@@ -31,9 +31,8 @@
 #endif
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_GSMDEC \
@@ -47,32 +46,30 @@ extern "C"
 #define GST_IS_GSMDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GSMDEC))
 
-  typedef struct _GstGSMDec GstGSMDec;
-  typedef struct _GstGSMDecClass GstGSMDecClass;
+typedef struct _GstGSMDec GstGSMDec;
+typedef struct _GstGSMDecClass GstGSMDecClass;
 
-  struct _GstGSMDec
-  {
-    GstElement element;
+struct _GstGSMDec {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
+  /* pads */
+  GstPad *sinkpad,*srcpad;
 
-    gsm state;
-    gsm_byte buffer[33];
-    gint bufsize;
-  };
+  gsm state;
+  gsm_byte buffer[33];
+  gint bufsize;
+};
 
-  struct _GstGSMDecClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstGSMDecClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_gsmdec_get_type (void);
+GType gst_gsmdec_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_GSMDEC_H__ */
+#endif /* __GST_GSMDEC_H__ */

@@ -26,9 +26,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_STEREO \
@@ -42,29 +41,27 @@ extern "C"
 #define GST_IS_STEREO_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_STEREO))
 
-  typedef struct _GstStereo GstStereo;
-  typedef struct _GstStereoClass GstStereoClass;
+typedef struct _GstStereo GstStereo;
+typedef struct _GstStereoClass GstStereoClass;
 
-  struct _GstStereo
-  {
-    GstElement element;
+struct _GstStereo {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
-    gint8 active;
-    gfloat stereo;
-  };
+  gint8 active;
+  gfloat stereo;
+};
 
-  struct _GstStereoClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstStereoClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_stereo_get_type (void);
+GType gst_stereo_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_STEREO_H__ */
+#endif /* __GST_STEREO_H__ */

@@ -24,9 +24,8 @@
 #include <decore.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_DIVXDEC \
@@ -40,36 +39,34 @@ extern "C"
 #define GST_IS_DIVXDEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DIVXDEC))
 
-  typedef struct _GstDivxDec GstDivxDec;
-  typedef struct _GstDivxDecClass GstDivxDecClass;
+typedef struct _GstDivxDec GstDivxDec;
+typedef struct _GstDivxDecClass GstDivxDecClass;
 
-  struct _GstDivxDec
-  {
-    GstElement element;
+struct _GstDivxDec {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
+  /* pads */
+  GstPad *sinkpad, *srcpad;
 
-    /* divx handle */
-    void *handle;
+  /* divx handle */
+  void *handle;
 
-    /* video (output) settings */
-    guint32 csp;
-    int bitcnt, bpp;
-    int version;
-    int width, height;
-    gdouble fps;
-  };
+  /* video (output) settings */
+  guint32 csp;
+  int bitcnt, bpp;
+  int version;
+  int width, height;
+  gdouble fps;
+};
 
-  struct _GstDivxDecClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstDivxDecClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_divxdec_get_type (void);
+GType gst_divxdec_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* __GST_DIVXDEC_H__ */
+#endif /* __GST_DIVXDEC_H__ */

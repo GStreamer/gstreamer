@@ -26,9 +26,8 @@
 #include <musicbrainz/mb_c.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_MUSICBRAINZ \
@@ -43,43 +42,41 @@ extern "C"
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MUSICBRAINZ))
 
 
-  typedef struct _GstMusicBrainz GstMusicBrainz;
-  typedef struct _GstMusicBrainzClass GstMusicBrainzClass;
+typedef struct _GstMusicBrainz GstMusicBrainz;
+typedef struct _GstMusicBrainzClass GstMusicBrainzClass;
 
-  struct _GstMusicBrainz
-  {
-    GstElement element;
+struct _GstMusicBrainz {
+  GstElement element;
 
-    GstPad *sinkpad;
-    GstPad *srcpad;
-    const GstCaps *caps;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+  const GstCaps *caps;
 
-    trm_t trm;
-    gchar signature[17];
-    gchar ascii_signature[37];
+  trm_t trm;
+  gchar signature[17];
+  gchar ascii_signature[37];
 
-    guint depth;
-    guint rate;
-    guint channels;
-    gboolean linked;
-    gboolean data_available;
-    gboolean signature_available;
-    guint64 total_time;
-  };
+  guint depth;  
+  guint rate;
+  guint channels;
+  gboolean linked;
+  gboolean data_available;
+  gboolean signature_available;
+  guint64 total_time;
+};
 
-  struct _GstMusicBrainzClass
-  {
-    GstElementClass parent_class;
+struct _GstMusicBrainzClass {
+  GstElementClass parent_class;
 
-    /* signals */
-    void (*signature_available) (GstElement * element);
-  };
+  /* signals */
+  void (*signature_available) (GstElement *element);
+};
 
-  GType gst_musicbrainz_get_type (void);
+GType gst_musicbrainz_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_MUSICBRAINZE_H__ */
+#endif /* __GST_MUSICBRAINZE_H__ */

@@ -25,9 +25,8 @@
 #include <artsc.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_ARTSDSINK \
@@ -41,42 +40,39 @@ extern "C"
 #define GST_IS_ARTSDSINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ARTSDSINK))
 
-  typedef enum
-  {
-    GST_ARTSDSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-    GST_ARTSDSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-  } GstArtsdSinkFlags;
+typedef enum {
+  GST_ARTSDSINK_OPEN            = GST_ELEMENT_FLAG_LAST,
+  GST_ARTSDSINK_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2,
+} GstArtsdSinkFlags;
 
-  typedef struct _GstArtsdsink GstArtsdsink;
-  typedef struct _GstArtsdsinkClass GstArtsdsinkClass;
+typedef struct _GstArtsdsink GstArtsdsink;
+typedef struct _GstArtsdsinkClass GstArtsdsinkClass;
 
-  struct _GstArtsdsink
-  {
-    GstElement element;
+struct _GstArtsdsink {
+  GstElement element;
 
-    GstPad *sinkpad;
+  GstPad *sinkpad;
 
-    gboolean connected;
-    arts_stream_t stream;
-    gboolean mute;
-    gboolean signd;
-    gint depth;
-    gint channels;
-    gint frequency;
-    gchar *connect_name;
-  };
+  gboolean connected;
+  arts_stream_t stream;
+  gboolean mute;
+  gboolean signd;
+  gint     depth;
+  gint     channels;
+  gint     frequency;
+  gchar*   connect_name;
+};
 
-  struct _GstArtsdsinkClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstArtsdsinkClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_artsdsink_get_type (void);
+GType gst_artsdsink_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_ARTSDSINK_H__ */
+#endif /* __GST_ARTSDSINK_H__ */

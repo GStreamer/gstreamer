@@ -25,81 +25,72 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 #define MAX_FLIP_BUFFERS 1
 
-  typedef struct _GstImageInfo GstImageInfo;
-  struct _GstImageInfo
-  {
-    gulong id;
-    int demo;
-    int dumpvideo;
-    void (*free_info) (GstImageInfo * info);
-  };
+typedef struct _GstImageInfo GstImageInfo;
+struct _GstImageInfo {
+  gulong id;
+  int demo;
+  int dumpvideo;
+  void (*free_info) (GstImageInfo *info);
+};
 
 
-  typedef struct _GstImageData GstImageData;
-  struct _GstImageData
-  {
-    gint size;
-    gchar *data;
-  };
+typedef struct _GstImageData GstImageData;
+struct _GstImageData {
+  gint size;
+  gchar *data;
+};
 
-  typedef struct _GstImageConnection GstImageConnection;
-  struct _GstImageConnection
-  {
-    void (*open_conn) (GstImageConnection * conn, GstImageInfo * info);
-    void (*close_conn) (GstImageConnection * conn, GstImageInfo * info);
-    void (*free_conn) (GstImageConnection * conn);
-  };
+typedef struct _GstImageConnection GstImageConnection;
+struct _GstImageConnection {
+  void (*open_conn) (GstImageConnection *conn, GstImageInfo *info);
+  void (*close_conn) (GstImageConnection *conn, GstImageInfo *info);  
+  void (*free_conn) (GstImageConnection *conn);
+};
 
-  typedef GstCaps *(*GstImagePluginGetCapsFunc) (GstImageInfo * info);
-  typedef GstImageConnection *(*GstImagePluginSetCapsFunc) (GstImageInfo * info,
-      GstCaps * caps);
-  typedef GstImageData *(*GstImagePluginGetImageFunc) (GstImageInfo * info,
-      GstImageConnection * conn);
-  typedef void (*GstImagePluginPutImageFunc) (GstImageInfo * info,
-      GstImageData * image);
-  typedef void (*GstImagePluginFreeImageFunc) (GstImageData * image);
+typedef GstCaps *		(*GstImagePluginGetCapsFunc)	(GstImageInfo *info); 
+typedef GstImageConnection *	(*GstImagePluginSetCapsFunc) 	(GstImageInfo *info, GstCaps *caps);
+typedef GstImageData*		(*GstImagePluginGetImageFunc)	(GstImageInfo *info, GstImageConnection *conn);
+typedef void 			(*GstImagePluginPutImageFunc)	(GstImageInfo *info, GstImageData *image);
+typedef void 			(*GstImagePluginFreeImageFunc)	(GstImageData *image);
 
-  typedef struct _GstImagePlugin GstImagePlugin;
-  struct _GstImagePlugin
-  {
-    GstImagePluginGetCapsFunc get_caps;
-    GstImagePluginSetCapsFunc set_caps;
-    GstImagePluginGetImageFunc get_image;
-    GstImagePluginPutImageFunc put_image;
-    GstImagePluginFreeImageFunc free_image;
-  };
+typedef struct _GstImagePlugin GstImagePlugin;
+struct _GstImagePlugin {
+  GstImagePluginGetCapsFunc	get_caps;
+  GstImagePluginSetCapsFunc	set_caps;
+  GstImagePluginGetImageFunc	get_image;
+  GstImagePluginPutImageFunc	put_image;
+  GstImagePluginFreeImageFunc	free_image;
+};
 
-  typedef struct _GstGLImageInfo GstGLImageInfo;
+typedef struct _GstGLImageInfo GstGLImageInfo;
 /* stuff about our window grouped together */
-  struct _GstGLImageInfo
-  {
-    GstImageInfo info;
-    Display *dpy;
-    int screen;
-    Window win;
-    GLXContext ctx;
-    XSetWindowAttributes attr;
-    Bool fs;
-    //XF86VidModeModeInfo deskMode;
-    int x, y;
-    unsigned int width, height;
-    unsigned int depth;
-    /* window specific from here */
-    GstElement *sink;
-    gulong handler_id;
-    float rotX, rotY, zoom, zoomdir;
-  };
+struct _GstGLImageInfo {
+  GstImageInfo info;
+  Display *dpy;
+  int screen;
+  Window win;
+  GLXContext ctx;
+  XSetWindowAttributes attr;
+  Bool fs;
+  //XF86VidModeModeInfo deskMode;
+  int x, y;
+  unsigned int width, height;
+  unsigned int depth;    
+  /* window specific from here */
+  GstElement *sink;
+  gulong handler_id;
+  float rotX,rotY,zoom, zoomdir;
+};
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_VIDEOSINK_H__ */
+#endif /* __GST_VIDEOSINK_H__ */

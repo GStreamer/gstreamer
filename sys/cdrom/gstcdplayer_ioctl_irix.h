@@ -22,95 +22,88 @@
 #define CDPLAYER(x) ((CDPlayer *)x)
 #define FD(x) ((int)x)
 
-gboolean
-cd_init (struct cd *cd, const gchar * device)
+gboolean cd_init(struct cd *cd,const gchar *device)
 {
-  CDPLAYER *cdplayer;
-  CDSTATUS status;
-  CDTRACKINFO info;
-  guint i;
+	CDPLAYER *cdplayer;
+	CDSTATUS status;
+	CDTRACKINFO info;
+	guint i;
 
-  cdplayer = CDOpen (device, "r");
+	cdplayer = CDOpen(device,"r");
 
-  if (cdplayer == NULL) {
-    return FALSE;
-  }
+	if (cdplayer == NULL) {
+		return FALSE;
+	}
 
-  cd->fd = FD (cdplayer);
+	cd->fd = FD(cdplayer);
 
-  if (CDgetstatus (cdplayer, &status) == 0) {
-    CDclose (cdplayer);
-    cd->fd = 0;
-    return FALSE;
-  }
+	if (CDgetstatus(cdplayer,&status) == 0) {
+		CDclose(cdplayer);
+		cd->fd = 0;
+		return FALSE;
+	}
 
-  for (i = 1; i < status.last; i++) {
-    if (CDgettrackinfo (cdplayer, i, &info) == 0) {
-      CDclose (cdplayer);
-      cd->fd = 0;
-      return FALSE;
-    }
+	for (i = 1; i < status.last; i++) {
+		if (CDgettrackinfo(cdplayer,i,&info) == 0) {
+			CDclose(cdplayer);
+			cd->fd = 0;
+			return FALSE;
+		}
 
-    cd->tracks[i].minute = info.start_min;
-    cd->tracks[i].second = info.start_sec;
-    cd->tracks[i].frame = info.start_frame;
+		cd->tracks[i].minute = info.start_min;
+		cd->tracks[i].second = info.start_sec;
+		cd->tracks[i].frame = info.start_frame;
 
-  }
+	}
 
-  /* there is no leadout information */
+	/* there is no leadout information */
+	
 
+	cd->num_tracks = status.last;
 
-  cd->num_tracks = status.last;
-
-  return TRUE;
+	return TRUE;
 }
 
-gboolean
-cd_start (struct cd * cd, gint start_track, gint end_track)
+gboolean cd_start(struct cd *cd,gint start_track,gint end_track)
 {
-  if (cd->fd == 0) {
-    return FALSE;
-  }
+	if (cd->fd == 0) {
+		return FALSE;
+	}
 
-  cd_fix_track_range (cd, &start_track, &end_track);
+	cd_fix_track_range(cd,&start_track,&end_track);
 
-
+	
 
 }
 
-gboolean
-cd_pause (struct cd * cd)
+gboolean cd_pause(struct cd *cd)
 {
 
 }
 
-gboolean
-cd_resume (struct cd *cd)
+gboolean cd_resume(struct cd *cd)
 {
 
 }
 
-gboolean
-cd_stop (struct cd *cd)
+gboolean cd_stop(struct cd *cd)
 {
 
 }
 
 /* -1 for error, 0 for not playing, 1 for playing */
-CDStatus
-cd_status (struct cd *cd)
+CDStatus cd_status(struct cd *cd)
 {
 
 }
 
-gint
-cd_current_track (struct cd *cd)
+gint cd_current_track(struct cd *cd)
 {
 
 }
 
-gboolean
-cd_close (struct cd *cd)
+gboolean cd_close(struct cd *cd)
 {
 
 }
+

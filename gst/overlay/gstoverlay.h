@@ -37,32 +37,30 @@
 typedef struct _GstOverlay GstOverlay;
 typedef struct _GstOverlayClass GstOverlayClass;
 
-struct _GstOverlay
-{
-  GstElement element;
+struct _GstOverlay {
+  GstElement 	 element;
 
-  GstPad *srcpad;
-  GstPad *sinkpad1;
-  GstPad *sinkpad2;
-  GstPad *sinkpad3;
+  GstPad 	*srcpad;
+  GstPad	*sinkpad1;
+  GstPad	*sinkpad2;
+  GstPad	*sinkpad3;
 
-  gint format;
-  gint width;
-  gint height;
+  gint 		 format;
+  gint 		 width;
+  gint 		 height;
 
-  gint duration;
-  gint position;
+  gint 		 duration;
+  gint 		 position;
 
-  gint type;
-  gint fps;
-  gint border;
-  gint depth;
+  gint 		 type;
+  gint 		 fps;
+  gint 		 border;
+  gint 		 depth;
 
-  gdouble framerate;
+  gdouble	 framerate;
 };
 
-struct _GstOverlayClass
-{
+struct _GstOverlayClass {
   GstElementClass parent_class;
 };
 

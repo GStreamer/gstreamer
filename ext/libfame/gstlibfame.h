@@ -25,9 +25,8 @@
 #include <fame.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_FAMEENC \
@@ -41,50 +40,48 @@ extern "C"
 #define GST_IS_FAMEENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FAMEENC))
 
-  typedef struct _GstFameEnc GstFameEnc;
-  typedef struct _GstFameEncClass GstFameEncClass;
+typedef struct _GstFameEnc GstFameEnc;
+typedef struct _GstFameEncClass GstFameEncClass;
 
-  struct _GstFameEnc
-  {
-    GstElement element;
+struct _GstFameEnc {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
+  /* pads */
+  GstPad *sinkpad, *srcpad;
 
-    /* the timestamp of the next frame */
-    guint64 next_time;
-    /* the interval between frames */
-    guint64 time_interval;
+  /* the timestamp of the next frame */
+  guint64 next_time;
+  /* the interval between frames */
+  guint64 time_interval;
 
-    /* video state */
-    gint format;
-    /* the size of the output buffer */
-    gint outsize;
+  /* video state */
+  gint format;
+  /* the size of the output buffer */
+  gint outsize;
 
-    /* encoding pattern string */
-    gchar *pattern;
+  /* encoding pattern string */
+  gchar *pattern;
 
-    /* fameenc stuff */
-    gboolean verbose;
-    fame_context_t *fc;
-    fame_parameters_t fp;
-    fame_yuv_t fy;
-    gulong buffer_size;
-    unsigned char *buffer;
-    gboolean initialized;
-  };
+  /* fameenc stuff */
+  gboolean verbose;
+  fame_context_t *fc;
+  fame_parameters_t fp;
+  fame_yuv_t fy;
+  gulong buffer_size;
+  unsigned char *buffer;
+  gboolean initialized;
+};
 
-  struct _GstFameEncClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstFameEncClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_fameenc_get_type (void);
+GType gst_fameenc_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_FAMEENC_H__ */
+#endif /* __GST_FAMEENC_H__ */

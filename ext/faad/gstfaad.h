@@ -24,6 +24,7 @@
 #include <faad.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_FAAD \
   (gst_faad_get_type ())
 #define GST_FAAD(obj) \
@@ -34,26 +35,28 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_FAAD))
 #define GST_IS_FAAD_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FAAD))
-    typedef struct _GstFaad
-{
+
+typedef struct _GstFaad {
   GstElement element;
 
   /* pads */
   GstPad *srcpad, *sinkpad;
 
   /* cache for latest MPEG-frame */
-  gint samplerate, channels, bps;
+  gint samplerate,
+       channels,
+       bps;
 
   /* FAAD object */
   faacDecHandle handle;
 } GstFaad;
 
-typedef struct _GstFaadClass
-{
+typedef struct _GstFaadClass {
   GstElementClass parent_class;
 } GstFaadClass;
 
 GType gst_faad_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_FAAD_H__ */

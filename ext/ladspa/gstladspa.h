@@ -31,60 +31,62 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
-  typedef struct _ladspa_control_info
-  {
-    gchar *name;
-    gchar *param_name;
-    gfloat lowerbound, upperbound;
-    gfloat def;
-    gboolean lower, upper, samplerate;
-    gboolean toggled, logarithmic, integer, writable;
-  } ladspa_control_info;
+typedef struct _ladspa_control_info {
+  gchar *name;
+  gchar *param_name;
+  gfloat lowerbound, upperbound;
+  gfloat def;
+  gboolean lower,upper,samplerate;
+  gboolean toggled, logarithmic, integer, writable;
+} ladspa_control_info;
 
-  typedef struct _GstLADSPA GstLADSPA;
-  typedef struct _GstLADSPAClass GstLADSPAClass;
+typedef struct _GstLADSPA GstLADSPA;
+typedef struct _GstLADSPAClass GstLADSPAClass;
 
-  struct _GstLADSPA
-  {
-    GstElement element;
+struct _GstLADSPA {
+  GstElement element;
 
-    LADSPA_Descriptor *descriptor;
-    LADSPA_Handle *handle;
+  LADSPA_Descriptor *descriptor;
+  LADSPA_Handle *handle;
 
-    GstDParamManager *dpman;
+  GstDParamManager *dpman;
 
-    gfloat *controls;
+  gfloat *controls;
+  
+  GstPad **sinkpads, 
+         **srcpads;
 
-    GstPad **sinkpads, **srcpads;
+  gboolean activated;
 
-    gboolean activated;
+  gint samplerate, buffer_frames;
+  gint64 timestamp;
+  gboolean inplace_broken;
+};
 
-    gint samplerate, buffer_frames;
-    gint64 timestamp;
-    gboolean inplace_broken;
-  };
+struct _GstLADSPAClass {
+  GstElementClass parent_class;
 
-  struct _GstLADSPAClass
-  {
-    GstElementClass parent_class;
+  LADSPA_Descriptor *descriptor;
 
-    LADSPA_Descriptor *descriptor;
+  gint numports,
+       numsinkpads, 
+       numsrcpads, 
+       numcontrols;
 
-    gint numports, numsinkpads, numsrcpads, numcontrols;
+  gint *sinkpad_portnums, 
+       *srcpad_portnums, 
+       *control_portnums;
 
-    gint *sinkpad_portnums, *srcpad_portnums, *control_portnums;
-
-    ladspa_control_info *control_info;
-  };
+  ladspa_control_info *control_info;
+};
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_LADSPA_H__ */
+#endif /* __GST_LADSPA_H__ */

@@ -18,12 +18,12 @@
 
 #include <gst/gst.h>
 
-typedef unsigned int Pixel;
-typedef unsigned int Pixel32;
-typedef unsigned char Pixel8;
-typedef int PixCoord;
-typedef int PixDim;
-typedef int PixOffset;
+typedef unsigned int    Pixel;
+typedef unsigned int    Pixel32;
+typedef unsigned char   Pixel8;
+typedef int             PixCoord;
+typedef int             PixDim;
+typedef int             PixOffset;
 
 
 #define R_MASK  (0x00ff0000)

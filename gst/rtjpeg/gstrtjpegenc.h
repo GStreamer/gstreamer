@@ -28,9 +28,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_RTJPEGENC \
@@ -44,31 +43,29 @@ extern "C"
 #define GST_IS_RTJPEGENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTJPEGENC))
 
-  typedef struct _GstRTJpegEnc GstRTJpegEnc;
-  typedef struct _GstRTJpegEncClass GstRTJpegEncClass;
+typedef struct _GstRTJpegEnc GstRTJpegEnc;
+typedef struct _GstRTJpegEncClass GstRTJpegEncClass;
 
-  struct _GstRTJpegEnc
-  {
-    GstElement element;
+struct _GstRTJpegEnc {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
-    gint width, height;
-    gint quality;
-    gint quant[128];
-  };
+  gint width,height;
+  gint quality;
+  gint quant[128];
+};
 
-  struct _GstRTJpegEncClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstRTJpegEncClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_rtjpegenc_get_type (void);
+GType gst_rtjpegenc_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __RTJPEGENC_H__ */
+#endif /* __RTJPEGENC_H__ */

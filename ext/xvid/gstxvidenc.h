@@ -24,9 +24,8 @@
 #include "gstxvid.h"
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_XVIDENC \
@@ -40,48 +39,46 @@ extern "C"
 #define GST_IS_XVIDENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XVIDENC))
 
-  typedef struct _GstXvidEnc GstXvidEnc;
-  typedef struct _GstXvidEncClass GstXvidEncClass;
+typedef struct _GstXvidEnc GstXvidEnc;
+typedef struct _GstXvidEncClass GstXvidEncClass;
 
-  struct _GstXvidEnc
-  {
-    GstElement element;
+struct _GstXvidEnc {
+  GstElement element;
 
-    /* pads */
-    GstPad *sinkpad, *srcpad;
+  /* pads */
+  GstPad *sinkpad, *srcpad;
 
-    /* encoding profile */
-    gint profile;
+  /* encoding profile */
+  gint profile;
 
-    /* quality of encoded image */
-    gint bitrate;
-    gint buffer_size;
+  /* quality of encoded image */
+  gint bitrate;
+  gint buffer_size;
 
-    /* max number of B frames between I/P */
-    gint max_b_frames;
+  /* max number of B frames between I/P */
+  gint max_b_frames;
 
-    /* max key interval */
-    gint max_key_interval;
+  /* max key interval */
+  gint max_key_interval;
 
-    /* xvid handle */
-    void *handle;
-    gint csp;
-    gint width, height, stride;
-    gdouble fps;
-  };
+  /* xvid handle */
+  void *handle;
+  gint csp;
+  gint width, height, stride;
+  gdouble fps;
+};
 
-  struct _GstXvidEncClass
-  {
-    GstElementClass parent_class;
+struct _GstXvidEncClass {
+  GstElementClass parent_class;
 
-    /* signals */
-    void (*frame_encoded) (GstElement * element);
-  };
+  /* signals */
+  void (*frame_encoded) (GstElement *element);
+};
 
-  GType gst_xvidenc_get_type (void);
+GType gst_xvidenc_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
-#endif				/* __GST_XVIDENC_H__ */
+#endif /* __GST_XVIDENC_H__ */

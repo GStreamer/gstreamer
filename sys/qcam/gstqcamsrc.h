@@ -25,9 +25,8 @@
 #include <gst/gst.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 /** QuickCam include files */
 #include "qcam.h"
@@ -45,38 +44,35 @@ extern "C"
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QCAMSRC))
 
 /* NOTE: per-element flags start with 16 for now */
-  typedef enum
-  {
-    GST_QCAMSRC_OPEN = GST_ELEMENT_FLAG_LAST,
+typedef enum {
+  GST_QCAMSRC_OPEN            = GST_ELEMENT_FLAG_LAST,
 
-    GST_QCAMSRC_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2,
-  } GstQCamSrcFlags;
+  GST_QCAMSRC_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2,
+} GstQCamSrcFlags;
 
-  typedef struct _GstQCamSrc GstQCamSrc;
-  typedef struct _GstQCamSrcClass GstQCamSrcClass;
+typedef struct _GstQCamSrc GstQCamSrc;
+typedef struct _GstQCamSrcClass GstQCamSrcClass;
 
-  struct _GstQCamSrc
-  {
-    GstElement element;
+struct _GstQCamSrc {
+  GstElement element;
 
-    /* pads */
-    GstPad *srcpad;
+  /* pads */
+  GstPad *srcpad;
 
-    struct qcam *qcam;
-    gboolean autoexposure;
-    gint port;
-  };
+  struct qcam *qcam;
+  gboolean autoexposure;
+  gint port;
+};
 
-  struct _GstQCamSrcClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstQCamSrcClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_qcamsrc_get_type (void);
+GType gst_qcamsrc_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_QCAMSRC_H__ */
+#endif /* __GST_QCAMSRC_H__ */

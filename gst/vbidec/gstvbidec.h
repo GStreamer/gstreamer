@@ -19,4 +19,4 @@
 
 typedef struct _GstVBIDec GstVBIDec;
 
-void gst_vbidec_show_text (GstVBIDec * vbidec, char *text, int len);
+void gst_vbidec_show_text (GstVBIDec *vbidec, char *text, int len);

@@ -27,9 +27,8 @@
 #include "tarkin.h"
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 #define GST_TYPE_TARKINENC \
   (tarkinenc_get_type())
@@ -42,45 +41,43 @@ extern "C"
 #define GST_IS_TARKINENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TARKINENC))
 
-  typedef struct _TarkinEnc TarkinEnc;
-  typedef struct _TarkinEncClass TarkinEncClass;
+typedef struct _TarkinEnc TarkinEnc;
+typedef struct _TarkinEncClass TarkinEncClass;
 
-  struct _TarkinEnc
-  {
-    GstElement element;
+struct _TarkinEnc {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
-    ogg_stream_state os;	/* take physical pages, weld into a logical
-				   stream of packets */
-    ogg_page og;		/* one Ogg bitstream page.  Tarkin packets are inside */
-    ogg_packet op[3];		/* one raw packet of data for decode */
+  ogg_stream_state	 os; /* take physical pages, weld into a logical
+			                              stream of packets */
+  ogg_page        	 og; /* one Ogg bitstream page.  Tarkin packets are inside */
+  ogg_packet       	 op[3]; /* one raw packet of data for decode */
 
-    TarkinStream *tarkin_stream;
-    TarkinComment tc;
-    TarkinInfo ti;
-    TarkinVideoLayerDesc layer[1];
+  TarkinStream 		*tarkin_stream;
+  TarkinComment 	 tc;
+  TarkinInfo 		 ti;
+  TarkinVideoLayerDesc 	 layer[1];
 
-    gint frame_num;
+  gint 			 frame_num;
+        
+  gboolean eos;
+  gint bitrate;
+  gint s_moments;
+  gint a_moments;
+  gboolean setup;
+};
 
-    gboolean eos;
-    gint bitrate;
-    gint s_moments;
-    gint a_moments;
-    gboolean setup;
-  };
+struct _TarkinEncClass {
+  GstElementClass parent_class;
+};
 
-  struct _TarkinEncClass
-  {
-    GstElementClass parent_class;
-  };
-
-  GType tarkinenc_get_type (void);
+GType tarkinenc_get_type(void);
 
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __TARKINENC_H__ */
+#endif /* __TARKINENC_H__ */

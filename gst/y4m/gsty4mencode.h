@@ -27,9 +27,8 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif				/* __cplusplus */
+extern "C" {
+#endif /* __cplusplus */
 
 
 #define GST_TYPE_Y4MENCODE \
@@ -43,32 +42,30 @@ extern "C"
 #define GST_IS_Y4MENCODE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_Y4MENCODE))
 
-  typedef struct _GstY4mEncode GstY4mEncode;
-  typedef struct _GstY4mEncodeClass GstY4mEncodeClass;
+typedef struct _GstY4mEncode GstY4mEncode;
+typedef struct _GstY4mEncodeClass GstY4mEncodeClass;
 
-  struct _GstY4mEncode
-  {
-    GstElement element;
+struct _GstY4mEncode {
+  GstElement element;
 
-    GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad,*srcpad;
 
-    gint width, height;
-    gfloat fps_idx;
+  gint width, height;
+  gfloat fps_idx;
 
-    gboolean init;
+  gboolean init;
 
-  };
+};
 
-  struct _GstY4mEncodeClass
-  {
-    GstElementClass parent_class;
-  };
+struct _GstY4mEncodeClass {
+  GstElementClass parent_class;
+};
 
-  GType gst_y4mencode_get_type (void);
+GType gst_y4mencode_get_type(void);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif /* __cplusplus */
 
 
-#endif				/* __GST_Y4MENCODE_H__ */
+#endif /* __GST_Y4MENCODE_H__ */

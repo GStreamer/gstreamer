@@ -72,65 +72,69 @@ struct GstMediaInfoPriv
   gint metadata_iters;
   GstTagList *streaminfo;
 
-  GstElement *pipeline;		/* will be != NULL during collection */
-  gchar *pipeline_desc;		/* will be != NULL during collection */
-  GstElement *fakesink;		/* so we can get caps from the
-				   decoder sink pad */
-  gchar *source_name;		/* type of element used as source */
+  GstElement *pipeline;                 /* will be != NULL during collection */
+  gchar *pipeline_desc;                 /* will be != NULL during collection */
+  GstElement *fakesink;			/* so we can get caps from the
+                                           decoder sink pad */
+  gchar *source_name;                   /* type of element used as source */
   GstElement *source;
-  GstPad *source_pad;		/* pad for querying encoded caps */
+  GstPad *source_pad;                   /* pad for querying encoded caps */
   GstElement *decoder;
-  GstPad *decoder_pad;		/* pad for querying decoded caps */
-  GstElement *decontainer;	/* element to typefind in containers */
+  GstPad *decoder_pad;                  /* pad for querying decoded caps */
+  GstElement *decontainer;		/* element to typefind in containers */
 
-  GstMediaInfoState state;	/* current state of state machine */
-  gchar *location;		/* location set on the info object */
-  guint16 flags;		/* flags supplied for detection */
-  GstMediaInfoTrack *current_track;	/* track pointer under inspection */
-  glong current_track_num;	/* current track under inspection */
+  GstMediaInfoState state;              /* current state of state machine */
+  gchar *location;                      /* location set on the info object */
+  guint16 flags;                        /* flags supplied for detection */
+  GstMediaInfoTrack *current_track;     /* track pointer under inspection */
+  glong current_track_num;              /* current track under inspection */
 
-  GstMediaInfoStream *stream;	/* total stream properties */
-  char *cache;			/* location of cache */
+  GstMediaInfoStream *stream;           /* total stream properties */
+  char *cache;                          /* location of cache */
 
-  GError *error;		/* error for creation problems */
+  GError *error;			/* error for creation problems */
 };
 
 /* declarations */
-GstMediaInfoStream *gmi_stream_new (void);
-void gmi_stream_free (GstMediaInfoStream * stream);
+GstMediaInfoStream *
+		gmi_stream_new			(void);
+void		gmi_stream_free			(GstMediaInfoStream *stream);
 
-GstMediaInfoTrack *gmi_track_new (void);
+GstMediaInfoTrack *
+		gmi_track_new			(void);
 
-void gmip_reset (GstMediaInfoPriv * priv);
-gboolean gmip_init (GstMediaInfoPriv * priv, GError ** error);
+void		gmip_reset			(GstMediaInfoPriv *priv);
+gboolean	gmip_init			(GstMediaInfoPriv *priv, GError **error);
 
-void gmi_clear_decoder (GstMediaInfo * info);
+void		gmi_clear_decoder		(GstMediaInfo *info);
 
-gboolean gmi_seek_to_track (GstMediaInfo * info, long track);
+gboolean	gmi_seek_to_track		(GstMediaInfo *info,
+		                                 long track);
 
-gboolean gmi_set_mime (GstMediaInfo * info, const char *mime);
+gboolean	gmi_set_mime			(GstMediaInfo *info,
+		                                 const char *mime);
 
-void deep_notify_callback (GObject * object,
-    GstObject * origin, GParamSpec * pspec, GstMediaInfoPriv * priv);
-void found_tag_callback (GObject * pipeline, GstElement * source,
-    GstTagList * tags, GstMediaInfoPriv * priv);
-void error_callback (GObject * element, GstElement * source, GError * error,
-    gchar * debug, GstMediaInfoPriv * priv);
+void		deep_notify_callback            (GObject *object,
+		                                 GstObject *origin,
+						 GParamSpec *pspec,
+						 GstMediaInfoPriv *priv);
+void		found_tag_callback		(GObject *pipeline, GstElement *source, GstTagList *tags, GstMediaInfoPriv *priv);
+void		error_callback			(GObject *element, GstElement *source, GError *error, gchar *debug, GstMediaInfoPriv *priv);
 
-gboolean gmip_find_type_pre (GstMediaInfoPriv * priv, GError ** error);
-gboolean gmip_find_type_post (GstMediaInfoPriv * priv);
-gboolean gmip_find_type (GstMediaInfoPriv * priv, GError ** error);
-gboolean gmip_find_stream_pre (GstMediaInfoPriv * priv);
-gboolean gmip_find_stream_post (GstMediaInfoPriv * priv);
-gboolean gmip_find_stream (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_metadata_pre (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_metadata_post (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_metadata (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_streaminfo_pre (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_streaminfo_post (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_streaminfo (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_format_pre (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_format_post (GstMediaInfoPriv * priv);
-gboolean gmip_find_track_format (GstMediaInfoPriv * priv);
+gboolean	gmip_find_type_pre		(GstMediaInfoPriv *priv, GError **error);
+gboolean	gmip_find_type_post		(GstMediaInfoPriv *priv);
+gboolean	gmip_find_type			(GstMediaInfoPriv *priv, GError **error);
+gboolean	gmip_find_stream_pre		(GstMediaInfoPriv *priv);
+gboolean	gmip_find_stream_post		(GstMediaInfoPriv *priv);
+gboolean	gmip_find_stream			(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_metadata_pre	(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_metadata_post	(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_metadata		(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_streaminfo_pre	(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_streaminfo_post	(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_streaminfo	(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_format_pre	(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_format_post	(GstMediaInfoPriv *priv);
+gboolean	gmip_find_track_format		(GstMediaInfoPriv *priv);
 
 #endif /* __GST_MEDIA_INFO_PRIV_H__ */
