@@ -403,12 +403,14 @@ dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
-dnl *** dv ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_DV, true)
-GST_CHECK_FEATURE(DV, [libdv DV/video decoder], dvdec, [
-  PKG_CHECK_MODULES(DV, libdv, HAVE_DV="yes", HAVE_DV="no")
-  AC_SUBST(DV_CFLAGS)
-  AC_SUBST(DV_LIBS)
+dnl *** libdv ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
+GST_CHECK_FEATURE(LIBDV, [libdv DV/video decoder], dvdec, [
+  dnl use this when gtk deps are removed from its pkg-config .pc
+  dnl PKG_CHECK_MODULES(LIBDV, libdv, HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  AM_PATH_LIBDV(HAVE_LIBDV="yes", HAVE_LIBDV="no")
+  AC_SUBST(LIBDV_CFLAGS)
+  AC_SUBST(LIBDV_LIBS)
 ])
 
 dnl *** dvdread ***
