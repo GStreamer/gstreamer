@@ -178,6 +178,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
 
   xvimage->width = width;
   xvimage->height = height;
+  xvimage->im_format = xvimagesink->xcontext->im_format;
   xvimage->xvimagesink = xvimagesink;
 
   g_mutex_lock (xvimagesink->x_lock);
@@ -189,8 +190,8 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
   if (xvimagesink->xcontext->use_xshm) {
     xvimage->xvimage = XvShmCreateImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
-        xvimagesink->xcontext->im_format,
-        NULL, xvimage->width, xvimage->height, &xvimage->SHMInfo);
+        xvimage->im_format, NULL,
+        xvimage->width, xvimage->height, &xvimage->SHMInfo);
 
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);
@@ -212,8 +213,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink,
     /* We use image's internal data pointer */
     xvimage->xvimage = XvCreateImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
-        xvimagesink->xcontext->im_format,
-        NULL, xvimage->width, xvimage->height);
+        xvimage->im_format, NULL, xvimage->width, xvimage->height);
 
     /* Allocating memory for image's data */
     xvimage->xvimage->data = g_malloc (xvimage->xvimage->data_size);
@@ -332,12 +332,11 @@ gst_xvimagesink_xwindow_decorate (GstXvImageSink * xvimagesink,
   g_mutex_lock (xvimagesink->x_lock);
 
   hints_atom = XInternAtom (xvimagesink->xcontext->disp, "_MOTIF_WM_HINTS", 1);
-
-  hints = g_malloc0 (sizeof (MotifWmHints));
-
-  if (!hints) {
+  if (hints_atom == None) {
     return FALSE;
   }
+
+  hints = g_malloc0 (sizeof (MotifWmHints));
 
   hints->flags |= MWM_HINTS_DECORATIONS;
   hints->decorations = 1 << 0;
@@ -1124,7 +1123,7 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
 
   /* We renew our xvimage only if size or format changed */
   if ((xvimagesink->xvimage) &&
-      ((xvimagesink->xcontext->im_format != im_format) ||
+      ((im_format != xvimagesink->xvimage->im_format) ||
           (GST_VIDEOSINK_WIDTH (xvimagesink) != xvimagesink->xvimage->width) ||
           (GST_VIDEOSINK_HEIGHT (xvimagesink) !=
               xvimagesink->xvimage->height))) {
@@ -1134,16 +1133,10 @@ gst_xvimagesink_sink_link (GstPad * pad, const GstCaps * caps)
         GST_FOURCC_ARGS (im_format));
     GST_DEBUG_OBJECT (xvimagesink, "renewing xvimage");
     gst_xvimagesink_xvimage_destroy (xvimagesink, xvimagesink->xvimage);
-
-    xvimagesink->xcontext->im_format = im_format;
-    xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
-        GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
-  } else if (!xvimagesink->xvimage) {
-    /* If no xvimage, creating one */
-    xvimagesink->xcontext->im_format = im_format;
-    xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
-        GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
+    xvimagesink->xvimage = NULL;
   }
+
+  xvimagesink->xcontext->im_format = im_format;
 
   gst_x_overlay_got_desired_size (GST_X_OVERLAY (xvimagesink),
       GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
@@ -1246,18 +1239,23 @@ gst_xvimagesink_chain (GstPad * pad, GstData * data)
   } else {
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
-    if (xvimagesink->xvimage) {
-      memcpy (xvimagesink->xvimage->xvimage->data,
-          GST_BUFFER_DATA (buf),
-          MIN (GST_BUFFER_SIZE (buf), xvimagesink->xvimage->size));
-      gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->xvimage);
-    } else {
-      /* No image available. Something went wrong during capsnego ! */
-      gst_buffer_unref (buf);
-      GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
-          ("no format defined before chain function"));
-      return;
+    if (!xvimagesink->xvimage) {
+      xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
+          GST_VIDEOSINK_WIDTH (xvimagesink),
+          GST_VIDEOSINK_HEIGHT (xvimagesink));
+      if (!xvimagesink->xvimage) {
+        /* No image available. That's very bad ! */
+        gst_buffer_unref (buf);
+        GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
+            ("Failed creating an XvImage in xvimagesink chain function."));
+        return;
+      }
     }
+
+    memcpy (xvimagesink->xvimage->xvimage->data,
+        GST_BUFFER_DATA (buf),
+        MIN (GST_BUFFER_SIZE (buf), xvimagesink->xvimage->size));
+    gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->xvimage);
   }
 
   /* set correct time for next buffer */
@@ -1318,8 +1316,10 @@ gst_xvimagesink_buffer_alloc (GstPad * pad, guint64 offset, guint size)
       xvimagesink->image_pool = g_slist_delete_link (xvimagesink->image_pool,
           xvimagesink->image_pool);
 
+      /* We check for geometry or image format changes */
       if ((xvimage->width != GST_VIDEOSINK_WIDTH (xvimagesink)) ||
-          (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink))) {
+          (xvimage->height != GST_VIDEOSINK_HEIGHT (xvimagesink)) ||
+          (xvimage->im_format != xvimagesink->xcontext->im_format)) {
         /* This image is unusable. Destroying... */
         gst_xvimagesink_xvimage_destroy (xvimagesink, xvimage);
         xvimage = NULL;
@@ -1465,13 +1465,6 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
     xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
         xwindow->win, 0, NULL);
     g_mutex_unlock (xvimagesink->x_lock);
-  }
-
-  /* Recreating our xvimage */
-  if (!xvimagesink->xvimage &&
-      GST_VIDEOSINK_WIDTH (xvimagesink) && GST_VIDEOSINK_HEIGHT (xvimagesink)) {
-    xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
-        GST_VIDEOSINK_WIDTH (xvimagesink), GST_VIDEOSINK_HEIGHT (xvimagesink));
   }
 
   if (xwindow)

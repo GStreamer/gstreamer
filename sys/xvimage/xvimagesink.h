@@ -115,7 +115,7 @@ struct _GstXvImage {
   XShmSegmentInfo SHMInfo;
 #endif /* HAVE_XSHM */
 
-  gint width, height, size;
+  gint width, height, size, im_format;
 };
 
 struct _GstXvImageSink {

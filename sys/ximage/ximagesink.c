@@ -510,10 +510,7 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
                   ximagesink->ximage->height))) {
         /* We renew our ximage only if size changed */
         gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
-
-        ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
-            GST_VIDEOSINK_WIDTH (ximagesink),
-            GST_VIDEOSINK_HEIGHT (ximagesink));
+        ximagesink->ximage = NULL;
       }
     } else {
       ximagesink->sw_scaling_failed = TRUE;
@@ -824,6 +821,8 @@ gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "pixel_height", &ximagesink->pixel_height);
 
   /* Creating our window and our image */
+  g_assert (GST_VIDEOSINK_WIDTH (ximagesink) > 0);
+  g_assert (GST_VIDEOSINK_HEIGHT (ximagesink) > 0);
   if (!ximagesink->xwindow) {
     ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink,
         GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
@@ -834,18 +833,13 @@ gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
     }
   }
 
-  if ((ximagesink->ximage)
-      && ((GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width)
-          || (GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->ximage->height))) {
-    /* We renew our ximage only if size changed */
+  /* If our ximage has changed we destroy it, next chain iteration will create
+     a new one */
+  if ((ximagesink->ximage) &&
+      ((GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||
+          (GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->ximage->height))) {
     gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
-
-    ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
-        GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
-  } else if (!ximagesink->ximage) {
-    /* If no ximage, creating one */
-    ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
-        GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+    ximagesink->ximage = NULL;
   }
 
   gst_x_overlay_got_desired_size (GST_X_OVERLAY (ximagesink),
@@ -949,18 +943,22 @@ gst_ximagesink_chain (GstPad * pad, GstData * data)
   } else {
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
-    if (ximagesink->ximage) {
-      memcpy (ximagesink->ximage->ximage->data,
-          GST_BUFFER_DATA (buf),
-          MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
-      gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
-    } else {
-      /* No image available. Something went wrong during capsnego ! */
-      gst_buffer_unref (buf);
-      GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
-          ("no format defined before chain function"));
-      return;
+    if (!ximagesink->ximage) {
+      ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
+          GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
+      if (!ximagesink->ximage) {
+        /* No image available. That's very bad ! */
+        gst_buffer_unref (buf);
+        GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
+            ("Failed creating an XImage in ximagesink chain function."));
+        return;
+      }
     }
+
+    memcpy (ximagesink->ximage->ximage->data,
+        GST_BUFFER_DATA (buf),
+        MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
+    gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
   }
 
   /* set correct time for next buffer */
@@ -1197,13 +1195,6 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
         GST_VIDEOSINK_HEIGHT (ximagesink) = xwindow->height;
       }
     }
-  }
-
-  /* Recreating our ximage */
-  if (!ximagesink->ximage &&
-      GST_VIDEOSINK_WIDTH (ximagesink) && GST_VIDEOSINK_HEIGHT (ximagesink)) {
-    ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
-        GST_VIDEOSINK_WIDTH (ximagesink), GST_VIDEOSINK_HEIGHT (ximagesink));
   }
 
   if (xwindow)
