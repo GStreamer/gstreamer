@@ -235,6 +235,7 @@ make_connections (graph_t *g, GError **error)
     
     a = c->src_pads;
     b = c->sink_pads;
+//    g_print ("a: %p, b: %p\n", a, b);
     if (a && b) {
       /* balanced multipad connection */
       while (a && b) {
@@ -266,11 +267,14 @@ make_connections (graph_t *g, GError **error)
       }
     } else if (a) {
       if ((pt1 = gst_element_get_pad_template (src, (gchar*)a->data))) {
+//        g_print ("have padtemplate %s, SOMETIMES=%s\n", pt1->name_template, pt1->presence == GST_PAD_SOMETIMES ? "TRUE" : "FALSE");
         if ((p1 = gst_element_get_pad (src, (gchar*)a->data)) || pt1->presence == GST_PAD_SOMETIMES) {
           if (!p1) {
             /* sigh, a hack until i fix the gstelement api... */
             if ((pt2 = gst_element_get_compatible_pad_template (sink, pt1))) {
+//              g_print ("have compatible pad template %s\n", pt2->name_template);
               if ((p2 = gst_element_get_pad (sink, pt2->name_template))) {
+//                g_print ("got the pad\n");
                 dc = g_new0 (dynamic_connection_t, 1);
                 dc->srcpadname = (gchar*)a->data;
                 dc->target = p2;
@@ -411,14 +415,64 @@ GstBin *
 gst_parse_launchv (const gchar **argv, GError **error)
 {
   GstBin *pipeline;
-  gchar *pipeline_description;
+  GString *str;
+  const gchar **argvp, *arg;
+  gchar *tmp;
 
-  /* i think this cast works out ok... */
-  pipeline_description = g_strjoinv (" ", (gchar**)argv);
+  /* let's give it a nice size. */
+  str = g_string_sized_new (1024);
+
+  argvp = argv;
+  while (*argvp) {
+    arg = *argvp;
+    tmp = _gst_parse_escape (arg);
+    g_string_append (str, tmp);
+    g_free (tmp);
+    g_string_append (str, " ");
+    argvp++;
+  }
   
-  pipeline = gst_parse_launch (pipeline_description, error);
+  pipeline = gst_parse_launch (str->str, error);
+
+  g_string_free (str, TRUE);
 
   return pipeline;
+}
+
+gchar *_gst_parse_escape (const gchar *str)
+{
+  GString *gstr = NULL;
+  
+  g_return_val_if_fail (str != NULL, NULL);
+  
+  gstr = g_string_sized_new (strlen (str));
+  
+  while (*str) {
+    if (*str == ' ')
+      g_string_append_c (gstr, '\\');
+    g_string_append_c (gstr, *str);
+    str++;
+  }
+  
+  return gstr->str;
+}
+
+void _gst_parse_unescape (gchar *str)
+{
+  gchar *walk;
+  
+  g_return_if_fail (str != NULL);
+  
+  walk = str;
+  
+  while (*walk) {
+    if (*walk == '\\')
+      walk++;
+    *str = *walk;
+    str++;
+    walk++;
+  }
+  *str = '\0';
 }
 
 /**
