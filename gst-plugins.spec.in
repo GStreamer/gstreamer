@@ -1,4 +1,5 @@
-%define name    gst-plugins  
+%define name    gstreamer-plugins  
+%define module  gst-plugins  
 %define ver     0.3.02
 %define rel     20011221
 %define prefix  /usr
@@ -10,8 +11,8 @@ Version: %ver
 Release: %rel
 Copyright: LGPL
 Group: Libraries/Multimedia
-Source: %{name}-%{ver}.tar.gz
-BuildRoot: /var/tmp/%{name}-%{ver}-root
+Source: %{module}-%{ver}.tar.gz
+BuildRoot: /var/tmp/%{module}-%{ver}-root
 Docdir: %{prefix}/doc
 Prefix: %prefix
 Requires: libxml >= 1.8.0
@@ -30,7 +31,7 @@ plugins.
 %doc AUTHORS COPYING README  
 
 %prep
-%setup
+%setup -n %{module}-%{ver}
 %build
 CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --sysconfdir=%{sysconfdir} --mandir=$RPM_BUILD_ROOT%{prefix}/share/man  
 
@@ -360,20 +361,20 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_ALSA_TRUE@%post -n gstreamer-alsa
 @USE_ALSA_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
 
-@USE_LIBDVD_TRUE@%package -n gstreamer-libdvd
-@USE_LIBDVD_TRUE@Summary: GStreamer plugins for DVD playback
-@USE_LIBDVD_TRUE@Group: Libraries/Multimedia
-@USE_LIBDVD_TRUE@Requires: gstreamer = %{ver}
-@USE_LIBDVD_TRUE@
-@USE_LIBDVD_TRUE@%description -n gstreamer-libdvd
-@USE_LIBDVD_TRUE@Input and output plugin for the ALSA soundcard driver architecture.
-@USE_LIBDVD_TRUE@
-@USE_LIBDVD_TRUE@%files -n gstreamer-libdvd
-@USE_LIBDVD_TRUE@%defattr(-, root, root)
-@USE_LIBDVD_TRUE@%{prefix}/lib/gst/libdvd*
-@USE_LIBDVD_TRUE@
-@USE_LIBDVD_TRUE@%post -n gstreamer-libdvd
-@USE_LIBDVD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
+@USE_DVDREAD_TRUE@%package -n gstreamer-libdvd
+@USE_DVDREAD_TRUE@Summary: GStreamer plugins for DVD playback
+@USE_DVDREAD_TRUE@Group: Libraries/Multimedia
+@USE_DVDREAD_TRUE@Requires: gstreamer = %{ver}
+@USE_DVDREAD_TRUE@
+@USE_DVDREAD_TRUE@%description -n gstreamer-libdvd
+@USE_DVDREAD_TRUE@Input and output plugin for the ALSA soundcard driver architecture.
+@USE_DVDREAD_TRUE@
+@USE_DVDREAD_TRUE@%files -n gstreamer-libdvd
+@USE_DVDREAD_TRUE@%defattr(-, root, root)
+@USE_DVDREAD_TRUE@%{prefix}/lib/gst/libdvd*
+@USE_DVDREAD_TRUE@
+@USE_DVDREAD_TRUE@%post -n gstreamer-libdvd
+@USE_DVDREAD_TRUE@%{prefix}/bin/gstreamer-register --gst-mask=0
 
 @USE_A52DEC_TRUE@%package -n gstreamer-a52dec
 @USE_A52DEC_TRUE@Summary: GStreamer VOB decoder plugin
