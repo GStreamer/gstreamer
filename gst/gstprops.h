@@ -69,9 +69,9 @@ typedef enum {
 	((gchar) (((fourcc)>>24)&0xff))
 
 #ifdef G_HAVE_ISO_VARARGS
-#  define GST_PROPS_LIST(...)	    GST_PROPS_LIST_TYPE,__VA_ARGS__,NULL
+#  define GST_PROPS_LIST(...)	    GST_PROPS_LIST_TYPE,__VA_ARGS__,GST_PROPS_END_TYPE
 #elif defined(G_HAVE_GNUC_VARARGS)
-#  define GST_PROPS_LIST(a...)	    GST_PROPS_LIST_TYPE,a,NULL
+#  define GST_PROPS_LIST(a...)	    GST_PROPS_LIST_TYPE,a,GST_PROPS_END_TYPE
 #endif
 
 #define GST_PROPS_GLIST(a) 		GST_PROPS_GLIST_TYPE,(a)

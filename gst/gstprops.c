@@ -79,6 +79,7 @@ static gboolean 	gst_props_entry_check_compatibility 	(GstPropsEntry *entry1, Gs
 static GList* 		gst_props_list_copy 			(GList *propslist);
 
 static GstPropsEntry*	gst_props_alloc_entry			(void);
+static inline void	gst_props_entry_free			(GstPropsEntry *entry);
 
 static void		gst_props_destroy			(GstProps *props);
 
@@ -653,10 +654,70 @@ props_find_func (gconstpointer a,
 /* This is implemented as a huge macro because we cannot pass
  * va_list variables by reference on some architectures.
  */
+static inline GstPropsType
+gst_props_type_sanitize (GstPropsType type)
+{
+  switch (type) {
+    case GST_PROPS_INT_TYPE:
+    case GST_PROPS_INT_RANGE_TYPE:
+      return GST_PROPS_INT_TYPE;
+    case GST_PROPS_FLOAT_TYPE:
+    case GST_PROPS_FLOAT_RANGE_TYPE:
+      return GST_PROPS_FLOAT_TYPE;
+    case GST_PROPS_FOURCC_TYPE:
+    case GST_PROPS_BOOLEAN_TYPE:
+    case GST_PROPS_STRING_TYPE:
+      return type;
+    case GST_PROPS_LIST_TYPE:
+    case GST_PROPS_GLIST_TYPE:
+      return GST_PROPS_LIST_TYPE;
+    case GST_PROPS_END_TYPE:
+    case GST_PROPS_INVALID_TYPE:
+    case GST_PROPS_VAR_TYPE:
+    case GST_PROPS_LAST_TYPE:
+      break;
+  }
+  g_assert_not_reached ();
+  return GST_PROPS_END_TYPE;
+}
 #define GST_PROPS_ENTRY_FILL(entry, var_args)	 				\
 G_STMT_START { 									\
   entry->propstype = va_arg (var_args, GstPropsType); 				\
-										\
+  if (entry->propstype == GST_PROPS_LIST_TYPE) {				\
+    GList *_list = NULL;							\
+    GstPropsEntry *_cur;				      			\
+    GstPropsType _cur_type;							\
+    GstPropsType _type = va_arg (var_args, GstPropsType);			\
+    _cur_type = _type;				  				\
+    _type = gst_props_type_sanitize (_type);		      			\
+    while (_cur_type != GST_PROPS_END_TYPE) {				      	\
+      _cur = gst_props_alloc_entry ();						\
+      _cur->propid = entry->propid;						\
+      _cur->propstype = _cur_type;				      		\
+      _cur_type = gst_props_type_sanitize (_cur_type);			    	\
+      g_assert (_cur_type == _type);						\
+      GST_PROPS_ENTRY_FILL_DATA(_cur, var_args);				\
+      if (_cur_type == GST_PROPS_INT_TYPE) {					\
+	_list = gst_props_add_to_int_list (_list, _cur);      			\
+      } else {									\
+	_list = g_list_prepend (_list, _cur);					\
+      }										\
+      _cur_type = va_arg (var_args, GstPropsType);				\
+    }										\
+    if (g_list_next (_list)) {							\
+      entry->data.list_data.entries = _list;				  	\
+    } else {									\
+      entry->propstype = _cur->propstype;					\
+      entry->data = _cur->data;							\
+      gst_props_entry_free (_cur);						\
+    }										\
+  } else {									\
+    GST_PROPS_ENTRY_FILL_DATA(entry, var_args);					\
+  }										\
+} G_STMT_END
+
+#define GST_PROPS_ENTRY_FILL_DATA(entry, var_args)	 			\
+G_STMT_START { 									\
   switch (entry->propstype) {							\
     case GST_PROPS_INT_TYPE:							\
       entry->data.int_data = va_arg (var_args, gint);				\
@@ -686,7 +747,7 @@ G_STMT_START { 									\
       entry->data.list_data.entries = g_list_copy (va_arg (var_args, GList*));	\
       break;									\
     default:									\
-      break;									\
+      g_assert_not_reached ();							\
   }										\
 } G_STMT_END
 
@@ -767,7 +828,14 @@ gst_props_entry_clean (GstPropsEntry *entry)
       break;
   }
 }
-
+static inline void
+gst_props_entry_free (GstPropsEntry *entry)
+{
+  gst_mem_chunk_free (_gst_props_entries_chunk, entry);
+#ifndef GST_DISABLE_TRACE
+  gst_alloc_trace_free (_entries_trace, entry);
+#endif
+}
 /**
  * gst_props_entry_destroy:
  * @entry: the entry to destroy
@@ -777,14 +845,13 @@ gst_props_entry_clean (GstPropsEntry *entry)
 void
 gst_props_entry_destroy (GstPropsEntry *entry)
 {
+  if (!entry) return;
+  
   GST_CAT_LOG (GST_CAT_PROPERTIES, "destroy entry %p", entry);
 
   gst_props_entry_clean (entry);
 
-  gst_mem_chunk_free (_gst_props_entries_chunk, entry);
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_entries_trace, entry);
-#endif
+  gst_props_entry_free (entry);
 }
 
 GType
@@ -1096,14 +1163,18 @@ gst_props_entry_get_type (void)
   return _gst_props_entry_type;
 }
 
+#define GST_PROPS_ENTRY_NEW(entry, name,var_args)				\
+G_STMT_START {									\
+  entry = gst_props_alloc_entry ();						\
+  entry->propid = g_quark_from_string (name);					\
+  GST_PROPS_ENTRY_FILL (entry, var_args);					\
+} G_STMT_END
 static GstPropsEntry*
 gst_props_entry_newv (const gchar *name, va_list var_args)
 {
   GstPropsEntry *entry;
 
-  entry = gst_props_alloc_entry ();
-  entry->propid = g_quark_from_string (name);
-  GST_PROPS_ENTRY_FILL (entry, var_args);
+  GST_PROPS_ENTRY_NEW (entry, name, var_args);
 
   return entry;
 }
@@ -1143,21 +1214,7 @@ GstProps*
 gst_props_newv (const gchar *firstname, va_list var_args)
 {
   GstProps *props;
-  gboolean inlist = FALSE;
   const gchar *prop_name;
-  GstPropsEntry *list_entry = NULL;
-
-  typedef enum {
-      GST_PROPS_LIST_T_UNSET,
-      GST_PROPS_LIST_T_INTS,
-      GST_PROPS_LIST_T_FLOATS,
-      GST_PROPS_LIST_T_MISC,
-  } list_types;
-
-  /* type of the list */
-  list_types list_type = GST_PROPS_LIST_T_UNSET;
-  /* type of current item */
-  list_types entry_type = GST_PROPS_LIST_T_UNSET;
 
   if (firstname == NULL)
     return NULL;
@@ -1170,79 +1227,10 @@ gst_props_newv (const gchar *firstname, va_list var_args)
   while (prop_name) {
     GstPropsEntry *entry;
 
-    entry = gst_props_alloc_entry ();
-    entry->propid = g_quark_from_string (prop_name);
-    GST_PROPS_ENTRY_FILL (entry, var_args);
-
-    switch (entry->propstype) {
-      case GST_PROPS_INT_TYPE:
-      case GST_PROPS_INT_RANGE_TYPE:
-	entry_type = GST_PROPS_LIST_T_INTS;
-	break;
-      case GST_PROPS_FLOAT_TYPE:
-      case GST_PROPS_FLOAT_RANGE_TYPE:
-	entry_type = GST_PROPS_LIST_T_FLOATS;
-	break;
-      case GST_PROPS_FOURCC_TYPE:
-      case GST_PROPS_BOOLEAN_TYPE:
-      case GST_PROPS_STRING_TYPE:
-	entry_type = GST_PROPS_LIST_T_MISC;
-	break;
-      case GST_PROPS_LIST_TYPE:
-	g_return_val_if_fail (inlist == FALSE, NULL);
-	inlist = TRUE;
-	list_entry = entry;
-	list_type = GST_PROPS_LIST_T_UNSET;
-	list_entry->data.list_data.entries = NULL;
-	break;
-      case GST_PROPS_END_TYPE:
-	g_return_val_if_fail (inlist == TRUE, NULL);
-
-	/* if list was of size 1, replace the list by a the item it contains */
-	if (g_list_length(list_entry->data.list_data.entries) == 1) {
-	  GstPropsEntry *subentry = (GstPropsEntry *)(list_entry->data.list_data.entries->data);
-	  list_entry->propstype = subentry->propstype;
-	  list_entry->data = subentry->data;
-          gst_props_entry_destroy (subentry);
-	}
-	else {
-	  list_entry->data.list_data.entries =
-		    g_list_reverse (list_entry->data.list_data.entries);
-	}
-
-        gst_props_entry_destroy (entry);
-	inlist = FALSE;
-	list_entry = NULL;
-        prop_name = va_arg (var_args, gchar*);
-	continue;
-      default:
-	g_warning ("unknown property type found %d for '%s'\n", entry->propstype, prop_name);
-        gst_props_entry_destroy (entry);
-	break;
-    }
-
-    if (inlist && (list_entry != entry)) {
-      if (list_type == GST_PROPS_LIST_T_UNSET) list_type = entry_type;
-      if (list_type != entry_type) {
-	g_warning ("property list contained incompatible entry types\n");
-      } else {
-	switch (list_type) {
-	  case GST_PROPS_LIST_T_INTS:
-	    list_entry->data.list_data.entries =
-		    gst_props_add_to_int_list (list_entry->data.list_data.entries, entry);
-	    break;
-	  default:
-	    list_entry->data.list_data.entries =
-		    g_list_prepend (list_entry->data.list_data.entries, entry);
-	    break;
-	}
-      }
-    }
-    else {
-      gst_props_add_entry (props, entry);
-    }
-    if (!inlist)
-      prop_name = va_arg (var_args, gchar*);
+    GST_PROPS_ENTRY_NEW (entry, prop_name, var_args);
+    gst_props_add_entry (props, entry);
+    
+    prop_name = va_arg (var_args, gchar*);
   }
 
   return props;
