@@ -133,7 +133,7 @@ cothread_context_init (void)
   /* FIXME: an assumption is made that the stack segment is STACK_SIZE
    * aligned. */
   ctx->stack_top = ((gulong) sp | (STACK_SIZE - 1)) + 1;
-  GST_DEBUG (GST_CAT_COTHREADS, "stack top is %lu", ctx->stack_top);
+  GST_DEBUG (GST_CAT_COTHREADS, "stack top is 0x%08lx", ctx->stack_top);
 
   /*
    * initialize the 0th cothread
@@ -193,11 +193,9 @@ cothread_state*
 cothread_create (cothread_context *ctx)
 {
   cothread_state *cothread;
-  //void *sp;
-  //unsigned long stack_top;
   void *mmaped = 0;
-
   gint slot = 0;
+  unsigned long page_size;
 
   g_return_val_if_fail (ctx != NULL, NULL);
 
@@ -219,35 +217,28 @@ cothread_create (cothread_context *ctx)
 
   GST_DEBUG (GST_CAT_COTHREADS, "Found free cothread slot %d", slot);
 
-#if 0
-  sp = CURRENT_STACK_FRAME;
-  /* FIXME this may not be 64bit clean
-   *       could use casts to uintptr_t from inttypes.h
-   *       if only all platforms had inttypes.h
-   */
-  /* stack_top is the address of the first byte past our stack segment. */
-  /* FIXME: an assumption is made that the stack segment is STACK_SIZE
-   * aligned. */
-  stack_top = ((gulong) sp | (STACK_SIZE - 1)) + 1;
-  GST_DEBUG (GST_CAT_COTHREADS, "stack top is 0x%lx", stack_top);
-#endif
-
   /* cothread stack space of the thread is mapped in reverse, with cothread 0
    * stack space at the top */
   cothread = (cothread_state *) (ctx->stack_top - (slot + 1) * COTHREAD_STACKSIZE);
+  GST_DEBUG (GST_CAT_COTHREADS, "cothread pointer is %p", cothread);
 
-  GST_DEBUG (GST_CAT_COTHREADS,
-             "mmap   cothread slot stack from %p to 0x%lx (size 0x%lx)",
-            cothread, (unsigned long) cothread + COTHREAD_STACKSIZE,
-            (long) COTHREAD_STACKSIZE);
+#if 0
+  /* This tests to see whether or not we can grow down the stack */
+  {
+    unsigned long ptr;
+    for(ptr=ctx->stack_top - 4096; ptr > (unsigned long)cothread; ptr -= 4096){
+      GST_DEBUG (GST_CAT_COTHREADS, "touching location 0x%08lx", ptr);
+      *(volatile unsigned int *)ptr = *(volatile unsigned int *)ptr;
+      GST_DEBUG (GST_CAT_COTHREADS, "ok (0x%08x)", *(unsigned int *)ptr);
+    }
+  }
+#endif
 
-  GST_DEBUG (GST_CAT_COTHREADS, "going into mmap");
-  /* the mmap is used to reserve part of the stack
-   * ie. we state explicitly that we are going to use it */
-  /* FIXME: maybe we should map slightly less than COTHREAD_STACKSIZE,
-   * so that stack overruns possibly could segfault ? */
-  mmaped = mmap ((void *) (cothread), 
-		 COTHREAD_STACKSIZE,
+  /* The mmap is necessary on Linux/i386, and possibly others, since the
+   * kernel is picky about when we can expand our stack. */
+  GST_DEBUG (GST_CAT_COTHREADS, "mmaping %p, size 0x%08x", cothread,
+             COTHREAD_STACKSIZE);
+  mmaped = mmap ((void *) cothread, COTHREAD_STACKSIZE,
                  PROT_READ | PROT_WRITE | PROT_EXEC,
                  MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   GST_DEBUG (GST_CAT_COTHREADS, "coming out of mmap");
@@ -260,6 +251,16 @@ cothread_create (cothread_context *ctx)
     return NULL;
   }
 
+#ifdef _SC_PAGESIZE
+  page_size = sysconf(_SC_PAGESIZE);
+#else
+  page_size = getpagesize();
+#endif
+  /* Unmap a guard page. This decreases our stack size by 8 kB (for
+   * 4 kB pages) and also wastes almost 4 kB for the cothreads
+   * structure */
+  munmap((void *)cothread + page_size, page_size);
+
   cothread->magic_number = COTHREAD_MAGIC_NUMBER;
   GST_DEBUG (GST_CAT_COTHREADS, "create  cothread %d with magic number 0x%x",
              slot, cothread->magic_number);
@@ -268,6 +269,7 @@ cothread_create (cothread_context *ctx)
   cothread->flags = 0;
   cothread->priv = NULL;
   cothread->sp = ((guchar *) cothread + COTHREAD_STACKSIZE);
+  cothread->sp -= 16; /* necessary for PowerPC */
   cothread->top_sp = cothread->sp; /* for debugging purposes 
 				      to detect stack overruns */
 
