@@ -9,11 +9,13 @@ COMPILING FROM SOURCE
 - configure the source tree:
   - if you installed GStreamer, then do:
       ./configure
-    If configure complains about missing GStreamer, you should try
-      ./configure --with-pkg-config-path=prefix/lib/pkgconfig
+    If configure complains about missing GStreamer, you should try the 
+    following command:
+    $export PKG_CONFIG_PATH=prefix/lib/pkgconfig
     where prefix should be replaced by the prefix you used to configure
-    GStreamer.  (Be mindful NOT to ADD a trailing / to that option !)
-    If this doesn't fix it, you have other issues ;)
+    GStreamer. (Be mindful NOT to ADD a trailing / to that option !).
+    After that, rerun ./configure. If this doesn't fix it, you have other
+    issues ;)
 
   - if you didn't install GStreamer, you can still compile the plug-ins.
     Add the path to gstreamer-uninstalled.pc (which lives in the gstreamer
