@@ -60,7 +60,7 @@ static GstPadTemplate   *gst_alsa_sink_request_pad_factory ();
 
 static GstPad           *gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar *name);
 static GstPadLinkReturn  gst_alsa_link (GstPad *pad, GstCaps *caps);
-static GstCaps          *gst_alsa_caps (GstAlsa *this);
+static GstCaps          *gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels);
 
 static GstElementStateReturn gst_alsa_change_state (GstElement *element);
 
@@ -98,16 +98,16 @@ gst_alsa_format_get_type (void)
 {
   static GType type = 0;
   static GEnumValue *values = NULL;
-  gint i, len = SND_PCM_FORMAT_GSM + 3;
+  gint i;
 
   if (values == NULL) {
     /* the three: for -1, 0, and the terminating NULL */
-    values = g_new0 (GEnumValue, len);
-
-    for (i = 0; i < len - 1; i++) {
-      values[i].value = i - 1;        /* UNKNOWN is -1 */
-      values[i].value_name = g_strdup_printf ("%d", i - 1);
-      values[i].value_nick = g_strdup (snd_pcm_format_name ((snd_pcm_format_t) i - 1));
+    values = g_new0 (GEnumValue, SND_PCM_FORMAT_LAST + 1);
+ 
+    for (i = -1; i <= SND_PCM_FORMAT_LAST; i++) {
+      values[i + 1].value = i; /* UNKNOWN is -1 */
+      values[i + 1].value_name = g_strdup_printf ("%d", i);
+      values[i + 1].value_nick = g_strdup (snd_pcm_format_name ((snd_pcm_format_t) i));
     }
   }
 
@@ -116,7 +116,6 @@ gst_alsa_format_get_type (void)
 
   return type;
 }
-
 GType
 gst_alsa_get_type (void)
 {
@@ -277,6 +276,8 @@ gst_alsa_init (GstAlsa *this)
 
   /* data is interleaved by default, because there's only one default pad */
   this->data_interleaved = TRUE;
+  this->rate = 0;
+  this->channels = 0;
 
   gst_element_add_pad (GST_ELEMENT (this), GST_ALSA_PAD (this->pads)->pad);
 
@@ -384,8 +385,8 @@ gst_alsa_src_pad_factory (void)
   static GstPadTemplate *template = NULL;
 
   if (!template)
-    template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_SOMETIMES,
-                                     gst_caps_new ("src", "audio/raw", NULL),
+    template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, -1),
                                      NULL);
 
   return template;
@@ -397,11 +398,9 @@ gst_alsa_src_request_pad_factory (void)
   static GstPadTemplate *template = NULL;
 
   if (!template)
-    template =
-      gst_pad_template_new ("src%d", GST_PAD_SRC, GST_PAD_REQUEST,
-                            gst_caps_new ("src-request", "audio/raw",
-                              gst_props_new ("channels", GST_PROPS_INT (1), NULL)),
-                            NULL);
+    template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, 1),
+                                     NULL);
 
   return template;
 }
@@ -412,8 +411,8 @@ gst_alsa_sink_pad_factory (void)
   static GstPadTemplate *template = NULL;
 
   if (!template)
-    template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_SOMETIMES,
-                                     gst_caps_new ("sink", "audio/raw", NULL),
+    template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, -1),
                                      NULL);
 
   return template;
@@ -427,8 +426,7 @@ gst_alsa_sink_request_pad_factory (void)
   if (!template)
     template =
       gst_pad_template_new ("sink%d", GST_PAD_SINK, GST_PAD_REQUEST,
-                            gst_caps_new ("sink-request", "audio/raw",
-                              gst_props_new ("channels", GST_PROPS_INT (1), NULL)),
+                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, 1),
                             NULL);
 
   return template;
@@ -515,170 +513,148 @@ gst_alsa_request_new_pad (GstElement *element, GstPadTemplate *templ,
   return pad->pad;
 }
 
-static gboolean
-gst_alsa_parse_caps (GstAlsa *this, GstCaps *caps)
+/* gets the matching alsa format or SND_PCM_FORMAT_UNKNOWN if none matches */
+static snd_pcm_format_t
+gst_alsa_get_format (GstCaps *caps)
 {
-  gint law, endianness, width, depth, channels;
-  gboolean sign;
-  gint format = -1;
   const gchar *format_name;
-
+  /** 
+   * We have to differentiate between int and float, so lets find out which one we have.
+   * Somebody fix the float caps spec please.
+   */
   if (!gst_caps_get_string (caps, "format", &format_name))
-    return FALSE;
-
-  if (format_name == NULL) {
-    return FALSE;
-  } else if (strcmp (format_name, "int") == 0) {
+    return SND_PCM_FORMAT_UNKNOWN;
+    if (strncmp (format_name, "int", 3) == 0) {
+    gboolean sign;
+    int width, depth, endianness, law;
+    /* extract the needed information from the caps */
     if (!gst_caps_get (caps,
-                       "width", &width, "depth", &depth, "law", &law,
-                       "endianness", &endianness, "signed", &sign, NULL))
-      return FALSE;
-
-    if (law == 0) {
-      if (width == 8) {
-        if (sign == TRUE) {
-          format = SND_PCM_FORMAT_S8;
-        } else {
-          format = SND_PCM_FORMAT_U8;
-        }
-      } else if (width == 16) {
-        if (sign == TRUE) {
-          if (endianness == G_LITTLE_ENDIAN)   format = SND_PCM_FORMAT_S16_LE;
-          else if (endianness == G_BIG_ENDIAN) format = SND_PCM_FORMAT_S16_BE;
-        } else {
-          if (endianness == G_LITTLE_ENDIAN)   format = SND_PCM_FORMAT_U16_LE;
-          else if (endianness == G_BIG_ENDIAN) format = SND_PCM_FORMAT_U16_BE;
-        }
-      } else if (width == 24) {
-        if (sign == TRUE) {
-          if (endianness == G_LITTLE_ENDIAN)   format = SND_PCM_FORMAT_S24_LE;
-          else if (endianness == G_BIG_ENDIAN) format = SND_PCM_FORMAT_S24_BE;
-        } else {
-          if (endianness == G_LITTLE_ENDIAN)   format = SND_PCM_FORMAT_U24_LE;
-          else if (endianness == G_BIG_ENDIAN) format = SND_PCM_FORMAT_U24_BE;
-        }
-      } else if (width == 32) {
-        if (sign == TRUE) {
-          if (endianness == G_LITTLE_ENDIAN)   format = SND_PCM_FORMAT_S32_LE;
-          else if (endianness == G_BIG_ENDIAN) format = SND_PCM_FORMAT_S32_BE;
-        } else {
-          if (endianness == G_LITTLE_ENDIAN)   format = SND_PCM_FORMAT_U32_LE;
-          else if (endianness == G_BIG_ENDIAN) format = SND_PCM_FORMAT_U32_BE;
-        }
-      }
-    } else if (law == 1) { /* mu law */
-      if (width == depth && width == 8 && sign == FALSE) {
-        format = SND_PCM_FORMAT_MU_LAW;
-      } else {
-        return FALSE;
-      }
-    } else if (law == 2) { /* a law, ug. */
-      if (width == depth && width == 8 && sign == FALSE) {
-        format = SND_PCM_FORMAT_A_LAW;
-      }
-    } else {
-      return FALSE;
+                       "width", &width,
+                       "depth", &depth,
+                       "law", &law,
+                       "endianness", &endianness,
+                       "signed", &sign,
+                       NULL))
+        return SND_PCM_FORMAT_UNKNOWN;
+	
+    /* find corresponding alsa format */
+    switch (law) {
+      case 0: return snd_pcm_build_linear_format (depth, width, sign ? 0 : 1, endianness == G_LITTLE_ENDIAN ? 0 : 1);
+      case 1: return SND_PCM_FORMAT_A_LAW;
+      case 2: return SND_PCM_FORMAT_MU_LAW;
+      default: return SND_PCM_FORMAT_UNKNOWN;
     }
-  } else if (strcmp (format_name, "float") == 0) {
-    const gchar *layout;
-
-    if (!gst_caps_get_string (caps, "layout", &layout))
-      return FALSE;
-
-    if (strcmp (layout, "gfloat") == 0) {
-      format = SND_PCM_FORMAT_FLOAT;
+  } else if (strncmp (format_name, "float", 5) == 0) {
+    gchar *layout;
+    /* get layout */
+    if (!gst_caps_get_string (caps, "layout", (const gchar **) &layout))
+      return SND_PCM_FORMAT_UNKNOWN;
+	/* match layout to format wrt to endianness */
+    if (strncmp (layout, "gfloat", 6) == 0) {
+      return SND_PCM_FORMAT_FLOAT;
+    } else if (strncmp (layout, "gdouble", 7) == 0) {
+      return SND_PCM_FORMAT_FLOAT64;
     } else {
-      return FALSE;
-      /* you need doubles? jeez... */
+      return SND_PCM_FORMAT_UNKNOWN;
     }
-  } else {
-    return FALSE;
   }
+    
+  return SND_PCM_FORMAT_UNKNOWN;
+}
+/* get props for a spec */
+static GstProps *
+gst_alsa_get_props (snd_pcm_format_t format)
+{
+  /* int or float */
+  if (snd_pcm_format_linear (format)) {
+    GstProps *props = gst_props_new ("format", GST_PROPS_STRING ("int"),
+                          "width", GST_PROPS_INT(snd_pcm_format_physical_width (format)),
+                          "depth", GST_PROPS_INT(snd_pcm_format_width (format)),
+                          "signed", GST_PROPS_BOOLEAN (snd_pcm_format_signed (format) == 1 ? TRUE : FALSE),
+                          NULL);
+    /* endianness */
+    switch (snd_pcm_format_little_endian (format)) {
+    case 0:
+      gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_BIG_ENDIAN)));
+      break;
+    case 1:
+      gst_props_add_entry (props, gst_props_entry_new ("endianness", GST_PROPS_INT (G_LITTLE_ENDIAN)));
+      break;
+    default:
+      break;
+    }
+    /* law */
+    switch (format) {
+    case SND_PCM_FORMAT_A_LAW:
+      gst_props_add_entry (props, gst_props_entry_new ("law", GST_PROPS_INT (1)));
+      break;
+    case SND_PCM_FORMAT_MU_LAW:
+      gst_props_add_entry (props, gst_props_entry_new ("law", GST_PROPS_INT (2)));
+      break;
+    default:
+      gst_props_add_entry (props, gst_props_entry_new ("law", GST_PROPS_INT (0)));
+      break;			
+    }
+    return props;
+  } else if (snd_pcm_format_float (format)) {
+    /* no float with non-platform endianness */
+    if (!snd_pcm_format_cpu_endian (format))
+      return NULL;
 
-  this->format = format;
-  if (!gst_caps_get (caps, "rate", &this->rate, "channels", &channels, NULL))
-    return FALSE;
-
-  if (this->data_interleaved)
-    this->channels = channels;
-  else if (channels != 1)
-    return FALSE;
-
-  return TRUE;
+    return gst_props_new ("format", GST_PROPS_STRING ("float"),
+                          "layout", GST_PROPS_STRING (snd_pcm_format_width (format) == 64 ? "gdouble" : "gfloat"),
+                          NULL);
+  }
+  return NULL;
 }
 
-/* caps are so painful sometimes. */
-static GstCaps *
-gst_alsa_caps (GstAlsa *this)
-{
-  gint law, endianness, width, depth;
-  gboolean sign;
-  GstProps *props;
-
-  g_return_val_if_fail (this != NULL && this->handle != NULL, NULL);
-
-  if (this->format == SND_PCM_FORMAT_FLOAT) {
-    props = gst_props_new ("format",   GST_PROPS_STRING ("float"),
-                           "layout",   GST_PROPS_STRING ("gfloat"),
-                           "rate",     GST_PROPS_INT (this->rate),
-                           "channels", GST_PROPS_INT ((this->data_interleaved ? this->channels : 1)),
-                           NULL);
+static inline void add_channels (GstProps *props, gint rate, gint channels) {
+  if (rate < 0) {
+    gst_props_add_entry (props, gst_props_entry_new ("rate", GST_PROPS_INT_RANGE (8000, 192000)));
   } else {
-    /* we'll just have to assume int, i don't feel like checking */
-    if (this->format == SND_PCM_FORMAT_MU_LAW) {
-      law = 1;
-      width = 8; sign = FALSE; endianness = 0;
-    } else if (this->format == SND_PCM_FORMAT_A_LAW) {
-      law = 2;
-      width = 8; sign = FALSE; endianness = 0;
-    } else {
-      law = 0;
-      if (this->format == SND_PCM_FORMAT_S8) {
-        width = 8; sign = TRUE; endianness = 0;
-      } else if (this->format == SND_PCM_FORMAT_U8) {
-        width = 8; sign = FALSE; endianness = 0;
-      } else if (this->format == SND_PCM_FORMAT_S16_LE) {
-        width = 16; sign = TRUE; endianness = G_LITTLE_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_S16_BE) {
-        width = 16; sign = TRUE; endianness = G_BIG_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_U16_LE) {
-        width = 16; sign = FALSE; endianness = G_LITTLE_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_U16_BE) {
-        width = 16; sign = FALSE; endianness = G_BIG_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_S24_LE) {
-        width = 24; sign = TRUE; endianness = G_LITTLE_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_S24_BE) {
-        width = 24; sign = TRUE; endianness = G_BIG_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_U24_LE) {
-        width = 24; sign = FALSE; endianness = G_LITTLE_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_U24_BE) {
-        width = 24; sign = FALSE; endianness = G_BIG_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_S32_LE) {
-        width = 32; sign = TRUE; endianness = G_LITTLE_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_S32_BE) {
-        width = 32; sign = TRUE; endianness = G_BIG_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_U32_LE) {
-        width = 32; sign = FALSE; endianness = G_LITTLE_ENDIAN;
-      } else if (this->format == SND_PCM_FORMAT_U32_BE) {
-        width = 32; sign = FALSE; endianness = G_BIG_ENDIAN;
-      } else {
-        g_error ("Unknown audio format %u", this->format);
-        return NULL;
+    gst_props_add_entry (props, gst_props_entry_new ("rate", GST_PROPS_INT (rate)));
+  }
+  if (channels < 0) {
+    gst_props_add_entry (props, gst_props_entry_new ("channels", GST_PROPS_INT_RANGE (1, 64)));
+  } else {
+    gst_props_add_entry (props, gst_props_entry_new ("channels", GST_PROPS_INT (channels)));
+  }
+}
+/**
+ * Get all available caps.
+ * @format: SND_PCM_FORMAT_UNKNOWN for all formats, desired format else
+ * @rate: allowed rates if < 0, else desired rate
+ * @channels: all allowed values for channels if < 0, else desired channel number
+ */
+static GstCaps *
+gst_alsa_caps (snd_pcm_format_t format, gint rate, gint channels)
+{
+  GstCaps *ret_caps = NULL;
+	
+  if (format != SND_PCM_FORMAT_UNKNOWN) {
+    /* there are some caps set already */
+    GstProps *props = gst_alsa_get_props (format);
+    /* we can never use a format we can't set caps for */
+    g_assert (props != NULL);
+
+    add_channels (props, rate, channels);
+    ret_caps = gst_caps_new ("alsacaps", "audio/raw", props);
+  } else {
+    int i;
+    GstProps *props;
+
+    for (i = 0; i <= SND_PCM_FORMAT_LAST; i++) {
+      props = gst_alsa_get_props (i);
+      /* can be NULL, because not all alsa formats can be specified as caps */
+      if (props != NULL) {
+        add_channels (props, rate, channels);
+        ret_caps = gst_caps_append (ret_caps, gst_caps_new (g_strdup (snd_pcm_format_name (i)),
+		      													"audio/raw", props));
       }
     }
-    depth = width;
-    props = gst_props_new ("format",     GST_PROPS_STRING ("int"),
-                           "rate",       GST_PROPS_INT (this->rate),
-                           "channels",   GST_PROPS_INT ((this->data_interleaved ? this->channels : 1)),
-                           "law",        GST_PROPS_INT (law),
-                           "endianness", GST_PROPS_INT (endianness),
-                           "signed",     GST_PROPS_BOOLEAN (sign),
-                           "width",      GST_PROPS_INT (width),
-                           "depth",      GST_PROPS_INT (depth),
-                           NULL);
   }
 
-  return gst_caps_new ("alsasrc", "audio/raw", props);
+  return ret_caps;
 }
 
 /* Negotiates the caps, "borrowed" from gstosssink.c */
@@ -686,6 +662,8 @@ GstPadLinkReturn
 gst_alsa_link (GstPad *pad, GstCaps *caps)
 {
   GstAlsa *this;
+  snd_pcm_format_t format;
+  gint rate, channels;
   gboolean need_mmap;
 
   g_return_val_if_fail (caps != NULL, GST_PAD_LINK_REFUSED);
@@ -698,25 +676,43 @@ gst_alsa_link (GstPad *pad, GstCaps *caps)
       if (!gst_alsa_open_audio (this))
         return GST_PAD_LINK_REFUSED;
 
-    if (gst_alsa_parse_caps (this, caps)) {
-      need_mmap = this->mmap_open;
-
-      /* sync the params */
-      if (GST_FLAG_IS_SET (this, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
-      if (GST_FLAG_IS_SET (this, GST_ALSA_OPEN))    gst_alsa_close_audio (this);
-
-      /* FIXME send out another caps if nego fails */
-
-      if (!gst_alsa_open_audio (this))  return GST_PAD_LINK_REFUSED;
-      if (!gst_alsa_start_audio (this)) return GST_PAD_LINK_REFUSED;
-
-      if (need_mmap && !gst_alsa_get_channel_addresses (this))
-        return GST_PAD_LINK_REFUSED;
-
-      return GST_PAD_LINK_OK;
+    /* FIXME: allow changing the format here */
+    format = gst_alsa_get_format (caps);
+    DEBUG ("found format %s\n", snd_pcm_format_name (format));
+    if (this->format != SND_PCM_FORMAT_UNKNOWN && this->format != format)
+      return GST_PAD_LINK_REFUSED;
+    if (!gst_caps_get (caps, "rate", &rate,
+                             "channels", &channels,
+                             NULL))
+      return GST_PAD_LINK_REFUSED;
+    if (this->format != SND_PCM_FORMAT_UNKNOWN && this->rate != rate)
+      return GST_PAD_LINK_REFUSED;      
+    if (this->format != SND_PCM_FORMAT_UNKNOWN && ((this->channels > 1 || channels > 1)))
+      return GST_PAD_LINK_REFUSED;
+    
+    if (this->format == SND_PCM_FORMAT_UNKNOWN) {
+      this->channels = channels;
+    } else {
+      this->channels++;
     }
+    this->format = format;
+    this->rate = rate;
+    
+    need_mmap = this->mmap_open;
 
-    return GST_PAD_LINK_REFUSED;
+    /* sync the params */
+    if (GST_FLAG_IS_SET (this, GST_ALSA_RUNNING)) gst_alsa_stop_audio (this);
+    if (GST_FLAG_IS_SET (this, GST_ALSA_OPEN))    gst_alsa_close_audio (this);
+
+    /* FIXME send out another caps if nego fails */
+
+    if (!gst_alsa_open_audio (this))  return GST_PAD_LINK_REFUSED;
+    if (!gst_alsa_start_audio (this)) return GST_PAD_LINK_REFUSED;
+
+    if (need_mmap && !gst_alsa_get_channel_addresses (this))
+      return GST_PAD_LINK_REFUSED;
+
+    return GST_PAD_LINK_OK;
   }
 
   return GST_PAD_LINK_DELAYED;
@@ -874,6 +870,7 @@ gst_alsa_xrun_recovery (GstAlsa *this)
   gst_alsa_start_audio (this);
 }
 
+/* FIXME: DO NOT RECORD WITH ALSA, IT DOESN'T WORK, IT ONLY COMPILES */
 static gboolean
 gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames)
 {
@@ -888,11 +885,11 @@ gst_alsa_src_process (GstAlsa *this, snd_pcm_uframes_t frames)
 
   /* let's get on the caps-setting merry-go-round! */
   if (!caps_set) {
-    caps = gst_alsa_caps (this);
+    caps = gst_alsa_caps (this->format, this->rate, this->channels);
     l = this->pads;
     while (l) {
       if (gst_pad_try_set_caps (GST_ALSA_PAD (l)->pad, caps) <= 0) {
-        g_print ("setting caps (%p) in source (%p) failed\n", caps, this);
+        DEBUG ("setting caps (%p) in source (%p) failed\n", caps, this);
         sleep (1);
         return FALSE;
       }
@@ -1032,7 +1029,7 @@ gst_alsa_sink_check_event (GstAlsa *this, GstAlsaPad *pad)
       g_warning ("GstAlsaSink: got an unknown event (Type: %d)", GST_EVENT_TYPE (event));
     }
   } else {
-    /* the element at the top of the chain did not emit an eos event. */
+    /* the element at the top of the chain did not emit an event. */
     g_assert_not_reached ();
   }
 }
@@ -1051,7 +1048,7 @@ gst_alsa_set_params (GstAlsa *this)
   g_return_val_if_fail (this != NULL, FALSE);
   g_return_val_if_fail (this->handle != NULL, FALSE);
 
-  g_print ("Preparing channel: %s %dHz, %d channels\n",
+  DEBUG ("Preparing channel: %s %dHz, %d channels\n",
            snd_pcm_format_name (this->format), this->rate, this->channels);
 
   snd_pcm_hw_params_alloca (&hw_param);
@@ -1091,14 +1088,16 @@ gst_alsa_set_params (GstAlsa *this)
     this->sample_bytes = snd_pcm_format_physical_width (this->format) / 8;
   }
 
-  ret = snd_pcm_hw_params_set_channels (this->handle, hw_param, this->channels);
-  if (ret < 0) {
-    g_warning ("Channels count (%d) not available: %s", this->channels, snd_strerror (ret));
-    return FALSE;
+  if (this->channels > 0) {
+    ret = snd_pcm_hw_params_set_channels (this->handle, hw_param, this->channels);
+    if (ret < 0) {
+      g_warning ("Channels count (%d) not available: %s", this->channels, snd_strerror (ret));
+      return FALSE;
+    }
+    this->channels = snd_pcm_hw_params_get_channels (hw_param);
   }
-  this->channels = snd_pcm_hw_params_get_channels (hw_param);
 
-  if (this->rate) {
+  if (this->rate > 0) {
     ret = snd_pcm_hw_params_set_rate (this->handle, hw_param, this->rate, 0);
     if (ret < 0) {
       g_warning ("error setting rate (%d): %s", this->rate, snd_strerror (ret));
@@ -1139,10 +1138,12 @@ gst_alsa_set_params (GstAlsa *this)
     return FALSE;
   }
 
+  /* FIXME: this needs to be done for a src, but not for a sink
   if (!this->rate)
     this->rate = snd_pcm_hw_params_get_rate (hw_param, 0);
-  if (!this->format)
+  if (this->format == SND_PCM_UNKNOWN)
     this->format = snd_pcm_hw_params_get_format (hw_param);
+  */
   if (!this->period_count)
     this->period_count = snd_pcm_hw_params_get_periods (hw_param, 0);
   if (!this->period_frames)
@@ -1217,11 +1218,12 @@ gst_alsa_open_audio (GstAlsa *this)
   gint ret;
 
   g_assert (this != NULL);
+  g_assert (this->handle == NULL);
 
   if (this->handle)
     gst_alsa_close_audio (this);
 
-  g_print ("Opening alsa device \"%s\" for %s...\n", this->device,
+  DEBUG ("Opening alsa device \"%s\" for %s...\n", this->device,
            this->stream == SND_PCM_STREAM_PLAYBACK ? "playback" : "capture");
 
   ret = snd_output_stdio_attach (&this->out, stdout, 0);
