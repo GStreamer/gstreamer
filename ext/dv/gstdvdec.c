@@ -328,6 +328,7 @@ gst_dvdec_init(GstDVDec *dvdec)
   dvdec->pool = NULL;
   dvdec->length = 0;
   dvdec->next_ts = 0LL;
+  dvdec->end_position = -1LL;
   dvdec->need_discont = FALSE;
   dvdec->framerate = 0;
   dvdec->height = 0;
@@ -397,7 +398,7 @@ gst_dvdec_src_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	  /* fallthrough */
         case GST_FORMAT_UNITS:
 	  if (pad == dvdec->videosrcpad)
-	    *dest_value = src_value * dvdec->framerate * scale / GST_SECOND;
+	    *dest_value = src_value * dvdec->framerate * scale / (GST_SECOND*100);
 	  else if (pad == dvdec->audiosrcpad)
 	    *dest_value = src_value * dvdec->decoder->audio->frequency * scale / GST_SECOND;
 	  break;
@@ -429,7 +430,7 @@ gst_dvdec_sink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_DEFAULT:
           *dest_format = GST_FORMAT_TIME;
         case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND / (dvdec->length * dvdec->framerate); 
+          *dest_value = src_value * (GST_SECOND * 100) / (dvdec->length * dvdec->framerate); 
           break;
         default:
           res = FALSE;
@@ -443,7 +444,7 @@ gst_dvdec_sink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
 	{
           guint64 frame;
           /* calculate the frame */
-          frame = src_value * dvdec->framerate / GST_SECOND;
+          frame = src_value * dvdec->framerate / (GST_SECOND*100);
           /* calculate the offset */
           *dest_value = frame * dvdec->length;
           break;
@@ -609,7 +610,7 @@ gst_dvdec_handle_src_event (GstPad *pad, GstEvent *event)
 			    GST_EVENT_SEEK_ENDOFFSET (event),
 		            &format, &position)) 
       {
-        /* could not convert seek format to byte offset */
+        /* could not convert seek format to time offset */
 	res = FALSE;
 	break;
       }
@@ -629,7 +630,7 @@ gst_dvdec_handle_src_event (GstPad *pad, GstEvent *event)
 			    GST_EVENT_SEEK_OFFSET (event),
 		            &format, &position)) 
       {
-        /* could not convert seek format to byte offset */
+        /* could not convert seek format to time offset */
         res = FALSE;
 	break;
       }
@@ -646,6 +647,7 @@ gst_dvdec_handle_src_event (GstPad *pad, GstEvent *event)
       if (!gst_bytestream_seek (dvdec->bs, position, GST_SEEK_METHOD_SET)) {
 	res = FALSE;
       }
+      dvdec->end_position = -1;
       break;
     }
     default:
@@ -670,7 +672,8 @@ gst_dvdec_push (GstDVDec *dvdec, GstBuffer *outbuf, GstPad *pad, GstClockTime ts
 
   gst_pad_push (pad, outbuf);
 
-  if (dvdec->next_ts >= dvdec->end_position) {
+  if ((dvdec->end_position != -1) &&
+      (dvdec->next_ts >= dvdec->end_position)) {
     if (dvdec->loop) 
       gst_pad_push (pad, GST_BUFFER(gst_event_new (GST_EVENT_SEGMENT_DONE)));
     else
@@ -701,7 +704,7 @@ gst_dvdec_loop (GstElement *element)
   /* after parsing the header we know the size of the data */
   dvdec->PAL = dv_system_50_fields (dvdec->decoder);
 
-  dvdec->framerate = (dvdec->PAL ? 25 : 30);
+  dvdec->framerate = (dvdec->PAL ? 2500 : 2997);
   dvdec->height = height = (dvdec->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
   length = (dvdec->PAL ? PAL_BUFFER : NTSC_BUFFER);
 
@@ -779,8 +782,7 @@ gst_dvdec_loop (GstElement *element)
   format = GST_FORMAT_TIME;
   gst_pad_query (dvdec->videosrcpad, GST_QUERY_POSITION, &format, &ts);
 
-  /* FIXME this is inaccurate for NTSC */
-  dvdec->next_ts += GST_SECOND / dvdec->framerate;
+  dvdec->next_ts += (GST_SECOND*100) / dvdec->framerate;
 
   if (GST_PAD_IS_CONNECTED (dvdec->audiosrcpad)) {
     gint16 *a_ptr;
@@ -863,7 +865,9 @@ gst_dvdec_loop (GstElement *element)
     gst_dvdec_push (dvdec, outbuf, dvdec->videosrcpad, ts);
   }
 
-  if (dvdec->next_ts >= dvdec->end_position && !dvdec->loop) {
+  if ((dvdec->end_position != -1) && 
+      (dvdec->next_ts >= dvdec->end_position) && 
+      !dvdec->loop) {
     gst_element_set_eos (GST_ELEMENT (dvdec));
   }
 
