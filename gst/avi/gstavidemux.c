@@ -406,6 +406,7 @@ gst_avi_demux_handle_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value)
 {
   gboolean res = TRUE;
+  GstAviDemux *demux = GST_AVI_DEMUX (gst_pad_get_parent (pad));
 
   /*GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (pad)); */
   avi_stream_context *stream = gst_pad_get_element_private (pad);
@@ -439,17 +440,29 @@ gst_avi_demux_handle_src_query (GstPad * pad,
     case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_TIME:
-          if (stream->strh->rate && stream->strh->type == GST_RIFF_FCC_auds) {
-            if (stream->strh->rate != 0) {
+          if (stream->strh->type == GST_RIFF_FCC_auds) {
+            if (stream->strh->samplesize != 0 && stream->blockalign != 0) {
+              *value = stream->current_byte * GST_SECOND /
+                  (stream->blockalign * stream->strh->rate);
+            } else if (stream->strh->rate != 0) {
+              *value = (gfloat) stream->current_frame * stream->strh->scale *
+                  GST_SECOND / stream->strh->rate;
+            } else if (stream->bitrate != 0) {
               *value = ((gfloat) stream->current_byte) * GST_SECOND /
                   stream->bitrate;
             } else {
-              *value = (((gfloat) stream->current_frame) * stream->strh->scale /
-                  (stream->strh->rate * stream->blockalign)) * GST_SECOND;
+              *value = 0;
             }
+//g_print ("Time: %" GST_TIME_FORMAT " (%d/%d/%d)\n", GST_TIME_ARGS (*value),
+//       stream->strh->rate, stream->bitrate, stream->strh->scale);
           } else {
-            *value = (((gfloat) stream->current_frame) * stream->strh->scale /
-                stream->strh->rate) * GST_SECOND;
+            if (stream->strh->rate != 0) {
+              *value = ((gfloat) stream->current_frame * stream->strh->scale *
+                  GST_SECOND / stream->strh->rate);
+            } else {
+              *value = stream->current_frame * demux->us_per_frame *
+                  GST_USECOND;
+            }
           }
           break;
         case GST_FORMAT_BYTES:
@@ -1489,6 +1502,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         GST_BUFFER_TIMESTAMP (buf) = next_ts;
         gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &dur_ts);
         GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
+//g_print ("TIME: %" GST_TIME_FORMAT " on pad %s\n",
+//       GST_TIME_ARGS (next_ts), gst_pad_get_name (stream->pad));
         gst_pad_push (stream->pad, GST_DATA (buf));
       }
     }
