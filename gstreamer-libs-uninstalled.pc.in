@@ -4,5 +4,6 @@ Version: @VERSION@
 Requires: gstreamer = @VERSION@
 Libs: -L${pcfiledir}/gst-libs/gst/gconf \
 	-L${pcfiledir}/gst-libs/gst/audio \
-	-L${pcfiledir}/gst-libs/gst/video
+	-L${pcfiledir}/gst-libs/gst/video \
+	-L${pcfiledir}/gst-libs/gst/play
 Cflags: -I${pcfiledir}/gst-libs
