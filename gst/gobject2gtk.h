@@ -57,6 +57,7 @@ typedef struct _GObjectClass GObjectClass;
 #define G_TYPE_UCHAR				GTK_TYPE_UCHAR
 #define G_TYPE_BOOLEAN				GTK_TYPE_BOOL
 #define G_TYPE_INT				GTK_TYPE_INT
+#define G_TYPE_INT64				GTK_TYPE_LONG
 #define G_TYPE_UINT				GTK_TYPE_UINT
 #define G_TYPE_LONG				GTK_TYPE_LONG
 #define G_TYPE_ULONG				GTK_TYPE_ULONG
