@@ -443,6 +443,7 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   // make sure buf1 has a lower address than buf2
   if (buf1->data > buf2->data) {
     GstBuffer *tmp = buf1;
+    g_print ("swapping buffers\n");
     buf1 = buf2;
     buf2 = tmp;
   }
@@ -475,9 +476,6 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
     else newbuf->maxage = buf1->maxage;
 
   }
-  // FIXME unref buf1 and buf2 here?
-  gst_buffer_unref (buf1);
-  gst_buffer_unref (buf2);
 
   return newbuf;
 }
