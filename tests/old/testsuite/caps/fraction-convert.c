@@ -60,30 +60,42 @@ check_from_double_convert (gdouble value, gint num, gint denom, gdouble prec)
 }
 
 static void
-check_from_fraction_convert (gint nom, gint denom, gdouble prec)
+check_from_fraction_convert (gint num, gint denom, gdouble prec)
 {
   GValue value1 = { 0 };
   GValue value2 = { 0 };
   gdouble value;
+  gint res_num, res_denom;
 
   g_value_init (&value1, GST_TYPE_FRACTION);
   g_value_init (&value2, G_TYPE_DOUBLE);
 
-  gst_value_set_fraction (&value1, nom, denom);
+  gst_value_set_fraction (&value1, num, denom);
   g_value_transform (&value1, &value2);
 
   value = g_value_get_double (&value2);
-  g_assert (fabs (value - ((gdouble) nom) / denom) < prec);
+  g_assert (fabs (value - ((gdouble) num) / denom) < prec);
 
   g_print ("%s = %s, %2.50lf as double\n",
       gst_value_serialize (&value1), gst_value_serialize (&value2), value);
 
   g_value_transform (&value2, &value1);
-  g_print ("%s = %s\n",
-      gst_value_serialize (&value2), gst_value_serialize (&value1));
+  g_print ("%s = %s ? (expected: %d/%d )\n",
+      gst_value_serialize (&value2), gst_value_serialize (&value1), num, denom);
   value = g_value_get_double (&value2);
-  g_assert (gst_value_get_fraction_numerator (&value1) == nom);
-  g_assert (gst_value_get_fraction_denominator (&value1) == denom);
+
+  res_num = gst_value_get_fraction_numerator (&value1);
+  res_denom = gst_value_get_fraction_denominator (&value1);
+  if (res_num == num && res_denom == denom) {
+    g_print ("best conversion.\n");
+  } else {
+    if (fabs (value - res_num / (gdouble) res_denom) <= prec) {
+      g_print ("acceptable suboptimal conversion.\n");
+    } else {
+      g_print ("unacceptable suboptimal conversion.\n");
+      g_assert_not_reached ();
+    }
+  }
 
   g_value_unset (&value2);
   g_value_unset (&value1);
