@@ -1,5 +1,14 @@
 2004-05-10  David Schleef  <ds@schleef.org>
 
+	(from Steve Lhomme)
+	* win32/Makefile: When using make clean the MS Visual Studio makefiles
+	are deleted.  Fix.
+	* win32/Makefile.inspect:
+	* win32/Makefile.launch:
+	* win32/Makefile.register:
+
+2004-05-10  David Schleef  <ds@schleef.org>
+
 	* gst/gstinfo.h: Add missing inline function.
 	* gst/gsttrace.c: add include
 	* gst/parse/grammar.y: remove unused code

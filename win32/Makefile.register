@@ -60,7 +60,7 @@ endif
 all: gst-register.exe
 
 clean:
-	$(RM) gst-register.*
+	$(RM) gst-register.exe gst-register.obj
 
 gst-register.exe:
 	$(CC) $(SRC_DIR)\gst-register.c $(CXXFLAGS) gstreamer-0.8.lib $(GLIB_DIR)/glib/glib-2.0.lib $(GLIB_DIR)/gobject/gobject-2.0.lib
