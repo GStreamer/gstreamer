@@ -208,6 +208,18 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Cinepak video");
       break;
 
+    case GST_MAKE_FOURCC ('M', 'S', 'V', 'C'):
+    case GST_MAKE_FOURCC ('m', 's', 'v', 'c'):
+    case GST_MAKE_FOURCC ('C', 'R', 'A', 'M'):
+    case GST_MAKE_FOURCC ('c', 'r', 'a', 'm'):
+    case GST_MAKE_FOURCC ('W', 'H', 'A', 'M'):
+    case GST_MAKE_FOURCC ('w', 'h', 'a', 'm'):
+      caps = gst_caps_new_simple ("video/x-msvideocodec",
+          "msvideoversion", G_TYPE_INT, 1, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("MS video v1");
+      break;
+
     default:
       GST_WARNING ("Unkown video fourcc " GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
@@ -380,6 +392,8 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('D', 'I', 'V', 'X'),
     GST_MAKE_FOURCC ('X', 'V', 'I', 'D'),
     GST_MAKE_FOURCC ('3', 'I', 'V', '1'),
+    GST_MAKE_FOURCC ('c', 'v', 'i', 'd'),
+    GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
     /* FILL ME */
     0
   };
