@@ -439,7 +439,7 @@ gst_basic_scheduler_chainhandler_proxy (GstPad * pad, GstBuffer * buf)
 
   if (loop_count == 0) {
     gst_element_error (parent, 
-		    "(internal error) maximum number of switches exceeded");
+		    "(internal error) basic: maximum number of switches exceeded");
     return;
   }
 
