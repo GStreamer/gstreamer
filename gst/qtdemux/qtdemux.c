@@ -362,7 +362,7 @@ gst_qtp_read_bytes_atom_head(GstQTDemux * qtdemux,GstQtpAtom * atom)
   /* FIXME this can't be right, rewrite with _read */
   do { /* do ... while (event()) is necessary for bytestream events */
     if (!amh) {
-      if ((amh = (GstQtpAtomMinHeader*) gst_bytestream_peek_bytes (bs, 8)))  {
+      if (gst_bytestream_peek_bytes (bs, (guint8**)&amh, 8) == 8)  {
 	atom->size = GUINT32_FROM_BE(amh->size);
 	atom->type = amh->type; /* don't need to turn this around magicly FIXME this can depend on endiannes */
 	atom->start = qtdemux->bs_pos;
@@ -372,7 +372,7 @@ gst_qtp_read_bytes_atom_head(GstQTDemux * qtdemux,GstQtpAtom * atom)
     }
     if (amh) {
       if (atom->size == 1) { /* need to peek extended size field */
-	if ((esize = (guint64*) gst_bytestream_peek_bytes (bs, 8))) {
+	if (gst_bytestream_peek_bytes (bs, (guint8**)&esize, 8) == 8) {
 	  atom->size = GUINT64_FROM_BE(*esize);
 	  gst_bytestream_flush (bs, 8);
 	  qtdemux->bs_pos += 8;
@@ -391,8 +391,9 @@ gst_qtp_read_bytes(GstQTDemux * qtdemux, void * buffer, size_t size)
 {
   void * data;
   GstByteStream * bs = qtdemux->bs;
+
   do {
-    if ((data = gst_bytestream_peek_bytes (bs,size))) {
+    if (gst_bytestream_peek_bytes (bs, (guint8**)&data, size) == size) {
       memcpy(buffer,data,size);
       gst_bytestream_flush(bs,size);
       qtdemux->bs_pos += size;
@@ -407,7 +408,7 @@ gst_qtp_read(GstQTDemux * qtdemux, size_t size)
   GstBuffer * buf;
   GstByteStream * bs = qtdemux->bs;
   do {
-    if ((buf = gst_bytestream_read (bs,size))) {
+    if (gst_bytestream_read (bs, &buf, size) == size) {
       qtdemux->bs_pos += size;
       return buf;
     }

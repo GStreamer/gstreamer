@@ -435,11 +435,12 @@ static GstBuffer*
 flx_get_data(GstFlxDec *flxdec, gulong size)
 {
   GstBuffer *retbuf;
+  guint32 got_bytes;
 
   g_return_val_if_fail (flxdec != NULL, NULL);
 
-  retbuf = gst_bytestream_read (flxdec->bs, size);
-  if (!retbuf) {
+  got_bytes = gst_bytestream_read (flxdec->bs, &retbuf, size);
+  if (got_bytes < size) {
     GstEvent *event;
     guint32 remaining;
 

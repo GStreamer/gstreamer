@@ -716,6 +716,7 @@ gst_ladspa_loop(GstElement *element)
   guint        num_processed, num_to_process;
   GstEvent     *event = NULL;
   guint32       waiting;
+  guint32       got_bytes;
   LADSPA_Data  **data_in, **data_out;
   GstBuffer    **buffers_in, **buffers_out;
   GstBufferPool *bufpool;
@@ -750,9 +751,9 @@ gst_ladspa_loop(GstElement *element)
     /* first get all the necessary data from the input ports */
     for (i=0 ; i<numsinkpads ; i++){  
       GST_DEBUG (0, "pulling %u bytes through channel %d'sbytestream", bufferbytesize, i);
-      buffers_in[i] = gst_bytestream_read (bytestreams[i], bufferbytesize);
+      got_bytes = gst_bytestream_read (bytestreams[i], buffers_in + i, bufferbytesize);
 
-      if (buffers_in[i] == NULL) {
+      if (got_bytes != bufferbytesize) {
         /* we need to check for an event. */
         gst_bytestream_get_status (bytestreams[i], &waiting, &event);
 
