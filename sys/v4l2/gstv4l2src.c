@@ -30,11 +30,8 @@
 static GstElementDetails gst_v4l2src_details = {
 	"Video (video4linux2) Source",
 	"Source/Video",
-	"LGPL",
 	"Reads frames (compressed or uncompressed) from a video4linux2 device",
-	VERSION,
-	"Ronald Bultje <rbultje@ronald.bitfreak.net>",
-	"(C) 2002",
+	"Ronald Bultje <rbultje@ronald.bitfreak.net>"
 };
 
 /* V4l2Src signals and args */
@@ -57,6 +54,7 @@ enum {
 
 /* init functions */
 static void			gst_v4l2src_class_init		(GstV4l2SrcClass *klass);
+static void			gst_v4l2src_base_init		(GstV4l2SrcClass *klass);
 static void			gst_v4l2src_init		(GstV4l2Src      *v4l2src);
 
 /* signal functions */
@@ -119,7 +117,7 @@ gst_v4l2src_get_type (void)
 	if (!v4l2src_type) {
 		static const GTypeInfo v4l2src_info = {
 			sizeof(GstV4l2SrcClass),
-			NULL,
+			(GBaseInitFunc) gst_v4l2src_base_init,
 			NULL,
 			(GClassInitFunc) gst_v4l2src_class_init,
 			NULL,
@@ -135,6 +133,21 @@ gst_v4l2src_get_type (void)
 	return v4l2src_type;
 }
 
+static void
+gst_v4l2src_base_init (GstV4l2SrcClass *klass)
+{
+	GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  
+	gst_element_class_set_details (gstelement_class,
+				       &gst_v4l2src_details);
+
+	src_template = gst_pad_template_new ("src",
+					     GST_PAD_SRC,
+					     GST_PAD_ALWAYS,
+					     NULL);
+
+	gst_element_class_add_pad_template (gstelement_class, src_template);
+}
 
 static void
 gst_v4l2src_class_init (GstV4l2SrcClass *klass)
@@ -1061,27 +1074,4 @@ gst_v4l2src_buffer_free (GstBufferPool *pool,
 
 	/* free the buffer itself */
 	gst_buffer_default_free(buf);
-}
-
-
-gboolean
-gst_v4l2src_factory_init (GstPlugin *plugin)
-{
-	GstElementFactory *factory;
-
-	/* create an elementfactory for the v4l2src */
-	factory = gst_element_factory_new("v4l2src", GST_TYPE_V4L2SRC,
-				&gst_v4l2src_details);
-	g_return_val_if_fail(factory != NULL, FALSE);
-
-	src_template = gst_pad_template_new("src",
-				GST_PAD_SRC,
-				GST_PAD_ALWAYS,
-				NULL);
-
-	gst_element_factory_add_pad_template(factory, src_template);
-
-	gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE(factory));
-
-	return TRUE;
 }

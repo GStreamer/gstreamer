@@ -27,20 +27,31 @@
 #include "gstv4l2src.h"
 
 gboolean
-plugin_init (GModule   *module,
-	     GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  if (!gst_v4l2element_factory_init (plugin) ||
-      !gst_v4l2src_factory_init (plugin)) {
+  /* actually, we can survive without it, but I'll create
+   * that handling later on. */
+  if (!gst_library_load ("xwindowlistener"))
     return FALSE;
-  }
+
+  if (!gst_element_register (plugin, "v4l2element",
+			     GST_RANK_NONE, GST_TYPE_V4L2ELEMENT) ||
+      !gst_element_register (plugin, "v4l2src",
+			     GST_RANK_NONE, GST_TYPE_V4L2SRC))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
-	GST_VERSION_MAJOR,
-	GST_VERSION_MINOR,
-	"video4linux2",
-	plugin_init
-};
+GST_PLUGIN_DEFINE (
+  GST_VERSION_MAJOR,
+  GST_VERSION_MINOR,
+  "video4linux2",
+  "elements for Video 4 Linux 2",
+  plugin_init,
+  VERSION,
+  GST_LICENSE,
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

@@ -98,6 +98,4 @@ struct _GstV4l2SrcClass {
 
 GType gst_v4l2src_get_type(void);
 
-gboolean gst_v4l2src_factory_init (GstPlugin *plugin);
-
 #endif /* __GST_V4L2SRC_H__ */
