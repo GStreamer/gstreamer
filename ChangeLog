@@ -1,3 +1,7 @@
+2004-04-12  Christian Schaller <Uraeus@gnome.org>
+
+	* sys/oss/gstosselement.c: s/lstat/stat/ from freeBSD, since it can 
+	be a symlink
 2004-04-11  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_data):
