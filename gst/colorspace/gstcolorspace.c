@@ -62,7 +62,7 @@ static GstStaticPadTemplate gst_colorspace_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB "; "
-        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_RGB_16)
+        GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_RGB_16)
     );
 
 /* Stereo signals and args */
