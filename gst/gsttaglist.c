@@ -206,7 +206,7 @@ gst_tag_merge_strings_with_comma (GValue *dest, const GValue *src)
   }
 
   g_value_init (dest, G_TYPE_STRING);
-  g_value_take_string (dest, str->str);
+  g_value_set_string_take_ownership (dest, str->str);
   g_string_free (str, FALSE);
 }
 static GstTagInfo *
