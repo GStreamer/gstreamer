@@ -1,3 +1,9 @@
+2005-02-05  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_getcaps):
+	  Switch to list instead of range, since MJPEG-devices really just
+	  support decimations, not any size.
+
 2005-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_open_decoder),
 	(gst_mpeg2dec_reset), (free_all_buffers),
