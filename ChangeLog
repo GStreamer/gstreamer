@@ -1,3 +1,12 @@
+2004-04-30  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/libvisual/Makefile.am:
+	* ext/libvisual/visual.c: 
+	  add initial support for libvisual (http://libvisual.sourceforge.net)
+	  libvisual is still quite alpha, so expect crashes in there :)
+
 2004-04-29  David Schleef  <ds@schleef.org>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream), (qtdemux_parse),
