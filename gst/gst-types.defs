@@ -159,7 +159,7 @@
   (in-module "Gst")
   (c-name "GstBuffer")
   (gtype-id "GST_TYPE_BUFFER")
-  (copy-func "gst_data_copy")
+  (copy-func "gst_buffer_copy")
   (release-func "gst_data_unref")
   (fields 
      '("guint" "size")

@@ -116,7 +116,7 @@ _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-#if 0
+%%
 override-slot GstBuffer.tp_getattr
 PyObject *
 _wrap_gst_buffer_tp_getattr(PyGObject *self, char *attr)
@@ -140,7 +140,6 @@ _wrap_gst_buffer_tp_getattr(PyGObject *self, char *attr)
 
 	return Py_FindMethod(_PyGstBuffer_methods, (PyObject*)self, attr);
 }
-#endif
 %%
 override-attr GstBuffer.size
 static PyObject *
@@ -249,33 +248,48 @@ gst_buffer_length(PyGObject *self)
 	return GST_BUFFER_SIZE(self->obj);
 }
 
+/* %%
+define GstBuffer.flags noargs
+static PyObject *
+_wrap_gst_buffer_flags(PyGBoxed *self)
+{
+	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
+	g_assert(GST_IS_BUFFER(buf));
+	return PyInt_FromLong(GST_BUFFER_FLAGS(buf));
+} */
 %%
 define GstBuffer.flag_is_set
 static PyObject *
-_wrap_gst_buffer_flag_is_set(PyGObject *self, PyObject *args)
+_wrap_gst_buffer_flag_is_set(PyObject *self, PyObject *args)
 {
 	int flag;
 	PyObject *retval;
+	GstBuffer *buf;
 	
 	if (!PyArg_ParseTuple(args, "i:GstBuffer.flag_is_set", &flag))
 		return NULL;
 
-	retval = GST_BUFFER_FLAG_IS_SET(self->obj, flag) ? Py_True : Py_False;
-
+	buf = pyg_boxed_get(self, GstBuffer);
+	g_assert(GST_IS_BUFFER(buf));
+	
+	retval = GST_BUFFER_FLAG_IS_SET(buf, flag) ? Py_True : Py_False;
 	Py_INCREF(retval);
 	return retval;
 }
 %%
 define GstBuffer.flag_set
 static PyObject *
-_wrap_gst_buffer_flag_set(PyGObject *self, PyObject *args)
+_wrap_gst_buffer_flag_set(PyObject *self, PyObject *args)
 {
 	int flag;
+	GstBuffer *buf;
 	
 	if (!PyArg_ParseTuple(args, "i:GstBuffer.set", &flag))
 		return NULL;
 
-	GST_BUFFER_FLAG_SET(self->obj, flag);
+	buf = pyg_boxed_get(self, GstBuffer);
+	g_assert(GST_IS_BUFFER(buf));
+	GST_BUFFER_FLAG_SET(buf, flag);
 
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -283,14 +297,17 @@ _wrap_gst_buffer_flag_set(PyGObject *self, PyObject *args)
 %%
 define GstBuffer.flag_unset
 static PyObject *
-_wrap_gst_buffer_flag_unset(PyGObject *self, PyObject *args)
+_wrap_gst_buffer_flag_unset(PyObject *self, PyObject *args)
 {
 	int flag;
+	GstBuffer *buf;
 	
 	if (!PyArg_ParseTuple(args, "i:GstBuffer.unset", &flag))
 		return NULL;
 
-	GST_BUFFER_FLAG_UNSET(self->obj, flag);
+	buf = pyg_boxed_get(self, GstBuffer);
+	g_assert(GST_IS_BUFFER(buf));
+	GST_BUFFER_FLAG_UNSET(buf, flag);
 
 	Py_INCREF(Py_None);
 	return Py_None;
