@@ -1,3 +1,15 @@
+2004-11-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/README:
+	* gst/playback/gstdecodebin.c: (close_pad_link), (try_to_link_1):
+	* gst/playback/gstplaybin.c: (gst_play_bin_init),
+	(gst_play_bin_dispose), (gst_play_bin_set_property),
+	(remove_sinks), (setup_sinks), (gst_play_bin_change_state),
+	(gst_play_bin_get_event_masks), (gst_play_bin_send_event),
+	(gst_play_bin_get_formats), (gst_play_bin_convert),
+	(gst_play_bin_get_query_types), (gst_play_bin_query):
+	Cleanups and some more documentation.
+
 2004-11-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/libcaca/gstcacasink.c: (gst_cacasink_class_init),
