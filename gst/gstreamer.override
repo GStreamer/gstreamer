@@ -278,8 +278,6 @@ _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 		return NULL;
 	value = 0;
 	ret = gst_pad_query(GST_PAD(self->obj), type, &format, &value);
-        g_print ("HOI THOMAS\n");
-        g_print ("THOMAS: value: %lld\n", value);
 	return Py_BuildValue("(bL)", ret, value);
 }
 %%
@@ -298,7 +296,7 @@ _wrap_gst_element_query(PyGObject *self, PyObject *args, PyObject *kwargs)
 		return NULL;
 	value = 0;
 	ret = gst_element_query(GST_ELEMENT(self->obj), type, &format, &value);
-	return Py_BuildValue("(bl)", ret, value);
+	return Py_BuildValue("(bL)", ret, value);
 }
 %%
 override gst_pad_convert kwargs
@@ -317,7 +315,7 @@ _wrap_gst_pad_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 	src_value = PyLong_AsLongLong(src_value_obj);
 	dest_value = 0;
 	ret = gst_pad_convert(GST_PAD(self->obj), src_format, src_value, &dest_format, &dest_value);
-	return Py_BuildValue("(bl)", ret, dest_value);
+	return Py_BuildValue("(bL)", ret, dest_value);
 }
 %%
 override gst_element_convert kwargs
@@ -336,7 +334,7 @@ _wrap_gst_element_convert(PyGObject *self, PyObject *args, PyObject *kwargs)
 	src_value = PyLong_AsLongLong(src_value_obj);
 	dest_value = 0;
 	ret = gst_element_convert(GST_ELEMENT(self->obj), src_format, src_value, &dest_format, &dest_value);
-	return Py_BuildValue("(bl)", ret, dest_value);
+	return Py_BuildValue("(bL)", ret, dest_value);
 }
 %%
 override gst_props_entry_get_int
