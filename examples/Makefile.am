@@ -7,10 +7,10 @@ endif
 SUBDIRS = autoplug $(GST_LOADSAVE_DIRS) \
           helloworld helloworld2 \
           queue queue2 queue3 queue4 \
-          launch thread plugins mixer cutter pingpong
+          launch thread plugins mixer cutter pingpong manual
 
 DIST_SUBDIRS = autoplug \
           helloworld helloworld2 \
           queue queue2 queue3 queue4 \
-          launch thread xml plugins typefind mixer cutter pingpong
+          launch thread xml plugins typefind mixer cutter pingpong manual
 
