@@ -1,10 +1,13 @@
-2004-10-25  David Schleef  <ds@schleef.org>
+2004-10-25  James Henstridge  <james@jamesh.id.au>
+
+	Reviewed by:  David Schleef  <ds@schleef.org>
 
 	* examples/gstplay/player.c: (got_stream_length), (main):
 	* examples/seeking/cdplayer.c: (update_scale):
 	* examples/seeking/seek.c: (format_value), (update_scale):
 	* examples/seeking/spider_seek.c: (format_value), (update_scale),
 	(stop_seek):
+	Build fixes on AMD64.
 
 2004-10-25  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
