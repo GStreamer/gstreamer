@@ -484,6 +484,11 @@ probe_triggered (GstProbe * probe, GstData ** data, gpointer user_data)
 
       GST_DEBUG ("probe got EOS in group %p", group);
 
+      /* FIXME there might be more streams in this group that need
+       * to go to EOS before we can switch to the next group. So
+       * here we should mark the stream as EOSed and decide if all
+       * streams have EOSed before continuing. */
+
       /* see if we have some more groups left to play */
       queued = g_list_length (play_base_bin->queued_groups);
       if (queued > 1) {
@@ -992,7 +997,9 @@ gst_play_base_bin_change_state (GstElement * element)
 
         group = get_active_group (play_base_bin);
 
-        /* FIXME for now... */
+        /* FIXME for now...  The group can be NULL if the setup_source
+         * function somehow returned TRUE but did not commit the group. 
+         * Actually I don't think this can happen but need to recheck. */
         g_assert (group);
 
         /* check if we found any supported stream... if not, then

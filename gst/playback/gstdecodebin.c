@@ -404,7 +404,9 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
 
   GST_LOG_OBJECT (element, "trying to close %" GST_PTR_FORMAT, caps);
 
-  /* FIXME, iterate over more structures? */
+  /* FIXME, iterate over more structures? I guess it is possible that
+   * this pad has some encoded and some raw pads. This code will fail
+   * then... */
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
 
@@ -501,7 +503,10 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       /* check if we can use threads */
       if (decode_bin->threaded) {
         if (strstr (klass, "Demux") != NULL) {
-          /* FIXME, do something with threads here */
+          /* FIXME, do something with threads here. Not sure that it 
+           * really matters here but in general it is better to preroll
+           * on encoded data from the muxer than on raw encoded streams
+           * because that would consume less memory. */
         }
       }
       /* make sure we catch unlink signals */

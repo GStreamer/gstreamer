@@ -1,5 +1,13 @@
 2004-11-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/README:
+	* gst/playback/gstdecodebin.c: (close_pad_link), (try_to_link_1):
+	* gst/playback/gstplaybasebin.c: (probe_triggered),
+	(gst_play_base_bin_change_state):
+	Updated README, added more comments for fixmes etc..
+
+2004-11-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_add_element):
 	We can remove this hack now.
 
