@@ -364,7 +364,7 @@ gst_a52dec_loop (GstElement * element)
   guint8 *data;
   int i, length, flags, sample_rate, bit_rate;
   int channels;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   guint32 got_bytes;
   gboolean need_reneg;
   GstClockTime timestamp = 0;
@@ -372,6 +372,9 @@ gst_a52dec_loop (GstElement * element)
   a52dec = GST_A52DEC (element);
 
   /* find and read header */
+  bit_rate = a52dec->bit_rate;
+  sample_rate = a52dec->sample_rate;
+  flags = 0;
   do {
     gint skipped_bytes = 0;
 
@@ -386,9 +389,15 @@ gst_a52dec_loop (GstElement * element)
         /* slide window to next 7 bytesa */
         gst_bytestream_flush_fast (a52dec->bs, 1);
         skipped_bytes++;
-        GST_LOG ("Skipped");
-      } else
+        GST_DEBUG ("Skipped");
+      } else {
+        GST_DEBUG ("Sync: %d", length);
         break;
+      }
+    }
+    if (skipped_bytes >= 3840) {
+      GST_LOG ("Sync failed");
+      return;
     }
   }
   while (0);
@@ -400,7 +409,9 @@ gst_a52dec_loop (GstElement * element)
     a52dec->sample_rate = sample_rate;
   }
 
-  a52dec->stream_channels = flags & (A52_CHANNEL_MASK | A52_LFE);
+  if (flags) {
+    a52dec->stream_channels = flags & (A52_CHANNEL_MASK | A52_LFE);
+  }
 
   if (bit_rate != a52dec->bit_rate) {
     a52dec->bit_rate = bit_rate;
