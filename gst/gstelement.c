@@ -1496,7 +1496,8 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
     if (foundpad) return foundpad;
   //}
   
-  g_critical("could not find a compatible pad");
+  g_critical("Could not find a compatible pad on element %s to link to %s:%s",
+             GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));
 
   return NULL;
 }
