@@ -3,7 +3,7 @@ AC_CANONICAL_TARGET([])
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 8, 1, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gstreamer, GST_VERSION, 0, 8, 1, 2, GST_CVS="no", GST_CVS="yes")
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
@@ -252,6 +252,8 @@ AC_SUBST(GLIB2_REQ)
 
 dnl Check for glib2 with sugar on top
 PKG_CHECK_MODULES(GLIB2, glib-2.0 >= $GLIB2_REQ gobject-2.0 gthread-2.0 gmodule-2.0,HAVE_GLIB2=yes,HAVE_GLIB2=no)
+dnl for the poor souls who for example have glib in /usr/local
+AS_SCRUB_CFLAGS(GLIB2_CFLAGS)
 GLIB_LIBS=$GLIB2_LIBS
 GLIB_CFLAGS=$GLIB2_CFLAGS
 AC_SUBST(GLIB_LIBS)

@@ -1,3 +1,9 @@
+2004-05-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  scrub cflags for glib2 so gcc doesn't complain when glib is in
+	  /usr/local
+
 2004-05-21  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstcpu.c (gst_cpuid_i386): Protect some gcc asm stuff with
