@@ -43,6 +43,9 @@
 #include "gstpad.h"
 #include "gstscheduler.h"
 #include "gst_private.h"
+#ifdef HAVE_VALGRIND
+#include <valgrind/valgrind.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEBUG);
 
@@ -155,6 +158,41 @@ GstDebugCategory *GST_CAT_PARAMS = NULL;
 GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
 GstDebugCategory *GST_CAT_SEEK = NULL;
 
+/* FIXME: export this? */
+gboolean
+__gst_in_valgrind (void)
+{
+  static enum
+  {
+    GST_VG_UNCHECKED,
+    GST_VG_NO_VALGRIND,
+    GST_VG_INSIDE
+  }
+  in_valgrind = GST_VG_UNCHECKED;
+
+  if (in_valgrind == GST_VG_UNCHECKED) {
+#ifdef HAVE_VALGRIND
+    if (RUNNING_ON_VALGRIND) {
+      GST_CAT_INFO (GST_CAT_GST_INIT, "we're running inside valgrind");
+      VALGRIND_PRINTF
+          ("GStreamer has detected that it is running inside valgrind.");
+      VALGRIND_PRINTF
+          ("It might now take different code paths to ease debugging.");
+      VALGRIND_PRINTF ("Of course, this may also lead to different bugs.");
+      in_valgrind = GST_VG_INSIDE;
+    } else {
+      GST_CAT_LOG (GST_CAT_GST_INIT, "not doing extra valgrind stuff");
+      in_valgrind = GST_VG_NO_VALGRIND;
+    }
+#else
+    in_valgrind = GST_VG_NO_VALGRIND;
+#endif
+    g_assert (in_valgrind == GST_VG_NO_VALGRIND ||
+        in_valgrind == GST_VG_INSIDE);
+  }
+  return (in_valgrind == GST_VG_INSIDE) ? TRUE : FALSE;
+}
+
 /**
  * _gst_debug_init:
  * 
@@ -240,6 +278,9 @@ _gst_debug_init (void)
       GST_DEBUG_BOLD, NULL);
   GST_CAT_SEEK = _gst_debug_category_new ("GST_SEEK",
       0, "plugins reacting to seek events");
+
+  /* print out the valgrind message if we're in valgrind */
+  __gst_in_valgrind ();
 }
 
 /* we can't do this further above, because we initialize the GST_CAT_DEFAULT struct */

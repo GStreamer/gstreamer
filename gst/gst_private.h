@@ -28,8 +28,12 @@
 #  include "config.h"
 #endif
 
+#include <glib.h>
+
 #include <stdlib.h>
 #include <string.h>
+
+gboolean __gst_in_valgrind (void);
 
 /*** debugging categories *****************************************************/
 

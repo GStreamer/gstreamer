@@ -409,6 +409,18 @@ AC_HELP_STRING([--disable-debug],[disable addition of -g debugging info]),
 esac],
 [USE_DEBUG=yes]) dnl Default value
 
+dnl valgrind inclusion
+USE_VALGRIND="$USE_DEBUG"
+if test "x$USE_VALGRIND" = xyes; then
+  PKG_CHECK_MODULES(VALGRIND, valgrind, USE_VALGRIND="yes", USE_VALGRIND="no")
+fi
+if test "x$USE_VALGRIND" = xyes; then
+  AC_DEFINE(HAVE_VALGRIND, 1, [Define if valgrind should be used])
+  AC_MSG_NOTICE(Using extra code paths for valgrind)
+fi
+AC_SUBST (VALGRIND_CFLAGS)
+AC_SUBST (VALGRIND_LIBS)
+
 dnl ################################################
 dnl # Set defines according to variables set above #
 dnl ################################################

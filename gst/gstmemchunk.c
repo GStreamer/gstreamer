@@ -16,6 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include "gst_private.h"
 
 #include <string.h>             /* memset */
 
@@ -23,6 +24,11 @@
 #include "gstutils.h"
 #include "gstmemchunk.h"
 #include "gsttrashstack.h"
+#ifdef HAVE_VALGRIND
+#include <sys/mman.h>
+#include <valgrind/valgrind.h>
+#endif
+
 
 #define GST_MEM_CHUNK_AREA(chunk) 	(((GstMemChunkElement*)(chunk))->area)
 #define GST_MEM_CHUNK_DATA(chunk) 	((gpointer)(((GstMemChunkElement*)(chunk)) + 1))
@@ -67,7 +73,18 @@ populate (GstMemChunk * mem_chunk)
   if (mem_chunk->cleanup)
     return FALSE;
 
-  area = (guint8 *) g_malloc0 (mem_chunk->area_size);
+  /* FIXME: if we don't do this here and use g_malloc, valgrind crashes */
+#if HAVE_VALGRIND
+  if (__gst_in_valgrind ()) {
+    /* copied from valgrind example */
+    area =
+        (guint8 *) mmap (0, mem_chunk->area_size,
+        PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON, -1, 0);
+  } else
+#endif
+  {
+    area = g_malloc0 (mem_chunk->area_size);
+  }
 
   for (i = 0; i < mem_chunk->area_size; i += mem_chunk->chunk_size) {
     GST_MEM_CHUNK_AREA (area + i) = area;
@@ -117,7 +134,17 @@ gst_mem_chunk_new (gchar * name, gint atom_size, gulong area_size, gint type)
 static gboolean
 free_area (gpointer key, gpointer value, gpointer user_data)
 {
-  g_free (key);
+#if HAVE_VALGRIND
+  GstMemChunk *chunk = (GstMemChunk *) user_data;
+
+  if (__gst_in_valgrind ()) {
+    /* copied from valgrind example */
+    munmap (key, chunk->area_size);
+  } else
+#endif
+  {
+    g_free (key);
+  }
 
   return TRUE;
 }
@@ -144,7 +171,7 @@ gst_mem_chunk_destroy (GstMemChunk * mem_chunk)
 
     data = gst_mem_chunk_alloc (mem_chunk);
   }
-  g_hash_table_foreach_remove (elements, free_area, NULL);
+  g_hash_table_foreach_remove (elements, free_area, mem_chunk);
 
   g_hash_table_destroy (elements);
   g_free (mem_chunk->name);
@@ -177,7 +204,12 @@ again:
     else
       return NULL;
   }
-
+#ifdef HAVE_VALGRIND
+  //return g_malloc (mem_chunk->atom_size);
+  g_print ("alloc %p %lu\n", GST_MEM_CHUNK_DATA (chunk), mem_chunk->atom_size);
+  VALGRIND_MALLOCLIKE_BLOCK (GST_MEM_CHUNK_DATA (chunk), mem_chunk->atom_size,
+      0, 0);
+#endif
   return GST_MEM_CHUNK_DATA (chunk);
 }
 
@@ -219,5 +251,10 @@ gst_mem_chunk_free (GstMemChunk * mem_chunk, gpointer mem)
 
   chunk = GST_MEM_CHUNK_LINK (mem);
 
+#ifdef HAVE_VALGRIND
+  //g_free (mem);
+  VALGRIND_FREELIKE_BLOCK (mem, 0);
+  g_print ("free %p\n", mem);
+#endif
   gst_trash_stack_push (&mem_chunk->stack, chunk);
 }

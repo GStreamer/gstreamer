@@ -1,3 +1,20 @@
+2004-04-05  Benjamin Otte  <otte@gnome.org>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst_private.h:
+	* gst/gstinfo.c: (__gst_in_valgrind), (_gst_debug_init):
+	  add support for detecting if GStreamer runs inside valgrind.
+	  requires valgrind (d'oh) and --enable-debug for correct cdetection.
+	  print a big message in valgrind that GStreamer has detected it's
+	  running inside and might now use different code.
+	* gst/gstmemchunk.c: (populate), (free_area),
+	(gst_mem_chunk_destroy), (gst_mem_chunk_alloc),
+	(gst_mem_chunk_free):
+	  flag memchunks for valgrind, so it can detect leaking of chunks.
+	  This allows detecting leaks of GstBuffer and GstEvent correctly
+	  inside valgrind.
+
 2004-04-05  David Schleef  <ds@schleef.org>
 
 	* gst/gsttrace.h:  Fix #ifdef nesting (bug #139109) Patch from
