@@ -398,9 +398,9 @@ gst_lame_init (GstLame * lame)
   lame->num_channels = 2;
   lame->initialized = FALSE;
 
-  lame->bitrate = lame_get_brate (lame->lgf);
-  lame->compression_ratio = lame_get_compression_ratio (lame->lgf);
-  lame->quality = lame_get_quality (lame->lgf);
+  lame->bitrate = 128;          /* lame_get_brate (lame->lgf); => 0/out of range */
+  lame->compression_ratio = 5;  /* lame_get_compression_ratio (lame->lgf); => 0/out of range */
+  lame->quality = 5;            /* lame_get_quality (lame->lgf); => -1/out of range */
   lame->mode = lame_get_mode (lame->lgf);
   lame->force_ms = lame_get_force_ms (lame->lgf);
   lame->free_format = lame_get_free_format (lame->lgf);
@@ -414,18 +414,18 @@ gst_lame_init (GstLame * lame)
   lame->vbr = lame_get_VBR_q (lame->lgf);
   lame->vbr_mean_bitrate = lame_get_VBR_mean_bitrate_kbps (lame->lgf);
   lame->vbr_min_bitrate = lame_get_VBR_min_bitrate_kbps (lame->lgf);
-  lame->vbr_max_bitrate = lame_get_VBR_max_bitrate_kbps (lame->lgf);
+  lame->vbr_max_bitrate = 320;  /* lame_get_VBR_max_bitrate_kbps (lame->lgf); => 0/no vbr possible */
   lame->vbr_hard_min = lame_get_VBR_hard_min (lame->lgf);
-  lame->lowpass_freq = lame_get_lowpassfreq (lame->lgf);
-  lame->lowpass_width = lame_get_lowpasswidth (lame->lgf);
+  lame->lowpass_freq = 50000;   /* lame_get_lowpassfreq (lame->lgf); => 0/lowpass on everything ? */
+  lame->lowpass_width = 0;      /* lame_get_lowpasswidth (lame->lgf); => -1/out of range */
   lame->highpass_freq = lame_get_highpassfreq (lame->lgf);
-  lame->highpass_width = lame_get_highpasswidth (lame->lgf);
+  lame->highpass_width = 0;     /* lame_get_highpasswidth (lame->lgf); => -1/out of range */
   lame->ath_only = lame_get_ATHonly (lame->lgf);
   lame->ath_short = lame_get_ATHshort (lame->lgf);
   lame->no_ath = lame_get_noATH (lame->lgf);
   /*  lame->ath_type = lame_get_ATHtype (lame->lgf); */
   lame->ath_lower = lame_get_ATHlower (lame->lgf);
-  lame->cwlimit = lame_get_cwlimit (lame->lgf);
+  lame->cwlimit = 8.8717;       /* lame_get_cwlimit (lame->lgf); => 0 */
   lame->allow_diff_short = lame_get_allow_diff_short (lame->lgf);
   lame->no_short_blocks = lame_get_no_short_blocks (lame->lgf);
   lame->emphasis = lame_get_emphasis (lame->lgf);
