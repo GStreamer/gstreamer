@@ -13,7 +13,7 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-typedef WORD    VERSION;        /* major (high byte), minor (low byte) */
+//typedef WORD    VERSION;        /* major (high byte), minor (low byte) */
 
 typedef UINT16	MMVERSION16;
 typedef UINT	MMVERSION;

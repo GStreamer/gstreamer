@@ -338,6 +338,13 @@ ICSendMessage(HIC hic,unsigned int msg,long lParam1,long lParam2) {
 //	printf("private=%x\n", whic->private);
     __asm__ __volatile__ ("fsave (%0)\n\t": :"r"(&qw));    
     STORE_ALL;	
+        /*__asm__
+	(
+	    "pushl %eax\n\t"
+    	    "movl $0xf,%eax\n\t"
+	    "movw %ax, %fs\n\t"
+	    "popl %eax\n\t"
+        );*/
     	ret = whic->driverproc(whic->private,1,msg,lParam1,lParam2);
     REST_ALL;	
     __asm__ __volatile__ ("frstor (%0)\n\t": :"r"(&qw));    
