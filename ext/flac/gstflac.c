@@ -37,7 +37,7 @@ flac_caps_factory (void)
   return
    gst_caps_new (
   	"flac_flac",
-  	"audio/x-flac",
+  	"application/x-flac",
 	/*gst_props_new (
  	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
     	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
