@@ -3586,7 +3586,7 @@
   (is-constructor-of "GstPipeline")
   (return-type "GstElement*")
   (parameters
-    '("const-gchar*" "name")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
 )
 
@@ -5375,7 +5375,7 @@
   (is-constructor-of "GstThread")
   (return-type "GstElement*")
   (parameters
-    '("const-gchar*" "name")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
 )
 

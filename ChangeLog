@@ -1,3 +1,8 @@
+2004-08-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	  allow no name for thread and pipeline as well
+
 2004-07-16  Johan Dahlin  <johan@gnome.org>
 
 	* pkgconfig/gst-python.pc.in (pyexecdir): Add and remove comments
