@@ -1174,6 +1174,7 @@ plugins/wav/Makefile
 plugins/dvdsrc/Makefile
 plugins/vcdsrc/Makefile
 plugins/rtjpeg/Makefile
+plugins/SID/Makefile
 plugins/vorbis/Makefile
 plugins/capture/Makefile
 plugins/capture/v4l/Makefile
