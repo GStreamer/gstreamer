@@ -114,18 +114,18 @@ gst_fakesink_class_init (GstFakeSinkClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
     g_param_spec_string ("last_message", "Last Message", "The message describing current status",
                          NULL, G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_SYNC,
-    g_param_spec_boolean("sync","Sync","Sync on the clock",
-                         FALSE, G_PARAM_READWRITE)); /* CHECKME */
-
-  gst_element_class_install_std_props (
-	  GST_ELEMENT_CLASS (klass),
-	  "silent", ARG_SILENT, G_PARAM_READWRITE,
-	  "dump",   ARG_DUMP,   G_PARAM_READWRITE,
-	  NULL);
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
+    g_param_spec_boolean ("sync", "Sync", "Sync on the clock",
+                          FALSE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+    g_param_spec_boolean ("silent", "Silent", "Don't produce last_message events",
+                          FALSE, G_PARAM_READWRITE)); 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
+    g_param_spec_boolean ("dump", "Dump", "Dump received bytes to stdout",
+                          FALSE, G_PARAM_READWRITE)); 
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
-    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstFakeSinkClass, handoff), NULL, NULL,
                     g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                     G_TYPE_POINTER);
@@ -140,6 +140,7 @@ static void
 gst_fakesink_init (GstFakeSink *fakesink) 
 {
   GstPad *pad;
+
   pad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
@@ -258,6 +259,15 @@ gst_fakesink_chain (GstPad *pad, GstBuffer *buf)
 
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
+    
+    if (!fakesink->silent) { 
+      g_free (fakesink->last_message);
+
+      fakesink->last_message = g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
+		GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE (event), event);
+    
+      g_object_notify (G_OBJECT (fakesink), "last_message");
+    }
 	  
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:

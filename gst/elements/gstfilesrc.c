@@ -79,6 +79,9 @@ GstElementDetails gst_filesrc_details = {
   "(C) 1999",
 };
 
+#define DEFAULT_BLOCKSIZE 	4*1024
+#define DEFAULT_MMAPSIZE 	4*1024*1024
+
 /* #define fs_print(format,args...) g_print(format, ## args)  */
 #define fs_print(format,args...)
 
@@ -93,7 +96,7 @@ enum {
   ARG_LOCATION,
   ARG_FD,
   ARG_BLOCKSIZE,
-  ARG_MAPSIZE,
+  ARG_MMAPSIZE,
   ARG_TOUCH,
 };
 
@@ -167,14 +170,23 @@ gst_filesrc_class_init (GstFileSrcClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gst_element_class_install_std_props (
-	  GST_ELEMENT_CLASS (klass),
-	  "fd",           ARG_FD,           G_PARAM_READABLE,
-	  "location",     ARG_LOCATION,     G_PARAM_READWRITE,
-	  "blocksize",    ARG_BLOCKSIZE,    G_PARAM_READWRITE,
-	  "mmapsize",     ARG_MAPSIZE,      G_PARAM_READWRITE,
-	  "touch",        ARG_TOUCH,        G_PARAM_READWRITE,
-	  NULL);
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
+    g_param_spec_int ("fd", "File-descriptor", "File-descriptor for the file being mmap()d",
+                      0, G_MAXINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
+    g_param_spec_string ("location", "File Location", "Location of the file to read",
+                         NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCKSIZE,
+    g_param_spec_ulong ("blocksize", "Block size", "Size in bytes to read per buffer",
+                        1, G_MAXULONG, DEFAULT_BLOCKSIZE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MMAPSIZE,
+    g_param_spec_ulong ("mmapsize", "mmap() Block Size",
+                        "Size in bytes of mmap()d regions",
+                        0, G_MAXULONG, DEFAULT_MMAPSIZE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOUCH,
+    g_param_spec_boolean ("touch", "Touch read data",
+                          "Touch data to force disk read", 
+			  FALSE, G_PARAM_READWRITE));
 
   gobject_class->dispose 	= gst_filesrc_dispose;
   gobject_class->set_property 	= gst_filesrc_set_property;
@@ -215,11 +227,11 @@ gst_filesrc_init (GstFileSrc *src)
   src->filelen = 0;
 
   src->curoffset = 0;
-  src->block_size = 4096;
-  src->touch = TRUE;
+  src->block_size = DEFAULT_BLOCKSIZE;
+  src->touch = FALSE;
 
   src->mapbuf = NULL;
-  src->mapsize = 4 * 1024 * 1024;		/* default is 4MB */
+  src->mapsize = DEFAULT_MMAPSIZE;		/* default is 4MB */
 
   src->map_regions = g_tree_new (gst_filesrc_bufcmp);
   src->map_regions_lock = g_mutex_new();
@@ -273,12 +285,13 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       src->block_size = g_value_get_ulong (value);
       g_object_notify (G_OBJECT (src), "blocksize");
       break;
-    case ARG_MAPSIZE:
+    case ARG_MMAPSIZE:
       if ((src->mapsize % src->pagesize) == 0) {
         src->mapsize = g_value_get_ulong (value);
         g_object_notify (G_OBJECT (src), "mmapsize");
       } else {
-        GST_INFO(0, "invalid mapsize, must a multiple of pagesize, which is %d\n",src->pagesize);
+        GST_INFO (0, "invalid mapsize, must a multiple of pagesize, which is %d\n", 
+	          src->pagesize);
       }
       break;
     case ARG_TOUCH:
@@ -310,7 +323,7 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
     case ARG_BLOCKSIZE:
       g_value_set_ulong (value, src->block_size);
       break;
-    case ARG_MAPSIZE:
+    case ARG_MMAPSIZE:
       g_value_set_ulong (value, src->mapsize);
       break;
     case ARG_TOUCH:
@@ -325,25 +338,26 @@ gst_filesrc_get_property (GObject *object, guint prop_id, GValue *value, GParamS
 static void
 gst_filesrc_free_parent_mmap (GstBuffer *buf)
 {
-  GstFileSrc *src = GST_FILESRC(GST_BUFFER_POOL_PRIVATE(buf));
+  GstFileSrc *src = GST_FILESRC (GST_BUFFER_POOL_PRIVATE (buf));
 
-  fs_print ("freeing mmap()d buffer at %d+%d\n",GST_BUFFER_OFFSET(buf),GST_BUFFER_SIZE(buf));
+  fs_print ("freeing mmap()d buffer at %d+%d\n", 
+	    GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
 
   /* remove the buffer from the list of available mmap'd regions */
-  g_mutex_lock(src->map_regions_lock);
-  g_tree_remove(src->map_regions,buf);
+  g_mutex_lock (src->map_regions_lock);
+  g_tree_remove (src->map_regions, buf);
   /* check to see if the tree is empty */
-  if (g_tree_nnodes(src->map_regions) == 0) {
+  if (g_tree_nnodes (src->map_regions) == 0) {
     /* we have to free the bufferpool we don't have yet */
   }
-  g_mutex_unlock(src->map_regions_lock);
+  g_mutex_unlock (src->map_regions_lock);
 
 #ifdef MADV_DONTNEED
   /* madvise to tell the kernel what to do with it */
-  madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_DONTNEED);
+  madvise (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), MADV_DONTNEED);
 #endif
   /* now unmap the memory */
-  munmap(GST_BUFFER_DATA(buf),GST_BUFFER_MAXSIZE(buf));
+  munmap (GST_BUFFER_DATA (buf), GST_BUFFER_MAXSIZE (buf));
 
   GST_BUFFER_DATA (buf) = NULL;
 
@@ -373,27 +387,27 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, size_t size)
   }
 
   /* time to allocate a new mapbuf */
-  buf = gst_buffer_new();
+  buf = gst_buffer_new ();
   /* mmap() the data into this new buffer */
-  GST_BUFFER_DATA(buf) = mmapregion;
+  GST_BUFFER_DATA (buf) = mmapregion;
 
 #ifdef MADV_SEQUENTIAL
   /* madvise to tell the kernel what to do with it */
-  retval = madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_SEQUENTIAL);
+  retval = madvise (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), MADV_SEQUENTIAL);
 #endif
   /* fill in the rest of the fields */
-  GST_BUFFER_FLAG_SET(buf, GST_BUFFER_READONLY);
-  GST_BUFFER_FLAG_SET(buf, GST_BUFFER_ORIGINAL);
-  GST_BUFFER_SIZE(buf) = size;
-  GST_BUFFER_MAXSIZE(buf) = size;
-  GST_BUFFER_OFFSET(buf) = offset;
-  GST_BUFFER_TIMESTAMP(buf) = -1LL;
-  GST_BUFFER_POOL_PRIVATE(buf) = src;
-  GST_BUFFER_FREE_FUNC(buf) = (GstDataFreeFunction) gst_filesrc_free_parent_mmap;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_ORIGINAL);
+  GST_BUFFER_SIZE (buf) = size;
+  GST_BUFFER_MAXSIZE (buf) = size;
+  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_TIMESTAMP (buf) = -1LL;
+  GST_BUFFER_POOL_PRIVATE (buf) = src;
+  GST_BUFFER_FREE_FUNC (buf) = (GstDataFreeFunction) gst_filesrc_free_parent_mmap;
 
-  g_mutex_lock(src->map_regions_lock);
-  g_tree_insert(src->map_regions,buf,buf);
-  g_mutex_unlock(src->map_regions_lock);
+  g_mutex_lock (src->map_regions_lock);
+  g_tree_insert (src->map_regions,buf,buf);
+  g_mutex_unlock (src->map_regions_lock);
 
   return buf;
 }
@@ -587,7 +601,8 @@ gst_filesrc_get (GstPad *pad)
   /* if we need to touch the buffer (to bring it into memory), do so */
   if (src->touch) {
     volatile guchar *p = GST_BUFFER_DATA (buf), c;
-    for (i=0;i<GST_BUFFER_SIZE(buf);i+=src->pagesize)
+
+    for (i=0; i < GST_BUFFER_SIZE (buf); i += src->pagesize)
       c = p[i];
   }
 

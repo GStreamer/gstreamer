@@ -112,14 +112,12 @@ gst_filesink_class_init (GstFileSinkClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gst_element_class_install_std_props (
-	  GST_ELEMENT_CLASS (klass),
-	  "location", ARG_LOCATION, G_PARAM_READWRITE,
-	  NULL);
-
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_MAXFILESIZE,
-    g_param_spec_int("maxfilesize","MaxFileSize","Maximum Size Per File",
-    G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
+    g_param_spec_string ("location", "File Location", "Location of the file to write",
+                         NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAXFILESIZE,
+    g_param_spec_int ("maxfilesize", "MaxFileSize", "Maximum Size Per File in MB (-1 == no limit)",
+    		      -1, G_MAXINT, -1, G_PARAM_READWRITE));
 
   gst_filesink_signals[SIGNAL_HANDOFF] =
     g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,

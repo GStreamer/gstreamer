@@ -29,8 +29,10 @@
 
 #include <gstfdsrc.h>
 
+#define DEFAULT_BLOCKSIZE	4096
 
-GstElementDetails gst_fdsrc_details = {
+GstElementDetails gst_fdsrc_details = 
+{
   "Disk Source",
   "Source/File",
   "LGPL",
@@ -49,10 +51,8 @@ enum {
 
 enum {
   ARG_0,
-  ARG_LOCATION,
-  ARG_BYTESPERREAD,
-  ARG_OFFSET,
   ARG_FD,
+  ARG_BLOCKSIZE,
 };
 
 
@@ -77,7 +77,8 @@ gst_fdsrc_get_type (void)
 
   if (!fdsrc_type) {
     static const GTypeInfo fdsrc_info = {
-      sizeof(GstFdSrcClass),      NULL,
+      sizeof(GstFdSrcClass),      
+      NULL,
       NULL,
       (GClassInitFunc)gst_fdsrc_class_init,
       NULL,
@@ -100,16 +101,12 @@ gst_fdsrc_class_init (GstFdSrcClass *klass)
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-  gst_element_class_install_std_props (
-	  GST_ELEMENT_CLASS (klass),
-	  "location",     ARG_LOCATION,     G_PARAM_WRITABLE,
-	  "bytesperread", ARG_BYTESPERREAD, G_PARAM_READWRITE,
-	  "offset",       ARG_OFFSET,       G_PARAM_READABLE,
-	  NULL);
-
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
     g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
                       0, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCKSIZE,
+    g_param_spec_ulong ("blocksize", "Block size", "Size in bytes to read per buffer",
+                        1, G_MAXULONG, DEFAULT_BLOCKSIZE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_fdsrc_set_property;
   gobject_class->get_property = gst_fdsrc_get_property;
@@ -122,7 +119,7 @@ static void gst_fdsrc_init(GstFdSrc *fdsrc) {
 
   fdsrc->fd = 0;
   fdsrc->curoffset = 0;
-  fdsrc->bytes_per_read = 4096;
+  fdsrc->blocksize = DEFAULT_BLOCKSIZE;
   fdsrc->seq = 0;
 }
 
@@ -131,7 +128,6 @@ static void
 gst_fdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec) 
 {
   GstFdSrc *src;
-  int fd;
 
   /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_FDSRC (object));
@@ -139,25 +135,11 @@ gst_fdsrc_set_property (GObject *object, guint prop_id, const GValue *value, GPa
   src = GST_FDSRC (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:
-      /* the element must not be playing in order to do this */
-      g_return_if_fail (GST_STATE (src) < GST_STATE_PLAYING);
-
-      /* if we get a NULL, consider it to be a fd of 0 */
-      if (g_value_get_string (value) == NULL) {
-        gst_element_set_state (GST_ELEMENT (object), GST_STATE_NULL);
-        src->fd = 0;
-      /* otherwise set the new filename */
-      } else {
-        if (sscanf (g_value_get_string (value), "%d", &fd))
-          src->fd = fd;
-      }
-      break;
     case ARG_FD:
       src->fd = g_value_get_int (value);
       break;
-    case ARG_BYTESPERREAD:
-      src->bytes_per_read = g_value_get_int (value);
+    case ARG_BLOCKSIZE:
+      src->blocksize = g_value_get_ulong (value);
       break;
     default:
       break;
@@ -175,11 +157,8 @@ gst_fdsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpe
   src = GST_FDSRC (object);
 
   switch (prop_id) {
-    case ARG_BYTESPERREAD:
-      g_value_set_int (value, src->bytes_per_read);
-      break;
-    case ARG_OFFSET:
-      g_value_set_int64 (value, src->curoffset);
+    case ARG_BLOCKSIZE:
+      g_value_set_ulong (value, src->blocksize);
       break;
     case ARG_FD:
       g_value_set_int (value, src->fd);
@@ -206,11 +185,11 @@ gst_fdsrc_get(GstPad *pad)
   g_return_val_if_fail (buf, NULL);
 
   /* allocate the space for the buffer data */
-  GST_BUFFER_DATA(buf) = g_malloc(src->bytes_per_read);
+  GST_BUFFER_DATA(buf) = g_malloc(src->blocksize);
   g_return_val_if_fail(GST_BUFFER_DATA(buf) != NULL, NULL);
 
   /* read it in from the file */
-  readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->bytes_per_read);
+  readbytes = read(src->fd,GST_BUFFER_DATA(buf),src->blocksize);
   /* if nothing was read, we're in eos */
   if (readbytes == 0) {
     gst_element_set_eos (GST_ELEMENT (src));

@@ -26,6 +26,9 @@
 
 #include <gstfakesrc.h>
 
+#define DEFAULT_SIZEMIN		0
+#define DEFAULT_SIZEMAX		4096
+#define DEFAULT_PARENTSIZE	4096*10
 
 GstElementDetails gst_fakesrc_details = {
   "Fake Source",
@@ -201,12 +204,12 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SOURCES,
     g_param_spec_int ("num-sources", "num-sources", "Number of sources",
                       1, G_MAXINT, 1, G_PARAM_READABLE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOOP_BASED,
-    g_param_spec_boolean("loop-based","loop-based","Enable loop-based operation",
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOOP_BASED,
+    g_param_spec_boolean ("loop-based", "loop-based", "Enable loop-based operation",
                          FALSE, G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT,
-    g_param_spec_enum("output","output","Output method (currently unused)",
-                      GST_TYPE_FAKESRC_OUTPUT,FAKESRC_FIRST_LAST_LOOP,G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OUTPUT,
+    g_param_spec_enum ("output", "output", "Output method (currently unused)",
+                       GST_TYPE_FAKESRC_OUTPUT, FAKESRC_FIRST_LAST_LOOP, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DATA,
     g_param_spec_enum ("data", "data", "Data allocation method",
                        GST_TYPE_FAKESRC_DATA, FAKESRC_DATA_ALLOCATE, G_PARAM_READWRITE)); 
@@ -215,37 +218,37 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
                        GST_TYPE_FAKESRC_SIZETYPE, FAKESRC_SIZETYPE_NULL, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMIN,
     g_param_spec_int ("sizemin","sizemin","Minimum buffer size",
-                      0, G_MAXINT, 0, G_PARAM_READWRITE)); 
+                      0, G_MAXINT, DEFAULT_SIZEMIN, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMAX,
     g_param_spec_int ("sizemax","sizemax","Maximum buffer size",
-                      0, G_MAXINT, 4096, G_PARAM_READWRITE)); 
+                      0, G_MAXINT, DEFAULT_SIZEMAX, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PARENTSIZE,
     g_param_spec_int ("parentsize","parentsize","Size of parent buffer for sub-buffered allocation",
-                      0, G_MAXINT, 4096 * 10, G_PARAM_READWRITE)); 
+                      0, G_MAXINT, DEFAULT_PARENTSIZE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILLTYPE,
     g_param_spec_enum ("filltype", "filltype", "How to fill the buffer, if at all",
                        GST_TYPE_FAKESRC_FILLTYPE, FAKESRC_FILLTYPE_NULL, G_PARAM_READWRITE)); 
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PATTERN,
-    g_param_spec_string("pattern","pattern","pattern",
-                        NULL, G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_BUFFERS,
-    g_param_spec_int("num-buffers","num-buffers","Number of buffers to output before sending EOS",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
-  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EOS,
-    g_param_spec_boolean("eos","eos","Send out the EOS event?",
-                         TRUE,G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PATTERN,
+    g_param_spec_string ("pattern", "pattern", "pattern",
+                         NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_BUFFERS,
+    g_param_spec_int ("num-buffers", "num-buffers", "Number of buffers to output before sending EOS",
+                      G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EOS,
+    g_param_spec_boolean ("eos", "eos", "Send out the EOS event?",
+                          TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
     g_param_spec_string ("last-message", "last-message", "The last status message",
                          NULL, G_PARAM_READABLE)); 
-
-  gst_element_class_install_std_props (
-	  GST_ELEMENT_CLASS (klass),
-	  "silent", ARG_SILENT, G_PARAM_READWRITE,
-	  "dump",   ARG_DUMP,   G_PARAM_READWRITE,
-	  NULL);
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+    g_param_spec_boolean ("silent", "Silent", "Don't produce last_message events",
+                          FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
+    g_param_spec_boolean ("dump", "Dump", "Dump produced bytes to stdout",
+                          FALSE, G_PARAM_READWRITE));
 
   gst_fakesrc_signals[SIGNAL_HANDOFF] =
-    g_signal_new ("handoff", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
                   g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
                   G_TYPE_POINTER);
@@ -282,10 +285,10 @@ gst_fakesrc_init (GstFakeSrc *fakesrc)
   fakesrc->data = FAKESRC_DATA_ALLOCATE;
   fakesrc->sizetype = FAKESRC_SIZETYPE_NULL;
   fakesrc->filltype = FAKESRC_FILLTYPE_NOTHING;
-  fakesrc->sizemin = 0;
-  fakesrc->sizemax = 4096;
+  fakesrc->sizemin = DEFAULT_SIZEMIN;
+  fakesrc->sizemax = DEFAULT_SIZEMAX;
   fakesrc->parent = NULL;
-  fakesrc->parentsize = 4096 * 10;
+  fakesrc->parentsize = DEFAULT_PARENTSIZE;
   fakesrc->last_message = NULL;
 }
 

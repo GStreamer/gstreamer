@@ -57,7 +57,7 @@ struct _GstFdSrc {
   gint fd;
 
   gulong curoffset;			/* current offset in file */
-  gulong bytes_per_read;		/* bytes per read */
+  gulong blocksize;		/* bytes per read */
 
   gulong seq;				/* buffer sequence number */
 };

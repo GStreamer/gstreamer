@@ -90,10 +90,9 @@ gst_fdsink_class_init (GstFdSinkClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gst_element_class_install_std_props (
-	  GST_ELEMENT_CLASS (klass),
-	  "fd", ARG_FD, G_PARAM_READWRITE,
-	  NULL);
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
+    g_param_spec_int ("fd", "fd", "An open file descriptor to write to",
+                      0, G_MAXINT, 1, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_fdsink_set_property;
   gobject_class->get_property = gst_fdsink_get_property;
