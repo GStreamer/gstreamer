@@ -144,7 +144,8 @@ void conv_short_double_ref(short *dest, double *src, int n)
 	}
 }
 
-#ifdef HAVE_CPU_PPC
+/* #ifdef HAVE_CPU_PPC */
+#if 0
 void conv_short_double_ppcasm(short *dest, double *src, int n)
 {
 	int tmp[2];
