@@ -13,6 +13,21 @@ srcfile=gst/gstobject.h
 	DIE=1
 }
 
+# thomasvs added an autoconf version check
+AC_MAJOR=2
+AC_MINOR=52
+AC_VERSION=$AC_MAJOR.$AC_MINOR
+autoconfvermin=`(autoconf --version|head -n 1|sed 's/^.* //;s/\./ /g;';echo "$AC_MAJOR $AC_MINOR")|sort -n|head -n 1`
+
+if test "x$autoconfvermin" != "x$AC_MAJOR $AC_MINOR"; then
+# version is less than the minimum suitable version
+	echo
+	echo "You must have autoconf version $AC_VERSION or greater installed."
+	echo "Download the appropriate package for your distribution,"
+	echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/autoconf/"
+	DIE=1
+fi
+
 (automake --version) < /dev/null > /dev/null 2>&1 || {
 	echo
 	echo "You must have automake installed to compile $package."
@@ -39,7 +54,10 @@ fi
 	DIE=1
 }
 
-
+LT_MAJOR=1
+LT_MINOR=4
+LT_MICRO=0
+LT_VERSION=$LT_MAJOR.$LT_MINOR.$LT_MICRO
 (libtool --version) < /dev/null > /dev/null 2>&1 || {
 	echo
 	echo "You must have libtool installed to compile $package."
@@ -54,21 +72,21 @@ libtool_micro=`echo $libtool_version | cut -d. -f3`
 if [ x$libtool_micro = x ]; then
 	libtool_micro=0
 fi
-if [ $libtool_major -le 1 ]; then
-	if [ $libtool_major -lt 1 ]; then
+if [ $libtool_major -le $LT_MAJOR ]; then
+	if [ $libtool_major -lt $LT_MAJOR ]; then
 		echo
-		echo "You must have libtool 1.4.0 or greater to compile $package."
+		echo "You must have libtool $LT_VERSION or greater to compile $package."
 		echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
 		DIE=1
-	elif [ $libtool_minor -le 4 ]; then
-		if [ $libtool_minor -lt 4 ]; then
+	elif [ $libtool_minor -le $LT_MINOR ]; then
+		if [ $libtool_minor -lt $LT_MINOR ]; then
 			echo
-			echo "You must have libtool 1.4.0 or greater to compile $package."
+			echo "You must have libtool $LT_VERSION or greater to compile $package."
 			echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
 			DIE=1
-		elif [ $libtool_micro -lt 0 ]; then
+		elif [ $libtool_micro -lt $LT_MICRO ]; then
 			echo
-			echo "You must have libtool 1.4.0 or greater to compile $package."
+			echo "You must have libtool $LT_VERSION or greater to compile $package."
 			echo "Get the latest version from ftp://alpha.gnu.org/gnu/libtool/"
 			DIE=1
 		fi
