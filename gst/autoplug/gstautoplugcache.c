@@ -330,6 +330,7 @@ gst_autoplugcache_get_property (GObject *object, guint prop_id, GValue *value, G
       break;
     case ARG_CAPS_PROXY:
       g_value_set_boolean (value, cache->caps_proxy);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
