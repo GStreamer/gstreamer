@@ -259,8 +259,8 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
 }
 
 static int
-gst_a52dec_push (GstPad * srcpad, int flags, sample_t * samples,
-    GstClockTime timestamp)
+gst_a52dec_push (GstA52Dec * a52dec,
+    GstPad * srcpad, int flags, sample_t * samples, GstClockTime timestamp)
 {
   GstBuffer *buf;
   int chans, n, c;
@@ -281,6 +281,7 @@ gst_a52dec_push (GstPad * srcpad, int flags, sample_t * samples,
     }
   }
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = 256 * GST_SECOND / a52dec->sample_rate;
 
   gst_pad_push (srcpad, GST_DATA (buf));
 
@@ -413,7 +414,7 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
       GST_WARNING ("a52_block error %d", i);
     } else {
       /* push on */
-      gst_a52dec_push (a52dec->srcpad, a52dec->using_channels,
+      gst_a52dec_push (a52dec, a52dec->srcpad, a52dec->using_channels,
           a52dec->samples, a52dec->time);
     }
     a52dec->time += 256 * GST_SECOND / a52dec->sample_rate;

@@ -981,7 +981,7 @@ dvdreadsrc_get (GstPad * pad)
     }
 
     return GST_DATA (gst_event_new_discontinuous (FALSE,
-            GST_FORMAT_BYTES, priv->cur_pack * DVD_VIDEO_LB_LEN,
+            GST_FORMAT_BYTES, (gint64) (priv->cur_pack * DVD_VIDEO_LB_LEN),
             GST_FORMAT_UNDEFINED));
   }
 

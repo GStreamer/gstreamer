@@ -802,15 +802,14 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
     len -= len % align;
     if (len > 0) {
       DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
-          buffer, GST_CLOCK_TIME_NONE, headerlen + 4, first_access - 1);
+          buffer, GST_CLOCK_TIME_NONE, off, len);
     }
     off += len;
     len = datalen - len;
     len -= len % align;
     if (len > 0) {
       DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
-          buffer, timestamp,
-          headerlen + 3 + first_access, datalen - (first_access - 1));
+          buffer, timestamp, off, len);
     }
   } else {
     off = headerlen + 4;
@@ -818,7 +817,7 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
     len -= len % align;
     if (len > 0) {
       DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
-          buffer, timestamp, headerlen + 4, datalen);
+          buffer, timestamp, off, len);
     }
   }
 }
