@@ -80,9 +80,36 @@ gmi_track_new (void)
 static void
 have_type_callback (GstElement *typefind, guint probability, GstCaps *type, GstMediaInfoPriv *priv)
 {
-  g_print ("DEBUG: have_type: caps %p\n", type);
+  GstStructure *str;
+  const gchar *mime;
+
   priv->type = gst_caps_copy (type);
-  /* FIXME: make sure we _free these somewhere */
+  str = gst_caps_get_structure (type, 0);
+  mime = gst_structure_get_name (str);
+  GST_DEBUG ("caps %p, mime %s", type, mime);
+
+  /* FIXME: this code doesn't yet work, test it later */
+#ifdef DONTWORK
+  if (strcmp (mime, "application/x-id3") == 0)
+  {
+    /* dig a little deeper */
+    GST_DEBUG ("dealing with id3, digging deeper");
+    gst_element_set_state (priv->pipeline, GST_STATE_READY);
+    gst_element_unlink (priv->source, priv->typefind);
+    g_assert (priv->decontainer == NULL);
+    priv->decontainer = gst_element_factory_make ("id3tag", "decontainer");
+    gst_bin_add (GST_BIN (priv->pipeline), priv->decontainer);
+    if (priv->decontainer == NULL)
+      /* FIXME: signal error */
+      g_warning ("Couldn't create id3tag");
+    if (!gst_element_link_many (priv->source, priv->decontainer, priv->typefind, NULL));
+      g_warning ("Couldn't link in id3tag");
+
+    if (gst_element_set_state (priv->pipeline, GST_STATE_PLAYING)
+		               == GST_STATE_FAILURE)
+      g_warning ("Couldn't set to playing");
+  }
+#endif
 }
 
 void
@@ -94,26 +121,21 @@ deep_notify_callback (GObject *object, GstObject *origin,
   /* we only care about pad notifies */
   if (!GST_IS_PAD (origin)) return;
 
+  /*
   GST_DEBUG ("DEBUG: deep_notify: have notify of %s from object %s:%s !",
              pspec->name, gst_element_get_name (gst_pad_get_parent (GST_PAD (origin))),
              gst_object_get_name (origin));
-
-  if (strcmp (pspec->name, "metadata") == 0)
-  {
-    GST_DEBUG ("DEBUG: deep_notify: have metadata !");
-    g_value_init (&value, pspec->value_type);
-    g_object_get_property (G_OBJECT (origin), pspec->name, &value);
-    priv->metadata = g_value_peek_pointer (&value);
-  }
+  */
   else if (strcmp (pspec->name, "caps") == 0)
   {
-    /* check if we're getting it from the source we want it from */
-    if (GST_IS_PAD (origin) && GST_PAD (origin) == priv->decoder_pad)
+    /* check if we're getting it from fakesink */
+    if (GST_IS_PAD (origin) && GST_PAD_PARENT (origin) == priv->fakesink)
     {
-      GST_DEBUG ("DEBUG: deep_notify: have caps on decoder_pad !");
+      GST_DEBUG ("have caps on fakesink pad !");
       g_value_init (&value, pspec->value_type);
       g_object_get_property (G_OBJECT (origin), pspec->name, &value);
       priv->format = g_value_peek_pointer (&value);
+      GST_DEBUG ("caps: %" GST_PTR_FORMAT, priv->format);
     }
     else GST_DEBUG ("ignoring caps on object %s:%s",
 		   gst_object_get_name (gst_object_get_parent (origin)),
@@ -123,14 +145,57 @@ deep_notify_callback (GObject *object, GstObject *origin,
   {
     /* we REALLY ignore offsets, we hate them */
   }
-  else if (strcmp (pspec->name, "streaminfo") == 0)
+    //else GST_DEBUG ("ignoring notify of %s", pspec->name);
+}
+
+typedef struct {
+  guint meta;
+  guint encoded;
+} TagFlagScore;
+
+static void
+tag_flag_score (const GstTagList *list, const gchar *tag, gpointer user_data)
+{
+  TagFlagScore *score = (TagFlagScore *) user_data;
+  GstTagFlag flag;
+
+  flag = gst_tag_get_flag (tag);
+  if (flag == GST_TAG_FLAG_META) score->meta++;
+  if (flag == GST_TAG_FLAG_ENCODED) score->encoded++;
+}
+
+void
+found_tag_callback (GObject *pipeline, GstElement *source, GstTagList *tags, GstMediaInfoPriv *priv)
+{
+  TagFlagScore score;
+
+  score.meta = 0;
+  score.encoded = 0;
+  g_print ("FOUND TAG      : found by element \"%s\".\n",
+           GST_STR_NULL (GST_ELEMENT_NAME (source)));
+
+  /* decide if it's likely to be metadata or streaminfo */
+  /* FIXME: this is a hack, there must be a better way,
+     but as long as elements can report both mixed we need to do this */
+
+  gst_tag_list_foreach (tags, tag_flag_score, &score);
+
+  if (score.meta > score.encoded)
   {
-    GST_DEBUG ("deep_notify: have streaminfo !");
-    g_value_init (&value, pspec->value_type);
-    g_object_get_property (G_OBJECT (origin), pspec->name, &value);
-    priv->streaminfo = g_value_peek_pointer (&value);
+    GST_DEBUG ("found tags from decoder, adding them as metadata");
+    priv->metadata = gst_tag_list_copy (tags);
   }
-   else GST_DEBUG ("ignoring notify of %s", pspec->name);
+  else
+  {
+    GST_DEBUG ("found tags, adding them as streaminfo");
+    priv->streaminfo = gst_tag_list_copy (tags);
+  }
+}
+
+void
+error_callback (GObject *element, GstElement *source, GError *error, gchar *debug)
+{
+  g_print ("ERROR: %s\n", error->message);
 }
 
 /* helpers */
@@ -151,7 +216,7 @@ gmi_reset (GstMediaInfo *info)
   if (priv->metadata)
   {
     GMI_DEBUG ("unreffing priv->metadata, error before this ?\n");
-    gst_caps_free (priv->metadata);
+    gst_tag_list_free (priv->metadata);
     priv->metadata = NULL;
   }
   if (priv->stream)
@@ -202,20 +267,22 @@ gmi_seek_to_track (GstMediaInfo *info, long track)
   /* clear structs because of the seek */
   if (priv->metadata)
   {
-    gst_caps_free (priv->metadata);
+    gst_tag_list_free (priv->metadata);
     priv->metadata = NULL;
   }
   if (priv->streaminfo)
   {
-    gst_caps_free (priv->streaminfo);
+    gst_tag_list_free (priv->streaminfo);
     priv->streaminfo = NULL;
   }
   return TRUE;
 }
 
+#ifdef REMOVEME
 /* create a good decoder for this mime type */
 /* FIXME: maybe make this more generic with a type, so it can be used
  * for taggers and other things as well */
+/* FIXME: deprecated, we work with pipelines now */
 GstElement *
 gmi_get_decoder (GstMediaInfo *info, const char *mime)
 {
@@ -234,6 +301,7 @@ gmi_get_decoder (GstMediaInfo *info, const char *mime)
     else if ((strcmp (mime, "audio/mpeg") == 0) ||
              (strcmp (mime, "audio/x-mp3") == 0) ||
              (strcmp (mime, "audio/mp3") == 0) ||
+             (strcmp (mime, "application/x-id3") == 0) ||
 	     (strcmp (mime, "audio/x-id3") == 0))
       factory = g_strdup ("mad");
     else if (strcmp (mime, "application/x-flac") == 0)
@@ -303,6 +371,72 @@ gmi_clear_decoder (GstMediaInfo *info)
     info->priv->decoder = NULL;
   }
 }
+#endif
+
+/* set the mime type on the media info getter */
+gboolean
+gmi_set_mime (GstMediaInfo *info, const char *mime)
+{
+  gchar *desc = NULL;
+  GError *error = NULL;
+  GstMediaInfoPriv *priv = info->priv;
+
+  /* FIXME: please figure out proper mp3 mimetypes */
+  if ((strcmp (mime, "application/x-ogg") == 0) ||
+      (strcmp (mime, "application/ogg") == 0))
+    desc = g_strdup_printf ("%s name=source ! oggdemux ! vorbisdec name=decoder ! audioconvert ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
+  else if ((strcmp (mime, "audio/mpeg") == 0) ||
+           (strcmp (mime, "audio/x-mp3") == 0) ||
+           (strcmp (mime, "audio/mp3") == 0) ||
+           (strcmp (mime, "application/x-id3") == 0) ||
+	   (strcmp (mime, "audio/x-id3") == 0))
+    desc = g_strdup_printf ("%s name=source ! id3tag ! mad name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
+  else if (strcmp (mime, "application/x-flac") == 0)
+    desc = g_strdup_printf ("%s name=source ! flac name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
+  else if (strcmp (mime, "audio/x-wav") == 0)
+    desc = g_strdup_printf ("%s ! wavparse name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
+  else if (strcmp (mime, "audio/x-mod") == 0 ||
+	   strcmp (mime, "audio/x-s3m") == 0 ||
+           strcmp (mime, "audio/x-xm") == 0 ||
+	   strcmp (mime, "audio/x-it") == 0)
+    desc = g_strdup_printf ("%s name=source ! modplug name=decoder ! audio/x-raw-int ! fakesink name=sink", priv->source_name);
+
+  GST_DEBUG ("using description %s", desc);
+  priv->pipeline_desc = desc;
+  priv->pipeline = gst_parse_launch (desc, &error);
+  if (error)
+  {
+    g_warning ("Error parsing pipeline description: %s\n", error->message);
+    g_error_free (error);
+    return FALSE;
+  }
+  /* get a bunch of elements from the bin */
+  priv->source = gst_bin_get_by_name (GST_BIN (priv->pipeline), "source");
+  g_assert (GST_IS_ELEMENT (priv->source));
+  g_object_set (G_OBJECT (priv->source), "location", priv->location, NULL);
+  priv->decoder = gst_bin_get_by_name (GST_BIN (priv->pipeline), "decoder");
+  g_assert (GST_IS_ELEMENT (priv->decoder));
+  priv->fakesink = gst_bin_get_by_name (GST_BIN (priv->pipeline), "sink");
+  g_assert (GST_IS_ELEMENT (priv->fakesink));
+
+  /* get the "source " source pad */
+  priv->source_pad = gst_element_get_pad (priv->source, "src");
+  g_assert (GST_IS_PAD (priv->source_pad));
+  /* get the "decoder" source pad */
+  priv->decoder_pad = gst_element_get_pad (priv->decoder, "src");
+  g_assert (GST_IS_PAD (priv->decoder_pad));
+  GST_DEBUG ("decoder pad: %s:%s", gst_object_get_name (gst_object_get_parent (GST_OBJECT (priv->decoder_pad))), gst_pad_get_name (priv->decoder_pad));
+
+  /* attach notify handler */
+  g_signal_connect (G_OBJECT (info->priv->pipeline), "deep_notify",
+                    G_CALLBACK (deep_notify_callback), info->priv);
+  g_signal_connect (G_OBJECT (info->priv->pipeline), "found-tag",                     G_CALLBACK (found_tag_callback), info->priv);
+  g_signal_connect (G_OBJECT (info->priv->pipeline), "error",
+                    G_CALLBACK (error_callback), info->priv);
+
+  return TRUE;
+}
+
 
 /****
  *  typefind functions
@@ -321,6 +455,9 @@ gmip_find_type_pre (GstMediaInfoPriv *priv)
     priv->type = NULL;
   }
 
+  g_assert (priv);
+  g_assert (priv->source);
+
   GST_DEBUG ("gmip_find_type_pre: start");
   /* find out type */
   /* FIXME: we could move caps for typefind out of struct and
@@ -338,6 +475,7 @@ gmip_find_type_pre (GstMediaInfoPriv *priv)
     g_warning ("Couldn't set to play");
     return FALSE;
   }
+  GST_DEBUG ("moving to STATE_TYPEFIND\n");
   priv->state = GST_MEDIA_INFO_STATE_TYPEFIND;
   return TRUE;
 }
@@ -348,7 +486,16 @@ gmip_find_type_post (GstMediaInfoPriv *priv)
 {
   /*clear up typefind */
   gst_element_set_state (priv->pipeline, GST_STATE_READY);
-  gst_element_unlink (priv->source, priv->typefind);
+  if (priv->decontainer)
+  {
+    gst_element_unlink (priv->source, priv->decontainer);
+    gst_element_unlink (priv->decontainer, priv->typefind);
+    gst_bin_remove (GST_BIN (priv->pipeline), priv->decontainer);
+  }
+  else
+  {
+    gst_element_unlink (priv->source, priv->typefind);
+  }
   gst_bin_remove (GST_BIN (priv->pipeline), priv->typefind);
 
   if (priv->type == NULL)
@@ -356,6 +503,7 @@ gmip_find_type_post (GstMediaInfoPriv *priv)
     g_warning ("iteration ended, type not found !\n");
     return FALSE;
   }
+  GST_DEBUG ("moving to STATE_STREAM\n");
   priv->state = GST_MEDIA_INFO_STATE_STREAM;
   return TRUE;
 }
@@ -450,6 +598,7 @@ gmip_find_stream_post (GstMediaInfoPriv *priv)
     formats++;
   }
   if (stream->length_tracks == 0) stream->length_tracks = 1;
+
   /* now get number of bytes from the sink pad to get the bitrate */
   format = GST_FORMAT_BYTES;
   g_assert (GST_IS_PAD (priv->source_pad));
@@ -465,6 +614,7 @@ gmip_find_stream_post (GstMediaInfoPriv *priv)
     double bits = bytes * 8;
     stream->bitrate = (long) (bits / seconds);
   }
+  GST_DEBUG ("moving to STATE_METADATA\n");
   priv->state = GST_MEDIA_INFO_STATE_METADATA;	/* metadata of first track */
   return TRUE;
 }
@@ -537,7 +687,7 @@ gmip_find_track_metadata (GstMediaInfoPriv *priv)
 }
 
 /* find streaminfo found by decoder and store in priv->streaminfo */
-/* FIXME: this is an exact copy, so reuse this functioin instead */
+/* FIXME: this is an exact copy, so reuse this function instead */
 gboolean
 gmip_find_track_streaminfo_pre (GstMediaInfoPriv *priv)
 {
@@ -590,8 +740,8 @@ gmip_find_track_streaminfo_post (GstMediaInfoPriv *priv)
 	value_end -= value_start;
 	/* FIXME: check units; this is in seconds */
 
-	gst_caps_set_simple (priv->streaminfo,
-	    "length", G_TYPE_INT, (int) (value_end / 1E6), NULL);
+	gst_tag_list_add (priv->streaminfo, GST_TAG_MERGE_REPLACE,
+	    GST_TAG_DURATION, (int) (value_end / 1E6), NULL);
       }
     }
   }

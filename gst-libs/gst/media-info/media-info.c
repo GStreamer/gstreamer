@@ -1,5 +1,5 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer media-info library
+ * Copyright (C) 2003,2004 Thomas Vander Stichele <thomas@apestaart.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -48,15 +48,16 @@ enum
 
 static guint gst_media_info_signals[LAST_SIGNAL] = { 0 };
 
-/* GError stuff */
 /*
+ * all GError stuff
+ */
+
 enum
 {
   MEDIA_INFO_ERROR_FILE
 };
-*/
+
 /* GError quark stuff */
-/*
 static GQuark
 gst_media_info_error_quark (void)
 {
@@ -65,7 +66,53 @@ gst_media_info_error_quark (void)
     quark = g_quark_from_static_string ("gst-media-info-error-quark");
   return quark;
 }
-*/
+
+/* General GError creation */
+static void
+gst_media_info_error_create (GError **error, const gchar *message)
+{
+  /* check if caller wanted an error reported */
+  if (error == NULL)
+    return;
+
+  *error = g_error_new (GST_MEDIA_INFO_ERROR, 0, message);
+  return;
+}
+
+/* GError creation when element is missing */
+static void
+gst_media_info_error_element (const gchar *element, GError **error)
+{
+  gchar *message;
+
+  message = g_strdup_printf ("The %s element could not be found. "
+                             "This element is essential for reading. "
+                             "Please install the right plug-in and verify "
+                             "that it works by running 'gst-inspect %s'",
+                             element, element);
+  gst_media_info_error_create (error, message);
+  g_free (message);
+  return;
+}
+
+/* used from the instance_init function to report errors */
+#define GST_MEDIA_INFO_MAKE_OR_ERROR(el, factory, name, error)  \
+G_STMT_START {                                                  \
+  el = gst_element_factory_make (factory, name);                \
+  if (!GST_IS_ELEMENT (el))                                     \
+  {                                                             \
+    gst_media_info_error_element (factory, error);              \
+    return;                                                     \
+  }                                                             \
+} G_STMT_END
+
+#define GST_MEDIA_INFO_ERROR_RETURN(error, message)             \
+G_STMT_START {                                                  \
+  gst_media_info_error_create (error, message);                 \
+    return FALSE;                                               \
+} G_STMT_END
+
+
 /*
  * GObject type stuff
  */
@@ -78,6 +125,8 @@ enum
 static GObjectClass *parent_class = NULL;
 
 GST_DEBUG_CATEGORY (gst_media_info_debug);
+
+/* initialize the media-info library */
 void
 gst_media_info_init (void)
 {
@@ -145,53 +194,35 @@ gst_media_info_class_init (GstMediaInfoClass *klass)
 static void
 gst_media_info_instance_init (GstMediaInfo *info)
 {
-  GstElement *source;
+  GError **error;
 
   info->priv = g_new0 (GstMediaInfoPriv, 1);
+  error = &info->priv->error;
 
   info->priv->pipeline = gst_pipeline_new ("media-info");
 
   /* create the typefind element and make sure it stays around by reffing */
-  info->priv->typefind = gst_element_factory_make ("typefind", "typefind");
-  if (!GST_IS_ELEMENT (info->priv->typefind))
-    g_error ("Cannot create typefind element !");
+  GST_MEDIA_INFO_MAKE_OR_ERROR (info->priv->typefind, "typefind", "typefind", error);
   gst_object_ref (GST_OBJECT (info->priv->typefind));
 
   /* create the fakesink element and make sure it stays around by reffing */
-  info->priv->fakesink = gst_element_factory_make ("fakesink", "fakesink");
-  if (!GST_IS_ELEMENT (info->priv->fakesink))
-    g_error ("Cannot create fakesink element !");
+  GST_MEDIA_INFO_MAKE_OR_ERROR (info->priv->fakesink, "fakesink", "fakesink", error);
   gst_object_ref (GST_OBJECT (info->priv->fakesink));
 
+  /* source element for media info reading */
+  info->priv->source = NULL;
+  info->priv->source_name = NULL;
 
-  /* use gnomevfssrc by default */
-  source = gst_element_factory_make ("gnomevfssrc", "source");
-  if (GST_IS_ELEMENT (source))
-  {
-    info->priv->source = source;
-    info->priv->source_element = g_strdup ("gnomevfssrc");
-    gst_bin_add (GST_BIN (info->priv->pipeline), info->priv->source);
-  }
-  else
-  {
-    info->priv->source = NULL;
-    info->priv->source_element = NULL;
-  }
   info->priv->location = NULL;
-  info->priv->decoder = NULL;
   info->priv->type = NULL;
   info->priv->format = NULL;
   info->priv->metadata = NULL;
+  info->priv->pipeline_desc = NULL;
 
   /* clear result pointers */
   info->priv->stream = NULL;
 
-  /* set up decoder hash table */
-  info->priv->decoders = g_hash_table_new (g_str_hash, g_str_equal);
-
-  /* attach notify handler */
-  g_signal_connect (G_OBJECT (info->priv->pipeline), "deep_notify",
-		    G_CALLBACK (deep_notify_callback), info->priv);
+  info->priv->error = NULL;
 }
 
 /* get/set */
@@ -204,7 +235,7 @@ gst_media_info_get_property (GObject *object, guint prop_id,
   switch (prop_id)
   {
     case PROP_SOURCE:
-      g_value_set_string (value, info->priv->source_element);
+      g_value_set_string (value, info->priv->source_name);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -213,12 +244,24 @@ gst_media_info_get_property (GObject *object, guint prop_id,
 }
 
 GstMediaInfo *
-gst_media_info_new (const gchar *source_element)
+gst_media_info_new (GError **error)
 {
   GstMediaInfo *info = g_object_new (GST_MEDIA_INFO_TYPE, NULL);
-  if (source_element)
-    g_object_set (G_OBJECT (info), "source", source_element);
 
+  if (info->priv->error)
+  {
+    if (error)
+    {
+      *error = info->priv->error;
+      info->priv->error = NULL;
+    }
+    else
+    {
+      g_warning ("Error creating GstMediaInfo object.\n%s",
+                 info->priv->error->message);
+      g_error_free (info->priv->error);
+    }
+  }
   return info;
 }
 
@@ -237,16 +280,16 @@ gst_media_info_set_source (GstMediaInfo *info, const char *source)
   {
     /* this also unrefs the element */
     gst_bin_remove (GST_BIN (info->priv->pipeline), info->priv->source);
-    if (info->priv->source_element)
+    if (info->priv->source_name)
     {
-      g_free (info->priv->source_element);
-      info->priv->source_element = NULL;
+      g_free (info->priv->source_name);
+      info->priv->source_name = NULL;
     }
   }
   g_object_set (G_OBJECT (src), "name", "source", NULL);
   gst_bin_add (GST_BIN (info->priv->pipeline), src);
   info->priv->source = src;
-  info->priv->source_element = g_strdup (source);
+  info->priv->source_name = g_strdup (source);
 
   return TRUE;
 }
@@ -275,26 +318,27 @@ gst_media_info_read_with_idler (GstMediaInfo *info, const char *location,
 gboolean
 gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
 {
-  GstMediaInfoPriv *priv ;
+  GstMediaInfoPriv *priv;
   /* if it's NULL then we're sure something went wrong higher up) */
   if (info == NULL) return FALSE;
 
   priv = info->priv;
 
   g_assert (streamp != NULL);
+  g_assert (priv);
+
   switch (priv->state)
   {
     case GST_MEDIA_INFO_STATE_NULL:
       /* need to find type */
-      GST_DEBUG ("idler: NULL, need to find type");
+      GST_DEBUG ("idler: NULL, need to find type, priv %p", priv);
       return gmip_find_type_pre (priv);
 
     case GST_MEDIA_INFO_STATE_TYPEFIND:
     {
       gchar *mime;
-      GstElement *decoder;
 
-      GST_DEBUG ("STATE_TYPEFIND");
+      GST_LOG ("STATE_TYPEFIND");
       if ((priv->type == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline)))
       {
 	GST_DEBUG ("iterating while in STATE_TYPEFIND");
@@ -313,24 +357,22 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       mime = g_strdup (gst_structure_get_name (
 	    gst_caps_get_structure(priv->type, 0)));
       GST_DEBUG ("found out mime type: %s", mime);
-      decoder = gmi_get_decoder (info, mime);
-      if (decoder == NULL)
+      if (!gmi_set_mime (info, mime))
       {
         /* FIXME: pop up error */
-        GST_DEBUG ("no decoder found for mime %s", mime);
+        GST_DEBUG ("no decoder pipeline found for mime %s", mime);
         return FALSE;
       }
       priv->stream = gmi_stream_new ();
       GST_DEBUG ("new stream: %p", priv->stream);
       priv->stream->mime = mime;
       priv->stream->path = priv->location;
-      gmi_set_decoder (info, decoder);
 
       gmip_find_stream_pre (priv);
     }
     case GST_MEDIA_INFO_STATE_STREAM:
     {
-      GST_DEBUG ("STATE_STREAM");
+      GST_LOG ("STATE_STREAM");
       if ((priv->format == NULL) && gst_bin_iterate (GST_BIN (priv->pipeline)))
       {
 	GMI_DEBUG("?");
@@ -368,7 +410,7 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       }
       GST_DEBUG ("found metadata of track %ld", priv->current_track_num);
       if (!gmip_find_track_metadata_post (priv)) return FALSE;
-      GST_DEBUG ("METADATA: going to STREAMINFO");
+      GST_DEBUG ("METADATA: going to STREAMINFO\n");
       priv->state = GST_MEDIA_INFO_STATE_STREAMINFO;
       return gmip_find_track_streaminfo_pre (priv);
     }
@@ -430,7 +472,6 @@ gst_media_info_read_idler (GstMediaInfo *info, GstMediaInfoStream **streamp)
       *streamp = priv->stream;
       priv->stream = NULL;
       GST_DEBUG ("TOTALLY DONE, setting pointer *streamp to %p", *streamp);
-      gmi_clear_decoder (info);
       return TRUE;
     }
     case GST_MEDIA_INFO_STATE_DONE:
@@ -464,8 +505,8 @@ gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
 	    gst_caps_get_structure(priv->type, 0)));
   GST_DEBUG ("mime type: %s", mime);
 
-  /* c) figure out decoder */
-  decoder = gmi_get_decoder (info, mime);
+  /* c) figure out decoding pipeline */
+  //FIXMEdecoder = gmi_get_pipeline_description (info, mime);
   g_print ("DEBUG: using decoder %s\n", gst_element_get_name (decoder));
 
  /* if it's NULL, then that's a sign we can't decode it */
@@ -481,7 +522,8 @@ gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
   priv->stream->path = priv->location;
 
   /* install this decoder in the pipeline */
-  gmi_set_decoder (info, decoder);
+
+  //FIXME: use new systemgmi_set_decoder (info, decoder);
 
   /* collect total stream properties */
   /* d) get all stream properties */
@@ -509,8 +551,6 @@ gst_media_info_read (GstMediaInfo *info, const char *location, guint16 flags)
     priv->current_track = NULL;
   }
 
-  /* f) clear decoder */
-  gmi_clear_decoder (info);
   /* please return it */
   stream = priv->stream;
   priv->stream = NULL;

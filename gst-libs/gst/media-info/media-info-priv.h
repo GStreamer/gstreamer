@@ -63,26 +63,25 @@ typedef enum
 /* private structure */
 struct GstMediaInfoPriv
 {
-  GstElement *pipeline;
-
   GstElement *typefind;
 
   GstCaps *type;
-  GstPad *decoder_pad;                  /* pad for querying decoded caps */
-  GstPad *source_pad;                   /* pad for querying encoded caps */
 
   GstCaps *format;
-  GstCaps *metadata;
+  GstTagList *metadata;
   gint metadata_iters;
-  GstCaps *streaminfo;
+  GstTagList *streaminfo;
 
-  GstElement *decoder;                  /* will be != NULL during collection */
+  GstElement *pipeline;                 /* will be != NULL during collection */
+  gchar *pipeline_desc;                 /* will be != NULL during collection */
   GstElement *fakesink;			/* so we can get caps from the
                                            decoder sink pad */
-  gchar *source_element;                /* type of element used as source */
+  gchar *source_name;                   /* type of element used as source */
   GstElement *source;
-
-  GHashTable *decoders;                 /* a table of decoder GstElements */
+  GstPad *source_pad;                   /* pad for querying encoded caps */
+  GstElement *decoder;
+  GstPad *decoder_pad;                  /* pad for querying decoded caps */
+  GstElement *decontainer;		/* element to typefind in containers */
 
   GstMediaInfoState state;              /* current state of state machine */
   gchar *location;                      /* location set on the info object */
@@ -92,6 +91,8 @@ struct GstMediaInfoPriv
 
   GstMediaInfoStream *stream;           /* total stream properties */
   char *cache;                          /* location of cache */
+
+  GError *error;			/* error for creation problems */
 };
 
 /* declarations */
@@ -106,16 +107,15 @@ void		gmi_reset			(GstMediaInfo *info);
 gboolean	gmi_seek_to_track		(GstMediaInfo *info,
 		                                 long track);
 
-GstElement *	gmi_get_decoder			(GstMediaInfo *info,
+gboolean	gmi_set_mime			(GstMediaInfo *info,
 		                                 const char *mime);
-void		gmi_set_decoder			(GstMediaInfo *info,
-		                                 GstElement *decoder);
-void		gmi_clear_decoder		(GstMediaInfo *info);
 
 void		deep_notify_callback            (GObject *object,
 		                                 GstObject *origin,
 						 GParamSpec *pspec,
 						 GstMediaInfoPriv *priv);
+void		found_tag_callback		(GObject *pipeline, GstElement *source, GstTagList *tags, GstMediaInfoPriv *priv);
+void		error_callback			(GObject *element, GstElement *source, GError *error, gchar *debug);
 
 gboolean	gmip_find_type_pre		(GstMediaInfoPriv *priv);
 gboolean	gmip_find_type_post		(GstMediaInfoPriv *priv);

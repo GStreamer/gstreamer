@@ -1,3 +1,23 @@
+2004-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/media-info/media-info-priv.c: (have_type_callback),
+	(deep_notify_callback), (tag_flag_score), (found_tag_callback),
+	(error_callback), (gmi_reset), (gmi_seek_to_track),
+	(gmi_get_decoder), (gmi_set_mime), (gmip_find_type_pre),
+	(gmip_find_type_post), (gmip_find_stream_post),
+	(gmip_find_track_streaminfo_post):
+	* gst-libs/gst/media-info/media-info-priv.h:
+	* gst-libs/gst/media-info/media-info-test.c: (print_tag),
+	(info_print), (main):
+	* gst-libs/gst/media-info/media-info.c:
+	(gst_media_info_error_create), (gst_media_info_error_element),
+	(gst_media_info_instance_init), (gst_media_info_get_property),
+	(gst_media_info_new), (gst_media_info_set_source),
+	(gst_media_info_read_idler), (gst_media_info_read):
+	* gst-libs/gst/media-info/media-info.h:
+          first pass at making this work again.  This seems to work on
+          tagged ogg/vorbis and mp3 files.
+
 2004-03-06  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):

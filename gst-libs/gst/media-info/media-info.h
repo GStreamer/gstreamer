@@ -43,7 +43,7 @@ struct _GstMediaInfoClass
   GObjectClass parent_class;
 
   /* signals */
-  void (*media_info_signal) 		(GstMediaInfo *gst_media_info);
+  void (*media_info_signal)		(GstMediaInfo *gst_media_info);
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -68,8 +68,8 @@ typedef struct
  * or one of a set of sequentially muxed streams */
 typedef struct
 {
-  GstCaps *metadata;		/* changeable metadata or tags */
-  GstCaps *streaminfo;		/* codec property stuff */
+  GstTagList *metadata;		/* changeable metadata or tags */
+  GstTagList *streaminfo;	/* codec property stuff */
   GstCaps *format;		/* properties of the logical stream */
 
   guint64 length_time;
@@ -102,8 +102,9 @@ typedef struct
 void		gst_media_info_init		(void);
 GType           gst_media_info_get_type		(void);
 
-GstMediaInfo *	gst_media_info_new		(const char *source_element);
+GstMediaInfo *	gst_media_info_new		(GError **error);
 
+gboolean	gst_media_info_set_source	(GstMediaInfo *info, const char *source);
 void		gst_media_info_read_with_idler	(GstMediaInfo *media_info,
 						 const char *location,
 						 guint16 GST_MEDIA_INFO_FLAGS);

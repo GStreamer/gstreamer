@@ -5,6 +5,33 @@
 #include "media-info.h"
 
 static void
+print_tag (const GstTagList *list, const gchar *tag, gpointer unused)
+{
+  gint i, count;
+
+  count = gst_tag_list_get_tag_size (list, tag);
+
+  for (i = 0; i < count; i++) {
+    gchar *str;
+
+    if (gst_tag_get_type (tag) == G_TYPE_STRING) {
+      g_assert (gst_tag_list_get_string_index (list, tag, i, &str));
+    } else {
+      str = g_strdup_value_contents (
+              gst_tag_list_get_value_index (list, tag, i));
+    }
+
+    if (i == 0) {
+      g_print ("%15s: %s\n", gst_tag_get_nick (tag), str);
+    } else {
+      g_print ("               : %s\n", str);
+    }
+
+    g_free (str);
+  }
+}
+
+static void
 info_print (GstMediaInfoStream *stream)
 {
   int i;
@@ -27,9 +54,12 @@ info_print (GstMediaInfoStream *stream)
     g_print ("- track %d\n", i);
     track = (GstMediaInfoTrack *) p->data;
     g_print ("  - metadata:\n");
-    g_print ("%s\n", gst_caps_to_string (track->metadata));
+    if (track->metadata)
+      gst_tag_list_foreach (track->metadata, print_tag, NULL);
+    else
+      g_print ("  (none found)\n");
     g_print ("  - streaminfo:\n");
-    g_print ("%s\n", gst_caps_to_string (track->streaminfo));
+    gst_tag_list_foreach (track->streaminfo, print_tag, NULL);
     g_print ("  - format:\n");
     g_print ("%s\n", gst_caps_to_string (track->format));
     p = p->next;
@@ -41,14 +71,29 @@ main (int argc, char *argv[])
 {
   GstMediaInfo *info;
   GstMediaInfoStream *stream = NULL;
+  GError *error = NULL;
   gint i;
 
   g_assert (argc > 1);
 
-  gst_init (&argc, &argv);
   gst_media_info_init ();
+  gst_init (&argc, &argv);
 
-  info = g_object_new (GST_MEDIA_INFO_TYPE, NULL);
+  info = gst_media_info_new (&error);
+  if (error != NULL)
+  {
+    g_print ("Error creating media-info object: %s\n", error->message);
+    g_error_free (error);
+    return -1;
+  }
+
+  g_assert (G_IS_OBJECT (info));
+  if (!gst_media_info_set_source (info, "gnomevfssrc"))
+  {
+    g_print ("Could not set gnomevfssrc as a source\n");
+    return -1;
+  }
+
   g_print ("stream: %p, &stream: %p\n", stream, &stream);
   for (i = 1; i < argc; ++i)
   {
