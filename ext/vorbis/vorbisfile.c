@@ -451,8 +451,6 @@ gst_vorbisfile_loop (GstElement *element)
   /* this function needs to go first since you don't want to be messing
    * with an unset vf ;) */
   if (vorbisfile->restart) {
-    gint i;
-
     vorbisfile->offset = 0;
     vorbisfile->total_bytes = 0;
     vorbisfile->may_eos = FALSE;
@@ -468,11 +466,6 @@ gst_vorbisfile_loop (GstElement *element)
     vorbisfile->need_discont = TRUE;
     vorbisfile->restart = FALSE;
     vorbisfile->current_link = -1;
-
-    for (i = 0; i < vorbisfile->vf.links; i++) {
-      g_print ("%lld %lld\n", vorbisfile->vf.offsets[i],
-		      vorbisfile->vf.dataoffsets[i]);
-    }
   }
 
   if (vorbisfile->seek_pending) {
