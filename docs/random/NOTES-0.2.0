@@ -7,6 +7,8 @@ compile fixes:
   - more compatibility fixes for various xml libs.
   - more BSD patches.
   - gstversion.h added.
+  - numerous configure changes
+  - compatibility with autoconf 2.50
 
 bug fixes:
   - allow quoted and escaped args in gstparse.c
