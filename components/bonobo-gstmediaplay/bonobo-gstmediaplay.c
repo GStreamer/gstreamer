@@ -407,7 +407,7 @@ init_server_factory (int argc, char **argv)
 int
 main (int argc, char **argv)
 {
-  //g_thread_init (NULL);
+  /* g_thread_init (NULL); */
   /*
    * Setup the factory.
    */
