@@ -115,7 +115,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
   GstCaps *caps = NULL;
 
   int bpp = 0, depth = 0, endianness = 0;
-  gulong g_mask = 0, r_mask = 0, b_mask = 0;
+  gulong g_mask = 0, r_mask = 0, b_mask = 0, a_mask = 0;
   guint32 fmt = 0;
 
   switch (pix_fmt) {
@@ -145,7 +145,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     case PIX_FMT_YUV444P:
       /* .. */
       break;
-    case PIX_FMT_RGBA32:
+    case PIX_FMT_RGB32:
       bpp = 32;
       depth = 24;
       endianness = G_BIG_ENDIAN;
@@ -157,6 +157,22 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       r_mask = 0x0000ff00;
       g_mask = 0x00ff0000;
       b_mask = 0xff000000;
+#endif
+      break;
+    case PIX_FMT_RGBA32:
+      bpp = 32;
+      depth = 32;
+      endianness = G_BIG_ENDIAN;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+      r_mask = 0x000000ff;
+      g_mask = 0x0000ff00;
+      b_mask = 0x00ff0000;
+      a_mask = 0xff000000;
+#else
+      r_mask = 0xff000000;
+      g_mask = 0x00ff0000;
+      b_mask = 0x0000ff00;
+      a_mask = 0x000000ff;
 #endif
       break;
     case PIX_FMT_YUV410P:
@@ -184,13 +200,25 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       bpp = depth = 8;
       endianness = G_BYTE_ORDER;
       break;
+    case PIX_FMT_AYUV4444:
+      fmt = GST_MAKE_FOURCC ('A', 'Y', 'U', 'V');
+      break;
     default:
       /* give up ... */
       break;
   }
 
   if (bpp != 0) {
-    if (r_mask != 0) {
+    if (a_mask != 0) {
+      caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
+          "bpp", G_TYPE_INT, bpp,
+          "depth", G_TYPE_INT, depth,
+          "red_mask", G_TYPE_INT, r_mask,
+          "green_mask", G_TYPE_INT, g_mask,
+          "blue_mask", G_TYPE_INT, b_mask,
+          "alpha_mask", G_TYPE_INT, a_mask,
+          "endianness", G_TYPE_INT, endianness, NULL);
+    } else if (r_mask != 0) {
       caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
           "bpp", G_TYPE_INT, bpp,
           "depth", G_TYPE_INT, depth,
@@ -410,6 +438,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         case GST_MAKE_FOURCC ('Y', 'U', 'V', '9'):
           context->pix_fmt = PIX_FMT_YUV410P;
           break;
+        case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
+          context->pix_fmt = PIX_FMT_AYUV4444;
+          break;
 #if 0
         case FIXME:
           context->pix_fmt = PIX_FMT_YUV444P;
@@ -419,19 +450,23 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     }
   } else if (strcmp (gst_structure_get_name (structure),
           "video/x-raw-rgb") == 0) {
-    gint bpp = 0, rmask = 0, endianness = 0;
+    gint bpp = 0, rmask = 0, endianness = 0, amask = 0;
 
     if (gst_structure_get_int (structure, "bpp", &bpp) &&
         gst_structure_get_int (structure, "endianness", &endianness)) {
       if (gst_structure_get_int (structure, "red_mask", &rmask)) {
         switch (bpp) {
           case 32:
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-            if (rmask == 0x00ff0000)
-#else
-            if (rmask == 0x0000ff00)
-#endif
+            if (gst_structure_get_int (structure, "alpha_mask", &amask)) {
               context->pix_fmt = PIX_FMT_RGBA32;
+            } else {
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+              if (rmask == 0x00ff0000)
+#else
+              if (rmask == 0x0000ff00)
+#endif
+                context->pix_fmt = PIX_FMT_RGB32;
+            }
             break;
           case 24:
             if (rmask == 0x0000FF)
@@ -569,6 +604,15 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         .depth = 8,
         .x_chroma_shift = 2,.y_chroma_shift = 0,
       },
+  [PIX_FMT_YUV422] = {
+        .name = "ayuv4444",
+        .nb_channels = 1,
+        .is_alpha = 1,
+        .color_type = FF_COLOR_YUV,
+        .pixel_type = FF_PIXEL_PACKED,
+        .depth = 8,
+        .x_chroma_shift = 0,.y_chroma_shift = 0,
+      },
 
   /* JPEG YUV */
   [PIX_FMT_YUVJ420P] = {
@@ -608,6 +652,14 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
   [PIX_FMT_BGR24] = {
         .name = "bgr24",
         .nb_channels = 3,
+        .color_type = FF_COLOR_RGB,
+        .pixel_type = FF_PIXEL_PACKED,
+        .depth = 8,
+        .x_chroma_shift = 0,.y_chroma_shift = 0,
+      },
+  [PIX_FMT_RGB32] = {
+        .name = "rgb32",
+        .nb_channels = 4,
         .color_type = FF_COLOR_RGB,
         .pixel_type = FF_PIXEL_PACKED,
         .depth = 8,
@@ -720,6 +772,8 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       picture->data[2] = NULL;
       picture->linesize[0] = stride;
       return size;
+    case PIX_FMT_AYUV4444:
+    case PIX_FMT_RGB32:
     case PIX_FMT_RGBA32:
       stride = width * 4;
       size = stride * height;

@@ -126,6 +126,7 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
     gst_structure_remove_field (structure, "red_mask");
     gst_structure_remove_field (structure, "green_mask");
     gst_structure_remove_field (structure, "blue_mask");
+    gst_structure_remove_field (structure, "alpha_mask");
   }
 
   gst_caps_do_simplify (caps);
