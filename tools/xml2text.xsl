@@ -179,11 +179,129 @@
 
  <xsl:template match="pads">
   <xsl:text>Pads:&#10;</xsl:text>
+  <xsl:apply-templates select="pad"/>
   <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="pad">
+  <xsl:text>  </xsl:text>
+  <xsl:value-of select="direction"/> 
+  <xsl:text>: '</xsl:text>
+  <xsl:value-of select="name"/>
+  <xsl:text>'&#10;</xsl:text>
+  <xsl:apply-templates select="implementation"/>
+  <xsl:text>    Pad Template: '</xsl:text>
+  <xsl:value-of select="template"/>
+  <xsl:text>'&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="implementation">
+  <xsl:text>    Implementation:&#10;</xsl:text>
+  <xsl:apply-templates select="*"/>
+ </xsl:template>
+
+ <xsl:template match="chain-based">
+  <xsl:text>      Has chainfunc(): </xsl:text>
+  <xsl:value-of select="@function"/>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="bufferpool-function">
+  <xsl:text>      Has bufferpoolfunc(): </xsl:text>
+  <xsl:value-of select="@function"/>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="format">
+  <xsl:text>                (</xsl:text>
+  <xsl:value-of select="@id"/>
+  <xsl:text>)&#9;</xsl:text>
+  <xsl:value-of select="@nick"/>
+  <xsl:text> (</xsl:text>
+  <xsl:value-of select="."/>
+  <xsl:text>)&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="formats-function">
+  <xsl:text>      Supports seeking/conversion/query formats: </xsl:text>
+  <xsl:value-of select="@function"/>
+  <xsl:text>&#10;</xsl:text>
+  <xsl:apply-templates select="format"/>
+ </xsl:template>
+
+ <xsl:template match="convert-function">
+  <xsl:text>      Has custom convertfunc(): </xsl:text>
+  <xsl:value-of select="@function"/>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="query-function">
+  <xsl:text>      Has custom queryfunc(): </xsl:text>
+  <xsl:value-of select="@function"/>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="event-function">
+  <xsl:text>      Has custom eventfunc(): </xsl:text>
+  <xsl:value-of select="@function"/>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="event">
+  <xsl:text>                </xsl:text>
+  <xsl:value-of select="@type"/>
+  <xsl:for-each select="flag">
+   <xsl:text> | </xsl:text>
+   <xsl:value-of select='.'/>
+  </xsl:for-each>
+  <xsl:text>&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="event-mask-func">
+  <xsl:text>        Provides event masks: </xsl:text>
+  <xsl:value-of select="@function"/>
+  <xsl:text>&#10;</xsl:text>
+  <xsl:apply-templates select="event"/>
+ </xsl:template>
+
+ <xsl:template match="query-type">
+  <xsl:text>                (</xsl:text>
+  <xsl:value-of select="@id"/>
+  <xsl:text>)&#9;</xsl:text>
+  <xsl:value-of select="@nick"/>
+  <xsl:text> (</xsl:text>
+  <xsl:value-of select="."/>
+  <xsl:text>)&#10;</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="query-type-func">
+  <xsl:text>        Provides query types: </xsl:text>
+  <xsl:value-of select="@function"/>
+  <xsl:text>&#10;</xsl:text>
+  <xsl:apply-templates select="query-type"/>
  </xsl:template>
 
  <xsl:template match="element-properties">
   <xsl:text>Element Arguments:&#10;</xsl:text>
+  <xsl:text>&#10;</xsl:text>
+  <xsl:apply-templates select="element-property"/>
+ </xsl:template>
+
+ <xsl:template match="default">
+  <xsl:text>. (Default </xsl:text>
+  <xsl:value-of select="."/>
+  <xsl:text>)</xsl:text>
+ </xsl:template>
+
+ <xsl:template match="element-property">
+  <xsl:text>  </xsl:text>
+  <xsl:value-of select="name"/>
+  <xsl:text>:&#9;  </xsl:text>
+  <xsl:value-of select="blurb"/>
+  <xsl:text>&#10;</xsl:text>
+  <xsl:text>                </xsl:text>
+  <xsl:value-of select="type"/>
+  <xsl:apply-templates select="default"/>
   <xsl:text>&#10;</xsl:text>
  </xsl:template>
 
