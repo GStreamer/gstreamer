@@ -193,7 +193,7 @@ gst_esdsink_link (GstPad *pad, const GstCaps *caps)
   esdsink = GST_ESDSINK (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "signed", &esdsink->depth);
+  gst_structure_get_int (structure, "depth", &esdsink->depth);
   gst_structure_get_int (structure, "channels", &esdsink->channels);
   gst_structure_get_int (structure, "rate", &esdsink->frequency);
 
