@@ -844,12 +844,12 @@ AC_SUBST(MAD_LIBS)
 
 dnl *** matroska ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MATROSKA, true)
-#GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, [
-#  PATH_EBML([HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
-#  if test x$HAVE_MATROSKA = xyes; then
-#    PATH_MATROSKA(0.4.4, [HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
-#  fi
-#])
+GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, [
+  PATH_EBML([HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
+  if test x$HAVE_MATROSKA = xyes; then
+    PATH_MATROSKA(0.4.4, [HAVE_MATROSKA=yes], [HAVE_MATROSKA=no])
+  fi
+])
 GST_CHECK_FEATURE(MATROSKA, [matroska muxer/demuxer], matroska muxer/demuxer, HAVE_MATROSKA=no)
 
 dnl *** mikmod ***
