@@ -1,10 +1,22 @@
 #include <stdlib.h>
 #include <gst/gst.h>
 
+static void
+error_cb (GstElement * bin, GstElement * error_element, GError * error,
+    const gchar * debug_msg, gpointer user_data)
+{
+  gboolean *p_got_error = (gboolean *) user_data;
+
+  g_printerr ("An error occured: %s\n", error->message);
+
+  *p_got_error = TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
-  GstElement *bin, *filesrc, *decoder, *osssink;
+  GstElement *bin, *filesrc, *decoder, *audioconvert, *audioscale, *osssink;
+  gboolean got_error;
 
   gst_init (&argc, &argv);
 
@@ -28,23 +40,43 @@ main (int argc, char *argv[])
     g_print ("could not find plugin \"mad\"");
     return -1;
   }
+
+  /* create standard converters to make sure the decoded
+   * samples are converted into a format our audio sink
+   * understands (if necessary) */
+  audioconvert = gst_element_factory_make ("audioconvert", "audioconvert");
+  audioscale = gst_element_factory_make ("audioscale", "audioscale");
+  g_assert (audioconvert && audioscale);
+
   /* and an audio sink */
   osssink = gst_element_factory_make ("osssink", "play_audio");
   g_assert (osssink);
 
   /* add objects to the main pipeline */
-  gst_bin_add_many (GST_BIN (bin), filesrc, decoder, osssink, NULL);
+  gst_bin_add_many (GST_BIN (bin), filesrc, decoder, audioconvert, audioscale,
+      osssink, NULL);
 
   /* link the elements */
-  gst_element_link_many (filesrc, decoder, osssink, NULL);
+  if (!gst_element_link_many (filesrc, decoder, audioconvert, audioscale,
+          osssink, NULL))
+    g_error ("gst_element_link_many() failed!");
+
+  /* check for errors */
+  got_error = FALSE;
+  g_signal_connect (bin, "error", G_CALLBACK (error_cb), &got_error);
 
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (GST_BIN (bin)));
+  while (!got_error && gst_bin_iterate (GST_BIN (bin))) {
+    ;
+  }
 
   /* stop the bin */
   gst_element_set_state (bin, GST_STATE_NULL);
+
+  /* free */
+  g_object_unref (bin);
 
   exit (0);
 }

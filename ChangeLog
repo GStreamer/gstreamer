@@ -1,3 +1,9 @@
+2005-04-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* examples/helloworld/helloworld.c: (error_cb), (main):
+	  Add audioconvert and audioscale elements and an
+	  error handler.
+
 2005-03-30  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstelement.c: (gst_element_found_tags_for_pad):
