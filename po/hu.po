@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"POT-Creation-Date: 2004-08-27 14:17+0200\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -135,7 +135,7 @@ msgid "Could not access device \"%s\", check its permissions."
 msgstr ""
 "Nem lehet hozzáférni a(z) \"%s\" eszközhöz, ellenőrizze a jogosultságait."
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "A(z) \"%s\" eszköz nem létezik."
@@ -255,11 +255,11 @@ msgstr "Rádió"
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/v4l/v4l_calls.c:158
+#: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Nincs megadva eszköz."
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nem lehet olvasásra és írásra megnyitni a(z) \"%s\" eszközt."

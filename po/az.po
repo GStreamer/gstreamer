@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"POT-Creation-Date: 2004-08-27 14:17+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -137,7 +137,7 @@ msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədi
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "\"%s\" avadanlığına yetişə bilmədi, səlahiyyətlərini yoxlayın."
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "\"%s\" avadanlığı mövcud deyil."
@@ -256,11 +256,11 @@ msgstr "Radio"
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/v4l/v4l_calls.c:158
+#: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Avadanlıq bildirilməyib."
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
