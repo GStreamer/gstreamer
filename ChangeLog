@@ -1,6 +1,11 @@
 2004-10-18  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
+	Added cdaudio to wrong list.
+
+2004-10-18  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
 	Revive cdaudio.
 
 2004-10-18  Wim Taymans  <wim@fluendo.com>
