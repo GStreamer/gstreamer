@@ -410,7 +410,7 @@ gst_jack_loop (GstElement *element)
     this = GST_JACK (element);
     
     g_return_if_fail(this != NULL);
-    len = this->bin->nframes * sizeof (sample_t);
+    len = this->bin->nframes * sizeof (jack_default_audio_sample_t);
     
     do {
         pads = this->pads;

@@ -30,9 +30,9 @@ static void gst_jack_bin_class_init(GstJackBinClass *klass);
 static GstElementStateReturn gst_jack_bin_change_state(GstElement *element);
 
 /* jack callbacks */
-static int process (nframes_t nframes, void *arg);
-static int buffer_size (nframes_t nframes, void *arg);
-static int sample_rate (nframes_t nframes, void *arg);
+static int process (jack_nframes_t nframes, void *arg);
+static int buffer_size (jack_nframes_t nframes, void *arg);
+static int sample_rate (jack_nframes_t nframes, void *arg);
 static void shutdown (void *arg);
 
 
@@ -225,7 +225,7 @@ gst_jack_bin_change_state (GstElement *element)
 /* keep in mind that these run in another thread, mm-kay? */
 
 static int
-process (nframes_t nframes, void *arg)
+process (jack_nframes_t nframes, void *arg)
 {
     GstJackBin *bin = (GstJackBin*) arg;
     GstJackPad *pad;
@@ -293,14 +293,14 @@ process (nframes_t nframes, void *arg)
 }
 
 static int
-buffer_size (nframes_t nframes, void *arg)
+buffer_size (jack_nframes_t nframes, void *arg)
 {
     printf ("the maximum buffer size is now %lu\n", nframes);
     return 0;
 }
 
 static int
-sample_rate (nframes_t nframes, void *arg)
+sample_rate (jack_nframes_t nframes, void *arg)
 {
     GstJackBin *bin = (GstJackBin*) arg;
     printf ("the sample rate is now %lu/sec\n", nframes);
