@@ -538,11 +538,12 @@ gst_gdk_animation_get_static_image (GdkPixbufAnimation *animation)
 {
   GstGdkAnimation *ani = GST_GDK_ANIMATION (animation);
   GTimeVal tv;
+  GstGdkAnimationIter *iter;
 
   if (!ani->pixbuf) {
     GST_LOG_OBJECT (ani, "trying to create pixbuf");
     g_get_current_time (&tv);
-    GstGdkAnimationIter *iter = GST_GDK_ANIMATION_ITER (
+    iter = GST_GDK_ANIMATION_ITER (
 	    gdk_pixbuf_animation_get_iter (animation, &tv));
     if (iter) {
       guint64 offset;
