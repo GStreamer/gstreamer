@@ -425,17 +425,23 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions], xvideosink-Xv, [
     AC_CHECK_LIB(Xv_pic, XvQueryExtension,
 		 HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
 		 $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
-    XVIDEO_LIBS="-lXv_pic -lXext"
 
-    dnl try again using something else if we didn't find it first
-    if test x$HAVE_XVIDEO = xno; then
-      AC_CHECK_LIB(Xv, XvQueryExtension,
+    if test x$HAVE_XVIDEO = xyes; then
+      XVIDEO_LIBS="-lXv_pic -lXext"
+      AC_SUBST(XVIDEO_LIBS)
+    else
+      dnl try again using something else if we didn't find it first
+      if test x$HAVE_XVIDEO = xno; then
+        AC_CHECK_LIB(Xv, XvQueryExtension,
 		   HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
 		   $X_LIBS $X_PRE_LIBS -lXext -lX11 $X_EXTRA_LIBS)
-      XVIDEO_LIBS="-lXv -lXext"
-    fi
 
-    AC_SUBST(XVIDEO_LIBS)
+        if test x$HAVE_XVIDEO = xyes; then
+          XVIDEO_LIBS="-lXv -lXext"
+          AC_SUBST(XVIDEO_LIBS)
+        fi
+      fi
+    fi
   fi
 ])
 
