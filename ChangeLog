@@ -1,3 +1,9 @@
+2004-01-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/videofilter/Makefile.am:
+	* gst/volume/Makefile.am:
+	  Since we use videofilter symbols, link to it.
+
 2004-01-15  Julien MOUTTE <julien@moutte.net>
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_interface_init): Setting
