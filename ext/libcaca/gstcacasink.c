@@ -46,6 +46,7 @@ enum {
   ARG_SCREEN_WIDTH,
   ARG_SCREEN_HEIGHT,
   ARG_DITHER,
+  ARG_ANTIALIASING
 };
 
 static GstStaticPadTemplate sink_template =
@@ -178,8 +179,11 @@ gst_cacasink_class_init (GstCACASinkClass *klass)
     g_param_spec_int("screen_height","screen_height","screen_height",
                      G_MININT,G_MAXINT,0,G_PARAM_READABLE)); /* CHECKME */
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DITHER,
-    g_param_spec_enum("dither","dither","dither",
+    g_param_spec_enum("dither","Dither Type","Set type of Dither",
                       GST_TYPE_CACADITHER, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANTIALIASING,
+    g_param_spec_boolean ("anti_aliasing", "Anti-Aliasing", 
+			  "Enables Anti-Aliasing", TRUE, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_cacasink_set_property;
   gobject_class->get_property = gst_cacasink_get_property;
@@ -302,7 +306,11 @@ gst_cacasink_init (GstCACASink *cacasink)
 
   cacasink->screen_width = caca_get_width ();
   cacasink->screen_height = caca_get_height ();
-  
+  cacasink->antialiasing = TRUE;
+  caca_set_feature (CACA_ANTIALIASING_MAX);
+  cacasink->dither = 0;
+  caca_set_dithering (CACA_DITHERING_NONE);
+
   GST_FLAG_SET(cacasink, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
@@ -380,6 +388,17 @@ gst_cacasink_set_property (GObject *object, guint prop_id, const GValue *value, 
       caca_set_dithering (cacasink->dither + CACA_DITHERING_NONE);
       break;
     }
+    case ARG_ANTIALIASING: {
+      cacasink->antialiasing = g_value_get_boolean (value);
+      if (cacasink->antialiasing) {
+	caca_set_feature (CACA_ANTIALIASING_MAX);
+      }
+	
+      else {
+	caca_set_feature (CACA_ANTIALIASING_MIN);
+      }
+      break;
+    }
     default:
       break;
   }
@@ -404,6 +423,10 @@ gst_cacasink_get_property (GObject *object, guint prop_id, GValue *value, GParam
     }
     case ARG_DITHER: {
       g_value_set_enum (value, cacasink->dither);
+      break;
+    }
+    case ARG_ANTIALIASING: {
+      g_value_set_boolean (value, cacasink->antialiasing);
       break;
     }
     default: {

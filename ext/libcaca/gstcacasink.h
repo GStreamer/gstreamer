@@ -71,6 +71,7 @@ struct _GstCACASink {
   gint screen_width, screen_height;
   guint bpp;
   guint dither;
+  gboolean antialiasing;
   guint red_mask, green_mask, blue_mask;
 
   gint64 correction;
