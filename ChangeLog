@@ -4,7 +4,7 @@
 	* ext/faad/gstfaad.h:
 	TEH LONGEST DEBUGGING SESSION EVAR is over. Fix interaction with 
 	certain invalid muxed streams, where some packets will contain 
-	junk after decoder data. Fixes 
+	junk after decoder data. Partially fixes #149158.
 
 2005-02-21  Jan Schmidt <thaytan@mad.scientist.com>
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain):
