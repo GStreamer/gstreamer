@@ -540,7 +540,7 @@ gst_v4l2element_get_property (GObject * object,
       guint flags = 0;
 
       if (GST_V4L2_IS_OPEN (v4l2element)) {
-        flags |= v4l2element->vcap.capabilities & 30007;
+        flags |= v4l2element->vcap.capabilities & 0x30007;
       }
       g_value_set_flags (value, flags);
       break;
