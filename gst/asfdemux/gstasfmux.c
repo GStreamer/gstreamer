@@ -44,7 +44,7 @@
 #include <gst/video/video.h>
 
 /* for audio codec IDs */
-#include <gst/riff/riff.h>
+#include <gst/riff/riff-ids.h>
 
 #include "gstasfmux.h"
 
