@@ -131,8 +131,6 @@ static void     	gst_basic_scheduler_pad_link		(GstScheduler *sched, GstPad *src
 static void     	gst_basic_scheduler_pad_unlink 		(GstScheduler *sched, GstPad *srcpad,
 								 GstPad *sinkpad);
 static void	  	gst_basic_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
-static GstClockReturn	gst_basic_scheduler_clock_wait	 	(GstScheduler *sched, GstElement *element,
-								 GstClockID id, GstClockTimeDiff *jitter);
 static GstSchedulerState
 			gst_basic_scheduler_iterate    		(GstScheduler *sched);
 
@@ -221,7 +219,7 @@ gst_basic_scheduler_class_init (GstBasicSchedulerClass * klass)
   gstscheduler_class->pad_link 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_link);
   gstscheduler_class->pad_unlink 	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_unlink);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_pad_select);
-  gstscheduler_class->clock_wait	= GST_DEBUG_FUNCPTR (gst_basic_scheduler_clock_wait);
+  gstscheduler_class->clock_wait	= NULL;
   gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_iterate);
 
   gstscheduler_class->show 		= GST_DEBUG_FUNCPTR (gst_basic_scheduler_show);
@@ -1343,13 +1341,6 @@ gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
 
     g_assert (pad != NULL);
   }
-}
-
-static GstClockReturn
-gst_basic_scheduler_clock_wait (GstScheduler *sched, GstElement *element,
-				GstClockID id, GstClockTimeDiff *jitter)
-{
-  return gst_clock_id_wait (id, jitter);
 }
 
 static GstSchedulerState

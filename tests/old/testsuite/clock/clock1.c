@@ -10,11 +10,8 @@
 void
 gst_clock_debug (GstClock *clock)
 {
-  g_print ("Clock info: speed %f, active %s, time %d\n",
-           gst_clock_get_speed (clock),
-	   gst_clock_is_active (clock) ? "yes" : "no",
-	   (gint) gst_clock_get_time (clock)
-	   );
+  g_print ("Clock info: time %"G_GUINT64_FORMAT"\n",
+	   gst_clock_get_time (clock));
 }
   
 int
@@ -53,12 +50,7 @@ main (int argc, char *argv[])
   clock = gst_bin_get_clock (GST_BIN (pipeline));
   g_assert (clock != NULL);
   gst_clock_debug (clock);
-  //gst_clock_set_active (clock, TRUE);
   gst_clock_debug (clock);
-  //clock = gst_clock_new ("clock");
-  //gst_element_set_clock (src, clock);
-  //clock = gst_element_get_clock (src);
-  //g_assert (clock != NULL);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_bin_iterate (GST_BIN (pipeline));

@@ -312,7 +312,7 @@ gst_fakesink_chain (GstPad *pad, GstData *_data)
       case GST_EVENT_DISCONTINUOUS:
         if (fakesink->sync && fakesink->clock) { 
           gint64 value = GST_EVENT_DISCONT_OFFSET (event, 0).value;
-          gst_clock_handle_discont (fakesink->clock, value);
+          gst_element_set_time (GST_ELEMENT (fakesink), value);
 	}
       default:
 	gst_pad_event_default (pad, event);
@@ -322,10 +322,7 @@ gst_fakesink_chain (GstPad *pad, GstData *_data)
   }
 
   if (fakesink->sync && fakesink->clock) { 
-    GstClockID id = gst_clock_new_single_shot_id (fakesink->clock, GST_BUFFER_TIMESTAMP (buf));
-
-    gst_element_clock_wait (GST_ELEMENT (fakesink), id, NULL);
-    gst_clock_id_free (id);
+    gst_element_wait (GST_ELEMENT (fakesink), GST_BUFFER_TIMESTAMP (buf));
   }
 
   if (!fakesink->silent) { 

@@ -128,16 +128,21 @@ struct _GstClock {
   gint64	 max_diff;
 
   /* --- private --- */
-  gboolean 	 accept_discont;
-  gdouble 	 speed;
+  gboolean 	 accept_discont;	  /* FIXME: REMOVE! */
+  gdouble 	 speed;			  /* FIXME: REMOVE! */
   guint64	 resolution;
-  gboolean 	 active;
+  gboolean 	 active;		  /* FIXME: REMOVE! */
   GList		*entries;
   GMutex	*active_mutex;
   GCond		*active_cond;
   gboolean	 stats;
 
-  gpointer _gst_reserved[GST_PADDING];
+  GstClockTime	 last_event;
+  GstClockTime	 max_event_diff;
+  
+  /* weird padding here */  
+  guint8	 padding[sizeof(gpointer) * GST_PADDING - sizeof (GstClockTime) * 2];
+  /*gpointer _gst_reserved[GST_PADDING];*/
 };
 
 struct _GstClockClass {
@@ -158,25 +163,32 @@ struct _GstClockClass {
   GstClockEntryStatus   (*wait_async)           (GstClock *clock, GstClockEntry *entry);
   void                  (*unschedule)        	(GstClock *clock, GstClockEntry *entry);
   void                  (*unlock)            	(GstClock *clock, GstClockEntry *entry);
-
   gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           	gst_clock_get_type 		(void);
 
+#ifndef GST_DISABLE_DEPRECATED
 gdouble			gst_clock_set_speed		(GstClock *clock, gdouble speed);
 gdouble 		gst_clock_get_speed		(GstClock *clock);
+#endif
 
 guint64			gst_clock_set_resolution	(GstClock *clock, guint64 resolution);
 guint64			gst_clock_get_resolution	(GstClock *clock);
 
+#ifndef GST_DISABLE_DEPRECATED
 void 			gst_clock_set_active		(GstClock *clock, gboolean active);
 gboolean 		gst_clock_is_active		(GstClock *clock);
 void 			gst_clock_reset			(GstClock *clock);
 gboolean		gst_clock_handle_discont	(GstClock *clock, guint64 time);
+#endif
 
 GstClockTime		gst_clock_get_time		(GstClock *clock);
+GstClockTime		gst_clock_get_event_time	(GstClock *clock);
 
+
+/* FIXME: deprecate? */
+#ifndef GST_DISABLE_DEPRECATED
 GstClockID		gst_clock_get_next_id		(GstClock *clock);
 
 /* creating IDs that can be used to get notifications */
@@ -196,6 +208,8 @@ GstClockReturn		gst_clock_id_wait_async		(GstClockID id,
 void 			gst_clock_id_unschedule		(GstClockID id);
 void			gst_clock_id_unlock		(GstClockID id);
 void			gst_clock_id_free		(GstClockID id);
+#endif
+
 
 G_END_DECLS
 

@@ -245,8 +245,6 @@ static void 		gst_opt_scheduler_error	 		(GstScheduler *sched, GstElement *eleme
 static void     	gst_opt_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static void     	gst_opt_scheduler_pad_unlink 		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 static void	  	gst_opt_scheduler_pad_select 		(GstScheduler *sched, GList *padlist);
-static GstClockReturn   gst_opt_scheduler_clock_wait        	(GstScheduler *sched, GstElement *element,
-	                                                         GstClockID id, GstClockTimeDiff *jitter);
 static GstSchedulerState
 			gst_opt_scheduler_iterate    		(GstScheduler *sched);
 
@@ -319,7 +317,7 @@ gst_opt_scheduler_class_init (GstOptSchedulerClass *klass)
   gstscheduler_class->pad_link 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_link);
   gstscheduler_class->pad_unlink 	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_unlink);
   gstscheduler_class->pad_select	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_select);
-  gstscheduler_class->clock_wait	= GST_DEBUG_FUNCPTR (gst_opt_scheduler_clock_wait);
+  gstscheduler_class->clock_wait	= NULL;
   gstscheduler_class->iterate 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_iterate);
   gstscheduler_class->show 		= GST_DEBUG_FUNCPTR (gst_opt_scheduler_show);
   
@@ -2043,13 +2041,6 @@ gst_opt_scheduler_pad_select (GstScheduler *sched, GList *padlist)
   //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
   
   g_warning ("pad select, implement me");
-}
-
-static GstClockReturn
-gst_opt_scheduler_clock_wait (GstScheduler *sched, GstElement *element,
-	                      GstClockID id, GstClockTimeDiff *jitter)
-{
-  return gst_clock_id_wait (id, jitter);
 }
 
 /* a scheduler iteration is done by looping and scheduling the active chains */

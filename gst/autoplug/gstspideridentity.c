@@ -251,10 +251,8 @@ gst_spider_identity_getcaps (GstPad *pad)
     otherpad = ident->src;
 
   if (otherpad != NULL) {
-    GstPad *peer = GST_PAD_PEER (otherpad);
-
-    if (peer) {
-      GstCaps *ret = gst_pad_get_caps (peer);
+    if (GST_PAD_PEER (otherpad)) {
+      GstCaps *ret = gst_pad_get_allowed_caps (otherpad);
       if (ident->caps) {
 	GstCaps *ret2 = gst_caps_intersect (ident->caps, ret);
 	gst_caps_free (ret);

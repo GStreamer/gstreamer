@@ -792,13 +792,162 @@ gst_element_clock_wait (GstElement *element, GstClockID id, GstClockTimeDiff *ji
 
   return res;
 }
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT GST_CAT_CLOCK
+/**
+ * gst_element_get_time:
+ * @element: element to query
+ *
+ * Query the element's time. The element must use 
+ * 
+ * Returns: the current time of the element or #GST_CLOCK_TIME_NONE when there
+ *          is no time available.
+ */
+GstClockTime
+gst_element_get_time (GstElement *element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_TIME_NONE);
+
+  if (element->clock == NULL) {
+    GST_WARNING_OBJECT (element, "element queries time but has no clock");
+    return GST_CLOCK_TIME_NONE;
+  }
+  switch (element->current_state) {
+    case GST_STATE_NULL:
+    case GST_STATE_READY:
+      return GST_CLOCK_TIME_NONE;
+    case GST_STATE_PAUSED:
+      return element->base_time;
+    case GST_STATE_PLAYING:
+      return gst_clock_get_time (element->clock) - element->base_time;
+    default:
+      g_assert_not_reached ();
+      return GST_CLOCK_TIME_NONE;
+  }   
+}
+
+GstClockID		gst_clock_new_single_shot_id	(GstClock *clock, 
+							 GstClockTime time); 
+void			gst_clock_id_free		(GstClockID id);
+/**
+ * gst_element_wait:
+ * @element: element that should wait
+ * @timestamp: wait until this time has arrived
+ *
+ * Waits until the given time has arrived. When this function returns successfully, 
+ * the time specified in the timestamp has passed.
+ * <note>This function can only be called on elements in #GST_STATE_PLAYING</note>
+ *
+ * Returns: TRUE on success
+ */
+gboolean
+gst_element_wait (GstElement *element, GstClockTime timestamp)
+{
+  GstClockID id;
+  GstClockReturn ret;
+  
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (GST_IS_CLOCK (element->clock), FALSE);
+  g_return_val_if_fail (element->current_state == GST_STATE_PLAYING, FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+  
+  /* shortcut when we're already late... */
+  if (gst_element_get_time (element) >= timestamp) {
+    GST_INFO_OBJECT (element, "called gst_element_wait and was late");
+    return TRUE;
+  }
+  
+  id = gst_clock_new_single_shot_id (element->clock, element->base_time + timestamp);
+  ret = gst_element_clock_wait (element, id, NULL);
+  gst_clock_id_free (id);
+
+  return ret == GST_CLOCK_STOPPED;
+}
+
+/**
+ * gst_element_set_time:
+ * @element: element to set time on
+ * @time: time to set
+ *
+ * Sets the current time of the element. This function can be used when handling
+ * discont events. You can only call this function on an element with a clock in
+ * #GST_STATE_PAUSED or #GST_STATE_PLAYING. You might want to have a look at 
+ * gst_element_adjust_time(), if you want to adjust by a difference as that is
+ * more accurate.
+ */
+void
+gst_element_set_time (GstElement *element, GstClockTime time)
+{
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_IS_CLOCK (element->clock));
+  g_return_if_fail (element->current_state >= GST_STATE_PAUSED);
+
+  switch (element->current_state) {
+    case GST_STATE_PAUSED:
+      element->base_time = time;
+      break;
+    case GST_STATE_PLAYING:
+      element->base_time = gst_clock_get_time (element->clock) - time;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
+/**
+ * gst_element_adjust_time:
+ * @element: element to adjust time on
+ * @difference: difference to adjust
+ *
+ * Adjusts the current time of the element by the specified difference. This 
+ * function can be used when handling discont events. You can only call this 
+ * function on an element with a clock in #GST_STATE_PAUSED or 
+ * #GST_STATE_PLAYING. It is more accurate than gst_element_set_time().
+ */
+void
+gst_element_adjust_time (GstElement *element, GstClockTimeDiff diff)
+{
+  GstClockTime time;
+  
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_if_fail (GST_IS_CLOCK (element->clock));
+  g_return_if_fail (element->current_state >= GST_STATE_PAUSED);
+
+  switch (element->current_state) {
+    case GST_STATE_PAUSED:
+      if (diff < 0 && element->base_time < abs (diff)) {
+	g_warning ("attempted to set the current time of element %s below 0",
+	    GST_OBJECT_NAME (element));
+	element->base_time = 0;
+      } else {
+	element->base_time += diff;
+      }
+      break;
+    case GST_STATE_PLAYING:
+      time = gst_clock_get_time (element->clock);
+      if (time < element->base_time - diff) {
+	g_warning ("attempted to set the current time of element %s below 0",
+	    GST_OBJECT_NAME (element));
+	element->base_time = time;
+      } else {
+	element->base_time -= diff;
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
+#undef GST_CAT_DEFAULT
 
 #ifndef GST_DISABLE_INDEX
 /**
  * gst_element_is_indexable:
  * @element: a #GstElement.
  *
- * Queries if the element can be indexed/
+ * Queries if the element can be indexed.
  *
  * Returns: TRUE if the element can be indexed.
  */
@@ -1496,8 +1645,8 @@ gst_element_get_compatible_pad_filtered (GstElement *element, GstPad *pad,
     if (foundpad) return foundpad;
   //}
   
-  g_critical("Could not find a compatible pad on element %s to link to %s:%s",
-             GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));
+  GST_DEBUG_OBJECT (element, "Could not find a compatible pad to link to %s:%s",
+      GST_DEBUG_PAD_NAME (pad));
 
   return NULL;
 }
@@ -2581,19 +2730,34 @@ gst_element_change_state (GstElement *element)
 
   switch (old_transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
+      if (element->clock) {
+	GstClockTime time = gst_clock_get_event_time (element->clock);
+	g_assert (time >= element->base_time);
+	element->base_time = time - element->base_time;
+	GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "setting base time to %"
+	    G_GINT64_FORMAT, element->base_time);
+      }
       gst_element_pads_activate (element, FALSE);
       break;
     case GST_STATE_PAUSED_TO_PLAYING:
       gst_element_pads_activate (element, TRUE);
+      if (element->clock) {
+	GstClockTime time = gst_clock_get_event_time (element->clock);
+	element->base_time = time - element->base_time;
+	GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, element, "setting base time to %"
+	    G_GINT64_FORMAT, element->base_time);
+      }
       break;
     /* if we are going to paused, we try to negotiate the pads */
     case GST_STATE_READY_TO_PAUSED:
+      g_assert (element->base_time == 0);
       if (!gst_element_negotiate_pads (element)) 
         goto failure;
       break;
     /* going to the READY state clears all pad caps */
     /* FIXME: Why doesn't this happen on READY => NULL? -- Company */
     case GST_STATE_PAUSED_TO_READY:
+      element->base_time = 0;
       gst_element_clear_pad_caps (element);
       break;
     default:

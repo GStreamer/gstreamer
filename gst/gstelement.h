@@ -159,7 +159,7 @@ struct _GstElement {
 
   /* allocated clock */
   GstClock		*clock;
-  GstClockTime		 base_time;
+  GstClockTimeDiff    	base_time; /* NULL/READY: 0 - PAUSED: current time - PLAYING: difference to clock */
 
   /* element pads */
   guint16 		numpads;
@@ -275,8 +275,14 @@ gboolean		gst_element_requires_clock	(GstElement *element);
 gboolean		gst_element_provides_clock	(GstElement *element);
 GstClock*		gst_element_get_clock 		(GstElement *element);
 void			gst_element_set_clock 		(GstElement *element, GstClock *clock);
+#ifndef GST_DEISABLE_DEPRECATED
 GstClockReturn		gst_element_clock_wait 		(GstElement *element, 
 							 GstClockID id, GstClockTimeDiff *jitter);
+#endif
+GstClockTime		gst_element_get_time		(GstElement *element);
+gboolean		gst_element_wait		(GstElement *element, GstClockTime timestamp);
+void			gst_element_set_time		(GstElement *element, GstClockTime time);
+void			gst_element_adjust_time		(GstElement *element, GstClockTimeDiff diff);
  
 /* indexs */
 gboolean		gst_element_is_indexable	(GstElement *element);

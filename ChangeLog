@@ -1,3 +1,44 @@
+2004-01-13  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstclock.c: (gst_clock_class_init), (gst_clock_init),
+	(gst_clock_set_speed), (gst_clock_set_active),
+	(gst_clock_is_active), (gst_clock_reset),
+	(gst_clock_handle_discont):
+	* gst/gstclock.h:
+	  deprecate old interface and disable functions that aren't in use
+	  anymore.
+	* gst/gstelement.h:
+	* gst/gstelement.c: (gst_element_get_time), (gst_element_wait),
+	(gst_element_set_time), (gst_element_adjust_time):
+	  add concept of "element time" and functions to get/set this time.
+	* gst/gstelement.c: (gst_element_change_state):
+	  update element time correctly.
+	* gst/gstelement.c: (gst_element_get_compatible_pad_filtered):
+	  This is a debug message, not a g_critical.
+	* gst/gstpad.c: (gst_pad_event_default):
+	  handle discontinuous events right with element time.
+	* gst/gstscheduler.c: (gst_scheduler_state_transition):
+	  update to clocking fixes.
+	  set clocks on elements in READY=>PAUSED. The old behaviour caused
+	  a wrong element time on the first element that started playing.
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_class_init):
+	* gst/schedulers/gstoptimalscheduler.c:
+	(gst_opt_scheduler_class_init):
+	  remove code that just implements the default behaviour.
+	* gst/elements/gstfakesink.c: (gst_fakesink_chain):
+	  update to use new clocking functions
+	* testsuite/clock/clock1.c: (gst_clock_debug), (main):
+	* testsuite/clock/clock2.c: (gst_clock_debug), (main):
+	  update to test new element time.
+	* gst/autoplug/gstspideridentity.c: (gst_spider_identity_getcaps):
+	  use _get_allowed_caps instead of _get_caps. This catches filtered
+	  caps correctly.
+	* testsuite/debug/commandline.c:
+	  update for new GST_DEBUG syntax.
+	* testsuite/threads/Makefile.am:
+	  disable a test that only works sometimes.
+
 2004-01-13  Julien MOUTTE <julien@moutte.net>
 
 	* po/LINGUAS: Adding fr.

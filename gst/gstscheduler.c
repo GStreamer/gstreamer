@@ -303,38 +303,12 @@ gst_scheduler_state_transition (GstScheduler *sched, GstElement *element, gint t
       case GST_STATE_READY_TO_PAUSED:
       {
         GstClock *clock = gst_scheduler_get_clock (sched);
-
-        if (clock)
-          gst_clock_reset (clock);
-
         GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler READY to PAUSED clock is %p (%s)", clock, 
 			(clock ? GST_OBJECT_NAME (clock) : "nil"));
 
-        gst_object_replace ((GstObject **)&sched->current_clock, (GstObject *)clock);
-        break;
-      }
-      case GST_STATE_PAUSED_TO_PLAYING:
-      {
-        GstClock *clock = gst_scheduler_get_clock (sched);
-
-        GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler PAUSED to PLAYING clock is %p (%s)", clock, 
-			(clock ? GST_OBJECT_NAME (clock) : "nil"));
-
 	gst_scheduler_set_clock (sched, clock);
-        if (clock) {
-          GST_CAT_DEBUG (GST_CAT_CLOCK, "enabling clock %p (%s)", clock, 
-			GST_OBJECT_NAME (clock));
-          gst_clock_set_active (clock, TRUE);
-	}
         break;
       }
-      case GST_STATE_PLAYING_TO_PAUSED:
-        if (sched->current_clock) {
-          GST_CAT_DEBUG (GST_CAT_CLOCK, "disabling clock %p (%s)", sched->current_clock, 
-			GST_OBJECT_NAME (sched->current_clock));
-          gst_clock_set_active (sched->current_clock, FALSE);
-	}
-        break;
     }
   }
 
@@ -678,6 +652,8 @@ gst_scheduler_auto_clock (GstScheduler *sched)
   GST_CAT_DEBUG (GST_CAT_CLOCK, "scheduler using automatic clock");
 }
 
+GstClockReturn		gst_clock_id_wait		(GstClockID id, 
+							 GstClockTimeDiff *jitter);
 /**
  * gst_scheduler_clock_wait:
  * @sched: the scheduler

@@ -3445,7 +3445,7 @@ gst_pad_event_default (GstPad *pad, GstEvent *event)
 	      
       if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &time)) {
       	if (gst_element_requires_clock (element) && element->clock) {
-	  gst_clock_handle_discont (element->clock, time); 
+	  gst_element_set_time (element, time); 
   	}
       }
     }

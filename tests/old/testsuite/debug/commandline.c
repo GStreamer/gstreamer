@@ -30,8 +30,8 @@ static const gchar* lines[] = {
   "--gst-disable-debug",
   "--gst-debug-no-color",
   "--gst-debug-level=4",
-  "--gst-debug=cat=4:cat_*=3",
-  "--gst-debug-level=4 --gst-debug=cat_*=5"  
+  "--gst-debug=cat:4,cat_*:3",
+  "--gst-debug-level=4 --gst-debug=cat_*:5"  
 };
 
 static void
