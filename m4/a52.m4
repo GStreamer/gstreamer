@@ -95,8 +95,7 @@ main ()
 int 
 main ()
 {
-  a52_state_t *state;
-  int i = sizeof (state);
+  int i = sizeof (a52_state_t);
   if ( i )
     return 0;
 }
