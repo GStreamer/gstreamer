@@ -1,7 +1,7 @@
 <chapter id="cha-dynamic">
   <title>Dynamic pipelines</title>
   <para> 
-    this chapter we will see how you can create a dynamic pipleine. A dynamic
+    In this chapter we will see how you can create a dynamic pipeline. A dynamic
     pipeline is a pipeline that is updated or created while media is flowing 
     through it. We will create a partial pipeline first and add more elements
     while the pipeline is playing. Dynamic pipelines cause all sorts of
@@ -117,10 +117,11 @@ new_pad_created (GstElement *parse, GstPad *pad, GstElement *pipeline)
 
     // set up pad connections
     gst_element_add_ghost_pad (GST_ELEMENT (audio_thread),
-                               gst_element_get_pad (decode_audio, "sink"));
+                               gst_element_get_pad (decode_audio, "sink"),
+                               "sink");
     gst_element_connect (decode, play);
 
-    // construct queue and connect everything in the main pipelie
+    // construct queue and connect everything in the main pipeline
     audio_queue = gst_element_factory_make ("queue", "audio_queue");
 
     gst_bin_add_many (GST_BIN (pipeline), audio_queue, audio_thread, NULL);
