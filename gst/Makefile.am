@@ -46,7 +46,8 @@ libgst_la_SOURCES =	\
 	gstmeta.c	\
 	gsttee.c	\
 	gstxml.c	\
-	cothreads.c
+	cothreads.c	\
+	gstscheduler.c
 
 libgstincludedir = $(includedir)/gst
 libgstinclude_HEADERS =	\
@@ -78,7 +79,8 @@ libgstinclude_HEADERS =	\
 	gsttee.h	\
 	gstxml.h	\
 	gstdebug.h	\
-	cothreads.h
+	cothreads.h	\
+	gstscheduler.h
 
 noinst_HEADERS =	\
 	gstarch.h       \

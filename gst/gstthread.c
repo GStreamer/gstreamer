@@ -116,6 +116,8 @@ gst_thread_class_init (GstThreadClass *klass)
 static void 
 gst_thread_init (GstThread *thread) 
 {
+  DEBUG("initializing thread '%s'\n",gst_element_get_name(GST_ELEMENT(thread)));
+
   // we're a manager by default
   GST_FLAG_SET (thread, GST_BIN_FLAG_MANAGER);
 

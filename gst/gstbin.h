@@ -54,6 +54,7 @@ typedef enum {
 
 typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
+typedef struct __GstBinChain _GstBinChain;
 
 struct _GstBin {
   GstElement element;
@@ -66,12 +67,14 @@ struct _GstBin {
   gboolean need_cothreads;
   GList *managed_elements;
   gint num_managed_elements;
+
+  GList *chains;
+  gint num_chains;
   GList *entries;
   gint num_entries;
 
   cothread_context *threadcontext;
   gboolean use_cothreads;
-  GList *outside_schedules;
 };
 
 struct _GstBinClass {
@@ -87,10 +90,21 @@ struct _GstBinClass {
                                  	 GtkType type);
   /* create a plan for the execution of the bin */
   void 		(*create_plan) 		(GstBin *bin);
+  void 		(*schedule) 		(GstBin *bin);
   /* run a full iteration of operation */
   void		(*iterate) 		(GstBin *bin);
 };
 
+struct __GstBinChain {
+  GList *elements;
+  gint num_elements;
+
+  GList *entries;
+
+  gboolean use_cothreads;
+
+  GstElement *entry;
+};  
 
 
 GtkType 	gst_bin_get_type		(void);
@@ -109,6 +123,7 @@ GstElement*	gst_bin_get_by_name		(GstBin *bin,
 GList*		gst_bin_get_list		(GstBin *bin);
 
 void 		gst_bin_create_plan		(GstBin *bin);
+void 		gst_bin_schedule		(GstBin *bin);
 gboolean 	gst_bin_set_state_type		(GstBin *bin,
 						 GstElementState state,
 						 GtkType type);

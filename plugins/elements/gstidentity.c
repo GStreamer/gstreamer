@@ -134,6 +134,7 @@ gst_identity_loop (GstElement *element)
   
   do {
     buf = gst_pad_pull (identity->sinkpad);
+    g_print("(%s:%s)i ",GST_DEBUG_PAD_NAME(identity->sinkpad));
 
     gst_pad_push (identity->srcpad, buf);
 

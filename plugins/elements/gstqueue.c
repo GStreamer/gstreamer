@@ -49,6 +49,7 @@ enum {
   ARG_0,
   ARG_LEVEL,
   ARG_MAX_LEVEL,
+  ARG_BLOCK,
 };
 
 
@@ -106,6 +107,8 @@ gst_queue_class_init (GstQueueClass *klass)
                            GTK_ARG_READABLE, ARG_LEVEL);
   gtk_object_add_arg_type ("GstQueue::max_level", GTK_TYPE_INT,
                            GTK_ARG_READWRITE, ARG_MAX_LEVEL);
+  gtk_object_add_arg_type ("GstQueue::block", GTK_TYPE_BOOL,
+                           GTK_ARG_READWRITE, ARG_BLOCK);
 
   gtkobject_class->set_arg = gst_queue_set_arg;  
   gtkobject_class->get_arg = gst_queue_get_arg;
@@ -116,7 +119,8 @@ gst_queue_class_init (GstQueueClass *klass)
 static void 
 gst_queue_init (GstQueue *queue) 
 {
-  GST_FLAG_SET (queue, GST_ELEMENT_SCHEDULE_PASSIVELY);
+  // scheduling on this kind of element is, well, interesting
+  GST_FLAG_SET (queue, GST_ELEMENT_DECOUPLED);
 
   queue->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_chain_function (queue->sinkpad, GST_DEBUG_FUNCPTR(gst_queue_chain));
@@ -129,6 +133,7 @@ gst_queue_init (GstQueue *queue)
   queue->queue = NULL;
   queue->level_buffers = 0;
   queue->max_buffers = 20;
+  queue->block = TRUE;
   queue->level_bytes = 0;
   queue->size_buffers = 0;
   queue->size_bytes = 0;
@@ -237,6 +242,12 @@ gst_queue_get (GstPad *pad)
   DEBUG("queue: %s push %d %ld %p\n", name, queue->level_buffers, pthread_self (), queue->emptycond);
   DEBUG("queue: %s have queue lock\n", name);
 
+  // we bail if there's nothing there
+  if (!queue->level_buffers && !queue->block) {
+    GST_UNLOCK(queue);
+    return NULL;
+  }
+
   while (!queue->level_buffers) {
     STATUS("queue: %s U released lock\n");
     GST_UNLOCK (queue);
@@ -312,6 +323,9 @@ gst_queue_set_arg (GtkObject *object, GtkArg *arg, guint id)
     case ARG_MAX_LEVEL:
       queue->max_buffers = GTK_VALUE_INT (*arg);
       break;
+    case ARG_BLOCK:
+      queue->block = GTK_VALUE_BOOL (*arg);
+      break;
     default:
       break;
   }
@@ -333,6 +347,9 @@ gst_queue_get_arg (GtkObject *object, GtkArg *arg, guint id)
       break;
     case ARG_MAX_LEVEL:
       GTK_VALUE_INT (*arg) = queue->max_buffers;
+      break;
+    case ARG_BLOCK:
+      GTK_VALUE_BOOL (*arg) = queue->block;
       break;
     default:
       arg->type = GTK_TYPE_INVALID;

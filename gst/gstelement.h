@@ -85,8 +85,9 @@ static inline char *_gst_print_statename(int state) {
 typedef enum {
   // element is complex (for some def.) and generally require a cothread
   GST_ELEMENT_COMPLEX		= GST_OBJECT_FLAG_LAST,
-  // not to be scheduled directly, let others trigger all events
-  GST_ELEMENT_SCHEDULE_PASSIVELY,
+  // input and output pads aren't directly coupled to each other
+  // examples: queues, multi-output async readers, etc.
+  GST_ELEMENT_DECOUPLED,
   // this element should be placed in a thread if at all possible
   GST_ELEMENT_THREAD_SUGGESTED,
   // this element is incable of seeking (FIXME: does this apply to filters?)
@@ -96,6 +97,8 @@ typedef enum {
   GST_ELEMENT_NEW_LOOPFUNC,
   // the cothread holding this element needs to be stopped
   GST_ELEMENT_COTHREAD_STOPPING,
+  // the element has to be scheduled as a cothread for any sanity
+  GST_ELEMENT_USE_COTHREAD,
 
   /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 8,

@@ -101,6 +101,7 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
   (_debug_string != NULL) ? \
     fprintf(stderr,GST_DEBUG_PREFIX("%s: "format , _debug_string , ## args )) : \
     fprintf(stderr,GST_DEBUG_PREFIX(": "format , ## args ))
+#define DEBUG_NOPREFIX(format,args...) fprintf(stderr,format , ## args )
 #define DEBUG_ENTER(format, args...) \
   fprintf(stderr,GST_DEBUG_PREFIX(format": entering\n" , ## args ))
 #define DEBUG_SET_STRING(format, args...) \
@@ -112,6 +113,7 @@ G_GNUC_UNUSED static GModule *_debug_self_module = NULL;
 #define DEBUG_LEAVE_STRING DEBUG_LEAVE("%s",_debug_string)
 #else
 #define DEBUG(format, args...)
+#define DEBUG_NOPREFIX(format, args...)
 #define DEBUG_ENTER(format, args...)
 #define DEBUG_LEAVE(format, args...)
 #define DEBUG_SET_STRING(format, args...)
