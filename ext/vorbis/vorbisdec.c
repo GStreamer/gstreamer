@@ -64,7 +64,8 @@ vorbisdec_get_type (void)
 
   if (!vorbisdec_type) {
     static const GTypeInfo vorbisdec_info = {
-      sizeof (VorbisDecClass), NULL,
+      sizeof (VorbisDecClass), 
+      NULL,
       NULL,
       (GClassInitFunc) gst_vorbisdec_class_init,
       NULL,
@@ -112,9 +113,6 @@ gst_vorbisdec_pull (VorbisDec * vorbisdec, ogg_sync_state * oy)
     GST_DEBUG (0, "vorbisdec: pull \n");
 
     buf = gst_pad_pull (vorbisdec->sinkpad);
-
-    /* this is fatal */
-    g_assert (buf != NULL);
 
     if (GST_IS_EVENT (buf)) {
       switch (GST_EVENT_TYPE (buf)) {
@@ -173,11 +171,7 @@ gst_vorbisdec_loop (GstElement * element)
        stream initial header) We need the first page to get the stream
        serialno. */
 
-    /* FIXME HACK! trap COTHREAD_STOPPING here */
-    if (GST_ELEMENT_IS_COTHREAD_STOPPING (vorbisdec)) {
-      GST_DEBUG (0, "HACK HACK HACK, switching to cothread zero on COTHREAD_STOPPING\n");
-      cothread_switch (cothread_current_main ());
-    }
+    gst_element_yield (GST_ELEMENT (vorbisdec));
 
     /* submit a 4k block to libvorbis' Ogg layer */
     buf = gst_vorbisdec_pull (vorbisdec, &oy);
@@ -193,7 +187,7 @@ gst_vorbisdec_loop (GstElement * element)
     if (ogg_sync_pageout (&oy, &og) != 1) {
       /* error case.  Must not be Vorbis data */
       gst_element_error (element, "input does not appear to be an Ogg bitstream.");
-      return;
+      break;
     }
 
     /* Get the serial number and set up the rest of decode. */
@@ -265,14 +259,7 @@ gst_vorbisdec_loop (GstElement * element)
 	  }
 	}
       }
-      /* no harm in not checkiindent: Standard input:375: Warning:old style assignment ambiguity in "=-".  Assuming "= -"
-
-ng before adding more */
-      /* FIXME HACK! trap COTHREAD_STOPPING here */
-      if (GST_ELEMENT_IS_COTHREAD_STOPPING (vorbisdec)) {
-	GST_DEBUG (0, "HACK HACK HACK, switching to cothread zero on COTHREAD_STOPPING\n");
-	cothread_switch (cothread_current_main ());
-      }
+      gst_element_yield (GST_ELEMENT (vorbisdec));
 
       buf = gst_vorbisdec_pull (vorbisdec, &oy);
       bytes = GST_BUFFER_SIZE (buf);
@@ -420,12 +407,7 @@ ng before adding more */
 	}
       }
       if (!eos) {
-
-	/* FIXME HACK! trap COTHREAD_STOPPING here */
-	if (GST_ELEMENT_IS_COTHREAD_STOPPING (vorbisdec)) {
-	  GST_DEBUG (0, "HACK HACK HACK, switching to cothread zero on COTHREAD_STOPPING\n");
-	  cothread_switch (cothread_current_main ());
-	}
+        gst_element_yield (GST_ELEMENT (vorbisdec));
 
 	buf = gst_vorbisdec_pull (vorbisdec, &oy);
 	bytes = GST_BUFFER_SIZE (buf);

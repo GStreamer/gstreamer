@@ -74,7 +74,8 @@ vorbisenc_get_type (void)
 
   if (!vorbisenc_type) {
     static const GTypeInfo vorbisenc_info = {
-      sizeof (VorbisEncClass), NULL,
+      sizeof (VorbisEncClass), 
+      NULL,
       NULL,
       (GClassInitFunc) gst_vorbisenc_class_init,
       NULL,
@@ -163,7 +164,7 @@ gst_vorbisenc_setup (VorbisEnc * vorbisenc)
 
   /* add a comment */
   vorbis_comment_init (&vorbisenc->vc);
-  vorbis_comment_add (&vorbisenc->vc, comment);
+  vorbis_comment_add (&vorbisenc->vc, (gchar *)comment);
   gst_element_send_event (GST_ELEMENT (vorbisenc),
              gst_event_new_info ("comment", GST_PROPS_STRING (comment), NULL));
 
