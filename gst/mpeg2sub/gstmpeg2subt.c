@@ -112,6 +112,13 @@ enum
   SPU_END = 0xff
 };
 
+static guint32 default_clut[16] = {
+  0xb48080, 0x248080, 0x628080, 0xd78080,
+  0x808080, 0x808080, 0x808080, 0x808080,
+  0x808080, 0x808080, 0x808080, 0x808080,
+  0x808080, 0x808080, 0x808080, 0x808080
+};
+
 typedef struct RLE_state
 {
   gint id;
@@ -233,11 +240,12 @@ gst_mpeg2subt_init (GstMpeg2Subt * mpeg2subt)
   mpeg2subt->start_display_time = GST_CLOCK_TIME_NONE;
   mpeg2subt->end_display_time = GST_CLOCK_TIME_NONE;
   mpeg2subt->forced_display = FALSE;
-  memset (mpeg2subt->current_clut, 0, 16 * sizeof (guint32));
-  memset (mpeg2subt->subtitle_index, 0, sizeof (mpeg2subt->subtitle_index));
-  memset (mpeg2subt->menu_index, 0, sizeof (mpeg2subt->menu_index));
-  memset (mpeg2subt->subtitle_alpha, 0, sizeof (mpeg2subt->subtitle_alpha));
-  memset (mpeg2subt->menu_alpha, 0, sizeof (mpeg2subt->menu_alpha));
+
+  memcpy (mpeg2subt->current_clut, default_clut, sizeof (guint32) * 16);
+  gst_setup_palette (mpeg2subt, mpeg2subt->menu_index, mpeg2subt->menu_alpha);
+  gst_setup_palette (mpeg2subt, mpeg2subt->subtitle_index,
+      mpeg2subt->subtitle_alpha);
+
   memset (mpeg2subt->out_buffers, 0, sizeof (mpeg2subt->out_buffers));
   mpeg2subt->pending_video_buffer = NULL;
   mpeg2subt->next_video_time = GST_CLOCK_TIME_NONE;

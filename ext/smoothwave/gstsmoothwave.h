@@ -26,8 +26,9 @@
 #include <gst/bytestream/adapter.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+extern "C"
+{
+#endif                          /* __cplusplus */
 
 #define GST_TYPE_SMOOTHWAVE \
   (gst_smoothwave_get_type())
@@ -40,36 +41,38 @@ extern "C" {
 #define GST_IS_SMOOTHWAVE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SMOOTHWAVE))
 
-typedef struct _GstSmoothWave GstSmoothWave;
-typedef struct _GstSmoothWaveClass GstSmoothWaveClass;
+  typedef struct _GstSmoothWave GstSmoothWave;
+  typedef struct _GstSmoothWaveClass GstSmoothWaveClass;
 
-struct _GstSmoothWave {
-  GstElement element;
+  struct _GstSmoothWave
+  {
+    GstElement element;
 
-  GstPad *sinkpad,*srcpad;
-  GstAdapter *adapter;
+    GstPad *sinkpad, *srcpad;
+    GstAdapter *adapter;
 
-  guchar *imagebuffer;
-  GstClockTime audio_basetime;
-  guint64 samples_consumed;
+    guchar *imagebuffer;
+    GstClockTime audio_basetime;
+    guint64 samples_consumed;
 
-  gint    sample_rate;
-  gint    width,height;
-  gdouble fps;
-  gint    channels;
-  guint32 palette[256];
-};
+    gint sample_rate;
+    gint width, height;
+    gdouble fps;
+    gint channels;
+    guint32 palette[256];
+  };
 
-struct _GstSmoothWaveClass {
-  GstElementClass parent_class;
-};
+  struct _GstSmoothWaveClass
+  {
+    GstElementClass parent_class;
+  };
 
-GType gst_smoothwave_get_type(void);
+  GType gst_smoothwave_get_type (void);
 
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif                          /* __cplusplus */
 
 
-#endif /* __GST_SMOOTHWAVE_H__ */
+#endif                          /* __GST_SMOOTHWAVE_H__ */
