@@ -1,3 +1,9 @@
+2004-04-20  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/filtercaps.c: (main):
+	  add test (that doesn't work right now, but should)
+
 2004-04-19  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Add test for allowing unaligned access.  Add define
