@@ -151,6 +151,23 @@ print_formats (const GstFormat *formats)
 }
 
 static void 
+print_query_types (const GstQueryType *types) 
+{
+  while (types && *types) {
+    const GstQueryTypeDefinition *definition;
+
+    definition = gst_query_type_get_details (*types);
+    if (definition)
+      g_print ("\t\t(%d):\t%s (%s)\n", *types,
+	       definition->nick, definition->description);
+    else
+      g_print ("\t\t(%d):\tUnknown query format\n", *types);
+
+    types++;
+  }
+}
+
+static void 
 print_event_masks (const GstEventMask *masks) 
 {
   GType event_type;
@@ -197,26 +214,6 @@ print_event_masks (const GstEventMask *masks)
     masks++;
   }
 }
-
-static void 
-print_query_types (const GstQueryType *types) 
-{
-  GType query_type;
-  GEnumClass *klass;
-
-  query_type = gst_query_type_get_type();
-  klass = (GEnumClass *) g_type_class_ref (query_type);
-
-  while (types && *types) {
-    GEnumValue *value;
-    
-    value = g_enum_get_value (klass, *types);
-    
-    g_print ("\t\t(%d):\t%s (%s)\n", value->value, value->value_nick, value->value_name);
-    types++;
-  }
-}
-
 
 static void
 output_hierarchy (GType type, gint level, gint *maxlevel)

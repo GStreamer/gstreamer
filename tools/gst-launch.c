@@ -204,10 +204,10 @@ main(int argc, char *argv[])
 
   free (malloc (8)); /* -lefence */
 
+  gst_init_with_popt_table (&argc, &argv, options);
+
   if (!no_fault)
     fault_setup();
-
-  gst_init_with_popt_table (&argc, &argv, options);
   
   /* make a null-terminated version of argv */
   argvn = g_new0 (char*, argc);
