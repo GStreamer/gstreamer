@@ -2794,14 +2794,26 @@ gst_element_set_loop_function (GstElement *element,
 void
 gst_element_set_eos (GstElement *element)
 {
+  GstElement *parent;
+  GstElementState parent_state;
+ 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   GST_DEBUG (GST_CAT_EVENT, "setting EOS on element %s", 
              GST_OBJECT_NAME (element));
 
+  parent = GST_ELEMENT (GST_OBJECT_PARENT (element));
+  if (parent)
+    parent_state = GST_STATE (parent);
+
   gst_element_set_state (element, GST_STATE_PAUSED);
 
   g_signal_emit (G_OBJECT (element), gst_element_signals[EOS], 0);
+
+  if (parent && parent_state == GST_STATE_PLAYING && 
+      GST_STATE (parent) == GST_STATE_PAUSED) {
+    gst_element_set_eos (parent);
+  }
 }
 
 
