@@ -18,7 +18,6 @@
  */
 
 #include "gstmikmod.h"
-#include "mikmod_types.h"
 
 #include <gst/audio/audio.h>
 #include <stdlib.h>
@@ -109,59 +108,6 @@ mikmod_sink_factory (void)
   return template;
 }
 
-static GstCaps* 
-mikmod_type_find (GstBuffer *buf, gpointer private) 
-{  
-  if ( MOD_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( Mod_669_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( Amf_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( Dsm_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( Fam_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( Gdm_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( Imf_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( It_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( M15_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  /* FIXME
-  if ( Med_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-    */
-  
-  if ( Mtm_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( Okt_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( S3m_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  if ( Xm_CheckType( buf ) )
-    return gst_caps_new ("mikmod_type_find", "audio/mod", NULL);
-  
-  return NULL;
-}
-
-static GstTypeDefinition mikmoddefinition = {
-  "mikmod_audio/mod", "audio/mod", ".mod .sam .med .s3m .it .xm .stm .mtm .669 .ult .far .amf  .dsm .imf .gdm .stx .okt", mikmod_type_find 
-};
 
 static void		gst_mikmod_class_init		(GstMikModClass *klass);
 static void		gst_mikmod_init			(GstMikMod *filter);
@@ -544,7 +490,6 @@ gst_mikmod_set_property (GObject *object, guint id, const GValue *value, GParamS
       filter->stereo = g_value_get_boolean (value);
       break;
     default:
-/*      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec); */
       break;
   }
 }
@@ -602,7 +547,6 @@ gst_mikmod_get_property (GObject *object, guint id, GValue *value, GParamSpec *p
       g_value_set_boolean (value, filter->stereo);
       break;
     default:
-/*      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec); */
       break;
   }
 }
@@ -611,7 +555,6 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
-  GstTypeFactory    *type;  
 	
   factory = gst_element_factory_new("mikmod",GST_TYPE_MIKMOD,
                                    &mikmod_details);
@@ -621,8 +564,6 @@ plugin_init (GModule *module, GstPlugin *plugin)
   gst_element_factory_add_pad_template (factory, mikmod_src_factory ());
   gst_element_factory_add_pad_template (factory, mikmod_sink_factory ());
 
-  type = gst_type_factory_new (&mikmoddefinition);
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));	
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));	
 
   return TRUE;
