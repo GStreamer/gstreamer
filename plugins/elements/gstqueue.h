@@ -67,8 +67,6 @@ struct _GstQueue {
   /* the queue of data we're keeping our grubby hands on */
   GQueue *queue;
 
-  GstTask *task;
-
   GstQueueSize
     cur_level,		/* currently in the queue */
     max_size,		/* max. amount of data allowed in the queue */

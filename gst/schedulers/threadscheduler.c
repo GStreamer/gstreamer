@@ -143,6 +143,8 @@ gst_thread_scheduler_task_start (GstTask * task)
       GST_THREAD_SCHEDULER (GST_OBJECT_PARENT (GST_OBJECT (task)));
   GstTaskState old;
 
+  GST_DEBUG_OBJECT (task, "Starting task %p", task);
+
   GST_LOCK (ttask);
   old = GST_TASK_CAST (ttask)->state;
   GST_TASK_CAST (ttask)->state = GST_TASK_STARTED;
@@ -166,6 +168,8 @@ gst_thread_scheduler_task_stop (GstTask * task)
 {
   GstThreadSchedulerTask *ttask = GST_THREAD_SCHEDULER_TASK (task);
   GstTaskState old;
+
+  GST_DEBUG_OBJECT (task, "Stopping task %p", task);
 
   GST_LOCK (ttask);
   old = GST_TASK_CAST (ttask)->state;
@@ -191,6 +195,8 @@ gst_thread_scheduler_task_pause (GstTask * task)
   GstThreadScheduler *tsched =
       GST_THREAD_SCHEDULER (GST_OBJECT_PARENT (GST_OBJECT (task)));
   GstTaskState old;
+
+  GST_DEBUG_OBJECT (task, "Pausing task %p", task);
 
   GST_LOCK (ttask);
   old = GST_TASK_CAST (ttask)->state;

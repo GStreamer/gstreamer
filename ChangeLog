@@ -1,3 +1,33 @@
+2005-01-11  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* gst/gstbus.c: (gst_bus_init), (gst_bus_dispose):
+	* gst/gstevent.c: (_gst_event_copy),
+	(gst_event_new_discontinuous_valist),
+	(gst_event_discont_get_value):
+	* gst/gstpipeline.c: (is_eos), (pipeline_bus_handler),
+	(gst_pipeline_change_state):
+	* gst/gstplugin.c: (gst_plugin_load):
+	* gst/gstqueue.c: (gst_queue_init), (gst_queue_getcaps),
+	(gst_queue_bufferalloc), (gst_queue_handle_sink_event),
+	(gst_queue_chain), (gst_queue_loop), (gst_queue_handle_src_event),
+	(gst_queue_src_activate):
+	* gst/gstqueue.h:
+	* gst/gstsystemclock.c: (gst_system_clock_init),
+	(gst_system_clock_async_thread), (gst_system_clock_id_wait),
+	(gst_system_clock_id_wait_async), (gst_system_clock_id_unschedule):
+	* gst/gstutils.c: (gst_element_finish_preroll),
+	(gst_element_get_compatible_pad_filtered),
+	(gst_element_link_pads_filtered), (gst_element_link_many),
+	(gst_element_unlink):
+	* gst/schedulers/threadscheduler.c:
+	(gst_thread_scheduler_task_start),
+	(gst_thread_scheduler_task_stop),
+	(gst_thread_scheduler_task_pause), (gst_thread_scheduler_func):
+	Bus cleanups.
+	Backport some HEAD changes.
+	Queue cleanup
+
 2005-01-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelement.c: (gst_element_add_pad),

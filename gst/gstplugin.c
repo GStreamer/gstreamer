@@ -856,8 +856,8 @@ gst_plugin_load (const gchar * name)
 
   plugin = gst_registry_pool_find_plugin (name);
   if (plugin) {
-    gst_plugin_load_file (plugin->filename, &error);
-    if (error) {
+    plugin = gst_plugin_load_file (plugin->filename, &error);
+    if (!plugin) {
       GST_WARNING ("load_plugin error: %s\n", error->message);
       g_error_free (error);
       return FALSE;

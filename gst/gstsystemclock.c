@@ -316,7 +316,7 @@ gst_system_clock_id_wait (GstClock * clock, GstClockEntry * entry)
   current = gst_clock_get_time (clock);
   diff = GST_CLOCK_ENTRY_TIME (entry) - current;
 
-  target = GST_CLOCK_ENTRY_TIME (entry);
+  target = gst_system_clock_get_internal_time (clock) + diff;
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p real_target %" GST_TIME_FORMAT
       " target %" GST_TIME_FORMAT

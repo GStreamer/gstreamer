@@ -95,10 +95,18 @@ gst_bus_init (GstBus * bus)
 {
   bus->queue = g_async_queue_new ();
 
-  if (socketpair (PF_UNIX, SOCK_STREAM, 0, bus->control_socket) < 0) {
+  if (socketpair (PF_UNIX, SOCK_STREAM, 0, bus->control_socket) < 0)
+    goto no_socketpair;
+
+  bus->io_channel = g_io_channel_unix_new (bus->control_socket[0]);
+
+  return;
+
+  /* errors */
+no_socketpair:
+  {
     g_warning ("cannot create io channel");
-  } else {
-    bus->io_channel = g_io_channel_unix_new (bus->control_socket[0]);
+    bus->io_channel = NULL;
   }
 }
 
@@ -108,6 +116,16 @@ gst_bus_dispose (GObject * object)
   GstBus *bus;
 
   bus = GST_BUS (object);
+
+  if (bus->io_channel) {
+    g_io_channel_shutdown (bus->io_channel, TRUE, NULL);
+    g_io_channel_unref (bus->io_channel);
+    bus->io_channel = NULL;
+  }
+  close (bus->control_socket[0]);
+  close (bus->control_socket[1]);
+
+  g_async_queue_unref (bus->queue);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

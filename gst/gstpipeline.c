@@ -296,8 +296,9 @@ gst_pipeline_change_state (GstElement * element)
         pipeline->start_time = gst_clock_get_time (element->clock);     // + 10*GST_MSECOND;
         element->base_time = pipeline->start_time - pipeline->stream_time;
       }
-      GST_DEBUG ("stream_time=%" G_GUINT64_FORMAT ", start_time=%"
-          G_GUINT64_FORMAT, pipeline->stream_time, pipeline->start_time);
+      GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
+          GST_TIME_FORMAT, GST_TIME_ARGS (pipeline->stream_time),
+          GST_TIME_ARGS (pipeline->start_time));
       break;
     case GST_STATE_PLAYING_TO_PAUSED:
     case GST_STATE_PAUSED_TO_READY:
@@ -318,8 +319,9 @@ gst_pipeline_change_state (GstElement * element)
         pipeline->stream_time = gst_clock_get_time (element->clock) -
             element->base_time;
       }
-      GST_DEBUG ("stream_time=%" G_GUINT64_FORMAT ", start_time=%"
-          G_GUINT64_FORMAT, pipeline->stream_time, pipeline->start_time);
+      GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
+          GST_TIME_FORMAT, GST_TIME_ARGS (pipeline->stream_time),
+          GST_TIME_ARGS (pipeline->start_time));
       break;
     case GST_STATE_PAUSED_TO_READY:
       break;

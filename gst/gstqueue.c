@@ -2,6 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2003 Colin Walters <cwalters@gnome.org>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstqueue.c:
  *
@@ -328,7 +329,7 @@ gst_queue_init (GstQueue * queue)
   queue->cur_level.buffers = 0; /* no content */
   queue->cur_level.bytes = 0;   /* no content */
   queue->cur_level.time = 0;    /* no content */
-  queue->max_size.buffers = 100;        /* 100 buffers */
+  queue->max_size.buffers = 200;        /* 200 buffers */
   queue->max_size.bytes = 10 * 1024 * 1024;     /* 10 MB */
   queue->max_size.time = GST_SECOND;    /* 1 s. */
   queue->min_threshold.buffers = 0;     /* no threshold */
@@ -381,7 +382,7 @@ gst_queue_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstCaps *result;
 
-  queue = GST_QUEUE (gst_object_get_parent (GST_OBJECT (pad)));
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
   result = gst_pad_peer_get_caps (otherpad);
@@ -476,14 +477,33 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
-  GST_QUEUE_MUTEX_LOCK;
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH:
       STATUS (queue, "received flush event");
-      gst_queue_locked_flush (queue);
-      STATUS (queue, "after flush");
-      break;
+      /* forward event */
+      gst_pad_event_default (pad, event);
+      if (GST_EVENT_FLUSH_DONE (event)) {
+        GST_STREAM_LOCK (queue->srcpad);
+        gst_task_start (GST_RPAD_TASK (queue->srcpad));
+        GST_STREAM_UNLOCK (queue->srcpad);
+      } else {
+        /* now unblock the chain function */
+        GST_QUEUE_MUTEX_LOCK;
+        gst_queue_locked_flush (queue);
+        GST_QUEUE_MUTEX_UNLOCK;
+
+        STATUS (queue, "after flush");
+
+        /* unblock the loop function */
+        g_cond_signal (queue->item_add);
+
+        /* make sure it stops */
+        GST_STREAM_LOCK (queue->srcpad);
+        gst_task_pause (GST_RPAD_TASK (queue->srcpad));
+        GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
+        GST_STREAM_UNLOCK (queue->srcpad);
+      }
+      goto done;
     case GST_EVENT_EOS:
       STATUS (queue, "received EOS");
       break;
@@ -494,9 +514,12 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  GST_QUEUE_MUTEX_LOCK;
   g_queue_push_tail (queue->queue, event);
   g_cond_signal (queue->item_add);
+
   GST_QUEUE_MUTEX_UNLOCK;
+done:
 
   return TRUE;
 }
@@ -532,6 +555,8 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
+  GST_STREAM_LOCK (pad);
+
   /* we have to lock the queue since we span threads */
   GST_QUEUE_MUTEX_LOCK;
 
@@ -541,7 +566,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   /* We make space available if we're "full" according to whatever
    * the user defined as "full". Note that this only applies to buffers.
    * We always handle events and they don't count in our statistics. */
-  if (gst_queue_is_filled (queue)) {
+  while (gst_queue_is_filled (queue)) {
     GST_QUEUE_MUTEX_UNLOCK;
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_OVERRUN], 0);
     GST_QUEUE_MUTEX_LOCK;
@@ -553,7 +578,6 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue is full, leaking buffer on upstream end");
         /* now we can clean up and exit right away */
-        GST_QUEUE_MUTEX_UNLOCK;
         goto out_unref;
 
         /* leak first buffer in the queue */
@@ -608,6 +632,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         while (gst_queue_is_filled (queue)) {
           STATUS (queue, "waiting for item_del signal from thread using qlock");
           g_cond_wait (queue->item_del, queue->qlock);
+
           /* if there's a pending state change for this queue
            * or its manager, switch back to iterator so bottom
            * half of state change executes */
@@ -621,6 +646,9 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         break;
     }
   }
+  /* we are flushing */
+  if (GST_RPAD_IS_FLUSHING (pad))
+    goto out_flushing;
 
   g_queue_push_tail (queue->queue, buffer);
 
@@ -635,13 +663,27 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_add");
   g_cond_signal (queue->item_add);
   GST_QUEUE_MUTEX_UNLOCK;
+  GST_STREAM_UNLOCK (pad);
 
   return GST_FLOW_OK;
 
 out_unref:
+  GST_QUEUE_MUTEX_UNLOCK;
+  GST_STREAM_UNLOCK (pad);
+
   gst_buffer_unref (buffer);
 
   return GST_FLOW_OK;
+
+out_flushing:
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because of flush");
+  GST_QUEUE_MUTEX_UNLOCK;
+  gst_task_pause (GST_RPAD_TASK (queue->srcpad));
+  GST_STREAM_UNLOCK (pad);
+
+  gst_buffer_unref (buffer);
+
+  return GST_FLOW_UNEXPECTED;
 }
 
 static void
@@ -649,15 +691,17 @@ gst_queue_loop (GstPad * pad)
 {
   GstQueue *queue;
   GstData *data;
-  gboolean result = TRUE;
+  gboolean restart = TRUE;
 
   queue = GST_QUEUE (GST_PAD_PARENT (pad));
+
+  GST_STREAM_LOCK (pad);
 
   /* have to lock for thread-safety */
   GST_QUEUE_MUTEX_LOCK;
 
 restart:
-  if (gst_queue_is_empty (queue)) {
+  while (gst_queue_is_empty (queue)) {
     GST_QUEUE_MUTEX_UNLOCK;
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_UNDERRUN], 0);
     GST_QUEUE_MUTEX_LOCK;
@@ -666,9 +710,18 @@ restart:
     while (gst_queue_is_empty (queue)) {
       STATUS (queue, "waiting for item_add");
 
+      /* we are flushing */
+      if (GST_RPAD_IS_FLUSHING (queue->sinkpad))
+        goto out_flushing;
+
       GST_LOG_OBJECT (queue, "doing g_cond_wait using qlock from thread %p",
           g_thread_self ());
       g_cond_wait (queue->item_add, queue->qlock);
+
+      /* we got unlocked because we are flushing */
+      if (GST_RPAD_IS_FLUSHING (queue->sinkpad))
+        goto out_flushing;
+
       GST_LOG_OBJECT (queue, "done g_cond_wait using qlock from thread %p",
           g_thread_self ());
       STATUS (queue, "got item_add signal");
@@ -686,6 +739,8 @@ restart:
       "retrieved data %p from queue", data);
 
   if (GST_IS_BUFFER (data)) {
+    GstFlowReturn result;
+
     /* Update statistics */
     queue->cur_level.buffers--;
     queue->cur_level.bytes -= GST_BUFFER_SIZE (data);
@@ -693,17 +748,20 @@ restart:
       queue->cur_level.time -= GST_BUFFER_DURATION (data);
 
     GST_QUEUE_MUTEX_UNLOCK;
-    gst_pad_push (pad, GST_BUFFER (data));
+    result = gst_pad_push (pad, GST_BUFFER (data));
     GST_QUEUE_MUTEX_LOCK;
+    if (result != GST_FLOW_OK) {
+      gst_task_pause (GST_RPAD_TASK (queue->srcpad));
+    }
   } else {
     if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
-      gst_task_pause (queue->task);
-      result = FALSE;
+      gst_task_pause (GST_RPAD_TASK (queue->srcpad));
+      restart = FALSE;
     }
     GST_QUEUE_MUTEX_UNLOCK;
     gst_pad_push_event (queue->srcpad, GST_EVENT (data));
     GST_QUEUE_MUTEX_LOCK;
-    if (result == TRUE)
+    if (restart == TRUE)
       goto restart;
   }
 
@@ -712,13 +770,22 @@ restart:
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "signalling item_del");
   g_cond_signal (queue->item_del);
   GST_QUEUE_MUTEX_UNLOCK;
+  GST_STREAM_UNLOCK (pad);
+  return;
+
+out_flushing:
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because of flush");
+  gst_task_pause (GST_RPAD_TASK (pad));
+  GST_QUEUE_MUTEX_UNLOCK;
+  GST_STREAM_UNLOCK (pad);
+  return;
 }
 
 
 static gboolean
 gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 {
-  GstQueue *queue = GST_QUEUE (gst_object_get_parent (GST_OBJECT (pad)));
+  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
   gboolean res = TRUE;
 
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
@@ -729,11 +796,6 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
   GST_QUEUE_MUTEX_LOCK;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH:
-      GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
-          "FLUSH event, flushing queue\n");
-      gst_queue_locked_flush (queue);
-      break;
     case GST_EVENT_SEEK:
       if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
         gst_queue_locked_flush (queue);
@@ -788,11 +850,11 @@ gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
     /* if we have a scheduler we can start the task */
     if (GST_ELEMENT_SCHEDULER (queue)) {
       GST_STREAM_LOCK (pad);
-      queue->task =
+      GST_RPAD_TASK (pad) =
           gst_scheduler_create_task (GST_ELEMENT_SCHEDULER (queue),
           (GstTaskFunction) gst_queue_loop, pad);
 
-      gst_task_start (queue->task);
+      gst_task_start (GST_RPAD_TASK (pad));
       GST_STREAM_UNLOCK (pad);
       result = TRUE;
     }
@@ -805,8 +867,8 @@ gst_queue_src_activate (GstPad * pad, GstActivateMode mode)
     /* step 2, make sure streaming finishes */
     GST_STREAM_LOCK (pad);
     /* step 3, stop the task */
-    gst_task_stop (queue->task);
-    gst_object_unref (GST_OBJECT (queue->task));
+    gst_task_stop (GST_RPAD_TASK (pad));
+    gst_object_unref (GST_OBJECT (GST_RPAD_TASK (pad)));
     GST_STREAM_UNLOCK (pad);
 
     result = TRUE;
