@@ -1,3 +1,9 @@
+2004-12-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_add_element):
+	Revert patch 1.38 as clock distribution over schedulers does
+	not work correcly in the core yet.
+
 2004-12-21  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
 	* sys/oss/README: remove this file, which predates my birth
