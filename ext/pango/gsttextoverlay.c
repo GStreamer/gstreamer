@@ -627,7 +627,7 @@ gst_textoverlay_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "textoverlay", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "textoverlay", GST_RANK_NONE,
           GST_TYPE_TEXTOVERLAY))
     return FALSE;
 

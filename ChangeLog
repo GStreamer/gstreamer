@@ -1,5 +1,13 @@
 2004-03-29  David Schleef  <ds@schleef.org>
 
+	* ext/hermes/gsthermescolorspace.c: (plugin_init): decrease rank
+	by 2 to not interfere with other colorspaces.
+	* ext/pango/gsttextoverlay.c: (plugin_init): change rank to NONE
+	* gst/colorspace/gstcolorspace.c: (plugin_init): decrease rank by
+	one to not interfere with ffmpeg_colorspace.
+
+2004-03-29  David Schleef  <ds@schleef.org>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_fixate): Don't fixate fields that
 	aren't in the caps.
 	* gst/sine/gstsinesrc.c: change rate caps to [1,MAX]
