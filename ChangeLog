@@ -1,3 +1,19 @@
+2004-06-10  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_init),
+	(gst_asf_demux_loop), (gst_asf_demux_process_file),
+	(gst_asf_demux_process_data), (gst_asf_demux_handle_data),
+	(gst_asf_demux_process_object), (gst_asf_demux_get_stream),
+	(gst_asf_demux_process_chunk), (gst_asf_demux_handle_sink_event),
+	(gst_asf_demux_handle_src_event), (gst_asf_demux_handle_src_query),
+	(gst_asf_demux_change_state):
+	* gst/asfdemux/gstasfdemux.h:
+	  You know Chimaira? "I - HATE - EVERYTHING". Yeah, that's what this
+	  feels like. I think we should set a new requirement for demuxers
+	  from now on to implement sane loop functions, data loops, query
+	  and seek functions before first commit into CVS. And this commit
+	  fixes all of the above.
+
 2004-06-10  Christophe Fergeau  <teuf@gnome.org>
 
 	* gst/tags/gstvorbistag.c: (gst_vorbis_tag_add): make sure parsed 
