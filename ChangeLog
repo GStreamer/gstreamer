@@ -1,3 +1,13 @@
+2004-01-02  David Schleef  <ds@schleef.org>
+
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_base_class_init): ->padtemplates should be cleared
+	in base_init, since we need to have a fresh list for every
+	class.  (Alternately, we chould copy the list and share the
+	actual pad templates (not the list), but that would require
+	changing every plugin to move pad template registration from
+	base_init to class_init.)
+
 2004-01-03  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/gstelement.c: (gst_element_class_add_pad_template):
