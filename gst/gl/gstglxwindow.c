@@ -1,5 +1,9 @@
 /* This stores the common OpenGL initialization stuff for all instances */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* gcc -ansi -pedantic on GNU/Linux causes warnings and errors
  * unless this is defined:
  * warning: #warning "Files using this header must be compiled with _SVID_SOURCE or _XOPEN_SOURCE"

@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 
 /* gcc -ansi -pedantic on GNU/Linux causes warnings and errors

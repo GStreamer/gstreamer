@@ -1,5 +1,10 @@
 // these includes don't do a lot in Linux, they are more needed in Win32 (for the OpenGL function call pointers)
 // but they are used at least for checking if the necessary extensions are present
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "ARB_multitexture.h"
 #include "NV_register_combiners.h"
 #include "EXT_paletted_texture.h"
