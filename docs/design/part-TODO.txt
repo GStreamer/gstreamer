@@ -1,0 +1,12 @@
+
+- changing an object's name after construction is not allowed. Checks are performed
+  when adding objects to parents that no duplicate names are used, changing the name
+  to a duplicate name after adding it is therefore allowed and voids internal
+  consistency.
+
+- check for race in _task_pause()/_stop() since the TASK_LOCK is not held by the
+  calling thread and the STREAM_LOCK not by the task code.
+
+- only emit EOS in PLAYING.
+
+- implement state change order on get<->loop-get<->loop elements.
