@@ -240,10 +240,24 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       if (encode) {
         /* I'm not exactly sure what ffmpeg outputs... ffmpeg itself uses
          * the AVI fourcc 'DIVX', but 'mp4v' for Quicktime... */
-        /* FIXME: bitrate */
-        caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
-            "systemstream", G_TYPE_BOOLEAN, FALSE,
-            "mpegversion", G_TYPE_INT, 4, NULL);
+        guint32 fourcc = 0;
+
+        if (context)
+          fourcc = context->codec_tag;
+
+        switch (fourcc) {
+          case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
+            caps = GST_FF_VID_CAPS_NEW ("video/x-divx",
+	        "divxversion", G_TYPE_INT, 5, NULL);
+            break;
+          case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
+          default:
+            /* FIXME: bitrate */
+            caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
+                "systemstream", G_TYPE_BOOLEAN, FALSE,
+                "mpegversion", G_TYPE_INT, 4, NULL);
+            break;
+        }
       } else {
         /* The trick here is to separate xvid, divx, mpeg4, 3ivx et al */
         caps = GST_FF_VID_CAPS_NEW ("video/mpeg",
@@ -523,7 +537,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             layout = "quicktime";
             break;
           case CODEC_ID_ADPCM_IMA_WAV:
-            layout = "wav";
+            layout = "dvi";
             break;
           case CODEC_ID_ADPCM_IMA_DK3:
             layout = "dk3";
@@ -1057,9 +1071,19 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
         else if (!strcmp (mime, "video/x-3ivx"))
           context->codec_tag = GST_MAKE_FOURCC ('3', 'I', 'V', '1');
         else if (!strcmp (mime, "video/mpeg")) {
+          const GValue *value;
+          const GstBuffer *buf;
+
           context->codec_tag = GST_MAKE_FOURCC ('m', 'p', '4', 'v');
 
-          /* FIXME: esds atom parsing */
+          /* esds atom parsing */
+          if ((value = gst_structure_get_value (str, "codec_data"))) {
+            buf = g_value_get_boxed (value);
+            context->extradata = av_mallocz (GST_BUFFER_SIZE (buf));
+            memcpy (context->extradata, GST_BUFFER_DATA (buf),
+		GST_BUFFER_SIZE (buf));
+            context->extradata_size = GST_BUFFER_SIZE (buf);
+          }
         }
       } while (0);
       break;
@@ -1141,6 +1165,9 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
           context->bits_per_sample = depth;
         gst_ffmpeg_get_palette (caps, context);
       } while (0);
+      break;
+
+    default:
       break;
   }
 
@@ -1482,7 +1509,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = CODEC_ID_ADPCM_IMA_QT;
     } else if (!strcmp (layout, "microsoft")) {
       id = CODEC_ID_ADPCM_MS;
-    } else if (!strcmp (layout, "wav")) {
+    } else if (!strcmp (layout, "dvi")) {
       id = CODEC_ID_ADPCM_IMA_WAV;
     } else if (!strcmp (layout, "4xm")) {
       id = CODEC_ID_ADPCM_4XM;

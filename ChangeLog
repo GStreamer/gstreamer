@@ -1,3 +1,9 @@
+2004-04-22  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_caps_to_codecid):
+	  WAV/IMA-ADPCM -> DVI ADPCM.
+
 2004-04-22  Benjamin Otte  <otte@gnome.org>
 
 	* ext/ffmpeg/gstffmpegcolorspace.c:
