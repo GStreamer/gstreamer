@@ -204,13 +204,11 @@ gst_tee_request_new_pad (GstElement *element, GstPadTemplate *templ, const gchar
       name = NULL;
     }
   }
-  /* FIXME: thomas: does tee also have to notify a new pad ? */
-    if (!tee->silent) {
-      if (tee->last_message) g_free (tee->last_message);
-      tee->last_message = g_strdup_printf ("new pad %s", name);
-      g_object_notify (G_OBJECT (tee), "last_message");
-    }
-  /* g_object_notify (G_OBJECT (element), "new pad"); */
+  if (!tee->silent) {
+    g_free (tee->last_message);
+    tee->last_message = g_strdup_printf ("new pad %s", name);
+    g_object_notify (G_OBJECT (tee), "last_message");
+  }
   
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);
@@ -257,10 +255,8 @@ gst_tee_set_property (GObject *object, guint prop_id, const GValue *value, GPara
     case ARG_SILENT:
       tee->silent = g_value_get_boolean (value);
       break;
-    case ARG_LAST_MESSAGE:
-      g_value_set_string ((GValue *) value, tee->last_message);
-      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -282,7 +278,11 @@ gst_tee_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec 
     case ARG_SILENT:
       g_value_set_boolean (value, tee->silent);
       break;
+    case ARG_LAST_MESSAGE:
+      g_value_set_string ((GValue *) value, tee->last_message);
+      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -329,7 +329,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
     }
 
     if (!tee->silent) {
-      if (tee->last_message) g_free (tee->last_message);
+      g_free (tee->last_message);
       tee->last_message = g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %llu) %p",
               GST_DEBUG_PAD_NAME (outpad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
       g_object_notify (G_OBJECT (tee), "last_message");
