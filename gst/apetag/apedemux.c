@@ -421,7 +421,7 @@ gst_ape_demux_typefind (GstApeDemux * ape,
  * Parse tags from a buffer.
  */
 
-static void
+static GstTagList *
 gst_ape_demux_parse_tags (GstApeDemux * ape, guint8 * data, gint size)
 {
   GstTagList *taglist = gst_tag_list_new ();
@@ -501,10 +501,13 @@ gst_ape_demux_parse_tags (GstApeDemux * ape, guint8 * data, gint size)
   /* let people know */
   if (have_tag) {
     gst_element_found_tags (GST_ELEMENT (ape), taglist);
-    /*gst_pad_push (ape->srcpad, GST_DATA (gst_event_new_tag (taglist))); */
+    /* we'll push it over the srcpad later */
   } else {
     gst_tag_list_free (taglist);
+    taglist = NULL;
   }
+
+  return taglist;
 }
 
 /*
@@ -518,6 +521,7 @@ gst_ape_demux_stream_init (GstApeDemux * ape)
   gboolean seekable = TRUE, res = TRUE;
   guint8 *data;
   guint32 size = 0;
+  GstTagList *taglist1 = NULL, *taglist2 = NULL, *taglist = NULL;
 
   GST_LOG ("Initializing stream, stripping tags");
 
@@ -568,7 +572,7 @@ gst_ape_demux_stream_init (GstApeDemux * ape)
         goto the_city;
       }
     }
-    gst_ape_demux_parse_tags (ape, data, size);
+    taglist1 = gst_ape_demux_parse_tags (ape, data, size);
     ape->start_off = size;
   }
 
@@ -633,7 +637,7 @@ gst_ape_demux_stream_init (GstApeDemux * ape)
       data += 32;
       size -= 32;
     }
-    gst_ape_demux_parse_tags (ape, data, size);
+    taglist2 = gst_ape_demux_parse_tags (ape, data, size);
     ape->end_off = size;
   }
 
@@ -671,6 +675,25 @@ gst_ape_demux_stream_init (GstApeDemux * ape)
 the_city:
   /* become rich & famous */
   gst_bytestream_destroy (bs);
+  if (taglist1 || taglist2) {
+    if (res) {
+      /* merge */
+      if (taglist1 && taglist2) {
+        taglist = gst_tag_list_merge (taglist1, taglist2,
+            GST_TAG_MERGE_REPLACE);
+        gst_tag_list_free (taglist1);
+        gst_tag_list_free (taglist2);
+      } else {
+        taglist = taglist1 ? taglist1 : taglist2;
+      }
+      gst_pad_push (ape->srcpad, GST_DATA (gst_event_new_tag (taglist)));
+    } else {
+      if (taglist1)
+        gst_tag_list_free (taglist1);
+      if (taglist2)
+        gst_tag_list_free (taglist2);
+    }
+  }
 
   return res;
 }
