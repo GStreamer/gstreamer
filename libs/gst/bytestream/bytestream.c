@@ -239,9 +239,9 @@ gst_bytestream_peek (GstByteStream *bs, GstBuffer **buf, guint32 len)
   /* make sure we have enough */
   bs_print ("peek: there are %d bytes in the list", bs->listavail);
   if (len > bs->listavail) {
-    if (!gst_bytestream_fill_bytes (bs, len)){
+    if (!gst_bytestream_fill_bytes (bs, len)) {
       /* we must have an event coming up */
-      if (bs->listavail > 0){
+      if (bs->listavail > 0) {
         /* we have some data left, len will be shrunk to the amount of data available */
         len = bs->listavail;
       }
@@ -492,8 +492,9 @@ gst_bytestream_tell (GstByteStream *bs)
 
   format = GST_FORMAT_BYTES;
 
-  if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_QUERY_POSITION, &format, &value)) 
-    return value;
+  if (gst_pad_query (GST_PAD_PEER (bs->pad), GST_QUERY_POSITION, &format, &value)) {
+    return value - bs->listavail;
+  }
   
   return -1;
 }
