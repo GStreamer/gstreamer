@@ -144,6 +144,7 @@ gst_type_find_element_have_type (GstTypeFindElement *typefind, guint probability
   gchar *caps_str;
   
   g_assert (typefind->caps == NULL);
+  g_assert (caps != NULL);
 
   caps_str = gst_caps_to_string (caps);
   GST_INFO_OBJECT (typefind, "found caps %s", caps_str);
@@ -318,8 +319,9 @@ gst_type_find_element_handle_event (GstPad *pad, GstEvent *event)
   if (typefind->mode == MODE_TYPEFIND) {
     /* need to do more? */
     gst_data_unref (GST_DATA (event));
+  } else {
+    gst_pad_event_default (pad, event);
   }
-  gst_pad_event_default (pad, event);
 }
 typedef struct {
   GstTypeFindFactory *	factory;
@@ -603,13 +605,15 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	}
 	if (g_list_next (typefind->possibilities) == NULL) {
 	  entry = (TypeFindEntry *) typefind->possibilities->data;
-	  GST_LOG_OBJECT (typefind, "'%s' is the only typefind left, using it now (probability %u)", 
-		  GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
-	  g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0, entry->probability, entry->caps);
-	  free_entry (entry);
-	  g_list_free (typefind->possibilities);
-	  typefind->possibilities = NULL;
-	  stop_typefinding (typefind);
+	  if (entry->probability > 0) {
+	    GST_LOG_OBJECT (typefind, "'%s' is the only typefind left, using it now (probability %u)", 
+		    GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
+	    g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0, entry->probability, entry->caps);
+	    free_entry (entry);
+	    g_list_free (typefind->possibilities);
+	    typefind->possibilities = NULL;
+	    stop_typefinding (typefind);
+	  }
 	}
       }
       break;

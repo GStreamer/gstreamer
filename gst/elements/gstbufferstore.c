@@ -131,6 +131,8 @@ gst_buffer_store_dispose (GObject *object)
 static gboolean
 gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 {
+  g_assert (buffer != NULL);
+  
   if (!GST_BUFFER_OFFSET_IS_VALID (buffer) &&
       store->buffers &&
       GST_BUFFER_OFFSET_IS_VALID (store->buffers->data)) {
@@ -175,6 +177,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	  if (needed_size < GST_BUFFER_SIZE (buffer)) {
 	    /* need to create subbuffer to not have overlapping data */
 	    GstBuffer *sub = gst_buffer_create_sub (buffer, 0, needed_size);
+	    g_assert (sub);
 	    buffer = sub;
 	  } else {
 	    gst_data_ref (GST_DATA (buffer));
@@ -201,7 +204,8 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	    start_offset = GST_BUFFER_OFFSET (buffer) > start_offset ? 0 : 
 			   start_offset - GST_BUFFER_OFFSET (buffer);
 	    GstBuffer* sub = gst_buffer_create_sub (buffer, start_offset,
-		    MIN (GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (current) - start_offset));
+		    MIN (GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (current) - start_offset - GST_BUFFER_OFFSET (buffer)));
+	    g_assert (sub);
 	    buffer = sub;
 	  } else {
 	    gst_data_ref (GST_DATA (buffer));
@@ -320,7 +324,10 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
       cur_offset = GST_BUFFER_OFFSET (current);
     }
     walk = g_list_next (walk);
-    if (cur_offset == offset &&
+    if (cur_offset > offset) {
+      /* #include <windows.h>
+         do_nothing_loop (); */
+    } else if (cur_offset == offset &&
 	GST_BUFFER_SIZE (current) == size) {
       GST_LOG_OBJECT (store, "found matching buffer %p for offset %"G_GUINT64_FORMAT" and size %u",
 		      current, offset, size);
