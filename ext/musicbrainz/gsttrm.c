@@ -120,7 +120,7 @@ gst_musicbrainz_base_init (GstMusicBrainzClass *klass)
   GstElementDetails gst_musicbrainz_details = {
     "Compute TRM Id",
     "Codec/Audio/Decoder",
-    "Computr TRM Id from muscibrainz",
+    "Compute TRM Id from muscibrainz",
     "Jeremy Simon <jsimon13@yahoo.fr>",
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -157,7 +157,7 @@ gst_musicbrainz_class_init (GstMusicBrainzClass *klass)
   gobject_class->get_property = gst_musicbrainz_get_property;
 
   gst_musicbrainz_signals[SIGNAL_SIGNATURE_AVAILABLE] =
-    g_signal_new ("signture_available", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+    g_signal_new ("signature_available", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                    G_STRUCT_OFFSET (GstMusicBrainzClass, signature_available), NULL, NULL,
                    g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
