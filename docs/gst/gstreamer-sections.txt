@@ -1521,6 +1521,7 @@ gst_plugin_list_feature_filter
 gst_plugin_name_filter
 gst_plugin_get_feature_list
 gst_plugin_find_feature
+gst_plugin_check_file
 gst_plugin_load_file
 gst_plugin_unload_plugin
 gst_plugin_add_feature
