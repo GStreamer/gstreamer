@@ -23,7 +23,7 @@
 #include <gst/control/control.h>
 
 #include "gstladspa.h"
-#include "ladspa.h"     /* main ladspa sdk include file */
+#include <ladspa.h>     /* main ladspa sdk include file */
 #include "utils.h"      /* ladspa sdk utility functions */
 
 
