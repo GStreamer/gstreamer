@@ -54,6 +54,7 @@ dnl
 #include <stdlib.h>
 #include <string.h>
 #include <vorbis/codec.h>
+#include <vorbis/vorbisenc.h>
 
 int main ()
 {
@@ -62,7 +63,7 @@ int main ()
     vorbis_info		vi;
 
     vorbis_info_init (&vi);
-    vorbis_encode_init (&vi, 2, 44100, -1, 128, -1);
+    vorbis_encode_init (&vi, 2, 44100, -1, 128000, -1);
     vorbis_analysis_init (&vd, &vi);
     vorbis_block_init (&vd, &vb);
     /* this function was added in 1.0rc3, so this is what we're testing for */
