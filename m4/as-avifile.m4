@@ -27,7 +27,7 @@ AC_DEFUN(AS_AVIFILE,
   min_avifile_version=ifelse([$1], ,0.7.0,$1)
   if test "x$AVIFILE_CONFIG" != "xno"; then
     dnl now that we have it, we need to save libs and cflags
-    AVIFILE_LDFLAGS=`avifile-config --libs`
+    AVIFILE_LDFLAGS=`avifile-config --libs` -lstdc++
     AVIFILE_CXXFLAGS=`avifile-config --cflags`
     AC_SUBST(AVIFILE_LDFLAGS)
     AC_SUBST(AVIFILE_CXXFLAGS)
