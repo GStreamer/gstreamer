@@ -372,7 +372,7 @@ gst_id3_tag_set_property (GObject * object, guint prop_id, const GValue * value,
   }
 
   /* make sure we render at least one tag */
-  if (GST_ID3_TAG_GET_CLASS (tag)->type == GST_ID3_TAG_PARSE_MUX &&
+  if (GST_ID3_TAG_GET_CLASS (tag)->type == GST_ID3_TAG_PARSE_DEMUX &&
       !tag->v1tag_render && !tag->v2tag_render) {
     g_object_set (object, prop_id == ARG_V1_TAG ? "v2-tag" : "v1-tag", TRUE,
         NULL);
