@@ -1,5 +1,23 @@
 2004-01-11  David Schleef  <ds@schleef.org>
 
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_set_caps):
+	* ext/faac/gstfaac.c: (gst_faac_sinkconnect):
+	* ext/gdk_pixbuf/gstgdkanimation.c:
+	(gst_gdk_animation_iter_create_pixbuf):
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_link),
+	(gst_gdk_pixbuf_chain):
+	* ext/gdk_pixbuf/gstgdkpixbuf.h:
+	* ext/jack/gstjack.c: (gst_jack_change_state):
+	* ext/xvid/gstxviddec.c: (gst_xviddec_sink_link):
+	* gst-libs/gst/play/gstplay.c: (gst_play_get_sink_element):
+	* gst-libs/gst/play/play.c: (gst_play_get_sink_element):
+	* gst/videofilter/gstvideofilter.c:
+	(gst_videofilter_set_output_size):
+	Remove all usage of gst_pad_get_caps(), and replace it with
+	gst_pad_get_allowed_caps() or gst_pad_get_negotiated_cap().
+
+2004-01-11  David Schleef  <ds@schleef.org>
+
 	* configure.ac:
 	* ext/Makefile.am: Fixes to make ext/libcaca compile.
 	* ext/divx/gstdivxdec.c:
