@@ -1,3 +1,9 @@
+2004-10-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_caps_to_codecid):
+	  Simplify codec_data handling.
+
 2004-09-23  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):

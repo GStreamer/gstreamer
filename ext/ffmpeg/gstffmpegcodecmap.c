@@ -264,7 +264,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             "mpegversion", G_TYPE_INT, 4,
             "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
         gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
-                "divxversion", GST_TYPE_INT_RANGE, 4, 5, NULL));
+            "divxversion", GST_TYPE_INT_RANGE, 4, 5, NULL));
         gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-xvid", NULL));
         gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-3ivx", NULL));
       }
@@ -285,7 +285,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             "msmpegversion", G_TYPE_INT, version, NULL);
         if (!encode && codec_id == CODEC_ID_MSMPEG4V3) {
           gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
-                  "divxversion", G_TYPE_INT, 3, NULL));
+              "divxversion", G_TYPE_INT, 3, NULL));
         }
       } while (0);
       break;
@@ -295,19 +295,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       do {
         gint version = (codec_id == CODEC_ID_WMV1) ? 1 : 2;
 
-        if (context && context->extradata_size)
-        {
-          GstBuffer *buffer;
-
-          buffer = gst_buffer_new_and_alloc (context->extradata_size);
-          memcpy (GST_BUFFER_DATA (buffer), context->extradata, context->extradata_size);
-          
-          caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",             
-            "wmvversion", G_TYPE_INT, version, 
-            "codec_data", GST_TYPE_BUFFER, buffer, NULL);
-        }
-        else
-          caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",             
+        caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",
             "wmvversion", G_TYPE_INT, version, NULL);
       } while (0);
       break;
@@ -342,17 +330,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_WMAV2:
       do {
         gint version = (codec_id == CODEC_ID_WMAV1) ? 1 : 2;
-    
-        if (context && context->extradata_size)
-        {
-          GstBuffer *buffer;
 
-          buffer = gst_buffer_new_and_alloc (context->extradata_size);
-          memcpy (GST_BUFFER_DATA (buffer), context->extradata, context->extradata_size);
-
+        if (context) {
           caps = GST_FF_AUD_CAPS_NEW ("audio/x-wma",
              "wmaversion", G_TYPE_INT, version,
-             "codec_data", GST_TYPE_BUFFER, buffer,
              "block_align", G_TYPE_INT, context->block_align,
              "bitrate", G_TYPE_INT, context->bit_rate, NULL);
         } else {
@@ -696,24 +677,27 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         default:
           break;
       }
-
-      /* set private data */
-      if (context && context->extradata_size > 0) {
-        GstBuffer *data = gst_buffer_new_and_alloc (context->extradata_size);
-
-        memcpy (GST_BUFFER_DATA (data), context->extradata,
-            context->extradata_size);
-        gst_caps_set_simple (caps,
-            "gst_ff_extradata", GST_TYPE_BUFFER, data, NULL);
-      }
     }
   }
 
   if (caps != NULL) {
-    char *str = gst_caps_to_string (caps);
+    char *str;
 
+    /* set private data */
+    if (context && context->extradata_size > 0) {
+      GstBuffer *data = gst_buffer_new_and_alloc (context->extradata_size);
+
+      memcpy (GST_BUFFER_DATA (data), context->extradata,
+          context->extradata_size);
+      gst_caps_set_simple (caps,
+          "codec_data", GST_TYPE_BUFFER, data, NULL);
+      gst_buffer_unref (data);
+    }
+
+    str = gst_caps_to_string (caps);
     GST_DEBUG ("caps for codec_id=%d: %s", codec_id, str);
     g_free (str);
+
   } else {
     GST_WARNING ("No caps found for codec_id=%d", codec_id);
   }
@@ -1100,9 +1084,20 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     enum CodecType codec_type, const GstCaps *caps, AVCodecContext *context)
 {
   GstStructure *str = gst_caps_get_structure (caps, 0);
+  const GValue *value;
+  const GstBuffer *buf;
 
   if (!context)
     return;
+
+  /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
+  if ((value = gst_structure_get_value (str, "codec_data"))) {
+    buf = g_value_get_boxed (value);
+    context->extradata = av_mallocz (GST_BUFFER_SIZE (buf));
+    memcpy (context->extradata, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
+    context->extradata_size = GST_BUFFER_SIZE (buf);
+  }
 
   switch (codec_id) {
     case CODEC_ID_MPEG4:
@@ -1115,21 +1110,8 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
           context->codec_tag = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
         else if (!strcmp (mime, "video/x-3ivx"))
           context->codec_tag = GST_MAKE_FOURCC ('3', 'I', 'V', '1');
-        else if (!strcmp (mime, "video/mpeg")) {
-          const GValue *value;
-          const GstBuffer *buf;
-
+        else if (!strcmp (mime, "video/mpeg"))
           context->codec_tag = GST_MAKE_FOURCC ('m', 'p', '4', 'v');
-
-          /* esds atom parsing */
-          if ((value = gst_structure_get_value (str, "codec_data"))) {
-            buf = g_value_get_boxed (value);
-            context->extradata = av_mallocz (GST_BUFFER_SIZE (buf));
-            memcpy (context->extradata, GST_BUFFER_DATA (buf),
-		GST_BUFFER_SIZE (buf));
-            context->extradata_size = GST_BUFFER_SIZE (buf);
-          }
-        }
       } while (0);
       break;
 
@@ -1161,31 +1143,6 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
           context->extradata_size = 0x64;
         }
       } while (0);
-      break;
-
-    case CODEC_ID_WMAV1:
-    case CODEC_ID_WMAV2:
-    case CODEC_ID_WMV1:
-    case CODEC_ID_WMV2:
-      do {
-        const GValue *value;
-        const GstBuffer *buf;
-
-        if ((value = gst_structure_get_value (str, "codec_data"))) {
-          buf = g_value_get_boxed (value);
-          if (GST_BUFFER_SIZE (buf) != 0) {
-            context->extradata = av_mallocz (GST_BUFFER_SIZE (buf));
-            memcpy (context->extradata, GST_BUFFER_DATA (buf),
-	   	    GST_BUFFER_SIZE (buf));
-            context->extradata_size = GST_BUFFER_SIZE (buf);      
-          }
-	}
-      } while (0);
-      break;
-
-    case CODEC_ID_AAC:
-    case CODEC_ID_MPEG4AAC:
-      /* if we cared (we don't), we would do esds/extra_data parsing here */
       break;
 
     case CODEC_ID_MSRLE:
@@ -1644,18 +1601,6 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           video = TRUE;
         else if (mimetype[0] == 'a')
           audio = TRUE;
-
-        /* extradata */
-        if ((data_v = gst_structure_get_value (structure,
-                 "gst_ff_extradata")) && context) {
-          data = g_value_get_boxed (data_v);
-          if (context->extradata)
-            av_free (context->extradata);
-          context->extradata = av_malloc (GST_BUFFER_SIZE (data));
-          memcpy (context->extradata, GST_BUFFER_DATA (data),
-              GST_BUFFER_SIZE (data));
-          context->extradata_size = GST_BUFFER_SIZE (data);
-        }
       }
     }
   }
