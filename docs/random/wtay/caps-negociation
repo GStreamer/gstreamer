@@ -177,8 +177,6 @@ the caps can be set with the gst_pad_set_caps function, which accepts
 the following parameters:
 
    - the pad to set the caps to
-   - whether the peer pad *must* accept the caps (AUTHORITATIVE) or
-     whether if can reject the caps (TRY)
    - a GstCaps* structure
 
 example4:
@@ -187,7 +185,6 @@ example4:
 !
 !     gst_pad_set_caps (
 !       pad,
-!       GST_CAPS_NEGOTIATE_AUTHORITATIVE,
 !       gst_caps_new_with_props (
 !         "src_caps",                       /* name */
 !         "audio/raw",                      /* mime */
@@ -201,20 +198,12 @@ example4:
 !       )
 !     );
 
-the _set_caps function returns a gboolean, indicating that the
-new caps are accepted by the peer pad.
-
-when the negotiation type is set to TRY, and the negotiation 
-fails, the pad has to perform another _set_caps call. The last 
-call to _set_caps has to be of type AUTHORITATIVE.
-
-when the negotiation fails and the type is set to AUTHORITATIVE,
-the pads are disconnected and a signal is emitted to inform any
-interested listeners.
+The _set_caps method will trigger the caps negotiation with the
+peer pad (if connected). 
 
 
-6) caps negotiation
--------------------
+6) caps negotiation function
+----------------------------
 
 the negotiate function of a pad is called whenever the peer pad 
 modifies the caps using the gst_pad_set_caps function.
@@ -224,6 +213,7 @@ new caps are acceptable. When it accepts the caps, both pads will
 be set to the negotiated caps.
 
 example5:
+!
 ! this is the caps negotiation function implemented by an element on
 ! one of its sink pads.
 !
@@ -240,6 +230,45 @@ example5:
 !    /* we accept everything else */
 !    return TRUE;
 !  }
+
+When the negotiate function returns FALSE (it does not accept the
+specified caps of the peer pad), 
+
+
+figure1
+!
+!
+!  element             pad                pad->peer
+!   !
+!   ! _negotiate(pad)   
+!   !------------------>!
+!                       ! gst_pad_negotiate()
+!                       !------. 
+!                       !<-----'               
+!                       ! _caps_negotiate()
+!                       !--------------------->!
+!
+!
+
+
+the element has some of its internal properties changed. It wants
+to renegotiate the caps with its peer element. The element does:
+
+  gst_pad_renegotiate (element->srcpad);
+
+this will trigger the class method of the pad and 
+
+
+
+
+7) use cases
+------------
+
+
+
+
+
+
 
 
 

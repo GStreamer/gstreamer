@@ -58,13 +58,13 @@
   <layer name="Background" visible="true">
     <object type="UML - Class" version="0" id="O0">
       <attribute name="obj_pos">
-        <point val="1.65,5.6"/>
+        <point val="0.75,5.55"/>
       </attribute>
       <attribute name="obj_bb">
-        <rectangle val="1.6,5.55;13.6504,9.65"/>
+        <rectangle val="0.7,5.5;12.7504,9.6"/>
       </attribute>
       <attribute name="elem_corner">
-        <point val="1.65,5.6"/>
+        <point val="0.75,5.55"/>
       </attribute>
       <attribute name="elem_width">
         <real val="11.9504"/>
@@ -228,15 +228,15 @@
     </object>
     <object type="UML - Association" version="0" id="O2">
       <attribute name="obj_pos">
-        <point val="13.6004,9.1"/>
+        <point val="12.7004,9.05"/>
       </attribute>
       <attribute name="obj_bb">
-        <rectangle val="12.1504,7.65;17.8,11.8"/>
+        <rectangle val="11.2504,7.6;18.4892,11.8"/>
       </attribute>
       <attribute name="orth_points">
-        <point val="13.6004,9.1"/>
-        <point val="15.15,9.1"/>
-        <point val="15.15,10.35"/>
+        <point val="12.7004,9.05"/>
+        <point val="14.15,9.05"/>
+        <point val="14.15,10.35"/>
         <point val="16.35,10.35"/>
       </attribute>
       <attribute name="orth_orient">
@@ -256,7 +256,7 @@
             <string/>
           </attribute>
           <attribute name="multiplicity">
-            <string>#0#</string>
+            <string>#1#</string>
           </attribute>
           <attribute name="arrow">
             <boolean val="false"/>
@@ -270,7 +270,7 @@
             <string/>
           </attribute>
           <attribute name="multiplicity">
-            <string>#1#</string>
+            <string>#0..1#</string>
           </attribute>
           <attribute name="arrow">
             <boolean val="false"/>
@@ -400,7 +400,7 @@
             <string/>
           </attribute>
           <attribute name="multiplicity">
-            <string>#0#</string>
+            <string>#1#</string>
           </attribute>
           <attribute name="arrow">
             <boolean val="false"/>
