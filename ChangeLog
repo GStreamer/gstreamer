@@ -1,3 +1,8 @@
+2004-10-04  Johan Dahlin  <johan@gnome.org>
+
+	* gst/interfaces.defs: Add proper fiels to GstTunerNorm. Also
+	remove parent property from all interfaces.
+
 2004-09-29  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstmodule.c (python_do_pending_calls): Use
