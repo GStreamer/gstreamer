@@ -1,0 +1,24 @@
+The idiot's guide to managing this directory
+
+Q: How do I add source files to be translated ? 
+A: - Make sure the source file includes either gst-i18n-lib.h (if it's a part
+     of a library/plugin) or gst-i18n-app.h (if it's an application)
+   - Add the file path, relative to the top of the module, to POTFILES.in
+
+Q: How do I add/mark strings to be translated ?
+A: - Use N_(...) to mark for translation.
+   - Use _(...) to get a translated string
+   - run "make gstreamer-0.7.pot-update" to update the .pot file
+
+Q: How do I add a language ?
+A: - copy gstreamer-0.7.pot to your new language.po
+   - add the language code to LINGUAS
+   - edit the header of this language.po file and make it match one of
+     the existing .po files
+   - translate the strings
+
+Q: How do I update a language ?
+A: - run make language.po-update to update your .po file
+     (replace language with your language code)
+   - edit the .po file, and translate the untranslated strings
+   - commit
