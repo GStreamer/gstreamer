@@ -213,7 +213,7 @@ volume_class_init (GstVolumeClass *klass)
   
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
     g_param_spec_float("volume","volume","volume",
-                       -4.0,4.0,1.0,G_PARAM_READWRITE));
+                       0.0,4.0,1.0,G_PARAM_READWRITE));
   
   gobject_class->set_property = volume_set_property;
   gobject_class->get_property = volume_get_property;
@@ -247,7 +247,7 @@ volume_init (GstVolume *filter)
   gst_dpman_add_required_dparam_callback (
     filter->dpman, 
     g_param_spec_float("volume","Volume","Volume of the audio",
-                       -4.0, 4.0, 1.0, G_PARAM_READWRITE),
+                       0.0, 4.0, 1.0, G_PARAM_READWRITE),
     "scalar",
     volume_update_volume, 
     filter
