@@ -201,6 +201,11 @@ gst_play_audiot_set_audio (	GstPlay *play,
 										audio_sink,
 										GST_PLAY_SINK_TYPE_AUDIO);
 	
+	play->visualisation_sink_element = gst_play_get_sink_element (
+										play,
+										audio_sink,
+										GST_PLAY_SINK_TYPE_VIDEO);
+	
 	if (play->audio_sink_element != NULL) {
 		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
 				  G_CALLBACK (callback_audio_sink_eos), play);
@@ -351,6 +356,11 @@ gst_play_audioht_set_audio (	GstPlay *play,
 												play,
 												audio_sink,
 												GST_PLAY_SINK_TYPE_AUDIO);
+	
+	play->visualisation_sink_element = gst_play_get_sink_element (
+												play,
+												audio_sink,
+												GST_PLAY_SINK_TYPE_VIDEO);
 	
 	if (play->audio_sink_element != NULL) {
 		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
@@ -660,6 +670,11 @@ gst_play_video_set_audio (	GstPlay *play,
 										audio_sink,
 										GST_PLAY_SINK_TYPE_AUDIO);
 
+	play->visualisation_sink_element = gst_play_get_sink_element (
+										play,
+										audio_sink,
+										GST_PLAY_SINK_TYPE_VIDEO);
+	
 	if (play->audio_sink_element != NULL) {
 		g_signal_connect (G_OBJECT (play->audio_sink_element), "eos",
 				  G_CALLBACK (callback_audio_sink_eos), play);
