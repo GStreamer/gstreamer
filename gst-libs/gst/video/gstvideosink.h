@@ -61,6 +61,8 @@ struct _GstVideoSink {
   GstClock *clock;
   
   GstCaps *formats;
+
+  GST_OBJECT_PADDING
 };
 
 struct _GstVideoSinkClass {
@@ -75,6 +77,8 @@ struct _GstVideoSinkClass {
   void (*have_video_out)  (GstVideoSink *element, gpointer video_out);
   void (*have_size)       (GstVideoSink *element, gint width, gint height);
   void (*frame_displayed) (GstVideoSink *element);
+
+  GST_CLASS_PADDING
 };
 
 GType gst_videosink_get_type (void);

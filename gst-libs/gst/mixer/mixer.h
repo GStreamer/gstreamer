@@ -82,6 +82,8 @@ typedef struct _GstMixerClass {
   void           (* set_record)    (GstMixer        *mixer,
 				    GstMixerChannel *channel,
 				    gboolean         record);
+
+  GST_CLASS_PADDING
 } GstMixerClass;
 
 GType		gst_mixer_get_type	(void);
