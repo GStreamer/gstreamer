@@ -532,8 +532,7 @@ gst_registry_pool_load_all (void)
   while (walk) {
     GstRegistry *registry = GST_REGISTRY (walk->data);
 
-    if (registry->flags & GST_REGISTRY_READABLE &&
-        !(registry->flags & GST_REGISTRY_DELAYED_LOADING)) {
+    if (!(registry->flags & GST_REGISTRY_DELAYED_LOADING)) {
       gst_registry_load (registry);
     }
     
