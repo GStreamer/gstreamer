@@ -53,7 +53,7 @@ AC_ISC_POSIX
 
 dnl We disable static building for development, for time savings
 dnl *NOTE*: dnl this line before release, so release does static too
-dnl AM_DISABLE_STATIC
+AM_DISABLE_STATIC
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 
