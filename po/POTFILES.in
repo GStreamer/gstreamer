@@ -1,0 +1,15 @@
+ext/audiofile/gstafsink.c
+ext/audiofile/gstafsrc.c
+ext/gnomevfs/gstgnomevfssrc.c
+ext/gnomevfs/gstgnomevfssink.c
+ext/sndfile/gstsf.c
+gst/avi/gstavimux.c
+sys/dxr3/dxr3audiosink.c
+sys/dxr3/dxr3audiosink.c
+sys/dxr3/dxr3videosink.c
+sys/oss/gstosselement.c
+sys/oss/gstossmixer.c
+sys/v4l/v4l_calls.c
+sys/v4l/v4l_calls.h
+sys/v4l2/v4l2_calls.c
+sys/v4l2/v4l2src_calls.c

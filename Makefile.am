@@ -22,6 +22,7 @@ SUBDIRS=gst-libs \
 	tools \
 	$(GCONF_DIR) \
 	testsuite \
+	po \
 	pkgconfig
 
 DIST_SUBDIRS=gst-libs \
@@ -30,6 +31,7 @@ DIST_SUBDIRS=gst-libs \
 	tools \
 	gconf \
 	testsuite \
+	po \
 	pkgconfig
 
 EXTRA_DIST=gst-plugins.spec depcomp \
