@@ -178,9 +178,11 @@ gst_v4lsrc_srcconnect (GstPad  *pad,
 {
   GstV4lSrc *v4lsrc;
   GstCaps *caps, *newcaps;
-  gint palette = v4lsrc->palette;
+  gint palette;
 
   v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
+
+  palette = v4lsrc->palette;
 
   /* TODO: caps = gst_caps_normalize(capslist); */
   for (caps = vscapslist ; caps != NULL ; caps = vscapslist = vscapslist->next)
