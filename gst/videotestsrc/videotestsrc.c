@@ -379,15 +379,33 @@ int n_fourccs = sizeof (fourcc_list) / sizeof (fourcc_list[0]);
 struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
 {
   int i;
+  const char *mimetype = gst_caps_get_mime(caps);
+  guint32 format;
 
-  for (i = 0; i < n_fourccs; i++) {
-    GstCaps *c;
-    
-    c = gst_caps_intersect(caps,paint_get_caps(fourcc_list + i));
-    if(c){
-      return fourcc_list + i;
+  if(strcmp(mimetype, "video/x-raw-yuv")==0){
+    char *s;
+    int fourcc;
+
+    gst_caps_get(caps, "format", &format);
+    for (i = 0; i < n_fourccs; i++) {
+      s = fourcc_list[i].fourcc;
+      g_print("testing " GST_FOURCC_FORMAT " and %s\n",
+	  GST_FOURCC_ARGS(format), s);
+      fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
+      if(fourcc == format){
+        return fourcc_list + i;
+      }
     }
+  }else if(strcmp(mimetype, "video/x-raw-yuv")==0){
+    g_warning("video/x-raw-rgb not implemented");
+    return NULL;
+  }else{
+    g_warning("unknown format");
+    return NULL;
   }
+
+  g_warning("format not found");
+
   return NULL;
 }
 

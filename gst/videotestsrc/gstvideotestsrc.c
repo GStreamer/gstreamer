@@ -88,12 +88,12 @@ videotestsrc_src_template_factory(void)
   if(!templ){
     GstCaps *caps;
     GstCaps *caps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"width", GST_PROPS_INT_RANGE (1, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (1, G_MAXINT),
                 "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
     GstCaps *caps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
+		"width", GST_PROPS_INT_RANGE (1, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (1, G_MAXINT),
                 "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
     caps = gst_caps_intersect(caps1, gst_videotestsrc_get_capslist ());
@@ -214,6 +214,12 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
     GstCaps *caps1 = gst_caps_copy_1(caps);
     GstPadLinkReturn ret;
 
+    gst_caps_set(caps1, "framerate", GST_PROPS_FLOAT((float)videotestsrc->rate));
+    gst_caps_set(caps1, "width", GST_PROPS_INT(videotestsrc->width));
+    gst_caps_set(caps1, "height", GST_PROPS_INT(videotestsrc->height));
+
+    //g_print("%s\n", gst_caps_to_string(caps1));
+
     ret = gst_pad_try_set_caps(pad, caps1);
 
     if (ret != GST_PAD_LINK_OK &&
@@ -234,17 +240,22 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
   }
 
   if (caps == NULL) {
-    GST_DEBUG (
-	       "videotestsrc: no suitable opposite-side caps found");
+    GST_DEBUG ("videotestsrc: no suitable opposite-side caps found");
     return GST_PAD_LINK_REFUSED;
   }
 
   GST_DEBUG ("videotestsrc: using fourcc element %p %s\n",
 	videotestsrc->fourcc, videotestsrc->fourcc->name);
 
-  gst_caps_get_int (caps, "width", &videotestsrc->width);
-  gst_caps_get_int (caps, "height", &videotestsrc->height);
-  gst_caps_get_float (caps, "framerate", &videotestsrc->rate);
+  if(videotestsrc->width==0){
+    gst_caps_get_int (caps, "width", &videotestsrc->width);
+  }
+  if(videotestsrc->height==0){
+    gst_caps_get_int (caps, "height", &videotestsrc->height);
+  }
+  if(videotestsrc->rate==0){
+    gst_caps_get_float (caps, "framerate", &videotestsrc->rate);
+  }
 
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
@@ -332,11 +343,11 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
              GST_CAPS_NEW("ack","video/x-raw-yuv",
 		"width",GST_PROPS_INT_RANGE(16,4096),
 		"height",GST_PROPS_INT_RANGE(16,4096),
-		"framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT)),
+                "framerate", GST_PROPS_FLOAT(vts->rate)),
              GST_CAPS_NEW("ack","video/x-raw-rgb",
 		"width",GST_PROPS_INT_RANGE(16,4096),
 		"height",GST_PROPS_INT_RANGE(16,4096),
-		"framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT)));
+                "framerate", GST_PROPS_FLOAT(vts->rate)));
   }
 
   /* ref intersection and return it */
@@ -389,7 +400,7 @@ gst_videotestsrc_get (GstPad * pad)
 
   newsize = (videotestsrc->width * videotestsrc->height * videotestsrc->bpp) >> 3;
 
-  GST_DEBUG ("size=%ld %dx%d", newsize, videotestsrc->width, videotestsrc->height);
+  GST_DEBUG ("size=%ld %dx%d\n", newsize, videotestsrc->width, videotestsrc->height);
 
   buf = NULL;
   if (videotestsrc->pool) {
