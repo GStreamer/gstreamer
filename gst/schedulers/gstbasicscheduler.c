@@ -165,7 +165,7 @@ static GstSchedulerClass *parent_class = NULL;
   GstElement *current = ((GstBasicScheduler*)sched)->current;	\
   if (current && current->post_run_func)			\
     current->post_run_func (current);				\
-  SCHED (current)->current = NULL;				\
+  ((GstBasicScheduler*) sched)->current = NULL;				\
   do_cothread_switch						\
     (do_cothread_get_main					\
        (((GstBasicScheduler*)sched)->context));			\

@@ -174,9 +174,7 @@ static void do_cothread_switch (cothread *to)
 {
   cothread *self = do_cothread_get_current(to->context);
   
-  if (self == to) {
-    g_warning ("trying to switch to the same cothread, not allowed");
-  } else {
+  if (self != to) {
     self->context->current = to;
     g_cond_signal (to->cond);
     g_cond_wait (self->cond, self->context->mutex);
