@@ -355,8 +355,11 @@ restart:
       while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
         GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
         g_mutex_unlock (queue->qlock);
+	/* FIXME: gst_element_interrupt doesn't return anything
 	if (gst_element_interrupt (GST_ELEMENT (queue)))
           return;
+	*/
+	gst_element_interrupt (GST_ELEMENT (queue));
 	goto restart;
       }
       if (GST_STATE (queue) != GST_STATE_PLAYING) {
@@ -439,8 +442,11 @@ restart:
     while (GST_STATE_PENDING (queue) != GST_STATE_VOID_PENDING) {
       GST_DEBUG_ELEMENT (GST_CAT_DATAFLOW, queue, "interrupted!!\n");
       g_mutex_unlock (queue->qlock);
-      if (gst_element_interrupt (GST_ELEMENT (queue)))
-        return NULL;
+	/* FIXME: gst_element_interrupt doesn't return anything
+	if (gst_element_interrupt (GST_ELEMENT (queue)))
+          return;
+	*/
+      gst_element_interrupt (GST_ELEMENT (queue));
       goto restart;
     }
     if (GST_STATE (queue) != GST_STATE_PLAYING) {
