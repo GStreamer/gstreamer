@@ -296,7 +296,7 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
 	 * we don't need a mixer anyway (says OSS)... If we are a
 	 * mixer element, we use the mixer anyway. */
 	if ((fd = open (mixer ? mixer :
-			dsp, openmode)) > 0 || errno == EBUSY) {
+			dsp, openmode | O_NONBLOCK)) > 0 || errno == EBUSY) {
 	  GstOssDeviceCombination *combi;
 	  
 	  if (fd > 0)
