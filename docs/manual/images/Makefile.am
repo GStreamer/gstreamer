@@ -28,7 +28,7 @@ epsfiles= \
 	fig2dev -L png -s 16 $< $@
 
 %.eps : ../fig/%.fig
-	fig2dev -L eps -s 16 $< $@
+	fig2dev -L eps -s 16 -m 0.5 $< $@
 
 
 all-local: $(epsfiles)
