@@ -44,6 +44,8 @@ TODO :
   - create a new version dir in www/releases and add that to cvs
   - copy files from the last one to this new release dir
   - Start updating the release notes on the www cvs tree
+    - grepping ChangeLog for contributors:
+ grep "<.*>" ChangeLog | perl -i -p -e 's@\d*-\d*-\d*\s*(.*)\s*<.*$@$1@' | sort | uniq
   - Log in to sourceforge and run www-update.sh in the gstreamer root dir
   - depending on how the API has changed update the libtool versioning
     in configure.ac, AS_LIBTOOL 
