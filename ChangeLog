@@ -1,5 +1,15 @@
 2004-03-24  Benjamin Otte  <otte@gnome.org>
 
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnomevfssrc_set_property):
+	  don't g_return_if_fail if element is PLAYING, fail silently as every
+	  other element.
+	* gst/effectv/gstquark.c: (gst_quarktv_chain):
+	  only fix needed for cast lvalue issues in gst-plugins
+	* gst/volenv/gstvolenv.c: (gst_volenv_init):
+	  add proxy_getcaps
+
+2004-03-24  Benjamin Otte  <otte@gnome.org>
+
 	* gst/level/gstlevel.c: (gst_level_init):
 	  add proxying getcaps function, so level doesn't advertise impossible
 	  caps
