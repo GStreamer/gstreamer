@@ -230,7 +230,7 @@ struct _GParamSpec {
 };
 
 #define g_value_init(value,t)			((value)->type = (t))
-#define g_value_copy			gtk_arg_copy
+#define g_value_copy(src_val,dest_val)	(dest_val = gtk_arg_copy(src_val,dest_val))
 #define g_value_unset(val)
 
 #define g_object_class_install_property		g2g_object_class_install_property
