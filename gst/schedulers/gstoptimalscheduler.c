@@ -978,6 +978,7 @@ gst_opt_scheduler_get_wrapper (GstPad *srcpad)
       group = unref_group (group);
       /* group is gone */
       if (group == NULL) {
+        GST_INFO (GST_CAT_SCHEDULING, "group %p destroyed, sending interrupt", group);
         return GST_BUFFER (gst_event_new (GST_EVENT_INTERRUPT));
       }
     }
@@ -1755,6 +1756,10 @@ gst_opt_scheduler_iterate (GstScheduler *sched)
       if (osched->state == GST_OPT_SCHEDULER_STATE_ERROR) {
         GST_INFO (GST_CAT_SCHEDULING, "scheduler %p is in error", sched);
         break;
+      }	
+      else if (osched->state == GST_OPT_SCHEDULER_STATE_INTERRUPTED) {
+        GST_INFO (GST_CAT_SCHEDULING, "scheduler %p is interrupted, continue with next chain", sched);
+        osched->state = GST_OPT_SCHEDULER_STATE_RUNNING;
       }
 
       GST_INFO (GST_CAT_SCHEDULING, "iterate scheduled %p", chain);
