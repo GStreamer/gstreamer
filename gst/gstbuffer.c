@@ -380,6 +380,22 @@ gst_buffer_copy (GstBuffer *buffer)
   return newbuf;
 }
 
+/*
+ * gst_buffer_is_span_fast
+ * @buf1: first source buffer
+ * @buf2: second source buffer
+ *
+ * Determines whether a gst_buffer_span is free, or requires a memcpy. 
+ *
+ * Returns: TRUE if the buffers are contiguous, FALSE if a copy would be required.
+ */
+gboolean
+gst_buffer_is_span_fast (GstBuffer *buf1, GstBuffer *buf2)
+{
+  return ((buf1->parent == buf2->parent) &&
+          ((buf1->data + buf1->size) == buf2->data));
+}
+
 
 /**
  * gst_buffer_span:
@@ -413,8 +429,9 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   }
 
   // if the two buffers have the same parent and are adjacent
-  if ((buf1->parent == buf2->parent) &&
-      ((buf1->data + buf1->size) == buf2->data)) {
+//  if ((buf1->parent == buf2->parent) &&
+//      ((buf1->data + buf1->size) == buf2->data)) {
+  if (gst_buffer_is_span_fast(buf1,buf2)) {
     // we simply create a subbuffer of the common parent
     return gst_buffer_create_sub(buf1->parent, buf1->data - (buf1->parent->data) + offset, len);
   }

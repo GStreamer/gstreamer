@@ -43,8 +43,10 @@ static void 		gst_typefactory_init 		(GstTypeFactory *factory);
 
 static GstCaps*		gst_type_typefind_dummy		(GstBuffer *buffer, gpointer priv);
 
+#ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr 	gst_typefactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
 static void 		gst_typefactory_restore_thyself (GstObject *object, xmlNodePtr parent);
+#endif /* GST_DISABLE_REGISTRY */
 
 static void 		gst_typefactory_unload_thyself 	(GstPluginFeature *feature);
 
@@ -87,8 +89,10 @@ gst_typefactory_class_init (GstTypeFactoryClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
+#ifndef GST_DISABLE_REGISTRY
   gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_typefactory_save_thyself);
   gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_typefactory_restore_thyself);
+#endif /* GST_DISABLE_REGISTRY */
 
   gstpluginfeature_class->unload_thyself = GST_DEBUG_FUNCPTR (gst_typefactory_unload_thyself);
 
@@ -314,6 +318,25 @@ gst_typefactory_unload_thyself (GstPluginFeature *feature)
     factory->typefindfunc = gst_type_typefind_dummy;
 }
 
+static GstCaps*
+gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
+{
+  GstTypeFactory *factory = (GstTypeFactory *)priv;
+
+  GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s\n", factory->mime);
+
+  gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory));
+
+  if (factory->typefindfunc) {
+     GstCaps *res = factory->typefindfunc (buffer, factory);
+     if (res) 
+       return res;
+  }
+
+  return NULL;
+}
+
+#ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr
 gst_typefactory_save_thyself (GstObject *object, xmlNodePtr parent)
 {
@@ -336,24 +359,6 @@ gst_typefactory_save_thyself (GstObject *object, xmlNodePtr parent)
   }
 
   return parent;
-}
-
-static GstCaps*
-gst_type_typefind_dummy (GstBuffer *buffer, gpointer priv)
-{
-  GstTypeFactory *factory = (GstTypeFactory *)priv;
-
-  GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s\n", factory->mime);
-
-  gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory));
-
-  if (factory->typefindfunc) {
-     GstCaps *res = factory->typefindfunc (buffer, factory);
-     if (res) 
-       return res;
-  }
-
-  return NULL;
 }
 
 /**
@@ -390,4 +395,4 @@ gst_typefactory_restore_thyself (GstObject *object, xmlNodePtr parent)
 
   gst_type_register (factory);
 }
-
+#endif /* GST_DISABLE_REGISTRY */

@@ -58,6 +58,8 @@ static gchar *_gst_info_category_strings[] = {
   "REFCOUNTING",
   "EVENT",
   "PARAMS",
+
+  [30] = "CALL_TRACE",
 };
 
 /**
@@ -113,7 +115,7 @@ const gchar *_gst_category_colors[32] = {
   [GST_CAT_EVENT]		= "01;37;41",		// !!
   [GST_CAT_PARAMS]		= "00;30;43",		// !!
 
-  [31]				= "",
+  [GST_CAT_CALL_TRACE]		= "",
 };
 
 /* colorization hash - DEPRACATED in favor of above */
@@ -145,6 +147,13 @@ guint32 _gst_debug_categories = 0x00000000;
  *
  *   DEBUG(pid:cid):gst_function:542(args): [elementname] something neat happened
  */
+void
+gst_default_debug_handler (gint category, gboolean incore,
+			   const gchar *file, const gchar *function,
+			   gint line, const gchar *debug_string,
+			   void *element, gchar *string)
+  __attribute__ ((no_instrument_function));
+
 void
 gst_default_debug_handler (gint category, gboolean incore,
 			   const gchar *file, const gchar *function,
@@ -451,14 +460,15 @@ gst_default_error_handler (gchar *file, gchar *function,
 /***** DEBUG system *****/
 GHashTable *__gst_function_pointers = NULL;
 
+gchar *_gst_debug_nameof_funcptr (void *ptr) __attribute__ ((no_instrument_function));
+
 gchar *
 _gst_debug_nameof_funcptr (void *ptr)
 {
   gchar *ptrname;
   Dl_info dlinfo;
-  if (__gst_function_pointers) {
-    if ((ptrname = g_hash_table_lookup(__gst_function_pointers,ptr)))
-      return g_strdup(ptrname);
+  if (__gst_function_pointers && (ptrname = g_hash_table_lookup(__gst_function_pointers,ptr))) {
+    return g_strdup(ptrname);
   } else if (dladdr(ptr,&dlinfo) && dlinfo.dli_sname) {
     return g_strdup(dlinfo.dli_sname);
   } else {
@@ -466,3 +476,18 @@ _gst_debug_nameof_funcptr (void *ptr)
   }
   return NULL;
 }
+
+
+#ifdef GST_ENABLE_FUNC_INSTRUMENTATION
+
+void __cyg_profile_func_enter(void *this_fn,void *call_site) __attribute__ ((no_instrument_function));
+void __cyg_profile_func_enter(void *this_fn,void *call_site) {
+  GST_DEBUG(GST_CAT_CALL_TRACE, "entering function %s\n", _gst_debug_nameof_funcptr (this_fn));
+}
+
+void __cyg_profile_func_exit(void *this_fn,void *call_site) __attribute__ ((no_instrument_function));
+void __cyg_profile_func_exit(void *this_fn,void *call_site) {
+  GST_DEBUG(GST_CAT_CALL_TRACE, "leavinging function %s\n", _gst_debug_nameof_funcptr (this_fn));
+}
+
+#endif /* GST_ENABLE_FUNC_INTSTRUMENTATION */

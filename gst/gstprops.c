@@ -986,6 +986,7 @@ end:
   return compatible;
 }
 
+#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )
 static xmlNodePtr
 gst_props_save_thyself_func (GstPropsEntry *entry, xmlNodePtr parent)
 {
@@ -1240,3 +1241,5 @@ gst_props_load_thyself (xmlNodePtr parent)
 
   return props;
 }
+#endif /* (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) ) */
+

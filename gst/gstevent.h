@@ -35,6 +35,7 @@ typedef enum {
   GST_EVENT_EOS,
   GST_EVENT_FLUSH,
   GST_EVENT_EMPTY,
+  GST_EVENT_SEEK,
 } GstEventType;
 
 typedef struct _GstEvent GstEvent;

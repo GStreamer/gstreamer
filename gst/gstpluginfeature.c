@@ -27,8 +27,10 @@
 static void		gst_plugin_feature_class_init		(GstPluginFeatureClass *klass);
 static void		gst_plugin_feature_init			(GstPluginFeature *feature);
 
+#ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr 	gst_plugin_feature_save_thyself 	(GstObject *object, xmlNodePtr parent);
 static void 		gst_plugin_feature_restore_thyself 	(GstObject *object, xmlNodePtr parent);
+#endif /* GST_DISABLE_REGISTRY */
 
 static GstObjectClass *parent_class = NULL;
 //static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 };
@@ -67,8 +69,10 @@ gst_plugin_feature_class_init (GstPluginFeatureClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 
+#ifndef GST_DISABLE_REGISTRY
   gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_plugin_feature_save_thyself);
   gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_plugin_feature_restore_thyself);
+#endif /* GST_DISABLE_REGISTRY */
 }
 
 static void
@@ -77,6 +81,7 @@ gst_plugin_feature_init (GstPluginFeature *feature)
   feature->manager = NULL;
 }
 
+#ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr
 gst_plugin_feature_save_thyself (GstObject *object, xmlNodePtr parent)
 {
@@ -102,6 +107,7 @@ gst_plugin_feature_restore_thyself (GstObject *object, xmlNodePtr parent)
     field = field->next;
   }
 }
+#endif /* GST_DISABLE_REGISTRY */
 
 void
 gst_plugin_feature_ensure_loaded (GstPluginFeature *feature)

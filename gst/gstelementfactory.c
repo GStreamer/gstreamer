@@ -28,8 +28,10 @@
 static void 			gst_elementfactory_class_init 		(GstElementFactoryClass *klass);
 static void 			gst_elementfactory_init 		(GstElementFactory *factory);
 
+#ifndef GST_DISABLE_REGISTRY
 static void 			gst_elementfactory_restore_thyself 	(GstObject *object, xmlNodePtr parent);
 static xmlNodePtr 		gst_elementfactory_save_thyself 	(GstObject *object, xmlNodePtr parent);
+#endif /* GST_DISABLE_REGISTRY */
 
 static void 			gst_elementfactory_unload_thyself 	(GstPluginFeature *feature);
 
@@ -75,8 +77,10 @@ gst_elementfactory_class_init (GstElementFactoryClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
 
+#ifndef GST_DISABLE_REGISTRY
   gstobject_class->save_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_save_thyself);
   gstobject_class->restore_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_restore_thyself);
+#endif /* GST_DISABLE_REGISTRY */
 
   gstpluginfeature_class->unload_thyself = 	GST_DEBUG_FUNCPTR (gst_elementfactory_unload_thyself);
 
@@ -363,6 +367,7 @@ gst_elementfactory_unload_thyself (GstPluginFeature *feature)
   factory->type = 0;
 }
 
+#ifndef GST_DISABLE_REGISTRY
 static xmlNodePtr
 gst_elementfactory_save_thyself (GstObject *object,
 		                 xmlNodePtr parent)
@@ -442,3 +447,4 @@ gst_elementfactory_restore_thyself (GstObject *object, xmlNodePtr parent)
     children = children->next;
   }
 }
+#endif /* GST_DISABLE_REGISTRY */

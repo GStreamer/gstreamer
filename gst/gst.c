@@ -91,7 +91,9 @@ gst_init (int *argc, char **argv[])
 
   gst_elementfactory_get_type ();
   gst_typefactory_get_type ();
+#ifndef GST_DISABLE_AUTOPLUG
   gst_autoplugfactory_get_type ();
+#endif
 
   _gst_cpu_initialize ();
   _gst_props_initialize ();

@@ -1702,6 +1702,7 @@ gst_padtemplate_get_caps (GstPadTemplate *templ)
   return GST_PADTEMPLATE_CAPS (templ);
 }
 
+#ifndef GST_DISABLE_LOADSAVE
 /**
  * gst_padtemplate_save_thyself:
  * @templ: the padtemplate to save
@@ -1803,6 +1804,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
 
   return factory;
 }
+#endif /* !GST_DISABLE_LOADSAVE */
 
 
 /**

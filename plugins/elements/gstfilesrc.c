@@ -145,6 +145,7 @@ static void		gst_filesrc_set_property	(GObject *object, guint prop_id, const GVa
 static void		gst_filesrc_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static GstBuffer *	gst_filesrc_get		(GstPad *pad);
+static gboolean		gst_filesrc_srcpad_event	(GstPad *pad, GstEventType event, gint64 location, guint32 data);
 
 static GstElementStateReturn	gst_filesrc_change_state	(GstElement *element);
 
@@ -227,6 +228,7 @@ gst_filesrc_init (GstFileSrc *src)
 {
   src->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (src->srcpad,gst_filesrc_get);
+  gst_pad_set_event_function (src->srcpad,gst_filesrc_srcpad_event);
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
   src->pagesize = getpagesize();
@@ -279,7 +281,10 @@ gst_filesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       src->curoffset = g_value_get_ulong (value);
       break;
     case ARG_MAPSIZE:
-      src->mapsize = g_value_get_ulong (value);
+      if ((src->mapsize % src->pagesize) == 0)
+        src->mapsize = g_value_get_ulong (value);
+      else
+        GST_INFO(0, "invalid mapsize, must a multiple of pagesize, which is %d\n",src->pagesize);
       break;
     default:
       break;
@@ -345,8 +350,9 @@ static GstBuffer *
 gst_filesrc_map_region (GstFileSrc *src, off_t offset, off_t size)
 {
   GstBuffer *buf;
+  gint retval;
 
-  fprintf(stderr,"mapping region %d+%d from file into memory\n",offset,size);
+//  fprintf(stderr,"mapping region %d+%d from file into memory\n",offset,size);
 
   // time to allocate a new mapbuf
   buf = gst_buffer_new();
@@ -354,9 +360,11 @@ gst_filesrc_map_region (GstFileSrc *src, off_t offset, off_t size)
   GST_BUFFER_DATA(buf) = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
   if (GST_BUFFER_DATA(buf) == NULL) {
     fprintf(stderr, "ERROR: gstfilesrc couldn't map file!\n");
-  } else if (GST_BUFFER_DATA(buf) == -1) {
+  } else if (GST_BUFFER_DATA(buf) == (void *)-1) {
     perror("gstfilesrc:mmap()");
   }
+  // madvise to tell the kernel what to do with it
+  retval = madvise(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf),MADV_SEQUENTIAL);
   // fill in the rest of the fields
   GST_BUFFER_FLAGS(buf) = GST_BUFFER_READONLY | GST_BUFFER_ORIGINAL;
   GST_BUFFER_SIZE(buf) = size;
@@ -423,7 +431,8 @@ gst_filesrc_get (GstPad *pad)
 {
   GstFileSrc *src;
   GstBuffer *buf = NULL, *map;
-  off_t readend,mapstart,mapend;
+  off_t readend,readsize,mapstart,mapend;
+  gboolean eof = FALSE;
   GstFileSrcRegion region;
   int i;
 
@@ -431,10 +440,18 @@ gst_filesrc_get (GstPad *pad)
   src = GST_FILESRC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_FLAG_IS_SET (src, GST_FILESRC_OPEN), NULL);
 
-  // calculate end poiters so we don't have to do so repeatedly later
+  // calculate end pointers so we don't have to do so repeatedly later
+  readsize = src->block_size;
   readend = src->curoffset + src->block_size;		// note this is the byte *after* the read
   mapstart = GST_BUFFER_OFFSET(src->mapbuf);
   mapend = mapstart + GST_BUFFER_SIZE(src->mapbuf);	// note this is the byte *after* the map
+
+  // check to see if we're going to overflow the end of the file
+  if (readend > src->filelen) {
+    readsize = src->filelen - src->curoffset;
+    readend = src->curoffset;
+    eof = TRUE;
+  }
 
   // if the start is past the mapstart
   if (src->curoffset >= mapstart) {
@@ -442,15 +459,15 @@ gst_filesrc_get (GstPad *pad)
     // ('cause by definition if readend is in the buffer, so's readstart)
     if (readend <= mapend) {
 //      printf("read buf %d+%d lives in current mapbuf %d+%d, creating subbuffer of mapbuf\n",
-//             src->curoffset,src->block_size,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
+//             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
       buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - GST_BUFFER_OFFSET(src->mapbuf),
-                                   src->block_size);
+                                   readsize);
 
     // if the start actually is within the current mmap region, map an overlap buffer
     } else if (src->curoffset < mapend) {
 //      printf("read buf %d+%d starts in mapbuf %d+%d but ends outside, creating new mmap\n",
-//             src->curoffset,src->block_size,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
-      buf = gst_filesrc_map_small_region (src, src->curoffset, src->block_size);
+//             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
+      buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
     }
 
     // the only other option is that buffer is totally outside, which means we search for it
@@ -462,42 +479,42 @@ gst_filesrc_get (GstPad *pad)
     // or the read buffer fully contains the current mmap region
     // either way, it's really not relevant, we just create a new region anyway
 //    printf("read buf %d+%d starts before mapbuf %d+%d, but overlaps it\n",
-//             src->curoffset,src->block_size,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
-    buf = gst_filesrc_map_small_region (src, src->curoffset, src->block_size);
+//             src->curoffset,readsize,GST_BUFFER_OFFSET(src->mapbuf),GST_BUFFER_SIZE(src->mapbuf));
+    buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
   }
 
   // then deal with the case where the read buffer is totally outside
   if (buf == NULL) {
     // first check to see if there's a map that covers the right region already
-//    printf("searching for mapbuf to cover %d+%d\n",src->curoffset,src->block_size);
+//    printf("searching for mapbuf to cover %d+%d\n",src->curoffset,readsize);
     region.offset = src->curoffset;
-    region.size = src->block_size;
+    region.size = readsize;
     map = g_tree_search(src->map_regions,gst_filesrc_search_region_match,&region);
 
     // if we found an exact match, subbuffer it
     if (map != NULL) {
 //      printf("found mapbuf at %d+%d, creating subbuffer\n",GST_BUFFER_OFFSET(map),GST_BUFFER_SIZE(map));
-      buf = gst_buffer_create_sub (map, src->curoffset - GST_BUFFER_OFFSET(map), src->block_size);
+      buf = gst_buffer_create_sub (map, src->curoffset - GST_BUFFER_OFFSET(map), readsize);
 
     // otherwise we need to create something out of thin air
     } else {
       // if the read buffer crosses a mmap region boundary, create a one-off region
-      if ((src->curoffset / src->mapsize) != ((src->curoffset + src->block_size) / src->mapsize)) {
+      if ((src->curoffset / src->mapsize) != (readend / src->mapsize)) {
 //        printf("read buf %d+%d crosses a %d-byte boundary, creating a one-off\n",
-//               src->curoffset,src->block_size,src->mapsize);
-        buf = gst_filesrc_map_small_region (src, src->curoffset, src->block_size);
+//               src->curoffset,readsize,src->mapsize);
+        buf = gst_filesrc_map_small_region (src, src->curoffset, readsize);
 
       // otherwise we will create a new mmap region and set it to the default
       } else {
         off_t nextmap = src->curoffset - (src->curoffset % src->mapsize);
 //        printf("read buf %d+%d in new mapbuf at %d+%d, mapping and subbuffering\n",
-//               src->curoffset,src->block_size,nextmap,src->mapsize);
+//               src->curoffset,readsize,nextmap,src->mapsize);
         // first, we're done with the old mapbuf
         gst_buffer_unref(src->mapbuf);
         // create a new one
         src->mapbuf = gst_filesrc_map_region (src, nextmap, src->mapsize);
         // subbuffer it
-        buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - GST_BUFFER_OFFSET(src->mapbuf), src->block_size);
+        buf = gst_buffer_create_sub (src->mapbuf, src->curoffset - GST_BUFFER_OFFSET(src->mapbuf), readsize);
       }
     }
   }
@@ -507,6 +524,8 @@ gst_filesrc_get (GstPad *pad)
     for (i=0;i<GST_BUFFER_SIZE(buf);i+=src->pagesize)
       *(GST_BUFFER_DATA(buf)+i) = *(GST_BUFFER_DATA(buf)+i);
   }
+
+  // if we hit EOF, 
 
   /* we're done, return the buffer */
   src->curoffset += GST_BUFFER_SIZE(buf);
@@ -579,4 +598,24 @@ gst_filesrc_change_state (GstElement *element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
+}
+
+static gboolean
+gst_filesrc_srcpad_event(GstPad *pad, GstEventType event, gint64 location, guint32 data)
+{
+  GstFileSrc *src = GST_FILESRC(GST_PAD_PARENT(pad));
+
+  if (event == GST_EVENT_SEEK) {
+    if (data == SEEK_SET) {
+      src->curoffset = (guint64)location;
+    } else if (data == SEEK_CUR) {
+      src->curoffset += (gint64)location;
+    } else if (data == SEEK_END) {
+      src->curoffset = src->filelen - (guint64)location;
+    }
+    // push a discontinuous event?
+    return TRUE;
+  }
+
+  return FALSE;
 }

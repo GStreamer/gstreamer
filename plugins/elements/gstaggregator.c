@@ -329,7 +329,7 @@ gst_aggregator_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
   aggregator = GST_AGGREGATOR (gst_pad_get_parent (pad));
-  gst_trace_add_entry (NULL, 0, buf, "aggregator buffer");
+//  gst_trace_add_entry (NULL, 0, buf, "aggregator buffer");
 
   gst_aggregator_push (aggregator, pad, buf, "chain");
 }

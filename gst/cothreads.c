@@ -244,6 +244,7 @@ cothread_stub (void)
  *
  * Returns: the current cothread id
  */
+int cothread_getcurrent(void) __attribute__ ((no_instrument_function));
 int cothread_getcurrent(void) {
   cothread_context *ctx = pthread_getspecific(_cothread_key);
   if (!ctx) return -1;

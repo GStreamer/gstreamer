@@ -156,6 +156,8 @@ GstBuffer*	gst_buffer_merge		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1,guint32 offset,GstBuffer *buf2,guint32 len);
 GstBuffer*	gst_buffer_append		(GstBuffer *buf, GstBuffer *buf2);
 
+gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

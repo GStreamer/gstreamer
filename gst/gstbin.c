@@ -21,7 +21,6 @@
  */
 
 //#define GST_DEBUG_ENABLED
-#include "config.h"
 #include "gst_private.h"
 
 #include "gstbin.h"
