@@ -70,8 +70,10 @@ struct _GstRMDemux {
   int offset;
   int data_offset;
 
+  int n_chunks;
+  int chunk_index;
 
-  /* track stuff */
+  guint64 length;
 
 };
 

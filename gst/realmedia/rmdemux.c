@@ -151,6 +151,9 @@ static void gst_rmdemux_dump_indx(GstRMDemux *rmdemux, void *data, int length);
 static void gst_rmdemux_dump_data(GstRMDemux *rmdemux, void *data, int length);
 static void gst_rmdemux_dump_cont(GstRMDemux *rmdemux, void *data, int length);
 
+static GstRMDemuxStream *gst_rmdemux_get_stream_by_id(GstRMDemux *rmdemux,
+    int id);
+
 static GType gst_rmdemux_get_type (void) 
 {
   static GType rmdemux_type = 0;
@@ -317,7 +320,11 @@ static void gst_rmdemux_loop (GstElement *element)
   //cur_offset = gst_bytestream_tell(rmdemux->bs);
   
   cur_offset = rmdemux->offset;
-  GST_DEBUG(0,"loop at position %d",cur_offset);
+  GST_DEBUG(0,"loop at position %d, state %d",cur_offset, rmdemux->state);
+
+  if(rmdemux->length == 0){
+    rmdemux->length = gst_bytestream_length(rmdemux->bs);
+  }
 
   switch(rmdemux->state){
   case RMDEMUX_STATE_HEADER:
@@ -368,10 +375,8 @@ static void gst_rmdemux_loop (GstElement *element)
         break;
       case GST_MAKE_FOURCC('D','A','T','A'):
 	rmdemux->data_offset = rmdemux->offset + 10;
-	if(0){
-          if(debug)gst_rmdemux_dump_data(rmdemux, data + 8, rlen);
-          gst_rmdemux_parse_data(rmdemux, data + 8, rlen);
-	}
+        if(debug)gst_rmdemux_dump_data(rmdemux, data + 8, rlen);
+        gst_rmdemux_parse_data(rmdemux, data + 8, rlen);
         break;
       case GST_MAKE_FOURCC('C','O','N','T'):
         gst_bytestream_read(rmdemux->bs, &buf, length);
@@ -385,17 +390,15 @@ static void gst_rmdemux_loop (GstElement *element)
         break;
     }
 
-    if(rmdemux->offset < 2392654){
-      rmdemux->offset += length;
+    rmdemux->offset += length;
+    if(rmdemux->offset < rmdemux->length){
       ret = gst_bytestream_seek(rmdemux->bs, rmdemux->offset,
           GST_SEEK_METHOD_SET);
-      g_print("seek returned %d\n",ret);
     }else{
-      rmdemux->offset = rmdemux->data_offset;
+      rmdemux->offset = rmdemux->data_offset + 8;
       rmdemux->state = RMDEMUX_STATE_PLAYING;
       ret = gst_bytestream_seek(rmdemux->bs, rmdemux->offset,
           GST_SEEK_METHOD_SET);
-      g_print("seek returned %d\n",ret);
     }
 
     break;
@@ -403,17 +406,22 @@ static void gst_rmdemux_loop (GstElement *element)
   case RMDEMUX_STATE_SEEKING_EOS:
   {
     guint8 *data;
+    int i;
 
-    do{
-      ret = gst_bytestream_peek_bytes(rmdemux->bs, &data, 1);
-      if(ret<1){
-        if(!gst_rmdemux_handle_sink_event(rmdemux)){
-	  return;
-        }
-      }else{
-	break;
+    for(i=0;i<rmdemux->n_streams;i++){
+      GstPad *pad = rmdemux->streams[i]->pad;
+      if(pad){
+        gst_pad_push(pad, GST_BUFFER(gst_event_new(GST_EVENT_EOS)));
       }
-    }while(TRUE);
+    }
+
+    ret = gst_bytestream_peek_bytes(rmdemux->bs, &data, 1);
+    if(ret<1){
+      gst_rmdemux_handle_sink_event(rmdemux);
+    }else{
+      /* didn't expect this */
+      g_warning("expected EOS event");
+    }
     gst_element_set_eos(element);
 
     rmdemux->state = RMDEMUX_STATE_EOS;
@@ -424,11 +432,13 @@ static void gst_rmdemux_loop (GstElement *element)
     return;
   case RMDEMUX_STATE_PLAYING:
   {
-    int unknown1, unknown2;
+    int id, timestamp, unknown1;
+    GstRMDemuxStream *stream;
+    GstBuffer *buffer;
 
     do{
-      ret = gst_bytestream_peek_bytes(rmdemux->bs, &data, 12);
-      if(ret<12){
+      ret = gst_bytestream_peek_bytes(rmdemux->bs, &data, 10);
+      if(ret<10){
         if(!gst_rmdemux_handle_sink_event(rmdemux)){
           return;
 	}
@@ -438,19 +448,33 @@ static void gst_rmdemux_loop (GstElement *element)
     }while(1);
 
     length = RMDEMUX_GUINT32_GET(data + 0);
-    unknown1 = RMDEMUX_GUINT32_GET(data + 4);
-    unknown2 = RMDEMUX_GUINT32_GET(data + 8);
-    g_print("length %08x\n",length);
-    g_print("unknown1 %08x\n",unknown1);
-    g_print("unknown2 %08x\n",unknown2);
+    id = RMDEMUX_GUINT16_GET(data + 4);
+    timestamp = RMDEMUX_GUINT32_GET(data + 6);
+    unknown1 = RMDEMUX_GUINT16_GET(data + 10);
+    g_print("length %d stream id %d timestamp %d unknown %d\n",
+	length,id,timestamp,unknown1);
 
-    //re_hexdump_bytes(data + offset,n-12,offset);
-    g_print("\n");
+    gst_bytestream_flush(rmdemux->bs, 12);
 
-    rmdemux->offset += length;
-    ret = gst_bytestream_seek(rmdemux->bs, rmdemux->offset,
-        GST_SEEK_METHOD_SET);
-    g_print("seek returned %d\n",ret);
+    gst_bytestream_read(rmdemux->bs, &buffer, length - 12);
+    stream = gst_rmdemux_get_stream_by_id(rmdemux, id);
+
+    if(stream->pad){
+      gst_pad_push(stream->pad, buffer);
+    }
+
+    rmdemux->chunk_index++;
+    g_print("chunk_index %d n_chunks %d\n", rmdemux->chunk_index,
+	rmdemux->n_chunks);
+    if(rmdemux->chunk_index < rmdemux->n_chunks){
+      rmdemux->offset += length;
+      ret = gst_bytestream_seek(rmdemux->bs, rmdemux->offset,
+          GST_SEEK_METHOD_SET);
+    }else{
+      ret = gst_bytestream_seek(rmdemux->bs, 0, GST_SEEK_METHOD_END);
+      g_print("seek to end returned %d\n",ret);
+      rmdemux->state = RMDEMUX_STATE_SEEKING_EOS;
+    }
 
     break;
   }
@@ -542,10 +566,14 @@ void gst_rmdemux_add_stream(GstRMDemux *rmdemux, GstRMDemuxStream *stream)
       gst_caps_set(stream->caps,"height",GST_PROPS_INT(stream->height));
     }
     rmdemux->n_video_streams++;
-  }else{
+  }else
+  if(stream->subtype == GST_RMDEMUX_STREAM_AUDIO){
     stream->pad = gst_pad_new_from_template (
         GST_PAD_TEMPLATE_GET (src_audio_templ), g_strdup_printf ("audio_%02d",
 	  rmdemux->n_audio_streams));
+    stream->caps = GST_CAPS_NEW("audio_caps","audio/a52",NULL);
+    gst_caps_ref(stream->caps);
+    gst_caps_sink(stream->caps);
     if(stream->caps){
       if(gst_caps_has_property(stream->caps,"rate")){
         gst_caps_set(stream->caps,"rate",GST_PROPS_INT((int)stream->rate));
@@ -555,23 +583,27 @@ void gst_rmdemux_add_stream(GstRMDemux *rmdemux, GstRMDemuxStream *stream)
       }
     }
     rmdemux->n_audio_streams++;
+  }else{
+    g_print("not adding stream of type %d\n",stream->subtype);
   }
-
-  gst_pad_set_getcaps_function(stream->pad, gst_rmdemux_src_getcaps);
-  gst_pad_set_link_function(stream->pad, gst_rmdemux_src_link);
 
   rmdemux->streams[rmdemux->n_streams] = stream;
   rmdemux->n_streams++;
-  g_print("n_streams is now %d", rmdemux->n_streams);
+  g_print("n_streams is now %d\n", rmdemux->n_streams);
 
-  g_print("adding pad %p to rmdemux %p", stream->pad, rmdemux);
-  gst_element_add_pad(GST_ELEMENT (rmdemux), stream->pad);
+  if(stream->pad){
+    gst_pad_set_getcaps_function(stream->pad, gst_rmdemux_src_getcaps);
+    gst_pad_set_link_function(stream->pad, gst_rmdemux_src_link);
 
-  /* Note: we need to have everything set up before calling try_set_caps */
-  if(stream->caps){
-    g_print("setting caps to %s\n",gst_caps_to_string(stream->caps));
+    g_print("adding pad %p to rmdemux %p\n", stream->pad, rmdemux);
+    gst_element_add_pad(GST_ELEMENT (rmdemux), stream->pad);
 
-    gst_pad_try_set_caps(stream->pad, stream->caps);
+    /* Note: we need to have everything set up before calling try_set_caps */
+    if(stream->caps){
+      g_print("setting caps to %s\n",gst_caps_to_string(stream->caps));
+
+      gst_pad_try_set_caps(stream->pad, stream->caps);
+    }
   }
 }
 
@@ -888,13 +920,17 @@ static void gst_rmdemux_dump_indx(GstRMDemux *rmdemux, void *data, int length)
 
 static void gst_rmdemux_parse_data(GstRMDemux *rmdemux, void *data, int length)
 {
-
+  rmdemux->n_chunks = RMDEMUX_GUINT32_GET(data + 2);
 }
 
 static void gst_rmdemux_dump_data(GstRMDemux *rmdemux, void *data, int length)
 {
   int offset = 0;
   int n;
+
+  g_print("version: %d\n", RMDEMUX_GUINT16_GET(data + 0));
+  g_print("n_chunks: %d\n", RMDEMUX_GUINT32_GET(data + offset + 2));
+  g_print("unknown: 0x%08x\n", RMDEMUX_GUINT32_GET(data + offset + 6));
 
   re_hexdump_bytes(data + offset,10,offset);
   offset += 10;
