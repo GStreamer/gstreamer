@@ -2,10 +2,10 @@ librarydir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 library_LTLIBRARIES = libgstvideo.la
 
-libgstvideo_la_SOURCES = video.c
+libgstvideo_la_SOURCES = video.c gstvideosink.c 
 
 libgstvideoincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
-libgstvideoinclude_HEADERS = video.h
+libgstvideoinclude_HEADERS = video.h gstvideosink.h
 
 libgstvideo_la_LIBADD =
 libgstvideo_la_CFLAGS = $(GST_CFLAGS)
