@@ -76,7 +76,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
   }
 
   if (off == 0) {
-    gulong *words = (gulong *)GST_BUFFER_DATA(buf);
+    guint32 *words = (guint32 *)GST_BUFFER_DATA(buf);
 
     // don't even try to parse the head if it's not there FIXME
     if (last < 12) {
@@ -86,11 +86,11 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
 
     //g_print("testing is 0x%08lx '%s'\n",words[0],gst_riff_id_to_fourcc(words[0]));
     /* verify this is a valid RIFF file, first of all */
-    if (words[0] != GST_RIFF_TAG_RIFF) {
+    if (GUINT32_FROM_LE (words[0]) != GST_RIFF_TAG_RIFF) {
       riff->state = GST_RIFF_ENOTRIFF;
       return riff->state;
     }
-    riff->form = words[2];
+    riff->form = GUINT32_FROM_LE (words[2]);
     //g_print("form is 0x%08lx '%s'\n",words[2],gst_riff_id_to_fourcc(words[2]));
     riff->nextlikely = 12;	/* skip 'RIFF', length, and form */
 		// all OK here
@@ -128,7 +128,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
   GST_DEBUG (0,"gst_riff_parser: next 0x%08x  last 0x%08lx offset %08lx\n",riff->nextlikely, last, off);
   /* loop while the next likely chunk header is in this buffer */
   while ((riff->nextlikely+12) <= last) {
-    gulong *words = (gulong *)((guchar *)GST_BUFFER_DATA(buf) + riff->nextlikely - off );
+    guint32 *words = (guint32 *)((guchar *)GST_BUFFER_DATA(buf) + riff->nextlikely - off );
 
     // loop over all of the chunks to check which one is finished
     while (riff->chunks) {
@@ -150,12 +150,12 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
     g_return_val_if_fail(chunk != NULL, GST_RIFF_ENOMEM);
 
     chunk->offset = riff->nextlikely+8;	/* point to the actual data */
-    chunk->id = words[0];
-    chunk->size = words[1];
+    chunk->id = GUINT32_FROM_LE (words[0]);
+    chunk->size = GUINT32_FROM_LE (words[1]);
     chunk->data = (gchar *)(words+2);
     // we need word alignment
     //if (chunk->size & 0x01) chunk->size++;
-    chunk->form = words[2]; /* fill in the form,  might not be valid */
+    chunk->form = GUINT32_FROM_LE (words[2]); /* fill in the form,  might not be valid */
 
 
     if (chunk->id == GST_RIFF_TAG_LIST) {
@@ -170,9 +170,9 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
     }
     else {
 
-      GST_DEBUG (0,"gst_riff_parser: chunk id offset %08x is 0x%08lx '%s' and is 0x%08lx long\n",
-		riff->nextlikely, words[0],
-            	gst_riff_id_to_fourcc(words[0]),words[1]);
+      GST_DEBUG (0,"gst_riff_parser: chunk id offset %08x is 0x%08x '%s' and is 0x%08x long\n",
+		riff->nextlikely, GUINT32_FROM_LE (words[0]),
+            	gst_riff_id_to_fourcc(words[0]), GUINT32_FROM_LE (words[1]));
 
       riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
       // if this buffer is incomplete
