@@ -53,7 +53,7 @@ GstMplexIBitStream::GstMplexIBitStream (GstPad *_pad,
   gst_bytestream_peek_bytes (bs, &data, 1);
 
   if (!ReadIntoBuffer () && buffered == 0) {
-    gst_element_error (gst_pad_get_parent (_pad), RESOURCE, READ, NULL,
+    gst_element_error (gst_pad_get_parent (_pad), RESOURCE, READ, (""),
 		       ("Failed to read from input pad %s",
 		       gst_pad_get_name (pad)));
   }
