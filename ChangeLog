@@ -1,5 +1,10 @@
 2005-01-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_change_state):
+	  Explicit state change to workaround refcount bugs.
+
+2005-01-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/avi/gstavimux.c: (gst_avimux_write_tag),
 	(gst_avimux_riff_get_avi_header):
 	  Fix...
