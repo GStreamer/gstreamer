@@ -173,6 +173,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	}
 	if (needed_size <= GST_BUFFER_SIZE (current)) {
 	  buffer = NULL;
+	  break;
 	} else {
 	  if (needed_size < GST_BUFFER_SIZE (buffer)) {
 	    /* need to create subbuffer to not have overlapping data */
@@ -215,7 +216,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	  }
 	  GST_INFO_OBJECT (store, "adding buffer %p with offset %"G_GINT64_FORMAT" and size %u", 
 			   buffer, GST_BUFFER_OFFSET (buffer), GST_BUFFER_SIZE (buffer));
-	  store->buffers = g_list_insert_before (store->buffers, walk, buffer);
+	  store->buffers = g_list_insert_before (store->buffers, current_list, buffer);
 	  buffer = NULL;
 	  break;
 	}
@@ -231,6 +232,14 @@ gst_buffer_store_add_buffer_func (GstBufferStore *store, GstBuffer *buffer)
 	g_assert (store->buffers == NULL);
 	store->buffers = g_list_prepend (NULL, buffer);
       }
+    }
+    {
+      GList *walk = store->buffers;
+      while (walk) {
+	g_print ("  %llu - %u\n", GST_BUFFER_OFFSET (walk->data), GST_BUFFER_SIZE (walk->data));
+	walk = g_list_next (walk);
+      }
+      g_print ("\n");
     }
     return TRUE;
   }
@@ -363,12 +372,12 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
       while (size) {
 	if (walk == NULL || 
 	    (have_offset && 
-	     cur_offset + GST_BUFFER_SIZE (current) != GST_BUFFER_OFFSET (walk->data))) {
-	  GST_DEBUG_OBJECT (store, "not all data for offset %"G_GUINT64_FORMAT" and size %u available, aborting",
+	     GST_BUFFER_OFFSET (current) + GST_BUFFER_SIZE (current) != GST_BUFFER_OFFSET (walk->data))) {
+	  GST_DEBUG_OBJECT (store, "not all data for offset %"G_GUINT64_FORMAT" and remaining size %u available, aborting",
 			    offset, size);
 	  gst_data_unref (GST_DATA (ret));
 	  ret = NULL;
-	  break;
+	  goto out;
 	}
 	current = GST_BUFFER (walk->data);
 	walk = g_list_next (walk);
@@ -381,6 +390,7 @@ gst_buffer_store_get_buffer (GstBufferStore *store, guint64 offset, guint size)
       cur_offset += GST_BUFFER_SIZE (current);
     }
   }
+out:
   
   return ret;
 }
