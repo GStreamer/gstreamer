@@ -14,7 +14,8 @@ AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
+ACLOCAL_FLAGS="-I common/m4 $ACLOCAL_FLAGS"
+AC_SUBST(ACLOCAL_AMFLAGS, $ACLOCAL_FLAGS)
 
 AC_PROG_CC
 AM_PROG_CC_STDC
