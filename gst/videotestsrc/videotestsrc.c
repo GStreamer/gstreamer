@@ -281,11 +281,14 @@ static void paint_setup_YV12 (paintinfo * p, char *dest);
 static void paint_setup_YUY2 (paintinfo * p, char *dest);
 static void paint_setup_UYVY (paintinfo * p, char *dest);
 static void paint_setup_YVYU (paintinfo * p, char *dest);
+static void paint_setup_IYU2 (paintinfo * p, char *dest);
 static void paint_setup_Y800 (paintinfo * p, char *dest);
 static void paint_setup_IMC1 (paintinfo * p, char *dest);
 static void paint_setup_IMC2 (paintinfo * p, char *dest);
 static void paint_setup_IMC3 (paintinfo * p, char *dest);
 static void paint_setup_IMC4 (paintinfo * p, char *dest);
+static void paint_setup_YUV9 (paintinfo * p, char *dest);
+static void paint_setup_YVU9 (paintinfo * p, char *dest);
 static void paint_setup_xRGB8888 (paintinfo * p, char *dest);
 static void paint_setup_xBGR8888 (paintinfo * p, char *dest);
 static void paint_setup_RGBx8888 (paintinfo * p, char *dest);
@@ -297,8 +300,10 @@ static void paint_setup_xRGB1555 (paintinfo * p, char *dest);
 
 static void paint_hline_I420 (paintinfo * p, int x, int y, int w);
 static void paint_hline_YUY2 (paintinfo * p, int x, int y, int w);
+static void paint_hline_IYU2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y800 (paintinfo * p, int x, int y, int w);
 static void paint_hline_IMC1 (paintinfo * p, int x, int y, int w);
+static void paint_hline_YUV9 (paintinfo * p, int x, int y, int w);
 static void paint_hline_str4 (paintinfo * p, int x, int y, int w);
 static void paint_hline_str3 (paintinfo * p, int x, int y, int w);
 static void paint_hline_RGB565 (paintinfo * p, int x, int y, int w);
@@ -329,11 +334,13 @@ struct fourcc_list_struct fourcc_list[] = {
   /*{ "Y42P", "Y42P", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
   /*{ "CLJR", "CLJR", 8, paint_setup_YVYU, paint_hline_YUY2 }, */
   /*{ "IYU1", "IYU1", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
-  /*{ "IYU2", "IYU2", 24, paint_setup_YVYU, paint_hline_YUY2 }, */
+  { "IYU2", "IYU2", 24, paint_setup_IYU2, paint_hline_IYU2 },
 
 /* planar */
   /* YVU9 */
+  {"YVU9", "YVU9", 9, paint_setup_YVU9, paint_hline_YUV9},
   /* YUV9 */
+  {"YUV9", "YUV9", 9, paint_setup_YUV9, paint_hline_YUV9},
   /* IF09 */
   /* YV12 */
   {"YV12", "YV12", 12, paint_setup_YV12, paint_hline_I420},
@@ -354,8 +361,6 @@ struct fourcc_list_struct fourcc_list[] = {
   /* Y42B */
   /* Y800 grayscale */
   {"Y800", "Y800", 8, paint_setup_Y800, paint_hline_Y800},
-
-  /*{ "IYU2", 24, paint_setup_YVYU, paint_hline_YUY2 }, */
 
   {"RGB ", "xRGB8888", 32, paint_setup_xRGB8888, paint_hline_str4, 1, 24,
   		0x00ff0000, 0x0000ff00, 0x000000ff },
@@ -389,14 +394,13 @@ struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
     gst_caps_get(caps, "format", &format);
     for (i = 0; i < n_fourccs; i++) {
       s = fourcc_list[i].fourcc;
-      g_print("testing " GST_FOURCC_FORMAT " and %s\n",
-	  GST_FOURCC_ARGS(format), s);
+      //g_print("testing " GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s);
       fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
       if(fourcc == format){
         return fourcc_list + i;
       }
     }
-  }else if(strcmp(mimetype, "video/x-raw-yuv")==0){
+  }else if(strcmp(mimetype, "video/x-raw-rgb")==0){
     g_warning("video/x-raw-rgb not implemented");
     return NULL;
   }else{
@@ -744,6 +748,25 @@ paint_hline_YUY2 (paintinfo * p, int x, int y, int w)
 }
 
 static void
+paint_setup_IYU2 (paintinfo * p, char *dest)
+{
+  p->yp = dest + 1;
+  p->up = dest + 0;
+  p->vp = dest + 2;
+}
+
+static void
+paint_hline_IYU2 (paintinfo * p, int x, int y, int w)
+{
+  int offset;
+
+  offset = y * p->width * 3;
+  memset_str3 (p->yp + offset + x * 3, p->color->Y, w);
+  memset_str3 (p->up + offset + x * 3, p->color->U, w);
+  memset_str3 (p->vp + offset + x * 3, p->color->V, w);
+}
+
+static void
 paint_setup_Y800 (paintinfo * p, char *dest)
 {
   p->yp = dest;
@@ -796,6 +819,35 @@ paint_hline_IMC1 (paintinfo * p, int x, int y, int w)
   int x2 = (x + w) / 2;
   int offset = y * p->width;
   int offset1 = (y / 2) * p->width;
+
+  memset (p->yp + offset + x, p->color->Y, w);
+  memset (p->up + offset1 + x1, p->color->U, x2 - x1);
+  memset (p->vp + offset1 + x1, p->color->V, x2 - x1);
+}
+
+static void
+paint_setup_YVU9 (paintinfo * p, char *dest)
+{
+  p->yp = dest;
+  p->vp = dest + p->width * p->height;
+  p->up = dest + p->width * p->height + (p->width/4) * (p->height/4);
+}
+
+static void
+paint_setup_YUV9 (paintinfo * p, char *dest)
+{
+  p->yp = dest;
+  p->up = dest + p->width * p->height;
+  p->vp = dest + p->width * p->height + (p->width/4) * (p->height/4);
+}
+
+static void
+paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
+{
+  int x1 = x / 4;
+  int x2 = (x + w) / 4;
+  int offset = y * p->width;
+  int offset1 = (y / 4) * (p->width / 4);
 
   memset (p->yp + offset + x, p->color->Y, w);
   memset (p->up + offset1 + x1, p->color->U, x2 - x1);

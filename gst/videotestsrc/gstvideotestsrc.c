@@ -78,6 +78,7 @@ static void gst_videotestsrc_reset (GstVideotestsrc *videotestsrc);
 static GstElementClass *parent_class = NULL;
 
 static GstCaps * gst_videotestsrc_get_capslist (void);
+static GstCaps * gst_videotestsrc_get_capslist_size (int height, int width, float rate);
 
 
 static GstPadTemplate *
@@ -87,22 +88,8 @@ videotestsrc_src_template_factory(void)
 
   if(!templ){
     GstCaps *caps;
-    GstCaps *caps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (1, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (1, G_MAXINT),
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-    GstCaps *caps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
-		"width", GST_PROPS_INT_RANGE (1, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (1, G_MAXINT),
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
 
-    caps = gst_caps_intersect(caps1, gst_videotestsrc_get_capslist ());
-    gst_caps_unref (caps1);
-    caps1 = caps;
-    caps = gst_caps_intersect(caps2, gst_videotestsrc_get_capslist ());
-    gst_caps_unref (caps2);
-    caps2 = caps;
-    caps = gst_caps_append(caps1, caps2);
+    caps = gst_videotestsrc_get_capslist_size(0,0,0.0);
 
     templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
   }
@@ -161,16 +148,16 @@ gst_videotestsrc_class_init (GstVideotestsrcClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH,
-      g_param_spec_int ("width", "width", "width",
-        G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+      g_param_spec_int ("width", "width", "Default width",
+        1, G_MAXINT, 320, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HEIGHT,
-      g_param_spec_int ("height", "height", "height",
-        G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));	/* CHECKME */
+      g_param_spec_int ("height", "height", "Default height",
+        1, G_MAXINT, 240, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FOURCC,
       g_param_spec_string ("fourcc", "fourcc", "fourcc",
         NULL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RATE,
-      g_param_spec_float ("fps", "FPS", "Frame rate",
+      g_param_spec_float ("fps", "FPS", "Default frame rate",
         0., G_MAXFLOAT, 30., G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
       g_param_spec_enum ("pattern", "Pattern", "Type of test pattern to generate",
@@ -206,19 +193,28 @@ static GstPadLinkReturn
 gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
 {
   GstVideotestsrc *videotestsrc;
+  GstCaps *caps1;
 
   GST_DEBUG ("gst_videotestsrc_srcconnect");
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
   for ( ; caps != NULL; caps = caps->next) {
-    GstCaps *caps1 = gst_caps_copy_1(caps);
     GstPadLinkReturn ret;
 
-    gst_caps_set(caps1, "framerate", GST_PROPS_FLOAT((float)videotestsrc->rate));
-    gst_caps_set(caps1, "width", GST_PROPS_INT(videotestsrc->width));
-    gst_caps_set(caps1, "height", GST_PROPS_INT(videotestsrc->height));
+    caps1 = gst_caps_copy_1(caps);
 
-    //g_print("%s\n", gst_caps_to_string(caps1));
+    if(!gst_caps_has_fixed_property(caps1, "framerate")){
+      gst_caps_set(caps1, "framerate", GST_PROPS_FLOAT(videotestsrc->default_rate));
+    }
+    if(!gst_caps_has_fixed_property(caps1, "width")){
+      gst_caps_set(caps1, "width", GST_PROPS_INT(videotestsrc->default_width));
+    }
+    if(!gst_caps_has_fixed_property(caps1, "height")){
+      gst_caps_set(caps1, "height", GST_PROPS_INT(videotestsrc->default_height));
+    }
+
+    gst_caps_ref(caps1);
+    gst_caps_sink(caps1);
 
     ret = gst_pad_try_set_caps(pad, caps1);
 
@@ -234,8 +230,8 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
       continue;
     }
 
-    /* if we get here, it's allright */
-    gst_caps_unref(caps1);
+    /* if we get here, it's OK */
+    //gst_caps_unref(caps1);
     break;
   }
 
@@ -244,18 +240,14 @@ gst_videotestsrc_srcconnect (GstPad * pad, GstCaps * caps)
     return GST_PAD_LINK_REFUSED;
   }
 
-  GST_DEBUG ("videotestsrc: using fourcc element %p %s\n",
-	videotestsrc->fourcc, videotestsrc->fourcc->name);
+  g_return_val_if_fail(videotestsrc->fourcc, GST_PAD_LINK_REFUSED);
 
-  if(videotestsrc->width==0){
-    gst_caps_get_int (caps, "width", &videotestsrc->width);
-  }
-  if(videotestsrc->height==0){
-    gst_caps_get_int (caps, "height", &videotestsrc->height);
-  }
-  if(videotestsrc->rate==0){
-    gst_caps_get_float (caps, "framerate", &videotestsrc->rate);
-  }
+  //g_print ("videotestsrc: using fourcc element %p %s\n",
+  //  videotestsrc->fourcc, videotestsrc->fourcc->name);
+
+  gst_caps_get_int (caps1, "width", &videotestsrc->width);
+  gst_caps_get_int (caps1, "height", &videotestsrc->height);
+  gst_caps_get_float (caps1, "framerate", &videotestsrc->rate);
 
   videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
@@ -293,28 +285,73 @@ gst_videotestsrc_get_capslist (void)
   GstCaps *caps;
   int i;
 
-  if (capslist)
-    return capslist;
-
-  for(i=0;i<n_fourccs;i++){
-    caps = paint_get_caps(fourcc_list + i);
-    capslist = gst_caps_append(capslist, caps);
+  if(!capslist){
+    for(i=0;i<n_fourccs;i++){
+      caps = paint_get_caps(fourcc_list + i);
+      capslist = gst_caps_append(capslist, caps);
+    }
   }
 
-  return capslist;
+  g_return_val_if_fail(capslist->refcount > 0, NULL);
+
+  return gst_caps_ref(capslist);
+}
+
+static GstCaps *
+gst_videotestsrc_get_capslist_size (int height, int width, float rate)
+{
+  GstCaps *capslist;
+  GstCaps *caps;
+  GstCaps *caps_yuv_mask;
+  GstCaps *caps_rgb_mask;
+  GstCaps *caps_yuv;
+  GstCaps *caps_rgb;
+
+  caps_rgb_mask = GST_CAPS_NEW("src","video/x-raw-rgb",
+		"width", GST_PROPS_INT_RANGE (1, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (1, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+  caps_yuv_mask = GST_CAPS_NEW("src","video/x-raw-yuv",
+		"width", GST_PROPS_INT_RANGE (1, G_MAXINT),
+		"height", GST_PROPS_INT_RANGE (1, G_MAXINT),
+                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+
+  if(height){
+    gst_caps_set(caps_rgb_mask, "height", GST_PROPS_INT(height));
+    gst_caps_set(caps_yuv_mask, "height", GST_PROPS_INT(height));
+  }
+  if(width){
+    gst_caps_set(caps_rgb_mask, "width", GST_PROPS_INT(width));
+    gst_caps_set(caps_yuv_mask, "width", GST_PROPS_INT(width));
+  }
+  if(rate > 0){
+    gst_caps_set(caps_rgb_mask, "framerate", GST_PROPS_FLOAT(rate));
+    gst_caps_set(caps_yuv_mask, "framerate", GST_PROPS_FLOAT(rate));
+  }
+
+  capslist = gst_videotestsrc_get_capslist ();
+  g_return_val_if_fail(capslist->refcount > 0, NULL);
+  caps_yuv = gst_caps_intersect(caps_yuv_mask, capslist);
+  caps_rgb = gst_caps_intersect(caps_rgb_mask, capslist);
+  caps = gst_caps_append(caps_yuv, caps_rgb);
+
+  //gst_caps_unref (capslist);
+  //gst_caps_unref (caps_yuv_mask);
+  //gst_caps_unref (caps_rgb_mask);
+
+  g_return_val_if_fail(caps->refcount > 0, NULL);
+
+  return caps;
 }
 
 static GstCaps *
 gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
 {
   GstVideotestsrc *vts;
-  GstCaps *caps1;
-  GstCaps *caps2;
 
   vts = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
-  caps1 = NULL;
-
+#if 0
   if (vts->forced_format != NULL) {
     struct fourcc_list_struct *fourcc;
 
@@ -323,35 +360,13 @@ gst_videotestsrc_getcaps (GstPad * pad, GstCaps * caps)
       caps1 = paint_get_caps(fourcc);
     }
   }
+#endif
 
-  if (caps1 == NULL) {
-    caps1 = gst_videotestsrc_get_capslist ();
-  }
+  caps = gst_videotestsrc_get_capslist_size (vts->width, vts->height, vts->rate);
 
-  if(vts->width){
-    caps2 = gst_caps_append(
-            GST_CAPS_NEW("ack","video/x-raw-yuv",
-		"width",GST_PROPS_INT(vts->width),
-		"height",GST_PROPS_INT(vts->height),
-                "framerate", GST_PROPS_FLOAT(vts->rate)),
-            GST_CAPS_NEW("ack","video/x-raw-rgb",
-		"width",GST_PROPS_INT(vts->width),
-		"height",GST_PROPS_INT(vts->height),
-                "framerate", GST_PROPS_FLOAT(vts->rate)));
-  }else{
-    caps2 = gst_caps_append(
-             GST_CAPS_NEW("ack","video/x-raw-yuv",
-		"width",GST_PROPS_INT_RANGE(16,4096),
-		"height",GST_PROPS_INT_RANGE(16,4096),
-                "framerate", GST_PROPS_FLOAT(vts->rate)),
-             GST_CAPS_NEW("ack","video/x-raw-rgb",
-		"width",GST_PROPS_INT_RANGE(16,4096),
-		"height",GST_PROPS_INT_RANGE(16,4096),
-                "framerate", GST_PROPS_FLOAT(vts->rate)));
-  }
+  g_return_val_if_fail(caps->refcount > 0, NULL);
 
-  /* ref intersection and return it */
-  return gst_caps_ref (gst_caps_intersect(caps1,caps2));
+  return caps;
 }
 
 static void
@@ -369,17 +384,18 @@ gst_videotestsrc_init (GstVideotestsrc * videotestsrc)
   videotestsrc->pool = NULL;
   gst_videotestsrc_set_pattern(videotestsrc, GST_VIDEOTESTSRC_SMPTE);
   gst_videotestsrc_reset (videotestsrc);
+
+  videotestsrc->sync = TRUE;
+  videotestsrc->default_width = 320;
+  videotestsrc->default_height = 240;
+  videotestsrc->default_rate = 30.;
 }
 
 static void
 gst_videotestsrc_reset (GstVideotestsrc *videotestsrc)
 {
-  videotestsrc->sync = TRUE;
-  videotestsrc->width = 640;
-  videotestsrc->height = 480;
-  videotestsrc->rate = 30.;
-  videotestsrc->timestamp = 0;
-  videotestsrc->interval = GST_SECOND / videotestsrc->rate;
+  videotestsrc->timestamp_offset = 0;
+  videotestsrc->n_frames = 0;
 }
 
 
@@ -398,7 +414,10 @@ gst_videotestsrc_get (GstPad * pad)
 
   videotestsrc = GST_VIDEOTESTSRC (gst_pad_get_parent (pad));
 
+  g_return_val_if_fail (videotestsrc->fourcc != NULL, NULL);
+
   newsize = (videotestsrc->width * videotestsrc->height * videotestsrc->bpp) >> 3;
+  g_return_val_if_fail (newsize > 0, NULL);
 
   GST_DEBUG ("size=%ld %dx%d\n", newsize, videotestsrc->width, videotestsrc->height);
 
@@ -425,15 +444,22 @@ gst_videotestsrc_get (GstPad * pad)
     do {
       GstClockID id;
 
-      videotestsrc->timestamp += videotestsrc->interval;
-      GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp;
+      GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
+	(videotestsrc->n_frames * GST_SECOND)/(double)videotestsrc->rate;
+      videotestsrc->n_frames++;
 
+      /* FIXME this is not correct if we do QoS */
       if (videotestsrc->clock) {
-        id = gst_clock_new_single_shot_id (videotestsrc->clock, GST_BUFFER_TIMESTAMP (buf));
+        id = gst_clock_new_single_shot_id (videotestsrc->clock,
+	    GST_BUFFER_TIMESTAMP (buf));
         gst_element_clock_wait (GST_ELEMENT (videotestsrc), id, &jitter);
         gst_clock_id_free (id);
       }
     } while (jitter > 100 * GST_MSECOND);
+  }else{
+    GST_BUFFER_TIMESTAMP (buf) = videotestsrc->timestamp_offset +
+      (videotestsrc->n_frames * GST_SECOND)/(double)videotestsrc->rate;
+    videotestsrc->n_frames++;
   }
 
   return buf;
@@ -474,10 +500,10 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
   GST_DEBUG ("gst_videotestsrc_set_property");
   switch (prop_id) {
     case ARG_WIDTH:
-      src->width = g_value_get_int (value);
+      src->default_width = g_value_get_int (value);
       break;
     case ARG_HEIGHT:
-      src->height = g_value_get_int (value);
+      src->default_height = g_value_get_int (value);
       break;
     case ARG_FOURCC:
       format = g_value_get_string (value);
@@ -489,8 +515,7 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id, const GValue * v
       }
       break;
     case ARG_RATE:
-      src->rate = g_value_get_float (value);
-      src->interval = GST_SECOND/src->rate;
+      src->default_rate = g_value_get_float (value);
       break;
     case ARG_TYPE:
       gst_videotestsrc_set_pattern (src, g_value_get_enum (value));
@@ -514,16 +539,16 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value, 
 
   switch (prop_id) {
     case ARG_WIDTH:
-      g_value_set_int (value, src->width);
+      g_value_set_int (value, src->default_width);
       break;
     case ARG_HEIGHT:
-      g_value_set_int (value, src->height);
+      g_value_set_int (value, src->default_height);
       break;
     case ARG_FOURCC:
       g_value_set_string (value, src->forced_format);
       break;
     case ARG_RATE:
-      g_value_set_float (value, src->rate);
+      g_value_set_float (value, src->default_rate);
       break;
     case ARG_TYPE:
       g_value_set_enum (value, src->type);
