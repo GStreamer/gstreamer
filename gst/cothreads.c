@@ -183,15 +183,19 @@ cothread_context_free (cothread_context *ctx)
 
   GST_INFO (GST_CAT_COTHREADS, "free cothread context");
 
-  for (i = 0; i < COTHREAD_MAXTHREADS; i++) {
+  for (i = 1; i < COTHREAD_MAXTHREADS; i++) {
     if (ctx->cothreads[i]) {
       cothread_destroy (ctx->cothreads[i]);
     }
   }
+  if (ctx->cothreads[0]) {
+    g_free(ctx->cothreads[0]);
+    ctx->cothreads[0] = NULL;
+  }
   g_hash_table_destroy (ctx->data);
   /* make sure we free the private key for cothread context */
   GST_INFO (GST_CAT_COTHREADS, "setting private _cothread_ctx_key to NULL in thread %p",
-	g_thread_self());
+	    g_thread_self());
   g_static_private_set (&_cothread_ctx_key, NULL, NULL);
   g_free (ctx);
 }
@@ -346,66 +350,14 @@ cothread_destroy (cothread_state *cothread)
    * with the lock held */
   cothread_unlock (cothread);
 
-  if (cothreadnum == 0) 
-  {
-    GST_INFO (GST_CAT_COTHREADS,
-	      "trying to destroy cothread 0 with %d cothreads left", 
-	     ctx->ncothreads);
-    if (ctx->ncothreads > 1)
-    {
-      /* we're trying to destroy cothread 0 when there are still cothreads
-       * active, so kill those first */
-      int i;
+  /* doing cleanups of the cothread create */
+  GST_DEBUG (GST_CAT_COTHREADS, "destroy cothread %d with magic number 0x%x",
+           cothreadnum, cothread->magic_number);
+  g_assert (cothread->magic_number == COTHREAD_MAGIC_NUMBER);
 
-      for (i = 1; i < COTHREAD_MAXTHREADS; ++i)
-      {
-	if (ctx->cothreads[i] != NULL)
-	{
-	  cothread_destroy (ctx->cothreads[i]);
-	  GST_INFO (GST_CAT_COTHREADS,
-	            "destroyed cothread %d, %d cothreads left",
-		    i, ctx->ncothreads);
-	}
-      }
-    }
-    g_assert (ctx->ncothreads == 1);
-    GST_INFO (GST_CAT_COTHREADS, "freeing 0th cothread");
-    g_free (cothread);
-  }
-  else {
-  /*  int res; 
-   *  Replaced with version below until cothreads issues solved */
-   int res = 0;
-    
-    /* doing cleanups of the cothread create */
-    GST_DEBUG (GST_CAT_COTHREADS, "destroy cothread %d with magic number 0x%x",
-             cothreadnum, cothread->magic_number);
-    g_assert (cothread->magic_number == COTHREAD_MAGIC_NUMBER);
+  g_assert (cothread->priv == NULL);
 
-    g_assert (cothread->priv == NULL);
-
-    GST_DEBUG (GST_CAT_COTHREADS, 
-               "munmap cothread slot stack from %p to %p (size 0x%lx)", 
-  	       cothread, cothread + COTHREAD_STACKSIZE, 
-	       (long) COTHREAD_STACKSIZE);
-/*    res = munmap (thread, COTHREAD_STACKSIZE);
- *    Commented out waiting for resolution for cothread issue */
-    if (res != 0)
-    {
-      switch (res)
-      {
-	case EINVAL:
-	  g_warning ("munmap doesn't like start %p or length %d\n",
-	             cothread, COTHREAD_STACKSIZE);
-	  break;
-	default:
-	  g_warning ("Thomas was too lazy to check for all errors, "
-	             "so I can't tell you what is wrong.\n");
-	  break;
-      }
-    }
-  }
-  GST_DEBUG (GST_CAT_COTHREADS, "munmap done");
+  memset(cothread,0,sizeof(*cothread));
 
   ctx->cothreads[cothreadnum] = NULL;
   ctx->ncothreads--;
@@ -492,7 +444,7 @@ static void
 cothread_stub (void)
 {
   cothread_context *ctx = cothread_get_current_context();
-  register cothread_state *thread = ctx->cothreads[ctx->current];
+  cothread_state *thread = ctx->cothreads[ctx->current];
 
   GST_DEBUG_ENTER ("");
 
