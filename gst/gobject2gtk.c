@@ -108,6 +108,28 @@ g_object_class_find_property(GtkObjectClass *class,gchar *name)
   return spec;
 }
 
+GParamSpec **
+g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties) {
+  GType type = G_OBJECT_CLASS_TYPE (oclass);
+  guint32 *flags;
+  GtkArg *args;
+  gint num_args;
+  GParamSpec **params;
+  int i;
+
+  args = gtk_object_query_args (type, &flags, &num_args);
+
+  params = g_new0(GParamSpec *,num_args);
+  for (i=0;i<num_args;i++) {
+    params[i] = g_new0(GParamSpec,1);
+    params[i]->name = args[i].name;
+    params[i]->value_type = args[i].type;
+    params[i]->flags = flags[i];
+  }
+
+  return params;
+}
+
 GParamSpec *
 g_param_spec_boolean(gchar *name,gchar *nick,gchar *blurb,gboolean def,gint flags) {
   GParamSpec *spec = g_new(GParamSpec,1);

@@ -80,7 +80,6 @@ print_element_info (GstElementFactory *factory)
   GstPad *pad;
   GstRealPad *realpad;
   GstPadTemplate *padtemplate;
-  guint32 *flags;
   gint num_properties,i;
   GParamSpec **property_specs;
   GList *children;
@@ -254,27 +253,12 @@ print_element_info (GstElementFactory *factory)
   } else
     printf("  none\n");
 
-#ifdef USE_GLIB2
-  // FIXME accessing private data of GObjectClass !!!
-  num_properties = G_OBJECT_GET_CLASS (element)->n_property_specs;
-  property_specs = G_OBJECT_GET_CLASS (element)->property_specs;
-#else
-  property_specs = (GParamSpec **)gtk_object_query_args (GTK_OBJECT_TYPE (element), &flags, &num_properties);
-#endif
+  property_specs = g_object_class_list_properties(G_OBJECT_GET_CLASS (element), &num_properties);
   printf("\nElement Arguments:\n");
 
   for (i=0;i<num_properties;i++) {
     GValue value = { 0, };
-#ifdef USE_GLIB2
     GParamSpec *param = property_specs[i];
-#else
-    // gtk doesn't have a paramspec, so we create one here
-    GParamSpec rparm, *param = &rparm;
-    GtkArg *args = (GtkArg *)property_specs; // ugly typecast here 
-
-    param->value_type = args[i].type;
-    param->name = args[i].name;
-#endif
 
     g_value_init (&value, param->value_type);
     g_object_get_property (G_OBJECT (element), param->name, &value);

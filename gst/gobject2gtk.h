@@ -189,6 +189,7 @@ struct _GParamSpec {
 
 void g_object_class_install_property(GtkObjectClass *oclass,guint property_id,GParamSpec *pspec);
 GParamSpec *g_object_class_find_property(GtkObjectClass *oclass,gchar *name);
+GParamSpec **g_object_class_list_properties(GtkObjectClass *oclass,guint *n_properties);
 
 #define G_IS_PARAM_SPEC_ENUM(pspec)		(GTK_FUNDAMENTAL_TYPE(pspec->value_type) == GTK_TYPE_ENUM)
 

@@ -11,7 +11,6 @@ int main(int argc,char *argv[]) {
   GstPad *pad;
   GstPadTemplate *padtemplate;
   GParamSpec **property_specs;
-  guint32 *flags;
   gint num_properties,i;
 
   gst_debug_set_categories(0);
@@ -64,24 +63,9 @@ int main(int argc,char *argv[]) {
       }
 
       // write out the args
-#ifdef USE_GLIB2
-      // FIXME accessing private data of GObjectClass !!!
-      num_properties = G_OBJECT_GET_CLASS (element)->n_property_specs;
-      property_specs = G_OBJECT_GET_CLASS (element)->property_specs;
-#else
-      property_specs = (GParamSpec **)gtk_object_query_args (GTK_OBJECT_TYPE (element), &flags, &num_properties);
-#endif
+      property_specs = g_object_class_list_properties(G_OBJECT_GET_CLASS (element), &num_properties);
       for (i=0;i<num_properties;i++) {
-#ifdef USE_GLIB2
         GParamSpec *param = property_specs[i];
-#else
-        // gtk doesn't have a paramspec, so we create one here
-        GParamSpec rparm, *param = &rparm;
-	GtkArg *args = (GtkArg *)property_specs; // ugly typecast here 
-	
-	param->value_type = args[i].type;
-	param->name = args[i].name;
-#endif
         argnode = xmlNewChild (factorynode, NULL, "argument", param->name);
         if (param->value_type == GST_TYPE_FILENAME) {
           xmlNewChild (argnode, NULL, "filename", NULL);
