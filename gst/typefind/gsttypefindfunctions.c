@@ -227,8 +227,7 @@ mp3_type_frame_length_from_header (guint32 header, guint *put_layer,
 				   guint *put_channels, guint *put_bitrate,
 				   guint *put_samplerate)
 {
-  guint length;
-  gulong mode, samplerate, bitrate, layer, version, channels;
+  guint bitrate, layer, length, mode, samplerate, version, channels;
 
   if ((header & 0xffe00000) != 0xffe00000)
     return 0;
@@ -279,12 +278,12 @@ mp3_type_frame_length_from_header (guint32 header, guint *put_layer,
   if (layer == 1) {
     length = ((12000 * bitrate / samplerate) + length) * 4;
   } else {
-    length += ((layer == 3 && version == 0) ? 72000 : 144000) * bitrate / samplerate;
+    length += ((layer == 3 && version != 3) ? 72000 : 144000) * bitrate / samplerate;
   }
   
   GST_LOG ("mp3typefind: alculated mp3 frame length of %u bytes", length);
-  GST_LOG ("mp3typefind: samplerate = %lu - bitrate = %lu - layer = %lu - version = %lu"
-	     " - channels = %lu",
+  GST_LOG ("mp3typefind: samplerate = %u - bitrate = %u - layer = %u - version = %u"
+	     " - channels = %u",
 	     samplerate, bitrate, layer, version, channels);
   
   if (put_layer)
@@ -349,6 +348,7 @@ mp3_type_find (GstTypeFind *tf, gpointer unused)
 	head = GUINT32_FROM_BE(*((guint32 *) head_data));
         if (!(length = mp3_type_frame_length_from_header (head, &layer,
 			&channels, &bitrate, &samplerate))) {
+	  GST_LOG ("%d. header at offset %"G_GUINT64_FORMAT" was not an mp3 header", found + 1, offset);
 	  break;
 	}
 	if ((prev_layer && prev_layer != layer) ||
