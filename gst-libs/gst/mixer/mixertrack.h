@@ -67,17 +67,21 @@ typedef enum {
 #define GST_MIXER_TRACK_HAS_FLAG(channel, flag) \
   ((channel)->flags & flag)
 
-typedef struct _GstMixerTrack {
+typedef struct _GstMixerTrack GstMixerTrack;
+typedef struct _GstMixerTrackClass GstMixerTrackClass;
+
+struct _GstMixerTrack {
   GObject            parent;
 
   gchar             *label;
+  /* FIXME: flags should be guint32. Change in 0.9 */
   GstMixerTrackFlags flags;
   gint               num_channels,
 	             min_volume,
 	             max_volume;
-} GstMixerTrack;
+};
 
-typedef struct _GstMixerTrackClass {
+struct _GstMixerTrackClass {
   GObjectClass parent;
 
   /* signals */
@@ -89,7 +93,7 @@ typedef struct _GstMixerTrackClass {
 			   gint          *volumes);
 
   gpointer _gst_reserved[GST_PADDING];
-} GstMixerTrackClass;
+};
 
 GType		gst_mixer_track_get_type	(void);
 
