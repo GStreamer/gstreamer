@@ -100,6 +100,7 @@ struct _GstOggMux
   GstOggPad *delta_pad;         /* when a delta frame is detected on a stream, we mark
                                    pages as delta frames up to the page that has the
                                    keyframe */
+  guint16 newmediacount;
 };
 
 typedef enum
@@ -238,6 +239,7 @@ gst_ogg_mux_get_sink_event_masks (GstPad * pad)
 {
   static const GstEventMask gst_ogg_mux_sink_event_masks[] = {
     {GST_EVENT_EOS, 0},
+    {GST_EVENT_DISCONTINUOUS, 0},
     {0,}
   };
 
@@ -268,7 +270,7 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
 
   ogg_mux->delta_pad = NULL;
-
+  ogg_mux->newmediacount = 0;
   gst_element_set_loop_function (GST_ELEMENT (ogg_mux), gst_ogg_mux_loop);
 }
 
@@ -429,6 +431,18 @@ gst_ogg_mux_next_buffer (GstOggPad * pad)
         {
           gint64 value = 0;
 
+          if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+            /* only handle if its not first new media event */
+            if (ogg_mux->newmediacount++ > 0) {
+              ogg_mux->next_ts = 0;
+              ogg_mux->offset = 0;
+              ogg_mux->pulling = NULL;
+              pad->offset = 0;
+              GST_DEBUG_OBJECT (ogg_mux, "received new media event");
+              gst_pad_event_default (pad->pad, event);
+              break;
+            }
+          }
           if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
             GST_DEBUG_OBJECT (ogg_mux,
                 "got discont of %" G_GUINT64_FORMAT " on pad %s:%s",

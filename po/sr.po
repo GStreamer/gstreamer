@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"POT-Creation-Date: 2004-08-27 14:17+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -138,7 +138,7 @@ msgstr "OSS уређај „%s“ већ користи неки програм.
 msgid "Could not access device \"%s\", check its permissions."
 msgstr "Не могу да приступим уређају „%s“, проверите његова овлашћења."
 
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Не постоји уређај „%s“."
@@ -257,11 +257,11 @@ msgstr "Радио"
 msgid "Monitor"
 msgstr "Праћење"
 
-#: sys/v4l/v4l_calls.c:158
+#: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Уређај није наведен."
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#: sys/v4l/v4l_calls.c:172 sys/v4l2/v4l2_calls.c:397
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
