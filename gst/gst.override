@@ -27,6 +27,7 @@ headers
 #endif
 
 #include "common.h"
+#include "gstmain.h"
 
 #include <gst/gst.h>
 #include <gst/gsterror.h>
@@ -35,22 +36,21 @@ headers
 #include <gst/gsttag.h>
 
 extern gboolean pygst_data_from_pyobject (PyObject *object, GstData **data);
-static PyObject *_wrap_gst_element_factory_make(PyObject *self, PyObject *args, PyObject *kwargs);
 
 GSList *mainloops = NULL;
 void
 _pygst_main_quit(void)
 {
     if (!mainloops)
-	    g_error ("Quit more loops than there are");
+           g_error ("Quit more loops than there are");
     else {
-	GMainLoop *loop = mainloops->data;
+       GMainLoop *loop = mainloops->data;
 
-	mainloops = g_slist_delete_link (mainloops, mainloops);
-	g_main_loop_quit (loop);
-	g_main_loop_unref (loop);
+       mainloops = g_slist_delete_link (mainloops, mainloops);
+       g_main_loop_quit (loop);
+       g_main_loop_unref (loop);
     }
-}
+ }
 
 void
 _pygst_main(void)
@@ -63,7 +63,6 @@ _pygst_main(void)
     g_main_loop_run (loop);
 }
 
-
 %%
 include
   gstbin.override
@@ -71,10 +70,6 @@ include
   gstpad-handlers.override
 %%
 init
-PyGstPipeline_Type.tp_new = PyType_GenericNew;
-PyGstThread_Type.tp_new = PyType_GenericNew;
-//PyGstQueue_Type.tp_new = PyType_GenericNew;
-PyGstBin_Type.tp_new = PyType_GenericNew; // Shouldn't this be enough?
 %%
 modulename gst
 %%
@@ -188,7 +183,10 @@ _wrap_gst_pad_tp_repr (PyGObject *self)
 	PyObject *retval;
   	GstPad *pad;
   	GstElement *parent;
-	
+
+	pad = GST_PAD(self->obj);
+	parent = gst_pad_get_parent (pad);
+	    
 	buf = g_strdup_printf ("<GstPad (%s:%s) at %lx>",
 		gst_element_get_name (parent),
 		gst_pad_get_name (pad), (long) self->obj);
@@ -1119,21 +1117,6 @@ _wrap_gst_main_quit(PyObject *self)
     
     Py_INCREF(Py_None);
     return Py_None;
-}
-
-%%
-override-slot GstElement.tp_init kwargs
-static int
-_wrap_gst_element_tp_init(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-	return 1;
-}
-%%
-override-slot GstElement.tp_new kwargs
-static PyObject *
-_wrap_gst_element_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
-{
-	return _wrap_gst_element_factory_make(NULL, args, kwargs);
 }
 %%
 override gst_registry_pool_plugin_list noargs
