@@ -627,9 +627,13 @@ gst_swfdec_get_property (GObject *object, guint prop_id, GValue *value, GParamSp
 }
 
 static GstCaps *
-swf_type_find(GstBuffer *buf, gpointer private)
+swf_type_find(GstByteStream *bs, gpointer private)
 {
-	gchar *data = GST_BUFFER_DATA(buf);
+        GstBuffer *buf;
+	gchar *data;
+        
+        gst_bytestream_peek (bs, &buf, 4);
+        data = GST_BUFFER_DATA(buf);
 
 	if (GST_BUFFER_SIZE (buf) < 4)
 	  return NULL;
