@@ -1,0 +1,285 @@
+# Përkthimi i mesazheve të gst-plugins në shqip.
+# Copyright (C) 2004 Free Software Foundation, Inc.
+# Laurent Dhima <laurenti@alblinux.net>, 2004.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins 0.8.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"PO-Revision-Date: 2004-08-07 20:29+0200\n"
+"Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
+"Language-Team: Albanian <begraj@hotmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "E pamundur hapja e file \"%s\" në shkrim."
+
+#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Gabim gjatë mbylljes së file \"%s\"."
+
+#: ext/audiofile/gstafsrc.c:320
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "E pamundur hapja e file \"%s\" për lexim."
+
+#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
+msgid "Could not open CD device for reading."
+msgstr "I pamundur hapja e dispozitivit CD për lexim."
+
+#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
+#, c-format
+msgid "Could not open vfs file \"%s\" for reading."
+msgstr "E pamundur hapja e file vfs \"%s\" për lexim."
+
+#: ext/gnomevfs/gstgnomevfssink.c:344
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "E pamundur hapja e file vfs \"%s\" për shkrim: %s."
+
+#: ext/gnomevfs/gstgnomevfssink.c:351
+msgid "No filename given"
+msgstr "Nuk është dhënë asnjë emër file"
+
+#: ext/gnomevfs/gstgnomevfssink.c:377
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "E pamundur mbyllja e file vfs \"%s\"."
+
+#: ext/sndfile/gstsf.c:582
+msgid "No filename specified."
+msgstr "Nuk është përcaktuar emri i file."
+
+#: ext/sndfile/gstsf.c:835
+#, c-format
+msgid "Could not write to file \"%s\"."
+msgstr "I pamundur shkrimi tek file \"%s\"."
+
+#: gst/avi/gstavimux.c:1052
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr "Input audio i gabuar ose mungon, stream AVI mund të jetë i dëmtuar."
+
+#: gst-libs/gst/play/play.c:110
+#, c-format
+msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
+msgstr "E pamundur gjetja e elementit %s. Ky element është thelbësor për playback. Ju lutem instaloni plug-in e duhur dhe kontrollo funksionimin duke ekzekutuar 'gst-inspect %s'"
+
+#: gst-libs/gst/play/play.c:139
+msgid ""
+"No usable colorspace element could be found.\n"
+"Please install one and restart."
+msgstr ""
+"Nuk arrin të gjehet asnjë element ngjyra e hapësirës.\n"
+"Ju lutem instaloni një dhe rinisni."
+
+#: sys/dxr3/dxr3audiosink.c:298
+#, c-format
+msgid "Could not open audio device \"%s\" for writing."
+msgstr "E pamundur hapja e dispozitivit të zërit \"%s\" për shkrim."
+
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
+#, c-format
+msgid "Could not open control device \"%s\" for writing."
+msgstr "E pamundur hapja e dispozitivit të kontrollit \"%s\" për shkrim."
+
+#: sys/dxr3/dxr3audiosink.c:343
+#, c-format
+msgid "Could not configure audio device \"%s\"."
+msgstr "I pamundur konfigurimi i dispozitivit të zërit \"%s\"."
+
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
+#, c-format
+msgid "Could not set audio device \"%s\" to %d Hz."
+msgstr "I pamundur rregullimi i dispozitivit audio \"%s\" në %d Hz."
+
+#: sys/dxr3/dxr3audiosink.c:422
+#, c-format
+msgid "Could not close audio device \"%s\"."
+msgstr "E pamundur mbyllja e dispozitivit audio \"%s\"."
+
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
+#, c-format
+msgid "Could not close control device \"%s\"."
+msgstr "E pamundur mbyllja e dispozitivit të kontrollit \"%s\"."
+
+#: sys/dxr3/dxr3videosink.c:271
+#, c-format
+msgid "Could not open video device \"%s\" for writing."
+msgstr "E pamundur hapja e dispozitivit video \"%s\" për shkrim."
+
+#: sys/dxr3/dxr3videosink.c:301
+#, c-format
+msgid "Could not close video device \"%s\"."
+msgstr "E pamundur mbyllja e dispozitivit video \"%s\"."
+
+#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
+#, c-format
+msgid "Could not write to device \"%s\"."
+msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
+
+#: sys/oss/gstosselement.c:725
+#, c-format
+msgid "OSS device \"%s\" is already in use by another program."
+msgstr "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program."
+
+#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
+#, c-format
+msgid "Could not access device \"%s\", check its permissions."
+msgstr "E pamundur futja në dispozitivin \"%s\", kontrollo të drejtat e tij."
+
+#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Dispozitivi \"%s\" nuk ekziston."
+
+#: sys/oss/gstosselement.c:750
+#, c-format
+msgid "Could not open device \"%s\" for writing."
+msgstr "E pamundur hapja e dispozitivit \"%s\" për shkrim."
+
+#: sys/oss/gstosselement.c:754
+#, c-format
+msgid "Could not open device \"%s\" for reading."
+msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim."
+
+#: sys/oss/gstosselement.c:1131
+msgid "Your OSS device could not be probed correctly"
+msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
+
+#: sys/oss/gstossmixer.c:98
+msgid "Volume"
+msgstr "Volumi"
+
+#: sys/oss/gstossmixer.c:100
+msgid "Bass"
+msgstr "Bas"
+
+#: sys/oss/gstossmixer.c:102
+msgid "Treble"
+msgstr "Treble"
+
+#: sys/oss/gstossmixer.c:104
+msgid "Synth"
+msgstr "Sintetizuesi"
+
+#: sys/oss/gstossmixer.c:106
+msgid "PCM"
+msgstr "PCM"
+
+#: sys/oss/gstossmixer.c:108
+msgid "Speaker"
+msgstr "Zë folës"
+
+#: sys/oss/gstossmixer.c:110
+msgid "Line-in"
+msgstr "Linja-hyrje"
+
+#: sys/oss/gstossmixer.c:112
+msgid "Microphone"
+msgstr "Mikrofoni"
+
+#: sys/oss/gstossmixer.c:114
+msgid "CD"
+msgstr "CD"
+
+#: sys/oss/gstossmixer.c:116
+msgid "Mixer"
+msgstr "Kontrolli i volumit"
+
+#: sys/oss/gstossmixer.c:118
+msgid "PCM-2"
+msgstr "PCM-2"
+
+#: sys/oss/gstossmixer.c:120
+msgid "Record"
+msgstr "Regjistrimi"
+
+#: sys/oss/gstossmixer.c:122
+msgid "In-gain"
+msgstr "In-gain"
+
+#: sys/oss/gstossmixer.c:124
+msgid "Out-gain"
+msgstr "Out-gain"
+
+#: sys/oss/gstossmixer.c:126
+msgid "Line-1"
+msgstr "Linja-1"
+
+#: sys/oss/gstossmixer.c:128
+msgid "Line-2"
+msgstr "Linja-2"
+
+#: sys/oss/gstossmixer.c:130
+msgid "Line-3"
+msgstr "Linja-3"
+
+#: sys/oss/gstossmixer.c:132
+msgid "Digital-1"
+msgstr "Dixhitale-1"
+
+#: sys/oss/gstossmixer.c:134
+msgid "Digital-2"
+msgstr "Dixhitale-2"
+
+#: sys/oss/gstossmixer.c:136
+msgid "Digital-3"
+msgstr "Dixhitale-3"
+
+#: sys/oss/gstossmixer.c:138
+msgid "Phone-in"
+msgstr "Phone-hyrja"
+
+#: sys/oss/gstossmixer.c:140
+msgid "Phone-out"
+msgstr "Phone-dalja"
+
+#: sys/oss/gstossmixer.c:142
+msgid "Video"
+msgstr "Video"
+
+#: sys/oss/gstossmixer.c:144
+msgid "Radio"
+msgstr "Radio"
+
+#: sys/oss/gstossmixer.c:146
+msgid "Monitor"
+msgstr "Ekrani"
+
+#: sys/v4l/v4l_calls.c:158
+msgid "No device specified."
+msgstr "Nuk është përcaktuar asnjë dispozitiv."
+
+#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
+
+#: sys/v4l/v4l_calls.h:50
+msgid "Device is not open."
+msgstr "Dispozitivi nuk është hapur."
+
+#: sys/v4l/v4l_calls.h:59
+msgid "Device is open."
+msgstr "Dispozitivi është i hapur."
+
+#: sys/v4l2/v4l2_calls.c:411
+#, c-format
+msgid "Device \"%s\" is not a capture device."
+msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+
+#: sys/v4l2/v4l2src_calls.c:255
+#, c-format
+msgid "Could not get buffers from device \"%s\"."
+msgstr "E pamundur marrja e buffers nga dispozitivi \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:264
+#, c-format
+msgid "Could not get enough buffers from device \"%s\"."
+msgstr "E pamundur marrja e buffers të mjaftueshëm nga dispozitivi \"%s\"."
