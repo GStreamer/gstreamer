@@ -67,6 +67,9 @@ void 			gst_buffer_pool_set_destroy_function	(GstBufferPool *pool,
 /* destroying the buffer pool */
 void 			gst_buffer_pool_destroy			(GstBufferPool *pool);
 
+/* a default buffer pool implementation */
+GstBufferPool* gst_buffer_pool_get_default (guint buffer_size, guint pool_size);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

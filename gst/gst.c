@@ -84,6 +84,7 @@ gst_init (int *argc, char **argv[])
   _gst_caps_initialize ();
   _gst_plugin_initialize ();
   _gst_buffer_initialize ();
+  _gst_buffer_pool_initialize ();
 
   /* register some standard builtin types */
   gst_elementfactory_new ("bin", gst_bin_get_type (), &gst_bin_details);
