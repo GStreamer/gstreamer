@@ -29,6 +29,10 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
+#ifdef FIONREAD_IN_SYS_FILIO
+#include <sys/filio.h>
+#endif
+
 GST_DEBUG_CATEGORY (tcpserversrc_debug);
 #define GST_CAT_DEFAULT tcpserversrc_debug
 

@@ -24,6 +24,11 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include <sys/ioctl.h>
+
+#ifdef FIONREAD_IN_SYS_FILIO
+#include <sys/filio.h>
+#endif
+
 #include "gsttcpserversink.h"
 
 #define TCP_DEFAULT_HOST	"127.0.0.1"
