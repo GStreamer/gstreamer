@@ -531,14 +531,6 @@ GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
   AC_SUBST(JPEG_LIBS)
 ])
 
-dnl *** mjpegtools ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_MJPEGTOOLS, true)
-GST_CHECK_FEATURE(MJPEGTOOLS, [mjpegtools], jpegmmxenc jpegmmxdec, [
-  PKG_CHECK_MODULES(MJPEGTOOLS, mjpegtools, HAVE_MJPEGTOOLS="yes", HAVE_MJPEGTOOLS="no")
-  AC_SUBST(MJPEGTOOLS_LIBS)
-  AC_SUBST(MJPEGTOOLS_CFLAGS)
-])
-
 dnl *** mad ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
@@ -553,6 +545,14 @@ GST_CHECK_FEATURE(MIKMOD, [mikmod plugin], mikmod, [
   AM_PATH_LIBMIKMOD(, HAVE_MIKMOD=yes, HAVE_MIKMOD=no)
   AC_SUBST(MIKMOD_LIBS, "$LIBMIKMOD_LIBS")
   AC_SUBST(MIKMOD_CFLAGS, "$LIBMIKMODCFLAGS")
+])
+
+dnl *** mjpegtools ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MJPEGTOOLS, true)
+GST_CHECK_FEATURE(MJPEGTOOLS, [mjpegtools], jpegmmxenc jpegmmxdec, [
+  PKG_CHECK_MODULES(MJPEGTOOLS, mjpegtools, HAVE_MJPEGTOOLS="yes", HAVE_MJPEGTOOLS="no")
+  AC_SUBST(MJPEGTOOLS_LIBS)
+  AC_SUBST(MJPEGTOOLS_CFLAGS)
 ])
 
 dnl *** mpeg2dec ***
