@@ -74,14 +74,14 @@ struct _GstAdder {
   guint           rate;
   guint           channels;
   
-  /* the next five are valid only for format == GST_PLAYONDEMAND_FORMAT_INT */
+  /* the next five are valid only for format == GST_ADDER_FORMAT_INT */
   guint           width;
   guint           depth;
   guint           endianness;
   guint           law;
   gboolean        is_signed;
   
-  /* the next three are valid only for format == GST_PLAYONDEMAND_FORMAT_FLOAT */
+  /* the next three are valid only for format == GST_ADDER_FORMAT_FLOAT */
   const gchar    *layout;
   gfloat          slope;
   gfloat          intercept;
