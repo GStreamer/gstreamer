@@ -326,10 +326,10 @@ siddec_negotiate (GstSidDec * siddec)
 {
   GstCaps *allowed;
   gboolean sign = TRUE;
-  gint width = 0, depth = 0;
+  gint width = 16, depth = 16;
   GstStructure *structure;
-  int rate;
-  int channels;
+  int rate = 22050;
+  int channels = 2;
 
   allowed = gst_pad_get_allowed_caps (siddec->srcpad);
   if (!allowed)
@@ -358,17 +358,15 @@ siddec_negotiate (GstSidDec * siddec)
   siddec->config->sampleFormat =
       (sign ? SIDEMU_SIGNED_PCM : SIDEMU_UNSIGNED_PCM);
 
-  if (!GST_PAD_CAPS (siddec->srcpad)) {
-    if (!gst_pad_try_set_caps (siddec->srcpad,
-            gst_caps_new_simple ("audio/x-raw-int",
-                "endianness", G_TYPE_INT, G_BYTE_ORDER,
-                "signed", G_TYPE_BOOLEAN, sign,
-                "width", G_TYPE_INT, siddec->config->bitsPerSample,
-                "depth", G_TYPE_INT, siddec->config->bitsPerSample,
-                "rate", G_TYPE_INT, siddec->config->frequency,
-                "channels", G_TYPE_INT, siddec->config->channels, NULL))) {
-      return FALSE;
-    }
+  if (!gst_pad_try_set_caps (siddec->srcpad,
+          gst_caps_new_simple ("audio/x-raw-int",
+              "endianness", G_TYPE_INT, G_BYTE_ORDER,
+              "signed", G_TYPE_BOOLEAN, sign,
+              "width", G_TYPE_INT, siddec->config->bitsPerSample,
+              "depth", G_TYPE_INT, siddec->config->bitsPerSample,
+              "rate", G_TYPE_INT, siddec->config->frequency,
+              "channels", G_TYPE_INT, siddec->config->channels, NULL))) {
+    return FALSE;
   }
 
   siddec->engine->setConfig (*siddec->config);
@@ -438,7 +436,7 @@ gst_siddec_loop (GstElement * element)
   if (siddec->state == SID_STATE_PLAY_TUNE) {
     GstBuffer *out;
     GstFormat format;
-    gint64 value, value2;
+    gint64 value, offset, time;
 
     out = gst_buffer_new_and_alloc (siddec->blocksize);
 
@@ -447,19 +445,25 @@ gst_siddec_loop (GstElement * element)
 
     /* get offset in samples */
     format = GST_FORMAT_DEFAULT;
-    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
-    GST_BUFFER_OFFSET (out) = value;
+    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &offset);
+    GST_BUFFER_OFFSET (out) = offset;
 
     /* get current timestamp */
     format = GST_FORMAT_TIME;
-    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
-    GST_BUFFER_TIMESTAMP (out) = value;
+    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &time);
+    GST_BUFFER_TIMESTAMP (out) = time;
 
     /* update position and get new timestamp to calculate duration */
     siddec->total_bytes += siddec->blocksize;
+
+    /* get offset in samples */
+    format = GST_FORMAT_DEFAULT;
+    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
+    GST_BUFFER_OFFSET_END (out) = value;
+
     format = GST_FORMAT_TIME;
-    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value2);
-    GST_BUFFER_DURATION (out) = value2 - value;
+    gst_siddec_src_query (siddec->srcpad, GST_QUERY_POSITION, &format, &value);
+    GST_BUFFER_DURATION (out) = value - time;
 
     gst_pad_push (siddec->srcpad, GST_DATA (out));
   }
@@ -546,7 +550,7 @@ gst_siddec_src_query (GstPad * pad, GstQueryType type,
   switch (type) {
     case GST_QUERY_POSITION:
       /* we only know about our bytes, convert to requested format */
-      res &= gst_pad_convert (pad,
+      res &= gst_siddec_src_convert (pad,
           GST_FORMAT_BYTES, siddec->total_bytes, format, value);
       break;
     default:
