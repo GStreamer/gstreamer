@@ -191,37 +191,37 @@ gst_auparse_chain (GstPad *pad, GstBuffer *buf)
   /* if we haven't seen any data yet... */
   if (auparse->size == 0) {
     GstBuffer *newbuf;
-    gulong *head = (gulong *)data;
+    guint32 *head = (guint32 *)data;
 
     /* normal format is big endian (au is a Sparc format) */
-    if (GULONG_FROM_BE (*head) == 0x2e736e64) {
+    if (GUINT32_FROM_BE (*head) == 0x2e736e64) {
       head++;
       auparse->le = 0;
-      auparse->offset 		= GULONG_FROM_BE (*head);
+      auparse->offset 		= GUINT32_FROM_BE (*head);
       head++;
-      auparse->size 		= GULONG_FROM_BE (*head);
+      auparse->size 		= GUINT32_FROM_BE (*head);
       head++;
-      auparse->encoding 	= GULONG_FROM_BE (*head);
+      auparse->encoding 	= GUINT32_FROM_BE (*head);
       head++;
-      auparse->frequency 	= GULONG_FROM_BE (*head);
+      auparse->frequency 	= GUINT32_FROM_BE (*head);
       head++;
-      auparse->channels 	= GULONG_FROM_BE (*head);
+      auparse->channels 	= GUINT32_FROM_BE (*head);
       head++;
 
     /* but I wouldn't be surprised by a little endian version */
-    } else if (GULONG_FROM_LE (head) == 0x2e736e64) {
+    } else if (GUINT32_FROM_LE (head) == 0x2e736e64) {
       auparse->le = 1;
       head++;
       auparse->le = 0;
-      auparse->offset 		= GULONG_FROM_LE (*head);
+      auparse->offset 		= GUINT32_FROM_LE (*head);
       head++;
-      auparse->size 		= GULONG_FROM_LE (*head);
+      auparse->size 		= GUINT32_FROM_LE (*head);
       head++;
-      auparse->encoding 	= GULONG_FROM_LE (*head);
+      auparse->encoding 	= GUINT32_FROM_LE (*head);
       head++;
-      auparse->frequency 	= GULONG_FROM_LE (*head);
+      auparse->frequency 	= GUINT32_FROM_LE (*head);
       head++;
-      auparse->channels 	= GULONG_FROM_LE (*head);
+      auparse->channels 	= GUINT32_FROM_LE (*head);
       head++;
 
     } else {
