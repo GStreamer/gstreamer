@@ -89,15 +89,15 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
 #define SMP_SYNC        ""
 #define SMP_ISYNC
 #else
-#define SMP_SYNC        "sync"
-#define SMP_ISYNC       "\n\tisync"
+#define SMP_SYNC        "\tsync\n"
+#define SMP_ISYNC       "\tisync\n"
 #endif
 
 /* Erratum #77 on the 405 means we need a sync or dcbt before every stwcx.
  * The old ATOMIC_SYNC_FIX covered some but not all of this.
  */
 #ifdef GST_CONFIG_IBM405_ERR77
-#define PPC405_ERR77(ra,rb)     "dcbt " #ra "," #rb ";"
+#define PPC405_ERR77(ra,rb)     "\tdcbt " #ra "," #rb "\n"
 #else
 #define PPC405_ERR77(ra,rb)
 #endif
@@ -113,11 +113,11 @@ gst_atomic_int_add (GstAtomicInt *aint, gint val)
   int t;
 
   __asm__ __volatile__(
-    "1:     lwarx   %0,0,%3         # atomic_add\n\
-            add     %0,%2,%0\n"
+    "1:     lwarx   %0,0,%3\n"
+    "       add     %0,%2,%0\n"
             PPC405_ERR77(0,%3)
-    "       stwcx.  %0,0,%3 \n\
-            bne-    1b"
+    "       stwcx.  %0,0,%3 \n"
+    "       bne-    1b\n"
       : "=&r" (t), "=m" (aint->counter)
       : "r" (val), "r" (&aint->counter), "m" (aint->counter)
       : "cc");
@@ -129,11 +129,11 @@ gst_atomic_int_inc (GstAtomicInt *aint)
   int t;
 
   __asm__ __volatile__(
-    "1:     lwarx   %0,0,%2         # atomic_inc\n\
-            addic   %0,%0,1\n"
+    "1:     lwarx   %0,0,%2\n"
+    "       addic   %0,%0,1\n"
             PPC405_ERR77(0,%2)
-    "       stwcx.  %0,0,%2 \n\
-            bne-    1b"
+    "       stwcx.  %0,0,%2\n"
+    "       bne-    1b\n"
       : "=&r" (t), "=m" (aint->counter)
       : "r" (&aint->counter), "m" (aint->counter)
       : "cc");
@@ -145,11 +145,11 @@ gst_atomic_int_dec_and_test (GstAtomicInt *aint)
   int t;
 
   __asm__ __volatile__(
-    "1:     lwarx   %0,0,%1         # atomic_dec_return\n\
-            addic   %0,%0,-1\n"
+    "1:     lwarx   %0,0,%1\n"
+    "       addic   %0,%0,-1\n"
             PPC405_ERR77(0,%1)
-    "       stwcx.  %0,0,%1\n\
-            bne-    1b"
+    "       stwcx.  %0,0,%1\n"
+    "       bne-    1b\n"
             SMP_ISYNC
       : "=&r" (t)
       : "r" (&aint->counter)
