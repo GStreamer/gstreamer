@@ -329,6 +329,7 @@ gst_object_default_deep_notify (GObject *object, GstObject *orig,
 {
   GValue value = { 0, }; /* the important thing is that value.type = 0 */
   gchar *str = 0;
+  gchar *name = NULL;
 
   if (pspec->flags & G_PARAM_READABLE) {
     /* let's not print these out for excluded properties... */
@@ -351,12 +352,16 @@ gst_object_default_deep_notify (GObject *object, GstObject *orig,
     else {
       str = g_strdup_value_contents (&value);
     }
-    g_print ("%s: %s = %s\n", GST_OBJECT_NAME (orig), pspec->name, str);
+    name = gst_object_get_path_string (orig);
+    g_print ("%s: %s = %s\n", name, pspec->name, str);
+    g_free (name);
     g_free (str);
     g_value_unset (&value);
   } else {
+    name = gst_object_get_path_string (orig);
     g_warning ("Parameter %s not readable in %s.",
-               pspec->name, GST_OBJECT_NAME (orig));
+               pspec->name, name);
+    g_free (name);
   }
 }
 

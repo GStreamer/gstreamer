@@ -216,7 +216,9 @@ gst_element_real_get_property (GObject *object, guint prop_id, GValue *value, GP
 void
 gst_element_default_error (GObject *object, GstObject *orig, gchar *error)
 { 
-  g_print ("ERROR: %s: %s\n", GST_OBJECT_NAME (orig), error);
+  gchar *name = gst_object_get_path_string (orig);
+  g_print ("ERROR: %s: %s\n", name, error);
+  g_free (name);
 } 
 
 typedef struct {
