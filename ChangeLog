@@ -1,3 +1,8 @@
+2005-01-27  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	  Fix compile with debug disabled (#165250).
+
 2005-01-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_peek):

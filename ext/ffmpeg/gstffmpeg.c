@@ -37,6 +37,7 @@
 
 GST_DEBUG_CATEGORY (ffmpeg_debug);
 
+#ifndef GST_DISABLE_GST_DEBUG
 static void
 gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
 {
@@ -62,6 +63,7 @@ gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
 
   gst_debug_log_valist (ffmpeg_debug, gst_level, "", "", 0, NULL, fmt, vl);
 }
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -70,7 +72,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (ffmpeg_debug, "ffmpeg", 0, "FFmpeg elements");
+#ifndef GST_DISABLE_GST_DEBUG
   av_log_set_callback (gst_ffmpeg_log_callback);
+#endif
   av_register_all ();
 
   gst_ffmpegenc_register (plugin);
