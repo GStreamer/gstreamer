@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/bytestream/gstbytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 
 #ifdef __cplusplus
