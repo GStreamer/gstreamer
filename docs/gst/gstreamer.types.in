@@ -17,5 +17,5 @@ gst_type_factory_get_type
 gst_element_factory_get_type
 gst_scheduler_factory_get_type
 gst_scheduler_get_type
-gst_time_cache_get_type
+gst_cache_get_type
 gst_xml_get_type
