@@ -24,7 +24,7 @@ construct_pipeline (GstElement *pipeline)
   GstElement *src, *sink, *queue, *identity, *thread;
 
   src      = gst_element_factory_make ("fakesrc",  NULL);
-  sink     = gst_element_factory_make ("fakesink", NULL);
+  sink     = gst_element_factory_make ("fakesink", "sink");
   identity = gst_element_factory_make ("identity", NULL);
   queue    = gst_element_factory_make ("queue",    NULL);
   thread   = gst_element_factory_make ("thread",   NULL);
@@ -90,7 +90,7 @@ main (gint argc, gchar *argv[])
   }
   if (TESTNUM == 3) {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    g_print ("running2 ...\n");
+    g_print ("running ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
@@ -98,7 +98,7 @@ main (gint argc, gchar *argv[])
     gint run;
 
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    g_print ("running3 ...\n");
+    g_print ("running ...\n");
     for (run = 0; run < 3; run++) {
       gst_bin_iterate (GST_BIN (pipeline));
     }
@@ -108,10 +108,12 @@ main (gint argc, gchar *argv[])
     GstElement *sink;
 
     sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+    g_assert (sink);
 
-    g_signal_connect (G_OBJECT (sink), "handoff", G_CALLBACK (change_state), pipeline);
+    g_signal_connect (G_OBJECT (sink), "handoff", 
+		      G_CALLBACK (change_state), pipeline);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    g_print ("running3 ...\n");
+    g_print ("running ...\n");
     while (gst_bin_iterate (GST_BIN (pipeline)));
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }

@@ -28,7 +28,15 @@ construct_pipeline (GstElement *pipeline)
 void
 state_changed (GstElement *el, gint arg1, gint arg2, gpointer user_data)
 {
-  g_print ("element %s has changed state\n", GST_ELEMENT_NAME (el));
+  static gboolean running = FALSE;
+  GstElementState state = gst_element_get_state (el);
+  
+  g_print ("element %s has changed state to %s\n", 
+	   GST_ELEMENT_NAME (el), 
+	   gst_element_state_get_name (state));
+  if (state == GST_STATE_PLAYING) running = TRUE;
+  /* if we move from PLAYING to PAUSED, we're done */
+  if (state == GST_STATE_PAUSED && running) gst_main_quit ();
 }
 
 int
@@ -42,7 +50,8 @@ main (gint argc, gchar *argv[])
   g_assert (thread);
 
   /* connect state change signal */
-  g_signal_connect (G_OBJECT (thread), "state_change", state_changed, NULL);
+  g_signal_connect (G_OBJECT (thread), "state_change", 
+		    G_CALLBACK (state_changed), NULL);
   construct_pipeline (thread);
 
   g_print ("Setting thread to play\n");
@@ -50,6 +59,7 @@ main (gint argc, gchar *argv[])
 
   g_print ("Going into the main GStreamer loop\n");
   gst_main (); 
+  g_print ("Coming out of the main GStreamer loop\n");
 
   return 0;
 }

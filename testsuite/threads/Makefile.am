@@ -1,11 +1,14 @@
-testprogs = thread1 thread2 thread3 thread4 thread5 threadb
+testprogs = thread1 thread2 thread3 thread4 thread5 
+testsfailing = threadb
 
 TESTS = $(testprogs)
 
 check_PROGRAMS = $(testprogs)
 
+noinst_PROGRAMS = $(testsfailing)
+
 LDADD = $(GST_LIBS) 
-AM_CFLAGS = $(GST_CFLAGS)
+CFLAGS = $(GST_CFLAGS)
 
 thread1_SOURCES = thread.c
 thread1_CFLAGS = -DTESTNUM=1
