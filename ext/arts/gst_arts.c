@@ -209,11 +209,7 @@ gst_arts_loop	(GstElement *element)
 
   g_return_if_fail (arts != NULL);
 
-//  do {
-
   gst_arts_wrapper_do(arts->wrapper);
-
-//  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
 }
 
 static gboolean

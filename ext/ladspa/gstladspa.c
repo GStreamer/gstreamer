@@ -640,26 +640,23 @@ gst_ladspa_loop (GstElement *element)
   LADSPA_Descriptor *desc;
 
   desc = ladspa->descriptor;
-  do {
-    printf("looping something\n");
+  printf("looping something\n");
 
-    // first get all the necessary data from the input ports
-    for (i=0;i<oclass->numsinkpads;i++){  
-      ladspa->buffers[i] = gst_pad_pull(ladspa->sinkpads[i]);
-      printf("pulling buffer %d\n", i);
-    }
+  // first get all the necessary data from the input ports
+  for (i=0;i<oclass->numsinkpads;i++){  
+    ladspa->buffers[i] = gst_pad_pull(ladspa->sinkpads[i]);
+    printf("pulling buffer %d\n", i);
+  }
     
-    for (i=0;i<oclass->numsinkpads;i++) {
+  for (i=0;i<oclass->numsinkpads;i++) {
 //      desc->connect_port(ladspa->handle,i,&(ladspa->controls[i]));
-    }
+  }
 
-    for (i=0;i<oclass->numsrcpads && i<oclass->numsinkpads;i++){
-      printf("pushing buffer %d\n", i);
-      gst_pad_push (ladspa->srcpads[i], ladspa->buffers[i]);
-      ladspa->buffers[i] = NULL;
-    }
-    
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+  for (i=0;i<oclass->numsrcpads && i<oclass->numsinkpads;i++){
+    printf("pushing buffer %d\n", i);
+    gst_pad_push (ladspa->srcpads[i], ladspa->buffers[i]);
+    ladspa->buffers[i] = NULL;
+  }
 }
 
 static void
