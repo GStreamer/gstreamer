@@ -23,6 +23,8 @@
 
 #include <gst/gst.h>
 
+#include "gst/gst-i18n-plugin.h"
+
 #include "gstv4l2element.h"
 #include "gstv4l2src.h"
 
