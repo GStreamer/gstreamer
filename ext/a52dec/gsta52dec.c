@@ -79,7 +79,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "endianness = (int) BYTE_ORDER, "
         "width = (int) " G_STRINGIFY (SAMPLE_WIDTH) ", "
-        "rate = (int) [ 4000, 96000 ], " "channels = (int) [ 1, 6 ]")
+        "rate = (int) [ 4000, 96000 ], "
+        "channels = (int) [ 1, 6 ], " "buffer-frames = (int) 0")
     );
 
 static void gst_a52dec_base_init (gpointer g_class);
@@ -304,7 +305,8 @@ gst_a52dec_reneg (GstPad * pad)
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "width", G_TYPE_INT, SAMPLE_WIDTH,
       "channels", G_TYPE_INT, channels,
-      "rate", G_TYPE_INT, a52dec->sample_rate, NULL);
+      "rate", G_TYPE_INT, a52dec->sample_rate,
+      "buffer-frames", G_TYPE_INT, 0, NULL);
   gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
   g_free (pos);
 

@@ -17,18 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __DVDREADSRC_H__
 #define __DVDREADSRC_H__
 
-
 #include <gst/gst.h>
-
 
 G_BEGIN_DECLS
 
 GstElementDetails dvdreadsrc_details;
-
 
 #define GST_TYPE_DVDREADSRC \
   (dvdreadsrc_get_type())
@@ -61,7 +57,7 @@ struct _DVDReadSrcClass {
   GstElementClass parent_class;
 };
 
-GType dvdreadsrc_get_type(void);
+GType dvdreadsrc_get_type (void);
 
 G_END_DECLS
 

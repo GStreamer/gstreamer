@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2001 Billy Biggs <vektor@dumbterm.net>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,24 +16,6 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
- */
-
-/**
- * Copyright (C) 2001 Billy Biggs <vektor@dumbterm.net>.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
- * your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -85,6 +68,10 @@ struct _DVDReadSrcPrivate
   ifo_handle_t *vts_file;
   vts_ptt_srpt_t *vts_ptt_srpt;
   pgc_t *cur_pgc;
+
+  /* where we are */
+  gboolean seek_pend, flush_pend;
+  GstFormat seek_pend_fmt;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gstdvdreadsrc_debug);
@@ -124,14 +111,22 @@ static void dvdreadsrc_set_property (GObject * object, guint prop_id,
 static void dvdreadsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static const GstEventMask *dvdreadsrc_get_event_mask (GstPad * pad);
+static const GstQueryType *dvdreadsrc_get_query_types (GstPad * pad);
+static const GstFormat *dvdreadsrc_get_formats (GstPad * pad);
+static gboolean dvdreadsrc_srcpad_event (GstPad * pad, GstEvent * event);
+static gboolean dvdreadsrc_srcpad_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value);
+
 static GstData *dvdreadsrc_get (GstPad * pad);
-
-/*static GstBuffer *	dvdreadsrc_get_region	(GstPad *pad,gulong offset,gulong size); */
-
 static GstElementStateReturn dvdreadsrc_change_state (GstElement * element);
+
+static void dvdreadsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
 
 static GstElementClass *parent_class = NULL;
+
+static GstFormat sector_format, angle_format, title_format, chapter_format;
 
 /*static guint dvdreadsrc_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -152,11 +147,24 @@ dvdreadsrc_get_type (void)
       0,
       (GInstanceInitFunc) dvdreadsrc_init,
     };
+    static const GInterfaceInfo urihandler_info = {
+      dvdreadsrc_uri_handler_init,
+      NULL,
+      NULL
+    };
+
+    sector_format = gst_format_register ("sector", "DVD sector");
+    title_format = gst_format_register ("title", "DVD title");
+    chapter_format = gst_format_register ("chapter", "DVD chapter");
+    angle_format = gst_format_register ("angle", "DVD angle");
 
     dvdreadsrc_type =
         g_type_register_static (GST_TYPE_ELEMENT, "DVDReadSrc",
         &dvdreadsrc_info, 0);
+    g_type_add_interface_static (dvdreadsrc_type,
+        GST_TYPE_URI_HANDLER, &urihandler_info);
   }
+
   return dvdreadsrc_type;
 }
 
@@ -209,14 +217,28 @@ dvdreadsrc_init (DVDReadSrc * dvdreadsrc)
   dvdreadsrc->priv = g_new (DVDReadSrcPrivate, 1);
   dvdreadsrc->priv->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_get_function (dvdreadsrc->priv->srcpad, dvdreadsrc_get);
+  gst_pad_set_event_function (dvdreadsrc->priv->srcpad,
+      dvdreadsrc_srcpad_event);
+  gst_pad_set_event_mask_function (dvdreadsrc->priv->srcpad,
+      dvdreadsrc_get_event_mask);
+  gst_pad_set_query_function (dvdreadsrc->priv->srcpad,
+      dvdreadsrc_srcpad_query);
+  gst_pad_set_query_type_function (dvdreadsrc->priv->srcpad,
+      dvdreadsrc_get_query_types);
+  gst_pad_set_formats_function (dvdreadsrc->priv->srcpad,
+      dvdreadsrc_get_formats);
   gst_element_add_pad (GST_ELEMENT (dvdreadsrc), dvdreadsrc->priv->srcpad);
 
-  dvdreadsrc->priv->location = g_strdup ("/dev/dvd");
+  dvdreadsrc->priv->location = g_strdup ("/dev/cdrom");
   dvdreadsrc->priv->new_seek = TRUE;
   dvdreadsrc->priv->new_cell = TRUE;
   dvdreadsrc->priv->title = 0;
   dvdreadsrc->priv->chapter = 0;
   dvdreadsrc->priv->angle = 0;
+
+  dvdreadsrc->priv->seek_pend = FALSE;
+  dvdreadsrc->priv->flush_pend = FALSE;
+  dvdreadsrc->priv->seek_pend_fmt = GST_FORMAT_UNDEFINED;
 }
 
 static void
@@ -309,6 +331,206 @@ dvdreadsrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+/*
+ * Querying and seeking.
+ */
+
+static const GstEventMask *
+dvdreadsrc_get_event_mask (GstPad * pad)
+{
+  static const GstEventMask masks[] = {
+    {GST_EVENT_SEEK, GST_SEEK_METHOD_CUR |
+          GST_SEEK_METHOD_SET | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
+    {0, 0}
+  };
+
+  return masks;
+}
+
+static const GstQueryType *
+dvdreadsrc_get_query_types (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_TOTAL,
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return types;
+}
+
+static const GstFormat *
+dvdreadsrc_get_formats (GstPad * pad)
+{
+  static GstFormat formats[] = {
+    GST_FORMAT_BYTES,
+    0, 0, 0, 0,                 /* init later */
+    0,
+  };
+  if (formats[1] == 0) {
+    formats[1] = sector_format;
+    formats[2] = angle_format;
+    formats[3] = title_format;
+    formats[4] = chapter_format;
+  }
+
+  return formats;
+}
+
+static gboolean
+dvdreadsrc_srcpad_event (GstPad * pad, GstEvent * event)
+{
+  DVDReadSrc *dvdreadsrc = DVDREADSRC (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:{
+      gint64 new_off, total, cur;
+      GstFormat fmt;
+
+      /* get requested offset */
+      new_off = GST_EVENT_SEEK_OFFSET (event);
+      switch (GST_EVENT_SEEK_FORMAT (event)) {
+        case GST_FORMAT_BYTES:
+          new_off /= DVD_VIDEO_LB_LEN;
+          fmt = sector_format;
+          break;
+        default:
+          fmt = GST_EVENT_SEEK_FORMAT (event);
+          if (fmt == sector_format ||
+              fmt == angle_format ||
+              fmt == title_format || fmt == chapter_format)
+            break;
+          GST_LOG ("Unsupported seek format");
+          return FALSE;
+      }
+
+      /* get current offset and length */
+      gst_pad_query (pad, GST_QUERY_TOTAL, &fmt, &total);
+      gst_pad_query (pad, GST_QUERY_POSITION, &fmt, &cur);
+      if (cur == new_off) {
+        GST_LOG ("We're already at that position!");
+        return TRUE;
+      }
+
+      /* get absolute */
+      switch (GST_EVENT_SEEK_METHOD (event)) {
+        case GST_SEEK_METHOD_SET:
+          /* no-op */
+          break;
+        case GST_SEEK_METHOD_CUR:
+          new_off += cur;
+          break;
+        case GST_SEEK_METHOD_END:
+          new_off = total - new_off;
+          break;
+        default:
+          GST_LOG ("Unsupported seek method");
+          return FALSE;
+      }
+      if (new_off < 0 || new_off >= total) {
+        GST_LOG ("Invalid seek position");
+        return FALSE;
+      }
+
+      GST_LOG ("Seeking to unit %d in format %d", new_off, fmt);
+
+      if (fmt == sector_format || fmt == chapter_format || fmt == title_format) {
+        if (fmt == sector_format) {
+          dvdreadsrc->priv->cur_pack = new_off;
+        } else if (fmt == chapter_format) {
+          dvdreadsrc->priv->cur_pack = 0;
+          dvdreadsrc->priv->chapter = new_off;
+          dvdreadsrc->priv->seek_pend_fmt = fmt;
+        } else if (fmt == title_format) {
+          dvdreadsrc->priv->cur_pack = 0;
+          dvdreadsrc->priv->title = new_off;
+          dvdreadsrc->priv->chapter = 0;
+          dvdreadsrc->priv->seek_pend_fmt = fmt;
+        }
+
+        /* leave for events */
+        dvdreadsrc->priv->seek_pend = TRUE;
+        if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH)
+          dvdreadsrc->priv->flush_pend = TRUE;
+      } else if (fmt == angle_format) {
+        dvdreadsrc->priv->angle = new_off;
+      }
+
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+
+  gst_event_unref (event);
+
+  return res;
+}
+
+static gboolean
+dvdreadsrc_srcpad_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value)
+{
+  DVDReadSrc *dvdreadsrc = DVDREADSRC (gst_pad_get_parent (pad));
+  DVDReadSrcPrivate *priv = dvdreadsrc->priv;
+  gboolean res = TRUE;
+
+  if (!GST_FLAG_IS_SET (dvdreadsrc, DVDREADSRC_OPEN))
+    return FALSE;
+
+  switch (type) {
+    case GST_QUERY_TOTAL:
+      switch (*format) {
+        case GST_FORMAT_BYTES:
+          *value = DVDFileSize (priv->dvd_title) * DVD_VIDEO_LB_LEN;
+          break;
+        default:
+          if (*format == sector_format) {
+            *value = DVDFileSize (priv->dvd_title);
+          } else if (*format == title_format) {
+            *value = priv->tt_srpt->nr_of_srpts;
+          } else if (*format == chapter_format) {
+            *value = priv->tt_srpt->title[priv->title].nr_of_ptts;
+          } else if (*format == angle_format) {
+            *value = priv->tt_srpt->title[priv->title].nr_of_angles;
+          } else {
+            GST_LOG ("Unknown format");
+            res = FALSE;
+          }
+          break;
+      }
+      break;
+    case GST_QUERY_POSITION:
+      switch (*format) {
+        case GST_FORMAT_BYTES:
+          *value = priv->cur_pack * DVD_VIDEO_LB_LEN;
+          break;
+        default:
+          if (*format == sector_format) {
+            *value = priv->cur_pack;
+          } else if (*format == title_format) {
+            *value = priv->title;
+          } else if (*format == chapter_format) {
+            *value = priv->chapter;
+          } else if (*format == angle_format) {
+            *value = priv->angle;
+          } else {
+            GST_LOG ("Unknown format");
+            res = FALSE;
+          }
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
+}
+
 /**
  * Returns true if the pack is a NAV pack.  This check is clearly insufficient,
  * and sometimes we incorrectly think that valid other packs are NAV packs.  I
@@ -362,7 +584,7 @@ _close (DVDReadSrcPrivate * priv)
 }
 
 static int
-_seek (DVDReadSrcPrivate * priv, int title, int chapter, int angle)
+_seek_title (DVDReadSrcPrivate * priv, int title, int angle)
 {
     /**
      * Make sure our title number is valid.
@@ -376,27 +598,15 @@ _seek (DVDReadSrcPrivate * priv, int title, int chapter, int angle)
     return -1;
   }
 
-
-    /**
-     * Make sure the chapter number is valid for this title.
-     */
   GST_LOG ("There are %d chapters in this title",
       priv->tt_srpt->title[title].nr_of_ptts);
-
-  if (chapter < 0 || chapter >= priv->tt_srpt->title[title].nr_of_ptts) {
-    GST_ERROR ("Invalid chapter %d (only %d available)",
-        chapter, priv->tt_srpt->title[title].nr_of_ptts);
-    ifoClose (priv->vmg_file);
-    DVDClose (priv->dvd);
-    return -1;
-  }
-
 
     /**
      * Make sure the angle number is valid for this title.
      */
   GST_LOG ("There are %d angles available in this title",
       priv->tt_srpt->title[title].nr_of_angles);
+
   if (angle < 0 || angle >= priv->tt_srpt->title[title].nr_of_angles) {
     GST_ERROR ("Invalid angle %d (only %d available)",
         angle, priv->tt_srpt->title[title].nr_of_angles);
@@ -419,25 +629,8 @@ _seek (DVDReadSrcPrivate * priv, int title, int chapter, int angle)
     return -1;
   }
 
-
-    /**
-     * Determine which program chain we want to watch.  This is based on the
-     * chapter number.
-     */
   priv->ttn = priv->tt_srpt->title[title].vts_ttn;
   priv->vts_ptt_srpt = priv->vts_file->vts_ptt_srpt;
-  priv->pgc_id = priv->vts_ptt_srpt->title[priv->ttn - 1].ptt[chapter].pgcn;
-  priv->pgn = priv->vts_ptt_srpt->title[priv->ttn - 1].ptt[chapter].pgn;
-  priv->cur_pgc = priv->vts_file->vts_pgcit->pgci_srp[priv->pgc_id - 1].pgc;
-  priv->start_cell = priv->cur_pgc->program_map[priv->pgn - 1] - 1;
-
-  if (chapter + 1 == priv->tt_srpt->title[title].nr_of_ptts) {
-    priv->last_cell = priv->cur_pgc->nr_of_cells;
-  } else {
-    priv->last_cell =
-        priv->cur_pgc->program_map[(priv->vts_ptt_srpt->title[priv->ttn -
-                1].ptt[chapter + 1].pgn) - 1] - 1;
-  }
 
     /**
      * We've got enough info, time to open the title set data.
@@ -454,7 +647,95 @@ _seek (DVDReadSrcPrivate * priv, int title, int chapter, int angle)
     return -1;
   }
 
+  GST_LOG ("Opened title %d, angle %d", title, angle);
+
   return 0;
+}
+
+static int
+_seek_chapter (DVDReadSrcPrivate * priv, int chapter)
+{
+  int i;
+
+    /**
+     * Make sure the chapter number is valid for this title.
+     */
+  if (chapter < 0 || chapter >= priv->tt_srpt->title[priv->title].nr_of_ptts) {
+    GST_ERROR ("Invalid chapter %d (only %d available)",
+        chapter, priv->tt_srpt->title[priv->title].nr_of_ptts);
+    ifoClose (priv->vmg_file);
+    DVDClose (priv->dvd);
+    return -1;
+  }
+
+    /**
+     * Determine which program chain we want to watch.  This is based on the
+     * chapter number.
+     */
+  priv->pgc_id = priv->vts_ptt_srpt->title[priv->ttn - 1].ptt[chapter].pgcn;
+  priv->pgn = priv->vts_ptt_srpt->title[priv->ttn - 1].ptt[chapter].pgn;
+  priv->cur_pgc = priv->vts_file->vts_pgcit->pgci_srp[priv->pgc_id - 1].pgc;
+  priv->start_cell = priv->cur_pgc->program_map[priv->pgn - 1] - 1;
+
+  if (chapter + 1 == priv->tt_srpt->title[priv->title].nr_of_ptts) {
+    priv->last_cell = priv->cur_pgc->nr_of_cells;
+  } else {
+    priv->last_cell =
+        priv->cur_pgc->program_map[(priv->vts_ptt_srpt->title[priv->ttn -
+                1].ptt[chapter + 1].pgn) - 1] - 1;
+  }
+
+  GST_LOG ("Opened chapter %d - cell %d-%d",
+      chapter, priv->start_cell, priv->last_cell);
+
+  /* retrieve position */
+  priv->cur_pack = 0;
+  for (i = 0; i < chapter; i++) {
+    gint c1, c2;
+
+    c1 = priv->cur_pgc->program_map[(priv->vts_ptt_srpt->title[priv->ttn -
+                1].ptt[i].pgn) - 1] - 1;
+    if (i + 1 == priv->tt_srpt->title[priv->title].nr_of_ptts) {
+      c2 = priv->cur_pgc->nr_of_cells;
+    } else {
+      c2 = priv->cur_pgc->program_map[(priv->vts_ptt_srpt->title[priv->ttn -
+                  1].ptt[i + 1].pgn) - 1] - 1;
+    }
+
+    for (; c1 < c2; c1++) {
+      priv->cur_pack +=
+          priv->cur_pgc->cell_playback[c1].last_sector -
+          priv->cur_pgc->cell_playback[c1].first_sector;
+    }
+  }
+
+  /* prepare reading for new cell */
+  priv->new_cell = TRUE;
+  priv->next_cell = priv->start_cell;
+
+  return 0;
+}
+
+static int
+get_next_cell_for (DVDReadSrcPrivate * priv, int cell)
+{
+  /* Check if we're entering an angle block. */
+  if (priv->cur_pgc->cell_playback[cell].block_type == BLOCK_TYPE_ANGLE_BLOCK) {
+    int i;
+
+    for (i = 0;; ++i) {
+      if (priv->cur_pgc->cell_playback[cell + i].block_mode
+          == BLOCK_MODE_LAST_CELL) {
+        return cell + i + 1;
+      }
+    }
+  } else {
+    return cell + 1;
+  }
+
+  /* shut up compiler */
+  g_assert_not_reached ();
+  return -1;
 }
 
 /*
@@ -465,44 +746,36 @@ _seek (DVDReadSrcPrivate * priv, int title, int chapter, int angle)
 static int
 _read (DVDReadSrcPrivate * priv, int angle, int new_seek, GstBuffer * buf)
 {
-  unsigned char *data;
+  unsigned char *data, static_data[DVD_VIDEO_LB_LEN];
 
-  data = GST_BUFFER_DATA (buf);
+  if (buf) {
+    data = GST_BUFFER_DATA (buf);
+  } else {
+    data = static_data;
+  }
 
     /**
      * Playback by cell in this pgc, starting at the cell for our chapter.
      */
-  if (new_seek) {
-    priv->next_cell = priv->start_cell;
+  if (new_seek)
     priv->cur_cell = priv->start_cell;
-  }
 
   if (priv->cur_cell < priv->last_cell) {
-    if (priv->new_cell)
-      priv->cur_cell = priv->next_cell;
+    if (priv->new_cell || new_seek) {
+      if (!new_seek)
+        priv->cur_cell = priv->next_cell;
 
-    /* Check if we're entering an angle block. */
-    if (priv->cur_pgc->cell_playback[priv->cur_cell].block_type
-        == BLOCK_TYPE_ANGLE_BLOCK) {
-      int i;
+      /* take angle into account */
+      if (priv->cur_pgc->cell_playback[priv->cur_cell].block_type
+          == BLOCK_TYPE_ANGLE_BLOCK)
+        priv->cur_cell += angle;
 
-      priv->cur_cell += angle;
-      for (i = 0;; ++i) {
-        if (priv->cur_pgc->cell_playback[priv->cur_cell + i].block_mode
-            == BLOCK_MODE_LAST_CELL) {
-          priv->next_cell = priv->cur_cell + i + 1;
-          break;
-        }
-      }
-    } else {
-      priv->next_cell = priv->cur_cell + 1;
-    }
+      /* calculate next cell */
+      priv->next_cell = get_next_cell_for (priv, priv->cur_cell);
 
-
-        /**
-         * We loop until we're out of this cell.
-         */
-    if (priv->new_cell) {
+      /**
+       * We loop until we're out of this cell.
+       */
       priv->cur_pack =
           priv->cur_pgc->cell_playback[priv->cur_cell].first_sector;
       priv->new_cell = FALSE;
@@ -565,31 +838,103 @@ _read (DVDReadSrcPrivate * priv, int angle, int new_seek, GstBuffer * buf)
       assert (cur_output_size < 1024);
       priv->cur_pack++;
 
+      if (buf) {
             /**
              * Read in and output cursize packs.
              */
-      len =
-          DVDReadBlocks (priv->dvd_title, priv->cur_pack, cur_output_size,
-          data);
-      if (len != cur_output_size) {
-        GST_ERROR ("Read failed for %d blocks at %d",
-            cur_output_size, priv->cur_pack);
-        return -1;
+        len =
+            DVDReadBlocks (priv->dvd_title, priv->cur_pack, cur_output_size,
+            data);
+        if (len != cur_output_size) {
+          GST_ERROR ("Read failed for %d blocks at %d",
+              cur_output_size, priv->cur_pack);
+          return -1;
+        }
+
+        GST_BUFFER_SIZE (buf) = cur_output_size * DVD_VIDEO_LB_LEN;
+        //GST_BUFFER_OFFSET (buf) = priv->cur_pack * DVD_VIDEO_LB_LEN;
       }
 
-      GST_BUFFER_SIZE (buf) = cur_output_size * DVD_VIDEO_LB_LEN;
       priv->cur_pack = next_vobu;
+
+      GST_LOG ("done reading data - %u sectors", cur_output_size);
 
       return 0;
     } else {
       priv->new_cell = TRUE;
     }
   } else {
-    return -2;
+    /* swap to next chapter */
+    if (priv->chapter + 1 == priv->tt_srpt->title[priv->title].nr_of_ptts) {
+      GST_LOG ("last chapter done - eos");
+      return -2;
+    }
+
+    GST_LOG ("end-of-chapter, switch to next");
+
+    priv->chapter++;
+    _seek_chapter (priv, priv->chapter);
   }
 
   /* again */
+  GST_LOG ("Need another try");
+
   return -3;
+}
+
+static gboolean
+seek_sector (DVDReadSrcPrivate * priv, int angle)
+{
+  gint seek_to = priv->cur_pack, chapter, sectors, next, cur, i;
+
+  /* retrieve position */
+  priv->cur_pack = 0;
+  for (i = 0; i < priv->tt_srpt->title[priv->title].nr_of_ptts; i++) {
+    gint c1, c2;
+
+    c1 = priv->cur_pgc->program_map[(priv->vts_ptt_srpt->title[priv->ttn -
+                1].ptt[i].pgn) - 1] - 1;
+    if (i + 1 == priv->tt_srpt->title[priv->title].nr_of_ptts) {
+      c2 = priv->cur_pgc->nr_of_cells;
+    } else {
+      c2 = priv->cur_pgc->program_map[(priv->vts_ptt_srpt->title[priv->ttn -
+                  1].ptt[i + 1].pgn) - 1] - 1;
+    }
+
+    for (next = cur = c1; cur < c2;) {
+      if (next != cur) {
+        sectors =
+            priv->cur_pgc->cell_playback[cur].last_sector -
+            priv->cur_pgc->cell_playback[cur].first_sector;
+        if (priv->cur_pack + sectors > seek_to) {
+          chapter = i;
+          goto done;
+        }
+        priv->cur_pack += sectors;
+      }
+      cur = next;
+      if (priv->cur_pgc->cell_playback[cur].block_type
+          == BLOCK_TYPE_ANGLE_BLOCK)
+        cur += angle;
+      next = get_next_cell_for (priv, cur);
+    }
+  }
+
+  GST_LOG ("Seek to sector %u failed", seek_to);
+  return FALSE;
+
+done:
+  /* so chapter $chapter and cell $cur contain our sector
+   * of interest. Let's go there! */
+  GST_LOG ("Seek succeeded, going to chapter %u, cell %u", chapter, cur);
+
+  _seek_chapter (priv, chapter);
+  priv->cur_cell = cur;
+  priv->next_cell = next;
+  priv->new_cell = FALSE;
+  priv->cur_pack = seek_to;
+
+  return TRUE;
 }
 
 static GstData *
@@ -607,12 +952,40 @@ dvdreadsrc_get (GstPad * pad)
   priv = dvdreadsrc->priv;
   g_return_val_if_fail (GST_FLAG_IS_SET (dvdreadsrc, DVDREADSRC_OPEN), NULL);
 
+  /* handle vents, if any */
+  if (priv->seek_pend) {
+    if (priv->flush_pend) {
+      priv->flush_pend = FALSE;
+
+      return GST_DATA (gst_event_new (GST_EVENT_FLUSH));
+    }
+
+    priv->seek_pend = FALSE;
+    if (priv->seek_pend_fmt != GST_FORMAT_UNDEFINED) {
+      if (priv->seek_pend_fmt == title_format) {
+        _seek_title (priv, priv->title, priv->angle);
+      }
+      _seek_chapter (priv, priv->chapter);
+
+      priv->seek_pend_fmt = GST_FORMAT_UNDEFINED;
+    } else {
+      if (!seek_sector (priv, priv->angle)) {
+        return GST_DATA (gst_event_new (GST_EVENT_EOS));
+      }
+    }
+
+    return GST_DATA (gst_event_new_discontinuous (FALSE,
+            GST_FORMAT_BYTES, priv->cur_pack * DVD_VIDEO_LB_LEN,
+            GST_FORMAT_UNDEFINED));
+  }
+
   /* create the buffer */
   /* FIXME: should eventually use a bufferpool for this */
   buf = gst_buffer_new_and_alloc (1024 * DVD_VIDEO_LB_LEN);
 
   if (priv->new_seek) {
-    _seek (priv, priv->title, priv->chapter, priv->angle);
+    _seek_title (priv, priv->title, priv->angle);
+    _seek_chapter (priv, priv->chapter);
   }
 
   /* read it in from the file */
@@ -649,10 +1022,8 @@ dvdreadsrc_open_file (DVDReadSrc * src)
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), (NULL));
     return FALSE;
   }
-  if (_seek (src->priv, src->priv->title, src->priv->chapter, src->priv->angle)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, SEEK, (NULL), (NULL));
-    return FALSE;
-  }
+  src->priv->seek_pend_fmt = title_format;
+  src->priv->seek_pend = TRUE;
 
   GST_FLAG_SET (src, DVDREADSRC_OPEN);
 
@@ -690,6 +1061,9 @@ dvdreadsrc_change_state (GstElement * element)
       dvdreadsrc->priv->new_seek = TRUE;
       dvdreadsrc->priv->chapter = 0;
       dvdreadsrc->priv->title = 0;
+      dvdreadsrc->priv->flush_pend = FALSE;
+      dvdreadsrc->priv->seek_pend = FALSE;
+      dvdreadsrc->priv->seek_pend_fmt = GST_FORMAT_UNDEFINED;
       break;
     case GST_STATE_READY_TO_NULL:
       dvdreadsrc_close_file (DVDREADSRC (element));
@@ -703,6 +1077,53 @@ dvdreadsrc_change_state (GstElement * element)
     return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 
   return GST_STATE_SUCCESS;
+}
+
+/*
+ * URI interface.
+ */
+
+static guint
+dvdreadsrc_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+
+static gchar **
+dvdreadsrc_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "dvd", NULL };
+
+  return protocols;
+}
+
+static const gchar *
+dvdreadsrc_uri_get_uri (GstURIHandler * handler)
+{
+  return "dvd://";
+}
+
+static gboolean
+dvdreadsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gboolean ret;
+  gchar *protocol = gst_uri_get_protocol (uri);
+
+  ret = (protocol && !strcmp (protocol, "dvd")) ? TRUE : FALSE;
+  g_free (protocol);
+
+  return ret;
+}
+
+static void
+dvdreadsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = dvdreadsrc_uri_get_type;
+  iface->get_protocols = dvdreadsrc_uri_get_protocols;
+  iface->get_uri = dvdreadsrc_uri_get_uri;
+  iface->set_uri = dvdreadsrc_uri_set_uri;
 }
 
 static gboolean
