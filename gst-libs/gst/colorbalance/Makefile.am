@@ -27,7 +27,7 @@ libgstcolorbalance_la_SOURCES = \
 	colorbalancechannel.c \
         $(built_sources)
 
-libgstcolorbalance_la_CFLAGS = $(GST_CFLAGS) $(GST_OPT_CFLAGS)
+libgstcolorbalance_la_CFLAGS = $(GST_CFLAGS)
 
 BUILT_SOURCES = \
         $(built_sources) \
