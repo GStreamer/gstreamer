@@ -26,7 +26,7 @@
 #include <stdlib.h>
 
 #include <gst/gst.h>
-#include <gst/bytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 #include "outputstream.hh"
 #include "bits.hh"

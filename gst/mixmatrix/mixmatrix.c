@@ -22,7 +22,7 @@
 #endif
 #include <config.h>
 #include <gst/gst.h>
-#include <gst/bytestream.h>
+#include <gst/bytestream/bytestream.h>
 #include <gst/audio/audio.h>
 #include <string.h>
 

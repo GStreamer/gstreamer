@@ -21,7 +21,7 @@
 #include <gst/gst.h>
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
-#include <gst/bytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 extern GType ivorbisfile_get_type(void);
 
