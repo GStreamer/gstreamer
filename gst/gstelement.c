@@ -1331,13 +1331,13 @@ gst_element_get_compatible_pad_template (GstElement *element,
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
       GST_DEBUG (GST_CAT_CAPS, "compatible direction: found src pad template");
-      comp = gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (padtempl),
+      comp = gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (padtempl),
 				           GST_PAD_TEMPLATE_CAPS (compattempl));
       GST_DEBUG(GST_CAT_CAPS, "caps are %scompatible", (comp ? "" : "not "));
     } else if (padtempl->direction == GST_PAD_SINK &&
 	       compattempl->direction == GST_PAD_SRC) {
       GST_DEBUG (GST_CAT_CAPS, "compatible direction: found sink pad template");
-      comp = gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (compattempl),
+      comp = gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (compattempl),
 					   GST_PAD_TEMPLATE_CAPS (padtempl));
       GST_DEBUG (GST_CAT_CAPS, "caps are %scompatible", (comp ? "" : "not "));
     }
@@ -1507,10 +1507,13 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
   destpads = gst_element_get_pad_list (dest);
 
   if (srcpads || destpads) {
+    GST_DEBUG (GST_CAT_ELEMENT_PADS, "looping through src and dest pads");
     /* loop through the existing pads in the source, trying to find a
      * compatible destination pad */
     while (srcpads) {
       srcpad = (GstPad *) GST_PAD_REALIZE (srcpads->data);
+      GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying src pad %s:%s", 
+		 GST_DEBUG_PAD_NAME (srcpad));
       if ((GST_RPAD_DIRECTION (srcpad) == GST_PAD_SRC) &&
           (GST_PAD_PEER (srcpad) == NULL)) {
         destpad = gst_element_get_compatible_pad_filtered (dest, srcpad, 
@@ -1527,6 +1530,8 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
     /* loop through the existing pads in the destination */
     while (destpads) {
       destpad = (GstPad *) GST_PAD_REALIZE (destpads->data);
+      GST_DEBUG (GST_CAT_ELEMENT_PADS, "trying dest pad %s:%s", 
+		 GST_DEBUG_PAD_NAME (destpad));
       if ((GST_RPAD_DIRECTION (destpad) == GST_PAD_SINK) &&
           (GST_PAD_PEER (destpad) == NULL)) {
         srcpad = gst_element_get_compatible_pad_filtered (src, destpad, 
@@ -1554,7 +1559,7 @@ gst_element_connect_filtered (GstElement *src, GstElement *dest,
           desttempl = (GstPadTemplate*) desttempls->data;
           if (desttempl->presence == GST_PAD_REQUEST && 
 	      desttempl->direction != srctempl->direction) {
-            if (gst_caps_check_compatibility (gst_pad_template_get_caps (srctempl),
+            if (gst_caps_is_always_compatible (gst_pad_template_get_caps (srctempl),
                                               gst_pad_template_get_caps (desttempl))) {
               srcpad = gst_element_get_request_pad (src, 
 		                                    srctempl->name_template);

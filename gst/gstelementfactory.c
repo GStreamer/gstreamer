@@ -347,7 +347,7 @@ gst_element_factory_can_src_caps (GstElementFactory *factory,
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == GST_PAD_SRC) {
-      if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (template), caps))
+      if (gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (template), caps))
 	return TRUE;
     }
     templates = g_list_next (templates);
@@ -380,7 +380,7 @@ gst_element_factory_can_sink_caps (GstElementFactory *factory,
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == GST_PAD_SINK) {
-      if (gst_caps_check_compatibility (caps, GST_PAD_TEMPLATE_CAPS (template)))
+      if (gst_caps_is_always_compatible (caps, GST_PAD_TEMPLATE_CAPS (template)))
 	return TRUE;
     }
     templates = g_list_next (templates);

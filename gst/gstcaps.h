@@ -127,7 +127,7 @@ GstCaps*	gst_caps_chain				(GstCaps *caps, ...);
 GstCaps*	gst_caps_append				(GstCaps *caps, GstCaps *capstoadd); 
 GstCaps*	gst_caps_prepend			(GstCaps *caps, GstCaps *capstoadd); 
 
-gboolean	gst_caps_check_compatibility		(GstCaps *fromcaps, GstCaps *tocaps);
+gboolean	gst_caps_is_always_compatible		(GstCaps *fromcaps, GstCaps *tocaps);
 GstCaps*	gst_caps_intersect			(GstCaps *caps1, GstCaps *caps2);
 GstCaps*	gst_caps_normalize			(GstCaps *caps);
 

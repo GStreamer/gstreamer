@@ -613,30 +613,36 @@ gst_caps_check_compatibility_func (GstCaps *fromcaps, GstCaps *tocaps)
 }
 
 /**
- * gst_caps_check_compatibility:
- * @fromcaps: a capabilty
- * @tocaps: a capabilty
+ * gst_caps_is_always_compatible:
+ * @fromcaps: a #GstCaps capability to check compatibility of.
+ * @tocaps: the #GstCaps capabilty to check compatibility with.
  *
- * Checks whether two capabilities are compatible.
+ * Checks if a connection is always possible from fromcaps to tocaps, for all
+ * possible capabilities.
  *
- * Returns: TRUE if compatible, FALSE otherwise
+ * Returns: TRUE if compatible under all circumstances, FALSE otherwise.
  */
 gboolean
-gst_caps_check_compatibility (GstCaps *fromcaps, GstCaps *tocaps)
+gst_caps_is_always_compatible (GstCaps *fromcaps, GstCaps *tocaps)
 {
   if (fromcaps == NULL) {
     if (tocaps == NULL) {
-      GST_DEBUG (GST_CAT_CAPS,"no caps");
+      /* if both are NULL, they can always connect.  Think filesrc ! filesink */
+      GST_DEBUG (GST_CAT_CAPS, "both caps NULL, compatible");
       return TRUE;
     }
     else {
-      GST_DEBUG (GST_CAT_CAPS,"no source but destination caps");
+      /* if source caps are NULL, it could be sending anything, so the
+       * destination can't know if it can accept this.  Think filesrc ! mad */
+      GST_DEBUG (GST_CAT_CAPS, "source caps NULL, not guaranteed compatible");
       return FALSE;
     }
   }
   else {
     if (tocaps == NULL) {
-      GST_DEBUG (GST_CAT_CAPS,"source caps and no destination caps");
+      /* if the dest caps are NULL, the element can accept anything, always,
+       * so they're compatible by definition.  Think mad ! filesink */
+      GST_DEBUG (GST_CAT_CAPS,"destination caps NULL");
       return TRUE;
     }
   }

@@ -1464,6 +1464,7 @@ gst_pad_try_reconnect_filtered_func (GstRealPad *srcpad, GstRealPad *sinkpad,
 
   /* first take the intersection of the pad caps */
   intersection = gst_caps_intersect (srccaps, sinkcaps);
+  gst_caps_debug (intersection, "caps of intersection");
 
   /* if we have no intersection but one of the caps was not NULL.. */
   if (!intersection && (srccaps || sinkcaps)) {
@@ -1774,8 +1775,8 @@ gst_pad_check_compatibility (GstPad *srcpad, GstPad *sinkpad)
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
 
   if (GST_PAD_CAPS (srcpad) && GST_PAD_CAPS (sinkpad)) {
-    if (!gst_caps_check_compatibility (GST_PAD_CAPS (srcpad), 
-	                               GST_PAD_CAPS (sinkpad))) {
+    if (!gst_caps_is_always_compatible (GST_PAD_CAPS (srcpad), 
+	                                GST_PAD_CAPS (sinkpad))) {
       return FALSE;
     }
     else {

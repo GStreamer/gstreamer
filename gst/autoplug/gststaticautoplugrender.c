@@ -119,11 +119,11 @@ gst_autoplug_match_caps (GstElementFactory *factory, GstPadDirection direction, 
     GstPadTemplate *template = (GstPadTemplate *)templates->data;
 
     if (template->direction == direction && direction == GST_PAD_SRC) {
-      if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (template), caps))
+      if (gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (template), caps))
         return template;
     }
     else if (template->direction == direction && direction == GST_PAD_SINK) {
-      if (gst_caps_check_compatibility (caps, GST_PAD_TEMPLATE_CAPS (template)))
+      if (gst_caps_is_always_compatible (caps, GST_PAD_TEMPLATE_CAPS (template)))
         return template;
     }
     templates = g_list_next (templates);
@@ -152,7 +152,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
       desttemps = g_list_next (desttemps);
 
       if (desttemp->direction == GST_PAD_SINK && desttemp->presence != GST_PAD_REQUEST) {
-	if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (srctemp), GST_PAD_TEMPLATE_CAPS (desttemp))) {
+	if (gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (srctemp), GST_PAD_TEMPLATE_CAPS (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
 			  "factory \"%s\" can connect with factory \"%s\"", 
 			  GST_OBJECT_NAME (src), GST_OBJECT_NAME (dest));
@@ -256,7 +256,7 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
   gboolean res;
 
   if (IS_CAPS (src) && IS_CAPS (dest)) {
-    res = gst_caps_check_compatibility ((GstCaps *)src, (GstCaps *)dest);
+    res = gst_caps_is_always_compatible ((GstCaps *)src, (GstCaps *)dest);
     /*GST_INFO (GST_CAT_AUTOPLUG_ATTEMPT,"caps %d to caps %d %d", ((GstCaps *)src)->id, ((GstCaps *)dest)->id, res); */
   }
   else if (IS_CAPS (src)) {
@@ -414,7 +414,7 @@ next:
 	GstPad *pad = GST_PAD (pads->data);
 	GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
-	if (gst_caps_check_compatibility (srccaps, GST_PAD_TEMPLATE_CAPS (templ))) {
+	if (gst_caps_is_always_compatible (srccaps, GST_PAD_TEMPLATE_CAPS (templ))) {
           gst_element_add_ghost_pad (result, pad, "sink");
 	  break;
 	}

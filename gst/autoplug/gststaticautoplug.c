@@ -122,7 +122,7 @@ gst_autoplug_can_match (GstElementFactory *src, GstElementFactory *dest)
 
       if (srctemp->direction == GST_PAD_SRC &&
           desttemp->direction == GST_PAD_SINK) {
-	if (gst_caps_check_compatibility (gst_pad_template_get_caps (srctemp), 
+	if (gst_caps_is_always_compatible (gst_pad_template_get_caps (srctemp), 
 				gst_pad_template_get_caps (desttemp))) {
 	  GST_DEBUG (GST_CAT_AUTOPLUG_ATTEMPT,
 			  "factory \"%s\" can connect with factory \"%s\"\n", GST_OBJECT_NAME (src), 
@@ -158,7 +158,7 @@ gst_autoplug_pads_autoplug_func (GstElement *src, GstPad *pad, GstElement *sink)
     if (gst_pad_get_direction(sinkpad)	 == GST_PAD_SINK &&
         !GST_PAD_IS_CONNECTED(sinkpad))
     {
-      if (gst_caps_check_compatibility (gst_pad_get_caps(pad), gst_pad_get_caps(sinkpad))) {
+      if (gst_caps_is_always_compatible (gst_pad_get_caps(pad), gst_pad_get_caps(sinkpad))) {
         gst_pad_connect(pad, sinkpad);
         GST_DEBUG (0,"gstpipeline: autoconnect pad \"%s\" in element %s <-> ", GST_PAD_NAME (pad),
 		       GST_ELEMENT_NAME(src));
@@ -200,7 +200,7 @@ autoplug_dynamic_pad (GstElement *element, GstPad *pad, gpointer data)
     GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
     pads = g_list_next (pads);
 
-    if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (templ), info->endcap)) {
+    if (gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (templ), info->endcap)) {
       gchar *name;
 
       name = g_strdup_printf ("src_%02d", info->i);
@@ -258,7 +258,7 @@ gst_autoplug_caps_find_cost (gpointer src, gpointer dest, gpointer data)
   gboolean res;
 
   if (IS_CAPS (src) && IS_CAPS (dest)) {
-    res = gst_caps_check_compatibility ((GstCaps *)src, (GstCaps *)dest);
+    res = gst_caps_is_always_compatible ((GstCaps *)src, (GstCaps *)dest);
   }
   else if (IS_CAPS (src)) {
     res = gst_element_factory_can_sink_caps ((GstElementFactory *)dest, (GstCaps *)src);
@@ -399,7 +399,7 @@ gst_static_autoplug_to_caps (GstAutoplug *autoplug, GstCaps *srccaps, GstCaps *s
 	GstPad *pad = GST_PAD (pads->data);
 	GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
-	if (gst_caps_check_compatibility (srccaps, GST_PAD_TEMPLATE_CAPS (templ))) {
+	if (gst_caps_is_always_compatible (srccaps, GST_PAD_TEMPLATE_CAPS (templ))) {
           gst_element_add_ghost_pad (result, pad, "sink");
 	  break;
 	}
@@ -464,7 +464,7 @@ differ:
 	GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 	pads = g_list_next (pads);
 
-	if (gst_caps_check_compatibility (GST_PAD_TEMPLATE_CAPS (templ), endcap)) {
+	if (gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (templ), endcap)) {
 	  gchar *name;
 
 	  name = g_strdup_printf ("src_%02d", i);
