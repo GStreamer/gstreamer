@@ -121,7 +121,7 @@ gst_mpeg_parse_class_init (GstMPEGParseClass *klass)
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BIT_RATE,
-    g_param_spec_uint("bit_rate","bit_rate","bit_rate",
+    g_param_spec_uint("bitrate","bitrate","bitrate",
                       0, G_MAXUINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MPEG2,
     g_param_spec_boolean ("mpeg2", "mpeg2", "is this an mpeg2 stream",
@@ -234,8 +234,8 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
   if (mpeg_parse->bit_rate != new_rate) {
     mpeg_parse->bit_rate = new_rate;
-    gst_element_send_event (GST_ELEMENT (mpeg_parse), 
-      gst_event_new_info ("bitrate", GST_PROPS_INT (new_rate), NULL));
+
+    g_object_notify (G_OBJECT (mpeg_parse), "bitrate");
   }
 
   GST_DEBUG (0, "mpeg_parse: stream is %1.3fMbs\n",
