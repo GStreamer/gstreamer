@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __V4L2_SRC_CALLS_H__
-#define __V4L2_SRC_CALLS_H__
+#ifndef __V4L2SRC_CALLS_H__
+#define __V4L2SRC_CALLS_H__
 
 #include "gstv4l2src.h"
 #include "v4l2_calls.h"
@@ -31,17 +31,16 @@ gboolean	gst_v4l2src_set_capture		(GstV4l2Src *v4l2src,
 						 gint        height);
 gboolean	gst_v4l2src_capture_init	(GstV4l2Src *v4l2src);
 gboolean	gst_v4l2src_capture_start	(GstV4l2Src *v4l2src);
-gboolean	gst_v4l2src_grab_frame		(GstV4l2Src *v4l2src,
-						 gint       *num);
+gint		gst_v4l2src_grab_frame		(GstV4l2Src *v4l2src);
 guint8 *	gst_v4l2src_get_buffer		(GstV4l2Src *v4l2src,
 						 gint        num);
-gboolean	gst_v4l2src_requeue_frame	(GstV4l2Src *v4l2src,
-						 gint        num);
+gboolean	gst_v4l2src_queue_frame		(GstV4l2Src *v4l2src,
+						 guint i);
 gboolean	gst_v4l2src_capture_stop	(GstV4l2Src *v4l2src);
 gboolean	gst_v4l2src_capture_deinit	(GstV4l2Src *v4l2src);
 
 gboolean	gst_v4l2src_fill_format_list	(GstV4l2Src *v4l2src);
-gboolean	gst_v4l2src_empty_format_list	(GstV4l2Src *v4l2src);
+gboolean	gst_v4l2src_clear_format_list	(GstV4l2Src *v4l2src);
 
 /* hacky */
 gboolean	gst_v4l2src_get_size_limits	(GstV4l2Src *v4l2src,
@@ -49,4 +48,6 @@ gboolean	gst_v4l2src_get_size_limits	(GstV4l2Src *v4l2src,
 						 gint *min_w, gint *max_w,
 						 gint *min_h, gint *max_h);
 
-#endif /* __V4L2_SRC_CALLS_H__ */
+void		gst_v4l2src_free_buffer		(GstBuffer *buffer);
+  
+#endif /* __V4L2SRC_CALLS_H__ */

@@ -82,6 +82,11 @@ struct _GstV4l2Element {
 	GstXWindowListener *overlay;
 	XID xwindow_id;
 
+	/* properties */
+	gchar *norm;
+	gchar *channel;
+	gulong frequency;
+
 	/* caching values */
 	gchar *display;
 };

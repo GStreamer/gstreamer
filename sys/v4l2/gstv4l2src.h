@@ -22,6 +22,10 @@
 
 #include <gstv4l2element.h>
 
+GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
+
+#define GST_V4L2_MAX_BUFFERS 16
+#define GST_V4L2_MIN_BUFFERS 2
 
 #define GST_TYPE_V4L2SRC \
 		(gst_v4l2src_get_type())
@@ -34,9 +38,26 @@
 #define GST_IS_V4L2SRC_CLASS(obj) \
 		(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2SRC))
 
+typedef struct _GstV4l2BufferPool	GstV4l2BufferPool;
+typedef struct _GstV4l2Buffer		GstV4l2Buffer;
+typedef	struct _GstV4l2Src		GstV4l2Src;
+typedef	struct _GstV4l2SrcClass		GstV4l2SrcClass;
 
-typedef	struct _GstV4l2Src	GstV4l2Src;
-typedef	struct _GstV4l2SrcClass	GstV4l2SrcClass;
+/* global info */
+struct _GstV4l2BufferPool {
+  GstAtomicInt		refcount; /* number of users: 1 for every buffer, 1 for element */
+  gint			video_fd;
+  guint			buffer_count;
+  GstV4l2Buffer *	buffers;
+};
+
+struct _GstV4l2Buffer {
+  struct v4l2_buffer	buffer;
+  guint8 *		start;
+  guint			length;
+  GstAtomicInt		refcount; /* add 1 if in use by element, add 1 if in use by GstBuffer */
+  GstV4l2BufferPool *	pool;
+};
 
 struct _GstV4l2Src {
 	GstV4l2Element v4l2element;
@@ -45,28 +66,21 @@ struct _GstV4l2Src {
 	GstPad *srcpad;
 
 	/* internal lists */
-	GList /*v4l2_fmtdesc*/ *formats, *format_list; /* list of available capture formats */
+	GSList *formats; /* list of available capture formats */
 
-	/* buffer properties */
-	struct v4l2_buffer bufsettings;
+	/* buffers */
+	GstV4l2BufferPool *pool;
+
 	struct v4l2_requestbuffers breq;
 	struct v4l2_format format;
-
-	/* num of queued frames and some GThread stuff
-	 * to wait if there's not enough */
-	gint8 *frame_queue_state;
-	GMutex *mutex_queue_state;
-	GCond *cond_queue_state;
-	gint num_queued;
-	gint queue_frame;
 
 	/* True if we want to stop */
 	gboolean quit;
 
 	/* A/V sync... frame counter and internal cache */
 	gulong handled;
-	gint last_frame;
 	gint need_writes;
+	GstBuffer *cached_buffer;
 	gulong last_seq;
 
 	/* clock */
@@ -74,9 +88,6 @@ struct _GstV4l2Src {
 	
 	/* time to substract from clock time to get back to timestamp */
 	GstClockTime substract_time;
-
-	/* how often are we going to use each frame? */
-	gint *use_num_times;
 
 	/* how are we going to push buffers? */
 	gboolean use_fixed_fps;

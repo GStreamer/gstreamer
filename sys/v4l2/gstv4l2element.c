@@ -43,17 +43,20 @@ static GstElementDetails gst_v4l2element_details = {
 
 /* V4l2Element signals and args */
 enum {
-	/* FILL ME */
-	SIGNAL_OPEN,
-	SIGNAL_CLOSE,
-	LAST_SIGNAL
+  /* FILL ME */
+  SIGNAL_OPEN,
+  SIGNAL_CLOSE,
+  LAST_SIGNAL
 };
 
 enum {
-	ARG_0,
-	ARG_DEVICE,
-	ARG_DEVICE_NAME,
-	ARG_FLAGS
+  ARG_0,
+  ARG_DEVICE,
+  ARG_DEVICE_NAME,
+  ARG_NORM,
+  ARG_CHANNEL,
+  ARG_FREQUENCY,
+  ARG_FLAGS
 };
 
 
@@ -378,41 +381,47 @@ gst_v4l2element_base_init (GstV4l2ElementClass *klass)
 static void
 gst_v4l2element_class_init (GstV4l2ElementClass *klass)
 {
-	GObjectClass *gobject_class;
-	GstElementClass *gstelement_class;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-	gobject_class = (GObjectClass*)klass;
-	gstelement_class = (GstElementClass*)klass;
+  parent_class = g_type_class_peek_parent (klass);
 
-	parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
+  g_object_class_install_property(gobject_class, ARG_DEVICE,
+	  g_param_spec_string("device", "Device", "Device location",
+		  NULL, G_PARAM_READWRITE));
+  g_object_class_install_property(gobject_class, ARG_DEVICE_NAME,
+	  g_param_spec_string("device_name", "Device name",
+		  "Name of the device", NULL, G_PARAM_READABLE));
+  g_object_class_install_property(gobject_class, ARG_FLAGS,
+	  g_param_spec_flags("flags", "Flags", "Device type flags",
+		  GST_TYPE_V4L2_DEVICE_FLAGS, 0, G_PARAM_READABLE));
+  g_object_class_install_property(gobject_class, ARG_NORM,
+	  g_param_spec_string("norm", "norm",
+		  "Norm to use", NULL, G_PARAM_READWRITE));
+  g_object_class_install_property(gobject_class, ARG_CHANNEL,
+	  g_param_spec_string("channel", "channel",
+		  "input/output to switch to", NULL, G_PARAM_READWRITE));
+  g_object_class_install_property(gobject_class, ARG_FREQUENCY,
+      g_param_spec_ulong ("frequency", "frequency",
+	  "frequency to tune to", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
 
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE,
-		g_param_spec_string("device", "Device", "Device location",
-			NULL, G_PARAM_READWRITE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_DEVICE_NAME,
-		g_param_spec_string("device_name", "Device name",
-			"Name of the device", NULL, G_PARAM_READABLE));
-	g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FLAGS,
-		g_param_spec_flags("flags", "Flags", "Device type flags",
-			GST_TYPE_V4L2_DEVICE_FLAGS, 0, G_PARAM_READABLE));
+  /* signals */
+  gst_v4l2element_signals[SIGNAL_OPEN] =
+	  g_signal_new("open", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+		  G_STRUCT_OFFSET(GstV4l2ElementClass, open),
+		  NULL, NULL, g_cclosure_marshal_VOID__STRING,
+		  G_TYPE_NONE, 1, G_TYPE_STRING);
+  gst_v4l2element_signals[SIGNAL_CLOSE] =
+	  g_signal_new("close", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+		  G_STRUCT_OFFSET(GstV4l2ElementClass, close),
+		  NULL, NULL, g_cclosure_marshal_VOID__STRING,
+		  G_TYPE_NONE, 1, G_TYPE_STRING);
 
-	/* signals */
-	gst_v4l2element_signals[SIGNAL_OPEN] =
-		g_signal_new("open", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-			G_STRUCT_OFFSET(GstV4l2ElementClass, open),
-			NULL, NULL, g_cclosure_marshal_VOID__STRING,
-			G_TYPE_NONE, 1, G_TYPE_STRING);
-	gst_v4l2element_signals[SIGNAL_CLOSE] =
-		g_signal_new("close", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
-			G_STRUCT_OFFSET(GstV4l2ElementClass, close),
-			NULL, NULL, g_cclosure_marshal_VOID__STRING,
-			G_TYPE_NONE, 1, G_TYPE_STRING);
+  gobject_class->set_property = gst_v4l2element_set_property;
+  gobject_class->get_property = gst_v4l2element_get_property;
+  gobject_class->dispose = gst_v4l2element_dispose;
 
-	gobject_class->set_property = gst_v4l2element_set_property;
-	gobject_class->get_property = gst_v4l2element_get_property;
-	gobject_class->dispose = gst_v4l2element_dispose;
-
-	gstelement_class->change_state = gst_v4l2element_change_state;
+  gstelement_class->change_state = gst_v4l2element_change_state;
 }
 
 
@@ -446,10 +455,13 @@ gst_v4l2element_dispose (GObject *object)
     g_free (v4l2element->display);
   }
 
-  if (v4l2element->device) {
-    g_free (v4l2element->device);
-  }
-
+  g_free (v4l2element->device);
+  v4l2element->device = NULL;
+  g_free (v4l2element->norm);
+  v4l2element->norm = NULL;
+  g_free (v4l2element->channel);
+  v4l2element->channel = NULL;
+  
   if (((GObjectClass *) parent_class)->dispose)
     ((GObjectClass *) parent_class)->dispose(object);
 }
@@ -460,24 +472,63 @@ gst_v4l2element_set_property (GObject      *object,
                               const GValue *value,
                               GParamSpec   *pspec)
 {
-	GstV4l2Element *v4l2element;
-
-	/* it's not null if we got it, but it might not be ours */
-	g_return_if_fail(GST_IS_V4L2ELEMENT(object));
-	v4l2element = GST_V4L2ELEMENT(object);
-
-	switch (prop_id) {
-		case ARG_DEVICE:
-			if (!GST_V4L2_IS_OPEN(v4l2element)) {
-				if (v4l2element->device)
-					g_free(v4l2element->device);
-				v4l2element->device = g_strdup(g_value_get_string(value));
-			}
-			break;
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-			break;
+  GstV4l2Element *v4l2element;
+  GstTuner *tuner;
+  
+  /* it's not null if we got it, but it might not be ours */
+  g_return_if_fail (GST_IS_V4L2ELEMENT (object));
+  v4l2element = GST_V4L2ELEMENT (object);
+  /* stupid GstInterface */
+  tuner = (GstTuner *) object;
+  
+  switch (prop_id) {
+    case ARG_DEVICE:
+      if (!GST_V4L2_IS_OPEN(v4l2element)) {
+	if (v4l2element->device)
+	  g_free(v4l2element->device);
+	v4l2element->device = g_value_dup_string(value);
+      }
+      break;
+    case ARG_NORM:
+      if (GST_V4L2_IS_OPEN(v4l2element)) {
+	GstTunerNorm *norm = gst_tuner_get_norm (tuner);
+	if (norm) {
+	  gst_tuner_set_norm (tuner, norm);
 	}
+      } else {
+	g_free (v4l2element->norm);
+	v4l2element->norm = g_value_dup_string (value);
+	g_object_notify (object, "norm");
+      }
+      break;
+    case ARG_CHANNEL:
+      if (GST_V4L2_IS_OPEN(v4l2element)) {
+	GstTunerChannel *channel = gst_tuner_get_channel (tuner);
+	if (channel) {
+	  gst_tuner_set_channel (tuner, channel);
+	}
+      } else {
+	g_free (v4l2element->channel);
+	v4l2element->channel = g_value_dup_string (value);
+	g_object_notify (object, "channel");
+      }
+      break;
+    case ARG_FREQUENCY:
+      if (GST_V4L2_IS_OPEN(v4l2element)) {
+	GstTunerChannel *channel;
+	if (!v4l2element->channel) return;
+	channel = gst_tuner_get_channel (tuner);
+	g_assert (channel);
+	gst_tuner_set_frequency (tuner, channel, g_value_get_ulong (value));
+      } else {
+	v4l2element->frequency = g_value_get_ulong (value);
+	g_object_notify (object, "frequency");
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 
@@ -513,6 +564,15 @@ gst_v4l2element_get_property (GObject    *object,
 			g_value_set_flags(value, flags);
 			break;
 		}
+		case ARG_NORM:
+			g_value_set_string (value, v4l2element->norm);
+			break;
+		case ARG_CHANNEL:
+			g_value_set_string (value, v4l2element->channel);
+			break;
+		case ARG_FREQUENCY:
+			g_value_set_ulong (value, v4l2element->frequency);
+			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 			break;
