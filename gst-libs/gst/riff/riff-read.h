@@ -98,6 +98,10 @@ gboolean gst_riff_read_strf_vids_with_data
 				  GstBuffer  **extradata);
 gboolean gst_riff_read_strf_auds (GstRiffRead *riff,
 				  gst_riff_strf_auds **header);
+gboolean gst_riff_read_strf_auds_with_data
+				 (GstRiffRead *riff,
+				  gst_riff_strf_auds **header,
+				  GstBuffer **extradata);
 gboolean gst_riff_read_strf_iavs (GstRiffRead *riff,
 				  gst_riff_strf_iavs **header);
 gboolean gst_riff_read_info      (GstRiffRead *riff);

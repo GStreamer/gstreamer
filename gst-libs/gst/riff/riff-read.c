@@ -551,8 +551,8 @@ gst_riff_read_strf_vids_with_data (GstRiffRead * riff,
         strf->size, GST_BUFFER_SIZE (buf));
     strf->size = GST_BUFFER_SIZE (buf);
   } else if (strf->size < GST_BUFFER_SIZE (buf)) {
-    *extradata = gst_buffer_create_sub (buf, strf->size,
-        GST_BUFFER_SIZE (buf) - strf->size);
+    *extradata = gst_buffer_create_sub (buf, strf->size + 2,
+        GST_BUFFER_SIZE (buf) - strf->size - 2);
   }
 
   /* debug */
@@ -582,7 +582,6 @@ gst_riff_read_strf_vids_with_data (GstRiffRead * riff,
 /*
  * Obsolete, use gst_riff_read_strf_vids_with_data ().
  */
-
 gboolean
 gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
 {
@@ -597,7 +596,8 @@ gst_riff_read_strf_vids (GstRiffRead * riff, gst_riff_strf_vids ** header)
 }
 
 gboolean
-gst_riff_read_strf_auds (GstRiffRead * riff, gst_riff_strf_auds ** header)
+gst_riff_read_strf_auds_with_data (GstRiffRead * riff,
+    gst_riff_strf_auds ** header, GstBuffer ** extradata)
 {
   guint32 tag;
   GstBuffer *buf;
@@ -629,6 +629,17 @@ gst_riff_read_strf_auds (GstRiffRead * riff, gst_riff_strf_auds ** header)
   strf->size = GUINT16_FROM_LE (strf->size);
 #endif
 
+  /* size checking */
+  *extradata = NULL;
+  if (strf->size > GST_BUFFER_SIZE (buf)) {
+    g_warning ("strf_auds header gave %d bytes data, only %d available",
+        strf->size, GST_BUFFER_SIZE (buf));
+    strf->size = GST_BUFFER_SIZE (buf);
+  } else if (strf->size < GST_BUFFER_SIZE (buf)) {
+    *extradata = gst_buffer_create_sub (buf, strf->size + 2,
+        GST_BUFFER_SIZE (buf) - strf->size - 2);
+  }
+
   /* debug */
   GST_INFO ("strf tag found in context auds:");
   GST_INFO (" format      %d", strf->format);
@@ -637,12 +648,30 @@ gst_riff_read_strf_auds (GstRiffRead * riff, gst_riff_strf_auds ** header)
   GST_INFO (" av_bps      %d", strf->av_bps);
   GST_INFO (" blockalign  %d", strf->blockalign);
   GST_INFO (" size        %d", strf->size);     /* wordsize, not extrasize! */
+  if (*extradata)
+    GST_INFO (" %d bytes extra_data", GST_BUFFER_SIZE (*extradata));
 
   gst_buffer_unref (buf);
 
   *header = strf;
 
   return TRUE;
+}
+
+/*
+ * Obsolete, use gst_riff_read_strf_auds_with_data ().
+ */
+gboolean
+gst_riff_read_strf_auds (GstRiffRead * riff, gst_riff_strf_auds ** header)
+{
+  GstBuffer *data = NULL;
+  gboolean ret;
+
+  ret = gst_riff_read_strf_auds_with_data (riff, header, &data);
+  if (data)
+    gst_buffer_unref (data);
+
+  return ret;
 }
 
 gboolean

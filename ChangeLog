@@ -1,3 +1,18 @@
+2004-07-13  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_audio_caps_with_data),
+	(gst_riff_create_audio_caps),
+	(gst_riff_create_audio_template_caps):
+	* gst-libs/gst/riff/riff-media.h:
+	* gst-libs/gst/riff/riff-read.c:
+	(gst_riff_read_strf_vids_with_data),
+	(gst_riff_read_strf_auds_with_data), (gst_riff_read_strf_auds):
+	* gst-libs/gst/riff/riff-read.h:
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_add_stream):
+	Set codec_data on caps for avidemuxer.
+
 2004-07-12  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Fix test for Objective C
