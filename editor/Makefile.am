@@ -18,7 +18,7 @@ libgsteditor_la_SOURCES =	\
 	gsteditorcreate.c
 
 libgsteditor_la_CFLAGS = -DDATADIR="\"$(gladedir)/\"" $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS)
-libgsteditor_la_LDFLAGS = $(GNOME_LIBS) $(LIBGLADE_GNOME_LIBS)
+libgsteditor_la_LIBADD = $(GNOME_LIBS) $(LIBGLADE_GNOME_LIBS)
 
 libgsteditorincludedir = $(includedir)/gst
 libgsteditorinclude_HEADERS =	\
@@ -26,7 +26,8 @@ libgsteditorinclude_HEADERS =	\
 
 bin_PROGRAMS = gsteditor
 gsteditor_SOURCES = editor.c
-gsteditor_LDFLAGS = libgsteditor.la $(GST_LIBS)
+gsteditor_CFLAGS = $(GST_CFLAGS) $(GNOME_CFLAGS) $(LIBGLADE_GNOME_CFLAGS)
+gsteditor_LDADD = $(GST_LIBS) $(GNOME_LIBS) $(LIBGLADE_GNOME_LIBS) libgsteditor.la
 
 man_MANS = gsteditor.1
 
