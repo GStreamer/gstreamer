@@ -31,8 +31,8 @@ version_check ()
 
   debug "major $MAJOR minor $MINOR micro $MICRO"
   VERSION=$MAJOR
-  if test ! -z $MINOR; then VERSION=$VERSION.$MINOR; else MINOR=0; fi
-  if test ! -z $MICRO; then VERSION=$VERSION.$MICRO; else MICRO=0; fi
+  if test ! -z "$MINOR"; then VERSION=$VERSION.$MINOR; else MINOR=0; fi
+  if test ! -z "$MICRO"; then VERSION=$VERSION.$MICRO; else MICRO=0; fi
 
   debug "major $MAJOR minor $MINOR micro $MICRO"
   echo "Checking for $1 > $VERSION ..."
