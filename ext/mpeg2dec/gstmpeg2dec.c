@@ -204,6 +204,7 @@ gst_mpeg2dec_init (GstMpeg2dec *mpeg2dec)
   /* initialize the mpeg2dec acceleration */
   mpeg2_accel (MPEG2_ACCEL_DETECT);
   mpeg2dec->closed = TRUE;
+  mpeg2dec->have_fbuf = FALSE;
 
   GST_FLAG_SET (GST_ELEMENT (mpeg2dec), GST_ELEMENT_EVENT_AWARE);
 }
@@ -224,6 +225,7 @@ gst_mpeg2dec_open_decoder (GstMpeg2dec *mpeg2dec)
   gst_mpeg2dec_close_decoder (mpeg2dec);
   mpeg2dec->decoder = mpeg2_init ();
   mpeg2dec->closed = FALSE;
+  mpeg2dec->have_fbuf = FALSE;
 }
 
 static void
@@ -385,6 +387,26 @@ update_streaminfo (GstMpeg2dec *mpeg2dec)
 }
 
 static void
+gst_mpeg2dec_flush_decoder (GstMpeg2dec *mpeg2dec)
+{
+  gint state;
+
+  if (mpeg2dec->decoder) {
+    const mpeg2_info_t *info = mpeg2_info (mpeg2dec->decoder);
+
+    do {
+      state = mpeg2_parse (mpeg2dec->decoder);
+      if (state == STATE_END) {
+	if (info->discard_fbuf && info->discard_fbuf->id) {
+	  gst_buffer_unref ((GstBuffer *)info->discard_fbuf->id);
+	}
+      }
+    } 
+    while (state != -1);
+  }
+}
+
+static void
 gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
@@ -401,9 +423,10 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_DISCONTINUOUS:
       {
-	GST_DEBUG (GST_CAT_EVENT, "discont\n"); 
+	GST_DEBUG (GST_CAT_EVENT, "discont"); 
         mpeg2dec->next_time = 0;
         mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
+	gst_mpeg2dec_flush_decoder (mpeg2dec);
         gst_pad_event_default (pad, event);
 	return;
       }
@@ -458,15 +481,18 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 
 	if (!gst_mpeg2dec_negotiate_format (mpeg2dec)) {
           gst_element_error (GST_ELEMENT (mpeg2dec), "could not negotiate format");
-	  return;
+	  goto exit;
 	}
 
 	update_streaminfo (mpeg2dec);
 
-	/* alloc 3 buffers */
-	gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
-	gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
-	gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
+	if (!mpeg2dec->have_fbuf) {
+	  /* alloc 3 buffers */
+	  gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
+	  gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
+	  gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
+	  mpeg2dec->have_fbuf = TRUE;
+	}
 
 	mpeg2dec->need_sequence = FALSE;
 	if (mpeg2dec->pending_event) {
@@ -479,7 +505,6 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       }
       case STATE_SEQUENCE_REPEATED:
 	GST_DEBUG (0, "sequence repeated");
-        break;
       case STATE_GOP:
         break;
       case STATE_PICTURE:
@@ -516,6 +541,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       case STATE_END:
       {
 	GstBuffer *outbuf = NULL;
+	gboolean skip = FALSE;
 
 	if (!slice) {
 	  mpeg2dec->need_sequence = TRUE;
@@ -542,14 +568,17 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  if (picture->flags & PIC_FLAG_PTS) {
             GstClockTime time = MPEGTIME_TO_GSTTIME (picture->pts);
 
+	    GST_DEBUG (0, "picture had pts %lld", time);
             GST_BUFFER_TIMESTAMP (outbuf) = time;
 
             mpeg2dec->next_time = time;
 	  }
 	  else {
+	    GST_DEBUG (0, "picture didn't have pts using %lld", mpeg2dec->next_time);
             GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
 	  }
           mpeg2dec->next_time += (mpeg2dec->frame_period * picture->nb_fields) >> 1;
+
 
 	  GST_DEBUG (0, "picture: %s %s fields:%d off:%lld ts:%lld", 
 			  (picture->flags & PIC_FLAG_TOP_FIELD_FIRST ? "tff " : "    "),
@@ -569,7 +598,8 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  if (picture->flags & PIC_FLAG_SKIP || 
 	      !GST_PAD_IS_USABLE (mpeg2dec->srcpad) || 
 	      mpeg2dec->discont_state != MPEG2DEC_DISC_NONE ||
-	      mpeg2dec->next_time < mpeg2dec->segment_start) 
+	      mpeg2dec->next_time < mpeg2dec->segment_start ||
+	      skip) 
 	  {
 	    gst_buffer_unref (outbuf);
 	  }
@@ -611,6 +641,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
       }
     }
   }
+exit:
   gst_buffer_unref(buf);
 }
 
@@ -878,7 +909,7 @@ index_seek (GstPad *pad, GstEvent *event)
         /* do the seekk */
         if (gst_pad_send_event (GST_PAD_PEER (mpeg2dec->sinkpad), seek_event)) {
           /* seek worked, we're done, loop will exit */
-          while (mpeg2_parse (mpeg2dec->decoder) != -1);
+	  gst_mpeg2dec_flush_decoder (mpeg2dec);
 	  mpeg2dec->segment_start = GST_EVENT_SEEK_OFFSET (event);
           return TRUE;
         }
@@ -946,7 +977,7 @@ normal_seek (GstPad *pad, GstEvent *event)
    * failed */
   if (res && flush) {
     /* if we need to flush, iterate until the buffer is empty */
-    while (mpeg2_parse (mpeg2dec->decoder) != -1);
+    gst_mpeg2dec_flush_decoder (mpeg2dec);
   }
 
   return res;

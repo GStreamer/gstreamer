@@ -70,6 +70,7 @@ struct _GstMpeg2dec {
 
   mpeg2dec_t 	*decoder;
   gboolean	 closed;
+  gboolean	 have_fbuf;
 
   /* the timestamp of the next frame */
   DiscontState	 discont_state;
