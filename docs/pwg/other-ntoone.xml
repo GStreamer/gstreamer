@@ -1,16 +1,247 @@
 
 <!-- ############ chapter ############# -->
 
-<chapter id="chapter-other-ntoone" xreflabel="Writing a N-to-1 Element">
-  <title>Writing a N-to-1 Element</title>
+<chapter id="chapter-other-ntoone" xreflabel="Writing a N-to-1 Element or Demuxer">
+  <title>Writing a N-to-1 Element or Demuxer</title>
   <para>
-    FIXME: write.
+    N-to-1 elements have been previously mentioned and discussed in both
+    <xref linkend="chapter-advanced-request"/> and in
+    <xref linkend="chapter-loopbased-loopfn"/>. The main noteworthy thing
+    about N-to-1 elements is that they should <emphasis>always</emphasis>,
+    without any single exception, be <function>_loop ()</function>-based.
+    Apart from that, there is not much general that you need to know. We
+    will discuss one special type of N-to-1 elements here, these being
+    muxers. The first two of these sections apply to N-to-1 elements in
+    general, though.
   </para>
 
-  <sect1 id="section-other-muxer" xreflabel="Writing a Muxer">
-    <title>Writing a Muxer</title>
+  <sect1 id="section-muxer-dataloop" xreflabel="The Data Loop Function">
+    <title>The Data Loop Function</title>
     <para>
-      WRITEME
+      As previously mentioned in <xref linkend="chapter-loopbased-loopfn"/>,
+      N-to-1 elements generally try to have one buffer from each sink pad
+      and then handle the one with the earliest timestamp. There's some
+      exceptions to this rule, we will come to those later. This only works
+      if all streams actually continuously provide input. There might be
+      cases where this is not true, for example subtitles (there might be
+      no subtitle for a while), overlay images and so forth. For this
+      purpose, there is a <function>_select ()</function> function in
+      &GStreamer;. It checks whether input is available on a (list of)
+      pad(s). In this way, you can skip over the pads that are 'non-
+      continuous'.
+    </para>
+    <programlisting>
+/* Pad selection is currently broken, FIXME some day */
+    </programlisting>
+  </sect1>
+
+  <sect1 id="section-muxer-events" xreflabel="Events in the Loop Function">
+    <title>Events in the Loop Function</title>
+    <para>
+      N-to-1 elements using a cache will sometimes receive events, and it
+      is often unclear how to handle those. For example, how do you seek
+      to a frame in an <emphasis>output</emphasis> file (and what's the
+      point of it anyway)? So, do discontinuity or seek events make sense,
+      and should you use them?
+    </para>
+    <sect2 id="section-muxevents-discont" xreflabel="Discontinuities and flushes">
+      <title>Discontinuities and flushes</title>
+      <para>
+        Don't do anything. They specify a discontinuity in the output, and
+        you should continue to playback as you would otherwise. You
+        generally do not need to put a discontinuity in the output stream
+        in muxers; you would have to manually start adapting timestamps of
+        output frames (if appliccable) to match the previous timescale,
+        though. Note that the output data stream should be continuous. For
+        other types of N-to-1-elements, it is generally fine to forward
+        the discontinuity once it has been received from all pads. This
+        depends on the specific element.
+      </para>
+    </sect2>
+    <sect2 id="section-muxevents-seek" xreflabel="Seeks">
+      <title>Seeks</title>
+      <para>
+        Depends on the element. Muxers would generally not implement this,
+        because the concept of seeking in an <emphasis>output</emphasis>
+        stream at frame level is not very useful. Seeking at byte level
+        can be useful, but that is more generally done
+        <emphasis>by</emphasis> muxers <emphasis>on</emphasis> sink
+        elements.
+      </para>
+    </sect2>
+    <sect2 id="section-muxevents-eos" xreflabel="End-of-Stream">
+      <title>End-of-Stream</title>
+      <para>
+        Speaks for itself.
+      </para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="section-muxer-negotiation" xreflabel="Negotiation">
+    <title>Negotiation</title>
+    <para>
+      Most container formats will have a fair amount of issues with
+      changing content on an elementary stream. Therefore, you should
+      not allow caps to be changed once you've started using data from
+      them. The easiest way to achieve this is by using explicit caps,
+      which have been explained before. However, we're going to use them
+      in a slightly different way then what you're used to, having the
+      core do all the work for us.
+    </para>
+    <para>
+      The idea is that, as long as the stream/file headers have not been
+      written yet and no data has been processed yet, a stream is allowed
+      to renegotiate. After that point, the caps should be fixed, because
+      we can only use a stream once. Caps may then only change within an
+      allowed range (think MPEG, where changes in FPS are allowed), or
+      sometimes not at all (such as AVI audio). In order to do that, we
+      will, after data retrieval and header writing, set an explicit caps
+      on each sink pad, that is the minimal caps describing the properties
+      of the format that may not change. As an example, for MPEG audio
+      inside an MPEG system stream, this would mean a wide caps of
+      audio/mpeg with mpegversion=1 and layer=[1,2]. For the same audio type
+      in MPEG, though, the samplerate, bitrate, layer and number of channels
+      would become static, too. Since the (request) pads will be removed
+      when the stream ends, the static caps will cease to exist too, then.
+      While the explicit caps  exist, the <function>_link ()</function>-
+      function will not be called, since the core will do all necessary
+      checks for us. Note that the property of using explicit caps should
+      be added along with the actual explicit caps, not any earlier.
+    </para>
+    <para>
+      Below here follows the simple example of an AVI muxer's audio caps
+      negotiation. The <function>_link ()</function>-function is fairly
+      normal, but the <function>-Loop ()</function>-function does some of
+      the tricks mentioned above. There is no <function>_getcaps ()</function>-
+      function since the pad template contains all that information already
+      (not shown).
+    </para>
+    <programlisting>
+static GstPadLinkReturn
+gst_avi_mux_audio_link (GstPad        *pad,
+			const GstCaps *caps)
+{
+  GstAviMux *mux = GST_AVI_MUX (gst_pad_get_parent (pad));
+  GstStructure *str = gst_caps_get_structure (caps, 0);
+  const gchar *mime = gst_structure_get_name (str);
+
+  if (!strcmp (str, "audio/mpeg")) {
+    /* get version, make sure it's 1, get layer, make sure it's 1-3,
+     * then create the 2-byte audio tag (0x0055) and fill an audio
+     * stream structure (strh/strf). */
+    [..]
+    return GST_PAD_LINK_OK;
+  } else if !strcmp (str, "audio/x-raw-int")) {
+    /* See above, but now with the raw audio tag (0x0001). */
+    [..]
+    return GST_PAD_LINK_OK;
+  } else [..]
+[..]
+}
+
+static void
+gst_avi_mux_loop (GstElement *element)
+{
+  GstAviMux *mux = GST_AVI_MUX (element);
+[..]
+  /* As we get here, we should have written the header if we hadn't done
+   * that before yet, and we're supposed to have an internal buffer from
+   * each pad, also from the audio one. So here, we check again whether
+   * this is the first run and if so, we set static caps. */
+  if (mux->first_cycle) {
+    const GList *padlist = gst_element_get_pad_list (element);
+    GList *item;
+
+    for (item = padlist; item != NULL; item = item->next) {
+      GstPad *pad = item->data;
+      GstCaps *caps;
+
+      if (!GST_PAD_IS_SINK (pad))
+        continue;
+
+      /* set static caps here */
+      if (!strncmp (gst_pad_get_name (pad), "audio_", 6)) {
+        /* the strf is the struct you filled in the _link () function. */
+        switch (strf->format) {
+          case 0x0055: /* mp3 */
+            caps = gst_caps_new_simple ("audio/mpeg",
+			"mpegversion", G_TYPE_INT, 1,
+			"layer",       G_TYPE_INT, 3,
+			"bitrate",     G_TYPE_INT, strf->av_bps,
+			"rate",        G_TYPE_INT, strf->rate,
+			"channels",    G_TYPE_INT, strf->channels,
+			NULL);
+            break;
+          case 0x0001: /* pcm */
+            caps = gst_caps_new_simple ("audio/x-raw-int",
+					[..]);
+            break;
+          [..]
+        }
+      } else if (!strncmp (gst_pad_get_name (pad), "video_", 6)) {
+        [..]
+      } else {
+        g_warning ("oi!");
+        continue;
+      }
+
+      /* set static caps */
+      gst_pad_use_explicit_caps (pad);
+      gst_pad_set_explicit_caps (pad, caps);
+    }
+  }
+[..]
+  /* Next runs will never be the first again. */
+  mux->first_cycle = FALSE;
+}
+    </programlisting>
+    <para>
+      Note that there are other ways to achieve that, which might be useful
+      for more complex cases. This will do for the simple cases, though.
+      This method is provided to simplify negotiation and renegotiation in
+      muxers, it is not a complete solution, nor is it a pretty one.
+    </para>
+  </sect1>
+
+  <sect1 id="section-muxer-markup" xreflabel="Markup vs. data processing">
+    <title>Markup vs. data processing</title>
+    <para>
+      As we noted on demuxers before, we love common programming paradigms
+      such as clean, lean and mean code. To achieve that in muxers, it's
+      generally a good idea to separate the actual data stream markup from
+      the data processing. To illustrate, here's how AVI muxers should
+      write out RIFF tag chunks:
+    </para>
+    <programlisting>
+static void
+gst_avi_mux_write_chunk (GstAviMux *mux,
+			 guint32    id,
+			 GstBuffer *data)
+{
+  GstBuffer *hdr;
+
+  hdr = gst_buffer_new_and_alloc (8);
+  ((guint32 *) GST_BUFFER_DATA (buf))[0] = GUINT32_TO_LE (id);
+  ((guint32 *) GST_BUFFER_DATA (buf))[1] = GUINT32_TO_LE (GST_BUFFER_SIZE (data));
+
+  gst_pad_push (mux->srcpad, hdr);
+  gst_pad_push (mux->srcpad, data);
+}
+
+static void
+gst_avi_mux_loop (GstElement *element)
+{
+  GstAviMux *mux = GST_AVI_MUX (element);
+  GstBuffer *buf;
+[..]
+  buf = gst_pad_pull (mux->sinkpad[0]);
+[..]
+  gst_avi_mux_write_chunk (GST_MAKE_FOURCC ('0','0','d','b'), buf);
+}
+    </programlisting>
+    <para>
+      In general, try to program clean code, that should cover pretty
+      much everything.
     </para>
   </sect1>
 </chapter>

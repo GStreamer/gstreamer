@@ -1,3 +1,8 @@
+2004-04-01  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* docs/pwg/other-ntoone.xml:
+	  Document muxers and n-to-1 elements.
+
 2004-04-01  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/registries/gstxmlregistry.c
