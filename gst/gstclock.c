@@ -164,9 +164,9 @@ gst_clock_init (GstClock *clock)
 
 /**
  * gst_clock_async_supported
- * @clock: The clock to query
+ * @clock: a #GstClock to query
  *
- * Check if this clock can support async notification.
+ * Checks if this clock can support asynchronous notification.
  *
  * Returns: TRUE if async notification is supported.
  */
@@ -180,10 +180,10 @@ gst_clock_async_supported (GstClock *clock)
 
 /**
  * gst_clock_set_speed
- * @clock: The clock to modify
- * @speed: The speed to set on the clock
+ * @clock: a #GstClock to modify
+ * @speed: the speed to set on the clock
  *
- * Set the speed on the given clock. 1.0 is the default 
+ * Sets the speed on the given clock. 1.0 is the default 
  * speed.
  */
 void
@@ -196,9 +196,9 @@ gst_clock_set_speed (GstClock *clock, gdouble speed)
 
 /**
  * gst_clock_get_speed
- * @clock: The clock to query
+ * @clock: a #GstClock to query
  *
- * Get the speed of the given clock.
+ * Gets the speed of the given clock.
  *
  * Returns: the speed of the clock.
  */
@@ -213,7 +213,7 @@ gst_clock_get_speed (GstClock *clock)
 
 /**
  * gst_clock_reset
- * @clock: The clock to reset
+ * @clock: a #GstClock to reset
  *
  * Reset the clock to time 0.
  */
@@ -236,15 +236,15 @@ gst_clock_reset (GstClock *clock)
 }
 
 /**
- * gst_clock_activate
- * @clock: The clock to activate
- * @active: flag indication activate or deactivate
+ * gst_clock_set_active
+ * @clock: a #GstClock to set state of
+ * @active: flag indicating if the clock should be activated (TRUE) or deactivated
  *
- * Activates or deactivates the clock based on the activate paramater.
+ * Activates or deactivates the clock based on the active parameter.
  * As soon as the clock is activated, the time will start ticking.
  */
 void
-gst_clock_activate (GstClock *clock, gboolean active)
+gst_clock_set_active (GstClock *clock, gboolean active)
 {
   GstClockTime time = 0LL;
 
@@ -272,7 +272,7 @@ gst_clock_activate (GstClock *clock, gboolean active)
 
 /**
  * gst_clock_is_active
- * @clock: The clock to query
+ * @clock: a #GstClock to query
  *
  * Checks if the given clock is active.
  * 
@@ -288,9 +288,9 @@ gst_clock_is_active (GstClock *clock)
 
 /**
  * gst_clock_get_time
- * @clock: The clock to query
+ * @clock: a #GstClock to query
  *
- * Get the current time of the given clock. The time is always
+ * Gets the current time of the given clock. The time is always
  * monotonically increasing.
  * 
  * Returns: the time of the clock.
@@ -346,12 +346,12 @@ gst_clock_wait_async_func (GstClock *clock, GstClockTime time,
 
 /**
  * gst_clock_wait
- * @clock: The clock to wait on
- * @time: The time to wait for
+ * @clock: a #GstClock to wait on
+ * @time: The #GstClockTime to wait for
  *
  * Wait and block till the clock reaches the specified time.
  *
- * Returns: result of the operation.
+ * Returns: the #GstClockReturn result of the operation.
  */
 GstClockReturn
 gst_clock_wait (GstClock *clock, GstClockTime time)
@@ -369,8 +369,8 @@ gst_clock_wait (GstClock *clock, GstClockTime time)
 
 /**
  * gst_clock_wait_async
- * @clock: The clock to wait on
- * @time: The time to wait for
+ * @clock: a #GstClock to wait on
+ * @time: The #GstClockTime to wait for
  * @func: The callback function 
  * @user_data: User data passed in the calback
  *

@@ -92,7 +92,7 @@ GType           	gst_clock_get_type 		(void);
 void 			gst_clock_set_speed		(GstClock *clock, gdouble speed);
 gdouble 		gst_clock_get_speed		(GstClock *clock);
 
-void 			gst_clock_activate		(GstClock *clock, gboolean active);
+void 			gst_clock_set_active		(GstClock *clock, gboolean active);
 gboolean 		gst_clock_is_active		(GstClock *clock);
 void 			gst_clock_reset			(GstClock *clock);
 gboolean 		gst_clock_async_supported	(GstClock *clock);
