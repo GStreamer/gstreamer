@@ -34,6 +34,9 @@ main (int argc, char *argv[])
   GstElement *pipeline = NULL;
   GstElement *tee, *src, *sink1, *sink2;
   GstPad *tee_src1, *tee_src2;
+  GstCaps *src_caps = NULL;
+  GstCaps *sink_caps = NULL;
+  GstProps *props = NULL;
 
   /* init */
   gst_init (&argc, &argv);
@@ -83,6 +86,42 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   gst_bin_iterate (GST_BIN (pipeline));
 
+  /* now we try setting caps on the src pad */
+  /* FIXME: should we set to pause here ? */
+  src_caps = GST_CAPS_NEW (
+      "input audio",
+      "audio/raw",
+        "format", GST_PROPS_STRING ("int"),
+	"rate", GST_PROPS_INT (44100)
+	);
+  g_assert (src_caps != NULL);
+  g_print ("Setting caps on fakesrc's src pad\n");
+  if (! (gst_pad_try_set_caps (gst_element_get_pad (src, "src"), src_caps)))
+  {
+    g_print ("Could not set caps !\n");
+  }
+
+  /* now iterate and see if it proxies caps ok */
+  gst_bin_iterate (GST_BIN (pipeline));
+  sink_caps = gst_pad_get_caps (gst_element_get_pad (sink1, "sink"));
+  props = gst_caps_get_props (sink_caps);
+  if (! (gst_props_has_property (props, "rate")))
+  {
+    g_print ("Hm, rate has not been propagated to sink1.\n"); 
+    return 1;
+  }
+  else
+    g_print ("Rate of pad on sink1 : %d\n", gst_props_get_int (props, "rate"));
+  sink_caps = gst_pad_get_caps (gst_element_get_pad (sink2, "sink"));
+  props = gst_caps_get_props (sink_caps);
+  if (! (gst_props_has_property (props, "rate")))
+  {
+    g_print ("Hm, rate has not been propagated to sink2.\n"); 
+    return 1;
+  }
+  else
+    g_print ("Rate of pad on sink2 : %d\n", gst_props_get_int (props, "rate"));
+   
   /* remove the first one, iterate */
   g_print ("Removing first sink\n");
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
