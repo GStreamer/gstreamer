@@ -567,7 +567,6 @@ gst_value_compare_string (const GValue *value1, const GValue *value2)
 static int
 gst_value_compare_fourcc (const GValue *value1, const GValue *value2)
 {
-g_print("comparing fourccs\n");
   if (value2->data[0].v_int == value1->data[0].v_int) return GST_VALUE_EQUAL;
   return GST_VALUE_UNORDERED;
 }
@@ -765,7 +764,7 @@ gst_value_can_intersect (const GValue *value1, const GValue *value2)
 	intersect_info->type2 == G_VALUE_TYPE(value2)) return TRUE;
   }
 
-  return FALSE;
+  return gst_value_can_compare (value1, value2);
 }
 
 gboolean
@@ -775,16 +774,12 @@ gst_value_intersect (GValue *dest, const GValue *value1, const GValue *value2)
   int i;
   int ret = FALSE;
 
-g_print("intersecting %s=%s and %s=%s\n",
-    g_type_name(G_VALUE_TYPE(value1)), g_strdup_value_contents(value1),
-    g_type_name(G_VALUE_TYPE(value2)), g_strdup_value_contents(value2));
   for(i=0;i<gst_value_intersect_funcs->len;i++){
     intersect_info = &g_array_index(gst_value_intersect_funcs,
 	GstValueIntersectInfo, i);
     if(intersect_info->type1 == G_VALUE_TYPE(value1) &&
 	intersect_info->type2 == G_VALUE_TYPE(value2)) {
       ret = intersect_info->func(dest, value1, value2);
-g_print("result is %d %s\n", ret, ret?g_strdup_value_contents(dest):"none1");
       return ret;
     }
   }
@@ -793,10 +788,8 @@ g_print("result is %d %s\n", ret, ret?g_strdup_value_contents(dest):"none1");
     g_value_init(dest, G_VALUE_TYPE(value1));
     g_value_copy(value1, dest);
     ret = TRUE;
-g_print("result is %d %s\n", ret, ret?g_strdup_value_contents(dest):"none2");
   }
 
-g_print("result is %d %s\n", ret, ret?g_strdup_value_contents(dest):"none3");
   return ret;
 }
 
