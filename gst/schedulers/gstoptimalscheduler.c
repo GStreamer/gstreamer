@@ -220,7 +220,8 @@ gst_opt_scheduler_get_type (void)
       NULL
     };
 
-    _gst_opt_scheduler_type = g_type_register_static (GST_TYPE_SCHEDULER, "GstOptScheduler", &scheduler_info, 0);
+    _gst_opt_scheduler_type = g_type_register_static (GST_TYPE_SCHEDULER, 
+		    "GstOpt"COTHREADS_NAME_CAPITAL"Scheduler", &scheduler_info, 0);
   }
   return _gst_opt_scheduler_type;
 }
