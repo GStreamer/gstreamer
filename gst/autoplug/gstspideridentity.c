@@ -254,16 +254,20 @@ gst_spider_identity_getcaps (GstPad *pad)
 {
   GstSpiderIdentity *spider_identity = GST_SPIDER_IDENTITY (gst_pad_get_parent (pad));
   GstPad *otherpad;
+  GstPad *peer;
 
   if (pad == spider_identity->src) 
     otherpad = spider_identity->sink;
   else
     otherpad = spider_identity->src;
 
-  if (otherpad != NULL)
-    return gst_pad_get_allowed_caps (otherpad);
-  
-  return NULL;
+  if (otherpad != NULL) {
+    peer = GST_PAD_PEER (otherpad);
+
+    if (peer)
+      return gst_pad_get_caps (peer);
+  }
+  return gst_caps2_new_any ();
 }
 
 GstPad*

@@ -167,6 +167,7 @@ gst_identity_getcaps (GstPad *pad)
 {
   GstIdentity *identity;
   GstPad *otherpad;
+  GstPad *peer;
   
   identity = GST_IDENTITY (gst_pad_get_parent (pad));
 
@@ -175,8 +176,13 @@ gst_identity_getcaps (GstPad *pad)
   }
 
   otherpad = (pad == identity->srcpad ? identity->sinkpad : identity->srcpad);
+  peer = GST_PAD_PEER (otherpad);
 
-  return gst_caps2_copy (gst_pad_get_allowed_caps (otherpad));
+  if (peer) {
+    return gst_pad_get_caps (peer);
+  } else {
+    return gst_caps2_new_any ();
+  }
 }
 
 static GstPadLinkReturn
