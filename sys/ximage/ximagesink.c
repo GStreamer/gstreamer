@@ -625,18 +625,17 @@ gst_ximagesink_chain (GstPad *pad, GstData *_data)
       switch (e.type)
         {
           case ConfigureNotify:
+
             /* Window got resized or moved. We do caps negotiation
                again to get video scaler to fit that new size */
             GST_DEBUG ("ximagesink window is at %d, %d with geometry : %d,%d",
                        e.xconfigure.x, e.xconfigure.y,
                        e.xconfigure.width, e.xconfigure.height);
-            event = gst_event_new (GST_EVENT_RENEGOTIATE);
-            event->src = GST_OBJECT (ximagesink);
-            event->event_data.caps.caps = GST_CAPS_NEW (
+            gst_pad_try_set_caps (ximagesink->sinkpad, GST_CAPS_NEW (
                                              "ximagesink_videoscaling",
                                              "video/x-raw-rgb",
                                              "width", GST_PROPS_INT (e.xconfigure.width),
-                                             "height", GST_PROPS_INT (e.xconfigure.height));
+                                             "height", GST_PROPS_INT (e.xconfigure.height)));
             break;
           case MotionNotify:
             /* Mouse pointer moved over our window. We send upstream
