@@ -557,6 +557,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
   };
   GType type;
   AVCodec *in_plugin;
+  gint rank;
 
   in_plugin = first_avcodec;
 
@@ -604,13 +605,22 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     g_hash_table_insert (global_plugins,
         GINT_TO_POINTER (0), (gpointer) params);
 
-    /* create the gtype now
-     * (Ronald) MPEG-4 gets a higher priority because it has been well-
-     * tested and by far outperforms divxdec/xviddec - so we prefer it. */
+    /* create the gtype now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-    if (!gst_element_register (plugin, type_name,
-            (in_plugin->id == CODEC_ID_MPEG4) ?
-            GST_RANK_PRIMARY : GST_RANK_MARGINAL, type)) {
+
+    /* (Ronald) MPEG-4 gets a higher priority because it has been well-
+     * tested and by far outperforms divxdec/xviddec - so we prefer it.
+     * msmpeg4v3 same, as it outperforms divxdec for divx3 playback. */
+    switch (in_plugin->id) {
+      case CODEC_ID_MPEG4:
+      case CODEC_ID_MSMPEG4V3:
+        rank = GST_RANK_PRIMARY;
+        break;
+      default:
+        rank = GST_RANK_MARGINAL;
+        break;
+    }
+    if (!gst_element_register (plugin, type_name, rank, type)) {
       g_free (type_name);
       return FALSE;
     }

@@ -1,3 +1,9 @@
+2004-09-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	  msmpeg4v3 should be priority as well, else it will choose divxdec
+	  first (which we don't want).
+
 2004-09-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
