@@ -1,3 +1,8 @@
+2004-12-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	  give some indication of why we're segfaulting
+
 2004-12-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* configure.ac:
