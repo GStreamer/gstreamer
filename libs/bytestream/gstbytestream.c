@@ -59,7 +59,7 @@ gst_bytestream_destroy (GstByteStream *bs)
 }
 
 GstBuffer*
-gst_bytestream_bytes_peek (GstByteStream *bs, guint64 len)
+gst_bytestream_peek (GstByteStream *bs, guint64 len)
 {
   GstBuffer *buf;
 
@@ -81,11 +81,11 @@ gst_bytestream_bytes_peek (GstByteStream *bs, guint64 len)
 }
 
 GstBuffer*                    
-gst_bytestream_bytes_read (GstByteStream *bs, guint64 len)
+gst_bytestream_read (GstByteStream *bs, guint64 len)
 {
   GstBuffer *buf;
 
-  buf = gst_bytestream_bytes_peek (bs, len);
+  buf = gst_bytestream_peek (bs, len);
   bs->index += len;
   bs->pos += len;
 
@@ -93,16 +93,16 @@ gst_bytestream_bytes_read (GstByteStream *bs, guint64 len)
 }
 
 gboolean
-gst_bytestream_bytes_seek (GstByteStream *bs, guint64 offset)
+gst_bytestream_seek (GstByteStream *bs, guint64 offset)
 {
   return FALSE;
 }
 
 gint
-gst_bytestream_bytes_flush (GstByteStream *bs, guint64 len)
+gst_bytestream_flush (GstByteStream *bs, guint64 len)
 {
   if (len == 0)
     return len;
   
-  return GST_BUFFER_SIZE (gst_bytestream_bytes_read (bs, len));
+  return GST_BUFFER_SIZE (gst_bytestream_read (bs, len));
 }
