@@ -807,7 +807,7 @@ gst_scheduler_factory_new (const gchar *name, const gchar *longdesc, GType type)
 {
   GstSchedulerFactory *factory;
 
-  g_return_val_if_fail(name != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
 
   factory = gst_scheduler_factory_find (name);
 
@@ -851,7 +851,7 @@ gst_scheduler_factory_find (const gchar *name)
 {
   GstPluginFeature *feature;
 
-  g_return_val_if_fail(name != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
 
   GST_DEBUG (0,"gstscheduler: find \"%s\"", name);
 
@@ -880,7 +880,8 @@ gst_scheduler_factory_create (GstSchedulerFactory *factory, GstElement *parent)
   GstScheduler *new = NULL;
 
   g_return_val_if_fail (factory != NULL, NULL);
-  g_return_val_if_fail (parent != NULL, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (parent), NULL);
+  g_return_val_if_fail (GST_ELEMENT_SCHED (parent) == NULL, NULL);
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
     g_return_val_if_fail (factory->type != 0, NULL);
