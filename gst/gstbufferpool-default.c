@@ -63,7 +63,7 @@ static GHashTable *_default_pools = NULL;
  * Returns: an instance of GstBufferPool
  */
 GstBufferPool*
-_gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
+gst_buffer_pool_get_default (guint buffer_size, guint pool_size)
 {
   GstBufferPool *pool;
   GstMemChunk *data_chunk;

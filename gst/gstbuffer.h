@@ -167,9 +167,6 @@ void		gst_buffer_pool_set_active		(GstBufferPool *pool, gboolean active);
 void 		gst_buffer_pool_set_user_data		(GstBufferPool *pool, gpointer user_data);
 gpointer	gst_buffer_pool_get_user_data		(GstBufferPool *pool);
 
-/* a default pool */
-GstBufferPool*	gst_buffer_pool_get_default		(guint size, guint numbuffers);
-
 G_END_DECLS
 
 

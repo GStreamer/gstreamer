@@ -50,6 +50,7 @@ _gst_buffer_initialize (void)
 						   (GBoxedFreeFunc) gst_data_unref);
 
   _gst_buffer_live = 0;
+  _gst_buffer_pool_live = 0;
 
   chunk = gst_mem_chunk_new ("GstBufferChunk", sizeof (GstBuffer), sizeof (GstBuffer) * 200, 0);
 
@@ -505,17 +506,3 @@ gst_buffer_pool_get_user_data (GstBufferPool *pool)
   return pool->user_data;
 }
 
-/**
- * gst_buffer_pool_get_default:
- * @size: The size of the buffers to allocate from this pool
- * @numbuffers: The number of buffer to preallocate in the pool
- *
- * Create a pool with buffers of the given size.
- * 
- * Returns: A new bufferpool to create buffers of the given size.
- */
-GstBufferPool*	
-gst_buffer_pool_get_default (guint size, guint numbuffers)
-{
-  return _gst_buffer_pool_get_default (size, numbuffers);
-}
