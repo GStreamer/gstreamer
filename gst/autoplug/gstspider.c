@@ -112,6 +112,20 @@ static                          GstElementClass	*			parent_class = NULL;
 /* no signals yet
 static guint gst_spider_signals[LAST_SIGNAL] = { 0 };*/
 
+/* let gstreamer know that we have some request pads available */
+GST_PADTEMPLATE_FACTORY (gst_spider_sink_template_factory,
+  "sink%d",
+  GST_PAD_SINK,
+  GST_PAD_REQUEST,
+  NULL
+);  
+GST_PADTEMPLATE_FACTORY (gst_spider_src_template_factory,
+  "src%d",
+  GST_PAD_SRC,
+  GST_PAD_REQUEST,
+  NULL
+);  
+
 /* GObject and GStreamer init functions */
 GType
 gst_spider_get_type(void)
@@ -154,6 +168,9 @@ gst_spider_class_init (GstSpiderClass *klass)
   gobject_class->get_property = gst_spider_get_property;
   gobject_class->dispose = gst_spider_dispose;
 
+  gst_element_class_add_padtemplate (gstelement_class, gst_spider_src_template_factory());
+  gst_element_class_add_padtemplate (gstelement_class, gst_spider_sink_template_factory());
+  
   gstelement_class->request_new_pad = GST_DEBUG_FUNCPTR(gst_spider_request_new_pad);
 }
 static void 
