@@ -213,7 +213,7 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
 
 dnl check for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_REQ=0.8.90.1
+GST_REQ=0.9.0
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST="yes", HAVE_GST="no")
 
@@ -236,6 +236,15 @@ if test "x$HAVE_GST_CONTROL" = "xno"; then
 fi
 
 AC_SUBST(GST_CONTROL_LIBS)
+
+PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_BASE="yes", HAVE_GST_BASE="no")
+
+if test "x$HAVE_GST_BASE" = "xno"; then
+  AC_MSG_ERROR(no libgstbase found)
+fi
+
+AC_SUBST(GST_BASE_LIBS)
 
 dnl Determine endianness
 AC_C_BIGENDIAN
