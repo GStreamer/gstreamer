@@ -233,6 +233,10 @@ gst_xvimagesink_xvimage_destroy (GstXvImageSink *xvimagesink,
   g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   
+  /* If the destroyed image is the current one we destroy our reference too */
+  if (xvimagesink->cur_image == xvimage)
+    xvimagesink->cur_image = NULL;
+  
   g_mutex_lock (xvimagesink->x_lock);
   
 #ifdef HAVE_XSHM
@@ -271,6 +275,10 @@ gst_xvimagesink_xvimage_put (GstXvImageSink *xvimagesink, GstXvImage *xvimage)
   g_return_if_fail (xvimage != NULL);
   g_return_if_fail (xvimagesink != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
+  
+  /* Store a reference to the last image we put */
+  if (xvimagesink->cur_image != xvimage)
+    xvimagesink->cur_image = xvimage;
   
   g_mutex_lock (xvimagesink->x_lock);
   
@@ -1468,10 +1476,21 @@ gst_xvimagesink_get_desired_size (GstXOverlay *overlay,
 }
 
 static void
+gst_xvimagesink_expose (GstXOverlay *overlay)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
+  
+  if (xvimagesink->cur_image) {
+    gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->cur_image);
+  }
+}
+
+static void
 gst_xvimagesink_xoverlay_init (GstXOverlayClass *iface)
 {
   iface->set_xwindow_id = gst_xvimagesink_set_xwindow_id;
   iface->get_desired_size = gst_xvimagesink_get_desired_size;
+  iface->expose = gst_xvimagesink_expose;
 }
 
 static const GList *
@@ -1712,6 +1731,7 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
   xvimagesink->xcontext = NULL;
   xvimagesink->xwindow = NULL;
   xvimagesink->xvimage = NULL;
+  xvimagesink->cur_image = NULL;
   
   xvimagesink->hue = xvimagesink->saturation = 0;
   xvimagesink->contrast = xvimagesink->brightness = 0;

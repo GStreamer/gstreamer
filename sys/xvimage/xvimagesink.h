@@ -127,6 +127,7 @@ struct _GstXvImageSink {
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXvImage *xvimage;
+  GstXvImage *cur_image;
   
   gdouble framerate;
   

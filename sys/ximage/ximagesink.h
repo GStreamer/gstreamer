@@ -111,6 +111,7 @@ struct _GstXImageSink {
   GstXContext *xcontext;
   GstXWindow *xwindow;
   GstXImage *ximage;
+  GstXImage *cur_image;
   
   gdouble framerate;
   GMutex *x_lock;

@@ -54,6 +54,7 @@ typedef struct _GstXOverlayClass {
   void (* get_desired_size) (GstXOverlay *overlay,
 			     guint *width,
 			     guint *height);
+  void (* expose) (GstXOverlay *overlay);
   
   /* signals */
   void (*have_xwindow_id) (GstXOverlay *overlay,
@@ -70,6 +71,7 @@ GType	gst_x_overlay_get_type		(void);
 /* virtual class function wrappers */
 void gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id);
 void gst_x_overlay_get_desired_size (GstXOverlay *overlay, guint *width, guint *height);
+void gst_x_overlay_expose (GstXOverlay *overlay);
 
 /* public methods to fire signals */
 void gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, XID xwindow_id);

@@ -221,6 +221,10 @@ gst_ximagesink_ximage_destroy (GstXImageSink *ximagesink, GstXImage *ximage)
   g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
   
+  /* If the destroyed image is the current one we destroy our reference too */
+  if (ximagesink->cur_image == ximage)
+    ximagesink->cur_image = NULL;
+  
   g_mutex_lock (ximagesink->x_lock);
   
 #ifdef HAVE_XSHM
@@ -261,6 +265,10 @@ gst_ximagesink_ximage_put (GstXImageSink *ximagesink, GstXImage *ximage)
   g_return_if_fail (ximage != NULL);
   g_return_if_fail (ximagesink != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  
+  /* Store a reference to the last image we put */
+  if (ximagesink->cur_image != ximage)
+    ximagesink->cur_image = ximage;
   
   /* We center the image in the window */
   x = MAX (0, (ximagesink->xwindow->width - ximage->width) / 2);
@@ -1210,10 +1218,20 @@ gst_ximagesink_get_desired_size (GstXOverlay *overlay,
 }
 
 static void
+gst_ximagesink_expose (GstXOverlay *overlay)
+{
+  GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
+  
+  if (ximagesink->cur_image)
+    gst_ximagesink_ximage_put (ximagesink, ximagesink->cur_image);
+}
+
+static void
 gst_ximagesink_xoverlay_init (GstXOverlayClass *iface)
 {
   iface->set_xwindow_id = gst_ximagesink_set_xwindow_id;
   iface->get_desired_size = gst_ximagesink_get_desired_size;
+  iface->expose = gst_ximagesink_expose;
 }
 
 /* =========================================== */
@@ -1318,6 +1336,7 @@ gst_ximagesink_init (GstXImageSink *ximagesink)
   ximagesink->xcontext = NULL;
   ximagesink->xwindow = NULL;
   ximagesink->ximage = NULL;
+  ximagesink->cur_image = NULL;
   
   ximagesink->framerate = 0;
   
