@@ -699,7 +699,9 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buf)
 
     if (!vorbisenc->setup) {
       gst_buffer_unref (buf);
-      gst_element_error (GST_ELEMENT (vorbisenc), "encoder not initialized (input is not audio?)");
+      gst_element_gerror(GST_ELEMENT (vorbisenc), GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("encoder not initialized (input is not audio?)"));
       return;
     }
 

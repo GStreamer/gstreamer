@@ -250,7 +250,9 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink *sink)
   /* create the GnomeVFSURI from the url */
   sink->uri = gnome_vfs_uri_new(sink->filename);
   if (!sink->uri) {
-    gst_element_error (GST_ELEMENT (sink), "opening file \"%s\" (%s)", sink->filename, strerror (errno));
+    gst_element_gerror(GST_ELEMENT (sink), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("opening file \"%s\" (%s)", sink->filename, strerror (errno)));
     return FALSE;
   }
 
@@ -266,7 +268,9 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink *sink)
           gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0,
           sink->erase);
     }
-    gst_element_error (GST_ELEMENT (sink), "opening file \"%s\" (%s)", sink->filename, strerror (errno));
+    gst_element_gerror(GST_ELEMENT (sink), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("opening file \"%s\" (%s)", sink->filename, strerror (errno)));
     return FALSE;
   } 
 
@@ -291,7 +295,9 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink *sink)
 
   if (result != GNOME_VFS_OK)
   {
-    gst_element_error (GST_ELEMENT (sink), "closing file \"%s\" (%s)", sink->filename, strerror (errno));
+    gst_element_gerror(GST_ELEMENT (sink), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("closing file \"%s\" (%s)", sink->filename, strerror (errno)));
   }
   else {
     GST_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);

@@ -708,7 +708,9 @@ sink_restart:
 	}
         /* caps nego failed somewhere */
         if (this->format == NULL) {
-          gst_element_error (GST_ELEMENT (this), "alsasink: No caps available");
+          gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+            g_strdup ("unconverted error, file a bug"),
+            g_strdup_printf("alsasink: No caps available"));
           return;
         }
         samplestamp = gst_alsa_timestamp_to_samples (this, GST_BUFFER_TIMESTAMP (sink->buf[i]));
@@ -1085,7 +1087,9 @@ gst_alsa_src_loop (GstElement *element)
   /* set the caps on all pads */
   if (!this->format) {
     if (!gst_alsa_src_set_caps (src, FALSE)) {
-      gst_element_error (element, "Could not set caps");
+      gst_element_gerror(element, GST_ERROR_UNKNOWN,
+        g_strdup ("unconverted error, file a bug"),
+        g_strdup_printf("Could not set caps"));
       return;
     }
     /* get the bufferpool going */
@@ -1532,7 +1536,9 @@ gst_alsa_link (GstPad *pad, GstCaps *caps)
 	    GstCaps *old = gst_alsa_caps (this->format->format, this->format->rate, this->format->channels);
 	    for (--i; i >= 0; i--) {
               if (gst_pad_try_set_caps (this->pad[i], gst_caps_ref (old)) == GST_PAD_LINK_REFUSED) {
-	        gst_element_error (GST_ELEMENT (this), "error resetting caps to sane value");
+	        gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+	          g_strdup ("unconverted error, file a bug"),
+	          g_strdup_printf("error resetting caps to sane value"));
 	        gst_caps_unref (old);
                 break;
 	      }
@@ -1553,7 +1559,9 @@ gst_alsa_link (GstPad *pad, GstCaps *caps)
       g_free (this->format);
       this->format = format;
       if (!gst_alsa_start_audio (this)) {
-        gst_element_error (GST_ELEMENT (this), "Probed format doesn't work");
+        gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+          g_strdup ("unconverted error, file a bug"),
+          g_strdup_printf("Probed format doesn't work"));
         return GST_PAD_LINK_REFUSED;
       }
     }
@@ -1870,7 +1878,9 @@ gst_alsa_xrun_recovery (GstAlsa *this)
   }
 
   if (!(gst_alsa_stop_audio (this) && gst_alsa_start_audio (this))) {
-    gst_element_error (GST_ELEMENT (this), "alsasink: Error restarting audio after xrun");
+    gst_element_gerror(GST_ELEMENT (this), GST_ERROR_UNKNOWN,
+      g_strdup ("unconverted error, file a bug"),
+      g_strdup_printf("alsasink: Error restarting audio after xrun"));
   }
 }
 
