@@ -45,6 +45,7 @@ gst_timecache_get_type(void) {
       sizeof(GstTimeCache),
       1,
       (GInstanceInitFunc)gst_timecache_init,
+      NULL
     };
     tc_type = g_type_register_static(GST_TYPE_OBJECT, "GstTimeCache", &tc_info, 0);
   }
