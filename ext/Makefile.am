@@ -28,6 +28,11 @@ else
 AVIFILE_DIR=
 endif
 
+if USE_CDPARANOIA
+CDPARANOIA_DIR=cdparanoia
+else
+CDPARANOIA_DIR=
+endif
 
 if USE_DVDREAD
 DVDREAD_DIR=dvdread
@@ -72,9 +77,9 @@ VORBIS_DIR=
 endif
 
 SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) \
-	$(AVIFILE_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
+	$(AVIFILE_DIR) $(CDPARANOIA_DIR) $(DVDREAD_DIR) $(ESD_DIR) \
         $(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
 	$(SDL_DIR) $(VORBIS_DIR)
 
-DIST_SUBDIRS=a52 aalib alsa avifile audiofile dvdread esd \
+DIST_SUBDIRS=a52 aalib alsa avifile audiofile cdparanoia dvdread esd \
 	     lame mad mpeg2dec sdl vorbis
