@@ -1,4 +1,7 @@
-noinst_PROGRAMS = init loadall simplefake states caps queue registry paranoia rip mp3encode autoplug props case4 padfactory
+SUBDIRS = sched
+
+noinst_PROGRAMS = init loadall simplefake states caps queue registry \
+paranoia rip mp3encode autoplug props case4 markup load
 
 LDADD = $(GLIB_LIBS) $(GTK_LIBS) $(top_builddir)/gst/libgst.la
 CFLAGS = -Wall
