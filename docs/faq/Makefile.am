@@ -10,6 +10,6 @@ XSLS=$(XSLFO) $(XSLFOMODS) $(XSLHTML) $(XSLHTMLMODS)
 SRC=$(XML)
 CSS=base.css
 
-EXTRA_DIST = $(XML) $(CSS)
+EXTRA_DIST = $(XML) $(CSS) magic-png magic-pdf
 
 include $(srcdir)/../manuals.mak
