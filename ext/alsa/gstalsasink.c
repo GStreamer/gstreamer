@@ -216,7 +216,7 @@ gst_alsa_sink_check_event (GstAlsaSink * sink, gint pad_nr)
         if (pad_nr != 0) {
           break;
         }
-        delay =
+        delay = (this->format == NULL) ? 0 :
             GST_SECOND * this->transmitted / this->format->rate -
             gst_alsa_sink_get_time (this);
         if (gst_event_discont_get_value (event, GST_FORMAT_TIME, &value)) {
