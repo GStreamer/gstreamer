@@ -1,3 +1,8 @@
+2004-03-08  Christian Schaller <Uraeus@gnome.org>
+
+	* tools/gst-launch-ext.in: 
+	Replace vorbisfile with oggdemux/vorbisdec/audioconvert
+
 2004-03-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_base_init),
