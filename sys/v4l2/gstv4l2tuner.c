@@ -166,7 +166,7 @@ gst_v4l2_tuner_is_sink (GstV4l2Element * v4l2element)
   return (dir == GST_PAD_SINK);
 }
 
-static gboolean
+static G_GNUC_UNUSED gboolean
 gst_v4l2_tuner_contains_channel (GstV4l2Element * v4l2element,
     GstV4l2TunerChannel * v4l2channel)
 {
@@ -229,7 +229,7 @@ gst_v4l2_tuner_get_channel (GstTuner * mixer)
   return NULL;
 }
 
-static gboolean
+static G_GNUC_UNUSED gboolean
 gst_v4l2_tuner_contains_norm (GstV4l2Element * v4l2element,
     GstV4l2TunerNorm * v4l2norm)
 {
