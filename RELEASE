@@ -1,12 +1,12 @@
 
-                     GStreamer "Wild Rover" 0.6.2 released
+                   GStreamer "Mother Theresa" 0.6.3 released
 
    The  GStreamer  team  is  proud  to announce an updated version in the
    ABI-stable 0.6.x series.
 
    At  this  point  in  time  GStreamer  is fully functional for creating
    audio-based   applications,   as   shown   by   applications  such  as
-   gnome-sound-recorder,     [1]net-rhythmbox,     [2]sound-juicer    and
+   gnome-sound-recorder,      [1]rhythmbox,      [2]sound-juicer      and
    nautilus-media.
 
    The  video part is known to be somewhat less functional than the audio
@@ -51,68 +51,44 @@ Features
      * Compiles with both GCC and Forte compilers
      * Tested to run on Linux, FreeBSD and Solaris
 
-Updates since 0.6.1
+Updates since 0.6.3
 
      * gstreamer (core)
 
-     * #112116:  [6][0.6.2]  if  you  don't have a registry, it shouldn't
-       crash
-     * #114385: [7][0.6.2] fix gst_event_new_discontinuous
-     * #114529: [8][0.6.2] gst-typefind addition
-     * #113195:  [9][0.6.2]  API  docs  should  build  in xml for devhelp
-       generation
-     * #114512:  [10][0.6.2]  Use  proper  min  and  max  values  for the
-       value_float pr
-     * #114668:  [11][0.6.2]  state_change  functions  have some problems
-       (recursion
-     * #93861: [12][0.6.2] gst-compprep needs X display to run
-     * #112579: [13][0.6.2] pngenc: event on source pad misrouted
-     * #114130: [14][0.6.2] refcounting for ghost and real pads is broken
-       and cr
-     * #114519: [15][0.6.2] make md5sink md5 functions static
-     * #110757: [16][0.6.2] memory corruption fix
-     * #112607:  [17][0.6.2]  fails to build gstgetbits_i386.s on Solaris
-       x86 w/o
+     * #104829:  [6][0.6.3]  crash when removing plugin without rerunning
+       gst-register
+     * #113280: [7][0.6.3] Atomic sparc code needs testing
+     * #117786: [8][0.6.3] Can't play files on a read-only NTFS drive
+     * #118067: [9][0.6.3] build failure with debugging disabled
+     * #118619: [10]please update the online docs
+     * #119393: [11]backport m68k fix
+     * #117837: [12]docs/libs doesn't build properly
+     * #120741: [13][PATCH] xml registry typefinding is recursive and can
+       lead t
+     * #116146:   [14]opt   scheduler   doesn't   set  event  handler  on
+       unconnected src p
 
-     gst-plugins:
-     * #110542: [18][PATCH] - wave files are little endian
-     * #112329: [19][0.6.2] gst-compprep seg faults because of aasink
-     * #111632: [20][0.6.2] videotestsrc ! xvideosink crash
-     * #110964: [21][0.6.2] xvideosink caps ref in get_caps
-     * #111692: [22][0.6.2 candidate] Fix wavparse
-     * #112608:  [23][0.6.2] fails to build gst/videoscale on Solaris x86
-       w/o gas
-     * #112943: [24]videotestsrc failure
-     * #113421: [25]libgstplay should link to libgstcontrol
-     * #114315: [26][0.6.2] quiet a ladspa g_warning
-     * #111498: [27][0.6.2] infinite loop on truncated ogg file
-     * #112657: [28][0.6.2] cutter plug-in needed updating
-     * #112890: [29][0.6.2] lame timestamp fix
-     * #113018: [30][0.6.2] avimux/avidemux audio/raw mixup
-     * #114134: [31][0.6.2] libgstplay doesn't do error reporting.
-     * #114664:  [32][0.6.2]  play library doesn't check return values of
-       gst_elem
-     * #107967:  [33][PATCH] - Fix for autogen.sh so that args are passed
-       to ./co
-     * #110963: [34][0.6.2] implement refcounting in colorspace
-     * #112595: [35][0.6.2] videoscale backport
-     * #112711:  [36][0.6.2]  [PATCH]  videotestsrc  doesn't ref caps and
-       doesn't ch
-     * #112895: [37][0.6.2] wavenc pad template only accepts 16 bit audio
-     * #113304: [38][0.6.2] flac metadata support
-     * #114158: [39]compile of 0.6.x branch fails in flac
-     * #112829:  [40][0.6.2]  wavenc  is in a different category to other
-       audio enc
-     * #109069: [41][0.6.2] Fix for X window leak in xvideosink plugin
+     gst-plugins
+     * #94113: [15][0.6.3] spider doesn't detect type of mp3 stream
+     * #115965: [16]dvdnavsrc plug-in isn't updated against 0.1.9
+     * #114948: [17]make install fails at gst-libs/ext/ffmpeg
+     * #114976:  [18][0.6.3/patch]  videotestsrc  and  xvideosink  do not
+       reset their
+     * #116416:  [19]vorbis  metadata:  use  fields  compatible with most
+       players
+     * #116420:  [20]lame  metadata:  write id3 v1 and v2 tags in encoded
+       files
+     * #119372: [21][0.6.3] [patch] mpeg2 identification bug
+     * #116152: [22]modplug doesn't handle state changes properly
 
 GStreamer Homepage
 
    More  details on these features can be found on the project's website,
-   [42]http://gstreamer.net/.
+   [23]http://gstreamer.net/.
 
 Support and Bugs
 
-   We  use [43]Gnome's Bugzilla for bug reports and feature requests. The
+   We  use [24]Gnome's Bugzilla for bug reports and feature requests. The
    "product  name"  is  GStreamer  (capital  G).  Please do the following
    before writing a bug report :
 gst-feedback &> feedback 2>&1
@@ -122,7 +98,7 @@ gst-feedback &> feedback 2>&1
 
 Developers
 
-   GStreamer  is [44]hosted on SourceForge. All code is in CVS and can be
+   GStreamer  is [25]hosted on SourceForge. All code is in CVS and can be
    checked  out  from  there.  Interested developers of the core library,
    plug-ins,  and  applications  should  subscribe to the gstreamer-devel
    list.  If  there  is  sufficient interest we will create more lists as
@@ -161,47 +137,28 @@ Contributors to this release
 
 References
 
-   1. http://web.verbum.org/net-rhythmbox/
+   1. http://www.rhythmbox.org/
    2. http://mail.gnome.org/archives/gnome-announce-list/2003-April/msg00046.html
    3. http://gstreamer.net/releases/gst-player/0.5.0/
    4. http://www.hadess.net/totem.php3
    5. http://www.gstreamer.net/status/?category=2
-   6. http://bugzilla.gnome.org/show_bug.cgi?id=112116
-   7. http://bugzilla.gnome.org/show_bug.cgi?id=114385
-   8. http://bugzilla.gnome.org/show_bug.cgi?id=114529
-   9. http://bugzilla.gnome.org/show_bug.cgi?id=113195
-  10. http://bugzilla.gnome.org/show_bug.cgi?id=114512
-  11. http://bugzilla.gnome.org/show_bug.cgi?id=114668
-  12. http://bugzilla.gnome.org/show_bug.cgi?id=93861
-  13. http://bugzilla.gnome.org/show_bug.cgi?id=112579
-  14. http://bugzilla.gnome.org/show_bug.cgi?id=114130
-  15. http://bugzilla.gnome.org/show_bug.cgi?id=114519
-  16. http://bugzilla.gnome.org/show_bug.cgi?id=110757
-  17. http://bugzilla.gnome.org/show_bug.cgi?id=112607
-  18. http://bugzilla.gnome.org/show_bug.cgi?id=110542
-  19. http://bugzilla.gnome.org/show_bug.cgi?id=112329
-  20. http://bugzilla.gnome.org/show_bug.cgi?id=111632
-  21. http://bugzilla.gnome.org/show_bug.cgi?id=110964
-  22. http://bugzilla.gnome.org/show_bug.cgi?id=111692
-  23. http://bugzilla.gnome.org/show_bug.cgi?id=112608
-  24. http://bugzilla.gnome.org/show_bug.cgi?id=112943
-  25. http://bugzilla.gnome.org/show_bug.cgi?id=113421
-  26. http://bugzilla.gnome.org/show_bug.cgi?id=114315
-  27. http://bugzilla.gnome.org/show_bug.cgi?id=111498
-  28. http://bugzilla.gnome.org/show_bug.cgi?id=112657
-  29. http://bugzilla.gnome.org/show_bug.cgi?id=112890
-  30. http://bugzilla.gnome.org/show_bug.cgi?id=113018
-  31. http://bugzilla.gnome.org/show_bug.cgi?id=114134
-  32. http://bugzilla.gnome.org/show_bug.cgi?id=114664
-  33. http://bugzilla.gnome.org/show_bug.cgi?id=107967
-  34. http://bugzilla.gnome.org/show_bug.cgi?id=110963
-  35. http://bugzilla.gnome.org/show_bug.cgi?id=112595
-  36. http://bugzilla.gnome.org/show_bug.cgi?id=112711
-  37. http://bugzilla.gnome.org/show_bug.cgi?id=112895
-  38. http://bugzilla.gnome.org/show_bug.cgi?id=113304
-  39. http://bugzilla.gnome.org/show_bug.cgi?id=114158
-  40. http://bugzilla.gnome.org/show_bug.cgi?id=112829
-  41. http://bugzilla.gnome.org/show_bug.cgi?id=109069
-  42. http://gstreamer.net/
-  43. http://bugzilla.gnome.org/
-  44. http://gstreamer.sf.net/
+   6. http://bugzilla.gnome.org/show_bug.cgi?id=104829
+   7. http://bugzilla.gnome.org/show_bug.cgi?id=113280
+   8. http://bugzilla.gnome.org/show_bug.cgi?id=117786
+   9. http://bugzilla.gnome.org/show_bug.cgi?id=118067
+  10. http://bugzilla.gnome.org/show_bug.cgi?id=118619
+  11. http://bugzilla.gnome.org/show_bug.cgi?id=119393
+  12. http://bugzilla.gnome.org/show_bug.cgi?id=117837
+  13. http://bugzilla.gnome.org/show_bug.cgi?id=120741
+  14. http://bugzilla.gnome.org/show_bug.cgi?id=116146
+  15. http://bugzilla.gnome.org/show_bug.cgi?id=94113
+  16. http://bugzilla.gnome.org/show_bug.cgi?id=115965
+  17. http://bugzilla.gnome.org/show_bug.cgi?id=114948
+  18. http://bugzilla.gnome.org/show_bug.cgi?id=114976
+  19. http://bugzilla.gnome.org/show_bug.cgi?id=116416
+  20. http://bugzilla.gnome.org/show_bug.cgi?id=116420
+  21. http://bugzilla.gnome.org/show_bug.cgi?id=119372
+  22. http://bugzilla.gnome.org/show_bug.cgi?id=116152
+  23. http://gstreamer.net/
+  24. http://bugzilla.gnome.org/
+  25. http://gstreamer.sf.net/
