@@ -26,6 +26,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
+#include <gst/bytestream/bytestream.h>
 
 #include "ladspa.h"
 
@@ -33,19 +34,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-/*
-#define GST_TYPE_LADSPA \
-  (gst_ladspa_get_type())
-#define GST_LADSPA(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LADSPA,GstLADSPA))
-#define GST_LADSPA_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_LADSPA,GstLADSPA))
-#define GST_IS_LADSPA(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LADSPA))
-#define GST_IS_LADSPA_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LADSPA))
-*/
 
 typedef struct _ladspa_control_info {
   gchar *name;
@@ -67,12 +55,14 @@ struct _GstLADSPA {
   
   GstPad **sinkpads, 
          **srcpads;
+
+  GstByteStream **bytestreams;
          
-  GstBuffer **buffers;
+  GstBufferPool *bufpool;
 
   gboolean loopbased, newcaps, activated;
 
-  gint samplerate, buffersize;
+  gint samplerate, buffersize, numbuffers;
   gulong timestamp;
 
 };
