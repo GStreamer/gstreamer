@@ -72,25 +72,20 @@ dnl ##############################
 dnl Check for tools:
 dnl ================
 
+dnl modify pkg-config path
+AC_ARG_WITH(pkg-config-path, 
+   AC_HELP_STRING([--with-pkg-config-path],[colon-separated list of pkg-config(1) dirs]),
+   [export PKG_CONFIG_PATH=${withval}])
+
 dnl Check for nasm
 AC_PATH_PROG(NASM_PATH, nasm, no)
 AC_SUBST(NASM_PATH)
 if test x$NASM_PATH = xno; then
   AC_MSG_WARN(Couldn't find nasm)
   HAVE_NASM="no"
-else
-  AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is available])
+else AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is available])
   HAVE_NASM="yes"
 fi
-
-dnl fix pkg-config's broken default search path
-if test -z $PKG_CONFIG_PATH; then
-  PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig
-fi
-export PKG_CONFIG_PATH
-
-dnl Check for pkgconfig
-AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
 
 dnl check for gtk-doc
 AC_ARG_WITH(html-dir, [  --with-html-dir=PATH path to installed docs ])
