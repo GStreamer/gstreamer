@@ -72,6 +72,11 @@ typedef struct _GObjectClass GObjectClass;
 
 #define gst_marshal_VOID__OBJECT_POINTER	gtk_marshal_NONE__POINTER_POINTER
 #define gst_marshal_VOID__INT_INT		gtk_marshal_NONE__INT_INT
+#define gst_marshal_VOID__INT			gtk_marshal_NONE__INT
+#define gst_marshal_VOID__STRING		gtk_marshal_NONE__STRING
+#define gst_marshal_VOID__VOID			gtk_marshal_NONE__NONE
+#define gst_marshal_VOID__BOOLEAN		gtk_marshal_NONE__BOOL
+#define gst_marshal_VOID__POINTER		gtk_marshal_NONE__POINTER
 
 /* General macros */
 #ifdef  __cplusplus

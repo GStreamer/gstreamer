@@ -146,6 +146,7 @@ gst_httpsrc_get(GstPad *pad)
     return NULL;
   }
 
+  g_print ("%d\n", readbytes);
   if (readbytes < src->bytes_per_read) {
     // FIXME: set the buffer's EOF bit here
   }
@@ -168,6 +169,7 @@ gst_httpsrc_open_url (GstHttpSrc *httpsrc)
   
   ghttp_set_uri (httpsrc->request, httpsrc->url);
   ghttp_set_sync (httpsrc->request, ghttp_async);
+  ghttp_set_chunksize (httpsrc->request, httpsrc->bytes_per_read);
   ghttp_set_header (httpsrc->request, "User-Agent", "GstHttpSrc");
   ghttp_prepare (httpsrc->request);
 

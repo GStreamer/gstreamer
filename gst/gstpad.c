@@ -28,7 +28,6 @@
 #include "gsttype.h"
 #include "gstbin.h"
 #include "gstscheduler.h"
-#include "gstmarshal.h"
 
 
 /***** Start with the base GstPad class *****/
@@ -1632,7 +1631,7 @@ gst_padtemplate_class_init (GstPadTemplateClass *klass)
   gst_padtemplate_signals[TEMPL_PAD_CREATED] =
     g_signal_new ("pad_created", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
                     G_STRUCT_OFFSET (GstPadTemplateClass, pad_created), NULL, NULL,
-                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 1,
                     GST_TYPE_PAD);
 
 

@@ -109,7 +109,7 @@ gst_bin_class_init (GstBinClass *klass)
   gst_bin_signals[OBJECT_ADDED] =
     g_signal_new ("object_added", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_FIRST,
                     G_STRUCT_OFFSET (GstBinClass, object_added), NULL, NULL,
-                    gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+                    gst_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 1,
                     GST_TYPE_ELEMENT);
 
   klass->change_state_type =		gst_bin_change_state_type;

@@ -102,7 +102,6 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint64 location, gint size)
   buffer->pool = pool;
   buffer->free = pool->buffer_free;
   buffer->copy = pool->buffer_copy;
-  buffer->pool_private = pool->user_data;
   
   return buffer;
 }
@@ -453,9 +452,6 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   newbuf->timestamp = buf1->timestamp;
   if (buf2->maxage > buf1->maxage) newbuf->maxage = buf2->maxage;
   else newbuf->maxage = buf1->maxage;
-
-  newbuf->parent = NULL;
-  newbuf->pool = NULL;
 
   return newbuf;
 }
