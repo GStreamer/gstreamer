@@ -31,9 +31,10 @@ noinst_LTLIBRARIES = libpth-mctx.la
 
 libpth_mctx_la_SOURCES = pth_mctx.c pth_p.h pth_vers.c pth.h pth_acdef.h pth_acmac.h
 
-noinst_PROGRAMS = test-pth
+noinst_PROGRAMS = test-pth test-pth-pthreads
 
 test_pth_LDADD = libpth-mctx.la
+test_pth_pthreads_LDADD = libpth-mctx.la -lpthread
 
 #pth_mctx_a_DEPENDENCIES = shtool
 

@@ -52,8 +52,8 @@
 #undef PTH_MCTX_STK_use
 #undef PTH_STACKGROWTH
 #undef PTH_DMALLOC
+#undef PTH_NEED_SEPARATE_REGISTER_STACK
 
 @BOTTOM@
 
 #endif /* _PTH_ACDEF_H_ */
-
