@@ -104,10 +104,14 @@ if test "x$broken-plugins" = "$xyes"; then
   USE_ARTS="yes"
   USE_ARTSC="yes"
   USE_LIBGSM="yes"
+  USE_FLACLIB="yes"
+  USE_LIBAVIFILE="yes"
 else
   USE_ARTS="no"
   USE_ARTSC="no"
   USE_LIBGSM="no"
+  USE_FLACLIB="no"
+  USE_LIBAVIFILE="no"
 fi
 
 
