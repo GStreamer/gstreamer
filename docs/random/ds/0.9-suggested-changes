@@ -92,6 +92,9 @@ bugs with interesting info:
    http://bugzilla.gnome.org/show_bug.cgi?id=114216
   
 
+object hierarchy:
+- state_change in GstElementClass should be renamed to state_changed, since
+  it's a signal triggered after state has changed
 
 
 - a method for elements to know when downstream elements are ignoring
