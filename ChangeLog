@@ -1,3 +1,8 @@
+2004-01-28  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_query_func):
+	  use gst_element_get_time to get correct time
+
 2004-01-28  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xerror),
