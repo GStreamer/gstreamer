@@ -1575,10 +1575,10 @@ GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
     AC_SUBST(SPEEX_CFLAGS)
     AC_SUBST(SPEEX_LIBS)
   ], [
-    GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex.h, [
-      AC_CHECK_HEADER(speex_jitter.h, [
+    GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex/speex.h, [
+      AC_CHECK_HEADER(speex/speex_jitter.h, [
         dnl speex 1.1.x :
-        GST_CHECK_LIBHEADER(SPEEX, speex, speex_encode_int, , speex.h, [
+        GST_CHECK_LIBHEADER(SPEEX, speex, speex_encode_int, , speex/speex.h, [
           dnl speex 1.1.5 or + :
           HAVE_SPEEX="yes"
           SPEEX_LIBS="-lspeex"
@@ -1595,9 +1595,14 @@ GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
             SPEEX_LIBS="-lspeex"
             AC_SUBST(SPEEX_CFLAGS)
             AC_SUBST(SPEEX_LIBS)
+
+            AC_DEFINE_UNQUOTED(SPEEX_1_0, 1,
+              [defined if speex 1.0.x API detected])
         ],[
             HAVE_SPEEX="no"
             AC_MSG_NOTICE(You need at least 1.0.4 to compile the speex plugin)
+        ], [
+#include <speex/speex.h>
         ])
       ])
     ])
