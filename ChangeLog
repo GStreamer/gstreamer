@@ -1,3 +1,22 @@
+2004-01-11  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/ffmpeg/gstffmpegcolorspace.c: (gst_ffmpegcsp_chain): Fixing the 
+	pad_alloc_buffer implementation to use ->srcpad
+	* ext/hermes/gstcolorspace.c: (gst_colorspace_chain): Fixing the
+        pad_alloc_buffer implementation to use ->srcpad
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_chain):  Fixing the
+        pad_alloc_buffer implementation to use ->srcpad
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),
+	(gst_ximagesink_chain), (gst_ximagesink_buffer_free),
+	(gst_ximagesink_buffer_alloc): Now only use GST_BUFFER_PRIVATE to keep
+	a reference to everything we need.
+	* sys/ximage/ximagesink.h: adding a reference to the sink in the image.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_chain), (gst_xvimagesink_buffer_free),
+	(gst_xvimagesink_buffer_alloc): Now only use GST_BUFFER_PRIVATE to keep
+        a reference to everything we need.
+	* sys/xvimage/xvimagesink.h: adding a reference to the sink in the image
+
 2004-01-11  David Schleef  <ds@schleef.org>
 
 	* ext/divx/gstdivxenc.c: remove bogus gst_caps_is_fixed() test
