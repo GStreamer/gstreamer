@@ -1,3 +1,13 @@
+2005-01-07  Gergely Nagy  <algernon@bonehunter.rulez.org>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngenc.c: (gst_pngenc_base_init),
+	(gst_pngenc_sinklink), (gst_pngenc_init), (gst_pngenc_chain):
+	* ext/libpng/gstpngenc.h:
+	  Alpha support (encoder; #163161), mime fixage.
+
 2005-01-07  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

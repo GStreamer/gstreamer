@@ -100,7 +100,7 @@ static GstStaticPadTemplate gst_pngdec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-png, "
+    GST_STATIC_CAPS ("image/png, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0.0, MAX ]")
     );

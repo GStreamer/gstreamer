@@ -38,8 +38,6 @@ extern "C" {
 typedef struct _GstPngEnc GstPngEnc;
 typedef struct _GstPngEncClass GstPngEncClass;
 
-extern GstPadTemplate *pngenc_src_template, *pngenc_sink_template;
-
 struct _GstPngEnc
 {
   GstElement element;

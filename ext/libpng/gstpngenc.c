@@ -61,10 +61,23 @@ static void gst_pngenc_get_property (GObject * object,
 
 static void gst_pngenc_chain (GstPad * pad, GstData * _data);
 
-GstPadTemplate *pngenc_src_template, *pngenc_sink_template;
+static GstStaticPadTemplate pngenc_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("image/png, "
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0.0, MAX ]")
+    );
+
+static GstStaticPadTemplate pngenc_sink_template =
+    GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB)
+    );
 
 static GstElementClass *parent_class = NULL;
-
 
 static void
 user_error_fn (png_structp png_ptr, png_const_charp error_msg)
@@ -103,39 +116,15 @@ gst_pngenc_get_type (void)
   return pngenc_type;
 }
 
-static GstCaps *
-png_caps_factory (void)
-{
-  return gst_caps_new_simple ("video/x-png",
-      "width", GST_TYPE_INT_RANGE, 16, 4096,
-      "height", GST_TYPE_INT_RANGE, 16, 4096,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
-}
-
-
-static GstCaps *
-raw_caps_factory (void)
-{
-  return gst_caps_from_string (GST_VIDEO_CAPS_RGB);
-}
-
 static void
 gst_pngenc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *raw_caps, *png_caps;
 
-  raw_caps = raw_caps_factory ();
-  png_caps = png_caps_factory ();
-
-  pngenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS, raw_caps);
-
-  pngenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, png_caps);
-
-  gst_element_class_add_pad_template (element_class, pngenc_sink_template);
-  gst_element_class_add_pad_template (element_class, pngenc_src_template);
+  gst_element_class_add_pad_template
+      (element_class, gst_static_pad_template_get (&pngenc_sink_template));
+  gst_element_class_add_pad_template
+      (element_class, gst_static_pad_template_get (&pngenc_src_template));
   gst_element_class_set_details (element_class, &gst_pngenc_details);
 }
 
@@ -180,7 +169,7 @@ gst_pngenc_sinklink (GstPad * pad, const GstCaps * caps)
   gst_structure_get_double (structure, "framerate", &fps);
   gst_structure_get_int (structure, "bpp", &pngenc->bpp);
 
-  caps = gst_caps_new_simple ("video/x-png",
+  caps = gst_caps_new_simple ("image/png",
       "framerate", G_TYPE_DOUBLE, fps,
       "width", G_TYPE_INT, pngenc->width,
       "height", G_TYPE_INT, pngenc->height, NULL);
@@ -191,7 +180,8 @@ gst_pngenc_sinklink (GstPad * pad, const GstCaps * caps)
 static void
 gst_pngenc_init (GstPngEnc * pngenc)
 {
-  pngenc->sinkpad = gst_pad_new_from_template (pngenc_sink_template, "sink");
+  pngenc->sinkpad = gst_pad_new_from_template
+      (gst_static_pad_template_get (&pngenc_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (pngenc), pngenc->sinkpad);
 
   pngenc->srcpad = gst_pad_new ("src", GST_PAD_SRC);
@@ -285,8 +275,8 @@ gst_pngenc_chain (GstPad * pad, GstData * _data)
       pngenc->png_info_ptr,
       pngenc->width,
       pngenc->height,
-      pngenc->bpp / 3,
-      PNG_COLOR_TYPE_RGB,
+      8,
+      (pngenc->bpp == 32) ? PNG_COLOR_TYPE_RGBA : PNG_COLOR_TYPE_RGB,
       PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
