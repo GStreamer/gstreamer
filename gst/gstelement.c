@@ -329,31 +329,55 @@ gst_element_get_padtemplate_by_name (GstElement *element, const guchar *name)
 
     if (!strcmp (padtempl->name_template, name))
       return padtempl;
-	
+
     padlist = g_list_next (padlist);
   }
 
   return NULL;
 }
 
+/**
+ * gst_element_request_pad:
+ * @element: element to request a new pad from
+ * @templ: the padtemplate specifuing the pad to get.
+ *
+ * Request a new pad from the element. The template will
+ * be used to decide what type of pad to create. This function
+ * is typically used for elements with a padtemplate with presence
+ * GST_PAD_REQUEST.
+ *
+ * Returns: the new pad that was created.
+ */
 GstPad*
-gst_element_request_pad (GstElement *element, GstPadTemplate *temp)
+gst_element_request_pad (GstElement *element, GstPadTemplate *templ)
 {
   GstPad *newpad = NULL;
   GstElementClass *oclass;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-  g_return_val_if_fail (temp != NULL, NULL);
+  g_return_val_if_fail (templ != NULL, NULL);
 
   /* call the state change function so it can set the state */
   oclass = GST_ELEMENT_CLASS (GTK_OBJECT (element)->klass);
   if (oclass->request_new_pad)
-    newpad = (oclass->request_new_pad)(element, temp);
+    newpad = (oclass->request_new_pad)(element, templ);
 
-  return newpad; 
+  return newpad;
 }
 
+/**
+ * gst_element_request_pad_by_name:
+ * @element: element to request a new pad from
+ * @name: the name of the padtemplate to use.
+ *
+ * Request a new pad from the element. The name argument will
+ * be used to decide what padtemplate to use. This function
+ * is typically used for elements with a padtemplate with presence
+ * GST_PAD_REQUEST.
+ *
+ * Returns: the new pad that was created.
+ */
 GstPad*
 gst_element_request_pad_by_name (GstElement *element, const gchar *name)
 {

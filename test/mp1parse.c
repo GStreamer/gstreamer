@@ -26,8 +26,6 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   // connect to audio pad
   //if (0) {
   if (strncmp(gst_pad_get_name(pad), "audio_", 6) == 0) {
-    gst_plugin_load("mp3parse");
-    gst_plugin_load("mpg123");
     // construct internal pipeline elements
     parse_audio = gst_elementfactory_make("mp3parse","parse_audio");
     g_return_if_fail(parse_audio != NULL);
@@ -68,10 +66,6 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
   } else if (strncmp(gst_pad_get_name(pad), "video_", 6) == 0) {
   //} else if (0) {
 
-    gst_plugin_load("mp1videoparse");
-    gst_plugin_load(VIDEO_DECODER);
-    gst_plugin_load("videoscale");
-    gst_plugin_load("videosink");
     // construct internal pipeline elements
     parse_video = gst_elementfactory_make("mp1videoparse","parse_video");
     g_return_if_fail(parse_video != NULL);
@@ -96,7 +90,7 @@ void new_pad_created(GstElement *parse,GstPad *pad,GstElement *pipeline) {
     g_return_if_fail(video_thread != NULL);
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(parse_video));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(decode_video));
-    gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(videoscale));
+    //gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(videoscale));
     gst_bin_add(GST_BIN(video_thread),GST_ELEMENT(show));
 
     // set up pad connections
@@ -137,7 +131,6 @@ int main(int argc,char *argv[]) {
   g_thread_init(NULL);
   gst_init(&argc,&argv);
 	gnome_init("MPEG1 Video player","0.0.1",argc,argv);
-  gst_plugin_load("mpeg1parse");
 
   pipeline = gst_pipeline_new("pipeline");
   g_return_val_if_fail(pipeline != NULL, -1);

@@ -9,20 +9,20 @@ static GstPropsFactory mpeg2dec_sink_props = {
 };
 
 static GstPropsFactory mpeg2dec_src_props = {
-  "fourcc", 	GST_PROPS_LIST (
-                        GST_PROPS_FOURCC ('Y','V','1','2'), 
- 			GST_PROPS_FOURCC_INT (0x56595559)
+  "fourcc",	GST_PROPS_LIST (
+                        GST_PROPS_FOURCC ('Y','V','1','2'),
+			GST_PROPS_FOURCC_INT (0x56595559)
 			),
   "width",	GST_PROPS_INT_RANGE (16, 4096),
   "height",	GST_PROPS_INT_RANGE (16, 4096),
   NULL
 };
 
-static GstProps *sinkprops = NULL, 
+static GstProps *sinkprops = NULL,
                 *rawprops = NULL,
                 *testprops = NULL;
 
-int main(int argc,char *argv[]) 
+int main(int argc,char *argv[])
 {
   xmlDocPtr doc;
   xmlNodePtr parent;
@@ -43,14 +43,14 @@ int main(int argc,char *argv[])
 
   i=argc;
 
-  testprops  = gst_props_new ("layer", GST_PROPS_INT (i), 
+  testprops  = gst_props_new ("layer", GST_PROPS_INT (i),
 		              "bitrate", GST_PROPS_INT_RANGE (i*300, i*10000),
 			      NULL);
   if (i==3) {
     testprops  = gst_props_merge (testprops,
-		      gst_props_new ("framed", GST_PROPS_BOOLEAN (TRUE), 
-		                     "mpegtest", GST_PROPS_BOOLEAN (FALSE), 
-		                     "hello", GST_PROPS_LIST ( 
+		      gst_props_new ("framed", GST_PROPS_BOOLEAN (TRUE),
+		                     "mpegtest", GST_PROPS_BOOLEAN (FALSE),
+		                     "hello", GST_PROPS_LIST (
 					     GST_PROPS_FOURCC_INT (0X5555),
 					     GST_PROPS_FOURCC_INT (0X6666)
 					     ),

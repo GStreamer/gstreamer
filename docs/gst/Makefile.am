@@ -13,6 +13,9 @@ EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt $
 
 HTML_DIR=$(datadir)/gstreamer/html
 
+GST_LIBS += ../../gst/elements/libgstelements.la
+
+
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
 tmpl_sources =				\
@@ -85,7 +88,9 @@ gstreamer-decl.txt:
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers=""
 
 scanobj: $(srcdir)/$(DOC_MODULE).types
-	-CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" gtkdoc-scanobj --module=$(DOC_MODULE)
+	rm gstreamer-scan.o; ln -s gstreamer-scan.lo gstreamer-scan.o
+	env CC="$(LIBTOOL) $(CC)" CFLAGS="$(GST_CFLAGS) $(GLIB_CFLAGS) $(XML_CFLAGS) -I../../" LDFLAGS="$(GST_LIBS)"\
+	gtkdoc-scanobj --module=$(DOC_MODULE) 
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR)
 
 tmpl: scanobj gstreamer-decl.txt

@@ -758,6 +758,12 @@ GstGetbits
 @name: 
 @Returns: 
 
+<!-- ##### STRUCT GstTee ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_ELEMENT_CLASS ##### -->
 <para>
 
@@ -906,6 +912,14 @@ This macro returns the entire set of flags for the object.
 
 </para>
 
+@Returns: 
+
+<!-- ##### FUNCTION gst_tee_new_pad ##### -->
+<para>
+
+</para>
+
+@tee: 
 @Returns: 
 
 <!-- ##### MACRO GST_TYPE_AUDIOSRC ##### -->
@@ -1220,6 +1234,14 @@ This macro usets the given flags.
 </para>
 
 @audiosink: 
+
+<!-- ##### FUNCTION gst_tee_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
 
 <!-- ##### MACRO GST_IS_OBJECT_CLASS ##### -->
 <para>
@@ -1553,6 +1575,12 @@ Query the element for the current mime type
 
 
 
+<!-- ##### ARG GstFakeSrc:patern ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### SECTION ./tmpl/gstgetbits.sgml:Long_Description ##### -->
 <para>
 
@@ -1752,6 +1780,14 @@ Flags for the GstSrc element
 
 @Returns: 
 
+<!-- ##### FUNCTION gst_tee_chain ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+
 <!-- ##### TYPEDEF GstPropsListFactory[] ##### -->
 <para>
 
@@ -1793,6 +1829,12 @@ Flags for the GstSrc element
 
 @pad: 
 @buf: 
+
+<!-- ##### ARG GstPad:active ##### -->
+<para>
+Indicates this pad is active
+</para>
+
 
 <!-- ##### MACRO GST_OBJECT_CLASS ##### -->
 <para>

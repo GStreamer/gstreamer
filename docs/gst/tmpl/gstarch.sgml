@@ -1,12 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-GstIdentity
+gstarch
 
 <!-- ##### SECTION Short_Description ##### -->
-Pass data without modification. (identity)
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Pass data without modification.
+
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -14,13 +14,27 @@ Pass data without modification.
 
 </para>
 
-<!-- ##### ARG GstIdentity:loop_based ##### -->
+<!-- ##### MACRO GST_ARCH_CALL ##### -->
 <para>
 
 </para>
 
-<!-- ##### ARG GstIdentity:sleep_time ##### -->
+@target: 
+
+
+<!-- ##### MACRO GST_ARCH_SET_SP ##### -->
 <para>
 
 </para>
+
+@stackpointer: 
+
+
+<!-- ##### MACRO GST_ARCH_SETUP_STACK ##### -->
+<para>
+
+</para>
+
+@sp: 
+
 

@@ -234,7 +234,7 @@ gst_pad_new (gchar *name,
 
 /**
  * gst_pad_new_from_template:
- * @temp: the pad template to use
+ * @templ: the pad template to use
  * @name: the name of the element
  *
  * Create a new pad with given name from the given template.
@@ -1023,7 +1023,7 @@ gst_padtemplate_create (gchar *name_template,
 
 /**
  * gst_padtemplate_save_thyself:
- * @pad: the padtemplate to save
+ * @templ: the padtemplate to save
  * @parent: the parent XML tree
  *
  * Saves the padtemplate into XML.
@@ -1031,16 +1031,16 @@ gst_padtemplate_create (gchar *name_template,
  * Returns: the new XML tree
  */
 xmlNodePtr
-gst_padtemplate_save_thyself (GstPadTemplate *pad, xmlNodePtr parent)
+gst_padtemplate_save_thyself (GstPadTemplate *templ, xmlNodePtr parent)
 {
   xmlNodePtr subtree;
   GList *caps;
   guchar *presence;
 
-  xmlNewChild(parent,NULL,"nametemplate", pad->name_template);
-  xmlNewChild(parent,NULL,"direction", (pad->direction == GST_PAD_SINK? "sink":"src"));
+  xmlNewChild(parent,NULL,"nametemplate", templ->name_template);
+  xmlNewChild(parent,NULL,"direction", (templ->direction == GST_PAD_SINK? "sink":"src"));
 
-  switch (pad->presence) {
+  switch (templ->presence) {
     case GST_PAD_ALWAYS:
       presence = "always";
       break;
@@ -1056,11 +1056,11 @@ gst_padtemplate_save_thyself (GstPadTemplate *pad, xmlNodePtr parent)
   }
   xmlNewChild(parent,NULL,"presence", presence);
 
-  caps = pad->caps;
+  caps = templ->caps;
   while (caps) {
     GstCaps *cap = (GstCaps *)caps->data;
-    
-    subtree = xmlNewChild(parent,NULL,"caps", NULL);
+
+    subtree = xmlNewChild (parent, NULL, "caps", NULL);
     gst_caps_save_thyself (cap, subtree);
 
     caps = g_list_next (caps);
@@ -1207,12 +1207,30 @@ gst_pad_select(GstPad *nextpad, ...) {
 */
 
 
+/**
+ * gst_pad_set_element_private:
+ * @pad: the pad to set the private data to
+ * @priv: The private data to attach to the pad
+ *
+ * Set the given private data pointer to the pad. This
+ * function can only be used by the element that own the
+ * pad.
+ */
 void
 gst_pad_set_element_private (GstPad *pad, gpointer priv)
 {
   pad->element_private = priv;
 }
 
+/**
+ * gst_pad_get_element_private:
+ * @pad: the pad to get the private data of
+ *
+ * Get the private data of a pad. The private data can
+ * only be set by the parent element of this pad.
+ *
+ * Returns: a pointer to the private data.
+ */
 gpointer
 gst_pad_get_element_private (GstPad *pad)
 {

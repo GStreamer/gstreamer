@@ -289,6 +289,16 @@ circumstances.
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_element_get_padtemplate_by_name ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_element_add_ghost_pad ##### -->
 <para>
 
@@ -305,6 +315,28 @@ circumstances.
 
 @element: 
 @pad: 
+
+
+<!-- ##### FUNCTION gst_element_request_pad ##### -->
+<para>
+
+</para>
+
+@element: 
+@templ: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@temp: 
+
+
+<!-- ##### FUNCTION gst_element_request_pad_by_name ##### -->
+<para>
+
+</para>
+
+@element: 
+@name: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gst_element_connect ##### -->
@@ -410,8 +442,9 @@ circumstances.
 </para>
 
 @elementfactory: 
-@temp: 
+@templ: 
 <!-- # Unused Parameters # -->
+@temp: 
 @pad: 
 
 

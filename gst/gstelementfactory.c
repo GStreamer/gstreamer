@@ -204,18 +204,18 @@ gst_elementfactory_make (const gchar *factoryname, const gchar *name)
 /**
  * gst_elementfactory_add_padtemplate :
  * @elementfactory: factory to add the src id to
- * @temp: the padtemplate to add
+ * @templ: the padtemplate to add
  *
- * Add the given padtemplate to this elementfactory. 
+ * Add the given padtemplate to this elementfactory.
  */
-void 
-gst_elementfactory_add_padtemplate (GstElementFactory *factory, 
-			            GstPadTemplate *temp) 
+void
+gst_elementfactory_add_padtemplate (GstElementFactory *factory,
+			            GstPadTemplate *templ)
 {
   g_return_if_fail(factory != NULL);
-  g_return_if_fail(temp != NULL);
+  g_return_if_fail(templ != NULL);
 
-  factory->padtemplates = g_list_append (factory->padtemplates, temp); 
+  factory->padtemplates = g_list_append (factory->padtemplates, templ);
   factory->numpadtemplates++;
 }
 

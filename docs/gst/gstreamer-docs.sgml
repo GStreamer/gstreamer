@@ -15,7 +15,6 @@
 <!entity GstPipeline SYSTEM "sgml/gstpipeline.sgml">
 <!entity GstAutoplug SYSTEM "sgml/gstautoplug.sgml">
 <!entity GstPlugin SYSTEM "sgml/gstplugin.sgml">
-<!entity GstTee SYSTEM "sgml/gsttee.sgml">
 <!entity GstThread SYSTEM "sgml/gstthread.sgml">
 <!entity GstTrace SYSTEM "sgml/gsttrace.sgml">
 <!entity GstType SYSTEM "sgml/gsttype.sgml">
@@ -23,6 +22,8 @@
 <!entity GstProps SYSTEM "sgml/gstprops.sgml">
 <!entity GstUtils SYSTEM "sgml/gstutils.sgml">
 <!entity GstXml SYSTEM "sgml/gstxml.sgml">
+<!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
+<!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
 <!entity cothreads SYSTEM "sgml/cothreads.sgml">
 
 <!entity GstFakeSrc SYSTEM "sgml/gstfakesrc.sgml">
@@ -37,8 +38,7 @@
 <!entity GstFdSink SYSTEM "sgml/gstfdsink.sgml">
 <!entity GstIdentity SYSTEM "sgml/gstidentity.sgml">
 <!entity GstPipefilter SYSTEM "sgml/gstpipefilter.sgml">
-<!entity GstQueue SYSTEM "sgml/gstqueue.sgml">
-<!entity GstTypeFind SYSTEM "sgml/gsttypefind.sgml">
+<!entity GstTee SYSTEM "sgml/gsttee.sgml">
 
 <!entity audioraw SYSTEM "sgml/audioraw.sgml">
 <!entity spectrum SYSTEM "sgml/spectrum.sgml">
@@ -72,7 +72,8 @@ with some more specialized elements.</para>
     &GstPad;
     &GstPlugin;
     &GstThread;
-    &GstTee;
+    &GstQueue;
+    &GstTypeFind;
 
     &GstType;
     &GstCaps;
@@ -136,9 +137,8 @@ with some more specialized elements.</para>
 
     &GstPipefilter;
     &GstIdentity;
-    &GstQueue;
 
-    &GstTypeFind;
+    &GstTee;
   </chapter>
 
   <chapter id="metatdata-types">

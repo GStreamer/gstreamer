@@ -19,10 +19,6 @@ cothread_main
 cothread_set_data
 cothread_get_data
 <SUBSECTION Standard>
-SETUP_STACK
-GET_SP
-JUMP
-SET_SP
 </SECTION>
 
 <SECTION>
@@ -36,7 +32,7 @@ gst_main_quit
 
 <SECTION>
 <FILE>gstinfo</FILE>
-<TITLE>gstinfo</TITLE>
+<TITLE>GstInfo</TITLE>
 gst_get_category_name
 gst_info_get_categories
 gst_info_set_categories
@@ -109,7 +105,22 @@ GST_IS_BIN
 GST_IS_BIN_CLASS
 gst_bin_details
 gst_bin_use_cothreads
+gst_bin_remove_eos_provider
+gst_bin_add_eos_provider
 _GstBinChain
+</SECTION>
+
+<SECTION>
+<FILE>gstparse</FILE>
+<TITLE>GstParse</TITLE>
+gst_parse_launch
+</SECTION>
+
+<SECTION>
+<FILE>gstarch</FILE>
+GST_ARCH_CALL
+GST_ARCH_SET_SP
+GST_ARCH_SETUP_STACK
 </SECTION>
 
 <SECTION>
@@ -193,8 +204,11 @@ gst_element_add_pad
 gst_element_get_pad
 gst_element_get_pad_list
 gst_element_get_padtemplate_list
+gst_element_get_padtemplate_by_name
 gst_element_add_ghost_pad
 gst_element_remove_ghost_pad
+gst_element_request_pad
+gst_element_request_pad_by_name
 gst_element_connect
 gst_element_disconnect
 gst_element_set_state
@@ -224,6 +238,7 @@ GST_ELEMENT_CLASS
 GST_IS_ELEMENT
 GST_IS_ELEMENT_CLASS
 gst_element_get_type
+gst_element_announce_eos
 </SECTION>
 
 <SECTION>
@@ -298,8 +313,17 @@ GST_IS_OBJECT_CLASS
 <SECTION>
 <FILE>gstpad</FILE>
 <TITLE>GstPad</TITLE>
+GST_PAD_NAME
+GST_PAD_ELEMENT_PRIVATE
+GST_PAD_PARENT
+GST_PAD_PADTEMPLATE
+GST_PAD_REALIZE
+GST_PAD_DIRECTION
+GST_PAD_CAPS
+GST_PAD_PEER
 GST_PAD_CONNECTED
 GST_PAD_CAN_PULL
+
 GstPad
 GstPadChainFunction
 GstPadGetFunction
@@ -328,6 +352,8 @@ gst_pad_get_caps_by_name
 gst_pad_check_compatibility
 gst_pad_set_name
 gst_pad_get_name
+gst_pad_set_element_private
+gst_pad_get_element_private
 gst_pad_set_parent
 gst_pad_get_parent
 gst_pad_add_ghost_parent
@@ -348,14 +374,31 @@ gst_pad_eos
 gst_pad_save_thyself
 gst_pad_load_and_connect
 
+GstRealPad
+GST_RPAD_DIRECTION
+GST_RPAD_CAPS
+GST_RPAD_PEER
+GST_RPAD_BUFPEN
+GST_RPAD_CHAINFUNC
+GST_RPAD_GETFUNC
+GST_RPAD_GETREGIONFUNC
+GST_RPAD_PUSHFUNC
+GST_RPAD_PULLFUNC
+GST_RPAD_PULLREGIONFUNC
+GST_RPAD_QOSFUNC
+GST_RPAD_EOSFUNC
+
+GST_GPAD_REALPAD
+GstGhostPad
+
 GstPadFactoryEntry
 GstPadFactory[]
 GST_PAD_FACTORY_SOMETIMES
 GST_PAD_FACTORY_ALWAYS
+GST_PAD_FACTORY_REQUEST
 GST_PAD_FACTORY_SINK
 GST_PAD_FACTORY_SRC
 GST_PAD_FACTORY_CAPS
-
 
 GstPadPresence
 GstPadTemplate
@@ -372,6 +415,22 @@ GST_PAD_CLASS
 GST_IS_PAD
 GST_IS_PAD_CLASS
 gst_pad_get_type
+
+GstRealPadClass
+GST_TYPE_REAL_PAD
+GST_REAL_PAD
+GST_REAL_PAD_CLASS
+GST_IS_REAL_PAD
+GST_IS_REAL_PAD_CLASS
+gst_real_pad_get_type
+
+GstGhostPadClass
+GST_TYPE_GHOST_PAD
+GST_GHOST_PAD
+GST_GHOST_PAD_CLASS
+GST_IS_GHOST_PAD
+GST_IS_GHOST_PAD_CLASS
+gst_ghost_pad_get_type
 
 GstPadTemplateClass
 GST_TYPE_PADTEMPLATE
@@ -456,12 +515,11 @@ gst_plugin_save_thyself
 <SECTION>
 <FILE>gsttee</FILE>
 <TITLE>GstTee</TITLE>
-GstTee
-gst_tee_new
-gst_tee_chain
-gst_tee_new_pad
 <SUBSECTION Standard>
+gst_tee_factory_init
+GstTee
 gst_tee_get_type
+gst_tee_details
 GstTeeClass
 GST_TYPE_TEE
 GST_TEE
@@ -609,6 +667,8 @@ GST_IS_XML_CLASS
 GST_TYPE_XML
 GST_XML_CLASS
 GstXMLClass
+xmlChildrenNode
+xmlRootNode
 </SECTION>
 
 <SECTION>

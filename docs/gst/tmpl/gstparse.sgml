@@ -1,12 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-GstIdentity
+GstParse
 
 <!-- ##### SECTION Short_Description ##### -->
-Pass data without modification. (identity)
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Pass data without modification.
+
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -14,13 +14,13 @@ Pass data without modification.
 
 </para>
 
-<!-- ##### ARG GstIdentity:loop_based ##### -->
+<!-- ##### FUNCTION gst_parse_launch ##### -->
 <para>
 
 </para>
 
-<!-- ##### ARG GstIdentity:sleep_time ##### -->
-<para>
+@cmdline: 
+@parent: 
+@Returns: 
 
-</para>
 

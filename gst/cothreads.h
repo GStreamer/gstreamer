@@ -34,8 +34,8 @@
 #define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
 #endif /* CURRENT_STACK_FRAME */
 
-typedef struct _cothread_state 		cothread_state;
-typedef struct _cothread_context 	cothread_context;
+typedef struct _cothread_state		cothread_state;
+typedef struct _cothread_context	cothread_context;
 
 typedef int (*cothread_func) (int argc,char **argv);
 
@@ -51,7 +51,7 @@ struct _cothread_state {
 
   int flags;
   void *sp;
-  // is this needed any more?
+  /* is this needed any more? */
   void *top_sp;
   void *pc;
   jmp_buf jmp;
@@ -66,12 +66,12 @@ struct _cothread_context {
 
 cothread_context*		cothread_init();
 cothread_state*			cothread_create		(cothread_context *ctx);
-void 				cothread_setfunc	(cothread_state *thread, cothread_func func, 
+void				cothread_setfunc	(cothread_state *thread, cothread_func func,
 						         int argc, char **argv);
 int				cothread_getcurrent	(void);
-void 				cothread_switch		(cothread_state *thread);
-void 				cothread_set_data	(cothread_state *thread, gchar *key, gpointer data);
-gpointer 			cothread_get_data 	(cothread_state *thread, gchar *key);
+void				cothread_switch		(cothread_state *thread);
+void				cothread_set_data	(cothread_state *thread, gchar *key, gpointer data);
+gpointer			cothread_get_data	(cothread_state *thread, gchar *key);
 
 cothread_state*			cothread_main		(cothread_context *ctx);
 

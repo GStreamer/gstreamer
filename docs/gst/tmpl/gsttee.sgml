@@ -14,36 +14,8 @@ A tee can be used to split out the filter graph.
 
 </para>
 
-<!-- ##### STRUCT GstTee ##### -->
+<!-- ##### ARG GstTee:num_pads ##### -->
 <para>
 
 </para>
-
-
-<!-- ##### FUNCTION gst_tee_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_tee_chain ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
-
-
-<!-- ##### FUNCTION gst_tee_new_pad ##### -->
-<para>
-
-</para>
-
-@tee: 
-@Returns: 
-
 

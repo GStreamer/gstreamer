@@ -1,7 +1,7 @@
 #include <gst/gst.h>
 
-int 
-main(int argc, char *argv[]) 
+int
+main(int argc, char *argv[])
 {
   GstElement *element, *mp3parse;
   GstPadTemplate *templ;
@@ -31,6 +31,6 @@ main(int argc, char *argv[])
   gst_padtemplate_save_thyself (pad->padtemplate, parent);
 
   xmlDocDump(stdout, doc);
-  
+
   return 0;
 }

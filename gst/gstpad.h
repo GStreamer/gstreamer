@@ -213,7 +213,7 @@ struct _GstPadTemplateClass {
   GstObjectClass parent_class;
 
   /* signal callbacks */
-  void (*pad_created)	(GstPadTemplate *temp, GstPad *pad);
+  void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
 };
 
 
@@ -237,7 +237,7 @@ GtkType 		gst_ghost_pad_get_type		(void);
 
 GstPad*			gst_pad_new			(gchar *name, GstPadDirection direction);
 #define 		gst_pad_destroy(pad) 		gst_object_destroy (GST_OBJECT (pad))
-GstPad*			gst_pad_new_from_template	(GstPadTemplate *temp, gchar *name);
+GstPad*			gst_pad_new_from_template	(GstPadTemplate *templ, gchar *name);
 
 GstPadDirection 	gst_pad_get_direction		(GstPad *pad);
 
@@ -309,7 +309,7 @@ GstPadTemplate*		gst_padtemplate_create		(gchar *name_template,
 		                                         GstPadDirection direction, GstPadPresence presence,
 							 GList *caps);
 
-xmlNodePtr 		gst_padtemplate_save_thyself	(GstPadTemplate *pad, xmlNodePtr parent);
+xmlNodePtr 		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
 
 #ifdef __cplusplus

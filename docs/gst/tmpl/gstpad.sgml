@@ -16,6 +16,71 @@ connections.
 
 </para>
 
+<!-- ##### MACRO GST_PAD_NAME ##### -->
+<para>
+Get the name of the pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_ELEMENT_PRIVATE ##### -->
+<para>
+Get the private data set by the element that owns the pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_PARENT ##### -->
+<para>
+Get the parent element of this pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_PADTEMPLATE ##### -->
+<para>
+Get the padtemplate that was used to create this pad. NULL if no padtemplate
+was used.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_REALIZE ##### -->
+<para>
+Return the real pad of this pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_DIRECTION ##### -->
+<para>
+Get the pad direction.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_CAPS ##### -->
+<para>
+Get the capabilities of a pad.
+</para>
+
+@pad: the pad to query
+
+
+<!-- ##### MACRO GST_PAD_PEER ##### -->
+<para>
+Get the peerpad of this pad.
+</para>
+
+@pad: the pad to query
+
+
 <!-- ##### MACRO GST_PAD_CONNECTED ##### -->
 <para>
 Is this pad connected.
@@ -156,9 +221,11 @@ Destroy the pad.
 
 </para>
 
-@temp: 
+@templ: 
 @name: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@temp: 
 
 
 <!-- ##### FUNCTION gst_pad_get_direction ##### -->
@@ -263,6 +330,24 @@ Destroy the pad.
 
 
 <!-- ##### FUNCTION gst_pad_get_name ##### -->
+<para>
+
+</para>
+
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_pad_set_element_private ##### -->
+<para>
+
+</para>
+
+@pad: 
+@priv: 
+
+
+<!-- ##### FUNCTION gst_pad_get_element_private ##### -->
 <para>
 
 </para>
@@ -447,6 +532,139 @@ Destroy the pad.
 @elements: 
 
 
+<!-- ##### STRUCT GstRealPad ##### -->
+<para>
+
+</para>
+
+@pad: 
+@caps: 
+@direction: 
+@threadstate: 
+@peer: 
+@bufpen: 
+@chainfunc: 
+@getfunc: 
+@getregionfunc: 
+@qosfunc: 
+@eosfunc: 
+@pushfunc: 
+@pullfunc: 
+@pullregionfunc: 
+@ghostparents: 
+
+<!-- ##### MACRO GST_RPAD_DIRECTION ##### -->
+<para>
+Get the direction of the real pad.
+</para>
+
+@pad: the realpad to query.
+
+
+<!-- ##### MACRO GST_RPAD_CAPS ##### -->
+<para>
+Get the caps of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_PEER ##### -->
+<para>
+Get the peer element of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_BUFPEN ##### -->
+<para>
+Get the bufpen of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_CHAINFUNC ##### -->
+<para>
+Get the chain function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_GETFUNC ##### -->
+<para>
+Get get getfunction of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_GETREGIONFUNC ##### -->
+<para>
+Get the getregion function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_PUSHFUNC ##### -->
+<para>
+Get the pushfunction of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_PULLFUNC ##### -->
+<para>
+Get the pullfunction of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_PULLREGIONFUNC ##### -->
+<para>
+Get the pullregion function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_QOSFUNC ##### -->
+<para>
+Get the QoS function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_RPAD_EOSFUNC ##### -->
+<para>
+Get the EOS function of the real pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### MACRO GST_GPAD_REALPAD ##### -->
+<para>
+Get the real pad of this ghost pad.
+</para>
+
+@pad: the real pad to query.
+
+
+<!-- ##### STRUCT GstGhostPad ##### -->
+<para>
+
+</para>
+
+@pad: 
+@realpad: 
+
 <!-- ##### TYPEDEF GstPadFactoryEntry ##### -->
 <para>
 Defines an entry for a padfactory.
@@ -471,6 +689,14 @@ on the media type. Use this in the factory definition.
 <para>
 Indicate that this pad will always be available.
 Use this in the factory definition.
+</para>
+
+
+
+<!-- ##### MACRO GST_PAD_FACTORY_REQUEST ##### -->
+<para>
+Indicates that this pad will be available on request. Use 
+this in the factory definition. 
 </para>
 
 
@@ -504,6 +730,7 @@ Indicates when this pad will become available.
 
 @GST_PAD_ALWAYS: the pad is always available
 @GST_PAD_SOMETIMES: the pad will become available depending on the media stream
+@GST_PAD_REQUEST: 
 
 <!-- ##### STRUCT GstPadTemplate ##### -->
 <para>
@@ -551,13 +778,10 @@ Indicates when this pad will become available.
 
 </para>
 
-@pad: 
+@templ: 
 @parent: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@pad: 
 
-
-<!-- ##### ARG GstPad:active ##### -->
-<para>
-Indicates this pad is active
-</para>
 

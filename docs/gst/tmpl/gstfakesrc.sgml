@@ -36,7 +36,7 @@ The <classname>GstFakeSrc</classname> generates empty buffers. (fakesrc)
 
 </para>
 
-<!-- ##### ARG GstFakeSrc:patern ##### -->
+<!-- ##### ARG GstFakeSrc:pattern ##### -->
 <para>
 
 </para>
