@@ -66,6 +66,8 @@ _gst_plugin_initialize (void)
   _gst_libraries = NULL;
   _gst_libraries_seqno = 0;
 
+  /* add the main (installed) library path */
+  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
 
   /* if this is set, we add build-directory paths to the list */
 #ifdef PLUGINS_USE_SRCDIR
@@ -81,9 +83,6 @@ _gst_plugin_initialize (void)
   _gst_plugin_paths = g_list_prepend (_gst_plugin_paths,
                                       PLUGINS_SRCDIR "/gst/types");
 #endif /* PLUGINS_USE_SRCDIR */
-
-  /* add the main (installed) library path */
-  _gst_plugin_paths = g_list_prepend (_gst_plugin_paths, PLUGINS_DIR);
 
   doc = xmlParseFile (GST_CONFIG_DIR"/reg.xml");
 
