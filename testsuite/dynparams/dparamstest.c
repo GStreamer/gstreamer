@@ -21,6 +21,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/gst.h>
 #include <gst/control/control.h>
@@ -59,6 +62,7 @@ GType gst_dptest_get_type (void);
 GstElementDetails gst_dptest_details = {
   "DParamsTest",
   "Filter",
+  "LGPL",
   "Test for the GstDParam code",
   VERSION,
   "Steve Baker <stevebaker_org@yahoo.co.uk>",
@@ -78,7 +82,7 @@ static void gst_dptest_set_property (GObject * object, guint prop_id, const GVal
 				     GParamSpec * pspec);
 
 static GstElementStateReturn 	gst_dptest_change_state 	(GstElement *element);
-static void gst_dptest_chain (GstPad *pad, GstBuffer *buf);
+static void gst_dptest_chain (GstPad *pad, GstData *buf);
 
 static GstElementClass *parent_class = NULL;
 
@@ -178,10 +182,10 @@ gst_dptest_change_state (GstElement *element)
 }
 
 static void 
-gst_dptest_chain (GstPad *pad, GstBuffer *buf)
+gst_dptest_chain (GstPad *pad, GstData *data)
 {
   GstDpTest *dptest;
-  gint i=0, frame_countdown;
+  gint frame_countdown;
 
   dptest = GST_DPTEST(gst_pad_get_parent (pad));
   g_assert(dptest);
@@ -189,7 +193,7 @@ gst_dptest_chain (GstPad *pad, GstBuffer *buf)
   /* we're using a made up buffer size of 64 and a timestamp of zero */
   frame_countdown = GST_DPMAN_PREPROCESS(dptest->dpman, 64, 0LL);
   
-  while(GST_DPMAN_PROCESS_COUNTDOWN(dptest->dpman, frame_countdown, i));
+  while(GST_DPMAN_PROCESS(dptest->dpman, frame_countdown));
   	
   g_print("dp chain\n");
 }

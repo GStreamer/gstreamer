@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include <gst/gst.h>
-#include "mem.h"
 
 #define VM_THRES 1000
 #define MAX_CONFIG_LINE 255
@@ -112,7 +111,7 @@ run_test (GstBin *pipeline, gint iters)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   while (iters) {
-    gint newvm = vmsize();
+    gint newvm = gst_alloc_trace_live_all ();
     gint percent;
 
     percent = (gint)((maxiters-iters+1)*100.0/maxiters);
@@ -146,6 +145,7 @@ main (int argc, char *argv[])
   GSList *walk;
   gint arg_walk;
 
+  gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
   gst_init (&argc, &argv);
 
   arg_walk = 1;

@@ -35,7 +35,7 @@ construct_pipeline (GstElement *pipeline)
   gst_bin_add_many (GST_BIN (thread), identity, sink, NULL);
 
   g_object_set (G_OBJECT (src), "num_buffers", 5, NULL);
-  g_object_set (sink, "signal-handoff", TRUE, NULL);
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
 }
 
 void
@@ -106,7 +106,7 @@ main (gint argc, gchar *argv[])
     gst_element_set_state (pipeline, GST_STATE_NULL);
   }
   if (TESTNUM == 5) {
-    /* I don't this test is supposed to work */
+    /* I don't think this test is supposed to work */
     GstElement *sink;
 
     sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");

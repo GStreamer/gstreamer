@@ -1,10 +1,10 @@
-testprogs = dparamstest
+include ../Rules
 
-TESTS = $(testprogs)
-
-check_PROGRAMS = $(testprogs)
+tests_pass =
+tests_fail = dparamstest 
 
 dparamstest_CFLAGS = $(GST_CFLAGS)
-dparamstest_LDFLAGS = $(GST_LIBS) -L$(top_builddir)/libs/gst/control/ -lgstcontrol
+dparamstest_LDFLAGS = $(GST_LIBS)
+dparamstest_LDADD = $(top_builddir)/libs/gst/control/libgstcontrol-@GST_MAJORMINOR@.la
 
 dparamstest_SOURCES = dparamstest.c

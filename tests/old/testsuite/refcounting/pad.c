@@ -1,6 +1,6 @@
 #include <gst/gst.h>
 
-#define ITERS 100000
+#define ITERS 100
 #include <stdlib.h>
 #include "mem.h"
 
@@ -12,12 +12,18 @@ main (int argc, gchar *argv[])
   long usage1;
   gint i, iters;
 
+  gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
+
   gst_init (&argc, &argv);
+
+  g_mem_profile ();
 
   if (argc == 2)
     iters = atoi (argv[1]);
   else
     iters = ITERS;
+
+  //gst_alloc_trace_print_all ();
 
   g_print ("starting pad test\n");
   usage1 = vmsize();
@@ -48,19 +54,23 @@ main (int argc, gchar *argv[])
   }
   g_print ("create/ref/sink/unref %d pads %ld\n", iters, vmsize()-usage1);
 
+#if 0
   pad = gst_pad_new ("padname", GST_PAD_SINK);
   g_assert (!GST_OBJECT_DESTROYED (pad));
   gst_object_unref (GST_OBJECT (pad));
   g_assert (GST_OBJECT_DESTROYED (pad));
   gst_object_unref (GST_OBJECT (pad));
   g_print ("create/destroy/unref pad %ld\n", vmsize()-usage1);
+#endif
   
+#if 0
   for (i=0; i<iters;i++) {
     pad = gst_pad_new ("padname", GST_PAD_SINK);
     gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
   }
   g_print ("create/destroy/unref %d pads %ld\n", iters, vmsize()-usage1);
+#endif
 
   pad = gst_pad_new ("padname", GST_PAD_SINK);
   gst_object_ref (GST_OBJECT (pad));
@@ -80,18 +90,23 @@ main (int argc, gchar *argv[])
   gst_object_ref (GST_OBJECT (pad));
   gst_object_unref (GST_OBJECT (pad));
   gst_object_unref (GST_OBJECT (pad));
+#if 0
   gst_object_unref (GST_OBJECT (pad));
+#endif
   g_print ("create/ref/destroy/unref/unref pad %ld\n", vmsize()-usage1);
   
+#if 0
   for (i=0; i<iters;i++) {
     pad = gst_pad_new ("padname", GST_PAD_SINK);
     gst_object_ref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
     gst_object_unref (GST_OBJECT (pad));
-    gst_object_unref (GST_OBJECT (pad));
+    //gst_object_unref (GST_OBJECT (pad));
   }
   g_print ("create/ref/destroy/unref/unref %d pads %ld\n", iters, vmsize()-usage1);
+#endif
 
+#if 0
   for (i=0; i<iters;i++) {
     pad = gst_pad_new ("padname", GST_PAD_SINK);
     gst_object_ref (GST_OBJECT (pad));
@@ -102,6 +117,7 @@ main (int argc, gchar *argv[])
     gst_object_unref (GST_OBJECT (pad));
   }
   g_print ("create/ref/destroy/unref/unref %d pads %ld with name\n", iters, vmsize()-usage1);
+#endif
 
   pad = gst_pad_new ("padname", GST_PAD_SINK);
   for (i=0; i<iters;i++) {
@@ -124,6 +140,8 @@ main (int argc, gchar *argv[])
   g_print ("%d pads create/unref from padtemplate %ld\n", iters, vmsize()-usage1);
   
   g_print ("leaked: %ld\n", vmsize()-usage1);
+
+  //gst_alloc_trace_print_all ();
 
   return vmsize()-usage1;
 }

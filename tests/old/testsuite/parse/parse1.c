@@ -21,6 +21,7 @@
 #include <gst/gst.h>
 
 #include <string.h>
+#include <unistd.h>
 
 /* variables used by the TEST_* macros */
 static gint test = 0;
@@ -58,6 +59,7 @@ static gchar *s;
   g_print ("TEST %2d line %3d COMPLETE\n", test, __LINE__); \
 }G_STMT_END 
 #define TEST_RUN G_STMT_START{ \
+  alarm(10); \
   g_print ("TEST %2d line %3d   RUN\n", test, __LINE__); \
   if (gst_element_set_state (cur, GST_STATE_PLAYING) == GST_STATE_FAILURE) { \
     g_print ("TEST %2d line %3d  FAILED  : pipeline could not be set to state PLAYING\n", test, __LINE__); \
@@ -70,6 +72,7 @@ static gchar *s;
     return -test; \
   } \
   g_print ("TEST %2d line %3d STOPPED  : %u iterations\n", test, __LINE__, iterations); \
+  alarm(0); \
 }G_STMT_END 
 #define PIPELINE1  "fakesrc"
 #define PIPELINE2  "fakesrc name=donald num-buffers= 27 silent =TruE sizetype = 3 eos  =    yesyo data=   Subbuffer\\ data"

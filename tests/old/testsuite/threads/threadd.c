@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+#include <unistd.h>
 
 /* threadc.c
  * this tests if we can make a GstThread, with enough cothreads to stress it
@@ -59,6 +60,8 @@ main (gint argc, gchar *argv[])
   gulong id;
   GstElement *thread;
   
+  alarm(10);
+
   gst_init (&argc, &argv);
 
   for (i = 0; i < runs; ++i)

@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+#include <unistd.h>
 
 /* threadc.c
  * this tests if we can make a GstBin and iterate it inside a GThread
@@ -53,6 +54,8 @@ main (gint argc, gchar *argv[])
   int runs = MAX_IDENTITIES * RUNS_PER_IDENTITY;
   int i;
   GstElement *pipeline;
+
+  alarm(10);
 
   g_thread_init (NULL);
   gst_init (&argc, &argv);

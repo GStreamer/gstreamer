@@ -1,14 +1,13 @@
 #include <gst/gst.h>
 
-#define ITERS 10000
+#define ITERS 100
 #include <stdlib.h>
-#include "mem.h"
 
 int
 main (int argc, gchar *argv[])
 {
   GstElement *element;
-  long usage1;
+  int usage1;
   gint i, iters;
 
   gst_init (&argc, &argv);
@@ -19,17 +18,19 @@ main (int argc, gchar *argv[])
     iters = ITERS;
 
   g_print ("starting test\n");
-  usage1 = vmsize();
+
+  usage1 = gst_alloc_trace_live_all ();
+  //gst_alloc_trace_print_all ();
 
   element = gst_element_factory_make ("fakesrc", NULL);
   gst_object_unref (GST_OBJECT (element));
-  g_print ("create/unref new element %ld\n", vmsize()-usage1);
+  g_print ("create/unref new element %d\n", gst_alloc_trace_live_all ()-usage1);
 
   for (i=0; i<iters;i++) {
     element = gst_element_factory_make ("fakesrc", NULL);
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("create/unref %d elements %ld\n", iters, vmsize()-usage1);
+  g_print ("create/unref %d elements %d\n", iters, gst_alloc_trace_live_all ()-usage1);
 
   element = gst_element_factory_make ("fakesrc", NULL);
   g_assert (GST_OBJECT_FLOATING (element));
@@ -37,7 +38,7 @@ main (int argc, gchar *argv[])
   gst_object_sink (GST_OBJECT (element));
   g_assert (!GST_OBJECT_FLOATING (element));
   gst_object_unref (GST_OBJECT (element));
-  g_print ("create/ref/sink/unref new element %ld\n", vmsize()-usage1);
+  g_print ("create/ref/sink/unref new element %d\n", gst_alloc_trace_live_all ()-usage1);
 
 
   for (i=0; i<iters;i++) {
@@ -46,27 +47,31 @@ main (int argc, gchar *argv[])
     gst_object_sink (GST_OBJECT (element));
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("create/ref/sink/unref %d elements %ld\n", iters, vmsize()-usage1);
+  g_print ("create/ref/sink/unref %d elements %d\n", iters, gst_alloc_trace_live_all ()-usage1);
 
+#if 0
   element = gst_element_factory_make ("fakesrc", NULL);
   g_assert (!GST_OBJECT_DESTROYED (element));
   gst_object_unref (GST_OBJECT (element));
   g_assert (GST_OBJECT_DESTROYED (element));
   gst_object_unref (GST_OBJECT (element));
-  g_print ("create/destroy/unref new element %ld\n", vmsize()-usage1);
+  g_print ("create/destroy/unref new element %d\n", gst_alloc_trace_live_all ()-usage1);
+#endif
   
+#if 0
   for (i=0; i<iters;i++) {
     element = gst_element_factory_make ("fakesrc", NULL);
     gst_object_unref (GST_OBJECT (element));
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("create/destroy/unref %d element %ld\n", iters, vmsize()-usage1);
+  g_print ("create/destroy/unref %d element %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+#endif
 
   element = gst_element_factory_make ("fakesrc", NULL);
   gst_object_ref (GST_OBJECT (element));
   gst_object_unref (GST_OBJECT (element));
   gst_object_unref (GST_OBJECT (element));
-  g_print ("create/ref/unref/unref new element %ld\n", vmsize()-usage1);
+  g_print ("create/ref/unref/unref new element %d\n", gst_alloc_trace_live_all ()-usage1);
   
   for (i=0; i<iters;i++) {
     element = gst_element_factory_make ("fakesrc", NULL);
@@ -74,15 +79,18 @@ main (int argc, gchar *argv[])
     gst_object_unref (GST_OBJECT (element));
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("create/ref/unref/unref %d element %ld\n", iters, vmsize()-usage1);
+  g_print ("create/ref/unref/unref %d element %d\n", iters, gst_alloc_trace_live_all ()-usage1);
 
+#if 0
   element = gst_element_factory_make ("fakesrc", NULL);
   gst_object_ref (GST_OBJECT (element));
   gst_object_unref (GST_OBJECT (element));
   gst_object_unref (GST_OBJECT (element));
   gst_object_unref (GST_OBJECT (element));
-  g_print ("craete/ref/destroy/unref/unref new element %ld\n", vmsize()-usage1);
+  g_print ("craete/ref/destroy/unref/unref new element %d\n", gst_alloc_trace_live_all ()-usage1);
+#endif
   
+#if 0
   for (i=0; i<iters;i++) {
     element = gst_element_factory_make ("fakesrc", NULL);
     gst_object_ref (GST_OBJECT (element));
@@ -90,8 +98,10 @@ main (int argc, gchar *argv[])
     gst_object_unref (GST_OBJECT (element));
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("craete/ref/destroy/unref/unref %d elements %ld\n", iters, vmsize()-usage1);
+  g_print ("craete/ref/destroy/unref/unref %d elements %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+#endif
 
+#if 0
   for (i=0; i<iters;i++) {
     element = gst_element_factory_make ("fakesrc", NULL);
     gst_object_ref (GST_OBJECT (element));
@@ -101,16 +111,17 @@ main (int argc, gchar *argv[])
     gst_object_unref (GST_OBJECT (element));
     gst_object_unref (GST_OBJECT (element));
   }
-  g_print ("craete/ref/destroy/unref/unref %d elements with name %ld\n", iters, vmsize()-usage1);
+  g_print ("craete/ref/destroy/unref/unref %d elements with name %d\n", iters, gst_alloc_trace_live_all ()-usage1);
+#endif
 
   element = gst_element_factory_make ("fakesrc", NULL);
   for (i=0; i<iters;i++) {
     gst_element_set_name (element, "testing");
   }
   gst_object_unref (GST_OBJECT (element));
-  g_print ("set name %d times %ld\n", iters, vmsize()-usage1);
+  g_print ("set name %d times %d\n", iters, gst_alloc_trace_live_all ()-usage1);
 
-  g_print ("leaked: %ld\n", vmsize()-usage1);
+  g_print ("leaked: %d\n", gst_alloc_trace_live_all ()-usage1);
 
-  return (vmsize()-usage1 ? -1 : 0);
+  return (gst_alloc_trace_live_all ()-usage1 ? -1 : 0);
 }

@@ -20,11 +20,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdlib.h>
 #include <string.h>
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/gstbytestream.h>
 
 #define GST_TYPE_BSTEST  		(gst_bstest_get_type())
 #define GST_BSTEST(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BSTEST,GstBsTest))
@@ -64,9 +67,11 @@ GType gst_bstest_get_type (void);
 GstElementDetails gst_bstest_details = {
   "ByteStreamTest",
   "Filter",
+  "LGPL",
   "Test for the GstByteStream code",
   VERSION,
-  "Erik Walthinsen <omega@temple-baptist.com>," "Wim Taymans <wim.taymans@chello.be>",
+  "Erik Walthinsen <omega@temple-baptist.com>,"
+    "Wim Taymans <wim.taymans@chello.be>",
   "(C) 2001",
 };
 
@@ -160,22 +165,15 @@ gst_bstest_class_init (GstBsTestClass * klass)
 
 }
 
-static GstPadLinkReturn
-gst_bstest_negotiate_src (GstPad * pad, GstCaps ** caps, gpointer * data)
+static GstCaps *
+gst_bstest_getcaps (GstPad *pad, GstCaps *caps)
 {
   GstBsTest *bstest = GST_BSTEST (gst_pad_get_parent (pad));
+  GstPad *otherpad;
 
-  /* thomas: I was trying to fix this old test, one of these two pads
-   * needs to be dropped according to the new api, which one ? */
-  return gst_pad_proxy_link (pad, bstest->sinkpad, caps);
-}
+  otherpad = (pad == bstest->srcpad) ? bstest->sinkpad : bstest->srcpad;
 
-static GstPadLinkReturn
-gst_bstest_negotiate_sink (GstPad * pad, GstCaps ** caps, gpointer * data)
-{
-  GstBsTest *bstest = GST_BSTEST (gst_pad_get_parent (pad));
-
-  return gst_pad_negotiate_proxy (pad, bstest->srcpad, caps);
+  return gst_pad_get_allowed_caps (otherpad);
 }
 
 static void
@@ -183,11 +181,11 @@ gst_bstest_init (GstBsTest * bstest)
 {
   bstest->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (bstest), bstest->sinkpad);
-  gst_pad_set_negotiate_function (bstest->sinkpad, gst_bstest_negotiate_sink);
+  gst_pad_set_getcaps_function (bstest->sinkpad, gst_bstest_getcaps);
 
   bstest->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (bstest), bstest->srcpad);
-  gst_pad_set_negotiate_function (bstest->srcpad, gst_bstest_negotiate_src);
+  gst_pad_set_getcaps_function (bstest->srcpad, gst_bstest_getcaps);
 
   gst_element_set_loop_function (GST_ELEMENT (bstest), gst_bstest_loop);
 
@@ -237,6 +235,7 @@ gst_bstest_loop (GstElement * element)
   do {
     guint size = 0;
     guint i = 0;
+    guint8 *ptr;
 
     while (i < bstest->num_patterns) {
       buf = NULL;
@@ -244,7 +243,7 @@ gst_bstest_loop (GstElement * element)
       if (bstest->patterns[i][0] == 'r') {
 	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
         if (!bstest->silent) g_print ("bstest: ***** read %d bytes\n", size);
-        buf = gst_bytestream_read (bstest->bs, size);
+        gst_bytestream_read (bstest->bs, &buf, size);
       }
       else if (bstest->patterns[i][0] == 'f') {
 	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
@@ -254,18 +253,18 @@ gst_bstest_loop (GstElement * element)
       else if (!strncmp (bstest->patterns[i], "pb", 2)) {
 	size = gst_bstest_get_size (bstest, &bstest->patterns[i][2], size);
         if (!bstest->silent) g_print ("bstest: ***** peek bytes %d bytes\n", size);
-        gst_bytestream_peek_bytes (bstest->bs, size);
+        gst_bytestream_peek_bytes (bstest->bs, &ptr, size);
       }
       else if (bstest->patterns[i][0] == 'p') {
 	size = gst_bstest_get_size (bstest, &bstest->patterns[i][1], size);
         if (!bstest->silent) g_print ("bstest: ***** peek %d bytes\n", size);
-        buf = gst_bytestream_peek (bstest->bs, size);
+        gst_bytestream_peek (bstest->bs, &buf, size);
 	gst_buffer_unref (buf);
 	buf = NULL;
       }
 
       if (buf)
-        gst_pad_push (bstest->srcpad, buf);
+        gst_pad_push (bstest->srcpad, GST_DATA (buf));
       
       i++;
     }
@@ -384,12 +383,6 @@ static gboolean
 plugin_init (GModule * module, GstPlugin * plugin)
 {
   GstElementFactory *factory;
-
-  /* we need gstbytestream */
-  if (!gst_library_load ("gstbytestream")) {
-    g_print ("can't load bytestream\n");
-    return FALSE;
-  }
 
   /* We need to create an ElementFactory for each element we provide.
    * This consists of the name of the element, the GType identifier,
