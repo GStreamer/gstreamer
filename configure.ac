@@ -60,6 +60,7 @@ fi
 
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_MAJORMINOR)
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
@@ -112,6 +113,9 @@ changequote([,])dnl
 AC_OUTPUT([
   Makefile
   gstreamer/Makefile
+  pkgconfig/Makefile
+  pkgconfig/gst-python.pc
+  pkgconfig/gst-python-uninstalled.pc
   examples/Makefile
   examples/gstreamer/Makefile
   gst-python.spec

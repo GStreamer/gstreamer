@@ -2,6 +2,8 @@
 
 	* gstreamer/Makefile.am: fix up line continuations
 
+	* configure.ac, Makefile.am, pkgconfig/*: add pkgconfig support
+
 2003-06-11  Thomas Vander Stichele <thomas at apestaart dot org>
 
 	* gst-python.spec.in: fix
