@@ -1,3 +1,8 @@
+2004-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/mad/gstid3tag.c: (plugin_init):
+          lower rank of id3tag as proposed by Benjamin.  Fixes #139926.
+
 2004-04-13  David Schleef  <ds@schleef.org>
 
 	* common/m4/gst-feature.m4: Call -config scripts with
