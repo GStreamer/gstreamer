@@ -24,7 +24,8 @@
 #ifndef __GST_PAD_H__
 #define __GST_PAD_H__
 
-#include <gnome-xml/parser.h>
+//#include <gnome-xml/parser.h>
+#include <parser.h>
 
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
@@ -183,7 +184,7 @@ gboolean 		gst_pad_check_compatibility	(GstPad *srcpad, GstPad *sinkpad);
 void 			gst_pad_set_name		(GstPad *pad, const gchar *name);
 const gchar*		gst_pad_get_name		(GstPad *pad);
 
-void			gst_pad_set_element_private	(GstPad *pad, gpointer private);
+void			gst_pad_set_element_private	(GstPad *pad, gpointer priv);
 gpointer		gst_pad_get_element_private	(GstPad *pad);
 
 void 			gst_pad_set_parent		(GstPad *pad, GstObject *parent);

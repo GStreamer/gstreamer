@@ -24,7 +24,8 @@
 #ifndef __GST_ELEMENT_H__
 #define __GST_ELEMENT_H__
 
-#include <gnome-xml/parser.h>
+//#include <gnome-xml/parser.h>
+#include <parser.h>
 
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
@@ -201,6 +202,7 @@ void 			gst_element_connect		(GstElement *src, const gchar *srcpadname,
 void 			gst_element_disconnect		(GstElement *src, const gchar *srcpadname,
                          				 GstElement *dest, const gchar *destpadname);
 
+void			gst_element_announce_eos	(GstElement *element, gboolean success);
 void			gst_element_signal_eos		(GstElement *element);
 
 

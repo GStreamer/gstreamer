@@ -25,6 +25,7 @@
 
 #include "gstelement.h"
 #include "gstextratypes.h"
+#include "gstbin.h"
 
 
 /* Element signals and args */
@@ -917,3 +918,20 @@ gst_element_signal_eos (GstElement *element)
 
   gtk_signal_emit (GTK_OBJECT (element), gst_element_signals[EOS]);
 }
+
+void
+gst_element_announce_eos (GstElement *element, gboolean success)
+{
+  g_return_if_fail (element != NULL);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+  
+  GST_DEBUG(GST_CAT_ELEMENT_PADS,"element '%s' announce eos\n", gst_element_get_name (element));
+
+  if (success) {
+    gst_bin_add_eos_provider (GST_BIN (gst_element_get_manager (element)), element);
+  }
+  else {
+    gst_bin_remove_eos_provider (GST_BIN (gst_element_get_manager (element)), element);
+  }
+}
+

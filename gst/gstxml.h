@@ -23,7 +23,8 @@
 #ifndef __GST_XML_H__
 #define __GST_XML_H__
 
-#include <gnome-xml/parser.h>
+//#include <gnome-xml/parser.h>
+#include <parser.h>
 #include <gst/gstelement.h>
 
 

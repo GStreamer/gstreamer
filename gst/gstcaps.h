@@ -24,7 +24,8 @@
 #ifndef __GST_CAPS_H__
 #define __GST_CAPS_H__
 
-#include <gnome-xml/parser.h>
+//#include <gnome-xml/parser.h>
+#include <parser.h>
 #include <gst/gstprops.h>
 
 typedef struct _GstCaps GstCaps;

@@ -131,6 +131,7 @@ gst_bin_init (GstBin *bin)
 
   bin->numchildren = 0;
   bin->children = NULL;
+  bin->eos_providers = NULL;
   bin->chains = NULL;
 // FIXME temporary testing measure
 //  bin->use_cothreads = TRUE;
@@ -768,3 +769,31 @@ gst_bin_iterate_func (GstBin *bin)
 
   GST_DEBUG_LEAVE("(%s)", gst_element_get_name (GST_ELEMENT (bin)));
 }
+
+static void
+gst_bin_eos_func (GstBin *bin, GstElement *element)
+{
+  g_print ("eos in bin \"%s\"\n", gst_element_get_name (GST_ELEMENT (bin)));
+
+  gst_element_signal_eos (GST_ELEMENT (bin));
+}
+
+void
+gst_bin_add_eos_provider (GstBin *bin, GstElement *element) 
+{
+  g_return_if_fail (bin != NULL);
+  g_return_if_fail (GST_IS_BIN (bin));
+  
+  bin->eos_providers = g_list_prepend (bin->eos_providers, element);
+  gtk_signal_connect_object (GTK_OBJECT (element), "eos", gst_bin_eos_func, GTK_OBJECT (bin));
+}
+
+void
+gst_bin_remove_eos_provider (GstBin *bin, GstElement *element) 
+{
+  g_return_if_fail (bin != NULL);
+  g_return_if_fail (GST_IS_BIN (bin));
+
+  bin->eos_providers = g_list_remove (bin->eos_providers, element);
+}
+

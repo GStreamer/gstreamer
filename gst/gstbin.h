@@ -65,6 +65,8 @@ struct _GstBin {
   /* our children */
   gint numchildren;
   GList *children;
+  gint num_eos_providers;
+  GList *eos_providers;
 
   /* iteration state */
   gboolean need_cothreads;
@@ -116,6 +118,11 @@ GstElement*	gst_bin_new			(const gchar *name);
 void 		gst_bin_add			(GstBin *bin,
 						 GstElement *element);
 void 		gst_bin_remove			(GstBin *bin,
+						 GstElement *element);
+
+void 		gst_bin_add_eos_provider	(GstBin *bin,
+						 GstElement *element);
+void 		gst_bin_remove_eos_provider	(GstBin *bin,
 						 GstElement *element);
 
 /* retrieve a single element or the list of children */

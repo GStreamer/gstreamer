@@ -25,7 +25,8 @@
 #define __GST_PROPS_H__
 
 #include <glib.h>
-#include <gnome-xml/parser.h>
+//#include <gnome-xml/parser.h>
+#include <parser.h>
 
 
 typedef struct _GstProps GstProps;

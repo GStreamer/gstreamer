@@ -1098,7 +1098,12 @@ gst_pad_set_eos(GstPad *pad)
 
   GST_INFO (GST_CAT_PADS,"attempting to set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
 
-  if (!gst_pad_eos(pad)) return FALSE;
+  gst_element_announce_eos (GST_ELEMENT (pad->parent), TRUE);
+
+  if (!gst_pad_eos(pad)) {
+    gst_element_announce_eos (GST_ELEMENT (pad->parent), FALSE);
+    return FALSE;
+  }
 
   GST_INFO (GST_CAT_PADS,"set EOS on src pad %s:%s",GST_DEBUG_PAD_NAME(pad));
   GST_FLAG_SET (pad, GST_PAD_EOS);
@@ -1126,9 +1131,9 @@ gst_pad_select(GstPad *nextpad, ...) {
 
 
 void
-gst_pad_set_element_private (GstPad *pad, gpointer private)
+gst_pad_set_element_private (GstPad *pad, gpointer priv)
 {
-  pad->element_private = private;
+  pad->element_private = priv;
 }
 
 gpointer
