@@ -1,1 +1,1 @@
-SUBDIRS = gst
+SUBDIRS = gst gstplay
