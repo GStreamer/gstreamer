@@ -87,6 +87,8 @@ gst_v4l2_color_balance_channel_init (GstV4l2ColorBalanceChannel *channel)
 void
 gst_v4l2_color_balance_interface_init (GstColorBalanceClass *klass)
 {
+  GST_COLOR_BALANCE_TYPE (klass) = GST_COLOR_BALANCE_HARDWARE;
+  
   /* default virtual functions */
   klass->list_channels = gst_v4l2_color_balance_list_channels;
   klass->set_value = gst_v4l2_color_balance_set_value;

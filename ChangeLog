@@ -1,3 +1,32 @@
+2004-01-15  Julien MOUTTE <julien@moutte.net>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_interface_init): Setting
+	mixer interface type to HARDWARE.
+	* gst-libs/gst/mixer/mixer.c: (gst_mixer_class_init): Adding a default
+	type to SOFTWARE.
+	* gst-libs/gst/mixer/mixer.h: Adding mixer interface type and macro.
+	* gst-libs/gst/mixer/mixertrack.h: Adding mixertrack flag SOFTWARE.
+	* gst/volume/gstvolume.c: (gst_volume_interface_supported),
+	(gst_volume_interface_init), (gst_volume_list_tracks),
+	(gst_volume_set_volume), (gst_volume_get_volume),
+	(gst_volume_set_mute), (gst_volume_mixer_init),
+	(gst_volume_dispose), (gst_volume_get_type), (volume_class_init),
+	(volume_init): Implementing mixer interface.
+	* gst/volume/gstvolume.h: Adding tracklist for mixer interface.
+	* sys/oss/gstosselement.c: (gst_osselement_get_type),
+	(gst_osselement_change_state): Removing some trailing commas in
+	structures.
+	* sys/oss/gstossmixer.c: (gst_ossmixer_interface_init): Setting mixer
+	interface type to HARDWARE.
+	* sys/v4l/gstv4lcolorbalance.c:
+	(gst_v4l_color_balance_interface_init): Setting colorbalance interface
+	type to HARDWARE.
+	* sys/v4l2/gstv4l2colorbalance.c:
+	(gst_v4l2_color_balance_interface_init): Setting colorbalance
+	interface type to HARDWARE.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain): use exactly the
+	same code than ximagesink for event handling.
+
 2004-01-15  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/snapshot/Makefile.am:
