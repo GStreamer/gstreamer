@@ -207,6 +207,12 @@ the stream.
 
 @Returns: 
 
+<!-- ##### TYPEDEF GstCapsFactoryEntry ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_IS_DISKSRC_CLASS ##### -->
 <para>
 
@@ -225,6 +231,17 @@ the stream.
 
 </para>
 
+
+<!-- ##### FUNCTION gst_padtemplate_create ##### -->
+<para>
+
+</para>
+
+@name_template: 
+@direction: 
+@presence: 
+@caps: 
+@Returns: 
 
 <!-- ##### MACRO GST_IS_ESDSINK_CLASS ##### -->
 <para>
@@ -610,6 +627,12 @@ Specify the current offset in the file.
 
 @Returns: 
 
+<!-- ##### TYPEDEF GstCapsFactory[] ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GST_PROPS_BOOL_ID ##### -->
 <para>
 
@@ -899,6 +922,12 @@ The fequency.
 
 @obj: 
 
+<!-- ##### TYPEDEF GstPropsFactory[] ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### SIGNAL GstAudioSink::handoff ##### -->
 <para>
 The buffer is sent to the sound card.
@@ -959,6 +988,16 @@ The buffer is sent to the sound card.
 
 </para>
 
+
+<!-- ##### FUNCTION gst_caps_register_count ##### -->
+<para>
+
+</para>
+
+@factory: 
+@counter: 
+@Returns: 
+@count: 
 
 <!-- ##### MACRO GST_TYPE_HTTPSRC ##### -->
 <para>
@@ -1151,6 +1190,12 @@ Flags for the GstSrc element
 GstColorSpace
 
 
+<!-- ##### TYPEDEF GstPadFactoryEntry ##### -->
+<para>
+Defines an entry for a padfactory.
+</para>
+
+
 <!-- ##### ENUM GstAsyncDiskSrcFlags ##### -->
 <para>
 <informaltable pgwide=1 frame="none" role="enum">
@@ -1217,6 +1262,12 @@ GstColorSpace
 </para>
 
 @Returns: 
+
+<!-- ##### MACRO GST_PAD_FACTORY_SINK ##### -->
+<para>
+Indicates a sinkpad for the padfactory.
+</para>
+
 
 <!-- ##### MACRO GST_SRC_CLASS ##### -->
 <para>
@@ -1376,6 +1427,13 @@ This macro sets the given flags.
 </para>
 
 
+<!-- ##### MACRO GST_PROPS_FLOAT_STRING ##### -->
+<para>
+
+</para>
+
+@a: 
+
 <!-- ##### FUNCTION gst_filter_get_type ##### -->
 <para>
 
@@ -1441,6 +1499,12 @@ This macro usets the given flags.
 <!-- ##### ARG GstAudioSrc:frequency ##### -->
 <para>
 The frequency.
+</para>
+
+
+<!-- ##### MACRO GST_PAD_FACTORY_SRC ##### -->
+<para>
+Indicates a srcpad for the padfactory.
 </para>
 
 
@@ -1553,6 +1617,13 @@ The frequency.
 @name: 
 @Returns: 
 
+<!-- ##### MACRO GST_PAD_FACTORY_CAPS ##### -->
+<para>
+Starts the declaration of a the capabilities for this padtemplate.
+</para>
+
+@a...: a capability factory
+
 <!-- ##### SECTION ./tmpl/gstsrc.sgml:Title ##### -->
 GstSrc
 
@@ -1572,6 +1643,16 @@ GstSrc
 
 @pad: 
 @buf: 
+
+<!-- ##### FUNCTION gst_caps_new_with_props ##### -->
+<para>
+
+</para>
+
+@name: 
+@mime: 
+@props: 
+@Returns: 
 
 <!-- ##### MACRO GST_TYPE_AUDIOSRC ##### -->
 <para>
@@ -1750,6 +1831,14 @@ Query whether this object has multiple input pads.
 </para>
 
 
+<!-- ##### FUNCTION gst_props_register ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
 <!-- ##### STRUCT GstThreadClass ##### -->
 <para>
 
@@ -1795,6 +1884,12 @@ Information about video buffers.
 </para>
 
 @klass: 
+
+<!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### MACRO GST_IS_FILTER_CLASS ##### -->
 <para>
@@ -2051,6 +2146,23 @@ The start point of a filter graph
 
 @src: 
 
+<!-- ##### FUNCTION gst_props_register_count ##### -->
+<para>
+
+</para>
+
+@factory: 
+@counter: 
+@Returns: 
+
+<!-- ##### MACRO GST_PROPS_FLOAT_RANGE_STRING ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
 <!-- ##### MACRO GST_FAKESRC_CLASS ##### -->
 <para>
 
@@ -2110,6 +2222,13 @@ The start point of a filter graph
 
 @klass: <<<<<<< gstreamer-unused.sgml
 
+<!-- ##### MACRO GST_PAD_FACTORY_REQUEST ##### -->
+<para>
+Indicates that this pad will be available on request. Use 
+this in the factory definition. 
+</para>
+
+
 <!-- ##### FUNCTION gst_audiosink_sync_parms ##### -->
 <para>
 
@@ -2146,6 +2265,13 @@ This macro unsets the given state on the element.
 
 @pad: 
 @id: 
+
+<!-- ##### MACRO GST_PAD_FACTORY_ALWAYS ##### -->
+<para>
+Indicate that this pad will always be available.
+Use this in the factory definition.
+</para>
+
 
 <!-- ##### FUNCTION gst_pad_add_ghost_parent ##### -->
 <para>
@@ -2396,6 +2522,12 @@ Information about audio buffers.
 Take data in and spit data out
 
 
+<!-- ##### TYPEDEF GstPadFactory[] ##### -->
+<para>
+The padfactory.
+</para>
+
+
 <!-- ##### MACRO GST_SRC_ASYNC ##### -->
 <para>
 This macro checks to see if the GST_SRC_ASYNC flag is set.
@@ -2404,6 +2536,12 @@ This macro checks to see if the GST_SRC_ASYNC flag is set.
 @obj: GstSrc to check for flag in.
 
 <!-- ##### MACRO GST_TYPE_SINESRC ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GstCapsFactory ##### -->
 <para>
 
 </para>
@@ -2515,6 +2653,14 @@ Information about audio buffers.
 </para>
 
 
+<!-- ##### FUNCTION gst_caps_register ##### -->
+<para>
+
+</para>
+
+@factory: 
+@Returns: 
+
 <!-- ##### FUNCTION plugin_initialize ##### -->
 <para>
 
@@ -2559,6 +2705,13 @@ Specify the location of the file to read.
 
 <!-- ##### SECTION ./tmpl/gstaudiosrc.sgml:Title ##### -->
 GstAudioSrc
+
+
+<!-- ##### MACRO GST_PAD_FACTORY_SOMETIMES ##### -->
+<para>
+Indicate that this pad will become available depending
+on the media type. Use this in the factory definition.
+</para>
 
 
 <!-- ##### MACRO INFO ##### -->

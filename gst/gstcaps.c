@@ -62,13 +62,14 @@ get_type_for_mime (const gchar *mime)
  * gst_caps_new:
  * @name: the name of this capability
  * @mime: the mime type to attach to the capability
+ * @props: the properties to add to this capability
  *
- * Create a new capability with the given mime type.
+ * Create a new capability with the given mime typei and properties.
  *
  * Returns: a new capability
  */
 GstCaps*
-gst_caps_new (const gchar *name, const gchar *mime)
+gst_caps_new (const gchar *name, const gchar *mime, GstProps *props)
 {
   GstCaps *caps;
 
@@ -80,82 +81,10 @@ gst_caps_new (const gchar *name, const gchar *mime)
 
   caps->name = g_strdup (name);
   caps->id = get_type_for_mime (mime);
-  caps->properties = NULL;
+  caps->properties = props;
   caps->next = NULL;
   caps->refcount = 1;
   caps->lock = g_mutex_new ();
-
-  return caps;
-}
-
-/**
- * gst_caps_new_with_props:
- * @name: the name of this capability
- * @mime: the mime type to attach to the capability
- * @props: the properties for this capability
- *
- * Create a new capability with the given mime type and the given properties.
- *
- * Returns: a new capability
- */
-GstCaps*
-gst_caps_new_with_props (const gchar *name, const gchar *mime, GstProps *props)
-{
-  GstCaps *caps;
-
-  caps = gst_caps_new (name, mime);
-  caps->properties = props;
-
-  return caps;
-}
-
-/**
- * gst_caps_register:
- * @factory: the factory to register
- *
- * Register the factory.
- *
- * Returns: the registered capability
- */
-GstCaps*
-gst_caps_register (GstCapsFactory *factory)
-{
-  guint dummy;
-
-  return gst_caps_register_count (factory, &dummy);
-}
-
-/**
- * gst_caps_register_count:
- * @factory: the factory to register
- * @counter: count how many entries were consumed
- *
- * Register the factory.
- *
- * Returns: the registered capability
- */
-GstCaps*
-gst_caps_register_count (GstCapsFactory *factory, guint *counter)
-{
-  GstCapsFactoryEntry tag;
-  gint i = 0;
-  gchar *name;
-  GstCaps *caps;
-
-  g_return_val_if_fail (factory != NULL, NULL);
-
-  tag = (*factory)[i++];
-  g_return_val_if_fail (tag != NULL, NULL);
-
-  name = tag;
-
-  tag = (*factory)[i++];
-  g_return_val_if_fail (tag != NULL, NULL);
-
-  caps = gst_caps_new_with_props (name, (gchar *)tag,
-                   gst_props_register_count (&(*factory)[i], counter));
-
-  *counter += 2;
 
   return caps;
 }
@@ -244,7 +173,7 @@ gst_caps_copy (GstCaps *caps)
   g_return_val_if_fail (caps != NULL, NULL);
 
   GST_CAPS_LOCK (caps);
-  new = gst_caps_new_with_props (
+  new = gst_caps_new (
 		  caps->name,
 		  (gst_type_find_by_id (caps->id))->mime,
 		  gst_props_copy (caps->properties));

@@ -25,11 +25,14 @@ libgstmediaplay_la_SOURCES = \
 gstmediaplay_SOURCES = \
 	main.c 
 
+libgstmediaplayincludedir = $(includedir)/gstplay
+libgstmediaplayinclude_HEADERS = \
+	gstplay.h 
+
 noinst_HEADERS = \
 	gstmediaplay.h \
 	gststatusarea.h \
 	callbacks.h \
-	gstplay.h \
 	gstplayprivate.h
 
 

@@ -364,6 +364,8 @@ gst_plugin_load_absolute (const gchar *name)
   module = g_module_open(name,G_MODULE_BIND_LAZY);
   if (module != NULL) {
     if (g_module_symbol(module,"plugin_init",(gpointer *)&initfunc)) {
+      GST_INFO (GST_CAT_PLUGIN_LOADING,"loading plugin \"%s\"...",
+           name);
       if ((plugin = (initfunc)(module))) {
         GST_INFO (GST_CAT_PLUGIN_LOADING,"plugin \"%s\" loaded: %d elements, %d types",
              plugin->name,plugin->numelements,plugin->numtypes);

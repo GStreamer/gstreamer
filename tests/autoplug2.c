@@ -3,10 +3,10 @@
 static GstElement*
 autoplug_caps (GstAutoplug *autoplug, gchar *mime1, gchar *mime2)
 {
-  GList *caps1, *caps2;
+  GstCaps *caps1, *caps2;
 
-  caps1 = g_list_append (NULL, gst_caps_new ("tescaps1", mime1));
-  caps2 = g_list_append (NULL, gst_caps_new ("tescaps2", mime2));
+  caps1 = gst_caps_new ("tescaps1", mime1, NULL);
+  caps2 = gst_caps_new ("tescaps2", mime2, NULL);
 
   return gst_autoplug_to_caps (autoplug, caps1, caps2, NULL);
 }
@@ -28,48 +28,48 @@ main (int argc, char *argv[])
   xmlSaveFile ("autoplug2_2.gst", gst_xml_write (element));
 
   element = gst_autoplug_to_caps (autoplug,
-		  g_list_append (NULL, gst_caps_new_with_props(
+		  gst_caps_new(
 			  "testcaps3",
 			  "video/mpeg",
 			  gst_props_new (
 			      "mpegversion",  GST_PROPS_INT (1),
 			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
-			      NULL))),
-		  g_list_append (NULL, gst_caps_new("testcaps4","audio/raw")),
+			      NULL)),
+		  gst_caps_new("testcaps4","audio/raw", NULL),
 		  NULL);
   xmlSaveFile ("autoplug2_3.gst", gst_xml_write (element));
 
   element = gst_autoplug_to_caps (autoplug,
-		  g_list_append (NULL, gst_caps_new_with_props(
+		  gst_caps_new(
 			  "testcaps5",
 			  "video/mpeg",
 			  gst_props_new (
 			      "mpegversion",  GST_PROPS_INT (1),
 			      "systemstream", GST_PROPS_BOOLEAN (FALSE),
-			      NULL))),
-		  g_list_append (NULL, gst_caps_new("testcaps6", "video/raw")),
+			      NULL)),
+		  gst_caps_new("testcaps6", "video/raw", NULL),
 		  NULL);
   xmlSaveFile ("autoplug2_4.gst", gst_xml_write (element));
 
   element = gst_autoplug_to_caps (autoplug,
-		  g_list_append (NULL, gst_caps_new(
+		  gst_caps_new(
 			  "testcaps7",
-			  "video/avi")),
-		  g_list_append (NULL, gst_caps_new("testcaps8", "video/raw")),
-		  g_list_append (NULL, gst_caps_new("testcaps9", "audio/raw")),
+			  "video/avi", NULL),
+		  gst_caps_new("testcaps8", "video/raw", NULL),
+		  gst_caps_new("testcaps9", "audio/raw", NULL),
 		  NULL);
   xmlSaveFile ("autoplug2_5.gst", gst_xml_write (element));
 
   element = gst_autoplug_to_caps (autoplug,
-		  g_list_append (NULL, gst_caps_new_with_props(
+		  gst_caps_new(
 			  "testcaps10",
 			  "video/mpeg",
 			  gst_props_new (
 			      "mpegversion",  GST_PROPS_INT (1),
 			      "systemstream", GST_PROPS_BOOLEAN (TRUE),
-			      NULL))),
-		  g_list_append (NULL, gst_caps_new("testcaps10", "video/raw")),
-		  g_list_append (NULL, gst_caps_new("testcaps11", "audio/raw")),
+			      NULL)),
+		  gst_caps_new("testcaps10", "video/raw", NULL),
+		  gst_caps_new("testcaps11", "audio/raw", NULL),
 		  NULL);
   xmlSaveFile ("autoplug2_6.gst", gst_xml_write (element));
 

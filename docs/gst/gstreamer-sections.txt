@@ -444,15 +444,6 @@ GST_GPAD_REALPAD
 GstGhostPad
 gst_ghost_pad_new
 
-GstPadFactoryEntry
-GstPadFactory[]
-GST_PAD_FACTORY_SOMETIMES
-GST_PAD_FACTORY_ALWAYS
-GST_PAD_FACTORY_REQUEST
-GST_PAD_FACTORY_SINK
-GST_PAD_FACTORY_SRC
-GST_PAD_FACTORY_CAPS
-
 GstPadPresence
 GstPadTemplate
 GST_PADTEMPLATE_CAPS
@@ -460,7 +451,6 @@ GST_PADTEMPLATE_DIRECTION
 GST_PADTEMPLATE_NAME_TEMPLATE
 GST_PADTEMPLATE_PRESENCE
 gst_padtemplate_new
-gst_padtemplate_create
 gst_padtemplate_load_thyself
 gst_padtemplate_save_thyself
 gst_padtemplate_get_caps
@@ -498,7 +488,6 @@ GST_PADTEMPLATE_CLASS
 GST_IS_PADTEMPLATE
 GST_IS_PADTEMPLATE_CLASS
 gst_padtemplate_get_type
-GST_PAD_FACTORY_CAPS_ID
 </SECTION>
 
 <SECTION>
@@ -627,16 +616,10 @@ GST_CAPS_LOCK
 GST_CAPS_TRYLOCK
 GST_CAPS_UNLOCK
 GstCaps
-GstCapsFactory
-GstCapsFactoryEntry
-GstCapsFactory[]
 gst_caps_new
-gst_caps_new_with_props
 gst_caps_destroy
 gst_caps_ref
 gst_caps_unref
-gst_caps_register
-gst_caps_register_count
 gst_caps_copy
 gst_caps_copy_on_write
 gst_caps_append
@@ -668,8 +651,6 @@ GST_CAPS
 <FILE>gstprops</FILE>
 <TITLE>GstProps</TITLE>
 GstProps
-GstPropsFactoryEntry
-GstPropsFactory[]
 GST_MAKE_FOURCC
 GST_PROPS_LIST
 GST_PROPS_INT
@@ -679,11 +660,8 @@ GST_PROPS_BOOLEAN
 GST_PROPS_STRING
 GST_PROPS_FLOAT
 GST_PROPS_FLOAT_RANGE
-GST_PROPS_FLOAT_STRING
-GST_PROPS_FLOAT_RANGE_STRING
-gst_props_register
-gst_props_register_count
 gst_props_new
+gst_props_newv
 gst_props_merge
 gst_props_copy
 gst_props_copy_on_write
@@ -700,18 +678,7 @@ gst_props_save_thyself
 gst_props_load_thyself
 <SUBSECTION Standard>
 GstPropsEntry
-GstPropsListFactory[]
 GstPropsId
-GST_PROPS_END_ID
-GST_PROPS_LIST_ID
-GST_PROPS_INT_ID
-GST_PROPS_INT_RANGE_ID
-GST_PROPS_FOURCC_ID
-GST_PROPS_BOOL_ID
-GST_PROPS_STRING_ID
-GST_PROPS_LAST_ID
-GST_PROPS_FLOAT_ID
-GST_PROPS_FLOAT_RANGE_ID
 </SECTION>
 
 <SECTION>

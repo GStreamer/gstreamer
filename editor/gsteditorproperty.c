@@ -248,16 +248,16 @@ static gchar*
 gst_editor_props_show_func (GstPropsEntry *entry) 
 {
   switch (entry->propstype) {
-    case GST_PROPS_INT_ID_NUM:
+    case GST_PROPS_INT_ID:
       return g_strdup_printf ("%d", entry->data.int_data);
       break;
-    case GST_PROPS_INT_RANGE_ID_NUM:
+    case GST_PROPS_INT_RANGE_ID:
       return g_strdup_printf ("%d-%d", entry->data.int_range_data.min, entry->data.int_range_data.max);
       break;
-    case GST_PROPS_FOURCC_ID_NUM:
+    case GST_PROPS_FOURCC_ID:
       return g_strdup_printf ("%4.4s", (gchar *)&entry->data.fourcc_data);
       break;
-    case GST_PROPS_BOOL_ID_NUM:
+    case GST_PROPS_BOOL_ID:
       return g_strdup_printf ("%s", (entry->data.bool_data ? "TRUE" : "FALSE"));
       break;
     default:
@@ -272,7 +272,7 @@ gst_editor_add_caps_to_tree (GstCaps *caps, GtkWidget *tree, GtkCTreeNode *padno
   if (caps) {
     GstProps *props = gst_caps_get_props (caps);
     if (props) {
-      GSList *propslist = props->properties;
+      GList *propslist = props->properties;
 
       while (propslist) {
         gchar *data[2];
@@ -281,7 +281,7 @@ gst_editor_add_caps_to_tree (GstCaps *caps, GtkWidget *tree, GtkCTreeNode *padno
         data[0] = g_quark_to_string (entry->propid);
 
 	switch (entry->propstype) {
- 	  case GST_PROPS_LIST_ID_NUM:
+ 	  case GST_PROPS_LIST_ID:
 	  {
 	    GList *list;
 	    guint count = 0;
@@ -303,7 +303,7 @@ gst_editor_add_caps_to_tree (GstCaps *caps, GtkWidget *tree, GtkCTreeNode *padno
         gtk_ctree_insert_node (GTK_CTREE (tree), padnode, NULL, data, 0, 
 	      NULL, NULL, NULL, NULL, TRUE, TRUE);
 	
-	propslist = g_slist_next (propslist);
+	propslist = g_list_next (propslist);
       }
     }
   }
@@ -357,14 +357,14 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
   pads = gst_element_get_padtemplate_list(realelement);
   while (pads) {
     GstPadTemplate *templ = (GstPadTemplate *)pads->data;
-    GList *caps = templ->caps;
+    GstCaps *caps = templ->caps;
     gchar *mime;
     gchar *data[2];
     GtkCTreeNode *padnode;
 
     if (caps) {
       GstType *type;
-      type = gst_type_find_by_id (((GstCaps *)caps->data)->id);
+      type = gst_type_find_by_id (((GstCaps *)caps)->id);
       mime = type->mime;
     }
     else {
@@ -377,11 +377,11 @@ gst_editor_pads_create (GstEditorProperty *property, GstEditorElement *element)
 		    NULL, NULL, NULL, NULL, FALSE, TRUE);
 
     while (caps) {
-      GstCaps *cap = (GstCaps *)caps->data;
+      GstCaps *cap = (GstCaps *)caps;
 
       gst_editor_add_caps_to_tree (cap, tree, padnode);
 
-      caps = g_list_next (caps);
+      caps = (caps)->next;
     }
 
     pads = g_list_next (pads);

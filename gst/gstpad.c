@@ -1397,48 +1397,6 @@ gst_padtemplate_init (GstPadTemplate *templ)
 }
 
 /**
- * gst_padtemplate_new:
- * @factory: the padfactory to use
- *
- * Creates a new padtemplate from the factory.
- *
- * Returns: the new padtemplate
- */
-GstPadTemplate*
-gst_padtemplate_new (GstPadFactory *factory)
-{
-  GstPadTemplate *new;
-  GstPadFactoryEntry tag;
-  gint i = 0;
-  guint counter = 0;
-
-  g_return_val_if_fail (factory != NULL, NULL);
-
-  new = gtk_type_new (gst_padtemplate_get_type ());
-
-  tag = (*factory)[i++];
-  g_return_val_if_fail (tag != NULL, new);
-  new->name_template = g_strdup ((gchar *)tag);
-
-  tag = (*factory)[i++];
-  new->direction = GPOINTER_TO_UINT (tag);
-
-  tag = (*factory)[i++];
-  new->presence = GPOINTER_TO_UINT (tag);
-
-  tag = (*factory)[i++];
-
-  while (GPOINTER_TO_INT (tag) == GST_PAD_FACTORY_CAPS_ID) {
-    GST_PADTEMPLATE_CAPS (new) = gst_caps_append (GST_PADTEMPLATE_CAPS (new), 
-		    gst_caps_register_count ((GstCapsFactory *)&(*factory)[i], &counter));
-    i+=counter;
-    tag = (*factory)[i++];
-  }
-
-  return new;
-}
-
-/**
  * gst_padtemplate_create:
  * @name_template: the name template
  * @direction: the direction for the template
@@ -1450,11 +1408,13 @@ gst_padtemplate_new (GstPadFactory *factory)
  * Returns: the new padtemplate
  */
 GstPadTemplate*
-gst_padtemplate_create (gchar *name_template,
-		        GstPadDirection direction, GstPadPresence presence,
-		        GstCaps *caps)
+gst_padtemplate_new (gchar *name_template,
+		     GstPadDirection direction, GstPadPresence presence,
+		     GstCaps *caps, ...)
 {
   GstPadTemplate *new;
+  va_list var_args;
+  GstCaps *thecaps = NULL;
 
   g_return_val_if_fail (name_template != NULL, NULL);
 
@@ -1463,7 +1423,16 @@ gst_padtemplate_create (gchar *name_template,
   GST_PADTEMPLATE_NAME_TEMPLATE (new) = name_template;
   GST_PADTEMPLATE_DIRECTION (new) = direction;
   GST_PADTEMPLATE_PRESENCE (new) = presence;
-  GST_PADTEMPLATE_CAPS (new) = caps;
+
+  va_start (var_args, caps);
+
+  while (caps) {
+    thecaps = gst_caps_append (thecaps, caps);
+    caps = va_arg (var_args, GstCaps*);
+  }
+  va_end (var_args);
+  
+  GST_PADTEMPLATE_CAPS (new) = thecaps;
 
   return new;
 }
@@ -1581,7 +1550,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
     field = field->next;
   }
 
-  factory = gst_padtemplate_create (name_template, direction, presence, caps);
+  factory = gst_padtemplate_new (name_template, direction, presence, caps, NULL);
 
   return factory;
 }

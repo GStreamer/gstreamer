@@ -253,21 +253,6 @@ struct _GstPadTemplateClass {
 };
 
 
-/* factory */
-typedef gpointer GstPadFactoryEntry;
-typedef GstPadFactoryEntry GstPadFactory[];
-
-#define GST_PAD_FACTORY_ALWAYS		GINT_TO_POINTER(GST_PAD_ALWAYS)
-#define GST_PAD_FACTORY_SOMETIMES	GINT_TO_POINTER(GST_PAD_SOMETIMES)
-#define GST_PAD_FACTORY_REQUEST		GINT_TO_POINTER(GST_PAD_REQUEST)
-
-#define GST_PAD_FACTORY_SRC		GINT_TO_POINTER(GST_PAD_SRC)
-#define GST_PAD_FACTORY_SINK		GINT_TO_POINTER(GST_PAD_SINK)
-
-#define GST_PAD_FACTORY_CAPS_ID		1
-#define GST_PAD_FACTORY_CAPS(a...)	GINT_TO_POINTER(GST_PAD_FACTORY_CAPS_ID),##a,NULL
-
-
 GtkType			gst_pad_get_type		(void);
 GtkType			gst_real_pad_get_type		(void);
 GtkType			gst_ghost_pad_get_type		(void);
@@ -348,10 +333,9 @@ GstPad *		gst_ghost_pad_new		(gchar *name,GstPad *pad);
 /* templates and factories */
 GtkType			gst_padtemplate_get_type	(void);
 
-GstPadTemplate*		gst_padtemplate_new		(GstPadFactory *factory);
-GstPadTemplate*		gst_padtemplate_create		(gchar *name_template,
+GstPadTemplate*		gst_padtemplate_new		(gchar *name_template,
 		                                         GstPadDirection direction, GstPadPresence presence,
-							 GstCaps *caps);
+							 GstCaps *caps, ...);
 
 GstCaps*		gst_padtemplate_get_caps	(GstPadTemplate *templ);
 GstCaps*		gst_padtemplate_get_caps_by_name	(GstPadTemplate *templ, const gchar *name);

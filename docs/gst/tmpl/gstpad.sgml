@@ -797,64 +797,6 @@ Get the real pad of this ghost pad.
 @Returns: 
 
 
-<!-- ##### TYPEDEF GstPadFactoryEntry ##### -->
-<para>
-Defines an entry for a padfactory.
-</para>
-
-
-<!-- ##### TYPEDEF GstPadFactory[] ##### -->
-<para>
-The padfactory.
-</para>
-
-
-<!-- ##### MACRO GST_PAD_FACTORY_SOMETIMES ##### -->
-<para>
-Indicate that this pad will become available depending
-on the media type. Use this in the factory definition.
-</para>
-
-
-
-<!-- ##### MACRO GST_PAD_FACTORY_ALWAYS ##### -->
-<para>
-Indicate that this pad will always be available.
-Use this in the factory definition.
-</para>
-
-
-
-<!-- ##### MACRO GST_PAD_FACTORY_REQUEST ##### -->
-<para>
-Indicates that this pad will be available on request. Use 
-this in the factory definition. 
-</para>
-
-
-
-<!-- ##### MACRO GST_PAD_FACTORY_SINK ##### -->
-<para>
-Indicates a sinkpad for the padfactory.
-</para>
-
-
-
-<!-- ##### MACRO GST_PAD_FACTORY_SRC ##### -->
-<para>
-Indicates a srcpad for the padfactory.
-</para>
-
-
-
-<!-- ##### MACRO GST_PAD_FACTORY_CAPS ##### -->
-<para>
-Starts the declaration of a the capabilities for this padtemplate.
-</para>
-
-@a...: a capability factory
-
-
 <!-- ##### ENUM GstPadPresence ##### -->
 <para>
 Indicates when this pad will become available.
@@ -912,20 +854,14 @@ Indicates when this pad will become available.
 
 </para>
 
-@factory: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_padtemplate_create ##### -->
-<para>
-
-</para>
-
 @name_template: 
 @direction: 
 @presence: 
 @caps: 
+@Varargs: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@factory: 
 
 
 <!-- ##### FUNCTION gst_padtemplate_load_thyself ##### -->

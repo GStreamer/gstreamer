@@ -45,13 +45,17 @@ enum {
   /* FILL ME */
 };
 
-static GstPadFactory tee_src_factory = {
-  "src%d",
-  GST_PAD_FACTORY_SRC,
-  GST_PAD_FACTORY_REQUEST,
-  NULL,			/* no caps */
-  NULL,
-};
+static GstPadTemplate*
+tee_src_factory_create (void)
+{
+  return 
+    gst_padtemplate_new (
+       	"src%d",
+  	GST_PAD_SRC,
+  	GST_PAD_REQUEST,
+  	NULL			/* no caps */
+    );
+}
 
 
 static void 	gst_tee_class_init	(GstTeeClass *klass);
@@ -197,7 +201,7 @@ gst_tee_chain (GstPad *pad, GstBuffer *buf)
 gboolean
 gst_tee_factory_init (GstElementFactory *factory)
 {
-  gst_tee_src_template = gst_padtemplate_new (&tee_src_factory);
+  gst_tee_src_template = tee_src_factory_create ();
   gst_elementfactory_add_padtemplate (factory, gst_tee_src_template);
 
   return TRUE;

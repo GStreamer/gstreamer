@@ -57,34 +57,41 @@ enum {
  * can have.  They can be quite complex, but for this example plugin
  * they are rather simple.
  */
-static GstPadFactory sink_factory = {
-  "sink",			/* The name of the pad */
-  GST_PAD_FACTORY_SINK,		/* Direction of the pad */
-  GST_PAD_FACTORY_ALWAYS,	/* The pad exists for every instance */
-  GST_PAD_FACTORY_CAPS(		/* This factory has specific capabilities */
-  "example_sink",				/* The name of the caps */
-     "unknown/unknown",				/* The overall MIME/type */
-     "foo",	GST_PROPS_INT (1),		/* An integer property */
-     "bar",	GST_PROPS_BOOLEAN (TRUE),	/* A boolean */
-     "baz",	GST_PROPS_LIST (		/* A list of values for */
-			GST_PROPS_INT (1),
-			GST_PROPS_INT (3)
-		)
-  ),
-  NULL				/* All factories must be NULL-terminated */
-};
+static GstPadTemplate*
+sink_factory (void)
+{
+  return 
+    gst_padtemplate_new (
+  	"sink",			/* The name of the pad */
+  	GST_PAD_SINK,		/* Direction of the pad */
+  	GST_PAD_ALWAYS,	/* The pad exists for every instance */
+	gst_caps_new (
+  	  "example_sink",				/* The name of the caps */
+     	  "unknown/unknown",				/* The overall MIME/type */
+	  gst_props_new (
+     	    "foo",	GST_PROPS_INT (1),		/* An integer property */
+     	    "bar",	GST_PROPS_BOOLEAN (TRUE),	/* A boolean */
+     	    "baz",	GST_PROPS_LIST (		/* A list of values for */
+			  GST_PROPS_INT (1),
+			  GST_PROPS_INT (3)
+			),
+	    NULL)));
+}
 
 /* This factory is much simpler, and defines the source pad. */
-static GstPadFactory src_factory = {
-  "src",
-  GST_PAD_FACTORY_SRC,
-  GST_PAD_FACTORY_ALWAYS,
-  GST_PAD_FACTORY_CAPS(
-  "example_src",
-    "unknown/unknown"
-  ),
-  NULL
-};
+static GstPadTemplate*
+src_factory (void)
+{
+  return
+    gst_padtemplate_new (
+  	"src",
+  	GST_PAD_SRC,
+  	GST_PAD_ALWAYS,
+	gst_caps_new (
+  	  "example_src",
+    	  "unknown/unknown",
+	  NULL));
+}
 
 
 /* A number of functon prototypes are given so we can refer to them later. */
@@ -351,10 +358,10 @@ plugin_init (GModule *module)
    * Note that the generated padtemplates are stored in static global
    * variables, for the gst_example_init function to use later on.
    */
-  sink_template = gst_padtemplate_new (&sink_factory);
+  sink_template = sink_factory ();
   gst_elementfactory_add_padtemplate (factory, sink_template);
 
-  src_template = gst_padtemplate_new (&src_factory);
+  src_template = src_factory ();
   gst_elementfactory_add_padtemplate (factory, src_template);
 
   /* The very last thing is to register the elementfactory with the plugin. */

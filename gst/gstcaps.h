@@ -36,12 +36,6 @@
 #include <gst/gstprops.h>
 
 typedef struct _GstCaps GstCaps;
-typedef gpointer GstCapsFactoryEntry;
-#ifdef __cplusplus
-typedef GstCapsFactoryEntry * GstCapsFactory;
-#else // C++ was unable to compile with this
-typedef GstCapsFactoryEntry GstCapsFactory[];
-#endif
 
 #define GST_CAPS(caps) \
   ((GstCaps *)(caps))
@@ -65,10 +59,7 @@ struct _GstCaps {
 /* initialize the subsystem */
 void		_gst_caps_initialize			(void);
 
-GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime);
-GstCaps*	gst_caps_new_with_props			(const gchar *name, const gchar *mime, GstProps *props);
-GstCaps*	gst_caps_register			(GstCapsFactory *factory);
-GstCaps*	gst_caps_register_count			(GstCapsFactory *factory, guint *counter);
+GstCaps*	gst_caps_new				(const gchar *name, const gchar *mime, GstProps *props);
 
 void		gst_caps_unref				(GstCaps *caps);
 void		gst_caps_ref				(GstCaps *caps);

@@ -24,18 +24,6 @@ GstCaps
 @lock: 
 @properties: the properties
 
-<!-- ##### TYPEDEF GstPropsFactoryEntry ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF GstPropsFactory[] ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GST_MAKE_FOURCC ##### -->
 <para>
 
@@ -117,49 +105,25 @@ Create a boolean property.
 @b: 
 
 
-<!-- ##### MACRO GST_PROPS_FLOAT_STRING ##### -->
-<para>
-
-</para>
-
-@a: 
-
-
-<!-- ##### MACRO GST_PROPS_FLOAT_RANGE_STRING ##### -->
-<para>
-
-</para>
-
-@a: 
-@b: 
-
-
-<!-- ##### FUNCTION gst_props_register ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_props_register_count ##### -->
-<para>
-
-</para>
-
-@factory: 
-@counter: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_props_new ##### -->
 <para>
 
 </para>
 
-@entry: 
+@firstname: 
 @Varargs: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@entry: 
+
+
+<!-- ##### FUNCTION gst_props_newv ##### -->
+<para>
+
+</para>
+
+@firstname: 
+@var_args: 
 @Returns: 
 
 
@@ -235,10 +199,10 @@ Create a boolean property.
 
 @props: 
 @name: 
-@entry: 
 @Varargs: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@entry: 
 @value: 
 
 

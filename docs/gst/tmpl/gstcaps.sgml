@@ -51,35 +51,7 @@ Unlock the caps structure
 @properties: the properties of the capability
 @next: a pointer to the next caps.
 
-<!-- ##### TYPEDEF GstCapsFactory ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF GstCapsFactoryEntry ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF GstCapsFactory[] ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### FUNCTION gst_caps_new ##### -->
-<para>
-
-</para>
-
-@name: 
-@mime: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_new_with_props ##### -->
 <para>
 
 </para>
@@ -112,27 +84,6 @@ Unlock the caps structure
 </para>
 
 @caps: 
-
-
-<!-- ##### FUNCTION gst_caps_register ##### -->
-<para>
-
-</para>
-
-@factory: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_caps_register_count ##### -->
-<para>
-
-</para>
-
-@factory: 
-@counter: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@count: 
 
 
 <!-- ##### FUNCTION gst_caps_copy ##### -->

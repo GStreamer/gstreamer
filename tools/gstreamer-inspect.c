@@ -15,25 +15,25 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
     printf(pfx);
 
   switch (prop->propstype) {
-    case GST_PROPS_INT_ID_NUM:
+    case GST_PROPS_INT_ID:
       printf("Integer: %d\n",prop->data.int_data);
       break;
-    case GST_PROPS_INT_RANGE_ID_NUM:
+    case GST_PROPS_INT_RANGE_ID:
       printf("Integer range: %d - %d\n",prop->data.int_range_data.min,
              prop->data.int_range_data.max);
       break;
-    case GST_PROPS_BOOL_ID_NUM:
+    case GST_PROPS_BOOL_ID:
       printf("Boolean: %s\n",prop->data.bool_data ? "TRUE" : "FALSE");
       break;
-    case GST_PROPS_STRING_ID_NUM:
+    case GST_PROPS_STRING_ID:
       printf("String: %s\n",prop->data.string_data.string);
       break;
-    case GST_PROPS_FOURCC_ID_NUM:
+    case GST_PROPS_FOURCC_ID:
       printf("FourCC: %c%c%c%c\n",
              prop->data.fourcc_data & 0xff,prop->data.fourcc_data>>8 & 0xff,
              prop->data.fourcc_data>>16 & 0xff,prop->data.fourcc_data>>24 & 0xff);
       break;
-    case GST_PROPS_LIST_ID_NUM:
+    case GST_PROPS_LIST_ID:
       printf("List:\n");
       longprefix = g_strdup_printf("%s  ",pfx);
       list = prop->data.list_data.entries;

@@ -22,7 +22,7 @@ main (int argc, char *argv[])
   g_assert (videosink != NULL);
 
   testcaps = g_list_append (NULL,
-				gst_caps_new_with_props ("test_caps",
+				gst_caps_new ("test_caps",
 							 "video/mpeg",
 							 gst_props_new (
 							   "mpegversion",  GST_PROPS_INT (1),

@@ -423,6 +423,8 @@ gst_play_realize (GtkWidget *widget)
 
   g_return_if_fail (GST_IS_PLAY (widget));
 
+  //g_print ("realize\n");
+
   play = GST_PLAY (widget);
   priv = (GstPlayPrivate *)play->priv;
 
