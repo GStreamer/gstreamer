@@ -322,8 +322,8 @@ gst_esdsink_chain (GstPad *pad, GstData *_data)
 	}
       }
 
-      GST_DEBUG ("esdsink: fd=%d data=%p size=%d",
-		 esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+      GST_LOG ("fd=%d data=%p size=%d",
+                esdsink->fd, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
       while (to_write > 0){
 	int done;
 
@@ -444,7 +444,7 @@ gst_esdsink_open_audio (GstEsdsink *sink)
     return FALSE;
   }
 
-  GST_DEBUG ("esdsink: attempting to open connection to esound server");
+  GST_INFO ("attempting to open connection to esound server");
   if(sink->fallback){
     sink->fd = esd_play_stream_fallback(esdformat, sink->frequency, sink->host, connname);
   }else{
@@ -455,6 +455,7 @@ gst_esdsink_open_audio (GstEsdsink *sink)
                        ("can't open connection to esound server"));
     return FALSE;
   }
+  GST_INFO ("successfully opened connection to esound server");
 
   return TRUE;
 }
@@ -468,7 +469,7 @@ gst_esdsink_close_audio (GstEsdsink *sink)
   close(sink->fd);
   sink->fd = -1;
 
-  GST_DEBUG ("esdsink: closed sound device");
+  GST_INFO ("esdsink: closed sound device");
 }
 
 static GstElementStateReturn
