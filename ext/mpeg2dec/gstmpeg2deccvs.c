@@ -22,7 +22,6 @@
 #include <inttypes.h>
 
 #include <mpeg2dec/mm_accel.h>
-#include <mpeg2dec/video_out.h>
 #include "gstmpeg2deccvs.h"
 
 /* elementfactory information */
