@@ -125,6 +125,9 @@ gst_media_play_init(GstMediaPlay *mplay)
   /* load the interface */
   mplay->xml = glade_xml_new (DATADIR"gstmediaplay.glade", "gstplay");
   //mplay->xml = glade_xml_new ("/usr/local/share/gstplay/gstplay.glade", "gstplay");
+  if (mplay->xml == NULL) {
+    glade_xml_new ("gstmediaplay.glade", "gstplay");
+  }
   g_assert (mplay->xml != NULL);
 
   mplay->slider = glade_xml_get_widget(mplay->xml, "slider");
