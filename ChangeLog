@@ -1,3 +1,8 @@
+2004-01-13  Julien MOUTTE <julien@moutte.net>
+
+	* po/LINGUAS: Adding fr.
+	* po/fr.po: Adding french translation.
+
 2004-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/parse/grammar.y:
