@@ -1,5 +1,15 @@
 2004-05-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_open),
+	(gst_alsa_mixer_close), (gst_alsa_mixer_supported),
+	(gst_alsa_mixer_build_list), (gst_alsa_mixer_free_list),
+	(gst_alsa_mixer_change_state), (gst_alsa_mixer_list_tracks),
+	(gst_alsa_mixer_get_volume), (gst_alsa_mixer_set_volume),
+	(gst_alsa_mixer_set_mute), (gst_alsa_mixer_set_record):
+	  Fix for cases where we fail to attach to a mixer.
+
+2004-05-16  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_seek):
 	  Don't touch events after not owning them anymore.
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),
