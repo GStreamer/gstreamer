@@ -253,7 +253,7 @@ gst_faad_srcconnect (GstPad  *pad,
 {
   GstStructure *structure;
   const gchar *mimetype;
-  gint fmt;
+  gint fmt = 0;
   gint depth;
   GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
 
