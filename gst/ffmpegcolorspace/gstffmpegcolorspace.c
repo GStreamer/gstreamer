@@ -357,9 +357,8 @@ gst_ffmpegcsp_chain (GstPad * pad, GstData * data)
   if (space->from_pixfmt == space->to_pixfmt) {
     outbuf = inbuf;
   } else {
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
     guint size = avpicture_get_size (space->to_pixfmt,
-        ROUND_UP_4 (space->width), ROUND_UP_4 (space->height));
+        space->width, space->height);
 
     outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
 
