@@ -1,3 +1,12 @@
+2004-11-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/alpha/gstalpha.c: (gst_alpha_set_property), (gst_alpha_add),
+	(gst_alpha_chroma_key), (gst_alpha_init_params), (gst_alpha_chain):
+	* gst/videomixer/videomixer.c: (gst_videomixer_blend_ayuv_i420),
+	(gst_videomixer_fill_checker), (gst_videomixer_blend_buffers),
+	(gst_videomixer_loop):
+	More stride fixes.
+
 2004-11-05  Benjamin Otte  <otte@gnome.org>
 
 	* ext/mad/gstmad.c: (gst_mad_chain):
