@@ -2,8 +2,7 @@ include ../Rules
 
 plugin_LTLIBRARIES = libtestplugin.la libtestplugin2.la
 
-tests_pass = dynamic linked loading registry
-tests_fail = static static2
+tests_pass = dynamic linked loading registry static static2
 
 
 libtestplugin_la_SOURCES = testplugin.c

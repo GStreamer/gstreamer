@@ -82,16 +82,16 @@ void
 _gst_plugin_register_static (GstPluginDesc *desc)
 {
   if (main_module == NULL) {
-    GST_LOG ("queueing static plugin \"%s\" for loading later on", desc->name);
+    if (GST_CAT_DEFAULT) GST_LOG ("queueing static plugin \"%s\" for loading later on", desc->name);
     _gst_plugin_static = g_list_prepend (_gst_plugin_static, desc);
   }
   else {
     GstPlugin *plugin;
 
-    GST_LOG ("attempting to load static plugin \"%s\" now...", desc->name);
+    if (GST_CAT_DEFAULT) GST_LOG ("attempting to load static plugin \"%s\" now...", desc->name);
     plugin = g_new0 (GstPlugin, 1);
     if (gst_plugin_register_func (plugin, main_module, desc)) {
-      GST_INFO ("loaded static plugin \"%s\"", desc->name);
+      if (GST_CAT_DEFAULT) GST_INFO ("loaded static plugin \"%s\"", desc->name);
       gst_registry_pool_add_plugin (plugin);
     }
   }
@@ -142,20 +142,20 @@ gst_plugin_register_func (GstPlugin *plugin, GModule *module, GstPluginDesc *des
   g_assert (plugin->module == NULL);
 
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
-    GST_INFO ("plugin \"%s\" has incompatible version, not loading",
+    if (GST_CAT_DEFAULT) GST_INFO ("plugin \"%s\" has incompatible version, not loading",
        plugin->filename);
     return FALSE;
   }
 
   if (!desc->license || !desc->description || !desc->package ||
       !desc->copyright || !desc->origin) {
-    GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
+    if (GST_CAT_DEFAULT) GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
        plugin->filename);
     return FALSE;
   }
       
   if (!gst_plugin_check_license (desc->license)) {
-    GST_INFO ("plugin \"%s\" has invalid license \"%s\", not loading",
+    if (GST_CAT_DEFAULT) GST_INFO ("plugin \"%s\" has invalid license \"%s\", not loading",
        plugin->filename, desc->license);
     return FALSE;
   }
@@ -164,12 +164,12 @@ gst_plugin_register_func (GstPlugin *plugin, GModule *module, GstPluginDesc *des
   plugin->module = module;
 
   if (!((desc->plugin_init) (plugin))) {
-    GST_INFO ("plugin \"%s\" failed to initialise", plugin->filename);
+    if (GST_CAT_DEFAULT) GST_INFO ("plugin \"%s\" failed to initialise", plugin->filename);
     plugin->module = NULL;
     return FALSE;
   }
   
-  GST_DEBUG ("plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
+  if (GST_CAT_DEFAULT) GST_DEBUG ("plugin \"%s\" initialised", GST_STR_NULL (plugin->filename));
 
   return plugin;
 }
