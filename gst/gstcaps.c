@@ -1184,6 +1184,8 @@ gst_caps_structure_simplify (GstStructure ** result,
           gst_caps_structure_figure_out_union, &field)) {
     gboolean ret = FALSE;
 
+    /* now we know all of simplify's fields are the same in compare
+     * but at most one field: field.name */
     if (G_IS_VALUE (&field.value)) {
       if (gst_structure_n_fields (simplify) == gst_structure_n_fields (compare)) {
         gst_structure_id_set_value (compare, field.name, &field.value);
@@ -1191,6 +1193,11 @@ gst_caps_structure_simplify (GstStructure ** result,
         ret = TRUE;
       }
       g_value_unset (&field.value);
+    } else if (gst_structure_n_fields (simplify) <=
+        gst_structure_n_fields (compare)) {
+      /* compare is just more specific, will be optimized away later */
+      /* FIXME: do this here? */
+      GST_LOG ("found a case that will be optimized later.");
     } else {
       gchar *one = gst_structure_to_string (simplify);
       gchar *two = gst_structure_to_string (compare);

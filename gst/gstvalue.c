@@ -639,7 +639,7 @@ static int
 gst_value_compare_int_range (const GValue * value1, const GValue * value2)
 {
   if (value2->data[0].v_int == value1->data[0].v_int &&
-      value2->data[0].v_int == value1->data[0].v_int)
+      value2->data[1].v_int == value1->data[1].v_int)
     return GST_VALUE_EQUAL;
   return GST_VALUE_UNORDERED;
 }

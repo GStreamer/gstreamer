@@ -1,3 +1,13 @@
+2004-05-25  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst/gstcaps.c: (gst_caps_structure_simplify):
+	  don't print error messages when there is no error
+	* gst/gstvalue.c: (gst_value_compare_int_range):
+	  compare the second value, too
+	* testsuite/caps/Makefile.am:
+	* testsuite/caps/random.c: (assert_on_error), (main):
+	  add tests to make sure the two things above are checked for
+
 2004-05-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

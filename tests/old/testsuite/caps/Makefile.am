@@ -21,7 +21,8 @@ tests_pass = \
 	renegotiate \
 	subtract \
 	sets \
-	simplify
+	simplify \
+	random
 
 EXTRA_DIST = caps_strings
 
@@ -61,3 +62,5 @@ simplify_LDADD = $(GST_OBJ_LIBS)
 simplify_CFLAGS = $(GST_OBJ_CFLAGS) $(XML_CFLAGS)
 renegotiate_LDADD = $(GST_OBJ_LIBS) 
 renegotiate_CFLAGS = $(GST_OBJ_CFLAGS) $(XML_CFLAGS)
+random_LDADD = $(GST_OBJ_LIBS) 
+random_CFLAGS = $(GST_OBJ_CFLAGS) $(XML_CFLAGS)
