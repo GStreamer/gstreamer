@@ -81,7 +81,7 @@ read_config ();
 ###  "ac3", "ac3parse ! $cfg{AUDIOSINK}",
 %pipes = ( 
   "au", "auparse ! $cfg{AUDIOSINK}",
-  "avi", "avidemux video_%02d! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
+  "avi", "avidemux video_%02d! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_%02d! { queue ! mad ! $cfg{AUDIOSINK} }",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}",
   "mod", "modplug !  $cfg{AUDIOSINK}",
   "mp3", "mad ! $cfg{AUDIOSINK}",
