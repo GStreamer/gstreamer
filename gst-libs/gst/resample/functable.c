@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <resample.h>
+#include "private.h"
 
 
 
