@@ -1,3 +1,15 @@
+2004-04-27  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/divx/gstdivxdec.c: (plugin_init):
+	  Remove comment that makes no sense.
+	* ext/mad/gstid3tag.c: (gst_id3_tag_set_property):
+	  Fix for obvious typo that resulted in warnings during gst-register.
+	* ext/xvid/gstxviddec.c: (gst_xviddec_src_link),
+	(gst_xviddec_sink_link):
+	  Fix caps negotiation a bit better.
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	  We call this 'codec_data', not 'esds'.
+
 2004-04-27  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/monoscope/gstmonoscope.c:

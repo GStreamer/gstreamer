@@ -311,7 +311,6 @@ gst_xviddec_src_link (GstPad * pad, const GstCaps * vscaps)
   if (xviddec->handle) {
     gst_xviddec_unset (xviddec);
   }
-  g_print ("out: %s\n", gst_caps_to_string (vscaps));
   xviddec->csp = gst_xvid_structure_to_csp (structure, xviddec->width,
       &xviddec->stride, &xviddec->bpp);
 
@@ -329,6 +328,7 @@ gst_xviddec_sink_link (GstPad * pad, const GstCaps * vscaps)
 {
   GstXvidDec *xviddec = GST_XVIDDEC (gst_pad_get_parent (pad));
   GstStructure *structure;
+  GstPadLinkReturn ret;
 
   /* if there's something old around, remove it */
   if (xviddec->handle) {
@@ -342,28 +342,12 @@ gst_xviddec_sink_link (GstPad * pad, const GstCaps * vscaps)
   gst_structure_get_int (structure, "width", &xviddec->width);
   gst_structure_get_int (structure, "height", &xviddec->height);
   gst_structure_get_double (structure, "framerate", &xviddec->fps);
-  g_print ("in: %dx%d\n", xviddec->width, xviddec->height);
-  /* re-nego? or just await src nego? */
-  if (GST_PAD_CAPS (xviddec->srcpad)) {
-    GstPadLinkReturn ret;
-    GstCaps *vscaps = gst_pad_get_allowed_caps (xviddec->srcpad), *new;
-    gint i, csp;
 
-    for (i = 0; i < gst_caps_get_size (vscaps); i++) {
-      csp = gst_xvid_structure_to_csp (gst_caps_get_structure (vscaps, i),
-          0, NULL, NULL);
-      new =
-          gst_xvid_csp_to_caps (csp, xviddec->width, xviddec->height,
-          xviddec->fps);
-      ret = gst_pad_try_set_caps (xviddec->srcpad, new);
-      if (ret != GST_PAD_LINK_REFUSED)
-        return ret;
-    }
+  ret = gst_pad_renegotiate (xviddec->srcpad);
+  if (ret == GST_PAD_LINK_DELAYED)
+    ret = GST_PAD_LINK_OK;
 
-    return GST_PAD_LINK_REFUSED;
-  }
-
-  return GST_PAD_LINK_OK;
+  return ret;
 }
 
 static GstElementStateReturn
