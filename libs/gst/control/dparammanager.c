@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/control/dparammanager.h>
+#include "dparammanager.h"
 #include <gst/gstelement.h>
 #include <gst/gstinfo.h>
 
