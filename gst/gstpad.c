@@ -100,7 +100,6 @@ static void		gst_real_pad_get_arg		(GtkObject *object,GtkArg *arg,guint id);
 static void		gst_real_pad_destroy		(GtkObject *object);
 
 static void		gst_pad_push_func		(GstPad *pad, GstBuffer *buf);
-static gboolean		gst_pad_eos_func                (GstPad *pad);
 
 
 static GstPad *real_pad_parent_class = NULL;
@@ -162,11 +161,11 @@ gst_real_pad_class_init (GstRealPadClass *klass)
   gtk_object_add_arg_type ("GstRealPad::active", GTK_TYPE_BOOL,
                            GTK_ARG_READWRITE, REAL_ARG_ACTIVE);
 
-  gtkobject_class->destroy = gst_real_pad_destroy;
-  gtkobject_class->set_arg = gst_real_pad_set_arg;
-  gtkobject_class->get_arg = gst_real_pad_get_arg;
+  gtkobject_class->destroy = GST_DEBUG_FUNCPTR(gst_real_pad_destroy);
+  gtkobject_class->set_arg = GST_DEBUG_FUNCPTR(gst_real_pad_set_arg);
+  gtkobject_class->get_arg = GST_DEBUG_FUNCPTR(gst_real_pad_get_arg);
 
-  gstobject_class->save_thyself = gst_pad_save_thyself;
+  gstobject_class->save_thyself = GST_DEBUG_FUNCPTR(gst_pad_save_thyself);
   gstobject_class->path_string_separator = ".";
 }
 
@@ -180,7 +179,7 @@ gst_real_pad_init (GstRealPad *pad)
   pad->getfunc = NULL;
   pad->getregionfunc = NULL;
   pad->qosfunc = NULL;
-  pad->eosfunc = gst_pad_eos_func;
+  pad->eosfunc = GST_DEBUG_FUNCPTR(gst_pad_eos_func);
 
   pad->pushfunc = GST_DEBUG_FUNCPTR(gst_pad_push_func);
   pad->pullfunc = NULL;
@@ -442,7 +441,6 @@ gst_pad_set_negotiate_function (GstPad *pad,
              GST_DEBUG_PAD_NAME(pad),GST_DEBUG_FUNCPTR_NAME(nego));
 }
 
-
 /**
  * gst_pad_set_newcaps_function:
  * @pad: the pad to set the newcaps function for
@@ -485,7 +483,8 @@ static void
 gst_pad_push_func(GstPad *pad, GstBuffer *buf)
 {
   if (GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad)) != NULL) {
-    GST_DEBUG (GST_CAT_DATAFLOW,"calling chain function %s\n");
+    GST_DEBUG (GST_CAT_DATAFLOW,"calling chain function %s\n",
+               GST_DEBUG_FUNCPTR_NAME(GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad))));
     (GST_RPAD_CHAINFUNC(GST_RPAD_PEER(pad)))(pad,buf);
   } else {
     GST_DEBUG (GST_CAT_DATAFLOW,"got a problem here: default pad_push handler in place, no chain function\n");
@@ -567,7 +566,7 @@ gst_pad_disconnect (GstPad *srcpad,
   gtk_signal_emit(GTK_OBJECT(realsink), gst_real_pad_signals[REAL_DISCONNECTED], realsrc);
 
   // now tell the scheduler
-  GST_SCHEDULE_PAD_DISCONNECT (realsrc->sched, realsrc, realsink);
+  GST_SCHEDULE_PAD_DISCONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "disconnected %s:%s and %s:%s",
             GST_DEBUG_PAD_NAME(srcpad), GST_DEBUG_PAD_NAME(sinkpad));
@@ -626,9 +625,9 @@ gst_pad_connect (GstPad *srcpad,
 
   // now tell the scheduler(s)
   if (realsrc->sched)
-    GST_SCHEDULE_PAD_CONNECT (realsrc->sched, realsrc, realsink);
+    GST_SCHEDULE_PAD_CONNECT (realsrc->sched, (GstPad *)realsrc, (GstPad *)realsink);
   else if (realsink->sched)
-    GST_SCHEDULE_PAD_CONNECT (realsink->sched, realsrc, realsink);
+    GST_SCHEDULE_PAD_CONNECT (realsink->sched, (GstPad *)realsrc, (GstPad *)realsink);
 
   if (GST_PAD_CAPS (srcpad)) {
     negotiated = gst_pad_renegotiate (srcpad);
@@ -697,13 +696,13 @@ gst_pad_get_padtemplate (GstPad *pad)
  *
  * Returns: the parent object
  */
-GstObject*
+GstElement*
 gst_pad_get_parent (GstPad *pad)
 {
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  return GST_OBJECT_PARENT (pad);
+  return GST_PAD_PARENT (pad);
 }
 
 void
@@ -734,7 +733,7 @@ gst_pad_get_sched (GstPad *pad)
  *
  * Returns: the parent object
  */
-GstObject*
+GstElement*
 gst_pad_get_real_parent (GstPad *pad)
 {
   g_return_val_if_fail (pad != NULL, NULL);
@@ -1228,6 +1227,13 @@ gst_pad_renegotiate (GstPad *pad)
     GST_PAD_CAPS (otherpad) = gst_caps_ref (newcaps);
     if (GST_RPAD_NEWCAPSFUNC (otherpad))
       GST_RPAD_NEWCAPSFUNC (otherpad) (GST_PAD (otherpad), newcaps);
+
+    GST_DEBUG (GST_CAT_NEGOTIATION, "firing caps_changed signal on %s:%s and %s:%s\n",
+               GST_DEBUG_PAD_NAME(currentpad),GST_DEBUG_PAD_NAME(otherpad));
+    gtk_signal_emit (GTK_OBJECT(currentpad), 
+                     gst_real_pad_signals[REAL_CAPS_CHANGED],GST_PAD_CAPS(currentpad));
+    gtk_signal_emit (GTK_OBJECT(otherpad), 
+                     gst_real_pad_signals[REAL_CAPS_CHANGED],GST_PAD_CAPS(otherpad));
   }
 
   return result;
@@ -1663,7 +1669,7 @@ gst_padtemplate_load_thyself (xmlNodePtr parent)
 }
 
 
-static gboolean
+gboolean
 gst_pad_eos_func(GstPad *pad)
 {
   GstElement *element;

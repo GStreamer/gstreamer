@@ -187,7 +187,7 @@ struct _GstGhostPadClass {
 /***** helper macros *****/
 /* GstPad */
 #define GST_PAD_NAME(pad)		(GST_OBJECT_NAME(pad))
-#define GST_PAD_PARENT(pad)		(GST_OBJECT_PARENT(pad))
+#define GST_PAD_PARENT(pad)		((GstElement *)(GST_OBJECT_PARENT(pad)))
 #define GST_PAD_ELEMENT_PRIVATE(pad)	(((GstPad *)(pad))->element_private)
 #define GST_PAD_PADTEMPLATE(pad)	(((GstPad *)(pad))->padtemplate)
 
@@ -318,8 +318,8 @@ void			gst_pad_set_name		(GstPad *pad, const gchar *name);
 const gchar*		gst_pad_get_name		(GstPad *pad);
 
 void			gst_pad_set_parent		(GstPad *pad, GstObject *parent);
-GstObject*		gst_pad_get_parent		(GstPad *pad);
-GstObject*		gst_pad_get_real_parent		(GstPad *pad);
+GstElement*		gst_pad_get_parent		(GstPad *pad);
+GstElement*		gst_pad_get_real_parent		(GstPad *pad);
 
 void			gst_pad_set_sched		(GstPad *pad, GstSchedule *sched);
 GstSchedule*		gst_pad_get_sched		(GstPad *pad);
@@ -382,6 +382,8 @@ GstCaps*		gst_padtemplate_get_caps_by_name	(GstPadTemplate *templ, const gchar *
 
 xmlNodePtr		gst_padtemplate_save_thyself	(GstPadTemplate *templ, xmlNodePtr parent);
 GstPadTemplate*		gst_padtemplate_load_thyself	(xmlNodePtr parent);
+
+gboolean		gst_pad_eos_func		(GstPad *pad);
 
 #ifdef __cplusplus
 }
