@@ -148,6 +148,7 @@ void gst_pad_set_chain_function(GstPad *pad,GstPadChainFunction chain) {
 void gst_pad_push(GstPad *pad,GstBuffer *buffer) {
   g_return_if_fail(pad != NULL);
   g_return_if_fail(GST_IS_PAD(pad));
+  g_return_if_fail(GST_PAD_CONNECTED(pad));
   g_return_if_fail(buffer != NULL);
 
   gst_trace_add_entry(NULL,0,buffer,"push buffer");
@@ -250,6 +251,8 @@ void gst_pad_set_parent(GstPad *pad,GstObject *parent) {
   g_return_if_fail(parent != NULL);
   g_return_if_fail(GTK_IS_OBJECT(parent));
   g_return_if_fail((gpointer)pad != (gpointer)parent);
+
+	//g_print("set parent %s\n", gst_element_get_name(parent));
 
   pad->parent = parent;
 }

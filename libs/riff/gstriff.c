@@ -20,6 +20,9 @@
 
 #include <gstriff.h>
 
+//#define debug(format,args...) g_print(format,##args)
+#define debug(format,args...)
+
 
 GstRiff *gst_riff_new(GstRiffCallback function, gpointer data) {
   GstRiff *riff;
@@ -35,6 +38,7 @@ GstRiff *gst_riff_new(GstRiffCallback function, gpointer data) {
 	riff->new_tag_found = function;
 	riff->callback_data = data;
 	riff->incomplete_chunk = NULL;
+	riff->dataleft = NULL;
 
   return riff;
 }
@@ -50,7 +54,24 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
 	size = GST_BUFFER_SIZE(buf);
   last = off + size;
 
-	//g_print("offset new buffer 0x%08lx size 0x%08x\n", off, GST_BUFFER_SIZE(buf));
+	debug("offset new buffer 0x%08lx size 0x%08x\n", off, GST_BUFFER_SIZE(buf));
+
+	if (riff->dataleft) {
+		gulong newsize;
+
+	  debug("recovering left data\n");
+		newsize = riff->dataleft_size + size;
+		riff->dataleft = g_realloc(riff->dataleft, newsize);
+		memcpy(riff->dataleft+riff->dataleft_size, GST_BUFFER_DATA(buf), size);
+		gst_buffer_unref(buf);
+
+		buf = gst_buffer_new();
+		GST_BUFFER_DATA(buf) = riff->dataleft;
+		GST_BUFFER_SIZE(buf) = newsize;
+		off -= riff->dataleft_size;
+		//last -= riff->dataleft_size;
+	  riff->dataleft = NULL;
+	}
 
   if (off == 0) {
     gulong *words = (gulong *)GST_BUFFER_DATA(buf);
@@ -77,10 +98,10 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
 	// if we have an incomplete chunk from the previous buffer
 	if (riff->incomplete_chunk) {
 		guint leftover;
-		//g_print("have incomplete chunk %08x filled\n", riff->incomplete_chunk_size);
+		debug("have incomplete chunk %08x filled\n", riff->incomplete_chunk_size);
 		leftover = riff->incomplete_chunk->size - riff->incomplete_chunk_size;
 		if (leftover <= size) {
-		  //g_print("we can fill it from %08x with %08x bytes = %08x\n", riff->incomplete_chunk_size, leftover, riff->incomplete_chunk_size+leftover);
+		  debug("we can fill it from %08x with %08x bytes = %08x\n", riff->incomplete_chunk_size, leftover, riff->incomplete_chunk_size+leftover);
 			memcpy(riff->incomplete_chunk->data+riff->incomplete_chunk_size, GST_BUFFER_DATA(buf), leftover);
 
 		  if (riff->new_tag_found) {
@@ -91,22 +112,34 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
 	    riff->incomplete_chunk = NULL;
 		}
 		else {
-		  //g_print("we cannot fill it %08x >= %08lx\n", leftover, size);
+		  debug("we cannot fill it %08x >= %08lx\n", leftover, size);
 			memcpy(riff->incomplete_chunk->data+riff->incomplete_chunk_size, GST_BUFFER_DATA(buf), size);
 		  riff->incomplete_chunk_size += size;
 			return 0;
 		}
 	}
 
+  if ((riff->nextlikely+12) > last) {
+		guint left = last - riff->nextlikely;
+    debug("not enough data next 0x%08x  last 0x%08lx %08x %08x\n",riff->nextlikely, last, left, off);
+
+		riff->dataleft = g_malloc(left);
+		riff->dataleft_size = left;
+		memcpy(riff->dataleft, GST_BUFFER_DATA(buf)+size-left, left);
+
+		return 0;
+	}
+
+  debug("next 0x%08x  last 0x%08lx offset %08x\n",riff->nextlikely, last, off);
   /* loop while the next likely chunk header is in this buffer */
-  while ((riff->nextlikely+12) < last) {
+  while ((riff->nextlikely+12) <= last) {
     gulong *words = (gulong *)((guchar *)GST_BUFFER_DATA(buf) + riff->nextlikely - off );
 
 		// loop over all of the chunks to check which one is finished
 		while (riff->chunks) {
 			chunk = g_list_nth_data(riff->chunks, 0);
 
-      //g_print("next 0x%08x  offset 0x%08lx size 0x%08x\n",riff->nextlikely, chunk->offset, chunk->size);
+      debug("next 0x%08x  offset 0x%08lx size 0x%08x\n",riff->nextlikely, chunk->offset, chunk->size);
 			if (riff->nextlikely >= chunk->offset+chunk->size) {
         //g_print("found END LIST\n");
 				// we have the end of the chunk on the stack, remove it
@@ -115,7 +148,7 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
 			else break;
 		}
 
-    //g_print("next likely chunk is at offset 0x%08x\n",riff->nextlikely);
+    debug("next likely chunk is at offset 0x%08x\n",riff->nextlikely);
 
     chunk = (GstRiffChunk *)g_malloc(sizeof(GstRiffChunk));
     g_return_val_if_fail(chunk != NULL, GST_RIFF_ENOMEM);
@@ -141,13 +174,13 @@ gint gst_riff_next_buffer(GstRiff *riff,GstBuffer *buf,gulong off) {
 		}
 		else {
 
-      //g_print("chunk id offset %08x is 0x%08lx '%s' and is 0x%08lx long\n",riff->nextlikely, words[0],
-      //      gst_riff_id_to_fourcc(words[0]),words[1]);
+      debug("chunk id offset %08x is 0x%08lx '%s' and is 0x%08lx long\n",riff->nextlikely, words[0],
+            gst_riff_id_to_fourcc(words[0]),words[1]);
 
       riff->nextlikely += 8 + chunk->size;	/* doesn't include hdr */
 			// if this buffer is incomplete
 			if (riff->nextlikely > last) {
-				guint left = size - (riff->nextlikely - 0 - chunk->size - off);
+				guint left = size - (riff->nextlikely - chunk->size - off);
 
 		    //g_print("make incomplete buffer %08x\n", left);
 				chunk->data = g_malloc(chunk->size);

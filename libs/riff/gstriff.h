@@ -293,6 +293,9 @@ struct _GstRiff {
   gint state;
   guint32 curoffset;
   guint32 nextlikely;
+	/* leftover data */
+	guchar *dataleft;
+	guint32 dataleft_size;
 
 	/* callback function and data pointer */
 	GstRiffCallback new_tag_found;
