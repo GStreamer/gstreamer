@@ -90,6 +90,15 @@ typedef struct {
 
   gboolean caps_sent;
   gboolean streamheader_sent;
+
+  /* stats */
+  guint64 bytes_sent;
+  guint64 connect_time;
+  guint64 disconnect_time;
+  guint64 connect_interval;
+  guint64 dropped_buffers;
+  guint64 avg_queue_size;
+  
 } GstTCPClient;
 
 struct _GstMultiFdSink {
@@ -120,6 +129,7 @@ struct _GstMultiFdSink {
   gint buffers_max;	/* max buffers to queue */
   gint buffers_soft_max;	/* max buffers a client can lay before recoevery starts */
   GstRecoverPolicy recover_policy;
+  GstClockTime timeout;	/* max amount of nanoseconds to remain idle */
   /* stats */
   gint buffers_queued;	/* number of queued buffers */
 };
@@ -128,9 +138,10 @@ struct _GstMultiFdSinkClass {
   GstElementClass parent_class;
 
   /* element methods */
-  void (*add)    (GstMultiFdSink *sink, int fd);
-  void (*remove) (GstMultiFdSink *sink, int fd);
-  void (*clear)  (GstMultiFdSink *sink);
+  void 		(*add)    	(GstMultiFdSink *sink, int fd);
+  void 		(*remove) 	(GstMultiFdSink *sink, int fd);
+  void 		(*clear)  	(GstMultiFdSink *sink);
+  GValueArray* 	(*get_stats)  	(GstMultiFdSink *sink, int fd);
 
   /* vtable */
   gboolean (*init)   (GstMultiFdSink *sink);
@@ -147,6 +158,7 @@ GType gst_multifdsink_get_type (void);
 void gst_multifdsink_add (GstMultiFdSink *sink, int fd);
 void gst_multifdsink_remove (GstMultiFdSink *sink, int fd);
 void gst_multifdsink_clear (GstMultiFdSink *sink);
+GValueArray* gst_multifdsink_get_stats (GstMultiFdSink *sink, int fd);
 
 
 #ifdef __cplusplus
