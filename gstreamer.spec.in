@@ -197,7 +197,7 @@ ln -sf %{_datadir}/gtk-doc/html/gstreamer-libs %{_datadir}/devhelp/books
 %{_datadir}/gtk-doc/html/gstreamer-libs/gstreamer-libs.html
 %{_datadir}/gtk-doc/html/gstreamer-libs/index.sgml
 ## this catches all of the rest of the docs we might have forgotten
-# %{_datadir}/gtk-doc/html/*
+%{_datadir}/gtk-doc/html/*
 %{_datadir}/devhelp/specs/gstreamer.devhelp
 %{_datadir}/devhelp/specs/gstreamer-libs.devhelp
 
