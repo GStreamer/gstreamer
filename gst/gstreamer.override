@@ -216,3 +216,16 @@ _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+%%
+override gst_bin_iterate
+
+static PyObject *
+_wrap_gst_bin_iterate(PyGObject *self)
+{
+    int ret;
+
+    pyg_unblock_threads();
+    ret = gst_bin_iterate(GST_BIN(self->obj));
+    pyg_block_threads();
+    return PyInt_FromLong(ret);
+}
