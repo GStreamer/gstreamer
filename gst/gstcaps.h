@@ -73,7 +73,7 @@ factoryname (void)                              \
 {                                               \
   static GstCaps *caps = NULL;			\
   if (!caps) {                              	\
-    caps = gst_caps_chain (__VA_ARGS_, NULL); 	\
+    caps = gst_caps_chain (__VA_ARGS__, NULL); 	\
   }                                             \
   return caps;                              	\
 }
