@@ -1,5 +1,9 @@
 2003-11-14  Thomas Vander Stichele <thomas at apestaart dot org>
 
+        * put GST_CACHE_DIR in config.h, as ordered by iain
+
+2003-11-14  Thomas Vander Stichele <thomas at apestaart dot org>
+
         * Slap walters back into place.
 	* remove GST_CONFIG_DIR, it isn't used anymore, and it looks like
           GST_CACHE_DIR replaces it (which is up for fixing next)
