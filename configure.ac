@@ -126,9 +126,10 @@ AC_SUBST(HAVE_GTK_DOC)
 AC_SUBST(GTK_DOC_SCANOBJ)
 
 dnl check for docbook tools
-AC_CHECK_PROG(HAVE_DB2HTML, db2html, true, false)
-AC_CHECK_PROG(HAVE_DB2PS, db2ps, true, false)
-AC_CHECK_PROG(HAVE_PS2PDF, ps2pdf, true, false)
+AC_CHECK_PROG(HAVE_XSLTPROC, xsltproc, true, false)
+AC_CHECK_PROG(HAVE_PDFTOPS, pdftops, true, false)
+dnl this does not yet work properly, at least on debain -- wingo
+HAVE_PDFXMLTEX=false
 
 dnl check for image conversion tool
 AC_CHECK_PROG(HAVE_FIG2DEV, fig2dev, true, false)
@@ -142,11 +143,11 @@ if test "x$HAVE_FIG2DEV" = "xtrue" ; then
     HAVE_FIG2DEV_PNG=true
   fi
 fi
-HAVE_FIG2DEV_EPS=false
+HAVE_FIG2DEV_PDF=false
 if test "x$HAVE_FIG2DEV" = "xtrue" ; then
-  fig2dev_quiet=`fig2dev -L eps </dev/null 2>&1 >/dev/null`
+  fig2dev_quiet=`fig2dev -L pdf </dev/null 2>&1 >/dev/null`
   if test "x$fig2dev_quiet" = "x" ; then
-    HAVE_FIG2DEV_EPS=true
+    HAVE_FIG2DEV_PDF=true
   fi
 fi
 
@@ -1072,11 +1073,11 @@ AM_CONDITIONAL(BUILD_DOCS,          test "x$BUILD_DOCS" = "xyes")
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
 AM_CONDITIONAL(BUILD_PLUGIN_DOCS,   test "x$BUILD_PLUGIN_DOCS" = "xyes")
-AM_CONDITIONAL(HAVE_DB2HTML,        $HAVE_DB2HTML)
-AM_CONDITIONAL(HAVE_DB2PS,          $HAVE_DB2PS)
-AM_CONDITIONAL(HAVE_PS2PDF,         $HAVE_PS2PDF)
+AM_CONDITIONAL(HAVE_PDFXMLTEX,      $HAVE_PDFXMLTEX)
+AM_CONDITIONAL(HAVE_PDFTOPS,        $HAVE_PDFTOPS)
+AM_CONDITIONAL(HAVE_XSLTPROC,       $HAVE_XSLTPROC)
 AM_CONDITIONAL(HAVE_FIG2DEV_PNG,    $HAVE_FIG2DEV_PNG)
-AM_CONDITIONAL(HAVE_FIG2DEV_EPS,    $HAVE_FIG2DEV_EPS)
+AM_CONDITIONAL(HAVE_FIG2DEV_PDF,    $HAVE_FIG2DEV_PDF)
 AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
