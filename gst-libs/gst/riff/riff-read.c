@@ -664,16 +664,18 @@ gst_riff_read_strf_auds_with_data (GstRiffRead * riff,
 
   /* size checking */
   *extradata = NULL;
-  if (strf->size > GST_BUFFER_SIZE (buf)) {
-    g_warning ("strf_auds header gave %d bytes data, only %d available",
-        strf->size, GST_BUFFER_SIZE (buf));
-    strf->size = GST_BUFFER_SIZE (buf);
-  } else if (strf->size < GST_BUFFER_SIZE (buf)) {
+  if (GST_BUFFER_SIZE (buf) > sizeof (gst_riff_strf_auds) + 2) {
     gint len;
 
-    len = GST_BUFFER_SIZE (buf) - strf->size - 2;
+    len = GST_READ_UINT16_LE (&GST_BUFFER_DATA (buf)[16]);
+    if (len + 2 + sizeof (gst_riff_strf_auds) > GST_BUFFER_SIZE (buf)) {
+      GST_WARNING ("Extradata indicated %d bytes, but only %d available",
+          len, GST_BUFFER_SIZE (buf) - 2 - sizeof (gst_riff_strf_auds));
+      len = GST_BUFFER_SIZE (buf) - 2 - sizeof (gst_riff_strf_auds);
+    }
     if (len > 0) {
-      *extradata = gst_buffer_create_sub (buf, strf->size + 2, len);
+      *extradata = gst_buffer_create_sub (buf,
+          sizeof (gst_riff_strf_auds) + 2, len);
     }
   }
 

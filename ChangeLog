@@ -1,3 +1,9 @@
+2004-12-17  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst-libs/gst/riff/riff-read.c:
+	(gst_riff_read_strf_auds_with_data):
+	  Read extradata correctly (fixes #155879).
+
 2004-12-16  David Schleef  <ds@schleef.org>
 
 	* gst/audioscale/gstaudioscale.c: allow passthru of >2 channel
