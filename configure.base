@@ -565,6 +565,11 @@ AC_MSG_CHECKING(mpeg2dec library)
 AC_CHECK_LIB(mpeg2, mpeg2_init, HAVE_MPEG2DEC=yes, HAVE_MPEG2DEC=no, )
 AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 
+dnl Check for flac
+AC_MSG_CHECKING(FLAC library)
+AC_CHECK_LIB(FLAC, FLAC__stream_decoder_new, HAVE_FLAC=yes, HAVE_FLAC=no, -lm)
+AC_CHECK_HEADER(FLAC/all.h, :, HAVE_FLAC=no)
+
 dnl Check for librtp
 AC_MSG_CHECKING(rtp library)
 AC_CHECK_LIB(rtp, rtp_packet_new_take_data, HAVE_LIBRTP=yes, HAVE_LIBRTP=no, $GLIB_LIBS $GLIB_CFLAGS)
@@ -911,6 +916,10 @@ if test "x$HAVE_MPEG2DEC" = xyes; then
   AC_DEFINE(HAVE_MPEG2DEC)
 fi
 
+if test "x$HAVE_FLAC" = xyes; then
+  AC_DEFINE(HAVE_FLAC)
+fi
+
 if test "x$HAVE_LIBGSM" = xyes; then
   AC_DEFINE(HAVE_LIBGSM)
 fi
@@ -956,6 +965,7 @@ AM_CONDITIONAL(HAVE_CDPARANOIA,     test "x$HAVE_CDPARANOIA" = "xyes")
 AM_CONDITIONAL(HAVE_LIBLAME,        test "x$HAVE_LIBLAME" = "xyes")
 AM_CONDITIONAL(HAVE_LIBSHOUT,       test "x$HAVE_LIBSHOUT" = "xyes")
 AM_CONDITIONAL(HAVE_MPEG2DEC,       test "x$HAVE_MPEG2DEC" = "xyes")
+AM_CONDITIONAL(HAVE_FLAC,      	    test "x$HAVE_FLAC" = "xyes")
 AM_CONDITIONAL(HAVE_LIBRTP,         test "x$HAVE_LIBRTP" = "xyes")
 AM_CONDITIONAL(HAVE_ARTS,           test "x$HAVE_ARTS" = "xyes")
 AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
