@@ -1,5 +1,13 @@
 2003-12-21  Julien MOUTTE  <julien@moutte.net>
 
+	* examples/gstplay/player.c: (got_time_tick), (got_stream_length),
+	(got_video_size), (main): using g_print instead of g_message.
+	* gst-libs/gst/play/gstplay.c: (gst_play_pipeline_setup): Fixing EOS 
+	signal which was not emitted because of "switch" element added to the
+	bin but not connected. (Removing from the bin temporarily)
+
+2003-12-21  Julien MOUTTE  <julien@moutte.net>
+
 	* configure.ac: X_DISPLAY_MISSING is set to 1 if AC_PATH_XTRA fails to
 	find X development files. I don't understand the previous tests and
 	they fail on my debian/ppc unstable. This one works.
