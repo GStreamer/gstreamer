@@ -506,6 +506,11 @@ AC_MSG_CHECKING(aalib)
 AC_CHECK_LIB(aa, aa_init, HAVE_LIBAA=yes, HAVE_LIBAA=no, )
 AC_CHECK_HEADER(aalib.h, :, HAVE_LIBAA=no)
 
+dnl Check for quicktime
+AC_MSG_CHECKING(openquicktime)
+AC_CHECK_LIB(openquicktime, quicktime_init, HAVE_LIBOPENQUICKTIME=yes, HAVE_LIBOPENQUICKTIME=no, )
+AC_CHECK_HEADER(openquicktime/openquicktime.h, :, HAVE_LIBOPENQUICKTIME=no)
+
 
 dnl check if css-auth.c exists (FIXME)
 AC_MSG_CHECKING(DVD CSS code)
@@ -859,6 +864,7 @@ AM_CONDITIONAL(HAVE_RAW1394,        test "x$HAVE_RAW1394" = "xyes")
 AM_CONDITIONAL(HAVE_LIBDV,          test "x$HAVE_LIBDV" = "xyes")
 AM_CONDITIONAL(HAVE_LIBAA,          test "x$HAVE_LIBAA" = "xyes")
 AM_CONDITIONAL(HAVE_GNOME_VFS,      test "x$HAVE_GNOME_VFS" = "xyes")
+AM_CONDITIONAL(HAVE_LIBOPENQUICKTIME, test "x$HAVE_LIBOPENQUICKTIME" = "xyes")
 
 
 
