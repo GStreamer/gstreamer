@@ -83,6 +83,9 @@ else
   HAVE_NASM="yes"
 fi
 
+dnl Check for pkgconfig
+AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, true, false)
+
 dnl check for gtkdoc
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-mkdb, true, false)
 AC_CHECK_PROG(HAVE_GTK_DOC, gtkdoc-scanobj, :, false)
@@ -1221,7 +1224,7 @@ plugins/rtp/Makefile
 plugins/rtp/rtpsend/Makefile
 plugins/mulaw/Makefile
 plugins/alaw/Makefile
-plugins/ffmpeg/Makefile
+dnl until ffmpeg is handled by configure plugins/ffmpeg/Makefile
 plugins/filters/Makefile
 plugins/filters/smooth/Makefile
 plugins/filters/median/Makefile
