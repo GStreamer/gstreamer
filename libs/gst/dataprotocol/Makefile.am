@@ -1,5 +1,5 @@
 
-lib_LTLIBRARIES = libgstdataprotocol.la
+plugin_LTLIBRARIES = libgstdataprotocol.la
 AS_LIBTOOL_LIB = libgstdataprotocol
 
 EXTRA_DIST = $(as_libtool_EXTRA_DIST)
