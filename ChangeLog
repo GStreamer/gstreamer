@@ -1,3 +1,8 @@
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* acinclude.m4:
+          fix underquotedness
+
 2004-02-03  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* gstinterfaces/.cvsignore:
