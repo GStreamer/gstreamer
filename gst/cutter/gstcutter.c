@@ -141,17 +141,17 @@ gst_cutter_class_init (GstCutterClass *klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD,
     g_param_spec_double ("threshold", "threshold", "threshold",
-                         G_MINDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE)); // CHECKME
+                         -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD_DB,
     g_param_spec_double ("threshold_dB", "threshold_dB", "threshold_dB",
-                         G_MINDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE)); // CHECKME
+                         -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RUN_LENGTH,
     g_param_spec_double ("runlength", "runlength", "runlength",
-                        G_MINDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE)); // CHECKME
+                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); // CHECKME
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRE_LENGTH,
     g_param_spec_double ("prelength", "prelength", "prelength",
-                        G_MINDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE)); // CHECKME
+                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE)); // CHECKME
   gst_cutter_signals[CUT_START] = 
 	g_signal_new ("cut_start", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
 			G_STRUCT_OFFSET (GstCutterClass, cut_start), NULL, NULL,
