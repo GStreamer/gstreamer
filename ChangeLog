@@ -1,3 +1,10 @@
+2004-10-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/raw1394/Makefile.am:
+	  fix the build
+
 2004-10-20  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_iterate):
