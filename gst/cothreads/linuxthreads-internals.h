@@ -9,7 +9,7 @@
 #endif /* CURRENT_STACK_FRAME */
 
 #ifndef STACK_SIZE
-#define STACK_SIZE 0x20000 /* 2 M linuxthreads default stack size */
+#define STACK_SIZE 0x200000 /* 2 M linuxthreads default stack size */
 #endif
 
 typedef void * pthread_descr;
