@@ -987,50 +987,75 @@ typedef struct _GstStructureAbbreviation
 }
 GstStructureAbbreviation;
 
-static GstStructureAbbreviation gst_structure_abbrs[] = {
-  {"int", G_TYPE_INT},
-  {"i", G_TYPE_INT},
-  {"float", G_TYPE_FLOAT},
-  {"f", G_TYPE_FLOAT},
-  {"double", G_TYPE_DOUBLE},
-  {"d", G_TYPE_DOUBLE},
-/* these are implemented with strcmp below */
-//{ "buffer",   GST_TYPE_BUFFER },
-//{ "fourcc",   GST_TYPE_FOURCC },
-//{ "4",   GST_TYPE_FOURCC },
-//{ "fraction",   GST_TYPE_FRACTION },
-  {"boolean", G_TYPE_BOOLEAN},
-  {"bool", G_TYPE_BOOLEAN},
-  {"b", G_TYPE_BOOLEAN},
-  {"string", G_TYPE_STRING},
-  {"str", G_TYPE_STRING},
-  {"s", G_TYPE_STRING}
-};
+static GstStructureAbbreviation *
+gst_structure_get_abbrs (gint * n_abbrs)
+{
+  static GstStructureAbbreviation *abbrs = NULL;
+  static gint num = 0;
+
+  if (abbrs == NULL) {
+    /* dynamically generate the array */
+    GstStructureAbbreviation dyn_abbrs[] = {
+      {"int", G_TYPE_INT}
+      ,
+      {"i", G_TYPE_INT}
+      ,
+      {"float", G_TYPE_FLOAT}
+      ,
+      {"f", G_TYPE_FLOAT}
+      ,
+      {"double", G_TYPE_DOUBLE}
+      ,
+      {"d", G_TYPE_DOUBLE}
+      ,
+      {"buffer", GST_TYPE_BUFFER}
+      ,
+      {"fourcc", GST_TYPE_FOURCC}
+      ,
+      {"4", GST_TYPE_FOURCC}
+      ,
+      {"fraction", GST_TYPE_FRACTION}
+      ,
+      {"boolean", G_TYPE_BOOLEAN}
+      ,
+      {"bool", G_TYPE_BOOLEAN}
+      ,
+      {"b", G_TYPE_BOOLEAN}
+      ,
+      {"string", G_TYPE_STRING}
+      ,
+      {"str", G_TYPE_STRING}
+      ,
+      {"s", G_TYPE_STRING}
+    };
+    num = G_N_ELEMENTS (dyn_abbrs);
+    /* permanently allocate and copy the array now */
+    abbrs = g_new0 (GstStructureAbbreviation, num);
+    memcpy (abbrs, dyn_abbrs, sizeof (GstStructureAbbreviation) * num);
+  }
+  *n_abbrs = num;
+
+  return abbrs;
+}
 
 static GType
 gst_structure_from_abbr (const char *type_name)
 {
   int i;
+  GstStructureAbbreviation *abbrs;
+  gint n_abbrs;
 
   g_return_val_if_fail (type_name != NULL, G_TYPE_INVALID);
 
-  for (i = 0; i < G_N_ELEMENTS (gst_structure_abbrs); i++) {
-    if (strcmp (type_name, gst_structure_abbrs[i].type_name) == 0) {
-      return gst_structure_abbrs[i].type;
+  abbrs = gst_structure_get_abbrs (&n_abbrs);
+
+  for (i = 0; i < n_abbrs; i++) {
+    if (strcmp (type_name, abbrs[i].type_name) == 0) {
+      return abbrs[i].type;
     }
   }
 
-  /* FIXME shouldn't be a special case */
-  if (strcmp (type_name, "fourcc") == 0 || strcmp (type_name, "4") == 0) {
-    return GST_TYPE_FOURCC;
-  }
-  if (strcmp (type_name, "buffer") == 0) {
-    return GST_TYPE_BUFFER;
-  }
-  if (strcmp (type_name, "fraction") == 0) {
-    return GST_TYPE_FRACTION;
-  }
-
+  /* this is the fallback */
   return g_type_from_name (type_name);
 }
 
@@ -1038,24 +1063,17 @@ static const char *
 gst_structure_to_abbr (GType type)
 {
   int i;
+  GstStructureAbbreviation *abbrs;
+  gint n_abbrs;
 
   g_return_val_if_fail (type != G_TYPE_INVALID, NULL);
 
-  for (i = 0; i < G_N_ELEMENTS (gst_structure_abbrs); i++) {
-    if (type == gst_structure_abbrs[i].type) {
-      return gst_structure_abbrs[i].type_name;
-    }
-  }
+  abbrs = gst_structure_get_abbrs (&n_abbrs);
 
-  /* FIXME shouldn't be a special case */
-  if (type == GST_TYPE_FOURCC) {
-    return "fourcc";
-  }
-  if (type == GST_TYPE_BUFFER) {
-    return "buffer";
-  }
-  if (type == GST_TYPE_FRACTION) {
-    return "fraction";
+  for (i = 0; i < n_abbrs; i++) {
+    if (type == abbrs[i].type) {
+      return abbrs[i].type_name;
+    }
   }
 
   return g_type_name (type);

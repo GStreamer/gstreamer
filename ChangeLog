@@ -1,5 +1,12 @@
 2004-11-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gststructure.c: (gst_structure_get_abbrs),
+	(gst_structure_from_abbr), (gst_structure_to_abbr):
+	Remove that ugly if-then thing in the code that converts
+	between strings and types.
+
+2004-11-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstscheduler.c: (gst_scheduler_add_element),
 	(gst_scheduler_remove_element), (gst_scheduler_state_transition):
 	Aplied clock distribution patch, this should fix bug
