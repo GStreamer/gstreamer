@@ -1,7 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
- * Most of the code from maswavplay and esdsink
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -18,15 +17,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * Portions derived from maswavplay.c (distributed under the X11
+ * license):
+ *
+ * Copyright (c) 2001-2003 Shiman Associates Inc. All Rights Reserved.
+ * Copyright (c) 2000, 2001 by Shiman Associates Inc. and Sun
+ * Microsystems, Inc. All Rights Reserved.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #include "massink.h"
 
 #define  BUFFER_SIZE           640
-#define  BUFFER_TIME_NS        3628118
-#define  FORCED_STABLE_LOOPS   10
-#define  NANOSLEEP_GRANULARITY 100000
 
 
 /* elementfactory information */
@@ -61,7 +66,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
   GST_PAD_ALWAYS,			/* ALWAYS/SOMETIMES */
   GST_CAPS_NEW (
     "massink_sink8",				/* the name of the caps */
-    "audio/x-wav",				/* the mime type of the caps */
+    "audio/x-raw-int",
     NULL
   )
 );
