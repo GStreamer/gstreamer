@@ -1020,8 +1020,11 @@ gst_pad_connect_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 
   /* now tell the scheduler, the schedulers on both paths have to be the same,
    * so we can just take one */
-  if (src_sched && src_sched == sink_sched)
+  if (src_sched) 
     gst_scheduler_pad_connect (src_sched, 
+	                       GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
+  else if (sink_sched)
+    gst_scheduler_pad_connect (sink_sched, 
 	                       GST_PAD_CAST (realsrc), GST_PAD_CAST (realsink));
 
   GST_INFO (GST_CAT_PADS, "connected %s:%s and %s:%s",
