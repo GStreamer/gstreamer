@@ -146,6 +146,15 @@ gst_registry_pool_plugin_list (void)
   return g_list_concat (_gst_registry_pool_plugins, result);
 }
 
+GstFeatureFilterResult
+gst_registry_pool_feature_type_filter (GstPluginFeature *feature, GType type)
+{
+  if (type == 0 || G_OBJECT_TYPE (feature) == type)
+    return GST_FEATURE_FILTER_OK;
+
+  return GST_FEATURE_FILTER_NOK;
+}
+
 /**
  * gst_registry_pool_feature_list:
  * @type: the type of the features to list.
@@ -157,27 +166,65 @@ gst_registry_pool_plugin_list (void)
 GList*
 gst_registry_pool_feature_list (GType type)
 {
-  GList *result = NULL;
-  GList *plugins = gst_registry_pool_plugin_list ();
+  return gst_registry_pool_feature_filter (
+		  (GstPluginFeatureFilter) gst_registry_pool_feature_type_filter, 
+		  GINT_TO_POINTER (type));
+}
 
-  while (plugins) {
+/**
+ * gst_registry_pool_feature_filter:
+ * @filter: the filter to apply to the feature list
+ * @user_data: data passed to the filter function
+ *
+ * Apply the filter function to all features and return a list
+ * of those features that satisfy the filter.
+ * 
+ * Returns: a GList of pluginfeatures, g_list_free after use.
+ */
+GList*
+gst_registry_pool_feature_filter (GstPluginFeatureFilter filter, gpointer user_data)
+{
+  GList *result = NULL;
+  GList *plugins, *orig;
+  gboolean done = FALSE;
+
+  orig = plugins = gst_registry_pool_plugin_list ();
+
+  while (plugins && !done) {
     GstPlugin *plugin = GST_PLUGIN (plugins->data);
     GList *features = plugin->features;
       
-    while (features) {
-      GstPluginFeature *feature = GST_PLUGIN_FEATURE (features->data);
-
-      if (type == 0 || G_OBJECT_TYPE (feature) == type) {
-        result = g_list_prepend (result, feature);
-      }
-      features = g_list_next (features);
-    }
     plugins = g_list_next (plugins);
+
+    while (features && !done) {
+      GstPluginFeature *feature = GST_PLUGIN_FEATURE (features->data);
+      gboolean res = GST_FEATURE_FILTER_OK;
+
+      features = g_list_next (features);
+
+      if (filter)
+        res = filter (feature, user_data);
+
+      switch (res) {
+	case GST_FEATURE_FILTER_DONE:
+	  done = TRUE;
+	  /* fallthrough */
+	case GST_FEATURE_FILTER_OK:
+          result = g_list_prepend (result, feature);
+          break;
+	case GST_FEATURE_FILTER_NOK:
+	default:
+          break;
+      }
+    }
   }
   result = g_list_reverse (result);
+
+  g_list_free (orig);
   
   return result;
 }
+
 
 /**
  * gst_registry_pool_find_plugin:
@@ -244,11 +291,11 @@ gst_registry_pool_find_feature (const gchar *name, GType type)
   walk = _gst_registry_pool_plugins;
   while (walk) {
     GstPlugin *plugin = (GstPlugin *) (walk->data);
-                                                                                                                                              
+
     result = gst_plugin_find_feature (plugin, name, type);
     if (result)
       return result;
-                                                                                                                                  
+
     walk = g_list_next (walk);
   }
 
