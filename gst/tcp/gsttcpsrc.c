@@ -28,7 +28,7 @@
 #define TCP_DEFAULT_PORT		4953
 
 /* elementfactory information */
-GstElementDetails gst_tcpsrc_details = GST_ELEMENT_DETAILS (
+static GstElementDetails gst_tcpsrc_details = GST_ELEMENT_DETAILS (
   "TCP packet receiver",
   "Source/Network",
   "Receive data over the network via TCP",
