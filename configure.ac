@@ -1327,7 +1327,7 @@ GST_CHECK_FEATURE(LIBRFB, [librfb Remote Framebuffer], rfbsrc, [
 dnl *** libvisual ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
 GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization plugins], libvisual, [
-  PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.1.7, HAVE_LIBVISUAL="yes", HAVE_LIBVISUAL="no")
+  PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0, HAVE_LIBVISUAL="yes", HAVE_LIBVISUAL="no")
   AC_SUBST(LIBVISUAL_CFLAGS)
   AC_SUBST(LIBVISUAL_LIBS)
 ])
