@@ -675,7 +675,7 @@ gst_lame_chain (GstPad *pad, GstBuffer *buf)
 {
   GstLame *lame;
   GstBuffer *outbuf;
-  gchar *mp3_data;
+  gchar *mp3_data = NULL;
   gint mp3_buffer_size, mp3_size = 0;
   gboolean eos = FALSE;
 
