@@ -1,5 +1,8 @@
 2005-04-06  Andy Wingo  <wingo@pobox.com>
 
+	* gst-libs/gst/video/Makefile.am (libgstvideo_la_LDFLAGS): Use
+	GST_BASE_LIBS.
+
 	* configure.ac: Add check and AC_SUBST for libgstbase.
 
 2005-03-31  Wim Taymans  <wim@fluendo.com>
