@@ -61,12 +61,14 @@ int main (int argc, char *argv[])
 
   /* disconnect and reconnect fakesink */
 
+  gst_element_set_state (main_bin, GST_STATE_PAUSED);
   g_print ("disconnecting...\n");
   gst_pad_disconnect (gst_element_get_pad (fakesrc, "src"),
                       gst_element_get_pad (fakesink, "sink"));
   g_print ("reconnecting...\n");
   gst_pad_connect (gst_element_get_pad (fakesrc, "src"),
                    gst_element_get_pad (fakesink, "sink"));
+  gst_element_set_state (main_bin, GST_STATE_PLAYING);
 
   for (i = 0; i < 5; ++i) 
   {
