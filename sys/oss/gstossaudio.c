@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "gst/gst-i18n-plugin.h"
+
 #include "gstosselement.h"
 #include "gstosssink.h"
 #include "gstosssrc.h"
@@ -45,6 +47,13 @@ plugin_init (GstPlugin *plugin)
   }
 
   GST_DEBUG_CATEGORY_INIT (oss_debug, "oss", 0, "OSS elements");
+
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
+#endif /* ENABLE_NLS */
+
   return TRUE;
 }
 

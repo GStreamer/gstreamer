@@ -681,22 +681,22 @@ gst_osselement_open_audio (GstOssElement *oss)
     switch (errno) {
       case EBUSY:
 	gst_element_error (oss, RESOURCE, BUSY,
-                           (_("OSS device %s is already in use by another program."), oss->device), NULL);
+                           (_("OSS device \"%s\" is already in use by another program"), oss->device), NULL);
 	break;
       case EACCES:
       case ETXTBSY:
         if (mode == GST_OSSELEMENT_WRITE)
 	  gst_element_error (oss, RESOURCE, OPEN_WRITE,
-			     (_("Could not access device %s, check it's permissions"), oss->device), GST_ERROR_SYSTEM);
+			     (_("Could not access device \"%s\", check its permissions"), oss->device), GST_ERROR_SYSTEM);
         else
 	  gst_element_error (oss, RESOURCE, OPEN_READ,
-			     (_("Could not access device %s, check it's permissions"), oss->device), GST_ERROR_SYSTEM);
+			     (_("Could not access device \"%s\", check its permissions"), oss->device), GST_ERROR_SYSTEM);
 	break;
       case ENXIO:
       case ENODEV:
       case ENOENT:
 	gst_element_error (oss, RESOURCE, NOT_FOUND,
-			   (_("Device %s does not exist"), oss->device), GST_ERROR_SYSTEM);
+			   (_("Device \"%s\" does not exist"), oss->device), GST_ERROR_SYSTEM);
 	break;
       default:
 	/* FIXME: strerror is not threadsafe */

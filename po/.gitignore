@@ -1,0 +1,14 @@
+*.gmo
+remove-potcdate.sed
+stamp-po
+POTFILES
+cat-id-tbl.c
+gstreamer-*.pot
+Makefile.in.in
+Makevars.template
+Rules-quot
+boldquot.sed
+en@boldquot.header
+en@quot.header
+insert-header.sin
+quot.sed

@@ -36,7 +36,7 @@ main (int argc,char *argv[])
     src = gst_element_factory_make ("dv1394src", "src");
   } else {
     src = gst_element_factory_make ("filesrc", "src");
-    gtk_object_set(GTK_OBJECT(src),"location",argv[1],"bytesperread",480,NULL);
+    g_object_set(G_OBJECT(src),"location",argv[1],"bytesperread",480,NULL);
   }
   dvdec = gst_element_factory_make ("dvdec", "decoder");
   if (!dvdec) fprintf(stderr,"no dvdec\n"),exit(1);
@@ -44,7 +44,7 @@ main (int argc,char *argv[])
   deint = gst_element_factory_make ("deinterlace", "deinterlace");
   videosink = gst_element_factory_make ("xvideosink", "videosink");
   if (!videosink) fprintf(stderr,"no dvdec\n"),exit(1);
-  gtk_object_set(GTK_OBJECT(videosink),"width",720,"height",576,NULL);
+  g_object_set(G_OBJECT(videosink),"width",720,"height",576,NULL);
 
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(src));
   gst_bin_add(GST_BIN(bin),GST_ELEMENT(dvdec));
@@ -62,7 +62,7 @@ main (int argc,char *argv[])
   vbox1 = gtk_vbox_new (FALSE, 0);
   gtk_widget_show (vbox1);
 
-  button = gtk_button_new_with_label(_("test"));/*_with_label (_("chup")); */
+  button = gtk_button_new_with_label("test");
   gtk_widget_show (button);
   gtk_box_pack_start (GTK_BOX (vbox1), button, FALSE, FALSE, 0);
 

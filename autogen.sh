@@ -35,6 +35,8 @@ version_check "autoconf" "$AUTOCONF autoconf autoconf-2.54 autoconf-2.53 autocon
               "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
 version_check "automake" "$AUTOMAKE automake automake-1.7 automake-1.6 automake-1.5" \
               "ftp://ftp.gnu.org/pub/gnu/automake/" 1 6 || DIE=1
+version_check "autopoint" "autopoint" \
+              "ftp://ftp.gnu.org/pub/gnu/gettext/" 0 11 4 || DIE=1
 version_check "libtoolize" "$LIBTOOLIZE libtoolize libtoolize14" \
               "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
 version_check "pkg-config" "" \
@@ -58,6 +60,28 @@ if test -z "$*"; then
 fi
 
 toplevel_check $srcfile
+
+# autopoint
+#    older autopoint (< 0.12) has a tendency to complain about mkinstalldirs
+if test -e mkinstalldirs; then rm mkinstalldirs; fi
+#    first remove patch if necessary, then run autopoint, then reapply
+if test -f po/Makefile.in.in;
+then
+  patch -p0 -R < common/gettext.patch
+fi
+tool_run "$autopoint"
+patch -p0 < common/gettext.patch
+
+# autopoint
+#    older autopoint (< 0.12) has a tendency to complain about mkinstalldirs
+if test -e mkinstalldirs; then rm mkinstalldirs; fi
+#    first remove patch if necessary, then run autopoint, then reapply
+if test -f po/Makefile.in.in;
+then
+  patch -p0 -R < common/gettext.patch
+fi
+tool_run "$autopoint"
+patch -p0 < common/gettext.patch
 
 tool_run "$aclocal" "-I m4 -I common/m4 $ACLOCAL_FLAGS"
 tool_run "$libtoolize" "--copy --force"

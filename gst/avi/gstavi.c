@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include "gst/gst-i18n-plugin.h"
+
 #include "gstavidemux.h"
 #include "gstavimux.h"
 
@@ -31,6 +33,12 @@ plugin_init (GstPlugin *plugin)
 {
   if (!gst_library_load ("riff"))
     return FALSE;
+
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
+#endif /* ENABLE_NLS */
 
   return (gst_element_register (plugin, "avidemux",
 				GST_RANK_PRIMARY,

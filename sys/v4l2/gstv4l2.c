@@ -40,6 +40,12 @@ plugin_init (GstPlugin *plugin)
 			     GST_RANK_NONE, GST_TYPE_V4L2SRC))
     return FALSE;
 
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
+#endif /* ENABLE_NLS */
+
   return TRUE;
 }
 
