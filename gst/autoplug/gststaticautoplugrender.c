@@ -432,11 +432,12 @@ differ:
 	// create a new queue and add to the previous bin
         queue = gst_elementfactory_make("queue", g_strconcat("queue_", GST_ELEMENT_NAME(element), NULL));
         GST_DEBUG (0,"adding element \"%s\"\n", GST_ELEMENT_NAME (element));
-        gst_bin_add(GST_BIN(thebin), queue);
-        gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (queue));
 
 	// this will be the new bin for all following elements
         thebin = gst_elementfactory_make("thread", g_strconcat("thread_", GST_ELEMENT_NAME(element), NULL));
+
+        gst_bin_add(GST_BIN(thebin), queue);
+        gst_autoplug_signal_new_object (GST_AUTOPLUG (autoplug), GST_OBJECT (queue));
 
         srcpad = gst_element_get_pad(queue, "src");
 
