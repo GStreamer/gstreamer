@@ -64,8 +64,10 @@ else
 VORBIS_DIR=
 endif
 
-SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) $(ESD_DIR) \
-        $(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR)\
+SUBDIRS=$(A52_DIR) $(AALIB_DIR) $(ALSA_DIR) $(AUDIOFILE_DIR) \
+	$(DVDREAD_DIR) $(ESD_DIR) \
+        $(LAME_DIR) $(MAD_DIR) $(MPEG2DEC_DIR) \
 	$(SDL_DIR) $(VORBIS_DIR)
 
-DIST_SUBDIRS=a52 aalib alsa audiofile esd lame mad mpeg2dec sdl vorbis
+DIST_SUBDIRS=a52 aalib alsa audiofile dvdread esd \
+	     lame mad mpeg2dec sdl vorbis
