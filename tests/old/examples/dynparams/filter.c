@@ -266,6 +266,7 @@ cb_play_clicked (GtkButton *button, gpointer *user_data)
 {
   _filter_data_t *fd = (_filter_data_t *) user_data;
 
+  g_return_if_fail (GST_IS_PIPELINE (fd->pipeline));
   if (GST_STATE (fd->pipeline) == GST_STATE_PLAYING)
   {
     ui_feedback_add (fd->ui, "Pipeline is already playing !\n");
