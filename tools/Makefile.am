@@ -17,7 +17,7 @@ bin_PROGRAMS = 	gst-launch 	\
 		gst-complete
 
 man_MANS = gst-launch.1 gst-register.1 gst-inspect.1 \
-	gst-complete.1 gst-compprep.1
+	gst-complete.1 gst-compprep.1 gst-xmllaunch.1
 
 gst_launch_LDADD = $(GST_LIBS) #-lefence
 gst_launch_CFLAGS = $(GST_CFLAGS) -DGST_CONFIG_DIR=\"$(GST_CONFIG_DIR)\" 
