@@ -1,6 +1,5 @@
-/* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wim.taymans@chello.be>
+/* GStreamer OSS Mixer implementation
+ * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * gstossmixer.h: mixer interface implementation for OSS
  *
