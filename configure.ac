@@ -699,6 +699,7 @@ tests/sched/Makefile
 testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
+testsuite/cleanup/Makefile
 testsuite/plugin/Makefile
 examples/Makefile
 examples/autoplug/Makefile
