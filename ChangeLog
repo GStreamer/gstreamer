@@ -1,5 +1,46 @@
 2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/manual/autoplugging.xml:
+	* docs/manual/bins-api.xml:
+	* docs/manual/bins.xml:
+	* docs/manual/buffers-api.xml:
+	* docs/manual/buffers.xml:
+	* docs/manual/clocks.xml:
+	* docs/manual/components.xml:
+	* docs/manual/cothreads.xml:
+	* docs/manual/debugging.xml:
+	* docs/manual/dparams-app.xml:
+	* docs/manual/dynamic.xml:
+	* docs/manual/elements-api.xml:
+	* docs/manual/elements.xml:
+	* docs/manual/factories.xml:
+	* docs/manual/gnome.xml:
+	* docs/manual/goals.xml:
+	* docs/manual/helloworld.xml:
+	* docs/manual/helloworld2.xml:
+	* docs/manual/init-api.xml:
+	* docs/manual/intro.xml:
+	* docs/manual/links-api.xml:
+	* docs/manual/links.xml:
+	* docs/manual/manual.xml:
+	* docs/manual/motivation.xml:
+	* docs/manual/pads-api.xml:
+	* docs/manual/pads.xml:
+	* docs/manual/plugins-api.xml:
+	* docs/manual/plugins.xml:
+	* docs/manual/programs.xml:
+	* docs/manual/queues.xml:
+	* docs/manual/quotes.xml:
+	* docs/manual/schedulers.xml:
+	* docs/manual/states-api.xml:
+	* docs/manual/states.xml:
+	* docs/manual/threads.xml:
+	* docs/manual/typedetection.xml:
+	* docs/manual/xml.xml:
+          use chapter, part, section or misc as id starts for all bits
+
+2004-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
           Fix up TITLE of the sections
 

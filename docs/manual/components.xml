@@ -1,4 +1,4 @@
-<chapter id="cha-components">
+<chapter id="chapter-components">
   <title>Components</title>
 
   <para>
@@ -10,7 +10,7 @@
     in their programs.
   </para>
 
-  <sect1>
+  <sect1 id="section-components-gst-play">
     <title>GstPlay</title>
     <para> 
       GstPlay is a GtkWidget with a simple API to play, pause and stop a media file.
@@ -18,15 +18,15 @@
       
   </sect1>
 
-  <sect1>
+  <sect1 id="section-components-gst-media-play">
     <title>GstMediaPlay</title>
     <para> 
-      GstMediaply is a complete player widget.
+      GstMediaPlay is a complete player widget.
     </para>
       
   </sect1>
 
-  <sect1>
+  <sect1 id="section-components-gst-editor">
     <title>GstEditor</title>
     <para> 
       GstEditor is a set of widgets to display a graphical representation of a 

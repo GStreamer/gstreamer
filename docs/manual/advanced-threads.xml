@@ -1,4 +1,4 @@
-<chapter id="cha-threads">
+<chapter id="chapter-threads">
   <title>Threads</title>
   <para> 
     GStreamer has support for multithreading through the use of
@@ -37,7 +37,7 @@
     itself. You never need to explicitly iterate a thread.
   </para>
   
-  <sect1>
+  <sect1 id="section-threads-constraints">
     <title>Constraints placed on the pipeline by the GstThread</title>
     <para>
       Within the pipeline, everything is the same as in any other bin. The
@@ -46,13 +46,13 @@
       fundamentally buffer-oriented rather than byte-oriented, the natural
       solution to this problem is an element that can "buffer" the buffers
       between the threads, in a thread-safe fashion. This element is the
-      queue, described more fully in <xref linkend="cha-queues"/>. It doesn't
+      queue, described more fully in <xref linkend="chapter-queues"/>. It doesn't
       matter if the queue is placed in the containing bin or in the thread
       itself, but it needs to be present on one side or the other to enable
       inter-thread communication.
     </para>
   </sect1>
-  <sect1>
+  <sect1 id="section-threads-when">
     <title>When would you want to use a thread?</title>
     <para>
       If you are writing a GUI application, making the top-level bin a thread will make your GUI
@@ -63,9 +63,9 @@
       an audio pipeline.
     </para>
     <para> 
-    <xref linkend="sec-threads-img"/> shows how a thread can be visualised.
+    <xref linkend="section-threads-img"/> shows how a thread can be visualised.
     </para>
-    <figure float="1" id="sec-threads-img">
+    <figure float="1" id="section-threads-img">
       <title>A thread</title>
       <mediaobject>
         <imageobject>

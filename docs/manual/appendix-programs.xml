@@ -1,9 +1,9 @@
-<chapter id="cha-programs">
+<chapter id="chapter-programs">
   <title>Programs</title>
   <para> 
   </para>
 
-  <sect1>
+  <sect1 id="section-programs-gst-register">
     <title><command>gst-register</command></title>
     <para> 
       <command>gst-register</command> is used to rebuild the database of plugins.
@@ -12,7 +12,7 @@
     </para>
   </sect1>
 
-  <sect1>
+  <sect1 id="section-programs-gst-launch">
     <title><command>gst-launch</command></title>
     <para> 
       This is a tool that will construct pipelines based on a command-line
@@ -149,7 +149,7 @@ main (int argc, char *argv[])
     </sect2>
   </sect1>
 
-  <sect1>
+  <sect1 id="section-programs-gst-inspect">
     <title><command>gst-inspect</command></title>
     <para> 
       This is a tool to query a plugin or an element about its properties.

@@ -1,16 +1,16 @@
-<chapter id="cha-goals">
+<chapter id="chapter-goals">
   <title>Goals</title>
   <para> 
     GStreamer was designed to provide a solution to the current Linux media
     problems.
   </para>
 
-  <sect1 id="sec-goals-design">
+  <sect1 id="section-goals-design">
     <title>The design goals</title>
     <para> 
       We describe what we try to achieve with GStreamer.
     </para>
-    <sect2 id="sec-goals-clean">
+    <sect2 id="section-goals-clean">
       <title>Clean and powerful</title>
       <para>
         GStreamer wants to provide a clean interface to:
@@ -35,7 +35,7 @@
       </itemizedlist>
 
     </sect2>
-    <sect2 id="sec-goals-object">
+    <sect2 id="section-goals-object">
       <title>Object oriented</title>
       <para>
         GStreamer adheres to the GLib 2.0 object model. A programmer familiar with GLib 2.0 or older versions
@@ -55,7 +55,7 @@
       </para> 
     </sect2>
   
-    <sect2 id="sec-goals-extensible">
+    <sect2 id="section-goals-extensible">
       <title>Extensible</title>
       <para> 
 	All GStreamer Objects can be extended using the GObject inheritance methods.
@@ -66,7 +66,7 @@
       </para> 
     </sect2>
 
-    <sect2 id="sec-goals-binary">
+    <sect2 id="section-goals-binary">
       <title>Allow binary only plugins</title>
       <para>
         Plugins are shared libraries that are loaded at runtime. Since all the properties of the
@@ -79,7 +79,7 @@
       </para> 
     </sect2>
 
-    <sect2 id="sec-goals-performance">
+    <sect2 id="section-goals-performance">
       <title>High performance</title>
       <para> 
         High performance is obtained by:
@@ -138,7 +138,7 @@
       </itemizedlist>
     </sect2>
 
-    <sect2 id="sec-goals-separation">
+    <sect2 id="section-goals-separation">
       <title>Clean core/plugins separation</title>
       <para>
         The core of GStreamer is essentially media-agnostic.  It only knows
@@ -152,7 +152,7 @@
       </para>
     </sect2>
 
-    <sect2 id="sec-goals-testbed">
+    <sect2 id="section-goals-testbed">
       <title>Provide a framework for codec experimentation</title>
       <para>
 	GStreamer also wants to be an easy framework where codec

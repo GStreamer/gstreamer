@@ -1,4 +1,4 @@
-<chapter id="cha-autoplug">
+<chapter id="chapter-autoplug">
   <title>Autoplugging</title>
   <para> 
     <application>GStreamer</application> provides an API to automatically
@@ -91,12 +91,12 @@
       </programlisting>
     </para>
   </sect1>
-  <sect1>
+  <sect1 id="section-autoplug-cache">
     <title>Using the <classname>GstAutoplugCache</classname> element</title>
     <para>
       The <classname>GstAutoplugCache</classname> element is used to cache the 
       media stream when performing typedetection. As we have seen in
-      <xref linkend="cha-typedetection"/>, the typefind function consumes a 
+      <xref linkend="chapter-typedetection"/>, the typefind function consumes a 
       buffer to determine its media type. After we have set up the pipeline
       to play the media stream we should be able to 'replay' the previous buffer(s).
       This is what the autoplugcache is used for.
@@ -147,7 +147,7 @@
       autoplugger, the autoplugcache and the typefind element.
     </para>
   </sect1>
-  <sect1>
+  <sect1 id="section-autoplugging-spider">
     <title>Another approach to autoplugging</title>
     <para>
       The autoplug API is interesting, but often impractical. It is static;

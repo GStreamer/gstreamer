@@ -1,11 +1,11 @@
-<chapter id="cha-debugging">
+<chapter id="chapter-debugging">
   <title>Debugging</title>
   <para> 
     GStreamer has an extensive set of debugging tools for
     plugin developers.
   </para>
  
-  <sect1>
+  <sect1 id="section-debugging-command-line">
     <title>Command line options</title>
     <para> 
       Applications using the GStreamer libraries accept the following set
@@ -94,7 +94,7 @@ Mask (to be OR'ed)   info/debug         FLAGS
 0x02000000              /              REFCOUNTING
     </programlisting>
   </sect1>
-  <sect1>
+  <sect1 id="section-debugging-adding-handler">
     <title>Adding a custom debug handler</title>
     <para> 
     </para> 

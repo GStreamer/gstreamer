@@ -1,13 +1,13 @@
-<chapter id="cha-pads-api">
+<chapter id="chapter-pads-api">
   <title>Pads</title>
   <para>
-    As we have seen in <xref linkend="cha-elements"/>, the pads are the element's
+    As we have seen in <xref linkend="chapter-elements"/>, the pads are the element's
     interface to the outside world. 
   </para>
   <para>
     The specific type of media that the element can handle will be exposed by the pads.
     The description of this media type is done with capabilities(see
-    <xref linkend="sec-caps"/>)
+    <xref linkend="section-caps"/>)
   </para>
 
   <para>
@@ -24,10 +24,10 @@
       </para></footnote>
   </para>
 
-  <sect1 id="sec-pads-api-type">
+  <sect1 id="section-pads-api-type">
     <title>Types of pads</title>
  
-    <sect2 id="sec-pads-api-dynamic">
+    <sect2 id="section-pads-api-dynamic">
       <title>Dynamic pads</title>
       <para> 
         You can attach a signal to an element to inform you when the element has created
@@ -75,7 +75,7 @@ main(int argc, char *argv[])
         </para> 
       </note>
     </sect2>
-    <sect2 id="sec-pads-api-request">
+    <sect2 id="section-pads-api-request">
       <title>Request pads</title>
       <para> 
         The following piece of code can be used to get a pad from the tee element. After
@@ -120,7 +120,7 @@ main(int argc, char *argv[])
 
   </sect1>
 
-  <sect1 id="sec-api-caps">
+  <sect1 id="section-api-caps">
     <title>Capabilities of a pad</title>
     <para> 
       Since the pads play a very important role in how the element is viewed by the
@@ -133,7 +133,7 @@ main(int argc, char *argv[])
       Plugin Writer's Guide.
     </para>
 
-    <sect2 id="sec-pads-api-caps">
+    <sect2 id="section-pads-api-caps">
       <title>Capabilities</title>
       <para> 
         Capabilities are attached to a pad in order to describe
@@ -156,7 +156,7 @@ struct _GstCaps {
       </programlisting>
     </sect2>
 
-    <sect2 id="sec-pads-api-caps-get">
+    <sect2 id="section-pads-api-caps-get">
       <title>Getting the capabilities of a pad</title>
       <para> 
         A pad can have a chain of capabilities attached to it. You can get the capabilities chain
@@ -179,7 +179,7 @@ struct _GstCaps {
     ...
     </programlisting>
     </sect2>
-    <sect2 id="sec-pads-api-caps-create">
+    <sect2 id="section-pads-api-caps-create">
       <title>Creating capability structures</title>
       <para> 
         While capabilities are mainly used inside a plugin to describe the

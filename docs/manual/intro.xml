@@ -1,11 +1,11 @@
-<chapter id="cha-intro">
+<chapter id="chapter-intro">
   <title>Introduction</title>
   <para> 
     This chapter gives you an overview of the technologies described in this
     book.  
   </para>
 
-  <sect1 id="sec-intro-what">
+  <sect1 id="section-intro-what">
     <title>What is GStreamer?</title>
     <para> 
       GStreamer is a framework for creating streaming media applications.

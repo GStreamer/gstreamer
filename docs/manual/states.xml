@@ -1,11 +1,11 @@
-<chapter id="cha-states">
+<chapter id="chapter-states">
   <title>Element states</title>
   <para> 
     Once you have created a pipeline packed with elements, nothing will happen
     right away. This is where the different states come into play. 
   </para>
 
-  <sect1 id="sec-states">
+  <sect1 id="section-states">
     <title>The different element states</title>
     <para> 
       An element can be in one of the following four states:
@@ -73,7 +73,7 @@
 
   </sect1>
 
-  <sect1 id="sec-states-null">
+  <sect1 id="section-states-null">
     <title>The NULL state</title>
     <para> 
       When you created the pipeline all of the elements will be in the NULL state. There is
@@ -87,7 +87,7 @@
     </note>
   </sect1>
 
-  <sect1 id="sec-states-ready">
+  <sect1 id="section-states-ready">
     <title>The READY state</title>
     <para> 
       You will start the pipeline by first setting it to the READY state. This will allow the 
@@ -108,7 +108,7 @@
     </note>
   </sect1>
 
-  <sect1 id="sec-states-paused">
+  <sect1 id="section-states-paused">
     <title>The PAUSED state</title>
     <para> 
       A pipeline that is playing can be set to the PAUSED state. This will temporarily stop all
@@ -126,10 +126,10 @@
     </note>
     <para> 
       The pipeline has to be in the PAUSED or NULL state if you want to insert or modify an element
-      in the pipeline. We will cover dynamic pipeline behaviour in <xref linkend="cha-dynamic"/>.
+      in the pipeline. We will cover dynamic pipeline behaviour in <xref linkend="chapter-dynamic"/>.
     </para>
   </sect1>
-  <sect1 id="sec-states-playing">
+  <sect1 id="section-states-playing">
     <title>The PLAYING state</title>
     <para> 
       A Pipeline that is in the READY state can be started by setting it to the PLAYING state. At

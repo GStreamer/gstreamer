@@ -1,4 +1,4 @@
-<chapter id="cha-scheduler">
+<chapter id="chapter-scheduler">
   <title>Understanding schedulers</title>
   <para> 
     The scheduler is responsible for managing the plugins at runtime. Its

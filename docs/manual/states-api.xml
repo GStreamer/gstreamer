@@ -1,6 +1,6 @@
-<chapter id="cha-states-api">
+<chapter id="chapter-states-api">
   <title>Element states</title>
-  <sect1 id="sec-states-api">
+  <sect1 id="section-states-api">
     <title>Changing element state</title>
     <para> 
       The state of an element can be changed with the following code:

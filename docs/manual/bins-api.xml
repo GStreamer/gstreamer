@@ -1,6 +1,6 @@
-<chapter id="cha-bins-api">
+<chapter id="chapter-bins-api">
   <title>Bins</title>
-  <sect1 id="sec-bin-create">
+  <sect1 id="section-bin-create">
     <title>Creating a bin</title>
     <para>
       Bins are created in the same way that other elements are created. ie.
@@ -22,7 +22,7 @@
     </programlisting>
   </sect1>
 
-  <sect1 id="sec-bin-adding">
+  <sect1 id="section-bin-adding">
     <title>Adding elements to a bin</title>
     <para>
       Elements are added to a bin with the following code sample: 
@@ -95,7 +95,7 @@
     </programlisting>
   </sect1>
 
-  <sect1 id="sec-bin-custom">
+  <sect1 id="section-bin-custom">
     <title>Custom bins</title>
     <para> 
       The application programmer can create custom bins packed with elements
@@ -121,7 +121,7 @@
       Note that the above code assumes that the mp3player bin derives itself
       from a <classname>GstThread</classname>, which begins to play as soon
       as its state is set to PLAYING.  Other bin types may need explicit
-      iteration. For more information, see <xref linkend="cha-threads"/>.
+      iteration. For more information, see <xref linkend="chapter-threads"/>.
     </para>
     <para>
       Custom bins can be created with a plugin or an XML description. You
@@ -130,13 +130,13 @@
     </para>
   </sect1>
 
-  <sect1 id="sec-bin-ghostpads">
+  <sect1 id="section-bin-ghostpads">
     <title>Ghost pads</title>
     <para>
-      You can see from <xref linkend="sec-bin-noghost-img"/> how a bin has no pads of its own.
+      You can see from <xref linkend="section-bin-noghost-img"/> how a bin has no pads of its own.
       This is where "ghost pads" come into play.
     </para>
-    <figure float="1" id="sec-bin-noghost-img">
+    <figure float="1" id="section-bin-noghost-img">
       <title>Visualisation of a <classname>GstBin</classname> element without ghost pads</title>
       <mediaobject>
         <imageobject>
@@ -151,7 +151,7 @@
       for creating custom bins.
     </para>
     
-    <figure float="1" id="sec-bin-ghost-img">
+    <figure float="1" id="section-bin-ghost-img">
       <title>Visualisation of a <classname>GstBin</classname> element with a ghost pad</title>
       <mediaobject>
         <imageobject>
@@ -160,7 +160,7 @@
       </mediaobject>  
     </figure>
     <para>
-      <xref linkend="sec-bin-ghost-img"/>
+      <xref linkend="section-bin-ghost-img"/>
       is a representation of a ghost pad. The sink pad of element one is now also a pad
       of the bin.
     </para>

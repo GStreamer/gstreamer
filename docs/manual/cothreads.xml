@@ -1,4 +1,4 @@
-<chapter id="cha-cothreads">
+<chapter id="chapter-cothreads">
   <title>Cothreads</title>
   <para>
     Cothreads are user-space threads that greatly reduce context switching overhead introduced by
@@ -34,7 +34,7 @@
     explain the chain-based elements.
   </para>
 
-  <sect1 id="sec-chain-based">
+  <sect1 id="section-chain-based">
     <title>Chain-based elements</title>
     <para>
       Chain based elements receive a buffer of data and are supposed
@@ -69,7 +69,7 @@ chain_function (GstPad *pad, GstBuffer *buffer)
 
   </sect1>
 
-  <sect1 id="sec-loop-based">
+  <sect1 id="section-loop-based">
     <title>Loop-based elements</title>
     <para>
      As opposed to chain-based elements, loop-based elements enter an 

@@ -1,4 +1,4 @@
-<chapter id="cha-factories">
+<chapter id="chapter-factories">
   <title>More on factories</title>
   <para> 
     The small application we created in the previous chapter used the
@@ -11,7 +11,7 @@
     We will first explain the concepts involved before we move on
     to the reworked helloworld example using autoplugging.
   </para>
-  <sect1>
+  <sect1 id="section-factories-helloworld-problems">
     <title>The problems with the helloworld example</title>
     <para> 
       If we take a look at how the elements were created in the previous
@@ -40,7 +40,7 @@
     </para>
   </sect1>
 
-  <sect1>
+  <sect1 id="section-factories-mime">
     <title>More on MIME Types</title>
     <para> 
       GStreamer uses MIME types to identify the different types of data
@@ -82,10 +82,10 @@
     </para> 
 
     <para>
-      <xref linkend="sec-mime-img"/> shows the MIME types associated with
+      <xref linkend="section-mime-img"/> shows the MIME types associated with
       each pad from the "hello world" example.
     </para>
-    <figure float="1" id="sec-mime-img">
+    <figure float="1" id="section-mime-img">
       <title>The Hello world pipeline with MIME types</title>
       <mediaobject>
         <imageobject>
@@ -115,7 +115,7 @@
     
   </sect1>
 
-  <sect1>
+  <sect1 id="section-factories-gstreamer-types">
     <title>GStreamer types</title>
     <para> 
       GStreamer assigns a unique number to all registered MIME types.
@@ -204,12 +204,12 @@ struct _GstType {
         This function will return 0 if the extension was not known.
       </para> 
       <para>
-        For more information, see <xref linkend="cha-autoplug"/>.
+        For more information, see <xref linkend="chapter-autoplug"/>.
       </para>
     </sect2>
   </sect1>
 
-  <sect1>
+  <sect1 id="section-factories-create">
     <title>Creating elements with the factory</title>
     <para>
       In the previous section we described how you could obtain
@@ -232,7 +232,7 @@ struct _GstType {
     </para>
   </sect1>
 
-  <sect1>
+  <sect1 id="section-factories-basic-types">
     <title>GStreamer basic types</title>
     <para>
       GStreamer only has two builtin types:

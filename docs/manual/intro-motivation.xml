@@ -1,4 +1,4 @@
-<chapter id="cha-motivation">
+<chapter id="chapter-motivation">
   <title>Motivation</title>
   <para> 
     Linux has historically lagged behind other operating systems in the multimedia 
@@ -9,12 +9,12 @@
     with the professional level of software available for MS Windows and MacOS.
   </para>
 
-  <sect1 id="sec-motivation-problems">
+  <sect1 id="section-motivation-problems">
     <title>Current problems</title>
     <para> 
       We describe the typical problems in today's media handling on Linux.
     </para>
-    <sect2 id="sec-motivation-duplicate">
+    <sect2 id="section-motivation-duplicate">
       <title>Multitude of duplicate code</title>
       <para> 
         The Linux user who wishes to hear a sound file must hunt through their collection of 
@@ -28,7 +28,7 @@
       </para>
 
     </sect2>
-    <sect2 id="sec-motivation-goal">
+    <sect2 id="section-motivation-goal">
       <title>'One goal' media players/libraries</title>
       <para>
         Your typical MPEG player was designed to play MPEG video and audio. Most of
@@ -51,7 +51,7 @@
       </para> 
     </sect2>
   
-    <sect2 id="sec-motivation-plugin">
+    <sect2 id="section-motivation-plugin">
       <title>Non unified plugin mechanisms</title>
       <para> 
         Your typical media player might have a plugin for different media
@@ -74,7 +74,7 @@
       </para> 
     </sect2>
 
-    <sect2 id="sec-motivation-network">
+    <sect2 id="section-motivation-network">
       <title>Provision for network transparency</title>
       <para> 
         No infrastructure is present to allow network transparent media
@@ -94,7 +94,7 @@
       </para> 
     </sect2>
 
-    <sect2 id="sec-motivation-catchup">
+    <sect2 id="section-motivation-catchup">
       <title>Catch up with the <trademark>Windows</trademark> world</title>
       <para> 
         We need solid media handling if we want to see Linux succeed on

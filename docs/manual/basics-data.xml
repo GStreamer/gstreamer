@@ -1,4 +1,4 @@
-<chapter id="cha-buffers">
+<chapter id="chapter-buffers">
   <title>Buffers</title>
   <para> 
     Buffers contain the data that will flow through the pipeline you have

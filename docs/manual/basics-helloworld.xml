@@ -1,4 +1,4 @@
-<chapter id="cha-hello">
+<chapter id="chapter-hello-world">
   <title>Your first application</title>
   <para> 
     This chapter describes the most rudimentary aspects of a
@@ -7,7 +7,7 @@
     pausing and stopping the pipeline.
   </para>
 
-  <sect1>
+  <sect1 id="section-hello-world">
     <title>Hello world</title>
     <para>
       We will create a simple first application, a complete MP3 player, using
@@ -177,7 +177,7 @@ main (int argc, char *argv[])
       We now have a created a complete pipeline.  We can visualise the
       pipeline as follows:
     </para>
-    <figure float="1" id="sec-hello-img">
+    <figure float="1" id="section-hello-img">
       <title>The "hello world" pipeline</title>
       <mediaobject>
         <imageobject>
@@ -232,7 +232,7 @@ main (int argc, char *argv[])
     
   </sect1>
 
-  <sect1>
+  <sect1 id="section-hello-world-compile">
     <title>Compiling helloworld.c</title>
     <para>
       To compile the helloworld example, use: 
@@ -256,7 +256,7 @@ main (int argc, char *argv[])
     </programlisting>
   </sect1>
 
-  <sect1>
+  <sect1 id="section-hello-world-conclusion">
     <title>Conclusion</title>
     <para>
       This concludes our first example. As you see, setting up a pipeline

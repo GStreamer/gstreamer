@@ -1,4 +1,4 @@
-<chapter id="cha-typedetection">
+<chapter id="chapter-typedetection">
   <title>Type Detection</title>
   <para> 
     Sometimes the capabilities of a pad are not specificied. The filesrc

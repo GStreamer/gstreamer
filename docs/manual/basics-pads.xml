@@ -1,13 +1,13 @@
-<chapter id="cha-pads">
+<chapter id="chapter-pads">
   <title>Pads</title>
   <para>
-    As we have seen in <xref linkend="cha-elements"/>, the pads are the element's
+    As we have seen in <xref linkend="chapter-elements"/>, the pads are the element's
     interface to the outside world. 
   </para>
   <para>
     The specific type of media that the element can handle will be exposed by the pads.
     The description of this media type is done with capabilities(see
-    <xref linkend="sec-caps"/>)
+    <xref linkend="section-caps"/>)
   </para>
 
   <para>
@@ -24,10 +24,10 @@
       </para></footnote>
   </para>
 
-  <sect1 id="sec-pads-type">
+  <sect1 id="section-pads-type">
     <title>Types of pads</title>
  
-    <sect2 id="sec-pads-dynamic">
+    <sect2 id="section-pads-dynamic">
       <title>Dynamic pads</title>
       <para> 
         Some elements might not have all of their pads when the element is
@@ -47,7 +47,7 @@
 	pipelines later on in this manual.
       </para> 
     </sect2>
-    <sect2 id="sec-pads-request">
+    <sect2 id="section-pads-request">
       <title>Request pads</title>
       <para> 
         An element can also have request pads. These pads are not created
@@ -63,7 +63,7 @@
 
   </sect1>
 
-  <sect1 id="sec-caps">
+  <sect1 id="section-caps">
     <title>Capabilities of a pad</title>
     <para> 
       Since the pads play a very important role in how the element is viewed by the
@@ -76,7 +76,7 @@
       Plugin Writer's Guide.
     </para>
 
-    <sect2 id="sec-pads-caps">
+    <sect2 id="section-pads-caps">
       <title>Capabilities</title>
       <para> 
         Capabilities are attached to a pad in order to describe
@@ -137,7 +137,7 @@ Pads:
         rate: Integer range: 11025 - 48000
       </programlisting>
     </sect2>
-    <sect2 id="sec-pads-props">
+    <sect2 id="section-pads-props">
       <title>What are properties ?</title>
       <para> 
         Properties are used to describe extra information for 
@@ -217,7 +217,7 @@ Pads:
       </itemizedlist>
 
     </sect2>
-    <sect2 id="sec-pads-caps-use">
+    <sect2 id="section-pads-caps-use">
       <title>What capabilities are used for</title>
       <para> 
         Capabilities describe in great detail the type of media that is handled by the pads.

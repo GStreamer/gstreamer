@@ -1,7 +1,7 @@
-<chapter id="cha-dparams">
+<chapter id="chapter-dparams">
   <title>Dynamic Parameters</title>
   
-  <sect1>
+  <sect1 id="section-dparams-getting-started">
     <title>Getting Started</title>
     <para>
       The Dynamic Parameters subsystem is contained within the
@@ -31,7 +31,7 @@
     </programlisting>
   </sect1>
 
-  <sect1>
+  <sect1 id="section-dparams-creating">
     <title>Creating and Attaching Dynamic Parameters</title>
     <para>
       Once you have created your elements you can create and attach dparams to them.
@@ -81,7 +81,7 @@
     </programlisting>
   </sect1>
 
-  <sect1>
+  <sect1 id="section-dparams-changing">
     <title>Changing Dynamic Parameter Values</title>
     <para>
       All interaction with dparams to actually set the dparam value is done through simple GObject properties.
@@ -116,7 +116,7 @@
 
   </sect1>
 
-  <sect1>
+  <sect1 id="section-dparams-types">
     <title>Different Types of Dynamic Parameter</title>
     <para>
       There are currently only two implementations of dparams so far.  They are both for real-time use so 

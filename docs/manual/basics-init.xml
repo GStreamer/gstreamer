@@ -1,4 +1,4 @@
-<chapter id="cha-initialisation">
+<chapter id="chapter-initialisation">
   <title>Initializing <application>GStreamer</application></title>
   <para> 
     When writing a <application>GStreamer</application> application, you can

@@ -88,7 +88,7 @@
       </author>
     </authorgroup>
 
-    <legalnotice id="legalnotice">
+    <legalnotice id="misc-legalnotice">
       <para>
 	This material may be distributed only subject to the terms and
         conditions set forth in the Open Publication License, v1.0 or later (the
@@ -104,16 +104,16 @@
       
 <!-- ############# Overview - part ############### -->
 
-  <part id="overview"><title>Overview</title>
+  <part id="part-overview"><title>Overview</title>
     <partintro>
       <para>
-        <xref linkend="overview"/> gives you an overview of
+        <xref linkend="part-overview"/> gives you an overview of
         <application>GStreamer</application> design goals.
 
-        <xref linkend="basic-concepts"/> rapidly covers the basics of
+        <xref linkend="part-basic-concepts"/> rapidly covers the basics of
         <application>GStreamer</application> programming.
 
-        In <xref linkend="build-app"/> we will move on to the
+        In <xref linkend="part-build-app"/> we will move on to the
         examples. Since <application>GStreamer</application> uses <ulink
         url="http://developer.gnome.org/arch/gtk/glib.html" type="http">GLib
         2.0</ulink>, the reader is assumed to understand the basics of the
@@ -138,7 +138,7 @@
 
 <!-- ############ Basic concepts - part ############# -->
 
-  <part id="basic-concepts"><title>Basic Concepts</title>
+  <part id="part-basic-concepts"><title>Basic Concepts</title>
     <partintro>
       <para> 
         We will first describe the basics of
@@ -167,7 +167,7 @@
   </part>
 
 <!-- ############ Basic API - part ############# -->
-  <part id="basic-api"><title>Basic API</title>
+  <part id="part-basic-api"><title>Basic API</title>
       &INIT-API;
 
       &ELEMENTS-API;
@@ -189,7 +189,7 @@
 
 <!-- ############ Building Apps - part ############# -->
 
-  <part id="build-app"><title>Building an application</title>
+  <part id="part-build-app"><title>Building an application</title>
 
     <partintro>
       <para>
@@ -209,7 +209,7 @@
 
 <!-- ############ Advanced GStreamer - part ############# -->
 
-  <part id="advanced"><title>Advanced <application>GStreamer</application> concepts</title>
+  <part id="part-advanced"><title>Advanced <application>GStreamer</application> concepts</title>
 
     <partintro>
       <para>
@@ -244,7 +244,7 @@
 
 <!-- ############ XML in GStreamer - part ############# -->
 
-  <part id="xml-gstreamer"><title>XML in <application>GStreamer</application></title>
+  <part id="part-xml-gstreamer"><title>XML in <application>GStreamer</application></title>
 
     <partintro>
       <para>
@@ -260,7 +260,7 @@
 
 <!-- ############ Appendices - part ############# -->
 
-  <part id="appendices">
+  <part id="part-appendices">
     <title>Appendices</title>
 
     <partintro>

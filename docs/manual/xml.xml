@@ -1,4 +1,4 @@
-<chapter id="cha-xml">
+<chapter id="chapter-xml">
   <title>XML in <application>GStreamer</application></title>
   <para> 
     <application>GStreamer</application> uses XML to store and load
@@ -13,7 +13,7 @@
     XML file again for later use. 
   </para>
   
-  <sect1 id="sec-xml-write">
+  <sect1 id="section-xml-write">
     <title>Turning GstElements into XML</title>
 
     <para>
@@ -108,7 +108,7 @@ main (int argc, char *argv[])
     </para>
   </sect1>
 
-  <sect1 id="sec-xml-load">
+  <sect1 id="section-xml-load">
     <title>Loading a GstElement from an XML file</title>
     <para>
       Before an XML file can be loaded, you must create a GstXML object. 
@@ -162,7 +162,7 @@ main(int argc, char *argv[])
       success or failure of the requested action.
     </para>
   </sect1>
-  <sect1 id="sec-xml-custom">
+  <sect1 id="section-xml-custom">
     <title>Adding custom XML tags into the core XML data</title>
 
     <para>

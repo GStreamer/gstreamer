@@ -1,11 +1,11 @@
-<chapter id="cha-links">
+<chapter id="chapter-links">
   <title>Linking elements</title>
   <para> 
     You can link the different pads of elements together so that the elements
     form a chain.
   </para>
 
-  <figure float="1" id="sec-link">
+  <figure float="1" id="section-link">
     <title>Visualisation of three linked elements</title>
       <mediaobject>
         <imageobject>

@@ -1,4 +1,4 @@
-<chapter id="cha-gnome">
+<chapter id="chapter-gnome">
   <title>GNOME integration</title>
   <para> 
     GStreamer is fairly easy to integrate with GNOME applications.

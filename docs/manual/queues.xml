@@ -1,4 +1,4 @@
-<chapter id="cha-queues">
+<chapter id="chapter-queues">
   <title>Queues</title>
   <para> 
     A queue is a filter element.
@@ -22,7 +22,7 @@
     Below is a figure of a two-threaded decoder. We have one thread (the main execution
     thread) reading the data from a file, and another thread decoding the data.
   </para>
-  <figure float="1" id="sec-queues-img">
+  <figure float="1" id="section-queues-img">
     <title>a two-threaded decoder with a queue</title>
     <mediaobject>
       <imageobject>

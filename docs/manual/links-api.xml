@@ -1,6 +1,6 @@
-<chapter id="cha-links-api">
+<chapter id="chapter-links-api">
   <title>Linking elements</title>
-  <sect1 id="sec-link-basic">
+  <sect1 id="section-link-basic">
    <title>Making simple links</title>
    <para> 
      You can link two pads with:
@@ -66,12 +66,12 @@
    </para>
   </sect1>
 
-  <sect1 id="sec-link-filtered">
+  <sect1 id="section-link-filtered">
    <title>Making filtered links</title>
     <para>
       You can also force a specific media type on the link by using gst_pad_link_filtered ()
       and gst_element_link_filtered () with capabilities.
-      See <xref linkend="sec-caps"/> for
+      See <xref linkend="section-caps"/> for
       an explanation of capabilities.
     </para>
   </sect1>

@@ -1,4 +1,4 @@
-<chapter id="cha-bins">
+<chapter id="chapter-bins">
   <title>Bins</title>
   <para> 
     A bin is a container element. You can add elements to a bin. Since a bin is 
@@ -16,7 +16,7 @@
     generation is one of the most complicated procedures in GStreamer.
   </para>
 
-  <figure float="1" id="sec-bin-img">
+  <figure float="1" id="section-bin-img">
     <title>Visualisation of a bin with some elements in it</title>
       <mediaobject>  
         <imageobject>
@@ -41,7 +41,7 @@
           a thread: a bin that will be run in a separate execution thread.
 	  You will have to use this bin if you have to carefully
           synchronize audio and video, or for buffering. You will learn
-	  more about threads in <xref linkend="cha-threads"/>.
+	  more about threads in <xref linkend="chapter-threads"/>.
         </para>
       </listitem>
     </itemizedlist>
