@@ -82,6 +82,7 @@ AC_ISC_POSIX
 
 AC_HEADER_STDC([])
 AC_C_INLINE
+AX_CREATE_STDINT_H
 
 dnl Check for a way to display the function name in debug output
 GST_CHECK_FUNCTION()

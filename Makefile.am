@@ -38,6 +38,8 @@ EXTRA_DIST=gst-plugins.spec depcomp \
 	   AUTHORS COPYING COPYING.LIB README RELEASE REQUIREMENTS \
 	   ChangeLog autogen.sh common m4
 
+DISTCLEANFILES=_stdint.h
+
 dist-hook:
 	rm -rf `find $(distdir)/common -name CVS`
 	rm -rf `find $(distdir)/m4 -name CVS`
