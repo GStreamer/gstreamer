@@ -52,6 +52,12 @@ else
 DIRAC_DIR=
 endif
 
+if USE_DIRECTFB
+DIRECTFB_DIR=directfb
+else
+DIRECTFB_DIR=
+endif
+
 if USE_DIVX
 DIVX_DIR=divx
 else
@@ -380,6 +386,7 @@ SUBDIRS=\
 	$(CDAUDIO_DIR) \
 	$(CDPARANOIA_DIR) \
 	$(DIRAC_DIR) \
+	$(DIRECTFB_DIR) \
 	$(DIVX_DIR) \
 	$(DTS_DIR) \
 	$(DV1394_DIR) \
@@ -442,6 +449,7 @@ DIST_SUBDIRS=\
 	cdaudio \
 	cdparanoia \
 	dirac \
+	directfb \
 	divx \
 	dts \
 	dv \

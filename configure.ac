@@ -828,6 +828,16 @@ GST_CHECK_FEATURE(DIRAC, [dirac plug-ins], dirac, [
   AC_SUBST(DIRAC_LIBS)
 ])
 
+dnl *** DirectFB ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
+GST_CHECK_FEATURE(DIRECTFB, [directfb], directfbvideosink , [
+  translit(dnm, m, l) AC_SUBST(DIRECTFB_LIBS)
+  translit(dnm, m, l) AC_SUBST(DIRECTFB_CFLAGS)
+  dnl check with pkg-config
+  PKG_CHECK_MODULES(DIRECTFB, directfb,
+                    HAVE_DIRECTFB="yes", HAVE_DIRECTFB="no")
+])
+
 dnl *** DIVX ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIVX, true)
 GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
@@ -1946,6 +1956,7 @@ ext/audiofile/Makefile
 ext/cdaudio/Makefile
 ext/cdparanoia/Makefile
 ext/dirac/Makefile
+ext/directfb/Makefile
 ext/divx/Makefile
 ext/dts/Makefile
 ext/dv/Makefile
