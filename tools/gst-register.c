@@ -86,6 +86,10 @@ int main (int argc,char *argv[])
 
   while (registries) {
     GstRegistry *registry = GST_REGISTRY (registries->data);
+    GList *dir_list;
+    GList *iter;
+    char *dir;
+
     if (path_spill)
     {
       GList *iter;
@@ -126,19 +130,13 @@ int main (int argc,char *argv[])
       }
     }
 
-    {
-      GList *dir_list;
-      GList *iter;
-      char *dir;
-
-      dir_list = gst_registry_get_path_list(registry);
-      for(iter = dir_list; iter; iter = iter->next) {
-        dir = g_build_filename((const char *)iter->data, "scripts");
-	spawn_all_in_dir(dir);
-	g_free(dir);
-      }
-      g_list_free(dir_list);
+    dir_list = gst_registry_get_path_list(registry);
+    for(iter = dir_list; iter; iter = iter->next) {
+      dir = g_build_filename((const char *)iter->data, "scripts");
+      spawn_all_in_dir(dir);
+      g_free(dir);
     }
+    g_list_free(dir_list);
 
     registries = g_list_next (registries);
   }
