@@ -167,6 +167,32 @@ HAVE_LIBMMX="no"
 AC_MSG_RESULT(no)
 )
 
+dnl
+dnl We should really use AC_SYS_LARGEFILE, but the problem is
+dnl many of the plugins don't include "config.h".  To assure
+dnl binary compatibility, it is necessary that all gstreamer
+dnl code be compiled with the same sizeof(off_t), so we use
+dnl the following crude hack.
+dnl
+
+AC_MSG_CHECKING(for large file support)
+AC_TRY_RUN([
+#define _LARGEFILE_SOURCE
+#define _FILE_OFFSET_BITS 64
+#include <sys/types.h>
+int main () { return !(sizeof(off_t) == 8); }
+],
+[
+AC_MSG_RESULT(yes)
+CORE_CFLAGS="$CORE_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+GST_DEFINE_CFLAGS="$GST_DEFINE_CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+],
+[
+AC_MSG_RESULT(no)
+],
+[
+AC_MSG_RESULT(no)
+])
 
 
 dnl Check for essential libraries first:
@@ -593,7 +619,7 @@ AC_CHECK_HEADER(mpeg2dec/mpeg2.h, :, HAVE_MPEG2DEC=no)
 
 dnl Check for a52dec
 AC_MSG_CHECKING(a52dec library)
-AC_CHECK_LIB(a52, a52_init, HAVE_A52DEC=yes, HAVE_A52DEC=no, )
+AC_CHECK_LIB(a52, a52_init, HAVE_A52DEC=yes, HAVE_A52DEC=no, -lm)
 AC_CHECK_HEADER(a52dec/a52.h, :, HAVE_A52DEC=no)
 
 dnl Check for sidplay
