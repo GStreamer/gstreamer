@@ -26,6 +26,9 @@
 
 #define TICK_INTERVAL_MSEC 200
 
+GST_DEBUG_CATEGORY_STATIC (play_debug);
+#define GST_CAT_DEFAULT play_debug
+
 enum
 {
   TIME_TICK,
@@ -669,6 +672,8 @@ gst_play_class_init (GstPlayClass * klass)
       G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstPlayClass, have_video_size), NULL, NULL,
       gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
+  GST_DEBUG_CATEGORY_INIT (play_debug, "GST_PLAY", 0, "GStreamer Play library");
+  GST_DEBUG ("Play class initialized");
 }
 
 /* ======================================================= */
@@ -700,8 +705,13 @@ gst_play_set_location (GstPlay * play, const char *location)
 
   play->priv->location = g_strdup (location);
 
-  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY) {
+    GstElementStateReturn ret;
+
+    ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+    if (ret == GST_STATE_FAILURE)
+      return FALSE;
+  }
 
   work_thread = g_hash_table_lookup (play->priv->elements, "work_thread");
   if (!GST_IS_ELEMENT (work_thread))
@@ -840,8 +850,13 @@ gst_play_set_data_src (GstPlay * play, GstElement * data_src)
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
 
   /* We bring back the pipeline to READY */
-  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY) {
+    GstElementStateReturn ret;
+
+    ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+    if (ret == GST_STATE_FAILURE)
+      return FALSE;
+  }
 
   /* Getting needed objects */
   work_thread = g_hash_table_lookup (play->priv->elements, "work_thread");
@@ -880,6 +895,7 @@ gboolean
 gst_play_set_video_sink (GstPlay * play, GstElement * video_sink)
 {
   GstElement *video_thread, *old_video_sink, *video_scaler, *video_sink_element;
+  GstElementStateReturn ret;
 
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
@@ -887,8 +903,13 @@ gst_play_set_video_sink (GstPlay * play, GstElement * video_sink)
   g_return_val_if_fail (GST_IS_ELEMENT (video_sink), FALSE);
 
   /* We bring back the pipeline to READY */
-  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY) {
+    GstElementStateReturn ret;
+
+    ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+    if (ret == GST_STATE_FAILURE)
+      return FALSE;
+  }
 
   /* Getting needed objects */
   video_thread = g_hash_table_lookup (play->priv->elements, "video_thread");
@@ -921,7 +942,9 @@ gst_play_set_video_sink (GstPlay * play, GstElement * video_sink)
     }
   }
 
-  gst_element_set_state (video_sink, GST_STATE (GST_ELEMENT (play)));
+  ret = gst_element_set_state (video_sink, GST_STATE (GST_ELEMENT (play)));
+  if (ret == GST_STATE_FAILURE)
+    return FALSE;
 
   return TRUE;
 }
@@ -939,6 +962,7 @@ gboolean
 gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink)
 {
   GstElement *old_audio_sink, *audio_thread, *volume, *audio_sink_element;
+  GstElementStateReturn ret;
 
   g_return_val_if_fail (play != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLAY (play), FALSE);
@@ -946,8 +970,13 @@ gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink)
   g_return_val_if_fail (GST_IS_ELEMENT (audio_sink), FALSE);
 
   /* We bring back the pipeline to READY */
-  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY)
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+  if (GST_STATE (GST_ELEMENT (play)) != GST_STATE_READY) {
+    GstElementStateReturn ret;
+
+    ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_READY);
+    if (ret == GST_STATE_FAILURE)
+      return FALSE;
+  }
 
   /* Getting needed objects */
   old_audio_sink = g_hash_table_lookup (play->priv->elements, "audio_sink");
@@ -976,7 +1005,9 @@ gst_play_set_audio_sink (GstPlay * play, GstElement * audio_sink)
         audio_sink_element);
   }
 
-  gst_element_set_state (audio_sink, GST_STATE (GST_ELEMENT (play)));
+  ret = gst_element_set_state (audio_sink, GST_STATE (GST_ELEMENT (play)));
+  if (ret == GST_STATE_FAILURE)
+    return FALSE;
 
   return TRUE;
 }
@@ -1017,7 +1048,11 @@ gst_play_set_visualization (GstPlay * play, GstElement * vis_element)
 
   /* We bring back the pipeline to PAUSED */
   if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+    GstElementStateReturn ret;
+
+    ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+    if (ret == GST_STATE_FAILURE)
+      return FALSE;
     was_playing = TRUE;
   }
 
@@ -1028,8 +1063,13 @@ gst_play_set_visualization (GstPlay * play, GstElement * vis_element)
 
   g_hash_table_replace (play->priv->elements, "vis_element", vis_element);
 
-  if (was_playing)
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
+  if (was_playing) {
+    GstElementStateReturn ret;
+
+    ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
+    if (ret == GST_STATE_FAILURE)
+      return FALSE;
+  }
 
   return TRUE;
 }
@@ -1092,7 +1132,11 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
 
     /* We bring back the pipeline to PAUSED */
     if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
-      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+      GstElementStateReturn ret;
+
+      ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+      if (ret == GST_STATE_FAILURE)
+        return FALSE;
       was_playing = TRUE;
     }
 
@@ -1115,7 +1159,11 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
 
     /* We bring back the pipeline to PAUSED */
     if (GST_STATE (GST_ELEMENT (play)) == GST_STATE_PLAYING) {
-      gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+      GstElementStateReturn ret;
+
+      ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PAUSED);
+      if (ret == GST_STATE_FAILURE)
+        return FALSE;
       was_playing = TRUE;
     }
 
@@ -1127,8 +1175,13 @@ gst_play_connect_visualization (GstPlay * play, gboolean connect)
     gst_element_link (vis_bin, video_switch);
   }
 
-  if (was_playing)
-    gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
+  if (was_playing) {
+    GstElementStateReturn ret;
+
+    ret = gst_element_set_state (GST_ELEMENT (play), GST_STATE_PLAYING);
+    if (ret == GST_STATE_FAILURE)
+      return FALSE;
+  }
 
   return TRUE;
 }
