@@ -78,7 +78,7 @@ gst_gconf_get_string (const gchar *key)
 
   if (error)
   {
-    g_warning ("gst_gconf_get_string: error: %s\n", error->message);
+    g_print ("gst_gconf_get_string: error: %s\n", error->message);
     g_error_free (error);
   }
   /* FIXME: decide if we want to strdup this value; if we do, check for NULL */
@@ -101,7 +101,7 @@ gst_gconf_set_string (const gchar *key, const gchar *value)
   gconf_client_set_string (gst_gconf_get_client (), full_key, value, &error);
   if (error)
   {
-    g_warning ("gst_gconf_set_string: error: %s\n", error->message);
+    g_print ("gst_gconf_set_string: error: %s\n", error->message);
     g_error_free (error);
   }
   g_free (full_key);
@@ -185,7 +185,7 @@ gst_gconf_get_default_audio_sink (void)
     if (!ret)
       g_warning ("No GConf default audio sink key and osssink doesn't work");
     else
-      g_warning ("GConf audio sink not found, using osssink");
+      g_print ("GConf audio sink not found, using osssink");
   }
 
   return ret;
@@ -211,7 +211,7 @@ gst_gconf_get_default_video_sink (void)
     if (!ret)
       g_warning ("No GConf default video sink key and xvideosink doesn't work");
     else
-      g_warning ("GConf video sink not found, using xvideosink");
+      g_print ("GConf video sink not found, using xvideosink");
   }
 
   return ret;
@@ -237,7 +237,7 @@ gst_gconf_get_default_audio_src (void)
     if (!ret)
       g_warning ("No GConf default audio src key and osssrc doesn't work");
     else
-      g_warning ("GConf audio src not found, using osssrc");
+      g_print ("GConf audio src not found, using osssrc");
   }
 
   return ret;
@@ -264,7 +264,7 @@ gst_gconf_get_default_video_src (void)
     if (!ret)
       g_warning ("No GConf default video src key and videotestrc doesn't work");
     else
-      g_warning ("GConf video src not found, using videotestrc");
+      g_print ("GConf video src not found, using videotestrc");
   }
 
   return ret;
@@ -290,7 +290,7 @@ gst_gconf_get_default_visualisation_element (void)
     if (!ret)
       g_warning ("No GConf default visualisation plugin key and goom doesn't work");
     else
-      g_warning ("GConf visualisation plugin not found, using goom");
+      g_print ("GConf visualisation plugin not found, using goom");
   }
 
   return ret;
