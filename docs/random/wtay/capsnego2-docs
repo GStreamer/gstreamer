@@ -76,23 +76,30 @@ Two capabilities can be chained together to form a larger capability:
                               (  )
 
 Capabilities always work as constraints, this means that they constrain the
-media type tp the given mime-type and properties. By this definition a NULL 
+media type to the given mime-type and properties. By this definition a NULL 
 GstCaps or a NULL GstProps means: no constraints.
 
 
 Variable capabilities vs. fixed capabilities
 --------------------------------------------
 
-A GstProps structure is said to be fixed if it doesn't contain lists or
-ranges, otherwise it is a variable GstProps. A variable GstProps, by definitin
-does not constrain the media type to a set of fixed properties.
+Definition:
 
-A GstCaps is said to be fixed if it is not chained and it doesn't contain
-a variable GstProps component.
+  A GstProps structure is said to be fixed if it doesn't contain lists or
+  ranges, otherwise it is a variable GstProps. A variable GstProps, by definitin
+  does not constrain the media type to a set of fixed properties.
+
+  A GstCaps is said to be fixed if it is not chained and it doesn't contain
+  a variable GstProps component.
 
 
 GstCaps compatibility
 ---------------------
+
+<write me>
+
+GstCaps intersection
+--------------------
 
 <write me>
 
@@ -128,8 +135,21 @@ GstCaps are used in the following data structures:
       connection filter that will act as additional constraints on the media types
       that can flow through the connection.
 
-Connection filters are cleared when two connected pads are disconnected.
+Connection filters and application filters are cleared when two connected pads 
+are disconnected. Pad caps are not cleared.  Padtemplates are immutable and 
+never cleared.
 
+
+The GstPad get_caps function
+----------------------------
+
+the gst_pad_get_caps function returns the caps of a given pad. The pad caps are
+calculated as:
+
+ - if the pad has pad caps, return those
+ - else if the pad has a getcaps function, call the function and return the result
+ - else if the pad has a padtemplate, return the padtemplate caps
+ - else return NULL
 
 
 Purpose of caps negotiation
@@ -145,19 +165,118 @@ equal.
 Caps negotiation starts as early as possible.
 
 
+GstPad connection
+-----------------
+
+When two pads are connected get_caps is called on both pads to get their caps.
+Then the intersection between those caps is made, this will give us all the
+possible media types that can flow trough this pad connection. Optionally the
+application can provide additional caps, the pad intersection is also made with
+the application caps. 
+
+The intersection and the optional application caps are stored in the two pads.
+
+If the intersection is NULL, the two pads have no common types and the connection
+is refused.
+
+If the intersection is a fixed caps, this means there is only one possible media type
+that can be used for this connection.
+
+For all not NULL intersections the pad connect functions are called with the 
+intersection. Depending on the result of the connect funtion the connection is
+allowed or refused.
+
+If the intersection is fixed and the pad connect functions agreed to the caps, 
+the caps are set on the pads.
+
+Note that pad caps are never set for non fixed caps.
+
+!Example 1:
+! 
+! 1. before connecting the pads, they both have a set of possible media types,
+!    on the pad, through the gstcaps function or on the padtemplate (here
+!    represented with capital letters)
+!
+!    srcpad                       sinkpad
+!       A                           B
+!       B                           F
+!       C                           A
+!	                          G
+!
+! 2. when performing the connection, the intersection between the two sets of caps
+!    is made.
+!    
+!    srcpad                       sinkpad
+!       A )                      (  B
+!       B )-------->  A   <------(  F
+!       C )           B          (  A
+! 	                         (  G
+! 
+! 3. In this case the intersection is not a fixed caps (it's a chained caps).
+!    the connect function of the two pads are called (if any), the connect
+!    function can accept of refuse the caps.
+! 
+! 4. if the caps are accepted, the intersection caps are set on both pads.
+! 
+! 5. plugins will typically no configure themselves if they get variable caps.
+!    It is possible though for a plugin to select one of the caps, fixate
+!    some properties and refine the filter to fixed caps (see later)
+!
+
+
+!Example 2:
+! 
+! 1. we take two pads that intersect to fixed caps (B):
+! 
+!    srcpad                       sinkpad
+!       A  )                     (  B
+!       B  )------->  B  <-------(  F
+! 
+! 2. both pad connect functions are called. 
+! 
+! 3. assuming the connect functions did not refuse the connection, the caps
+!    are set on both pads (because they are fixed).
+! 
+!    srcpad  (B)--------------(B) sinkpad
+!       A                           B
+!       B                           F
+! 
+   
+!Example 3:
+! 
+! 1. we take two pads, one with pad caps, another one with a padtemplate. 
+! 
+!    srcpad (B)                   sinkpad
+!            !                   (  B
+!            ------>  B  <-------(  F
+! 
+! 2. the pad get_caps function will return the pad caps of the srcpad and
+!    the padtemplate caps of the sinkpad. The intersection is made, yielding
+!    a fixed caps (B) which is sent to both connect functions (if any)
+!
+! 3. If the connect function(s) didn't refuse the connection the fixed caps
+!    are set on both pads. The intersection is also kept in the pad object.
+!
+!    srcpad  (B)--------------(B) sinkpad
+!                                   B
+!                                   F
+!
+! 4. when fixed caps are received on the sinkpad the plugin will typically 
+!    configure itself to deal with the format.
+!
+
+
+
 Pad connect functions
 ---------------------
 
 A Pad can be notified when another pad is connected or reconnected to it with
 fixed or variable caps. This notification will be done with the optional 
-GstPadConnect callback that an element can provide for a pad.
+GstPadConnectFunction callback that an element can provide for a pad.
+iRemember that this connection is _always_ called, not only whith fixed caps
+but also with variable caps (if any).
 
-The pad connection 
 
-
-
-GstPad connection
------------------
 
 
 
