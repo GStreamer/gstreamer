@@ -352,8 +352,8 @@ print_element_info (GstElementFactory *factory)
     printf("  GST_ELEMENT_THREADSUGGESTED\n");
     have_flags = TRUE;
   }
-  if (GST_FLAG_IS_SET(element,GST_ELEMENT_NO_SEEK)) {
-    printf("  GST_ELEMENT_NO_SEEK\n");
+  if (GST_FLAG_IS_SET(element,GST_ELEMENT_EVENT_AWARE)) {
+    printf("  GST_ELEMENT_EVENT_AWARE\n");
     have_flags = TRUE;
   }
   if (!have_flags)
