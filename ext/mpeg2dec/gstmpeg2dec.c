@@ -450,7 +450,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
   if (pts != -1) {
     gint64 mpeg_pts = GSTTIME_TO_MPEGTIME (pts);
 
-    GST_DEBUG (0, "have pts: %lld (%lld)", 
+    GST_DEBUG (0, "have pts: %" G_GINT64_FORMAT " (%" G_GINT64_FORMAT ")", 
 		  mpeg_pts, MPEGTIME_TO_GSTTIME (mpeg_pts));
 
     mpeg2_pts (mpeg2dec->decoder, mpeg_pts);
@@ -517,7 +517,7 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	}
 	outbuf = gst_mpeg2dec_alloc_buffer (mpeg2dec, info, GST_BUFFER_OFFSET (buf));
 
-	GST_DEBUG (0, "picture %d, %p, %lld, %lld", 
+	GST_DEBUG (0, "picture %d, %p, %" G_GINT64_FORMAT ", %" G_GINT64_FORMAT, 
 			key_frame, outbuf, GST_BUFFER_OFFSET (outbuf), pts);
 
 	if (mpeg2dec->discont_state == MPEG2DEC_DISC_NEW_PICTURE && key_frame)
@@ -568,19 +568,19 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 	  if (picture->flags & PIC_FLAG_PTS) {
             GstClockTime time = MPEGTIME_TO_GSTTIME (picture->pts);
 
-	    GST_DEBUG (0, "picture had pts %lld", time);
+	    GST_DEBUG (0, "picture had pts %" G_GINT64_FORMAT, time);
             GST_BUFFER_TIMESTAMP (outbuf) = time;
 
             mpeg2dec->next_time = time;
 	  }
 	  else {
-	    GST_DEBUG (0, "picture didn't have pts using %lld", mpeg2dec->next_time);
+	    GST_DEBUG (0, "picture didn't have pts using %" G_GINT64_FORMAT, mpeg2dec->next_time);
             GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
 	  }
           mpeg2dec->next_time += (mpeg2dec->frame_period * picture->nb_fields) >> 1;
 
 
-	  GST_DEBUG (0, "picture: %s %s fields:%d off:%lld ts:%lld", 
+	  GST_DEBUG (0, "picture: %s %s fields:%d off:%" G_GINT64_FORMAT " ts:%" G_GINT64_FORMAT, 
 			  (picture->flags & PIC_FLAG_TOP_FIELD_FIRST ? "tff " : "    "),
 			  (picture->flags & PIC_FLAG_PROGRESSIVE_FRAME ? "prog" : "    "),
 			  picture->nb_fields, 

@@ -279,7 +279,7 @@ gst_mpeg_parse_send_data (GstMPEGParse *mpeg_parse, GstData *data, GstClockTime 
     }
 
     GST_BUFFER_TIMESTAMP (data) = time;
-    GST_DEBUG (0, "current_scr %lld", time);
+    GST_DEBUG (0, "current_scr %" G_GINT64_FORMAT, time);
 
     if (GST_PAD_IS_USABLE (mpeg_parse->srcpad))
       gst_pad_push (mpeg_parse->srcpad, GST_BUFFER (data));
@@ -331,7 +331,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 
     scr = (scr * 300 + scr_ext % 300) / 300;
 
-    GST_DEBUG (0, "%lld %d, %08x %08x %lld diff: %lld", 
+    GST_DEBUG (0, "%" G_GINT64_FORMAT " %d, %08x %08x %" G_GINT64_FORMAT " diff: %" G_GINT64_FORMAT, 
 		    scr, scr_ext, scr1, scr2, mpeg_parse->bytes_since_scr, 
 		    scr - mpeg_parse->current_scr);
 
@@ -360,7 +360,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
     mpeg_parse->next_scr = scr;
   }
 
-  GST_DEBUG (0, "SCR is %llu (%llu) next: %lld (%lld) diff: %lld (%lld)", 
+  GST_DEBUG (0, "SCR is %" G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT ") next: %" G_GINT64_FORMAT " (%" G_GINT64_FORMAT ") diff: %" G_GINT64_FORMAT " (%" G_GINT64_FORMAT ")", 
 		  scr, 
 		  MPEGTIME_TO_GSTTIME (scr),
 		  mpeg_parse->next_scr,
@@ -370,13 +370,13 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
 		  MPEGTIME_TO_GSTTIME (mpeg_parse->next_scr));
 
   if (ABS ((gint64)mpeg_parse->next_scr - (gint64)(scr_adj)) > mpeg_parse->max_discont) {
-    GST_DEBUG (0, "discontinuity detected; expected: %llu got: %llu real:%lld adjust:%lld", 
+    GST_DEBUG (0, "discontinuity detected; expected: %" G_GUINT64_FORMAT " got: %" G_GUINT64_FORMAT " real:%" G_GINT64_FORMAT " adjust:%" G_GINT64_FORMAT, 
            mpeg_parse->next_scr, scr_adj, scr, mpeg_parse->adjust);
 
     mpeg_parse->adjust = mpeg_parse->next_scr - scr;
     scr = mpeg_parse->next_scr;
 
-    GST_DEBUG (0, "new adjust: %lld", mpeg_parse->adjust);
+    GST_DEBUG (0, "new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
   }
   else {
     scr = scr_adj;
@@ -554,7 +554,7 @@ gst_mpeg_parse_loop (GstElement *element)
         mpeg_parse->next_scr = scr;
       }
 
-      GST_DEBUG (0, "size: %lld, total since SCR: %lld, next SCR: %lld", 
+      GST_DEBUG (0, "size: %" G_GINT64_FORMAT ", total since SCR: %" G_GINT64_FORMAT ", next SCR: %" G_GINT64_FORMAT, 
 		       size, bss, mpeg_parse->next_scr);
     }
   }
@@ -758,7 +758,7 @@ gst_mpeg_parse_handle_src_event (GstPad *pad, GstEvent *event)
       if (!res)
 	break;
 	      
-      GST_DEBUG (0, "sending seek to %lld", desired_offset);
+      GST_DEBUG (0, "sending seek to %" G_GINT64_FORMAT, desired_offset);
       if (gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset, GST_SEEK_METHOD_SET)) {
         mpeg_parse->discont_pending = TRUE;
         mpeg_parse->scr_pending = TRUE;

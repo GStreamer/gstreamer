@@ -487,7 +487,7 @@ gst_asf_demux_process_file (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
   asf_demux->play_time = (guint32) GUINT64_FROM_LE (object->play_time) / 10;
   asf_demux->preroll = GUINT64_FROM_LE (object->preroll);
   
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a file with %llu data packets", packets);
+  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is a file with %" G_GUINT64_FORMAT " data packets", packets);
 
   return TRUE;
 }
@@ -692,10 +692,10 @@ gst_asf_demux_process_data (GstASFDemux *asf_demux, guint64 *filepos, guint64 *o
   gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&object, 26);
   packets = GUINT64_FROM_LE (object->packets);
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is data with %llu packets", packets); 
+  GST_INFO (GST_CAT_PLUGIN_INFO, "Object is data with %" G_GUINT64_FORMAT " packets", packets); 
 
   for (packet = 0; packet < packets; packet++) {
-    GST_INFO (GST_CAT_PLUGIN_INFO, "\n\nProcess packet %llu", packet);
+    GST_INFO (GST_CAT_PLUGIN_INFO, "\n\nProcess packet %" G_GUINT64_FORMAT, packet);
     
     gst_asf_demux_read_object_header_rest (asf_demux, (guint8**)&buf, 1); rsize=1;
     if (*buf & 0x80) {
@@ -941,11 +941,11 @@ gst_asf_demux_process_object    (GstASFDemux *asf_demux,
   guint64 obj_size;
 
   if (!gst_asf_demux_read_object_header (asf_demux, &obj_id, &obj_size)) {
-    g_print ("  *****  Error reading object at filepos 0x%08llx\n", *filepos);
+    g_print ("  *****  Error reading object at filepos %" G_GUINT64_FORMAT "\n", *filepos);
     return FALSE;
   }
 
-  GST_INFO (GST_CAT_PLUGIN_INFO, "Found object %u with size %llu", obj_id, obj_size);
+  GST_INFO (GST_CAT_PLUGIN_INFO, "Found object %u with size %" G_GUINT64_FORMAT, obj_id, obj_size);
 
   switch (obj_id) {
   case ASF_OBJ_STREAM:
@@ -1166,7 +1166,7 @@ gst_asf_demux_handle_sink_event (GstASFDemux *asf_demux)
         asf_stream_context *stream = &asf_demux->stream[i];
 
 	if (GST_PAD_IS_USABLE (stream->pad)) {
-	  GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %lld + %lld = %lld", i, 
+	  GST_DEBUG (GST_CAT_EVENT, "sending discont on %d %" G_GINT64_FORMAT " + %" G_GINT64_FORMAT " = %" G_GINT64_FORMAT, i, 
 			asf_demux->last_seek, stream->delay, asf_demux->last_seek + stream->delay);
          discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, 
 			asf_demux->last_seek + stream->delay , NULL);

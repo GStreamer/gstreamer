@@ -262,7 +262,7 @@ gst_mpeg_demux_handle_discont (GstMPEGParse *mpeg_parse)
   gint64 current_time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
   gint i;
 
-  GST_DEBUG (GST_CAT_EVENT, "discont %llu\n", current_time);
+  GST_DEBUG (GST_CAT_EVENT, "discont %" G_GUINT64_FORMAT "\n", current_time);
 
   for (i=0;i<NUM_VIDEO_STREAMS;i++) {
     if (mpeg_demux->video_stream[i] && 
@@ -533,7 +533,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
             pts |=  *buf++         <<  7;
             pts |= (*buf++ & 0xFE) >>  1;
 
-            GST_DEBUG (0, "PTS = %llu", pts);
+            GST_DEBUG (0, "PTS = %" G_GUINT64_FORMAT, pts);
             headerlen += 5;
 	    goto done;
 	  case 0x30:
@@ -551,7 +551,7 @@ gst_mpeg_demux_parse_packet (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
             dts |=  *buf++         <<  7;
             dts |= (*buf++ & 0xFE) >>  1;
 
-            GST_DEBUG (0, "PTS = %llu, DTS = %llu", pts, dts);
+            GST_DEBUG (0, "PTS = %" G_GUINT64_FORMAT ", DTS = %" G_GUINT64_FORMAT, pts, dts);
             headerlen += 10;
 	    goto done;
 	  case 0x00:
@@ -657,7 +657,7 @@ done:
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    GST_DEBUG (0, "pushing buffer of len %d id %d, ts %lld", 
+    GST_DEBUG (0, "pushing buffer of len %d id %d, ts %" G_GINT64_FORMAT, 
 		    datalen, id, GST_BUFFER_TIMESTAMP (outbuf));
 
     gst_pad_push (outpad, outbuf);
@@ -723,7 +723,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
       pts |=  *buf++         <<  7;
       pts |= (*buf++ & 0xFE) >>  1;
 
-      GST_DEBUG (0, "%x PTS = %llu", 
+      GST_DEBUG (0, "%x PTS = %" G_GUINT64_FORMAT, 
 		      id, MPEGTIME_TO_GSTTIME (pts));
 
     }
@@ -964,7 +964,7 @@ normal_seek (GstPad *pad, GstEvent *event, gint64 *offset)
   res = gst_pad_convert (pad, GST_FORMAT_BYTES, mpeg_demux->total_size_bound,
 		         &format, &adjust);
 
-  GST_DEBUG (0, "seek adjusted from %lld bytes to %lld\n", mpeg_demux->total_size_bound, adjust);
+  GST_DEBUG (0, "seek adjusted from %" G_GINT64_FORMAT " bytes to %" G_GINT64_FORMAT "\n", mpeg_demux->total_size_bound, adjust);
 
   if (res) 
     *offset = MAX (GST_EVENT_SEEK_OFFSET (event) - adjust, 0);
