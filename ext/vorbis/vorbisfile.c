@@ -454,6 +454,8 @@ static gboolean
 gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
 {
   vorbis_info *vi = ov_info (&vorbisfile->vf, link);
+  GstCaps *caps;
+  gboolean res = TRUE;
 
   /* new logical bitstream */
   vorbisfile->current_link = link;
@@ -461,23 +463,26 @@ gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
   gst_vorbisfile_update_metadata (vorbisfile, link);
   gst_vorbisfile_update_streaminfo (vorbisfile, link);
       
-  if (gst_pad_try_set_caps (vorbisfile->srcpad,
-                   GST_CAPS_NEW ("vorbisdec_src",
-                                   "audio/raw",    
-                                     "format",     GST_PROPS_STRING ("int"),
-                                     "law",        GST_PROPS_INT (0),
-                                     "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                                     "signed",     GST_PROPS_BOOLEAN (TRUE),
-                                     "width",      GST_PROPS_INT (16),
-                                     "depth",      GST_PROPS_INT (16),
-                                     "rate",       GST_PROPS_INT (vi->rate),
-                                     "channels",   GST_PROPS_INT (vi->channels)
-                                )) <= 0) 
-  {
-     return FALSE;
+  caps = GST_CAPS_NEW ("vorbisdec_src",
+                       "audio/raw",    
+                         "format",     GST_PROPS_STRING ("int"),
+                         "law",        GST_PROPS_INT (0),
+                         "endianness", GST_PROPS_INT (G_BYTE_ORDER),
+                         "signed",     GST_PROPS_BOOLEAN (TRUE),
+                         "width",      GST_PROPS_INT (16),
+                         "depth",      GST_PROPS_INT (16),
+                         "rate",       GST_PROPS_INT (vi->rate),
+                         "channels",   GST_PROPS_INT (vi->channels));
+  gst_caps_ref (caps);
+
+  if (gst_pad_try_set_caps (vorbisfile->srcpad, caps) <= 0) {
+    if (!gst_pad_recover_caps_error (vorbisfile->srcpad, caps))
+      res = FALSE;
   }
 
-  return TRUE;
+  gst_caps_unref (caps);
+
+  return res;
 }
 
 static void
@@ -565,7 +570,7 @@ gst_vorbisfile_loop (GstElement *element)
   /* we update the caps for each logical stream */
   if (vorbisfile->vf.current_link != vorbisfile->current_link) {
     if (!gst_vorbisfile_new_link (vorbisfile, vorbisfile->vf.current_link)) {
-      gst_element_error (GST_ELEMENT (vorbisfile), "could not negotiate format");
+      return;
     }
     return;
   }
