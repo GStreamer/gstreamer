@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstcdaudio.la
 
 libgstcdaudio_la_SOURCES = gstcdaudio.c 

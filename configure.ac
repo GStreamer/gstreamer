@@ -647,13 +647,14 @@ dnl v4l/v4l2 checks have been moved down because they require X
 
 dnl *** Video 4 Linux ***
 dnl for information about the header/define, see sys/v4l/gstv4lelement.h
-translit(dnm, m, l) AM_CONDITIONAL(USE_V4L, true)
-GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
+dnl renamed to GST_V4L in accordance with V4L2 below
+translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L, true)
+GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
   # first check X
-  HAVE_V4L="no"
+  HAVE_GST_V4L="no"
   if test "$HAVE_X" = "yes"
   then
-    AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_V4L="yes", HAVE_V4L="no", [
+    AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_GST_V4L="yes", HAVE_GST_V4L="no", [
 #include <sys/types.h>
 #define _LINUX_TIME_H
 #include <linux/videodev.h>
@@ -663,7 +664,8 @@ GST_CHECK_FEATURE(V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
 
 dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
-translit(dnm, m, l) AM_CONDITIONAL(USE_V4L2, true)
+dnl renamed to GST_V4L2 because of some conflict with kernel headers
+translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
 GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
   HAVE_GST_V4L2="no"
   if test "$HAVE_X" = "yes"

@@ -34,7 +34,7 @@ else
 SUNAUDIO_DIR=
 endif
 
-if USE_V4L
+if USE_GST_V4L
 V4L_DIR=v4l
 else
 V4L_DIR=
