@@ -11,6 +11,7 @@ decoderbin:
    - reuse of decoderbin, cleanup in READY state
    - threading after demuxing?
    - new_media events should be handled.
+   - caching of elements.
 
 baseplaybin:
 

@@ -406,7 +406,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
 
   /* FIXME, iterate over more structures? I guess it is possible that
    * this pad has some encoded and some raw pads. This code will fail
-   * then... */
+   * then if the first structure is not the raw type... */
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
 
