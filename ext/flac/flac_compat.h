@@ -13,7 +13,7 @@
 /* FIXME when there's a autoconf symbol */
 #ifndef FLAC_VERSION
 
-#ifndef FLAC__STREAM_ENCODER_WRITE_OK
+#ifdef FLAC__STREAM_ENCODER_WRITE_ERROR /* added in 1.0.4 */
 #define FLAC_VERSION 0x010004
 #else
 #ifdef FLAC__REFERENCE_CODEC_MAX_BITS_PER_SAMPLE
