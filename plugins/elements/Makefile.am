@@ -2,12 +2,6 @@ filterdir = $(libdir)/gst
 
 filter_LTLIBRARIES = libgstelements.la
 
-if USE_LIBGHTTP
-GSTHTTPSRC=gsthttpsrc.c
-else
-GSTHTTPSRC=
-endif
-
 libgstelements_la_DEPENDENCIES = ../libgst.la
 libgstelements_la_SOURCES =	\
 	gstelements.c		\
@@ -22,8 +16,7 @@ libgstelements_la_SOURCES =	\
 	gstpipefilter.c		\
 	gsttee.c		\
 	gstaggregator.c		\
-	gststatistics.c		\
-	$(GSTHTTPSRC)
+	gststatistics.c
 
 noinst_HEADERS =		\
 	gstfakesrc.h		\
@@ -32,7 +25,6 @@ noinst_HEADERS =		\
 	gstdisksink.h		\
 	gstfdsrc.h		\
 	gstmultidisksrc.h	\
-	gsthttpsrc.h		\
 	gstfdsink.h		\
 	gstpipefilter.h		\
 	gsttee.h		\

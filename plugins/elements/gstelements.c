@@ -35,10 +35,6 @@
 #include "gstaggregator.h"
 #include "gststatistics.h"
 
-#if HAVE_LIBGHTTP
-#include <gsthttpsrc.h>
-#endif /* HAVE_LIBGHTTP */
-
 
 struct _elements_entry {
   gchar *name;
@@ -64,11 +60,6 @@ static struct _elements_entry _elements[] = {
   { "tee",     	    gst_tee_get_type, 		&gst_tee_details,		gst_tee_factory_init },
   { "aggregator",   gst_aggregator_get_type, 	&gst_aggregator_details,	gst_aggregator_factory_init },
   { "statistics",   gst_statistics_get_type, 	&gst_statistics_details,	NULL },
-
-#if HAVE_LIBGHTTP
-  { "httpsrc",	    gst_httpsrc_get_type,	&gst_httpsrc_details,      NULL },
-#endif /* HAVE_LIBGHTTP */
-
   { NULL, 0 },
 };
 
