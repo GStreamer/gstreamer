@@ -207,8 +207,24 @@ static gboolean
 gst_osselement_class_probe_devices (GstOssElementClass *klass,
 				    gboolean            check)
 {
+  GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
   static gboolean init = FALSE;
   static GList *device_combinations;
+  GList *padtempllist;
+  gint openmode = O_RDONLY;
+  gboolean mixer = FALSE;
+
+  /* Ok, so how do we open the device? We assume that we have (max.) one
+   * pad, and if this is a sinkpad, we're osssink (w). else, we're osssrc
+   * (r) */
+  padtempllist = gst_element_class_get_pad_template_list (eklass);
+  if (padtempllist != NULL) {
+    GstPadTemplate *firstpadtempl = padtempllist->data;
+    if (GST_PAD_TEMPLATE_DIRECTION (firstpadtempl) == GST_PAD_SINK) {
+      openmode = O_WRONLY;
+    }
+    mixer = TRUE;
+  }
 
   if (!init && !check) {
     gchar *dsp_base[] = { "/dev/dsp", "/dev/sound/dsp", NULL };
@@ -249,8 +265,10 @@ gst_osselement_class_probe_devices (GstOssElementClass *klass,
         continue;
 
       /* we just check the dsp. we assume the mixer always works.
-       * we don't need a mixer anyway (says OSS)... */
-      if ((fd = open (devices[n].dsp, O_RDONLY)) > 0 || errno == EBUSY) {
+       * we don't need a mixer anyway (says OSS)... If we are a
+       * mixer element, we use the mixer anyway. */
+      if ((fd = open (mixer ? devices[n].mixer :
+                         devices[n].dsp, openmode)) > 0 || errno == EBUSY) {
         GstOssDeviceCombination *combi;
 
         if (fd > 0)

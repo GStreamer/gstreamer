@@ -1,3 +1,9 @@
+2004-01-22  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* sys/oss/gstosselement.c: (gst_osselement_class_probe_devices):
+	  Fix the ossmixer case where we shouldn't open /dev/dsp* because
+	  it might block operations (which is bad for a mixer).
+
 2004-01-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/media-info/media-info-priv.c: (have_type_callback),
