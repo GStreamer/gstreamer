@@ -24,7 +24,7 @@
 
 #ifdef G_HAVE_ISO_VARARGS
 
-#define debug(format,...)
+#define debug(...)
 
 #elif defined(G_HAVE_GNUC_VARARGS)
 
