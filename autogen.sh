@@ -85,14 +85,14 @@ version_check ()
   #start checking the version
   debug "version check"
 
-  if [ ! "$pkg_major" \> "$MAJOR" ]; then
-    debug "$pkg_major <= $MAJOR"
-    if [ "$pkg_major" \< "$MAJOR" ]; then
+  if [ ! "$pkg_major" -gt "$MAJOR" ]; then
+    debug "$pkg_major -le $MAJOR"
+    if [ "$pkg_major" -lt "$MAJOR" ]; then
       WRONG=1
-    elif [ ! "$pkg_minor" \> "$MINOR" ]; then
-      if [ "$pkg_minor" \< "$MINOR" ]; then
+    elif [ ! "$pkg_minor" -gt "$MINOR" ]; then
+      if [ "$pkg_minor" -lt "$MINOR" ]; then
         WRONG=1
-      elif [ "$pkg_micro" \< "$MICRO" ]; then
+      elif [ "$pkg_micro" -lt "$MICRO" ]; then
 	WRONG=1
       fi
     fi
