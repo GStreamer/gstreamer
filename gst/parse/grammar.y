@@ -311,7 +311,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
       gchar *endptr;
       gdouble d;
       g_value_init (&v2, G_TYPE_DOUBLE); 
-      d = strtod (pos, &endptr);
+      d = g_ascii_strtod (pos, &endptr);
       if (*endptr != '\0') goto error_conversion;
       g_value_set_double (&v2, d);
       if (!g_value_transform (&v2, &v)) goto error_conversion;
