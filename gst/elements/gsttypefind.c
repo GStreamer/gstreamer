@@ -571,7 +571,7 @@ gst_type_find_element_chain (GstPad *pad, GstData *data)
 	    if (gst_pad_send_event (GST_PAD_PEER (typefind->sink), event)) {
 	      /* done seeking */
 	      break;
-	    } else {
+	    } else if (entry->requested_offset < 0) {
 	      /* impossible to seek */
 	      GST_LOG_OBJECT (typefind, "'%s' was reset - couldn't seek to %"G_GINT64_FORMAT, 
 		      GST_PLUGIN_FEATURE_NAME (entry->factory), entry->requested_offset);
