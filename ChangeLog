@@ -1,3 +1,10 @@
+2004-10-01  Francis Labonte  <francis_labonte@hotmail.com>
+
+	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_fmt):
+	  Fix memleak.
+
 2004-10-01  Balamurali Viswanathan  <balamurali.viswanathan@wipro.com>
 
 	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
