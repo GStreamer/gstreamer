@@ -53,7 +53,7 @@ enum {
 };
 
 extern void			__gst_element_details_clear	(GstElementDetails *dp);
-extern void			__gst_element_details_set	(GstElementDetails *dest, 
+extern void			__gst_element_details_copy	(GstElementDetails *dest, 
 								 const GstElementDetails *src);
 
 static void			gst_element_class_init		(GstElementClass *klass);
@@ -172,6 +172,7 @@ gst_element_base_class_init (gpointer g_class)
   gobject_class->set_property =		GST_DEBUG_FUNCPTR(gst_element_real_set_property);
   gobject_class->get_property =		GST_DEBUG_FUNCPTR(gst_element_real_get_property);
 
+  memset (&element_class->details, 0, sizeof (GstElementDetails));
   element_class->padtemplates = NULL;
 }
 
@@ -1144,8 +1145,12 @@ gst_element_remove_pad (GstElement *element, GstPad *pad)
     if (GST_RPAD_PEER (pad) != NULL) {
       gst_pad_unlink (pad, GST_PAD (GST_RPAD_PEER (pad)));
     }
+<<<<<<< gstelement.c
+    gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
+=======
   } else if (GST_IS_GHOST_PAD (pad)) {
     g_object_set (pad, "real-pad", NULL, NULL);
+>>>>>>> 1.250
   }
   
   /* remove it from the list */
@@ -1379,7 +1384,7 @@ gst_element_class_set_details (GstElementClass *klass, const GstElementDetails *
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
   g_return_if_fail (GST_IS_ELEMENT_DETAILS (details));
   
-  __gst_element_details_set (&klass->details, details);
+  __gst_element_details_copy (&klass->details, details);
 }
 
 /**
@@ -2753,6 +2758,9 @@ gst_element_clear_pad_caps (GstElement *element)
     GstPad *pad = GST_PAD (pads->data);
 
     gst_pad_unnegotiate (pad);
+    if (GST_IS_REAL_PAD (pad)){
+      gst_caps_replace (&GST_RPAD_EXPLICIT_CAPS (pad), NULL);
+    }
 
     pads = g_list_next (pads);
   }
