@@ -58,13 +58,35 @@ enum
   ARG_0,
   ARG_NUMBUFS,
   ARG_BUFSIZE,
-  ARG_USE_FIXED_FPS
+  ARG_SYNC_MODE
 };
 
 GST_FORMATS_FUNCTION (GstPad *, gst_v4lsrc_get_formats,
     GST_FORMAT_TIME, GST_FORMAT_DEFAULT);
 GST_QUERY_TYPE_FUNCTION (GstPad *, gst_v4lsrc_get_query_types,
     GST_QUERY_POSITION);
+
+#define DEFAULT_SYNC_MODE GST_V4LSRC_SYNC_MODE_CLOCK
+
+#define GST_TYPE_V4LSRC_SYNC_MODE (gst_v4lsrc_sync_mode_get_type())
+static GType
+gst_v4lsrc_sync_mode_get_type (void)
+{
+  static GType v4lsrc_sync_mode_type = 0;
+  static GEnumValue v4lsrc_sync_mode[] = {
+    {GST_V4LSRC_SYNC_MODE_CLOCK, "0", "Sync to the pipeline clock"},
+    {GST_V4LSRC_SYNC_MODE_PRIVATE_CLOCK, "1", "Sync to a private clock"},
+    {GST_V4LSRC_SYNC_MODE_FIXED_FPS, "2", "Use Fixed fps"},
+    {GST_V4LSRC_SYNC_MODE_NONE, "3", "No Sync"},
+    {0, NULL, NULL},
+  };
+
+  if (!v4lsrc_sync_mode_type) {
+    v4lsrc_sync_mode_type =
+        g_enum_register_static ("GstV4lSrcSyncMode", v4lsrc_sync_mode);
+  }
+  return v4lsrc_sync_mode_type;
+}
 
 /* structure for buffer private data referencing element and frame number */
 typedef struct
@@ -175,11 +197,10 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
       g_param_spec_int ("buffer_size", "Buffer Size", "Size of buffers",
           0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USE_FIXED_FPS,
-      g_param_spec_boolean ("use_fixed_fps", "Use Fixed FPS",
-          "Drop/Insert frames to reach a certain FPS (TRUE) "
-          "or adapt FPS to suit the number of grabbed frames",
-          TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC_MODE,
+      g_param_spec_enum ("sync_mode", "Sync mode",
+          "Method to use for timestamping captured frames",
+          GST_TYPE_V4LSRC_SYNC_MODE, DEFAULT_SYNC_MODE, G_PARAM_READWRITE));
 
   /* signals */
   gst_v4lsrc_signals[SIGNAL_FRAME_CAPTURE] =
@@ -238,7 +259,7 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc)
   v4lsrc->colourspaces = NULL;
 
   /* fps */
-  v4lsrc->use_fixed_fps = TRUE;
+  v4lsrc->syncmode = DEFAULT_SYNC_MODE;
 
   v4lsrc->is_capturing = FALSE;
 }
@@ -366,7 +387,8 @@ gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc)
     return current_fps;
   }
 
-  if (!v4lsrc->use_fixed_fps && v4lsrc->clock != NULL && v4lsrc->handled > 0) {
+  if (!(v4lsrc->syncmode == GST_V4LSRC_SYNC_MODE_FIXED_FPS) &&
+      v4lsrc->clock != NULL && v4lsrc->handled > 0) {
     /* try to get time from clock master and calculate fps */
     GstClockTime time =
         gst_clock_get_time (v4lsrc->clock) - v4lsrc->substract_time;
@@ -773,20 +795,23 @@ gst_v4lsrc_get (GstPad * pad)
   gdouble fps = 0.;
   v4lsrc_private_t *v4lsrc_private = NULL;
   GstClockTime now, until;
+  gboolean fixed_fps;
 
   g_return_val_if_fail (pad != NULL, NULL);
 
   v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
   fps = gst_v4lsrc_get_fps (v4lsrc);
 
-  if (v4lsrc->use_fixed_fps && fps == 0.0)
+  fixed_fps = v4lsrc->syncmode == GST_V4LSRC_SYNC_MODE_FIXED_FPS;
+
+  if (fixed_fps && fps == 0.0)
     return NULL;
 
   if (v4lsrc->need_writes > 0) {
     /* use last frame */
     num = v4lsrc->last_frame;
     v4lsrc->need_writes--;
-  } else if (v4lsrc->clock && v4lsrc->use_fixed_fps) {
+  } else if (v4lsrc->clock && fixed_fps) {
     GstClockTime time;
     gboolean have_frame = FALSE;
 
@@ -854,19 +879,36 @@ gst_v4lsrc_get (GstPad * pad)
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
   GST_BUFFER_MAXSIZE (buf) = v4lsrc->mbuf.size / v4lsrc->mbuf.frames;
   GST_BUFFER_SIZE (buf) = v4lsrc->buffer_size;
-  if (v4lsrc->use_fixed_fps) {
-    GST_BUFFER_TIMESTAMP (buf) = v4lsrc->handled * GST_SECOND / fps;
-    GST_BUFFER_DURATION (buf) = GST_SECOND / fps;
-  } else {
-    /* calculate time based on our own clock */
-    GST_BUFFER_TIMESTAMP (buf) =
-        v4lsrc->timestamp_sync - v4lsrc->substract_time;
-    /* FIXME: in this case we might calculate from the delta with last frame ? */
-    GST_BUFFER_DURATION (buf) = GST_SECOND / fps;
+
+
+  switch (v4lsrc->syncmode) {
+    case GST_V4LSRC_SYNC_MODE_FIXED_FPS:
+      GST_BUFFER_TIMESTAMP (buf) = v4lsrc->handled * GST_SECOND / fps;
+      break;
+    case GST_V4LSRC_SYNC_MODE_PRIVATE_CLOCK:
+      /* calculate time based on our own clock */
+      GST_BUFFER_TIMESTAMP (buf) =
+          v4lsrc->timestamp_sync - v4lsrc->substract_time;
+      break;
+    case GST_V4LSRC_SYNC_MODE_CLOCK:
+      if (v4lsrc->clock) {
+        GstClockTime time = gst_element_get_time (GST_ELEMENT (v4lsrc));
+
+        GST_BUFFER_TIMESTAMP (buf) = time;
+      } else {
+        GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+      }
+      break;
+    case GST_V4LSRC_SYNC_MODE_NONE:
+      GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+      break;
+    default:
+      break;
   }
+  GST_BUFFER_DURATION (buf) = GST_SECOND / fps;
+
   GST_LOG_OBJECT (v4lsrc, "outgoing buffer duration: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-
 
   v4lsrc->handled++;
   g_signal_emit (G_OBJECT (v4lsrc),
@@ -925,9 +967,9 @@ gst_v4lsrc_set_property (GObject * object,
   v4lsrc = GST_V4LSRC (object);
 
   switch (prop_id) {
-    case ARG_USE_FIXED_FPS:
+    case ARG_SYNC_MODE:
       if (!GST_V4L_IS_ACTIVE (GST_V4LELEMENT (v4lsrc))) {
-        v4lsrc->use_fixed_fps = g_value_get_boolean (value);
+        v4lsrc->syncmode = g_value_get_enum (value);
       }
       break;
 
@@ -960,8 +1002,8 @@ gst_v4lsrc_get_property (GObject * object,
             v4lsrc->mbuf.size / (v4lsrc->mbuf.frames * 1024));
       break;
 
-    case ARG_USE_FIXED_FPS:
-      g_value_set_boolean (value, v4lsrc->use_fixed_fps);
+    case ARG_SYNC_MODE:
+      g_value_set_enum (value, v4lsrc->syncmode);
       break;
 
     default:

@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -48,6 +49,7 @@ gst_v4l_set_overlay (GstV4lElement * v4lelement)
 {
   gchar *buff;
   gchar *path;
+  gint ret;
 
   if (v4lelement->display)
     g_free (v4lelement->display);
@@ -69,10 +71,11 @@ gst_v4l_set_overlay (GstV4lElement * v4lelement)
   }
   g_free (path);
 
-  buff = g_strdup_printf ("v4l-conf -q -c %s -d %s 2> /dev/null",
+  buff = g_strdup_printf ("v4l-conf -q -c %s -d %s",
       v4lelement->videodev, v4lelement->display);
 
-  switch (system (buff)) {
+  ret = system (buff);
+  switch (ret) {
     case -1:
       GST_ELEMENT_ERROR (v4lelement, RESOURCE, FAILED,
           (_("Could not start v4l-conf.")), GST_ERROR_SYSTEM);
@@ -81,10 +84,16 @@ gst_v4l_set_overlay (GstV4lElement * v4lelement)
     case 0:
       break;
     default:
-      GST_ELEMENT_ERROR (v4lelement, RESOURCE, FAILED,
-          (_("Executing v4l-conf failed.")), GST_ERROR_SYSTEM);
+    {
+      /* if we get here, the system command did not fail but v4l-conf
+       * returned an error code, we just warn for now because it is not
+       * always fatal (like not having overlay support) */
+      gint status = WEXITSTATUS (ret);
+
+      g_warning ("v4l-conf returned %d.", status);
       g_free (buff);
-      return FALSE;
+      return TRUE;
+    }
   }
 
   g_free (buff);

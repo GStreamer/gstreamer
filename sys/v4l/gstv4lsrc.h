@@ -47,6 +47,14 @@ enum
   QUEUE_STATE_SYNCED           /* the frame is captured */
 };
 
+typedef enum
+{
+  GST_V4LSRC_SYNC_MODE_CLOCK,
+  GST_V4LSRC_SYNC_MODE_PRIVATE_CLOCK,
+  GST_V4LSRC_SYNC_MODE_FIXED_FPS,
+  GST_V4LSRC_SYNC_MODE_NONE,
+} GstV4lSrcSyncMode;
+
 struct _GstV4lSrc
 {
   GstV4lElement v4lelement;
@@ -91,8 +99,8 @@ struct _GstV4lSrc
   /* list of supported colourspaces (as integers) */
   GList *colourspaces;
 
-  /* how are we going to push buffers? */
-  gboolean use_fixed_fps;
+  /* how are we going to timestamp buffers? */
+   GstV4lSrcSyncMode syncmode;
 };
 
 struct _GstV4lSrcClass
