@@ -1,3 +1,7 @@
+2004-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac: bump nano to 1 for cvs
+
 2003-05-31  Thomas Vander Stichele <thomas at apestaart dot org>
 
 	* gst/gstelement.c: (gst_element_remove_ghost_pad):
