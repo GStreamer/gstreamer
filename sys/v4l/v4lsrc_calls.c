@@ -386,7 +386,11 @@ gst_v4lsrc_get_buffer (GstV4lSrc *v4lsrc, gint  num)
     num);
 #endif
 
-  if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc)))
+  if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lsrc)) ||
+      !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lsrc)))
+    return NULL;
+
+  if (num < 0 || num >= v4lsrc->mbuf.frames)
     return NULL;
 
   return GST_V4LELEMENT(v4lsrc)->buffer+v4lsrc->mbuf.offsets[num];

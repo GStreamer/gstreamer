@@ -187,7 +187,7 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   v4lmjpegsrc->quality = 50;
 
   v4lmjpegsrc->numbufs = 64;
-  v4lmjpegsrc->bufsize = 256 * 1024;
+  v4lmjpegsrc->bufsize = 256;
 
   v4lmjpegsrc->init = TRUE;
 }

@@ -2,9 +2,6 @@ TODO list (short term):
 =======================
 * v4lmjpegsrc: integrate input/norm autodetection
 * libgstrec: build (a library for video recording)
-* v4lmjpegsink: build (based on liblavplay (mjpegtools) and MJPEG/V4L API)
-* v4lsrc: threaded sync() (done?)
-* v4lsrc: threaded wait-for-sync()-until-queue() (done?)
 
 TODO list (long term):
 ======================

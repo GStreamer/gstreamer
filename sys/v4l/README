@@ -11,8 +11,7 @@ v4l_calls.[ch]      \            \ v4lmjpegsrc_calls.[ch]
                                  \ v4lmjpegsink_calls.[ch]
 
 I.e., all the files on the right are child classes of
-the v4lelement 'parent' on the left. mjpegsink is still
-todo.
+the v4lelement 'parent' on the left.
 
 * v4lelement handles generic v4l stuff (picture settings,
     audio, norm/input setting, open()/close())

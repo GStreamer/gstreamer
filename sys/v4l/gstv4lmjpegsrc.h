@@ -68,7 +68,7 @@ struct _GstV4lMjpegSrc {
 
   gint quality;
   gint numbufs;
-  gint bufsize;
+  gint bufsize; /* in KB */
 
   gboolean init;
 };

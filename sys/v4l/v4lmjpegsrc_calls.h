@@ -39,19 +39,34 @@ extern char *input_name[];
 
 
 /* set input/norm (includes autodetection, norm = VIDEO_MODE_{PAL|NTSC|SECAM|AUTO}) */
-gboolean gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc *v4lmjpegsrc, GstV4lMjpegInputType input, gint norm);
+gboolean gst_v4lmjpegsrc_set_input_norm (GstV4lMjpegSrc       *v4lmjpegsrc,
+                                         GstV4lMjpegInputType input,
+                                         gint                 norm);
 
 /* frame grabbing/capture */
-gboolean gst_v4lmjpegsrc_set_buffer     (GstV4lMjpegSrc *v4lmjpegsrc,  gint numbufs,    gint bufsize);
-gboolean gst_v4lmjpegsrc_set_capture    (GstV4lMjpegSrc *v4lmjpegsrc,  gint decimation, gint quality);
+gboolean gst_v4lmjpegsrc_set_buffer     (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           numbufs,
+                                         gint           bufsize);
+gboolean gst_v4lmjpegsrc_set_capture    (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           decimation,
+                                         gint           quality);
 gboolean gst_v4lmjpegsrc_set_capture_m  (GstV4lMjpegSrc *v4lmjpegsrc,
-                                         gint x_offset, gint y_offset, gint width,      gint height,
-                                         gint h_decimation,     gint v_decimation,      gint quality);
+                                         gint           x_offset,
+                                         gint           y_offset,
+                                         gint           width,
+                                         gint           height,
+                                         gint           h_decimation,
+                                         gint           v_decimation,
+                                         gint           quality);
 gboolean gst_v4lmjpegsrc_capture_init   (GstV4lMjpegSrc *v4lmjpegsrc);
 gboolean gst_v4lmjpegsrc_capture_start  (GstV4lMjpegSrc *v4lmjpegsrc);
-gboolean gst_v4lmjpegsrc_grab_frame     (GstV4lMjpegSrc *v4lmjpegsrc,  gint *num,       gint *size);
-guint8 * gst_v4lmjpegsrc_get_buffer     (GstV4lMjpegSrc *v4lmjpegsrc,  gint  num);
-gboolean gst_v4lmjpegsrc_requeue_frame  (GstV4lMjpegSrc *v4lmjpegsrc,  gint  num);
+gboolean gst_v4lmjpegsrc_grab_frame     (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           *num,
+                                         gint           *size);
+guint8 * gst_v4lmjpegsrc_get_buffer     (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           num);
+gboolean gst_v4lmjpegsrc_requeue_frame  (GstV4lMjpegSrc *v4lmjpegsrc,
+                                         gint           num);
 gboolean gst_v4lmjpegsrc_capture_stop   (GstV4lMjpegSrc *v4lmjpegsrc);
 gboolean gst_v4lmjpegsrc_capture_deinit (GstV4lMjpegSrc *v4lmjpegsrc);
 

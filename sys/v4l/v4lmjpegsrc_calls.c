@@ -189,14 +189,14 @@ gst_v4lmjpegsrc_set_buffer (GstV4lMjpegSrc *v4lmjpegsrc,
                             gint           bufsize)
 {
 #ifdef DEBUG
-  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_set_buffer(), numbufs = %d, bufsize = %d\n",
+  fprintf(stderr, "V4LMJPEGSRC: gst_v4lmjpegsrc_set_buffer(), numbufs = %d, bufsize = %d KB\n",
     numbufs, bufsize);
 #endif
 
   GST_V4L_CHECK_OPEN(GST_V4LELEMENT(v4lmjpegsrc));
   GST_V4L_CHECK_NOT_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc));
 
-  v4lmjpegsrc->breq.size = bufsize;
+  v4lmjpegsrc->breq.size = bufsize * 1024;
   v4lmjpegsrc->breq.count = numbufs;
 
   return TRUE;
@@ -515,7 +515,11 @@ gst_v4lmjpegsrc_get_buffer (GstV4lMjpegSrc *v4lmjpegsrc,
     num);
 #endif
 
-  if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)))
+  if (!GST_V4L_IS_ACTIVE(GST_V4LELEMENT(v4lmjpegsrc)) ||
+      !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc)))
+    return NULL;
+
+  if (num < 0 || num >= v4lmjpegsrc->breq.count)
     return NULL;
 
   return GST_V4LELEMENT(v4lmjpegsrc)->buffer+(v4lmjpegsrc->breq.size*num);
