@@ -144,10 +144,10 @@ gst_mp3parse_init (GstMPEGAudioParse *mp3parse)
   mp3parse->sinkpad = gst_pad_new_from_template(sink_temp, "sink");
   gst_element_add_pad(GST_ELEMENT(mp3parse),mp3parse->sinkpad);
 
+  gst_element_set_loop_function (GST_ELEMENT(mp3parse),gst_mp3parse_loop);
 #if 1	/* set this to one to use the old chaining code */
   gst_pad_set_chain_function(mp3parse->sinkpad,gst_mp3parse_chain);
-#else		/* else you get the new loop-based code, which isn't complete yet */
-  gst_element_set_loop_function (GST_ELEMENT(mp3parse),gst_mp3parse_loop);
+  gst_element_set_loop_function (GST_ELEMENT(mp3parse),NULL);
 #endif
 
   mp3parse->srcpad = gst_pad_new_from_template(src_temp, "src");

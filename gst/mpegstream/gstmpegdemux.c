@@ -772,59 +772,6 @@ gst_mpeg_demux_parse_pes (GstMPEGParse *mpeg_parse, GstBuffer *buffer)
   return TRUE;
 }
 
-static void
-_queue_discontinuous (GstPad *pad, gpointer ign)
-{
-  /* ugh, GstBuffer cast is wrong here */
-  gst_pad_push (pad, (GstBuffer*) gst_event_new (GST_EVENT_DISCONTINUOUS));
-}
-
-static void
-_queue_eos (GstPad *pad, gpointer ign)
-{
-  /* ugh, GstBuffer cast is wrong here */
-  gst_pad_push (pad, (GstBuffer*) gst_event_new (GST_EVENT_EOS));
-}
-
-static void
-_forall_pads (GstMPEGDemux *mpeg_demux, GFunc fun, gpointer user_data)
-{
-  GstPad *pad;
-  gint i;
-
-  /* events should be refcnt'd XXX */
-
-  for (i=0;i<NUM_PRIVATE_1_PADS;i++)
-    {
-      pad = mpeg_demux->private_1_pad[i];
-      if (pad && GST_PAD_IS_CONNECTED(pad))
-	(*fun) (pad, user_data);
-    }
-  for (i=0;i<NUM_SUBTITLE_PADS;i++)
-    {
-      pad = mpeg_demux->subtitle_pad[i];
-      if (pad && GST_PAD_IS_CONNECTED(pad))
-	(*fun) (pad, user_data);
-    }
-
-  pad = mpeg_demux->private_2_pad;
-  if (pad && GST_PAD_IS_CONNECTED(pad))
-    (*fun) (pad, user_data);
-    
-  for (i=0;i<NUM_VIDEO_PADS;i++)
-    {
-      pad = mpeg_demux->video_pad[i];
-      if (pad && GST_PAD_IS_CONNECTED(pad))
-	(*fun) (pad, user_data);
-    }
-  for (i=0;i<NUM_AUDIO_PADS;i++)
-    {
-      pad = mpeg_demux->audio_pad[i];
-      if (pad && GST_PAD_IS_CONNECTED(pad))
-	(*fun) (pad, user_data);
-    }
-}
-
 static GstElementStateReturn
 gst_mpeg_demux_change_state (GstElement *element)
 { 

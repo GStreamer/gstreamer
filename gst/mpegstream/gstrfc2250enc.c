@@ -75,9 +75,6 @@ static void 	gst_rfc2250_enc_init		(GstRFC2250Enc *rfc2250_enc);
 static GstElementStateReturn
 		gst_rfc2250_enc_change_state	(GstElement *element);
 
-static gboolean	gst_rfc2250_enc_parse_packhead 	(GstRFC2250Enc *rfc2250_enc, GstBuffer *buffer);
-static void 	gst_rfc2250_enc_send_data	(GstRFC2250Enc *rfc2250_enc, GstData *data);
-
 static void 	gst_rfc2250_enc_loop 		(GstElement *element);
 
 static void 	gst_rfc2250_enc_get_property	(GObject *object, guint prop_id, 
