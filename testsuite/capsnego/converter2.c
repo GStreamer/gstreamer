@@ -206,10 +206,10 @@ main (int argc, char *argv[])
   g_print ("result: %d, converter status: %d %d, target: %d\n\n", result, 
 		  converter_in, converter_out, target_rate);
 
-  result = gst_pad_connect (srcpad, sinkconvpad);
+  /* result = FIXME */ gst_pad_connect (srcpad, sinkconvpad);
   g_print ("pad connect 1: %d\n", result);
   overall &= (result == TRUE);
-  result = gst_pad_connect (srcconvpad, sinkpad);
+  /* result = FIXME */ gst_pad_connect (srcconvpad, sinkpad);
   g_print ("pad connect 2: %d\n", result);
   overall &= (result == TRUE);
 

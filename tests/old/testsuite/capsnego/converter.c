@@ -164,10 +164,10 @@ main (int argc, char *argv[])
   g_print ("set caps on src: %d\n", result);
   g_print ("initial converter status: %d %d\n", converter_in, converter_out);
 
-  result = gst_pad_connect (srcpad, sinkconvpad);
+  /* result = FIXME */ gst_pad_connect (srcpad, sinkconvpad);
   g_print ("pad connect 1: %d\n", result);
   overall &= (result == TRUE);
-  result = gst_pad_connect (srcconvpad, sinkpad);
+  /* result = FIXME */ gst_pad_connect (srcconvpad, sinkpad);
   g_print ("pad connect 2: %d\n", result);
   overall &= (result == TRUE);
 
