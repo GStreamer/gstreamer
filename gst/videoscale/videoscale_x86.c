@@ -23,7 +23,7 @@
 
 /* scalers */
 void gst_videoscale_generate_rowbytes_x86	(unsigned char *copy_row, int src_w, int dst_w, int bpp);
-void gst_videoscale_scale_nearest_x86		(Videoscale *scale,
+void gst_videoscale_scale_nearest_x86		(GstVideoscale *scale,
 							 unsigned char *src, unsigned char *dest,
 							 int sw, int sh, int dw, int dh);
 

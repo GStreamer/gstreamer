@@ -311,6 +311,21 @@ AC_ARG_WITH(plugins,
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 
+dnl needed for smoothwave, FIXME!
+if test x$USE_GLIB2 = xno; then
+  AM_PATH_GTK(1.2.0,,
+              AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
+  HAVE_GTK=yes
+  # we have to have it
+else
+  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
+
+  GTK_CFLAGS=$GTK2_CFLAGS
+  GTK_LIBS=$GTK2_LIBS
+fi
+AC_SUBST(GTK_LIBS)
+AC_SUBST(GTK_CFLAGS)
+
 dnl ==========================================================================
 dnl ============================= sys plugins ================================
 dnl ==========================================================================
@@ -1076,7 +1091,6 @@ sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
 ext/Makefile
-ext/a52/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
 ext/audiofile/Makefile
@@ -1088,6 +1102,7 @@ ext/vorbis/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
+gst-libs/gst/resample/Makefile
 gst-plugins.spec
 )
 

@@ -21,7 +21,7 @@
 #ifndef __GST_ALSA_H__
 #define __GST_ALSA_H__
 
-#include <sys/asoundlib.h>
+#include <alsa/asoundlib.h>
 #include <gst/gst.h>
 #include <libs/bytestream/gstbytestream.h>
 #include <glib.h>

@@ -19,7 +19,7 @@
 */
 
 #include <stdlib.h>
-#include "alsa.h"
+#include "gstalsa.h"
 
 static GstElementDetails gst_alsa_sink_details = {  
     "Alsa Sink",

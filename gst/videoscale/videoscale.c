@@ -28,15 +28,15 @@
 #include "videoscale_x86.h"
 #endif
 
-static void	gst_videoscale_scale_yuv		(Videoscale *scale, unsigned char *src, unsigned char *dest);
-static void	gst_videoscale_scale_rgb		(Videoscale *scale, unsigned char *src, unsigned char *dest);
+static void	gst_videoscale_scale_yuv		(GstVideoscale *scale, unsigned char *src, unsigned char *dest);
+static void	gst_videoscale_scale_rgb		(GstVideoscale *scale, unsigned char *src, unsigned char *dest);
 
 /* scalers */
-static void	gst_videoscale_scale_nearest		(Videoscale *scale, unsigned char *src, unsigned char *dest,
+static void	gst_videoscale_scale_nearest		(GstVideoscale *scale, unsigned char *src, unsigned char *dest,
 							 int sw, int sh, int dw, int dh);
-static void	gst_videoscale_scale_plane_slow		(Videoscale *scale, unsigned char *src, unsigned char *dest,
+static void	gst_videoscale_scale_plane_slow		(GstVideoscale *scale, unsigned char *src, unsigned char *dest,
 							 int sw, int sh, int dw, int dh);
-static void	gst_videoscale_scale_point_sample	(Videoscale *scale, unsigned char *src, unsigned char *dest,
+static void	gst_videoscale_scale_point_sample	(GstVideoscale *scale, unsigned char *src, unsigned char *dest,
 							 int sw, int sh, int dw, int dh);
 
 /* filters */
@@ -44,7 +44,7 @@ static unsigned char gst_videoscale_bilinear		(unsigned char *src, double x, dou
 static unsigned char gst_videoscale_bicubic		(unsigned char *src, double x, double y, int sw, int sh);
 
 void
-gst_videoscale_setup (Videoscale *scale)
+gst_videoscale_setup (GstVideoscale *scale)
 {
   switch (scale->format) {
     case GST_MAKE_FOURCC('I','4','2','0'):
@@ -95,7 +95,7 @@ gst_videoscale_setup (Videoscale *scale)
 }
 
 static void
-gst_videoscale_scale_rgb (Videoscale *scale, unsigned char *src, unsigned char *dest)
+gst_videoscale_scale_rgb (GstVideoscale *scale, unsigned char *src, unsigned char *dest)
 {
   int sw = scale->width;
   int sh = scale->height;
@@ -121,7 +121,7 @@ gst_videoscale_scale_rgb (Videoscale *scale, unsigned char *src, unsigned char *
 }
 
 static void
-gst_videoscale_scale_yuv (Videoscale *scale, unsigned char *src, unsigned char *dest)
+gst_videoscale_scale_yuv (GstVideoscale *scale, unsigned char *src, unsigned char *dest)
 {
   int sw = scale->width;
   int sh = scale->height;
@@ -214,7 +214,7 @@ gst_videoscale_bicubic (unsigned char *src, double x, double y, int sw, int sh)
 }
 
 static void
-gst_videoscale_scale_plane_slow (Videoscale *scale, unsigned char *src, unsigned char *dest,
+gst_videoscale_scale_plane_slow (GstVideoscale *scale, unsigned char *src, unsigned char *dest,
 		                 int sw, int sh, int dw, int dh)
 {
   double zoomx = ((double)dw)/(double)sw;
@@ -244,7 +244,7 @@ gst_videoscale_scale_plane_slow (Videoscale *scale, unsigned char *src, unsigned
 }
 
 static void
-gst_videoscale_scale_point_sample (Videoscale *scale, unsigned char *src, unsigned char *dest,
+gst_videoscale_scale_point_sample (GstVideoscale *scale, unsigned char *src, unsigned char *dest,
 		                   int sw, int sh, int dw, int dh)
 {
   int ypos, yinc, y;
@@ -292,7 +292,7 @@ gst_videoscale_scale_point_sample (Videoscale *scale, unsigned char *src, unsign
 }
 
 static void
-gst_videoscale_scale_nearest (Videoscale *scale,
+gst_videoscale_scale_nearest (GstVideoscale *scale,
 		              unsigned char *src,
 			      unsigned char *dest,
 			      int sw, int sh, int dw, int dh)
