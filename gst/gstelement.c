@@ -1295,8 +1295,8 @@ gst_element_get_compatible_pad_template (GstElement *element,
     if (padtempl->direction == GST_PAD_SRC &&
       compattempl->direction == GST_PAD_SINK) {
       GST_CAT_DEBUG (GST_CAT_CAPS, "compatible direction: found src pad template");
-      comp = gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (padtempl),
-				           GST_PAD_TEMPLATE_CAPS (compattempl));
+      comp = gst_caps_is_always_compatible (GST_PAD_TEMPLATE_CAPS (compattempl),
+				           GST_PAD_TEMPLATE_CAPS (padtempl));
       GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible", (comp ? "" : "not "));
     } else if (padtempl->direction == GST_PAD_SINK &&
 	       compattempl->direction == GST_PAD_SRC) {
