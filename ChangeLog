@@ -1,5 +1,9 @@
 2004-03-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* Makefile.am: use common/release.mak
+
+2004-03-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/faq/gst-uninstalled:
           adding gst-monkeysaudio to the list of possible plugin dirs
 
