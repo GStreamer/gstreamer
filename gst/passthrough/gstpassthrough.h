@@ -59,26 +59,18 @@ struct _GstPassthrough {
   GstBufferPool *bufpool;
 
   gboolean silent;
-  
-  /* the next three are valid for both int and float */
-  
+
+  /* the next are valid for both int and float */
   GstPassthroughFormat format;
-  guint rate;  
+  guint rate;
   guint channels;
-  
-  /* the next five are valid only for format==GST_PASSTHROUGH_FORMAT_INT */
-  
   guint width;
-  guint depth;
   guint endianness;
-  guint law;
+
+  /* the next are valid only for format==GST_PASSTHROUGH_FORMAT_INT */
+  guint depth;
   gboolean is_signed;
-  
-  /* the next three are valid only for format==GST_PASSTHROUGH_FORMAT_FLOAT */
-  
-  const gchar *layout;
-  gfloat slope;
-  gfloat intercept;
+
 };
 
 struct _GstPassthroughClass {

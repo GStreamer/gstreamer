@@ -49,7 +49,7 @@ struct _GstMixMatrixClass {
 /* elementfactory information */
 static GstElementDetails mixmatrix_details = {
   "Mixing Matrix",
-  "Filter/Audio/Mixing",
+  "Filter/Audio",
   "LGPL",
   "Mix N audio channels together into M channels",
   VERSION,
@@ -79,7 +79,7 @@ GST_PAD_TEMPLATE_FACTORY (mixmatrix_sink_factory,
   gst_caps_new (
     "float_src",
     "audio/x-raw-float",
-    GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
+    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
   )
 );
 
@@ -90,7 +90,7 @@ GST_PAD_TEMPLATE_FACTORY (mixmatrix_src_factory,
   gst_caps_new (
     "float_sink",
     "audio/x-raw-float",
-    GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
+    GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
   )
 );
 

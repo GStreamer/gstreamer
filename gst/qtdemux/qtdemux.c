@@ -1673,18 +1673,14 @@ static GstCaps *qtdemux_audio_caps(GstQTDemux *qtdemux, guint32 fourcc)
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('f','l','6','4'):
       return GST_CAPS_NEW("fl64_caps","audio/x-raw-float",
-          "depth",GST_PROPS_INT (64),
+          "width",GST_PROPS_INT (64),
           "endianness",GST_PROPS_INT (G_BIG_ENDIAN),
-          "intercept",GST_PROPS_FLOAT (0.0),
-          "slope",GST_PROPS_FLOAT (1.0),
 	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('f','l','3','2'):
       return GST_CAPS_NEW("fl32_caps","audio/x-raw-float",
-          "depth",GST_PROPS_INT (32),
+          "width",GST_PROPS_INT (32),
           "endianness",GST_PROPS_INT (G_BIG_ENDIAN),
-          "intercept",GST_PROPS_FLOAT (0.0),
-          "slope",GST_PROPS_FLOAT (1.0),
 	  "rate",GST_PROPS_INT_RANGE(1,G_MAXINT),
 	  "channels",GST_PROPS_INT_RANGE(1,G_MAXINT));
     case GST_MAKE_FOURCC('i','n','2','4'):

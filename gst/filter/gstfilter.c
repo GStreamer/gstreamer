@@ -38,38 +38,38 @@ static struct _elements_entry _elements[] = {
   { NULL, 0 },
 };
 
-GstPadTemplate* 
+GstPadTemplate*
 gst_filter_src_factory (void)
 {
   static GstPadTemplate *templ = NULL;
   if (!templ) {
-    templ = GST_PAD_TEMPLATE_NEW ( 
+    templ = GST_PAD_TEMPLATE_NEW (
   		"src",
   		GST_PAD_SRC,
   		GST_PAD_ALWAYS,
   		gst_caps_new (
   		  "filter_src",
   		  "audio/x-raw-float",
-  	          GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
+  	          GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
 		)
   	     );
   }
   return templ;
 }
 
-GstPadTemplate* 
+GstPadTemplate*
 gst_filter_sink_factory (void)
 {
   static GstPadTemplate *templ = NULL;
   if (!templ) {
-    templ = GST_PAD_TEMPLATE_NEW ( 
+    templ = GST_PAD_TEMPLATE_NEW (
   		"sink",
   		GST_PAD_SINK,
   		GST_PAD_ALWAYS,
   		gst_caps_new (
   		  "filter_src",
   		  "audio/x-raw-float",
-  		  GST_AUDIO_FLOAT_MONO_PAD_TEMPLATE_PROPS
+  		  GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
 		)
   	     );
   }

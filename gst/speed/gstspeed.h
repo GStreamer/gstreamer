@@ -58,35 +58,23 @@ struct _GstSpeed {
 
   GstPad *sinkpad, *srcpad;
   GstBufferPool *sinkpool, *srcpool;
-  
-  gboolean silent;
-  
-  gfloat speed;
-  
-  /* the next three are valid for both int and float */
-  
-  GstSpeedFormat format;
-  
-  guint rate;
-  
-  guint channels;
-  
-  /* the next five are valid only for format==GST_SPEED_FORMAT_INT */
-  
-  guint width;
-  
-  guint depth;
 
+  gboolean silent;
+  gfloat speed;
+
+  /* the next are valid for both int and float */
+  GstSpeedFormat format;
+  guint rate;
+  guint channels;
+  guint width;
   guint endianness;
-  
-  guint law;
-  
+
+  /* the next are valid only for format==GST_SPEED_FORMAT_INT */
+  guint depth;
   gboolean is_signed;
-  
+
   /* the next three are valid only for format==GST_SPEED_FORMAT_FLOAT */
-  
   gfloat slope;
-  
   gfloat intercept;
 };
 
