@@ -16,11 +16,20 @@ else
 EXAMPLES_DIR=
 endif
 
+gstreamer-libs-@GST_MAJORMINOR@.pc: gstreamer-libs.pc
+	cp gstreamer-libs.pc gstreamer-libs-@GST_MAJORMINOR@.pc
+gstreamer-play-@GST_MAJORMINOR@.pc: gstreamer-play.pc
+	cp gstreamer-play.pc gstreamer-play-@GST_MAJORMINOR@.pc
+gst_element_check-@GST_MAJORMINOR@.m4: gst-element-check.m4
+	cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
+
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = gstreamer-libs.pc gstreamer-play.pc
+pkgconfig_DATA = \
+	gstreamer-libs-@GST_MAJORMINOR@.pc \
+	gstreamer-play-@GST_MAJORMINOR@.pc
 
 aclocaldir = $(datadir)/aclocal
-aclocal_DATA = gst-element-check.m4
+aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
 SUBDIRS=gst-libs gst sys $(EXT_DIR) $(EXAMPLES_DIR) tools $(GCONF_DIR) testsuite
 

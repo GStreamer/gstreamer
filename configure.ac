@@ -14,7 +14,17 @@ dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
 AS_VERSION(gst-plugins, GST_PLUGINS_VERSION, 0, 4, 2, 1, GST_ERROR="-Wall", GST_ERROR="-Wall -Werror")
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
-AS_LIBTOOL(GST_PLUGINS, 0, 0, 0, yes)
+
+dnl our libraries and install dirs use major.minor as a version
+GST_MAJORMINOR=$GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR
+AC_SUBST(GST_MAJORMINOR)
+
+dnl CURRENT, REVISION, AGE
+dnl - library source changed -> increment REVISION
+dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
+dnl - interfaces added -> increment AGE
+dnl - interfaces removed -> AGE = 0
+AS_LIBTOOL(GST_PLUGINS, 1, 0, 0)
 
 dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
@@ -136,18 +146,22 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
 ])
 
 dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
-PKG_CHECK_MODULES(GST, gstreamer >= $GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR.$GST_PLUGINS_VERSION_MICRO,
+PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_PLUGINS_VERSION_MAJOR.$GST_PLUGINS_VERSION_MINOR.$GST_PLUGINS_VERSION_MICRO,
   HAVE_GST="yes", HAVE_GST="no")
 
 if test "x$HAVE_GST" = "xno"; then
   AC_MSG_ERROR(no GStreamer found)
 fi
 
-GST_TOOLS_DIR=`pkg-config --variable=toolsdir gstreamer`
+GST_TOOLS_DIR=`pkg-config --variable=toolsdir gstreamer-$GST_MAJORMINOR`
 if test -z $GST_TOOLS_DIR; then
   AC_MSG_ERROR([no tools dir defined in GStreamer pkg-config file; core upgrade needed.])
 fi
 AC_SUBST(GST_TOOLS_DIR)
+
+dnl additional gstcontrol libs
+GST_CONTROL_LIBS=`pkg-config --variable=gstcontrol_libs gstreamer-$GST_MAJORMINOR`
+AC_SUBST(GST_CONTROL_LIBS)
 
 dnl Set up conditionals for (target) architecture:
 dnl ==============================================

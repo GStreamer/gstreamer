@@ -1,6 +1,6 @@
 #FIXME clean me up a bit
 
-plugindir = $(libdir)/gst
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 plugin_LTLIBRARIES = libgstmpegaudioparse.la libgstmp3types.la
 
 libgstmpegaudioparse_la_SOURCES = gstmpegaudioparse.c
