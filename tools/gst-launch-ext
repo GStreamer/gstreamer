@@ -81,14 +81,14 @@ read_config ();
 
 %pipes = ( 
   "mp3", "mad ! $cfg{AUDIOSINK}",
-  "vis.mp3", "mad ! tee silent=true 'tee0.src0!' queue ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee0.src1!' $cfg{AUDIOSINK}",
+  "vis.mp3", "mad ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
   "ogg", "vorbisdec ! $cfg{AUDIOSINK}",
-  "vis.ogg", "vorbisdec ! tee silent=true 'tee0.src0!' queue ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee0.src1!' $cfg{AUDIOSINK}",
+  "vis.ogg", "vorbisdec ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
   "mpg", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
   "avi", "avidemux video_00! { queue ! windec ! $cfg{VIDEOSINK} } avidemux0.audio_00! { queue ! mad ! $cfg{AUDIOSINK} }",
   "vob", "mpegdemux video_00! { queue ! mpeg2dec ! $cfg{VIDEOSINK} } mpegdemux0.audio_00! { queue ! a52dec ! $cfg{AUDIOSINK} }",
   "wav", "wavparse ! $cfg{AUDIOSINK}",
-  "vis.wav", "wavparse ! tee silent=true 'tee0.src0!' queue ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee0.src1!' $cfg{AUDIOSINK}",
+  "vis.wav", "wavparse ! tee silent=true 'tee1.src0!' queue leaky=1 ! { $cfg{VISUALIZER} ! colorspace ! $cfg{VIDEOSINK} } 'tee1.src1!' $cfg{AUDIOSINK}",
   "fli", "flxdec ! colorspace ! $cfg{VIDEOSINK}"
 
 );
