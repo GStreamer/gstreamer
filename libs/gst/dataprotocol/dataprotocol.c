@@ -154,7 +154,7 @@ gst_dp_header_payload_type (const guint8 * header)
  *
  * Creates a GDP header from the given buffer.
  *
- * Returns: %TRUE if the header was successfully created
+ * Returns: %TRUE if the header was successfully created.
  */
 
 gboolean
@@ -227,7 +227,7 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
  *
  * Creates a GDP packet from the given caps.
  *
- * Returns: %TRUE if the packet was successfully created
+ * Returns: %TRUE if the packet was successfully created.
  */
 gboolean
 gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
@@ -295,7 +295,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
  *
  * Creates a GDP packet from the given event.
  *
- * Returns: %TRUE if the packet was successfully created
+ * Returns: %TRUE if the packet was successfully created.
  */
 gboolean
 gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
@@ -413,7 +413,7 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
  * Use this function if you want to pre-allocate a buffer based on the
  * packet header to read the packet payload in to.
  *
- * Returns: %TRUE if the buffer was successfully created
+ * Returns: %TRUE if the buffer was successfully created.
  */
 GstBuffer *
 gst_dp_buffer_from_header (guint header_length, const guint8 * header)
@@ -441,7 +441,7 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
  *
  * Creates a newly allocated #GstCaps from the given packet.
  *
- * Returns: %TRUE if the caps was successfully created
+ * Returns: %TRUE if the caps was successfully created.
  */
 GstCaps *
 gst_dp_caps_from_packet (guint header_length, const guint8 * header,
@@ -468,7 +468,7 @@ gst_dp_caps_from_packet (guint header_length, const guint8 * header,
  *
  * Creates a newly allocated #GstEvent from the given packet.
  *
- * Returns: %TRUE if the event was successfully created
+ * Returns: %TRUE if the event was successfully created.
  */
 GstEvent *
 gst_dp_event_from_packet (guint header_length, const guint8 * header,
@@ -547,7 +547,7 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
  *
  * Validates the given packet header by checking the CRC checksum.
  *
- * Returns: %TRUE if the CRC matches, or no CRC checksum is present
+ * Returns: %TRUE if the CRC matches, or no CRC checksum is present.
  */
 gboolean
 gst_dp_validate_header (guint header_length, const guint8 * header)
@@ -577,7 +577,7 @@ gst_dp_validate_header (guint header_length, const guint8 * header)
  * Validates the given packet payload using the given packet header
  * by checking the CRC checksum.
  *
- * Returns: %TRUE if the CRC matches, or no CRC checksum is present
+ * Returns: %TRUE if the CRC matches, or no CRC checksum is present.
  */
 gboolean
 gst_dp_validate_payload (guint header_length, const guint8 * header,
@@ -606,7 +606,7 @@ gst_dp_validate_payload (guint header_length, const guint8 * header,
  *
  * Validates the given packet by checking version information and checksums.
  *
- * Returns: %TRUE if the packet validates
+ * Returns: %TRUE if the packet validates.
  */
 gboolean
 gst_dp_validate_packet (guint header_length, const guint8 * header,
