@@ -22,6 +22,13 @@ void print_prop(GstPropsEntry *prop,gboolean showname,gchar *pfx) {
       printf("Integer range: %d - %d\n",prop->data.int_range_data.min,
              prop->data.int_range_data.max);
       break;
+    case GST_PROPS_FLOAT_ID:
+      printf("Float: %f\n",prop->data.float_data);
+      break;
+    case GST_PROPS_FLOAT_RANGE_ID:
+      printf("Float range: %f - %f\n",prop->data.float_range_data.min,
+             prop->data.float_range_data.max);
+      break;
     case GST_PROPS_BOOL_ID:
       printf("Boolean: %s\n",prop->data.bool_data ? "TRUE" : "FALSE");
       break;
