@@ -29,7 +29,7 @@
 #include <string.h>
 #include <gst/control/control.h>
 
-#include <gstsinesrc.h>
+#include "gstsinesrc.h"
 
 /* elementfactory information */
 GstElementDetails gst_sinesrc_details = {
@@ -183,8 +183,8 @@ gst_sinesrc_init (GstSineSrc * src)
   src->table_pos = 0.0;
   src->table_size = 1024;
   src->samples_per_buffer = 1024;
-  src->timestamp = 0LLU;
-  src->offset = 0LLU;
+  src->timestamp = G_GINT64_CONSTANT (0);
+  src->offset = G_GINT64_CONSTANT (0);
 
   src->seq = 0;
 
@@ -484,8 +484,8 @@ gst_sinesrc_change_state (GstElement * element)
 
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_PAUSED_TO_READY:
-      src->timestamp = 0LLU;
-      src->offset = 0LLU;
+      src->timestamp = G_GINT64_CONSTANT (0);
+      src->offset = G_GINT64_CONSTANT (0);
       break;
     default:
       break;

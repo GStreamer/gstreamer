@@ -24,7 +24,7 @@
 
 #include <string.h>
 /*#define DEBUG_ENABLED */
-#include <gstvideofilter.h>
+#include "gstvideofilter.h"
 
 
 

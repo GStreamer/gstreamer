@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 #include <math.h>
-#include <videoscale.h>
+#include "videoscale.h"
 #include <string.h>
 
 #include "gstvideoscale.h"

@@ -23,8 +23,8 @@
 
 /* non-GST-specific stuff */
 
-#include <gstvideotestsrc.h>
-#include <videotestsrc.h>
+#include "gstvideotestsrc.h"
+#include "videotestsrc.h"
 #ifdef HAVE_LIBOIL
 #include <liboil/liboil.h>
 #endif
