@@ -294,6 +294,8 @@ GST_PLUGINS_ALL="\
         smooth smoothwave spectrum speed stereo stereomono\
         synaesthesia udp videoscale volenv volume vumeter wavparse"
 
+GST_PLUGINS_ALL=""
+
 AC_SUBST(GST_PLUGINS_ALL)
 
 GST_PLUGINS_SELECTED=""
@@ -437,7 +439,7 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
-GST_CHECK_FEATURE(DVDREAD, [dvdread library], libdvdread, [
+GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdread, [
   GST_CHECK_LIBHEADER(DVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, DVDREAD_LIBS="-ldvdread")
   AC_SUBST(DVDREAD_LIBS)
 ])
@@ -1020,50 +1022,52 @@ dnl libs/control/Makefile
 dnl libs/resample/Makefile
 dnl stamp.h
 dnl echo "$infomessages", infomessages="$infomessages"
+PLUGIN_GST_MAKEFILES="\
+gst/ac3parse/Makefile \
+gst/adder/Makefile \
+gst/audioscale/Makefile \
+gst/auparse/Makefile \
+gst/avi/Makefile \
+gst/chart/Makefile \
+gst/cutter/Makefile \
+gst/deinterlace/Makefile \
+gst/flx/Makefile \
+gst/intfloat/Makefile \
+gst/lav/Makefile \
+gst/law/Makefile \
+gst/level/Makefile \
+gst/median/Makefile \
+gst/mpeg1enc/Makefile \
+gst/mpeg1sys/Makefile \
+gst/mpeg2enc/Makefile \
+gst/mpeg2sub/Makefile \
+gst/mpegaudio/Makefile \
+gst/mpegaudioparse/Makefile \
+gst/mpegstream/Makefile \
+gst/mpegtypes/Makefile \
+gst/passthrough/Makefile \
+gst/playondemand/Makefile \
+gst/rtjpeg/Makefile \
+gst/silence/Makefile \
+gst/sine/Makefile \
+gst/smooth/Makefile \
+gst/smoothwave/Makefile \
+gst/spectrum/Makefile \
+gst/speed/Makefile \
+gst/stereo/Makefile \
+gst/stereomono/Makefile \
+gst/synaesthesia/Makefile \
+gst/udp/Makefile \
+gst/videoscale/Makefile \
+gst/volenv/Makefile \
+gst/volume/Makefile \
+gst/vumeter/Makefile \
+gst/wavparse/Makefile"
+
 AC_OUTPUT(
 Makefile
 gst/Makefile
-gst/ac3parse/Makefile
-gst/Makefile
-gst/adder/Makefile
-gst/audioscale/Makefile
-gst/auparse/Makefile
-gst/avi/Makefile
-gst/chart/Makefile
-gst/cutter/Makefile
-gst/deinterlace/Makefile
-gst/flx/Makefile
-gst/intfloat/Makefile
-gst/lav/Makefile
-gst/law/Makefile
-gst/level/Makefile
-gst/median/Makefile
-gst/mpeg1enc/Makefile
-gst/mpeg1sys/Makefile
-gst/mpeg2enc/Makefile
-gst/mpeg2sub/Makefile
-gst/mpegaudio/Makefile
-gst/mpegaudioparse/Makefile
-gst/mpegstream/Makefile
-gst/mpegtypes/Makefile
-gst/passthrough/Makefile
-gst/playondemand/Makefile
-gst/rtjpeg/Makefile
-gst/silence/Makefile
-gst/sine/Makefile
-gst/smooth/Makefile
-gst/smoothwave/Makefile
-gst/spectrum/Makefile
-gst/speed/Makefile
-gst/stereo/Makefile
-gst/stereomono/Makefile
-gst/synaesthesia/Makefile
-gst/udp/Makefile
-gst/videoscale/Makefile
-gst/volenv/Makefile
-gst/volume/Makefile
-gst/vumeter/Makefile
-gst/wavparse/Makefile
+$PLUGIN_GST_MAKEFILES
 sys/Makefile
 sys/oss/Makefile
 sys/qcam/Makefile
@@ -1075,6 +1079,7 @@ ext/Makefile
 ext/aalib/Makefile
 ext/alsa/Makefile
 ext/audiofile/Makefile
+ext/dvdread/Makefile
 ext/esd/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
