@@ -1,5 +1,19 @@
 2004-03-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	* gst-libs/ext/ffmpeg/Makefile.am:
+	  Slightly change the way we set this up. Ugly, but now it works
+	  again. This baby is looking for a proper fix.
+	* gst-libs/ext/ffmpeg/Tag:
+	  Apparently CVS and me disagree on the tag... Ohwell, CVS wins.
+	* gst-libs/ext/ffmpeg/patch/autotools.diff:
+	* gst-libs/ext/ffmpeg/patch/disableinstalllibs.diff:
+	  Slight nag on a link between lavf/lavc in ffmpeg. Not really
+	  important for us since the code is the same in the end, but this
+	  is actually correct from a per-patch point-of-view...
+
+2004-03-02  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst-libs/ext/ffmpeg/Makefile.am:
 	  Fix patching.
 

@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 7, 1, 0, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 7, 1, 1, GST_CVS="no", GST_CVS="yes")
 dnl we cheat here so we don't have to change the actual configure code bit
 GST_PLUGINS_VERSION_NANO=$GST_FFMPEG_VERSION_NANO
 
@@ -83,8 +83,21 @@ GST_CHECK_FEATURE(FFMPEG, [ffmpeg plug-ins], ffmpeg, [
   # prerelease and release should get it disted
   if test "x$GST_PLUGINS_VERSION_NANO" = x1; then
     AC_MSG_NOTICE(slurping FFmpeg CVS source)
-    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2004-02-29 20:00 GMT,
-                    HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+    dnl until someone fixes this... I guess this should be in ./autogen.sh
+    AS_SLURP_FFMPEG(gst-libs/ext/ffmpeg, 2004-02-29 20:00 GMT,[
+      if ! test -f gst-libs/ext/ffmpeg/ffmpeg/configure.ac; then
+        AC_MSG_NOTICE(setting up ffmpeg build system and applying patches)
+        CURDIR=`pwd`
+        cd gst-libs/ext/ffmpeg
+        for PATCH in patch/*.diff; do
+          patch -p0 -N -r rejects < $PATCH > /dev/null || true
+        done
+        cd ffmpeg
+        chmod a+x ./autogen.sh
+        NOCONFIGURE=1 ./autogen.sh
+        cd $CURDIR
+      fi
+      HAVE_FFMPEG=yes ], HAVE_FFMPEG=no)
   else
     AC_MSG_NOTICE(FFmpeg CVS code should be included already)
     HAVE_FFMPEG=yes
