@@ -19,7 +19,6 @@ linear_factory (void)
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
       "rate", GST_TYPE_INT_RANGE, 8000, 192000,
       "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
 }
