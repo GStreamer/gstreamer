@@ -37,8 +37,8 @@ version_check "automake" "$AUTOMAKE automake automake-1.7 automake-1.6 automake-
               "ftp://ftp.gnu.org/pub/gnu/automake/" 1 6 || DIE=1
 version_check "autopoint" "autopoint" \
               "ftp://ftp.gnu.org/pub/gnu/gettext/" 0 11 5 || DIE=1
-version_check "libtoolize" "$LIBTOOLIZE libtoolize libtoolize14" \
-              "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
+version_check "libtoolize" "$LIBTOOLIZE libtoolize" \
+              "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 5 0 || DIE=1
 version_check "pkg-config" "" \
               "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
 
