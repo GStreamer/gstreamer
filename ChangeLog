@@ -1,3 +1,38 @@
+2005-02-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements/gstfakesrc.c (gst_fakesrc_class_init): Add HAS_LOOP
+	and HAS_GETRANGE properties, readwrite + construct.
+	(gst_fakesrc_set_pad_functions) 
+	(gst_fakesrc_set_all_pad_functions): New procs, like in fakesrc.
+	(gst_fakesrc_set_property, gst_fakesrc_get_property): Same as
+	fakesrc.
+	(gst_fakesrc_get_range_unlocked): New proc, factored out of the
+	core of _loop.
+	(gst_fakesrc_get_range): Getrange implementation for fakesink.
+	(gst_fakesrc_loop): Interface with get_range_unlocked.
+	(gst_fakesrc_activate): Add support for both activation modes,
+	with assertions.
+
+	* gst/elements/gstfakesink.h: 
+	* gst/elements/gstfakesrc.h: Add has_loop and has_chain instance
+	variables.
+
+	* gst/elements/gstfakesink.c (gst_fakesink_class_init): Add
+	HAS_LOOP and HAS_CHAIN object properties, readwrite but also set
+	on construction.
+	(gst_fakesink_set_pad_functions): New proc, sets the functions on
+	one pad, setting the loop and chain functions properly.
+	(gst_fakesink_set_all_pad_functions): New proc, does
+	set_pad_functions on all pads.
+	(gst_fakesink_request_new_pad): Call set_pad_functions.
+	(gst_fakesink_set_property, gst_fakesink_get_property): When the
+	HAS_LOOP and HAS_CHAIN properties are set, reset the functions on
+	all pads.
+	(gst_fakesink_activate): Assert that the appropriate functions are
+	available for the activation mode.
+	(gst_fakesink_loop): Don't unref the buffer, chain_unlocked does
+	it for us.
+
 2005-02-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfakesink.c: (gst_fakesink_activate),

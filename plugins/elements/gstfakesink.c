@@ -61,7 +61,9 @@ enum
   ARG_DUMP,
   ARG_SYNC,
   ARG_SIGNAL_HANDOFFS,
-  ARG_LAST_MESSAGE
+  ARG_LAST_MESSAGE,
+  ARG_HAS_LOOP,
+  ARG_HAS_CHAIN
 };
 
 GstStaticPadTemplate fakesink_sink_template = GST_STATIC_PAD_TEMPLATE ("sink%d",
@@ -171,6 +173,14 @@ gst_fakesink_class_init (GstFakeSinkClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump received bytes to stdout",
           FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HAS_LOOP,
+      g_param_spec_boolean ("has-loop", "has-loop",
+          "Enable loop-based operation", TRUE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HAS_CHAIN,
+      g_param_spec_boolean ("has-chain", "has-chain",
+          "Enable chain-based operation", TRUE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gst_fakesink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -194,11 +204,6 @@ gst_fakesink_init (GstFakeSink * fakesink)
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
       "sink");
   gst_element_add_pad (GST_ELEMENT (fakesink), pad);
-  gst_pad_set_activate_function (pad,
-      GST_DEBUG_FUNCPTR (gst_fakesink_activate));
-  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
-  gst_pad_set_loop_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_loop));
-  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_event));
 
   fakesink->silent = FALSE;
   fakesink->dump = FALSE;
@@ -208,6 +213,33 @@ gst_fakesink_init (GstFakeSink * fakesink)
   fakesink->signal_handoffs = FALSE;
   fakesink->pad_mode = GST_ACTIVATE_NONE;
   GST_RPAD_TASK (pad) = NULL;
+}
+
+static void
+gst_fakesink_set_pad_functions (GstFakeSink * this, GstPad * pad)
+{
+  gst_pad_set_activate_function (pad,
+      GST_DEBUG_FUNCPTR (gst_fakesink_activate));
+  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_event));
+
+  if (this->has_chain)
+    gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
+  else
+    gst_pad_set_chain_function (pad, NULL);
+
+  if (this->has_loop)
+    gst_pad_set_loop_function (pad, GST_DEBUG_FUNCPTR (gst_fakesink_loop));
+  else
+    gst_pad_set_loop_function (pad, NULL);
+}
+
+static void
+gst_fakesink_set_all_pad_functions (GstFakeSink * this)
+{
+  GList *l;
+
+  for (l = GST_ELEMENT_PADS (this); l; l = l->next)
+    gst_fakesink_set_pad_functions (this, (GstPad *) l->data);
 }
 
 static void
@@ -241,8 +273,7 @@ gst_fakesink_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   sinkpad = gst_pad_new_from_template (templ, name);
   g_free (name);
-  gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
-
+  gst_fakesink_set_pad_functions (fakesink, sinkpad);
   gst_element_add_pad (GST_ELEMENT (fakesink), sinkpad);
 
   return sinkpad;
@@ -258,6 +289,14 @@ gst_fakesink_set_property (GObject * object, guint prop_id,
   sink = GST_FAKESINK (object);
 
   switch (prop_id) {
+    case ARG_HAS_LOOP:
+      sink->has_loop = g_value_get_boolean (value);
+      gst_fakesink_set_all_pad_functions (sink);
+      break;
+    case ARG_HAS_CHAIN:
+      sink->has_chain = g_value_get_boolean (value);
+      gst_fakesink_set_all_pad_functions (sink);
+      break;
     case ARG_SILENT:
       sink->silent = g_value_get_boolean (value);
       break;
@@ -328,10 +367,12 @@ gst_fakesink_activate (GstPad * pad, GstActivateMode mode)
 
   switch (mode) {
     case GST_ACTIVATE_PUSH:
+      g_return_val_if_fail (fakesink->has_chain, FALSE);
       result = TRUE;
       break;
     case GST_ACTIVATE_PULL:
       /* if we have a scheduler we can start the task */
+      g_return_val_if_fail (fakesink->has_loop, FALSE);
       if (GST_ELEMENT_SCHEDULER (fakesink)) {
         GST_STREAM_LOCK (pad);
         GST_RPAD_TASK (pad) =
@@ -483,8 +524,6 @@ gst_fakesink_loop (GstPad * pad)
 
 exit:
   GST_STREAM_UNLOCK (pad);
-  if (buf)
-    gst_buffer_unref (buf);
   return;
 
 paused:
