@@ -8,6 +8,11 @@ libgstlevel_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstlevel.h filter.func
 
+noinst_PROGRAMS = demo
+demo_SOURCES = demo.c
+demo_CFLAGS = $(GTK_CFLAGS) $(GST_CFLAGS)
+demo_LDFLAGS = $(GTK_LIBS) $(GST_LIBS)
+
 EXTRA_libgstlevel_la_SOURCES = gstlevel-marshal.list
 
 BUILT_SOURCES = \

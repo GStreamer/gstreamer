@@ -208,7 +208,6 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
   g_return_if_fail (buf != NULL);
 
 
-  g_print ("\nDEBUG: chain start\n");
   filter = GST_LEVEL (GST_OBJECT_PARENT (pad));
   g_return_if_fail (filter != NULL);
   g_return_if_fail (GST_IS_LEVEL (filter));
@@ -237,7 +236,7 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
                                      &CS, &filter->peak[i]);
 	  break;
     }
-    g_print ("DEBUG: CS %f, peak %f\n", CS, filter->peak[i]);
+    /* g_print ("DEBUG: CS %f, peak %f\n", CS, filter->peak[i]); */
     filter->CS[i] += CS;
 
   }
@@ -248,8 +247,8 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
   for (i = 0; i < filter->channels; ++i)
   {
     filter->decay_peak_age[i] += num_samples;
-    g_print ("filter peak info [%d]: peak %f, age %f\n", i,
-             filter->last_peak[i], filter->decay_peak_age[i]);
+    /* g_print ("filter peak info [%d]: peak %f, age %f\n", i, 
+             filter->last_peak[i], filter->decay_peak_age[i]); */
     /* update running peak */
     if (filter->peak[i] > filter->last_peak[i])
         filter->last_peak[i] = filter->peak[i];
@@ -257,7 +256,7 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
     /* update decay peak */
     if (filter->peak[i] >= filter->decay_peak[i])
     {
-       g_print ("new peak, %f\n", filter->peak[i]);
+       /* g_print ("new peak, %f\n", filter->peak[i]); */
        filter->decay_peak[i] = filter->peak[i];
        filter->decay_peak_age[i] = 0;
     }
@@ -275,11 +274,11 @@ gst_level_chain (GstPad *pad, GstBuffer *buf)
         falloff_dB = filter->decay_peak_falloff * length;
         falloff = pow (10, falloff_dB / -20.0);
 
-        g_print ("falloff: length %f, dB falloff %f, falloff factor %e\n",
-                 length, falloff_dB, falloff);
+        /* g_print ("falloff: length %f, dB falloff %f, falloff factor %e\n",
+                 length, falloff_dB, falloff); */
         filter->decay_peak[i] *= falloff;
-        g_print ("peak is %f samples old, decayed with factor %e to %f\n",
-                 filter->decay_peak_age[i], falloff, filter->decay_peak[i]);
+        /* g_print ("peak is %f samples old, decayed with factor %e to %f\n",
+                 filter->decay_peak_age[i], falloff, filter->decay_peak[i]); */
       }
     }
   }
