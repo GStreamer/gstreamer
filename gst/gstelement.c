@@ -2075,6 +2075,15 @@ gst_element_error (GstElement *element, const gchar *error, ...)
   va_end (var_args);
   GST_INFO (GST_CAT_EVENT, "ERROR in %s: %s", GST_ELEMENT_NAME (element), string);
 
+  /* if the element was already in error, stop now */
+  if (GST_FLAG_IS_SET (element, GST_ELEMENT_ERROR)) {
+    GST_INFO (GST_CAT_EVENT, "recursive ERROR detected in %s", GST_ELEMENT_NAME (element));
+    g_free (string);
+    return;
+  }
+    
+  GST_FLAG_SET (element, GST_ELEMENT_ERROR);
+
   /* emit the signal, make sure the element stays available */
   gst_object_ref (GST_OBJECT (element));
   g_signal_emit (G_OBJECT (element), gst_element_signals[ERROR], 0, element, string);
@@ -2084,8 +2093,16 @@ gst_element_error (GstElement *element, const gchar *error, ...)
     gst_scheduler_error (element->sched, element); 
   } 
 
-  if (GST_STATE (element) == GST_STATE_PLAYING)
-    gst_element_set_state (element, GST_STATE_PAUSED);
+  if (GST_STATE (element) == GST_STATE_PLAYING) { 
+    GstElementStateReturn ret;
+    
+    ret = gst_element_set_state (element, GST_STATE_PAUSED);
+    if (ret != GST_STATE_SUCCESS) {
+      g_warning ("could not PAUSE element \"%s\" after error, help!", GST_ELEMENT_NAME (element));
+    }
+  }
+
+  GST_FLAG_UNSET (element, GST_ELEMENT_ERROR);
 
   /* cleanup */
   gst_object_unref (GST_OBJECT (element));
@@ -2281,11 +2298,6 @@ gst_element_set_state (GstElement *element, GstElementState state)
   }
 exit:
 
-  /* signal the state change in case somebody is waiting for us */
-  g_mutex_lock (element->state_mutex);
-  g_cond_signal (element->state_cond);
-  g_mutex_unlock (element->state_mutex);
-
   return return_val;
 }
 
@@ -2458,14 +2470,20 @@ gst_element_change_state (GstElement *element)
     }
   }
 
-  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
-		 0, old_state, GST_STATE (element));
-
   /* tell our parent about the state change */
   if (parent && GST_IS_BIN (parent)) {
     gst_bin_child_state_change (GST_BIN (parent), old_state, 
 	                        GST_STATE (element), element);
   }
+  /* at this point the state of the element could have changed again */
+
+  g_signal_emit (G_OBJECT (element), gst_element_signals[STATE_CHANGE],
+		 0, old_state, GST_STATE (element));
+
+  /* signal the state change in case somebody is waiting for us */
+  g_mutex_lock (element->state_mutex);
+  g_cond_signal (element->state_cond);
+  g_mutex_unlock (element->state_mutex);
 
   return GST_STATE_SUCCESS;
 

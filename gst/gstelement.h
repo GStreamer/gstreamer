@@ -111,6 +111,9 @@ typedef enum {
   /* ignore state changes from parent */
   GST_ELEMENT_LOCKED_STATE,
 
+  /* element is in error */
+  GST_ELEMENT_ERROR,
+
   /* use some padding for future expansion */
   GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16
 } GstElementFlags;
