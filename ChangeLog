@@ -1,3 +1,11 @@
+2004-12-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_loop):
+	  Align by packetsize, and assert that we a packet available before
+	  playing. The first makes webstreams work (they often include
+	  trailing padding data in a packet), the second allows pausing a
+	  ASF stream in totem without getting demux errors afterwards.
+
 2004-12-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ogg/gstoggdemux.c: (get_relative):
