@@ -15,35 +15,29 @@
 #include "callbacks.h"
 #include "interface.h"
 
-#include "codecs.h"
-
 #define MUTEX_STATUS() (g_mutex_trylock(gdk_threads_mutex)? g_mutex_unlock(gdk_threads_mutex), "was not locked" : "was locked")
-
 
 #define BUFFER 20
 
-extern gboolean _gst_plugin_spew;
-gboolean idle_func(gpointer data);
-GstElement *show, *video_render_queue;
-GstElement *audio_play, *audio_render_queue;
+static gboolean idle_func(gpointer data);
+static gint start_from_file(guchar *filename); 
+
+GstElement *show;
+GstElement *audio_play;
 GstElement *src;
+GstElement *parse;
 GstElement *pipeline;
-GstElement *parse = NULL;
-GstElement *typefind;
-GstElement *video_render_thread;
-GstElement *audio_render_thread;
 GstPlayState state;
 gboolean picture_shown = FALSE;
 guchar statusline[200];
 guchar *statustext = "stopped";
 GtkWidget *status_area;
+GtkWidget *video;
 GtkAdjustment *adjustment;
 GtkWidget *play_button;
 GtkWidget *pause_button;
 GtkWidget *stop_button;
 GtkFileSelection *open_file_selection;
-
-gint start_from_file(guchar *filename); 
 
 static void frame_displayed(GstSrc *asrc) 
 {
@@ -79,9 +73,8 @@ static void frame_displayed(GstSrc *asrc)
   DEBUG("gstplay: frame displayed end %s\n", MUTEX_STATUS());
 }
 
-gboolean idle_func(gpointer data) {
+static gboolean idle_func(gpointer data) {
   DEBUG("idle start %s\n",MUTEX_STATUS());
-  //gst_src_push(GST_SRC(data));
   gst_bin_iterate(GST_BIN(data));
   DEBUG("idle stop %s\n",MUTEX_STATUS());
   return TRUE;
@@ -103,7 +96,7 @@ void show_next_picture() {
   DEBUG("gstplay: next found %s\n", MUTEX_STATUS());
 }
 
-void mute_audio(gboolean mute) {
+static void mute_audio(gboolean mute) {
   gtk_object_set(GTK_OBJECT(audio_play),"mute",mute,NULL);
 }
 
@@ -135,7 +128,7 @@ on_exit_menu_activate                 (GtkMenuItem     *menuitem,
   gdk_threads_leave();
   gstplay_tear_down();
   gdk_threads_enter();
-  gtk_main_quit();
+  gst_main_quit();
 }
 
 void on_ok_button1_clicked             (GtkButton     *button,
@@ -155,12 +148,6 @@ gint on_gstplay_delete_event(GtkWidget *widget, GdkEvent *event, gpointer data)
   return FALSE;
 }
 
-void gstplay_parse_pads_created(GstElement *element, gpointer data)
-{
-  printf("gstplay: element \"%s\" is ready\n", gst_element_get_name(element));
-  gst_clock_reset(gst_clock_get_system());
-}
-
 void change_state(GstPlayState new_state) {
 
   if (new_state == state) return;
@@ -169,6 +156,7 @@ void change_state(GstPlayState new_state) {
       mute_audio(FALSE);
       statustext = "playing";
       update_status_area(status_area);
+      gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
       gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
       gtk_idle_add(idle_func, pipeline);
       state = GSTPLAY_PLAYING;
@@ -178,12 +166,14 @@ void change_state(GstPlayState new_state) {
       statustext = "paused";
       update_status_area(status_area);
       if (state != GSTPLAY_STOPPED) gtk_idle_remove_by_data(pipeline);
+      //gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PAUSED);
       mute_audio(TRUE);
       state = GSTPLAY_PAUSE;
       update_buttons(1);
       break;
     case GSTPLAY_STOPPED:
       if (state != GSTPLAY_PAUSE) gtk_idle_remove_by_data(pipeline);
+      //gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_NULL);
       statustext = "stopped";
       update_status_area(status_area);
       mute_audio(TRUE);
@@ -191,104 +181,31 @@ void change_state(GstPlayState new_state) {
       gtk_object_set(GTK_OBJECT(src),"offset",0,NULL);
       update_buttons(2);
       update_slider(adjustment, 0.0);
-      show_next_picture();
+      //show_next_picture();
       break;
   }
 }
 
-static void have_type(GstSink *sink) {
-  gint type;
-  GstType *gsttype;
-  
-  type = gst_util_get_int_arg(GTK_OBJECT(sink),"type");
-  gsttype = gst_type_find_by_id(type);
-
-  g_print("have type %d:%s\n", type, gsttype->mime);
-
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_NULL);
-  gst_bin_remove(GST_BIN(pipeline), GST_ELEMENT(sink));
-
-  gst_pad_disconnect(gst_element_get_pad(src,"src"),
-                  gst_element_get_pad(GST_ELEMENT(sink),"sink"));
-   
-  if (strstr(gsttype->mime, "mpeg1-system")) {
-    parse = gst_elementfactory_make("mpeg1parse","mpeg1_system_parse");
-    gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
-                       GTK_SIGNAL_FUNC(mpeg1_new_pad_created),pipeline);
-    gtk_signal_connect(GTK_OBJECT(show),"frame_displayed",
-                       GTK_SIGNAL_FUNC(frame_displayed),NULL);
-  }
-  else if (strstr(gsttype->mime, "mpeg2-system")) {
-    parse = gst_elementfactory_make("mpeg2parse","mpeg2_system_parse");
-    gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
-                       GTK_SIGNAL_FUNC(mpeg2_new_pad_created),pipeline);
-    gtk_signal_connect(GTK_OBJECT(show),"frame_displayed",
-                       GTK_SIGNAL_FUNC(frame_displayed),NULL);
-  }
-  else if (strstr(gsttype->mime, "avi")) {
-    parse = gst_elementfactory_make("parseavi","parse");
-    gtk_signal_connect(GTK_OBJECT(parse),"new_pad",
-                       GTK_SIGNAL_FUNC(avi_new_pad_created),pipeline);
-  }
-  else if (strstr(gsttype->mime, "mpeg1")) {
-    mpeg1_setup_video_thread(gst_element_get_pad(src,"src"), video_render_queue, GST_ELEMENT(pipeline));
-    gst_clock_reset(gst_clock_get_system());
-    gtk_signal_connect(GTK_OBJECT(show),"frame_displayed",
-                       GTK_SIGNAL_FUNC(frame_displayed),NULL);
-  }
-  else if (strstr(gsttype->mime, "mp3")) {
-    mpeg1_setup_audio_thread(gst_element_get_pad(src,"src"), audio_render_queue, GST_ELEMENT(pipeline));
-    gst_clock_reset(gst_clock_get_system());
-  }
-  else {
-    g_print("unknown media type\n");
-    exit(0);
-  }
-
-  if (parse) {
-    gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(parse));
-    gst_pad_connect(gst_element_get_pad(src,"src"),
-                  gst_element_get_pad(parse,"sink"));
-    gtk_signal_connect(GTK_OBJECT(parse),"pads_created",
-                       GTK_SIGNAL_FUNC(gstplay_parse_pads_created),pipeline);
-  }
-  gtk_object_set(GTK_OBJECT(src),"offset",0,NULL);
-
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(video_render_thread));
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(audio_render_thread));
-
-  g_print("setting to READY state\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
-  g_print("setting to PLAYING state\n");
-  gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_PLAYING);
-  g_print("set to PLAYING state\n");
-
-}
-
-gint start_from_file(guchar *filename) 
+static gint start_from_file(guchar *filename) 
 {
-  src = gst_elementfactory_make("disksrc","disk_src");
+  src = gst_elementfactory_make("disksrc", "disk_src");
   g_return_val_if_fail(src != NULL, -1);
   g_print("should be using file '%s'\n",filename);
   gtk_object_set(GTK_OBJECT(src),"location",filename,NULL);
 
-  typefind = gst_elementfactory_make("typefind","typefind");
-  g_return_val_if_fail(typefind != NULL, -1);
-
-  gtk_signal_connect(GTK_OBJECT(typefind),"have_type",
-                       GTK_SIGNAL_FUNC(have_type),NULL);
-
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(src));
-  gst_bin_add(GST_BIN(pipeline),GST_ELEMENT(typefind));
-
+  gst_pipeline_add_src(GST_PIPELINE(pipeline),GST_ELEMENT(src));
   gtk_signal_connect(GTK_OBJECT(src),"eos",
                        GTK_SIGNAL_FUNC(eof),NULL);
 
-  gst_pad_connect(gst_element_get_pad(src,"src"),
-                  gst_element_get_pad(typefind,"sink"));
+  if (!gst_pipeline_autoplug(GST_PIPELINE(pipeline))) {
+    g_print("unable to handle stream\n");
+    exit(-1);
+  }
 
+  if (GST_PAD_CONNECTED(gst_element_get_pad(show, "sink"))) {
+    gtk_widget_show(video);
+  }
   g_print("setting to READY state\n");
-
   gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_READY);
 
   state = GSTPLAY_STOPPED;
@@ -311,18 +228,14 @@ main (int argc, char *argv[])
   bindtextdomain (PACKAGE, PACKAGE_LOCALE_DIR);
   textdomain (PACKAGE);
 
-  g_thread_init(NULL);
-  gtk_init(&argc,&argv);
+  gst_init(&argc,&argv);
   gnome_init ("gstreamer", VERSION, argc, argv);
   glade_init();
   glade_gnome_init();
-  gst_init(&argc,&argv);
-  //gst_plugin_load_all();
 
   g_print("using %s\n", DATADIR"gstplay.glade");
   /* load the interface */
   xml = glade_xml_new(DATADIR "gstplay.glade", "gstplay");
-  /* connect the signals in the interface */
 
   status_area = glade_xml_get_widget(xml, "status_area");
   slider = glade_xml_get_widget(xml, "slider");
@@ -349,42 +262,32 @@ main (int argc, char *argv[])
 	              GTK_SIGNAL_FUNC (target_drag_data_received),
 	              NULL);
 
-  gst_plugin_load("videosink");
-
   g_snprintf(statusline, 200, "seeking"); 
 
-  pipeline = gst_pipeline_new("main_pipeline");
-  g_return_val_if_fail(pipeline != NULL, -1);
+  /* create a new bin to hold the elements */
+  pipeline = gst_pipeline_new("pipeline");
+  g_assert(pipeline != NULL);
 
-  video_render_thread = gst_thread_new("video_render_thread");
-  g_return_val_if_fail(video_render_thread != NULL, -1);
+  /* and an audio sink */
+  audio_play = gst_elementfactory_make("audiosink","play_audio");
+  g_return_val_if_fail(audio_play != NULL, -1);
+
+  /* and a video sink */
   show = gst_elementfactory_make("videosink","show");
   g_return_val_if_fail(show != NULL, -1);
   gtk_object_set(GTK_OBJECT(show),"xv_enabled",FALSE,NULL);
+  gtk_signal_connect(GTK_OBJECT(show),"frame_displayed",
+                      GTK_SIGNAL_FUNC(frame_displayed),NULL);
 
+  video = gst_util_get_widget_arg(GTK_OBJECT(show),"widget");
   gnome_dock_set_client_area(GNOME_DOCK(glade_xml_get_widget(xml, "dock1")),
-		  gst_util_get_widget_arg(GTK_OBJECT(show),"widget"));
-  gst_bin_add(GST_BIN(video_render_thread),GST_ELEMENT(show));
+		  video);
 
+  gst_pipeline_add_sink(GST_PIPELINE(pipeline), audio_play);
+  gst_pipeline_add_sink(GST_PIPELINE(pipeline), show);
+
+  /* connect the signals in the interface */
   glade_xml_signal_autoconnect(xml);
-
-  video_render_queue = gst_elementfactory_make("queue","video_render_queue");
-  gtk_object_set(GTK_OBJECT(video_render_queue),"max_level",BUFFER,NULL);
-  gst_pad_connect(gst_element_get_pad(video_render_queue,"src"),
-                  gst_element_get_pad(show,"sink"));
-  gtk_object_set(GTK_OBJECT(video_render_thread),"create_thread",TRUE,NULL);
-
-
-  audio_render_thread = gst_thread_new("audio_render_thread");
-  g_return_val_if_fail(audio_render_thread != NULL, -1);
-  audio_play = gst_elementfactory_make("audiosink","play_audio");
-  gst_bin_add(GST_BIN(audio_render_thread),GST_ELEMENT(audio_play));
-
-  audio_render_queue = gst_elementfactory_make("queue","audio_render_queue");
-  gtk_object_set(GTK_OBJECT(audio_render_queue),"max_level",BUFFER,NULL);
-  gst_pad_connect(gst_element_get_pad(audio_render_queue,"src"),
-                  gst_element_get_pad(audio_play,"sink"));
-  gtk_object_set(GTK_OBJECT(audio_render_thread),"create_thread",TRUE,NULL);
 
   if (argc > 1) {
     gint ret;
@@ -393,9 +296,7 @@ main (int argc, char *argv[])
     if (ret < 0) exit(ret);
   }
 
-  gdk_threads_enter();
-  gtk_main();
-  gdk_threads_leave();
+  gst_main();
   return 0;
 }
 

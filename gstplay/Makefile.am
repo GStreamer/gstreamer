@@ -11,11 +11,8 @@ glade_DATA = gstplay.glade play.xpm stop.xpm pause.xpm
 
 gstplay_SOURCES = \
 	gstplay.c \
-	mpeg1.c mpeg2.c avi.c\
 	interface.c interface.h \
 	callbacks.c callbacks.h
-
-noinst_HEADERS = codecs.h
 
 CFLAGS += -O2 -Wall -DDATADIR=\""$(gladedir)/"\"
 

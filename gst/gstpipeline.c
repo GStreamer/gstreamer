@@ -419,6 +419,8 @@ differ:
     GstElement *thesrcelement = srcelement;
     GstElement *thebin = GST_ELEMENT(pipeline);
 
+    if (g_list_length(factories[i]) < 1) goto next;
+
     sinkelement = (GstElement *)elements->data;
 
     use_thread = have_common;
@@ -486,7 +488,7 @@ differ:
       // this element is now the new source element
       thesrcelement = element;
     }
-
+next:
     elements = g_list_next(elements);
     i++;
   }

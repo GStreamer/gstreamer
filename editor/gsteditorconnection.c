@@ -179,7 +179,7 @@ static void gst_editor_connection_realize(GstEditorConnection *connection) {
   connection->line = gnome_canvas_item_new(
     GST_EDITOR_ELEMENT(connection->parent)->group,
     gnome_canvas_line_get_type(),
-    "points",connection->points,NULL);
+    "points",connection->points,"width_units",2.0, NULL);
 }
 
 static void gst_editor_connection_destroy(GtkObject *object) {

@@ -226,7 +226,7 @@ static void gst_editor_pad_realize(GstEditorPad *pad) {
 
   pad->border = gnome_canvas_item_new(pad->group,
     gnome_canvas_rect_get_type(),
-    "width_units",1.0,"fill_color","white","outline_color","black", 
+    "width_units",1.0,"fill_color_rgba", 0xCCFFCC00,"outline_color","black", 
     "x1",0.0,"y1",0.0,"x2",pad->width,"y2",pad->height,NULL);
   g_return_if_fail(pad->border != NULL);
   GST_EDITOR_SET_OBJECT(pad->border,pad);
