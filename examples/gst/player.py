@@ -4,9 +4,8 @@ import sys
 import gst
 
 def found_tags(element, source, tags):
-    print 'Artist:', tags.get('artist')
-    print 'Title: ', tags.get('title')
-    print 'Album: ', tags.get('album')        
+    for tag in tags.keys():
+        print gst.tag_get_nick(tag), tags[tag]
 
 def playfile(filename):
     bin = gst.Pipeline('player')
@@ -16,7 +15,7 @@ def playfile(filename):
 
     spider = gst.Element('spider', 'spider')
     spider.connect('found-tag', found_tags)
-    
+
     sink = gst.Element('osssink', 'sink')
 
     bin.add_many(source, spider, sink)
