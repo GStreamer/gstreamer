@@ -50,7 +50,12 @@ gst_open (URLContext *h, const char *filename, int flags)
   info = g_new0 (GstProtocolInfo, 1);
   info->flags = flags;
 
-  if (sscanf (&filename[12], "%p", &pad) != 1) {
+  if (filename[12] != 'i') {
+    g_warning("%s is no input: %c", filename, filename[12]);
+    return -EIO;
+  }
+
+  if (sscanf (&filename[14], "%p", &pad) != 1) {
     g_warning ("could not decode pad from %s", &filename[12]);
     return -EIO;
   }
