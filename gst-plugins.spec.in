@@ -196,7 +196,7 @@ GStreamer support libraries header files.
 @USE_ALSA_TRUE@%files -n gstreamer-alsa
 @USE_ALSA_TRUE@%defattr(-, root, root)
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
-@USE_ALSA_TRUE@%{_mandir}/man1/gstalsa*
+### @USE_ALSA_TRUE@%{_mandir}/man1/gstalsa*
 @USE_ALSA_TRUE@
 @USE_ALSA_TRUE@%post -n gstreamer-alsa
 @USE_ALSA_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -721,6 +721,29 @@ Plug-ins for playback of AVI format media files.
 @USE_LIBFAME_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 @USE_LIBFAME_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
+### LIBPNG ###
+@USE_LIBPNG_TRUE@%package -n gstreamer-libpng
+@USE_LIBPNG_TRUE@Summary:       GStreamer plug-in to encode png images
+@USE_LIBPNG_TRUE@Group:         Libraries/Multimedia
+@USE_LIBPNG_TRUE@Requires:      gstreamer-plugins = %{version}
+@USE_LIBPNG_TRUE@Requires:      libpng >= 1.2.0
+@USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
+@USE_LIBPNG_TRUE@
+@USE_LIBPNG_TRUE@%description -n gstreamer-libpng
+@USE_LIBPNG_TRUE@Plug-in for encoding png images.
+@USE_LIBPNG_TRUE@
+@USE_LIBPNG_TRUE@%files -n gstreamer-libpng
+@USE_LIBPNG_TRUE@%defattr(-, root, root)
+@USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibpng.so
+@USE_LIBPNG_TRUE@
+@USE_LIBPNG_TRUE@%post -n gstreamer-libpng
+@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LIBPNG_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LIBPNG_TRUE@
+@USE_LIBPNG_TRUE@%postun -n gstreamer-libpng
+@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LIBPNG_TRUE@### %{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 ### MAD ###
 @USE_MAD_TRUE@%package -n gstreamer-mad  
 @USE_MAD_TRUE@Summary:       GStreamer plug-in using MAD for mp3 decoding.
@@ -1124,7 +1147,6 @@ Plug-ins for playback of AVI format media files.
 Summary: 	GStreamer audio effects plug-in.
 Group: 		Libraries/Multimedia
 Requires: 	gstreamer-plugins = %{version}
-@USE_LIBPNG_TRUE@Requires:	libpng
 Obsoletes:	gstreamer-misc
 
 %description -n gstreamer-audio-effects
@@ -1510,6 +1532,7 @@ This package contains a basic audio and video playback library.
 
 %changelog
 * Sun Dec 08 2002 Thomas Vander Stichele <thomas at apestaart dot org>
+- fix location of libgstpng
 - changes for parallel installability
 
 * Thu Nov 28 2002 Christian Schaller <Uraeus@linuxrising.org>
