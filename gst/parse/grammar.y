@@ -306,23 +306,23 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
   GList *walk = (GList *) gst_element_get_pad_list (element);
   gboolean unlocked_peer = FALSE;
   
-  if (gst_element_is_state_locked (element) == lock)
+  if (gst_element_is_locked_state (element) == lock)
     return;
   /* check if we have an unlocked peer */
   while (walk) {
     pad = (GstPad *) GST_PAD_REALIZE (walk->data);
     walk = walk->next;
     if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) &&
-        !gst_element_is_state_locked (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
+        !gst_element_is_locked_state (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
       unlocked_peer = TRUE;
       break;
     }
   }  
   
-  if (lock && !unlocked_peer) {
-    gst_element_lock_state (element);
-  } else if (!lock) {
-    gst_element_unlock_state (element);
+  if (!(lock && unlocked_peer)) {
+    gst_element_set_locked_state (element, lock);
+    if (!lock)
+      gst_element_sync_state_with_parent (element);
   } else {
     return;
   }
@@ -334,7 +334,7 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
     walk = walk->next;
     if (GST_PAD_IS_SRC (pad) && GST_PAD_PEER (pad)) {
       GstElement *next = GST_ELEMENT (GST_OBJECT_PARENT (GST_PAD_PEER (pad)));
-      if (gst_element_is_state_locked (next) != lock)
+      if (gst_element_is_locked_state (next) != lock)
         gst_parse_element_lock (next, lock);
     }
   }
@@ -343,35 +343,23 @@ static void
 gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 {
   DelayedLink *link = (DelayedLink *) data;
-  gboolean restart = FALSE;
   
   GST_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s", 
             GST_ELEMENT_NAME (src), link->src_pad,
             GST_ELEMENT_NAME (link->sink), link->sink_pad);
-  if (gst_element_get_state (src) == GST_STATE_PLAYING) {
-    restart = TRUE;
-    gst_element_set_state (src, GST_STATE_PAUSED);
-  }
-  
+
   if (gst_element_link_pads_filtered (src, link->src_pad, link->sink, link->sink_pad, link->caps)) {
     /* do this here, we don't want to get any problems later on when unlocking states */
     GST_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked", 
                GST_ELEMENT_NAME (src), link->src_pad,
                GST_ELEMENT_NAME (link->sink), link->sink_pad);
-    if (restart) {
-      gst_element_set_state (src, GST_STATE_PLAYING);
-    }
     g_signal_handler_disconnect (src, link->signal_id);
     g_free (link->src_pad);
     g_free (link->sink_pad);
     gst_caps_unref (link->caps);
-    if (!gst_element_is_state_locked (src))
+    if (!gst_element_is_locked_state (src))
       gst_parse_element_lock (link->sink, FALSE);
     g_free (link);
-  } else {
-    if (restart) {
-      gst_element_set_state (src, GST_STATE_PLAYING);
-    }
   }
 }
 /* both padnames and the caps may be NULL */
@@ -427,7 +415,7 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
     if (gst_element_link_pads_filtered (src, srcs ? (const gchar *) srcs->data : NULL,
                                         sink, sinks ? (const gchar *) sinks->data : NULL,
 					link->caps)) {
-      gst_parse_element_lock (sink, gst_element_is_state_locked (src));
+      gst_parse_element_lock (sink, gst_element_is_locked_state (src));
       goto success;
     } else {
       if (gst_parse_perform_delayed_link (src, srcs ? (const gchar *) srcs->data : NULL,
@@ -449,7 +437,7 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
     srcs = g_slist_next (srcs);
     sinks = g_slist_next (sinks);
     if (gst_element_link_pads_filtered (src, src_pad, sink, sink_pad, link->caps)) {
-      gst_parse_element_lock (sink, gst_element_is_state_locked (src));
+      gst_parse_element_lock (sink, gst_element_is_locked_state (src));
       continue;
     } else {
       if (gst_parse_perform_delayed_link (src, src_pad,

@@ -516,6 +516,7 @@ gst_spider_create_and_plug (GstSpiderConnection *conn, GList *plugpath)
     } else {
       element = gst_element_factory_create ((GstElementFactory *) plugpath->data, NULL);
       gst_bin_add (GST_BIN (spider), element);
+      gst_element_sync_state_with_parent (element);
     }
     /* insert and link new element */
     if (!gst_element_link (conn->current, element))

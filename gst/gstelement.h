@@ -325,9 +325,9 @@ void			gst_element_set_eos		(GstElement *element);
 
 void 			gst_element_error 		(GstElement *element, const gchar *error, ...);
 
-gboolean		gst_element_is_state_locked	(GstElement *element);
-gboolean		gst_element_lock_state		(GstElement *element);
-gboolean		gst_element_unlock_state	(GstElement *element);
+gboolean		gst_element_is_locked_state	(GstElement *element);
+void			gst_element_set_locked_state	(GstElement *element, gboolean locked_state);
+gboolean		gst_element_sync_state_with_parent (GstElement *element);
 
 GstElementState         gst_element_get_state           (GstElement *element);
 GstElementStateReturn	gst_element_set_state		(GstElement *element, GstElementState state);

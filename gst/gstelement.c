@@ -859,6 +859,7 @@ gst_element_release_locks (GstElement *element)
  *
  * Add a pad (link point) to the element, setting the parent of the
  * pad to the element (and thus adding a reference).
+ * Pads are automatically activated when the element is in state PLAYING.
  */
 void
 gst_element_add_pad (GstElement *element, GstPad *pad)
@@ -887,6 +888,10 @@ gst_element_add_pad (GstElement *element, GstPad *pad)
   else
     element->numsinkpads++;
 
+  /* activate element when we are playing */
+  if (GST_STATE (element) == GST_STATE_PLAYING)
+    gst_pad_set_active (pad, TRUE);
+  
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
 }
@@ -1428,8 +1433,6 @@ gst_element_link_pads_filtered (GstElement *src, const gchar *srcpadname,
   /* checks */
   g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
-  g_return_val_if_fail (GST_STATE (src) != GST_STATE_PLAYING, FALSE);
-  g_return_val_if_fail (GST_STATE (dest) != GST_STATE_PLAYING, FALSE);
 
   GST_INFO (GST_CAT_ELEMENT_PADS, "trying to link element %s:%s to element %s:%s",
             GST_ELEMENT_NAME (src), srcpadname ? srcpadname : "(any)", 
@@ -2089,7 +2092,7 @@ gst_element_error (GstElement *element, const gchar *error, ...)
 }
 
 /**
- * gst_element_is_state_locked:
+ * gst_element_is_locked_state:
  * @element: a #GstElement.
  *
  * Checks if the state of an element is locked.
@@ -2101,57 +2104,65 @@ gst_element_error (GstElement *element, const gchar *error, ...)
  * Returns: TRUE, if the element's state is locked.
  */
 gboolean
-gst_element_is_state_locked (GstElement *element)
+gst_element_is_locked_state (GstElement *element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   return GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE) ? TRUE : FALSE;
 }
 /**
- * gst_element_lock_state:
- * @element: a #GstElement.
+ * gst_element_set_locked_state:
+ * @element: a #GstElement
+ * @locked_state: TRUE to lock the element's state
  *
  * Locks the state of an element, so state changes of the parent don't affect
  * this element anymore.
- *
- * Returns: TRUE, if the element's state could be locked.
  */
-gboolean
-gst_element_lock_state (GstElement *element)
+void
+gst_element_set_locked_state (GstElement *element, gboolean locked_state)
 {
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  gboolean old;
 
-  GST_INFO (GST_CAT_STATES, "locking state of element %s\n", GST_ELEMENT_NAME (element));
-  GST_FLAG_SET (element, GST_ELEMENT_LOCKED_STATE);
-  return TRUE;
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  old = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+
+  if (old == locked_state)
+    return;
+
+  if (locked_state) {
+    GST_DEBUG (GST_CAT_STATES, "locking state of element %s\n", 
+               GST_ELEMENT_NAME (element));
+    GST_FLAG_SET (element, GST_ELEMENT_LOCKED_STATE);
+  } else {
+    GST_DEBUG (GST_CAT_STATES, "unlocking state of element %s\n", 
+               GST_ELEMENT_NAME (element));
+    GST_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);
+  }
 }
 /**
- * gst_element_unlock_state:
+ * gst_element_sync_state_with_parent:
  * @element: a #GstElement.
  *
- * Unlocks the state of an element and synchronises the state with the parent.
- * If this function succeeds, the state of this element is identical to the 
- * state of it's bin.
- * When this function fails, the state of the element is undefined.
+ * Tries to change the state of the element to the same as its parent.
+ * If this function returns FALSE, the state of element is undefined.
  *
- * Returns: TRUE, if the element's state could be unlocked.
+ * Returns: TRUE, if the element's state could be synced to the parent's state.
  */
-gboolean 
-gst_element_unlock_state (GstElement *element)
+gboolean
+gst_element_sync_state_with_parent (GstElement *element)
 {
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  GstElement *parent;
 
-  GST_INFO (GST_CAT_STATES, "unlocking state of element %s\n", GST_ELEMENT_NAME (element));
-  GST_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);  
-  if (GST_ELEMENT_PARENT(element)) {
-    GST_DEBUG (GST_CAT_STATES, "setting state of unlocked element %s to %s\n", GST_ELEMENT_NAME (element), gst_element_state_get_name (GST_STATE (GST_ELEMENT_PARENT(element))));
-    GstElementState old_state = GST_STATE (element);
-    if (gst_element_set_state (element, GST_STATE (GST_ELEMENT_PARENT(element))) == GST_STATE_FAILURE) {
-      GST_DEBUG (GST_CAT_STATES, "state change of unlocked element %s to %s stopped at %s, resetting\n", GST_ELEMENT_NAME (element), 
-                 gst_element_state_get_name (GST_STATE (GST_ELEMENT_PARENT(element))), gst_element_state_get_name (GST_STATE (element)));      
-      gst_element_set_state (element, old_state);
-      return FALSE;
-    }
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  parent = GST_ELEMENT (GST_ELEMENT_PARENT(element));
+  g_return_val_if_fail (GST_IS_BIN (parent), FALSE);
+  
+  GST_DEBUG (GST_CAT_STATES, "syncing state of element %s (%s) to %s (%s)", 
+             GST_ELEMENT_NAME (element), gst_element_state_get_name (GST_STATE (element)),
+             GST_ELEMENT_NAME (parent), gst_element_state_get_name (GST_STATE (parent)));
+  if (gst_element_set_state (element, GST_STATE (parent)) == GST_STATE_FAILURE) {
+    return FALSE;
   }
   return TRUE;
 }

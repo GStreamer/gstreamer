@@ -1010,9 +1010,6 @@ gst_pad_link_filtered (GstPad *srcpad, GstPad *sinkpad, GstCaps *filtercaps)
 	      GST_DEBUG_PAD_NAME (realsrc));
     return FALSE;
   }
-  g_return_val_if_fail (GST_STATE (GST_PAD_PARENT (realsrc)) != GST_STATE_PLAYING, FALSE);
-  g_return_val_if_fail (GST_STATE (GST_PAD_PARENT (realsink)) != GST_STATE_PLAYING, FALSE);
-
 
   if (!gst_pad_check_schedulers (realsrc, realsink)) {
     g_warning ("linking pads with different scheds requires "

@@ -181,8 +181,8 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
         if (conn->current != (GstElement *) conn->src) {
           GST_DEBUG (GST_CAT_AUTOPLUG, "sending EOS to unconnected element %s from %s", 
 	       GST_ELEMENT_NAME (conn->src), GST_ELEMENT_NAME (ident));
-          gst_element_set_eos (GST_ELEMENT (conn->src));
           gst_pad_push (conn->src->src, GST_BUFFER (gst_event_new (GST_EVENT_EOS)));  
+          gst_element_set_eos (GST_ELEMENT (conn->src));
 	}
       }
     }
@@ -203,8 +203,6 @@ gst_spider_identity_chain (GstPad *pad, GstBuffer *buf)
 GstSpiderIdentity*           
 gst_spider_identity_new_src (gchar *name)
 {
-  //GstSpiderIdentity *ret = (GstSpiderIdentity *) g_object_new (gst_spider_identity_get_type (), NULL);
-  //GST_ELEMENT_NAME (ret) = name;
   GstSpiderIdentity *ret = (GstSpiderIdentity *) gst_element_factory_make ("spideridentity", name);
   /* set the right functions */
   gst_element_set_loop_function (GST_ELEMENT (ret), (GstElementLoopFunction) GST_DEBUG_FUNCPTR (gst_spider_identity_src_loop));
@@ -214,9 +212,6 @@ gst_spider_identity_new_src (gchar *name)
 GstSpiderIdentity*           
 gst_spider_identity_new_sink (gchar *name)
 {
-  //GstSpiderIdentity *ret = (GstSpiderIdentity *) g_object_new (gst_spider_identity_get_type (), NULL);
-  
-  //GST_ELEMENT_NAME (ret) = name;
   GstSpiderIdentity *ret = (GstSpiderIdentity *) gst_element_factory_make ("spideridentity", name);
 
   /* set the right functions */
@@ -417,7 +412,6 @@ gst_spider_identity_sink_loop_type_finding (GstSpiderIdentity *ident)
   GstBuffer *typefindbuf = NULL;
   gboolean getmorebuf = TRUE;
   GList *type_list;
-  gboolean restart_spider = FALSE;
   GstCaps *caps;
 
   /* this should possibly be a property */
@@ -519,17 +513,9 @@ plug:
 
   gst_caps_debug (caps, "spider starting caps");
   gst_caps_sink (caps);
-  /* pause the autoplugger */
-  if (gst_element_get_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident))) == GST_STATE_PLAYING) {
-    gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PAUSED);
-    restart_spider = TRUE;
-  }
+
   gst_spider_identity_plug (ident);  
 
-  /* restart autoplugger */
-  if (restart_spider){
-    gst_element_set_state (GST_ELEMENT (GST_ELEMENT_PARENT(ident)), GST_STATE_PLAYING);
-  }
   goto end;
 }
 
