@@ -1,5 +1,10 @@
 2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* sys/v4l/v4l_calls.c: (gst_v4l_get_chan_names):
+	  Fix logic bug.
+
+2004-12-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_type_find):
 	  Yay, another one.
 
