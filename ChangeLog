@@ -1,3 +1,8 @@
+2004-12-11  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/interleave/deinterleave.c:
+	fix my name's spelling! :)
+
 2004-12-11  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 	* AUTHORS ChangeLog
 	* gst/auparse/gstauparse.c
