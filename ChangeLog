@@ -1,5 +1,34 @@
 2004-06-08  Wim Taymans  <wim@fluendo.com>
 
+	* ext/jpeg/Makefile.am:
+	* ext/jpeg/README:
+	* ext/jpeg/gstjpeg.c: (plugin_init):
+	* ext/jpeg/gstsmokedec.c: (gst_smokedec_get_type),
+	(gst_smokedec_base_init), (gst_smokedec_class_init),
+	(gst_smokedec_init), (gst_smokedec_link), (gst_smokedec_chain):
+	* ext/jpeg/gstsmokedec.h:
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_get_type),
+	(gst_smokeenc_base_init), (gst_smokeenc_class_init),
+	(gst_smokeenc_init), (gst_smokeenc_getcaps), (gst_smokeenc_link),
+	(gst_smokeenc_resync), (gst_smokeenc_chain),
+	(gst_smokeenc_set_property), (gst_smokeenc_get_property):
+	* ext/jpeg/gstsmokeenc.h:
+	* ext/jpeg/smokecodec.c: (smokecodec_init_destination),
+	(smokecodec_flush_destination), (smokecodec_term_destination),
+	(smokecodec_init_source), (smokecodec_fill_input_buffer),
+	(smokecodec_skip_input_data), (smokecodec_resync_to_restart),
+	(smokecodec_term_source), (smokecodec_encode_new),
+	(smokecodec_decode_new), (smokecodec_info_free),
+	(smokecodec_set_quality), (smokecodec_get_quality),
+	(smokecodec_set_threshold), (smokecodec_get_threshold),
+	(smokecodec_set_bitrate), (smokecodec_get_bitrate),
+	(find_best_size), (abs_diff), (put), (smokecodec_encode),
+	(smokecodec_parse_header), (smokecodec_decode):
+	* ext/jpeg/smokecodec.h:
+	Added a new simple jpeg based codec
+
+2004-06-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/multipart/multipartmux.c: (gst_multipart_mux_class_init),
 	(gst_multipart_mux_loop):
 	Fix memory leak
