@@ -106,12 +106,6 @@ else
 JPEG_DIR=
 endif
 
-if USE_MJPEGTOOLS
-JPEG_MMX_DIR=jpeg-mmx
-else
-JPEG_MMX_DIR=
-endif
-
 LADSPA_DIR=ladspa
 
 if USE_LAME
@@ -130,6 +124,12 @@ if USE_MIKMOD
 MIKMOD_DIR=mikmod
 else
 MIKMOD_DIR=
+endif
+
+if USE_MJPEGTOOLS
+MJPEGTOOLS_DIR=mjpegtools
+else
+MJPEGTOOLS_DIR=
 endif
 
 if USE_MPEG2DEC
@@ -198,8 +198,8 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(DVDREAD_DIR) $(ESD_DIR) $(FESTIVAL_DIR) \
 	$(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
 	$(HERMES_DIR) $(HTTP_DIR) $(JPEG_DIR) \
-	$(JPEG_MMX_DIR) $(LADSPA_DIR) $(LAME_DIR) \
-	$(MAD_DIR) $(MIKMOD_DIR) $(MPEG2DEC_DIR) \
+	$(LADSPA_DIR) $(LAME_DIR) \
+	$(MAD_DIR) $(MIKMOD_DIR) $(MJPEGTOOLS_DIR) $(MPEG2DEC_DIR) \
 	$(OPENQUICKTIME_DIR) $(RAW1394_DIR) $(RTP_DIR) \
 	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
 	$(SMOOTHWAVE_DIR) $(VORBIS_DIR) $(XMMS_DIR)
@@ -211,8 +211,8 @@ DIST_SUBDIRS=\
 	dvdread esd festival \
 	flac gnomevfs gsm \
 	hermes http jpeg \
-	jpeg-mmx ladspa lame \
-	mad mikmod mpeg2dec \
+	ladspa lame \
+	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 rtp \
 	sdl shout sidplay \
 	smoothwave vorbis xmms
