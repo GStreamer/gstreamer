@@ -8,7 +8,7 @@ UNCONDDIRS = gst pkgconfig testsuite
 SUBDIRS = \
 	$(UNCONDDIRS) \
 	$(SUBDIRS_DOCS)
-DIST_SUBDIRS = $(UNCONDDIRS) docs $(PLAYDIR)
+DIST_SUBDIRS = $(UNCONDDIRS) docs
 
 EXTRA_DIST = \
 	gst-python.spec.in \
