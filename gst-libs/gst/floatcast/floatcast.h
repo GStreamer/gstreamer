@@ -21,6 +21,15 @@
 #ifndef __FLOATCAST_H__
 #define __FLOATCAST_H__
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#include <string.h>
+#include <glib/gtypes.h>
+
+G_BEGIN_DECLS
+
 #if (HAVE_LRINT && HAVE_LRINTF)
 
 	/*	These defines enable functionality introduced with the 1999 ISO C
@@ -40,13 +49,58 @@
 
 	#define gst_cast_float(x)	((gint)lrintf(x))
 	#define gst_cast_double(x)	((gint)lrint(x))
-	
+
 #else
 	/* use a standard c cast, but do rounding correctly */
 	#define gst_cast_float(x)	((x)>=0?(gint)((x)+0.5):(gint)((x)-0.5))
 	#define gst_cast_double(x)	((x)>=0?(gint)((x)+0.5):(gint)((x)-0.5))
 
 #endif
+
+inline static gfloat
+GFLOAT_SWAP_LE_BE(gfloat in)
+{
+  gint32 swap;
+  gfloat out;
+  memcpy(&swap, &in, 4);
+  swap = GUINT32_SWAP_LE_BE_CONSTANT (swap);
+  memcpy(&out, &swap, 4);
+  return out;
+}
+
+inline static gdouble
+GDOUBLE_SWAP_LE_BE(gdouble in)
+{
+  gint64 swap;
+  gdouble out;
+  memcpy(&swap, &in, 8);
+  swap = GUINT64_SWAP_LE_BE_CONSTANT (swap);
+  memcpy(&out, &swap, 8);
+  return out;
+}
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define GFLOAT_TO_LE(val)    ((gfloat) (val))
+#define GFLOAT_TO_BE(val)    (GFLOAT_SWAP_LE_BE (val))
+#define GDOUBLE_TO_LE(val)   ((gdouble) (val))
+#define GDOUBLE_TO_BE(val)   (GDOUBLE_SWAP_LE_BE (val))
+
+#elif G_BYTE_ORDER == G_BIG_ENDIAN
+#define GFLOAT_TO_LE(val)    (GFLOAT_SWAP_LE_BE (val))
+#define GFLOAT_TO_BE(val)    ((gfloat) (val))
+#define GDOUBLE_TO_LE(val)   (GDOUBLE_SWAP_LE_BE (val))
+#define GDOUBLE_TO_BE(val)   ((gdouble) (val))
+
+#else /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
+#error unknown ENDIAN type
+#endif /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
+
+#define GFLOAT_FROM_LE(val)  (GFLOAT_TO_LE (val))
+#define GFLOAT_FROM_BE(val)  (GDOUBLE_TO_BE (val))
+#define GDOUBLE_FROM_LE(val) (GFLOAT_TO_LE (val))
+#define GDOUBLE_FROM_BE(val) (GDOUBLE_TO_BE (val))
+
+G_END_DECLS
 
 #endif /* __FLOATCAST_H__ */
 
