@@ -104,9 +104,7 @@ struct _GstBuffer {
   guint64		 offset;
   guint64		 offset_end;
 
-  /* this is a pointer to the buffer pool (if any) */
   GstBufferFreeDataFunc  free_data;
-  /* pointer to pool private data of parent buffer in case of a subbuffer */
   gpointer 		 buffer_private;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -145,7 +143,6 @@ GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, 
 /* --- private --- */
 void		_gst_buffer_initialize		(void);
 
-/* functions used by subclasses and bufferpools */
 void		gst_buffer_default_free 	(GstBuffer *buffer);
 GstBuffer*	gst_buffer_default_copy 	(GstBuffer *buffer);
 

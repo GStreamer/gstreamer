@@ -849,7 +849,7 @@ gst_pad_set_getcaps_function (GstPad *pad,
 /**
  * gst_pad_set_bufferalloc_function:
  * @pad: a #GstPad to set the bufferalloc function for.
- * @bufalloc: the #GstPadBufferPoolFunction to set.
+ * @bufalloc: the #GstPadBufferAllocFunction to set.
  *
  * Sets the given bufferalloc function for the pad. Note that the
  * bufferalloc function can only be set on sinkpads.
