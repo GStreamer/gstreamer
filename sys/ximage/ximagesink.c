@@ -531,22 +531,29 @@ gst_ximagesink_renegotiate_size (GstXImageSink * ximagesink)
   if (GST_VIDEOSINK_WIDTH (ximagesink) != ximagesink->xwindow->width ||
       GST_VIDEOSINK_HEIGHT (ximagesink) != ximagesink->xwindow->height) {
     GstPadLinkReturn r;
+    GstCaps *caps;
 
-    r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink),
-        gst_caps_new_simple ("video/x-raw-rgb",
-            "bpp", G_TYPE_INT, ximagesink->xcontext->bpp,
-            "depth", G_TYPE_INT, ximagesink->xcontext->depth,
-            "endianness", G_TYPE_INT, ximagesink->xcontext->endianness,
-            "red_mask", G_TYPE_INT, ximagesink->xcontext->visual->red_mask,
-            "green_mask", G_TYPE_INT, ximagesink->xcontext->visual->green_mask,
-            "blue_mask", G_TYPE_INT, ximagesink->xcontext->visual->blue_mask,
-            "width", G_TYPE_INT, ximagesink->xwindow->width,
-            "height", G_TYPE_INT, ximagesink->xwindow->height,
-            /* for now we use the object-set value for par */
-            "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            gst_value_get_fraction_numerator (&ximagesink->par),
-            gst_value_get_fraction_denominator (&ximagesink->par),
-            "framerate", G_TYPE_DOUBLE, ximagesink->framerate, NULL));
+    caps = gst_caps_new_simple ("video/x-raw-rgb",
+        "bpp", G_TYPE_INT, ximagesink->xcontext->bpp,
+        "depth", G_TYPE_INT, ximagesink->xcontext->depth,
+        "endianness", G_TYPE_INT, ximagesink->xcontext->endianness,
+        "red_mask", G_TYPE_INT, ximagesink->xcontext->visual->red_mask,
+        "green_mask", G_TYPE_INT, ximagesink->xcontext->visual->green_mask,
+        "blue_mask", G_TYPE_INT, ximagesink->xcontext->visual->blue_mask,
+        "width", G_TYPE_INT, ximagesink->xwindow->width,
+        "height", G_TYPE_INT, ximagesink->xwindow->height,
+        "framerate", G_TYPE_DOUBLE, ximagesink->framerate, NULL);
+
+    if (ximagesink->par) {
+      int nom, den;
+
+      nom = gst_value_get_fraction_numerator (ximagesink->par);
+      den = gst_value_get_fraction_denominator (ximagesink->par);
+      gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          nom, den, NULL);
+    }
+
+    r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink), caps);
 
     if ((r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE)) {
       /* Renegotiation succeeded, we update our size and image */
@@ -684,6 +691,12 @@ gst_ximagesink_calculate_pixel_aspect_ratio (GstXContext * xcontext)
    * which is the "physical" w/h divided by the w/h in pixels of the display */
   ratio = xcontext->widthmm * xcontext->height
       / (xcontext->heightmm * xcontext->width);
+
+  /* DirectFB's X in 720x576 reports the physical dimensions wrong, so
+   * override here */
+  if (xcontext->width == 720 && xcontext->height == 576) {
+    ratio = 4.0 * 576 / (3.0 * 720);
+  }
   GST_DEBUG ("calculated pixel aspect ratio: %f", ratio);
 
   /* now find the one from par[][2] with the lowest delta to the real one */
@@ -702,8 +715,13 @@ gst_ximagesink_calculate_pixel_aspect_ratio (GstXContext * xcontext)
   GST_DEBUG ("Decided on index %d (%d/%d)", index,
       par[index][0], par[index][1]);
 
-  g_value_init (&xcontext->par, GST_TYPE_FRACTION);
-  gst_value_set_fraction (&xcontext->par, par[index][0], par[index][1]);
+  g_free (xcontext->par);
+  xcontext->par = g_new0 (GValue, 1);
+  g_value_init (xcontext->par, GST_TYPE_FRACTION);
+  gst_value_set_fraction (xcontext->par, par[index][0], par[index][1]);
+  GST_DEBUG ("set xcontext PAR to %d/%d",
+      gst_value_get_fraction_numerator (xcontext->par),
+      gst_value_get_fraction_denominator (xcontext->par));
 }
 
 /* This function gets the X Display and global info about it. Everything is
@@ -805,11 +823,15 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
       "blue_mask", G_TYPE_INT, xcontext->visual->blue_mask,
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      /* for now we use the object-set value for par */
-      "pixel-aspect-ratio", GST_TYPE_FRACTION,
-      gst_value_get_fraction_numerator (&ximagesink->par),
-      gst_value_get_fraction_denominator (&ximagesink->par),
       "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+  if (ximagesink->par) {
+    int nom, den;
+
+    nom = gst_value_get_fraction_numerator (ximagesink->par);
+    den = gst_value_get_fraction_denominator (ximagesink->par);
+    gst_caps_set_simple (xcontext->caps, "pixel-aspect-ratio",
+        GST_TYPE_FRACTION, nom, den, NULL);
+  }
 
   g_mutex_unlock (ximagesink->x_lock);
 
@@ -824,6 +846,7 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
 
   gst_caps_free (ximagesink->xcontext->caps);
+  g_free (ximagesink->xcontext->par);
 
   g_mutex_lock (ximagesink->x_lock);
 
@@ -898,9 +921,14 @@ gst_ximagesink_getcaps (GstPad * pad)
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
-    gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        gst_value_get_fraction_numerator (&ximagesink->par),
-        gst_value_get_fraction_denominator (&ximagesink->par), NULL);
+    if (ximagesink->par) {
+      int nom, den;
+
+      nom = gst_value_get_fraction_numerator (ximagesink->par);
+      den = gst_value_get_fraction_denominator (ximagesink->par);
+      gst_structure_set (structure, "pixel-aspect-ratio",
+          GST_TYPE_FRACTION, nom, den, NULL);
+    }
   }
   return caps;
 }
@@ -936,7 +964,7 @@ gst_ximagesink_sink_link (GstPad * pad, const GstCaps * caps)
    * otherwise linking should fail */
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
   if (par) {
-    if (gst_value_compare (par, &ximagesink->par) != GST_VALUE_EQUAL) {
+    if (gst_value_compare (par, ximagesink->par) != GST_VALUE_EQUAL) {
       GST_INFO_OBJECT (ximagesink, "pixel aspect ratio does not match");
       return GST_PAD_LINK_REFUSED;
     }
@@ -984,6 +1012,12 @@ gst_ximagesink_change_state (GstElement * element)
         ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
       if (!ximagesink->xcontext)
         return GST_STATE_FAILURE;
+      /* update object's par with calculated one if not set yet */
+      if (!ximagesink->par) {
+        ximagesink->par = g_new0 (GValue, 1);
+        gst_value_init_and_copy (ximagesink->par, ximagesink->xcontext->par);
+        GST_DEBUG_OBJECT (ximagesink, "set calculated PAR on object's PAR");
+      }
       /* call XSynchronize with the current value of synchronous */
       GST_DEBUG_OBJECT (ximagesink, "XSynchronize called with %s",
           ximagesink->synchronous ? "TRUE" : "FALSE");
@@ -1022,6 +1056,8 @@ gst_ximagesink_change_state (GstElement * element)
         gst_ximagesink_xcontext_clear (ximagesink);
         ximagesink->xcontext = NULL;
       }
+      g_free (ximagesink->par);
+      ximagesink->par = NULL;
       break;
   }
 
@@ -1303,24 +1339,30 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
         (xwindow->width != GST_VIDEOSINK_WIDTH (ximagesink) ||
             xwindow->height != GST_VIDEOSINK_HEIGHT (ximagesink))) {
       GstPadLinkReturn r;
+      GstCaps *caps;
 
-      r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink),
-          gst_caps_new_simple ("video/x-raw-rgb",
-              "bpp", G_TYPE_INT, ximagesink->xcontext->bpp,
-              "depth", G_TYPE_INT, ximagesink->xcontext->depth,
-              "endianness", G_TYPE_INT, ximagesink->xcontext->endianness,
-              "red_mask", G_TYPE_INT, ximagesink->xcontext->visual->red_mask,
-              "green_mask", G_TYPE_INT,
-              ximagesink->xcontext->visual->green_mask,
-              "blue_mask", G_TYPE_INT,
-              ximagesink->xcontext->visual->blue_mask,
-              "width", G_TYPE_INT, xwindow->width,
-              "height", G_TYPE_INT, xwindow->height,
-              /* for now we use the object-set value for par */
-              "pixel-aspect-ratio", GST_TYPE_FRACTION,
-              gst_value_get_fraction_numerator (&ximagesink->par),
-              gst_value_get_fraction_denominator (&ximagesink->par),
-              "framerate", G_TYPE_DOUBLE, ximagesink->framerate, NULL));
+      caps = gst_caps_new_simple ("video/x-raw-rgb",
+          "bpp", G_TYPE_INT, ximagesink->xcontext->bpp,
+          "depth", G_TYPE_INT, ximagesink->xcontext->depth,
+          "endianness", G_TYPE_INT, ximagesink->xcontext->endianness,
+          "red_mask", G_TYPE_INT, ximagesink->xcontext->visual->red_mask,
+          "green_mask", G_TYPE_INT,
+          ximagesink->xcontext->visual->green_mask,
+          "blue_mask", G_TYPE_INT,
+          ximagesink->xcontext->visual->blue_mask,
+          "width", G_TYPE_INT, xwindow->width,
+          "height", G_TYPE_INT, xwindow->height,
+          "framerate", G_TYPE_DOUBLE, ximagesink->framerate, NULL);
+
+      if (ximagesink->par) {
+        int nom, den;
+
+        nom = gst_value_get_fraction_numerator (ximagesink->par);
+        den = gst_value_get_fraction_denominator (ximagesink->par);
+        gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            nom, den, NULL);
+      }
+      r = gst_pad_try_set_caps (GST_VIDEOSINK_PAD (ximagesink), caps);
 
       /* If caps nego succeded updating our size */
       if ((r == GST_PAD_LINK_OK) || (r == GST_PAD_LINK_DONE)) {
@@ -1402,11 +1444,16 @@ gst_ximagesink_set_property (GObject * object, guint prop_id,
       }
       break;
     case ARG_PIXEL_ASPECT_RATIO:
-      if (!g_value_transform (value, &ximagesink->par))
+      g_free (ximagesink->par);
+      ximagesink->par = g_new0 (GValue, 1);
+      g_value_init (ximagesink->par, GST_TYPE_FRACTION);
+      if (!g_value_transform (value, ximagesink->par)) {
         g_warning ("Could not transform string to aspect ratio");
+        gst_value_set_fraction (ximagesink->par, 1, 1);
+      }
       GST_DEBUG_OBJECT (ximagesink, "set PAR to %d/%d",
-          gst_value_get_fraction_numerator (&ximagesink->par),
-          gst_value_get_fraction_denominator (&ximagesink->par));
+          gst_value_get_fraction_numerator (ximagesink->par),
+          gst_value_get_fraction_denominator (ximagesink->par));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1432,7 +1479,8 @@ gst_ximagesink_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, ximagesink->synchronous);
       break;
     case ARG_PIXEL_ASPECT_RATIO:
-      g_value_transform (&ximagesink->par, value);
+      if (ximagesink->par)
+        g_value_transform (ximagesink->par, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1496,8 +1544,7 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
   ximagesink->sw_scaling_failed = FALSE;
   ximagesink->synchronous = FALSE;
 
-  g_value_init (&ximagesink->par, GST_TYPE_FRACTION);
-  gst_value_set_fraction (&ximagesink->par, 1, 1);
+  ximagesink->par = NULL;
 
   GST_FLAG_SET (ximagesink, GST_ELEMENT_THREAD_SUGGESTED);
   GST_FLAG_SET (ximagesink, GST_ELEMENT_EVENT_AWARE);
