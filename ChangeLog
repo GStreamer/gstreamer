@@ -1,3 +1,10 @@
+2005-03-11  Torsten Schoenfeld  <kaffeetisch@gmx.de>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/gstindex.h:
+	  Add already-existing function to header (#168703).
+
 2005-03-10  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* Makefile.am:
