@@ -233,6 +233,7 @@ gst_fakesink_request_new_pad (GstElement *element, GstPadTemplate *templ, const 
 
   sinkpad = gst_pad_new_from_template (templ, name);
   g_free (name);
+  gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (gst_fakesink_chain));
   
   gst_element_add_pad (GST_ELEMENT (fakesink), sinkpad);
 
