@@ -1,5 +1,10 @@
 2004-04-25  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstelement.c: (gst_element_change_state):
+	  fix assertion to do an int comparison
+
+2004-04-25  Benjamin Otte  <otte@gnome.org>
+
 	* gst/elements/gstfilesrc.c: (gst_filesrc_open_file):
 	  better debugging output on error
 

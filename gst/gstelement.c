@@ -2881,7 +2881,7 @@ gst_element_change_state (GstElement * element)
   switch (old_transition) {
     case GST_STATE_PLAYING_TO_PAUSED:
       if (element->clock) {
-        GstClockTime time = gst_clock_get_event_time (element->clock);
+        GstClockTimeDiff time = gst_clock_get_event_time (element->clock);
 
         g_assert (time >= element->base_time);
         element->base_time = time - element->base_time;
