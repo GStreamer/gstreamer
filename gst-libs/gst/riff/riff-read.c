@@ -180,9 +180,10 @@ gst_riff_peek_head (GstRiffRead * riff,
     /* Here, we might encounter EOS */
     gst_bytestream_get_status (riff->bs, &remaining, &event);
     if (GST_IS_EVENT (event)) {
-      gst_event_ref (event);
+      gboolean eos = (GST_EVENT_TYPE (event) == GST_EVENT_EOS);
+
       gst_pad_event_default (riff->sinkpad, event);
-      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+      if (eos)
         return FALSE;
     } else {
       GST_ELEMENT_ERROR (riff, RESOURCE, READ, (NULL), (NULL));
