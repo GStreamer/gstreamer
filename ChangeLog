@@ -1,5 +1,11 @@
 2005-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/dvdread/dvdreadsrc.c: (_read):
+	  Don't read beyond the last cell in a chapter (fixes 
+	  invalid memory access)
+
+2005-01-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/dvdread/stream_labels.c:
 	(dvdreadsrc_get_audio_stream_labels):
 	  Use NULL for an empty GList instead of g_list_alloc(); fix 
