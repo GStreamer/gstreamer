@@ -1,4 +1,3 @@
-# the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
 libdir=${pcfiledir}/../gst-libs/gst
