@@ -31,7 +31,12 @@
 #include "efence.h"
 
 #ifndef MAP_ANONYMOUS
+#ifdef MAP_ANON
 #define MAP_ANONYMOUS MAP_ANON
+#else
+/* assume we don't need it */
+#define MAP_ANONYMOUS 0
+#endif
 #endif
 
 static GstElementDetails plugin_details = {
