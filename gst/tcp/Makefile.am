@@ -20,7 +20,8 @@ libgsttcp_la_SOURCES = \
 	gsttcpclientsrc.c gsttcpclientsink.c \
 	gsttcpserversrc.c gsttcpserversink.c
 
-libgsttcp_la_CFLAGS = $(GST_CFLAGS)
+# remove ENABLE_NEW when dataprotocol is stable
+libgsttcp_la_CFLAGS = $(GST_CFLAGS) -DGST_ENABLE_NEW
 libgsttcp_la_LIBADD =
 libgsttcp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
