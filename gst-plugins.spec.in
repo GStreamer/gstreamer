@@ -103,7 +103,7 @@ make prefix=$RPM_BUILD_ROOT%{prefix} install
 @USE_HERMES_TRUE@%files -n gstreamer-xvideosink
 @USE_HERMES_TRUE@%defattr(-, root, root)
 @USE_HERMES_TRUE@%{prefix}/lib/gst/libxvideosink*
-@USE_HERMES_TRUE@%{prefix}/lib/gst/libgstvideosink*
+@USE_HERMES_TRUE@%{prefix}/lib/gst/libvideosink*
 @USE_HERMES_TRUE@
 @USE_HERMES_TRUE@%post -n gstreamer-xvideosink
 @USE_HERMES_TRUE@%{prefix}/bin/gst-register --gst-mask=0 2> /dev/null
