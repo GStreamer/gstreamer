@@ -26,7 +26,7 @@
 #include <math.h>
 
 /*#define DEBUG_ENABLED */
-#include <gstaudioscale.h>
+#include "gstaudioscale.h"
 #include <gst/audio/audio.h>
 #include <gst/resample/resample.h>
 
