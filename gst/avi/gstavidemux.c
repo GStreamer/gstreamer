@@ -932,6 +932,7 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
   guint32 got_bytes;
   gint i;
   gst_riff_index_entry *entry;
+  guint32 id;
 
   if (!gst_bytestream_seek (avi_demux->bs, filepos + offset, GST_SEEK_METHOD_SET)) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: could not seek to index");
@@ -955,7 +956,9 @@ gst_avi_demux_parse_index (GstAviDemux *avi_demux,
     goto end;
   }
 
-  if (gst_riff_fourcc_to_id (GST_BUFFER_DATA (buf)) != GST_RIFF_TAG_idx1) {
+  id = GUINT32_FROM_LE (*(guint32 *)GST_BUFFER_DATA (buf));
+
+  if (id != GST_RIFF_TAG_idx1) {
     GST_INFO (GST_CAT_PLUGIN_INFO, "avidemux: no index found");
     goto end;
   }
