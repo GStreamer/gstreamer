@@ -30,8 +30,9 @@ static GstElementDetails gst_dv1394src_details = {
   "LGPL",
   "Source for DV video data from firewire port",
   VERSION,
-  "Erik Walthinsen <omega@temple-baptist.com>",
-  "(C) 2001",
+  "Erik Walthinsen <omega@temple-baptist.com>\n"
+  "Daniel Fischer <dan@f3c.com>",
+  "(C) 2001-2002",
 };
 
 

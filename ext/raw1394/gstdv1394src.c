@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ *               <2000> Daniel Fischer <dan@f3c.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,8 +19,13 @@
  */
 
 #include <gst/gst.h>
+#include <string.h>
 #include "gstdv1394src.h"
 
+#define N_BUFFERS_IN_POOL 3
+
+#define PAL_FRAMESIZE 144000
+#define NTSC_FRAMESIZE 120000
 
 /* Filter signals and args */
 enum {
@@ -28,7 +34,10 @@ enum {
 };
 
 enum {
-  ARG_0
+  ARG_0,
+  ARG_CONSECUTIVE,
+  ARG_SKIP,
+  ARG_DROP_INCOMPLETE,
 };
 
 #if 0
@@ -42,12 +51,18 @@ gst_dv1394src_factory (void)
       "src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
-      gst_caps_new (
+      GST_CAPS_NEW (
         "dv1394src",
         "video/dv",
+/*
 	gst_props_new (
-          "format", GST_PROPS_STRING ("NTSC"),
-	  NULL)),
+          "format", GST_PROPS_LIST (
+	  		GST_PROPS_STRING ("NTSC"),
+	  		GST_PROPS_STRING ("PAL")
+			), 
+	  NULL)
+	),
+*/  
       NULL);
   }
   return template;
@@ -96,6 +111,16 @@ gst_dv1394src_class_init (GstDV1394SrcClass *klass)
   gobject_class = (GObjectClass*)klass;
   gstelement_class = (GstElementClass*)klass;
 
+  g_object_class_install_property( G_OBJECT_CLASS(klass), ARG_CONSECUTIVE,
+  	g_param_spec_int("consecutive","consecutive frames","send n consecutive frames after skipping",
+			1, G_MAXINT,1,G_PARAM_READWRITE));
+  g_object_class_install_property( G_OBJECT_CLASS(klass), ARG_SKIP,
+  	g_param_spec_int("skip","skip frames","skip n frames",
+			0, G_MAXINT,1,G_PARAM_READWRITE));
+  g_object_class_install_property( G_OBJECT_CLASS(klass), ARG_DROP_INCOMPLETE,
+  	g_param_spec_boolean("drop_incomplete","drop_incomplete","drop incomplete frames",
+			TRUE, G_PARAM_READWRITE));
+
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
   gobject_class->set_property = gst_dv1394src_set_property;
@@ -114,6 +139,18 @@ gst_dv1394src_init (GstDV1394Src *dv1394src)
   dv1394src->card = 0;
   dv1394src->port = 0;
   dv1394src->channel = 63;
+  
+  dv1394src->consecutive = 1;
+  dv1394src->skip = 0;
+  dv1394src->drop_incomplete = TRUE;
+  
+  /* initialized when first header received */
+  dv1394src->frameSize=0; 
+  dv1394src->pool = NULL;
+ 
+  dv1394src->buf = NULL;
+  dv1394src->frame = NULL;
+  dv1394src->frameSequence = 0;
 }
 
 static void
@@ -126,6 +163,15 @@ gst_dv1394src_set_property (GObject *object, guint prop_id, const GValue *value,
   filter = GST_DV1394SRC(object);
 
   switch (prop_id) {
+    case ARG_SKIP:
+    	filter->skip = g_value_get_int(value);
+	break;
+    case ARG_CONSECUTIVE:
+    	filter->consecutive = g_value_get_int(value);
+	break;
+    case ARG_DROP_INCOMPLETE:
+    	filter->drop_incomplete = g_value_get_boolean(value);
+	break;
     default:
       break;
   }
@@ -141,6 +187,15 @@ gst_dv1394src_get_property (GObject *object, guint prop_id, GValue *value, GPara
   filter = GST_DV1394SRC(object);
 
   switch (prop_id) {
+    case ARG_SKIP:
+    	g_value_set_int( value, filter->skip );
+        break;
+    case ARG_CONSECUTIVE:
+    	g_value_set_int( value, filter->consecutive );
+        break;
+    case ARG_DROP_INCOMPLETE:
+        g_value_set_boolean( value, filter->drop_incomplete );
+	break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -150,23 +205,103 @@ gst_dv1394src_get_property (GObject *object, guint prop_id, GValue *value, GPara
 static
 int gst_dv1394src_iso_receive(raw1394handle_t handle,int channel,size_t len,quadlet_t *data) {
   GstDV1394Src *dv1394src = GST_DV1394SRC (raw1394_get_userdata(handle));
-  unsigned char *ptr = (unsigned char *)&data[3];
-  GstBuffer *buf;
 
   if (len > 16) {
-/*fprintf(stderr,"section_type %d, dif_sequence %d, dif_block %d\n",ptr[0] >> 5,ptr[1] >> 4,ptr[2]); */
-fprintf(stderr,".");
-    if (((ptr[0] >> 5) == 0) &&
-        ((ptr[1] >> 4) == 0) && (ptr[2] == 0)) dv1394src->started = TRUE;
-    if (dv1394src->started) {
-      buf = gst_buffer_new();
-      GST_BUFFER_DATA(buf) = ptr;
-      GST_BUFFER_SIZE(buf) = 480;
-      GST_BUFFER_OFFSET(buf) = 0;
-      GST_BUFFER_FLAG_SET(buf,GST_BUFFER_DONTFREE);
+  	/*
+		 the following code taken from kino-0.51 (Dan Dennedy/Charles Yates)
+  	*/
+        unsigned char *p = (unsigned char*) & data[3];
+        int section_type = p[0] >> 5;           /* section type is in bits 5 - 7 */
+        int dif_sequence = p[1] >> 4;           /* dif sequence number is in bits 4 - 7 */
+        int dif_block = p[2];
 
-      dv1394src->buf = buf;
-    }
+        /* if we are at the beginning of a frame, 
+          we set buf=frame, and get a new buffer from pool for frame
+        */
+
+        if (section_type == 0 && dif_sequence == 0) {	// dif header
+	
+          if( dv1394src->pool == NULL ) {
+            // figure format (NTSC/PAL)
+            if( p[3] & 0x80 ) {
+              // PAL
+              dv1394src->frameSize = PAL_FRAMESIZE;
+              GST_DEBUG(0,"PAL data");
+              if (gst_pad_try_set_caps (dv1394src->srcpad, 
+                        GST_CAPS_NEW ( "dv1394src", "video/dv",
+                                      "format", GST_PROPS_STRING("PAL"),
+                                      NULL)
+              ) <= 0) {
+                GST_ERROR(GST_ELEMENT(dv1394src), "Could not set source caps for PAL");
+                return 0;
+              }
+            } else {
+              // NTSC (untested)
+              dv1394src->frameSize = NTSC_FRAMESIZE;
+              GST_DEBUG(0,"NTSC data [untested] - please report success/failure to <dan@f3c.com>");
+              if (gst_pad_try_set_caps (dv1394src->srcpad, 
+                        GST_CAPS_NEW ( "dv1394src", "video/dv",
+                                      "format", GST_PROPS_STRING ("NTSC"),
+                                      NULL)
+              ) <= 0) {
+                GST_ERROR(GST_ELEMENT(dv1394src), "Could not set source caps for NTSC");
+                return 0;
+              }
+            }
+
+            dv1394src->pool = gst_buffer_pool_get_default( dv1394src->frameSize, N_BUFFERS_IN_POOL );
+            if (dv1394src->pool == NULL) {
+              GST_ERROR(GST_ELEMENT(dv1394src), "gst_buffer_pool_get_default returned NULL");
+            }
+          }
+  
+          // drop last frame when not complete
+          if( !dv1394src->drop_incomplete || dv1394src->bytesInFrame == dv1394src->frameSize ) { 
+            dv1394src->buf = dv1394src->frame;
+          } else {
+            GST_INFO_ELEMENT(GST_CAT_PLUGIN_INFO, GST_ELEMENT(dv1394src), "incomplete frame dropped"); 
+          }
+          dv1394src->frame = NULL;
+
+          dv1394src->frameSequence++;
+
+          if( dv1394src->frameSequence % (dv1394src->skip+dv1394src->consecutive) < dv1394src->consecutive ) {
+            if( dv1394src->pool ) dv1394src->frame = gst_buffer_new_from_pool( dv1394src->pool, 0, dv1394src->frameSize );
+              dv1394src->bytesInFrame = 0;
+            }
+          }
+
+          if (dv1394src->frame != NULL) {
+            void *data = GST_BUFFER_DATA( dv1394src->frame );
+
+
+            switch (section_type) {
+            case 0: /* 1 Header block */
+                /* p[3] |= 0x80; // hack to force PAL data */
+                memcpy(data + dif_sequence * 150 * 80, p, 480);
+                break;
+
+            case 1: /* 2 Subcode blocks */
+                memcpy(data + dif_sequence * 150 * 80 + (1 + dif_block) * 80, p, 480);
+                break;
+
+            case 2: /* 3 VAUX blocks */
+                memcpy(data + dif_sequence * 150 * 80 + (3 + dif_block) * 80, p, 480);
+                break;
+
+            case 3: /* 9 Audio blocks interleaved with video */
+                memcpy(data + dif_sequence * 150 * 80 + (6 + dif_block * 16) * 80, p, 480);
+                break;
+
+            case 4: /* 135 Video blocks interleaved with audio */
+                memcpy(data + dif_sequence * 150 * 80 + (7 + (dif_block / 15) + dif_block) * 80, p, 480);
+                break;
+
+            default: /* we can´t handle any other data */
+                break;
+            }
+            dv1394src->bytesInFrame += 480;
+        }
   }
 
   return 0;
@@ -234,6 +369,10 @@ gst_dv1394src_change_state (GstElement *element)
       raw1394_stop_iso_rcv(dv1394src->handle, dv1394src->channel);
       break;
     case GST_STATE_READY_TO_NULL:
+      if (dv1394src->pool != NULL) {
+        gst_buffer_pool_unref(dv1394src->pool);
+        dv1394src->pool = NULL;
+      }
       raw1394_destroy_handle(dv1394src->handle);
       break;
     default:

@@ -51,6 +51,11 @@ struct _GstDV1394Src {
 
   GstPad *srcpad;
 
+  // consecutive=2, skip=4 will skip 4 frames, then let 2 consecutive ones thru
+  gint consecutive;
+  gint skip;
+  gboolean drop_incomplete;
+
   int numcards,numports;
   int card,port,channel;
 
@@ -59,6 +64,12 @@ struct _GstDV1394Src {
 
   gboolean started;
   GstBuffer *buf;
+  
+  GstBuffer *frame;
+  guint frameSize;
+  guint bytesInFrame;
+  guint frameSequence;
+  GstBufferPool *pool;
 };
 
 struct _GstDV1394SrcClass {
