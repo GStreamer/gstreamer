@@ -85,7 +85,7 @@ gst_registry_class_init (GstRegistryClass *klass)
     g_signal_new ("plugin_added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GstRegistryClass, plugin_added), NULL, NULL,
                   gst_marshal_VOID__POINTER, G_TYPE_NONE, 1,
-                  G_TYPE_POINTER);
+                  GST_TYPE_PLUGIN);
 
   gobject_class->dispose = NULL;
 }

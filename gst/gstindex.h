@@ -229,6 +229,7 @@ GstIndexEntry*		gst_index_get_assoc_entry_full	(GstIndex *index, gint id,
 							 gpointer user_data);
 
 /* working with index entries */
+GstIndexEntry *         gst_index_entry_copy            (GstIndexEntry *entry);
 void			gst_index_entry_free		(GstIndexEntry *entry);
 gboolean		gst_index_entry_assoc_map	(GstIndexEntry *entry,
 		                                         GstFormat format, gint64 *value);

@@ -119,7 +119,7 @@ gst_buffer_store_class_init (gpointer g_class, gpointer class_data)
   gst_buffer_store_signals[BUFFER_ADDED] = g_signal_new ("buffer-added", 
 	  G_TYPE_FROM_CLASS (g_class), G_SIGNAL_RUN_LAST,
           G_STRUCT_OFFSET (GstBufferStoreClass, buffer_added), continue_accu, NULL,
-          gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
+          gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, GST_TYPE_BUFFER);
 
   store_class->cleared = gst_buffer_store_cleared_func;
   store_class->buffer_added = gst_buffer_store_add_buffer_func;

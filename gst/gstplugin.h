@@ -128,10 +128,13 @@ _gst_plugin_static_init__ ##init (void)			\
   
 #define GST_LICENSE_UNKNOWN "unknown"
 
+
 /* function for filters */
 typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
                                                          gpointer user_data);
 
+#define GST_TYPE_PLUGIN   (gst_plugin_get_type())
+GType                   gst_plugin_get_type             (void);
 void			_gst_plugin_initialize		(void);
 void 			_gst_plugin_register_static 	(GstPluginDesc *desc);
 

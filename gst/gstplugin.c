@@ -63,6 +63,19 @@ static void		gst_plugin_desc_copy		(GstPluginDesc *dest,
 static GstPlugin *	gst_plugin_register_func 	(GstPlugin *plugin, 
 							 GModule *module,
 							 GstPluginDesc *desc);
+
+GType
+gst_plugin_get_type (void)
+{
+  static GType plugin_type;
+
+  if (plugin_type == 0) {
+    plugin_type = g_boxed_type_register_static ("GstPlugin", NULL, g_free);
+  }
+
+  return plugin_type;
+}
+
 GQuark 
 gst_plugin_error_quark (void)
 {
@@ -247,6 +260,16 @@ gst_plugin_load_file (const gchar *filename, GError **error)
 	}
       }
       GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...", plugin, filename);
+
+      if (g_module_symbol (module, "plugin_init", &ptr)) {
+        g_print ("plugin %p from file \"%s\" exports a symbol named plugin_init\n",
+                     plugin, plugin->filename);
+        g_set_error (error,
+                     GST_PLUGIN_ERROR,
+                     GST_PLUGIN_ERROR_NAME_MISMATCH,
+                     "plugin \"%s\" exports a symbol named plugin_init",
+                     desc->name);
+      }
 
       if (gst_plugin_register_func (plugin, module, desc)) {
         GST_INFO ("plugin \"%s\" loaded", plugin->filename);
