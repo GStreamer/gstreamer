@@ -472,7 +472,7 @@ gst_register_core_elements (GstPlugin *plugin)
 static GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "gst_core_elements",
+  "gstcoreelements",
   "core elements of the GStreamer library",
   gst_register_core_elements,
   NULL,

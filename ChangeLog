@@ -1,3 +1,7 @@
+2004-02-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: fix name to be in line with others
+
 2004-02-09  Julien MOUTTE <julien@moutte.net>
 
 	* libs/gst/bytestream/bytestream.c: (gst_bytestream_peek): We should
