@@ -30,7 +30,7 @@
 
 #include "common.h"
 #include "avcodec.h"
-
+#include <math.h>
 
 //#define DEBUG
 /* dct code */
