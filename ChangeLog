@@ -1,5 +1,11 @@
 2004-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/alsa/gstalsaclock.c: (gst_alsa_clock_get_type):
+	* ext/alsa/gstalsasrc.c: (gst_alsa_src_loop):
+          check error condition on available samples correctly
+
+2004-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/alsa/gstalsasrc.c: (gst_alsa_src_get_time):
           avoid a segfault
 	* gst/tcp/gsttcp.c: (gst_tcp_socket_write), (gst_tcp_socket_read),
