@@ -26,6 +26,13 @@
 
 #include <parser.h> // NOTE: This is xml-config's fault
 
+// Include compatability defines: if libxml hasn't already defined these,
+// we have an old version 1.x
+#ifndef xmlChildrenNode
+#define xmlChildrenNode childs
+#define xmlRootNode root
+#endif
+
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/cothreads.h>
