@@ -1,3 +1,23 @@
+2004-01-07  Julien MOUTTE  <julien@moutte.net>
+
+	* examples/gstplay/Makefile.am: Adding the interface library.
+	* gst-libs/gst/play/Makefile.am: Adding the interface library.
+	* gst-libs/gst/play/gstplay.c: (gst_play_set_video_sink): Connecting to 	the XOverlay size signal instead of GstVideoSink.
+	* gst-libs/gst/play/gstplay.h: Including the XOverlay interface to check
+	GST_IS_X_OVERLAY before signal connect.
+	* gst-libs/gst/video/gstvideosink.c: (gst_videosink_class_init): 
+	Removing the have_video_size signal.
+	* gst-libs/gst/video/gstvideosink.h: Removing the have_video_size signal
+	and associated public method.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents),
+	(gst_ximagesink_sinkconnect): Using XOverlay public method to fire size
+	signal.
+	* sys/xvideo/xvideosink.c: (gst_xvideosink_sinkconnect),
+	(gst_xvideosink_xwindow_new): Using XOverlay public method to fire size
+        signal.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_sinkconnect):
+	Using XOverlay public method to fire size signal.
+
 2004-01-07  David Schleef  <ds@schleef.org>
 
 	* gst/videofilter/Makefile.am:
