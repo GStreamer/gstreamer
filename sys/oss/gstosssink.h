@@ -74,6 +74,7 @@ struct _GstOssSink {
   int 		 fd;
   int 		 caps; /* the capabilities */
   gint 		 format;
+  gint 		 width;
   gint 		 channels;
   gint 		 frequency;
   gint 		 fragment;

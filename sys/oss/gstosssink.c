@@ -53,6 +53,11 @@ static void		 	gst_osssink_set_clock		(GstElement *element, GstClock *clock);
 static GstClock* 		gst_osssink_get_clock 		(GstElement *element);
 static GstClockTime 		gst_osssink_get_time 		(GstClock *clock, gpointer data);
 
+static gboolean 		gst_osssink_convert 		(GstPad *pad, GstFormat src_format, gint64 src_value,
+	            						 GstFormat *dest_format, gint64 *dest_value);
+static gboolean 		gst_osssink_query 		(GstPad *pad, GstPadQueryType type, 
+								 GstFormat *format, gint64 *value);
+
 static GstPadConnectReturn	gst_osssink_sinkconnect		(GstPad *pad, GstCaps *caps);
 
 static void 			gst_osssink_set_property	(GObject *object, guint prop_id, const GValue *value, 
@@ -230,6 +235,8 @@ gst_osssink_init (GstOssSink *osssink)
   gst_element_add_pad (GST_ELEMENT (osssink), osssink->sinkpad);
   gst_pad_set_connect_function (osssink->sinkpad, gst_osssink_sinkconnect);
   gst_pad_set_bufferpool_function (osssink->sinkpad, gst_osssink_get_bufferpool);
+  gst_pad_set_convert_function (osssink->sinkpad, gst_osssink_convert);
+  gst_pad_set_query_function (osssink->sinkpad, gst_osssink_query);
 
   gst_pad_set_chain_function (osssink->sinkpad, gst_osssink_chain);
 
@@ -264,7 +271,7 @@ gst_osssink_init (GstOssSink *osssink)
 static GstPadConnectReturn 
 gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps) 
 {
-  gint law, endianness, width, depth;
+  gint law, endianness, depth;
   gboolean sign;
   gint format = -1;
   GstOssSink *osssink = GST_OSSSINK (gst_pad_get_parent (pad));
@@ -272,10 +279,10 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
   if (!GST_CAPS_IS_FIXED (caps))
     return GST_PAD_CONNECT_DELAYED;
   
-  gst_caps_get_int (caps, "width", &width);
+  gst_caps_get_int (caps, "width", &osssink->width);
   gst_caps_get_int (caps, "depth", &depth);
 
-  if (width != depth) 
+  if (osssink->width != depth) 
     return GST_PAD_CONNECT_REFUSED;
 
   /* laws 1 and 2 are 1 bps anyway */
@@ -286,7 +293,7 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
   gst_caps_get_boolean (caps, "signed", &sign);
 
   if (law == 0) {
-    if (width == 16) {
+    if (osssink->width == 16) {
       if (sign == TRUE) {
         if (endianness == G_LITTLE_ENDIAN)
 	  format = AFMT_S16_LE;
@@ -301,7 +308,7 @@ gst_osssink_sinkconnect (GstPad *pad, GstCaps *caps)
       }
       osssink->bps = 2;
     }
-    else if (width == 8) {
+    else if (osssink->width == 8) {
       if (sign == TRUE) {
 	format = AFMT_S8;
       }
@@ -406,6 +413,9 @@ static inline gint64
 gst_osssink_get_delay (GstOssSink *osssink) 
 {
   gint delay = 0;
+
+  if (osssink->fd == -1)
+    return 0;
 
   if (ioctl (osssink->fd, SNDCTL_DSP_GETODELAY, &delay) < 0) {
     audio_buf_info info;
@@ -557,6 +567,99 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
     }
   }
   gst_buffer_unref (buf);
+}
+
+static gboolean
+gst_osssink_convert (GstPad *pad, GstFormat src_format, gint64 src_value,
+	             GstFormat *dest_format, gint64 *dest_value)
+{
+  gboolean res = TRUE;
+	      
+  GstOssSink *osssink;
+
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
+  osssink = GST_OSSSINK (gst_pad_get_parent (pad));
+
+  if (osssink->bps == 0 || osssink->channels == 0 || osssink->width == 0)
+    return FALSE;
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+	  *dest_value = src_value * GST_SECOND / osssink->bps;
+          break;
+        case GST_FORMAT_SAMPLES:
+	  *dest_value = src_value / (osssink->channels * osssink->width);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_BYTES;
+        case GST_FORMAT_BYTES:
+	  *dest_value = src_value * osssink->bps / GST_SECOND;
+          break;
+        case GST_FORMAT_SAMPLES:
+	  *dest_value = osssink->frequency;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_SAMPLES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+	  *dest_value = src_value * GST_SECOND / osssink->frequency;
+          break;
+        case GST_FORMAT_BYTES:
+	  *dest_value = src_value * osssink->channels * osssink->width;
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+
+  return res;
+}
+
+static gboolean
+gst_osssink_query (GstPad *pad, GstPadQueryType type, GstFormat *format, gint64 *value) 
+{
+  gboolean res = TRUE;
+  GstOssSink *osssink;
+
+  osssink = GST_OSSSINK (gst_pad_get_parent (pad));
+  
+  switch (type) {
+    case GST_PAD_QUERY_LATENCY:
+      if (!gst_osssink_convert (pad, 
+			        GST_FORMAT_BYTES, gst_osssink_get_delay (osssink),
+		                format, value)) 
+      {
+        res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+
+  return res;
 }
 
 static void 
