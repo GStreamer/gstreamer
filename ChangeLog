@@ -1,11 +1,15 @@
+2003-12-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+        * configure.ac: make pixbuf loader configurable
+
 2003-12-14  Amaury Jacquot <sxpert@esitcom.org>
 	
 	* sys/xvideo/gstximage.c: remove 3 unnecessary X headers
 	* sys/xvideo/gstxvimage.c: same
 	* sys/xvideo/gstxwindow.c: same
-	these problems occur when using the X server from freedestkop.org
+	these problems occur when using the X server from freedesktop.org
 
-2003-12-03  set REAL_NAME environment variable  <thomas at apestaart dot org>
+2003-12-03  Thomas Vander Stichele <thomas at apestaart dot org>
 
 	* common/m4/gst-feature.m4: *** instead of newline when not built
 	* configure.ac: fix X detection when no X stuff present
