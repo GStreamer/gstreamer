@@ -266,7 +266,6 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
   for (i = 0; i < count; i++) {
     gint channels = 0;
     gint flags = GST_MIXER_TRACK_OUTPUT;
-    gboolean got_it = FALSE;
 
     if (snd_mixer_selem_has_capture_switch (element)) {
       if (dir != GST_PAD_SRC && dir != GST_PAD_UNKNOWN)
@@ -280,10 +279,13 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
     if (snd_mixer_selem_has_capture_volume (element)) {
       while (snd_mixer_selem_has_capture_channel (element, channels))
         channels++;
+      if (first) {
+        first = FALSE;
+        flags |= GST_MIXER_TRACK_MASTER;
+      }
       track = gst_alsa_mixer_track_new (element, i, channels,
           flags, GST_ALSA_MIXER_TRACK_CAPTURE);
       mixer->tracklist = g_list_append (mixer->tracklist, track);
-      got_it = TRUE;
     }
 
     if (snd_mixer_selem_has_playback_volume (element)) {
@@ -296,23 +298,11 @@ gst_alsa_mixer_build_list (GstAlsaMixer * mixer)
       track = gst_alsa_mixer_track_new (element, i, channels,
           flags, GST_ALSA_MIXER_TRACK_PLAYBACK);
       mixer->tracklist = g_list_append (mixer->tracklist, track);
-      got_it = TRUE;
     }
 
     if (snd_mixer_selem_is_enumerated (element)) {
       opts = gst_alsa_mixer_options_new (element, i);
       mixer->tracklist = g_list_append (mixer->tracklist, opts);
-      got_it = TRUE;
-    }
-
-    if (!got_it) {
-      if (flags == GST_MIXER_TRACK_OUTPUT &&
-          snd_mixer_selem_has_playback_switch (element)) {
-        /* simple mute switch */
-        track = gst_alsa_mixer_track_new (element, i, 0,
-            flags, GST_ALSA_MIXER_TRACK_PLAYBACK);
-        mixer->tracklist = g_list_append (mixer->tracklist, track);
-      }
     }
 
     element = snd_mixer_elem_next (element);
