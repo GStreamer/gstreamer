@@ -10,7 +10,7 @@ if test ! -d common; then
   echo "+ getting common from cvs"; cvs co common
 fi
 if test ! -d libs/ext/cothreads; then
-  echo "+ getting cothreads from cvs"; cd libs/ext; cvs co cothreads
+  echo "+ getting cothreads from cvs"; cvs co -d libs/ext cothreads
 fi
 
 CONFIGURE_OPT='--enable-maintainer-mode --enable-plugin-builddir'
@@ -186,13 +186,16 @@ automake -a -c || {
 	exit 1
 }
 
-dnl echo
-dnl echo "+ running autogen.sh in libs/ext/cothreads..."
-dnl pushd libs/ext/cothreads > /dev/null
-dnl echo
-dnl ./autogen.sh --autogen-noconfigure --autogen-nocheck
-dnl popd > /dev/null
-dnl echo
+echo
+echo "+ running autogen.sh in libs/ext/cothreads..."
+pushd libs/ext/cothreads > /dev/null
+echo
+./autogen.sh --autogen-noconfigure --autogen-nocheck || {
+        echo "autogen in cothreads failed."
+        exit 1
+}
+popd > /dev/null
+echo
 
 test -n "$NOCONFIGURE" && {
     echo "skipping configure stage for package $package, as requested."
