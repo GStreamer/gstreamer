@@ -109,22 +109,32 @@ gst_audio_clock_new (gchar * name, GstAudioClockGetTimeFunc func,
 void
 gst_audio_clock_set_active (GstAudioClock * aclock, gboolean active)
 {
-  GstClockTime time;
+  GstClockTime audio_time, system_time;
   GstClock *clock;
+  GTimeVal timeval;
 
   g_return_if_fail (GST_IS_AUDIO_CLOCK (aclock));
   clock = GST_CLOCK (aclock);
 
-  time = gst_clock_get_event_time (clock);
+  if (active == aclock->active) {
+    /* Nothing to do. */
+    return;
+  }
 
+  audio_time = aclock->func (clock, aclock->user_data);
+
+  g_get_current_time (&timeval);
+  system_time = GST_TIMEVAL_TO_TIME (timeval);
+
+  /* Set the new adjust value in such a way that there's no abrupt
+     discontinuity, i.e. if gst_audio_clock_get_internal_time is
+     invoked right before and right after (de)activating the clock,
+     the values returned will be close to each other, and the second
+     value will be greater than or equal than the first. */
   if (active) {
-    aclock->adjust = time - aclock->func (clock, aclock->user_data);
+    aclock->adjust = aclock->adjust + system_time - audio_time;
   } else {
-    GTimeVal timeval;
-
-    g_get_current_time (&timeval);
-
-    aclock->adjust = GST_TIMEVAL_TO_TIME (timeval) - time;
+    aclock->adjust = aclock->adjust + audio_time - system_time;
   }
 
   aclock->active = active;
@@ -141,7 +151,7 @@ gst_audio_clock_get_internal_time (GstClock * clock)
     GTimeVal timeval;
 
     g_get_current_time (&timeval);
-    return GST_TIMEVAL_TO_TIME (timeval);
+    return GST_TIMEVAL_TO_TIME (timeval) + aclock->adjust;
   }
 }
 

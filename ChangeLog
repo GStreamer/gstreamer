@@ -1,3 +1,10 @@
+2004-11-27  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst-libs/gst/audio/audioclock.c (gst_audio_clock_set_active)
+	(gst_audio_clock_get_internal_time):
+	Fix active <-> inactive transitions: ensure time value always
+	grows and avoid abrupt value changes.
+
 2004-11-27  Arwed v. Merkatz <v.merkatz@gmx.net>
 	* configure.ac:
 	* gst/tta/Makefile.am:
