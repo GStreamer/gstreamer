@@ -31,11 +31,8 @@
 static GstElementDetails colorspace_details = {
   "Colorspace converter",
   "Filter/Convert",
-  "LGPL",
   "Converts video from one colorspace to another using libhermes",
-  VERSION,
   "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
 };
 
 
@@ -51,6 +48,7 @@ enum {
   ARG_DEST,
 };
 
+static void             gst_colorspace_base_init                (gpointer g_class);
 static void		gst_colorspace_class_init		(GstColorspaceClass *klass);
 static void		gst_colorspace_init			(GstColorspace *space);
 
@@ -417,7 +415,7 @@ gst_colorspace_get_type (void)
   if (!colorspace_type) {
     static const GTypeInfo colorspace_info = {
       sizeof(GstColorspaceClass),      
-      NULL,
+      gst_colorspace_base_init,
       NULL,
       (GClassInitFunc)gst_colorspace_class_init,
       NULL,
@@ -431,6 +429,48 @@ gst_colorspace_get_type (void)
   return colorspace_type;
 }
 
+static void
+gst_colorspace_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *caps;
+  
+  /* create caps for templates */
+  caps = gst_caps_new ("csp_templ_yuv",
+                       "video/x-raw-yuv",
+	               GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
+                         GST_PROPS_LIST (
+                           GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
+	                   GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
+	                   GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")))));
+  caps = gst_caps_append (caps,
+			  gst_caps_new ("csp_templ_rgb24_32",
+					"video/x-raw-rgb",
+					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32));
+  caps = gst_caps_append (caps,
+			  gst_caps_new ("csp_templ_rgb15",
+					"video/x-raw-rgb",
+					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15));
+  caps = gst_caps_append (caps,
+			  gst_caps_new ("csp_templ_rgb16",
+					"video/x-raw-rgb",
+					GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_16));
+  
+  /* build templates */
+  srctempl  = gst_pad_template_new ("src",
+				    GST_PAD_SRC,
+				    GST_PAD_ALWAYS,
+				    caps, NULL);
+  gst_caps_ref (caps);
+  sinktempl = gst_pad_template_new ("sink",
+				    GST_PAD_SINK,
+				    GST_PAD_ALWAYS,
+				    caps, NULL);
+  gst_element_class_add_pad_template (element_class, srctempl);
+  gst_element_class_add_pad_template (element_class, sinktempl);
+  gst_element_class_set_details (element_class, &colorspace_details);
+}
+  
 static void
 gst_colorspace_class_init (GstColorspaceClass *klass)
 {
@@ -617,10 +657,8 @@ gst_colorspace_get_property (GObject *object, guint prop_id, GValue *value, GPar
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-  GstCaps *caps;
 #ifdef HAVE_HERMES
   gint hermes_res;
 
@@ -628,55 +666,21 @@ plugin_init (GModule *module, GstPlugin *plugin)
   g_return_val_if_fail (hermes_res != 0, FALSE);
 #endif
 
-  factory = gst_element_factory_new ("colorspace", GST_TYPE_COLORSPACE,
-                                    &colorspace_details);
-  g_return_val_if_fail (factory != NULL, FALSE);
-  gst_element_factory_set_rank (factory, GST_ELEMENT_RANK_PRIMARY);
-
-  /* create caps for templates */
-  caps = gst_caps_new ("csp_templ_yuv",
-                       "video/x-raw-yuv",
-	               GST_VIDEO_YUV_PAD_TEMPLATE_PROPS (
-                         GST_PROPS_LIST (
-                           GST_PROPS_FOURCC (GST_STR_FOURCC ("I420")),
-	                   GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
-	                   GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")))));
-  caps = gst_caps_append (caps,
-         gst_caps_new ("csp_templ_rgb24_32",
-                       "video/x-raw-rgb",
-                       GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_24_32));
-  caps = gst_caps_append (caps,
-         gst_caps_new ("csp_templ_rgb15",
-                       "video/x-raw-rgb",
-                       GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_15));
-  caps = gst_caps_append (caps,
-         gst_caps_new ("csp_templ_rgb16",
-                       "video/x-raw-rgb",
-                       GST_VIDEO_RGB_PAD_TEMPLATE_PROPS_16));
-
-  /* build templates */
-  srctempl  = gst_pad_template_new ("src",
-				    GST_PAD_SRC,
-				    GST_PAD_ALWAYS,
-				    caps, NULL);
-  gst_caps_ref (caps);
-  sinktempl = gst_pad_template_new ("sink",
-				    GST_PAD_SINK,
-				    GST_PAD_ALWAYS,
-				    caps, NULL);
-
-  gst_element_factory_add_pad_template (factory, srctempl);
-  gst_element_factory_add_pad_template (factory, sinktempl);
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "colorspace", GST_RANK_PRIMARY, GST_TYPE_COLORSPACE))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "colorspace",
-  plugin_init
-};
+  "Hermes colorspace converter",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN)
 
