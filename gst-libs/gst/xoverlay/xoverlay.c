@@ -27,13 +27,12 @@
 
 enum {
   HAVE_XWINDOW_ID,
-  HAVE_SIZE,
   LAST_SIGNAL
 };
 
 static guint gst_x_overlay_signals[LAST_SIGNAL] = { 0 };
 
-static void 	gst_x_overlay_base_init	(gpointer g_class);
+static void gst_x_overlay_base_init (gpointer g_class);
 
 GType
 gst_x_overlay_get_type (void)
@@ -70,14 +69,6 @@ gst_x_overlay_base_init (gpointer g_class)
   
   if (! initialized)
     {
-      gst_x_overlay_signals[HAVE_SIZE] =
-        g_signal_new ("have_size",
-                      GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
-                      G_STRUCT_OFFSET (GstXOverlayClass, have_size),
-                      NULL, NULL,
-                      gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
-		      G_TYPE_UINT, G_TYPE_UINT);
-
       gst_x_overlay_signals[HAVE_XWINDOW_ID] =
         g_signal_new ("have_xwindow_id",
                       GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
@@ -126,25 +117,4 @@ gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
   
   g_signal_emit (G_OBJECT (overlay),
                  gst_x_overlay_signals[HAVE_XWINDOW_ID], 0, xwindow_id);
-}
-
-/**
- * gst_x_overlay_got_video_size:
- * @overlay: a #GstXOverlay which received video geometry.
- * @width: a width as a #gint.
- * @height: a height as a #gint.
- *
- * This will fire an have_size signal.
- *
- * This function should be used by video overlay developpers.
- */
-void
-gst_x_overlay_got_video_size (GstXOverlay *overlay,
-                              gint width, gint height)
-{
-  g_return_if_fail (overlay != NULL);
-  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
-  
-  g_signal_emit (G_OBJECT (overlay), gst_x_overlay_signals[HAVE_SIZE],
-                 0, width, height);
 }
