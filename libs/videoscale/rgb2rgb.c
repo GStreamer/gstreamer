@@ -63,13 +63,13 @@ static GstBuffer *gst_colorspace_rgb24_to_bgr24(GstBuffer *src, GstColorSpacePar
   gchar temp;
   gchar *data;
 
-  DEBUG("gst_colorspace_rgb24_to_bgr24 %d\n", GST_BUFFER_SIZE(src));
+  GST_DEBUG (0,"gst_colorspace_rgb24_to_bgr24 %d\n", GST_BUFFER_SIZE(src));
 
   size = GST_BUFFER_SIZE(src)/3;
 
   if (params != NULL && params->outbuf != NULL) {
     data = params->outbuf;
-    DEBUG("gst_colorspace: to buffer %p\n", data);
+    GST_DEBUG (0,"gst_colorspace: to buffer %p\n", data);
   }
   else {
     data = GST_BUFFER_DATA(src);
@@ -81,7 +81,7 @@ static GstBuffer *gst_colorspace_rgb24_to_bgr24(GstBuffer *src, GstColorSpacePar
     data[2] = temp;
     data+=3;
   }
-  DEBUG("gst_colorspace_rgb24_to_bgr24 end %d\n", GST_BUFFER_SIZE(src));
+  GST_DEBUG (0,"gst_colorspace_rgb24_to_bgr24 end %d\n", GST_BUFFER_SIZE(src));
 
   return src;
 }

@@ -55,12 +55,12 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
   size = GST_BUFFER_SIZE(buf);
   last = off + size;
 
-  DEBUG("gst_riff_parser: offset new buffer 0x%08lx size 0x%08x\n", off, GST_BUFFER_SIZE(buf));
+  GST_DEBUG (0,"gst_riff_parser: offset new buffer 0x%08lx size 0x%08x\n", off, GST_BUFFER_SIZE(buf));
 
   if (riff->dataleft) {
     gulong newsize;
 
-    DEBUG("gst_riff_parser: recovering left data\n");
+    GST_DEBUG (0,"gst_riff_parser: recovering left data\n");
     newsize = riff->dataleft_size + size;
     riff->dataleft = g_realloc(riff->dataleft, newsize);
     memcpy(riff->dataleft+riff->dataleft_size, GST_BUFFER_DATA(buf), size);
@@ -99,10 +99,10 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
   // if we have an incomplete chunk from the previous buffer
   if (riff->incomplete_chunk) {
     guint leftover;
-    DEBUG("gst_riff_parser: have incomplete chunk %08x filled\n", riff->incomplete_chunk_size);
+    GST_DEBUG (0,"gst_riff_parser: have incomplete chunk %08x filled\n", riff->incomplete_chunk_size);
     leftover = riff->incomplete_chunk->size - riff->incomplete_chunk_size;
     if (leftover <= size) {
-      DEBUG("gst_riff_parser: we can fill it from %08x with %08x bytes = %08x\n", 
+      GST_DEBUG (0,"gst_riff_parser: we can fill it from %08x with %08x bytes = %08x\n", 
 		riff->incomplete_chunk_size, leftover, 
 		riff->incomplete_chunk_size+leftover);
       memcpy(riff->incomplete_chunk->data+riff->incomplete_chunk_size, GST_BUFFER_DATA(buf), leftover);
@@ -115,7 +115,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
       riff->incomplete_chunk = NULL;
     }
     else {
-      DEBUG("gst_riff_parser: we cannot fill it %08x >= %08lx\n", leftover, size);
+      GST_DEBUG (0,"gst_riff_parser: we cannot fill it %08x >= %08lx\n", leftover, size);
       memcpy(riff->incomplete_chunk->data+riff->incomplete_chunk_size, GST_BUFFER_DATA(buf), size);
       riff->incomplete_chunk_size += size;
       return 0;
@@ -124,7 +124,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
 
   if (riff->nextlikely & 0x01) riff->nextlikely++;
 
-  DEBUG("gst_riff_parser: next 0x%08x  last 0x%08lx offset %08x\n",riff->nextlikely, last, off);
+  GST_DEBUG (0,"gst_riff_parser: next 0x%08x  last 0x%08lx offset %08x\n",riff->nextlikely, last, off);
   /* loop while the next likely chunk header is in this buffer */
   while ((riff->nextlikely+12) <= last) {
     gulong *words = (gulong *)((guchar *)GST_BUFFER_DATA(buf) + riff->nextlikely - off );
@@ -133,17 +133,17 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
     while (riff->chunks) {
       chunk = g_list_nth_data(riff->chunks, 0);
 
-      DEBUG("gst_riff_parser: next 0x%08x  offset 0x%08lx size 0x%08x\n",riff->nextlikely, 
+      GST_DEBUG (0,"gst_riff_parser: next 0x%08x  offset 0x%08lx size 0x%08x\n",riff->nextlikely, 
 		      chunk->offset, chunk->size);
       if (riff->nextlikely >= chunk->offset+chunk->size) {
-        DEBUG("gst_riff_parser: found END LIST\n");
+        GST_DEBUG (0,"gst_riff_parser: found END LIST\n");
         // we have the end of the chunk on the stack, remove it
         riff->chunks = g_list_remove(riff->chunks, chunk);
       }
       else break;
     }
 
-    DEBUG("gst_riff_parser: next likely chunk is at offset 0x%08x\n",riff->nextlikely);
+    GST_DEBUG (0,"gst_riff_parser: next likely chunk is at offset 0x%08x\n",riff->nextlikely);
 
     chunk = (GstRiffChunk *)g_malloc(sizeof(GstRiffChunk));
     g_return_val_if_fail(chunk != NULL, GST_RIFF_ENOMEM);
@@ -158,7 +158,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
 
 
     if (chunk->id == GST_RIFF_TAG_LIST) {
-      DEBUG("found LIST %s\n", gst_riff_id_to_fourcc(chunk->form));
+      GST_DEBUG (0,"found LIST %s\n", gst_riff_id_to_fourcc(chunk->form));
       riff->nextlikely += 12;	
       // we push the list chunk on our 'stack'
       riff->chunks = g_list_prepend(riff->chunks,chunk);
@@ -169,7 +169,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
     }
     else {
 
-      DEBUG("gst_riff_parser: chunk id offset %08x is 0x%08lx '%s' and is 0x%08lx long\n",
+      GST_DEBUG (0,"gst_riff_parser: chunk id offset %08x is 0x%08lx '%s' and is 0x%08lx long\n",
 		riff->nextlikely, words[0],
             	gst_riff_id_to_fourcc(words[0]),words[1]);
 
@@ -178,7 +178,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
       if (riff->nextlikely > last) {
         guint left = size - (riff->nextlikely - chunk->size - off);
 
-        DEBUG("make incomplete buffer %08x\n", left);
+        GST_DEBUG (0,"make incomplete buffer %08x\n", left);
         chunk->data = g_malloc(chunk->size);
         memcpy(chunk->data, (gchar *)(words+2), left);
 	     riff->incomplete_chunk = chunk;
@@ -198,7 +198,7 @@ gst_riff_parser_next_buffer (GstRiff *riff, GstBuffer *buf, gulong off)
   }
   if ((riff->nextlikely+12) > last && !riff->incomplete_chunk) {
     guint left = last - riff->nextlikely;
-    DEBUG("gst_riff_parser: not enough data next 0x%08x  last 0x%08lx %08x %08x\n",riff->nextlikely, 
+    GST_DEBUG (0,"gst_riff_parser: not enough data next 0x%08x  last 0x%08lx %08x %08x\n",riff->nextlikely, 
 		    last, left, off);
 
     riff->dataleft = g_malloc(left);

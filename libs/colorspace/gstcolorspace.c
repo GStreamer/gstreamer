@@ -46,7 +46,7 @@ GstColorSpaceConverter *gst_colorspace_converter_new(gint width, gint height, Gs
   new->color_tables = NULL;
   new->convert = NULL;
 
-  DEBUG("gst_colorspace: new\n");
+  GST_DEBUG (0,"gst_colorspace: new\n");
   if (GST_COLORSPACE_IS_RGB_TYPE(srcspace)) {
     if (GST_COLORSPACE_IS_RGB_TYPE(destspace)) {
       new->convert =  gst_colorspace_rgb2rgb_get_converter(new, srcspace, destspace);
