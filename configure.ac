@@ -1,5 +1,6 @@
 dnl autoconf configuration file for plugins 
 AC_INIT
+dnl FIXME take something else ?
 AC_CONFIG_SRCDIR([COPYING])
 
 AC_CANONICAL_TARGET([])
@@ -80,11 +81,13 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plugins],,
   USE_LIBMIKMOD="yes"
   USE_ARTS="yes"
   USE_ARTSC="yes"
+  USE_SINE="no"
 ],[
   AC_MSG_NOTICE(not building experimental plugins)
   USE_LIBMIKMOD="no"
   USE_ARTS="no"
   USE_ARTSC="no"
+  USE_SINE="no"
 ])
 
 dnl broken plugins; stuff that doesn't seem to build at the moment
