@@ -170,6 +170,7 @@ libgstreamerinclude_HEADERS =		\
 
 noinst_HEADERS = 		\
 	gst_private.h		\
+	gstdata_private.h		\
 	gstarch.h		\
 	cothreads.h		
 
