@@ -29,8 +29,12 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_PROBE		(gst_probe_get_type())
+#define GST_PROBE(object)	((GstProbe *) object)
+
 typedef struct _GstProbe GstProbe;
 
+GType                    gst_probe_get_type		(void) G_GNUC_CONST;
 /* the callback should return FALSE if the data should be discarded */
 typedef gboolean 		(*GstProbeCallback) 		(GstProbe *probe, 
 								 GstData **data, 
@@ -71,6 +75,5 @@ gboolean		gst_probe_dispatcher_dispatch		(GstProbeDispatcher *disp, GstData **da
 
 G_END_DECLS
 
-
-#endif /* __GST_PAD_H__ */
+#endif /* __GST_PROBE_H__ */
 

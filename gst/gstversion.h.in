@@ -24,6 +24,8 @@
 #ifndef __GST_VERSION_H__
 #define __GST_VERSION_H__
 
+G_BEGIN_DECLS
+
 /*
  * Use these only when you want to know what GStreamer version your stuff was
  * compiled against.
@@ -35,5 +37,7 @@
 #define GST_VERSION_MICRO (@GST_VERSION_MICRO@)
 
 void    gst_version     (guint *major, guint *minor, guint *micro);
+
+G_END_DECLS
 
 #endif /* __GST_VERSION_H__ */

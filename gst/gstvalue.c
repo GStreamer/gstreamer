@@ -1241,6 +1241,8 @@ gst_string_wrap (const char *s)
 
   len = 0;
   t = s;
+  if (!s)
+    return g_strdup ("");
   while (*t) {
     if (GST_ASCII_IS_STRING (*t)) {
       len++;
@@ -1332,6 +1334,8 @@ static gboolean
 gst_value_deserialize_string (GValue * dest, const char *s)
 {
   if (*s != '"') {
+    if (!g_utf8_validate (s, -1, NULL))
+      return FALSE;
     g_value_set_string (dest, s);
     return TRUE;
   } else {
@@ -2027,10 +2031,15 @@ gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
 
 /**
  * gst_value_can_intersect:
- * @value1:
- * @value2:
+ * @value1: a value to intersect
+ * @value2: another value to intersect
  *
- * Returns:
+ * Determines if intersecting two values will produce a valid result.
+ * Two values will produce a valid intersection if they have the same
+ * type, or if there is a method (registered by
+ * #gst_value_register_intersection_func) to calculate the intersection.
+ *
+ * Returns: TRUE if the values can intersect
  */
 gboolean
 gst_value_can_intersect (const GValue * value1, const GValue * value2)
@@ -2057,11 +2066,15 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 
 /**
  * gst_value_intersect:
- * @dest: the destination value for intersection
+ * @dest: a uninitialized #GValue that will hold the calculated
+ * intersection value
  * @value1: a value to intersect
  * @value2: another value to intersect
  *
- * Calculates the intersection of the two values.
+ * Calculates the intersection of two values.  If the values have
+ * a non-empty intersection, the value representing the intersection
+ * is placed in @dest.  If the intersection is non-empty, @dest is
+ * not modified.
  *
  * Returns: TRUE if the intersection is non-empty
  */
@@ -2104,10 +2117,26 @@ gst_value_intersect (GValue * dest, const GValue * value1,
 
 /**
  * gst_value_register_intersection_func:
- * @type1:
- * @type2:
- * @func:
+ * @type1: the first type to intersect
+ * @type2: the second type to intersect
+ * @func: the intersection function
  *
+ * Registers a function that is called to calculate the intersection
+ * of the values having the types @type1 and @type2.
+ */
+/**
+ * GstValueIntersectFunc:
+ * @dest: a uninitialized #GValue that will hold the calculated
+ * intersection value
+ * @value1: a value to intersect
+ * @value2: another value to intersect
+ *
+ * Functions having this type calculate the intersection of @value1
+ * and @value2.  If the intersection is non-empty, the result is
+ * placed in @dest and TRUE is returned.  If the intersection is
+ * empty, @dest is unmodified and FALSE is returned.
+ *
+ * Returns: TRUE if the intersection is non-empty, FALSE otherwise
  */
 void
 gst_value_register_intersect_func (GType type1, GType type2,
@@ -2236,8 +2265,22 @@ gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
 
 /**
  * gst_value_register:
- * @table:
+ * @table: structure containing functions to register
  *
+ * Registers functions to perform calculations on #GValues of a given
+ * type.
+ */
+/**
+ * GstValueTable:
+ * @type: GType that the functions operate on.
+ * @compare: A function that compares two values of this type.
+ * @serialize: A function that transforms a value of this type to a
+ * string.  Strings created by this function must be unique and should
+ * be human readable.
+ * @deserialize: A function that transforms a string to a value of
+ * this type.  This function must transform strings created by the
+ * serialize function back to the original value.  This function may
+ * optionally transform other strings into values.
  */
 void
 gst_value_register (const GstValueTable * table)
@@ -2247,9 +2290,11 @@ gst_value_register (const GstValueTable * table)
 
 /**
  * gst_value_init_and_copy:
- * @dest:
- * @src:
+ * @dest: the target value
+ * @src: the source value
  *
+ * Initialises the target value to be of the same type as source and then copies
+ * the contents from source to target.
  */
 void
 gst_value_init_and_copy (GValue * dest, const GValue * src)

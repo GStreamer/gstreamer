@@ -466,6 +466,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   gst_object_unparent (GST_OBJECT (element));
 
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
+  /* element is really out of our control now */
   gst_object_unref (GST_OBJECT (element));
 
   return TRUE;
@@ -717,6 +718,7 @@ gst_bin_iterate_sinks (GstBin * bin)
   children = gst_bin_iterate_elements (bin);
   result = gst_iterator_filter (children,
       (GCompareFunc) bin_element_is_sink, bin);
+  gst_iterator_free (children);
 
   return result;
 }
@@ -1051,6 +1053,7 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_find_custom (children,
       (GCompareFunc) compare_name, (gpointer) name);
+  gst_iterator_free (children);
 
   return GST_ELEMENT_CAST (result);
 }
@@ -1091,7 +1094,6 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
 
   return result;
 }
-
 
 static gint
 compare_interface (GstElement * element, gpointer interface)
@@ -1136,6 +1138,7 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_find_custom (children, (GCompareFunc) compare_interface,
       GINT_TO_POINTER (interface));
+  gst_iterator_free (children);
 
   return GST_ELEMENT_CAST (result);
 }
@@ -1164,6 +1167,7 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_filter (children, (GCompareFunc) compare_interface,
       GINT_TO_POINTER (interface));
+  gst_iterator_free (children);
 
   return result;
 }

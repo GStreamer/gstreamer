@@ -124,15 +124,15 @@ GstMessage *	gst_message_new_eos 		(GstObject * src);
 GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
-GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState old,
-                                                 GstElementState new);
+GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstElementState old_state,
+                                                 GstElementState new_state);
 GstMessage *	gst_message_new_application 	(GstStructure *structure);
 
 const GstStructure *  gst_message_get_structure	(GstMessage *message);
 
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
-void		gst_message_parse_state_changed	(GstMessage *message, GstElementState *old,
-                                                 GstElementState *new);
+void		gst_message_parse_state_changed	(GstMessage *message, GstElementState *old_state,
+                                                 GstElementState *new_state);
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
 

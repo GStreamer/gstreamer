@@ -370,66 +370,6 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
   g_free (specs);
 }
 
-GstFlowReturn
-gst_element_abort_preroll (GstElement * element)
-{
-  GstFlowReturn result = GST_FLOW_OK;
-
-  /* grab state change lock */
-  GST_STATE_LOCK (element);
-  /* if we are going to PAUSED, we can abort the state change */
-  if (GST_STATE_TRANSITION (element) == GST_STATE_READY_TO_PAUSED) {
-    gst_element_abort_state (GST_ELEMENT (element));
-  }
-  GST_STATE_UNLOCK (element);
-
-  return result;
-}
-
-/* call with stream lock held */
-GstFlowReturn
-gst_element_finish_preroll (GstElement * element, GstPad * pad)
-{
-  GstFlowReturn result = GST_FLOW_OK;
-
-  /* grab state change lock */
-  GST_STATE_LOCK (element);
-  /* if we are going to PAUSED, we can commit the state change */
-  if (GST_STATE_PENDING (element) == GST_STATE_PAUSED) {
-    gst_element_commit_state (GST_ELEMENT (element));
-  }
-  /* if we are paused we need to wait for playing to continue */
-  if (GST_STATE (element) == GST_STATE_PAUSED) {
-    GST_CAT_DEBUG (GST_CAT_STATES,
-        "element %s wants to finish preroll", GST_ELEMENT_NAME (element));
-
-    /* here we wait for the next state change */
-    while (GST_STATE (element) == GST_STATE_PAUSED) {
-      if (GST_RPAD_IS_FLUSHING (pad) || !GST_RPAD_IS_ACTIVE (pad)) {
-        GST_CAT_DEBUG (GST_CAT_STATES, "pad is flushing");
-        result = GST_FLOW_UNEXPECTED;
-        goto done;
-      }
-
-      GST_CAT_DEBUG (GST_CAT_STATES, "waiting for next state change");
-
-      GST_STATE_WAIT (element);
-      GST_CAT_DEBUG (GST_CAT_STATES, " got state change");
-    }
-
-    /* check if we got playing */
-    if (GST_STATE (element) != GST_STATE_PLAYING) {
-      /* not playing, we can't accept the buffer */
-      result = GST_FLOW_WRONG_STATE;
-    }
-    GST_CAT_DEBUG (GST_CAT_STATES, "done preroll");
-  }
-done:
-  GST_STATE_UNLOCK (element);
-
-  return result;
-}
-
 /**
  * gst_element_get_compatible_pad_template:
  * @element: a #GstElement to get a compatible pad template for.

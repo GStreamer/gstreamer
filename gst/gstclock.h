@@ -166,7 +166,7 @@ struct _GstClockClass {
   GstClockReturn        (*wait)        		(GstClock *clock, GstClockEntry *entry);
   GstClockReturn        (*wait_async)           (GstClock *clock, GstClockEntry *entry);
   void                  (*unschedule)        	(GstClock *clock, GstClockEntry *entry);
-
+  
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -203,7 +203,6 @@ GstClockReturn		gst_clock_id_wait_async		(GstClockID id,
 						 	 GstClockCallback func, 
 							 gpointer user_data);
 void 			gst_clock_id_unschedule		(GstClockID id);
-
 
 G_END_DECLS
 

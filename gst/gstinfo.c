@@ -48,6 +48,8 @@
 
 /* underscore is to prevent conflict with GST_CAT_DEBUG define */
 GST_DEBUG_CATEGORY_STATIC (_GST_CAT_DEBUG);
+/* time of initialization, so we get useful debugging output times */
+GstClockTime start_time;
 
 #if 0
 #if defined __sgi__
@@ -158,6 +160,8 @@ GstDebugCategory *GST_CAT_MESSAGE = NULL;
 GstDebugCategory *GST_CAT_PARAMS = NULL;
 GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
 GstDebugCategory *GST_CAT_SEEK = NULL;
+GstDebugCategory *GST_CAT_SIGNAL = NULL;
+GstDebugCategory *GST_CAT_PROBE = NULL;
 
 /* FIXME: export this? */
 gboolean
@@ -203,8 +207,14 @@ __gst_in_valgrind (void)
 void
 _gst_debug_init (void)
 {
+  GTimeVal current;
+
   gst_atomic_int_init (&__default_level, GST_LEVEL_DEFAULT);
   gst_atomic_int_init (&__use_color, 1);
+
+  /* get time we started for debugging messages */
+  g_get_current_time (&current);
+  start_time = GST_TIMEVAL_TO_TIME (current);
 
 #ifdef HAVE_PRINTF_EXTENSION
   register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension,
@@ -240,7 +250,7 @@ _gst_debug_init (void)
       GST_DEBUG_BOLD | GST_DEBUG_FG_MAGENTA, NULL);
 /* FIXME: remove GST_CAT_DATAFLOW in 0.9 */
   GST_CAT_DATAFLOW = _gst_debug_category_new ("GST_DATAFLOW",
-      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, NULL);
+      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads");
   GST_CAT_BUFFER = _gst_debug_category_new ("GST_BUFFER",
       GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, NULL);
   GST_CAT_CAPS = _gst_debug_category_new ("GST_CAPS",
@@ -281,7 +291,12 @@ _gst_debug_init (void)
   GST_CAT_CALL_TRACE = _gst_debug_category_new ("GST_CALL_TRACE",
       GST_DEBUG_BOLD, NULL);
   GST_CAT_SEEK = _gst_debug_category_new ("GST_SEEK",
-      0, "plugins reacting to seek events");
+      GST_DEBUG_BOLD | GST_DEBUG_FG_BLUE, "plugins reacting to seek events");
+  GST_CAT_SIGNAL = _gst_debug_category_new ("GST_SIGNAL",
+      GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
+  GST_CAT_PROBE = _gst_debug_category_new ("GST_PROBE",
+      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "pad probes");
+
 
   /* print out the valgrind message if we're in valgrind */
   __gst_in_valgrind ();
@@ -490,6 +505,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gchar *pidcolor;
   gint pid;
   GTimeVal now;
+  GstClockTime elapsed;
 
   if (level > gst_debug_category_get_threshold (category))
     return;
@@ -512,10 +528,11 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   obj = object ? gst_debug_print_object (object) : g_strdup ("");
 
   g_get_current_time (&now);
+  elapsed = GST_TIMEVAL_TO_TIME (now) - start_time;
   g_printerr ("%s (%p - %" GST_TIME_FORMAT
       ") %s%15s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
       gst_debug_level_get_name (level), g_thread_self (),
-      GST_TIME_ARGS (GST_TIMEVAL_TO_TIME (now)), color,
+      GST_TIME_ARGS (elapsed), color,
       gst_debug_category_get_name (category), clear, pidcolor, pid, clear,
       color, file, line, function, obj, clear, gst_debug_message_get (message));
 
@@ -1112,6 +1129,17 @@ _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
 #endif /* HAVE_PRINTF_EXTENSION */
 
 #else /* !GST_DISABLE_GST_DEBUG */
+guint
+gst_debug_remove_log_function (GstLogFunction func)
+{
+  return 0;
+}
+
+guint
+gst_debug_remove_log_function_by_data (gpointer data)
+{
+  return 0;
+}
 
 gboolean
 __gst_in_valgrind (void)

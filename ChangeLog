@@ -1,3 +1,62 @@
+2005-03-08  Wim Taymans  <wim@fluendo.com>
+
+	* MAINTAINERS:
+	* README:
+	* autogen.sh:
+	* configure.ac:
+	* gst/gst.c: (gst_init_get_popt_table), (init_post):
+	* gst/gst_private.h:
+	* gst/gstbin.c: (gst_bin_remove_func), (gst_bin_iterate_sinks),
+	(gst_bin_get_by_name), (gst_bin_get_by_interface),
+	(gst_bin_iterate_all_by_interface):
+	* gst/gstbin.h:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* gst/gstcaps.c: (gst_static_caps_get), (gst_caps_append),
+	(gst_caps_copy_nth), (gst_caps_intersect):
+	* gst/gstcaps.h:
+	* gst/gstclock.h:
+	* gst/gstdata.h:
+	* gst/gstelement.c: (gst_element_release_request_pad),
+	(gst_element_message_full), (gst_element_get_state_func),
+	(gst_element_lost_state):
+	* gst/gstelementfactory.c: (gst_element_factory_create):
+	* gst/gsterror.c: (_gst_resource_errors_init),
+	(_gst_stream_errors_init), (gst_error_get_message):
+	* gst/gsterror.h:
+	* gst/gstinfo.c: (_gst_debug_init), (gst_debug_log_default),
+	(gst_debug_remove_log_function),
+	(gst_debug_remove_log_function_by_data):
+	* gst/gstinfo.h:
+	* gst/gstmessage.h:
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_ref),
+	(gst_object_unref), (gst_object_sink), (gst_object_dispose),
+	(gst_object_dispatch_properties_changed), (gst_object_set_name),
+	(gst_object_set_parent), (gst_object_unparent),
+	(gst_object_check_uniqueness):
+	* gst/gstpad.c: (gst_real_pad_init):
+	* gst/gstplugin.c: (gst_plugin_get_version):
+	* gst/gstplugin.h:
+	* gst/gstpluginfeature.c: (gst_plugin_feature_ensure_loaded):
+	* gst/gstprobe.c: (_gst_probe_copy), (gst_probe_get_type),
+	(gst_probe_new), (gst_probe_perform),
+	(gst_probe_dispatcher_add_probe),
+	(gst_probe_dispatcher_remove_probe),
+	(gst_probe_dispatcher_dispatch):
+	* gst/gstprobe.h:
+	* gst/gstregistry.h:
+	* gst/gststructure.c: (gst_structure_copy_conditional):
+	* gst/gsttag.h:
+	* gst/gsttypes.h:
+	* gst/gstutils.c:
+	* gst/gstvalue.c: (gst_string_wrap),
+	(gst_value_deserialize_string):
+	* gst/gstvalue.h:
+	* gst/gstversion.h.in:
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_dump_byte_array):
+	* tools/gst-inspect.c: (print_children_info):
+	Backporting some HEAD changes, mostly docs and stuff.
+
 2005-03-07  Andy Wingo  <wingo@pobox.com>
 
 	* check/gst/gstobject.c (test_fake_object_name): The object *does*

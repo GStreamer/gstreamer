@@ -114,6 +114,7 @@ gst_buffer_default_free (GstBuffer * buffer)
   gst_buffer_free_chunk (buffer);
 }
 
+
 /**
  * gst_buffer_default_copy:
  * @buffer: a #GstBuffer to make a copy of.

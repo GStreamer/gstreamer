@@ -130,6 +130,7 @@ void 			_gst_plugin_register_static 	(GstPluginDesc *desc);
 G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_filename		(GstPlugin *plugin);
+G_CONST_RETURN gchar*	gst_plugin_get_version		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_license		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_package		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_origin      	(GstPlugin *plugin);

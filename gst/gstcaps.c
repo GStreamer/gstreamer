@@ -196,7 +196,7 @@ gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
 
 /**
  * gst_caps_copy:
- * @caps: the caps structure to copy
+ * @caps: the #GstCaps to copy
  *
  * Creates a new #GstCaps as a copy of the old @caps. The new caps will have a
  * refcount of 1, owned by the caller. The structures are copied as well.
@@ -355,7 +355,6 @@ gst_static_caps_get (GstStaticCaps * static_caps)
   GstCaps *caps = (GstCaps *) static_caps;
   gboolean ret;
 
-
   if (caps->type == 0) {
     caps->type = GST_TYPE_CAPS;
     /* initialize the caps to a refcount of 1 so the caps can be writable... */
@@ -407,7 +406,11 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (IS_WRITABLE (caps1));
   g_return_if_fail (IS_WRITABLE (caps2));
 
+#ifdef USE_POISONING
+  CAPS_POISON (caps2);
+#endif
   if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2)) {
+    /* FIXME: this leaks */
     caps1->flags |= GST_CAPS_FLAGS_ANY;
     for (i = caps2->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, i);
@@ -421,7 +424,6 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
       gst_caps_append_structure (caps1, structure);
     }
   }
-
   gst_caps_unref (caps2);       /* guaranteed to free it */
 }
 
@@ -474,11 +476,11 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 
 /**
  * gst_caps_split_one:
- * @caps: 
+ * @caps: a #GstCaps
  *
  * This function is not implemented.
  *
- * Returns:
+ * Returns: NULL
  */
 GstCaps *
 gst_caps_split_one (GstCaps * caps)
@@ -974,7 +976,6 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
       j--;
     }
   }
-
   gst_caps_do_simplify (dest);
   return dest;
 }

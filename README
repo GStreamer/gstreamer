@@ -67,6 +67,6 @@ some build scripts like that.
 When you have done this once, you can use autoregen.sh to re-autogen with
 the last passed options as a handy shortcut.  Use it.
 
-
 After the autogen.sh stage, you can follow the directions listed in
 "COMPILING FROM SOURCE"
+

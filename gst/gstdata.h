@@ -74,7 +74,7 @@ struct _GstData {
   GstAtomicInt		 refcount;
 
   guint16		 flags;
-
+ 
   /*< protected >*/
   /* utility function pointers, can override default */
   GstDataFreeFunction	 free;		/* free the data */

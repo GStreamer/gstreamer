@@ -67,7 +67,7 @@ if test -f po/Makefile.in.in;
 then
   patch -p0 -R < common/gettext.patch
 fi
-tool_run "$autopoint --force"
+tool_run "$autopoint" "--force" "patch -p0 < common/gettext.patch"
 patch -p0 < common/gettext.patch
 
 # aclocal

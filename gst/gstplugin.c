@@ -579,6 +579,22 @@ gst_plugin_get_filename (GstPlugin * plugin)
 }
 
 /**
+ * gst_plugin_get_version:
+ * @plugin: plugin to get the version of
+ *
+ * get the version of the plugin
+ *
+ * Returns: the version of the plugin
+ */
+G_CONST_RETURN gchar *
+gst_plugin_get_version (GstPlugin * plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->desc.version;
+}
+
+/**
  * gst_plugin_get_license:
  * @plugin: plugin to get the license of
  *
@@ -874,9 +890,9 @@ gst_plugin_load (const gchar * name)
  * @name: name of library to load
  *
  * Load the named library.  Name should be given as
- * &quot;liblibrary.so&quot;.
+ * &quot;liblibrary.so&quot;. (exception to this rule is 'riff', which .so name is 'gstriff')
  *
- * Returns: whether the library was loaded or not
+ * Returns: whether the library was loaded or not (and returns TRUE if it was already loaded)
  */
 gboolean
 gst_library_load (const gchar * name)

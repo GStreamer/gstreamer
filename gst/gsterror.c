@@ -28,11 +28,10 @@
 #define TABLE(t, d, a, b) t[GST_ ## d ## _ERROR_ ## a] = g_strdup (b)
 #define QUARK_FUNC(string)						\
 GQuark gst_ ## string ## _error_quark (void) {				\
-  static GQuark q;							\
-  if (!q)								\
-    q = g_quark_from_static_string ("gst-" # string "-error-quark");	\
-  return q;								\
-}
+  static GQuark quark;							\
+  if (!quark)								\
+    quark = g_quark_from_static_string ("gst-" # string "-error-quark"); \
+  return quark; }
 
 GType
 gst_g_error_get_type (void)
@@ -111,7 +110,7 @@ _gst_resource_errors_init (void)
   t = g_new0 (gchar *, GST_RESOURCE_ERROR_NUM_ERRORS);
 
   TABLE (t, RESOURCE, FAILED,
-      N_("GStreamer encountered a general supporting library error."));
+      N_("GStreamer encountered a general resource error."));
   TABLE (t, RESOURCE, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
           "to this error.  Please file a bug."));
@@ -141,7 +140,7 @@ _gst_stream_errors_init (void)
   t = g_new0 (gchar *, GST_STREAM_ERROR_NUM_ERRORS);
 
   TABLE (t, STREAM, FAILED,
-      N_("GStreamer encountered a general supporting library error."));
+      N_("GStreamer encountered a general stream error."));
   TABLE (t, STREAM, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
           "to this error.  Please file a bug."));
@@ -162,30 +161,29 @@ _gst_stream_errors_init (void)
   return t;
 }
 
-QUARK_FUNC (core);
-QUARK_FUNC (library);
-QUARK_FUNC (resource);
-QUARK_FUNC (stream);
+QUARK_FUNC (core)
+    QUARK_FUNC (library)
+    QUARK_FUNC (resource)
+    QUARK_FUNC (stream)
 
 /**
- * gst_error_get_text:
+ * gst_error_get_message:
  * @domain: the GStreamer error domain this error belongs to.
  * @code: the error code belonging to the domain.
  *
- * Returns: a newly allocated string describing the error text in the
+ * Returns: a newly allocated string describing the error message in the
  * current locale.
  */
-gchar *
-gst_error_get_text (GQuark domain, gint code)
+     gchar *gst_error_get_message (GQuark domain, gint code)
 {
   static gchar **gst_core_errors = NULL;
   static gchar **gst_library_errors = NULL;
   static gchar **gst_resource_errors = NULL;
   static gchar **gst_stream_errors = NULL;
 
-  gchar *text = NULL;
+  gchar *message = NULL;
 
-  /* initialize error text tables if necessary */
+  /* initialize error message tables if necessary */
   if (gst_core_errors == NULL)
     gst_core_errors = _gst_core_errors_init ();
   if (gst_library_errors == NULL)
@@ -197,23 +195,23 @@ gst_error_get_text (GQuark domain, gint code)
 
 
   if (domain == GST_CORE_ERROR)
-    text = gst_core_errors[code];
+    message = gst_core_errors[code];
   else if (domain == GST_LIBRARY_ERROR)
-    text = gst_library_errors[code];
+    message = gst_library_errors[code];
   else if (domain == GST_RESOURCE_ERROR)
-    text = gst_resource_errors[code];
+    message = gst_resource_errors[code];
   else if (domain == GST_STREAM_ERROR)
-    text = gst_stream_errors[code];
+    message = gst_stream_errors[code];
   else {
-    g_warning ("No error texts for domain %s", g_quark_to_string (domain));
-    return g_strdup_printf (_("No error text for domain %s."),
+    g_warning ("No error messages for domain %s", g_quark_to_string (domain));
+    return g_strdup_printf (_("No error message for domain %s."),
         g_quark_to_string (domain));
   }
-  if (text)
-    return g_strdup (_(text));
+  if (message)
+    return g_strdup (_(message));
   else
     return
         g_strdup_printf (_
-        ("No standard error text for domain %s and code %d."),
+        ("No standard error message for domain %s and code %d."),
         g_quark_to_string (domain), code);
 }

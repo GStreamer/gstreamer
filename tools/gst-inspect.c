@@ -822,7 +822,6 @@ print_children_info (GstElement * element)
   if (!GST_IS_BIN (element))
     return;
 
-  //children = (GList *) gst_bin_get_list (GST_BIN (element));
   children = (GList *) GST_BIN (element)->children;
   if (children) {
     n_print ("\n");

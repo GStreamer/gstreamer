@@ -26,7 +26,6 @@
 #include <gobject/gvaluecollector.h>
 
 #include "gstelement.h"
-
 #include "gstmarshal.h"
 #include "gsterror.h"
 #include "gstevent.h"
@@ -243,6 +242,8 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
 
   if (oclass->release_pad)
     (oclass->release_pad) (element, pad);
+  else
+    gst_element_remove_pad (element, pad);
 }
 
 /**
@@ -1429,7 +1430,7 @@ void gst_element_message_full
   if ((text == NULL) || (text[0] == 0)) {
     /* text could have come from g_strdup_printf (""); */
     g_free (text);
-    sent_text = gst_error_get_text (domain, code);
+    sent_text = gst_error_get_message (domain, code);
   } else
     sent_text = text;
 

@@ -235,6 +235,7 @@ gst_real_pad_class_init (GstRealPadClass * klass)
 static void
 gst_real_pad_init (GstRealPad * pad)
 {
+  pad->direction = GST_PAD_UNKNOWN;
   pad->peer = NULL;
 
   pad->chainfunc = NULL;
@@ -2183,6 +2184,7 @@ gst_pad_get_pad_template_caps (GstPad * pad)
 
   return gst_static_caps_get (&anycaps);
 }
+
 
 /**
  * gst_pad_get_peer:

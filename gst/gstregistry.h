@@ -36,14 +36,23 @@
 
 /* compatibility for pre-POSIX defines */
 #ifdef S_IRUSR
+#if defined(_WIN32) && defined(__MINGW32__)
+#define REGISTRY_DIR_PERMS (S_ISGID | \
+                            S_IRUSR | S_IWUSR | S_IXUSR)
+#else
 #define REGISTRY_DIR_PERMS (S_ISGID | \
                             S_IRUSR | S_IWUSR | S_IXUSR | \
 		            S_IRGRP | S_IXGRP | \
 			    S_IROTH | S_IXOTH)
+#endif
 #define REGISTRY_TMPFILE_PERMS (S_IRUSR | S_IWUSR)
+#if defined(_WIN32) && defined(__MINGW32__)
+#define REGISTRY_FILE_PERMS (S_IRUSR | S_IWUSR
+#else
 #define REGISTRY_FILE_PERMS (S_IRUSR | S_IWUSR | \
                              S_IRGRP | S_IWGRP | \
 			     S_IROTH | S_IWOTH)
+#endif
 #else
 #define REGISTRY_DIR_PERMS (S_ISGID | \
                             S_IREAD | S_IWRITE | S_IEXEC)

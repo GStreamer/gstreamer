@@ -189,7 +189,7 @@ gst_init_get_popt_table (void)
     {"gst-plugin-load", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
           ARG_PLUGIN_LOAD,
           N_("Comma-separated list of plugins to preload in addition to the "
-              "list stored in envronment variable GST_PLUGIN_PATH"),
+              "list stored in environment variable GST_PLUGIN_PATH"),
         N_("PLUGINS")},
     {"gst-disable-segtrap", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
           ARG_SEGTRAP_DISABLE,
@@ -584,6 +584,7 @@ init_post (void)
   _gst_format_initialize ();
   _gst_query_type_initialize ();
   gst_object_get_type ();
+  gst_probe_get_type ();
   gst_pad_get_type ();
   gst_real_pad_get_type ();
   gst_ghost_pad_get_type ();

@@ -40,8 +40,10 @@ G_BEGIN_DECLS
 #define GST_CAPS_IS_SIMPLE(caps) (gst_caps_get_size(caps) == 1)
 #define gst_caps_is_simple(caps) GST_CAPS_IS_SIMPLE(caps)
 
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_DEBUG_CAPS(string, caps) \
   GST_DEBUG ( string "%s: " GST_PTR_FORMAT, caps)
+#endif
 
 #define GST_STATIC_CAPS(string) \
 { \
@@ -146,6 +148,12 @@ void                     gst_caps_replace                               (GstCaps
 gchar *                  gst_caps_to_string                             (const GstCaps *caps);
 GstCaps *                gst_caps_from_string                           (const gchar   *string);
 
+gboolean                 gst_caps_structure_fixate_field_nearest_int    (GstStructure *structure,
+									 const char   *field_name,
+									 int           target);
+gboolean                 gst_caps_structure_fixate_field_nearest_double (GstStructure *structure,
+									 const char   *field_name,
+									 double        target);
 
 G_END_DECLS
 
