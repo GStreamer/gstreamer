@@ -1,3 +1,9 @@
+2004-05-17  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* ext/mad/gstmad.c: (gst_mad_handle_event):
+	  Fix for when the first format in a discont event is not a
+	  byte-based one. Should fix #137710.
+
 2004-05-18  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
 	* m4/a52.m4 : fix compilation with -Wall -Werror

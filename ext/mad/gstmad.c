@@ -908,19 +908,25 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
           GstEvent *discont;
 
           /* see how long the input bytes take */
-          format = GST_FORMAT_TIME;
-          if (!gst_pad_convert (pad,
-                  GST_EVENT_DISCONT_OFFSET (event, i).format,
-                  value, &format, &time)) {
-            time = 0;
+          if (GST_EVENT_DISCONT_OFFSET (event, i).format != GST_FORMAT_TIME) {
+            format = GST_FORMAT_TIME;
+            if (!gst_pad_convert (pad,
+                    GST_EVENT_DISCONT_OFFSET (event, i).format,
+                    value, &format, &time)) {
+              continue;
+            }
+          } else {
+            time = value;
           }
 
           /* for now, this is the best we can do to get the total number
-           * of samples */
+           * of samples. This is suboptimal because the incoming event
+           * might contain this information already (although I believe
+           * that this doesn't happen anywhere so far). */
           format = GST_FORMAT_DEFAULT;
           if (!gst_pad_convert (mad->srcpad,
                   GST_FORMAT_TIME, time, &format, &mad->total_samples)) {
-            mad->total_samples = 0;
+            continue;
           }
 
           if (GST_PAD_IS_USABLE (mad->srcpad)) {
@@ -928,9 +934,13 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
                 time, NULL);
             gst_pad_push (mad->srcpad, GST_DATA (discont));
           }
-          break;
+          goto done;
         }
       }
+      GST_WARNING ("Failed to retrieve sample position");
+      /* this isn't really correct? */
+      gst_pad_event_default (pad, event);
+    done:
       mad->tempsize = 0;
       /* we don't need to restart when we get here */
       mad->restart = FALSE;
@@ -945,7 +955,6 @@ gst_mad_handle_event (GstPad * pad, GstBuffer * buffer)
       gst_pad_event_default (pad, event);
       break;
   }
-  return;
 }
 
 static gboolean
