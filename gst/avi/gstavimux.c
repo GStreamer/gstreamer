@@ -150,6 +150,7 @@ static void gst_avimux_loop (GstElement * element);
 static gboolean gst_avimux_handle_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_avimux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
+static void gst_avimux_release_pad (GstElement * element, GstPad * pad);
 static void gst_avimux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_avimux_get_property (GObject * object,
@@ -220,6 +221,7 @@ gst_avimux_class_init (GstAviMuxClass * klass)
           "Support for openDML-2.0 (big) AVI files", 0, G_PARAM_READWRITE));
 
   gstelement_class->request_new_pad = gst_avimux_request_new_pad;
+  gstelement_class->release_pad = gst_avimux_release_pad;
 
   gstelement_class->change_state = gst_avimux_change_state;
 
@@ -487,10 +489,8 @@ gst_avimux_pad_unlink (GstPad * pad, GstPad * peer, gpointer data)
 
   if (pad == avimux->audiosinkpad) {
     avimux->audio_pad_connected = FALSE;
-    avimux->audiosinkpad = NULL;
   } else if (pad == avimux->videosinkpad) {
     avimux->video_pad_connected = FALSE;
-    avimux->videosinkpad = NULL;
   } else {
     g_warning ("Unknown padname '%s'", padname);
     return;
@@ -541,6 +541,24 @@ gst_avimux_request_new_pad (GstElement * element,
   gst_pad_set_event_mask_function (newpad, gst_avimux_get_event_masks);
 
   return newpad;
+}
+
+static void
+gst_avimux_release_pad (GstElement * element, GstPad * pad)
+{
+  GstAviMux *avimux = GST_AVIMUX (element);
+
+  if (pad == avimux->videosinkpad) {
+    avimux->videosinkpad = NULL;
+  } else if (pad == avimux->audiosinkpad) {
+    avimux->audiosinkpad = NULL;
+  } else {
+    g_warning ("Unknown pad %s", gst_pad_get_name (pad));
+    return;
+  }
+
+  GST_DEBUG ("Removed pad '%s'", gst_pad_get_name (pad));
+  gst_element_remove_pad (element, pad);
 }
 
 /* maybe some of these functions should be moved to riff.h? */
