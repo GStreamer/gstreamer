@@ -3253,6 +3253,10 @@ gst_element_found_tags (GstElement *element, const GstTagList *tag_list)
  * want to push the found tags down one pad, in that case this function is for
  * you. It takes ownership of the taglist, emits the found-tag signal and pushes 
  * a tag event down the pad.
+ * <note>This function may not be used in a #GstPadGetFunction, because it calls 
+ * gst_pad_push(). In those functions, call gst_element_found_tags(), create a 
+ * tag event with gst_event_new_tag() and return that from your 
+ * #GstPadGetFunction.</note>
  */
 void
 gst_element_found_tags_for_pad (GstElement *element, GstPad *pad, GstClockTime timestamp,

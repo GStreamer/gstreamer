@@ -1,3 +1,9 @@
+2004-03-13  Benjamin Otte  <otte@gnome.org>
+
+	* gst/gstelement.c:
+	  add documentation note about gst_element_found_tags_for_pad not
+	  being usable in getfunctions. (see #137042)
+
 2004-03-12  David Schleef  <ds@schleef.org>
 
 	* gst/gstcaps.h: jdahlin, what are you smoking?  We can't just
