@@ -276,7 +276,7 @@ DIST_SUBDIRS=\
 	audiofile cdparanoia divx dv \
 	dvdread dvdnav esd mas ffmpeg \
 	flac gnomevfs gsm \
-	hermes http ivorbis jack jpeg \
+	hermes ivorbis jack jpeg \
 	ladspa lame lcs libfame libpng \
 	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 \
