@@ -43,7 +43,6 @@ gst_gnomevfs_get_supported_uris (GnomeVFSOpenMode mode)
     "sftp://localhost/bla",
     "nfs://localhost/bla",
     "ssh://localhost/bla",
-    "bla://bla",
     NULL
   }
   , **result;
