@@ -2012,8 +2012,8 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
         gst_pad_push (stream->pad, GST_DATA (buf));
         processed = TRUE;
       }
-      stream->current_frame++;
-      stream->current_byte += entry->size;
+      stream->current_frame = entry->frames_before + 1;
+      stream->current_byte = entry->bytes_before + entry->size;
     }
   }
 
