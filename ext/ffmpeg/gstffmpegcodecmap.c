@@ -261,8 +261,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID    codec_id,
 
     case CODEC_ID_VP3:
       caps = GST_FF_VID_CAPS_NEW ("video/x-vp3");
-      gst_caps_append(caps,
-             GST_FF_VID_CAPS_NEW ("video/x-theora"));
       break;
 
     case CODEC_ID_AAC:
