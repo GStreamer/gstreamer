@@ -80,11 +80,13 @@ _syscall0 (pid_t, gettid)
      };
 
 
+#ifndef GST_DISABLE_GST_DEBUG
      static gchar *gst_fairscheduler_ct_state_names[] = {
        "stopped",
        "suspended",
        "running"
      };
+#endif
 
 
 /*

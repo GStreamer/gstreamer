@@ -1,3 +1,11 @@
+2005-02-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	* gst/schedulers/faircothreads.c:
+	* gst/schedulers/fairscheduler.c:
+	  fixes for compiling without debug
+
 2005-02-25  tvainika+gnomebugs@cc.hut.fi
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
