@@ -194,7 +194,7 @@ gst_osselement_probe (gchar * device_base,
     goto end;
   }
 
-  if (lstat (device, &s) || !S_ISCHR (s.st_mode))
+  if (stat (device, &s) || !S_ISCHR (s.st_mode))
     goto end;
 
   *name = device;
