@@ -482,7 +482,7 @@ gst_osssink_get_time (GstClock *clock, gpointer data)
 
   /*
   g_print ("from osssink: %lld %d %lld %d\n", res, delay, osssink->handled, osssink->bps);
-		  */
+  */
 
   return res;
 }
@@ -574,7 +574,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	  gst_element_clock_wait (GST_ELEMENT (osssink), osssink->clock, 
 				buftime - queued, &jitter);
 
-	  if (jitter > 0) {
+	  if (jitter >= 0) {
             gst_clock_handle_discont (osssink->clock, buftime - queued + jitter);
 	    write (osssink->fd, data, size);
 	    gst_oss_clock_set_active (osssink->provided_clock, TRUE);
