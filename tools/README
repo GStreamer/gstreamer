@@ -67,16 +67,20 @@ For mpeg1 files (video and audio streams respectively):
  gstreamer-launch filesrc location=video.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink }
  gstreamer-launch filesrc location=video.mpg ! mpegdemux audio_00! { queue ! mad ! osssink }
 
-for mpeg1 with both audio and video:
+for mpeg1 with both audio and video (for glib2):
 
  gstreamer-launch filesrc location=video.mpg ! mpegdemux name=demux video_00! { queue ! mpeg2dec ! sdlvideosink } demux.audio_00! { queue ! mad ! osssink }
+
+for mpeg1 with both audio and video (for gtk1.2, the shim doesn't handle the 'name' property yet):
+
+ gstreamer-launch filesrc location=video.mpg ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink } mpegdemux0.audio_00! { queue ! mad ! osssink }
 
 For mpeg2 files (video and audio streams respectively):
  
  gstreamer-launch filesrc location=video.mpeg ! mpegdemux video_00! { queue ! mpeg2dec ! sdlvideosink }
  gstreamer-launch filesrc location=video.mpeg ! mpegdemux private_stream_1.0! { queue ! a52dec ! osssink }
 
-for mpeg2 with both audio and video:
+for mpeg2 with both audio and video (glib2):
 
  gstreamer-launch filesrc location=video.mpg ! mpegdemux name=demux video_00! { queue ! mpeg2dec ! sdlvideosink } demux.private_stream_1.0! { queue ! a52dec ! osssink }
 
