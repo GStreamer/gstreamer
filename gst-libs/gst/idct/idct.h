@@ -23,6 +23,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 typedef enum {
   GST_IDCT_DEFAULT,    
   GST_IDCT_INT,	
@@ -47,5 +49,7 @@ GstIDCT *gst_idct_new(GstIDCTMethod method);
 #define gst_idct_convert(idct, blocks) (idct)->convert((blocks))
 #define gst_idct_convert_sparse(idct, blocks) (idct)->convert_sparse((blocks))
 void gst_idct_destroy(GstIDCT *idct);
+
+G_END_DECLS
 
 #endif /* __GST_IDCT_H__ */

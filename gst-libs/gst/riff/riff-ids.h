@@ -24,6 +24,8 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 /* RIFF types */
 #define GST_RIFF_RIFF_WAVE GST_MAKE_FOURCC ('W','A','V','E')
 #define GST_RIFF_RIFF_AVI  GST_MAKE_FOURCC ('A','V','I',' ')
@@ -327,5 +329,7 @@ typedef struct _gst_riff_index_entry {
 typedef struct _gst_riff_dmlh {
   guint32 totalframes;
 } gst_riff_dmlh;
+
+G_END_DECLS
 
 #endif /* __GST_RIFF_IDS_H__ */

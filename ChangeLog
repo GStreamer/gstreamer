@@ -1,3 +1,18 @@
+2005-02-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/multichannel.h:
+	* gst-libs/gst/gconf/gconf.h:
+	* gst-libs/gst/idct/idct.h:
+	* gst-libs/gst/media-info/media-info-priv.h:
+	* gst-libs/gst/play/play.h:
+	* gst-libs/gst/resample/private.h:
+	* gst-libs/gst/resample/resample.h:
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/video/video.h:
+	* gst-libs/gst/video/videosink.h:
+	  Add G_BEGIN_DECLS and G_END_DECLS around headers where
+	  missing, so that they work when included from C++ code.
+
 2005-02-09  David Schleef  <ds@schleef.org>
 
 	* testsuite/gst-lint: Check for non-statically scoped
