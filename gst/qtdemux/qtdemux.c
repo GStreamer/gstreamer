@@ -687,9 +687,10 @@ static void gst_qtdemux_loop_header (GstElement *element)
 void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
 {
   if(stream->subtype == GST_MAKE_FOURCC('v','i','d','e')){
+    gchar *name = g_strdup_printf ("video_%02d", qtdemux->n_video_streams);
     stream->pad = gst_pad_new_from_template (
-	gst_static_pad_template_get(&gst_qtdemux_videosrc_template),
-        g_strdup_printf ("video_%02d", qtdemux->n_video_streams));
+	gst_static_pad_template_get(&gst_qtdemux_videosrc_template), name);
+    g_free (name);
     stream->fps = 1. * GST_SECOND / stream->samples[0].duration;
     if(stream->caps){
       gst_caps_set_simple(stream->caps,
@@ -699,9 +700,10 @@ void gst_qtdemux_add_stream(GstQTDemux *qtdemux, QtDemuxStream *stream)
     }
     qtdemux->n_video_streams++;
   }else{
+    gchar *name = g_strdup_printf ("audio_%02d", qtdemux->n_audio_streams);
     stream->pad = gst_pad_new_from_template (
-	gst_static_pad_template_get(&gst_qtdemux_audiosrc_template),
-        g_strdup_printf ("audio_%02d", qtdemux->n_audio_streams));
+	gst_static_pad_template_get(&gst_qtdemux_audiosrc_template), name);
+    g_free (name);
     if(stream->caps){
       gst_caps_set_simple(stream->caps,
 	  "rate", G_TYPE_INT, (int)stream->rate,
@@ -1600,6 +1602,7 @@ done:
 
       for(j=first_chunk;j<last_chunk;j++){
         int chunk_offset;
+        if(j>=n_samples)goto done2;
         if(stco){
           chunk_offset = QTDEMUX_GUINT32_GET(stco->data + 16 + j*4);
         }else{
@@ -1620,7 +1623,6 @@ done:
 #endif
 	samples[j].sample_index = sample_index;
 	sample_index += samples_per_chunk;
-	if(j>=n_samples)goto done2;
       }
     }
 /*
