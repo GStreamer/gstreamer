@@ -174,8 +174,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libgstmedia-info*.so.0.0.0
 %doc AUTHORS COPYING README RELEASE REQUIREMENTS
 %{_bindir}/gst-launch-ext-%{majorminor}
 %{_bindir}/gst-visualise-%{majorminor}
-%{_mandir}/man1/gst-launch-ext.*
-%{_mandir}/man1/gst-visualise.1.*
+%{_mandir}/man1/gst-launch-ext-%{majorminor}.*
+%{_mandir}/man1/gst-visualise-%{majorminor}*
 %{_libdir}/libgstplay-%{majorminor}.so.*
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudio.so
@@ -306,11 +306,13 @@ GStreamer support libraries header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audioclock.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mixer/mixer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/navigation/navigation.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
 %{_libdir}/pkgconfig/gstreamer-libs-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-play-%{majorminor}.pc
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf-%{majorminor}.so
 %{_libdir}/libgstplay-%{majorminor}.so
+%{_libdir}/libgstnavigation.so
 
 # Here are all the packages depending on external libs #
 
@@ -824,6 +826,10 @@ Plug-in for playing ASF movies under GStreamer.
 
 
 %changelog
+* Sat Sep 27 2003 Christian Schaller <Uraeus@gnome.org>
+- Add majorminor to man page names
+- add navigation lib to package
+
 * Tue Sep 11 2003 Christian Schaller <Uraeus@gnome.org>
 - Add -%{majorminor} to each instance of gst-register
 
