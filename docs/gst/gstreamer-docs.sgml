@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY % version-entities SYSTEM "../version.entities">
+<!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
 <!ENTITY Gst SYSTEM "xml/gst.xml">
 <!ENTITY GstAtomic SYSTEM "xml/gstatomic.xml">

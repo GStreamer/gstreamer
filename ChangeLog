@@ -1,3 +1,11 @@
+2004-05-20  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/libs/Makefile.am:
+	* docs/libs/gstreamer-libs-docs.sgml:
+          fix distcheck issues
+
 2004-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/dataprotocol/Makefile.am:

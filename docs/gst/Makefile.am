@@ -212,7 +212,7 @@ tmpl.stamp: tmpl-build.stamp
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB)
 	@echo '*** Building XML ***'
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) --output-format=xml $(MKDB_OPTIONS) | tee sgml-build.log
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(srcdir)/$(DOC_MAIN_SGML_FILE) --output-format=xml $(MKDB_OPTIONS) | tee sgml-build.log
 	@if grep "WARNING:" sgml-build.log > /dev/null; then exit 1; fi
 	rm sgml-build.log
 	touch sgml-build.stamp
@@ -227,15 +227,20 @@ sgml.stamp: sgml-build.stamp
 # use bytes; in gtkdoc-fixxref
 html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	@echo '*** Building HTML ***'
-	test -d html || mkdir html
-	cd html && gtkdoc-mkhtml $(DOC_MODULE) $(srcdir)/../$(DOC_MAIN_SGML_FILE)
+	if test -d html; then rm -rf html; fi
+	mkdir html
+	cp $(srcdir)/$(DOC_MAIN_SGML_FILE) html
+	cp -pr xml html
+	cp ../version.entities html
+	cd html && gtkdoc-mkhtml $(DOC_MODULE) $(DOC_MAIN_SGML_FILE)
+	rm -f html/$(DOC_MAIN_SGML_FILE)
+	rm -rf xml
+	rm -f html/version.entities
 	test "x$(HTML_IMAGES)" = "x" || for i in "" $(HTML_IMAGES) ; do \
 	    if test "$$i" != ""; then cp $(srcdir)/$$i html ; fi; done
 	@echo '-- Fixing Crossreferences' 
 	LANG=C && gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
 	touch html-build.stamp
-else
-all-local:
 endif
 
 clean-local:
