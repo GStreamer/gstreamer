@@ -27,6 +27,7 @@
 #include <glib.h>
 #include <gst/gsttrace.h>
 
+#ifdef HAVE_RDTS
 __inline__ void read_tsc(guint64 *dst) {
   __asm__ __volatile__
     ("rdtsc"
@@ -34,6 +35,10 @@ __inline__ void read_tsc(guint64 *dst) {
      :
      : "eax", "edx");
 }
+#else
+__inline__ void read_tsc(guint64 *dst) {
+}
+#endif
 
 void gst_trace_read_tsc(guint64 *dst) {
   read_tsc(dst);
