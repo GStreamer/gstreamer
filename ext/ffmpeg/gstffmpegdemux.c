@@ -241,7 +241,7 @@ gst_ffmpegdemux_loop (GstElement *element)
 					       ffmpegdemux->sinkpad),
 			      oclass->in_plugin, 0, NULL);
     if (res < 0) {
-      gst_element_error (ffmpegdemux, LIBRARY, TOO_LAZY, NULL,
+      GST_ELEMENT_ERROR (ffmpegdemux, LIBRARY, TOO_LAZY, NULL,
 			 ("Failed to open demuxer/file context"));
       return;
     }
