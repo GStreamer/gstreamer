@@ -476,7 +476,7 @@ add_one_tag (const GstTagList *list, const gchar *tag,
       comments = gst_tag_to_vorbis_comments (list, tag);
       for (it = comments; it != NULL; it = it->next) {
 	      FLAC__StreamMetadata_VorbisComment_Entry commment_entry;
-	      commment_entry.length = GUINT32_TO_LE (strlen(it->data));
+	      commment_entry.length = strlen(it->data);
 	      commment_entry.entry  =  it->data;
 	      FLAC__metadata_object_vorbiscomment_insert_comment (flacenc->meta[0], 
 								  flacenc->meta[0]->data.vorbis_comment.num_comments, 
