@@ -1219,6 +1219,21 @@ GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz], musicbrainz, [
   AC_SUBST(MUSICBRAINZ_LIBS)
 ])
 
+dnl *** nas ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_NAS, true)
+GST_CHECK_FEATURE(NAS, [nas plug-in], nassink, [
+  HAVE_NAS="no"
+  if test "x$HAVE_X" = "xyes"; then
+    save_cppflags=$CFLAGS
+    CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+    GST_CHECK_LIBHEADER(NAS, audio, AuOpenServer, $X_LIBS, audio/audiolib.h,
+      NAS_LIBS="$X_LIBS -laudio" NAS_CFLAGS="$X_CFLAGS")
+    CPPFLAGS="$save_cppflags"
+  fi
+  AC_SUBST(NAS_CFLAGS)
+  AC_SUBST(NAS_LIBS)
+])
+
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
 GST_CHECK_FEATURE(PANGO, [pango], pango, [
@@ -1659,6 +1674,7 @@ ext/mpeg2dec/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
 ext/musicbrainz/Makefile
+ext/nas/Makefile
 ext/ogg/Makefile
 ext/pango/Makefile
 ext/raw1394/Makefile
