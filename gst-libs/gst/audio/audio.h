@@ -58,7 +58,7 @@ G_BEGIN_DECLS
   "rate = (int) [ 1, MAX ], " \
   "channels = (int) [ 1, MAX ], " \
   "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-  "width = (int) { 8, 16, 32 }, " \
+  "width = (int) { 8, 16, 24, 32 }, " \
   "depth = (int) [ 1, 32 ], " \
   "signed = (boolean) { true, false }" 
 
