@@ -535,7 +535,7 @@ gst_sf_link (GstPad *pad, const GstCaps *caps)
   gst_structure_get_int  (structure, "rate", &this->rate);
   gst_structure_get_int  (structure, "buffer-frames", &this->buffer_frames);
 
-  INFO_OBJ (this, "linked pad %s:%s with fixed caps, frames=%d, rate=%d",
+  INFO_OBJ (this, "linked pad %s:%s with fixed caps, rate=%d, frames=%d",
             GST_DEBUG_PAD_NAME (pad), this->rate, this->buffer_frames);
 
   if (this->numchannels) {
@@ -756,6 +756,7 @@ gst_sf_loop (GstElement *element)
     for (i=0,l=this->channels; l; l=l->next,i++) {
       channel = GST_SF_CHANNEL (l);
       
+    pull_again:
       in = GST_BUFFER (gst_pad_pull (channel->pad));
 
       if (buffer_frames == 0) {
@@ -776,13 +777,24 @@ gst_sf_loop (GstElement *element)
           return; /* we've already set gst_element_error */
 
       if (GST_IS_EVENT (in)) {
-        num_to_write = 0;
-      } else {
+        switch (GST_EVENT_TYPE (in)) {
+        case GST_EVENT_EOS:
+        case GST_EVENT_INTERRUPT:
+          num_to_write = 0;
+          break;
+        default:
+          goto pull_again;
+          break;
+        }
+      }
+        
+      if (num_to_write) {
         data = (gfloat*)GST_BUFFER_DATA (in);
         num_to_write = MIN (num_to_write, GST_BUFFER_SIZE (in) / sizeof (gfloat));
         for (j=0; j<num_to_write; j++)
           buf[j * nchannels + i % nchannels] = data[j];
       }
+
       gst_data_unref ((GstData*)in);
     }
 
