@@ -131,6 +131,9 @@ Notes for converters:
      the caps that should be returned.  (This is how to do it
      _theoretically_, but an optimal implementation will probably be 
      quite different.)
+     For example, a simple way to do this for an element that can convert
+     a given field of the caps is to remove the field(s) from the structure,
+     then intersect with the pad template.
 
    - As an example, videoscale can convert any sized video to any other
      sized video.  Its getcaps function iterates over each structure in
