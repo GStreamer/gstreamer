@@ -58,6 +58,7 @@ static gboolean 		gst_osssink_query 		(GstElement *element, GstQueryType type,
 static gboolean 		gst_osssink_sink_query 		(GstPad *pad, GstQueryType type,
 								 GstFormat *format, gint64 *value);
 
+static GstCaps *                gst_osssink_sink_fixate         (GstPad *pad, const GstCaps *caps, gpointer user_data);
 static GstPadLinkReturn		gst_osssink_sinkconnect		(GstPad *pad, const GstCaps *caps);
 
 static void 			gst_osssink_set_property	(GObject *object, guint prop_id, const GValue *value, 
@@ -193,6 +194,7 @@ gst_osssink_init (GstOssSink *osssink)
 		  gst_static_pad_template_get (&osssink_sink_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (osssink), osssink->sinkpad);
   gst_pad_set_link_function (osssink->sinkpad, gst_osssink_sinkconnect);
+  gst_pad_set_fixate_function (osssink->sinkpad, gst_osssink_sink_fixate);
   gst_pad_set_convert_function (osssink->sinkpad, gst_osssink_convert);
   gst_pad_set_query_function (osssink->sinkpad, gst_osssink_sink_query);
   gst_pad_set_query_type_function (osssink->sinkpad, gst_osssink_get_query_types);
@@ -213,6 +215,30 @@ gst_osssink_init (GstOssSink *osssink)
   GST_FLAG_SET (osssink, GST_ELEMENT_EVENT_AWARE);
 }
 
+static GstCaps *
+gst_osssink_sink_fixate (GstPad *pad, const GstCaps *caps, gpointer user_data)
+{
+  GstCaps *newcaps;
+  GstStructure *structure;
+
+  structure = gst_structure_copy(gst_caps_get_structure (caps, 0));
+  newcaps = gst_caps_new_full (structure, NULL);
+
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "width", 16)) {
+    return newcaps;
+  }
+  if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2)) {
+    return newcaps;
+  }
+
+  return newcaps;
+}
 
 static GstPadLinkReturn 
 gst_osssink_sinkconnect (GstPad *pad, const GstCaps *caps) 

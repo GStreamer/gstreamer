@@ -1,3 +1,9 @@
+2003-12-23  David Schleef  <ds@schleef.org>
+
+	* gst/volume/gstvolume.c: (volume_init): Proxy getcaps.
+	* sys/oss/gstosssink.c: (gst_osssink_init),
+	(gst_osssink_sink_fixate): Add fixate function.
+
 2003-12-24  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c:
