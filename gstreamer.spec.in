@@ -170,6 +170,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_bindir}/gst-register
 %{_bindir}/gst-feedback
 %{_bindir}/gst-xmllaunch
+%{_bindir}/gst-typefind
 %{_mandir}/man1/gst-feedback.*
 %{_mandir}/man1/gst-xmllaunch.*
 %{_mandir}/man1/gst-complete.*
@@ -178,6 +179,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_mandir}/man1/gst-launch.*
 %{_mandir}/man1/gst-md5sum.*
 %{_mandir}/man1/gst-register.*
+%{_mandir}/man1/gst-typefind.*
 
 
 %files devel
