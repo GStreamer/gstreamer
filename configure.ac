@@ -362,7 +362,7 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl *** dv ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV, true)
 GST_CHECK_FEATURE(DV, [dv library], dv, [
-  GST_CHECK_LIBHEADER(DV, dv, dv_init, -lm $GST_CFLAGS $GST_LIBS, libdv/dv.h, DV_LIBS="-ldv")
+  GST_CHECK_LIBHEADER(DV, dv, dv_init, -lm, libdv/dv.h, DV_LIBS="-ldv")
   AC_SUBST(DV_LIBS)
 ])
 
