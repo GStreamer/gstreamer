@@ -179,10 +179,6 @@ static void gst_entry_scheduler_remove_element (GstScheduler * sched,
     GstElement * element);
 static GstElementStateReturn gst_entry_scheduler_state_transition (GstScheduler
     * sched, GstElement * element, gint transition);
-static void gst_entry_scheduler_lock_element (GstScheduler * sched,
-    GstElement * element);
-static void gst_entry_scheduler_unlock_element (GstScheduler * sched,
-    GstElement * element);
 static gboolean gst_entry_scheduler_yield (GstScheduler * sched,
     GstElement * element);
 static gboolean gst_entry_scheduler_interrupt (GstScheduler * sched,
@@ -193,8 +189,8 @@ static void gst_entry_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
     GstPad * sinkpad);
 static void gst_entry_scheduler_pad_unlink (GstScheduler * sched,
     GstPad * srcpad, GstPad * sinkpad);
-static GstData *gst_entry_scheduler_select (GstScheduler * sched,
-    GstPad ** pulled_from, GList * list);
+static GstData *gst_entry_scheduler_pad_select (GstScheduler * sched,
+    GstPad ** pulled_from, GstPad ** pads);
 static GstSchedulerState gst_entry_scheduler_iterate (GstScheduler * sched);
 static void gst_entry_scheduler_show (GstScheduler * scheduler);
 
@@ -211,14 +207,12 @@ gst_entry_scheduler_class_init (gpointer klass, gpointer class_data)
   scheduler->add_element = gst_entry_scheduler_add_element;
   scheduler->remove_element = gst_entry_scheduler_remove_element;
   scheduler->state_transition = gst_entry_scheduler_state_transition;
-  scheduler->lock_element = gst_entry_scheduler_lock_element;
-  scheduler->unlock_element = gst_entry_scheduler_unlock_element;
   scheduler->yield = gst_entry_scheduler_yield;
   scheduler->interrupt = gst_entry_scheduler_interrupt;
   scheduler->error = gst_entry_scheduler_error;
   scheduler->pad_link = gst_entry_scheduler_pad_link;
   scheduler->pad_unlink = gst_entry_scheduler_pad_unlink;
-  //scheduler->pad_select = gst_entry_scheduler_pad_select;
+  scheduler->pad_select = gst_entry_scheduler_pad_select;
   scheduler->clock_wait = NULL;
   scheduler->iterate = gst_entry_scheduler_iterate;
   scheduler->show = gst_entry_scheduler_show;
@@ -229,6 +223,7 @@ gst_entry_scheduler_class_init (gpointer klass, gpointer class_data)
 static void
 gst_entry_scheduler_init (GstEntryScheduler * scheduler)
 {
+  GST_FLAG_SET (scheduler, GST_SCHEDULER_FLAG_NEW_API);
 }
 
 /*
@@ -247,7 +242,7 @@ gst_entry_scheduler_init (GstEntryScheduler * scheduler)
 typedef struct
 {
   CothreadPrivate element;
-  GList *sinkpads;
+  GstPad **sinkpads;
 }
 LoopPrivate;
 
@@ -257,6 +252,7 @@ static gboolean
 _can_schedule_loop (GstRealPad * pad)
 {
   LoopPrivate *priv;
+  gint i = 0;
 
   g_assert (PAD_PRIVATE (pad));
 
@@ -268,7 +264,11 @@ _can_schedule_loop (GstRealPad * pad)
   if (!priv->sinkpads)
     return FALSE;
 
-  return g_list_find (priv->sinkpads, pad) != NULL;
+  while (priv->sinkpads[i]) {
+    if (pad == GST_REAL_PAD (priv->sinkpads[i++]))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 static int
@@ -709,14 +709,14 @@ gst_entry_scheduler_get_handler (GstPad * pad)
 {
   GstData *data;
   GstEntryScheduler *sched = GST_ENTRY_SCHEDULER (gst_pad_get_scheduler (pad));
-  GList list = { NULL, NULL, NULL };
+  GstPad *pads[2] = { NULL, NULL };
   GstPad *ret;
 
   pad = GST_PAD_PEER (pad);
-  list.data = pad;
+  pads[0] = pad;
   GST_LOG_OBJECT (sched, "pad %s:%s pulls", GST_DEBUG_PAD_NAME (pad));
 
-  data = gst_entry_scheduler_select (GST_SCHEDULER (sched), &ret, &list);
+  data = gst_entry_scheduler_pad_select (GST_SCHEDULER (sched), &ret, pads);
   g_assert (pad == ret);
 
   GST_LOG_OBJECT (sched, "done with %s:%s", GST_DEBUG_PAD_NAME (pad));
@@ -735,30 +735,29 @@ gst_entry_scheduler_event_handler (GstPad * srcpad, GstEvent * event)
  */
 
 static GstData *
-gst_entry_scheduler_select (GstScheduler * scheduler, GstPad ** pulled_from,
-    GList * list)
+gst_entry_scheduler_pad_select (GstScheduler * scheduler, GstPad ** pulled_from,
+    GstPad ** pads)
 {
   GstData *data;
   GstRealPad *pad;
-  GList *walk;
   GstElement *element = NULL;
   GstEntryScheduler *sched = GST_ENTRY_SCHEDULER (scheduler);
+  gint i = 0;
 
   /* sanity check */
-  for (walk = list; walk; walk = g_list_next (walk)) {
-    pad = GST_REAL_PAD (walk->data);
-    g_assert (!element || element == gst_pad_get_parent (GST_PAD (pad)));
+  while (pads[i]) {
+    pad = GST_REAL_PAD (pads[i++]);
     if (PAD_PRIVATE (pad)->bufpen) {
       sched->schedule_now =
           g_list_remove (sched->schedule_now, PAD_PRIVATE (pad));
       goto found;
     }
-    element = gst_pad_get_parent (GST_PAD (pad));
   }
+  element = gst_pad_get_parent (GST_PAD (pad));
   g_assert (element);
   g_assert (ELEMENT_PRIVATE (element)->main ==
       gst_entry_scheduler_loop_wrapper);
-  LOOP_PRIVATE (element)->sinkpads = list;
+  LOOP_PRIVATE (element)->sinkpads = pads;
   ELEMENT_PRIVATE (element)->wait = WAIT_FOR_PADS;
   schedule_next_element (SCHED (element));
   LOOP_PRIVATE (element)->sinkpads = NULL;
@@ -935,18 +934,6 @@ gst_entry_scheduler_state_transition (GstScheduler * scheduler,
   }
 
   return GST_STATE_SUCCESS;
-}
-
-static void
-gst_entry_scheduler_lock_element (GstScheduler * sched, GstElement * element)
-{
-  g_warning ("What's this?");
-}
-
-static void
-gst_entry_scheduler_unlock_element (GstScheduler * sched, GstElement * element)
-{
-  g_warning ("What's this?");
 }
 
 static gboolean

@@ -323,10 +323,6 @@ static GstElementStateReturn gst_opt_scheduler_state_transition (GstScheduler *
     sched, GstElement * element, gint transition);
 static void gst_opt_scheduler_scheduling_change (GstScheduler * sched,
     GstElement * element);
-static void gst_opt_scheduler_lock_element (GstScheduler * sched,
-    GstElement * element);
-static void gst_opt_scheduler_unlock_element (GstScheduler * sched,
-    GstElement * element);
 static gboolean gst_opt_scheduler_yield (GstScheduler * sched,
     GstElement * element);
 static gboolean gst_opt_scheduler_interrupt (GstScheduler * sched,
@@ -337,8 +333,6 @@ static void gst_opt_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
     GstPad * sinkpad);
 static void gst_opt_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad,
     GstPad * sinkpad);
-static void gst_opt_scheduler_pad_select (GstScheduler * sched,
-    GList * padlist);
 static GstSchedulerState gst_opt_scheduler_iterate (GstScheduler * sched);
 
 static void gst_opt_scheduler_show (GstScheduler * sched);
@@ -407,10 +401,6 @@ gst_opt_scheduler_class_init (GstOptSchedulerClass * klass)
       GST_DEBUG_FUNCPTR (gst_opt_scheduler_state_transition);
   gstscheduler_class->scheduling_change =
       GST_DEBUG_FUNCPTR (gst_opt_scheduler_scheduling_change);
-  gstscheduler_class->lock_element =
-      GST_DEBUG_FUNCPTR (gst_opt_scheduler_lock_element);
-  gstscheduler_class->unlock_element =
-      GST_DEBUG_FUNCPTR (gst_opt_scheduler_unlock_element);
   gstscheduler_class->yield = GST_DEBUG_FUNCPTR (gst_opt_scheduler_yield);
   gstscheduler_class->interrupt =
       GST_DEBUG_FUNCPTR (gst_opt_scheduler_interrupt);
@@ -418,8 +408,6 @@ gst_opt_scheduler_class_init (GstOptSchedulerClass * klass)
   gstscheduler_class->pad_link = GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_link);
   gstscheduler_class->pad_unlink =
       GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_unlink);
-  gstscheduler_class->pad_select =
-      GST_DEBUG_FUNCPTR (gst_opt_scheduler_pad_select);
   gstscheduler_class->clock_wait = NULL;
   gstscheduler_class->iterate = GST_DEBUG_FUNCPTR (gst_opt_scheduler_iterate);
   gstscheduler_class->show = GST_DEBUG_FUNCPTR (gst_opt_scheduler_show);
@@ -1787,20 +1775,6 @@ gst_opt_scheduler_remove_element (GstScheduler * sched, GstElement * element)
   GST_ELEMENT (element)->sched_private = NULL;
 }
 
-static void
-gst_opt_scheduler_lock_element (GstScheduler * sched, GstElement * element)
-{
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
-  g_warning ("lock element, implement me");
-}
-
-static void
-gst_opt_scheduler_unlock_element (GstScheduler * sched, GstElement * element)
-{
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
-  g_warning ("unlock element, implement me");
-}
-
 static gboolean
 gst_opt_scheduler_yield (GstScheduler * sched, GstElement * element)
 {
@@ -2313,14 +2287,6 @@ gst_opt_scheduler_pad_unlink (GstScheduler * sched,
       }
     }
   }
-}
-
-static void
-gst_opt_scheduler_pad_select (GstScheduler * sched, GList * padlist)
-{
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER (sched);
-
-  g_warning ("pad select, implement me");
 }
 
 /* a scheduler iteration is done by looping and scheduling the active chains */

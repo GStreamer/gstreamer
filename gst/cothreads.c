@@ -363,10 +363,6 @@ cothread_destroy (cothread_state * cothread)
   /* cothread 0 needs to be destroyed specially */
   g_assert (cothreadnum != 0);
 
-  /* we have to unlock here because we might be switched out 
-   * with the lock held */
-  cothread_unlock (cothread);
-
   /* doing cleanups of the cothread create */
   GST_CAT_DEBUG (GST_CAT_COTHREADS,
       "destroy cothread %d with magic number 0x%x", cothreadnum,
@@ -679,43 +675,5 @@ nocurrent:
   exit (2);
 #endif /* COTHREAD_PARANOID */
 selfswitch:
-  g_warning
-      ("cothread: trying to switch to same thread, legal but not necessary");
   return;
-}
-
-/**
- * cothread_lock:
- * @cothread: cothread state to lock
- *
- * Locks the cothread state.
- */
-void
-cothread_lock (cothread_state * cothread)
-{
-}
-
-/**
- * cothread_trylock:
- * @cothread: cothread state to try to lock
- *
- * Try to lock the cothread state
- *
- * Returns: TRUE if the cothread could be locked.
- */
-gboolean
-cothread_trylock (cothread_state * cothread)
-{
-  return TRUE;
-}
-
-/**
- * cothread_unlock:
- * @cothread: cothread state to unlock
- *
- * Unlock the cothread state.
- */
-void
-cothread_unlock (cothread_state * cothread)
-{
 }

@@ -61,9 +61,6 @@ typedef cothread_state cothread;
 #define do_cothread_context_init()		(cothread_context_init ())
 #define do_cothread_context_destroy(context)	cothread_context_free (context)
   
-#define do_cothread_lock(cothread)		cothread_lock(cothread)
-#define do_cothread_unlock(cothread)		cothread_unlock(cothread)
-
 #define do_cothread_get_current(context)		(cothread_current())
 #define do_cothread_get_main(context)		(cothread_current_main())
   

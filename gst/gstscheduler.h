@@ -40,6 +40,8 @@ G_BEGIN_DECLS
 typedef enum {
   /* this scheduler works with a fixed clock */
   GST_SCHEDULER_FLAG_FIXED_CLOCK	= GST_OBJECT_FLAG_LAST,
+  /* this scheduler supports select and lock calls */
+  GST_SCHEDULER_FLAG_NEW_API,
 
   /* padding */
   GST_SCHEDULER_FLAG_LAST 		= GST_OBJECT_FLAG_LAST + 4
@@ -87,14 +89,17 @@ struct _GstSchedulerClass {
   void 			(*remove_scheduler)	(GstScheduler *sched, GstScheduler *sched2);
   GstElementStateReturn (*state_transition)	(GstScheduler *sched, GstElement *element, gint transition);
   void			(*scheduling_change)	(GstScheduler *sched, GstElement *element);
-  void 			(*lock_element)		(GstScheduler *sched, GstElement *element);
-  void 			(*unlock_element)	(GstScheduler *sched, GstElement *element);
+  /* next two are optional, require NEW_API flag */
+  /* FIXME 0.9: rename to (un)lock_object */
+  void 			(*lock_element)		(GstScheduler *sched, GstObject *object);
+  void 			(*unlock_element)	(GstScheduler *sched, GstObject *object);
   gboolean		(*yield)		(GstScheduler *sched, GstElement *element);
   gboolean		(*interrupt)		(GstScheduler *sched, GstElement *element);
   void 			(*error)		(GstScheduler *sched, GstElement *element);
   void 			(*pad_link)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
   void 			(*pad_unlink)		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
-  void 			(*pad_select)		(GstScheduler *sched, GList *padlist);
+  /* optional, requires NEW_API flag */
+  GstData *   		(*pad_select)		(GstScheduler *sched, GstPad **selected, GstPad **pads);
   GstClockReturn	(*clock_wait)		(GstScheduler *sched, GstElement *element,
 		  				 GstClockID id, GstClockTimeDiff *jitter);
   GstSchedulerState 	(*iterate)		(GstScheduler *sched);
@@ -119,14 +124,18 @@ void			gst_scheduler_add_scheduler	(GstScheduler *sched, GstScheduler *sched2);
 void			gst_scheduler_remove_scheduler	(GstScheduler *sched, GstScheduler *sched2);
 GstElementStateReturn	gst_scheduler_state_transition	(GstScheduler *sched, GstElement *element, gint transition);
 void			gst_scheduler_scheduling_change	(GstScheduler *sched, GstElement *element);
+#ifndef GST_DISABLE_DEPRECATED
 void			gst_scheduler_lock_element	(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_unlock_element	(GstScheduler *sched, GstElement *element);
+#endif
 gboolean		gst_scheduler_yield		(GstScheduler *sched, GstElement *element);
 gboolean		gst_scheduler_interrupt		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_error		(GstScheduler *sched, GstElement *element);
 void			gst_scheduler_pad_link		(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
 void			gst_scheduler_pad_unlink	(GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad);
+#ifndef GST_DISABLE_DEPRECATED
 GstPad*                 gst_scheduler_pad_select 	(GstScheduler *sched, GList *padlist);
+#endif
 GstClockReturn		gst_scheduler_clock_wait	(GstScheduler *sched, GstElement *element,
 							 GstClockID id, GstClockTimeDiff *jitter);
 gboolean		gst_scheduler_iterate		(GstScheduler *sched);

@@ -1,5 +1,39 @@
 2004-04-04  Benjamin Otte  <otte@gnome.org>
 
+	* gst/gstpad.c: (gst_pad_collect_array), (gst_pad_collectv),
+	(gst_pad_collect), (gst_pad_collect_valist), (gst_pad_selectv),
+	(gst_pad_select):
+	* gst/gstpad.h:
+	* gst/gstscheduler.c: (gst_scheduler_pad_select),
+	(gst_scheduler_lock_element), (gst_scheduler_unlock_element):
+	* gst/gstscheduler.h:
+	  implement gst_pad_collect as replacement for gst_pad_select.
+	  deprecate gst_pad_select and gst_scheduler_(un)lock_element
+	  add new flag GST_SCHEDULER_FLAG_NEW_API for API that implements the
+	  new pad_select, lock and unlock calls.
+	* gst/cothreads.c: (cothread_destroy), (cothread_switch):
+	* gst/cothreads.h:
+	* gst/schedulers/cothreads_compat.h:
+	* gst/schedulers/gthread-cothreads.h:
+	  remove unused cothread_lock and cothread_unlock calls
+	* gst/schedulers/entryscheduler.c:
+	(gst_entry_scheduler_class_init), (gst_entry_scheduler_init),
+	(_can_schedule_loop), (gst_entry_scheduler_get_handler),
+	(gst_entry_scheduler_pad_select):
+	  update to new API
+	* gst/schedulers/gstbasicscheduler.c:
+	(gst_basic_scheduler_class_init), (gst_basic_scheduler_init),
+	(gst_basic_scheduler_pad_select):
+	  remove useless lock and unlock calls, update pad_select to new API
+	  (untested)
+	* gst/schedulers/gstoptimalscheduler.c:
+	(gst_opt_scheduler_class_init):
+	  remove useless select, lock and unlock function calls
+	* gst/elements/gstaggregator.c: (gst_aggregator_loop):
+	  use gst_pad_collect instead of gst_pad_select
+
+2004-04-04  Benjamin Otte  <otte@gnome.org>
+
 	* gst/schedulers/entryscheduler.c: (_can_schedule_get),
 	(can_schedule_pad), (can_schedule), (schedule), (schedule_forward),
 	(schedule_next_element), (print_entry):

@@ -129,10 +129,6 @@ static void gst_basic_scheduler_remove_element (GstScheduler * sched,
     GstElement * element);
 static GstElementStateReturn gst_basic_scheduler_state_transition (GstScheduler
     * sched, GstElement * element, gint transition);
-static void gst_basic_scheduler_lock_element (GstScheduler * sched,
-    GstElement * element);
-static void gst_basic_scheduler_unlock_element (GstScheduler * sched,
-    GstElement * element);
 static gboolean gst_basic_scheduler_yield (GstScheduler * sched,
     GstElement * element);
 static gboolean gst_basic_scheduler_interrupt (GstScheduler * sched,
@@ -143,8 +139,8 @@ static void gst_basic_scheduler_pad_link (GstScheduler * sched, GstPad * srcpad,
     GstPad * sinkpad);
 static void gst_basic_scheduler_pad_unlink (GstScheduler * sched,
     GstPad * srcpad, GstPad * sinkpad);
-static void gst_basic_scheduler_pad_select (GstScheduler * sched,
-    GList * padlist);
+static GstData *gst_basic_scheduler_pad_select (GstScheduler * sched,
+    GstPad ** selected, GstPad ** padlist);
 static GstSchedulerState gst_basic_scheduler_iterate (GstScheduler * sched);
 
 static void gst_basic_scheduler_show (GstScheduler * sched);
@@ -229,10 +225,6 @@ gst_basic_scheduler_class_init (GstBasicSchedulerClass * klass)
       GST_DEBUG_FUNCPTR (gst_basic_scheduler_remove_element);
   gstscheduler_class->state_transition =
       GST_DEBUG_FUNCPTR (gst_basic_scheduler_state_transition);
-  gstscheduler_class->lock_element =
-      GST_DEBUG_FUNCPTR (gst_basic_scheduler_lock_element);
-  gstscheduler_class->unlock_element =
-      GST_DEBUG_FUNCPTR (gst_basic_scheduler_unlock_element);
   gstscheduler_class->yield = GST_DEBUG_FUNCPTR (gst_basic_scheduler_yield);
   gstscheduler_class->interrupt =
       GST_DEBUG_FUNCPTR (gst_basic_scheduler_interrupt);
@@ -258,6 +250,8 @@ gst_basic_scheduler_init (GstBasicScheduler * scheduler)
   scheduler->num_elements = 0;
   scheduler->chains = NULL;
   scheduler->num_chains = 0;
+
+  GST_FLAG_SET (scheduler, GST_SCHEDULER_FLAG_NEW_API);
 }
 
 static void
@@ -1197,20 +1191,6 @@ gst_basic_scheduler_state_transition (GstScheduler * sched,
   return GST_STATE_SUCCESS;
 }
 
-static void
-gst_basic_scheduler_lock_element (GstScheduler * sched, GstElement * element)
-{
-  if (GST_ELEMENT_THREADSTATE (element))
-    do_cothread_lock (GST_ELEMENT_THREADSTATE (element));
-}
-
-static void
-gst_basic_scheduler_unlock_element (GstScheduler * sched, GstElement * element)
-{
-  if (GST_ELEMENT_THREADSTATE (element))
-    do_cothread_unlock (GST_ELEMENT_THREADSTATE (element));
-}
-
 static gboolean
 gst_basic_scheduler_yield (GstScheduler * sched, GstElement * element)
 {
@@ -1336,40 +1316,39 @@ gst_basic_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad,
 #endif
 }
 
-static void
-gst_basic_scheduler_pad_select (GstScheduler * sched, GList * padlist)
+static GstData *
+gst_basic_scheduler_pad_select (GstScheduler * sched, GstPad ** selected,
+    GstPad ** padlist)
 {
-  GstPad *pad = NULL;
-  GList *padlist2 = padlist;
+  GstData *data;
+  GstPad *pad;
+  gint i;
 
   GST_INFO ("performing select");
 
-  while (padlist2) {
-    pad = GST_PAD (padlist2->data);
-
-
-    padlist2 = g_list_next (padlist2);
-  }
-
-  /* else there is nothing ready to consume, set up the select functions */
-  while (padlist) {
-    pad = GST_PAD (padlist->data);
+  while (padlist[i]) {
+    pad = padlist[i];
 
     GST_RPAD_CHAINHANDLER (pad) =
         GST_DEBUG_FUNCPTR (gst_basic_scheduler_select_proxy);
-
-    padlist = g_list_next (padlist);
   }
-  if (pad != NULL) {
-    GstRealPad *peer = GST_RPAD_PEER (pad);
 
-    do_element_switch (GST_PAD_PARENT (peer));
+  do_element_switch (GST_PAD_PARENT (GST_PAD_PEER (pad)));
 
-    /* FIXME disabled for now */
-    /* pad = GST_ELEMENT (GST_PAD_PARENT (pad))->select_pad; */
+  while (padlist[i]) {
+    pad = padlist[i];
 
-    g_assert (pad != NULL);
+    if (GST_RPAD_BUFPEN (pad)) {
+      *selected = pad;
+      data = GST_RPAD_BUFPEN (pad);
+      GST_RPAD_BUFPEN (pad) = NULL;
+    }
+
+    GST_RPAD_CHAINHANDLER (pad) =
+        GST_DEBUG_FUNCPTR (gst_basic_scheduler_chainhandler_proxy);
   }
+
+  return data;
 }
 
 static GstSchedulerState

@@ -443,10 +443,15 @@ void			gst_pad_push				(GstPad *pad, GstData *data);
 GstData*		gst_pad_pull				(GstPad *pad);
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
+#ifndef GST_DISABLE_DEPRECATED
 GstPad*			gst_pad_selectv				(GList *padlist);
 GstPad*			gst_pad_select				(GstPad *pad, ...);
 GstPad*			gst_pad_select_valist			(GstPad *pad, va_list varargs);
-
+#endif
+/* FIXME 0.9: rename to _select? Otherwise rename SchedulerClass pointer */
+GstData *		gst_pad_collectv			(GstPad **selected, const GList *padlist);
+GstData *		gst_pad_collect				(GstPad **selected, GstPad *pad, ...);
+GstData *		gst_pad_collect_valist			(GstPad **selected, GstPad *pad, va_list varargs);
 
 /* convert/query/format functions */
 void			gst_pad_set_formats_function		(GstPad *pad, 

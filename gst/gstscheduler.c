@@ -198,15 +198,8 @@ gst_scheduler_pad_unlink (GstScheduler * sched, GstPad * srcpad,
 GstPad *
 gst_scheduler_pad_select (GstScheduler * sched, GList * padlist)
 {
-  GstSchedulerClass *sclass;
-
   g_return_val_if_fail (GST_IS_SCHEDULER (sched), NULL);
   g_return_val_if_fail (padlist != NULL, NULL);
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->pad_select)
-    sclass->pad_select (sched, padlist);
 
   return NULL;
 }
@@ -418,15 +411,8 @@ gst_scheduler_remove_scheduler (GstScheduler * sched, GstScheduler * sched2)
 void
 gst_scheduler_lock_element (GstScheduler * sched, GstElement * element)
 {
-  GstSchedulerClass *sclass;
-
   g_return_if_fail (GST_IS_SCHEDULER (sched));
   g_return_if_fail (GST_IS_ELEMENT (element));
-
-  sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->lock_element)
-    sclass->lock_element (sched, element);
 }
 
 /**
@@ -445,9 +431,6 @@ gst_scheduler_unlock_element (GstScheduler * sched, GstElement * element)
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   sclass = GST_SCHEDULER_GET_CLASS (sched);
-
-  if (sclass->unlock_element)
-    sclass->unlock_element (sched, element);
 }
 
 /**

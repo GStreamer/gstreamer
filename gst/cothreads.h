@@ -70,10 +70,6 @@ void				cothread_set_private		(cothread_state *cothread,
 								 gpointer data);
 gpointer			cothread_get_private		(cothread_state *cothread);
 
-void				cothread_lock			(cothread_state *cothread);
-gboolean			cothread_trylock		(cothread_state *cothread);
-void				cothread_unlock			(cothread_state *cothread);
-
 cothread_state*			cothread_main			(cothread_context *ctx);
 cothread_state*			cothread_current_main		(void);
 cothread_state*			cothread_current		(void);

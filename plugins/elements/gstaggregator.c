@@ -336,8 +336,7 @@ gst_aggregator_loop (GstElement * element)
 
       debug = "loop_select";
 
-      pad = gst_pad_selectv (aggregator->sinkpads);
-      buf = GST_BUFFER (gst_pad_pull (pad));
+      buf = GST_BUFFER (gst_pad_collectv (&pad, aggregator->sinkpads));
 
       gst_aggregator_push (aggregator, pad, buf, debug);
     } else {

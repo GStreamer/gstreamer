@@ -76,8 +76,6 @@ static cothread *       cothread_create                 (cothread_context *conte
   }G_STMT_END
 static void             do_cothread_switch              (cothread *to);
 static void             do_cothread_destroy             (cothread *thread);
-#define do_cothread_lock(cothread)		/* FIXME */
-#define do_cothread_unlock(cothread)		/* FIXME */
 #define do_cothread_get_current(context) ((context)->current)
 #define do_cothread_get_main(context) ((context)->main)
 
@@ -210,8 +208,5 @@ do_cothread_destroy (cothread *thread)
   /* the mutex was locked by the thread that we joined, no need to lock again */
 }
   
-#define do_cothread_lock(cothread)		/* FIXME */
-#define do_cothread_unlock(cothread)		/* FIXME */
-
 #define do_cothread_get_current(context) ((context)->current)
 #define do_cothread_get_main(context) ((context)->main)

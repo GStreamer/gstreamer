@@ -3116,6 +3116,125 @@ gst_pad_pull (GstPad * pad)
   return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
 }
 
+GstData *
+gst_pad_collect_array (GstScheduler * scheduler, GstPad ** selected,
+    GstPad ** padlist)
+{
+  GstSchedulerClass *klass = GST_SCHEDULER_GET_CLASS (scheduler);
+
+  if (!GST_FLAG_IS_SET (scheduler, GST_SCHEDULER_FLAG_NEW_API) ||
+      !klass->pad_select) {
+    /* better randomness? */
+    if (selected)
+      *selected = padlist[0];
+    return gst_pad_pull (padlist[0]);
+  } else {
+    GstPad *select;
+
+    return klass->pad_select (scheduler, selected ? selected : &select,
+        padlist);
+  }
+}
+
+/**
+ * gst_pad_collectv:
+ * @selected: set to the pad the buffer comes from if not NULL
+ * @padlist: a #GList of sink pads.
+ *
+ * Waits for a buffer on any of the list of pads. Each #GstPad in @padlist must
+ * belong to the same element and be owned by the caller.
+ *
+ * Returns: the #GstData that was available
+ */
+GstData *
+gst_pad_collectv (GstPad ** selected, const GList * padlist)
+{
+  /* need to use alloca here because we must not leak data */
+  GstPad **pads;
+  GstPad *test;
+  GstElement *element = NULL;
+  int i = 0;
+
+  g_return_val_if_fail (padlist != NULL, NULL);
+  pads = g_alloca (sizeof (gpointer) * (g_list_length ((GList *) padlist) + 1));
+  for (; padlist; padlist = g_list_next (padlist)) {
+    test = GST_PAD (padlist->data);
+    g_return_val_if_fail (GST_IS_PAD (test), NULL);
+    g_return_val_if_fail (GST_PAD_IS_SINK (test), NULL);
+    if (element) {
+      g_return_val_if_fail (element == gst_pad_get_parent (test), NULL);
+    } else {
+      element = gst_pad_get_parent (test);
+    }
+    pads[i++] = test;
+  }
+  pads[i] = NULL;
+
+  return gst_pad_collect_array (GST_SCHEDULER (element), selected, pads);
+}
+
+/**
+ * gst_pad_collect:
+ * @selected: set to the pad the buffer comes from if not NULL
+ * @pad: first pad
+ * @...: more sink pads.
+ *
+ * Waits for a buffer on the given set of pads.
+ *
+ * Returns: the #GstData that was available.
+ */
+GstData *
+gst_pad_collect (GstPad ** selected, GstPad * pad, ...)
+{
+  GstData *result;
+  va_list var_args;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  va_start (var_args, pad);
+
+  result = gst_pad_collect_valist (selected, pad, var_args);
+
+  va_end (var_args);
+
+  return result;
+}
+
+/**
+ * gst_pad_collect_valist:
+ * @selected: set to the pad the buffer comes from if not NULL
+ * @pad: first pad
+ * @...: more sink pads.
+ *
+ * Waits for a buffer on the given set of pads.
+ *
+ * Returns: the #GstData that was available.
+ */
+GstData *
+gst_pad_collect_valist (GstPad ** selected, GstPad * pad, va_list var_args)
+{
+  GstPad **padlist;
+  GstElement *element = NULL;
+  gint i = 0, maxlength;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  while (pad) {
+    g_return_val_if_fail (i < maxlength, NULL);
+    if (element) {
+      g_return_val_if_fail (element == gst_pad_get_parent (pad), NULL);
+    } else {
+      element = gst_pad_get_parent (pad);
+      maxlength = element->numsinkpads;
+      /* can we make this list a bit smaller than this upper limit? */
+      padlist = g_alloca (sizeof (gpointer) * (maxlength + 1));
+    }
+    padlist[i++] = pad;
+    pad = va_arg (var_args, GstPad *);
+  }
+  return gst_pad_collect_array (GST_SCHEDULER (element), selected, padlist);
+}
+
 /**
  * gst_pad_selectv:
  * @padlist: a #GList of sink pads.
@@ -3129,40 +3248,7 @@ gst_pad_pull (GstPad * pad)
 GstPad *
 gst_pad_selectv (GList * padlist)
 {
-  GstPad *pad;
-
-  pad = gst_scheduler_pad_select (GST_PAD_PARENT (padlist->data)->sched,
-      padlist);
-  return pad;
-}
-
-/* FIXME 0.9: Don't allow the first pad to be NULL */
-/**
- * gst_pad_select:
- * @pad: a first sink #GstPad to perform the select on.
- * @...: A NULL-terminated list of more pads to select on.
- *
- * Waits for a buffer on the given set of pads.
- *
- * Returns: the #GstPad that has a buffer available.
- * Use #gst_pad_pull() to get the buffer.
- */
-GstPad *
-gst_pad_select (GstPad * pad, ...)
-{
-  GstPad *result;
-  va_list var_args;
-
-  if (pad == NULL)
-    return NULL;
-
-  va_start (var_args, pad);
-
-  result = gst_pad_select_valist (pad, var_args);
-
-  va_end (var_args);
-
-  return result;
+  return NULL;
 }
 
 /**
@@ -3190,6 +3276,34 @@ gst_pad_select_valist (GstPad * pad, va_list var_args)
   }
   result = gst_pad_selectv (padlist);
   g_list_free (padlist);
+
+  return result;
+}
+
+/**
+ * gst_pad_select:
+ * @pad: a first sink #GstPad to perform the select on.
+ * @...: A NULL-terminated list of more pads to select on.
+ *
+ * Waits for a buffer on the given set of pads.
+ *
+ * Returns: the #GstPad that has a buffer available.
+ * Use #gst_pad_pull() to get the buffer.
+ */
+GstPad *
+gst_pad_select (GstPad * pad, ...)
+{
+  GstPad *result;
+  va_list var_args;
+
+  if (pad == NULL)
+    return NULL;
+
+  va_start (var_args, pad);
+
+  result = gst_pad_select_valist (pad, var_args);
+
+  va_end (var_args);
 
   return result;
 }
