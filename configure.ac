@@ -1303,6 +1303,7 @@ testsuite/Makefile
 testsuite/bytestream/Makefile
 testsuite/capsnego/Makefile
 testsuite/plugin/Makefile
+testsuite/cleanup/Makefile
 tests/nego/Makefile
 examples/Makefile
 examples/autoplug/Makefile
