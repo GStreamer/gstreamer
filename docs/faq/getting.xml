@@ -60,7 +60,7 @@ before building gst-plugins.
         <para>
 	Yes, we currently provide precompiled packages for Red Hat, Debian and Linux Mandrake. </para>
 
-<para>We provide RPMS for Red Hat and Fedora Core through our <ulink url="http://gstreamer.freedesktop.org/pkg/">Apt for rpm page.</ulink> We usually support the last 2-3 releases of Red Hat. (RH9 & FC1)
+<para>We provide RPMS for Red Hat and Fedora Core through our <ulink url="http://gstreamer.freedesktop.org/pkg/">Apt for rpm page.</ulink> We usually support the last 2-3 releases of Red Hat. (RH9 and FC1)
         </para>
 	<para>GStreamer is already in Debian experimental, so if you are a debian user you should be able to get the Debian packages from there.</para>
 	<para>GStreamer is also in Mandrake Cooker so if you are using a recent release of Linux Mandrake you should be able to get GStreamer from there. To learn howto get packages from Mandrake cooker <ulink url="http://www.mandrakelinux.com/en/cookerdevel.php3">the Mandrake cooker page has more info</ulink>
