@@ -92,7 +92,7 @@ static void gst_sinesrc_get_property(GObject *object, guint prop_id, GValue *val
 static void gst_sinesrc_populate_sinetable(GstSineSrc *src);
 static inline void gst_sinesrc_update_table_inc(GstSineSrc *src);
 static inline void gst_sinesrc_update_vol_scale(GstSineSrc *src);
-void gst_sinesrc_force_caps(GstSineSrc *src);
+static void gst_sinesrc_force_caps(GstSineSrc *src);
 
 static GstBuffer * gst_sinesrc_get(GstPad *pad);
 
@@ -129,9 +129,9 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
 
   parent_class = g_type_class_ref(GST_TYPE_ELEMENT);
 
-//  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
-//    g_param_spec_double("volume","volume","volume",
-//                        G_MINDOUBLE,G_MAXDOUBLE,0.0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_VOLUME,
+    g_param_spec_double("volume","volume","volume",
+                        0.0, 1.0, 0.0,G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FORMAT,
     g_param_spec_int("format","format","format",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
@@ -141,12 +141,12 @@ gst_sinesrc_class_init(GstSineSrcClass *klass) {
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_TABLESIZE,
     g_param_spec_int("tablesize","tablesize","tablesize",
                      G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
-//  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQ,
-//    g_param_spec_double("freq","freq","freq",
-//                        G_MINDOUBLE,G_MAXDOUBLE,0.0,G_PARAM_READWRITE)); // CHECKME
+  g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_FREQ,
+    g_param_spec_double("freq","freq","freq",
+                        0.0,G_MAXDOUBLE, 440.0,G_PARAM_READWRITE)); // CHECKME
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_BUFFER_SIZE,
     g_param_spec_int("buffersize","buffersize","buffersize",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); // CHECKME
+                     0, G_MAXINT, 1024, G_PARAM_READWRITE)); 
                           
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
@@ -261,8 +261,6 @@ gst_sinesrc_set_property(GObject *object, guint prop_id, const GValue *value, GP
 
   switch (prop_id) {
     case ARG_VOLUME:
-      if (g_value_get_double (value) < 0.0 || g_value_get_double (value) > 1.0)
-        break;
       src->volume = g_value_get_double (value);
       gst_sinesrc_update_vol_scale(src);
       break;
@@ -378,7 +376,7 @@ gst_sinesrc_update_vol_scale(GstSineSrc *src)
   src->vol_scale = 32767 * src->volume;
 }
 
-void 
+static void 
 gst_sinesrc_force_caps(GstSineSrc *src) {
   GstCaps *caps;
 
