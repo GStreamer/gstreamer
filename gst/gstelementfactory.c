@@ -138,6 +138,25 @@ gst_elementfactory_get_list (void)
   return _gst_elementfactories;
 }
 
+static void
+gst_element_details_free (GstElementDetails *dp)
+{
+  g_return_if_fail (dp);
+
+  if (dp->longname)
+    g_free (dp->longname);
+  if (dp->klass)
+    g_free (dp->klass);
+  if (dp->description)
+    g_free (dp->description);
+  if (dp->version)
+    g_free (dp->version);
+  if (dp->author)
+    g_free (dp->author);
+  if (dp->copyright)
+    g_free (dp->copyright);
+  g_free (dp);
+}
 
 /**
  * gst_elementfactory_new:
@@ -158,29 +177,27 @@ gst_elementfactory_new (const gchar *name, GType type,
 
   g_return_val_if_fail(name != NULL, NULL);
   g_return_val_if_fail(type != 0, NULL);
+  g_return_val_if_fail (details, NULL);
 
   factory = gst_elementfactory_find (name);
 
-  if (factory)
+  if (!factory)
+    factory = GST_ELEMENTFACTORY (g_object_new (GST_TYPE_ELEMENTFACTORY, NULL));
+
+  if (factory->details_dynamic)
     {
-      if (!type)
-	g_warning ("gst_elementfactory_new for `%s' still didn't set type",
-		   name);
-
-      if (!factory->type)
-	factory->type = type;
-      else if (factory->type != type)
-	g_critical ("%s type changed", name);
-
-      return factory;
+      gst_element_details_free (factory->details);
+      factory->details_dynamic = FALSE;
     }
 
-  // probably created by the registry
-  factory = GST_ELEMENTFACTORY (g_object_new (GST_TYPE_ELEMENTFACTORY, NULL));
+  factory->details = details;
+
+  if (!factory->type)
+    factory->type = type;
+  else if (factory->type != type)
+    g_critical ("`%s' requested type change (!)", name);
 
   gst_object_set_name (GST_OBJECT (factory), name);
-  factory->type = type;
-  factory->details = details;
 
   return factory;
 }
@@ -400,12 +417,18 @@ gst_elementfactory_save_thyself (GstObject *object,
 
   g_return_val_if_fail(factory != NULL, NULL);
 
-  xmlNewChild(parent,NULL,"longname", factory->details->longname);
-  xmlNewChild(parent,NULL,"class", factory->details->klass);
-  xmlNewChild(parent,NULL,"description", factory->details->description);
-  xmlNewChild(parent,NULL,"version", factory->details->version);
-  xmlNewChild(parent,NULL,"author", factory->details->author);
-  xmlNewChild(parent,NULL,"copyright", factory->details->copyright);
+  if (factory->details)
+    {
+      xmlNewChild(parent,NULL,"longname", factory->details->longname);
+      xmlNewChild(parent,NULL,"class", factory->details->klass);
+      xmlNewChild(parent,NULL,"description", factory->details->description);
+      xmlNewChild(parent,NULL,"version", factory->details->version);
+      xmlNewChild(parent,NULL,"author", factory->details->author);
+      xmlNewChild(parent,NULL,"copyright", factory->details->copyright);
+    }
+  else
+    g_warning ("elementfactory `%s' is missing details",
+	       object->name);
 
   pads = factory->padtemplates;
   if (pads) {
@@ -427,6 +450,8 @@ gst_elementfactory_restore_thyself (GstObject *object, xmlNodePtr parent)
 {
   GstElementFactory *factory = GST_ELEMENTFACTORY (object);
   xmlNodePtr children = parent->xmlChildrenNode;
+  
+  factory->details_dynamic = TRUE;
   factory->details = g_new0(GstElementDetails, 1);
   factory->padtemplates = NULL;
 

@@ -1113,9 +1113,9 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
   // first get the needed tags to construct the element
   while (children) {
     if (!strcmp (children->name, "name")) {
-      name = g_strdup (xmlNodeGetContent (children));
+      name = xmlNodeGetContent (children);
     } else if (!strcmp (children->name, "type")) {
-      type = g_strdup (xmlNodeGetContent (children));
+      type = xmlNodeGetContent (children);
     }
     children = children->next;
   }
@@ -1142,10 +1142,10 @@ gst_element_restore_thyself (xmlNodePtr self, GstObject *parent)
 
       while (child) {
         if (!strcmp (child->name, "name")) {
-          name = g_strdup (xmlNodeGetContent (child));
+          name = xmlNodeGetContent (child);
 	}
 	else if (!strcmp (child->name, "value")) {
-          value = g_strdup (xmlNodeGetContent (child));
+          value = xmlNodeGetContent (child);
 	}
         child = child->next;
       }

@@ -1059,7 +1059,7 @@ gst_pad_load_and_connect (xmlNodePtr self,
       pad = gst_element_get_pad (GST_ELEMENT (parent), xmlNodeGetContent (field));
     }
     else if (!strcmp(field->name, "peer")) {
-      peer = g_strdup (xmlNodeGetContent (field));
+      peer = xmlNodeGetContent (field);
     }
     field = field->next;
   }

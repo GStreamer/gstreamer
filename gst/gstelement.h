@@ -262,6 +262,8 @@ struct _GstElementFactory {
 
   GType type;			/* unique GType of element */
 
+  guint details_dynamic : 1;
+
   GstElementDetails *details;	/* pointer to details struct */
 
   GList *padtemplates;
