@@ -118,7 +118,7 @@ gst_mem_pool_destroy (GstMemPool *mem_pool)
 gpointer
 gst_mem_pool_alloc (GstMemPool *mem_pool)
 {
-  GstMemPoolElement *pool = NULL;
+  volatile GstMemPoolElement *pool = NULL;
   
   g_return_val_if_fail (mem_pool != NULL, NULL);
 
@@ -187,7 +187,7 @@ gst_mem_pool_free (GstMemPool *mem_pool, gpointer mem)
 			:"m" (*mem_pool), "r" (pool), "a" (mem_pool->free));
 #else
   g_mutex_lock (mem_pool->chunk_lock);
-  pool->link = mem_pool->free;
+  pool->link = (GstMemPoolElement *) mem_pool->free;
   mem_pool->free = pool;
   g_mutex_unlock (mem_pool->chunk_lock);
 #endif
