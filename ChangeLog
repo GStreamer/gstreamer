@@ -1,5 +1,11 @@
 2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
+	  Oops, unbreak audio.
+
+2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_caps_to_codecid):
 	  Add AMR mimetypes (since those are recognized in ffmpeg).

@@ -897,7 +897,11 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
     /* first make sure we've got a supported type */
     sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
-    srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
+    if (in_plugin->type == CODEC_TYPE_VIDEO) {
+      srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
+    } else {
+      srccaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
+    }
     if (!sinkcaps || !srccaps) {
       if (sinkcaps) gst_caps_free (sinkcaps);
       if (srccaps) gst_caps_free (srccaps);
