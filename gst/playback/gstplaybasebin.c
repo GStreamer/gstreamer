@@ -250,6 +250,9 @@ remove_prerolls (GstPlayBaseBin * play_base_bin)
   g_list_free (play_base_bin->streaminfo);
   play_base_bin->streaminfo = NULL;
   play_base_bin->nstreams = 0;
+  play_base_bin->naudiopads = 0;
+  play_base_bin->nvideopads = 0;
+  play_base_bin->nunknownpads = 0;
 }
 
 static void
@@ -285,6 +288,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   GstStreamInfo *info;
   GstStreamType type;
   GstPad *srcpad;
+  gboolean need_preroll;
 
   GST_DEBUG ("play base: new decoded pad");
 
@@ -300,17 +304,31 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   play_base_bin->nstreams++;
 
+  need_preroll = FALSE;
+
   if (g_str_has_prefix (mimetype, "audio/")) {
     type = GST_STREAM_TYPE_AUDIO;
+    play_base_bin->naudiopads++;
+    /* first audio pad gets a preroll element */
+    if (play_base_bin->naudiopads == 1) {
+      need_preroll = TRUE;
+    }
   } else if (g_str_has_prefix (mimetype, "video/")) {
     type = GST_STREAM_TYPE_VIDEO;
+    play_base_bin->nvideopads++;
+    /* first video pad gets a preroll element */
+    if (play_base_bin->nvideopads == 1) {
+      need_preroll = TRUE;
+    }
   } else {
     type = GST_STREAM_TYPE_UNKNOWN;
+    play_base_bin->nunknownpads++;
   }
 
-  if (last) {
+  if (last || !need_preroll) {
     srcpad = pad;
-    no_more_pads (NULL, play_base_bin);
+    if (last)
+      no_more_pads (NULL, play_base_bin);
   } else {
     new_element = gen_preroll_element (play_base_bin, pad);
     srcpad = gst_element_get_pad (new_element, "src");

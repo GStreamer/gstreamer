@@ -55,6 +55,10 @@ struct _GstPlayBaseBin {
   gint		 nstreams;
   GList		*streaminfo;
 
+  gint		 naudiopads;
+  gint		 nvideopads;
+  gint		 nunknownpads;
+
   /* list of usable factories */
   GList		*factories;
 };

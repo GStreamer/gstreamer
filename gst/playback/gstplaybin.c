@@ -368,6 +368,8 @@ setup_sinks (GstPlayBin * play_bin)
 {
   GList *streaminfo;
   GList *s;
+  gboolean have_audio = FALSE;
+  gboolean have_video = FALSE;
 
   /* get info about the stream */
   g_object_get (G_OBJECT (play_bin), "stream-info", &streaminfo, NULL);
@@ -386,9 +388,21 @@ setup_sinks (GstPlayBin * play_bin)
       continue;
 
     if (type == 1) {
-      sink = gen_audio_element (play_bin);
+      if (have_audio) {
+        g_warning ("two audio streams found, playing first one");
+        continue;
+      } else {
+        sink = gen_audio_element (play_bin);
+        have_audio = TRUE;
+      }
     } else if (type == 2) {
-      sink = gen_video_element (play_bin);
+      if (have_video) {
+        g_warning ("two video streams found, playing first one");
+        continue;
+      } else {
+        sink = gen_video_element (play_bin);
+        have_video = TRUE;
+      }
     } else {
       g_warning ("unknown stream found");
       continue;
