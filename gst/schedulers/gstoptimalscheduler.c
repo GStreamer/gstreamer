@@ -1152,23 +1152,28 @@ schedule_group (GstOptSchedulerGroup * group)
     GST_INFO ("not scheduling group %p without schedulefunc", group);
     return FALSE;
   } else {
-    GSList *l;
+    GSList *l, *lcopy;
 
-    for (l = group->elements; l; l = l->next) {
+    lcopy = g_slist_copy (group->elements);
+    for (l = lcopy; l; l = l->next) {
       GstElement *e = (GstElement *) l->data;
 
+      gst_object_ref (GST_OBJECT (e));
       if (e->pre_run_func)
         e->pre_run_func (e);
     }
 
     group->schedulefunc (group->argc, group->argv);
 
-    for (l = group->elements; l; l = l->next) {
+    for (l = lcopy; l; l = l->next) {
       GstElement *e = (GstElement *) l->data;
 
       if (e->post_run_func)
         e->post_run_func (e);
+
+      gst_object_unref (GST_OBJECT (e));
     }
+    g_slist_free (lcopy);
 
   }
   return TRUE;

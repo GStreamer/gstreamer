@@ -1,5 +1,15 @@
 2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: David Moore
+
+	* gst/schedulers/gstoptimalscheduler.c: (group_has_element),
+	(schedule_group), (gst_opt_scheduler_schedule_run_queue),
+	(group_migrate_connected):
+	* testsuite/schedulers/Makefile.am:
+	  fix for #142813 (Deadlock in optimal scheduler)
+
+2004-07-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	patch by: Wim Taymans
 
 	* gst/schedulers/gstoptimalscheduler.c: (group_has_element),

@@ -4,12 +4,15 @@ tests_pass = \
 	unlink_src unlink_sink \
 	relink_src relink_sink \
 	unref_src unref_sink \
-	143777 143777-2 147713 147819 147894
+	142183 142183-2 \
+	143777 143777-2 \
+        147713 \
+        147819 \
+        147894
 
 # don't enable this one unless it actually works.
 #	useless_iteration
-
-tests_fail = 142183 142183-2
+tests_fail = 
 tests_ignore =
 
 unlink_src_SOURCES = unlink.c
