@@ -1227,4 +1227,3 @@ gst_mad_change_state (GstElement *element)
 
   return parent_class->change_state (element);
 }
-

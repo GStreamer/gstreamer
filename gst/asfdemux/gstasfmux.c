@@ -1302,4 +1302,3 @@ gst_asfmux_change_state (GstElement *element)
 
   return GST_STATE_SUCCESS;
 }
-

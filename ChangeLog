@@ -1,3 +1,22 @@
+2004-02-20  Andy Wingo  <wingo@pobox.com>
+
+	* gst/intfloat/, gst/oneton: Removed, replaced by audioconvert and
+	interleave respectively.
+
+	* gst/interleave/deinterleave.c: New plugin: deinterleave
+	(replaces on oneton).
+	* gst/interleave/interleave.c: New plugin: interleave.
+	* gst/interleave/plugin.h: Support file.
+	* gst/interleave/plugin.c: Support file.
+
+	* configure.ac: Remove intfloat and oneton, add interleave.
+
+	* ext/sndfile/gstsf.c: Handle events better.
+
+	* gst/audioconvert/gstaudioconvert.c: Change to support int2float
+	and float2int operation. int2float has scheduling problems as
+	noted in in2float_chain. 
+
 2004-02-20  Benjamin Otte  <otte@gnome.org>
 
 	* ext/xine/Makefile.am:
