@@ -45,8 +45,9 @@ mp3_src_factory (void)
   	GST_PAD_ALWAYS,
   	gst_caps_new (
   	  "mp3parse_src",
-    	  "audio/x-mp3",
+    	  "audio/mpeg",
 	  gst_props_new (
+	    "mpegversion", GST_PROPS_INT (1),
     	    "layer",   GST_PROPS_INT_RANGE (1, 3),
             "rate",    GST_PROPS_INT_RANGE (8000, 48000),
             "channels", GST_PROPS_INT_RANGE (1, 2),
@@ -64,7 +65,7 @@ mp3_sink_factory (void)
   	GST_PAD_ALWAYS,
   	gst_caps_new (
   	  "mp3parse_sink",
-    	  "audio/x-mp3",
+    	  "audio/mpeg",
 	  NULL),
 	NULL);
 };
@@ -272,6 +273,7 @@ gst_mp3parse_chain (GstPad *pad, GstBuffer *buf)
 	    mp3parse->in_flush = FALSE;
 	  }
 	  GST_BUFFER_TIMESTAMP(outbuf) = last_ts;
+	  GST_BUFFER_DURATION(outbuf) = 8 * (GST_SECOND/1000) * GST_BUFFER_SIZE(outbuf) / mp3parse->bit_rate;
 
           if (GST_PAD_CAPS (mp3parse->srcpad) != NULL) {
             gst_pad_push(mp3parse->srcpad,outbuf);
