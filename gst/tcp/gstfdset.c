@@ -54,10 +54,12 @@ struct _GstFDSet
   GstFDSetMode mode;
 
   /* for poll */
+  struct pollfd *testpollfds;
   struct pollfd *pollfds;
   gint last_pollfds;
   gint size;
   gint free;
+  GMutex *poll_lock;
 
   /* for select */
   fd_set readfds, writefds;     /* input */
@@ -85,6 +87,7 @@ ensure_size (GstFDSet * set, gint len)
     need = MAX (need, MIN_POLLFDS * sizeof (struct pollfd));
 
     set->pollfds = g_realloc (set->pollfds, need);
+    set->testpollfds = g_realloc (set->testpollfds, need);
 
     set->size = need;
   }
@@ -105,8 +108,10 @@ gst_fdset_new (GstFDSetMode mode)
       break;
     case GST_FDSET_MODE_POLL:
       nset->pollfds = NULL;
+      nset->testpollfds = NULL;
       nset->free = 0;
       nset->last_pollfds = 0;
+      nset->poll_lock = g_mutex_new ();
       ensure_size (nset, MIN_POLLFDS);
       break;
     case GST_FDSET_MODE_EPOLL:
@@ -161,6 +166,8 @@ gst_fdset_add_fd (GstFDSet * set, GstFD * fd)
       struct pollfd *nfd;
       gint idx;
 
+      g_mutex_lock (set->poll_lock);
+
       ensure_size (set, set->last_pollfds + 1);
 
       idx = set->free;
@@ -182,6 +189,8 @@ gst_fdset_add_fd (GstFDSet * set, GstFD * fd)
       set->last_pollfds = MAX (idx + 1, set->last_pollfds);
       fd->idx = idx;
       set->free = -1;
+      g_mutex_unlock (set->poll_lock);
+
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -200,6 +209,7 @@ gst_fdset_remove_fd (GstFDSet * set, GstFD * fd)
       break;
     case GST_FDSET_MODE_POLL:
     {
+      g_mutex_lock (set->poll_lock);
       set->pollfds[fd->idx].fd = -1;
       set->pollfds[fd->idx].events = 0;
       set->pollfds[fd->idx].revents = 0;
@@ -215,6 +225,7 @@ gst_fdset_remove_fd (GstFDSet * set, GstFD * fd)
       } else {
         set->free = MIN (set->free, fd->idx);
       }
+      g_mutex_unlock (set->poll_lock);
       break;
     }
     case GST_FDSET_MODE_EPOLL:
@@ -272,8 +283,13 @@ gst_fdset_fd_has_closed (GstFDSet * set, GstFD * fd)
       res = FALSE;
       break;
     case GST_FDSET_MODE_POLL:
-      res = (set->pollfds[fd->idx].revents & POLLHUP) != 0;
+    {
+      gint idx = fd->idx;
+
+      if (idx > 0)
+        res = (set->testpollfds[idx].revents & POLLHUP) != 0;
       break;
+    }
     case GST_FDSET_MODE_EPOLL:
       break;
   }
@@ -290,8 +306,13 @@ gst_fdset_fd_has_error (GstFDSet * set, GstFD * fd)
       res = FALSE;
       break;
     case GST_FDSET_MODE_POLL:
-      res = (set->pollfds[fd->idx].revents & (POLLERR | POLLNVAL)) != 0;
+    {
+      gint idx = fd->idx;
+
+      if (idx > 0)
+        res = (set->testpollfds[idx].revents & (POLLERR | POLLNVAL)) != 0;
       break;
+    }
     case GST_FDSET_MODE_EPOLL:
       break;
   }
@@ -308,8 +329,13 @@ gst_fdset_fd_can_read (GstFDSet * set, GstFD * fd)
       res = FD_ISSET (fd->fd, &set->testreadfds);
       break;
     case GST_FDSET_MODE_POLL:
-      res = (set->pollfds[fd->idx].revents & (POLLIN | POLLPRI)) != 0;
+    {
+      gint idx = fd->idx;
+
+      if (idx > 0)
+        res = (set->testpollfds[idx].revents & (POLLIN | POLLPRI)) != 0;
       break;
+    }
     case GST_FDSET_MODE_EPOLL:
       break;
   }
@@ -326,8 +352,13 @@ gst_fdset_fd_can_write (GstFDSet * set, GstFD * fd)
       res = FD_ISSET (fd->fd, &set->testwritefds);
       break;
     case GST_FDSET_MODE_POLL:
-      res = (set->pollfds[fd->idx].revents & POLLOUT) != 0;
+    {
+      gint idx = fd->idx;
+
+      if (idx > 0)
+        res = (set->testpollfds[idx].revents & POLLOUT) != 0;
       break;
+    }
     case GST_FDSET_MODE_EPOLL:
       break;
   }
@@ -360,11 +391,18 @@ gst_fdset_wait (GstFDSet * set, int timeout)
       break;
     }
     case GST_FDSET_MODE_POLL:
-      /* we do not make a copy here. The polfds could change while
-       * executing this call but even if this should happen and cause
-       * problems, we can recover from it */
-      res = poll (set->pollfds, set->last_pollfds, timeout);
+    {
+      gint last_pollfds;
+
+      g_mutex_lock (set->poll_lock);
+      last_pollfds = set->last_pollfds;
+      memcpy (set->testpollfds, set->pollfds,
+          sizeof (struct pollfd) * last_pollfds);
+      g_mutex_unlock (set->poll_lock);
+
+      res = poll (set->testpollfds, last_pollfds, timeout);
       break;
+    }
     case GST_FDSET_MODE_EPOLL:
       break;
   }
