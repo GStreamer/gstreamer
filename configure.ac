@@ -570,8 +570,10 @@ dnl *** sidplay ***
 dnl FIXME : make this work
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
 GST_CHECK_FEATURE(SIDPLAY, [sidplay plugin], sidplay, [
-  GST_CHECK_LIBHEADER(SIDPLAY, sidplay, sidTune(), ,sidplay/sidtune.h,SIDPLAY_LIBS="-lsidplay")
+  AC_LANG_PUSH(C++)
+  AC_CHECK_HEADER(sidplay/sidtune.h, SIDPLAY_LIBS="-lsidplay", )
   AC_SUBST(SIDPLAY_LIBS)
+  AC_LANG_POP()
 ])
 
 dnl *** smoothwave ***
@@ -1011,6 +1013,7 @@ sys/v4l/Makefile
 sys/vcd/Makefile
 sys/vga/Makefile
 sys/xvideo/Makefile
+examples/capsfilter/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/aalib/Makefile
