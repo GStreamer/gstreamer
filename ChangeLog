@@ -1,17 +1,24 @@
+2004-05-21  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* m4/as-arts.m4:
+	  sync with upstream version to fix test on FC2
+	  readd with -ko to preserve Id header
+
 2004-05-20  Stephane Loeuillet <stephane.loeuillet@tiscali.fr>
 
-	* configure.ac : test for FIONREAD ioctl in sys/filio.h for Solaris compat.
-	* gst/tcp/gsttcpclientsrc.c : idem
-	* gst/tcp/gsttcpserversink.c : idem
-	* gst/tcp/gsttcpserversrc.c : idem
-	* m4/gst-fionread.m4 : idem
+	* configure.ac:
+	  test for FIONREAD ioctl in sys/filio.h forSolaris compat.
+	* gst/tcp/gsttcpclientsrc.c: idem
+	* gst/tcp/gsttcpserversink.c: idem
+	* gst/tcp/gsttcpserversrc.c: idem
+	* m4/gst-fionread.m4: idem
 
-	* sys/sunaudio/gstsunaudio.c : change category to Sink/Audio
+	* sys/sunaudio/gstsunaudio.c: change category to Sink/Audio
 
-	* configure.ac : enable speex plugin for speex 1.1.5+
-	* ext/speex/gstspeexenc.c : fix cast warning
+	* configure.ac: enable speex plugin for speex 1.1.5+
+	* ext/speex/gstspeexenc.c: fix cast warning
 
-	* ext/esd/README : fix typo
+	* ext/esd/README: fix typo
 
 2004-05-20  David Schleef  <ds@schleef.org>
 
