@@ -29,6 +29,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/mman.h>
+#ifdef HAVE_UCONTEXT_H
+#include <ucontext.h>
+#endif
 
 #include "gst_private.h"
 
@@ -101,8 +104,9 @@ cothread_get_current_context (void)
 cothread_context *
 cothread_context_init (void)
 {
+  char __csf;
+  void *current_stack_frame = &__csf;  /* Get pointer inside current stack frame */
   cothread_context *ctx;
-  void *sp;
 
   /* if there already is a cotread context for this thread,
    * just return it */
@@ -136,7 +140,6 @@ cothread_context_init (void)
   /* clear the cothread data */
   memset (ctx->cothreads, 0, sizeof (ctx->cothreads));
 
-  sp = CURRENT_STACK_FRAME;
   /* FIXME this may not be 64bit clean
    *       could use casts to uintptr_t from inttypes.h
    *       if only all platforms had inttypes.h
@@ -144,7 +147,7 @@ cothread_context_init (void)
   /* stack_top is the address of the first byte past our stack segment. */
   /* FIXME: an assumption is made that the stack segment is STACK_SIZE
    * aligned. */
-  ctx->stack_top = ((gulong) sp | (STACK_SIZE - 1)) + 1;
+  ctx->stack_top = ((gulong) current_stack_frame | (STACK_SIZE - 1)) + 1;
   GST_DEBUG (GST_CAT_COTHREADS, "stack top is 0x%08lx", ctx->stack_top);
 
   /*
@@ -158,7 +161,7 @@ cothread_context_init (void)
   ctx->cothreads[0]->argv = NULL;
   ctx->cothreads[0]->priv = NULL;
   ctx->cothreads[0]->flags = COTHREAD_STARTED;
-  ctx->cothreads[0]->sp = (void *) CURRENT_STACK_FRAME;
+  ctx->cothreads[0]->sp = (void *) current_stack_frame;
 
   GST_INFO (GST_CAT_COTHREADS, "0th cothread is %p at sp:%p", 
             ctx->cothreads[0], ctx->cothreads[0]->sp);
@@ -445,6 +448,8 @@ cothread_stub (void)
 {
   cothread_context *ctx = cothread_get_current_context();
   cothread_state *cothread = ctx->cothreads[ctx->current];
+  char __csf;
+  void *current_stack_frame = &__csf;
 
   GST_DEBUG_ENTER ("");
 
@@ -457,7 +462,7 @@ cothread_stub (void)
 
     GST_DEBUG (GST_CAT_COTHREADS, "cothread[%d] thread->func exited", ctx->current);
 
-    GST_DEBUG (GST_CAT_COTHREADS, "sp=%p", CURRENT_STACK_FRAME);
+    GST_DEBUG (GST_CAT_COTHREADS, "sp=%p", current_stack_frame);
     GST_DEBUG (GST_CAT_COTHREADS, "ctx=%p current=%p", ctx,cothread_get_current_context());
     g_assert (ctx == cothread_get_current_context());
 

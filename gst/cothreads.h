@@ -26,11 +26,6 @@
 #include <glib.h>
 #include <setjmp.h>
 
-/* this bit is lifted out of glibc */
-#ifndef CURRENT_STACK_FRAME
-#define CURRENT_STACK_FRAME  ({ char __csf; &__csf; })
-#endif /* CURRENT_STACK_FRAME */
-
 typedef struct _cothread_state		cothread_state;
 typedef struct _cothread_context	cothread_context;
 
