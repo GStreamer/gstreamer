@@ -114,8 +114,8 @@ gst_ffmpegmux_base_init (GstFFMpegMuxClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementDetails details;
   GstFFMpegMuxClassParams *params;
-  GstElementDetails *details;
   GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
 
   params = g_hash_table_lookup (global_plugins,
@@ -126,14 +126,17 @@ gst_ffmpegmux_base_init (GstFFMpegMuxClass *klass)
   g_assert (params);
 
   /* construct the element details struct */
-  details = g_new0 (GstElementDetails, 1);
-  details->longname = g_strdup_printf ("FFMPEG %s Muxer",
+  details.longname = g_strdup_printf ("FFMPEG %s Muxer",
 				       params->in_plugin->name);
-  details->klass = g_strdup ("Codec/Muxer");
-  details->description = g_strdup_printf ("FFMPEG %s Muxer",
+  details.klass = g_strdup ("Codec/Muxer");
+  details.description = g_strdup_printf ("FFMPEG %s Muxer",
 					  params->in_plugin->name);
-  details->author = g_strdup ("Wim Taymans <wim.taymans@chello.be>\n"
-			      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+  details.author = "Wim Taymans <wim.taymans@chello.be>, "
+		   "Ronald Bultje <rbultje@ronald.bitfreak.net>";
+  gst_element_class_set_details (element_class, &details);
+  g_free (details.longname);
+  g_free (details.klass);
+  g_free (details.description);
 
   /* pad templates */
   srctempl = gst_pad_template_new ("sink", GST_PAD_SRC,
@@ -151,7 +154,6 @@ gst_ffmpegmux_base_init (GstFFMpegMuxClass *klass)
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, videosinktempl);
   gst_element_class_add_pad_template (element_class, audiosinktempl);
-  gst_element_class_set_details (element_class, details);
 
   klass->in_plugin = params->in_plugin;
   klass->srctempl = srctempl;
