@@ -60,27 +60,34 @@ typedef enum {
   GST_XML_REGISTRY_WRITE,
 } GstXMLRegistryMode;
 
-typedef gboolean (*GstXMLRegistryParser) (GMarkupParseContext *context,
-					  const gchar	      *tag,
-		                          const gchar         *text,
-		                          gsize                text_len,
-		                          GstXMLRegistry      *registry,
-		                          GError             **error);
+enum {
+    GST_XML_REGISTRY_OPEN = (1 << 1)
+};
 
-typedef gboolean (*GstXMLRegistryOpen)   (GstXMLRegistry      *registry,
-					  GstXMLRegistryMode   mode);
-typedef gboolean (*GstXMLRegistryLoad)   (GstXMLRegistry      *registry,
-		                          gchar		      *dest,
-					  gssize              *size);
-typedef gboolean (*GstXMLRegistrySave)   (GstXMLRegistry      *registry,
-					  gchar		      *format, 
-					  ...);
-typedef gboolean (*GstXMLRegistryClose)  (GstXMLRegistry      *registry);
+typedef void	 (*GstXMLRegistryGetPerms)	(GstXMLRegistry      *registry);
+typedef gboolean (*GstXMLRegistryParser) 	(GMarkupParseContext *context,
+                                                 const gchar	      *tag,
+                                                 const gchar         *text,
+                                                 gsize                text_len,
+                                                 GstXMLRegistry      *registry,
+                                                 GError             **error);
+
+typedef gboolean (*GstXMLRegistryOpen)   	(GstXMLRegistry      *registry,
+                                                 GstXMLRegistryMode   mode);
+typedef gboolean (*GstXMLRegistryLoad)		(GstXMLRegistry      *registry,
+                                                 gchar		      *dest,
+                                                 gssize              *size);
+typedef gboolean (*GstXMLRegistrySave)   	(GstXMLRegistry      *registry,
+                                                 gchar		      *format, 
+                                                 ...);
+typedef gboolean (*GstXMLRegistryClose)		(GstXMLRegistry      *registry);
 
 struct _GstXMLRegistry {
   GstRegistry 		 object;
 
   gchar 		*location;
+  gboolean		 open;
+
   FILE 			*regfile;
   gchar			*buffer;
 
@@ -105,6 +112,7 @@ struct _GstXMLRegistry {
 struct _GstXMLRegistryClass {
   GstRegistryClass	 parent_class;
 
+  GstXMLRegistryGetPerms get_perms_func;
   GstXMLRegistryOpen	 open_func;
   GstXMLRegistryLoad	 load_func;
   GstXMLRegistrySave	 save_func;

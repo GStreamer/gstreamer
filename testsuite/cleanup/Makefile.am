@@ -1,5 +1,8 @@
 testprogs = cleanup1 cleanup2 cleanup3 cleanup4 cleanup5
 
+GST_PLUGIN_PATH = $(shell cd $(top_builddir) && pwd)
+TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(GST_PLUGIN_PATH) GST_REGISTRY=`pwd`/test-registry.xml
+
 TESTS = $(testprogs)
 
 check_PROGRAMS = $(testprogs)

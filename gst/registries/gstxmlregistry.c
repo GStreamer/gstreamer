@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <utime.h>
 
 #include <gst/gst_private.h>
 #include <gst/gstelement.h>
@@ -41,13 +42,26 @@
 #define CLASS(registry)  GST_XML_REGISTRY_CLASS (G_OBJECT_GET_CLASS (registry))
 
 
+enum 
+{
+  PROP_0,
+  PROP_LOCATION
+};
+
+
 static void 		gst_xml_registry_class_init 		(GstXMLRegistryClass *klass);
 static void 		gst_xml_registry_init 			(GstXMLRegistry *registry);
+
+static void 		gst_xml_registry_set_property 		(GObject * object, guint prop_id,
+                                                                 const GValue * value, GParamSpec * pspec);
+static void 		gst_xml_registry_get_property 		(GObject * object, guint prop_id,
+                                                                 GValue * value, GParamSpec * pspec);
 
 static gboolean		gst_xml_registry_load 			(GstRegistry *registry);
 static gboolean		gst_xml_registry_save 			(GstRegistry *registry);
 static gboolean 	gst_xml_registry_rebuild 		(GstRegistry *registry);
 
+static void	 	gst_xml_registry_get_perms_func 	(GstXMLRegistry *registry);
 static gboolean 	gst_xml_registry_open_func 		(GstXMLRegistry *registry, GstXMLRegistryMode mode);
 static gboolean 	gst_xml_registry_load_func 		(GstXMLRegistry *registry, gchar *data, gssize *size);
 static gboolean 	gst_xml_registry_save_func 		(GstXMLRegistry *registry, gchar *format, ...);
@@ -131,12 +145,20 @@ gst_xml_registry_class_init (GstXMLRegistryClass *klass)
 
   parent_class = g_type_class_ref (GST_TYPE_REGISTRY);
 
-  gstregistry_class->load  	  = GST_DEBUG_FUNCPTR (gst_xml_registry_load);
-  gstregistry_class->save  	  = GST_DEBUG_FUNCPTR (gst_xml_registry_save);
-  gstregistry_class->rebuild  	  = GST_DEBUG_FUNCPTR (gst_xml_registry_rebuild);
-  
-  gstregistry_class->load_plugin  = GST_DEBUG_FUNCPTR (gst_xml_registry_load_plugin);
+  gobject_class->get_property		= GST_DEBUG_FUNCPTR (gst_xml_registry_get_property);
+  gobject_class->set_property		= GST_DEBUG_FUNCPTR (gst_xml_registry_set_property);
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LOCATION,
+    g_param_spec_string ("location", "Location", "Location of the registry file",
+                         NULL, G_PARAM_READWRITE));
+
+  gstregistry_class->load		= GST_DEBUG_FUNCPTR (gst_xml_registry_load);
+  gstregistry_class->save		= GST_DEBUG_FUNCPTR (gst_xml_registry_save);
+  gstregistry_class->rebuild		= GST_DEBUG_FUNCPTR (gst_xml_registry_rebuild);
+  
+  gstregistry_class->load_plugin	= GST_DEBUG_FUNCPTR (gst_xml_registry_load_plugin);
+
+  gstxmlregistry_class->get_perms_func 	= GST_DEBUG_FUNCPTR (gst_xml_registry_get_perms_func);
   gstxmlregistry_class->open_func 	= GST_DEBUG_FUNCPTR (gst_xml_registry_open_func);
   gstxmlregistry_class->load_func 	= GST_DEBUG_FUNCPTR (gst_xml_registry_load_func);
   gstxmlregistry_class->save_func 	= GST_DEBUG_FUNCPTR (gst_xml_registry_save_func);
@@ -170,17 +192,60 @@ gst_xml_registry_new (const gchar *name, const gchar *location)
   
   xmlregistry = GST_XML_REGISTRY (g_object_new (GST_TYPE_XML_REGISTRY, NULL));
   
-  xmlregistry->location = g_strdup (location);
+  g_object_set (G_OBJECT (xmlregistry), "location", location, NULL);
 
   GST_REGISTRY (xmlregistry)->name = g_strdup (name);
-  GST_REGISTRY (xmlregistry)->flags = GST_REGISTRY_READABLE | GST_REGISTRY_WRITABLE;
 
   return GST_REGISTRY (xmlregistry);
 }
 
-/* same as 0755 */
-#define dirmode \
-  (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
+static void
+gst_xml_registry_set_property (GObject* object, guint prop_id, 
+                               const GValue* value, GParamSpec* pspec)
+{
+  GstXMLRegistry *registry;
+	    
+  registry = GST_XML_REGISTRY (object);
+
+  switch (prop_id) {
+    case PROP_LOCATION:
+      if (registry->open) {
+        CLASS (object)->close_func (registry);
+        g_return_if_fail (registry->open == FALSE);
+      }
+      
+      if (registry->location)
+        g_free (registry->location);
+      
+      registry->location = g_strdup (g_value_get_string (value));
+      GST_REGISTRY (registry)->flags = 0x0;
+
+      if (CLASS (object)->get_perms_func)
+        CLASS (object)->get_perms_func (registry);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_xml_registry_get_property (GObject* object, guint prop_id, 
+                               GValue* value, GParamSpec* pspec)
+{
+  GstXMLRegistry *registry;
+	    
+  registry = GST_XML_REGISTRY (object);
+
+  switch (prop_id) {
+    case PROP_LOCATION:
+      g_value_set_string (value, g_strdup (registry->location));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static time_t
 get_time(const char * path)
@@ -191,6 +256,57 @@ get_time(const char * path)
   return statbuf.st_ctime;
 }
 
+/* same as 0755 */
+#define dirmode \
+  (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
+
+static void gst_xml_registry_get_perms_func (GstXMLRegistry *registry)
+{
+  struct stat dirstat;
+  time_t mod_time = 0;
+  gchar *dirname;
+  FILE *temp;
+
+  /* if the dir does not exist, make it. if that can't be done, flags = 0x0.
+     if the file can be appended to, it's writable. if it can then be read,
+     it's readable. */
+  
+  dirname = g_strndup(registry->location,
+                      strrchr(registry->location, '/') - registry->location);
+  if (stat(dirname, &dirstat) == -1 && errno == ENOENT) {
+    if (mkdir(dirname, dirmode) != 0) {
+      /* we can't do anything with it, leave flags as 0x0 */
+      g_free(dirname);
+      return;
+    }
+  }
+  g_free(dirname);
+  
+  mod_time = get_time (registry->location);
+  
+  if ((temp = fopen (registry->location, "a"))) {
+    GST_REGISTRY (registry)->flags |= GST_REGISTRY_WRITABLE;
+    fclose (temp);
+  }
+  
+  if ((temp = fopen (registry->location, "r"))) {
+    GST_REGISTRY (registry)->flags |= GST_REGISTRY_READABLE;
+    fclose (temp);
+  }
+
+  if (mod_time) {
+    struct utimbuf utime_buf;
+    
+    /* set the modification time back to its previous value */
+    utime_buf.actime = mod_time;
+    utime_buf.modtime = mod_time;
+    utime (registry->location, &utime_buf);
+  } else if (GST_REGISTRY (registry)->flags & GST_REGISTRY_WRITABLE) {
+    /* it did not exist before, so delete it */
+    unlink (registry->location);
+  }
+}
+      
 static gboolean
 plugin_times_older_than_recurse(gchar *path, time_t regtime)
 {
@@ -254,21 +370,29 @@ static gboolean
 gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
 {
   gulong handler_id;
-  GList *paths = GST_REGISTRY (registry)->paths;
+  GstRegistry *gst_registry;
+  GList *paths;
+
+  gst_registry = GST_REGISTRY (registry);
+  paths = gst_registry->paths;
+
+  g_return_val_if_fail (registry->open == FALSE, FALSE);
 
   if (mode == GST_XML_REGISTRY_READ) {
+    g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_READABLE, FALSE);
+
     if (!plugin_times_older_than (paths, get_time (registry->location))) {
       GST_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
       
-      handler_id = g_signal_connect (G_OBJECT (registry), "plugin_added", 
+      handler_id = g_signal_connect (registry, "plugin_added", 
                                      G_CALLBACK (plugin_added_func), NULL);
 
-      gst_registry_rebuild (GST_REGISTRY (registry));
+      gst_registry_rebuild (gst_registry);
 
       g_signal_handler_disconnect (registry, handler_id);
 
-      if (GST_REGISTRY (registry)->flags & GST_REGISTRY_WRITABLE) {
-        gst_registry_save (GST_REGISTRY (registry));
+      if (gst_registry->flags & GST_REGISTRY_WRITABLE) {
+        gst_registry_save (gst_registry);
         if (!plugin_times_older_than (paths, get_time (registry->location))) {
           GST_INFO (GST_CAT_GST_INIT, "Registry still out of date, something is wrong...");
           return FALSE;
@@ -280,20 +404,15 @@ gst_xml_registry_open_func (GstXMLRegistry *registry, GstXMLRegistryMode mode)
   }
   else if (mode == GST_XML_REGISTRY_WRITE)
   {
-    /* check the dir */
-    struct stat filestat;
-    char *dirname = g_strndup(registry->location,
-                              strrchr(registry->location, '/') - registry->location);
-    if (stat(dirname, &filestat) == -1 && errno == ENOENT)
-      if (mkdir(dirname, dirmode) != 0)
-        return FALSE;
-    g_free(dirname);
+    g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_WRITABLE, FALSE);
 
     registry->regfile = fopen (registry->location, "w");
   }
 
   if (!registry->regfile)
     return FALSE;
+
+  registry->open = TRUE;
 
   return TRUE;
 }
@@ -324,6 +443,8 @@ static gboolean
 gst_xml_registry_close_func (GstXMLRegistry *registry)
 {
   fclose (registry->regfile);
+
+  registry->open = FALSE;
 
   return TRUE;
 }
