@@ -26,6 +26,14 @@
 
 #include "gstmpeg2dec.h"
 
+/* mpeg2dec changed a struct name after 0.3.1, here's a workaround */
+/* mpeg2dec also only defined MPEG2_RELEASE after 0.3.1
+#if MPEG2_RELEASE < MPEG2_VERSION(0,3,2)
+*/
+#ifndef MPEG2_RELEASE
+typedef picture_t mpeg2_picture_t;
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
 
 /* elementfactory information */
@@ -272,7 +280,7 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec *mpeg2dec, const mpeg2_info_t *info, gint
   GstBuffer *outbuf = NULL;
   gint size = mpeg2dec->width * mpeg2dec->height;
   guint8 *buf[3], *out;
-  const picture_t *picture;
+  const mpeg2_picture_t *picture;
 
   if (mpeg2dec->peerpool) {
     outbuf = gst_buffer_new_from_pool (mpeg2dec->peerpool, 0, 0);
@@ -583,9 +591,9 @@ gst_mpeg2dec_chain (GstPad *pad, GstBuffer *buf)
 			(info->display_fbuf ? info->display_fbuf->id : NULL));
 
 	if (info->display_fbuf && info->display_fbuf->id) {
-          const picture_t *picture;
+          const mpeg2_picture_t *picture;
 	  gboolean key_frame = FALSE;
-	  
+  
 	  outbuf = (GstBuffer *) info->display_fbuf->id;
 	  picture = info->display_picture;
 
