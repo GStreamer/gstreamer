@@ -110,12 +110,38 @@ xmllaunch_parse_cmdline (const gchar **argv)
 
 extern volatile gboolean glib_on_error_halt;
 static void fault_restore(void);
+static void fault_spin (void);
+
+/* FIXME: This is just a temporary hack.  We should have a better
+ * check for siginfo handling. */
+#ifdef SA_SIGINFO
+#define USE_SIGINFO
+#endif
+
+#ifndef USE_SIGINFO
+static void 
+fault_handler_sighandler (int signum)
+{
+  fault_restore ();
+
+  if (signum == SIGSEGV) {
+    g_print ("Caught SIGSEGV\n");
+  }
+  else if (signum == SIGQUIT){
+    g_print ("Caught SIGQUIT\n");
+  }
+  else {
+    g_print ("signo:  %d\n", signum);
+  }
+
+  fault_spin();
+}
+
+#else
 
 static void 
-fault_handler (int signum, siginfo_t *si, void *misc)
+fault_handler_sigaction (int signum, siginfo_t *si, void *misc)
 {
-  int spinning = TRUE;
-
   fault_restore ();
 
   if (si->si_signo == SIGSEGV) {
@@ -129,6 +155,15 @@ fault_handler (int signum, siginfo_t *si, void *misc)
     g_print ("errno:  %d\n", si->si_errno);
     g_print ("code:   %d\n", si->si_code);
   }
+
+  fault_spin();
+}
+#endif
+
+static void
+fault_spin (void)
+{
+  int spinning = TRUE;
 
   glib_on_error_halt = FALSE;
   g_on_error_stack_trace ("gst-launch");
@@ -151,7 +186,6 @@ fault_handler (int signum, siginfo_t *si, void *misc)
 
   _exit(0);
 #endif
-
 }
 
 static void 
@@ -172,8 +206,12 @@ fault_setup (void)
   struct sigaction action;
 
   memset (&action, 0, sizeof (action));
-  action.sa_sigaction = fault_handler;
+#ifdef USE_SIGINFO
+  action.sa_sigaction = fault_handler_sigaction;
   action.sa_flags = SA_SIGINFO;
+#else
+  action.sa_handler = fault_handler_sighandler;
+#endif
 
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
