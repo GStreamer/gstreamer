@@ -1,3 +1,11 @@
+2004-01-04  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst-libs/gst/xoverlay/xoverlay.c: (gst_x_overlay_base_init),
+	(gst_x_overlay_got_xwindow_id), (gst_x_overlay_get_desired_size),
+	(gst_x_overlay_got_desired_size):
+	* gst-libs/gst/xoverlay/xoverlay.h:
+	  Add optional "desired size" signal and querying.
+
 2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/matroska/matroska-demux.c:
