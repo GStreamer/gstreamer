@@ -1,8 +1,6 @@
-TOP_BUILDDIR=$(shell cd $(top_builddir) && pwd)
-TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(TOP_BUILDDIR) GST_REGISTRY=$(TOP_BUILDDIR)/testsuite/test-registry.xml
+TESTS_ENVIRONMENT = GST_PLUGIN_PATH=$(top_builddir) GST_REGISTRY=$(top_builddir)/testsuite/test-registry.xml
 
-plugindir = $(shell cd $(top_builddir)/testsuite/plugin/ && pwd)
-
+plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 plugin_LTLIBRARIES = libtestplugin.la libtestplugin2.la
 
 # FIXME : tests need fixing
@@ -18,10 +16,14 @@ libtestplugin2_la_SOURCES = testplugin2.c
 libtestplugin2_la_CFLAGS = $(GST_CFLAGS)
 libtestplugin2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-linked_LDFLAGS = -L. -ltestplugin -ltestplugin2
+linked_LIBS = libtestplugin.la libtestplugin2.la
 
 static_SOURCES = static.c testplugin_s.c testplugin2_s.c
 
-TESTS = $(testprogs)
-
 check_PROGRAMS = $(testprogs)
+
+TESTS = $(top_builddir)/tools/gst-register $(testprogs)
+
+# override to _not_ install the test plugins
+install-pluginLTLIBRARIES:
+
