@@ -1,3 +1,11 @@
+2004-08-16  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoraenc.c: (gst_border_mode_get_type),
+	(gst_theora_enc_class_init), (theora_enc_sink_link),
+	(theora_buffer_from_packet), (theora_enc_chain):
+	Fix bug where buffers were not marked as keyframes
+	correctly.
+
 2004-08-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/lame/gstlame.c: (gst_lame_vbrmode_get_type),
