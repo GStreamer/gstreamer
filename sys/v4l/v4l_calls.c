@@ -56,7 +56,7 @@ static const char *picture_name[] = {
   NULL
 };
 
-static const char *audio_name[] = {
+G_GNUC_UNUSED static const char *audio_name[] = {
   "Volume",
   "Mute",
   "Mode",
