@@ -22,7 +22,7 @@
 #include "flx_fmt.h"
 #include "gstflxdec.h"
 
-#define JIFFIE  (1000000/70)
+#define JIFFIE  (GST_SECOND/70)
 
 static GstCaps* flxdec_type_find(GstBuffer *buf, gpointer private);
 
@@ -508,7 +508,7 @@ gst_flxdec_loop (GstElement *element)
       flxdec->frame_time = JIFFIE * flxh->speed;
     }
     else {
-      flxdec->frame_time = flxh->speed * 1000;
+      flxdec->frame_time = flxh->speed * GST_USECOND;
     }
     
     gst_pad_try_set_caps (flxdec->srcpad,
