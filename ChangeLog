@@ -1,3 +1,10 @@
+2004-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* ext/vorbis/Makefile.am:
+	* sys/Makefile.am:
+	  remove id3types, vorbisfile and xvideosink from the build (#133783)
+
 2004-03-08  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_info):
