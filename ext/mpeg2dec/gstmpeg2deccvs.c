@@ -710,7 +710,12 @@ gst_mpeg2dec_src_event (GstPad *pad, GstEvent *event)
         }
 	peer_formats++;
       }
-      /* at this point, either the seek worked or res == FALSE */
+      /* at this point, either the seek worked and res = TRUE or res == FALSE and the seek
+       * failed */
+      if (res && flush) {
+        /* if we need to flush, iterate until the buffer is empty */
+        while (mpeg2_parse (mpeg2dec->decoder) != -1);
+      }
       break;
     }
     default:
