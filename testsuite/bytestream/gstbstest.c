@@ -24,7 +24,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
-#include <libs/bytestream/gstbytestream.h>
+#include <gst/bytestream/bytestream.h>
 
 #define GST_TYPE_BSTEST  		(gst_bstest_get_type())
 #define GST_BSTEST(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BSTEST,GstBsTest))
@@ -271,7 +271,9 @@ gst_bstest_loop (GstElement * element)
       
       i++;
     }
-  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element));
+/*  } while (!GST_ELEMENT_IS_COTHREAD_STOPPING (element)); */
+
+  } while (0);
 }
 
 static void

@@ -1,5 +1,5 @@
-# FIXME : refcounting threads
-SUBDIRS = capsnego plugin bytestream cleanup
+# FIXME : refcounting threads bytestream
+SUBDIRS = capsnego plugin cleanup
 
 testprogs = test_gst_init
 

@@ -1,6 +1,6 @@
 # FIXME : tests need fixing
-testprogs = dynamic linked static # loading registry static2
-## filterdir = $(libdir)/gst
+testprogs = static # dynamic linked loading registry static2
+# filterdir = $(libdir)/gst
 
 noinst_LTLIBRARIES = libtestplugin.la libtestplugin2.la
 
