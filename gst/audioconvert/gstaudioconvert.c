@@ -484,7 +484,7 @@ gst_audio_convert_buffer_to_default_format (GstAudioConvert *this, GstBuffer *bu
         if (this->sinkcaps.sign) {
           CONVERT_TO (cur, src, gint8, this->sinkcaps.sign, this->sinkcaps.endianness, GINT8_IDENTITY, GINT8_IDENTITY);
         } else {
-          CONVERT_TO (cur, src, guint16, this->sinkcaps.sign, this->sinkcaps.endianness, GUINT8_IDENTITY, GUINT8_IDENTITY);
+          CONVERT_TO (cur, src, guint8, this->sinkcaps.sign, this->sinkcaps.endianness, GUINT8_IDENTITY, GUINT8_IDENTITY);
         }
         break;
       case 16:
