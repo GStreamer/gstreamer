@@ -787,6 +787,15 @@ gst_v4l2src_getcaps (GstPad * pad)
             &min_w, &max_w, &min_h, &max_h)) {
       continue;
     }
+    /* template */
+    if (min_w < 1)
+      min_w = 1;
+    if (min_h < 1)
+      min_h = 1;
+    if (max_w > 4096)
+      max_w = 4096;
+    if (max_h > 4096)
+      max_h = 4096;
 
     /* add to list */
     structure = gst_v4l2src_v4l2fourcc_to_caps (format->pixelformat);
