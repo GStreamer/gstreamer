@@ -867,7 +867,10 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
       return;
     case GST_ID3_TAG_STATE_READING_V1_TAG:
       if (tag->buffer) {
-	tag->buffer = gst_buffer_merge (tag->buffer, buffer);
+	GstBuffer *temp;
+	temp = gst_buffer_merge (tag->buffer, buffer);
+	gst_data_unref (GST_DATA (tag->buffer));
+	tag->buffer = temp;
 	gst_data_unref (GST_DATA (buffer));
       } else {
 	tag->buffer = buffer;
@@ -923,7 +926,10 @@ gst_id3_tag_chain (GstPad *pad, GstData *data)
       return;
     case GST_ID3_TAG_STATE_READING_V2_TAG:
       if (tag->buffer) {
-	tag->buffer = gst_buffer_merge (tag->buffer, buffer);
+	GstBuffer *temp;
+	temp = gst_buffer_merge (tag->buffer, buffer);
+	gst_data_unref (GST_DATA (tag->buffer));
+	tag->buffer = temp;
 	gst_data_unref (GST_DATA (buffer));
       } else {
 	tag->buffer = buffer;
