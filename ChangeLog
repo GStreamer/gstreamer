@@ -1,5 +1,10 @@
 2004-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/adder/gstadder.c: (gst_adder_get_type), (gst_adder_loop):
+          throw errors instead of allowing SIGFPE
+
+2004-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/gconf/gconf.c: (gst_gconf_get_string),
 	(gst_gconf_render_bin_from_key):
           leak plugging and style fixing
