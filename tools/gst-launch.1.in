@@ -23,7 +23,7 @@ For a complete description of possible PIPELINE-DESCRIPTIONS see above under
 .B  \-\-help
 Print help synopsis and available FLAGS
 .TP 8
-.B  \-v, \-\-silent
+.B  \-v, \-\-verbose
 Output status information
 .TP 8
 .B  \-XTYPE, \-\-exclude=TYPE, 
