@@ -70,7 +70,7 @@ static gboolean gst_asf_demux_setup_pad (GstASFDemux * asf_demux,
 
 static GstElementStateReturn gst_asf_demux_change_state (GstElement * element);
 static GstCaps *gst_asf_demux_video_caps (guint32 codec_fcc,
-    asf_stream_video_format * video, char **codec_name);
+    asf_stream_video_format * video, guint8 * extradata, char **codec_name);
 static GstCaps *gst_asf_demux_audio_caps (guint16 codec_id,
     asf_stream_audio * audio, guint8 * extradata, char **codec_name);
 
@@ -154,7 +154,7 @@ gst_asf_demux_base_init (gpointer g_class)
 
   vidcaps = gst_caps_new_empty ();
   for (i = 0; vid_list[i] != 0; i++) {
-    temp = gst_asf_demux_video_caps (vid_list[i], NULL, NULL);
+    temp = gst_asf_demux_video_caps (vid_list[i], NULL, NULL, NULL);
     gst_caps_append (vidcaps, temp);
   }
 
@@ -942,8 +942,6 @@ gst_asf_demux_process_stream (GstASFDemux * asf_demux, guint64 * obj_size)
   asf_stream_video video_object;
   asf_stream_video_format video_format_object;
   guint16 size;
-  GstBuffer *buf;
-  guint32 got_bytes;
   guint16 id;
 
   /* Get the rest of the header's header */
@@ -1018,21 +1016,6 @@ gst_asf_demux_process_stream (GstASFDemux * asf_demux, guint64 * obj_size)
 
       if (!gst_asf_demux_add_video_stream (asf_demux, &video_format_object, id))
         return FALSE;
-
-      /* Read any additional information */
-      if (size) {
-        got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
-        /* There is additional data */
-        while (got_bytes < size) {
-          guint32 remaining;
-          GstEvent *event;
-
-          gst_bytestream_get_status (asf_demux->bs, &remaining, &event);
-          gst_event_unref (event);
-
-          got_bytes = gst_bytestream_read (asf_demux->bs, &buf, size);
-        }
-      }
       break;
     default:
       GST_ELEMENT_ERROR (asf_demux, STREAM, WRONG_TYPE, (NULL),
@@ -1743,7 +1726,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux * asf_demux,
 
 static GstCaps *
 gst_asf_demux_video_caps (guint32 codec_fcc,
-    asf_stream_video_format * video, char **codec_name)
+    asf_stream_video_format * video, guint8 * extradata, char **codec_name)
 {
   GstCaps *caps = NULL;
   gint width = 0, height = 0;
@@ -1864,6 +1847,17 @@ gst_asf_demux_video_caps (guint32 codec_fcc,
         "width", G_TYPE_INT, video->width,
         "height", G_TYPE_INT, video->height,
         "framerate", G_TYPE_DOUBLE, (double) 25, NULL);
+
+    if (extradata) {
+      GstBuffer *buffer;
+
+      buffer = gst_buffer_new_and_alloc (video->size);
+      memcpy (GST_BUFFER_DATA (buffer), extradata, video->size);
+      /* gst_util_dump_mem (GST_BUFFER_DATA (buffer), video->size); */
+
+      gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+      gst_data_unref (GST_DATA (buffer));
+    }
   } else {
     gst_caps_set_simple (caps,
         "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
@@ -1883,6 +1877,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * asf_demux,
   gchar *name = NULL;
   char *codec_name = NULL;
   GstTagList *list = gst_tag_list_new ();
+  gint size_left = video->size - 40;
 
   /* Create the audio pad */
   name = g_strdup_printf ("video_%02d", asf_demux->num_video_streams);
@@ -1890,7 +1885,18 @@ gst_asf_demux_add_video_stream (GstASFDemux * asf_demux,
   g_free (name);
 
   /* Now try some gstreamer formatted MIME types (from gst_avi_demux_strf_vids) */
-  caps = gst_asf_demux_video_caps (video->tag, video, &codec_name);
+  if (size_left) {
+    guint8 *extradata;
+
+    GST_WARNING_OBJECT (asf_demux,
+        "asfdemux: Video header contains %d bytes of codec specific data",
+        size_left);
+    gst_bytestream_peek_bytes (asf_demux->bs, &extradata, size_left);
+    caps = gst_asf_demux_video_caps (video->tag, video, extradata, &codec_name);
+    gst_bytestream_flush (asf_demux->bs, size_left);
+  } else {
+    caps = gst_asf_demux_video_caps (video->tag, video, NULL, &codec_name);
+  }
   gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
       codec_name, NULL);
   gst_element_found_tags (GST_ELEMENT (asf_demux), list);

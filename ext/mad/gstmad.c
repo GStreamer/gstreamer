@@ -74,8 +74,9 @@ struct _GstMad
   GstTagList *tags;
 
   /* negotiated format */
-  gint rate;
-  gint channels;
+  gint rate, pending_rate;
+  gint channels, pending_channels;
+  gint times_pending;
 
   gboolean caps_set;            /* used to keep track of whether to change/update caps */
   GstIndex *index;
@@ -1153,7 +1154,16 @@ gst_mad_check_caps_reset (GstMad * mad)
       GST_DEBUG
           ("Header changed from %d Hz/%d ch to %d Hz/%d ch, failed sync after seek ?",
           mad->rate, mad->channels, rate, nchannels);
-      return;
+      /* we're conservative on stream changes. However, our *initial* caps
+       * might have been wrong as well - mad ain't perfect in syncing. So,
+       * we count caps changes and change if we pass a limit treshold (3). */
+      if (nchannels != mad->pending_channels || rate != mad->pending_rate) {
+        mad->times_pending = 0;
+        mad->pending_channels = nchannels;
+        mad->pending_rate = rate;
+      }
+      if (++mad->times_pending < 3)
+        return;
     }
   }
   gst_mad_update_info (mad);
@@ -1493,6 +1503,7 @@ gst_mad_change_state (GstElement * element)
       mad->rate = 0;
       mad->channels = 0;
       mad->caps_set = FALSE;
+      mad->times_pending = mad->pending_rate = mad->pending_channels = 0;
       mad->vbr_average = 0;
       mad->segment_start = 0;
       mad->new_header = TRUE;
