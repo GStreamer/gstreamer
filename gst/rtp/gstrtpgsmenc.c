@@ -28,11 +28,8 @@
 static GstElementDetails gst_rtpgsmenc_details = {
   "RTP GSM Audio Encoder",
   "Codec/Network",
-  "LGPL",
   "Encodes GSM audio into an RTP packet",
-  VERSION,
-  "Zeeshan Ali <zak147@yahoo.com>",
-  "(C) 2003",
+  "Zeeshan Ali <zak147@yahoo.com>"
 };
 
 /* RtpGSMEnc signals and args */
@@ -70,6 +67,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 )
 
 static void gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass);
+static void gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass);
 static void gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc);
 static void gst_rtpgsmenc_chain (GstPad * pad, GstData *_data);
 static void gst_rtpgsmenc_set_property (GObject * object, guint prop_id,
@@ -88,7 +86,7 @@ static GType gst_rtpgsmenc_get_type (void)
   if (!rtpgsmenc_type) {
     static const GTypeInfo rtpgsmenc_info = {
       sizeof (GstRtpGSMEncClass),
-      NULL,
+      (GBaseInitFunc) gst_rtpgsmenc_base_init,
       NULL,
       (GClassInitFunc) gst_rtpgsmenc_class_init,
       NULL,
@@ -101,6 +99,18 @@ static GType gst_rtpgsmenc_get_type (void)
     rtpgsmenc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMEnc", &rtpgsmenc_info, 0);
   }
   return rtpgsmenc_type;
+}
+
+static void
+gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_set_details (element_class, &gst_rtpgsmenc_details);
 }
 
 static void
@@ -299,17 +309,8 @@ gst_rtpgsmenc_change_state (GstElement * element)
 }
 
 gboolean
-gst_rtpgsmenc_plugin_init (GModule * module, GstPlugin * plugin)
+gst_rtpgsmenc_plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *rtpgsmenc;
-
-  rtpgsmenc = gst_element_factory_new ("rtpgsmenc", GST_TYPE_RTP_GSM_ENC, &gst_rtpgsmenc_details);
-  g_return_val_if_fail (rtpgsmenc != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (rtpgsmenc, GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_element_factory_add_pad_template (rtpgsmenc, GST_PAD_TEMPLATE_GET (src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (rtpgsmenc));
-
-  return TRUE;
+  return gst_element_register (plugin, "rtpgsmenc",
+			       GST_RANK_NONE, GST_TYPE_RTP_GSM_ENC);
 }

@@ -69,7 +69,7 @@ struct _GstRtpGSMEncClass
 #define GST_IS_RTP_GSM_ENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_ENC))
 
-gboolean gst_rtpgsmenc_plugin_init (GModule * module, GstPlugin * plugin);
+gboolean gst_rtpgsmenc_plugin_init (GstPlugin * plugin);
 
 #ifdef __cplusplus
 }

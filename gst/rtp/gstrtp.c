@@ -17,25 +17,34 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+
 #include "gstrtpL16enc.h"
 #include "gstrtpL16parse.h"
 #include "gstrtpgsmenc.h"
 #include "gstrtpgsmparse.h"
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  gst_rtpL16enc_plugin_init (module, plugin);
-  gst_rtpL16parse_plugin_init (module, plugin);
-  gst_rtpgsmenc_plugin_init (module, plugin);
-  gst_rtpgsmparse_plugin_init (module, plugin);
+  if (!gst_rtpL16enc_plugin_init (plugin) ||
+      !gst_rtpL16parse_plugin_init (plugin) ||
+      !gst_rtpgsmenc_plugin_init (plugin) ||
+      !gst_rtpgsmparse_plugin_init (plugin))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "rtp",
-  plugin_init
-};
+  "Real-time protocol plugins",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+)

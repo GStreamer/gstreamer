@@ -27,11 +27,8 @@
 static GstElementDetails gst_rtpL16enc_details = {
   "RTP RAW Audio Encoder",
   "Codec/Network",
-  "LGPL",
   "Encodes Raw Audio into an RTP packet",
-  VERSION,
-  "Zeeshan Ali <zak147@yahoo.com>",
-  "(C) 2003",
+  "Zeeshan Ali <zak147@yahoo.com>"
 };
 
 /* RtpL16Enc signals and args */
@@ -74,6 +71,7 @@ GST_PAD_TEMPLATE_FACTORY (src_factory,
 );
 
 static void gst_rtpL16enc_class_init (GstRtpL16EncClass * klass);
+static void gst_rtpL16enc_base_init (GstRtpL16EncClass * klass);
 static void gst_rtpL16enc_init (GstRtpL16Enc * rtpL16enc);
 static void gst_rtpL16enc_chain (GstPad * pad, GstData *_data);
 static void gst_rtpL16enc_set_property (GObject * object, guint prop_id,
@@ -92,7 +90,7 @@ static GType gst_rtpL16enc_get_type (void)
   if (!rtpL16enc_type) {
     static const GTypeInfo rtpL16enc_info = {
       sizeof (GstRtpL16EncClass),
-      NULL,
+      (GBaseInitFunc) gst_rtpL16enc_base_init,
       NULL,
       (GClassInitFunc) gst_rtpL16enc_class_init,
       NULL,
@@ -105,6 +103,18 @@ static GType gst_rtpL16enc_get_type (void)
     rtpL16enc_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Enc", &rtpL16enc_info, 0);
   }
   return rtpL16enc_type;
+}
+
+static void
+gst_rtpL16enc_base_init (GstRtpL16EncClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_set_details (element_class, &gst_rtpL16enc_details);
 }
 
 static void
@@ -312,17 +322,8 @@ gst_rtpL16enc_change_state (GstElement * element)
 }
 
 gboolean
-gst_rtpL16enc_plugin_init (GModule * module, GstPlugin * plugin)
+gst_rtpL16enc_plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *rtpL16enc;
-
-  rtpL16enc = gst_element_factory_new ("rtpL16enc", GST_TYPE_RTP_L16_ENC, &gst_rtpL16enc_details);
-  g_return_val_if_fail (rtpL16enc != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (rtpL16enc, GST_PAD_TEMPLATE_GET (sink_factory));
-  gst_element_factory_add_pad_template (rtpL16enc, GST_PAD_TEMPLATE_GET (src_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (rtpL16enc));
-
-  return TRUE;
+  return gst_element_register (plugin, "rtpL16enc",
+			       GST_RANK_NONE, GST_TYPE_RTP_L16_ENC);
 }

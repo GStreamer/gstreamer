@@ -23,11 +23,8 @@
 static GstElementDetails gst_rtp_L16parse_details = {
   "RTP packet parser",
   "Codec/Network",
-  "GPL",
   "Extracts raw audio from RTP packets",
-  VERSION,
-  "Zeeshan Ali <zak147@yahoo.com>",
-  "(C) 2003",
+  "Zeeshan Ali <zak147@yahoo.com>"
 };
 
 /* RtpL16Parse signals and args */
@@ -70,6 +67,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
 );
 
 static void gst_rtpL16parse_class_init (GstRtpL16ParseClass * klass);
+static void gst_rtpL16parse_base_init (GstRtpL16ParseClass * klass);
 static void gst_rtpL16parse_init (GstRtpL16Parse * rtpL16parse);
 
 static void gst_rtpL16parse_chain (GstPad * pad, GstData *_data);
@@ -89,7 +87,7 @@ static GType gst_rtpL16parse_get_type (void)
   if (!rtpL16parse_type) {
     static const GTypeInfo rtpL16parse_info = {
       sizeof (GstRtpL16ParseClass),
-      NULL,
+      (GBaseInitFunc) gst_rtpL16parse_base_init,
       NULL,
       (GClassInitFunc) gst_rtpL16parse_class_init,
       NULL,
@@ -102,6 +100,18 @@ static GType gst_rtpL16parse_get_type (void)
     rtpL16parse_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Parse", &rtpL16parse_info, 0);
   }
   return rtpL16parse_type;
+}
+
+static void
+gst_rtpL16parse_base_init (GstRtpL16ParseClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &gst_rtp_L16parse_details);
 }
 
 static void
@@ -322,17 +332,8 @@ gst_rtpL16parse_change_state (GstElement * element)
 }
 
 gboolean
-gst_rtpL16parse_plugin_init (GModule * module, GstPlugin * plugin)
+gst_rtpL16parse_plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *rtpL16parse;
-
-  rtpL16parse = gst_element_factory_new ("rtpL16parse", GST_TYPE_RTP_L16_PARSE, &gst_rtp_L16parse_details);
-  g_return_val_if_fail (rtpL16parse != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (rtpL16parse, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (rtpL16parse, GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (rtpL16parse));
-
-  return TRUE;
+  return gst_element_register (plugin, "rtpL16parse",
+			       GST_RANK_NONE, GST_TYPE_RTP_L16_PARSE);
 }

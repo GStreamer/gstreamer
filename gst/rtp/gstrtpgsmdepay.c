@@ -24,11 +24,8 @@
 static GstElementDetails gst_rtp_gsmparse_details = {
   "RTP packet parser",
   "Codec/Network",
-  "GPL",
   "Extracts GSM audio from RTP packets",
-  VERSION,
-  "Zeeshan Ali <zak147@yahoo.com>",
-  "(C) 2003",
+  "Zeeshan Ali <zak147@yahoo.com>"
 };
 
 /* RtpGSMParse signals and args */
@@ -65,6 +62,7 @@ GST_PAD_TEMPLATE_FACTORY (sink_factory,
 );
 
 static void gst_rtpgsmparse_class_init (GstRtpGSMParseClass * klass);
+static void gst_rtpgsmparse_base_init (GstRtpGSMParseClass * klass);
 static void gst_rtpgsmparse_init (GstRtpGSMParse * rtpgsmparse);
 
 static void gst_rtpgsmparse_chain (GstPad * pad, GstData *_data);
@@ -84,7 +82,7 @@ static GType gst_rtpgsmparse_get_type (void)
   if (!rtpgsmparse_type) {
     static const GTypeInfo rtpgsmparse_info = {
       sizeof (GstRtpGSMParseClass),
-      NULL,
+      (GBaseInitFunc) gst_rtpgsmparse_base_init,
       NULL,
       (GClassInitFunc) gst_rtpgsmparse_class_init,
       NULL,
@@ -97,6 +95,18 @@ static GType gst_rtpgsmparse_get_type (void)
     rtpgsmparse_type = g_type_register_static (GST_TYPE_ELEMENT, "GstRtpGSMParse", &rtpgsmparse_info, 0);
   }
   return rtpgsmparse_type;
+}
+
+static void
+gst_rtpgsmparse_base_init (GstRtpGSMParseClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (src_factory));
+  gst_element_class_add_pad_template (element_class,
+		GST_PAD_TEMPLATE_GET (sink_factory));
+  gst_element_class_set_details (element_class, &gst_rtp_gsmparse_details);
 }
 
 static void
@@ -284,17 +294,8 @@ gst_rtpgsmparse_change_state (GstElement * element)
 }
 
 gboolean
-gst_rtpgsmparse_plugin_init (GModule * module, GstPlugin * plugin)
+gst_rtpgsmparse_plugin_init (GstPlugin * plugin)
 {
-  GstElementFactory *rtpgsmparse;
-
-  rtpgsmparse = gst_element_factory_new ("rtpgsmparse", GST_TYPE_RTP_GSM_PARSE, &gst_rtp_gsmparse_details);
-  g_return_val_if_fail (rtpgsmparse != NULL, FALSE);
-
-  gst_element_factory_add_pad_template (rtpgsmparse, GST_PAD_TEMPLATE_GET (src_factory));
-  gst_element_factory_add_pad_template (rtpgsmparse, GST_PAD_TEMPLATE_GET (sink_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (rtpgsmparse));
-
-  return TRUE;
+  return gst_element_register (plugin, "rtpgsmparse",
+			       GST_RANK_NONE, GST_TYPE_RTP_GSM_PARSE);
 }

@@ -63,7 +63,7 @@ struct _GstRtpL16ParseClass
 #define GST_IS_RTP_L16_PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_PARSE))
 
-gboolean gst_rtpL16parse_plugin_init (GModule * module, GstPlugin * plugin);
+gboolean gst_rtpL16parse_plugin_init (GstPlugin * plugin);
 
 #ifdef __cplusplus
 }
