@@ -191,6 +191,7 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
         *codec_name = g_strdup ("Microsoft MPEG-4 4.1");
       break;
 
+    case GST_MAKE_FOURCC ('m', 'p', '4', '2'):
     case GST_MAKE_FOURCC ('M', 'P', '4', '2'):
       caps = gst_caps_new_simple ("video/x-msmpeg",
           "msmpegversion", G_TYPE_INT, 42, NULL);
@@ -198,6 +199,7 @@ gst_riff_create_video_caps_with_data (guint32 codec_fcc,
         *codec_name = g_strdup ("Microsoft MPEG-4 4.2");
       break;
 
+    case GST_MAKE_FOURCC ('m', 'p', '4', '3'):
     case GST_MAKE_FOURCC ('M', 'P', '4', '3'):
       caps = gst_caps_new_simple ("video/x-msmpeg",
           "msmpegversion", G_TYPE_INT, 43, NULL);
