@@ -406,7 +406,7 @@ gst_mms_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     return FALSE;
   }
   g_free (protocol);
-  g_object_set (src, "location", uri);
+  g_object_set (src, "location", uri, NULL);
 
   return TRUE;
 }
