@@ -243,8 +243,19 @@ colorspace_setup_converter (GstColorspace *space, GstCaps *from_caps, GstCaps *t
       break;
     case GST_MAKE_FOURCC ('Y','V','1','2'):
       switch (to_space) {
+        case GST_MAKE_FOURCC ('R','G','B',' '):
+          GST_INFO (GST_CAT_NEGOTIATION, "colorspace: YV12 to RGB");
+
+	  gst_caps_get_int (to_caps, "bpp", &space->destbpp);
+	  space->converter = gst_colorspace_yuv2rgb_get_converter (from_caps, to_caps);
+          space->type = GST_COLORSPACE_YUV_RGB;
+	  return TRUE;
         case GST_MAKE_FOURCC ('I','4','2','0'):
           space->type = GST_COLORSPACE_420_SWAP;
+	  space->destbpp = 12;
+	  return TRUE;
+        case GST_MAKE_FOURCC ('Y','V','1','2'):
+          space->type = GST_COLORSPACE_NONE;
 	  space->destbpp = 12;
 	  return TRUE;
       }
