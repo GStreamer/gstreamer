@@ -153,10 +153,10 @@ gst_navigationtest_handle_src_event (GstPad *pad, GstEvent *event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
-      gst_caps_get_float(event->event_data.caps.caps, "pointer_x",
-          &navigationtest->x);
-      gst_caps_get_float(event->event_data.caps.caps, "pointer_y",
-          &navigationtest->y);
+      gst_structure_get_double(event->event_data.structure.structure,
+          "pointer_x", &navigationtest->x);
+      gst_structure_get_double(event->event_data.structure.structure,
+          "pointer_y", &navigationtest->y);
       break;
     default:
       break;

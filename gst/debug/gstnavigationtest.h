@@ -46,8 +46,8 @@ typedef struct _GstNavigationtestClass GstNavigationtestClass;
 struct _GstNavigationtest {
   GstVideofilter videofilter;
 
-  float x;
-  float y;
+  double x;
+  double y;
 };
 
 struct _GstNavigationtestClass {
