@@ -49,16 +49,16 @@ static void 			gst_bin_dispose 		(GObject * object);
 static GstElementStateReturn	gst_bin_change_state		(GstElement *element);
 static GstElementStateReturn	gst_bin_change_state_norecurse	(GstBin *bin);
 
-static void 			gst_bin_set_index 		(GstBin *bin, GstIndex *index);
+static void 			gst_bin_set_index 		(GstElement *element, GstIndex *index);
 
 static void 			gst_bin_add_func 		(GstBin *bin, GstElement *element);
 static void 			gst_bin_remove_func 		(GstBin *bin, GstElement *element);
 
-static gboolean 		gst_bin_iterate_func 		(GstBin * bin);
+static gboolean 		gst_bin_iterate_func 		(GstBin *bin);
 
 #ifndef GST_DISABLE_LOADSAVE
-static xmlNodePtr 		gst_bin_save_thyself 		(GstObject * object, xmlNodePtr parent);
-static void 			gst_bin_restore_thyself 	(GstObject * object, xmlNodePtr self);
+static xmlNodePtr 		gst_bin_save_thyself 		(GstObject *object, xmlNodePtr parent);
+static void 			gst_bin_restore_thyself 	(GstObject *object, xmlNodePtr self);
 #endif
 
 /* Bin signals and args */
@@ -224,11 +224,10 @@ gst_bin_auto_clock (GstBin *bin)
 }
 
 static void
-gst_bin_set_index (GstBin *bin, GstIndex *index)
+gst_bin_set_index (GstElement *element, GstIndex *index)
 {
   GList *children;
-  
-  g_return_if_fail (GST_IS_BIN (bin));
+  GstBin *bin = GST_BIN (element);
 
   children = bin->children;
   while (children) {
@@ -928,6 +927,8 @@ gst_bin_iterate (GstBin *bin)
 
   oclass = GST_BIN_GET_CLASS (bin);
 
+  gst_object_ref (GST_OBJECT (bin));
+
   if (bin->pre_iterate_func)
     (bin->pre_iterate_func) (bin, bin->pre_iterate_data);
 
@@ -949,6 +950,7 @@ gst_bin_iterate (GstBin *bin)
       running = TRUE;
     }
   }
+  gst_object_unref (GST_OBJECT (bin));
 
   return running;
 }
