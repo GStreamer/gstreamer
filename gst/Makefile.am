@@ -90,48 +90,12 @@ libgstreamer_la_SOURCES =		\
 
 BUILT_SOURCES = gstmarshal.h gstmarshal.c gstenumtypes.h gstenumtypes.c
 
-gstmarshal.h: gstmarshal.list
-	glib-genmarshal --header --prefix=gst_marshal $(srcdir)/gstmarshal.list > gstmarshal.h.tmp
-	mv gstmarshal.h.tmp gstmarshal.h
-
-gstmarshal.c: gstmarshal.list
-	echo "#include \"glib-object.h\"" >gstmarshal.c.tmp
-	echo "#include \"gstlog.h\"" >> gstmarshal.c.tmp
-	echo "#include \"gstmarshal.h\"" >> gstmarshal.c.tmp
-	glib-genmarshal --body --prefix=gst_marshal $(srcdir)/gstmarshal.list >> gstmarshal.c.tmp
-	mv gstmarshal.c.tmp gstmarshal.c
-
-gstenumtypes.h: $(libgstreamerinclude_HEADERS)
-	glib-mkenums \
-	--fhead "#ifndef __GST_ENUM_TYPES_H__\n#define __GST_ENUM_TYPES_H__\n\n#include <glib-object.h>\n\nG_BEGIN_DECLS\n" \
-	--fprod "/* enumerations from \"@filename@\" */\n" \
-	--vhead "GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n"         \
-	--ftail "G_END_DECLS\n\n#endif /* __GST_ENUM_TYPES_H__ */" \
-	$(libgstreamerinclude_HEADERS) > gstenumtypes.h
-
-gstenumtypes.c: $(libgstreamerinclude_HEADERS)
-	glib-mkenums \
-	--fhead "#include <gst/gst.h>" \
-	--fprod "\n/* enumerations from \"@filename@\" */" \
-	--vhead "GType\n@enum_name@_get_type (void)\n{\n  static GType etype = 0;\n  if (etype == 0) {\n    static const G@Type@Value values[] = {"     \
-	--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
-	--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (\"@EnumName@\", values);\n  }\n  return etype;\n}\n" \
-	$(libgstreamerinclude_HEADERS) > gstenumtypes.c
-
-# Don't want the generated marshal files in the dist
-dist-hook:
-	rm -f $(distdir)/gstmarshal.c $(distdir)/gstmarshal.h
-# Clean generated files
-distclean-local:
-	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
-
 libgstreamerincludedir = $(includedir)/gstreamer-@VERSION@/gst
-libgstreamerinclude_HEADERS =		\
+
+gst_headers =			\
 	gst.h			\
 	gstatomic.h		\
 	gstconfig.h		\
-	gstmarshal.h		\
-	gstenumtypes.h		\
 	gstobject.h		\
 	gsttypes.h		\
 	gstautoplug.h		\
@@ -165,14 +129,57 @@ libgstreamerinclude_HEADERS =		\
 	gstregistry.h		\
 	gsttimecache.h		\
 	gstparse.h		\
-	gstversion.h		\
 	gstxml.h
+
+built_headers =			\
+	gstversion.h		\
+	gstmarshal.h		\
+	gstenumtypes.h
+
+libgstreamerinclude_HEADERS = $(gst_headers) $(built_headers)
 
 noinst_HEADERS = 		\
 	gst_private.h		\
-	gstdata_private.h		\
+	gstdata_private.h	\
 	gstarch.h		\
 	cothreads.h		
+
+
+gstmarshal.h: gstmarshal.list
+	glib-genmarshal --header --prefix=gst_marshal $^ > gstmarshal.h.tmp
+	mv gstmarshal.h.tmp gstmarshal.h
+
+gstmarshal.c: gstmarshal.list
+	echo "#include \"glib-object.h\"" >gstmarshal.c.tmp
+	echo "#include \"gstlog.h\"" >> gstmarshal.c.tmp
+	echo "#include \"gstmarshal.h\"" >> gstmarshal.c.tmp
+	glib-genmarshal --body --prefix=gst_marshal $^ >> gstmarshal.c.tmp
+	mv gstmarshal.c.tmp gstmarshal.c
+
+gstenumtypes.h: $(gst_headers)
+	glib-mkenums \
+	--fhead "#ifndef __GST_ENUM_TYPES_H__\n#define __GST_ENUM_TYPES_H__\n\n#include <glib-object.h>\n\nG_BEGIN_DECLS\n" \
+	--fprod "/* enumerations from \"@filename@\" */\n" \
+	--vhead "GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n"         \
+	--ftail "G_END_DECLS\n\n#endif /* __GST_ENUM_TYPES_H__ */" \
+	$^ > gstenumtypes.h
+
+gstenumtypes.c: $(gst_headers)
+	glib-mkenums \
+	--fhead "#include <gst/gst.h>" \
+	--fprod "\n/* enumerations from \"@filename@\" */" \
+	--vhead "GType\n@enum_name@_get_type (void)\n{\n  static GType etype = 0;\n  if (etype == 0) {\n    static const G@Type@Value values[] = {"     \
+	--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
+	--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (\"@EnumName@\", values);\n  }\n  return etype;\n}\n" \
+	$^ > gstenumtypes.c
+
+# Don't want the generated marshal files in the dist
+dist-hook:
+	rm -f $(distdir)/gstmarshal.c $(distdir)/gstmarshal.h
+
+# Clean generated files
+distclean-local:
+	rm -f $(top_builddir)/gst/gstmarshal.c $(top_builddir)/gst/gstmarshal.h
 
 libgstreamer_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	$(LIBGST_CFLAGS) \
