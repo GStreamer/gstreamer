@@ -1,3 +1,10 @@
+2004-01-26  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+
+	* gst-libs/gst/audio/audio.h:
+	  remove buffer-frames from audio caps
+	* gst/audioconvert/gstaudioconvert.c:
+	  fix plugin to really work.
+
 2004-01-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst-libs/gst/mixer/mixer.c:
