@@ -256,4 +256,4 @@ DIST_SUBDIRS=\
 	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 rtp \
 	sdl shout sidplay \
-	smoothwave tarkin vorbis xmms
+	smoothwave swfdec tarkin vorbis xmms
