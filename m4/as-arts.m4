@@ -158,7 +158,7 @@ int main ()
         :
       else
          echo "*** Could not run ARTS test program, checking why..."
-         CFLAGS="$CFLAGS $ARTS_CFLAGS"
+         CFLAGS="$CFLAGS $ARTS_CXXFLAGS"
          LIBS="$LIBS $ARTS_LIBS"
          AC_TRY_LINK([
 #include <stdio.h>
@@ -181,11 +181,11 @@ int main ()
           LIBS="$ac_save_LIBS"
       fi
     fi
-    ARTS_CFLAGS=""
+    ARTS_CXXFLAGS=""
     ARTS_LIBS=""
     ifelse([$3], , :, [$3])
   fi
-  AC_SUBST(ARTS_CFLAGS)
+  AC_SUBST(ARTS_CXXFLAGS)
   AC_SUBST(ARTS_LIBS)
   rm -f conf.artstest
 ])
