@@ -1,3 +1,22 @@
+2004-03-25  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/law/alaw-decode.c: (alawdec_getcaps), (alawdec_link),
+	(gst_alawdec_base_init), (gst_alawdec_class_init),
+	(gst_alawdec_init), (gst_alawdec_chain):
+	* gst/law/alaw-encode.c: (alawenc_getcaps), (alawenc_link),
+	(gst_alawenc_base_init), (gst_alawenc_class_init),
+	(gst_alawenc_init), (gst_alawenc_chain):
+	* gst/law/mulaw-decode.c: (mulawdec_getcaps), (mulawdec_link),
+	(gst_mulawdec_base_init), (gst_mulawdec_class_init),
+	(gst_mulawdec_init), (gst_mulawdec_chain):
+	* gst/law/mulaw-encode.c: (mulawenc_getcaps), (mulawenc_link),
+	(gst_mulawenc_base_init), (gst_mulawenc_class_init),
+	(gst_mulawenc_init), (gst_mulawenc_chain):
+	  Fix capsnego in all four, remove the unused property functions and
+	  simplify the chain functions slightly. I guess we could use macros
+	  or something similar for those, since the code is so similar, but
+	  I'm currently too lazy...
+
 2004-03-24  David Schleef  <ds@schleef.org>
 
 	* sys/oss/gstosselement.c: (gst_osselement_sync_parms),

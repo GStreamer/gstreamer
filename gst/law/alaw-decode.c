@@ -27,14 +27,6 @@
 
 extern GstPadTemplate *alawdec_src_template, *alawdec_sink_template;
 
-/* elementfactory information */
-static GstElementDetails alawdec_details = {
-  "A Law to PCM conversion",
-  "Codec/Decoder/Audio",
-  "Convert 8bit A law to 16bit PCM",
-  "Zaheer Merali <zaheer@bellworldwide.net>"
-};
-
 /* Stereo signals and args */
 enum
 {
@@ -51,13 +43,7 @@ static void gst_alawdec_class_init (GstALawDecClass * klass);
 static void gst_alawdec_base_init (GstALawDecClass * klass);
 static void gst_alawdec_init (GstALawDec * alawdec);
 
-static void gst_alawdec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_alawdec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static void gst_alawdec_chain (GstPad * pad, GstData * _data);
-
 
 static GstElementClass *parent_class = NULL;
 
@@ -85,31 +71,73 @@ alaw_to_s16 (guint8 a_val)
   return ((a_val & 0x80) ? t : -t);
 }
 
+static GstCaps *
+alawdec_getcaps (GstPad * pad)
+{
+  GstALawDec *alawdec = GST_ALAWDEC (gst_pad_get_parent (pad));
+  GstPad *otherpad;
+  GstCaps *base_caps, *othercaps;
+  GstStructure *structure;
+  const GValue *rate, *chans;
+
+  if (pad == alawdec->sinkpad) {
+    otherpad = alawdec->srcpad;
+    base_caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+  } else {
+    otherpad = alawdec->sinkpad;
+    base_caps = gst_caps_new_simple ("audio/x-raw-int",
+        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16,
+        "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
+  }
+  othercaps = gst_pad_get_allowed_caps (otherpad);
+
+  /* Not fully correct, but usually, all structures in a caps have
+   * the same samplerate and channels range. */
+  structure = gst_caps_get_structure (othercaps, 0);
+  rate = gst_structure_get_value (structure, "rate");
+  chans = gst_structure_get_value (structure, "channels");
+  if (!rate || !chans)
+    return gst_caps_new_empty ();
+
+  /* Set the samplerate/channels on the to-be-returned caps */
+  structure = gst_caps_get_structure (base_caps, 0);
+  gst_structure_set_value (structure, "rate", rate);
+  gst_structure_set_value (structure, "channels", chans);
+  gst_caps_free (othercaps);
+
+  return base_caps;
+}
+
 static GstPadLinkReturn
 alawdec_link (GstPad * pad, const GstCaps * caps)
 {
-  GstCaps *tempcaps;
-  gint rate, channels;
+  GstALawDec *alawdec = GST_ALAWDEC (gst_pad_get_parent (pad));
+  GstPad *otherpad;
   GstStructure *structure;
-  gboolean ret;
-
-  GstALawDec *alawdec = GST_ALAWDEC (GST_OBJECT_PARENT (pad));
+  const GValue *rate, *chans;
+  GstCaps *base_caps;
 
   structure = gst_caps_get_structure (caps, 0);
-
-  ret = gst_structure_get_int (structure, "rate", &rate);
-  ret &= gst_structure_get_int (structure, "channels", &channels);
-  if (!ret)
+  rate = gst_structure_get_value (structure, "rate");
+  chans = gst_structure_get_value (structure, "channels");
+  if (!rate || !chans)
     return GST_PAD_LINK_REFUSED;
 
-  tempcaps = gst_caps_new_simple ("audio/x-raw-int",
-      "depth", G_TYPE_INT, 16,
-      "width", G_TYPE_INT, 16,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+  if (pad == alawdec->srcpad) {
+    otherpad = alawdec->sinkpad;
+    base_caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+  } else {
+    otherpad = alawdec->srcpad;
+    base_caps = gst_caps_new_simple ("audio/x-raw-int",
+        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16,
+        "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
+  }
 
-  return gst_pad_try_set_caps (alawdec->srcpad, tempcaps);
+  structure = gst_caps_get_structure (base_caps, 0);
+  gst_structure_set_value (structure, "rate", rate);
+  gst_structure_set_value (structure, "channels", chans);
+
+  return gst_pad_try_set_caps (otherpad, base_caps);
 }
 
 GType
@@ -141,6 +169,12 @@ static void
 gst_alawdec_base_init (GstALawDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementDetails alawdec_details = {
+    "A Law to PCM conversion",
+    "Codec/Decoder/Audio",
+    "Convert 8bit A law to 16bit PCM",
+    "Zaheer Merali <zaheer@bellworldwide.net>"
+  };
 
   gst_element_class_add_pad_template (element_class, alawdec_src_template);
   gst_element_class_add_pad_template (element_class, alawdec_sink_template);
@@ -150,27 +184,21 @@ gst_alawdec_base_init (GstALawDecClass * klass)
 static void
 gst_alawdec_class_init (GstALawDecClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  gobject_class->set_property = gst_alawdec_set_property;
-  gobject_class->get_property = gst_alawdec_get_property;
 }
 
 static void
 gst_alawdec_init (GstALawDec * alawdec)
 {
   alawdec->sinkpad = gst_pad_new_from_template (alawdec_sink_template, "sink");
-  alawdec->srcpad = gst_pad_new_from_template (alawdec_src_template, "src");
   gst_pad_set_link_function (alawdec->sinkpad, alawdec_link);
-
-  gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->sinkpad);
+  gst_pad_set_getcaps_function (alawdec->sinkpad, alawdec_getcaps);
   gst_pad_set_chain_function (alawdec->sinkpad, gst_alawdec_chain);
+  gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->sinkpad);
+
+  alawdec->srcpad = gst_pad_new_from_template (alawdec_src_template, "src");
+  gst_pad_set_link_function (alawdec->srcpad, alawdec_link);
+  gst_pad_set_getcaps_function (alawdec->srcpad, alawdec_getcaps);
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->srcpad);
 }
 
@@ -193,11 +221,11 @@ gst_alawdec_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (GST_IS_ALAWDEC (alawdec));
 
   alaw_data = (guint8 *) GST_BUFFER_DATA (buf);
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_DATA (outbuf) = (gchar *) g_new (gint16, GST_BUFFER_SIZE (buf));
-  GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE (buf) * 2;
-
+  outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buf) * 2);
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
   linear_data = (gint16 *) GST_BUFFER_DATA (outbuf);
+
   for (i = 0; i < GST_BUFFER_SIZE (buf); i++) {
     *linear_data = alaw_to_s16 (*alaw_data);
     linear_data++;
@@ -206,37 +234,4 @@ gst_alawdec_chain (GstPad * pad, GstData * _data)
 
   gst_buffer_unref (buf);
   gst_pad_push (alawdec->srcpad, GST_DATA (outbuf));
-}
-
-static void
-gst_alawdec_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
-{
-  GstALawDec *alawdec;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_ALAWDEC (object));
-  alawdec = GST_ALAWDEC (object);
-
-  switch (prop_id) {
-    default:
-      break;
-  }
-}
-
-static void
-gst_alawdec_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstALawDec *alawdec;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_ALAWDEC (object));
-  alawdec = GST_ALAWDEC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
