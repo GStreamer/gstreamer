@@ -282,6 +282,12 @@ GST_CHECK_FEATURE(VGA, [VGA], vgavideosink, [
   AC_CHECK_HEADER(asm/vga.h, HAVE_VGA="yes", HAVE_VGA="no")
 ])
 
+dnl *** CDROM Audio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CDROM, true)
+GST_CHECK_FEATURE(CDROM, [CDROM Audio], cdrom, [
+ AC_CHECK_HEADER(linux/cdrom.h, HAVE_CDROM="yes", HAVE_CDROM="no")
+])
+
 dnl *** XVideo ***
 dnl Look for the PIC library first, Debian requires it.
 dnl Check debian-devel archives for gory details.
