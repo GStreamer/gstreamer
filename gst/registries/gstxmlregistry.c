@@ -701,10 +701,17 @@ gst_type_type_find_dummy (GstBuffer *buffer, gpointer priv)
   GST_DEBUG (GST_CAT_TYPES,"gsttype: need to load typefind function for %s", factory->mime);
 
   if (gst_plugin_feature_ensure_loaded (GST_PLUGIN_FEATURE (factory))) {
-    if (factory->typefindfunc) {
-      GstCaps *res = factory->typefindfunc (buffer, factory);
-      if (res)
-        return res;
+    if (factory->typefindfunc)
+    {
+      if (factory->typefindfunc == gst_type_type_find_dummy) {
+        g_warning ("factory->typefindfunc set to _dummy, not recursing, FIXME");
+      }
+      else
+      {
+        GstCaps *res = factory->typefindfunc (buffer, factory);
+        if (res)
+          return res;
+      }
     }
   }
   return NULL;
