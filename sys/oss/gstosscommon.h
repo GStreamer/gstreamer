@@ -57,6 +57,7 @@ struct _GstOssCommon
 };
 
 void       	gst_osscommon_init 		(GstOssCommon *common);
+void       	gst_osscommon_reset 		(GstOssCommon *common);
 
 gboolean 	gst_osscommon_open_audio 	(GstOssCommon *common, 
 		                                 GstOssOpenMode mode, gchar **error);

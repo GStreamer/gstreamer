@@ -105,6 +105,12 @@ gst_osscommon_init (GstOssCommon *common)
   common->device = g_strdup ("/dev/dsp");
   common->fd = -1;
 
+  gst_osscommon_reset (common);
+}
+
+void 
+gst_osscommon_reset (GstOssCommon *common) 
+{
   common->law = 0;
   common->endianness = G_BYTE_ORDER;
   common->sign = TRUE;

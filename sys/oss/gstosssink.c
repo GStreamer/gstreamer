@@ -589,7 +589,7 @@ gst_osssink_change_state (GstElement *element)
     case GST_STATE_PAUSED_TO_READY:
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN))
         ioctl (osssink->common.fd, SNDCTL_DSP_RESET, 0);
-      gst_osscommon_init (&osssink->common);
+      gst_osscommon_reset (&osssink->common);
       break;
     case GST_STATE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, GST_OSSSINK_OPEN)) {
