@@ -599,6 +599,7 @@ static GstOggPad *
 gst_ogg_pad_new (GstOggDemux *ogg, int serial)
 {
   GstOggPad *ret = g_new0 (GstOggPad, 1);
+  GstTagList *list = gst_tag_list_new ();
 
   ret->serial = serial;
   if (ogg_stream_init (&ret->stream, serial) != 0) {
@@ -606,6 +607,8 @@ gst_ogg_pad_new (GstOggDemux *ogg, int serial)
     g_free (ret);
     return NULL;
   }
+  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_SERIAL, serial, NULL);
+  gst_element_found_tags (GST_ELEMENT (ogg), list);
   GST_LOG_OBJECT (ogg, "created new ogg src %p for stream with serial %d", ret, serial);
 
   return ret;
