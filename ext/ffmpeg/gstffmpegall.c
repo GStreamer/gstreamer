@@ -163,9 +163,9 @@ GST_PAD_TEMPLATE_FACTORY(sink_templ,
     "gstffmpeg_sink_mpeg",
     "video/mpeg",
       "systemstream", GST_PROPS_BOOLEAN(FALSE),
-      "mpegversion",  GST_PROPS_INT(1),
+      "mpegversion",  GST_PROPS_INT(1) /*,
       "width",        GST_PROPS_INT_RANGE (16, 4096),
-      "height",       GST_PROPS_INT_RANGE (16, 4096)
+      "height",       GST_PROPS_INT_RANGE (16, 4096)*/
   ),
   GST_CAPS_NEW (
     "gstffmpeg_sink_jpeg",
@@ -288,18 +288,21 @@ gst_ffmpegdecall_connect (GstPad *pad, GstCaps *caps)
     return GST_PAD_CONNECT_REFUSED;
   }
 
-  /* set caps on src pad based on context.pix_fmt && width/height */
-  newcaps = gst_ffmpeg_codecid_to_caps(CODEC_ID_RAWVIDEO,
-                                       &ffmpegdec->context);
-  if (!newcaps) {
-    GST_DEBUG(GST_CAT_PLUGIN_INFO,
-              "Failed to create caps for other end (pix_fmt=%d)",
-              ffmpegdec->context.pix_fmt);
-    return GST_PAD_CONNECT_REFUSED;
+  if (ffmpegdec->context.width > 0 && ffmpegdec->context.height > 0) {
+    /* set caps on src pad based on context.pix_fmt && width/height */
+    newcaps = gst_ffmpeg_codecid_to_caps(CODEC_ID_RAWVIDEO,
+                                         &ffmpegdec->context);
+    if (!newcaps) {
+      GST_DEBUG(GST_CAT_PLUGIN_INFO,
+                "Failed to create caps for other end (pix_fmt=%d)",
+                ffmpegdec->context.pix_fmt);
+      return GST_PAD_CONNECT_REFUSED;
+    }
+
+    return gst_pad_try_set_caps(ffmpegdec->srcpad, newcaps);
   }
 
-  return gst_pad_try_set_caps(ffmpegdec->srcpad, newcaps);
-  /*return GST_PAD_CONNECT_OK;*/
+  return GST_PAD_CONNECT_OK;
 }
 
 static void

@@ -719,8 +719,10 @@ gst_ffmpeg_caps_to_codecid (GstCaps        *caps,
   }
 
   if (video && context) {
-    gst_caps_get_int(caps, "width", &context->width);
-    gst_caps_get_int(caps, "height", &context->height);
+    if (gst_caps_has_property(caps, "width"))
+      gst_caps_get_int(caps, "width", &context->width);
+    if (gst_caps_has_property(caps, "height"))
+      gst_caps_get_int(caps, "height", &context->height);
 
     /* framerate (context->frame_rate)? but then, we'd need a GstPad* */
 
