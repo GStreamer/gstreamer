@@ -484,14 +484,15 @@ speex_dec_chain (GstPad * pad, GstData * data)
 
       ret = speex_decode (dec->state, &dec->bits, dec->output);
       if (ret == -1) {
-        /* FIXME emit warning */
+        /* uh? end of stream */
+        GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
         break;
       } else if (ret == -2) {
-        /* FIXME emit warning */
+        GST_WARNING_OBJECT (dec, "Decoding error: corrupted stream?");
         break;
       }
       if (speex_bits_remaining (&dec->bits) < 0) {
-        fprintf (stderr, "Decoding overflow: corrupted stream?\n");
+        GST_WARNING_OBJECT (dec, "Decoding overflow: corrupted stream?");
         break;
       }
       if (dec->header->nb_channels == 2)
@@ -503,10 +504,10 @@ speex_dec_chain (GstPad * pad, GstData * data)
 
       /*PCM saturation (just in case) */
       for (i = 0; i < dec->frame_size * dec->header->nb_channels; i++) {
-        if (dec->output[i] > 32000.0)
-          out_data[i] = 32000;
-        else if (dec->output[i] < -32000.0)
-          out_data[i] = -32000;
+        if (dec->output[i] > 32767.0)
+          out_data[i] = 32767;
+        else if (dec->output[i] < -32768.0)
+          out_data[i] = -32768;
         else
           out_data[i] = (gint16) dec->output[i];
       }
