@@ -503,9 +503,10 @@ gst_flacenc_set_metadata (FlacEnc *flacenc)
   flacenc->meta = g_malloc (sizeof (FLAC__StreamMetadata **));
 
   flacenc->meta[0] = FLAC__metadata_object_new (FLAC__METADATA_TYPE_VORBIS_COMMENT);
-  gst_tag_list_foreach ((GstTagList*)copy, add_one_tag, flacenc);
+  gst_tag_list_foreach (copy, add_one_tag, flacenc);
 
-  FLAC__seekable_stream_encoder_set_metadata(flacenc->encoder, flacenc->meta, 1);
+  if (FLAC__seekable_stream_encoder_set_metadata(flacenc->encoder, flacenc->meta, 1) != true)
+    g_warning ("Dude, i'm already initialized!");
   gst_tag_list_free (copy);
 }
 
@@ -534,8 +535,8 @@ gst_flacenc_chain (GstPad *pad, GstData *_data)
 	break;
       case GST_EVENT_TAG:
 	if (flacenc->tags) {
-	  gst_tag_list_merge (flacenc->tags, gst_event_tag_get_list (event), 
-		  gst_tag_setter_get_merge_mode (GST_TAG_SETTER (flacenc)));
+	  gst_tag_list_insert (flacenc->tags, gst_event_tag_get_list (event), 
+		  GST_TAG_MERGE_REPLACE);
 	} else {
 	  g_assert_not_reached ();
 	}
