@@ -1,3 +1,22 @@
+2005-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	* ext/musepack/Makefile.am:
+	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_class_init),
+	(gst_musepackdec_init), (gst_musepackdec_dispose),
+	(gst_musepackdec_src_query), (gst_musepackdec_src_convert),
+	(gst_musepack_stream_init), (gst_musepackdec_loop),
+	(gst_musepackdec_change_state):
+	* ext/musepack/gstmusepackdec.cpp:
+	* ext/musepack/gstmusepackdec.h:
+	* ext/musepack/gstmusepackreader.c: (gst_musepack_reader_peek),
+	(gst_musepack_reader_read), (gst_musepack_reader_seek),
+	(gst_musepack_reader_tell), (gst_musepack_reader_get_size),
+	(gst_musepack_reader_canseek), (gst_musepack_init_reader):
+	* ext/musepack/gstmusepackreader.cpp:
+	* ext/musepack/gstmusepackreader.h:
+	  Update to 1.1 API (#165446).
+
 2005-01-28  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/Makefile.am:
