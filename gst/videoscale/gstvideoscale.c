@@ -267,10 +267,10 @@ gst_videoscale_link (GstPad * pad, const GstCaps * caps)
       gst_caps_set_simple (newcaps,
           "width", G_TYPE_INT, videoscale->from_width,
           "height", G_TYPE_INT, videoscale->from_height, NULL);
-      GST_DEBUG_OBJECT (videoscale, "from par %d/%d",
-          gst_value_get_fraction_numerator (videoscale->from_par),
-          gst_value_get_fraction_denominator (videoscale->from_par));
       if (videoscale->from_par) {
+        GST_DEBUG_OBJECT (videoscale, "from par %d/%d",
+            gst_value_get_fraction_numerator (videoscale->from_par),
+            gst_value_get_fraction_denominator (videoscale->from_par));
         gst_structure_set (gst_caps_get_structure (newcaps, 0),
             "pixel-aspect-ratio", GST_TYPE_FRACTION,
             gst_value_get_fraction_numerator (videoscale->from_par),
