@@ -1,4 +1,4 @@
-	.p2align 4,,7
+	.align 16
 .globl _gst_getbits_i386
 	.type	 _gst_getbits_i386,@function
 _gst_getbits_i386:
@@ -24,7 +24,7 @@ _gst_getbits_i386:
 	andl $7,16(%edx)
 	ret
 
-	.p2align 4,,7
+	.align 16
 .globl _gst_getbits_fast_i386
 	.type	 _gst_getbits_fast_i386,@function
 _gst_getbits_fast_i386:
@@ -45,7 +45,7 @@ _gst_getbits_fast_i386:
 	andl $7,16(%edx)
 	ret
 
-	.p2align 4,,7
+	.align 16
 .globl _gst_get1bit_i386
 	.type	 _gst_get1bit_i386,@function
 _gst_get1bit_i386:
@@ -62,7 +62,7 @@ _gst_get1bit_i386:
 	addl %ecx,(%edx)
 	ret
 
-	.p2align 4,,7
+	.align 16
 .globl _gst_showbits_i386
 	.type	 _gst_showbits_i386,@function
 _gst_showbits_i386:
@@ -84,7 +84,7 @@ _gst_showbits_i386:
 	ret
 
 
-	.p2align 4,,7
+	.align 16
 .globl _gst_flushbits_i386
 	.type	 _gst_flushbits_i386,@function
 _gst_flushbits_i386:
@@ -99,7 +99,7 @@ _gst_flushbits_i386:
 	ret
 
 
-	.p2align 4,,7
+	.align 16
 .globl _gst_getbits_back_i386
 	.type	 _gst_getbits_back_i386,@function
 _gst_getbits_back_i386:
