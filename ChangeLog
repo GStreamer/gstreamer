@@ -1,3 +1,11 @@
+2005-02-19  Martin Holters  <martin.holters@gmx.de>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/audioconvert/bufferframesconvert.c:
+	(buffer_frames_convert_link):
+	  Don't leak othercaps. (fixes #167878)
+
 2005-02-19  Arwed v. Merkatz  <v.merkatz@gmx.net>>
 
 	* configure.ac:
