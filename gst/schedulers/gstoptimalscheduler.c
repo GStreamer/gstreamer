@@ -1345,11 +1345,19 @@ element_has_connection_with_group (GstElement *element, GstOptSchedulerGroup *gr
 
       /* see in what group this element is */
       parent = GST_PAD_PARENT (GST_PAD_PEER (pad));
-      get_group (parent, &parentgroup);
 
-      /* if it's in the same group, we're still connected */
-      if (parentgroup == group)
+      /* connections with decoupled elements are valid */
+      if (GST_ELEMENT_IS_DECOUPLED (parent)) {
         connected = TRUE;
+      }
+      else {
+	/* for non-decoupled elements we need to check the group */
+        get_group (parent, &parentgroup);
+
+        /* if it's in the same group, we're still connected */
+        if (parentgroup == group)
+          connected = TRUE;
+      }
     } 
   }
   return connected;
