@@ -421,7 +421,7 @@ gst_jack_loop (GstElement *element)
                 if (!pad->bs)
                     pad->bs = gst_bytestream_new (pad->pad);
                 
-                if (!(peeked = gst_bytestream_peek_bytes (pad->bs, len))) {
+                if (gst_bytestream_peek_bytes (pad->bs, (guint8**)&peeked, len) < len) {
                     gst_bytestream_get_status(pad->bs, &avail, &event);
                     if (event) {
                         g_warning("got an event on jacksink");
