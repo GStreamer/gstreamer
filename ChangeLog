@@ -5,6 +5,7 @@
 	  snd_pcm_delay that caused issues (see inline code comments)
 	* ext/alsa/gstalsasink.c: (gst_alsa_sink_get_time):
 	  make more readable and fix return value when snd_pcm_delay fails
+	(fixes #142586)
 
 2004-05-15  Jan Schmidt  <thaytan@mad.scientisti.com>
 	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_method_get_type),
