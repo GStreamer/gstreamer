@@ -741,7 +741,11 @@ gst_index_add_object (GstIndex * index, gint id, gchar * key,
 static gint
 gst_index_compare_func (gconstpointer a, gconstpointer b, gpointer user_data)
 {
-  return (gint) a - (gint) b;
+  if (a < b)
+    return -1;
+  if (a > b)
+    return 1;
+  return 0;
 }
 
 /**
