@@ -61,6 +61,9 @@ struct _GstMad {
   guint framecount;
   gint vbr_average; /* average bitrate */
   gulong vbr_rate; /* average * framecount */
+
+  /* caps */
+  gboolean caps_set;
 };
 
 struct _GstMadClass {
@@ -454,25 +457,28 @@ gst_mad_chain (GstPad *pad, GstBuffer *buffer)
           *outdata++ = scale(*right_ch++) & 0xffff;
         }
       }
-      if (GST_PAD_CAPS (mad->srcpad) == NULL) {
-        gst_pad_try_set_caps (mad->srcpad,
-  	    gst_caps_new (
-  	      "mad_src",
-    	      "audio/raw",
-	      gst_props_new (
-    	        "format",   GST_PROPS_STRING ("int"),
-      	         "law",         GST_PROPS_INT (0),
-      	         "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
-      	         "signed",      GST_PROPS_BOOLEAN (TRUE),
-      	         "width",       GST_PROPS_INT (16),
-      	         "depth",       GST_PROPS_INT (16),
+      if (mad->caps_set == FALSE) {
+        if (!gst_pad_try_set_caps (mad->srcpad,
+  	      gst_caps_new (
+  	        "mad_src",
+                "audio/raw",
+                gst_props_new (
+    	          "format",   GST_PROPS_STRING ("int"),
+                  "law",         GST_PROPS_INT (0),
+                  "endianness",  GST_PROPS_INT (G_BYTE_ORDER),
+                  "signed",      GST_PROPS_BOOLEAN (TRUE),
+                  "width",       GST_PROPS_INT (16),
+                  "depth",       GST_PROPS_INT (16),
 #if MAD_VERSION_MINOR <= 12
-      	         "rate",        GST_PROPS_INT (mad->header.sfreq),
+                  "rate",        GST_PROPS_INT (mad->header.sfreq),
 #else
-      	         "rate",        GST_PROPS_INT (mad->header.samplerate),
+                  "rate",        GST_PROPS_INT (mad->header.samplerate),
 #endif
-      	         "channels",    GST_PROPS_INT (nchannels),
-	         NULL)));
+                  "channels",    GST_PROPS_INT (nchannels),
+                  NULL)))) {
+          gst_element_error (GST_ELEMENT (mad), "could not set caps on source pad, aborting...");
+        }
+        mad->caps_set = TRUE;
       }
 
       gst_pad_push (mad->srcpad, outbuffer);
