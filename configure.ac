@@ -22,7 +22,7 @@ dnl Add parameters for aclocal
 ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
 dnl required versions of other packages
-AC_SUBST(PYGTK_REQ, 2.0.0)
+AC_SUBST(PYGTK_REQ, 1.99.4)
 AC_SUBST(GLIB_REQ,  2.0.0)
 AC_SUBST(GTK_REQ,   2.0.0)
 AC_SUBST(GST_REQ,   0.7.6)
