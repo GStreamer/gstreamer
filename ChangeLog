@@ -1,5 +1,13 @@
 2004-10-06  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
 
+	* gst-libs/gst/riff/riff-media.c:
+	  generate caps for ATRAC3 audio streams
+
+	* gst/realmedia/rmdemux.c:
+	  generate caps for ATRAC3 audio streams
+
+2004-10-06  Stephane Loeuillet  <stephane.loeuillet@tiscali.fr>
+
 	* gst/wavparse/Makefile.am
 	* gst/wavparse/riff.h
 	* gst/wavparse/wavparse.vcproj

@@ -476,6 +476,12 @@ gst_riff_create_audio_caps_with_data (guint16 codec_id,
       }
       break;
     }
+    case GST_RIFF_WAVE_FORMAT_SONY_ATRAC3:
+      caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Sony ATRAC3");
+      break;
+
     default:
       GST_WARNING ("Unknown audio tag 0x%04x", codec_id);
       return NULL;

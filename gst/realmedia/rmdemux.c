@@ -571,6 +571,11 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
             (int) 4, NULL);
         break;
 
+        /* Sony ATRAC3 */
+      case GST_RM_AUD_ATRC:
+        stream->caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
+        break;
+
         /* RealAudio audio/RALF is lossless */
       case GST_RM_AUD_COOK:
       case GST_RM_AUD_RALF:
@@ -578,8 +583,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         /* Sipro/ACELP-NET Voice Codec */
       case GST_RM_AUD_SIPR:
 
-        /* Sony ATRAC3 */
-      case GST_RM_AUD_ATRC:
         GST_WARNING ("Nothing known to decode this audio FOURCC code");
         break;
 
