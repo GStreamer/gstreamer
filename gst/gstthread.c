@@ -403,8 +403,8 @@ gst_thread_wait_thread (GstThread *thread, guint syncflag, gboolean set)
   g_mutex_lock (thread->lock[syncflag-GST_THREAD_STATE_STARTED]);
   GST_DEBUG (0,"sync: waiting for thread for %u to be set %d\n",
 	     syncflag,set);
-  while ((GST_FLAG_IS_SET(thread,syncflag) && set==TRUE) ||
-	 (!GST_FLAG_IS_SET(thread,syncflag) && set==FALSE)) {
+  while ((!GST_FLAG_IS_SET(thread,syncflag) && set==TRUE) ||
+	 (GST_FLAG_IS_SET(thread,syncflag) && set==FALSE)) {
     g_get_current_time(&finaltime);
     if (finaltime.tv_usec>995000) {
       finaltime.tv_sec++;
