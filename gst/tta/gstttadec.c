@@ -122,7 +122,7 @@ gst_tta_dec_link (GstPad * pad, const GstCaps * caps)
       "channels", G_TYPE_INT, ttadec->channels,
       "depth", G_TYPE_INT, bits,
       "width", G_TYPE_INT, bits,
-      "endianness", G_TYPE_INT, LITTLE_ENDIAN,
+      "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
       "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   gst_pad_set_explicit_caps (ttadec->srcpad, srccaps);
