@@ -235,7 +235,7 @@ gst_type_find_chain (GstPad *pad, GstBuffer *buf)
 end:
   gst_buffer_unref (buf);
 
-  if (typefind->num_buffer >= typefind->max_buffers) {
+  if (typefind->max_buffers && typefind->num_buffer >= typefind->max_buffers) {
     gst_element_error (GST_ELEMENT (typefind), 
 		    "typefind could not determine type after %d buffers", typefind->num_buffer);
   }
