@@ -16,8 +16,10 @@ AC_ARG_WITH(libmikmod-prefix,[  --with-libmikmod-prefix=PFX   Prefix where libmi
             libmikmod_config_prefix="$withval", libmikmod_config_prefix="")
 AC_ARG_WITH(libmikmod-exec-prefix,[  --with-libmikmod-exec-prefix=PFX Exec prefix where libmikmod is installed (optional)],
             libmikmod_config_exec_prefix="$withval", libmikmod_config_exec_prefix="")
-AC_ARG_ENABLE(libmikmodtest, [  --disable-libmikmodtest       Do not try to compile and run a test libmikmod program],
-		    , enable_libmikmodtest=yes)
+AC_ARG_ENABLE(libmikmodtest,
+  AC_HELP_STRING([--disable-libmikmodtest],
+                 [Do not try to compile and run a test libmikmod program]),
+  , enable_libmikmodtest=yes)
 
   if test x$libmikmod_config_exec_prefix != x ; then
      libmikmod_config_args="$libmikmod_config_args --exec-prefix=$libmikmod_config_exec_prefix"
