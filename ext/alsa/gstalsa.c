@@ -19,7 +19,6 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <stdlib.h>
 #include <sys/time.h>
 #include "gstalsa.h"
 
@@ -1085,9 +1084,11 @@ gst_alsa_update_avail (GstAlsa *this)
 inline static gboolean
 gst_alsa_pcm_wait (GstAlsa *this)
 {
+  int err;
+
   if (snd_pcm_state (this->handle) == SND_PCM_STATE_RUNNING) {
-    if (snd_pcm_wait (this->handle, 1000) < 0) {
-      if (errno == EINTR) {
+    if ((err = snd_pcm_wait (this->handle, 1000)) < 0) {
+      if (err == EINTR) {
         /* happens mostly when run under gdb, or when exiting due to a signal */
         GST_DEBUG (GST_CAT_PLUGIN_INFO, "got interrupted while waiting");
         if (gst_element_interrupt (GST_ELEMENT (this))) {
@@ -1096,7 +1097,7 @@ gst_alsa_pcm_wait (GstAlsa *this)
           return FALSE;
         }
       }
-      g_warning ("error waiting for alsa pcm: (%d: %s)", errno, strerror (errno));
+      g_warning ("error waiting for alsa pcm: (%d: %s)", err, snd_strerror (err));
       return FALSE;
     }
   }
