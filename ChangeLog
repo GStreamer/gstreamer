@@ -1,3 +1,9 @@
+2004-09-25  Christian Schaller <christian@fluendo.com>
+
+	* Update SPEC file to be usable in conjunction with Fedora Core,
+	  Fedora.us and freshrpms packages
+	* Fix typo in multifilesrc test Makefile
+	
 2004-09-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (new_decoded_pad):
@@ -110,6 +116,7 @@
 	* gst/multifilesink/gstmultifilesink.h:
 	add support for streamheader in multifilesink
 
+>>>>>>> 1.1087
 2004-09-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* gst/asfdemux/gstasfdemux.c: (_read_var_length), (_read_guid),
