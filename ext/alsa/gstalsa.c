@@ -1190,6 +1190,8 @@ gst_alsa_change_state (GstElement * element)
         gst_alsa_stop_audio (this);
       g_free (this->format);
       this->format = NULL;
+      this->played = 0;
+      this->captured = 0;
       break;
     case GST_STATE_READY_TO_NULL:
       if (GST_FLAG_IS_SET (element, GST_ALSA_OPEN))
