@@ -1,5 +1,10 @@
 2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
 
+	* gst/wavenc/gstwavenc.c: (set_property), (gst_wavenc_init):
+	  Fix indenting, fix pad creation.
+
+2004-01-04  Ronald Bultje  <rbultje@ronald.bitfreak.net>
+
 	* ext/xvid/gstxviddec.c: (gst_xviddec_init),
 	(gst_xviddec_src_getcaps), (gst_xviddec_src_link),
 	(gst_xviddec_sink_link):
