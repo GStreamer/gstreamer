@@ -465,7 +465,6 @@ gst_dpman_register_mode (GstDParamManagerClass *klass,
 	mode->teardownfunc = teardownfunc;
 	
 	g_hash_table_insert(klass->modes, modename, mode);
-	GST_DEBUG ("mode '%s' registered", modename);
 }
 
 /**
