@@ -348,7 +348,7 @@ gst_thread_change_state (GstElement * element)
 	  GList *pads = GST_ELEMENT_PADS (element);
 
 	  while (pads) {
-	    GstRealPad *peer = GST_PAD_PEER (pads->data);
+	    GstRealPad *peer = GST_REAL_PAD (GST_PAD_PEER (pads->data));
 	    GstElement *peerelement;
 
 	    pads = g_list_next (pads);
