@@ -560,7 +560,7 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
       } else if (wrote < maxsize) {
         /* partial write means that the client cannot read more and we should
          * stop sending more */
-        GST_DEBUG_OBJECT (sink, "partial write on %d of %d bytes", fd, wrote);
+        GST_LOG_OBJECT (sink, "partial write on %d of %d bytes", fd, wrote);
         client->bufoffset += wrote;
         more = FALSE;
       } else {
