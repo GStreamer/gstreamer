@@ -28,6 +28,7 @@
 #include "gstmarshal.h"
 #include "gstxml.h"
 #include "gstinfo.h"
+#include "gsterror.h"
 
 #include "gstscheduler.h"
 #include "gstindex.h"
@@ -495,7 +496,9 @@ gst_bin_add (GstBin *bin, GstElement *element)
     bclass->add_element (bin, element);
   }
   else {
-    g_warning ("cannot add elements to bin %s\n", GST_ELEMENT_NAME (bin));
+    GST_ELEMENT_ERROR (bin, CORE, FAILED, (NULL),
+                       ("cannot add element %s to bin %s",
+	                GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin)));
   }
 }
 
