@@ -56,63 +56,6 @@ static GstElementClass *parent_class = NULL;
 /*                                                               */
 /* ============================================================= */
 
-/* Interfaces stuff */
-
-static gboolean
-gst_ximagesink_interface_supported (GstInterface *iface, GType type)
-{
-  g_assert (type == GST_TYPE_NAVIGATION ||
-	    type == GST_TYPE_X_OVERLAY);
-
-  return (GST_STATE (iface) != GST_STATE_NULL);
-}
-
-static void
-gst_ximagesink_interface_init (GstInterfaceClass *klass)
-{
-  klass->supported = gst_ximagesink_interface_supported;
-}
-
-static void
-gst_ximagesink_navigation_send_event (GstNavigation *navigation, GstStructure *structure)
-{
-  GstXImageSink *ximagesink = GST_XIMAGESINK (navigation);
-  GstEvent *event;
-  gint x_offset, y_offset;
-  double x,y;
-  
-  event = gst_event_new (GST_EVENT_NAVIGATION);
-  event->event_data.structure.structure = structure;
-
-  /* We are not converting the pointer coordinates as there's no hardware 
-     scaling done here. The only possible scaling is done by videoscale and
-     videoscale will have to catch those events and tranform the coordinates
-     to match the applied scaling. So here we just add the offset if the image
-     is centered in the window.  */
-  
-  x_offset = ximagesink->xwindow->width - ximagesink->width;
-  y_offset = ximagesink->xwindow->height - ximagesink->height;
-  
-  if (gst_structure_get_double (structure, "pointer_x", &x))
-    {
-      x += x_offset;
-      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
-    }
-  if (gst_structure_get_double (structure, "pointer_y", &y))
-    {
-      y += y_offset;
-      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
-    }
-    
-  gst_pad_send_event (gst_pad_get_peer (ximagesink->sinkpad), event);
-}
-
-static void
-gst_ximagesink_navigation_init (GstNavigationInterface *iface)
-{
-  iface->send_event = gst_ximagesink_navigation_send_event;
-}
-
 /* X11 stuff */
 
 /* This function handles GstXImage creation depending on XShm availability */
@@ -281,7 +224,6 @@ static GstXWindow *
 gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
 {
   GstXWindow *xwindow = NULL;
-  XGCValues values;
   
   g_return_val_if_fail (ximagesink != NULL, NULL);
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
@@ -290,6 +232,7 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
   
   xwindow->width = width;
   xwindow->height = height;
+  xwindow->internal = TRUE;
   
   g_mutex_lock (ximagesink->x_lock);
   
@@ -303,7 +246,7 @@ gst_ximagesink_xwindow_new (GstXImageSink *ximagesink, gint width, gint height)
                 KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
   
   xwindow->gc = XCreateGC (ximagesink->xcontext->disp,
-                           xwindow->win, 0, &values);
+                           xwindow->win, 0, NULL);
   
   XMapRaised (ximagesink->xcontext->disp, xwindow->win);
   
@@ -322,7 +265,9 @@ gst_ximagesink_xwindow_destroy (GstXImageSink *ximagesink, GstXWindow *xwindow)
   
   g_mutex_lock (ximagesink->x_lock);
   
-  XDestroyWindow (ximagesink->xcontext->disp, xwindow->win);
+  /* If we did not create that window we just free the GC and let it live */
+  if (xwindow->internal)
+    XDestroyWindow (ximagesink->xcontext->disp, xwindow->win);
   
   XFreeGC (ximagesink->xcontext->disp, xwindow->gc);
   
@@ -330,22 +275,6 @@ gst_ximagesink_xwindow_destroy (GstXImageSink *ximagesink, GstXWindow *xwindow)
   
   g_free (xwindow);
 }
-
-/* This function resizes a GstXWindow */
-/*static void
-gst_ximagesink_xwindow_resize (GstXImageSink *ximagesink, GstXWindow  *xwindow,
-                               gint width, gint height)
-{
-  g_return_if_fail (xwindow != NULL);
-  g_return_if_fail (ximagesink != NULL);
-  g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
-  
-  g_mutex_lock (ximagesink->x_lock);
-  
-  XResizeWindow (ximagesink->xcontext->disp, xwindow->win, width, height);
-  
-  g_mutex_unlock (ximagesink->x_lock);
-} */
 
 /* This function handles XEvents that might be in the queue. It generates
    GstEvent that will be sent upstream in the pipeline to handle interactivity
@@ -420,6 +349,10 @@ gst_ximagesink_handle_xevents (GstXImageSink *ximagesink, GstPad *pad)
                                                             ximagesink->width,
                                                             ximagesink->height);
                       }
+                      
+                    gst_x_overlay_got_video_size (
+                                        GST_X_OVERLAY (ximagesink),
+                                        ximagesink->width, ximagesink->height);
                   }
               }
             break;
@@ -640,14 +573,6 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
     ximagesink->xwindow = gst_ximagesink_xwindow_new (ximagesink,
                                                       ximagesink->width,
                                                       ximagesink->height);
-  else
-    { /* We resize our window only if size has changed, preventing us from
-         infinite loops with XConfigure events.
-      if ( (ximagesink->width != ximagesink->xwindow->width) ||
-           (ximagesink->height != ximagesink->xwindow->height) )
-        gst_ximagesink_xwindow_resize (ximagesink, ximagesink->xwindow,
-                                       ximagesink->width, ximagesink->height);*/
-    }
   
   if ( (ximagesink->ximage) &&
        ( (ximagesink->width != ximagesink->ximage->width) ||
@@ -664,6 +589,9 @@ gst_ximagesink_sinkconnect (GstPad *pad, GstCaps *caps)
                                                     ximagesink->width,
                                                     ximagesink->height);
   
+  gst_x_overlay_got_video_size (GST_X_OVERLAY (ximagesink),
+                                ximagesink->width, ximagesink->height);
+  
   return GST_PAD_LINK_OK;
 }
 
@@ -677,7 +605,8 @@ gst_ximagesink_change_state (GstElement *element)
   switch (GST_STATE_TRANSITION (element)) {
     case GST_STATE_NULL_TO_READY:
       /* Initializing the XContext */
-      ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
+      if (!ximagesink->xcontext)
+        ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
       if (!ximagesink->xcontext)
         return GST_STATE_FAILURE;
       break;
@@ -897,6 +826,111 @@ gst_ximagesink_get_bufferpool (GstPad *pad)
   return ximagesink->bufferpool;
 }
 
+/* Interfaces stuff */
+
+static gboolean
+gst_ximagesink_interface_supported (GstInterface *iface, GType type)
+{
+  g_assert (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY);
+  return TRUE;
+}
+
+static void
+gst_ximagesink_interface_init (GstInterfaceClass *klass)
+{
+  klass->supported = gst_ximagesink_interface_supported;
+}
+
+static void
+gst_ximagesink_navigation_send_event (GstNavigation *navigation, GstStructure *structure)
+{
+  GstXImageSink *ximagesink = GST_XIMAGESINK (navigation);
+  GstEvent *event;
+  gint x_offset, y_offset;
+  double x,y;
+  
+  event = gst_event_new (GST_EVENT_NAVIGATION);
+  event->event_data.structure.structure = structure;
+
+  /* We are not converting the pointer coordinates as there's no hardware 
+     scaling done here. The only possible scaling is done by videoscale and
+     videoscale will have to catch those events and tranform the coordinates
+     to match the applied scaling. So here we just add the offset if the image
+     is centered in the window.  */
+  
+  x_offset = ximagesink->xwindow->width - ximagesink->width;
+  y_offset = ximagesink->xwindow->height - ximagesink->height;
+  
+  if (gst_structure_get_double (structure, "pointer_x", &x))
+    {
+      x += x_offset;
+      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+    }
+  if (gst_structure_get_double (structure, "pointer_y", &y))
+    {
+      y += y_offset;
+      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+    }
+    
+  gst_pad_send_event (gst_pad_get_peer (ximagesink->sinkpad), event);
+}
+
+static void
+gst_ximagesink_navigation_init (GstNavigationInterface *iface)
+{
+  iface->send_event = gst_ximagesink_navigation_send_event;
+}
+
+static void
+gst_ximagesink_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
+{
+  GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
+  GstXWindow *xwindow = NULL;
+  XWindowAttributes attr;
+  
+  g_return_if_fail (ximagesink != NULL);
+  g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  
+  if (!ximagesink->xcontext)
+    {
+      ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
+    }
+  
+  if ( (ximagesink->xwindow) && (ximagesink->ximage) )
+    { /* If we are replacing a window we destroy pictures and window as they
+         are associated */
+      gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
+      gst_ximagesink_imagepool_clear (ximagesink);
+      gst_ximagesink_xwindow_destroy (ximagesink, ximagesink->xwindow);
+    }
+    
+  xwindow = g_new0 (GstXWindow, 1);
+  
+  xwindow->win = xwindow_id;
+  
+  /* We get window geometry, set the event we want to receive, and create a GC */
+  g_mutex_lock (ximagesink->x_lock);
+  XGetWindowAttributes (ximagesink->xcontext->disp, xwindow->win, &attr);
+  xwindow->width = attr.width;
+  xwindow->height = attr.height;
+  xwindow->internal = FALSE;
+  XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
+                StructureNotifyMask | PointerMotionMask | KeyPressMask |
+                KeyReleaseMask /*| ButtonPressMask | ButtonReleaseMask*/);
+  
+  xwindow->gc = XCreateGC (ximagesink->xcontext->disp,
+                           xwindow->win, 0, NULL);
+  g_mutex_unlock (ximagesink->x_lock);
+    
+  ximagesink->xwindow = xwindow;
+}
+
+static void
+gst_ximagesink_xoverlay_init (GstXOverlayClass *iface)
+{
+  iface->set_xwindow_id = gst_ximagesink_set_xwindow_id;
+}
+
 /* =========================================== */
 /*                                             */
 /*              Init & Class init              */
@@ -1039,22 +1073,22 @@ gst_ximagesink_get_type (void)
         NULL,
         NULL,
       };
-      /*static const GInterfaceInfo xoverlay_info = {
+      static const GInterfaceInfo overlay_info = {
         (GInterfaceInitFunc) gst_ximagesink_xoverlay_init,
         NULL,
         NULL,
-      };*/
+      };
       
       ximagesink_type = g_type_register_static (GST_TYPE_ELEMENT,
                                                 "GstXImageSink",
                                                 &ximagesink_info, 0);
       
       g_type_add_interface_static (ximagesink_type, GST_TYPE_INTERFACE,
-        &iface_info);
+                                   &iface_info);
       g_type_add_interface_static (ximagesink_type, GST_TYPE_NAVIGATION,
-        &navigation_info);
-      /*g_type_add_interface_static (ximagesink_type, GST_TYPE_X_OVERLAY,
-        &xoverlay_info);*/
+                                   &navigation_info);
+      g_type_add_interface_static (ximagesink_type, GST_TYPE_X_OVERLAY,
+                                   &overlay_info);
     }
     
   return ximagesink_type;

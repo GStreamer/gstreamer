@@ -94,6 +94,7 @@ struct _GstXContext {
 struct _GstXWindow {
   Window win;
   gint width, height;
+  gboolean internal;
   GC gc;
 };
 
