@@ -960,7 +960,7 @@ gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames)
         if (!GST_ALSA_PAD(this->pads)->bs)
             GST_ALSA_PAD(this->pads)->bs = gst_bytestream_new(GST_ALSA_PAD(this->pads)->pad);
         
-        if (!(peeked = gst_bytestream_peek_bytes(GST_ALSA_PAD(this->pads)->bs, frames))) {
+        if (gst_bytestream_peek_bytes(GST_ALSA_PAD(this->pads)->bs, &peeked, frames) != frames) {
             g_warning("initial pull on pad %s returned NULL", GST_OBJECT_NAME(GST_ALSA_PAD(this->pads)->pad));
             gst_element_set_state(GST_ELEMENT(this), GST_STATE_PAUSED);
             return FALSE;
@@ -979,7 +979,7 @@ gst_alsa_sink_process (GstAlsa *this, snd_pcm_uframes_t frames)
         if (!GST_ALSA_PAD(this->pads)->bs)
             GST_ALSA_PAD(this->pads)->bs = gst_bytestream_new(GST_ALSA_PAD(this->pads)->pad);
         
-        if (!(peeked = gst_bytestream_peek_bytes(GST_ALSA_PAD(this->pads)->bs, len))) {
+        if (gst_bytestream_peek_bytes(GST_ALSA_PAD(this->pads)->bs, &peeked, len) != len) {
             gst_bytestream_get_status(GST_ALSA_PAD(this->pads)->bs, &avail, &event);
             if (event) {
                 g_warning("got an event on alsasink");
