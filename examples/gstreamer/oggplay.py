@@ -58,11 +58,11 @@ def main():
    for e in (filesrc, decoder, osssink):
       bin.add(e)
 
-   # connect the elements
+   # link the elements
    previous = None
    for e in (filesrc, decoder, osssink):
       if previous:
-         previous.connect(e)
+         previous.link(e)
       previous = e
 
    # start playing

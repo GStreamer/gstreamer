@@ -55,11 +55,11 @@ def filter(filters):
    for e in elements: 
       bin.add(e)
 
-   # connect the elements
+   # link the elements
    previous = None
    for e in elements:
       if previous:
-         previous.connect(e)
+         previous.link(e)
       previous = e
 
    # start playing
@@ -84,7 +84,7 @@ def main():
    stats.set_property('silent', 0)
    stats.set_property('buffer_update_freq', 1)
    stats.set_property('update_on_eos', 1)
-   #GObject.connect(stats, 'update', update)
+   #stats.connect('update', update)
 
    return filter([stats])
 

@@ -46,13 +46,13 @@ class DVDPlayer(object):
       #gtk.threads_enter()
       print '***** a new pad %s was created' % pad.get_name()
       if pad.get_name()[:6] == 'video_':
-         pad.connect(self.v_queue.get_pad('sink'))
+         pad.link(self.v_queue.get_pad('sink'))
          self.pipeline.set_state(STATE_PAUSED)
          self.pipeline.add(self.v_thread)
          #self.v_thread.set_state(STATE_PLAYING)
          self.pipeline.set_state(STATE_PLAYING)
       elif pad.get_name() == 'private_stream_1.0':
-         pad.connect(self.a_queue.get_pad('sink'))
+         pad.link(self.a_queue.get_pad('sink'))
          self.pipeline.set_state(STATE_PAUSED)
          self.pipeline.add(self.a_thread)
          #self.a_thread.set_state(STATE_PLAYING);
@@ -146,14 +146,14 @@ class DVDPlayer(object):
       for e in (self.v_queue, self.v_decode, self.color, self.efx, self.color2,  self.deinterlace, self.show):
          self.v_thread.add(e)
          if last:
-            last.connect(e)
+            last.link(e)
          last = e
 
-      #self.v_queue.connect(self.v_decode)
-      #self.v_decode.connect(self.color)
-      #self.color.connect(self.efx)
-      #self.efx.connect(self.color2)
-      #self.color2.connect(self.show)
+      #self.v_queue.link(self.v_decode)
+      #self.v_decode.link(self.color)
+      #self.color.link(self.efx)
+      #self.efx.link(self.color2)
+      #self.color2.link(self.show)
 
    def build_audio_thread(self):
       # ***** pre-construct the audio thread *****
@@ -175,8 +175,8 @@ class DVDPlayer(object):
       for e in (self.a_queue, self.a_decode, self.osssink):
          self.a_thread.add(e)
 
-      self.a_queue.connect(self.a_decode)
-      self.a_decode.connect(self.osssink)
+      self.a_queue.link(self.a_decode)
+      self.a_decode.link(self.osssink)
 
    def build(self):
       # ***** construct the main pipeline *****
@@ -186,7 +186,7 @@ class DVDPlayer(object):
       self.src = gst_element_factory_make('dvdreadsrc','src');
       assert self.src
 
-      GObject.connect(self.src,'deep_notify',self.dnprint)
+      self.src.connect('deep_notify',self.dnprint)
       self.src.set_property('location', self.location)
       self.src.set_property('title', self.title)
       self.src.set_property('chapter', self.chapter)
@@ -199,7 +199,7 @@ class DVDPlayer(object):
       self.pipeline.add(self.src)
       self.pipeline.add(self.parse)
 
-      self.src.connect(self.parse)
+      self.src.link(self.parse)
 
       # pre-construct the audio/video threads
       self.build_video_thread()
@@ -218,12 +218,12 @@ class DVDPlayer(object):
       #gtk_socket_steal (GTK_SOCKET (gtk_socket), 
             #gst_util_get_int_arg (GTK_OBJECT(show), 'xid'));
 
-      GObject.connect(self.parse,'new_pad',self.mpegparse_newpad, self.pipeline)
-      GObject.connect(self.src,'eos',self.eof)
-      #GObject.connect(show,'have_size',self.mpegparse_have_size, self.pipeline)
+      self.parse.connect('new_pad',self.mpegparse_newpad, self.pipeline)
+      self.src.connect('eos',self.eof)
+      #show.connect('have_size',self.mpegparse_have_size, self.pipeline)
 
-      #GObject.connect(self.pipeline,'error',self.pipeline_error)
-      #GObject.connect(self.pipeline,'deep_notify',self.dnprint)
+      #self.pipeline.connect('error',self.pipeline_error)
+      #self.pipeline.connect('deep_notify',self.dnprint)
 
       return 0
 

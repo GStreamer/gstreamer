@@ -48,11 +48,11 @@ def build(filters, b):
    for e in elements: 
       bin.add(e)
 
-   # connect the elements
+   # link the elements
    previous = None
    for e in elements:
       if previous:
-         previous.connect(e)
+         previous.link(e)
       previous = e
 
    return bin

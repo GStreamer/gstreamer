@@ -30,7 +30,7 @@ headers
 
 typedef struct {
 	PyGObject *pad;
-	PyObject *connect_function;
+	PyObject *link_function;
 	PyObject *chain_function;
 } PyGstPadPrivate;
 
@@ -68,16 +68,16 @@ ignore-glob
  gstreamer_*init
  *_get_type
 %%
-override gst_pad_set_connect_function kwargs
+override gst_pad_set_link_function kwargs
 
-static GstPadConnectReturn
-call_connect_function (GstPad *pad, GstCaps *caps)
+static GstPadLinkReturn
+call_link_function (GstPad *pad, GstCaps *caps)
 {
 	PyObject *function;
 	PyObject *retval;
-	GstPadConnectReturn ret;
+	GstPadLinkReturn ret;
 	
-	function = pad_private(pad)->connect_function;
+	function = pad_private(pad)->link_function;
 	
 	pyg_block_threads();
 
@@ -89,7 +89,7 @@ call_connect_function (GstPad *pad, GstCaps *caps)
 	if (PyErr_Occurred ()) {
 		PyErr_Print ();
         	pyg_unblock_threads();
-		return GST_PAD_CONNECT_REFUSED;
+		return GST_PAD_LINK_REFUSED;
 	}
 
 	ret = PyInt_AsLong(retval);
@@ -100,30 +100,30 @@ call_connect_function (GstPad *pad, GstCaps *caps)
 }
 
 static PyObject*
-_wrap_gst_pad_set_connect_function (PyGObject *self,
+_wrap_gst_pad_set_link_function (PyGObject *self,
 		PyObject  *args,
 		PyObject  *kwargs)
 {
-	static char *kwlist[] = { "connect_function", NULL };
-	PyObject *connect_function;
+	static char *kwlist[] = { "link_function", NULL };
+	PyObject *link_function;
 	GstPad *pad;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-				"O:GstPad.set_connect_funcion",
+				"O:GstPad.set_link_funcion",
 				kwlist,
-				&connect_function)) {
+				&link_function)) {
 		return NULL;
 	}
 
-	if (!PyCallable_Check(connect_function)) {
-		PyErr_SetString(PyExc_TypeError, "connect_function not callable");
+	if (!PyCallable_Check(link_function)) {
+		PyErr_SetString(PyExc_TypeError, "link_function not callable");
 		return NULL;
 	}
 
-	Py_INCREF(connect_function);
-	py_pad_private(self)->connect_function = connect_function;
+	Py_INCREF(link_function);
+	py_pad_private(self)->link_function = link_function;
 	pad = (GstPad*)pygobject_get(self);
-	gst_pad_set_connect_function(pad, call_connect_function);
+	gst_pad_set_link_function(pad, call_link_function);
 
 	Py_INCREF(Py_None);
 	return Py_None;

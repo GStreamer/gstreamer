@@ -35,21 +35,21 @@ def main():
 
    src = gst_element_factory_make('fakesrc', 'src')
    assert src
-   GObject.connect(src, 'handoff', handoff)
+   src.connect('handoff', handoff)
    src.set_property('silent', 1)
    src.set_property('num_buffers', 10)
 
    sink = gst_element_factory_make('fakesink', 'sink')
    assert sink
-   GObject.connect(sink, 'handoff', handoff)
+   sink.connect('handoff', handoff)
    src.set_property('silent', 1)
 
    #  add objects to the main pipeline
    for e in (src, sink):
       bin.add(e)
 
-   # connect the elements
-   res = src.connect(sink)
+   # link the elements
+   res = src.link(sink)
    assert res
 
    # start playing

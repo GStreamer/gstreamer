@@ -1,3 +1,11 @@
+2003-01-09  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* examples/gstreamer/*, gstreamer/gstreamer.override: update to new
+	GstPad/GstElement link API and remove old hacks to call GObject
+	connect method
+
+	* gstreamer/Makefile.am: ignore gstcompat.h
+
 2003-01-04  David I. Lehn <dlehn@users.sourceforge.net>
 
 	* gstreamer/gstreamer.override, gstreamer/gstreamer-extra.defs: add

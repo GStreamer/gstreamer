@@ -32,19 +32,19 @@ class Identity(Element):
       self.sinkpad = Pad('sink', PAD_SINK)
       self.add_pad(self.sinkpad)
       self.sinkpad.set_chain_function(self.chain)
-      self.sinkpad.set_connect_function(self.pad_connect)
+      self.sinkpad.set_link_function(self.pad_link)
 
       self.srcpad = Pad('src', PAD_SRC)
       self.add_pad(self.srcpad)
-      self.srcpad.set_connect_function(self.pad_connect)
+      self.srcpad.set_link_function(self.pad_link)
 
    def get_bufferpool(self, pad):
       print 'get_bufferpool:', self, pad
       return self.srcpad.get_bufferpool()
 
-   def pad_connect(self, pad, caps):
-      print 'pad_connect:', self, pad, caps
-      return PAD_CONNECT_OK
+   def pad_link(self, pad, caps):
+      print 'pad_link:', self, pad, caps
+      return PAD_LINK_OK
 
    def chain(self, pad, buf):
       self.srcpad.push(buf)
