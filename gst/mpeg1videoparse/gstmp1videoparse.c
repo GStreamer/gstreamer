@@ -160,10 +160,10 @@ mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
 			 50., 60./1.001, 60. };
   guint32 n = GUINT32_FROM_BE (*(guint32 *) GST_BUFFER_DATA (buf));
 
-  width   = (n & 0x00000fff) >>  0;
-  height  = (n & 0x00fff000) >> 12;
-  asr_idx = (n & 0x0f000000) >> 24;
-  fps_idx = (n & 0xf0000000) >> 28;
+  width   = (n & 0xfff00000) >> 20;
+  height  = (n & 0x000fff00) >>  8;
+  asr_idx = (n & 0x000000f0) >>  4;
+  fps_idx = (n & 0x0000000f) >>  0;
 
   if (fps_idx >= 9 || fps_idx <= 0)
     fps_idx = 3; /* well, we need a default */
@@ -175,11 +175,15 @@ mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
       width              != mp1videoparse->width  ||
       height             != mp1videoparse->height) {
     GstCaps *caps;
+    gint p_w, p_h;
 
     mp1videoparse->asr    = asr_table[asr_idx];
     mp1videoparse->fps    = fps_table[fps_idx];
     mp1videoparse->width  = width;
     mp1videoparse->height = height;
+
+    p_w = (asr_table[asr_idx] < 1.0) ? (100 / asr_table[asr_idx]) : 1;
+    p_h = (asr_table[asr_idx] > 1.0) ? (100 * asr_table[asr_idx]) : 1;
 
     caps = GST_CAPS_NEW ("mp1videoparse_src",
                          "video/mpeg",
@@ -188,8 +192,8 @@ mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
                            "width",        GST_PROPS_INT (width),
                            "height",       GST_PROPS_INT (height),
                            "framerate",    GST_PROPS_FLOAT (fps_table[fps_idx]),
-                           "pixel_width",  GST_PROPS_INT (1),
-                           "pixel_height", GST_PROPS_INT (1)); /* FIXME */
+                           "pixel_width",  GST_PROPS_INT (p_w),
+                           "pixel_height", GST_PROPS_INT (p_h));
 
     gst_caps_debug (caps, "New mpeg1videoparse caps");
 
@@ -202,12 +206,16 @@ mp1videoparse_parse_seq (Mp1VideoParse *mp1videoparse, GstBuffer *buf)
 }
 
 static gboolean
-mp1videoparse_valid_sync (Mp1VideoParse *mp1videoparse, gulong head, GstBuffer *buf)
+mp1videoparse_valid_sync (Mp1VideoParse *mp1videoparse, guint32 head, GstBuffer *buf)
 {
   switch (head) {
-    case SEQ_START_CODE:
-      mp1videoparse_parse_seq(mp1videoparse, buf);
+    case SEQ_START_CODE: {
+      GstBuffer *subbuf = gst_buffer_create_sub (buf, 4,
+		      				 GST_BUFFER_SIZE (buf) - 4);
+      mp1videoparse_parse_seq(mp1videoparse, subbuf);
+      gst_buffer_unref (subbuf);
       return TRUE;
+    }
     case GOP_START_CODE:
     case PICTURE_START_CODE:
     case USER_START_CODE:
