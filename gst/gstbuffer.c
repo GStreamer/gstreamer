@@ -332,16 +332,29 @@ _compare_buffer (GstBuffer *b1, GstBuffer *b2)
     return -1;
 }
 
+//
+// GST_BUFFER_WHERE will be replaced with something better as
+// soon as something better is actually implemented.  The
+// problems with this technique are:
+//
+// 1. Toggling debugging changes the function prototypes, causing
+// a full recompile.  Yuk.
+//
+// 2. The prototypes don't match the documentation.  This may cause
+// gtk-doc to choak.
+//
+// 3. Lots of ugly macros make the source code hard to maintain.
+//
+
 void gst_buffer_print_live ()
 {
-  GSList *sorted;
   GSList *elem;
 
   g_mutex_lock (_gst_buffer_chunk_lock);
 
-  sorted = g_slist_sort (_debug_live, (GCompareFunc) _compare_buffer);
+  _debug_live = g_slist_sort (_debug_live, (GCompareFunc) _compare_buffer);
 
-  for (elem = sorted; elem; elem = elem->next) {
+  for (elem = _debug_live; elem; elem = elem->next) {
     GstBuffer *buf = elem->data;
     g_print ("%sbuffer %p created %s:%d data=%p size=0x%x\n",
 	     buf->parent? "sub":"   ",
@@ -349,9 +362,7 @@ void gst_buffer_print_live ()
 	     buf->line, buf->data, buf->size);
   }
 
-  g_print ("(%d buffers)\n", g_slist_length (sorted));
-
-  g_slist_free (sorted);
+  g_print ("(%d buffers)\n", g_slist_length (_debug_live));
 
   g_mutex_unlock (_gst_buffer_chunk_lock);
 }
