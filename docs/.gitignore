@@ -1,3 +1,4 @@
-gst-python.html
-gst-python.txt
-gst-python.pdf
+*.txt
+*.pdf
+*.html
+gst-python.ent
