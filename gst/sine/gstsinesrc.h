@@ -55,11 +55,11 @@ struct _GstSineSrc {
   GstDParamManager *dpman;
 
   /* parameters */
-  gfloat volume;
-  gfloat freq;
+  gdouble volume;
+  gdouble freq;
   
   /* lookup table data */
-  gfloat *table_data;
+  gdouble *table_data;
   gdouble table_pos;
   gdouble table_inc;
   gint table_size;
@@ -75,7 +75,6 @@ struct _GstSineSrc {
   
   guint64 timestamp;
   guint64 offset;
-  GstBufferPool *bufpool;
 
   gdouble accumulator;
 };

@@ -46,9 +46,6 @@ struct _GstV4lMjpegSrc {
   /* pads */
   GstPad *srcpad;
 
-  /* the bufferpool */
-  GstBufferPool *bufferpool;
-
   /* buffer/capture info */
   struct mjpeg_sync bsync;
   struct mjpeg_requestbuffers breq;

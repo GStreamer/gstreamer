@@ -81,10 +81,9 @@ static gboolean              gst_v4lmjpegsrc_src_query    (GstPad         *pad,
 
 /* buffer functions */
 static GstPadLinkReturn      gst_v4lmjpegsrc_srcconnect   (GstPad         *pad,
-                                                           GstCaps        *caps);
-static GstData*              gst_v4lmjpegsrc_get          (GstPad         *pad);
-static GstCaps*              gst_v4lmjpegsrc_getcaps      (GstPad         *pad,
-                                                           GstCaps        *caps);
+                                                           const GstCaps        *caps);
+static GstData*            gst_v4lmjpegsrc_get          (GstPad         *pad);
+static GstCaps*              gst_v4lmjpegsrc_getcaps      (GstPad         *pad);
 
 /* get/set params */
 static void                  gst_v4lmjpegsrc_set_property (GObject        *object,
@@ -103,17 +102,7 @@ static void                  gst_v4lmjpegsrc_set_clock    (GstElement     *eleme
 /* state handling */
 static GstElementStateReturn gst_v4lmjpegsrc_change_state (GstElement     *element);
 
-/* bufferpool functions */
-static GstBuffer*            gst_v4lmjpegsrc_buffer_new   (GstBufferPool  *pool,
-                                                           guint64        offset,
-                                                           guint          size,
-                                                           gpointer       user_data);
-static void                  gst_v4lmjpegsrc_buffer_free  (GstBufferPool  *pool,
-							   GstBuffer      *buf,
-                                                           gpointer       user_data);
 
-
-static GstCaps *capslist = NULL;
 static GstPadTemplate *src_template;
 
 static GstElementClass *parent_class = NULL;
@@ -147,28 +136,22 @@ gst_v4lmjpegsrc_get_type (void)
 static void
 gst_v4lmjpegsrc_base_init (gpointer g_class)
 {
-  GstCaps *caps;
+  static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE (
+      "src",
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("video/x-jpeg, "
+        "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], "
+        "framerate = (double) [ 0, MAX ]"
+      )
+  );
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   
   gst_element_class_set_details (gstelement_class, &gst_v4lmjpegsrc_details);
 
-  caps = gst_caps_new ("v4lmjpegsrc_caps",
-                       "video/x-jpeg",
-                       gst_props_new (
-                          "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
-                          "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
-                          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-                          NULL       )
-                      );
-  capslist = gst_caps_append(capslist, caps);
-
-  src_template = gst_pad_template_new (
-		  "src",
-                  GST_PAD_SRC,
-  		  GST_PAD_ALWAYS,
-		  capslist, NULL);
-
-  gst_element_class_add_pad_template (gstelement_class, src_template);
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
 }
 static void
 gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass *klass)
@@ -259,14 +242,6 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc *v4lmjpegsrc)
   gst_pad_set_formats_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get_formats);
   gst_pad_set_query_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_src_query);
   gst_pad_set_query_type_function (v4lmjpegsrc->srcpad, gst_v4lmjpegsrc_get_query_types);
-
-  v4lmjpegsrc->bufferpool = gst_buffer_pool_new(
-		  			NULL,
-					NULL,
-					(GstBufferPoolBufferNewFunction)gst_v4lmjpegsrc_buffer_new,
-					NULL,
-					(GstBufferPoolBufferFreeFunction)gst_v4lmjpegsrc_buffer_free,
-					v4lmjpegsrc);
 
 #if 0
   v4lmjpegsrc->frame_width = 0;
@@ -416,7 +391,7 @@ calc_bufsize (int hor_dec,
         return result;
 }
 
-#define gst_caps_get_int_range(caps, name, min, max) \
+#define gst_structure_get_int_range (structure, name, min, max) \
   gst_props_entry_get_int_range(gst_props_get_entry((caps)->properties, \
                                                     name), \
                                 min, max)
@@ -424,16 +399,15 @@ calc_bufsize (int hor_dec,
 
 static GstPadLinkReturn
 gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
-                            GstCaps *caps)
+                            const GstCaps *caps)
 {
-  GstPadLinkReturn ret_val;
   GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC(gst_pad_get_parent(pad));
   gint hor_dec, ver_dec;
   gint w, h;
   gint max_w = GST_V4LELEMENT(v4lmjpegsrc)->vcap.maxwidth,
        max_h = GST_V4LELEMENT(v4lmjpegsrc)->vcap.maxheight;
   gulong bufsize;
-  gfloat fps = gst_v4lmjpegsrc_get_fps(v4lmjpegsrc);
+  GstStructure *structure;
 
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
@@ -453,22 +427,9 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
    * our own mime type back and it'll work. Other properties are to be set
    * by the src, not by the opposite caps */
 
-  if (gst_caps_has_property(caps, "width")) {
-    if (gst_caps_has_fixed_property(caps, "width")) {
-      gst_caps_get_int(caps, "width", &w);
-    } else {
-      int max;
-      gst_caps_get_int_range(caps, "width",  &max, &w);
-    }
-  }
-  if (gst_caps_has_property(caps, "height")) {
-    if (gst_caps_has_fixed_property(caps, "height")) {
-      gst_caps_get_int(caps, "height", &h);
-    } else {
-      int max;
-      gst_caps_get_int_range(caps, "height", &max, &h);
-    }
-  }
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "width", &w);
+  gst_structure_get_int (structure, "height", &h);
 
   /* figure out decimation */
   if (w >= max_w) {
@@ -530,23 +491,7 @@ gst_v4lmjpegsrc_srcconnect (GstPad  *pad,
   }
 #endif
 
-  /* we now have an actual width/height - *set it* */
-  caps = gst_caps_new("v4lmjpegsrc_caps",
-                      "video/x-jpeg",
-                      gst_props_new(
-                        "width",     GST_PROPS_INT(v4lmjpegsrc->end_width),
-                        "height",    GST_PROPS_INT(v4lmjpegsrc->end_height),
-                        "framerate", GST_PROPS_FLOAT(fps),
-                        NULL       ) );
-  if ((ret_val = gst_pad_try_set_caps(v4lmjpegsrc->srcpad, caps)) == GST_PAD_LINK_REFUSED)
-    return GST_PAD_LINK_REFUSED;
-  else if (ret_val == GST_PAD_LINK_DELAYED)
-    return GST_PAD_LINK_DELAYED;
-
-  if (!gst_v4lmjpegsrc_capture_init(v4lmjpegsrc))
-    return GST_PAD_LINK_REFUSED;
-
-  return GST_PAD_LINK_DONE;
+  return GST_PAD_LINK_OK;
 }
 
 
@@ -565,14 +510,6 @@ gst_v4lmjpegsrc_get (GstPad *pad)
   if (v4lmjpegsrc->use_fixed_fps &&
       (fps = gst_v4lmjpegsrc_get_fps(v4lmjpegsrc)) == 0)
     return NULL;
-
-  buf = gst_buffer_new_from_pool(v4lmjpegsrc->bufferpool, 0, 0);
-  if (!buf)
-  {
-    gst_element_error(GST_ELEMENT(v4lmjpegsrc),
-      "Failed to create a new GstBuffer");
-    return NULL;
-  }
 
   if (v4lmjpegsrc->need_writes > 0) {
     /* use last frame */
@@ -643,8 +580,10 @@ gst_v4lmjpegsrc_get (GstPad *pad)
     v4lmjpegsrc->use_num_times[num] = 1;
   }
 
+  buf = gst_buffer_new ();
   GST_BUFFER_DATA(buf) = gst_v4lmjpegsrc_get_buffer(v4lmjpegsrc, num);
   GST_BUFFER_SIZE(buf) = v4lmjpegsrc->last_size;
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
   if (v4lmjpegsrc->use_fixed_fps)
     GST_BUFFER_TIMESTAMP(buf) = v4lmjpegsrc->handled * GST_SECOND / fps;
   else /* calculate time based on our own clock */
@@ -660,27 +599,20 @@ gst_v4lmjpegsrc_get (GstPad *pad)
 
 
 static GstCaps*
-gst_v4lmjpegsrc_getcaps (GstPad  *pad,
-                         GstCaps *_caps)
+gst_v4lmjpegsrc_getcaps (GstPad  *pad)
 {
   GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC(gst_pad_get_parent(pad));
   struct video_capability *vcap = &GST_V4LELEMENT(v4lmjpegsrc)->vcap;
-  GstCaps *caps;
 
   if (!GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsrc))) {
     return NULL;
   }
 
-  caps = GST_CAPS_NEW("v4lmjpegsrc_jpeg_caps",
-                      "video/x-jpeg",
-                        "width",  GST_PROPS_INT_RANGE(vcap->maxwidth/4,
-                                                      vcap->maxwidth),
-                        "height", GST_PROPS_INT_RANGE(vcap->maxheight/4,
-                                                      vcap->maxheight),
-                        "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
-                        NULL);
-
-  return caps;
+  return gst_caps_new_simple ("video/x-jpeg",
+      "width", GST_TYPE_INT_RANGE, vcap->maxwidth/4, vcap->maxwidth,
+      "height", GST_TYPE_INT_RANGE, vcap->maxheight/4, vcap->maxheight,
+      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+      NULL);
 }
 
 
@@ -834,6 +766,7 @@ gst_v4lmjpegsrc_set_clock (GstElement *element,
 }
 
 
+#if 0
 static GstBuffer*
 gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
                             guint64       offset,
@@ -856,8 +789,9 @@ gst_v4lmjpegsrc_buffer_new (GstBufferPool *pool,
 
   return buffer;
 }
+#endif
 
-
+#if 0
 static void
 gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_data)
 {
@@ -884,3 +818,4 @@ gst_v4lmjpegsrc_buffer_free (GstBufferPool *pool, GstBuffer *buf, gpointer user_
   /* free the buffer struct et all */
   gst_buffer_default_free(buf);
 }
+#endif

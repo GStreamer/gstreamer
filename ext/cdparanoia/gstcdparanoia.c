@@ -51,21 +51,21 @@ static GstElementDetails cdparanoia_details = {
   "Erik Walthinsen <omega@cse.ogi.edu>",
 };
 
-GST_PAD_TEMPLATE_FACTORY (cdparanoia_src_factory,
-  "src",
-  GST_PAD_SRC,
-  GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "cdparanoia_src",
-    "audio/x-raw-int",
-	"endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-	"signed", 	GST_PROPS_BOOLEAN (TRUE),
-	"width", 	GST_PROPS_INT (16),
-	"depth", 	GST_PROPS_INT (16),
-	"rate", 	GST_PROPS_INT (44100),
-	"channels", 	GST_PROPS_INT (2),
-	"chunksize", 	GST_PROPS_INT (CD_FRAMESIZE_RAW)
-  )
+static GstStaticPadTemplate cdparanoia_src_template =
+  GST_STATIC_PAD_TEMPLATE (
+    "src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (
+      "audio/x-raw-int, "
+      "endianness = (int) BYTE_ORDER, "
+      "signed = (boolean) true, "
+      "width = (int) 16, "
+      "depth = (int) 16, "
+      "rate = (int) 44100, "
+      "channels = (int) 2, "
+      "chunksize = (int) " G_STRINGIFY(CD_FRAMESIZE_RAW)
+    )
 );
 
 
@@ -202,7 +202,8 @@ cdparanoia_base_init (gpointer g_class)
 {
 	GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-	gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (cdparanoia_src_factory));
+	gst_element_class_add_pad_template (element_class, 
+	  gst_static_pad_template_get (&cdparanoia_src_template));
 	gst_element_class_set_details (element_class, &cdparanoia_details);
 }
 
@@ -289,7 +290,8 @@ static void
 cdparanoia_init (CDParanoia *cdparanoia)
 {
   cdparanoia->srcpad =
-    gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (cdparanoia_src_factory), "src");
+    gst_pad_new_from_template (
+      gst_static_pad_template_get (&cdparanoia_src_template), "src");
   gst_pad_set_get_function (cdparanoia->srcpad, cdparanoia_get);
   gst_pad_set_event_function (cdparanoia->srcpad, cdparanoia_event);
   gst_pad_set_event_mask_function (cdparanoia->srcpad, cdparanoia_get_event_mask);

@@ -56,7 +56,7 @@ static void                  gst_v4lmjpegsink_init         (GstV4lMjpegSink     
 
 /* the chain of buffers */
 static GstPadLinkReturn   gst_v4lmjpegsink_sinkconnect  (GstPad               *pad,
-                                                            GstCaps              *vscapslist);
+                                                            const GstCaps              *vscapslist);
 static void                  gst_v4lmjpegsink_chain        (GstPad               *pad,
                                                             GstData              *_data);
 
@@ -72,14 +72,7 @@ static void                  gst_v4lmjpegsink_get_property (GObject             
 static GstElementStateReturn gst_v4lmjpegsink_change_state (GstElement           *element);
 static void		     gst_v4lmjpegsink_set_clock    (GstElement *element, GstClock *clock);
 
-/* bufferpool functions */
-static GstBuffer*            gst_v4lmjpegsink_buffer_new   (GstBufferPool  *pool,
-                                                            guint64        offset,
-                                                            guint          size,
-                                                            gpointer       user_data);
 
-
-static GstCaps *capslist = NULL;
 static GstPadTemplate *sink_template;
 
 static GstElementClass *parent_class = NULL;
@@ -111,28 +104,21 @@ gst_v4lmjpegsink_get_type (void)
 static void
 gst_v4lmjpegsink_base_init (gpointer g_class)
 {
-  GstCaps *caps;
+  static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE (
+      "sink",
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("video/x-jpeg, "
+	"width = (int) [ 1, MAX ], "
+	"height = (int) [ 1, MAX ], "
+	"framerate = (double) [ 0, MAX ]")
+  );
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details (gstelement_class, &gst_v4lmjpegsink_details);
 
-  caps = gst_caps_new ("v4lmjpegsink_caps",
-                       "video/x-jpeg",
-                       gst_props_new (
-                          "width",     GST_PROPS_INT_RANGE (0, G_MAXINT),
-                          "height",    GST_PROPS_INT_RANGE (0, G_MAXINT),
-                          "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-                          NULL       )
-                      );
-  capslist = gst_caps_append(capslist, caps);
-
-  sink_template = gst_pad_template_new (
-		  "sink",
-                  GST_PAD_SINK,
-  		  GST_PAD_ALWAYS,
-		  capslist, NULL);
-
-  gst_element_class_add_pad_template (gstelement_class, sink_template);
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get(&sink_template));
 }
 static void
 gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass *klass)
@@ -200,29 +186,17 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink *v4lmjpegsink)
   v4lmjpegsink->bufsize = 256;
 
   GST_FLAG_SET(v4lmjpegsink, GST_ELEMENT_THREAD_SUGGESTED);
-
-  v4lmjpegsink->bufferpool = gst_buffer_pool_new(
-				  NULL, 
-				  NULL,
-				  (GstBufferPoolBufferNewFunction)gst_v4lmjpegsink_buffer_new,
-				  NULL,
-				  NULL,
-				  v4lmjpegsink);
 }
 
 
 static GstPadLinkReturn
 gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
-                              GstCaps *vscapslist)
+                              const GstCaps *vscapslist)
 {
   GstV4lMjpegSink *v4lmjpegsink;
-  GstCaps *caps;
+  GstStructure *structure;
 
   v4lmjpegsink = GST_V4LMJPEGSINK (gst_pad_get_parent (pad));
-
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (vscapslist) || !GST_V4L_IS_OPEN(GST_V4LELEMENT(v4lmjpegsink)))
-    return GST_PAD_LINK_DELAYED;
 
   /* in case the buffers are active (which means that we already
    * did capsnego before and didn't clean up), clean up anyways */
@@ -230,29 +204,26 @@ gst_v4lmjpegsink_sinkconnect (GstPad  *pad,
     if (!gst_v4lmjpegsink_playback_deinit(v4lmjpegsink))
       return GST_PAD_LINK_REFUSED;
 
-  for (caps = vscapslist; caps != NULL; caps = vscapslist = vscapslist->next)
-  {
-    gst_caps_get_int (caps, "width", &v4lmjpegsink->width);
-    gst_caps_get_int (caps, "height", &v4lmjpegsink->height);
+  structure = gst_caps_get_structure (vscapslist, 0);
 
-    if (!gst_v4lmjpegsink_set_playback(v4lmjpegsink,
-         v4lmjpegsink->width, v4lmjpegsink->height,
-         v4lmjpegsink->x_offset, v4lmjpegsink->y_offset,
-         GST_V4LELEMENT(v4lmjpegsink)->vchan.norm, 0)) /* TODO: interlacing */
-      continue;
+  gst_structure_get_int  (structure, "width", &v4lmjpegsink->width);
+  gst_structure_get_int  (structure, "height", &v4lmjpegsink->height);
 
-    /* set buffer info */
-    if (!gst_v4lmjpegsink_set_buffer(v4lmjpegsink,
-         v4lmjpegsink->numbufs, v4lmjpegsink->bufsize))
-      continue;
-    if (!gst_v4lmjpegsink_playback_init(v4lmjpegsink))
-      continue;
+  if (!gst_v4lmjpegsink_set_playback(v4lmjpegsink,
+       v4lmjpegsink->width, v4lmjpegsink->height,
+       v4lmjpegsink->x_offset, v4lmjpegsink->y_offset,
+       GST_V4LELEMENT(v4lmjpegsink)->vchan.norm, 0)) /* TODO: interlacing */
+    return GST_PAD_LINK_REFUSED;
 
-    return GST_PAD_LINK_OK;
-  }
+  /* set buffer info */
+  if (!gst_v4lmjpegsink_set_buffer(v4lmjpegsink,
+       v4lmjpegsink->numbufs, v4lmjpegsink->bufsize))
+    return GST_PAD_LINK_REFUSED;
+  if (!gst_v4lmjpegsink_playback_init(v4lmjpegsink))
+    return GST_PAD_LINK_REFUSED;
 
-  /* if we got here - it's not good */
-  return GST_PAD_LINK_REFUSED;
+  return GST_PAD_LINK_OK;
+
 }
 
 
@@ -295,6 +266,7 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
     gst_clock_id_free (id);
   }
 
+#if 0
   if (GST_BUFFER_POOL(buf) == v4lmjpegsink->bufferpool)
   {
     num = GPOINTER_TO_INT(GST_BUFFER_POOL_PRIVATE(buf));
@@ -302,6 +274,7 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
   }
   else
   {
+#endif
     /* check size */
     if (GST_BUFFER_SIZE(buf) > v4lmjpegsink->breq.size)
     {
@@ -316,7 +289,9 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
     memcpy(gst_v4lmjpegsink_get_buffer(v4lmjpegsink, num),
       GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
     gst_v4lmjpegsink_play_frame(v4lmjpegsink, num);
+#if 0
   }
+#endif
 
   g_signal_emit(G_OBJECT(v4lmjpegsink),gst_v4lmjpegsink_signals[SIGNAL_FRAME_DISPLAYED],0);
 
@@ -324,6 +299,7 @@ gst_v4lmjpegsink_chain (GstPad    *pad,
 }
 
 
+#if 0
 static GstBuffer *
 gst_v4lmjpegsink_buffer_new (GstBufferPool *pool,
                              guint64        offset,
@@ -359,6 +335,7 @@ gst_v4lmjpegsink_buffer_new (GstBufferPool *pool,
 
   return buffer;
 }
+#endif
 
 
 static void

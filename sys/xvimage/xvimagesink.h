@@ -122,7 +122,7 @@ struct _GstXvImageSink {
   GstXWindow *xwindow;
   GstXvImage *xvimage;
   
-  gfloat framerate;
+  gdouble framerate;
   GMutex *x_lock;
   
   /* Unused */
@@ -130,7 +130,6 @@ struct _GstXvImageSink {
 
   GstClockTime time;
  
-  GstBufferPool *bufferpool;
   GMutex *pool_lock;
   GSList *image_pool;
 };

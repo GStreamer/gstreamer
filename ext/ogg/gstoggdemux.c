@@ -82,22 +82,21 @@ enum {
   /* FILL ME */
 };
 
-GST_PAD_TEMPLATE_FACTORY (ogg_demux_src_template_factory,
+static GstStaticPadTemplate ogg_demux_src_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_SOMETIMES,
-  NULL
-)
-GST_PAD_TEMPLATE_FACTORY (ogg_demux_sink_template_factory,
+  GST_STATIC_CAPS_ANY
+);
+
+static GstStaticPadTemplate ogg_demux_sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "ogg_demux_sink",
-    "application/ogg",
-    NULL
-  )
-)
+  GST_STATIC_CAPS ("application/ogg")
+);
 
 
 static void		gst_ogg_demux_base_init		(gpointer		g_class);
@@ -170,9 +169,9 @@ gst_ogg_demux_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_ogg_demux_details);
 
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (ogg_demux_sink_template_factory));
+      gst_static_pad_template_get (&ogg_demux_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (ogg_demux_src_template_factory));
+      gst_static_pad_template_get (&ogg_demux_src_template_factory));
 }
 static void
 gst_ogg_demux_class_init (gpointer g_class, gpointer class_data)
@@ -193,7 +192,7 @@ gst_ogg_demux_init (GTypeInstance *instance, gpointer g_class)
   
   /* create the sink pad */
   ogg->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (ogg_demux_sink_template_factory), "sink");
+      gst_static_pad_template_get (&ogg_demux_sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (ogg), ogg->sinkpad);
   gst_pad_set_chain_function (ogg->sinkpad, GST_DEBUG_FUNCPTR (gst_ogg_demux_chain));
 
@@ -438,7 +437,9 @@ gst_ogg_pad_push (GstOggDemux *ogg, GstOggPad *pad)
 	  GstCaps *caps = gst_ogg_type_find (&packet);
 	  gchar *name = g_strdup_printf ("serial %d", pad->serial);
 	  
-	  pad->pad = gst_pad_new_from_template (ogg_demux_src_template_factory(), name);
+	  pad->pad = gst_pad_new_from_template (
+	      gst_static_pad_template_get (&ogg_demux_src_template_factory),
+	      name);
 	  g_free (name);
 	  gst_pad_set_event_function (pad->pad, GST_DEBUG_FUNCPTR (gst_ogg_demux_src_event));
 	  gst_pad_set_event_mask_function (pad->pad, GST_DEBUG_FUNCPTR (gst_ogg_demux_get_event_masks));
@@ -527,12 +528,12 @@ ogg_find_peek (gpointer data, gint64 offset, guint size)
   }
 }
 static void
-ogg_find_suggest (gpointer data, guint probability, GstCaps *caps)
+ogg_find_suggest (gpointer data, guint probability, const GstCaps *caps)
 {
   OggTypeFind *find = (OggTypeFind *) data;
   
   if (probability > find->best_probability) {
-    gst_caps_replace_sink (&find->caps, caps);
+    gst_caps_replace (&find->caps, gst_caps_copy (caps));
     find->best_probability = probability;
   }
 }

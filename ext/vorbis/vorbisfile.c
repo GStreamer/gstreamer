@@ -101,8 +101,6 @@ enum
 {
   ARG_0,
   ARG_BLOCKSIZE,
-  ARG_METADATA,
-  ARG_STREAMINFO
 };
 
 static void     gst_vorbisfile_base_init        (gpointer g_class);
@@ -180,44 +178,32 @@ vorbisfile_get_type (void)
 static GstCaps*
 vorbis_caps_factory (void)
 {
-  return
-   gst_caps_new (
-  	"vorbis_vorbis",
-  	"application/ogg",
-  	NULL);
+  return gst_caps_new_simple ("application/ogg", NULL);
 }
 
 static GstCaps*
 raw_caps_factory (void)
 {
-  return
-   gst_caps_new (
-  	"vorbis_raw",
-  	"audio/x-raw-int",
-	gst_props_new (
-    	    "endianness", 	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "signed", 		GST_PROPS_BOOLEAN (TRUE),
-    	    "width", 		GST_PROPS_INT (16),
-    	    "depth",    	GST_PROPS_INT (16),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-	    NULL));
+  return gst_caps_new_simple ("audio/x-raw-int",
+      "endianness", 	G_TYPE_INT, G_BYTE_ORDER,
+      "signed", 	G_TYPE_BOOLEAN, TRUE,
+      "width", 		G_TYPE_INT, 16,
+      "depth",    	G_TYPE_INT, 16,
+      "rate",     	GST_TYPE_INT_RANGE, 11025, 48000,
+      "channels", 	GST_TYPE_INT_RANGE, 1, 2,
+      NULL);
 }
 
 static GstCaps*
 raw_caps2_factory (void)
 {
-  return
-   gst_caps_new (
-  	"vorbis_raw_float",
-  	"audio/x-raw-float",
-	gst_props_new (
-	    "width",		GST_PROPS_INT (32),
-	    "endianness",	GST_PROPS_INT (G_BYTE_ORDER),
-    	    "rate",     	GST_PROPS_INT_RANGE (11025, 48000),
-    	    "channels", 	GST_PROPS_INT_RANGE (1, 2),
-            "buffer-frames",    GST_PROPS_INT_RANGE (1, G_MAXINT),
-	    NULL));
+  return gst_caps_new_simple ("audio/x-raw-float",
+      "width",		G_TYPE_INT, 32,
+      "endianness",	G_TYPE_INT, G_BYTE_ORDER,
+      "rate",     	GST_TYPE_INT_RANGE, 11025, 48000,
+      "channels", 	GST_TYPE_INT_RANGE, 1, 2,
+      "buffer-frames",  GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      NULL);
 }
 
 static void
@@ -232,11 +218,11 @@ gst_vorbisfile_base_init (gpointer g_class)
 
   gst_vorbisdec_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, 
 		                                      GST_PAD_ALWAYS, 
-					              vorbis_caps, NULL);
-  raw_caps = gst_caps_prepend (raw_caps, raw_caps2);
+					              vorbis_caps);
+  gst_caps_append (raw_caps2, raw_caps);
   gst_vorbisdec_src_template = gst_pad_template_new ("src", GST_PAD_SRC, 
 		                                     GST_PAD_ALWAYS, 
-					             raw_caps, NULL);
+					             raw_caps2);
   gst_element_class_add_pad_template (element_class, gst_vorbisdec_sink_template);
   gst_element_class_add_pad_template (element_class, gst_vorbisdec_src_template);
   gst_element_class_set_details (element_class, &vorbisfile_details);
@@ -256,12 +242,6 @@ gst_vorbisfile_class_init (VorbisFileClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLOCKSIZE,
     g_param_spec_ulong ("blocksize", "Block size", "Size in bytes to read per buffer",
                         1, G_MAXULONG, DEFAULT_BLOCKSIZE, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_METADATA,
-    g_param_spec_boxed ("metadata", "Metadata", "(logical) Stream metadata",
-                         GST_TYPE_CAPS, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, ARG_STREAMINFO,
-    g_param_spec_boxed ("streaminfo", "stream", "(logical) Stream information",
-                         GST_TYPE_CAPS, G_PARAM_READABLE));
 
   gobject_class->get_property = gst_vorbisfile_get_property;
   gobject_class->set_property = gst_vorbisfile_set_property;
@@ -295,7 +275,6 @@ gst_vorbisfile_init (VorbisFile * vorbisfile)
   vorbisfile->offset = 0;
   vorbisfile->seek_pending = 0;
   vorbisfile->need_discont = FALSE;
-  vorbisfile->metadata = NULL;
   vorbisfile->streaminfo = NULL;
   vorbisfile->current_link = -1;
   vorbisfile->blocksize = DEFAULT_BLOCKSIZE;
@@ -435,6 +414,7 @@ ov_callbacks vorbisfile_ov_callbacks =
   gst_vorbisfile_tell,
 };
 
+#if 0
 /* retrieve the comment field (or tags) and put in metadata GstCaps
  * returns TRUE if caps could be set,
  * FALSE if they couldn't be read somehow */
@@ -463,7 +443,7 @@ gst_vorbisfile_update_metadata (VorbisFile *vorbisfile, gint link)
     value = strstr (*ptr, "=");
     if (value) {
       name = g_strndup (*ptr, value-*ptr);
-      entry = gst_props_entry_new (name, GST_PROPS_STRING_TYPE, value+1);
+      entry = gst_props_entry_new (name, G_TYPE_STRING_TYPE, value+1);
       gst_props_add_entry (props, (GstPropsEntry *) entry);
     }
     ptr++;
@@ -498,21 +478,21 @@ gst_vorbisfile_update_streaminfo (VorbisFile *vorbisfile, gint link)
   props = gst_props_empty_new ();
 
   vi = ov_info (vf, link);
-  entry = gst_props_entry_new ("version", GST_PROPS_INT_TYPE, vi->version);
+  entry = gst_props_entry_new ("version", G_TYPE_INT_TYPE, vi->version);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_upper", GST_PROPS_INT_TYPE, 
+  entry = gst_props_entry_new ("bitrate_upper", G_TYPE_INT_TYPE, 
 		               vi->bitrate_upper);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_nominal", GST_PROPS_INT_TYPE, 
+  entry = gst_props_entry_new ("bitrate_nominal", G_TYPE_INT_TYPE, 
 		               vi->bitrate_nominal);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate_lower", GST_PROPS_INT_TYPE, 
+  entry = gst_props_entry_new ("bitrate_lower", G_TYPE_INT_TYPE, 
 		               vi->bitrate_lower);
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("serial", GST_PROPS_INT_TYPE, 
+  entry = gst_props_entry_new ("serial", G_TYPE_INT_TYPE, 
 		               ov_serialnumber (vf, link));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
-  entry = gst_props_entry_new ("bitrate", GST_PROPS_INT_TYPE, 
+  entry = gst_props_entry_new ("bitrate", G_TYPE_INT_TYPE, 
 		               ov_bitrate (vf, link));
   gst_props_add_entry (props, (GstPropsEntry *) entry);
 
@@ -524,6 +504,7 @@ gst_vorbisfile_update_streaminfo (VorbisFile *vorbisfile, gint link)
 
   return TRUE;
 }
+#endif
 
 static gboolean
 gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
@@ -535,25 +516,19 @@ gst_vorbisfile_new_link (VorbisFile *vorbisfile, gint link)
   /* new logical bitstream */
   vorbisfile->current_link = link;
 
-  gst_vorbisfile_update_metadata (vorbisfile, link);
-  gst_vorbisfile_update_streaminfo (vorbisfile, link);
-      
-  caps = GST_CAPS_NEW ("vorbisdec_src",
-                       "audio/x-raw-int",    
-                         "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-                         "signed",     GST_PROPS_BOOLEAN (TRUE),
-                         "width",      GST_PROPS_INT (16),
-                         "depth",      GST_PROPS_INT (16),
-                         "rate",       GST_PROPS_INT (vi->rate),
-                         "channels",   GST_PROPS_INT (vi->channels));
-  gst_caps_ref (caps);
+  caps = gst_caps_new_simple ("audio/x-raw-int",    
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "signed",     G_TYPE_BOOLEAN, TRUE,
+      "width",      G_TYPE_INT, 16,
+      "depth",      G_TYPE_INT, 16,
+      "rate",       G_TYPE_INT, vi->rate,
+      "channels",   G_TYPE_INT, vi->channels,
+      NULL);
 
   if (gst_pad_try_set_caps (vorbisfile->srcpad, caps) <= 0) {
-    if (!gst_pad_recover_caps_error (vorbisfile->srcpad, caps))
-      res = FALSE;
+    res = FALSE;
   }
-
-  gst_caps_unref (caps);
+  gst_caps_free (caps);
 
   return res;
 }
@@ -1155,12 +1130,6 @@ gst_vorbisfile_get_property (GObject *object, guint prop_id,
   switch (prop_id) {
     case ARG_BLOCKSIZE:
       g_value_set_ulong (value, vorbisfile->blocksize);
-      break;
-    case ARG_METADATA:
-      g_value_set_boxed (value, vorbisfile->metadata);
-      break;
-    case ARG_STREAMINFO:
-      g_value_set_boxed (value, vorbisfile->streaminfo);
       break;
     default:
       g_warning ("Unknown property id\n");

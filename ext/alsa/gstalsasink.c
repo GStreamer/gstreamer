@@ -65,8 +65,7 @@ gst_alsa_sink_pad_factory (void)
 
   if (!template)
     template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, -1),
-                                     NULL);
+                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, -1));
 
   return template;
 }
@@ -78,8 +77,7 @@ gst_alsa_sink_request_pad_factory (void)
   if (!template)
     template =
       gst_pad_template_new ("sink%d", GST_PAD_SINK, GST_PAD_REQUEST,
-                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, 1),
-                            NULL);
+                                     gst_alsa_caps (SND_PCM_FORMAT_UNKNOWN, -1, 1));
 
   return template;
 }

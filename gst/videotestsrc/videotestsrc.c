@@ -385,17 +385,21 @@ struct fourcc_list_struct fourcc_list[] = {
 };
 int n_fourccs = sizeof (fourcc_list) / sizeof (fourcc_list[0]);
 
-struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
+struct fourcc_list_struct *paintinfo_find_by_structure(const GstStructure *structure)
 {
   int i;
-  const char *mimetype = gst_caps_get_mime(caps);
+  const char *media_type = gst_structure_get_name(structure);
+  int ret;
 
-  if(strcmp(mimetype, "video/x-raw-yuv")==0){
+  g_return_val_if_fail (structure, NULL);
+
+  if(strcmp(media_type, "video/x-raw-yuv")==0){
     char *s;
     int fourcc;
     guint32 format;
 
-    gst_caps_get(caps, "format", &format, NULL);
+    ret = gst_structure_get_fourcc (structure, "format", &format);
+    if (!ret) return NULL;
     for (i = 0; i < n_fourccs; i++) {
       s = fourcc_list[i].fourcc;
       //g_print("testing " GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s);
@@ -404,19 +408,19 @@ struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
         return fourcc_list + i;
       }
     }
-  }else if(strcmp(mimetype, "video/x-raw-rgb")==0){
+  }else if(strcmp(media_type, "video/x-raw-rgb")==0){
     int red_mask;
     int green_mask;
     int blue_mask;
     int depth;
     int bpp;
 
-    gst_caps_get(caps, "red_mask", &red_mask,
-	"green_mask", &green_mask,
-	"blue_mask", &blue_mask,
-	"depth", &depth,
-	"bpp", &bpp,
-	NULL);
+    ret = gst_structure_get_int (structure, "red_mask", &red_mask);
+    ret &= gst_structure_get_int (structure, "green_mask", &green_mask);
+    ret &= gst_structure_get_int (structure, "blue_mask", &blue_mask);
+    ret &= gst_structure_get_int (structure, "depth", &depth);
+    ret &= gst_structure_get_int (structure, "bpp", &bpp);
+
     for (i = 0; i < n_fourccs; i++) {
       if (strcmp(fourcc_list[i].fourcc, "RGB ") == 0 &&
 	  fourcc_list[i].red_mask == red_mask &&
@@ -429,12 +433,9 @@ struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps)
       }
     }
     return NULL;
-  }else{
-    g_warning("unknown format");
-    return NULL;
   }
 
-  g_warning("format not found");
+  g_critical("format not found for media type %s", media_type);
 
   return NULL;
 }
@@ -474,10 +475,9 @@ struct fourcc_list_struct * paintrect_find_name (const char *name)
 }
 
 
-GstCaps *paint_get_caps(struct fourcc_list_struct *format)
+GstStructure *paint_get_structure(struct fourcc_list_struct *format)
 {
   unsigned int fourcc;
-  GstCaps *caps;
 
   g_return_val_if_fail(format, NULL);
 
@@ -491,21 +491,19 @@ GstCaps *paint_get_caps(struct fourcc_list_struct *format)
     }else{
       endianness = G_BIG_ENDIAN;
     }
-    caps = GST_CAPS_NEW ("videotestsrc_filter",
-			 "video/x-raw-rgb",
-  			 "bpp", GST_PROPS_INT(format->bitspp),
-			 "endianness", GST_PROPS_INT(endianness),
-  			 "depth", GST_PROPS_INT(format->depth),
-  			 "red_mask", GST_PROPS_INT(format->red_mask),
-  			 "green_mask", GST_PROPS_INT(format->green_mask),
-  			 "blue_mask", GST_PROPS_INT(format->blue_mask));
+    return gst_structure_new ("video/x-raw-rgb",
+	"bpp", G_TYPE_INT, format->bitspp,
+	"endianness", G_TYPE_INT, endianness,
+	"depth", G_TYPE_INT, format->depth,
+	"red_mask", G_TYPE_INT, format->red_mask,
+	"green_mask", G_TYPE_INT, format->green_mask,
+	"blue_mask", G_TYPE_INT, format->blue_mask,
+        NULL);
   }else{
-    caps = GST_CAPS_NEW ("videotestsrc_filter",
-			 "video/x-raw-yuv",
-			 "format", GST_PROPS_FOURCC (fourcc));
+    return gst_structure_new ("video/x-raw-yuv",
+	"format", GST_TYPE_FOURCC, fourcc,
+        NULL);
   }
-
-  return caps;
 }
 
 void

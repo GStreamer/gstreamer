@@ -107,13 +107,12 @@ struct _GstXImageSink {
   GstXWindow *xwindow;
   GstXImage *ximage;
   
-  gfloat framerate;
+  gdouble framerate;
   GMutex *x_lock;
   
   /* Unused */
   gint pixel_width, pixel_height;
  
-  GstBufferPool *bufferpool;
   GMutex *pool_lock;
   GSList *image_pool;
 };

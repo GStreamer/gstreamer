@@ -53,8 +53,9 @@ struct fourcc_list_struct
 
 struct fourcc_list_struct * paintrect_find_fourcc (int find_fourcc);
 struct fourcc_list_struct * paintrect_find_name (const char *name);
-struct fourcc_list_struct *paintinfo_find_by_caps(GstCaps *caps);
-GstCaps *paint_get_caps(struct fourcc_list_struct *format);
+struct fourcc_list_struct *paintinfo_find_by_structure(
+    const GstStructure *structure);
+GstStructure *paint_get_structure(struct fourcc_list_struct *format);
 void gst_videotestsrc_smpte (GstVideotestsrc * v, unsigned char *dest, int w, int h);
 void gst_videotestsrc_snow (GstVideotestsrc * v, unsigned char *dest, int w, int h);
 void gst_videotestsrc_black (GstVideotestsrc * v, unsigned char *dest, int w, int h);

@@ -24,7 +24,7 @@
 #include "gstvideoscale.h"
 
 struct videoscale_format_struct {
-	char *fourcc;
+	unsigned int fourcc;
 	int depth;
 	void (*scale)(GstVideoscale *,unsigned char *dest, unsigned char *src);
 	int bpp;
@@ -37,9 +37,9 @@ struct videoscale_format_struct {
 extern struct videoscale_format_struct videoscale_formats[];
 extern int videoscale_n_formats;
 
-GstCaps *videoscale_get_caps(struct videoscale_format_struct *format);
+GstStructure *videoscale_get_structure(struct videoscale_format_struct *format);
 
-struct videoscale_format_struct *videoscale_find_by_caps(GstCaps *caps);
+struct videoscale_format_struct *videoscale_find_by_structure (GstStructure *structure);
 
 
 #endif

@@ -38,7 +38,6 @@ typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 struct _GstAlsaSrc {
   GstAlsa        parent;
   GstBuffer     *buf[GST_ALSA_MAX_TRACKS];
-  GstBufferPool *pool;
 };
 
 struct _GstAlsaSrcClass {

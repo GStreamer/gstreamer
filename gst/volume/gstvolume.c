@@ -50,7 +50,8 @@ enum {
   ARG_VOLUME
 };
 
-GST_PAD_TEMPLATE_FACTORY (volume_sink_factory,
+static GstStaticPadTemplate volume_sink_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
@@ -59,19 +60,20 @@ GST_PAD_TEMPLATE_FACTORY (volume_sink_factory,
     "audio/x-raw-float",
       GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
   ),
-  GST_CAPS_NEW (
+  GST_STATIC_CAPS (
     "volume_int_sink",
     "audio/x-raw-int",
-      "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),
-      "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "signed",     GST_PROPS_BOOLEAN (TRUE)
+      "channels",   G_TYPE_INT_RANGE (1, G_MAXINT),
+      "rate",       G_TYPE_INT_RANGE (1, G_MAXINT),
+      "endianness", G_TYPE_INT (G_BYTE_ORDER),
+      "width",      G_TYPE_INT (16),
+      "depth",      G_TYPE_INT (16),
+      "signed",     G_TYPE_BOOLEAN (TRUE)
   )
 );
 
-GST_PAD_TEMPLATE_FACTORY (volume_src_factory,
+static GstStaticPadTemplate volume_src_factory =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
@@ -80,15 +82,15 @@ GST_PAD_TEMPLATE_FACTORY (volume_src_factory,
     "audio/x-raw-float",
       GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_PROPS
   ),
-  GST_CAPS_NEW (
+  GST_STATIC_CAPS (
     "volume_int_src",
     "audio/x-raw-int",
-      "channels",   GST_PROPS_INT_RANGE (1, G_MAXINT),
-      "rate",       GST_PROPS_INT_RANGE (1, G_MAXINT),
-      "endianness", GST_PROPS_INT (G_BYTE_ORDER),
-      "width",      GST_PROPS_INT (16),
-      "depth",      GST_PROPS_INT (16),
-      "signed",     GST_PROPS_BOOLEAN (TRUE)
+      "channels",   G_TYPE_INT_RANGE (1, G_MAXINT),
+      "rate",       G_TYPE_INT_RANGE (1, G_MAXINT),
+      "endianness", G_TYPE_INT (G_BYTE_ORDER),
+      "width",      G_TYPE_INT (16),
+      "depth",      G_TYPE_INT (16),
+      "signed",     G_TYPE_BOOLEAN (TRUE)
   )
 );
 
@@ -109,16 +111,6 @@ static void		volume_chain_int16         (GstPad *pad, GstData *_data);
 static GstElementClass *parent_class = NULL;
 /*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
 
-static GstBufferPool*
-volume_get_bufferpool (GstPad *pad)
-{
-  GstVolume *filter;
-
-  filter = GST_VOLUME (gst_pad_get_parent (pad));
-
-  return gst_pad_get_bufferpool (filter->srcpad);
-}
-
 static GstPadLinkReturn
 volume_connect (GstPad *pad, GstCaps *caps)
 {
@@ -137,7 +129,7 @@ volume_connect (GstPad *pad, GstCaps *caps)
       return GST_PAD_LINK_REFUSED;
 
     if ((set_retval = gst_pad_try_set_caps(otherpad, caps)) > 0)
-      if (gst_caps_get_int (caps, "rate", &rate)){
+      if (gst_structure_get_int  (structure, "rate", &rate)){
         gst_dpman_set_rate(filter->dpman, rate);
       }
     return set_retval;
@@ -154,8 +146,7 @@ volume_parse_caps (GstVolume *filter, GstCaps *caps)
   g_return_val_if_fail(filter!=NULL,FALSE);
   g_return_val_if_fail(caps!=NULL,FALSE);
   
-  mimetype = gst_caps_get_mime (caps);
-  
+  mimetype = gst_structure_get_mime  (structure  
   if (strcmp(mimetype, "audio/x-raw-int")==0) {
     gst_pad_set_chain_function(filter->sinkpad,volume_chain_int16);
     return TRUE;
@@ -227,7 +218,6 @@ volume_init (GstVolume *filter)
 {
   filter->sinkpad = gst_pad_new_from_template(volume_sink_factory (),"sink");
   gst_pad_set_link_function(filter->sinkpad,volume_connect);
-  gst_pad_set_bufferpool_function(filter->sinkpad,volume_get_bufferpool);
   filter->srcpad = gst_pad_new_from_template(volume_src_factory (),"src");
   gst_pad_set_link_function(filter->srcpad,volume_connect);
   

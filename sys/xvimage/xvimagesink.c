@@ -38,19 +38,22 @@ static GstElementDetails gst_xvimagesink_details = GST_ELEMENT_DETAILS (
 
 /* Default template - initiated with class struct to allow gst-register to work
    without X running */
-GST_PAD_TEMPLATE_FACTORY (gst_xvimagesink_sink_template_factory,
+static GstStaticPadTemplate gst_xvimagesink_sink_template_factory =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW ("xvimagesink_rgbsink", "video/x-raw-rgb",
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT),
-                "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                "height", GST_PROPS_INT_RANGE (0, G_MAXINT)),
-  GST_CAPS_NEW ("xvimagesink_yuvsink", "video/x-raw-yuv",
-                "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
-                "width", GST_PROPS_INT_RANGE(0, G_MAXINT),
-                "height", GST_PROPS_INT_RANGE(0, G_MAXINT))
-)
+  GST_STATIC_CAPS (
+    "video/x-raw-rgb, "
+      "framerate = (double) [ 0, MAX ], "
+      "width = (int) [ 0, MAX ], "
+      "height = (int) [ 0, MAX ]; "
+    "video/x-raw-yuv, "
+      "framerate = (double) [ 0, MAX ], "
+      "width = (int) [ 0, MAX ], "
+      "height = (int) [ 0, MAX ]"
+  )
+);
 
 static GstVideoSinkClass *parent_class = NULL;
 
@@ -398,11 +401,11 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
       gint nb_formats;
       XvImageFormatValues *formats = NULL;
       GstCaps *caps = NULL;
-      char *caps_str;
       
       /* We get all image formats supported by our port */
       formats = XvListImageFormats (xcontext->disp,
                                     xcontext->xv_port_id, &nb_formats);
+      caps = gst_caps_new_empty ();
       for (i = 0; i < nb_formats; i++)
         {
           GstCaps *format_caps = NULL;
@@ -411,17 +414,17 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
             {
               case XvRGB:
                 {
-                  format_caps = GST_CAPS_NEW ("xvimagesink_caps",
-                                              "video/x-raw-rgb",
-                                              "endianness", GST_PROPS_INT (xcontext->endianness),
-                                              "depth", GST_PROPS_INT (xcontext->depth),
-                                              "bpp", GST_PROPS_INT (xcontext->bpp),
-                                              "blue_mask", GST_PROPS_INT (formats[i].red_mask),
-                                              "green_mask", GST_PROPS_INT (formats[i].green_mask),
-                                              "red_mask", GST_PROPS_INT (formats[i].blue_mask),
-                                              "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                                              "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                                              "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+                  format_caps = gst_caps_new_simple ("video/x-raw-rgb",
+		      "endianness", G_TYPE_INT, xcontext->endianness,
+		      "depth", G_TYPE_INT, xcontext->depth,
+		      "bpp", G_TYPE_INT, xcontext->bpp,
+		      "blue_mask", G_TYPE_INT, formats[i].red_mask,
+		      "green_mask", G_TYPE_INT, formats[i].green_mask,
+		      "red_mask", G_TYPE_INT, formats[i].blue_mask,
+		      "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+		      "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+		      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+		      NULL);
                   
                   /* For RGB caps we store them and the image 
                  format so that we can get back the format
@@ -442,29 +445,26 @@ gst_xvimagesink_get_xv_support (GstXContext *xcontext)
                   break;
                 }
               case XvYUV:
-                format_caps = GST_CAPS_NEW ("xvimagesink_caps",
-                                            "video/x-raw-yuv", 
-                                            "format", GST_PROPS_FOURCC (formats[i].id),
-                                            "width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                                            "height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                                            "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+		format_caps = gst_caps_new_simple ("video/x-raw-yuv",
+		    "format", GST_TYPE_FOURCC,formats[i].id,
+		    "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+		    "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+		    "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+		    NULL);
                 break;
+	      default:
+		g_assert_not_reached();
+		break;
             }
           
-          if (format_caps)
-            caps = gst_caps_append (caps, format_caps);
+          gst_caps_append (caps, format_caps);
         }
         
       if (formats)
         XFree (formats);
       
-      caps_str = gst_caps_to_string (caps);
-      
-      GST_DEBUG ("Generated the following caps %s", caps_str);
-      
-      if (caps_str)
-        g_free (caps_str);
-      
+      GST_DEBUG_CAPS ("Generated the following caps", caps);
+
       return caps;
     }
     
@@ -562,10 +562,6 @@ gst_xvimagesink_xcontext_get (GstXvImageSink *xvimagesink)
     
   g_mutex_unlock (xvimagesink->x_lock);
   
-  /* We make this caps non floating. This way we keep it during our whole life */
-  gst_caps_ref (xcontext->caps);
-  gst_caps_sink (xcontext->caps);
-  
   return xcontext;
 }
 
@@ -584,7 +580,7 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
   while (list)
     {
       GstXvImageFormat *format = list->data;
-      gst_caps_unref (format->caps);
+      gst_caps_free (format->caps);
       g_free (format);
       list = g_list_next (list);
     }
@@ -592,7 +588,7 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink *xvimagesink)
   if (xvimagesink->xcontext->formats_list)
     g_list_free (xvimagesink->xcontext->formats_list);
     
-  gst_caps_unref (xvimagesink->xcontext->caps);
+  gst_caps_free (xvimagesink->xcontext->caps);
   
   g_mutex_lock (xvimagesink->x_lock);
   
@@ -612,7 +608,6 @@ static gint
 gst_xvimagesink_get_fourcc_from_caps (GstXvImageSink *xvimagesink,
                                       GstCaps *caps)
 {
-  gint fourcc = 0;
   GList *list = NULL;
   
   g_return_val_if_fail (xvimagesink != NULL, 0);
@@ -628,83 +623,71 @@ gst_xvimagesink_get_fourcc_from_caps (GstXvImageSink *xvimagesink,
         {
           GstCaps *icaps = NULL;
           icaps = gst_caps_intersect (caps, format->caps);
-          if (icaps)
-            fourcc = format->format;
+          if (!gst_caps_is_empty(icaps))
+            return format->format;
         }
       list = g_list_next (list);
     }
   
-  return fourcc;
+  return 0;
 }
 
 static GstCaps *
-gst_xvimagesink_getcaps (GstPad *pad, GstCaps *caps)
+gst_xvimagesink_getcaps (GstPad *pad)
 {
   GstXvImageSink *xvimagesink;
-  
+
   xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
   
   if (xvimagesink->xcontext)
     return gst_caps_copy (xvimagesink->xcontext->caps);
 
-  return gst_caps_append (GST_CAPS_NEW ("xvimagesink_rgbsink",
-                                        "video/x-raw-rgb",
-                                        "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
-                                        "width", GST_PROPS_INT_RANGE(0, G_MAXINT),
-                                        "height", GST_PROPS_INT_RANGE(0, G_MAXINT)),
-                          GST_CAPS_NEW ("xvimagesink_yuvsink",
-                                        "video/x-raw-yuv",
-                                        "framerate", GST_PROPS_FLOAT_RANGE(0, G_MAXFLOAT),
-                                        "width", GST_PROPS_INT_RANGE(0, G_MAXINT),
-                                        "height", GST_PROPS_INT_RANGE(0, G_MAXINT)));
+  return gst_caps_from_string(
+    "video/x-raw-rgb, "
+      "framerate = (double) [ 0, MAX ], "
+      "width = (int) [ 0, MAX ], "
+      "height = (int) [ 0, MAX ]; "
+    "video/x-raw-yuv, "
+      "framerate = (double) [ 0, MAX ], "
+      "width = (int) [ 0, MAX ], "
+      "height = (int) [ 0, MAX ]");
 }
 
 static GstPadLinkReturn
-gst_xvimagesink_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_xvimagesink_sinkconnect (GstPad *pad, const GstCaps *caps)
 {
   GstXvImageSink *xvimagesink;
   char *caps_str1, *caps_str2;
+  GstStructure *structure;
+  gboolean ret;
 
   xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
-
-  /* we are not going to act on variable caps */
-  if (!GST_CAPS_IS_FIXED (caps))
-    return GST_PAD_LINK_DELAYED;
-  if (GST_CAPS_IS_CHAINED (caps))
-    return GST_PAD_LINK_DELAYED;
 
   caps_str1 = gst_caps_to_string (xvimagesink->xcontext->caps);
   caps_str2 = gst_caps_to_string (caps);
                                                                                 
   GST_DEBUG ("sinkconnect %s with %s", caps_str1, caps_str2);
                                                                                 
-  if (caps_str1)
-    g_free (caps_str1);
-  if (caps_str2)
-    g_free (caps_str2);
+  g_free (caps_str1);
+  g_free (caps_str2);
   
-  if (!gst_caps_get_int (caps, "width", &(GST_VIDEOSINK_WIDTH (xvimagesink))))
-    return GST_PAD_LINK_REFUSED;
-  if (!gst_caps_get_int (caps, "height", &(GST_VIDEOSINK_HEIGHT (xvimagesink))))
-    return GST_PAD_LINK_REFUSED;
-  if (!gst_caps_get_float (caps, "framerate", &xvimagesink->framerate))
-    return GST_PAD_LINK_REFUSED;
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "width", &(GST_VIDEOSINK_WIDTH (xvimagesink)));
+  ret &= gst_structure_get_int (structure, "height", &(GST_VIDEOSINK_HEIGHT (xvimagesink)));
+  ret &= gst_structure_get_double (structure, "framerate", &xvimagesink->framerate);
+  if (!ret) return GST_PAD_LINK_REFUSED;
   
-  if (gst_caps_has_fixed_property (caps, "format"))
-    gst_caps_get_fourcc_int (caps, "format", &xvimagesink->xcontext->im_format);
-  else
+  if (!gst_structure_get_fourcc (structure, "format",
+	&xvimagesink->xcontext->im_format)) {
     xvimagesink->xcontext->im_format = gst_xvimagesink_get_fourcc_from_caps (
-                                                             xvimagesink, caps);
+	xvimagesink, gst_caps_copy(caps));
+  }
   
-  if (gst_caps_has_fixed_property (caps, "pixel_width"))
-    gst_caps_get_int (caps, "pixel_width", &xvimagesink->pixel_width);
-  else
-    xvimagesink->pixel_width = 1;
+  xvimagesink->pixel_width = 1;
+  gst_structure_get_int (structure, "pixel_width", &xvimagesink->pixel_width);
 
-  if (gst_caps_has_fixed_property (caps, "pixel_height"))
-    gst_caps_get_int (caps, "pixel_height", &xvimagesink->pixel_height);
-  else
-    xvimagesink->pixel_height = 1;
+  xvimagesink->pixel_height = 1;
+  gst_structure_get_int  (structure, "pixel_height", &xvimagesink->pixel_height);
   
   /* Creating our window and our image */
   if (!xvimagesink->xwindow)
@@ -814,12 +797,14 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
     gst_clock_id_free (id);
   }
   
+#if 0
   /* If we have a pool and the image is from this pool, simply put it. */
   if ( (xvimagesink->bufferpool) &&
        (GST_BUFFER_BUFFERPOOL (buf) == xvimagesink->bufferpool) )
     gst_xvimagesink_xvimage_put (xvimagesink, GST_BUFFER_POOL_PRIVATE (buf));
   else /* Else we have to copy the data into our private image, */
     {  /* if we have one... */
+#endif
       if (xvimagesink->xvimage)
         {
           memcpy (xvimagesink->xvimage->xvimage->data, 
@@ -833,7 +818,9 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
           gst_element_error (GST_ELEMENT (xvimagesink), "no image to draw");
           return;
         }
+#if 0
     }
+#endif
   /* set correct time for next buffer */
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf) && xvimagesink->framerate > 0) {
     xvimagesink->time += GST_SECOND / xvimagesink->framerate;
@@ -844,6 +831,7 @@ gst_xvimagesink_chain (GstPad *pad, GstData *data)
   gst_xvimagesink_handle_xevents (xvimagesink, pad);
 }
 
+#if 0
 static GstBuffer*
 gst_xvimagesink_buffer_new (GstBufferPool *pool,  
 		           gint64 location, guint size, gpointer user_data)
@@ -926,6 +914,7 @@ gst_xvimagesink_buffer_free (GstBufferPool *pool,
 
   gst_buffer_default_free (buffer);
 }
+#endif
 
 static void
 gst_xvimagesink_imagepool_clear (GstXvImageSink *xvimagesink)
@@ -941,30 +930,6 @@ gst_xvimagesink_imagepool_clear (GstXvImageSink *xvimagesink)
     }
   
   g_mutex_unlock(xvimagesink->pool_lock);
-}
-
-static GstBufferPool*
-gst_xvimagesink_get_bufferpool (GstPad *pad)
-{
-  GstXvImageSink *xvimagesink;
-  
-  xvimagesink = GST_XVIMAGESINK (gst_pad_get_parent (pad));
-
-  if (!xvimagesink->bufferpool) {
-    xvimagesink->bufferpool = gst_buffer_pool_new (
-                NULL,		/* free */
-                NULL,		/* copy */
-                (GstBufferPoolBufferNewFunction) gst_xvimagesink_buffer_new,
-                NULL,		/* buffer copy, the default is fine */
-                (GstBufferPoolBufferFreeFunction) gst_xvimagesink_buffer_free,
-                xvimagesink);
-
-    xvimagesink->image_pool = NULL;
-  }
-
-  gst_buffer_pool_ref (xvimagesink->bufferpool);
-
-  return xvimagesink->bufferpool;
 }
 
 /* Interfaces stuff */
@@ -1100,9 +1065,6 @@ gst_xvimagesink_dispose (GObject *object)
   g_mutex_free (xvimagesink->x_lock);
   g_mutex_free (xvimagesink->pool_lock);
 
-  if (xvimagesink->bufferpool) 
-    gst_buffer_pool_free (xvimagesink->bufferpool);
-
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -1110,9 +1072,8 @@ static void
 gst_xvimagesink_init (GstXvImageSink *xvimagesink)
 {
   GST_VIDEOSINK_PAD (xvimagesink) = gst_pad_new_from_template (
-                                      GST_PAD_TEMPLATE_GET (
-                                        gst_xvimagesink_sink_template_factory),
-                                        "sink");
+      gst_static_pad_template_get (&gst_xvimagesink_sink_template_factory),
+      "sink");
   
   gst_element_add_pad (GST_ELEMENT (xvimagesink),
                        GST_VIDEOSINK_PAD (xvimagesink));
@@ -1123,8 +1084,6 @@ gst_xvimagesink_init (GstXvImageSink *xvimagesink)
                              gst_xvimagesink_sinkconnect);
   gst_pad_set_getcaps_function (GST_VIDEOSINK_PAD (xvimagesink),
                                 gst_xvimagesink_getcaps);
-  gst_pad_set_bufferpool_function (GST_VIDEOSINK_PAD (xvimagesink),
-                                   gst_xvimagesink_get_bufferpool);
 
   xvimagesink->xcontext = NULL;
   xvimagesink->xwindow = NULL;
@@ -1151,7 +1110,7 @@ gst_xvimagesink_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_xvimagesink_details);
 
   gst_element_class_add_pad_template (element_class, 
-    GST_PAD_TEMPLATE_GET (gst_xvimagesink_sink_template_factory));
+    gst_static_pad_template_get (&gst_xvimagesink_sink_template_factory));
 }
 
 static void

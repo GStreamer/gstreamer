@@ -74,32 +74,21 @@ enum {
   LAST_SIGNAL
 };
 
-GST_PAD_TEMPLATE_FACTORY (vorbis_tag_src_template_factory,
+static GstStaticPadTemplate gst_vorbis_tag_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "vorbis_tag_data_src",
-    "audio/x-vorbis",
-    NULL
-  ),
-  GST_CAPS_NEW (
-    "vorbis_tag_tag_src",
-    "application/x-gst-tags",
-    NULL
-  )
-)
+  GST_STATIC_CAPS ("audio/x-vorbis; application/x-gst-tags")
+);
 
-GST_PAD_TEMPLATE_FACTORY (vorbis_tag_sink_template_factory,
+static GstStaticPadTemplate gst_vorbis_tag_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_CAPS_NEW (
-    "vorbis_tag_data_sink",
-    "audio/x-vorbis",
-    NULL
-  )
-)
+  GST_STATIC_CAPS ( "audio/x-vorbis" )
+);
 
 
 static void		gst_vorbis_tag_base_init		(gpointer		g_class);
@@ -155,9 +144,9 @@ gst_vorbis_tag_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_vorbis_tag_details);
 
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (vorbis_tag_sink_template_factory));
+      gst_static_pad_template_get (&gst_vorbis_tag_sink_template));
   gst_element_class_add_pad_template (element_class,
-		  GST_PAD_TEMPLATE_GET (vorbis_tag_src_template_factory));
+      gst_static_pad_template_get (&gst_vorbis_tag_src_template));
 }
 static void
 gst_vorbis_tag_class_init (gpointer g_class, gpointer class_data)
@@ -175,12 +164,12 @@ gst_vorbis_tag_init (GTypeInstance *instance, gpointer g_class)
     
   /* create the sink and src pads */
   tag->sinkpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (vorbis_tag_sink_template_factory), "sink");
+      gst_static_pad_template_get (&gst_vorbis_tag_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (tag), tag->sinkpad);
   gst_pad_set_chain_function (tag->sinkpad, GST_DEBUG_FUNCPTR (gst_vorbis_tag_chain));
 
   tag->srcpad = gst_pad_new_from_template(
-		  GST_PAD_TEMPLATE_GET (vorbis_tag_src_template_factory), "src");
+      gst_static_pad_template_get (&gst_vorbis_tag_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (tag), tag->srcpad);
 }
 static GstTagEntryMatch tag_matches[] = {
@@ -520,12 +509,15 @@ gst_vorbis_tag_chain (GstPad *pad, GstData *data)
   if (tag->output == OUTPUT_UNKNOWN) {
     /* caps nego */
     do {
-      if (gst_pad_try_set_caps (tag->srcpad, GST_CAPS_NEW ("vorbis_tag_data_src", "audio/x-vorbis", NULL)) >= 0) {
+      if (gst_pad_try_set_caps (tag->srcpad, gst_caps_new_simple (
+	      "audio/x-vorbis", NULL)) >= 0) {
 	tag->output = OUTPUT_DATA;
-      } else if (gst_pad_try_set_caps (tag->srcpad, GST_CAPS_NEW ("vorbis_tag_tag_src", "application/x-gst-tags", NULL)) >= 0) {
+      } else if (gst_pad_try_set_caps (tag->srcpad, gst_caps_new_simple (
+	      "application/x-gst-tags", NULL)) >= 0) {
 	tag->output = OUTPUT_TAGS;
       } else {
-	GstCaps *caps = gst_pad_template_get_caps (GST_PAD_TEMPLATE_GET (vorbis_tag_src_template_factory));
+	const GstCaps *caps = gst_static_caps_get (
+	    &gst_vorbis_tag_src_template.static_caps);
 	if (gst_pad_recover_caps_error (tag->srcpad, caps))
 	  continue;
 	return;

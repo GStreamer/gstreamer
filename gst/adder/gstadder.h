@@ -63,7 +63,6 @@ struct _GstAdder {
   GstElement      element;
 
   GstPad         *srcpad;
-  GstBufferPool  *bufpool;
 
   /* keep track of the sinkpads */
   guint           numsinkpads;

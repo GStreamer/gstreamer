@@ -39,8 +39,10 @@ sub check_old_typefind();
 sub check_bad_casts();
 sub check_old_plugin();
 sub check_signal_new();
+sub check_gnuc_const();
 
 sub m_check_plugindir();
+sub m_check_interfaces();
 
 open FIND, "find . -name \"*.[ch]\" -print|";
 
@@ -71,6 +73,7 @@ foreach $filename (<FIND>) {
 	check_bad_casts();
 	check_old_plugin();
 	check_signal_new();
+    check_gnuc_const();
 }
 
 open FIND, "find . -name \"Makefile.am\" -print|";
@@ -84,6 +87,7 @@ foreach $filename (<FIND>) {
 	print "I: $filename\n";
 
 	m_check_plugindir();
+	m_check_interfaces();
 }
 
 #
@@ -399,3 +403,35 @@ sub check_signal_new()
 		$lineno++;
 	}
 }
+
+#
+# Check that libgstinterfaces is in LDADD
+#
+sub m_check_interfaces()
+{
+	if (grep { /libgstinterfaces.la/ } @lines) {
+		if (! grep { /libgstinterfaces_la/ } @lines) {
+	  		if (! grep { /_LDADD.*libgstinterfaces.la/ } @lines) {
+				print "E: libgstinterfaces.la not in LDADD\n";
+			}
+		}
+	}
+}
+
+#
+# Check that get_type() functions return G_CONST_RETURN GType
+#
+sub check_gnuc_const()
+{
+	my $n = 0;
+	my $lineno = 1;
+
+	foreach $line (@lines){
+	    if($line =~ /GType.*get_type.*/ &&
+	        !($line =~ /GType.*get_type.*G_GNUC_CONST/)) {
+
+			print "E: get_type function does not have G_GNUC_CONST attribute\n";
+		}
+	}
+}
+

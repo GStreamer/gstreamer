@@ -44,9 +44,6 @@ struct _GstV4lSrc {
   /* pads */
   GstPad *srcpad;
 
-  /* bufferpool for the buffers we're gonna use */
-  GstBufferPool *bufferpool;
-
   /* capture/buffer info */
   struct video_mmap mmap;
   struct video_mbuf mbuf;

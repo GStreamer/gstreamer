@@ -121,7 +121,7 @@ static void  gst_audio_convert_get_property (GObject *object, guint prop_id, GVa
 
 /* gstreamer functions */
 static void                  gst_audio_convert_chain        (GstPad *pad, GstData *_data);
-static GstPadLinkReturn      gst_audio_convert_link         (GstPad *pad, GstCaps *caps);
+static GstPadLinkReturn      gst_audio_convert_link         (GstPad *pad, const GstCaps *caps);
 static GstElementStateReturn gst_audio_convert_change_state (GstElement *element);
 
 /* actual work */
@@ -151,37 +151,27 @@ static GstElementClass *parent_class = NULL;
 
 /*** GSTREAMER PROTOTYPES *****************************************************/
 
-GST_PAD_TEMPLATE_FACTORY (audio_convert_src_template_factory,
+static GstStaticPadTemplate gst_audio_convert_src_template =
+GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_append (
-    gst_caps_new (
-      "audio_convert_src_int",
-      "audio/x-raw-int",
-      GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
-    gst_caps_new (
-      "audio_convert_src_float",
-      "audio/x-raw-float",
-      GST_AUDIO_FLOAT_PAD_TEMPLATE_PROPS)
+  GST_STATIC_CAPS (
+    GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+    GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS
   )
-)
+);
 
-GST_PAD_TEMPLATE_FACTORY (audio_convert_sink_template_factory,
+static GstStaticPadTemplate gst_audio_convert_sink_template =
+GST_STATIC_PAD_TEMPLATE (
   "sink",
-  GST_PAD_SINK,
+  GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  gst_caps_append (
-    gst_caps_new (
-      "audio_convert_sink_int",
-      "audio/x-raw-int",
-      GST_AUDIO_INT_PAD_TEMPLATE_PROPS),
-    gst_caps_new (
-      "audio_convert_sink_float",
-      "audio/x-raw-float",
-      GST_AUDIO_FLOAT_PAD_TEMPLATE_PROPS)
+  GST_STATIC_CAPS (
+    GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
+    GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS
   )
-)
+);
 
 /*** TYPE FUNCTIONS ***********************************************************/
 
@@ -214,9 +204,9 @@ gst_audio_convert_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-				      GST_PAD_TEMPLATE_GET (audio_convert_src_template_factory));
+      gst_static_pad_template_get (&gst_audio_convert_src_template));
   gst_element_class_add_pad_template (element_class,
-				      GST_PAD_TEMPLATE_GET (audio_convert_sink_template_factory));
+      gst_static_pad_template_get (&gst_audio_convert_sink_template));
   gst_element_class_set_details (element_class, &audio_convert_details);
 }
 
@@ -261,14 +251,14 @@ static void
 gst_audio_convert_init (GstAudioConvert *this)
 {
   /* sinkpad */
-  this->sink = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (
-               audio_convert_sink_template_factory), "sink");
+  this->sink = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_audio_convert_sink_template), "sink");
   gst_pad_set_link_function (this->sink, gst_audio_convert_link);
   gst_element_add_pad (GST_ELEMENT(this), this->sink);
 
   /* srcpad */
-  this->src = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (
-              audio_convert_src_template_factory), "src");
+  this->src = gst_pad_new_from_template (
+      gst_static_pad_template_get (&gst_audio_convert_src_template), "src");
   gst_pad_set_link_function (this->src, gst_audio_convert_link);
   gst_element_add_pad (GST_ELEMENT(this), this->src);
 
@@ -383,38 +373,36 @@ gst_audio_convert_chain (GstPad *pad, GstData *_data)
 }
 
 static GstPadLinkReturn
-gst_audio_convert_link (GstPad *pad, GstCaps *caps)
+gst_audio_convert_link (GstPad *pad, const GstCaps *caps)
 {
   GstAudioConvert *this;
   gint nr = 0;
   gint rate, endianness, depth, width, channels;
   gboolean sign;
+  GstStructure *structure;
+  gboolean ret;
 
   g_return_val_if_fail(GST_IS_PAD(pad), GST_PAD_LINK_REFUSED);
   g_return_val_if_fail(GST_IS_AUDIO_CONVERT(GST_OBJECT_PARENT (pad)), GST_PAD_LINK_REFUSED);
   this = GST_AUDIO_CONVERT(GST_OBJECT_PARENT (pad));
 
-  /* could we do better? */
-  if (!GST_CAPS_IS_FIXED (caps)) return GST_PAD_LINK_DELAYED;
-
   nr = (pad == this->sink) ? 0 : (pad == this->src) ? 1 : -1;
   g_assert (nr > -1);
 
-  if (! gst_caps_get (caps,
-                      "channels", &channels,
-                      "signed", &sign,
-                      "depth", &depth,
-                      "width", &width,
-                      "rate", &rate, NULL))
-    return GST_PAD_LINK_DELAYED;
+  structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_caps_get_int (caps, "endianness", &endianness)) {
-    if (width == 1) {
-      endianness = G_BYTE_ORDER;
-    } else {
-      return GST_PAD_LINK_DELAYED;
-    }
+  ret = gst_structure_get_int (structure, "channels", &channels);
+  ret &= gst_structure_get_boolean (structure, "signed", &sign);
+  ret &= gst_structure_get_int (structure, "depth", &depth);
+  ret &= gst_structure_get_int (structure, "width", &width);
+  ret &= gst_structure_get_int (structure, "rate", &rate);
+  endianness = G_BYTE_ORDER;
+  if (width != 8) {
+    ret &= gst_structure_get_int (structure, "endianness", &endianness);
   }
+
+  if (!ret) return GST_PAD_LINK_REFUSED;
+
   /* we can't convert rate changes yet */
   if ((this->caps_set[1 - nr]) &&
       (rate != this->rate[1 - nr]))
@@ -454,32 +442,26 @@ gst_audio_convert_change_state (GstElement *element)
 
 /*** ACTUAL WORK **************************************************************/
 
-static GstCaps*
+static GstCaps *
 make_caps (gint endianness, gboolean sign, gint depth, gint width, gint rate, gint channels)
 {
-  if (width == 1) {
-    return GST_CAPS_NEW (
-      "audio_convert_caps",
-      "audio/x-raw-int",
-        "signed",        GST_PROPS_BOOLEAN (sign),
-        "depth",        GST_PROPS_INT (depth),
-        "width",        GST_PROPS_INT (width * 8),
-        "rate",                GST_PROPS_INT (rate),
-        "channels",        GST_PROPS_INT (channels)
-    );
-  } else {
-    return GST_CAPS_NEW (
-      "audio_convert_caps",
-      "audio/x-raw-int",
-        "endianness",        GST_PROPS_INT (endianness),
-        "signed",        GST_PROPS_BOOLEAN (sign),
-        "depth",        GST_PROPS_INT (depth),
-        "width",        GST_PROPS_INT (width * 8),
-        "rate",                GST_PROPS_INT (rate),
-        "channels",        GST_PROPS_INT (channels)
-    );
+  GstCaps *caps;
+
+  caps = gst_caps_new_simple ("audio/x-raw-int",
+      "signed", G_TYPE_BOOLEAN, sign,
+      "depth", G_TYPE_INT, depth,
+      "width", G_TYPE_INT, width * 8,
+      "rate", G_TYPE_INT, rate,
+      "channels", G_TYPE_INT, channels, NULL);
+
+  if (width != 1) {
+    gst_caps_set_simple (caps, 
+        "endianness", G_TYPE_INT, endianness, NULL);
   }
+
+  return caps;
 }
+
 static gboolean
 gst_audio_convert_set_caps (GstPad *pad)
 {

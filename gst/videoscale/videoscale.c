@@ -67,76 +67,115 @@ static void gst_videoscale_scale_nearest_24bit (GstVideoscale *scale,
 static void gst_videoscale_scale_nearest_16bit (GstVideoscale *scale,
 	unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);
 
+#define fourcc_YUY2 GST_MAKE_FOURCC('Y','U','Y','2')
+#define fourcc_UYVY GST_MAKE_FOURCC('U','Y','V','Y')
+#define fourcc_Y422 GST_MAKE_FOURCC('Y','4','2','2')
+#define fourcc_UYNV GST_MAKE_FOURCC('U','Y','N','V')
+#define fourcc_YVYU GST_MAKE_FOURCC('Y','V','Y','U')
+#define fourcc_YV12 GST_MAKE_FOURCC('Y','V','1','2')
+#define fourcc_I420 GST_MAKE_FOURCC('I','4','2','0')
+#define fourcc_Y800 GST_MAKE_FOURCC('Y','8','0','0')
+#define fourcc_RGB_ GST_MAKE_FOURCC('R','G','B',' ')
+
 struct videoscale_format_struct videoscale_formats[] = {
 	/* packed */
-	{ "YUY2", 16, gst_videoscale_packed422, },
-	{ "UYVY", 16, gst_videoscale_packed422rev, },
-	{ "Y422", 16, gst_videoscale_packed422rev, },
-	{ "UYNV", 16, gst_videoscale_packed422rev, },
-	{ "YVYU", 16, gst_videoscale_packed422, },
+	{ fourcc_YUY2, 16, gst_videoscale_packed422, },
+	{ fourcc_UYVY, 16, gst_videoscale_packed422rev, },
+	{ fourcc_Y422, 16, gst_videoscale_packed422rev, },
+	{ fourcc_UYNV, 16, gst_videoscale_packed422rev, },
+	{ fourcc_YVYU, 16, gst_videoscale_packed422, },
 	/* planar */
-	{ "YV12", 12, gst_videoscale_planar411, },
-	{ "I420", 12, gst_videoscale_planar411, },
-	{ "Y800", 8,  gst_videoscale_planar400, },
+	{ fourcc_YV12, 12, gst_videoscale_planar411, },
+	{ fourcc_I420, 12, gst_videoscale_planar411, },
+	{ fourcc_Y800, 8,  gst_videoscale_planar400, },
 	/* RGB */
-	{ "RGB ", 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x00ff0000, 0x0000ff00, 0x000000ff },
-	{ "RGB ", 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x000000ff, 0x0000ff00, 0x00ff0000 },
-	{ "RGB ", 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0xff000000, 0x00ff0000, 0x0000ff00 },
-	{ "RGB ", 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 },
-	{ "RGB ", 24, gst_videoscale_24bit, 24, G_BIG_ENDIAN, 0xff0000, 0x00ff00, 0x0000ff },
-	{ "RGB ", 24, gst_videoscale_24bit, 24, G_BIG_ENDIAN, 0x0000ff, 0x00ff00, 0xff0000 },
-	{ "RGB ", 16, gst_videoscale_16bit, 16, G_BYTE_ORDER, 0xf800, 0x07e0, 0x001f },
-	{ "RGB ", 16, gst_videoscale_16bit, 15, G_BYTE_ORDER, 0x7c00, 0x03e0, 0x001f },
+	{ fourcc_RGB_, 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x00ff0000, 0x0000ff00, 0x000000ff },
+	{ fourcc_RGB_, 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x000000ff, 0x0000ff00, 0x00ff0000 },
+	{ fourcc_RGB_, 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0xff000000, 0x00ff0000, 0x0000ff00 },
+	{ fourcc_RGB_, 32, gst_videoscale_32bit, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000, 0xff000000 },
+	{ fourcc_RGB_, 24, gst_videoscale_24bit, 24, G_BIG_ENDIAN, 0xff0000, 0x00ff00, 0x0000ff },
+	{ fourcc_RGB_, 24, gst_videoscale_24bit, 24, G_BIG_ENDIAN, 0x0000ff, 0x00ff00, 0xff0000 },
+	{ fourcc_RGB_, 16, gst_videoscale_16bit, 16, G_BYTE_ORDER, 0xf800, 0x07e0, 0x001f },
+	{ fourcc_RGB_, 16, gst_videoscale_16bit, 15, G_BYTE_ORDER, 0x7c00, 0x03e0, 0x001f },
 };
 
 int videoscale_n_formats = sizeof(videoscale_formats)/sizeof(videoscale_formats[0]);
 
-GstCaps *
-videoscale_get_caps(struct videoscale_format_struct *format)
+GstStructure *
+videoscale_get_structure (struct videoscale_format_struct *format)
 {
-  unsigned int fourcc;
-  GstCaps *caps;
+  GstStructure *structure;
 
   if(format->scale==NULL)
     return NULL;
 
-  fourcc = GST_MAKE_FOURCC(format->fourcc[0],format->fourcc[1],format->fourcc[2],format->fourcc[3]);
-
   if(format->bpp){
-    caps = GST_CAPS_NEW ("videoscale", "video/x-raw-rgb",
-		"depth", GST_PROPS_INT(format->bpp),
-		"bpp", GST_PROPS_INT(format->depth),
-		"endianness", GST_PROPS_INT(format->endianness),
-		"red_mask", GST_PROPS_INT(format->red_mask),
-		"green_mask", GST_PROPS_INT(format->green_mask),
-		"blue_mask", GST_PROPS_INT(format->blue_mask));
+    structure = gst_structure_new ("video/x-raw-rgb",
+	"depth", G_TYPE_INT, format->bpp,
+	"bpp", G_TYPE_INT, format->depth,
+	"endianness", G_TYPE_INT, format->endianness,
+	"red_mask", G_TYPE_INT, format->red_mask,
+	"green_mask", G_TYPE_INT, format->green_mask,
+	"blue_mask", G_TYPE_INT, format->blue_mask,
+	NULL);
   }else{
-    caps = GST_CAPS_NEW ("videoscale", "video/x-raw-yuv",
-		"format", GST_PROPS_FOURCC (fourcc));
+    structure = gst_structure_new ("video/x-raw-yuv",
+	"fourcc", GST_TYPE_FOURCC, format->fourcc, NULL);
   }
 
-  return caps;
+  gst_structure_set(structure,
+      "width", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 0, G_MAXINT,
+      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,
+      NULL);
+
+  return structure;
 }
 
 struct videoscale_format_struct *
-videoscale_find_by_caps(GstCaps *caps)
+videoscale_find_by_structure(GstStructure *structure)
 {
   int i;
+  gboolean ret;
+  struct videoscale_format_struct *format;
 
-  GST_DEBUG ("finding %p",caps);
+  GST_DEBUG ("finding %p",structure);
 
-  g_return_val_if_fail(caps != NULL, NULL);
+  g_return_val_if_fail(structure != NULL, NULL);
 
-  for (i = 0; i < videoscale_n_formats; i++){
-    GstCaps *c;
+  if(strcmp(gst_structure_get_name(structure),"video/x-raw-yuv")==0){
+    unsigned int fourcc;
 
-    c = videoscale_get_caps(videoscale_formats + i);
-    if(c){
-      if(gst_caps_is_always_compatible(caps, c)){
-        gst_caps_unref(c);
-        return videoscale_formats + i;
+    ret = gst_structure_get_fourcc (structure, "format", &fourcc);
+    if(!ret) return NULL;
+    for (i = 0; i < videoscale_n_formats; i++){
+      format = videoscale_formats + i;
+      if(format->bpp==0 && format->fourcc == fourcc){
+	return format;
       }
-      gst_caps_unref(c);
+    }
+  }else{
+    int bpp;
+    int depth;
+    int endianness;
+    int red_mask;
+    int green_mask;
+    int blue_mask;
+
+    ret = gst_structure_get_int (structure, "bpp", &bpp);
+    ret &= gst_structure_get_int (structure, "depth", &depth);
+    ret &= gst_structure_get_int (structure, "endianness", &endianness);
+    ret &= gst_structure_get_int (structure, "red_mask", &red_mask);
+    ret &= gst_structure_get_int (structure, "green_mask", &green_mask);
+    ret &= gst_structure_get_int (structure, "blue_mask", &blue_mask);
+    if(!ret) return NULL;
+    for (i = 0; i < videoscale_n_formats; i++){
+      format = videoscale_formats + i;
+      if(format->bpp == bpp && format->depth == depth &&
+	  format->endianness == endianness && format->red_mask == red_mask &&
+	  format->green_mask == green_mask && format->blue_mask == blue_mask) {
+	return format;
+      }
     }
   }
 
@@ -149,8 +188,8 @@ gst_videoscale_setup (GstVideoscale *videoscale)
   g_return_if_fail (GST_IS_VIDEOSCALE (videoscale));
   g_return_if_fail (videoscale->format != NULL);
 
-  GST_DEBUG ("format=%p \"%s\" from %dx%d to %dx%d",
-		videoscale->format, videoscale->format->fourcc,
+  GST_DEBUG ("format=%p " GST_FOURCC_FORMAT " from %dx%d to %dx%d",
+		videoscale->format, GST_FOURCC_ARGS(videoscale->format->fourcc),
 		videoscale->from_width, videoscale->from_height,
 		videoscale->to_width, videoscale->to_height);
 

@@ -56,7 +56,7 @@ struct _GstVideotestsrc {
   gint default_width;
   gint default_height;
   gboolean sync;
-  gfloat default_rate;
+  double default_rate;
 
   /* video state */
   char *format_name;
@@ -69,11 +69,9 @@ struct _GstVideotestsrc {
   gint64 timestamp_offset;
   gint64 n_frames;
   gint bpp;
-  gfloat rate;
+  gdouble rate;
   int type;
   GstClock *clock;
-
-  GstBufferPool *pool;
 
   void (*make_image)(GstVideotestsrc *v, unsigned char *dest, int w, int h);
 };
@@ -82,7 +80,7 @@ struct _GstVideotestsrcClass {
   GstElementClass parent_class;
 };
 
-GType gst_videotestsrc_get_type(void);
+GType gst_videotestsrc_get_type(void) G_GNUC_CONST;
 
 G_END_DECLS
 

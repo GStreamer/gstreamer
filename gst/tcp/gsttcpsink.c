@@ -146,7 +146,7 @@ gst_tcpsink_class_init (GstTCPSink *klass)
 
 
 static GstPadLinkReturn
-gst_tcpsink_sinkconnect (GstPad *pad, GstCaps *caps)
+gst_tcpsink_sink_link (GstPad *pad, const GstCaps *caps)
 {
   GstTCPSink *tcpsink;
   struct sockaddr_in serv_addr;
@@ -240,7 +240,7 @@ gst_tcpsink_init (GstTCPSink *tcpsink)
   tcpsink->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (tcpsink), tcpsink->sinkpad);
   gst_pad_set_chain_function (tcpsink->sinkpad, gst_tcpsink_chain);
-  gst_pad_set_link_function (tcpsink->sinkpad, gst_tcpsink_sinkconnect);
+  gst_pad_set_link_function (tcpsink->sinkpad, gst_tcpsink_sink_link);
 
   tcpsink->host = g_strdup (TCP_DEFAULT_HOST);
   tcpsink->port = TCP_DEFAULT_PORT;

@@ -75,7 +75,7 @@ struct _GstVideofilter {
   /* private */
   gint from_buf_size;
   gint to_buf_size;
-  gfloat framerate;
+  gdouble framerate;
 
   GstBuffer *in_buf;
   GstBuffer *out_buf;
@@ -95,7 +95,7 @@ int gst_videofilter_get_input_height(GstVideofilter *videofilter);
 void gst_videofilter_set_output_size(GstVideofilter *videofilter,
     int width, int height);
 GstVideofilterFormat *gst_videofilter_find_format_by_caps(GstVideofilter *filter,
-    GstCaps *caps);
+    const GstCaps *caps);
 GstCaps *gst_videofilter_class_get_capslist(GstVideofilterClass *videofilterclass);
 
 void gst_videofilter_class_add_format(GstVideofilterClass *videofilterclass,

@@ -68,80 +68,30 @@ gst_videoscale_method_get_type (void)
 static GstCaps *
 gst_videoscale_get_capslist(void)
 {
-  static GstCaps *capslist = NULL;
   GstCaps *caps;
   int i;
 
-  if (capslist){
-    gst_caps_ref(capslist);
-    return capslist;
-  }
-
+  caps = gst_caps_new_empty();
   for(i=0;i<videoscale_n_formats;i++){
-    caps = videoscale_get_caps(videoscale_formats + i);
-    capslist = gst_caps_append(capslist, caps);
+    gst_caps_append_structure (caps,
+	videoscale_get_structure (videoscale_formats + i));
   }
 
-  gst_caps_ref(capslist);
-  return capslist;
+  return caps;
 }
 
 static GstPadTemplate *
 gst_videoscale_src_template_factory(void)
 {
-  static GstPadTemplate *templ = NULL;
-
-  if(!templ){
-    GstCaps *caps;
-    GstCaps *caps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-    GstCaps *caps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-
-    caps = gst_caps_intersect(caps1, gst_videoscale_get_capslist ());
-    gst_caps_unref (caps1);
-    caps1 = caps;
-    caps = gst_caps_intersect(caps2, gst_videoscale_get_capslist ());
-    gst_caps_unref (caps2);
-    caps2 = caps;
-    caps = gst_caps_append(caps1, caps2);
-
-    templ = GST_PAD_TEMPLATE_NEW("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-  }
-  return templ;
+  return gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      gst_videoscale_get_capslist());
 }
 
 static GstPadTemplate *
 gst_videoscale_sink_template_factory(void)
 {
-  static GstPadTemplate *templ = NULL;
-
-  if(!templ){
-    GstCaps *caps;
-    GstCaps *caps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-    GstCaps *caps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-
-    caps = gst_caps_intersect(caps1, gst_videoscale_get_capslist ());
-    gst_caps_unref (caps1);
-    caps1 = caps;
-    caps = gst_caps_intersect(caps2, gst_videoscale_get_capslist ());
-    gst_caps_unref (caps2);
-    caps2 = caps;
-    caps = gst_caps_append(caps1, caps2);
-
-    templ = GST_PAD_TEMPLATE_NEW("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
-  }
-  return templ;
+  return gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      gst_videoscale_get_capslist());
 }
 
 static void	gst_videoscale_base_init	(gpointer g_class);
@@ -186,8 +136,8 @@ gst_videoscale_base_init (gpointer g_class)
 
   gst_element_class_set_details (element_class, &videoscale_details);
 
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_videoscale_sink_template_factory));
-  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (gst_videoscale_src_template_factory));
+  gst_element_class_add_pad_template (element_class, gst_videoscale_sink_template_factory());
+  gst_element_class_add_pad_template (element_class, gst_videoscale_src_template_factory());
 }
 static void
 gst_videoscale_class_init (GstVideoscaleClass *klass)
@@ -210,16 +160,13 @@ gst_videoscale_class_init (GstVideoscaleClass *klass)
 }
 
 static GstCaps *
-gst_videoscale_getcaps (GstPad *pad, GstCaps *caps)
+gst_videoscale_getcaps (GstPad *pad)
 {
   GstVideoscale *videoscale;
-  //GstCaps *capslist = NULL;
   GstCaps *peercaps;
-  //GstCaps *sizecaps1, *sizecaps2;
-  //GstCaps *sizecaps;
-  GstCaps *handled_caps;
-  GstCaps *icaps;
+  GstCaps *caps;
   GstPad *otherpad;
+  int i;
 
   GST_DEBUG ("gst_videoscale_getcaps");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
@@ -238,139 +185,64 @@ gst_videoscale_getcaps (GstPad *pad, GstCaps *caps)
   }
   peercaps = gst_pad_get_allowed_caps (GST_PAD_PEER(otherpad));
 
-  GST_DEBUG("othercaps are %s", gst_caps_to_string(peercaps));
+  GST_DEBUG_CAPS("othercaps are", peercaps);
 
-  {
-    GstCaps *caps1 = GST_CAPS_NEW("src","video/x-raw-yuv",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
-    GstCaps *caps2 = GST_CAPS_NEW("src","video/x-raw-rgb",
-		"width", GST_PROPS_INT_RANGE (0, G_MAXINT),
-		"height", GST_PROPS_INT_RANGE (0, G_MAXINT),
-                "framerate", GST_PROPS_FLOAT_RANGE (0, G_MAXFLOAT));
+  caps = gst_caps_copy (peercaps);
+  for(i=0;i<gst_caps_get_size(caps);i++) {
+    GstStructure *structure = gst_caps_get_structure (caps, i);
 
-    caps = gst_caps_intersect(caps1, gst_videoscale_get_capslist ());
-    gst_caps_unref (caps1);
-    caps1 = caps;
-    caps = gst_caps_intersect(caps2, gst_videoscale_get_capslist ());
-    gst_caps_unref (caps2);
-    caps2 = caps;
-    handled_caps = gst_caps_append(caps1, caps2);
+    gst_structure_set (structure,
+	"width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+	"height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+	NULL);
   }
 
-  icaps = gst_caps_intersect (handled_caps, gst_caps_copy(peercaps));
+  GST_DEBUG_CAPS ("returning caps", caps);
 
-  GST_DEBUG("returning caps %s", gst_caps_to_string (icaps));
-
-  return icaps;
+  return caps;
 }
 
 
 static GstPadLinkReturn
-gst_videoscale_link (GstPad *pad, GstCaps *caps)
+gst_videoscale_link (GstPad *pad, const GstCaps *caps)
 {
   GstVideoscale *videoscale;
   GstPadLinkReturn ret;
   GstCaps *othercaps;
   GstPad *otherpad;
-  GstCaps *icaps;
+  GstStructure *structure;
 
   GST_DEBUG ("gst_videoscale_link");
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
-
-  if (!GST_CAPS_IS_FIXED (caps)) {
-    return GST_PAD_LINK_DELAYED;
-  }
 
   if (pad == videoscale->srcpad) {
     otherpad = videoscale->sinkpad;
   } else {
     otherpad = videoscale->srcpad;
   }
-  if (otherpad == NULL) {
-    return GST_PAD_LINK_DELAYED;
+
+  ret = gst_pad_try_set_caps (otherpad, caps);
+  if (ret == GST_PAD_LINK_OK) {
+    /* cool, we can use passthru */
+    videoscale->passthru = TRUE;
+
+    return GST_PAD_LINK_OK;
   }
 
   othercaps = GST_PAD_CAPS (otherpad);
 
-  if (othercaps) {
-    GstCaps *othercaps_wh;
-
-    GST_DEBUG ("otherpad caps are already set");
-    GST_DEBUG ("otherpad caps are %s", gst_caps_to_string(othercaps));
-
-    othercaps_wh = gst_caps_copy (othercaps);
-    gst_caps_set(othercaps_wh, "width", GST_PROPS_INT_RANGE (1, G_MAXINT),
-        "height", GST_PROPS_INT_RANGE (1, G_MAXINT), NULL);
-
-#if 1
-    icaps = othercaps;
-#else
-    /* FIXME this is disabled because videotestsrc ! videoscale ! ximagesink
-     * doesn't negotiate caps correctly the first time, so we pretend it's
-     * still ok here. */
-    icaps = gst_caps_intersect (othercaps_wh, caps);
-
-    GST_DEBUG ("intersected caps are %s", gst_caps_to_string(icaps));
-
-    if (icaps == NULL) {
-      /* the new caps are not compatible with the existing, set caps */
-      /* currently, we don't force renegotiation */
-      return GST_PAD_LINK_REFUSED;
-    }
-#endif
-
-    if (!GST_CAPS_IS_FIXED (icaps)) {
-      return GST_PAD_LINK_REFUSED;
-    }
-
-    /* ok, we have a candidate caps */
-  } else {
-    GstCaps *othercaps_wh;
-
-    GST_DEBUG ("otherpad caps are unset");
-
-    othercaps = gst_pad_get_allowed_caps (pad);
-
-    othercaps_wh = gst_caps_copy (othercaps);
-    gst_caps_set(othercaps_wh, "width", GST_PROPS_INT_RANGE (1, G_MAXINT),
-        "height", GST_PROPS_INT_RANGE (1, G_MAXINT), NULL);
-
-    icaps = gst_caps_intersect (othercaps_wh, caps);
-
-    GST_DEBUG ("intersected caps are %s", gst_caps_to_string(icaps));
-
-    if (icaps == NULL) {
-      /* the new caps are not compatible with the existing, set caps */
-      /* currently, we don't force renegotiation */
-      return GST_PAD_LINK_REFUSED;
-    }
-
-    if (!GST_CAPS_IS_FIXED (icaps)) {
-      return GST_PAD_LINK_REFUSED;
-    }
-
-    /* ok, we have a candidate caps */
-    ret = gst_pad_try_set_caps (otherpad, gst_caps_copy(icaps));
-    if (ret == GST_PAD_LINK_DELAYED || ret == GST_PAD_LINK_REFUSED) {
-      return ret;
-    }
-  }
-
+  structure = gst_caps_get_structure (caps, 0);
   if (pad == videoscale->srcpad) {
-    gst_caps_get_int (icaps, "width", &videoscale->from_width);
-    gst_caps_get_int (icaps, "height", &videoscale->from_height);
-    gst_caps_get_int (caps, "width", &videoscale->to_width);
-    gst_caps_get_int (caps, "height", &videoscale->to_height);
+    ret = gst_structure_get_int (structure, "width", &videoscale->to_width);
+    ret &= gst_structure_get_int (structure, "height", &videoscale->to_height);
   } else {
-    gst_caps_get_int (icaps, "width", &videoscale->to_width);
-    gst_caps_get_int (icaps, "height", &videoscale->to_height);
-    gst_caps_get_int (caps, "width", &videoscale->from_width);
-    gst_caps_get_int (caps, "height", &videoscale->from_height);
+    ret = gst_structure_get_int (structure, "width", &videoscale->from_width);
+    ret &= gst_structure_get_int (structure, "height", &videoscale->from_height);
   }
 
-  videoscale->format = videoscale_find_by_caps (caps);
+  if(!ret) return GST_PAD_LINK_REFUSED;
+
+  videoscale->format = videoscale_find_by_structure (structure);
   gst_videoscale_setup(videoscale);
 
   return GST_PAD_LINK_OK;
@@ -381,7 +253,7 @@ gst_videoscale_init (GstVideoscale *videoscale)
 {
   GST_DEBUG ("gst_videoscale_init");
   videoscale->sinkpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_videoscale_sink_template_factory),
+		  gst_videoscale_sink_template_factory(),
 		  "sink");
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->sinkpad);
   gst_pad_set_chain_function(videoscale->sinkpad,gst_videoscale_chain);
@@ -389,7 +261,7 @@ gst_videoscale_init (GstVideoscale *videoscale)
   gst_pad_set_getcaps_function(videoscale->sinkpad,gst_videoscale_getcaps);
 
   videoscale->srcpad = gst_pad_new_from_template (
-		  GST_PAD_TEMPLATE_GET (gst_videoscale_src_template_factory),
+		  gst_videoscale_src_template_factory(),
 		  "src");
   gst_element_add_pad(GST_ELEMENT(videoscale),videoscale->srcpad);
   gst_pad_set_link_function(videoscale->srcpad,gst_videoscale_link);
@@ -448,7 +320,7 @@ gst_videoscale_chain (GstPad *pad, GstData *_data)
   GST_BUFFER_TIMESTAMP(outbuf) = GST_BUFFER_TIMESTAMP(buf);
 
   g_return_if_fail(videoscale->format);
-  GST_DEBUG ("format %s",videoscale->format->fourcc);
+  GST_DEBUG ("format " GST_FOURCC_FORMAT,GST_FOURCC_ARGS(videoscale->format->fourcc));
   g_return_if_fail(videoscale->format->scale);
 
   videoscale->format->scale(videoscale, GST_BUFFER_DATA(outbuf), data);
