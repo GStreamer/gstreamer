@@ -1,5 +1,13 @@
 2004-02-22  Benjamin Otte  <otte@gnome.org>
 
+	reported by: Padraig O'Briain <padraig.obriain@sun.com>
+
+	* autogen.sh:
+	  replace test -e with test -x for mkinstalldirs to be more portable.
+	  (fixes #134816)
+
+2004-02-22  Benjamin Otte  <otte@gnome.org>
+
 	reported by: Stefan Kost <kost@imn.htwk-leipzig.de>
 
 	* gst/audioconvert/gstaudioconvert.c: (plugin_init):
