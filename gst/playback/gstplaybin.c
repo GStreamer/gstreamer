@@ -258,10 +258,12 @@ gen_video_element (GstPlayBin * play_bin)
 {
   GstElement *element;
   GstElement *conv;
+  GstElement *scale;
   GstElement *sink;
 
   element = gst_bin_new ("vbin");
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
+  scale = gst_element_factory_make ("videoscale", "vscale");
   if (play_bin->video_sink) {
     sink = play_bin->video_sink;
   } else {
@@ -271,8 +273,10 @@ gen_video_element (GstPlayBin * play_bin)
   play_bin->seekables = g_list_append (play_bin->seekables, sink);
 
   gst_bin_add (GST_BIN (element), conv);
+  gst_bin_add (GST_BIN (element), scale);
   gst_bin_add (GST_BIN (element), sink);
-  gst_element_link_pads (conv, "src", sink, "sink");
+  gst_element_link_pads (conv, "src", scale, "sink");
+  gst_element_link_pads (scale, "src", sink, "sink");
 
   gst_element_add_ghost_pad (element, gst_element_get_pad (conv, "sink"),
       "sink");
