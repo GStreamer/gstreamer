@@ -99,8 +99,9 @@ gst_fakesrc_data_get_type (void)
 {
   static GType fakesrc_data_type = 0;
   static GEnumValue fakesrc_data[] = {
-    { FAKESRC_DATA_ALLOCATE, 		"2", "Allocate data"},
-    { FAKESRC_DATA_SUBBUFFER, 		"3", "Subbuffer data"},
+    { FAKESRC_DATA_ALLOCATE, 		"1", "Allocate data"},
+    { FAKESRC_DATA_SUBBUFFER, 		"2", "Subbuffer data"},
+    { FAKESRC_DATA_BUFFERPOOL, 		"3", "Use the default buffer pool (forces sizetype=2)"},
     {0, NULL, NULL},
   };
   if (!fakesrc_data_type) {
@@ -197,43 +198,43 @@ gst_fakesrc_class_init (GstFakeSrcClass *klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NUM_SOURCES,
-    g_param_spec_int ("num_sources", "num_sources", "num_sources",
+    g_param_spec_int ("num-sources", "num-sources", "Number of sources",
                       1, G_MAXINT, 1, G_PARAM_READABLE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_LOOP_BASED,
-    g_param_spec_boolean("loop_based","loop_based","loop_based",
-                         FALSE, G_PARAM_READWRITE)); /* CHECKME */
+    g_param_spec_boolean("loop-based","loop-based","Enable loop-based operation",
+                         FALSE, G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_OUTPUT,
-    g_param_spec_enum("output","output","output",
-                      GST_TYPE_FAKESRC_OUTPUT,FAKESRC_FIRST_LAST_LOOP,G_PARAM_READWRITE)); /* CHECKME! */
+    g_param_spec_enum("output","output","Output method (currently unused)",
+                      GST_TYPE_FAKESRC_OUTPUT,FAKESRC_FIRST_LAST_LOOP,G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DATA,
-    g_param_spec_enum ("data", "data", "data",
+    g_param_spec_enum ("data", "data", "Data allocation method",
                        GST_TYPE_FAKESRC_DATA, FAKESRC_DATA_ALLOCATE, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZETYPE,
-    g_param_spec_enum ("sizetype", "sizetype", "sizetype",
+    g_param_spec_enum ("sizetype", "sizetype", "How to determine buffer sizes",
                        GST_TYPE_FAKESRC_SIZETYPE, FAKESRC_SIZETYPE_NULL, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMIN,
-    g_param_spec_int ("sizemin","sizemin","sizemin",
+    g_param_spec_int ("sizemin","sizemin","Minimum buffer size",
                       0, G_MAXINT, 0, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIZEMAX,
-    g_param_spec_int ("sizemax","sizemax","sizemax",
+    g_param_spec_int ("sizemax","sizemax","Maximum buffer size",
                       0, G_MAXINT, 4096, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PARENTSIZE,
-    g_param_spec_int ("parentsize","parentsize","parentsize",
+    g_param_spec_int ("parentsize","parentsize","Size of parent buffer for sub-buffered allocation",
                       0, G_MAXINT, 4096 * 10, G_PARAM_READWRITE)); 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILLTYPE,
-    g_param_spec_enum ("filltype", "filltype", "filltype",
+    g_param_spec_enum ("filltype", "filltype", "How to fill the buffer, if at all",
                        GST_TYPE_FAKESRC_FILLTYPE, FAKESRC_FILLTYPE_NULL, G_PARAM_READWRITE)); 
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_PATTERN,
     g_param_spec_string("pattern","pattern","pattern",
-                        NULL, G_PARAM_READWRITE)); /* CHECKME */
+                        NULL, G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_NUM_BUFFERS,
-    g_param_spec_int("num_buffers","num_buffers","num_buffers",
-                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE)); /* CHECKME */
+    g_param_spec_int("num-buffers","num-buffers","Number of buffers to output before sending EOS",
+                     G_MININT,G_MAXINT,0,G_PARAM_READWRITE));
   g_object_class_install_property(G_OBJECT_CLASS(klass), ARG_EOS,
-    g_param_spec_boolean("eos","eos","eos",
-                         TRUE,G_PARAM_READWRITE)); /* CHECKME */
+    g_param_spec_boolean("eos","eos","Send out the EOS event?",
+                         TRUE,G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LAST_MESSAGE,
-    g_param_spec_string ("last_message", "last_message", "last_message",
+    g_param_spec_string ("last-message", "last-message", "The last status message",
                          NULL, G_PARAM_READABLE)); 
 
   gst_element_class_install_std_props (
@@ -396,18 +397,28 @@ gst_fakesrc_set_property (GObject *object, guint prop_id, const GValue *value, G
       break;
     case ARG_DATA:
       src->data = g_value_get_enum (value);
-      switch (src->data) {
-	case FAKESRC_DATA_ALLOCATE:
-          if (src->parent) {
-            gst_buffer_unref (src->parent);
-            src->parent = NULL;
-	  }
-          break;
-	case FAKESRC_DATA_SUBBUFFER:
-	  if (!src->parent)
-	    gst_fakesrc_alloc_parent (src);
-	default:
-          break;
+
+      if (src->data == FAKESRC_DATA_SUBBUFFER) {
+        if (!src->parent)
+          gst_fakesrc_alloc_parent (src);
+      } else {
+        if (src->parent) {
+          gst_buffer_unref (src->parent);
+          src->parent = NULL;
+        }
+      }
+      
+      if (src->data == FAKESRC_DATA_BUFFERPOOL) {
+        if (src->sizetype != FAKESRC_SIZETYPE_FIXED)
+          g_object_set (src, "sizetype", FAKESRC_SIZETYPE_FIXED, NULL);
+        
+        if (!src->pool)
+          src->pool = gst_buffer_pool_get_default (src->sizemax, 10);
+      } else {
+        if (src->pool) {
+          gst_buffer_pool_free (src->pool);
+          src->pool = NULL;
+        }
       }
       break;
     case ARG_SIZETYPE:
@@ -630,6 +641,10 @@ gst_fakesrc_create_buffer (GstFakeSrc *src)
       }
       gst_fakesrc_prepare_buffer (src, buf);
       break;
+    case FAKESRC_DATA_BUFFERPOOL:
+      buf = gst_buffer_new_from_pool (src->pool, 0, 0);
+      gst_fakesrc_prepare_buffer (src, buf);
+      break;
     default:
       g_warning ("fakesrc: dunno how to allocate buffers !");
       buf = gst_buffer_new();
@@ -768,15 +783,20 @@ gst_fakesrc_change_state (GstElement *element)
       fakesrc->need_flush = FALSE;
       fakesrc->eos = FALSE;
       fakesrc->rt_num_buffers = fakesrc->num_buffers;
-      if (fakesrc->parent) {
-        gst_buffer_unref (fakesrc->parent);
-        fakesrc->parent = NULL;
-      }
       break;
     case GST_STATE_READY_TO_PAUSED:
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_READY_TO_NULL:
+      if (fakesrc->parent) {
+        gst_buffer_unref (fakesrc->parent);
+        fakesrc->parent = NULL;
+      }
+      if (fakesrc->pool) {
+        gst_buffer_pool_unref (fakesrc->pool);
+        fakesrc->pool = NULL;
+      }
       break;
     default:
       g_assert_not_reached ();

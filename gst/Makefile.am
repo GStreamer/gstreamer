@@ -55,6 +55,7 @@ libgstreamer_la_SOURCES =		\
 	$(GST_AUTOPLUG_SRC)	\
 	gstbin.c		\
 	gstbuffer.c		\
+	gstbufferpool-default.c	\
 	gstcaps.c		\
 	gstclock.c		\
 	gstcpu.c		\
@@ -165,10 +166,11 @@ libgstreamerinclude_HEADERS =		\
 	gstversion.h		\
 	gstxml.h
 
-noinst_HEADERS = 	\
-	gst_private.h	\
-	gstarch.h	\
-	cothreads.h
+noinst_HEADERS = 		\
+	gst_private.h		\
+	gstarch.h		\
+	cothreads.h		\
+	gstbufferpool-default.h
 
 libgstreamer_la_CFLAGS = -D_GNU_SOURCE -DGST_CONFIG_DIR=\""$(GST_CONFIG_DIR)"\" \
 	$(LIBGST_CFLAGS) \

@@ -28,6 +28,7 @@
 #include "gstbuffer.h"
 #include "gstmemchunk.h"
 #include "gstlog.h"
+#include "gstbufferpool-default.h"
 
 GType _gst_buffer_type;
 GType _gst_buffer_pool_type;
@@ -74,7 +75,7 @@ _gst_buffer_free_to_pool (GstBuffer *buffer)
 {
   GstBufferPool *pool = buffer->pool;
 
-  buffer->pool->buffer_free (buffer->pool, buffer, buffer->pool->user_data);
+  pool->buffer_free (pool, buffer, pool->user_data);
 
   gst_data_unref (GST_DATA (pool));
 }
@@ -97,7 +98,7 @@ _gst_buffer_sub_free (GstBuffer *buffer)
  * gst_buffer_default_free:
  * @buffer: a #GstBuffer to free
  *
- * Free the momory associated with the buffer including the buffer data,
+ * Free the memory associated with the buffer including the buffer data,
  * unless the GST_BUFFER_DONTFREE flags was set or the buffer data is NULL.
  * This function is used by bufferpools.
  */
@@ -116,6 +117,12 @@ gst_buffer_default_free (GstBuffer *buffer)
 
   gst_mem_chunk_free (chunk, GST_DATA (buffer));
   _gst_buffer_live--;
+}
+
+static GstBuffer*
+_gst_buffer_copy_from_pool (GstBuffer *buffer)
+{
+  return buffer->pool->buffer_copy (buffer->pool, buffer, buffer->pool->user_data);
 }
 
 /**
@@ -144,13 +151,6 @@ gst_buffer_default_copy (GstBuffer *buffer)
 
   return copy;
 }
-
-static GstBuffer*
-_gst_buffer_copy_to_pool (GstBuffer *buffer)
-{
-  return buffer->pool->buffer_copy (buffer->pool, buffer, buffer->pool->user_data);
-}
-
 
 /**
  * gst_buffer_new:
@@ -215,6 +215,8 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint64 offset, guint size)
 {
   GstBuffer *buffer;
   
+  g_return_val_if_fail (pool != NULL, NULL);
+
   buffer = pool->buffer_new (pool, offset, size, pool->user_data);
   if (!buffer)
     return NULL;
@@ -224,9 +226,9 @@ gst_buffer_new_from_pool (GstBufferPool *pool, guint64 offset, guint size)
 
   /* override the buffer refcount functions with those from the pool (if any) */
   if (pool->buffer_free)
-    GST_DATA (buffer)->free = (GstDataFreeFunction) _gst_buffer_free_to_pool;
+    GST_DATA (buffer)->free = (GstDataFreeFunction)_gst_buffer_free_to_pool;
   if (pool->buffer_copy)
-    GST_DATA (buffer)->copy = (GstDataCopyFunction) _gst_buffer_copy_to_pool;
+    GST_DATA (buffer)->copy = (GstDataCopyFunction)_gst_buffer_copy_from_pool;
 
   return buffer;
 }
@@ -393,8 +395,8 @@ gst_buffer_span (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len)
   return newbuf;
 }
 
-static void
-_gst_buffer_pool_free (GstBufferPool *pool)
+void
+gst_buffer_pool_default_free (GstBufferPool *pool)
 {
   _GST_DATA_DISPOSE (GST_DATA (pool));
   g_free (pool);
@@ -429,13 +431,14 @@ gst_buffer_pool_new (GstDataFreeFunction free,
 
   pool = g_new0 (GstBufferPool, 1);
   _gst_buffer_pool_live++;
-  GST_DEBUG (GST_CAT_BUFFER,"allocating new buffer pool %p\n", pool);
+
+  GST_DEBUG (GST_CAT_BUFFER, "allocating new buffer pool %p\n", pool);
         
   /* init data struct */
   _GST_DATA_INIT (GST_DATA (pool), 
 		  _gst_buffer_pool_type,
 		  0,
-		  (free ? free : (GstDataFreeFunction) _gst_buffer_pool_free),
+		  (free ? free : (GstDataFreeFunction) gst_buffer_pool_default_free),
 		  copy);
 	    
   /* set functions */
@@ -511,9 +514,8 @@ gst_buffer_pool_get_user_data (GstBufferPool *pool)
  * 
  * Returns: A new bufferpool to create buffers of the given size.
  */
-/* FIXME */
 GstBufferPool*	
 gst_buffer_pool_get_default (guint size, guint numbuffers)
 {
-  return NULL;
+  return _gst_buffer_pool_get_default (size, numbuffers);
 }

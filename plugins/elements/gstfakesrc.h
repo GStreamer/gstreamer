@@ -44,12 +44,13 @@ typedef enum {
   FAKESRC_RANDOM,
   FAKESRC_PATTERN_LOOP,
   FAKESRC_PING_PONG_PATTERN,
-  FAKESRC_GET_ALWAYS_SUCEEDS,
+  FAKESRC_GET_ALWAYS_SUCEEDS
 } GstFakeSrcOutputType;
 
 typedef enum {
   FAKESRC_DATA_ALLOCATE = 1,
   FAKESRC_DATA_SUBBUFFER,
+  FAKESRC_DATA_BUFFERPOOL
 } GstFakeSrcDataType;
 
 typedef enum {
@@ -105,6 +106,7 @@ struct _GstFakeSrc {
   gboolean 	silent;
   gboolean 	dump;
   gboolean 	need_flush;
+  GstBufferPool *pool;
 
   gchar		*last_message;
 };

@@ -110,7 +110,7 @@ struct _GstBufferPool {
 /*< private >*/
 void		_gst_buffer_initialize		(void);
 
-/* function used by subclasses and bufferpools */
+/* functions used by subclasses and bufferpools */
 void		gst_buffer_default_free 	(GstBuffer *buffer);
 GstBuffer*	gst_buffer_default_copy 	(GstBuffer *buffer);
 
@@ -149,6 +149,9 @@ GstBufferPool*	gst_buffer_pool_new			(GstDataFreeFunction free,
                                                 	 GstBufferPoolBufferFreeFunction buffer_free,
 							 gpointer user_data);
 
+/* function used by subclasses and bufferpools */
+void		gst_buffer_pool_default_free		(GstBufferPool *pool);
+
 gboolean	gst_buffer_pool_is_active		(GstBufferPool *pool);
 void		gst_buffer_pool_set_active		(GstBufferPool *pool, gboolean active);
 
@@ -164,7 +167,7 @@ void		gst_buffer_pool_set_active		(GstBufferPool *pool, gboolean active);
 void 		gst_buffer_pool_set_user_data		(GstBufferPool *pool, gpointer user_data);
 gpointer	gst_buffer_pool_get_user_data		(GstBufferPool *pool);
 
-/* implement me */
+/* a default pool */
 GstBufferPool*	gst_buffer_pool_get_default		(guint size, guint numbuffers);
 
 G_END_DECLS
