@@ -1,3 +1,10 @@
+2004-10-09  Tim-Philipp Müller  <t.i.m@zen.co.uk>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_stop_file):
+	  Fix wrong discont event setup (fixes #154967).
+
 2004-10-09  Sebastien Cote  <sc5@hermes.usherb.ca>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
