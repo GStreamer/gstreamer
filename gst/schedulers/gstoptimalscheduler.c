@@ -121,6 +121,7 @@ typedef enum {
   GST_OPT_SCHEDULER_GROUP_DISABLED		= (1 << 3),	/* this group is disabled */
   GST_OPT_SCHEDULER_GROUP_RUNNING		= (1 << 4),	/* this group is running */
   GST_OPT_SCHEDULER_GROUP_SCHEDULABLE		= (1 << 5),	/* this group is schedulable */
+  GST_OPT_SCHEDULER_GROUP_VISITED		= (1 << 6),	/* this group is visited when finding links */
 } GstOptSchedulerGroupFlags;
 
 typedef enum {
@@ -129,7 +130,7 @@ typedef enum {
 } GstOptSchedulerGroupType;
 
 #define GST_OPT_SCHEDULER_GROUP_SET_FLAG(group,flag) 	((group)->flags |= (flag))
-#define GST_OPT_SCHEDULER_GROUP_UNSET_FLAG(group,flag) 	((group)->flags &= (flag))
+#define GST_OPT_SCHEDULER_GROUP_UNSET_FLAG(group,flag) 	((group)->flags &= ~(flag))
 #define GST_OPT_SCHEDULER_GROUP_IS_FLAG_SET(group,flag) ((group)->flags & (flag))
 
 #define GST_OPT_SCHEDULER_GROUP_DISABLE(group) 		((group)->flags |= GST_OPT_SCHEDULER_GROUP_DISABLED)
@@ -137,7 +138,20 @@ typedef enum {
 #define GST_OPT_SCHEDULER_GROUP_IS_ENABLED(group) 	(!((group)->flags & GST_OPT_SCHEDULER_GROUP_DISABLED))
 #define GST_OPT_SCHEDULER_GROUP_IS_DISABLED(group) 	((group)->flags & GST_OPT_SCHEDULER_GROUP_DISABLED)
 
+
 typedef struct _GstOptSchedulerGroup GstOptSchedulerGroup;
+typedef struct _GstOptSchedulerGroupLink GstOptSchedulerGroupLink;
+
+/* used to keep track of links with other groups */
+struct _GstOptSchedulerGroupLink {
+  GstOptSchedulerGroup	*group1;  	/* the group we are linked with */
+  GstOptSchedulerGroup	*group2;  	/* the group we are linked with */
+  gint			 count;		/* the number of links with the group */
+};
+
+#define IS_GROUP_LINK(link, group1, group2)	((link->group1 == group1 && link->group2 == group2) || \
+		                                 (link->group2 == group1 && link->group1 == group2))
+#define OTHER_GROUP_LINK(link, group)		(link->group1 == group ? link->group2 : link->group1)
 
 typedef int (*GroupScheduleFunction)	(int argc, char *argv[]);
 
@@ -153,8 +167,7 @@ struct _GstOptSchedulerGroup {
   gint				 num_enabled;
   GstElement 			*entry;			/* the group's entry point */
 
-  GSList			*providers;		/* other groups that provide data
-							   for this group */
+  GSList			*group_links;		/* other groups that are linked with this group */
 
 #ifdef USE_COTHREADS
   cothread 			*cothread;		/* the cothread of this group */
@@ -165,18 +178,19 @@ struct _GstOptSchedulerGroup {
   char			       **argv;
 };
 
-/* some group operations */
-static GstOptSchedulerGroup* 	ref_group 		(GstOptSchedulerGroup *group);
-#ifndef USE_COTHREADS
-static GstOptSchedulerGroup* 	ref_group_by_count 	(GstOptSchedulerGroup *group, gint count);
-#endif
-static GstOptSchedulerGroup* 	unref_group 		(GstOptSchedulerGroup *group);
-static void 			destroy_group 		(GstOptSchedulerGroup *group);
-static void 			group_element_set_enabled (GstOptSchedulerGroup *group, 
-							   GstElement *element, gboolean enabled);
 
-static void 		chain_group_set_enabled 	(GstOptSchedulerChain *chain, 
-							 GstOptSchedulerGroup *group, gboolean enabled);
+/* some group operations */
+static GstOptSchedulerGroup* 	ref_group 			(GstOptSchedulerGroup *group);
+#ifndef USE_COTHREADS
+static GstOptSchedulerGroup* 	ref_group_by_count 		(GstOptSchedulerGroup *group, gint count);
+#endif
+static GstOptSchedulerGroup* 	unref_group 			(GstOptSchedulerGroup *group);
+static void 			destroy_group 			(GstOptSchedulerGroup *group);
+static void 			group_element_set_enabled 	(GstOptSchedulerGroup *group, 
+							  	 GstElement *element, gboolean enabled);
+
+static void 			chain_group_set_enabled 	(GstOptSchedulerChain *chain, 
+								 GstOptSchedulerGroup *group, gboolean enabled);
 /* 
  * Scheduler private data for an element 
  */
@@ -532,6 +546,31 @@ chain_group_set_enabled (GstOptSchedulerChain *chain, GstOptSchedulerGroup *grou
       GST_INFO (GST_CAT_SCHEDULING, "disable chain %p", chain);
       GST_OPT_SCHEDULER_CHAIN_DISABLE (chain);
     }
+  }
+}
+
+/* recursively migrate the group and all connected groups into the new chain */
+static void
+chain_recursively_migrate_group (GstOptSchedulerChain *chain, GstOptSchedulerGroup *group)
+{
+  GSList *links;
+  
+  /* group already in chain */
+  if (group->chain == chain)
+    return;
+
+  /* first remove the group from its old chain */
+  remove_from_chain (group->chain, group);
+  /* add to new chain */
+  add_to_chain (chain, group);
+
+  /* then follow all links */
+  links = group->group_links;
+  while (links) {
+    GstOptSchedulerGroupLink *link = (GstOptSchedulerGroupLink *) links->data;
+    links = g_slist_next (links);
+
+    chain_recursively_migrate_group (chain, (link->group1 == group ? link->group2 : link->group1));
   }
 }
 
@@ -1302,6 +1341,78 @@ group_elements (GstOptScheduler *osched, GstElement *element1, GstElement *eleme
   return group;
 }
 
+/*
+ * increment link counts between groups
+ */
+static void
+group_inc_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
+{
+  GSList *links = group1->group_links;
+  gboolean done = FALSE;
+  GstOptSchedulerGroupLink *link;
+
+  /* first try to find a previous link */
+  while (links && !done) {
+    link = (GstOptSchedulerGroupLink *) links->data;
+    links = g_slist_next (links);
+    
+    if (IS_GROUP_LINK (link, group1, group2)) {
+      /* we found a link to this group, increment the link count */
+      link->count++;
+      GST_INFO (GST_CAT_SCHEDULING, "incremented group link count between %p and %p to %d", 
+		  group1, group2, link->count);
+      done = TRUE;
+    }
+  }
+  if (!done) {
+    /* no link was found, create a new one */
+    link = g_new0 (GstOptSchedulerGroupLink, 1);
+
+    link->group1 = group1;
+    link->group2 = group2;
+    link->count = 1;
+
+    group1->group_links = g_slist_prepend (group1->group_links, link);
+    group2->group_links = g_slist_prepend (group2->group_links, link);
+
+    GST_INFO (GST_CAT_SCHEDULING, "added group link count between %p and %p", 
+		  group1, group2);
+  }
+}
+
+/*
+ * decrement link counts between groups, returns TRUE if the link count reaches 0
+ */
+static gboolean
+group_dec_link (GstOptSchedulerGroup *group1, GstOptSchedulerGroup *group2)
+{
+  GSList *links = group1->group_links;
+  gboolean res = FALSE;
+  GstOptSchedulerGroupLink *link;
+
+  while (links) {
+    link = (GstOptSchedulerGroupLink *) links->data;
+    links = g_slist_next (links);
+    
+    if (IS_GROUP_LINK (link, group1, group2)) {
+      link->count--;
+      GST_INFO (GST_CAT_SCHEDULING, "link count between %p and %p is now %d", 
+		  group1, group2, link->count);
+      if (link->count == 0) {
+	group1->group_links = g_slist_remove (group1->group_links, link);
+	group2->group_links = g_slist_remove (group2->group_links, link);
+	g_free (link);
+        GST_INFO (GST_CAT_SCHEDULING, "removed group link between %p and %p", 
+		  group1, group2);
+	res = TRUE;
+      }
+      break;
+    }
+  }
+  return res;
+}
+
+
 typedef enum {
   GST_OPT_INVALID,
   GST_OPT_GET_TO_CHAIN,
@@ -1636,6 +1747,7 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
 	 * the same chain */
         merge_chains (group1->chain, group2->chain);
       }
+      group_inc_link (group1, group2);
       break;
     }
     case GST_OPT_INVALID:
@@ -1647,7 +1759,7 @@ gst_opt_scheduler_pad_link (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad
 /* 
  * checks if an element is still linked to some other element in the group. 
  * no checking is done on the brokenpad arg 
- * */
+ */
 static gboolean
 element_has_link_with_group (GstElement *element, GstOptSchedulerGroup *group, GstPad *brokenpad)
 {
@@ -1688,10 +1800,64 @@ element_has_link_with_group (GstElement *element, GstOptSchedulerGroup *group, G
   return linked;
 }
 
+/* 
+ * checks if a target group is still reachable from the group without taking the broken
+ * group link into account.
+ */
+static gboolean
+group_can_reach_group (GstOptSchedulerGroup *group, GstOptSchedulerGroup *target)
+{
+  gboolean reachable = FALSE;
+  const GSList *links = group->group_links;
+
+  GST_INFO (GST_CAT_SCHEDULING, "checking if group %p can reach %p", 
+		  group, target);
+
+  /* seems like we found the target element */
+  if (group == target) {
+    GST_INFO (GST_CAT_SCHEDULING, "found way to reach %p", target);
+    return TRUE;
+  }
+
+  /* if the group is marked as visited, we don't need to check here */
+  if (GST_OPT_SCHEDULER_GROUP_IS_FLAG_SET (group, GST_OPT_SCHEDULER_GROUP_VISITED)) {
+    GST_INFO (GST_CAT_SCHEDULING, "already visited %p", group);
+    return FALSE;
+  }
+
+  /* mark group as visited */
+  GST_OPT_SCHEDULER_GROUP_SET_FLAG (group, GST_OPT_SCHEDULER_GROUP_VISITED);
+
+  while (links && !reachable) {
+    GstOptSchedulerGroupLink *link = (GstOptSchedulerGroupLink *) links->data;
+    GstOptSchedulerGroup *other;
+
+    links = g_slist_next (links);
+
+    /* find other group in this link */
+    other = OTHER_GROUP_LINK (link, group);
+
+    GST_INFO (GST_CAT_SCHEDULING, "found link from %p to %p, count %d", 
+		    group, other, link->count);
+
+    /* check if we can reach the target recursiveley */
+    reachable = group_can_reach_group (other, target);
+  }
+  /* unset the visited flag, note that this is not optimal as we might be checking
+   * groups several times when they are reachable with a loop. An alternative would be
+   * to not clear the group flag at this stage but clear all flags in the chain when
+   * all groups are checked. */
+  GST_OPT_SCHEDULER_GROUP_UNSET_FLAG (group, GST_OPT_SCHEDULER_GROUP_VISITED);
+
+  GST_INFO (GST_CAT_SCHEDULING, "leaving group %p with %s", group, (reachable ? "TRUE":"FALSE"));
+
+  return reachable;
+}
+
 static void
 gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkpad)
 {
-  //GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
+  GstOptScheduler *osched = GST_OPT_SCHEDULER_CAST (sched);
   GstElement *element1, *element2;
   GstOptSchedulerGroup *group1, *group2;
 
@@ -1722,10 +1888,34 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 
   /* easy part, groups are different */
   if (group1 != group2) {
+    gboolean zero;
+
     GST_INFO (GST_CAT_SCHEDULING, "elements are in different groups");
 
-    /* FIXME, need to eventually break the chain */
-    g_warning ("pad unlink for different groups, implement me");
+    /* we can remove the links between the groups now */
+    zero = group_dec_link (group1, group2);
+
+    /* if the groups are not directly connected anymore, we have to perform a recursive check
+     * to see if they are really unlinked */
+    if (zero) {
+      gboolean still_link;
+      GstOptSchedulerChain *chain;
+
+      /* see if group1 and group2 are still connected in any indirect way */
+      still_link = group_can_reach_group (group1, group2);
+
+      GST_INFO (GST_CAT_SCHEDULING, "group %p %s reach group %p", group1, (still_link ? "can":"can't"), group2);
+      if (!still_link) {
+	/* groups are really disconnected, migrate one group to a new chain */
+        chain = create_chain (osched);
+        chain_recursively_migrate_group (chain, group1);
+
+        GST_INFO (GST_CAT_SCHEDULING, "migrated group %p to new chain %p", group1, chain);
+      }
+    }
+    else {
+      GST_INFO (GST_CAT_SCHEDULING, "group %p still has direct link with group %p", group1, group2);
+    }
   }
   /* hard part, groups are equal */
   else {
@@ -1739,14 +1929,20 @@ gst_opt_scheduler_pad_unlink (GstScheduler *sched, GstPad *srcpad, GstPad *sinkp
 
     /* check if the element is still linked to some other element in the group,
      * we pass the pad that is broken up as an arg because a link on that pad
-     * is not valid anymore */
+     * is not valid anymore.
+     * Note that this check is only to make sure that a single element can be removed 
+     * completely from the group, we also have to check for migrating several 
+     * elements to a new group. */
     still_link1 = element_has_link_with_group (element1, group, srcpad);
     still_link2 = element_has_link_with_group (element2, group, sinkpad);
 
     /* if there is still a link, we don't need to break this group */
     if (still_link1 && still_link2) {
       GST_INFO (GST_CAT_SCHEDULING, "elements still have links with other elements in the group");
-      /* FIXME it's possible that we have to break the chain */
+      /* FIXME it's possible that we have to break the group/chain. This heppens when
+       * the src element recursiveley has links with other elements in the group but not 
+       * with all elements. */
+      g_warning ("opt: unlink elements in same group: implement me");
       return;
     }
 
