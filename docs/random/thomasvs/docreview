@@ -1,0 +1,26 @@
+Documentation review
+
+* gstbuffer
+- What are the flags in GstBuffer ? used anywhere ? defined how ?
+
+
+* General
+- how can we define common terms and make them cros-ref'd ?
+  e.g. timestamps in buffer, do we say everywhere that they're in nanosec ?
+
+
+* Style
+- when in doubt, try to conform to GTK+ reference docs
+- in the arg clarification, use as much cross-reffing as possible.  Do it
+  only where it is useful in the explanation text.
+
+- examples
+
+  - use active form instead of imperative describing functions; we describe
+    what the function does.
+    good : creates a new buffer
+    bad : create new buffer
+  - use singular for enum names; this makes it more natural to reference to
+    it in the API docs
+    good : GstBufferFlag
+    bad : GstBufferFlags
