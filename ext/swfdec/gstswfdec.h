@@ -24,7 +24,7 @@
 
 #include <config.h>
 #include <gst/gst.h>
-#include <swf.h>
+#include <swfdec.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,12 +54,13 @@ struct _GstSwfdec {
   GstPad *audiopad;
   GstBufferPool *pool;
 
-  swf_state_t *state;
+  SwfdecDecoder *state;
   gboolean closed;
 
   /* the timestamp of the next frame */
   gboolean first;
 
+  double rate;
   gint64 timestamp;
   gint64 interval;
   gdouble frame_rate;

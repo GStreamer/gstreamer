@@ -70,7 +70,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_template_factory,
       "width",		GST_PROPS_INT(16),
       "depth",		GST_PROPS_INT(16),
       "rate",		GST_PROPS_INT(44100),
-      "channels",	GST_PROPS_INT(1)
+      "channels",	GST_PROPS_INT(2)
   )
 );
 
@@ -496,8 +496,9 @@ printf("setting caps\n");
 		      "video/raw",
 		      gst_props_new (
 			"format",   GST_PROPS_FOURCC (GST_MAKE_FOURCC ('R','G','B',' ')),
-			  "width",  GST_PROPS_INT (640),
-			  "height", GST_PROPS_INT (480),
+			  ///"width",  GST_PROPS_INT (640),
+			  //"height", GST_PROPS_INT (480),
+			  "rate", GST_PROPS_INT(12),
 			  NULL)));
 
   gst_pad_try_set_caps (swfdec->audiopad, 
@@ -520,7 +521,7 @@ printf("adding pad\n");
 		gst_element_add_pad(element, swfdec->audiopad);
 	}
 
-	ret = swf_parse(swfdec->state);
+	ret = swfdec_decoder_parse(swfdec->state);
 	if(ret==SWF_NEEDBITS){
 		buf = gst_pad_pull(swfdec->sinkpad);
 		if(GST_IS_EVENT(buf)){
@@ -537,15 +538,16 @@ printf("adding pad\n");
 			if(!GST_BUFFER_DATA(buf)){
 				printf("expected non-null buffer\n");
 			}
-			ret = swf_addbits(swfdec->state,GST_BUFFER_DATA(buf),
-				GST_BUFFER_SIZE(buf));
+			ret = swfdec_decoder_addbits(swfdec->state,
+				GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
 		}
 	}
 
 	if(ret==SWF_CHANGE){
-		swfdec->width = swfdec->state->width;
-		swfdec->height = swfdec->state->height;
-		swfdec->interval = GST_SECOND / swfdec->state->rate;
+		swfdec_decoder_get_image_size(swfdec->state,
+			&swfdec->width, &swfdec->height);
+		swfdec_decoder_get_rate(swfdec->state, &swfdec->rate);
+		swfdec->interval = GST_SECOND / swfdec->rate;
 #if G_BYTE_ORDER == 4321
 #define RED_MASK 0xff0000
 #define GREEN_MASK 0x00ff00
@@ -604,20 +606,15 @@ printf("adding pad\n");
 
 	if(ret==SWF_IMAGE){
 		GstBuffer *newbuf = NULL;
-		int newsize = swfdec->state->width * swfdec->state->height * 3;
+		unsigned char *data;
+		int len;
 
 		/* video stuff */
-		if(swfdec->pool){
-			newbuf = gst_buffer_new_from_pool(swfdec->pool, 0, 0);
-		}
-		if(!newbuf){
-			newbuf = gst_buffer_new();
-			GST_BUFFER_SIZE(newbuf) = newsize;
-			GST_BUFFER_DATA(newbuf) = g_malloc(newsize);
-		}
-		g_return_if_fail(GST_BUFFER_DATA(newbuf) != NULL);
+		newbuf = gst_buffer_new();
+		GST_BUFFER_SIZE(newbuf) = swfdec->width * swfdec->height * 3;
 
-		memcpy(GST_BUFFER_DATA(newbuf),swfdec->state->buffer,newsize);
+		swfdec_decoder_get_image(swfdec->state, &data);
+		GST_BUFFER_DATA(newbuf) = data;
 
 		swfdec->timestamp += swfdec->interval;
 		GST_BUFFER_TIMESTAMP(newbuf) = swfdec->timestamp;
@@ -625,15 +622,19 @@ printf("adding pad\n");
 		gst_pad_push(swfdec->videopad, newbuf);
 
 		/* audio stuff */
-		newbuf = gst_buffer_new();
-		newsize = 2*44100.0/swfdec->state->rate;
-		GST_BUFFER_SIZE(newbuf) = newsize;
-		GST_BUFFER_DATA(newbuf) = g_malloc(newsize);
-		memcpy(GST_BUFFER_DATA(newbuf),swfdec->state->sound_buffer,
-				newsize);
-		GST_BUFFER_TIMESTAMP(newbuf) = swfdec->timestamp;
 
-		gst_pad_push(swfdec->audiopad, newbuf);
+		data = swfdec_decoder_get_sound_chunk(swfdec->state, &len);
+		while(data){
+			newbuf = gst_buffer_new();
+
+			GST_BUFFER_SIZE(newbuf) = len;
+			GST_BUFFER_DATA(newbuf) = data;
+			GST_BUFFER_TIMESTAMP(newbuf) = swfdec->timestamp;
+
+			gst_pad_push(swfdec->audiopad, newbuf);
+
+			data = swfdec_decoder_get_sound_chunk(swfdec->state, &len);
+		}
 	}
 
 	if(ret==SWF_EOF){
@@ -670,10 +671,10 @@ gst_swfdec_init (GstSwfdec *swfdec)
   gst_element_set_loop_function(GST_ELEMENT(swfdec), gst_swfdec_loop);
 
   /* initialize the swfdec decoder state */
-  swfdec->state = swf_init();
+  swfdec->state = swfdec_decoder_new();
   g_return_if_fail(swfdec->state != NULL);
 
-  swfdec->state->colorspace = SWF_COLORSPACE_RGB888;
+  swfdec_decoder_set_colorspace(swfdec->state, SWF_COLORSPACE_RGB888);
 
   GST_FLAG_SET (GST_ELEMENT (swfdec), GST_ELEMENT_EVENT_AWARE);
 }
@@ -684,7 +685,7 @@ gst_swfdec_dispose (GObject *object)
   //GstSwfdec *swfdec = GST_SWFDEC (object);
 
   /* FIXME */
-  //swf_state_free(swfdec->state);
+  //swfdec_decoder_free(swfdec->state);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -737,7 +738,7 @@ gst_swfdec_chain (GstPad *pad, GstBuffer *buf)
 
 /* fprintf(stderr, "SWFDEC: in timestamp=%llu\n",GST_BUFFER_TIMESTAMP(buf)); */
 /* fprintf(stderr, "SWFDEC: have buffer of %d bytes\n",size);		*/
-  ret = swf_addbits(swfdec->state, data, size);
+  ret = swfdec_decoder_addbits(swfdec->state, data, size);
 
   if(ret==SWF_IMAGE){
 
@@ -1010,7 +1011,7 @@ gst_swfdec_change_state (GstElement *element)
     case GST_STATE_READY_TO_PAUSED:
     {
       //gst_swfdec_vo_open (swfdec);
-      //swf_init (swfdec->decoder, swfdec->accel, swfdec->vo);
+      //swfdec_decoder_new (swfdec->decoder, swfdec->accel, swfdec->vo);
 
       //swfdec->decoder->is_sequence_needed = 1;
       //swfdec->decoder->frame_rate_code = 0;
