@@ -53,6 +53,10 @@ TODO :
   - while (IS_PRERELEASE)
     {
       - increase the nano number (starting with 2)
+      - FIXME: do the devhelp stuff
+        go into docs/devhelp, rm *.devhelp, make devhelp
+        check if ok, and commit to cvs
+
       - check out a fresh anonymous copy
         cvs -d:pserver:anonymous@cvs.gstreamer.sf.net:/cvsroot/gstreamer \
             co -rBRANCH-RELEASE-0_3_3 gstreamer
