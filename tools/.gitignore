@@ -26,3 +26,11 @@ gst-xmllaunch.1
 *.bb
 *.bbg
 *.da
+gst-complete-?.?*
+gst-compprep-?.?*
+gst-inspect-?.?*
+gst-md5sum-?.?*
+gst-register-?.?*
+gst-typefind-?.?*
+gst-xmlinspect-?.?*
+gst-xmllaunch-?.?*
