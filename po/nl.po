@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-03 12:17+0100\n"
+"POT-Creation-Date: 2004-02-04 19:40+0100\n"
 "PO-Revision-Date: 2004-01-13 12:03+0100\n"
 "Last-Translator: Thomas Vander Stichele <thomas@apestaart.org>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -15,72 +15,71 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:118
+#: gst/gst.c:120
 msgid "Print the GStreamer version"
 msgstr "Druk de GStreamer versie af"
 
-#: gst/gst.c:119
+#: gst/gst.c:121
 msgid "Make all warnings fatal"
 msgstr "Maak alle waarschuwingen fataal"
 
-#: gst/gst.c:121
+#: gst/gst.c:123
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standaard debug-niveau van 1 (enkel fouten) tot 5 (alles) of 0 voor geen "
 "uitvoer"
 
-#: gst/gst.c:121
+#: gst/gst.c:123
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:122
+#: gst/gst.c:124
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
-"the individual categories.\n"
-"Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 "Lijst van categorie_naam=niveau paren, gescheiden door dubbele punten, om "
-"specifieke niveau's in te stellen voor de individuele categorieën.\n"
+"specifieke niveau's in te stellen voor de individuele categorieën."
 "Voorbeeld:GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:122
+#: gst/gst.c:124
 msgid "CATEGORIES"
 msgstr "CATEGORIEEN"
 
-#: gst/gst.c:123
+#: gst/gst.c:125
 msgid "Disable color debugging output"
 msgstr "Zet kleuren af in debug-uitvoer"
 
-#: gst/gst.c:124
+#: gst/gst.c:126
 msgid "Disable debugging"
 msgstr "Zet debugging af"
 
-#: gst/gst.c:125
+#: gst/gst.c:127
 msgid "Print available debug categories and exit"
 msgstr "Druk beschikbare debug-categorieën af en stop"
 
-#: gst/gst.c:127
+#: gst/gst.c:129
 msgid "Disable accelerated CPU instructions"
 msgstr "Schakel versnelde CPU-instructies uit"
 
-#: gst/gst.c:128
+#: gst/gst.c:130
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Schakel uitgebreide diagnostiek aan voor het laden van plugins"
 
-#: gst/gst.c:129
+#: gst/gst.c:131
 msgid "path list for loading plugins (separated by '"
 msgstr "padlijst om plugins te laden (gescheiden door '"
 
-#: gst/gst.c:129
+#: gst/gst.c:131
 msgid "')"
 msgstr ")"
 
-#: gst/gst.c:129
+#: gst/gst.c:131
 msgid "PATHS"
 msgstr "PADEN"
 
-#: gst/gst.c:130
+#: gst/gst.c:132
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "env variable GST_PLUGIN_PATH"
@@ -88,40 +87,41 @@ msgstr ""
 "Lijst van plugins, gescheiden door komma's, om eerste te laden bovenop de "
 "lijst volgens omgevingsvariable GST_PLUGIN_PATH"
 
-#: gst/gst.c:130
+#: gst/gst.c:132
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:131
+#: gst/gst.c:133
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Schakel het opvangen van segmentatiefouten uit tijdens laden van plugins"
 
-#: gst/gst.c:132
+#: gst/gst.c:134
 msgid "Scheduler to use ('"
 msgstr "Planner om te gebruiken ('"
 
-#: gst/gst.c:132
+#: gst/gst.c:134
 msgid "' is the default)"
 msgstr "' is de voorkeursplanner)"
 
-#: gst/gst.c:132
+#: gst/gst.c:134
 msgid "SCHEDULER"
 msgstr "PLANNER"
 
-#: gst/gst.c:133
+#: gst/gst.c:135
 msgid "Registry to use"
 msgstr "Register om te gebruiken"
 
-#: gst/gst.c:133
+#: gst/gst.c:135
 msgid "REGISTRY"
 msgstr "REGISTER"
 
-#: gst/gstelement.c:240
+#: gst/gstelement.c:241
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FOUT: van element %s: %s\n"
 
-#: gst/gstelement.c:242
+#: gst/gstelement.c:243
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -605,12 +605,12 @@ msgstr "geen ton \"%s\", overgeslagen"
 msgid "no property \"%s\" in element \"%s\""
 msgstr "geen eigenschap \"%s\" in element \"%s\""
 
-#: gst/parse/grammar.y:327
+#: gst/parse/grammar.y:331
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
 
-#: gst/parse/grammar.y:332
+#: gst/parse/grammar.y:336
 #, c-format
 msgid ""
 "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
@@ -618,51 +618,51 @@ msgstr ""
 "kon \"%s\" niet omzetten zodat het in eigenschap \"%s\" in element \"%s\" "
 "past"
 
-#: gst/parse/grammar.y:511
+#: gst/parse/grammar.y:515
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kon %s niet verbinden met %s"
 
-#: gst/parse/grammar.y:556
+#: gst/parse/grammar.y:560
 #, c-format
 msgid "no element \"%s\""
 msgstr "geen element \"%s\""
 
-#: gst/parse/grammar.y:607
+#: gst/parse/grammar.y:611
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kon mogelijkheden \"%s\" niet verwerken"
 
-#: gst/parse/grammar.y:629 gst/parse/grammar.y:683 gst/parse/grammar.y:699
-#: gst/parse/grammar.y:757
+#: gst/parse/grammar.y:633 gst/parse/grammar.y:687 gst/parse/grammar.y:703
+#: gst/parse/grammar.y:761
 msgid "link without source element"
 msgstr "verbinding zonder bronelement"
 
-#: gst/parse/grammar.y:635 gst/parse/grammar.y:680 gst/parse/grammar.y:766
+#: gst/parse/grammar.y:639 gst/parse/grammar.y:684 gst/parse/grammar.y:770
 msgid "link without sink element"
 msgstr "verbinding zonder doelelement"
 
-#: gst/parse/grammar.y:717
+#: gst/parse/grammar.y:721
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "geen bronelement voor URI \"%s\""
 
-#: gst/parse/grammar.y:727
+#: gst/parse/grammar.y:731
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "geen element om URI \"%s\" mee te verbinden"
 
-#: gst/parse/grammar.y:735
+#: gst/parse/grammar.y:739
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "geen doelelement voor URI \"%s\""
 
-#: gst/parse/grammar.y:739
+#: gst/parse/grammar.y:743
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kon doelelement niet verbinden voor URI \"%s\""
 
-#: gst/parse/grammar.y:751
+#: gst/parse/grammar.y:755
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
 
