@@ -436,13 +436,15 @@ static GstPadConnectReturn
 gst_jack_connect (GstPad *pad, GstCaps *caps)
 {
   GstJack *this;
+  gint rate;
   
   this = GST_JACK (gst_pad_get_parent (pad));
   g_return_val_if_fail (this != NULL, GST_PAD_CONNECT_REFUSED);
   g_return_val_if_fail (GST_IS_JACK (this), GST_PAD_CONNECT_REFUSED);
   
   if (GST_CAPS_IS_FIXED (caps)) {
-      if (this->client && gst_caps_get_int (caps, "rate") != this->client->rate)
+      gst_caps_get_int (caps, "rate", &rate);
+      if (this->client && rate != this->client->rate)
           return GST_PAD_CONNECT_REFUSED;
       
       return GST_PAD_CONNECT_OK;

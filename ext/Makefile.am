@@ -120,6 +120,12 @@ else
 LAME_DIR=
 endif
 
+if USE_LCS
+LCS_DIR=lcs
+else
+LCS_DIR=
+endif
+
 if USE_MAD
 MAD_DIR=mad
 else
@@ -210,7 +216,7 @@ SUBDIRS=$(A52DEC_DIR) $(AALIB_DIR) $(ALSA_DIR) \
 	$(DVDREAD_DIR) $(ESD_DIR) $(FESTIVAL_DIR) \
 	$(FLAC_DIR) $(GNOMEVFS_DIR) $(GSM_DIR) \
 	$(HERMES_DIR) $(HTTP_DIR) $(JACK_DIR) $(JPEG_DIR) \
-	$(LADSPA_DIR) $(LAME_DIR) \
+	$(LADSPA_DIR) $(LAME_DIR) $(LCD_DIR) \
 	$(MAD_DIR) $(MIKMOD_DIR) $(MJPEGTOOLS_DIR) $(MPEG2DEC_DIR) \
 	$(OPENQUICKTIME_DIR) $(RAW1394_DIR) $(RTP_DIR) \
 	$(SDL_DIR) $(SHOUT_DIR) $(SIDPLAY_DIR) \
@@ -223,7 +229,7 @@ DIST_SUBDIRS=\
 	dvdread esd festival \
 	flac gnomevfs gsm \
 	hermes http jack jpeg \
-	ladspa lame \
+	ladspa lame lcs \
 	mad mikmod mjpegtools mpeg2dec \
 	openquicktime raw1394 rtp \
 	sdl shout sidplay \
