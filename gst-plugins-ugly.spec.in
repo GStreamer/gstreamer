@@ -82,6 +82,14 @@ make prefix=%{?buildroot:%{buildroot}}%{_prefix} \
   install
 unset GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL
 
+# Clean out files that should not be part of the rpm.
+# This is the recommended way of dealing with it for RH8
+rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/gst/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+
+
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
@@ -258,29 +266,50 @@ GStreamer support libraries header files.
 @USE_AUDIOFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 @USE_AUDIOFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
-### AVIFILE ###
-@USE_AVIFILE_TRUE@%package -n gstreamer-avi
-@USE_AVIFILE_TRUE@Summary:       GStreamer plug-in for AVI movie playback.
+### AVI ###
+%package -n gstreamer-avi
+Summary:       GStreamer plug-in for AVI movie playback.
+Group:         Libraries/Multimedia
+Requires:      gstreamer-plugins = %{version}
+Requires:      gstreamer-colorspace = %{version}
+
+%description -n gstreamer-avi
+Plug-ins for playback of AVI format media files.
+
+%files -n gstreamer-avi
+%defattr(-, root, root)
+%{_libdir}/gst/libgstavidemux.so
+%{_libdir}/gst/libgstavimux.so
+
+%post -n gstreamer-avi
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-avi
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+### Windec ###
+@USE_AVIFILE_TRUE@%package -n gstreamer-windec
+@USE_AVIFILE_TRUE@Summary:       GStreamer plug-in for Windows DLL loading
 @USE_AVIFILE_TRUE@Group:         Libraries/Multimedia
 @USE_AVIFILE_TRUE@Requires:      gstreamer-plugins = %{version}
-@USE_AVIFILE_TRUE@Requires:      gstreamer-colorspace = %{version}
 @USE_AVIFILE_TRUE@Requires:      avifile
 @USE_AVIFILE_TRUE@BuildRequires: avifile-devel
 @USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%description -n gstreamer-avi
-@USE_AVIFILE_TRUE@Plug-ins for playback of AVI format media files.
+@USE_AVIFILE_TRUE@%description -n gstreamer-windec
+@USE_AVIFILE_TRUE@Plug-ins for playback for loading window DLL files. 
+@USE_AVIFILE_TRUE@Needed for playback of some  AVI format media files.
 @USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%files -n gstreamer-avi
+@USE_AVIFILE_TRUE@%files -n gstreamer-windec
 @USE_AVIFILE_TRUE@%defattr(-, root, root)
-@USE_AVIFILE_TRUE@%{_libdir}/gst/libgstavidemux.so
-@USE_AVIFILE_TRUE@%{_libdir}/gst/libgstavimux.so
 @USE_AVIFILE_TRUE@%{_libdir}/gst/libgstwincodec.so
 @USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%post -n gstreamer-avi
+@USE_AVIFILE_TRUE@%post -n gstreamer-windec
 @USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 @USE_AVIFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 @USE_AVIFILE_TRUE@
-@USE_AVIFILE_TRUE@%postun -n gstreamer-avi
+@USE_AVIFILE_TRUE@%postun -n gstreamer-windec
 @USE_AVIFILE_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 @USE_AVIFILE_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
@@ -309,7 +338,7 @@ GStreamer support libraries header files.
 
 ### DVDREAD ###
 @USE_DVDREAD_TRUE@%package -n gstreamer-libdvdread
-@USE_DVDREAD_TRUE@Summary:       GStreamer plug-in for DVD playback using libdvdread.
+@USE_DVDREAD_TRUE@Summary:       GStreamer plug-in for DVD playback.
 @USE_DVDREAD_TRUE@Group:         Libraries/Multimedia
 @USE_DVDREAD_TRUE@Requires:      gstreamer-plugins = %{version}
 @USE_DVDREAD_TRUE@Requires:      libdvdread >= 0.9.0
@@ -317,11 +346,13 @@ GStreamer support libraries header files.
 @USE_DVDREAD_TRUE@Obsoletes:     gstreamer-libdvd
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%description -n gstreamer-libdvdread
-@USE_DVDREAD_TRUE@Plug-in for reading DVDs using libdvdread under GStreamer.
+@USE_DVDREAD_TRUE@Plug-in for reading DVDs using libdvdread and libdvdnav 
+@USE_DVDREAD_TRUE@under GStreamer.
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%files -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%defattr(-, root, root)
 @USE_DVDREAD_TRUE@%{_libdir}/gst/libgstdvdreadsrc.so
+@USE_DVDREAD_TRUE@%{_libdir}/gst/libgstdvdnavsrc.so
 @USE_DVDREAD_TRUE@
 @USE_DVDREAD_TRUE@%post -n gstreamer-libdvdread
 @USE_DVDREAD_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1228,6 +1259,8 @@ plug-ins.
 %{_libdir}/gst/libgstdeinterlace.so
 %{_libdir}/gst/libgstmedian.so
 %{_libdir}/gst/libgstrtjpeg.so
+%{_libdir}/gst/libgstvideocrop.so
+%{_libdir}/gst/libgstvideoscale.so
 
 %post -n gstreamer-video-effects
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
@@ -1289,6 +1322,90 @@ processed with the lavtools from mjpegtools.
 %{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
 %{_bindir}/gst-compprep > /dev/null 2> /dev/null
 
+# cdplayer
+%package -n gstreamer-cdplayer
+Summary:        GStreamer plug-in playing audio cds	
+Group:          Libraries/Multimedia
+Requires:       gstreamer-plugins = %{version}
+
+%description -n gstreamer-cdplayer
+Lets you get sound from audio cd's using GStreamer
+
+%files -n gstreamer-cdplayer
+%defattr(-, root, root)
+%{_libdir}/gst/libgstcdplayer.so
+
+%post -n gstreamer-cdplayer
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-cdplayer
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+# Videotest plugin
+%package -n gstreamer-videotest
+Summary:        GStreamer plug-in for generating a video test streamer
+Group:          Libraries/Multimedia
+Requires:       gstreamer-plugins = %{version}
+
+%description -n gstreamer-videotest
+This plugin provides a videotest plugin. This plugin can be used to generate a videostream for testing other plugins.
+
+%files -n gstreamer-videotest
+%defattr(-, root, root)
+%{_libdir}/gst/libgstvideotestsrc.so
+
+%post -n gstreamer-videotest
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-videotest
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+# Snapshot plugin
+@USE_LIBPNG_TRUE@%package -n gstreamer-snapshot
+@USE_LIBPNG_TRUE@Summary:        GStreamer plug-in for grabbing images from videostreams
+@USE_LIBPNG_TRUE@Group:          Libraries/Multimedia
+@USE_LIBPNG_TRUE@Requires:       gstreamer-plugins = %{version}
+@USE_LIBPNG_TRUE@
+@USE_LIBPNG_TRUE@%description -n gstreamer-snapshot
+@USE_LIBPNG_TRUE@This plugin grabs images from videostreams and saves them as PNG format images.
+@USE_LIBPNG_TRUE@
+@USE_LIBPNG_TRUE@%files -n gstreamer-snapshot
+@USE_LIBPNG_TRUE@%defattr(-, root, root)
+@USE_LIBPNG_TRUE@%{_libdir}/gst/libgstsnapshot.so
+@USE_LIBPNG_TRUE@
+@USE_LIBPNG_TRUE@%post -n gstreamer-snapshot
+@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LIBPNG_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+@USE_LIBPNG_TRUE@
+@USE_LIBPNG_TRUE@%postun -n gstreamer-snapshot
+@USE_LIBPNG_TRUE@%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+@USE_LIBPNG_TRUE@%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+# Dependency free Quicktime demuxer
+%package -n gstreamer-quicktime
+Summary:       GStreamer Quicktime demuxer video Plug-in.
+Group:         Libraries/Multimedia
+Requires:      gstreamer-plugins = %{version}
+
+%description -n gstreamer-quicktime
+Plug-in for demuxing Quicktime movies
+
+%files -n gstreamer-quicktime
+%defattr(-, root, root)
+%{_libdir}/gst/libgstqtdemux.so
+
+%post -n gstreamer-quicktime
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
+%postun -n gstreamer-quicktime
+%{_bindir}/gst-register --gst-mask=0 > /dev/null 2> /dev/null
+%{_bindir}/gst-compprep > /dev/null 2> /dev/null
+
 # package supporting GConf
 @USE_GCONF_TRUE@%package -n gstreamer-GConf
 @USE_GCONF_TRUE@Summary: 	GStreamer GConf schemas.
@@ -1305,12 +1422,21 @@ processed with the lavtools from mjpegtools.
 @USE_GCONF_TRUE@%defattr(-, root, root)
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer.schemas
 @USE_GCONF_TRUE@%{_libdir}/libgstgconf.so
+@USE_GCONF_TRUE@%{_libdir}/libgstgconf-0.4.1.1.so.0.0.0
 
 @USE_GCONF_TRUE@%post -n gstreamer-GConf
 @USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
 @USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer.schemas > /dev/null
 
 %changelog
+* Sat Oct 20 2002 Christian Scchaller <Uraeus@linuxrising.org>
+- Removed all .la files
+- added separate non-openquicktime demuxer plugin
+- added snapshot plugin
+- added videotest plugin
+- Split avi plugin out to avi and windec plugins since aviplugin do not depend on avifile
+- Added cdplayer plugin
+
 * Fri Sep 20 2002 Thomas Vander Stichele <thomas@apestaart.org>
 - added gst-compprep calls
 
