@@ -1,3 +1,8 @@
+2004-05-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/law/mulaw-conversion.c: (mulaw_encode):
+	Fix overflow bug in ulaw encoding.
+
 2004-05-19  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* ext/mad/gstmad.c: (gst_mad_handle_event):
