@@ -1294,8 +1294,8 @@ gst_caps_do_simplify (GstCaps * caps)
 xmlNodePtr
 gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent)
 {
-
-  return 0;
+  xmlNewChild (parent, NULL, "caps", gst_caps_to_string (caps));
+  return parent;
 }
 
 /**
@@ -1309,6 +1309,9 @@ gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent)
 GstCaps *
 gst_caps_load_thyself (xmlNodePtr parent)
 {
+  if (strcmp ("caps", parent->name) == 0) {
+    return gst_caps_from_string (xmlNodeGetContent (parent));
+  }
 
   return NULL;
 }

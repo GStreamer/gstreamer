@@ -1,3 +1,9 @@
+2004-07-03  David Schleef  <ds@schleef.org>
+
+	* gst/gstcaps.c: (gst_caps_save_thyself), (gst_caps_load_thyself):
+	Actually do something in these functions, like before the big
+	caps change.  (bug #145137)
+
 2004-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.c: (gst_element_get_compatible_pad_template),
