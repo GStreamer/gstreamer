@@ -119,10 +119,40 @@ GST_PAD_TEMPLATE_FACTORY ( audio_src_temp,
   )
 )
 
+/* typefind stuff */
+static GstCaps*
+dv_type_find (GstBuffer *buf, gpointer private)
+{
+  gulong head = GULONG_FROM_BE(*((gulong *)GST_BUFFER_DATA(buf)));
+  GstCaps *new = NULL;
+
+  /* check for DIF  and DV flag */
+  if ((head & 0xffffff00) == 0x1f070000 && !(GST_BUFFER_DATA(buf)[4] & 0x01)) {
+    gchar *format;
+
+    if ((head & 0x000000ff) & 0x80)
+      format = "PAL";
+    else
+      format = "NTSC";
+    
+    new = GST_CAPS_NEW ("dv_type_find",
+                        "video/dv",
+                          "format",   GST_PROPS_STRING (format)
+		       );
+  }
+  return new;
+}
+
+static GstTypeDefinition dv_definition = {
+  "dv_video/dv", "video/dv", ".dv", dv_type_find 
+};
 
 /* A number of functon prototypes are given so we can refer to them later. */
 static void		gst_dvdec_class_init	(GstDVDecClass *klass);
 static void		gst_dvdec_init		(GstDVDec *dvdec);
+
+static gboolean 	gst_dvdec_src_query 	(GstPad *pad, GstPadQueryType type,
+                    				 GstFormat *format, gint64 *value);
 
 static void		gst_dvdec_loop		(GstElement *element);
 
@@ -212,12 +242,15 @@ gst_dvdec_init(GstDVDec *dvdec)
 
   dvdec->sinkpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (sink_temp), "sink");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
+  gst_pad_set_query_function (dvdec->sinkpad, NULL);
 
   dvdec->videosrcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (video_src_temp), "video");
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->videosrcpad);
+  gst_pad_set_query_function (dvdec->videosrcpad, gst_dvdec_src_query);
 
   dvdec->audiosrcpad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET(audio_src_temp), "audio");
   gst_element_add_pad(GST_ELEMENT(dvdec),dvdec->audiosrcpad);
+  gst_pad_set_query_function (dvdec->audiosrcpad, gst_dvdec_src_query);
 
   gst_element_set_loop_function (GST_ELEMENT (dvdec), gst_dvdec_loop);
 
@@ -225,11 +258,50 @@ gst_dvdec_init(GstDVDec *dvdec)
   dvdec->decoder->quality = DV_QUALITY_BEST;
   dvdec->pool = NULL;
   dvdec->length = 0;
+  dvdec->next_ts = 0LL;
 
   for (i = 0; i <4; i++) {
     dvdec->audio_buffers[i] = (gint16 *)g_malloc (DV_AUDIO_MAX_SAMPLES * sizeof (gint16));
   }
 }
+
+static gboolean
+gst_dvdec_src_query (GstPad *pad, GstPadQueryType type,
+                     GstFormat *format, gint64 *value)
+{
+  gboolean res = TRUE;
+  GstDVDec *dvdec;
+
+  dvdec = GST_DVDEC (gst_pad_get_parent (pad));
+
+  switch (type) {
+    case GST_PAD_QUERY_TOTAL:
+      switch (*format) {
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+        case GST_FORMAT_TIME:
+          *value = 0;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_PAD_QUERY_POSITION:
+      switch (*format) {
+        case GST_FORMAT_DEFAULT:
+          *format = GST_FORMAT_TIME;
+        default:
+	  *value = dvdec->next_ts;
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+} 
 
 static gboolean
 gst_dvdec_handle_event (GstDVDec *dvdec)
@@ -273,14 +345,11 @@ gst_dvdec_loop (GstElement *element)
   GstDVDec *dvdec;
   GstBuffer *buf, *outbuf;
   guint8 *inframe;
-  guint8 *outframe;
-  guint8 *outframe_ptrs[3];
-  gint outframe_pitches[3];
   gboolean PAL;
   gint height;
   guint32 length, got_bytes;
-  gint16 *a_ptr;
-  gint i, j;
+  GstFormat format;
+  guint64 ts;
 
   dvdec = GST_DVDEC (element);
 
@@ -374,56 +443,76 @@ gst_dvdec_loop (GstElement *element)
   			  ));
   }
   
-  dv_decode_full_audio (dvdec->decoder, GST_BUFFER_DATA (buf), dvdec->audio_buffers);
+  format = GST_FORMAT_TIME;
+  gst_pad_query (dvdec->videosrcpad, GST_PAD_QUERY_POSITION, &format, &ts);
 
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_SIZE (outbuf) = dvdec->decoder->audio->samples_this_frame * sizeof (gint16) * dvdec->decoder->audio->num_channels;
-  GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
+  if (GST_PAD_IS_CONNECTED (dvdec->audiosrcpad)) {
+    gint16 *a_ptr;
+    gint i, j;
 
-  a_ptr = (gint16 *) GST_BUFFER_DATA (outbuf);
+    dv_decode_full_audio (dvdec->decoder, GST_BUFFER_DATA (buf), dvdec->audio_buffers);
 
-  for (i = 0; i < dvdec->decoder->audio->samples_this_frame; i++) {
-    for (j = 0; j < dvdec->decoder->audio->num_channels; j++) {
-      *(a_ptr++) = dvdec->audio_buffers[j][i];
-    }
-  }
-  gst_pad_push (dvdec->audiosrcpad, outbuf);
-
-  /* try to grab a pool */
-  if (!dvdec->pool) {
-    dvdec->pool = gst_pad_get_bufferpool (dvdec->videosrcpad);
-  }
-
-  outbuf = NULL;
-  /* try to get a buffer from the pool if we have one */
-  if (dvdec->pool) {
-    outbuf = gst_buffer_new_from_pool (dvdec->pool, 0, 0);
-  }
-  /* no buffer from pool, allocate one ourselves */
-  if (!outbuf) {
     outbuf = gst_buffer_new ();
-    
-    GST_BUFFER_SIZE (outbuf) = (720 * height) * dvdec->bpp;
+    GST_BUFFER_SIZE (outbuf) = dvdec->decoder->audio->samples_this_frame * sizeof (gint16) * dvdec->decoder->audio->num_channels;
     GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
+
+    a_ptr = (gint16 *) GST_BUFFER_DATA (outbuf);
+
+    for (i = 0; i < dvdec->decoder->audio->samples_this_frame; i++) {
+      for (j = 0; j < dvdec->decoder->audio->num_channels; j++) {
+        *(a_ptr++) = dvdec->audio_buffers[j][i];
+      }
+    }
+    GST_BUFFER_TIMESTAMP (outbuf) = ts;
+
+    gst_pad_push (dvdec->audiosrcpad, outbuf);
   }
 
+  if (GST_PAD_IS_CONNECTED (dvdec->videosrcpad)) {
+    guint8 *outframe;
+    guint8 *outframe_ptrs[3];
+    gint outframe_pitches[3];
+
+    /* try to grab a pool */
+    if (!dvdec->pool) {
+      dvdec->pool = gst_pad_get_bufferpool (dvdec->videosrcpad);
+    }
+
+    outbuf = NULL;
+    /* try to get a buffer from the pool if we have one */
+    if (dvdec->pool) {
+      outbuf = gst_buffer_new_from_pool (dvdec->pool, 0, 0);
+    }
+    /* no buffer from pool, allocate one ourselves */
+    if (!outbuf) {
+      outbuf = gst_buffer_new ();
     
-  outframe = GST_BUFFER_DATA (outbuf);
+      GST_BUFFER_SIZE (outbuf) = (720 * height) * dvdec->bpp;
+      GST_BUFFER_DATA (outbuf) = g_malloc (GST_BUFFER_SIZE (outbuf));
+    }
+    
+    outframe = GST_BUFFER_DATA (outbuf);
 
-  outframe_ptrs[0] = outframe;
-  outframe_ptrs[1] = outframe_ptrs[0] + 720 * height;
-  outframe_ptrs[2] = outframe_ptrs[1] + 360 * height;
+    outframe_ptrs[0] = outframe;
+    outframe_ptrs[1] = outframe_ptrs[0] + 720 * height;
+    outframe_ptrs[2] = outframe_ptrs[1] + 360 * height;
   
-  outframe_pitches[0] = 720 * dvdec->bpp;
-  outframe_pitches[1] = height / 2;
-  outframe_pitches[2] = height / 2;
+    outframe_pitches[0] = 720 * dvdec->bpp;
+    outframe_pitches[1] = height / 2;
+    outframe_pitches[2] = height / 2;
 
-  dv_decode_full_frame (dvdec->decoder, GST_BUFFER_DATA (buf), 
-		        dvdec->space, outframe_ptrs, outframe_pitches);
+    dv_decode_full_frame (dvdec->decoder, GST_BUFFER_DATA (buf), 
+		          dvdec->space, outframe_ptrs, outframe_pitches);
+
+    GST_BUFFER_TIMESTAMP (outbuf) = ts;
+
+    gst_pad_push (dvdec->videosrcpad, outbuf);
+  }
+
+  /* FIXME this is inaccurate for NTSC */
+  dvdec->next_ts += GST_SECOND / (PAL ? 25 : 30);
 
   gst_buffer_unref (buf);
-
-  gst_pad_push (dvdec->videosrcpad, outbuf);
 }
 
 static GstElementStateReturn
@@ -455,8 +544,6 @@ gst_dvdec_change_state (GstElement *element)
 	        
   return GST_STATE_SUCCESS;
 }
-
-
 
 /* Arguments are part of the Gtk+ object system, and these functions
  * enable the element to respond to various arguments.
@@ -503,6 +590,7 @@ static gboolean
 plugin_init (GModule *module, GstPlugin *plugin)
 {
   GstElementFactory *factory;
+  GstTypeFactory *type;
 
   if (!gst_library_load ("gstbytestream")) {
     gst_info("dvdec: could not load support library: 'gstbytestream'\n");
@@ -528,6 +616,9 @@ plugin_init (GModule *module, GstPlugin *plugin)
 
   /* The very last thing is to register the elementfactory with the plugin. */
   gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+
+  type = gst_type_factory_new (&dv_definition);
+  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (type));
 
   return TRUE;
 }

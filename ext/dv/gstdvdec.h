@@ -54,6 +54,7 @@ struct _GstDVDec {
   dv_color_space_t space;
   gint 		 bpp;
   gint 		 length;
+  guint64	 next_ts;
 
   gint16 	*audio_buffers[4];
 };
