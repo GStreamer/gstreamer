@@ -45,6 +45,7 @@
 #  include "config.h"
 #endif
 
+#include "../gst-i18n-lib.h"
 #include "gstspider.h"
 #include "gstspideridentity.h"
 #include "gstsearchfuncs.h"
@@ -386,6 +387,42 @@ gst_spider_identity_plug (GstSpiderIdentity *ident)
   
   /* return if we're already plugged */
   if (ident->plugged) return;
+
+  /* check if there is at least one element factory that can handle the
+     identity's src caps */
+  {
+    GstCaps *src_caps = gst_pad_get_caps (ident->src);
+    if (! gst_caps_is_empty (src_caps) && ! gst_caps_is_any (src_caps))
+    {
+      const char *mime;
+      GList *factories;
+      GstPadTemplate *padtemp;
+      gboolean found = FALSE;
+
+      mime = gst_structure_get_name (gst_caps_get_structure (src_caps, 0));
+
+      factories = spider->factories;
+      while (factories)
+      {
+        if ((padtemp = gst_autoplug_can_connect_src (factories->data, src_caps)))
+        {
+          const GstCaps *caps = gst_pad_template_get_caps (padtemp);
+          GST_DEBUG ("can connect src to pad template: %" GST_PTR_FORMAT, caps);
+          found = TRUE;
+        }
+        factories = factories->next;
+      }
+      if (!found)
+      {
+        GST_ELEMENT_ERROR (spider, STREAM, CODEC_NOT_FOUND,
+                           (_("There is no element present to handle the stream's mime type %s."), mime),
+                           (NULL));
+	return;
+      }
+    }
+  }
+
+
 
   /* get the direction of our ident */
   if (GST_PAD_PEER (ident->sink))
