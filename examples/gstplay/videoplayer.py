@@ -88,7 +88,7 @@ class PlayerWidget(gtk.DrawingArea):
         self.parentw = parent
         gtk.DrawingArea.__init__(self)
         self.connect('destroy', self.destroy_cb)
-        self.connect_after('realize', self.after_realize_cb)
+        self.connect('expose-event', self.expose_cb)
         self.set_size_request(400, 400)
         self.player = gst.play.Play()
         self.player.connect('eos', lambda p: gst.main_quit())
@@ -97,17 +97,15 @@ class PlayerWidget(gtk.DrawingArea):
         
         # Setup source and sinks
         self.player.set_data_src(gst.element_factory_make('filesrc'))
-        self.player.set_audio_sink(gst.element_factory_make('osssink'))
+        audio_sink = gst.element_factory_make('alsasink')
+        audio_sink.set_property('device', 'hw:0')
+        self.player.set_audio_sink(audio_sink)
         self.player.set_video_sink(self.imagesink)
 
     def destroy_cb(self, da):
         self.imagesink.set_xwindow_id(0L)
 
-    def after_realize_cb(self, window):
-        # Sort of a hack, but it works for now.
-        gtk.idle_add(self.idler)
-
-    def idler(self):
+    def expose_cb(self, window, event):
         self.imagesink.set_xwindow_id(self.window.xid)
         
     def stop(self):
