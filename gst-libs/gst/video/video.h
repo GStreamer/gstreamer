@@ -61,6 +61,19 @@
 #define GST_VIDEO_FPS_RANGE "(double) [ 0, max ]"
 
 /* consider the next 2 protected */
+#define __GST_VIDEO_CAPS_MAKE_32A(R, G, B, A)				\
+    "video/x-raw-rgb, "							\
+    "bpp = (int) 32, "							\
+    "depth = (int) 32, "						\
+    "endianness = (int) BIG_ENDIAN, "					\
+    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_32 ", "		\
+    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_32 ", "		\
+    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_32 ", "		\
+    "alpha_mask = (int) " GST_VIDEO_BYTE ## A ## _MASK_32 ", "		\
+    "width = " GST_VIDEO_SIZE_RANGE ", "				\
+    "height = " GST_VIDEO_SIZE_RANGE ", "				\
+    "framerate = " GST_VIDEO_FPS_RANGE
+
 #define __GST_VIDEO_CAPS_MAKE_32(R, G, B)				\
     "video/x-raw-rgb, "							\
     "bpp = (int) 32, "							\
@@ -107,6 +120,20 @@
   
 #define GST_VIDEO_CAPS_xBGR \
     __GST_VIDEO_CAPS_MAKE_32 (4, 3, 2)
+
+/* 32 bit alpha */
+
+#define GST_VIDEO_CAPS_RGBA \
+    __GST_VIDEO_CAPS_MAKE_32A (1, 2, 3, 4)
+  
+#define GST_VIDEO_CAPS_ARGB \
+    __GST_VIDEO_CAPS_MAKE_32A (2, 3, 4, 1)
+  
+#define GST_VIDEO_CAPS_BGRA \
+    __GST_VIDEO_CAPS_MAKE_32A (3, 2, 1, 4)
+  
+#define GST_VIDEO_CAPS_ABGR \
+    __GST_VIDEO_CAPS_MAKE_32A (4, 3, 2, 1)
 
 /* note: the macro name uses the order on BE systems */
 #if G_BYTE_ORDER == G_BIG_ENDIAN

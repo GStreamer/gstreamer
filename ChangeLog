@@ -1,5 +1,12 @@
 2004-07-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/video/video.h:
+	Added 32 bits RGBA. Not sure if we should use another mime-type
+	for alpha rgb. Currently the presence of the alpha_mask property
+	signals an alpha channel.
+
+2004-07-16  Wim Taymans  <wim@fluendo.com>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
 	FPS seems to be 0.0 to MAX everywhere else.
