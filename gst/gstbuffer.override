@@ -117,28 +117,18 @@ _wrap_gst_buffer_set_data(PyObject *self, PyObject *args, PyObject *kwargs)
 	return Py_None;
 }
 %%
-override-slot GstBuffer.tp_getattr
-PyObject *
-_wrap_gst_buffer_tp_getattr(PyGObject *self, char *attr)
+override-attr GstBuffer.data_type
+static PyObject*
+_wrap_gst_buffer__get_data_type(PyGObject *self, void *closure)
 {
-	/* We have some GstData methods since it's not a subclass */
-	if (!strcmp(attr, "type"))
-		return pyg_type_wrapper_new(GST_DATA_TYPE(self->obj));
-	else if (!strcmp(attr, "flags"))
-		return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
-#if 0	
-	else if (!strcmp(attr, "size"))
-		return PyInt_FromLong(GST_BUFFER_SIZE(self->obj));
-#endif	
-	else if (!strcmp(attr, "maxsize"))
-		return PyInt_FromLong(GST_BUFFER_MAXSIZE(self->obj));
-	/* XXX: timestamp and duration */
-	else if (!strcmp(attr, "offset"))
-		return PyInt_FromLong(GST_BUFFER_OFFSET(self->obj));
-	else if (!strcmp(attr, "offset_end"))
-		return PyInt_FromLong(GST_BUFFER_OFFSET_END(self->obj));
-
-	return Py_FindMethod(_PyGstBuffer_methods, (PyObject*)self, attr);
+	return pyg_type_wrapper_new(GST_DATA_TYPE(self->obj));
+}
+%%
+override-attr GstBuffer.flags
+static PyObject*
+_wrap_gst_buffer__get_flags(PyGObject *self, void *closure)
+{
+	return PyInt_FromLong(GST_DATA_FLAGS(self->obj));
 }
 %%
 override-attr GstBuffer.size
@@ -167,6 +157,25 @@ static PyObject *
 _wrap_gst_buffer__get_offset_end(PyGObject *self, void *closure)
 {
 	return PyInt_FromLong(GST_BUFFER_OFFSET_END(self->obj));
+}
+%%
+override-attr GstBuffer.timestamp
+static PyObject *
+_wrap_gst_buffer__get_timestamp(PyGObject *self, void *closure)
+{
+	return PyInt_FromLong(GST_BUFFER(self->obj)->timestamp);
+}
+static int
+_wrap_gst_buffer__set_timestamp(PyGBoxed *self, PyObject *value, void *closure)
+{
+    gint val;
+
+    val = PyInt_AsLong(value);
+    if (PyErr_Occurred())
+        return -1;
+    
+    pyg_boxed_get(self, GstBuffer)->timestamp = val;
+    return 0;
 }
 %%
 override-slot GstBuffer.tp_str

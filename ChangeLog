@@ -1,3 +1,11 @@
+2004-12-14  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst-types.defs:
+	* gst/gstbuffer.override:
+	* testsuite/test_buffer.py:
+
+	Improve support GstBuffer attributes, r/w support for timestamp.
+
 2004-11-29  Johan Dahlin  <johan@gnome.org>
 
 	* configure.ac: Post release version bump

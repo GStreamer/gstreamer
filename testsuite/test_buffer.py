@@ -1,5 +1,5 @@
 import sys
-from common import gst, unittest
+from common import gobject, gst, unittest
 
 class BufferTest(unittest.TestCase):
     def testBufferBuffer(self):
@@ -80,5 +80,26 @@ class BufferTest(unittest.TestCase):
         buffer.flag_unset(gst.BUFFER_IN_CAPS)
         assert not buffer.flag_is_set(gst.BUFFER_IN_CAPS)
 
+    def testAttrType(self):
+        buffer = gst.Buffer()
+        assert hasattr(buffer, "data_type")
+        # XXX: Expose this in gobject
+        #assert isinstance(buffer.data_type, gobject.GType)
+        assert buffer.data_type == buffer.__gtype__
+        
+    def testAttrFlags(self):
+        buffer = gst.Buffer()
+        assert hasattr(buffer, "flags")
+        assert isinstance(buffer.flags, int)
+ 
+    def testAttrTimestamp(self):
+        buffer = gst.Buffer()
+        assert hasattr(buffer, "timestamp")
+        assert isinstance(buffer.timestamp, int)
+
+        assert buffer.timestamp == -1
+        buffer.timestamp = 0
+        assert buffer.timestamp == 0
+        
 if __name__ == "__main__":
     unittest.main()
