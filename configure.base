@@ -169,21 +169,11 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 
-dnl Check for glib
-AM_PATH_GLIB(1.2.0,,
-            AC_MSG_ERROR(Cannot find glib: Is glib-config in path?),
-            glib gmodule gthread)
-dnl Put the glib flags into $LIBS and $CFLAGS since we always use them
+PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0 gthread-2.0, , AC_MSG_ERROR(Cannot find glib-2.0))
 CORE_LIBS="$GLIB_LIBS"
 CORE_CFLAGS="$GLIB_CFLAGS"
-
-
-dnl Check for gtk
-AM_PATH_GTK(1.2.0,,
-            AC_MSG_ERROR(Cannot find gtk: Is gtk-config in path?))
-dnl Put the gtk flags into $LIBS and $CFLAGS since we always use them
-CORE_LIBS="$CORE_LIBS $GTK_LIBS"
-CORE_CFLAGS="$CORE_CFLAGS $GTK_CFLAGS"
+AC_SUBST(GLIB_LIBS)
+AC_SUBST(GLIB_CFLAGS)
 
 
 dnl Check for libxml
