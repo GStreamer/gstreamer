@@ -498,7 +498,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
         return;
       case GST_EVENT_NEW_MEDIA:
 	g_print ("new media\n");
-        return;
+        break;
       case GST_EVENT_DISCONTINUOUS:
       {
 	gint64 value;
@@ -516,7 +516,7 @@ gst_osssink_chain (GstPad *pad, GstBuffer *buf)
 	gst_pad_event_default (pad, event);
         return;
     }
-    gst_event_free (event);
+    gst_event_unref (event);
     return;
   }
 
