@@ -129,13 +129,13 @@ xmllaunch_parse_cmdline (const gchar *argv[])
     *property++ = '\0';
     *value++ = '\0';
     
-    g_print ("%s, %s, %s\n", element, property, value);
     e = gst_bin_get_by_name (GST_BIN (pipeline), element);
     if (!e) {
       g_warning ("element named '%s' not found", element);
     } else {
       gst_util_set_object_arg (G_OBJECT (e), property, value);
     }
+    g_free (element);
   }
   
   if (!l)
