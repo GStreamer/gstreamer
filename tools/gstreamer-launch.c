@@ -7,8 +7,10 @@
 static int launch_argc;
 static char **launch_argv;
 
-//GtkWidget *window;
-//GtkWidget *gtk_socket;
+#ifndef USE_GLIB2
+GtkWidget *window;
+GtkWidget *gtk_socket;
+#endif
 
 typedef void (*found_handler) (GstElement *element, gint xid, void *priv);
 
@@ -22,7 +24,7 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
 
   children = gst_bin_get_list(bin);
 
-#if 0
+#ifndef USE_GLIB2
   while (children) {
     GstElement *child;
      
@@ -59,14 +61,16 @@ arg_search (GstBin *bin, gchar *argname, found_handler handler, void *priv)
 void 
 handle_have_size (GstElement *element,int width,int height) 
 {
-  //gtk_widget_set_usize(gtk_socket,width,height);
-  //gtk_widget_show_all(window);
+#ifndef USE_GLIB2
+  gtk_widget_set_usize(gtk_socket,width,height);
+  gtk_widget_show_all(window);
+#endif
 }
 
 void 
 xid_handler (GstElement *element, gint xid, void *priv) 
 {
-#if 0
+#ifndef USE_GLIB2
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
   gtk_socket = gtk_socket_new ();
@@ -153,8 +157,13 @@ main(int argc, char *argv[])
     fprintf(stderr,"RUNNING pipeline\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-//    g_idle_add(idle_func,pipeline);
-//    g_main_loop_run (g_main_loop_new (NULL, FALSE));
+    g_idle_add(idle_func,pipeline);
+#ifdef USE_GLIB2
+    g_main_loop_run (g_main_loop_new (NULL, FALSE));
+#else
+    gtk_main();
+#endif
+
     while (1)
       gst_bin_iterate (GST_BIN (pipeline));
 
