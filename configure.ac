@@ -12,7 +12,8 @@ m4_define(pygtk_required_version,             1.99.13)
 
 m4_define(glib_required_version,              2.0.0)
 m4_define(gtk_required_version,               2.0.0)
-m4_define(gstreamer_required_version,         0.4.2)
+m4_define(gstreamer_required_version,         0.5.0)
+m4_define(gstreamer_majorminor,               0.5)
 
 AC_INIT(gst-python, gst_python_version,
         [http://gstreamer.net/])
@@ -77,7 +78,7 @@ dnl check to make sure we can find gtk
 AM_PATH_GTK_2_0(gtk_required_version,,[AC_MSG_ERROR(maybe you want the gtk-gnome-1-2 branch?)],$extra_mods)
 
 dnl check to make sure we can find gstreamer
-PKG_CHECK_MODULES(GST, gstreamer >= gstreamer_required_version, HAVE_GST="yes", HAVE_GST="no")
+PKG_CHECK_MODULES(GST, gstreamer-gstreamer_majorminor >= gstreamer_required_version, HAVE_GST="yes", HAVE_GST="no")
 
 AC_MSG_CHECKING(for gstreamer include dir)
 GST_INCLUDEDIR=`$PKG_CONFIG --variable=includedir gstreamer`
@@ -85,7 +86,7 @@ AC_SUBST(GST_INCLUDEDIR)
 AC_MSG_RESULT($GST_INCLUDEDIR)
 
 if test "x$HAVE_GST" = "xno"; then
-  AC_MSG_ERROR(need GStreamer $gstreamer_required_version)
+  AC_MSG_ERROR(need GStreamer gstreamer_required_version)
 fi
 
 AC_SUBST(GST_CFLAGS)
