@@ -606,8 +606,11 @@ remove_sinks (GstPlayBin * play_bin)
 
   for (sinks = play_bin->sinks; sinks; sinks = g_list_next (sinks)) {
     GstElement *element = GST_ELEMENT (sinks->data);
+    GstPad *pad = gst_element_get_pad (element, "sink");
 
     GST_LOG ("removing sink %p", element);
+    if (GST_PAD_PEER (pad))
+      gst_pad_unlink (GST_PAD_PEER (pad), pad);
     gst_bin_remove (GST_BIN (play_bin), element);
   }
   g_list_free (play_bin->sinks);
@@ -741,6 +744,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin)
           GST_STATE (sink), GST_STATE (play_bin),
           GST_STATE (gst_pad_get_parent (srcpad)));
       sinkpad = gst_element_get_pad (sink, "sink");
+
       /* try to link the pad of the sink to the stream */
       res = gst_pad_link (srcpad, sinkpad);
       if (!res) {
