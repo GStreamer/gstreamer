@@ -1,3 +1,21 @@
+2004-03-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* gst-plugins.spec.in:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-gconf-uninstalled.pc.in:
+	* pkgconfig/gstreamer-interfaces-uninstalled.pc.in:
+	* pkgconfig/gstreamer-libs-uninstalled.pc.in:
+	* pkgconfig/gstreamer-libs.pc.in:
+	* pkgconfig/gstreamer-media-info-uninstalled.pc.in:
+	* pkgconfig/gstreamer-play-uninstalled.pc.in:
+	* pkgconfig/gstreamer-plugins-uninstalled.pc.in:
+	* pkgconfig/gstreamer-plugins.pc.in:
+          remove @VERSION@ from some of the pc files since core and plugins
+          are decoupled.
+          created gstreamer-plugins.pc as it's a better name, but keeping
+          -libs around for now to get fixes upstream done first.
+
 2004-03-15  Julien MOUTTE <julien@moutte.net>
 
 	* gst-libs/gst/play/play.c: (gst_play_get_framerate),
