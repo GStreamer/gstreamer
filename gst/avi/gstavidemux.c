@@ -144,7 +144,7 @@ GST_PAD_TEMPLATE_FACTORY (src_audio_templ,
   ),
   GST_CAPS_NEW (
     "avidemux_src_audio",
-    "audio/mp3",
+    "audio/x-mp3",
       NULL
   ),
   GST_CAPS_NEW (
@@ -520,7 +520,7 @@ gst_avi_demux_strf_auds (GstAviDemux *avi_demux)
     case GST_RIFF_WAVE_FORMAT_MPEGL3:
     case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp3 */
       newcaps = gst_caps_new ("avidemux_audio_src",
-                              "audio/mp3",
+                              "audio/x-mp3",
                                 NULL);
       break;
     case GST_RIFF_WAVE_FORMAT_PCM: /* PCM/wav */

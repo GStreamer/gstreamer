@@ -155,7 +155,7 @@ GST_PAD_TEMPLATE_FACTORY (audio_sink_factory,
   ),
   GST_CAPS_NEW (
     "avimux_sink_audio",
-    "audio/mp3",
+    "audio/x-mp3",
       NULL
   ),
   GST_CAPS_NEW (
@@ -417,7 +417,7 @@ gst_avimux_sinkconnect (GstPad *pad, GstCaps *vscaps)
       avimux->auds_hdr.samplesize = avimux->auds_hdr.scale = avimux->auds.blockalign = width * avimux->auds.channels/8;
       goto done;
     }
-    else if (!strcmp (mimetype, "audio/mp3"))
+    else if (!strcmp (mimetype, "audio/x-mp3"))
     {
       gint layer;
 

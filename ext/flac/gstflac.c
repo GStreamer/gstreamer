@@ -37,7 +37,7 @@ flac_caps_factory (void)
   return
    gst_caps_new (
   	"flac_flac",
-  	"audio/x-flac",
+  	"application/x-flac",
   	NULL);
 }
 
@@ -61,8 +61,8 @@ raw_caps_factory (void)
 }
 
 static GstTypeDefinition flacdefinition = {
-  "flac_audio/x-flac",
-  "audio/x-flac",
+  "flac_application/x-flac",
+  "application/x-flac",
   ".flac",
   flac_type_find,
 };
@@ -75,7 +75,7 @@ flac_type_find (GstBuffer *buf, gpointer private)
   if (head  != 0x664C6143)
     return NULL;
 
-  return gst_caps_new ("flac_type_find", "audio/x-flac", NULL);
+  return gst_caps_new ("flac_type_find", "application/x-flac", NULL);
 }
 
 

@@ -69,7 +69,7 @@ sink_template_factory (void)
 	NULL),
       gst_caps_new (
         "shout2send_sink",
-        "audio/mp3",
+        "audio/x-mp3",
 	NULL),
       NULL);
   }
@@ -324,7 +324,7 @@ gst_shout2send_connect (GstPad *pad, GstCaps *caps)
 
 {
   
-  if (!strcmp(gst_caps_get_mime (caps), "audio/mp3"))
+  if (!strcmp(gst_caps_get_mime (caps), "audio/x-mp3"))
     {
       audio_format = SHOUT_FORMAT_MP3;
       return GST_PAD_CONNECT_OK;
