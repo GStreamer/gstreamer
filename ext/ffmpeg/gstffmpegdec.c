@@ -241,8 +241,8 @@ gst_ffmpegdec_connect (GstPad  *pad,
    * simply because we don't know! We only get it
    * during playback... */
   if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0) {
-    GST_DEBUG (
-		"ffdec_%s: Failed to open FFMPEG codec",
+    avcodec_close (ffmpegdec->context);
+    GST_DEBUG ("ffdec_%s: Failed to open FFMPEG codec",
 		oclass->in_plugin->name);
     return GST_PAD_LINK_REFUSED;
   }
@@ -341,8 +341,9 @@ gst_ffmpegdec_chain (GstPad    *pad,
     switch (oclass->in_plugin->type) {
       case CODEC_TYPE_VIDEO:
 	/* workarounds, functions write to buffers:
-	   libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
-           libavcodec/svq3.c:svq3_decode_slice_header too */
+	 *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
+         *  libavcodec/svq3.c:svq3_decode_slice_header too.
+         * ffmpeg devs know about it and will fix it (they said). */
 	if (oclass->in_plugin->id == CODEC_ID_SVQ1 ||
             oclass->in_plugin->id == CODEC_ID_SVQ3) {
 	  inbuf = gst_buffer_copy_on_write(inbuf);

@@ -321,6 +321,7 @@ gst_ffmpegenc_connect (GstPad  *pad,
 
   /* open codec */
   if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
+    avcodec_close (ffmpegenc->context);
     GST_DEBUG ("ffenc_%s: Failed to open FFMPEG codec",
 	       oclass->in_plugin->name);
     return GST_PAD_LINK_REFUSED;
@@ -470,6 +471,7 @@ gst_ffmpegenc_chain_audio (GstPad  *pad,
       g_warning("ffenc_%s: failed to encode buffer",
 		oclass->in_plugin->name);
       gst_buffer_unref (inbuf);
+      gst_buffer_unref (outbuf);
       gst_buffer_unref (subbuf);
       return;
     }

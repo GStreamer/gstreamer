@@ -1297,11 +1297,23 @@ gst_ffmpeg_caps_to_codecid (const GstCaps *caps,
       video = TRUE;
     }
 
-  } else if (!strcmp (mimetype, "video/x-3ivx") ||
-             !strcmp (mimetype, "video/x-divx")) {
+  } else if (!strcmp (mimetype, "video/x-3ivx")) {
 
     id = CODEC_ID_MPEG4;
     video = TRUE;
+
+    if (context) {
+      context->codec_tag = GST_MAKE_FOURCC ('3','I','V','X');
+    }
+
+  } else if (!strcmp (mimetype, "video/x-xvid")) {
+
+    id = CODEC_ID_MPEG4;
+    video = TRUE;
+
+    if (context) {
+      context->codec_tag = GST_MAKE_FOURCC ('X','V','I','D');
+    }
 
   } else if (!strcmp (mimetype, "video/x-ffv")) {
     gint ffvversion = 0;
