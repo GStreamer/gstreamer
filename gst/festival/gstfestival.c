@@ -77,6 +77,7 @@
 #include "gstfestival.h"
 #include <gst/audio/audio.h>
 
+static void		gst_festival_base_init		(gpointer g_class);
 static void		gst_festival_class_init		(GstFestivalClass *klass);
 static void		gst_festival_init		(GstFestival *festival);
 
@@ -89,15 +90,12 @@ static char*		socket_receive_file_to_buff	(int fd,int *size);
 static char*		client_accept_s_expr		(int fd);
 
 /* elementfactory information */
-static GstElementDetails gst_festival_details = {
+static GstElementDetails gst_festival_details = GST_ELEMENT_DETAILS (
   "Festival synthesizer",
   "Filter/Audio",
-  "LGPL",
   "Synthesizes plain text into audio",
-  VERSION,
-  "Wim Taymans <wim.taymans@chello.be>",
-  "(C) 2001",
-};
+  "Wim Taymans <wim.taymans@chello.be>"
+);
 
 GST_PAD_TEMPLATE_FACTORY (sink_template_factory,
   "festival_sink",
@@ -143,7 +141,7 @@ gst_festival_get_type (void)
   if (!festival_type) {
     static const GTypeInfo festival_info = {
       sizeof(GstFestivalClass),      
-      NULL,
+      gst_festival_base_init,
       NULL,
       (GClassInitFunc) gst_festival_class_init,
       NULL,
@@ -155,6 +153,18 @@ gst_festival_get_type (void)
     festival_type = g_type_register_static (GST_TYPE_ELEMENT, "GstFestival", &festival_info, 0);
   }
   return festival_type;
+}
+
+static void
+gst_festival_base_init (gpointer g_class)
+{  
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  /* register src pads */
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (sink_template_factory));
+  gst_element_class_add_pad_template (element_class, GST_PAD_TEMPLATE_GET (src_template_factory));
+
+  gst_element_class_set_details (element_class, &gst_festival_details);  
 }
 
 static void
@@ -434,27 +444,23 @@ gst_festival_change_state (GstElement *element)
 }
 
 static gboolean
-plugin_init (GModule *module, GstPlugin *plugin)
+plugin_init (GstPlugin *plugin)
 {
-  GstElementFactory *factory;
-
-  /* create an elementfactory for the festival element */
-  factory = gst_element_factory_new ("festival", GST_TYPE_FESTIVAL,
-                                    &gst_festival_details);
-  g_return_val_if_fail(factory != NULL, FALSE);
-
-  /* register src pads */
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (sink_template_factory));
-  gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (src_template_factory));
-
-  gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
+  if (!gst_element_register (plugin, "festival", GST_RANK_NONE, GST_TYPE_FESTIVAL))
+    return FALSE;
 
   return TRUE;
 }
 
-GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "festival",
-  plugin_init
-};
+  "Synthesizes plain text into audio",
+  plugin_init,
+  VERSION,
+  "LGPL",
+  GST_COPYRIGHT,
+  GST_PACKAGE,
+  GST_ORIGIN
+);
