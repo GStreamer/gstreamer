@@ -757,8 +757,7 @@ gst_fakesrc_get(GstPad *pad)
   GST_BUFFER_TIMESTAMP (buf) = src->buffer_count++;
 
   if (!src->silent) {
-    if (src->last_message)
-      g_free (src->last_message);
+    g_free (src->last_message);
 
     src->last_message = g_strdup_printf ("get      ******* (%s:%s)> (%d bytes, %llu) %p",
                       GST_DEBUG_PAD_NAME (pad), GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
@@ -818,19 +817,19 @@ gst_fakesrc_change_state (GstElement *element)
   fakesrc = GST_FAKESRC (element);
 
   switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_PAUSED_TO_READY:
     case GST_STATE_NULL_TO_READY:
+      break;
+    case GST_STATE_READY_TO_PAUSED:
       fakesrc->buffer_count = 0;
       fakesrc->pattern_byte = 0x00;
       fakesrc->need_flush = FALSE;
       fakesrc->eos = FALSE;
       fakesrc->rt_num_buffers = fakesrc->num_buffers;
       break;
-    case GST_STATE_READY_TO_PAUSED:
     case GST_STATE_PAUSED_TO_PLAYING:
     case GST_STATE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_READY_TO_NULL:
+    case GST_STATE_PAUSED_TO_READY:
       if (fakesrc->parent) {
         gst_buffer_unref (fakesrc->parent);
         fakesrc->parent = NULL;
@@ -839,8 +838,10 @@ gst_fakesrc_change_state (GstElement *element)
         gst_buffer_pool_unref (fakesrc->pool);
         fakesrc->pool = NULL;
       }
-      if (fakesrc->last_message)
-        g_free (fakesrc->last_message);
+      g_free (fakesrc->last_message);
+      fakesrc->last_message = NULL;
+      break;
+    case GST_STATE_READY_TO_NULL:
       break;
     default:
       g_assert_not_reached ();
